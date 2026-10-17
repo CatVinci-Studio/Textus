@@ -6,6 +6,7 @@ import { useProviderCatalog } from "../../ai/provider-catalog";
 import { isDesktopApp } from "../../platform/capabilities";
 import { links } from "../../platform/ipc";
 import { fetchConnected } from "./providers";
+import { UpdateButton } from "./general";
 import appIcon from "../../../src-tauri/icons/128x128@2x.png";
 
 /** Taps on the version, close enough together, that open or close the
@@ -35,7 +36,8 @@ function useAiConnected(provider: string): boolean {
   return connected;
 }
 
-/** Settings › About: the app, its version, its code and who made it - and,
+/** Settings › General › About Textus: the app, its version and updates,
+ *  its code, where to talk with us and who made it - and,
  *  behind the version, the diary. Five taps open it once an AI provider is
  *  connected (the settings close, and the page is the book); five more
  *  close it. Without a provider the taps do nothing at all. */
@@ -81,13 +83,30 @@ export function AboutSection({
       <div className="settings-about-version" onClick={tapVersion}>
         {version ? t.aboutVersion.replace("{version}", version) : " "}
       </div>
-      <button
-        type="button"
-        className="text-button settings-about-link"
-        onClick={() => void links.openGithubPage()}
-      >
-        GitHub
-      </button>
+      <div className="settings-about-links">
+        <button
+          type="button"
+          className="text-button settings-about-link"
+          onClick={() => void links.openAboutLink("github")}
+        >
+          GitHub
+        </button>
+        <button
+          type="button"
+          className="text-button settings-about-link"
+          onClick={() => void links.openAboutLink("discord")}
+        >
+          Discord
+        </button>
+        <button
+          type="button"
+          className="text-button settings-about-link"
+          onClick={() => void links.openAboutLink("qq")}
+        >
+          {t.aboutQq}
+        </button>
+        <UpdateButton t={t} />
+      </div>
       <div className="settings-about-credit">{t.aboutMadeBy}</div>
     </div>
   );

@@ -1,6 +1,5 @@
 import { errorText } from "../../utils/error-text";
 import { useEffect, useState } from "react";
-import { getVersion } from "@tauri-apps/api/app";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import type { Strings } from "../../i18n/strings";
@@ -16,14 +15,14 @@ import { itemList, runLevisImport } from "../levis-import";
 // The General category's sections beyond plain settings rows.
 
 /**
- * Current version + a manual "Check for Updates" button. The background
+ * The manual "Check for Updates" button, beside the links in Settings ›
+ * General › About Textus (which shows the version). The background
  * check (useAppUpdate) is silent about being up to date and about errors;
  * a manual check is the opposite - the user asked, so "already latest" and
  * failures both get an explicit answer here. A package-manager build only
  * reports the new version - see platform/distribution.ts.
  */
-export function UpdateSection({ t }: { t: Strings }) {
-  const [version, setVersion] = useState("");
+export function UpdateButton({ t }: { t: Strings }) {
   const [phase, setPhase] = useState<
     "idle" | "checking" | "latest" | "available" | "downloading" | "error"
   >("idle");
@@ -33,9 +32,6 @@ export function UpdateSection({ t }: { t: Strings }) {
 
   useEffect(() => {
     if (canAutoUpdate) void selfUpdateAllowed().then(setSelfUpdate);
-    getVersion()
-      .then(setVersion)
-      .catch(() => setVersion(""));
   }, []);
 
   async function checkNow() {
@@ -83,34 +79,47 @@ export function UpdateSection({ t }: { t: Strings }) {
     }
   }
 
+  // No updater on iOS: the App Store updates it.
+  if (!canAutoUpdate) return null;
+  const busy = phase === "checking" || phase === "downloading";
+  const ready =
+    selfUpdate && (phase === "available" || phase === "downloading");
   return (
-    <SettingRow
-      label={
-        version ? `${t.updateVersionLabel} v${version}` : t.updateVersionLabel
-      }
-      hint={phase === "error" ? undefined : message || undefined}
-      error={phase === "error" ? message : null}
-    >
-      {/* No updater on iOS (App Store updates): the version alone. */}
-      {canAutoUpdate &&
-        (selfUpdate && (phase === "available" || phase === "downloading") ? (
-          <button
-            className="text-button settings-inline-button"
-            onClick={install}
-            disabled={phase === "downloading"}
-          >
-            {t.updateInstall}
-          </button>
-        ) : (
-          <button
-            className="text-button settings-inline-button"
-            onClick={checkNow}
-            disabled={phase === "checking"}
-          >
-            {phase === "checking" ? t.updateChecking : t.updateCheckButton}
-          </button>
-        ))}
-    </SettingRow>
+    <>
+      <button
+        type="button"
+        className="text-button settings-about-link"
+        onClick={ready ? install : checkNow}
+        disabled={busy}
+      >
+        {ready
+          ? t.updateInstall
+          : phase === "checking"
+            ? t.updateChecking
+            : t.updateCheckButton}
+      </button>
+      {/* The answer to the check, under the row of buttons. */}
+      {message && (
+        <div
+          className={`settings-about-status${phase === "error" ? " settings-error" : ""}`}
+          role="status"
+        >
+          {message}
+        </div>
+      )}
+    </>
+  );
+}
+
+/** "Install the {command} command…" with the command set as code. */
+function withCommand(label: string) {
+  const [before, after = ""] = label.split("{command}");
+  return (
+    <>
+      {before}
+      <code className="settings-inline-code">textus</code>
+      {after}
+    </>
   );
 }
 
@@ -144,8 +153,7 @@ export function CliCommandSection({ t }: { t: Strings }) {
 
   return (
     <SettingRow
-      label={t.cliCommandLabel}
-      hint={t.cliCommandHint}
+      label={withCommand(t.cliCommandLabel)}
       error={error && `${t.cliCommandFailed} ${error}`}
     >
       {!error && (

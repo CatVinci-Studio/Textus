@@ -21,7 +21,8 @@ vi.mock("./providers", () => ({
   fetchConnected: () =>
     Promise.resolve({ oauth: mock.connected, apiKey: false }),
 }));
-vi.mock("../../platform/ipc", () => ({ links: { openGithubPage: vi.fn() } }));
+vi.mock("../../platform/ipc", () => ({ links: { openAboutLink: vi.fn() } }));
+vi.mock("./general", () => ({ UpdateButton: () => null }));
 vi.mock("../../platform/capabilities", () => ({ isDesktopApp: true }));
 
 const t = resolveStrings("en");
