@@ -16,20 +16,26 @@ async function reachInk(page: Page) {
   await expect(walker).toHaveAttribute("data-stage", /approach|standing/);
   for (
     let i = 0;
-    i < 150 && (await walker.getAttribute("data-stage")) === "approach";
+    i < 300 && (await walker.getAttribute("data-stage")) === "approach";
     i++
   ) {
-    await page.clock.runFor(650);
+    await page.clock.runFor(150);
   }
   await expect(walker).toHaveAttribute("data-stage", "standing");
-  await page.clock.runFor(650);
+}
+/** Runs the clock until the answer has finished writing itself. */
+async function written(page: Page) {
+  const settled = page.locator(".magic-diary-reply-settled");
+  for (let i = 0; i < 60 && !(await settled.count()); i++)
+    await page.clock.runFor(100);
+  await expect(settled).toBeVisible();
 }
 async function send(page: Page, text: string) {
   await pasteMarkdown(page, text);
   await editor(page).press("End");
   await editor(page).press("Enter");
   await reachInk(page);
-  await expect(page.locator(".magic-diary-reply-settled")).toBeVisible();
+  await written(page);
 }
 
 test("answer expires ten seconds after writing, returning focus for another turn", async ({
@@ -294,25 +300,28 @@ test("a new tab's submission releases the displaced pending turn", async ({
   ).toBeVisible();
 });
 
-test("a ready model answer waits for the slower walker to arrive", async ({
+test("a ready answer starts writing within a second, walker or not", async ({
   page,
 }) => {
   await setup(page);
   await pasteMarkdown(page, "等你走过来");
   await editor(page).press("End");
   await editor(page).press("Enter");
-  await page.clock.runFor(3000);
-  await expect(page.locator(".magic-footprint-layer")).toHaveAttribute(
-    "data-stage",
-    "approach",
-  );
   await expect(page.locator(".magic-diary-reply")).toHaveCount(0);
-  await reachInk(page);
-  await expect(page.locator(".magic-footprint-layer")).toHaveAttribute(
-    "data-stage",
-    "standing",
-  );
-  await expect(page.locator(".magic-diary-reply-settled")).toBeVisible();
+  await page.clock.runFor(900);
+  await expect(page.locator(".magic-diary-reply")).toHaveCount(1);
+  await written(page);
+});
+
+test("typing after the answer is written puts it away and goes on", async ({
+  page,
+}) => {
+  await setup(page);
+  await send(page, "第一句话");
+  await editor(page).pressSequentially("下一句");
+  await page.clock.runFor(700);
+  await expect(page.locator(".magic-diary-reply")).toHaveCount(0);
+  await expect(editor(page)).toContainText("下一句");
 });
 
 test("diary ink wraps without creating scroll containers or scrolling the page", async ({
@@ -350,8 +359,7 @@ test("a long reply fits a short window at large zoom without clipping or scrolli
   await editor(page).press("End");
   await editor(page).press("Enter");
   await reachInk(page);
-  await page.clock.runFor(17000);
-  await expect(page.locator(".magic-diary-reply-settled")).toBeVisible();
+  await written(page);
   const reply = await page.locator(".magic-diary-reply").boundingBox();
   const pane = await page
     .locator('[data-active-tab="true"] .editor-scroll')
@@ -365,10 +373,15 @@ test("perimeter, approach, and departure keep the same foot spacing", async ({
   page,
 }) => {
   await setup(page);
-  const checkSteps = async () => {
+  const walker = page.locator(".magic-footprint-layer");
+  const checkSteps = async (stepMs = 650) => {
     const points = [];
+    const stage = await walker.getAttribute("data-stage");
     for (let i = 0; i < 4; i++) {
-      await page.clock.runFor(650);
+      await page.clock.runFor(stepMs);
+      // A hurried walk can end within these steps; spacing is only
+      // measured while it lasts.
+      if ((await walker.getAttribute("data-stage")) !== stage) break;
       points.push(
         await page
           .locator(".magic-foot")
@@ -392,7 +405,8 @@ test("perimeter, approach, and departure keep the same foot spacing", async ({
   await pasteMarkdown(page, "慢慢走来");
   await editor(page).press("End");
   await editor(page).press("Enter");
-  await checkSteps();
+  // It hurries to the line: shorter steps in time, the same stride.
+  await checkSteps(150);
   await reachInk(page);
   await editor(page).press("Escape");
   await checkSteps();
@@ -567,7 +581,7 @@ test("the book's own story answers and continues without a provider", async ({
   await editor(page).press("Escape");
   await fragment("后来呢？");
   await expect(page.locator(".magic-diary-ink")).toContainText("薇拉来过");
-  await expect(page.locator(".magic-diary-ink")).toContainText("未竟之城");
+  await expect(page.locator(".magic-diary-ink")).toContainText("找路");
 });
 
 test("ordinary chat keeps a practical answer with a magical background offline", async ({

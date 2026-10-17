@@ -1,6 +1,8 @@
 /** A continuous clockwise rounded rectangle, measured in pixels of travel. */
 export const WALKER_ARRIVED_EVENT = "textus:magic-diary-arrived";
 export const STEP_MS = 650;
+/** The pace of a walker hurrying to the line it was called to. */
+export const DASH_STEP_MS = 150;
 export const STRIDE = 22;
 export interface Point {
   x: number;

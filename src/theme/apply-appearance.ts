@@ -17,6 +17,12 @@ import { adaptTyporaCss } from "./typora-compat";
 // Typora theme's stylesheet and the window colours derived from it) and the
 // user's Custom CSS, in that cascade order. SettingsProvider runs it.
 
+/** The Magic Diary's handwriting (LXGW WenKai, OFL), on the website at a
+ *  versioned path; see textus.catvinci.com's /fonts/. */
+const DIARY_FONT_CSS =
+  "https://textus.catvinci.com/fonts/lxgw-wenkai/1.7.0/regular.css";
+const DIARY_FONT_ID = "textus-diary-font";
+
 /** The <style> holding Settings > Theme > Custom CSS. */
 const CUSTOM_CSS_STYLE_ID = "textus-user-css";
 
@@ -110,6 +116,18 @@ export function useApplyAppearance(
     const root = document.documentElement;
     if (diary) root.setAttribute("data-magic-diary", "");
     else root.removeAttribute("data-magic-diary");
+    // Its handwriting is a web font, fetched only while the theme is on
+    // (and then from the browser's cache): the stylesheet splits the face
+    // by unicode-range, so a page loads only the pieces its text uses.
+    // Offline, the hand falls back to the system's kai (--diary-hand).
+    let link = document.getElementById(DIARY_FONT_ID) as HTMLLinkElement | null;
+    if (diary && !link) {
+      link = document.createElement("link");
+      link.id = DIARY_FONT_ID;
+      link.rel = "stylesheet";
+      link.href = DIARY_FONT_CSS;
+      document.head.appendChild(link);
+    } else if (!diary) link?.remove();
   }, [diary]);
 
   useEffect(() => {

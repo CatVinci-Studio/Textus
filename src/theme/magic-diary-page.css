@@ -36,6 +36,20 @@ html[data-magic-diary] {
   --sidebar-active: #e3cfa2;
   --sidebar-active-text: #40311b;
   --border-color: #d8c7a0;
+
+  /* The diary's own marks - the answer's ink, its glow, the walker's feet
+     and the map - kept apart from the theme's text colour so each mode can
+     give them the contrast they need. */
+  --diary-ink: color-mix(in srgb, var(--editor-text) 78%, #7a4718);
+  --diary-glow: #c79a52;
+  --diary-mark: var(--editor-text);
+  --diary-mark-strength: 1.15;
+  --diary-vignette: #7350201a;
+  /* The other hand: LXGW WenKai, loaded from the website only while this
+     theme is on (theme/apply-appearance.ts), then whatever kai the system
+     has. */
+  --diary-hand:
+    "LXGW WenKai", "Kaiti SC", "Kaiti TC", STKaiti, KaiTi, "Klee One", serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -59,6 +73,12 @@ html[data-magic-diary] {
     --sidebar-active: #3b3018;
     --sidebar-active-text: #e6d6ae;
     --border-color: #453720;
+
+    --diary-ink: #ecc98a;
+    --diary-glow: #e0ad5c;
+    --diary-mark: #eadbb4;
+    --diary-mark-strength: 1.7;
+    --diary-vignette: #00000059;
   }
 }
 
@@ -82,6 +102,12 @@ html[data-theme="dark"][data-magic-diary] {
   --sidebar-active: #3b3018;
   --sidebar-active-text: #e6d6ae;
   --border-color: #453720;
+
+  --diary-ink: #ecc98a;
+  --diary-glow: #e0ad5c;
+  --diary-mark: #eadbb4;
+  --diary-mark-strength: 1.7;
+  --diary-vignette: #00000059;
 }
 
 /* The tooth of the paper, and the darkening at the edges of a page that
@@ -92,11 +118,8 @@ html[data-theme="dark"][data-magic-diary] {
    overlays (the lowest of which is 100), so the whole window is one sheet
    while a dialog opened over it still reads as a dialog.
 
-   Two layers in one: a fine speckle from layered gradients at angles that
-   do not share a period (an inline SVG noise would be one more asset to
-   ship and one more thing to fail to decode - and at these alphas the
-   crosshatch that comes out is the paper, not a grid), and a vignette that
-   keeps the reading column the brightest thing on screen. */
+   Two layers in one: a fine speckle, and a vignette that keeps the
+   reading column the brightest thing on screen. */
 body::before {
   content: "";
   position: fixed;
@@ -104,14 +127,19 @@ body::before {
   z-index: 60;
   pointer-events: none;
   display: none;
+  /* A small pre-drawn grain tiled, and the vignette as a plain gradient:
+     no blend mode and no filter, so this layer is composited once rather
+     than recomputed over the whole window on every repaint. */
   background-image:
     radial-gradient(
       ellipse 100% 100% at 50% 45%,
       transparent 50%,
-      #7350201a 100%
+      var(--diary-vignette) 100%
     ),
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23765b32' opacity='.055' filter='url(%23n)' d='M0 0h180v180H0z'/%3E%3C/svg%3E");
-  mix-blend-mode: multiply;
+    url("data:image/png;base64,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");
+  background-size:
+    100% 100%,
+    120px 120px;
 }
 
 html[data-magic-diary] body::before {
@@ -129,14 +157,11 @@ html[data-magic-diary] body::before {
   }
 }
 
-/* The reader is looking at a page, not at an app, so the text column sits
-   on a sheet rather than floating on a flat field. Just the reading area:
-   the editor's own padding, so the sheet does not fight a zoom or a narrow
-   window. */
+/* One hand for the whole book: the reader's lines and the page's answers
+   are written in the same face, and the answer is told apart by its ink. */
 html[data-magic-diary] .milkdown .ProseMirror {
-  font-family:
-    var(--font-cjk-punct-serif), "Iowan Old Style", "Palatino Linotype",
-    Palatino, Georgia, var(--font-cjk-serif), serif;
+  font-family: var(--diary-hand);
+  font-size: 1.08em;
 }
 
 /* Type set by hand is not set flush to the edge of the block; a little
@@ -192,10 +217,9 @@ html[data-magic-diary] .milkdown .ProseMirror .magic-diary-reply {
 }
 html[data-magic-diary] .milkdown .ProseMirror .magic-diary-ink {
   display: block;
-  font-style: normal;
-  font-size: 1.08em;
-  letter-spacing: 0.035em;
-  line-height: 1.9;
+  font-size: 1.14em;
+  letter-spacing: 0.03em;
+  line-height: 1.85;
 }
 html[data-magic-diary] .magic-footprint-layer {
   display: block;
@@ -214,7 +238,7 @@ html[data-magic-diary] .magic-footprint-layer {
   width: 19px;
   height: 10px;
   translate: -50% -50%;
-  color: var(--editor-text, #4a3823);
+  color: var(--diary-mark);
   opacity: 0;
   animation: magic-foot-fade 2400ms ease-out both;
 }
@@ -227,10 +251,10 @@ html[data-magic-diary] .magic-footprint-layer {
     opacity: 0;
   }
   8% {
-    opacity: 0.38;
+    opacity: calc(0.38 * var(--diary-mark-strength));
   }
   40% {
-    opacity: 0.24;
+    opacity: calc(0.24 * var(--diary-mark-strength));
   }
   100% {
     opacity: 0;
@@ -249,7 +273,7 @@ html[data-magic-diary] .magic-footprint-layer {
 .magic-footprint-layer[data-stage="standing"]
   .magic-foot:nth-last-child(-n + 2) {
   animation: none;
-  opacity: 0.2;
+  opacity: calc(0.2 * var(--diary-mark-strength));
 }
 html[data-magic-diary] .empty-doc-placeholder::before {
   content: "";
@@ -273,13 +297,9 @@ html[data-magic-diary] .editor-content .milkdown {
   flex-direction: column;
   align-items: center;
   width: 84px;
-  color: var(--editor-text);
-  opacity: 0.24;
-  font:
-    10px/1.8 Georgia,
-    "Kaiti SC",
-    STKaiti,
-    serif;
+  color: var(--diary-mark);
+  opacity: calc(0.24 * var(--diary-mark-strength));
+  font: 11px/1.8 var(--diary-hand);
   letter-spacing: 0.2em;
 }
 .magic-map-landmark svg {
@@ -320,7 +340,7 @@ html[data-magic-diary] .editor-content .milkdown {
   width: 19px;
   height: 10px;
   translate: -50% -50%;
-  color: var(--editor-muted);
+  color: var(--diary-mark);
   animation: magic-foot-fade 2400ms ease-out both;
 }
 .magic-visitor-foot svg {
@@ -333,7 +353,7 @@ html[data-magic-diary] .editor-content .milkdown {
   width: 25px;
   height: 25px;
   translate: -50% -50%;
-  color: color-mix(in srgb, var(--editor-text) 70%, var(--chrome-accent));
+  color: color-mix(in srgb, var(--diary-mark) 70%, var(--diary-glow));
   animation: magic-map-materialize 1200ms ease both;
 }
 .magic-map-visitor > svg {
@@ -356,12 +376,8 @@ html[data-magic-diary] .editor-content .milkdown {
   width: max-content;
   max-width: 110px;
   translate: -50% 0;
-  opacity: 0.5;
-  font:
-    10px/1.5 Georgia,
-    "Kaiti SC",
-    STKaiti,
-    serif;
+  opacity: 0.6;
+  font: 11px/1.5 var(--diary-hand);
   letter-spacing: 0.12em;
 }
 .magic-map-visitor[data-phase="greeting"] .magic-map-visitor-name {
@@ -379,25 +395,25 @@ html[data-magic-diary] .editor-content .milkdown {
   width: 70px;
   height: 70px;
   translate: -50% -50%;
-  color: var(--chrome-accent);
+  color: var(--diary-glow);
   animation: magic-map-ward 2400ms ease-in-out both;
 }
 .magic-map-shield {
-  color: color-mix(in srgb, var(--editor-text) 55%, #b18a41);
+  color: color-mix(in srgb, var(--diary-mark) 55%, var(--diary-glow));
 }
 .magic-footprint-layer[data-stage="encounter"]
   .magic-foot:nth-last-child(-n + 2) {
   animation: none;
-  opacity: 0.24;
+  opacity: calc(0.24 * var(--diary-mark-strength));
 }
 @keyframes magic-map-materialize {
   from {
     opacity: 0;
-    filter: blur(2px);
+    transform: scale(0.82);
   }
   to {
     opacity: 1;
-    filter: blur(0);
+    transform: none;
   }
 }
 @keyframes magic-map-drift {
@@ -478,14 +494,14 @@ html[data-magic-diary] .editor-content .milkdown {
     filter 900ms ease;
 }
 .magic-map-landmark[data-visit="approaching"] {
-  opacity: 0.65;
-  color: var(--chrome-accent);
+  opacity: 0.7;
+  color: var(--diary-glow);
 }
 .magic-map-landmark[data-visit="active"] {
   opacity: 0.95;
-  color: var(--editor-text);
+  color: var(--diary-mark);
   filter: drop-shadow(
-    0 0 9px color-mix(in srgb, var(--chrome-accent) 25%, transparent)
+    0 0 9px color-mix(in srgb, var(--diary-glow) 30%, transparent)
   );
 }
 .magic-map-landmark[data-visit="departing"] {
@@ -502,14 +518,14 @@ html[data-magic-diary] .editor-content .milkdown {
 .magic-footprint-layer[data-stage="landmark"]
   .magic-foot:nth-last-child(-n + 2) {
   animation: none;
-  opacity: 0.28;
+  opacity: calc(0.28 * var(--diary-mark-strength));
 }
 .magic-landmark-event {
   position: absolute;
   top: -25px;
   left: -8px;
   width: 100px;
-  color: var(--chrome-accent);
+  color: var(--diary-glow);
   display: flex;
   flex-direction: column;
   align-items: center;

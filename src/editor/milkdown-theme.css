@@ -152,15 +152,8 @@
 
 .milkdown .ProseMirror .magic-diary-absorbed {
   opacity: 0;
-  filter: blur(3px);
-  /* The letters drift apart as they go, the way ink spreads into damp
-     paper rather than vanishing cleanly. */
-  letter-spacing: 0.05em;
   caret-color: transparent;
-  transition:
-    opacity 900ms var(--ease-standard),
-    filter 900ms var(--ease-standard),
-    letter-spacing 900ms var(--ease-standard);
+  transition: opacity 900ms var(--ease-standard);
 }
 
 /* The line coming off the page. A copy of what was just written, lifting
@@ -178,21 +171,23 @@
   animation: magic-diary-lift 900ms cubic-bezier(0.33, 0, 0.2, 1) both;
 }
 
+/* The ink lifts and spreads as it goes: a widening glow of its own colour
+   rather than a blur filter, which would be recomputed every frame. */
 @keyframes magic-diary-lift {
   0% {
     opacity: 0;
-    transform: translateY(2px) scale(1);
-    filter: blur(0);
+    transform: translateY(2px);
+    text-shadow: 0 0 0 transparent;
   }
   22% {
     opacity: 0.85;
-    transform: translateY(-2px) scale(1);
-    filter: blur(0.4px);
+    transform: translateY(-2px);
+    text-shadow: 0 0 1px currentColor;
   }
   100% {
     opacity: 0;
-    transform: translateY(-16px) scale(0.985);
-    filter: blur(6px);
+    transform: translateY(-18px) scale(1.02);
+    text-shadow: 0 0 10px currentColor;
   }
 }
 
@@ -227,16 +222,36 @@
 .milkdown .ProseMirror .magic-diary-reply .magic-diary-ink::before {
   content: "";
   position: absolute;
-  inset: -0.4em -0.7em;
+  inset: -0.8em -1.2em;
   z-index: -1;
   pointer-events: none;
   border-radius: var(--radius-block);
+  /* closest-side keeps the whole wash inside its box, so it never shows
+     an edge, however wide the line or dark the page. */
   background: radial-gradient(
-    ellipse 75% 130% at 16% 50%,
-    color-mix(in srgb, #c79a52 22%, transparent),
-    transparent 70%
+    closest-side,
+    color-mix(in srgb, var(--diary-glow, #c79a52) 22%, transparent),
+    transparent
   );
   animation: magic-diary-glow 1600ms var(--ease-out) both;
+}
+
+/* While the answer is being written the glow breathes like a candle - on
+   the glow's opacity, which the compositor animates without repainting. */
+.milkdown .ProseMirror .magic-diary-reply-writing .magic-diary-ink::before {
+  animation:
+    magic-diary-glow 1600ms var(--ease-out) both,
+    magic-diary-breathe 2.6s ease-in-out 1600ms infinite;
+}
+
+@keyframes magic-diary-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  45% {
+    opacity: 0.75;
+  }
 }
 
 @keyframes magic-diary-glow {
@@ -258,13 +273,10 @@
    real style rather than a broken one. */
 .milkdown .ProseMirror .magic-diary-ink {
   margin: 0;
-  font-style: italic;
-  font-family:
-    "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia,
-    "Kaiti SC", "Kaiti TC", STKaiti, KaiTi, "楷体", serif;
-  font-size: 1.02em;
-  line-height: 1.72;
-  color: color-mix(in srgb, var(--editor-text) 88%, #6d4318);
+  font-family: var(--diary-hand, serif);
+  font-size: 1.06em;
+  line-height: 1.75;
+  color: var(--diary-ink, var(--editor-text));
   white-space: pre-wrap;
 }
 
@@ -272,46 +284,29 @@
    then settles into the paper. Without this the reveal reads as a text
    cursor advancing, not as a nib. */
 .magic-diary-char {
-  animation: magic-diary-ink-in 260ms var(--ease-out) both;
-}
-
-@keyframes magic-diary-ink-in {
-  from {
-    opacity: 0;
-    filter: blur(2.5px);
-    transform: translateY(-0.08em);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-    transform: none;
-  }
-}
-
-/* The nib: a wet point riding the end of what has been written. A ::after
-   on the ink, so it sits at the growing end without the reveal loop having
-   to know where that is - and it is gone with the writing class, the
-   moment the last character lands. */
-.milkdown .ProseMirror .magic-diary-reply-writing .magic-diary-ink::after {
-  content: "";
   display: inline-block;
-  width: 0.1em;
-  height: 1.05em;
-  margin-left: 0.06em;
-  vertical-align: text-bottom;
-  border-radius: 1px;
-  background: #8a5a2b;
-  box-shadow: 0 0 6px 1px color-mix(in srgb, #c79a52 70%, transparent);
-  animation: magic-diary-nib 1.05s ease-in-out infinite;
+  white-space: pre;
+  animation: magic-diary-ink-in 460ms var(--ease-out) both;
 }
 
-@keyframes magic-diary-nib {
-  0%,
-  100% {
-    opacity: 0.55;
+/* Wet, then dry: a character lands with a halo of fresh ink that soaks
+   into the paper. Opacity and a short-lived shadow on one glyph - no blur
+   filter over the line. */
+@keyframes magic-diary-ink-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-0.12em) scale(1.06);
+    text-shadow: 0 0 0.45em var(--diary-glow, #c79a52);
   }
-  50% {
+  45% {
     opacity: 1;
+    text-shadow: 0 0 0.3em
+      color-mix(in srgb, var(--diary-glow, #c79a52) 60%, transparent);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    text-shadow: 0 0 0 transparent;
   }
 }
 
@@ -319,22 +314,7 @@
    slightly while it is being written and stops dead once it has settled -
    a still reply reads as finished, and finished is what it is. */
 .milkdown .ProseMirror .magic-diary-reply-writing {
-  animation:
-    magic-diary-settle 900ms var(--ease-out) both,
-    magic-diary-candle 2.6s ease-in-out 900ms infinite;
-}
-
-@keyframes magic-diary-candle {
-  0%,
-  100% {
-    filter: brightness(1);
-  }
-  42% {
-    filter: brightness(1.035);
-  }
-  61% {
-    filter: brightness(0.985);
-  }
+  animation: magic-diary-settle 900ms var(--ease-out) both;
 }
 
 /* While it is still being written the strip has nowhere settled to rest
@@ -366,13 +346,64 @@
 @keyframes magic-diary-unwrite {
   from {
     opacity: 1;
-    filter: blur(0);
-    transform: translateY(2px);
+    transform: none;
+    text-shadow: 0 0 0 transparent;
   }
   to {
     opacity: 0;
-    filter: blur(3px);
-    transform: translateY(2px);
+    transform: translateY(-6px);
+    text-shadow: 0 0 8px currentColor;
+  }
+}
+
+/* Three drops of ink gathering where the answer will appear, while the
+   page is still thinking. They wait until the line has lifted off. */
+.milkdown .ProseMirror .magic-diary-waiting {
+  display: inline-flex;
+  gap: 0.32em;
+  margin-left: 0.2em;
+  vertical-align: middle;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: magic-diary-waiting-in 400ms var(--ease-out) 700ms both;
+}
+
+.milkdown .ProseMirror .magic-diary-waiting i {
+  width: 0.34em;
+  height: 0.34em;
+  border-radius: 50%;
+  background: var(--diary-ink, var(--editor-text));
+  box-shadow: 0 0 0.4em var(--diary-glow, #c79a52);
+  animation: magic-diary-drop 1.2s ease-in-out infinite;
+}
+
+.milkdown .ProseMirror .magic-diary-waiting i:nth-child(2) {
+  animation-delay: 160ms;
+}
+
+.milkdown .ProseMirror .magic-diary-waiting i:nth-child(3) {
+  animation-delay: 320ms;
+}
+
+@keyframes magic-diary-waiting-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes magic-diary-drop {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0) scale(0.8);
+  }
+  40% {
+    opacity: 0.95;
+    transform: translateY(-0.18em) scale(1);
   }
 }
 
@@ -626,19 +657,18 @@
   }
 
   /* The diary keeps its meaning without any of this: the line still goes
-     and the reply still arrives, both without travel. The blur is a
-     transition, not an animation, so it is transitioned off here too. */
+     and the reply still arrives, both without travel. The fade is a
+     transition, not an animation, so it is shortened here too. */
   .milkdown .ProseMirror .magic-diary-absorbed {
     transition: opacity 120ms linear;
-    filter: none;
-    letter-spacing: normal;
   }
   .milkdown .ProseMirror .magic-diary-ghost,
   .milkdown .ProseMirror .magic-diary-char,
   .milkdown .ProseMirror .magic-diary-reply .magic-diary-ink::before,
   .milkdown .ProseMirror .magic-diary-reply-writing,
   .milkdown .ProseMirror .magic-diary-reply-leaving,
-  .milkdown .ProseMirror .magic-diary-reply-writing .magic-diary-ink::after {
+  .milkdown .ProseMirror .magic-diary-waiting,
+  .milkdown .ProseMirror .magic-diary-waiting i {
     animation: none !important;
   }
   /* The lift and the ink-bleed are the same effect on two elements; with

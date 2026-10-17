@@ -15,7 +15,18 @@ import { WALKER_ARRIVED_EVENT } from "./footprint-gait";
 const MAX_LINE_CHARS = 200;
 const DWELL_MS = 10_000;
 const FADE_MS = 520;
-const REPLY_BUDGET_MS = 15_000;
+/** How long the page waits for a model before it answers from its own
+ *  lines instead. */
+const REPLY_BUDGET_MS = 8_000;
+/** The walker hurries to the line, but the reply never waits on it for
+ *  longer than this: it writes itself as the walker arrives. */
+const ARRIVAL_GRACE_MS = 800;
+/** A reply of any length is written in about this long; short ones go at
+ *  the natural pace below and do not stretch to fill it. */
+const WRITE_MS = 1_800;
+const CHAR_MS = { latin: 30, cjk: 55, pause: 2.6 } as const;
+/** One character's ink-in (milkdown-theme.css's .magic-diary-char). */
+const CHAR_IN_MS = 460;
 export const MAGIC_DIARY_EVENT = "textus:magic-diary";
 export type MagicDiaryPhase = "absorbed" | "thinking" | "replying" | "leaving";
 export interface MagicDiaryEvent {
@@ -147,6 +158,16 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
     )
       view.focus();
   }
+  /** Puts away an answer that has finished writing (so the reader can go
+   *  on), and says whether there was one. */
+  function putAwaySettled(): boolean {
+    const current = state();
+    const turn = current?.turns.find((t) => t.id === current.active);
+    if (turn?.stage !== "done") return false;
+    announce("leaving");
+    finish();
+    return true;
+  }
   function leave(id: number) {
     if (!isCurrent(id)) return;
     announce("leaving");
@@ -267,33 +288,38 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
       ink.textContent = turn.reply;
       return wrap;
     }
+    // The whole reply is laid out at once and each character only fades in
+    // on its own delay: one layout, then compositor-only animation, instead
+    // of a reflow (and a refit of the page) per character.
     const chars = Array.from(turn.reply);
-    let index = 0;
-    function tick() {
-      if (!isCurrent(turn.id) || !ink.isConnected) return;
-      if (index === chars.length) {
-        wrap.classList.remove("magic-diary-reply-writing");
-        wrap.classList.add("magic-diary-reply-settled");
-        dispatch({ type: "settle", id: turn.id });
-        // Start the reading time only after the last character is written.
-        later(() => leave(turn.id), DWELL_MS);
-        return;
-      }
-      const ch = chars[index++];
+    const weights = chars.map((ch) =>
+      /[。，！？、,.!?；;：:]/.test(ch)
+        ? CHAR_MS.pause
+        : /[\u1100-\uffef]/.test(ch)
+          ? CHAR_MS.cjk / CHAR_MS.latin
+          : 1,
+    );
+    const natural = weights.reduce((sum, w) => sum + w, 0) * CHAR_MS.latin;
+    const scale = natural > WRITE_MS ? WRITE_MS / natural : 1;
+    let at = 0;
+    const fragment = document.createDocumentFragment();
+    chars.forEach((ch, i) => {
       const nib = document.createElement("span");
       nib.className = "magic-diary-char";
       nib.textContent = ch;
-      ink.appendChild(nib);
-      later(
-        tick,
-        /[。，！？、,.!?；;]/.test(ch)
-          ? 190
-          : /[\u1100-\uffef]/.test(ch)
-            ? 74
-            : 46,
-      );
-    }
-    later(tick, 100);
+      nib.style.animationDelay = `${Math.round(at)}ms`;
+      fragment.appendChild(nib);
+      at += weights[i] * CHAR_MS.latin * scale;
+    });
+    ink.appendChild(fragment);
+    later(() => {
+      if (!isCurrent(turn.id) || !ink.isConnected) return;
+      wrap.classList.remove("magic-diary-reply-writing");
+      wrap.classList.add("magic-diary-reply-settled");
+      dispatch({ type: "settle", id: turn.id });
+      // Start the reading time only after the last character is written.
+      later(() => leave(turn.id), DWELL_MS);
+    }, at + CHAR_IN_MS);
     return wrap;
   }
   function decorations(doc: ProseNode, current: DiaryState) {
@@ -355,6 +381,21 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
               return ghost;
             },
             { key: `ghost-${turn.id}`, side: -1, ignoreSelection: true },
+          ),
+          // Three drops of ink gathering where the answer will be, once the
+          // line has lifted off: something is coming, even from a slow model.
+          Decoration.widget(
+            current.composer,
+            () => {
+              const wait = document.createElement("span");
+              wait.className = "magic-diary-waiting";
+              wait.contentEditable = "false";
+              wait.setAttribute("aria-hidden", "true");
+              for (let i = 0; i < 3; i++)
+                wait.appendChild(document.createElement("i"));
+              return wait;
+            },
+            { key: `wait-${turn.id}`, side: -1, ignoreSelection: true },
           ),
         );
     }
@@ -466,6 +507,7 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
       },
       handleTextInput() {
         if (!options.enabled()) return false;
+        if (putAwaySettled()) return false;
         if (state()?.active !== null) return true;
         if (state()?.browsing !== null)
           dispatch({ type: "browse", index: null });
@@ -476,6 +518,9 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
       },
       handleDOMEvents: {
         beforeinput: (_view, event) => {
+          // Typing (an IME's too) after the answer is written puts it away
+          // and goes on with the next line, rather than waiting it out.
+          if (options.enabled() && putAwaySettled()) return false;
           if (options.enabled() && state()?.active !== null) {
             event.preventDefault();
             return true;
@@ -514,7 +559,18 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
             cancel();
             return true;
           }
-          // Input belongs to the reader again after the reply disappears.
+          // A written answer goes the moment the reader starts the next
+          // line; until it is written, input waits.
+          if (
+            (event.key.length === 1 ||
+              event.key === "Enter" ||
+              event.key === "Backspace") &&
+            !event.metaKey &&
+            !event.ctrlKey &&
+            !event.altKey &&
+            putAwaySettled()
+          )
+            return event.key === "Enter" || event.key === "Backspace";
           if (!event.metaKey && !event.ctrlKey && !event.altKey) {
             event.preventDefault();
             return true;
@@ -583,6 +639,11 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
         editorView.dispatch(tr);
         live = { id, requestId: `diary-${Date.now()}-${id}`, arrived: false };
         announce("absorbed");
+        later(() => {
+          if (live?.id !== id) return;
+          live.arrived = true;
+          revealWhenReady();
+        }, ARRIVAL_GRACE_MS);
         void ask(id, at.line);
         return true;
       },

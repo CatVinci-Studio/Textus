@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSettings } from "../../settings/SettingsContext";
 import { isMagicDiary } from "../../theme/builtin-themes";
 import {
+  DASH_STEP_MS,
   orbitLength,
   orbitPoint,
   STEP_MS,
@@ -317,10 +318,20 @@ export function FootprintLayer() {
         changeStage("leaving");
       }
     };
-    const timer = setInterval(tick, STEP_MS);
+    // The walker strolls the margins, but hurries to a line it has been
+    // called to: the answer should not wait on a slow walk.
+    let timer: ReturnType<typeof setTimeout>;
+    const loop = () => {
+      tick();
+      timer = setTimeout(
+        loop,
+        currentStage === "approach" ? DASH_STEP_MS : STEP_MS,
+      );
+    };
+    timer = setTimeout(loop, STEP_MS);
     window.addEventListener(MAGIC_DIARY_EVENT, onEvent);
     return () => {
-      clearInterval(timer);
+      clearTimeout(timer);
       window.removeEventListener(MAGIC_DIARY_EVENT, onEvent);
     };
   }, [on]);
