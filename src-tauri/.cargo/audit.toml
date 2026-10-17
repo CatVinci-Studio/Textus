@@ -1,0 +1,19 @@
+# cargo audit settings (run weekly by .github/workflows/audit.yml).
+#
+# Each ignored advisory says why it doesn't reach Textus and when to look
+# again. Remove an entry as soon as the dependency that pulls it in moves on.
+
+[advisories]
+ignore = [
+  # zip < 9: three flaws in ZipArchive::extract / ZipStreamReader::extract
+  # (symlinks, Unix permission bits). Textus never extracts archives to
+  # disk: our attachment reader and calamine read entries in memory. The
+  # only caller of extract is tauri-plugin-updater, on Windows, for legacy
+  # zip update bundles, after the signature check - and Windows has neither
+  # symlink entries nor Unix permission bits there. The latest
+  # tauri-plugin-updater and calamine still depend on zip 4/8; revisit when
+  # they move to zip 9 (checked 2026-10-17).
+  "RUSTSEC-2026-0367",
+  "RUSTSEC-2026-0368",
+  "RUSTSEC-2026-0369",
+]
