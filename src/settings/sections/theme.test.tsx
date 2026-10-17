@@ -60,7 +60,7 @@ describe("theme settings", () => {
         screen.getByRole("combobox", { name: t.contentThemeLabel }),
       );
       await screen.findByRole("option", { name: "Default" });
-      return screen.queryByRole("option", { name: "Magic Diary" });
+      return screen.queryByRole("option", { name: "✦ Magic Diary" });
     };
     connected.value = false;
     const { unmount } = render(<ThemeSection t={t} />);

@@ -283,7 +283,9 @@ export function ThemeSection({ t }: { t: Strings }) {
               offerDiary,
           ).map((theme) => (
             <option key={theme.id} value={theme.id}>
-              {t[theme.nameKey]}
+              {theme.id === MAGIC_DIARY_THEME
+                ? `✦ ${t[theme.nameKey]}`
+                : t[theme.nameKey]}
             </option>
           ))}
           {settings.userThemes.map((theme) => (
