@@ -10,8 +10,10 @@ import {
 } from "../ui/icons";
 import { isIOSApp } from "../platform/capabilities";
 import { Presence, PresenceDiv, type PresenceHandle } from "../ui/usePresence";
+import { ResizeHandle } from "../ui/ResizeHandle";
 import type { Strings } from "../i18n/strings";
 import type { PanelMode } from "./useSidePanels";
+import type { useSidebarWidth } from "./sidebar-width";
 
 /** The left sidebar (file tree, outline, clipboard, chat history) and, on
  *  iPhone, the scrim behind its drawer. Its open state lives in
@@ -23,6 +25,7 @@ export function Sidebar({
   spotlight,
   mode,
   onModeChange,
+  width,
   rootPath,
   activePath,
   activeContent,
@@ -38,6 +41,7 @@ export function Sidebar({
   spotlight: boolean;
   mode: PanelMode;
   onModeChange: (mode: PanelMode) => void;
+  width: ReturnType<typeof useSidebarWidth>;
   rootPath: string | null;
   activePath: string | null;
   activeContent: string;
@@ -129,6 +133,20 @@ export function Sidebar({
               {mode === "clipboard" && <ClipboardHistory />}
               {mode === "chat" && <ChatHistory />}
             </div>
+            {/* Its width is the user's to drag on a desktop; an iPad's
+              sidebar keeps the one the layout gives it. */}
+            {!isIOSApp && (
+              <ResizeHandle
+                className="sidebar-resizer"
+                edge="right"
+                width={width.width}
+                min={width.min}
+                max={width.max}
+                onResize={width.setWidth}
+                onReset={width.resetWidth}
+                label={t.sidebarResize}
+              />
+            )}
           </>
         )}
       </aside>

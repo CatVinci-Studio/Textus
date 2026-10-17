@@ -33,7 +33,7 @@ packaging/arch/*.pkg.tar.zst
 # Local API key for live AI tests - never committed
 .anthropic-api-key.local
 
-# Playwright output (npm run test:visual)
+# Playwright output (npm run test:e2e, test:visual, screenshots:*)
 test-results/
 playwright-report/
 *.tsbuildinfo

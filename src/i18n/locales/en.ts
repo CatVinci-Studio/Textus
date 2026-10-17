@@ -11,6 +11,7 @@ const en = {
   agentPanelToggle: "AI panel",
   agentPanelPopOut: "Open in a separate window",
   agentPanelResize: "Resize the AI panel",
+  sidebarResize: "Resize the sidebar",
   agentPanelSheet: "Expand or collapse the AI panel",
   agentExpandWindowLabel: "Open full conversations in a separate window",
   shortcutToggleAgentPanel: "Toggle AI panel",
@@ -157,6 +158,9 @@ type /name in a conversation to use one.
   shortcutToggleZenMode: "Toggle zen mode",
   zenExitHint: "Esc to leave zen mode",
   zenExitButton: "Leave Zen Mode",
+  /** File > Open's file-type choices besides Markdown. */
+  openDialogText: "Text files",
+  openDialogAll: "All files",
   agentPanelSourceMode: `${AI_NAME} works in the editor view. Switch back to keep the conversation going.`,
   agentPanelBackToEditor: "Back to the editor",
   modelTagVision: "vision",
