@@ -291,25 +291,6 @@ export async function triggerGhostTextNow(
   );
 }
 
-/// Shows a caller-supplied suggestion as ghost text at the caret, no backend
-/// involved - the onboarding tutorial's completion step uses this with a
-/// pre-written continuation so first-run users see the feature without an
-/// AI account. Tab-accept and clear-on-edit behave exactly like the real
-/// thing (same plugin state).
-export function showGhostSuggestion(
-  view: EditorView,
-  suggestion: string,
-): void {
-  const { selection } = view.state;
-  if (!selection.empty || view.composing || !suggestion) return;
-  view.dispatch(
-    view.state.tr.setMeta(
-      ghostTextKey,
-      ghostDecoration(view.state.doc, selection.from, suggestion),
-    ),
-  );
-}
-
 /** Tagged union (like pending-edit-plugin's PendingMeta) so the "set" arm
  *  carries its payload as required fields - no assertions at the read site. */
 type GhostMeta =
@@ -353,6 +334,8 @@ export function createGhostTextPlugin(options: {
   /** The project folder the completion takes its style profile and
    *  library from. */
   project: () => { docPath: string | null; workspaceRoot: string | null };
+  /** A suggestion was taken (Tab, a tap) - the tour's completion lesson. */
+  onAccept?: () => void;
 }) {
   const debounced = createDebouncedTask(DEBOUNCE_MS);
   // Set by an accept (Tab, a tap): the edit that inserts the suggestion
@@ -405,6 +388,7 @@ export function createGhostTextPlugin(options: {
               tr.setMeta(ghostTextKey, { type: "clear" });
               accepted = true;
               view.dispatch(tr);
+              options.onAccept?.();
               return true;
             },
           },
@@ -477,6 +461,7 @@ export function createGhostTextPlugin(options: {
             tr.setMeta(ghostTextKey, { type: "clear" });
             accepted = true;
             view.dispatch(tr);
+            options.onAccept?.();
             return true;
           },
         },
@@ -487,10 +472,10 @@ export function createGhostTextPlugin(options: {
               // span's ::before, see milkdown-theme.css) while the caret
               // sits exactly where a suggestion is showing: WebKit's caret
               // canonicalization otherwise paints the caret AFTER the
-              // suggestion. Runs before every early return below - mock
-              // suggestions (showGhostSuggestion) arrive while the plugin's
-              // own triggering is disabled, and the swap must still track
-              // the caret leaving/returning.
+              // suggestion. Runs before every early return below - a
+              // suggestion asked for by hand (triggerGhostTextNow) can
+              // arrive while the plugin's own triggering is off, and the
+              // swap must still track the caret leaving/returning.
               const ghost = ghostTextKey.getState(view.state);
               const pinned =
                 !!ghost?.suggestion &&

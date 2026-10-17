@@ -308,7 +308,6 @@
      dots then sit at full opacity - a "working" state that holds still. */
   .agent-thinking-dots span,
   .pending-insert-typing::after,
-  .tutorial-status-icon::before,
   .ghost-text::before,
   .pdf-export-spinner {
     animation: none !important;

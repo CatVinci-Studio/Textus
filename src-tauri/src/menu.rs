@@ -63,6 +63,9 @@ const HELP_DOC_PREFIX: &str = "help-doc:";
 /// Help > Join the Community: the website's community page, in the UI's
 /// language (the focused window opens it, knowing the language).
 const COMMUNITY_ID: &str = "help-community";
+/// Help > Video Tutorials: the website's tutorials page, in the UI's
+/// language - the same way round as Join the Community.
+const TUTORIALS_ID: &str = "help-tutorials";
 /// Format menu ids carry the block kind to insert: "insert-block:<kind>",
 /// where <kind> is one of h1..h6, bullet-list, ordered-list, blockquote,
 /// code-block, table - matching the frontend's INSERT_BLOCK_EVENT handler.
@@ -647,6 +650,7 @@ fn build(
         .separator()
         .text(markdown_id, markdown)
         .text(agent_id, agent)
+        .text(TUTORIALS_ID, l(TUTORIALS_ID, "Video Tutorials"))
         .separator()
         .text(COMMUNITY_ID, l(COMMUNITY_ID, "Join the Community"))
         .build()?;
@@ -778,6 +782,16 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
             );
         } else {
             let _ = commands::links::open_community(app_handle, None);
+        }
+    } else if id == TUTORIALS_ID {
+        if let Some(label) = focused_editor_window(app_handle) {
+            let _ = app_handle.emit_to(
+                EventTarget::webview_window(&label),
+                "menu-open-tutorials",
+                (),
+            );
+        } else {
+            let _ = commands::links::open_tutorials(app_handle, None, None);
         }
     } else if let Some(doc) = id.strip_prefix(HELP_DOC_PREFIX) {
         // A help doc opens as a tab in the focused window; with no window to

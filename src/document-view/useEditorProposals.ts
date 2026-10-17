@@ -17,8 +17,6 @@ import { isRefusal } from "../ai/revision/proposal-status";
 import type { EditProposal } from "../ai/types";
 import type { StreamEvent } from "../platform/ipc";
 import type { Settings } from "../settings/SettingsContext";
-import type { Strings } from "../i18n/strings";
-import { createTutorialMockAgent } from "../onboarding/tutorial-mock-agent";
 
 /** The editor's side of AI edits: the pending previews (usePendingEdits),
  *  the two conversations that propose them (the panel's and Quick Ask's),
@@ -29,16 +27,12 @@ export function useEditorProposals({
   settingsRef,
   settings,
   filePath,
-  tutorialMock,
-  t,
 }: {
   run: EditorRunner;
   pendingEditActionsRef: { current: PendingEditCallbacks };
   settingsRef: { readonly current: Settings };
   settings: Settings;
   filePath: string | null;
-  tutorialMock: boolean;
-  t: Strings;
 }) {
   const pendingEdits = usePendingEdits(run);
   useEffect(() => {
@@ -196,7 +190,6 @@ export function useEditorProposals({
     settings.aiProvider,
     settings.enableWebSearch,
     agentModel,
-    tutorialMock ? createTutorialMockAgent(t) : null,
     handleStreamEvent,
     pendingEdits.allStatuses,
   );
@@ -210,7 +203,6 @@ export function useEditorProposals({
     settings.aiProvider,
     settings.enableWebSearch,
     agentModel,
-    tutorialMock ? createTutorialMockAgent(t) : null,
     handleStreamEvent,
     pendingEdits.allStatuses,
     false,

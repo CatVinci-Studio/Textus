@@ -10,20 +10,72 @@ const SITE: &str = "https://textus.catvinci.com";
 /// invite, so a changed invite or a new week's WeChat code needs no app
 /// update.
 pub fn community_url(language: Option<&str>) -> String {
-    let dir = match language {
-        Some("en") => "",
-        Some("zh") => "zh/",
-        Some("zh-Hant") => "zh-hant/",
-        Some("ja") => "ja/",
-        Some("ko") => "ko/",
-        Some("es") => "es/",
-        Some("fr") => "fr/",
-        Some("de") => "de/",
-        Some("ru") => "ru/",
-        Some("pt") => "pt/",
-        _ => return format!("{SITE}/join"),
-    };
-    format!("{SITE}/{dir}community/")
+    match language.and_then(language_dir) {
+        Some(dir) => format!("{SITE}/{dir}community/"),
+        None => format!("{SITE}/join"),
+    }
+}
+
+/// The website's folder for a UI language (a code of LANGS in
+/// src/i18n/langs.ts): "" for English, which the site serves at its root.
+fn language_dir(language: &str) -> Option<&'static str> {
+    Some(match language {
+        "en" => "",
+        "zh" => "zh/",
+        "zh-Hant" => "zh-hant/",
+        "ja" => "ja/",
+        "ko" => "ko/",
+        "es" => "es/",
+        "fr" => "fr/",
+        "de" => "de/",
+        "ru" => "ru/",
+        "pt" => "pt/",
+        _ => return None,
+    })
+}
+
+/// The clips on the website's tutorials page, one per lesson of the
+/// first-run tour that has an animation. The tour's "Watch the animation"
+/// links name one of these (TUTORIAL_CLIPS in src/onboarding/tutorial-steps.ts
+/// - change both), and the page has an element with each as its id.
+const TUTORIAL_CLIPS: &[&str] = &[
+    "wysiwyg",
+    "blocks",
+    "modes-themes",
+    "sidebar-export",
+    "ai-panel",
+    "continuation",
+    "grammar",
+    "revision",
+    "review",
+    "skills",
+    "memory",
+];
+
+/// The website's video tutorials in the UI's `language` (English when there
+/// is none or it is unknown), at `clip` when one is named. None for a clip
+/// the page doesn't have.
+pub fn tutorials_url(clip: Option<&str>, language: Option<&str>) -> Option<String> {
+    let dir = language.and_then(language_dir).unwrap_or("");
+    let page = format!("{SITE}/{dir}tutorials/");
+    match clip {
+        None => Some(page),
+        Some(clip) => TUTORIAL_CLIPS
+            .contains(&clip)
+            .then(|| format!("{page}#{clip}")),
+    }
+}
+
+pub fn open_tutorials(
+    app: &tauri::AppHandle,
+    clip: Option<&str>,
+    language: Option<&str>,
+) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    let url = tutorials_url(clip, language).ok_or_else(|| "no such tutorial".to_string())?;
+    app.opener()
+        .open_url(url, None::<&str>)
+        .map_err(|e| e.to_string())
 }
 
 pub fn open_community(app: &tauri::AppHandle, language: Option<&str>) -> Result<(), String> {
@@ -64,9 +116,58 @@ pub async fn open_community_page(
     open_community(&app, language.as_deref())
 }
 
+/// Help > Video Tutorials, its row in Settings, and the tour's "Watch the
+/// animation" links, which name their `clip`.
+#[tauri::command]
+pub async fn open_tutorials_page(
+    app: tauri::AppHandle,
+    clip: Option<String>,
+    language: Option<String>,
+) -> Result<(), String> {
+    open_tutorials(&app, clip.as_deref(), language.as_deref())
+}
+
 #[cfg(test)]
 mod tests {
-    use super::community_url;
+    use super::{community_url, tutorials_url};
+
+    #[test]
+    fn every_tour_clip_opens_in_every_ui_language() {
+        for ui in crate::ai::ui_language::UI_LANGUAGES {
+            for clip in super::TUTORIAL_CLIPS {
+                let url = tutorials_url(Some(clip), Some(ui.code)).unwrap();
+                assert!(url.ends_with(&format!("tutorials/#{clip}")), "{url}");
+            }
+        }
+        assert_eq!(
+            tutorials_url(Some("grammar"), Some("en")).as_deref(),
+            Some("https://textus.catvinci.com/tutorials/#grammar")
+        );
+        assert_eq!(
+            tutorials_url(Some("ai-panel"), Some("zh-Hant")).as_deref(),
+            Some("https://textus.catvinci.com/zh-hant/tutorials/#ai-panel")
+        );
+        assert_eq!(
+            tutorials_url(None, Some("ja")).as_deref(),
+            Some("https://textus.catvinci.com/ja/tutorials/")
+        );
+    }
+
+    #[test]
+    fn tutorials_open_only_the_clips_the_page_has() {
+        assert!(tutorials_url(Some("https://example.com"), Some("en")).is_none());
+        assert!(tutorials_url(Some("grammar\"#x"), Some("en")).is_none());
+        assert!(tutorials_url(Some(""), Some("en")).is_none());
+        // An unknown language gets the English page, never a made-up folder.
+        assert_eq!(
+            tutorials_url(Some("memory"), Some("../evil")).as_deref(),
+            Some("https://textus.catvinci.com/tutorials/#memory")
+        );
+        assert_eq!(
+            tutorials_url(None, None).as_deref(),
+            Some("https://textus.catvinci.com/tutorials/")
+        );
+    }
 
     #[test]
     fn every_ui_language_has_its_community_page() {

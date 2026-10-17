@@ -35,6 +35,8 @@ export interface MenuBridgeHandlers {
   startWelcomeTutorial: () => void;
   /** Help > Join the Community: the website's page in the UI's language. */
   openCommunity: () => void;
+  /** Help > Video Tutorials: the website's page in the UI's language. */
+  openTutorials: () => void;
   /** The phone menu's Documents (mobile/DocumentList.tsx). */
   onOpenDocuments: () => void;
   /** The phone menu's Share (iOS share sheet). */
@@ -127,6 +129,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         );
       }),
       listenToThisWindow("menu-open-community", () => h().openCommunity()),
+      listenToThisWindow("menu-open-tutorials", () => h().openTutorials()),
       listenToThisWindow<string>("menu-open-help", (event) => {
         if (event.payload === "welcome") h().startWelcomeTutorial();
         else if (event.payload === "markdown" || event.payload === "agent")

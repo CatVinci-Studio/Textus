@@ -25,7 +25,7 @@ export async function createTestEditor(markdown: string): Promise<Editor> {
       getFocusedSentence: () => null,
     },
     { onMount() {}, onUnmount() {} },
-    { current: true },
+    { current: "muted" },
     () => "",
     async () => null,
   );

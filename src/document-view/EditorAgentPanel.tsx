@@ -22,7 +22,7 @@ export function EditorAgentPanel({
   t,
   settings,
   filePath,
-  tutorialMock,
+  onSkillUsed,
   agentPanel,
   conversation,
   pendingEdits,
@@ -42,7 +42,8 @@ export function EditorAgentPanel({
   t: Strings;
   settings: Settings;
   filePath: string | null;
-  tutorialMock: boolean;
+  /** A message went out through a skill (the tour's skills lesson). */
+  onSkillUsed?: () => void;
   agentPanel: AgentPanelFrame;
   conversation: AgentConversation;
   pendingEdits: PendingEdits;
@@ -107,7 +108,7 @@ export function EditorAgentPanel({
         conversation={conversation}
         defaultMode={settings.agentDefaultMode}
         defaultWebSearch={settings.enableWebSearch}
-        tutorialMock={tutorialMock}
+        onSkillUsed={onSkillUsed}
         labels={chatLabels(t, settings.language)}
         proposalStatus={pendingEdits.status}
         pendingCount={pendingEdits.decidable.length}

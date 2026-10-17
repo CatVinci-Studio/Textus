@@ -6,63 +6,61 @@ import appIcon from "../../src-tauri/icons/128x128@2x.png";
 
 interface TutorialOverlayLabels {
   back: string;
-  collapse?: string;
-  expand?: string;
+  collapse: string;
+  expand: string;
+  /** Leaves the whole tour. */
   skip: string;
   /** The per-lesson escape hatch shown while an exercise is incomplete. */
   skipStep: string;
-  practice: string;
-  learned: string;
-  courseSections: string;
-  /** "{item}" is replaced with the exercise text. */
-  skipItem: string;
-  /** "{i}"/"{n}" placeholders - screen-reader text for the progress rail. */
+  /** Heads the thing to do. */
+  tryIt: string;
+  chapters: string;
+  /** "{i}"/"{n}" placeholders - the step counter. */
   stepOfCount: string;
 }
 
-export interface TutorialChecklistItem {
-  label: string;
-  done: boolean;
-  onSkip?: () => void;
-}
-
-interface TutorialSectionNavItem {
+interface TutorialChapterNavItem {
   label: string;
   active: boolean;
   done: boolean;
 }
 
+interface TutorialButton {
+  label: string;
+  onClick: () => void;
+}
+
 interface TutorialOverlayProps {
-  /** Reading steps dim the app; practice steps leave the editor interactive. */
+  /** Opening, connecting and ending dim the app; lessons leave the editor
+   *  to work in, with the card at its side. */
   layout: "overlay" | "card";
   stepId: TutorialStepId;
   stepIndex: number;
   totalSteps: number;
-  sections: TutorialSectionNavItem[];
-  /** Chapter-local exercise number, e.g. AI exercises 01 through 04. */
-  activityNumber?: string;
+  chapters: TutorialChapterNavItem[];
   title: string;
+  /** The one sentence under the title. */
   body: string;
-  /** A literal phrase the learner should type/send. */
+  /** What to do. `code` spans (backticks) are what to type. */
   task?: string;
-  /** Several independently detected exercises, used by the Markdown lesson. */
-  checklist?: TutorialChecklistItem[];
-  /** The four skills previewed at the start and recapped at the end. */
-  roadmap?: string[];
-  /** Live one-line feedback under the exercise. */
+  /** One line of feedback on the exercise. */
   status?: string | null;
-  /** Lesson-specific controls under the body (the provider picker of the
-   *  "Connect your AI" lesson). */
-  children?: ReactNode;
-  waiting?: boolean;
   complete?: boolean;
-  primaryLabel: string;
-  primaryDisabled?: boolean;
-  onPrimary: () => void;
+  /** A quieter line under the exercise (watching instead of doing). */
+  note?: string | null;
+  /** The lesson's animation on the website, as a link; absent when it is
+   *  the primary action instead. */
+  watch?: TutorialButton | null;
+  /** Lesson-specific controls (the provider picker, the theme picker, the
+   *  ending's links). */
+  children?: ReactNode;
+  primary: TutorialButton & { disabled?: boolean };
+  /** A plain button before the primary one (Continue, while watching). */
+  secondary?: TutorialButton | null;
   onBack: () => void;
   onSkip: () => void;
-  /** Advance past THIS lesson without completing it. Rendered only while
-   *  the primary action is disabled - an exercise whose detection misfires
+  /** Advance past THIS lesson without completing it. Shown only while the
+   *  primary action is disabled - an exercise whose detection misfires
    *  must never leave "exit the whole guide" as the only way out. */
   onSkipStep?: () => void;
   labels: TutorialOverlayLabels;
@@ -70,43 +68,49 @@ interface TutorialOverlayProps {
 
 // The welcome step shows the app icon instead (see the header below).
 const STEP_GLYPHS: Record<Exclude<TutorialStepId, "welcome">, string> = {
-  markdownIntro: "M↓",
-  markdownPractice: "#",
-  sidebar: "◧",
-  aiIntro: "AI",
-  completion: "↹",
+  wysiwyg: "M↓",
+  blocks: "∑",
+  "modes-themes": "◐",
+  "sidebar-export": "◧",
+  connect: "⇄",
+  "ai-panel": "✦",
+  continuation: "↹",
   grammar: "✓",
-  agentChat: "…",
-  agentEdit: "✎",
-  connectAi: "⇄",
+  revision: "✎",
+  review: "❝",
+  skills: "/",
+  memory: "◎",
   done: "✓",
 };
 
+/** `text` with its backtick spans as code - what the learner types. */
+function withCode(text: string): ReactNode[] {
+  return text
+    .split("`")
+    .map((part, i) => (i % 2 === 1 ? <code key={i}>{part}</code> : part));
+}
+
 /**
- * A small lesson, not a tooltip: orientation, one concrete exercise, then
- * live feedback. Practice steps keep the editor available; reading steps use
- * the same visual language in a focused modal so the whole tour feels like
- * one continuous course.
+ * One lesson card: where you are, a title, one sentence, the one thing to
+ * do, and a link to watch it done. Lessons leave the editor usable beside
+ * the card; the opening, connecting and ending sit over a dimmed window.
  */
 export function TutorialOverlay({
   layout,
   stepId,
   stepIndex,
   totalSteps,
-  sections,
-  activityNumber,
+  chapters,
   title,
   body,
   task,
-  checklist,
-  roadmap,
   status,
-  children,
-  waiting,
   complete,
-  primaryLabel,
-  primaryDisabled,
-  onPrimary,
+  note,
+  watch,
+  children,
+  primary,
+  secondary,
   onBack,
   onSkip,
   onSkipStep,
@@ -114,13 +118,13 @@ export function TutorialOverlay({
 }: TutorialOverlayProps) {
   const titleId = useId();
   const bodyId = useId();
+  const contentId = useId();
   const primaryRef = useRef<HTMLButtonElement>(null);
   const modal = useModalDialog(onSkip, layout === "overlay");
   const [collapsedStep, setCollapsedStep] = useState<TutorialStepId | null>(
     null,
   );
   const collapsed = collapsedStep === stepId;
-  const contentId = useId();
   const progressLabel = labels.stepOfCount
     .replace("{i}", String(stepIndex + 1))
     .replace("{n}", String(totalSteps));
@@ -129,17 +133,24 @@ export function TutorialOverlay({
     if (layout === "overlay") primaryRef.current?.focus();
   }, [layout, stepIndex]);
 
-  const progress = (
-    <>
-      <div className="tutorial-section-nav" aria-label={labels.courseSections}>
-        {sections.map((section, index) => (
-          <div
-            className={`tutorial-section-nav-item${section.active ? " is-current" : ""}${section.done ? " is-done" : ""}`}
-            key={section.label}
+  const card = (
+    <div
+      {...modal}
+      className={`tutorial-surface tutorial-${layout} tutorial-step-${stepId} floating-surface`}
+      role="dialog"
+      aria-modal={layout === "overlay"}
+      aria-labelledby={titleId}
+      aria-describedby={collapsed ? undefined : bodyId}
+    >
+      <div className="tutorial-chapters" aria-label={labels.chapters}>
+        {chapters.map((chapter) => (
+          <span
+            className={`tutorial-chapter${chapter.active ? " is-current" : ""}${chapter.done ? " is-done" : ""}`}
+            aria-current={chapter.active ? "step" : undefined}
+            key={chapter.label}
           >
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            {section.label}
-          </div>
+            {chapter.label}
+          </span>
         ))}
       </div>
       <div
@@ -157,114 +168,6 @@ export function TutorialOverlay({
           />
         ))}
       </div>
-    </>
-  );
-
-  const actions = (
-    <div className="tutorial-actions">
-      <button type="button" className="tutorial-link-btn" onClick={onSkip}>
-        {labels.skip}
-      </button>
-      <div className="tutorial-actions-main">
-        {onSkipStep && primaryDisabled && (
-          <button
-            type="button"
-            className="tutorial-link-btn"
-            onClick={onSkipStep}
-          >
-            {labels.skipStep}
-          </button>
-        )}
-        {stepIndex > 0 && (
-          <button type="button" className="tutorial-btn" onClick={onBack}>
-            {labels.back}
-          </button>
-        )}
-        <button
-          ref={primaryRef}
-          type="button"
-          className="tutorial-btn tutorial-btn-primary"
-          onClick={onPrimary}
-          disabled={primaryDisabled}
-        >
-          {primaryLabel}
-          {!primaryDisabled && <span aria-hidden>→</span>}
-        </button>
-      </div>
-    </div>
-  );
-
-  const activity = (task || checklist) && (
-    <section className="tutorial-practice" aria-label={labels.practice}>
-      <div className="tutorial-section-label">
-        <span className="tutorial-section-number">{activityNumber}</span>
-        {labels.practice}
-      </div>
-      {task && <div className="tutorial-task-text">{task}</div>}
-      {checklist && (
-        <div className="tutorial-checklist">
-          {checklist.map((item, index) => (
-            <div
-              className={`tutorial-check${item.done ? " is-done" : ""}`}
-              key={index}
-            >
-              {item.done || !item.onSkip ? (
-                <span className="tutorial-check-icon" aria-hidden>
-                  {item.done ? "✓" : index + 1}
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  className="tutorial-check-icon tutorial-check-skip"
-                  aria-label={labels.skipItem.replace("{item}", item.label)}
-                  title={labels.skipItem.replace("{item}", item.label)}
-                  onClick={item.onSkip}
-                >
-                  {index + 1}
-                </button>
-              )}
-              <span>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-
-  const statusLine = status ? (
-    <div
-      className={`tutorial-status${complete ? " is-complete" : ""}`}
-      role="status"
-      aria-live="polite"
-    >
-      <span className="tutorial-status-icon" aria-hidden>
-        {complete ? "✓" : waiting ? "" : "→"}
-      </span>
-      <span>{status}</span>
-    </div>
-  ) : null;
-
-  const roadmapView = roadmap && (
-    <div className="tutorial-roadmap">
-      {roadmap.map((item, index) => (
-        <div className="tutorial-roadmap-item" key={item}>
-          <span>{String(index + 1).padStart(2, "0")}</span>
-          {item}
-        </div>
-      ))}
-    </div>
-  );
-
-  const card = (
-    <div
-      {...modal}
-      className={`tutorial-surface tutorial-${layout} tutorial-step-${stepId} floating-surface`}
-      role="dialog"
-      aria-modal={layout === "overlay"}
-      aria-labelledby={titleId}
-      aria-describedby={collapsed ? undefined : bodyId}
-    >
-      {progress}
       <header className="tutorial-header">
         {stepId === "welcome" ? (
           <img className="tutorial-glyph-icon" src={appIcon} alt="" />
@@ -279,7 +182,7 @@ export function TutorialOverlay({
             {title}
           </h2>
         </div>
-        {layout === "card" && labels.collapse && labels.expand && (
+        {layout === "card" && (
           <button
             type="button"
             className="tutorial-collapse"
@@ -299,15 +202,81 @@ export function TutorialOverlay({
         <p className="tutorial-body" id={bodyId}>
           {body}
         </p>
-        {roadmapView}
+        {task && (
+          <section
+            className={`tutorial-task${complete ? " is-complete" : ""}`}
+            aria-label={labels.tryIt}
+          >
+            <span className="tutorial-task-icon" aria-hidden>
+              {complete ? "✓" : "→"}
+            </span>
+            <span>{withCode(task)}</span>
+          </section>
+        )}
+        {status && (
+          <div
+            className={`tutorial-status${complete ? " is-complete" : ""}`}
+            role="status"
+            aria-live="polite"
+          >
+            {status}
+          </div>
+        )}
         {children}
-        {activity}
-        {statusLine}
-        {complete && layout === "card" && (
-          <div className="tutorial-learned">{labels.learned}</div>
+        {note && <p className="tutorial-note">{note}</p>}
+        {watch && (
+          <button
+            type="button"
+            className="tutorial-watch"
+            onClick={watch.onClick}
+          >
+            <span className="tutorial-watch-icon" aria-hidden>
+              ▶
+            </span>
+            {watch.label}
+            <span aria-hidden>↗</span>
+          </button>
         )}
       </div>
-      {actions}
+      <div className="tutorial-actions">
+        <button type="button" className="tutorial-link-btn" onClick={onSkip}>
+          {labels.skip}
+        </button>
+        <div className="tutorial-actions-main">
+          {onSkipStep && primary.disabled && (
+            <button
+              type="button"
+              className="tutorial-link-btn"
+              onClick={onSkipStep}
+            >
+              {labels.skipStep}
+            </button>
+          )}
+          {stepIndex > 0 && (
+            <button type="button" className="tutorial-btn" onClick={onBack}>
+              {labels.back}
+            </button>
+          )}
+          {secondary && (
+            <button
+              type="button"
+              className="tutorial-btn"
+              onClick={secondary.onClick}
+            >
+              {secondary.label}
+            </button>
+          )}
+          <button
+            ref={primaryRef}
+            type="button"
+            className="tutorial-btn tutorial-btn-primary"
+            onClick={primary.onClick}
+            disabled={primary.disabled}
+          >
+            {primary.label}
+          </button>
+        </div>
+      </div>
     </div>
   );
 

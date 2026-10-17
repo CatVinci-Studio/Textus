@@ -93,26 +93,6 @@ export async function triggerGrammarCheckNow(
   );
 }
 
-/// Underlines a PRE-WRITTEN set of issues in the cursor's paragraph - the
-/// decoration half of triggerGrammarCheckNow above, without the backend
-/// call. Used by the onboarding tutorial's grammar step, which has no AI
-/// account to call yet.
-export function showGrammarIssues(
-  view: EditorView,
-  issues: GrammarIssue[],
-): void {
-  const { $from } = view.state.selection;
-  const para = $from.parent;
-  if (!para.isTextblock) return;
-  const contentStart = $from.start($from.depth);
-  view.dispatch(
-    view.state.tr.setMeta(
-      grammarKey,
-      paragraphMeta(contentStart, para, issues),
-    ),
-  );
-}
-
 /// What grammar meta a transaction can carry. Each check replaces the issues
 /// of the ONE paragraph it checked - checking paragraph B used to replace the
 /// whole set, wiping A's underlines the moment the user typed elsewhere.

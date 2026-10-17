@@ -1,81 +1,63 @@
 import { describe, expect, it } from "vitest";
 import {
-  anchorGrammarIssues,
-  evaluateMarkdownTasks,
-  isTutorialPracticeComplete,
-  MARKDOWN_ALL_TASKS,
-  MARKDOWN_TASK,
+  evaluateWysiwyg,
+  hasBlock,
+  isLessonComplete,
+  MODES_PART,
+  WYSIWYG_PART,
 } from "./tutorial-evaluation";
+import { practiceDiary, withPracticeDiary } from "./practice-diary";
+import { LANGS } from "../i18n/strings";
 
-describe("evaluateMarkdownTasks", () => {
-  it("detects every exercise independently", () => {
-    expect(evaluateMarkdownTasks("# Heading")).toBe(MARKDOWN_TASK.heading);
-    expect(evaluateMarkdownTasks("## Heading")).toBe(MARKDOWN_TASK.subheading);
-    expect(evaluateMarkdownTasks("**important**")).toBe(MARKDOWN_TASK.bold);
-    expect(evaluateMarkdownTasks("*important*")).toBe(MARKDOWN_TASK.italic);
-    expect(evaluateMarkdownTasks("==important==")).toBe(
-      MARKDOWN_TASK.highlight,
+describe("the WYSIWYG lesson", () => {
+  it("sees a level-one heading and a list, each on its own", () => {
+    expect(evaluateWysiwyg("# Three days in Kyoto")).toBe(WYSIWYG_PART.heading);
+    expect(evaluateWysiwyg("- Passport")).toBe(WYSIWYG_PART.list);
+    expect(evaluateWysiwyg("1. Passport")).toBe(WYSIWYG_PART.list);
+    expect(evaluateWysiwyg("* [ ] Passport")).toBe(WYSIWYG_PART.list);
+    expect(evaluateWysiwyg("# 京都三日\n\n- 护照\n- 相机")).toBe(3);
+  });
+
+  it("wants a heading with text, and a level-one one", () => {
+    expect(evaluateWysiwyg("#\n## Day one\n-\n")).toBe(0);
+  });
+});
+
+describe("the blocks lesson", () => {
+  it("takes a table, a formula or a diagram", () => {
+    expect(hasBlock("| Day | Where |\n| --- | --- |\n| 1 | Inari |")).toBe(
+      true,
     );
-    expect(evaluateMarkdownTasks("`detail`")).toBe(MARKDOWN_TASK.code);
-    expect(evaluateMarkdownTasks("$E=mc^2$")).toBe(MARKDOWN_TASK.formula);
+    expect(hasBlock("| Day | Where |\n|:-|-:|")).toBe(true);
+    expect(hasBlock("Cost: $E=mc^2$")).toBe(true);
+    expect(hasBlock("```mermaid\ngraph LR\n```")).toBe(true);
   });
 
-  it("combines tasks regardless of their order", () => {
-    const page =
-      "$E=mc^2$\n`detail`\n==highlight==\n*italic*\n**bold**\n## Subheading\n# Heading";
-    expect(evaluateMarkdownTasks(page)).toBe(MARKDOWN_ALL_TASKS);
-  });
-
-  it("does not accept empty delimiters or a hash without heading text", () => {
-    expect(evaluateMarkdownTasks("#\n##\n****\n**\n====\n``\n$$")).toBe(0);
+  it("finds none in the diary itself", () => {
+    for (const lang of LANGS) {
+      const diary = practiceDiary(lang);
+      expect(hasBlock(withPracticeDiary("", diary)), lang).toBe(false);
+    }
   });
 });
 
-describe("anchorGrammarIssues", () => {
-  const target = "He go to school every day";
-  const issue = {
-    start: 3,
-    end: 5,
-    issue: "verb agreement",
-    suggestion: "goes",
-    original: "go",
-  };
-
-  it("keeps offsets untouched when the sentence is the whole paragraph", () => {
-    expect(anchorGrammarIssues(target, { target, issues: [issue] })).toEqual([
-      issue,
-    ]);
+describe("isLessonComplete", () => {
+  it("wants both parts of a two-part lesson", () => {
+    expect(isLessonComplete("wysiwyg", WYSIWYG_PART.heading)).toBe(false);
+    expect(isLessonComplete("wysiwyg", 3)).toBe(true);
+    expect(isLessonComplete("modes-themes", MODES_PART.theme)).toBe(false);
+    expect(isLessonComplete("modes-themes", 3)).toBe(true);
   });
 
-  it("shifts offsets when the sentence follows earlier paragraph text", () => {
-    const [anchored] = anchorGrammarIssues(`Earlier words. ${target}`, {
-      target,
-      issues: [issue],
-    });
-    expect(anchored.start).toBe(15 + 3);
-    expect(anchored.end).toBe(15 + 5);
+  it("never gates the opening, connecting or the end", () => {
+    for (const id of ["welcome", "connect", "done"] as const)
+      expect(isLessonComplete(id, 0)).toBe(true);
   });
 
-  it("counts the prefix in Unicode scalars, not UTF-16 units", () => {
-    const [anchored] = anchorGrammarIssues(`🎉🎉 ${target}`, {
-      target,
-      issues: [issue],
-    });
-    // Two emoji (one scalar each, two UTF-16 units each) plus a space.
-    expect(anchored.start).toBe(3 + 3);
-  });
-});
-
-describe("isTutorialPracticeComplete", () => {
-  it("keeps each interactive lesson locked until its real success phase", () => {
-    expect(isTutorialPracticeComplete("markdownPractice", 126)).toBe(false);
-    expect(isTutorialPracticeComplete("markdownPractice", 127)).toBe(true);
-    expect(isTutorialPracticeComplete("completion", 1)).toBe(false);
-    expect(isTutorialPracticeComplete("completion", 2)).toBe(true);
-    expect(isTutorialPracticeComplete("grammar", 2)).toBe(true);
-    expect(isTutorialPracticeComplete("agentChat", 0)).toBe(false);
-    expect(isTutorialPracticeComplete("agentChat", 1)).toBe(true);
-    expect(isTutorialPracticeComplete("agentEdit", 2)).toBe(false);
-    expect(isTutorialPracticeComplete("agentEdit", 3)).toBe(true);
+  it("gates every other lesson until it is done", () => {
+    for (const id of ["blocks", "ai-panel", "grammar", "memory"] as const) {
+      expect(isLessonComplete(id, 0)).toBe(false);
+      expect(isLessonComplete(id, 1)).toBe(true);
+    }
   });
 });

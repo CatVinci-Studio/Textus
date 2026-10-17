@@ -548,6 +548,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuHelpMarkdown: "Markdown-Anleitung",
   menuHelpAgent: "Anleitung zu KI-Funktionen",
   menuHelpCommunity: "Zur Community",
+  menuHelpTutorials: "Video-Tutorials",
   windowMinimize: "Minimieren",
   windowMaximize: "Maximieren",
   windowRestore: "Wiederherstellen",
@@ -626,106 +627,84 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   untitledTab: "Unbenannt",
   markdownGuideTab: "Markdown-Anleitung",
   agentGuideTab: "Anleitung zu KI-Funktionen",
-  tutorialStepOfCount: "Lektion {i} von {n}",
-  tutorialCourseSections: "Kapitel der Einführung",
-  tutorialSectionMarkdown: "Markdown-Grundlagen",
-  tutorialSectionWorkspace: "Orientierung",
-  tutorialSidebarTitle: "Die Seitenleiste",
-  tutorialSidebarBody:
-    "Die Seitenleiste links ist hier schon für dich geöffnet; blende sie jederzeit mit {shortcut} oder über das Menü „Ansicht“ ein und aus. Klicke nacheinander auf ihre vier Tabs, um zu sehen, was sie enthalten.",
-  tutorialSidebarTree:
-    "Dateien: der Ordner des geöffneten Dokuments. Klicke auf eine Datei, um sie zu öffnen, auf ↑, um eine Ebene höher zu gehen, und doppelklicke auf einen Ordner, um hineinzuwechseln.",
-  tutorialSidebarOutline:
-    "Gliederung: die Überschriften des Dokuments. Klicke auf eine, um dorthin zu springen; die Pfeile klappen Abschnitte ein und aus.",
-  tutorialSidebarClipboard:
-    "Zwischenablage: was du zuletzt kopiert hast. Klicke auf einen Eintrag, um ihn am Cursor einzufügen.",
-  tutorialSidebarChat:
-    "Chats: frühere KI-Unterhaltungen. Klicke auf eine, um dort weiterzumachen, wo du aufgehört hast.",
-  tutorialSidebarDone: "Du hast alle Tabs gesehen.",
-  tutorialSectionAi: "Schreiben mit\u00a0KI",
+  tutorialStepOfCount: "Schritt {i} von {n}",
+  tutorialChapters: "Kapitel der Einführung",
+  tutorialChapterStart: "Start",
+  tutorialChapterWriting: "Schreiben",
+  tutorialChapterConnect: "KI verbinden",
+  tutorialChapterAi: AI_NAME,
+  tutorialChapterDone: "Fertig",
   tutorialBack: "Zurück",
   tutorialNext: "Weiter",
-  tutorialStart: "Einführung starten",
+  tutorialStart: "Los geht's",
   tutorialFinish: "Losschreiben",
   tutorialSkip: "Einführung beenden",
   tutorialSkipStep: "Überspringen",
-  tutorialPractice: "Übung",
-  tutorialShortcut: "Tastenkürzel: {shortcut}",
   tutorialCollapse: "Minimieren",
   tutorialExpand: "Anleitung einblenden",
-  tutorialSkipItem: "Übung überspringen: {item}",
-  tutorialLearned: "Bereit zum Weitermachen",
+  tutorialTryIt: "Probier's aus",
+  tutorialWatch: "Animation ansehen",
+  tutorialWatchNote:
+    "Verbinde später unter {path} eine KI, um es selbst auszuprobieren.",
   tutorialWelcomeTitle: `Willkommen bei ${APP_NAME}`,
-  tutorialWelcomeBody: `${APP_NAME} bearbeitet Markdown und zeigt die Formatierung schon beim Tippen. Probiere Überschriften, Textauszeichnungen und KI-Funktionen aus. Du kannst jeden Schritt überspringen und jederzeit aufhören.`,
-  tutorialRoadmapAiTools: "KI-Vervollständigung und Grammatikkorrektur",
-  tutorialMarkdownIntroTitle: "Was ist Markdown?",
-  tutorialMarkdownIntroBody: `Markdown formatiert mit Sonderzeichen. Beginne eine Zeile mit # und einem Leerzeichen für eine Überschrift, oder umschließe Text mit ** für Fettdruck. ${APP_NAME} zeigt das Ergebnis schon beim Tippen.`,
-  tutorialMarkdownPracticeTitle: "Markdown ausprobieren",
-  tutorialMarkdownPracticeBody:
-    "Tippe diese Beispiele in beliebiger Reihenfolge in den Editor. Klicke auf die Nummer eines Punkts, um ihn zu überspringen. Minimiere die Anleitung, wenn sie deinen Text verdeckt.",
-  tutorialMarkdownStepHeading: "Tippe # Überschrift erster Ebene",
-  tutorialMarkdownStepSubheading:
-    "Tippe in der nächsten Zeile ## Überschrift zweiter Ebene",
-  tutorialMarkdownStepBold: "Tippe **eine wichtige Idee**",
-  tutorialMarkdownStepItalic: "Tippe *ein paar kursive Wörter*",
-  tutorialMarkdownStepHighlight: "Tippe ==das ist wichtig==",
-  tutorialMarkdownStepCode: 'Tippe `print("hello")`',
-  tutorialMarkdownStepFormula: "Tippe $E=mc^2$",
-  tutorialMarkdownDone: "Alle Übungen sind erledigt oder übersprungen.",
-  tutorialAiIntroTitle: "Schreiben mit\u00a0KI",
-  tutorialAiIntroBody: `Probiere Vervollständigung, Grammatikprüfung, Chat und Änderungen am Dokument aus. Diese Einführung nutzt vorbereitete Beispiele und braucht keine Anmeldung. Für die normale Nutzung verbindest du unter Einstellungen > ${AI_NAME} einen Dienst.`,
-  tutorialCompletionTitle: "Textvervollständigung",
-  tutorialCompletionBody:
-    "Vorschläge erscheinen in Grau. Drücke Tab, um einen zu übernehmen, oder tippe weiter, um ihn zu verwerfen. Du kannst einen Vorschlag auch über das Kontextmenü anfordern.",
-  tutorialCompletionTarget: "Das Wetter ist heute",
-  tutorialCompletionSuggestion:
-    " sonnig und mild, genau richtig für einen Spaziergang.",
-  tutorialCompletionWaiting: "Tippe den Text unten und warte kurz.",
-  tutorialCompletionGhostShown:
-    "Drücke Tab, um den grauen Vorschlag zu übernehmen.",
-  tutorialCompletionAccepted: "Vorschlag übernommen.",
+  tutorialWelcomeBody: "Wir zeigen dir alles an einem Reisetagebuch.",
+  tutorialWysiwygTitle: "Was du siehst, bekommst du",
+  tutorialWysiwygBody: "Markdown wird beim Schreiben formatiert.",
+  tutorialWysiwygTask: "Tippe `# {title}` und schreib dann eine Liste.",
+  tutorialBlocksTitle: "Formeln, Tabellen, Diagramme",
+  tutorialBlocksBody: "Ein paar Zeilen Text zeichnen sie.",
+  tutorialBlocksTask: "Schreib deine Reiseroute als Tabelle.",
+  tutorialModesTitle: "Schreibmodi und Designs",
+  tutorialModesBody: "Anders schreiben, anders aussehen.",
+  tutorialModesTask: "Schalte den Zen-Modus ein und wähl ein anderes Design.",
+  tutorialSidebarTitle: "Seitenleiste und Export",
+  tutorialSidebarBody:
+    "Dateien und Gliederung links; exportieren, wenn du fertig bist.",
+  tutorialSidebarTask:
+    "Öffne die Seitenleiste ({shortcut}) und sieh dir die Gliederung an.",
+  tutorialSidebarTaskPhone:
+    "Öffne die Seitenleiste über das Menü und sieh dir die Gliederung an.",
+  tutorialConnectTitle: "KI verbinden",
+  tutorialConnectBody:
+    "Ist sie verbunden, kannst du das Folgende wirklich ausprobieren.",
+  tutorialConnectTask:
+    "Melde dich an oder füge einen Schlüssel ein - oder überspring es vorerst.",
+  tutorialConnectSkip: "Später",
+  tutorialConnected: "Verbunden.",
+  tutorialAiPanelTitle: "Der KI-Bereich",
+  tutorialAiPanelBody: "Hier wohnt dein Schreibassistent.",
+  tutorialAiPanelTask: "Drück {shortcut}, um den Bereich zu öffnen.",
+  tutorialAiPanelTaskPhone:
+    "Tippe oben auf die Taste des KI-Bereichs, um ihn zu öffnen.",
+  tutorialContinuationTitle: "Vervollständigung",
+  tutorialContinuationBody:
+    "Halte kurz inne, und sie schreibt für dich weiter.",
+  tutorialContinuationTask:
+    "Schreib am Ende des Tagebuchs weiter, halte inne und nimm mit Tab an.",
+  tutorialContinuationTaskPhone:
+    "Schreib am Ende des Tagebuchs weiter, halte inne und tippe auf den grauen Text.",
   tutorialGrammarTitle: "Grammatikprüfung",
-  tutorialGrammarBody:
-    "Mögliche Fehler werden unterstrichen. Bewege den Zeiger auf eine Unterstreichung, um den Grund zu sehen und zu entscheiden, ob du die Änderung übernimmst.",
-  tutorialGrammarTarget: "Ich hoffe, das du morgen Zeit hast",
-  tutorialGrammarOriginal: "das",
-  tutorialGrammarIssue: "Verwechslung von „das“ und „dass“",
-  tutorialGrammarSuggestion: "dass",
-  tutorialGrammarWaiting: "Tippe den Satz unten.",
-  tutorialGrammarShown:
-    "Bewege den Zeiger auf die Unterstreichung und klicke auf „Übernehmen“.",
-  tutorialGrammarFixed: "Änderung übernommen.",
-  tutorialAgentChatTitle: "KI fragen",
-  tutorialAgentChatBody:
-    "Klicke mit der rechten Maustaste und wähle „KI fragen…“, um eine Unterhaltung zu öffnen. Dein aktuelles Dokument wird mit der Frage mitgeschickt.",
-  tutorialAgentChatPrompt: "Gib mir drei schnelle Markdown-Tipps",
-  tutorialAgentChatWaiting: "Öffne die Unterhaltung und sende die Frage unten.",
-  tutorialAgentChatReplied: "Nachricht gesendet.",
-  tutorialAgentChatMockReply:
-    "Hier sind drei schnelle Markdown-Tipps:\n\n1. Setze zwei Sternchen vor und hinter wichtigen Text, um ihn **fett** zu machen.\n2. Beginne eine Zeile mit `-` und einem Leerzeichen, um eine Liste anzulegen.\n3. Gliedere ein Dokument mit den Überschriften `#`, `##` und `###`.",
-  tutorialAgentEditTitle: "Dokument bearbeiten",
-  tutorialAgentEditBody:
-    "Änderungen erscheinen als Vorschau. Nimm eine Änderung an, um sie ins Dokument zu übernehmen, oder lehne sie ab.",
-  tutorialAgentEditTarget:
-    "Hiermit möchte ich Ihnen mitteilen, dass die Besprechung morgen Nachmittag um drei Uhr beginnen wird.",
-  tutorialAgentEditPrompt: "Kürze diesen Satz.",
-  tutorialAgentEditSuggestion: "Die Besprechung beginnt morgen um 15 Uhr.",
-  tutorialAgentEditWaiting: "Tippe zuerst den Satz unten in den Editor.",
-  tutorialAgentEditReady:
-    "Klicke mit der rechten Maustaste, wähle „KI fragen…“ und sende dann die Anweisung unten.",
-  tutorialAgentEditProposed: "Prüfe die Vorschau und klicke auf „Annehmen“.",
-  tutorialAgentEditApplied: "Das Dokument wurde aktualisiert.",
-  tutorialAgentEditMockReply:
-    "Die überflüssige Einleitung ist gestrichen. Prüfe die Vorschau der Änderung.",
-  tutorialConnectAiTitle: "KI verbinden",
-  tutorialConnectAiBody:
-    "Die Übungen nutzten Beispielantworten. Verbinde einen Anbieter, dann funktionieren Vervollständigung, Grammatikprüfung und der Assistent wirklich.",
-  tutorialConnectAiConnected:
-    "Verbunden. Die KI-Funktionen nutzen diesen Anbieter.",
-  tutorialConnectAiSkip: "Später",
-  tutorialConnectAiLater: "Du kannst das auch später unter {path} erledigen.",
-  tutorialDoneTitle: "Einführung abgeschlossen",
-  tutorialDoneBody: `Jetzt kannst du losschreiben. Um die KI zu nutzen, verbinde unter Einstellungen > ${AI_NAME} einen Dienst. Diese Einführung findest du jederzeit wieder im Menü „Hilfe“.`,
+  tutorialGrammarBody: "Flüchtigkeitsfehler werden unterstrichen.",
+  tutorialGrammarTask:
+    "Öffne die Karte an der Unterstreichung und übernimm die Korrektur.",
+  tutorialGrammarQuiet:
+    "Diesmal hat die KI nichts zu korrigieren gefunden. Du kannst weitermachen.",
+  tutorialRevisionTitle: "Überarbeiten",
+  tutorialRevisionBody:
+    "Lass einen Absatz überarbeiten und entscheide Satz für Satz.",
+  tutorialRevisionTask:
+    "Markiere einen Absatz und bitte die KI, ihn lebendiger zu machen.",
+  tutorialReviewTitle: "Lektorat",
+  tutorialReviewBody: "Vorschläge erscheinen am Rand.",
+  tutorialReviewTask: "Bitte die KI um Vorschläge zu diesem Tagebuch.",
+  tutorialSkillsTitle: "Integrierte Skills",
+  tutorialSkillsBody: "Tippe /, um sie zu nutzen.",
+  tutorialSkillsTask: "Probier `/kürzen` oder `/übersetzen` im Bereich.",
+  tutorialMemoryTitle: "Wächst mit der Zeit",
+  tutorialMemoryBody: "Sie merkt sich deinen Stil und deine Wünsche.",
+  tutorialMemoryTask: "Öffne Gedächtnis und sieh nach, was sie sich merkt.",
+  tutorialDoneTitle: "Fertig",
+  tutorialDoneBody: "Jetzt schreib dein Eigenes.",
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",
   closePromptSave: "Speichern",
   closePromptDiscard: "Nicht speichern",

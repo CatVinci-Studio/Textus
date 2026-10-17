@@ -1,139 +1,241 @@
 import type { TextKey } from "../i18n/strings";
 
-type TutorialSectionId = "markdown" | "workspace" | "ai";
+/**
+ * The first-run tour, laid out like the website: the four things about
+ * writing, connecting an AI, then the six kinds of Textus AI with the
+ * panel they live in. Every lesson is one card - a title, one sentence,
+ * one thing to do, and a link to its animation on the website.
+ */
+
+type TutorialChapterId = "start" | "writing" | "connect" | "ai" | "done";
 
 export type TutorialStepId =
   | "welcome"
-  | "markdownIntro"
-  | "markdownPractice"
-  | "sidebar"
-  | "aiIntro"
-  | "completion"
+  | "wysiwyg"
+  | "blocks"
+  | "modes-themes"
+  | "sidebar-export"
+  | "connect"
+  | "ai-panel"
+  | "continuation"
   | "grammar"
-  | "agentChat"
-  | "agentEdit"
-  | "connectAi"
+  | "revision"
+  | "review"
+  | "skills"
+  | "memory"
   | "done";
 
-export interface TutorialSection {
-  id: TutorialSectionId;
+/** The lessons with an animation on the website's tutorials page, by the
+ *  id of its clip there. Rust opens the page and accepts only these
+ *  (TUTORIAL_CLIPS in src-tauri/src/commands/links.rs - change both). */
+export type TutorialClipId = Exclude<
+  TutorialStepId,
+  "welcome" | "connect" | "done"
+>;
+
+export interface TutorialChapter {
+  id: TutorialChapterId;
   titleKey: TextKey;
 }
 
 export interface TutorialStep {
   id: TutorialStepId;
-  /** Opening and ending frame the two chapters rather than belonging to one. */
-  section: TutorialSectionId | null;
+  chapter: TutorialChapterId;
+  /** Opening, connecting and ending dim the app; lessons leave the editor
+   *  to work in, the card at its side. */
   layout: "overlay" | "card";
   titleKey: TextKey;
+  /** The one sentence under the title. */
   bodyKey: TextKey;
+  /** What to do, when the lesson asks for something. */
+  taskKey?: TextKey;
+  /** Its clip on the website's tutorials page, when it has one. */
+  clip?: TutorialClipId;
+  /** A Textus AI lesson: with no AI connected it is watched, not done. */
+  ai?: boolean;
 }
 
-/**
- * The first-run experience has three visible chapters. Each entry in
- * TUTORIAL_STEPS is one independently navigable lesson card inside a
- * chapter; reading lessons use a focused overlay while exercises keep the
- * editor interactive underneath.
- */
-export const TUTORIAL_SECTIONS: TutorialSection[] = [
-  { id: "markdown", titleKey: "tutorialSectionMarkdown" },
-  { id: "workspace", titleKey: "tutorialSectionWorkspace" },
-  { id: "ai", titleKey: "tutorialSectionAi" },
+export const TUTORIAL_CHAPTERS: TutorialChapter[] = [
+  { id: "start", titleKey: "tutorialChapterStart" },
+  { id: "writing", titleKey: "tutorialChapterWriting" },
+  { id: "connect", titleKey: "tutorialChapterConnect" },
+  { id: "ai", titleKey: "tutorialChapterAi" },
+  { id: "done", titleKey: "tutorialChapterDone" },
 ];
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: "welcome",
-    section: null,
+    chapter: "start",
     layout: "overlay",
     titleKey: "tutorialWelcomeTitle",
     bodyKey: "tutorialWelcomeBody",
   },
   {
-    id: "markdownIntro",
-    section: "markdown",
-    layout: "overlay",
-    titleKey: "tutorialMarkdownIntroTitle",
-    bodyKey: "tutorialMarkdownIntroBody",
-  },
-  {
-    id: "markdownPractice",
-    section: "markdown",
+    id: "wysiwyg",
+    chapter: "writing",
     layout: "card",
-    titleKey: "tutorialMarkdownPracticeTitle",
-    bodyKey: "tutorialMarkdownPracticeBody",
+    titleKey: "tutorialWysiwygTitle",
+    bodyKey: "tutorialWysiwygBody",
+    taskKey: "tutorialWysiwygTask",
+    clip: "wysiwyg",
   },
   {
-    // The sidebar starts collapsed and its four tabs are icons only, so a
-    // newcomer had no way to learn it existed, let alone what each tab is
-    // for. Opens it and has the learner visit each tab.
-    id: "sidebar",
-    section: "workspace",
+    id: "blocks",
+    chapter: "writing",
+    layout: "card",
+    titleKey: "tutorialBlocksTitle",
+    bodyKey: "tutorialBlocksBody",
+    taskKey: "tutorialBlocksTask",
+    clip: "blocks",
+  },
+  {
+    id: "modes-themes",
+    chapter: "writing",
+    layout: "card",
+    titleKey: "tutorialModesTitle",
+    bodyKey: "tutorialModesBody",
+    taskKey: "tutorialModesTask",
+    clip: "modes-themes",
+  },
+  {
+    id: "sidebar-export",
+    chapter: "writing",
     layout: "card",
     titleKey: "tutorialSidebarTitle",
     bodyKey: "tutorialSidebarBody",
+    taskKey: "tutorialSidebarTask",
+    clip: "sidebar-export",
   },
   {
-    id: "aiIntro",
-    section: "ai",
+    // The Settings › Textus AI provider controls, as they are there. Never
+    // a gate: leaving it decides whether the AI lessons are done for real
+    // or watched (useTutorial's aiMode).
+    id: "connect",
+    chapter: "connect",
     layout: "overlay",
-    titleKey: "tutorialAiIntroTitle",
-    bodyKey: "tutorialAiIntroBody",
+    titleKey: "tutorialConnectTitle",
+    bodyKey: "tutorialConnectBody",
+    taskKey: "tutorialConnectTask",
   },
   {
-    id: "completion",
-    section: "ai",
+    // Opens the real panel whether or not an AI is connected: it is where
+    // the next lessons happen, and it works without one.
+    id: "ai-panel",
+    chapter: "ai",
     layout: "card",
-    titleKey: "tutorialCompletionTitle",
-    bodyKey: "tutorialCompletionBody",
+    titleKey: "tutorialAiPanelTitle",
+    bodyKey: "tutorialAiPanelBody",
+    taskKey: "tutorialAiPanelTask",
+    clip: "ai-panel",
+    ai: true,
+  },
+  {
+    id: "continuation",
+    chapter: "ai",
+    layout: "card",
+    titleKey: "tutorialContinuationTitle",
+    bodyKey: "tutorialContinuationBody",
+    taskKey: "tutorialContinuationTask",
+    clip: "continuation",
+    ai: true,
   },
   {
     id: "grammar",
-    section: "ai",
+    chapter: "ai",
     layout: "card",
     titleKey: "tutorialGrammarTitle",
     bodyKey: "tutorialGrammarBody",
+    taskKey: "tutorialGrammarTask",
+    clip: "grammar",
+    ai: true,
   },
   {
-    id: "agentChat",
-    section: "ai",
+    id: "revision",
+    chapter: "ai",
     layout: "card",
-    titleKey: "tutorialAgentChatTitle",
-    bodyKey: "tutorialAgentChatBody",
+    titleKey: "tutorialRevisionTitle",
+    bodyKey: "tutorialRevisionBody",
+    taskKey: "tutorialRevisionTask",
+    clip: "revision",
+    ai: true,
   },
   {
-    id: "agentEdit",
-    section: "ai",
+    id: "review",
+    chapter: "ai",
     layout: "card",
-    titleKey: "tutorialAgentEditTitle",
-    bodyKey: "tutorialAgentEditBody",
+    titleKey: "tutorialReviewTitle",
+    bodyKey: "tutorialReviewBody",
+    taskKey: "tutorialReviewTask",
+    clip: "review",
+    ai: true,
   },
   {
-    // Every exercise above ran on scripted replies (the real AI is muted
-    // for the whole tour), so the chapter ends by offering the real thing:
-    // the same provider controls as Settings, never blocking.
-    id: "connectAi",
-    section: "ai",
-    layout: "overlay",
-    titleKey: "tutorialConnectAiTitle",
-    bodyKey: "tutorialConnectAiBody",
+    id: "skills",
+    chapter: "ai",
+    layout: "card",
+    titleKey: "tutorialSkillsTitle",
+    bodyKey: "tutorialSkillsBody",
+    taskKey: "tutorialSkillsTask",
+    clip: "skills",
+    ai: true,
+  },
+  {
+    id: "memory",
+    chapter: "ai",
+    layout: "card",
+    titleKey: "tutorialMemoryTitle",
+    bodyKey: "tutorialMemoryBody",
+    taskKey: "tutorialMemoryTask",
+    clip: "memory",
+    ai: true,
   },
   {
     id: "done",
-    section: null,
+    chapter: "done",
     layout: "overlay",
     titleKey: "tutorialDoneTitle",
     bodyKey: "tutorialDoneBody",
   },
 ];
 
+/** Every clip the tour links to, in tour order. */
+export const TUTORIAL_CLIPS: readonly TutorialClipId[] = TUTORIAL_STEPS.flatMap(
+  (step) => (step.clip ? [step.clip] : []),
+);
+
+export function stepIndexOf(id: TutorialStepId): number {
+  return TUTORIAL_STEPS.findIndex((step) => step.id === id);
+}
+
+/** How the AI lessons run: for real with a connected AI ("live"), or as
+ *  animations to watch ("watch"). Decided on leaving the connect lesson,
+ *  null before that. */
+export type TutorialAiMode = "live" | "watch";
+
 /**
- * The step list as it was before `connectAi` existed. Progress saved by
- * those builds holds only a `stepIndex` into this list (no `stepId`), so
- * an index is read against it: index 9 was "done", which would otherwise
- * now land on the new step.
+ * The tours before this one, by their step ids. Their writing lessons map
+ * onto the matching new ones; anything in or after their AI chapter -
+ * which ran on scripted replies and never asked about an AI - restarts at
+ * the connect lesson, where the new AI chapter begins.
  */
-const LEGACY_STEP_IDS: readonly TutorialStepId[] = [
+const LEGACY_STEP_IDS = new Map<string, TutorialStepId>([
+  ["welcome", "welcome"],
+  ["markdownIntro", "wysiwyg"],
+  ["markdownPractice", "wysiwyg"],
+  ["sidebar", "sidebar-export"],
+  ["aiIntro", "connect"],
+  ["completion", "connect"],
+  ["grammar", "connect"],
+  ["agentChat", "connect"],
+  ["agentEdit", "connect"],
+  ["connectAi", "connect"],
+  ["done", "done"],
+]);
+
+/** The first tour's steps. Its progress holds only a `stepIndex` into
+ *  this list (no `stepId`). */
+const LEGACY_INDEXED_IDS = [
   "welcome",
   "markdownIntro",
   "markdownPractice",
@@ -144,23 +246,41 @@ const LEGACY_STEP_IDS: readonly TutorialStepId[] = [
   "agentChat",
   "agentEdit",
   "done",
-];
+] as const;
 
-/** Where saved progress resumes: by `stepId` when it names a known step,
- *  otherwise by a legacy `stepIndex` (see LEGACY_STEP_IDS), clamped. */
-export function resolveSavedStepIndex(saved: {
+/**
+ * Where saved progress resumes, and in which AI mode. Read by `stepId`:
+ * one of this tour's, one of the tour before (LEGACY_STEP_IDS), or - from
+ * the first tour - only a `stepIndex`. An AI lesson resumes only with its
+ * mode saved beside it; without one (an older tour, or a damaged save) the
+ * learner is asked about connecting again.
+ */
+export function resolveSavedProgress(saved: {
   stepId?: unknown;
   stepIndex?: unknown;
-}): number {
+  aiMode?: unknown;
+}): { stepIndex: number; aiMode: TutorialAiMode | null } {
+  const aiMode =
+    saved.aiMode === "live" || saved.aiMode === "watch" ? saved.aiMode : null;
+  let id: TutorialStepId | undefined;
   if (typeof saved.stepId === "string") {
-    const index = TUTORIAL_STEPS.findIndex((step) => step.id === saved.stepId);
-    if (index >= 0) return index;
+    id =
+      TUTORIAL_STEPS.find((step) => step.id === saved.stepId)?.id ??
+      LEGACY_STEP_IDS.get(saved.stepId);
   }
-  const raw =
-    typeof saved.stepIndex === "number" && Number.isFinite(saved.stepIndex)
-      ? Math.trunc(saved.stepIndex)
-      : 0;
-  const legacyId =
-    LEGACY_STEP_IDS[Math.min(Math.max(0, raw), LEGACY_STEP_IDS.length - 1)];
-  return TUTORIAL_STEPS.findIndex((step) => step.id === legacyId);
+  if (!id) {
+    const raw =
+      typeof saved.stepIndex === "number" && Number.isFinite(saved.stepIndex)
+        ? Math.trunc(saved.stepIndex)
+        : 0;
+    const legacy =
+      LEGACY_INDEXED_IDS[
+        Math.min(Math.max(0, raw), LEGACY_INDEXED_IDS.length - 1)
+      ];
+    id = LEGACY_STEP_IDS.get(legacy) ?? "welcome";
+  }
+  const step = TUTORIAL_STEPS[stepIndexOf(id)];
+  if (step.ai && !aiMode)
+    return { stepIndex: stepIndexOf("connect"), aiMode: null };
+  return { stepIndex: stepIndexOf(id), aiMode };
 }
