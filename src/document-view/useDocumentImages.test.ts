@@ -8,6 +8,7 @@ import type {
   ImageGenerationRequest,
 } from "../platform/ipc";
 const api = vi.hoisted(() => ({
+  cancelImageGeneration: vi.fn(async () => {}),
   imageJobs: vi.fn(),
   startImage: vi.fn(),
   prepareImage: vi.fn(),
@@ -104,6 +105,41 @@ it("inserts a reviewed local asset through the document transaction", async () =
   expect(
     run((ctx) => ctx.get(serializerCtx)(ctx.get(editorViewCtx).state.doc)),
   ).toContain("assets/generated.png");
+});
+it("stops an image generation before a deferred start reaches the frontend cache", async () => {
+  const { result } = await setup();
+  let resolve!: (job: ImageJob) => void;
+  api.startImage.mockReturnValueOnce(
+    new Promise<ImageJob>((r) => {
+      resolve = r;
+    }),
+  );
+  let starting!: Promise<void>;
+  act(() => {
+    starting = result.current.images.start({
+      prompt: "Delayed",
+      anchor: "## Section",
+      alt: "Delayed",
+    });
+  });
+  expect(result.current.images.pending).toBe(true);
+  await act(() => result.current.images.stopRunning());
+  expect(api.cancelImageGeneration).toHaveBeenCalledWith(
+    expect.objectContaining({
+      documentId: "document",
+      taskId: result.current.workspace.draft?.id,
+      generationId: expect.any(String),
+    }),
+  );
+  await act(async () => {
+    resolve({ ...records[0], jobId: "late-image", status: "queued" });
+    await starting;
+  });
+  expect(
+    result.current.images.jobs.some(
+      (job) => job.jobId === "late-image" && job.status === "queued",
+    ),
+  ).toBe(false);
 });
 it("rolls back the prepared asset if the user types while the asset is saving", async () => {
   const { result, run } = await setup();

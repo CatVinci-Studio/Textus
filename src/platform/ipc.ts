@@ -145,8 +145,16 @@ export const fs = {
       endpoint,
       urlField,
     }),
-  migrateDraftImages: (docPath: string, srcs: string[]) =>
-    call<ImageMigration[]>("migrate_draft_images", { docPath, srcs }),
+  migrateDraftImages: (
+    docPath: string,
+    srcs: string[],
+    sourceDocPath: string | null = null,
+  ) =>
+    call<ImageMigration[]>("migrate_draft_images", {
+      docPath,
+      srcs,
+      sourceDocPath,
+    }),
   writeTextFile: (path: string, contents: string): Promise<void> =>
     isScopedUrl(path)
       ? iosFiles.writeText(path, contents)
@@ -481,6 +489,7 @@ export interface SpeechAudio {
 }
 /** Mirrors media/jobs.rs; authorization is outside the model's tool arguments. */
 export interface ImageTaskPermission {
+  generationId: string;
   taskId: string;
   documentId: string;
   baseRevision: number;
@@ -495,6 +504,7 @@ export interface ImageGenerationRequest {
   quality?: string | null;
 }
 export interface ImageJob {
+  generationId?: string;
   jobId: string;
   taskId: string;
   documentId: string;
@@ -518,6 +528,12 @@ export interface ImageJob {
   assetSrc: string | null;
 }
 export const media = {
+  cancelImageGeneration: (permission: ImageTaskPermission) =>
+    call<void>("media_cancel_image_generation", { permission }),
+  rebaseImageAssets: (
+    documentId: string,
+    mappings: { old: string; new: string }[],
+  ) => call<void>("media_rebase_image_assets", { documentId, mappings }),
   providers: () => call<MediaProviders>("media_provider_status"),
   configure: (
     capability: MediaCapability,

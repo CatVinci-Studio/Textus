@@ -76,6 +76,16 @@ Cancellation deletes that job's temporary image; accepted images use the existin
 are marked failed and require explicit retry. Credentials and original recordings
 are excluded from task snapshots and Markdown.
 
+Cross-directory Save As copies referenced `assets/` images before writing the
+destination document, preserves source images, handles filename collisions, and
+updates image-job references. Stopping a request fences its generation id in
+Rust, including a late enqueue that has not reached the frontend job cache. A
+new explicit send uses a new generation id while retaining the task's quota.
+Conflict recovery persists an explicit conflict flag and keeps the original
+base snapshot across repeated restarts. Partial acceptance maps captured
+selection targets through the accepted transaction; it never retargets them to
+the current UI selection.
+
 ## Verification
 
 `e2e/workspace.spec.ts` covers draft creation, view switching, single-step Undo,
@@ -99,3 +109,23 @@ real image decoding and atomic local storage. The speech test exercises the
 native multipart adapter against synthetic local speech. Normal tests never
 send paid requests. Physical microphones and native window handoff still need
 manual macOS/Windows/Linux acceptance before a release.
+
+## Acceptance record — 2026-10-17
+
+- Frontend: 937 tests in 119 files; key workspace/media Playwright flows: 7/7.
+- Rust library: 320 passed; 13 explicitly ignored live/interactive tests.
+- Real MiniMax smoke: 2/2 passed using the existing MiniMax text credential.
+  `image-01` returned a validated 1024×1024 JPEG through the production adapter
+  and atomic local file write. `asr-1.0` transcribed local synthetic speech as
+  “This is a text-to-speech input test.” No microphone audio or document content
+  was sent by these smoke tests.
+- Production frontend build and local macOS debug `.app` bundle built. The
+  local bundle disables updater artifact signing; it is a test build, not a
+  signed/notarized release.
+- Independent code review found five important lifecycle issues. Regression
+  tests and fixes cover repeated conflict recovery, document replacement,
+  cross-folder assets, captured selections, and late image enqueue cancellation.
+- Regular/narrow workspace screenshots inspected. Physical microphone capture,
+  native drag-to-merge and Windows/Linux audio remain manual release checks.
+  New media controls currently provide Chinese and English, with English
+  fallback for other interface languages.

@@ -4,7 +4,7 @@ import { migrateDraftImages } from "../editor/images/image-migration";
 import { basename } from "../utils/path";
 import { errorText } from "../utils/error-text";
 import { statMtime, tabTitle, writeDocFile } from "../document/doc-tabs";
-import { fs, session } from "../platform/ipc";
+import { fs, session, media } from "../platform/ipc";
 import { defaultMarkdownFilename } from "../document/save-default-name";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./useTabState";
@@ -63,32 +63,45 @@ export function useSaveTabs(opts: {
           );
       const picked = await fs.saveFileDialog(defaultName);
       if (!picked) return false;
-      if (!(await writeOrReport(picked, tab.content))) return false;
-      void session.addRecentFile(picked);
       // First save of a draft: any pasted images it holds live in the app's
       // data dir with an absolute src (fs.rs's save_pasted_image) - now that
-      // the document has a real home, move them into assets/ next to it and
+      // the document has a real home, copy them into assets/ next to it and
       // rewrite the markdown to relative paths (4.2). A no-op for documents
       // with no draft-origin images.
       let { content } = tab;
       try {
-        const migration = await migrateDraftImages(picked, tab.content);
+        const migration = await migrateDraftImages(
+          picked,
+          tab.content,
+          tab.path,
+        );
         if (migration.migrated) {
           content = migration.content;
-          await writeDocFile(picked, content);
         }
         if (migration.failed.length > 0) {
-          void showMessage(
+          await showMessage(
             `${t.imageMigrationFailedMessage}\n${migration.failed.join("\n")}`,
             {
               title: t.imageMigrationFailedTitle,
               tone: "warning",
             },
           );
+          return false;
         }
+        if (!(await writeOrReport(picked, content))) return false;
+        if (migration.mappings.length)
+          await media.rebaseImageAssets(
+            tab.workspaceId ?? tab.id,
+            migration.mappings,
+          );
       } catch (err) {
-        console.error("[image-migration] failed:", err);
+        await showMessage(errorText(err), {
+          title: t.imageMigrationFailedTitle,
+          tone: "error",
+        });
+        return false;
       }
+      void session.addRecentFile(picked);
       updateTab(tabId, {
         path: picked,
         content,

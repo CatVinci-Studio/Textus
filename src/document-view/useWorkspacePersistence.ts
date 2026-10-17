@@ -36,7 +36,7 @@ export function useWorkspacePersistence({
   enabled: boolean;
   language: string;
   imagePending: boolean;
-  stopImages: () => void;
+  stopImages: () => Promise<void>;
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,9 +74,7 @@ export function useWorkspacePersistence({
               ctx.get(serializerCtx)(state.doc),
               documentRevisionKey.getState(state) ?? 0,
             );
-            latest.current.workspace.restore(
-              rebased ?? { ...snapshot.draft, baseRevision: -1 },
-            );
+            latest.current.workspace.restore(rebased);
             const entry = history.current.find(
               (e) => e.id === snapshot.draft.sessionId,
             );
@@ -199,7 +197,12 @@ export function useWorkspacePersistence({
           ));
         if (!keep) return false;
         if (c.busy) c.stop();
-        latest.current.stopImages();
+        try {
+          await latest.current.stopImages();
+        } catch (error) {
+          setError(String(error));
+          return false;
+        }
         w.finish();
         const frozen = w.currentDraft();
         if (enabled && frozen) {

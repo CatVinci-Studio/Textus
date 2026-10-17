@@ -97,7 +97,8 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
       for (const workspace of workspaceSnapshots ?? []) {
         const existing = draftSnapshots.find(
           (d) =>
-            d.tabId === (workspace.tabId ?? workspace.documentId) ||
+            (d.tabId === (workspace.tabId ?? workspace.documentId) &&
+              d.path === workspace.documentPath) ||
             (workspace.documentPath && d.path === workspace.documentPath),
         );
         if (existing) existing.workspaceId = workspace.documentId;

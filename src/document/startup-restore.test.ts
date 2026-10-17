@@ -106,6 +106,27 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("startup restore into the initial tab", () => {
+  it("keeps a replaced file's workspace separate when its UI tab id was reused", async () => {
+    ipc.takeDraftSnapshots.mockResolvedValue([
+      { tabId: "same-tab", path: "/docs/b.md", content: "B unsaved." },
+    ]);
+    ipc.takeWorkspaceSnapshots.mockResolvedValue([
+      {
+        documentId: "document-a",
+        tabId: "same-tab",
+        documentPath: "/docs/a.md",
+        draft: { baseMarkdown: "A base." },
+      },
+    ]);
+    const { tabs } = await restore();
+    await waitFor(() => expect(tabs()).toHaveLength(2));
+    expect(
+      tabs().find((tab) => tab.path === "/docs/b.md")?.workspaceId,
+    ).not.toBe("document-a");
+    expect(tabs().find((tab) => tab.path === "/docs/a.md")?.workspaceId).toBe(
+      "document-a",
+    );
+  });
   it("restores a workspace for a saved document without replacing newer disk text", async () => {
     ipc.takeWorkspaceSnapshots.mockResolvedValue([
       {

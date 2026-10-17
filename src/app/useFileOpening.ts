@@ -12,6 +12,8 @@ import { OPEN_FILE_IN_TAB_EVENT } from "../utils/events";
 import type { NewDocumentMode } from "../settings/SettingsContext";
 import type { PendingClose } from "./close-flow";
 import type { TabState } from "./useTabState";
+import { confirmWorkspaceClose } from "../document/workspace-close";
+import { flushPendingWrites } from "../storage/pending-writes";
 
 /**
  * Every way a file on disk becomes an open document in this window: a new
@@ -52,11 +54,16 @@ export function useFileOpening(opts: {
   // path and the save/discard prompt's resolution (2.3: unsaved protection).
   const replaceTabWithFile = useCallback(
     async (tabId: string, path: string) => {
+      const previous = tabsRef.current.find((tab) => tab.id === tabId);
+      if (previous?.path === path) return;
       const { content: text, diskMtime } = await readDocFromDisk(path);
+      if (!(await confirmWorkspaceClose([tabId]))) return;
+      await flushPendingWrites();
       void session.addRecentFile(path);
       const reloadKey =
         (tabsRef.current.find((tb) => tb.id === tabId)?.reloadKey ?? 0) + 1;
       updateTab(tabId, {
+        workspaceId: crypto.randomUUID(),
         path,
         content: text,
         savedContent: text,

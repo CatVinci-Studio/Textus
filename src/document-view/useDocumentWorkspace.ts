@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
+import type { Transaction } from "@milkdown/kit/prose/state";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { StreamEvent } from "../platform/ipc";
 import type { AgentMode } from "../settings/SettingsContext";
@@ -10,6 +11,7 @@ import { parseProposal } from "../ai/chat/proposal";
 import {
   buildDraftTransaction,
   captureDraft,
+  rebaseDraftAfterTransaction,
   previewDraft,
   type DocumentDraft,
   type DraftOperation,
@@ -160,16 +162,22 @@ export function useDocumentWorkspace(run: EditorRunner, documentId: string) {
           if (!tr) return false;
           view.dispatch(tr);
           // Rebase remaining proposals onto the exact document just committed.
-          update({
-            ...captureDraft(ctx, view.state, documentId, current.sessionId),
-            id: current.id,
-            operations: current.operations.filter(
-              (o) => !operations.includes(o),
-            ),
-          });
+          const rebased = rebaseDraftAfterTransaction(
+            ctx,
+            view.state,
+            {
+              ...current,
+              operations: current.operations.filter(
+                (o) => !operations.includes(o),
+              ),
+            },
+            tr,
+          );
+          update(rebased);
+          setConflict(!!rebased.conflicted);
           return true;
         }) ?? false;
-      setConflict(!ok);
+      if (!ok) setConflict(true);
       if (ok)
         setStatuses((prev) => ({
           ...prev,
@@ -179,7 +187,7 @@ export function useDocumentWorkspace(run: EditorRunner, documentId: string) {
         }));
       return ok;
     },
-    [run, documentId, update],
+    [run, update],
   );
   const preview = useMemo(
     () =>
@@ -198,7 +206,7 @@ export function useDocumentWorkspace(run: EditorRunner, documentId: string) {
     (restored: DocumentDraft) => {
       if (draftRef.current) return;
       update(restored);
-      setConflict(restored.baseRevision < 0);
+      setConflict(!!restored.conflicted || restored.baseRevision < 0);
     },
     [update],
   );
@@ -206,22 +214,23 @@ export function useDocumentWorkspace(run: EditorRunner, documentId: string) {
   const setMediaPending = useCallback((pending: boolean) => {
     mediaPending.current = pending;
   }, []);
-  const rebaseAfterCommit = useCallback(() => {
-    const current = draftRef.current;
-    if (current)
-      run((ctx) =>
-        update({
-          ...captureDraft(
+  const rebaseAfterCommit = useCallback(
+    (tr: Transaction) => {
+      const current = draftRef.current;
+      if (current)
+        run((ctx) => {
+          const next = rebaseDraftAfterTransaction(
             ctx,
             ctx.get(editorViewCtx).state,
-            documentId,
-            current.sessionId,
-          ),
-          id: current.id,
-          operations: current.operations,
-        }),
-      );
-  }, [run, documentId, update]);
+            current,
+            tr,
+          );
+          update(next);
+          setConflict(!!next.conflicted);
+        });
+    },
+    [run, update],
+  );
   return {
     open,
     setOpen,

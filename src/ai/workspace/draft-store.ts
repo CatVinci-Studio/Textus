@@ -22,7 +22,8 @@ export function decodeWorkspaceSnapshot(
     typeof d.sessionId !== "string" ||
     typeof d.baseMarkdown !== "string" ||
     !Number.isSafeInteger(d.baseRevision) ||
-    d.baseRevision < 0 ||
+    d.baseRevision < -1 ||
+    (d.conflicted !== undefined && typeof d.conflicted !== "boolean") ||
     !d.selection ||
     !Number.isSafeInteger(d.selection.from) ||
     !Number.isSafeInteger(d.selection.to) ||
@@ -42,17 +43,22 @@ export function decodeWorkspaceSnapshot(
       return null;
     ids.add(op.callId);
   }
-  return { ...s, status: s.status === "running" ? "interrupted" : s.status };
+  return {
+    ...s,
+    draft:
+      d.baseRevision === -1 ? { ...d, baseRevision: 0, conflicted: true } : d,
+    status: s.status === "running" ? "interrupted" : s.status,
+  };
 }
 
 export function rebaseRestoredDraft(
   draft: DocumentDraft,
   markdown: string,
   revision: number,
-): DocumentDraft | null {
-  return draft.baseMarkdown === markdown
+): DocumentDraft {
+  return !draft.conflicted && draft.baseMarkdown === markdown
     ? { ...draft, baseRevision: revision }
-    : null;
+    : { ...draft, conflicted: true };
 }
 
 const writes = new Map<string, Promise<void>>();

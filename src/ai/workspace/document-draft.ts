@@ -1,6 +1,6 @@
 import { serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
-import { EditorState } from "@milkdown/kit/prose/state";
+import { EditorState, type Transaction } from "@milkdown/kit/prose/state";
 import { closeHistory } from "@milkdown/kit/prose/history";
 import type { EditProposal } from "../types";
 import {
@@ -21,6 +21,7 @@ export interface DocumentDraft {
   documentId: string;
   sessionId: string;
   baseRevision: number;
+  conflicted?: boolean;
   baseMarkdown: string;
   selection: { from: number; to: number };
   operations: DraftOperation[];
@@ -40,6 +41,40 @@ export function captureDraft(
     baseMarkdown: ctx.get(serializerCtx)(state.doc),
     selection: { from: state.selection.from, to: state.selection.to },
     operations: [],
+  };
+}
+
+/** Rebase captured targets through our commit, never through the UI selection. */
+export function rebaseDraftAfterTransaction(
+  ctx: Ctx,
+  state: EditorState,
+  draft: DocumentDraft,
+  tr: Transaction,
+): DocumentDraft {
+  let { from, to } = draft.selection;
+  let touched = false;
+  for (const map of tr.mapping.maps) {
+    map.forEach((start, end) => {
+      if (
+        from === to
+          ? start <= from && end >= from
+          : (start < to && end > from) ||
+            (start === end && start > from && start < to)
+      )
+        touched = true;
+    });
+    from = map.map(from, 1);
+    to = map.map(to, -1);
+  }
+  const remainingSelection = draft.operations.some((op) =>
+    ["replace_selection", "insert_at_cursor"].includes(op.proposal.action),
+  );
+  return {
+    ...draft,
+    baseRevision: documentRevisionKey.getState(state) ?? 0,
+    baseMarkdown: ctx.get(serializerCtx)(state.doc),
+    selection: { from: Math.min(from, to), to: Math.max(from, to) },
+    conflicted: draft.conflicted || (touched && remainingSelection),
   };
 }
 
@@ -132,6 +167,7 @@ export function buildDraftTransaction(
   draft: DocumentDraft,
 ) {
   if (
+    draft.conflicted ||
     (documentRevisionKey.getState(state) ?? 0) !== draft.baseRevision ||
     ctx.get(serializerCtx)(state.doc) !== draft.baseMarkdown
   )

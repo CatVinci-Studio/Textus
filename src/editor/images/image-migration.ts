@@ -14,10 +14,14 @@ function isAbsoluteLocalPath(src: string): boolean {
   return src.startsWith("/");
 }
 
-function extractImageSrcs(content: string): string[] {
+function extractImageSrcs(content: string, includeRelative: boolean): string[] {
   const srcs = new Set<string>();
   for (const match of content.matchAll(IMAGE_SRC_RE)) {
-    if (isAbsoluteLocalPath(match[1])) srcs.add(match[1]);
+    if (
+      isAbsoluteLocalPath(match[1]) ||
+      (includeRelative && match[1].startsWith("assets/"))
+    )
+      srcs.add(match[1]);
   }
   return [...srcs];
 }
@@ -30,28 +34,41 @@ function replaceAll(content: string, from: string, to: string): string {
  * A draft's pasted images live in the app's data dir with an absolute src
  * (see fs.rs's save_pasted_image) until the document itself is saved
  * somewhere real - called right after a first save (app/useSaveTabs.ts's
- * saveTabAs) to move them into a `assets/` folder next to the document and
+ * saveTabAs) to copy them into an `assets/` folder next to the document and
  * rewrite the markdown to the new relative paths. A no-op (empty result)
  * for documents with no draft-origin images, which is the common case.
  */
 export async function migrateDraftImages(
   docPath: string,
   content: string,
-): Promise<{ content: string; migrated: boolean; failed: string[] }> {
-  const candidates = extractImageSrcs(content);
-  if (candidates.length === 0) return { content, migrated: false, failed: [] };
+  sourceDocPath: string | null = null,
+): Promise<{
+  content: string;
+  migrated: boolean;
+  failed: string[];
+  mappings: { old: string; new: string }[];
+}> {
+  const candidates = extractImageSrcs(content, !!sourceDocPath);
+  if (candidates.length === 0)
+    return { content, migrated: false, failed: [], mappings: [] };
 
-  const results = await fs.migrateDraftImages(docPath, candidates);
+  const results = await fs.migrateDraftImages(
+    docPath,
+    candidates,
+    sourceDocPath,
+  );
   let next = content;
   const failed: string[] = [];
   let migrated = false;
+  const mappings: { old: string; new: string }[] = [];
   for (const { old, new: replacement } of results) {
     if (replacement) {
       next = replaceAll(next, old, replacement);
       migrated = true;
+      mappings.push({ old, new: replacement });
     } else {
       failed.push(old);
     }
   }
-  return { content: next, migrated, failed };
+  return { content: next, migrated, failed, mappings };
 }

@@ -188,12 +188,16 @@ export function MilkdownEditor({
     conversation.conversationId,
   );
   const refreshImages = images.refresh;
+  const settleImages = images.settle;
+  useEffect(() => {
+    if (!conversation.busy) void settleImages();
+  }, [conversation.busy, settleImages]);
   useEffect(() => {
     void refreshImages();
   }, [conversation.history, conversation.streaming?.turns, refreshImages]);
   const stopTask = () => {
     conversation.stop();
-    images.stopRunning();
+    void images.stopRunning().catch(() => {});
   };
   const defaultImageAnchor = () =>
     run((ctx) => {
@@ -585,13 +589,11 @@ export function MilkdownEditor({
                   return {
                     ...options,
                     imageTask:
-                      draft && allowed && draft.baseRevision >= 0
-                        ? {
-                            taskId: draft.id,
-                            documentId,
-                            baseRevision: draft.baseRevision,
-                            allowAutomatic: true,
-                          }
+                      draft &&
+                      allowed &&
+                      !draft.conflicted &&
+                      draft.baseRevision >= 0
+                        ? images.authorizeTask(draft.id, draft.baseRevision)
                         : null,
                   };
                 }}

@@ -18,8 +18,8 @@ mod commands;
 mod distribution;
 mod media;
 use media::jobs::{
-    media_cancel_image, media_finish_image, media_image_jobs, media_prepare_image,
-    media_start_image,
+    media_cancel_image, media_cancel_image_generation, media_finish_image, media_image_jobs,
+    media_prepare_image, media_rebase_image_assets, media_start_image,
 };
 use media::provider::{media_cancel, media_configure_provider, media_provider_status};
 use media::speech::{media_synthesize, media_transcribe};
@@ -696,7 +696,9 @@ pub fn run() {
             media_cancel,
             media_start_image,
             media_image_jobs,
+            media_rebase_image_assets,
             media_cancel_image,
+            media_cancel_image_generation,
             media_prepare_image,
             media_finish_image,
             save_workspace_snapshot,

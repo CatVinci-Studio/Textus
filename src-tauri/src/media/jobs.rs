@@ -4,7 +4,7 @@ use super::{
 };
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     path::PathBuf,
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
@@ -17,6 +17,7 @@ use tauri::{AppHandle, Manager};
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImageTaskPermission {
+    pub generation_id: String,
     pub task_id: String,
     pub document_id: String,
     pub base_revision: u64,
@@ -37,6 +38,8 @@ pub struct ImageRequest {
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImageJob {
+    #[serde(default)]
+    pub generation_id: String,
     pub job_id: String,
     pub task_id: String,
     pub document_id: String,
@@ -56,11 +59,13 @@ pub struct ImageJob {
 
 #[derive(Default)]
 struct Registry {
+    stopped: HashSet<String>,
     jobs: HashMap<String, ImageJob>,
     counts: HashMap<String, usize>,
 }
 static REGISTRY: LazyLock<Mutex<Registry>> = LazyLock::new(|| Mutex::new(Registry::default()));
 static LANE: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(1);
+static COMMIT_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 static SEQUENCE: AtomicU64 = AtomicU64::new(0);
 static RECOVERED: AtomicBool = AtomicBool::new(false);
 static RECOVERY_LOCK: Mutex<()> = Mutex::new(());
@@ -77,6 +82,67 @@ impl ImageTaskContext {
 }
 fn valid_id(id: &str) -> bool {
     !id.is_empty() && id.len() <= 128 && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+}
+
+fn generation_key(permission: &ImageTaskPermission) -> String {
+    format!(
+        "{}/{}/{}",
+        permission.document_id, permission.task_id, permission.generation_id
+    )
+}
+fn generation_active(
+    registry: &Registry,
+    permission: &ImageTaskPermission,
+) -> Result<(), MediaError> {
+    if !valid_id(&permission.generation_id)
+        || registry.stopped.contains(&generation_key(permission))
+    {
+        return Err(MediaError::new(
+            "cancelled",
+            "This image request was stopped. Send a new request explicitly.",
+        ));
+    }
+    Ok(())
+}
+fn stop_generation(registry: &mut Registry, permission: &ImageTaskPermission) -> Vec<ImageJob> {
+    registry.stopped.insert(generation_key(permission));
+    let mut cancelled = Vec::new();
+    for job in registry.jobs.values_mut() {
+        if job.document_id == permission.document_id
+            && job.task_id == permission.task_id
+            && job.generation_id == permission.generation_id
+            && matches!(job.status.as_str(), "queued" | "running")
+        {
+            job.status = "cancelled".into();
+            cancelled.push(job.clone());
+        }
+    }
+    cancelled
+}
+
+#[tauri::command]
+pub async fn media_cancel_image_generation(
+    app: AppHandle,
+    permission: ImageTaskPermission,
+) -> Result<(), MediaError> {
+    if !valid_id(&permission.task_id)
+        || !valid_id(&permission.document_id)
+        || !valid_id(&permission.generation_id)
+    {
+        return Err(MediaError::new(
+            "invalid_request",
+            "Invalid image generation identity",
+        ));
+    }
+    let cancelled = stop_generation(&mut REGISTRY.lock().unwrap(), &permission);
+    for job in cancelled {
+        provider::media_cancel(job.job_id.clone());
+        if let Some(path) = &job.preview_path {
+            let _ = tokio::fs::remove_file(path).await;
+        }
+        write_metadata(&app, &job).await?;
+    }
+    Ok(())
 }
 fn reserve(
     counts: &mut HashMap<String, usize>,
@@ -163,7 +229,9 @@ pub fn start_job(
     // Check configuration before consuming a task's request allowance.
     let _configured = provider::request(&context.app, "image", "images/generations")?;
     recover_registry(&context.app)?;
-    let sequence = reserve(&mut REGISTRY.lock().unwrap().counts, &context.permission)?;
+    let mut registry = REGISTRY.lock().unwrap();
+    generation_active(&registry, &context.permission)?;
+    let sequence = reserve(&mut registry.counts, &context.permission)?;
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -173,6 +241,7 @@ pub fn start_job(
         SEQUENCE.fetch_add(1, Ordering::Relaxed)
     );
     let job = ImageJob {
+        generation_id: context.permission.generation_id.clone(),
         job_id: job_id.clone(),
         task_id: context.permission.task_id.clone(),
         document_id: context.permission.document_id.clone(),
@@ -188,7 +257,8 @@ pub fn start_job(
         asset_src: None,
         prepared_path: None,
     };
-    store(job.clone());
+    registry.jobs.insert(job_id.clone(), job.clone());
+    drop(registry);
     let app = context.app.clone();
     tauri::async_runtime::spawn(async move {
         run_job(app, job_id).await;
@@ -207,12 +277,14 @@ async fn run_job(app: AppHandle, id: String) {
                 .acquire()
                 .await
                 .map_err(|_| MediaError::new("cancelled", "Image queue stopped"))?;
-            let mut running = get_job(&id)?;
-            if running.status == "cancelled" {
-                return Err(MediaError::new("cancelled", "Image job cancelled"));
+            {
+                let mut registry = REGISTRY.lock().unwrap();
+                let running = registry.jobs.get_mut(&id).unwrap();
+                if running.status != "queued" {
+                    return Err(MediaError::new("cancelled", "Image job cancelled"));
+                }
+                running.status = "running".into();
             }
-            running.status = "running".into();
-            store(running);
             image::generate(
                 &app,
                 &job.request.prompt,
@@ -249,11 +321,20 @@ async fn run_job(app: AppHandle, id: String) {
         ready.height = Some(generated.height);
         write_metadata(&app, &ready).await?;
         // Cancellation may have arrived during the atomic metadata write.
-        if get_job(&id)?.status == "cancelled" {
+        let published = {
+            let mut registry = REGISTRY.lock().unwrap();
+            let current = registry.jobs.get_mut(&id).unwrap();
+            if current.status != "running" {
+                false
+            } else {
+                *current = ready;
+                true
+            }
+        };
+        if !published {
             let _ = tokio::fs::remove_file(&path).await;
             return Err(MediaError::new("cancelled", "Image job cancelled"));
         }
-        store(ready);
         Ok::<(), MediaError>(())
     }
     .await;
@@ -393,8 +474,46 @@ pub async fn media_image_jobs(
     Ok(jobs)
 }
 
+#[derive(Deserialize)]
+pub struct ImageAssetMapping {
+    old: String,
+    new: String,
+}
+
+#[tauri::command]
+pub async fn media_rebase_image_assets(
+    app: AppHandle,
+    document_id: String,
+    mappings: Vec<ImageAssetMapping>,
+) -> Result<(), MediaError> {
+    let _commit = COMMIT_LOCK.lock().await;
+    let changed = {
+        let mut registry = REGISTRY.lock().unwrap();
+        let mut changed = Vec::new();
+        for job in registry
+            .jobs
+            .values_mut()
+            .filter(|job| job.document_id == document_id)
+        {
+            if let Some(mapping) = mappings
+                .iter()
+                .find(|mapping| job.asset_src.as_deref() == Some(mapping.old.as_str()))
+            {
+                job.asset_src = Some(mapping.new.clone());
+                changed.push(job.clone());
+            }
+        }
+        changed
+    };
+    for job in changed {
+        write_metadata(&app, &job).await?;
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn media_cancel_image(app: AppHandle, job_id: String) -> Result<(), MediaError> {
+    let _commit = COMMIT_LOCK.lock().await;
     let mut job = get_job(&job_id)?;
     if matches!(job.status.as_str(), "committed" | "prepared" | "preparing") {
         return Err(MediaError::new(
@@ -420,6 +539,7 @@ pub async fn media_prepare_image(
     job_id: String,
     doc_path: Option<String>,
 ) -> Result<String, MediaError> {
+    let _commit = COMMIT_LOCK.lock().await;
     use base64::Engine;
     let mut job = {
         let mut registry = REGISTRY.lock().unwrap();
@@ -485,6 +605,7 @@ pub async fn media_finish_image(
     job_id: String,
     accepted: bool,
 ) -> Result<(), MediaError> {
+    let _commit = COMMIT_LOCK.lock().await;
     let mut job = get_job(&job_id)?;
     if job.status != "prepared" {
         return Err(MediaError::new(
@@ -494,6 +615,7 @@ pub async fn media_finish_image(
     }
     if accepted {
         job.status = "committed".into();
+        store(job.clone());
         // Keep generation metadata, but never remove an accepted image on Undo.
         write_metadata(&app, &job).await?;
         if let Some(path) = job.preview_path.take() {
@@ -518,9 +640,26 @@ pub async fn media_finish_image(
 mod tests {
     use super::*;
     #[test]
+    fn stop_fences_late_enqueue_but_allows_a_new_send_in_the_same_task() {
+        let mut registry = Registry::default();
+        let mut permission = ImageTaskPermission {
+            task_id: "task".into(),
+            document_id: "document".into(),
+            generation_id: "send-1".into(),
+            base_revision: 0,
+            allow_automatic: true,
+        };
+        assert!(generation_active(&registry, &permission).is_ok());
+        stop_generation(&mut registry, &permission);
+        assert!(generation_active(&registry, &permission).is_err());
+        permission.generation_id = "send-2".into();
+        assert!(generation_active(&registry, &permission).is_ok());
+    }
+    #[test]
     fn permission_is_task_scoped_and_limits_include_retries() {
         let mut counts = HashMap::new();
         let mut permission = ImageTaskPermission {
+            generation_id: "generation".into(),
             task_id: "task".into(),
             document_id: "document".into(),
             base_revision: 0,

@@ -39,6 +39,20 @@ describe("workspace recovery", () => {
     expect(
       rebaseRestoredDraft(snapshot.draft, "Original.", 7)?.baseRevision,
     ).toBe(7);
-    expect(rebaseRestoredDraft(snapshot.draft, "Manual edit.", 7)).toBeNull();
+    expect(
+      rebaseRestoredDraft(snapshot.draft, "Manual edit.", 7),
+    ).toMatchObject({ conflicted: true, baseRevision: 42 });
+  });
+  it("preserves a conflicted base snapshot through a second restart", () => {
+    const first = rebaseRestoredDraft(
+      snapshot.draft,
+      "Manually saved document.",
+      0,
+    );
+    const saved = JSON.parse(JSON.stringify({ ...snapshot, draft: first }));
+    const second = decodeWorkspaceSnapshot(saved);
+    expect(second?.draft.operations).toHaveLength(1);
+    expect(second?.draft.baseMarkdown).toBe("Original.");
+    expect(second?.draft).toMatchObject({ conflicted: true, baseRevision: 42 });
   });
 });

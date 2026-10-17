@@ -213,7 +213,13 @@ pub async fn save_pasted_image(
     let stamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_err(|e| e.to_string())?
-        .as_millis();
+        .as_nanos();
+    static IMAGE_SEQUENCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let stamp = format!(
+        "{stamp}-{}-{}",
+        std::process::id(),
+        IMAGE_SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+    );
     let mut name = format!("image-{stamp}.{ext}");
     let mut n = 1;
     while dir.join(&name).exists() {
@@ -244,28 +250,70 @@ pub struct ImageMigration {
     new: Option<String>,
 }
 
-async fn move_file(from: &Path, to: &Path) -> std::io::Result<()> {
-    if fs::rename(from, to).await.is_ok() {
-        return Ok(());
+async fn copy_image_asset(
+    from: &Path,
+    dest_dir: &Path,
+    name: &std::ffi::OsStr,
+) -> std::io::Result<String> {
+    fs::create_dir_all(dest_dir).await?;
+    // Keep the source: a failed Markdown write, another document or Undo
+    // may still refer to it. Reserve the name atomically across windows.
+    let bytes = fs::read(from).await?;
+    for n in 0..10000 {
+        let dest_name = if n == 0 {
+            name.to_string_lossy().into_owned()
+        } else {
+            let path = Path::new(name);
+            format!(
+                "{}-{n}.{}",
+                path.file_stem().unwrap_or_default().to_string_lossy(),
+                path.extension().unwrap_or_default().to_string_lossy()
+            )
+        };
+        let dest = dest_dir.join(&dest_name);
+        if from == dest {
+            return Ok(format!("assets/{dest_name}"));
+        }
+        match fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&dest)
+            .await
+        {
+            Ok(reserved) => {
+                drop(reserved);
+                if let Err(error) = crate::atomic::write(&dest, &bytes).await {
+                    let _ = fs::remove_file(&dest).await;
+                    return Err(error);
+                }
+                return Ok(format!("assets/{dest_name}"));
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+                if fs::read(&dest)
+                    .await
+                    .is_ok_and(|existing| existing == bytes)
+                {
+                    return Ok(format!("assets/{dest_name}"));
+                }
+            }
+            Err(error) => return Err(error),
+        }
     }
-    // rename fails across filesystems/volumes (app data dir and the
-    // document's folder aren't guaranteed to share one) - copy then remove
-    // the original as a fallback "move".
-    fs::copy(from, to).await?;
-    fs::remove_file(from).await
+    Err(std::io::Error::other("Too many asset filename collisions"))
 }
 
-/// Moves a first-saved draft's pasted images from the app's data dir into a
-/// Typora-style `assets/` folder next to the now-real document, rewriting
-/// each markdown `src` to the new relative path. Only touches paths that are
-/// actually under the app data dir's `assets/` folder - anything else
-/// (http(s), data:, or already-relative) is left alone, matching the
-/// frontend's job of only offering draft-image candidates here.
+/// Copies draft or document images into the newly saved document's
+/// Typora-style `assets/` folder, rewriting
+/// each Markdown `src` to a relative path. Draft candidates must be
+/// directly under the app data dir's `assets/` folder. Relative candidates
+/// come from the source document's `assets/` folder; URLs stay untouched. The
+/// source is preserved for other documents, failed writes and Undo.
 #[tauri::command]
 pub async fn migrate_draft_images(
     app: tauri::AppHandle,
     doc_path: String,
     srcs: Vec<String>,
+    source_doc_path: Option<String>,
 ) -> Result<Vec<ImageMigration>, String> {
     use tauri::Manager;
 
@@ -282,12 +330,20 @@ pub async fn migrate_draft_images(
 
     let mut results = Vec::with_capacity(srcs.len());
     for old in srcs {
-        let path = Path::new(&old);
+        let relative = old.strip_prefix("assets/").filter(|name| {
+            !name.is_empty() && !name.contains(['/', '\\']) && *name != "." && *name != ".."
+        });
+        let source = source_doc_path
+            .as_deref()
+            .and_then(|p| Path::new(p).parent())
+            .zip(relative)
+            .map(|(parent, name)| parent.join("assets").join(name));
+        let path = source.as_deref().unwrap_or_else(|| Path::new(&old));
         // Not a draft-origin image (e.g. some other absolute path the user
         // inserted directly) - silently skipped, not a migration failure:
         // `new: None` below is reserved for a draft image that WAS found
         // here but failed to move, which is the only case worth a toast.
-        if path.parent() != Some(draft_assets_dir.as_path()) {
+        if source.is_none() && path.parent() != Some(draft_assets_dir.as_path()) {
             continue;
         }
         let Some(name) = path.file_name() else {
@@ -295,25 +351,7 @@ pub async fn migrate_draft_images(
             continue;
         };
 
-        let new = async {
-            fs::create_dir_all(&dest_dir).await.ok()?;
-            let mut dest_name = name.to_string_lossy().to_string();
-            let mut n = 1;
-            while dest_dir.join(&dest_name).exists() {
-                let stem = Path::new(name).file_stem()?.to_string_lossy();
-                let ext = Path::new(name)
-                    .extension()
-                    .map(|e| e.to_string_lossy().to_string());
-                dest_name = match &ext {
-                    Some(ext) => format!("{stem}-{n}.{ext}"),
-                    None => format!("{stem}-{n}"),
-                };
-                n += 1;
-            }
-            move_file(path, &dest_dir.join(&dest_name)).await.ok()?;
-            Some(format!("assets/{dest_name}"))
-        }
-        .await;
+        let new = copy_image_asset(path, &dest_dir, name).await.ok();
 
         results.push(ImageMigration { old, new });
     }
@@ -333,4 +371,43 @@ pub async fn write_text_file(path: String, contents: String) -> Result<(), Strin
     crate::atomic::write(Path::new(&path), contents)
         .await
         .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod image_asset_tests {
+    use super::*;
+    #[tokio::test]
+    async fn save_as_copies_assets_without_removing_sources_or_overwriting_collisions() {
+        let root = std::env::temp_dir().join(format!(
+            "textus-assets-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let source = root.join("A/assets");
+        let dest = root.join("B/assets");
+        fs::create_dir_all(&source).await.unwrap();
+        fs::create_dir_all(&dest).await.unwrap();
+        let image = source.join("image.png");
+        fs::write(&image, b"source-image").await.unwrap();
+        fs::write(dest.join("image.png"), b"other-document-image")
+            .await
+            .unwrap();
+        let name = copy_image_asset(&image, &dest, std::ffi::OsStr::new("image.png"))
+            .await
+            .unwrap();
+        assert_eq!(name, "assets/image-1.png");
+        assert_eq!(fs::read(&image).await.unwrap(), b"source-image");
+        assert_eq!(
+            fs::read(dest.join("image.png")).await.unwrap(),
+            b"other-document-image"
+        );
+        assert_eq!(
+            fs::read(root.join("B").join(name)).await.unwrap(),
+            b"source-image"
+        );
+        fs::remove_dir_all(root).await.unwrap();
+    }
 }

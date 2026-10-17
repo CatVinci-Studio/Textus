@@ -4,6 +4,7 @@ import {
   media,
   type ImageGenerationRequest,
   type ImageJob,
+  type ImageTaskPermission,
 } from "../platform/ipc";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { useDocumentWorkspace } from "./useDocumentWorkspace";
@@ -23,12 +24,18 @@ export function useDocumentImages(
   const [jobs, setJobs] = useState<ImageJob[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [inserting, setInserting] = useState<string | null>(null);
+  const [starts, setStarts] = useState(0);
+  const [unsettled, setUnsettled] = useState(0);
+  const awaiting = useRef(new Set<string>());
+  const authorizations = useRef(new Map<string, ImageTaskPermission>());
+  const stopped = useRef(new Set<string>());
   const insertingRef = useRef<string | null>(null);
   const alive = useRef(true);
   const latest = useLatest({ workspace, path, sessionId, jobs });
-  const pending = jobs.some(
-    (j) => !["committed", "cancelled"].includes(j.status),
-  );
+  const pending =
+    starts > 0 ||
+    unsettled > 0 ||
+    jobs.some((j) => !["committed", "cancelled"].includes(j.status));
   const setMediaPending = workspace.setMediaPending;
   useEffect(() => {
     setMediaPending(pending);
@@ -37,15 +44,28 @@ export function useDocumentImages(
     try {
       const value = await media.imageJobs(documentId);
       if (alive.current) setJobs(value ?? []);
+      return true;
     } catch (err) {
       if (alive.current) setError(errorText(err));
+      return false;
     }
   }, [documentId]);
+  const settle = useCallback(async () => {
+    const ids = [...awaiting.current];
+    if (!ids.length) return;
+    if (await refresh()) {
+      for (const id of ids) awaiting.current.delete(id);
+      if (alive.current) setUnsettled(awaiting.current.size);
+    }
+  }, [refresh]);
   useEffect(() => {
     alive.current = true;
+    const ownedGenerations = authorizations.current;
     void refresh();
     return () => {
       alive.current = false;
+      for (const permission of ownedGenerations.values())
+        void media.cancelImageGeneration(permission).catch(() => {});
     };
   }, [refresh]);
   useEffect(() => {
@@ -60,23 +80,33 @@ export function useDocumentImages(
     }, 750);
     return () => clearTimeout(timer);
   }, [jobs, refresh]);
+  const authorizeTask = useCallback(
+    (taskId: string, baseRevision: number): ImageTaskPermission => {
+      const permission = {
+        taskId,
+        documentId,
+        baseRevision,
+        allowAutomatic: true,
+        generationId: crypto.randomUUID(),
+      };
+      authorizations.current.set(permission.generationId, permission);
+      awaiting.current.add(permission.generationId);
+      setUnsettled(awaiting.current.size);
+      return permission;
+    },
+    [documentId],
+  );
   const start = useCallback(
     async (request: ImageGenerationRequest) => {
       const { workspace: w, sessionId: session } = latest.current;
       if (!w.begin("edit", session)) return;
       const draft = w.currentDraft();
       if (!draft) return;
+      const permission = authorizeTask(draft.id, draft.baseRevision);
+      setStarts((count) => count + 1);
       try {
-        const job = await media.startImage(
-          {
-            taskId: draft.id,
-            documentId,
-            baseRevision: draft.baseRevision,
-            allowAutomatic: true,
-          },
-          request,
-        );
-        if (alive.current) {
+        const job = await media.startImage(permission, request);
+        if (alive.current && !stopped.current.has(permission.generationId)) {
           setJobs((prev) => [
             ...prev.filter((j) => j.jobId !== job.jobId),
             job,
@@ -85,9 +115,13 @@ export function useDocumentImages(
         }
       } catch (err) {
         if (alive.current) setError(errorText(err));
+      } finally {
+        awaiting.current.delete(permission.generationId);
+        if (alive.current) setUnsettled(awaiting.current.size);
+        if (alive.current) setStarts((count) => count - 1);
       }
     },
-    [documentId, latest],
+    [authorizeTask, latest],
   );
   const cancel = useCallback(
     async (jobId: string) => {
@@ -186,7 +220,7 @@ export function useDocumentImages(
           );
         run((ctx) => ctx.get(editorViewCtx).dispatch(tr));
         committed = true;
-        w.rebaseAfterCommit();
+        w.rebaseAfterCommit(tr);
         await media.finishImage(job.jobId, true);
         await refresh();
       } catch (err) {
@@ -202,19 +236,45 @@ export function useDocumentImages(
       } finally {
         insertingRef.current = null;
         if (alive.current) setInserting(null);
+        if (committed) void refresh();
       }
     },
     [run, canAccept, latest, refresh],
   );
-  const stopRunning = useCallback(() => {
+  const stopRunning = useCallback(async () => {
+    const permissions = new Map(authorizations.current);
     for (const job of latest.current.jobs)
-      if (["queued", "running"].includes(job.status)) void cancel(job.jobId);
-  }, [cancel, latest]);
+      if (job.generationId)
+        permissions.set(job.generationId, {
+          taskId: job.taskId,
+          documentId,
+          generationId: job.generationId,
+          baseRevision: job.baseRevision,
+          allowAutomatic: true,
+        });
+    for (const id of permissions.keys()) stopped.current.add(id);
+    try {
+      await Promise.all(
+        [...permissions.values()].map((permission) =>
+          media.cancelImageGeneration(permission),
+        ),
+      );
+      for (const id of permissions.keys()) authorizations.current.delete(id);
+      for (const id of permissions.keys()) awaiting.current.delete(id);
+      if (alive.current) setUnsettled(awaiting.current.size);
+      await refresh();
+    } catch (err) {
+      if (alive.current) setError(errorText(err));
+      throw err;
+    }
+  }, [documentId, latest, refresh]);
   return {
     jobs,
     error,
     inserting,
     start,
+    authorizeTask,
+    settle,
     accept,
     cancel,
     canAccept,
