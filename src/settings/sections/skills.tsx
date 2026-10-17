@@ -19,6 +19,7 @@ import {
   CONVENTION_PROFILES,
   conventionsLanguageName,
   conventionsProfileName,
+  isConventionsValue,
 } from "../writing-conventions";
 
 // Settings > Textus AI: skills (the user's own, and the built-ins with their
@@ -366,9 +367,7 @@ export function WritingConventionsRow({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const lang = settings.language;
   const value = settings.writingConventions;
-  const known =
-    value === AUTOMATIC_CONVENTIONS ||
-    CONVENTION_PROFILES.some((g) => g.profiles.includes(value));
+  const known = isConventionsValue(value);
   return (
     <SettingRow label={t.writingConventionsLabel}>
       <Select
