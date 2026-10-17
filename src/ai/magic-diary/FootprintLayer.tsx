@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSettings } from "../../settings/SettingsContext";
+import { isMagicDiary } from "../../theme/builtin-themes";
 import {
   orbitLength,
   orbitPoint,
@@ -66,7 +67,7 @@ const VISITOR_NAMES = {
  * footfall is stamped once; only its fading trail remains on the paper. */
 export function FootprintLayer() {
   const { settings } = useSettings();
-  const on = settings.enableMagicDiary;
+  const on = isMagicDiary(settings);
   const [feet, setFeet] = useState<Foot[]>([]);
   const [stage, setStage] = useState<Stage>("orbit");
   const [visitorDrawing, setVisitorDrawing] = useState<VisitorDrawing | null>(

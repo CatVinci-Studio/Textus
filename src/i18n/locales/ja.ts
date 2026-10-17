@@ -337,9 +337,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   chatAttachmentTruncated: "（一部のみ）",
   chatAttachmentNoVision: `このプロバイダーは画像を読めません。「設定 > ${AI_NAME}」でプロバイダーを変更するか、文書を添付してください。`,
   aiGrammarLabel: "文法チェックを有効にする",
-  aiDiaryLabel: "魔法の日記",
-  aiDiaryHint:
-    "ほかの AI 機能に代わるイースターエッグです。段落の末尾で Enter を押すと送信され、書き終えた返事は 10 秒後に消えて、また入力できます。上下キーで過去の返事を表示し、Esc で中止します。原文は文書内に残ります。",
   aiAskLabel: `${AI_NAME} チャット`,
   aiAskToggleLabel: `${AI_NAME} チャットを有効にする`,
   accountLabelTemplate: "{name}アカウント",
@@ -790,6 +787,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   themeNameSlate: "スレート",
   themeNameForest: "フォレスト",
   themeNameParchment: "パーチメント",
+  themeNameDiary: "魔法の日記",
+  themeDiaryHint:
+    "行末で Enter を押すと、ページが別の筆跡で答えます。そのまま入力を続けると返事は消えます。上下キーで過去の返事、Esc で中止。書いた文は文書に残ります。このテーマの間は続きの提案と文法チェックを休みます。",
   appearanceLabel: "外観",
   appearanceSystem: "システムに従う",
   appearanceLight: "ライト",

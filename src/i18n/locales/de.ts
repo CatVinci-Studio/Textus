@@ -340,9 +340,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatAttachmentTruncated: "(gekürzt)",
   chatAttachmentNoVision: `Dieser Anbieter kann keine Bilder lesen. Wechsle den Anbieter unter Einstellungen > ${AI_NAME} oder hänge stattdessen ein Dokument an.`,
   aiGrammarLabel: "Grammatikprüfung aktivieren",
-  aiDiaryLabel: "Magisches Tagebuch",
-  aiDiaryHint:
-    "Ein Easter Egg, bei dem die anderen KI-Funktionen pausieren. Eingabe am Absatzende sendet den Text; die fertige Antwort bleibt 10 Sekunden, verblasst dann und gibt die Eingabe frei. Hoch/Runter zeigt frühere Antworten, Escape bricht ab. Der Originaltext bleibt im Dokument.",
   aiAskLabel: `Chat mit ${AI_NAME}`,
   aiAskToggleLabel: `Chat mit ${AI_NAME} aktivieren`,
   accountLabelTemplate: "{name}-Konto",
@@ -807,6 +804,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   themeNameSlate: "Schiefer",
   themeNameForest: "Wald",
   themeNameParchment: "Pergament",
+  themeNameDiary: "Magisches Tagebuch",
+  themeDiaryHint:
+    "Drücke am Zeilenende die Eingabetaste, und die Seite antwortet in einer anderen Handschrift. Weiterschreiben räumt die Antwort weg; Hoch/Runter holen frühere zurück, Esc bricht ab. Deine Zeilen bleiben im Dokument. Mit diesem Design pausieren Vorschläge und Grammatikprüfung.",
   appearanceLabel: "Erscheinungsbild",
   appearanceSystem: "Systemeinstellung",
   appearanceLight: "Hell",

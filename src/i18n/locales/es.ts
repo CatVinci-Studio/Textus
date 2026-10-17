@@ -353,9 +353,6 @@ para usar una.
   chatAttachmentTruncated: "(recortado)",
   chatAttachmentNoVision: `Este proveedor no puede leer imágenes. Cambia de proveedor en Ajustes > ${AI_NAME} o adjunta un documento.`,
   aiGrammarLabel: "Activar revisión gramatical",
-  aiDiaryLabel: "Diario mágico",
-  aiDiaryHint:
-    "Un huevo de pascua que da paso a este diario en lugar de las otras funciones de IA. Intro al final del párrafo lo envía; la respuesta terminada permanece 10 segundos y se desvanece para volver a escribir. Arriba/Abajo muestra respuestas anteriores; Escape cancela. El texto original permanece en el documento.",
   aiAskLabel: `Chat de ${AI_NAME}`,
   aiAskToggleLabel: `Activar el chat de ${AI_NAME}`,
   accountLabelTemplate: "Cuenta de {name}",
@@ -818,6 +815,9 @@ para usar una.
   themeNameSlate: "Pizarra",
   themeNameForest: "Bosque",
   themeNameParchment: "Pergamino",
+  themeNameDiary: "Diario mágico",
+  themeDiaryHint:
+    "Pulsa Intro al final de una línea y la página te responde con otra letra. Sigue escribiendo para retirar la respuesta; Arriba/Abajo recuperan las anteriores y Esc cancela. Tus líneas se quedan en el documento. Con este tema, las sugerencias y la revisión gramatical se pausan.",
   appearanceLabel: "Aspecto",
   appearanceSystem: "Según el sistema",
   appearanceLight: "Claro",

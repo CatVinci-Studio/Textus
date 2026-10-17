@@ -332,9 +332,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   chatAttachmentTruncated: "(일부 생략)",
   chatAttachmentNoVision: `이 제공업체는 이미지를 읽을 수 없습니다. 설정 > ${AI_NAME}에서 제공업체를 바꾸거나 문서를 첨부하세요.`,
   aiGrammarLabel: "문법 검사 사용",
-  aiDiaryLabel: "마법 일기",
-  aiDiaryHint:
-    "다른 AI 기능 대신 사용하는 이스터 에그입니다. 문단 끝에서 Enter로 보내면 답이 다 쓰인 뒤 10초 동안 머물다가 사라지고 다시 입력할 수 있습니다. 위아래 키로 이전 답을 보고 Esc로 취소합니다. 원문은 문서에 남습니다.",
   aiAskLabel: `${AI_NAME} 채팅`,
   aiAskToggleLabel: `${AI_NAME} 채팅 사용`,
   accountLabelTemplate: "{name} 계정",
@@ -783,6 +780,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   themeNameSlate: "슬레이트",
   themeNameForest: "숲",
   themeNameParchment: "양피지",
+  themeNameDiary: "마법 일기",
+  themeDiaryHint:
+    "줄 끝에서 Enter를 누르면 페이지가 다른 필체로 답합니다. 바로 이어서 입력하면 답이 사라지고, 위아래 키로 이전 답을 보고 Esc로 취소합니다. 쓴 문장은 문서에 남습니다. 이 테마를 쓰는 동안 이어 쓰기 제안과 문법 검사는 쉽니다.",
   appearanceLabel: "모양",
   appearanceSystem: "시스템 설정 따르기",
   appearanceLight: "라이트",

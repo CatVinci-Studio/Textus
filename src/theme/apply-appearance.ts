@@ -8,7 +8,7 @@ import {
   type ThemeChromeCache,
 } from "../storage/ui-state";
 import type { Settings, ThemeMode } from "../settings/SettingsContext";
-import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
+import { BUILTIN_CONTENT_THEMES, isMagicDiary } from "./builtin-themes";
 import { applyThemeChrome, clearThemeChrome } from "./theme-chrome";
 import { adaptTyporaCss } from "./typora-compat";
 
@@ -100,16 +100,17 @@ export function useApplyAppearance(
     else root.setAttribute("data-content-width", settings.contentWidth);
   }, [settings.contentWidth]);
 
-  // The Magic Diary ages the whole window, not just the writing column
+  const diary = isMagicDiary(settings);
+  // The Magic Diary theme ages the whole window, not just the writing column
   // (magic-diary-page.css) - it is the room that turns out to be a book.
   // An attribute rather than a class so the skin's rules can sit at a
   // specificity that wins against the theme's own without !important, and
   // so one rule can reach the app chrome that no theme variable covers.
   useEffect(() => {
     const root = document.documentElement;
-    if (settings.enableMagicDiary) root.setAttribute("data-magic-diary", "");
+    if (diary) root.setAttribute("data-magic-diary", "");
     else root.removeAttribute("data-magic-diary");
-  }, [settings.enableMagicDiary]);
+  }, [diary]);
 
   useEffect(() => {
     let styleEl = document.getElementById(

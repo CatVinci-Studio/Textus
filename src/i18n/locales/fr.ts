@@ -355,9 +355,6 @@ utiliser une.
   chatAttachmentTruncated: "(tronqué)",
   chatAttachmentNoVision: `Ce fournisseur ne peut pas lire les images. Changez de fournisseur dans Réglages > ${AI_NAME}, ou joignez plutôt un document.`,
   aiGrammarLabel: "Activer la vérification grammaticale",
-  aiDiaryLabel: "Diary magique",
-  aiDiaryHint:
-    "Une surprise qui remplace les autres fonctions d’IA. Entrée en fin de paragraphe envoie le texte ; la réponse terminée reste 10 secondes, puis s’efface pour vous laisser écrire. Haut/Bas rappelle les réponses précédentes ; Échap annule. Le texte original reste dans le document.",
   aiAskLabel: `Discussion avec ${AI_NAME}`,
   aiAskToggleLabel: `Activer la discussion avec ${AI_NAME}`,
   accountLabelTemplate: "Compte {name}",
@@ -826,6 +823,9 @@ utiliser une.
   themeNameSlate: "Ardoise",
   themeNameForest: "Forêt",
   themeNameParchment: "Parchemin",
+  themeNameDiary: "Journal magique",
+  themeDiaryHint:
+    "Appuyez sur Entrée en fin de ligne et la page vous répond d’une autre écriture. Continuez à taper pour ranger la réponse ; Haut/Bas rappellent les précédentes, Échap annule. Vos lignes restent dans le document. Avec ce thème, les suggestions et la vérification grammaticale sont en pause.",
   appearanceLabel: "Apparence",
   appearanceSystem: "Selon le système",
   appearanceLight: "Clair",

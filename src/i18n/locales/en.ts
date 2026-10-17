@@ -337,9 +337,6 @@ type /name in a conversation to use one.
   chatAttachmentTruncated: "(shortened)",
   chatAttachmentNoVision: `This provider can't read images. Switch provider in Settings > ${AI_NAME}, or attach a document instead.`,
   aiGrammarLabel: "Enable grammar check",
-  aiDiaryLabel: "Magic Diary",
-  aiDiaryHint:
-    "An easter egg that stands the other AI features down. Enter at the end of a paragraph sends it; the finished answer stays for 10 seconds, then fades so you can write again. Up/Down recalls earlier answers; Escape cancels. Your original text stays in the document.",
   aiAskLabel: `${AI_NAME} Chat`,
   aiAskToggleLabel: `Enable ${AI_NAME} chat`,
   accountLabelTemplate: "{name} Account",
@@ -795,6 +792,9 @@ type /name in a conversation to use one.
   themeNameSlate: "Slate",
   themeNameForest: "Forest",
   themeNameParchment: "Parchment",
+  themeNameDiary: "Magic Diary",
+  themeDiaryHint:
+    "Press Enter at the end of a line and the page answers it in another hand. Start typing to put the answer away; Up/Down bring back earlier ones, Esc cancels. Your lines stay in the document. Ghost text and grammar checks pause while this theme is on.",
   appearanceLabel: "Appearance",
   appearanceSystem: "Follow system",
   appearanceLight: "Light",

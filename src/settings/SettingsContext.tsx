@@ -172,11 +172,6 @@ export interface Settings {
   /// Whether an agent edit's green in-document preview streams/types itself
   /// in (pending-edit-plugin's typewriter) or appears complete at once.
   enableEditAnimation: boolean;
-  /// The Magic Diary: a finished line dissolves and the page answers it in
-  /// another hand (ai/magic-diary). Off by default - it takes the Enter key
-  /// at the end of a paragraph, which is the one key a writer uses to mean
-  /// "next paragraph". Nothing is deleted either way; see the plugin.
-  enableMagicDiary: boolean;
   /// Where Quick Ask's "open full conversation" goes: the docked panel on
   /// the right (default), or the detached window - for a second monitor.
   /// The panel's own header pops out to the window either way.
@@ -241,7 +236,7 @@ export interface Settings {
   enableDraftRecovery: boolean;
 }
 
-const DEFAULT_SETTINGS_RAW: Settings = {
+const DEFAULT_SETTINGS: Settings = {
   language: "en",
   languageChosen: false,
   levisImportOffered: false,
@@ -265,7 +260,6 @@ const DEFAULT_SETTINGS_RAW: Settings = {
   writingConventions: "automatic",
   enableWebSearch: false,
   enableEditAnimation: true,
-  enableMagicDiary: false,
   agentExpandToWindow: false,
   pinAgentWindow: false,
   agentWorkspaceRoot: "",
@@ -288,14 +282,6 @@ const DEFAULT_SETTINGS_RAW: Settings = {
   enableClipboardHistory: true,
   enableDraftRecovery: true,
 };
-
-/* The defaults are put through the same rule as everything else, so they
-   cannot describe two of these at once either - a first launch whose
-   defaults said diary on and ghost text on would ship the contradiction to
-   every new install. `diaryExclusive` is declared below and hoisted; the
-   defaults are off today, so it changes nothing until someone flips
-   enableMagicDiary to true, which is exactly when it must bite. */
-const DEFAULT_SETTINGS: Settings = diaryExclusive({ ...DEFAULT_SETTINGS_RAW });
 
 const STORAGE_KEY = "catvinci-settings";
 
@@ -355,53 +341,13 @@ function isRecord(value: unknown): value is Raw {
  * or an empty object) is a brand-new installation; a stored object that is
  * merely missing a field is an existing one from before that field.
  */
-/** The AI features that write into the page, one at a time. */
-const OTHER_AI_FEATURES = [
-  "enableCompletion",
-  "enableGrammarCheck",
-  "enableAskAi",
-  "enableWebSearch",
-] as const satisfies readonly (keyof Settings)[];
-
-/** The one invariant about these: with the diary on, none of the rest can
- *  be. Pure, so it can also settle DEFAULT_SETTINGS and anything read from
- *  disk - the two places a settings blob can arrive describing two voices
- *  on one line, neither of them through a toggle press. */
-function diaryExclusive<T extends Partial<Settings>>(value: T): T {
-  return value.enableMagicDiary === true
-    ? {
-        ...value,
-        enableCompletion: false,
-        enableGrammarCheck: false,
-        enableAskAi: false,
-        enableWebSearch: false,
-      }
-    : value;
-}
-
-/** The same rule as a policy for a toggle: the last switch moved wins, so
- *  switching the diary off does not quietly bring ghost text back. Read off
- *  `patch` alone, so "switched on" is never guessed from a field the caller
- *  did not touch, and so this stays safe to call twice. */
-function exclusiveAi(patch: Partial<Settings>): Partial<Settings> {
-  if (patch.enableMagicDiary === true) return diaryExclusive(patch);
-  if (OTHER_AI_FEATURES.some((key) => patch[key] === true))
-    return { ...patch, enableMagicDiary: false };
-  return patch;
-}
-
 export function normaliseSettings(parsed: Raw | null): Settings {
   if (!parsed || Object.keys(parsed).length === 0)
     return { ...DEFAULT_SETTINGS, language: guessLanguage() };
   try {
-    const merged = {
+    return {
       ...DEFAULT_SETTINGS,
       ...parsed,
-      // The same stand-down exclusiveAi states, for a settings blob written
-      // before it - an install with the diary already on and the other AI
-      // features still enabled would otherwise run both on load, with no
-      // toggle press to reconcile it.
-      ...exclusiveAi(parsed as Partial<Settings>),
       // Existing installations created before the newcomer guide had no
       // field at all and must not suddenly receive first-run onboarding
       // after an update. A genuinely new install starts from DEFAULT_SETTINGS
@@ -450,7 +396,6 @@ export function normaliseSettings(parsed: Raw | null): Settings {
           ? parsed.writingConventions
           : DEFAULT_SETTINGS.writingConventions,
     };
-    return merged;
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -548,11 +493,7 @@ function fileStore(): SettingsSync | null {
 /** Adopts a full snapshot from Rust, keeping this window's zoom. */
 function adopt(value: Raw, rev: number) {
   if (!sync) return;
-  // The same stand-down the panel does, for settings arriving from outside
-  // this window - the backend's own file, a first-launch fill that wrote
-  // both on, another window's change. Without it a blob describing two of
-  // these at once would put two voices on the same line.
-  const next = { ...value, ...exclusiveAi(value as Partial<Settings>) } as Raw;
+  const next = { ...value };
   if (sync.raw.zoom !== undefined) next.zoom = sync.raw.zoom;
   if (sync.snapshot(next, rev)) notifyRemote();
 }
@@ -690,8 +631,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   useApplyAppearance(settings, setSettings);
 
   function setSettings(patch: Partial<Settings>) {
-    setSettingsState((prev) => ({ ...prev, ...exclusiveAi(patch) }));
-    persist(exclusiveAi(patch));
+    setSettingsState((prev) => ({ ...prev, ...patch }));
+    persist(patch);
   }
 
   const t = resolveStrings(settings.language);

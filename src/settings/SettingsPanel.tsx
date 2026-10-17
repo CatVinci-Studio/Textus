@@ -391,12 +391,6 @@ export function SettingsPanel({
                 </Select>
               </SettingRow>
             )}
-            <ToggleRow
-              label={t.aiDiaryLabel}
-              hint={t.aiDiaryHint}
-              checked={settings.enableMagicDiary}
-              onChange={(v) => setSettings({ enableMagicDiary: v })}
-            />
             <WritingConventionsRow t={t} />
           </SettingsGroup>
 

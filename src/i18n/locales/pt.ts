@@ -340,9 +340,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   chatAttachmentTruncated: "(parcial)",
   chatAttachmentNoVision: `Este provedor não lê imagens. Troque de provedor em Ajustes > ${AI_NAME} ou anexe um documento.`,
   aiGrammarLabel: "Ativar verificação gramatical",
-  aiDiaryLabel: "Diário mágico",
-  aiDiaryHint:
-    "Um ovo de Páscoa que dá lugar ao diário em vez das outras funções de IA. Enter no fim do parágrafo envia o texto; a resposta concluída fica 10 segundos e desvanece-se para voltar a escrever. Cima/Baixo mostra respostas anteriores; Escape cancela. O texto original permanece no documento.",
   aiAskLabel: `Chat da ${AI_NAME}`,
   aiAskToggleLabel: `Ativar chat da ${AI_NAME}`,
   accountLabelTemplate: "Conta {name}",
@@ -801,6 +798,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   themeNameSlate: "Ardósia",
   themeNameForest: "Floresta",
   themeNameParchment: "Pergaminho",
+  themeNameDiary: "Diário mágico",
+  themeDiaryHint:
+    "Prima Enter no fim de uma linha e a página responde com outra caligrafia. Continue a escrever para guardar a resposta; Cima/Baixo mostram as anteriores e Esc cancela. As suas linhas ficam no documento. Com este tema, as sugestões e a verificação gramatical ficam em pausa.",
   appearanceLabel: "Aparência",
   appearanceSystem: "Seguir o sistema",
   appearanceLight: "Claro",

@@ -319,9 +319,6 @@ export default {
   chatAttachmentTruncated: "（已截断）",
   chatAttachmentNoVision: `当前服务商无法读取图片。请在「设置 > ${AI_NAME}」中更换服务商，或改为附加文档。`,
   aiGrammarLabel: "开启语法检查",
-  aiDiaryLabel: "魔法日记",
-  aiDiaryHint:
-    "一个彩蛋，开启后其他 AI 功能会让位。段落末尾按回车发送，回答写完停留 10 秒后消散，随后继续输入。上下键回看先前回答，Esc 取消。原文始终保留在文档中。",
   aiAskLabel: `${AI_NAME} 对话`,
   aiAskToggleLabel: `开启 ${AI_NAME} 对话`,
   accountLabelTemplate: "{name} 账户",
@@ -752,6 +749,9 @@ export default {
   themeNameSlate: "石板",
   themeNameForest: "森林",
   themeNameParchment: "羊皮纸",
+  themeNameDiary: "魔法日记",
+  themeDiaryHint:
+    "在一行末尾按回车，页面会用另一种笔迹回答你。直接继续打字就能收起回答；上下键回看先前的回答，Esc 取消。你写的句子始终留在文档里。使用这个主题时，续写和语法检查会暂停。",
   appearanceLabel: "外观",
   appearanceSystem: "跟随系统",
   appearanceLight: "浅色",

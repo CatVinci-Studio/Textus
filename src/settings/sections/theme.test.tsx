@@ -16,6 +16,7 @@ const mock = vi.hoisted(() => ({
   settings: {
     theme: "system",
     themeId: "user-test",
+    aiProvider: "openai",
     userThemes: [{ id: "user-test", name: "Test", hasDark: false }],
   },
 }));
@@ -24,7 +25,23 @@ vi.mock("../SettingsContext", () => ({
   THEME_MODES: ["system", "light", "dark"],
 }));
 vi.mock("../../theme/builtin-themes", () => ({
-  BUILTIN_CONTENT_THEMES: [{ id: "default", nameKey: "themeNameDefault" }],
+  BUILTIN_CONTENT_THEMES: [
+    { id: "default", nameKey: "themeNameDefault" },
+    { id: "diary", nameKey: "themeNameDiary" },
+  ],
+  MAGIC_DIARY_THEME: "diary",
+}));
+const connected = vi.hoisted(() => ({ value: false }));
+vi.mock("../../ai/provider-catalog", () => ({
+  useProviderCatalog: () => [{ id: "openai" }],
+}));
+vi.mock("./providers", () => ({
+  fetchConnected: () =>
+    Promise.resolve({ oauth: connected.value, apiKey: false }),
+}));
+vi.mock("../../platform/capabilities", async (real) => ({
+  ...(await real<typeof import("../../platform/capabilities")>()),
+  isDesktopApp: true,
 }));
 vi.mock("../../platform/ipc", () => ({
   fs: { openCssFileDialog: vi.fn() },
@@ -36,6 +53,24 @@ vi.mock("../../theme/theme-import", () => ({
 afterEach(cleanup);
 beforeEach(() => vi.clearAllMocks());
 describe("theme settings", () => {
+  it("offers the Magic Diary theme only once an AI provider is connected", async () => {
+    const t = resolveStrings("en");
+    const options = async () => {
+      fireEvent.click(
+        screen.getByRole("combobox", { name: t.contentThemeLabel }),
+      );
+      await screen.findByRole("option", { name: "Default" });
+      return screen.queryByRole("option", { name: "Magic Diary" });
+    };
+    connected.value = false;
+    const { unmount } = render(<ThemeSection t={t} />);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(await options()).toBeNull();
+    unmount();
+    connected.value = true;
+    render(<ThemeSection t={t} />);
+    await waitFor(async () => expect(await options()).not.toBeNull());
+  });
   it("offers named appearance choices with the current selection", () => {
     render(<ThemeSection t={resolveStrings("en")} />);
     expect(screen.getByRole("radio", { name: "Follow system" })).toBeChecked();
