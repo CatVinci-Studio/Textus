@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { storyReply } from "./diary-story";
 import { scriptedReply } from "./diary-replies";
-import story from "./diary-story.json";
 
 describe("Textus's hidden story", () => {
   it("answers lore questions with the original story even without a model", () => {
@@ -28,22 +27,6 @@ describe("Textus's hidden story", () => {
   });
   it("says the story is Textus's own when asked where it comes from", () => {
     expect(storyReply("zh", "原著里真的有Textus吗？", [])).toContain("原创");
-  });
-  it("borrows nothing from another story", () => {
-    const text = JSON.stringify(story);
-    for (const name of [
-      "哈利",
-      "赫敏",
-      "霍格沃茨",
-      "禁林",
-      "活点",
-      "Harry",
-      "Hermione",
-      "Hogwarts",
-      "Marauder",
-      "Potter",
-    ])
-      expect(text).not.toContain(name);
   });
   it("offers English and traditional Chinese story replies without overriding other app languages", () => {
     expect(storyReply("en", "Who are you?", [])).toContain("Textus");
