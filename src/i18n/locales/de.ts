@@ -159,6 +159,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   shortcutToggleZenMode: "Zen-Modus ein/aus",
   zenExitHint: "Esc beendet den Zen-Modus",
   zenExitButton: "Zen-Modus beenden",
+  openDialogText: "Textdateien",
+  openDialogAll: "Alle Dateien",
   agentPanelSourceMode: `${AI_NAME} arbeitet in der Editoransicht. Wechsle zurück, um die Unterhaltung fortzusetzen.`,
   agentPanelBackToEditor: "Zurück zum Editor",
   modelTagVision: "Bilder",

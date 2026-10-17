@@ -165,6 +165,8 @@ para usar una.
   shortcutToggleZenMode: "Modo zen",
   zenExitHint: "Esc para salir del modo zen",
   zenExitButton: "Salir del modo zen",
+  openDialogText: "Archivos de texto",
+  openDialogAll: "Todos los archivos",
   agentPanelSourceMode: `${AI_NAME} funciona en la vista del editor. Vuelve a ella para seguir con la conversación.`,
   agentPanelBackToEditor: "Volver al editor",
   modelTagVision: "visión",

@@ -149,6 +149,8 @@ export default {
   shortcutToggleZenMode: "切换禅模式",
   zenExitHint: "按 Esc 退出禅模式",
   zenExitButton: "退出禅模式",
+  openDialogText: "文本文件",
+  openDialogAll: "所有文件",
   agentPanelSourceMode: `${AI_NAME} 需要在编辑视图中使用，切换回去即可继续对话。`,
   agentPanelBackToEditor: "返回编辑视图",
   modelTagVision: "看图",

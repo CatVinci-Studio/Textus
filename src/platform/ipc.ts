@@ -101,10 +101,15 @@ export const fs = {
   // On iOS a picked document is a file:// URL read and written through the
   // native plugin (platform/ios-files.ts); sandbox paths and every desktop
   // path go to Rust as before.
-  openFileDialog: (): Promise<string | null> =>
+  /** `filters` names the dialog's file-type choices besides Markdown, in
+   *  the UI language (commands/fs.rs). */
+  openFileDialog: (filters?: {
+    textFilter: string;
+    allFilter: string;
+  }): Promise<string | null> =>
     isIOSApp
       ? iosFiles.pickDocument()
-      : call<string | null>("open_file_dialog"),
+      : call<string | null>("open_file_dialog", filters),
   openCssFileDialog: () => call<string | null>("open_css_file_dialog"),
   saveFileDialog: (defaultName: string): Promise<string | null> =>
     isIOSApp

@@ -154,6 +154,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   shortcutToggleZenMode: "젠 모드 전환",
   zenExitHint: "Esc 키로 젠 모드 종료",
   zenExitButton: "젠 모드 종료",
+  openDialogText: "텍스트 파일",
+  openDialogAll: "모든 파일",
   agentPanelSourceMode: `${AI_NAME}는 편집기 보기에서 작동합니다. 대화를 이어 가려면 편집기 보기로 돌아가세요.`,
   agentPanelBackToEditor: "편집기로 돌아가기",
   modelTagVision: "이미지",

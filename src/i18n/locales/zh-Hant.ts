@@ -149,6 +149,8 @@ export default {
   shortcutToggleZenMode: "切換禪模式",
   zenExitHint: "按 Esc 離開禪模式",
   zenExitButton: "離開禪模式",
+  openDialogText: "文字檔案",
+  openDialogAll: "所有檔案",
   agentPanelSourceMode: `${AI_NAME} 需要在編輯器檢視中使用。切換回去即可繼續對話。`,
   agentPanelBackToEditor: "回到編輯器",
   modelTagVision: "視覺",
