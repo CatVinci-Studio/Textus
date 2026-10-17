@@ -870,6 +870,9 @@ test("source mode: body-sized text, centred on a whole pixel, unchanged by focus
         willChange: cs.willChange,
         filter: cs.filter,
         opacity: cs.opacity,
+        // The focus ring outlined the textarea's composited layer, which
+        // is when WebKitGTK's text went soft (#61): the page is the field.
+        outline: cs.outlineStyle,
       };
     });
   const before = await look();
@@ -878,6 +881,9 @@ test("source mode: body-sized text, centred on a whole pixel, unchanged by focus
   expect(Number.isInteger(before.left)).toBe(true);
   await textarea.click();
   await expect(textarea).toBeFocused();
+  expect(await textarea.evaluate((el) => el.matches(":focus-visible"))).toBe(
+    true,
+  );
   const after = await look();
   expect(after).toEqual(before);
   expect(after.transform).toBe("none");
