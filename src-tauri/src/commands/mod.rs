@@ -17,6 +17,8 @@ pub mod fs;
 pub mod image_host;
 pub mod links;
 #[cfg(desktop)]
+pub mod pdf_page_numbers;
+#[cfg(desktop)]
 pub mod prefs;
 pub mod recents;
 #[cfg(desktop)]

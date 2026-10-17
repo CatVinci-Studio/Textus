@@ -259,6 +259,7 @@ function App() {
     activeTabId,
     liveTabs,
     t,
+    pdfPageNumbers: settings.pdfPageNumbers,
     onOpenSettings: () => setSettingsOpen(true),
     onToggleTypewriter: () =>
       setSettings({ typewriterMode: !settings.typewriterMode }),

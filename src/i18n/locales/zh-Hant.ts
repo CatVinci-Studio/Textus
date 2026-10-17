@@ -457,6 +457,8 @@ export default {
     "微信等只接收純文字的 App 會收到這一種；支援格式的 App 仍會保留格式。",
   copyTextModeReadable: "可讀文字",
   copyTextModeMarkdown: "Markdown 原文",
+  pdfPageNumbersLabel: "PDF 頁碼",
+  pdfPageNumbersHint: "匯出的 PDF 在每頁底部顯示頁碼。",
   askAi: "詢問 AI…",
   agentProposalTitle: "修改建議",
   chatClose: "關閉對話",

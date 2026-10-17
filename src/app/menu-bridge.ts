@@ -19,6 +19,8 @@ export interface MenuBridgeHandlers {
    *  export carries what is on screen. */
   liveTabs: () => DocTab[];
   t: Strings;
+  /** Settings › "Page numbers in PDF", read when File > Export as PDF runs. */
+  pdfPageNumbers: boolean;
   onOpenSettings: () => void;
   onToggleTypewriter: () => void;
   onToggleSidebar: () => void;
@@ -86,7 +88,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       // the chosen file (no print dialog). See exportPdf in export-doc.
       listenToThisWindow("menu-export-pdf", () => {
         const tab = activeTabNow();
-        if (tab) void exportPdf(tab, h().t);
+        if (tab) void exportPdf(tab, h().t, h().pdfPageNumbers);
       }),
       listenToThisWindow("menu-export-html", () => {
         const tab = activeTabNow();

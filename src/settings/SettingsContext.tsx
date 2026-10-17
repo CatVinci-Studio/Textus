@@ -223,6 +223,9 @@ export interface Settings {
   /** Suggest an H1 or first content line as a draft's Save As filename. */
   autoSuggestFilename: boolean;
   copyTextMode: CopyTextMode;
+  /** File > Export as PDF numbers each page in its bottom margin
+   *  (commands/pdf_page_numbers.rs). Off by default (#68). */
+  pdfPageNumbers: boolean;
   /// Set once the first-run tutorial has been shown (or skipped) - belt and
   /// suspenders alongside `isFreshInstall` below, in case a window closes
   /// mid-tutorial before the user reaches the end.
@@ -277,6 +280,7 @@ const DEFAULT_SETTINGS: Settings = {
   restoreSessionOnStartup: true,
   autoSuggestFilename: true,
   copyTextMode: "readable",
+  pdfPageNumbers: false,
   onboardingShown: false,
   enableChatHistory: true,
   enableClipboardHistory: true,

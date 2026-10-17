@@ -197,10 +197,12 @@ pub async fn export_pdf_native(
     html: String,
     base_dir: Option<String>,
     output_path: String,
+    page_numbers: bool,
 ) -> Result<(), String> {
     let (tx, rx) = std::sync::mpsc::channel::<Result<(), String>>();
+    let target = output_path.clone();
     app.run_on_main_thread(move || {
-        pdf_macos::start_pdf_export(html, base_dir, output_path, tx);
+        pdf_macos::start_pdf_export(html, base_dir, target, tx);
     })
     .map_err(|e| e.to_string())?;
     // Bounded wait so a hung render can never leave the frontend spinner stuck.
@@ -213,7 +215,24 @@ pub async fn export_pdf_native(
         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
             Err("PDF export ended without a result".to_string())
         }
+    }?;
+    add_page_numbers(output_path, page_numbers).await
+}
+
+/// Settings › "Page numbers in PDF" (#68): numbers the finished file's
+/// pages, the same way whichever webview rendered it
+/// (pdf_page_numbers.rs). Off, the export is exactly what the renderer
+/// wrote.
+#[cfg(any(target_os = "macos", windows, target_os = "linux"))]
+async fn add_page_numbers(output_path: String, page_numbers: bool) -> Result<(), String> {
+    if !page_numbers {
+        return Ok(());
     }
+    tokio::task::spawn_blocking(move || {
+        super::pdf_page_numbers::number_pdf_file(std::path::Path::new(&output_path))
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 /// Labels of the hidden windows the Windows/Linux PDF export renders in -
@@ -237,8 +256,10 @@ pub async fn export_pdf_native(
     html: String,
     _base_dir: Option<String>,
     output_path: String,
+    page_numbers: bool,
 ) -> Result<(), String> {
-    pdf_offscreen::export(app, html, output_path).await
+    pdf_offscreen::export(app, html, output_path.clone()).await?;
+    add_page_numbers(output_path, page_numbers).await
 }
 
 #[cfg(all(desktop, not(any(target_os = "macos", windows, target_os = "linux"))))]
@@ -248,6 +269,7 @@ pub async fn export_pdf_native(
     _html: String,
     _base_dir: Option<String>,
     _output_path: String,
+    _page_numbers: bool,
 ) -> Result<(), String> {
     Err("PDF export is not supported on this platform".to_string())
 }

@@ -29,6 +29,7 @@ const t = {
   customCssLabel: "Custom CSS",
   privacyClearButton: "Clear",
   privacyClearClipboard: "Clear Clipboard History",
+  pdfPageNumbersLabel: "Page numbers in PDF",
 };
 
 async function openSettings(page: Page) {
@@ -164,6 +165,30 @@ test.describe("desktop", () => {
     ).toBeAttached();
   });
 
+  test("PDF page numbers start off and the switch is remembered", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    const panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.navEditor }).click();
+    const numbers = panel.getByRole("checkbox", {
+      name: t.pdfPageNumbersLabel,
+    });
+    await expect(numbers).not.toBeChecked();
+    await numbers.click();
+
+    await expect(numbers).toBeChecked();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}")
+              .pdfPageNumbers,
+        ),
+      )
+      .toBe(true);
+  });
+
   test("Custom CSS stays open while it is emptied", async ({ page }) => {
     await openApp(page, { settings: { language: "en" } });
     const panel = await openSettings(page);
@@ -260,6 +285,14 @@ test.describe("phone", () => {
       client: el.clientWidth,
     }));
     expect(scroll).toBeLessThanOrEqual(client);
+  });
+
+  test("no PDF page number switch, with no PDF export", async ({ page }) => {
+    await openPhone(page);
+    const panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.navEditor }).tap();
+    await expect(panel.getByText(t.menuViewSource)).toBeVisible();
+    await expect(panel.getByText(t.pdfPageNumbersLabel)).toHaveCount(0);
   });
 
   test("closing Settings doesn't put the keyboard back up", async ({
