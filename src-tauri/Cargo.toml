@@ -24,7 +24,9 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 # macos-private-api: required for transparent webview windows (the floating
 # drag-pill window a tab turns into while being dragged between windows).
-tauri = { version = "2", features = ["protocol-asset", "macos-private-api"] }
+# Keep the minor in step with @tauri-apps/api in package.json; the tauri
+# CLI warns when the JS and Rust versions drift apart.
+tauri = { version = "2.12", features = ["protocol-asset", "macos-private-api"] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
@@ -77,8 +79,9 @@ unicode-segmentation = "1"
 tauri-plugin-textus-files = { path = "plugins/textus-files" }
 
 [target.'cfg(not(any(target_os = "ios", target_os = "android")))'.dependencies]
-tauri-plugin-updater = "2"
-tauri-plugin-process = "2"
+# In step with @tauri-apps/plugin-updater and @tauri-apps/plugin-process.
+tauri-plugin-updater = "2.14"
+tauri-plugin-process = "2.4"
 
 # macOS-native PDF export (commands/export.rs): the themed document is
 # rendered in an offscreen WKWebView with createPDF and cut into A4 sheets
@@ -134,8 +137,8 @@ block2 = "0.6"
 # renderer driven directly - WebView2's PrintToPdf, WebKitGTK's print-to-file
 # operation. Already in the tree via wry; versions must stay on wry's.
 [target.'cfg(windows)'.dependencies]
-webview2-com = "0.38"
-windows = "0.61"
+webview2-com = "0.39"
+windows = "0.62"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 webkit2gtk = "2.0"
