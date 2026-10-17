@@ -8,7 +8,13 @@ import {
 } from "../document/doc-tabs";
 import { fs, session } from "../platform/ipc";
 import { useWindowEvent } from "../utils/hooks/useWindowEvent";
-import { OPEN_FILE_IN_TAB_EVENT } from "../utils/events";
+import {
+  DROP_IMAGE_FILES_EVENT,
+  OPEN_FILE_IN_TAB_EVENT,
+} from "../utils/events";
+import { isIOSApp } from "../platform/capabilities";
+import { isWindowsPlatform } from "../platform/os";
+import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
 import type { NewDocumentMode } from "../settings/SettingsContext";
 import type { PendingClose } from "./close-flow";
 import type { TabState } from "./useTabState";
@@ -22,8 +28,10 @@ export function useFileOpening(opts: {
   tabState: TabState;
   newDocumentMode: NewDocumentMode;
   setPendingClose: (close: PendingClose) => void;
+  /** File > Open's file-type names besides Markdown, in the UI language. */
+  dialogFilters: { textFilter: string; allFilter: string };
 }) {
-  const { tabState, newDocumentMode, setPendingClose } = opts;
+  const { tabState, newDocumentMode, setPendingClose, dialogFilters } = opts;
   const { tabsRef, setTabs, activeTabId, setActiveTabId, updateTab } = tabState;
 
   const openPathInTab = useCallback(
@@ -103,9 +111,9 @@ export function useFileOpening(opts: {
   });
 
   const openFileDialog = useCallback(async () => {
-    const picked = await fs.openFileDialog();
+    const picked = await fs.openFileDialog(dialogFilters);
     if (picked) await openFile(picked);
-  }, [openFile]);
+  }, [openFile, dialogFilters]);
 
   return { openPathInTab, replaceTabWithFile, openFile, openFileDialog };
 }
@@ -129,4 +137,45 @@ export function useOpenPathsPush(
     );
     return unlistenAll(unlisten);
   }, [openPathInTab]);
+}
+
+/**
+ * Files dropped on this window from a file manager (dropped-files.ts).
+ * Strictly this window, like the push above: Tauri addresses the drop to
+ * the window it landed on. One document opens the way File > Open does
+ * (a tab, or in window mode in place of this one); several each get a tab
+ * here, rather than replacing one another in turn. Dropped images go to
+ * the editor on screen, at the drop point (images/image-plugin.ts).
+ */
+export function useFileDrop(
+  openFile: (path: string) => Promise<void>,
+  openPathInTab: (path: string) => Promise<void>,
+): void {
+  useEffect(() => {
+    if (isIOSApp) return;
+    const unlisten = listenToThisWindow<{
+      paths: string[];
+      position: { x: number; y: number };
+    }>("tauri://drag-drop", async (event) => {
+      const { documents, images } = sortDroppedPaths(event.payload.paths);
+      if (images.length > 0)
+        window.dispatchEvent(
+          new CustomEvent(DROP_IMAGE_FILES_EVENT, {
+            detail: {
+              paths: images,
+              point: dropPointInPage(
+                event.payload.position,
+                isWindowsPlatform(),
+                window.devicePixelRatio,
+              ),
+            },
+          }),
+        );
+      // A file that can't be read as text (a folder, a binary) opens
+      // nothing, the same as when it is picked in File > Open.
+      const open = documents.length === 1 ? openFile : openPathInTab;
+      for (const path of documents) await open(path).catch(() => undefined);
+    });
+    return unlistenAll(unlisten);
+  }, [openFile, openPathInTab]);
 }

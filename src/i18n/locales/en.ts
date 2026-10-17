@@ -157,6 +157,9 @@ type /name in a conversation to use one.
   shortcutToggleZenMode: "Toggle zen mode",
   zenExitHint: "Esc to leave zen mode",
   zenExitButton: "Leave Zen Mode",
+  /** File > Open's file-type choices besides Markdown. */
+  openDialogText: "Text files",
+  openDialogAll: "All files",
   agentPanelSourceMode: `${AI_NAME} works in the editor view. Switch back to keep the conversation going.`,
   agentPanelBackToEditor: "Back to the editor",
   modelTagVision: "vision",

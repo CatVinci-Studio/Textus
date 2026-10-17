@@ -155,6 +155,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   shortcutToggleZenMode: "禅モードの切り替え",
   zenExitHint: "Escで禅モードを終了",
   zenExitButton: "禅モードを終了",
+  openDialogText: "テキストファイル",
+  openDialogAll: "すべてのファイル",
   agentPanelSourceMode: `${AI_NAME} はエディター表示で使えます。戻ると会話を続けられます。`,
   agentPanelBackToEditor: "エディター表示に戻る",
   modelTagVision: "画像",

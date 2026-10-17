@@ -27,12 +27,45 @@ pub(crate) fn window_file_dialog(
     dialog
 }
 
-/// Opens a native file picker for a single Markdown file.
+/// The file types File > Open offers, in order: Markdown first, as the
+/// one picked by default, then plain text and any file at all (issue #78 -
+/// Markdown alone locked every other file out). The names come from the
+/// frontend, in the UI language.
+///
+/// None on macOS: NSOpenPanel shows no file-type menu, it only greys out
+/// what the filters leave out (rfd hands it every filter's extensions at
+/// once, with no "any file" among them), so no filter is the "All files"
+/// choice there. iOS has its own picker and never opens this one.
+fn open_document_filters(text: &str, all: &str) -> Vec<(String, &'static [&'static str])> {
+    if cfg!(any(target_os = "macos", target_os = "ios")) {
+        return Vec::new();
+    }
+    vec![
+        ("Markdown".to_string(), &["md", "markdown"]),
+        (text.to_string(), &["txt", "text"]),
+        // rfd writes it out as the any-file pattern each dialog takes.
+        (all.to_string(), &["*"]),
+    ]
+}
+
+/// Opens a native file picker for the document to open: a Markdown file by
+/// default, any file once the user switches the type.
 #[tauri::command]
-pub async fn open_file_dialog(window: tauri::WebviewWindow) -> Option<String> {
+pub async fn open_file_dialog(
+    window: tauri::WebviewWindow,
+    text_filter: Option<String>,
+    all_filter: Option<String>,
+) -> Option<String> {
+    let filters = open_document_filters(
+        text_filter.as_deref().unwrap_or("Text files"),
+        all_filter.as_deref().unwrap_or("All files"),
+    );
     tauri::async_runtime::spawn_blocking(move || {
-        window_file_dialog(&window)
-            .add_filter("Markdown", &["md", "markdown"])
+        filters
+            .iter()
+            .fold(window_file_dialog(&window), |dialog, (name, exts)| {
+                dialog.add_filter(name, exts)
+            })
             .blocking_pick_file()
             .map(|p| p.to_string())
     })
@@ -333,4 +366,25 @@ pub async fn write_text_file(path: String, contents: String) -> Result<(), Strin
     crate::atomic::write(Path::new(&path), contents)
         .await
         .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(not(target_os = "macos"))]
+    #[test]
+    fn open_dialog_defaults_to_markdown_and_offers_any_file() {
+        let filters = open_document_filters("Text", "All files");
+        let names: Vec<&str> = filters.iter().map(|(name, _)| name.as_str()).collect();
+        assert_eq!(names, ["Markdown", "Text", "All files"]);
+        assert_eq!(filters[0].1, ["md", "markdown"]);
+        assert_eq!(filters[2].1, ["*"]);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn open_dialog_leaves_every_file_pickable_on_macos() {
+        assert!(open_document_filters("Text", "All files").is_empty());
+    }
 }

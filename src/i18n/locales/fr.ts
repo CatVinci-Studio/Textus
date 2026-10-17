@@ -166,6 +166,8 @@ utiliser une.
   shortcutToggleZenMode: "Activer/désactiver le mode zen",
   zenExitHint: "Esc pour quitter le mode zen",
   zenExitButton: "Quitter le mode zen",
+  openDialogText: "Fichiers texte",
+  openDialogAll: "Tous les fichiers",
   agentPanelSourceMode: `${AI_NAME} fonctionne dans la vue éditeur. Revenez-y pour poursuivre la conversation.`,
   agentPanelBackToEditor: "Revenir à l'éditeur",
   modelTagVision: "vision",

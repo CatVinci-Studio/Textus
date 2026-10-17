@@ -157,6 +157,8 @@ export default {
   shortcutToggleZenMode: "Режим дзен",
   zenExitHint: "Esc — выйти из режима дзен",
   zenExitButton: "Выйти из режима дзен",
+  openDialogText: "Текстовые файлы",
+  openDialogAll: "Все файлы",
   agentPanelSourceMode: `${AI_NAME} работает в визуальном режиме редактора. Вернитесь в него, чтобы продолжить диалог.`,
   agentPanelBackToEditor: "Вернуться в редактор",
   modelTagVision: "изображения",

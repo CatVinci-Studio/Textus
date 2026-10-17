@@ -156,6 +156,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   shortcutToggleZenMode: "Alternar modo zen",
   zenExitHint: "Esc para sair do modo zen",
   zenExitButton: "Sair do Modo Zen",
+  openDialogText: "Arquivos de texto",
+  openDialogAll: "Todos os arquivos",
   agentPanelSourceMode: `A ${AI_NAME} funciona na visualização do editor. Volte a ela para continuar a conversa.`,
   agentPanelBackToEditor: "Voltar ao editor",
   modelTagVision: "visão",
