@@ -826,4 +826,14 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuWindow: "Fenster",
   menuZoomWindow: "Zoomen",
   menuBringAllToFront: "Alle nach vorne bringen",
+  // The browser playground (src/playground/).
+  playgroundName: "Spielwiese",
+  playgroundImport: "Importieren",
+  playgroundExport: "Exportieren",
+  playgroundSource: "Quelltext",
+  playgroundDownload: `${APP_NAME} herunterladen`,
+  playgroundLocalNote: "Dein Dokument bleibt nur in diesem Browser.",
+  playgroundImageNotice: `Bilder brauchen die Desktop-App von ${APP_NAME}.`,
+  playgroundImportUnsupported:
+    "Nur .md-, .markdown- und .txt-Dateien lassen sich importieren.",
 } satisfies Translation;

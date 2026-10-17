@@ -21,6 +21,7 @@ type-only import may cross, since it leaves nothing behind at runtime.
 
 ```
 5  app/                window shell: App, tabs, window bar, app menu, shortcuts
+   playground/         the browser playground: the editor core in a web page
    document-view/      the document on screen: MilkdownEditor + its AI, assembled
 4  ai/  editor/  export/  sidebar/  mobile/  onboarding/  document/  clipboard/
    settings/  theme/   features (editor is below ai: ai builds on it)

@@ -71,6 +71,12 @@ jobs:
         run: |
           npm run build 2>&1 | tee build.log
           ! grep -q 'css-syntax-error' build.log
+      # The browser playground (src/playground/) shares the editor: a change
+      # that breaks its build shows up here, before it is deployed.
+      - name: Build the playground
+        run: |
+          npm run build:playground 2>&1 | tee build-playground.log
+          ! grep -q 'css-syntax-error' build-playground.log
 
   e2e:
     needs: changes

@@ -809,4 +809,14 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuWindow: "ウインドウ",
   menuZoomWindow: "拡大/縮小",
   menuBringAllToFront: "すべてを手前に移動",
+  // The browser playground (src/playground/).
+  playgroundName: "プレイグラウンド",
+  playgroundImport: "読み込む",
+  playgroundExport: "書き出す",
+  playgroundSource: "ソース",
+  playgroundDownload: `${APP_NAME} をダウンロード`,
+  playgroundLocalNote: "文書はこのブラウザにだけ保存されます。",
+  playgroundImageNotice: `画像を入れるには ${APP_NAME} デスクトップ版が必要です。`,
+  playgroundImportUnsupported:
+    "読み込めるのは .md、.markdown、.txt ファイルだけです。",
 } satisfies Translation;

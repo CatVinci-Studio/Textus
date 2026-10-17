@@ -771,4 +771,13 @@ export default {
   menuWindow: "窗口",
   menuZoomWindow: "缩放",
   menuBringAllToFront: "前置全部窗口",
+  // The browser playground (src/playground/).
+  playgroundName: "在线体验",
+  playgroundImport: "导入",
+  playgroundExport: "导出",
+  playgroundSource: "源码",
+  playgroundDownload: `下载 ${APP_NAME}`,
+  playgroundLocalNote: "文档只保存在这个浏览器里。",
+  playgroundImageNotice: `插入图片需要 ${APP_NAME} 桌面版。`,
+  playgroundImportUnsupported: "只能导入 .md、.markdown 和 .txt 文件。",
 } satisfies Translation;

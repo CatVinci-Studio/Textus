@@ -820,4 +820,14 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuWindow: "Janela",
   menuZoomWindow: "Zoom",
   menuBringAllToFront: "Trazer Todas para a Frente",
+  // The browser playground (src/playground/).
+  playgroundName: "Playground",
+  playgroundImport: "Importar",
+  playgroundExport: "Exportar",
+  playgroundSource: "Código",
+  playgroundDownload: `Baixar ${APP_NAME}`,
+  playgroundLocalNote: "Seu documento fica guardado só neste navegador.",
+  playgroundImageNotice: `Imagens precisam do app de desktop do ${APP_NAME}.`,
+  playgroundImportUnsupported:
+    "Só é possível importar arquivos .md, .markdown e .txt.",
 } satisfies Translation;

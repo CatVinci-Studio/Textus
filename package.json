@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "dev:playground": "vite --config vite.playground.config.ts",
+    "build:playground": "tsc && vite build --config vite.playground.config.ts",
     "preview": "vite preview",
     "tauri": "tauri",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
