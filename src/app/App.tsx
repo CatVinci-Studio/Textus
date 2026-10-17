@@ -55,7 +55,13 @@ import { AgentPanelDock } from "./AgentPanelDock";
 import { ClosePrompt } from "./ClosePrompt";
 import { DraftRestoredToast, UpdateToast, ZenHint } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
+import { FootprintLayer } from "../ai/magic-diary/FootprintLayer";
 import "./App.css";
+// The Magic Diary's aged-paper skin for the whole window (theme/), applied
+// by html[data-magic-diary]. Loaded here rather than by the plugin: it
+// covers the app chrome as well as the writing column, so it belongs with
+// the window's own stylesheet rather than with one feature's.
+import "../theme/magic-diary-page.css";
 
 /**
  * One window: its tabs, the panels around them, and the prompts and
@@ -447,6 +453,9 @@ function App() {
         />
 
         <UpdateToast appUpdate={appUpdate} t={t} />
+
+        {/* Whoever walks around the margins while the Magic Diary is on. */}
+        <FootprintLayer />
 
         <OnboardingLayers
           tutorial={tutorial}

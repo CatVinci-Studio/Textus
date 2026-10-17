@@ -4,6 +4,7 @@ pub mod cancel;
 pub mod catalog;
 pub mod client;
 pub mod conventions;
+pub mod diary;
 #[cfg(test)]
 mod live_eval;
 pub mod project;

@@ -172,6 +172,9 @@ export interface Settings {
   /// Whether an agent edit's green in-document preview streams/types itself
   /// in (pending-edit-plugin's typewriter) or appears complete at once.
   enableEditAnimation: boolean;
+  /// The hidden diary (ai/magic-diary/diary-mode.ts), opened from Settings
+  /// › About. Not a theme: the user's theme comes back when it closes.
+  enableDiary: boolean;
   /// Where Quick Ask's "open full conversation" goes: the docked panel on
   /// the right (default), or the detached window - for a second monitor.
   /// The panel's own header pops out to the window either way.
@@ -263,6 +266,7 @@ const DEFAULT_SETTINGS: Settings = {
   writingConventions: "automatic",
   enableWebSearch: false,
   enableEditAnimation: true,
+  enableDiary: false,
   agentExpandToWindow: false,
   pinAgentWindow: false,
   agentWorkspaceRoot: "",

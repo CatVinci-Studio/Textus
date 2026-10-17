@@ -656,7 +656,7 @@ export function SettingsPanel({
                 <ChevronIcon className="settings-back-chevron" />
                 {t.navGeneral}
               </button>
-              <AboutSection t={t} />
+              <AboutSection t={t} onClose={onClose} />
             </div>
           ) : (
             <div

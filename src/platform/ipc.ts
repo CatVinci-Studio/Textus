@@ -795,6 +795,32 @@ export const ai = {
       workspaceRoot: project.workspaceRoot,
       uiLanguage,
     }),
+  /** The Magic Diary (ai/diary.rs): one short aside answering a line the
+   *  reader just wrote, in the voice of the diary's other inhabitant. Its
+   *  own command because completion's prompt forbids everything this needs -
+   *  it continues rather than answers, and strips Markdown from what it
+   *  returns. `requestId` pairs with ai_cancel, so a reader who gives up
+   *  mid-reply aborts the request instead of leaking it. */
+  diaryReply: (args: {
+    provider: string;
+    /** The absorbed line, verbatim. */
+    line: string;
+    /** Everything already said on this page, oldest first. The page is a
+     *  conversation: a reply sent without it answers a stranger. */
+    history?: { line: string; reply: string }[];
+    model: string | null;
+    /** The app's language, so the aside is written in the reader's own. */
+    uiLanguage: string | null;
+    requestId: string;
+  }) =>
+    call<string>("ai_diary_reply", {
+      provider: args.provider,
+      line: args.line,
+      history: args.history ?? [],
+      model: args.model,
+      uiLanguage: args.uiLanguage,
+      requestId: args.requestId,
+    }),
   agentMessage: ({
     onEvent,
     ...args

@@ -141,12 +141,13 @@ export function MilkdownEditor({
   // The empty-document placeholder reads the language when it draws, and
   // decorations only draw on a transaction: without one, switching the
   // language in Settings (or on the first-run picker) left the old text.
+  // The diary also needs this refresh to release a pending turn on disable.
   useEffect(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       view.dispatch(view.state.tr.setMeta("addToHistory", false));
     });
-  }, [settings.language, run]);
+  }, [settings.language, settings.enableDiary, run]);
 
   const proposals = useEditorProposals({
     run,

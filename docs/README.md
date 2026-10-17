@@ -27,6 +27,7 @@ where the project is heading.
 | [ai-concepts.md](design/ai-concepts.md)          | The AI concepts: project folder, style profile, library, writing rules, skills, priority |
 | [ai-proposals.md](design/ai-proposals.md)        | An AI edit's life from streaming to the document, and the three chat surfaces            |
 | [ai-eval.md](design/ai-eval.md)                  | Evaluating the AI features against real providers                                       |
+| [magic-diary.md](design/magic-diary.md)          | The hidden Magic Diary: how it opens, its parts, its web font and its story             |
 
 ## Other
 

@@ -478,6 +478,28 @@ export function installDevTauriShim(): void {
             : [],
         );
       }
+      // A canned aside, so the Magic Diary's whole choreography can be
+      // smoked in the browser - the line fading, the reply writing itself
+      // in beside it. null here would fall through to the scripted pool
+      // instead, which is the fallback path rather than the one being
+      // exercised.
+      if (cmd === "ai_diary_reply") {
+        const { line = "", history = [] } =
+          (args as unknown as {
+            line?: string;
+            history?: { line: string; reply: string }[];
+          }) ?? {};
+        // Echoes how many exchanges came before it, so a conversation is
+        // visibly a conversation in the browser too and not four identical
+        // one-shots.
+        const turns = Array.isArray(history) ? history.length : 0;
+        const aside = turns
+          ? `Canned dev-shim aside, turn ${turns + 1}, to: ${line}`
+          : line
+            ? `Canned dev-shim aside to: ${line}`
+            : "Canned dev-shim aside.";
+        return Promise.resolve(aside);
+      }
       // A canned User/Assistant exchange (AgentTurn[]) instead of null - lets
       // the inline chat's real send path (not just the tutorial's own
       // mockReply) be smoke-tested in the browser; null here made

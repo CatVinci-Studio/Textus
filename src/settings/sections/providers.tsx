@@ -25,7 +25,7 @@ function localizedLabel(entry: ProviderCatalogEntry, t: Strings): string {
 /// (status-object, bare boolean, or config-or-null) - this normalizes them
 /// to one boolean per auth method for the picker's status pill and to decide
 /// which auth tab opens by default.
-async function fetchConnected(
+export async function fetchConnected(
   entry: ProviderCatalogEntry,
 ): Promise<{ oauth: boolean; apiKey: boolean }> {
   if (entry.id === "custom") {

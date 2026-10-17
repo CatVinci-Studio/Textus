@@ -831,6 +831,10 @@ para usar una.
   themeNameSlate: "Pizarra",
   themeNameForest: "Bosque",
   themeNameParchment: "Pergamino",
+  diaryNoAnswer:
+    "Esta vez la tinta no ha respondido. Inténtalo de nuevo dentro de un momento.",
+  diaryGreeting: "…¿Hay alguien ahí? Hace mucho que nadie abría este libro.",
+  diaryLeave: "Salir del diario",
   appearanceLabel: "Aspecto",
   appearanceSystem: "Según el sistema",
   appearanceLight: "Claro",

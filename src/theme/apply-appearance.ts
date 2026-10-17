@@ -9,6 +9,7 @@ import {
 } from "../storage/ui-state";
 import type { Settings, ThemeMode } from "../settings/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
+import { isMagicDiary } from "../ai/magic-diary/diary-mode";
 import { applyThemeChrome, clearThemeChrome } from "./theme-chrome";
 import { adaptTyporaCss } from "./typora-compat";
 
@@ -16,6 +17,12 @@ import { adaptTyporaCss } from "./typora-compat";
 // column's width, the content theme (a built-in's attribute, or an imported
 // Typora theme's stylesheet and the window colours derived from it) and the
 // user's Custom CSS, in that cascade order. SettingsProvider runs it.
+
+/** The Magic Diary's handwriting (LXGW WenKai, OFL), on the website at a
+ *  versioned path; see textus.catvinci.com's /fonts/. */
+const DIARY_FONT_CSS =
+  "https://textus.catvinci.com/fonts/lxgw-wenkai/1.7.0/regular.css";
+const DIARY_FONT_ID = "textus-diary-font";
 
 /** The <style> holding Settings > Theme > Custom CSS. */
 const CUSTOM_CSS_STYLE_ID = "textus-user-css";
@@ -99,6 +106,30 @@ export function useApplyAppearance(
       root.removeAttribute("data-content-width");
     else root.setAttribute("data-content-width", settings.contentWidth);
   }, [settings.contentWidth]);
+
+  const diary = isMagicDiary(settings);
+  // The diary ages the whole window, not just the writing column
+  // (magic-diary-page.css) - it is the room that turns out to be a book.
+  // An attribute rather than a class so the skin's rules can sit at a
+  // specificity that wins against the theme's own without !important, and
+  // so one rule can reach the app chrome that no theme variable covers.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (diary) root.setAttribute("data-magic-diary", "");
+    else root.removeAttribute("data-magic-diary");
+    // Its handwriting is a web font, fetched only while the theme is on
+    // (and then from the browser's cache): the stylesheet splits the face
+    // by unicode-range, so a page loads only the pieces its text uses.
+    // Offline, the hand falls back to the system's kai (--diary-hand).
+    let link = document.getElementById(DIARY_FONT_ID) as HTMLLinkElement | null;
+    if (diary && !link) {
+      link = document.createElement("link");
+      link.id = DIARY_FONT_ID;
+      link.rel = "stylesheet";
+      link.href = DIARY_FONT_CSS;
+      document.head.appendChild(link);
+    } else if (!diary) link?.remove();
+  }, [diary]);
 
   useEffect(() => {
     let styleEl = document.getElementById(
