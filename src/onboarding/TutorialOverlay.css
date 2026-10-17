@@ -508,36 +508,3 @@
 .sidebar.tutorial-spotlight {
   box-shadow: inset 0 0 0 2px var(--chrome-accent);
 }
-
-/* The Connect lesson embeds Settings' provider rows; framed like a
-   Settings group so they read as the same controls. */
-.tutorial-connect-ai {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.tutorial-connect-ai .provider-picker {
-  padding: 0 14px;
-  border: 1px solid var(--tutorial-line);
-  border-radius: var(--radius-surface);
-  background: var(--chrome-subtle);
-}
-
-.tutorial-connect-ai .combobox-trigger,
-.tutorial-connect-ai .provider-auth-trigger,
-.tutorial-connect-ai .provider-disclosure-label {
-  font-size: var(--text-md);
-}
-
-.tutorial-connect-ai-later {
-  margin: 0;
-  color: var(--editor-muted);
-  font-size: var(--text-sm);
-  line-height: 1.5;
-}
-
-.tutorial-connect-ai-later strong {
-  color: var(--editor-text);
-  font-weight: 600;
-}

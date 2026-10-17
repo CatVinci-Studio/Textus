@@ -95,9 +95,6 @@ export function isTutorialPracticeComplete(
       return phase >= 1;
     case "agentEdit":
       return phase >= 3;
-    // Never a gate: connecting is optional. Its phase only says whether the
-    // selected provider is connected (1) or not (0).
-    case "connectAi":
     case "welcome":
     case "markdownIntro":
     case "aiIntro":

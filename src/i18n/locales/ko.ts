@@ -698,13 +698,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialAgentEditApplied: "문서가 수정되었습니다.",
   tutorialAgentEditMockReply:
     "불필요한 서두를 덜어 냈습니다. 수정 미리 보기를 확인하세요.",
-  tutorialConnectAiTitle: "AI 연결하기",
-  tutorialConnectAiBody:
-    "지금까지의 연습은 예시 답변을 사용했습니다. 서비스를 연결하면 이어 쓰기, 문법 검사, 어시스턴트가 실제로 작동합니다.",
-  tutorialConnectAiConnected:
-    "연결되었습니다. AI 기능이 이 서비스를 사용합니다.",
-  tutorialConnectAiSkip: "나중에 하기",
-  tutorialConnectAiLater: "나중에 {path}에서 설정할 수도 있습니다.",
   tutorialDoneTitle: "튜토리얼 완료",
   tutorialDoneBody: `이제 글쓰기를 시작할 수 있습니다. AI를 사용하려면 설정 > ${AI_NAME}에서 서비스를 연결하세요. 이 튜토리얼은 도움말 메뉴에서 다시 열 수 있습니다.`,
   closePromptMessage: "이 문서에 저장하지 않은 변경 사항이 있습니다.",

@@ -110,11 +110,7 @@ export const PHONE = {
 /** openApp as an iPhone: the phone layout (mobile/styles) is on. */
 export async function openPhone(
   page: Page,
-  options: {
-    animations?: boolean;
-    storage?: Record<string, string>;
-    colorScheme?: "light" | "dark";
-  } = {},
+  options: { animations?: boolean } = {},
 ) {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "platform", { get: () => "iPhone" });

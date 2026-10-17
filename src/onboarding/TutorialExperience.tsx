@@ -1,6 +1,4 @@
-import { useCallback, type ReactNode } from "react";
 import type { Strings } from "../i18n/strings";
-import { ProviderListPanel } from "../settings/sections/providers";
 import {
   isTutorialPracticeComplete,
   MARKDOWN_ALL_TASKS,
@@ -56,13 +54,7 @@ export function TutorialExperience({
   t,
   shortcuts,
 }: TutorialExperienceProps) {
-  const { step, phase, setPhase } = tutorial;
-  // connectAi's phase mirrors the selected provider's connection (1 / 0),
-  // reported by the embedded Settings panel.
-  const onConnectedChange = useCallback(
-    (connected: boolean) => setPhase(connected ? 1 : 0),
-    [setPhase],
-  );
+  const { step, phase } = tutorial;
   const shortcut =
     step.id === "completion"
       ? shortcuts.completion
@@ -89,8 +81,6 @@ export function TutorialExperience({
   let checklist: TutorialChecklistItem[] | undefined;
   let status: string | null = null;
   let waiting = false;
-  let complete = isTutorialPracticeComplete(step.id, phase);
-  let lessonControls: ReactNode = null;
 
   if (step.id === "markdownPractice") {
     checklist = MARKDOWN_EXERCISES.map(({ labelKey, bit }) => ({
@@ -145,16 +135,10 @@ export function TutorialExperience({
             ? text(t.tutorialAgentEditProposed)
             : text(t.tutorialAgentEditApplied);
     waiting = phase < 3;
-  } else if (step.id === "connectAi") {
-    const connected = phase >= 1;
-    status = connected ? t.tutorialConnectAiConnected : null;
-    complete = connected;
-    lessonControls = (
-      <ConnectAiControls t={t} onConnectedChange={onConnectedChange} />
-    );
   }
 
   const isLast = tutorial.stepIndex === tutorial.totalSteps - 1;
+  const complete = isTutorialPracticeComplete(step.id, phase);
   const roadmap =
     step.id === "welcome" || step.id === "done"
       ? [
@@ -204,9 +188,7 @@ export function TutorialExperience({
           ? t.tutorialFinish
           : step.id === "welcome"
             ? t.tutorialStart
-            : step.id === "connectAi" && !complete
-              ? t.tutorialConnectAiSkip
-              : t.tutorialNext
+            : t.tutorialNext
       }
       primaryDisabled={step.layout === "card" && !complete}
       onPrimary={tutorial.next}
@@ -225,36 +207,6 @@ export function TutorialExperience({
         courseSections: t.tutorialCourseSections,
         stepOfCount: t.tutorialStepOfCount,
       }}
-    >
-      {lessonControls}
-    </TutorialOverlay>
-  );
-}
-
-/** The Settings › Textus AI provider controls, as they are there: picking a
- *  provider, signing in to an account and pasting a key all work from here. */
-function ConnectAiControls({
-  t,
-  onConnectedChange,
-}: {
-  t: Strings;
-  onConnectedChange: (connected: boolean) => void;
-}) {
-  const [before, after = ""] = t.tutorialConnectAiLater.split("{path}");
-  return (
-    <div className="tutorial-connect-ai">
-      <ProviderListPanel
-        t={t}
-        expandCredentials
-        onActiveConnectedChange={onConnectedChange}
-      />
-      <p className="tutorial-connect-ai-later">
-        {before}
-        <strong>
-          {t.settingsTitle} › {t.navAi}
-        </strong>
-        {after}
-      </p>
-    </div>
+    />
   );
 }

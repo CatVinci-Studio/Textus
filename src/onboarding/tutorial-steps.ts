@@ -12,7 +12,6 @@ export type TutorialStepId =
   | "grammar"
   | "agentChat"
   | "agentEdit"
-  | "connectAi"
   | "done";
 
 export interface TutorialSection {
@@ -109,16 +108,6 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     bodyKey: "tutorialAgentEditBody",
   },
   {
-    // Every exercise above ran on scripted replies (the real AI is muted
-    // for the whole tour), so the chapter ends by offering the real thing:
-    // the same provider controls as Settings, never blocking.
-    id: "connectAi",
-    section: "ai",
-    layout: "overlay",
-    titleKey: "tutorialConnectAiTitle",
-    bodyKey: "tutorialConnectAiBody",
-  },
-  {
     id: "done",
     section: null,
     layout: "overlay",
@@ -126,41 +115,3 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     bodyKey: "tutorialDoneBody",
   },
 ];
-
-/**
- * The step list as it was before `connectAi` existed. Progress saved by
- * those builds holds only a `stepIndex` into this list (no `stepId`), so
- * an index is read against it: index 9 was "done", which would otherwise
- * now land on the new step.
- */
-const LEGACY_STEP_IDS: readonly TutorialStepId[] = [
-  "welcome",
-  "markdownIntro",
-  "markdownPractice",
-  "sidebar",
-  "aiIntro",
-  "completion",
-  "grammar",
-  "agentChat",
-  "agentEdit",
-  "done",
-];
-
-/** Where saved progress resumes: by `stepId` when it names a known step,
- *  otherwise by a legacy `stepIndex` (see LEGACY_STEP_IDS), clamped. */
-export function resolveSavedStepIndex(saved: {
-  stepId?: unknown;
-  stepIndex?: unknown;
-}): number {
-  if (typeof saved.stepId === "string") {
-    const index = TUTORIAL_STEPS.findIndex((step) => step.id === saved.stepId);
-    if (index >= 0) return index;
-  }
-  const raw =
-    typeof saved.stepIndex === "number" && Number.isFinite(saved.stepIndex)
-      ? Math.trunc(saved.stepIndex)
-      : 0;
-  const legacyId =
-    LEGACY_STEP_IDS[Math.min(Math.max(0, raw), LEGACY_STEP_IDS.length - 1)];
-  return TUTORIAL_STEPS.findIndex((step) => step.id === legacyId);
-}

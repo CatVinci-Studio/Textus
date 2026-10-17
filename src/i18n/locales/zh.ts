@@ -675,12 +675,6 @@ export default {
   tutorialAgentEditProposed: "检查修改预览，点击「接受」。",
   tutorialAgentEditApplied: "修改已写入正文。",
   tutorialAgentEditMockReply: "已删去多余的开场语，请查看修改预览。",
-  tutorialConnectAiTitle: "连接你的 AI",
-  tutorialConnectAiBody:
-    "刚才的练习用的是示例回复。连接一个服务后，续写、语法检查和 AI 助手就会真正工作。",
-  tutorialConnectAiConnected: "已连接，AI 功能将使用这个服务。",
-  tutorialConnectAiSkip: "暂时跳过",
-  tutorialConnectAiLater: "之后也可以在「{path}」中设置。",
   tutorialDoneTitle: "教程结束",
   tutorialDoneBody: `现在可以开始写作。AI 功能需要先在「设置 > ${AI_NAME}」中连接服务。若想再练习，可从帮助菜单重新打开教程。`,
   closePromptMessage: "文档有未保存的更改。",

@@ -722,13 +722,6 @@ export default {
   tutorialAgentEditApplied: "Документ обновлён.",
   tutorialAgentEditMockReply:
     "Лишнее вступление убрано. Проверьте правку в предпросмотре.",
-  tutorialConnectAiTitle: "Подключите ИИ",
-  tutorialConnectAiBody:
-    "В упражнениях использовались примерные ответы. Подключите сервис, и автодополнение, проверка грамматики и ассистент заработают по-настоящему.",
-  tutorialConnectAiConnected:
-    "Подключено. Функции ИИ будут использовать этот сервис.",
-  tutorialConnectAiSkip: "Пропустить пока",
-  tutorialConnectAiLater: "Это можно сделать и позже в разделе «{path}».",
   tutorialDoneTitle: "Обучение завершено",
   tutorialDoneBody: `Теперь можно писать. Чтобы пользоваться ИИ, подключите сервис в разделе «Настройки > ${AI_NAME}». Обучение можно снова открыть из меню «Справка».`,
   closePromptMessage: "В документе есть несохранённые изменения.",

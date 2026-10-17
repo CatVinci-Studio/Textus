@@ -720,13 +720,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialAgentEditApplied: "Das Dokument wurde aktualisiert.",
   tutorialAgentEditMockReply:
     "Die überflüssige Einleitung ist gestrichen. Prüfe die Vorschau der Änderung.",
-  tutorialConnectAiTitle: "KI verbinden",
-  tutorialConnectAiBody:
-    "Die Übungen nutzten Beispielantworten. Verbinde einen Anbieter, dann funktionieren Vervollständigung, Grammatikprüfung und der Assistent wirklich.",
-  tutorialConnectAiConnected:
-    "Verbunden. Die KI-Funktionen nutzen diesen Anbieter.",
-  tutorialConnectAiSkip: "Später",
-  tutorialConnectAiLater: "Du kannst das auch später unter {path} erledigen.",
   tutorialDoneTitle: "Einführung abgeschlossen",
   tutorialDoneBody: `Jetzt kannst du losschreiben. Um die KI zu nutzen, verbinde unter Einstellungen > ${AI_NAME} einen Dienst. Diese Einführung findest du jederzeit wieder im Menü „Hilfe“.`,
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",

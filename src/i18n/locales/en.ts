@@ -712,12 +712,6 @@ type /name in a conversation to use one.
   tutorialAgentEditApplied: "The document has been updated.",
   tutorialAgentEditMockReply:
     "Removed the extra opening phrase. Review the edit preview.",
-  tutorialConnectAiTitle: "Connect your AI",
-  tutorialConnectAiBody:
-    "The practice used sample replies. Connect a provider and completion, grammar checks and the assistant work for real.",
-  tutorialConnectAiConnected: "Connected. AI features will use this provider.",
-  tutorialConnectAiSkip: "Skip for now",
-  tutorialConnectAiLater: "You can also do this later in {path}.",
   tutorialDoneTitle: "Tutorial finished",
   tutorialDoneBody: `You can start writing now. To use AI, connect a service in Settings > ${AI_NAME}. You can reopen this tutorial from the Help menu.`,
   closePromptMessage: "This document has unsaved changes.",

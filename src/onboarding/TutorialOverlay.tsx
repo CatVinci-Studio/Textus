@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useModalDialog } from "../ui/useModalDialog";
 import type { TutorialStepId } from "./tutorial-steps";
 import "./TutorialOverlay.css";
@@ -51,9 +51,6 @@ interface TutorialOverlayProps {
   roadmap?: string[];
   /** Live one-line feedback under the exercise. */
   status?: string | null;
-  /** Lesson-specific controls under the body (the provider picker of the
-   *  "Connect your AI" lesson). */
-  children?: ReactNode;
   waiting?: boolean;
   complete?: boolean;
   primaryLabel: string;
@@ -78,7 +75,6 @@ const STEP_GLYPHS: Record<Exclude<TutorialStepId, "welcome">, string> = {
   grammar: "✓",
   agentChat: "…",
   agentEdit: "✎",
-  connectAi: "⇄",
   done: "✓",
 };
 
@@ -101,7 +97,6 @@ export function TutorialOverlay({
   checklist,
   roadmap,
   status,
-  children,
   waiting,
   complete,
   primaryLabel,
@@ -300,7 +295,6 @@ export function TutorialOverlay({
           {body}
         </p>
         {roadmapView}
-        {children}
         {activity}
         {statusLine}
         {complete && layout === "card" && (

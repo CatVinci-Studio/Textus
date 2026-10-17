@@ -704,12 +704,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialAgentEditApplied: "本文を更新しました。",
   tutorialAgentEditMockReply:
     "不要な前置きを省きました。変更プレビューを確認してください。",
-  tutorialConnectAiTitle: "AI を接続する",
-  tutorialConnectAiBody:
-    "ここまでの練習は用意された返答を使っていました。サービスを接続すると、補完、文法チェック、アシスタントが実際に動きます。",
-  tutorialConnectAiConnected: "接続しました。AI 機能はこのサービスを使います。",
-  tutorialConnectAiSkip: "今はスキップ",
-  tutorialConnectAiLater: "あとで「{path}」から設定することもできます。",
   tutorialDoneTitle: "チュートリアル終了",
   tutorialDoneBody: `ここから自由に書き始められます。AI機能は「設定 > ${AI_NAME}」で接続すると使えます。チュートリアルはヘルプメニューから再開できます。`,
   closePromptMessage: "この文書には保存されていない変更があります。",

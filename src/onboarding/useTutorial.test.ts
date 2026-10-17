@@ -37,26 +37,6 @@ describe("useTutorial navigation", () => {
     },
   );
 
-  it("saves the step's id so a resume survives steps being added", () => {
-    const { result } = renderHook(() => useTutorial());
-    act(() => result.current.start("practice"));
-    act(() => result.current.next());
-    const saved = JSON.parse(
-      localStorage.getItem("levis-tutorial-progress") ?? "null",
-    );
-    expect(saved).toMatchObject({ stepIndex: 1, stepId: "markdownIntro" });
-  });
-
-  it("resumes progress saved before the connect step at the same lesson", () => {
-    // Saved by a build whose tour had no connectAi step: index 9 was "done".
-    localStorage.setItem(
-      "levis-tutorial-progress",
-      JSON.stringify({ active: true, stepIndex: 9, tabId: "practice" }),
-    );
-    const { result } = renderHook(() => useTutorial());
-    expect(result.current.step.id).toBe("done");
-  });
-
   it("ignores delayed navigation after exit", () => {
     const { result } = renderHook(() => useTutorial());
     act(() => result.current.start("practice"));
