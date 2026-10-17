@@ -90,6 +90,7 @@ export function MainPane({
             <EditorPane
               key={`${tab.id}-${tab.reloadKey}`}
               tabId={tab.id}
+              documentId={tab.workspaceId ?? tab.id}
               filePath={tab.path}
               docTitle={tabTitle(tab, t)}
               initialValue={tab.content}

@@ -7,6 +7,7 @@ import { drafts, session } from "../platform/ipc";
 import { flushPendingWrites } from "../storage/pending-writes";
 import { useModalDialog } from "../ui/useModalDialog";
 import type { TabState } from "./useTabState";
+import { confirmWorkspaceClose } from "../document/workspace-close";
 
 // The one save/discard/cancel prompt, reused for every "this would lose
 // unsaved content" moment: closing a tab, closing the whole window (every
@@ -63,8 +64,9 @@ export function useTabRemoval(opts: {
   );
 
   const requestCloseTab = useCallback(
-    (id: string) => {
+    async (id: string) => {
       const tab = liveTabs().find((tb) => tb.id === id);
+      if (!(await confirmWorkspaceClose([id]))) return;
       if (!tab || !tabIsDirty(tab)) {
         removeTab(id);
         return;
@@ -97,6 +99,10 @@ export function useWindowCloseGuard(
 ): void {
   useEffect(() => {
     const unlisten = getCurrentWindow().onCloseRequested(async (event) => {
+      if (!(await confirmWorkspaceClose(liveTabs().map((tab) => tab.id)))) {
+        event.preventDefault();
+        return;
+      }
       if (liveTabs().some(tabIsDirty)) {
         event.preventDefault();
         setPendingClose({ kind: "window" });

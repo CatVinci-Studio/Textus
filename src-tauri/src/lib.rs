@@ -36,7 +36,8 @@ use auth::keys::{clear_provider_api_key, provider_api_key_status, set_provider_a
 use auth::openai_codex::{codex_auth_status, codex_login, codex_logout};
 use commands::attachment::pick_attachment_file;
 use commands::drafts::{
-    clear_all_drafts, clear_draft_snapshot, save_draft_snapshot, take_draft_snapshots,
+    clear_all_drafts, clear_draft_snapshot, clear_workspace_snapshot, load_workspace_snapshot,
+    save_draft_snapshot, save_workspace_snapshot, take_draft_snapshots, take_workspace_snapshots,
 };
 use commands::export::export_save_dialog;
 use commands::fs::{
@@ -681,6 +682,10 @@ pub fn run() {
             test_custom_endpoint,
             export_save_dialog,
             save_draft_snapshot,
+            save_workspace_snapshot,
+            load_workspace_snapshot,
+            clear_workspace_snapshot,
+            take_workspace_snapshots,
             take_draft_snapshots,
             clear_draft_snapshot,
             clear_all_drafts,

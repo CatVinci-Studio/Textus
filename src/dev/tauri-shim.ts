@@ -403,6 +403,14 @@ export function installDevTauriShim(): void {
     return null;
   }
 
+  let workspaceRecoveryClaimed = false;
+  const readWorkspaceDrafts = (): Record<string, unknown> => {
+    try {
+      return JSON.parse(localStorage.getItem("dev-workspace-drafts") ?? "{}");
+    } catch {
+      return {};
+    }
+  };
   w.__TAURI_INTERNALS__ = {
     metadata: {
       currentWindow: { label: "main" },
@@ -421,6 +429,30 @@ export function installDevTauriShim(): void {
         return value && typeof value === "object" && "__reject" in value
           ? Promise.reject(value.__reject)
           : Promise.resolve(value);
+      }
+      if (
+        [
+          "save_workspace_snapshot",
+          "load_workspace_snapshot",
+          "clear_workspace_snapshot",
+          "take_workspace_snapshots",
+        ].includes(cmd)
+      ) {
+        const input = args as Record<string, unknown> | undefined;
+        const snapshots = readWorkspaceDrafts();
+        if (cmd === "take_workspace_snapshots") {
+          if (workspaceRecoveryClaimed) return Promise.resolve([]);
+          workspaceRecoveryClaimed = true;
+          return Promise.resolve(Object.values(snapshots));
+        }
+        const snapshot = input?.snapshot as { documentId: string } | undefined;
+        const id = snapshot?.documentId ?? String(input?.documentId ?? "");
+        if (cmd === "load_workspace_snapshot")
+          return Promise.resolve(snapshots[id] ?? null);
+        if (cmd === "save_workspace_snapshot") snapshots[id] = snapshot;
+        else delete snapshots[id];
+        localStorage.setItem("dev-workspace-drafts", JSON.stringify(snapshots));
+        return Promise.resolve(null);
       }
       if (
         cmd === "plugin:event|listen" &&

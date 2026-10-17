@@ -186,6 +186,14 @@ export function useDocumentWorkspace(run: EditorRunner, documentId: string) {
   const endRouting = useCallback(() => {
     routing.current = false;
   }, []);
+  const restore = useCallback(
+    (restored: DocumentDraft) => {
+      if (draftRef.current) return;
+      update(restored);
+      setConflict(restored.baseRevision < 0);
+    },
+    [update],
+  );
   return {
     open,
     setOpen,
@@ -200,5 +208,6 @@ export function useDocumentWorkspace(run: EditorRunner, documentId: string) {
     statuses,
     finish,
     endRouting,
+    restore,
   };
 }

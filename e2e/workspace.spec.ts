@@ -3,18 +3,69 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 const sections = ["Motivation", "Method", "Experiments", "Conclusion"];
 const turns = sections.flatMap((title, index) => [
-  { kind: "ToolCall", call_id: `section-${index}`, name: "propose_edit", arguments: JSON.stringify({ action: "append", text: `## ${title}\n\nContent for ${title}.` }) },
+  {
+    kind: "ToolCall",
+    call_id: `section-${index}`,
+    name: "propose_edit",
+    arguments: JSON.stringify({
+      action: "append",
+      text: `## ${title}\n\nContent for ${title}.`,
+    }),
+  },
   { kind: "ToolResult", call_id: `section-${index}`, output: "Edit proposed" },
 ]);
 
-test("creates a reviewed four-section draft in the same editor and undoes one batch", async ({ page }) => {
+test("recovers an unaccepted draft across reload without sending another model request", async ({
+  page,
+}) => {
   await openApp(page, { settings: { language: "en" } });
-  await mockInvoke(page, { ai_agent_message: [
-    { kind: "User", text: "Create an article" }, ...turns,
-    { kind: "Assistant", text: "The four sections are ready to review." },
-  ] });
+  await mockInvoke(page, { ai_agent_message: turns });
+  await page
+    .getByRole("button", { name: "Create with AI", exact: true })
+    .click();
+  let workspace = page.getByRole("region", { name: "Agent Workspace" });
+  await workspace.locator("textarea").fill("Write four sections");
+  await workspace.getByRole("button", { name: "Send", exact: true }).click();
+  await expect(workspace.locator(".workspace-document h2")).toHaveCount(4);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          Object.keys(
+            JSON.parse(localStorage.getItem("dev-workspace-drafts") ?? "{}"),
+          ).length,
+      ),
+    )
+    .toBe(1);
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Create with AI", exact: true })
+    .click();
+  workspace = page.getByRole("region", { name: "Agent Workspace" });
+  await expect(workspace.locator(".workspace-document h2")).toHaveCount(4);
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).not.toContainText("Motivation");
+  await expect(
+    workspace.getByRole("button", { name: "Stop", exact: true }),
+  ).toHaveCount(0);
+});
+
+test("creates a reviewed four-section draft in the same editor and undoes one batch", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "Create an article" },
+      ...turns,
+      { kind: "Assistant", text: "The four sections are ready to review." },
+    ],
+  });
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await page.getByRole("button", { name: "Create with AI", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Create with AI", exact: true })
+    .click();
   const workspace = page.getByRole("region", { name: "Agent Workspace" });
   await workspace.locator("textarea").fill("Create an article");
   await workspace.getByRole("button", { name: "Send", exact: true }).click();
@@ -22,9 +73,13 @@ test("creates a reviewed four-section draft in the same editor and undoes one ba
   await expect(editor).not.toContainText("Motivation");
   await workspace.getByRole("button", { name: "Open editor" }).click();
   await expect(editor).not.toContainText("Motivation");
-  await page.getByRole("button", { name: "Create with AI", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Create with AI", exact: true })
+    .click();
   await expect(workspace.locator(".workspace-document h2")).toHaveCount(4);
-  await workspace.getByRole("button", { name: "Accept all", exact: true }).click();
+  await workspace
+    .getByRole("button", { name: "Accept all", exact: true })
+    .click();
   await workspace.getByRole("button", { name: "Open editor" }).click();
   for (const title of sections) await expect(editor).toContainText(title);
   await editor.click();
@@ -32,11 +87,15 @@ test("creates a reviewed four-section draft in the same editor and undoes one ba
   for (const title of sections) await expect(editor).not.toContainText(title);
 });
 
-test("preserves a draft and refuses to overwrite an intervening manual edit", async ({ page }) => {
+test("preserves a draft and refuses to overwrite an intervening manual edit", async ({
+  page,
+}) => {
   await openApp(page, { settings: { language: "en" } });
   await pasteMarkdown(page, "Original text.");
   await mockInvoke(page, { ai_agent_message: turns });
-  await page.getByRole("button", { name: "Create with AI", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Create with AI", exact: true })
+    .click();
   const workspace = page.getByRole("region", { name: "Agent Workspace" });
   await workspace.locator("textarea").fill("Write four chapters");
   await workspace.getByRole("button", { name: "Send", exact: true }).click();
@@ -46,8 +105,12 @@ test("preserves a draft and refuses to overwrite an intervening manual edit", as
   await editor.click();
   await page.keyboard.press("ControlOrMeta+End");
   await page.keyboard.type(" Manual edit.");
-  await page.getByRole("button", { name: "Create with AI", exact: true }).click();
-  await workspace.getByRole("button", { name: "Accept all", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Create with AI", exact: true })
+    .click();
+  await workspace
+    .getByRole("button", { name: "Accept all", exact: true })
+    .click();
   await expect(workspace.getByRole("alert")).toContainText("document changed");
   await expect(workspace.locator(".workspace-document h2")).toHaveCount(4);
   await workspace.getByRole("button", { name: "Open editor" }).click();

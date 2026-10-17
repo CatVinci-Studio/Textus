@@ -2,6 +2,7 @@ import { type MouseEvent, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { useDocumentWorkspace } from "./useDocumentWorkspace";
+import { useWorkspacePersistence } from "./useWorkspacePersistence";
 import { AgentWorkspace } from "../ai/workspace/AgentWorkspace";
 import { workspaceLabels } from "../ai/workspace/labels";
 import { ChatBody } from "../ai/chat/ChatBody";
@@ -56,6 +57,7 @@ interface MilkdownEditorProps {
   /** The owning tab - the key App.tsx flushes this editor under (see
    *  editor-flush.ts). */
   tabId: string;
+  documentId?: string;
   filePath: string | null;
   initialValue: string;
   onChange: (markdown: string) => void;
@@ -77,6 +79,7 @@ interface MilkdownEditorProps {
 
 export function MilkdownEditor({
   tabId,
+  documentId = tabId,
   filePath,
   docTitle,
   initialValue,
@@ -153,7 +156,7 @@ export function MilkdownEditor({
     });
   }, [settings.language, settings.enableMagicDiary, run]);
 
-  const workspace = useDocumentWorkspace(run, tabId);
+  const workspace = useDocumentWorkspace(run, documentId);
   const [workspaceMounted, setWorkspaceMounted] = useState(false);
   const proposals = useEditorProposals({
     run,
@@ -167,6 +170,16 @@ export function MilkdownEditor({
   });
   const { pendingEdits, conversation, quickConversation, showProposals } =
     proposals;
+  const recovery = useWorkspacePersistence({
+    workspace,
+    conversation,
+    run,
+    documentId,
+    tabId,
+    path: filePath,
+    enabled: settings.enableDraftRecovery && !tutorialMock,
+    language: settings.language,
+  });
   const finishWorkspace = workspace.finish;
   useEffect(() => {
     if (!conversation.busy) finishWorkspace();
@@ -417,6 +430,21 @@ export function MilkdownEditor({
               onAccept={workspace.accept}
               onReject={workspace.discard}
             >
+              {recovery.error && (
+                <p role="alert">
+                  {settings.language.startsWith("zh")
+                    ? "草稿恢复或保存失败："
+                    : "Draft recovery or save failed: "}
+                  {recovery.error}
+                </p>
+              )}
+              {recovery.interrupted && (
+                <p role="status">
+                  {settings.language.startsWith("zh")
+                    ? "上次任务已中断；草稿已恢复，不会自动重发请求。"
+                    : "The previous task was interrupted. Its draft was restored without restarting requests."}
+                </p>
+              )}
               <ChatBody
                 document=""
                 selectedText={panelSelection?.text ?? null}
@@ -427,6 +455,7 @@ export function MilkdownEditor({
                 defaultMode="create"
                 allowCreate
                 beforeSend={(options) =>
+                  recovery.loaded &&
                   workspace.begin(options.mode, conversation.conversationId)
                 }
                 defaultWebSearch={settings.enableWebSearch}

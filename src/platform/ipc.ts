@@ -972,7 +972,30 @@ export interface DraftSnapshot {
   tabId: string;
   path: string | null;
   content: string;
+  /** Frontend recovery annotation, not part of the ordinary draft file. */
+  workspaceId?: string;
+  workspaceOnly?: boolean;
 }
+
+/** Mirrors commands/drafts.rs WorkspaceSnapshot; body uses the existing proposal schema. */
+export interface WorkspaceSnapshot {
+  schemaVersion: 1;
+  documentId: string;
+  tabId?: string;
+  documentPath: string | null;
+  updatedAt: number;
+  status: "running" | "review" | "interrupted";
+  draft: import("../ai/workspace/document-draft").DocumentDraft;
+}
+export const workspaceDrafts = {
+  save: (snapshot: WorkspaceSnapshot) =>
+    call<void>("save_workspace_snapshot", { snapshot }),
+  load: (documentId: string) =>
+    call<WorkspaceSnapshot | null>("load_workspace_snapshot", { documentId }),
+  clear: (documentId: string) =>
+    call<void>("clear_workspace_snapshot", { documentId }),
+  takeRecoveries: () => call<WorkspaceSnapshot[]>("take_workspace_snapshots"),
+};
 
 export const drafts = {
   saveDraftSnapshot: (tabId: string, path: string | null, content: string) =>

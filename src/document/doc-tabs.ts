@@ -24,6 +24,8 @@ export type HelpDoc = "markdown" | "agent";
 
 export interface DocTab {
   id: string;
+  /** Keeps the workspace identity when a recovered tab receives a new UI id. */
+  workspaceId?: string;
   path: string | null;
   content: string;
   // What's on disk (or "" for a fresh draft) - dirtiness is divergence from

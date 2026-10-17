@@ -9,6 +9,7 @@ const MilkdownEditor = lazy(() =>
 interface EditorPaneProps {
   /** See MilkdownEditor: the owning tab, for editor-flush.ts. */
   tabId: string;
+  documentId?: string;
   filePath: string | null;
   /** Read once, at mount (a reload remounts via the key in App.tsx), so
    *  changes alone don't re-render the pane - see `sameProps` below. */
@@ -40,6 +41,7 @@ function sameProps(prev: EditorPaneProps, next: EditorPaneProps): boolean {
 
 export const EditorPane = memo(function EditorPane({
   tabId,
+  documentId,
   filePath,
   docTitle,
   initialValue,
@@ -68,6 +70,7 @@ export const EditorPane = memo(function EditorPane({
           <MilkdownProvider>
             <MilkdownEditor
               tabId={tabId}
+              documentId={documentId}
               filePath={filePath}
               docTitle={docTitle}
               initialValue={initialValue}

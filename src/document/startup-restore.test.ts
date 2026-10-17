@@ -9,6 +9,7 @@ const ipc = vi.hoisted(() => ({
   takePendingOpenPaths: vi.fn(),
   takePendingOpenPath: vi.fn(),
   takeDraftSnapshots: vi.fn(),
+  takeWorkspaceSnapshots: vi.fn(),
 }));
 
 vi.mock("../platform/ipc", () => ({
@@ -19,6 +20,7 @@ vi.mock("../platform/ipc", () => ({
     takePendingOpenPath: ipc.takePendingOpenPath,
   },
   drafts: { takeDraftSnapshots: ipc.takeDraftSnapshots },
+  workspaceDrafts: { takeRecoveries: ipc.takeWorkspaceSnapshots },
 }));
 // Desktop unless a test says otherwise.
 const platform = vi.hoisted(() => ({
@@ -99,10 +101,42 @@ beforeEach(() => {
   ipc.takePendingOpenPaths.mockResolvedValue([]);
   ipc.takePendingOpenPath.mockResolvedValue(null);
   ipc.takeDraftSnapshots.mockResolvedValue([]);
+  ipc.takeWorkspaceSnapshots.mockResolvedValue([]);
 });
 afterEach(cleanup);
 
 describe("startup restore into the initial tab", () => {
+  it("restores a workspace for a saved document without replacing newer disk text", async () => {
+    ipc.takeWorkspaceSnapshots.mockResolvedValue([
+      {
+        documentId: "workspace-1",
+        documentPath: "/docs/a.md",
+        draft: { baseMarkdown: "Old base." },
+      },
+    ]);
+    const { tabs } = await restore();
+    await waitFor(() => expect(tabs()[0].workspaceId).toBe("workspace-1"));
+    expect(tabs()[0].content).toBe("# /docs/a.md\n");
+    expect(tabs()[0].savedContent).toBe("# /docs/a.md\n");
+  });
+
+  it("merges workspace recovery with a newer unsaved document snapshot", async () => {
+    ipc.takeDraftSnapshots.mockResolvedValue([
+      { tabId: "new-tab", path: null, content: "Manual edits." },
+    ]);
+    ipc.takeWorkspaceSnapshots.mockResolvedValue([
+      {
+        documentId: "workspace-1",
+        tabId: "new-tab",
+        documentPath: null,
+        draft: { baseMarkdown: "Old base." },
+      },
+    ]);
+    const { tabs } = await restore();
+    await waitFor(() => expect(tabs()[0].workspaceId).toBe("workspace-1"));
+    expect(tabs()).toHaveLength(1);
+    expect(tabs()[0].content).toBe("Manual edits.");
+  });
   // The initial tab's editor can mount before the restore's IPC round trips
   // finish, and reads its content only at mount: whatever lands in that tab
   // must move reloadKey on, or the editor keeps showing an empty document

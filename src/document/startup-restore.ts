@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { drafts, windowIpc } from "../platform/ipc";
+import { drafts, workspaceDrafts, windowIpc } from "../platform/ipc";
 import { canUseWindows, hasAppMenu, isIOSApp } from "../platform/capabilities";
 import { lastIOSDocument } from "./ios-recents";
 import {
@@ -91,12 +91,32 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
       const draftSnapshots = opts.enableDraftRecovery
         ? ((await drafts.takeDraftSnapshots()) ?? [])
         : [];
+      const workspaceSnapshots = opts.enableDraftRecovery
+        ? await workspaceDrafts.takeRecoveries().catch(() => [])
+        : [];
+      for (const workspace of workspaceSnapshots ?? []) {
+        const existing = draftSnapshots.find(
+          (d) =>
+            d.tabId === (workspace.tabId ?? workspace.documentId) ||
+            (workspace.documentPath && d.path === workspace.documentPath),
+        );
+        if (existing) existing.workspaceId = workspace.documentId;
+        else
+          draftSnapshots.push({
+            tabId: workspace.documentId,
+            path: workspace.documentPath,
+            content: workspace.draft.baseMarkdown,
+            workspaceId: workspace.documentId,
+            workspaceOnly: true,
+          });
+      }
       const restored: DocTab[] = [];
       if (draftSnapshots.length > 0) {
         for (const draft of draftSnapshots) {
           if (!draft.path) {
             restored.push({
               ...makeBlankTab(),
+              workspaceId: draft.workspaceId,
               content: draft.content,
               savedContent: "",
             });
@@ -106,11 +126,12 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
             const { content: diskContent, diskMtime } = await readDocFromDisk(
               draft.path,
             );
-            if (diskContent === draft.content) continue; // disk already matches - nothing to recover
+            if (diskContent === draft.content && !draft.workspaceId) continue;
             restored.push({
               ...makeBlankTab(),
+              workspaceId: draft.workspaceId,
               path: draft.path,
-              content: draft.content,
+              content: draft.workspaceOnly ? diskContent : draft.content,
               savedContent: diskContent,
               diskMtime,
             });
@@ -157,6 +178,7 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
       const loadRecoveredIntoInitialTab = (recovered: DocTab) => {
         loadIntoInitialTab({
           path: recovered.path,
+          workspaceId: recovered.workspaceId,
           content: recovered.content,
           savedContent: recovered.savedContent,
           diskMtime: recovered.diskMtime,
