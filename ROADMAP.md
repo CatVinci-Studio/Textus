@@ -31,10 +31,6 @@ once one of us has looked it over, it shows up on
 your AI, and a few short videos on the things people ask us about most.
 [#90](https://github.com/CatVinci-Studio/Textus/issues/90)
 
-We've also hidden a few easter eggs. With an AI provider signed in, try
-clicking the version number in **Settings › General › About Textus** a few
-times.
-
 ## In the next release
 
 These came from your reports - thank you, especially for the ones with
@@ -49,13 +45,14 @@ screenshots and exact steps.
   any file. [#78](https://github.com/CatVinci-Studio/Textus/issues/78)
 - Text stays sharp while you edit in Source Code Mode on Linux.
   [#61](https://github.com/CatVinci-Studio/Textus/issues/61)
+- Exported PDFs can have page numbers (turn it on in **Settings › Editor &
+  Appearance**).
 
 ## Later
 
 - Installing gallery themes from inside the app.
 - An outline that covers a whole folder, not just one file.
   [#79](https://github.com/CatVinci-Studio/Textus/issues/79)
-- Page numbers in exported PDFs.
 
 ## Want to help?
 
