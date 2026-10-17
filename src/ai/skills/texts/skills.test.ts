@@ -4,7 +4,7 @@ import { SKILL_TEXTS, skillText } from ".";
 import { BUILTIN_SKILLS } from "../builtin";
 import { fold } from "../../chat/skill-picker";
 
-// The built-in skills' words in every UI language (docs/TRANSLATING.md):
+// The built-in skills' words in every UI language (docs/dev/translating.md):
 // what the `/` menu and Settings show, and what people type after `/`.
 
 /** Each UI's word for inline completion: never a skill's label, or two

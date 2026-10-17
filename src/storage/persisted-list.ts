@@ -11,7 +11,7 @@ import { listenToThisWindow } from "../utils/tauri-events";
  * reach the others.
  *
  * Kept by Rust in a JSON file per list (src-tauri/src/settings.rs,
- * docs/STORAGE.md), changed one entry at a time - upsert, remove, clear -
+ * docs/dev/storage.md), changed one entry at a time - upsert, remove, clear -
  * and never by writing the whole array back: two windows saving different
  * conversations at once must both land. Rust broadcasts each change and
  * every other window applies the same operation to its copy.

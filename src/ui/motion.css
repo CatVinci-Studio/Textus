@@ -1,5 +1,5 @@
 /* Motion tokens: every duration, curve and distance the UI moves with, in
-   one place (docs/DESIGN-LANGUAGE.zh.md, 动效). Components name these and
+   one place (docs/design/design-language.md, 动效). Components name these and
    never a raw value, so the reduced-motion switch at the end of this file
    reaches all of them at once. motion.ts reads the same tokens for the few
    movements CSS cannot express (FLIP, the AI sheet under a finger). */

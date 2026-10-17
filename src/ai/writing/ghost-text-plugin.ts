@@ -74,7 +74,7 @@ const BLOCK_NAMES: Record<string, string> = {
   table_header: "table cell",
   // Without it a code block went out as a "paragraph" and the model had to
   // guess it was continuing code (the live eval scored the hinted case
-  // higher - docs/AI-EVAL.md).
+  // higher - docs/design/ai-eval.md).
   code_block: "code block",
 };
 

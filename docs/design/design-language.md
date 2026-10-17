@@ -1,0 +1,50 @@
+# Textus design language
+
+The interface uses neutral backgrounds, light borders and a single accent color. Layout and interaction rules stay the same everywhere. Colors can change with the theme.
+
+## Shared rules
+
+- `src/ui/design-system.css` defines the interface variables, focus styles, control heights and the reduced-motion settings. `src/ui/base.css` provides the fonts and the default light and dark colors. `src/app/App.css` imports the style sheets of the main window in order.
+- There are four corner radii: 4, 6, 10 and 14 px. They are for compact elements (menu items, inline marks), controls and cards, popovers, and dialogs. Tags and one-line hints use the pill shape (`--radius-pill`). Use only the variables. Do not write raw values. Plain content groups have no shadow. Shadows are only for popovers and dialogs.
+- Standard form controls are at least 32 px high. Compact buttons in panels, toolbars and notice bars are 26 px (`--control-height-sm`). When Settings is narrower than 760 px, it uses top navigation, and the content area scrolls on its own.
+- Button size, corner radius, and the hover, pressed and disabled states are defined once, in `design-system.css`. Component styles only set layout and text color. The primary action uses a solid button (one per group). Secondary actions use a light-border button. The next level down uses a text button. One action appears as only one button in one place. For example, one change has only one pair of accept/reject buttons.
+- Interface text uses only four sizes: 11, 12, 13 and 14 px (`--text-xs/sm/md/lg`). Larger sizes are only for headings. Smaller sizes are only for badges. Document text has its own type scale and is not affected.
+- Icon buttons are 24 px with no border in headers, inline and in toolbars. In the input bar toolbar they have a border and match the height of the 26 px dropdowns and the send button. All dropdowns use a custom-drawn arrow, in two sizes: standard and compact.
+- Menus (the app menu, context menus, the project bar menu and the Quick Ask dropdown) share the panel padding, menu item size, hover color and separators.
+- Do not use the native alert, confirm or dropdown controls. For messages and confirmations use `ui/app-dialog.tsx` (`showMessage` / `showConfirm`). For dropdowns use `ui/Select.tsx`. For checkboxes add the `ui-check` class. Only the open and save file dialogs and the macOS system menu bar stay native.
+- All popup menus and popovers use `useCloseOnOutsideClick`: a click outside or Esc closes them, and the listener is only active while they are open. Text inputs draw their focus ring on the inside, so it does not overlap neighboring controls.
+- Text, secondary text, the accent color, danger and success states each have their own variable.
+- Settings, the sidebar, menus, the tutorial, the AI panel and dialogs use the interface variables. Native window buttons follow the platform's interaction conventions.
+
+## Motion
+
+- Durations, easing curves, offsets and scales come only from the variables in `src/ui/motion.css`. Do not write raw values.
+  - Durations: `--dur-instant` 80 ms (press, hover color change), `--dur-fast` 120 ms (small popover exit, arrow rotation, fades), `--dur-base` 200 ms (menu, popover, notice bar and dialog entry), `--dur-slow` 320 ms (sidebar, AI panel, Settings, Zen mode), `--dur-sheet` 450 ms (phone bottom sheets and full pages).
+  - Curves: `--ease-standard` for changes in place, `--ease-out` for entry, `--ease-in` for exit, `--ease-in-out` for movement within the screen. The spring is `--ease-spring` (engines without `linear()` fall back to a cubic Bézier). `--ease-spring-bouncy`, with about 3% overshoot, is only for a finger release (panel snapping, a tab dropping into place, a switch).
+- Motion only tells the user three things: where something comes from, where it goes, and that a state changed. There are no looping decorations, except for "working" indicators (thinking dots, the export spinner, the cursor while text is generated).
+- Interface responses take 100–250 ms. Large panels take at most about 450 ms. An exit takes about 70% of the entry time.
+- Anything the user can toggle repeatedly (sidebar, AI panel, Zen mode, switches, arrows) uses a CSS transition, so it can reverse from its current value. Keyframes are only for the one-time entry of a newly mounted element. Animations never block input: an exiting element is `inert`, clicks pass through to what is below, and focus returns as soon as the exit starts.
+- Keep space consistent: grow from the anchor and shrink back into it. Menus scale from the corner next to their button (`--transform-origin`). The sidebar slides in from the left edge. The AI panel enters from the right on desktop and from the bottom on phones. Panels leave the way they came. Each surface uses only one direction.
+- Animate only `opacity` and `transform`. Hover and press may change color. Focus rings may change shadow. Do not animate width, height, margin, padding, position, `max-height`, shadow geometry or filters. For size changes use FLIP (`ui/flip.ts`) or a crossfade.
+- On exit, `ui/usePresence.ts` keeps the element mounted and sets `data-state="closing"`. If no animation is running, it unmounts at once. It never waits for an event that will not come.
+- Nothing moves while the user types. Input, the input method, the caret, the selection, completion suggestions as they update with typing, typewriter scrolling, find highlights, the word count, tab title text, window resizing and dragged elements all change instantly. A completion suggestion fades in only the first time it appears.
+- Reduced motion means fades, not no motion at all. When the system setting is on, the offset and scale variables become zero, springs become the standard curve, slow motion becomes a 150 ms fade, loops stop, and smooth scrolling becomes instant. Script-driven motion reads `prefersReducedMotion()` / `motionAllowed()` from `ui/motion.ts`.
+- Overshoot is at most 3%, and only when the user releases a direct manipulation. Menus and dialogs never overshoot.
+- Blur materials are only for surfaces that have content scrolling underneath (menus, popovers, the find bar, the phone keyboard toolbar), and only on macOS and iOS (`<html data-platform>`). Linux stays opaque. Overlays only darken. They never blur.
+
+## Theme rules
+
+Built-in themes only change the document text area. Default, Paper, Slate, Forest and Parchment are each checked in light and dark. System dark and explicit dark use the same variables. Tests check the contrast of body text, links and secondary text against the document and code backgrounds.
+
+An imported theme also sets the global interface colors. `src/theme/theme-chrome.ts` reads the theme's background, text and link colors in a separate document. It then generates the interface colors and any missing editor variables. Buttons, status notices and selected items get contrast correction. When the user switches back to a built-in theme, the derived styles are removed, and a late theme read does not overwrite the new choice.
+
+The theme's original CSS is kept. A theme with only one color scheme keeps that scheme. It is not forced into dark. Remote `@import`, image backgrounds, layouts that depend on a specific Typora DOM, and arbitrary global CSS are not part of the full compatibility promise. Check them against each real theme.
+
+## Acceptance checks
+
+- Visually check light and dark body text in all five built-in themes: Chinese, English and Japanese text, emphasis, links, quotes, lists, code and tables.
+- Check the global interface colors in Settings with a warm imported theme and a dark imported theme.
+- Check Settings and the tutorial in a small 520×620 window, keyboard focus, and switching back to the default theme.
+- Automated checks cover theme color contrast, dark variable consistency, cleanup after import, and load race conditions.
+
+Browser checks do not replace acceptance testing of native windows, input methods, installation and upgrades on each platform.

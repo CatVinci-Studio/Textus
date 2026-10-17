@@ -1,5 +1,5 @@
 //! Settings, UI state and the two histories, as plain JSON files owned by
-//! Rust - docs/STORAGE.md lists every file.
+//! Rust - docs/dev/storage.md lists every file.
 //!
 //! They used to live in each webview's localStorage, which has two problems
 //! this module exists to fix:

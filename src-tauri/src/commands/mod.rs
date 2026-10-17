@@ -2,7 +2,7 @@
 //! the modules below `#[cfg(desktop)]` are about OS windows (the detached
 //! chat window, per-window session restore, window-mode prefs) or the desktop
 //! shell (the `textus` terminal command); `documents` (rename and delete
-//! for the iPhone's document list) is `#[cfg(mobile)]`. See docs/ios/code-map.zh.md.
+//! for the iPhone's document list) is `#[cfg(mobile)]`. See docs/dev/ios-code-map.md.
 
 pub mod attachment;
 #[cfg(desktop)]

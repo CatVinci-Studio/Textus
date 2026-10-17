@@ -11,7 +11,7 @@ One folder used to go by three names - "project folder" in the AI panel and
 the tools, "Workspace Folder" in Settings, "the document's folder" in the
 prompt - and agent.md by three more, so the agent made up its own ("I'm in
 read-only mode", "I have no tool to open files"). Since 0.9.7 every place
-uses the names of [AI-CONCEPTS.md](AI-CONCEPTS.md) (PR #42): the UI and the
+uses the names of [AI-CONCEPTS.md](ai-concepts.md) (PR #42): the UI and the
 in-app guide in en, zh and ja, and the agent's prompt, which is told the
 same names, the project menu's items and the Settings rows, and what each
 thing is (`agent.rs`'s `workspace_section`; unit tests check every label it

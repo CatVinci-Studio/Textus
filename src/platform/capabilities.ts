@@ -7,7 +7,7 @@ import { isDesktop, isIOSPlatform, isMacPlatform } from "./os";
  * through components.
  *
  * Mirrors the `#[cfg(desktop)]` gating in src-tauri (see
- * docs/ios/code-map.zh.md): every flag below that is false on iOS stands for
+ * docs/dev/ios-code-map.md): every flag below that is false on iOS stands for
  * Rust commands, plugins or window APIs that are not compiled or not
  * registered there, so calling them would only ever reject. The desktop-only
  * command wrappers in platform/ipc.ts check {@link isDesktopApp} as a backstop.

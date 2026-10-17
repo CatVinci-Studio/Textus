@@ -3,7 +3,7 @@
  * the way to wait for them before the window goes away.
  *
  * localStorage was synchronous: whatever had been set was kept, however
- * soon the window closed. The files Rust owns (docs/STORAGE.md) are
+ * soon the window closed. The files Rust owns (docs/dev/storage.md) are
  * reached through IPC, which is not. Every settings, UI-state and history
  * change is sent as it is made (SettingsContext's persist), but a window
  * destroyed before Rust has taken it can still drop it - and one value is

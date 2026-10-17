@@ -1,6 +1,6 @@
 # Messages for the shared writing rules (src-tauri/src/ai/rules/messages.rs).
 # One line per message: `rule.key = text`; {0}, {1} are filled in by the code.
-# Translators: keep every key and placeholder; see docs/TRANSLATING.md.
+# Translators: keep every key and placeholder; see docs/dev/translating.md.
 shared.nfc.invisible = Invisible character: remove it.
 shared.nfc.compose = Decomposed accent: use the composed character.
 shared.space-before-punct = No space before this punctuation mark.

@@ -6,7 +6,7 @@
  * is registered here, in the string tables (strings.ts) and in the backend
  * (agent.rs's UI_LANGUAGES) ahead of its translation - a language without
  * one shows English - so translating one only fills files of its own
- * (docs/TRANSLATING.md).
+ * (docs/dev/translating.md).
  */
 export const LANGS = [
   "en",

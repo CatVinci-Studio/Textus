@@ -4,7 +4,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 // The layers of src/, lowest first: a folder imports from its own layer and
-// the ones below, never above (docs/ARCHITECTURE.md). Type-only imports are
+// the ones below, never above (docs/dev/architecture.md). Type-only imports are
 // allowed across layers - they leave nothing behind at runtime.
 const above = (folders) => ({
   "@typescript-eslint/no-restricted-imports": [
@@ -17,7 +17,7 @@ const above = (folders) => ({
           `${up}/${folder}/**`,
         ]),
         allowTypeImports: true,
-        message: `${folder}/ is a higher layer; see docs/ARCHITECTURE.md.`,
+        message: `${folder}/ is a higher layer; see docs/dev/architecture.md.`,
       })),
     },
   ],

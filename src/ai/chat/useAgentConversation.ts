@@ -330,7 +330,7 @@ export type AgentConversation = ReturnType<typeof useAgentConversation>;
  * displays (name and type).
  *
  * Attached images are REQUEST data: base64 inflates a file by 4/3, and chat
- * history is one JSON file (chat-history.json, see docs/STORAGE.md) that
+ * history is one JSON file (chat-history.json, see docs/dev/storage.md) that
  * Rust rewrites on every save and every window keeps a copy of. A few
  * screenshots would turn each save into megabytes of writing and IPC. (Under
  * localStorage, where history used to live, one 6 MB screenshot overflowed
