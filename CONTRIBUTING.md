@@ -1,13 +1,19 @@
 # Contributing to Textus
 
-Thanks for taking the time. This is the one guide for developers: how to
-build Textus, what to run before you push, and the rules the codebase
-follows. AI coding assistants read the same rules from [AGENTS.md](AGENTS.md).
+Hi, and thanks for wanting to help. Textus is made by a few people at
+CatVinci Studio, and every fix or idea from outside makes a real difference
+to us.
 
-Textus is a Tauri 2 app: a React + TypeScript frontend in `src/`, a Rust
-backend in `src-tauri/`, and a provider-agnostic AI client crate in
-`src-tauri/crates/aicompat/`. Issues and pull requests are discussed in
-English or Chinese.
+This file is everything we'd tell you over a call: how to build the app,
+what to run before you push, and the habits the code has grown. It's long,
+but you don't need all of it for a first pull request - "Getting set up" and
+"Before you push" are enough to start. If you use an AI coding assistant, it
+can read the short version in [AGENTS.md](AGENTS.md).
+
+Textus is a Tauri 2 app: React and TypeScript in `src/`, Rust in
+`src-tauri/`, and the code that talks to AI providers in
+`src-tauri/crates/aicompat/`. Write to us in English or Chinese, whichever is
+easier for you.
 
 ## Getting set up
 
@@ -111,14 +117,23 @@ exercised by hand.
 
 ## Branches and pull requests
 
-- Branch from `main` and open a pull request to `main`. Name the branch for
-  what it does: `feat/…`, `fix/…`, `docs/…`, `chore/…`.
-- CI must pass; `main` also requires the branch to be up to date.
-- One pull request does one thing. Keep its description on _why_; the commit
-  bodies carry the detail.
-- If a change is visible, include a before/after screenshot. If it touches
-  window behaviour, drafts, or anything that can lose the user's work, say
-  what you tested by hand.
+Fork the repository (or branch from `main` if you have write access), make
+your change, and open a pull request against `main`. A branch name that says
+what it does helps: `fix/pdf-margins`, `feat/sidebar-width`.
+
+A few things make a pull request easy for us to say yes to:
+
+- It does one thing. Two fixes are two pull requests.
+- The description says why. What was broken, or what you wanted to do; the
+  commits can carry the details.
+- If it changes something you can see, a before and after screenshot.
+- If it touches windows, drafts or anything that could lose someone's
+  writing, a line on what you tried by hand.
+
+CI has to pass before we can merge, and one of the two maintainers reviews
+every pull request. We try to answer within a few days. If we haven't, a
+friendly nudge on the pull request is welcome - it usually means it slipped
+past us, not that we're ignoring you.
 
 Releases are tags on `main` - see [docs/dev/releasing.md](docs/dev/releasing.md).
 
@@ -180,14 +195,18 @@ Rust modules `snake_case.rs`, scripts `verb-noun.mjs`.
 ## Writing
 
 **Interface text** is in ten languages: `src/i18n/locales/` holds en, zh,
-zh-Hant, ja, ko, es, fr, de, ru and pt. Every new string goes into all ten;
-`npm run check` fails if one is missing. See
+zh-Hant, ja, ko, es, fr, de, ru and pt. Every new string goes into all ten,
+and `npm run check` fails if one is missing. If you only know some of the
+languages, put the English text in the others and say so in the pull
+request; we'll translate them. More in
 [docs/dev/translating.md](docs/dev/translating.md).
 
-**Documentation and release notes** are in English and follow one format:
+**Documentation and release notes** are in English. Write the way you'd
+explain something to a colleague: plain words, short sentences, what happens
+and then why. Skip the marketing ("seamless", "powerful") and the filler
+("This document describes…"). For the details we keep consistent:
 
 - One `#` heading per file; headings in sentence case ("Getting set up").
-- Short sentences in plain English; say what happens, then why.
 - UI paths in bold with › between steps: **Settings › Theme**. Buttons and
   other on-screen words in bold, exactly as the UI shows them: **Copy link**.
 - Code, file names, commands and settings keys in backticks:
@@ -205,3 +224,10 @@ pull request at the end, as in `(#68)`.
 The README (`README.md` and its nine translations) is for users. Its
 translations keep the English file's headings, code blocks and links;
 `scripts/check-readmes.mjs` checks that.
+
+## Stuck?
+
+Ask. Open a draft pull request with what you have, or an issue, or find us
+on [Discord](https://textus.catvinci.com/discord) (English) or in the QQ and
+WeChat groups listed in the README (Chinese). A half-finished pull request
+with a question is better than a finished one that went the wrong way.

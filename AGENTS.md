@@ -1,9 +1,10 @@
 # Agent guide
 
-Instructions for AI coding assistants (Codex, Claude Code, Cursor and the
-like) working in this repository. Human contributors follow the same rules
-in [CONTRIBUTING.md](CONTRIBUTING.md); read it once, it is the source of truth
-and this file only condenses it.
+We use AI coding assistants on Textus ourselves, and so do some of our
+contributors. This file is what we hand them: the short version of
+[CONTRIBUTING.md](CONTRIBUTING.md), plus the few things that have gone wrong
+before and must not again. If the two ever disagree, CONTRIBUTING.md wins -
+and please tell us.
 
 ## The project
 

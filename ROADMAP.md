@@ -1,49 +1,66 @@
 # Roadmap
 
-Where Textus is heading. This lists directions and priorities, not dates.
-Each item links to an issue labelled
-[`roadmap`](https://github.com/CatVinci-Studio/Textus/labels/roadmap):
-that is the place to discuss it or offer help.
-
 [简体中文](ROADMAP.zh.md)
 
-## In progress
+This is what we're working on and what we'd like to do next. There are no
+dates here on purpose: we're a small team, and we'd rather ship something when
+it's good than when a calendar says so.
 
-- **iPhone and iPad on the App Store.** The iOS app is in TestFlight and
-  heading for review. ([#87](https://github.com/CatVinci-Studio/Textus/issues/87))
-- **Playground.** Try the editor in a browser at
-  `textus.catvinci.com/playground`: write, import and export Markdown, no
-  install. ([#88](https://github.com/CatVinci-Studio/Textus/issues/88))
-- **Theme gallery.** An open, free place to share Textus themes: post yours
-  in one pinned issue, and it appears on `textus.catvinci.com/themes` after an
-  automatic check. ([#89](https://github.com/CatVinci-Studio/Textus/issues/89))
-- **Better tutorials.** A step in the first-run tour to connect your AI, and
-  short videos for the main features, in the app and on the website. ([#90](https://github.com/CatVinci-Studio/Textus/issues/90))
-- **Magic Diary.** A hidden theme where the page answers what you write, in
-  another hand. ([#76](https://github.com/CatVinci-Studio/Textus/pull/76))
+Each item has an issue tagged
+[`roadmap`](https://github.com/CatVinci-Studio/Textus/labels/roadmap). If one
+of them matters to you, say so there - it really does change what we pick up
+first.
 
-## Coming in the next release
+## What we're working on now
 
-- A resizable sidebar. ([#77](https://github.com/CatVinci-Studio/Textus/issues/77))
-- Cleaner PDF export: white pages and proper margins on Windows and Linux.
-  ([#68](https://github.com/CatVinci-Studio/Textus/issues/68))
-- Drop files on the window to open them, and open any file type from
-  **File › Open**. ([#78](https://github.com/CatVinci-Studio/Textus/issues/78))
-- Crisp text while editing in Source Code Mode on Linux.
-  ([#61](https://github.com/CatVinci-Studio/Textus/issues/61))
+**Getting onto the App Store.** Textus for iPhone and iPad has been in
+TestFlight for a while and is about to go to review.
+[#87](https://github.com/CatVinci-Studio/Textus/issues/87)
+
+**A Playground.** A small page at `textus.catvinci.com/playground` where you
+can try the editor in your browser before installing anything. It only does
+writing, importing and exporting Markdown; the app has the rest.
+[#88](https://github.com/CatVinci-Studio/Textus/issues/88)
+
+**A place to share themes.** Post your theme as a comment on one pinned issue,
+and it shows up on `textus.catvinci.com/themes` for everyone, free.
+[#89](https://github.com/CatVinci-Studio/Textus/issues/89)
+
+**Tutorials that actually help.** A step in the first-run tour to connect
+your AI, and a few short videos on the things people ask us about most.
+[#90](https://github.com/CatVinci-Studio/Textus/issues/90)
+
+**Magic Diary.** Something a teammate built for fun: a hidden theme where the
+page writes back to you. We liked it too much to leave it out.
+[#76](https://github.com/CatVinci-Studio/Textus/pull/76)
+
+## In the next release
+
+These came from your reports - thank you, especially for the ones with
+screenshots and exact steps.
+
+- You can drag the sidebar wider or narrower.
+  [#77](https://github.com/CatVinci-Studio/Textus/issues/77)
+- PDF export on Windows and Linux prints on white, with proper margins, and
+  no longer drops lines at the bottom of a page.
+  [#68](https://github.com/CatVinci-Studio/Textus/issues/68)
+- Dropping a file on the window opens it, and **File › Open** lets you pick
+  any file. [#78](https://github.com/CatVinci-Studio/Textus/issues/78)
+- Text stays sharp while you edit in Source Code Mode on Linux.
+  [#61](https://github.com/CatVinci-Studio/Textus/issues/61)
 
 ## Later
 
-- Install themes from the gallery inside the app (**Settings › Theme**).
-- An outline across a whole folder.
-  ([#79](https://github.com/CatVinci-Studio/Textus/issues/79))
+- Installing gallery themes from inside the app.
+- An outline that covers a whole folder, not just one file.
+  [#79](https://github.com/CatVinci-Studio/Textus/issues/79)
 - Page numbers in exported PDFs.
 
-## How to help
+## Want to help?
 
-- Pick an issue labelled
-  [`good first issue`](https://github.com/CatVinci-Studio/Textus/labels/good%20first%20issue)
-  or [`help wanted`](https://github.com/CatVinci-Studio/Textus/labels/help%20wanted).
-- Suggest a direction in a [new issue](https://github.com/CatVinci-Studio/Textus/issues/new/choose).
-- Read [CONTRIBUTING.md](CONTRIBUTING.md) to build Textus and open a pull
-  request.
+Issues tagged
+[`good first issue`](https://github.com/CatVinci-Studio/Textus/labels/good%20first%20issue)
+are a good way in. If you have an idea that isn't here,
+[open an issue](https://github.com/CatVinci-Studio/Textus/issues/new/choose) -
+we read all of them. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to build
+Textus and send a pull request.
