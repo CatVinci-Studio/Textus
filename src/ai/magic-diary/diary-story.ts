@@ -29,7 +29,7 @@ export function storyReply(
   );
   if (
     /原著|原作|正史|official|canon|true story/i.test(input) &&
-    (/textus|哈利|harry/i.test(input) || last >= 0)
+    (/textus|薇拉|vela|未竟之城|unfinished city/i.test(input) || last >= 0)
   )
     return story.canon[lang];
   if (last >= 0 && /^(我在这里|我在這裡|i am here)[。.!！\s]*$/i.test(input))

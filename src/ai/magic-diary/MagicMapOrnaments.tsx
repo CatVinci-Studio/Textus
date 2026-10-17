@@ -45,8 +45,8 @@ export function MapLandmarks({
   visit: LandmarkVisit | null;
 }) {
   const labels = chinese
-    ? ["北塔", "藏书阁", "钟楼", "禁林"]
-    : ["NORTH TOWER", "THE LIBRARY", "CLOCK COURT", "THE WOODS"];
+    ? ["观星阁", "无尽书廊", "回声钟", "萤火林"]
+    : ["STAR LOFT", "ENDLESS STACKS", "ECHO CLOCK", "FIREFLY WOOD"];
   const events = chinese
     ? [
         ["星图显现", "风向密语"],

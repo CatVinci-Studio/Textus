@@ -57,7 +57,7 @@ function FootGlyph() {
   );
 }
 const VISITOR_NAMES = {
-  wanderer: ["夜巡者", "Night wanderer"],
+  wanderer: ["掌灯人", "Lamplighter"],
   wisp: ["纸上星火", "Paper wisp"],
   beast: ["墨影狼", "Ink wolf"],
 } as const;
