@@ -36,7 +36,7 @@ export function SettingRow({
   error,
   children,
 }: {
-  label: string;
+  label: ReactNode;
   hint?: string;
   error?: string | null;
   children?: ReactNode;

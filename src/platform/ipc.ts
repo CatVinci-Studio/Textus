@@ -14,6 +14,7 @@ import type {
 } from "../ai/types";
 import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
 import type { SkillCategory } from "../ai/skills/builtin";
+import type { Lang } from "../i18n/langs";
 import { isDesktopApp, isIOSApp } from "./capabilities";
 import { iosFiles, isScopedUrl, newDocumentPath } from "./ios-files";
 
@@ -345,7 +346,12 @@ export const menuIpc = {
 /** Our own pages, opened in the system browser. Each URL is fixed in Rust
  *  (commands/links.rs), not passed from here. */
 export const links = {
-  openCommunityPage: () => call<void>("open_community_page"),
+  /** The website's community page, in the UI's language. */
+  openCommunityPage: (language: Lang) =>
+    call<void>("open_community_page", { language }),
+  /** Settings › General › About Textus's links, by name. */
+  openAboutLink: (page: "github" | "discord" | "qq") =>
+    call<void>("open_about_link", { page }),
 };
 
 export const exportDoc = {

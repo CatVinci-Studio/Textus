@@ -33,6 +33,8 @@ export interface MenuBridgeHandlers {
   requestCloseTab: (tabId: string) => void;
   openHelpTab: (doc: HelpDoc) => void;
   startWelcomeTutorial: () => void;
+  /** Help > Join the Community: the website's page in the UI's language. */
+  openCommunity: () => void;
   /** The phone menu's Documents (mobile/DocumentList.tsx). */
   onOpenDocuments: () => void;
   /** The phone menu's Share (iOS share sheet). */
@@ -124,6 +126,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
           new CustomEvent(INSERT_BLOCK_EVENT, { detail: event.payload }),
         );
       }),
+      listenToThisWindow("menu-open-community", () => h().openCommunity()),
       listenToThisWindow<string>("menu-open-help", (event) => {
         if (event.payload === "welcome") h().startWelcomeTutorial();
         else if (event.payload === "markdown" || event.payload === "agent")
