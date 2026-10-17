@@ -77,6 +77,7 @@ function App() {
     panelOpen,
     setPanelOpen,
     toggleSidebar,
+    sidebarWidth,
     agentPanel,
     agentOverlays,
     agentPanelEl,
@@ -314,6 +315,11 @@ function App() {
               agentPresence.mounted && !agentOverlays && !isIOSApp
                 ? `${agentPanel.width}px`
                 : "0px",
+            // The sidebar's dragged width (sidebar-frame.css); an iPad
+            // keeps the stylesheet's, its sidebar has no handle.
+            ...(!isIOSApp && {
+              "--sidebar-width": `${sidebarWidth.width}px`,
+            }),
           } as React.CSSProperties
         }
       >
@@ -335,6 +341,7 @@ function App() {
           spotlight={sidebarLesson}
           mode={panelMode}
           onModeChange={setPanelMode}
+          width={sidebarWidth}
           rootPath={rootPath}
           activePath={activeTab.path}
           activeContent={activeTab.content}

@@ -11,6 +11,7 @@ const en = {
   agentPanelToggle: "AI panel",
   agentPanelPopOut: "Open in a separate window",
   agentPanelResize: "Resize the AI panel",
+  sidebarResize: "Resize the sidebar",
   agentPanelSheet: "Expand or collapse the AI panel",
   agentExpandWindowLabel: "Open full conversations in a separate window",
   shortcutToggleAgentPanel: "Toggle AI panel",
