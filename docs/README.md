@@ -14,6 +14,7 @@ where the project is heading.
 | [storage.md](dev/storage.md)                        | Every file the app writes (settings, UI state, history), per platform, and the Levis import       |
 | [translating.md](dev/translating.md)                | The ten UI languages: which files a translation fills, tone, and how it is checked                |
 | [releasing.md](dev/releasing.md)                    | Branches, tags, the desktop release, pre-releases, the updater manifest                           |
+| [infrastructure.md](dev/infrastructure.md) | The other repositories, the automation, the website and downloads, the secrets and how to replace them |
 | [ios-release.md](dev/ios-release.md)                | Shipping the iOS app: App Store Connect setup, keys, TestFlight, review                           |
 | [ios-code-map.md](dev/ios-code-map.md)              | What the desktop and iOS apps share and what is desktop-only; building on a Mac                   |
 | [windows-installer.md](dev/windows-installer.md)    | The NSIS installer, and why there is no MSI                                                       |
