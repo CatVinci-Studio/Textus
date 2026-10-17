@@ -1,4 +1,11 @@
-import type { Editor } from "@milkdown/kit/core";
+import {
+  type Editor,
+  defaultValueCtx,
+  editorViewOptionsCtx,
+  rootCtx,
+} from "@milkdown/kit/core";
+import type { Ctx, MilkdownPlugin } from "@milkdown/kit/ctx";
+import { orderedListAttr } from "@milkdown/kit/preset/commonmark";
 import { history } from "@milkdown/kit/plugin/history";
 import { clipboard } from "@milkdown/kit/plugin/clipboard";
 import { listener } from "@milkdown/kit/plugin/listener";
@@ -63,6 +70,32 @@ import { createPlaceholderPlugin } from "./placeholder-plugin";
 import { findReplacePlugin } from "./find/find-replace-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../settings/SettingsContext";
+import { normalizeMathDelimiters } from "../utils/markdown-math";
+
+/** Where the editor mounts and what it opens with, plus the two DOM details
+ *  the stylesheets rely on - shared by the app's editor and the browser
+ *  playground's. Called from `Editor.make().config(...)`. */
+export function configureEditorRoot(
+  ctx: Ctx,
+  root: HTMLElement,
+  initialValue: string,
+): void {
+  ctx.set(rootCtx, root);
+  ctx.set(defaultValueCtx, normalizeMathDelimiters(initialValue));
+  // Typora-compatible themes style their content under `#write` - aliasing
+  // it here lets most community Typora themes' CSS apply directly to our
+  // content with no rewriting.
+  ctx.set(editorViewOptionsCtx, { attributes: { id: "write" } });
+  // A list starting somewhere other than 1 ("3. ") is the one thing the DOM
+  // structure alone doesn't tell the counter that numbers ordered lists
+  // (see .milkdown ol in milkdown-theme.css), so the node's `order` rides
+  // along as a custom property. Minus one because counter-reset sets the
+  // value BEFORE the first increment.
+  ctx.set(orderedListAttr.key, (node) => {
+    const order = (node.attrs.order as number) ?? 1;
+    return order === 1 ? {} : { style: `--textus-ol-start: ${order - 1}` };
+  });
+}
 
 /**
  * The Markdown editor itself, in load order: parsing and saving, the
@@ -78,16 +111,27 @@ export function withEditorCore(
   options: {
     settings: { readonly current: Settings };
     docPath: { readonly current: string | null };
-    /** A pasted image failed to save to disk - the message to show in a
-     *  native alert (localized, since this plugin has no i18n access). */
-    onImagePasteError: () => string;
-    requestImageName: (
-      stem: string,
-      extension: string,
-    ) => Promise<string | null>;
-  },
+  } & (
+    | {
+        /** A pasted image failed to save to disk - the message to show in
+         *  a native alert (localized, since this plugin has no i18n
+         *  access). */
+        onImagePasteError: () => string;
+        requestImageName: (
+          stem: string,
+          extension: string,
+        ) => Promise<string | null>;
+      }
+    | {
+        /** No disk behind the page (the browser playground,
+         *  src/playground/): pasted images aren't stored and no clipboard
+         *  history is kept - this plugin takes image pastes instead. */
+        noDiskImages: MilkdownPlugin;
+      }
+  ),
 ): Editor {
-  const { settings, docPath, onImagePasteError, requestImageName } = options;
+  const { settings, docPath } = options;
+  const disk = !("noDiskImages" in options);
   return (
     editor
       // How saved markdown is written (markdown-output.ts).
@@ -178,18 +222,20 @@ export function withEditorCore(
       // markdown-source text, then milkdown's own clipboard plugin.
       .use(history)
       .use(
-        createImagePlugin({
-          docPath: () => docPath.current,
-          settings: () => settings.current,
-          requestName: requestImageName,
-          onError: onImagePasteError,
-        }),
+        "noDiskImages" in options
+          ? options.noDiskImages
+          : createImagePlugin({
+              docPath: () => docPath.current,
+              settings: () => settings.current,
+              requestName: options.requestImageName,
+              onError: options.onImagePasteError,
+            }),
       )
       .use(pasteUrlPlugin)
       .use(pasteMarkdownSourcePlugin)
       .use(createPlainTextCopyPlugin(() => settings.current.copyTextMode))
       .use(clipboard)
-      .use(clipboardHistoryPlugin)
+      .use(disk ? clipboardHistoryPlugin : [])
       .use(listener)
       // Enter / Mod+Enter in tables, code blocks and quotes - ahead of the
       // other key handlers and the preset keymaps.
