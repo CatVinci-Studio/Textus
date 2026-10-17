@@ -25,9 +25,14 @@ function MediaProviderForm({
   }[capability];
   const [config, setConfig] = useState<MediaProviderConfig>(
     initial ?? {
-      provider: "openai-compatible",
-      endpoint: "",
-      model: "",
+      provider: capability === "tts" ? "openai-compatible" : "minimax",
+      endpoint: capability === "tts" ? "" : "https://api.minimax.cn/v1",
+      model:
+        capability === "image"
+          ? "image-01"
+          : capability === "stt"
+            ? "asr-1.0"
+            : "",
       voice: capability === "tts" ? "alloy" : null,
     },
   );
@@ -72,13 +77,29 @@ function MediaProviderForm({
           <span>{zh ? "接口协议" : "API protocol"}</span>
           <Select
             value={config.provider}
-            onChange={(event) =>
+            onChange={(event) => {
+              const provider = event.target
+                .value as MediaProviderConfig["provider"];
               setConfig({
                 ...config,
-                provider: event.target.value as MediaProviderConfig["provider"],
-              })
-            }
+                provider,
+                credentialSource: "separate",
+                endpoint:
+                  provider === "minimax"
+                    ? "https://api.minimax.cn/v1"
+                    : provider === "openai"
+                      ? "https://api.openai.com/v1"
+                      : "",
+                model:
+                  provider === "minimax"
+                    ? capability === "image"
+                      ? "image-01"
+                      : "asr-1.0"
+                    : "",
+              });
+            }}
           >
+            {capability !== "tts" && <option value="minimax">MiniMax</option>}
             <option value="openai-compatible">OpenAI-compatible</option>
             <option value="openai">OpenAI</option>
           </Select>
@@ -118,11 +139,34 @@ function MediaProviderForm({
             />
           </label>
         )}
+        {config.provider === "minimax" && (
+          <label className="settings-row">
+            <span>
+              {zh
+                ? "复用 MiniMax 文字服务的 Key"
+                : "Reuse the MiniMax text API key"}
+            </span>
+            <input
+              type="checkbox"
+              checked={config.credentialSource === "minimax-chat"}
+              onChange={(event) => {
+                setKey("");
+                setConfig({
+                  ...config,
+                  credentialSource: event.target.checked
+                    ? "minimax-chat"
+                    : "separate",
+                });
+              }}
+            />
+          </label>
+        )}
         <label className="settings-row">
           <span>API Key {hasKey && "✓"}</span>
           <input
             className="settings-text-input"
             type="password"
+            disabled={config.credentialSource === "minimax-chat"}
             autoComplete="off"
             value={key}
             placeholder={

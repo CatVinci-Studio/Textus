@@ -735,12 +735,13 @@ pub async fn ai_agent_message(
     // The UI language (src/i18n/langs.ts), for the names the agent is told
     // the app uses (UiNames). None - an older frontend - is English.
     ui_language: Option<String>,
+    image_task: Option<crate::media::jobs::ImageTaskPermission>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
     let cancel_rx = cancel::register(request_id.clone());
     let ui_language = ui_language.unwrap_or_else(|| "en".to_string());
     let result = tokio::select! {
-        result = ai_agent_message_inner(app, provider, document, doc_path, workspace_root, history, message, images, web_search, mode, model, focus_heading, ui_language, on_event) => result,
+        result = ai_agent_message_inner(app, provider, document, doc_path, workspace_root, history, message, images, web_search, mode, model, focus_heading, ui_language, image_task, on_event) => result,
         _ = cancel_rx => Err(cancel::CANCELLED.to_string()),
     };
     cancel::unregister(&request_id);
@@ -764,8 +765,16 @@ async fn ai_agent_message_inner(
     model: Option<String>,
     focus_heading: Option<String>,
     ui_language: String,
+    image_task: Option<crate::media::jobs::ImageTaskPermission>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
+    let image_context = image_task
+        .filter(|p| p.allow_automatic && allows_document_edits(&mode))
+        .map(|permission| crate::media::jobs::ImageTaskContext {
+            app: app.clone(),
+            permission,
+            mode: mode.clone(),
+        });
     let history = compact_history(history);
     let workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
@@ -815,11 +824,14 @@ async fn ai_agent_message_inner(
         "openai-responses" => {
             let instructions =
                 build_instructions(&workspace, &document, true, &mode, &focus, &ui_language);
-            let tools = tools::builtin_tools(
+            let mut tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 allows_document_edits(mode.as_ref()),
             );
+            if image_context.is_some() {
+                tools.push(tools::image_tool());
+            }
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
                 document: &document,
@@ -829,6 +841,7 @@ async fn ai_agent_message_inner(
                 conventions: &conventions,
                 library: &library,
                 proposed: Default::default(),
+                image: image_context.as_ref(),
             };
 
             match route::resolve_openai_auth(&app).await? {
@@ -927,11 +940,14 @@ async fn ai_agent_message_inner(
             let instructions =
                 build_instructions(&workspace, &document, true, &mode, &focus, &ui_language);
             let auth = route::resolve_anthropic_auth(&app).await?;
-            let tools = tools::builtin_tools(
+            let mut tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 allows_document_edits(mode.as_ref()),
             );
+            if image_context.is_some() {
+                tools.push(tools::image_tool());
+            }
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
                 document: &document,
@@ -941,6 +957,7 @@ async fn ai_agent_message_inner(
                 conventions: &conventions,
                 library: &library,
                 proposed: Default::default(),
+                image: image_context.as_ref(),
             };
 
             let agent_model = model.unwrap_or_else(|| {
@@ -990,11 +1007,14 @@ async fn ai_agent_message_inner(
                 .or_else(|| entry.agent_default_model.map(str::to_string))
                 .or(default_model)
                 .ok_or_else(|| NOT_CONFIGURED.to_string())?;
-            let tools = tools::builtin_tools(
+            let mut tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 allows_document_edits(mode.as_ref()),
             );
+            if image_context.is_some() {
+                tools.push(tools::image_tool());
+            }
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
                 document: &document,
@@ -1004,6 +1024,7 @@ async fn ai_agent_message_inner(
                 conventions: &conventions,
                 library: &library,
                 proposed: Default::default(),
+                image: image_context.as_ref(),
             };
             let instructions_with_tools =
                 build_instructions(&workspace, &document, true, &mode, &focus, &ui_language);
@@ -1225,6 +1246,7 @@ mod tests {
             conventions: &conventions,
             library: &[],
             proposed: Default::default(),
+            image: None,
         };
         let call = |id: &str, name: &str, args: &str| AgentTurn::ToolCall {
             call_id: id.into(),

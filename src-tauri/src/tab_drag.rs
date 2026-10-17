@@ -22,6 +22,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 /// one window spawned for it, not a batch any window could claim.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct DetachedTab {
+    #[serde(
+        rename = "workspaceId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    workspace_id: Option<String>,
     path: Option<String>,
     content: String,
     #[serde(rename = "savedContent")]

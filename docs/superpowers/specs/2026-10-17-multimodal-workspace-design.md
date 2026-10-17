@@ -12,16 +12,16 @@
 
 ## 已核对的代码基础
 
-| 位置 | 现有能力与扩展点 |
-| --- | --- |
-| `src/app/MainPane.tsx` | 每个标签的编辑器保持挂载；工作台切换延续该约定。 |
-| `src/document-view/EditorPane.tsx` | 保存草稿导致路径变化时不重新挂载，保留撤销、聊天和提案。 |
-| `src/document-view/useEditorProposals.ts` | 拥有聊天、ProposalStream 和提案回调，是工作台的组合边界。 |
-| `src/ai/chat/useAgentConversation.ts` | 复用发送、取消、重试、历史恢复和持久化。 |
-| `src/ai/revision/usePendingEdits.ts` | 复用锚点解析和逐项审阅；现有 acceptAll 逐项提交，新批次提交需单独实现原子性。 |
-| `src-tauri/src/ai/agent.rs`、`tools.rs` | 扩展现有运行循环；Ask/Plan 当前不提供编辑工具。 |
-| `src/platform/ipc.ts` | 所有新增 IPC 契约集中定义，与 Rust serde 类型一致。 |
-| `src-tauri/src/commands/fs.rs` | 沿用 save_pasted_image / migrate_draft_images 资源生命周期。 |
+| 位置                                      | 现有能力与扩展点                                                              |
+| ----------------------------------------- | ----------------------------------------------------------------------------- |
+| `src/app/MainPane.tsx`                    | 每个标签的编辑器保持挂载；工作台切换延续该约定。                              |
+| `src/document-view/EditorPane.tsx`        | 保存草稿导致路径变化时不重新挂载，保留撤销、聊天和提案。                      |
+| `src/document-view/useEditorProposals.ts` | 拥有聊天、ProposalStream 和提案回调，是工作台的组合边界。                     |
+| `src/ai/chat/useAgentConversation.ts`     | 复用发送、取消、重试、历史恢复和持久化。                                      |
+| `src/ai/revision/usePendingEdits.ts`      | 复用锚点解析和逐项审阅；现有 acceptAll 逐项提交，新批次提交需单独实现原子性。 |
+| `src-tauri/src/ai/agent.rs`、`tools.rs`   | 扩展现有运行循环；Ask/Plan 当前不提供编辑工具。                               |
+| `src/platform/ipc.ts`                     | 所有新增 IPC 契约集中定义，与 Rust serde 类型一致。                           |
+| `src-tauri/src/commands/fs.rs`            | 沿用 save_pasted_image / migrate_draft_images 资源生命周期。                  |
 
 遵循 `docs/ARCHITECTURE.md` 的依赖层级。`editor/` 不导入 `ai/`；组合放在 `document-view/` 和 `app/`，工作台功能放在 `ai/workspace/`。不新建 Markdown 引擎和 Agent runtime。
 
@@ -91,13 +91,13 @@ Rust 对 base64 或临时 URL 结果执行大小、真实 MIME、像素检查，
 
 ## 交付顺序与验收
 
-| 阶段 | 交付 | 必须通过的验收 |
-| --- | --- | --- |
-| M0 | 共享会话、工作台入口、能力配置模型 | 切换保留正文、选择区、滚动、Undo、会话和运行状态。 |
-| M1 | Create、章节预览、时间线、原子批次提交、恢复 | 四章草稿可预览采纳；中途手改触发冲突；一批一次 Undo；Ask/Plan 后端拒绝写入。 |
-| M2 | 录音、STT、双目标审阅 | 权限拒绝/设备缺失/超限/取消可恢复；未确认不上传、不发送、不写正文。 |
-| M3 | 图片 adapter、异步任务、授权和 assets 集成 | 文本不等图片；乱序返回落点正确；超限/SSRF/取消安全；首存、重开、导出引用有效。 |
-| M4 | 分块 TTS、播放器、段落高亮 | 长文有界请求；暂停继续正常；停止和切文档无残留播放。 |
+| 阶段 | 交付                                         | 必须通过的验收                                                                 |
+| ---- | -------------------------------------------- | ------------------------------------------------------------------------------ |
+| M0   | 共享会话、工作台入口、能力配置模型           | 切换保留正文、选择区、滚动、Undo、会话和运行状态。                             |
+| M1   | Create、章节预览、时间线、原子批次提交、恢复 | 四章草稿可预览采纳；中途手改触发冲突；一批一次 Undo；Ask/Plan 后端拒绝写入。   |
+| M2   | 录音、STT、双目标审阅                        | 权限拒绝/设备缺失/超限/取消可恢复；未确认不上传、不发送、不写正文。            |
+| M3   | 图片 adapter、异步任务、授权和 assets 集成   | 文本不等图片；乱序返回落点正确；超限/SSRF/取消安全；首存、重开、导出引用有效。 |
+| M4   | 分块 TTS、播放器、段落高亮                   | 长文有界请求；暂停继续正常；停止和切文档无残留播放。                           |
 
 每批运行相关 Vitest 与 Rust 单测，关键流程加入基于 dev Tauri shim 的 Playwright 测试。最终运行 typecheck、lint、test、check、生产构建及 Rust 检查。设备麦克风、实际供应商和跨平台硬件验证需明确记录实测环境；无凭据时不得把 mock 测试描述为真实服务通过。
 

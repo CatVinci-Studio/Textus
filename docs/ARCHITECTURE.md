@@ -14,6 +14,14 @@ and a Rust backend in `src-tauri/`. They talk only through
 
 ## Frontend layers
 
+The conversation workspace uses `ai/workspace/` for revision-checked drafts and
+`ai/multimodal/` for image proposals. `voice/` owns recording and playback;
+`document-view/` composes these with the existing Milkdown document through
+`useDocumentWorkspace`, `useDocumentImages` and `useWorkspacePersistence`.
+Rust `media/` owns separate capability configuration, native MiniMax and
+OpenAI-compatible requests, cancellation and bounded media jobs. See
+[the workspace guide](MULTIMODAL-WORKSPACE.md) for protocols and lifecycle.
+
 `src/` is grouped by feature, and the features are stacked in layers. A
 folder imports from its own layer and the layers below it, never above.
 ESLint enforces this (`no-restricted-imports` in `eslint.config.js`); a

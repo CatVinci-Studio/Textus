@@ -1,0 +1,58 @@
+.voice-input {
+  position: relative;
+  display: inline-flex;
+}
+.voice-launch {
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.3rem;
+}
+.voice-panel {
+  position: absolute;
+  z-index: 100;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: min(340px, 80vw);
+  padding: 1rem;
+  border: 1px solid #8885;
+  border-radius: 10px;
+  background: var(--editor-bg, var(--bg));
+  color: var(--editor-text);
+  box-shadow: 0 6px 30px #0002;
+  font-size: 13px;
+}
+.workspace-launch .voice-panel {
+  top: calc(100% + 8px);
+  bottom: auto;
+  left: auto;
+  right: 0;
+}
+.voice-panel p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0.6rem 0;
+}
+.voice-panel small {
+  display: block;
+  overflow-wrap: anywhere;
+  opacity: 0.7;
+}
+.voice-panel label {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.75rem 0;
+}
+.voice-panel textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+}
+.voice-panel button {
+  margin: 0.4rem 0.4rem 0 0;
+  font: inherit;
+}

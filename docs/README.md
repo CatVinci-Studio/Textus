@@ -6,6 +6,7 @@
 | [TESTING.md](TESTING.md) | 各测试套件覆盖什么、怎么运行，以及刻意没覆盖的部分 |
 | [AI-CONCEPTS.md](AI-CONCEPTS.md) | AI 相关概念的统一定义：项目文件夹、文风档案、资料库、写作要求（agent.md）、技能、全局配置文件夹，以及优先级 |
 | [AI-PROPOSALS.md](AI-PROPOSALS.md) | AI 修改建议从流式生成到写入文档的完整生命周期，以及三个对话界面 |
+| [MULTIMODAL-WORKSPACE.md](MULTIMODAL-WORKSPACE.md) | Agent 工作台、MiniMax 生图/语音输入、朗读与草稿恢复，以及真实 API 测试方法 |
 | [DESIGN-LANGUAGE.zh.md](DESIGN-LANGUAGE.zh.md) | 界面规范：圆角、字号、按钮、菜单、对话框和主题规则 |
 | [STORAGE.md](STORAGE.md) | 应用保存的所有文件（设置、界面状态、历史记录）、各平台路径，以及 Textus 如何导入 |
 | [TRANSLATING.md](TRANSLATING.md) | 界面语言：翻译一种语言要填哪些文件、教程练习的约束、语气规范和检查方法（英文） |

@@ -10,6 +10,7 @@ import {
   AI_CANCELLED,
   IpcError,
   type StreamEvent,
+  type ImageTaskPermission,
 } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useSettings, type AgentMode } from "../../settings/SettingsContext";
@@ -17,6 +18,7 @@ import { useSettings, type AgentMode } from "../../settings/SettingsContext";
 export interface AgentRequestOptions {
   mode: AgentMode;
   webSearch: boolean;
+  imageTask?: ImageTaskPermission | null;
   /** See ai.agentMessage's focusHeading. */
   focusHeading?: string | null;
 }
@@ -189,6 +191,7 @@ export function useAgentConversation(
             uiLanguage: uiLanguage.current,
             model: model || null,
             requestId,
+            imageTask: options.imageTask ?? null,
             onEvent: (event) => {
               if (generation !== generationRef.current) return;
               onStreamEventRef.current?.(event);

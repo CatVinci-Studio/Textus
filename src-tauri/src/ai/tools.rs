@@ -29,6 +29,7 @@ pub struct ToolContext<'a> {
     /// (their `context`, else their anchor; "" for the selection). One
     /// context serves one request, every step of it.
     pub proposed: std::sync::Mutex<ProposalLedger>,
+    pub image: Option<&'a crate::media::jobs::ImageTaskContext>,
 }
 
 /// What this request's propose_edit calls have done so far.
@@ -97,6 +98,28 @@ impl ProposedPassage {
 pub struct Tool {
     pub spec: ToolSpec,
     pub run: fn(&ToolContext, &str) -> String,
+}
+
+pub fn image_tool() -> Tool {
+    Tool {
+        spec: ToolSpec {
+            name: "generate_image",
+            description: "Generate one proposed illustration only when the user requested an image. Returns a background job immediately: continue drafting text without waiting. The UI reviews the image before insertion. `anchor` is a verbatim unique section heading or passage at the intended insertion point, including a heading you proposed in this task. Never insert a temporary URL into Markdown. Maximum two image requests per task, including retries.",
+            parameters: json!({"type":"object", "properties": {
+                "prompt":{"type":"string"}, "anchor":{"type":"string"}, "alt":{"type":"string"}, "caption":{"type":"string"},
+                "size":{"type":"string","enum":["1024x1024","1536x1024","1024x1536"]},
+                "quality":{"type":"string","enum":["auto","low","medium","high","standard","hd"]}
+            }, "required":["prompt","anchor","alt"]}),
+        },
+        run: |ctx, arguments| {
+            let Some(context) = ctx.image.filter(|c| c.allowed()) else { return "Image generation denied: no task authorization or a read-only mode.".into(); };
+            let request = match serde_json::from_str(arguments) { Ok(request) => request, Err(_) => return "Image generation refused: invalid request arguments.".into() };
+            match crate::media::jobs::start_job(context, request) {
+                Ok(job) => serde_json::to_string(&job).unwrap_or_else(|_| "Image job serialization failed.".into()),
+                Err(error) => format!("Image not generated ({}): {}", error.code, error.message),
+            }
+        },
+    }
 }
 
 const SEARCH_TOOL_NAME: &str = "search_document";
@@ -1111,6 +1134,7 @@ mod tests {
             conventions: &NO_CONVENTIONS,
             library: &[],
             proposed: Default::default(),
+            image: None,
         };
         let call = |name: &str| use_skill(&ctx, &json!({ "name": name }).to_string());
         let dialogue = call("dialogue");
@@ -1142,6 +1166,20 @@ mod tests {
             conventions: &NO_CONVENTIONS,
             library: &[],
             proposed: Default::default(),
+            image: None,
+        }
+    }
+
+    #[test]
+    fn image_tool_cannot_authorize_itself() {
+        let tool = image_tool();
+        let result = (tool.run)(
+            &ctx("## Section"),
+            r###"{"prompt":"a diagram","anchor":"## Section","alt":"diagram","allowAutomatic":true}"###,
+        );
+        assert!(result.contains("denied"));
+        for read_only in [builtin_tools(false, false, false)] {
+            assert!(!read_only.iter().any(|t| t.spec.name == "generate_image"));
         }
     }
 

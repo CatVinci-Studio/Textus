@@ -511,6 +511,7 @@ pub fn run_conversation(
             conventions: &conventions,
             library: &library,
             proposed: Default::default(),
+            image: None,
         };
         let usage = RefCell::new(Vec::new());
         let postfix = RefCell::new(Vec::new());

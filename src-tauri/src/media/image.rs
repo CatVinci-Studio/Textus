@@ -122,6 +122,17 @@ pub async fn generate(
     size: &str,
     quality: Option<&str>,
 ) -> Result<GeneratedImage, MediaError> {
+    let (request, config) = provider::request(app, "image", "images/generations")?;
+    generate_with(request, config, prompt, size, quality).await
+}
+
+pub(super) async fn generate_with(
+    request: reqwest::RequestBuilder,
+    config: provider::MediaProviderConfig,
+    prompt: &str,
+    size: &str,
+    quality: Option<&str>,
+) -> Result<GeneratedImage, MediaError> {
     if prompt.trim().is_empty()
         || prompt.chars().count() > 12000
         || !matches!(
@@ -134,14 +145,19 @@ pub async fn generate(
             "Specify a prompt up to 12000 characters and a supported image size",
         ));
     }
-    let (request, config) = provider::request(app, "image", "images/generations")?;
-    let mut payload = json!({"model":config.model,"prompt":prompt,"size":size,"n":1});
+    let mut payload = if config.provider == "minimax" {
+        super::minimax::image_payload(&config.model, prompt, size)?
+    } else {
+        json!({"model":config.model,"prompt":prompt,"size":size,"n":1})
+    };
     // GPT image models return base64 intrinsically; older/compatible image
     // APIs use response_format. Keep that protocol choice in the adapter.
-    if config.provider == "openai-compatible" || !config.model.starts_with("gpt-image") {
+    if config.provider != "minimax"
+        && (config.provider == "openai-compatible" || !config.model.starts_with("gpt-image"))
+    {
         payload["response_format"] = json!("b64_json");
     }
-    if let Some(quality) = quality {
+    if let Some(quality) = quality.filter(|_| config.provider != "minimax") {
         if !matches!(
             quality,
             "auto" | "low" | "medium" | "high" | "standard" | "hd"
@@ -162,27 +178,32 @@ pub async fn generate(
         provider::read_response(response, (MAX_IMAGE_BYTES + 2) / 3 * 4 + 1024 * 1024).await?;
     let response: serde_json::Value = serde_json::from_slice(&raw)
         .map_err(|_| MediaError::new("invalid_response", "Image provider returned invalid JSON"))?;
-    let first = response
-        .get("data")
-        .and_then(|v| v.as_array())
-        .and_then(|v| if v.len() == 1 { v.first() } else { None })
-        .ok_or_else(|| {
-            MediaError::new("invalid_response", "Expected exactly one generated image")
-        })?;
-    let bytes = if let Some(encoded) = first.get("b64_json").and_then(|v| v.as_str()) {
-        STANDARD.decode(encoded).map_err(|_| {
-            MediaError::new(
-                "invalid_image",
-                "Provider returned invalid base64 image data",
-            )
-        })?
-    } else if let Some(url) = first.get("url").and_then(|v| v.as_str()) {
-        download(url).await?
+    let bytes = if config.provider == "minimax" {
+        download(super::minimax::image_url(&response)?).await?
     } else {
-        return Err(MediaError::new(
-            "invalid_response",
-            "Provider returned neither image data nor a URL",
-        ));
+        let first = response
+            .get("data")
+            .and_then(|v| v.as_array())
+            .and_then(|v| if v.len() == 1 { v.first() } else { None })
+            .ok_or_else(|| {
+                MediaError::new("invalid_response", "Expected exactly one generated image")
+            })?;
+        let bytes = if let Some(encoded) = first.get("b64_json").and_then(|v| v.as_str()) {
+            STANDARD.decode(encoded).map_err(|_| {
+                MediaError::new(
+                    "invalid_image",
+                    "Provider returned invalid base64 image data",
+                )
+            })?
+        } else if let Some(url) = first.get("url").and_then(|v| v.as_str()) {
+            download(url).await?
+        } else {
+            return Err(MediaError::new(
+                "invalid_response",
+                "Provider returned neither image data nor a URL",
+            ));
+        };
+        bytes
     };
     let (ext, width, height) = validate_image(&bytes)?;
     Ok(GeneratedImage {

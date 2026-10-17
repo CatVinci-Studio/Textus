@@ -106,6 +106,7 @@ export function EditorAgentPanel({
         workspaceRoot={settings.agentWorkspaceRoot || null}
         conversation={conversation}
         defaultMode={settings.agentDefaultMode}
+        voiceLanguage={settings.language}
         defaultWebSearch={settings.enableWebSearch}
         tutorialMock={tutorialMock}
         labels={chatLabels(t, settings.language)}

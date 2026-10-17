@@ -57,28 +57,36 @@ pub async fn media_transcribe(
             .map_err(|_| MediaError::new("invalid_audio", "Invalid recording data"))?;
         let (mime, extension) = validate_recording(&mime, bytes.len())?;
         let (request, config) = provider::request(&app, "stt", "audio/transcriptions")?;
-        let file = reqwest::multipart::Part::bytes(bytes)
-            .file_name(format!("recording.{extension}"))
-            .mime_str(mime)
-            .map_err(|_| MediaError::new("invalid_audio", "Invalid recording MIME"))?;
-        let mut form = reqwest::multipart::Form::new()
-            .text("model", config.model)
-            .text("response_format", "json")
-            .part("file", file);
-        if let Some(language) = language.filter(|l| !l.is_empty()) {
-            if !matches!(language.as_str(), "en" | "zh") {
-                return Err(MediaError::new(
-                    "invalid_request",
-                    "Select automatic, Chinese or English transcription",
-                ));
+        let request = if config.provider == "minimax" {
+            super::minimax::transcription_request(
+                request,
+                &config.model,
+                bytes,
+                mime,
+                extension,
+                language.as_deref(),
+            )?
+        } else {
+            let file = reqwest::multipart::Part::bytes(bytes)
+                .file_name(format!("recording.{extension}"))
+                .mime_str(mime)
+                .map_err(|_| MediaError::new("invalid_audio", "Invalid recording MIME"))?;
+            let mut form = reqwest::multipart::Form::new()
+                .text("model", config.model)
+                .text("response_format", "json")
+                .part("file", file);
+            if let Some(language) = language.filter(|l| !l.is_empty()) {
+                if !matches!(language.as_str(), "en" | "zh") {
+                    return Err(MediaError::new(
+                        "invalid_request",
+                        "Select automatic, Chinese or English transcription",
+                    ));
+                }
+                form = form.text("language", language);
             }
-            form = form.text("language", language);
-        }
-        let response = request
-            .multipart(form)
-            .send()
-            .await
-            .map_err(provider::network_error)?;
+            request.multipart(form)
+        };
+        let response = request.send().await.map_err(provider::network_error)?;
         let bytes = provider::read_response(response, 1024 * 1024).await?;
         let json: serde_json::Value = serde_json::from_slice(&bytes).map_err(|_| {
             MediaError::new("invalid_response", "Transcription response was not JSON")

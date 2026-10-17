@@ -24,9 +24,41 @@ pub struct MediaProviderConfig {
     pub endpoint: String,
     pub model: String,
     pub voice: Option<String>,
+    #[serde(default)]
+    pub credential_source: Option<String>,
 }
 pub type MediaProviders = BTreeMap<String, MediaProviderConfig>;
 static CONFIG_LOCK: Mutex<()> = Mutex::new(());
+
+pub(super) fn minimax_chat_key(
+    text: &crate::auth::custom_endpoint::CustomEndpointConfig,
+    endpoint: &str,
+) -> Result<String, MediaError> {
+    let official = |value: &str| {
+        reqwest::Url::parse(value).ok().is_some_and(|url| {
+            url.scheme() == "https"
+                && url.port_or_known_default() == Some(443)
+                && url.username().is_empty()
+                && url.password().is_none()
+                && matches!(
+                    url.host_str(),
+                    Some("api.minimax.cn" | "api.minimaxi.com" | "api.minimax.io")
+                )
+        })
+    };
+    if !official(&text.base_url) || !official(endpoint) {
+        return Err(MediaError::new(
+            "configuration",
+            "Reusing the MiniMax text key requires official MiniMax HTTPS endpoints",
+        ));
+    }
+    text.api_key
+        .clone()
+        .filter(|key| !key.trim().is_empty())
+        .ok_or_else(|| {
+            MediaError::new("not_configured", "Configure the MiniMax text API key first")
+        })
+}
 
 pub fn credential_id(capability: &str) -> Result<&'static str, MediaError> {
     match capability {
@@ -40,8 +72,12 @@ pub fn credential_id(capability: &str) -> Result<&'static str, MediaError> {
 pub fn validate_config(config: &MediaProviderConfig) -> Result<(), MediaError> {
     let url = reqwest::Url::parse(&config.endpoint)
         .map_err(|_| MediaError::new("configuration", "Invalid provider endpoint"))?;
-    if !matches!(config.provider.as_str(), "openai" | "openai-compatible")
-        || config.model.trim().is_empty()
+    if !matches!(
+        config.provider.as_str(),
+        "openai" | "openai-compatible" | "minimax"
+    ) || config.credential_source.as_deref().is_some_and(|source| {
+        source != "separate" && (source != "minimax-chat" || config.provider != "minimax")
+    }) || config.model.trim().is_empty()
         || config.model.len() > 200
         || !matches!(url.scheme(), "http" | "https")
         || url.host_str().is_none()
@@ -128,9 +164,25 @@ pub fn request(
         )
     })?;
     validate_config(&config)?;
-    let key = crate::auth::keys::load_provider_key(app, credential_id(capability)?)
-        .map_err(|_| MediaError::new("authentication", "Cannot read the provider credential"))?;
-    if config.provider == "openai" && key.as_ref().is_none_or(|k| k.trim().is_empty()) {
+    let key = if config.credential_source.as_deref() == Some("minimax-chat") {
+        let text = crate::auth::custom_endpoint::load_custom_endpoint(app)
+            .map_err(|_| {
+                MediaError::new("authentication", "Cannot read the MiniMax text credential")
+            })?
+            .ok_or_else(|| {
+                MediaError::new(
+                    "not_configured",
+                    "Configure the MiniMax text endpoint first",
+                )
+            })?;
+        Some(minimax_chat_key(&text, &config.endpoint)?)
+    } else {
+        crate::auth::keys::load_provider_key(app, credential_id(capability)?)
+            .map_err(|_| MediaError::new("authentication", "Cannot read the provider credential"))?
+    };
+    if matches!(config.provider.as_str(), "openai" | "minimax")
+        && key.as_ref().is_none_or(|k| k.trim().is_empty())
+    {
         return Err(MediaError::new(
             "not_configured",
             "Add an API key for this media provider",
@@ -138,6 +190,20 @@ pub fn request(
     }
     let client = aicompat::http::media_client(if capability == "image" { 180 } else { 120 })
         .map_err(|_| MediaError::new("network", "Cannot create media client"))?;
+    let suffix = if config.provider == "minimax" {
+        match capability {
+            "stt" => "speech_to_text",
+            "image" => "image_generation",
+            _ => {
+                return Err(MediaError::new(
+                    "configuration",
+                    "MiniMax is currently supported for speech input and image generation",
+                ))
+            }
+        }
+    } else {
+        suffix
+    };
     let mut request = client.post(format!(
         "{}/{}",
         config.endpoint.trim_end_matches('/'),
@@ -227,12 +293,33 @@ pub fn media_cancel(request_id: String) {
 mod tests {
     use super::*;
     #[test]
+    fn shared_minimax_key_is_bound_to_official_media_hosts() {
+        use crate::auth::custom_endpoint::CustomEndpointConfig;
+        let text = CustomEndpointConfig {
+            base_url: "https://api.minimax.cn/v1".into(),
+            model: "MiniMax-M3".into(),
+            api_key: Some("test-secret".into()),
+        };
+        assert_eq!(
+            minimax_chat_key(&text, "https://api.minimax.cn/v1").unwrap(),
+            "test-secret"
+        );
+        assert!(minimax_chat_key(&text, "https://example.com/v1").is_err());
+        assert!(minimax_chat_key(&text, "http://api.minimax.cn/v1").is_err());
+        let other = CustomEndpointConfig {
+            base_url: "https://example.com/v1".into(),
+            ..text
+        };
+        assert!(minimax_chat_key(&other, "https://api.minimax.cn/v1").is_err());
+    }
+    #[test]
     fn config_rejects_missing_models_and_embedded_credentials() {
         let mut config = MediaProviderConfig {
             provider: "openai-compatible".into(),
             endpoint: "https://example.com/v1".into(),
             model: "whisper-1".into(),
             voice: None,
+            credential_source: None,
         };
         assert!(validate_config(&config).is_ok());
         config.endpoint = "https://secret@example.com/v1".into();

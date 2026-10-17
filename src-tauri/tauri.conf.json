@@ -54,6 +54,10 @@
       "icons/icon.ico"
     ],
     "createUpdaterArtifacts": true,
+    "macOS": {
+      "infoPlist": "Info.plist",
+      "entitlements": "entitlements.plist"
+    },
     "iOS": {
       "minimumSystemVersion": "16.0"
     }

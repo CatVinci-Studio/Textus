@@ -19,6 +19,7 @@ import {
   type ChatMessagesProps,
 } from "./ChatMessages";
 import { ChatComposer, type ChatComposerLabels } from "./ChatComposer";
+import { SpeechScope } from "../../voice/SpeechPlayer";
 import { MarkdownText } from "../MarkdownText";
 import {
   QuickAskPendingBar,
@@ -68,7 +69,9 @@ export interface ChatBodyProps {
   conversation: AgentConversation;
   defaultMode: AgentMode;
   allowCreate?: boolean;
-  beforeSend?: (options: AgentRequestOptions) => boolean;
+  active?: boolean;
+  voiceLanguage?: string;
+  beforeSend?: (options: AgentRequestOptions) => boolean | AgentRequestOptions;
   defaultWebSearch: boolean;
   tutorialMock?: boolean;
   labels: ChatBodyLabels;
@@ -209,6 +212,8 @@ export function ChatBody({
   conversation,
   defaultMode,
   allowCreate = false,
+  active = true,
+  voiceLanguage,
   beforeSend,
   defaultWebSearch,
   tutorialMock,
@@ -341,13 +346,16 @@ export function ChatBody({
     options: AgentRequestOptions,
   ) {
     void (async () => {
-      if (beforeSend && !beforeSend(options)) return;
+      const prepared = beforeSend?.(options);
+      if (prepared === false) return;
+      const requestOptions =
+        prepared && typeof prepared === "object" ? prepared : options;
       const latest = refreshContext ? await refreshContext() : null;
       const state = latest ?? { document, selectionMarkdown };
       const { message, images } = buildMessage(state);
       afterSend(
         await send(state.document, message, images, {
-          ...options,
+          ...requestOptions,
           focusHeading: latest?.focusHeading ?? null,
         }),
       );
@@ -477,7 +485,7 @@ export function ChatBody({
   }
 
   return (
-    <>
+    <SpeechScope active={active} language={voiceLanguage ?? "en"}>
       {variant === "quick"
         ? (busy || error || summaryText) && (
             <div
@@ -637,6 +645,8 @@ export function ChatBody({
         labels={labels}
         defaultMode={defaultMode}
         allowCreate={allowCreate}
+        active={active}
+        voiceLanguage={voiceLanguage}
         carryMode={variant !== "quick"}
         allowPlan={variant !== "quick"}
         compact={variant === "quick"}
@@ -648,6 +658,6 @@ export function ChatBody({
         onEscape={onEscape ?? (() => {})}
       />
       {footer}
-    </>
+    </SpeechScope>
   );
 }

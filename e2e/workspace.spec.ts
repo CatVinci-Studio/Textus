@@ -24,7 +24,7 @@ test("recovers an unaccepted draft across reload without sending another model r
     .getByRole("button", { name: "Create with AI", exact: true })
     .click();
   let workspace = page.getByRole("region", { name: "Agent Workspace" });
-  await workspace.locator("textarea").fill("Write four sections");
+  await workspace.locator(".inline-chat-input").fill("Write four sections");
   await workspace.getByRole("button", { name: "Send", exact: true }).click();
   await expect(workspace.locator(".workspace-document h2")).toHaveCount(4);
   await expect
@@ -53,7 +53,7 @@ test("recovers an unaccepted draft across reload without sending another model r
 
 test("creates a reviewed four-section draft in the same editor and undoes one batch", async ({
   page,
-}) => {
+}, testInfo) => {
   await openApp(page, { settings: { language: "en" } });
   await mockInvoke(page, {
     ai_agent_message: [
@@ -67,9 +67,16 @@ test("creates a reviewed four-section draft in the same editor and undoes one ba
     .getByRole("button", { name: "Create with AI", exact: true })
     .click();
   const workspace = page.getByRole("region", { name: "Agent Workspace" });
-  await workspace.locator("textarea").fill("Create an article");
+  await workspace.locator(".inline-chat-input").fill("Create an article");
   await workspace.getByRole("button", { name: "Send", exact: true }).click();
   await expect(workspace.locator(".workspace-document h2")).toHaveCount(4);
+  await page.screenshot({ path: testInfo.outputPath("workspace-desktop.png") });
+  await page.setViewportSize({ width: 600, height: 800 });
+  await expect(
+    workspace.getByRole("button", { name: "Open editor" }),
+  ).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("workspace-narrow.png") });
+  await page.setViewportSize({ width: 1180, height: 780 });
   await expect(editor).not.toContainText("Motivation");
   await workspace.getByRole("button", { name: "Open editor" }).click();
   await expect(editor).not.toContainText("Motivation");
@@ -97,7 +104,7 @@ test("preserves a draft and refuses to overwrite an intervening manual edit", as
     .getByRole("button", { name: "Create with AI", exact: true })
     .click();
   const workspace = page.getByRole("region", { name: "Agent Workspace" });
-  await workspace.locator("textarea").fill("Write four chapters");
+  await workspace.locator(".inline-chat-input").fill("Write four chapters");
   await workspace.getByRole("button", { name: "Send", exact: true }).click();
   await expect(workspace.locator(".workspace-document h2")).toHaveCount(4);
   await workspace.getByRole("button", { name: "Open editor" }).click();

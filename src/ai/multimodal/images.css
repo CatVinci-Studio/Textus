@@ -1,0 +1,76 @@
+.image-generator {
+  font-size: 12px;
+  padding: 0.5rem;
+}
+.image-generator summary {
+  cursor: pointer;
+}
+.image-generator form {
+  padding: 0.75rem 0;
+  min-width: 250px;
+  max-width: 420px;
+}
+.image-generator label {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.6rem 0;
+}
+.image-generator :is(textarea, input, select) {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  border: 1px solid #8885;
+  border-radius: 5px;
+  padding: 0.4rem;
+}
+.image-generator p,
+.image-job p {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.image-job {
+  border: 1px solid #8884;
+  border-radius: 9px;
+  padding: 0.8rem;
+  margin: 0.75rem 0;
+  font-size: 12px;
+}
+.image-job > span {
+  display: block;
+  opacity: 0.65;
+  margin-top: 0.3rem;
+}
+.image-job img {
+  display: block;
+  max-width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  margin-block: 0.75rem;
+  border-radius: 5px;
+}
+.image-job button {
+  margin: 0.5rem 0.4rem 0 0;
+}
+.workspace-launch .image-generator {
+  position: relative;
+}
+.workspace-launch .image-generator form {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 40;
+  padding: 1rem;
+  background: var(--editor-bg, var(--bg));
+  border: 1px solid #8885;
+  border-radius: 8px;
+  box-shadow: 0 6px 30px #0002;
+  width: 340px;
+}
+.workspace-media-permission {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 12px;
+  padding: 0.5rem;
+}

@@ -176,7 +176,7 @@ pub async fn read_binary_file_base64(path: String) -> Result<String, String> {
 pub struct SavedImage {
     /// What goes into the markdown: "assets/<name>" relative to the document,
     /// or an absolute path for a draft that has no folder yet.
-    src: String,
+    pub(crate) src: String,
 }
 
 /// Persists an image pasted into the editor. Saved documents get a Typora

@@ -589,6 +589,8 @@ export function installDevTauriShim(): void {
       return id;
     },
     unregisterCallback: () => {},
+    convertFileSrc: (filePath: string) =>
+      `/__dev-assets/${encodeURIComponent(filePath)}`,
     plugins: {},
   };
   // The event plugin calls this from unlisten() - without it, React

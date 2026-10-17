@@ -24,6 +24,8 @@ export function useWorkspacePersistence({
   path,
   enabled,
   language,
+  imagePending,
+  stopImages,
 }: {
   workspace: ReturnType<typeof useDocumentWorkspace>;
   conversation: AgentConversation;
@@ -33,12 +35,20 @@ export function useWorkspacePersistence({
   path: string | null;
   enabled: boolean;
   language: string;
+  imagePending: boolean;
+  stopImages: () => void;
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [interrupted, setInterrupted] = useState(false);
   const history = useLatest(useChatHistory());
-  const latest = useLatest({ workspace, conversation, path });
+  const latest = useLatest({
+    workspace,
+    conversation,
+    path,
+    imagePending,
+    stopImages,
+  });
   const loadStarted = useRef(false);
   useEffect(() => {
     if (!enabled) {
@@ -108,7 +118,8 @@ export function useWorkspacePersistence({
       } = latest.current;
       const draft = w.draft;
       const snapshot =
-        draft && (draft.operations.length || c.busy)
+        draft &&
+        (draft.operations.length || c.busy || latest.current.imagePending)
           ? {
               schemaVersion: 1 as const,
               documentId,
@@ -133,6 +144,7 @@ export function useWorkspacePersistence({
   }, [
     workspace.draft,
     conversation.busy,
+    imagePending,
     path,
     enabled,
     loaded,
@@ -142,38 +154,55 @@ export function useWorkspacePersistence({
   ]);
   useEffect(
     () =>
-      registerWorkspaceClose(tabId, async () => {
+      registerWorkspaceClose(tabId, async (reason) => {
         const {
           workspace: w,
           conversation: c,
           path: currentPath,
         } = latest.current;
-        if (!w.draft?.operations.length && !c.busy) return true;
+        if (
+          !w.draft?.operations.length &&
+          !c.busy &&
+          !latest.current.imagePending
+        )
+          return true;
         const zh = language.startsWith("zh");
-        const keep = await showConfirm(
-          zh
-            ? enabled
-              ? "此文档有未处理的 Agent 草稿或正在运行的任务。关闭将停止任务，并保留草稿供恢复。"
-              : "此文档有未处理的 Agent 草稿或任务，草稿恢复已关闭。关闭将停止任务并丢弃草稿。"
-            : enabled
-              ? "This document has a pending Agent draft or running task. Closing stops the task and keeps the draft for recovery."
-              : "Draft recovery is off. Closing stops the task and discards the pending draft.",
-          {
-            title: zh ? "未处理的创作任务" : "Pending document task",
-            okLabel: zh
+        if (reason === "handoff" && !enabled) {
+          setError(
+            zh
+              ? "请先处理创作草稿，或启用草稿恢复后再移动标签页。"
+              : "Resolve the Agent draft or enable draft recovery before moving this tab.",
+          );
+          return false;
+        }
+        const keep =
+          reason === "handoff" ||
+          (await showConfirm(
+            zh
               ? enabled
-                ? "保留草稿并关闭"
-                : "丢弃并关闭"
+                ? "此文档有未处理的 Agent 草稿或正在运行的任务。关闭将停止任务，并保留草稿供恢复。"
+                : "此文档有未处理的 Agent 草稿或任务，草稿恢复已关闭。关闭将停止任务并丢弃草稿。"
               : enabled
-                ? "Keep draft and close"
-                : "Discard and close",
-            cancelLabel: zh ? "取消" : "Cancel",
-          },
-        );
+                ? "This document has a pending Agent draft or running task. Closing stops the task and keeps the draft for recovery."
+                : "Draft recovery is off. Closing stops the task and discards the pending draft.",
+            {
+              title: zh ? "未处理的创作任务" : "Pending document task",
+              okLabel: zh
+                ? enabled
+                  ? "保留草稿并关闭"
+                  : "丢弃并关闭"
+                : enabled
+                  ? "Keep draft and close"
+                  : "Discard and close",
+              cancelLabel: zh ? "取消" : "Cancel",
+            },
+          ));
         if (!keep) return false;
         if (c.busy) c.stop();
+        latest.current.stopImages();
         w.finish();
-        if (enabled && w.draft) {
+        const frozen = w.currentDraft();
+        if (enabled && frozen) {
           try {
             await persistWorkspace(
               {
@@ -183,7 +212,7 @@ export function useWorkspacePersistence({
                 documentPath: currentPath,
                 updatedAt: Date.now(),
                 status: c.busy ? "interrupted" : "review",
-                draft: w.draft,
+                draft: frozen,
               },
               documentId,
             );

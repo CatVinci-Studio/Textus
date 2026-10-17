@@ -21,6 +21,7 @@ export function useDocumentWorkspace(run: EditorRunner, documentId: string) {
   const [draft, setDraft] = useState<DocumentDraft | null>(null);
   const draftRef = useRef<DocumentDraft | null>(null);
   const routing = useRef(false);
+  const mediaPending = useRef(false);
   const mode = useRef<AgentMode>("ask");
   const [conflict, setConflict] = useState(false);
   const [statuses, setStatuses] = useState<Record<string, PendingStatus>>({});
@@ -92,7 +93,10 @@ export function useDocumentWorkspace(run: EditorRunner, documentId: string) {
     (nextMode: AgentMode, sessionId: string) => {
       routing.current = true;
       mode.current = nextMode;
-      if (!draftRef.current?.operations.length) {
+      if (
+        !draftRef.current ||
+        (!draftRef.current.operations.length && !mediaPending.current)
+      ) {
         const next = run((ctx) =>
           captureDraft(
             ctx,
@@ -102,7 +106,11 @@ export function useDocumentWorkspace(run: EditorRunner, documentId: string) {
           ),
         );
         if (!next) return false;
-        update(next);
+        const previous = draftRef.current;
+        update({
+          ...next,
+          id: previous?.sessionId === sessionId ? previous.id : next.id,
+        });
         setConflict(false);
       }
       return true;
@@ -194,6 +202,26 @@ export function useDocumentWorkspace(run: EditorRunner, documentId: string) {
     },
     [update],
   );
+  const currentDraft = useCallback(() => draftRef.current, []);
+  const setMediaPending = useCallback((pending: boolean) => {
+    mediaPending.current = pending;
+  }, []);
+  const rebaseAfterCommit = useCallback(() => {
+    const current = draftRef.current;
+    if (current)
+      run((ctx) =>
+        update({
+          ...captureDraft(
+            ctx,
+            ctx.get(editorViewCtx).state,
+            documentId,
+            current.sessionId,
+          ),
+          id: current.id,
+          operations: current.operations,
+        }),
+      );
+  }, [run, documentId, update]);
   return {
     open,
     setOpen,
@@ -209,5 +237,8 @@ export function useDocumentWorkspace(run: EditorRunner, documentId: string) {
     finish,
     endRouting,
     restore,
+    currentDraft,
+    setMediaPending,
+    rebaseAfterCommit,
   };
 }

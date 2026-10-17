@@ -164,6 +164,16 @@ app's webview storage, so such a user updates Levis once first.
 
 ## Project folders: `.textus/` and `.levis/`
 
+Multimodal workspace storage is separate from portable document content:
+`workspace-drafts/` contains schema-versioned draft snapshots, `media-jobs/`
+contains temporary generated images and task metadata, and `media-providers.json`
+contains non-secret capability configuration. Separate media keys use reserved
+provider ids `__media_stt`, `__media_image`, `__media_tts`. An explicit
+`credentialSource: "minimax-chat"` references the existing MiniMax custom text
+credential without copying its key. Workspace snapshots follow draft recovery;
+running jobs become interrupted/failed on restore and do not restart requests.
+See [the workspace guide](MULTIMODAL-WORKSPACE.md).
+
 A project's own settings (writing instructions, skills, library, style
 profile) live in its `.textus/` folder. A project made with Levis has a
 `.levis/` folder instead; while a project has no `.textus/`, Textus reads

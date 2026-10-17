@@ -19,6 +19,7 @@ import {
 import { windowIpc, type WindowBounds } from "../platform/ipc";
 import { flushPendingWrites } from "../storage/pending-writes";
 import { canUseWindows } from "../platform/capabilities";
+import { confirmWorkspaceClose } from "../document/workspace-close";
 
 // Everything about moving tabs BETWEEN windows lives here, both directions:
 //
@@ -114,6 +115,8 @@ export function useTabDragMerge(opts: {
       const tab = liveTabs().find((tb) => tb.id === id);
       if (!tab) return;
       try {
+        if (!(await confirmWorkspaceClose([id], "handoff"))) return;
+        await flushPendingWrites();
         await windowIpc.startFloatingTabDrag(floatingDragArgs(tab, t, false));
       } catch {
         return; // drag couldn't start (unsupported platform / one already active) - keep the tab
@@ -168,8 +171,16 @@ export function useTabDragMerge(opts: {
       // Rust destroys this window at once (destroySource), mid-drag, with
       // no time to wait for anything - but whatever storage writes it still
       // holds back are sent first, and land before the drag command does.
-      void flushPendingWrites();
-      void windowIpc.startFloatingTabDrag(floatingDragArgs(tab, t, true));
+      try {
+        if (!(await confirmWorkspaceClose([tab.id], "handoff"))) {
+          windowDragRef.current = "idle";
+          return;
+        }
+        await flushPendingWrites();
+        await windowIpc.startFloatingTabDrag(floatingDragArgs(tab, t, true));
+      } catch {
+        windowDragRef.current = "idle";
+      }
     }
 
     // Ticks run strictly in order - two interleaved handlers could both

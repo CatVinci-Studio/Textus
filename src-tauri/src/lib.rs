@@ -17,6 +17,10 @@ mod auth;
 mod commands;
 mod distribution;
 mod media;
+use media::jobs::{
+    media_cancel_image, media_finish_image, media_image_jobs, media_prepare_image,
+    media_start_image,
+};
 use media::provider::{media_cancel, media_configure_provider, media_provider_status};
 use media::speech::{media_synthesize, media_transcribe};
 mod levis_import;
@@ -690,6 +694,11 @@ pub fn run() {
             media_transcribe,
             media_synthesize,
             media_cancel,
+            media_start_image,
+            media_image_jobs,
+            media_cancel_image,
+            media_prepare_image,
+            media_finish_image,
             save_workspace_snapshot,
             load_workspace_snapshot,
             clear_workspace_snapshot,

@@ -19,6 +19,11 @@
   }
 
   .sidebar,
+  .workspace-launch,
+  .agent-workspace,
+  .image-jobs,
+  .voice-input,
+  .speech-player,
   .tab-bar,
   .window-bar,
   .close-prompt-overlay,

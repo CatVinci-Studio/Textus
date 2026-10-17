@@ -37,3 +37,6 @@ packaging/arch/*.pkg.tar.zst
 test-results/
 playwright-report/
 *.tsbuildinfo
+
+# Local generated media and acceptance artifacts
+output/

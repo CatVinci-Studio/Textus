@@ -3,6 +3,13 @@ import { createPortal } from "react-dom";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { useDocumentWorkspace } from "./useDocumentWorkspace";
 import { useWorkspacePersistence } from "./useWorkspacePersistence";
+import { useVoiceTarget } from "./useVoiceTarget";
+import { VoiceInput } from "../voice/VoiceInput";
+import { SpeechPlayer } from "../voice/SpeechPlayer";
+import { useReadAloudTarget } from "./useReadAloudTarget";
+import { useDocumentImages } from "./useDocumentImages";
+import { ImageGenerator, ImageJobsPanel } from "../ai/multimodal/ImageTools";
+import { serializeBlocks } from "../ai/doc-markdown";
 import { AgentWorkspace } from "../ai/workspace/AgentWorkspace";
 import { workspaceLabels } from "../ai/workspace/labels";
 import { ChatBody } from "../ai/chat/ChatBody";
@@ -130,6 +137,8 @@ export function MilkdownEditor({
   });
 
   const run = useEditorRunner();
+  const voiceTarget = useVoiceTarget(run);
+  const readAloud = useReadAloudTarget(run);
   const { copyOrCut, paste, selectAll, insertText } = useEditorClipboard(run);
   useEditorFlush(tabId, run, reporting);
 
@@ -158,6 +167,7 @@ export function MilkdownEditor({
 
   const workspace = useDocumentWorkspace(run, documentId);
   const [workspaceMounted, setWorkspaceMounted] = useState(false);
+  const [allowAutoImages, setAllowAutoImages] = useState(false);
   const proposals = useEditorProposals({
     run,
     pendingEditActionsRef,
@@ -170,6 +180,32 @@ export function MilkdownEditor({
   });
   const { pendingEdits, conversation, quickConversation, showProposals } =
     proposals;
+  const images = useDocumentImages(
+    run,
+    documentId,
+    filePath,
+    workspace,
+    conversation.conversationId,
+  );
+  const refreshImages = images.refresh;
+  useEffect(() => {
+    void refreshImages();
+  }, [conversation.history, conversation.streaming?.turns, refreshImages]);
+  const stopTask = () => {
+    conversation.stop();
+    images.stopRunning();
+  };
+  const defaultImageAnchor = () =>
+    run((ctx) => {
+      const state = ctx.get(editorViewCtx).state;
+      return (
+        serializeBlocks(ctx, state.doc).find(
+          (block) =>
+            block.from <= state.selection.from &&
+            block.to >= state.selection.to,
+        )?.markdown ?? ""
+      );
+    }) ?? "";
   const recovery = useWorkspacePersistence({
     workspace,
     conversation,
@@ -179,6 +215,8 @@ export function MilkdownEditor({
     path: filePath,
     enabled: settings.enableDraftRecovery && !tutorialMock,
     language: settings.language,
+    imagePending: images.pending,
+    stopImages: images.stopRunning,
   });
   const finishWorkspace = workspace.finish;
   useEffect(() => {
@@ -397,6 +435,55 @@ export function MilkdownEditor({
     >
       {!phone && (
         <div className="workspace-launch">
+          <SpeechPlayer
+            active={isActive && !workspace.open}
+            language={settings.language}
+            getText={readAloud.getText}
+            onChunk={readAloud.highlight}
+            onStop={readAloud.clear}
+            rangeControls={
+              <label>
+                {settings.language.startsWith("zh")
+                  ? "朗读范围"
+                  : "Reading range"}
+                <select
+                  value={readAloud.range}
+                  onChange={(event) =>
+                    readAloud.setRange(
+                      event.target.value as typeof readAloud.range,
+                    )
+                  }
+                >
+                  <option value="document">
+                    {settings.language.startsWith("zh")
+                      ? "全文"
+                      : "Full document"}
+                  </option>
+                  <option value="selection">
+                    {settings.language.startsWith("zh") ? "选区" : "Selection"}
+                  </option>
+                  <option value="cursor">
+                    {settings.language.startsWith("zh")
+                      ? "从光标开始"
+                      : "From cursor"}
+                  </option>
+                </select>
+              </label>
+            }
+          />
+          <ImageGenerator
+            language={settings.language}
+            defaultAnchor={defaultImageAnchor}
+            onGenerate={images.start}
+            disabled={conversation.busy}
+          />
+          <VoiceInput
+            active={isActive && !workspace.open}
+            language={settings.language}
+            target="editor"
+            onStart={voiceTarget.capture}
+            onApply={voiceTarget.insert}
+          />
           <button
             onClick={() => {
               setWorkspaceMounted(true);
@@ -409,6 +496,9 @@ export function MilkdownEditor({
         </div>
       )}
       <Milkdown />
+      {!workspace.open && (
+        <ImageJobsPanel language={settings.language} images={images} />
+      )}
       {workspaceMounted &&
         paneEl &&
         createPortal(
@@ -416,6 +506,7 @@ export function MilkdownEditor({
             <AgentWorkspace
               language={settings.language}
               title={docTitle}
+              documentPath={filePath}
               draft={workspace.draft}
               preview={
                 workspace.draft?.operations.length
@@ -429,6 +520,32 @@ export function MilkdownEditor({
               onEditor={() => workspace.setOpen(false)}
               onAccept={workspace.accept}
               onReject={workspace.discard}
+              onStop={stopTask}
+              pendingMedia={images.pending}
+              mediaPreview={
+                <ImageJobsPanel language={settings.language} images={images} />
+              }
+              tools={
+                <>
+                  <label className="workspace-media-permission">
+                    <input
+                      type="checkbox"
+                      checked={allowAutoImages}
+                      disabled={conversation.busy}
+                      onChange={(e) => setAllowAutoImages(e.target.checked)}
+                    />
+                    {settings.language.startsWith("zh")
+                      ? "允许本次请求生成配图（每任务最多两次，可能收费）"
+                      : "Allow images for this request (max two per task; may incur charges)"}
+                  </label>
+                  <ImageGenerator
+                    language={settings.language}
+                    defaultAnchor={defaultImageAnchor}
+                    onGenerate={images.start}
+                    disabled={conversation.busy}
+                  />
+                </>
+              }
             >
               {recovery.error && (
                 <p role="alert">
@@ -451,13 +568,33 @@ export function MilkdownEditor({
                 selectionMarkdown={null}
                 docPath={filePath}
                 workspaceRoot={settings.agentWorkspaceRoot || null}
-                conversation={conversation}
+                conversation={{ ...conversation, stop: stopTask }}
                 defaultMode="create"
                 allowCreate
-                beforeSend={(options) =>
-                  recovery.loaded &&
-                  workspace.begin(options.mode, conversation.conversationId)
-                }
+                active={workspace.open && isActive}
+                voiceLanguage={settings.language}
+                beforeSend={(options) => {
+                  if (
+                    !recovery.loaded ||
+                    !workspace.begin(options.mode, conversation.conversationId)
+                  )
+                    return false;
+                  const draft = workspace.currentDraft();
+                  const allowed = allowAutoImages;
+                  setAllowAutoImages(false);
+                  return {
+                    ...options,
+                    imageTask:
+                      draft && allowed && draft.baseRevision >= 0
+                        ? {
+                            taskId: draft.id,
+                            documentId,
+                            baseRevision: draft.baseRevision,
+                            allowAutomatic: true,
+                          }
+                        : null,
+                  };
+                }}
                 defaultWebSearch={settings.enableWebSearch}
                 tutorialMock={tutorialMock}
                 labels={chatLabels(t, settings.language)}

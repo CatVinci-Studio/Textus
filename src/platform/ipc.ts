@@ -466,7 +466,8 @@ const IMAGE_HOST_CREDENTIAL_ID = "__image_host";
 /** Mirrors media/provider.rs and media/speech.rs. Credentials stay in provider_keys.json. */
 export type MediaCapability = "stt" | "tts" | "image";
 export interface MediaProviderConfig {
-  provider: "openai" | "openai-compatible";
+  credentialSource?: "separate" | "minimax-chat";
+  provider: "openai" | "openai-compatible" | "minimax";
   endpoint: string;
   model: string;
   voice: string | null;
@@ -477,6 +478,44 @@ export type MediaProviders = Partial<
 export interface SpeechAudio {
   dataBase64: string;
   mime: string;
+}
+/** Mirrors media/jobs.rs; authorization is outside the model's tool arguments. */
+export interface ImageTaskPermission {
+  taskId: string;
+  documentId: string;
+  baseRevision: number;
+  allowAutomatic: boolean;
+}
+export interface ImageGenerationRequest {
+  prompt: string;
+  anchor: string;
+  alt: string;
+  caption?: string | null;
+  size?: string | null;
+  quality?: string | null;
+}
+export interface ImageJob {
+  jobId: string;
+  taskId: string;
+  documentId: string;
+  baseRevision: number;
+  sequence: number;
+  request: ImageGenerationRequest;
+  status:
+    | "queued"
+    | "running"
+    | "ready"
+    | "failed"
+    | "cancelled"
+    | "preparing"
+    | "prepared"
+    | "committed";
+  previewPath: string | null;
+  error: string | null;
+  model: string | null;
+  width: number | null;
+  height: number | null;
+  assetSrc: string | null;
 }
 export const media = {
   providers: () => call<MediaProviders>("media_provider_status"),
@@ -500,6 +539,17 @@ export const media = {
   synthesize: (requestId: string, text: string, voice: string | null = null) =>
     call<SpeechAudio>("media_synthesize", { requestId, text, voice }),
   cancel: (requestId: string) => call<void>("media_cancel", { requestId }),
+  startImage: (
+    permission: ImageTaskPermission,
+    request: ImageGenerationRequest,
+  ) => call<ImageJob>("media_start_image", { permission, request }),
+  imageJobs: (documentId: string) =>
+    call<ImageJob[]>("media_image_jobs", { documentId }),
+  cancelImage: (jobId: string) => call<void>("media_cancel_image", { jobId }),
+  prepareImage: (jobId: string, docPath: string | null) =>
+    call<string>("media_prepare_image", { jobId, docPath }),
+  finishImage: (jobId: string, accepted: boolean) =>
+    call<void>("media_finish_image", { jobId, accepted }),
 };
 export const imageHostAuth = {
   tokenStatus: () => auth.providerApiKeyStatus(IMAGE_HOST_CREDENTIAL_ID),
@@ -865,6 +915,7 @@ export const ai = {
     images: ImageAttachment[];
     webSearch: boolean;
     mode: "ask" | "edit" | "plan" | "create";
+    imageTask?: ImageTaskPermission | null;
     model: string | null;
     requestId: string;
     /** Heading of the section the cursor/selection is in - embedded in full

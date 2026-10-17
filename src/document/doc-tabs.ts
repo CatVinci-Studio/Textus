@@ -53,6 +53,7 @@ export interface DocTab {
 // start_floating_tab_drag hands to Rust and take_detached_tab /
 // receive-detached-tab hand back (tab_drag.rs DetachedTab).
 export interface DetachedTabDoc {
+  workspaceId?: string;
   path: string | null;
   content: string;
   savedContent: string;
@@ -102,6 +103,7 @@ export function floatingDragArgs(
 ) {
   return {
     tab: {
+      workspaceId: tab.workspaceId ?? tab.id,
       path: tab.path,
       content: tab.content,
       savedContent: tab.savedContent,

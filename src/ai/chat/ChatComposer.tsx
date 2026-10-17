@@ -35,6 +35,7 @@ import { errorText } from "../../utils/error-text";
 import { basename } from "../../utils/path";
 import { useActiveProvider } from "../provider-catalog";
 import type { AgentMode } from "../../settings/SettingsContext";
+import { VoiceInput } from "../../voice/VoiceInput";
 import { initialMode, rememberMode } from "./last-mode";
 import {
   CloseIcon,
@@ -102,6 +103,8 @@ interface ChatComposerProps {
    *  conversation. */
   allowPlan?: boolean;
   allowCreate?: boolean;
+  voiceLanguage?: string;
+  active?: boolean;
   /** Quick Ask: no attach or web-search buttons - those stay in the panel
    *  (an @-mention still attaches a project file). */
   compact?: boolean;
@@ -145,6 +148,8 @@ export function ChatComposer({
   carryMode = false,
   allowPlan = true,
   allowCreate = false,
+  voiceLanguage = "en",
+  active = true,
   compact = false,
   focusOnOpen = true,
   defaultWebSearch,
@@ -572,6 +577,15 @@ export function ChatComposer({
             autoFocus={focusOnOpen}
           />
           <div className="inline-chat-toolbar">
+            {!compact && (
+              <VoiceInput
+                active={active && !busy}
+                language={voiceLanguage}
+                onApply={(text) =>
+                  setInput((prev) => (prev ? `${prev}\n${text}` : text))
+                }
+              />
+            )}
             {phone ? (
               // Two or three short words: they all fit in a row, and a
               // segmented control shows which one is on and switches in one

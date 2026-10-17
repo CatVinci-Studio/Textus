@@ -13,3 +13,10 @@ it("blocks closure on a declined task guard and unregisters only its own instanc
   remove();
   expect(await confirmWorkspaceClose(["a"])).toBe(true);
 });
+it("passes a handoff reason so drafts can be saved before the source unmounts", async () => {
+  const guard = vi.fn(async () => true);
+  const remove = registerWorkspaceClose("moving", guard);
+  await confirmWorkspaceClose(["moving"], "handoff");
+  expect(guard).toHaveBeenCalledWith("handoff");
+  remove();
+});
