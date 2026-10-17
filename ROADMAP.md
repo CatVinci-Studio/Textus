@@ -22,17 +22,14 @@ can try the editor in your browser before installing anything. It only does
 writing, importing and exporting Markdown; the app has the rest.
 [#88](https://github.com/CatVinci-Studio/Textus/issues/88)
 
-**A place to share themes.** Post your theme as a comment on one pinned issue,
-and it shows up on `textus.catvinci.com/themes` for everyone, free.
+**A place to share themes.** Post your theme as a comment on one pinned issue;
+once one of us has looked it over, it shows up on
+`textus.catvinci.com/themes` for everyone, free.
 [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
 **Tutorials that actually help.** A step in the first-run tour to connect
 your AI, and a few short videos on the things people ask us about most.
 [#90](https://github.com/CatVinci-Studio/Textus/issues/90)
-
-**Magic Diary.** Something a teammate built for fun: a hidden theme where the
-page writes back to you. We liked it too much to leave it out.
-[#76](https://github.com/CatVinci-Studio/Textus/pull/76)
 
 ## In the next release
 
@@ -48,13 +45,14 @@ screenshots and exact steps.
   any file. [#78](https://github.com/CatVinci-Studio/Textus/issues/78)
 - Text stays sharp while you edit in Source Code Mode on Linux.
   [#61](https://github.com/CatVinci-Studio/Textus/issues/61)
+- Exported PDFs can have page numbers (turn it on in **Settings › Editor &
+  Appearance**).
 
 ## Later
 
 - Installing gallery themes from inside the app.
 - An outline that covers a whole folder, not just one file.
   [#79](https://github.com/CatVinci-Studio/Textus/issues/79)
-- Page numbers in exported PDFs.
 
 ## Want to help?
 
