@@ -799,6 +799,9 @@ type /name in a conversation to use one.
   /** The Magic Diary's note when no answer came (offline, no provider,
    *  too slow); the reader's line comes back after it. */
   diaryNoAnswer: "The ink has not answered this time. Try again in a moment.",
+  /** The diary's first words when it opens on an empty page. */
+  diaryGreeting:
+    "…Is anyone there? This book has not been opened in a long time.",
   appearanceLabel: "Appearance",
   appearanceSystem: "Follow system",
   appearanceLight: "Light",

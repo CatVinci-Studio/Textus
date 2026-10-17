@@ -810,6 +810,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   themeNameParchment: "Pergament",
   diaryNoAnswer:
     "Die Tinte hat diesmal nicht geantwortet. Versuch es gleich noch einmal.",
+  diaryGreeting:
+    "… Ist da jemand? Dieses Buch wurde lange nicht aufgeschlagen.",
   appearanceLabel: "Erscheinungsbild",
   appearanceSystem: "Systemeinstellung",
   appearanceLight: "Hell",

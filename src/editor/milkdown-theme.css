@@ -202,7 +202,9 @@
    conversation into a chat log and gives the trick away; what makes it read
    as the same book is only the other hand it is written in and the warm
    brown of the ink. */
-.milkdown .ProseMirror .magic-diary-reply {
+/* The page's first words when it opens (magic-diary-plugin's greet) are
+   written the same way, before the reader has said anything. */
+.milkdown .ProseMirror :is(.magic-diary-reply, .magic-diary-greeting) {
   display: block;
   position: relative;
   margin: 0.35em 0 1.5em;

@@ -809,6 +809,7 @@ export default {
   themeNameParchment: "Пергамент",
   diaryNoAnswer:
     "На этот раз чернила не ответили. Попробуйте ещё раз чуть позже.",
+  diaryGreeting: "…Здесь кто-нибудь есть? Эту книгу давно не открывали.",
   appearanceLabel: "Оформление",
   appearanceSystem: "Как в системе",
   appearanceLight: "Светлое",

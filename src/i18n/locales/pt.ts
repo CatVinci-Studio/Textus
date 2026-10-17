@@ -804,6 +804,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   themeNameParchment: "Pergaminho",
   diaryNoAnswer:
     "Desta vez a tinta não respondeu. Tente de novo daqui a pouco.",
+  diaryGreeting: "…Está alguém aí? Este livro não é aberto há muito tempo.",
   appearanceLabel: "Aparência",
   appearanceSystem: "Seguir o sistema",
   appearanceLight: "Claro",

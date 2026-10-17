@@ -207,7 +207,10 @@ html[data-magic-diary] .magic-diary-busy {
 html[data-magic-diary] .magic-diary-draft-hidden {
   display: none;
 }
-html[data-magic-diary] .milkdown .ProseMirror .magic-diary-reply {
+html[data-magic-diary]
+  .milkdown
+  .ProseMirror
+  :is(.magic-diary-reply, .magic-diary-greeting) {
   display: block;
   margin: 0;
   max-height: none;

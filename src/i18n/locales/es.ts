@@ -821,6 +821,7 @@ para usar una.
   themeNameParchment: "Pergamino",
   diaryNoAnswer:
     "Esta vez la tinta no ha respondido. Inténtalo de nuevo dentro de un momento.",
+  diaryGreeting: "…¿Hay alguien ahí? Hace mucho que nadie abría este libro.",
   appearanceLabel: "Aspecto",
   appearanceSystem: "Según el sistema",
   appearanceLight: "Claro",

@@ -564,3 +564,15 @@ test("the waiting caret returns after the answer disappears and clicking paper f
     .click({ position: { x: 20, y: 100 } });
   await expect(editor(page)).toBeFocused();
 });
+
+test("on an empty page the diary speaks first, until the reader writes", async ({
+  page,
+}) => {
+  await setup(page);
+  await page.clock.runFor(1600);
+  const greeting = page.locator(".magic-diary-greeting");
+  await expect(greeting).toContainText("这本书很久没有被打开了");
+  await editor(page).pressSequentially("你好");
+  await expect(greeting).toHaveCount(0);
+  await expect(editor(page)).toContainText("你好");
+});

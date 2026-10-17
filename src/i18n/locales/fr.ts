@@ -829,6 +829,8 @@ utiliser une.
   themeNameParchment: "Parchemin",
   diaryNoAnswer:
     "L’encre n’a pas répondu cette fois. Réessayez dans un instant.",
+  diaryGreeting:
+    "… Il y a quelqu’un ? Ce livre n’a pas été ouvert depuis longtemps.",
   appearanceLabel: "Apparence",
   appearanceSystem: "Selon le système",
   appearanceLight: "Clair",

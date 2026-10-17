@@ -28,6 +28,8 @@ const WRITE_MS = 1_800;
 const CHAR_MS = { latin: 30, cjk: 55, pause: 2.6 } as const;
 /** One character's ink-in (milkdown-theme.css's .magic-diary-char). */
 const CHAR_IN_MS = 460;
+/** The page waits a moment before it speaks first. */
+const GREETING_DELAY_MS = 1_400;
 export const MAGIC_DIARY_EVENT = "textus:magic-diary";
 export type MagicDiaryPhase = "absorbed" | "thinking" | "replying" | "leaving";
 export interface MagicDiaryEvent {
@@ -57,6 +59,9 @@ interface DiaryState {
   active: number | null;
   browsing: number | null;
   composer: number;
+  /** The page's own first words when the diary opens on an empty page,
+   *  until the reader starts writing. */
+  greeting: string | null;
 }
 type Meta =
   | { type: "absorb"; turn: Turn; composer: number }
@@ -65,7 +70,8 @@ type Meta =
   | { type: "leave"; id: number }
   | { type: "finish" }
   | { type: "cancel"; id: number }
-  | { type: "browse"; index: number | null };
+  | { type: "browse"; index: number | null }
+  | { type: "greet"; text: string };
 const key = new PluginKey<DiaryState>("magic-diary");
 let serial = 0;
 export function absorbableLine(
@@ -228,9 +234,12 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
     if (!isCurrent(id) || !live) return;
     announce("thinking");
     const language = options.uiLanguage();
-    const history = state()!
-      .turns.filter((t) => t.id !== id && t.reply)
-      .map((t) => ({ line: t.line, reply: t.reply }));
+    const history = [
+      ...(opening ? [{ line: "", reply: opening }] : []),
+      ...state()!
+        .turns.filter((t) => t.id !== id && t.reply && !t.failed)
+        .map((t) => ({ line: t.line, reply: t.reply })),
+    ];
     const requestId = live.requestId;
     let budget: ReturnType<typeof setTimeout> | undefined;
     const timeout = new Promise<string>((resolve) => {
@@ -281,6 +290,47 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
     live.arrived = true;
     revealWhenReady();
   }
+  /** Writes `text` into `ink` at once, each character fading in on its own
+   *  delay: one layout, then compositor-only animation, instead of a
+   *  reflow (and a refit of the page) per character. Returns when the
+   *  last character starts, in ms. */
+  function writeInk(ink: HTMLElement, text: string): number {
+    const chars = Array.from(text);
+    const weights = chars.map((ch) =>
+      /[。，！？、,.!?；;：:…]/.test(ch)
+        ? CHAR_MS.pause
+        : /[\u1100-\uffef]/.test(ch)
+          ? CHAR_MS.cjk / CHAR_MS.latin
+          : 1,
+    );
+    const natural = weights.reduce((sum, w) => sum + w, 0) * CHAR_MS.latin;
+    const scale = natural > WRITE_MS ? WRITE_MS / natural : 1;
+    let at = 0;
+    const fragment = document.createDocumentFragment();
+    chars.forEach((ch, i) => {
+      const nib = document.createElement("span");
+      nib.className = "magic-diary-char";
+      nib.textContent = ch;
+      nib.style.animationDelay = `${Math.round(at)}ms`;
+      fragment.appendChild(nib);
+      at += weights[i] * CHAR_MS.latin * scale;
+    });
+    ink.appendChild(fragment);
+    return at;
+  }
+  /** The diary opened on an empty page: it speaks first, once a window. */
+  let greeted = false;
+  let greetPending = false;
+  function greet() {
+    if (greeted || !view || !options.enabled()) return;
+    if (view.state.doc.textContent.trim() || state()?.active !== null) return;
+    greeted = true;
+    const language = options.uiLanguage();
+    opening = resolveStrings(isLang(language) ? language : "en").diaryGreeting;
+    dispatch({ type: "greet", text: opening });
+  }
+  /** What the page said first, so the model knows it asked. */
+  let opening: string | null = null;
   function replyElement(turn: Turn, browsing: boolean) {
     const widgetKey = `${turn.id}-${browsing ? "history" : "live"}`;
     const cached = widgets.get(widgetKey);
@@ -301,30 +351,7 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
       ink.textContent = turn.reply;
       return wrap;
     }
-    // The whole reply is laid out at once and each character only fades in
-    // on its own delay: one layout, then compositor-only animation, instead
-    // of a reflow (and a refit of the page) per character.
-    const chars = Array.from(turn.reply);
-    const weights = chars.map((ch) =>
-      /[。，！？、,.!?；;：:]/.test(ch)
-        ? CHAR_MS.pause
-        : /[\u1100-\uffef]/.test(ch)
-          ? CHAR_MS.cjk / CHAR_MS.latin
-          : 1,
-    );
-    const natural = weights.reduce((sum, w) => sum + w, 0) * CHAR_MS.latin;
-    const scale = natural > WRITE_MS ? WRITE_MS / natural : 1;
-    let at = 0;
-    const fragment = document.createDocumentFragment();
-    chars.forEach((ch, i) => {
-      const nib = document.createElement("span");
-      nib.className = "magic-diary-char";
-      nib.textContent = ch;
-      nib.style.animationDelay = `${Math.round(at)}ms`;
-      fragment.appendChild(nib);
-      at += weights[i] * CHAR_MS.latin * scale;
-    });
-    ink.appendChild(fragment);
+    const at = writeInk(ink, turn.reply);
     later(() => {
       if (!isCurrent(turn.id) || !ink.isConnected) return;
       wrap.classList.remove("magic-diary-reply-writing");
@@ -419,12 +446,44 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
           ),
         );
     }
+    const composerNode = doc.nodeAt(current.composer - 1);
+    if (
+      current.greeting &&
+      current.active === null &&
+      current.browsing === null &&
+      composerNode?.isTextblock
+    ) {
+      const text = current.greeting;
+      result.push(
+        Decoration.widget(
+          current.composer,
+          () => {
+            const wrap = document.createElement("span");
+            wrap.className = "magic-diary-greeting";
+            wrap.contentEditable = "false";
+            wrap.setAttribute("role", "status");
+            const ink = document.createElement("span");
+            ink.className = "magic-diary-ink";
+            wrap.appendChild(ink);
+            writeInk(ink, text);
+            return wrap;
+          },
+          { key: "greeting", side: -1, ignoreSelection: true },
+        ),
+      );
+    }
     return DecorationSet.create(doc, result);
   }
   const plugin = new Plugin<DiaryState>({
     key,
     state: {
-      init: () => ({ turns: [], active: null, browsing: null, composer: 1 }),
+      init: () => ({
+        turns: [],
+        active: null,
+        browsing: null,
+        composer: 1,
+        greeting: null,
+      }),
       apply(tr, prev) {
         let next: DiaryState = {
           ...prev,
@@ -459,11 +518,16 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
             ...next,
             active: null,
             browsing: null,
+            greeting: null,
             turns: next.turns.filter((t) => t.stage === "done"),
           };
         }
         const meta = tr.getMeta(key) as Meta | undefined;
-        if (!meta) return tr.docChanged ? { ...next, browsing: null } : next;
+        // The reader's first keystroke answers the page's greeting.
+        if (!meta)
+          return tr.docChanged
+            ? { ...next, browsing: null, greeting: null }
+            : next;
         switch (meta.type) {
           case "absorb":
             next = {
@@ -519,6 +583,15 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
             break;
           case "browse":
             next.browsing = meta.index;
+            break;
+          case "greet":
+            next = {
+              ...next,
+              greeting: meta.text,
+              composer: tr.selection.$from.depth
+                ? tr.selection.$from.start()
+                : 1,
+            };
             break;
         }
         return next;
@@ -783,7 +856,17 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
       const update = () => {
         if (!view) return;
         const current = state()!;
-        if (options.enabled() && !wasEnabled) autofocus = true;
+        if (options.enabled() && !wasEnabled) {
+          autofocus = true;
+          greeted = false;
+        }
+        if (options.enabled() && !greeted && !greetPending) {
+          greetPending = true;
+          later(() => {
+            greetPending = false;
+            greet();
+          }, GREETING_DELAY_MS);
+        }
         wasEnabled = options.enabled();
         updateCaret();
         scheduleFit();
