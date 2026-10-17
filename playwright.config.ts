@@ -1,11 +1,20 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Visual tests: the frontend in Chromium against the Vite dev server, with
- * the dev Tauri shim standing in for the backend (src/dev-tauri-shim.ts).
- * Screenshot baselines are per platform (Playwright adds the OS to the file
- * name) - regenerate with `npm run test:visual -- --update-snapshots` after
- * an intended UI change, and review the diff images in test-results/.
+ * The e2e flows (e2e/*.spec.ts): the frontend in Chromium against the Vite
+ * dev server, with the dev Tauri shim standing in for the backend
+ * (src/dev/tauri-shim.ts).
+ *
+ *   npm run test:e2e      every flow, screenshots not compared - the same on
+ *                         Linux, macOS and Windows, and what CI runs
+ *   npm run test:visual   the same flows comparing visual.spec.ts's
+ *                         screenshots against e2e/visual.spec.ts-snapshots/,
+ *                         which are Linux baselines (fonts differ elsewhere);
+ *                         after an intended UI change, on Linux:
+ *                         `npm run test:visual -- --update-snapshots`
+ *
+ * The page's locale, time zone and colour scheme are fixed below, so a run
+ * does not depend on the machine's own.
  *
  * Native behaviour (windows, dialogs, single instance) isn't reachable from
  * here - scripts/smoke-linux.sh covers the built app.
@@ -17,9 +26,8 @@ const port = Number(process.env.PLAYWRIGHT_PORT) || 1430;
 
 export default defineConfig({
   testDir: "./e2e",
-  // The README and website screenshots run on their own
-  // (playwright.readme.config.ts, playwright.website.config.ts).
-  testIgnore: ["readme/**", "website/**"],
+  // Screenshot generators run on their own (playwright.shots.config.ts).
+  testIgnore: ["shots/**"],
   timeout: 30_000,
   fullyParallel: false,
   workers: 1,
@@ -38,6 +46,8 @@ export default defineConfig({
     viewport: { width: 1180, height: 780 },
     deviceScaleFactor: 1,
     locale: "zh-CN",
+    timezoneId: "Asia/Shanghai",
+    colorScheme: "light",
   },
   projects: [
     {
