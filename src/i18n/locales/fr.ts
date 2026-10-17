@@ -556,7 +556,7 @@ utiliser une.
   menuHelpWelcome: "Bienvenue et tutoriel",
   menuHelpMarkdown: "Guide Markdown",
   menuHelpAgent: "Guide des fonctions IA",
-  menuHelpCommunity: "Communauté Discord",
+  menuHelpCommunity: "Rejoindre la communauté",
   windowMinimize: "Réduire",
   windowMaximize: "Agrandir",
   windowRestore: "Niveau inférieur",

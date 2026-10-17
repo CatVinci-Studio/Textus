@@ -8,6 +8,7 @@ import { DocumentList } from "../mobile/DocumentList";
 import { KeyboardToolbar } from "../mobile/KeyboardToolbar";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { useSettings } from "../settings/SettingsContext";
+import { links } from "../platform/ipc";
 import { useTutorial } from "../onboarding/useTutorial";
 import { useTutorialDocumentEvaluation } from "../onboarding/useTutorialDocumentEvaluation";
 import { formatCombo } from "../utils/shortcuts";
@@ -268,6 +269,7 @@ function App() {
     requestCloseTab,
     openHelpTab,
     startWelcomeTutorial,
+    openCommunity: () => void links.openCommunityPage(settings.language),
     onOpenDocuments: () => setDocumentsOpen(true),
     shareActiveTab,
   });

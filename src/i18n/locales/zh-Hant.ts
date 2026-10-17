@@ -511,7 +511,7 @@ export default {
   menuHelpWelcome: "歡迎與入門教學",
   menuHelpMarkdown: "Markdown 指南",
   menuHelpAgent: "AI 功能指南",
-  menuHelpCommunity: "Discord 社群",
+  menuHelpCommunity: "加入社群",
   windowMinimize: "最小化",
   windowMaximize: "最大化",
   windowRestore: "向下還原",

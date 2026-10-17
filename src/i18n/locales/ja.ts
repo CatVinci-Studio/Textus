@@ -531,7 +531,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuHelpWelcome: "ようこそ・チュートリアル",
   menuHelpMarkdown: "Markdown ガイド",
   menuHelpAgent: "AI 機能ガイド",
-  menuHelpCommunity: "Discord コミュニティ",
+  menuHelpCommunity: "コミュニティに参加",
   windowMinimize: "最小化",
   windowMaximize: "最大化",
   windowRestore: "元のサイズに戻す",

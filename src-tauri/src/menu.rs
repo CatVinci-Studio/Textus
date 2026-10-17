@@ -60,7 +60,8 @@ const NEW_WINDOW_ID: &str = "new-window";
 /// (see menu-bridge.ts's menu-open-help handler) - this string slot doesn't need
 /// to change for that, it's just a payload value like any other doc id.
 const HELP_DOC_PREFIX: &str = "help-doc:";
-/// Help > Discord Community: opens our server in the browser.
+/// Help > Join the Community: the website's community page, in the UI's
+/// language (the focused window opens it, knowing the language).
 const COMMUNITY_ID: &str = "help-community";
 /// Format menu ids carry the block kind to insert: "insert-block:<kind>",
 /// where <kind> is one of h1..h6, bullet-list, ordered-list, blockquote,
@@ -647,7 +648,7 @@ fn build(
         .text(markdown_id, markdown)
         .text(agent_id, agent)
         .separator()
-        .text(COMMUNITY_ID, l(COMMUNITY_ID, "Discord Community"))
+        .text(COMMUNITY_ID, l(COMMUNITY_ID, "Join the Community"))
         .build()?;
 
     let menu = MenuBuilder::new(app)
@@ -767,7 +768,17 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     } else if id == NEW_WINDOW_ID {
         let _ = crate::open_new_window(app_handle);
     } else if id == COMMUNITY_ID {
-        let _ = commands::links::open_community(app_handle);
+        // A window knows the UI's language; with none open (macOS keeps
+        // running after the last one closes), the site picks it.
+        if let Some(label) = focused_editor_window(app_handle) {
+            let _ = app_handle.emit_to(
+                EventTarget::webview_window(&label),
+                "menu-open-community",
+                (),
+            );
+        } else {
+            let _ = commands::links::open_community(app_handle, None);
+        }
     } else if let Some(doc) = id.strip_prefix(HELP_DOC_PREFIX) {
         // A help doc opens as a tab in the focused window; with no window to
         // receive it (macOS keeps the app running after its last window

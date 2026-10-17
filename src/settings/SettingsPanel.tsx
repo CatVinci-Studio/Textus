@@ -203,7 +203,7 @@ export function SettingsPanel({
             <HelpRow label={t.menuHelpAgent} onOpen={() => openHelp("agent")} />
             <HelpRow
               label={t.menuHelpCommunity}
-              onOpen={() => void links.openCommunityPage()}
+              onOpen={() => void links.openCommunityPage(settings.language)}
             />
           </SettingsGroup>
 

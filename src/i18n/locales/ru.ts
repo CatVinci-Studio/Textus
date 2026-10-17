@@ -543,7 +543,7 @@ export default {
   menuHelpWelcome: "Знакомство и обучение",
   menuHelpMarkdown: "Руководство по Markdown",
   menuHelpAgent: "Руководство по ИИ",
-  menuHelpCommunity: "Сообщество в Discord",
+  menuHelpCommunity: "Сообщество",
   windowMinimize: "Свернуть",
   windowMaximize: "Развернуть",
   windowRestore: "Свернуть в окно",

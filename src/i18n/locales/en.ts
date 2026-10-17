@@ -535,7 +535,7 @@ type /name in a conversation to use one.
   menuHelpWelcome: "Welcome and Tutorial",
   menuHelpMarkdown: "Markdown Guide",
   menuHelpAgent: "AI Features Guide",
-  menuHelpCommunity: "Discord Community",
+  menuHelpCommunity: "Join the Community",
   windowMinimize: "Minimize",
   windowMaximize: "Maximize",
   windowRestore: "Restore Down",

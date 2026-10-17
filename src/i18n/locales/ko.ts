@@ -527,7 +527,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuHelpWelcome: "시작하기 및 튜토리얼",
   menuHelpMarkdown: "Markdown 가이드",
   menuHelpAgent: "AI 기능 가이드",
-  menuHelpCommunity: "Discord 커뮤니티",
+  menuHelpCommunity: "커뮤니티 참여",
   windowMinimize: "최소화",
   windowMaximize: "최대화",
   windowRestore: "이전 크기로 복원",
