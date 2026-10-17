@@ -8,13 +8,13 @@ Textus 接下来的方向。这里只写方向和优先级，不写日期。每�
 
 ## 进行中
 
-- **iPhone 和 iPad 版上架 App Store。** iOS 版已经在 TestFlight 测试，即将提交审核。
+- **iPhone 和 iPad 版上架 App Store。** iOS 版已经在 TestFlight 测试，即将提交审核。（[#87](https://github.com/CatVinci-Studio/Textus/issues/87)）
 - **Playground（在线试用）。** 在浏览器里打开 `textus.catvinci.com/playground`
-  就能试用编辑器：写作、导入和导出 Markdown，不用安装。
+  就能试用编辑器：写作、导入和导出 Markdown，不用安装。（[#88](https://github.com/CatVinci-Studio/Textus/issues/88)）
 - **主题分享。** 一个开放、免费的 Textus 主题分享平台：在置顶的 issue 里发布你的主题，
-  通过自动检查后，就会出现在 `textus.catvinci.com/themes` 上。
+  通过自动检查后，就会出现在 `textus.catvinci.com/themes` 上。（[#89](https://github.com/CatVinci-Studio/Textus/issues/89)）
 - **更好的教程。** 新手教程里加一步"连接你的 AI"，并为主要功能制作简短的视频，放在
-  App 和官网上。
+  App 和官网上。（[#90](https://github.com/CatVinci-Studio/Textus/issues/90)）
 - **魔法日记。** 一个隐藏主题：你写下一句话，页面会用另一种笔迹回答你。
   （[#76](https://github.com/CatVinci-Studio/Textus/pull/76)）
 

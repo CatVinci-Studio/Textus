@@ -10,15 +10,15 @@ that is the place to discuss it or offer help.
 ## In progress
 
 - **iPhone and iPad on the App Store.** The iOS app is in TestFlight and
-  heading for review.
+  heading for review. ([#87](https://github.com/CatVinci-Studio/Textus/issues/87))
 - **Playground.** Try the editor in a browser at
   `textus.catvinci.com/playground`: write, import and export Markdown, no
-  install.
+  install. ([#88](https://github.com/CatVinci-Studio/Textus/issues/88))
 - **Theme gallery.** An open, free place to share Textus themes: post yours
   in one pinned issue, and it appears on `textus.catvinci.com/themes` after an
-  automatic check.
+  automatic check. ([#89](https://github.com/CatVinci-Studio/Textus/issues/89))
 - **Better tutorials.** A step in the first-run tour to connect your AI, and
-  short videos for the main features, in the app and on the website.
+  short videos for the main features, in the app and on the website. ([#90](https://github.com/CatVinci-Studio/Textus/issues/90))
 - **Magic Diary.** A hidden theme where the page answers what you write, in
   another hand. ([#76](https://github.com/CatVinci-Studio/Textus/pull/76))
 
