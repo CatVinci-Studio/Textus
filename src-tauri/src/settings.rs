@@ -1244,7 +1244,12 @@ mod tests {
         stores.patch_settings(&obj(json!({ "theme": "dark" })));
         // Not yet: the write waits out the debounce.
         assert!(!settings_path(&dir).exists());
-        std::thread::sleep(FLUSH_DELAY * 3);
+        // Then it lands on its own. Wait for it rather than for a fixed time:
+        // a busy CI runner can take well past the debounce to get there.
+        let deadline = std::time::Instant::now() + Duration::from_secs(10);
+        while !settings_path(&dir).exists() && std::time::Instant::now() < deadline {
+            std::thread::sleep(FLUSH_DELAY / 5);
+        }
         let file = read_file(&settings_path(&dir));
         assert_eq!(file["schemaVersion"], json!(SCHEMA_VERSION));
         assert_eq!(file["settings"], json!({ "theme": "dark" }));
