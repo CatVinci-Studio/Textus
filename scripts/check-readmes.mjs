@@ -38,6 +38,9 @@ function outline(file) {
   const tableRows = prose.split("\n").filter((l) => l.startsWith("|")).length;
   const links = [...prose.matchAll(/(?:href|src)="([^"]+)"|\]\(([^)]+)\)/g)]
     .map((m) => m[1] ?? m[2])
+    // Badges may differ per language (the Chinese ones show the QQ and
+    // WeChat groups instead of Discord), so their images are not compared.
+    .filter((target) => !target.startsWith("https://img.shields.io/"))
     // Each README links to the other languages, and shows its own
     // language's screenshots.
     .filter((target) => !/^\.\/README/.test(target))
@@ -76,7 +79,10 @@ for (const file of [reference, ...translations]) {
     );
   // The same links, in any order: a translation may list them in the order
   // its readers want (the Chinese ones put the QQ and WeChat groups first).
-  if (!same([...doc.links].sort(), [...ref.links].sort()))
+  // Compared as sets: a badge and the Community section may both link to
+  // the same group.
+  const unique = (links) => [...new Set(links)].sort();
+  if (!same(unique(doc.links), unique(ref.links)))
     problems.push(
       `${file}: links differ from ${reference}:\n  ${doc.links.join("\n  ")}`,
     );
