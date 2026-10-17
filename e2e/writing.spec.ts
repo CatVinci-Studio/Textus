@@ -350,23 +350,11 @@ test("zooming keeps the line being read in place", async ({ page }) => {
     el.scrollIntoView({ block: "center", behavior: "instant" }),
   );
   const before = (await heading.boundingBox())!;
-  const center = await page.evaluate(() => {
-    const box = document
-      .querySelector('[data-active-tab="true"] .editor-scroll')!
-      .getBoundingClientRect();
-    return box.top + box.height / 2;
-  });
   await emit(page, "menu-zoom-in");
   await emit(page, "menu-zoom-in");
-  await page.waitForTimeout(200);
+  await expectZoom(page, 1.1 * 1.1);
   const after = (await heading.boundingBox())!;
   // The heading at the pane's centre stays there.
-  console.log(
-    "zoom",
-    before.y + before.height / 2,
-    after.y + after.height / 2,
-    center,
-  );
   expect(
     Math.abs(after.y + after.height / 2 - (before.y + before.height / 2)),
   ).toBeLessThan(24);
@@ -481,7 +469,7 @@ test("a block formula's preview never covers the text below; an inline one float
   await expectPreviewsClear(page);
   await emit(page, "menu-zoom-in");
   await emit(page, "menu-zoom-in");
-  await page.waitForTimeout(200);
+  await expectZoom(page, 1.1 * 1.1);
   await expectPreviewsClear(page);
 });
 
@@ -723,7 +711,9 @@ test("repairing a pruned IME commit leaves a real empty item alone", async ({
   // Three task items: an empty one, "a", and a fresh one to compose in.
   await pasteMarkdown(page, "- [ ] e\n- [ ] a\n- [ ] x");
   // ProseMirror takes a caret set this way from the selectionchange that
-  // follows it - a key pressed before that lands where the caret was.
+  // follows it - a key pressed before that lands where the caret was. Its
+  // own listener was added first, so it has read the caret by the time
+  // this one runs.
   const caretAfter = (index: number) =>
     page.evaluate(
       (i) =>
@@ -731,8 +721,10 @@ test("repairing a pruned IME commit leaves a real empty item alone", async ({
           const p = document.querySelectorAll(
             '[data-active-tab="true"] .ProseMirror li p',
           )[i];
+          document.addEventListener("selectionchange", () => resolve(), {
+            once: true,
+          });
           getSelection()!.collapse(p.firstChild, 1);
-          requestAnimationFrame(() => setTimeout(resolve, 30));
         }),
       index,
     );
@@ -962,6 +954,23 @@ test("Enter in a table's last row starts the new row at its first cell", async (
   ).toHaveText("x");
 });
 
+/** The content zoom on screen (useZoom's `--content-zoom`). */
+function contentZoom(page: Page): Promise<number> {
+  return page.evaluate(() =>
+    Number(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--content-zoom",
+      ) || 1,
+    ),
+  );
+}
+
+/** Waits for a zoom step to land: useZoom applies it on the next frame,
+ *  setting the variable and holding the scroll position in one go. */
+async function expectZoom(page: Page, zoom: number) {
+  await expect.poll(() => contentZoom(page)).toBeCloseTo(zoom, 6);
+}
+
 /** Text-line index of a source textarea at viewport y, from its own
  *  scroll metrics (the content zoom scales screen px by 1/zoom). Assumes
  *  lines too short to wrap. */
@@ -986,11 +995,12 @@ async function sourceLineAt(page: Page, y: number): Promise<number> {
 }
 
 async function wheelZoom(page: Page, x: number, y: number, steps: number) {
+  const zoom = Math.min(3, (await contentZoom(page)) * Math.exp(0.15 * steps));
   await page.mouse.move(x, y);
   await page.keyboard.down("Control");
   for (let i = 0; i < steps; i++) await page.mouse.wheel(0, -100);
   await page.keyboard.up("Control");
-  await page.waitForTimeout(250);
+  await expectZoom(page, zoom);
 }
 
 const shortLines = Array.from({ length: 200 }, (_, i) => `Line ${i}`).join(
@@ -1004,19 +1014,11 @@ test("mod+wheel in source mode keeps the line under the pointer", async ({
   await pasteMarkdown(page, shortLines);
   await emit(page, "menu-toggle-source-mode");
   const source = page.locator('[data-active-tab="true"] textarea.source-view');
-  // Entering source mode scrolls the caret into view a moment later (on a
-  // slow machine, after a scroll set here): set the position until it holds,
-  // or that late scroll moves the text after `before` is read.
-  await expect
-    .poll(async () => {
-      const top = await source.evaluate((ta) => {
-        ta.scrollTop = Math.round(ta.scrollHeight / 3);
-        return ta.scrollTop;
-      });
-      await page.waitForTimeout(150);
-      return top > 0 && (await source.evaluate((ta) => ta.scrollTop)) === top;
-    })
-    .toBe(true);
+  // Entering source mode places the caret a frame later, focusing the
+  // textarea and scrolling to it: a scroll set before that is undone after
+  // `before` is read.
+  await expect(source).toBeFocused();
+  await source.evaluate((ta) => (ta.scrollTop = ta.scrollHeight / 3));
   const box = (await source.boundingBox())!;
   const y = box.y + box.height * 0.3;
   const before = await sourceLineAt(page, y);
@@ -1034,23 +1036,28 @@ test("split view: mod+wheel holds the pane under the pointer, the other follows"
   await emit(page, "menu-toggle-split-view");
   const preview = page.locator('[data-active-tab="true"] .split-preview');
   const heading = preview.locator("h2", { hasText: "Anchor line" });
-  await heading.evaluate((el) =>
-    el.scrollIntoView({ block: "center", behavior: "instant" }),
-  );
-  await page.waitForTimeout(250);
-  const ratio = () =>
+  // How far apart the two panes are, as shares of their scroll ranges.
+  const gap = () =>
     page.evaluate(() => {
       const r = (el: Element) =>
         el.scrollTop / Math.max(1, el.scrollHeight - el.clientHeight);
-      return {
-        source: r(
-          document.querySelector('[data-active-tab="true"] .split-source')!,
-        ),
-        preview: r(
-          document.querySelector('[data-active-tab="true"] .split-preview')!,
-        ),
-      };
+      return Math.abs(
+        r(document.querySelector('[data-active-tab="true"] .split-source')!) -
+          r(document.querySelector('[data-active-tab="true"] .split-preview')!),
+      );
     });
+  // The caret lands in the source a frame after the switch and scrolls it;
+  // the preview follows on the scroll event after that. A scroll set here
+  // before both have happened is undone.
+  await expect(
+    page.locator('[data-active-tab="true"] .split-source'),
+  ).toBeFocused();
+  await expect.poll(gap).toBeLessThan(0.02);
+  await heading.evaluate((el) =>
+    el.scrollIntoView({ block: "center", behavior: "instant" }),
+  );
+  await expect.poll(gap).toBeLessThan(0.02);
+  await expect(heading).toBeInViewport();
   // Over the preview: its heading stays put.
   const before = (await heading.boundingBox())!;
   const pane = (await preview.boundingBox())!;
@@ -1063,13 +1070,11 @@ test("split view: mod+wheel holds the pane under the pointer, the other follows"
   const after = (await heading.boundingBox())!;
   expect(Math.abs(after.y - before.y)).toBeLessThan(24);
   // ...and the source followed it in proportion, as on a scroll.
-  let r = await ratio();
-  expect(Math.abs(r.source - r.preview)).toBeLessThan(0.02);
+  await expect.poll(gap).toBeLessThan(0.02);
   // Over the source, the preview follows it the same way.
   const sbox = (await page
     .locator('[data-active-tab="true"] .split-source')
     .boundingBox())!;
   await wheelZoom(page, sbox.x + sbox.width / 2, sbox.y + sbox.height / 2, 3);
-  r = await ratio();
-  expect(Math.abs(r.source - r.preview)).toBeLessThan(0.02);
+  await expect.poll(gap).toBeLessThan(0.02);
 });

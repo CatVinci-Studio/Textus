@@ -4,7 +4,7 @@
 //! --nocapture`, `SWEEP_LEVEL=strict` for the P2 rules too).
 
 #[test]
-#[ignore]
+#[ignore = "a manual false-positive sweep - see module docs"]
 fn sweep_real_prose() {
     let mut files: Vec<std::path::PathBuf> = std::fs::read_dir("../src/help")
         .unwrap()
