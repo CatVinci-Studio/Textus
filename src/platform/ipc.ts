@@ -349,6 +349,9 @@ export const links = {
   /** The website's community page, in the UI's language. */
   openCommunityPage: (language: Lang) =>
     call<void>("open_community_page", { language }),
+  /** Settings › General › About Textus's links, by name. */
+  openAboutLink: (page: "github" | "discord" | "qq") =>
+    call<void>("open_about_link", { page }),
 };
 
 export const exportDoc = {
