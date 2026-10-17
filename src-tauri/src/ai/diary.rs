@@ -26,6 +26,10 @@ use tauri::AppHandle;
 /// overruns it is cut at a sentence or word boundary, never mid-word.
 const MAX_REPLY_CHARS: usize = 200;
 
+/// The diary's world and its story, in English like the rules above: the
+/// model tells it in the reader's language.
+const DIARY_STORY: &str = include_str!("diary-story.txt");
+
 const DIARY_INSTRUCTIONS: &str = "\
 You are the writer that lives in the pages of an old diary.
 
@@ -123,24 +127,10 @@ pub(crate) fn diary_instructions(ui_language: Option<&str>) -> String {
             || "the language the line is written in".to_string(),
             |l| format!("{} (the language of the reader's app)", l.english),
         );
-    let story: serde_json::Value =
-        serde_json::from_str(include_str!("../../../src/ai/magic-diary/diary-story.json"))
-            .expect("the bundled Textus story must be valid JSON");
-    let fragments = story["scenes"]
-        .as_array()
-        .map(|scenes| {
-            scenes
-                .iter()
-                .filter_map(|scene| scene["replies"]["en"].as_str())
-                .collect::<Vec<_>>()
-                .join("\n")
-        })
-        .unwrap_or_default();
     format!(
-        "{}\n\nStory background for both lore and ordinary conversation:\n{}\n{}\n\nThis world is Textus's own invention. If asked whether it comes from another story, say it does not: it belongs to this book alone. Magic is fictional atmosphere; never claim that it can affect real-world events or require the reader to reveal secrets.",
+        "{}\n\nStory background for both lore and ordinary conversation:\n{}\nIf asked whether this world comes from another story, say it does not: it belongs to this book alone. Magic is fictional atmosphere; never claim that it can affect real-world events or require the reader to reveal secrets.",
         DIARY_INSTRUCTIONS.replace("{DIARY_LANGUAGE}", &language),
-        story["fictionalPremise"].as_str().unwrap_or_default(),
-        fragments,
+        DIARY_STORY,
     )
 }
 

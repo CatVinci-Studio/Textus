@@ -790,6 +790,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   themeNameDiary: "魔法の日記",
   themeDiaryHint:
     "行末で Enter を押すと、ページが別の筆跡で答えます。そのまま入力を続けると返事は消えます。上下キーで過去の返事、Esc で中止。書いた文は文書に残ります。このテーマの間は続きの提案と文法チェックを休みます。",
+  diaryNoAnswer: "今回はインクが応えませんでした。少ししてからもう一度どうぞ。",
   appearanceLabel: "外観",
   appearanceSystem: "システムに従う",
   appearanceLight: "ライト",

@@ -207,7 +207,7 @@ test("history keeps chronological order and sends previous exchanges to the mode
   await expect(page.locator(".magic-diary-reply")).toHaveCount(0);
 });
 
-test("a missing provider still produces an answer and Chinese composition does not submit", async ({
+test("with no answer the page says so and gives the line back; composition does not submit", async ({
   page,
 }) => {
   await setup(page);
@@ -234,10 +234,12 @@ test("a missing provider still produces an answer and Chinese composition does n
   await expect(page.locator(".magic-diary-archived")).toHaveCount(0);
   await editor(page).press("Enter");
   await reachInk(page);
-  await expect(page.locator(".magic-diary-reply-settled")).toBeVisible({
-    timeout: 10000,
-  });
-  await expect(page.locator(".magic-diary-ink")).not.toBeEmpty();
+  await written(page);
+  await expect(page.locator(".magic-diary-reply-failed")).toBeVisible();
+  await page.clock.runFor(4000);
+  await expect(page.locator(".magic-diary-reply")).toHaveCount(0);
+  await expect(page.locator(".magic-diary-archived")).toHaveCount(0);
+  await expect(editor(page)).toContainText("你好");
 });
 
 test("undo during absorption never leaves the input locked", async ({
@@ -561,35 +563,4 @@ test("the waiting caret returns after the answer disappears and clicking paper f
     .locator('[data-active-tab="true"] .editor-content')
     .click({ position: { x: 20, y: 100 } });
   await expect(editor(page)).toBeFocused();
-});
-
-test("the book's own story answers and continues without a provider", async ({
-  page,
-}) => {
-  await setup(page);
-  await mockInvoke(page, { ai_diary_reply: { __reject: "No provider" } });
-  const fragment = async (line: string) => {
-    await pasteMarkdown(page, line);
-    await editor(page).press("End");
-    await editor(page).press("Enter");
-    await reachInk(page);
-    await page.clock.runFor(10000);
-    await expect(page.locator(".magic-diary-reply-settled")).toBeVisible();
-  };
-  await fragment("你是谁？");
-  await expect(page.locator(".magic-diary-ink")).toContainText("Textus");
-  await editor(page).press("Escape");
-  await fragment("后来呢？");
-  await expect(page.locator(".magic-diary-ink")).toContainText("薇拉来过");
-  await expect(page.locator(".magic-diary-ink")).toContainText("找路");
-});
-
-test("ordinary chat keeps a practical answer with a magical background offline", async ({
-  page,
-}) => {
-  await setup(page);
-  await mockInvoke(page, { ai_diary_reply: { __reject: "No provider" } });
-  await send(page, "今天好累，想休息");
-  await expect(page.locator(".magic-diary-ink")).toContainText("回声钟");
-  await expect(page.locator(".magic-diary-ink")).toContainText("放下");
 });

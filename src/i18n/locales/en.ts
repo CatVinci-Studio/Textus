@@ -795,6 +795,9 @@ type /name in a conversation to use one.
   themeNameDiary: "Magic Diary",
   themeDiaryHint:
     "Press Enter at the end of a line and the page answers it in another hand. Start typing to put the answer away; Up/Down bring back earlier ones, Esc cancels. Your lines stay in the document. Ghost text and grammar checks pause while this theme is on.",
+  /** The Magic Diary's note when no answer came (offline, no provider,
+   *  too slow); the reader's line comes back after it. */
+  diaryNoAnswer: "The ink has not answered this time. Try again in a moment.",
   appearanceLabel: "Appearance",
   appearanceSystem: "Follow system",
   appearanceLight: "Light",

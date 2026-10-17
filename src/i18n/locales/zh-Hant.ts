@@ -758,6 +758,7 @@ export default {
   themeNameDiary: "魔法日記",
   themeDiaryHint:
     "在一行末尾按 Enter，頁面會用另一種筆跡回答你。直接繼續打字就能收起回答；上下鍵回看先前的回答，Esc 取消。你寫的句子始終留在文件裡。使用這個主題時，續寫和語法檢查會暫停。",
+  diaryNoAnswer: "墨水暫時沒有回應，稍後再試試吧。",
   appearanceLabel: "外觀",
   appearanceSystem: "依照系統",
   appearanceLight: "淺色",

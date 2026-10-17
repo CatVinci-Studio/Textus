@@ -818,6 +818,8 @@ para usar una.
   themeNameDiary: "Diario mágico",
   themeDiaryHint:
     "Pulsa Intro al final de una línea y la página te responde con otra letra. Sigue escribiendo para retirar la respuesta; Arriba/Abajo recuperan las anteriores y Esc cancela. Tus líneas se quedan en el documento. Con este tema, las sugerencias y la revisión gramatical se pausan.",
+  diaryNoAnswer:
+    "Esta vez la tinta no ha respondido. Inténtalo de nuevo dentro de un momento.",
   appearanceLabel: "Aspecto",
   appearanceSystem: "Según el sistema",
   appearanceLight: "Claro",

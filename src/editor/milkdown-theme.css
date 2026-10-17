@@ -356,6 +356,17 @@
   }
 }
 
+/* No answer came: the page says so in a fainter, smaller hand, and the
+   line comes back after it (magic-diary-plugin's FAILED_DWELL_MS). */
+.milkdown .ProseMirror .magic-diary-reply-failed .magic-diary-ink {
+  color: var(--editor-muted);
+  font-size: 0.94em;
+}
+
+.milkdown .ProseMirror .magic-diary-reply-failed .magic-diary-ink::before {
+  display: none;
+}
+
 /* Three drops of ink gathering where the answer will appear, while the
    page is still thinking. They wait until the line has lifted off. */
 .milkdown .ProseMirror .magic-diary-waiting {

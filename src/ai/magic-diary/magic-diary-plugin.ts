@@ -8,16 +8,17 @@ import {
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent } from "../../editor/marks/enclosure";
 import { ai } from "../../platform/ipc";
-import { scriptedReply } from "./diary-replies";
-import { storyReply } from "./diary-story";
+import { resolveStrings } from "../../i18n/strings";
+import { isLang } from "../../i18n/langs";
 import { WALKER_ARRIVED_EVENT } from "./footprint-gait";
 
 const MAX_LINE_CHARS = 200;
 const DWELL_MS = 10_000;
 const FADE_MS = 520;
-/** How long the page waits for a model before it answers from its own
- *  lines instead. */
-const REPLY_BUDGET_MS = 8_000;
+/** How long the page waits for the model; the drops of ink show meanwhile. */
+const REPLY_BUDGET_MS = 15_000;
+/** How long the page's "no answer" note stays before the line comes back. */
+const FAILED_DWELL_MS = 3_500;
 /** The walker hurries to the line, but the reply never waits on it for
  *  longer than this: it writes itself as the walker arrives. */
 const ARRIVAL_GRACE_MS = 800;
@@ -47,6 +48,9 @@ interface Turn {
   line: string;
   reply: string;
   stage: "absorbing" | "writing" | "done" | "leaving";
+  /** No answer came (no provider, offline, too slow): `reply` is the
+   *  page's note saying so, and the line goes back on the page after it. */
+  failed?: boolean;
 }
 interface DiaryState {
   turns: Turn[];
@@ -56,7 +60,7 @@ interface DiaryState {
 }
 type Meta =
   | { type: "absorb"; turn: Turn; composer: number }
-  | { type: "reply"; id: number; text: string }
+  | { type: "reply"; id: number; text: string; failed?: boolean }
   | { type: "settle"; id: number }
   | { type: "leave"; id: number }
   | { type: "finish" }
@@ -91,6 +95,7 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
     requestId: string;
     arrived: boolean;
     reply?: string;
+    failed?: boolean;
   } | null = null;
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const widgets = new Map<string, HTMLElement>();
@@ -165,7 +170,8 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
     const turn = current?.turns.find((t) => t.id === current.active);
     if (turn?.stage !== "done") return false;
     announce("leaving");
-    finish();
+    if (turn.failed) restoreLine(turn);
+    else finish();
     return true;
   }
   function leave(id: number) {
@@ -183,14 +189,20 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
       finish();
       return;
     }
+    restoreLine(turn);
+  }
+  /** Takes the turn back: removes the empty composer the turn inserted and
+   *  puts the reader's line on the page again, caret at its end. */
+  function restoreLine(turn: Turn) {
+    const current = state();
+    if (!current || !view) return;
     stopRequest();
-    // Remove only the empty composer we inserted; restore the user's prompt.
     const tr = view.state.tr;
-    const composerNode = tr.doc.nodeAt(current!.composer - 1);
+    const composerNode = tr.doc.nodeAt(current.composer - 1);
     if (composerNode?.isTextblock && !composerNode.content.size)
       tr.delete(
-        current!.composer - 1,
-        current!.composer - 1 + composerNode.nodeSize,
+        current.composer - 1,
+        current.composer - 1 + composerNode.nodeSize,
       );
     tr.setSelection(
       TextSelection.near(
@@ -219,12 +231,6 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
     const history = state()!
       .turns.filter((t) => t.id !== id && t.reply)
       .map((t) => ({ line: t.line, reply: t.reply }));
-    const fragment = storyReply(language, line, history);
-    if (fragment) {
-      live.reply = fragment;
-      revealWhenReady();
-      return;
-    }
     const requestId = live.requestId;
     let budget: ReturnType<typeof setTimeout> | undefined;
     const timeout = new Promise<string>((resolve) => {
@@ -244,22 +250,29 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
       })
       .then((text) => (typeof text === "string" ? text : ""))
       .catch(() => "");
-    const reply =
-      (await Promise.race([request, timeout])).trim() ||
-      scriptedReply(language, line, history);
+    const reply = (await Promise.race([request, timeout])).trim();
     if (budget) {
       clearTimeout(budget);
       timers.delete(budget);
     }
     if (!isCurrent(id)) return;
-    live!.reply = reply;
+    // Every answer is the model's. Without one the page says so, and the
+    // line comes back to be sent again (see replyElement).
+    live!.reply =
+      reply || resolveStrings(isLang(language) ? language : "en").diaryNoAnswer;
+    live!.failed = !reply;
     revealWhenReady();
   }
   function revealWhenReady() {
     if (!live || !isCurrent(live.id) || !live.arrived || !live.reply) return;
     const current = state()?.turns.find((turn) => turn.id === live!.id);
     if (current?.stage !== "absorbing") return;
-    dispatch({ type: "reply", id: live.id, text: live.reply });
+    dispatch({
+      type: "reply",
+      id: live.id,
+      text: live.reply,
+      failed: live.failed,
+    });
     announce("replying");
   }
   function onArrived(event: Event) {
@@ -273,7 +286,7 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
     const cached = widgets.get(widgetKey);
     if (cached) return cached;
     const wrap = document.createElement("span");
-    wrap.className = `magic-diary-reply magic-diary-reply-${browsing ? "settled" : turn.stage}`;
+    wrap.className = `magic-diary-reply magic-diary-reply-${browsing ? "settled" : turn.stage}${turn.failed ? " magic-diary-reply-failed" : ""}`;
     wrap.contentEditable = "false";
     wrap.setAttribute("role", "status");
     wrap.setAttribute(
@@ -318,7 +331,14 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
       wrap.classList.add("magic-diary-reply-settled");
       dispatch({ type: "settle", id: turn.id });
       // Start the reading time only after the last character is written.
-      later(() => leave(turn.id), DWELL_MS);
+      // A note that no answer came gives the line back instead.
+      if (turn.failed)
+        later(() => {
+          if (!isCurrent(turn.id)) return;
+          announce("leaving");
+          restoreLine(turn);
+        }, FAILED_DWELL_MS);
+      else later(() => leave(turn.id), DWELL_MS);
     }, at + CHAR_IN_MS);
     return wrap;
   }
@@ -457,7 +477,12 @@ export function createMagicDiaryPlugin(options: MagicDiaryOptions) {
           case "reply":
             next.turns = next.turns.map((t) =>
               t.id === meta.id
-                ? { ...t, reply: meta.text, stage: "writing" }
+                ? {
+                    ...t,
+                    reply: meta.text,
+                    stage: "writing",
+                    failed: meta.failed,
+                  }
                 : t,
             );
             break;

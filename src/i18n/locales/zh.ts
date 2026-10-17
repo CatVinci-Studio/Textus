@@ -752,6 +752,7 @@ export default {
   themeNameDiary: "魔法日记",
   themeDiaryHint:
     "在一行末尾按回车，页面会用另一种笔迹回答你。直接继续打字就能收起回答；上下键回看先前的回答，Esc 取消。你写的句子始终留在文档里。使用这个主题时，续写和语法检查会暂停。",
+  diaryNoAnswer: "墨水暂时没有回应，稍后再试试吧。",
   appearanceLabel: "外观",
   appearanceSystem: "跟随系统",
   appearanceLight: "浅色",
