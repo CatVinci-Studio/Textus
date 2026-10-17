@@ -41,7 +41,10 @@ through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md
    Tag only after the merge has landed: a tag pushed before it points at the
    old commit, and the workflow's preflight stops it.
 
-5. `release.yml` checks that the tag matches the version files, then builds,
+5. `release.yml` checks that the tag matches the version files and that CI
+   (`check`, `e2e`, `native`) passed on the tagged commit - it waits if CI is
+   still running, and stops if it failed, so the builds don't run the tests
+   again. Then it builds,
    signs and notarizes for macOS (Apple silicon and Intel), Windows and Linux,
    publishes the GitHub release, writes the updater manifest, mirrors the
    installers to the website's download bucket, points the Homebrew cask at
@@ -60,7 +63,10 @@ through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md
 
 A failed run can be rebuilt with
 `gh workflow run release.yml --ref main -f tag=vX.Y.Z`: the packaging
-scripts come from the ref, the build from the tag.
+scripts come from the ref, the build from the tag. The three steps after
+publishing are separate workflows, so one of them can be retried alone:
+`gh workflow run mirror-downloads.yml -f tag=vX.Y.Z`, and the same for
+`update-homebrew-tap.yml` and `update-arch-repo.yml`.
 
 ## Pre-releases
 

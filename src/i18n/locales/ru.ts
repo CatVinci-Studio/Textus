@@ -832,4 +832,14 @@ export default {
   menuWindow: "Окно",
   menuZoomWindow: "Изменить масштаб",
   menuBringAllToFront: "Все окна — на передний план",
+  // The browser playground (src/playground/).
+  playgroundName: "Песочница",
+  playgroundImport: "Импорт",
+  playgroundExport: "Экспорт",
+  playgroundSource: "Исходник",
+  playgroundDownload: `Скачать ${APP_NAME}`,
+  playgroundLocalNote: "Документ хранится только в этом браузере.",
+  playgroundImageNotice: `Для изображений нужно настольное приложение ${APP_NAME}.`,
+  playgroundImportUnsupported:
+    "Импортировать можно только файлы .md, .markdown и .txt.",
 } satisfies Translation;

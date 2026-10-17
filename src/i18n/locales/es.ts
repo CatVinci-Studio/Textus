@@ -844,4 +844,14 @@ para usar una.
   menuWindow: "Ventana",
   menuZoomWindow: "Zoom",
   menuBringAllToFront: "Traer todo al frente",
+  // The browser playground (src/playground/).
+  playgroundName: "Zona de pruebas",
+  playgroundImport: "Importar",
+  playgroundExport: "Exportar",
+  playgroundSource: "Código",
+  playgroundDownload: `Descargar ${APP_NAME}`,
+  playgroundLocalNote: "Tu documento se guarda solo en este navegador.",
+  playgroundImageNotice: `Las imágenes necesitan la app de escritorio de ${APP_NAME}.`,
+  playgroundImportUnsupported:
+    "Solo se pueden importar archivos .md, .markdown y .txt.",
 } satisfies Translation;
