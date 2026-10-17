@@ -9,6 +9,7 @@ export default {
   agentPanelToggle: "AI 패널",
   agentPanelPopOut: "별도 창에서 열기",
   agentPanelResize: "AI 패널 크기 조절",
+  sidebarResize: "사이드바 크기 조절",
   agentPanelSheet: "AI 패널 펼치기 또는 접기",
   agentExpandWindowLabel: "전체 대화를 별도 창에서 열기",
   shortcutToggleAgentPanel: "AI 패널 보기/숨기기",

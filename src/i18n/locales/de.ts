@@ -9,6 +9,7 @@ export default {
   agentPanelToggle: "KI-Bereich",
   agentPanelPopOut: "In eigenem Fenster öffnen",
   agentPanelResize: "Breite des KI-Bereichs ändern",
+  sidebarResize: "Breite der Seitenleiste ändern",
   agentPanelSheet: "KI-Bereich auf- oder zuklappen",
   agentExpandWindowLabel:
     "Vollständige Unterhaltungen in einem eigenen Fenster öffnen",

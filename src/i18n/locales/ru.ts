@@ -9,6 +9,7 @@ export default {
   agentPanelToggle: "Панель ИИ",
   agentPanelPopOut: "Открыть в отдельном окне",
   agentPanelResize: "Изменить ширину панели ИИ",
+  sidebarResize: "Изменить ширину боковой панели",
   agentPanelSheet: "Развернуть или свернуть панель ИИ",
   agentExpandWindowLabel: "Открывать полные диалоги в отдельном окне",
   shortcutToggleAgentPanel: "Панель ИИ",
