@@ -483,6 +483,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Apps que só aceitam texto simples, como o WeChat, recebem isto; onde o app aceita formatação, ela é mantida.",
   copyTextModeReadable: "Texto legível",
   copyTextModeMarkdown: "Código Markdown",
+  pdfPageNumbersLabel: "Números de página no PDF",
+  pdfPageNumbersHint:
+    "Os PDFs exportados mostram o número de cada página no rodapé.",
   askAi: "Perguntar à IA…",
   agentProposalTitle: "Edição proposta",
   chatClose: "Fechar chat",

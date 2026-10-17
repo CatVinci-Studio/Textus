@@ -339,7 +339,13 @@ async function settleRender(editor: Element): Promise<void> {
 
 // File > Export as PDF. Requires the WYSIWYG view (source mode has no themed
 // DOM) and exports the active tab as-is - unsaved edits included.
-export async function exportPdf(tab: DocTab, t: Strings): Promise<void> {
+// `pageNumbers` (Settings › Page numbers in PDF) has Rust number the
+// finished file's pages; the render itself is the same either way.
+export async function exportPdf(
+  tab: DocTab,
+  t: Strings,
+  pageNumbers = false,
+): Promise<void> {
   if (!canExportPdf) return;
   const editor = document.querySelector('[data-active-tab="true"] .milkdown');
   if (!editor) {
@@ -379,6 +385,7 @@ export async function exportPdf(tab: DocTab, t: Strings): Promise<void> {
       // Resolves relative image srcs (assets/...) against the document folder.
       baseDir: tab.path ? dirname(tab.path) : null,
       outputPath: picked,
+      pageNumbers,
     });
     void exportDoc.revealInDir(picked);
   } catch (err) {

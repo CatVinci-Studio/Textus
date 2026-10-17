@@ -485,6 +485,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Apps, die nur reinen Text annehmen, etwa WeChat, erhalten dies; wo eine App Formatierung annimmt, bleibt sie erhalten.",
   copyTextModeReadable: "Lesbarer Text",
   copyTextModeMarkdown: "Markdown-Quelltext",
+  pdfPageNumbersLabel: "Seitenzahlen im PDF",
+  pdfPageNumbersHint:
+    "Exportierte PDFs zeigen unten auf jeder Seite die Seitenzahl.",
   askAi: "KI fragen…",
   agentProposalTitle: "Vorgeschlagene Änderung",
   chatClose: "Chat schließen",

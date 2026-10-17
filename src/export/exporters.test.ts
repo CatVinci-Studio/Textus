@@ -169,4 +169,20 @@ describe("exportPdf", () => {
     expect(overlayUnderMessage).toBeNull();
     expect(document.querySelector(".pdf-export-overlay")).toBeNull();
   });
+
+  it("asks Rust for page numbers only when the setting is on", async () => {
+    document.body.innerHTML =
+      '<div data-active-tab="true"><div class="milkdown"><p>x</p></div></div>';
+    mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/a.pdf");
+    mocks.exportDoc.exportPdfNative.mockReset().mockResolvedValue(undefined);
+    mocks.exportDoc.revealInDir.mockResolvedValue(undefined);
+
+    await exportPdf(tab, t);
+    await exportPdf(tab, t, true);
+
+    const calls = mocks.exportDoc.exportPdfNative.mock.calls;
+    expect(calls.map(([args]) => args.pageNumbers)).toEqual([false, true]);
+    // The page itself is rendered the same either way.
+    expect(calls[0][0].html).toBe(calls[1][0].html);
+  });
 });
