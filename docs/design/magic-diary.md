@@ -1,35 +1,61 @@
-# Textus 与未竟之城
+# The Magic Diary
 
-魔法日记里的故事。整个世界是 Textus 自己的原创设定，不来自任何其他作品。页面上的回答都由 AI 写出：它读的是 `src-tauri/src/ai/diary-story.txt` 里的英文设定和故事，再用读者的语言讲出来。这份文件是故事的中文版，方便阅读和修改；改故事时两边一起改。
+A hidden mode, contributed by Zhuohang Jiang. While it is on, the window
+becomes an old book: the page ages, a pagekeeper's footprints walk the
+margins between four places on a map, and each line the writer finishes is
+answered on the page, in another hand, by the connected AI provider.
+Nothing in the interface names it.
 
-## 设定
+![The diary's page, with the map's four places and the pagekeeper's footprints](../images/magic-diary/map-visit.png)
 
-- **Textus**：制图师薇拉亲手装订的空白书。薇拉一生都在画「未竟之城」——城里每一块砖，都是一句没写完的话。
-- **守页人**：薇拉最后一张地图上的一缕墨迹，在页边替夜里写字的人巡路。不是幽灵，也不是被困的灵魂。
-- **地图上的四个地方**：观星阁（少了北极星的星图）、无尽书廊（总停在最后一页的书）、回声钟（曾留住午夜后的第三分钟）、萤火林（被划掉又舍不得丢的愿望）。
-- **路过的访客**：掌灯人、纸上星火、墨影狼（没写出口的恐惧；守页人的护盾只留出喘息的距离，从不伤它）。
-- **结局**：读者写下“我在这里”，观星阁的星补全，四个地方一同亮起。
+## Opening and closing it
 
-## 故事（按顺序）
+Settings › General › About Textus: tap the version five times, quickly. It
+opens only when the selected AI provider is signed in or has its key, and
+only in the desktop app; without a provider the taps do nothing at all.
+Settings close and the page is the book. Five more taps close it, and the
+user's own theme is back - the diary sits over the theme, it doesn't
+replace it (`enableDiary` in Settings, `html[data-magic-diary]`).
 
-我叫 Textus，是制图师薇拉亲手装订的一本空白书。她一生都在画一座城——未竟之城，城里每一块砖，都是一句没写完的话。她把最后一张地图缝进了我的封底。你想知道她留下了什么吗？
+While it is on, ghost-text completion and grammar underlines stand down:
+they would write over the answer on the same line.
 
-薇拉来过很多个夜晚。她问我：一座永远画不完的城，还值得画吗？我让墨迹慢慢排成一句话：值得，因为总有人要在里面找路。那晚，页边多了第一双脚印。你看见那些脚印了吗？
+## Where it lives
 
-那是守页人，是薇拉地图上的一缕墨迹，替每个夜里写字的人巡路。地图上有四个地方，各替它保管一段没写完的故事。先去观星阁看看吗？
+| Part                                       | What it does                                                   |
+| ------------------------------------------ | -------------------------------------------------------------- |
+| `src/ai/magic-diary/magic-diary-plugin.ts` | Notices a finished line, asks for the answer, writes it in ink |
+| `src/ai/magic-diary/FootprintLayer.tsx`    | The pagekeeper walking the margins                             |
+| `src/ai/magic-diary/MagicMapOrnaments.tsx` | The map's four places                                          |
+| `src/theme/magic-diary-page.css`           | The aged page over the whole window, light and dark            |
+| `src-tauri/src/ai/diary.rs`                | `ai_diary_reply`: the answer, through the user's provider      |
+| `src-tauri/src/ai/diary-story.txt`         | The world and the story the model tells from                   |
 
-观星阁里有一幅少了北极星的星图。薇拉没有补上那颗星，她说，方向该由走路的人自己选。守页人每次走近，星图便会亮起，等一个还没写下的目的地。要去无尽书廊找下一条线索吗？
+## The handwriting
 
-无尽书廊里有一本总停在最后一页的书。薇拉翻了很多年，才明白那不是缺页，而是留给后来者的空白。你听见的翻页声，是它在问：今天，有什么值得留下？
+The answer's hand is LXGW WenKai (SIL OFL 1.1). It is not bundled with the
+app: `theme/apply-appearance.ts` links
+`https://textus.catvinci.com/fonts/lxgw-wenkai/1.7.0/regular.css` only while
+the diary is on. That stylesheet splits the face by `unicode-range` with
+`font-display: swap`, so a page downloads only the slices its text uses and
+the browser caches them. Offline, the hand falls back to the system's kai
+(Kaiti, STKaiti, Klee One), then serif. The files and their licences live in
+the website repository under `public/fonts/lxgw-wenkai/1.7.0/`; its
+`functions/_middleware.js` serves `/fonts/` with
+`Access-Control-Allow-Origin: *` and a year-long immutable cache. A new font
+version goes to a new versioned path, never over the old one.
 
-回声钟曾把午夜后的第三分钟留住。薇拉在那里写下一句没来得及说的谢谢，等墨干了，指针才肯继续走。时间的涟漪改不了过去，只提醒人别把下一句话也拖成遗憾。萤火林的光，你见过吗？
+## The story
 
-萤火林的光不是星星掉了下来，是被划掉又舍不得丢的愿望。守页人走近时，它们会聚成一只纸鹤的模样。薇拉在树下留了一句：害怕的时候，也可以慢慢往前走。可你听过墨影狼的脚步吗？
+The world is Textus's own, borrowed from no other book, film or game.
+Textus is a blank book bound by Vela, a mapmaker who spent her life drawing
+the Unfinished City, where every brick is a sentence someone never
+finished. A thread of ink from her last map became the pagekeeper, who walks
+the margins for anyone writing at night. The map keeps four places: the
+Star Loft, the Endless Stacks, the Echo Clock and the Firefly Wood. Every
+answer on the page is the model's, told in the reader's language from the
+English text in `src-tauri/src/ai/diary-story.txt` - change the story there.
 
-墨影狼是那些一直没写出口的恐惧，借着旧墨长出的形状。守页人的护盾并不伤它，只替纸上的人留一点喘息的距离；当恐惧有了名字，狼便会退回林间。未竟之城还剩最后一句。你想听完吗？
-
-天亮前，薇拉把地图的最后一角留白，放下了笔。许多年后，你在 Textus 上写下“我在这里”，观星阁的星才补全，四个地方一同亮起。原来未竟之城从来不需要被写完，它只需要一直有人点灯。
-
-## 怎么听到
-
-从“你是谁？”或“讲讲你的故事”开始，再问“后来呢？”或回答“想听”。也可以直接问“薇拉来过这里吗？”“这些脚印是谁的？”“观星阁里有什么？”“墨影狼是什么？”。
+To hear it, start with "Who are you?" or "Tell me your story", then "What
+happened next?"; or ask about Vela, the footprints, the Star Loft or the ink
+wolf directly.
