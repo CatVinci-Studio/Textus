@@ -63,13 +63,13 @@ describe("scriptedReply", () => {
 });
 
 describe("everyday diary atmosphere", () => {
-  it("offers practical rest with a trace of the clock tower", () => {
-    expect(scriptedReply("zh", "今天好累，想休息")).toContain("钟楼");
+  it("offers practical rest with a trace of the Echo Clock", () => {
+    expect(scriptedReply("zh", "今天好累，想休息")).toContain("回声钟");
     expect(scriptedReply("zh", "今天好累，想休息")).toContain("放下");
   });
   it("brings writing advice and loneliness into the same world", () => {
-    expect(scriptedReply("zh", "写不出来，没有灵感")).toContain("藏书阁");
+    expect(scriptedReply("zh", "写不出来，没有灵感")).toContain("书廊");
     expect(scriptedReply("zh", "有点孤独")).toContain("守页人");
-    expect(scriptedReply("en", "I am tired")).toContain("clock tower");
+    expect(scriptedReply("en", "I am tired")).toContain("Echo Clock");
   });
 });
