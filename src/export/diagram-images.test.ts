@@ -1,5 +1,6 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { replaceMermaidBlocks } from "./diagram-images";
+import { redrawDiagrams, replaceMermaidBlocks } from "./diagram-images";
 
 const draw = async (code: string) =>
   code.includes("broken")
@@ -45,5 +46,30 @@ describe("replaceMermaidBlocks", () => {
     expect(
       await replaceMermaidBlocks(md, () => Promise.reject(new Error("x"))),
     ).toBe(md);
+  });
+});
+
+describe("redrawDiagrams", () => {
+  // The serialized editor: a diagram's hidden source block, then its preview.
+  const diagram = (code: string, svg: string) =>
+    `<div class="code-block-wrapper mermaid-source-hidden"><pre><code>${code}</code></pre></div>` +
+    `<div class="mermaid-preview">${svg}</div>`;
+
+  it("draws each preview again from the source block before it", async () => {
+    const html = await redrawDiagrams(
+      diagram("graph LR", "<svg>dark</svg>") +
+        diagram("broken", "<svg>kept</svg>"),
+      async (code) => (code === "broken" ? null : `<svg>${code}</svg>`),
+    );
+    expect(html).toContain('<div class="mermaid-preview"><svg>graph LR</svg>');
+    expect(html).toContain('<div class="mermaid-preview"><svg>kept</svg>');
+    expect(html).not.toContain("dark");
+  });
+
+  it("keeps the picture when drawing throws", async () => {
+    const html = diagram("graph LR", "<svg>dark</svg>");
+    expect(
+      await redrawDiagrams(html, () => Promise.reject(new Error("x"))),
+    ).toContain("<svg>dark</svg>");
   });
 });

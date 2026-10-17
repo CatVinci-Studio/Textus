@@ -36,13 +36,14 @@ export function configureMermaid(
   mermaid: MermaidApi,
   width: number,
   fontFamily?: string,
+  dark = appearanceIsDark(),
 ): void {
   mermaid.initialize({
     startOnLoad: false,
     // Follows the app's appearance - "neutral" in a dark theme left white
     // boxes and near-invisible arrows on the dark page. In the document's
     // own face rather than mermaid's "trebuchet ms".
-    theme: appearanceIsDark() ? "dark" : "neutral",
+    theme: dark ? "dark" : "neutral",
     ...(fontFamily ? { fontFamily, themeVariables: { fontFamily } } : {}),
     securityLevel: "strict",
     // A broken diagram must not draw mermaid's "Syntax error" bomb into a
