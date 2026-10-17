@@ -272,6 +272,10 @@ utiliser une.
   navMarkdown: "Markdown",
   navAi: AI_NAME,
   navPrivacy: "Confidentialité",
+  navAbout: "À propos",
+  aboutTextus: "À propos de Textus",
+  aboutVersion: "Version {version}",
+  aboutMadeBy: "Créé par CatVinci Studio",
   navShortcuts: "Raccourcis",
   generalBasicsLabel: "Réglages de base",
   generalSystemLabel: "Application",
@@ -823,9 +827,6 @@ utiliser une.
   themeNameSlate: "Ardoise",
   themeNameForest: "Forêt",
   themeNameParchment: "Parchemin",
-  themeNameDiary: "Journal magique",
-  themeDiaryHint:
-    "Appuyez sur Entrée en fin de ligne et la page vous répond d’une autre écriture. Continuez à taper pour ranger la réponse ; Haut/Bas rappellent les précédentes, Échap annule. Vos lignes restent dans le document. Avec ce thème, les suggestions et la vérification grammaticale sont en pause.",
   diaryNoAnswer:
     "L’encre n’a pas répondu cette fois. Réessayez dans un instant.",
   appearanceLabel: "Apparence",

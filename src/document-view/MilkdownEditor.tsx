@@ -147,7 +147,7 @@ export function MilkdownEditor({
       const view = ctx.get(editorViewCtx);
       view.dispatch(view.state.tr.setMeta("addToHistory", false));
     });
-  }, [settings.language, settings.themeId, run]);
+  }, [settings.language, settings.enableDiary, run]);
 
   const proposals = useEditorProposals({
     run,

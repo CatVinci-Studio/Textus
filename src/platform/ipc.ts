@@ -349,6 +349,8 @@ export const links = {
   /** The website's community page, in the UI's language. */
   openCommunityPage: (language: Lang) =>
     call<void>("open_community_page", { language }),
+  /** The app's repository on GitHub (Settings › About). */
+  openGithubPage: () => call<void>("open_github_page"),
 };
 
 export const exportDoc = {

@@ -270,6 +270,10 @@ para usar una.
   navMarkdown: "Markdown",
   navAi: AI_NAME,
   navPrivacy: "Privacidad",
+  navAbout: "Acerca de",
+  aboutTextus: "Acerca de Textus",
+  aboutVersion: "Versión {version}",
+  aboutMadeBy: "Hecho por CatVinci Studio",
   navShortcuts: "Atajos de teclado",
   generalBasicsLabel: "Opciones básicas",
   generalSystemLabel: "Aplicación",
@@ -815,9 +819,6 @@ para usar una.
   themeNameSlate: "Pizarra",
   themeNameForest: "Bosque",
   themeNameParchment: "Pergamino",
-  themeNameDiary: "Diario mágico",
-  themeDiaryHint:
-    "Pulsa Intro al final de una línea y la página te responde con otra letra. Sigue escribiendo para retirar la respuesta; Arriba/Abajo recuperan las anteriores y Esc cancela. Tus líneas se quedan en el documento. Con este tema, las sugerencias y la revisión gramatical se pausan.",
   diaryNoAnswer:
     "Esta vez la tinta no ha respondido. Inténtalo de nuevo dentro de un momento.",
   appearanceLabel: "Aspecto",

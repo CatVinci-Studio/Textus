@@ -257,6 +257,10 @@ type /name in a conversation to use one.
   navMarkdown: "Markdown",
   navAi: AI_NAME,
   navPrivacy: "Privacy",
+  navAbout: "About",
+  aboutTextus: "About Textus",
+  aboutVersion: "Version {version}",
+  aboutMadeBy: "Made by CatVinci Studio",
   navShortcuts: "Shortcuts",
   generalBasicsLabel: "Basics",
   generalSystemLabel: "Application",
@@ -792,9 +796,6 @@ type /name in a conversation to use one.
   themeNameSlate: "Slate",
   themeNameForest: "Forest",
   themeNameParchment: "Parchment",
-  themeNameDiary: "Magic Diary",
-  themeDiaryHint:
-    "Press Enter at the end of a line and the page answers it in another hand. Start typing to put the answer away; Up/Down bring back earlier ones, Esc cancels. Your lines stay in the document. Ghost text and grammar checks pause while this theme is on.",
   /** The Magic Diary's note when no answer came (offline, no provider,
    *  too slow); the reader's line comes back after it. */
   diaryNoAnswer: "The ink has not answered this time. Try again in a moment.",

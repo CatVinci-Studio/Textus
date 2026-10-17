@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSettings } from "../../settings/SettingsContext";
-import { isMagicDiary } from "../../theme/builtin-themes";
+import { isMagicDiary } from "./diary-mode";
 import {
   DASH_STEP_MS,
   orbitLength,

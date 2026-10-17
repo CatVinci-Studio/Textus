@@ -6,7 +6,7 @@ const editor = (page: Page) =>
 async function setup(page: Page) {
   await page.clock.install();
   await openApp(page, {
-    settings: { themeId: "diary" },
+    settings: { enableDiary: true },
     animations: true,
   });
   await mockInvoke(page, { ai_diary_reply: "我记得。" });
@@ -150,7 +150,7 @@ test("cancelling a pending answer restores the input and allows a fresh request"
 test("normal editing remains available outside diary mode", async ({
   page,
 }) => {
-  await openApp(page, { settings: { themeId: "default" } });
+  await openApp(page, { settings: { enableDiary: false } });
   await pasteMarkdown(page, "普通文本");
   await editor(page).press("End");
   await editor(page).press("Enter");

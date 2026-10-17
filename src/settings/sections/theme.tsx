@@ -1,17 +1,11 @@
 import { errorText } from "../../utils/error-text";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import {
   useSettings,
   THEME_MODES,
   type UserThemeMeta,
 } from "../SettingsContext";
-import {
-  BUILTIN_CONTENT_THEMES,
-  MAGIC_DIARY_THEME,
-} from "../../theme/builtin-themes";
-import { useProviderCatalog } from "../../ai/provider-catalog";
-import { isDesktopApp } from "../../platform/capabilities";
-import { fetchConnected } from "./providers";
+import { BUILTIN_CONTENT_THEMES } from "../../theme/builtin-themes";
 import type { Strings } from "../../i18n/strings";
 import { importThemeCss } from "../../theme/theme-import";
 import { ornamentRules } from "../../theme/theme-export";
@@ -126,33 +120,8 @@ ${customCss.trim() ? `\n/* Custom CSS */\n${customCss}\n` : ""}`;
   }
 }
 
-/** Whether the selected AI provider is signed in or has its key: the Magic
- *  Diary theme answers through it, so the picker offers that theme only
- *  then. Checked when Settings opens and when the provider changes. */
-function useAiConnected(provider: string): boolean {
-  const catalog = useProviderCatalog();
-  const [connected, setConnected] = useState(false);
-  useEffect(() => {
-    const entry = catalog.find((e) => e.id === provider);
-    if (!entry) {
-      setConnected(false);
-      return;
-    }
-    let live = true;
-    fetchConnected(entry)
-      .then((c) => live && setConnected(c.oauth || c.apiKey))
-      .catch(() => live && setConnected(false));
-    return () => {
-      live = false;
-    };
-  }, [catalog, provider]);
-  return connected;
-}
-
 export function ThemeSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
-  // A desktop easter egg: on a phone the margins it walks are not there.
-  const offerDiary = useAiConnected(settings.aiProvider) && isDesktopApp;
   const appearanceId = useId();
   const working = useRef(false);
   const latest = useLatest(settings);
@@ -263,12 +232,7 @@ export function ThemeSection({ t }: { t: Strings }) {
         </div>
       </SettingRow>
 
-      <SettingRow
-        label={t.contentThemeLabel}
-        hint={
-          settings.themeId === MAGIC_DIARY_THEME ? t.themeDiaryHint : undefined
-        }
-      >
+      <SettingRow label={t.contentThemeLabel}>
         <Select
           className="settings-select"
           aria-label={t.contentThemeLabel}
@@ -276,16 +240,9 @@ export function ThemeSection({ t }: { t: Strings }) {
           value={settings.themeId}
           onChange={(e) => setSettings({ themeId: e.target.value })}
         >
-          {BUILTIN_CONTENT_THEMES.filter(
-            (theme) =>
-              theme.id !== MAGIC_DIARY_THEME ||
-              settings.themeId === MAGIC_DIARY_THEME ||
-              offerDiary,
-          ).map((theme) => (
+          {BUILTIN_CONTENT_THEMES.map((theme) => (
             <option key={theme.id} value={theme.id}>
-              {theme.id === MAGIC_DIARY_THEME
-                ? `✦ ${t[theme.nameKey]}`
-                : t[theme.nameKey]}
+              {t[theme.nameKey]}
             </option>
           ))}
           {settings.userThemes.map((theme) => (

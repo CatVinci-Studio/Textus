@@ -263,6 +263,10 @@ export default {
   navMarkdown: "Markdown",
   navAi: AI_NAME,
   navPrivacy: "Конфиденциальность",
+  navAbout: "О программе",
+  aboutTextus: "О Textus",
+  aboutVersion: "Версия {version}",
+  aboutMadeBy: "Сделано в CatVinci Studio",
   navShortcuts: "Сочетания клавиш",
   generalBasicsLabel: "Общие",
   generalSystemLabel: "Приложение",
@@ -803,9 +807,6 @@ export default {
   themeNameSlate: "Грифель",
   themeNameForest: "Лес",
   themeNameParchment: "Пергамент",
-  themeNameDiary: "Волшебный дневник",
-  themeDiaryHint:
-    "Нажмите Enter в конце строки — страница ответит другим почерком. Продолжайте печатать, чтобы убрать ответ; стрелки вверх и вниз возвращают прежние, Esc отменяет. Ваши строки остаются в документе. С этой темой подсказки и проверка грамматики приостановлены.",
   diaryNoAnswer:
     "На этот раз чернила не ответили. Попробуйте ещё раз чуть позже.",
   appearanceLabel: "Оформление",

@@ -13,7 +13,7 @@ import {
   type ReviewNote,
 } from "./margin/review-notes-plugin";
 import { createMagicDiaryPlugin } from "./magic-diary/magic-diary-plugin";
-import { isMagicDiary } from "../theme/builtin-themes";
+import { isMagicDiary } from "./magic-diary/diary-mode";
 import { resolveStrings } from "../i18n/strings";
 import type { RevisionDisplay, Settings } from "../settings/SettingsContext";
 

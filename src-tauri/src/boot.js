@@ -41,11 +41,12 @@ window.__textusBoot = function (boot, themeCss) {
       root.setAttribute("data-content-width", settings.contentWidth);
     // BUILTIN_CONTENT_THEMES in SettingsContext.tsx, minus "default" (which
     // is the absence of the attribute).
-    var builtin = ["paper", "slate", "forest", "parchment", "diary"];
+    var builtin = ["paper", "slate", "forest", "parchment"];
     if (builtin.indexOf(settings.themeId) >= 0)
       root.setAttribute("data-content-theme", settings.themeId);
-    // The Magic Diary theme (theme/apply-appearance.ts) from the first frame.
-    if (settings.themeId === "diary") root.setAttribute("data-magic-diary", "");
+    // The hidden diary (theme/apply-appearance.ts) from the first frame.
+    if (settings.enableDiary === true)
+      root.setAttribute("data-magic-diary", "");
     else if (themeCss) root.setAttribute("data-user-theme", "");
     // macOS only (native_titlebar_height in lib.rs): what the window bar
     // lines its contents up with, so they sit level with the traffic lights.

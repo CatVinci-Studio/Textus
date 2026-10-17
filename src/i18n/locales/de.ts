@@ -259,6 +259,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   navMarkdown: "Markdown",
   navAi: AI_NAME,
   navPrivacy: "Datenschutz",
+  navAbout: "Über",
+  aboutTextus: "Über Textus",
+  aboutVersion: "Version {version}",
+  aboutMadeBy: "Von CatVinci Studio",
   navShortcuts: "Tastenkürzel",
   generalBasicsLabel: "Grundeinstellungen",
   generalSystemLabel: "Anwendung",
@@ -804,9 +808,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   themeNameSlate: "Schiefer",
   themeNameForest: "Wald",
   themeNameParchment: "Pergament",
-  themeNameDiary: "Magisches Tagebuch",
-  themeDiaryHint:
-    "Drücke am Zeilenende die Eingabetaste, und die Seite antwortet in einer anderen Handschrift. Weiterschreiben räumt die Antwort weg; Hoch/Runter holen frühere zurück, Esc bricht ab. Deine Zeilen bleiben im Dokument. Mit diesem Design pausieren Vorschläge und Grammatikprüfung.",
   diaryNoAnswer:
     "Die Tinte hat diesmal nicht geantwortet. Versuch es gleich noch einmal.",
   appearanceLabel: "Erscheinungsbild",

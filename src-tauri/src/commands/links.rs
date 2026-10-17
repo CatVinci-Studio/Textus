@@ -33,6 +33,17 @@ pub fn open_community(app: &tauri::AppHandle, language: Option<&str>) -> Result<
         .map_err(|e| e.to_string())
 }
 
+/// The app's source code, from Settings › About.
+const GITHUB_URL: &str = "https://github.com/CatVinci-Studio/Textus";
+
+#[tauri::command]
+pub async fn open_github_page(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app.opener()
+        .open_url(GITHUB_URL, None::<&str>)
+        .map_err(|e| e.to_string())
+}
+
 /// Help > Join the Community, and its row in Settings.
 #[tauri::command]
 pub async fn open_community_page(

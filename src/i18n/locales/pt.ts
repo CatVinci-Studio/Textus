@@ -260,6 +260,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   navMarkdown: "Markdown",
   navAi: AI_NAME,
   navPrivacy: "Privacidade",
+  navAbout: "Sobre",
+  aboutTextus: "Sobre o Textus",
+  aboutVersion: "Versão {version}",
+  aboutMadeBy: "Feito pela CatVinci Studio",
   navShortcuts: "Atalhos",
   generalBasicsLabel: "Básico",
   generalSystemLabel: "Aplicativo",
@@ -798,9 +802,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   themeNameSlate: "Ardósia",
   themeNameForest: "Floresta",
   themeNameParchment: "Pergaminho",
-  themeNameDiary: "Diário mágico",
-  themeDiaryHint:
-    "Prima Enter no fim de uma linha e a página responde com outra caligrafia. Continue a escrever para guardar a resposta; Cima/Baixo mostram as anteriores e Esc cancela. As suas linhas ficam no documento. Com este tema, as sugestões e a verificação gramatical ficam em pausa.",
   diaryNoAnswer:
     "Desta vez a tinta não respondeu. Tente de novo daqui a pouco.",
   appearanceLabel: "Aparência",

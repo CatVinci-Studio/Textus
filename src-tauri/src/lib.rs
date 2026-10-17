@@ -742,6 +742,7 @@ pub fn run() {
             #[cfg(desktop)]
             export_pdf_native,
             commands::links::open_community_page,
+            commands::links::open_github_page,
             #[cfg(desktop)]
             open_pandoc_install_page,
             #[cfg(desktop)]
