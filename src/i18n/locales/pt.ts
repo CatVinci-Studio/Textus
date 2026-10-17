@@ -715,6 +715,13 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialAgentEditApplied: "O documento foi atualizado.",
   tutorialAgentEditMockReply:
     "Tirei a introdução desnecessária. Revise a prévia da edição.",
+  tutorialConnectAiTitle: "Conecte sua IA",
+  tutorialConnectAiBody:
+    "A prática usou respostas de exemplo. Conecte um provedor e o autocompletar, a verificação gramatical e o assistente funcionarão de verdade.",
+  tutorialConnectAiConnected:
+    "Conectado. Os recursos de IA vão usar este provedor.",
+  tutorialConnectAiSkip: "Pular por agora",
+  tutorialConnectAiLater: "Você também pode fazer isso depois em {path}.",
   tutorialDoneTitle: "Tutorial concluído",
   tutorialDoneBody: `Agora você já pode escrever. Para usar a IA, conecte um serviço em Ajustes > ${AI_NAME}. Você pode reabrir este tutorial pelo menu Ajuda.`,
   closePromptMessage: "Este documento tem alterações não salvas.",

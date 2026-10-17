@@ -675,6 +675,12 @@ export default {
   tutorialAgentEditProposed: "檢查預覽，再按一下「接受」。",
   tutorialAgentEditApplied: "文件已更新。",
   tutorialAgentEditMockReply: "刪去了開場白和贅字。檢查一下修改預覽。",
+  tutorialConnectAiTitle: "連線你的 AI",
+  tutorialConnectAiBody:
+    "剛才的練習用的是範例回覆。連線一個服務後，續寫、文法檢查和 AI 助理就會真正運作。",
+  tutorialConnectAiConnected: "已連線，AI 功能將使用這個服務。",
+  tutorialConnectAiSkip: "暫時略過",
+  tutorialConnectAiLater: "之後也可以在「{path}」中設定。",
   tutorialDoneTitle: "教學完成",
   tutorialDoneBody: `現在就可以開始寫作。要使用 AI，先在「設定 > ${AI_NAME}」中連線到 AI 服務。之後可以從「說明」選單重新開啟這份教學。`,
   closePromptMessage: "這份文件有未儲存的變更。",

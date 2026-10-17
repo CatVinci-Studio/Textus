@@ -736,6 +736,13 @@ utiliser une.
   tutorialAgentEditApplied: "Le document a été mis à jour.",
   tutorialAgentEditMockReply:
     "J'ai supprimé la formule d'introduction superflue. Vérifiez l'aperçu de la modification.",
+  tutorialConnectAiTitle: "Connectez votre IA",
+  tutorialConnectAiBody:
+    "L'entraînement utilisait des réponses d'exemple. Connectez un fournisseur et la complétion, la vérification grammaticale et l'assistant fonctionneront pour de vrai.",
+  tutorialConnectAiConnected:
+    "Connecté. Les fonctions d'IA utiliseront ce fournisseur.",
+  tutorialConnectAiSkip: "Passer pour l'instant",
+  tutorialConnectAiLater: "Vous pourrez aussi le faire plus tard dans {path}.",
   tutorialDoneTitle: "Tutoriel terminé",
   tutorialDoneBody: `Vous pouvez maintenant commencer à écrire. Pour utiliser l'IA, connectez un service dans Réglages > ${AI_NAME}. Vous pouvez rouvrir ce tutoriel depuis le menu Aide.`,
   closePromptMessage:
