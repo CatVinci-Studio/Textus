@@ -20,8 +20,6 @@
 **真正有用的教程。** 新手教程里加一步"连接你的 AI"，再给大家最常问的几个功能做几段短视频。
 [#90](https://github.com/CatVinci-Studio/Textus/issues/90)
 
-另外，我们还藏了一些彩蛋。登录 AI 之后，可以试试在 **设置 › 通用 › 关于 Textus** 里多点几下版本号。
-
 ## 下一个版本
 
 这些都来自大家的反馈。谢谢你们，特别是那些附了截图和复现步骤的。
@@ -33,13 +31,13 @@
   [#78](https://github.com/CatVinci-Studio/Textus/issues/78)
 - Linux 上在源码模式里编辑时，字不会再发虚。
   [#61](https://github.com/CatVinci-Studio/Textus/issues/61)
+- 导出的 PDF 可以带页码（在 **设置 › 编辑与外观** 里打开）。
 
 ## 以后
 
 - 在 App 里直接安装主题分享平台上的主题。
 - 能覆盖整个文件夹的目录，而不只是当前这一篇。
   [#79](https://github.com/CatVinci-Studio/Textus/issues/79)
-- 导出的 PDF 带页码。
 
 ## 想帮忙？
 
