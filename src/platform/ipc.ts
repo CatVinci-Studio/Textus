@@ -917,6 +917,8 @@ export const ai = {
     ...args
   }: {
     provider: string;
+    engine?: "harness" | "codex" | "claude-code";
+    engineModel?: string | null;
     document: string;
     docPath: string | null;
     /** The chosen project folder (Settings > Textus AI > Project Folder, or
@@ -1109,4 +1111,18 @@ export const drafts = {
   clearDraftSnapshot: (tabId: string) =>
     call<void>("clear_draft_snapshot", { tabId }),
   clearAllDrafts: () => call<void>("clear_all_drafts"),
+};
+
+export interface DictationEvent {
+  text: string;
+  done: boolean;
+  error: boolean;
+}
+export const dictation = {
+  start: (language: string, onEvent: (event: DictationEvent) => void) => {
+    const channel = new Channel<DictationEvent>();
+    channel.onmessage = onEvent;
+    return call<number>("dictation_start", { language, onEvent: channel });
+  },
+  stop: (token: number) => call<void>("dictation_stop", { token }),
 };

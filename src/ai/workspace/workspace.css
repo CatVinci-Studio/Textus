@@ -172,3 +172,259 @@
   align-items: center;
   flex-wrap: wrap;
 }
+
+/* The editor and conversation stay mounted; these controls only change surface. */
+.document-surface-switch {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 42;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--sidebar-bg);
+  border: 1px solid #8883;
+  border-radius: 8px;
+}
+.document-surface-switch button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 4px 18px;
+  border-radius: 5px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.document-surface-switch button[aria-pressed="true"] {
+  background: var(--editor-bg, var(--bg));
+  box-shadow: 0 1px 4px #0002;
+}
+.agent-home {
+  inset: 42px 0 0;
+}
+.agent-home .workspace-header {
+  padding: 9px 20px;
+  border: 0;
+}
+.agent-home .workspace-header > div {
+  display: none;
+}
+.agent-home .workspace-header > span {
+  margin-right: auto;
+}
+.agent-home .workspace-columns {
+  grid-template-columns: 200px minmax(0, 1fr);
+  position: relative;
+}
+.agent-home .workspace-tasks {
+  background: var(--sidebar-bg);
+  border: 0;
+  padding: 20px 12px;
+}
+.agent-home .workspace-tasks h3 {
+  opacity: 0.5;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 24px;
+}
+.agent-home .workspace-tasks > button {
+  text-align: left;
+  width: 100%;
+  background: transparent;
+  border: 0;
+}
+.agent-home .workspace-timeline {
+  font-size: 11px;
+}
+.agent-home .workspace-conversation {
+  width: 100%;
+  max-width: 1000px;
+  margin-inline: auto;
+  padding: 24px clamp(20px, 4vw, 70px);
+}
+.agent-home.is-empty .workspace-conversation {
+  justify-content: center;
+  padding-bottom: 14vh;
+}
+.agent-home.is-empty .inline-chat-messages {
+  display: none;
+}
+.agent-home-heading {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.agent-home-heading > span {
+  font-size: 32px;
+  opacity: 0.7;
+}
+.agent-home-heading h1 {
+  font-size: clamp(23px, 3vw, 34px);
+  font-weight: 550;
+  letter-spacing: -0.6px;
+  margin: 16px 0 10px;
+}
+.agent-home-heading p {
+  font-size: 13px;
+  opacity: 0.5;
+}
+.agent-home .inline-chat-input {
+  min-height: 92px;
+  padding: 16px;
+}
+.agent-home .inline-chat-toolbar {
+  flex-wrap: wrap;
+  padding: 8px 12px;
+}
+.agent-home .workspace-preview.document-card {
+  display: none;
+}
+.agent-home .workspace-preview.has-draft {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(44%, 460px);
+  background: var(--editor-bg, var(--bg));
+  box-shadow: -8px 0 30px #0001;
+  z-index: 2;
+}
+.agent-home:has(.has-draft) .workspace-conversation {
+  margin-right: min(44%, 460px);
+  max-width: 56%;
+}
+.agent-engine-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  flex-wrap: wrap;
+}
+.agent-engine-controls select,
+.agent-engine-controls input {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: transparent;
+  padding: 5px;
+  max-width: 160px;
+}
+.agent-engine-controls select {
+  background: var(--sidebar-bg);
+  border-radius: 5px;
+}
+.agent-model-label,
+.agent-engine-controls > span {
+  opacity: 0.65;
+}
+@media (max-width: 780px) {
+  .agent-home .workspace-columns {
+    grid-template-columns: 135px minmax(0, 1fr);
+  }
+  .agent-home .workspace-preview.has-draft {
+    width: 90%;
+  }
+  .agent-home:has(.has-draft) .workspace-conversation {
+    max-width: 100%;
+    margin-right: 0;
+  }
+}
+.inline-dictation {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+.inline-dictation button {
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  border: 0;
+  background: transparent;
+}
+.inline-dictation select {
+  font: inherit;
+  font-size: 10px;
+  max-width: 65px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  opacity: 0.5;
+}
+.inline-dictation .dictation-listening {
+  color: #31c477;
+  background: #31c47720;
+  border-radius: 50%;
+}
+.inline-dictation [role="alert"] {
+  font-size: 11px;
+  color: #cf655f;
+  max-width: 240px;
+}
+.document-surface-switch {
+  top: 42px;
+}
+.agent-home {
+  inset: 80px 0 0;
+}
+.agent-home .inline-chat-field {
+  border: 1px solid #8884;
+  border-radius: 16px;
+  background: var(--sidebar-bg);
+  padding: 4px;
+  box-shadow: 0 4px 20px #00000004;
+}
+.agent-home .inline-chat-attach svg,
+.agent-home .inline-chat-web-search svg {
+  width: 16px;
+  height: 16px;
+}
+.agent-home .inline-chat-toolbar button {
+  border: 0;
+}
+.workspace-extra-tools {
+  font-size: 11px;
+  opacity: 0.65;
+  margin: 12px 8px 0;
+}
+.workspace-extra-tools > summary {
+  cursor: pointer;
+}
+.workspace-extra-tools[open] {
+  opacity: 1;
+  padding: 10px;
+  border: 1px solid #8883;
+  border-radius: 8px;
+}
+.workspace-launch {
+  padding-top: 38px;
+}
+.selection-illustration-status {
+  font: 12px/1.6 system-ui;
+  opacity: 0.8;
+  padding: 8px 12px;
+  border: 1px solid #8883;
+  border-radius: 8px;
+}
+/* Write is a quiet page. Media actions live in selection menus and Agent. */
+.main-pane:has(.document-surface-switch) .editor-content {
+  padding-top: 6rem;
+}
+@media (max-width: 1000px) {
+  .agent-home .workspace-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .agent-home .workspace-conversation {
+    padding-inline: clamp(20px, 5vw, 48px);
+  }
+}
+.agent-home :is(.inline-chat-attach, .inline-chat-web-search) {
+  padding: 6px;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  background: transparent;
+  display: grid;
+  place-items: center;
+}

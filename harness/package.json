@@ -1,0 +1,12 @@
+{
+  "name": "textus-harness-host",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test *.test.mjs"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh-sdk-client": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-llm-pi-ai": "0.2.1-rc.2"
+  }
+}

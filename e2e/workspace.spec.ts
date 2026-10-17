@@ -20,9 +20,7 @@ test("recovers an unaccepted draft across reload without sending another model r
 }) => {
   await openApp(page, { settings: { language: "en" } });
   await mockInvoke(page, { ai_agent_message: turns });
-  await page
-    .getByRole("button", { name: "Create with AI", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Agent", exact: true }).click();
   let workspace = page.getByRole("region", { name: "Agent Workspace" });
   await workspace.locator(".inline-chat-input").fill("Write four sections");
   await workspace.getByRole("button", { name: "Send", exact: true }).click();
@@ -38,9 +36,7 @@ test("recovers an unaccepted draft across reload without sending another model r
     )
     .toBe(1);
   await page.reload();
-  await page
-    .getByRole("button", { name: "Create with AI", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Agent", exact: true }).click();
   workspace = page.getByRole("region", { name: "Agent Workspace" });
   await expect(workspace.locator(".workspace-document h2")).toHaveCount(4);
   await expect(
@@ -63,9 +59,7 @@ test("creates a reviewed four-section draft in the same editor and undoes one ba
     ],
   });
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await page
-    .getByRole("button", { name: "Create with AI", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Agent", exact: true }).click();
   const workspace = page.getByRole("region", { name: "Agent Workspace" });
   await workspace.locator(".inline-chat-input").fill("Create an article");
   await workspace.getByRole("button", { name: "Send", exact: true }).click();
@@ -73,21 +67,19 @@ test("creates a reviewed four-section draft in the same editor and undoes one ba
   await page.screenshot({ path: testInfo.outputPath("workspace-desktop.png") });
   await page.setViewportSize({ width: 600, height: 800 });
   await expect(
-    workspace.getByRole("button", { name: "Open editor" }),
+    workspace.getByRole("button", { name: /^Write ·/ }),
   ).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("workspace-narrow.png") });
   await page.setViewportSize({ width: 1180, height: 780 });
   await expect(editor).not.toContainText("Motivation");
-  await workspace.getByRole("button", { name: "Open editor" }).click();
+  await workspace.getByRole("button", { name: /^Write ·/ }).click();
   await expect(editor).not.toContainText("Motivation");
-  await page
-    .getByRole("button", { name: "Create with AI", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Agent", exact: true }).click();
   await expect(workspace.locator(".workspace-document h2")).toHaveCount(4);
   await workspace
     .getByRole("button", { name: "Accept all", exact: true })
     .click();
-  await workspace.getByRole("button", { name: "Open editor" }).click();
+  await workspace.getByRole("button", { name: /^Write ·/ }).click();
   for (const title of sections) await expect(editor).toContainText(title);
   await editor.click();
   await page.keyboard.press("ControlOrMeta+z");
@@ -100,27 +92,23 @@ test("preserves a draft and refuses to overwrite an intervening manual edit", as
   await openApp(page, { settings: { language: "en" } });
   await pasteMarkdown(page, "Original text.");
   await mockInvoke(page, { ai_agent_message: turns });
-  await page
-    .getByRole("button", { name: "Create with AI", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Agent", exact: true }).click();
   const workspace = page.getByRole("region", { name: "Agent Workspace" });
   await workspace.locator(".inline-chat-input").fill("Write four chapters");
   await workspace.getByRole("button", { name: "Send", exact: true }).click();
   await expect(workspace.locator(".workspace-document h2")).toHaveCount(4);
-  await workspace.getByRole("button", { name: "Open editor" }).click();
+  await workspace.getByRole("button", { name: /^Write ·/ }).click();
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await editor.click();
   await page.keyboard.press("ControlOrMeta+End");
   await page.keyboard.type(" Manual edit.");
-  await page
-    .getByRole("button", { name: "Create with AI", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Agent", exact: true }).click();
   await workspace
     .getByRole("button", { name: "Accept all", exact: true })
     .click();
   await expect(workspace.getByRole("alert")).toContainText("document changed");
   await expect(workspace.locator(".workspace-document h2")).toHaveCount(4);
-  await workspace.getByRole("button", { name: "Open editor" }).click();
+  await workspace.getByRole("button", { name: /^Write ·/ }).click();
   await expect(editor).toContainText("Manual edit.");
   await expect(editor).not.toContainText("Motivation");
 });

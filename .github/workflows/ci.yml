@@ -63,6 +63,9 @@ jobs:
       - name: Install frontend dependencies
         working-directory: .
         run: npm ci
+      - name: Prepare official Agent runtime
+        run: node scripts/prepare-harness.mjs
+
       - name: Validate frontend on this platform
         working-directory: .
         run: npm run check

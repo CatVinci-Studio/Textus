@@ -1,3 +1,4 @@
+import { SilenceStop } from "./silence";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { media } from "../platform/ipc";
 import { errorText } from "../utils/error-text";
@@ -28,6 +29,7 @@ export function useRecording(
   active: boolean,
   language: string | null,
   provider?: string,
+  autoStop = false,
 ) {
   const [state, setState] = useState<RecordingState>("idle");
   const [text, setText] = useState("");
@@ -40,8 +42,15 @@ export function useRecording(
   const request = useRef<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const shouldUpload = useRef(false);
+  const audioContext = useRef<AudioContext | null>(null);
+  const silenceTimer = useRef<ReturnType<typeof setInterval> | undefined>(
+    undefined,
+  );
   const release = useCallback(() => {
     clearTimeout(timer.current);
+    clearInterval(silenceTimer.current);
+    void audioContext.current?.close().catch(() => {});
+    audioContext.current = null;
     stream.current?.getTracks().forEach((track) => track.stop());
     stream.current = null;
   }, []);
@@ -171,10 +180,37 @@ export function useRecording(
         setError("Recording failed. Check the microphone and try again.");
         setState("error");
       };
+      if (autoStop) {
+        const context = new AudioContext();
+        audioContext.current = context;
+        const analyser = context.createAnalyser();
+        analyser.fftSize = 1024;
+        context.createMediaStreamSource(input).connect(analyser);
+        await context.resume();
+        if (token !== generation.current) {
+          void context.close().catch(() => {});
+          return;
+        }
+        const samples = new Float32Array(analyser.fftSize);
+        const silence = new SilenceStop(performance.now());
+        silenceTimer.current = setInterval(() => {
+          if (token !== generation.current) return;
+          analyser.getFloatTimeDomainData(samples);
+          const rms = Math.sqrt(
+            samples.reduce((sum, x) => sum + x * x, 0) / samples.length,
+          );
+          const stop = silence.sample(performance.now(), rms);
+          if (!stop) return;
+          shouldUpload.current = stop === "speech";
+          if (recording.state !== "inactive") recording.stop();
+          release();
+          if (stop === "empty") cancel();
+        }, 100);
+      }
       recording.start(1000);
       setState("recording");
       timer.current = setTimeout(() => {
-        shouldUpload.current = false;
+        shouldUpload.current = autoStop;
         if (recording.state !== "inactive") recording.stop();
         release();
       }, MAX_RECORDING_MS);
@@ -190,7 +226,7 @@ export function useRecording(
       );
       setState("error");
     }
-  }, [active, cancel, release, transcribe]);
+  }, [active, autoStop, cancel, release, transcribe]);
   const stopAndTranscribe = useCallback(() => {
     shouldUpload.current = true;
     if (recorder.current?.state === "recording") recorder.current.stop();

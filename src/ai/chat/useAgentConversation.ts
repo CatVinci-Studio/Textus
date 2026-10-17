@@ -1,3 +1,5 @@
+import { isIOSApp } from "../../platform/capabilities";
+import { selectedEngine, engineModel } from "../agent-engine";
 import { errorText } from "../../utils/error-text";
 import { useEffect, useRef, useState } from "react";
 import { keepCancelledTurns } from "./cancelled-turns";
@@ -179,6 +181,8 @@ export function useAgentConversation(
         ? await mockExchange(trimmed, mockReply(trimmed))
         : await ai.agentMessage({
             provider,
+            engine: isIOSApp ? undefined : selectedEngine(),
+            engineModel: engineModel(selectedEngine()),
             document,
             docPath,
             workspaceRoot,

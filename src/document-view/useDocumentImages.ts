@@ -112,6 +112,7 @@ export function useDocumentImages(
             job,
           ]);
           setError(null);
+          return job;
         }
       } catch (err) {
         if (alive.current) setError(errorText(err));

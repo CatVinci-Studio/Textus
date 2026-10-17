@@ -1178,9 +1178,8 @@ mod tests {
             r###"{"prompt":"a diagram","anchor":"## Section","alt":"diagram","allowAutomatic":true}"###,
         );
         assert!(result.contains("denied"));
-        for read_only in [builtin_tools(false, false, false)] {
-            assert!(!read_only.iter().any(|t| t.spec.name == "generate_image"));
-        }
+        let read_only = builtin_tools(false, false, false);
+        assert!(!read_only.iter().any(|t| t.spec.name == "generate_image"));
     }
 
     #[test]

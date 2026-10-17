@@ -436,6 +436,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .on_window_event(|window, event| {
             let app = window.app_handle();
             if matches!(event, tauri::WindowEvent::Destroyed) {
+                media::dictation::stop_window(window.label());
                 let no_other_windows = app
                     .webview_windows()
                     .keys()
@@ -692,6 +693,8 @@ pub fn run() {
             media_provider_status,
             media_configure_provider,
             media_transcribe,
+            media::dictation::dictation_start,
+            media::dictation::dictation_stop,
             media_synthesize,
             media_cancel,
             media_start_image,

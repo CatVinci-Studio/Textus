@@ -1,0 +1,95 @@
+import { spawn } from "node:child_process";
+import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { createInterface } from "node:readline";
+import { responseSchema, responseTurns } from "./protocol.mjs";
+export async function runCli(request, home, emit) {
+  const writable = ["create", "edit"].includes(request.mode);
+  const schemaPath = join(home, "response.json");
+  await writeFile(schemaPath, JSON.stringify(responseSchema));
+  const codex = request.engine === "codex";
+  const args = codex
+    ? [
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--sandbox",
+        "read-only",
+        "--skip-git-repo-check",
+        "--output-schema",
+        schemaPath,
+        "-",
+      ]
+    : [
+        "-p",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--include-partial-messages",
+        "--tools",
+        "",
+        "--strict-mcp-config",
+        "--mcp-config",
+        '{"mcpServers":{}}',
+        "--setting-sources",
+        "",
+        "--no-session-persistence",
+        "--json-schema",
+        JSON.stringify(responseSchema),
+      ];
+  if (request.engineModel) args.push("--model", request.engineModel);
+  const child = spawn(request.executable, args, {
+    cwd: home,
+    stdio: ["pipe", "pipe", "pipe"],
+  });
+  let output;
+  let stderr = "";
+  child.stderr.on("data", (data) => {
+    stderr = (stderr + data).slice(-4000);
+  });
+  const exited = new Promise((resolve, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code) => resolve(code));
+  });
+  child.stdin.on("error", () => {});
+  child.stdin.end(
+    `You are a Textus writing assistant. Return structured text and proposals. Never write files. Document changes are proposals requiring user approval. Mode ${request.mode}; ${writable ? "proposals allowed" : "proposals MUST be empty"}.\nCurrent document:\n${request.document}\nConversation history:\n${JSON.stringify(request.history ?? [])}\nUser:\n${request.message}`,
+  );
+  for await (const line of createInterface({ input: child.stdout })) {
+    let value;
+    try {
+      value = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (
+      codex &&
+      value.type === "item.completed" &&
+      value.item?.type === "agent_message"
+    ) {
+      try {
+        output = JSON.parse(value.item.text);
+      } catch {
+        /* status prose */
+      }
+    }
+    if (!codex && value.type === "result") {
+      if (value.is_error)
+        throw new Error(
+          value.errors?.join("\n") || value.result || "Claude Code failed",
+        );
+      output = value.structured_output;
+    }
+  }
+  const code = await exited;
+  if (code !== 0)
+    throw new Error(
+      `${codex ? "Codex" : "Claude Code"} failed (${code}). Check CLI installation and login. ${stderr}`,
+    );
+  const turns = [
+    { kind: "User", text: request.message, images: [] },
+    ...responseTurns(output, writable),
+  ];
+  for (const turn of turns.slice(1)) emit({ event: { type: "turn", turn } });
+  emit({ result: turns });
+}

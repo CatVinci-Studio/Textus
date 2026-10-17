@@ -114,7 +114,7 @@ it("stops an image generation before a deferred start reaches the frontend cache
       resolve = r;
     }),
   );
-  let starting!: Promise<void>;
+  let starting!: Promise<ImageJob | undefined>;
   act(() => {
     starting = result.current.images.start({
       prompt: "Delayed",

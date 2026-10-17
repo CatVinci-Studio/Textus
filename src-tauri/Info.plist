@@ -2,5 +2,5 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
   <key>NSMicrophoneUsageDescription</key>
-  <string>Textus uses the microphone only when you start dictation. Recordings are sent to your configured speech service only after you choose to transcribe them.</string>
-</dict></plist>
+  <string>Textus uses the microphone only when you start dictation. Dictation uses system speech recognition or your selected speech service.</string>
+<key>NSSpeechRecognitionUsageDescription</key><string>Textus converts your voice to text inside the active input when you start dictation.</string></dict></plist>

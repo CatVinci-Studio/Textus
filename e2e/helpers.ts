@@ -36,6 +36,7 @@ export async function openApp(
     settings?: Record<string, unknown>;
     colorScheme?: "light" | "dark";
     animations?: boolean;
+    home?: boolean;
   } = {},
 ) {
   await page.emulateMedia({ colorScheme: options.colorScheme ?? "light" });
@@ -66,7 +67,19 @@ export async function openApp(
       content:
         "*, *::before, *::after { animation: none !important; transition: none !important; caret-color: transparent !important; }",
     });
-  await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
+  await page.waitForSelector('[data-active-tab="true"] .ProseMirror', {
+    state: "attached",
+  });
+  if (
+    !options.home &&
+    (await page.evaluate(
+      () => document.documentElement.dataset.windowChrome !== "mobile",
+    ))
+  )
+    await page
+      .locator(".document-surface-switch")
+      .getByRole("button", { name: "Write", exact: true })
+      .click();
 }
 
 /** Puts markdown into the active editor the way a paste does. */

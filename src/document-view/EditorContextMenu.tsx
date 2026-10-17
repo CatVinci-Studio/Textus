@@ -1,3 +1,4 @@
+import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import {
   buildContextMenuItems,
@@ -27,6 +28,7 @@ export function EditorContextMenu({
   settings,
   tutorialMock,
   openAgentConversation,
+  generateSelectionImage,
   triggerCompletion,
   triggerGrammarCheck,
   copyOrCut,
@@ -42,6 +44,7 @@ export function EditorContextMenu({
   settings: Settings;
   tutorialMock: boolean;
   openAgentConversation: () => void;
+  generateSelectionImage?: () => void;
   triggerCompletion: () => void;
   triggerGrammarCheck: () => void;
   copyOrCut: (cut: boolean) => void;
@@ -69,6 +72,17 @@ export function EditorContextMenu({
               // the guide from Help. The phone's "More" leaves it to the
               // toolbar's own button.
               aiItems: [
+                ...(generateSelectionImage &&
+                run((ctx) => !ctx.get(editorViewCtx).state.selection.empty)
+                  ? [
+                      {
+                        label: settings.language.startsWith("zh")
+                          ? "生成图片并插入选区下方"
+                          : "Generate image below selection",
+                        onSelect: generateSelectionImage,
+                      },
+                    ]
+                  : []),
                 ...((settings.enableAskAi || tutorialMock) && !menu.phone
                   ? [{ label: t.askAi, onSelect: openAgentConversation }]
                   : []),

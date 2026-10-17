@@ -1,6 +1,6 @@
 # Agent Workspace and media
 
-Use **Create with AI** above a document to open its conversation workspace.
+Desktop starts on **Agent**. Use the persistent **Agent / Write** switch to move between the conversation workspace and the document.
 The editor remains mounted; switching views preserves its selection, Undo
 history and conversation. **Create** proposes document content in a separate
 draft. **Ask** and **Plan** remain read-only. Accept the whole draft or individual
@@ -39,11 +39,7 @@ belong to the compatible providers.
 
 ## Reviewed media
 
-- **Dictate** in the composer or editor asks for microphone access. Start does
-  not upload. **Stop and transcribe** explicitly uploads; the result is editable
-  before using it in the composer or inserting it into the document. Nothing
-  sends to the Agent automatically. The limit is 120 seconds / 25 MiB. Reaching
-  the time limit stops locally and waits for an explicit transcription action.
+- **Dictate** uses the small composer microphone. System recognition inserts live partial text; the explicitly selected MiniMax alternative uploads after stop or silence. Transcripts enter the captured input range without sending the prompt. Limits are 120 seconds / 25 MiB. Focus changes, Escape and manual edits cancel range ownership.
 - **Generate image** opens a manual proposal. To let the Agent enqueue images,
   explicitly enable image generation for that send. Each task permits two
   requests, including retries, with one network job at a time. Text generation
@@ -52,11 +48,8 @@ belong to the compatible providers.
   Markdown image transaction. Stale anchors/revisions or a concurrent Save As
   cause rollback. Same-anchor images preserve request order. Undo removes the
   reference without deleting an accepted asset.
-- **Read aloud** supports the selection, document, cursor onward, and assistant
-  replies. It queues natural paragraph chunks of at most 3000 Unicode characters.
-  Pause, resume, speed, retry and stop operate on the current queue. Reading
-  highlights use decorations and do not alter document content. Switching a
-  document or leaving the active reading surface cancels playback and requests.
+- **Write** is a quiet document surface. Read-aloud controls, microphone panels, manual image forms and the old creation launcher are removed from Write. Speech synthesis remains an optional assistant-reply capability.
+- **Selection illustrations** start from the editor right-click menu. The selected official Agent refines the passage into an image prompt, then Textus generates the image and inserts it beneath the final selected paragraph after revision checks. The explicit right-click action authorizes that insertion; stale document revisions retain the generated image for recovery.
 
 All remote media requests can incur provider charges. Provider configuration is
 optional: ordinary Markdown editing works without any AI credentials.
@@ -129,3 +122,15 @@ manual macOS/Windows/Linux acceptance before a release.
   native drag-to-merge and Windows/Linux audio remain manual release checks.
   New media controls currently provide Chinese and English, with English
   fallback for other interface languages.
+
+## Conversation home and official engines (2026-10-18)
+
+The desktop opens in Agent. The persistent Agent / Write switch changes surfaces without remounting Milkdown, losing an unsent prompt or resetting Undo. The composer selects DeepSeek Harness, Codex or Claude Code separately from its model. Harness uses the configured OpenAI-compatible text endpoint (including the shared MiniMax text key). Native CLI models use their own login and model name; an empty model field keeps the CLI default. Missing installation or expired login is shown as an error, with no automatic engine substitution.
+
+See `harness/README.md` for provenance, packaging and runtime limits. Local smoke checks completed an official Harness tool loop, a real MiniMax Harness request and a real Codex request. Claude Code was found but its OAuth session is expired; its authenticated end-to-end request remains unverified until the user signs in again.
+
+The small composer microphone inserts partial system transcripts directly at the captured input selection. macOS requires microphone and speech recognition permission, and an available on-device language. It stops after about 1.5 seconds of silence after speech, or 5 seconds without initial speech. Manual edits revoke the captured range; focus loss, surface/session changes and window destruction release capture. The adjacent arrow switches explicitly to MiniMax: this option uploads after recording stops and does not claim live recognition. Dictation never sends the prompt. Native microphone permission UI, real room acoustics and recognition quality require manual hardware checks.
+
+Validation for this revision: frontend `npm run check` (943 unit tests), Rust workspace tests (362 passed, 13 ignored), strict Clippy, 7 Node runtime/build tests, and 9 focused browser flows passed. The independent review's dependency installation, target architecture, Escape, and Windows process-tree findings were addressed. Physical microphone capture, native Windows process cleanup, Intel execution and signed notarization still need platform/hardware verification. The local macOS app bundles the official SDK, matching Node and licenses.
+
+The Harness tool-result adapter maps upstream `message.toolCallId` to Textus `call_id`. A real official-runtime tool-loop regression checks both non-empty identity and call/result equality, preventing the previously observed missing-field failure.

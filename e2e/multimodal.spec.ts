@@ -78,30 +78,25 @@ test("dictation is editable and enters the composer without sending a model requ
       return original(command, args);
     };
   });
-  await page
-    .getByRole("button", { name: "Create with AI", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Agent", exact: true }).click();
   const workspace = page.getByRole("region", { name: "Agent Workspace" });
-  await workspace.getByRole("button", { name: "Dictate", exact: true }).click();
   await workspace
-    .getByRole("button", { name: "Start recording", exact: true })
+    .getByRole("button", { name: "Switch dictation service" })
+    .click();
+  await workspace
+    .getByRole("button", { name: "Voice input", exact: true })
     .click();
   await expect(
-    workspace.getByRole("button", { name: "Stop and transcribe", exact: true }),
+    workspace.getByRole("button", { name: "Stop dictation", exact: true }),
   ).toBeVisible();
-  await page.waitForTimeout(1100); // Allow one MediaRecorder timeslice of synthetic audio.
+  await page.waitForTimeout(1100);
   await workspace
-    .getByRole("button", { name: "Stop and transcribe", exact: true })
+    .getByRole("button", { name: "Stop dictation", exact: true })
     .click();
-  const transcript = workspace.getByRole("textbox", {
-    name: "Transcription",
-    exact: true,
-  });
-  await expect(transcript).toHaveValue("Transcribed 中文 text.");
-  await transcript.fill("Edited 中文 prompt.");
-  await workspace
-    .getByRole("button", { name: "Use in composer", exact: true })
-    .click();
+  await expect(workspace.locator(".inline-chat-input")).toHaveValue(
+    "Transcribed 中文 text.",
+  );
+  await workspace.locator(".inline-chat-input").fill("Edited 中文 prompt.");
   await expect(workspace.locator(".inline-chat-input")).toHaveValue(
     "Edited 中文 prompt.",
   );
@@ -111,29 +106,22 @@ test("dictation is editable and enters the composer without sending a model requ
   await expect(workspace.locator(".workspace-tasks p")).toHaveCount(0);
 });
 
-test("editor dictation waits for explicit insertion", async ({ page }) => {
+test("Write keeps only the document and navigation, without media forms or launch controls", async ({
+  page,
+}, testInfo) => {
   await openApp(page, { settings: { language: "en" } });
-  await mockInvoke(page, {
-    media_provider_status: { stt: provider },
-    media_transcribe: "A reviewed paragraph.",
-  });
-  await page.getByRole("button", { name: "Dictate", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Start recording", exact: true })
-    .click();
-  await page.waitForTimeout(1100);
-  await page
-    .getByRole("button", { name: "Stop and transcribe", exact: true })
-    .click();
+  await page.screenshot({ path: testInfo.outputPath("write-clean.png") });
+  await expect(page.locator(".workspace-launch")).toHaveCount(0);
+  await expect(page.getByText("Read aloud", { exact: true })).not.toBeVisible();
   await expect(
-    page.getByRole("textbox", { name: "Transcription", exact: true }),
-  ).toHaveValue("A reviewed paragraph.");
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await expect(editor).not.toContainText("A reviewed paragraph.");
-  await page
-    .getByRole("button", { name: "Insert into document", exact: true })
-    .click();
-  await expect(editor).toContainText("A reviewed paragraph.");
+    page.getByText("Generate illustration", { exact: true }),
+  ).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Dictate", exact: true }),
+  ).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Create with AI", exact: true }),
+  ).not.toBeVisible();
 });
 
 test("image generation produces a local asset proposal and requires explicit insertion", async ({
@@ -193,7 +181,12 @@ test("image generation produces a local asset proposal and requires explicit ins
       return original(command, args);
     };
   });
-  const generator = page.locator(".workspace-launch .image-generator");
+  await page
+    .getByRole("navigation", { name: "Workspace surface" })
+    .getByRole("button", { name: "Agent", exact: true })
+    .click();
+  await page.locator(".workspace-extra-tools > summary").click();
+  const generator = page.locator(".agent-home .image-generator");
   await generator.locator("summary").click();
   await generator.getByLabel("Image prompt").fill("A system diagram");
   await generator
@@ -203,7 +196,7 @@ test("image generation produces a local asset proposal and requires explicit ins
   await generator
     .getByRole("button", { name: "Generate image", exact: true })
     .click();
-  const card = page.locator(".image-job");
+  const card = page.locator(".image-job:visible");
   await expect(card).toContainText("System diagram");
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await expect(editor.locator('img[src*="generated-test.png"]')).toHaveCount(0);
@@ -212,50 +205,95 @@ test("image generation produces a local asset proposal and requires explicit ins
   await expect(editor).toContainText("Original paragraph.");
 });
 
-test("read aloud pauses, resumes and stops without changing the document", async ({
+test("right-click selection refines the image prompt with the selected engine and inserts below the passage", async ({
   page,
 }) => {
-  await openApp(page, { settings: { language: "en" } });
-  await pasteMarkdown(page, "First paragraph.\n\nSecond paragraph.");
-  await mockInvoke(page, {
-    media_provider_status: {
-      tts: { ...provider, model: "speech-model", voice: "alloy" },
-    },
-    media_synthesize: { dataBase64: "YXVkaW8=", mime: "audio/mpeg" },
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "textus-agent-engine": "codex" },
   });
-  // Mock playback only; the real hook still requests, queues and cleans up audio.
+  await pasteMarkdown(
+    page,
+    "A forest beside a blue lake.\n\nFollowing paragraph.",
+  );
   await page.evaluate(() => {
-    class TestAudio {
-      src: string;
-      playbackRate = 1;
-      onended: (() => void) | null = null;
-      onerror: (() => void) | null = null;
-      constructor(src: string) {
-        this.src = src;
+    const runtime = (window as any).__TAURI_INTERNALS__;
+    const original = runtime.invoke;
+    let job: any = null;
+    runtime.invoke = async (command: string, args: any) => {
+      if (command === "ai_agent_message") {
+        if (
+          args.engine !== "codex" ||
+          args.document !== "A forest beside a blue lake." ||
+          !args.message.includes("A forest beside a blue lake.")
+        )
+          throw new Error("Wrong refinement engine or selection");
+        return [
+          {
+            kind: "Assistant",
+            text: "A cinematic forest framing a blue alpine lake, soft morning light, balanced composition.",
+          },
+        ];
       }
-      async play() {}
-      pause() {}
-      load() {}
-      removeAttribute() {
-        this.src = "";
+      if (command === "media_start_image") {
+        if (!args.request.prompt.startsWith("A cinematic forest"))
+          throw new Error("Unrefined prompt");
+        job = {
+          jobId: "selection-image",
+          ...args.permission,
+          sequence: 1,
+          request: args.request,
+          status: "ready",
+          previewPath: "/tmp/selection.png",
+          model: "image-01",
+          error: null,
+          width: 1024,
+          height: 1024,
+          assetSrc: null,
+        };
+        return job;
       }
-    }
-    Object.defineProperty(window, "Audio", {
-      configurable: true,
-      value: TestAudio,
-    });
+      if (command === "media_image_jobs") return job ? [job] : [];
+      if (command === "media_prepare_image") return "assets/selection.png";
+      if (command === "media_finish_image") {
+        job.status = "committed";
+        job.assetSrc = "assets/selection.png";
+        return null;
+      }
+      return original(command, args);
+    };
   });
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  const before = await editor.innerText();
-  const player = page.locator(".workspace-launch .speech-player");
-  await player.locator("summary").click();
-  await player.getByRole("button", { name: "Play", exact: true }).click();
-  await expect(editor.locator(".speech-reading")).not.toHaveCount(0);
-  await player.getByRole("button", { name: "Pause", exact: true }).click();
-  await player.getByRole("button", { name: "Resume", exact: true }).click();
-  await player
-    .getByRole("button", { name: "Stop reading", exact: true })
+  await editor.click();
+  await editor
+    .locator("p")
+    .first()
+    .evaluate((el) => {
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      document.dispatchEvent(new Event("selectionchange"));
+    });
+  await page.waitForTimeout(100);
+  await editor
+    .locator("p")
+    .first()
+    .click({ button: "right", position: { x: 50, y: 10 } });
+  await page
+    .getByText("Generate image below selection", { exact: true })
     .click();
-  await expect(editor.locator(".speech-reading")).toHaveCount(0);
-  expect(await editor.innerText()).toBe(before);
+  await expect(editor.locator('img[src*="selection.png"]')).toHaveCount(1);
+  const blocks = await editor
+    .locator(":scope > *")
+    .evaluateAll((els) =>
+      els.map(
+        (el) =>
+          el.textContent || el.querySelector("img")?.getAttribute("src") || "",
+      ),
+    );
+  expect(blocks[0]).toContain("A forest beside a blue lake.");
+  expect(blocks[1]).toContain("selection.png");
+  expect(blocks[2]).toContain("Following paragraph.");
 });

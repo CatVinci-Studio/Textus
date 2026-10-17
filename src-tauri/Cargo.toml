@@ -20,6 +20,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
+cc = "1"
 
 [dependencies]
 # macos-private-api: required for transparent webview windows (the floating
@@ -29,8 +30,9 @@ tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tokio = { version = "1", features = ["fs", "sync", "macros", "rt"] }
+tokio = { version = "1", features = ["fs", "sync", "macros", "rt", "process", "io-util", "time"] }
 base64 = "0.22"
+libc = "0.2"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
 aicompat = { path = "crates/aicompat" }

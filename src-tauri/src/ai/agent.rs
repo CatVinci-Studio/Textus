@@ -22,7 +22,7 @@ use tauri::AppHandle;
 /// list, which remains the authoritative result the frontend appends to its
 /// history - a dropped or ignored event costs liveness, never correctness.
 /// Mirrored by `StreamEvent` in platform/ipc.ts - the two must stay in sync.
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, serde::Deserialize)]
 #[serde(
     tag = "type",
     rename_all = "camelCase",
@@ -367,7 +367,7 @@ pub(crate) fn build_instructions(
 
     if with_tools {
         sections.push(
-            if allows_document_edits(mode.as_ref()) {
+            if allows_document_edits(mode) {
                 AGENT_TOOL_INSTRUCTIONS
             } else {
                 AGENT_READ_ONLY_TOOL_INSTRUCTIONS
@@ -715,6 +715,8 @@ pub(crate) fn compact_history(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
 pub async fn ai_agent_message(
     app: AppHandle,
     provider: String,
+    engine: Option<String>,
+    engine_model: Option<String>,
     document: String,
     doc_path: Option<String>,
     // `workspace_root`: the chosen project folder. None keeps the default -
@@ -738,6 +740,24 @@ pub async fn ai_agent_message(
     image_task: Option<crate::media::jobs::ImageTaskPermission>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
+    if let Some(engine) = engine {
+        return super::runtime::run(
+            app,
+            engine,
+            engine_model,
+            provider,
+            document,
+            history,
+            message,
+            images,
+            mode,
+            model,
+            request_id,
+            image_task,
+            on_event,
+        )
+        .await;
+    }
     let cancel_rx = cancel::register(request_id.clone());
     let ui_language = ui_language.unwrap_or_else(|| "en".to_string());
     let result = tokio::select! {

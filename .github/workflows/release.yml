@@ -145,6 +145,11 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Prepare official Agent runtime
+        run: node scripts/prepare-harness.mjs
+        env:
+          CARGO_BUILD_TARGET: ${{ matrix.target }}
+
       # The Intel build is the same source as the Apple silicon one, which
       # has just run these on this runner image.
       - name: Validate frontend before publishing

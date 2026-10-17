@@ -1,17 +1,14 @@
+import { useSelectionIllustration } from "./useSelectionIllustration";
+import { useAgentEngine } from "../ai/agent-engine";
 import { type MouseEvent, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { useDocumentWorkspace } from "./useDocumentWorkspace";
 import { useWorkspacePersistence } from "./useWorkspacePersistence";
-import { useVoiceTarget } from "./useVoiceTarget";
-import { VoiceInput } from "../voice/VoiceInput";
-import { SpeechPlayer } from "../voice/SpeechPlayer";
-import { useReadAloudTarget } from "./useReadAloudTarget";
 import { useDocumentImages } from "./useDocumentImages";
 import { ImageGenerator, ImageJobsPanel } from "../ai/multimodal/ImageTools";
 import { serializeBlocks } from "../ai/doc-markdown";
 import { AgentWorkspace } from "../ai/workspace/AgentWorkspace";
-import { workspaceLabels } from "../ai/workspace/labels";
 import { ChatBody } from "../ai/chat/ChatBody";
 import { contextMenuTarget, insertTable } from "../editor/editor-menu";
 import { useDocumentReporting, useEditorFlush } from "./useDocumentReporting";
@@ -137,8 +134,6 @@ export function MilkdownEditor({
   });
 
   const run = useEditorRunner();
-  const voiceTarget = useVoiceTarget(run);
-  const readAloud = useReadAloudTarget(run);
   const { copyOrCut, paste, selectAll, insertText } = useEditorClipboard(run);
   useEditorFlush(tabId, run, reporting);
 
@@ -165,8 +160,15 @@ export function MilkdownEditor({
     });
   }, [settings.language, settings.enableMagicDiary, run]);
 
-  const workspace = useDocumentWorkspace(run, documentId);
-  const [workspaceMounted, setWorkspaceMounted] = useState(false);
+  const agentEngine = useAgentEngine();
+  const workspace = useDocumentWorkspace(
+    run,
+    documentId,
+    !phone && !tutorialMock,
+  );
+  const [workspaceMounted, setWorkspaceMounted] = useState(
+    !phone && !tutorialMock,
+  );
   const [allowAutoImages, setAllowAutoImages] = useState(false);
   const proposals = useEditorProposals({
     run,
@@ -199,6 +201,13 @@ export function MilkdownEditor({
     conversation.stop();
     void images.stopRunning().catch(() => {});
   };
+  const selectionIllustration = useSelectionIllustration(
+    run,
+    settings,
+    images,
+    documentId,
+    isActive,
+  );
   const defaultImageAnchor = () =>
     run((ctx) => {
       const state = ctx.get(editorViewCtx).state;
@@ -437,67 +446,48 @@ export function MilkdownEditor({
       onPointerDown={() => (lastTouchRef.current = Date.now())}
       onPointerUp={() => (lastTouchRef.current = Date.now())}
     >
-      {!phone && (
-        <div className="workspace-launch">
-          <SpeechPlayer
-            active={isActive && !workspace.open}
-            language={settings.language}
-            getText={readAloud.getText}
-            onChunk={readAloud.highlight}
-            onStop={readAloud.clear}
-            rangeControls={
-              <label>
-                {settings.language.startsWith("zh")
-                  ? "朗读范围"
-                  : "Reading range"}
-                <select
-                  value={readAloud.range}
-                  onChange={(event) =>
-                    readAloud.setRange(
-                      event.target.value as typeof readAloud.range,
-                    )
-                  }
-                >
-                  <option value="document">
-                    {settings.language.startsWith("zh")
-                      ? "全文"
-                      : "Full document"}
-                  </option>
-                  <option value="selection">
-                    {settings.language.startsWith("zh") ? "选区" : "Selection"}
-                  </option>
-                  <option value="cursor">
-                    {settings.language.startsWith("zh")
-                      ? "从光标开始"
-                      : "From cursor"}
-                  </option>
-                </select>
-              </label>
-            }
-          />
-          <ImageGenerator
-            language={settings.language}
-            defaultAnchor={defaultImageAnchor}
-            onGenerate={images.start}
-            disabled={conversation.busy}
-          />
-          <VoiceInput
-            active={isActive && !workspace.open}
-            language={settings.language}
-            target="editor"
-            onStart={voiceTarget.capture}
-            onApply={voiceTarget.insert}
-          />
-          <button
-            onClick={() => {
-              setWorkspaceMounted(true);
-              workspace.setOpen(true);
-              agentPanel.setOpen(false);
-            }}
+      {!phone &&
+        paneEl &&
+        isActive &&
+        createPortal(
+          <nav
+            className="document-surface-switch"
+            aria-label="Workspace surface"
           >
-            {workspaceLabels(settings.language).open}
-          </button>
-        </div>
+            <button
+              aria-pressed={workspace.open}
+              onClick={() => {
+                setWorkspaceMounted(true);
+                workspace.setOpen(true);
+                agentPanel.setOpen(false);
+              }}
+            >
+              Agent
+            </button>
+            <button
+              aria-pressed={!workspace.open}
+              onClick={() => workspace.setOpen(false)}
+            >
+              Write
+            </button>
+          </nav>,
+          paneEl,
+        )}
+      {(selectionIllustration.busy || selectionIllustration.error) && (
+        <p
+          role={selectionIllustration.error ? "alert" : "status"}
+          className="selection-illustration-status"
+        >
+          {selectionIllustration.error ||
+            (settings.language.startsWith("zh")
+              ? "Agent 正在润色图片提示词…"
+              : "Agent is refining the image prompt…")}
+          {selectionIllustration.busy && (
+            <button onClick={selectionIllustration.stop}>
+              {settings.language.startsWith("zh") ? "取消" : "Cancel"}
+            </button>
+          )}
+        </p>
       )}
       <Milkdown />
       {!workspace.open && (
@@ -534,8 +524,8 @@ export function MilkdownEditor({
                   <label className="workspace-media-permission">
                     <input
                       type="checkbox"
-                      checked={allowAutoImages}
-                      disabled={conversation.busy}
+                      checked={allowAutoImages && agentEngine === "harness"}
+                      disabled={conversation.busy || agentEngine !== "harness"}
                       onChange={(e) => setAllowAutoImages(e.target.checked)}
                     />
                     {settings.language.startsWith("zh")
@@ -545,7 +535,9 @@ export function MilkdownEditor({
                   <ImageGenerator
                     language={settings.language}
                     defaultAnchor={defaultImageAnchor}
-                    onGenerate={images.start}
+                    onGenerate={async (request) => {
+                      await images.start(request);
+                    }}
                     disabled={conversation.busy}
                   />
                 </>
@@ -584,7 +576,7 @@ export function MilkdownEditor({
                   )
                     return false;
                   const draft = workspace.currentDraft();
-                  const allowed = allowAutoImages;
+                  const allowed = allowAutoImages && agentEngine === "harness";
                   setAllowAutoImages(false);
                   return {
                     ...options,
@@ -689,6 +681,9 @@ export function MilkdownEditor({
         t={t}
         settings={settings}
         tutorialMock={tutorialMock}
+        generateSelectionImage={() => {
+          void selectionIllustration.create();
+        }}
         openAgentConversation={openAgentConversation}
         triggerCompletion={triggerCompletion}
         triggerGrammarCheck={triggerGrammarCheck}

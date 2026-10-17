@@ -40,6 +40,8 @@ export default tseslint.config(
   {
     ignores: [
       "dist/**",
+      "harness/node_modules/**",
+      "src-tauri/resources/**",
       "node_modules/**",
       "src-tauri/target/**",
       // Local git worktrees (.claude/worktrees) are other checkouts.
@@ -100,7 +102,12 @@ export default tseslint.config(
     rules: above(SHELL),
   },
   {
-    files: ["vite.config.ts", "eslint.config.js", "scripts/**/*.mjs"],
+    files: [
+      "vite.config.ts",
+      "eslint.config.js",
+      "scripts/**/*.mjs",
+      "harness/**/*.mjs",
+    ],
     languageOptions: {
       globals: globals.node,
     },

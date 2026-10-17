@@ -18,8 +18,12 @@ import {
 } from "../ai/workspace/document-draft";
 
 /** The editor owns both surfaces. Only accepted drafts dispatch transactions. */
-export function useDocumentWorkspace(run: EditorRunner, documentId: string) {
-  const [open, setOpen] = useState(false);
+export function useDocumentWorkspace(
+  run: EditorRunner,
+  documentId: string,
+  initialOpen = false,
+) {
+  const [open, setOpen] = useState(initialOpen);
   const [draft, setDraft] = useState<DocumentDraft | null>(null);
   const draftRef = useRef<DocumentDraft | null>(null);
   const routing = useRef(false);

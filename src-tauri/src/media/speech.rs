@@ -49,7 +49,7 @@ pub async fn media_transcribe(
     language: Option<String>,
 ) -> Result<String, MediaError> {
     provider::cancellable(&request_id, 120, async {
-        if data_base64.len() > (MAX_RECORDING_BYTES + 2) / 3 * 4 {
+        if data_base64.len() > MAX_RECORDING_BYTES.div_ceil(3) * 4 {
             return Err(MediaError::new("limit", "Recording exceeds 25 MiB"));
         }
         let bytes = STANDARD

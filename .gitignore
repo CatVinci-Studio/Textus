@@ -40,3 +40,5 @@ playwright-report/
 
 # Local generated media and acceptance artifacts
 output/
+harness/node_modules/
+src-tauri/resources/harness/

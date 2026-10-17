@@ -55,7 +55,10 @@ export function AgentWorkspace({
   const tasks = turns.filter((t) => t.kind === "User");
   const steps = turns.filter((t) => t.kind === "ToolCall");
   return (
-    <section className="agent-workspace" aria-label={labels.title}>
+    <section
+      className={`agent-workspace agent-home ${tasks.length ? "has-conversation" : "is-empty"}`}
+      aria-label={labels.title}
+    >
       <header className="workspace-header">
         <div>
           <strong>{title}</strong>
@@ -71,7 +74,7 @@ export function AgentWorkspace({
         {(conversation.busy || pendingMedia) && (
           <button onClick={onStop ?? conversation.stop}>{labels.stop}</button>
         )}
-        <button onClick={onEditor}>{labels.editor}</button>
+        <button onClick={onEditor}>Write · {title}</button>
       </header>
       <div className="workspace-columns">
         <aside className="workspace-tasks">
@@ -89,7 +92,7 @@ export function AgentWorkspace({
             {labels.newTask}
           </button>
           {notice && <p role="alert">{labels.resolve}</p>}
-          <h3>{labels.task}</h3>
+          <h3>{language.startsWith("zh") ? "当前对话" : "Conversation"}</h3>
           {tasks.map((turn, i) => (
             <p key={i}>
               {turn.kind === "User"
@@ -160,11 +163,34 @@ export function AgentWorkspace({
           ))}
         </aside>
         <div className="workspace-conversation">
-          {tools}
-          {!tasks.length && <p className="workspace-intro">{labels.empty}</p>}
+          {!tasks.length && (
+            <div className="agent-home-heading">
+              <span>✳</span>
+              <h1>
+                {language.startsWith("zh")
+                  ? "与 Textus 一起创作"
+                  : "Create with Textus"}
+              </h1>
+              <p>
+                {language.startsWith("zh")
+                  ? "从一个想法开始，写成你的作品。"
+                  : "Start with an idea. Make it yours."}
+              </p>
+            </div>
+          )}
           {children}
+          <details className="workspace-extra-tools">
+            <summary>
+              {language.startsWith("zh")
+                ? "配图与任务选项"
+                : "Images and task options"}
+            </summary>
+            {tools}
+          </details>
         </div>
-        <div className="workspace-preview">
+        <div
+          className={`workspace-preview ${pending.length || pendingMedia ? "has-draft" : "document-card"}`}
+        >
           <header>
             <strong>{pending.length ? labels.preview : labels.current}</strong>
             <span>{pending.length}</span>

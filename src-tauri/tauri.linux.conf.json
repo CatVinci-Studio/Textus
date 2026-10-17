@@ -22,6 +22,9 @@
       "rpm": {
         "desktopTemplate": "../packaging/linux/textus.desktop"
       }
+    },
+    "resources": {
+      "resources/harness/": "harness/"
     }
   }
 }

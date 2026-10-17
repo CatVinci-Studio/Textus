@@ -1,3 +1,4 @@
+import { EngineSelector } from "./EngineSelector";
 import {
   useEffect,
   useLayoutEffect,
@@ -35,7 +36,7 @@ import { errorText } from "../../utils/error-text";
 import { basename } from "../../utils/path";
 import { useActiveProvider } from "../provider-catalog";
 import type { AgentMode } from "../../settings/SettingsContext";
-import { VoiceInput } from "../../voice/VoiceInput";
+import { InlineDictation } from "../../voice/InlineDictation";
 import { initialMode, rememberMode } from "./last-mode";
 import {
   CloseIcon,
@@ -577,13 +578,16 @@ export function ChatComposer({
             autoFocus={focusOnOpen}
           />
           <div className="inline-chat-toolbar">
+            {allowCreate && (
+              <EngineSelector disabled={busy} language={voiceLanguage} />
+            )}
             {!compact && (
-              <VoiceInput
+              <InlineDictation
                 active={active && !busy}
                 language={voiceLanguage}
-                onApply={(text) =>
-                  setInput((prev) => (prev ? `${prev}\n${text}` : text))
-                }
+                value={input}
+                inputRef={inputRef}
+                onChange={setInput}
               />
             )}
             {phone ? (

@@ -175,7 +175,7 @@ pub(super) async fn generate_with(
         .await
         .map_err(provider::network_error)?;
     let raw =
-        provider::read_response(response, (MAX_IMAGE_BYTES + 2) / 3 * 4 + 1024 * 1024).await?;
+        provider::read_response(response, MAX_IMAGE_BYTES.div_ceil(3) * 4 + 1024 * 1024).await?;
     let response: serde_json::Value = serde_json::from_slice(&raw)
         .map_err(|_| MediaError::new("invalid_response", "Image provider returned invalid JSON"))?;
     let bytes = if config.provider == "minimax" {
