@@ -254,7 +254,6 @@ export default {
   shortcutAiGroupLabel: "AI 与写作",
   shortcutEditorGroupLabel: "编辑与导航",
   languageLabel: "语言",
-  updateVersionLabel: "版本",
   updateCheckButton: "检查更新",
   updateChecking: "检查中…",
   updateLatest: "已是最新版本。",

@@ -268,7 +268,6 @@ type /name in a conversation to use one.
   shortcutAiGroupLabel: "AI & Writing",
   shortcutEditorGroupLabel: "Editor & Navigation",
   languageLabel: "Language",
-  updateVersionLabel: "Version",
   updateCheckButton: "Check for Updates",
   updateChecking: "Checking…",
   updateLatest: "You're on the latest version.",

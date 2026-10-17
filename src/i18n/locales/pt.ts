@@ -271,7 +271,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   shortcutAiGroupLabel: "IA e escrita",
   shortcutEditorGroupLabel: "Editor e navegação",
   languageLabel: "Idioma",
-  updateVersionLabel: "Versão",
   updateCheckButton: "Verificar Atualizações",
   updateChecking: "Verificando…",
   updateLatest: "Você está usando a versão mais recente.",

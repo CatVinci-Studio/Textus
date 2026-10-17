@@ -281,7 +281,6 @@ para usar una.
   shortcutAiGroupLabel: "IA y escritura",
   shortcutEditorGroupLabel: "Editor y navegación",
   languageLabel: "Idioma",
-  updateVersionLabel: "Versión",
   updateCheckButton: "Buscar actualizaciones",
   updateChecking: "Buscando…",
   updateLatest: "Tienes la versión más reciente.",

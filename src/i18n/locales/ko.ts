@@ -264,7 +264,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   shortcutAiGroupLabel: "AI 및 글쓰기",
   shortcutEditorGroupLabel: "편집 및 탐색",
   languageLabel: "언어",
-  updateVersionLabel: "버전",
   updateCheckButton: "업데이트 확인",
   updateChecking: "확인 중…",
   updateLatest: "최신 버전을 사용하고 있습니다.",

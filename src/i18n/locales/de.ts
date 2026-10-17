@@ -270,7 +270,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   shortcutAiGroupLabel: "KI & Schreiben",
   shortcutEditorGroupLabel: "Editor & Navigation",
   languageLabel: "Sprache",
-  updateVersionLabel: "Version",
   updateCheckButton: "Nach Updates suchen",
   updateChecking: "Wird geprüft…",
   updateLatest: "Du hast die neueste Version.",

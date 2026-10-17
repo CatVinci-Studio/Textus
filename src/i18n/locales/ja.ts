@@ -266,7 +266,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   shortcutAiGroupLabel: "AIと執筆",
   shortcutEditorGroupLabel: "編集とナビゲーション",
   languageLabel: "言語",
-  updateVersionLabel: "バージョン",
   updateCheckButton: "アップデートを確認",
   updateChecking: "確認中…",
   updateLatest: "最新バージョンです。",

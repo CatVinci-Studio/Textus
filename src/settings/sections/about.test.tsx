@@ -3,6 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveStrings } from "../../i18n/strings";
+import { links } from "../../platform/ipc";
 import { AboutSection } from "./about";
 
 const mock = vi.hoisted(() => ({
@@ -55,5 +56,17 @@ describe("About", () => {
     expect(mock.setSettings).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("opens each of its pages by name", () => {
+    render(<AboutSection t={t} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "GitHub" }));
+    fireEvent.click(screen.getByRole("button", { name: "Discord" }));
+    fireEvent.click(screen.getByRole("button", { name: t.aboutQq }));
+    expect(vi.mocked(links.openAboutLink).mock.calls).toEqual([
+      ["github"],
+      ["discord"],
+      ["qq"],
+    ]);
   });
 });

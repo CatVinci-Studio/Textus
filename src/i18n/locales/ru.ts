@@ -274,7 +274,6 @@ export default {
   shortcutAiGroupLabel: "ИИ и текст",
   shortcutEditorGroupLabel: "Редактор и навигация",
   languageLabel: "Язык",
-  updateVersionLabel: "Версия",
   updateCheckButton: "Проверить обновления",
   updateChecking: "Проверка…",
   updateLatest: "Установлена последняя версия.",
