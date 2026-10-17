@@ -1,0 +1,22 @@
+# Changes to these ask the maintainers for a review automatically. They
+# decide what ships to users and how it is signed, so a second pair of eyes
+# is worth the wait.
+
+# CI, release and store workflows
+/.github/                          @ChengAoShen @jzzzzh
+
+# Release tooling: versions, the updater manifest, the download mirror
+/scripts/check-versions.mjs        @ChengAoShen @jzzzzh
+/scripts/updater-manifest.mjs      @ChengAoShen @jzzzzh
+/scripts/mirror-downloads.sh       @ChengAoShen @jzzzzh
+/scripts/package-linux-tarball.sh  @ChengAoShen @jzzzzh
+/scripts/ios-prepare.sh            @ChengAoShen @jzzzzh
+
+# App identity, updater key, permissions and signing settings
+/src-tauri/tauri*.conf.json        @ChengAoShen @jzzzzh
+/src-tauri/capabilities/           @ChengAoShen @jzzzzh
+/src-tauri/Info.ios.plist          @ChengAoShen @jzzzzh
+/src-tauri/PrivacyInfo.ios.xcprivacy  @ChengAoShen @jzzzzh
+
+# Packages people install from
+/packaging/                        @ChengAoShen @jzzzzh
