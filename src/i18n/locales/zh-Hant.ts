@@ -777,4 +777,13 @@ export default {
   menuWindow: "視窗",
   menuZoomWindow: "縮放",
   menuBringAllToFront: "將全部移至最前",
+  // The browser playground (src/playground/).
+  playgroundName: "線上體驗",
+  playgroundImport: "匯入",
+  playgroundExport: "匯出",
+  playgroundSource: "原始碼",
+  playgroundDownload: `下載 ${APP_NAME}`,
+  playgroundLocalNote: "文件只儲存在這個瀏覽器中。",
+  playgroundImageNotice: `插入圖片需要 ${APP_NAME} 桌面版。`,
+  playgroundImportUnsupported: "只能匯入 .md、.markdown 和 .txt 檔案。",
 } satisfies Translation;

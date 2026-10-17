@@ -40,6 +40,22 @@ touching the backend (attachments, windows, AI requests) needs the real app.
 `npm run tauri build` makes the installers for your platform (`.dmg`,
 `-setup.exe`, `.AppImage`/`.deb`/`.rpm`).
 
+### The browser playground
+
+`src/playground/` is a web edition of the editor alone (no AI, sidebar or
+settings), served at <https://textus.catvinci.com/playground/>. It reuses the
+editor core (`editor/editor-extensions.ts`) with image storage and clipboard
+history left out, and keeps its one document in the browser's localStorage.
+
+```sh
+npm run dev:playground     # http://localhost:1450/playground/
+npm run build:playground   # dist-playground/, built for /playground/
+```
+
+Its entry is `playground.html` and its Vite config `vite.playground.config.ts`,
+so `npm run build` and `dist/` are unaffected. CI builds it in the `check` job;
+`e2e/playground.spec.ts` runs as the `playground` project of `npm run test:e2e`.
+
 ## Where things are
 
 | Path                         | What                                                |
@@ -47,6 +63,7 @@ touching the backend (attachments, windows, AI requests) needs the real app.
 | `src/`                       | the frontend; [architecture.md] maps its folders    |
 | `src-tauri/src/`             | the Rust backend: windows, files, AI agent, updater |
 | `src-tauri/crates/aicompat/` | the AI provider client (no Tauri dependency)        |
+| `src/playground/`            | the browser playground (the editor alone)           |
 | `e2e/*.spec.ts`              | Playwright flows (CI)                               |
 | `e2e/shots/`                 | screenshot generators (README, website, review)     |
 | `scripts/`                   | checks and release tooling, written in Node         |

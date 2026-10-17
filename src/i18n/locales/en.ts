@@ -815,6 +815,16 @@ type /name in a conversation to use one.
   menuWindow: "Window",
   menuZoomWindow: "Zoom",
   menuBringAllToFront: "Bring All to Front",
+  // The browser playground (src/playground/).
+  playgroundName: "Playground",
+  playgroundImport: "Import",
+  playgroundExport: "Export",
+  playgroundSource: "Source",
+  playgroundDownload: `Download ${APP_NAME}`,
+  playgroundLocalNote: "Your document is kept in this browser only.",
+  playgroundImageNotice: `Images need the ${APP_NAME} desktop app.`,
+  playgroundImportUnsupported:
+    "Only .md, .markdown and .txt files can be imported.",
 } satisfies Record<string, string | Plural>;
 
 export default en;

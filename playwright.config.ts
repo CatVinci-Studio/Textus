@@ -19,10 +19,16 @@ import { defineConfig, devices } from "@playwright/test";
  * Native behaviour (windows, dialogs, single instance) isn't reachable from
  * here - scripts/smoke-linux.sh covers the built app.
  *
+ * The browser playground (src/playground/, e2e/playground.spec.ts) is its
+ * own project against its own dev server - no shim there, the page runs as
+ * it does on the website.
+ *
  * PLAYWRIGHT_PORT moves the dev server off 1430, for running a second copy
- * of the suite (another worktree) beside a first.
+ * of the suite (another worktree) beside a first; the playground's server
+ * is 10 above it.
  */
 const port = Number(process.env.PLAYWRIGHT_PORT) || 1430;
+const playgroundPort = port + 10;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -52,16 +58,35 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      testIgnore: ["shots/**", "playground.spec.ts"],
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1180, height: 780 },
       },
     },
+    {
+      name: "playground",
+      testMatch: "playground.spec.ts",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1180, height: 780 },
+        baseURL: `http://localhost:${playgroundPort}`,
+        locale: "en-US",
+      },
+    },
   ],
-  webServer: {
-    command: `npx vite --port ${port} --strictPort`,
-    url: `http://localhost:${port}`,
-    reuseExistingServer: false,
-    timeout: 60_000,
-  },
+  webServer: [
+    {
+      command: `npx vite --port ${port} --strictPort`,
+      url: `http://localhost:${port}`,
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+    {
+      command: `npx vite --config vite.playground.config.ts --port ${playgroundPort} --strictPort`,
+      url: `http://localhost:${playgroundPort}/playground/`,
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+  ],
 });

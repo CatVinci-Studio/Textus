@@ -802,4 +802,14 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuWindow: "윈도우",
   menuZoomWindow: "확대/축소",
   menuBringAllToFront: "모두 앞으로 가져오기",
+  // The browser playground (src/playground/).
+  playgroundName: "플레이그라운드",
+  playgroundImport: "가져오기",
+  playgroundExport: "내보내기",
+  playgroundSource: "소스",
+  playgroundDownload: `${APP_NAME} 다운로드`,
+  playgroundLocalNote: "문서는 이 브라우저에만 저장됩니다.",
+  playgroundImageNotice: `이미지를 넣으려면 ${APP_NAME} 데스크톱 앱이 필요합니다.`,
+  playgroundImportUnsupported:
+    ".md, .markdown, .txt 파일만 가져올 수 있습니다.",
 } satisfies Translation;

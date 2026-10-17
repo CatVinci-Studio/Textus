@@ -1,0 +1,141 @@
+/* The browser playground's page: the app's palette and type (base.css),
+   its document column (editor-column.css), and a slim bar of its own. */
+@import "../ui/base.css";
+@import "../app/editor-column.css";
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+}
+
+.playground {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.playground-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--chrome-text);
+  font-size: var(--text-md);
+}
+
+.playground-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.playground-brand img {
+  display: block;
+  border-radius: 5px;
+}
+
+.playground-name {
+  font-weight: 600;
+  font-size: var(--text-lg);
+}
+
+.playground-tag {
+  padding: 1px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  color: var(--chrome-muted);
+  font-size: var(--text-sm);
+}
+
+.playground-note {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--chrome-muted);
+  font-size: var(--text-sm);
+}
+
+.playground-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.playground-actions .text-button {
+  min-height: var(--control-height-sm);
+  padding: 0 12px;
+  color: inherit;
+}
+
+.playground-actions .text-button[aria-pressed="true"] {
+  border-color: var(--chrome-accent);
+  color: var(--chrome-accent);
+}
+
+.playground-download {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height-sm);
+  padding: 0 12px;
+  border-radius: var(--radius-button);
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.playground-download:hover {
+  background: color-mix(in srgb, var(--ui-primary) 85%, var(--bg));
+}
+
+.editor-scroll {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--editor-bg, var(--bg));
+}
+
+/* Source mode fills the rest of the page, as the editor does. */
+.playground .source-view {
+  min-height: 0;
+}
+
+.playground-notice {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  margin-inline: auto;
+  z-index: 220;
+  padding: var(--space-2) var(--space-3);
+  color: var(--editor-text);
+  font-size: var(--text-md);
+}
+
+/* A phone: the note gets a line of its own under the brand and buttons,
+   and the column gives the text the width. */
+@media (max-width: 640px) {
+  .playground-bar {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .playground-note {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .playground .editor-content,
+  .playground .source-view {
+    padding: 1.5rem 1rem 4rem;
+  }
+}

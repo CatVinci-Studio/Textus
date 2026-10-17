@@ -845,4 +845,15 @@ utiliser une.
   menuWindow: "Fenêtre",
   menuZoomWindow: "Réduire/agrandir",
   menuBringAllToFront: "Tout ramener au premier plan",
+  // The browser playground (src/playground/).
+  playgroundName: "Bac à sable",
+  playgroundImport: "Importer",
+  playgroundExport: "Exporter",
+  playgroundSource: "Source",
+  playgroundDownload: `Télécharger ${APP_NAME}`,
+  playgroundLocalNote:
+    "Votre document est conservé dans ce navigateur uniquement.",
+  playgroundImageNotice: `Les images nécessitent l’app de bureau ${APP_NAME}.`,
+  playgroundImportUnsupported:
+    "Seuls les fichiers .md, .markdown et .txt peuvent être importés.",
 } satisfies Translation;
