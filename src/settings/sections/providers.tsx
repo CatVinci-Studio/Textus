@@ -48,7 +48,19 @@ interface ConnectedState {
 
 /// Two compact rows: the first opens a searchable provider list; the second
 /// independently expands login/API-key details for the active provider.
-export function ProviderListPanel({ t }: { t: Strings }) {
+/// The tutorial's "Connect your AI" lesson embeds this same panel:
+/// `expandCredentials` keeps the credentials row open (also after a provider
+/// switch) and `onActiveConnectedChange` reports whether the selected
+/// provider is connected, so the lesson can't drift from Settings.
+export function ProviderListPanel({
+  t,
+  expandCredentials = false,
+  onActiveConnectedChange,
+}: {
+  t: Strings;
+  expandCredentials?: boolean;
+  onActiveConnectedChange?: (connected: boolean) => void;
+}) {
   const { settings, setSettings } = useSettings();
   const catalog = useProviderCatalog();
   const [connected, setConnected] = useState<
@@ -56,7 +68,7 @@ export function ProviderListPanel({ t }: { t: Strings }) {
   >({});
   const [open, setOpen] = useState(false);
   const popoverId = useId();
-  const [authOpen, setAuthOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(expandCredentials);
   const [query, setQuery] = useState("");
   const popoverRef = useCloseOnOutsideClick<HTMLDivElement>(
     () => setOpen(false),
@@ -88,6 +100,10 @@ export function ProviderListPanel({ t }: { t: Strings }) {
   const activeConnected = active ? connected[active.id] : undefined;
   const isConnected = !!(activeConnected?.oauth || activeConnected?.apiKey);
   const usesAccountStatus = active?.auth.includes("oauth") ?? false;
+
+  useEffect(() => {
+    onActiveConnectedChange?.(isConnected);
+  }, [isConnected, onActiveConnectedChange]);
   const statusLabel =
     active?.keyOptional && active.id !== "custom"
       ? t.providerNoKeyRequired
@@ -102,7 +118,7 @@ export function ProviderListPanel({ t }: { t: Strings }) {
   function selectProvider(id: AiProvider) {
     setSettings({ aiProvider: id });
     setOpen(false);
-    setAuthOpen(false);
+    setAuthOpen(expandCredentials);
     setQuery("");
     popoverRef.current
       ?.querySelector<HTMLButtonElement>(".combobox-trigger")

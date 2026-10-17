@@ -730,6 +730,13 @@ para usar una.
   tutorialAgentEditApplied: "Documento actualizado.",
   tutorialAgentEditMockReply:
     "Sin la frase introductoria, queda más directa. Revisa la vista previa del cambio.",
+  tutorialConnectAiTitle: "Conecta tu IA",
+  tutorialConnectAiBody:
+    "La práctica usó respuestas de ejemplo. Conecta un proveedor y el autocompletado, la revisión gramatical y el asistente funcionarán de verdad.",
+  tutorialConnectAiConnected:
+    "Conectado. Las funciones de IA usarán este proveedor.",
+  tutorialConnectAiSkip: "Omitir por ahora",
+  tutorialConnectAiLater: "También puedes hacerlo más tarde en {path}.",
   tutorialDoneTitle: "Tutorial terminado",
   tutorialDoneBody: `Ya puedes empezar a escribir. Para usar la IA, conecta un servicio en Ajustes > ${AI_NAME}. Puedes volver a abrir este tutorial desde el menú Ayuda.`,
   closePromptMessage: "Este documento tiene cambios sin guardar.",
