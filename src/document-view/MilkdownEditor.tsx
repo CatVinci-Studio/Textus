@@ -1,6 +1,10 @@
 import { type MouseEvent, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { editorViewCtx } from "@milkdown/kit/core";
+import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
+import { useDocumentWorkspace } from "./useDocumentWorkspace";
+import { AgentWorkspace } from "../ai/workspace/AgentWorkspace";
+import { workspaceLabels } from "../ai/workspace/labels";
+import { ChatBody } from "../ai/chat/ChatBody";
 import { contextMenuTarget, insertTable } from "../editor/editor-menu";
 import { useDocumentReporting, useEditorFlush } from "./useDocumentReporting";
 import { useTextusEditor } from "./useTextusEditor";
@@ -149,6 +153,8 @@ export function MilkdownEditor({
     });
   }, [settings.language, settings.enableMagicDiary, run]);
 
+  const workspace = useDocumentWorkspace(run, tabId);
+  const [workspaceMounted, setWorkspaceMounted] = useState(false);
   const proposals = useEditorProposals({
     run,
     pendingEditActionsRef,
@@ -157,9 +163,14 @@ export function MilkdownEditor({
     filePath,
     tutorialMock,
     t,
+    workspace,
   });
   const { pendingEdits, conversation, quickConversation, showProposals } =
     proposals;
+  const finishWorkspace = workspace.finish;
+  useEffect(() => {
+    if (!conversation.busy) finishWorkspace();
+  }, [conversation.busy, finishWorkspace]);
 
   const {
     quickSendContext,
@@ -371,7 +382,84 @@ export function MilkdownEditor({
       onPointerDown={() => (lastTouchRef.current = Date.now())}
       onPointerUp={() => (lastTouchRef.current = Date.now())}
     >
+      {!phone && (
+        <div className="workspace-launch">
+          <button
+            onClick={() => {
+              setWorkspaceMounted(true);
+              workspace.setOpen(true);
+              agentPanel.setOpen(false);
+            }}
+          >
+            {workspaceLabels(settings.language).open}
+          </button>
+        </div>
+      )}
       <Milkdown />
+      {workspaceMounted &&
+        paneEl &&
+        createPortal(
+          <div hidden={!workspace.open || !isActive}>
+            <AgentWorkspace
+              language={settings.language}
+              title={docTitle}
+              draft={workspace.draft}
+              preview={
+                workspace.draft?.operations.length
+                  ? workspace.preview
+                  : (run((ctx) =>
+                      ctx.get(serializerCtx)(ctx.get(editorViewCtx).state.doc),
+                    ) ?? "")
+              }
+              conflict={workspace.conflict}
+              conversation={conversation}
+              onEditor={() => workspace.setOpen(false)}
+              onAccept={workspace.accept}
+              onReject={workspace.discard}
+            >
+              <ChatBody
+                document=""
+                selectedText={panelSelection?.text ?? null}
+                selectionMarkdown={null}
+                docPath={filePath}
+                workspaceRoot={settings.agentWorkspaceRoot || null}
+                conversation={conversation}
+                defaultMode="create"
+                allowCreate
+                beforeSend={(options) =>
+                  workspace.begin(options.mode, conversation.conversationId)
+                }
+                defaultWebSearch={settings.enableWebSearch}
+                tutorialMock={tutorialMock}
+                labels={chatLabels(t, settings.language)}
+                proposalStatus={(id) =>
+                  workspace.statuses[id] ??
+                  (workspace.draft?.operations.some((o) => o.callId === id)
+                    ? "pending"
+                    : pendingEdits.status(id))
+                }
+                pendingCount={workspace.draft?.operations.length ?? 0}
+                fillHeight
+                refreshContext={panelSendContext}
+                onProposals={showProposals}
+                onAcceptProposal={(id) => {
+                  if (!conversation.busy) workspace.accept(id);
+                }}
+                onRejectProposal={(id) => {
+                  if (!conversation.busy) workspace.discard(id);
+                }}
+                onAcceptAll={() => {
+                  if (!conversation.busy) workspace.accept();
+                }}
+                onRejectAll={() => {
+                  if (!conversation.busy) workspace.discard();
+                }}
+                pendingBar={false}
+              />
+            </AgentWorkspace>
+          </div>,
+          paneEl,
+        )}
       {isActive && scrollEl && contentEl && (
         <ReviewMargin
           view={notes.editorView}
@@ -499,7 +587,10 @@ export function MilkdownEditor({
             conversation={conversation}
             pendingEdits={pendingEdits}
             selectedText={panelSelection?.text ?? null}
-            panelSendContext={panelSendContext}
+            panelSendContext={async () => {
+              workspace.endRouting();
+              return panelSendContext();
+            }}
             showProposals={showProposals}
             onRevealProposal={revealProposal}
             onLocateText={notes.locateText}
@@ -527,7 +618,10 @@ export function MilkdownEditor({
         createPortal(
           <InlineChat
             document={inlineChat.chatInfo.document}
-            sendContext={quickSendContext}
+            sendContext={async () => {
+              workspace.endRouting();
+              return quickSendContext();
+            }}
             selectedText={inlineChat.chatInfo.selectedText}
             selectionMarkdown={inlineChat.chatInfo.selectionMarkdown}
             docPath={filePath}

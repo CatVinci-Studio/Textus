@@ -67,6 +67,8 @@ export interface ChatBodyProps {
   workspaceRoot: string | null;
   conversation: AgentConversation;
   defaultMode: AgentMode;
+  allowCreate?: boolean;
+  beforeSend?: (options: AgentRequestOptions) => boolean;
   defaultWebSearch: boolean;
   tutorialMock?: boolean;
   labels: ChatBodyLabels;
@@ -206,6 +208,8 @@ export function ChatBody({
   workspaceRoot,
   conversation,
   defaultMode,
+  allowCreate = false,
+  beforeSend,
   defaultWebSearch,
   tutorialMock,
   labels,
@@ -337,6 +341,7 @@ export function ChatBody({
     options: AgentRequestOptions,
   ) {
     void (async () => {
+      if (beforeSend && !beforeSend(options)) return;
       const latest = refreshContext ? await refreshContext() : null;
       const state = latest ?? { document, selectionMarkdown };
       const { message, images } = buildMessage(state);
@@ -631,6 +636,7 @@ export function ChatBody({
         busy={busy}
         labels={labels}
         defaultMode={defaultMode}
+        allowCreate={allowCreate}
         carryMode={variant !== "quick"}
         allowPlan={variant !== "quick"}
         compact={variant === "quick"}

@@ -31,6 +31,7 @@ export function useEditorProposals({
   filePath,
   tutorialMock,
   t,
+  workspace,
 }: {
   run: EditorRunner;
   pendingEditActionsRef: { current: PendingEditCallbacks };
@@ -39,6 +40,16 @@ export function useEditorProposals({
   filePath: string | null;
   tutorialMock: boolean;
   t: Strings;
+  workspace?: {
+    onEvent: (event: StreamEvent) => boolean;
+    receive: (
+      proposals: { callId: string; proposal: EditProposal }[],
+    ) => boolean;
+    statuses: Record<
+      string,
+      import("../ai/revision/usePendingEdits").PendingStatus
+    >;
+  };
 }) {
   const pendingEdits = usePendingEdits(run);
   useEffect(() => {
@@ -106,6 +117,7 @@ export function useEditorProposals({
       }[],
       target: SelectionTarget | null,
     ) => {
+      if (workspace?.receive(proposals)) return;
       if (supersedePending.current) {
         supersedePending.current = false;
         pendingEdits.rejectAll();
@@ -116,7 +128,7 @@ export function useEditorProposals({
     // depending on the whole `pendingEdits` object (fresh every render)
     // would destabilize the ProposalStream memo below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pendingEdits.rejectAll, pendingEdits.showPreviews],
+    [pendingEdits.rejectAll, pendingEdits.showPreviews, workspace?.receive],
   );
   // A streaming propose_edit grows its green preview in the document while
   // the model is still writing it. All lifecycle decisions - when a draft is
@@ -148,6 +160,7 @@ export function useEditorProposals({
   );
   const handleStreamEvent = useCallback(
     (event: StreamEvent) => {
+      if (workspace?.onEvent(event)) return;
       // A propose_edit the backend refused (tools.rs: a cut-off `text`)
       // may already be on screen - streamed, or placed from its call turn
       // a moment before this result arrived. The model resends it; this
@@ -184,7 +197,7 @@ export function useEditorProposals({
     },
     // settingsRef is a stable ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [proposalStream, discardRefused],
+    [proposalStream, discardRefused, workspace?.onEvent],
   );
   // Owned here rather than by the popup so a completed exchange can be saved
   // to history when the popup closes. Every ordinary NEW open resets it;
@@ -198,7 +211,7 @@ export function useEditorProposals({
     agentModel,
     tutorialMock ? createTutorialMockAgent(t) : null,
     handleStreamEvent,
-    pendingEdits.allStatuses,
+    { ...pendingEdits.allStatuses, ...workspace?.statuses },
   );
   // Quick Ask's own conversation: a one-off exchange at the caret, kept out
   // of the History list. "Continue in the panel" hands it to `conversation`

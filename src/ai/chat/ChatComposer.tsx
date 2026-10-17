@@ -67,6 +67,7 @@ export interface ChatComposerLabels {
   modeAsk: string;
   modeEdit: string;
   modePlan: string;
+  modeCreate?: string;
   /** Accessible name of the phone's segmented mode control. */
   modeLabel: string;
   webSearch: string;
@@ -100,6 +101,7 @@ interface ChatComposerProps {
    *  text in front of you, leaves it out - planning belongs in the full
    *  conversation. */
   allowPlan?: boolean;
+  allowCreate?: boolean;
   /** Quick Ask: no attach or web-search buttons - those stay in the panel
    *  (an @-mention still attaches a project file). */
   compact?: boolean;
@@ -142,6 +144,7 @@ export function ChatComposer({
   defaultMode,
   carryMode = false,
   allowPlan = true,
+  allowCreate = false,
   compact = false,
   focusOnOpen = true,
   defaultWebSearch,
@@ -165,9 +168,10 @@ export function ChatComposer({
   const [skillList, setSkillList] = useState<SkillListItem[] | null>(null);
   const [recent, setRecent] = useState<string[]>(recentSkills);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
-  const [mode, setModeState] = useState<AgentMode>(() =>
-    carryMode ? initialMode(defaultMode) : defaultMode,
-  );
+  const [mode, setModeState] = useState<AgentMode>(() => {
+    const saved = carryMode ? initialMode(defaultMode) : defaultMode;
+    return saved === "create" && !allowCreate ? "edit" : saved;
+  });
   const setMode = (next: AgentMode) => {
     setModeState(next);
     if (carryMode) rememberMode(next, defaultMode);
@@ -462,6 +466,9 @@ export function ChatComposer({
   const modes: [AgentMode, string][] = [
     ["ask", labels.modeAsk],
     ["edit", labels.modeEdit],
+    ...(allowCreate
+      ? [["create", labels.modeCreate ?? "Create"] as [AgentMode, string]]
+      : []),
     ...(allowPlan ? [["plan", labels.modePlan] as [AgentMode, string]] : []),
   ];
 

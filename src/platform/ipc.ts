@@ -826,7 +826,7 @@ export const ai = {
      *  inlined into `message` by the caller. */
     images: ImageAttachment[];
     webSearch: boolean;
-    mode: "ask" | "edit" | "plan";
+    mode: "ask" | "edit" | "plan" | "create";
     model: string | null;
     requestId: string;
     /** Heading of the section the cursor/selection is in - embedded in full

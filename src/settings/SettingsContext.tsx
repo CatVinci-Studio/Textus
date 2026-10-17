@@ -112,7 +112,7 @@ export interface UserThemeMeta {
 
 export type ImageStorageMode = "local" | "image-host";
 export type ImageNamingMode = "auto" | "original" | "ask";
-export type AgentMode = "ask" | "edit" | "plan";
+export type AgentMode = "ask" | "edit" | "plan" | "create";
 
 export interface Settings {
   language: Lang;

@@ -328,6 +328,10 @@ fn document_section(document: &str, with_tools: bool, focus_heading: Option<&str
 /// index (+ the document, tool-less) go into the system prompt; skill bodies
 /// and project files stay out of it and are pulled in dynamically through
 /// tools.
+fn allows_document_edits(mode: &str) -> bool {
+    matches!(mode, "edit" | "create")
+}
+
 pub(crate) fn build_instructions(
     workspace: &AgentWorkspace,
     document: &str,
@@ -344,6 +348,7 @@ pub(crate) fn build_instructions(
     let ui = UiNames::of(ui_language);
 
     sections.push(match mode {
+        "create" => "---interaction mode: create---\nCreate a complete Markdown document as ordered section proposals using propose_edit. Use append for each new section. These are uncommitted drafts: nothing is saved until the user accepts. Never deliver the requested document only in chat. Keep chapters in tool-call order and do not anchor to unaccepted content. Preserve unresolved drafts; do not claim proposals replace them automatically.".to_string(),
         "edit" => "---interaction mode: edit---\nCarry out the user's request. When document changes are needed, submit them through propose_edit so the user can review them before applying.".to_string(),
         "plan" => "---interaction mode: plan---\nProduce a concrete, structured writing plan only - an outline, a revision plan, or the steps to get the document where the user wants it. You may research and inspect context, but do not call propose_edit and do not modify the document. Wait for the user to approve the plan in a later request.".to_string(),
         // The UI's names for the modes: told "read-only mode", the model
@@ -362,7 +367,7 @@ pub(crate) fn build_instructions(
 
     if with_tools {
         sections.push(
-            if mode == "edit" {
+            if allows_document_edits(mode.as_ref()) {
                 AGENT_TOOL_INSTRUCTIONS
             } else {
                 AGENT_READ_ONLY_TOOL_INSTRUCTIONS
@@ -813,7 +818,7 @@ async fn ai_agent_message_inner(
             let tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
-                mode == "edit",
+                allows_document_edits(mode.as_ref()),
             );
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
@@ -925,7 +930,7 @@ async fn ai_agent_message_inner(
             let tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
-                mode == "edit",
+                allows_document_edits(mode.as_ref()),
             );
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
@@ -988,7 +993,7 @@ async fn ai_agent_message_inner(
             let tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
-                mode == "edit",
+                allows_document_edits(mode.as_ref()),
             );
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
@@ -1189,6 +1194,14 @@ async fn flattened_chat_turn(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn only_create_and_edit_can_propose_document_changes() {
+        assert!(super::allows_document_edits("create"));
+        assert!(super::allows_document_edits("edit"));
+        for mode in ["ask", "plan", "unknown", ""] {
+            assert!(!super::allows_document_edits(mode));
+        }
+    }
     use super::*;
     use crate::ai::ui_language::{entries, UI_LANGUAGES};
 

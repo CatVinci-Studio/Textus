@@ -57,9 +57,30 @@ const labels = {
   modeAsk: "Ask",
   modeEdit: "Edit",
   modePlan: "Plan",
+  modeCreate: "Create",
   modeLabel: "Mode",
   webSearch: "Web search",
 };
+
+it("offers Create only in a document workspace", () => {
+  render(
+    <ChatComposer
+      docPath={null}
+      workspaceRoot={null}
+      selectedText={null}
+      busy={false}
+      labels={labels}
+      defaultMode="create"
+      defaultWebSearch={false}
+      allowCreate
+      onSend={() => {}}
+      onStop={() => {}}
+      onEscape={() => {}}
+    />,
+  );
+  fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
+  expect(screen.getByRole("option", { name: "Create" })).toBeInTheDocument();
+});
 
 type ComposerOptions = {
   selectedText?: string | null;

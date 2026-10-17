@@ -89,6 +89,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     approvePlan: t.chatApprovePlan,
     executePlanRequest: t.chatExecutePlanRequest,
     modeAsk: t.agentModeAsk,
+    modeCreate: lang === "zh" || lang === "zh-Hant" ? "创作" : "Create",
     modeEdit: t.agentModeEdit,
     modePlan: t.agentModePlan,
     modeLabel: t.chatModeLabel,
