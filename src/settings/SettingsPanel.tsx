@@ -45,6 +45,7 @@ import {
 } from "./sections/skills";
 import { PrivacySection } from "./sections/privacy";
 import { ImageStorageSection } from "./sections/images";
+import { MediaSettings } from "./sections/media";
 import "./SettingsPanel.css";
 import { useModalDialog } from "../ui/useModalDialog";
 import { usePresenceProps } from "../ui/usePresence";
@@ -295,6 +296,15 @@ export function SettingsPanel({
           once, under Connection, for both pickers. */}
       {c === "ai" && (
         <>
+          <SettingsGroup
+            title={
+              settings.language.startsWith("zh")
+                ? "多模态服务"
+                : "Media providers"
+            }
+          >
+            <MediaSettings language={settings.language} />
+          </SettingsGroup>
           <SettingsGroup title={t.aiAccountLabel}>
             <ProviderListPanel t={t} />
             <SettingRow label={t.proxyLabel}>

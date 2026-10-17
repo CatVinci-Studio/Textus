@@ -16,6 +16,9 @@ mod atomic;
 mod auth;
 mod commands;
 mod distribution;
+mod media;
+use media::provider::{media_cancel, media_configure_provider, media_provider_status};
+use media::speech::{media_synthesize, media_transcribe};
 mod levis_import;
 #[cfg(desktop)]
 mod menu;
@@ -682,6 +685,11 @@ pub fn run() {
             test_custom_endpoint,
             export_save_dialog,
             save_draft_snapshot,
+            media_provider_status,
+            media_configure_provider,
+            media_transcribe,
+            media_synthesize,
+            media_cancel,
             save_workspace_snapshot,
             load_workspace_snapshot,
             clear_workspace_snapshot,

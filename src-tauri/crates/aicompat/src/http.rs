@@ -40,6 +40,16 @@ pub fn set_proxy(url: Option<String>) -> Result<(), String> {
     Ok(())
 }
 
+/// Media requests share the configured proxy, with a capability-specific
+/// total timeout and no redirects carrying credentials to another host.
+pub fn media_client(timeout_seconds: u64) -> Result<reqwest::Client, String> {
+    let mut client = builder().timeout(Duration::from_secs(timeout_seconds)).redirect(reqwest::redirect::Policy::none());
+    if let Some(proxy) = PROXY_URL.read().map_err(|_| "proxy configuration unavailable")?.as_ref() {
+        client = client.proxy(reqwest::Proxy::all(proxy).map_err(|_| "invalid proxy configuration")?);
+    }
+    client.build().map_err(|_| "cannot create media client".to_string())
+}
+
 fn builder() -> reqwest::ClientBuilder {
     reqwest::Client::builder()
         .connect_timeout(CONNECT_TIMEOUT)

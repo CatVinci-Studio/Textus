@@ -35,7 +35,7 @@ export class IpcError extends Error {
   readonly cause: unknown;
   constructor(command: string, cause: unknown) {
     super(
-      `${command}: ${cause instanceof Error ? cause.message : String(cause)}`,
+      `${command}: ${cause instanceof Error ? cause.message : cause && typeof cause === "object" && "message" in cause && typeof cause.message === "string" ? cause.message : String(cause)}`,
     );
     this.name = "IpcError";
     this.command = command;
@@ -463,6 +463,44 @@ export const auth = {
 /** Image-host credentials reuse the same private 0600 credential store as
  * provider keys, under a reserved id that is never shown as an AI provider. */
 const IMAGE_HOST_CREDENTIAL_ID = "__image_host";
+/** Mirrors media/provider.rs and media/speech.rs. Credentials stay in provider_keys.json. */
+export type MediaCapability = "stt" | "tts" | "image";
+export interface MediaProviderConfig {
+  provider: "openai" | "openai-compatible";
+  endpoint: string;
+  model: string;
+  voice: string | null;
+}
+export type MediaProviders = Partial<
+  Record<MediaCapability, MediaProviderConfig>
+>;
+export interface SpeechAudio {
+  dataBase64: string;
+  mime: string;
+}
+export const media = {
+  providers: () => call<MediaProviders>("media_provider_status"),
+  configure: (
+    capability: MediaCapability,
+    config: MediaProviderConfig | null,
+  ) => call<void>("media_configure_provider", { capability, config }),
+  keyStatus: (capability: MediaCapability) =>
+    auth.providerApiKeyStatus(`__media_${capability}`),
+  setKey: (capability: MediaCapability, key: string) =>
+    auth.setProviderApiKey(`__media_${capability}`, key),
+  clearKey: (capability: MediaCapability) =>
+    auth.clearProviderApiKey(`__media_${capability}`),
+  transcribe: (
+    requestId: string,
+    dataBase64: string,
+    mime: string,
+    language: string | null,
+  ) =>
+    call<string>("media_transcribe", { requestId, dataBase64, mime, language }),
+  synthesize: (requestId: string, text: string, voice: string | null = null) =>
+    call<SpeechAudio>("media_synthesize", { requestId, text, voice }),
+  cancel: (requestId: string) => call<void>("media_cancel", { requestId }),
+};
 export const imageHostAuth = {
   tokenStatus: () => auth.providerApiKeyStatus(IMAGE_HOST_CREDENTIAL_ID),
   setToken: (token: string) =>
