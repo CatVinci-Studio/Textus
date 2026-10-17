@@ -135,7 +135,7 @@ block2 = "0.6"
 # operation. Already in the tree via wry; versions must stay on wry's.
 [target.'cfg(windows)'.dependencies]
 webview2-com = "0.38"
-windows = "0.61"
+windows = "0.62"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 webkit2gtk = "2.0"
