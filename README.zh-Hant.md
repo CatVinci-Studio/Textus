@@ -181,32 +181,7 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
 3. 開始寫作。停筆時，續寫會以灰色文字出現，按 Tab 接受。
 4. 點視窗列裡的對話按鈕開啟 AI 面板。其餘功能請見 **說明 → AI 功能指南**。
 
-| 操作      | 快速鍵                       |
-| ------- | ------------------------- |
-| AI 面板   | Ctrl/⌘+Shift+L            |
-| 快速提問    | Ctrl/⌘+Shift+K            |
-| 立即續寫    | Ctrl/⌘+Shift+Space        |
-| 立即檢查文法  | Ctrl/⌘+Shift+G            |
-| 接受待定的修改 | Ctrl/⌘+Enter              |
-| 分割檢視    | Ctrl/⌘+Shift+E            |
-| 禪模式     | Ctrl/⌘+Shift+J (按 Esc 離開) |
-| 原始碼模式   | Ctrl/⌘+/                  |
-
-以上快速鍵都可以在 **設定 → 快速鍵** 中修改。
-
-## 從原始碼建置
-
-```bash
-git clone https://github.com/CatVinci-Studio/Textus.git
-cd Textus
-npm install
-
-npm run tauri dev     # full Tauri app (Rust shell + Vite renderer)
-npm run tauri build   # bundle .dmg / -setup.exe (NSIS) / .AppImage / .deb / .rpm
-npm run build         # frontend only: type-check (tsc) + vite build
-```
-
-需要 [Node.js](https://nodejs.org) 22 以上、[Rust](https://rustup.rs)（stable）以及各平台的建置工具（macOS 上是 Xcode CLT；Linux 上是 `libwebkit2gtk-4.1-dev`/`libappindicator3-dev`/`librsvg2-dev`/`patchelf`；Windows 上是 MSVC Build Tools）。
+所有快速鍵都可以在 **設定 → 快速鍵** 中查看和修改。
 
 ## 社群
 
@@ -216,9 +191,9 @@ npm run build         # frontend only: type-check (tsc) + vite build
 
 錯誤回報與功能建議也歡迎提到 [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues)。
 
-## 參與貢獻
+## 路線圖與參與開發
 
-CI 執行的檢查、提交慣例和發布流程請見 [CONTRIBUTING.md](CONTRIBUTING.md)。各測試套件涵蓋了什麼、刻意不涵蓋什麼，請見 [docs/TESTING.md](docs/TESTING.md)。討論可以用中文或英文。
+Textus 接下來的方向見 [ROADMAP.md](ROADMAP.md)（英文）。想自行建置 Textus、執行檢查或提交 PR，請從 [CONTRIBUTING.md](CONTRIBUTING.md)（英文）開始；AI 程式助手請遵循 [AGENTS.md](AGENTS.md)。討論可以用中文或英文。
 
 ## Star 成長趨勢
 

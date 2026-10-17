@@ -181,32 +181,7 @@ Ja: ganz normale .md-Dateien, mit Tabellen, Aufgabenlisten, Fußnoten, Formeln u
 3. Schreib los. Hältst du inne, erscheint die Fortsetzung in Grau; Tab übernimmt sie.
 4. Öffne den KI-Bereich mit dem Chat-Knopf in der Fensterleiste. **Hilfe → Anleitung zu KI-Funktionen** erklärt den Rest.
 
-| Aktion                        | Tastenkürzel                     |
-| ----------------------------- | -------------------------------- |
-| KI-Bereich                    | Ctrl/⌘+Shift+L                   |
-| Schnellfrage                  | Ctrl/⌘+Shift+K                   |
-| Jetzt vervollständigen        | Ctrl/⌘+Shift+Space               |
-| Grammatik jetzt prüfen        | Ctrl/⌘+Shift+G                   |
-| Ausstehende Änderung annehmen | Ctrl/⌘+Enter                     |
-| Geteilte Ansicht              | Ctrl/⌘+Shift+E                   |
-| Zen-Modus                     | Ctrl/⌘+Shift+J (Esc zum Beenden) |
-| Quellcodemodus                | Ctrl/⌘+/                         |
-
-Alle lassen sich unter **Einstellungen → Tastenkürzel** ändern.
-
-## Aus dem Quellcode bauen
-
-```bash
-git clone https://github.com/CatVinci-Studio/Textus.git
-cd Textus
-npm install
-
-npm run tauri dev     # full Tauri app (Rust shell + Vite renderer)
-npm run tauri build   # bundle .dmg / -setup.exe (NSIS) / .AppImage / .deb / .rpm
-npm run build         # frontend only: type-check (tsc) + vite build
-```
-
-Benötigt werden [Node.js](https://nodejs.org) 22+, [Rust](https://rustup.rs) (stable) und die Build-Werkzeuge der jeweiligen Plattform (Xcode CLT unter macOS; `libwebkit2gtk-4.1-dev`/`libappindicator3-dev`/`librsvg2-dev`/`patchelf` unter Linux; MSVC Build Tools unter Windows).
+Alle Tastenkürzel stehen unter **Einstellungen → Tastenkürzel** und lassen sich dort ändern.
 
 ## Community
 
@@ -215,9 +190,9 @@ Benötigt werden [Node.js](https://nodejs.org) 22+, [Rust](https://rustup.rs) (s
 
 Fehlerberichte und Wünsche gern in den [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues).
 
-## Mitwirken
+## Roadmap und Mitwirken
 
-[CONTRIBUTING.md](CONTRIBUTING.md) beschreibt die Prüfungen der CI, die Commit-Konventionen und den Release-Ablauf. [docs/TESTING.md](docs/TESTING.md) zeigt, was die Tests abdecken – und was bewusst nicht. Diskutiert wird auf Englisch oder Chinesisch.
+[ROADMAP.md](ROADMAP.md) (Englisch) zeigt, wohin sich Textus entwickelt. Zum Bauen, für die Prüfungen und für Pull Requests beginnst du mit [CONTRIBUTING.md](CONTRIBUTING.md) (Englisch); KI-Programmierassistenten folgen [AGENTS.md](AGENTS.md). Diskutiert wird auf Englisch oder Chinesisch.
 
 ## Sterne im Verlauf
 
