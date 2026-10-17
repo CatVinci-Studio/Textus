@@ -139,7 +139,7 @@ fn qwen_uses_responses_search(model: &str) -> bool {
 }
 
 /// The writing assistant's standing rules, one paragraph per concern. From
-/// the live eval (docs/AI-EVAL.md): round 1 found replies in the document's
+/// the live eval (docs/design/ai-eval.md): round 1 found replies in the document's
 /// language instead of the user's, expansions with made-up specifics, and
 /// tightened paragraphs that quietly lost facts while the reply said they
 /// were all kept. Round 2 found the cost of the fixes: replies that listed
@@ -191,7 +191,7 @@ fn where_to_choose_the_project_folder(has_menu: bool) -> String {
 
 /// What the agent is told about its project folder (in code, the workspace
 /// root) - which one is in use and why - and about what the app calls the
-/// things that shape its work (docs/AI-CONCEPTS.md: project folder,
+/// things that shape its work (docs/design/ai-concepts.md: project folder,
 /// `.textus/` folder, writing instructions, global config folder, skills,
 /// library, style profile, "Learn my style"), with the menu items, chips
 /// and Settings rows that make and open them, what reaches completion too,
@@ -199,7 +199,7 @@ fn where_to_choose_the_project_folder(has_menu: bool) -> String {
 /// it, the model made up its own names ("read-only mode"), told a user with
 /// an unsaved draft "I have no tool to open files" without saying why or
 /// what to do, and was told the document's folder held reference material
-/// even when no file tool was offered (docs/AI-EVAL.md, round 2). Labels it
+/// even when no file tool was offered (docs/design/ai-eval.md, round 2). Labels it
 /// wasn't given never came up: users were told to write a hidden
 /// .textus/style.md by hand, and had no way back after choosing a folder.
 fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -> String {
@@ -376,7 +376,7 @@ pub(crate) fn build_instructions(
     // The writing instructions (agent.md): global, then the project's - the
     // user's own standing rules: reply language, terminology, project
     // background. With both layers present the project's section says it
-    // wins a conflict (docs/AI-CONCEPTS.md); a single layer keeps the plain
+    // wins a conflict (docs/design/ai-concepts.md); a single layer keeps the plain
     // header the rest of the prompt refers to.
     for instructions in &workspace.instructions {
         sections.push(format!("---user instructions---\n{instructions}"));

@@ -7,7 +7,8 @@ import { exportDoc, fs } from "../platform/ipc";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
 import { canExportPdf, canExportWithPandoc } from "../platform/capabilities";
 import { toPandocMarkdown } from "./pandoc-markdown";
-import { diagramsToImages } from "./diagram-images";
+import { diagramsToImages, lightDiagrams } from "./diagram-images";
+import { appearanceIsDark } from "../editor/mermaid-plugin";
 import {
   MAC_PAGE,
   WINDOWS_PAGE,
@@ -184,20 +185,24 @@ async function inlineImages(html: string): Promise<string> {
 
 // Wraps serialized editor content in a full themed document. `layoutCss` frees
 // it from the app's fixed-viewport layout (each export tunes its own page).
-function buildStandaloneHtml(
+// `light` renders the theme's light form whatever the app shows, for a page
+// printed on white (see pdfLayoutCss).
+export function buildStandaloneHtml(
   base: string,
   contentHtml: string,
   layoutCss: string,
+  light = false,
 ): string {
   const root = document.documentElement;
   // Pin the appearance the page was exported in. Following the system
   // (no data-theme) would let a reader's dark mode restyle the text while
   // the diagrams keep the colours they were rendered with.
-  const dataTheme =
-    root.getAttribute("data-theme") ??
-    (window.matchMedia?.("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light");
+  const dataTheme = light
+    ? "light"
+    : (root.getAttribute("data-theme") ??
+      (window.matchMedia?.("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light"));
   const contentTheme = root.getAttribute("data-content-theme");
   // An imported theme switches Textus's own ornaments off (content-base.css);
   // the export has to say so too, or they come back on the page.
@@ -244,37 +249,44 @@ const EXPORT_FIT_CSS =
   ".milkdown a, .milkdown p, .milkdown li, .milkdown td, .milkdown th { overflow-wrap: anywhere; } ";
 
 // Theme + page CSS for the offscreen PDF render. print-color-adjust keeps
-// the editor theme's backgrounds from being flattened to white per page.
+// the theme's own backgrounds (code blocks, quotes) from being dropped.
+//
+// `whitePage` prints the page itself on white, as paper is (Windows and
+// Linux, #68): the theme's page colour goes, and exportPdf renders the
+// theme's light form, so a dark theme's pale text never lands on white.
+// macOS keeps the page in the theme's own colour.
 //
 // With a known page geometry (macOS, Windows) the sheet margin stays zero so
-// the theme background bleeds to every edge - WebKit never paints an @page
+// the page colour bleeds to every edge - WebKit never paints an @page
 // margin, which would leave white bands on tinted themes - and the top and
 // bottom margins are laid out instead, by paginate.ts pushing blocks
 // off each page seam. Without one (Linux, where WebKitGTK's print geometry
 // isn't pinned down) the GTK page setup gives each sheet a real top and
-// bottom margin (export.rs): text stays clear of the seams, at the cost of
-// plain margins on a tinted theme. Every platform ends up near 20mm all
-// round, the margin of a printed page.
-//
-// WebKitGTK paints the root background only as far as the document reaches,
-// so the last sheet ended in white below the text. A body shadow paints
-// past the content without adding layout height (no extra blank page);
-// the print clips it to each sheet's printable area.
-export function pdfLayoutCss(page: PageGeometry | null): string {
+// bottom margin (export.rs). Every platform ends up near 20mm all round,
+// the margin of a printed page.
+export function pdfLayoutCss(
+  page: PageGeometry | null,
+  whitePage = false,
+): string {
   const side = Math.round((page?.width ?? 595) * 0.094);
+  const background = whitePage ? "#fff" : "var(--editor-bg, var(--bg))";
   return (
     ":root { -webkit-print-color-adjust: exact; print-color-adjust: exact; } " +
-    // The sheet itself never has a CSS margin: macOS and Windows lay theirs
-    // out (export-paginate), and on Linux the GTK page setup holds it
-    // (export.rs) - WebKitGTK ignores an @page margin.
-    "@page { margin: 0; } " +
-    "html, body { margin: 0; background: var(--editor-bg, var(--bg)); } " +
+    // Whatever paints with the page colour (sticky bars, cut-outs) matches.
+    (whitePage ? ":root { --editor-bg: #fff !important; } " : "") +
+    // macOS and Windows lay their margins out (paginate.ts), so the sheet
+    // has none. On Linux the GTK page setup holds them (export.rs), and only
+    // `auto` leaves them to it: given a CSS margin - even the 0 this used
+    // to set, or print.css's - WebKitGTK cut its pages that much taller but
+    // still drew each one below the setup's top margin, so a page's last
+    // lines ran off the sheet and were lost.
+    `@page { margin: ${page ? "0" : "auto"}; } ` +
+    `html, body { margin: 0; background: ${background}; } ` +
     ".app-shell, .main-pane, .editor-scroll { height: auto; overflow: visible; background: transparent; } " +
     `.editor-content, .editor-content.typewriter-active { max-width: none; padding: ${page ? page.margin : 0}px ${side}px 0; } ` +
     (page
       ? ""
-      : "body { box-shadow: 0 0 0 4000px var(--editor-bg, var(--bg)); } " +
-        "pre, blockquote, table, img, .math-block-wrapper, .mermaid-preview, .md-alert { break-inside: avoid; } " +
+      : "pre, blockquote, table, img, .math-block-wrapper, .mermaid-preview, .md-alert { break-inside: avoid; } " +
         // WebKitGTK's print-to-file ignores break-inside on a block, and cut
         // a display formula in two at the seam; an inline-block it never
         // splits.
@@ -341,9 +353,25 @@ export async function exportPdf(tab: DocTab, t: Strings): Promise<void> {
   try {
     await nextFrame();
     await settleRender(editor);
-    const content = await inlineImages(cloneEditorContent(editor, "inline"));
+    // Paper is white: macOS keeps the theme's page colour, the others print
+    // on white in the theme's light form (#68).
+    const whitePage = !isMac;
+    let content = await inlineImages(cloneEditorContent(editor, "inline"));
+    if (whitePage && appearanceIsDark()) {
+      const style = getComputedStyle(editor);
+      content = await lightDiagrams(
+        content,
+        editor.clientWidth - 40,
+        style.fontFamily,
+      );
+    }
     const page = platformPage();
-    const standalone = buildStandaloneHtml(base, content, pdfLayoutCss(page));
+    const standalone = buildStandaloneHtml(
+      base,
+      content,
+      pdfLayoutCss(page, whitePage),
+      whitePage,
+    );
     const html = page ? await paginateHtml(standalone, page) : standalone;
     // Resolves once the file is written.
     await exportDoc.exportPdfNative({

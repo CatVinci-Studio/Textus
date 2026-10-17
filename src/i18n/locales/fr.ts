@@ -11,6 +11,7 @@ export default {
   agentPanelToggle: "Panneau IA",
   agentPanelPopOut: "Ouvrir dans une fenêtre séparée",
   agentPanelResize: "Redimensionner le panneau IA",
+  sidebarResize: "Redimensionner la barre latérale",
   agentPanelSheet: "Agrandir ou réduire le panneau IA",
   agentExpandWindowLabel:
     "Ouvrir les conversations complètes dans une fenêtre séparée",
@@ -166,6 +167,8 @@ utiliser une.
   shortcutToggleZenMode: "Activer/désactiver le mode zen",
   zenExitHint: "Esc pour quitter le mode zen",
   zenExitButton: "Quitter le mode zen",
+  openDialogText: "Fichiers texte",
+  openDialogAll: "Tous les fichiers",
   agentPanelSourceMode: `${AI_NAME} fonctionne dans la vue éditeur. Revenez-y pour poursuivre la conversation.`,
   agentPanelBackToEditor: "Revenir à l'éditeur",
   modelTagVision: "vision",
@@ -733,6 +736,13 @@ utiliser une.
   tutorialAgentEditApplied: "Le document a été mis à jour.",
   tutorialAgentEditMockReply:
     "J'ai supprimé la formule d'introduction superflue. Vérifiez l'aperçu de la modification.",
+  tutorialConnectAiTitle: "Connectez votre IA",
+  tutorialConnectAiBody:
+    "L'entraînement utilisait des réponses d'exemple. Connectez un fournisseur et la complétion, la vérification grammaticale et l'assistant fonctionneront pour de vrai.",
+  tutorialConnectAiConnected:
+    "Connecté. Les fonctions d'IA utiliseront ce fournisseur.",
+  tutorialConnectAiSkip: "Passer pour l'instant",
+  tutorialConnectAiLater: "Vous pourrez aussi le faire plus tard dans {path}.",
   tutorialDoneTitle: "Tutoriel terminé",
   tutorialDoneBody: `Vous pouvez maintenant commencer à écrire. Pour utiliser l'IA, connectez un service dans Réglages > ${AI_NAME}. Vous pouvez rouvrir ce tutoriel depuis le menu Aide.`,
   closePromptMessage:
@@ -846,4 +856,15 @@ utiliser une.
   menuWindow: "Fenêtre",
   menuZoomWindow: "Réduire/agrandir",
   menuBringAllToFront: "Tout ramener au premier plan",
+  // The browser playground (src/playground/).
+  playgroundName: "Bac à sable",
+  playgroundImport: "Importer",
+  playgroundExport: "Exporter",
+  playgroundSource: "Source",
+  playgroundDownload: `Télécharger ${APP_NAME}`,
+  playgroundLocalNote:
+    "Votre document est conservé dans ce navigateur uniquement.",
+  playgroundImageNotice: `Les images nécessitent l’app de bureau ${APP_NAME}.`,
+  playgroundImportUnsupported:
+    "Seuls les fichiers .md, .markdown et .txt peuvent être importés.",
 } satisfies Translation;

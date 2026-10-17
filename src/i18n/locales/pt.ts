@@ -9,6 +9,7 @@ export default {
   agentPanelToggle: "Painel de IA",
   agentPanelPopOut: "Abrir em uma janela separada",
   agentPanelResize: "Redimensionar o painel de IA",
+  sidebarResize: "Redimensionar a barra lateral",
   agentPanelSheet: "Expandir ou recolher o painel de IA",
   agentExpandWindowLabel: "Abrir conversas completas em uma janela separada",
   shortcutToggleAgentPanel: "Alternar painel de IA",
@@ -156,6 +157,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   shortcutToggleZenMode: "Alternar modo zen",
   zenExitHint: "Esc para sair do modo zen",
   zenExitButton: "Sair do Modo Zen",
+  openDialogText: "Arquivos de texto",
+  openDialogAll: "Todos os arquivos",
   agentPanelSourceMode: `A ${AI_NAME} funciona na visualização do editor. Volte a ela para continuar a conversa.`,
   agentPanelBackToEditor: "Voltar ao editor",
   modelTagVision: "visão",
@@ -712,6 +715,13 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialAgentEditApplied: "O documento foi atualizado.",
   tutorialAgentEditMockReply:
     "Tirei a introdução desnecessária. Revise a prévia da edição.",
+  tutorialConnectAiTitle: "Conecte sua IA",
+  tutorialConnectAiBody:
+    "A prática usou respostas de exemplo. Conecte um provedor e o autocompletar, a verificação gramatical e o assistente funcionarão de verdade.",
+  tutorialConnectAiConnected:
+    "Conectado. Os recursos de IA vão usar este provedor.",
+  tutorialConnectAiSkip: "Pular por agora",
+  tutorialConnectAiLater: "Você também pode fazer isso depois em {path}.",
   tutorialDoneTitle: "Tutorial concluído",
   tutorialDoneBody: `Agora você já pode escrever. Para usar a IA, conecte um serviço em Ajustes > ${AI_NAME}. Você pode reabrir este tutorial pelo menu Ajuda.`,
   closePromptMessage: "Este documento tem alterações não salvas.",
@@ -820,4 +830,14 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuWindow: "Janela",
   menuZoomWindow: "Zoom",
   menuBringAllToFront: "Trazer Todas para a Frente",
+  // The browser playground (src/playground/).
+  playgroundName: "Playground",
+  playgroundImport: "Importar",
+  playgroundExport: "Exportar",
+  playgroundSource: "Código",
+  playgroundDownload: `Baixar ${APP_NAME}`,
+  playgroundLocalNote: "Seu documento fica guardado só neste navegador.",
+  playgroundImageNotice: `Imagens precisam do app de desktop do ${APP_NAME}.`,
+  playgroundImportUnsupported:
+    "Só é possível importar arquivos .md, .markdown e .txt.",
 } satisfies Translation;

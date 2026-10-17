@@ -1,5 +1,5 @@
 //! Importing a Levis installation (Textus's name before 1.0.0, identifier
-//! `com.chengaoshen.levis`) - docs/STORAGE.md, "Importing Levis data".
+//! `com.chengaoshen.levis`) - docs/dev/storage.md, "Importing Levis data".
 //!
 //! Textus has its own identifier, so its directories start empty. Since
 //! Levis 0.9.7 everything Levis remembers is a plain file in its config and

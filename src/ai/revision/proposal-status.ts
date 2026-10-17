@@ -14,7 +14,7 @@ import type { PendingStatus } from "./usePendingEdits";
  *  stands. Anything else (a missing anchor, a cut-off `text`) refused it:
  *  the model was told so and resends, so the call must never become a
  *  preview - the editor would otherwise show an edit the backend rejected
- *  ("due" for a whole sentence, round 4 of docs/AI-EVAL.md). */
+ *  ("due" for a whole sentence, round 4 of docs/design/ai-eval.md). */
 const PROPOSED_PREFIX = "Edit proposed";
 
 /** A propose_edit result that refused the proposal. Results replaced by a

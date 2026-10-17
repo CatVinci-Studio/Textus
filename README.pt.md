@@ -181,32 +181,7 @@ Sim: arquivos .md comuns, com tabelas, listas de tarefas, notas de rodapé, fór
 3. Comece a escrever. Quando você para, a continuação aparece em cinza; Tab aceita.
 4. Abra o Painel de IA pelo botão de chat na barra da janela. **Ajuda → Guia dos Recursos de IA** explica o resto.
 
-| Ação                        | Atalho                         |
-| --------------------------- | ------------------------------ |
-| Painel de IA                | Ctrl/⌘+Shift+L                 |
-| Pergunta rápida             | Ctrl/⌘+Shift+K                 |
-| Sugerir continuação agora   | Ctrl/⌘+Shift+Space             |
-| Verificar gramática agora   | Ctrl/⌘+Shift+G                 |
-| Aceitar uma edição pendente | Ctrl/⌘+Enter                   |
-| Visualização Dividida       | Ctrl/⌘+Shift+E                 |
-| Modo Zen                    | Ctrl/⌘+Shift+J (Esc para sair) |
-| Modo Código-Fonte           | Ctrl/⌘+/                       |
-
-Todos podem ser alterados em **Ajustes → Atalhos**.
-
-## Compilar a partir do código
-
-```bash
-git clone https://github.com/CatVinci-Studio/Textus.git
-cd Textus
-npm install
-
-npm run tauri dev     # full Tauri app (Rust shell + Vite renderer)
-npm run tauri build   # bundle .dmg / -setup.exe (NSIS) / .AppImage / .deb / .rpm
-npm run build         # frontend only: type-check (tsc) + vite build
-```
-
-É preciso ter [Node.js](https://nodejs.org) 22+, [Rust](https://rustup.rs) (stable) e as ferramentas de compilação de cada plataforma (Xcode CLT no macOS; `libwebkit2gtk-4.1-dev`/`libappindicator3-dev`/`librsvg2-dev`/`patchelf` no Linux; MSVC Build Tools no Windows).
+Todos os atalhos podem ser vistos e alterados em **Ajustes → Atalhos**.
 
 ## Comunidade
 
@@ -215,9 +190,9 @@ npm run build         # frontend only: type-check (tsc) + vite build
 
 Bugs e sugestões são bem-vindos nas [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues).
 
-## Como contribuir
+## Roteiro e como contribuir
 
-O [CONTRIBUTING.md](CONTRIBUTING.md) descreve as verificações da CI, as convenções de commit e o processo de lançamento. O [docs/TESTING.md](docs/TESTING.md) mostra o que os testes cobrem e o que deixam de fora de propósito. As conversas são em inglês ou chinês.
+O [ROADMAP.md](ROADMAP.md) (em inglês) mostra para onde o Textus vai. Para compilar o Textus, rodar as verificações ou abrir um pull request, comece pelo [CONTRIBUTING.md](CONTRIBUTING.md) (em inglês); assistentes de programação com IA seguem o [AGENTS.md](AGENTS.md). As conversas podem ser em inglês ou chinês.
 
 ## Histórico de estrelas
 

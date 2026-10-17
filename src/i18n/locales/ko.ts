@@ -9,6 +9,7 @@ export default {
   agentPanelToggle: "AI 패널",
   agentPanelPopOut: "별도 창에서 열기",
   agentPanelResize: "AI 패널 크기 조절",
+  sidebarResize: "사이드바 크기 조절",
   agentPanelSheet: "AI 패널 펼치기 또는 접기",
   agentExpandWindowLabel: "전체 대화를 별도 창에서 열기",
   shortcutToggleAgentPanel: "AI 패널 보기/숨기기",
@@ -153,6 +154,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   shortcutToggleZenMode: "젠 모드 전환",
   zenExitHint: "Esc 키로 젠 모드 종료",
   zenExitButton: "젠 모드 종료",
+  openDialogText: "텍스트 파일",
+  openDialogAll: "모든 파일",
   agentPanelSourceMode: `${AI_NAME}는 편집기 보기에서 작동합니다. 대화를 이어 가려면 편집기 보기로 돌아가세요.`,
   agentPanelBackToEditor: "편집기로 돌아가기",
   modelTagVision: "이미지",
@@ -693,6 +696,13 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialAgentEditApplied: "문서가 수정되었습니다.",
   tutorialAgentEditMockReply:
     "불필요한 서두를 덜어 냈습니다. 수정 미리 보기를 확인하세요.",
+  tutorialConnectAiTitle: "AI 연결하기",
+  tutorialConnectAiBody:
+    "지금까지의 연습은 예시 답변을 사용했습니다. 서비스를 연결하면 이어 쓰기, 문법 검사, 어시스턴트가 실제로 작동합니다.",
+  tutorialConnectAiConnected:
+    "연결되었습니다. AI 기능이 이 서비스를 사용합니다.",
+  tutorialConnectAiSkip: "나중에 하기",
+  tutorialConnectAiLater: "나중에 {path}에서 설정할 수도 있습니다.",
   tutorialDoneTitle: "튜토리얼 완료",
   tutorialDoneBody: `이제 글쓰기를 시작할 수 있습니다. AI를 사용하려면 설정 > ${AI_NAME}에서 서비스를 연결하세요. 이 튜토리얼은 도움말 메뉴에서 다시 열 수 있습니다.`,
   closePromptMessage: "이 문서에 저장하지 않은 변경 사항이 있습니다.",
@@ -801,4 +811,14 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuWindow: "윈도우",
   menuZoomWindow: "확대/축소",
   menuBringAllToFront: "모두 앞으로 가져오기",
+  // The browser playground (src/playground/).
+  playgroundName: "플레이그라운드",
+  playgroundImport: "가져오기",
+  playgroundExport: "내보내기",
+  playgroundSource: "소스",
+  playgroundDownload: `${APP_NAME} 다운로드`,
+  playgroundLocalNote: "문서는 이 브라우저에만 저장됩니다.",
+  playgroundImageNotice: `이미지를 넣으려면 ${APP_NAME} 데스크톱 앱이 필요합니다.`,
+  playgroundImportUnsupported:
+    ".md, .markdown, .txt 파일만 가져올 수 있습니다.",
 } satisfies Translation;

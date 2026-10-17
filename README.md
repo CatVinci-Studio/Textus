@@ -185,32 +185,7 @@ Yes: plain .md files, with tables, task lists, footnotes, math and Mermaid. You 
 3. Start typing. A continuation appears in grey when you pause; Tab accepts it.
 4. Open the AI panel with the chat button in the window bar. **Help → AI Features Guide** covers the rest.
 
-| Action                 | Shortcut                     |
-| ---------------------- | ---------------------------- |
-| AI panel               | Ctrl/⌘+Shift+L               |
-| Quick Ask              | Ctrl/⌘+Shift+K               |
-| Suggest completion now | Ctrl/⌘+Shift+Space           |
-| Check grammar now      | Ctrl/⌘+Shift+G               |
-| Accept a pending edit  | Ctrl/⌘+Enter                 |
-| Split View             | Ctrl/⌘+Shift+E               |
-| Zen Mode               | Ctrl/⌘+Shift+J (Esc to exit) |
-| Source Code Mode       | Ctrl/⌘+/                     |
-
-All of them can be changed in **Settings → Shortcuts**.
-
-## Build from source
-
-```bash
-git clone https://github.com/CatVinci-Studio/Textus.git
-cd Textus
-npm install
-
-npm run tauri dev     # full Tauri app (Rust shell + Vite renderer)
-npm run tauri build   # bundle .dmg / -setup.exe (NSIS) / .AppImage / .deb / .rpm
-npm run build         # frontend only: type-check (tsc) + vite build
-```
-
-Requires [Node.js](https://nodejs.org) 22+, [Rust](https://rustup.rs) (stable), and platform build tools (Xcode CLT on macOS; `libwebkit2gtk-4.1-dev`/`libappindicator3-dev`/`librsvg2-dev`/`patchelf` on Linux; MSVC Build Tools on Windows).
+Every shortcut is listed, and can be changed, in **Settings → Shortcuts**.
 
 ## Community
 
@@ -219,9 +194,9 @@ Requires [Node.js](https://nodejs.org) 22+, [Rust](https://rustup.rs) (stable), 
 
 Bug reports and feature requests are welcome in [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues).
 
-## Contributing
+## Roadmap and contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the checks CI runs, commit conventions and the release process. [docs/TESTING.md](docs/TESTING.md) maps what the test suites cover – and what they deliberately don't. Contributions are discussed in English or Chinese.
+[ROADMAP.md](ROADMAP.md) shows where Textus is heading. To build Textus, run the checks or open a pull request, start with [CONTRIBUTING.md](CONTRIBUTING.md); AI coding assistants follow [AGENTS.md](AGENTS.md). Discussions are welcome in English or Chinese.
 
 ## Star history
 

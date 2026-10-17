@@ -42,10 +42,14 @@ function outline(file) {
     // language's screenshots.
     .filter((target) => !/^\.\/README/.test(target))
     .map((target) =>
-      target.replace(
-        /\/readme\/(en|zh|zh-hant|ja|ko|es|fr|de|ru|pt)\//,
-        "/readme/*/",
-      ),
+      target
+        .replace(
+          /\/readme\/(en|zh|zh-hant|ja|ko|es|fr|de|ru|pt)\//,
+          "/readme/*/",
+        )
+        // Simplified Chinese links the Chinese roadmap; every other
+        // language the English one.
+        .replace(/^ROADMAP\.zh\.md$/, "ROADMAP.md"),
     );
   const images = [...prose.matchAll(/src="([^"]+\.png)"/g)].map((m) => m[1]);
   return { headings, code, tableRows, links, images };

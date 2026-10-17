@@ -22,8 +22,13 @@ vi.mock("../ui/app-dialog", () => ({
 
 import type { Strings } from "../i18n/strings";
 import type { DocTab } from "../document/doc-tabs";
-import { cloneEditorContent, exportPdf, pdfLayoutCss } from "./exporters";
-import { MAC_PAGE } from "./paginate";
+import {
+  buildStandaloneHtml,
+  cloneEditorContent,
+  exportPdf,
+  pdfLayoutCss,
+} from "./exporters";
+import { MAC_PAGE, WINDOWS_PAGE } from "./paginate";
 
 function editor(html: string): HTMLElement {
   const root = document.createElement("div");
@@ -89,16 +94,49 @@ describe("cloneEditorContent", () => {
 });
 
 describe("pdfLayoutCss", () => {
-  it("carries the theme background past the content on Linux's last sheet", () => {
-    // No pinned page geometry (Linux): nothing fills the last sheet to a
-    // page multiple, so the body's shadow has to.
-    expect(pdfLayoutCss(null)).toMatch(
-      /body \{ box-shadow: 0 0 0 \d+px var\(--editor-bg, var\(--bg\)\); \}/,
-    );
+  it("leaves Linux's sheet margins to the GTK page setup", () => {
+    // Any other @page margin made WebKitGTK cut taller pages that still
+    // started below the setup's top margin, so their last lines ran off the
+    // sheet (#68).
+    const css = pdfLayoutCss(null, true);
+    expect(css).toContain("@page { margin: auto; }");
+    expect(css).not.toContain("@page { margin: 0");
   });
 
-  it("leaves paginated renders to their tail spacer", () => {
-    expect(pdfLayoutCss(MAC_PAGE)).not.toContain("box-shadow");
+  it("keeps a zero sheet margin where the margins are laid out", () => {
+    expect(pdfLayoutCss(MAC_PAGE)).toContain("@page { margin: 0; }");
+    expect(pdfLayoutCss(WINDOWS_PAGE, true)).toContain("@page { margin: 0; }");
+  });
+
+  it("prints a white page instead of the theme's page colour", () => {
+    const css = pdfLayoutCss(WINDOWS_PAGE, true);
+    expect(css).toContain("html, body { margin: 0; background: #fff; }");
+    expect(css).toContain("--editor-bg: #fff !important");
+  });
+
+  it("keeps the theme's page colour on macOS", () => {
+    const css = pdfLayoutCss(MAC_PAGE);
+    expect(css).toContain("background: var(--editor-bg, var(--bg));");
+    expect(css).not.toContain("#fff");
+  });
+});
+
+describe("buildStandaloneHtml", () => {
+  it("renders a white page in the theme's light form", () => {
+    const root = document.documentElement;
+    root.setAttribute("data-theme", "dark");
+    root.setAttribute("data-content-theme", "paper");
+    try {
+      expect(buildStandaloneHtml("a", "<p>x</p>", "", true)).toContain(
+        '<html data-theme="light" data-content-theme="paper">',
+      );
+      expect(buildStandaloneHtml("a", "<p>x</p>", "")).toContain(
+        '<html data-theme="dark" data-content-theme="paper">',
+      );
+    } finally {
+      root.removeAttribute("data-theme");
+      root.removeAttribute("data-content-theme");
+    }
   });
 });
 

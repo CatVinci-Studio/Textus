@@ -181,32 +181,7 @@ Oui : de simples fichiers .md, avec tableaux, listes de tâches, notes de bas de
 3. Commencez à écrire. Quand vous marquez une pause, la suite apparaît en gris ; Tab l’accepte.
 4. Ouvrez le Panneau IA avec le bouton de discussion de la barre de fenêtre. **Aide → Guide des fonctions IA** présente le reste.
 
-| Action                               | Raccourci                           |
-| ------------------------------------ | ----------------------------------- |
-| Panneau IA                           | Ctrl/⌘+Shift+L                      |
-| Question rapide                      | Ctrl/⌘+Shift+K                      |
-| Suggérer une complétion              | Ctrl/⌘+Shift+Space                  |
-| Vérifier la grammaire                | Ctrl/⌘+Shift+G                      |
-| Accepter une modification en attente | Ctrl/⌘+Enter                        |
-| Vue partagée                         | Ctrl/⌘+Shift+E                      |
-| Mode zen                             | Ctrl/⌘+Shift+J (Échap pour quitter) |
-| Mode source                          | Ctrl/⌘+/                            |
-
-Tous se modifient dans **Réglages → Raccourcis**.
-
-## Compiler depuis les sources
-
-```bash
-git clone https://github.com/CatVinci-Studio/Textus.git
-cd Textus
-npm install
-
-npm run tauri dev     # full Tauri app (Rust shell + Vite renderer)
-npm run tauri build   # bundle .dmg / -setup.exe (NSIS) / .AppImage / .deb / .rpm
-npm run build         # frontend only: type-check (tsc) + vite build
-```
-
-Il faut [Node.js](https://nodejs.org) 22 ou plus, [Rust](https://rustup.rs) (stable) et les outils de compilation de chaque plateforme (Xcode CLT sur macOS ; `libwebkit2gtk-4.1-dev`/`libappindicator3-dev`/`librsvg2-dev`/`patchelf` sur Linux ; MSVC Build Tools sur Windows).
+Tous les raccourcis se consultent et se modifient dans **Réglages → Raccourcis**.
 
 ## Communauté
 
@@ -215,9 +190,9 @@ Il faut [Node.js](https://nodejs.org) 22 ou plus, [Rust](https://rustup.rs) (sta
 
 Bugs et suggestions sont les bienvenus dans les [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues).
 
-## Contribuer
+## Feuille de route et contributions
 
-[CONTRIBUTING.md](CONTRIBUTING.md) décrit les vérifications de la CI, les conventions de commit et le processus de publication. [docs/TESTING.md](docs/TESTING.md) indique ce que couvrent les tests, et ce qu’ils laissent volontairement de côté. Les échanges se font en anglais ou en chinois.
+[ROADMAP.md](ROADMAP.md) (en anglais) montre où va Textus. Pour compiler Textus, lancer les vérifications ou ouvrir une pull request, commencez par [CONTRIBUTING.md](CONTRIBUTING.md) (en anglais) ; les assistants de programmation IA suivent [AGENTS.md](AGENTS.md). Les échanges se font en anglais ou en chinois.
 
 ## Historique des étoiles
 

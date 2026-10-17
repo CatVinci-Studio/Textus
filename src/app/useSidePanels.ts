@@ -11,12 +11,12 @@ import { keyboardUp, whenKeyboardDown } from "../mobile/keyboard";
 import { usePresence } from "../ui/usePresence";
 import { CLOSE_FIND_REPLACE_EVENT } from "../utils/events";
 import { useAgentPanelState } from "../ai/chat/panel/agent-panel";
+import { useSidebarWidth } from "./sidebar-width";
 
 export type PanelMode = "tree" | "outline" | "clipboard" | "chat";
 
-/** The sidebar's width (sidebar-frame.css .sidebar) and the narrowest text column
- *  the docked panel may leave beside it. */
-const SIDEBAR_WIDTH = 240;
+/** The narrowest text column the docked panel may leave beside the
+ *  sidebar. */
 const MIN_TEXT_COLUMN = 420;
 
 function subscribeWindowResize(onChange: () => void) {
@@ -26,7 +26,7 @@ function subscribeWindowResize(onChange: () => void) {
 
 /**
  * The layout state of the two side panels around the document: the sidebar
- * on the left (open, which tab it shows) and the docked Agent panel on the
+ * on the left (open, width, which tab it shows) and the docked Agent panel on the
  * right (open, width, whether it lies over the page, the phone's bottom
  * sheet). Pulled out of App.tsx, which renders both frames.
  */
@@ -49,10 +49,11 @@ export function useSidePanels() {
   const windowWidth = useSyncExternalStore(subscribeWindowResize, () =>
     typeof window === "undefined" ? 0 : window.innerWidth,
   );
+  const sidebarWidth = useSidebarWidth(windowWidth);
   const agentOverlays =
     !isIOSApp &&
     panelOpen &&
-    windowWidth - SIDEBAR_WIDTH - agentPanel.width < MIN_TEXT_COLUMN;
+    windowWidth - sidebarWidth.width - agentPanel.width < MIN_TEXT_COLUMN;
   const [agentPanelEl, setAgentPanelEl] = useState<HTMLElement | null>(null);
   // On a phone, opening the sheet puts the keyboard away in one movement:
   // the document gives up focus here and the sheet's input doesn't take it
@@ -115,6 +116,7 @@ export function useSidePanels() {
     panelOpen,
     setPanelOpen,
     toggleSidebar,
+    sidebarWidth,
     agentPanel,
     agentOverlays,
     agentPanelEl,

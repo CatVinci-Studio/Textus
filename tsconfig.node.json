@@ -10,9 +10,9 @@
   },
   "include": [
     "vite.config.ts",
+    "vite.playground.config.ts",
     "playwright.config.ts",
     "e2e",
-    "playwright.readme.config.ts",
-    "playwright.website.config.ts"
+    "playwright.shots.config.ts"
   ]
 }

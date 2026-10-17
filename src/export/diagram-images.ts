@@ -1,4 +1,8 @@
-import { loadMermaid, renderMermaid } from "../editor/mermaid-plugin";
+import {
+  configureMermaid,
+  loadMermaid,
+  renderMermaid,
+} from "../editor/mermaid-plugin";
 
 // Word, OpenDocument and EPUB have no idea what a ```mermaid block is, so
 // pandoc would print the diagram's source. Before the markdown goes to
@@ -123,5 +127,45 @@ export async function diagramsToImages(markdown: string): Promise<string> {
     svgToPng(
       await renderMermaid(mermaid, `export-diagram-${++exportId}`, code),
     ),
+  );
+}
+
+/** Replaces the SVG of every rendered diagram in serialized editor `html`
+ *  with what `draw` makes of its source (the hidden code block just before
+ *  the preview); a diagram `draw` returns null for keeps its picture. */
+export async function redrawDiagrams(
+  html: string,
+  draw: (code: string) => Promise<string | null>,
+): Promise<string> {
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  const previews = Array.from(
+    template.content.querySelectorAll<HTMLElement>(".mermaid-preview"),
+  );
+  for (const preview of previews) {
+    const source = preview.previousElementSibling;
+    if (!source?.classList.contains("mermaid-source-hidden")) continue;
+    const code = (source.querySelector("code") ?? source).textContent ?? "";
+    const svg = await draw(code).catch(() => null);
+    if (svg) preview.innerHTML = svg;
+  }
+  return template.innerHTML;
+}
+
+/** The editor's diagrams drawn again in mermaid's light style, for a PDF
+ *  printed on white: drawn for a dark appearance, their pale lines and
+ *  labels all but vanished on it. Laid out like the editor's own pass
+ *  (`width`, `fontFamily`), which re-applies its settings before its next
+ *  one (configureMermaid). */
+export async function lightDiagrams(
+  html: string,
+  width: number,
+  fontFamily: string,
+): Promise<string> {
+  if (!html.includes("mermaid-preview")) return html;
+  const mermaid = await loadMermaid();
+  configureMermaid(mermaid, width, fontFamily, false);
+  return redrawDiagrams(html, (code) =>
+    renderMermaid(mermaid, `export-diagram-${++exportId}`, code),
   );
 }

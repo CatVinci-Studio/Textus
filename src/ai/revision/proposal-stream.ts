@@ -34,7 +34,7 @@ import type { EditProposal } from "../types";
  * proposal supersedes whatever previews the user left undecided
  * (MilkdownEditor's addPreviews wrapper), and each send reports every past
  * proposal's current status to the model (proposal-status.ts). The full
- * picture lives in docs/AI-PROPOSALS.md.
+ * picture lives in docs/design/ai-proposals.md.
  */
 export interface ProposalStreamEffects {
   /** First moment the draft can be located: show it as a streaming

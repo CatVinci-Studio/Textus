@@ -5,7 +5,7 @@
 //! `#[ignore]` - it spends money and needs a key, so CI never runs it (the
 //! checking code itself is unit-tested in checks.rs and does run in CI).
 //!
-//! Run from src-tauri/ (docs/AI-EVAL.md has the full guide and results):
+//! Run from src-tauri/ (docs/design/ai-eval.md has the full guide and results):
 //!   cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
 //! The built-in skills suite alone, automatic checks only:
 //!   TEXTUS_EVAL_JUDGE=0 cargo test --lib live_eval::live_agent_builtin -- --ignored --nocapture
@@ -180,7 +180,7 @@ fn live_writing_model_comparison() {
     finish("grammar-models", records);
 }
 
-/// Prompt caching (docs/AI-EVAL.md, "Prompt caching"): every tool step reads
+/// Prompt caching (docs/design/ai-eval.md, "Prompt caching"): every tool step reads
 /// everything the step before it sent, and every message after the first
 /// reads the system prompt and the history the previous message wrote,
 /// instead of paying for them again.

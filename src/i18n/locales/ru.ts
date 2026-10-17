@@ -9,6 +9,7 @@ export default {
   agentPanelToggle: "Панель ИИ",
   agentPanelPopOut: "Открыть в отдельном окне",
   agentPanelResize: "Изменить ширину панели ИИ",
+  sidebarResize: "Изменить ширину боковой панели",
   agentPanelSheet: "Развернуть или свернуть панель ИИ",
   agentExpandWindowLabel: "Открывать полные диалоги в отдельном окне",
   shortcutToggleAgentPanel: "Панель ИИ",
@@ -157,6 +158,8 @@ export default {
   shortcutToggleZenMode: "Режим дзен",
   zenExitHint: "Esc — выйти из режима дзен",
   zenExitButton: "Выйти из режима дзен",
+  openDialogText: "Текстовые файлы",
+  openDialogAll: "Все файлы",
   agentPanelSourceMode: `${AI_NAME} работает в визуальном режиме редактора. Вернитесь в него, чтобы продолжить диалог.`,
   agentPanelBackToEditor: "Вернуться в редактор",
   modelTagVision: "изображения",
@@ -716,6 +719,13 @@ export default {
   tutorialAgentEditApplied: "Документ обновлён.",
   tutorialAgentEditMockReply:
     "Лишнее вступление убрано. Проверьте правку в предпросмотре.",
+  tutorialConnectAiTitle: "Подключите ИИ",
+  tutorialConnectAiBody:
+    "В упражнениях использовались примерные ответы. Подключите сервис, и автодополнение, проверка грамматики и ассистент заработают по-настоящему.",
+  tutorialConnectAiConnected:
+    "Подключено. Функции ИИ будут использовать этот сервис.",
+  tutorialConnectAiSkip: "Пропустить пока",
+  tutorialConnectAiLater: "Это можно сделать и позже в разделе «{path}».",
   tutorialDoneTitle: "Обучение завершено",
   tutorialDoneBody: `Теперь можно писать. Чтобы пользоваться ИИ, подключите сервис в разделе «Настройки > ${AI_NAME}». Обучение можно снова открыть из меню «Справка».`,
   closePromptMessage: "В документе есть несохранённые изменения.",
@@ -825,4 +835,14 @@ export default {
   menuWindow: "Окно",
   menuZoomWindow: "Изменить масштаб",
   menuBringAllToFront: "Все окна — на передний план",
+  // The browser playground (src/playground/).
+  playgroundName: "Песочница",
+  playgroundImport: "Импорт",
+  playgroundExport: "Экспорт",
+  playgroundSource: "Исходник",
+  playgroundDownload: `Скачать ${APP_NAME}`,
+  playgroundLocalNote: "Документ хранится только в этом браузере.",
+  playgroundImageNotice: `Для изображений нужно настольное приложение ${APP_NAME}.`,
+  playgroundImportUnsupported:
+    "Импортировать можно только файлы .md, .markdown и .txt.",
 } satisfies Translation;

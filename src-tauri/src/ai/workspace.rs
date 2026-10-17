@@ -6,7 +6,7 @@ use tauri::{AppHandle, Manager};
 
 /// Everything that shapes Textus AI for the document being edited: the
 /// project folder, its `.textus/` folder and the global config folder. The
-/// user-facing names and rules are in docs/AI-CONCEPTS.md; in code the
+/// user-facing names and rules are in docs/design/ai-concepts.md; in code the
 /// project folder is still called the workspace root.
 ///
 /// The project folder is the document's own folder unless the user chose

@@ -2,7 +2,7 @@
 //! the user's UI language with an agent request (src/i18n/langs.ts has the
 //! codes); everything per language lives in a file of that language's own -
 //! ui-names/<code>.txt and style-headings/<code>.txt - so translating the
-//! app touches no code here (docs/TRANSLATING.md).
+//! app touches no code here (docs/dev/translating.md).
 
 /// A UI language (LANGS in src/i18n/langs.ts - a test keeps the two lists
 /// the same), with its name in English and in itself, and:

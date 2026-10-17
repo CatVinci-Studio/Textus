@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type SetStateAction } from "react";
-import { TUTORIAL_STEPS } from "./tutorial-steps";
+import { resolveSavedStepIndex, TUTORIAL_STEPS } from "./tutorial-steps";
 import type { TutorialStepId } from "./tutorial-steps";
 import { getUiState, setUiState } from "../storage/ui-state";
 import {
@@ -30,19 +30,9 @@ function loadProgress(): TutorialProgress {
     > | null;
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
       return IDLE_PROGRESS;
-    const stepIndex = Math.min(
-      Math.max(
-        0,
-        typeof parsed.stepIndex === "number" &&
-          Number.isFinite(parsed.stepIndex)
-          ? Math.trunc(parsed.stepIndex)
-          : 0,
-      ),
-      TUTORIAL_STEPS.length - 1,
-    );
     return {
       active: parsed.active === true,
-      stepIndex,
+      stepIndex: resolveSavedStepIndex(parsed),
       tabId: typeof parsed.tabId === "string" ? parsed.tabId : null,
     };
   } catch {
@@ -78,8 +68,14 @@ export function useTutorial() {
     {},
   );
 
+  // The step's id is saved beside its index and is what a resume reads, so
+  // a step added to the list later can't shift a saved run onto the wrong
+  // lesson (resolveSavedStepIndex).
   useEffect(() => {
-    setUiState("tutorialProgress", progress);
+    setUiState("tutorialProgress", {
+      ...progress,
+      stepId: TUTORIAL_STEPS[progress.stepIndex].id,
+    });
   }, [progress]);
 
   const start = useCallback((tabId: string) => {

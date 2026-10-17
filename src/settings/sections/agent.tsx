@@ -19,7 +19,7 @@ import { Select } from "../../ui/Select";
 import { SettingRow, VERBATIM_INPUT } from "./controls";
 
 // The AI category's model pickers, and the rows for the concepts in
-// docs/AI-CONCEPTS.md: the project folder, the global writing instructions
+// docs/design/ai-concepts.md: the project folder, the global writing instructions
 // (agent.md), skills and the global config folder. Those are files, not
 // settings - these rows open folders and files rather than embedding
 // editors; Help > AI Features Guide explains them.

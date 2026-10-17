@@ -2,7 +2,7 @@
  * The snapshot Rust hands every app webview before the page loads
  * (src-tauri/src/settings.rs's boot_script, which also applies the theme to
  * the first frame). Settings, UI state and the histories live in JSON files
- * Rust owns (docs/STORAGE.md); this is how the frontend gets the first two
+ * Rust owns (docs/dev/storage.md); this is how the frontend gets the first two
  * synchronously, where it used to read localStorage.
  *
  * The snapshot is taken when the window is BUILT, so a page reload replays

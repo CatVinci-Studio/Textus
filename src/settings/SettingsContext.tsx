@@ -188,7 +188,7 @@ export interface Settings {
   /// library, agent.md, skills) is read AND the sandbox boundary of the
   /// agent's list_files/read_file tools, so setting it is what lets the
   /// agent reach reference material that doesn't live next to the draft.
-  /// See docs/AI-CONCEPTS.md.
+  /// See docs/design/ai-concepts.md.
   agentWorkspaceRoot: string;
   /// Proxy all AI provider requests route through, as type + host + port
   /// ("none" or an empty host means direct connection). Handed to Rust as a

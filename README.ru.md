@@ -181,32 +181,7 @@ OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · Op
 3. Начните писать. Когда вы остановитесь, продолжение появится серым; Tab принимает его.
 4. Откройте Панель ИИ кнопкой чата в строке окна. Остальное описано в **Справка → Руководство по ИИ**.
 
-| Действие                 | Сочетание                    |
-| ------------------------ | ---------------------------- |
-| Панель ИИ                | Ctrl/⌘+Shift+L               |
-| Быстрый вопрос           | Ctrl/⌘+Shift+K               |
-| Предложить продолжение   | Ctrl/⌘+Shift+Space           |
-| Проверить грамматику     | Ctrl/⌘+Shift+G               |
-| Принять ожидающую правку | Ctrl/⌘+Enter                 |
-| Разделённый вид          | Ctrl/⌘+Shift+E               |
-| Режим дзен               | Ctrl/⌘+Shift+J (Esc — выход) |
-| Режим исходного кода     | Ctrl/⌘+/                     |
-
-Все сочетания можно изменить в **Настройки → Сочетания клавиш**.
-
-## Сборка из исходников
-
-```bash
-git clone https://github.com/CatVinci-Studio/Textus.git
-cd Textus
-npm install
-
-npm run tauri dev     # full Tauri app (Rust shell + Vite renderer)
-npm run tauri build   # bundle .dmg / -setup.exe (NSIS) / .AppImage / .deb / .rpm
-npm run build         # frontend only: type-check (tsc) + vite build
-```
-
-Нужны [Node.js](https://nodejs.org) 22+, [Rust](https://rustup.rs) (stable) и инструменты сборки для вашей платформы (Xcode CLT на macOS; `libwebkit2gtk-4.1-dev`/`libappindicator3-dev`/`librsvg2-dev`/`patchelf` на Linux; MSVC Build Tools на Windows).
+Все сочетания клавиш можно посмотреть и изменить в **Настройки → Сочетания клавиш**.
 
 ## Сообщество
 
@@ -215,9 +190,9 @@ npm run build         # frontend only: type-check (tsc) + vite build
 
 Об ошибках и пожеланиях пишите в [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues).
 
-## Участие
+## Планы и участие в разработке
 
-В [CONTRIBUTING.md](CONTRIBUTING.md) — проверки CI, правила коммитов и порядок выпуска. В [docs/TESTING.md](docs/TESTING.md) — что покрывают тесты и что они сознательно не покрывают. Обсуждения ведутся на английском или китайском.
+Куда движется Textus, описано в [ROADMAP.md](ROADMAP.md) (на английском). Чтобы собрать Textus, запустить проверки или открыть pull request, начните с [CONTRIBUTING.md](CONTRIBUTING.md) (на английском); ИИ-ассистенты для программирования следуют [AGENTS.md](AGENTS.md). Обсуждение — на английском или китайском.
 
 ## История звёзд
 

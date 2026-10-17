@@ -9,6 +9,11 @@ export const TOGGLE_FIND_REPLACE_EVENT = "textus:toggle-find-replace";
 /// over the top of the page, where the bar sits.
 export const CLOSE_FIND_REPLACE_EVENT = "textus:close-find-replace";
 
+/// detail: `{ paths, point }` - image files dropped on the window from a
+/// file manager, and where in the page they landed (app/useFileOpening.ts's
+/// useFileDrop). The editor on screen inserts them (images/image-plugin.ts).
+export const DROP_IMAGE_FILES_EVENT = "textus:drop-image-files";
+
 /// detail: the markdown text to insert at the cursor (clipboard history panel).
 export const INSERT_CLIPBOARD_TEXT_EVENT = "textus:insert-clipboard-text";
 

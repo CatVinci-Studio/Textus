@@ -4,7 +4,10 @@
    to its new place (App.tsx's FlipOnChange) instead of reflowing on every
    frame, as a margin transition did. Transitions, not keyframes, so a
    second toggle mid-slide turns it around from where it is. Under reduced
-   motion it doesn't travel; it fades where it rests. */
+   motion it doesn't travel; it fades where it rests.
+   Its width is the one dragged on its edge (--sidebar-width, set on
+   .app-shell from app/sidebar-width.ts); the main pane makes room for the
+   same. */
 .sidebar {
   position: absolute;
   top: 0;
@@ -12,7 +15,7 @@
   left: 0;
   /* Over the editor while it slides away across it. */
   z-index: 1;
-  width: 240px;
+  width: var(--sidebar-width, 240px);
   background: var(--sidebar-bg);
   border-right: 1px solid var(--border-color);
   display: flex;
@@ -34,7 +37,14 @@
 }
 
 :root:not(.zen) .sidebar:not(.sidebar-collapsed) ~ .main-pane {
-  margin-left: 240px;
+  margin-left: var(--sidebar-width, 240px);
+}
+
+/* Its resize handle (ui/ResizeHandle.tsx), astride the right edge below
+   the window bar - the bar's own row stays the window's to drag. */
+.sidebar-resizer {
+  top: 28px;
+  right: -3px;
 }
 
 /* Thin, unobtrusive sidebar scrollbar: invisible until the pointer is over

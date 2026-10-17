@@ -1,12 +1,5 @@
 import { type Dispatch, type SetStateAction, useRef } from "react";
-import {
-  Editor,
-  rootCtx,
-  defaultValueCtx,
-  editorViewCtx,
-  editorViewOptionsCtx,
-} from "@milkdown/kit/core";
-import { orderedListAttr } from "@milkdown/kit/preset/commonmark";
+import { Editor, editorViewCtx } from "@milkdown/kit/core";
 import { listenerCtx } from "@milkdown/kit/plugin/listener";
 import { useEditor } from "@milkdown/react";
 import {
@@ -18,7 +11,7 @@ import { effectiveRevisionDisplay } from "../ai/revision/revision-display";
 import type { ReviewNote } from "../ai/margin/review-notes-plugin";
 import type { Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
-import { normalizeMathDelimiters } from "../utils/markdown-math";
+import { configureEditorRoot } from "../editor/editor-extensions";
 
 /** The ref-indirected callbacks the plugin chain reads at call time: the
  *  chain is built once, on mount, before the hooks that own the real
@@ -92,23 +85,7 @@ export function useTextusEditor({
     (root) =>
       withEditorExtensions(
         Editor.make().config((ctx) => {
-          ctx.set(rootCtx, root);
-          ctx.set(defaultValueCtx, normalizeMathDelimiters(initialValue));
-          // Typora-compatible themes style their content under `#write` -
-          // aliasing it here lets most community Typora themes' CSS apply
-          // directly to our content with no rewriting.
-          ctx.set(editorViewOptionsCtx, { attributes: { id: "write" } });
-          // A list starting somewhere other than 1 ("3. ") is the one thing
-          // the DOM structure alone doesn't tell the counter that numbers
-          // ordered lists (see .milkdown ol in milkdown-theme.css), so the
-          // node's `order` rides along as a custom property. Minus one
-          // because counter-reset sets the value BEFORE the first increment.
-          ctx.set(orderedListAttr.key, (node) => {
-            const order = (node.attrs.order as number) ?? 1;
-            return order === 1
-              ? {}
-              : { style: `--textus-ol-start: ${order - 1}` };
-          });
+          configureEditorRoot(ctx, root, initialValue);
           ctx
             .get(listenerCtx)
             .mounted((ctx) => {

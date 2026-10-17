@@ -12,7 +12,7 @@ import {
   type StringKey,
 } from "./strings";
 
-// Every language's file against English (docs/TRANSLATING.md): what a
+// Every language's file against English (docs/dev/translating.md): what a
 // translation may and must contain, whoever wrote it.
 
 const english = LOCALES.en.default as Record<string, string | Plural>;

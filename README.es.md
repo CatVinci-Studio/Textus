@@ -181,32 +181,7 @@ Sí: archivos .md normales, con tablas, listas de tareas, notas al pie, fórmula
 3. Empieza a escribir. Cuando haces una pausa, la continuación aparece en gris; Tab la acepta.
 4. Abre el Panel de IA con el botón de chat de la barra de la ventana. **Ayuda → Guía de funciones de IA** explica el resto.
 
-| Acción                        | Atajo                           |
-| ----------------------------- | ------------------------------- |
-| Panel de IA                   | Ctrl/⌘+Shift+L                  |
-| Pregunta rápida               | Ctrl/⌘+Shift+K                  |
-| Sugerir continuación ahora    | Ctrl/⌘+Shift+Space              |
-| Revisar gramática ahora       | Ctrl/⌘+Shift+G                  |
-| Aceptar una edición pendiente | Ctrl/⌘+Enter                    |
-| Vista dividida                | Ctrl/⌘+Shift+E                  |
-| Modo zen                      | Ctrl/⌘+Shift+J (Esc para salir) |
-| Modo código fuente            | Ctrl/⌘+/                        |
-
-Todos se pueden cambiar en **Ajustes → Atajos de teclado**.
-
-## Compilar desde el código
-
-```bash
-git clone https://github.com/CatVinci-Studio/Textus.git
-cd Textus
-npm install
-
-npm run tauri dev     # full Tauri app (Rust shell + Vite renderer)
-npm run tauri build   # bundle .dmg / -setup.exe (NSIS) / .AppImage / .deb / .rpm
-npm run build         # frontend only: type-check (tsc) + vite build
-```
-
-Necesitas [Node.js](https://nodejs.org) 22 o posterior, [Rust](https://rustup.rs) (stable) y las herramientas de compilación de cada plataforma (Xcode CLT en macOS; `libwebkit2gtk-4.1-dev`/`libappindicator3-dev`/`librsvg2-dev`/`patchelf` en Linux; MSVC Build Tools en Windows).
+Todos los atajos se pueden ver y cambiar en **Ajustes → Atajos de teclado**.
 
 ## Comunidad
 
@@ -215,9 +190,9 @@ Necesitas [Node.js](https://nodejs.org) 22 o posterior, [Rust](https://rustup.rs
 
 Los errores y las sugerencias son bienvenidos en [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues).
 
-## Contribuir
+## Hoja de ruta y cómo contribuir
 
-En [CONTRIBUTING.md](CONTRIBUTING.md) están las comprobaciones que ejecuta la CI, las convenciones de commits y el proceso de publicación. [docs/TESTING.md](docs/TESTING.md) explica qué cubren las pruebas y qué dejan fuera a propósito. Las conversaciones son en inglés o chino.
+[ROADMAP.md](ROADMAP.md) (en inglés) muestra hacia dónde va Textus. Para compilar Textus, ejecutar las comprobaciones o abrir un pull request, empieza por [CONTRIBUTING.md](CONTRIBUTING.md) (en inglés); los asistentes de programación con IA siguen [AGENTS.md](AGENTS.md). Se puede conversar en inglés o en chino.
 
 ## Historial de estrellas
 

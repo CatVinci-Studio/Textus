@@ -101,10 +101,15 @@ export const fs = {
   // On iOS a picked document is a file:// URL read and written through the
   // native plugin (platform/ios-files.ts); sandbox paths and every desktop
   // path go to Rust as before.
-  openFileDialog: (): Promise<string | null> =>
+  /** `filters` names the dialog's file-type choices besides Markdown, in
+   *  the UI language (commands/fs.rs). */
+  openFileDialog: (filters?: {
+    textFilter: string;
+    allFilter: string;
+  }): Promise<string | null> =>
     isIOSApp
       ? iosFiles.pickDocument()
-      : call<string | null>("open_file_dialog"),
+      : call<string | null>("open_file_dialog", filters),
   openCssFileDialog: () => call<string | null>("open_css_file_dialog"),
   saveFileDialog: (defaultName: string): Promise<string | null> =>
     isIOSApp
@@ -167,7 +172,7 @@ export const session = {
 
 // ---------------------------------------------------------------------------
 // storage (src-tauri/src/settings.rs) - settings, UI state and the two
-// histories, held by Rust in plain JSON files (docs/STORAGE.md). Only called
+// histories, held by Rust in plain JSON files (docs/dev/storage.md). Only called
 // when Rust booted this window (src/storage/boot.ts); without that, the
 // stores fall back to localStorage.
 // ---------------------------------------------------------------------------
@@ -520,7 +525,7 @@ export interface LibraryEntry {
   body: string;
 }
 
-/** What shapes Textus AI for one document - see docs/AI-CONCEPTS.md. */
+/** What shapes Textus AI for one document - see docs/design/ai-concepts.md. */
 export interface AgentWorkspaceInfo {
   /** The global writing instructions (agent.md), comments stripped. */
   instructions: string[];

@@ -4,7 +4,7 @@ import { trackWrite } from "./pending-writes";
 import { readLegacyUiState } from "./ui-state";
 
 /**
- * The one-time move out of localStorage (docs/STORAGE.md).
+ * The one-time move out of localStorage (docs/dev/storage.md).
  *
  * On the first launch after the move, Rust has no settings.json and boots
  * every window with `legacyImport`. Each such window reads what its

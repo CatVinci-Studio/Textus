@@ -9,6 +9,7 @@ export default {
   agentPanelToggle: "KI-Bereich",
   agentPanelPopOut: "In eigenem Fenster öffnen",
   agentPanelResize: "Breite des KI-Bereichs ändern",
+  sidebarResize: "Breite der Seitenleiste ändern",
   agentPanelSheet: "KI-Bereich auf- oder zuklappen",
   agentExpandWindowLabel:
     "Vollständige Unterhaltungen in einem eigenen Fenster öffnen",
@@ -158,6 +159,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   shortcutToggleZenMode: "Zen-Modus ein/aus",
   zenExitHint: "Esc beendet den Zen-Modus",
   zenExitButton: "Zen-Modus beenden",
+  openDialogText: "Textdateien",
+  openDialogAll: "Alle Dateien",
   agentPanelSourceMode: `${AI_NAME} arbeitet in der Editoransicht. Wechsle zurück, um die Unterhaltung fortzusetzen.`,
   agentPanelBackToEditor: "Zurück zum Editor",
   modelTagVision: "Bilder",
@@ -714,6 +717,13 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialAgentEditApplied: "Das Dokument wurde aktualisiert.",
   tutorialAgentEditMockReply:
     "Die überflüssige Einleitung ist gestrichen. Prüfe die Vorschau der Änderung.",
+  tutorialConnectAiTitle: "KI verbinden",
+  tutorialConnectAiBody:
+    "Die Übungen nutzten Beispielantworten. Verbinde einen Anbieter, dann funktionieren Vervollständigung, Grammatikprüfung und der Assistent wirklich.",
+  tutorialConnectAiConnected:
+    "Verbunden. Die KI-Funktionen nutzen diesen Anbieter.",
+  tutorialConnectAiSkip: "Später",
+  tutorialConnectAiLater: "Du kannst das auch später unter {path} erledigen.",
   tutorialDoneTitle: "Einführung abgeschlossen",
   tutorialDoneBody: `Jetzt kannst du losschreiben. Um die KI zu nutzen, verbinde unter Einstellungen > ${AI_NAME} einen Dienst. Diese Einführung findest du jederzeit wieder im Menü „Hilfe“.`,
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",
@@ -827,4 +837,14 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuWindow: "Fenster",
   menuZoomWindow: "Zoomen",
   menuBringAllToFront: "Alle nach vorne bringen",
+  // The browser playground (src/playground/).
+  playgroundName: "Spielwiese",
+  playgroundImport: "Importieren",
+  playgroundExport: "Exportieren",
+  playgroundSource: "Quelltext",
+  playgroundDownload: `${APP_NAME} herunterladen`,
+  playgroundLocalNote: "Dein Dokument bleibt nur in diesem Browser.",
+  playgroundImageNotice: `Bilder brauchen die Desktop-App von ${APP_NAME}.`,
+  playgroundImportUnsupported:
+    "Nur .md-, .markdown- und .txt-Dateien lassen sich importieren.",
 } satisfies Translation;

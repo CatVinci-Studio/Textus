@@ -10,14 +10,16 @@ proof that it builds.
 
 ## Checked
 
-<!-- Both halves - it is easy to run one and forget the other. -->
+<!-- `npm run check:all` runs all three. -->
 
 - [ ] `npm run check`
-- [ ] `cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace` (in `src-tauri/`)
+- [ ] `npm run test:e2e`
+- [ ] `npm run check:native`
 
 ## Exercised by hand
 
-<!-- There is no UI or end-to-end coverage (see docs/TESTING.md), so say what
-     you actually ran. REQUIRED if this touches window management, drafts,
+<!-- The e2e flows run the frontend against a stand-in backend; windows,
+     dialogs, files and the built app are not covered (see docs/dev/testing.md),
+     so say what you actually ran. REQUIRED if this touches window management, drafts,
      the updater, or anything else that can lose the user's work. Screenshots
      for anything visible. -->

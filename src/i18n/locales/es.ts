@@ -9,6 +9,7 @@ export default {
   agentPanelToggle: "Panel de IA",
   agentPanelPopOut: "Abrir en una ventana aparte",
   agentPanelResize: "Cambiar el tamaño del panel de IA",
+  sidebarResize: "Cambiar el tamaño de la barra lateral",
   agentPanelSheet: "Expandir o contraer el panel de IA",
   agentExpandWindowLabel:
     "Abrir las conversaciones completas en una ventana aparte",
@@ -164,6 +165,8 @@ para usar una.
   shortcutToggleZenMode: "Modo zen",
   zenExitHint: "Esc para salir del modo zen",
   zenExitButton: "Salir del modo zen",
+  openDialogText: "Archivos de texto",
+  openDialogAll: "Todos los archivos",
   agentPanelSourceMode: `${AI_NAME} funciona en la vista del editor. Vuelve a ella para seguir con la conversación.`,
   agentPanelBackToEditor: "Volver al editor",
   modelTagVision: "visión",
@@ -727,6 +730,13 @@ para usar una.
   tutorialAgentEditApplied: "Documento actualizado.",
   tutorialAgentEditMockReply:
     "Sin la frase introductoria, queda más directa. Revisa la vista previa del cambio.",
+  tutorialConnectAiTitle: "Conecta tu IA",
+  tutorialConnectAiBody:
+    "La práctica usó respuestas de ejemplo. Conecta un proveedor y el autocompletado, la revisión gramatical y el asistente funcionarán de verdad.",
+  tutorialConnectAiConnected:
+    "Conectado. Las funciones de IA usarán este proveedor.",
+  tutorialConnectAiSkip: "Omitir por ahora",
+  tutorialConnectAiLater: "También puedes hacerlo más tarde en {path}.",
   tutorialDoneTitle: "Tutorial terminado",
   tutorialDoneBody: `Ya puedes empezar a escribir. Para usar la IA, conecta un servicio en Ajustes > ${AI_NAME}. Puedes volver a abrir este tutorial desde el menú Ayuda.`,
   closePromptMessage: "Este documento tiene cambios sin guardar.",
@@ -837,4 +847,14 @@ para usar una.
   menuWindow: "Ventana",
   menuZoomWindow: "Zoom",
   menuBringAllToFront: "Traer todo al frente",
+  // The browser playground (src/playground/).
+  playgroundName: "Zona de pruebas",
+  playgroundImport: "Importar",
+  playgroundExport: "Exportar",
+  playgroundSource: "Código",
+  playgroundDownload: `Descargar ${APP_NAME}`,
+  playgroundLocalNote: "Tu documento se guarda solo en este navegador.",
+  playgroundImageNotice: `Las imágenes necesitan la app de escritorio de ${APP_NAME}.`,
+  playgroundImportUnsupported:
+    "Solo se pueden importar archivos .md, .markdown y .txt.",
 } satisfies Translation;

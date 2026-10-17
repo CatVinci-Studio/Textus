@@ -11,6 +11,7 @@ const en = {
   agentPanelToggle: "AI panel",
   agentPanelPopOut: "Open in a separate window",
   agentPanelResize: "Resize the AI panel",
+  sidebarResize: "Resize the sidebar",
   agentPanelSheet: "Expand or collapse the AI panel",
   agentExpandWindowLabel: "Open full conversations in a separate window",
   shortcutToggleAgentPanel: "Toggle AI panel",
@@ -157,6 +158,9 @@ type /name in a conversation to use one.
   shortcutToggleZenMode: "Toggle zen mode",
   zenExitHint: "Esc to leave zen mode",
   zenExitButton: "Leave Zen Mode",
+  /** File > Open's file-type choices besides Markdown. */
+  openDialogText: "Text files",
+  openDialogAll: "All files",
   agentPanelSourceMode: `${AI_NAME} works in the editor view. Switch back to keep the conversation going.`,
   agentPanelBackToEditor: "Back to the editor",
   modelTagVision: "vision",
@@ -706,6 +710,12 @@ type /name in a conversation to use one.
   tutorialAgentEditApplied: "The document has been updated.",
   tutorialAgentEditMockReply:
     "Removed the extra opening phrase. Review the edit preview.",
+  tutorialConnectAiTitle: "Connect your AI",
+  tutorialConnectAiBody:
+    "The practice used sample replies. Connect a provider and completion, grammar checks and the assistant work for real.",
+  tutorialConnectAiConnected: "Connected. AI features will use this provider.",
+  tutorialConnectAiSkip: "Skip for now",
+  tutorialConnectAiLater: "You can also do this later in {path}.",
   tutorialDoneTitle: "Tutorial finished",
   tutorialDoneBody: `You can start writing now. To use AI, connect a service in Settings > ${AI_NAME}. You can reopen this tutorial from the Help menu.`,
   closePromptMessage: "This document has unsaved changes.",
@@ -817,6 +827,16 @@ type /name in a conversation to use one.
   menuWindow: "Window",
   menuZoomWindow: "Zoom",
   menuBringAllToFront: "Bring All to Front",
+  // The browser playground (src/playground/).
+  playgroundName: "Playground",
+  playgroundImport: "Import",
+  playgroundExport: "Export",
+  playgroundSource: "Source",
+  playgroundDownload: `Download ${APP_NAME}`,
+  playgroundLocalNote: "Your document is kept in this browser only.",
+  playgroundImageNotice: `Images need the ${APP_NAME} desktop app.`,
+  playgroundImportUnsupported:
+    "Only .md, .markdown and .txt files can be imported.",
 } satisfies Record<string, string | Plural>;
 
 export default en;

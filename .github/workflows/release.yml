@@ -73,8 +73,40 @@ jobs:
           fi
           echo "::warning::$notes is missing at $RELEASE_TAG; the release keeps its current notes."
 
-  release:
+      # The tests ran in CI on the tagged commit (it reached main or a
+      # release/ branch through a pull request); the builds below don't run
+      # them again. Waits while that CI is still going, and stops the release
+      # if any of the required jobs failed. A rebuild of an old tag
+      # (workflow_dispatch) predates these job names and skips the gate.
+      - name: CI passed on the tagged commit
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sha=$(git -C tagged rev-parse HEAD)
+          echo "Tagged commit: $sha"
+          for attempt in $(seq 1 90); do
+            runs=$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/check-runs?per_page=100" \
+              --jq '[.check_runs[] | select(.name == "check" or .name == "e2e" or .name == "native")]')
+            failed=$(jq -r '[.[] | select(.status == "completed" and (.conclusion != "success" and .conclusion != "skipped")) | .name] | join(", ")' <<< "$runs")
+            if [ -n "$failed" ]; then
+              echo "::error::CI failed on $sha: $failed. Fix it on main and tag again."
+              exit 1
+            fi
+            passed=$(jq '[.[] | select(.status == "completed")] | map(.name) | unique | length' <<< "$runs")
+            if [ "$passed" -eq 3 ]; then
+              echo "check, e2e and native passed on $sha."
+              exit 0
+            fi
+            echo "Waiting for CI on $sha ($passed of 3 done)..."
+            sleep 30
+          done
+          echo "::error::CI on $sha did not finish within 45 minutes (or never ran: was this commit pushed to main or a release/ branch?)."
+          exit 1
+
+  build:
     needs: preflight
+    name: build (${{ matrix.target || matrix.platform }})
     timeout-minutes: 90
     strategy:
       fail-fast: false
@@ -145,16 +177,6 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      # The Intel build is the same source as the Apple silicon one, which
-      # has just run these on this runner image.
-      - name: Validate frontend before publishing
-        if: matrix.target != 'x86_64-apple-darwin'
-        run: npm run check
-
-      - name: Test native app before publishing
-        if: matrix.target != 'x86_64-apple-darwin'
-        run: cargo test --workspace --manifest-path src-tauri/Cargo.toml
-
       - name: Build and release
         # Pinned to the commit of v0.6.2 (what @v0 resolved to): a moving
         # major tag could change how the release is built between two tags.
@@ -222,14 +244,14 @@ jobs:
   # arch-package.yml). Before publish, so a broken package keeps the whole
   # release a draft.
   arch-package:
-    needs: release
+    needs: build
     uses: ./.github/workflows/arch-package.yml
     with:
       tag: ${{ inputs.tag || github.ref_name }}
     secrets: inherit
 
   publish:
-    needs: [release, arch-package]
+    needs: [build, arch-package]
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     outputs:
@@ -331,118 +353,28 @@ jobs:
             gh release edit "$RELEASE_TAG" --draft=false --latest=false
           fi
 
-  # Points the Homebrew cask (CatVinci-Studio/homebrew-tap) at the DMG this
-  # release just published, so `brew install --cask catvinci-studio/tap/textus`
-  # always serves the newest version. Pushes via a write deploy key on the
-  # tap repo (GITHUB_TOKEN can't push to another repository).
-  #
-  # Only for the newest stable tag. Pre-releases: the cask has no channel of
-  # its own, so pointing it at an rc would hand that build to every `brew
-  # upgrade` - the same mistake marking the GitHub release as a pre-release
-  # exists to prevent. Rebuilds of an older tag: that would downgrade.
-  # The website's download buttons serve the installers from our own R2
-  # bucket (textus.catvinci.com/download/), not from GitHub, which is slow
-  # or unreachable from some networks. Copies this release there and points
-  # the bucket's manifest.json at it. Needs the CLOUDFLARE_API_TOKEN secret
-  # (an API token with R2 edit on the account); without it the job only
-  # warns, and scripts/mirror-downloads.sh can be run by hand.
+  # After publishing, only for the newest stable tag: the download mirror,
+  # the Homebrew cask and the [catvinci] pacman repository. Pre-releases have
+  # no channel of their own in any of them, so pointing them at an rc would
+  # hand it to everyone; an older tag would downgrade. Each is its own
+  # workflow and can be re-run by hand for one tag.
   mirror-downloads:
     needs: publish
     if: ${{ needs.publish.outputs.newest-stable == 'true' }}
-    runs-on: ubuntu-22.04
-    timeout-minutes: 30
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: 49abb4d436c552f6e4497b1782fc9beb
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Copy the installers to textus.catvinci.com/download
-        run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "::warning::CLOUDFLARE_API_TOKEN is not set: the website still downloads the previous version. Run scripts/mirror-downloads.sh $RELEASE_TAG by hand."
-            exit 0
-          fi
-          scripts/mirror-downloads.sh "$RELEASE_TAG"
+    uses: ./.github/workflows/mirror-downloads.yml
+    with:
+      tag: ${{ inputs.tag || github.ref_name }}
+    secrets: inherit
 
   update-homebrew-tap:
     needs: publish
     if: ${{ needs.publish.outputs.newest-stable == 'true' }}
-    runs-on: ubuntu-22.04
-    timeout-minutes: 30
-    steps:
-      # packaging/homebrew/textus.rb, for the first release's rename.
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.RELEASE_TAG }}
-          path: app
+    uses: ./.github/workflows/update-homebrew-tap.yml
+    with:
+      tag: ${{ inputs.tag || github.ref_name }}
+    secrets: inherit
 
-      - name: Update cask version and sha256
-        env:
-          TAP_DEPLOY_KEY: ${{ secrets.TAP_DEPLOY_KEY }}
-        run: |
-          # Loudly: a quietly skipped tap update leaves brew users on the
-          # old version with nobody noticing.
-          if [ -z "$TAP_DEPLOY_KEY" ]; then
-            echo "::error::TAP_DEPLOY_KEY is not set - the Homebrew cask was not updated"
-            exit 1
-          fi
-          VERSION="${RELEASE_TAG#v}"
-          # The release was published seconds ago; let the CDN catch up.
-          sha_of() {
-            curl -fsSL --retry 5 --retry-all-errors --retry-delay 10 -o "$1.dmg" \
-              "https://github.com/CatVinci-Studio/Textus/releases/download/${RELEASE_TAG}/${PRODUCT_NAME}_${VERSION}_$1.dmg"
-            sha256sum "$1.dmg" | cut -d' ' -f1
-          }
-          SHA_ARM=$(sha_of aarch64)
-          SHA_INTEL=$(sha_of x64)
-          mkdir -p ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          printf '%s\n' "$TAP_DEPLOY_KEY" > ~/.ssh/tap_key
-          chmod 600 ~/.ssh/tap_key
-          export GIT_SSH_COMMAND="ssh -i ~/.ssh/tap_key"
-          git clone git@github.com:CatVinci-Studio/homebrew-tap.git
-          cd homebrew-tap
-          # The first Textus release renames the levis cask (Levis is
-          # Textus's name before 1.0.0) in this same commit, so the tap
-          # never has a textus cask pointing at an unpublished DMG, and
-          # cask_renames.json moves `brew upgrade` users from levis to
-          # textus. See packaging/homebrew/README.md.
-          if [ ! -f Casks/textus.rb ]; then
-            cp ../app/packaging/homebrew/textus.rb Casks/textus.rb
-            if [ -f Casks/levis.rb ]; then git rm -q Casks/levis.rb; fi
-            [ -f cask_renames.json ] || echo '{}' > cask_renames.json
-            jq --indent 2 '. + {"levis": "textus"}' cask_renames.json > cask_renames.json.new
-            mv cask_renames.json.new cask_renames.json
-            git add Casks/textus.rb cask_renames.json
-          fi
-          # The cask's shape comes from packaging/homebrew/textus.rb each
-          # time (the Intel DMG made it per-architecture in 1.0.3); only
-          # the version and the two checksums are this release's.
-          cp ../app/packaging/homebrew/textus.rb Casks/textus.rb
-          sed -i "s|^  version \".*\"|  version \"${VERSION}\"|" Casks/textus.rb
-          sed -i "s|^  sha256 arm: .*|  sha256 arm:   \"${SHA_ARM}\",|" Casks/textus.rb
-          sed -i "s|^         intel: .*|         intel: \"${SHA_INTEL}\"|" Casks/textus.rb
-          grep -q "${SHA_ARM}" Casks/textus.rb && grep -q "${SHA_INTEL}" Casks/textus.rb
-          # A rerun after a successful push has nothing to commit.
-          if git diff HEAD --quiet; then
-            echo "The cask already serves ${VERSION}"
-            exit 0
-          fi
-          git -c user.name="github-actions[bot]" \
-              -c user.email="github-actions[bot]@users.noreply.github.com" \
-              commit -am "textus ${VERSION}"
-          git push
-
-  # Asks the [catvinci] pacman repository (CatVinci-Studio/arch-repo) to
-  # serve the textus-bin this release carries (see update-arch-repo.yml).
-  # Only for the newest stable tag, like the Homebrew cask: pacman sorts
-  # 0.9.0_rc.1 above 0.9.0, and an older tag would downgrade.
+  # pacman also sorts 0.9.0_rc.1 above 0.9.0 (see update-arch-repo.yml).
   update-arch-repo:
     needs: publish
     if: ${{ needs.publish.outputs.newest-stable == 'true' }}

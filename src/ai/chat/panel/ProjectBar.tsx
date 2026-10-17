@@ -42,7 +42,7 @@ export function libraryFileName(name: string): string {
  * project-level files kept in its .textus/ folder - the style profile, the
  * library of people, places and terms (src-tauri ai::project) and the
  * project's writing instructions (.textus/agent.md). The names follow
- * docs/AI-CONCEPTS.md. The folder used to be a setting three screens deep;
+ * docs/design/ai-concepts.md. The folder used to be a setting three screens deep;
  * this is where it actually matters.
  */
 export function ProjectBar({
