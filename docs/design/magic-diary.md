@@ -13,7 +13,8 @@ Nothing in the interface names it.
 Settings › General › About Textus: tap the version five times, quickly. It
 opens only when the selected AI provider is signed in or has its key, and
 only in the desktop app; without a provider the taps do nothing at all.
-Settings close and the page is the book. Five more taps close it, and the
+Settings close and the page is the book. To leave, the × at the page's top
+right ("Leave the diary", reachable with Tab) or five more taps close it, and the
 user's own theme is back - the diary sits over the theme, it doesn't
 replace it (`enableDiary` in Settings, `html[data-magic-diary]`).
 

@@ -637,3 +637,54 @@ html[data-magic-diary] .magic-diary-has-caret {
     opacity: 0;
   }
 }
+
+/* The way out (ai/magic-diary/DiaryLeaveButton.tsx): the page's top right,
+   under the window bar and the tab bar, so it never meets the traffic
+   lights, the caption buttons or the AI panel toggle, and above the map's
+   top landmarks (124px down). The anchor takes no height in the pane's
+   column; the button hangs from it. */
+.magic-diary-leave-anchor {
+  position: relative;
+  height: 0;
+  flex-shrink: 0;
+  z-index: 46;
+}
+.magic-diary-leave {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+}
+/* The diary's chrome ink; html[...] to outweigh .icon-button's own colour,
+   whichever stylesheet loads last. */
+html[data-magic-diary] .magic-diary-leave {
+  color: var(--chrome-muted);
+}
+/* No tab bar: the anchor is the pane's top edge, which the window bar
+   covers. */
+.magic-diary-leave-anchor:first-child .magic-diary-leave {
+  top: calc(var(--native-titlebar-height, 28px) + 10px);
+}
+html[data-magic-diary] .magic-diary-leave:is(:hover, :focus-visible) {
+  color: var(--chrome-text);
+}
+/* The button hangs into the page itself; the column keeps its text below
+   it, so a long answer in a narrow or short window can't run under the
+   button (both edges, to keep the page's line centred). Under a tab bar it
+   reaches 40px into the page; without one, below the window bar too. */
+html[data-magic-diary] .magic-diary-leave-anchor ~ * .editor-content {
+  padding-block: max(min(3rem, 8dvh), 48px);
+}
+html[data-magic-diary]
+  .magic-diary-leave-anchor:first-child
+  ~ *
+  .editor-content {
+  padding-block: max(
+    min(3rem, 8dvh),
+    calc(var(--native-titlebar-height, 28px) + 50px)
+  );
+}
+@media print {
+  .magic-diary-leave-anchor {
+    display: none;
+  }
+}

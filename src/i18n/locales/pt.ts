@@ -814,6 +814,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   diaryNoAnswer:
     "Desta vez a tinta não respondeu. Tente de novo daqui a pouco.",
   diaryGreeting: "…Está alguém aí? Este livro não é aberto há muito tempo.",
+  diaryLeave: "Sair do diário",
   appearanceLabel: "Aparência",
   appearanceSystem: "Seguir o sistema",
   appearanceLight: "Claro",

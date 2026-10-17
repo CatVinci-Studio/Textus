@@ -769,6 +769,7 @@ export default {
   themeNameParchment: "羊皮紙",
   diaryNoAnswer: "墨水暫時沒有回應，稍後再試試吧。",
   diaryGreeting: "……有人嗎？這本書很久沒有被打開了。",
+  diaryLeave: "退出日記",
   appearanceLabel: "外觀",
   appearanceSystem: "依照系統",
   appearanceLight: "淺色",

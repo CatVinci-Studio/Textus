@@ -821,6 +821,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Die Tinte hat diesmal nicht geantwortet. Versuch es gleich noch einmal.",
   diaryGreeting:
     "… Ist da jemand? Dieses Buch wurde lange nicht aufgeschlagen.",
+  diaryLeave: "Tagebuch verlassen",
   appearanceLabel: "Erscheinungsbild",
   appearanceSystem: "Systemeinstellung",
   appearanceLight: "Hell",

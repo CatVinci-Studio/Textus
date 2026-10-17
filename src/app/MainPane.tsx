@@ -5,6 +5,7 @@ import { SplitView } from "../editor/modes/SplitView";
 import { SourceTextarea } from "../editor/modes/SourceTextarea";
 import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
+import { DiaryLeaveButton } from "../ai/magic-diary/DiaryLeaveButton";
 import { TabBar } from "./TabBar";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
@@ -62,6 +63,10 @@ export function MainPane({
           previewTab={previewTab}
         />
       )}
+
+      {/* Under the tab bar, so it sits at the page's top right and clear
+        of everything in the window bar. */}
+      <DiaryLeaveButton t={t} />
 
       {/* Every open tab's editor stays mounted (just hidden) so switching
         tabs preserves undo history, scroll position, and in-flight AI

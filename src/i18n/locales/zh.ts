@@ -763,6 +763,7 @@ export default {
   themeNameParchment: "羊皮纸",
   diaryNoAnswer: "墨水暂时没有回应，稍后再试试吧。",
   diaryGreeting: "……有人吗？这本书很久没有被打开了。",
+  diaryLeave: "退出日记",
   appearanceLabel: "外观",
   appearanceSystem: "跟随系统",
   appearanceLight: "浅色",

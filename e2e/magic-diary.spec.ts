@@ -576,3 +576,125 @@ test("on an empty page the diary speaks first, until the reader writes", async (
   await expect(greeting).toHaveCount(0);
   await expect(editor(page)).toContainText("你好");
 });
+
+const leave = (page: Page) => page.getByRole("button", { name: "退出日记" });
+
+test("the leave button closes the diary and gives the window back", async ({
+  page,
+}) => {
+  await setup(page);
+  await expect(leave(page)).toBeVisible();
+  await expect(leave(page)).toHaveAttribute("title", "退出日记");
+  await leave(page).click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-magic-diary");
+  await expect(leave(page)).toHaveCount(0);
+  await expect(page.locator(".magic-footprint-layer")).toHaveCount(0);
+  await pasteMarkdown(page, "普通文本");
+  await editor(page).press("End");
+  await editor(page).press("Enter");
+  await expect(editor(page).locator("p")).toHaveCount(2);
+  await expect(page.locator(".magic-diary-reply")).toHaveCount(0);
+});
+
+test("leaving while an answer is pending gives the reader's line back", async ({
+  page,
+}) => {
+  await setup(page);
+  await pasteMarkdown(page, "还没说完的话");
+  await editor(page).press("End");
+  await editor(page).press("Enter");
+  await expect(editor(page)).toHaveAttribute("aria-busy", "true");
+  await leave(page).click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-magic-diary");
+  await expect(editor(page)).toHaveAttribute("aria-busy", "false");
+  await expect(page.locator(".magic-diary-reply")).toHaveCount(0);
+  await expect(editor(page)).toContainText("还没说完的话");
+  await expect(editor(page).locator(".magic-diary-absorbed")).toHaveCount(0);
+});
+
+test("there is no leave button outside the diary", async ({ page }) => {
+  await openApp(page, { settings: { enableDiary: false } });
+  await expect(editor(page)).toBeVisible();
+  await expect(leave(page)).toHaveCount(0);
+});
+
+test("the leave button is reachable from the keyboard", async ({ page }) => {
+  await setup(page);
+  await leave(page).focus();
+  await expect(leave(page)).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("html")).not.toHaveAttribute("data-magic-diary");
+});
+
+type Box = { x: number; y: number; width: number; height: number };
+const overlaps = (a: Box, b: Box) =>
+  a.x < b.x + b.width &&
+  b.x < a.x + a.width &&
+  a.y < b.y + b.height &&
+  b.y < a.y + a.height;
+
+async function expectClearOfMap(page: Page, button: Box) {
+  for (const landmark of await page.locator(".magic-map-landmark").all()) {
+    const box = await landmark.boundingBox();
+    if (box) expect(overlaps(button, box)).toBe(false);
+  }
+}
+
+for (const colorScheme of ["light", "dark"] as const) {
+  test(`in a small ${colorScheme} window the leave button clears the window bar, the map and a long answer`, async ({
+    page,
+  }) => {
+    await page.clock.install();
+    await openApp(page, {
+      settings: { enableDiary: true },
+      animations: true,
+      colorScheme,
+    });
+    await page.setViewportSize({ width: 560, height: 420 });
+    await mockInvoke(page, {
+      ai_diary_reply: "先慢慢写，不必急着找到答案。".repeat(12),
+    });
+    await pasteMarkdown(page, "还有很多话想说");
+    await editor(page).press("End");
+    await editor(page).press("Enter");
+    await reachInk(page);
+    await written(page);
+    const button = (await leave(page).boundingBox())!;
+    expect(button.width).toBeGreaterThanOrEqual(28);
+    expect(button.height).toBeGreaterThanOrEqual(28);
+    const bar = (await page.locator(".window-bar").boundingBox())!;
+    expect(button.y).toBeGreaterThanOrEqual(bar.y + bar.height);
+    const reply = (await page.locator(".magic-diary-reply").boundingBox())!;
+    expect(overlaps(button, reply)).toBe(false);
+    await expectClearOfMap(page, button);
+    // The diary's own chrome ink, not the default theme's.
+    const [colour, ink] = await leave(page).evaluate((el) => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--chrome-muted)";
+      document.body.append(probe);
+      const expected = getComputedStyle(probe).color;
+      probe.remove();
+      return [getComputedStyle(el).color, expected];
+    });
+    expect(colour).toBe(ink);
+    await page.screenshot({
+      path: test.info().outputPath(`leave-${colorScheme}.png`),
+    });
+  });
+}
+
+test("with a tab bar the leave button sits under it, still clear of the map", async ({
+  page,
+}) => {
+  await setup(page);
+  await page.evaluate(() => {
+    (
+      window as unknown as { __devEmitTauriEvent: (name: string) => void }
+    ).__devEmitTauriEvent("menu-new-file");
+  });
+  await expect(page.locator(".tab-pill")).toHaveCount(2);
+  const button = (await leave(page).boundingBox())!;
+  const tabs = (await page.locator(".tab-bar").boundingBox())!;
+  expect(button.y).toBeGreaterThanOrEqual(tabs.y + tabs.height);
+  await expectClearOfMap(page, button);
+});
