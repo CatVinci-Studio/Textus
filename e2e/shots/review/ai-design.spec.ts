@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, openPhone, PHONE } from "./helpers";
+import { mockInvoke, openApp, openPhone, PHONE } from "../../helpers";
 
 // Screenshots of the AI surfaces in the text - a rewrite decided sentence by
 // sentence, the review bar, margin notes, the grammar card, the Memory view
@@ -8,7 +8,7 @@ import { mockInvoke, openApp, openPhone, PHONE } from "./helpers";
 // the notes, and the quoted original is never touched. Runs only with
 // TEXTUS_SHOTS_DIR set to where the PNGs go:
 //
-//   TEXTUS_SHOTS_DIR=../assets/working/ai-design/shots npx playwright test ai-design-shots
+//   TEXTUS_SHOTS_DIR=../assets/working/ai-design/shots npm run screenshots:review -- ai-design
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");
@@ -261,7 +261,7 @@ for (const [themeId, scheme] of [
 test("theme imported typora", async ({ page }) => {
   const { readFileSync } = await import("node:fs");
   const css = readFileSync(
-    new URL("./fixtures/themes/newsprint-like.css", import.meta.url),
+    new URL("../../fixtures/themes/newsprint-like.css", import.meta.url),
     "utf8",
   );
   await page.setViewportSize({ width: 1440, height: 900 });

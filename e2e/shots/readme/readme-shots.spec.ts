@@ -5,7 +5,7 @@
  * images in docs/images/readme/.
  */
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "../helpers";
+import { mockInvoke, openApp, pasteMarkdown } from "../../helpers";
 
 interface Sample {
   doc: string;
