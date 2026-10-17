@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
 import { installClipboardCapture } from "../clipboard/history";
@@ -27,7 +27,11 @@ import { useTabState } from "./useTabState";
 import { useSidePanels } from "./useSidePanels";
 import { useActiveDocument } from "./useActiveDocument";
 import { useSessionPaths, useWindowTitle } from "./useWindowSession";
-import { useFileOpening, useOpenPathsPush } from "./useFileOpening";
+import {
+  useFileDrop,
+  useFileOpening,
+  useOpenPathsPush,
+} from "./useFileOpening";
 import { useHelpTabs } from "./useHelpTabs";
 import { useSaveTabs } from "./useSaveTabs";
 import { useZenMode } from "./useZenMode";
@@ -77,6 +81,7 @@ function App() {
     panelOpen,
     setPanelOpen,
     toggleSidebar,
+    sidebarWidth,
     agentPanel,
     agentOverlays,
     agentPanelEl,
@@ -118,11 +123,16 @@ function App() {
   useWindowTitle(activeTitle);
   useSessionPaths(tabs);
 
+  const dialogFilters = useMemo(
+    () => ({ textFilter: t.openDialogText, allFilter: t.openDialogAll }),
+    [t],
+  );
   const { openPathInTab, replaceTabWithFile, openFile, openFileDialog } =
     useFileOpening({
       tabState,
       newDocumentMode: settings.newDocumentMode,
       setPendingClose,
+      dialogFilters,
     });
 
   const { openHelpTab } = useHelpTabs({
@@ -214,6 +224,7 @@ function App() {
 
   // The same, pushed to an already-running window (useFileOpening.ts).
   useOpenPathsPush(openPathInTab);
+  useFileDrop(openFile, openPathInTab);
 
   useWindowCloseGuard(liveTabs, setPendingClose);
 
@@ -314,6 +325,11 @@ function App() {
               agentPresence.mounted && !agentOverlays && !isIOSApp
                 ? `${agentPanel.width}px`
                 : "0px",
+            // The sidebar's dragged width (sidebar-frame.css); an iPad
+            // keeps the stylesheet's, its sidebar has no handle.
+            ...(!isIOSApp && {
+              "--sidebar-width": `${sidebarWidth.width}px`,
+            }),
           } as React.CSSProperties
         }
       >
@@ -335,6 +351,7 @@ function App() {
           spotlight={sidebarLesson}
           mode={panelMode}
           onModeChange={setPanelMode}
+          width={sidebarWidth}
           rootPath={rootPath}
           activePath={activeTab.path}
           activeContent={activeTab.content}

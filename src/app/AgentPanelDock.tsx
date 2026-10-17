@@ -1,9 +1,12 @@
 import { isIOSApp } from "../platform/capabilities";
 import type { PresenceHandle } from "../ui/usePresence";
 import {
-  AgentPanelResizer,
+  AGENT_PANEL_DEFAULT_WIDTH,
+  AGENT_PANEL_MAX_WIDTH,
+  AGENT_PANEL_MIN_WIDTH,
   AgentPanelSheetGrip,
 } from "../ai/chat/panel/agent-panel";
+import { ResizeHandle } from "../ui/ResizeHandle";
 import type { Strings } from "../i18n/strings";
 
 /** The docked Agent panel's frame on the right (a bottom sheet on a
@@ -30,7 +33,8 @@ export function AgentPanelDock({
   sheetFull: boolean;
   onSheetFullChange: (full: boolean) => void;
   width: number;
-  onResize: (width: number) => void;
+  /** `done`: the drag let go, or a key moved it - remember it. */
+  onResize: (width: number, done: boolean) => void;
   onClose: () => void;
   mountRef: (el: HTMLElement | null) => void;
   /** The active tab is in source mode or split view. */
@@ -56,9 +60,14 @@ export function AgentPanelDock({
           label={t.agentPanelSheet}
         />
       )}
-      <AgentPanelResizer
+      <ResizeHandle
+        className="agent-panel-resizer"
+        edge="left"
         width={width}
+        min={AGENT_PANEL_MIN_WIDTH}
+        max={AGENT_PANEL_MAX_WIDTH}
         onResize={onResize}
+        onReset={() => onResize(AGENT_PANEL_DEFAULT_WIDTH, true)}
         label={t.agentPanelResize}
       />
       <div className="agent-panel-mount" ref={mountRef} />

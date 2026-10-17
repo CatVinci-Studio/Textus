@@ -4,20 +4,21 @@ Five suites, from cheapest to most expensive:
 
 ```sh
 npm run check                          # typecheck, lint, vitest, prettier, README structure
-cd src-tauri && cargo test --workspace # app crate + aicompat
-npm run test:visual                    # Playwright: the UI in Chromium
+npm run check:native                   # rustfmt, clippy, Rust tests (app crate + aicompat)
+npm run test:e2e                       # Playwright flows in Chromium, desktop and phone
 scripts/smoke-linux.sh --build         # the built Linux app and its .deb
-npm run screenshots:readme             # regenerate the README screenshots
-npm run screenshots:website            # the website's app screenshots (e2e/website/)
+npm run screenshots:readme             # regenerate the README screenshots (e2e/shots/readme/)
+npm run screenshots:website            # the website's app screenshots (e2e/shots/website/)
 cd src-tauri && cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
                                        # real Anthropic API (costs money - docs/AI-EVAL.md)
 ```
 
-The first two run in CI, as do the Playwright flows with
-`--ignore-snapshots` (screenshot baselines depend on the fonts of the machine
-that took them). The rest need a display, a desktop session or an API key,
-and are run by hand before a release. The visual suite needs Chromium once:
-`npx playwright install chromium`.
+The first three run in CI, the same commands on every platform. The rest
+need a display, a desktop session or an API key, and are run by hand before
+a release. The e2e flows need Chromium once: `npm run setup:e2e`.
+`npm run test:visual` adds the screenshot comparison of `e2e/visual.spec.ts`
+against Linux baselines (they depend on the fonts of the machine that took
+them).
 
 CI also builds the iOS app for the simulator, unsigned, on macOS (the `ios`
 job) - proof that the desktop/iOS split in `docs/ios/code-map.zh.md` still

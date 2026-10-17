@@ -9,6 +9,7 @@ export default {
   agentPanelToggle: "Panel de IA",
   agentPanelPopOut: "Abrir en una ventana aparte",
   agentPanelResize: "Cambiar el tamaño del panel de IA",
+  sidebarResize: "Cambiar el tamaño de la barra lateral",
   agentPanelSheet: "Expandir o contraer el panel de IA",
   agentExpandWindowLabel:
     "Abrir las conversaciones completas en una ventana aparte",
@@ -164,6 +165,8 @@ para usar una.
   shortcutToggleZenMode: "Modo zen",
   zenExitHint: "Esc para salir del modo zen",
   zenExitButton: "Salir del modo zen",
+  openDialogText: "Archivos de texto",
+  openDialogAll: "Todos los archivos",
   agentPanelSourceMode: `${AI_NAME} funciona en la vista del editor. Vuelve a ella para seguir con la conversación.`,
   agentPanelBackToEditor: "Volver al editor",
   modelTagVision: "visión",

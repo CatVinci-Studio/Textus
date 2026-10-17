@@ -20,7 +20,6 @@ import {
 const LINUX_MENU_ACCELERATORS: Record<string, string> = {
   "mod+,": "settings",
   "mod+shift+s": "save-file-as",
-  "mod+p": "export-pdf",
   "mod+=": "zoom-in",
   "mod++": "zoom-in",
   "mod+shift++": "zoom-in",
@@ -29,6 +28,15 @@ const LINUX_MENU_ACCELERATORS: Record<string, string> = {
   "mod+shift+n": "new-window",
   "mod+shift+w": "close-window",
   "mod+q": "quit",
+};
+
+/** File commands routed through the backend where the app draws the window
+ *  frame (Windows, Linux), so they reach the menu dispatch while focus is
+ *  inside the webview - see the keydown handler below. */
+const WEBVIEW_FILE_COMMANDS: Record<string, string> = {
+  "mod+n": "new-file",
+  "mod+o": "open-file",
+  "mod+p": "export-pdf",
 };
 
 /**
@@ -80,12 +88,13 @@ export function useGlobalShortcuts(opts: {
       // for most accelerators, but Open/New are handled here so they remain
       // reliable while focus is inside the webview/editor. The backend still
       // owns their behaviour (including tab-vs-window mode), exactly as if
-      // the corresponding menu item had been clicked.
-      if (appDrawsWindowFrame && (combo === "mod+n" || combo === "mod+o")) {
+      // the corresponding menu item had been clicked. Ctrl+P too: left to
+      // the webview, WebView2 printed the app window itself, with the
+      // browser's date/title header and tauri.localhost footer (#68).
+      const fileCommand = WEBVIEW_FILE_COMMANDS[combo];
+      if (appDrawsWindowFrame && fileCommand) {
         e.preventDefault();
-        void menuIpc.triggerMenuItem(
-          combo === "mod+n" ? "new-file" : "open-file",
-        );
+        void menuIpc.triggerMenuItem(fileCommand);
         return;
       }
 
