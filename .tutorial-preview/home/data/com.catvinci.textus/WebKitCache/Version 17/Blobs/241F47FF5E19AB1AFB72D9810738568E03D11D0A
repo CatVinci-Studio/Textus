@@ -1,0 +1,1743 @@
+import {
+  longestStreak
+} from "/node_modules/.vite/deps/chunk-Y7LV7UOF.js?v=d86238d2";
+import {
+  classifyCharacter
+} from "/node_modules/.vite/deps/chunk-VHYWNMDZ.js?v=d86238d2";
+import {
+  decodeNamedCharacterReference
+} from "/node_modules/.vite/deps/chunk-YQLVW5CY.js?v=d86238d2";
+import {
+  codes,
+  constants,
+  values
+} from "/node_modules/.vite/deps/chunk-U6CUW5DC.js?v=d86238d2";
+
+// node_modules/zwitch/index.js
+var own = {}.hasOwnProperty;
+function zwitch(key, options) {
+  const settings = options || {};
+  function one2(value, ...parameters) {
+    let fn = one2.invalid;
+    const handlers = one2.handlers;
+    if (value && own.call(value, key)) {
+      const id = String(value[key]);
+      fn = own.call(handlers, id) ? handlers[id] : one2.unknown;
+    }
+    if (fn) {
+      return fn.call(this, value, ...parameters);
+    }
+  }
+  one2.handlers = settings.handlers || {};
+  one2.invalid = settings.invalid;
+  one2.unknown = settings.unknown;
+  return one2;
+}
+
+// node_modules/mdast-util-to-markdown/lib/configure.js
+var own2 = {}.hasOwnProperty;
+function configure(base, extension) {
+  let index = -1;
+  let key;
+  if (extension.extensions) {
+    while (++index < extension.extensions.length) {
+      configure(base, extension.extensions[index]);
+    }
+  }
+  for (key in extension) {
+    if (own2.call(extension, key)) {
+      switch (key) {
+        case "extensions": {
+          break;
+        }
+        /* c8 ignore next 4 */
+        case "unsafe": {
+          list(base[key], extension[key]);
+          break;
+        }
+        case "join": {
+          list(base[key], extension[key]);
+          break;
+        }
+        case "handlers": {
+          map(base[key], extension[key]);
+          break;
+        }
+        default: {
+          base.options[key] = extension[key];
+        }
+      }
+    }
+  }
+  return base;
+}
+function list(left, right) {
+  if (right) {
+    left.push(...right);
+  }
+}
+function map(left, right) {
+  if (right) {
+    Object.assign(left, right);
+  }
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/blockquote.js
+function blockquote(node2, _, state, info) {
+  const exit = state.enter("blockquote");
+  const tracker = state.createTracker(info);
+  tracker.move("> ");
+  tracker.shift(2);
+  const value = state.indentLines(
+    state.containerFlow(node2, tracker.current()),
+    map2
+  );
+  exit();
+  return value;
+}
+function map2(line, _, blank) {
+  return ">" + (blank ? "" : " ") + line;
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/pattern-in-scope.js
+function patternInScope(stack, pattern) {
+  return listInScope(stack, pattern.inConstruct, true) && !listInScope(stack, pattern.notInConstruct, false);
+}
+function listInScope(stack, list3, none) {
+  if (typeof list3 === "string") {
+    list3 = [list3];
+  }
+  if (!list3 || list3.length === 0) {
+    return none;
+  }
+  let index = -1;
+  while (++index < list3.length) {
+    if (stack.includes(list3[index])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/break.js
+function hardBreak(_, _1, state, info) {
+  let index = -1;
+  while (++index < state.unsafe.length) {
+    if (state.unsafe[index].character === "\n" && patternInScope(state.stack, state.unsafe[index])) {
+      return /[ \t]/.test(info.before) ? "" : " ";
+    }
+  }
+  return "\\\n";
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/format-code-as-indented.js
+function formatCodeAsIndented(node2, state) {
+  return Boolean(
+    state.options.fences === false && node2.value && // If there’s no info…
+    !node2.lang && // And there’s a non-whitespace character…
+    /[^ \r\n]/.test(node2.value) && // And the value doesn’t start or end in a blank…
+    !/^[\t ]*(?:[\r\n]|$)|(?:^|[\r\n])[\t ]*$/.test(node2.value)
+  );
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/check-fence.js
+function checkFence(state) {
+  const marker = state.options.fence || "`";
+  if (marker !== "`" && marker !== "~") {
+    throw new Error(
+      "Cannot serialize code with `" + marker + "` for `options.fence`, expected `` ` `` or `~`"
+    );
+  }
+  return marker;
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/code.js
+function code(node2, _, state, info) {
+  const marker = checkFence(state);
+  const raw = node2.value || "";
+  const suffix = marker === "`" ? "GraveAccent" : "Tilde";
+  if (formatCodeAsIndented(node2, state)) {
+    const exit2 = state.enter("codeIndented");
+    const value2 = state.indentLines(raw, map3);
+    exit2();
+    return value2;
+  }
+  const tracker = state.createTracker(info);
+  const sequence = marker.repeat(Math.max(longestStreak(raw, marker) + 1, 3));
+  const exit = state.enter("codeFenced");
+  let value = tracker.move(sequence);
+  if (node2.lang) {
+    const subexit = state.enter(`codeFencedLang${suffix}`);
+    value += tracker.move(
+      state.safe(node2.lang, {
+        before: value,
+        after: " ",
+        encode: ["`"],
+        ...tracker.current()
+      })
+    );
+    subexit();
+  }
+  if (node2.lang && node2.meta) {
+    const subexit = state.enter(`codeFencedMeta${suffix}`);
+    value += tracker.move(" ");
+    value += tracker.move(
+      state.safe(node2.meta, {
+        before: value,
+        after: "\n",
+        encode: ["`"],
+        ...tracker.current()
+      })
+    );
+    subexit();
+  }
+  value += tracker.move("\n");
+  if (raw) {
+    value += tracker.move(raw + "\n");
+  }
+  value += tracker.move(sequence);
+  exit();
+  return value;
+}
+function map3(line, _, blank) {
+  return (blank ? "" : "    ") + line;
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/check-quote.js
+function checkQuote(state) {
+  const marker = state.options.quote || '"';
+  if (marker !== '"' && marker !== "'") {
+    throw new Error(
+      "Cannot serialize title with `" + marker + "` for `options.quote`, expected `\"`, or `'`"
+    );
+  }
+  return marker;
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/definition.js
+function definition(node2, _, state, info) {
+  const quote = checkQuote(state);
+  const suffix = quote === '"' ? "Quote" : "Apostrophe";
+  const exit = state.enter("definition");
+  let subexit = state.enter("label");
+  const tracker = state.createTracker(info);
+  let value = tracker.move("[");
+  value += tracker.move(
+    state.safe(state.associationId(node2), {
+      before: value,
+      after: "]",
+      ...tracker.current()
+    })
+  );
+  value += tracker.move("]: ");
+  subexit();
+  if (
+    // If there’s no url, or…
+    !node2.url || // If there are control characters or whitespace.
+    /[\0- \u007F]/.test(node2.url)
+  ) {
+    subexit = state.enter("destinationLiteral");
+    value += tracker.move("<");
+    value += tracker.move(
+      state.safe(node2.url, { before: value, after: ">", ...tracker.current() })
+    );
+    value += tracker.move(">");
+  } else {
+    subexit = state.enter("destinationRaw");
+    value += tracker.move(
+      state.safe(node2.url, {
+        before: value,
+        after: node2.title ? " " : "\n",
+        ...tracker.current()
+      })
+    );
+  }
+  subexit();
+  if (node2.title) {
+    subexit = state.enter(`title${suffix}`);
+    value += tracker.move(" " + quote);
+    value += tracker.move(
+      state.safe(node2.title, {
+        before: value,
+        after: quote,
+        ...tracker.current()
+      })
+    );
+    value += tracker.move(quote);
+    subexit();
+  }
+  exit();
+  return value;
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/check-emphasis.js
+function checkEmphasis(state) {
+  const marker = state.options.emphasis || "*";
+  if (marker !== "*" && marker !== "_") {
+    throw new Error(
+      "Cannot serialize emphasis with `" + marker + "` for `options.emphasis`, expected `*`, or `_`"
+    );
+  }
+  return marker;
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/encode-character-reference.js
+function encodeCharacterReference(code2) {
+  return "&#x" + code2.toString(16).toUpperCase() + ";";
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/encode-info.js
+function encodeInfo(outside, inside, marker) {
+  const outsideKind = classifyCharacter(outside);
+  const insideKind = classifyCharacter(inside);
+  if (outsideKind === void 0) {
+    return insideKind === void 0 ? (
+      // Letter inside:
+      // we have to encode *both* letters for `_` as it is looser.
+      // it already forms for `*` (and GFMs `~`).
+      marker === "_" ? { inside: true, outside: true } : { inside: false, outside: false }
+    ) : insideKind === 1 ? (
+      // Whitespace inside: encode both (letter, whitespace).
+      { inside: true, outside: true }
+    ) : (
+      // Punctuation inside: encode outer (letter)
+      { inside: false, outside: true }
+    );
+  }
+  if (outsideKind === 1) {
+    return insideKind === void 0 ? (
+      // Letter inside: already forms.
+      { inside: false, outside: false }
+    ) : insideKind === 1 ? (
+      // Whitespace inside: encode both (whitespace).
+      { inside: true, outside: true }
+    ) : (
+      // Punctuation inside: already forms.
+      { inside: false, outside: false }
+    );
+  }
+  return insideKind === void 0 ? (
+    // Letter inside: already forms.
+    { inside: false, outside: false }
+  ) : insideKind === 1 ? (
+    // Whitespace inside: encode inner (whitespace).
+    { inside: true, outside: false }
+  ) : (
+    // Punctuation inside: already forms.
+    { inside: false, outside: false }
+  );
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/emphasis.js
+emphasis.peek = emphasisPeek;
+function emphasis(node2, _, state, info) {
+  const marker = checkEmphasis(state);
+  const exit = state.enter("emphasis");
+  const tracker = state.createTracker(info);
+  const before = tracker.move(marker);
+  let between2 = tracker.move(
+    state.containerPhrasing(node2, {
+      after: marker,
+      before,
+      ...tracker.current()
+    })
+  );
+  const betweenHead = between2.charCodeAt(0);
+  const open = encodeInfo(
+    info.before.charCodeAt(info.before.length - 1),
+    betweenHead,
+    marker
+  );
+  if (open.inside) {
+    between2 = encodeCharacterReference(betweenHead) + between2.slice(1);
+  }
+  const betweenTail = between2.charCodeAt(between2.length - 1);
+  const close = encodeInfo(info.after.charCodeAt(0), betweenTail, marker);
+  if (close.inside) {
+    between2 = between2.slice(0, -1) + encodeCharacterReference(betweenTail);
+  }
+  const after = tracker.move(marker);
+  exit();
+  state.attentionEncodeSurroundingInfo = {
+    after: close.outside,
+    before: open.outside
+  };
+  return before + between2 + after;
+}
+function emphasisPeek(_, _1, state) {
+  return state.options.emphasis || "*";
+}
+
+// node_modules/unist-util-is/lib/index.js
+var convert = (
+  // Note: overloads in JSDoc can’t yet use different `@template`s.
+  /**
+   * @type {(
+   *   (<Condition extends string>(test: Condition) => (node: unknown, index?: number | null | undefined, parent?: Parent | null | undefined, context?: unknown) => node is Node & {type: Condition}) &
+   *   (<Condition extends Props>(test: Condition) => (node: unknown, index?: number | null | undefined, parent?: Parent | null | undefined, context?: unknown) => node is Node & Condition) &
+   *   (<Condition extends TestFunction>(test: Condition) => (node: unknown, index?: number | null | undefined, parent?: Parent | null | undefined, context?: unknown) => node is Node & Predicate<Condition, Node>) &
+   *   ((test?: null | undefined) => (node?: unknown, index?: number | null | undefined, parent?: Parent | null | undefined, context?: unknown) => node is Node) &
+   *   ((test?: Test) => Check)
+   * )}
+   */
+  /**
+   * @param {Test} [test]
+   * @returns {Check}
+   */
+  (function(test) {
+    if (test === null || test === void 0) {
+      return ok;
+    }
+    if (typeof test === "function") {
+      return castFactory(test);
+    }
+    if (typeof test === "object") {
+      return Array.isArray(test) ? anyFactory(test) : (
+        // Cast because `ReadonlyArray` goes into the above but `isArray`
+        // narrows to `Array`.
+        propertiesFactory(
+          /** @type {Props} */
+          test
+        )
+      );
+    }
+    if (typeof test === "string") {
+      return typeFactory(test);
+    }
+    throw new Error("Expected function, string, or object as test");
+  })
+);
+function anyFactory(tests) {
+  const checks = [];
+  let index = -1;
+  while (++index < tests.length) {
+    checks[index] = convert(tests[index]);
+  }
+  return castFactory(any);
+  function any(...parameters) {
+    let index2 = -1;
+    while (++index2 < checks.length) {
+      if (checks[index2].apply(this, parameters)) return true;
+    }
+    return false;
+  }
+}
+function propertiesFactory(check) {
+  const checkAsRecord = (
+    /** @type {Record<string, unknown>} */
+    check
+  );
+  return castFactory(all2);
+  function all2(node2) {
+    const nodeAsRecord = (
+      /** @type {Record<string, unknown>} */
+      /** @type {unknown} */
+      node2
+    );
+    let key;
+    for (key in check) {
+      if (nodeAsRecord[key] !== checkAsRecord[key]) return false;
+    }
+    return true;
+  }
+}
+function typeFactory(check) {
+  return castFactory(type);
+  function type(node2) {
+    return node2 && node2.type === check;
+  }
+}
+function castFactory(testFunction) {
+  return check;
+  function check(value, index, parent) {
+    return Boolean(
+      looksLikeANode(value) && testFunction.call(
+        this,
+        value,
+        typeof index === "number" ? index : void 0,
+        parent || void 0
+      )
+    );
+  }
+}
+function ok() {
+  return true;
+}
+function looksLikeANode(value) {
+  return value !== null && typeof value === "object" && "type" in value;
+}
+
+// node_modules/unist-util-visit-parents/lib/color.js
+function color(d) {
+  return d;
+}
+
+// node_modules/unist-util-visit-parents/lib/index.js
+var empty = [];
+var CONTINUE = true;
+var EXIT = false;
+var SKIP = "skip";
+function visitParents(tree, test, visitor, reverse) {
+  let check;
+  if (typeof test === "function" && typeof visitor !== "function") {
+    reverse = visitor;
+    visitor = test;
+  } else {
+    check = test;
+  }
+  const is2 = convert(check);
+  const step = reverse ? -1 : 1;
+  factory(tree, void 0, [])();
+  function factory(node2, index, parents) {
+    const value = (
+      /** @type {Record<string, unknown>} */
+      node2 && typeof node2 === "object" ? node2 : {}
+    );
+    if (typeof value.type === "string") {
+      const name = (
+        // `hast`
+        typeof value.tagName === "string" ? value.tagName : (
+          // `xast`
+          typeof value.name === "string" ? value.name : void 0
+        )
+      );
+      Object.defineProperty(visit2, "name", {
+        value: "node (" + color(node2.type + (name ? "<" + name + ">" : "")) + ")"
+      });
+    }
+    return visit2;
+    function visit2() {
+      let result = empty;
+      let subresult;
+      let offset;
+      let grandparents;
+      if (!test || is2(node2, index, parents[parents.length - 1] || void 0)) {
+        result = toResult(visitor(node2, parents));
+        if (result[0] === EXIT) {
+          return result;
+        }
+      }
+      if ("children" in node2 && node2.children) {
+        const nodeAsParent = (
+          /** @type {UnistParent} */
+          node2
+        );
+        if (nodeAsParent.children && result[0] !== SKIP) {
+          offset = (reverse ? nodeAsParent.children.length : -1) + step;
+          grandparents = parents.concat(nodeAsParent);
+          while (offset > -1 && offset < nodeAsParent.children.length) {
+            const child = nodeAsParent.children[offset];
+            subresult = factory(child, offset, grandparents)();
+            if (subresult[0] === EXIT) {
+              return subresult;
+            }
+            offset = typeof subresult[1] === "number" ? subresult[1] : offset + step;
+          }
+        }
+      }
+      return result;
+    }
+  }
+}
+function toResult(value) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (typeof value === "number") {
+    return [CONTINUE, value];
+  }
+  return value === null || value === void 0 ? empty : [value];
+}
+
+// node_modules/unist-util-visit/lib/index.js
+function visit(tree, testOrVisitor, visitorOrReverse, maybeReverse) {
+  let reverse;
+  let test;
+  let visitor;
+  if (typeof testOrVisitor === "function" && typeof visitorOrReverse !== "function") {
+    test = void 0;
+    visitor = testOrVisitor;
+    reverse = visitorOrReverse;
+  } else {
+    test = testOrVisitor;
+    visitor = visitorOrReverse;
+    reverse = maybeReverse;
+  }
+  visitParents(tree, test, overload, reverse);
+  function overload(node2, parents) {
+    const parent = parents[parents.length - 1];
+    const index = parent ? parent.children.indexOf(node2) : void 0;
+    return visitor(node2, index, parent);
+  }
+}
+
+// node_modules/mdast-util-to-string/lib/index.js
+var emptyOptions = {};
+function toString(value, options) {
+  const settings = options || emptyOptions;
+  const includeImageAlt = typeof settings.includeImageAlt === "boolean" ? settings.includeImageAlt : true;
+  const includeHtml = typeof settings.includeHtml === "boolean" ? settings.includeHtml : true;
+  return one(value, includeImageAlt, includeHtml);
+}
+function one(value, includeImageAlt, includeHtml) {
+  if (node(value)) {
+    if ("value" in value) {
+      return value.type === "html" && !includeHtml ? "" : value.value;
+    }
+    if (includeImageAlt && "alt" in value && value.alt) {
+      return value.alt;
+    }
+    if ("children" in value) {
+      return all(value.children, includeImageAlt, includeHtml);
+    }
+  }
+  if (Array.isArray(value)) {
+    return all(value, includeImageAlt, includeHtml);
+  }
+  return "";
+}
+function all(values2, includeImageAlt, includeHtml) {
+  const result = [];
+  let index = -1;
+  while (++index < values2.length) {
+    result[index] = one(values2[index], includeImageAlt, includeHtml);
+  }
+  return result.join("");
+}
+function node(value) {
+  return Boolean(value && typeof value === "object");
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/format-heading-as-setext.js
+function formatHeadingAsSetext(node2, state) {
+  let literalWithBreak = false;
+  visit(node2, function(node3) {
+    if ("value" in node3 && /\r?\n|\r/.test(node3.value) || node3.type === "break") {
+      literalWithBreak = true;
+      return EXIT;
+    }
+  });
+  return Boolean(
+    (!node2.depth || node2.depth < 3) && toString(node2) && (state.options.setext || literalWithBreak)
+  );
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/heading.js
+function heading(node2, _, state, info) {
+  const rank = Math.max(Math.min(6, node2.depth || 1), 1);
+  const tracker = state.createTracker(info);
+  if (formatHeadingAsSetext(node2, state)) {
+    const exit2 = state.enter("headingSetext");
+    const subexit2 = state.enter("phrasing");
+    const value2 = state.containerPhrasing(node2, {
+      ...tracker.current(),
+      before: "\n",
+      after: "\n"
+    });
+    subexit2();
+    exit2();
+    return value2 + "\n" + (rank === 1 ? "=" : "-").repeat(
+      // The whole size…
+      value2.length - // Minus the position of the character after the last EOL (or
+      // 0 if there is none)…
+      (Math.max(value2.lastIndexOf("\r"), value2.lastIndexOf("\n")) + 1)
+    );
+  }
+  const sequence = "#".repeat(rank);
+  const exit = state.enter("headingAtx");
+  const subexit = state.enter("phrasing");
+  tracker.move(sequence + " ");
+  let value = state.containerPhrasing(node2, {
+    before: "# ",
+    after: "\n",
+    ...tracker.current()
+  });
+  if (/^[\t ]/.test(value)) {
+    value = encodeCharacterReference(value.charCodeAt(0)) + value.slice(1);
+  }
+  value = value ? sequence + " " + value : sequence;
+  if (state.options.closeAtx) {
+    value += " " + sequence;
+  }
+  subexit();
+  exit();
+  return value;
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/html.js
+html.peek = htmlPeek;
+function html(node2) {
+  return node2.value || "";
+}
+function htmlPeek() {
+  return "<";
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/image.js
+image.peek = imagePeek;
+function image(node2, _, state, info) {
+  const quote = checkQuote(state);
+  const suffix = quote === '"' ? "Quote" : "Apostrophe";
+  const exit = state.enter("image");
+  let subexit = state.enter("label");
+  const tracker = state.createTracker(info);
+  let value = tracker.move("![");
+  value += tracker.move(
+    state.safe(node2.alt, { before: value, after: "]", ...tracker.current() })
+  );
+  value += tracker.move("](");
+  subexit();
+  if (
+    // If there’s no url but there is a title…
+    !node2.url && node2.title || // If there are control characters or whitespace.
+    /[\0- \u007F]/.test(node2.url)
+  ) {
+    subexit = state.enter("destinationLiteral");
+    value += tracker.move("<");
+    value += tracker.move(
+      state.safe(node2.url, { before: value, after: ">", ...tracker.current() })
+    );
+    value += tracker.move(">");
+  } else {
+    subexit = state.enter("destinationRaw");
+    value += tracker.move(
+      state.safe(node2.url, {
+        before: value,
+        after: node2.title ? " " : ")",
+        ...tracker.current()
+      })
+    );
+  }
+  subexit();
+  if (node2.title) {
+    subexit = state.enter(`title${suffix}`);
+    value += tracker.move(" " + quote);
+    value += tracker.move(
+      state.safe(node2.title, {
+        before: value,
+        after: quote,
+        ...tracker.current()
+      })
+    );
+    value += tracker.move(quote);
+    subexit();
+  }
+  value += tracker.move(")");
+  exit();
+  return value;
+}
+function imagePeek() {
+  return "!";
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/image-reference.js
+imageReference.peek = imageReferencePeek;
+function imageReference(node2, _, state, info) {
+  const type = node2.referenceType;
+  const exit = state.enter("imageReference");
+  let subexit = state.enter("label");
+  const tracker = state.createTracker(info);
+  let value = tracker.move("![");
+  const alt = state.safe(node2.alt, {
+    before: value,
+    after: "]",
+    ...tracker.current()
+  });
+  value += tracker.move(alt + "][");
+  subexit();
+  const stack = state.stack;
+  state.stack = [];
+  subexit = state.enter("reference");
+  const reference = state.safe(state.associationId(node2), {
+    before: value,
+    after: "]",
+    ...tracker.current()
+  });
+  subexit();
+  state.stack = stack;
+  exit();
+  if (type === "full" || !alt || alt !== reference) {
+    value += tracker.move(reference + "]");
+  } else if (type === "shortcut") {
+    value = value.slice(0, -1);
+  } else {
+    value += tracker.move("]");
+  }
+  return value;
+}
+function imageReferencePeek() {
+  return "!";
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/inline-code.js
+inlineCode.peek = inlineCodePeek;
+function inlineCode(node2, _, state) {
+  let value = node2.value || "";
+  let sequence = "`";
+  let index = -1;
+  while (new RegExp("(^|[^`])" + sequence + "([^`]|$)").test(value)) {
+    sequence += "`";
+  }
+  if (/[^ \r\n]/.test(value) && (/^[ \r\n]/.test(value) && /[ \r\n]$/.test(value) || /^`|`$/.test(value))) {
+    value = " " + value + " ";
+  }
+  while (++index < state.unsafe.length) {
+    const pattern = state.unsafe[index];
+    const expression = state.compilePattern(pattern);
+    let match;
+    if (!pattern.atBreak) continue;
+    while (match = expression.exec(value)) {
+      let position = match.index;
+      if (value.charCodeAt(position) === 10 && value.charCodeAt(position - 1) === 13) {
+        position--;
+      }
+      value = value.slice(0, position) + " " + value.slice(match.index + 1);
+    }
+  }
+  return sequence + value + sequence;
+}
+function inlineCodePeek() {
+  return "`";
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/format-link-as-autolink.js
+function formatLinkAsAutolink(node2, state) {
+  const raw = toString(node2);
+  return Boolean(
+    !state.options.resourceLink && // If there’s a url…
+    node2.url && // And there’s a no title…
+    !node2.title && // And the content of `node` is a single text node…
+    node2.children && node2.children.length === 1 && node2.children[0].type === "text" && // And if the url is the same as the content…
+    (raw === node2.url || "mailto:" + raw === node2.url) && // And that starts w/ a protocol…
+    /^[a-z][a-z+.-]+:/i.test(node2.url) && // And that doesn’t contain ASCII control codes (character escapes and
+    // references don’t work), space, or angle brackets…
+    !/[\0- <>\u007F]/.test(node2.url)
+  );
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/link.js
+link.peek = linkPeek;
+function link(node2, _, state, info) {
+  const quote = checkQuote(state);
+  const suffix = quote === '"' ? "Quote" : "Apostrophe";
+  const tracker = state.createTracker(info);
+  let exit;
+  let subexit;
+  if (formatLinkAsAutolink(node2, state)) {
+    const stack = state.stack;
+    state.stack = [];
+    exit = state.enter("autolink");
+    let value2 = tracker.move("<");
+    value2 += tracker.move(
+      state.containerPhrasing(node2, {
+        before: value2,
+        after: ">",
+        ...tracker.current()
+      })
+    );
+    value2 += tracker.move(">");
+    exit();
+    state.stack = stack;
+    return value2;
+  }
+  exit = state.enter("link");
+  subexit = state.enter("label");
+  let value = tracker.move("[");
+  value += tracker.move(
+    state.containerPhrasing(node2, {
+      before: value,
+      after: "](",
+      ...tracker.current()
+    })
+  );
+  value += tracker.move("](");
+  subexit();
+  if (
+    // If there’s no url but there is a title…
+    !node2.url && node2.title || // If there are control characters or whitespace.
+    /[\0- \u007F]/.test(node2.url)
+  ) {
+    subexit = state.enter("destinationLiteral");
+    value += tracker.move("<");
+    value += tracker.move(
+      state.safe(node2.url, { before: value, after: ">", ...tracker.current() })
+    );
+    value += tracker.move(">");
+  } else {
+    subexit = state.enter("destinationRaw");
+    value += tracker.move(
+      state.safe(node2.url, {
+        before: value,
+        after: node2.title ? " " : ")",
+        ...tracker.current()
+      })
+    );
+  }
+  subexit();
+  if (node2.title) {
+    subexit = state.enter(`title${suffix}`);
+    value += tracker.move(" " + quote);
+    value += tracker.move(
+      state.safe(node2.title, {
+        before: value,
+        after: quote,
+        ...tracker.current()
+      })
+    );
+    value += tracker.move(quote);
+    subexit();
+  }
+  value += tracker.move(")");
+  exit();
+  return value;
+}
+function linkPeek(node2, _, state) {
+  return formatLinkAsAutolink(node2, state) ? "<" : "[";
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/link-reference.js
+linkReference.peek = linkReferencePeek;
+function linkReference(node2, _, state, info) {
+  const type = node2.referenceType;
+  const exit = state.enter("linkReference");
+  let subexit = state.enter("label");
+  const tracker = state.createTracker(info);
+  let value = tracker.move("[");
+  const text2 = state.containerPhrasing(node2, {
+    before: value,
+    after: "]",
+    ...tracker.current()
+  });
+  value += tracker.move(text2 + "][");
+  subexit();
+  const stack = state.stack;
+  state.stack = [];
+  subexit = state.enter("reference");
+  const reference = state.safe(state.associationId(node2), {
+    before: value,
+    after: "]",
+    ...tracker.current()
+  });
+  subexit();
+  state.stack = stack;
+  exit();
+  if (type === "full" || !text2 || text2 !== reference) {
+    value += tracker.move(reference + "]");
+  } else if (type === "shortcut") {
+    value = value.slice(0, -1);
+  } else {
+    value += tracker.move("]");
+  }
+  return value;
+}
+function linkReferencePeek() {
+  return "[";
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/check-bullet.js
+function checkBullet(state) {
+  const marker = state.options.bullet || "*";
+  if (marker !== "*" && marker !== "+" && marker !== "-") {
+    throw new Error(
+      "Cannot serialize items with `" + marker + "` for `options.bullet`, expected `*`, `+`, or `-`"
+    );
+  }
+  return marker;
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/check-bullet-other.js
+function checkBulletOther(state) {
+  const bullet = checkBullet(state);
+  const bulletOther = state.options.bulletOther;
+  if (!bulletOther) {
+    return bullet === "*" ? "-" : "*";
+  }
+  if (bulletOther !== "*" && bulletOther !== "+" && bulletOther !== "-") {
+    throw new Error(
+      "Cannot serialize items with `" + bulletOther + "` for `options.bulletOther`, expected `*`, `+`, or `-`"
+    );
+  }
+  if (bulletOther === bullet) {
+    throw new Error(
+      "Expected `bullet` (`" + bullet + "`) and `bulletOther` (`" + bulletOther + "`) to be different"
+    );
+  }
+  return bulletOther;
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/check-bullet-ordered.js
+function checkBulletOrdered(state) {
+  const marker = state.options.bulletOrdered || ".";
+  if (marker !== "." && marker !== ")") {
+    throw new Error(
+      "Cannot serialize items with `" + marker + "` for `options.bulletOrdered`, expected `.` or `)`"
+    );
+  }
+  return marker;
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/check-rule.js
+function checkRule(state) {
+  const marker = state.options.rule || "*";
+  if (marker !== "*" && marker !== "-" && marker !== "_") {
+    throw new Error(
+      "Cannot serialize rules with `" + marker + "` for `options.rule`, expected `*`, `-`, or `_`"
+    );
+  }
+  return marker;
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/list.js
+function list2(node2, parent, state, info) {
+  const exit = state.enter("list");
+  const bulletCurrent = state.bulletCurrent;
+  let bullet = node2.ordered ? checkBulletOrdered(state) : checkBullet(state);
+  const bulletOther = node2.ordered ? bullet === "." ? ")" : "." : checkBulletOther(state);
+  let useDifferentMarker = parent && state.bulletLastUsed ? bullet === state.bulletLastUsed : false;
+  if (!node2.ordered) {
+    const firstListItem = node2.children ? node2.children[0] : void 0;
+    if (
+      // Bullet could be used as a thematic break marker:
+      (bullet === "*" || bullet === "-") && // Empty first list item:
+      firstListItem && (!firstListItem.children || !firstListItem.children[0]) && // Directly in two other list items:
+      state.stack[state.stack.length - 1] === "list" && state.stack[state.stack.length - 2] === "listItem" && state.stack[state.stack.length - 3] === "list" && state.stack[state.stack.length - 4] === "listItem" && // That are each the first child.
+      state.indexStack[state.indexStack.length - 1] === 0 && state.indexStack[state.indexStack.length - 2] === 0 && state.indexStack[state.indexStack.length - 3] === 0
+    ) {
+      useDifferentMarker = true;
+    }
+    if (checkRule(state) === bullet && firstListItem) {
+      let index = -1;
+      while (++index < node2.children.length) {
+        const item = node2.children[index];
+        if (item && item.type === "listItem" && item.children && item.children[0] && item.children[0].type === "thematicBreak") {
+          useDifferentMarker = true;
+          break;
+        }
+      }
+    }
+  }
+  if (useDifferentMarker) {
+    bullet = bulletOther;
+  }
+  state.bulletCurrent = bullet;
+  const value = state.containerFlow(node2, info);
+  state.bulletLastUsed = bullet;
+  state.bulletCurrent = bulletCurrent;
+  exit();
+  return value;
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/check-list-item-indent.js
+function checkListItemIndent(state) {
+  const style = state.options.listItemIndent || "one";
+  if (style !== "tab" && style !== "one" && style !== "mixed") {
+    throw new Error(
+      "Cannot serialize items with `" + style + "` for `options.listItemIndent`, expected `tab`, `one`, or `mixed`"
+    );
+  }
+  return style;
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/list-item.js
+function listItem(node2, parent, state, info) {
+  const listItemIndent = checkListItemIndent(state);
+  let bullet = state.bulletCurrent || checkBullet(state);
+  if (parent && parent.type === "list" && parent.ordered) {
+    bullet = (typeof parent.start === "number" && parent.start > -1 ? parent.start : 1) + (state.options.incrementListMarker === false ? 0 : parent.children.indexOf(node2)) + bullet;
+  }
+  let size = bullet.length + 1;
+  if (listItemIndent === "tab" || listItemIndent === "mixed" && (parent && parent.type === "list" && parent.spread || node2.spread)) {
+    size = Math.ceil(size / 4) * 4;
+  }
+  const tracker = state.createTracker(info);
+  tracker.move(bullet + " ".repeat(size - bullet.length));
+  tracker.shift(size);
+  const exit = state.enter("listItem");
+  const value = state.indentLines(
+    state.containerFlow(node2, tracker.current()),
+    map4
+  );
+  exit();
+  return value;
+  function map4(line, index, blank) {
+    if (index) {
+      return (blank ? "" : " ".repeat(size)) + line;
+    }
+    return (blank ? bullet : bullet + " ".repeat(size - bullet.length)) + line;
+  }
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/paragraph.js
+function paragraph(node2, _, state, info) {
+  const exit = state.enter("paragraph");
+  const subexit = state.enter("phrasing");
+  const value = state.containerPhrasing(node2, info);
+  subexit();
+  exit();
+  return value;
+}
+
+// node_modules/mdast-util-phrasing/lib/index.js
+var phrasing = (
+  /** @type {(node?: unknown) => node is Exclude<PhrasingContent, Html>} */
+  convert([
+    "break",
+    "delete",
+    "emphasis",
+    // To do: next major: removed since footnotes were added to GFM.
+    "footnote",
+    "footnoteReference",
+    "image",
+    "imageReference",
+    "inlineCode",
+    // Enabled by `mdast-util-math`:
+    "inlineMath",
+    "link",
+    "linkReference",
+    // Enabled by `mdast-util-mdx`:
+    "mdxJsxTextElement",
+    // Enabled by `mdast-util-mdx`:
+    "mdxTextExpression",
+    "strong",
+    "text",
+    // Enabled by `mdast-util-directive`:
+    "textDirective"
+  ])
+);
+
+// node_modules/mdast-util-to-markdown/lib/handle/root.js
+function root(node2, _, state, info) {
+  const hasPhrasing = node2.children.some(function(d) {
+    return phrasing(d);
+  });
+  const container = hasPhrasing ? state.containerPhrasing : state.containerFlow;
+  return container.call(state, node2, info);
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/check-strong.js
+function checkStrong(state) {
+  const marker = state.options.strong || "*";
+  if (marker !== "*" && marker !== "_") {
+    throw new Error(
+      "Cannot serialize strong with `" + marker + "` for `options.strong`, expected `*`, or `_`"
+    );
+  }
+  return marker;
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/strong.js
+strong.peek = strongPeek;
+function strong(node2, _, state, info) {
+  const marker = checkStrong(state);
+  const exit = state.enter("strong");
+  const tracker = state.createTracker(info);
+  const before = tracker.move(marker + marker);
+  let between2 = tracker.move(
+    state.containerPhrasing(node2, {
+      after: marker,
+      before,
+      ...tracker.current()
+    })
+  );
+  const betweenHead = between2.charCodeAt(0);
+  const open = encodeInfo(
+    info.before.charCodeAt(info.before.length - 1),
+    betweenHead,
+    marker
+  );
+  if (open.inside) {
+    between2 = encodeCharacterReference(betweenHead) + between2.slice(1);
+  }
+  const betweenTail = between2.charCodeAt(between2.length - 1);
+  const close = encodeInfo(info.after.charCodeAt(0), betweenTail, marker);
+  if (close.inside) {
+    between2 = between2.slice(0, -1) + encodeCharacterReference(betweenTail);
+  }
+  const after = tracker.move(marker + marker);
+  exit();
+  state.attentionEncodeSurroundingInfo = {
+    after: close.outside,
+    before: open.outside
+  };
+  return before + between2 + after;
+}
+function strongPeek(_, _1, state) {
+  return state.options.strong || "*";
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/text.js
+function text(node2, _, state, info) {
+  return state.safe(node2.value, info);
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/check-rule-repetition.js
+function checkRuleRepetition(state) {
+  const repetition = state.options.ruleRepetition || 3;
+  if (repetition < 3) {
+    throw new Error(
+      "Cannot serialize rules with repetition `" + repetition + "` for `options.ruleRepetition`, expected `3` or more"
+    );
+  }
+  return repetition;
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/thematic-break.js
+function thematicBreak(_, _1, state) {
+  const value = (checkRule(state) + (state.options.ruleSpaces ? " " : "")).repeat(checkRuleRepetition(state));
+  return state.options.ruleSpaces ? value.slice(0, -1) : value;
+}
+
+// node_modules/mdast-util-to-markdown/lib/handle/index.js
+var handle = {
+  blockquote,
+  break: hardBreak,
+  code,
+  definition,
+  emphasis,
+  hardBreak,
+  heading,
+  html,
+  image,
+  imageReference,
+  inlineCode,
+  link,
+  linkReference,
+  list: list2,
+  listItem,
+  paragraph,
+  root,
+  strong,
+  text,
+  thematicBreak
+};
+
+// node_modules/mdast-util-to-markdown/lib/join.js
+var join = [joinDefaults];
+function joinDefaults(left, right, parent, state) {
+  if (right.type === "code" && formatCodeAsIndented(right, state) && (left.type === "list" || left.type === right.type && formatCodeAsIndented(left, state))) {
+    return false;
+  }
+  if ("spread" in parent && typeof parent.spread === "boolean") {
+    if (left.type === "paragraph" && // Two paragraphs.
+    (left.type === right.type || right.type === "definition" || // Paragraph followed by a setext heading.
+    right.type === "heading" && formatHeadingAsSetext(right, state))) {
+      return;
+    }
+    return parent.spread ? 1 : 0;
+  }
+}
+
+// node_modules/mdast-util-to-markdown/lib/unsafe.js
+var fullPhrasingSpans = [
+  "autolink",
+  "destinationLiteral",
+  "destinationRaw",
+  "reference",
+  "titleQuote",
+  "titleApostrophe"
+];
+var unsafe = [
+  { character: "	", after: "[\\r\\n]", inConstruct: "phrasing" },
+  { character: "	", before: "[\\r\\n]", inConstruct: "phrasing" },
+  {
+    character: "	",
+    inConstruct: ["codeFencedLangGraveAccent", "codeFencedLangTilde"]
+  },
+  {
+    character: "\r",
+    inConstruct: [
+      "codeFencedLangGraveAccent",
+      "codeFencedLangTilde",
+      "codeFencedMetaGraveAccent",
+      "codeFencedMetaTilde",
+      "destinationLiteral",
+      "headingAtx"
+    ]
+  },
+  {
+    character: "\n",
+    inConstruct: [
+      "codeFencedLangGraveAccent",
+      "codeFencedLangTilde",
+      "codeFencedMetaGraveAccent",
+      "codeFencedMetaTilde",
+      "destinationLiteral",
+      "headingAtx"
+    ]
+  },
+  { character: " ", after: "[\\r\\n]", inConstruct: "phrasing" },
+  { character: " ", before: "[\\r\\n]", inConstruct: "phrasing" },
+  {
+    character: " ",
+    inConstruct: ["codeFencedLangGraveAccent", "codeFencedLangTilde"]
+  },
+  // An exclamation mark can start an image, if it is followed by a link or
+  // a link reference.
+  {
+    character: "!",
+    after: "\\[",
+    inConstruct: "phrasing",
+    notInConstruct: fullPhrasingSpans
+  },
+  // A quote can break out of a title.
+  { character: '"', inConstruct: "titleQuote" },
+  // A number sign could start an ATX heading if it starts a line.
+  { atBreak: true, character: "#" },
+  { character: "#", inConstruct: "headingAtx", after: "(?:[\r\n]|$)" },
+  // Dollar sign and percentage are not used in markdown.
+  // An ampersand could start a character reference.
+  { character: "&", after: "[#A-Za-z]", inConstruct: "phrasing" },
+  // An apostrophe can break out of a title.
+  { character: "'", inConstruct: "titleApostrophe" },
+  // A left paren could break out of a destination raw.
+  { character: "(", inConstruct: "destinationRaw" },
+  // A left paren followed by `]` could make something into a link or image.
+  {
+    before: "\\]",
+    character: "(",
+    inConstruct: "phrasing",
+    notInConstruct: fullPhrasingSpans
+  },
+  // A right paren could start a list item or break out of a destination
+  // raw.
+  { atBreak: true, before: "\\d+", character: ")" },
+  { character: ")", inConstruct: "destinationRaw" },
+  // An asterisk can start thematic breaks, list items, emphasis, strong.
+  { atBreak: true, character: "*", after: "(?:[ 	\r\n*])" },
+  { character: "*", inConstruct: "phrasing", notInConstruct: fullPhrasingSpans },
+  // A plus sign could start a list item.
+  { atBreak: true, character: "+", after: "(?:[ 	\r\n])" },
+  // A dash can start thematic breaks, list items, and setext heading
+  // underlines.
+  { atBreak: true, character: "-", after: "(?:[ 	\r\n-])" },
+  // A dot could start a list item.
+  { atBreak: true, before: "\\d+", character: ".", after: "(?:[ 	\r\n]|$)" },
+  // Slash, colon, and semicolon are not used in markdown for constructs.
+  // A less than can start html (flow or text) or an autolink.
+  // HTML could start with an exclamation mark (declaration, cdata, comment),
+  // slash (closing tag), question mark (instruction), or a letter (tag).
+  // An autolink also starts with a letter.
+  // Finally, it could break out of a destination literal.
+  { atBreak: true, character: "<", after: "[!/?A-Za-z]" },
+  {
+    character: "<",
+    after: "[!/?A-Za-z]",
+    inConstruct: "phrasing",
+    notInConstruct: fullPhrasingSpans
+  },
+  { character: "<", inConstruct: "destinationLiteral" },
+  // An equals to can start setext heading underlines.
+  { atBreak: true, character: "=" },
+  // A greater than can start block quotes and it can break out of a
+  // destination literal.
+  { atBreak: true, character: ">" },
+  { character: ">", inConstruct: "destinationLiteral" },
+  // Question mark and at sign are not used in markdown for constructs.
+  // A left bracket can start definitions, references, labels,
+  { atBreak: true, character: "[" },
+  { character: "[", inConstruct: "phrasing", notInConstruct: fullPhrasingSpans },
+  { character: "[", inConstruct: ["label", "reference"] },
+  // A backslash can start an escape (when followed by punctuation) or a
+  // hard break (when followed by an eol).
+  // Note: typical escapes are handled in `safe`!
+  { character: "\\", after: "[\\r\\n]", inConstruct: "phrasing" },
+  // A right bracket can exit labels.
+  { character: "]", inConstruct: ["label", "reference"] },
+  // Caret is not used in markdown for constructs.
+  // An underscore can start emphasis, strong, or a thematic break.
+  { atBreak: true, character: "_" },
+  { character: "_", inConstruct: "phrasing", notInConstruct: fullPhrasingSpans },
+  // A grave accent can start code (fenced or text), or it can break out of
+  // a grave accent code fence.
+  { atBreak: true, character: "`" },
+  {
+    character: "`",
+    inConstruct: ["codeFencedLangGraveAccent", "codeFencedMetaGraveAccent"]
+  },
+  { character: "`", inConstruct: "phrasing", notInConstruct: fullPhrasingSpans },
+  // Left brace, vertical bar, right brace are not used in markdown for
+  // constructs.
+  // A tilde can start code (fenced).
+  { atBreak: true, character: "~" }
+];
+
+// node_modules/micromark-util-decode-numeric-character-reference/dev/index.js
+function decodeNumericCharacterReference(value, base) {
+  const code2 = Number.parseInt(value, base);
+  if (
+    // C0 except for HT, LF, FF, CR, space.
+    code2 < codes.ht || code2 === codes.vt || code2 > codes.cr && code2 < codes.space || // Control character (DEL) of C0, and C1 controls.
+    code2 > codes.tilde && code2 < 160 || // Lone high surrogates and low surrogates.
+    code2 > 55295 && code2 < 57344 || // Noncharacters.
+    code2 > 64975 && code2 < 65008 || /* eslint-disable no-bitwise */
+    (code2 & 65535) === 65535 || (code2 & 65535) === 65534 || /* eslint-enable no-bitwise */
+    // Out of range
+    code2 > 1114111
+  ) {
+    return values.replacementCharacter;
+  }
+  return String.fromCodePoint(code2);
+}
+
+// node_modules/micromark-util-decode-string/dev/index.js
+var characterEscapeOrReference = /\\([!-/:-@[-`{-~])|&(#(?:\d{1,7}|x[\da-f]{1,6})|[\da-z]{1,31});/gi;
+function decodeString(value) {
+  return value.replace(characterEscapeOrReference, decode);
+}
+function decode($0, $1, $2) {
+  if ($1) {
+    return $1;
+  }
+  const head = $2.charCodeAt(0);
+  if (head === codes.numberSign) {
+    const head2 = $2.charCodeAt(1);
+    const hex = head2 === codes.lowercaseX || head2 === codes.uppercaseX;
+    return decodeNumericCharacterReference(
+      $2.slice(hex ? 2 : 1),
+      hex ? constants.numericBaseHexadecimal : constants.numericBaseDecimal
+    );
+  }
+  return decodeNamedCharacterReference($2) || $0;
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/association.js
+function association(node2) {
+  if (node2.label || !node2.identifier) {
+    return node2.label || "";
+  }
+  return decodeString(node2.identifier);
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/compile-pattern.js
+function compilePattern(pattern) {
+  if (!pattern._compiled) {
+    const before = (pattern.atBreak ? "[\\r\\n][\\t ]*" : "") + (pattern.before ? "(?:" + pattern.before + ")" : "");
+    pattern._compiled = new RegExp(
+      (before ? "(" + before + ")" : "") + (/[|\\{}()[\]^$+*?.-]/.test(pattern.character) ? "\\" : "") + pattern.character + (pattern.after ? "(?:" + pattern.after + ")" : ""),
+      "g"
+    );
+  }
+  return pattern._compiled;
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/container-phrasing.js
+function containerPhrasing(parent, state, info) {
+  const indexStack = state.indexStack;
+  const children = parent.children || [];
+  const results = [];
+  let index = -1;
+  let before = info.before;
+  let encodeAfter;
+  indexStack.push(-1);
+  let tracker = state.createTracker(info);
+  while (++index < children.length) {
+    const child = children[index];
+    let after;
+    indexStack[indexStack.length - 1] = index;
+    if (index + 1 < children.length) {
+      let handle2 = state.handle.handlers[children[index + 1].type];
+      if (handle2 && handle2.peek) handle2 = handle2.peek;
+      after = handle2 ? handle2(children[index + 1], parent, state, {
+        before: "",
+        after: "",
+        ...tracker.current()
+      }).charAt(0) : "";
+    } else {
+      after = info.after;
+    }
+    if (results.length > 0 && (before === "\r" || before === "\n") && child.type === "html") {
+      results[results.length - 1] = results[results.length - 1].replace(
+        /(\r?\n|\r)$/,
+        " "
+      );
+      before = " ";
+      tracker = state.createTracker(info);
+      tracker.move(results.join(""));
+    }
+    let value = state.handle(child, parent, state, {
+      ...tracker.current(),
+      after,
+      before
+    });
+    if (encodeAfter && encodeAfter === value.slice(0, 1)) {
+      value = encodeCharacterReference(encodeAfter.charCodeAt(0)) + value.slice(1);
+    }
+    const encodingInfo = state.attentionEncodeSurroundingInfo;
+    state.attentionEncodeSurroundingInfo = void 0;
+    encodeAfter = void 0;
+    if (encodingInfo) {
+      if (results.length > 0 && encodingInfo.before && before === results[results.length - 1].slice(-1)) {
+        results[results.length - 1] = results[results.length - 1].slice(0, -1) + encodeCharacterReference(before.charCodeAt(0));
+      }
+      if (encodingInfo.after) encodeAfter = after;
+    }
+    tracker.move(value);
+    results.push(value);
+    before = value.slice(-1);
+  }
+  indexStack.pop();
+  return results.join("");
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/container-flow.js
+function containerFlow(parent, state, info) {
+  const indexStack = state.indexStack;
+  const children = parent.children || [];
+  const tracker = state.createTracker(info);
+  const results = [];
+  let index = -1;
+  indexStack.push(-1);
+  while (++index < children.length) {
+    const child = children[index];
+    indexStack[indexStack.length - 1] = index;
+    results.push(
+      tracker.move(
+        state.handle(child, parent, state, {
+          before: "\n",
+          after: "\n",
+          ...tracker.current()
+        })
+      )
+    );
+    if (child.type !== "list") {
+      state.bulletLastUsed = void 0;
+    }
+    if (index < children.length - 1) {
+      results.push(
+        tracker.move(between(child, children[index + 1], parent, state))
+      );
+    }
+  }
+  indexStack.pop();
+  return results.join("");
+}
+function between(left, right, parent, state) {
+  let index = state.join.length;
+  while (index--) {
+    const result = state.join[index](left, right, parent, state);
+    if (result === true || result === 1) {
+      break;
+    }
+    if (typeof result === "number") {
+      return "\n".repeat(1 + result);
+    }
+    if (result === false) {
+      return "\n\n<!---->\n\n";
+    }
+  }
+  return "\n\n";
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/indent-lines.js
+var eol = /\r?\n|\r/g;
+function indentLines(value, map4) {
+  const result = [];
+  let start = 0;
+  let line = 0;
+  let match;
+  while (match = eol.exec(value)) {
+    one2(value.slice(start, match.index));
+    result.push(match[0]);
+    start = match.index + match[0].length;
+    line++;
+  }
+  one2(value.slice(start));
+  return result.join("");
+  function one2(value2) {
+    result.push(map4(value2, line, !value2));
+  }
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/safe.js
+function safe(state, input, config) {
+  const value = (config.before || "") + (input || "") + (config.after || "");
+  const positions = [];
+  const result = [];
+  const infos = {};
+  let index = -1;
+  while (++index < state.unsafe.length) {
+    const pattern = state.unsafe[index];
+    if (!patternInScope(state.stack, pattern)) {
+      continue;
+    }
+    const expression = state.compilePattern(pattern);
+    let match;
+    while (match = expression.exec(value)) {
+      const before = "before" in pattern || Boolean(pattern.atBreak);
+      const after = "after" in pattern;
+      const position = match.index + (before ? match[1].length : 0);
+      if (positions.includes(position)) {
+        if (infos[position].before && !before) {
+          infos[position].before = false;
+        }
+        if (infos[position].after && !after) {
+          infos[position].after = false;
+        }
+      } else {
+        positions.push(position);
+        infos[position] = { before, after };
+      }
+    }
+  }
+  positions.sort(numerical);
+  let start = config.before ? config.before.length : 0;
+  const end = value.length - (config.after ? config.after.length : 0);
+  index = -1;
+  while (++index < positions.length) {
+    const position = positions[index];
+    if (position < start || position >= end) {
+      continue;
+    }
+    if (position + 1 < end && positions[index + 1] === position + 1 && infos[position].after && !infos[position + 1].before && !infos[position + 1].after || positions[index - 1] === position - 1 && infos[position].before && !infos[position - 1].before && !infos[position - 1].after) {
+      continue;
+    }
+    if (start !== position) {
+      result.push(escapeBackslashes(value.slice(start, position), "\\"));
+    }
+    start = position;
+    if (/[!-/:-@[-`{-~]/.test(value.charAt(position)) && (!config.encode || !config.encode.includes(value.charAt(position)))) {
+      result.push("\\");
+    } else {
+      result.push(encodeCharacterReference(value.charCodeAt(position)));
+      start++;
+    }
+  }
+  result.push(escapeBackslashes(value.slice(start, end), config.after));
+  return result.join("");
+}
+function numerical(a, b) {
+  return a - b;
+}
+function escapeBackslashes(value, after) {
+  const expression = /\\(?=[!-/:-@[-`{-~])/g;
+  const positions = [];
+  const results = [];
+  const whole = value + after;
+  let index = -1;
+  let start = 0;
+  let match;
+  while (match = expression.exec(whole)) {
+    positions.push(match.index);
+  }
+  while (++index < positions.length) {
+    if (start !== positions[index]) {
+      results.push(value.slice(start, positions[index]));
+    }
+    results.push("\\");
+    start = positions[index];
+  }
+  results.push(value.slice(start));
+  return results.join("");
+}
+
+// node_modules/mdast-util-to-markdown/lib/util/track.js
+function track(config) {
+  const options = config || {};
+  const now = options.now || {};
+  let lineShift = options.lineShift || 0;
+  let line = now.line || 1;
+  let column = now.column || 1;
+  return { move, current, shift };
+  function current() {
+    return { now: { line, column }, lineShift };
+  }
+  function shift(value) {
+    lineShift += value;
+  }
+  function move(input) {
+    const value = input || "";
+    const chunks = value.split(/\r?\n|\r/g);
+    const tail = chunks[chunks.length - 1];
+    line += chunks.length - 1;
+    column = chunks.length === 1 ? column + tail.length : 1 + tail.length + lineShift;
+    return value;
+  }
+}
+
+// node_modules/mdast-util-to-markdown/lib/index.js
+function toMarkdown(tree, options) {
+  const settings = options || {};
+  const state = {
+    associationId: association,
+    containerPhrasing: containerPhrasingBound,
+    containerFlow: containerFlowBound,
+    createTracker: track,
+    compilePattern,
+    enter,
+    // @ts-expect-error: GFM / frontmatter are typed in `mdast` but not defined
+    // here.
+    handlers: { ...handle },
+    // @ts-expect-error: add `handle` in a second.
+    handle: void 0,
+    indentLines,
+    indexStack: [],
+    join: [...join],
+    options: {},
+    safe: safeBound,
+    stack: [],
+    unsafe: [...unsafe]
+  };
+  configure(state, settings);
+  if (state.options.tightDefinitions) {
+    state.join.push(joinDefinition);
+  }
+  state.handle = zwitch("type", {
+    invalid,
+    unknown,
+    handlers: state.handlers
+  });
+  let result = state.handle(tree, void 0, state, {
+    before: "\n",
+    after: "\n",
+    now: { line: 1, column: 1 },
+    lineShift: 0
+  });
+  if (result && result.charCodeAt(result.length - 1) !== 10 && result.charCodeAt(result.length - 1) !== 13) {
+    result += "\n";
+  }
+  return result;
+  function enter(name) {
+    state.stack.push(name);
+    return exit;
+    function exit() {
+      state.stack.pop();
+    }
+  }
+}
+function invalid(value) {
+  throw new Error("Cannot handle value `" + value + "`, expected node");
+}
+function unknown(value) {
+  const node2 = (
+    /** @type {Nodes} */
+    value
+  );
+  throw new Error("Cannot handle unknown node `" + node2.type + "`");
+}
+function joinDefinition(left, right) {
+  if (left.type === "definition" && left.type === right.type) {
+    return 0;
+  }
+}
+function containerPhrasingBound(parent, info) {
+  return containerPhrasing(parent, this, info);
+}
+function containerFlowBound(parent, info) {
+  return containerFlow(parent, this, info);
+}
+function safeBound(value, config) {
+  return safe(this, value, config);
+}
+
+export {
+  toString,
+  decodeNumericCharacterReference,
+  decodeString,
+  convert,
+  SKIP,
+  visitParents,
+  visit,
+  handle,
+  toMarkdown
+};
+//# sourceMappingURL=chunk-477OW2TW.js.map

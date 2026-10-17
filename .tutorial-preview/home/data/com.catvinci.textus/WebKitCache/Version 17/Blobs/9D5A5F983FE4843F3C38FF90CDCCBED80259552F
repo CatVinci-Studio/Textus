@@ -1,0 +1,137 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/settings/sections/about.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=f9787d19"; const useEffect = __vite__cjsImport3_react["useEffect"]; const useState = __vite__cjsImport3_react["useState"];
+import { getVersion } from "/node_modules/.vite/deps/@tauri-apps_api_app.js?v=89e5203d";
+import { links } from "/src/platform/ipc.ts";
+import { UpdateButton } from "/src/settings/sections/general.tsx";
+import appIcon from "/src-tauri/icons/128x128@2x.png?import";
+export function AboutSection({ t }) {
+  _s();
+  const [version, setVersion] = useState("");
+  useEffect(() => {
+    getVersion().then(setVersion).catch(() => setVersion(""));
+  }, []);
+  return /* @__PURE__ */ jsxDEV("div", { className: "settings-about", children: [
+    /* @__PURE__ */ jsxDEV("img", { className: "settings-about-icon", src: appIcon, alt: "" }, void 0, false, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx",
+      lineNumber: 40,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "settings-about-name", children: "Textus" }, void 0, false, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx",
+      lineNumber: 41,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "settings-about-version", children: version ? t.aboutVersion.replace("{version}", version) : " " }, void 0, false, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx",
+      lineNumber: 42,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "settings-about-links", children: [
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          type: "button",
+          className: "text-button settings-about-link",
+          onClick: () => void links.openAboutLink("github"),
+          children: "GitHub"
+        },
+        void 0,
+        false,
+        {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx",
+          lineNumber: 46,
+          columnNumber: 9
+        },
+        this
+      ),
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          type: "button",
+          className: "text-button settings-about-link",
+          onClick: () => void links.openAboutLink("discord"),
+          children: "Discord"
+        },
+        void 0,
+        false,
+        {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx",
+          lineNumber: 53,
+          columnNumber: 9
+        },
+        this
+      ),
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          type: "button",
+          className: "text-button settings-about-link",
+          onClick: () => void links.openAboutLink("qq"),
+          children: t.aboutQq
+        },
+        void 0,
+        false,
+        {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx",
+          lineNumber: 60,
+          columnNumber: 9
+        },
+        this
+      ),
+      /* @__PURE__ */ jsxDEV(UpdateButton, { t }, void 0, false, {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx",
+        lineNumber: 67,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx",
+      lineNumber: 45,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "settings-about-credit", children: t.aboutMadeBy }, void 0, false, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx",
+      lineNumber: 69,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx",
+    lineNumber: 39,
+    columnNumber: 5
+  }, this);
+}
+_s(AboutSection, "j9yMxX12osB7r0JN+KrOqzlhMxw=");
+_c = AboutSection;
+var _c;
+$RefreshReg$(_c, "AboutSection");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/settings/sections/about.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBb0JNOzs7Ozs7Ozs7Ozs7Ozs7OztBQXBCTixTQUFTQSxXQUFXQyxnQkFBZ0I7QUFDcEMsU0FBU0Msa0JBQWtCO0FBRTNCLFNBQVNDLGFBQWE7QUFDdEIsU0FBU0Msb0JBQW9CO0FBQzdCLE9BQU9DLGFBQWE7QUFJYixnQkFBU0MsYUFBYSxFQUFFQyxFQUFrQixHQUFHO0FBQUFDLEtBQUE7QUFDbEQsUUFBTSxDQUFDQyxTQUFTQyxVQUFVLElBQUlULFNBQVMsRUFBRTtBQUV6Q0QsWUFBVSxNQUFNO0FBQ2RFLGVBQVcsRUFDUlMsS0FBS0QsVUFBVSxFQUNmRSxNQUFNLE1BQU1GLFdBQVcsRUFBRSxDQUFDO0FBQUEsRUFDL0IsR0FBRyxFQUFFO0FBRUwsU0FDRSx1QkFBQyxTQUFJLFdBQVUsa0JBQ2I7QUFBQSwyQkFBQyxTQUFJLFdBQVUsdUJBQXNCLEtBQUtMLFNBQVMsS0FBSSxNQUF2RDtBQUFBO0FBQUE7QUFBQTtBQUFBLFdBQXlEO0FBQUEsSUFDekQsdUJBQUMsU0FBSSxXQUFVLHVCQUFzQixzQkFBckM7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQUEyQztBQUFBLElBQzNDLHVCQUFDLFNBQUksV0FBVSwwQkFDWkksb0JBQVVGLEVBQUVNLGFBQWFDLFFBQVEsYUFBYUwsT0FBTyxJQUFJLE9BRDVEO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0FFQTtBQUFBLElBQ0EsdUJBQUMsU0FBSSxXQUFVLHdCQUNiO0FBQUE7QUFBQSxRQUFDO0FBQUE7QUFBQSxVQUNDLE1BQUs7QUFBQSxVQUNMLFdBQVU7QUFBQSxVQUNWLFNBQVMsTUFBTSxLQUFLTixNQUFNWSxjQUFjLFFBQVE7QUFBQSxVQUFFO0FBQUE7QUFBQSxRQUhwRDtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUEsTUFNQTtBQUFBLE1BQ0E7QUFBQSxRQUFDO0FBQUE7QUFBQSxVQUNDLE1BQUs7QUFBQSxVQUNMLFdBQVU7QUFBQSxVQUNWLFNBQVMsTUFBTSxLQUFLWixNQUFNWSxjQUFjLFNBQVM7QUFBQSxVQUFFO0FBQUE7QUFBQSxRQUhyRDtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUEsTUFNQTtBQUFBLE1BQ0E7QUFBQSxRQUFDO0FBQUE7QUFBQSxVQUNDLE1BQUs7QUFBQSxVQUNMLFdBQVU7QUFBQSxVQUNWLFNBQVMsTUFBTSxLQUFLWixNQUFNWSxjQUFjLElBQUk7QUFBQSxVQUUzQ1IsWUFBRVM7QUFBQUE7QUFBQUEsUUFMTDtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUEsTUFNQTtBQUFBLE1BQ0EsdUJBQUMsZ0JBQWEsS0FBZDtBQUFBO0FBQUE7QUFBQTtBQUFBLGFBQW1CO0FBQUEsU0F0QnJCO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0F1QkE7QUFBQSxJQUNBLHVCQUFDLFNBQUksV0FBVSx5QkFBeUJULFlBQUVVLGVBQTFDO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0FBc0Q7QUFBQSxPQTlCeEQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxTQStCQTtBQUVKO0FBQUNULEdBM0NlRixjQUFZO0FBQUEsS0FBWkE7QUFBWSxJQUFBWTtBQUFBLGFBQUFBLElBQUEiLCJuYW1lcyI6WyJ1c2VFZmZlY3QiLCJ1c2VTdGF0ZSIsImdldFZlcnNpb24iLCJsaW5rcyIsIlVwZGF0ZUJ1dHRvbiIsImFwcEljb24iLCJBYm91dFNlY3Rpb24iLCJ0IiwiX3MiLCJ2ZXJzaW9uIiwic2V0VmVyc2lvbiIsInRoZW4iLCJjYXRjaCIsImFib3V0VmVyc2lvbiIsInJlcGxhY2UiLCJvcGVuQWJvdXRMaW5rIiwiYWJvdXRRcSIsImFib3V0TWFkZUJ5IiwiX2MiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiYWJvdXQudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZUVmZmVjdCwgdXNlU3RhdGUgfSBmcm9tIFwicmVhY3RcIjtcbmltcG9ydCB7IGdldFZlcnNpb24gfSBmcm9tIFwiQHRhdXJpLWFwcHMvYXBpL2FwcFwiO1xuaW1wb3J0IHR5cGUgeyBTdHJpbmdzIH0gZnJvbSBcIi4uLy4uL2kxOG4vc3RyaW5nc1wiO1xuaW1wb3J0IHsgbGlua3MgfSBmcm9tIFwiLi4vLi4vcGxhdGZvcm0vaXBjXCI7XG5pbXBvcnQgeyBVcGRhdGVCdXR0b24gfSBmcm9tIFwiLi9nZW5lcmFsXCI7XG5pbXBvcnQgYXBwSWNvbiBmcm9tIFwiLi4vLi4vLi4vc3JjLXRhdXJpL2ljb25zLzEyOHgxMjhAMngucG5nXCI7XG5cbi8qKiBTZXR0aW5ncyDigLogR2VuZXJhbCDigLogQWJvdXQgVGV4dHVzOiB0aGUgYXBwLCBpdHMgdmVyc2lvbiBhbmQgdXBkYXRlcyxcbiAqICBpdHMgY29kZSwgd2hlcmUgdG8gdGFsayB3aXRoIHVzLCBhbmQgd2hvIG1hZGUgaXQuICovXG5leHBvcnQgZnVuY3Rpb24gQWJvdXRTZWN0aW9uKHsgdCB9OiB7IHQ6IFN0cmluZ3MgfSkge1xuICBjb25zdCBbdmVyc2lvbiwgc2V0VmVyc2lvbl0gPSB1c2VTdGF0ZShcIlwiKTtcblxuICB1c2VFZmZlY3QoKCkgPT4ge1xuICAgIGdldFZlcnNpb24oKVxuICAgICAgLnRoZW4oc2V0VmVyc2lvbilcbiAgICAgIC5jYXRjaCgoKSA9PiBzZXRWZXJzaW9uKFwiXCIpKTtcbiAgfSwgW10pO1xuXG4gIHJldHVybiAoXG4gICAgPGRpdiBjbGFzc05hbWU9XCJzZXR0aW5ncy1hYm91dFwiPlxuICAgICAgPGltZyBjbGFzc05hbWU9XCJzZXR0aW5ncy1hYm91dC1pY29uXCIgc3JjPXthcHBJY29ufSBhbHQ9XCJcIiAvPlxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJzZXR0aW5ncy1hYm91dC1uYW1lXCI+VGV4dHVzPC9kaXY+XG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cInNldHRpbmdzLWFib3V0LXZlcnNpb25cIj5cbiAgICAgICAge3ZlcnNpb24gPyB0LmFib3V0VmVyc2lvbi5yZXBsYWNlKFwie3ZlcnNpb259XCIsIHZlcnNpb24pIDogXCIgXCJ9XG4gICAgICA8L2Rpdj5cbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwic2V0dGluZ3MtYWJvdXQtbGlua3NcIj5cbiAgICAgICAgPGJ1dHRvblxuICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICAgIGNsYXNzTmFtZT1cInRleHQtYnV0dG9uIHNldHRpbmdzLWFib3V0LWxpbmtcIlxuICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHZvaWQgbGlua3Mub3BlbkFib3V0TGluayhcImdpdGh1YlwiKX1cbiAgICAgICAgPlxuICAgICAgICAgIEdpdEh1YlxuICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgPGJ1dHRvblxuICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICAgIGNsYXNzTmFtZT1cInRleHQtYnV0dG9uIHNldHRpbmdzLWFib3V0LWxpbmtcIlxuICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHZvaWQgbGlua3Mub3BlbkFib3V0TGluayhcImRpc2NvcmRcIil9XG4gICAgICAgID5cbiAgICAgICAgICBEaXNjb3JkXG4gICAgICAgIDwvYnV0dG9uPlxuICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgdHlwZT1cImJ1dHRvblwiXG4gICAgICAgICAgY2xhc3NOYW1lPVwidGV4dC1idXR0b24gc2V0dGluZ3MtYWJvdXQtbGlua1wiXG4gICAgICAgICAgb25DbGljaz17KCkgPT4gdm9pZCBsaW5rcy5vcGVuQWJvdXRMaW5rKFwicXFcIil9XG4gICAgICAgID5cbiAgICAgICAgICB7dC5hYm91dFFxfVxuICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgPFVwZGF0ZUJ1dHRvbiB0PXt0fSAvPlxuICAgICAgPC9kaXY+XG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cInNldHRpbmdzLWFib3V0LWNyZWRpdFwiPnt0LmFib3V0TWFkZUJ5fTwvZGl2PlxuICAgIDwvZGl2PlxuICApO1xufVxuIl0sImZpbGUiOiIvaG9tZS9jaGVuZ2FvL0RvY3VtZW50cy9FbmpveW1lbnQvVGV4dHVzL2FwcC8uY2xhdWRlL3dvcmt0cmVlcy9hYm91dC10ZXh0dXMvc3JjL3NldHRpbmdzL3NlY3Rpb25zL2Fib3V0LnRzeCJ9

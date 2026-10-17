@@ -1,0 +1,300 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/ai/revision/ReviewBar.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=f9787d19"; const useRef = __vite__cjsImport3_react["useRef"]; const useState = __vite__cjsImport3_react["useState"];
+import { useCloseOnOutsideClick } from "/src/utils/hooks/useCloseOnOutsideClick.ts";
+import {
+  REVISION_DISPLAYS
+} from "/src/settings/SettingsContext.tsx";
+import { ChatTabIcon, ChevronIcon } from "/src/ui/icons.tsx";
+import { usePresenceProps } from "/src/ui/usePresence.ts";
+import "/src/ai/revision/ReviewBar.css";
+export function ReviewBar({
+  labels,
+  taken,
+  total,
+  position,
+  stops,
+  phone,
+  onPrevious,
+  onNext,
+  onAccept,
+  onReject,
+  onOpenChat,
+  display,
+  displayName,
+  onDisplay
+}) {
+  _s();
+  const rootRef = useRef(null);
+  const presence = usePresenceProps(rootRef);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useCloseOnOutsideClick(
+    () => setMenuOpen(false),
+    true,
+    menuOpen
+  );
+  const modes = phone ? REVISION_DISPLAYS.filter((m) => m === "inline" || m === "final") : REVISION_DISPLAYS;
+  const shown = phone && display !== "final" ? "inline" : display;
+  const view = /* @__PURE__ */ jsxDEV("div", { className: "review-bar-view", ref: menuRef, children: [
+    /* @__PURE__ */ jsxDEV(
+      "button",
+      {
+        type: "button",
+        className: "review-bar-view-button",
+        "aria-haspopup": "menu",
+        "aria-expanded": menuOpen,
+        "aria-label": labels.revisionDisplayLabel,
+        title: labels.revisionDisplayLabel,
+        onClick: () => setMenuOpen(!menuOpen),
+        children: /* @__PURE__ */ jsxDEV("svg", { viewBox: "0 0 16 16", "aria-hidden": "true", children: [
+          /* @__PURE__ */ jsxDEV("path", { d: "M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8s-2.4 4.5-6.5 4.5S1.5 8 1.5 8z" }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+            lineNumber: 114,
+            columnNumber: 11
+          }, this),
+          /* @__PURE__ */ jsxDEV("circle", { cx: "8", cy: "8", r: "2" }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+            lineNumber: 115,
+            columnNumber: 11
+          }, this)
+        ] }, void 0, true, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+          lineNumber: 113,
+          columnNumber: 9
+        }, this)
+      },
+      void 0,
+      false,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+        lineNumber: 104,
+        columnNumber: 7
+      },
+      this
+    ),
+    menuOpen && /* @__PURE__ */ jsxDEV(
+      "div",
+      {
+        className: "review-bar-menu floating-surface",
+        role: "menu",
+        "aria-label": labels.revisionDisplayLabel,
+        children: modes.map(
+          (mode) => /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              role: "menuitemradio",
+              "aria-checked": shown === mode,
+              onClick: () => {
+                onDisplay(mode);
+                setMenuOpen(false);
+              },
+              children: displayName(mode)
+            },
+            mode,
+            false,
+            {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+              lineNumber: 125,
+              columnNumber: 7
+            },
+            this
+          )
+        )
+      },
+      void 0,
+      false,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+        lineNumber: 119,
+        columnNumber: 5
+      },
+      this
+    )
+  ] }, void 0, true, {
+    fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+    lineNumber: 103,
+    columnNumber: 3
+  }, this);
+  const accept = taken < total ? labels.proposalAcceptSome.replace("{k}", String(taken)).replace("{n}", String(total)) : labels.proposalAccept;
+  const nav = stops > 1 && /* @__PURE__ */ jsxDEV("span", { className: "review-bar-nav", children: [
+    /* @__PURE__ */ jsxDEV(
+      "button",
+      {
+        type: "button",
+        "aria-label": labels.quickAskPrevEdit,
+        title: labels.quickAskPrevEdit,
+        onClick: onPrevious,
+        children: /* @__PURE__ */ jsxDEV(ChevronIcon, { className: "review-bar-prev" }, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+          lineNumber: 156,
+          columnNumber: 9
+        }, this)
+      },
+      void 0,
+      false,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+        lineNumber: 150,
+        columnNumber: 7
+      },
+      this
+    ),
+    /* @__PURE__ */ jsxDEV("span", { className: "review-bar-pos", children: position < 0 ? labels.proposalChangeCount.replace("{n}", String(stops)) : labels.quickAskPosition.replace("{i}", String(position + 1)).replace("{n}", String(stops)) }, void 0, false, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+      lineNumber: 158,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(
+      "button",
+      {
+        type: "button",
+        "aria-label": labels.quickAskNextEdit,
+        title: labels.quickAskNextEdit,
+        onClick: onNext,
+        children: /* @__PURE__ */ jsxDEV(ChevronIcon, { className: "review-bar-next" }, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+          lineNumber: 171,
+          columnNumber: 9
+        }, this)
+      },
+      void 0,
+      false,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+        lineNumber: 165,
+        columnNumber: 7
+      },
+      this
+    )
+  ] }, void 0, true, {
+    fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+    lineNumber: 149,
+    columnNumber: 3
+  }, this);
+  return /* @__PURE__ */ jsxDEV(
+    "div",
+    {
+      ...presence,
+      className: `review-bar${phone ? " review-bar-phone" : ""}`,
+      role: "toolbar",
+      "aria-label": labels.reviewBarLabel,
+      children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "review-bar-top", children: [
+          /* @__PURE__ */ jsxDEV("span", { className: "review-bar-label", children: labels.reviewBarLabel }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+            lineNumber: 183,
+            columnNumber: 9
+          }, this),
+          nav,
+          view,
+          phone && onOpenChat && /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              className: "review-bar-chat",
+              "aria-label": labels.reviewBarOpenChat,
+              title: labels.reviewBarOpenChat,
+              onClick: onOpenChat,
+              children: /* @__PURE__ */ jsxDEV(ChatTabIcon, {}, void 0, false, {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+                lineNumber: 194,
+                columnNumber: 13
+              }, this)
+            },
+            void 0,
+            false,
+            {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+              lineNumber: 187,
+              columnNumber: 9
+            },
+            this
+          )
+        ] }, void 0, true, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+          lineNumber: 182,
+          columnNumber: 7
+        }, this),
+        !phone && /* @__PURE__ */ jsxDEV("span", { className: "review-bar-sep", "aria-hidden": "true" }, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+          lineNumber: 198,
+          columnNumber: 18
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "review-bar-actions", children: [
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              className: "review-bar-button review-bar-accept",
+              onClick: onAccept,
+              children: accept
+            },
+            void 0,
+            false,
+            {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+              lineNumber: 200,
+              columnNumber: 9
+            },
+            this
+          ),
+          /* @__PURE__ */ jsxDEV("button", { type: "button", className: "review-bar-button", onClick: onReject, children: labels.proposalReject }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+            lineNumber: 207,
+            columnNumber: 9
+          }, this)
+        ] }, void 0, true, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+          lineNumber: 199,
+          columnNumber: 7
+        }, this)
+      ]
+    },
+    void 0,
+    true,
+    {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx",
+      lineNumber: 176,
+      columnNumber: 5
+    },
+    this
+  );
+}
+_s(ReviewBar, "+BcaYbiXooF+G3mqdcP9LwtEufk=", false, function() {
+  return [usePresenceProps, useCloseOnOutsideClick];
+});
+_c = ReviewBar;
+var _c;
+$RefreshReg$(_c, "ReviewBar");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/revision/ReviewBar.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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QSIsIm5hbWVzIjpbInVzZVJlZiIsInVzZVN0YXRlIiwidXNlQ2xvc2VPbk91dHNpZGVDbGljayIsIlJFVklTSU9OX0RJU1BMQVlTIiwiQ2hhdFRhYkljb24iLCJDaGV2cm9uSWNvbiIsInVzZVByZXNlbmNlUHJvcHMiLCJSZXZpZXdCYXIiLCJsYWJlbHMiLCJ0YWtlbiIsInRvdGFsIiwicG9zaXRpb24iLCJzdG9wcyIsInBob25lIiwib25QcmV2aW91cyIsIm9uTmV4dCIsIm9uQWNjZXB0Iiwib25SZWplY3QiLCJvbk9wZW5DaGF0IiwiZGlzcGxheSIsImRpc3BsYXlOYW1lIiwib25EaXNwbGF5IiwiX3MiLCJyb290UmVmIiwicHJlc2VuY2UiLCJtZW51T3BlbiIsInNldE1lbnVPcGVuIiwibWVudVJlZiIsIm1vZGVzIiwiZmlsdGVyIiwibSIsInNob3duIiwidmlldyIsInJldmlzaW9uRGlzcGxheUxhYmVsIiwibWFwIiwibW9kZSIsImFjY2VwdCIsInByb3Bvc2FsQWNjZXB0U29tZSIsInJlcGxhY2UiLCJTdHJpbmciLCJwcm9wb3NhbEFjY2VwdCIsIm5hdiIsInF1aWNrQXNrUHJldkVkaXQiLCJwcm9wb3NhbENoYW5nZUNvdW50IiwicXVpY2tBc2tQb3NpdGlvbiIsInF1aWNrQXNrTmV4dEVkaXQiLCJyZXZpZXdCYXJMYWJlbCIsInJldmlld0Jhck9wZW5DaGF0IiwicHJvcG9zYWxSZWplY3QiLCJfYyJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJSZXZpZXdCYXIudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZVJlZiwgdXNlU3RhdGUgfSBmcm9tIFwicmVhY3RcIjtcbmltcG9ydCB7IHVzZUNsb3NlT25PdXRzaWRlQ2xpY2sgfSBmcm9tIFwiLi4vLi4vdXRpbHMvaG9va3MvdXNlQ2xvc2VPbk91dHNpZGVDbGlja1wiO1xuaW1wb3J0IHtcbiAgUkVWSVNJT05fRElTUExBWVMsXG4gIHR5cGUgUmV2aXNpb25EaXNwbGF5LFxufSBmcm9tIFwiLi4vLi4vc2V0dGluZ3MvU2V0dGluZ3NDb250ZXh0XCI7XG5pbXBvcnQgeyBDaGF0VGFiSWNvbiwgQ2hldnJvbkljb24gfSBmcm9tIFwiLi4vLi4vdWkvaWNvbnNcIjtcbmltcG9ydCB7IHVzZVByZXNlbmNlUHJvcHMgfSBmcm9tIFwiLi4vLi4vdWkvdXNlUHJlc2VuY2VcIjtcbmltcG9ydCBcIi4vUmV2aWV3QmFyLmNzc1wiO1xuXG5leHBvcnQgaW50ZXJmYWNlIFJldmlld0JhckxhYmVscyB7XG4gIHJldmlzaW9uRGlzcGxheUxhYmVsOiBzdHJpbmc7XG4gIHJldmlld0JhckxhYmVsOiBzdHJpbmc7XG4gIHJldmlld0Jhck9wZW5DaGF0OiBzdHJpbmc7XG4gIHByb3Bvc2FsQWNjZXB0OiBzdHJpbmc7XG4gIHByb3Bvc2FsUmVqZWN0OiBzdHJpbmc7XG4gIHByb3Bvc2FsQWNjZXB0U29tZTogc3RyaW5nO1xuICBwcm9wb3NhbENoYW5nZUNvdW50OiBzdHJpbmc7XG4gIHF1aWNrQXNrUG9zaXRpb246IHN0cmluZztcbiAgcXVpY2tBc2tQcmV2RWRpdDogc3RyaW5nO1xuICBxdWlja0Fza05leHRFZGl0OiBzdHJpbmc7XG59XG5cbi8qKlxuICogVGhlIHBlbmRpbmcgZWRpdHMnIGNvbnRyb2xzLCBmbG9hdGluZyBvdmVyIHRoZSBib3R0b20gb2YgdGhlIGRvY3VtZW50XG4gKiB3aGlsZSB0aGVyZSBhcmUgYW55OiBzdGVwIHRocm91Z2ggdGhlIGNoYW5nZWQgc2VudGVuY2VzICjigLkgMS8zIOKAuiksIHRoZW5cbiAqIEFjY2VwdCB3aGF0IHdhc24ndCBrZXB0IG9yIFJlamVjdCB0aGVtIGFsbC4gVGhlIHRleHQgaXRzZWxmIGNhcnJpZXMgYVxuICog4pyTIC8g4pyVIHBlciBzZW50ZW5jZTsgdGhpcyBpcyB0aGUgb25lIHBsYWNlIHRvIGZpbmlzaCAtIHRoZSBBSSBwYW5lbCdzXG4gKiBjYXJkIGhhcyB0aGUgc2FtZSBidXR0b25zLCB0aGUgcGFuZWwgbm8gbG9uZ2VyIGhhcyBhIGJhciBvZiBpdHMgb3duLlxuICpcbiAqIE9uIGEgcGhvbmUgaXQgaXMgdGhlIEFJIHNoZWV0J3MgY29sbGFwc2VkIGZvcm06IGEgYm90dG9tIGJhciB3aXRoIGJpZ1xuICogYnV0dG9ucyBhbmQgYSB3YXkgYmFjayBpbnRvIHRoZSBjb252ZXJzYXRpb24uXG4gKi9cbmV4cG9ydCBmdW5jdGlvbiBSZXZpZXdCYXIoe1xuICBsYWJlbHMsXG4gIHRha2VuLFxuICB0b3RhbCxcbiAgcG9zaXRpb24sXG4gIHN0b3BzLFxuICBwaG9uZSxcbiAgb25QcmV2aW91cyxcbiAgb25OZXh0LFxuICBvbkFjY2VwdCxcbiAgb25SZWplY3QsXG4gIG9uT3BlbkNoYXQsXG4gIGRpc3BsYXksXG4gIGRpc3BsYXlOYW1lLFxuICBvbkRpc3BsYXksXG59OiB7XG4gIC8qKiBIb3cgcmV2aXNpb25zIHNob3cgKFNldHRpbmdzLnJldmlzaW9uRGlzcGxheSksIHN3aXRjaGVkIGZyb20gaGVyZSBhc1xuICAgKiAgaW4gV29yZCdzIFJldmlldyByaWJib24uICovXG4gIGRpc3BsYXk6IFJldmlzaW9uRGlzcGxheTtcbiAgZGlzcGxheU5hbWU6IChtb2RlOiBSZXZpc2lvbkRpc3BsYXkpID0+IHN0cmluZztcbiAgb25EaXNwbGF5OiAobW9kZTogUmV2aXNpb25EaXNwbGF5KSA9PiB2b2lkO1xuICBsYWJlbHM6IFJldmlld0JhckxhYmVscztcbiAgLyoqIFNlbnRlbmNlcyBBY2NlcHQgd291bGQgdGFrZSwgb2YgYWxsIHBlbmRpbmcgb25lcy4gKi9cbiAgdGFrZW46IG51bWJlcjtcbiAgdG90YWw6IG51bWJlcjtcbiAgLyoqIFRoZSBwb2ludGVyICgtMTogbm90IG9uIGEgc3RvcCB5ZXQpIGFuZCBob3cgbWFueSBzdG9wcyB0aGVyZSBhcmUuICovXG4gIHBvc2l0aW9uOiBudW1iZXI7XG4gIHN0b3BzOiBudW1iZXI7XG4gIHBob25lOiBib29sZWFuO1xuICBvblByZXZpb3VzOiAoKSA9PiB2b2lkO1xuICBvbk5leHQ6ICgpID0+IHZvaWQ7XG4gIG9uQWNjZXB0OiAoKSA9PiB2b2lkO1xuICBvblJlamVjdDogKCkgPT4gdm9pZDtcbiAgLyoqIFBob25lOiBiYWNrIHRvIHRoZSBjb252ZXJzYXRpb24uICovXG4gIG9uT3BlbkNoYXQ/OiAoKSA9PiB2b2lkO1xufSkge1xuICBjb25zdCByb290UmVmID0gdXNlUmVmPEhUTUxEaXZFbGVtZW50PihudWxsKTtcbiAgY29uc3QgcHJlc2VuY2UgPSB1c2VQcmVzZW5jZVByb3BzKHJvb3RSZWYpO1xuICBjb25zdCBbbWVudU9wZW4sIHNldE1lbnVPcGVuXSA9IHVzZVN0YXRlKGZhbHNlKTtcbiAgY29uc3QgbWVudVJlZiA9IHVzZUNsb3NlT25PdXRzaWRlQ2xpY2s8SFRNTERpdkVsZW1lbnQ+KFxuICAgICgpID0+IHNldE1lbnVPcGVuKGZhbHNlKSxcbiAgICB0cnVlLFxuICAgIG1lbnVPcGVuLFxuICApO1xuICAvLyBBIHBob25lIGhhcyBubyBtYXJnaW46IG9ubHkgdGhlIHR3byB2aWV3cyB0aGF0IG5lZWQgbm9uZS5cbiAgY29uc3QgbW9kZXMgPSBwaG9uZVxuICAgID8gUkVWSVNJT05fRElTUExBWVMuZmlsdGVyKChtKSA9PiBtID09PSBcImlubGluZVwiIHx8IG0gPT09IFwiZmluYWxcIilcbiAgICA6IFJFVklTSU9OX0RJU1BMQVlTO1xuICBjb25zdCBzaG93biA9IHBob25lICYmIGRpc3BsYXkgIT09IFwiZmluYWxcIiA/IFwiaW5saW5lXCIgOiBkaXNwbGF5O1xuICBjb25zdCB2aWV3ID0gKFxuICAgIDxkaXYgY2xhc3NOYW1lPVwicmV2aWV3LWJhci12aWV3XCIgcmVmPXttZW51UmVmfT5cbiAgICAgIDxidXR0b25cbiAgICAgICAgdHlwZT1cImJ1dHRvblwiXG4gICAgICAgIGNsYXNzTmFtZT1cInJldmlldy1iYXItdmlldy1idXR0b25cIlxuICAgICAgICBhcmlhLWhhc3BvcHVwPVwibWVudVwiXG4gICAgICAgIGFyaWEtZXhwYW5kZWQ9e21lbnVPcGVufVxuICAgICAgICBhcmlhLWxhYmVsPXtsYWJlbHMucmV2aXNpb25EaXNwbGF5TGFiZWx9XG4gICAgICAgIHRpdGxlPXtsYWJlbHMucmV2aXNpb25EaXNwbGF5TGFiZWx9XG4gICAgICAgIG9uQ2xpY2s9eygpID0+IHNldE1lbnVPcGVuKCFtZW51T3Blbil9XG4gICAgICA+XG4gICAgICAgIDxzdmcgdmlld0JveD1cIjAgMCAxNiAxNlwiIGFyaWEtaGlkZGVuPVwidHJ1ZVwiPlxuICAgICAgICAgIDxwYXRoIGQ9XCJNMS41IDhzMi40LTQuNSA2LjUtNC41UzE0LjUgOCAxNC41IDhzLTIuNCA0LjUtNi41IDQuNVMxLjUgOCAxLjUgOHpcIiAvPlxuICAgICAgICAgIDxjaXJjbGUgY3g9XCI4XCIgY3k9XCI4XCIgcj1cIjJcIiAvPlxuICAgICAgICA8L3N2Zz5cbiAgICAgIDwvYnV0dG9uPlxuICAgICAge21lbnVPcGVuICYmIChcbiAgICAgICAgPGRpdlxuICAgICAgICAgIGNsYXNzTmFtZT1cInJldmlldy1iYXItbWVudSBmbG9hdGluZy1zdXJmYWNlXCJcbiAgICAgICAgICByb2xlPVwibWVudVwiXG4gICAgICAgICAgYXJpYS1sYWJlbD17bGFiZWxzLnJldmlzaW9uRGlzcGxheUxhYmVsfVxuICAgICAgICA+XG4gICAgICAgICAge21vZGVzLm1hcCgobW9kZSkgPT4gKFxuICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICBrZXk9e21vZGV9XG4gICAgICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICAgICAgICByb2xlPVwibWVudWl0ZW1yYWRpb1wiXG4gICAgICAgICAgICAgIGFyaWEtY2hlY2tlZD17c2hvd24gPT09IG1vZGV9XG4gICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHtcbiAgICAgICAgICAgICAgICBvbkRpc3BsYXkobW9kZSk7XG4gICAgICAgICAgICAgICAgc2V0TWVudU9wZW4oZmFsc2UpO1xuICAgICAgICAgICAgICB9fVxuICAgICAgICAgICAgPlxuICAgICAgICAgICAgICB7ZGlzcGxheU5hbWUobW9kZSl9XG4gICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICApKX1cbiAgICAgICAgPC9kaXY+XG4gICAgICApfVxuICAgIDwvZGl2PlxuICApO1xuICBjb25zdCBhY2NlcHQgPVxuICAgIHRha2VuIDwgdG90YWxcbiAgICAgID8gbGFiZWxzLnByb3Bvc2FsQWNjZXB0U29tZVxuICAgICAgICAgIC5yZXBsYWNlKFwie2t9XCIsIFN0cmluZyh0YWtlbikpXG4gICAgICAgICAgLnJlcGxhY2UoXCJ7bn1cIiwgU3RyaW5nKHRvdGFsKSlcbiAgICAgIDogbGFiZWxzLnByb3Bvc2FsQWNjZXB0O1xuICBjb25zdCBuYXYgPSBzdG9wcyA+IDEgJiYgKFxuICAgIDxzcGFuIGNsYXNzTmFtZT1cInJldmlldy1iYXItbmF2XCI+XG4gICAgICA8YnV0dG9uXG4gICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICBhcmlhLWxhYmVsPXtsYWJlbHMucXVpY2tBc2tQcmV2RWRpdH1cbiAgICAgICAgdGl0bGU9e2xhYmVscy5xdWlja0Fza1ByZXZFZGl0fVxuICAgICAgICBvbkNsaWNrPXtvblByZXZpb3VzfVxuICAgICAgPlxuICAgICAgICA8Q2hldnJvbkljb24gY2xhc3NOYW1lPVwicmV2aWV3LWJhci1wcmV2XCIgLz5cbiAgICAgIDwvYnV0dG9uPlxuICAgICAgPHNwYW4gY2xhc3NOYW1lPVwicmV2aWV3LWJhci1wb3NcIj5cbiAgICAgICAge3Bvc2l0aW9uIDwgMFxuICAgICAgICAgID8gbGFiZWxzLnByb3Bvc2FsQ2hhbmdlQ291bnQucmVwbGFjZShcIntufVwiLCBTdHJpbmcoc3RvcHMpKVxuICAgICAgICAgIDogbGFiZWxzLnF1aWNrQXNrUG9zaXRpb25cbiAgICAgICAgICAgICAgLnJlcGxhY2UoXCJ7aX1cIiwgU3RyaW5nKHBvc2l0aW9uICsgMSkpXG4gICAgICAgICAgICAgIC5yZXBsYWNlKFwie259XCIsIFN0cmluZyhzdG9wcykpfVxuICAgICAgPC9zcGFuPlxuICAgICAgPGJ1dHRvblxuICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgYXJpYS1sYWJlbD17bGFiZWxzLnF1aWNrQXNrTmV4dEVkaXR9XG4gICAgICAgIHRpdGxlPXtsYWJlbHMucXVpY2tBc2tOZXh0RWRpdH1cbiAgICAgICAgb25DbGljaz17b25OZXh0fVxuICAgICAgPlxuICAgICAgICA8Q2hldnJvbkljb24gY2xhc3NOYW1lPVwicmV2aWV3LWJhci1uZXh0XCIgLz5cbiAgICAgIDwvYnV0dG9uPlxuICAgIDwvc3Bhbj5cbiAgKTtcbiAgcmV0dXJuIChcbiAgICA8ZGl2XG4gICAgICB7Li4ucHJlc2VuY2V9XG4gICAgICBjbGFzc05hbWU9e2ByZXZpZXctYmFyJHtwaG9uZSA/IFwiIHJldmlldy1iYXItcGhvbmVcIiA6IFwiXCJ9YH1cbiAgICAgIHJvbGU9XCJ0b29sYmFyXCJcbiAgICAgIGFyaWEtbGFiZWw9e2xhYmVscy5yZXZpZXdCYXJMYWJlbH1cbiAgICA+XG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cInJldmlldy1iYXItdG9wXCI+XG4gICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInJldmlldy1iYXItbGFiZWxcIj57bGFiZWxzLnJldmlld0JhckxhYmVsfTwvc3Bhbj5cbiAgICAgICAge25hdn1cbiAgICAgICAge3ZpZXd9XG4gICAgICAgIHtwaG9uZSAmJiBvbk9wZW5DaGF0ICYmIChcbiAgICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgICAgIGNsYXNzTmFtZT1cInJldmlldy1iYXItY2hhdFwiXG4gICAgICAgICAgICBhcmlhLWxhYmVsPXtsYWJlbHMucmV2aWV3QmFyT3BlbkNoYXR9XG4gICAgICAgICAgICB0aXRsZT17bGFiZWxzLnJldmlld0Jhck9wZW5DaGF0fVxuICAgICAgICAgICAgb25DbGljaz17b25PcGVuQ2hhdH1cbiAgICAgICAgICA+XG4gICAgICAgICAgICA8Q2hhdFRhYkljb24gLz5cbiAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgKX1cbiAgICAgIDwvZGl2PlxuICAgICAgeyFwaG9uZSAmJiA8c3BhbiBjbGFzc05hbWU9XCJyZXZpZXctYmFyLXNlcFwiIGFyaWEtaGlkZGVuPVwidHJ1ZVwiIC8+fVxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJyZXZpZXctYmFyLWFjdGlvbnNcIj5cbiAgICAgICAgPGJ1dHRvblxuICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICAgIGNsYXNzTmFtZT1cInJldmlldy1iYXItYnV0dG9uIHJldmlldy1iYXItYWNjZXB0XCJcbiAgICAgICAgICBvbkNsaWNrPXtvbkFjY2VwdH1cbiAgICAgICAgPlxuICAgICAgICAgIHthY2NlcHR9XG4gICAgICAgIDwvYnV0dG9uPlxuICAgICAgICA8YnV0dG9uIHR5cGU9XCJidXR0b25cIiBjbGFzc05hbWU9XCJyZXZpZXctYmFyLWJ1dHRvblwiIG9uQ2xpY2s9e29uUmVqZWN0fT5cbiAgICAgICAgICB7bGFiZWxzLnByb3Bvc2FsUmVqZWN0fVxuICAgICAgICA8L2J1dHRvbj5cbiAgICAgIDwvZGl2PlxuICAgIDwvZGl2PlxuICApO1xufVxuIl0sImZpbGUiOiIvaG9tZS9jaGVuZ2FvL0RvY3VtZW50cy9FbmpveW1lbnQvVGV4dHVzL2FwcC8uY2xhdWRlL3dvcmt0cmVlcy9hYm91dC10ZXh0dXMvc3JjL2FpL3JldmlzaW9uL1Jldmlld0Jhci50c3gifQ==

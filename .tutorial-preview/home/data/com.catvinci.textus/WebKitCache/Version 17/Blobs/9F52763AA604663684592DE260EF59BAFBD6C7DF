@@ -1,0 +1,171 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/ai/writing/GrammarSuggestion.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=f9787d19"; const useMemo = __vite__cjsImport3_react["useMemo"];
+import { GrammarPopover, applyLabel } from "/src/ai/writing/GrammarPopover.tsx";
+import { BottomCard } from "/src/ui/BottomCard.tsx";
+import { Presence } from "/src/ui/usePresence.ts";
+export function GrammarSuggestion({
+  grammar,
+  phone,
+  t,
+  onStale
+}) {
+  _s();
+  const grammarLabels = useMemo(
+    () => ({
+      grammarKinds: {
+        spelling: t.grammarKindSpelling,
+        grammar: t.grammarKindGrammar,
+        punctuation: t.grammarKindPunctuation,
+        rules: t.grammarKindRules
+      },
+      grammarApplyTo: t.grammarApplyTo,
+      grammarApply: t.grammarApply,
+      grammarIgnore: t.grammarIgnore,
+      grammarPrevious: t.grammarPrevious,
+      grammarNext: t.grammarNext
+    }),
+    [t]
+  );
+  return /* @__PURE__ */ jsxDEV(Fragment, { children: [
+    /* @__PURE__ */ jsxDEV(Presence, { show: !!grammar.popover && phone, exitMs: 250, children: grammar.popover && phone && // The phone's form: a card from the bottom with the fix as its
+    // main button, as iOS offers a spelling replacement. A fix that
+    // no longer fits the text says so in the notice, the card having
+    // closed on the tap.
+    /* @__PURE__ */ jsxDEV(
+      BottomCard,
+      {
+        label: grammarLabels.grammarKinds[grammar.popover.kind],
+        actions: [
+          { label: t.grammarIgnore, onSelect: grammar.ignore },
+          {
+            label: applyLabel(
+              grammarLabels,
+              grammar.popover.shownSuggestion ?? grammar.popover.suggestion
+            ),
+            primary: true,
+            onSelect: () => {
+              if (!grammar.applyFix()) onStale();
+            }
+          }
+        ],
+        onClose: grammar.hide,
+        children: [
+          /* @__PURE__ */ jsxDEV(
+            "span",
+            {
+              className: `grammar-kind grammar-kind-${grammar.popover.kind}`,
+              children: grammarLabels.grammarKinds[grammar.popover.kind]
+            },
+            void 0,
+            false,
+            {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx",
+              lineNumber: 83,
+              columnNumber: 13
+            },
+            this
+          ),
+          /* @__PURE__ */ jsxDEV("div", { className: "grammar-card-fix", children: [
+            grammar.popover.original && /* @__PURE__ */ jsxDEV("s", { children: grammar.popover.shownOriginal ?? grammar.popover.original }, void 0, false, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx",
+              lineNumber: 90,
+              columnNumber: 13
+            }, this),
+            grammar.popover.original && " → ",
+            /* @__PURE__ */ jsxDEV("b", { children: grammar.popover.shownSuggestion ?? (grammar.popover.suggestion || "∅") }, void 0, false, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx",
+              lineNumber: 95,
+              columnNumber: 15
+            }, this)
+          ] }, void 0, true, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx",
+            lineNumber: 88,
+            columnNumber: 13
+          }, this),
+          grammar.popover.issue && /* @__PURE__ */ jsxDEV("div", { className: "grammar-card-issue", children: grammar.popover.issue }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx",
+            lineNumber: 101,
+            columnNumber: 11
+          }, this)
+        ]
+      },
+      void 0,
+      true,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx",
+        lineNumber: 66,
+        columnNumber: 9
+      },
+      this
+    ) }, void 0, false, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx",
+      lineNumber: 60,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Presence, { show: !!grammar.popover && !phone, exitMs: 120, children: grammar.popover && !phone && /* @__PURE__ */ jsxDEV(
+      GrammarPopover,
+      {
+        info: grammar.popover,
+        labels: grammarLabels,
+        error: grammar.applyError,
+        onApply: grammar.applyFix,
+        onIgnore: grammar.ignore,
+        onStep: grammar.step,
+        onMouseEnter: grammar.cancelHide,
+        onMouseLeave: grammar.hide
+      },
+      void 0,
+      false,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx",
+        lineNumber: 108,
+        columnNumber: 9
+      },
+      this
+    ) }, void 0, false, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx",
+      lineNumber: 106,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx",
+    lineNumber: 59,
+    columnNumber: 5
+  }, this);
+}
+_s(GrammarSuggestion, "rUWbtmXX5lsFr5wmpsr/rBYV2Zg=");
+_c = GrammarSuggestion;
+var _c;
+$RefreshReg$(_c, "GrammarSuggestion");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarSuggestion.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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S0FDbERELGtCQUFRbUIsV0FBVyxDQUFDbEIsU0FDbkI7QUFBQSxNQUFDO0FBQUE7QUFBQSxRQUNDLE1BQU1ELFFBQVFtQjtBQUFBQSxRQUNkLFFBQVFkO0FBQUFBLFFBQ1IsT0FBT0wsUUFBUWdDO0FBQUFBLFFBQ2YsU0FBU2hDLFFBQVEyQjtBQUFBQSxRQUNqQixVQUFVM0IsUUFBUXVCO0FBQUFBLFFBQ2xCLFFBQVF2QixRQUFRaUM7QUFBQUEsUUFDaEIsY0FBY2pDLFFBQVFrQztBQUFBQSxRQUN0QixjQUFjbEMsUUFBUTRCO0FBQUFBO0FBQUFBLE1BUnhCO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxJQVE2QixLQVZqQztBQUFBO0FBQUE7QUFBQTtBQUFBLFdBYUE7QUFBQSxPQTVERjtBQUFBO0FBQUE7QUFBQTtBQUFBLFNBNkRBO0FBRUo7QUFBQ3hCLEdBN0ZlTCxtQkFBaUI7QUFBQSxLQUFqQkE7QUFBaUIsSUFBQW9DO0FBQUEsYUFBQUEsSUFBQSIsIm5hbWVzIjpbInVzZU1lbW8iLCJHcmFtbWFyUG9wb3ZlciIsImFwcGx5TGFiZWwiLCJCb3R0b21DYXJkIiwiUHJlc2VuY2UiLCJHcmFtbWFyU3VnZ2VzdGlvbiIsImdyYW1tYXIiLCJwaG9uZSIsInQiLCJvblN0YWxlIiwiX3MiLCJncmFtbWFyTGFiZWxzIiwiZ3JhbW1hcktpbmRzIiwic3BlbGxpbmciLCJncmFtbWFyS2luZFNwZWxsaW5nIiwiZ3JhbW1hcktpbmRHcmFtbWFyIiwicHVuY3R1YXRpb24iLCJncmFtbWFyS2luZFB1bmN0dWF0aW9uIiwicnVsZXMiLCJncmFtbWFyS2luZFJ1bGVzIiwiZ3JhbW1hckFwcGx5VG8iLCJncmFtbWFyQXBwbHkiLCJncmFtbWFySWdub3JlIiwiZ3JhbW1hclByZXZpb3VzIiwiZ3JhbW1hck5leHQiLCJwb3BvdmVyIiwia2luZCIsImxhYmVsIiwib25TZWxlY3QiLCJpZ25vcmUiLCJzaG93blN1Z2dlc3Rpb24iLCJzdWdnZXN0aW9uIiwicHJpbWFyeSIsImFwcGx5Rml4IiwiaGlkZSIsIm9yaWdpbmFsIiwic2hvd25PcmlnaW5hbCIsImlzc3VlIiwiYXBwbHlFcnJvciIsInN0ZXAiLCJjYW5jZWxIaWRlIiwiX2MiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiR3JhbW1hclN1Z2dlc3Rpb24udHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZU1lbW8gfSBmcm9tIFwicmVhY3RcIjtcbmltcG9ydCB7IEdyYW1tYXJQb3BvdmVyLCBhcHBseUxhYmVsIH0gZnJvbSBcIi4vR3JhbW1hclBvcG92ZXJcIjtcbmltcG9ydCB0eXBlIHsgdXNlR3JhbW1hclBvcG92ZXIgfSBmcm9tIFwiLi91c2VHcmFtbWFyUG9wb3ZlclwiO1xuaW1wb3J0IHsgQm90dG9tQ2FyZCB9IGZyb20gXCIuLi8uLi91aS9Cb3R0b21DYXJkXCI7XG5pbXBvcnQgeyBQcmVzZW5jZSB9IGZyb20gXCIuLi8uLi91aS91c2VQcmVzZW5jZVwiO1xuaW1wb3J0IHR5cGUgeyBTdHJpbmdzIH0gZnJvbSBcIi4uLy4uL2kxOG4vc3RyaW5nc1wiO1xuXG4vKiogVGhlIHN1Z2dlc3Rpb24gZm9yIHRoZSBncmFtbWFyIGlzc3VlIHVuZGVyIHRoZSBwb2ludGVyIG9yIGNhcmV0OiBhXG4gKiAgcG9wb3ZlciBiZXNpZGUgaXQsIG9yIG9uIGEgcGhvbmUgYSBjYXJkIGZyb20gdGhlIGJvdHRvbS4gKi9cbmV4cG9ydCBmdW5jdGlvbiBHcmFtbWFyU3VnZ2VzdGlvbih7XG4gIGdyYW1tYXIsXG4gIHBob25lLFxuICB0LFxuICBvblN0YWxlLFxufToge1xuICBncmFtbWFyOiBSZXR1cm5UeXBlPHR5cGVvZiB1c2VHcmFtbWFyUG9wb3Zlcj47XG4gIHBob25lOiBib29sZWFuO1xuICB0OiBTdHJpbmdzO1xuICAvKiogVGhlIHBob25lIGNhcmQncyBmaXggbm8gbG9uZ2VyIGZpdHMgdGhlIHRleHQgKHRoZSBjYXJkIGhhcyBjbG9zZWQpLiAqL1xuICBvblN0YWxlOiAoKSA9PiB2b2lkO1xufSkge1xuICBjb25zdCBncmFtbWFyTGFiZWxzID0gdXNlTWVtbyhcbiAgICAoKSA9PiAoe1xuICAgICAgZ3JhbW1hcktpbmRzOiB7XG4gICAgICAgIHNwZWxsaW5nOiB0LmdyYW1tYXJLaW5kU3BlbGxpbmcsXG4gICAgICAgIGdyYW1tYXI6IHQuZ3JhbW1hcktpbmRHcmFtbWFyLFxuICAgICAgICBwdW5jdHVhdGlvbjogdC5ncmFtbWFyS2luZFB1bmN0dWF0aW9uLFxuICAgICAgICBydWxlczogdC5ncmFtbWFyS2luZFJ1bGVzLFxuICAgICAgfSxcbiAgICAgIGdyYW1tYXJBcHBseVRvOiB0LmdyYW1tYXJBcHBseVRvLFxuICAgICAgZ3JhbW1hckFwcGx5OiB0LmdyYW1tYXJBcHBseSxcbiAgICAgIGdyYW1tYXJJZ25vcmU6IHQuZ3JhbW1hcklnbm9yZSxcbiAgICAgIGdyYW1tYXJQcmV2aW91czogdC5ncmFtbWFyUHJldmlvdXMsXG4gICAgICBncmFtbWFyTmV4dDogdC5ncmFtbWFyTmV4dCxcbiAgICB9KSxcbiAgICBbdF0sXG4gICk7XG5cbiAgcmV0dXJuIChcbiAgICA8PlxuICAgICAgPFByZXNlbmNlIHNob3c9eyEhZ3JhbW1hci5wb3BvdmVyICYmIHBob25lfSBleGl0TXM9ezI1MH0+XG4gICAgICAgIHtncmFtbWFyLnBvcG92ZXIgJiYgcGhvbmUgJiYgKFxuICAgICAgICAgIC8vIFRoZSBwaG9uZSdzIGZvcm06IGEgY2FyZCBmcm9tIHRoZSBib3R0b20gd2l0aCB0aGUgZml4IGFzIGl0c1xuICAgICAgICAgIC8vIG1haW4gYnV0dG9uLCBhcyBpT1Mgb2ZmZXJzIGEgc3BlbGxpbmcgcmVwbGFjZW1lbnQuIEEgZml4IHRoYXRcbiAgICAgICAgICAvLyBubyBsb25nZXIgZml0cyB0aGUgdGV4dCBzYXlzIHNvIGluIHRoZSBub3RpY2UsIHRoZSBjYXJkIGhhdmluZ1xuICAgICAgICAgIC8vIGNsb3NlZCBvbiB0aGUgdGFwLlxuICAgICAgICAgIDxCb3R0b21DYXJkXG4gICAgICAgICAgICBsYWJlbD17Z3JhbW1hckxhYmVscy5ncmFtbWFyS2luZHNbZ3JhbW1hci5wb3BvdmVyLmtpbmRdfVxuICAgICAgICAgICAgYWN0aW9ucz17W1xuICAgICAgICAgICAgICB7IGxhYmVsOiB0LmdyYW1tYXJJZ25vcmUsIG9uU2VsZWN0OiBncmFtbWFyLmlnbm9yZSB9LFxuICAgICAgICAgICAgICB7XG4gICAgICAgICAgICAgICAgbGFiZWw6IGFwcGx5TGFiZWwoXG4gICAgICAgICAgICAgICAgICBncmFtbWFyTGFiZWxzLFxuICAgICAgICAgICAgICAgICAgZ3JhbW1hci5wb3BvdmVyLnNob3duU3VnZ2VzdGlvbiA/PyBncmFtbWFyLnBvcG92ZXIuc3VnZ2VzdGlvbixcbiAgICAgICAgICAgICAgICApLFxuICAgICAgICAgICAgICAgIHByaW1hcnk6IHRydWUsXG4gICAgICAgICAgICAgICAgb25TZWxlY3Q6ICgpID0+IHtcbiAgICAgICAgICAgICAgICAgIGlmICghZ3JhbW1hci5hcHBseUZpeCgpKSBvblN0YWxlKCk7XG4gICAgICAgICAgICAgICAgfSxcbiAgICAgICAgICAgICAgfSxcbiAgICAgICAgICAgIF19XG4gICAgICAgICAgICBvbkNsb3NlPXtncmFtbWFyLmhpZGV9XG4gICAgICAgICAgPlxuICAgICAgICAgICAgPHNwYW5cbiAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgZ3JhbW1hci1raW5kIGdyYW1tYXIta2luZC0ke2dyYW1tYXIucG9wb3Zlci5raW5kfWB9XG4gICAgICAgICAgICA+XG4gICAgICAgICAgICAgIHtncmFtbWFyTGFiZWxzLmdyYW1tYXJLaW5kc1tncmFtbWFyLnBvcG92ZXIua2luZF19XG4gICAgICAgICAgICA8L3NwYW4+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyYW1tYXItY2FyZC1maXhcIj5cbiAgICAgICAgICAgICAge2dyYW1tYXIucG9wb3Zlci5vcmlnaW5hbCAmJiAoXG4gICAgICAgICAgICAgICAgPHM+XG4gICAgICAgICAgICAgICAgICB7Z3JhbW1hci5wb3BvdmVyLnNob3duT3JpZ2luYWwgPz8gZ3JhbW1hci5wb3BvdmVyLm9yaWdpbmFsfVxuICAgICAgICAgICAgICAgIDwvcz5cbiAgICAgICAgICAgICAgKX1cbiAgICAgICAgICAgICAge2dyYW1tYXIucG9wb3Zlci5vcmlnaW5hbCAmJiBcIiDihpIgXCJ9XG4gICAgICAgICAgICAgIDxiPlxuICAgICAgICAgICAgICAgIHtncmFtbWFyLnBvcG92ZXIuc2hvd25TdWdnZXN0aW9uID8/XG4gICAgICAgICAgICAgICAgICAoZ3JhbW1hci5wb3BvdmVyLnN1Z2dlc3Rpb24gfHwgXCLiiIVcIil9XG4gICAgICAgICAgICAgIDwvYj5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAge2dyYW1tYXIucG9wb3Zlci5pc3N1ZSAmJiAoXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JhbW1hci1jYXJkLWlzc3VlXCI+e2dyYW1tYXIucG9wb3Zlci5pc3N1ZX08L2Rpdj5cbiAgICAgICAgICAgICl9XG4gICAgICAgICAgPC9Cb3R0b21DYXJkPlxuICAgICAgICApfVxuICAgICAgPC9QcmVzZW5jZT5cbiAgICAgIDxQcmVzZW5jZSBzaG93PXshIWdyYW1tYXIucG9wb3ZlciAmJiAhcGhvbmV9IGV4aXRNcz17MTIwfT5cbiAgICAgICAge2dyYW1tYXIucG9wb3ZlciAmJiAhcGhvbmUgJiYgKFxuICAgICAgICAgIDxHcmFtbWFyUG9wb3ZlclxuICAgICAgICAgICAgaW5mbz17Z3JhbW1hci5wb3BvdmVyfVxuICAgICAgICAgICAgbGFiZWxzPXtncmFtbWFyTGFiZWxzfVxuICAgICAgICAgICAgZXJyb3I9e2dyYW1tYXIuYXBwbHlFcnJvcn1cbiAgICAgICAgICAgIG9uQXBwbHk9e2dyYW1tYXIuYXBwbHlGaXh9XG4gICAgICAgICAgICBvbklnbm9yZT17Z3JhbW1hci5pZ25vcmV9XG4gICAgICAgICAgICBvblN0ZXA9e2dyYW1tYXIuc3RlcH1cbiAgICAgICAgICAgIG9uTW91c2VFbnRlcj17Z3JhbW1hci5jYW5jZWxIaWRlfVxuICAgICAgICAgICAgb25Nb3VzZUxlYXZlPXtncmFtbWFyLmhpZGV9XG4gICAgICAgICAgLz5cbiAgICAgICAgKX1cbiAgICAgIDwvUHJlc2VuY2U+XG4gICAgPC8+XG4gICk7XG59XG4iXSwiZmlsZSI6Ii9ob21lL2NoZW5nYW8vRG9jdW1lbnRzL0Vuam95bWVudC9UZXh0dXMvYXBwLy5jbGF1ZGUvd29ya3RyZWVzL2Fib3V0LXRleHR1cy9zcmMvYWkvd3JpdGluZy9HcmFtbWFyU3VnZ2VzdGlvbi50c3gifQ==

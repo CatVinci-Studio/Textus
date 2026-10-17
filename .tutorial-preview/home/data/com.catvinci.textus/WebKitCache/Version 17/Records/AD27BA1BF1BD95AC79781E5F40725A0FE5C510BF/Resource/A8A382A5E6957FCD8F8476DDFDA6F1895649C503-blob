@@ -1,0 +1,148 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/onboarding/LanguageWelcome.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import { useModalDialog } from "/src/ui/useModalDialog.ts";
+import { Select } from "/src/ui/Select.tsx";
+import { usePresenceProps } from "/src/ui/usePresence.ts";
+import appIcon from "/src-tauri/icons/128x128@2x.png?import";
+import { LANGS, LANG_NAMES, resolveStrings } from "/src/i18n/strings.ts";
+import "/src/onboarding/LanguageWelcome.css";
+export function LanguageWelcome({
+  language,
+  onLanguage,
+  onContinue
+}) {
+  _s();
+  const t = resolveStrings(language);
+  const modal = useModalDialog(() => {
+  }, true, ".language-welcome-continue");
+  const presence = usePresenceProps();
+  return /* @__PURE__ */ jsxDEV("div", { ...presence, className: "language-welcome-backdrop", children: /* @__PURE__ */ jsxDEV(
+    "div",
+    {
+      ...modal,
+      className: "language-welcome",
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-labelledby": "language-welcome-title",
+      children: [
+        /* @__PURE__ */ jsxDEV("img", { className: "language-welcome-mark", src: appIcon, alt: "" }, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx",
+          lineNumber: 51,
+          columnNumber: 9
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "language-welcome-eyebrow", children: t.tutorialWelcomeTitle }, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx",
+          lineNumber: 52,
+          columnNumber: 9
+        }, this),
+        /* @__PURE__ */ jsxDEV("h1", { id: "language-welcome-title", children: t.languageWelcomeTitle }, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx",
+          lineNumber: 53,
+          columnNumber: 9
+        }, this),
+        /* @__PURE__ */ jsxDEV("p", { children: t.languageWelcomeBody }, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx",
+          lineNumber: 54,
+          columnNumber: 9
+        }, this),
+        /* @__PURE__ */ jsxDEV(
+          Select,
+          {
+            className: "settings-select language-welcome-select",
+            "aria-label": t.languageLabel,
+            value: language,
+            onChange: (e) => onLanguage(e.target.value),
+            children: LANGS.map(
+              (lang) => /* @__PURE__ */ jsxDEV("option", { value: lang, children: LANG_NAMES[lang] }, lang, false, {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx",
+                lineNumber: 64,
+                columnNumber: 11
+              }, this)
+            )
+          },
+          void 0,
+          false,
+          {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx",
+            lineNumber: 57,
+            columnNumber: 9
+          },
+          this
+        ),
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            type: "button",
+            className: "language-welcome-continue",
+            onClick: onContinue,
+            children: [
+              t.tutorialNext,
+              /* @__PURE__ */ jsxDEV("span", { "aria-hidden": true, children: "→" }, void 0, false, {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx",
+                lineNumber: 75,
+                columnNumber: 11
+              }, this)
+            ]
+          },
+          void 0,
+          true,
+          {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx",
+            lineNumber: 69,
+            columnNumber: 9
+          },
+          this
+        )
+      ]
+    },
+    void 0,
+    true,
+    {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx",
+      lineNumber: 44,
+      columnNumber: 7
+    },
+    this
+  ) }, void 0, false, {
+    fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx",
+    lineNumber: 43,
+    columnNumber: 5
+  }, this);
+}
+_s(LanguageWelcome, "c3Dq2USukAxtFRPiQLSSM0c7Nf4=", false, function() {
+  return [useModalDialog, usePresenceProps];
+});
+_c = LanguageWelcome;
+var _c;
+$RefreshReg$(_c, "LanguageWelcome");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/onboarding/LanguageWelcome.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBK0JROzs7Ozs7Ozs7Ozs7Ozs7OztBQS9CUixTQUFTQSxzQkFBc0I7QUFDL0IsU0FBU0MsY0FBYztBQUN2QixTQUFTQyx3QkFBd0I7QUFFakMsT0FBT0MsYUFBYTtBQUNwQixTQUFTQyxPQUFPQyxZQUFZQyxzQkFBaUM7QUFDN0QsT0FBTztBQUVBLGdCQUFTQyxnQkFBZ0I7QUFBQSxFQUM5QkM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFLRixHQUFHO0FBQUFDLEtBQUE7QUFFRCxRQUFNQyxJQUFJTixlQUFlRSxRQUFRO0FBQ2pDLFFBQU1LLFFBQVFiLGVBQWUsTUFBTTtBQUFBLEVBQUMsR0FBRyxNQUFNLDRCQUE0QjtBQUV6RSxRQUFNYyxXQUFXWixpQkFBaUM7QUFDbEQsU0FDRSx1QkFBQyxTQUFJLEdBQUlZLFVBQVUsV0FBVSw2QkFDM0I7QUFBQSxJQUFDO0FBQUE7QUFBQSxNQUNDLEdBQUlEO0FBQUFBLE1BQ0osV0FBVTtBQUFBLE1BQ1YsTUFBSztBQUFBLE1BQ0wsY0FBVztBQUFBLE1BQ1gsbUJBQWdCO0FBQUEsTUFFaEI7QUFBQSwrQkFBQyxTQUFJLFdBQVUseUJBQXdCLEtBQUtWLFNBQVMsS0FBSSxNQUF6RDtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBQTJEO0FBQUEsUUFDM0QsdUJBQUMsU0FBSSxXQUFVLDRCQUE0QlMsWUFBRUcsd0JBQTdDO0FBQUE7QUFBQTtBQUFBO0FBQUEsZUFBa0U7QUFBQSxRQUNsRSx1QkFBQyxRQUFHLElBQUcsMEJBQTBCSCxZQUFFSSx3QkFBbkM7QUFBQTtBQUFBO0FBQUE7QUFBQSxlQUF3RDtBQUFBLFFBQ3hELHVCQUFDLE9BQUdKLFlBQUVLLHVCQUFOO0FBQUE7QUFBQTtBQUFBO0FBQUEsZUFBMEI7QUFBQSxRQUcxQjtBQUFBLFVBQUM7QUFBQTtBQUFBLFlBQ0MsV0FBVTtBQUFBLFlBQ1YsY0FBWUwsRUFBRU07QUFBQUEsWUFDZCxPQUFPVjtBQUFBQSxZQUNQLFVBQVUsQ0FBQ1csTUFBTVYsV0FBV1UsRUFBRUMsT0FBT0MsS0FBYTtBQUFBLFlBRWpEakIsZ0JBQU1rQjtBQUFBQSxjQUFJLENBQUNDLFNBQ1YsdUJBQUMsWUFBa0IsT0FBT0EsTUFDdkJsQixxQkFBV2tCLElBQUksS0FETEEsTUFBYjtBQUFBO0FBQUE7QUFBQTtBQUFBLHFCQUVBO0FBQUEsWUFDRDtBQUFBO0FBQUEsVUFWSDtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUEsUUFXQTtBQUFBLFFBQ0E7QUFBQSxVQUFDO0FBQUE7QUFBQSxZQUNDLE1BQUs7QUFBQSxZQUNMLFdBQVU7QUFBQSxZQUNWLFNBQVNiO0FBQUFBLFlBRVJFO0FBQUFBLGdCQUFFWTtBQUFBQSxjQUNILHVCQUFDLFVBQUssZUFBVyxNQUFDLGlCQUFsQjtBQUFBO0FBQUE7QUFBQTtBQUFBLHFCQUFtQjtBQUFBO0FBQUE7QUFBQSxVQU5yQjtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUEsUUFPQTtBQUFBO0FBQUE7QUFBQSxJQWhDRjtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUEsRUFpQ0EsS0FsQ0Y7QUFBQTtBQUFBO0FBQUE7QUFBQSxTQW1DQTtBQUVKO0FBQUNiLEdBcERlSixpQkFBZTtBQUFBLFVBV2ZQLGdCQUVHRSxnQkFBZ0I7QUFBQTtBQUFBLEtBYm5CSztBQUFlLElBQUFrQjtBQUFBLGFBQUFBLElBQUEiLCJuYW1lcyI6WyJ1c2VNb2RhbERpYWxvZyIsIlNlbGVjdCIsInVzZVByZXNlbmNlUHJvcHMiLCJhcHBJY29uIiwiTEFOR1MiLCJMQU5HX05BTUVTIiwicmVzb2x2ZVN0cmluZ3MiLCJMYW5ndWFnZVdlbGNvbWUiLCJsYW5ndWFnZSIsIm9uTGFuZ3VhZ2UiLCJvbkNvbnRpbnVlIiwiX3MiLCJ0IiwibW9kYWwiLCJwcmVzZW5jZSIsInR1dG9yaWFsV2VsY29tZVRpdGxlIiwibGFuZ3VhZ2VXZWxjb21lVGl0bGUiLCJsYW5ndWFnZVdlbGNvbWVCb2R5IiwibGFuZ3VhZ2VMYWJlbCIsImUiLCJ0YXJnZXQiLCJ2YWx1ZSIsIm1hcCIsImxhbmciLCJ0dXRvcmlhbE5leHQiLCJfYyJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJMYW5ndWFnZVdlbGNvbWUudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZU1vZGFsRGlhbG9nIH0gZnJvbSBcIi4uL3VpL3VzZU1vZGFsRGlhbG9nXCI7XG5pbXBvcnQgeyBTZWxlY3QgfSBmcm9tIFwiLi4vdWkvU2VsZWN0XCI7XG5pbXBvcnQgeyB1c2VQcmVzZW5jZVByb3BzIH0gZnJvbSBcIi4uL3VpL3VzZVByZXNlbmNlXCI7XG4vLyBUaGUgYXBwIGljb24gaXRzZWxmLCBzbyB0aGUgd2VsY29tZSBzaG93cyB0aGUgcmVhbCBtYXJrLlxuaW1wb3J0IGFwcEljb24gZnJvbSBcIi4uLy4uL3NyYy10YXVyaS9pY29ucy8xMjh4MTI4QDJ4LnBuZ1wiO1xuaW1wb3J0IHsgTEFOR1MsIExBTkdfTkFNRVMsIHJlc29sdmVTdHJpbmdzLCB0eXBlIExhbmcgfSBmcm9tIFwiLi4vaTE4bi9zdHJpbmdzXCI7XG5pbXBvcnQgXCIuL0xhbmd1YWdlV2VsY29tZS5jc3NcIjtcblxuZXhwb3J0IGZ1bmN0aW9uIExhbmd1YWdlV2VsY29tZSh7XG4gIGxhbmd1YWdlLFxuICBvbkxhbmd1YWdlLFxuICBvbkNvbnRpbnVlLFxufToge1xuICBsYW5ndWFnZTogTGFuZztcbiAgb25MYW5ndWFnZTogKGxhbmd1YWdlOiBMYW5nKSA9PiB2b2lkO1xuICBvbkNvbnRpbnVlOiAoKSA9PiB2b2lkO1xufSkge1xuICAvLyBJbiB0aGUgbGFuZ3VhZ2UgYmVpbmcgcGlja2VkLCBzbyB0aGUgY2hvaWNlIHJlYWRzIGJhY2sgYXQgb25jZS5cbiAgY29uc3QgdCA9IHJlc29sdmVTdHJpbmdzKGxhbmd1YWdlKTtcbiAgY29uc3QgbW9kYWwgPSB1c2VNb2RhbERpYWxvZygoKSA9PiB7fSwgdHJ1ZSwgXCIubGFuZ3VhZ2Utd2VsY29tZS1jb250aW51ZVwiKTtcbiAgLy8gQ29udGludWUgZmFkZXMgaXQgb3V0IG92ZXIgdGhlIHR1dG9yaWFsIGFycml2aW5nIChBcHAudHN4J3MgUHJlc2VuY2UpLlxuICBjb25zdCBwcmVzZW5jZSA9IHVzZVByZXNlbmNlUHJvcHM8SFRNTERpdkVsZW1lbnQ+KCk7XG4gIHJldHVybiAoXG4gICAgPGRpdiB7Li4ucHJlc2VuY2V9IGNsYXNzTmFtZT1cImxhbmd1YWdlLXdlbGNvbWUtYmFja2Ryb3BcIj5cbiAgICAgIDxkaXZcbiAgICAgICAgey4uLm1vZGFsfVxuICAgICAgICBjbGFzc05hbWU9XCJsYW5ndWFnZS13ZWxjb21lXCJcbiAgICAgICAgcm9sZT1cImRpYWxvZ1wiXG4gICAgICAgIGFyaWEtbW9kYWw9XCJ0cnVlXCJcbiAgICAgICAgYXJpYS1sYWJlbGxlZGJ5PVwibGFuZ3VhZ2Utd2VsY29tZS10aXRsZVwiXG4gICAgICA+XG4gICAgICAgIDxpbWcgY2xhc3NOYW1lPVwibGFuZ3VhZ2Utd2VsY29tZS1tYXJrXCIgc3JjPXthcHBJY29ufSBhbHQ9XCJcIiAvPlxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImxhbmd1YWdlLXdlbGNvbWUtZXllYnJvd1wiPnt0LnR1dG9yaWFsV2VsY29tZVRpdGxlfTwvZGl2PlxuICAgICAgICA8aDEgaWQ9XCJsYW5ndWFnZS13ZWxjb21lLXRpdGxlXCI+e3QubGFuZ3VhZ2VXZWxjb21lVGl0bGV9PC9oMT5cbiAgICAgICAgPHA+e3QubGFuZ3VhZ2VXZWxjb21lQm9keX08L3A+XG4gICAgICAgIHsvKiBBIGRyb3Bkb3duLCBub3QgYSByb3cgb2YgYnV0dG9uczogdGVuIGxhbmd1YWdlcyBkb24ndCBmaXQgYVxuICAgICAgICAgICAgcGhvbmUncyB3aWR0aCBzaWRlIGJ5IHNpZGUuIEVhY2ggaXMgbmFtZWQgaW4gaXRzZWxmLiAqL31cbiAgICAgICAgPFNlbGVjdFxuICAgICAgICAgIGNsYXNzTmFtZT1cInNldHRpbmdzLXNlbGVjdCBsYW5ndWFnZS13ZWxjb21lLXNlbGVjdFwiXG4gICAgICAgICAgYXJpYS1sYWJlbD17dC5sYW5ndWFnZUxhYmVsfVxuICAgICAgICAgIHZhbHVlPXtsYW5ndWFnZX1cbiAgICAgICAgICBvbkNoYW5nZT17KGUpID0+IG9uTGFuZ3VhZ2UoZS50YXJnZXQudmFsdWUgYXMgTGFuZyl9XG4gICAgICAgID5cbiAgICAgICAgICB7TEFOR1MubWFwKChsYW5nKSA9PiAoXG4gICAgICAgICAgICA8b3B0aW9uIGtleT17bGFuZ30gdmFsdWU9e2xhbmd9PlxuICAgICAgICAgICAgICB7TEFOR19OQU1FU1tsYW5nXX1cbiAgICAgICAgICAgIDwvb3B0aW9uPlxuICAgICAgICAgICkpfVxuICAgICAgICA8L1NlbGVjdD5cbiAgICAgICAgPGJ1dHRvblxuICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICAgIGNsYXNzTmFtZT1cImxhbmd1YWdlLXdlbGNvbWUtY29udGludWVcIlxuICAgICAgICAgIG9uQ2xpY2s9e29uQ29udGludWV9XG4gICAgICAgID5cbiAgICAgICAgICB7dC50dXRvcmlhbE5leHR9XG4gICAgICAgICAgPHNwYW4gYXJpYS1oaWRkZW4+4oaSPC9zcGFuPlxuICAgICAgICA8L2J1dHRvbj5cbiAgICAgIDwvZGl2PlxuICAgIDwvZGl2PlxuICApO1xufVxuIl0sImZpbGUiOiIvaG9tZS9jaGVuZ2FvL0RvY3VtZW50cy9FbmpveW1lbnQvVGV4dHVzL2FwcC8uY2xhdWRlL3dvcmt0cmVlcy9hYm91dC10ZXh0dXMvc3JjL29uYm9hcmRpbmcvTGFuZ3VhZ2VXZWxjb21lLnRzeCJ9

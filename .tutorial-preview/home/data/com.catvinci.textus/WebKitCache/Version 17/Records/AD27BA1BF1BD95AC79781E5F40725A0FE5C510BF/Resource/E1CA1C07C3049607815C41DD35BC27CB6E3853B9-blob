@@ -1,0 +1,59 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/ai/MarkdownText.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/MarkdownText.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=f9787d19"; const useMemo = __vite__cjsImport3_react["useMemo"];
+import { renderMarkdownHtml } from "/src/editor/markdown/render-html.ts";
+import "/node_modules/katex/dist/katex.min.css";
+export function MarkdownText({ text }) {
+  _s();
+  const html = useMemo(() => renderMarkdownHtml(text), [text]);
+  return /* @__PURE__ */ jsxDEV(
+    "div",
+    {
+      className: "agent-markdown",
+      dangerouslySetInnerHTML: { __html: html }
+    },
+    void 0,
+    false,
+    {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/MarkdownText.tsx",
+      lineNumber: 38,
+      columnNumber: 5
+    },
+    this
+  );
+}
+_s(MarkdownText, "OtathaP3BKVCXaZtVNvoS+3QIcY=");
+_c = MarkdownText;
+var _c;
+$RefreshReg$(_c, "MarkdownText");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/MarkdownText.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/MarkdownText.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBa0JJOzs7Ozs7Ozs7Ozs7Ozs7OztBQWxCSixTQUFTQSxlQUFlO0FBQ3hCLFNBQVNDLDBCQUEwQjtBQUduQyxPQUFPO0FBU0EsZ0JBQVNDLGFBQWEsRUFBRUMsS0FBdUIsR0FBRztBQUFBQyxLQUFBO0FBQ3ZELFFBQU1DLE9BQU9MLFFBQVEsTUFBTUMsbUJBQW1CRSxJQUFJLEdBQUcsQ0FBQ0EsSUFBSSxDQUFDO0FBRzNELFNBQ0U7QUFBQSxJQUFDO0FBQUE7QUFBQSxNQUNDLFdBQVU7QUFBQSxNQUNWLHlCQUF5QixFQUFFRyxRQUFRRCxLQUFLO0FBQUE7QUFBQSxJQUYxQztBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUEsRUFFNEM7QUFHaEQ7QUFBQ0QsR0FWZUYsY0FBWTtBQUFBLEtBQVpBO0FBQVksSUFBQUs7QUFBQSxhQUFBQSxJQUFBIiwibmFtZXMiOlsidXNlTWVtbyIsInJlbmRlck1hcmtkb3duSHRtbCIsIk1hcmtkb3duVGV4dCIsInRleHQiLCJfcyIsImh0bWwiLCJfX2h0bWwiLCJfYyJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJNYXJrZG93blRleHQudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZU1lbW8gfSBmcm9tIFwicmVhY3RcIjtcbmltcG9ydCB7IHJlbmRlck1hcmtkb3duSHRtbCB9IGZyb20gXCIuLi9lZGl0b3IvbWFya2Rvd24vcmVuZGVyLWh0bWxcIjtcbi8vIFJlcGxpZXMgcmVuZGVyIG1hdGggd2l0aCBLYVRlWDsgdGhlIGRldGFjaGVkIGNoYXQgd2luZG93IG5ldmVyIGxvYWRzIHRoZVxuLy8gZWRpdG9yLCBzbyB0aGUgc3R5bGVzaGVldCBoYXMgdG8gY29tZSB3aXRoIHRoZSByZW5kZXJlci5cbmltcG9ydCBcImthdGV4L2Rpc3Qva2F0ZXgubWluLmNzc1wiO1xuXG4vKipcbiAqIFJlbmRlcnMgYW4gYXNzaXN0YW50IHJlcGx5IGFzIGZvcm1hdHRlZCBtYXJrZG93biAoYm9sZCwgbGlzdHMsIGNvZGUsXG4gKiBsaW5rcywgLi4uKSBpbnN0ZWFkIG9mIGEgZmxhdCB0ZXh0IGJsb2IuIFRoZSBtb2RlbCdzIHJhdyBvdXRwdXQgaXNcbiAqIHVudHJ1c3RlZCAoaXQgY2FuIGJlIHN0ZWVyZWQgYnkgZG9jdW1lbnQgY29udGVudCBvciBwcm9tcHQgaW5qZWN0aW9uKSwgc29cbiAqIGl0J3Mgc2FuaXRpemVkIChyZW5kZXJNYXJrZG93bkh0bWwpIGJlZm9yZSBnb2luZyBpbnRvIHRoZSBET00gdmlhXG4gKiBgZGFuZ2Vyb3VzbHlTZXRJbm5lckhUTUxgLlxuICovXG5leHBvcnQgZnVuY3Rpb24gTWFya2Rvd25UZXh0KHsgdGV4dCB9OiB7IHRleHQ6IHN0cmluZyB9KSB7XG4gIGNvbnN0IGh0bWwgPSB1c2VNZW1vKCgpID0+IHJlbmRlck1hcmtkb3duSHRtbCh0ZXh0KSwgW3RleHRdKTtcblxuICAvLyBTYWZlIGF0IHRoaXMgYm91bmRhcnkgYmVjYXVzZSB0aGUgZ2VuZXJhdGVkIEhUTUwgaXMgc2FuaXRpemVkIGFib3ZlLlxuICByZXR1cm4gKFxuICAgIDxkaXZcbiAgICAgIGNsYXNzTmFtZT1cImFnZW50LW1hcmtkb3duXCJcbiAgICAgIGRhbmdlcm91c2x5U2V0SW5uZXJIVE1MPXt7IF9faHRtbDogaHRtbCB9fVxuICAgIC8+XG4gICk7XG59XG4iXSwiZmlsZSI6Ii9ob21lL2NoZW5nYW8vRG9jdW1lbnRzL0Vuam95bWVudC9UZXh0dXMvYXBwLy5jbGF1ZGUvd29ya3RyZWVzL2Fib3V0LXRleHR1cy9zcmMvYWkvTWFya2Rvd25UZXh0LnRzeCJ9

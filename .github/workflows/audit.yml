@@ -4,7 +4,8 @@ name: Security audit
 # a week (and on demand). Dependencies change under us even when our code
 # doesn't, so this runs on a schedule rather than on pull requests. A high
 # or critical advisory opens an issue - or comments on the open one - so it
-# can't go unnoticed.
+# can't go unnoticed. Rust advisories that can't reach Textus are listed,
+# with the reason, in src-tauri/.cargo/audit.toml.
 
 on:
   schedule:
@@ -31,6 +32,7 @@ jobs:
         id: npm
         continue-on-error: true
         run: |
+          set -o pipefail
           npm ci --ignore-scripts
           npm audit --omit=dev --audit-level=high | tee npm-audit.txt
 
@@ -41,6 +43,7 @@ jobs:
         continue-on-error: true
         working-directory: src-tauri
         run: |
+          set -o pipefail
           cargo install cargo-audit --locked --quiet
           cargo audit | tee ../cargo-audit.txt
 

@@ -1,0 +1,94 @@
+export default {
+  "continue-story": {
+    label: "接著寫",
+    hint: "用你的文風寫下一節，與資料庫保持一致",
+    aliases: ["續寫", "寫下一節"]
+  },
+  describe: {
+    label: "描寫人物或場景",
+    hint: "為人物、地點或場景加上具體可感的細節",
+    aliases: ["描寫"]
+  },
+  dialogue: {
+    label: "對話潤飾",
+    hint: "依文件語言的規範整理對話的標點和提示語",
+    aliases: ["對話", "對白"]
+  },
+  "imitate-style": {
+    label: "模仿文風",
+    hint: "照著範文或你的文風檔案改寫",
+    aliases: ["仿寫"]
+  },
+  expand: {
+    label: "擴寫",
+    hint: "讓段落更充實，不加入新的事實",
+    aliases: ["展開"]
+  },
+  tighten: {
+    label: "精簡",
+    hint: "刪掉冗詞贅句，事實一個不少",
+    aliases: ["壓縮"]
+  },
+  "change-tone": {
+    label: "調整語氣",
+    hint: "改得更正式、更平實、更親切或更堅定",
+    aliases: ["語氣"]
+  },
+  "de-ai": {
+    label: "去 AI 味",
+    hint: "拿掉公式化的 AI 腔，或者只把它標出來",
+    aliases: ["去AI味"]
+  },
+  translate: {
+    label: "翻譯潤飾",
+    hint: "譯成讀起來像母語寫作的文字",
+    aliases: ["翻譯"]
+  },
+  proofread: {
+    label: "校對",
+    hint: "依語言規範檢查錯字、標點和數字",
+    aliases: ["校稿", "挑錯"]
+  },
+  continuity: {
+    label: "檢查前後一致",
+    hint: "找出與資料庫或其他章節矛盾的地方",
+    aliases: ["設定檢查"]
+  },
+  email: {
+    label: "寫郵件",
+    hint: "起草或重新整理一封郵件或書信",
+    aliases: ["郵件", "回信"]
+  },
+  notice: {
+    label: "公文與通知",
+    hint: "起草或修改通知、函、簽等公文",
+    aliases: ["公文", "函", "簽"]
+  },
+  minutes: {
+    label: "會議紀錄",
+    hint: "把會議筆記整理成決議事項和待辦",
+    aliases: ["紀錄"]
+  },
+  "academic-polish": {
+    label: "學術潤飾",
+    hint: "改成正式、分寸得宜的學術用語，引文不動",
+    aliases: ["論文潤飾"]
+  },
+  "social-post": {
+    label: "社群貼文",
+    hint: "寫出符合平台字數和規則的貼文",
+    aliases: ["貼文"]
+  },
+  headline: {
+    label: "下標題",
+    hint: "下一個準確、長短合適的標題",
+    aliases: ["標題"]
+  },
+  summarize: {
+    label: "摘要",
+    hint: "依你要的篇幅忠實摘要",
+    aliases: ["總結", "概述"]
+  }
+};
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInpoLUhhbnQudHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHR5cGUgeyBTa2lsbFRleHRzIH0gZnJvbSBcIi4uL2J1aWx0aW5cIjtcblxuLyoqIFRyYWRpdGlvbmFsIENoaW5lc2UgKFRhaXdhbikuIOe6jOWvqyBpcyB0aGUgVUkncyB3b3JkIGZvciBpbmxpbmVcbiAqICBjb21wbGV0aW9uLCBzbyBpdCBpcyBvbmx5IGFuIGFsaWFzIGhlcmUsIG5ldmVyIGEgbGFiZWwuICovXG5leHBvcnQgZGVmYXVsdCB7XG4gIFwiY29udGludWUtc3RvcnlcIjoge1xuICAgIGxhYmVsOiBcIuaOpeiRl+Wvq1wiLFxuICAgIGhpbnQ6IFwi55So5L2g55qE5paH6aKo5a+r5LiL5LiA56+A77yM6IiH6LOH5paZ5bqr5L+d5oyB5LiA6Ie0XCIsXG4gICAgYWxpYXNlczogW1wi57qM5a+rXCIsIFwi5a+r5LiL5LiA56+AXCJdLFxuICB9LFxuICBkZXNjcmliZToge1xuICAgIGxhYmVsOiBcIuaPj+Wvq+S6uueJqeaIluWgtOaZr1wiLFxuICAgIGhpbnQ6IFwi54K65Lq654mp44CB5Zyw6bue5oiW5aC05pmv5Yqg5LiK5YW36auU5Y+v5oSf55qE57Sw56+AXCIsXG4gICAgYWxpYXNlczogW1wi5o+P5a+rXCJdLFxuICB9LFxuICBkaWFsb2d1ZToge1xuICAgIGxhYmVsOiBcIuWwjeipsea9pOmjvlwiLFxuICAgIGhpbnQ6IFwi5L6d5paH5Lu26Kqe6KiA55qE6KaP56+E5pW055CG5bCN6Kmx55qE5qiZ6bue5ZKM5o+Q56S66KqeXCIsXG4gICAgYWxpYXNlczogW1wi5bCN6KmxXCIsIFwi5bCN55m9XCJdLFxuICB9LFxuICBcImltaXRhdGUtc3R5bGVcIjoge1xuICAgIGxhYmVsOiBcIuaooeS7v+aWh+miqFwiLFxuICAgIGhpbnQ6IFwi54Wn6JGX56+E5paH5oiW5L2g55qE5paH6aKo5qqU5qGI5pS55a+rXCIsXG4gICAgYWxpYXNlczogW1wi5Lu/5a+rXCJdLFxuICB9LFxuICBleHBhbmQ6IHtcbiAgICBsYWJlbDogXCLmk7Tlr6tcIixcbiAgICBoaW50OiBcIuiuk+auteiQveabtOWFheWvpu+8jOS4jeWKoOWFpeaWsOeahOS6i+WvplwiLFxuICAgIGFsaWFzZXM6IFtcIuWxlemWi1wiXSxcbiAgfSxcbiAgdGlnaHRlbjoge1xuICAgIGxhYmVsOiBcIueyvuewoVwiLFxuICAgIGhpbnQ6IFwi5Yiq5o6J5YaX6Kme6LSF5Y+l77yM5LqL5a+m5LiA5YCL5LiN5bCRXCIsXG4gICAgYWxpYXNlczogW1wi5aOT57iuXCJdLFxuICB9LFxuICBcImNoYW5nZS10b25lXCI6IHtcbiAgICBsYWJlbDogXCLoqr/mlbToqp7msKNcIixcbiAgICBoaW50OiBcIuaUueW+l+abtOato+W8j+OAgeabtOW5s+WvpuOAgeabtOimquWIh+aIluabtOWgheWumlwiLFxuICAgIGFsaWFzZXM6IFtcIuiqnuawo1wiXSxcbiAgfSxcbiAgXCJkZS1haVwiOiB7XG4gICAgbGFiZWw6IFwi5Y67IEFJIOWRs1wiLFxuICAgIGhpbnQ6IFwi5ou/5o6J5YWs5byP5YyW55qEIEFJIOiFlO+8jOaIluiAheWPquaKiuWug+aomeWHuuS+hlwiLFxuICAgIGFsaWFzZXM6IFtcIuWOu0FJ5ZGzXCJdLFxuICB9LFxuICB0cmFuc2xhdGU6IHtcbiAgICBsYWJlbDogXCLnv7vora/mvaTpo75cIixcbiAgICBoaW50OiBcIuitr+aIkOiugOi1t+S+huWDj+avjeiqnuWvq+S9nOeahOaWh+Wtl1wiLFxuICAgIGFsaWFzZXM6IFtcIue/u+itr1wiXSxcbiAgfSxcbiAgcHJvb2ZyZWFkOiB7XG4gICAgbGFiZWw6IFwi5qCh5bCNXCIsXG4gICAgaGludDogXCLkvp3oqp7oqIDopo/nr4TmqqLmn6XpjK/lrZfjgIHmqJnpu57lkozmlbjlrZdcIixcbiAgICBhbGlhc2VzOiBbXCLmoKHnqL9cIiwgXCLmjJHpjK9cIl0sXG4gIH0sXG4gIGNvbnRpbnVpdHk6IHtcbiAgICBsYWJlbDogXCLmqqLmn6XliY3lvozkuIDoh7RcIixcbiAgICBoaW50OiBcIuaJvuWHuuiIh+izh+aWmeW6q+aIluWFtuS7lueroOevgOefm+ebvueahOWcsOaWuVwiLFxuICAgIGFsaWFzZXM6IFtcIuioreWumuaqouafpVwiXSxcbiAgfSxcbiAgZW1haWw6IHtcbiAgICBsYWJlbDogXCLlr6vpg7Xku7ZcIixcbiAgICBoaW50OiBcIui1t+iNieaIlumHjeaWsOaVtOeQhuS4gOWwgemDteS7tuaIluabuOS/oVwiLFxuICAgIGFsaWFzZXM6IFtcIumDteS7tlwiLCBcIuWbnuS/oVwiXSxcbiAgfSxcbiAgbm90aWNlOiB7XG4gICAgbGFiZWw6IFwi5YWs5paH6IiH6YCa55+lXCIsXG4gICAgaGludDogXCLotbfojYnmiJbkv67mlLnpgJrnn6XjgIHlh73jgIHnsL3nrYnlhazmlodcIixcbiAgICBhbGlhc2VzOiBbXCLlhazmlodcIiwgXCLlh71cIiwgXCLnsL1cIl0sXG4gIH0sXG4gIG1pbnV0ZXM6IHtcbiAgICBsYWJlbDogXCLmnIPorbDntIDpjIRcIixcbiAgICBoaW50OiBcIuaKiuacg+itsOethuiomOaVtOeQhuaIkOaxuuitsOS6i+mgheWSjOW+hei+plwiLFxuICAgIGFsaWFzZXM6IFtcIue0gOmMhFwiXSxcbiAgfSxcbiAgXCJhY2FkZW1pYy1wb2xpc2hcIjoge1xuICAgIGxhYmVsOiBcIuWtuOihk+a9pOmjvlwiLFxuICAgIGhpbnQ6IFwi5pS55oiQ5q2j5byP44CB5YiG5a+45b6X5a6c55qE5a246KGT55So6Kqe77yM5byV5paH5LiN5YuVXCIsXG4gICAgYWxpYXNlczogW1wi6KuW5paH5r2k6aO+XCJdLFxuICB9LFxuICBcInNvY2lhbC1wb3N0XCI6IHtcbiAgICBsYWJlbDogXCLnpL7nvqTosrzmlodcIixcbiAgICBoaW50OiBcIuWvq+WHuuespuWQiOW5s+WPsOWtl+aVuOWSjOimj+WJh+eahOiyvOaWh1wiLFxuICAgIGFsaWFzZXM6IFtcIuiyvOaWh1wiXSxcbiAgfSxcbiAgaGVhZGxpbmU6IHtcbiAgICBsYWJlbDogXCLkuIvmqJnpoYxcIixcbiAgICBoaW50OiBcIuS4i+S4gOWAi+a6lueiuuOAgemVt+efreWQiOmBqeeahOaomemhjFwiLFxuICAgIGFsaWFzZXM6IFtcIuaomemhjFwiXSxcbiAgfSxcbiAgc3VtbWFyaXplOiB7XG4gICAgbGFiZWw6IFwi5pGY6KaBXCIsXG4gICAgaGludDogXCLkvp3kvaDopoHnmoTnr4fluYXlv6Dlr6bmkZjopoFcIixcbiAgICBhbGlhc2VzOiBbXCLnuL3ntZBcIiwgXCLmpoLov7BcIl0sXG4gIH0sXG59IHNhdGlzZmllcyBTa2lsbFRleHRzO1xuIl0sIm1hcHBpbmdzIjoiQUFJQSxlQUFlO0FBQUEsRUFDYixrQkFBa0I7QUFBQSxJQUNoQixPQUFPO0FBQUEsSUFDUCxNQUFNO0FBQUEsSUFDTixTQUFTLENBQUMsTUFBTSxNQUFNO0FBQUEsRUFDeEI7QUFBQSxFQUNBLFVBQVU7QUFBQSxJQUNSLE9BQU87QUFBQSxJQUNQLE1BQU07QUFBQSxJQUNOLFNBQVMsQ0FBQyxJQUFJO0FBQUEsRUFDaEI7QUFBQSxFQUNBLFVBQVU7QUFBQSxJQUNSLE9BQU87QUFBQSxJQUNQLE1BQU07QUFBQSxJQUNOLFNBQVMsQ0FBQyxNQUFNLElBQUk7QUFBQSxFQUN0QjtBQUFBLEVBQ0EsaUJBQWlCO0FBQUEsSUFDZixPQUFPO0FBQUEsSUFDUCxNQUFNO0FBQUEsSUFDTixTQUFTLENBQUMsSUFBSTtBQUFBLEVBQ2hCO0FBQUEsRUFDQSxRQUFRO0FBQUEsSUFDTixPQUFPO0FBQUEsSUFDUCxNQUFNO0FBQUEsSUFDTixTQUFTLENBQUMsSUFBSTtBQUFBLEVBQ2hCO0FBQUEsRUFDQSxTQUFTO0FBQUEsSUFDUCxPQUFPO0FBQUEsSUFDUCxNQUFNO0FBQUEsSUFDTixTQUFTLENBQUMsSUFBSTtBQUFBLEVBQ2hCO0FBQUEsRUFDQSxlQUFlO0FBQUEsSUFDYixPQUFPO0FBQUEsSUFDUCxNQUFNO0FBQUEsSUFDTixTQUFTLENBQUMsSUFBSTtBQUFBLEVBQ2hCO0FBQUEsRUFDQSxTQUFTO0FBQUEsSUFDUCxPQUFPO0FBQUEsSUFDUCxNQUFNO0FBQUEsSUFDTixTQUFTLENBQUMsTUFBTTtBQUFBLEVBQ2xCO0FBQUEsRUFDQSxXQUFXO0FBQUEsSUFDVCxPQUFPO0FBQUEsSUFDUCxNQUFNO0FBQUEsSUFDTixTQUFTLENBQUMsSUFBSTtBQUFBLEVBQ2hCO0FBQUEsRUFDQSxXQUFXO0FBQUEsSUFDVCxPQUFPO0FBQUEsSUFDUCxNQUFNO0FBQUEsSUFDTixTQUFTLENBQUMsTUFBTSxJQUFJO0FBQUEsRUFDdEI7QUFBQSxFQUNBLFlBQVk7QUFBQSxJQUNWLE9BQU87QUFBQSxJQUNQLE1BQU07QUFBQSxJQUNOLFNBQVMsQ0FBQyxNQUFNO0FBQUEsRUFDbEI7QUFBQSxFQUNBLE9BQU87QUFBQSxJQUNMLE9BQU87QUFBQSxJQUNQLE1BQU07QUFBQSxJQUNOLFNBQVMsQ0FBQyxNQUFNLElBQUk7QUFBQSxFQUN0QjtBQUFBLEVBQ0EsUUFBUTtBQUFBLElBQ04sT0FBTztBQUFBLElBQ1AsTUFBTTtBQUFBLElBQ04sU0FBUyxDQUFDLE1BQU0sS0FBSyxHQUFHO0FBQUEsRUFDMUI7QUFBQSxFQUNBLFNBQVM7QUFBQSxJQUNQLE9BQU87QUFBQSxJQUNQLE1BQU07QUFBQSxJQUNOLFNBQVMsQ0FBQyxJQUFJO0FBQUEsRUFDaEI7QUFBQSxFQUNBLG1CQUFtQjtBQUFBLElBQ2pCLE9BQU87QUFBQSxJQUNQLE1BQU07QUFBQSxJQUNOLFNBQVMsQ0FBQyxNQUFNO0FBQUEsRUFDbEI7QUFBQSxFQUNBLGVBQWU7QUFBQSxJQUNiLE9BQU87QUFBQSxJQUNQLE1BQU07QUFBQSxJQUNOLFNBQVMsQ0FBQyxJQUFJO0FBQUEsRUFDaEI7QUFBQSxFQUNBLFVBQVU7QUFBQSxJQUNSLE9BQU87QUFBQSxJQUNQLE1BQU07QUFBQSxJQUNOLFNBQVMsQ0FBQyxJQUFJO0FBQUEsRUFDaEI7QUFBQSxFQUNBLFdBQVc7QUFBQSxJQUNULE9BQU87QUFBQSxJQUNQLE1BQU07QUFBQSxJQUNOLFNBQVMsQ0FBQyxNQUFNLElBQUk7QUFBQSxFQUN0QjtBQUNGOyIsIm5hbWVzIjpbXX0=

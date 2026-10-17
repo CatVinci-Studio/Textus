@@ -1,0 +1,159 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/app/ClosePrompt.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+import { ActionSheet } from "/src/ui/ActionSheet.tsx";
+import { Presence, PresenceDiv } from "/src/ui/usePresence.ts";
+export function ClosePrompt({
+  open,
+  phone,
+  dialogProps,
+  onSave,
+  onDiscard,
+  onCancel,
+  t
+}) {
+  return /* @__PURE__ */ jsxDEV(Fragment, { children: [
+    /* @__PURE__ */ jsxDEV(Presence, { show: open && phone, exitMs: 250, children: open && phone && // The iPhone asks what to do with an edited document from the
+    // bottom of the screen, as Notes and Pages do. The sheet runs its
+    // onClose before the chosen action: cancelClose's quit-cancel is
+    // a desktop-only call (a no-op here), and the two handlers still
+    // hold the pending close they were rendered with.
+    /* @__PURE__ */ jsxDEV(
+      ActionSheet,
+      {
+        title: t.closePromptMessage,
+        items: [
+          {
+            label: t.closePromptSave,
+            onSelect: onSave
+          },
+          {
+            label: t.closePromptDiscard,
+            danger: true,
+            onSelect: onDiscard
+          }
+        ],
+        onClose: onCancel
+      },
+      void 0,
+      false,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx",
+        lineNumber: 54,
+        columnNumber: 9
+      },
+      this
+    ) }, void 0, false, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx",
+      lineNumber: 47,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Presence, { show: open && !phone, exitMs: 120, children: open && !phone && /* @__PURE__ */ jsxDEV(PresenceDiv, { className: "close-prompt-overlay", children: /* @__PURE__ */ jsxDEV(
+      "div",
+      {
+        className: "close-prompt",
+        ...dialogProps,
+        role: "dialog",
+        "aria-modal": "true",
+        "aria-label": t.closePromptMessage,
+        children: [
+          /* @__PURE__ */ jsxDEV("p", { children: t.closePromptMessage }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx",
+            lineNumber: 81,
+            columnNumber: 15
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "close-prompt-buttons", children: [
+            /* @__PURE__ */ jsxDEV("button", { className: "close-prompt-discard", onClick: onDiscard, children: t.closePromptDiscard }, void 0, false, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx",
+              lineNumber: 83,
+              columnNumber: 17
+            }, this),
+            /* @__PURE__ */ jsxDEV("div", { className: "close-prompt-spacer" }, void 0, false, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx",
+              lineNumber: 86,
+              columnNumber: 17
+            }, this),
+            /* @__PURE__ */ jsxDEV("button", { onClick: onCancel, children: t.closePromptCancel }, void 0, false, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx",
+              lineNumber: 87,
+              columnNumber: 17
+            }, this),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                className: "close-prompt-primary",
+                autoFocus: true,
+                onClick: onSave,
+                children: t.closePromptSave
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx",
+                lineNumber: 88,
+                columnNumber: 17
+              },
+              this
+            )
+          ] }, void 0, true, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx",
+            lineNumber: 82,
+            columnNumber: 15
+          }, this)
+        ]
+      },
+      void 0,
+      true,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx",
+        lineNumber: 74,
+        columnNumber: 13
+      },
+      this
+    ) }, void 0, false, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx",
+      lineNumber: 73,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx",
+      lineNumber: 71,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx",
+    lineNumber: 46,
+    columnNumber: 5
+  }, this);
+}
+_c = ClosePrompt;
+var _c;
+$RefreshReg$(_c, "ClosePrompt");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/ClosePrompt.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBMEJJLG1CQVFNLGNBUk47Ozs7Ozs7Ozs7Ozs7Ozs7QUExQkosU0FBU0EsbUJBQW1CO0FBQzVCLFNBQVNDLFVBQVVDLG1CQUFtQjtBQU0vQixnQkFBU0MsWUFBWTtBQUFBLEVBQzFCQztBQUFBQSxFQUNBQztBQUFBQSxFQUNBQztBQUFBQSxFQUNBQztBQUFBQSxFQUNBQztBQUFBQSxFQUNBQztBQUFBQSxFQUNBQztBQVVGLEdBQUc7QUFDRCxTQUNFLG1DQUNFO0FBQUEsMkJBQUMsWUFBUyxNQUFNTixRQUFRQyxPQUFPLFFBQVEsS0FDcENELGtCQUFRQztBQUFBQTtBQUFBQTtBQUFBQTtBQUFBQTtBQUFBQSxJQU1QO0FBQUEsTUFBQztBQUFBO0FBQUEsUUFDQyxPQUFPSyxFQUFFQztBQUFBQSxRQUNULE9BQU87QUFBQSxVQUNMO0FBQUEsWUFDRUMsT0FBT0YsRUFBRUc7QUFBQUEsWUFDVEMsVUFBVVA7QUFBQUEsVUFDWjtBQUFBLFVBQ0E7QUFBQSxZQUNFSyxPQUFPRixFQUFFSztBQUFBQSxZQUNUQyxRQUFRO0FBQUEsWUFDUkYsVUFBVU47QUFBQUEsVUFDWjtBQUFBLFFBQUM7QUFBQSxRQUVILFNBQVNDO0FBQUFBO0FBQUFBLE1BYlg7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLElBYW9CLEtBcEJ4QjtBQUFBO0FBQUE7QUFBQTtBQUFBLFdBdUJBO0FBQUEsSUFDQSx1QkFBQyxZQUFTLE1BQU1MLFFBQVEsQ0FBQ0MsT0FBTyxRQUFRLEtBQ3JDRCxrQkFBUSxDQUFDQyxTQUNSLHVCQUFDLGVBQVksV0FBVSx3QkFDckI7QUFBQSxNQUFDO0FBQUE7QUFBQSxRQUNDLFdBQVU7QUFBQSxRQUNWLEdBQUlDO0FBQUFBLFFBQ0osTUFBSztBQUFBLFFBQ0wsY0FBVztBQUFBLFFBQ1gsY0FBWUksRUFBRUM7QUFBQUEsUUFFZDtBQUFBLGlDQUFDLE9BQUdELFlBQUVDLHNCQUFOO0FBQUE7QUFBQTtBQUFBO0FBQUEsaUJBQXlCO0FBQUEsVUFDekIsdUJBQUMsU0FBSSxXQUFVLHdCQUNiO0FBQUEsbUNBQUMsWUFBTyxXQUFVLHdCQUF1QixTQUFTSCxXQUMvQ0UsWUFBRUssc0JBREw7QUFBQTtBQUFBO0FBQUE7QUFBQSxtQkFFQTtBQUFBLFlBQ0EsdUJBQUMsU0FBSSxXQUFVLHlCQUFmO0FBQUE7QUFBQTtBQUFBO0FBQUEsbUJBQW9DO0FBQUEsWUFDcEMsdUJBQUMsWUFBTyxTQUFTTixVQUFXQyxZQUFFTyxxQkFBOUI7QUFBQTtBQUFBO0FBQUE7QUFBQSxtQkFBZ0Q7QUFBQSxZQUNoRDtBQUFBLGNBQUM7QUFBQTtBQUFBLGdCQUNDLFdBQVU7QUFBQSxnQkFDVjtBQUFBLGdCQUNBLFNBQVNWO0FBQUFBLGdCQUVSRyxZQUFFRztBQUFBQTtBQUFBQSxjQUxMO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxZQU1BO0FBQUEsZUFaRjtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQWFBO0FBQUE7QUFBQTtBQUFBLE1BckJGO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxJQXNCQSxLQXZCRjtBQUFBO0FBQUE7QUFBQTtBQUFBLFdBd0JBLEtBMUJKO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0E0QkE7QUFBQSxPQXJERjtBQUFBO0FBQUE7QUFBQTtBQUFBLFNBc0RBO0FBRUo7QUFBQ0ssS0EzRWVmO0FBQVcsSUFBQWU7QUFBQSxhQUFBQSxJQUFBIiwibmFtZXMiOlsiQWN0aW9uU2hlZXQiLCJQcmVzZW5jZSIsIlByZXNlbmNlRGl2IiwiQ2xvc2VQcm9tcHQiLCJvcGVuIiwicGhvbmUiLCJkaWFsb2dQcm9wcyIsIm9uU2F2ZSIsIm9uRGlzY2FyZCIsIm9uQ2FuY2VsIiwidCIsImNsb3NlUHJvbXB0TWVzc2FnZSIsImxhYmVsIiwiY2xvc2VQcm9tcHRTYXZlIiwib25TZWxlY3QiLCJjbG9zZVByb21wdERpc2NhcmQiLCJkYW5nZXIiLCJjbG9zZVByb21wdENhbmNlbCIsIl9jIl0sImlnbm9yZUxpc3QiOltdLCJzb3VyY2VzIjpbIkNsb3NlUHJvbXB0LnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBBY3Rpb25TaGVldCB9IGZyb20gXCIuLi91aS9BY3Rpb25TaGVldFwiO1xuaW1wb3J0IHsgUHJlc2VuY2UsIFByZXNlbmNlRGl2IH0gZnJvbSBcIi4uL3VpL3VzZVByZXNlbmNlXCI7XG5pbXBvcnQgdHlwZSB7IHVzZU1vZGFsRGlhbG9nIH0gZnJvbSBcIi4uL3VpL3VzZU1vZGFsRGlhbG9nXCI7XG5pbXBvcnQgdHlwZSB7IFN0cmluZ3MgfSBmcm9tIFwiLi4vaTE4bi9zdHJpbmdzXCI7XG5cbi8qKiBUaGUgc2F2ZS9kaXNjYXJkL2NhbmNlbCBwcm9tcHQgKGNsb3NlLWZsb3cudHMpOiBhIGRpYWxvZyBvbiB0aGVcbiAqICBkZXNrdG9wLCBhbiBhY3Rpb24gc2hlZXQgZnJvbSB0aGUgYm90dG9tIG9mIHRoZSBzY3JlZW4gb24gYSBwaG9uZS4gKi9cbmV4cG9ydCBmdW5jdGlvbiBDbG9zZVByb21wdCh7XG4gIG9wZW4sXG4gIHBob25lLFxuICBkaWFsb2dQcm9wcyxcbiAgb25TYXZlLFxuICBvbkRpc2NhcmQsXG4gIG9uQ2FuY2VsLFxuICB0LFxufToge1xuICBvcGVuOiBib29sZWFuO1xuICBwaG9uZTogYm9vbGVhbjtcbiAgLyoqIHVzZU1vZGFsRGlhbG9nJ3Mgd2lyaW5nIGZvciB0aGUgZGVza3RvcCBkaWFsb2cuICovXG4gIGRpYWxvZ1Byb3BzOiBSZXR1cm5UeXBlPHR5cGVvZiB1c2VNb2RhbERpYWxvZz47XG4gIG9uU2F2ZTogKCkgPT4gdm9pZDtcbiAgb25EaXNjYXJkOiAoKSA9PiB2b2lkO1xuICBvbkNhbmNlbDogKCkgPT4gdm9pZDtcbiAgdDogU3RyaW5ncztcbn0pIHtcbiAgcmV0dXJuIChcbiAgICA8PlxuICAgICAgPFByZXNlbmNlIHNob3c9e29wZW4gJiYgcGhvbmV9IGV4aXRNcz17MjUwfT5cbiAgICAgICAge29wZW4gJiYgcGhvbmUgJiYgKFxuICAgICAgICAgIC8vIFRoZSBpUGhvbmUgYXNrcyB3aGF0IHRvIGRvIHdpdGggYW4gZWRpdGVkIGRvY3VtZW50IGZyb20gdGhlXG4gICAgICAgICAgLy8gYm90dG9tIG9mIHRoZSBzY3JlZW4sIGFzIE5vdGVzIGFuZCBQYWdlcyBkby4gVGhlIHNoZWV0IHJ1bnMgaXRzXG4gICAgICAgICAgLy8gb25DbG9zZSBiZWZvcmUgdGhlIGNob3NlbiBhY3Rpb246IGNhbmNlbENsb3NlJ3MgcXVpdC1jYW5jZWwgaXNcbiAgICAgICAgICAvLyBhIGRlc2t0b3Atb25seSBjYWxsIChhIG5vLW9wIGhlcmUpLCBhbmQgdGhlIHR3byBoYW5kbGVycyBzdGlsbFxuICAgICAgICAgIC8vIGhvbGQgdGhlIHBlbmRpbmcgY2xvc2UgdGhleSB3ZXJlIHJlbmRlcmVkIHdpdGguXG4gICAgICAgICAgPEFjdGlvblNoZWV0XG4gICAgICAgICAgICB0aXRsZT17dC5jbG9zZVByb21wdE1lc3NhZ2V9XG4gICAgICAgICAgICBpdGVtcz17W1xuICAgICAgICAgICAgICB7XG4gICAgICAgICAgICAgICAgbGFiZWw6IHQuY2xvc2VQcm9tcHRTYXZlLFxuICAgICAgICAgICAgICAgIG9uU2VsZWN0OiBvblNhdmUsXG4gICAgICAgICAgICAgIH0sXG4gICAgICAgICAgICAgIHtcbiAgICAgICAgICAgICAgICBsYWJlbDogdC5jbG9zZVByb21wdERpc2NhcmQsXG4gICAgICAgICAgICAgICAgZGFuZ2VyOiB0cnVlLFxuICAgICAgICAgICAgICAgIG9uU2VsZWN0OiBvbkRpc2NhcmQsXG4gICAgICAgICAgICAgIH0sXG4gICAgICAgICAgICBdfVxuICAgICAgICAgICAgb25DbG9zZT17b25DYW5jZWx9XG4gICAgICAgICAgLz5cbiAgICAgICAgKX1cbiAgICAgIDwvUHJlc2VuY2U+XG4gICAgICA8UHJlc2VuY2Ugc2hvdz17b3BlbiAmJiAhcGhvbmV9IGV4aXRNcz17MTIwfT5cbiAgICAgICAge29wZW4gJiYgIXBob25lICYmIChcbiAgICAgICAgICA8UHJlc2VuY2VEaXYgY2xhc3NOYW1lPVwiY2xvc2UtcHJvbXB0LW92ZXJsYXlcIj5cbiAgICAgICAgICAgIDxkaXZcbiAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiY2xvc2UtcHJvbXB0XCJcbiAgICAgICAgICAgICAgey4uLmRpYWxvZ1Byb3BzfVxuICAgICAgICAgICAgICByb2xlPVwiZGlhbG9nXCJcbiAgICAgICAgICAgICAgYXJpYS1tb2RhbD1cInRydWVcIlxuICAgICAgICAgICAgICBhcmlhLWxhYmVsPXt0LmNsb3NlUHJvbXB0TWVzc2FnZX1cbiAgICAgICAgICAgID5cbiAgICAgICAgICAgICAgPHA+e3QuY2xvc2VQcm9tcHRNZXNzYWdlfTwvcD5cbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJjbG9zZS1wcm9tcHQtYnV0dG9uc1wiPlxuICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3NOYW1lPVwiY2xvc2UtcHJvbXB0LWRpc2NhcmRcIiBvbkNsaWNrPXtvbkRpc2NhcmR9PlxuICAgICAgICAgICAgICAgICAge3QuY2xvc2VQcm9tcHREaXNjYXJkfVxuICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiY2xvc2UtcHJvbXB0LXNwYWNlclwiIC8+XG4gICAgICAgICAgICAgICAgPGJ1dHRvbiBvbkNsaWNrPXtvbkNhbmNlbH0+e3QuY2xvc2VQcm9tcHRDYW5jZWx9PC9idXR0b24+XG4gICAgICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiY2xvc2UtcHJvbXB0LXByaW1hcnlcIlxuICAgICAgICAgICAgICAgICAgYXV0b0ZvY3VzXG4gICAgICAgICAgICAgICAgICBvbkNsaWNrPXtvblNhdmV9XG4gICAgICAgICAgICAgICAgPlxuICAgICAgICAgICAgICAgICAge3QuY2xvc2VQcm9tcHRTYXZlfVxuICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgIDwvUHJlc2VuY2VEaXY+XG4gICAgICAgICl9XG4gICAgICA8L1ByZXNlbmNlPlxuICAgIDwvPlxuICApO1xufVxuIl0sImZpbGUiOiIvaG9tZS9jaGVuZ2FvL0RvY3VtZW50cy9FbmpveW1lbnQvVGV4dHVzL2FwcC8uY2xhdWRlL3dvcmt0cmVlcy9hYm91dC10ZXh0dXMvc3JjL2FwcC9DbG9zZVByb21wdC50c3gifQ==

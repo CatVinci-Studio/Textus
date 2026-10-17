@@ -1,0 +1,157 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/ui/WindowCaptionButtons.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ui/WindowCaptionButtons.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=f9787d19"; const useEffect = __vite__cjsImport3_react["useEffect"]; const useState = __vite__cjsImport3_react["useState"];
+import { getCurrentWindow } from "/node_modules/.vite/deps/@tauri-apps_api_window.js?v=db5fd0af";
+import { useSettings } from "/src/settings/SettingsContext.tsx";
+import {
+  WindowCloseIcon,
+  WindowMaximizeIcon,
+  WindowMinimizeIcon,
+  WindowRestoreIcon
+} from "/src/ui/icons.tsx";
+import { appDrawsWindowFrame } from "/src/platform/window-chrome.ts";
+import "/src/ui/window-caption.css";
+export function WindowCaptionButtons() {
+  _s();
+  const { t } = useSettings();
+  const [maximized, setMaximized] = useState(false);
+  useEffect(() => {
+    if (!appDrawsWindowFrame) return;
+    const win = getCurrentWindow();
+    let alive = true;
+    const sync = () => {
+      void win.isMaximized().then((v) => {
+        if (alive) setMaximized(v);
+      }).catch(() => {
+      });
+    };
+    sync();
+    let settle;
+    const unlisten = win.onResized(() => {
+      clearTimeout(settle);
+      settle = setTimeout(sync, 100);
+    });
+    return () => {
+      alive = false;
+      clearTimeout(settle);
+      void unlisten.then((off) => off());
+    };
+  }, []);
+  if (!appDrawsWindowFrame) return null;
+  return /* @__PURE__ */ jsxDEV("div", { className: "window-caption", children: [
+    /* @__PURE__ */ jsxDEV(
+      "button",
+      {
+        type: "button",
+        className: "window-caption-button",
+        "aria-label": t.windowMinimize,
+        title: t.windowMinimize,
+        onClick: () => void getCurrentWindow().minimize(),
+        children: /* @__PURE__ */ jsxDEV(WindowMinimizeIcon, {}, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ui/WindowCaptionButtons.tsx",
+          lineNumber: 88,
+          columnNumber: 9
+        }, this)
+      },
+      void 0,
+      false,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ui/WindowCaptionButtons.tsx",
+        lineNumber: 81,
+        columnNumber: 7
+      },
+      this
+    ),
+    /* @__PURE__ */ jsxDEV(
+      "button",
+      {
+        type: "button",
+        className: "window-caption-button",
+        "aria-label": maximized ? t.windowRestore : t.windowMaximize,
+        title: maximized ? t.windowRestore : t.windowMaximize,
+        onClick: () => void getCurrentWindow().toggleMaximize(),
+        children: maximized ? /* @__PURE__ */ jsxDEV(WindowRestoreIcon, {}, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ui/WindowCaptionButtons.tsx",
+          lineNumber: 97,
+          columnNumber: 22
+        }, this) : /* @__PURE__ */ jsxDEV(WindowMaximizeIcon, {}, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ui/WindowCaptionButtons.tsx",
+          lineNumber: 97,
+          columnNumber: 46
+        }, this)
+      },
+      void 0,
+      false,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ui/WindowCaptionButtons.tsx",
+        lineNumber: 90,
+        columnNumber: 7
+      },
+      this
+    ),
+    /* @__PURE__ */ jsxDEV(
+      "button",
+      {
+        type: "button",
+        className: "window-caption-button window-caption-close",
+        "aria-label": t.windowClose,
+        title: t.windowClose,
+        onClick: () => void getCurrentWindow().close(),
+        children: /* @__PURE__ */ jsxDEV(WindowCloseIcon, {}, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ui/WindowCaptionButtons.tsx",
+          lineNumber: 106,
+          columnNumber: 9
+        }, this)
+      },
+      void 0,
+      false,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ui/WindowCaptionButtons.tsx",
+        lineNumber: 99,
+        columnNumber: 7
+      },
+      this
+    )
+  ] }, void 0, true, {
+    fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ui/WindowCaptionButtons.tsx",
+    lineNumber: 80,
+    columnNumber: 5
+  }, this);
+}
+_s(WindowCaptionButtons, "inzF56Ok64Lhl7T4zX3YMitzUjM=", false, function() {
+  return [useSettings];
+});
+_c = WindowCaptionButtons;
+var _c;
+$RefreshReg$(_c, "WindowCaptionButtons");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ui/WindowCaptionButtons.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ui/WindowCaptionButtons.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBb0VROzs7Ozs7Ozs7Ozs7Ozs7OztBQXBFUixTQUFTQSxXQUFXQyxnQkFBZ0I7QUFDcEMsU0FBU0Msd0JBQXdCO0FBQ2pDLFNBQVNDLG1CQUFtQjtBQUM1QjtBQUFBLEVBQ0VDO0FBQUFBLEVBQ0FDO0FBQUFBLEVBQ0FDO0FBQUFBLEVBQ0FDO0FBQUFBLE9BQ0s7QUFDUCxTQUFTQywyQkFBMkI7QUFDcEMsT0FBTztBQVVBLGdCQUFTQyx1QkFBdUI7QUFBQUMsS0FBQTtBQUNyQyxRQUFNLEVBQUVDLEVBQUUsSUFBSVIsWUFBWTtBQUMxQixRQUFNLENBQUNTLFdBQVdDLFlBQVksSUFBSVosU0FBUyxLQUFLO0FBRWhERCxZQUFVLE1BQU07QUFDZCxRQUFJLENBQUNRLG9CQUFxQjtBQUMxQixVQUFNTSxNQUFNWixpQkFBaUI7QUFDN0IsUUFBSWEsUUFBUTtBQUNaLFVBQU1DLE9BQU9BLE1BQU07QUFDakIsV0FBS0YsSUFDRkcsWUFBWSxFQUNaQyxLQUFLLENBQUNDLE1BQU07QUFDWCxZQUFJSixNQUFPRixjQUFhTSxDQUFDO0FBQUEsTUFDM0IsQ0FBQyxFQUNBQyxNQUFNLE1BQU07QUFBQSxNQUNYLENBQ0Q7QUFBQSxJQUNMO0FBQ0FKLFNBQUs7QUFPTCxRQUFJSztBQUNKLFVBQU1DLFdBQVdSLElBQUlTLFVBQVUsTUFBTTtBQUNuQ0MsbUJBQWFILE1BQU07QUFDbkJBLGVBQVNJLFdBQVdULE1BQU0sR0FBRztBQUFBLElBQy9CLENBQUM7QUFDRCxXQUFPLE1BQU07QUFDWEQsY0FBUTtBQUNSUyxtQkFBYUgsTUFBTTtBQUNuQixXQUFLQyxTQUFTSixLQUFLLENBQUNRLFFBQVFBLElBQUksQ0FBQztBQUFBLElBQ25DO0FBQUEsRUFDRixHQUFHLEVBQUU7QUFFTCxNQUFJLENBQUNsQixvQkFBcUIsUUFBTztBQUVqQyxTQUNFLHVCQUFDLFNBQUksV0FBVSxrQkFDYjtBQUFBO0FBQUEsTUFBQztBQUFBO0FBQUEsUUFDQyxNQUFLO0FBQUEsUUFDTCxXQUFVO0FBQUEsUUFDVixjQUFZRyxFQUFFZ0I7QUFBQUEsUUFDZCxPQUFPaEIsRUFBRWdCO0FBQUFBLFFBQ1QsU0FBUyxNQUFNLEtBQUt6QixpQkFBaUIsRUFBRTBCLFNBQVM7QUFBQSxRQUVoRCxpQ0FBQyx3QkFBRDtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBQW1CO0FBQUE7QUFBQSxNQVByQjtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUEsSUFRQTtBQUFBLElBQ0E7QUFBQSxNQUFDO0FBQUE7QUFBQSxRQUNDLE1BQUs7QUFBQSxRQUNMLFdBQVU7QUFBQSxRQUNWLGNBQVloQixZQUFZRCxFQUFFa0IsZ0JBQWdCbEIsRUFBRW1CO0FBQUFBLFFBQzVDLE9BQU9sQixZQUFZRCxFQUFFa0IsZ0JBQWdCbEIsRUFBRW1CO0FBQUFBLFFBQ3ZDLFNBQVMsTUFBTSxLQUFLNUIsaUJBQWlCLEVBQUU2QixlQUFlO0FBQUEsUUFFckRuQixzQkFBWSx1QkFBQyx1QkFBRDtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBQWtCLElBQU0sdUJBQUMsd0JBQUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxlQUFtQjtBQUFBO0FBQUEsTUFQMUQ7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLElBUUE7QUFBQSxJQUNBO0FBQUEsTUFBQztBQUFBO0FBQUEsUUFDQyxNQUFLO0FBQUEsUUFDTCxXQUFVO0FBQUEsUUFDVixjQUFZRCxFQUFFcUI7QUFBQUEsUUFDZCxPQUFPckIsRUFBRXFCO0FBQUFBLFFBQ1QsU0FBUyxNQUFNLEtBQUs5QixpQkFBaUIsRUFBRStCLE1BQU07QUFBQSxRQUU3QyxpQ0FBQyxxQkFBRDtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBQWdCO0FBQUE7QUFBQSxNQVBsQjtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUEsSUFRQTtBQUFBLE9BM0JGO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0E0QkE7QUFFSjtBQUFDdkIsR0F0RWVELHNCQUFvQjtBQUFBLFVBQ3BCTixXQUFXO0FBQUE7QUFBQSxLQURYTTtBQUFvQixJQUFBeUI7QUFBQSxhQUFBQSxJQUFBIiwibmFtZXMiOlsidXNlRWZmZWN0IiwidXNlU3RhdGUiLCJnZXRDdXJyZW50V2luZG93IiwidXNlU2V0dGluZ3MiLCJXaW5kb3dDbG9zZUljb24iLCJXaW5kb3dNYXhpbWl6ZUljb24iLCJXaW5kb3dNaW5pbWl6ZUljb24iLCJXaW5kb3dSZXN0b3JlSWNvbiIsImFwcERyYXdzV2luZG93RnJhbWUiLCJXaW5kb3dDYXB0aW9uQnV0dG9ucyIsIl9zIiwidCIsIm1heGltaXplZCIsInNldE1heGltaXplZCIsIndpbiIsImFsaXZlIiwic3luYyIsImlzTWF4aW1pemVkIiwidGhlbiIsInYiLCJjYXRjaCIsInNldHRsZSIsInVubGlzdGVuIiwib25SZXNpemVkIiwiY2xlYXJUaW1lb3V0Iiwic2V0VGltZW91dCIsIm9mZiIsIndpbmRvd01pbmltaXplIiwibWluaW1pemUiLCJ3aW5kb3dSZXN0b3JlIiwid2luZG93TWF4aW1pemUiLCJ0b2dnbGVNYXhpbWl6ZSIsIndpbmRvd0Nsb3NlIiwiY2xvc2UiLCJfYyJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJXaW5kb3dDYXB0aW9uQnV0dG9ucy50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgdXNlRWZmZWN0LCB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xuaW1wb3J0IHsgZ2V0Q3VycmVudFdpbmRvdyB9IGZyb20gXCJAdGF1cmktYXBwcy9hcGkvd2luZG93XCI7XG5pbXBvcnQgeyB1c2VTZXR0aW5ncyB9IGZyb20gXCIuLi9zZXR0aW5ncy9TZXR0aW5nc0NvbnRleHRcIjtcbmltcG9ydCB7XG4gIFdpbmRvd0Nsb3NlSWNvbixcbiAgV2luZG93TWF4aW1pemVJY29uLFxuICBXaW5kb3dNaW5pbWl6ZUljb24sXG4gIFdpbmRvd1Jlc3RvcmVJY29uLFxufSBmcm9tIFwiLi9pY29uc1wiO1xuaW1wb3J0IHsgYXBwRHJhd3NXaW5kb3dGcmFtZSB9IGZyb20gXCIuLi9wbGF0Zm9ybS93aW5kb3ctY2hyb21lXCI7XG5pbXBvcnQgXCIuL3dpbmRvdy1jYXB0aW9uLmNzc1wiO1xuXG4vKipcbiAqIE1pbmltaXNlIC8gbWF4aW1pc2UgLyBjbG9zZS5cbiAqXG4gKiBDbG9zZSBnb2VzIHRocm91Z2ggYGNsb3NlKClgLCBub3QgYGRlc3Ryb3koKWAsIHNvIGl0IGxhbmRzIGluIHRoZSBzYW1lXG4gKiBvbkNsb3NlUmVxdWVzdGVkIGhhbmRsZXIgdGhlIG5hdGl2ZSBidXR0b24gdXNlZCB0byByZWFjaDogdGhlIGVkaXRvciBzdGlsbFxuICogZ2V0cyBpdHMgdW5zYXZlZC1kb2N1bWVudCBwcm9tcHQsIGFuZCB0aGUgZGV0YWNoZWQgY2hhdCBzdGlsbCBoYW5kcyBpdHNcbiAqIGNvbnZlcnNhdGlvbiBiYWNrIGZvciByZS1lbWJlZGRpbmcuXG4gKi9cbmV4cG9ydCBmdW5jdGlvbiBXaW5kb3dDYXB0aW9uQnV0dG9ucygpIHtcbiAgY29uc3QgeyB0IH0gPSB1c2VTZXR0aW5ncygpO1xuICBjb25zdCBbbWF4aW1pemVkLCBzZXRNYXhpbWl6ZWRdID0gdXNlU3RhdGUoZmFsc2UpO1xuXG4gIHVzZUVmZmVjdCgoKSA9PiB7XG4gICAgaWYgKCFhcHBEcmF3c1dpbmRvd0ZyYW1lKSByZXR1cm47XG4gICAgY29uc3Qgd2luID0gZ2V0Q3VycmVudFdpbmRvdygpO1xuICAgIGxldCBhbGl2ZSA9IHRydWU7XG4gICAgY29uc3Qgc3luYyA9ICgpID0+IHtcbiAgICAgIHZvaWQgd2luXG4gICAgICAgIC5pc01heGltaXplZCgpXG4gICAgICAgIC50aGVuKCh2KSA9PiB7XG4gICAgICAgICAgaWYgKGFsaXZlKSBzZXRNYXhpbWl6ZWQodik7XG4gICAgICAgIH0pXG4gICAgICAgIC5jYXRjaCgoKSA9PiB7XG4gICAgICAgICAgLy8gTm8gYmFja2VuZCAoZGV2IHNoaW0pIC0gdGhlIGdseXBoIGp1c3Qgc3RheXMgb24gXCJtYXhpbWl6ZVwiLlxuICAgICAgICB9KTtcbiAgICB9O1xuICAgIHN5bmMoKTtcbiAgICAvLyBNYXhpbWlzaW5nIGlzIG5vdCB0aGUgb25seSB3YXkgaW50byB0aGUgc3RhdGU6IEFlcm8gc25hcCwgV2luK1VwIGFuZCBhXG4gICAgLy8gZG91YmxlLWNsaWNrIG9uIHRoZSBkcmFnIHJlZ2lvbiBhbGwgZ2V0IHRoZXJlIHdpdGhvdXQgZ29pbmcgdGhyb3VnaFxuICAgIC8vIHRoZSBidXR0b24gYmVsb3csIGFuZCBhIHN0YWxlIGdseXBoIHdvdWxkIG9mZmVyIFwibWF4aW1pemVcIiBvbiBhblxuICAgIC8vIGFscmVhZHktbWF4aW1pemVkIHdpbmRvdy5cbiAgICAvLyBBIGRyYWctcmVzaXplIGZpcmVzIHRoaXMgZXZlcnkgZnJhbWUsIGFuZCBlYWNoIHN5bmMgaXMgdGhyZWUgSVBDXG4gICAgLy8gcm91bmQgdHJpcHM7IG9ubHkgd2hlcmUgdGhlIHJlc2l6ZSBlbmRzIG1hdHRlcnMuXG4gICAgbGV0IHNldHRsZTogUmV0dXJuVHlwZTx0eXBlb2Ygc2V0VGltZW91dD4gfCB1bmRlZmluZWQ7XG4gICAgY29uc3QgdW5saXN0ZW4gPSB3aW4ub25SZXNpemVkKCgpID0+IHtcbiAgICAgIGNsZWFyVGltZW91dChzZXR0bGUpO1xuICAgICAgc2V0dGxlID0gc2V0VGltZW91dChzeW5jLCAxMDApO1xuICAgIH0pO1xuICAgIHJldHVybiAoKSA9PiB7XG4gICAgICBhbGl2ZSA9IGZhbHNlO1xuICAgICAgY2xlYXJUaW1lb3V0KHNldHRsZSk7XG4gICAgICB2b2lkIHVubGlzdGVuLnRoZW4oKG9mZikgPT4gb2ZmKCkpO1xuICAgIH07XG4gIH0sIFtdKTtcblxuICBpZiAoIWFwcERyYXdzV2luZG93RnJhbWUpIHJldHVybiBudWxsO1xuXG4gIHJldHVybiAoXG4gICAgPGRpdiBjbGFzc05hbWU9XCJ3aW5kb3ctY2FwdGlvblwiPlxuICAgICAgPGJ1dHRvblxuICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgY2xhc3NOYW1lPVwid2luZG93LWNhcHRpb24tYnV0dG9uXCJcbiAgICAgICAgYXJpYS1sYWJlbD17dC53aW5kb3dNaW5pbWl6ZX1cbiAgICAgICAgdGl0bGU9e3Qud2luZG93TWluaW1pemV9XG4gICAgICAgIG9uQ2xpY2s9eygpID0+IHZvaWQgZ2V0Q3VycmVudFdpbmRvdygpLm1pbmltaXplKCl9XG4gICAgICA+XG4gICAgICAgIDxXaW5kb3dNaW5pbWl6ZUljb24gLz5cbiAgICAgIDwvYnV0dG9uPlxuICAgICAgPGJ1dHRvblxuICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgY2xhc3NOYW1lPVwid2luZG93LWNhcHRpb24tYnV0dG9uXCJcbiAgICAgICAgYXJpYS1sYWJlbD17bWF4aW1pemVkID8gdC53aW5kb3dSZXN0b3JlIDogdC53aW5kb3dNYXhpbWl6ZX1cbiAgICAgICAgdGl0bGU9e21heGltaXplZCA/IHQud2luZG93UmVzdG9yZSA6IHQud2luZG93TWF4aW1pemV9XG4gICAgICAgIG9uQ2xpY2s9eygpID0+IHZvaWQgZ2V0Q3VycmVudFdpbmRvdygpLnRvZ2dsZU1heGltaXplKCl9XG4gICAgICA+XG4gICAgICAgIHttYXhpbWl6ZWQgPyA8V2luZG93UmVzdG9yZUljb24gLz4gOiA8V2luZG93TWF4aW1pemVJY29uIC8+fVxuICAgICAgPC9idXR0b24+XG4gICAgICA8YnV0dG9uXG4gICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICBjbGFzc05hbWU9XCJ3aW5kb3ctY2FwdGlvbi1idXR0b24gd2luZG93LWNhcHRpb24tY2xvc2VcIlxuICAgICAgICBhcmlhLWxhYmVsPXt0LndpbmRvd0Nsb3NlfVxuICAgICAgICB0aXRsZT17dC53aW5kb3dDbG9zZX1cbiAgICAgICAgb25DbGljaz17KCkgPT4gdm9pZCBnZXRDdXJyZW50V2luZG93KCkuY2xvc2UoKX1cbiAgICAgID5cbiAgICAgICAgPFdpbmRvd0Nsb3NlSWNvbiAvPlxuICAgICAgPC9idXR0b24+XG4gICAgPC9kaXY+XG4gICk7XG59XG4iXSwiZmlsZSI6Ii9ob21lL2NoZW5nYW8vRG9jdW1lbnRzL0Vuam95bWVudC9UZXh0dXMvYXBwLy5jbGF1ZGUvd29ya3RyZWVzL2Fib3V0LXRleHR1cy9zcmMvdWkvV2luZG93Q2FwdGlvbkJ1dHRvbnMudHN4In0=

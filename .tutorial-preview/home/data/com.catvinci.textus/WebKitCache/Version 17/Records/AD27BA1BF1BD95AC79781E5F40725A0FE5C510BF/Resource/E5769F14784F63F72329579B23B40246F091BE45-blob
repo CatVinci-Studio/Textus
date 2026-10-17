@@ -1,0 +1,418 @@
+import {
+  TwoPreviousCode,
+  classifyCharacter,
+  classifyPrecedingCharacter,
+  isCjk,
+  isCjkOrIvs,
+  isCodeHighSurrogate,
+  isCodeLowSurrogate,
+  isIvs,
+  isNonCjkPunctuation,
+  isNonEmojiGeneralUseVS,
+  isUnicodeWhitespace,
+  tryGetGenuineNextCode,
+  tryGetGenuinePreviousCode
+} from "/node_modules/.vite/deps/chunk-JJ7MZJNB.js?v=d86238d2";
+import {
+  ok
+} from "/node_modules/.vite/deps/chunk-UQBEAGQE.js?v=d86238d2";
+import {
+  resolveAll
+} from "/node_modules/.vite/deps/chunk-OBGODODA.js?v=d86238d2";
+import "/node_modules/.vite/deps/chunk-K7CXGKQC.js?v=d86238d2";
+import {
+  splice
+} from "/node_modules/.vite/deps/chunk-VBNBKOQ3.js?v=d86238d2";
+import {
+  codes,
+  constants,
+  types
+} from "/node_modules/.vite/deps/chunk-U6CUW5DC.js?v=d86238d2";
+import "/node_modules/.vite/deps/chunk-QKQ6FTX6.js?v=d86238d2";
+
+// node_modules/micromark-extension-cjk-friendly-gfm-strikethrough/dist/strikethrough.js
+function gfmStrikethroughCjkFriendly(options) {
+  let single = (options || {}).singleTilde;
+  const tokenizer = {
+    name: "strikethrough",
+    tokenize: tokenizeStrikethrough,
+    resolveAll: resolveAllStrikethrough
+  };
+  if (single === null || single === void 0) single = true;
+  return {
+    text: { [codes.tilde]: tokenizer },
+    insideSpan: { null: [tokenizer] },
+    attentionMarkers: { null: [codes.tilde] }
+  };
+  function resolveAllStrikethrough(events, context) {
+    let index = -1;
+    while (++index < events.length) if (events[index][0] === "enter" && events[index][1].type === "strikethroughSequenceTemporary" && events[index][1]._close) {
+      let open = index;
+      while (open--) if (events[open][0] === "exit" && events[open][1].type === "strikethroughSequenceTemporary" && events[open][1]._open && events[index][1].end.offset - events[index][1].start.offset === events[open][1].end.offset - events[open][1].start.offset) {
+        events[index][1].type = "strikethroughSequence";
+        events[open][1].type = "strikethroughSequence";
+        const strikethrough = {
+          type: "strikethrough",
+          start: Object.assign({}, events[open][1].start),
+          end: Object.assign({}, events[index][1].end)
+        };
+        const text2 = {
+          type: "strikethroughText",
+          start: Object.assign({}, events[open][1].end),
+          end: Object.assign({}, events[index][1].start)
+        };
+        const nextEvents = [
+          [
+            "enter",
+            strikethrough,
+            context
+          ],
+          [
+            "enter",
+            events[open][1],
+            context
+          ],
+          [
+            "exit",
+            events[open][1],
+            context
+          ],
+          [
+            "enter",
+            text2,
+            context
+          ]
+        ];
+        const insideSpan = context.parser.constructs.insideSpan.null;
+        if (insideSpan) splice(nextEvents, nextEvents.length, 0, resolveAll(insideSpan, events.slice(open + 1, index), context));
+        splice(nextEvents, nextEvents.length, 0, [
+          [
+            "exit",
+            text2,
+            context
+          ],
+          [
+            "enter",
+            events[index][1],
+            context
+          ],
+          [
+            "exit",
+            events[index][1],
+            context
+          ],
+          [
+            "exit",
+            strikethrough,
+            context
+          ]
+        ]);
+        splice(events, open - 1, index - open + 3, nextEvents);
+        index = open + nextEvents.length - 2;
+        break;
+      }
+    }
+    index = -1;
+    while (++index < events.length) if (events[index][1].type === "strikethroughSequenceTemporary") events[index][1].type = types.data;
+    return events;
+  }
+  function tokenizeStrikethrough(effects, ok$1, nok) {
+    const { now, sliceSerialize, previous: tentativePrevious } = this;
+    const previous = isCodeLowSurrogate(tentativePrevious) ? tryGetGenuinePreviousCode(tentativePrevious, now(), sliceSerialize) : tentativePrevious;
+    const before = classifyCharacter(previous);
+    const twoPrevious = new TwoPreviousCode(previous, now(), sliceSerialize);
+    const beforePrimary = classifyPrecedingCharacter(before, twoPrevious.value.bind(twoPrevious), previous);
+    const events = this.events;
+    let size = 0;
+    return start;
+    function start(code) {
+      ok(code === codes.tilde, "expected `~`");
+      if (previous === codes.tilde && events[events.length - 1][1].type !== types.characterEscape) return nok(code);
+      effects.enter("strikethroughSequenceTemporary");
+      return more(code);
+    }
+    function more(code) {
+      const before$1 = classifyCharacter(previous);
+      if (code === codes.tilde) {
+        if (size > 1) return nok(code);
+        effects.consume(code);
+        size++;
+        return more;
+      }
+      if (size < 2 && !single) return nok(code);
+      const token = effects.exit("strikethroughSequenceTemporary");
+      const after = classifyCharacter(isCodeHighSurrogate(code) ? tryGetGenuineNextCode(code, now(), sliceSerialize) : code);
+      const beforeSpaceOrNonCjkPunctuation = isNonCjkPunctuation(beforePrimary) || isUnicodeWhitespace(beforePrimary);
+      const afterSpaceOrNonCjkPunctuation = isNonCjkPunctuation(after) || isUnicodeWhitespace(after);
+      const beforeCjkOrIvs = isCjk(beforePrimary) || isIvs(before$1);
+      token._open = !afterSpaceOrNonCjkPunctuation || after === constants.attentionSideAfter && (beforeSpaceOrNonCjkPunctuation || beforeCjkOrIvs);
+      token._close = !beforeSpaceOrNonCjkPunctuation || before$1 === constants.attentionSideAfter && (afterSpaceOrNonCjkPunctuation || isCjk(after));
+      return ok$1(code);
+    }
+  }
+}
+
+// node_modules/remark-cjk-friendly-gfm-strikethrough/dist/parseOnly.js
+function remarkCjkFriendlyGfmStrikethrough(options) {
+  const data = this.data();
+  (data.micromarkExtensions || (data.micromarkExtensions = [])).push(gfmStrikethroughCjkFriendly(options));
+}
+
+// node_modules/mdast-util-to-markdown-cjk-friendly-gfm-strikethrough/dist/index.mjs
+var constructsWithoutStrikethrough = [
+  "autolink",
+  "destinationLiteral",
+  "destinationRaw",
+  "reference",
+  "titleQuote",
+  "titleApostrophe"
+];
+var encodedOutsideBoundary = ";".codePointAt(0) ?? codes.eof;
+var encodedInsideBoundary = "&".codePointAt(0) ?? codes.eof;
+function cjkFriendlyGfmStrikethroughToMarkdown() {
+  return {
+    unsafe: [{
+      character: "~",
+      inConstruct: "phrasing",
+      notInConstruct: constructsWithoutStrikethrough
+    }],
+    handlers: {
+      delete: handleDelete,
+      text
+    }
+  };
+}
+handleDelete.peek = peekDelete;
+function handleDelete(node, parent, state, info) {
+  const sequence = "~~";
+  const exit = state.enter("strikethrough");
+  const tracker = state.createTracker(info);
+  const before = tracker.move(sequence);
+  let between = tracker.move(state.containerPhrasing(node, {
+    after: "~",
+    before,
+    ...tracker.current()
+  }));
+  const beforeBoundary = resolveBeforeBoundary(node, parent, state, info.before);
+  const afterBoundary = resolveAfterBoundary(node, parent, state, info.after);
+  const open = encodeInfoCjk(beforeBoundary, firstCodePoint(between), "open");
+  if (open.inside && between) between = encodeFirstCodePoint(between);
+  const close = encodeInfoCjk({
+    current: lastCodePoint(between),
+    previous: codePointBeforeLast(between)
+  }, afterBoundary, "close");
+  if (close.inside && between) between = encodeLastCodePoint(between);
+  const after = tracker.move(sequence);
+  exit();
+  const encodeAfterSupplementary = close.outside && shouldEncodeAfterSupplementaryText(parent, state);
+  state.attentionEncodeSurroundingInfo = {
+    after: close.outside && !encodeAfterSupplementary,
+    before: open.outside
+  };
+  getCjkFriendlyState(state).cjkFriendlyEncodeAfterSupplementaryText = encodeAfterSupplementary;
+  return before + between + after;
+}
+function text(node, _parent, state, info) {
+  const cjkFriendlyState = getCjkFriendlyState(state);
+  if (!cjkFriendlyState.cjkFriendlyEncodeAfterSupplementaryText) return state.safe(node.value, info);
+  cjkFriendlyState.cjkFriendlyEncodeAfterSupplementaryText = false;
+  const [first = ""] = [...node.value];
+  const rest = node.value.slice(first.length);
+  return `${encodeCharacterReference(first.codePointAt(0) ?? codes.eof)}${state.safe(rest, {
+    ...info,
+    before: ";"
+  })}`;
+}
+function peekDelete() {
+  return "~";
+}
+function encodeInfoCjk(before, after, target) {
+  const beforeKind = classifyBoundaryBefore(before);
+  const afterKind = classifyCharacter(after);
+  if (!isCjkOrIvs(beforeKind) && !isCjkOrIvs(afterKind)) return target === "open" ? encodeInfoFallback(beforeKind, afterKind) : encodeInfoFallback(afterKind, beforeKind);
+  const raw = {
+    inside: false,
+    outside: false
+  };
+  const preserveOutside = {
+    inside: true,
+    outside: false
+  };
+  const preserveInside = {
+    inside: false,
+    outside: true
+  };
+  const encodeBoth = {
+    inside: true,
+    outside: true
+  };
+  for (const candidate of [
+    raw,
+    preserveOutside,
+    preserveInside,
+    encodeBoth
+  ]) {
+    const candidateBefore = target === "open" ? candidate.outside ? encodedBoundaryBeforeContext : before : candidate.inside ? encodedBoundaryBeforeContext : before;
+    const candidateAfter = target === "open" ? candidate.inside ? encodedBoundaryAfter : after : candidate.outside ? encodedBoundaryAfter : after;
+    if (target === "open" ? canOpen(candidateBefore, candidateAfter) : canClose(candidateBefore, candidateAfter)) return candidate;
+  }
+  return encodeBoth;
+}
+function encodeInfoFallback(outsideKind, insideKind) {
+  if (isLetterLike(outsideKind)) return isLetterLike(insideKind) ? {
+    inside: false,
+    outside: false
+  } : isUnicodeWhitespace(insideKind) ? {
+    inside: true,
+    outside: true
+  } : {
+    inside: false,
+    outside: true
+  };
+  if (isUnicodeWhitespace(outsideKind)) return isLetterLike(insideKind) ? {
+    inside: false,
+    outside: false
+  } : isUnicodeWhitespace(insideKind) ? {
+    inside: true,
+    outside: true
+  } : {
+    inside: false,
+    outside: false
+  };
+  return isUnicodeWhitespace(insideKind) ? {
+    inside: true,
+    outside: false
+  } : {
+    inside: false,
+    outside: false
+  };
+}
+function canOpen(before, afterCode) {
+  const { open } = getAttentionSides(classifyBoundaryBefore(before), classifyCharacter(afterCode));
+  return open;
+}
+function canClose(before, afterCode) {
+  const afterKind = classifyCharacter(afterCode);
+  const { close } = getAttentionSides(classifyBoundaryBefore(before), afterKind);
+  return close;
+}
+function getAttentionSides(beforeKind, afterKind) {
+  const beforeNonCjkPunctuation = isNonCjkPunctuation(beforeKind);
+  const beforeSpaceOrNonCjkPunctuation = beforeNonCjkPunctuation || isUnicodeWhitespace(beforeKind);
+  const afterNonCjkPunctuation = isNonCjkPunctuation(afterKind);
+  const afterSpaceOrNonCjkPunctuation = afterNonCjkPunctuation || isUnicodeWhitespace(afterKind);
+  return {
+    open: !afterSpaceOrNonCjkPunctuation || afterNonCjkPunctuation && (beforeSpaceOrNonCjkPunctuation || isCjkOrIvs(beforeKind)),
+    close: !beforeSpaceOrNonCjkPunctuation || beforeNonCjkPunctuation && (afterSpaceOrNonCjkPunctuation || isCjk(afterKind))
+  };
+}
+function isLetterLike(kind) {
+  return !isUnicodeWhitespace(kind) && !isNonCjkPunctuation(kind);
+}
+function classifyBoundaryBefore(before) {
+  const kind = classifyCharacter(before.current);
+  return before.current === null || !isNonEmojiGeneralUseVS(kind) ? kind : classifyPrecedingCharacter(kind, () => before.previous, before.current);
+}
+function resolveBeforeBoundary(node, parent, state, fallback) {
+  let current = lastCodePoint(fallback);
+  let previous = codePointBeforeLast(fallback);
+  if (needsPreviousBoundaryRecovery(current) || needsPreviousContext(current, previous)) {
+    const siblingText = getAdjacentSiblingText(node, parent, state, -1);
+    if (siblingText) {
+      current = lastCodePoint(siblingText);
+      previous = codePointBeforeLast(siblingText);
+    }
+  }
+  return {
+    current,
+    previous
+  };
+}
+function resolveAfterBoundary(node, parent, state, fallback) {
+  const current = firstCodePoint(fallback);
+  if (!needsNextBoundaryRecovery(current)) return current;
+  const siblingText = getAdjacentSiblingText(node, parent, state, 1);
+  return siblingText ? firstCodePoint(siblingText) : current;
+}
+function needsPreviousBoundaryRecovery(codePoint) {
+  return codePoint !== null && 56320 <= codePoint && codePoint <= 57343;
+}
+function needsNextBoundaryRecovery(codePoint) {
+  return codePoint !== null && 55296 <= codePoint && codePoint <= 56319;
+}
+function needsPreviousContext(current, previous) {
+  return isNonEmojiGeneralUseVS(classifyCharacter(current)) && (previous === null || previous === codes.eof);
+}
+function getAdjacentSiblingText(node, parent, state, offset) {
+  if (!parent) return;
+  const stackIndex = state.indexStack.at(-1);
+  const siblings = parent.children;
+  const index = typeof stackIndex === "number" ? stackIndex : siblings.indexOf(node);
+  if (index < 0) return;
+  const sibling = siblings[index + offset];
+  return getNodeTextContent(sibling) || void 0;
+}
+function shouldEncodeAfterSupplementaryText(parent, state) {
+  if (!parent) return false;
+  const stackIndex = state.indexStack.at(-1);
+  if (typeof stackIndex !== "number") return false;
+  const sibling = parent.children[stackIndex + 1];
+  return sibling?.type === "text" && (firstCodePoint(sibling.value) ?? 0) > 65535;
+}
+function getCjkFriendlyState(state) {
+  return state;
+}
+function getNodeTextContent(node) {
+  if (!node || typeof node !== "object") return "";
+  if ("value" in node && typeof node.value === "string") return node.value;
+  if ("alt" in node && typeof node.alt === "string") return node.alt;
+  if ("children" in node && Array.isArray(node.children)) return node.children.map(getNodeTextContent).join("");
+  return "";
+}
+function encodeCharacterReference(codePoint) {
+  return `&#x${(codePoint ?? 0).toString(16).toUpperCase()};`;
+}
+function encodeFirstCodePoint(value) {
+  const [first = ""] = [...value];
+  return encodeCharacterReference(first.codePointAt(0) ?? codes.eof) + value.slice(first.length);
+}
+function encodeLastCodePoint(value) {
+  const characters = [...value];
+  const last = characters.pop();
+  return `${characters.join("")}${encodeCharacterReference(last?.codePointAt(0) ?? codes.eof)}`;
+}
+function codePointBeforeLast(value) {
+  const characters = [...value];
+  characters.pop();
+  return characters.at(-1)?.codePointAt(0) ?? codes.eof;
+}
+function firstCodePoint(value) {
+  return value.codePointAt(0) ?? codes.eof;
+}
+function lastCodePoint(value) {
+  return [...value].at(-1)?.codePointAt(0) ?? codes.eof;
+}
+var encodedBoundaryBeforeContext = {
+  current: encodedOutsideBoundary,
+  previous: codes.eof
+};
+var encodedBoundaryAfter = encodedInsideBoundary;
+
+// node_modules/remark-cjk-friendly-gfm-strikethrough/dist/serializeOnly.js
+function remarkCjkFriendlyGfmStrikethrough2() {
+  const data = this.data();
+  (data.toMarkdownExtensions || (data.toMarkdownExtensions = [])).push(cjkFriendlyGfmStrikethroughToMarkdown());
+}
+
+// node_modules/remark-cjk-friendly-gfm-strikethrough/dist/bidi.js
+function remarkGfmStrikethroughCjkFriendly(options) {
+  remarkCjkFriendlyGfmStrikethrough.call(this, options);
+  remarkCjkFriendlyGfmStrikethrough2.call(this);
+}
+
+// node_modules/remark-cjk-friendly-gfm-strikethrough/dist/index.js
+var src_default = remarkGfmStrikethroughCjkFriendly;
+export {
+  src_default as default
+};
+//# sourceMappingURL=remark-cjk-friendly-gfm-strikethrough.js.map

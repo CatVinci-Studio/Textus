@@ -1,0 +1,432 @@
+import {
+  escapeStringRegexp
+} from "/node_modules/.vite/deps/chunk-UG75ID67.js?v=d86238d2";
+import {
+  ok
+} from "/node_modules/.vite/deps/chunk-UQBEAGQE.js?v=d86238d2";
+import {
+  markdownLineEnding,
+  markdownSpace
+} from "/node_modules/.vite/deps/chunk-K7CXGKQC.js?v=d86238d2";
+import {
+  codes,
+  types
+} from "/node_modules/.vite/deps/chunk-U6CUW5DC.js?v=d86238d2";
+import {
+  __commonJS,
+  __toESM
+} from "/node_modules/.vite/deps/chunk-QKQ6FTX6.js?v=d86238d2";
+
+// node_modules/format/format.js
+var require_format = __commonJS({
+  "node_modules/format/format.js"(exports, module) {
+    (function() {
+      var namespace;
+      if (typeof module !== "undefined") {
+        namespace = module.exports = format;
+      } else {
+        namespace = (function() {
+          return this || (1, eval)("this");
+        })();
+      }
+      namespace.format = format;
+      namespace.vsprintf = vsprintf;
+      if (typeof console !== "undefined" && typeof console.log === "function") {
+        namespace.printf = printf;
+      }
+      function printf() {
+        console.log(format.apply(null, arguments));
+      }
+      function vsprintf(fmt, replacements) {
+        return format.apply(null, [fmt].concat(replacements));
+      }
+      function format(fmt) {
+        var argIndex = 1, args = [].slice.call(arguments), i = 0, n = fmt.length, result = "", c, escaped = false, arg, tmp, leadingZero = false, precision, nextArg = function() {
+          return args[argIndex++];
+        }, slurpNumber = function() {
+          var digits = "";
+          while (/\d/.test(fmt[i])) {
+            digits += fmt[i++];
+            c = fmt[i];
+          }
+          return digits.length > 0 ? parseInt(digits) : null;
+        };
+        for (; i < n; ++i) {
+          c = fmt[i];
+          if (escaped) {
+            escaped = false;
+            if (c == ".") {
+              leadingZero = false;
+              c = fmt[++i];
+            } else if (c == "0" && fmt[i + 1] == ".") {
+              leadingZero = true;
+              i += 2;
+              c = fmt[i];
+            } else {
+              leadingZero = true;
+            }
+            precision = slurpNumber();
+            switch (c) {
+              case "b":
+                result += parseInt(nextArg(), 10).toString(2);
+                break;
+              case "c":
+                arg = nextArg();
+                if (typeof arg === "string" || arg instanceof String)
+                  result += arg;
+                else
+                  result += String.fromCharCode(parseInt(arg, 10));
+                break;
+              case "d":
+                result += parseInt(nextArg(), 10);
+                break;
+              case "f":
+                tmp = String(parseFloat(nextArg()).toFixed(precision || 6));
+                result += leadingZero ? tmp : tmp.replace(/^0/, "");
+                break;
+              case "j":
+                result += JSON.stringify(nextArg());
+                break;
+              case "o":
+                result += "0" + parseInt(nextArg(), 10).toString(8);
+                break;
+              case "s":
+                result += nextArg();
+                break;
+              case "x":
+                result += "0x" + parseInt(nextArg(), 10).toString(16);
+                break;
+              case "X":
+                result += "0x" + parseInt(nextArg(), 10).toString(16).toUpperCase();
+                break;
+              default:
+                result += c;
+                break;
+            }
+          } else if (c === "%") {
+            escaped = true;
+          } else {
+            result += c;
+          }
+        }
+        return result;
+      }
+    })();
+  }
+});
+
+// node_modules/fault/index.js
+var import_format = __toESM(require_format());
+var fault = Object.assign(create(Error), {
+  eval: create(EvalError),
+  range: create(RangeError),
+  reference: create(ReferenceError),
+  syntax: create(SyntaxError),
+  type: create(TypeError),
+  uri: create(URIError)
+});
+function create(Constructor) {
+  FormattedError.displayName = Constructor.displayName || Constructor.name;
+  return FormattedError;
+  function FormattedError(format, ...values) {
+    const reason = format ? (0, import_format.default)(format, ...values) : format;
+    return new Constructor(reason);
+  }
+}
+
+// node_modules/micromark-extension-frontmatter/dev/lib/to-matters.js
+var own = {}.hasOwnProperty;
+var markers = { yaml: "-", toml: "+" };
+function toMatters(options) {
+  const result = [];
+  let index = -1;
+  const presetsOrMatters = Array.isArray(options) ? options : options ? [options] : ["yaml"];
+  while (++index < presetsOrMatters.length) {
+    result[index] = matter(presetsOrMatters[index]);
+  }
+  return result;
+}
+function matter(option) {
+  let result = option;
+  if (typeof result === "string") {
+    if (!own.call(markers, result)) {
+      throw fault("Missing matter definition for `%s`", result);
+    }
+    result = { type: result, marker: markers[result] };
+  } else if (typeof result !== "object") {
+    throw fault("Expected matter to be an object, not `%j`", result);
+  }
+  if (!own.call(result, "type")) {
+    throw fault("Missing `type` in matter `%j`", result);
+  }
+  if (!own.call(result, "fence") && !own.call(result, "marker")) {
+    throw fault("Missing `marker` or `fence` in matter `%j`", result);
+  }
+  return result;
+}
+
+// node_modules/micromark-extension-frontmatter/dev/lib/syntax.js
+function frontmatter(options) {
+  const matters = toMatters(options);
+  const flow = {};
+  let index = -1;
+  while (++index < matters.length) {
+    const matter2 = matters[index];
+    const code = fence(matter2, "open").charCodeAt(0);
+    const construct = createConstruct(matter2);
+    const existing = flow[code];
+    if (Array.isArray(existing)) {
+      existing.push(construct);
+    } else {
+      flow[code] = [construct];
+    }
+  }
+  return { flow };
+}
+function createConstruct(matter2) {
+  const anywhere = matter2.anywhere;
+  const frontmatterType = (
+    /** @type {TokenType} */
+    matter2.type
+  );
+  const fenceType = (
+    /** @type {TokenType} */
+    frontmatterType + "Fence"
+  );
+  const sequenceType = (
+    /** @type {TokenType} */
+    fenceType + "Sequence"
+  );
+  const valueType = (
+    /** @type {TokenType} */
+    frontmatterType + "Value"
+  );
+  const closingFenceConstruct = { tokenize: tokenizeClosingFence, partial: true };
+  let buffer;
+  let bufferIndex = 0;
+  return { tokenize: tokenizeFrontmatter, concrete: true };
+  function tokenizeFrontmatter(effects, ok2, nok) {
+    const self = this;
+    return start;
+    function start(code) {
+      const position = self.now();
+      if (
+        // Indent not allowed.
+        position.column === 1 && // Normally, only allowed in first line.
+        (position.line === 1 || anywhere)
+      ) {
+        buffer = fence(matter2, "open");
+        bufferIndex = 0;
+        if (code === buffer.charCodeAt(bufferIndex)) {
+          effects.enter(frontmatterType);
+          effects.enter(fenceType);
+          effects.enter(sequenceType);
+          return openSequence(code);
+        }
+      }
+      return nok(code);
+    }
+    function openSequence(code) {
+      if (bufferIndex === buffer.length) {
+        effects.exit(sequenceType);
+        if (markdownSpace(code)) {
+          effects.enter(types.whitespace);
+          return openSequenceWhitespace(code);
+        }
+        return openAfter(code);
+      }
+      if (code === buffer.charCodeAt(bufferIndex++)) {
+        effects.consume(code);
+        return openSequence;
+      }
+      return nok(code);
+    }
+    function openSequenceWhitespace(code) {
+      if (markdownSpace(code)) {
+        effects.consume(code);
+        return openSequenceWhitespace;
+      }
+      effects.exit(types.whitespace);
+      return openAfter(code);
+    }
+    function openAfter(code) {
+      if (markdownLineEnding(code)) {
+        effects.exit(fenceType);
+        effects.enter(types.lineEnding);
+        effects.consume(code);
+        effects.exit(types.lineEnding);
+        buffer = fence(matter2, "close");
+        bufferIndex = 0;
+        return effects.attempt(closingFenceConstruct, after, contentStart);
+      }
+      return nok(code);
+    }
+    function contentStart(code) {
+      if (code === codes.eof || markdownLineEnding(code)) {
+        return contentEnd(code);
+      }
+      effects.enter(valueType);
+      return contentInside(code);
+    }
+    function contentInside(code) {
+      if (code === codes.eof || markdownLineEnding(code)) {
+        effects.exit(valueType);
+        return contentEnd(code);
+      }
+      effects.consume(code);
+      return contentInside;
+    }
+    function contentEnd(code) {
+      if (code === codes.eof) {
+        return nok(code);
+      }
+      effects.enter(types.lineEnding);
+      effects.consume(code);
+      effects.exit(types.lineEnding);
+      return effects.attempt(closingFenceConstruct, after, contentStart);
+    }
+    function after(code) {
+      effects.exit(frontmatterType);
+      return ok2(code);
+    }
+  }
+  function tokenizeClosingFence(effects, ok2, nok) {
+    let bufferIndex2 = 0;
+    return closeStart;
+    function closeStart(code) {
+      if (code === buffer.charCodeAt(bufferIndex2)) {
+        effects.enter(fenceType);
+        effects.enter(sequenceType);
+        return closeSequence(code);
+      }
+      return nok(code);
+    }
+    function closeSequence(code) {
+      if (bufferIndex2 === buffer.length) {
+        effects.exit(sequenceType);
+        if (markdownSpace(code)) {
+          effects.enter(types.whitespace);
+          return closeSequenceWhitespace(code);
+        }
+        return closeAfter(code);
+      }
+      if (code === buffer.charCodeAt(bufferIndex2++)) {
+        effects.consume(code);
+        return closeSequence;
+      }
+      return nok(code);
+    }
+    function closeSequenceWhitespace(code) {
+      if (markdownSpace(code)) {
+        effects.consume(code);
+        return closeSequenceWhitespace;
+      }
+      effects.exit(types.whitespace);
+      return closeAfter(code);
+    }
+    function closeAfter(code) {
+      if (code === codes.eof || markdownLineEnding(code)) {
+        effects.exit(fenceType);
+        return ok2(code);
+      }
+      return nok(code);
+    }
+  }
+}
+function fence(matter2, prop) {
+  return matter2.marker ? pick(matter2.marker, prop).repeat(3) : (
+    // @ts-expect-error: They’re mutually exclusive.
+    pick(matter2.fence, prop)
+  );
+}
+function pick(schema, prop) {
+  return typeof schema === "string" ? schema : schema[prop];
+}
+
+// node_modules/mdast-util-frontmatter/lib/index.js
+function frontmatterFromMarkdown(options) {
+  const matters = toMatters(options);
+  const enter = {};
+  const exit = {};
+  let index = -1;
+  while (++index < matters.length) {
+    const matter2 = matters[index];
+    enter[matter2.type] = opener(matter2);
+    exit[matter2.type] = close;
+    exit[matter2.type + "Value"] = value;
+  }
+  return { enter, exit };
+}
+function opener(matter2) {
+  return open;
+  function open(token) {
+    this.enter({ type: matter2.type, value: "" }, token);
+    this.buffer();
+  }
+}
+function close(token) {
+  const data = this.resume();
+  const node = this.stack[this.stack.length - 1];
+  ok("value" in node);
+  this.exit(token);
+  node.value = data.replace(/^(\r?\n|\r)|(\r?\n|\r)$/g, "");
+}
+function value(token) {
+  this.config.enter.data.call(this, token);
+  this.config.exit.data.call(this, token);
+}
+function frontmatterToMarkdown(options) {
+  const unsafe = [];
+  const handlers = {};
+  const matters = toMatters(options);
+  let index = -1;
+  while (++index < matters.length) {
+    const matter2 = matters[index];
+    handlers[matter2.type] = handler(matter2);
+    const open = fence2(matter2, "open");
+    unsafe.push({
+      atBreak: true,
+      character: open.charAt(0),
+      after: escapeStringRegexp(open.charAt(1))
+    });
+  }
+  return { unsafe, handlers };
+}
+function handler(matter2) {
+  const open = fence2(matter2, "open");
+  const close2 = fence2(matter2, "close");
+  return handle;
+  function handle(node) {
+    return open + (node.value ? "\n" + node.value : "") + "\n" + close2;
+  }
+}
+function fence2(matter2, prop) {
+  return matter2.marker ? pick2(matter2.marker, prop).repeat(3) : (
+    // @ts-expect-error: They’re mutually exclusive.
+    pick2(matter2.fence, prop)
+  );
+}
+function pick2(schema, prop) {
+  return typeof schema === "string" ? schema : schema[prop];
+}
+
+// node_modules/remark-frontmatter/lib/index.js
+var emptyOptions = "yaml";
+function remarkFrontmatter(options) {
+  const self = (
+    /** @type {Processor} */
+    this
+  );
+  const settings = options || emptyOptions;
+  const data = self.data();
+  const micromarkExtensions = data.micromarkExtensions || (data.micromarkExtensions = []);
+  const fromMarkdownExtensions = data.fromMarkdownExtensions || (data.fromMarkdownExtensions = []);
+  const toMarkdownExtensions = data.toMarkdownExtensions || (data.toMarkdownExtensions = []);
+  micromarkExtensions.push(frontmatter(settings));
+  fromMarkdownExtensions.push(frontmatterFromMarkdown(settings));
+  toMarkdownExtensions.push(frontmatterToMarkdown(settings));
+}
+export {
+  remarkFrontmatter as default
+};
+//# sourceMappingURL=remark-frontmatter.js.map

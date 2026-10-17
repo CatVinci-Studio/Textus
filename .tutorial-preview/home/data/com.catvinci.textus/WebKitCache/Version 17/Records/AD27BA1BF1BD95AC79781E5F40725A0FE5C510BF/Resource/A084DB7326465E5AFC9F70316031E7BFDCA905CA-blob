@@ -1,0 +1,344 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/editor/find/FindReplaceBar.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=f9787d19"; const useState = __vite__cjsImport3_react["useState"];
+import { ArrowUpIcon, ChevronIcon, CloseIcon } from "/src/ui/icons.tsx";
+import { usePresenceProps } from "/src/ui/usePresence.ts";
+import "/src/editor/find/FindReplaceBar.css";
+export function FindReplaceBar({ findReplace, labels }) {
+  _s();
+  const [replaceOpen, setReplaceOpen] = useState(false);
+  const { query, replacement, caseSensitive, useRegex, status } = findReplace;
+  const presence = usePresenceProps();
+  function onFindKeyDown(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (e.shiftKey) findReplace.prev();
+      else
+        findReplace.next();
+    }
+  }
+  function onReplaceKeyDown(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      findReplace.replaceOne();
+    }
+  }
+  function onBarKeyDown(e) {
+    const composing = e.nativeEvent.isComposing || e.keyCode === 229;
+    if (e.key === "Escape" && !composing) {
+      e.preventDefault();
+      findReplace.close();
+    }
+    e.stopPropagation();
+  }
+  const countLabel = status.error ? labels.invalidRegex : query ? status.matchCount > 0 ? `${status.activeIndex + 1} / ${status.matchCount}` : labels.noMatches : "";
+  return /* @__PURE__ */ jsxDEV(
+    "div",
+    {
+      ...presence,
+      className: "find-replace-bar floating-surface",
+      onKeyDown: onBarKeyDown,
+      children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "find-replace-row", children: [
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              className: `find-replace-chevron ${replaceOpen ? "find-replace-chevron-open" : ""}`,
+              title: labels.replace,
+              onClick: () => setReplaceOpen((v) => !v),
+              children: /* @__PURE__ */ jsxDEV(ChevronIcon, {}, void 0, false, {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                lineNumber: 99,
+                columnNumber: 11
+              }, this)
+            },
+            void 0,
+            false,
+            {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+              lineNumber: 93,
+              columnNumber: 9
+            },
+            this
+          ),
+          /* @__PURE__ */ jsxDEV("div", { className: "find-replace-field", children: [
+            /* @__PURE__ */ jsxDEV(
+              "input",
+              {
+                className: "find-replace-input",
+                type: "text",
+                value: query,
+                placeholder: labels.findPlaceholder,
+                autoFocus: true,
+                onChange: (e) => findReplace.setQuery(e.target.value),
+                onKeyDown: onFindKeyDown
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                lineNumber: 102,
+                columnNumber: 11
+              },
+              this
+            ),
+            /* @__PURE__ */ jsxDEV(
+              "span",
+              {
+                className: `find-replace-count ${status.error ? "find-replace-count-error" : ""}`,
+                children: countLabel
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                lineNumber: 111,
+                columnNumber: 11
+              },
+              this
+            ),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                className: `find-replace-toggle ${caseSensitive ? "find-replace-toggle-active" : ""}`,
+                title: labels.matchCase,
+                onClick: findReplace.toggleCaseSensitive,
+                children: "Aa"
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                lineNumber: 116,
+                columnNumber: 11
+              },
+              this
+            ),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                className: `find-replace-toggle ${useRegex ? "find-replace-toggle-active" : ""}`,
+                title: labels.useRegex,
+                onClick: findReplace.toggleUseRegex,
+                children: ".*"
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                lineNumber: 124,
+                columnNumber: 11
+              },
+              this
+            )
+          ] }, void 0, true, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+            lineNumber: 101,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "find-replace-nav", children: [
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                onClick: findReplace.prev,
+                disabled: status.matchCount === 0,
+                "aria-label": labels.findPreviousMatch,
+                title: labels.findPreviousMatch,
+                children: /* @__PURE__ */ jsxDEV(ArrowUpIcon, {}, void 0, false, {
+                  fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                  lineNumber: 141,
+                  columnNumber: 13
+                }, this)
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                lineNumber: 134,
+                columnNumber: 11
+              },
+              this
+            ),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                onClick: findReplace.next,
+                disabled: status.matchCount === 0,
+                "aria-label": labels.findNextMatch,
+                title: labels.findNextMatch,
+                children: /* @__PURE__ */ jsxDEV(ArrowUpIcon, { className: "find-replace-arrow-down" }, void 0, false, {
+                  fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                  lineNumber: 151,
+                  columnNumber: 13
+                }, this)
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                lineNumber: 143,
+                columnNumber: 11
+              },
+              this
+            ),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                className: "find-replace-close",
+                onClick: findReplace.close,
+                "aria-label": labels.findClose,
+                title: labels.findClose,
+                children: /* @__PURE__ */ jsxDEV(CloseIcon, {}, void 0, false, {
+                  fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                  lineNumber: 160,
+                  columnNumber: 13
+                }, this)
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                lineNumber: 153,
+                columnNumber: 11
+              },
+              this
+            )
+          ] }, void 0, true, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+            lineNumber: 133,
+            columnNumber: 9
+          }, this)
+        ] }, void 0, true, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+          lineNumber: 92,
+          columnNumber: 7
+        }, this),
+        replaceOpen && /* @__PURE__ */ jsxDEV("div", { className: "find-replace-row", children: [
+          /* @__PURE__ */ jsxDEV("span", { className: "find-replace-chevron-spacer" }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+            lineNumber: 166,
+            columnNumber: 11
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "find-replace-field", children: /* @__PURE__ */ jsxDEV(
+            "input",
+            {
+              className: "find-replace-input",
+              type: "text",
+              value: replacement,
+              placeholder: labels.replacePlaceholder,
+              onChange: (e) => findReplace.setReplacement(e.target.value),
+              onKeyDown: onReplaceKeyDown
+            },
+            void 0,
+            false,
+            {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+              lineNumber: 168,
+              columnNumber: 13
+            },
+            this
+          ) }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+            lineNumber: 167,
+            columnNumber: 11
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "find-replace-nav", children: [
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                onClick: findReplace.replaceOne,
+                disabled: status.matchCount === 0,
+                children: labels.replace
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                lineNumber: 178,
+                columnNumber: 13
+              },
+              this
+            ),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                onClick: findReplace.replaceAll,
+                disabled: status.matchCount === 0,
+                children: labels.replaceAll
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+                lineNumber: 185,
+                columnNumber: 13
+              },
+              this
+            )
+          ] }, void 0, true, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+            lineNumber: 177,
+            columnNumber: 11
+          }, this)
+        ] }, void 0, true, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+          lineNumber: 165,
+          columnNumber: 7
+        }, this)
+      ]
+    },
+    void 0,
+    true,
+    {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx",
+      lineNumber: 87,
+      columnNumber: 5
+    },
+    this
+  );
+}
+_s(FindReplaceBar, "YBkER2CJ3VuX6eMRolBIp8qWtXU=", false, function() {
+  return [usePresenceProps];
+});
+_c = FindReplaceBar;
+var _c;
+$RefreshReg$(_c, "FindReplaceBar");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/find/FindReplaceBar.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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QUFBO0FBQUE7QUFBQSxZQU1BO0FBQUEsWUFDQTtBQUFBLGNBQUM7QUFBQTtBQUFBLGdCQUNDLE1BQUs7QUFBQSxnQkFDTCxTQUFTakMsWUFBWStDO0FBQUFBLGdCQUNyQixVQUFVdEMsT0FBT3FCLGVBQWU7QUFBQSxnQkFFL0I3QixpQkFBTzhDO0FBQUFBO0FBQUFBLGNBTFY7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLFlBTUE7QUFBQSxlQWRGO0FBQUE7QUFBQTtBQUFBO0FBQUEsaUJBZUE7QUFBQSxhQTNCRjtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBNEJBO0FBQUE7QUFBQTtBQUFBLElBMUdKO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxFQTRHQTtBQUVKO0FBQUM3QyxHQXRKZUgsZ0JBQWM7QUFBQSxVQUdYRCxnQkFBZ0I7QUFBQTtBQUFBLEtBSG5CQztBQUFjLElBQUFpRDtBQUFBLGFBQUFBLElBQUEiLCJuYW1lcyI6WyJ1c2VTdGF0ZSIsIkFycm93VXBJY29uIiwiQ2hldnJvbkljb24iLCJDbG9zZUljb24iLCJ1c2VQcmVzZW5jZVByb3BzIiwiRmluZFJlcGxhY2VCYXIiLCJmaW5kUmVwbGFjZSIsImxhYmVscyIsIl9zIiwicmVwbGFjZU9wZW4iLCJzZXRSZXBsYWNlT3BlbiIsInF1ZXJ5IiwicmVwbGFjZW1lbnQiLCJjYXNlU2Vuc2l0aXZlIiwidXNlUmVnZXgiLCJzdGF0dXMiLCJwcmVzZW5jZSIsIm9uRmluZEtleURvd24iLCJlIiwia2V5IiwicHJldmVudERlZmF1bHQiLCJzaGlmdEtleSIsInByZXYiLCJuZXh0Iiwib25SZXBsYWNlS2V5RG93biIsInJlcGxhY2VPbmUiLCJvbkJhcktleURvd24iLCJjb21wb3NpbmciLCJuYXRpdmVFdmVudCIsImlzQ29tcG9zaW5nIiwia2V5Q29kZSIsImNsb3NlIiwic3RvcFByb3BhZ2F0aW9uIiwiY291bnRMYWJlbCIsImVycm9yIiwiaW52YWxpZFJlZ2V4IiwibWF0Y2hDb3VudCIsImFjdGl2ZUluZGV4Iiwibm9NYXRjaGVzIiwicmVwbGFjZSIsInYiLCJmaW5kUGxhY2Vob2xkZXIiLCJzZXRRdWVyeSIsInRhcmdldCIsInZhbHVlIiwibWF0Y2hDYXNlIiwidG9nZ2xlQ2FzZVNlbnNpdGl2ZSIsInRvZ2dsZVVzZVJlZ2V4IiwiZmluZFByZXZpb3VzTWF0Y2giLCJmaW5kTmV4dE1hdGNoIiwiZmluZENsb3NlIiwicmVwbGFjZVBsYWNlaG9sZGVyIiwic2V0UmVwbGFjZW1lbnQiLCJyZXBsYWNlQWxsIiwiX2MiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiRmluZFJlcGxhY2VCYXIudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZVN0YXRlIH0gZnJvbSBcInJlYWN0XCI7XG5pbXBvcnQgdHlwZSB7IFN0cmluZ3MgfSBmcm9tIFwiLi4vLi4vaTE4bi9zdHJpbmdzXCI7XG5pbXBvcnQgdHlwZSB7IEZpbmRSZXBsYWNlIH0gZnJvbSBcIi4vdXNlRmluZFJlcGxhY2VcIjtcbmltcG9ydCB7IEFycm93VXBJY29uLCBDaGV2cm9uSWNvbiwgQ2xvc2VJY29uIH0gZnJvbSBcIi4uLy4uL3VpL2ljb25zXCI7XG5pbXBvcnQgeyB1c2VQcmVzZW5jZVByb3BzIH0gZnJvbSBcIi4uLy4uL3VpL3VzZVByZXNlbmNlXCI7XG5pbXBvcnQgXCIuL0ZpbmRSZXBsYWNlQmFyLmNzc1wiO1xuXG50eXBlIEZpbmRSZXBsYWNlQmFyTGFiZWxzID0gUGljazxcbiAgU3RyaW5ncyxcbiAgfCBcImZpbmRQbGFjZWhvbGRlclwiXG4gIHwgXCJyZXBsYWNlUGxhY2Vob2xkZXJcIlxuICB8IFwicmVwbGFjZVwiXG4gIHwgXCJyZXBsYWNlQWxsXCJcbiAgfCBcIm1hdGNoQ2FzZVwiXG4gIHwgXCJ1c2VSZWdleFwiXG4gIHwgXCJpbnZhbGlkUmVnZXhcIlxuICB8IFwibm9NYXRjaGVzXCJcbiAgfCBcImZpbmRQcmV2aW91c01hdGNoXCJcbiAgfCBcImZpbmROZXh0TWF0Y2hcIlxuICB8IFwiZmluZENsb3NlXCJcbj47XG5cbmludGVyZmFjZSBGaW5kUmVwbGFjZUJhclByb3BzIHtcbiAgZmluZFJlcGxhY2U6IEZpbmRSZXBsYWNlO1xuICBsYWJlbHM6IEZpbmRSZXBsYWNlQmFyTGFiZWxzO1xufVxuXG5leHBvcnQgZnVuY3Rpb24gRmluZFJlcGxhY2VCYXIoeyBmaW5kUmVwbGFjZSwgbGFiZWxzIH06IEZpbmRSZXBsYWNlQmFyUHJvcHMpIHtcbiAgY29uc3QgW3JlcGxhY2VPcGVuLCBzZXRSZXBsYWNlT3Blbl0gPSB1c2VTdGF0ZShmYWxzZSk7XG4gIGNvbnN0IHsgcXVlcnksIHJlcGxhY2VtZW50LCBjYXNlU2Vuc2l0aXZlLCB1c2VSZWdleCwgc3RhdHVzIH0gPSBmaW5kUmVwbGFjZTtcbiAgY29uc3QgcHJlc2VuY2UgPSB1c2VQcmVzZW5jZVByb3BzPEhUTUxEaXZFbGVtZW50PigpO1xuXG4gIGZ1bmN0aW9uIG9uRmluZEtleURvd24oZTogUmVhY3QuS2V5Ym9hcmRFdmVudCkge1xuICAgIGlmIChlLmtleSA9PT0gXCJFbnRlclwiKSB7XG4gICAgICBlLnByZXZlbnREZWZhdWx0KCk7XG4gICAgICBpZiAoZS5zaGlmdEtleSkgZmluZFJlcGxhY2UucHJldigpO1xuICAgICAgZWxzZSBmaW5kUmVwbGFjZS5uZXh0KCk7XG4gICAgfVxuICB9XG5cbiAgZnVuY3Rpb24gb25SZXBsYWNlS2V5RG93bihlOiBSZWFjdC5LZXlib2FyZEV2ZW50KSB7XG4gICAgaWYgKGUua2V5ID09PSBcIkVudGVyXCIpIHtcbiAgICAgIGUucHJldmVudERlZmF1bHQoKTtcbiAgICAgIGZpbmRSZXBsYWNlLnJlcGxhY2VPbmUoKTtcbiAgICB9XG4gIH1cblxuICAvLyBFc2NhcGUgaGFuZGxlZCBvbmNlIGhlcmUgZm9yIGJvdGggaW5wdXRzOyBzdG9wUHJvcGFnYXRpb24ga2VlcHMgYmFyXG4gIC8vIGtleXN0cm9rZXMgb3V0IG9mIHRoZSBhcHAtbGV2ZWwgc2hvcnRjdXQgZGlzcGF0Y2hlci5cbiAgZnVuY3Rpb24gb25CYXJLZXlEb3duKGU6IFJlYWN0LktleWJvYXJkRXZlbnQpIHtcbiAgICBjb25zdCBjb21wb3NpbmcgPSBlLm5hdGl2ZUV2ZW50LmlzQ29tcG9zaW5nIHx8IGUua2V5Q29kZSA9PT0gMjI5O1xuICAgIGlmIChlLmtleSA9PT0gXCJFc2NhcGVcIiAmJiAhY29tcG9zaW5nKSB7XG4gICAgICBlLnByZXZlbnREZWZhdWx0KCk7XG4gICAgICBmaW5kUmVwbGFjZS5jbG9zZSgpO1xuICAgIH1cbiAgICBlLnN0b3BQcm9wYWdhdGlvbigpO1xuICB9XG5cbiAgY29uc3QgY291bnRMYWJlbCA9IHN0YXR1cy5lcnJvclxuICAgID8gbGFiZWxzLmludmFsaWRSZWdleFxuICAgIDogcXVlcnlcbiAgICAgID8gc3RhdHVzLm1hdGNoQ291bnQgPiAwXG4gICAgICAgID8gYCR7c3RhdHVzLmFjdGl2ZUluZGV4ICsgMX0gLyAke3N0YXR1cy5tYXRjaENvdW50fWBcbiAgICAgICAgOiBsYWJlbHMubm9NYXRjaGVzXG4gICAgICA6IFwiXCI7XG5cbiAgcmV0dXJuIChcbiAgICA8ZGl2XG4gICAgICB7Li4ucHJlc2VuY2V9XG4gICAgICBjbGFzc05hbWU9XCJmaW5kLXJlcGxhY2UtYmFyIGZsb2F0aW5nLXN1cmZhY2VcIlxuICAgICAgb25LZXlEb3duPXtvbkJhcktleURvd259XG4gICAgPlxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmaW5kLXJlcGxhY2Utcm93XCI+XG4gICAgICAgIDxidXR0b25cbiAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgICBjbGFzc05hbWU9e2BmaW5kLXJlcGxhY2UtY2hldnJvbiAke3JlcGxhY2VPcGVuID8gXCJmaW5kLXJlcGxhY2UtY2hldnJvbi1vcGVuXCIgOiBcIlwifWB9XG4gICAgICAgICAgdGl0bGU9e2xhYmVscy5yZXBsYWNlfVxuICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldFJlcGxhY2VPcGVuKCh2KSA9PiAhdil9XG4gICAgICAgID5cbiAgICAgICAgICA8Q2hldnJvbkljb24gLz5cbiAgICAgICAgPC9idXR0b24+XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmluZC1yZXBsYWNlLWZpZWxkXCI+XG4gICAgICAgICAgPGlucHV0XG4gICAgICAgICAgICBjbGFzc05hbWU9XCJmaW5kLXJlcGxhY2UtaW5wdXRcIlxuICAgICAgICAgICAgdHlwZT1cInRleHRcIlxuICAgICAgICAgICAgdmFsdWU9e3F1ZXJ5fVxuICAgICAgICAgICAgcGxhY2Vob2xkZXI9e2xhYmVscy5maW5kUGxhY2Vob2xkZXJ9XG4gICAgICAgICAgICBhdXRvRm9jdXNcbiAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gZmluZFJlcGxhY2Uuc2V0UXVlcnkoZS50YXJnZXQudmFsdWUpfVxuICAgICAgICAgICAgb25LZXlEb3duPXtvbkZpbmRLZXlEb3dufVxuICAgICAgICAgIC8+XG4gICAgICAgICAgPHNwYW5cbiAgICAgICAgICAgIGNsYXNzTmFtZT17YGZpbmQtcmVwbGFjZS1jb3VudCAke3N0YXR1cy5lcnJvciA/IFwiZmluZC1yZXBsYWNlLWNvdW50LWVycm9yXCIgOiBcIlwifWB9XG4gICAgICAgICAgPlxuICAgICAgICAgICAge2NvdW50TGFiZWx9XG4gICAgICAgICAgPC9zcGFuPlxuICAgICAgICAgIDxidXR0b25cbiAgICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICAgICAgY2xhc3NOYW1lPXtgZmluZC1yZXBsYWNlLXRvZ2dsZSAke2Nhc2VTZW5zaXRpdmUgPyBcImZpbmQtcmVwbGFjZS10b2dnbGUtYWN0aXZlXCIgOiBcIlwifWB9XG4gICAgICAgICAgICB0aXRsZT17bGFiZWxzLm1hdGNoQ2FzZX1cbiAgICAgICAgICAgIG9uQ2xpY2s9e2ZpbmRSZXBsYWNlLnRvZ2dsZUNhc2VTZW5zaXRpdmV9XG4gICAgICAgICAgPlxuICAgICAgICAgICAgQWFcbiAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgICAgIGNsYXNzTmFtZT17YGZpbmQtcmVwbGFjZS10b2dnbGUgJHt1c2VSZWdleCA/IFwiZmluZC1yZXBsYWNlLXRvZ2dsZS1hY3RpdmVcIiA6IFwiXCJ9YH1cbiAgICAgICAgICAgIHRpdGxlPXtsYWJlbHMudXNlUmVnZXh9XG4gICAgICAgICAgICBvbkNsaWNrPXtmaW5kUmVwbGFjZS50b2dnbGVVc2VSZWdleH1cbiAgICAgICAgICA+XG4gICAgICAgICAgICAuKlxuICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmaW5kLXJlcGxhY2UtbmF2XCI+XG4gICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgdHlwZT1cImJ1dHRvblwiXG4gICAgICAgICAgICBvbkNsaWNrPXtmaW5kUmVwbGFjZS5wcmV2fVxuICAgICAgICAgICAgZGlzYWJsZWQ9e3N0YXR1cy5tYXRjaENvdW50ID09PSAwfVxuICAgICAgICAgICAgYXJpYS1sYWJlbD17bGFiZWxzLmZpbmRQcmV2aW91c01hdGNofVxuICAgICAgICAgICAgdGl0bGU9e2xhYmVscy5maW5kUHJldmlvdXNNYXRjaH1cbiAgICAgICAgICA+XG4gICAgICAgICAgICA8QXJyb3dVcEljb24gLz5cbiAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgICAgIG9uQ2xpY2s9e2ZpbmRSZXBsYWNlLm5leHR9XG4gICAgICAgICAgICBkaXNhYmxlZD17c3RhdHVzLm1hdGNoQ291bnQgPT09IDB9XG4gICAgICAgICAgICBhcmlhLWxhYmVsPXtsYWJlbHMuZmluZE5leHRNYXRjaH1cbiAgICAgICAgICAgIHRpdGxlPXtsYWJlbHMuZmluZE5leHRNYXRjaH1cbiAgICAgICAgICA+XG4gICAgICAgICAgICB7LyogU2FtZSBhcnJvdywgZmxpcHBlZCAtIHNlZSBBcnJvd1VwSWNvbi4gKi99XG4gICAgICAgICAgICA8QXJyb3dVcEljb24gY2xhc3NOYW1lPVwiZmluZC1yZXBsYWNlLWFycm93LWRvd25cIiAvPlxuICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICAgIDxidXR0b25cbiAgICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICAgICAgY2xhc3NOYW1lPVwiZmluZC1yZXBsYWNlLWNsb3NlXCJcbiAgICAgICAgICAgIG9uQ2xpY2s9e2ZpbmRSZXBsYWNlLmNsb3NlfVxuICAgICAgICAgICAgYXJpYS1sYWJlbD17bGFiZWxzLmZpbmRDbG9zZX1cbiAgICAgICAgICAgIHRpdGxlPXtsYWJlbHMuZmluZENsb3NlfVxuICAgICAgICAgID5cbiAgICAgICAgICAgIDxDbG9zZUljb24gLz5cbiAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgPC9kaXY+XG4gICAgICA8L2Rpdj5cbiAgICAgIHtyZXBsYWNlT3BlbiAmJiAoXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmluZC1yZXBsYWNlLXJvd1wiPlxuICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImZpbmQtcmVwbGFjZS1jaGV2cm9uLXNwYWNlclwiIC8+XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmaW5kLXJlcGxhY2UtZmllbGRcIj5cbiAgICAgICAgICAgIDxpbnB1dFxuICAgICAgICAgICAgICBjbGFzc05hbWU9XCJmaW5kLXJlcGxhY2UtaW5wdXRcIlxuICAgICAgICAgICAgICB0eXBlPVwidGV4dFwiXG4gICAgICAgICAgICAgIHZhbHVlPXtyZXBsYWNlbWVudH1cbiAgICAgICAgICAgICAgcGxhY2Vob2xkZXI9e2xhYmVscy5yZXBsYWNlUGxhY2Vob2xkZXJ9XG4gICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gZmluZFJlcGxhY2Uuc2V0UmVwbGFjZW1lbnQoZS50YXJnZXQudmFsdWUpfVxuICAgICAgICAgICAgICBvbktleURvd249e29uUmVwbGFjZUtleURvd259XG4gICAgICAgICAgICAvPlxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmluZC1yZXBsYWNlLW5hdlwiPlxuICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgICAgICAgb25DbGljaz17ZmluZFJlcGxhY2UucmVwbGFjZU9uZX1cbiAgICAgICAgICAgICAgZGlzYWJsZWQ9e3N0YXR1cy5tYXRjaENvdW50ID09PSAwfVxuICAgICAgICAgICAgPlxuICAgICAgICAgICAgICB7bGFiZWxzLnJlcGxhY2V9XG4gICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICAgIDxidXR0b25cbiAgICAgICAgICAgICAgdHlwZT1cImJ1dHRvblwiXG4gICAgICAgICAgICAgIG9uQ2xpY2s9e2ZpbmRSZXBsYWNlLnJlcGxhY2VBbGx9XG4gICAgICAgICAgICAgIGRpc2FibGVkPXtzdGF0dXMubWF0Y2hDb3VudCA9PT0gMH1cbiAgICAgICAgICAgID5cbiAgICAgICAgICAgICAge2xhYmVscy5yZXBsYWNlQWxsfVxuICAgICAgICAgICAgPC9idXR0b24+XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgIDwvZGl2PlxuICAgICAgKX1cbiAgICA8L2Rpdj5cbiAgKTtcbn1cbiJdLCJmaWxlIjoiL2hvbWUvY2hlbmdhby9Eb2N1bWVudHMvRW5qb3ltZW50L1RleHR1cy9hcHAvLmNsYXVkZS93b3JrdHJlZXMvYWJvdXQtdGV4dHVzL3NyYy9lZGl0b3IvZmluZC9GaW5kUmVwbGFjZUJhci50c3gifQ==

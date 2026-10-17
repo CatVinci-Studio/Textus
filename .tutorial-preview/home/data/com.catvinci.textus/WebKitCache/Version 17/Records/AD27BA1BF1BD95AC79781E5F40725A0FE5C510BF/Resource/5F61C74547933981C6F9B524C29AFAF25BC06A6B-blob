@@ -1,0 +1,187 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/editor/images/ImageNameDialog.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=f9787d19"; const useState = __vite__cjsImport3_react["useState"];
+import { useModalDialog } from "/src/ui/useModalDialog.ts";
+import { usePresenceProps } from "/src/ui/usePresence.ts";
+import "/src/editor/images/ImageNameDialog.css";
+export function ImageNameDialog({
+  request,
+  title,
+  label,
+  invalidLabel,
+  uploadLabel,
+  cancelLabel,
+  onClose
+}) {
+  _s();
+  const modal = useModalDialog(() => onClose(null));
+  const presence = usePresenceProps();
+  const [stem, setStem] = useState(request.stem);
+  const valid = !!stem.trim() && !/[\\/]/.test(stem);
+  function submit() {
+    if (valid) onClose(stem.trim());
+  }
+  return /* @__PURE__ */ jsxDEV(
+    "div",
+    {
+      ...presence,
+      className: "image-name-overlay",
+      onClick: () => onClose(null),
+      children: /* @__PURE__ */ jsxDEV(
+        "div",
+        {
+          ...modal,
+          className: "image-name-dialog",
+          role: "dialog",
+          "aria-modal": "true",
+          "aria-label": title,
+          onClick: (event) => event.stopPropagation(),
+          onKeyDown: (event) => {
+            modal.onKeyDown(event);
+            if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229)
+              return;
+            if (event.key === "Enter" && event.target instanceof HTMLInputElement) {
+              event.preventDefault();
+              submit();
+            }
+          },
+          children: [
+            /* @__PURE__ */ jsxDEV("div", { className: "image-name-title", children: title }, void 0, false, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx",
+              lineNumber: 86,
+              columnNumber: 9
+            }, this),
+            /* @__PURE__ */ jsxDEV("label", { className: "image-name-field", children: [
+              /* @__PURE__ */ jsxDEV("span", { children: label }, void 0, false, {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx",
+                lineNumber: 88,
+                columnNumber: 11
+              }, this),
+              /* @__PURE__ */ jsxDEV("span", { className: "image-name-input-row", children: [
+                /* @__PURE__ */ jsxDEV(
+                  "input",
+                  {
+                    "aria-label": label,
+                    value: stem,
+                    "aria-invalid": !valid,
+                    onChange: (event) => setStem(event.target.value)
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx",
+                    lineNumber: 90,
+                    columnNumber: 13
+                  },
+                  this
+                ),
+                /* @__PURE__ */ jsxDEV("span", { children: [
+                  ".",
+                  request.extension
+                ] }, void 0, true, {
+                  fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx",
+                  lineNumber: 96,
+                  columnNumber: 13
+                }, this)
+              ] }, void 0, true, {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx",
+                lineNumber: 89,
+                columnNumber: 11
+              }, this)
+            ] }, void 0, true, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx",
+              lineNumber: 87,
+              columnNumber: 9
+            }, this),
+            !valid && /* @__PURE__ */ jsxDEV("div", { className: "image-name-error", children: invalidLabel }, void 0, false, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx",
+              lineNumber: 99,
+              columnNumber: 20
+            }, this),
+            /* @__PURE__ */ jsxDEV("div", { className: "image-name-buttons", children: [
+              /* @__PURE__ */ jsxDEV("button", { onClick: () => onClose(null), children: cancelLabel }, void 0, false, {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx",
+                lineNumber: 101,
+                columnNumber: 11
+              }, this),
+              /* @__PURE__ */ jsxDEV(
+                "button",
+                {
+                  className: "image-name-primary",
+                  disabled: !valid,
+                  onClick: submit,
+                  children: uploadLabel
+                },
+                void 0,
+                false,
+                {
+                  fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx",
+                  lineNumber: 102,
+                  columnNumber: 11
+                },
+                this
+              )
+            ] }, void 0, true, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx",
+              lineNumber: 100,
+              columnNumber: 9
+            }, this)
+          ]
+        },
+        void 0,
+        true,
+        {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx",
+          lineNumber: 63,
+          columnNumber: 7
+        },
+        this
+      )
+    },
+    void 0,
+    false,
+    {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx",
+      lineNumber: 58,
+      columnNumber: 5
+    },
+    this
+  );
+}
+_s(ImageNameDialog, "XLAY6mkH57HWSEuYjRnMPgyvGf8=", false, function() {
+  return [useModalDialog, usePresenceProps];
+});
+_c = ImageNameDialog;
+var _c;
+$RefreshReg$(_c, "ImageNameDialog");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/images/ImageNameDialog.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBa0VROzs7Ozs7Ozs7Ozs7Ozs7OztBQWxFUixTQUFTQSxnQkFBZ0I7QUFDekIsU0FBU0Msc0JBQXNCO0FBQy9CLFNBQVNDLHdCQUF3QjtBQUNqQyxPQUFPO0FBUUEsZ0JBQVNDLGdCQUFnQjtBQUFBLEVBQzlCQztBQUFBQSxFQUNBQztBQUFBQSxFQUNBQztBQUFBQSxFQUNBQztBQUFBQSxFQUNBQztBQUFBQSxFQUNBQztBQUFBQSxFQUNBQztBQVNGLEdBQUc7QUFBQUMsS0FBQTtBQUNELFFBQU1DLFFBQVFYLGVBQWUsTUFBTVMsUUFBUSxJQUFJLENBQUM7QUFDaEQsUUFBTUcsV0FBV1gsaUJBQWlDO0FBQ2xELFFBQU0sQ0FBQ1ksTUFBTUMsT0FBTyxJQUFJZixTQUFTSSxRQUFRVSxJQUFJO0FBQzdDLFFBQU1FLFFBQVEsQ0FBQyxDQUFDRixLQUFLRyxLQUFLLEtBQUssQ0FBQyxRQUFRQyxLQUFLSixJQUFJO0FBRWpELFdBQVNLLFNBQVM7QUFDaEIsUUFBSUgsTUFBT04sU0FBUUksS0FBS0csS0FBSyxDQUFDO0FBQUEsRUFDaEM7QUFFQSxTQUNFO0FBQUEsSUFBQztBQUFBO0FBQUEsTUFDQyxHQUFJSjtBQUFBQSxNQUNKLFdBQVU7QUFBQSxNQUNWLFNBQVMsTUFBTUgsUUFBUSxJQUFJO0FBQUEsTUFFM0I7QUFBQSxRQUFDO0FBQUE7QUFBQSxVQUNDLEdBQUlFO0FBQUFBLFVBQ0osV0FBVTtBQUFBLFVBQ1YsTUFBSztBQUFBLFVBQ0wsY0FBVztBQUFBLFVBQ1gsY0FBWVA7QUFBQUEsVUFDWixTQUFTLENBQUNlLFVBQVVBLE1BQU1DLGdCQUFnQjtBQUFBLFVBQzFDLFdBQVcsQ0FBQ0QsVUFBVTtBQUNwQlIsa0JBQU1VLFVBQVVGLEtBQUs7QUFDckIsZ0JBQ0VBLE1BQU1HLFlBQVlDLGVBQ2xCSixNQUFNRyxZQUFZRSxZQUFZO0FBRTlCO0FBQ0YsZ0JBQ0VMLE1BQU1NLFFBQVEsV0FDZE4sTUFBTU8sa0JBQWtCQyxrQkFDeEI7QUFDQVIsb0JBQU1TLGVBQWU7QUFDckJWLHFCQUFPO0FBQUEsWUFDVDtBQUFBLFVBQ0Y7QUFBQSxVQUVBO0FBQUEsbUNBQUMsU0FBSSxXQUFVLG9CQUFvQmQsbUJBQW5DO0FBQUE7QUFBQTtBQUFBO0FBQUEsbUJBQXlDO0FBQUEsWUFDekMsdUJBQUMsV0FBTSxXQUFVLG9CQUNmO0FBQUEscUNBQUMsVUFBTUMsbUJBQVA7QUFBQTtBQUFBO0FBQUE7QUFBQSxxQkFBYTtBQUFBLGNBQ2IsdUJBQUMsVUFBSyxXQUFVLHdCQUNkO0FBQUE7QUFBQSxrQkFBQztBQUFBO0FBQUEsb0JBQ0MsY0FBWUE7QUFBQUEsb0JBQ1osT0FBT1E7QUFBQUEsb0JBQ1AsZ0JBQWMsQ0FBQ0U7QUFBQUEsb0JBQ2YsVUFBVSxDQUFDSSxVQUFVTCxRQUFRSyxNQUFNTyxPQUFPRyxLQUFLO0FBQUE7QUFBQSxrQkFKakQ7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLGdCQUltRDtBQUFBLGdCQUVuRCx1QkFBQyxVQUFLO0FBQUE7QUFBQSxrQkFBRTFCLFFBQVEyQjtBQUFBQSxxQkFBaEI7QUFBQTtBQUFBO0FBQUE7QUFBQSx1QkFBMEI7QUFBQSxtQkFQNUI7QUFBQTtBQUFBO0FBQUE7QUFBQSxxQkFRQTtBQUFBLGlCQVZGO0FBQUE7QUFBQTtBQUFBO0FBQUEsbUJBV0E7QUFBQSxZQUNDLENBQUNmLFNBQVMsdUJBQUMsU0FBSSxXQUFVLG9CQUFvQlQsMEJBQW5DO0FBQUE7QUFBQTtBQUFBO0FBQUEsbUJBQWdEO0FBQUEsWUFDM0QsdUJBQUMsU0FBSSxXQUFVLHNCQUNiO0FBQUEscUNBQUMsWUFBTyxTQUFTLE1BQU1HLFFBQVEsSUFBSSxHQUFJRCx5QkFBdkM7QUFBQTtBQUFBO0FBQUE7QUFBQSxxQkFBbUQ7QUFBQSxjQUNuRDtBQUFBLGdCQUFDO0FBQUE7QUFBQSxrQkFDQyxXQUFVO0FBQUEsa0JBQ1YsVUFBVSxDQUFDTztBQUFBQSxrQkFDWCxTQUFTRztBQUFBQSxrQkFFUlg7QUFBQUE7QUFBQUEsZ0JBTEg7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLGNBTUE7QUFBQSxpQkFSRjtBQUFBO0FBQUE7QUFBQTtBQUFBLG1CQVNBO0FBQUE7QUFBQTtBQUFBLFFBOUNGO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxNQStDQTtBQUFBO0FBQUEsSUFwREY7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLEVBcURBO0FBRUo7QUFBQ0csR0FsRmVSLGlCQUFlO0FBQUEsVUFpQmZGLGdCQUNHQyxnQkFBZ0I7QUFBQTtBQUFBLEtBbEJuQkM7QUFBZSxJQUFBNkI7QUFBQSxhQUFBQSxJQUFBIiwibmFtZXMiOlsidXNlU3RhdGUiLCJ1c2VNb2RhbERpYWxvZyIsInVzZVByZXNlbmNlUHJvcHMiLCJJbWFnZU5hbWVEaWFsb2ciLCJyZXF1ZXN0IiwidGl0bGUiLCJsYWJlbCIsImludmFsaWRMYWJlbCIsInVwbG9hZExhYmVsIiwiY2FuY2VsTGFiZWwiLCJvbkNsb3NlIiwiX3MiLCJtb2RhbCIsInByZXNlbmNlIiwic3RlbSIsInNldFN0ZW0iLCJ2YWxpZCIsInRyaW0iLCJ0ZXN0Iiwic3VibWl0IiwiZXZlbnQiLCJzdG9wUHJvcGFnYXRpb24iLCJvbktleURvd24iLCJuYXRpdmVFdmVudCIsImlzQ29tcG9zaW5nIiwia2V5Q29kZSIsImtleSIsInRhcmdldCIsIkhUTUxJbnB1dEVsZW1lbnQiLCJwcmV2ZW50RGVmYXVsdCIsInZhbHVlIiwiZXh0ZW5zaW9uIiwiX2MiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiSW1hZ2VOYW1lRGlhbG9nLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xuaW1wb3J0IHsgdXNlTW9kYWxEaWFsb2cgfSBmcm9tIFwiLi4vLi4vdWkvdXNlTW9kYWxEaWFsb2dcIjtcbmltcG9ydCB7IHVzZVByZXNlbmNlUHJvcHMgfSBmcm9tIFwiLi4vLi4vdWkvdXNlUHJlc2VuY2VcIjtcbmltcG9ydCBcIi4vSW1hZ2VOYW1lRGlhbG9nLmNzc1wiO1xuXG5leHBvcnQgaW50ZXJmYWNlIEltYWdlTmFtZVJlcXVlc3Qge1xuICBzdGVtOiBzdHJpbmc7XG4gIGV4dGVuc2lvbjogc3RyaW5nO1xuICByZXNvbHZlOiAoc3RlbTogc3RyaW5nIHwgbnVsbCkgPT4gdm9pZDtcbn1cblxuZXhwb3J0IGZ1bmN0aW9uIEltYWdlTmFtZURpYWxvZyh7XG4gIHJlcXVlc3QsXG4gIHRpdGxlLFxuICBsYWJlbCxcbiAgaW52YWxpZExhYmVsLFxuICB1cGxvYWRMYWJlbCxcbiAgY2FuY2VsTGFiZWwsXG4gIG9uQ2xvc2UsXG59OiB7XG4gIHJlcXVlc3Q6IEltYWdlTmFtZVJlcXVlc3Q7XG4gIHRpdGxlOiBzdHJpbmc7XG4gIGxhYmVsOiBzdHJpbmc7XG4gIGludmFsaWRMYWJlbDogc3RyaW5nO1xuICB1cGxvYWRMYWJlbDogc3RyaW5nO1xuICBjYW5jZWxMYWJlbDogc3RyaW5nO1xuICBvbkNsb3NlOiAoc3RlbTogc3RyaW5nIHwgbnVsbCkgPT4gdm9pZDtcbn0pIHtcbiAgY29uc3QgbW9kYWwgPSB1c2VNb2RhbERpYWxvZygoKSA9PiBvbkNsb3NlKG51bGwpKTtcbiAgY29uc3QgcHJlc2VuY2UgPSB1c2VQcmVzZW5jZVByb3BzPEhUTUxEaXZFbGVtZW50PigpO1xuICBjb25zdCBbc3RlbSwgc2V0U3RlbV0gPSB1c2VTdGF0ZShyZXF1ZXN0LnN0ZW0pO1xuICBjb25zdCB2YWxpZCA9ICEhc3RlbS50cmltKCkgJiYgIS9bXFxcXC9dLy50ZXN0KHN0ZW0pO1xuXG4gIGZ1bmN0aW9uIHN1Ym1pdCgpIHtcbiAgICBpZiAodmFsaWQpIG9uQ2xvc2Uoc3RlbS50cmltKCkpO1xuICB9XG5cbiAgcmV0dXJuIChcbiAgICA8ZGl2XG4gICAgICB7Li4ucHJlc2VuY2V9XG4gICAgICBjbGFzc05hbWU9XCJpbWFnZS1uYW1lLW92ZXJsYXlcIlxuICAgICAgb25DbGljaz17KCkgPT4gb25DbG9zZShudWxsKX1cbiAgICA+XG4gICAgICA8ZGl2XG4gICAgICAgIHsuLi5tb2RhbH1cbiAgICAgICAgY2xhc3NOYW1lPVwiaW1hZ2UtbmFtZS1kaWFsb2dcIlxuICAgICAgICByb2xlPVwiZGlhbG9nXCJcbiAgICAgICAgYXJpYS1tb2RhbD1cInRydWVcIlxuICAgICAgICBhcmlhLWxhYmVsPXt0aXRsZX1cbiAgICAgICAgb25DbGljaz17KGV2ZW50KSA9PiBldmVudC5zdG9wUHJvcGFnYXRpb24oKX1cbiAgICAgICAgb25LZXlEb3duPXsoZXZlbnQpID0+IHtcbiAgICAgICAgICBtb2RhbC5vbktleURvd24oZXZlbnQpO1xuICAgICAgICAgIGlmIChcbiAgICAgICAgICAgIGV2ZW50Lm5hdGl2ZUV2ZW50LmlzQ29tcG9zaW5nIHx8XG4gICAgICAgICAgICBldmVudC5uYXRpdmVFdmVudC5rZXlDb2RlID09PSAyMjlcbiAgICAgICAgICApXG4gICAgICAgICAgICByZXR1cm47XG4gICAgICAgICAgaWYgKFxuICAgICAgICAgICAgZXZlbnQua2V5ID09PSBcIkVudGVyXCIgJiZcbiAgICAgICAgICAgIGV2ZW50LnRhcmdldCBpbnN0YW5jZW9mIEhUTUxJbnB1dEVsZW1lbnRcbiAgICAgICAgICApIHtcbiAgICAgICAgICAgIGV2ZW50LnByZXZlbnREZWZhdWx0KCk7XG4gICAgICAgICAgICBzdWJtaXQoKTtcbiAgICAgICAgICB9XG4gICAgICAgIH19XG4gICAgICA+XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaW1hZ2UtbmFtZS10aXRsZVwiPnt0aXRsZX08L2Rpdj5cbiAgICAgICAgPGxhYmVsIGNsYXNzTmFtZT1cImltYWdlLW5hbWUtZmllbGRcIj5cbiAgICAgICAgICA8c3Bhbj57bGFiZWx9PC9zcGFuPlxuICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImltYWdlLW5hbWUtaW5wdXQtcm93XCI+XG4gICAgICAgICAgICA8aW5wdXRcbiAgICAgICAgICAgICAgYXJpYS1sYWJlbD17bGFiZWx9XG4gICAgICAgICAgICAgIHZhbHVlPXtzdGVtfVxuICAgICAgICAgICAgICBhcmlhLWludmFsaWQ9eyF2YWxpZH1cbiAgICAgICAgICAgICAgb25DaGFuZ2U9eyhldmVudCkgPT4gc2V0U3RlbShldmVudC50YXJnZXQudmFsdWUpfVxuICAgICAgICAgICAgLz5cbiAgICAgICAgICAgIDxzcGFuPi57cmVxdWVzdC5leHRlbnNpb259PC9zcGFuPlxuICAgICAgICAgIDwvc3Bhbj5cbiAgICAgICAgPC9sYWJlbD5cbiAgICAgICAgeyF2YWxpZCAmJiA8ZGl2IGNsYXNzTmFtZT1cImltYWdlLW5hbWUtZXJyb3JcIj57aW52YWxpZExhYmVsfTwvZGl2Pn1cbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJpbWFnZS1uYW1lLWJ1dHRvbnNcIj5cbiAgICAgICAgICA8YnV0dG9uIG9uQ2xpY2s9eygpID0+IG9uQ2xvc2UobnVsbCl9PntjYW5jZWxMYWJlbH08L2J1dHRvbj5cbiAgICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgICBjbGFzc05hbWU9XCJpbWFnZS1uYW1lLXByaW1hcnlcIlxuICAgICAgICAgICAgZGlzYWJsZWQ9eyF2YWxpZH1cbiAgICAgICAgICAgIG9uQ2xpY2s9e3N1Ym1pdH1cbiAgICAgICAgICA+XG4gICAgICAgICAgICB7dXBsb2FkTGFiZWx9XG4gICAgICAgICAgPC9idXR0b24+XG4gICAgICAgIDwvZGl2PlxuICAgICAgPC9kaXY+XG4gICAgPC9kaXY+XG4gICk7XG59XG4iXSwiZmlsZSI6Ii9ob21lL2NoZW5nYW8vRG9jdW1lbnRzL0Vuam95bWVudC9UZXh0dXMvYXBwLy5jbGF1ZGUvd29ya3RyZWVzL2Fib3V0LXRleHR1cy9zcmMvZWRpdG9yL2ltYWdlcy9JbWFnZU5hbWVEaWFsb2cudHN4In0=

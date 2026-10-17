@@ -1,0 +1,65 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/editor/modes/SourceTextarea.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/modes/SourceTextarea.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+import { centerTextareaCaret } from "/src/editor/modes/mode-switch.ts";
+export function SourceTextarea({
+  onChange,
+  typewriter,
+  className,
+  ...rest
+}) {
+  return /* @__PURE__ */ jsxDEV(
+    "textarea",
+    {
+      ...rest,
+      className: `source-view ${className ?? ""}${typewriter ? " typewriter-source" : ""}`,
+      spellCheck: false,
+      onChange: (e) => {
+        onChange(e.target.value);
+        const el = e.currentTarget;
+        if (typewriter) requestAnimationFrame(() => centerTextareaCaret(el));
+      },
+      onSelect: (e) => typewriter && centerTextareaCaret(e.currentTarget)
+    },
+    void 0,
+    false,
+    {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/modes/SourceTextarea.tsx",
+      lineNumber: 42,
+      columnNumber: 5
+    },
+    this
+  );
+}
+_c = SourceTextarea;
+var _c;
+$RefreshReg$(_c, "SourceTextarea");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/modes/SourceTextarea.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/modes/SourceTextarea.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBc0JJOzs7Ozs7Ozs7Ozs7Ozs7O0FBckJKLFNBQVNBLDJCQUEyQjtBQWM3QixnQkFBU0MsZUFBZTtBQUFBLEVBQzdCQztBQUFBQSxFQUNBQztBQUFBQSxFQUNBQztBQUFBQSxFQUNBLEdBQUdDO0FBQ0UsR0FBRztBQUNSLFNBQ0U7QUFBQSxJQUFDO0FBQUE7QUFBQSxNQUNDLEdBQUlBO0FBQUFBLE1BQ0osV0FBVyxlQUFlRCxhQUFhLEVBQUUsR0FBR0QsYUFBYSx1QkFBdUIsRUFBRTtBQUFBLE1BQ2xGLFlBQVk7QUFBQSxNQUNaLFVBQVUsQ0FBQ0csTUFBTTtBQUNmSixpQkFBU0ksRUFBRUMsT0FBT0MsS0FBSztBQUN2QixjQUFNQyxLQUFLSCxFQUFFSTtBQUViLFlBQUlQLFdBQVlRLHVCQUFzQixNQUFNWCxvQkFBb0JTLEVBQUUsQ0FBQztBQUFBLE1BQ3JFO0FBQUEsTUFDQSxVQUFVLENBQUNILE1BQU1ILGNBQWNILG9CQUFvQk0sRUFBRUksYUFBYTtBQUFBO0FBQUEsSUFWcEU7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLEVBVXNFO0FBRzFFO0FBQUNFLEtBcEJlWDtBQUFjLElBQUFXO0FBQUEsYUFBQUEsSUFBQSIsIm5hbWVzIjpbImNlbnRlclRleHRhcmVhQ2FyZXQiLCJTb3VyY2VUZXh0YXJlYSIsIm9uQ2hhbmdlIiwidHlwZXdyaXRlciIsImNsYXNzTmFtZSIsInJlc3QiLCJlIiwidGFyZ2V0IiwidmFsdWUiLCJlbCIsImN1cnJlbnRUYXJnZXQiLCJyZXF1ZXN0QW5pbWF0aW9uRnJhbWUiLCJfYyJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJTb3VyY2VUZXh0YXJlYS50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHR5cGUgeyBSZWYsIFRleHRhcmVhSFRNTEF0dHJpYnV0ZXMgfSBmcm9tIFwicmVhY3RcIjtcbmltcG9ydCB7IGNlbnRlclRleHRhcmVhQ2FyZXQgfSBmcm9tIFwiLi9tb2RlLXN3aXRjaFwiO1xuXG50eXBlIFByb3BzID0gT21pdDxcbiAgVGV4dGFyZWFIVE1MQXR0cmlidXRlczxIVE1MVGV4dEFyZWFFbGVtZW50PixcbiAgXCJvbkNoYW5nZVwiIHwgXCJvblNlbGVjdFwiXG4+ICYge1xuICB2YWx1ZTogc3RyaW5nO1xuICBvbkNoYW5nZTogKG1hcmtkb3duOiBzdHJpbmcpID0+IHZvaWQ7XG4gIC8qKiBUeXBld3JpdGVyIG1vZGU6IGtlZXAgdGhlIGNhcmV0J3MgbGluZSBpbiB0aGUgbWlkZGxlLiAqL1xuICB0eXBld3JpdGVyOiBib29sZWFuO1xuICByZWY/OiBSZWY8SFRNTFRleHRBcmVhRWxlbWVudD47XG59O1xuXG4vKiogVGhlIHBsYWluLU1hcmtkb3duIGVkaXRvciBvZiBzb3VyY2UgbW9kZSBhbmQgc3BsaXQgdmlldy4gKi9cbmV4cG9ydCBmdW5jdGlvbiBTb3VyY2VUZXh0YXJlYSh7XG4gIG9uQ2hhbmdlLFxuICB0eXBld3JpdGVyLFxuICBjbGFzc05hbWUsXG4gIC4uLnJlc3Rcbn06IFByb3BzKSB7XG4gIHJldHVybiAoXG4gICAgPHRleHRhcmVhXG4gICAgICB7Li4ucmVzdH1cbiAgICAgIGNsYXNzTmFtZT17YHNvdXJjZS12aWV3ICR7Y2xhc3NOYW1lID8/IFwiXCJ9JHt0eXBld3JpdGVyID8gXCIgdHlwZXdyaXRlci1zb3VyY2VcIiA6IFwiXCJ9YH1cbiAgICAgIHNwZWxsQ2hlY2s9e2ZhbHNlfVxuICAgICAgb25DaGFuZ2U9eyhlKSA9PiB7XG4gICAgICAgIG9uQ2hhbmdlKGUudGFyZ2V0LnZhbHVlKTtcbiAgICAgICAgY29uc3QgZWwgPSBlLmN1cnJlbnRUYXJnZXQ7XG4gICAgICAgIC8vIEFmdGVyIFJlYWN0IGhhcyBhcHBsaWVkIHRoZSBuZXcgdmFsdWUgYW5kIHRoZSBjYXJldCBtb3ZlZC5cbiAgICAgICAgaWYgKHR5cGV3cml0ZXIpIHJlcXVlc3RBbmltYXRpb25GcmFtZSgoKSA9PiBjZW50ZXJUZXh0YXJlYUNhcmV0KGVsKSk7XG4gICAgICB9fVxuICAgICAgb25TZWxlY3Q9eyhlKSA9PiB0eXBld3JpdGVyICYmIGNlbnRlclRleHRhcmVhQ2FyZXQoZS5jdXJyZW50VGFyZ2V0KX1cbiAgICAvPlxuICApO1xufVxuIl0sImZpbGUiOiIvaG9tZS9jaGVuZ2FvL0RvY3VtZW50cy9FbmpveW1lbnQvVGV4dHVzL2FwcC8uY2xhdWRlL3dvcmt0cmVlcy9hYm91dC10ZXh0dXMvc3JjL2VkaXRvci9tb2Rlcy9Tb3VyY2VUZXh0YXJlYS50c3gifQ==

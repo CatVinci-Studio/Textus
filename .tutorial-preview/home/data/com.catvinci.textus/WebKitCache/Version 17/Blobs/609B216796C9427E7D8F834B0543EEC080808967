@@ -1,0 +1,125 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/ai/margin/OpenReviewNote.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/margin/OpenReviewNote.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+import { NotePopover } from "/src/ai/margin/ReviewMargin.tsx";
+import { BottomCard } from "/src/ui/BottomCard.tsx";
+import { Presence } from "/src/ui/usePresence.ts";
+export function OpenReviewNote({
+  note,
+  at,
+  phone,
+  editorView,
+  t,
+  onDone,
+  onAsk,
+  onClose
+}) {
+  return /* @__PURE__ */ jsxDEV(Fragment, { children: [
+    note && at && !phone && /* @__PURE__ */ jsxDEV(
+      NotePopover,
+      {
+        note,
+        x: at.x,
+        y: at.y,
+        labels: t,
+        onDone,
+        onAsk,
+        onClose
+      },
+      void 0,
+      false,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/margin/OpenReviewNote.tsx",
+        lineNumber: 52,
+        columnNumber: 7
+      },
+      this
+    ),
+    /* @__PURE__ */ jsxDEV(Presence, { show: !!note && phone, exitMs: 250, children: note && phone && /* @__PURE__ */ jsxDEV(
+      BottomCard,
+      {
+        label: t.reviewNoteBy,
+        actions: [
+          {
+            label: t.reviewNoteAsk,
+            onSelect: () => onAsk(note)
+          },
+          {
+            label: t.reviewNoteDone,
+            primary: true,
+            onSelect: () => onDone(note.id)
+          }
+        ],
+        onClose,
+        children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "bottom-card-kicker", children: [
+            /* @__PURE__ */ jsxDEV("span", { className: "review-note-mark", "aria-hidden": "true", children: "AI" }, void 0, false, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/margin/OpenReviewNote.tsx",
+              lineNumber: 80,
+              columnNumber: 15
+            }, this),
+            t.reviewNoteBy
+          ] }, void 0, true, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/margin/OpenReviewNote.tsx",
+            lineNumber: 79,
+            columnNumber: 13
+          }, this),
+          /* @__PURE__ */ jsxDEV("p", { className: "bottom-card-quote", children: editorView?.state.doc.textBetween(note.from, note.to, " ") }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/margin/OpenReviewNote.tsx",
+            lineNumber: 85,
+            columnNumber: 13
+          }, this),
+          note.comment
+        ]
+      },
+      void 0,
+      true,
+      {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/margin/OpenReviewNote.tsx",
+        lineNumber: 64,
+        columnNumber: 9
+      },
+      this
+    ) }, void 0, false, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/margin/OpenReviewNote.tsx",
+      lineNumber: 62,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/margin/OpenReviewNote.tsx",
+    lineNumber: 50,
+    columnNumber: 5
+  }, this);
+}
+_c = OpenReviewNote;
+var _c;
+$RefreshReg$(_c, "OpenReviewNote");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/margin/OpenReviewNote.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/margin/OpenReviewNote.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBOEJJLG1CQUVJLGNBRko7Ozs7Ozs7Ozs7Ozs7Ozs7QUE3QkosU0FBU0EsbUJBQW1CO0FBRTVCLFNBQVNDLGtCQUFrQjtBQUMzQixTQUFTQyxnQkFBZ0I7QUFLbEIsZ0JBQVNDLGVBQWU7QUFBQSxFQUM3QkM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFXRixHQUFHO0FBQ0QsU0FDRSxtQ0FDR1A7QUFBQUEsWUFBUUMsTUFBTSxDQUFDQyxTQUNkO0FBQUEsTUFBQztBQUFBO0FBQUEsUUFDQztBQUFBLFFBQ0EsR0FBR0QsR0FBR087QUFBQUEsUUFDTixHQUFHUCxHQUFHUTtBQUFBQSxRQUNOLFFBQVFMO0FBQUFBLFFBQ1I7QUFBQSxRQUNBO0FBQUEsUUFDQTtBQUFBO0FBQUEsTUFQRjtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUEsSUFPbUI7QUFBQSxJQUdyQix1QkFBQyxZQUFTLE1BQU0sQ0FBQyxDQUFDSixRQUFRRSxPQUFPLFFBQVEsS0FDdENGLGtCQUFRRSxTQUNQO0FBQUEsTUFBQztBQUFBO0FBQUEsUUFDQyxPQUFPRSxFQUFFTTtBQUFBQSxRQUNULFNBQVM7QUFBQSxVQUNQO0FBQUEsWUFDRUMsT0FBT1AsRUFBRVE7QUFBQUEsWUFDVEMsVUFBVUEsTUFBTVAsTUFBTU4sSUFBSTtBQUFBLFVBQzVCO0FBQUEsVUFDQTtBQUFBLFlBQ0VXLE9BQU9QLEVBQUVVO0FBQUFBLFlBQ1RDLFNBQVM7QUFBQSxZQUNURixVQUFVQSxNQUFNUixPQUFPTCxLQUFLZ0IsRUFBRTtBQUFBLFVBQ2hDO0FBQUEsUUFBQztBQUFBLFFBRUg7QUFBQSxRQUVBO0FBQUEsaUNBQUMsU0FBSSxXQUFVLHNCQUNiO0FBQUEsbUNBQUMsVUFBSyxXQUFVLG9CQUFtQixlQUFZLFFBQU0sa0JBQXJEO0FBQUE7QUFBQTtBQUFBO0FBQUEsbUJBRUE7QUFBQSxZQUNDWixFQUFFTTtBQUFBQSxlQUpMO0FBQUE7QUFBQTtBQUFBO0FBQUEsaUJBS0E7QUFBQSxVQUNBLHVCQUFDLE9BQUUsV0FBVSxxQkFDVlAsc0JBQVljLE1BQU1DLElBQUlDLFlBQVluQixLQUFLb0IsTUFBTXBCLEtBQUtxQixJQUFJLEdBQUcsS0FENUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFFQTtBQUFBLFVBQ0NyQixLQUFLc0I7QUFBQUE7QUFBQUE7QUFBQUEsTUF4QlI7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLElBeUJBLEtBM0JKO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0E2QkE7QUFBQSxPQXpDRjtBQUFBO0FBQUE7QUFBQTtBQUFBLFNBMENBO0FBRUo7QUFBQ0MsS0FqRWV4QjtBQUFjLElBQUF3QjtBQUFBLGFBQUFBLElBQUEiLCJuYW1lcyI6WyJOb3RlUG9wb3ZlciIsIkJvdHRvbUNhcmQiLCJQcmVzZW5jZSIsIk9wZW5SZXZpZXdOb3RlIiwibm90ZSIsImF0IiwicGhvbmUiLCJlZGl0b3JWaWV3IiwidCIsIm9uRG9uZSIsIm9uQXNrIiwib25DbG9zZSIsIngiLCJ5IiwicmV2aWV3Tm90ZUJ5IiwibGFiZWwiLCJyZXZpZXdOb3RlQXNrIiwib25TZWxlY3QiLCJyZXZpZXdOb3RlRG9uZSIsInByaW1hcnkiLCJpZCIsInN0YXRlIiwiZG9jIiwidGV4dEJldHdlZW4iLCJmcm9tIiwidG8iLCJjb21tZW50IiwiX2MiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiT3BlblJldmlld05vdGUudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB0eXBlIHsgRWRpdG9yVmlldyB9IGZyb20gXCJAbWlsa2Rvd24va2l0L3Byb3NlL3ZpZXdcIjtcbmltcG9ydCB7IE5vdGVQb3BvdmVyIH0gZnJvbSBcIi4vUmV2aWV3TWFyZ2luXCI7XG5pbXBvcnQgdHlwZSB7IFJldmlld05vdGUgfSBmcm9tIFwiLi9yZXZpZXctbm90ZXMtcGx1Z2luXCI7XG5pbXBvcnQgeyBCb3R0b21DYXJkIH0gZnJvbSBcIi4uLy4uL3VpL0JvdHRvbUNhcmRcIjtcbmltcG9ydCB7IFByZXNlbmNlIH0gZnJvbSBcIi4uLy4uL3VpL3VzZVByZXNlbmNlXCI7XG5pbXBvcnQgdHlwZSB7IFN0cmluZ3MgfSBmcm9tIFwiLi4vLi4vaTE4bi9zdHJpbmdzXCI7XG5cbi8qKiBBIHJldmlldyBub3RlIG9wZW5lZCBmcm9tIGl0cyBudW1iZXJlZCBiYWRnZSAobm8gcm9vbSBmb3IgYSBtYXJnaW4pOiBhXG4gKiAgcG9wb3ZlciB1bmRlciB0aGUgYmFkZ2UsIG9yIG9uIGEgcGhvbmUgYSBjYXJkIGZyb20gdGhlIGJvdHRvbS4gKi9cbmV4cG9ydCBmdW5jdGlvbiBPcGVuUmV2aWV3Tm90ZSh7XG4gIG5vdGUsXG4gIGF0LFxuICBwaG9uZSxcbiAgZWRpdG9yVmlldyxcbiAgdCxcbiAgb25Eb25lLFxuICBvbkFzayxcbiAgb25DbG9zZSxcbn06IHtcbiAgbm90ZTogUmV2aWV3Tm90ZSB8IG51bGw7XG4gIC8qKiBXaGVyZSB0aGUgYmFkZ2Ugd2FzOyBudWxsIHdoaWxlIG5vIG5vdGUgaXMgb3Blbi4gKi9cbiAgYXQ6IHsgeDogbnVtYmVyOyB5OiBudW1iZXIgfSB8IG51bGw7XG4gIHBob25lOiBib29sZWFuO1xuICBlZGl0b3JWaWV3OiBFZGl0b3JWaWV3IHwgbnVsbDtcbiAgdDogU3RyaW5ncztcbiAgb25Eb25lOiAoaWQ6IHN0cmluZykgPT4gdm9pZDtcbiAgb25Bc2s6IChub3RlOiBSZXZpZXdOb3RlKSA9PiB2b2lkO1xuICBvbkNsb3NlOiAoKSA9PiB2b2lkO1xufSkge1xuICByZXR1cm4gKFxuICAgIDw+XG4gICAgICB7bm90ZSAmJiBhdCAmJiAhcGhvbmUgJiYgKFxuICAgICAgICA8Tm90ZVBvcG92ZXJcbiAgICAgICAgICBub3RlPXtub3RlfVxuICAgICAgICAgIHg9e2F0Lnh9XG4gICAgICAgICAgeT17YXQueX1cbiAgICAgICAgICBsYWJlbHM9e3R9XG4gICAgICAgICAgb25Eb25lPXtvbkRvbmV9XG4gICAgICAgICAgb25Bc2s9e29uQXNrfVxuICAgICAgICAgIG9uQ2xvc2U9e29uQ2xvc2V9XG4gICAgICAgIC8+XG4gICAgICApfVxuICAgICAgPFByZXNlbmNlIHNob3c9eyEhbm90ZSAmJiBwaG9uZX0gZXhpdE1zPXsyNTB9PlxuICAgICAgICB7bm90ZSAmJiBwaG9uZSAmJiAoXG4gICAgICAgICAgPEJvdHRvbUNhcmRcbiAgICAgICAgICAgIGxhYmVsPXt0LnJldmlld05vdGVCeX1cbiAgICAgICAgICAgIGFjdGlvbnM9e1tcbiAgICAgICAgICAgICAge1xuICAgICAgICAgICAgICAgIGxhYmVsOiB0LnJldmlld05vdGVBc2ssXG4gICAgICAgICAgICAgICAgb25TZWxlY3Q6ICgpID0+IG9uQXNrKG5vdGUpLFxuICAgICAgICAgICAgICB9LFxuICAgICAgICAgICAgICB7XG4gICAgICAgICAgICAgICAgbGFiZWw6IHQucmV2aWV3Tm90ZURvbmUsXG4gICAgICAgICAgICAgICAgcHJpbWFyeTogdHJ1ZSxcbiAgICAgICAgICAgICAgICBvblNlbGVjdDogKCkgPT4gb25Eb25lKG5vdGUuaWQpLFxuICAgICAgICAgICAgICB9LFxuICAgICAgICAgICAgXX1cbiAgICAgICAgICAgIG9uQ2xvc2U9e29uQ2xvc2V9XG4gICAgICAgICAgPlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJib3R0b20tY2FyZC1raWNrZXJcIj5cbiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwicmV2aWV3LW5vdGUtbWFya1wiIGFyaWEtaGlkZGVuPVwidHJ1ZVwiPlxuICAgICAgICAgICAgICAgIEFJXG4gICAgICAgICAgICAgIDwvc3Bhbj5cbiAgICAgICAgICAgICAge3QucmV2aWV3Tm90ZUJ5fVxuICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJib3R0b20tY2FyZC1xdW90ZVwiPlxuICAgICAgICAgICAgICB7ZWRpdG9yVmlldz8uc3RhdGUuZG9jLnRleHRCZXR3ZWVuKG5vdGUuZnJvbSwgbm90ZS50bywgXCIgXCIpfVxuICAgICAgICAgICAgPC9wPlxuICAgICAgICAgICAge25vdGUuY29tbWVudH1cbiAgICAgICAgICA8L0JvdHRvbUNhcmQ+XG4gICAgICAgICl9XG4gICAgICA8L1ByZXNlbmNlPlxuICAgIDwvPlxuICApO1xufVxuIl0sImZpbGUiOiIvaG9tZS9jaGVuZ2FvL0RvY3VtZW50cy9FbmpveW1lbnQvVGV4dHVzL2FwcC8uY2xhdWRlL3dvcmt0cmVlcy9hYm91dC10ZXh0dXMvc3JjL2FpL21hcmdpbi9PcGVuUmV2aWV3Tm90ZS50c3gifQ==

@@ -1,0 +1,149 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/app/AgentPanelDock.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/AgentPanelDock.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+import { isIOSApp } from "/src/platform/capabilities.ts";
+import {
+  AGENT_PANEL_DEFAULT_WIDTH,
+  AGENT_PANEL_MAX_WIDTH,
+  AGENT_PANEL_MIN_WIDTH,
+  AgentPanelSheetGrip
+} from "/src/ai/chat/panel/agent-panel.tsx";
+import { ResizeHandle } from "/src/ui/ResizeHandle.tsx";
+export function AgentPanelDock({
+  presence,
+  closing,
+  overlays,
+  sheetFull,
+  onSheetFullChange,
+  width,
+  onResize,
+  onClose,
+  mountRef,
+  sourceMode,
+  onToggleSourceMode,
+  t
+}) {
+  return /* @__PURE__ */ jsxDEV(
+    "aside",
+    {
+      ref: presence.ref,
+      "data-state": presence.state,
+      inert: closing || void 0,
+      className: `agent-panel${sheetFull ? " agent-panel-sheet-full" : ""}${overlays ? " agent-panel-overlay" : ""}`,
+      style: { width },
+      children: [
+        isIOSApp && /* @__PURE__ */ jsxDEV(
+          AgentPanelSheetGrip,
+          {
+            full: sheetFull,
+            onFullChange: onSheetFullChange,
+            onClose,
+            label: t.agentPanelSheet
+          },
+          void 0,
+          false,
+          {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/AgentPanelDock.tsx",
+            lineNumber: 75,
+            columnNumber: 7
+          },
+          this
+        ),
+        /* @__PURE__ */ jsxDEV(
+          ResizeHandle,
+          {
+            className: "agent-panel-resizer",
+            edge: "left",
+            width,
+            min: AGENT_PANEL_MIN_WIDTH,
+            max: AGENT_PANEL_MAX_WIDTH,
+            onResize,
+            onReset: () => onResize(AGENT_PANEL_DEFAULT_WIDTH, true),
+            label: t.agentPanelResize
+          },
+          void 0,
+          false,
+          {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/AgentPanelDock.tsx",
+            lineNumber: 82,
+            columnNumber: 7
+          },
+          this
+        ),
+        /* @__PURE__ */ jsxDEV("div", { className: "agent-panel-mount", ref: mountRef }, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/AgentPanelDock.tsx",
+          lineNumber: 92,
+          columnNumber: 7
+        }, this),
+        sourceMode && /* @__PURE__ */ jsxDEV("div", { className: "agent-panel-placeholder", children: [
+          /* @__PURE__ */ jsxDEV("p", { children: t.agentPanelSourceMode }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/AgentPanelDock.tsx",
+            lineNumber: 98,
+            columnNumber: 11
+          }, this),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              className: "text-button",
+              onClick: onToggleSourceMode,
+              children: t.agentPanelBackToEditor
+            },
+            void 0,
+            false,
+            {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/AgentPanelDock.tsx",
+              lineNumber: 99,
+              columnNumber: 11
+            },
+            this
+          )
+        ] }, void 0, true, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/AgentPanelDock.tsx",
+          lineNumber: 97,
+          columnNumber: 7
+        }, this)
+      ]
+    },
+    void 0,
+    true,
+    {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/AgentPanelDock.tsx",
+      lineNumber: 65,
+      columnNumber: 5
+    },
+    this
+  );
+}
+_c = AgentPanelDock;
+var _c;
+$RefreshReg$(_c, "AgentPanelDock");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/AgentPanelDock.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/app/AgentPanelDock.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBdURROzs7Ozs7Ozs7Ozs7Ozs7O0FBdkRSLFNBQVNBLGdCQUFnQjtBQUV6QjtBQUFBLEVBQ0VDO0FBQUFBLEVBQ0FDO0FBQUFBLEVBQ0FDO0FBQUFBLEVBQ0FDO0FBQUFBLE9BQ0s7QUFDUCxTQUFTQyxvQkFBb0I7QUFNdEIsZ0JBQVNDLGVBQWU7QUFBQSxFQUM3QkM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFpQkYsR0FBRztBQUNELFNBQ0U7QUFBQSxJQUFDO0FBQUE7QUFBQSxNQUNDLEtBQUtYLFNBQVNZO0FBQUFBLE1BQ2QsY0FBWVosU0FBU2E7QUFBQUEsTUFDckIsT0FBT1osV0FBV2E7QUFBQUEsTUFDbEIsV0FBVyxjQUFjWCxZQUFZLDRCQUE0QixFQUFFLEdBQUdELFdBQVcseUJBQXlCLEVBQUU7QUFBQSxNQUM1RyxPQUFPLEVBQUVHLE1BQU07QUFBQSxNQUlkWjtBQUFBQSxvQkFDQztBQUFBLFVBQUM7QUFBQTtBQUFBLFlBQ0MsTUFBTVU7QUFBQUEsWUFDTixjQUFjQztBQUFBQSxZQUNkO0FBQUEsWUFDQSxPQUFPTyxFQUFFSTtBQUFBQTtBQUFBQSxVQUpYO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxRQUkyQjtBQUFBLFFBRzdCO0FBQUEsVUFBQztBQUFBO0FBQUEsWUFDQyxXQUFVO0FBQUEsWUFDVixNQUFLO0FBQUEsWUFDTDtBQUFBLFlBQ0EsS0FBS25CO0FBQUFBLFlBQ0wsS0FBS0Q7QUFBQUEsWUFDTDtBQUFBLFlBQ0EsU0FBUyxNQUFNVyxTQUFTWiwyQkFBMkIsSUFBSTtBQUFBLFlBQ3ZELE9BQU9pQixFQUFFSztBQUFBQTtBQUFBQSxVQVJYO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxRQVE0QjtBQUFBLFFBRTVCLHVCQUFDLFNBQUksV0FBVSxxQkFBb0IsS0FBS1IsWUFBeEM7QUFBQTtBQUFBO0FBQUE7QUFBQSxlQUFpRDtBQUFBLFFBSWhEQyxjQUNDLHVCQUFDLFNBQUksV0FBVSwyQkFDYjtBQUFBLGlDQUFDLE9BQUdFLFlBQUVNLHdCQUFOO0FBQUE7QUFBQTtBQUFBO0FBQUEsaUJBQTJCO0FBQUEsVUFDM0I7QUFBQSxZQUFDO0FBQUE7QUFBQSxjQUNDLE1BQUs7QUFBQSxjQUNMLFdBQVU7QUFBQSxjQUNWLFNBQVNQO0FBQUFBLGNBRVJDLFlBQUVPO0FBQUFBO0FBQUFBLFlBTEw7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLFVBTUE7QUFBQSxhQVJGO0FBQUE7QUFBQTtBQUFBO0FBQUEsZUFTQTtBQUFBO0FBQUE7QUFBQSxJQXpDSjtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUEsRUEyQ0E7QUFFSjtBQUFDQyxLQTVFZXBCO0FBQWMsSUFBQW9CO0FBQUEsYUFBQUEsSUFBQSIsIm5hbWVzIjpbImlzSU9TQXBwIiwiQUdFTlRfUEFORUxfREVGQVVMVF9XSURUSCIsIkFHRU5UX1BBTkVMX01BWF9XSURUSCIsIkFHRU5UX1BBTkVMX01JTl9XSURUSCIsIkFnZW50UGFuZWxTaGVldEdyaXAiLCJSZXNpemVIYW5kbGUiLCJBZ2VudFBhbmVsRG9jayIsInByZXNlbmNlIiwiY2xvc2luZyIsIm92ZXJsYXlzIiwic2hlZXRGdWxsIiwib25TaGVldEZ1bGxDaGFuZ2UiLCJ3aWR0aCIsIm9uUmVzaXplIiwib25DbG9zZSIsIm1vdW50UmVmIiwic291cmNlTW9kZSIsIm9uVG9nZ2xlU291cmNlTW9kZSIsInQiLCJyZWYiLCJzdGF0ZSIsInVuZGVmaW5lZCIsImFnZW50UGFuZWxTaGVldCIsImFnZW50UGFuZWxSZXNpemUiLCJhZ2VudFBhbmVsU291cmNlTW9kZSIsImFnZW50UGFuZWxCYWNrVG9FZGl0b3IiLCJfYyJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJBZ2VudFBhbmVsRG9jay50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgaXNJT1NBcHAgfSBmcm9tIFwiLi4vcGxhdGZvcm0vY2FwYWJpbGl0aWVzXCI7XG5pbXBvcnQgdHlwZSB7IFByZXNlbmNlSGFuZGxlIH0gZnJvbSBcIi4uL3VpL3VzZVByZXNlbmNlXCI7XG5pbXBvcnQge1xuICBBR0VOVF9QQU5FTF9ERUZBVUxUX1dJRFRILFxuICBBR0VOVF9QQU5FTF9NQVhfV0lEVEgsXG4gIEFHRU5UX1BBTkVMX01JTl9XSURUSCxcbiAgQWdlbnRQYW5lbFNoZWV0R3JpcCxcbn0gZnJvbSBcIi4uL2FpL2NoYXQvcGFuZWwvYWdlbnQtcGFuZWxcIjtcbmltcG9ydCB7IFJlc2l6ZUhhbmRsZSB9IGZyb20gXCIuLi91aS9SZXNpemVIYW5kbGVcIjtcbmltcG9ydCB0eXBlIHsgU3RyaW5ncyB9IGZyb20gXCIuLi9pMThuL3N0cmluZ3NcIjtcblxuLyoqIFRoZSBkb2NrZWQgQWdlbnQgcGFuZWwncyBmcmFtZSBvbiB0aGUgcmlnaHQgKGEgYm90dG9tIHNoZWV0IG9uIGFcbiAqICBwaG9uZSkuIEFwcCBvd25zIHRoZSBmcmFtZTsgdGhlIGFjdGl2ZSB0YWIncyBlZGl0b3IgcmVuZGVycyBpdHNcbiAqICBjb252ZXJzYXRpb24gaW50byB0aGUgbW91bnQgcG9pbnQgaGVyZS4gKi9cbmV4cG9ydCBmdW5jdGlvbiBBZ2VudFBhbmVsRG9jayh7XG4gIHByZXNlbmNlLFxuICBjbG9zaW5nLFxuICBvdmVybGF5cyxcbiAgc2hlZXRGdWxsLFxuICBvblNoZWV0RnVsbENoYW5nZSxcbiAgd2lkdGgsXG4gIG9uUmVzaXplLFxuICBvbkNsb3NlLFxuICBtb3VudFJlZixcbiAgc291cmNlTW9kZSxcbiAgb25Ub2dnbGVTb3VyY2VNb2RlLFxuICB0LFxufToge1xuICBwcmVzZW5jZTogUHJlc2VuY2VIYW5kbGU7XG4gIGNsb3Npbmc6IGJvb2xlYW47XG4gIC8qKiBMaWVzIG92ZXIgdGhlIHBhZ2UgaW5zdGVhZCBvZiBiZXNpZGUgaXQgKHVzZVNpZGVQYW5lbHMpLiAqL1xuICBvdmVybGF5czogYm9vbGVhbjtcbiAgc2hlZXRGdWxsOiBib29sZWFuO1xuICBvblNoZWV0RnVsbENoYW5nZTogKGZ1bGw6IGJvb2xlYW4pID0+IHZvaWQ7XG4gIHdpZHRoOiBudW1iZXI7XG4gIC8qKiBgZG9uZWA6IHRoZSBkcmFnIGxldCBnbywgb3IgYSBrZXkgbW92ZWQgaXQgLSByZW1lbWJlciBpdC4gKi9cbiAgb25SZXNpemU6ICh3aWR0aDogbnVtYmVyLCBkb25lOiBib29sZWFuKSA9PiB2b2lkO1xuICBvbkNsb3NlOiAoKSA9PiB2b2lkO1xuICBtb3VudFJlZjogKGVsOiBIVE1MRWxlbWVudCB8IG51bGwpID0+IHZvaWQ7XG4gIC8qKiBUaGUgYWN0aXZlIHRhYiBpcyBpbiBzb3VyY2UgbW9kZSBvciBzcGxpdCB2aWV3LiAqL1xuICBzb3VyY2VNb2RlOiBib29sZWFuO1xuICBvblRvZ2dsZVNvdXJjZU1vZGU6ICgpID0+IHZvaWQ7XG4gIHQ6IFN0cmluZ3M7XG59KSB7XG4gIHJldHVybiAoXG4gICAgPGFzaWRlXG4gICAgICByZWY9e3ByZXNlbmNlLnJlZn1cbiAgICAgIGRhdGEtc3RhdGU9e3ByZXNlbmNlLnN0YXRlfVxuICAgICAgaW5lcnQ9e2Nsb3NpbmcgfHwgdW5kZWZpbmVkfVxuICAgICAgY2xhc3NOYW1lPXtgYWdlbnQtcGFuZWwke3NoZWV0RnVsbCA/IFwiIGFnZW50LXBhbmVsLXNoZWV0LWZ1bGxcIiA6IFwiXCJ9JHtvdmVybGF5cyA/IFwiIGFnZW50LXBhbmVsLW92ZXJsYXlcIiA6IFwiXCJ9YH1cbiAgICAgIHN0eWxlPXt7IHdpZHRoIH19XG4gICAgPlxuICAgICAgey8qIFBob25lIHdpZHRoczogdGhlIHBhbmVsIGlzIGEgYm90dG9tIHNoZWV0IChtb2JpbGUvc3R5bGVzKVxuICAgICAgICBhbmQgdGhpcyBpcyBpdHMgaGFuZGxlOyBoaWRkZW4gZWxzZXdoZXJlLiAqL31cbiAgICAgIHtpc0lPU0FwcCAmJiAoXG4gICAgICAgIDxBZ2VudFBhbmVsU2hlZXRHcmlwXG4gICAgICAgICAgZnVsbD17c2hlZXRGdWxsfVxuICAgICAgICAgIG9uRnVsbENoYW5nZT17b25TaGVldEZ1bGxDaGFuZ2V9XG4gICAgICAgICAgb25DbG9zZT17b25DbG9zZX1cbiAgICAgICAgICBsYWJlbD17dC5hZ2VudFBhbmVsU2hlZXR9XG4gICAgICAgIC8+XG4gICAgICApfVxuICAgICAgPFJlc2l6ZUhhbmRsZVxuICAgICAgICBjbGFzc05hbWU9XCJhZ2VudC1wYW5lbC1yZXNpemVyXCJcbiAgICAgICAgZWRnZT1cImxlZnRcIlxuICAgICAgICB3aWR0aD17d2lkdGh9XG4gICAgICAgIG1pbj17QUdFTlRfUEFORUxfTUlOX1dJRFRIfVxuICAgICAgICBtYXg9e0FHRU5UX1BBTkVMX01BWF9XSURUSH1cbiAgICAgICAgb25SZXNpemU9e29uUmVzaXplfVxuICAgICAgICBvblJlc2V0PXsoKSA9PiBvblJlc2l6ZShBR0VOVF9QQU5FTF9ERUZBVUxUX1dJRFRILCB0cnVlKX1cbiAgICAgICAgbGFiZWw9e3QuYWdlbnRQYW5lbFJlc2l6ZX1cbiAgICAgIC8+XG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImFnZW50LXBhbmVsLW1vdW50XCIgcmVmPXttb3VudFJlZn0gLz5cbiAgICAgIHsvKiBUaGUgY29udmVyc2F0aW9uIGxpdmVzIGluIHRoZSByaWNoIGVkaXRvciAoZWFjaCB0YWInc1xuICAgICAgICBNaWxrZG93bkVkaXRvciByZW5kZXJzIGl0IGhlcmUpOyBzb3VyY2UgbW9kZSBhbmQgc3BsaXQgdmlld1xuICAgICAgICBoYXZlIG5vbmUgdG8gcmVuZGVyLCBzbyBzYXkgc28gaW5zdGVhZCBvZiBhbiBlbXB0eSBjb2x1bW4uICovfVxuICAgICAge3NvdXJjZU1vZGUgJiYgKFxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImFnZW50LXBhbmVsLXBsYWNlaG9sZGVyXCI+XG4gICAgICAgICAgPHA+e3QuYWdlbnRQYW5lbFNvdXJjZU1vZGV9PC9wPlxuICAgICAgICAgIDxidXR0b25cbiAgICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICAgICAgY2xhc3NOYW1lPVwidGV4dC1idXR0b25cIlxuICAgICAgICAgICAgb25DbGljaz17b25Ub2dnbGVTb3VyY2VNb2RlfVxuICAgICAgICAgID5cbiAgICAgICAgICAgIHt0LmFnZW50UGFuZWxCYWNrVG9FZGl0b3J9XG4gICAgICAgICAgPC9idXR0b24+XG4gICAgICAgIDwvZGl2PlxuICAgICAgKX1cbiAgICA8L2FzaWRlPlxuICApO1xufVxuIl0sImZpbGUiOiIvaG9tZS9jaGVuZ2FvL0RvY3VtZW50cy9FbmpveW1lbnQvVGV4dHVzL2FwcC8uY2xhdWRlL3dvcmt0cmVlcy9hYm91dC10ZXh0dXMvc3JjL2FwcC9BZ2VudFBhbmVsRG9jay50c3gifQ==

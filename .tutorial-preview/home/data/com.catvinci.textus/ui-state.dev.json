@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "state": {
+    "tutorialProgress": {
+      "active": false,
+      "stepId": "welcome",
+      "stepIndex": 0,
+      "tabId": null
+    }
+  }
+}

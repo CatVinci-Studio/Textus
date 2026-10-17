@@ -1,0 +1,200 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/editor/tables/InsertTableDialog.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=f9787d19"; const useState = __vite__cjsImport3_react["useState"];
+import { useModalDialog } from "/src/ui/useModalDialog.ts";
+import { usePresenceProps } from "/src/ui/usePresence.ts";
+import "/src/editor/tables/InsertTableDialog.css";
+export function InsertTableDialog({
+  title,
+  rowsLabel,
+  columnsLabel,
+  confirmLabel,
+  cancelLabel,
+  onInsert,
+  onClose
+}) {
+  _s();
+  const [rows, setRows] = useState("3");
+  const [cols, setCols] = useState("3");
+  const modal = useModalDialog(onClose);
+  const presence = usePresenceProps();
+  const rowCount = Number(rows);
+  const columnCount = Number(cols);
+  const validRows = Number.isInteger(rowCount) && rowCount >= 1 && rowCount <= 50;
+  const validColumns = Number.isInteger(columnCount) && columnCount >= 1 && columnCount <= 20;
+  const valid = validRows && validColumns;
+  function submit() {
+    if (!valid) return;
+    onInsert(rowCount, columnCount);
+    onClose();
+  }
+  return /* @__PURE__ */ jsxDEV("div", { ...presence, className: "insert-table-overlay", onClick: onClose, children: /* @__PURE__ */ jsxDEV(
+    "div",
+    {
+      ...modal,
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-label": title,
+      className: "insert-table-dialog",
+      onClick: (e) => e.stopPropagation(),
+      onKeyDown: (e) => {
+        modal.onKeyDown(e);
+        if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229)
+          return;
+        if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
+          e.preventDefault();
+          submit();
+        }
+      },
+      children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "insert-table-title", children: title }, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx",
+          lineNumber: 82,
+          columnNumber: 9
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "insert-table-fields", children: [
+          /* @__PURE__ */ jsxDEV("label", { children: [
+            rowsLabel,
+            /* @__PURE__ */ jsxDEV(
+              "input",
+              {
+                type: "number",
+                min: 1,
+                max: 50,
+                value: rows,
+                step: 1,
+                "aria-invalid": !validRows,
+                onChange: (e) => setRows(e.target.value)
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx",
+                lineNumber: 86,
+                columnNumber: 13
+              },
+              this
+            )
+          ] }, void 0, true, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx",
+            lineNumber: 84,
+            columnNumber: 11
+          }, this),
+          /* @__PURE__ */ jsxDEV("label", { children: [
+            columnsLabel,
+            /* @__PURE__ */ jsxDEV(
+              "input",
+              {
+                type: "number",
+                min: 1,
+                max: 20,
+                value: cols,
+                step: 1,
+                "aria-invalid": !validColumns,
+                onChange: (e) => setCols(e.target.value)
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx",
+                lineNumber: 98,
+                columnNumber: 13
+              },
+              this
+            )
+          ] }, void 0, true, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx",
+            lineNumber: 96,
+            columnNumber: 11
+          }, this)
+        ] }, void 0, true, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx",
+          lineNumber: 83,
+          columnNumber: 9
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "insert-table-buttons", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "insert-table-spacer" }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx",
+            lineNumber: 110,
+            columnNumber: 11
+          }, this),
+          /* @__PURE__ */ jsxDEV("button", { onClick: onClose, children: cancelLabel }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx",
+            lineNumber: 111,
+            columnNumber: 11
+          }, this),
+          /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              className: "insert-table-primary",
+              disabled: !valid,
+              onClick: submit,
+              children: confirmLabel
+            },
+            void 0,
+            false,
+            {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx",
+              lineNumber: 112,
+              columnNumber: 11
+            },
+            this
+          )
+        ] }, void 0, true, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx",
+          lineNumber: 109,
+          columnNumber: 9
+        }, this)
+      ]
+    },
+    void 0,
+    true,
+    {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx",
+      lineNumber: 65,
+      columnNumber: 7
+    },
+    this
+  ) }, void 0, false, {
+    fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx",
+    lineNumber: 64,
+    columnNumber: 5
+  }, this);
+}
+_s(InsertTableDialog, "tmqwJ0dmj2s9pUffZzzJVj1IiSk=", false, function() {
+  return [useModalDialog, usePresenceProps];
+});
+_c = InsertTableDialog;
+var _c;
+$RefreshReg$(_c, "InsertTableDialog");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/editor/tables/InsertTableDialog.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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QTtBQUFBO0FBQUEsZUF5QkE7QUFBQSxRQUNBLHVCQUFDLFNBQUksV0FBVSx3QkFDYjtBQUFBLGlDQUFDLFNBQUksV0FBVSx5QkFBZjtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUFvQztBQUFBLFVBQ3BDLHVCQUFDLFlBQU8sU0FBUzFCLFNBQVVGLHlCQUEzQjtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUF1QztBQUFBLFVBQ3ZDO0FBQUEsWUFBQztBQUFBO0FBQUEsY0FDQyxXQUFVO0FBQUEsY0FDVixVQUFVLENBQUNnQjtBQUFBQSxjQUNYLFNBQVNDO0FBQUFBLGNBRVJsQjtBQUFBQTtBQUFBQSxZQUxIO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxVQU1BO0FBQUEsYUFURjtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBVUE7QUFBQTtBQUFBO0FBQUEsSUF0REY7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLEVBdURBLEtBeERGO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0F5REE7QUFFSjtBQUFDSSxHQXhGZVIsbUJBQWlCO0FBQUEsVUFZakJGLGdCQUNHQyxnQkFBZ0I7QUFBQTtBQUFBLEtBYm5CQztBQUFpQixJQUFBa0M7QUFBQSxhQUFBQSxJQUFBIiwibmFtZXMiOlsidXNlU3RhdGUiLCJ1c2VNb2RhbERpYWxvZyIsInVzZVByZXNlbmNlUHJvcHMiLCJJbnNlcnRUYWJsZURpYWxvZyIsInRpdGxlIiwicm93c0xhYmVsIiwiY29sdW1uc0xhYmVsIiwiY29uZmlybUxhYmVsIiwiY2FuY2VsTGFiZWwiLCJvbkluc2VydCIsIm9uQ2xvc2UiLCJfcyIsInJvd3MiLCJzZXRSb3dzIiwiY29scyIsInNldENvbHMiLCJtb2RhbCIsInByZXNlbmNlIiwicm93Q291bnQiLCJOdW1iZXIiLCJjb2x1bW5Db3VudCIsInZhbGlkUm93cyIsImlzSW50ZWdlciIsInZhbGlkQ29sdW1ucyIsInZhbGlkIiwic3VibWl0IiwiZSIsInN0b3BQcm9wYWdhdGlvbiIsIm9uS2V5RG93biIsIm5hdGl2ZUV2ZW50IiwiaXNDb21wb3NpbmciLCJrZXlDb2RlIiwia2V5IiwidGFyZ2V0IiwiSFRNTElucHV0RWxlbWVudCIsInByZXZlbnREZWZhdWx0IiwidmFsdWUiLCJfYyJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJJbnNlcnRUYWJsZURpYWxvZy50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgdXNlU3RhdGUgfSBmcm9tIFwicmVhY3RcIjtcbmltcG9ydCB7IHVzZU1vZGFsRGlhbG9nIH0gZnJvbSBcIi4uLy4uL3VpL3VzZU1vZGFsRGlhbG9nXCI7XG5pbXBvcnQgeyB1c2VQcmVzZW5jZVByb3BzIH0gZnJvbSBcIi4uLy4uL3VpL3VzZVByZXNlbmNlXCI7XG5pbXBvcnQgXCIuL0luc2VydFRhYmxlRGlhbG9nLmNzc1wiO1xuXG5pbnRlcmZhY2UgSW5zZXJ0VGFibGVEaWFsb2dQcm9wcyB7XG4gIHRpdGxlOiBzdHJpbmc7XG4gIHJvd3NMYWJlbDogc3RyaW5nO1xuICBjb2x1bW5zTGFiZWw6IHN0cmluZztcbiAgY29uZmlybUxhYmVsOiBzdHJpbmc7XG4gIGNhbmNlbExhYmVsOiBzdHJpbmc7XG4gIG9uSW5zZXJ0OiAocm93czogbnVtYmVyLCBjb2xzOiBudW1iZXIpID0+IHZvaWQ7XG4gIG9uQ2xvc2U6ICgpID0+IHZvaWQ7XG59XG5cbmV4cG9ydCBmdW5jdGlvbiBJbnNlcnRUYWJsZURpYWxvZyh7XG4gIHRpdGxlLFxuICByb3dzTGFiZWwsXG4gIGNvbHVtbnNMYWJlbCxcbiAgY29uZmlybUxhYmVsLFxuICBjYW5jZWxMYWJlbCxcbiAgb25JbnNlcnQsXG4gIG9uQ2xvc2UsXG59OiBJbnNlcnRUYWJsZURpYWxvZ1Byb3BzKSB7XG4gIGNvbnN0IFtyb3dzLCBzZXRSb3dzXSA9IHVzZVN0YXRlKFwiM1wiKTtcbiAgY29uc3QgW2NvbHMsIHNldENvbHNdID0gdXNlU3RhdGUoXCIzXCIpO1xuXG4gIGNvbnN0IG1vZGFsID0gdXNlTW9kYWxEaWFsb2cob25DbG9zZSk7XG4gIGNvbnN0IHByZXNlbmNlID0gdXNlUHJlc2VuY2VQcm9wczxIVE1MRGl2RWxlbWVudD4oKTtcbiAgY29uc3Qgcm93Q291bnQgPSBOdW1iZXIocm93cyk7XG4gIGNvbnN0IGNvbHVtbkNvdW50ID0gTnVtYmVyKGNvbHMpO1xuICBjb25zdCB2YWxpZFJvd3MgPVxuICAgIE51bWJlci5pc0ludGVnZXIocm93Q291bnQpICYmIHJvd0NvdW50ID49IDEgJiYgcm93Q291bnQgPD0gNTA7XG4gIGNvbnN0IHZhbGlkQ29sdW1ucyA9XG4gICAgTnVtYmVyLmlzSW50ZWdlcihjb2x1bW5Db3VudCkgJiYgY29sdW1uQ291bnQgPj0gMSAmJiBjb2x1bW5Db3VudCA8PSAyMDtcbiAgY29uc3QgdmFsaWQgPSB2YWxpZFJvd3MgJiYgdmFsaWRDb2x1bW5zO1xuXG4gIGZ1bmN0aW9uIHN1Ym1pdCgpIHtcbiAgICBpZiAoIXZhbGlkKSByZXR1cm47XG4gICAgb25JbnNlcnQocm93Q291bnQsIGNvbHVtbkNvdW50KTtcbiAgICBvbkNsb3NlKCk7XG4gIH1cblxuICByZXR1cm4gKFxuICAgIDxkaXYgey4uLnByZXNlbmNlfSBjbGFzc05hbWU9XCJpbnNlcnQtdGFibGUtb3ZlcmxheVwiIG9uQ2xpY2s9e29uQ2xvc2V9PlxuICAgICAgPGRpdlxuICAgICAgICB7Li4ubW9kYWx9XG4gICAgICAgIHJvbGU9XCJkaWFsb2dcIlxuICAgICAgICBhcmlhLW1vZGFsPVwidHJ1ZVwiXG4gICAgICAgIGFyaWEtbGFiZWw9e3RpdGxlfVxuICAgICAgICBjbGFzc05hbWU9XCJpbnNlcnQtdGFibGUtZGlhbG9nXCJcbiAgICAgICAgb25DbGljaz17KGUpID0+IGUuc3RvcFByb3BhZ2F0aW9uKCl9XG4gICAgICAgIG9uS2V5RG93bj17KGUpID0+IHtcbiAgICAgICAgICBtb2RhbC5vbktleURvd24oZSk7XG4gICAgICAgICAgaWYgKGUubmF0aXZlRXZlbnQuaXNDb21wb3NpbmcgfHwgZS5uYXRpdmVFdmVudC5rZXlDb2RlID09PSAyMjkpXG4gICAgICAgICAgICByZXR1cm47XG4gICAgICAgICAgaWYgKGUua2V5ID09PSBcIkVudGVyXCIgJiYgZS50YXJnZXQgaW5zdGFuY2VvZiBIVE1MSW5wdXRFbGVtZW50KSB7XG4gICAgICAgICAgICBlLnByZXZlbnREZWZhdWx0KCk7XG4gICAgICAgICAgICBzdWJtaXQoKTtcbiAgICAgICAgICB9XG4gICAgICAgIH19XG4gICAgICA+XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaW5zZXJ0LXRhYmxlLXRpdGxlXCI+e3RpdGxlfTwvZGl2PlxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImluc2VydC10YWJsZS1maWVsZHNcIj5cbiAgICAgICAgICA8bGFiZWw+XG4gICAgICAgICAgICB7cm93c0xhYmVsfVxuICAgICAgICAgICAgPGlucHV0XG4gICAgICAgICAgICAgIHR5cGU9XCJudW1iZXJcIlxuICAgICAgICAgICAgICBtaW49ezF9XG4gICAgICAgICAgICAgIG1heD17NTB9XG4gICAgICAgICAgICAgIHZhbHVlPXtyb3dzfVxuICAgICAgICAgICAgICBzdGVwPXsxfVxuICAgICAgICAgICAgICBhcmlhLWludmFsaWQ9eyF2YWxpZFJvd3N9XG4gICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gc2V0Um93cyhlLnRhcmdldC52YWx1ZSl9XG4gICAgICAgICAgICAvPlxuICAgICAgICAgIDwvbGFiZWw+XG4gICAgICAgICAgPGxhYmVsPlxuICAgICAgICAgICAge2NvbHVtbnNMYWJlbH1cbiAgICAgICAgICAgIDxpbnB1dFxuICAgICAgICAgICAgICB0eXBlPVwibnVtYmVyXCJcbiAgICAgICAgICAgICAgbWluPXsxfVxuICAgICAgICAgICAgICBtYXg9ezIwfVxuICAgICAgICAgICAgICB2YWx1ZT17Y29sc31cbiAgICAgICAgICAgICAgc3RlcD17MX1cbiAgICAgICAgICAgICAgYXJpYS1pbnZhbGlkPXshdmFsaWRDb2x1bW5zfVxuICAgICAgICAgICAgICBvbkNoYW5nZT17KGUpID0+IHNldENvbHMoZS50YXJnZXQudmFsdWUpfVxuICAgICAgICAgICAgLz5cbiAgICAgICAgICA8L2xhYmVsPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJpbnNlcnQtdGFibGUtYnV0dG9uc1wiPlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaW5zZXJ0LXRhYmxlLXNwYWNlclwiIC8+XG4gICAgICAgICAgPGJ1dHRvbiBvbkNsaWNrPXtvbkNsb3NlfT57Y2FuY2VsTGFiZWx9PC9idXR0b24+XG4gICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgY2xhc3NOYW1lPVwiaW5zZXJ0LXRhYmxlLXByaW1hcnlcIlxuICAgICAgICAgICAgZGlzYWJsZWQ9eyF2YWxpZH1cbiAgICAgICAgICAgIG9uQ2xpY2s9e3N1Ym1pdH1cbiAgICAgICAgICA+XG4gICAgICAgICAgICB7Y29uZmlybUxhYmVsfVxuICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICA8L2Rpdj5cbiAgICAgIDwvZGl2PlxuICAgIDwvZGl2PlxuICApO1xufVxuIl0sImZpbGUiOiIvaG9tZS9jaGVuZ2FvL0RvY3VtZW50cy9FbmpveW1lbnQvVGV4dHVzL2FwcC8uY2xhdWRlL3dvcmt0cmVlcy9hYm91dC10ZXh0dXMvc3JjL2VkaXRvci90YWJsZXMvSW5zZXJ0VGFibGVEaWFsb2cudHN4In0=

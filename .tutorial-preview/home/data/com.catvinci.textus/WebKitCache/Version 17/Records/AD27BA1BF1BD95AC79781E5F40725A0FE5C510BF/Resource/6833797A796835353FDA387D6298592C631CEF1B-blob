@@ -1,0 +1,104 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/ai/chat/CloseConfirm.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/chat/CloseConfirm.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+export function CloseConfirmBar({
+  labels,
+  pendingCount,
+  onAcceptAll,
+  onRejectAll,
+  onClose,
+  onCancel
+}) {
+  return /* @__PURE__ */ jsxDEV("div", { className: "inline-chat-confirm", children: [
+    /* @__PURE__ */ jsxDEV("span", { className: "inline-chat-confirm-message", children: labels.closeConfirm.replace("{n}", String(pendingCount)) }, void 0, false, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/chat/CloseConfirm.tsx",
+      lineNumber: 46,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "inline-chat-confirm-actions", children: [
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          className: "inline-chat-action inline-chat-action-primary",
+          onClick: () => {
+            onAcceptAll();
+            onClose();
+          },
+          children: labels.closeConfirmAccept
+        },
+        void 0,
+        false,
+        {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/chat/CloseConfirm.tsx",
+          lineNumber: 50,
+          columnNumber: 9
+        },
+        this
+      ),
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          className: "inline-chat-action",
+          onClick: () => {
+            onRejectAll();
+            onClose();
+          },
+          children: labels.closeConfirmReject
+        },
+        void 0,
+        false,
+        {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/chat/CloseConfirm.tsx",
+          lineNumber: 59,
+          columnNumber: 9
+        },
+        this
+      ),
+      /* @__PURE__ */ jsxDEV("button", { className: "inline-chat-action", onClick: onCancel, children: labels.closeConfirmCancel }, void 0, false, {
+        fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/chat/CloseConfirm.tsx",
+        lineNumber: 68,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/chat/CloseConfirm.tsx",
+      lineNumber: 49,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/chat/CloseConfirm.tsx",
+    lineNumber: 45,
+    columnNumber: 5
+  }, this);
+}
+_c = CloseConfirmBar;
+var _c;
+$RefreshReg$(_c, "CloseConfirmBar");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/chat/CloseConfirm.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/chat/CloseConfirm.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBMEJNOzs7Ozs7Ozs7Ozs7Ozs7O0FBakJDLGdCQUFTQSxnQkFBZ0I7QUFBQSxFQUM5QkM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFBQUEsRUFDQUM7QUFRRixHQUFHO0FBQ0QsU0FDRSx1QkFBQyxTQUFJLFdBQVUsdUJBQ2I7QUFBQSwyQkFBQyxVQUFLLFdBQVUsK0JBQ2JMLGlCQUFPTSxhQUFhQyxRQUFRLE9BQU9DLE9BQU9QLFlBQVksQ0FBQyxLQUQxRDtBQUFBO0FBQUE7QUFBQTtBQUFBLFdBRUE7QUFBQSxJQUNBLHVCQUFDLFNBQUksV0FBVSwrQkFDYjtBQUFBO0FBQUEsUUFBQztBQUFBO0FBQUEsVUFDQyxXQUFVO0FBQUEsVUFDVixTQUFTLE1BQU07QUFDYkMsd0JBQVk7QUFDWkUsb0JBQVE7QUFBQSxVQUNWO0FBQUEsVUFFQ0osaUJBQU9TO0FBQUFBO0FBQUFBLFFBUFY7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLE1BUUE7QUFBQSxNQUNBO0FBQUEsUUFBQztBQUFBO0FBQUEsVUFDQyxXQUFVO0FBQUEsVUFDVixTQUFTLE1BQU07QUFDYk4sd0JBQVk7QUFDWkMsb0JBQVE7QUFBQSxVQUNWO0FBQUEsVUFFQ0osaUJBQU9VO0FBQUFBO0FBQUFBLFFBUFY7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLE1BUUE7QUFBQSxNQUNBLHVCQUFDLFlBQU8sV0FBVSxzQkFBcUIsU0FBU0wsVUFDN0NMLGlCQUFPVyxzQkFEVjtBQUFBO0FBQUE7QUFBQTtBQUFBLGFBRUE7QUFBQSxTQXJCRjtBQUFBO0FBQUE7QUFBQTtBQUFBLFdBc0JBO0FBQUEsT0ExQkY7QUFBQTtBQUFBO0FBQUE7QUFBQSxTQTJCQTtBQUVKO0FBQUNDLEtBN0NlYjtBQUFlLElBQUFhO0FBQUEsYUFBQUEsSUFBQSIsIm5hbWVzIjpbIkNsb3NlQ29uZmlybUJhciIsImxhYmVscyIsInBlbmRpbmdDb3VudCIsIm9uQWNjZXB0QWxsIiwib25SZWplY3RBbGwiLCJvbkNsb3NlIiwib25DYW5jZWwiLCJjbG9zZUNvbmZpcm0iLCJyZXBsYWNlIiwiU3RyaW5nIiwiY2xvc2VDb25maXJtQWNjZXB0IiwiY2xvc2VDb25maXJtUmVqZWN0IiwiY2xvc2VDb25maXJtQ2FuY2VsIiwiX2MiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiQ2xvc2VDb25maXJtLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgaW50ZXJmYWNlIENsb3NlQ29uZmlybUxhYmVscyB7XG4gIC8qKiBDbG9zZSBwcm9tcHQgd2hpbGUgZWRpdHMgYXJlIHBlbmRpbmc7IFwie259XCIgaXMgaG93IG1hbnkuICovXG4gIGNsb3NlQ29uZmlybTogc3RyaW5nO1xuICBjbG9zZUNvbmZpcm1BY2NlcHQ6IHN0cmluZztcbiAgY2xvc2VDb25maXJtUmVqZWN0OiBzdHJpbmc7XG4gIGNsb3NlQ29uZmlybUNhbmNlbDogc3RyaW5nO1xufVxuXG4vKiogVGhlIGNvbmZpcm1hdGlvbiBiYXIgaXRzZWxmIC0gcmVuZGVyZWQgaW50byBDaGF0Qm9keSdzIGBmb290ZXJgIHNsb3QuICovXG5leHBvcnQgZnVuY3Rpb24gQ2xvc2VDb25maXJtQmFyKHtcbiAgbGFiZWxzLFxuICBwZW5kaW5nQ291bnQsXG4gIG9uQWNjZXB0QWxsLFxuICBvblJlamVjdEFsbCxcbiAgb25DbG9zZSxcbiAgb25DYW5jZWwsXG59OiB7XG4gIGxhYmVsczogQ2xvc2VDb25maXJtTGFiZWxzO1xuICBwZW5kaW5nQ291bnQ6IG51bWJlcjtcbiAgb25BY2NlcHRBbGw6ICgpID0+IHZvaWQ7XG4gIG9uUmVqZWN0QWxsOiAoKSA9PiB2b2lkO1xuICBvbkNsb3NlOiAoKSA9PiB2b2lkO1xuICBvbkNhbmNlbDogKCkgPT4gdm9pZDtcbn0pIHtcbiAgcmV0dXJuIChcbiAgICA8ZGl2IGNsYXNzTmFtZT1cImlubGluZS1jaGF0LWNvbmZpcm1cIj5cbiAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImlubGluZS1jaGF0LWNvbmZpcm0tbWVzc2FnZVwiPlxuICAgICAgICB7bGFiZWxzLmNsb3NlQ29uZmlybS5yZXBsYWNlKFwie259XCIsIFN0cmluZyhwZW5kaW5nQ291bnQpKX1cbiAgICAgIDwvc3Bhbj5cbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaW5saW5lLWNoYXQtY29uZmlybS1hY3Rpb25zXCI+XG4gICAgICAgIDxidXR0b25cbiAgICAgICAgICBjbGFzc05hbWU9XCJpbmxpbmUtY2hhdC1hY3Rpb24gaW5saW5lLWNoYXQtYWN0aW9uLXByaW1hcnlcIlxuICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHtcbiAgICAgICAgICAgIG9uQWNjZXB0QWxsKCk7XG4gICAgICAgICAgICBvbkNsb3NlKCk7XG4gICAgICAgICAgfX1cbiAgICAgICAgPlxuICAgICAgICAgIHtsYWJlbHMuY2xvc2VDb25maXJtQWNjZXB0fVxuICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgPGJ1dHRvblxuICAgICAgICAgIGNsYXNzTmFtZT1cImlubGluZS1jaGF0LWFjdGlvblwiXG4gICAgICAgICAgb25DbGljaz17KCkgPT4ge1xuICAgICAgICAgICAgb25SZWplY3RBbGwoKTtcbiAgICAgICAgICAgIG9uQ2xvc2UoKTtcbiAgICAgICAgICB9fVxuICAgICAgICA+XG4gICAgICAgICAge2xhYmVscy5jbG9zZUNvbmZpcm1SZWplY3R9XG4gICAgICAgIDwvYnV0dG9uPlxuICAgICAgICA8YnV0dG9uIGNsYXNzTmFtZT1cImlubGluZS1jaGF0LWFjdGlvblwiIG9uQ2xpY2s9e29uQ2FuY2VsfT5cbiAgICAgICAgICB7bGFiZWxzLmNsb3NlQ29uZmlybUNhbmNlbH1cbiAgICAgICAgPC9idXR0b24+XG4gICAgICA8L2Rpdj5cbiAgICA8L2Rpdj5cbiAgKTtcbn1cbiJdLCJmaWxlIjoiL2hvbWUvY2hlbmdhby9Eb2N1bWVudHMvRW5qb3ltZW50L1RleHR1cy9hcHAvLmNsYXVkZS93b3JrdHJlZXMvYWJvdXQtdGV4dHVzL3NyYy9haS9jaGF0L0Nsb3NlQ29uZmlybS50c3gifQ==

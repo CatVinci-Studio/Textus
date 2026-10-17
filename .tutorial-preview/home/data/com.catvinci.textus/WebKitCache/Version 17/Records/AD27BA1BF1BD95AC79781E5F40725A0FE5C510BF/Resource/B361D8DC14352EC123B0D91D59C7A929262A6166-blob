@@ -1,0 +1,209 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/ai/writing/GrammarPopover.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f9787d19"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=f9787d19"; const useRef = __vite__cjsImport3_react["useRef"];
+import { useViewportClamp } from "/src/utils/hooks/useViewportClamp.ts";
+import { usePresenceProps } from "/src/ui/usePresence.ts";
+import { ChevronIcon } from "/src/ui/icons.tsx";
+import "/src/ai/writing/GrammarPopover.css";
+export function applyLabel(labels, suggestion) {
+  const s = suggestion.trim();
+  return s && [...s].length <= 16 ? labels.grammarApplyTo.replace("{s}", s) : labels.grammarApply;
+}
+export function GrammarPopover({
+  info,
+  labels,
+  error,
+  onApply,
+  onIgnore,
+  onStep,
+  onMouseEnter,
+  onMouseLeave
+}) {
+  _s();
+  const rootRef = useRef(null);
+  const pos = useViewportClamp(rootRef, info.x, info.y);
+  const presence = usePresenceProps(rootRef);
+  const origin = {
+    "--transform-origin": `${Math.max(0, info.x - pos.left)}px ${pos.top < info.y - 0.5 ? "100%" : "0"}`
+  };
+  return /* @__PURE__ */ jsxDEV(
+    "div",
+    {
+      ...presence,
+      className: "grammar-popover floating-surface",
+      style: { ...pos, ...origin },
+      onMouseEnter,
+      onMouseLeave,
+      children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "grammar-popover-head", children: [
+          /* @__PURE__ */ jsxDEV("span", { className: `grammar-kind grammar-kind-${info.kind}`, children: labels.grammarKinds[info.kind] }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+            lineNumber: 114,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV("span", { className: "grammar-popover-fix", children: [
+            info.original && /* @__PURE__ */ jsxDEV("s", { children: info.shownOriginal ?? info.original }, void 0, false, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+              lineNumber: 118,
+              columnNumber: 29
+            }, this),
+            info.original && /* @__PURE__ */ jsxDEV("span", { "aria-hidden": "true", children: " → " }, void 0, false, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+              lineNumber: 119,
+              columnNumber: 29
+            }, this),
+            /* @__PURE__ */ jsxDEV("b", { children: info.shownSuggestion ?? (info.suggestion || "∅") }, void 0, false, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+              lineNumber: 120,
+              columnNumber: 11
+            }, this)
+          ] }, void 0, true, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+            lineNumber: 117,
+            columnNumber: 9
+          }, this),
+          info.count > 1 && /* @__PURE__ */ jsxDEV("span", { className: "grammar-popover-nav", children: [
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                "aria-label": labels.grammarPrevious,
+                title: labels.grammarPrevious,
+                onClick: () => onStep(-1),
+                children: /* @__PURE__ */ jsxDEV(ChevronIcon, { className: "grammar-popover-prev" }, void 0, false, {
+                  fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+                  lineNumber: 130,
+                  columnNumber: 15
+                }, this)
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+                lineNumber: 124,
+                columnNumber: 13
+              },
+              this
+            ),
+            /* @__PURE__ */ jsxDEV("span", { children: [
+              info.index + 1,
+              "/",
+              info.count
+            ] }, void 0, true, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+              lineNumber: 132,
+              columnNumber: 13
+            }, this),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                "aria-label": labels.grammarNext,
+                title: labels.grammarNext,
+                onClick: () => onStep(1),
+                children: /* @__PURE__ */ jsxDEV(ChevronIcon, {}, void 0, false, {
+                  fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+                  lineNumber: 141,
+                  columnNumber: 15
+                }, this)
+              },
+              void 0,
+              false,
+              {
+                fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+                lineNumber: 135,
+                columnNumber: 13
+              },
+              this
+            )
+          ] }, void 0, true, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+            lineNumber: 123,
+            columnNumber: 9
+          }, this)
+        ] }, void 0, true, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+          lineNumber: 113,
+          columnNumber: 7
+        }, this),
+        info.issue && /* @__PURE__ */ jsxDEV("div", { className: "grammar-popover-issue", children: info.issue }, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+          lineNumber: 146,
+          columnNumber: 22
+        }, this),
+        error ? /* @__PURE__ */ jsxDEV("div", { className: "grammar-popover-error", children: error }, void 0, false, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+          lineNumber: 148,
+          columnNumber: 7
+        }, this) : /* @__PURE__ */ jsxDEV("div", { className: "grammar-popover-actions", children: [
+          /* @__PURE__ */ jsxDEV("button", { className: "grammar-popover-apply", onClick: onApply, children: [
+            applyLabel(labels, info.shownSuggestion ?? info.suggestion),
+            /* @__PURE__ */ jsxDEV("kbd", { children: "Alt+Enter" }, void 0, false, {
+              fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+              lineNumber: 153,
+              columnNumber: 13
+            }, this)
+          ] }, void 0, true, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+            lineNumber: 151,
+            columnNumber: 11
+          }, this),
+          /* @__PURE__ */ jsxDEV("button", { className: "grammar-popover-ignore", onClick: onIgnore, children: labels.grammarIgnore }, void 0, false, {
+            fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+            lineNumber: 155,
+            columnNumber: 11
+          }, this)
+        ] }, void 0, true, {
+          fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+          lineNumber: 150,
+          columnNumber: 7
+        }, this)
+      ]
+    },
+    void 0,
+    true,
+    {
+      fileName: "/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx",
+      lineNumber: 106,
+      columnNumber: 5
+    },
+    this
+  );
+}
+_s(GrammarPopover, "oXohMEWEyby5DfVAM1Q7f41TXjk=", false, function() {
+  return [useViewportClamp, usePresenceProps];
+});
+_c = GrammarPopover;
+var _c;
+$RefreshReg$(_c, "GrammarPopover");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("/home/chengao/Documents/Enjoyment/Textus/app/.claude/worktrees/about-textus/src/ai/writing/GrammarPopover.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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aGV2cm9uSWNvbiIsImFwcGx5TGFiZWwiLCJsYWJlbHMiLCJzdWdnZXN0aW9uIiwicyIsInRyaW0iLCJsZW5ndGgiLCJncmFtbWFyQXBwbHlUbyIsInJlcGxhY2UiLCJncmFtbWFyQXBwbHkiLCJHcmFtbWFyUG9wb3ZlciIsImluZm8iLCJlcnJvciIsIm9uQXBwbHkiLCJvbklnbm9yZSIsIm9uU3RlcCIsIm9uTW91c2VFbnRlciIsIm9uTW91c2VMZWF2ZSIsIl9zIiwicm9vdFJlZiIsInBvcyIsIngiLCJ5IiwicHJlc2VuY2UiLCJvcmlnaW4iLCJNYXRoIiwibWF4IiwibGVmdCIsInRvcCIsImtpbmQiLCJncmFtbWFyS2luZHMiLCJvcmlnaW5hbCIsInNob3duT3JpZ2luYWwiLCJzaG93blN1Z2dlc3Rpb24iLCJjb3VudCIsImdyYW1tYXJQcmV2aW91cyIsImluZGV4IiwiZ3JhbW1hck5leHQiLCJpc3N1ZSIsImdyYW1tYXJJZ25vcmUiLCJfYyJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJHcmFtbWFyUG9wb3Zlci50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgdXNlUmVmLCB0eXBlIENTU1Byb3BlcnRpZXMgfSBmcm9tIFwicmVhY3RcIjtcbmltcG9ydCB7IHVzZVZpZXdwb3J0Q2xhbXAgfSBmcm9tIFwiLi4vLi4vdXRpbHMvaG9va3MvdXNlVmlld3BvcnRDbGFtcFwiO1xuaW1wb3J0IHsgdXNlUHJlc2VuY2VQcm9wcyB9IGZyb20gXCIuLi8uLi91aS91c2VQcmVzZW5jZVwiO1xuaW1wb3J0IHsgQ2hldnJvbkljb24gfSBmcm9tIFwiLi4vLi4vdWkvaWNvbnNcIjtcbmltcG9ydCB0eXBlIHsgR3JhbW1hcktpbmQgfSBmcm9tIFwiLi9ncmFtbWFyLWtpbmRcIjtcbmltcG9ydCBcIi4vR3JhbW1hclBvcG92ZXIuY3NzXCI7XG5cbmV4cG9ydCBpbnRlcmZhY2UgR3JhbW1hclBvcG92ZXJJbmZvIHtcbiAgeDogbnVtYmVyO1xuICB5OiBudW1iZXI7XG4gIGZyb206IG51bWJlcjtcbiAgdG86IG51bWJlcjtcbiAgaXNzdWU6IHN0cmluZztcbiAgc3VnZ2VzdGlvbjogc3RyaW5nO1xuICAvKiogRXhhY3QgdGV4dCB0aGUgcmFuZ2UgbXVzdCBzdGlsbCBjb250YWluIGZvciBBcHBseSB0byBhY3QuICovXG4gIG9yaWdpbmFsPzogc3RyaW5nO1xuICAvKiogV2hhdCBraW5kIG9mIHNsaXAgaXQgaXMgKGdyYW1tYXIta2luZC50cyksIGZvciB0aGUgbGFiZWwuICovXG4gIGtpbmQ6IEdyYW1tYXJLaW5kO1xuICAvKiogSG93IHRoZSBjYXJkIHNob3dzIHRoZSBmaXggd2hlbiBpdCBkaWZmZXJzIGZyb20gd2hhdCBpcyByZXBsYWNlZCAoYVxuICAgKiAgb25lLWNoYXJhY3RlciBDSksgZml4LCBzaG93biB3aXRoIGl0cyBuZWlnaGJvdXIpLiAqL1xuICBzaG93bk9yaWdpbmFsPzogc3RyaW5nO1xuICBzaG93blN1Z2dlc3Rpb24/OiBzdHJpbmc7XG4gIC8qKiBXaGVyZSBpdCBzdGFuZHMgYW1vbmcgdGhlIHBhcmFncmFwaCdzIHVuZGVybGluZXMuICovXG4gIGluZGV4OiBudW1iZXI7XG4gIGNvdW50OiBudW1iZXI7XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgR3JhbW1hclBvcG92ZXJMYWJlbHMge1xuICBncmFtbWFyS2luZHM6IFJlY29yZDxHcmFtbWFyS2luZCwgc3RyaW5nPjtcbiAgLyoqIFwiQ2hhbmdlIHRvIOKAnHtzfeKAnVwiLiAqL1xuICBncmFtbWFyQXBwbHlUbzogc3RyaW5nO1xuICBncmFtbWFyQXBwbHk6IHN0cmluZztcbiAgZ3JhbW1hcklnbm9yZTogc3RyaW5nO1xuICBncmFtbWFyUHJldmlvdXM6IHN0cmluZztcbiAgZ3JhbW1hck5leHQ6IHN0cmluZztcbn1cblxuaW50ZXJmYWNlIEdyYW1tYXJQb3BvdmVyUHJvcHMge1xuICBpbmZvOiBHcmFtbWFyUG9wb3ZlckluZm87XG4gIGxhYmVsczogR3JhbW1hclBvcG92ZXJMYWJlbHM7XG4gIC8qKiBXaHkgdGhlIGxhc3QgQXBwbHkgY2xpY2sgZGlkIG5vdGhpbmcgKHN0YWxlIHRleHQpIC0gc2hvd24gaW4gcGxhY2Ugb2YgdGhlIGJ1dHRvbi4gKi9cbiAgZXJyb3I6IHN0cmluZyB8IG51bGw7XG4gIG9uQXBwbHk6ICgpID0+IHZvaWQ7XG4gIG9uSWdub3JlOiAoKSA9PiB2b2lkO1xuICBvblN0ZXA6IChkZWx0YTogMSB8IC0xKSA9PiB2b2lkO1xuICBvbk1vdXNlRW50ZXI6ICgpID0+IHZvaWQ7XG4gIG9uTW91c2VMZWF2ZTogKCkgPT4gdm9pZDtcbn1cblxuLyoqIFwiQ2hhbmdlIHRvIOKAnOavleern+KAnVwiIC0gb3IgcGxhaW4gXCJBcHBseVwiIGZvciBhIGZpeCB0aGF0IGRlbGV0ZXMsIG9yIG9uZSB0b29cbiAqICBsb25nIHRvIG5hbWUgb24gYSBidXR0b24uICovXG5leHBvcnQgZnVuY3Rpb24gYXBwbHlMYWJlbChcbiAgbGFiZWxzOiBQaWNrPEdyYW1tYXJQb3BvdmVyTGFiZWxzLCBcImdyYW1tYXJBcHBseVRvXCIgfCBcImdyYW1tYXJBcHBseVwiPixcbiAgc3VnZ2VzdGlvbjogc3RyaW5nLFxuKTogc3RyaW5nIHtcbiAgY29uc3QgcyA9IHN1Z2dlc3Rpb24udHJpbSgpO1xuICByZXR1cm4gcyAmJiBbLi4uc10ubGVuZ3RoIDw9IDE2XG4gICAgPyBsYWJlbHMuZ3JhbW1hckFwcGx5VG8ucmVwbGFjZShcIntzfVwiLCBzKVxuICAgIDogbGFiZWxzLmdyYW1tYXJBcHBseTtcbn1cblxuLyoqXG4gKiBUaGUgY2FyZCB1bmRlciBhIGdyYW1tYXIgdW5kZXJsaW5lOiB3aGF0IGtpbmQgb2Ygc2xpcCBpdCBpcywgdGhlIHdyb25nXG4gKiB3b3JkcyDihpIgdGhlIGZpeCwgdGhlIGNoZWNrZXIncyBub3RlLCB0aGVuIHRoZSBmaXggaXRzZWxmIGFzIHRoZSBidXR0b25cbiAqIChBbHQrRW50ZXIsIHdyaXR0ZW4gb24gaXQpIGJlc2lkZSBJZ25vcmUuIFdpdGggbW9yZSB0aGFuIG9uZSB1bmRlcmxpbmVcbiAqIGluIHRoZSBwYXJhZ3JhcGgsIOKAuSAxLzMg4oC6IHN0ZXBzIGJldHdlZW4gdGhlbS5cbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIEdyYW1tYXJQb3BvdmVyKHtcbiAgaW5mbyxcbiAgbGFiZWxzLFxuICBlcnJvcixcbiAgb25BcHBseSxcbiAgb25JZ25vcmUsXG4gIG9uU3RlcCxcbiAgb25Nb3VzZUVudGVyLFxuICBvbk1vdXNlTGVhdmUsXG59OiBHcmFtbWFyUG9wb3ZlclByb3BzKSB7XG4gIGNvbnN0IHJvb3RSZWYgPSB1c2VSZWY8SFRNTERpdkVsZW1lbnQ+KG51bGwpO1xuICBjb25zdCBwb3MgPSB1c2VWaWV3cG9ydENsYW1wKHJvb3RSZWYsIGluZm8ueCwgaW5mby55KTtcbiAgY29uc3QgcHJlc2VuY2UgPSB1c2VQcmVzZW5jZVByb3BzKHJvb3RSZWYpO1xuICAvLyBJdCBncm93cyBvdXQgb2YgdGhlIHVuZGVybGluZSBpdCBleHBsYWluczogZnJvbSBpdHMgdG9wIGVkZ2UsIG9yIGl0c1xuICAvLyBib3R0b20gb25lIHdoZW4gdGhlIHdpbmRvdydzIGVkZ2UgcHVzaGVkIGl0IHVwIG92ZXIgdGhlIGxpbmUuXG4gIGNvbnN0IG9yaWdpbiA9IHtcbiAgICBcIi0tdHJhbnNmb3JtLW9yaWdpblwiOiBgJHtNYXRoLm1heCgwLCBpbmZvLnggLSBwb3MubGVmdCl9cHggJHtwb3MudG9wIDwgaW5mby55IC0gMC41ID8gXCIxMDAlXCIgOiBcIjBcIn1gLFxuICB9IGFzIENTU1Byb3BlcnRpZXM7XG4gIHJldHVybiAoXG4gICAgPGRpdlxuICAgICAgey4uLnByZXNlbmNlfVxuICAgICAgY2xhc3NOYW1lPVwiZ3JhbW1hci1wb3BvdmVyIGZsb2F0aW5nLXN1cmZhY2VcIlxuICAgICAgc3R5bGU9e3sgLi4ucG9zLCAuLi5vcmlnaW4gfX1cbiAgICAgIG9uTW91c2VFbnRlcj17b25Nb3VzZUVudGVyfVxuICAgICAgb25Nb3VzZUxlYXZlPXtvbk1vdXNlTGVhdmV9XG4gICAgPlxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmFtbWFyLXBvcG92ZXItaGVhZFwiPlxuICAgICAgICA8c3BhbiBjbGFzc05hbWU9e2BncmFtbWFyLWtpbmQgZ3JhbW1hci1raW5kLSR7aW5mby5raW5kfWB9PlxuICAgICAgICAgIHtsYWJlbHMuZ3JhbW1hcktpbmRzW2luZm8ua2luZF19XG4gICAgICAgIDwvc3Bhbj5cbiAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwiZ3JhbW1hci1wb3BvdmVyLWZpeFwiPlxuICAgICAgICAgIHtpbmZvLm9yaWdpbmFsICYmIDxzPntpbmZvLnNob3duT3JpZ2luYWwgPz8gaW5mby5vcmlnaW5hbH08L3M+fVxuICAgICAgICAgIHtpbmZvLm9yaWdpbmFsICYmIDxzcGFuIGFyaWEtaGlkZGVuPVwidHJ1ZVwiPiDihpIgPC9zcGFuPn1cbiAgICAgICAgICA8Yj57aW5mby5zaG93blN1Z2dlc3Rpb24gPz8gKGluZm8uc3VnZ2VzdGlvbiB8fCBcIlxcdTIyMDVcIil9PC9iPlxuICAgICAgICA8L3NwYW4+XG4gICAgICAgIHtpbmZvLmNvdW50ID4gMSAmJiAoXG4gICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwiZ3JhbW1hci1wb3BvdmVyLW5hdlwiPlxuICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgICAgICAgYXJpYS1sYWJlbD17bGFiZWxzLmdyYW1tYXJQcmV2aW91c31cbiAgICAgICAgICAgICAgdGl0bGU9e2xhYmVscy5ncmFtbWFyUHJldmlvdXN9XG4gICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IG9uU3RlcCgtMSl9XG4gICAgICAgICAgICA+XG4gICAgICAgICAgICAgIDxDaGV2cm9uSWNvbiBjbGFzc05hbWU9XCJncmFtbWFyLXBvcG92ZXItcHJldlwiIC8+XG4gICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICAgIDxzcGFuPlxuICAgICAgICAgICAgICB7aW5mby5pbmRleCArIDF9L3tpbmZvLmNvdW50fVxuICAgICAgICAgICAgPC9zcGFuPlxuICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcbiAgICAgICAgICAgICAgYXJpYS1sYWJlbD17bGFiZWxzLmdyYW1tYXJOZXh0fVxuICAgICAgICAgICAgICB0aXRsZT17bGFiZWxzLmdyYW1tYXJOZXh0fVxuICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBvblN0ZXAoMSl9XG4gICAgICAgICAgICA+XG4gICAgICAgICAgICAgIDxDaGV2cm9uSWNvbiAvPlxuICAgICAgICAgICAgPC9idXR0b24+XG4gICAgICAgICAgPC9zcGFuPlxuICAgICAgICApfVxuICAgICAgPC9kaXY+XG4gICAgICB7aW5mby5pc3N1ZSAmJiA8ZGl2IGNsYXNzTmFtZT1cImdyYW1tYXItcG9wb3Zlci1pc3N1ZVwiPntpbmZvLmlzc3VlfTwvZGl2Pn1cbiAgICAgIHtlcnJvciA/IChcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmFtbWFyLXBvcG92ZXItZXJyb3JcIj57ZXJyb3J9PC9kaXY+XG4gICAgICApIDogKFxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyYW1tYXItcG9wb3Zlci1hY3Rpb25zXCI+XG4gICAgICAgICAgPGJ1dHRvbiBjbGFzc05hbWU9XCJncmFtbWFyLXBvcG92ZXItYXBwbHlcIiBvbkNsaWNrPXtvbkFwcGx5fT5cbiAgICAgICAgICAgIHthcHBseUxhYmVsKGxhYmVscywgaW5mby5zaG93blN1Z2dlc3Rpb24gPz8gaW5mby5zdWdnZXN0aW9uKX1cbiAgICAgICAgICAgIDxrYmQ+QWx0K0VudGVyPC9rYmQ+XG4gICAgICAgICAgPC9idXR0b24+XG4gICAgICAgICAgPGJ1dHRvbiBjbGFzc05hbWU9XCJncmFtbWFyLXBvcG92ZXItaWdub3JlXCIgb25DbGljaz17b25JZ25vcmV9PlxuICAgICAgICAgICAge2xhYmVscy5ncmFtbWFySWdub3JlfVxuICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG4gICAgPC9kaXY+XG4gICk7XG59XG4iXSwiZmlsZSI6Ii9ob21lL2NoZW5nYW8vRG9jdW1lbnRzL0Vuam95bWVudC9UZXh0dXMvYXBwLy5jbGF1ZGUvd29ya3RyZWVzL2Fib3V0LXRleHR1cy9zcmMvYWkvd3JpdGluZy9HcmFtbWFyUG9wb3Zlci50c3gifQ==
