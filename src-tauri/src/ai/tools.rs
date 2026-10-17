@@ -315,7 +315,7 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     // annotateProposalStatuses in src/ai/revision/proposal-status.ts. The size of
     // the change is measured here so the reply can rest on it: replies
     // called a 20% cut "about 70% of the original" and an expansion that
-    // shrank "expanded into two paragraphs" (docs/AI-EVAL.md, round 2).
+    // shrank "expanded into two paragraphs" (docs/design/ai-eval.md, round 2).
     let text = parsed.get("text").and_then(|v| v.as_str()).unwrap_or("");
     if let Some(problem) = degenerate_replacement(action, anchor, text) {
         // Refused once; the identical call again means it ("replace this

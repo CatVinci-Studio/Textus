@@ -1,5 +1,5 @@
 //! The project folder, its `.textus/` folder and the style profile,
-//! exercised on real folders. The names are docs/AI-CONCEPTS.md's; the case
+//! exercised on real folders. The names are docs/design/ai-concepts.md's; the case
 //! ids keep their round-2 groups (`workspace/` is the project folder) so
 //! runs stay comparable.
 //!
@@ -670,7 +670,7 @@ fn style_cases() -> Vec<AgentCase> {
     c
 }
 
-/// Names the UI retired (docs/AI-CONCEPTS.md): "Workspace Folder" and
+/// Names the UI retired (docs/design/ai-concepts.md): "Workspace Folder" and
 /// friends in en, zh and ja. A reply that uses one sends the user looking
 /// for a label that no longer exists.
 const RETIRED_NAMES: &[&str] = &[

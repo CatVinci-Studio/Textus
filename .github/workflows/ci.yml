@@ -137,7 +137,7 @@ jobs:
         run: test "$RESULT" = success || test "$RESULT" = skipped
 
   # iOS: proves the shared code and the #[cfg(desktop)] gating compile for
-  # the iOS simulator (docs/ios/code-map.zh.md). No secrets and no signing: the
+  # the iOS simulator (docs/dev/ios-code-map.md). No secrets and no signing: the
   # Xcode project is generated fresh (gen/apple is not committed) and the
   # simulator build is unsigned (--no-sign). Not a required check while the
   # iOS port is young.

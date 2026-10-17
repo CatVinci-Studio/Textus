@@ -5,7 +5,7 @@ import { trackWrite } from "./pending-writes";
 /**
  * Small bits of UI remembered between launches - not settings the user
  * picks, just where they left things. Kept by Rust in ui-state.json
- * (docs/STORAGE.md); before the move each was its own localStorage key,
+ * (docs/dev/storage.md); before the move each was its own localStorage key,
  * which is still what the fallback (no Rust boot snapshot) reads and writes.
  *
  * Remembered for the next window or launch, never pushed into windows

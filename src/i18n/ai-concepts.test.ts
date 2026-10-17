@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { AI_NAME, LANGS, resolveStrings } from "./strings";
 
-// The copy for the concepts in docs/AI-CONCEPTS.md: the starter files and
+// The copy for the concepts in docs/design/ai-concepts.md: the starter files and
 // the names the user meets in Settings and the project bar.
 
 /** What the backend sends the model from an agent.md: everything outside

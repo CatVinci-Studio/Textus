@@ -450,7 +450,7 @@ export function SettingsPanel({
           {/* Project files, writing instructions and skills only reach
               conversations, so with chat off there is nothing here to set.
               (Completion still follows the project's style profile and
-              library - see docs/AI-CONCEPTS.md.) */}
+              library - see docs/design/ai-concepts.md.) */}
           {settings.enableAskAi && (
             <>
               <SettingsGroup title={t.agentPersonalizationGroupLabel}>

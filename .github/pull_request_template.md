@@ -19,7 +19,7 @@ proof that it builds.
 ## Exercised by hand
 
 <!-- The e2e flows run the frontend against a stand-in backend; windows,
-     dialogs, files and the built app are not covered (see docs/TESTING.md),
+     dialogs, files and the built app are not covered (see docs/dev/testing.md),
      so say what you actually ran. REQUIRED if this touches window management, drafts,
      the updater, or anything else that can lose the user's work. Screenshots
      for anything visible. -->

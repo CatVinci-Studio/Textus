@@ -172,7 +172,7 @@ export const session = {
 
 // ---------------------------------------------------------------------------
 // storage (src-tauri/src/settings.rs) - settings, UI state and the two
-// histories, held by Rust in plain JSON files (docs/STORAGE.md). Only called
+// histories, held by Rust in plain JSON files (docs/dev/storage.md). Only called
 // when Rust booted this window (src/storage/boot.ts); without that, the
 // stores fall back to localStorage.
 // ---------------------------------------------------------------------------
@@ -525,7 +525,7 @@ export interface LibraryEntry {
   body: string;
 }
 
-/** What shapes Textus AI for one document - see docs/AI-CONCEPTS.md. */
+/** What shapes Textus AI for one document - see docs/design/ai-concepts.md. */
 export interface AgentWorkspaceInfo {
   /** The global writing instructions (agent.md), comments stripped. */
   instructions: string[];

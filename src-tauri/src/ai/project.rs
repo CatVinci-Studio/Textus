@@ -1,5 +1,5 @@
 //! The project folder (in code, the workspace root) seen as writing
-//! material - see docs/AI-CONCEPTS.md. One place for walking it, reading
+//! material - see docs/design/ai-concepts.md. One place for walking it, reading
 //! from it safely, searching it, and the two writing aids that live in its
 //! `.textus/` directory:
 //!

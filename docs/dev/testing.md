@@ -10,7 +10,7 @@ scripts/smoke-linux.sh --build         # the built Linux app and its .deb
 npm run screenshots:readme             # regenerate the README screenshots (e2e/shots/readme/)
 npm run screenshots:website            # the website's app screenshots (e2e/shots/website/)
 cd src-tauri && cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
-                                       # real Anthropic API (costs money - docs/AI-EVAL.md)
+                                       # real Anthropic API (costs money - docs/design/ai-eval.md)
 ```
 
 The first three run in CI, the same commands on every platform. The rest
@@ -21,7 +21,7 @@ against Linux baselines (they depend on the fonts of the machine that took
 them).
 
 CI also builds the iOS app for the simulator, unsigned, on macOS (the `ios`
-job) - proof that the desktop/iOS split in `docs/ios/code-map.zh.md` still
+job) - proof that the desktop/iOS split in `docs/dev/ios-code-map.md` still
 compiles. Running it on a device is a manual step on a Mac.
 
 ## What is covered, by kind
@@ -78,7 +78,7 @@ pinned rather than trusted.
 
 Settings migration (a rejected value must not discard the rest), the
 composer, streaming tool arguments, the proposal state machine
-(docs/AI-PROPOSALS.md), cancelled turns, AI error classification, the chat
+(docs/design/ai-proposals.md), cancelled turns, AI error classification, the chat
 history grouping, the tutorial, the Windows-only window frame, menus and
 shortcuts, export pagination, themes, and the AI concept copy (the agent.md
 starters send nothing; templates name the menu items as the menus do).
@@ -122,7 +122,7 @@ outside the target untouched, Markdown structure re-parsed and compared,
 tool use, completion spacing and length, grammar recall and false
 positives) and an Opus judge's 1-5 scores; model-comparison runs put the
 defaults side by side with the other current models. Results land in a
-`.jsonl` and `.md` per suite. `docs/AI-EVAL.md` has the matrix, how to run
+`.jsonl` and `.md` per suite. `docs/design/ai-eval.md` has the matrix, how to run
 and filter it, and the latest before/after results.
 
 The key comes from `$TEXTUS_ANTHROPIC_KEY_FILE` or `.anthropic-api-key.local`

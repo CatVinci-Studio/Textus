@@ -197,7 +197,7 @@ const isAnchored = (proposal: EditProposal) =>
  * model was shown. This is the only path that writes a reply into the
  * document; there is deliberately no direct-apply fallback that skips the
  * preview. The full proposal lifecycle - streaming, stop/failure endings,
- * what a consecutive prompt supersedes - is laid out in docs/AI-PROPOSALS.md.
+ * what a consecutive prompt supersedes - is laid out in docs/design/ai-proposals.md.
  */
 export function usePendingEdits(run: EditorRunner) {
   const [previews, setPreviews] = useState<PendingPreview[]>([]);

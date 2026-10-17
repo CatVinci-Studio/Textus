@@ -181,32 +181,7 @@ macOS（AppleシリコンとIntel）、Windows、Linuxです。iPhone版とiPad�
 3. 書き始めましょう。手を止めると続きが灰色で現れ、Tab で採用できます。
 4. ウィンドウバーのチャットボタンでAIパネルを開きます。詳しくは **ヘルプ → AI 機能ガイド** を。
 
-| 操作         | ショートカット                  |
-| ---------- | ------------------------ |
-| AIパネル      | Ctrl/⌘+Shift+L           |
-| クイック質問     | Ctrl/⌘+Shift+K           |
-| 今すぐ補完を提案   | Ctrl/⌘+Shift+Space       |
-| 今すぐ文法をチェック | Ctrl/⌘+Shift+G           |
-| 保留中の編集を適用  | Ctrl/⌘+Enter             |
-| 分割表示       | Ctrl/⌘+Shift+E           |
-| 禅モード       | Ctrl/⌘+Shift+J (Esc で終了) |
-| ソースコードモード  | Ctrl/⌘+/                 |
-
-どれも **設定 → ショートカット** で変更できます。
-
-## ソースからビルド
-
-```bash
-git clone https://github.com/CatVinci-Studio/Textus.git
-cd Textus
-npm install
-
-npm run tauri dev     # full Tauri app (Rust shell + Vite renderer)
-npm run tauri build   # bundle .dmg / -setup.exe (NSIS) / .AppImage / .deb / .rpm
-npm run build         # frontend only: type-check (tsc) + vite build
-```
-
-[Node.js](https://nodejs.org) 22 以上、[Rust](https://rustup.rs)（stable）、各プラットフォームのビルドツール（macOS は Xcode CLT、Linux は `libwebkit2gtk-4.1-dev`/`libappindicator3-dev`/`librsvg2-dev`/`patchelf`、Windows は MSVC Build Tools）が必要です。
+ショートカットの一覧と変更は **設定 → ショートカット** から行えます。
 
 ## コミュニティ
 
@@ -215,9 +190,9 @@ npm run build         # frontend only: type-check (tsc) + vite build
 
 不具合の報告や要望は [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues) へどうぞ。
 
-## コントリビュート
+## ロードマップと開発への参加
 
-CI が実行するチェック、コミットの規約、リリースの手順は [CONTRIBUTING.md](CONTRIBUTING.md) を、テストが何を対象にし、何をあえて対象外にしているかは [docs/TESTING.md](docs/TESTING.md) をご覧ください。やり取りは英語か中国語でお願いします。
+Textus の今後の方向は [ROADMAP.md](ROADMAP.md)（英語）にあります。ビルド、チェックの実行、プルリクエストの作成は [CONTRIBUTING.md](CONTRIBUTING.md)（英語）から始めてください。AI コーディングアシスタントは [AGENTS.md](AGENTS.md) に従います。やり取りは英語か中国語でお願いします。
 
 ## スターの推移
 

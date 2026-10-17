@@ -5,7 +5,7 @@
   - The app's Documents folder shows in the Files app as "On My iPhone > Textus",
     and documents there are opened in place rather than copied.
   - Textus is offered for Markdown and plain text in "Open in…" / "Share".
-  See docs/ios/plan.zh.md, "文件访问方案".
+  See docs/archive/2026-10-ios-plan.zh.md, "文件访问方案".
 -->
 <plist version="1.0">
 <dict>
