@@ -5,6 +5,7 @@ import { SplitView } from "../editor/modes/SplitView";
 import { SourceTextarea } from "../editor/modes/SourceTextarea";
 import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
+import type { TourAi } from "../utils/events";
 import { TabBar } from "./TabBar";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
@@ -23,7 +24,7 @@ export function MainPane({
   previewTab,
   onChange,
   typewriter,
-  tutorialTabId,
+  tour,
   t,
 }: {
   tabs: DocTab[];
@@ -37,8 +38,8 @@ export function MainPane({
   previewTab: TabBarProps["previewTab"];
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
-  /** The tour's practice tab while the tour runs, else null. */
-  tutorialTabId: string | null;
+  /** The tour's practice tab and its AI while the tour runs, else null. */
+  tour: { tabId: string; ai: TourAi } | null;
   t: Strings;
 }) {
   return (
@@ -95,7 +96,7 @@ export function MainPane({
               initialValue={tab.content}
               onChange={onChange}
               isActive={tab.id === activeTabId}
-              tutorialMock={tab.id === tutorialTabId}
+              tour={tour && tab.id === tour.tabId ? tour.ai : null}
             />
           )}
         </div>

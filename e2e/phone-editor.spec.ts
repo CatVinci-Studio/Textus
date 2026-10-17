@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { PHONE, openPhone, pasteMarkdown } from "./helpers";
+import { PHONE, mockInvoke, openPhone, pasteMarkdown } from "./helpers";
 
 // Editing by finger on the iPhone layout: the keyboard toolbar follows the
 // caret into tables, its "More" stands in for the right-click menu, and a
@@ -152,24 +152,20 @@ test("a tap on a grammar underline offers the fix in a bottom card", async ({
   await openPhone(page);
   await pasteMarkdown(page, "She go to school.");
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  // The tutorial's canned issue: no backend needed.
+  // A canned answer from the checker: no backend needed.
+  await mockInvoke(page, {
+    ai_grammar_check: [
+      {
+        start: 4,
+        end: 6,
+        issue: "The verb should agree with “she”.",
+        suggestion: "goes",
+        original: "go",
+      },
+    ],
+  });
   await page.evaluate(() =>
-    window.dispatchEvent(
-      new CustomEvent("textus:tutorial-mock-grammar", {
-        detail: {
-          target: "She go to school.",
-          issues: [
-            {
-              start: 4,
-              end: 6,
-              issue: "The verb should agree with “she”.",
-              suggestion: "goes",
-              original: "go",
-            },
-          ],
-        },
-      }),
-    ),
+    window.dispatchEvent(new Event("textus:trigger-grammar-check")),
   );
   await editor.locator(".grammar-issue").tap();
   const card = page.locator(".bottom-card");

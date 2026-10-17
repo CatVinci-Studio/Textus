@@ -1,187 +1,165 @@
-import { useCallback, type ReactNode } from "react";
-import type { Strings } from "../i18n/strings";
+import { useCallback, useEffect, type ReactNode } from "react";
+import type { Lang, Strings, TextKey } from "../i18n/strings";
+import { links } from "../platform/ipc";
 import { ProviderListPanel } from "../settings/sections/providers";
-import {
-  isTutorialPracticeComplete,
-  MARKDOWN_ALL_TASKS,
-  MARKDOWN_TASK,
-  SIDEBAR_ALL_TABS,
-  SIDEBAR_TAB,
-} from "./tutorial-evaluation";
-import { TutorialOverlay, type TutorialChecklistItem } from "./TutorialOverlay";
-import { TUTORIAL_SECTIONS, TUTORIAL_STEPS } from "./tutorial-steps";
+import { useSettings } from "../settings/SettingsContext";
+import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
+import { Select } from "../ui/Select";
+import { TOUR_GRAMMAR_CHECK_EVENT } from "../utils/events";
+import { practiceDiary } from "./practice-diary";
+import { GRAMMAR_QUIET, isLessonComplete } from "./tutorial-evaluation";
+import { TutorialOverlay } from "./TutorialOverlay";
+import { TUTORIAL_CHAPTERS } from "./tutorial-steps";
+import type { TutorialStepId } from "./tutorial-steps";
 import type { Tutorial } from "./useTutorial";
+
+/** How long the grammar lesson waits for the AI to flag something before
+ *  it lets the learner go on without: a careful model may find nothing. */
+export const GRAMMAR_WAIT_MS = 20_000;
 
 interface TutorialExperienceProps {
   tutorial: Tutorial;
   t: Strings;
-  shortcuts: {
-    completion: string;
-    grammar: string;
-    agent: string;
-    sidebar: string;
-  };
+  language: Lang;
+  /** The phone layout: no keyboard shortcuts, taps instead of Tab. */
+  phone: boolean;
+  shortcuts: { agentPanel: string; sidebar: string };
+  /** Zen mode, for the modes-and-themes lesson's button. */
+  zen: { on: boolean; toggle: () => void };
 }
 
-const MARKDOWN_EXERCISES = [
-  { labelKey: "tutorialMarkdownStepHeading", bit: MARKDOWN_TASK.heading },
-  {
-    labelKey: "tutorialMarkdownStepSubheading",
-    bit: MARKDOWN_TASK.subheading,
-  },
-  { labelKey: "tutorialMarkdownStepBold", bit: MARKDOWN_TASK.bold },
-  { labelKey: "tutorialMarkdownStepItalic", bit: MARKDOWN_TASK.italic },
-  {
-    labelKey: "tutorialMarkdownStepHighlight",
-    bit: MARKDOWN_TASK.highlight,
-  },
-  { labelKey: "tutorialMarkdownStepCode", bit: MARKDOWN_TASK.code },
-  { labelKey: "tutorialMarkdownStepFormula", bit: MARKDOWN_TASK.formula },
-] as const;
-
-const SIDEBAR_TABS = [
-  { labelKey: "tutorialSidebarTree", bit: SIDEBAR_TAB.tree },
-  { labelKey: "tutorialSidebarOutline", bit: SIDEBAR_TAB.outline },
-  { labelKey: "tutorialSidebarClipboard", bit: SIDEBAR_TAB.clipboard },
-  { labelKey: "tutorialSidebarChat", bit: SIDEBAR_TAB.chat },
-] as const;
+/** What a lesson asks on a phone, where it differs. */
+const PHONE_TASKS: Partial<Record<TutorialStepId, TextKey>> = {
+  "sidebar-export": "tutorialSidebarTaskPhone",
+  "ai-panel": "tutorialAiPanelTaskPhone",
+  continuation: "tutorialContinuationTaskPhone",
+};
 
 /**
- * Maps tutorial state to lesson presentation. App owns document events that
- * advance phases; this component owns everything the learner sees, keeping
- * step copy, completion gates, and controls out of the application shell.
+ * Maps tutorial state to the card the learner sees: its copy, its gate,
+ * its buttons. App owns the events that advance lessons; this owns
+ * everything shown, keeping lesson copy and controls out of the shell.
  */
 export function TutorialExperience({
   tutorial,
   t,
+  language,
+  phone,
   shortcuts,
+  zen,
 }: TutorialExperienceProps) {
-  const { step, phase, setPhase } = tutorial;
-  // connectAi's phase mirrors the selected provider's connection (1 / 0),
+  const { step, phase, setPhase, watching } = tutorial;
+  const live = tutorial.practiceAi === "live";
+  const diary = practiceDiary(language);
+
+  // The connect lesson's phase mirrors its provider's connection (1 / 0),
   // reported by the embedded Settings panel.
   const onConnectedChange = useCallback(
     (connected: boolean) => setPhase(connected ? 1 : 0),
     [setPhase],
   );
-  const shortcut =
-    step.id === "completion"
-      ? shortcuts.completion
-      : step.id === "grammar"
-        ? shortcuts.grammar
-        : step.id === "agentChat" || step.id === "agentEdit"
-          ? shortcuts.agent
-          : step.id === "sidebar"
-            ? shortcuts.sidebar
-            : "";
-  const text = (value: string) => value.replace("{shortcut}", shortcut);
-  // A body that already names its shortcut inline doesn't get it repeated
-  // on a line of its own.
-  const inlineShortcut = t[step.bodyKey].includes("{shortcut}");
-  const body = [
-    text(t[step.bodyKey]),
-    shortcut && !inlineShortcut
-      ? t.tutorialShortcut.replace("{shortcut}", shortcut)
-      : "",
-  ]
-    .filter(Boolean)
-    .join("\n");
-  let task: string | undefined;
-  let checklist: TutorialChecklistItem[] | undefined;
-  let status: string | null = null;
-  let waiting = false;
-  let complete = isTutorialPracticeComplete(step.id, phase);
-  let lessonControls: ReactNode = null;
 
-  if (step.id === "markdownPractice") {
-    checklist = MARKDOWN_EXERCISES.map(({ labelKey, bit }) => ({
-      label: t[labelKey],
-      done: !!(phase & bit),
-      onSkip: () => tutorial.setPhase((current) => current | bit),
-    }));
-    const missing = checklist.find((item) => !item.done);
-    status = missing ? missing.label : t.tutorialMarkdownDone;
-    waiting = phase < MARKDOWN_ALL_TASKS;
-  } else if (step.id === "sidebar") {
-    checklist = SIDEBAR_TABS.map(({ labelKey, bit }) => ({
-      label: t[labelKey],
-      done: !!(phase & bit),
-      onSkip: () => tutorial.setPhase((current) => current | bit),
-    }));
-    status = phase === SIDEBAR_ALL_TABS ? t.tutorialSidebarDone : null;
-    waiting = phase < SIDEBAR_ALL_TABS;
-  } else if (step.id === "completion") {
-    task = t.tutorialCompletionTarget;
-    status =
-      phase === 0
-        ? text(t.tutorialCompletionWaiting)
-        : phase === 1
-          ? text(t.tutorialCompletionGhostShown)
-          : text(t.tutorialCompletionAccepted);
-    waiting = phase < 2;
-  } else if (step.id === "grammar") {
-    task = t.tutorialGrammarTarget;
-    status =
-      phase === 0
-        ? text(t.tutorialGrammarWaiting)
-        : phase === 1
-          ? text(t.tutorialGrammarShown)
-          : text(t.tutorialGrammarFixed);
-    waiting = phase < 2;
-  } else if (step.id === "agentChat") {
-    task = t.tutorialAgentChatPrompt;
-    status =
-      phase === 0
-        ? text(t.tutorialAgentChatWaiting)
-        : text(t.tutorialAgentChatReplied);
-    waiting = phase === 0;
-  } else if (step.id === "agentEdit") {
-    task = phase === 0 ? t.tutorialAgentEditTarget : t.tutorialAgentEditPrompt;
-    status =
-      phase === 0
-        ? text(t.tutorialAgentEditWaiting)
-        : phase === 1
-          ? text(t.tutorialAgentEditReady)
-          : phase === 2
-            ? text(t.tutorialAgentEditProposed)
-            : text(t.tutorialAgentEditApplied);
-    waiting = phase < 3;
-  } else if (step.id === "connectAi") {
-    const connected = phase >= 1;
-    status = connected ? t.tutorialConnectAiConnected : null;
-    complete = connected;
-    lessonControls = (
-      <ConnectAiControls t={t} onConnectedChange={onConnectedChange} />
+  // The grammar lesson, live: check the paragraph with the diary's slip,
+  // and give the AI a while to find it before letting the learner on.
+  const grammarLive = live && step.id === "grammar";
+  useEffect(() => {
+    if (!grammarLive) return;
+    const check = window.setTimeout(
+      () =>
+        window.dispatchEvent(
+          new CustomEvent(TOUR_GRAMMAR_CHECK_EVENT, { detail: diary.slip }),
+        ),
+      300,
+    );
+    const quiet = window.setTimeout(
+      () => setPhase((p) => p || GRAMMAR_QUIET),
+      GRAMMAR_WAIT_MS,
+    );
+    return () => {
+      window.clearTimeout(check);
+      window.clearTimeout(quiet);
+    };
+  }, [grammarLive, diary.slip, setPhase]);
+
+  const complete = isLessonComplete(step.id, phase);
+  const taskKey = (phone && PHONE_TASKS[step.id]) || step.taskKey;
+  const task = taskKey
+    ? t[taskKey]
+        .replace("{title}", diary.title)
+        .replace(
+          "{shortcut}",
+          step.id === "ai-panel" ? shortcuts.agentPanel : shortcuts.sidebar,
+        )
+    : undefined;
+  const watch = step.clip
+    ? {
+        label: t.tutorialWatch,
+        onClick: () => void links.openTutorialsPage(language, step.clip),
+      }
+    : null;
+  const settingsPath = `${t.settingsTitle} › ${t.navAi}`;
+
+  let status: string | null = null;
+  let controls: ReactNode = null;
+  if (step.id === "connect") {
+    status = phase >= 1 ? t.tutorialConnected : null;
+    controls = (
+      <ProviderListPanel
+        t={t}
+        expandCredentials
+        onActiveConnectedChange={onConnectedChange}
+      />
+    );
+  } else if (step.id === "grammar" && phase === GRAMMAR_QUIET) {
+    status = t.tutorialGrammarQuiet;
+  } else if (step.id === "modes-themes") {
+    controls = <ModesThemesControls t={t} zen={zen} />;
+  } else if (step.id === "done") {
+    controls = (
+      <div className="tutorial-links">
+        <button
+          type="button"
+          className="tutorial-btn"
+          onClick={() => void links.openTutorialsPage(language)}
+        >
+          {t.menuHelpTutorials}
+        </button>
+        <button
+          type="button"
+          className="tutorial-btn"
+          onClick={() => void links.openCommunityPage(language)}
+        >
+          {t.menuHelpCommunity}
+        </button>
+      </div>
     );
   }
 
-  const isLast = tutorial.stepIndex === tutorial.totalSteps - 1;
-  const roadmap =
-    step.id === "welcome" || step.id === "done"
-      ? [
-          t.tutorialMarkdownPracticeTitle,
-          t.tutorialSidebarTitle,
-          t.tutorialRoadmapAiTools,
-          t.tutorialAgentChatTitle,
-          t.tutorialAgentEditTitle,
-        ]
-      : undefined;
-  const sectionIndex = TUTORIAL_SECTIONS.findIndex(
-    (section) => section.id === step.section,
+  const chapterIndex = TUTORIAL_CHAPTERS.findIndex(
+    (chapter) => chapter.id === step.chapter,
   );
-  const sections = TUTORIAL_SECTIONS.map((section, index) => ({
-    label: t[section.titleKey],
-    active: index === sectionIndex,
-    done: step.id === "done" || (sectionIndex >= 0 && index < sectionIndex),
+  const chapters = TUTORIAL_CHAPTERS.map((chapter, index) => ({
+    label: t[chapter.titleKey],
+    active: index === chapterIndex,
+    done: index < chapterIndex,
   }));
-  const chapterExercises = TUTORIAL_STEPS.filter(
-    (candidate) =>
-      candidate.section === step.section && candidate.layout === "card",
-  );
-  const activityIndex = chapterExercises.findIndex(
-    (candidate) => candidate.id === step.id,
-  );
-  const activityNumber =
-    activityIndex >= 0 ? String(activityIndex + 1).padStart(2, "0") : undefined;
+
+  const isLast = tutorial.stepIndex === tutorial.totalSteps - 1;
+  const gated = step.layout === "card" && !watching;
+  const primary =
+    watching && watch
+      ? watch
+      : {
+          label: isLast
+            ? t.tutorialFinish
+            : step.id === "welcome"
+              ? t.tutorialStart
+              : step.id === "connect" && phase < 1
+                ? t.tutorialConnectSkip
+                : t.tutorialNext,
+          onClick: tutorial.next,
+          disabled: gated && !complete,
+        };
 
   return (
     <TutorialOverlay
@@ -189,72 +167,76 @@ export function TutorialExperience({
       stepId={step.id}
       stepIndex={tutorial.stepIndex}
       totalSteps={tutorial.totalSteps}
-      sections={sections}
-      activityNumber={activityNumber}
+      chapters={chapters}
       title={t[step.titleKey]}
-      body={body}
+      body={t[step.bodyKey]}
       task={task}
-      checklist={checklist}
-      roadmap={roadmap}
       status={status}
-      waiting={waiting}
-      complete={complete}
-      primaryLabel={
-        isLast
-          ? t.tutorialFinish
-          : step.id === "welcome"
-            ? t.tutorialStart
-            : step.id === "connectAi" && !complete
-              ? t.tutorialConnectAiSkip
-              : t.tutorialNext
+      complete={step.id !== "connect" && !watching && complete}
+      note={
+        watching ? t.tutorialWatchNote.replace("{path}", settingsPath) : null
       }
-      primaryDisabled={step.layout === "card" && !complete}
-      onPrimary={tutorial.next}
+      watch={watching ? null : watch}
+      primary={primary}
+      secondary={
+        watching ? { label: t.tutorialNext, onClick: tutorial.next } : null
+      }
       onBack={tutorial.back}
       onSkip={tutorial.skip}
-      onSkipStep={step.layout === "card" ? tutorial.next : undefined}
+      onSkipStep={gated ? tutorial.next : undefined}
       labels={{
         back: t.tutorialBack,
         collapse: t.tutorialCollapse,
         expand: t.tutorialExpand,
         skip: t.tutorialSkip,
         skipStep: t.tutorialSkipStep,
-        practice: t.tutorialPractice,
-        learned: t.tutorialLearned,
-        skipItem: t.tutorialSkipItem,
-        courseSections: t.tutorialCourseSections,
+        tryIt: t.tutorialTryIt,
+        chapters: t.tutorialChapters,
         stepOfCount: t.tutorialStepOfCount,
       }}
     >
-      {lessonControls}
+      {controls}
     </TutorialOverlay>
   );
 }
 
-/** The Settings › Textus AI provider controls, as they are there: picking a
- *  provider, signing in to an account and pasting a key all work from here. */
-function ConnectAiControls({
+/** Zen mode, the first writing mode to hand, and the built-in themes - the
+ *  same choice Settings › Theme makes. */
+function ModesThemesControls({
   t,
-  onConnectedChange,
+  zen,
 }: {
   t: Strings;
-  onConnectedChange: (connected: boolean) => void;
+  zen: TutorialExperienceProps["zen"];
 }) {
-  const [before, after = ""] = t.tutorialConnectAiLater.split("{path}");
+  const { settings, setSettings } = useSettings();
   return (
-    <div className="tutorial-connect-ai">
-      <ProviderListPanel
-        t={t}
-        expandCredentials
-        onActiveConnectedChange={onConnectedChange}
-      />
-      <p className="tutorial-connect-ai-later">
-        {before}
-        <strong>
-          {t.settingsTitle} › {t.navAi}
-        </strong>
-        {after}
-      </p>
+    <div className="tutorial-controls">
+      <button
+        type="button"
+        className="tutorial-btn"
+        aria-pressed={zen.on}
+        onClick={zen.toggle}
+      >
+        {t.menuToggleZenMode}
+      </button>
+      <Select
+        className="settings-select"
+        aria-label={t.contentThemeLabel}
+        value={settings.themeId}
+        onChange={(e) => setSettings({ themeId: e.target.value })}
+      >
+        {BUILTIN_CONTENT_THEMES.map((theme) => (
+          <option key={theme.id} value={theme.id}>
+            {t[theme.nameKey]}
+          </option>
+        ))}
+        {settings.userThemes.map((theme) => (
+          <option key={theme.id} value={theme.id}>
+            {theme.name}
+          </option>
+        ))}
+      </Select>
     </div>
   );
 }

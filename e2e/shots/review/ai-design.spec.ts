@@ -81,40 +81,31 @@ async function paste(page: Page) {
   await page.waitForTimeout(300);
 }
 
-/** The checker's finding in the notes, without a backend (the tutorial's
- *  canned-issue event). */
+/** The checker's finding in the notes, without a backend (a canned answer
+ *  to the check of the caret's paragraph). */
 async function grammar(page: Page) {
-  const target =
-    "黛玉必竟寄人篱下，所以步步留心，时时在意，这份小心在初见宝玉时也没有放下。";
-  // The event underlines the caret's paragraph.
   await page.locator(".milkdown p", { hasText: "寄人篱下" }).click();
   await page.waitForTimeout(300);
-  await page.evaluate(
-    (target) =>
-      window.dispatchEvent(
-        new CustomEvent("textus:tutorial-mock-grammar", {
-          detail: {
-            target,
-            issues: [
-              {
-                start: 2,
-                end: 4,
-                issue: "“毕竟”是固定写法。",
-                suggestion: "毕竟",
-                original: "必竟",
-              },
-              {
-                start: 21,
-                end: 25,
-                issue: "“这份小心”与上文重复，可省略。",
-                suggestion: "这份心",
-                original: "这份小心",
-              },
-            ],
-          },
-        }),
-      ),
-    target,
+  await mockInvoke(page, {
+    ai_grammar_check: [
+      {
+        start: 2,
+        end: 4,
+        issue: "“毕竟”是固定写法。",
+        suggestion: "毕竟",
+        original: "必竟",
+      },
+      {
+        start: 21,
+        end: 25,
+        issue: "“这份小心”与上文重复，可省略。",
+        suggestion: "这份心",
+        original: "这份小心",
+      },
+    ],
+  });
+  await page.evaluate(() =>
+    window.dispatchEvent(new Event("textus:trigger-grammar-check")),
   );
 }
 

@@ -130,29 +130,25 @@ Start from `zh.ts` or `ja.ts`:
   feature. It may be an alias.
 - Name concepts as your strings do (the library, the style profile).
 
-### The tutorial's exercises
+### The tutorial
 
-The newcomer tutorial grades what the learner types against these strings,
-so they are written for your language, not translated word for word:
+The first-run tour is a short card per lesson: a title, one sentence, one
+thing to do. Keep them that short in your language.
 
-- `tutorialCompletionTarget` + `tutorialCompletionSuggestion`: the learner
-  types the target and the suggestion appears as the continuation, so the
-  suggestion starts where the target ends - with a space in a language that
-  separates words, none in Chinese or Japanese. The target ends in no space
-  and doesn't contain the suggestion.
-- `tutorialGrammarTarget`, `tutorialGrammarOriginal`,
-  `tutorialGrammarSuggestion`, `tutorialGrammarIssue`: a short sentence with
-  one real, common grammar mistake of your language (English: "He go to
-  school every day"). `Original` is the wrong words, appearing exactly once
-  in the target; `Suggestion` replaces them to make the sentence right;
-  `Issue` names the mistake in a few words. No final full stop.
-- `tutorialAgentEditTarget`, `tutorialAgentEditPrompt`,
-  `tutorialAgentEditSuggestion`: a wordy sentence, a short instruction to
-  shorten it, and the shortened sentence - shorter than the target and not
-  contained in it. The prompt is matched with punctuation, spaces and case
-  ignored, so it has to have words of its own, and
-  `tutorialAgentChatPrompt` (the question asked in the lesson before) must
-  not contain it.
+- Each `...Body` is one sentence; each `...Task` one line. `{title}` is the
+  practice diary's title (written in English and Chinese; other languages
+  get the English diary), `{shortcut}` a keyboard shortcut, `{path}` where
+  in Settings an AI is connected. Text in backticks is what the learner
+  types, shown as code.
+- Lesson titles follow the website's names for the features
+  (`site/i18n/<code>.mjs`, its `writing` and `ai` sections).
+- `tutorialSkillsTask` names two built-in skills as the learner would type
+  them, `/word` in backticks: a label or alias of `tighten` and of
+  `translate` in your language (`src/ai/skills/texts/<code>.ts`) without a
+  space in it.
+
+`src/onboarding/tutorial-copy.test.ts` checks both: one sentence per body,
+and that each `/word` runs the skill it should.
 
 ### The help guides
 
@@ -230,7 +226,7 @@ cd src-tauri && cargo test   # ai-names and style-headings against your strings 
 aliases. `src/i18n/strings.test.ts` fails on a key English doesn't have, a value of
 the wrong kind, an empty string, a placeholder kept or added wrongly, a
 missing or unknown plural form, or - once `complete = true` - any key not
-translated; its tutorial section checks the exercises above. The tests in
+translated. The tests in
 `src/help/help-guides.test.ts` compare your guides' outline with
 English's, and `src/i18n/ai-concepts.test.ts` checks the starter files and
 the Settings paths. In `src-tauri`, `agent.rs`'s

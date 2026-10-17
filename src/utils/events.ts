@@ -56,32 +56,42 @@ export const IMAGE_ACTION_EVENT = "textus:image-action";
 /// "More" button, standing in for the right-click a phone doesn't have.
 export const EDITOR_MORE_EVENT = "textus:editor-more";
 
-/// Fired once a chat message actually goes out (InlineChat.tsx's send), not
-/// just when the chat panel opens - the interactive tutorial's "ask AI
-/// something" step listens for this to know the user really did it. Only
-/// the tutorial's own mock chat dispatches it (InlineChat's tutorialMock
-/// prop), so sends in other tabs never advance the tour.
-export const AI_MESSAGE_SENT_EVENT = "textus:ai-message-sent";
+/// The AI of the tour's practice tab (onboarding/): "muted" while the
+/// lesson isn't about it, or the learner chose to watch the animations
+/// instead of connecting one - completion and the grammar check stay quiet
+/// and their shortcuts do nothing; "live" for the AI lessons of a learner
+/// who connected one - the real thing, exactly as outside the tour.
+export type TourAi = "muted" | "live";
 
-/// Fired after the first-run Agent editing exercise has produced a real
-/// in-document proposal preview. The lesson waits for this rather than the
-/// earlier message-sent event, so it never tells the learner to accept a
-/// change before the preview actually exists.
-export const TUTORIAL_AGENT_PROPOSAL_EVENT = "textus:tutorial-agent-proposal";
+/// What the learner did in the tour's practice tab that a lesson waits
+/// for. Sent only by the practice tab's editor (MilkdownEditor's `tour`).
+export type TourSignal =
+  /** A completion suggestion was taken (Tab, or a tap on a phone). */
+  | "completion-accepted"
+  /** A grammar card opened on an underline. */
+  | "grammar-card"
+  /** An AI revision was accepted or rejected, all of it decided. */
+  | "revision-decided"
+  /** A review note was pinned to the text. */
+  | "review-note"
+  /** The AI finished answering a message without an error. */
+  | "reply"
+  /** A message went out through a skill (`/name`). */
+  | "skill-sent";
 
-/// detail: the suggestion string. The tutorial's completion step showing a
-/// PRE-WRITTEN ghost suggestion at the caret (ghost-text-plugin's
-/// showGhostSuggestion) - first-run users have no AI account yet, so the
-/// tour never calls the real backend.
-export const TUTORIAL_MOCK_GHOST_EVENT = "textus:tutorial-mock-ghost";
+/// detail: a TourSignal. See useTutorial's listener.
+export const TOUR_SIGNAL_EVENT = "textus:tour-signal";
 
-/// detail: a TutorialGrammarMock (tutorial-evaluation.ts) - the practice
-/// sentence plus issues with sentence-relative offsets. The tutorial's
-/// grammar step underlining a PRE-WRITTEN issue in the practice paragraph
-/// (grammar-check-plugin's showGrammarIssues, after the consumer re-bases
-/// the offsets onto the cursor's paragraph) - same no-backend reasoning as
-/// the ghost event above.
-export const TUTORIAL_MOCK_GRAMMAR_EVENT = "textus:tutorial-mock-grammar";
+export function sendTourSignal(signal: TourSignal): void {
+  window.dispatchEvent(
+    new CustomEvent<TourSignal>(TOUR_SIGNAL_EVENT, { detail: signal }),
+  );
+}
+
+/// detail: a passage of the practice document. The tour's grammar lesson,
+/// for a learner who connected an AI: check the paragraph holding it, as
+/// the grammar shortcut would with the caret there.
+export const TOUR_GRAMMAR_CHECK_EVENT = "textus:tour-grammar-check";
 
 /** Open a file in a new tab (the project bar's style profile and library
  *  entries) - detail: the absolute path. Handled by App. */

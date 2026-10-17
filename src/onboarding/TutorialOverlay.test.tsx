@@ -2,6 +2,7 @@
 
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TutorialOverlay } from "./TutorialOverlay";
 
@@ -13,181 +14,148 @@ const labels = {
   back: "Back",
   skip: "Leave lesson",
   skipStep: "Skip this step",
-  practice: "Try it",
-  learned: "Skill unlocked",
-  courseSections: "Course sections",
-  skipItem: "Skip this exercise: {item}",
-  stepOfCount: "Lesson {i} of {n}",
+  tryIt: "Try it",
+  chapters: "Chapters",
+  stepOfCount: "Step {i} of {n}",
 };
 
-const sections = [
-  { label: "Markdown basics", active: true, done: false },
-  { label: "AI writing", active: false, done: false },
+const chapters = [
+  { label: "Start", active: false, done: true },
+  { label: "Writing", active: true, done: false },
+  { label: "Done", active: false, done: false },
 ];
 
-describe("TutorialOverlay", () => {
-  it("labels and focuses a reading lesson as an accessible dialog", () => {
-    render(
-      <TutorialOverlay
-        layout="overlay"
-        stepId="welcome"
-        stepIndex={0}
-        totalSteps={9}
-        sections={sections}
-        title="Learn by making"
-        body="A short hands-on lesson."
-        primaryLabel="Start learning"
-        onPrimary={vi.fn()}
-        onBack={vi.fn()}
-        onSkip={vi.fn()}
-        labels={labels}
-      />,
-    );
+type Props = ComponentProps<typeof TutorialOverlay>;
 
-    expect(
-      screen.getByRole("dialog", { name: "Learn by making" }),
-    ).toHaveAttribute("aria-modal", "true");
-    expect(
-      screen.getByRole("button", { name: /start learning/i }),
-    ).toHaveFocus();
+function lesson(props: Partial<Props> = {}) {
+  return render(
+    <TutorialOverlay
+      layout="card"
+      stepId="wysiwyg"
+      stepIndex={1}
+      totalSteps={14}
+      chapters={chapters}
+      title="What you see is what you get"
+      body="Markdown is formatted as you write."
+      task="Type `# Three days in Kyoto`, then write a list."
+      primary={{ label: "Continue", onClick: vi.fn() }}
+      onBack={vi.fn()}
+      onSkip={vi.fn()}
+      labels={labels}
+      {...props}
+    />,
+  );
+}
+
+describe("TutorialOverlay", () => {
+  it("labels and focuses an opening as an accessible dialog", () => {
+    lesson({
+      layout: "overlay",
+      stepId: "welcome",
+      stepIndex: 0,
+      title: "Welcome",
+      task: undefined,
+      primary: { label: "Start", onClick: vi.fn() },
+    });
+    expect(screen.getByRole("dialog", { name: "Welcome" })).toHaveAttribute(
+      "aria-modal",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Start" })).toHaveFocus();
     expect(screen.getByRole("progressbar")).toHaveAttribute(
       "aria-valuenow",
       "1",
     );
   });
 
-  it("keeps Continue disabled until a practice lesson is complete", () => {
+  it("is a title, one sentence, one thing to do and the animation", () => {
+    const onWatch = vi.fn();
+    lesson({ watch: { label: "Watch the animation", onClick: onWatch } });
+    const dialog = screen.getByRole("dialog", {
+      name: "What you see is what you get",
+    });
+    expect(dialog).toHaveTextContent("Markdown is formatted as you write.");
+    // What to type is set as code.
+    expect(screen.getByText("# Three days in Kyoto").tagName).toBe("CODE");
+    expect(screen.getByText("Step 2 of 14")).toBeVisible();
+    expect(screen.getByText("Writing")).toHaveAttribute("aria-current", "step");
+    fireEvent.click(
+      screen.getByRole("button", { name: /Watch the animation/ }),
+    );
+    expect(onWatch).toHaveBeenCalledOnce();
+  });
+
+  it("keeps Continue disabled until the lesson is done, with a way past", () => {
     const onPrimary = vi.fn();
     const onSkipStep = vi.fn();
-    render(
-      <TutorialOverlay
-        layout="card"
-        stepId="markdownPractice"
-        stepIndex={2}
-        totalSteps={9}
-        sections={sections}
-        title="Markdown"
-        body="Give the page structure."
-        checklist={[{ label: "Type a heading", done: false }]}
-        status="Type a heading"
-        waiting
-        primaryLabel="Continue"
-        primaryDisabled
-        onPrimary={onPrimary}
-        onBack={vi.fn()}
-        onSkip={vi.fn()}
-        onSkipStep={onSkipStep}
-        labels={labels}
-      />,
-    );
-
-    const continueButton = screen.getByRole("button", { name: "Continue" });
-    expect(continueButton).toBeDisabled();
-    fireEvent.click(continueButton);
+    lesson({
+      primary: { label: "Continue", onClick: onPrimary, disabled: true },
+      onSkipStep,
+    });
+    const next = screen.getByRole("button", { name: "Continue" });
+    expect(next).toBeDisabled();
+    fireEvent.click(next);
     expect(onPrimary).not.toHaveBeenCalled();
-
-    // The per-lesson escape hatch: a misfiring exercise must never leave
-    // "exit the whole guide" as the only way forward.
+    // A misfiring exercise must never leave "exit the whole guide" as the
+    // only way forward.
     fireEvent.click(screen.getByRole("button", { name: "Skip this step" }));
     expect(onSkipStep).toHaveBeenCalledOnce();
   });
 
-  it("lets the learner skip a checklist exercise by clicking its number", () => {
-    const onSkip = vi.fn();
-    render(
-      <TutorialOverlay
-        layout="card"
-        stepId="markdownPractice"
-        stepIndex={2}
-        totalSteps={9}
-        sections={sections}
-        title="Markdown"
-        body="Try the syntax."
-        checklist={[
-          { label: "Type a heading", done: false, onSkip },
-          { label: "Type bold text", done: false, onSkip: vi.fn() },
-        ]}
-        primaryLabel="Continue"
-        onPrimary={vi.fn()}
-        onBack={vi.fn()}
-        onSkip={vi.fn()}
-        labels={labels}
-      />,
+  it("ticks the task once it is done", () => {
+    lesson({ complete: true });
+    expect(screen.getByRole("region", { name: "Try it" })).toHaveClass(
+      "is-complete",
     );
-
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: "Skip this exercise: Type a heading",
-      }),
-    );
-    expect(onSkip).toHaveBeenCalledOnce();
+    expect(
+      screen.queryByRole("button", { name: "Skip this step" }),
+    ).not.toBeInTheDocument();
   });
 
-  it("does not exit the whole guide when Escape is pressed", () => {
-    const onSkip = vi.fn();
-    render(
-      <TutorialOverlay
-        layout="card"
-        stepId="agentChat"
-        stepIndex={6}
-        totalSteps={9}
-        sections={sections}
-        title="Chat"
-        body="Ask a question."
-        primaryLabel="Continue"
-        onPrimary={vi.fn()}
-        onBack={vi.fn()}
-        onSkip={onSkip}
-        labels={labels}
-      />,
+  it("can put watching first, with moving on beside it", () => {
+    const onWatch = vi.fn();
+    const onNext = vi.fn();
+    lesson({
+      stepId: "grammar",
+      primary: { label: "Watch the animation", onClick: onWatch },
+      secondary: { label: "Continue", onClick: onNext },
+      note: "Connect an AI later in Settings › Textus AI to try it yourself.",
+    });
+    expect(screen.getByText(/Connect an AI later/)).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Watch the animation" }),
     );
+    expect(onNext).toHaveBeenCalledOnce();
+    expect(onWatch).toHaveBeenCalledOnce();
+  });
 
+  it("does not exit the whole guide when Escape is pressed on a lesson", () => {
+    const onSkip = vi.fn();
+    lesson({ onSkip });
     fireEvent.keyDown(window, { key: "Escape" });
     expect(onSkip).not.toHaveBeenCalled();
   });
-  it("can minimize a practice without disabling navigation or editing", () => {
-    render(
-      <TutorialOverlay
-        layout="card"
-        stepId="completion"
-        stepIndex={4}
-        totalSteps={9}
-        sections={sections}
-        title="Completion"
-        body="Type the sample."
-        task="Sample text"
-        primaryLabel="Continue"
-        onPrimary={vi.fn()}
-        onBack={vi.fn()}
-        onSkip={vi.fn()}
-        labels={labels}
-      />,
-    );
+
+  it("can minimize a lesson without hiding navigation", () => {
+    lesson();
     fireEvent.click(screen.getByRole("button", { name: "Minimize" }));
-    expect(screen.getByText("Sample text")).not.toBeVisible();
+    expect(screen.getByText("# Three days in Kyoto")).not.toBeVisible();
     expect(screen.getByRole("button", { name: "Continue" })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Show instructions" }));
-    expect(screen.getByText("Sample text")).toBeVisible();
+    expect(screen.getByText("# Three days in Kyoto")).toBeVisible();
   });
 
-  it("keeps Tab inside reading lessons and closes them with Escape", () => {
+  it("keeps Tab inside an overlay and closes it with Escape", () => {
     const onSkip = vi.fn();
-    render(
-      <TutorialOverlay
-        layout="overlay"
-        stepId="welcome"
-        stepIndex={0}
-        totalSteps={9}
-        sections={sections}
-        title="Welcome"
-        body="Read the introduction."
-        primaryLabel="Start"
-        onPrimary={vi.fn()}
-        onBack={vi.fn()}
-        onSkip={onSkip}
-        labels={labels}
-      />,
-    );
+    lesson({
+      layout: "overlay",
+      stepId: "welcome",
+      stepIndex: 0,
+      title: "Welcome",
+      primary: { label: "Start", onClick: vi.fn() },
+      onSkip,
+    });
     fireEvent.keyDown(screen.getByRole("button", { name: "Start" }), {
       key: "Tab",
     });

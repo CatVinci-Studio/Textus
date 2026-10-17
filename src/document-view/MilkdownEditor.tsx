@@ -41,6 +41,8 @@ import { useReviewNotes } from "../ai/margin/useReviewNotes";
 import { useGrammarPopover } from "../ai/writing/useGrammarPopover";
 import { useSettings } from "../settings/SettingsContext";
 import { useLatest } from "../utils/hooks/useLatest";
+import { sendTourSignal, type TourAi } from "../utils/events";
+import { useTourSignals } from "./useTourSignals";
 import { Milkdown } from "@milkdown/react";
 import "@milkdown/kit/prose/view/style/prosemirror.css";
 import "katex/dist/katex.min.css";
@@ -64,11 +66,11 @@ interface MilkdownEditorProps {
    *  chat - which follows the ACTIVE document - needs to know which of them
    *  should be feeding it. */
   isActive?: boolean;
-  /** True while the onboarding tour runs: real AI is muted end to end -
-   *  typing-triggered plugins go quiet (editor-extensions), on-demand
-   *  triggers are ignored, and the chat answers from a pre-written script
-   *  instead of the backend. First-run users have no AI account yet. */
-  tutorialMock?: boolean;
+  /** The tour's AI while this is the tour's practice tab, else null
+   *  (utils/events.ts's TourAi): muted, completion and the grammar check
+   *  go quiet; either way the tab reports what its lessons wait for
+   *  (useTourSignals) and the AI panel opens even with Ask AI off. */
+  tour?: TourAi | null;
 }
 
 export function MilkdownEditor({
@@ -78,7 +80,7 @@ export function MilkdownEditor({
   initialValue,
   onChange,
   isActive = true,
-  tutorialMock = false,
+  tour = null,
 }: MilkdownEditorProps) {
   const [menu, setMenu] = useState<EditorMenuState>(null);
   const [tableDialogOpen, setTableDialogOpen] = useState(false);
@@ -100,7 +102,7 @@ export function MilkdownEditor({
   const filePathRef = useLatest(filePath);
   const docTitleRef = useLatest(docTitle);
   const isActiveRef = useLatest(isActive);
-  const tutorialMockRef = useLatest(tutorialMock);
+  const tourRef = useLatest(tour);
   const tRef = useLatest(t);
   const reporting = useDocumentReporting(initialValue, onChange);
   // Defined further down (useGrammarPopover); read through a ref here.
@@ -116,7 +118,7 @@ export function MilkdownEditor({
     reporting,
     settingsRef,
     filePathRef,
-    tutorialMockRef,
+    tourRef,
     tRef,
     setQuickAskEl,
     requestImageName,
@@ -154,8 +156,6 @@ export function MilkdownEditor({
     settingsRef,
     settings,
     filePath,
-    tutorialMock,
-    t,
   });
   const { pendingEdits, conversation, quickConversation, showProposals } =
     proposals;
@@ -277,7 +277,7 @@ export function MilkdownEditor({
   useEditorWindowEvents({
     run,
     settings,
-    tutorialMock,
+    tour,
     triggerCompletion,
     triggerGrammarCheck,
     toggleAgentConversation,
@@ -329,6 +329,15 @@ export function MilkdownEditor({
     t,
     showAiNotice,
   });
+
+  useTourSignals({
+    tour,
+    grammarCardOpen: grammar.popover !== null,
+    undecidedRevisions: pendingEdits.decidable.length,
+    reviewNotes: notes.notes.length,
+    conversations: [conversation, quickConversation],
+  });
+  const onSkillUsed = tour ? () => sendTourSignal("skill-sent") : undefined;
 
   function popOutPanel() {
     handleDetachChat();
@@ -431,7 +440,7 @@ export function MilkdownEditor({
         run={run}
         t={t}
         settings={settings}
-        tutorialMock={tutorialMock}
+        inTour={tour !== null}
         openAgentConversation={openAgentConversation}
         triggerCompletion={triggerCompletion}
         triggerGrammarCheck={triggerGrammarCheck}
@@ -493,7 +502,7 @@ export function MilkdownEditor({
             t={t}
             settings={settings}
             filePath={filePath}
-            tutorialMock={tutorialMock}
+            onSkillUsed={onSkillUsed}
             agentPanel={agentPanel}
             conversation={conversation}
             pendingEdits={pendingEdits}
@@ -537,7 +546,7 @@ export function MilkdownEditor({
             // into a chat answer. Ask stays one click away in the picker.
             defaultMode="edit"
             defaultWebSearch={settings.enableWebSearch}
-            tutorialMock={tutorialMock}
+            onSkillUsed={onSkillUsed}
             labels={chatLabels(t, settings.language)}
             onProposals={showProposals}
             proposalStatus={pendingEdits.status}

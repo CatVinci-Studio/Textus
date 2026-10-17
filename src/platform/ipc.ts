@@ -354,6 +354,11 @@ export const links = {
   /** The website's community page, in the UI's language. */
   openCommunityPage: (language: Lang) =>
     call<void>("open_community_page", { language }),
+  /** The website's video tutorials in the UI's language, at one lesson's
+   *  clip (a TUTORIAL_CLIPS id, onboarding/tutorial-steps.ts) or, without
+   *  one, from the top. */
+  openTutorialsPage: (language: Lang, clip?: string) =>
+    call<void>("open_tutorials_page", { language, clip: clip ?? null }),
   /** Settings › General › About Textus's links, by name. */
   openAboutLink: (page: "github" | "discord" | "qq") =>
     call<void>("open_about_link", { page }),

@@ -11,6 +11,7 @@ import { effectiveRevisionDisplay } from "../ai/revision/revision-display";
 import type { ReviewNote } from "../ai/margin/review-notes-plugin";
 import type { Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
+import type { TourAi } from "../utils/events";
 import { configureEditorRoot } from "../editor/editor-extensions";
 
 /** The ref-indirected callbacks the plugin chain reads at call time: the
@@ -35,7 +36,7 @@ export function useTextusEditor({
   reporting,
   settingsRef,
   filePathRef,
-  tutorialMockRef,
+  tourRef,
   tRef,
   setQuickAskEl,
   requestImageName,
@@ -47,7 +48,7 @@ export function useTextusEditor({
   // captured at construction time.
   settingsRef: { readonly current: Settings };
   filePathRef: { readonly current: string | null };
-  tutorialMockRef: { readonly current: boolean };
+  tourRef: { readonly current: TourAi | null };
   tRef: { readonly current: Strings };
   setQuickAskEl: Dispatch<SetStateAction<HTMLElement | null>>;
   requestImageName: (stem: string, extension: string) => Promise<string | null>;
@@ -135,7 +136,7 @@ export function useTextusEditor({
           onUnmount: (el) =>
             setQuickAskEl((current) => (current === el ? null : current)),
         },
-        tutorialMockRef,
+        tourRef,
         () => tRef.current.imagePasteFailedMessage,
         requestImageName,
         {

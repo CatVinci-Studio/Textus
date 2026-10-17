@@ -76,7 +76,6 @@ export function ChatWindowApp() {
     settings.aiProvider,
     settings.enableWebSearch,
     agentModel,
-    null,
     undefined,
     statuses,
   );
