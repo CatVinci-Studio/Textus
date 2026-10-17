@@ -50,6 +50,20 @@ test("the first visit shows the sample, rendered", async ({ page }) => {
   await expect(page.locator(`${editor} h1`)).toContainText("Welcome to Textus");
   await expect(page.locator(`${editor} table`)).toBeVisible();
   await expect(page.locator(`${editor} .katex`).first()).toBeVisible();
+  // KaTeX's fonts are bundled as woff2 alone (vite.katex-fonts.ts); the
+  // formulas must still get them rather than a fallback face.
+  await page.evaluate(() => document.fonts.ready);
+  expect(
+    await page.evaluate(() => {
+      let loaded = false;
+      document.fonts.forEach((face) => {
+        if (face.family === "KaTeX_Main" && face.status === "loaded")
+          loaded = true;
+      });
+      return loaded;
+    }),
+    "KaTeX's fonts did not load",
+  ).toBe(true);
   await expect(page.locator(`${editor} .mermaid-preview svg`)).toBeVisible({
     timeout: 15_000,
   });

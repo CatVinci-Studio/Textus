@@ -9,6 +9,29 @@ edition = "2021"
 members = ["crates/aicompat", "plugins/textus-files"]
 resolver = "2"
 
+# Shipped builds (tauri build, tauri ios build) are sized for download:
+# 36.2 MB -> 16.5 MB binary on Linux x86_64, measured for 1.0.4.
+# - strip: the symbol table is only for backtraces, and nothing captures
+#   one - there is no panic hook or crash reporter. A panic's message and
+#   file:line live in the binary's data, so stderr still has them.
+# - lto + codegen-units = 1: whole-program inlining and dead-code removal
+#   across every crate in the tree. Costs build time: a clean release
+#   build went from ~1 to ~2.5 minutes locally, a rebuild of just this
+#   crate from 19 s to 100 s, since the link re-optimizes everything.
+# - opt-level "s": another 4 MB off (20.6 -> 16.5 MB) over 3. The editor
+#   and its rendering run in the webview; the CPU-bound Rust is the
+#   writing-rules engine, which with LTO is still faster at "s" than the
+#   old profile (all ten help guides: 167 ms before, 123 ms at "s", 73 ms
+#   at 3) - well under a frame per paragraph either way.
+# panic stays "unwind": spawn_blocking turns a panic (pdf-extract on a bad
+# PDF, commands/attachment.rs) into an error instead of an abort.
+# PR CI is unaffected: check:native and the iOS simulator build use debug.
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+opt-level = "s"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]

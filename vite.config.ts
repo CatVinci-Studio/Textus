@@ -1,12 +1,13 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { katexWoff2Only } from "./vite.katex-fonts";
 
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react()],
+  plugins: [react(), katexWoff2Only()],
 
   // Unit tests only; e2e/ holds the Playwright flows (npm run test:e2e)
   // and screenshot generators, which vitest must not try to run.
