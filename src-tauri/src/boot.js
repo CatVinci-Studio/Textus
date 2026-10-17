@@ -44,10 +44,12 @@ window.__textusBoot = function (boot, themeCss) {
     var builtin = ["paper", "slate", "forest", "parchment"];
     if (builtin.indexOf(settings.themeId) >= 0)
       root.setAttribute("data-content-theme", settings.themeId);
-    // The hidden diary (theme/apply-appearance.ts) from the first frame.
+    else if (themeCss) root.setAttribute("data-user-theme", "");
+    // The hidden diary (theme/apply-appearance.ts) from the first frame. It
+    // sits over the user's theme rather than replacing it, so it stays out
+    // of the theme chain above.
     if (settings.enableDiary === true)
       root.setAttribute("data-magic-diary", "");
-    else if (themeCss) root.setAttribute("data-user-theme", "");
     // macOS only (native_titlebar_height in lib.rs): what the window bar
     // lines its contents up with, so they sit level with the traffic lights.
     if (typeof boot.titlebarHeight === "number")

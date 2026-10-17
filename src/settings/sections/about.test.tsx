@@ -10,6 +10,7 @@ const mock = vi.hoisted(() => ({
   setSettings: vi.fn(),
   settings: { aiProvider: "openai", enableDiary: false },
   connected: false,
+  desktop: true,
 }));
 vi.mock("../SettingsContext", () => ({ useSettings: () => mock }));
 vi.mock("@tauri-apps/api/app", () => ({
@@ -24,11 +25,18 @@ vi.mock("./providers", () => ({
 }));
 vi.mock("../../platform/ipc", () => ({ links: { openAboutLink: vi.fn() } }));
 vi.mock("./general", () => ({ UpdateButton: () => null }));
-vi.mock("../../platform/capabilities", () => ({ isDesktopApp: true }));
+vi.mock("../../platform/capabilities", () => ({
+  get isDesktopApp() {
+    return mock.desktop;
+  },
+}));
 
 const t = resolveStrings("en");
 afterEach(cleanup);
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  mock.desktop = true;
+});
 
 async function tapVersion(times: number) {
   const version = await screen.findByText("Version 1.0.4");
@@ -36,6 +44,11 @@ async function tapVersion(times: number) {
 }
 
 describe("About", () => {
+  it("shows the app's version", async () => {
+    render(<AboutSection t={t} onClose={vi.fn()} />);
+    expect(await screen.findByText("Version 1.0.4")).toBeInTheDocument();
+  });
+
   it("opens the diary on five taps once AI is connected, and closes Settings", async () => {
     mock.connected = true;
     const onClose = vi.fn();
@@ -56,6 +69,17 @@ describe("About", () => {
     expect(mock.setSettings).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("keeps the diary closed on iPhone and iPad", async () => {
+    mock.connected = true;
+    mock.desktop = false;
+    const onClose = vi.fn();
+    render(<AboutSection t={t} onClose={onClose} />);
+    await new Promise((r) => setTimeout(r, 0));
+    await tapVersion(5);
+    expect(mock.setSettings).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("opens each of its pages by name", () => {
