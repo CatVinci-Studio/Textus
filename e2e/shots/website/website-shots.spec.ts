@@ -36,7 +36,7 @@
  *   SAMPLES_JSON    a JSON file of { "<lang>": Sample } (see Sample below):
  *                   the texts of languages beyond the built-in three, or
  *                   fields that replace built-in ones. A shot whose texts a
- *                   language lacks is skipped. e2e/website/site-samples.json
+ *                   language lacks is skipped. e2e/shots/website/site-samples.json
  *                   has the other seven site languages, each on the site's
  *                   own classic for that language.
  *   SHOTS_OUT       where the images go (default ../assets/site-assets/
@@ -56,7 +56,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { openApp } from "../helpers";
+import { openApp } from "../../helpers";
 
 /** One language's texts, all Markdown. `anchor`, `commentAnchor`,
  *  `zenFocus` and `tourCaret` are quoted verbatim from their documents. */

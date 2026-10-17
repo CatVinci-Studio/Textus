@@ -8,8 +8,8 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(async () => ({
   plugins: [react()],
 
-  // Unit tests only; e2e/ holds the Playwright visual suite
-  // (npm run test:visual), which vitest must not try to run.
+  // Unit tests only; e2e/ holds the Playwright flows (npm run test:e2e)
+  // and screenshot generators, which vitest must not try to run.
   test: {
     exclude: [
       "**/node_modules/**",

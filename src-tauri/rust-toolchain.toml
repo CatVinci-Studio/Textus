@@ -1,0 +1,7 @@
+# The Rust toolchain for everyone building Textus, locally and in CI:
+# rustup reads this and installs what is missing. Stable, plus the two
+# components `npm run check:native` runs.
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

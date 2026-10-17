@@ -21,24 +21,19 @@ touching the backend (attachments, windows, AI requests) needs the real app.
 
 ## Before you push
 
-Run exactly what CI runs. There are two halves, and it is easy to run one and
-forget the other:
+Run exactly what CI runs - the same commands on Linux, macOS and Windows:
 
 ```sh
-npm run check                                          # tsc + eslint + vitest + prettier + README structure
-npm run build                                          # tsc + vite build
-cd src-tauri
-cargo fmt --all -- --check
-cargo clippy --workspace --all-targets -- -D warnings   # --workspace: aicompat too
-cargo test --workspace
+npm run check          # types, lint, unit tests, formatting, README/version/updater checks
+npm run test:e2e       # the Playwright flows (first time: npm run setup:e2e)
+npm run check:native   # rustfmt, clippy, Rust tests in src-tauri/ (builds dist/ if missing)
+npm run check:all      # all three, in that order
 ```
 
-`npm run format` and `cargo fmt --all` fix the formatting halves in place.
-
-Note the two flags that catch things a plain invocation misses: `npm run
-check` includes `prettier --check` (a bare `tsc && eslint && vitest` does
-not), and `--workspace` includes the `aicompat` crate (a bare `cargo clippy`
-does not).
+`npm run format` and `cargo fmt --all` (in `src-tauri/`) fix formatting in
+place. `check:native` passes `--workspace`, so the `aicompat` crate is
+checked too; `src-tauri/rust-toolchain.toml` and `.nvmrc` name the Rust and
+Node versions.
 
 ## Commits
 
@@ -96,23 +91,22 @@ what is deliberately _not_ covered:
 
 ```sh
 npm run check                          # typecheck, lint, vitest, prettier, README structure
-cd src-tauri && cargo test --workspace # app crate + aicompat
-npm run test:visual                    # Playwright screenshots of the UI in Chromium
+npm run check:native                   # rustfmt, clippy, Rust tests (app crate + aicompat)
+npm run test:e2e                       # Playwright flows in Chromium, desktop and phone
 scripts/smoke-linux.sh --build         # the built Linux app and its .deb
 cd src-tauri && cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
                                        # real Anthropic API (costs cents)
 ```
 
-The first two run in CI, and so do the Playwright flows without their
-screenshot comparison. The rest need a display, a desktop session or an API
-key, and are run by hand before a release.
+The first three run in CI. The rest need a display, a desktop session or an
+API key, and are run by hand before a release.
 
-The visual suite needs Chromium once: `npx playwright install chromium`. Its
-screenshot baselines depend on the fonts of the machine that took them; on
-another machine either run `npm run test:visual -- --ignore-snapshots` (the
-flows and their assertions only) or take local baselines. After an intended
-UI change, `npm run test:visual -- --update-snapshots` and look at every
-changed image before keeping it.
+The e2e flows need Chromium once: `npm run setup:e2e`. They don't compare
+screenshots, so they pass the same on every platform. `npm run test:visual`
+also compares `e2e/visual.spec.ts`'s screenshots against Linux baselines
+(fonts differ elsewhere); after an intended UI change, on Linux,
+`npm run test:visual -- --update-snapshots` and look at every changed image
+before keeping it.
 
 New tests belong next to the code (`foo.ts` → `foo.test.ts`, `#[cfg(test)]
 mod tests` in Rust). Name them as the claim they make, not as the function

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown, PHONE } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown, PHONE } from "../../helpers";
 
 // Screenshots of the AI panel (empty, a reply with an edit, a comment and a
 // sentence picker, a reply streaming in, the / menu) and of the app's
@@ -7,7 +7,7 @@ import { mockInvoke, openApp, pasteMarkdown, PHONE } from "./helpers";
 // and dark, desktop, a narrow panel and phone - for review, not a baseline.
 // Runs only with TEXTUS_SHOTS_DIR set to where the PNGs go:
 //
-//   TEXTUS_SHOTS_DIR=../assets/ui-polish/after npx playwright test ui-polish-shots
+//   TEXTUS_SHOTS_DIR=../assets/ui-polish/after npm run screenshots:review -- ui-polish
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");
