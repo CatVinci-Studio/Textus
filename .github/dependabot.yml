@@ -1,8 +1,8 @@
-# Weekly dependency updates, one pull request per ecosystem so they are few
-# and easy to review: CI runs on each, and a maintainer merges it.
-# Major versions arrive as their own pull requests - they usually need code
-# changes. Security updates are separate and come as soon as an advisory
-# is published.
+# Weekly dependency updates, one grouped pull request per ecosystem so they
+# are few and easy to review: CI runs on each, and a maintainer merges it.
+# Major versions are left out - they usually need code changes, and we do
+# them by hand when there is time. Security updates still come as soon as an
+# advisory is published, majors included.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -16,6 +16,9 @@ updates:
     groups:
       npm-minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: cargo
     directory: /src-tauri
@@ -28,6 +31,9 @@ updates:
     groups:
       cargo-minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
