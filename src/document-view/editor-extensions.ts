@@ -3,6 +3,7 @@ import { withEditorCore } from "../editor/editor-extensions";
 import { withAiPlugins, type PendingEditCallbacks } from "../ai/editor-plugins";
 import type { ReviewNote } from "../ai/margin/review-notes-plugin";
 import type { Settings } from "../settings/SettingsContext";
+import { documentRevisionPlugin } from "../ai/workspace/revision-plugin";
 
 export type { PendingEditCallbacks };
 
@@ -52,5 +53,5 @@ export function withEditorExtensions(
       requestImageName,
     }),
     { settings, docPath, pendingEdits, quickAskWidget, aiMuted, reviewNotes },
-  );
+  ).use(documentRevisionPlugin);
 }
