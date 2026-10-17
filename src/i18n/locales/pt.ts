@@ -9,6 +9,7 @@ export default {
   agentPanelToggle: "Painel de IA",
   agentPanelPopOut: "Abrir em uma janela separada",
   agentPanelResize: "Redimensionar o painel de IA",
+  sidebarResize: "Redimensionar a barra lateral",
   agentPanelSheet: "Expandir ou recolher o painel de IA",
   agentExpandWindowLabel: "Abrir conversas completas em uma janela separada",
   shortcutToggleAgentPanel: "Alternar painel de IA",

@@ -11,6 +11,7 @@ export default {
   agentPanelToggle: "Panneau IA",
   agentPanelPopOut: "Ouvrir dans une fenêtre séparée",
   agentPanelResize: "Redimensionner le panneau IA",
+  sidebarResize: "Redimensionner la barre latérale",
   agentPanelSheet: "Agrandir ou réduire le panneau IA",
   agentExpandWindowLabel:
     "Ouvrir les conversations complètes dans une fenêtre séparée",

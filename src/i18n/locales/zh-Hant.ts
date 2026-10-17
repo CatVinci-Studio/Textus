@@ -9,6 +9,7 @@ export default {
   agentPanelToggle: "AI 面板",
   agentPanelPopOut: "在獨立視窗中開啟",
   agentPanelResize: "調整 AI 面板寬度",
+  sidebarResize: "調整側邊欄寬度",
   agentPanelSheet: "展開或收合 AI 面板",
   agentExpandWindowLabel: "在獨立視窗中開啟完整對話",
   shortcutToggleAgentPanel: "切換 AI 面板",

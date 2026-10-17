@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -52,9 +51,9 @@ export function useAgentPanel(): AgentPanelFrame {
   return useContext(AgentPanelContext);
 }
 
-const AGENT_PANEL_MIN_WIDTH = 300;
-const AGENT_PANEL_MAX_WIDTH = 720;
-const DEFAULT_WIDTH = 380;
+export const AGENT_PANEL_MIN_WIDTH = 300;
+export const AGENT_PANEL_MAX_WIDTH = 720;
+export const AGENT_PANEL_DEFAULT_WIDTH = 380;
 
 function clampWidth(width: number): number {
   return Math.min(
@@ -72,7 +71,7 @@ export function useAgentPanelState() {
     const stored = getUiState("agentPanelWidth");
     return typeof stored === "number" && Number.isFinite(stored) && stored > 0
       ? clampWidth(stored)
-      : DEFAULT_WIDTH;
+      : AGENT_PANEL_DEFAULT_WIDTH;
   });
   const [tab, setTab] = useState<AgentPanelTab>("chat");
   const setOpen = useCallback((next: boolean) => {
@@ -82,10 +81,12 @@ export function useAgentPanelState() {
     // "ask about this note" - wants the conversation.
     if (next) setTab("chat");
   }, []);
-  const setWidth = useCallback((next: number) => {
+  // Remembered once a drag lets go (ResizeHandle's `done`), not on every
+  // frame of it.
+  const setWidth = useCallback((next: number, persist = true) => {
     const clamped = clampWidth(next);
     setWidthState(clamped);
-    setUiState("agentPanelWidth", Math.round(clamped));
+    if (persist) setUiState("agentPanelWidth", Math.round(clamped));
   }, []);
   const toggle = useCallback(() => setOpen(!open), [open, setOpen]);
   return { open, setOpen, toggle, width, setWidth, tab, setTab };
@@ -114,54 +115,6 @@ export function AgentPanelProvider({
     <AgentPanelContext.Provider value={value}>
       {children}
     </AgentPanelContext.Provider>
-  );
-}
-
-/** Drag handle on the panel's left edge: dragging left widens it. */
-export function AgentPanelResizer({
-  width,
-  onResize,
-  label,
-}: {
-  width: number;
-  onResize: (width: number) => void;
-  label: string;
-}) {
-  const [drag, setDrag] = useState<{
-    startX: number;
-    startWidth: number;
-  } | null>(null);
-  useEffect(() => {
-    if (!drag) return;
-    const move = (e: PointerEvent) =>
-      onResize(drag.startWidth + (drag.startX - e.clientX));
-    const up = () => setDrag(null);
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-    return () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-    };
-  }, [drag, onResize]);
-  return (
-    <div
-      className={`agent-panel-resizer${drag ? " agent-panel-resizer-active" : ""}`}
-      role="separator"
-      aria-orientation="vertical"
-      aria-label={label}
-      aria-valuenow={Math.round(width)}
-      aria-valuemin={AGENT_PANEL_MIN_WIDTH}
-      aria-valuemax={AGENT_PANEL_MAX_WIDTH}
-      tabIndex={0}
-      onPointerDown={(e) => {
-        e.preventDefault();
-        setDrag({ startX: e.clientX, startWidth: width });
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "ArrowLeft") onResize(width + 20);
-        else if (e.key === "ArrowRight") onResize(width - 20);
-      }}
-    />
   );
 }
 

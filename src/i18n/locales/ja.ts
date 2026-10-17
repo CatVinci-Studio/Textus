@@ -9,6 +9,7 @@ export default {
   agentPanelToggle: "AIパネル",
   agentPanelPopOut: "別ウィンドウで開く",
   agentPanelResize: "AIパネルの幅を調整",
+  sidebarResize: "サイドバーの幅を調整",
   agentPanelSheet: "AIパネルを広げる・縮める",
   agentExpandWindowLabel: "会話全体を別ウィンドウで開く",
   shortcutToggleAgentPanel: "AIパネルの表示切替",

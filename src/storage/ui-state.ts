@@ -18,6 +18,8 @@ export interface UiState {
   tutorialProgress: unknown;
   agentPanelOpen: boolean;
   agentPanelWidth: number;
+  /** The sidebar's width as last dragged (app/sidebar-width.ts). */
+  sidebarWidth: number;
   /** iOS: recently opened documents, newest first (platform/ios-files.ts). */
   iosRecentDocuments: unknown;
   /** iOS: the document list's layout (mobile/DocumentList.tsx). */
@@ -71,6 +73,13 @@ const LEGACY: {
   },
   agentPanelWidth: {
     key: "levis-agent-panel-width",
+    decode: (raw) => Number(raw),
+    encode: (value) => String(Math.round(value)),
+  },
+  // Newer than the move: no build ever wrote this key, it is only where
+  // the fallback keeps the width.
+  sidebarWidth: {
+    key: "textus-sidebar-width",
     decode: (raw) => Number(raw),
     encode: (value) => String(Math.round(value)),
   },
