@@ -14,14 +14,13 @@
 **Playground（在线试用）。** 在 `textus.catvinci.com/playground` 做一个小页面，不用安装就能在浏览器里试试编辑器。它只管写、导入和导出 Markdown，其他功能留给 App。
 [#88](https://github.com/CatVinci-Studio/Textus/issues/88)
 
-**一个分享主题的地方。** 在置顶的 issue 里发一条评论，你的主题就会出现在 `textus.catvinci.com/themes` 上，大家都能免费下载。
+**一个分享主题的地方。** 在置顶的 issue 里发一条评论，我们看过之后，你的主题就会出现在 `textus.catvinci.com/themes` 上，大家都能免费下载。
 [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
 **真正有用的教程。** 新手教程里加一步"连接你的 AI"，再给大家最常问的几个功能做几段短视频。
 [#90](https://github.com/CatVinci-Studio/Textus/issues/90)
 
-**魔法日记。** 团队里一位同事做着玩的：一个隐藏主题，你写下一句话，页面会回你一句。我们太喜欢了，舍不得不放进来。
-[#76](https://github.com/CatVinci-Studio/Textus/pull/76)
+另外，我们还藏了一些彩蛋。登录 AI 之后，可以试试在 **设置 › 通用 › 关于 Textus** 里多点几下版本号。
 
 ## 下一个版本
 

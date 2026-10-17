@@ -147,7 +147,7 @@ A few things make a pull request easy for us to say yes to:
 - If it touches windows, drafts or anything that could lose someone's
   writing, a line on what you tried by hand.
 
-CI has to pass before we can merge, and one of the two maintainers reviews
+CI has to pass before we can merge, and a maintainer reviews
 every pull request. We try to answer within a few days. If we haven't, a
 friendly nudge on the pull request is welcome - it usually means it slipped
 past us, not that we're ignoring you.
