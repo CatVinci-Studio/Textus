@@ -494,6 +494,31 @@
   box-shadow: none;
 }
 
+/* <details> (raw-html-preview-plugin.ts). Written around markdown, its
+   body is the paragraphs below the head, folded by hiding them, and the
+   closing "</details>" line goes while the caret is away from it. */
+/* A block widget ends its paragraph, and the caret helpers ProseMirror puts
+   after it (a separator image, a trailing <br>) only added an empty line
+   below the table or summary. prosemirror.css shows the separator with
+   !important, hence this one. */
+.milkdown
+  p:has(> .raw-html-rendered:not(.raw-html-rendered-inline))
+  > :is(br.ProseMirror-trailingBreak, img.ProseMirror-separator) {
+  display: none !important;
+}
+
+/* As wide as its text: the row beside it is where a click edits the source
+   instead of folding. */
+.milkdown .raw-html-rendered summary {
+  width: fit-content;
+  cursor: pointer;
+}
+
+.raw-html-details-end,
+.raw-html-details-folded {
+  display: none;
+}
+
 /* Styling stand-ins for PAIRED inline tags (raw-html-preview-plugin.ts):
    "<b>", "</b>" etc. are separate markdown nodes, so the rendering can't
    wrap real elements around the text between them - these classes applied
