@@ -110,6 +110,9 @@ tauri-plugin-textus-files = { path = "plugins/textus-files" }
 # In step with @tauri-apps/plugin-updater and @tauri-apps/plugin-process.
 tauri-plugin-updater = "2.14"
 tauri-plugin-process = "2.4"
+# The update check's version comparison (commands/update.rs); the updater
+# hands its versions over as semver 1.
+semver = "1"
 
 # macOS-native PDF export (commands/export.rs): the themed document is
 # rendered in an offscreen WKWebView with createPDF and cut into A4 sheets

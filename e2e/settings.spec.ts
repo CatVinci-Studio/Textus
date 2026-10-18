@@ -30,6 +30,13 @@ const t = {
   privacyClearButton: "Clear",
   privacyClearClipboard: "Clear Clipboard History",
   pdfPageNumbersLabel: "Page numbers in PDF",
+  aboutTextus: "About Textus",
+  aboutMadeBy: "Made by CatVinci Studio",
+  updateCheckButton: "Check for Updates",
+  updateChannel: "Update channel",
+  updateChannelStable: "Stable",
+  updateChannelBeta: "Beta",
+  updateChannelHint: "Beta gets release candidates before everyone else.",
 };
 
 async function openSettings(page: Page) {
@@ -240,6 +247,67 @@ test.describe("desktop", () => {
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
   });
+  test("the update channel sits under the update button and is remembered", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    let panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.aboutTextus }).click();
+    await expect(
+      panel.getByRole("button", { name: t.updateCheckButton }),
+    ).toBeVisible();
+    const channel = panel.getByRole("combobox", { name: t.updateChannel });
+    await expect(channel).toHaveText(t.updateChannelStable);
+    await expect(panel.getByText(t.updateChannelHint)).toBeVisible();
+
+    await channel.click();
+    await page.getByRole("option", { name: t.updateChannelBeta }).click();
+    await expect(channel).toHaveText(t.updateChannelBeta);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}")
+              .updateChannel,
+        ),
+      )
+      .toBe("beta");
+
+    // Still Beta after a restart. (openApp's init script would put the
+    // settings back, so this reads what was stored.)
+    await page.evaluate(() => {
+      const stored = localStorage.getItem("catvinci-settings");
+      sessionStorage.setItem("kept-settings", stored ?? "{}");
+    });
+    await page.addInitScript(() => {
+      const kept = sessionStorage.getItem("kept-settings");
+      if (kept && window.top === window)
+        localStorage.setItem("catvinci-settings", kept);
+    });
+    await page.reload();
+    await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
+    panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.aboutTextus }).click();
+    await expect(
+      panel.getByRole("combobox", { name: t.updateChannel }),
+    ).toHaveText(t.updateChannelBeta);
+  });
+
+  test("no update channel in a package-manager build", async ({ page }) => {
+    // The Arch package: it reports new versions but doesn't install them.
+    await page.addInitScript(() => {
+      (
+        window as unknown as { __devInvokeResults: unknown }
+      ).__devInvokeResults = { app_distribution: "aur" };
+    });
+    await openApp(page, { settings: { language: "en" } });
+    const panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.aboutTextus }).click();
+    await expect(
+      panel.getByRole("button", { name: t.updateCheckButton }),
+    ).toBeVisible();
+    await expect(panel.getByText(t.updateChannel)).toHaveCount(0);
+  });
 });
 
 test.describe("iPad", () => {
@@ -293,6 +361,17 @@ test.describe("phone", () => {
     await panel.getByRole("button", { name: t.navEditor }).tap();
     await expect(panel.getByText(t.menuViewSource)).toBeVisible();
     await expect(panel.getByText(t.pdfPageNumbersLabel)).toHaveCount(0);
+  });
+
+  test("no update button or channel: the App Store updates the app", async ({
+    page,
+  }) => {
+    await openPhone(page);
+    const panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.aboutTextus }).tap();
+    await expect(panel.getByText(t.aboutMadeBy)).toBeVisible();
+    await expect(panel.getByText(t.updateCheckButton)).toHaveCount(0);
+    await expect(panel.getByText(t.updateChannel)).toHaveCount(0);
   });
 
   test("closing Settings doesn't put the keyboard back up", async ({

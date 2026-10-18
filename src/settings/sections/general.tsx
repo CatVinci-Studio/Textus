@@ -1,12 +1,14 @@
 import { errorText } from "../../utils/error-text";
 import { useEffect, useState } from "react";
-import { check, type Update } from "@tauri-apps/plugin-updater";
+import type { Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import type { Strings } from "../../i18n/strings";
-import { cli } from "../../platform/ipc";
+import { cli, updater, type UpdateChannel } from "../../platform/ipc";
 import { flushPendingWrites } from "../../storage/pending-writes";
-import { selfUpdateAllowed } from "../../platform/distribution";
+import { checkChannel, selfUpdateAllowed } from "../../platform/distribution";
 import { canAutoUpdate } from "../../platform/capabilities";
+import { useSettings } from "../SettingsContext";
+import { Select } from "../../ui/Select";
 import { SettingRow } from "./controls";
 import { levisImport, type LevisImportStatus } from "../../platform/ipc";
 import type { Lang } from "../../i18n/strings";
@@ -29,6 +31,7 @@ export function UpdateButton({ t }: { t: Strings }) {
   const [message, setMessage] = useState("");
   const [update, setUpdate] = useState<Update | null>(null);
   const [selfUpdate, setSelfUpdate] = useState(true);
+  const { settings } = useSettings();
 
   useEffect(() => {
     if (canAutoUpdate) void selfUpdateAllowed().then(setSelfUpdate);
@@ -38,7 +41,10 @@ export function UpdateButton({ t }: { t: Strings }) {
     setPhase("checking");
     setMessage("");
     try {
-      const found = await check();
+      const allowed = await selfUpdateAllowed();
+      const found = await updater.check(
+        checkChannel(settings.updateChannel, allowed),
+      );
       if (found) {
         setUpdate(found);
         setPhase("available");
@@ -108,6 +114,42 @@ export function UpdateButton({ t }: { t: Strings }) {
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * Stable or Beta, under the update button in About Textus. Beta also gets
+ * release candidates, always the newest release of either kind; going back
+ * to Stable keeps an installed release candidate until a newer stable
+ * version exists (src-tauri/src/commands/update.rs). Hidden where the app
+ * doesn't install its own updates: iOS (the App Store) and package-manager
+ * builds such as the Arch package, which only report stable versions.
+ */
+export function UpdateChannelRow({ t }: { t: Strings }) {
+  const { settings, setSettings } = useSettings();
+  const [selfUpdate, setSelfUpdate] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (canAutoUpdate) void selfUpdateAllowed().then(setSelfUpdate);
+  }, []);
+
+  if (!canAutoUpdate || !selfUpdate) return null;
+  return (
+    <div className="settings-about-channel">
+      <SettingRow label={t.updateChannelLabel} hint={t.updateChannelHint}>
+        <Select
+          className="settings-select"
+          aria-label={t.updateChannelLabel}
+          value={settings.updateChannel}
+          onChange={(e) =>
+            setSettings({ updateChannel: e.target.value as UpdateChannel })
+          }
+        >
+          <option value="stable">{t.updateChannelStable}</option>
+          <option value="beta">{t.updateChannelBeta}</option>
+        </Select>
+      </SettingRow>
+    </div>
   );
 }
 

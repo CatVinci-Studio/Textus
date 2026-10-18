@@ -72,6 +72,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/CatVinci-Studio/arch-repo/ma
 
 iPhone und iPad: bald verfügbar. [Alle Versionen auf GitHub](https://github.com/CatVinci-Studio/Textus/releases)
 
+Neue Versionen früher haben? Stell unter **Einstellungen › Allgemein › Über Textus** den **Update-Kanal** auf **Beta**, dann kommen auch Release-Kandidaten; zurück auf **Stabil** geht jederzeit, und du bleibst auf deiner Version, bis eine neuere stabile erscheint.
+
 ## Schreiben
 
 Markdown wird schon beim Tippen formatiert. Zeig auf eine Zeile, und du siehst ihr Markdown.

@@ -355,6 +355,17 @@ jobs:
             gh release edit "$RELEASE_TAG" --draft=false --latest=false
           fi
 
+  # After publishing every tag, release candidates included: the beta update
+  # channel's manifest (textus-beta.json on the download bucket), which is
+  # that channel's only way to see a pre-release. It moves only forward, so
+  # rebuilding an older tag leaves it where it is.
+  update-beta-manifest:
+    needs: publish
+    uses: ./.github/workflows/update-beta-manifest.yml
+    with:
+      tag: ${{ inputs.tag || github.ref_name }}
+    secrets: inherit
+
   # After publishing, only for the newest stable tag: the download mirror,
   # the Homebrew cask and the [catvinci] pacman repository. Pre-releases have
   # no channel of their own in any of them, so pointing them at an rc would

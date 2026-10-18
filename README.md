@@ -76,6 +76,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/CatVinci-Studio/arch-repo/ma
 
 iPhone and iPad: coming soon. [All releases on GitHub](https://github.com/CatVinci-Studio/Textus/releases)
 
+Want new versions early? In **Settings › General › About Textus**, set **Update channel** to **Beta** to get release candidates too; set it back to **Stable** any time, and you stay on your version until a newer stable one is out.
+
 ## Writing
 
 Every Markdown mark, rendered as you write. Point at a line to see its Markdown.

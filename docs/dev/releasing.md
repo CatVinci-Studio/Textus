@@ -46,7 +46,8 @@ through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md
    still running, and stops if it failed, so the builds don't run the tests
    again. Then it builds,
    signs and notarizes for macOS (Apple silicon and Intel), Windows and Linux,
-   publishes the GitHub release, writes the updater manifest, mirrors the
+   publishes the GitHub release, writes the updater manifest, points the
+   beta channel's manifest at it, mirrors the
    installers to the website's download bucket, points the Homebrew cask at
    both DMGs, and sends the tested `textus-bin` package to the `[catvinci]`
    pacman repository in `CatVinci-Studio/arch-repo` (see
@@ -59,24 +60,62 @@ through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md
    - the Homebrew cask (`CatVinci-Studio/homebrew-tap`) has the new version
      and both sha256 sums;
    - <https://textus.catvinci.com/download/manifest.json> names the new files;
+   - <https://textus.catvinci.com/download/textus-beta.json> has the new
+     version;
    - the Arch repository has `textus-bin-X.Y.Z-1`.
 
 A failed run can be rebuilt with
 `gh workflow run release.yml --ref main -f tag=vX.Y.Z`: the packaging
-scripts come from the ref, the build from the tag. The three steps after
+scripts come from the ref, the build from the tag. The four steps after
 publishing are separate workflows, so one of them can be retried alone:
 `gh workflow run mirror-downloads.yml -f tag=vX.Y.Z`, and the same for
-`update-homebrew-tap.yml` and `update-arch-repo.yml`.
+`update-beta-manifest.yml`, `update-homebrew-tap.yml` and
+`update-arch-repo.yml`.
 
 ## Pre-releases
 
 A tag with a semver pre-release suffix (`v1.1.0-rc.1`) is published as a
 GitHub pre-release. The version files carry the same suffix (`1.1.0-rc.1`):
 the tag check compares the whole version, and release notes are only
-required for stable tags. It skips the Homebrew cask, the download mirror and
-the `[catvinci]` pacman repository, so it reaches nobody who did not go looking
-for it - the in-app updater reads `releases/latest/download/textus-latest.json`,
-and `releases/latest` excludes pre-releases.
+required for stable tags. Linux gets the `.deb` and AppImage but no `.rpm`
+(RPM versions can't contain `-`).
+
+A release candidate reaches only the users who chose **Settings › General ›
+About Textus › Update channel › Beta**. It skips the Homebrew cask, the
+download mirror and the `[catvinci]` pacman repository, and the stable
+channel never sees it: that channel reads
+`releases/latest/download/textus-latest.json`, and `releases/latest`
+excludes pre-releases. To check a release candidate before tagging the
+stable release, switch a test install to Beta and use **Check for Updates**.
+
+## Update channels
+
+The app has two (`src-tauri/src/commands/update.rs`):
+
+- **Stable** reads the newest stable GitHub release's `textus-latest.json`,
+  the endpoint in `tauri.conf.json`.
+- **Beta** reads `textus-beta.json` from the website's download bucket
+  (<https://textus.catvinci.com/download/textus-beta.json>), and falls back
+  to the stable endpoint when that fails. GitHub has no fixed URL for the
+  newest pre-release, so the beta manifest lives on our own bucket.
+
+After every published tag, release candidates included, the
+`update-beta-manifest` job (`update-beta-manifest.yml`,
+`scripts/update-beta-manifest.sh`) copies that release's
+`textus-latest.json` to `textus-beta.json` in the `textus-downloads` R2
+bucket - unless the bucket already holds a newer version, so rebuilding an
+old tag never moves beta backwards. Beta therefore always offers the newest
+of the latest release candidate and the latest stable release: on
+`1.0.5-rc.2`, the stable `1.0.5` arrives as an update. Its download URLs are
+the GitHub release's assets; release candidates are not mirrored. It needs
+the `CLOUDFLARE_API_TOKEN` secret that the download mirror uses.
+
+The app never installs an older version than it runs, so a user who goes
+back from Beta to Stable keeps the release candidate until a newer stable
+version is out. An install from the `.rpm` skips release candidates, which
+have no `.rpm`, and waits for the stable release. Builds that don't install
+their own updates (the Arch package, iOS) have no channel setting and check
+the stable channel.
 
 ## Updater manifest
 
@@ -88,13 +127,16 @@ tauri-action runs with `includeUpdaterJson: false`; the publish job writes
 `textus-latest.json` from the draft's `.sig` files
 (`scripts/updater-manifest.mjs build`) and refuses to publish a draft that
 has any other `latest.json` (`… guard`). `npm run check` runs `… check`, which
-fails if the updater endpoint or the workflow drifts back.
+fails if the updater endpoint, the beta channel's endpoint or the workflow
+drifts back. The beta manifest is `textus-beta.json` and lives only on the
+download bucket, never on a GitHub release.
 
 ## Rebuilds
 
 Running the Release workflow by hand on an existing tag rebuilds and
 republishes that release. The Homebrew cask, the download mirror and the
-pacman repository only move when the tag is the newest stable one, so
+pacman repository only move when the tag is the newest stable one, and the
+beta manifest only when the tag is not older than the one it names, so
 rebuilding an old tag never downgrades anyone.
 
 ## Windows installer

@@ -10,7 +10,10 @@ vi.mock("@tauri-apps/api/app", () => ({
   getVersion: () => Promise.resolve("1.0.4"),
 }));
 vi.mock("../../platform/ipc", () => ({ links: { openAboutLink: vi.fn() } }));
-vi.mock("./general", () => ({ UpdateButton: () => null }));
+vi.mock("./general", () => ({
+  UpdateButton: () => null,
+  UpdateChannelRow: () => null,
+}));
 
 const t = resolveStrings("en");
 afterEach(cleanup);

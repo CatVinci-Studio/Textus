@@ -734,6 +734,8 @@ pub fn run() {
             #[cfg(desktop)]
             install_cli_command,
             #[cfg(desktop)]
+            commands::update::check_for_update,
+            #[cfg(desktop)]
             detect_pandoc,
             #[cfg(desktop)]
             export_via_pandoc,

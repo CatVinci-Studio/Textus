@@ -53,6 +53,12 @@ language key, `"automatic"` or a missing language meaning Automatic. The
 allowed values are `writing_conventions_options` (`platform/ipc.ts`:
 `WRITING_CONVENTIONS`).
 
+`settings.json`'s `updateChannel` is **Settings › General › About Textus ›
+Update channel**: `"stable"` (the default; a missing or unknown value means
+the same) or `"beta"`. Rust doesn't read the file for it: the frontend sends
+the channel with each update check (`check_for_update` in
+`src-tauri/src/commands/update.rs`).
+
 ### Data directory
 
 | File                       | What                                                                                                                     |

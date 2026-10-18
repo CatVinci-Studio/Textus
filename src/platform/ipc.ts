@@ -1,4 +1,6 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
+import { Update } from "@tauri-apps/plugin-updater";
+import type { UpdateChannel } from "./update-channel";
 import type {
   ChatHandoff,
   ChatHandoffState,
@@ -953,6 +955,29 @@ export type Distribution = "direct" | "homebrew" | "aur";
 
 export const distribution = {
   appDistribution: () => call<Distribution>("app_distribution"),
+};
+
+// ---------------------------------------------------------------------------
+// update (src-tauri/src/commands/update.rs) - desktop only
+// ---------------------------------------------------------------------------
+
+export type { UpdateChannel } from "./update-channel";
+
+/** Mirrors UpdateMetadata in src-tauri/src/commands/update.rs, which is the
+ *  plugin's own check answer. */
+type UpdateMetadata = ConstructorParameters<typeof Update>[0];
+
+export const updater = {
+  /** The plugin's `check()` on `channel`'s endpoints; the `Update` it
+   *  answers downloads and installs through the plugin as usual. */
+  check: async (channel: UpdateChannel): Promise<Update | null> => {
+    const metadata = await desktopQuery<UpdateMetadata | null>(
+      "check_for_update",
+      null,
+      { channel },
+    );
+    return metadata ? new Update(metadata) : null;
+  },
 };
 
 // ---------------------------------------------------------------------------

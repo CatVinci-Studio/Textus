@@ -1,0 +1,57 @@
+name: Update beta manifest
+
+# The app's beta update channel reads textus-beta.json from our own R2
+# bucket (textus.catvinci.com/download/textus-beta.json), because GitHub's
+# releases/latest skips pre-releases. This copies a published release's
+# textus-latest.json there - release candidates and stable releases alike,
+# but never an older version than the one already there
+# (scripts/update-beta-manifest.sh). release.yml calls this after
+# publishing every tag; run it by hand to retry one.
+#
+# Needs CLOUDFLARE_API_TOKEN (an API token with R2 edit on the account);
+# without it this only warns.
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published release tag (for example v1.0.5-rc.1)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  update-beta-manifest:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    # Two tags published at once each read, compare and write the manifest:
+    # one at a time, so the older can't land last.
+    concurrency:
+      group: update-beta-manifest
+      cancel-in-progress: false
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 49abb4d436c552f6e4497b1782fc9beb
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Point textus-beta.json at the release
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN is not set: beta users still get the previous version. Run scripts/update-beta-manifest.sh $RELEASE_TAG by hand."
+            exit 0
+          fi
+          scripts/update-beta-manifest.sh "$RELEASE_TAG"

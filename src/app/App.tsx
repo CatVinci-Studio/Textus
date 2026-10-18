@@ -98,7 +98,7 @@ function App() {
     setPanelMode,
   } = useSidePanels();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const appUpdate = useAppUpdate();
+  const appUpdate = useAppUpdate(settings.updateChannel);
   useZoom(settings.zoom, (zoom) => setSettings({ zoom }));
   const tutorial = useTutorial();
   const startTutorial = tutorial.start;
