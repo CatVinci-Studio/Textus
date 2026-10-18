@@ -226,6 +226,10 @@ export interface Settings {
   restoreSessionOnStartup: boolean;
   /** Suggest an H1 or first content line as a draft's Save As filename. */
   autoSuggestFilename: boolean;
+  /** Settings › General › Save Automatically (#133): write a document that
+   *  has a file back to it once typing rests (document/autosave.ts). Off by
+   *  default. */
+  autosave: boolean;
   copyTextMode: CopyTextMode;
   /** File > Export as PDF numbers each page in its bottom margin
    *  (commands/pdf_page_numbers.rs). Off by default (#68). */
@@ -287,6 +291,7 @@ const DEFAULT_SETTINGS: Settings = {
   newDocumentMode: "window",
   restoreSessionOnStartup: true,
   autoSuggestFilename: true,
+  autosave: false,
   copyTextMode: "readable",
   pdfPageNumbers: false,
   updateChannel: "stable",

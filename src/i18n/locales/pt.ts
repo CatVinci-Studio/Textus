@@ -629,6 +629,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   newDocumentModeTab: "Uma aba nesta janela",
   restoreSessionLabel: "Restaurar a sessão anterior ao iniciar",
   autoSuggestFilenameLabel: "Sugerir um nome ao salvar um arquivo novo",
+  autosaveLabel: "Salvar automaticamente",
+  autosaveHint:
+    "Grava um documento que já tem um arquivo de volta nele logo depois que você para de digitar, e ao trocar de aba ou sair da janela. Documentos novos só são salvos depois que você der um nome a eles.",
   untitledTab: "Sem título",
   markdownGuideTab: "Guia de Markdown",
   agentGuideTab: "Guia dos Recursos de IA",

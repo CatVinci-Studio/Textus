@@ -616,6 +616,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   newDocumentModeTab: "このウィンドウの新しいタブ",
   restoreSessionLabel: "起動時に前回のセッションを復元",
   autoSuggestFilenameLabel: "新規ファイルの保存時にファイル名を提案",
+  autosaveLabel: "自動保存",
+  autosaveHint:
+    "ファイルのある書類を、入力が止まって少したったときや、タブを切り替えたりウインドウを離れたりしたときに、元のファイルへ書き戻します。新規書類は名前を付けて保存するまで自動保存されません。",
   untitledTab: "無題",
   markdownGuideTab: "Markdownガイド",
   agentGuideTab: "AI機能ガイド",
