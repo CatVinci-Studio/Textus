@@ -392,7 +392,7 @@ export function MilkdownEditor({
           onDone={notes.doneNote}
           onAsk={notes.askAboutNote}
           onDecide={pendingEdits.decide}
-          onCompact={notes.setNotesCompact}
+          onNoMargin={notes.onNoMargin}
           layoutKey={pendingEdits.previews}
         />
       )}
@@ -423,7 +423,6 @@ export function MilkdownEditor({
                 onReject={pendingEdits.rejectAll}
                 onOpenChat={() => agentPanel.setOpen(true)}
                 display={settings.revisionDisplay}
-                marginAvailable={!notes.notesBadged}
                 displayName={(mode) => revisionDisplayName(t, mode)}
                 onDisplay={(mode) => setSettings({ revisionDisplay: mode })}
               />
@@ -513,7 +512,7 @@ export function MilkdownEditor({
             onRevealProposal={revealProposal}
             onLocateText={notes.locateText}
             noteNumber={(id) =>
-              notes.notesBadged
+              notes.noMargin
                 ? (notes.notes.find((n) => n.id === id)?.num ?? null)
                 : null
             }

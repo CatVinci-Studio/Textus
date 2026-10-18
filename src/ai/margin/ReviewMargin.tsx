@@ -83,10 +83,10 @@ function anchorSelector(item: MarginItem): string {
  *
  * The margin is made, not assumed: when the space right of the text is too
  * narrow the text column moves left to open it (animated, via its margin),
- * and when even that isn't enough - a narrow window, a phone - `onCompact`
+ * and when even that isn't enough - a narrow window, a phone - `onNoMargin`
  * hands everything back to the text: notes behind numbered badges, a
- * rewrite's sentences inline with their ✓ / ✕. Whether it fits is
- * measured with or without anything to show, so the margin views are
+ * rewrite's sentences inline with their ✓ / ✕. Whether one is available
+ * is measured with or without anything to show, so the margin views are
  * offered only where they would work.
  */
 export function ReviewMargin({
@@ -100,7 +100,7 @@ export function ReviewMargin({
   onDone,
   onAsk,
   onDecide,
-  onCompact,
+  onNoMargin,
   layoutKey,
 }: {
   /** Anything else that moves text without moving the items: a change
@@ -116,7 +116,7 @@ export function ReviewMargin({
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
   onDecide: (callId: string, index: number, take: boolean | null) => void;
-  onCompact: (compact: boolean) => void;
+  onNoMargin: (noMargin: boolean) => void;
 }) {
   const [layout, setLayout] = useState<{
     left: number;
@@ -124,20 +124,20 @@ export function ReviewMargin({
   } | null>(null);
   const heights = useRef(new Map<string, number>());
   const [tick, setTick] = useState(0);
-  const [compact, setCompact] = useState(false);
-  const onCompactRef = useLatest(onCompact);
+  const [noMargin, setNoMargin] = useState(false);
+  const onNoMarginRef = useLatest(onNoMargin);
 
-  // Whether a margin fits, cards or no cards: the window, the side panels,
-  // the zoom and the text width all change it.
+  // Whether a margin is available, cards or no cards: the window, the side
+  // panels, the zoom and the text width all change it.
   useLayoutEffect(() => {
     if (!view) return;
     let last: boolean | null = null;
     const check = () => {
-      const next = !measureRoom(scrollEl, contentEl, view).fits;
+      const next = !measureRoom(scrollEl, contentEl, view).available;
       if (next === last) return;
       last = next;
-      setCompact(next);
-      onCompactRef.current(next);
+      setNoMargin(next);
+      onNoMarginRef.current(next);
     };
     check();
     const ro = new ResizeObserver(check);
@@ -145,12 +145,12 @@ export function ReviewMargin({
     ro.observe(contentEl);
     ro.observe(view.dom);
     return () => ro.disconnect();
-  }, [view, scrollEl, contentEl, onCompactRef]);
+  }, [view, scrollEl, contentEl, onNoMarginRef]);
 
   // Measure: where the text ends, where each item's passage is - then
   // stack the cards.
   useLayoutEffect(() => {
-    if (!view || compact || items.length === 0) {
+    if (!view || noMargin || items.length === 0) {
       contentEl.style.marginLeft = "";
       scrollEl.classList.remove("review-notes-on");
       setLayout(null);
@@ -242,7 +242,7 @@ export function ReviewMargin({
       cancelAnimationFrame(frame);
     };
     // `tick`: a card's measured height changed, restack.
-  }, [view, compact, items, scrollEl, contentEl, tick, layoutKey]);
+  }, [view, noMargin, items, scrollEl, contentEl, tick, layoutKey]);
 
   // Unmounting (the editor going away) gives the column its place back.
   useLayoutEffect(

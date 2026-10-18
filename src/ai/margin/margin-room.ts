@@ -13,8 +13,9 @@ export interface MarginRoom {
   textRight: number;
   /** How far the column moves left to open the margin. */
   shift: number;
-  /** Whether a margin fits at all, even with the column moved over. */
-  fits: boolean;
+  /** Whether a margin is available at all, even with the column moved
+   *  over. */
+  available: boolean;
 }
 
 /**
@@ -22,7 +23,7 @@ export interface MarginRoom {
  * moves over to make it - from the scroller's width, the column's, and the
  * column's padding round the text. The one place this is decided: the
  * margin lays its cards out by it, and the review bar and Settings offer
- * the margin views only when it fits.
+ * the margin views only when it is available.
  */
 export function marginRoom(
   scrollWidth: number,
@@ -39,7 +40,7 @@ export function marginRoom(
     natural,
     textRight,
     shift,
-    fits: natural + padding / 2 - shift >= MIN_LEFT,
+    available: natural + padding / 2 - shift >= MIN_LEFT,
   };
 }
 

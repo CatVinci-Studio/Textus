@@ -24,7 +24,21 @@ export function needsMargin(mode: RevisionDisplay): boolean {
  */
 export function effectiveRevisionDisplay(
   mode: RevisionDisplay,
-  hasMargin: boolean,
+  marginAvailable: boolean,
 ): RevisionDisplay {
-  return !hasMargin && needsMargin(mode) ? "inline" : mode;
+  return !marginAvailable && needsMargin(mode) ? "inline" : mode;
+}
+
+/**
+ * Whether a margin view is listed but can't be picked: there is no room
+ * for a margin (margin-room.ts) where there could be one. A phone never
+ * has a margin, so nothing there is blocked or explained - it lists only
+ * the views that need none. The review bar's menu and Settings both ask
+ * this.
+ */
+export function marginViewBlocked(
+  mode: RevisionDisplay,
+  { phone, marginAvailable }: { phone: boolean; marginAvailable: boolean },
+): boolean {
+  return !phone && !marginAvailable && needsMargin(mode);
 }
