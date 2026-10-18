@@ -98,6 +98,7 @@ export default {
   revisionDisplayOriginal: "原文在正文，修改在页边",
   revisionDisplayNew: "修改在正文，原文在页边",
   revisionDisplayFinal: "只看修改后的结果",
+  revisionDisplayNoRoom: "空间不够：关掉侧边栏或 AI 面板即可",
   proposalDeletedSentence: "原文",
   reviewBarLabel: "修订",
   reviewBarOpenChat: "打开 AI 面板",

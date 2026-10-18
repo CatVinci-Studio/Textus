@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { ReviewNote } from "./review-notes-plugin";
 import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
+import { useLatest } from "../../utils/hooks/useLatest";
+import { CARD_WIDTH, GAP, marginRoom } from "./margin-room";
 import "./ReviewMargin.css";
 
 export interface ReviewMarginLabels {
@@ -37,11 +39,6 @@ export type MarginItem =
       take: boolean | null;
     };
 
-/** A card's width and the air between it and the text. */
-const CARD_WIDTH = 232;
-const GAP = 28;
-/** The least the text column keeps on its left when it moves over. */
-const MIN_LEFT = 16;
 const STACK_GAP = 8;
 
 interface Placed {
@@ -51,6 +48,20 @@ interface Placed {
    *  layer's coordinates. */
   ax: number;
   ay: number;
+}
+
+/** marginRoom for this editor as it is laid out now. */
+function measureRoom(
+  scrollEl: HTMLElement,
+  contentEl: HTMLElement,
+  view: EditorView,
+) {
+  const pm = view.dom as HTMLElement;
+  return marginRoom(
+    scrollEl.clientWidth,
+    contentEl.offsetWidth,
+    contentEl.offsetWidth - pm.offsetWidth,
+  );
 }
 
 /** The marked text an item is about, in the document. */
@@ -74,7 +85,9 @@ function anchorSelector(item: MarginItem): string {
  * narrow the text column moves left to open it (animated, via its margin),
  * and when even that isn't enough - a narrow window, a phone - `onCompact`
  * hands everything back to the text: notes behind numbered badges, a
- * rewrite's sentences inline with their ✓ / ✕.
+ * rewrite's sentences inline with their ✓ / ✕. Whether it fits is
+ * measured with or without anything to show, so the margin views are
+ * offered only where they would work.
  */
 export function ReviewMargin({
   view,
@@ -111,47 +124,45 @@ export function ReviewMargin({
   } | null>(null);
   const heights = useRef(new Map<string, number>());
   const [tick, setTick] = useState(0);
-  const compactRef = useRef(false);
+  const [compact, setCompact] = useState(false);
+  const onCompactRef = useLatest(onCompact);
 
-  // Measure: where the text ends, whether a margin fits, where each item's
-  // passage is - then stack the cards.
+  // Whether a margin fits, cards or no cards: the window, the side panels,
+  // the zoom and the text width all change it.
   useLayoutEffect(() => {
-    if (!view || items.length === 0) {
+    if (!view) return;
+    let last: boolean | null = null;
+    const check = () => {
+      const next = !measureRoom(scrollEl, contentEl, view).fits;
+      if (next === last) return;
+      last = next;
+      setCompact(next);
+      onCompactRef.current(next);
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(scrollEl);
+    ro.observe(contentEl);
+    ro.observe(view.dom);
+    return () => ro.disconnect();
+  }, [view, scrollEl, contentEl, onCompactRef]);
+
+  // Measure: where the text ends, where each item's passage is - then
+  // stack the cards.
+  useLayoutEffect(() => {
+    if (!view || compact || items.length === 0) {
       contentEl.style.marginLeft = "";
       scrollEl.classList.remove("review-notes-on");
-      if (compactRef.current) {
-        compactRef.current = false;
-        onCompact(false);
-      }
       setLayout(null);
       return;
     }
     const measure = () => {
-      const scrollW = scrollEl.clientWidth;
-      const contentW = contentEl.offsetWidth;
       const pm = view.dom as HTMLElement;
-      // The text's right edge sits inside the column's padding.
-      const pad = contentEl.offsetWidth - pm.offsetWidth;
-      const natural = Math.max(0, (scrollW - contentW) / 2);
-      const textRight = natural + contentW - pad / 2;
-      const room = scrollW - textRight;
-      const need = CARD_WIDTH + GAP + 16;
-      let shift = 0;
-      let compact = false;
-      if (room < need) {
-        shift = need - room;
-        if (natural + pad / 2 - shift < MIN_LEFT) compact = true;
-      }
-      if (compact !== compactRef.current) {
-        compactRef.current = compact;
-        onCompact(compact);
-      }
-      if (compact) {
-        contentEl.style.marginLeft = "";
-        scrollEl.classList.remove("review-notes-on");
-        setLayout(null);
-        return;
-      }
+      const { natural, textRight, shift } = measureRoom(
+        scrollEl,
+        contentEl,
+        view,
+      );
       scrollEl.classList.add("review-notes-on");
       contentEl.style.marginLeft = shift > 0 ? `${natural - shift}px` : "";
       const left = textRight - shift + GAP;
@@ -231,8 +242,7 @@ export function ReviewMargin({
       cancelAnimationFrame(frame);
     };
     // `tick`: a card's measured height changed, restack.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, items, scrollEl, contentEl, tick, layoutKey]);
+  }, [view, compact, items, scrollEl, contentEl, tick, layoutKey]);
 
   // Unmounting (the editor going away) gives the column its place back.
   useLayoutEffect(

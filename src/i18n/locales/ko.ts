@@ -103,6 +103,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   revisionDisplayOriginal: "본문에 원문, 여백에 수정",
   revisionDisplayNew: "본문에 수정, 여백에 원문",
   revisionDisplayFinal: "수정 결과만",
+  revisionDisplayNoRoom: "공간이 부족합니다: 사이드바나 AI 패널을 닫아 주세요",
   proposalDeletedSentence: "원문",
   reviewBarLabel: "수정",
   reviewBarOpenChat: "AI 패널 열기",

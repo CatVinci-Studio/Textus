@@ -114,6 +114,8 @@ para usar una.
   revisionDisplayOriginal: "Original en el texto, cambios en el margen",
   revisionDisplayNew: "Cambios en el texto, original en el margen",
   revisionDisplayFinal: "Solo el resultado, sin marcas",
+  revisionDisplayNoRoom:
+    "No hay espacio: cierra la barra lateral o el panel de IA",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Revisión",
   reviewBarOpenChat: "Abrir el panel de IA",
