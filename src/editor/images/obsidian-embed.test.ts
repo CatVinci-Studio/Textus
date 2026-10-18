@@ -3,7 +3,26 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
-import { parseEmbed } from "./obsidian-embed";
+import { readFileSync } from "node:fs";
+import { IMAGE_EXTENSIONS, parseEmbed } from "./obsidian-embed";
+import { exportSrc } from "./obsidian-embed-preview";
+
+describe("an embed's src in an HTML export", () => {
+  it("is relative to the document when the file is below its folder", () => {
+    expect(
+      exportSrc("/vault/notes/img/Pasted image.png", "/vault/notes/trip.md"),
+    ).toBe("img/Pasted%20image.png");
+    expect(exportSrc("C:\\v\\notes\\img\\a.png", "C:\\v\\notes\\t.md")).toBe(
+      "img/a.png",
+    );
+  });
+
+  it("is the full path when the file is elsewhere in the vault", () => {
+    expect(exportSrc("/vault/attachments/a.png", "/vault/notes/trip.md")).toBe(
+      "/vault/attachments/a.png",
+    );
+  });
+});
 
 describe("parseEmbed", () => {
   it("reads a path from the vault root", () => {
@@ -47,6 +66,16 @@ describe("parseEmbed", () => {
       expect(parseEmbed(`![[a.${ext}]]`)?.isImage).toBe(true);
     },
   );
+
+  it("takes the same file types for images as the backend searches for", () => {
+    // src-tauri/src/commands/vault.rs indexes the vault by its own list.
+    const rust = readFileSync("src-tauri/src/commands/vault.rs", "utf8");
+    const list = /const IMAGE_EXTENSIONS: &\[&str\] = &\[([^\]]*)\]/.exec(rust);
+    const types = [...(list?.[1] ?? "").matchAll(/"([^"]+)"/g)].map(
+      (m) => m[1],
+    );
+    expect(types).toEqual([...IMAGE_EXTENSIONS]);
+  });
 
   it.each(["![[Note]]", "![[Note#Heading]]", "![[doc.pdf]]", "![[a.png#^b]]"])(
     "takes %s for something other than an image",

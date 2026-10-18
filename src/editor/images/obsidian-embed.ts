@@ -24,7 +24,8 @@ import type { Literal } from "mdast";
  * caret is elsewhere. Any other embed (a note, a heading) stays text.
  *
  * HTML and PDF exports are copies of the editor's page, so they carry the
- * picture (its src the file's full path). Exports from the Markdown source -
+ * picture (its src: obsidian-embed-preview.ts's exportSrc). Exports from the
+ * Markdown source -
  * Word and the other Pandoc formats - keep the embed as text: Pandoc can't
  * read it, and rewriting it to `![](path)` would change what was written.
  */
@@ -51,7 +52,21 @@ declare module "mdast" {
 
 /** File types an embed shows as a picture - IMAGE_EXTENSIONS in
  *  src-tauri/src/commands/vault.rs. */
-const IMAGE_EXTENSIONS = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i;
+export const IMAGE_EXTENSIONS = [
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "webp",
+  "svg",
+  "avif",
+  "bmp",
+] as const;
+
+function isImageFile(file: string): boolean {
+  const ext = /\.([^./]+)$/.exec(file)?.[1].toLowerCase();
+  return (IMAGE_EXTENSIONS as readonly string[]).includes(ext ?? "");
+}
 
 export interface EmbedTarget {
   /** The file as written: a name or a path from the vault root. */
@@ -86,7 +101,7 @@ export function parseEmbed(source: string): EmbedTarget | null {
     alt: alt.join("|"),
     width,
     height,
-    isImage: !file.includes("#") && IMAGE_EXTENSIONS.test(file),
+    isImage: !file.includes("#") && isImageFile(file),
   };
 }
 

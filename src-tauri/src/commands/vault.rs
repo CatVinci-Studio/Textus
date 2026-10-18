@@ -8,7 +8,6 @@
 //! when possible", Obsidian's default link format). Outside a vault the
 //! document's own folder stands in for one.
 
-use std::collections::HashMap;
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -197,32 +196,57 @@ fn resolve_with(
 }
 
 struct CachedIndex {
+    root: PathBuf,
     built: Instant,
     files: Arc<Vec<String>>,
 }
 
-static INDEXES: Mutex<Option<HashMap<PathBuf, CachedIndex>>> = Mutex::new(None);
+/// The vaults indexed lately, most recently used first. A writer keeps a
+/// vault or two open; the rest are dropped, not kept for the whole session.
+const MAX_CACHED_VAULTS: usize = 4;
+
+static INDEXES: Mutex<Vec<CachedIndex>> = Mutex::new(Vec::new());
+
+/// Moves `root`'s index to the front of `cache` (or puts `fresh` there) and
+/// drops what falls past MAX_CACHED_VAULTS.
+fn touch_cached(cache: &mut Vec<CachedIndex>, root: &Path, fresh: Option<CachedIndex>) {
+    let found = cache.iter().position(|c| c.root == root);
+    let entry = match (fresh, found) {
+        (Some(entry), found) => {
+            if let Some(i) = found {
+                cache.remove(i);
+            }
+            entry
+        }
+        (None, Some(i)) => cache.remove(i),
+        (None, None) => return,
+    };
+    cache.insert(0, entry);
+    cache.truncate(MAX_CACHED_VAULTS);
+}
 
 /// The vault's index, built again when it is older than INDEX_TTL - or, for
 /// a lookup that just missed (`fresh`), older than MISS_REBUILD_AFTER.
 fn cached_index(root: &Path, fresh: bool) -> Arc<Vec<String>> {
     let limit = if fresh { MISS_REBUILD_AFTER } else { INDEX_TTL };
-    if let Ok(guard) = INDEXES.lock() {
-        if let Some(cached) = guard.as_ref().and_then(|m| m.get(root)) {
-            if cached.built.elapsed() < limit {
-                return cached.files.clone();
-            }
+    if let Ok(mut cache) = INDEXES.lock() {
+        let hit = cache
+            .iter()
+            .find(|c| c.root == root && c.built.elapsed() < limit)
+            .map(|c| c.files.clone());
+        if let Some(files) = hit {
+            touch_cached(&mut cache, root, None);
+            return files;
         }
     }
     let files = Arc::new(index_vault(root));
-    if let Ok(mut guard) = INDEXES.lock() {
-        guard.get_or_insert_with(HashMap::new).insert(
-            root.to_path_buf(),
-            CachedIndex {
-                built: Instant::now(),
-                files: files.clone(),
-            },
-        );
+    if let Ok(mut cache) = INDEXES.lock() {
+        let entry = CachedIndex {
+            root: root.to_path_buf(),
+            built: Instant::now(),
+            files: files.clone(),
+        };
+        touch_cached(&mut cache, root, Some(entry));
     }
     files
 }
@@ -435,5 +459,26 @@ mod tests {
         });
         assert!(asked_fresh);
         assert_eq!(found, Some(image));
+    }
+
+    #[test]
+    fn only_the_most_recently_used_vaults_stay_cached() {
+        let entry = |name: &str| CachedIndex {
+            root: PathBuf::from(name),
+            built: Instant::now(),
+            files: Arc::new(Vec::new()),
+        };
+        let mut cache = Vec::new();
+        for name in ["a", "b", "c", "d"] {
+            touch_cached(&mut cache, Path::new(name), Some(entry(name)));
+        }
+        // Using "a" again keeps it; the next new vault pushes out "b".
+        touch_cached(&mut cache, Path::new("a"), None);
+        touch_cached(&mut cache, Path::new("e"), Some(entry("e")));
+        let roots: Vec<_> = cache
+            .iter()
+            .map(|c| c.root.to_string_lossy().to_string())
+            .collect();
+        assert_eq!(roots, ["e", "a", "d", "c"]);
     }
 }
