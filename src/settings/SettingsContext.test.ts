@@ -28,6 +28,22 @@ describe("newcomer guide eligibility", () => {
     expect(loadSettings().pdfPageNumbers).toBe(true);
   });
 
+  it("updates from the stable channel unless beta was chosen", () => {
+    expect(loadSettings().updateChannel).toBe("stable");
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ language: "zh" }));
+    expect(loadSettings().updateChannel).toBe("stable");
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ language: "zh", updateChannel: "beta" }),
+    );
+    expect(loadSettings().updateChannel).toBe("beta");
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ language: "zh", updateChannel: "nightly" }),
+    );
+    expect(loadSettings().updateChannel).toBe("stable");
+  });
+
   it("does not surprise installations whose old settings predate the flag", () => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ language: "zh" }));
     expect(loadSettings().onboardingShown).toBe(true);

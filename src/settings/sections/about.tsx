@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import type { Strings } from "../../i18n/strings";
 import { links } from "../../platform/ipc";
-import { UpdateButton } from "./general";
+import { UpdateButton, UpdateChannelRow } from "./general";
 import appIcon from "../../../src-tauri/icons/128x128@2x.png";
 
 /** Settings › General › About Textus: the app, its version and updates,
@@ -47,6 +47,7 @@ export function AboutSection({ t }: { t: Strings }) {
         </button>
         <UpdateButton t={t} />
       </div>
+      <UpdateChannelRow t={t} />
       <div className="settings-about-credit">{t.aboutMadeBy}</div>
     </div>
   );

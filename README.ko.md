@@ -72,6 +72,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/CatVinci-Studio/arch-repo/ma
 
 iPhone·iPad 버전도 곧 나옵니다. [GitHub에서 모든 릴리스 보기](https://github.com/CatVinci-Studio/Textus/releases)
 
+새 버전을 먼저 써 보고 싶다면 **설정 › 일반 › Textus 정보**에서 **업데이트 채널**을 **베타**로 바꾸세요. 출시 후보 버전도 받게 됩니다. 언제든 **안정 버전**으로 되돌릴 수 있으며, 되돌린 뒤에는 더 새로운 안정 버전이 나올 때까지 지금 버전을 유지합니다.
+
 ## 글쓰기
 
 어떤 Markdown 표기든 쓰는 즉시 서식으로 바뀝니다. 줄을 가리키면 원래 표기가 보입니다.

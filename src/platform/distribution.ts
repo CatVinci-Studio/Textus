@@ -1,4 +1,4 @@
-import { distribution } from "./ipc";
+import { distribution, type UpdateChannel } from "./ipc";
 
 let cached: Promise<boolean> | null = null;
 
@@ -15,4 +15,16 @@ export function selfUpdateAllowed(): Promise<boolean> {
     .then((d) => (d ?? "direct") === "direct")
     .catch(() => true);
   return cached;
+}
+
+/**
+ * The channel an update check asks. A package-manager build hides the
+ * channel setting and only reports versions its package manager will
+ * also have, which are stable ones; elsewhere it is the user's choice.
+ */
+export function checkChannel(
+  chosen: UpdateChannel,
+  selfUpdate: boolean,
+): UpdateChannel {
+  return selfUpdate ? chosen : "stable";
 }

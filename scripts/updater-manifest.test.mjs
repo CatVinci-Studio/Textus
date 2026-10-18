@@ -3,7 +3,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  BETA_MANIFEST_NAME,
+  betaAdvances,
   buildManifest,
+  compareVersions,
   configProblems,
   forbiddenAssets,
   LEVIS_LAST_TAG,
@@ -127,5 +130,98 @@ describe("updater manifest", () => {
       "no signed darwin-x86_64 entry",
       "no signed linux-x86_64 entry",
     ]);
+  });
+});
+
+describe("beta manifest", () => {
+  const rcBase =
+    "https://github.com/CatVinci-Studio/Textus/releases/download/v1.0.5-rc.1";
+  const rc = buildManifest({
+    version: "1.0.5-rc.1",
+    notes: "",
+    pubDate: "2026-10-20T00:00:00.000Z",
+    baseUrl: rcBase,
+    // A release candidate has no .rpm: RPM versions can't contain '-'.
+    artifacts: [
+      { name: "Textus_aarch64.app.tar.gz", signature: "mac" },
+      { name: "Textus_x64.app.tar.gz", signature: "intel" },
+      { name: "Textus_1.0.5-rc.1_amd64.AppImage", signature: "appimage" },
+      { name: "Textus_1.0.5-rc.1_amd64.deb", signature: "deb" },
+      { name: "Textus_1.0.5-rc.1_x64-setup.exe", signature: "nsis" },
+    ],
+  });
+  const manifest = (version) => ({ version, platforms: {} });
+
+  it("builds a complete manifest for a release candidate without an .rpm", () => {
+    expect(manifestProblems(rc, "1.0.5-rc.1")).toEqual([]);
+    expect(rc.platforms["linux-x86_64-rpm"]).toBeUndefined();
+    expect(rc.platforms["windows-x86_64"].url).toBe(
+      `${rcBase}/Textus_1.0.5-rc.1_x64-setup.exe`,
+    );
+  });
+
+  it("orders versions as semver does", () => {
+    const sorted = [
+      "1.0.5",
+      "1.0.4",
+      "1.0.5-rc.10",
+      "1.0.5-rc.2",
+      "1.1.0-rc.1",
+      "1.0.5-rc.1",
+      "1.0.10",
+      "1.0.5-beta.1",
+    ].sort(compareVersions);
+    expect(sorted).toEqual([
+      "1.0.4",
+      "1.0.5-beta.1",
+      "1.0.5-rc.1",
+      "1.0.5-rc.2",
+      "1.0.5-rc.10",
+      "1.0.5",
+      "1.0.10",
+      "1.1.0-rc.1",
+    ]);
+    expect(compareVersions("v1.0.5", "1.0.5")).toBe(0);
+    expect(() => compareVersions("latest", "1.0.5")).toThrow();
+  });
+
+  it("starts from any release when there is no beta manifest yet", () => {
+    expect(betaAdvances(null, rc)).toBe(true);
+  });
+
+  it("moves forward to a newer release candidate or stable release", () => {
+    expect(betaAdvances(manifest("1.0.4"), rc)).toBe(true);
+    expect(betaAdvances(rc, manifest("1.0.5-rc.2"))).toBe(true);
+    expect(betaAdvances(manifest("1.0.5-rc.2"), manifest("1.0.5"))).toBe(true);
+  });
+
+  it("never moves back when an older tag is rebuilt", () => {
+    expect(betaAdvances(manifest("1.0.5"), rc)).toBe(false);
+    expect(betaAdvances(manifest("1.0.5-rc.2"), rc)).toBe(false);
+    expect(betaAdvances(manifest("1.0.6-rc.1"), manifest("1.0.5"))).toBe(false);
+  });
+
+  it("refreshes the same version, whose rebuild re-signed its files", () => {
+    expect(betaAdvances(rc, structuredClone(rc))).toBe(true);
+  });
+
+  it("this checkout's beta endpoint names textus-beta.json", () => {
+    expect(readRepo("src-tauri/src/commands/update.rs")).toContain(
+      `/download/${BETA_MANIFEST_NAME}"`,
+    );
+    const problems = configProblems((file) =>
+      file.endsWith("update.rs")
+        ? readRepo(file).replaceAll(BETA_MANIFEST_NAME, "latest.json")
+        : readRepo(file),
+    );
+    expect(problems.join("\n")).toMatch(/must end in \/textus-beta\.json/);
+  });
+
+  it("checks a tag from before the update channel without its endpoint", () => {
+    const problems = configProblems((file) => {
+      if (file.endsWith("update.rs")) throw new Error("ENOENT");
+      return readRepo(file);
+    });
+    expect(problems).toEqual([]);
   });
 });

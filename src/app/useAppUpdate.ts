@@ -1,18 +1,22 @@
 import { errorText } from "../utils/error-text";
 import { useEffect, useState } from "react";
-import { check, type Update } from "@tauri-apps/plugin-updater";
+import type { Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
-import { selfUpdateAllowed } from "../platform/distribution";
+import { checkChannel, selfUpdateAllowed } from "../platform/distribution";
 import { flushPendingWrites } from "../storage/pending-writes";
 import { canAutoUpdate } from "../platform/capabilities";
+import { updater, type UpdateChannel } from "../platform/ipc";
 
 export type UpdateStatus = "idle" | "available" | "downloading" | "error";
 
 /**
- * Checks GitHub Releases at startup and every 4 hours (the updater endpoint points at the
- * latest release's textus-latest.json - never latest.json, which is what
- * Levis installs read; see scripts/updater-manifest.mjs) and drives the update banner: available ->
- * user confirms -> download + install -> relaunch. Checking is silent on
+ * Checks for a new release at startup, every 4 hours and whenever the
+ * update channel changes, and drives the update banner: available -> user
+ * confirms -> download + install -> relaunch. The stable channel reads the
+ * latest GitHub release's textus-latest.json (never latest.json, which is
+ * what Levis installs read; see scripts/updater-manifest.mjs), the beta
+ * channel textus-beta.json on our download bucket
+ * (src-tauri/src/commands/update.rs). Checking is silent on
  * failure - offline, rate-limited, or running in a plain browser during
  * development are all normal situations, not something to bother the user
  * about. Installing is the opposite: the user explicitly asked, so errors
@@ -22,7 +26,7 @@ export type UpdateStatus = "idle" | "available" | "downloading" | "error";
  * `selfUpdate` is false: the banner tells the user to upgrade through the
  * package manager, and install() does nothing.
  */
-export function useAppUpdate() {
+export function useAppUpdate(channel: UpdateChannel) {
   const [update, setUpdate] = useState<Update | null>(null);
   const [status, setStatus] = useState<UpdateStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +41,8 @@ export function useAppUpdate() {
     });
 
     const checkOnce = () => {
-      check()
+      selfUpdateAllowed()
+        .then((allowed) => updater.check(checkChannel(channel, allowed)))
         .then((found) => {
           if (!cancelled && found) {
             setUpdate(found);
@@ -57,7 +62,7 @@ export function useAppUpdate() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, []);
+  }, [channel]);
 
   async function install() {
     if (!canAutoUpdate || !update || !(await selfUpdateAllowed())) return;

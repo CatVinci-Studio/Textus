@@ -1135,6 +1135,14 @@ button.settings-skill-action:focus-visible {
   padding-inline: 18px;
 }
 
+/* Update channel: an ordinary settings row, under the update button. */
+.settings-about-channel {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 6px;
+  text-align: start;
+}
+
 .settings-about-credit {
   margin-top: 4px;
   font-size: 0.8rem;

@@ -73,6 +73,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/CatVinci-Studio/arch-repo/ma
 
 iPhone 与 iPad 版即将推出。[在 GitHub 查看所有版本](https://github.com/CatVinci-Studio/Textus/releases)
 
+想抢先用上新版本？在 **设置 › 通用 › 关于 Textus** 中把 **更新通道** 改为 **测试版**，就会同时收到候选版本；随时可以改回 **正式版**，之后会停在当前版本，直到有更新的正式版。
+
 ## 写作
 
 每一种 Markdown 标记，边写边排好。指向任意一行，就能看到它的源码。

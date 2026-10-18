@@ -72,6 +72,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/CatVinci-Studio/arch-repo/ma
 
 iPhone版とiPad版も、まもなく登場します。[すべてのリリースをGitHubで見る](https://github.com/CatVinci-Studio/Textus/releases)
 
+新しいバージョンをいち早く使いたい場合は、**設定 › 一般 › Textus について** で **アップデートチャンネル** を **ベータ版** にすると、リリース候補版も届きます。いつでも **安定版** に戻せます。戻したあとは、より新しい安定版が出るまで今のバージョンのままです。
+
 ## 執筆
 
 Markdownの記法は、書いたそばから仕上がりの姿に。行にポインタを合わせると、元の記法が現れます。

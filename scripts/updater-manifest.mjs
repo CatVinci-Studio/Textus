@@ -21,13 +21,19 @@
 // v0.9.x tag, nothing that could install Textus.
 //
 //   node scripts/updater-manifest.mjs check [--root DIR]
-//       tauri.conf.json's updater endpoints name textus-latest.json and
-//       release.yml keeps tauri-action from uploading latest.json (exit 1
-//       otherwise)
+//       tauri.conf.json's updater endpoints name textus-latest.json, the
+//       beta channel's names textus-beta.json, and release.yml keeps
+//       tauri-action from uploading latest.json (exit 1 otherwise)
 //   node scripts/updater-manifest.mjs build --version V --base-url URL
 //       --sig-dir DIR [--notes-file F] --out FILE
 //       the manifest for the .sig files downloaded into DIR; each artifact's
 //       URL is BASE-URL/<its name> (the .sig's name minus ".sig")
+//   node scripts/updater-manifest.mjs beta --version V --manifest FILE
+//       [--current FILE]
+//       FILE is a release's textus-latest.json, to become textus-beta.json;
+//       exit 1 unless it is a complete manifest of V, else print "advance"
+//       when it is not older than CURRENT (the beta manifest there now,
+//       none when absent) and "keep" when it is
 //   node scripts/updater-manifest.mjs bridge --levis-manifest FILE
 //       exit 1 unless FILE is the last Levis release's latest.json
 //   node scripts/updater-manifest.mjs guard --assets-file FILE
@@ -46,6 +52,13 @@ export const MANIFEST_NAME = "textus-latest.json";
 export const LEVIS_MANIFEST_NAME = "latest.json";
 /** The last Levis release: the one every older Levis install updates to. */
 export const LEVIS_LAST_TAG = "v0.9.8";
+/** What the beta update channel reads: the newest release of any kind,
+ *  release candidates included, kept on the website's download bucket
+ *  (scripts/update-beta-manifest.sh) because GitHub's releases/latest
+ *  skips pre-releases. Never on a GitHub release. */
+export const BETA_MANIFEST_NAME = "textus-beta.json";
+/** Where the app finds the beta manifest's URL. */
+const BETA_ENDPOINT_SOURCE = "src-tauri/src/commands/update.rs";
 
 const ownRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -61,6 +74,20 @@ export function configProblems(readFile) {
     if (file !== MANIFEST_NAME)
       problems.push(
         `tauri.conf.json: updater endpoint ${url} must end in /${MANIFEST_NAME}`,
+      );
+  }
+  // Tags from before the update channel have no beta endpoint to check.
+  let updateRs = null;
+  try {
+    updateRs = readFile(BETA_ENDPOINT_SOURCE);
+  } catch {
+    // Not there: nothing to check.
+  }
+  if (updateRs !== null) {
+    const url = /BETA_MANIFEST_URL: &str =\s*"([^"]+)"/.exec(updateRs)?.[1];
+    if (!url?.endsWith(`/${BETA_MANIFEST_NAME}`))
+      problems.push(
+        `${BETA_ENDPOINT_SOURCE}: BETA_MANIFEST_URL must end in /${BETA_MANIFEST_NAME}`,
       );
   }
   const workflow = readFile(".github/workflows/release.yml");
@@ -125,6 +152,50 @@ export function manifestProblems(manifest, version) {
       problems.push(`no signed ${key} entry`);
   }
   return problems;
+}
+
+/** Semver precedence of two versions such as "1.0.5" and "1.0.5-rc.2":
+ *  negative, zero or positive. A pre-release sorts before its release, and
+ *  numeric identifiers compare as numbers (rc.10 after rc.9). Build
+ *  metadata is ignored. */
+export function compareVersions(a, b) {
+  const parse = (v) => {
+    const m =
+      /^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/.exec(
+        String(v),
+      );
+    if (!m) throw new Error(`not a version: ${v}`);
+    return { core: m.slice(1, 4).map(Number), pre: m[4]?.split(".") ?? [] };
+  };
+  const x = parse(a);
+  const y = parse(b);
+  for (let i = 0; i < 3; i++)
+    if (x.core[i] !== y.core[i]) return x.core[i] - y.core[i];
+  if (x.pre.length === 0 || y.pre.length === 0)
+    return y.pre.length - x.pre.length;
+  for (let i = 0; i < Math.max(x.pre.length, y.pre.length); i++) {
+    const p = x.pre[i];
+    const q = y.pre[i];
+    if (p === undefined) return -1;
+    if (q === undefined) return 1;
+    if (p === q) continue;
+    const pn = /^\d+$/.test(p);
+    const qn = /^\d+$/.test(q);
+    if (pn && qn) return Number(p) - Number(q);
+    if (pn !== qn) return pn ? -1 : 1;
+    return p < q ? -1 : 1;
+  }
+  return 0;
+}
+
+/** Whether the beta manifest moves to `candidate` (a release's manifest)
+ *  from `current` (what the bucket holds now; null when there is none).
+ *  Never backwards: rebuilding an old tag leaves it alone. The same version
+ *  does replace it, since a rebuild re-signs the release's files and the
+ *  old signatures no longer match them. */
+export function betaAdvances(current, candidate) {
+  if (!current?.version) return true;
+  return compareVersions(candidate.version, current.version) >= 0;
 }
 
 /** Why `manifest` is not the last Levis release's latest.json - empty when
@@ -199,6 +270,16 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const problems = manifestProblems(manifest, version);
     if (problems.length > 0) fail(problems);
     writeFileSync(required("--out"), `${JSON.stringify(manifest, null, 2)}\n`);
+  } else if (command === "beta") {
+    const version = required("--version");
+    const manifest = JSON.parse(readFileSync(required("--manifest"), "utf8"));
+    const problems = manifestProblems(manifest, version);
+    if (problems.length > 0) fail(problems);
+    const currentFile = option("--current");
+    const current = currentFile
+      ? JSON.parse(readFileSync(currentFile, "utf8"))
+      : null;
+    console.log(betaAdvances(current, manifest) ? "advance" : "keep");
   } else if (command === "bridge") {
     const manifest = JSON.parse(
       readFileSync(required("--levis-manifest"), "utf8"),
@@ -219,7 +300,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       ]);
   } else {
     fail([
-      `unknown command ${command ?? "(none)"}: check, build, bridge or guard`,
+      `unknown command ${command ?? "(none)"}: check, build, beta, bridge or guard`,
     ]);
   }
 }
