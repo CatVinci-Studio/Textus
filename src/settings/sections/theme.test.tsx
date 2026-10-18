@@ -37,7 +37,7 @@ afterEach(cleanup);
 beforeEach(() => vi.clearAllMocks());
 describe("theme settings", () => {
   it("offers named appearance choices with the current selection", () => {
-    render(<ThemeSection t={resolveStrings("en")} />);
+    render(<ThemeSection t={resolveStrings("en")} onBrowse={() => {}} />);
     expect(screen.getByRole("radio", { name: "Follow system" })).toBeChecked();
     fireEvent.click(screen.getByRole("radio", { name: "Dark" }));
     expect(mock.setSettings).toHaveBeenCalledWith({ theme: "dark" });
@@ -46,7 +46,7 @@ describe("theme settings", () => {
     vi.mocked(fs.openCssFileDialog).mockRejectedValueOnce(
       new Error("Cannot open picker"),
     );
-    render(<ThemeSection t={resolveStrings("en")} />);
+    render(<ThemeSection t={resolveStrings("en")} onBrowse={() => {}} />);
     fireEvent.click(
       screen.getByRole("button", {
         name: resolveStrings("en").themeImportButton,
@@ -67,7 +67,7 @@ describe("theme settings", () => {
     vi.mocked(themes.deleteTheme).mockRejectedValueOnce(
       new Error("Read-only folder"),
     );
-    render(<ThemeSection t={resolveStrings("en")} />);
+    render(<ThemeSection t={resolveStrings("en")} onBrowse={() => {}} />);
     fireEvent.click(
       screen.getByRole("button", {
         name: resolveStrings("en").themeDeleteButton,

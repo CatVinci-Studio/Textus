@@ -1,5 +1,5 @@
 import { errorText } from "../../utils/error-text";
-import { useId, useRef, useState, type ReactNode } from "react";
+import { useId, useRef, useState } from "react";
 import { useSettings, THEME_MODES } from "../SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../../theme/builtin-themes";
 import type { Strings } from "../../i18n/strings";
@@ -14,7 +14,7 @@ import { showMessage } from "../../ui/app-dialog";
 import { exportDoc, fs, themes } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { Select } from "../../ui/Select";
-import { SettingRow } from "./controls";
+import { LinkRow, SettingRow } from "./controls";
 
 const CUSTOM_CSS_PLACEHOLDER = `#write > p {
   text-indent: 2em;
@@ -120,14 +120,14 @@ ${customCss.trim() ? `\n/* Custom CSS */\n${customCss}\n` : ""}`;
   }
 }
 
-/** `browseRow` (Browse themes) goes under the theme picker: the panel owns
- *  the page it opens. */
+/** `onBrowse` opens Browse themes, a page the panel shows in place of the
+ *  category (as it does About Textus). */
 export function ThemeSection({
   t,
-  browseRow,
+  onBrowse,
 }: {
   t: Strings;
-  browseRow?: ReactNode;
+  onBrowse: () => void;
 }) {
   const { settings, setSettings } = useSettings();
   const appearanceId = useId();
@@ -273,7 +273,11 @@ export function ThemeSection({
         </button>
       </SettingRow>
 
-      {browseRow}
+      <LinkRow
+        label={t.themeGalleryBrowse}
+        onOpen={onBrowse}
+        className="theme-gallery-entry"
+      />
 
       {/* A tweak on top of the theme, folded away until wanted. */}
       <details

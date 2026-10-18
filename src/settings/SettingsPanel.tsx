@@ -17,6 +17,7 @@ import {
 import { revisionDisplayName } from "../ai/revision/revision-display";
 import { LANGS, LANG_NAMES, type Lang, type TextKey } from "../i18n/strings";
 import {
+  LinkRow,
   SettingRow,
   ToggleRow,
   ShortcutRow,
@@ -96,20 +97,6 @@ function SettingsGroup({
       <h2 className="settings-group-title">{title}</h2>
       <div className="settings-group-body">{children}</div>
     </section>
-  );
-}
-
-/** A guide, opened as a document: the whole row is the button. */
-function HelpRow({ label, onOpen }: { label: string; onOpen: () => void }) {
-  return (
-    <button
-      type="button"
-      className="settings-row settings-link-row"
-      onClick={onOpen}
-    >
-      <span className="settings-row-label">{label}</span>
-      <ChevronIcon className="settings-link-chevron" />
-    </button>
   );
 }
 
@@ -201,16 +188,16 @@ export function SettingsPanel({
           </SettingsGroup>
 
           <SettingsGroup title={t.settingsHelpGroup}>
-            <HelpRow
+            <LinkRow
               label={t.menuHelpMarkdown}
               onOpen={() => openHelp("markdown")}
             />
-            <HelpRow label={t.menuHelpAgent} onOpen={() => openHelp("agent")} />
-            <HelpRow
+            <LinkRow label={t.menuHelpAgent} onOpen={() => openHelp("agent")} />
+            <LinkRow
               label={t.menuHelpTutorials}
               onOpen={() => void links.openTutorialsPage(settings.language)}
             />
-            <HelpRow
+            <LinkRow
               label={t.menuHelpCommunity}
               onOpen={() => void links.openCommunityPage(settings.language)}
             />
@@ -219,7 +206,7 @@ export function SettingsPanel({
           <SettingsGroup title={t.generalSystemLabel}>
             {canInstallCliCommand && <CliCommandSection t={t} />}
             <LevisImportSection t={t} lang={settings.language} />
-            <HelpRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
+            <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
           </SettingsGroup>
         </>
       )}
@@ -227,15 +214,7 @@ export function SettingsPanel({
       {c === "editor" && (
         <>
           <SettingsGroup title={t.navTheme}>
-            <ThemeSection
-              t={t}
-              browseRow={
-                <HelpRow
-                  label={t.themeGalleryBrowse}
-                  onOpen={() => setSubpage("themes")}
-                />
-              }
-            />
+            <ThemeSection t={t} onBrowse={() => setSubpage("themes")} />
             <SettingRow label={t.contentWidthLabel}>
               <Select
                 className="settings-select"
