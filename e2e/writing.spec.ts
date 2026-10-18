@@ -45,6 +45,35 @@ test("typing a closing ** or ~~ by hand closes the span once", async ({
   );
 });
 
+test("** committed through an IME composition still makes bold (#134)", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await editor.click();
+  // Chromium's own IME path: each piece is a real composition (as Microsoft
+  // Pinyin / Sogou send even a "*" in Chinese mode), committed by insertText.
+  const cdp = await page.context().newCDPSession(page);
+  const compose = async (preedit: string, committed: string) => {
+    await cdp.send("Input.imeSetComposition", {
+      text: preedit,
+      selectionStart: preedit.length,
+      selectionEnd: preedit.length,
+    });
+    await cdp.send("Input.insertText", { text: committed });
+    // Past the post-commit check (40ms) before the next composition.
+    await page.waitForTimeout(100);
+  };
+  await compose("*", "*");
+  await compose("*", "*");
+  await compose("jiacu", "加粗");
+  await compose("*", "*");
+  await compose("*", "*");
+  await expect(editor.locator("strong")).toHaveText("加粗");
+  await page.keyboard.type(" and ~~s~~", { delay: 30 });
+  expect((await sourceOf(page)).trim()).toBe("**加粗** and ~~s~~");
+});
+
 /** Paragraphs enough to scroll several screens. */
 function longDoc(extra: { at: number; text: string }[] = []): string {
   const parts: string[] = [];
@@ -1077,4 +1106,46 @@ test("split view: mod+wheel holds the pane under the pointer, the other follows"
     .boundingBox())!;
   await wheelZoom(page, sbox.x + sbox.width / 2, sbox.y + sbox.height / 2, 3);
   await expect.poll(gap).toBeLessThan(0.02);
+});
+
+test("in Typewriter Mode a click on a task's box ticks it without scrolling (#136)", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", typewriterMode: true },
+  });
+  await pasteMarkdown(
+    page,
+    longDoc([{ at: 30, text: "- [ ] buy milk\n- [ ] post the letter" }]),
+  );
+  const task = page.locator(
+    '[data-active-tab="true"] li[data-item-type="task"]',
+  );
+  await expect(task).toHaveCount(2);
+  // Off the middle, where the typewriter would want to recentre it (and
+  // clear of the title bar at the very top).
+  const scroller = page.locator('[data-active-tab="true"] .editor-scroll');
+  await task.first().evaluate((el) => {
+    el.scrollIntoView({ block: "start", behavior: "instant" });
+    el.closest(".editor-scroll")!.scrollTop -= 150;
+  });
+  const scrollTop = () => scroller.evaluate((el) => el.scrollTop);
+  await page.waitForTimeout(100);
+  const before = await scrollTop();
+  const box = (await task.first().boundingBox())!;
+  await page.mouse.click(box.x + 8, box.y + box.height / 2);
+  await expect(task.first()).toHaveAttribute("data-checked", "true");
+  await expect(task.nth(1)).toHaveAttribute("data-checked", "false");
+  await page.waitForTimeout(100);
+  expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
+  // And untick it again, still in place.
+  await page.mouse.click(box.x + 8, box.y + box.height / 2);
+  await expect(task.first()).toHaveAttribute("data-checked", "false");
+  await page.waitForTimeout(100);
+  expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
+  // A click on the text still places the caret, and the typewriter centres it.
+  await page.mouse.click(box.x + 80, box.y + box.height / 2);
+  await expect
+    .poll(async () => Math.abs((await scrollTop()) - before))
+    .toBeGreaterThan(2);
 });

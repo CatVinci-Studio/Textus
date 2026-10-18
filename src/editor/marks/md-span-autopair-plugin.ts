@@ -109,6 +109,63 @@ function codeFenceLanguage(paragraph: ProseNode): string | null {
 }
 
 /**
+ * The IME counterpart of the run-closing path in handleTextInput below.
+ * Several Windows IMEs in Chinese mode (Microsoft Pinyin, Sogou) deliver
+ * even a plain "*" through a composition, and handleTextInput must stay out
+ * of the way while one is active (dispatching aborts the preedit), so a
+ * "**加粗文本**" written that way used to stay literal text (#134). Once the
+ * composition has been committed, look at the text before the caret: if it
+ * ends in a complete closing run that pairs with an opening run left in the
+ * same literal text, convert the pair exactly as typing the last delimiter
+ * would have. Only full pairs are converted - nothing opens an empty shell
+ * after the fact - so a lone "*" committed this way stays literal until its
+ * partner arrives. `committed` is the composition's text: unless it ends
+ * in the delimiter, the closing run was already there (say, literal text
+ * left by a paste) and is not the user's to convert now. Returns whether it
+ * converted anything.
+ */
+export function convertRunClosedBeforeCaret(
+  view: EditorView,
+  committed: string,
+): boolean {
+  const { state } = view;
+  const sel = state.selection;
+  if (!sel.empty) return false;
+  const $pos = sel.$from;
+  const parent = $pos.parent;
+  if (isOurNode(parent.type.name)) return false;
+  if (!parent.isTextblock || parent.type.spec.code) return false;
+  const { text: textBefore, from: runStart } = literalTextBefore($pos);
+  const spec = SPECS.find(
+    (s) => committed.endsWith(s.char) && textBefore.endsWith(s.char),
+  );
+  if (!spec) return false;
+  // The caret sits inside a longer delimiter run - not a finished closer.
+  if (literalTextAfter($pos).text.startsWith(spec.char)) return false;
+  // findRunOpen expects the last closing character as "the one being typed".
+  const head = textBefore.slice(0, -1);
+  for (let rung = spec.maxRung; rung >= spec.minRung; rung--) {
+    const open = findRunOpen(head, spec.char, rung);
+    if (!open) continue;
+    const absOpen = runStart + open.openIdx;
+    const node =
+      spec.nodeType === "md_span"
+        ? state.schema.nodes.md_span.create(
+            { delim: spec.char, rung },
+            state.schema.text(open.value),
+          )
+        : state.schema.nodes.md_code_span.create(
+            {},
+            state.schema.text(open.value),
+          );
+    const tr = state.tr.replaceWith(absOpen, sel.from, node);
+    view.dispatch(caretAt(tr, absOpen + node.nodeSize));
+    return true;
+  }
+  return false;
+}
+
+/**
  * What typing a delimiter character does for bold/italic/strikethrough/
  * highlight/inline code: open a fresh empty shell, upgrade an empty shell's
  * rung, close/step past the node the cursor is in, or convert an unclosed
@@ -319,6 +376,19 @@ export const mdSpanAutopairPlugin = $prose(
           tr.replaceWith(precedingStart, precedingStart, node);
           view.dispatch(caretAt(tr, precedingStart + 1));
           return true;
+        },
+        handleDOMEvents: {
+          compositionend(view, event) {
+            const committed = event.data ?? "";
+            // prosemirror-view reads the committed text back in a moment
+            // after this event, and enclosure.ts may move it out of an
+            // adjacent node at 30ms; look once both have happened.
+            setTimeout(() => {
+              if (view.composing || view.isDestroyed) return;
+              convertRunClosedBeforeCaret(view, committed);
+            }, 40);
+            return false;
+          },
         },
         handleKeyDown(view, event) {
           if (event.key !== "Enter" || isImeKeyEvent(view, event)) return false;

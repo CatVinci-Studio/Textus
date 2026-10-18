@@ -38,14 +38,34 @@ import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
  *   asset: URL.
  */
 
+/**
+ * A Markdown image destination is a URL, so other apps write a space as
+ * "%20" (and Chinese as "%E5%9B%BE..."); the file on disk has the decoded
+ * name. convertFileSrc percent-encodes the path itself, so an undecoded
+ * "%20" reached the asset protocol as "%2520" and found nothing (#135). A
+ * malformed escape (a file really named "100%.png") is kept as written.
+ */
+function decodeImagePath(src: string): string {
+  try {
+    return decodeURIComponent(src);
+  } catch {
+    return src;
+  }
+}
+
 export function resolveImageSrc(src: string, docPath: string | null): string {
   // A Windows drive path ("C:\..." / "C:/...") would otherwise read as a
   // single-letter URL scheme to the test below.
-  if (/^[a-z]:[\\/]/i.test(src)) return convertFileSrc(src);
+  if (/^[a-z]:[\\/]/i.test(src)) return convertFileSrc(decodeImagePath(src));
   if (!src || /^[a-z][a-z0-9+.-]*:/i.test(src)) return src; // http(s), data:, asset:, file:, ...
-  if (src.startsWith("/")) return convertFileSrc(src);
+  if (src.startsWith("/")) return convertFileSrc(decodeImagePath(src));
+  // An unsaved document has no folder to resolve against, so a relative
+  // path is left as written (the image shows as missing) and resolves once
+  // the document is saved and reopened. The sidebar's open folder is not
+  // used as a stand-in: the document may well be saved somewhere else, and
+  // an image that showed before saving would then vanish.
   if (!docPath) return src;
-  return convertFileSrc(`${dirname(docPath)}/${src}`);
+  return convertFileSrc(`${dirname(docPath)}/${decodeImagePath(src)}`);
 }
 
 /**

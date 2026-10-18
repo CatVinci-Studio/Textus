@@ -1,5 +1,15 @@
-import { Plugin } from "@milkdown/kit/prose/state";
+import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
+
+/**
+ * Transaction meta for an edit made by pointing at something rather than
+ * typing at the caret - ticking a task's box (task-list-plugin.ts). It
+ * leaves the caret where it was, so recentring on it would scroll the view
+ * away from what was just clicked (#136).
+ */
+export const TYPEWRITER_HOLD = "typewriterHold";
+
+const typewriterKey = new PluginKey<boolean>("typewriter");
 
 /**
  * Typora/iA Writer-style typewriter scrolling: keeps the cursor's line
@@ -11,7 +21,12 @@ import { $prose } from "@milkdown/kit/utils";
 export function createTypewriterPlugin(options: { enabled: () => boolean }) {
   return $prose(
     () =>
-      new Plugin({
+      new Plugin<boolean>({
+        key: typewriterKey,
+        state: {
+          init: () => false,
+          apply: (tr) => tr.getMeta(TYPEWRITER_HOLD) === true,
+        },
         view(editorView) {
           // Centres the caret line's MIDDLE (not its top, which sat half a
           // line high) in the scroll container.
@@ -38,6 +53,7 @@ export function createTypewriterPlugin(options: { enabled: () => boolean }) {
               wasEnabled = enabled;
               if (!enabled) return;
               if (view.composing) return;
+              if (typewriterKey.getState(view.state)) return;
               if (
                 !justEnabled &&
                 view.state.doc.eq(prevState.doc) &&

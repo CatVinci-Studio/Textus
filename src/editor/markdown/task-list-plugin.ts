@@ -2,6 +2,7 @@ import { $prose, $remark } from "@milkdown/kit/utils";
 import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { TYPEWRITER_HOLD } from "../modes/typewriter-plugin";
 
 const CHECKBOX_HIT_WIDTH = 24;
 
@@ -59,31 +60,53 @@ export const remarkEmptyTaskItems = $remark(
  * plugin adds a CSS-drawn checkbox (see milkdown-theme.css) and toggles the
  * node's `checked` attr when that glyph area is clicked, without pulling in
  * @milkdown/components (which drags in a Vue runtime for one checkbox).
+ *
+ * It toggles on mousedown and cancels the default, not on click: the
+ * mousedown would otherwise move the caret into the item, and in Typewriter
+ * Mode that recentres the view before the button is released - the click
+ * then landed on whatever had scrolled under the pointer, so the box never
+ * ticked and the caret jumped (#136). A press on the box now leaves caret,
+ * focus and scroll where they were; TYPEWRITER_HOLD stops the typewriter
+ * recentring on the unmoved (maybe far away) caret after the edit.
  */
 export const taskListClickPlugin = $prose(
   () =>
     new Plugin({
       props: {
-        handleClickOn(view, _pos, node, nodePos, event) {
-          if (node.type.name !== "list_item" || node.attrs.checked == null)
+        handleDOMEvents: {
+          mousedown(view, event) {
+            if (event.button !== 0) return false;
+            const target = event.target as HTMLElement | null;
+            const li = target?.closest(
+              'li[data-item-type="task"]',
+            ) as HTMLElement | null;
+            if (!li || !view.dom.contains(li)) return false;
+            const rect = li.getBoundingClientRect();
+            if (event.clientX - rect.left > CHECKBOX_HIT_WIDTH) return false;
+
+            let $pos;
+            try {
+              $pos = view.state.doc.resolve(view.posAtDOM(li, 0));
+            } catch {
+              return false;
+            }
+            for (let depth = $pos.depth; depth > 0; depth--) {
+              const node = $pos.node(depth);
+              if (node.type.name !== "list_item") continue;
+              if (node.attrs.checked == null) return false;
+              event.preventDefault();
+              view.dispatch(
+                view.state.tr
+                  .setNodeMarkup($pos.before(depth), undefined, {
+                    ...node.attrs,
+                    checked: !node.attrs.checked,
+                  })
+                  .setMeta(TYPEWRITER_HOLD, true),
+              );
+              return true;
+            }
             return false;
-
-          const target = event.target as HTMLElement | null;
-          const li = target?.closest(
-            'li[data-item-type="task"]',
-          ) as HTMLElement | null;
-          if (!li) return false;
-
-          const rect = li.getBoundingClientRect();
-          if (event.clientX - rect.left > CHECKBOX_HIT_WIDTH) return false;
-
-          view.dispatch(
-            view.state.tr.setNodeMarkup(nodePos, undefined, {
-              ...node.attrs,
-              checked: !node.attrs.checked,
-            }),
-          );
-          return true;
+          },
         },
       },
     }),
