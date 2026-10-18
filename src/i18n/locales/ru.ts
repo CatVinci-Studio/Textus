@@ -432,8 +432,16 @@ export default {
   agentThinking: "Думает…",
   chatTab: "Чаты",
   chatHistoryEmpty: "Прошлых диалогов нет.",
-  chatHistoryRestoreHint: "Открыть этот диалог во встроенном чате",
+  chatHistoryRestoreHint: "Снова открыть этот диалог вместе с его документом",
   chatHistoryDelete: "Удалить диалог",
+  chatHistoryRestoreHereHint:
+    "Продолжить этот диалог в текущем документе (его документ так и не был сохранён)",
+  chatHistoryMissingTitle: "Документ не найден",
+  chatHistoryMissingText:
+    "«{name}» больше нет там, где его оставил этот диалог. Продолжить диалог в текущем документе?",
+  chatHistoryContinueHere: "Продолжить здесь",
+  chatHistoryArchived:
+    "Старые диалоги перемещены в архив; показаны последние 500.",
   chatSelectedChars: {
     one: "Выделен {n} символ",
     few: "Выделено {n} символа",

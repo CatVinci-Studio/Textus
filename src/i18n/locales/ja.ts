@@ -426,8 +426,16 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentThinking: "考え中…",
   chatTab: "チャット",
   chatHistoryEmpty: "過去の会話はありません。",
-  chatHistoryRestoreHint: "この会話をインラインチャットで開く",
+  chatHistoryRestoreHint: "この会話を元の文書と一緒に開き直す",
   chatHistoryDelete: "会話を削除",
+  chatHistoryRestoreHereHint:
+    "この会話を現在の文書で続ける（元の文書は保存されていません）",
+  chatHistoryMissingTitle: "文書が見つかりません",
+  chatHistoryMissingText:
+    "「{name}」はこの会話のときの場所にありません。現在の文書で会話を続けますか？",
+  chatHistoryContinueHere: "ここで続ける",
+  chatHistoryArchived:
+    "古い会話はアーカイブに移しました。最新の 500 件を表示しています。",
   chatSelectedChars: { other: "{n} 文字を選択中" },
   cut: "切り取り",
   copy: "コピー",

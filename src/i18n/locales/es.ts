@@ -442,8 +442,16 @@ para usar una.
   agentThinking: "Pensando…",
   chatTab: "Chats",
   chatHistoryEmpty: "No hay conversaciones anteriores.",
-  chatHistoryRestoreHint: "Retomar esta conversación",
+  chatHistoryRestoreHint: "Reabrir esta conversación con su documento",
   chatHistoryDelete: "Eliminar conversación",
+  chatHistoryRestoreHereHint:
+    "Continuar esta conversación en el documento actual (su documento nunca se guardó)",
+  chatHistoryMissingTitle: "Documento no encontrado",
+  chatHistoryMissingText:
+    "«{name}» ya no está donde lo dejó esta conversación. ¿Continuar la conversación en el documento actual?",
+  chatHistoryContinueHere: "Continuar aquí",
+  chatHistoryArchived:
+    "Las conversaciones más antiguas se movieron al archivo; se muestran las 500 más recientes.",
   chatSelectedChars: {
     one: "{n} carácter seleccionado",
     many: "{n} de caracteres seleccionados",

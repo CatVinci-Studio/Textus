@@ -27,9 +27,10 @@ The app identifier is `com.catvinci.textus`. Tauri's app directories:
 
 ## Files
 
-Debug builds write `*.dev.json` instead of `*.json` for the four files
-marked †, so a development build never rewrites an installed app's settings
-(the two share an identifier, hence the directories).
+Debug builds write `*.dev.json` instead of `*.json` for the three files
+marked †, and use `chat-history.dev/` instead of `chat-history/`, so a
+development build never rewrites an installed app's settings (the two share
+an identifier, hence the directories).
 
 ### Config directory
 
@@ -64,17 +65,63 @@ the channel with each update check (`check_for_update` in
 | File                       | What                                                                                                                                                                                                                        |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ui-state.json` †          | Where the UI was left: `{"schemaVersion": 1, "state": {...}}` with the fields of `UiState` in `src/storage/ui-state.ts`.                                                                                                    |
-| `chat-history.json` †      | Saved Agent conversations, most recent first, at most 60: `{"schemaVersion": 1, "entries": [...]}`.                                                                                                                         |
+| `chat-history/`            | Saved Agent conversations, one file each - see [Chat history](#chat-history) below.                                                                                                                                         |
 | `clipboard-history.json` † | The clipboard panel, newest first, at most 30 entries of up to 50,000 characters.                                                                                                                                           |
 | `drafts/`                  | Crash recovery for unsaved documents.                                                                                                                                                                                       |
 | `assets/`                  | Images pasted into a document that has not been saved yet, referenced by absolute path until its first save moves them into the folder chosen by the `imageFolder` setting (`assets` by default, relative to the document). |
 
 On iOS a document path inside the app's Documents folder is stored as
-`documents:<path inside Documents>` - a chat history entry's `docPath`, like
-the recent documents in `ui-state.json` - because the app's container, and
+`documents:<path inside Documents>` - a conversation's `docPath`, like the
+recent documents in `ui-state.json` - because the app's container, and
 every absolute path into it, moves with each reinstall and update
 (`src/platform/documents-path.ts`). An absolute container path stored by an
 earlier version is rewritten that way when the history loads.
+
+### Chat history
+
+`src-tauri/src/settings/chat_history.rs`. Up to 1.0 the conversations were
+one `chat-history.json`, rewritten whole on every saved turn and capped at
+60 by dropping the oldest. Since 1.1.0 they are a folder:
+
+| File                            | What                                                                                                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `chat-history/<id>.json`        | One conversation: `{"schemaVersion": 1, "entry": {id, docPath, title, updatedAt, turns}}`. Attached images are kept as their name and type only.                               |
+| `chat-history/index.json`       | What the Chats tab lists, most recent first: `{"schemaVersion": 1, "entries": [{id, docPath, title, updatedAt, turnCount}]}` (`ChatSummary` in `src/ai/chat/chat-history.ts`). |
+| `chat-history/.trash/<id>.json` | Conversations moved out of the list by the cap, as they were.                                                                                                                  |
+
+- Saving a turn rewrites only that conversation's file and the index, each
+  debounced and written like every other file here. The windows hold only
+  the index; a conversation's turns are read (`chat_history_get`) when it
+  is reopened.
+- The index keeps the newest 500 conversations. A save that pushes one past
+  that moves the oldest's file into `.trash/`, and the Chats tab says that
+  older conversations were archived. `.trash/` keeps at most 200 files; past
+  that the oldest (by modification time, which a move keeps) are deleted.
+- A conversation id is a file name, so only ids of letters, digits, `-` and
+  `_` are accepted. Only files named that way are ever moved or deleted;
+  anything else put in the folder is left alone.
+- **Privacy › Clear chat history** deletes every conversation file in the
+  folder and in `.trash/`, and empties the index. Deleting one conversation
+  in the Chats tab deletes its file (not into the trash).
+- A document saved under a new path by Textus (Save As, a rename in the
+  iPhone's document list) takes its conversations along
+  (`chat_history_move_document`).
+- An index that is missing or corrupt while conversation files are there is
+  built again from the files.
+
+**Migration from `chat-history.json`.** On the first launch that finds no
+`chat-history/` folder but an old `chat-history.json` (`chat-history.dev.json`
+in a debug build), Rust splits it: every conversation's file and the index
+are written into `chat-history.migrating/`, which is then renamed to
+`chat-history/` in one step, and only then is the old file renamed to
+`chat-history.json.migrated` - never deleted. A crash before the folder's
+rename leaves no folder, and the next launch starts over; once the folder
+exists, the old file is never read again. An old file that can't be parsed
+is moved aside as `chat-history.json.corrupt-<unix time>` and the history
+starts empty, like any other file here; one that can't be read is left
+alone and nothing is saved for that session. Conversations brought by the
+move out of localStorage or the Levis import are added to the folder the
+same way.
 
 The webview's own storage also lives here (`localstorage/`, `WebKitCache/`
 and so on; `EBWebView\` under `%LOCALAPPDATA%` on Windows). Since 0.9.7 the
@@ -87,7 +134,8 @@ missing.
 - Rust holds each file in memory and is its only writer. Windows change
   settings and UI state one top-level field at a time (`settings_patch`,
   `ui_state_patch`), and the histories one entry at a time
-  (`history_upsert`, `history_remove`, `history_clear`) - never by writing a
+  (`history_upsert`, `history_remove`, `history_clear`; a conversation is
+  its own file) - never by writing a
   whole object or list back, so two windows changing different things both
   land. Every settings and history change is broadcast to all windows.
 - Writes are debounced by 250 ms and flushed when the app exits, through a
@@ -154,7 +202,8 @@ Levis installation by copying from Levis's directories (the table above with
 
 1. `settings.json`, `ui-state.json`, `chat-history.json`,
    `clipboard-history.json` - read with the same code, since the format is
-   the same. A `schemaVersion` newer than Textus knows means a newer Levis
+   the same; the conversations are written into Textus's `chat-history/`
+   folder. A `schemaVersion` newer than Textus knows means a newer Levis
    wrote it; read it best-effort (unknown fields are kept) rather than
    discard it.
 2. `themes/`, `agent/`, `recent_files.json`, `session.json`, `prefs.json`

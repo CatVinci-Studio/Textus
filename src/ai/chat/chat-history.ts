@@ -4,6 +4,9 @@ import { userMessageBody } from "./user-message";
 import { loadSettings } from "../../settings/SettingsContext";
 import { createPersistedList } from "../../storage/persisted-list";
 import { CHAT_HISTORY_KEY } from "../../storage/legacy-import";
+import { readBoot } from "../../storage/boot";
+import { trackWrite } from "../../storage/pending-writes";
+import { storage } from "../../platform/ipc";
 import { isIOSApp } from "../../platform/capabilities";
 import {
   documentsDir,
@@ -14,12 +17,14 @@ import {
 
 /**
  * Persisted agent conversations, so past chats can be reopened and continued
- * (the Chats sidebar panel). Kept by Rust in chat-history.json and capped
- * so it can't grow unbounded. A persisted list (storage/persisted-list.ts) so
- * the sidebar list re-renders live as conversations are saved or deleted,
- * in every window.
+ * (the Chats sidebar panel). Kept by Rust, one file per conversation plus an
+ * index of them (src-tauri/src/settings/chat_history.rs), and capped: beyond
+ * the cap the oldest move to the folder's trash. A persisted list
+ * (storage/persisted-list.ts) of the index, so the sidebar list re-renders
+ * live as conversations are saved or deleted, in every window; a
+ * conversation's turns are read from its file when it is reopened.
  */
-export interface ChatHistoryEntry {
+export interface ChatSummary {
   id: string;
   /** The document the conversation happened in, for the list's context line
    *  and its project group. On iOS one in the app's Documents folder is
@@ -30,43 +35,57 @@ export interface ChatHistoryEntry {
   /** First user message, cleaned and truncated - the list's display name. */
   title: string;
   updatedAt: number;
+  /** In the index (`summary` in chat_history.rs, which this mirrors); not
+   *  in the browser fallback, whose list holds whole conversations. */
+  turnCount?: number;
+}
+
+/** A whole conversation, as saved. */
+export interface ChatHistoryEntry extends ChatSummary {
   turns: AgentTurn[];
 }
 
-const MAX_ENTRIES = 60;
+/** chat_history.rs's MAX_CONVERSATIONS. */
+const MAX_ENTRIES = 500;
 const MAX_TITLE_CHARS = 60;
 
-const history = createPersistedList<ChatHistoryEntry>(CHAT_HISTORY_KEY, {
-  kind: "chat",
-  max: MAX_ENTRIES,
-  keyOf: (entry) => entry.id,
-  isEntry: (e): e is ChatHistoryEntry => {
-    const entry = e as ChatHistoryEntry;
-    return (
-      typeof entry?.id === "string" &&
-      typeof entry.updatedAt === "number" &&
-      Array.isArray(entry.turns)
-    );
+const history = createPersistedList<ChatSummary, ChatHistoryEntry>(
+  CHAT_HISTORY_KEY,
+  {
+    kind: "chat",
+    max: MAX_ENTRIES,
+    keyOf: (entry) => entry.id,
+    isEntry: (e): e is ChatSummary => {
+      const entry = e as ChatSummary;
+      return (
+        typeof entry?.id === "string" && typeof entry.updatedAt === "number"
+      );
+    },
+    sort: (a, b) => b.updatedAt - a.updatedAt,
+    // iOS: the document path relative to Documents, on every save - and for
+    // what an earlier version stored absolute, rewritten once when the list
+    // loads, so its conversations join their documents' group again.
+    normalise: isIOSApp ? storedEntry : undefined,
+    listed: ({ turns, ...summary }) => ({
+      ...summary,
+      turnCount: turns.length,
+    }),
+    // The list holds summaries, which aren't whole conversations to save:
+    // the conversations move with their document instead.
+    rewrite: (stored, normalised) =>
+      storage.chatHistoryMoveDocument(stored.docPath!, normalised.docPath!),
   },
-  sort: (a, b) => b.updatedAt - a.updatedAt,
-  // iOS: the document path relative to Documents, on every save - and for
-  // what an earlier version stored absolute, rewritten once when the list
-  // loads, so its conversations join their documents' group again.
-  normalise: isIOSApp ? storedEntry : undefined,
-});
+);
 
 /** `entry` with its document path in the stored form (see docPath). */
-export function storedEntry(entry: ChatHistoryEntry): ChatHistoryEntry {
+export function storedEntry<E extends ChatSummary>(entry: E): E {
   if (!entry.docPath) return entry;
   const docPath = storedDocumentPath(entry.docPath, knownDocumentsDir());
   return docPath === entry.docPath ? entry : { ...entry, docPath };
 }
 
 /** `entry` with a stored document path resolved against Documents `docs`. */
-export function resolvedEntry(
-  entry: ChatHistoryEntry,
-  docs: string,
-): ChatHistoryEntry {
+export function resolvedEntry(entry: ChatSummary, docs: string): ChatSummary {
   if (!entry.docPath) return entry;
   const docPath = resolvedDocumentPath(entry.docPath, docs);
   return docPath === entry.docPath ? entry : { ...entry, docPath };
@@ -96,7 +115,7 @@ function useDocumentsDir(): string | null {
 
 /** Reactive view of the saved conversations, most recently active first,
  *  with their document paths as the rest of the app knows them. */
-export function useChatHistory(): ChatHistoryEntry[] {
+export function useChatHistory(): ChatSummary[] {
   const entries = history.useEntries();
   const docs = useDocumentsDir();
   return useMemo(
@@ -108,11 +127,55 @@ export function useChatHistory(): ChatHistoryEntry[] {
   );
 }
 
-/** Inserts or updates one conversation, dropping the stalest beyond the cap.
- *  A no-op while Settings > Privacy > Chat History is off. */
+/** Whether conversations beyond the cap have been moved to the trash -
+ *  asked again whenever the list changes. */
+export function useHasArchivedConversations(entries: ChatSummary[]): boolean {
+  const [archived, setArchived] = useState(false);
+  useEffect(() => {
+    if (!readBoot()) return;
+    let live = true;
+    storage
+      .chatHistoryArchived()
+      .then((count) => {
+        if (live) setArchived(count > 0);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [entries]);
+  return archived;
+}
+
+/** A saved conversation's turns, read from its file; null when it is gone.
+ *  Rejects when Rust couldn't be asked. */
+export async function loadConversationTurns(
+  id: string,
+): Promise<AgentTurn[] | null> {
+  const entry = (
+    readBoot()
+      ? await storage.chatHistoryGet(id)
+      : history.get().find((e) => e.id === id)
+  ) as Partial<ChatHistoryEntry> | null | undefined;
+  return Array.isArray(entry?.turns) ? entry.turns : null;
+}
+
+/** Inserts or updates one conversation, moving the stalest beyond the cap
+ *  to the trash. A no-op while Settings > Privacy > Chat History is off. */
 export function saveConversation(entry: ChatHistoryEntry) {
   if (!loadSettings().enableChatHistory) return;
   history.upsert(entry);
+}
+
+/** A document Textus saved under a new path (Save As, a rename) takes its
+ *  conversations along, so they reopen with it. */
+export function moveConversations(from: string, to: string) {
+  if (from === to || !readBoot()) return;
+  const stored = (path: string) =>
+    isIOSApp ? storedDocumentPath(path, knownDocumentsDir()) : path;
+  trackWrite(storage.chatHistoryMoveDocument(stored(from), stored(to))).catch(
+    () => {},
+  );
 }
 
 export function deleteConversation(id: string) {

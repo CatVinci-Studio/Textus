@@ -430,8 +430,16 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentThinking: "Denkt nach…",
   chatTab: "Chats",
   chatHistoryEmpty: "Keine früheren Unterhaltungen.",
-  chatHistoryRestoreHint: "Diese Unterhaltung im KI-Bereich öffnen",
+  chatHistoryRestoreHint: "Diese Unterhaltung mit ihrem Dokument wieder öffnen",
   chatHistoryDelete: "Unterhaltung löschen",
+  chatHistoryRestoreHereHint:
+    "Diese Unterhaltung im aktuellen Dokument fortsetzen (ihr Dokument wurde nie gespeichert)",
+  chatHistoryMissingTitle: "Dokument nicht gefunden",
+  chatHistoryMissingText:
+    "„{name}“ ist nicht mehr dort, wo diese Unterhaltung es zuletzt hatte. Die Unterhaltung im aktuellen Dokument fortsetzen?",
+  chatHistoryContinueHere: "Hier fortsetzen",
+  chatHistoryArchived:
+    "Ältere Unterhaltungen wurden ins Archiv verschoben; die neuesten 500 werden angezeigt.",
   chatSelectedChars: {
     one: "{n} Zeichen ausgewählt",
     other: "{n} Zeichen ausgewählt",

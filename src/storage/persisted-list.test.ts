@@ -105,6 +105,30 @@ describe("with Rust (file-backed)", () => {
     expect(localStorage.getItem("test-list")).toBeNull();
   });
 
+  it("sends a whole entry but lists only what `listed` keeps of it", async () => {
+    vi.mocked(storage.historyList).mockResolvedValue([]);
+    const list = createPersistedList<Entry, Entry & { body: string }>(
+      "test-listed",
+      {
+        kind: "chat",
+        max: 3,
+        keyOf: (e) => e.id,
+        isEntry: (e): e is Entry => typeof (e as Entry)?.id === "string",
+        listed: ({ id, at }) => ({ id, at }),
+      },
+    );
+    list.upsert({ id: "a", at: 1, body: "long" });
+    expect(storage.historyUpsert).toHaveBeenCalledWith("chat", {
+      id: "a",
+      at: 1,
+      body: "long",
+    });
+    expect(list.get()).toEqual([{ id: "a", at: 1 }]);
+    // Replayed onto the first load as listed, too.
+    await flush();
+    expect(list.get()).toEqual([{ id: "a", at: 1 }]);
+  });
+
   it("keeps a change made before the first load arrives", async () => {
     let answer!: (list: unknown[]) => void;
     vi.mocked(storage.historyList).mockReturnValue(
@@ -176,7 +200,7 @@ describe("with Rust (file-backed)", () => {
       path: string;
     }
     // Stand-in for chat-history's: "old:" is the form an earlier build stored.
-    const normalise = (e: Doc) =>
+    const normalise = <E extends Doc>(e: E): E =>
       e.path.startsWith("old:") ? { ...e, path: `new:${e.path.slice(4)}` } : e;
     const makeDocs = () =>
       createPersistedList<Doc>("test-docs", {
