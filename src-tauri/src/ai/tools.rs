@@ -25,6 +25,8 @@ pub struct ToolContext<'a> {
     pub conventions: &'a crate::ai::rules::Conventions,
     /// Library names and aliases, for the library-name rule.
     pub library: &'a [String],
+    /// Where the remember tool writes; None when it isn't offered.
+    pub memory: Option<&'a crate::ai::memory::MemoryContext>,
     /// The passages this request's proposals already replace or delete
     /// (their `context`, else their anchor; "" for the selection). One
     /// context serves one request, every step of it.
@@ -558,6 +560,16 @@ fn use_skill(ctx: &ToolContext, arguments: &str) -> String {
     }
 }
 
+const REMEMBER_TOOL_NAME: &str = "remember";
+
+/// Keeps a memory for later conversations - ai::memory does the work.
+fn remember(ctx: &ToolContext, arguments: &str) -> String {
+    match ctx.memory {
+        Some(memory) => crate::ai::memory::run_tool(memory, arguments),
+        None => "Remembering is turned off.".to_string(),
+    }
+}
+
 const LIST_FILES_TOOL_NAME: &str = "list_files";
 const READ_FILE_TOOL_NAME: &str = "read_file";
 
@@ -814,7 +826,13 @@ fn measure_text(_ctx: &ToolContext, arguments: &str) -> String {
 /// only offered when there's something for them to work on - a tool that can
 /// only report "nothing there" would just waste the model's steps. Append
 /// here (or extend to merge in MCP-provided tools) as the toolset grows.
-pub fn builtin_tools(has_skills: bool, has_root: bool, allow_edits: bool) -> Vec<Tool> {
+/// `can_remember`: Settings > Textus AI > Remember automatically is on.
+pub fn builtin_tools(
+    has_skills: bool,
+    has_root: bool,
+    allow_edits: bool,
+    can_remember: bool,
+) -> Vec<Tool> {
     let mut tools = vec![Tool {
             spec: ToolSpec {
                 name: SEARCH_TOOL_NAME,
@@ -939,6 +957,50 @@ pub fn builtin_tools(has_skills: bool, has_root: bool, allow_edits: bool) -> Vec
         },
         run: add_comment,
     });
+
+    // Remembering writes memory, never the document, so every mode has it.
+    if can_remember {
+        tools.push(Tool {
+            spec: ToolSpec {
+                name: REMEMBER_TOOL_NAME,
+                description: "Remember something for later conversations: a requirement, preference or trait of the user's style that should hold beyond this request, or a fact about their work (a person, place or term). It is saved as a small file the user can see, undo, edit or delete; it never changes the document. To change something already remembered, pass its id as `replaces`.",
+                parameters: json!({
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "type": "string",
+                            "enum": ["requirement", "preference", "style", "fact"],
+                            "description": "requirement: something always or never to do; preference: what they like in replies and edits; style: how they write; fact: what is true of a person, place or term in their work (needs `name`)"
+                        },
+                        "scope": {
+                            "type": "string",
+                            "enum": ["project", "personal"],
+                            "description": "project: about this work; personal: the user's general habits. Ignored for a fact (always project) and with `replaces`."
+                        },
+                        "text": {
+                            "type": "string",
+                            "description": "The memory: one or a few plain sentences in the user's language, as an instruction to yourself; for a fact, what is true of it"
+                        },
+                        "name": {
+                            "type": "string",
+                            "description": "For a fact: the person, place or term"
+                        },
+                        "aliases": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "For a fact: other names it goes by"
+                        },
+                        "replaces": {
+                            "type": "string",
+                            "description": "The id of a memory to update instead of adding one, as listed in brackets"
+                        }
+                    },
+                    "required": ["kind", "text"],
+                }),
+            },
+            run: remember,
+        });
+    }
 
     // Ask and Plan are structurally read-only: the model never receives the
     // edit tool, so a provider cannot accidentally ignore a prompt-only mode
@@ -1110,6 +1172,7 @@ mod tests {
             root: None,
             conventions: &NO_CONVENTIONS,
             library: &[],
+            memory: None,
             proposed: Default::default(),
         };
         let call = |name: &str| use_skill(&ctx, &json!({ "name": name }).to_string());
@@ -1141,6 +1204,7 @@ mod tests {
             root: None,
             conventions: &NO_CONVENTIONS,
             library: &[],
+            memory: None,
             proposed: Default::default(),
         }
     }
@@ -1202,7 +1266,7 @@ mod tests {
     #[test]
     fn the_rules_tools_are_in_every_mode() {
         for edits in [false, true] {
-            let names: Vec<&str> = builtin_tools(false, false, edits)
+            let names: Vec<&str> = builtin_tools(false, false, edits, false)
                 .iter()
                 .map(|t| t.spec.name)
                 .collect();
@@ -1211,6 +1275,21 @@ mod tests {
                 "{names:?}"
             );
         }
+    }
+
+    #[test]
+    fn remember_is_offered_in_every_mode_only_while_the_setting_is_on() {
+        let has = |edits: bool, remember: bool| {
+            builtin_tools(true, true, edits, remember)
+                .iter()
+                .any(|t| t.spec.name == REMEMBER_TOOL_NAME)
+        };
+        assert!(has(false, true) && has(true, true));
+        assert!(!has(false, false) && !has(true, false));
+        assert_eq!(
+            remember(&ctx(""), r#"{"kind":"style","text":"x"}"#),
+            "Remembering is turned off."
+        );
     }
 
     #[test]
@@ -1230,12 +1309,12 @@ mod tests {
 
     #[test]
     fn read_only_modes_do_not_receive_the_edit_tool() {
-        let read_only = builtin_tools(true, true, false);
+        let read_only = builtin_tools(true, true, false, false);
         assert!(!read_only
             .iter()
             .any(|tool| tool.spec.name == PROPOSE_EDIT_TOOL_NAME));
 
-        let editing = builtin_tools(true, true, true);
+        let editing = builtin_tools(true, true, true, false);
         assert!(editing
             .iter()
             .any(|tool| tool.spec.name == PROPOSE_EDIT_TOOL_NAME));

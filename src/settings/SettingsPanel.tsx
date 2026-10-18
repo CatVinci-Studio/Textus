@@ -490,6 +490,12 @@ export function SettingsPanel({
             <>
               <SettingsGroup title={t.agentPersonalizationGroupLabel}>
                 {canPickFolder && <AgentWorkspaceRootSection t={t} />}
+                <ToggleRow
+                  label={t.rememberAutomaticallyLabel}
+                  hint={t.rememberAutomaticallyHint}
+                  checked={settings.rememberAutomatically}
+                  onChange={(v) => setSettings({ rememberAutomatically: v })}
+                />
                 <AgentSystemPromptSection
                   t={t}
                   onOpenFile={onOpenFile}

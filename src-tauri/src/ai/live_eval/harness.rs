@@ -459,7 +459,8 @@ pub fn run_conversation(
     let ws = setup.workspace;
     let root = ws.root.as_deref().map(Path::new);
     let tool_set =
-        tools::builtin_tools(ws.has_usable_skills(), root.is_some(), setup.mode == "edit");
+        // No remember tool: an eval run writes no memories.
+        tools::builtin_tools(ws.has_usable_skills(), root.is_some(), setup.mode == "edit", false);
     let specs = tools::tool_specs(&tool_set);
     let mut history: Vec<AgentTurn> = Vec::new();
     let mut doc = document.to_string();
@@ -510,6 +511,7 @@ pub fn run_conversation(
             root,
             conventions: &conventions,
             library: &library,
+            memory: None,
             proposed: Default::default(),
         };
         let usage = RefCell::new(Vec::new());

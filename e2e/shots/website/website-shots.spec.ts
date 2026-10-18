@@ -779,9 +779,13 @@ async function launch(page: Page, options: Launch) {
         name,
         aliases: [],
         include: "detected",
-        file: `.levis/library/${name}.md`,
+        file: `.textus/library/${name}.md`,
         body: "",
+        remembered: null,
       })),
+      memories: { items: [], chars: 0, cap: 4000 },
+      remember: true,
+      levis_project: false,
     },
   });
   await openApp(page, {

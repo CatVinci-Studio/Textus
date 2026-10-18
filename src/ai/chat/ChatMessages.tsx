@@ -16,6 +16,12 @@ import { classifyAiError, type AiErrorKind } from "../error-messages";
 import { diffLines } from "./line-diff";
 import type { PendingSentence } from "../revision/pending-edit-plugin";
 import { FlipOnChange } from "../../ui/flip";
+import {
+  MemoryChip,
+  parseRememberResult,
+  type MemoryChipLabels,
+  type RememberResult,
+} from "./MemoryChip";
 
 /** The statuses a card reaches by being decided, which collapse it. */
 const DECIDED: ReadonlySet<PendingStatus> = new Set([
@@ -42,7 +48,7 @@ function parseComment(
   }
 }
 
-export interface ChatMessagesLabels extends AgentTurnLabels {
+export interface ChatMessagesLabels extends AgentTurnLabels, MemoryChipLabels {
   thinking: string;
   proposalTitle: string;
   proposalStatus: Record<Exclude<PendingStatus, "pending">, string>;
@@ -119,6 +125,9 @@ export interface ChatMessagesProps {
    *  is still available to resend - not every error is retryable this way. */
   canRetry: boolean;
   onRetry: () => void;
+  /** The conversation's document, whose project a remembered project
+   *  memory belongs to (MemoryChip). */
+  docPath?: string | null;
 }
 
 /**
@@ -153,6 +162,7 @@ export function ChatMessages({
   noteNumber,
   canRetry,
   onRetry,
+  docPath = null,
 }: ChatMessagesProps) {
   const revealFrom = useRef(0);
   const wasBusy = useRef(busy);
@@ -196,6 +206,24 @@ export function ChatMessages({
           proposal: parseProposal(turn.arguments),
           sentSelection,
         });
+    }
+    return map;
+  }, [shown]);
+  // What each remember call saved, parsed once per turn-list change like
+  // the proposals.
+  const rememberResults = useMemo(() => {
+    const remembers = new Set(
+      shown.flatMap((turn) =>
+        turn.kind === "ToolCall" && turn.name === "remember"
+          ? [turn.call_id]
+          : [],
+      ),
+    );
+    const map = new Map<string, RememberResult>();
+    for (const turn of shown) {
+      if (turn.kind !== "ToolResult" || !remembers.has(turn.call_id)) continue;
+      const result = parseRememberResult(turn.output);
+      if (result) map.set(turn.call_id, result);
     }
     return map;
   }, [shown]);
@@ -327,6 +355,25 @@ export function ChatMessages({
           (parsedProposals.has(turn.call_id) || commentIds.has(turn.call_id))
         )
           return null;
+        // A remember call shows as its result's chip; one that saved
+        // nothing (a duplicate) shows as any other tool result.
+        if (turn.kind === "ToolCall" && turn.name === "remember") return null;
+        const remembered =
+          turn.kind === "ToolResult" && rememberResults.get(turn.call_id);
+        if (remembered)
+          return (
+            <div
+              key={i}
+              className={reveal ? "turn-reveal" : undefined}
+              style={style}
+            >
+              <MemoryChip
+                result={remembered}
+                docPath={docPath}
+                labels={labels}
+              />
+            </div>
+          );
         return (
           <div
             key={i}

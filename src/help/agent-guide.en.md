@@ -70,6 +70,7 @@ Textus AI learns about you and your work from a few plain Markdown files, not fr
 | **Style profile** | How you write | `.textus/style.md` |
 | **Library** | Facts about people, places and terms | `.textus/library/` |
 | **Writing instructions** | Standing rules for every conversation | `agent.md` — global, and per project |
+| **AI remembered** | What Textus AI keeps from your conversations | `.textus/memory/`, and `memory/` in the global config folder |
 | **Skills** | Reusable instructions you call with `/name` | `skills/` — global, and per project |
 | **Global config folder** | What applies to every document | The app's settings folder |
 
@@ -94,7 +95,7 @@ The project menu creates `.textus/` and its files for you the first time you ask
 
 ### The project folder
 
-**The project folder is the folder Textus AI works in.** By default it is the folder of the document you are editing: save a document, and its folder becomes the project folder.
+**The project folder is the folder Textus AI works in.** By default it is the folder of the document you are editing — or the nearest folder above it that has a `.textus/` folder, so a chapter in `novel/part-1/` belongs to `novel/`: save a document, and its folder becomes the project folder.
 
 - Textus AI can list, read and search the text files in it (Markdown, plain text and similar formats) to find a character's earlier scenes, a term, or your notes. Hidden files and folders, build and dependency folders (such as `node_modules`) and files over 100 KB are left out.
 - Typing `@` in the chat input attaches one of its files to your message.
@@ -165,6 +166,15 @@ Spell it "Harbour City", never "Harbor City".
 
 Writing instructions apply to conversations only. Completion doesn't read them; it follows the style profile and the library.
 
+### What Textus AI remembers
+
+**Textus AI remembers what you ask for and how you write**, without you writing a file. When you tell it something that should hold beyond one request — "always use British spelling", "no em dashes", a correction you had to make twice — or a fact about your work, such as who a character is, it keeps it and follows it in later conversations. Each time, a line under its reply says what it remembered and where: **Undo** takes it back, and **Make personal** or **Make project** moves it.
+
+- **This project**: what is about this work, in `.textus/memory/`; facts about people, places and terms go into the library.
+- **For all projects**: your general habits, in `memory/` in the global config folder. Without a project folder, everything goes here.
+
+The AI panel's **Memory** tab lists it all under **AI remembered**, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and the Memory tab says so. **Settings > Textus AI > Remember automatically** turns it off.
+
 ### Skills (/name)
 
 **A skill is a reusable set of instructions with a name** — "polish", "outline", "check the citations" — kept in one Markdown file: a name and a one-line description at the top, the full instructions below.
@@ -226,6 +236,7 @@ There is no global style profile or library: those describe one body of work, so
 | Style profile | ✓ | ✓ | |
 | Library entries that come up | ✓ | ✓ | |
 | Writing instructions | ✓ | | |
+| What Textus AI remembered | ✓ | | |
 | Skills | ✓ | | |
 | Completion tone (Settings) | | ✓ | |
 

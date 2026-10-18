@@ -30,9 +30,8 @@
 //! `<!-- -->` comments in the style profile and in entries are notes to
 //! self and never reach the model.
 
-use crate::ai::workspace::{
-    project_dir, project_file, project_read_dirs, strip_html_comments, writable_project_file,
-};
+use crate::ai::memory::Remembered;
+use crate::ai::workspace::{project_dir, project_file, strip_html_comments, WORKSPACE_DIR_NAME};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
@@ -58,7 +57,9 @@ const TEXT_EXTENSIONS: &[&str] = &[
 const MAX_FILE_BYTES: u64 = 100 * 1024;
 const MAX_WALKED_FILES: usize = 2000;
 const MAX_SEARCH_MATCHES: usize = 40;
-const MAX_LIBRARY_CHARS: usize = 8_000;
+/// Most library text one request carries, in characters - not bytes, which
+/// gave Chinese and Japanese a third of what English got.
+pub(crate) const MAX_LIBRARY_CHARS: usize = 8_000;
 const MAX_STYLE_CHARS: usize = 6_000;
 
 /// A folder too broad to hand to the agent as a project: the filesystem
@@ -217,6 +218,9 @@ pub struct LibraryEntry {
     /// Path relative to the project root, for "open this entry".
     pub file: String,
     pub body: String,
+    /// Set on an entry Textus AI wrote with the remember tool (ai::memory),
+    /// which the Memory tab also lists under "AI remembered".
+    pub remembered: Option<Remembered>,
 }
 
 fn parse_list(value: &str) -> Vec<String> {
@@ -237,6 +241,7 @@ pub fn parse_library_entry(file: &str, stem: &str, content: &str) -> LibraryEntr
         include: LibraryInclude::Detected,
         file: file.to_string(),
         body: strip_html_comments(content).trim().to_string(),
+        remembered: Remembered::from_file(content),
     };
     if let Some(rest) = content.strip_prefix("---") {
         if let Some(end) = rest.find("\n---") {
@@ -266,36 +271,32 @@ pub fn parse_library_entry(file: &str, stem: &str, content: &str) -> LibraryEntr
     entry
 }
 
-/// The library: `.textus/library/*.md`, plus a Levis project's
-/// `.levis/library/*.md` that `.textus/` has no entry of the same name for.
+/// The library: `.textus/library/*.md`, in file-name order.
 pub fn read_library(root: &Path) -> Vec<LibraryEntry> {
-    let mut by_stem: std::collections::BTreeMap<String, LibraryEntry> = Default::default();
-    for project in project_read_dirs(root) {
-        let folder = project
-            .file_name()
-            .map(|n| n.to_string_lossy().into_owned())
-            .unwrap_or_default();
-        let Ok(entries) = std::fs::read_dir(project.join("library")) else {
-            continue;
-        };
-        for path in entries.flatten().map(|e| e.path()) {
-            if path.extension().and_then(|e| e.to_str()) != Some("md") {
-                continue;
-            }
-            let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
-                continue;
-            };
-            let Ok(content) = std::fs::read_to_string(&path) else {
-                continue;
-            };
-            let file = format!("{folder}/library/{stem}.md");
+    let Ok(entries) = std::fs::read_dir(project_dir(root).join("library")) else {
+        return Vec::new();
+    };
+    let mut paths: Vec<PathBuf> = entries
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("md"))
+        .collect();
+    paths.sort();
+    paths
+        .into_iter()
+        .filter_map(|path| {
+            let stem = path.file_stem().and_then(|s| s.to_str())?;
+            let content = std::fs::read_to_string(&path).ok()?;
             // An entry with nothing written in it yet is still listed (the
             // Memory tab showed nothing after New library entry, as if it
             // had failed); relevant_library leaves it out of requests.
-            by_stem.insert(stem.to_string(), parse_library_entry(&file, stem, &content));
-        }
-    }
-    by_stem.into_values().collect()
+            Some(parse_library_entry(
+                &format!("{WORKSPACE_DIR_NAME}/library/{stem}.md"),
+                stem,
+                &content,
+            ))
+        })
+        .collect()
 }
 
 /// Where "Learn my style" writes the profile: `.textus/style.md`.
@@ -303,8 +304,7 @@ fn style_path(root: &Path) -> PathBuf {
     project_dir(root).join("style.md")
 }
 
-/// The style profile: `.textus/style.md`, or a Levis project's
-/// `.levis/style.md` while there is none.
+/// The style profile: `.textus/style.md`.
 pub fn read_style(root: &Path) -> Option<String> {
     project_file(root, "style.md")
         .and_then(|path| std::fs::read_to_string(path).ok())
@@ -325,10 +325,12 @@ pub fn style_conventions(style: Option<&str>) -> crate::ai::rules::ProjectConven
 
 /// The library entries a request should carry: `always` ones, plus
 /// `detected` ones whose name or an alias appears in `context` (the user's
-/// message, the selection, the text around the cursor). Bounded overall.
-pub fn relevant_library<'a>(library: &'a [LibraryEntry], context: &str) -> Vec<&'a LibraryEntry> {
+/// message, the selection, the text around the cursor), until
+/// MAX_LIBRARY_CHARS characters. Those that came up but didn't fit are
+/// `left_out`, for the Memory tab to say so rather than drop them silently.
+pub fn pick_library<'a>(library: &'a [LibraryEntry], context: &str) -> LibraryPick<'a> {
     let haystack = context.to_lowercase();
-    let mut picked = Vec::new();
+    let mut pick = LibraryPick::default();
     let mut used = 0;
     for entry in library.iter().filter(|e| !e.body.is_empty()) {
         let hit = match entry.include {
@@ -339,12 +341,31 @@ pub fn relevant_library<'a>(library: &'a [LibraryEntry], context: &str) -> Vec<&
                 .filter(|term| term.chars().count() >= 2)
                 .any(|term| haystack.contains(&term.to_lowercase())),
         };
-        if hit && used + entry.body.len() <= MAX_LIBRARY_CHARS {
-            used += entry.body.len();
-            picked.push(entry);
+        if !hit {
+            continue;
+        }
+        let size = entry.body.chars().count();
+        if used + size <= MAX_LIBRARY_CHARS {
+            used += size;
+            pick.included.push(entry);
+        } else {
+            pick.left_out.push(entry);
         }
     }
-    picked
+    pick
+}
+
+/// What pick_library chose for one request.
+#[derive(Default)]
+pub struct LibraryPick<'a> {
+    pub included: Vec<&'a LibraryEntry>,
+    /// Entries that came up but no longer fit.
+    pub left_out: Vec<&'a LibraryEntry>,
+}
+
+/// The entries pick_library includes.
+pub fn relevant_library<'a>(library: &'a [LibraryEntry], context: &str) -> Vec<&'a LibraryEntry> {
+    pick_library(library, context).included
 }
 
 /// The prompt section for the style profile and the relevant library
@@ -506,43 +527,57 @@ mod tests {
     }
 
     #[test]
-    fn a_levis_projects_library_and_style_are_read_under_textus_ones() {
-        let dir = std::env::temp_dir().join(format!("textus-legacy-lib-{}", std::process::id()));
+    fn the_library_and_style_are_read_from_textus_only() {
+        let dir = std::env::temp_dir().join(format!("textus-lib-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         for (path, body) in [
-            (".levis/library/lin.md", "---\nname: Lin\n---\nLevis Lin."),
             (".levis/library/wu.md", "---\nname: Wu\n---\nLevis Wu."),
             (".levis/style.md", "Short sentences."),
             (".textus/library/lin.md", "---\nname: Lin\n---\nTextus Lin."),
+            (
+                ".textus/library/new.md",
+                "---\nname: New\n---\n<!-- what to know about New -->\n",
+            ),
         ] {
             let full = dir.join(path);
             std::fs::create_dir_all(full.parent().unwrap()).unwrap();
             std::fs::write(full, body).unwrap();
         }
-        std::fs::write(
-            dir.join(".textus/library/new.md"),
-            "---\nname: New\n---\n<!-- what to know about New -->\n",
-        )
-        .unwrap();
         let library = read_library(&dir);
         let bodies: Vec<_> = library.iter().map(|e| e.body.as_str()).collect();
-        assert_eq!(bodies, ["Textus Lin.", "", "Levis Wu."]);
+        assert_eq!(bodies, ["Textus Lin.", ""]);
+        assert_eq!(library[0].file, ".textus/library/lin.md");
         // Listed, but never sent: nothing is written in it yet.
         assert!(relevant_library(&library, "New and Lin")
             .iter()
             .all(|e| e.name != "New"));
-        let library: Vec<_> = library.into_iter().filter(|e| e.name != "New").collect();
-        assert_eq!(library[1].file, ".levis/library/wu.md");
-        assert_eq!(read_style(&dir).as_deref(), Some("Short sentences."));
+        assert_eq!(read_style(&dir), None);
         // "Learn my style" and "Open style profile" write .textus/style.md.
         assert_eq!(style_path(&dir), dir.join(".textus/style.md"));
         std::fs::write(dir.join(".textus/style.md"), "Long sentences.").unwrap();
         assert_eq!(read_style(&dir).as_deref(), Some("Long sentences."));
-        assert_eq!(
-            std::fs::read_to_string(dir.join(".levis/style.md")).unwrap(),
-            "Short sentences."
-        );
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_library_cap_counts_characters_and_names_what_it_left_out() {
+        // 3,000 Chinese characters are 9,000 bytes: two such entries fit
+        // in 8,000 characters' worth only one at a time.
+        let body = "林".repeat(3_000);
+        let lib: Vec<_> = ["甲", "乙", "丙"]
+            .iter()
+            .map(|n| {
+                parse_library_entry(
+                    n,
+                    n,
+                    &format!("---\nname: {n}{n}\ninclude: always\n---\n{body}"),
+                )
+            })
+            .collect();
+        let pick = pick_library(&lib, "");
+        assert_eq!(pick.included.len(), 2, "6,000 of 8,000 characters");
+        assert_eq!(pick.left_out.len(), 1);
+        assert_eq!(pick.left_out[0].name, "丙丙");
     }
 
     #[test]
@@ -592,9 +627,77 @@ pub async fn read_project_file(
     .map_err(|e| e.to_string())?
 }
 
+/// Which library entries reached Textus AI, for the Memory tab's marks
+/// (`LibraryUse` in platform/ipc.ts): the entries' `file`s, those that came
+/// up but didn't fit, and whether this is what the last conversation
+/// request for the document carried (`lastRequest`) or what its text alone
+/// would bring in, before any request.
+#[derive(Serialize, Clone, Debug, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct LibraryUse {
+    pub included: Vec<String>,
+    pub left_out: Vec<String>,
+    pub last_request: bool,
+    /// MAX_LIBRARY_CHARS, for the tab to name.
+    pub cap: usize,
+}
+
+impl LibraryUse {
+    fn of(pick: &LibraryPick, last_request: bool) -> Self {
+        let files = |entries: &[&LibraryEntry]| entries.iter().map(|e| e.file.clone()).collect();
+        Self {
+            included: files(&pick.included),
+            left_out: files(&pick.left_out),
+            last_request,
+            cap: MAX_LIBRARY_CHARS,
+        }
+    }
+}
+
+/// The last request's LibraryUse per document path, recorded by
+/// ai_agent_message - so the marks are what was sent, picked by the same
+/// rule, never a second guess at it in TypeScript.
+static LAST_SENT: std::sync::Mutex<std::collections::BTreeMap<String, LibraryUse>> =
+    std::sync::Mutex::new(std::collections::BTreeMap::new());
+
+pub fn record_library_use(doc_path: Option<&str>, pick: &LibraryPick) {
+    if let Ok(mut sent) = LAST_SENT.lock() {
+        sent.insert(
+            doc_path.unwrap_or_default().to_string(),
+            LibraryUse::of(pick, true),
+        );
+    }
+}
+
+/// The Memory tab's "used" marks: what the last request for the document
+/// carried, or before one, what the document's text brings in by itself.
+#[tauri::command]
+pub async fn library_use(
+    doc_path: Option<String>,
+    workspace_root: Option<String>,
+    document: String,
+) -> LibraryUse {
+    if let Some(sent) = LAST_SENT
+        .lock()
+        .ok()
+        .and_then(|sent| sent.get(doc_path.as_deref().unwrap_or_default()).cloned())
+    {
+        return sent;
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let Ok(root) = project_root(doc_path.as_deref(), workspace_root.as_deref()) else {
+            return LibraryUse::default();
+        };
+        let library = read_library(&root);
+        let context = crate::ai::agent::document_section(&document, true, None);
+        LibraryUse::of(&pick_library(&library, &context), false)
+    })
+    .await
+    .unwrap_or_default()
+}
+
 /// Creates `.textus/<rel>` with `template` unless it already exists, and
 /// returns its absolute path - "new library entry", "open style profile".
-/// A Levis project's `.levis/<rel>` is copied rather than opened in place.
 #[tauri::command]
 pub async fn ensure_project_file(
     doc_path: Option<String>,
@@ -611,9 +714,7 @@ pub async fn ensure_project_file(
         {
             return Err("Invalid file name.".to_string());
         }
-        // A Levis project's .levis/<rel> is copied into .textus/ first, so
-        // the author edits what they have and .levis/ stays as Levis left it.
-        let path = writable_project_file(&root, rel).map_err(|e| e.to_string())?;
+        let path = project_dir(&root).join(rel);
         if !path.exists() {
             if let Some(parent) = path.parent() {
                 std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
@@ -732,8 +833,6 @@ pub async fn learn_style(
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    // The profile it replaces - .textus/style.md, or a Levis project's
-    // .levis/style.md, which itself stays untouched.
     if let Some(previous) = project_file(&root, "style.md") {
         let _ = std::fs::copy(&previous, path.with_file_name("style.previous.md"));
     }

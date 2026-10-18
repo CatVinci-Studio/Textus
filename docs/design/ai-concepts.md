@@ -15,28 +15,33 @@ Grammar check uses only the writing conventions and the library's names.
 
 ## Glossary
 
-| Concept              | 中文              | 日本語                   | In one sentence                                                                        |
-| -------------------- | ----------------- | ------------------------ | -------------------------------------------------------------------------------------- |
-| Project folder       | 项目文件夹        | プロジェクトフォルダー   | The folder Textus AI works in and may read.                                            |
-| `.textus/` folder    | `.textus/` 文件夹 | `.textus/` フォルダー    | The project's own settings, inside the project folder.                                 |
-| Style profile        | 文风档案          | 文体プロファイル         | How you write, so continuations and edits sound like you.                              |
-| Learn my style       | 学习我的文风      | 文体を学習               | Drafts the style profile from samples of your writing.                                 |
-| Library              | 资料库            | ライブラリ               | Facts about people, places and terms that must stay consistent.                        |
-| Writing instructions | 写作要求          | 執筆の指示               | Standing rules sent with every conversation, in `agent.md`.                            |
-| Skills               | 技能              | スキル                   | Named, reusable instructions, called with `/name`.                                     |
-| Global config folder | 全局配置文件夹    | グローバル設定フォルダー | The app's folder for the writing instructions and skills that apply to every document. |
-| Built-in skills      | 内置技能          | 組み込みスキル           | The 18 skills that come with the app; each can be turned off, customized or reset.     |
-| Writing conventions  | 写作规范          | 表記ルール               | The punctuation, spacing and number norms followed, per document language.             |
+| Concept              | 中文              | 日本語                   | In one sentence                                                                           |
+| -------------------- | ----------------- | ------------------------ | ----------------------------------------------------------------------------------------- |
+| Project folder       | 项目文件夹        | プロジェクトフォルダー   | The folder Textus AI works in and may read.                                               |
+| `.textus/` folder    | `.textus/` 文件夹 | `.textus/` フォルダー    | The project's own settings, inside the project folder.                                    |
+| Style profile        | 文风档案          | 文体プロファイル         | How you write, so continuations and edits sound like you.                                 |
+| Learn my style       | 学习我的文风      | 文体を学習               | Drafts the style profile from samples of your writing.                                    |
+| Library              | 资料库            | ライブラリ               | Facts about people, places and terms that must stay consistent.                           |
+| Writing instructions | 写作要求          | 執筆の指示               | Standing rules sent with every conversation, in `agent.md`.                               |
+| AI remembered        | AI 记住的         | AIが覚えたこと           | What Textus AI keeps by itself from conversations: your requirements, preferences, style. |
+| Skills               | 技能              | スキル                   | Named, reusable instructions, called with `/name`.                                        |
+| Global config folder | 全局配置文件夹    | グローバル設定フォルダー | The app's folder for the writing instructions and skills that apply to every document.    |
+| Built-in skills      | 内置技能          | 組み込みスキル           | The 18 skills that come with the app; each can be turned off, customized or reset.        |
+| Writing conventions  | 写作规范          | 表記ルール               | The punctuation, spacing and number norms followed, per document language.                |
 
 ### Project folder
 
 **The folder Textus AI works in: it may read and search the text files
 there, and the project's own settings live in its `.textus/` folder.**
 
-- **On disk:** the folder of the document being edited, unless the user
-  chose another one.
+- **On disk:** the nearest folder holding the document that has a
+  `.textus/` folder - the document's own, or one above it - and otherwise
+  the document's own folder, unless the user chose another one. The walk
+  up stops before the home folder and a drive root, which are never a
+  project.
 - **Create / edit:** nothing to create - saving a document makes its folder
-  the project folder. **Choose project folder…** in the project bar's menu,
+  the project folder, and a chapter in `novel/part-1/` belongs to `novel/`
+  once `novel/.textus/` exists. **Choose project folder…** in the project bar's menu,
   or **Settings > Textus AI > Project Folder**, picks another one; **Use the
   document's folder** goes back to the default.
 - **Textus AI uses it:** conversations list, read and search its text files
@@ -50,10 +55,16 @@ there, and the project's own settings live in its `.textus/` folder.**
 ### `.textus/` folder
 
 **The project's settings folder: a hidden folder inside the project folder
-that holds the project's style profile, library, writing instructions and
-skills.**
+that holds the project's style profile, library, writing instructions,
+skills and what Textus AI remembered about the project.**
 
-- **On disk:** `<project folder>/.textus/`.
+- **On disk:** `<project folder>/.textus/`. Only this folder counts: a
+  project made with Levis has a `.levis/` folder instead, which Textus does
+  not read. While `.levis/` holds files `.textus/` lacks, the project bar
+  asks once whether to convert it ("Convert" copies them into `.textus/`,
+  never changing `.levis/`; "Not now" is remembered per project in
+  `ui-state.json`, and the Memory tab keeps **Convert Levis data**) -
+  `ai::levis_project`, the one place that knows `.levis/`.
 - **Create / edit:** created on first use by the project bar's menu items,
   or by hand.
 - **Textus AI uses it:** only through the roles below. The file tools never
@@ -84,15 +95,21 @@ consistent, one entry per file.**
 
 - **On disk:** `.textus/library/<name>.md` - frontmatter `name`, `aliases`
   and `include` (`detected` by default, `always` or `never`), then the
-  facts.
+  facts. An entry Textus AI wrote (see AI remembered) also has
+  `remembered-by: textus-ai` and the `created`/`updated`/`source-*` record.
 - **Create / edit:** **New library entry…** in the project bar's menu asks
-  for the name and opens the new file; or by hand. The **Library N** chip
-  shows how many entries there are.
+  for the name and opens the new file; or by hand; or Textus AI, with the
+  `remember` tool, for a fact about the work. The **Library N** chip shows
+  how many entries there are; the Memory tab opens or deletes each.
 - **Textus AI uses it:** an entry goes with a request when it is `always`,
   or `detected` and its name or an alias (two characters or longer) appears
   in the request - the message plus the document for a conversation, the
-  text around the cursor for completion. At most about 8 KB of entries per
-  request; entries nobody mentions cost nothing.
+  text around the cursor for completion. At most 8,000 characters of
+  entries per request (characters, not bytes, so Chinese gets as much as
+  English); entries nobody mentions cost nothing. The Memory tab marks the
+  entries the last request carried - Rust records them
+  (`project::record_library_use`), so the mark is what was sent - and
+  names those that came up but didn't fit.
 
 ### Writing instructions (`agent.md`)
 
@@ -108,6 +125,52 @@ reply language, spellings and terms, things to always or never do.**
 - **Textus AI uses it:** in the system prompt of every conversation, under
   `---user instructions---`, with comments stripped. Not used by completion
   or grammar check.
+
+### AI remembered
+
+**What Textus AI keeps by itself from conversations, so that it "remembers
+your style and what you ask for": the user's requirements ("always…",
+"never…"), preferences about its replies and edits, their style, and facts
+about the work.** The user's own files - agent.md, style.md - stay theirs:
+Textus AI never changes them.
+
+- **On disk:** one Markdown file per memory, apart from the files the user
+  writes. Personal (the user's habits, every project): `memory/<slug>.md`
+  in the global config folder. The project's (this work):
+  `.textus/memory/<slug>.md`. Front matter `kind` (`requirement`, `preference` or
+  `style`), `remembered-by: textus-ai`, `created`, `updated`,
+  `source-conversation`, `source-title`, `source-document`; then the memory
+  in one or a few sentences. A fact about the work (a person, place, term)
+  is a library entry instead, marked `remembered-by` (see Library). Each is
+  named by an id, `<scope>/<folder>/<file stem>`
+  (`personal/memory/no-semicolons`, `project/library/lin-wan`).
+- **Create / edit:** Textus AI, with the `remember` tool, in any mode -
+  it writes memory, never the document - while **Settings > Textus AI >
+  Remember automatically** is on (the default). Its result shows under the
+  reply as "Remembered: … (project) · Undo · Make personal"; Undo deletes a
+  new memory or puts back what an update replaced. The Memory tab's **AI
+  remembered** lists them all, personal then the project's, with the date
+  and the conversation each came from, and **Edit** (opens the file),
+  **Make personal / Make project** (moves the file) and **Delete**.
+- **Scope:** about this work - project; the user's general habits -
+  personal; with no project folder (an unsaved draft) everything is
+  personal and no fact is kept. Rust writes only inside the two `memory/`
+  folders and the project's library, through the atomic writer; an
+  identical memory (same letters and digits, ignoring case, spacing and
+  punctuation) is not saved twice, and to change one the model passes its
+  id as `replaces`. It never changes a library entry the user wrote.
+- **Textus AI uses it:** requirements, preferences and style go with every
+  conversation request, after the writing instructions: personal under
+  `---what you remember about the user…---`, then the project's under
+  `---what you remember about this project…---`, which wins a conflict with
+  the personal ones; the writing instructions win over both. At most 4,000
+  characters - the project's newest first, then the personal ones' newest
+  first; what doesn't fit is left out, the model is told how many, and the
+  Memory tab marks them **Not sent** and says so (it warns from 80% on).
+  With the tool offered, each line carries its id and the prompt lists the
+  library entries Textus AI wrote, so it updates instead of repeating.
+  Facts reach requests through the library's matching. Not used by
+  completion or grammar check.
 
 ### Skills (`/name`)
 
@@ -147,7 +210,8 @@ description.**
 ### Global config folder
 
 **The app's own folder for what applies to every document: the global
-writing instructions and the global skills.**
+writing instructions, the global skills and the personal memories (see AI
+remembered).**
 
 - **On disk:** `agent/` in the app config directory -
   `~/.config/com.catvinci.textus/agent/` (Linux),
@@ -207,6 +271,7 @@ part of the project.
 | Style profile                             |       ✓       |     ✓      |               |
 | Library entries the request mentions      |       ✓       |     ✓      |               |
 | Writing instructions (global and project) |       ✓       |            |               |
+| AI remembered (personal and project)      |       ✓       |            |               |
 | Skills (global and project)               |       ✓       |            |               |
 | Completion tone                           |               |     ✓      |               |
 | Writing conventions                       |       ✓       |     ✓      |       ✓       |
@@ -214,13 +279,16 @@ part of the project.
 - **One project folder at a time.** A chosen folder is a single setting
   and applies to every document, unsaved drafts included, until **Use the
   document's folder**. A chosen folder that no longer exists falls back to
-  the document's folder. With neither (an unsaved draft, nothing chosen)
+  the document's project. With neither (an unsaved draft, nothing chosen)
   there is no project: no file tools, style profile, library, project
-  instructions or project skills - the global layer still applies. A folder
-  that is too broad (the home folder, a drive root) is refused, whether
-  chosen or the document's own.
+  instructions, project skills or project memories - the global layer and
+  the personal memories still apply. A folder that is too broad (the home
+  folder, a drive root) is refused, whether chosen or the document's own,
+  and the walk up to a `.textus/` never reaches one.
 - **Only the project folder's `.textus/` counts.** When the user chose a
-  folder, the `.textus/` next to the document is not read.
+  folder, the `.textus/` next to the document is not read; a nearer
+  `.textus/` wins over one further up; a `.levis/` is never read (the
+  project bar offers to convert it).
 - **Writing instructions add up.** The global `agent.md` comes first and the
   project's after it. With one layer the section is headed
   `---user instructions---`; when both are present the project's section is
@@ -230,6 +298,11 @@ part of the project.
   ---user instructions for this project (where they conflict with the ones above, follow these)---
   ```
 
+- **What Textus AI remembered follows the writing instructions.** The
+  system prompt carries, in this order: the global `agent.md`, the
+  project's, the personal memories, the project's memories (which win over
+  the personal ones), then - when the `remember` tool is offered - how to
+  use it. The user's own instructions win over anything remembered.
 - **Skills merge by name.** A project skill replaces a global skill with the
   same `name`, and either replaces a built-in one; all other skills from
   the three levels are available.
@@ -246,11 +319,19 @@ part of the project.
 
 - **Settings > Textus AI**, group "Writing Instructions & Skills": Project
   Folder (its hint names the folder Textus AI may read), Writing Instructions
-  (agent.md) (hint: for all documents), Skills (hint: how to call one) and
-  Global Config Folder (no hint). Few hints on purpose; the guide explains.
+  (agent.md) (hint: for all documents), Skills (hint: how to call one),
+  Remember automatically (hint: where to see and undo) and Global Config
+  Folder (no hint). Few hints on purpose; the guide explains.
 - **The AI panel's project bar**: the folder name (tooltip: "Project folder"
   and the path), the **Style** and **Library N** chips, and the menu that
-  chooses the folder and creates each project-level file.
+  chooses the folder and creates each project-level file; for a project
+  with Levis data, the one-time question whether to convert it.
+- **The AI panel's Memory tab**: AI remembered, the style profile, the
+  library (with delete), the writing instructions and the skills - each
+  opening its file; the notes when memories near or pass their limit and
+  when mentioned library entries didn't fit.
+- **Under Textus AI's reply**: a chip for each thing it remembered, with
+  Undo and the move to the other scope.
 - **Help > AI Features Guide**, section "Make Textus AI yours": an overview
   table, one subsection with a small example per concept, "Which applies
   when" and "Which file for what".
@@ -283,5 +364,6 @@ names above.
 | Style profile        | `AgentWorkspace.style`, `project::read_style`, `learn_style`                                                                                                      |
 | Library              | `AgentWorkspace.library`, `project::read_library`, `project::relevant_library`                                                                                    |
 | Writing instructions | `AgentWorkspace.instructions` (global) and `AgentWorkspace.project_instructions`; `agentSystemPrompt*` strings                                                    |
+| AI remembered        | `ai::memory`, `AgentWorkspace.memories`, the `remember` tool, `memory_undo`, `memory_move`, `memory_delete`, `settings.rememberAutomatically`, `MemoryChip`       |
 | Skills               | `AgentWorkspace.skills`, the `use_skill` tool, `import_agent_skill`, `ai::builtin`, `customize_builtin_skill`, `reset_builtin_skill`, `set_builtin_skill_enabled` |
 | Global config folder | `global_agent_dir`, `agentWorkspaceLabel`                                                                                                                         |

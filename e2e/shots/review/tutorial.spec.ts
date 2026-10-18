@@ -246,6 +246,9 @@ test("zh desktop light: the AI lessons done for real", async ({ page }) => {
       style:
         "---\nconventions: zh\n---\n# 文风\n\n- 短句为主\n- 多写看到和听到的\n",
       library: [],
+      memories: { items: [], chars: 0, cap: 4000 },
+      remember: true,
+      levis_project: false,
     },
   });
   await page.locator("#agent-tab-memory").click();

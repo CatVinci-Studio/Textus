@@ -198,6 +198,11 @@ export interface Settings {
   /// Offer the active provider's native server-side web search to Agent;
   /// providers without a compatible search API safely ignore it.
   enableWebSearch: boolean;
+  /// Settings > Textus AI > Remember automatically: Textus AI may keep
+  /// requirements, preferences, style and facts it learns in a
+  /// conversation (the remember tool, src-tauri ai/memory.rs, which reads
+  /// this field from settings.json as REMEMBER_SETTING). On by default.
+  rememberAutomatically: boolean;
   /// Whether an agent edit's green in-document preview streams/types itself
   /// in (pending-edit-plugin's typewriter) or appears complete at once.
   enableEditAnimation: boolean;
@@ -306,6 +311,7 @@ const DEFAULT_SETTINGS: Settings = {
   completionTone: "default",
   writingConventions: "automatic",
   enableWebSearch: false,
+  rememberAutomatically: true,
   enableEditAnimation: true,
   agentExpandToWindow: false,
   pinAgentWindow: false,
