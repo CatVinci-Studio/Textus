@@ -115,6 +115,8 @@ utiliser une.
     "Original dans le texte, modifications dans la marge",
   revisionDisplayNew: "Modifications dans le texte, original dans la marge",
   revisionDisplayFinal: "Résultat seul, sans marques",
+  revisionDisplayNoRoom:
+    "Pas assez de place : fermez la barre latérale ou le panneau IA",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Révision",
   reviewBarOpenChat: "Ouvrir le panneau IA",
@@ -664,8 +666,6 @@ utiliser une.
   autoSuggestFilenameLabel:
     "Suggérer un nom de fichier au premier enregistrement",
   autosaveLabel: "Enregistrer automatiquement",
-  autosaveHint:
-    "Réécrit dans son fichier un document qui en a déjà un peu après que vous avez cessé de taper, ainsi qu'au changement d'onglet ou en quittant la fenêtre. Un nouveau document n'est enregistré qu'une fois nommé.",
   untitledTab: "Sans titre",
   markdownGuideTab: "Guide Markdown",
   agentGuideTab: "Guide des fonctions IA",

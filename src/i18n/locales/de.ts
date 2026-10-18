@@ -108,6 +108,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   revisionDisplayOriginal: "Original im Text, Änderungen am Rand",
   revisionDisplayNew: "Änderungen im Text, Original am Rand",
   revisionDisplayFinal: "Nur das Ergebnis, ohne Markierungen",
+  revisionDisplayNoRoom:
+    "Nicht genug Platz - schließen Sie die Seitenleiste oder den KI-Bereich",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Überarbeitung",
   reviewBarOpenChat: "KI-Bereich öffnen",
@@ -647,8 +649,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   autoSuggestFilenameLabel:
     "Dateinamen beim Speichern neuer Dateien vorschlagen",
   autosaveLabel: "Automatisch speichern",
-  autosaveHint:
-    "Schreibt ein Dokument, das schon eine Datei hat, kurz nach dem Tippen sowie beim Tabwechsel oder Verlassen des Fensters in diese Datei zurück. Neue Dokumente werden erst gespeichert, wenn du sie benannt hast.",
   untitledTab: "Unbenannt",
   markdownGuideTab: "Markdown-Anleitung",
   agentGuideTab: "Anleitung zu KI-Funktionen",

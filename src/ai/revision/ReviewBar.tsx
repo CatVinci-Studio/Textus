@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import {
   REVISION_DISPLAYS,
@@ -6,10 +6,12 @@ import {
 } from "../../settings/SettingsContext";
 import { ChatTabIcon, ChevronIcon } from "../../ui/icons";
 import { usePresenceProps } from "../../ui/usePresence";
+import { effectiveRevisionDisplay, needsMargin } from "./revision-display";
 import "./ReviewBar.css";
 
 export interface ReviewBarLabels {
   revisionDisplayLabel: string;
+  revisionDisplayNoRoom: string;
   reviewBarLabel: string;
   reviewBarOpenChat: string;
   proposalAccept: string;
@@ -44,12 +46,15 @@ export function ReviewBar({
   onReject,
   onOpenChat,
   display,
+  marginAvailable,
   displayName,
   onDisplay,
 }: {
   /** How revisions show (Settings.revisionDisplay), switched from here as
    *  in Word's Review ribbon. */
   display: RevisionDisplay;
+  /** Whether the editor has room for a margin (margin-room.ts). */
+  marginAvailable: boolean;
   displayName: (mode: RevisionDisplay) => string;
   onDisplay: (mode: RevisionDisplay) => void;
   labels: ReviewBarLabels;
@@ -75,26 +80,41 @@ export function ReviewBar({
     true,
     menuOpen,
   );
-  // A phone has no margin: only the two views that need none.
+  // A phone has no margin: only the two views that need none. Elsewhere
+  // the margin views stay listed while there is no room, unpickable, with
+  // why - and a chosen one waits there while the text shows everything.
   const modes = phone
-    ? REVISION_DISPLAYS.filter((m) => m === "inline" || m === "final")
+    ? REVISION_DISPLAYS.filter((m) => !needsMargin(m))
     : REVISION_DISPLAYS;
-  const shown = phone && display !== "final" ? "inline" : display;
+  const noRoom = !phone && !marginAvailable;
+  const shown = effectiveRevisionDisplay(display, !phone && marginAvailable);
+  const waiting = noRoom && shown !== display;
+  const noRoomId = useId();
   const view = (
     <div className="review-bar-view" ref={menuRef}>
       <button
         type="button"
-        className="review-bar-view-button"
+        className={`review-bar-view-button${waiting ? " review-bar-view-waiting" : ""}`}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
-        aria-label={labels.revisionDisplayLabel}
-        title={labels.revisionDisplayLabel}
+        aria-label={
+          waiting
+            ? `${labels.revisionDisplayLabel}: ${displayName(shown)}`
+            : labels.revisionDisplayLabel
+        }
+        title={
+          waiting ? labels.revisionDisplayNoRoom : labels.revisionDisplayLabel
+        }
         onClick={() => setMenuOpen(!menuOpen)}
       >
         <svg viewBox="0 0 16 16" aria-hidden="true">
           <path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8s-2.4 4.5-6.5 4.5S1.5 8 1.5 8z" />
           <circle cx="8" cy="8" r="2" />
         </svg>
+        {/* The chosen view waits for room: what shows meanwhile. */}
+        {waiting && (
+          <span className="review-bar-view-name">{displayName(shown)}</span>
+        )}
       </button>
       {menuOpen && (
         <div
@@ -108,6 +128,15 @@ export function ReviewBar({
               type="button"
               role="menuitemradio"
               aria-checked={shown === mode}
+              disabled={noRoom && needsMargin(mode)}
+              aria-describedby={
+                noRoom && needsMargin(mode) ? noRoomId : undefined
+              }
+              className={
+                waiting && mode === display
+                  ? "review-bar-menu-waiting"
+                  : undefined
+              }
               onClick={() => {
                 onDisplay(mode);
                 setMenuOpen(false);
@@ -116,6 +145,11 @@ export function ReviewBar({
               {displayName(mode)}
             </button>
           ))}
+          {noRoom && (
+            <p id={noRoomId} className="review-bar-menu-note">
+              {labels.revisionDisplayNoRoom}
+            </p>
+          )}
         </div>
       )}
     </div>

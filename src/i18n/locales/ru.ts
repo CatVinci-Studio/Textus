@@ -107,6 +107,8 @@ export default {
   revisionDisplayOriginal: "Оригинал в тексте, правки на полях",
   revisionDisplayNew: "Правки в тексте, оригинал на полях",
   revisionDisplayFinal: "Только результат, без пометок",
+  revisionDisplayNoRoom:
+    "Не хватает места: закройте боковую панель или панель ИИ",
   proposalDeletedSentence: "Оригинал",
   reviewBarLabel: "Правка",
   reviewBarOpenChat: "Открыть панель ИИ",
@@ -650,8 +652,6 @@ export default {
   restoreSessionLabel: "Восстанавливать прошлый сеанс при запуске",
   autoSuggestFilenameLabel: "Предлагать имя при сохранении нового файла",
   autosaveLabel: "Сохранять автоматически",
-  autosaveHint:
-    "Записывает документ, у которого уже есть файл, обратно в него вскоре после того, как вы перестали печатать, а также при смене вкладки или уходе из окна. Новые документы не сохраняются, пока вы не дадите им имя.",
   untitledTab: "Без названия",
   markdownGuideTab: "Руководство по Markdown",
   agentGuideTab: "Руководство по ИИ",

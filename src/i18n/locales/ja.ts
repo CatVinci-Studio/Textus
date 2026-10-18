@@ -105,6 +105,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   revisionDisplayOriginal: "本文に元の文、修正は余白に",
   revisionDisplayNew: "本文に修正、元の文は余白に",
   revisionDisplayFinal: "修正後の文だけ",
+  revisionDisplayNoRoom:
+    "余白が足りません：サイドバーか AIパネルを閉じてください",
   proposalDeletedSentence: "元の文",
   reviewBarLabel: "修正",
   reviewBarOpenChat: "AIパネルを開く",
@@ -632,8 +634,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   restoreSessionLabel: "起動時に前回のセッションを復元",
   autoSuggestFilenameLabel: "新規ファイルの保存時にファイル名を提案",
   autosaveLabel: "自動保存",
-  autosaveHint:
-    "ファイルのある書類を、入力が止まって少したったときや、タブを切り替えたりウインドウを離れたりしたときに、元のファイルへ書き戻します。新規書類は名前を付けて保存するまで自動保存されません。",
   untitledTab: "無題",
   markdownGuideTab: "Markdownガイド",
   agentGuideTab: "AI機能ガイド",

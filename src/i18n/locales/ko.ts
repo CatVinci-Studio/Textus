@@ -103,6 +103,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   revisionDisplayOriginal: "본문에 원문, 여백에 수정",
   revisionDisplayNew: "본문에 수정, 여백에 원문",
   revisionDisplayFinal: "수정 결과만",
+  revisionDisplayNoRoom: "공간이 부족합니다: 사이드바나 AI 패널을 닫아 주세요",
   proposalDeletedSentence: "원문",
   reviewBarLabel: "수정",
   reviewBarOpenChat: "AI 패널 열기",
@@ -629,8 +630,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   restoreSessionLabel: "시작할 때 이전 세션 복원",
   autoSuggestFilenameLabel: "새 파일을 저장할 때 파일 이름 제안",
   autosaveLabel: "자동 저장",
-  autosaveHint:
-    "파일이 있는 문서를 입력을 멈추고 잠시 뒤, 탭을 바꾸거나 창을 떠날 때 원래 파일에 다시 씁니다. 새 문서는 이름을 정해 저장하기 전까지 자동 저장되지 않습니다.",
   untitledTab: "제목 없음",
   markdownGuideTab: "Markdown 가이드",
   agentGuideTab: "AI 기능 가이드",

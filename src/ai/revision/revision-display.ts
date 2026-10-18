@@ -12,16 +12,19 @@ export function revisionDisplayName(t: Strings, mode: RevisionDisplay): string {
   }[mode];
 }
 
+/** Whether a display puts one side of each change in the margin. */
+export function needsMargin(mode: RevisionDisplay): boolean {
+  return mode === "original" || mode === "new";
+}
+
 /**
  * The display actually drawn: the margin views need a margin, and fall
  * back to everything in the text where there is none (a narrow window, a
- * phone).
+ * phone). The chosen display is kept, and applies again once there is.
  */
 export function effectiveRevisionDisplay(
   mode: RevisionDisplay,
   hasMargin: boolean,
 ): RevisionDisplay {
-  return !hasMargin && (mode === "original" || mode === "new")
-    ? "inline"
-    : mode;
+  return !hasMargin && needsMargin(mode) ? "inline" : mode;
 }
