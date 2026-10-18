@@ -38,6 +38,11 @@
 https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 <p align="center">
+  <a href="https://www.youtube.com/watch?v=k_ew9TRljz0">Voir sur YouTube</a> ·
+  <a href="https://www.bilibili.com/video/BV19LJb6WEWb">Bilibili</a>
+</p>
+
+<p align="center">
   <img src="docs/images/readme/fr/hero.png" alt="Textus avec Les Misérables et les notes du lecteur ouvertes. Textus AI resserre les notes phrase par phrase, chaque modification dans la marge, et épingle un commentaire de relecture à côté du texte." width="860" /><br>
   <sub><i>Les Misérables</i>, Victor Hugo</sub>
 </p>
