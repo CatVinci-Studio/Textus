@@ -83,13 +83,22 @@ stretched to fit and looks it.
 `src-tauri/tauri.windows.conf.json`.
 
 **The pages themselves** - `src-tauri/installer/installer.nsi`. This is
-tauri-bundler's own template, vendored (from tauri-cli v2.11.4) because the
+tauri-bundler's own template, vendored (from tauri-cli v2.12.3) because the
 two changes above are to `Page` declarations and no config option reaches
 them; `installerHooks` only reaches the four install/uninstall macros. It is
 upstream **verbatim** apart from the blocks marked `; Textus:`, so re-syncing
 after a CLI upgrade is a diff against that tag's copy of
 `crates/tauri-bundler/src/bundle/windows/nsis/installer.nsi` plus re-applying
 those blocks.
+
+The template has to move with the CLI: the bundler's helper macros change
+between versions, and a stale template fails `makensis` (1.0.4-rc.1 did,
+after the CLI went from 2.11.4 to 2.12.3). CI does not build the installer,
+so `npm run check` runs `scripts/check-nsis-template.mjs`, which fails when
+the file's "Vendored from tauri-cli" line differs from `@tauri-apps/cli` in
+`package-lock.json`. `scripts/sync-nsis-template.sh` then does the re-sync: a
+three-way merge of upstream's changes between the two versions, keeping the
+`; Textus:` blocks and updating both version lines.
 
 ## Known rough edge
 

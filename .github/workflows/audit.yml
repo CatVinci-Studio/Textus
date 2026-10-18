@@ -1,0 +1,68 @@
+name: Security audit
+
+# Checks the app's dependencies against the public advisory databases once
+# a week (and on demand). Dependencies change under us even when our code
+# doesn't, so this runs on a schedule rather than on pull requests. A high
+# or critical advisory opens an issue - or comments on the open one - so it
+# can't go unnoticed. Rust advisories that can't reach Textus are listed,
+# with the reason, in src-tauri/.cargo/audit.toml.
+
+on:
+  schedule:
+    - cron: "0 4 * * 1" # Mondays 04:00 UTC, after the model sync
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: npm advisories (what ships in the app)
+        id: npm
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm ci --ignore-scripts
+          npm audit --omit=dev --audit-level=high | tee npm-audit.txt
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust advisories
+        id: cargo
+        continue-on-error: true
+        working-directory: src-tauri
+        run: |
+          set -o pipefail
+          cargo install cargo-audit --locked --quiet
+          cargo audit | tee ../cargo-audit.txt
+
+      - name: Report
+        if: steps.npm.outcome == 'failure' || steps.cargo.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          title="Security advisories in dependencies"
+          {
+            echo "The weekly audit found advisories ([run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}))."
+            echo
+            [ -s npm-audit.txt ] && { echo '<details><summary>npm audit</summary>'; echo; echo '```'; tail -n 60 npm-audit.txt; echo '```'; echo '</details>'; }
+            [ -s cargo-audit.txt ] && { echo '<details><summary>cargo audit</summary>'; echo; echo '```'; tail -n 60 cargo-audit.txt; echo '```'; echo '</details>'; }
+          } > body.md
+          open=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
+          if [ -n "$open" ]; then
+            gh issue comment "$open" --body-file body.md
+          else
+            gh issue create --title "$title" --body-file body.md
+          fi
+          exit 1

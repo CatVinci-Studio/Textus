@@ -488,6 +488,9 @@ export default {
     "Приложения, принимающие только простой текст (например, WeChat), получат это; там, где формат поддерживается, он сохранится.",
   copyTextModeReadable: "Читаемый текст",
   copyTextModeMarkdown: "Исходный Markdown",
+  pdfPageNumbersLabel: "Номера страниц в PDF",
+  pdfPageNumbersHint:
+    "В экспортированном PDF внизу каждой страницы стоит её номер.",
   askAi: "Спросить ИИ…",
   agentProposalTitle: "Предлагаемая правка",
   chatClose: "Закрыть чат",

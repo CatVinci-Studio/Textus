@@ -17,6 +17,17 @@ describe("newcomer guide eligibility", () => {
     expect(settings.autoSuggestFilename).toBe(true);
   });
 
+  it("exports PDFs without page numbers until they are switched on", () => {
+    expect(loadSettings().pdfPageNumbers).toBe(false);
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ language: "zh" }));
+    expect(loadSettings().pdfPageNumbers).toBe(false);
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ language: "zh", pdfPageNumbers: true }),
+    );
+    expect(loadSettings().pdfPageNumbers).toBe(true);
+  });
+
   it("does not surprise installations whose old settings predate the flag", () => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ language: "zh" }));
     expect(loadSettings().onboardingShown).toBe(true);

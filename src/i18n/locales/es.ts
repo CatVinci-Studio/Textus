@@ -497,6 +497,9 @@ para usar una.
     "Las apps que solo aceptan texto sin formato, como WeChat, reciben esto; donde una app acepta formato, se conserva.",
   copyTextModeReadable: "Texto legible",
   copyTextModeMarkdown: "Código Markdown",
+  pdfPageNumbersLabel: "Números de página en PDF",
+  pdfPageNumbersHint:
+    "Los PDF exportados muestran el número de cada página abajo.",
   askAi: "Preguntar a la IA…",
   agentProposalTitle: "Cambio propuesto",
   chatClose: "Cerrar el chat",

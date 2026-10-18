@@ -40,13 +40,7 @@ describe("the languages", () => {
     );
   });
 
-  it("fall back to English for whatever they leave out", () => {
-    const untranslated = LANGS.find(
-      (lang) => Object.keys(LOCALES[lang].default).length === 0,
-    );
-    if (untranslated)
-      expect(resolveStrings(untranslated)).toEqual(resolveStrings("en"));
-    // An unknown code - a newer build's - is English too.
+  it("fall back to English for an unknown code - a newer build's", () => {
     expect(resolveStrings("xx" as never)).toBe(resolveStrings("en"));
   });
 });

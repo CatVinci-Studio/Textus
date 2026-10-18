@@ -384,11 +384,13 @@ export const exportDoc = {
   // Renders the self-contained, already-paginated themed HTML offscreen and
   // writes the PDF straight to `path` - no print dialog on any platform
   // (WKWebView createPDF / WebView2 PrintToPdf / WebKitGTK print-to-file;
-  // see export.rs). baseDir resolves relative images.
+  // see export.rs). baseDir resolves relative images. pageNumbers stamps
+  // each page's number on the finished file (pdf_page_numbers.rs).
   exportPdfNative: (args: {
     html: string;
     baseDir: string | null;
     outputPath: string;
+    pageNumbers: boolean;
   }) => desktopAction<void>("export_pdf_native", args),
 };
 

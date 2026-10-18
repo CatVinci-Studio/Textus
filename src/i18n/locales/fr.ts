@@ -501,6 +501,9 @@ utiliser une.
     "Les apps qui n'acceptent que du texte brut, comme WeChat, reçoivent ceci ; la mise en forme est conservée là où une app l'accepte.",
   copyTextModeReadable: "Texte lisible",
   copyTextModeMarkdown: "Source Markdown",
+  pdfPageNumbersLabel: "Numéros de page dans le PDF",
+  pdfPageNumbersHint:
+    "Les PDF exportés affichent le numéro de chaque page en bas.",
   askAi: "Demander à l'IA…",
   agentProposalTitle: "Modification proposée",
   chatClose: "Fermer la discussion",

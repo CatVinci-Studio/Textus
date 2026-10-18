@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
+import { katexWoff2Only } from "./vite.katex-fonts";
 
 /**
  * The browser playground (src/playground/): the editor alone, served from
@@ -34,7 +35,7 @@ function servedAsIndex(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), servedAsIndex()],
+  plugins: [react(), katexWoff2Only(), servedAsIndex()],
   base: "/playground/",
   // public/ holds the app's files.
   publicDir: false,

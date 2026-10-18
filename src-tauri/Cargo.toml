@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.0.3"
+version = "1.0.4"
 description = "Textus Markdown Editor"
 authors = ["CatVinci Studio"]
 edition = "2021"
@@ -8,6 +8,29 @@ edition = "2021"
 [workspace]
 members = ["crates/aicompat", "plugins/textus-files"]
 resolver = "2"
+
+# Shipped builds (tauri build, tauri ios build) are sized for download:
+# 36.2 MB -> 16.5 MB binary on Linux x86_64, measured for 1.0.4.
+# - strip: the symbol table is only for backtraces, and nothing captures
+#   one - there is no panic hook or crash reporter. A panic's message and
+#   file:line live in the binary's data, so stderr still has them.
+# - lto + codegen-units = 1: whole-program inlining and dead-code removal
+#   across every crate in the tree. Costs build time: a clean release
+#   build went from ~1 to ~2.5 minutes locally, a rebuild of just this
+#   crate from 19 s to 100 s, since the link re-optimizes everything.
+# - opt-level "s": another 4 MB off (20.6 -> 16.5 MB) over 3. The editor
+#   and its rendering run in the webview; the CPU-bound Rust is the
+#   writing-rules engine, which with LTO is still faster at "s" than the
+#   old profile (all ten help guides: 167 ms before, 123 ms at "s", 73 ms
+#   at 3) - well under a frame per paragraph either way.
+# panic stays "unwind": spawn_blocking turns a panic (pdf-extract on a bad
+# PDF, commands/attachment.rs) into an error instead of an abort.
+# PR CI is unaffected: check:native and the iOS simulator build use debug.
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+opt-level = "s"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -24,7 +47,9 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 # macos-private-api: required for transparent webview windows (the floating
 # drag-pill window a tab turns into while being dragged between windows).
-tauri = { version = "2", features = ["protocol-asset", "macos-private-api"] }
+# Keep the minor in step with @tauri-apps/api in package.json; the tauri
+# CLI warns when the JS and Rust versions drift apart.
+tauri = { version = "2.12", features = ["protocol-asset", "macos-private-api"] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
@@ -48,6 +73,11 @@ pdf-extract = "0.12"
 calamine = "0.36"
 zip = { version = "4", default-features = false, features = ["deflate"] }
 quick-xml = "0.41"
+# PDF export's page numbers (commands/pdf_page_numbers.rs): the finished
+# file is opened and each page's number drawn in its bottom margin. Already
+# in the tree via pdf-extract, at the same version and features, so it adds
+# no crates - only lopdf's writer code to the binary.
+lopdf = { version = "0.42", default-features = false }
 
 # The writing-rules engine (src/ai/rules/, docs/design/ai-concepts.md): Markdown
 # parsed into prose blocks so code, math, front matter and link targets are
@@ -77,8 +107,9 @@ unicode-segmentation = "1"
 tauri-plugin-textus-files = { path = "plugins/textus-files" }
 
 [target.'cfg(not(any(target_os = "ios", target_os = "android")))'.dependencies]
-tauri-plugin-updater = "2"
-tauri-plugin-process = "2"
+# In step with @tauri-apps/plugin-updater and @tauri-apps/plugin-process.
+tauri-plugin-updater = "2.14"
+tauri-plugin-process = "2.4"
 
 # macOS-native PDF export (commands/export.rs): the themed document is
 # rendered in an offscreen WKWebView with createPDF and cut into A4 sheets
@@ -134,8 +165,8 @@ block2 = "0.6"
 # renderer driven directly - WebView2's PrintToPdf, WebKitGTK's print-to-file
 # operation. Already in the tree via wry; versions must stay on wry's.
 [target.'cfg(windows)'.dependencies]
-webview2-com = "0.38"
-windows = "0.61"
+webview2-com = "0.39"
+windows = "0.62"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 webkit2gtk = "2.0"

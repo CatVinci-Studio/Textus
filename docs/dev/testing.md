@@ -24,6 +24,40 @@ CI also builds the iOS app for the simulator, unsigned, on macOS (the `ios`
 job) - proof that the desktop/iOS split in `docs/dev/ios-code-map.md` still
 compiles. Running it on a device is a manual step on a Mac.
 
+## Flaky tests
+
+On CI, a Playwright test that fails is run once more. If the second run
+passes, the job stays green and the test is reported as **flaky**: the
+`list` reporter names it in the summary at the end of the log, and the
+`github` reporter adds an annotation to the run. Locally there is no retry,
+so a failure on your machine is always a failure. The setting is `retries`
+in `playwright.config.ts`.
+
+A flaky test is still a bug - in the test, or in the app. Don't ignore the
+annotation. To find out how flaky a test is, run it many times:
+
+```sh
+PLAYWRIGHT_PORT=1445 npx playwright test e2e/writing.spec.ts \
+  -g "the test's title" --repeat-each=100 --workers=4
+```
+
+`--workers` above 1 adds load, which brings out timing problems sooner. To
+slow the page down the way a CI runner does, add this to a temporary copy of
+the spec (don't commit it):
+
+```ts
+test.beforeEach(async ({ page }) => {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 6 });
+});
+```
+
+When you fix one, wait for the thing the assertion depends on - an element
+being focused, a CSS variable reaching its value, an event having fired -
+with `expect(...)` or `expect.poll(...)`. A longer `waitForTimeout` only
+makes the failure rarer. A fix is done when 100 repeats under throttling
+pass.
+
 ## What is covered, by kind
 
 The suites divide by _what kind of mistake they catch_, which is more useful

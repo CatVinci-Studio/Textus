@@ -222,7 +222,9 @@ jobs:
           # textus-latest.json from the uploaded .sig files instead.
           # scripts/updater-manifest.mjs check fails if this line goes.
           includeUpdaterJson: false
-          args: ${{ matrix.args }}
+          # RPM versions may not contain '-', so a pre-release (1.0.4-rc.1)
+          # cannot be an .rpm; rc tags ship the .deb and AppImage only.
+          args: ${{ matrix.args }}${{ matrix.platform == 'ubuntu-22.04' && contains(env.RELEASE_TAG, '-') && ' --bundles deb,appimage' || '' }}
 
       # textus-bin (packaging/arch/PKGBUILD) installs this tarball. Its
       # binary is a second build with TEXTUS_DISTRIBUTION=aur: it reports new

@@ -477,6 +477,8 @@ type /name in a conversation to use one.
     "Apps that only take plain text, like WeChat, get this; formatting still comes along where an app accepts it.",
   copyTextModeReadable: "Readable text",
   copyTextModeMarkdown: "Markdown source",
+  pdfPageNumbersLabel: "Page numbers in PDF",
+  pdfPageNumbersHint: "Exported PDFs show each page's number at the bottom.",
   askAi: "Ask AI…",
   agentProposalTitle: "Proposed edit",
   chatClose: "Close chat",

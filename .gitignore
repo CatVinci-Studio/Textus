@@ -38,3 +38,6 @@ packaging/arch/*.pkg.tar.zst
 test-results/
 playwright-report/
 *.tsbuildinfo
+
+# Throwaway app profiles for local previews (tutorial, diary)
+.*-preview/

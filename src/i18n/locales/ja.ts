@@ -476,6 +476,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "WeChat などプレーンテキストだけを受け取るアプリにはこちらが渡ります。書式に対応したアプリでは書式が保たれます。",
   copyTextModeReadable: "読みやすいテキスト",
   copyTextModeMarkdown: "Markdown のソース",
+  pdfPageNumbersLabel: "PDF にページ番号",
+  pdfPageNumbersHint: "書き出した PDF の各ページ下部にページ番号を入れます。",
   askAi: "AIに聞く…",
   agentProposalTitle: "編集の提案",
   chatClose: "チャットを閉じる",

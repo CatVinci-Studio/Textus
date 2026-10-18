@@ -50,6 +50,7 @@ import { emitMenuEvent } from "../platform/menu-events";
 import type { MenuChecks } from "../app/app-menu-model";
 import {
   canDetachChat,
+  canExportPdf,
   canInstallCliCommand,
   canPickFolder,
   canRevealInFileManager,
@@ -287,6 +288,15 @@ export function SettingsPanel({
                 <option value="markdown">{t.copyTextModeMarkdown}</option>
               </Select>
             </SettingRow>
+            {/* No PDF export on the phone (canExportPdf). */}
+            {canExportPdf && (
+              <ToggleRow
+                label={t.pdfPageNumbersLabel}
+                hint={t.pdfPageNumbersHint}
+                checked={settings.pdfPageNumbers}
+                onChange={(v) => setSettings({ pdfPageNumbers: v })}
+              />
+            )}
           </SettingsGroup>
           <SettingsGroup title={t.imageStorageGroupLabel}>
             <ImageStorageSection t={t} />

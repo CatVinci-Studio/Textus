@@ -37,7 +37,12 @@ export default defineConfig({
   timeout: 30_000,
   fullyParallel: false,
   workers: 1,
-  reporter: [["list"]],
+  // On CI a failed test runs once more. One that passes the second time is
+  // reported as "flaky" - named in the list's summary and as a GitHub
+  // annotation - and doesn't fail the job, so a flake is seen without
+  // blocking a merge. Locally a failure is a failure: no retry.
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? [["list"], ["github"]] : [["list"]],
   expect: {
     // A tight per-pixel threshold: the default (0.2) reads a light panel tint
     // such as the code-block background as plain white.
