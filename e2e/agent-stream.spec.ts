@@ -218,6 +218,78 @@ test("an edit the backend refused never stays on screen", async ({ page }) => {
   await expect(doc).toContainText("Alpha line one.");
 });
 
+test("a reply that arrives in a few large chunks still flows in, and ends as received", async ({
+  page,
+}) => {
+  // Animations on: the reveal is motion, and the helpers' switch-off
+  // stylesheet would show each chunk whole.
+  await openApp(page, {
+    storage: { "levis-agent-panel-open": "1" },
+    animations: true,
+  });
+  const reply =
+    "流式回复应该平稳地出现，而不是一块一块地跳出来。👨‍👩‍👧 ".repeat(6) +
+    "The text keeps flowing while the provider sends big pieces. ".repeat(6);
+  await page.evaluate((reply) => {
+    const w = window as unknown as Record<string, unknown>;
+    const internals = w.__TAURI_INTERNALS__ as {
+      invoke: (cmd: string, args?: unknown) => Promise<unknown>;
+    };
+    const original = internals.invoke;
+    // What the reply looked like on every frame while it streamed.
+    const seen: string[] = [];
+    w.__seen = seen;
+    const sample = () => {
+      const el = document.querySelector(".agent-streaming .agent-markdown");
+      // trimEnd: the rendered paragraph ends in a newline of its own.
+      if (el) seen.push((el.textContent ?? "").trimEnd());
+      requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+    internals.invoke = (cmd, args) => {
+      if (cmd !== "ai_agent_message") return original(cmd, args);
+      const { message, onEvent } = args as {
+        message: string;
+        onEvent?: { onmessage?: (event: unknown) => void };
+      };
+      const third = Math.ceil(reply.length / 3);
+      const chunks = [0, 1, 2].map((i) =>
+        reply.slice(i * third, (i + 1) * third),
+      );
+      return new Promise((resolve) => {
+        const next = () => {
+          const text = chunks.shift();
+          if (text === undefined) {
+            resolve([
+              { kind: "User", text: message },
+              { kind: "Assistant", text: reply },
+            ]);
+            return;
+          }
+          onEvent?.onmessage?.({ type: "delta", text });
+          setTimeout(next, 400);
+        };
+        next();
+      });
+    };
+  }, reply);
+
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Tell me something");
+  await composer.press("Enter");
+  const answer = page.locator(".agent-message-assistant .agent-markdown");
+  await expect(answer).toHaveText(reply.trim());
+  await expect(page.locator(".agent-streaming")).toHaveCount(0);
+
+  const seen = await page.evaluate(
+    () => (window as unknown as { __seen: string[] }).__seen,
+  );
+  // Three chunks, many steps: the text grew over a run of frames.
+  expect(new Set(seen).size).toBeGreaterThan(20);
+  // Each step showed the start of the reply, never anything else.
+  for (const text of seen) expect(reply.startsWith(text)).toBe(true);
+});
+
 test("the empty-document hint gives way to text the AI is writing", async ({
   page,
 }) => {

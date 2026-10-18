@@ -6,6 +6,7 @@ import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { renderMarkdownInlineHtml } from "../../editor/markdown/render-html";
+import { StreamReveal } from "../stream-reveal";
 import type { FoldAttention } from "../../editor/html/raw-html-preview-plugin";
 import type { EditProposal } from "../types";
 import type { SentenceHunk } from "./sentence-diff";
@@ -85,29 +86,45 @@ interface InsertAnimation {
   callId: string;
   /** Full text known so far - grows while the proposal streams. */
   target: string;
-  /** How many chars of `target` are currently revealed. */
-  shown: number;
+  /** Paces `target` onto the screen (stream-reveal.ts). */
+  reveal: StreamReveal;
   /** False while more streamed text may still arrive (keeps the caret). */
   done: boolean;
   span: HTMLSpanElement | null;
-  timer: number | null;
+  frame: number | null;
   /** The view that drew the widget - the reveal's only way to dispatch the
    *  `settle` meta that finally offers Accept/Reject for this preview. */
   view: EditorView | null;
   /** The settle meta was dispatched - never dispatch it twice. */
   settled: boolean;
-  /** Once the whole text is known, when its reveal must be over (see
-   *  REVEAL_MAX_MS). Null while it streams. */
-  finishBy?: number | null;
 }
 
 const animations = new Map<string, InsertAnimation>();
 
-const TICK_MS = 30;
+function newAnimation(
+  callId: string,
+  text: string,
+  done: boolean,
+): InsertAnimation {
+  const reveal = new StreamReveal();
+  reveal.update(text, done, performance.now());
+  return {
+    callId,
+    target: text,
+    reveal,
+    done,
+    span: null,
+    frame: null,
+    view: null,
+    settled: false,
+  };
+}
 
-/** The reveal is decoration - it shows where the edit lands - so once the
- *  text is complete it never takes longer than this, however long it is. */
-const REVEAL_MAX_MS = 600;
+function updateAnimation(anim: InsertAnimation, text: string, done: boolean) {
+  anim.target = text;
+  anim.done = done;
+  anim.reveal.update(text, done, performance.now());
+}
 
 /** Whether the callId's text is still being revealed (or may still grow) -
  *  while true, the preview must stay in the un-decidable "streaming" state
@@ -126,12 +143,12 @@ function stillRevealing(callId: string): boolean {
   // there and then, became decidable mid-stream, and - settling only once -
   // stayed "Writing…" forever when the final proposal landed mid-reveal.
   if (anim.target.length === 0) return !anim.done;
-  return !anim.done || anim.shown < anim.target.length;
+  return !anim.done || !anim.reveal.caughtUp;
 }
 
 /** Once the reveal completes, flips the preview out of `streaming` via a
  *  plugin meta so Accept/Reject finally show. Deferred a tick: this is
- *  reached from timer callbacks but also from inside decoration draws,
+ *  reached from animation frames but also from inside decoration draws,
  *  where a reentrant dispatch is not allowed. */
 function maybeSettle(callId: string) {
   const anim = animations.get(callId);
@@ -154,10 +171,10 @@ export function prefersReducedMotion(): boolean {
   );
 }
 
-function stopTimer(anim: InsertAnimation) {
-  if (anim.timer !== null) {
-    window.clearInterval(anim.timer);
-    anim.timer = null;
+function stopFrame(anim: InsertAnimation) {
+  if (anim.frame !== null) {
+    cancelAnimationFrame(anim.frame);
+    anim.frame = null;
   }
 }
 
@@ -170,54 +187,38 @@ function renderAnimation(anim: InsertAnimation) {
   // not a bug (every streaming markdown renderer has it). Preferred over
   // revealing raw source and snapping to formatted HTML only once done,
   // which pops the widget's width/wrapping at the very end instead.
-  anim.span.innerHTML = renderMarkdownInlineHtml(
-    anim.target.slice(0, anim.shown),
-  );
+  anim.span.innerHTML = renderMarkdownInlineHtml(anim.reveal.text);
   anim.span.classList.toggle(
     "pending-insert-typing",
-    anim.shown < anim.target.length || !anim.done,
+    !anim.reveal.caughtUp || !anim.done,
   );
 }
 
-/** Reveals a couple of chars per tick, catching up faster the further
- *  behind the target it is - so the pace follows real token arrival while
- *  still reading as steady typing. */
+/** Types the text out a frame at a time until it has caught up with what
+ *  has arrived; the next fragment starts it again. */
 function ensureTicking(anim: InsertAnimation) {
-  if (anim.timer !== null || anim.span === null) return;
-  if (anim.shown >= anim.target.length) {
+  if (anim.frame !== null || anim.span === null) return;
+  if (anim.reveal.caughtUp) {
     renderAnimation(anim);
     return;
   }
-  anim.timer = window.setInterval(() => {
-    const remaining = anim.target.length - anim.shown;
-    if (!anim.done) anim.finishBy = null;
-    else anim.finishBy ??= Date.now() + REVEAL_MAX_MS;
-    if (remaining > 0) {
-      const ticksLeft = anim.finishBy
-        ? Math.max(1, Math.floor((anim.finishBy - Date.now()) / TICK_MS))
-        : Infinity;
-      anim.shown = Math.min(
-        anim.target.length,
-        anim.shown +
-          Math.max(
-            2,
-            Math.ceil(remaining / 15),
-            Math.ceil(remaining / ticksLeft),
-          ),
-      );
-    }
+  const step = (now: number) => {
+    anim.reveal.tick(now);
     renderAnimation(anim);
-    if (anim.shown >= anim.target.length && anim.done) {
-      stopTimer(anim);
-      maybeSettle(anim.callId);
+    if (!anim.reveal.caughtUp) {
+      anim.frame = requestAnimationFrame(step);
+      return;
     }
-  }, TICK_MS);
+    anim.frame = null;
+    maybeSettle(anim.callId);
+  };
+  anim.frame = requestAnimationFrame(step);
 }
 
 function dropAnimation(callId: string) {
   const anim = animations.get(callId);
   if (!anim) return;
-  stopTimer(anim);
+  stopFrame(anim);
   animations.delete(callId);
 }
 
@@ -234,24 +235,14 @@ export function streamPendingInsertText(
 ) {
   const existing = animations.get(callId);
   if (!existing) {
-    animations.set(callId, {
-      callId,
-      target: text,
-      shown: 0,
-      done,
-      span: null,
-      timer: null,
-      view: null,
-      settled: false,
-    });
+    animations.set(callId, newAnimation(callId, text, done));
     return;
   }
-  existing.target = text;
-  existing.shown = Math.min(existing.shown, text.length);
-  // Both directions: a widget drawn from an early streaming preview creates
-  // the entry with done=true (it can't know more text is coming) - the next
-  // stream call must be able to reopen it, or the reveal settles mid-stream.
-  existing.done = done;
+  // `done` goes both directions: a widget drawn from an early streaming
+  // preview creates the entry with done=true (it can't know more text is
+  // coming) - the next stream call must be able to reopen it, or the
+  // reveal settles mid-stream.
+  updateAnimation(existing, text, done);
   ensureTicking(existing);
   renderAnimation(existing);
   maybeSettle(callId);
@@ -357,21 +348,12 @@ function textWidget(
       }
       let anim = animations.get(p.callId);
       if (!anim) {
-        anim = {
-          callId: p.callId,
-          target: text,
-          shown: 0,
-          done: !p.streaming,
-          span: null,
-          timer: null,
-          view: null,
-          settled: false,
-        };
+        anim = newAnimation(p.callId, text, !p.streaming);
         animations.set(p.callId, anim);
       } else if (text.length > anim.target.length) {
         // The final proposal's text wins over whatever partial state the
         // stream left behind; a shorter re-add never truncates the target.
-        anim.target = text;
+        updateAnimation(anim, text, anim.done);
       }
       anim.span = span;
       anim.view = view;
@@ -390,7 +372,7 @@ function textWidget(
         const anim = animations.get(p.callId);
         if (anim && anim.span === node) {
           anim.span = null;
-          stopTimer(anim);
+          stopFrame(anim);
         }
       },
     },
