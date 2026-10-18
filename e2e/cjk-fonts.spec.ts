@@ -159,3 +159,32 @@ test("Chinese and Japanese UIs take quotes, the ellipsis and the dash from the C
   for (const lang of ["en", "fr", "ko"])
     expect(await stack(lang, "body")).toBe("Textus No Punct");
 });
+
+test("source mode names a mono face for Latin and a sans face for CJK before the generic monospace (#132)", async ({
+  page,
+}) => {
+  // WebView2 in a Chinese Windows resolves `monospace` to NSimSun: with no
+  // named face holding Chinese ahead of it, source mode showed SimSun.
+  await openApp(page);
+  await page.evaluate(() =>
+    (
+      window as unknown as {
+        __devEmitTauriEvent: (name: string) => void;
+      }
+    ).__devEmitTauriEvent("menu-toggle-source-mode"),
+  );
+  const source = '[data-active-tab="true"] textarea.source-view';
+  await expect(page.locator(source)).toBeAttached();
+  for (const [lang, cjk] of [
+    ["zh-CN", "Microsoft YaHei"],
+    ["en", "Microsoft YaHei"],
+    ["ja", "Yu Gothic UI"],
+  ]) {
+    const stack = await faces(page, lang, source);
+    expect(stack.indexOf("Consolas"), lang).toBeGreaterThan(-1);
+    expect(stack.indexOf(cjk), lang).toBeGreaterThan(
+      stack.indexOf("Liberation Mono"),
+    );
+    expect(stack.at(-1), lang).toBe("monospace");
+  }
+});

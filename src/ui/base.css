@@ -95,7 +95,16 @@
   --font-sans:
     var(--font-cjk-punct), -apple-system, "SF Pro Text", var(--font-text-sans),
     sans-serif;
-  --font-mono: "Fira Code", "JetBrains Mono", "SF Mono", Menlo, monospace;
+  /* A mono face every platform has comes before the CJK faces: Menlo
+     (macOS), Cascadia Mono / Consolas (Windows), DejaVu / Noto / Liberation
+     (Linux) - otherwise Latin would be drawn in the proportional CJK face.
+     The CJK faces come before the generic: WebView2 in a Chinese Windows
+     resolves `monospace` to NSimSun, which drew Chinese in source mode as
+     SimSun (#132). */
+  --font-mono:
+    "Fira Code", "JetBrains Mono", "SF Mono", Menlo, "Cascadia Mono", Consolas,
+    "DejaVu Sans Mono", "Noto Sans Mono", "Liberation Mono",
+    var(--font-cjk-sans), monospace;
 
   color-scheme: light;
   --chrome-text: #24272e;
