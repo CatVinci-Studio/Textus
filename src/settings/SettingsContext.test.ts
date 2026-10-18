@@ -137,3 +137,25 @@ describe("appearance and theme are independent", () => {
     expect(settings.zoom).toBe(1.25);
   });
 });
+
+describe("where images go", () => {
+  beforeAll(installTestLocalStorage);
+  beforeEach(() => localStorage.clear());
+
+  it("saves images in assets/ and offers PicGo for uploads", () => {
+    const settings = loadSettings();
+    expect(settings.imageFolder).toBe("assets");
+    expect(settings.imageHost).toBe("picgo");
+  });
+
+  it("keeps an endpoint set up before the presets as the custom host", () => {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({
+        imageStorageMode: "image-host",
+        imageUploadEndpoint: "https://images.example.com/upload",
+      }),
+    );
+    expect(loadSettings().imageHost).toBe("custom");
+  });
+});

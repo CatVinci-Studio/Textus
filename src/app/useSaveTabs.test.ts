@@ -47,6 +47,7 @@ function setup(tab: DocTab) {
       tabState,
       t: en as Strings,
       autoSuggestFilename: true,
+      imageFolder: "assets",
     });
     return { tabState, ...saves };
   });

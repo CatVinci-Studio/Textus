@@ -491,6 +491,8 @@ export function installDevTauriShim(): void {
       const canned = w.__devInvokeResults as
         Record<string, unknown> | undefined;
       if (canned && cmd in canned) {
+        // And records what it was asked: `window.__devInvokeCalls`.
+        ((w.__devInvokeCalls ??= []) as unknown[]).push({ cmd, ...args });
         const value = canned[cmd] as { __reject?: unknown } | null;
         // `{ __reject: message }` fails the command instead, for error UI.
         return value && typeof value === "object" && "__reject" in value
