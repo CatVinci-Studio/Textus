@@ -210,6 +210,10 @@ fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -> String {
             "Project folder: {root} - chosen by the user, in {}. You can read the text files in it with list_files, search_files and read_file, and nothing outside it. Use the document's folder, in the same menu or Settings row, goes back to the open document's own folder. {one_folder}",
             where_to_choose_the_project_folder(true)
         ),
+        (Some(root), RootSource::EnclosingProject) => format!(
+            "Project folder: {root} - the nearest folder above the open document that has a .textus/ folder. You can read the text files in it with list_files, search_files and read_file, and nothing outside it; the user can choose another one in {}. {one_folder}",
+            where_to_choose_the_project_folder(true)
+        ),
         (Some(root), _) => format!(
             "Project folder: {root} - the open document's own folder, the default. You can read the text files in it with list_files, search_files and read_file, and nothing outside it; the user can choose another one in {}. {one_folder}",
             where_to_choose_the_project_folder(true)

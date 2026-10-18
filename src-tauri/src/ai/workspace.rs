@@ -41,51 +41,15 @@ use tauri::{AppHandle, Manager};
 /// the body is loaded dynamically via the `use_skill` tool.
 pub const WORKSPACE_DIR_NAME: &str = ".textus";
 
-/// The project folder's name in Levis, before the rename to Textus.
-pub const LEGACY_WORKSPACE_DIR_NAME: &str = ".levis";
-
-/// Where Textus writes a project's settings: always `.textus/`. A Levis
-/// project's `.levis/` is only ever read (see `project_read_dirs`), so a
-/// Levis install sharing the folder keeps seeing exactly what it wrote.
+/// Where a project's settings live: `<project folder>/.textus/`. Only this
+/// folder counts: a Levis project's `.levis/` is never read.
 pub fn project_dir(root: &Path) -> PathBuf {
     root.join(WORKSPACE_DIR_NAME)
 }
 
-/// The project's settings folders that exist, lowest priority first: a
-/// Levis project's `.levis/` (read only), then `.textus/`. A file or skill
-/// in `.textus/` replaces the one of the same name in `.levis/`.
-pub fn project_read_dirs(root: &Path) -> Vec<PathBuf> {
-    [LEGACY_WORKSPACE_DIR_NAME, WORKSPACE_DIR_NAME]
-        .iter()
-        .map(|name| root.join(name))
-        .filter(|dir| dir.is_dir())
-        .collect()
-}
-
-/// One project file as Textus reads it: `.textus/<rel>`, or a Levis
-/// project's `.levis/<rel>` while `.textus/` has no such file.
+/// One project file, when it exists: `.textus/<rel>`.
 pub fn project_file(root: &Path, rel: &str) -> Option<PathBuf> {
-    project_read_dirs(root)
-        .into_iter()
-        .rev()
-        .map(|dir| dir.join(rel))
-        .find(|path| path.is_file())
-}
-
-/// The path Textus writes `rel` to: `.textus/<rel>`. When only a Levis
-/// project's `.levis/<rel>` exists, it is copied there first (the original
-/// stays untouched), so an edit starts from what the author already has.
-pub fn writable_project_file(root: &Path, rel: &str) -> std::io::Result<PathBuf> {
-    let path = project_dir(root).join(rel);
-    if !path.exists() {
-        if let Some(legacy) = project_file(root, rel).filter(|p| *p != path) {
-            if let Some(parent) = path.parent() {
-                std::fs::create_dir_all(parent)?;
-            }
-            std::fs::copy(legacy, &path)?;
-        }
-    }
-    Ok(path)
+    Some(project_dir(root).join(rel)).filter(|path| path.is_file())
 }
 
 /// Who may start a skill (`metadata.textus-invocation`). `Both`: the model,
@@ -234,6 +198,8 @@ pub enum RootSource {
     None,
     /// The open document's own folder - the default.
     DocumentFolder,
+    /// The nearest folder above the document that has a `.textus/` folder.
+    EnclosingProject,
     /// The folder the user chose (the project menu, or Settings > Textus AI).
     Chosen,
     /// The folder would be the home folder or a drive root, which is never
@@ -467,9 +433,10 @@ fn unquote(raw: &str) -> String {
 /// pack references), `textus-aliases-<ui language>` (comma-separated),
 /// `textus-based-on` (a Customize… copy) and `textus-sources` (credits, not
 /// read). A skill written for Levis says `levis-` instead (a Customize… copy
-/// imported from Levis, a project's .levis/skills/); that prefix is read the
-/// same, `textus-` winning where a file has both. Claude Code's top-level
-/// `disable-model-invocation: true` also makes a skill /name-only.
+/// brought over by Import from Levis, a Levis project's skills);
+/// that prefix is read the same, `textus-` winning where a file has both.
+/// Claude Code's top-level `disable-model-invocation: true` also makes a
+/// skill /name-only.
 /// The prefix of the app's own keys under a skill's `metadata:`.
 const META_PREFIX: &str = "textus";
 /// The same keys as Levis wrote them.
@@ -662,17 +629,16 @@ pub(crate) const DISABLED_BUILTINS_KEY: &str = "disabledBuiltinSkills";
 /// is read from and the sandbox boundary the `list_files`/`read_file` tools
 /// may not escape.
 ///
-/// The document's own folder is the default and covers the common case (a
-/// folder of chapters, notes next to the draft). `root_override` is the
-/// chosen project folder ("Choose project folder…" in the project bar, or
-/// Settings > Textus AI > Project Folder) - one setting for every document,
-/// unsaved drafts included. Without it, reference material one folder over
-/// is simply unreachable, and so is any attachment the user picked from
-/// elsewhere on disk - which is exactly the wall a user hits the first time
-/// their sources and their draft don't live together.
+/// `root_override` is the chosen project folder ("Choose project folder…"
+/// in the project bar, or Settings > Textus AI > Project Folder) - one
+/// setting for every document, unsaved drafts included. Without it, the
+/// project is the nearest folder holding the document that has a `.textus/`
+/// folder (enclosing_project), else the document's own folder: a chapter in
+/// `novel/part-1/` belongs to `novel/` once `novel/.textus/` exists, and a
+/// folder of chapters with notes next to the draft needs nothing at all.
 ///
 /// An override that no longer exists (a moved or unmounted folder) falls
-/// back to the document's folder rather than leaving the agent with no
+/// back to the document's project rather than leaving the agent with no
 /// workspace at all.
 fn resolve_root(doc_path: Option<&str>, root_override: Option<&str>) -> Option<PathBuf> {
     let picked = root_override
@@ -681,25 +647,39 @@ fn resolve_root(doc_path: Option<&str>, root_override: Option<&str>) -> Option<P
         .map(PathBuf::from)
         .filter(|p| p.is_dir());
     picked.or_else(|| {
-        let folder = doc_path
-            .map(Path::new)
-            .and_then(|p| p.parent())
-            .filter(|p| !p.as_os_str().is_empty())?;
-        // A file of the project's own (.textus/library/Lin.md, opened from
-        // the Memory tab) belongs to the folder holding .textus/: left at
-        // its own folder, the panel took .textus/library for the project
-        // and showed an empty library right after New library entry.
-        let project = folder
-            .ancestors()
-            .find(|dir| {
-                matches!(
-                    dir.file_name().and_then(|n| n.to_str()),
-                    Some(".textus" | ".levis")
-                )
-            })
-            .and_then(Path::parent);
-        Some(project.unwrap_or(folder).to_path_buf())
+        let folder = document_folder(doc_path)?;
+        Some(enclosing_project(folder).unwrap_or_else(|| folder.to_path_buf()))
     })
+}
+
+fn document_folder(doc_path: Option<&str>) -> Option<&Path> {
+    doc_path
+        .map(Path::new)
+        .and_then(|p| p.parent())
+        .filter(|p| !p.as_os_str().is_empty())
+}
+
+/// The nearest folder from `folder` upwards that is a project: one holding
+/// a `.textus/` folder, or the folder above `.textus/` itself - a file of
+/// the project's own (.textus/library/Lin.md, opened from the Memory tab)
+/// belongs to it; left at its own folder, the panel took .textus/library
+/// for the project and showed an empty library right after New library
+/// entry. The walk stops before the home folder and a drive root, which
+/// are never a project (project::is_too_broad) - a `.textus/` there would
+/// make every document under it part of one.
+fn enclosing_project(folder: &Path) -> Option<PathBuf> {
+    for dir in folder.ancestors() {
+        if dir.file_name().and_then(|n| n.to_str()) == Some(WORKSPACE_DIR_NAME) {
+            return dir.parent().map(Path::to_path_buf);
+        }
+        if crate::ai::project::is_too_broad(dir) {
+            return None;
+        }
+        if project_dir(dir).is_dir() {
+            return Some(dir.to_path_buf());
+        }
+    }
+    None
 }
 
 /// The project folder the agent may read: the resolved root, unless it is
@@ -772,25 +752,22 @@ pub(crate) fn load_layers(
         None => RootSource::None,
         Some(root) if crate::ai::project::is_too_broad(root) => RootSource::TooBroad,
         Some(_) if chosen => RootSource::Chosen,
+        Some(root) if Some(root.as_path()) != document_folder(doc_path) => {
+            RootSource::EnclosingProject
+        }
         Some(_) => RootSource::DocumentFolder,
     };
-    if let Some(root) = resolved.filter(|_| ws.root_source != RootSource::TooBroad) {
-        let root = root.as_path();
+    let root = resolved.filter(|_| ws.root_source != RootSource::TooBroad);
+    if let Some(root) = root.as_deref() {
         ws.root = Some(root.to_string_lossy().to_string());
         ws.style = crate::ai::project::read_style(root);
         ws.conventions = crate::ai::project::style_conventions(ws.style.as_deref());
         ws.library = crate::ai::project::read_library(root);
-        // .levis/ (a Levis project's, read only), then .textus/: the later
-        // folder's agent.md and same-named skills win.
-        for dir in project_read_dirs(root) {
-            let (instructions, skills) = read_layer(&dir, SkillSource::Project);
-            if instructions.is_some() {
-                ws.project_instructions = instructions;
-            }
-            // Project skills shadow same-named global and built-in ones.
-            for skill in skills {
-                push_layer_skill(&mut ws.skills, skill);
-            }
+        let (instructions, skills) = read_layer(&project_dir(root), SkillSource::Project);
+        ws.project_instructions = instructions;
+        // Project skills shadow same-named global and built-in ones.
+        for skill in skills {
+            push_layer_skill(&mut ws.skills, skill);
         }
     }
 
@@ -1338,70 +1315,67 @@ mod tests {
     }
 
     #[test]
-    fn a_levis_project_folder_is_read_but_never_written() {
+    fn a_levis_folder_is_never_read() {
         let root = scratch("legacy-dir");
         let project = root.join("novel");
-        std::fs::create_dir_all(&project).unwrap();
-        assert_eq!(project_dir(&project), project.join(".textus"));
-        assert!(project_read_dirs(&project).is_empty(), "new project");
         write(
             &project.join(".levis/skills/house.md"),
-            "---\nname: house\ndescription: Levis-era skill\nmetadata:\n  levis-category: \"revise\"\n  levis-aliases-zh: \"家规\"\n---\nKeep it short.",
-        );
-        write(
-            &project.join(".levis/skills/tone.md"),
-            "---\nname: tone\ndescription: Levis tone\n---\nLevis tone.",
+            "---\nname: house\ndescription: Levis-era skill\n---\nKeep it short.",
         );
         write(
             &project.join(".levis/agent.md"),
             "Write in British English.",
         );
-        write(&project.join("chapter.md"), "# One");
-        // Writes still go to .textus/, which does not exist yet.
-        assert_eq!(project_dir(&project), project.join(".textus"));
-        assert_eq!(
-            project_file(&project, "agent.md"),
-            Some(project.join(".levis/agent.md"))
+        write(
+            &project.join(".levis/library/lin.md"),
+            "---\nname: Lin\n---\nLevis Lin.",
         );
+        write(&project.join(".levis/style.md"), "Short sentences.");
+        write(&project.join("chapter.md"), "# One");
         let doc = project.join("chapter.md");
         let ws = load_layers(None, doc.to_str(), None, &[]);
-        let house = ws.skills.iter().find(|s| s.name == "house").unwrap();
-        assert_eq!(house.source, SkillSource::Project);
-        assert_eq!(house.category.as_deref(), Some("revise"));
-        assert_eq!(house.aliases["zh"], ["家规"]);
-        assert!(ws
-            .project_instructions
-            .as_deref()
-            .is_some_and(|i| i.contains("British English")));
+        assert_eq!(ws.root.as_deref(), project.to_str());
+        assert!(ws.project_instructions.is_none());
+        assert!(ws.style.is_none() && ws.library.is_empty());
+        assert!(!ws.skills.iter().any(|s| s.name == "house"));
+        assert_eq!(project_file(&project, "agent.md"), None);
+        std::fs::remove_dir_all(&root).ok();
+    }
 
-        // Editing agent.md copies it into .textus/ and leaves .levis/ as it was.
-        let copy = writable_project_file(&project, "agent.md").unwrap();
-        assert_eq!(copy, project.join(".textus/agent.md"));
-        assert_eq!(
-            std::fs::read_to_string(&copy).unwrap(),
-            "Write in British English."
-        );
-        write(&copy, "Textus rules.");
-        write(
-            &project.join(".textus/skills/tone.md"),
-            "---\nname: tone\ndescription: Textus tone\n---\nTextus tone.",
-        );
+    #[test]
+    fn the_project_is_the_nearest_folder_above_with_a_textus_folder() {
+        let root = scratch("walk-up");
+        let novel = root.join("novel");
+        write(&novel.join(".textus/agent.md"), "Novel rules.");
+        write(&novel.join("part-1/scenes/one.md"), "# One");
+        let doc = novel.join("part-1/scenes/one.md");
+        assert_eq!(resolve_root(doc.to_str(), None), Some(novel.clone()));
         let ws = load_layers(None, doc.to_str(), None, &[]);
-        // .textus/ wins where both have a file; .levis/-only skills still load.
-        assert_eq!(ws.project_instructions.as_deref(), Some("Textus rules."));
-        assert!(ws.skills.iter().any(|s| s.name == "house"));
-        let tone = ws.skills.iter().find(|s| s.name == "tone").unwrap();
-        assert_eq!(tone.prompt, "Textus tone.");
-        assert_eq!(
-            std::fs::read_to_string(project.join(".levis/agent.md")).unwrap(),
-            "Write in British English."
-        );
-        assert!(
-            std::fs::read_to_string(project.join(".levis/skills/tone.md"))
-                .unwrap()
-                .contains("Levis tone")
-        );
-        let _ = std::fs::remove_dir_all(&root);
+        assert_eq!(ws.root_source, RootSource::EnclosingProject);
+        assert_eq!(ws.project_instructions.as_deref(), Some("Novel rules."));
+        // A nearer .textus/ wins.
+        write(&novel.join("part-1/.textus/agent.md"), "Part rules.");
+        assert_eq!(resolve_root(doc.to_str(), None), Some(novel.join("part-1")));
+        // With none anywhere above, the document's own folder, as before.
+        let loose = root.join("loose/notes.md");
+        write(&loose, "x");
+        assert_eq!(resolve_root(loose.to_str(), None), Some(root.join("loose")));
+        let ws = load_layers(None, loose.to_str(), None, &[]);
+        assert_eq!(ws.root_source, RootSource::DocumentFolder);
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn the_walk_up_never_takes_a_folder_too_broad() {
+        let root = scratch("walk-stop");
+        write(&root.join("a/b/c.md"), "x");
+        assert_eq!(enclosing_project(&root.join("a/b")), None);
+        assert_eq!(enclosing_project(Path::new("/")), None);
+        // Even with a .textus/ in it, the home folder is no project.
+        if let Some(home) = std::env::var_os("HOME") {
+            assert_eq!(enclosing_project(Path::new(&home)), None);
+        }
+        std::fs::remove_dir_all(&root).ok();
     }
 
     #[test]

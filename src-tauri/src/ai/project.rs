@@ -30,9 +30,7 @@
 //! `<!-- -->` comments in the style profile and in entries are notes to
 //! self and never reach the model.
 
-use crate::ai::workspace::{
-    project_dir, project_file, project_read_dirs, strip_html_comments, writable_project_file,
-};
+use crate::ai::workspace::{project_dir, project_file, strip_html_comments, WORKSPACE_DIR_NAME};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
@@ -266,36 +264,32 @@ pub fn parse_library_entry(file: &str, stem: &str, content: &str) -> LibraryEntr
     entry
 }
 
-/// The library: `.textus/library/*.md`, plus a Levis project's
-/// `.levis/library/*.md` that `.textus/` has no entry of the same name for.
+/// The library: `.textus/library/*.md`, in file-name order.
 pub fn read_library(root: &Path) -> Vec<LibraryEntry> {
-    let mut by_stem: std::collections::BTreeMap<String, LibraryEntry> = Default::default();
-    for project in project_read_dirs(root) {
-        let folder = project
-            .file_name()
-            .map(|n| n.to_string_lossy().into_owned())
-            .unwrap_or_default();
-        let Ok(entries) = std::fs::read_dir(project.join("library")) else {
-            continue;
-        };
-        for path in entries.flatten().map(|e| e.path()) {
-            if path.extension().and_then(|e| e.to_str()) != Some("md") {
-                continue;
-            }
-            let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
-                continue;
-            };
-            let Ok(content) = std::fs::read_to_string(&path) else {
-                continue;
-            };
-            let file = format!("{folder}/library/{stem}.md");
+    let Ok(entries) = std::fs::read_dir(project_dir(root).join("library")) else {
+        return Vec::new();
+    };
+    let mut paths: Vec<PathBuf> = entries
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("md"))
+        .collect();
+    paths.sort();
+    paths
+        .into_iter()
+        .filter_map(|path| {
+            let stem = path.file_stem().and_then(|s| s.to_str())?;
+            let content = std::fs::read_to_string(&path).ok()?;
             // An entry with nothing written in it yet is still listed (the
             // Memory tab showed nothing after New library entry, as if it
             // had failed); relevant_library leaves it out of requests.
-            by_stem.insert(stem.to_string(), parse_library_entry(&file, stem, &content));
-        }
-    }
-    by_stem.into_values().collect()
+            Some(parse_library_entry(
+                &format!("{WORKSPACE_DIR_NAME}/library/{stem}.md"),
+                stem,
+                &content,
+            ))
+        })
+        .collect()
 }
 
 /// Where "Learn my style" writes the profile: `.textus/style.md`.
@@ -303,8 +297,7 @@ fn style_path(root: &Path) -> PathBuf {
     project_dir(root).join("style.md")
 }
 
-/// The style profile: `.textus/style.md`, or a Levis project's
-/// `.levis/style.md` while there is none.
+/// The style profile: `.textus/style.md`.
 pub fn read_style(root: &Path) -> Option<String> {
     project_file(root, "style.md")
         .and_then(|path| std::fs::read_to_string(path).ok())
@@ -506,42 +499,35 @@ mod tests {
     }
 
     #[test]
-    fn a_levis_projects_library_and_style_are_read_under_textus_ones() {
-        let dir = std::env::temp_dir().join(format!("textus-legacy-lib-{}", std::process::id()));
+    fn the_library_and_style_are_read_from_textus_only() {
+        let dir = std::env::temp_dir().join(format!("textus-lib-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         for (path, body) in [
-            (".levis/library/lin.md", "---\nname: Lin\n---\nLevis Lin."),
             (".levis/library/wu.md", "---\nname: Wu\n---\nLevis Wu."),
             (".levis/style.md", "Short sentences."),
             (".textus/library/lin.md", "---\nname: Lin\n---\nTextus Lin."),
+            (
+                ".textus/library/new.md",
+                "---\nname: New\n---\n<!-- what to know about New -->\n",
+            ),
         ] {
             let full = dir.join(path);
             std::fs::create_dir_all(full.parent().unwrap()).unwrap();
             std::fs::write(full, body).unwrap();
         }
-        std::fs::write(
-            dir.join(".textus/library/new.md"),
-            "---\nname: New\n---\n<!-- what to know about New -->\n",
-        )
-        .unwrap();
         let library = read_library(&dir);
         let bodies: Vec<_> = library.iter().map(|e| e.body.as_str()).collect();
-        assert_eq!(bodies, ["Textus Lin.", "", "Levis Wu."]);
+        assert_eq!(bodies, ["Textus Lin.", ""]);
+        assert_eq!(library[0].file, ".textus/library/lin.md");
         // Listed, but never sent: nothing is written in it yet.
         assert!(relevant_library(&library, "New and Lin")
             .iter()
             .all(|e| e.name != "New"));
-        let library: Vec<_> = library.into_iter().filter(|e| e.name != "New").collect();
-        assert_eq!(library[1].file, ".levis/library/wu.md");
-        assert_eq!(read_style(&dir).as_deref(), Some("Short sentences."));
+        assert_eq!(read_style(&dir), None);
         // "Learn my style" and "Open style profile" write .textus/style.md.
         assert_eq!(style_path(&dir), dir.join(".textus/style.md"));
         std::fs::write(dir.join(".textus/style.md"), "Long sentences.").unwrap();
         assert_eq!(read_style(&dir).as_deref(), Some("Long sentences."));
-        assert_eq!(
-            std::fs::read_to_string(dir.join(".levis/style.md")).unwrap(),
-            "Short sentences."
-        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -594,7 +580,6 @@ pub async fn read_project_file(
 
 /// Creates `.textus/<rel>` with `template` unless it already exists, and
 /// returns its absolute path - "new library entry", "open style profile".
-/// A Levis project's `.levis/<rel>` is copied rather than opened in place.
 #[tauri::command]
 pub async fn ensure_project_file(
     doc_path: Option<String>,
@@ -611,9 +596,7 @@ pub async fn ensure_project_file(
         {
             return Err("Invalid file name.".to_string());
         }
-        // A Levis project's .levis/<rel> is copied into .textus/ first, so
-        // the author edits what they have and .levis/ stays as Levis left it.
-        let path = writable_project_file(&root, rel).map_err(|e| e.to_string())?;
+        let path = project_dir(&root).join(rel);
         if !path.exists() {
             if let Some(parent) = path.parent() {
                 std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
@@ -732,8 +715,6 @@ pub async fn learn_style(
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    // The profile it replaces - .textus/style.md, or a Levis project's
-    // .levis/style.md, which itself stays untouched.
     if let Some(previous) = project_file(&root, "style.md") {
         let _ = std::fs::copy(&previous, path.with_file_name("style.previous.md"));
     }
