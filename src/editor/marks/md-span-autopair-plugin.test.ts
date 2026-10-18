@@ -4,6 +4,7 @@ import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import type { Settings } from "../../settings/SettingsContext";
 import { createTestEditor } from "../../document-view/editor-test-harness";
 import { convertRunClosedBeforeCaret } from "./md-span-autopair-plugin";
 
@@ -12,11 +13,14 @@ afterEach(async () => {
   await Promise.all(editors.splice(0).map((editor) => editor.destroy()));
 });
 
-async function openView(markdown = ""): Promise<{
+async function openView(
+  markdown = "",
+  settings: Partial<Settings> = {},
+): Promise<{
   view: EditorView;
   save: () => string;
 }> {
-  const editor = await createTestEditor(markdown);
+  const editor = await createTestEditor(markdown, settings);
   editors.push(editor);
   return editor.action((ctx) => {
     const view = ctx.get(editorViewCtx);
@@ -29,6 +33,18 @@ async function openView(markdown = ""): Promise<{
 function commit(view: EditorView, text: string): void {
   const { from, to } = view.state.selection;
   view.dispatch(view.state.tr.insertText(text, from, to));
+}
+
+/** Typing on a keyboard: each character goes through handleTextInput, and
+ *  lands as plain text when no plugin takes it. */
+function type(view: EditorView, text: string): void {
+  for (const ch of text) {
+    const { from, to } = view.state.selection;
+    const handled = view.someProp("handleTextInput", (f) =>
+      f(view, from, to, ch, () => view.state.tr.insertText(ch, from, to)),
+    );
+    if (!handled) view.dispatch(view.state.tr.insertText(ch, from, to));
+  }
 }
 
 function caretToEndOfFirstBlock(view: EditorView): void {
@@ -103,5 +119,61 @@ describe("delimiters committed by an IME (#134)", () => {
     await new Promise((resolve) => setTimeout(resolve, 80));
     expect(view.state.doc.firstChild?.firstChild?.type.name).toBe("md_span");
     expect(save()).toBe("**加粗文本**\n");
+  });
+});
+
+describe("Close formatting marks automatically (#136)", () => {
+  it("on, opens a shell with its closing mark as soon as * is typed", async () => {
+    const { view, save } = await openView();
+    caretToEndOfFirstBlock(view);
+    type(view, "**");
+    const shell = view.state.doc.firstChild?.firstChild;
+    expect(shell?.type.name).toBe("md_span");
+    expect(shell?.attrs.rung).toBe(2);
+    type(view, "bold**after");
+    expect(save()).toBe("**bold**after\n");
+  });
+
+  it("off, leaves * and ** as typed, with no closing mark", async () => {
+    const { view } = await openView("", { autoCloseMarks: false });
+    caretToEndOfFirstBlock(view);
+    type(view, "**~~==`");
+    const paragraph = view.state.doc.firstChild!;
+    expect(paragraph.childCount).toBe(1);
+    expect(paragraph.firstChild?.isText).toBe(true);
+    expect(paragraph.textContent).toBe("**~~==`");
+  });
+
+  it("off, still turns a hand-typed **text** into bold", async () => {
+    const { view, save } = await openView("", { autoCloseMarks: false });
+    caretToEndOfFirstBlock(view);
+    type(view, "**bold**");
+    const node = view.state.doc.firstChild?.firstChild;
+    expect(node?.type.name).toBe("md_span");
+    expect(node?.attrs.rung).toBe(2);
+    type(view, " *it* ~~s~~ ==h== `c` after");
+    expect(save()).toBe("**bold** *it* ~~s~~ ==h== `c` after\n");
+  });
+
+  it("off, still converts a span committed by an IME", async () => {
+    const { view, save } = await openView("", { autoCloseMarks: false });
+    caretToEndOfFirstBlock(view);
+    for (const piece of ["*", "*", "加粗文本", "*", "*"]) {
+      commit(view, piece);
+      convertRunClosedBeforeCaret(view, piece);
+    }
+    expect(view.state.doc.firstChild?.firstChild?.type.name).toBe("md_span");
+    expect(save()).toBe("**加粗文本**\n");
+  });
+
+  it("off, still turns ``` and Enter into a code block", async () => {
+    const { view, save } = await openView("", { autoCloseMarks: false });
+    caretToEndOfFirstBlock(view);
+    type(view, "```");
+    view.someProp("handleKeyDown", (f) =>
+      f(view, new KeyboardEvent("keydown", { key: "Enter" })),
+    );
+    expect(view.state.doc.firstChild?.type.name).toBe("code_block");
+    expect(save()).toBe("```\n```\n");
   });
 });

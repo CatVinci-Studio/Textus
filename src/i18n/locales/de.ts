@@ -484,6 +484,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   themeImportButton: "CSS importieren…",
   enableMathLabel: "Mathematische Formeln aktivieren",
   enableMermaidLabel: "Mermaid-Diagramme",
+  autoCloseMarksLabel: "Formatierungszeichen automatisch schließen",
+  autoCloseMarksHint:
+    "Beim Tippen von *, **, ~~, == oder ` wird das schließende Zeichen ergänzt. Ist es aus, tippst du es selbst; ein fertiger **Text** wird trotzdem fett.",
   copyTextModeLabel: "Beim Kopieren in andere Apps",
   copyTextModeHint:
     "Apps, die nur reinen Text annehmen, etwa WeChat, erhalten dies; wo eine App Formatierung annimmt, bleibt sie erhalten.",
@@ -625,6 +628,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   contentWidthAuto: "Adaptiv",
   contentWidthStandard: "Standard",
   contentWidthFull: "Volle Breite",
+  headingMarksLabel: "Überschriften-Markierungen",
+  headingMarksHint:
+    "Der Akzentbalken neben Überschriften der Ebene 3 und der Punkt vor Überschriften der Ebene 4 in den integrierten Designs.",
   newDocumentModeLabel: "Dokumente öffnen",
   newDocumentModeWindow: "In neuem Fenster",
   newDocumentModeTab: "Als Tab in diesem Fenster",

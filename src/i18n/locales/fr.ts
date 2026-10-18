@@ -500,6 +500,9 @@ utiliser une.
   themeImportButton: "Importer du CSS…",
   enableMathLabel: "Activer les formules mathématiques",
   enableMermaidLabel: "Diagrammes Mermaid",
+  autoCloseMarksLabel: "Fermer automatiquement les marques de mise en forme",
+  autoCloseMarksHint:
+    "Taper *, **, ~~, == ou ` ajoute sa marque de fermeture. Désactivé, vous la tapez vous-même ; un **texte** complet passe toujours en gras.",
   copyTextModeLabel: "Copie vers d'autres apps",
   copyTextModeHint:
     "Les apps qui n'acceptent que du texte brut, comme WeChat, reçoivent ceci ; la mise en forme est conservée là où une app l'accepte.",
@@ -642,6 +645,9 @@ utiliser une.
   contentWidthAuto: "Adaptative",
   contentWidthStandard: "Standard",
   contentWidthFull: "Pleine largeur",
+  headingMarksLabel: "Ornements des titres",
+  headingMarksHint:
+    "La barre d’accent à côté des titres de niveau 3 et le point devant ceux de niveau 4 dans les thèmes intégrés.",
   newDocumentModeLabel: "Ouvrir les documents dans",
   newDocumentModeWindow: "Une nouvelle fenêtre",
   newDocumentModeTab: "Un onglet de cette fenêtre",

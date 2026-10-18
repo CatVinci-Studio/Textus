@@ -100,6 +100,15 @@ export function useApplyAppearance(
     else root.setAttribute("data-content-width", settings.contentWidth);
   }, [settings.contentWidth]);
 
+  // Settings > Editor & Appearance > Heading marks: the h3 bar and h4 dot
+  // of content-base.css key off this. Only the built-in look has them, so
+  // with an imported theme it changes nothing.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.headingMarks) root.removeAttribute("data-no-heading-marks");
+    else root.setAttribute("data-no-heading-marks", "");
+  }, [settings.headingMarks]);
+
   useEffect(() => {
     let styleEl = document.getElementById(
       CUSTOM_CSS_STYLE_ID,

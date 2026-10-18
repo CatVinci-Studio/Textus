@@ -43,7 +43,10 @@ const THEME_VARIABLES = [
  * usual adjustments. Importing the edited file
  * (Import Theme) makes it a theme of its own.
  */
-async function exportThemeCss(t: Strings, customCss: string): Promise<void> {
+async function exportThemeCss(
+  t: Strings,
+  { customCss, headingMarks }: { customCss: string; headingMarks: boolean },
+): Promise<void> {
   const style = getComputedStyle(document.documentElement);
   const write = document.querySelector("#write");
   const writeStyle = write ? getComputedStyle(write) : null;
@@ -104,7 +107,7 @@ ${typeRules}
 }
 
 /* Textus's ornaments - delete any you don't want */
-${ornamentRules()}
+${ornamentRules(undefined, { headingMarks })}
 ${customCss.trim() ? `\n/* Custom CSS */\n${customCss}\n` : ""}`;
   const picked = await exportDoc.exportSaveDialog(
     "textus-theme.css",
@@ -292,7 +295,7 @@ export function ThemeSection({ t }: { t: Strings }) {
           <div className="shortcut-row-controls">
             <button
               className="text-button settings-inline-button"
-              onClick={() => void exportThemeCss(t, settings.customCss)}
+              onClick={() => void exportThemeCss(t, settings)}
             >
               {t.themeExportButton}
             </button>

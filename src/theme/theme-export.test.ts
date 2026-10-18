@@ -33,4 +33,25 @@ describe("ornamentRules", () => {
     expect(rules).not.toContain("data-user-theme");
     expect(rules).not.toContain("/*");
   });
+
+  it("leaves out the h3 bar and h4 dot when heading marks are off (#136)", () => {
+    const rules = ornamentRules(contentBaseCss, { headingMarks: false });
+    expect(rules).not.toContain("#write h3 {");
+    expect(rules).not.toContain("#write h4::before {");
+    expect(rules).toContain("#write h2 {");
+    expect(rules).toContain("#write blockquote {");
+    expect(rules).not.toContain("data-no-heading-marks");
+  });
+
+  it("switches off only the h3 bar and h4 dot, not the h2 rule", () => {
+    const flat = contentBaseCss
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\s+/g, " ");
+    const off =
+      ":root:not([data-user-theme]):not([data-no-heading-marks]) .milkdown ";
+    expect(flat).toContain(`${off}h3 {`);
+    expect(flat).toContain(`${off}h4::before {`);
+    expect(flat).toContain(":root:not([data-user-theme]) .milkdown h2 {");
+    expect(flat.match(/data-no-heading-marks/g)).toHaveLength(2);
+  });
 });

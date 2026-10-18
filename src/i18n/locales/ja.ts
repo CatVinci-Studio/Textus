@@ -475,6 +475,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   themeImportButton: "CSSをインポート…",
   enableMathLabel: "数式を有効にする",
   enableMermaidLabel: "Mermaid 図表",
+  autoCloseMarksLabel: "書式記号を自動で閉じる",
+  autoCloseMarksHint:
+    "*、**、~~、==、` を入力すると閉じる記号を自動で追加します。オフにすると自分で入力します。入力し終えた **テキスト** は太字になります。",
   copyTextModeLabel: "他のアプリにコピーするとき",
   copyTextModeHint:
     "WeChat などプレーンテキストだけを受け取るアプリにはこちらが渡ります。書式に対応したアプリでは書式が保たれます。",
@@ -611,6 +614,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   contentWidthAuto: "自動",
   contentWidthStandard: "標準",
   contentWidthFull: "全幅",
+  headingMarksLabel: "見出しの装飾",
+  headingMarksHint:
+    "組み込みテーマで、見出し 3 の横のアクセントバーと見出し 4 の前の点を表示します。",
   newDocumentModeLabel: "文書を開く方法",
   newDocumentModeWindow: "新しいウィンドウ",
   newDocumentModeTab: "このウィンドウの新しいタブ",

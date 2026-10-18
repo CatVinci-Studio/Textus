@@ -487,6 +487,9 @@ export default {
   themeImportButton: "Импортировать CSS…",
   enableMathLabel: "Математические формулы",
   enableMermaidLabel: "Диаграммы Mermaid",
+  autoCloseMarksLabel: "Автоматически закрывать знаки форматирования",
+  autoCloseMarksHint:
+    "При вводе *, **, ~~, == или ` закрывающий знак добавляется сам. Если выключено, вы вводите его сами; готовый **текст** всё равно станет жирным.",
   copyTextModeLabel: "При копировании в другие приложения",
   copyTextModeHint:
     "Приложения, принимающие только простой текст (например, WeChat), получат это; там, где формат поддерживается, он сохранится.",
@@ -629,6 +632,9 @@ export default {
   contentWidthAuto: "Адаптивная",
   contentWidthStandard: "Стандартная",
   contentWidthFull: "Во всю ширину",
+  headingMarksLabel: "Украшения заголовков",
+  headingMarksHint:
+    "Цветная полоса у заголовков 3-го уровня и точка перед заголовками 4-го уровня во встроенных темах.",
   newDocumentModeLabel: "Открывать документы",
   newDocumentModeWindow: "В новом окне",
   newDocumentModeTab: "Во вкладке этого окна",

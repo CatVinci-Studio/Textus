@@ -482,6 +482,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   themeImportButton: "Importar CSS…",
   enableMathLabel: "Ativar fórmulas matemáticas",
   enableMermaidLabel: "Diagramas Mermaid",
+  autoCloseMarksLabel: "Fechar marcas de formatação automaticamente",
+  autoCloseMarksHint:
+    "Ao digitar *, **, ~~, == ou `, a marca de fechamento é adicionada. Desativado, você mesmo a digita; um **texto** completo continua virando negrito.",
   copyTextModeLabel: "Ao copiar para outros apps",
   copyTextModeHint:
     "Apps que só aceitam texto simples, como o WeChat, recebem isto; onde o app aceita formatação, ela é mantida.",
@@ -624,6 +627,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   contentWidthAuto: "Adaptável",
   contentWidthStandard: "Padrão",
   contentWidthFull: "Largura total",
+  headingMarksLabel: "Marcas de título",
+  headingMarksHint:
+    "A barra de destaque ao lado dos títulos de nível 3 e o ponto antes dos de nível 4 nos temas integrados.",
   newDocumentModeLabel: "Abrir documentos em",
   newDocumentModeWindow: "Uma nova janela",
   newDocumentModeTab: "Uma aba nesta janela",

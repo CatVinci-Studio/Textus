@@ -45,6 +45,8 @@ window.__textusBoot = function (boot, themeCss) {
     if (builtin.indexOf(settings.themeId) >= 0)
       root.setAttribute("data-content-theme", settings.themeId);
     else if (themeCss) root.setAttribute("data-user-theme", "");
+    if (settings.headingMarks === false)
+      root.setAttribute("data-no-heading-marks", "");
     // macOS only (native_titlebar_height in lib.rs): what the window bar
     // lines its contents up with, so they sit level with the traffic lights.
     if (typeof boot.titlebarHeight === "number")

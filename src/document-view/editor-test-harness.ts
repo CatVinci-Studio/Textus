@@ -1,12 +1,15 @@
 import { Editor, defaultValueCtx, rootCtx } from "@milkdown/kit/core";
 import { withEditorExtensions } from "./editor-extensions";
-import { loadSettings } from "../settings/SettingsContext";
+import { loadSettings, type Settings } from "../settings/SettingsContext";
 import { normalizeMathDelimiters } from "../utils/markdown-math";
 
 // Test-only: the full editor chain MilkdownEditor builds, mounted in jsdom
 // with no-op callbacks, for tests that need real parsing and serializing.
-// Callers destroy what they create.
-export async function createTestEditor(markdown: string): Promise<Editor> {
+// Callers destroy what they create. `settings` overrides the stored ones.
+export async function createTestEditor(
+  markdown: string,
+  settings: Partial<Settings> = {},
+): Promise<Editor> {
   const root = document.createElement("div");
   document.body.appendChild(root);
   const editor = withEditorExtensions(
@@ -14,7 +17,7 @@ export async function createTestEditor(markdown: string): Promise<Editor> {
       ctx.set(rootCtx, root);
       ctx.set(defaultValueCtx, normalizeMathDelimiters(markdown));
     }),
-    { current: loadSettings() },
+    { current: { ...loadSettings(), ...settings } },
     { current: null },
     {
       onAccept() {},

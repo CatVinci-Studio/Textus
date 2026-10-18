@@ -471,6 +471,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   themeImportButton: "CSS 가져오기…",
   enableMathLabel: "수식 사용",
   enableMermaidLabel: "Mermaid 다이어그램",
+  autoCloseMarksLabel: "서식 기호 자동으로 닫기",
+  autoCloseMarksHint:
+    "*, **, ~~, == 또는 `를 입력하면 닫는 기호를 자동으로 넣습니다. 끄면 직접 입력하며, 다 입력한 **텍스트**는 그대로 굵게 바뀝니다.",
   copyTextModeLabel: "다른 앱으로 복사할 때",
   copyTextModeHint:
     "WeChat처럼 일반 텍스트만 받는 앱에는 이 형식이 전달됩니다. 서식을 지원하는 앱에서는 서식이 유지됩니다.",
@@ -608,6 +611,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   contentWidthAuto: "자동",
   contentWidthStandard: "표준",
   contentWidthFull: "전체 너비",
+  headingMarksLabel: "제목 장식",
+  headingMarksHint:
+    "기본 제공 테마에서 제목 3 옆의 강조색 막대와 제목 4 앞의 점입니다.",
   newDocumentModeLabel: "문서 열기 위치",
   newDocumentModeWindow: "새 창",
   newDocumentModeTab: "현재 창의 새 탭",

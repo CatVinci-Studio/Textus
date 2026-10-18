@@ -476,6 +476,9 @@ type /name in a conversation to use one.
   themeImportButton: "Import CSS…",
   enableMathLabel: "Enable math formulas",
   enableMermaidLabel: "Mermaid diagrams",
+  autoCloseMarksLabel: "Close formatting marks automatically",
+  autoCloseMarksHint:
+    "Typing *, **, ~~, == or ` adds its closing mark. When off, you type it yourself; a finished **text** still turns bold.",
   copyTextModeLabel: "When copied to other apps",
   copyTextModeHint:
     "Apps that only take plain text, like WeChat, get this; formatting still comes along where an app accepts it.",
@@ -620,6 +623,9 @@ type /name in a conversation to use one.
   contentWidthAuto: "Adaptive",
   contentWidthStandard: "Standard",
   contentWidthFull: "Full Width",
+  headingMarksLabel: "Heading marks",
+  headingMarksHint:
+    "The accent bar beside level 3 headings and the dot before level 4 headings in the built-in themes.",
   newDocumentModeLabel: "Open Documents In",
   newDocumentModeWindow: "A New Window",
   newDocumentModeTab: "A Tab in This Window",

@@ -28,6 +28,12 @@ function Controls() {
         Default
       </button>
       <button onClick={() => setSettings({ theme: "dark" })}>Dark</button>
+      <button onClick={() => setSettings({ headingMarks: false })}>
+        No heading marks
+      </button>
+      <button onClick={() => setSettings({ headingMarks: true })}>
+        Heading marks
+      </button>
     </>
   );
 }
@@ -123,4 +129,18 @@ it("does not restore an import after switching to a built-in theme", async () =>
   });
   expect(document.getElementById("textus-custom-theme")).toBeNull();
   expect(applyThemeChrome).not.toHaveBeenCalled();
+});
+it("marks the root while heading marks are off, and only then (#136)", async () => {
+  vi.mocked(themes.loadThemeCss).mockResolvedValue("");
+  render(
+    <SettingsProvider>
+      <Controls />
+    </SettingsProvider>,
+  );
+  const root = document.documentElement;
+  expect(root.hasAttribute("data-no-heading-marks")).toBe(false);
+  fireEvent.click(screen.getByText("No heading marks"));
+  expect(root.hasAttribute("data-no-heading-marks")).toBe(true);
+  fireEvent.click(screen.getByText("Heading marks"));
+  expect(root.hasAttribute("data-no-heading-marks")).toBe(false);
 });

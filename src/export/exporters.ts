@@ -58,9 +58,9 @@ function exportBaseName(tab: DocTab, t: Strings): string {
 // Both exports serialize the live editor DOM - what you see is what exports -
 // into a self-contained page with every stylesheet inlined. The current
 // editor theme is reproduced by mirroring the app root's data-theme /
-// data-content-theme / data-user-theme onto the exported <html> (what
-// content-themes.css and content-base.css key off) and keeping the same
-// ancestor classes.
+// data-content-theme / data-user-theme / data-no-heading-marks onto the
+// exported <html> (what content-themes.css and content-base.css key off)
+// and keeping the same ancestor classes.
 
 function nextFrame(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));
@@ -242,10 +242,13 @@ export function buildStandaloneHtml(
   // An imported theme switches Textus's own ornaments off (content-base.css);
   // the export has to say so too, or they come back on the page.
   const userTheme = root.hasAttribute("data-user-theme");
+  // ...and so does Settings > Heading marks, for the h3 bar and h4 dot.
+  const noHeadingMarks = root.hasAttribute("data-no-heading-marks");
   const rootAttrs =
     (dataTheme ? ` data-theme="${escapeHtml(dataTheme)}"` : "") +
     (contentTheme ? ` data-content-theme="${escapeHtml(contentTheme)}"` : "") +
-    (userTheme ? " data-user-theme" : "");
+    (userTheme ? " data-user-theme" : "") +
+    (noHeadingMarks ? " data-no-heading-marks" : "");
   return `<!doctype html>
 <html${rootAttrs}>
 <head>

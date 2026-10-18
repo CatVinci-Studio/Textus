@@ -456,6 +456,9 @@ export default {
   themeImportButton: "匯入 CSS…",
   enableMathLabel: "啟用數學公式",
   enableMermaidLabel: "Mermaid 圖表",
+  autoCloseMarksLabel: "自動補上格式符號",
+  autoCloseMarksHint:
+    "輸入 *、**、~~、== 或 ` 時自動補上結尾符號。關閉後由你自己輸入，寫完的 **文字** 仍會變成粗體。",
   copyTextModeLabel: "複製到其他 App 時",
   copyTextModeHint:
     "微信等只接收純文字的 App 會收到這一種；支援格式的 App 仍會保留格式。",
@@ -591,6 +594,8 @@ export default {
   contentWidthAuto: "自動調整",
   contentWidthStandard: "標準",
   contentWidthFull: "全寬",
+  headingMarksLabel: "標題裝飾",
+  headingMarksHint: "內建主題中三級標題旁的強調色豎條和四級標題前的圓點。",
   newDocumentModeLabel: "文件開啟方式",
   newDocumentModeWindow: "新視窗",
   newDocumentModeTab: "目前視窗的新分頁",

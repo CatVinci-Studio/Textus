@@ -240,6 +240,12 @@ export function SettingsPanel({
                 <option value="full">{t.contentWidthFull}</option>
               </Select>
             </SettingRow>
+            <ToggleRow
+              label={t.headingMarksLabel}
+              hint={t.headingMarksHint}
+              checked={settings.headingMarks}
+              onChange={(v) => setSettings({ headingMarks: v })}
+            />
           </SettingsGroup>
           {/* The window's view modes, beside the one that is a setting
               (typewriter): on a phone, whose menu is kept short, this is
@@ -272,6 +278,12 @@ export function SettingsPanel({
               label={t.enableMermaidLabel}
               checked={settings.enableMermaid}
               onChange={(v) => setSettings({ enableMermaid: v })}
+            />
+            <ToggleRow
+              label={t.autoCloseMarksLabel}
+              hint={t.autoCloseMarksHint}
+              checked={settings.autoCloseMarks}
+              onChange={(v) => setSettings({ autoCloseMarks: v })}
             />
             <SettingRow label={t.copyTextModeLabel} hint={t.copyTextModeHint}>
               <Select
