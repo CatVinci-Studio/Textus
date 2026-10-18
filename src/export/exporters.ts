@@ -125,6 +125,40 @@ function fitTablesToWidth(root: HTMLElement): void {
   });
 }
 
+// A <details> written around markdown shows in the editor as a head widget
+// with the document's own paragraphs below it, hidden while folded
+// (raw-html-preview-plugin.ts). A page has no editor to fold them, so they
+// go back inside one real <details>, which opens and closes by itself.
+// Innermost first, so a nested one moves into its parent whole.
+function gatherDetails(root: HTMLElement): void {
+  const heads = Array.from(
+    root.querySelectorAll<HTMLDetailsElement>("details[data-details-head]"),
+  ).reverse();
+  for (const details of heads) {
+    const id = details.dataset.detailsHead;
+    delete details.dataset.detailsHead;
+    let block: Element = details;
+    while (block.parentElement && !block.parentElement.matches(".ProseMirror"))
+      block = block.parentElement;
+    if (block === details || !block.parentElement) continue;
+    // The head paragraph's classes say which outer <details> it is in.
+    for (const cls of Array.from(block.classList))
+      if (cls.startsWith("raw-html-details-")) details.classList.add(cls);
+    const body = Array.from(
+      block.parentElement.querySelectorAll(
+        `:scope > .raw-html-details-in-${id}`,
+      ),
+    );
+    for (const el of body) {
+      el.classList.remove(`raw-html-details-in-${id}`);
+      el.classList.remove("raw-html-details-folded");
+      details.appendChild(el);
+    }
+    block.replaceWith(details);
+  }
+  root.querySelectorAll(".raw-html-details-end").forEach((el) => el.remove());
+}
+
 // Local images render through asset: URLs (image-plugin.ts), which resolve
 // only inside this app. A file exported next to the document wants the
 // markdown's own paths back ("document"); a self-contained render wants the
@@ -141,6 +175,7 @@ export function cloneEditorContent(
     .querySelectorAll("[contenteditable]")
     .forEach((el) => el.removeAttribute("contenteditable"));
   clone.querySelectorAll(EDITOR_CHROME_SELECTOR).forEach((el) => el.remove());
+  gatherDetails(clone);
   fitTablesToWidth(clone);
   clone
     .querySelectorAll<HTMLImageElement>("img[data-doc-src]")
