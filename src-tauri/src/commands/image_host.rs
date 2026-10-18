@@ -154,6 +154,13 @@ fn valid_public_url(value: &str) -> bool {
         .unwrap_or(false)
 }
 
+/// An error page rather than a message: its first line says nothing (a
+/// doctype or an `<html>` tag), so the error gives the status alone.
+fn is_html(content_type: Option<&str>, body: &str) -> bool {
+    content_type.is_some_and(|value| value.trim_start().starts_with("text/html"))
+        || body.trim_start().starts_with('<')
+}
+
 /// An error answer's first line, cut to MAX_ERROR_CHARS.
 fn first_line(text: &str) -> String {
     let line = text.trim().lines().next().unwrap_or_default().trim_end();
@@ -248,12 +255,21 @@ async fn send(
         }
     })?;
     let status = response.status();
+    let content_type = response
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .map(str::to_owned);
     let body = crate::net::read_limited(response, MAX_ANSWER_BYTES)
         .await?
         .ok_or_else(|| format!("{name} returned {status} and an answer too large to read"))?;
     let body = String::from_utf8_lossy(&body);
     if !status.is_success() {
-        return Err(format!("{name} returned {status}: {}", first_line(&body)));
+        return Err(if is_html(content_type.as_deref(), &body) {
+            format!("{name} returned {status}.")
+        } else {
+            format!("{name} returned {status}: {}", first_line(&body))
+        });
     }
 
     let trimmed = body.trim();
@@ -626,9 +642,17 @@ mod tests {
             &page,
         )
         .await;
-        assert_eq!(
-            src.unwrap_err(),
-            "The image host returned 502 Bad Gateway: <!DOCTYPE html>"
-        );
+        assert_eq!(src.unwrap_err(), "The image host returned 502 Bad Gateway.");
+    }
+
+    #[test]
+    fn an_answer_is_html_by_its_type_or_its_first_character() {
+        assert!(is_html(Some("text/html; charset=utf-8"), "Bad gateway"));
+        assert!(is_html(Some("application/json"), "  <html>"));
+        assert!(!is_html(
+            Some("application/json"),
+            r#"{"error":"bad token"}"#
+        ));
+        assert!(!is_html(None, "Bad token"));
     }
 }
