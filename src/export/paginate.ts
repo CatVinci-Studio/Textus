@@ -224,7 +224,11 @@ export function paginateDocument(
     anchor.parentNode?.insertBefore(spacer, anchor);
     // Measured, not computed: the spacer breaks margin collapsing, so the
     // block's own top margin may now sit between the spacer and the block.
-    spacer.style.height = `${Math.max(0, target - top(anchor))}px`;
+    // Measured with the spacer already open - an empty one lets the margins
+    // on both sides collapse through it, and the block landed that margin
+    // below its target, its bottom in the margin band.
+    spacer.style.height = "1px";
+    spacer.style.height = `${Math.max(0, target - top(anchor) + 1)}px`;
     inserted++;
   };
 
