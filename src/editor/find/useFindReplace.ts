@@ -3,7 +3,7 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { compileQuery, findReplaceKey } from "./find-replace-plugin";
 import { scrollBehavior } from "../../ui/motion";
-import { revealRange } from "../html/raw-html-preview-plugin";
+import { unfoldRange } from "../html/details-fold";
 import type { EditorRunner } from "../useEditorRunner";
 
 export interface FindReplaceStatus {
@@ -36,7 +36,7 @@ function scrollToActive(view: EditorView, behavior = scrollBehavior()) {
   if (!match) return;
   // A match in a folded <details> opens it, so the counter's "3 / 12"
   // points at something on screen.
-  revealRange(view, match.from, match.to);
+  unfoldRange(view, match.from, match.to);
   try {
     const dom = view.domAtPos(match.from).node;
     const el = dom instanceof Element ? dom : dom.parentElement;

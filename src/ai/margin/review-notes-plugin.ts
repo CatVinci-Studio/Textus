@@ -2,7 +2,7 @@ import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
-import type { FoldAttention } from "../../editor/html/raw-html-preview-plugin";
+import type { FoldAttention } from "../../editor/html/details-fold";
 
 /**
  * An add_comment note pinned to its passage: the review the AI leaves

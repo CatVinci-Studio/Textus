@@ -52,7 +52,7 @@ describe("cloneEditorContent", () => {
   });
 
   it("puts the markdown folded under a <details> back inside it", () => {
-    // What raw-html-preview-plugin.ts draws for "<details><summary>…" +
+    // What details-fold.ts draws for "<details><summary>…" +
     // markdown + "</details>", nested once, the inner one folded.
     const root0 = editor(
       '<div class="ProseMirror">' +

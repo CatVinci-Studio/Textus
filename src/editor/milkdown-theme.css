@@ -515,7 +515,7 @@
   box-shadow: none;
 }
 
-/* <details> (raw-html-preview-plugin.ts). Written around markdown, its
+/* <details> (details-fold.ts). Written around markdown, its
    body is the paragraphs below the head, folded by hiding them, and the
    closing "</details>" line goes while the caret is away from it. */
 /* A block widget ends its paragraph, and the caret helpers ProseMirror puts

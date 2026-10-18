@@ -6,7 +6,7 @@ import { $prose } from "@milkdown/kit/utils";
 import { createDebouncedTask } from "./debounced-task";
 import { scalarToUtf16Offset, textOffsetToDocPos } from "../doc-text";
 import { isLargeDoc } from "../../editor/large-doc";
-import type { FoldAttention } from "../../editor/html/raw-html-preview-plugin";
+import type { FoldAttention } from "../../editor/html/details-fold";
 import { ai } from "../../platform/ipc";
 import { AiNoticeError } from "../../utils/error-text";
 

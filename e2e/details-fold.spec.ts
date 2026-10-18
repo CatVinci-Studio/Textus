@@ -3,7 +3,7 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * A <details> written around markdown folds that markdown away
- * (editor/html/raw-html-preview-plugin.ts). Whatever points into the
+ * (editor/html/details-fold.ts). Whatever points into the
  * folded text - find, the outline, the AI's edits and notes, the caret -
  * opens it, so nothing it points at is hidden.
  */
