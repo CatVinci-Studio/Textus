@@ -17,7 +17,7 @@ first.
 TestFlight for a while and is about to go to review.
 [#87](https://github.com/CatVinci-Studio/Textus/issues/87)
 
-## In the next release (1.0.5)
+## In the next release (1.1.0)
 
 - **A new first-run tour.** Connect your AI first, so the AI lessons that
   follow are the real thing; then the main features one step at a time, each
@@ -29,6 +29,20 @@ TestFlight for a while and is about to go to review.
   exports. Scripts never run.
 - **A beta channel.** Choose Beta under **Settings › General › About Textus**
   to get release candidates before everyone else; Stable stays the default.
+
+## After that (1.2.0)
+
+New features come in minor releases like this one; patch releases (1.1.x)
+only fix things. Already built and waiting:
+
+- Saving to the original file automatically, if you turn it on.
+  [#133](https://github.com/CatVinci-Studio/Textus/issues/133)
+- Obsidian image embeds (`![[image.png]]`), kept as written when you save.
+  [#135](https://github.com/CatVinci-Studio/Textus/issues/135)
+- Switches to stop closing `*` for you and to hide the level-3 and level-4
+  heading marks. [#136](https://github.com/CatVinci-Studio/Textus/issues/136)
+- Browsing and installing gallery themes from inside the app.
+  [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
 ## Recently done
 
@@ -52,7 +66,6 @@ TestFlight for a while and is about to go to review.
 
 ## Later
 
-- Installing gallery themes from inside the app.
 - An outline that covers a whole folder, not just one file.
   [#79](https://github.com/CatVinci-Studio/Textus/issues/79)
 

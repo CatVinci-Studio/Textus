@@ -69,7 +69,7 @@ body:
     attributes:
       label: 应用版本
       description: 在 设置 › 通用 › 关于 Textus 中可以看到。
-      placeholder: "1.0.5"
+      placeholder: "1.1.0"
     validations:
       required: true
 
