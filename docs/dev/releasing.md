@@ -45,8 +45,8 @@ through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md
    still running, and stops if it failed, so the builds don't run the tests
    again. Then it builds,
    signs and notarizes for macOS (Apple silicon and Intel), Windows and Linux,
-   publishes the GitHub release, writes the updater manifest, points the
-   beta channel's manifest at it, mirrors the
+   writes the updater manifest onto the draft, publishes the GitHub release,
+   points the beta channel's manifest at it, mirrors the
    installers to the website's download bucket, points the Homebrew cask at
    both DMGs, and sends the tested `textus-bin` package to the `[catvinci]`
    pacman repository in `CatVinci-Studio/arch-repo` (see
@@ -64,8 +64,10 @@ through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md
    - the Arch repository has `textus-bin-X.Y.Z-1`.
 
 A failed run can be rebuilt with
-`gh workflow run release.yml --ref main -f tag=vX.Y.Z`: the packaging
-scripts come from the ref, the build from the tag. The four steps after
+`gh workflow run release.yml --ref main -f tag=vX.Y.Z`: the workflows, the
+preflight checks and the Arch package's scripts (`packaging/arch/`) come from
+the ref; the app, its installers and tarball, and the updater manifest are
+built from the tag. The four steps after
 publishing are separate workflows, so one of them can be retried alone:
 `gh workflow run mirror-downloads.yml -f tag=vX.Y.Z`, and the same for
 `update-beta-manifest.yml`, `update-homebrew-tap.yml` and
@@ -105,7 +107,7 @@ After every published tag, release candidates included, the
 bucket - unless the bucket already holds a newer version, so rebuilding an
 old tag never moves beta backwards. Beta therefore always offers the newest
 of the latest release candidate and the latest stable release: on
-`1.0.5-rc.2`, the stable `1.0.5` arrives as an update. Its download URLs are
+`1.1.0-rc.2`, the stable `1.1.0` arrives as an update. Its download URLs are
 the GitHub release's assets; release candidates are not mirrored. It needs
 the `CLOUDFLARE_API_TOKEN` secret that the download mirror uses.
 
@@ -122,7 +124,8 @@ Textus's manifest is `textus-latest.json`, never `latest.json`. Levis 0.9.x
 installs read `latest.json` from this repository (the old
 `CatVinci-Studio/Levis` URL redirects here) and trust the same signing key, so
 a `latest.json` on a Textus release would install Textus over Levis.
-tauri-action runs with `uploadUpdaterJson: false` (`includeUpdaterJson` before tauri-action 1.0); the publish job writes
+tauri-action runs with `uploadUpdaterJson: false` (`includeUpdaterJson`
+before tauri-action 1.0); before publishing, the publish job writes
 `textus-latest.json` from the draft's `.sig` files
 (`scripts/updater-manifest.mjs build`) and refuses to publish a draft that
 has any other `latest.json` (`… guard`). `npm run check` runs `… check`, which
