@@ -141,15 +141,56 @@ fn parse_catalog(bytes: &[u8]) -> Result<Vec<GalleryTheme>, String> {
     Ok(themes)
 }
 
+/// `css` without its comments, so a remark that mentions `@import` or
+/// `url(` isn't read as one. An unclosed comment runs to the end, as in CSS.
+fn without_comments(css: &str) -> String {
+    let mut out = String::with_capacity(css.len());
+    let mut rest = css;
+    while let Some(start) = rest.find("/*") {
+        out.push_str(&rest[..start]);
+        out.push(' ');
+        rest = match rest[start + 2..].find("*/") {
+            Some(end) => &rest[start + 2 + end + 2..],
+            None => "",
+        };
+    }
+    out.push_str(rest);
+    out
+}
+
+/// `css` with every quoted string emptied (`content: "@import"` is text,
+/// not a rule). The quotes stay; a backslash escapes the next character.
+fn without_strings(css: &str) -> String {
+    let mut out = String::with_capacity(css.len());
+    let mut chars = css.chars();
+    while let Some(c) = chars.next() {
+        out.push(c);
+        if c != '"' && c != '\'' {
+            continue;
+        }
+        while let Some(inner) = chars.next() {
+            if inner == '\\' {
+                chars.next();
+            } else if inner == c {
+                out.push(c);
+                break;
+            }
+        }
+    }
+    out
+}
+
 /// The gallery's rule (its README): one self-contained file - no `@import`,
 /// and every `url()` a `data:` URI. A theme that breaks it would fetch from
-/// some server each time it is shown, so it isn't installed.
+/// some server each time it is shown, so it isn't installed. Comments never
+/// count, and strings don't for `@import`; a `url("...")` target is a
+/// string, though, and is checked.
 fn check_self_contained(css: &str) -> Result<(), String> {
-    let lower = css.to_ascii_lowercase();
-    if lower.contains("@import") {
+    let code = without_comments(css).to_ascii_lowercase();
+    if without_strings(&code).contains("@import") {
         return Err("the theme loads another stylesheet (@import)".into());
     }
-    let mut rest = lower.as_str();
+    let mut rest = code.as_str();
     while let Some(at) = rest.find("url(") {
         let target = rest[at + 4..].trim_start().trim_start_matches(['"', '\'']);
         if !target.trim_start().starts_with("data:") {
@@ -323,6 +364,24 @@ mod tests {
         assert!(check_self_contained("@IMPORT 'b.css';").is_err());
         assert!(check_self_contained("#write { background: url(https://x.test/p.png) }").is_err());
         assert!(check_self_contained("#write { background: url( 'fonts/a.woff2' ) }").is_err());
+    }
+
+    #[test]
+    fn comments_and_text_that_mention_imports_or_urls_are_not_rules() {
+        assert!(check_self_contained(
+            "/* No @import here: every url(...) is a data: URI. */\n#write { color: red; }"
+        )
+        .is_ok());
+        assert!(check_self_contained(r#"#write p::after { content: "@import 'x.css';" }"#).is_ok());
+        assert!(check_self_contained(r"#write::before { content: 'it\'s @import' }").is_ok());
+        // A rule after a comment still counts; a comment left open hides the rest.
+        assert!(check_self_contained("/* x */ @import 'a.css';").is_err());
+        assert!(
+            check_self_contained("/* a */ #w { background: url(http://x.test/a.png) }").is_err()
+        );
+        assert!(check_self_contained("#w { color: red } /* @import 'a.css';").is_ok());
+        // A url() target is a string, and is still checked.
+        assert!(check_self_contained(r#"#w { background: url("https://x.test/a.png") }"#).is_err());
     }
 
     #[test]
