@@ -227,11 +227,6 @@ export function splitCandidates(raw: string): string[] {
   return raw.split(/\s*<<<>>>(?:[ \t]*\n)*/).filter((part) => part.trim());
 }
 
-/// Runs a completion request right now at the cursor and shows it as ghost
-/// text, bypassing the debounce/word-count gating the typing-triggered path
-/// uses - for manual "trigger completion" entry points (e.g. a context menu
-/// item). Unlike the silent auto-trigger path, this throws on failure so the
-/// caller can surface the error to the user.
 /** Right after raw HTML ("</details>", a table): text written on its
  *  line becomes part of the HTML block when the file is read again, so a
  *  continuation there would vanish into the markup. */
@@ -239,6 +234,11 @@ function afterRawHtml($pos: ResolvedPos): boolean {
   return $pos.nodeBefore?.type.name === "html";
 }
 
+/// Runs a completion request right now at the cursor and shows it as ghost
+/// text, bypassing the debounce/word-count gating the typing-triggered path
+/// uses - for manual "trigger completion" entry points (e.g. a context menu
+/// item). Unlike the silent auto-trigger path, this throws on failure so the
+/// caller can surface the error to the user.
 export async function triggerGhostTextNow(
   view: EditorView,
   provider: string,
