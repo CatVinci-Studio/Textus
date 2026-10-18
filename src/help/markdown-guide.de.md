@@ -120,9 +120,11 @@ sequenceDiagram
 
 ## Bilder
 
-Füge ein Bild direkt aus der Zwischenablage ein – Textus speichert es in einem Ordner `assets/` neben dem Dokument und fügt den Verweis ein. Oder schreib ihn von Hand:
+Füge ein Bild direkt aus der Zwischenablage ein – Textus speichert es und fügt den Verweis ein. Wohin, legst du unter **Einstellungen → Editor & Design → Bilder** fest. **Auf diesem Computer** ist es standardmäßig ein Ordner `assets/` neben dem Dokument; zur Wahl stehen auch **Neben dem Dokument**, `<Dokument>.assets/` und ein **Eigener Ordner**. Mit **Zu einem Bildhoster hochladen** geht es an PicGo / PicList, SM.MS, Imgur oder deinen eigenen Endpunkt (**Eigener Server**).
 
-Unter **Einstellungen → Editor & Design → Bilder** kannst du neu eingefügte Bilder stattdessen an deinen eigenen Bildhoster senden. Der Endpunkt empfängt `multipart/form-data` mit einem Feld `file` und kann die öffentliche URL entweder als reinen Text oder in einem einstellbaren JSON-Feld zurückgeben. Hochgeladene Dateien können automatisch umbenannt werden oder ihren Originalnamen behalten, oder Textus fragt dich vor jedem Upload nach einem Namen. Wenn du den Speicherort wechselst, bleiben vorhandene Bildverweise unverändert.
+Ein eigener Endpunkt empfängt `multipart/form-data` mit einem Feld `file` und kann die öffentliche URL entweder als reinen Text oder in einem einstellbaren JSON-Feld zurückgeben. Hochgeladene Dateien können automatisch umbenannt werden oder ihren Originalnamen behalten, oder Textus fragt dich vor jedem Upload nach einem Namen. Wenn du den Speicherort wechselst, bleiben vorhandene Bildverweise unverändert.
+
+Oder schreib den Verweis von Hand:
 
 ```markdown
 ![Alternativtext](assets/screenshot.png)

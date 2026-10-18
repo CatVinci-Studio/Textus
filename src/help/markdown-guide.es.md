@@ -120,9 +120,11 @@ sequenceDiagram
 
 ## Imágenes
 
-Pega una imagen directamente desde el portapapeles: Textus la guarda en una carpeta `assets/` junto al documento e inserta la referencia. O escribe la referencia a mano:
+Pega una imagen directamente desde el portapapeles: Textus la guarda e inserta la referencia. Dónde va se decide en **Ajustes → Editor y aspecto → Imágenes**. **En este equipo**, va por defecto a una carpeta `assets/` junto al documento; también puedes elegir **Junto al documento**, `<documento>.assets/` o una **Carpeta personalizada**. Con **Subir a un servidor de imágenes**, se envía a PicGo / PicList, SM.MS, Imgur o a un endpoint tuyo (**Personalizado**).
 
-En **Ajustes → Editor y aspecto → Imágenes** puedes hacer que las imágenes que pegues a partir de ahora se envíen a tu propio servidor de imágenes. El endpoint recibe `multipart/form-data` con un campo `file` y puede devolver la URL pública como texto sin formato o en un campo JSON configurable. Los archivos subidos pueden renombrarse automáticamente, mantener su nombre original o pedirte un nombre antes de cada subida. Las referencias a imágenes existentes no se modifican al cambiar el modo de almacenamiento.
+Un endpoint personalizado recibe `multipart/form-data` con un campo `file` y puede devolver la URL pública como texto sin formato o en un campo JSON configurable. Los archivos subidos pueden renombrarse automáticamente, mantener su nombre original o pedirte un nombre antes de cada subida. Las referencias a imágenes existentes no se modifican al cambiar el modo de almacenamiento.
+
+O escribe la referencia a mano:
 
 ```markdown
 ![texto alternativo](assets/screenshot.png)

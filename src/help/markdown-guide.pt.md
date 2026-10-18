@@ -120,9 +120,11 @@ sequenceDiagram
 
 ## Imagens
 
-Cole uma imagem direto da área de transferência: o Textus a salva em uma pasta `assets/` ao lado do documento e insere a referência. Ou escreva à mão:
+Cole uma imagem direto da área de transferência: o Textus a salva e insere a referência. O destino se escolhe em **Ajustes → Editor e aparência → Imagens**. **Neste computador**, por padrão é uma pasta `assets/` ao lado do documento; também dá para escolher **Junto ao documento**, `<documento>.assets/` ou uma **Pasta personalizada**. Com **Enviar para uma hospedagem de imagens**, ela vai para PicGo / PicList, SM.MS, Imgur ou um endpoint seu (**Personalizado**).
 
-Em **Ajustes → Editor e aparência → Imagens**, você pode, em vez disso, enviar as imagens que colar para o seu próprio serviço de hospedagem de imagens. O endpoint recebe `multipart/form-data` com um campo `file` e pode devolver a URL pública como texto simples ou em um campo JSON configurável. Os arquivos enviados podem ser renomeados automaticamente, manter o nome original ou pedir um nome antes de cada envio. As referências a imagens que já existem nunca mudam quando você troca o modo de armazenamento.
+Um endpoint personalizado recebe `multipart/form-data` com um campo `file` e pode devolver a URL pública como texto simples ou em um campo JSON configurável. Os arquivos enviados podem ser renomeados automaticamente, manter o nome original ou pedir um nome antes de cada envio. As referências a imagens que já existem nunca mudam quando você troca o modo de armazenamento.
+
+Ou escreva a referência à mão:
 
 ```markdown
 ![texto alternativo](assets/screenshot.png)

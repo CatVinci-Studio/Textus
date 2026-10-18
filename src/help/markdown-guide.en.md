@@ -120,9 +120,11 @@ sequenceDiagram
 
 ## Images
 
-Paste an image straight from the clipboard — Textus saves it to an `assets/` folder next to the document and inserts the reference. Or write it by hand:
+Paste an image straight from the clipboard — Textus saves it and inserts the reference. Where it goes is set in **Settings → Editor & Appearance → Images**. **On this computer**, it is an `assets/` folder next to the document by default; **Next to the document**, `<document>.assets/` and a **Custom folder** are the other choices. **Upload to an image host** sends it to PicGo / PicList, SM.MS, Imgur or an endpoint of your own (**Custom**) instead.
 
-In **Settings → Editor & Appearance → Images**, you can instead send newly pasted images to your own image host. The endpoint receives `multipart/form-data` with a `file` field and may return either the public URL as plain text or in a configurable JSON field. Uploaded files can be renamed automatically, keep their original name, or ask you for a name before every upload. Existing image references are never changed when you switch storage modes.
+A custom endpoint receives `multipart/form-data` with a `file` field and may return either the public URL as plain text or in a configurable JSON field. Uploaded files can be renamed automatically, keep their original name, or ask you for a name before every upload. Existing image references are never changed when you switch storage modes.
+
+Or write the reference by hand:
 
 ```markdown
 ![alt text](assets/screenshot.png)
