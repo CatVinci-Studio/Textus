@@ -1,15 +1,14 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { tabIsDirty, type DocTab } from "./doc-tabs";
+import { createTabIdleTimers } from "./tab-idle-timers";
 import { drafts } from "../platform/ipc";
 
 const DEBOUNCE_MS = 3000;
 const MAX_WAIT_MS = 30000;
 
-interface Pending {
+interface Snapshot {
   content: string;
   path: string | null;
-  timer: ReturnType<typeof setTimeout>;
-  firstPendingAt: number;
 }
 
 /**
@@ -34,23 +33,24 @@ interface Pending {
  * discarded document as a "recovered draft" on the next launch.
  */
 export function useDraftAutosave(tabs: DocTab[], enabled: boolean): () => void {
-  const pendingRef = useRef<Map<string, Pending>>(new Map());
+  const [timers] = useState(() =>
+    createTabIdleTimers<Snapshot>({
+      idleMs: DEBOUNCE_MS,
+      maxWaitMs: MAX_WAIT_MS,
+      same: (a, b) => a.content === b.content && a.path === b.path,
+    }),
+  );
   const knownIdsRef = useRef<Set<string>>(new Set());
-  const cancel = useCallback(() => {
-    for (const p of pendingRef.current.values()) clearTimeout(p.timer);
-    pendingRef.current.clear();
-  }, []);
+  const cancel = timers.cancelAll;
 
   useEffect(() => cancel, [cancel]);
 
   useEffect(() => {
-    const pending = pendingRef.current;
     const seenIds = new Set(tabs.map((tab) => tab.id));
 
     for (const id of knownIdsRef.current) {
       if (seenIds.has(id)) continue;
-      clearTimeout(pending.get(id)?.timer);
-      pending.delete(id);
+      timers.cancel(id);
       void drafts.clearDraftSnapshot(id);
     }
     knownIdsRef.current = seenIds;
@@ -61,43 +61,18 @@ export function useDraftAutosave(tabs: DocTab[], enabled: boolean): () => void {
     }
 
     for (const tab of tabs) {
-      const existing = pending.get(tab.id);
       if (!tabIsDirty(tab)) {
-        if (existing) {
-          clearTimeout(existing.timer);
-          pending.delete(tab.id);
-          void drafts.clearDraftSnapshot(tab.id);
-        }
+        if (timers.cancel(tab.id)) void drafts.clearDraftSnapshot(tab.id);
         continue;
       }
-      if (
-        existing &&
-        existing.content === tab.content &&
-        existing.path === tab.path
-      )
-        continue;
-      if (existing) clearTimeout(existing.timer);
-
-      const firstPendingAt = existing?.firstPendingAt ?? Date.now();
-      const delay = Math.max(
-        0,
-        Math.min(DEBOUNCE_MS, MAX_WAIT_MS - (Date.now() - firstPendingAt)),
+      timers.schedule(
+        tab.id,
+        { content: tab.content, path: tab.path },
+        ({ content, path }) =>
+          void drafts.saveDraftSnapshot(tab.id, path, content),
       );
-      const path = tab.path;
-      const content = tab.content;
-      const timer = setTimeout(() => {
-        void drafts.saveDraftSnapshot(tab.id, path, content);
-        const p = pending.get(tab.id);
-        if (p) p.firstPendingAt = Date.now(); // restart the hard-cap clock after a flush
-      }, delay);
-      pending.set(tab.id, {
-        content: tab.content,
-        path,
-        timer,
-        firstPendingAt,
-      });
     }
-  }, [tabs, enabled, cancel]);
+  }, [tabs, enabled, cancel, timers]);
 
   return cancel;
 }

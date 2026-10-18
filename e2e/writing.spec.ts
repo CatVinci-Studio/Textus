@@ -45,6 +45,15 @@ test("typing a closing ** or ~~ by hand closes the span once", async ({
   );
 });
 
+test("text typed after *** goes into the bold-italic span", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.locator('[data-active-tab="true"] .ProseMirror').click();
+  await page.keyboard.type("A ***both*** end", { delay: 30 });
+  expect((await sourceOf(page)).trim()).toBe("A ***both*** end");
+});
+
 test("** committed through an IME composition still makes bold (#134)", async ({
   page,
 }) => {

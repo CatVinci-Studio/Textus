@@ -6,7 +6,8 @@
 // background bleeds to every edge) and the margin is laid out - the
 // document is rendered at the paper's width, and every block that would
 // cross a page seam, or start inside the top or bottom margin band, is
-// pushed to the next page's top margin by a spacer.
+// pushed to the next page's top margin by a spacer. A block taller than a
+// page is cut into one copy of it per page instead (#151).
 //
 // The layout must use the renderer's own sheet size in CSS px, or every
 // computed seam drifts - and the two renderers differ (see export.rs):
@@ -36,23 +37,18 @@ export const WINDOWS_PAGE: PageGeometry = {
 
 const SPACER_CLASS = "textus-page-spacer";
 
-// Containers whose children can start on a new page on their own. Anything
-// else is moved as a whole, or left to split if it is taller than a page.
+// Containers cut between their children when taller than a page.
 function isSplittable(el: Element): boolean {
-  return /^(UL|OL|LI|BLOCKQUOTE|TBODY|TABLE|DIV)$/.test(el.tagName);
+  return /^(UL|OL|LI|BLOCKQUOTE|TABLE|DIV)$/.test(el.tagName);
 }
 
-function makeSpacer(doc: Document, before: Element): HTMLElement {
-  if (before.tagName === "TR") {
-    const row = doc.createElement("tr");
-    row.className = SPACER_CLASS;
-    const cell = doc.createElement("td");
-    cell.colSpan = Math.max(1, (before as HTMLTableRowElement).cells.length);
-    cell.style.cssText = "padding:0;border:0;background:transparent";
-    row.appendChild(cell);
-    return row;
-  }
-  const div = doc.createElement(before.tagName === "LI" ? "li" : "div");
+/** Code and paragraphs, cut between lines (see textBreak). */
+function isTextBlock(el: Element): boolean {
+  return /^(PRE|P)$/.test(el.tagName) && /\S/.test(el.textContent ?? "");
+}
+
+function makeSpacer(doc: Document): HTMLElement {
+  const div = doc.createElement("div");
   div.className = SPACER_CLASS;
   div.setAttribute("aria-hidden", "true");
   div.style.cssText =
@@ -60,12 +56,84 @@ function makeSpacer(doc: Document, before: Element): HTMLElement {
   return div;
 }
 
-function setSpacerHeight(spacer: HTMLElement, height: number): void {
-  const target =
-    spacer.tagName === "TR"
-      ? (spacer.firstElementChild as HTMLElement)
-      : spacer;
-  target.style.height = `${Math.max(0, height)}px`;
+/** A table's first row if it is all header cells. */
+function headerRow(table: Element): Element | null {
+  const head = (table as HTMLTableElement).rows[0];
+  return head && Array.from(head.cells).every((cell) => cell.tagName === "TH")
+    ? head
+    : null;
+}
+
+/**
+ * Moves everything in `el` from `node` on (from `offset` into it, for text)
+ * into a shallow copy of `el` inserted after it, and returns the copy. The
+ * elements the cut runs through are copied too, so code keeps its
+ * highlighting on both sides. A table's copy repeats its column widths and
+ * header row; an ordered list's goes on counting.
+ */
+export function splitBefore(el: Element, node: Node, offset?: number): Element {
+  const range = el.ownerDocument.createRange();
+  if (offset === undefined) range.setStartBefore(node);
+  else range.setStart(node, offset);
+  range.setEnd(el, el.childNodes.length);
+  const rest = el.cloneNode(false) as HTMLElement;
+  rest.append(range.extractContents());
+  if (el.tagName === "TABLE") {
+    const head = headerRow(el);
+    if (head) rest.querySelector("tr")?.before(head.cloneNode(true));
+    const columns = el.querySelector(":scope > colgroup");
+    if (columns) rest.prepend(columns.cloneNode(true));
+  } else if (el.tagName === "OL") {
+    const before = el.querySelectorAll(":scope > li").length;
+    rest.setAttribute("start", String((el as HTMLOListElement).start + before));
+  } else if (el.tagName === "P") {
+    // The rest of a paragraph, not a new one.
+    rest.style.textIndent = "0";
+  }
+  el.after(rest);
+  return rest;
+}
+
+/** Where `block`'s text breaks so that what comes before ends above
+ *  `limit`: the start of the first line reaching below it - for code, of
+ *  its source line, so a wrapped line stays whole. Null if no line fits,
+ *  or every line does. */
+function textBreak(
+  block: Element,
+  limit: number,
+  scrollTop: number,
+): [Text, number] | null {
+  const doc = block.ownerDocument;
+  const chars: [Text, number][] = [];
+  const walker = doc.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode())
+    for (let i = 0; i < (node as Text).length; i++)
+      chars.push([node as Text, i]);
+  const lineHeight = parseFloat(getComputedStyle(block).lineHeight);
+  const range = doc.createRange();
+  const below = ([node, i]: [Text, number]) => {
+    range.setStart(node, i);
+    range.setEnd(node, i + 1);
+    const rect = range.getBoundingClientRect();
+    // White space collapsed at a line's end has no box; it ends that line.
+    if (rect.height === 0) return false;
+    // A glyph's box is the font's height; its line adds half the leading.
+    const leading = Math.max(0, (lineHeight || rect.height) - rect.height);
+    return rect.bottom + scrollTop + leading / 2 > limit;
+  };
+  // Lines run down the block in text order, so bisect for the first
+  // character below the limit.
+  let lo = 0;
+  let hi = chars.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (below(chars[mid])) hi = mid;
+    else lo = mid + 1;
+  }
+  let at = lo;
+  if (block.tagName === "PRE")
+    while (at > 0 && chars[at - 1][0].data[chars[at - 1][1]] !== "\n") at--;
+  return at > 0 && at < chars.length ? chars[at] : null;
 }
 
 /** The next sibling that takes up space - a diagram's hidden source block
@@ -119,26 +187,29 @@ export function paginateDocument(
     const withNext = next ? bottom(next) : 0;
     const end = next && withNext - start <= usable ? withNext : bottom(el);
 
-    // Too tall for any page: let its children find their own pages if it
-    // has any; otherwise it splits wherever the engine puts the seam.
+    // Too tall for any page: cut into one piece per page, so its
+    // background and border stop at the margin along with its text.
+    // Anything else that tall (a picture) splits wherever the engine puts
+    // the seam.
     if (rect.height > usable) {
-      if (isSplittable(el)) {
-        for (const child of Array.from(el.children)) place(child);
-      }
+      if (isSplittable(el) || isTextBlock(el)) placeTall(el);
       return;
     }
 
-    let target: number | null = null;
-    if (start < contentTop) target = contentTop;
-    else if (end > contentEnd) target = contentTop + pageHeight;
-    if (target === null) return;
+    if (start < contentTop) moveTo(el, contentTop);
+    else if (end > contentEnd) moveTo(el, contentTop + pageHeight);
+  };
 
+  // Puts `el`'s top at `target` with a spacer before it.
+  const moveTo = (el: Element, target: number) => {
+    const pageTop = Math.floor(top(el) / pageHeight) * pageHeight;
+    const contentTop = pageTop + margin;
     // Moving to the next page takes along the heading and label lines that
     // introduce this block, if they would otherwise stay behind at the
     // bottom of this one. (They were placed first and fit, since they only
     // looked one block ahead.)
     let anchor = el;
-    if (target > contentEnd) {
+    if (target > pageTop + pageHeight - margin) {
       for (
         let prev = anchor.previousElementSibling;
         prev && introduces(prev) && top(prev) >= contentTop;
@@ -149,12 +220,67 @@ export function paginateDocument(
       }
     }
 
-    const spacer = makeSpacer(doc, anchor);
+    const spacer = makeSpacer(doc);
     anchor.parentNode?.insertBefore(spacer, anchor);
     // Measured, not computed: the spacer breaks margin collapsing, so the
     // block's own top margin may now sit between the spacer and the block.
-    setSpacerHeight(spacer, target - top(anchor));
+    // Measured with the spacer already open - an empty one lets the margins
+    // on both sides collapse through it, and the block landed that margin
+    // below its target, its bottom in the margin band.
+    spacer.style.height = "1px";
+    spacer.style.height = `${Math.max(0, target - top(anchor) + 1)}px`;
     inserted++;
+  };
+
+  // Cuts `el` where it reaches below `limit`, moving the rest into a copy
+  // after it, and returns the copy - or null if nothing fits above.
+  const cut = (el: Element, limit: number): Element | null => {
+    const style = getComputedStyle(el);
+    const inner =
+      limit -
+      (parseFloat(style.paddingBottom) || 0) -
+      (parseFloat(style.borderBottomWidth) || 0);
+    if (isTextBlock(el)) {
+      const at = textBreak(el, inner, scrollTop());
+      return at && splitBefore(el, ...at);
+    }
+    // A table is cut between its body rows - never right after its header.
+    const units =
+      el.tagName === "TABLE"
+        ? Array.from(el.querySelectorAll(":scope > tbody > tr")).filter(
+            (row) => row !== headerRow(el),
+          )
+        : Array.from(el.children);
+    let at = units.find(
+      (unit) =>
+        bottom(unit) + (parseFloat(getComputedStyle(unit).marginBottom) || 0) >
+        inner,
+    );
+    if (!at) return null;
+    if (
+      at.getBoundingClientRect().height > usable &&
+      (isSplittable(at) || isTextBlock(at))
+    )
+      at = cut(at, inner) ?? at;
+    // A heading or label line goes on with the block it introduces.
+    while (at.previousElementSibling && introduces(at.previousElementSibling))
+      at = at.previousElementSibling;
+    return at === units[0] ? null : splitBefore(el, at);
+  };
+
+  // A piece starting in the top margin band moves down to the text first;
+  // one that can't keep even its first line or child on this page moves to
+  // the next.
+  const placeTall = (el: Element) => {
+    let pageTop = Math.floor(top(el) / pageHeight) * pageHeight;
+    if (top(el) < pageTop + margin) moveTo(el, pageTop + margin);
+    let rest = cut(el, pageTop + pageHeight - margin);
+    if (!rest) {
+      pageTop += pageHeight;
+      moveTo(el, pageTop + margin);
+      rest = cut(el, pageTop + pageHeight - margin);
+    }
+    if (rest) place(rest);
   };
 
   for (const child of Array.from(root.children)) place(child);

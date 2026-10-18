@@ -43,6 +43,7 @@ use commands::fs::{
     read_binary_file_base64, read_text_file, save_file_dialog, save_pasted_image, write_text_file,
 };
 use commands::image_host::upload_image;
+use commands::theme_gallery::{theme_gallery_catalog, theme_gallery_css, theme_gallery_preview};
 use commands::themes::{delete_theme, load_theme_css, save_theme_css};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
@@ -633,11 +634,15 @@ pub fn run() {
             read_binary_file_base64,
             write_text_file,
             save_pasted_image,
+            commands::vault::resolve_vault_image,
             upload_image,
             migrate_draft_images,
             save_theme_css,
             load_theme_css,
             delete_theme,
+            theme_gallery_catalog,
+            theme_gallery_css,
+            theme_gallery_preview,
             codex_login,
             codex_auth_status,
             codex_logout,
@@ -743,6 +748,7 @@ pub fn run() {
             export_pdf_native,
             commands::links::open_community_page,
             commands::links::open_about_link,
+            commands::links::open_web_link,
             commands::links::open_tutorials_page,
             #[cfg(desktop)]
             open_pandoc_install_page,

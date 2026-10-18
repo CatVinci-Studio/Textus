@@ -112,6 +112,18 @@ export interface UserThemeMeta {
   id: string;
   name: string;
   hasDark: boolean;
+  /// Set when the theme was installed from the theme gallery
+  /// (theme/theme-gallery.ts): which one, and the version installed, so a
+  /// newer one shows as an update. Rust reads only `id` and `hasDark`.
+  gallery?: GalleryOrigin;
+}
+
+export interface GalleryOrigin {
+  /// The gallery's theme id (`GalleryTheme.id`).
+  id: string;
+  /// `GalleryTheme.updated` of the installed copy.
+  updated: string;
+  source: string;
 }
 
 export type ImageStorageMode = "local" | "image-host";
@@ -230,6 +242,10 @@ export interface Settings {
   restoreSessionOnStartup: boolean;
   /** Suggest an H1 or first content line as a draft's Save As filename. */
   autoSuggestFilename: boolean;
+  /** Settings › General › Save Automatically (#133): write a document that
+   *  has a file back to it once typing rests (document/autosave.ts). Off by
+   *  default. */
+  autosave: boolean;
   copyTextMode: CopyTextMode;
   /** File > Export as PDF numbers each page in its bottom margin
    *  (commands/pdf_page_numbers.rs). Off by default (#68). */
@@ -292,6 +308,7 @@ const DEFAULT_SETTINGS: Settings = {
   newDocumentMode: "window",
   restoreSessionOnStartup: true,
   autoSuggestFilename: true,
+  autosave: false,
   copyTextMode: "readable",
   pdfPageNumbers: false,
   updateChannel: "stable",

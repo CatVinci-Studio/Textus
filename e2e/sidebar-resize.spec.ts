@@ -56,7 +56,8 @@ test("dragging the sidebar's edge resizes it, and the width is remembered", asyn
 
   await page.reload();
   await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
-  await openSidebar(page);
+  // Left open, it comes back open (#152).
+  await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar-collapsed/);
   expect(await sidebarWidth(page)).toBe(320);
   expect(await mainPaneLeft(page)).toBe(320);
 });
@@ -107,4 +108,28 @@ test("a remembered width too wide for a small window is narrowed to fit", async 
   expect(await sidebarWidth(page)).toBe(360);
   await page.setViewportSize({ width: 1300, height: 700 });
   await expect.poll(() => sidebarWidth(page)).toBe(460);
+});
+
+test("the sidebar comes back open or closed, the way it was left", async ({
+  page,
+}) => {
+  const collapsed = /sidebar-collapsed/;
+  const reload = async () => {
+    await page.reload();
+    await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
+  };
+  await openApp(page);
+  await expect(page.locator(".sidebar")).toHaveClass(collapsed);
+  await openSidebar(page);
+  await reload();
+  await expect(page.locator(".sidebar")).not.toHaveClass(collapsed);
+
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (name: string) => void }
+    ).__devEmitTauriEvent("menu-toggle-sidebar"),
+  );
+  await expect(page.locator(".sidebar")).toHaveClass(collapsed);
+  await reload();
+  await expect(page.locator(".sidebar")).toHaveClass(collapsed);
 });

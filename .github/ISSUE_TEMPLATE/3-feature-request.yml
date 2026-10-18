@@ -1,0 +1,36 @@
+name: Feature request
+description: An idea or an improvement (in English).
+labels: ["enhancement", "lang: en"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search [existing issues](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aissue) first; a 👍 on a matching one helps us see what matters. The [roadmap](https://github.com/CatVinci-Studio/Textus/blob/main/ROADMAP.md) shows what's already planned.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you're trying to do
+      description: The situation and what gets in the way today.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you'd like
+      description: How you picture it working.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or other apps
+      description: Workarounds you use now, or how another editor handles it.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: Screenshots, mockups, examples.

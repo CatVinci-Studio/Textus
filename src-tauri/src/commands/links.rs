@@ -1,6 +1,7 @@
 //! Pages of ours the app opens in the system browser. Each URL is fixed
 //! here rather than passed in, so the frontend can't send the browser
-//! anywhere else.
+//! anywhere else - except a link the reader follows in a document, which
+//! is held to the web and mail schemes (`web_link`).
 
 const SITE: &str = "https://textus.catvinci.com";
 
@@ -94,6 +95,8 @@ fn about_url(page: &str) -> Option<&'static str> {
         "github" => Some("https://github.com/CatVinci-Studio/Textus"),
         "discord" => Some("https://textus.catvinci.com/discord"),
         "qq" => Some("https://textus.catvinci.com/qq"),
+        // Settings › Browse themes, when the gallery can't be reached.
+        "themes" => Some("https://textus.catvinci.com/themes/"),
         _ => None,
     }
 }
@@ -102,6 +105,26 @@ fn about_url(page: &str) -> Option<&'static str> {
 pub async fn open_about_link(app: tauri::AppHandle, page: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
     let url = about_url(&page).ok_or_else(|| format!("no page {page}"))?;
+    app.opener()
+        .open_url(url, None::<&str>)
+        .map_err(|e| e.to_string())
+}
+
+/// `url` if it is a web or mail link, as the system should be handed it.
+/// The document's author chose it, so anything else - file:, javascript:, a
+/// scheme some installed app registered - is refused rather than passed to
+/// the OS, which would launch whatever handles it.
+fn web_link(url: &str) -> Option<String> {
+    let url = tauri::Url::parse(url).ok()?;
+    matches!(url.scheme(), "http" | "https" | "mailto").then(|| url.to_string())
+}
+
+/// A link Ctrl/Cmd+clicked in a document (src/editor/markdown/
+/// link-click-plugin.ts).
+#[tauri::command]
+pub async fn open_web_link(app: tauri::AppHandle, url: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    let url = web_link(&url).ok_or_else(|| "not a web link".to_string())?;
     app.opener()
         .open_url(url, None::<&str>)
         .map_err(|e| e.to_string())
@@ -192,7 +215,28 @@ mod tests {
     fn about_opens_only_its_own_pages() {
         assert!(super::about_url("github").is_some());
         assert!(super::about_url("qq").is_some());
+        assert!(super::about_url("themes").is_some());
         assert!(super::about_url("https://example.com").is_none());
+    }
+
+    #[test]
+    fn a_document_link_opens_only_on_the_web_or_in_mail() {
+        assert_eq!(
+            super::web_link("https://example.com/a b").as_deref(),
+            Some("https://example.com/a%20b")
+        );
+        assert!(super::web_link("HTTP://example.com").is_some());
+        assert!(super::web_link("mailto:me@example.com").is_some());
+        for refused in [
+            "file:///C:/Windows/System32/calc.exe",
+            "javascript:alert(1)",
+            "ms-settings:privacy",
+            "smb://server/share",
+            "./notes/ch1.md",
+            "",
+        ] {
+            assert!(super::web_link(refused).is_none(), "{refused}");
+        }
     }
 
     #[test]

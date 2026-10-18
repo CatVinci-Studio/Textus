@@ -7,6 +7,7 @@ import {
   formatCombo,
   isReservedCombo,
 } from "../../utils/shortcuts";
+import { ChevronIcon } from "../../ui/icons";
 
 // Generic row controls shared by the settings categories.
 
@@ -50,6 +51,29 @@ export function SettingRow({
       </div>
       {children && <div className="settings-row-control">{children}</div>}
     </div>
+  );
+}
+
+/** A row that opens something - a guide as a document, a page of Settings:
+ *  the whole row is the button. */
+export function LinkRow({
+  label,
+  onOpen,
+  className,
+}: {
+  label: string;
+  onOpen: () => void;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      className={`settings-row settings-link-row${className ? ` ${className}` : ""}`}
+      onClick={onOpen}
+    >
+      <span className="settings-row-label">{label}</span>
+      <ChevronIcon className="settings-link-chevron" />
+    </button>
   );
 }
 

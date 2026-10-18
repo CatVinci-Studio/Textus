@@ -17,6 +17,7 @@ import type {
 import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
 import type { SkillCategory } from "../ai/skills/builtin";
 import type { Lang } from "../i18n/langs";
+import type { GalleryTheme } from "../theme/theme-gallery";
 import { isDesktopApp, isIOSApp } from "./capabilities";
 import { iosFiles, isScopedUrl, newDocumentPath } from "./ios-files";
 
@@ -153,6 +154,10 @@ export const fs = {
       endpoint,
       urlField,
     }),
+  /** The file an Obsidian image embed names, searched in the document's
+   *  vault (commands/vault.rs); null when there is none. */
+  resolveVaultImage: (docPath: string, link: string) =>
+    call<string | null>("resolve_vault_image", { docPath, link }),
   migrateDraftImages: (docPath: string, srcs: string[]) =>
     call<ImageMigration[]>("migrate_draft_images", { docPath, srcs }),
   writeTextFile: (path: string, contents: string): Promise<void> =>
@@ -351,7 +356,8 @@ export const menuIpc = {
 // ---------------------------------------------------------------------------
 
 /** Our own pages, opened in the system browser. Each URL is fixed in Rust
- *  (commands/links.rs), not passed from here. */
+ *  (commands/links.rs), not passed from here - except a link followed in a
+ *  document, which Rust opens only if it is http(s) or mailto. */
 export const links = {
   /** The website's community page, in the UI's language. */
   openCommunityPage: (language: Lang) =>
@@ -361,9 +367,13 @@ export const links = {
    *  one, from the top. */
   openTutorialsPage: (language: Lang, clip?: string) =>
     call<void>("open_tutorials_page", { language, clip: clip ?? null }),
-  /** Settings › General › About Textus's links, by name. */
-  openAboutLink: (page: "github" | "discord" | "qq") =>
+  /** Settings › General › About Textus's links, and the theme gallery's
+   *  website (Browse themes, when it can't be reached), by name. */
+  openAboutLink: (page: "github" | "discord" | "qq" | "themes") =>
     call<void>("open_about_link", { page }),
+  /** A web or mail link Ctrl/Cmd+clicked in a document
+   *  (editor/markdown/link-click-plugin.ts). */
+  openWebLink: (url: string) => call<void>("open_web_link", { url }),
 };
 
 export const exportDoc = {
@@ -406,6 +416,15 @@ export const themes = {
   loadThemeCss: (id: string, variant: "light" | "dark") =>
     call<string | null>("load_theme_css", { id, variant }),
   deleteTheme: (id: string) => call<void>("delete_theme", { id }),
+};
+
+/** The public theme gallery (src-tauri/src/commands/theme_gallery.rs). A
+ *  file is named by its path in the gallery repository, never by URL. */
+export const themeGallery = {
+  catalog: () => call<GalleryTheme[]>("theme_gallery_catalog"),
+  css: (path: string) => call<string>("theme_gallery_css", { path }),
+  /** A screenshot, as a `data:` URL. */
+  preview: (path: string) => call<string>("theme_gallery_preview", { path }),
 };
 
 // ---------------------------------------------------------------------------

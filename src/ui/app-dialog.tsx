@@ -26,6 +26,10 @@ interface Request extends AppDialogOptions {
    *  alert draws its button in red (mobile/styles/chrome.css); elsewhere
    *  it is the usual primary button. */
   danger?: boolean;
+  /** Confirm only: start on the way out instead of the action, for a
+   *  question the user didn't ask for (an autosave conflict) - an Enter
+   *  typed on the way back must not do something that can't be undone. */
+  focusCancel?: boolean;
   confirm: boolean;
   /** Prompt only: the text field's starting value. */
   input?: string;
@@ -63,6 +67,7 @@ export function showConfirm(
     okLabel: string;
     cancelLabel: string;
     danger?: boolean;
+    focusCancel?: boolean;
   },
 ): Promise<boolean> {
   return enqueue({ ...options, text, confirm: true });
@@ -117,7 +122,11 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
   const dialog = useModalDialog(
     () => current && answer(current, false),
     !!current,
-    shown?.input !== undefined ? ".app-dialog-input" : ".close-prompt-primary",
+    shown?.input !== undefined
+      ? ".app-dialog-input"
+      : shown?.focusCancel
+        ? ".app-dialog-cancel"
+        : ".close-prompt-primary",
   );
   const ok = () => current && answer(current, true, inputRef.current?.value);
   if (!presence.mounted || !shown) return null;
@@ -158,7 +167,10 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
         <div className="close-prompt-buttons">
           <div className="close-prompt-spacer" />
           {shown.confirm && (
-            <button onClick={() => current && answer(current, false)}>
+            <button
+              className="app-dialog-cancel"
+              onClick={() => current && answer(current, false)}
+            >
               {shown.cancelLabel}
             </button>
           )}

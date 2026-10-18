@@ -18,13 +18,16 @@ export type PendingClose =
   | { kind: "replace"; tabId: string; path: string };
 
 /** Taking tabs away: outright (removeTab) or behind the prompt when the
- *  tab has unsaved changes (requestCloseTab). */
+ *  tab has unsaved changes (requestCloseTab) - which, with Save
+ *  Automatically on, are written first, so only what that couldn't save
+ *  (a new document, a conflict, a failed write) still asks. */
 export function useTabRemoval(opts: {
   tabState: TabState;
   cancelDraftFlushes: () => void;
+  flushAutosave: (ids?: string[]) => Promise<void>;
   setPendingClose: (close: PendingClose) => void;
 }) {
-  const { tabState, cancelDraftFlushes, setPendingClose } = opts;
+  const { tabState, cancelDraftFlushes, flushAutosave, setPendingClose } = opts;
   const { tabsRef, setTabs, setActiveTabId, liveTabs } = tabState;
 
   // Removes a tab outright (no prompt - callers that need one show it
@@ -63,7 +66,8 @@ export function useTabRemoval(opts: {
   );
 
   const requestCloseTab = useCallback(
-    (id: string) => {
+    async (id: string) => {
+      await flushAutosave([id]);
       const tab = liveTabs().find((tb) => tb.id === id);
       if (!tab || !tabIsDirty(tab)) {
         removeTab(id);
@@ -71,7 +75,7 @@ export function useTabRemoval(opts: {
       }
       setPendingClose({ kind: "tab", tabId: id });
     },
-    [removeTab, liveTabs, setPendingClose],
+    [flushAutosave, removeTab, liveTabs, setPendingClose],
   );
 
   return { removeTab, requestCloseTab };
@@ -93,10 +97,14 @@ export function useTabRemoval(opts: {
  */
 export function useWindowCloseGuard(
   liveTabs: () => DocTab[],
+  flushAutosave: () => Promise<void>,
   setPendingClose: (close: PendingClose) => void,
 ): void {
   useEffect(() => {
     const unlisten = getCurrentWindow().onCloseRequested(async (event) => {
+      // Save Automatically writes what it can first; the prompt is for the
+      // rest.
+      await flushAutosave();
       if (liveTabs().some(tabIsDirty)) {
         event.preventDefault();
         setPendingClose({ kind: "window" });
@@ -105,7 +113,7 @@ export function useWindowCloseGuard(
       await flushPendingWrites();
     });
     return unlistenAll(unlisten);
-  }, [liveTabs, setPendingClose]);
+  }, [liveTabs, flushAutosave, setPendingClose]);
 }
 
 /** The prompt's three answers - Save, Don't Save, Cancel - carried out for
