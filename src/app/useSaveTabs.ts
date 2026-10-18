@@ -1,9 +1,15 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import { migrateDraftImages } from "../editor/images/image-migration";
 import { basename } from "../utils/path";
 import { errorText } from "../utils/error-text";
-import { statMtime, tabTitle, writeDocFile } from "../document/doc-tabs";
+import {
+  statMtime,
+  tabIsDirty,
+  tabTitle,
+  writeDocFile,
+} from "../document/doc-tabs";
+import type { SaveOutcome } from "../document/autosave";
 import { fs, session } from "../platform/ipc";
 import { defaultMarkdownFilename } from "../document/save-default-name";
 import type { Strings } from "../i18n/strings";
@@ -17,7 +23,7 @@ export function useSaveTabs(opts: {
   autoSuggestFilename: boolean;
 }) {
   const { tabState, t, autoSuggestFilename } = opts;
-  const { liveTabs, updateTab } = tabState;
+  const { liveTabs, updateTab, tabsRef } = tabState;
 
   // Writes a document, or says why it couldn't and resolves false - the tab
   // stays dirty, so nothing is lost. A failed save used to be silent: the
@@ -102,13 +108,28 @@ export function useSaveTabs(opts: {
     [updateTab, liveTabs, t, autoSuggestFilename, writeOrReport],
   );
 
-  const saveTab = useCallback(
-    async (tabId: string): Promise<boolean> => {
+  // A save that reached disk: the tab turns clean and takes the file's new
+  // mtime. tabsRef is patched as well as the state, so a save of the same
+  // tab right behind this one (an autosave, a close) compares the disk
+  // against this write's mtime - the state only reaches tabsRef on the next
+  // render, and the old mtime would make our own write look external.
+  const commitSaved = useCallback(
+    async (tabId: string, path: string, content: string) => {
+      const patch = { savedContent: content, diskMtime: await statMtime(path) };
+      tabsRef.current = tabsRef.current.map((tb) =>
+        tb.id === tabId && tb.path === path ? { ...tb, ...patch } : tb,
+      );
+      updateTab(tabId, patch);
+    },
+    [tabsRef, updateTab],
+  );
+
+  // Writes a document that already has a file. "conflict": the file changed
+  // on disk and the user chose to keep that version.
+  const saveToPath = useCallback(
+    async (tabId: string): Promise<SaveOutcome> => {
       const tab = liveTabs().find((tb) => tb.id === tabId);
-      if (!tab) return false;
-      // Draft never saved before: ask where to put it, then this document
-      // graduates into a real file (the sidebar tree picks up its folder).
-      if (!tab.path) return saveTabAs(tabId);
+      if (!tab?.path) return "skipped";
       // The file changed on disk since it was read (another app, git, a sync
       // service): saving now would silently destroy those changes, so ask.
       // A null current mtime means the file was deleted - writing simply
@@ -121,18 +142,61 @@ export function useSaveTabs(opts: {
             okLabel: t.fileChangedOnDiskOverwrite,
             cancelLabel: t.closePromptCancel,
           });
-          if (!overwrite) return false;
+          if (!overwrite) return "conflict";
         }
       }
-      if (!(await writeOrReport(tab.path, tab.content))) return false;
-      updateTab(tabId, {
-        savedContent: tab.content,
-        diskMtime: await statMtime(tab.path),
-      });
-      return true;
+      if (!(await writeOrReport(tab.path, tab.content))) return "failed";
+      await commitSaved(tabId, tab.path, tab.content);
+      return "saved";
     },
-    [updateTab, liveTabs, saveTabAs, t, writeOrReport],
+    [liveTabs, t, writeOrReport, commitSaved],
   );
 
-  return { saveTab, saveTabAs };
+  // One save at a time per tab. A manual save racing an autosave would
+  // compare the disk against the mtime from before the other's write and
+  // take this app's own write for a change made outside it.
+  const queues = useRef(new Map<string, Promise<unknown>>());
+  const serialized = useCallback(
+    <T>(tabId: string, run: () => Promise<T>): Promise<T> => {
+      const next = (queues.current.get(tabId) ?? Promise.resolve()).then(
+        run,
+        run,
+      );
+      const settled = next.catch(() => undefined);
+      queues.current.set(tabId, settled);
+      void settled.then(() => {
+        if (queues.current.get(tabId) === settled) queues.current.delete(tabId);
+      });
+      return next;
+    },
+    [],
+  );
+
+  const saveTab = useCallback(
+    async (tabId: string): Promise<boolean> => {
+      const tab = liveTabs().find((tb) => tb.id === tabId);
+      if (!tab) return false;
+      // Draft never saved before: ask where to put it, then this document
+      // graduates into a real file (the sidebar tree picks up its folder).
+      if (!tab.path) return saveTabAs(tabId);
+      return (await serialized(tabId, () => saveToPath(tabId))) === "saved";
+    },
+    [liveTabs, saveTabAs, saveToPath, serialized],
+  );
+
+  /** Settings › General › Save Automatically: File > Save for a document
+   *  that already has a file and has changed - never a Save As. A conflict
+   *  or a failure shows the same prompt or error a manual save does;
+   *  document/autosave.ts sees that it is shown once. */
+  const autosaveTab = useCallback(
+    (tabId: string): Promise<SaveOutcome> =>
+      serialized(tabId, async () => {
+        const tab = liveTabs().find((tb) => tb.id === tabId);
+        if (!tab?.path || !tabIsDirty(tab)) return "skipped";
+        return saveToPath(tabId);
+      }),
+    [liveTabs, saveToPath, serialized],
+  );
+
+  return { saveTab, saveTabAs, autosaveTab };
 }
