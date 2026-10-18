@@ -25,7 +25,7 @@ GitHub 風格的提示區塊：
 
 **粗體**（`**文字**`）、*斜體*（`*文字*`）、***粗斜體***、~~刪除線~~（`~~文字~~`）、==醒目提示==（`==文字==`），以及 `行內程式碼`。
 
-連結的寫法：[Textus 的原始碼存放庫](https://github.com/CatVinci-Studio/Textus)。行內 HTML 也會呈現，例如鍵盤按鍵 <kbd>Cmd</kbd> + <kbd>S</kbd>。
+連結的寫法：[Textus 的原始碼存放庫](https://github.com/CatVinci-Studio/Textus)。行內 HTML 也會呈現，例如鍵盤按鍵 <kbd>Cmd</kbd> + <kbd>S</kbd>。`<details>` 摺疊區塊、HTML 表格、少量行內樣式（顏色、背景色、字級、粗細、對齊、底線和刪除線）和行內 `<svg>`（顯示為圖片）也會呈現；指令碼等其他 HTML 保持原始碼顯示。
 
 行內數學公式：質能等價 $E = mc^2$，歐拉恆等式 $e^{i\pi} + 1 = 0$。
 

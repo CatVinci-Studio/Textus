@@ -25,7 +25,7 @@ Alertas al estilo de GitHub:
 
 **Negrita** (`**texto**`), *cursiva* (`*texto*`), ***negrita y cursiva***, ~~tachado~~ (`~~texto~~`), ==resaltado== (`==texto==`) y `código en línea`.
 
-Los enlaces se ven así: [el repositorio de Textus](https://github.com/CatVinci-Studio/Textus). También se representa el HTML en línea, como las teclas <kbd>Cmd</kbd> + <kbd>S</kbd>.
+Los enlaces se ven así: [el repositorio de Textus](https://github.com/CatVinci-Studio/Textus). También se representa el HTML en línea, como las teclas <kbd>Cmd</kbd> + <kbd>S</kbd>. También se representan los bloques plegables `<details>`, las tablas HTML, algunos estilos en línea (color, fondo, tamaño, grosor, alineación, subrayado y tachado) y el `<svg>` en línea, que se muestra como imagen. Los scripts y el resto del HTML se quedan como código.
 
 Fórmulas en línea: la equivalencia entre masa y energía $E = mc^2$, la identidad de Euler $e^{i\pi} + 1 = 0$.
 
