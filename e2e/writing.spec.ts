@@ -272,6 +272,55 @@ test("a narrow window numbers the notes as the chat lists them", async ({
   );
 });
 
+test("a note opened from its badge stays under the Settings backdrop", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 900, height: 780 });
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(page, "First paragraph here.");
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "Review" },
+      {
+        kind: "ToolCall",
+        call_id: "c1",
+        name: "add_comment",
+        arguments: JSON.stringify({
+          anchor: "First paragraph",
+          comment: "About the first.",
+        }),
+      },
+      { kind: "ToolResult", call_id: "c1", output: "Comment added" },
+      { kind: "Assistant", text: "One note." },
+    ],
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Review");
+  await composer.press("Enter");
+  await page.locator(".milkdown .review-badge").click();
+  const popover = page.locator(".review-note-popover");
+  await expect(popover).toBeVisible();
+  // Settings opened from the menu leaves the note open behind it.
+  await page.evaluate(() =>
+    (
+      window as unknown as {
+        __devEmitTauriEvent: (name: string) => void;
+      }
+    ).__devEmitTauriEvent("menu-open-settings"),
+  );
+  await expect(page.locator(".settings-backdrop")).toBeVisible();
+  const box = (await popover.boundingBox())!;
+  const covered = await page.evaluate(
+    ({ x, y }) =>
+      !!document.elementFromPoint(x, y)?.closest(".settings-backdrop"),
+    { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+  );
+  expect(covered).toBe(true);
+});
+
 test("an undone edit's card still counts what it removes", async ({ page }) => {
   await openApp(page, {
     settings: { language: "en" },
