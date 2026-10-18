@@ -109,23 +109,33 @@ export function configProblems(readFile) {
   return problems;
 }
 
+/** The updater's name (tauri-plugin-updater's `{arch}`: x86_64 or
+ *  aarch64) for the architecture in an artifact's name, which
+ *  tauri-bundler spells per format: `_x64`/`_aarch64` on the macOS
+ *  .app.tar.gz, `_x64`/`_arm64` on the -setup.exe, `_amd64`/`_arm64` on
+ *  the .deb, `.x86_64`/`.aarch64` on the .rpm, `_amd64`/`_aarch64` on the
+ *  AppImage. */
+function artifactArch(name) {
+  if (/[_.](x64|amd64|x86_64)[-_.]/.test(name)) return "x86_64";
+  if (/[_.](arm64|aarch64)[-_.]/.test(name)) return "aarch64";
+  return null;
+}
+
 /** The updater platform keys an artifact serves, by its asset name. The
  *  plain `<os>-<arch>` key is the default installer for that platform;
  *  `<os>-<arch>-<installer>` lets an install that came from a .deb or .rpm
  *  stay on that format (tauri-plugin-updater tries the longer key first). */
 export function platformKeys(name) {
-  if (/\.app\.tar\.gz$/.test(name)) {
-    if (/aarch64|arm64/.test(name))
-      return ["darwin-aarch64", "darwin-aarch64-app"];
-    if (/x64|x86_64/.test(name)) return ["darwin-x86_64", "darwin-x86_64-app"];
-    return [];
-  }
+  const arch = artifactArch(name);
+  if (arch === null) return [];
+  if (/\.app\.tar\.gz$/.test(name))
+    return [`darwin-${arch}`, `darwin-${arch}-app`];
   if (/\.AppImage$/.test(name))
-    return ["linux-x86_64", "linux-x86_64-appimage"];
-  if (/\.deb$/.test(name)) return ["linux-x86_64-deb"];
-  if (/\.rpm$/.test(name)) return ["linux-x86_64-rpm"];
+    return [`linux-${arch}`, `linux-${arch}-appimage`];
+  if (/\.deb$/.test(name)) return [`linux-${arch}-deb`];
+  if (/\.rpm$/.test(name)) return [`linux-${arch}-rpm`];
   if (/-setup\.exe$/.test(name))
-    return ["windows-x86_64", "windows-x86_64-nsis"];
+    return [`windows-${arch}`, `windows-${arch}-nsis`];
   return [];
 }
 
@@ -145,11 +155,16 @@ export function buildManifest({ version, notes, pubDate, baseUrl, artifacts }) {
   return { version, notes, pub_date: pubDate, platforms };
 }
 
-/** Platforms every release must serve. */
+/** Platforms every release must serve. ARM64 Windows and Linux since
+ *  1.1.0-rc.5; a rebuild of an older tag builds them too, since the build
+ *  matrix comes from the workflow's ref. A manifest published before then
+ *  lacks them, so `beta` refuses it. */
 export const REQUIRED_PLATFORMS = [
   "darwin-aarch64",
   "darwin-x86_64",
+  "linux-aarch64",
   "linux-x86_64",
+  "windows-aarch64",
   "windows-x86_64",
 ];
 

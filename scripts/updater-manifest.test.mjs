@@ -113,32 +113,93 @@ describe("updater manifest", () => {
     expect(levisBridgeProblems(lastLevis)).toEqual([]);
   });
 
+  // A stable release's signed assets, named as tauri-bundler names them:
+  // x64 as on the 1.0.4 release, ARM64 with its arm64/aarch64 spellings.
+  const base =
+    "https://github.com/CatVinci-Studio/Textus/releases/download/v1.1.0";
+  const stable = buildManifest({
+    version: "1.1.0",
+    notes: "notes",
+    pubDate: "2026-10-14T00:00:00.000Z",
+    baseUrl: `${base}/`,
+    artifacts: [
+      { name: "Textus_aarch64.app.tar.gz", signature: "mac\n" },
+      { name: "Textus_x64.app.tar.gz", signature: "intel" },
+      { name: "Textus_1.1.0_amd64.AppImage", signature: "appimage" },
+      { name: "Textus_1.1.0_amd64.deb", signature: "deb" },
+      { name: "Textus-1.1.0-1.x86_64.rpm", signature: "rpm" },
+      { name: "Textus_1.1.0_x64-setup.exe", signature: "nsis" },
+      { name: "Textus_1.1.0_aarch64.AppImage", signature: "arm appimage" },
+      { name: "Textus_1.1.0_arm64.deb", signature: "arm deb" },
+      { name: "Textus-1.1.0-1.aarch64.rpm", signature: "arm rpm" },
+      { name: "Textus_1.1.0_arm64-setup.exe", signature: "arm nsis" },
+      { name: "Textus_1.1.0_linux_x86_64.tar.gz", signature: "ignored" },
+    ],
+  });
+  const signed = (key) => stable.platforms[key]?.signature;
+
   it("builds every platform's entry from the signed artifacts", () => {
-    const manifest = buildManifest({
-      version: "1.0.0",
-      notes: "notes",
-      pubDate: "2026-10-14T00:00:00.000Z",
-      baseUrl:
-        "https://github.com/CatVinci-Studio/Textus/releases/download/v1.0.0/",
-      artifacts: [
-        { name: "Textus_aarch64.app.tar.gz", signature: "mac\n" },
-        { name: "Textus_x64.app.tar.gz", signature: "intel" },
-        { name: "Textus_1.0.0_amd64.AppImage", signature: "appimage" },
-        { name: "Textus_1.0.0_amd64.deb", signature: "deb" },
-        { name: "Textus_1.0.0_x64-setup.exe", signature: "nsis" },
-        { name: "textus-1.0.0-x86_64.tar.gz", signature: "ignored" },
-      ],
-    });
-    expect(manifest.platforms["darwin-aarch64"]).toEqual({
+    expect(stable.platforms["darwin-aarch64"]).toEqual({
       signature: "mac",
-      url: "https://github.com/CatVinci-Studio/Textus/releases/download/v1.0.0/Textus_aarch64.app.tar.gz",
+      url: `${base}/Textus_aarch64.app.tar.gz`,
     });
-    expect(manifest.platforms["darwin-x86_64"].signature).toBe("intel");
-    expect(manifest.platforms["linux-x86_64"].signature).toBe("appimage");
-    expect(manifest.platforms["linux-x86_64-deb"].signature).toBe("deb");
-    expect(manifest.platforms["windows-x86_64-nsis"].signature).toBe("nsis");
-    expect(Object.keys(manifest.platforms)).toHaveLength(9);
-    expect(manifestProblems(manifest, "1.0.0")).toEqual([]);
+    expect(Object.keys(stable.platforms).sort()).toEqual([
+      "darwin-aarch64",
+      "darwin-aarch64-app",
+      "darwin-x86_64",
+      "darwin-x86_64-app",
+      "linux-aarch64",
+      "linux-aarch64-appimage",
+      "linux-aarch64-deb",
+      "linux-aarch64-rpm",
+      "linux-x86_64",
+      "linux-x86_64-appimage",
+      "linux-x86_64-deb",
+      "linux-x86_64-rpm",
+      "windows-aarch64",
+      "windows-aarch64-nsis",
+      "windows-x86_64",
+      "windows-x86_64-nsis",
+    ]);
+    expect(manifestProblems(stable, "1.1.0")).toEqual([]);
+  });
+
+  it("keeps every x64 key on the x64 installers", () => {
+    expect(signed("darwin-x86_64")).toBe("intel");
+    expect(signed("darwin-x86_64-app")).toBe("intel");
+    expect(signed("linux-x86_64")).toBe("appimage");
+    expect(signed("linux-x86_64-appimage")).toBe("appimage");
+    expect(signed("linux-x86_64-deb")).toBe("deb");
+    expect(signed("linux-x86_64-rpm")).toBe("rpm");
+    expect(signed("windows-x86_64")).toBe("nsis");
+    expect(signed("windows-x86_64-nsis")).toBe("nsis");
+  });
+
+  it("serves ARM64 Windows and Linux their own installers", () => {
+    expect(signed("linux-aarch64")).toBe("arm appimage");
+    expect(signed("linux-aarch64-appimage")).toBe("arm appimage");
+    expect(signed("linux-aarch64-deb")).toBe("arm deb");
+    expect(signed("linux-aarch64-rpm")).toBe("arm rpm");
+    expect(signed("windows-aarch64")).toBe("arm nsis");
+    expect(stable.platforms["windows-aarch64-nsis"]).toEqual({
+      signature: "arm nsis",
+      url: `${base}/Textus_1.1.0_arm64-setup.exe`,
+    });
+  });
+
+  it("refuses two artifacts for one platform", () => {
+    expect(() =>
+      buildManifest({
+        version: "1.1.0",
+        notes: "",
+        pubDate: "",
+        baseUrl: base,
+        artifacts: [
+          { name: "Textus_1.1.0_arm64-setup.exe", signature: "a" },
+          { name: "Textus_1.1.0_aarch64-setup.exe", signature: "b" },
+        ],
+      }),
+    ).toThrow(/two artifacts serve windows-aarch64/);
   });
 
   it("reports a missing platform or a version that is not the tag's", () => {
@@ -153,7 +214,9 @@ describe("updater manifest", () => {
       "manifest says 1.0.0, expected 1.0.1",
       "no signed darwin-aarch64 entry",
       "no signed darwin-x86_64 entry",
+      "no signed linux-aarch64 entry",
       "no signed linux-x86_64 entry",
+      "no signed windows-aarch64 entry",
     ]);
   });
 });
@@ -173,6 +236,9 @@ describe("beta manifest", () => {
       { name: "Textus_1.0.5-rc.1_amd64.AppImage", signature: "appimage" },
       { name: "Textus_1.0.5-rc.1_amd64.deb", signature: "deb" },
       { name: "Textus_1.0.5-rc.1_x64-setup.exe", signature: "nsis" },
+      { name: "Textus_1.0.5-rc.1_aarch64.AppImage", signature: "arm" },
+      { name: "Textus_1.0.5-rc.1_arm64.deb", signature: "arm deb" },
+      { name: "Textus_1.0.5-rc.1_arm64-setup.exe", signature: "arm nsis" },
     ],
   });
   const manifest = (version) => ({ version, platforms: {} });
@@ -180,6 +246,10 @@ describe("beta manifest", () => {
   it("builds a complete manifest for a release candidate without an .rpm", () => {
     expect(manifestProblems(rc, "1.0.5-rc.1")).toEqual([]);
     expect(rc.platforms["linux-x86_64-rpm"]).toBeUndefined();
+    expect(rc.platforms["linux-aarch64-rpm"]).toBeUndefined();
+    expect(rc.platforms["linux-aarch64-deb"].url).toBe(
+      `${rcBase}/Textus_1.0.5-rc.1_arm64.deb`,
+    );
     expect(rc.platforms["windows-x86_64"].url).toBe(
       `${rcBase}/Textus_1.0.5-rc.1_x64-setup.exe`,
     );
