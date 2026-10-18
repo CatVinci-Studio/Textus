@@ -15,7 +15,7 @@ const native = vi.hoisted(() => ({
 }));
 vi.mock("../platform/ipc", () => ({
   dictation: native,
-  media: { cancel: vi.fn() },
+  media: { cancel: vi.fn(), providers: vi.fn(async () => ({})) },
 }));
 import { InlineDictation } from "./InlineDictation";
 afterEach(() => {

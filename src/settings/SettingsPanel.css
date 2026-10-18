@@ -1089,3 +1089,108 @@ button.settings-skill-action:focus-visible {
   gap: 8px;
   margin-top: 10px;
 }
+
+/* Media stays within Settings' quiet row and disclosure vocabulary. */
+.media-capability-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.media-capability-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--editor-muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.media-capability-tab:hover {
+  background: var(--sidebar-hover);
+}
+
+.media-capability-tab.is-selected {
+  background: var(--sidebar-active);
+  border-color: color-mix(
+    in srgb,
+    var(--editor-accent) 40%,
+    var(--border-color)
+  );
+  color: var(--editor-text);
+}
+
+.media-capability-tab:focus-visible {
+  outline: 2px solid var(--editor-accent);
+  outline-offset: 2px;
+}
+
+.media-capability-title {
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+
+.media-capability-hint,
+.media-capability-status,
+.media-settings-note,
+.media-settings-state {
+  color: var(--editor-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.media-capability-status {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.media-settings .settings-row-control {
+  flex: 0 1 270px;
+  min-width: 0;
+}
+
+.media-settings .settings-text-input,
+.media-settings .settings-select {
+  width: 100%;
+}
+
+.media-settings-advanced {
+  padding-bottom: 0;
+}
+
+.media-settings-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 8px;
+}
+
+.media-settings-state {
+  margin-left: auto;
+}
+
+.media-settings-note {
+  margin: 10px 0;
+}
+
+@media (max-width: 520px) {
+  .media-capability-tab {
+    padding: 9px 8px;
+  }
+
+  .media-capability-hint {
+    display: none;
+  }
+
+  .media-settings .settings-row-control {
+    flex-grow: 1;
+  }
+}

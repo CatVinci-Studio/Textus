@@ -80,9 +80,10 @@ test("dictation is editable and enters the composer without sending a model requ
   });
   await page.getByRole("button", { name: "Agent", exact: true }).click();
   const workspace = page.getByRole("region", { name: "Agent Workspace" });
-  await workspace
-    .getByRole("button", { name: "Switch dictation service" })
-    .click();
+  await page.evaluate(() =>
+    window.dispatchEvent(new Event("textus-media-settings-change")),
+  );
+  await page.waitForTimeout(50);
   await workspace
     .getByRole("button", { name: "Voice input", exact: true })
     .click();
@@ -124,87 +125,6 @@ test("Write keeps only the document and navigation, without media forms or launc
   ).not.toBeVisible();
 });
 
-test("image generation produces a local asset proposal and requires explicit insertion", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await pasteMarkdown(page, "## Section\n\nOriginal paragraph.");
-  await mockInvoke(page, {
-    media_provider_status: { image: { ...provider, model: "image-model" } },
-  });
-  await page.route("**/__dev-assets/**", (route) =>
-    route.fulfill({
-      contentType: "image/svg+xml",
-      body: '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="100"><rect width="160" height="100" fill="#ddd"/><text x="10" y="50">Test illustration</text></svg>',
-    }),
-  );
-  await page.evaluate(() => {
-    const runtime = (
-      window as unknown as {
-        __TAURI_INTERNALS__: {
-          invoke: (command: string, args?: unknown) => Promise<unknown>;
-        };
-      }
-    ).__TAURI_INTERNALS__;
-    const original = runtime.invoke;
-    let job: Record<string, unknown> | null = null;
-    runtime.invoke = async (command, args) => {
-      if (command === "media_image_jobs") return job ? [job] : [];
-      if (command === "media_start_image") {
-        const { permission, request } = args as {
-          permission: Record<string, unknown>;
-          request: unknown;
-        };
-        job = {
-          jobId: "image-test",
-          ...permission,
-          sequence: 1,
-          request,
-          status: "ready",
-          previewPath: "/tmp/test.png",
-          model: "image-model",
-          error: null,
-          width: 160,
-          height: 100,
-          assetSrc: null,
-        };
-        return job;
-      }
-      if (command === "media_prepare_image") return "assets/generated-test.png";
-      if (command === "media_finish_image") {
-        if (job) {
-          job.status = "committed";
-          job.assetSrc = "assets/generated-test.png";
-        }
-        return null;
-      }
-      return original(command, args);
-    };
-  });
-  await page
-    .getByRole("navigation", { name: "Workspace surface" })
-    .getByRole("button", { name: "Agent", exact: true })
-    .click();
-  await page.locator(".workspace-extra-tools > summary").click();
-  const generator = page.locator(".agent-home .image-generator");
-  await generator.locator("summary").click();
-  await generator.getByLabel("Image prompt").fill("A system diagram");
-  await generator
-    .getByLabel("Insert after", { exact: false })
-    .fill("## Section");
-  await generator.getByLabel("Alternative text").fill("System diagram");
-  await generator
-    .getByRole("button", { name: "Generate image", exact: true })
-    .click();
-  const card = page.locator(".image-job:visible");
-  await expect(card).toContainText("System diagram");
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await expect(editor.locator('img[src*="generated-test.png"]')).toHaveCount(0);
-  await card.getByRole("button", { name: "Insert image", exact: true }).click();
-  await expect(editor.locator('img[src*="generated-test.png"]')).toHaveCount(1);
-  await expect(editor).toContainText("Original paragraph.");
-});
-
 test("right-click selection refines the image prompt with the selected engine and inserts below the passage", async ({
   page,
 }) => {
@@ -216,6 +136,9 @@ test("right-click selection refines the image prompt with the selected engine an
     page,
     "A forest beside a blue lake.\n\nFollowing paragraph.",
   );
+  await mockInvoke(page, {
+    media_provider_status: { image: { ...provider, model: "image-model" } },
+  });
   await page.evaluate(() => {
     const runtime = (window as any).__TAURI_INTERNALS__;
     const original = runtime.invoke;

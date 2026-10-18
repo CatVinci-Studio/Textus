@@ -37,7 +37,7 @@ export async function recordingWav(blob: Blob): Promise<Blob> {
   const context = new OfflineAudioContext(1, 1, 16000);
   const decoded = await context.decodeAudioData(await blob.arrayBuffer());
   if (!decoded.length || decoded.duration > 121)
-    throw new Error("Record at most 120 seconds for MiniMax transcription.");
+    throw new Error("Record at most 120 seconds for transcription.");
   const mono = new Float32Array(decoded.length);
   for (let channel = 0; channel < decoded.numberOfChannels; channel++) {
     const samples = decoded.getChannelData(channel);

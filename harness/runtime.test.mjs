@@ -86,9 +86,13 @@ test(
       res.end("data: [DONE]\n\n");
     });
     await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-    const child = spawn(process.execPath, ["harness/host.mjs"], {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
+    const child = spawn(
+      process.execPath,
+      [process.env.TEXTUS_TEST_HOST || "harness/host.mjs"],
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+      },
+    );
     let stdout = "",
       stderr = "";
     child.stdout.on("data", (x) => (stdout += x));

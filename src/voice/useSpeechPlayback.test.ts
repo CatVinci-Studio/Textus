@@ -93,3 +93,32 @@ it("ignores a late audio response after stop or document switch", async () => {
   expect(audios).toHaveLength(0);
   expect(result.current.state).toBe("idle");
 });
+it("rejects a synthesis response when its source revision changed during the request", async () => {
+  let resolve!: (value: { dataBase64: string; mime: string }) => void;
+  api.synthesize.mockReturnValue(
+    new Promise((r) => {
+      resolve = r;
+    }),
+  );
+  let current = true;
+  const { result } = renderHook(() => useSpeechPlayback(true, () => current));
+  act(() => result.current.start("Original paragraph.", "alloy"));
+  current = false;
+  await act(async () =>
+    resolve({ dataBase64: btoa("audio"), mime: "audio/mpeg" }),
+  );
+  expect(audios).toHaveLength(0);
+  expect(result.current.state).toBe("error");
+  expect(result.current.error).toContain("document changed");
+});
+it("does not resume paused audio after its source changes", async () => {
+  let current = true;
+  const { result } = renderHook(() => useSpeechPlayback(true, () => current));
+  act(() => result.current.start("Original.", "alloy"));
+  await waitFor(() => expect(result.current.state).toBe("playing"));
+  act(() => result.current.pause());
+  current = false;
+  await act(() => result.current.resume());
+  expect(result.current.state).toBe("error");
+  expect(audios[0].play).toHaveBeenCalledTimes(1);
+});

@@ -43,7 +43,17 @@ for (const signal of ["SIGTERM", "SIGINT"])
   });
 try {
   if (request.engine && request.engine !== "harness") {
-    await runCli(request, home, emit);
+    await runCli(
+      request,
+      home,
+      emit,
+      (name, args) =>
+        new Promise((resolve) => {
+          const id = crypto.randomUUID();
+          callbacks.set(id, resolve);
+          emit({ tool: { id, name, arguments: JSON.stringify(args) } });
+        }),
+    );
   } else {
     const bridgeToken = crypto.randomUUID();
     bridge = createServer(async (req, res) => {

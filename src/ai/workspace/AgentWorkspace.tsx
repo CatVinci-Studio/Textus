@@ -179,14 +179,7 @@ export function AgentWorkspace({
             </div>
           )}
           {children}
-          <details className="workspace-extra-tools">
-            <summary>
-              {language.startsWith("zh")
-                ? "配图与任务选项"
-                : "Images and task options"}
-            </summary>
-            {tools}
-          </details>
+          {tools && <div className="workspace-extra-tools">{tools}</div>}
         </div>
         <div
           className={`workspace-preview ${pending.length || pendingMedia ? "has-draft" : "document-card"}`}

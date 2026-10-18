@@ -26,6 +26,10 @@ pub struct MediaProviderConfig {
     pub voice: Option<String>,
     #[serde(default)]
     pub credential_source: Option<String>,
+    #[serde(default)]
+    pub language: Option<String>,
+    #[serde(default)]
+    pub playback_rate: Option<f64>,
 }
 pub type MediaProviders = BTreeMap<String, MediaProviderConfig>;
 static CONFIG_LOCK: Mutex<()> = Mutex::new(());
@@ -69,15 +73,49 @@ pub fn credential_id(capability: &str) -> Result<&'static str, MediaError> {
     }
 }
 
+pub(super) fn valid_language(language: &str) -> bool {
+    if language.is_empty() || language == "auto" {
+        return true;
+    }
+    if language.len() > 35 {
+        return false;
+    }
+    let mut parts = language.split('-');
+    let first = parts.next().unwrap_or("");
+    (2..=8).contains(&first.len())
+        && first.bytes().all(|b| b.is_ascii_alphabetic())
+        && parts
+            .all(|p| !p.is_empty() && p.len() <= 8 && p.bytes().all(|b| b.is_ascii_alphanumeric()))
+}
+
 pub fn validate_config(config: &MediaProviderConfig) -> Result<(), MediaError> {
+    if config
+        .language
+        .as_deref()
+        .is_some_and(|l| !valid_language(l))
+        || config
+            .playback_rate
+            .is_some_and(|r| !r.is_finite() || !(0.5..=2.0).contains(&r))
+        || config
+            .voice
+            .as_deref()
+            .is_some_and(|v| v.len() > 100 || v.chars().any(char::is_control))
+        || config.credential_source.as_deref().is_some_and(|source| {
+            source != "separate" && (source != "minimax-chat" || config.provider != "minimax")
+        })
+    {
+        return Err(MediaError::new(
+            "configuration",
+            "Use a valid language, voice and playback rate between 0.5 and 2",
+        ));
+    }
+    if config.provider == "system" {
+        return Ok(());
+    }
     let url = reqwest::Url::parse(&config.endpoint)
         .map_err(|_| MediaError::new("configuration", "Invalid provider endpoint"))?;
-    if !matches!(
-        config.provider.as_str(),
-        "openai" | "openai-compatible" | "minimax"
-    ) || config.credential_source.as_deref().is_some_and(|source| {
-        source != "separate" && (source != "minimax-chat" || config.provider != "minimax")
-    }) || config.model.trim().is_empty()
+    if !super::protocols::known_provider(&config.provider)
+        || config.model.trim().is_empty()
         || config.model.len() > 200
         || !matches!(url.scheme(), "http" | "https")
         || url.host_str().is_none()
@@ -87,6 +125,23 @@ pub fn validate_config(config: &MediaProviderConfig) -> Result<(), MediaError> {
         || url.fragment().is_some()
     {
         return Err(MediaError::new("configuration", "Use an HTTP(S) API base URL without credentials, query or fragment, and specify a model"));
+    }
+    Ok(())
+}
+
+pub fn validate_capability(
+    config: &MediaProviderConfig,
+    capability: &str,
+) -> Result<(), MediaError> {
+    validate_config(config)?;
+    if !super::protocols::supports(&config.provider, capability) {
+        return Err(MediaError::new(
+            "configuration",
+            format!(
+                "{} does not support {capability} in Textus",
+                config.provider
+            ),
+        ));
     }
     Ok(())
 }
@@ -128,7 +183,7 @@ pub fn media_configure_provider(
 ) -> Result<(), MediaError> {
     credential_id(&capability)?;
     if let Some(ref config) = config {
-        validate_config(config)?;
+        validate_capability(config, &capability)?;
     }
     let _guard = CONFIG_LOCK
         .lock()
@@ -157,13 +212,31 @@ pub fn request(
     capability: &str,
     suffix: &str,
 ) -> Result<(reqwest::RequestBuilder, MediaProviderConfig), MediaError> {
-    let config = load_config(app)?.remove(capability).ok_or_else(|| {
+    request_with_voice(app, capability, suffix, None)
+}
+
+pub(super) fn request_with_voice(
+    app: &AppHandle,
+    capability: &str,
+    suffix: &str,
+    voice: Option<&str>,
+) -> Result<(reqwest::RequestBuilder, MediaProviderConfig), MediaError> {
+    let mut config = load_config(app)?.remove(capability).ok_or_else(|| {
         MediaError::new(
             "not_configured",
             format!("Configure the {capability} provider in Settings > Textus AI > Media"),
         )
     })?;
-    validate_config(&config)?;
+    if let Some(voice) = voice {
+        config.voice = Some(voice.to_owned());
+    }
+    validate_capability(&config, capability)?;
+    if config.provider == "system" {
+        return Err(MediaError::new(
+            "configuration",
+            "System dictation uses the local dictation command",
+        ));
+    }
     let key = if config.credential_source.as_deref() == Some("minimax-chat") {
         let text = crate::auth::custom_endpoint::load_custom_endpoint(app)
             .map_err(|_| {
@@ -180,9 +253,7 @@ pub fn request(
         crate::auth::keys::load_provider_key(app, credential_id(capability)?)
             .map_err(|_| MediaError::new("authentication", "Cannot read the provider credential"))?
     };
-    if matches!(config.provider.as_str(), "openai" | "minimax")
-        && key.as_ref().is_none_or(|k| k.trim().is_empty())
-    {
+    if config.provider != "openai-compatible" && key.as_ref().is_none_or(|k| k.trim().is_empty()) {
         return Err(MediaError::new(
             "not_configured",
             "Add an API key for this media provider",
@@ -190,27 +261,14 @@ pub fn request(
     }
     let client = aicompat::http::media_client(if capability == "image" { 180 } else { 120 })
         .map_err(|_| MediaError::new("network", "Cannot create media client"))?;
-    let suffix = if config.provider == "minimax" {
-        match capability {
-            "stt" => "speech_to_text",
-            "image" => "image_generation",
-            _ => {
-                return Err(MediaError::new(
-                    "configuration",
-                    "MiniMax is currently supported for speech input and image generation",
-                ))
-            }
-        }
-    } else {
-        suffix
-    };
+    let suffix = super::protocols::route(&config, capability, suffix)?;
     let mut request = client.post(format!(
         "{}/{}",
         config.endpoint.trim_end_matches('/'),
         suffix
     ));
     if let Some(key) = key.filter(|k| !k.trim().is_empty()) {
-        request = request.bearer_auth(key);
+        request = super::protocols::authorize(request, &config.provider, &key);
     }
     Ok((request, config))
 }
@@ -293,6 +351,21 @@ pub fn media_cancel(request_id: String) {
 mod tests {
     use super::*;
     #[test]
+    fn accepts_native_and_local_providers_and_validates_settings() {
+        for (provider, endpoint, model) in [
+            ("elevenlabs", "https://api.elevenlabs.io/v1", "scribe_v2"),
+            ("system", "", ""),
+        ] {
+            let config: MediaProviderConfig = serde_json::from_value(
+                serde_json::json!({"provider":provider,"endpoint":endpoint,"model":model}),
+            )
+            .unwrap();
+            assert!(validate_config(&config).is_ok(), "{provider}");
+        }
+        let config:MediaProviderConfig=serde_json::from_value(serde_json::json!({"provider":"openai","endpoint":"https://api.openai.com/v1","model":"whisper-1","playbackRate":0.1})).unwrap();
+        assert!(validate_config(&config).is_err());
+    }
+    #[test]
     fn shared_minimax_key_is_bound_to_official_media_hosts() {
         use crate::auth::custom_endpoint::CustomEndpointConfig;
         let text = CustomEndpointConfig {
@@ -320,6 +393,8 @@ mod tests {
             model: "whisper-1".into(),
             voice: None,
             credential_source: None,
+            language: None,
+            playback_rate: None,
         };
         assert!(validate_config(&config).is_ok());
         config.endpoint = "https://secret@example.com/v1".into();

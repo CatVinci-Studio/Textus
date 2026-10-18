@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { AgentTurn, ImageAttachment } from "../types";
 import { MarkdownText } from "../MarkdownText";
-import { SpeechPlayer } from "../../voice/SpeechPlayer";
 import { parseUserMessage } from "./user-message";
 import { ChevronIcon, PaperclipIcon, SearchIcon } from "../../ui/icons";
 import "./AgentTurnView.css";
@@ -65,7 +64,6 @@ export function AgentTurnView({
       return (
         <div className="agent-message agent-message-assistant">
           <MarkdownText text={turn.text} />
-          <SpeechPlayer text={turn.text} markdown />
         </div>
       );
     case "ToolCall":

@@ -101,3 +101,60 @@ export function responseTurns(value, writable) {
   if (value.text) turns.push({ kind: "Assistant", text: value.text });
   return turns;
 }
+
+export function responseSchemaFor(images) {
+  if (!images) return responseSchema;
+  return {
+    ...responseSchema,
+    required: [...responseSchema.required, "imageRequests"],
+    properties: {
+      ...responseSchema.properties,
+      imageRequests: {
+        type: "array",
+        maxItems: 2,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["prompt", "anchor", "alt"],
+          properties: {
+            prompt: { type: "string", maxLength: 1500 },
+            anchor: { type: "string" },
+            alt: { type: "string" },
+          },
+        },
+      },
+    },
+  };
+}
+export async function imageResponseTurns(value, enabled, requestTool) {
+  if (!enabled) return [];
+  if (!Array.isArray(value?.imageRequests) || value.imageRequests.length > 2)
+    throw new Error("Invalid engine image requests");
+  const turns = [];
+  for (const image of value.imageRequests) {
+    if (
+      typeof image.prompt !== "string" ||
+      !image.prompt.trim() ||
+      [...image.prompt].length > 1500 ||
+      typeof image.anchor !== "string" ||
+      !image.anchor.trim() ||
+      typeof image.alt !== "string"
+    )
+      throw new Error("Invalid engine image request");
+    const call_id = crypto.randomUUID();
+    const args = { ...image, size: "1024x1024" };
+    turns.push({
+      kind: "ToolCall",
+      call_id,
+      name: "generate_image",
+      arguments: JSON.stringify(args),
+    });
+    const output = await requestTool("generate_image", args);
+    turns.push({
+      kind: "ToolResult",
+      call_id,
+      output: typeof output === "string" ? output : JSON.stringify(output),
+    });
+  }
+  return turns;
+}

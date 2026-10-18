@@ -15,9 +15,9 @@ export function speechChunks(text: string): SpeechChunk[] {
     let cursor = 0;
     let offset = match.index;
     while (cursor < chars.length) {
-      let end = Math.min(cursor + 3000, chars.length);
+      let end = Math.min(cursor + 600, chars.length);
       if (end < chars.length) {
-        for (let index = end - 1; index >= cursor + 1500; index--) {
+        for (let index = end - 1; index >= cursor + 300; index--) {
           if (/[。！？.!?;；\n]/.test(chars[index])) {
             end = index + 1;
             break;

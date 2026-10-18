@@ -109,10 +109,32 @@ pub fn transcription_request(
         .part("file", file);
     let mut request = request.multipart(form);
     if let Some(language) = language.filter(|l| !l.is_empty()) {
-        if !matches!(language, "zh" | "en") {
+        let language = language.split('-').next().unwrap_or(language);
+        if !matches!(
+            language,
+            "zh" | "yue"
+                | "en"
+                | "ja"
+                | "ko"
+                | "th"
+                | "vi"
+                | "id"
+                | "ms"
+                | "fil"
+                | "ar"
+                | "tr"
+                | "fr"
+                | "de"
+                | "es"
+                | "it"
+                | "pt"
+                | "pl"
+                | "ru"
+                | "uk"
+        ) {
             return Err(MediaError::new(
                 "invalid_request",
-                "Select automatic, Chinese or English transcription",
+                "Select a supported MiniMax transcription language",
             ));
         }
         request = request.header("language", language);
@@ -160,6 +182,21 @@ mod tests {
         assert!(image_url(&json!({"data":{"image_urls":["a"]}})).is_err());
     }
 
+    #[test]
+    fn transcription_accepts_documented_bcp47_language_hints() {
+        let request = transcription_request(
+            reqwest::Client::new().post("https://api.minimax.cn/v1/speech_to_text"),
+            "asr-1.0",
+            vec![0; 44],
+            "audio/wav",
+            "wav",
+            Some("ja-JP"),
+        );
+        assert_eq!(
+            request.unwrap().build().unwrap().headers()["language"],
+            "ja"
+        );
+    }
     #[tokio::test]
     async fn transcription_sends_language_in_header_and_nonstreaming_multipart() {
         let request = transcription_request(

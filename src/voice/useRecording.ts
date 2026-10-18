@@ -86,7 +86,8 @@ export function useRecording(
     setState("transcribing");
     setError(null);
     try {
-      const upload = provider === "minimax" ? await recordingWav(audio) : audio;
+      const upload =
+        provider && provider !== "system" ? await recordingWav(audio) : audio;
       if (token !== generation.current) return;
       const data = await encodeAudio(upload);
       if (token !== generation.current) return;
@@ -209,11 +210,14 @@ export function useRecording(
       }
       recording.start(1000);
       setState("recording");
-      timer.current = setTimeout(() => {
-        shouldUpload.current = autoStop;
-        if (recording.state !== "inactive") recording.stop();
-        release();
-      }, MAX_RECORDING_MS);
+      timer.current = setTimeout(
+        () => {
+          shouldUpload.current = autoStop;
+          if (recording.state !== "inactive") recording.stop();
+          release();
+        },
+        provider === "azure-speech" ? 60_000 : MAX_RECORDING_MS,
+      );
     } catch (err) {
       if (token !== generation.current) return;
       release();
@@ -226,7 +230,7 @@ export function useRecording(
       );
       setState("error");
     }
-  }, [active, autoStop, cancel, release, transcribe]);
+  }, [active, autoStop, cancel, release, transcribe, provider]);
   const stopAndTranscribe = useCallback(() => {
     shouldUpload.current = true;
     if (recorder.current?.state === "recording") recorder.current.stop();

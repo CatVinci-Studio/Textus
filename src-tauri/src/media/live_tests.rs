@@ -33,6 +33,8 @@ async fn minimax_live_image() {
         model: "image-01".into(),
         voice: None,
         credential_source: Some("minimax-chat".into()),
+        language: None,
+        playback_rate: None,
     };
     let generated = image::generate_with(
         request("image_generation"),

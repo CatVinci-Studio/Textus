@@ -22,7 +22,7 @@ export function apply(ctx, config) {
       defineTool({
         name: "generate_image",
         description:
-          "Start a background illustration job for explicit user review. Maximum two per authorized task. Do not insert temporary URLs.",
+          "Start a background illustration job for explicit user review. Maximum two per authorized task. Write a polished visual prompt of 1–1500 characters, not a copied long passage. Use an exact unique paragraph anchor from the document or proposed draft (accept draft before inserting its images). Do not insert temporary URLs.",
         parameters: {
           prompt: { type: "string", required: true },
           anchor: { type: "string", required: true },
@@ -33,6 +33,14 @@ export function apply(ctx, config) {
         },
         output,
         async execute(args) {
+          if (
+            typeof args.prompt !== "string" ||
+            !args.prompt.trim() ||
+            [...args.prompt].length > 1500
+          )
+            throw new Error(
+              "Refine the image prompt to 1–1500 characters before requesting an image.",
+            );
           const response = await fetch(process.env.TEXTUS_TOOL_URL, {
             method: "POST",
             headers: {

@@ -51,6 +51,7 @@ import { ClosePrompt } from "./ClosePrompt";
 import { DraftRestoredToast, UpdateToast, ZenHint } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
 import { FootprintLayer } from "../ai/magic-diary/FootprintLayer";
+import { GlobalDictation } from "../voice/GlobalDictation";
 import "./App.css";
 // The Magic Diary's aged-paper skin for the whole window (theme/), applied
 // by html[data-magic-diary]. Loaded here rather than by the plugin: it
@@ -422,6 +423,7 @@ function App() {
             />
           )}
         </Presence>
+        <GlobalDictation language={settings.language} />
         <AppDialogHost okLabel={t.dialogOk} />
 
         {zenMode && <ZenHint onExit={() => setZenMode(false)} t={t} />}

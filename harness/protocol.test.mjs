@@ -53,3 +53,38 @@ test("maps the official tool-result toolCallId to the required call_id", () => {
     },
   );
 });
+
+test("native engines expose image requests only when authorized and preserve tool identities", async () => {
+  const { responseSchemaFor, imageResponseTurns } =
+    await import("./protocol.mjs");
+  assert.equal(responseSchemaFor(false).properties.imageRequests, undefined);
+  assert.ok(responseSchemaFor(true).required.includes("imageRequests"));
+  let calls = 0;
+  const image = {
+    prompt: "A quiet mountain at sunrise",
+    anchor: "Mountain passage",
+    alt: "Sunrise",
+  };
+  const request = async (name, args) => {
+    calls++;
+    assert.equal(name, "generate_image");
+    assert.equal(args.anchor, image.anchor);
+    return "queued";
+  };
+  assert.deepEqual(
+    await imageResponseTurns({ imageRequests: [image] }, false, request),
+    [],
+  );
+  assert.equal(calls, 0);
+  const turns = await imageResponseTurns(
+    { imageRequests: [image] },
+    true,
+    request,
+  );
+  assert.equal(calls, 1);
+  assert.ok(turns[0].call_id);
+  assert.equal(turns[0].call_id, turns[1].call_id);
+  await assert.rejects(
+    imageResponseTurns({ imageRequests: [image, image, image] }, true, request),
+  );
+});

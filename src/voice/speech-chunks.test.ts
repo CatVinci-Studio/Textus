@@ -1,9 +1,9 @@
 import { expect, it } from "vitest";
 import { speechChunks } from "./speech-chunks";
-it("chunks paragraphs without splitting Unicode characters or exceeding 3000 characters", () => {
+it("chunks paragraphs without splitting Unicode characters or exceeding 600 characters", () => {
   const text = "中文🙂".repeat(2500) + "。\n\nEnglish paragraph.";
   const chunks = speechChunks(text);
-  expect(chunks.every((chunk) => Array.from(chunk.text).length <= 3000)).toBe(
+  expect(chunks.every((chunk) => Array.from(chunk.text).length <= 600)).toBe(
     true,
   );
   expect(chunks.map((chunk) => chunk.text).join("")).toBe(

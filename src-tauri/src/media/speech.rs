@@ -1,7 +1,6 @@
 use super::provider::{self, MediaError};
 use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::Serialize;
-use serde_json::json;
 use tauri::AppHandle;
 
 pub const MAX_RECORDING_BYTES: usize = 25 * 1024 * 1024;
@@ -57,49 +56,20 @@ pub async fn media_transcribe(
             .map_err(|_| MediaError::new("invalid_audio", "Invalid recording data"))?;
         let (mime, extension) = validate_recording(&mime, bytes.len())?;
         let (request, config) = provider::request(&app, "stt", "audio/transcriptions")?;
-        let request = if config.provider == "minimax" {
-            super::minimax::transcription_request(
-                request,
-                &config.model,
-                bytes,
-                mime,
-                extension,
-                language.as_deref(),
-            )?
-        } else {
-            let file = reqwest::multipart::Part::bytes(bytes)
-                .file_name(format!("recording.{extension}"))
-                .mime_str(mime)
-                .map_err(|_| MediaError::new("invalid_audio", "Invalid recording MIME"))?;
-            let mut form = reqwest::multipart::Form::new()
-                .text("model", config.model)
-                .text("response_format", "json")
-                .part("file", file);
-            if let Some(language) = language.filter(|l| !l.is_empty()) {
-                if !matches!(language.as_str(), "en" | "zh") {
-                    return Err(MediaError::new(
-                        "invalid_request",
-                        "Select automatic, Chinese or English transcription",
-                    ));
-                }
-                form = form.text("language", language);
-            }
-            request.multipart(form)
-        };
+        let request = super::protocols::transcription_request(
+            request,
+            &config,
+            bytes,
+            mime,
+            extension,
+            language.as_deref().or(config.language.as_deref()),
+        )?;
         let response = request.send().await.map_err(provider::network_error)?;
         let bytes = provider::read_response(response, 1024 * 1024).await?;
         let json: serde_json::Value = serde_json::from_slice(&bytes).map_err(|_| {
             MediaError::new("invalid_response", "Transcription response was not JSON")
         })?;
-        json.get("text")
-            .and_then(|s| s.as_str())
-            .map(str::to_owned)
-            .ok_or_else(|| {
-                MediaError::new(
-                    "invalid_response",
-                    "Transcription response did not contain text",
-                )
-            })
+        super::protocols::transcript(&json, &config.provider)
     })
     .await
 }
@@ -119,36 +89,18 @@ pub async fn media_synthesize(
     voice: Option<String>,
 ) -> Result<SpeechAudio, MediaError> {
     provider::cancellable(&request_id, 120, async {
-        let (request, config) = provider::request(&app, "tts", "audio/speech")?;
-        let voice = voice.or(config.voice).unwrap_or_default();
+        let (request, config) =
+            provider::request_with_voice(&app, "tts", "audio/speech", voice.as_deref())?;
+        let voice = voice.or(config.voice.clone()).unwrap_or_default();
         validate_speech(&text, &voice)?;
-        let response = request
-            .json(&json!({"model":config.model,"input":text,"voice":voice,"response_format":"mp3"}))
+        let response = super::protocols::synthesis_request(request, &config, &text, &voice)?
             .send()
             .await
             .map_err(provider::network_error)?;
-        if let Some(mime) = response
-            .headers()
-            .get(reqwest::header::CONTENT_TYPE)
-            .and_then(|v| v.to_str().ok())
-        {
-            if !mime.starts_with("audio/") && !mime.starts_with("application/octet-stream") {
-                return Err(MediaError::new(
-                    "invalid_response",
-                    "Speech provider returned non-audio content",
-                ));
-            }
-        }
-        let bytes = provider::read_response(response, 15 * 1024 * 1024).await?;
-        if bytes.is_empty() {
-            return Err(MediaError::new(
-                "invalid_response",
-                "Speech provider returned empty audio",
-            ));
-        }
+        let (bytes, mime) = super::protocols::speech_audio(response, &config).await?;
         Ok(SpeechAudio {
             data_base64: STANDARD.encode(bytes),
-            mime: "audio/mpeg",
+            mime,
         })
     })
     .await

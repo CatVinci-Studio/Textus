@@ -29,6 +29,7 @@ export function EditorContextMenu({
   tutorialMock,
   openAgentConversation,
   generateSelectionImage,
+  readSelection,
   triggerCompletion,
   triggerGrammarCheck,
   copyOrCut,
@@ -45,6 +46,7 @@ export function EditorContextMenu({
   tutorialMock: boolean;
   openAgentConversation: () => void;
   generateSelectionImage?: () => void;
+  readSelection?: () => void;
   triggerCompletion: () => void;
   triggerGrammarCheck: () => void;
   copyOrCut: (cut: boolean) => void;
@@ -72,6 +74,17 @@ export function EditorContextMenu({
               // the guide from Help. The phone's "More" leaves it to the
               // toolbar's own button.
               aiItems: [
+                ...(readSelection &&
+                run((ctx) => !ctx.get(editorViewCtx).state.selection.empty)
+                  ? [
+                      {
+                        label: settings.language.startsWith("zh")
+                          ? "朗读所选文字"
+                          : "Read selected text",
+                        onSelect: readSelection,
+                      },
+                    ]
+                  : []),
                 ...(generateSelectionImage &&
                 run((ctx) => !ctx.get(editorViewCtx).state.selection.empty)
                   ? [

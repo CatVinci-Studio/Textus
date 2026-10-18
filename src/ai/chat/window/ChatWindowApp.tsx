@@ -1,3 +1,4 @@
+import { GlobalDictation } from "../../../voice/GlobalDictation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useSettings } from "../../../settings/SettingsContext";
@@ -336,6 +337,7 @@ export function ChatWindowApp() {
   return (
     <div className="chat-window">
       {header}
+      <GlobalDictation language={settings.language} />
       <div className="chat-window-body">
         <ChatBody
           document={context.document}

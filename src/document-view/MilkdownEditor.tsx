@@ -1,13 +1,13 @@
 import { useSelectionIllustration } from "./useSelectionIllustration";
-import { useAgentEngine } from "../ai/agent-engine";
+import { WritePlayback, useWritePlayback } from "./WritePlayback";
+import { useEditorDictationTarget } from "./useEditorDictationTarget";
 import { type MouseEvent, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { useDocumentWorkspace } from "./useDocumentWorkspace";
 import { useWorkspacePersistence } from "./useWorkspacePersistence";
 import { useDocumentImages } from "./useDocumentImages";
-import { ImageGenerator, ImageJobsPanel } from "../ai/multimodal/ImageTools";
-import { serializeBlocks } from "../ai/doc-markdown";
+import { ImageJobsPanel } from "../ai/multimodal/ImageTools";
 import { AgentWorkspace } from "../ai/workspace/AgentWorkspace";
 import { ChatBody } from "../ai/chat/ChatBody";
 import { contextMenuTarget, insertTable } from "../editor/editor-menu";
@@ -160,7 +160,6 @@ export function MilkdownEditor({
     });
   }, [settings.language, settings.enableMagicDiary, run]);
 
-  const agentEngine = useAgentEngine();
   const workspace = useDocumentWorkspace(
     run,
     documentId,
@@ -170,6 +169,11 @@ export function MilkdownEditor({
     !phone && !tutorialMock,
   );
   const [allowAutoImages, setAllowAutoImages] = useState(false);
+  const reader = useWritePlayback(
+    run,
+    isActive && !workspace.open && !tutorialMock,
+  );
+  useEditorDictationTarget(run, isActive && !workspace.open);
   const proposals = useEditorProposals({
     run,
     pendingEditActionsRef,
@@ -208,17 +212,6 @@ export function MilkdownEditor({
     documentId,
     isActive,
   );
-  const defaultImageAnchor = () =>
-    run((ctx) => {
-      const state = ctx.get(editorViewCtx).state;
-      return (
-        serializeBlocks(ctx, state.doc).find(
-          (block) =>
-            block.from <= state.selection.from &&
-            block.to >= state.selection.to,
-        )?.markdown ?? ""
-      );
-    }) ?? "";
   const recovery = useWorkspacePersistence({
     workspace,
     conversation,
@@ -473,6 +466,14 @@ export function MilkdownEditor({
           </nav>,
           paneEl,
         )}
+      {paneEl &&
+        isActive &&
+        !workspace.open &&
+        !tutorialMock &&
+        createPortal(
+          <WritePlayback reader={reader} language={settings.language} />,
+          paneEl,
+        )}
       {(selectionIllustration.busy || selectionIllustration.error) && (
         <p
           role={selectionIllustration.error ? "alert" : "status"}
@@ -524,22 +525,14 @@ export function MilkdownEditor({
                   <label className="workspace-media-permission">
                     <input
                       type="checkbox"
-                      checked={allowAutoImages && agentEngine === "harness"}
-                      disabled={conversation.busy || agentEngine !== "harness"}
+                      checked={allowAutoImages}
+                      disabled={conversation.busy}
                       onChange={(e) => setAllowAutoImages(e.target.checked)}
                     />
                     {settings.language.startsWith("zh")
-                      ? "允许本次请求生成配图（每任务最多两次，可能收费）"
-                      : "Allow images for this request (max two per task; may incur charges)"}
+                      ? "允许本次请求配图"
+                      : "Allow images for this request"}
                   </label>
-                  <ImageGenerator
-                    language={settings.language}
-                    defaultAnchor={defaultImageAnchor}
-                    onGenerate={async (request) => {
-                      await images.start(request);
-                    }}
-                    disabled={conversation.busy}
-                  />
                 </>
               }
             >
@@ -576,7 +569,7 @@ export function MilkdownEditor({
                   )
                     return false;
                   const draft = workspace.currentDraft();
-                  const allowed = allowAutoImages && agentEngine === "harness";
+                  const allowed = allowAutoImages;
                   setAllowAutoImages(false);
                   return {
                     ...options,
@@ -681,9 +674,20 @@ export function MilkdownEditor({
         t={t}
         settings={settings}
         tutorialMock={tutorialMock}
-        generateSelectionImage={() => {
-          void selectionIllustration.create();
-        }}
+        generateSelectionImage={
+          !workspace.open && !tutorialMock
+            ? () => {
+                void selectionIllustration.create();
+              }
+            : undefined
+        }
+        readSelection={
+          !workspace.open && !tutorialMock
+            ? () => {
+                void reader.start("selection");
+              }
+            : undefined
+        }
         openAgentConversation={openAgentConversation}
         triggerCompletion={triggerCompletion}
         triggerGrammarCheck={triggerGrammarCheck}

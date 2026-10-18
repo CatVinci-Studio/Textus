@@ -14,12 +14,14 @@ export function useReadAloudTarget(run: EditorRunner) {
     paragraphs: { start: number; end: number; from: number; to: number }[];
   } | null>(null);
   const getText = useCallback(
-    () =>
+    (override: "document" | "selection" | "cursor" = range) =>
       run((ctx) => {
         const state = ctx.get(editorViewCtx).state;
-        const from = range === "document" ? 0 : state.selection.from;
+        const from = override === "document" ? 0 : state.selection.from;
         const to =
-          range === "selection" ? state.selection.to : state.doc.content.size;
+          override === "selection"
+            ? state.selection.to
+            : state.doc.content.size;
         const paragraphs: {
           start: number;
           end: number;

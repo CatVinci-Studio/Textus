@@ -35,7 +35,7 @@ export function useDocumentImages(
   const pending =
     starts > 0 ||
     unsettled > 0 ||
-    jobs.some((j) => !["committed", "cancelled"].includes(j.status));
+    jobs.some((j) => !["committed", "cancelled", "failed"].includes(j.status));
   const setMediaPending = workspace.setMediaPending;
   useEffect(() => {
     setMediaPending(pending);

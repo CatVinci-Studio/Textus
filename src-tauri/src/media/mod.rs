@@ -3,6 +3,7 @@ pub mod jobs;
 #[cfg(test)]
 mod live_tests;
 mod minimax;
+mod protocols;
 pub mod provider;
 pub mod speech;
 

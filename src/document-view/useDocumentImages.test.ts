@@ -251,3 +251,23 @@ it("preserves sequence at a shared anchor regardless of completion order", async
   );
   expect(markdown).toContain("Original.");
 });
+it("a historical failed image does not silently block a new selection illustration", async () => {
+  const { result } = await setup();
+  records = records.map((job) => ({
+    ...job,
+    status: "failed",
+    error: "Prompt too long",
+  }));
+  await act(async () => {
+    await result.current.images.refresh();
+  });
+  expect(result.current.images.pending).toBe(false);
+  await act(async () => {
+    await result.current.images.start({
+      prompt: "A concise forest composition",
+      anchor: "## Section",
+      alt: "Forest",
+    });
+  });
+  expect(api.startImage).toHaveBeenCalledTimes(2);
+});

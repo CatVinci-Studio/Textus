@@ -27,7 +27,7 @@ export function useSpeechPlayback(
   const index = useRef(0);
   const currentVoice = useRef("");
   const paused = useRef(false);
-  const rateRef = useLatest(rate);
+  const rateRef = useRef(rate);
   const chunkRef = useLatest(onChunk);
   const stopRef = useLatest(onStop);
   const clearAudio = useCallback(() => {
@@ -96,6 +96,14 @@ export function useSpeechPlayback(
       try {
         const result = await media.synthesize(requestId, chunk.text, voice);
         if (token !== generation.current) return;
+        if (chunkRef.current?.(chunk) === false) {
+          stop();
+          setError(
+            "The document changed. Restart reading from the current text.",
+          );
+          setState("error");
+          return;
+        }
         request.current = null;
         const bytes = Uint8Array.from(atob(result.dataBase64), (c) =>
           c.charCodeAt(0),
@@ -159,6 +167,13 @@ export function useSpeechPlayback(
     setState("paused");
   }, []);
   const resume = useCallback(async () => {
+    const chunk = queue.current[index.current];
+    if (chunk && chunkRef.current?.(chunk) === false) {
+      stop();
+      setError("The document changed. Restart reading from the current text.");
+      setState("error");
+      return;
+    }
     paused.current = false;
     const player = audio.current;
     if (!player) {
@@ -176,9 +191,10 @@ export function useSpeechPlayback(
         setState("error");
       }
     }
-  }, []);
+  }, [chunkRef, stop]);
   const setRate = useCallback((value: number) => {
     const bounded = Math.max(0.5, Math.min(2, value));
+    rateRef.current = bounded;
     setRateState(bounded);
     if (audio.current) audio.current.playbackRate = bounded;
   }, []);

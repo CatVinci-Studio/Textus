@@ -1,0 +1,38 @@
+.global-dictation {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-muted);
+  box-shadow: 0 1px 5px #0001;
+}
+.global-dictation button {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.global-dictation button:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+.global-dictation .dictation-listening {
+  color: var(--accent);
+}
+.global-dictation [role="alert"] {
+  position: absolute;
+  right: 0;
+  bottom: 36px;
+  width: 240px;
+  padding: 10px;
+  font-size: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}

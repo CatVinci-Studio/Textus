@@ -1,6 +1,6 @@
 use super::provider::{self, MediaError};
+#[cfg(test)]
 use base64::{engine::general_purpose::STANDARD, Engine};
-use serde_json::json;
 use std::{io::Cursor, net::IpAddr, time::Duration};
 use tauri::AppHandle;
 
@@ -75,7 +75,7 @@ pub fn validate_image(bytes: &[u8]) -> Result<(&'static str, u32, u32), MediaErr
 
 /// The configured API endpoint is user-chosen. A returned download URL is
 /// untrusted: pin the verified public DNS result and bypass system proxies.
-async fn download(url: &str) -> Result<Vec<u8>, MediaError> {
+pub(super) async fn download_media(url: &str, limit: usize) -> Result<Vec<u8>, MediaError> {
     let url = reqwest::Url::parse(url)
         .map_err(|_| MediaError::new("invalid_url", "Invalid generated-image URL"))?;
     if url.scheme() != "https" || !url.username().is_empty() || url.password().is_some() {
@@ -113,7 +113,7 @@ async fn download(url: &str) -> Result<Vec<u8>, MediaError> {
         .send()
         .await
         .map_err(provider::network_error)?;
-    provider::read_response(response, MAX_IMAGE_BYTES).await
+    provider::read_response(response, limit).await
 }
 
 pub async fn generate(
@@ -145,30 +145,7 @@ pub(super) async fn generate_with(
             "Specify a prompt up to 12000 characters and a supported image size",
         ));
     }
-    let mut payload = if config.provider == "minimax" {
-        super::minimax::image_payload(&config.model, prompt, size)?
-    } else {
-        json!({"model":config.model,"prompt":prompt,"size":size,"n":1})
-    };
-    // GPT image models return base64 intrinsically; older/compatible image
-    // APIs use response_format. Keep that protocol choice in the adapter.
-    if config.provider != "minimax"
-        && (config.provider == "openai-compatible" || !config.model.starts_with("gpt-image"))
-    {
-        payload["response_format"] = json!("b64_json");
-    }
-    if let Some(quality) = quality.filter(|_| config.provider != "minimax") {
-        if !matches!(
-            quality,
-            "auto" | "low" | "medium" | "high" | "standard" | "hd"
-        ) {
-            return Err(MediaError::new(
-                "invalid_request",
-                "Unsupported image quality",
-            ));
-        }
-        payload["quality"] = json!(quality);
-    }
+    let payload = super::protocols::image_payload(&config, prompt, size, quality)?;
     let response = request
         .json(&payload)
         .send()
@@ -178,33 +155,7 @@ pub(super) async fn generate_with(
         provider::read_response(response, MAX_IMAGE_BYTES.div_ceil(3) * 4 + 1024 * 1024).await?;
     let response: serde_json::Value = serde_json::from_slice(&raw)
         .map_err(|_| MediaError::new("invalid_response", "Image provider returned invalid JSON"))?;
-    let bytes = if config.provider == "minimax" {
-        download(super::minimax::image_url(&response)?).await?
-    } else {
-        let first = response
-            .get("data")
-            .and_then(|v| v.as_array())
-            .and_then(|v| if v.len() == 1 { v.first() } else { None })
-            .ok_or_else(|| {
-                MediaError::new("invalid_response", "Expected exactly one generated image")
-            })?;
-        let bytes = if let Some(encoded) = first.get("b64_json").and_then(|v| v.as_str()) {
-            STANDARD.decode(encoded).map_err(|_| {
-                MediaError::new(
-                    "invalid_image",
-                    "Provider returned invalid base64 image data",
-                )
-            })?
-        } else if let Some(url) = first.get("url").and_then(|v| v.as_str()) {
-            download(url).await?
-        } else {
-            return Err(MediaError::new(
-                "invalid_response",
-                "Provider returned neither image data nor a URL",
-            ));
-        };
-        bytes
-    };
+    let bytes = super::protocols::image_bytes(&response, &config).await?;
     let (ext, width, height) = validate_image(&bytes)?;
     Ok(GeneratedImage {
         bytes,
@@ -218,6 +169,26 @@ pub(super) async fn generate_with(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn gemini_inline_image_is_decoded_and_sends_native_modalities() {
+        use std::io::{Read, Write};
+        let mut png = Cursor::new(Vec::new());
+        image::DynamicImage::new_rgba8(1,1).write_to(&mut png,image::ImageFormat::Png).unwrap();
+        let body = serde_json::json!({"candidates":[{"content":{"parts":[{"inlineData":{"mimeType":"image/png","data":STANDARD.encode(png.into_inner())}}]}}]}).to_string();
+        let server=std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let address=server.local_addr().unwrap();
+        std::thread::spawn(move || {
+            let (mut socket,_)=server.accept().unwrap(); let mut buffer=[0;8192]; let count=socket.read(&mut buffer).unwrap();
+            let wire=String::from_utf8_lossy(&buffer[..count]);
+            // Return the fixture first so malformed request assertions do not stall the caller.
+            write!(socket,"HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",body.len(),body).unwrap();
+            assert!(wire.contains("responseModalities"));
+        });
+        let config=serde_json::from_value(serde_json::json!({"provider":"gemini","endpoint":format!("http://{address}"),"model":"gemini-2.5-flash-image"})).unwrap();
+        let request=reqwest::Client::builder().no_proxy().build().unwrap().post(format!("http://{address}"));
+        let generated=generate_with(request,config,"Draw a tree","1024x1024",None).await;
+        assert!(generated.is_ok());
+    }
     #[test]
     fn rejects_private_and_special_download_addresses() {
         for address in [

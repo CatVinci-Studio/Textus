@@ -475,7 +475,22 @@ const IMAGE_HOST_CREDENTIAL_ID = "__image_host";
 export type MediaCapability = "stt" | "tts" | "image";
 export interface MediaProviderConfig {
   credentialSource?: "separate" | "minimax-chat";
-  provider: "openai" | "openai-compatible" | "minimax";
+  provider:
+    | "system"
+    | "openai"
+    | "openai-compatible"
+    | "minimax"
+    | "elevenlabs"
+    | "deepgram"
+    | "gemini"
+    | "dashscope"
+    | "azure-speech"
+    | "siliconflow"
+    | "groq"
+    | "together"
+    | "volcengine";
+  language?: string | null;
+  playbackRate?: number;
   endpoint: string;
   model: string;
   voice: string | null;
@@ -535,10 +550,13 @@ export const media = {
     mappings: { old: string; new: string }[],
   ) => call<void>("media_rebase_image_assets", { documentId, mappings }),
   providers: () => call<MediaProviders>("media_provider_status"),
-  configure: (
+  configure: async (
     capability: MediaCapability,
     config: MediaProviderConfig | null,
-  ) => call<void>("media_configure_provider", { capability, config }),
+  ) => {
+    await call<void>("media_configure_provider", { capability, config });
+    window.dispatchEvent(new Event("textus-media-settings-change"));
+  },
   keyStatus: (capability: MediaCapability) =>
     auth.providerApiKeyStatus(`__media_${capability}`),
   setKey: (capability: MediaCapability, key: string) =>
