@@ -4,7 +4,8 @@
 # which is slow or unreachable from some networks. The site
 # (CatVinci-Studio/levis-homepage) reads manifest.json through its
 # functions/download/[[path]].js and falls back to GitHub; the updater,
-# Homebrew and Arch keep using the GitHub release.
+# Homebrew and Arch keep using the GitHub release. Which file goes under
+# which of manifest.json's keys is scripts/mirror-keys.mjs.
 #
 #   scripts/mirror-downloads.sh v1.0.0
 #
@@ -36,35 +37,17 @@ put() {
   return 1
 }
 
-declare -A key
-for f in "$work"/*; do
-  name="$(basename "$f")"
-  case "$name" in
-    *_aarch64.dmg) key[mac]="$name" ;;
-    *_x64.dmg) key[mac-intel]="$name" ;;
-    *-setup.exe) key[windows]="$name" ;;
-    *.AppImage) key[linux]="$name" ;;
-    *.deb) key[deb]="$name" ;;
-    *.rpm) key[rpm]="$name" ;;
-    *) continue ;;
-  esac
-  echo "uploading $name"
-  put "releases/$tag/$name" "$f" application/octet-stream
-done
-
-# The manifest the site reads: the version and each platform's file.
+# The manifest the site reads: the version and each platform's file, under
+# the keys in scripts/mirror-keys.mjs (mac, windows, linux-arm64, ...).
+# Written first, uploaded last: the files it names must be there before it.
 manifest="$work/manifest.json"
-{
-  printf '{\n  "tag": "%s",\n  "version": "%s",\n  "files": {\n' "$tag" "${tag#v}"
-  first=1
-  for p in mac mac-intel windows linux deb rpm; do
-    [ -n "${key[$p]:-}" ] || continue
-    [ $first = 1 ] || printf ',\n'
-    printf '    "%s": "releases/%s/%s"' "$p" "$tag" "${key[$p]}"
-    first=0
-  done
-  printf '\n  }\n}\n'
-} >"$manifest"
+node scripts/mirror-keys.mjs --tag "$tag" --out "$manifest" "$work"/*
+paths="$(node -p "Object.values(require('$manifest').files).join('\n')")"
+for path in $paths; do
+  name="${path##*/}"
+  echo "uploading $name"
+  put "$path" "$work/$name" application/octet-stream
+done
 cat "$manifest"
 put manifest.json "$manifest" application/json
 echo "mirrored $tag"

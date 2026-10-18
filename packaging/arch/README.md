@@ -6,6 +6,11 @@ binary is built with `TEXTUS_DISTRIBUTION=aur`
 (`src-tauri/src/distribution.rs`): it reports new versions, but the upgrade
 goes through pacman.
 
+The package is x86_64 only, although the release also builds Linux for
+ARM64: the checks below run in the `archlinux` container, which has no
+aarch64 image, and `[catvinci]` has no aarch64 repository. ARM64 Arch users
+can use the AppImage.
+
 ## How users get it
 
 Through the signed `[catvinci]` pacman repository,

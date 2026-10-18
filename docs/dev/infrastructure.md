@@ -58,7 +58,13 @@ repository's `main`:
   serve `/download/` from the R2 bucket `textus-downloads` (filled by
   `mirror-downloads.yml`, and `textus-beta.json` by `update-beta-manifest.yml`),
   and the short links `/discord`, `/qq`, `/wechat`
-  and `/join`.
+  and `/join`. The bucket's `manifest.json` names the newest stable
+  release's installers under the keys the download page uses: `mac`,
+  `mac-intel`, `windows`, `linux`, `deb`, `rpm`, and from 1.1.0
+  `windows-arm64`, `linux-arm64`, `deb-arm64`, `rpm-arm64`
+  (`scripts/mirror-keys.mjs`; the files are listed in
+  [releasing.md](releasing.md#installers)). Keep existing keys as they are:
+  the site reads them.
 - **catvinci.com** - project `catvinci-homepage`. A Worker handles the Join
   us form, and another forwards mail for studio@catvinci.com.
 
@@ -90,4 +96,5 @@ replace it.
   opened.
 - Before each release: make sure the Apple certificate isn't about to expire.
 - Every few months: delete merged branches and old pull requests, and look at
-  the R2 bucket's size (each release adds about 150 MB).
+  the R2 bucket's size (each release adds about 250 MB: the two AppImages
+  are most of it).

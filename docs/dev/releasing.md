@@ -44,7 +44,8 @@ through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md
    (`check`, `e2e`, `native`) passed on the tagged commit - it waits if CI is
    still running, and stops if it failed, so the builds don't run the tests
    again. Then it builds,
-   signs and notarizes for macOS (Apple silicon and Intel), Windows and Linux,
+   signs and notarizes for macOS (Apple silicon and Intel), Windows and Linux
+   (x64 and ARM64 each; see [Installers](#installers)),
    writes the updater manifest onto the draft, publishes the GitHub release,
    points the beta channel's manifest at it, mirrors the
    installers to the website's download bucket, points the Homebrew cask at
@@ -52,13 +53,19 @@ through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md
    pacman repository in `CatVinci-Studio/arch-repo` (see
    `packaging/arch/README.md`).
 6. Verify the release:
-   - the GitHub release is public and has every installer and `.sig` file;
+   - the GitHub release is public and has every file in
+     [Installers](#installers), and a `.sig` beside each one with updater
+     keys;
    - `latest.json` is still Levis 0.9.8's and `textus-latest.json` has the new
-     version with `darwin-aarch64`, `darwin-x86_64`, `linux-x86_64` and
-     `windows-x86_64`;
+     version with the keys listed there (`jq '.platforms | keys'`):
+     `darwin-aarch64`, `darwin-x86_64`, `linux-x86_64`, `linux-aarch64`,
+     `windows-x86_64` and `windows-aarch64`, each also with its installer
+     suffix;
    - the Homebrew cask (`CatVinci-Studio/homebrew-tap`) has the new version
      and both sha256 sums;
-   - <https://textus.catvinci.com/download/manifest.json> names the new files;
+   - <https://textus.catvinci.com/download/manifest.json> names the new
+     files under all ten keys, `windows-arm64`, `linux-arm64`, `deb-arm64`
+     and `rpm-arm64` included;
    - <https://textus.catvinci.com/download/textus-beta.json> has the new
      version;
    - the Arch repository has `textus-bin-X.Y.Z-1`.
@@ -73,12 +80,44 @@ publishing are separate workflows, so one of them can be retried alone:
 `update-beta-manifest.yml`, `update-homebrew-tap.yml` and
 `update-arch-repo.yml`.
 
+## Installers
+
+Each release carries these, named by tauri-bundler (`X.Y.Z` is the
+version). The files with updater keys have a `.sig` beside them, and the
+updater manifest (`textus-latest.json`) points those keys at them; the
+download mirror's `manifest.json` gives the website one file per mirror
+key. A release candidate has no `.rpm`, and so no `…-rpm` keys.
+
+| Platform          | File                                    | Built on           | Updater keys                  | Mirror key      |
+| ----------------- | --------------------------------------- | ------------------ | ----------------------------- | --------------- |
+| macOS, Apple      | `Textus_X.Y.Z_aarch64.dmg`              | `macos-26`         | -                             | `mac`           |
+| macOS, Apple      | `Textus_X.Y.Z_aarch64.app.tar.gz`       | `macos-26`         | `darwin-aarch64`, `…-app`     | -               |
+| macOS, Intel      | `Textus_X.Y.Z_x64.dmg`                  | `macos-26` (cross) | -                             | `mac-intel`     |
+| macOS, Intel      | `Textus_X.Y.Z_x64.app.tar.gz`           | `macos-26` (cross) | `darwin-x86_64`, `…-app`      | -               |
+| Windows x64       | `Textus_X.Y.Z_x64-setup.exe`            | `windows-latest`   | `windows-x86_64`, `…-nsis`    | `windows`       |
+| Windows ARM64     | `Textus_X.Y.Z_arm64-setup.exe`          | `windows-11-arm`   | `windows-aarch64`, `…-nsis`   | `windows-arm64` |
+| Linux x64         | `Textus_X.Y.Z_amd64.AppImage`           | `ubuntu-22.04`     | `linux-x86_64`, `…-appimage`  | `linux`         |
+| Linux x64         | `Textus_X.Y.Z_amd64.deb`                | `ubuntu-22.04`     | `linux-x86_64-deb`            | `deb`           |
+| Linux x64         | `Textus-X.Y.Z-1.x86_64.rpm`             | `ubuntu-22.04`     | `linux-x86_64-rpm`            | `rpm`           |
+| Linux ARM64       | `Textus_X.Y.Z_aarch64.AppImage`         | `ubuntu-22.04-arm` | `linux-aarch64`, `…-appimage` | `linux-arm64`   |
+| Linux ARM64       | `Textus_X.Y.Z_arm64.deb`                | `ubuntu-22.04-arm` | `linux-aarch64-deb`           | `deb-arm64`     |
+| Linux ARM64       | `Textus-X.Y.Z-1.aarch64.rpm`            | `ubuntu-22.04-arm` | `linux-aarch64-rpm`           | `rpm-arm64`     |
+| Arch Linux x86_64 | `Textus_X.Y.Z_linux_x86_64.tar.gz`      | `ubuntu-22.04`     | -                             | -               |
+| Arch Linux x86_64 | `textus-bin-X.Y.Z-1-x86_64.pkg.tar.zst` | Arch container     | -                             | -               |
+
+ARM64 Windows and Linux ship from 1.1.0 on, built on GitHub's native arm64
+runners. The Arch package stays x86_64: it is built and tested in the
+x86_64-only `archlinux` container, and `[catvinci]` has no aarch64
+repository. `scripts/updater-manifest.mjs` (`platformKeys`) and
+`scripts/mirror-keys.mjs` map the file names to the keys; their tests
+list every name above.
+
 ## Pre-releases
 
 A tag with a semver pre-release suffix (`v1.1.0-rc.1`) is published as a
 GitHub pre-release. The version files carry the same suffix (`1.1.0-rc.1`):
 the tag check compares the whole version, and release notes are only
-required for stable tags. Linux gets the `.deb` and AppImage but no `.rpm`
+required for stable tags. Linux (x64 and ARM64) gets the `.deb` and AppImage but no `.rpm`
 (RPM versions can't contain `-`).
 
 A release candidate reaches only the users who chose **Settings › General ›

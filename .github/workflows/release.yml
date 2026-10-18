@@ -141,6 +141,20 @@ jobs:
           # has always shipped NSIS. One installer, one upgrade path.
           - platform: windows-latest
             args: ""
+          # ARM64 Windows and Linux (from 1.1.0), each on GitHub's native
+          # arm64 runner, so the frontend tooling, the Rust build and the
+          # bundlers (NSIS, linuxdeploy) all run as they do on x64. The
+          # explicit --target is what tauri-action reads the architecture
+          # from when it looks for the installers; without it, it would trust
+          # the arch of whichever Node the runner picked. Tauri names their
+          # installers apart from the x64 ones: _arm64-setup.exe, _arm64.deb,
+          # .aarch64.rpm and _aarch64.AppImage (docs/dev/releasing.md).
+          - platform: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            args: --target aarch64-pc-windows-msvc
+          - platform: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            args: --target aarch64-unknown-linux-gnu
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -165,8 +179,24 @@ jobs:
           # The two macOS builds share a runner image; one cache each.
           key: ${{ matrix.target || 'host' }}
 
+      # ring (rustls, under reqwest) assembles its ARM64 Windows code with
+      # clang, which must be on PATH. The windows-11-arm image ships LLVM;
+      # this makes sure the build finds it, or says why it can't.
+      - name: Put clang on PATH
+        if: matrix.target == 'aarch64-pc-windows-msvc'
+        shell: pwsh
+        run: |
+          if (Get-Command clang -ErrorAction SilentlyContinue) { clang --version; exit 0 }
+          $llvm = "C:\Program Files\LLVM\bin"
+          if (-not (Test-Path "$llvm\clang.exe")) {
+            Write-Output "::error::clang is neither on PATH nor in $llvm; ring cannot build for ARM64 Windows."
+            exit 1
+          }
+          Add-Content -Path $env:GITHUB_PATH -Value $llvm
+          & "$llvm\clang.exe" --version
+
       - name: Install Linux dependencies
-        if: matrix.platform == 'ubuntu-22.04'
+        if: startsWith(matrix.platform, 'ubuntu-')
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
@@ -228,13 +258,16 @@ jobs:
           # (tauri-action before 1.0 called this input includeUpdaterJson.)
           uploadUpdaterJson: false
           # RPM versions may not contain '-', so a pre-release (1.0.4-rc.1)
-          # cannot be an .rpm; rc tags ship the .deb and AppImage only.
-          args: ${{ matrix.args }}${{ matrix.platform == 'ubuntu-22.04' && contains(env.RELEASE_TAG, '-') && ' --bundles deb,appimage' || '' }}
+          # cannot be an .rpm; rc tags ship the .deb and AppImage only, on
+          # x64 and ARM64 alike.
+          args: ${{ matrix.args }}${{ startsWith(matrix.platform, 'ubuntu-') && contains(env.RELEASE_TAG, '-') && ' --bundles deb,appimage' || '' }}
 
       # textus-bin (packaging/arch/PKGBUILD) installs this tarball. Its
       # binary is a second build with TEXTUS_DISTRIBUTION=aur: it reports new
       # versions but does not install them, because pacman owns /usr/bin.
       # --no-bundle recompiles only the textus crate and skips the installers.
+      # x86_64 only: the package is built and tested in the x86_64-only
+      # archlinux container, and [catvinci] serves no aarch64 repository.
       - name: Build and upload AUR tarball
         if: matrix.platform == 'ubuntu-22.04'
         shell: bash
