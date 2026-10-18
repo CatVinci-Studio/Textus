@@ -57,6 +57,7 @@
 :root
   :is(
     .settings-backdrop,
+    .language-welcome-backdrop,
     .tutorial-backdrop,
     .insert-table-overlay,
     .image-name-overlay,
