@@ -445,8 +445,16 @@ utiliser une.
   agentThinking: "Réflexion…",
   chatTab: "Discussions",
   chatHistoryEmpty: "Aucune conversation passée.",
-  chatHistoryRestoreHint: "Reprendre cette conversation",
+  chatHistoryRestoreHint: "Rouvrir cette conversation avec son document",
   chatHistoryDelete: "Supprimer la conversation",
+  chatHistoryRestoreHereHint:
+    "Poursuivre cette conversation dans le document actuel (son document n’a jamais été enregistré)",
+  chatHistoryMissingTitle: "Document introuvable",
+  chatHistoryMissingText:
+    "« {name} » n’est plus là où cette conversation l’a laissé. Poursuivre la conversation dans le document actuel ?",
+  chatHistoryContinueHere: "Continuer ici",
+  chatHistoryArchived:
+    "Les conversations plus anciennes ont été déplacées dans l’archive ; les 500 plus récentes sont affichées.",
   chatSelectedChars: {
     one: "{n} caractère sélectionné",
     many: "{n} de caractères sélectionnés",

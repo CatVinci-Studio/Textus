@@ -230,6 +230,15 @@ export const storage = {
   historyRemove: (kind: HistoryKind, key: string) =>
     call<void>("history_remove", { kind, key }),
   historyClear: (kind: HistoryKind) => call<void>("history_clear", { kind }),
+  /** One saved conversation whole (the chat list holds summaries), or
+   *  null when its file is gone. */
+  chatHistoryGet: (id: string) =>
+    call<unknown | null>("chat_history_get", { id }),
+  /** How many older conversations were moved to the chat history's trash. */
+  chatHistoryArchived: () => call<number>("chat_history_archived"),
+  /** A document saved under a new path takes its conversations along. */
+  chatHistoryMoveDocument: (from: string, to: string) =>
+    call<void>("chat_history_move_document", { from, to }),
 };
 
 // ---------------------------------------------------------------------------

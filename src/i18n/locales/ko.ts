@@ -420,8 +420,16 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentThinking: "생각하는 중…",
   chatTab: "채팅",
   chatHistoryEmpty: "지난 대화가 없습니다.",
-  chatHistoryRestoreHint: "이 대화를 다시 열어 이어 가기",
+  chatHistoryRestoreHint: "이 대화를 해당 문서와 함께 다시 열기",
   chatHistoryDelete: "대화 삭제",
+  chatHistoryRestoreHereHint:
+    "현재 문서에서 이 대화 이어가기 (원래 문서는 저장된 적이 없음)",
+  chatHistoryMissingTitle: "문서를 찾을 수 없음",
+  chatHistoryMissingText:
+    "“{name}” 문서가 이 대화 당시의 위치에 더 이상 없습니다. 현재 문서에서 대화를 이어갈까요?",
+  chatHistoryContinueHere: "여기서 이어가기",
+  chatHistoryArchived:
+    "이전 대화는 보관함으로 옮겨졌습니다. 최근 500개만 표시됩니다.",
   chatSelectedChars: { other: "{n}자 선택됨" },
   cut: "잘라내기",
   copy: "복사",

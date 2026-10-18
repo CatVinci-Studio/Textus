@@ -22,8 +22,12 @@ import { listenToThisWindow } from "../utils/tauri-events";
  *
  * What comes back from storage is untrusted (an older build's shape, a
  * hand edit), so every entry passes `isEntry` on load.
+ *
+ * `T` is an entry as the list holds it, `Saved` one as it is saved - more
+ * than the list shows, when the store keeps the rest elsewhere (see
+ * `listed`).
  */
-export function createPersistedList<T>(
+export function createPersistedList<T, Saved extends T = T>(
   key: string,
   options: {
     kind: HistoryKind;
@@ -39,7 +43,16 @@ export function createPersistedList<T>(
      *  stored (the chat history's iOS document paths, ai/chat/chat-history.ts).
      *  Must return an entry already in that form unchanged (the same
      *  object). */
-    normalise?: (entry: T) => T;
+    normalise?: <E extends T>(entry: E) => E;
+    /** File-backed, what of a saved entry the list holds, when Rust keeps
+     *  the rest out of the list (a conversation's turns, in a file of its
+     *  own): applied to what this window saves, as Rust applies it to what
+     *  it tells the other windows. The localStorage fallback keeps whole
+     *  entries. */
+    listed?: (entry: Saved) => T;
+    /** How an entry loaded in an older form is written back in the one
+     *  `normalise` gives it; by default, an upsert of it. */
+    rewrite?: (stored: T, normalised: T) => Promise<unknown>;
   },
 ) {
   const listeners = new Set<() => void>();
@@ -98,7 +111,7 @@ export function createPersistedList<T>(
           : [];
         entries = next;
         notify();
-        for (const entry of outdated) change({ type: "upsert", entry });
+        for (const entry of outdated) rewrite(entry);
       })
       .catch(() => {
         if (request === mine) request = null;
@@ -133,14 +146,32 @@ export function createPersistedList<T>(
     fetchList();
   }
 
+  /** An entry loaded in an older form: in its new one here at once, and
+   *  written back. */
+  function rewrite(stored: T) {
+    // Without `rewrite` a list holds whole entries: what it holds is saved.
+    if (!options.rewrite)
+      return change({ type: "upsert", entry: stored as Saved });
+    const entry = options.normalise!(stored);
+    const op: Op<T> = { type: "upsert", entry };
+    request?.ops.push(op);
+    entries = apply(entries, op);
+    trackWrite(options.rewrite(stored, entry)).catch(() => {});
+    notify();
+  }
+
   /** Applies `op` here at once, then hands it to the store behind. */
-  function change(op: Op<T>) {
+  function change(op: Op<Saved>) {
     start();
     if (op.type === "upsert" && options.normalise)
       op = { type: "upsert", entry: options.normalise(op.entry) };
-    entries = apply(entries, op);
     if (readBoot()) {
-      request?.ops.push(op);
+      const local: Op<T> =
+        op.type === "upsert" && options.listed
+          ? { type: "upsert", entry: options.listed(op.entry) }
+          : op;
+      entries = apply(entries, local);
+      request?.ops.push(local);
       const sent =
         op.type === "upsert"
           ? storage.historyUpsert(options.kind, op.entry)
@@ -152,6 +183,7 @@ export function createPersistedList<T>(
       // (storage/pending-writes.ts).
       trackWrite(sent).catch(() => {});
     } else {
+      entries = apply(entries, op);
       try {
         localStorage.setItem(key, JSON.stringify(entries));
       } catch {
@@ -174,7 +206,7 @@ export function createPersistedList<T>(
     },
     /** Adds `entry`, or replaces the one with the same key, at the front
      *  (then `sort` and the cap apply). */
-    upsert: (entry: T) => change({ type: "upsert", entry }),
+    upsert: (entry: Saved) => change({ type: "upsert", entry }),
     remove: (entryKey: string) => change({ type: "remove", key: entryKey }),
     clear: () => change({ type: "clear" }),
     useEntries: (): T[] => useSyncExternalStore(subscribe, () => entries),

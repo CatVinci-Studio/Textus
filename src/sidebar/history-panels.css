@@ -102,6 +102,14 @@
   white-space: nowrap;
 }
 
+/* Older conversations were moved to the trash folder (beyond the cap). */
+.chat-history-archived {
+  padding: 6px 8px 2px;
+  font-size: var(--text-xs);
+  color: var(--sidebar-text);
+  opacity: 0.6;
+}
+
 /* Same separated-list treatment as .clipboard-history above - the two sit in
    the same sidebar and shouldn't read as different kinds of list. */
 .chat-history {

@@ -426,8 +426,16 @@ type /name in a conversation to use one.
   agentThinking: "Thinking…",
   chatTab: "Chats",
   chatHistoryEmpty: "No past conversations.",
-  chatHistoryRestoreHint: "Open this conversation in the inline chat",
+  chatHistoryRestoreHint: "Reopen this conversation with its document",
   chatHistoryDelete: "Delete conversation",
+  chatHistoryRestoreHereHint:
+    "Continue this conversation in the current document (its document was never saved)",
+  chatHistoryMissingTitle: "Document Not Found",
+  chatHistoryMissingText:
+    "“{name}” is no longer where this conversation left it. Continue the conversation in the current document?",
+  chatHistoryContinueHere: "Continue Here",
+  chatHistoryArchived:
+    "Older conversations were moved to the archive; the latest 500 are listed.",
   chatSelectedChars: { one: "{n} char selected", other: "{n} chars selected" },
   cut: "Cut",
   copy: "Copy",

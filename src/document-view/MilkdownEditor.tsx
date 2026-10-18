@@ -290,6 +290,7 @@ export function MilkdownEditor({
     setMenu,
     conversation,
     agentPanel,
+    docPath: filePath,
   });
 
   const decidableCount = pendingEdits.decidable.length;

@@ -428,8 +428,16 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentThinking: "Pensando…",
   chatTab: "Conversas",
   chatHistoryEmpty: "Nenhuma conversa anterior.",
-  chatHistoryRestoreHint: "Abrir esta conversa no painel de IA",
+  chatHistoryRestoreHint: "Reabrir esta conversa com o seu documento",
   chatHistoryDelete: "Apagar conversa",
+  chatHistoryRestoreHereHint:
+    "Continuar esta conversa no documento atual (o documento dela nunca foi guardado)",
+  chatHistoryMissingTitle: "Documento não encontrado",
+  chatHistoryMissingText:
+    "«{name}» já não está onde esta conversa o deixou. Continuar a conversa no documento atual?",
+  chatHistoryContinueHere: "Continuar aqui",
+  chatHistoryArchived:
+    "As conversas mais antigas foram movidas para o arquivo; são mostradas as 500 mais recentes.",
   chatSelectedChars: {
     one: "{n} caractere selecionado",
     many: "{n} de caracteres selecionados",

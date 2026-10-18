@@ -153,6 +153,10 @@ export function installDevTauriShim(): void {
     log: [] as string[],
     uiState: { ...(boot?.uiState ?? {}) } as Record<string, unknown>,
     histories: { chat: [], clipboard: [] } as Record<string, unknown[]>,
+    // The chat history's conversation files by id, and how many sit in its
+    // trash (a test sets it to show the archived note).
+    conversations: {} as Record<string, unknown>,
+    archivedChats: 0,
     // custom_endpoint.json: the key is kept here but, as in Rust, never
     // handed back - custom_endpoint_status says only whether there is one.
     customEndpoint: null as {
@@ -186,6 +190,21 @@ export function installDevTauriShim(): void {
     );
   const historyKey = (kind: unknown, entry: unknown) =>
     (entry as Record<string, unknown>)?.[kind === "chat" ? "id" : "text"];
+  // A conversation is kept whole apart and listed as its summary, as
+  // settings/chat_history.rs does.
+  const keepConversation = (entry: Record<string, unknown>) => {
+    store.conversations[String(entry.id)] = entry;
+    const { turns, ...summary } = entry;
+    return { ...summary, turnCount: Array.isArray(turns) ? turns.length : 0 };
+  };
+  // `window.__devChatHistory` starts the chat history from whole
+  // conversations, and with `archived` of them in its trash.
+  const startChats = w.__devChatHistory as
+    { saved: Record<string, unknown>[]; archived?: number } | undefined;
+  if (startChats) {
+    store.histories.chat = startChats.saved.map(keepConversation);
+    store.archivedChats = startChats.archived ?? 0;
+  }
   function storageCommand(
     cmd: string,
     args: Record<string, unknown> = {},
@@ -226,7 +245,9 @@ export function installDevTauriShim(): void {
             ...store.settings,
           };
           store.uiState = { ...(payload.uiState as object) };
-          store.histories.chat = (payload.chatHistory as unknown[]) ?? [];
+          store.histories.chat = (
+            (payload.chatHistory ?? []) as Record<string, unknown>[]
+          ).map(keepConversation);
           store.histories.clipboard =
             (payload.clipboardHistory as unknown[]) ?? [];
           store.rev += 1;
@@ -249,8 +270,10 @@ export function installDevTauriShim(): void {
         return Promise.resolve(store.histories[kind] ?? []);
       case "history_upsert": {
         const key = historyKey(kind, args.entry);
+        const entry = args.entry as Record<string, unknown>;
+        const listed = kind === "chat" ? keepConversation(entry) : entry;
         store.histories[kind] = [
-          args.entry,
+          listed,
           ...store.histories[kind].filter((e) => historyKey(kind, e) !== key),
         ];
         return answer(cmd, null);
@@ -259,10 +282,29 @@ export function installDevTauriShim(): void {
         store.histories[kind] = store.histories[kind].filter(
           (e) => historyKey(kind, e) !== args.key,
         );
+        if (kind === "chat") delete store.conversations[String(args.key)];
         return answer(cmd, null);
       case "history_clear":
         store.histories[kind] = [];
+        if (kind === "chat") store.conversations = {};
         return answer(cmd, null);
+      case "chat_history_get":
+        return Promise.resolve(store.conversations[String(args.id)] ?? null);
+      case "chat_history_archived":
+        return Promise.resolve(store.archivedChats);
+      case "chat_history_move_document": {
+        for (const entry of [
+          ...store.histories.chat,
+          ...Object.values(store.conversations),
+        ] as Record<string, unknown>[])
+          if (entry.docPath === args.from) entry.docPath = args.to;
+        emitSoon("history-changed", {
+          kind: "chat",
+          op: { type: "reload" },
+          from: "",
+        });
+        return answer(cmd, null);
+      }
       // auth/custom_endpoint.rs, including its rule that an empty key keeps
       // the stored one - for the URL it was saved with only.
       case "custom_endpoint_status": {

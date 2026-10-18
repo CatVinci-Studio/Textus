@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { iosFiles } from "../platform/ios-files";
 import { forgetIOSDocument } from "../document/ios-recents";
+import { moveConversations } from "../ai/chat/chat-history";
 import { makeBlankTab, tabIsDirty } from "../document/doc-tabs";
 import type { TabState } from "./useTabState";
 
@@ -28,13 +29,15 @@ export function useDocumentActions(opts: {
     },
     [openFile],
   );
-  // A renamed document stays open under its new name; a deleted one keeps
-  // its text in the tab, unsaved, so nothing on screen is lost with it.
+  // A renamed document stays open under its new name, its past
+  // conversations with it; a deleted one keeps its text in the tab, unsaved,
+  // so nothing on screen is lost with it.
   const documentRenamed = useCallback(
     (from: string, to: string) => {
       setTabs((prev) =>
         prev.map((tab) => (tab.path === from ? { ...tab, path: to } : tab)),
       );
+      moveConversations(from, to);
     },
     [setTabs],
   );
