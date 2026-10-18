@@ -37,6 +37,10 @@ TestFlight for a while and is about to go to review.
   save. [#135](https://github.com/CatVinci-Studio/Textus/issues/135)
 - **A switch to type closing `*` yourself.**
   [#136](https://github.com/CatVinci-Studio/Textus/issues/136)
+- **Your choice of image folder, or an image host.** Pasted images can go to
+  `assets`, next to the document, a folder named after it or one of your own,
+  or be uploaded through PicGo, SM.MS or Imgur.
+  [#147](https://github.com/CatVinci-Studio/Textus/issues/147)
 
 New features come in minor releases like this one; patch releases (1.1.x)
 only fix things.

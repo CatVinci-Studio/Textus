@@ -141,7 +141,9 @@ thing to do. Keep them that short in your language.
   in Settings an AI is connected. Text in backticks is what the learner
   types, shown as code.
 - Lesson titles follow the website's names for the features
-  (`site/i18n/<code>.mjs`, its `writing` and `ai` sections).
+  (`site/i18n/<code>.mjs` in the
+  [website repository](https://github.com/CatVinci-Studio/levis-homepage/tree/main/site/i18n),
+  its `writing` and `ai` sections).
 - `tutorialSkillsTask` names two built-in skills as the learner would type
   them, `/word` in backticks: a label or alias of `tighten` and of
   `translate` in your language (`src/ai/skills/texts/<code>.ts`) without a
