@@ -490,6 +490,9 @@ type /name in a conversation to use one.
   themeGalleryInstallFailed: "Couldn't install the theme:",
   enableMathLabel: "Enable math formulas",
   enableMermaidLabel: "Mermaid diagrams",
+  autoCloseMarksLabel: "Close formatting marks automatically",
+  autoCloseMarksHint:
+    "Typing *, **, ~~, == or ` adds its closing mark. When off, you type the closing mark yourself, and the formatting applies once you do.",
   copyTextModeLabel: "When copied to other apps",
   copyTextModeHint:
     "Apps that only take plain text, like WeChat, get this; formatting still comes along where an app accepts it.",

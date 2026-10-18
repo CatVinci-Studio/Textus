@@ -498,6 +498,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   themeGalleryInstallFailed: "Das Theme konnte nicht installiert werden:",
   enableMathLabel: "Mathematische Formeln aktivieren",
   enableMermaidLabel: "Mermaid-Diagramme",
+  autoCloseMarksLabel: "Formatierungszeichen automatisch schließen",
+  autoCloseMarksHint:
+    "Beim Tippen von *, **, ~~, == oder ` wird das schließende Zeichen ergänzt. Ist es aus, tippst du das schließende Zeichen selbst, und die Formatierung greift dann trotzdem.",
   copyTextModeLabel: "Beim Kopieren in andere Apps",
   copyTextModeHint:
     "Apps, die nur reinen Text annehmen, etwa WeChat, erhalten dies; wo eine App Formatierung annimmt, bleibt sie erhalten.",

@@ -211,6 +211,10 @@ export interface Settings {
   proxyPort: string;
   typewriterMode: boolean;
   contentWidth: ContentWidth;
+  /// Typing "*", "**", "~~", "==" or "`" puts the closing mark in at once
+  /// (an empty span to type into). Off, the marks are typed by hand and a
+  /// complete "**text**" still turns into bold (#136).
+  autoCloseMarks: boolean;
   /// The user's own CSS, applied on top of whichever theme is selected -
   /// for small changes (indent, line spacing, a font) without writing a
   /// whole theme. Injected last, so it wins ties with the theme (#13).
@@ -295,6 +299,7 @@ const DEFAULT_SETTINGS: Settings = {
   proxyPort: "",
   typewriterMode: false,
   contentWidth: "auto",
+  autoCloseMarks: true,
   customCss: "",
   zoom: 1,
   shortcuts: DEFAULT_SHORTCUTS,

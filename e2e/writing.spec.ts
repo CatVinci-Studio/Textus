@@ -83,6 +83,21 @@ test("** committed through an IME composition still makes bold (#134)", async ({
   expect((await sourceOf(page)).trim()).toBe("**加粗** and ~~s~~");
 });
 
+test("with closing marks off, ** stays as typed and **x** still turns bold (#136)", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en", autoCloseMarks: false } });
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await editor.click();
+  await page.keyboard.type("**", { delay: 30 });
+  await expect(editor.locator(".md-span")).toHaveCount(0);
+  await expect(editor.locator("p").first()).toHaveText("**");
+  await page.keyboard.type("x**", { delay: 30 });
+  await expect(editor.locator("strong")).toHaveText("x");
+  await page.keyboard.type(" and ~~s~~", { delay: 30 });
+  expect((await sourceOf(page)).trim()).toBe("**x** and ~~s~~");
+});
+
 /** Paragraphs enough to scroll several screens. */
 function longDoc(extra: { at: number; text: string }[] = []): string {
   const parts: string[] = [];

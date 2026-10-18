@@ -469,6 +469,9 @@ export default {
   themeGalleryInstallFailed: "無法安裝主題：",
   enableMathLabel: "啟用數學公式",
   enableMermaidLabel: "Mermaid 圖表",
+  autoCloseMarksLabel: "自動補上格式符號",
+  autoCloseMarksHint:
+    "輸入 *、**、~~、== 或 ` 時自動補上結尾符號。關閉後結尾符號由你自己輸入，輸入後格式照樣生效。",
   copyTextModeLabel: "複製到其他 App 時",
   copyTextModeHint:
     "微信等只接收純文字的 App 會收到這一種；支援格式的 App 仍會保留格式。",

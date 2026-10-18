@@ -510,6 +510,9 @@ para usar una.
   themeGalleryInstallFailed: "No se pudo instalar el tema:",
   enableMathLabel: "Activar fórmulas matemáticas",
   enableMermaidLabel: "Diagramas Mermaid",
+  autoCloseMarksLabel: "Cerrar las marcas de formato automáticamente",
+  autoCloseMarksHint:
+    "Al escribir *, **, ~~, == o ` se añade su marca de cierre. Si lo desactivas, escribes tú la marca de cierre y el formato se aplica al hacerlo.",
   copyTextModeLabel: "Al copiar a otras apps",
   copyTextModeHint:
     "Las apps que solo aceptan texto sin formato, como WeChat, reciben esto; donde una app acepta formato, se conserva.",

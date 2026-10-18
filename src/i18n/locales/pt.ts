@@ -496,6 +496,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   themeGalleryInstallFailed: "Não foi possível instalar o tema:",
   enableMathLabel: "Ativar fórmulas matemáticas",
   enableMermaidLabel: "Diagramas Mermaid",
+  autoCloseMarksLabel: "Fechar marcas de formatação automaticamente",
+  autoCloseMarksHint:
+    "Ao digitar *, **, ~~, == ou `, a marca de fechamento é adicionada. Desativado, você digita a marca de fechamento, e a formatação é aplicada quando você a digita.",
   copyTextModeLabel: "Ao copiar para outros apps",
   copyTextModeHint:
     "Apps que só aceitam texto simples, como o WeChat, recebem isto; onde o app aceita formatação, ela é mantida.",

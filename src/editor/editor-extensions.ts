@@ -30,7 +30,7 @@ import {
   mdCodeSpanSchema,
   mdSpanClipboardPlugin,
 } from "./marks/md-span-schema";
-import { mdSpanAutopairPlugin } from "./marks/md-span-autopair-plugin";
+import { createMdSpanAutopairPlugin } from "./marks/md-span-autopair-plugin";
 import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
 import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
@@ -204,7 +204,11 @@ export function withEditorCore(
       .use(mdSpanSchema)
       .use(mdCodeSpanSchema)
       .use(mdSpanClipboardPlugin)
-      .use(mdSpanAutopairPlugin)
+      .use(
+        createMdSpanAutopairPlugin({
+          autoClose: () => settings.current.autoCloseMarks,
+        }),
+      )
       .use(formatShortcutPlugin)
       .use(enclosurePlugin)
 

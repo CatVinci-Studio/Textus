@@ -270,6 +270,12 @@ export function SettingsPanel({
               checked={settings.enableMermaid}
               onChange={(v) => setSettings({ enableMermaid: v })}
             />
+            <ToggleRow
+              label={t.autoCloseMarksLabel}
+              hint={t.autoCloseMarksHint}
+              checked={settings.autoCloseMarks}
+              onChange={(v) => setSettings({ autoCloseMarks: v })}
+            />
             <SettingRow label={t.copyTextModeLabel} hint={t.copyTextModeHint}>
               <Select
                 className="settings-select"
