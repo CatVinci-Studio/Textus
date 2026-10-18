@@ -85,8 +85,25 @@ export function useAgentConversation(
   // a stop must fold what already streamed into history, and the state
   // value in that closure is stale by then.
   const streamingRef = useRef<StreamingState | null>(null);
-  const setStreaming = (value: StreamingState | null) => {
+  // Text deltas can arrive several times a frame, and each state update
+  // re-renders the editor that owns this conversation - so a delta only
+  // marks the state dirty, and one render per frame picks up all of them.
+  // Everything else (a landed turn, the end) renders at once.
+  const deltaFrame = useRef<number | null>(null);
+  const setStreaming = (
+    value: StreamingState | null,
+    { textOnly = false } = {},
+  ) => {
     streamingRef.current = value;
+    if (textOnly) {
+      deltaFrame.current ??= requestAnimationFrame(() => {
+        deltaFrame.current = null;
+        setStreamingState(streamingRef.current);
+      });
+      return;
+    }
+    if (deltaFrame.current !== null) cancelAnimationFrame(deltaFrame.current);
+    deltaFrame.current = null;
     setStreamingState(value);
   };
   const [busy, setBusy] = useState(false);
@@ -165,10 +182,13 @@ export function useAgentConversation(
           onStreamEventRef.current?.(event);
           if (event.type === "delta") {
             const prev = streamingRef.current;
-            setStreaming({
-              turns: prev?.turns ?? [],
-              text: (prev?.text ?? "") + event.text,
-            });
+            setStreaming(
+              {
+                turns: prev?.turns ?? [],
+                text: (prev?.text ?? "") + event.text,
+              },
+              { textOnly: true },
+            );
           } else if (event.type === "turn") {
             // Interim prose that streamed before a tool call is dropped,
             // mirroring how the backend's step parsers prefer tool calls
