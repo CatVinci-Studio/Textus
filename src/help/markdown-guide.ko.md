@@ -25,7 +25,7 @@ GitHub 스타일 알림:
 
 **굵게**(`**텍스트**`), *기울임꼴*(`*텍스트*`), ***굵은 기울임꼴***, ~~취소선~~(`~~텍스트~~`), ==강조 표시==(`==텍스트==`), 그리고 `인라인 코드`.
 
-링크는 이렇게 씁니다: [Textus 저장소](https://github.com/CatVinci-Studio/Textus). 인라인 HTML도 렌더링됩니다(예: 키보드 키 <kbd>Cmd</kbd> + <kbd>S</kbd>). `<details>` 접기, HTML 표, 일부 인라인 스타일(색, 배경색, 크기, 굵기, 정렬, 밑줄과 취소선), 인라인 `<svg>`(그림으로 표시)도 렌더링됩니다. 스크립트 등 그 밖의 HTML은 소스 그대로 보입니다.
+링크는 이렇게 씁니다: [Textus 저장소](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘를 누른 채 클릭하면 링크를 따라갑니다. 웹 링크는 브라우저에서, 다른 Markdown 파일 링크는 탭에서 열리고, `#제목` 링크는 그 제목으로 스크롤합니다. 인라인 HTML도 렌더링됩니다(예: 키보드 키 <kbd>Cmd</kbd> + <kbd>S</kbd>). `<details>` 접기, HTML 표, 일부 인라인 스타일(색, 배경색, 크기, 굵기, 정렬, 밑줄과 취소선), 인라인 `<svg>`(그림으로 표시)도 렌더링됩니다. 스크립트 등 그 밖의 HTML은 소스 그대로 보입니다.
 
 인라인 수식: 질량-에너지 등가 원리 $E = mc^2$, 오일러 등식 $e^{i\pi} + 1 = 0$.
 
@@ -127,6 +127,8 @@ sequenceDiagram
 ```markdown
 ![대체 텍스트](assets/screenshot.png)
 ```
+
+`![[image.png]]`나 `![[attachments/image.png|300]]` 같은 Obsidian 임베드도 그림으로 보입니다. Textus는 문서가 속한 Obsidian 보관함에서 파일을 찾고, 임베드는 쓴 그대로 저장합니다.
 
 ## 보기와 모드
 

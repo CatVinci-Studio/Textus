@@ -10,11 +10,12 @@ import type { Node as ProseNode, Slice } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { showMessage } from "../../ui/app-dialog";
-import { dirname } from "../../utils/path";
+import { decodeUrlPath, dirname } from "../../utils/path";
 import { fs } from "../../platform/ipc";
 import type { Settings, ImageNamingMode } from "../../settings/SettingsContext";
 import { isScopedUrl, scopedImageSrc } from "../../platform/ios-files";
 import { imageFilesFromClipboard, imageMimeForPath } from "./pasted-files";
+import { parseEmbed } from "./obsidian-embed";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
 import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
 
@@ -38,34 +39,19 @@ import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
  *   asset: URL.
  */
 
-/**
- * A Markdown image destination is a URL, so other apps write a space as
- * "%20" (and Chinese as "%E5%9B%BE..."); the file on disk has the decoded
- * name. convertFileSrc percent-encodes the path itself, so an undecoded
- * "%20" reached the asset protocol as "%2520" and found nothing (#135). A
- * malformed escape (a file really named "100%.png") is kept as written.
- */
-function decodeImagePath(src: string): string {
-  try {
-    return decodeURIComponent(src);
-  } catch {
-    return src;
-  }
-}
-
 export function resolveImageSrc(src: string, docPath: string | null): string {
   // A Windows drive path ("C:\..." / "C:/...") would otherwise read as a
   // single-letter URL scheme to the test below.
-  if (/^[a-z]:[\\/]/i.test(src)) return convertFileSrc(decodeImagePath(src));
+  if (/^[a-z]:[\\/]/i.test(src)) return convertFileSrc(decodeUrlPath(src));
   if (!src || /^[a-z][a-z0-9+.-]*:/i.test(src)) return src; // http(s), data:, asset:, file:, ...
-  if (src.startsWith("/")) return convertFileSrc(decodeImagePath(src));
+  if (src.startsWith("/")) return convertFileSrc(decodeUrlPath(src));
   // An unsaved document has no folder to resolve against, so a relative
   // path is left as written (the image shows as missing) and resolves once
   // the document is saved and reopened. The sidebar's open folder is not
   // used as a stand-in: the document may well be saved somewhere else, and
   // an image that showed before saving would then vanish.
   if (!docPath) return src;
-  return convertFileSrc(`${dirname(docPath)}/${decodeImagePath(src)}`);
+  return convertFileSrc(`${dirname(docPath)}/${decodeUrlPath(src)}`);
 }
 
 /**
@@ -377,13 +363,19 @@ function fileImage(path: string): PastedImage {
 }
 
 /** A paragraph holding nothing but images (and line breaks between them):
- *  the "an image on its own line" case, laid out as a centred figure. */
+ *  the "an image on its own line" case, laid out as a centred figure. An
+ *  Obsidian image embed (obsidian-embed.ts) counts as an image. */
 function isImageParagraph(node: ProseNode): boolean {
   if (node.type.name !== "paragraph" || node.childCount === 0) return false;
   let images = 0;
   for (let i = 0; i < node.childCount; i++) {
     const child = node.child(i);
-    if (child.type.name === "image") images++;
+    if (
+      child.type.name === "image" ||
+      (child.type.name === "obsidian_embed" &&
+        parseEmbed(child.textContent)?.isImage)
+    )
+      images++;
     else if (child.type.name !== "hardbreak") return false;
   }
   return images > 0;

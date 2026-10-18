@@ -153,6 +153,10 @@ export const fs = {
       endpoint,
       urlField,
     }),
+  /** The file an Obsidian image embed names, searched in the document's
+   *  vault (commands/vault.rs); null when there is none. */
+  resolveVaultImage: (docPath: string, link: string) =>
+    call<string | null>("resolve_vault_image", { docPath, link }),
   migrateDraftImages: (docPath: string, srcs: string[]) =>
     call<ImageMigration[]>("migrate_draft_images", { docPath, srcs }),
   writeTextFile: (path: string, contents: string): Promise<void> =>
@@ -351,7 +355,8 @@ export const menuIpc = {
 // ---------------------------------------------------------------------------
 
 /** Our own pages, opened in the system browser. Each URL is fixed in Rust
- *  (commands/links.rs), not passed from here. */
+ *  (commands/links.rs), not passed from here - except a link followed in a
+ *  document, which Rust opens only if it is http(s) or mailto. */
 export const links = {
   /** The website's community page, in the UI's language. */
   openCommunityPage: (language: Lang) =>
@@ -364,6 +369,9 @@ export const links = {
   /** Settings › General › About Textus's links, by name. */
   openAboutLink: (page: "github" | "discord" | "qq") =>
     call<void>("open_about_link", { page }),
+  /** A web or mail link Ctrl/Cmd+clicked in a document
+   *  (editor/markdown/link-click-plugin.ts). */
+  openWebLink: (url: string) => call<void>("open_web_link", { url }),
 };
 
 export const exportDoc = {

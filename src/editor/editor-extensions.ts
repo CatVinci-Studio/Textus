@@ -28,6 +28,7 @@ import {
   remarkHighlightPlugin,
   mdSpanSchema,
   mdCodeSpanSchema,
+  mdSpanClipboardPlugin,
 } from "./marks/md-span-schema";
 import { mdSpanAutopairPlugin } from "./marks/md-span-autopair-plugin";
 import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
@@ -60,9 +61,16 @@ import { escapeTrailingBlockPlugin } from "./markdown/escape-trailing-block-plug
 import { codeBlockIndentPlugin } from "./code/code-block-indent-plugin";
 import { pasteMarkdownSourcePlugin } from "./markdown/paste-markdown-plugin";
 import { pasteUrlPlugin } from "./markdown/paste-url";
+import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
 import { createPlainTextCopyPlugin } from "./markdown/plain-text-copy-plugin";
 import { createImagePlugin } from "./images/image-plugin";
+import {
+  obsidianEmbedInputRule,
+  obsidianEmbedSchema,
+  remarkObsidianEmbedPlugin,
+} from "./images/obsidian-embed";
+import { createObsidianEmbedPreviewPlugin } from "./images/obsidian-embed-preview";
 import { createTypewriterPlugin } from "./modes/typewriter-plugin";
 import { zenFocusPlugin } from "./modes/zen-focus-plugin";
 import { keyboardRevealPlugin } from "./keys/keyboard-reveal-plugin";
@@ -156,6 +164,13 @@ export function withEditorCore(
       .use(createRawHtmlPreviewPlugin({ docPath: () => docPath.current }))
       .use(brToHardbreakPlugin)
 
+      // Obsidian's ![[file]] embeds: kept as written, an image one shown as
+      // the picture from the document's vault.
+      .use(remarkObsidianEmbedPlugin)
+      .use(obsidianEmbedSchema)
+      .use(obsidianEmbedInputRule)
+      .use(createObsidianEmbedPreviewPlugin({ docPath: () => docPath.current }))
+
       // GitHub-style alerts: > [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING]
       // / [!CAUTION] blockquotes render as colored callouts with a badge.
       .use(
@@ -188,6 +203,7 @@ export function withEditorCore(
       .use(remarkHighlightPlugin)
       .use(mdSpanSchema)
       .use(mdCodeSpanSchema)
+      .use(mdSpanClipboardPlugin)
       .use(mdSpanAutopairPlugin)
       .use(formatShortcutPlugin)
       .use(enclosurePlugin)
@@ -236,6 +252,9 @@ export function withEditorCore(
       .use(createPlainTextCopyPlugin(() => settings.current.copyTextMode))
       .use(clipboard)
       .use(disk ? clipboardHistoryPlugin : [])
+      // Ctrl/Cmd+click follows a link. The playground leaves links to the
+      // browser it runs in.
+      .use(disk ? createLinkClickPlugin(() => docPath.current) : [])
       .use(listener)
       // Enter / Mod+Enter in tables, code blocks and quotes - ahead of the
       // other key handlers and the preset keymaps.

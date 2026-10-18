@@ -633,6 +633,7 @@ pub fn run() {
             read_binary_file_base64,
             write_text_file,
             save_pasted_image,
+            commands::vault::resolve_vault_image,
             upload_image,
             migrate_draft_images,
             save_theme_css,
@@ -743,6 +744,7 @@ pub fn run() {
             export_pdf_native,
             commands::links::open_community_page,
             commands::links::open_about_link,
+            commands::links::open_web_link,
             commands::links::open_tutorials_page,
             #[cfg(desktop)]
             open_pandoc_install_page,

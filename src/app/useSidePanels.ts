@@ -11,6 +11,7 @@ import { keyboardUp, whenKeyboardDown } from "../mobile/keyboard";
 import { usePresence } from "../ui/usePresence";
 import { CLOSE_FIND_REPLACE_EVENT } from "../utils/events";
 import { useAgentPanelState } from "../ai/chat/panel/agent-panel";
+import { getUiState, setUiState } from "../storage/ui-state";
 import { useSidebarWidth } from "./sidebar-width";
 
 export type PanelMode = "tree" | "outline" | "clipboard" | "chat";
@@ -31,8 +32,15 @@ function subscribeWindowResize(onChange: () => void) {
  * sheet). Pulled out of App.tsx, which renders both frames.
  */
 export function useSidePanels() {
-  const [panelOpen, setPanelOpen] = useState(false);
+  // Remembered on the desktop, where people who use the sidebar expect it
+  // back (#152, #79). On iOS it is a drawer over the page and starts closed.
+  const [panelOpen, setPanelOpen] = useState(
+    () => !isIOSApp && getUiState("sidebarOpen") === true,
+  );
   const toggleSidebar = useCallback(() => setPanelOpen((v) => !v), []);
+  useEffect(() => {
+    if (!isIOSApp) setUiState("sidebarOpen", panelOpen);
+  }, [panelOpen]);
   // On iOS the sidebar is a drawer over the page, and the find bar sits at
   // the top of the page: they would overlap, so opening one closes the bar.
   useEffect(() => {
