@@ -11,27 +11,17 @@
 **上架 App Store。** iPhone 和 iPad 版已经在 TestFlight 里测试了一段时间，马上就要提交审核。
 [#87](https://github.com/CatVinci-Studio/Textus/issues/87)
 
-**Playground（在线试用）。** 在 `textus.catvinci.com/playground` 做一个小页面，不用安装就能在浏览器里试试编辑器。它只管写、导入和导出 Markdown，其他功能留给 App。
-[#88](https://github.com/CatVinci-Studio/Textus/issues/88)
+## 下一个版本（1.0.5）
 
-**一个分享主题的地方。** 在置顶的 issue 里发一条评论，我们看过之后，你的主题就会出现在 `textus.catvinci.com/themes` 上，大家都能免费下载。
-[#89](https://github.com/CatVinci-Studio/Textus/issues/89)
+- **全新的新手教程。** 先连接你的 AI，后面的 AI 课就是真实效果；然后一步一步介绍主要功能，每一步都能打开一段短动画。跳过 AI 的话，这几课会改成演示给你看。[#90](https://github.com/CatVinci-Studio/Textus/issues/90)
+- **文档里支持更多 HTML。** 可折叠的 `<details>`、HTML 表格、几种内联样式（颜色、字号、对齐），以及直接写在文档里的 `<svg>` 图形，写的时候、分屏预览和导出时都能正常显示。脚本一律不会运行。
+- **测试版通道。** 在 **设置 › 通用 › 关于 Textus** 里选"测试版"，就能比大家早一步收到候选版本；默认仍是稳定版。
 
-**真正有用的教程。** 新手教程里加一步"连接你的 AI"，再给大家最常问的几个功能做几段短视频。
-[#90](https://github.com/CatVinci-Studio/Textus/issues/90)
+## 最近完成
 
-## 下一个版本
-
-这些都来自大家的反馈。谢谢你们，特别是那些附了截图和复现步骤的。
-
-- 侧边栏可以拖动调整宽度。[#77](https://github.com/CatVinci-Studio/Textus/issues/77)
-- Windows 和 Linux 上导出的 PDF 是白底，页边距正常，每页底部也不会再丢字。
-  [#68](https://github.com/CatVinci-Studio/Textus/issues/68)
-- 把文件拖进窗口就能打开，**文件 › 打开**可以选任意文件。
-  [#78](https://github.com/CatVinci-Studio/Textus/issues/78)
-- Linux 上在源码模式里编辑时，字不会再发虚。
-  [#61](https://github.com/CatVinci-Studio/Textus/issues/61)
-- 导出的 PDF 可以带页码（在 **设置 › 编辑与外观** 里打开）。
+- **Textus 1.0.4**：侧边栏可以拖动调整宽度（[#77](https://github.com/CatVinci-Studio/Textus/issues/77)）；导出的 PDF 是白底、页边距正常，还可以带页码（[#68](https://github.com/CatVinci-Studio/Textus/issues/68)）；Windows 上把文件拖进窗口就能打开（[#78](https://github.com/CatVinci-Studio/Textus/issues/78)）；Linux 源码模式的字更清晰（[#61](https://github.com/CatVinci-Studio/Textus/issues/61)）；安装包更小。
+- **Playground 已上线**：[textus.catvinci.com/playground](https://textus.catvinci.com/playground/)，不用安装就能在浏览器里试试编辑器。[#88](https://github.com/CatVinci-Studio/Textus/issues/88)
+- **主题分享已开放**：在置顶的 issue 里发一条评论，我们看过之后，你的主题就会出现在 [textus.catvinci.com/themes](https://textus.catvinci.com/themes/) 上，大家都能免费下载。[#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
 ## 以后
 
