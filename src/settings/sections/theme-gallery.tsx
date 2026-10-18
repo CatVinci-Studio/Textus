@@ -147,7 +147,13 @@ function GalleryItem({
 }) {
   const byline = t.themeGalleryBy.replace("{author}", theme.author);
   return (
-    <div className="theme-gallery-item" aria-label={theme.name} role="group">
+    // The hint is cut to two lines; the whole description is on hover.
+    <div
+      className="theme-gallery-item"
+      aria-label={theme.name}
+      role="group"
+      title={theme.description}
+    >
       <GalleryPreview path={theme.previews[0]} />
       <SettingRow
         label={theme.name}
@@ -197,26 +203,60 @@ function GalleryItem({
   );
 }
 
+/** Screenshots fetched at once, at most: a long catalog scrolled quickly
+ *  shouldn't start a download per row. */
+const MAX_PREVIEW_FETCHES = 3;
+let previewFetches = 0;
+const waitingFetches: (() => void)[] = [];
+
+/** Runs `task` once one of the preview slots is free. A finished task hands
+ *  its slot straight to the next waiting one, so the count never overshoots. */
+async function inPreviewSlot<T>(task: () => Promise<T>): Promise<T> {
+  if (previewFetches < MAX_PREVIEW_FETCHES) previewFetches++;
+  else await new Promise<void>((resolve) => waitingFetches.push(resolve));
+  try {
+    return await task();
+  } finally {
+    const next = waitingFetches.shift();
+    if (next) next();
+    else previewFetches--;
+  }
+}
+
 /** A theme's first screenshot, fetched through the backend as a `data:`
- *  URL - only ever shown as an image. An empty frame until it arrives, or
- *  if it can't. */
+ *  URL once its row scrolls into view - only ever shown as an image. An
+ *  empty frame until it arrives, or if it can't. */
 function GalleryPreview({ path }: { path: string | undefined }) {
+  const frame = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
   const [src, setSrc] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!path) return;
+    const el = frame.current;
+    if (!el || visible) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) setVisible(true);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [visible]);
+
+  useEffect(() => {
+    if (!path || !visible) return;
     let cancelled = false;
-    themeGallery
-      .preview(path)
+    inPreviewSlot(() =>
+      // A row closed while it waited for a slot needs no download.
+      cancelled ? Promise.resolve(null) : themeGallery.preview(path),
+    )
       .then((url) => !cancelled && setSrc(url))
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [path]);
+  }, [path, visible]);
 
   return (
-    <div className="theme-gallery-preview">
+    <div className="theme-gallery-preview" ref={frame}>
       {src && <img src={src} alt="" draggable={false} />}
     </div>
   );
