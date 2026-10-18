@@ -25,7 +25,7 @@ GitHub 风格的提示块：
 
 **粗体**、*斜体*、***粗斜体***、~~删除线~~、==高亮==，以及 `行内代码`。
 
-链接写法：[Textus 仓库](https://github.com/CatVinci-Studio/Textus)。行内 HTML 也会渲染，比如键盘按键 <kbd>Cmd</kbd> + <kbd>S</kbd>。`<details>` 折叠块、HTML 表格、少量行内样式（颜色、背景色、字号、粗细、对齐、下划线和删除线）和行内 `<svg>`（显示为图片）也能渲染；脚本等其他 HTML 保持源码显示。
+链接写法：[Textus 仓库](https://github.com/CatVinci-Studio/Textus)。按住 Ctrl/⌘ 点击链接即可跳转：网页链接在浏览器中打开，指向另一个 Markdown 文件的链接在新标签页中打开，`#某个标题` 这样的链接会滚动到该标题。行内 HTML 也会渲染，比如键盘按键 <kbd>Cmd</kbd> + <kbd>S</kbd>。`<details>` 折叠块、HTML 表格、少量行内样式（颜色、背景色、字号、粗细、对齐、下划线和删除线）和行内 `<svg>`（显示为图片）也能渲染；脚本等其他 HTML 保持源码显示。
 
 行内数学公式：质能方程 $E = mc^2$，欧拉恒等式 $e^{i\pi} + 1 = 0$。
 
