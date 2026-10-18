@@ -217,3 +217,94 @@ test("an edit the backend refused never stays on screen", async ({ page }) => {
   await expect(doc).toContainText("BETA LINE TWO (edited).");
   await expect(doc).toContainText("Alpha line one.");
 });
+
+test("the empty-document hint gives way to text the AI is writing", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await editor.click();
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.press("Backspace");
+  const hint = page.locator('[data-active-tab="true"] .empty-doc-placeholder');
+  await expect(hint).toHaveCount(1);
+
+  // One append into the empty document, streamed until `__finishStream`.
+  await page.evaluate(() => {
+    type Send = (event: unknown) => void;
+    const w = window as unknown as {
+      __finishStream?: () => void;
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, args?: unknown) => Promise<unknown>;
+      };
+    };
+    const original = w.__TAURI_INTERNALS__.invoke;
+    w.__TAURI_INTERNALS__.invoke = (cmd, args) => {
+      if (cmd !== "ai_agent_message") return original(cmd, args);
+      const { message, onEvent } = args as {
+        message: string;
+        onEvent?: { onmessage?: Send };
+      };
+      const send: Send = (event) => onEvent?.onmessage?.(event);
+      const callArgs = JSON.stringify({
+        action: "append",
+        text: "A first paragraph the AI wrote into the empty page.",
+      });
+      send({ type: "toolStart", callId: "e1", name: "propose_edit" });
+      send({
+        type: "toolArgsDelta",
+        callId: "e1",
+        delta: callArgs.slice(0, 40),
+      });
+      return new Promise((resolve) => {
+        w.__finishStream = () => {
+          send({
+            type: "toolArgsDelta",
+            callId: "e1",
+            delta: callArgs.slice(40),
+          });
+          const turns = [
+            {
+              kind: "ToolCall",
+              call_id: "e1",
+              name: "propose_edit",
+              arguments: callArgs,
+            },
+            { kind: "ToolResult", call_id: "e1", output: "Edit proposed" },
+            { kind: "Assistant", text: "Started it for you." },
+          ];
+          for (const turn of turns) send({ type: "turn", turn });
+          resolve([{ kind: "User", text: message }, ...turns]);
+        };
+      });
+    };
+  });
+
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Start this document");
+  await composer.press("Enter");
+  // While it streams...
+  await expect(page.locator(".milkdown .pending-insert")).toBeVisible();
+  await expect(hint).toHaveCount(0);
+  // ...while it waits for a decision...
+  await page.evaluate(() =>
+    (window as unknown as { __finishStream: () => void }).__finishStream(),
+  );
+  const accept = page.locator(
+    ".agent-proposal-actions .inline-chat-action-primary",
+  );
+  await expect(accept).toHaveCount(1);
+  await expect(page.locator(".milkdown .pending-insert")).toContainText(
+    "into the empty page.",
+  );
+  await expect(hint).toHaveCount(0);
+  // ...and once it is the document's own text.
+  await accept.click();
+  await expect(page.locator(".milkdown")).toContainText(
+    "A first paragraph the AI wrote into the empty page.",
+  );
+  await expect(hint).toHaveCount(0);
+});

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
+import { blockAt, holdBlock } from "../ui/hold-line";
 import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
 
 /// Document zoom, scoped to the editor CONTENT - the window chrome (tab
@@ -38,17 +39,6 @@ function clamp(zoom: number): number {
 function snap(zoom: number): number {
   const clamped = clamp(zoom);
   return Math.abs(clamped - 1) < 0.03 ? 1 : clamped;
-}
-
-/// The document's top-level block at viewport y `line`: the one it falls
-/// in, else the first below it.
-function blockAt(content: Element, line: number): Element | null {
-  const blocks = content.querySelector(".ProseMirror")?.children;
-  if (!blocks) return null;
-  for (const block of Array.from(blocks)) {
-    if (block.getBoundingClientRect().bottom >= line) return block;
-  }
-  return null;
 }
 
 /// Where a zoom step is held still: the rich editor's scroller, split
@@ -106,13 +96,10 @@ function holdRendered(
   next: number,
   setZoomVar: () => void,
 ) {
-  const block = blockAt(content, line);
+  const blocks = content.querySelector(".ProseMirror");
+  const block = blocks && blockAt(blocks, line);
   if (block) {
-    const was = block.getBoundingClientRect();
-    const share = was.height > 0 ? (line - was.top) / was.height : 0;
-    setZoomVar();
-    const now = block.getBoundingClientRect();
-    scroller.scrollTop += now.top + share * now.height - line;
+    holdBlock(scroller, block, line, setZoomVar);
     return;
   }
   // Below the last block: the column's padding is outside the zoomed node,

@@ -107,6 +107,7 @@ type /name in a conversation to use one.
   revisionDisplayOriginal: "Original in the text, changes in the margin",
   revisionDisplayNew: "Changes in the text, original in the margin",
   revisionDisplayFinal: "Result only, no markup",
+  revisionDisplayNoRoom: "Not enough room - close the sidebar or the AI panel",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Revision",
   reviewBarOpenChat: "Open the AI panel",
@@ -232,8 +233,6 @@ type /name in a conversation to use one.
     "Nothing new to import: Textus already has what Levis has.",
   levisImportFailed: "Some files couldn’t be copied:",
   levisImportRow: "Import from Levis",
-  levisImportRowHint:
-    "Copies settings, history, themes and more. Levis keeps everything.",
   levisImportButton: "Import…",
   levisImportNone: "No Levis data on this computer.",
   levisItemSettings: "settings",
@@ -643,8 +642,6 @@ type /name in a conversation to use one.
   restoreSessionLabel: "Restore Previous Session on Startup",
   autoSuggestFilenameLabel: "Suggest a Filename When Saving a New File",
   autosaveLabel: "Save Automatically",
-  autosaveHint:
-    "Writes a document that already has a file back to it a moment after you stop typing, and when you switch tabs or leave the window. New documents aren't saved until you name them.",
   untitledTab: "Untitled",
   markdownGuideTab: "Markdown Guide",
   agentGuideTab: "AI Features Guide",

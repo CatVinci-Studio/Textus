@@ -98,6 +98,7 @@ export default {
   revisionDisplayOriginal: "原文在正文，修改在页边",
   revisionDisplayNew: "修改在正文，原文在页边",
   revisionDisplayFinal: "只看修改后的结果",
+  revisionDisplayNoRoom: "空间不够：关掉侧边栏或 AI 面板即可",
   proposalDeletedSentence: "原文",
   reviewBarLabel: "修订",
   reviewBarOpenChat: "打开 AI 面板",
@@ -216,8 +217,6 @@ export default {
   levisImportNothing: "没有需要导入的新内容：Levis 的数据 Textus 都已经有了。",
   levisImportFailed: "有些文件没能复制：",
   levisImportRow: "从 Levis 导入",
-  levisImportRowHint:
-    "复制设置、历史记录、主题等内容，Levis 里的内容保持不变。",
   levisImportButton: "导入…",
   levisImportNone: "这台电脑上没有 Levis 的数据。",
   levisItemSettings: "设置",
@@ -613,8 +612,6 @@ export default {
   restoreSessionLabel: "启动时恢复上次会话",
   autoSuggestFilenameLabel: "新文件保存时自动建议文件名",
   autosaveLabel: "自动保存",
-  autosaveHint:
-    "已有文件的文档在停止输入片刻后、切换标签页或离开窗口时自动写回原文件。新建的文档在你命名保存之前不会自动保存。",
   untitledTab: "未命名",
   markdownGuideTab: "Markdown 指南",
   agentGuideTab: "AI 功能指南",
