@@ -1,4 +1,9 @@
-import { decodeUrlPath, dirname } from "../../utils/path";
+import {
+  decodeUrlPath,
+  dirname,
+  hasUrlScheme,
+  isDrivePath,
+} from "../../utils/path";
 
 /** Where a followed link leads (link-click-plugin.ts). */
 export type LinkTarget =
@@ -32,8 +37,8 @@ export function linkTarget(
       : null;
   // A Windows drive path ("C:\..." / "C:/...") would otherwise read as a
   // single-letter URL scheme to the test below.
-  const drive = /^[a-z]:[\\/]/i.test(link);
-  if (!drive && /^[a-z][a-z0-9+.-]*:/i.test(link))
+  const drive = isDrivePath(link);
+  if (!drive && hasUrlScheme(link))
     return /^(https?|mailto):/i.test(link) ? { kind: "web", url: link } : null;
   // The anchor of a link into another file is dropped: that file opens at
   // its top.
