@@ -225,19 +225,38 @@
   min-width: 72px;
 }
 
-/* How much text rides along as context, and a way to drop it. */
+/* How much text rides along as context, and a way to drop it. Tinted like
+   the passage it stands for, which stays highlighted in the document while
+   the composer has the focus (.chat-selection, milkdown-theme.css): the two
+   read as one thing. Pointing at the chip strengthens both; a click scrolls
+   to the passage. */
 .inline-chat-selection-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-size: var(--text-xs);
-  color: var(--editor-muted);
-  border: 1px solid var(--editor-border);
+  color: var(--editor-text);
+  border: 1px solid color-mix(in srgb, var(--editor-accent) 30%, transparent);
   border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--editor-accent) 12%, transparent);
   padding: 2px 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.inline-chat-selection-chip:hover {
+  background: color-mix(in srgb, var(--editor-accent) 22%, transparent);
+}
+
+.inline-chat-chip-label {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 
 .inline-chat-chip-remove {
@@ -495,7 +514,6 @@
 .inline-chat-header + .inline-chat-bar .inline-chat-input,
 .inline-chat-header + .quick-ask-status,
 .inline-chat-header + .quick-ask-pending-bar,
-.inline-chat-header + .agent-plan-actions,
 .inline-chat-header + .inline-chat-confirm {
   padding-right: var(--quick-ask-actions-width);
 }
@@ -583,12 +601,6 @@
   margin-top: 4px;
   margin-left: 0;
   align-self: flex-start;
-}
-
-.agent-plan-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding: 8px;
 }
 
 .inline-chat-action {
@@ -867,8 +879,7 @@
 }
 
 /* What follows the bar paints over it while it moves. */
-.inline-chat-pending-bar
-  ~ :is(.inline-chat-bar, .inline-chat-skill-menu, .agent-plan-actions) {
+.inline-chat-pending-bar ~ :is(.inline-chat-bar, .inline-chat-skill-menu) {
   position: relative;
   background: var(--editor-bg, var(--bg));
 }

@@ -31,6 +31,7 @@ use super::checks_builtin::{self as cb, Metric, Register};
 use super::conventions::{self, Level};
 use super::docs::*;
 use super::harness::{self, TurnOutcome};
+use crate::ai::agent::AgentMode;
 
 // ------------------------------------------------------------- fixtures
 
@@ -525,7 +526,7 @@ fn revise_cases() -> Vec<AgentCase> {
         o.comments.iter().try_for_each(|(_, c)| checks::check_lang(c, Lang::ZhHans))
     }).check("no authorship verdict", |o| {
         ["AI 生成", "AI生成", "由 AI 写", "由AI写"].iter().find(|w| o.reply.contains(**w)).map_or(Ok(()), |w| Err(format!("reply says {w:?}")))
-    }), "Check only: comments pinned to the passages, each naming the pattern (时代开头, 不仅仅是…更是, 赋能, 彰显了, 总而言之…拭目以待) and why; no edits; no claim about who or what wrote the text.").mode("ask").disk(ws));
+    }), "Check only: comments pinned to the passages, each naming the pattern (时代开头, 不仅仅是…更是, 赋能, 彰显了, 总而言之…拭目以待) and why; no edits; no claim about who or what wrote the text.").mode(AgentMode::Review).disk(ws));
 
     let novel = NOVEL_EN.replace(
         "\"The bus broke down,\" he replied apologetically. \"I ran the last mile.\"",
@@ -611,7 +612,7 @@ fn check_cases() -> Vec<AgentCase> {
     );
     c.push(AgentCase::new("builtin/continuity/en/chapters", Lang::En, Lang::En, NOVEL_EN, "Check this chapter for contradictions with earlier chapters.", either().tools(&["search_files"]).comments().check("comment on the phone", |o| {
         o.comments.iter().any(|(a, _)| a.contains("phone")).then_some(()).ok_or_else(|| "no comment anchored on the phone".into())
-    }).without_tools(&["propose_edit"]), "Searches the project, finds chapter 6 (Tom never carried a phone) and comments on 'He held up his phone', citing chapter 6; nothing invented; no edits.").mode("ask").disk(ws));
+    }).without_tools(&["propose_edit"]), "Searches the project, finds chapter 6 (Tom never carried a phone) and comments on 'He held up his phone', citing chapter 6; nothing invented; no edits.").mode(AgentMode::Review).disk(ws));
 
     c
 }
@@ -693,7 +694,7 @@ fn format_cases() -> Vec<AgentCase> {
     c.push(AgentCase::new("builtin/headline/en/options", Lang::En, Lang::En, LANG_EN, "/headline give me five options", no_edit().check("five options", reply_items(5)).check("each 65 characters, no final period", |o| {
         let bad: Vec<String> = cb::top_level_items(&o.reply).iter().map(|i| cb::bare(i)).filter(|i| i.chars().count() > 65 || i.ends_with('.')).collect();
         bad.is_empty().then_some(()).ok_or_else(|| format!("{bad:?}"))
-    }), "Five accurate titles with varied angles (120 to 310 readers, Sunday closing, author visits); no clickbait; nothing the report doesn't say.").mode("ask").disk(ws));
+    }), "Five accurate titles with varied angles (120 to 310 readers, Sunday closing, author visits); no clickbait; nothing the report doesn't say.").mode(AgentMode::Review).disk(ws));
 
     let ws = plain("headline-wechat", WEEKLY_ZH);
     c.push(AgentCase::new("builtin/headline/zh/wechat", Lang::ZhHans, Lang::ZhHans, WEEKLY_ZH, "/headline 起一个公众号标题", edit_in("# 第 42 周工作周报（10.13 - 10.17）", StructureExpect::Same).lacks(&["震惊", "！！"]).check("32 characters at most", measured(Metric::Chars, 1, 32, h1)).check("no final 。", |o| (!h1(o).ends_with('。')).then_some(()).ok_or_else(|| format!("{:?}", h1(o)))), "A specific 公众号 title from the report's real content (订单模块, 96%, 看板); no clickbait.").disk(ws));
@@ -1144,7 +1145,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             describe(&c),
-            "route/none/en/meaning\tedit\ten\t[selection] What does this paragraph mean?"
+            "route/none/en/meaning\trevise\ten\t[selection] What does this paragraph mean?"
         );
     }
 }

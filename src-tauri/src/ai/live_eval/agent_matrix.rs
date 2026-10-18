@@ -1,7 +1,7 @@
 //! The agent matrix: every kind of request the chat gets - questions,
 //! rewrites in eleven languages, edits inside each Markdown construct,
 //! reviews, agent.md / style / library / skills / project files, multi-turn
-//! follow-ups, plan mode and ambiguous asks - each run through the app's
+//! follow-ups, the three modes and ambiguous asks - each run through the app's
 //! real prompt, tools and loop, checked automatically and graded by the
 //! judge.
 
@@ -12,6 +12,7 @@ use super::harness::{
     self, conversation_material, run_conversation, AgentSetup, Checks, Record, TurnOutcome,
     UserTurn,
 };
+use crate::ai::agent::AgentMode;
 use crate::ai::workspace::{AgentSkill, AgentWorkspace};
 use aicompat::providers::anthropic::AnthropicAuth;
 use serde_json::{json, Value};
@@ -142,7 +143,7 @@ pub struct AgentCase {
     pub doc: String,
     pub script: Vec<UserTurn>,
     pub expects: Vec<Expect>,
-    pub mode: &'static str,
+    pub mode: AgentMode,
     pub workspace: AgentWorkspace,
     /// When set, the workspace is loaded from these folders at run time
     /// instead of `workspace`.
@@ -172,7 +173,7 @@ impl AgentCase {
             doc: doc.to_string(),
             script: vec![UserTurn::new(message)],
             expects: vec![expect],
-            mode: "edit",
+            mode: AgentMode::Revise,
             workspace: AgentWorkspace::default(),
             disk: None,
             learn: None,
@@ -180,7 +181,7 @@ impl AgentCase {
             rubric: rubric.to_string(),
         }
     }
-    pub fn mode(mut self, mode: &'static str) -> Self {
+    pub fn mode(mut self, mode: AgentMode) -> Self {
         self.mode = mode;
         self
     }
@@ -206,7 +207,7 @@ impl AgentCase {
     }
     /// Quick Ask opened on `selected`: every message of the conversation
     /// goes out with the selection as it reads at send time (see
-    /// UserTurn::follow_selection), in edit mode (Quick Ask's default).
+    /// UserTurn::follow_selection), in Revise mode (Quick Ask's default).
     pub fn quick(mut self, selected: &str) -> Self {
         let start = self.doc.find(selected).expect("selection in document");
         self.script[0].caret = Caret {
@@ -216,7 +217,7 @@ impl AgentCase {
         for turn in &mut self.script {
             turn.follow_selection = true;
         }
-        self.mode = "edit";
+        self.mode = AgentMode::Revise;
         self
     }
     /// A follow-up message; `accept_previous` is what the user did with the
@@ -239,7 +240,7 @@ impl AgentCase {
             doc: String::new(),
             script: Vec::new(),
             expects: Vec::new(),
-            mode: "edit",
+            mode: AgentMode::Revise,
             workspace: AgentWorkspace::default(),
             disk: None,
             learn: Some(learn),
@@ -754,14 +755,14 @@ fn behaviour_cases() -> Vec<AgentCase> {
         ..Expect::default()
     };
     e.reply_any = vec![];
-    cases.push(AgentCase::new("review/edit-mode-comments", Lang::En, Lang::En, en, "Review this draft and point out its weakest spots. Don't change anything yet.", e, "Expect add_comment calls pinned to specific passages (e.g. the wordy Method paragraph, the vague intro, the abrupt last line, missing context for the numbers), no edits, and a short summary reply."));
+    cases.push(AgentCase::new("review/revise-mode-comments", Lang::En, Lang::En, en, "Review this draft and point out its weakest spots. Don't change anything yet.", e, "Expect add_comment calls pinned to specific passages (e.g. the wordy Method paragraph, the vague intro, the abrupt last line, missing context for the numbers), no edits, and a short summary reply."));
     let mut e = Expect {
         edit: EditExpect::Forbidden,
         comments: Some(true),
         ..Expect::default()
     };
     e.reply_any = vec![];
-    cases.push(AgentCase::new("review/ask-mode-zh", Lang::ZhHans, Lang::ZhHans, zh, "帮我看看这篇文章哪里写得不好，指出具体的段落。", e, "Ask mode review: expect comments pinned to specific passages in Chinese and a short Chinese summary, no edits.").mode("ask"));
+    cases.push(AgentCase::new("review/review-mode-zh", Lang::ZhHans, Lang::ZhHans, zh, "帮我看看这篇文章哪里写得不好，指出具体的段落。", e, "Review mode: expect comments pinned to specific passages in Chinese and a short Chinese summary, no edits.").mode(AgentMode::Review));
 
     let mut q = no_edit();
     q.reply_any = vec![];
@@ -769,22 +770,6 @@ fn behaviour_cases() -> Vec<AgentCase> {
     let mut q = no_edit();
     q.reply_any = vec![];
     cases.push(AgentCase::new("ask/why-question-zh", Lang::ZhHans, Lang::ZhHans, zh, "我为什么要在“发现”里提到周日闭馆时间？", q, "A question about the author's intent: expect a short Chinese answer (it's the most common complaint and explains why Sunday sessions end early), NO edit."));
-
-    let mut q = no_edit();
-    q.reply_any = vec![];
-    q.custom = Some(|o| {
-        let lines = o.reply.lines().filter(|l| {
-            let t = l.trim_start();
-            t.starts_with("- ")
-                || t.starts_with("* ")
-                || t.chars().next().is_some_and(|c| c.is_ascii_digit())
-                || t.starts_with('#')
-        });
-        (lines.count() >= 3)
-            .then_some(())
-            .ok_or_else(|| "plan is not structured".to_string())
-    });
-    cases.push(AgentCase::new("plan/restructure", Lang::En, Lang::En, en, "Plan how to restructure this report for a city council audience.", q, "Plan mode: expect a concrete, structured plan (ordered steps or an outline) tailored to a council audience (lead with outcomes and the ask, e.g. Sunday hours), no edits.").mode("plan"));
 
     // Ambiguity: either a reasonable, contained improvement or a question.
     let amb = Expect {
@@ -966,7 +951,7 @@ fn workspace_cases() -> Vec<AgentCase> {
     };
     let mut q = no_edit();
     q.reply_any = s(&["语文"]);
-    cases.push(AgentCase::new("library/zh-alias-fact", Lang::ZhHans, Lang::ZhHans, "# 第一章\n\n晚晚推开教室的门。\n", "晚晚是做什么工作的？用一句话回答。", q, "The library entry (reached through the alias 晚晚) says 林晚 is a middle-school Chinese teacher. Expect a one-sentence Chinese answer saying so, no edit.").mode("ask").workspace(ws_zh));
+    cases.push(AgentCase::new("library/zh-alias-fact", Lang::ZhHans, Lang::ZhHans, "# 第一章\n\n晚晚推开教室的门。\n", "晚晚是做什么工作的？用一句话回答。", q, "The library entry (reached through the alias 晚晚) says 林晚 is a middle-school Chinese teacher. Expect a one-sentence Chinese answer saying so, no edit.").mode(AgentMode::Review).workspace(ws_zh));
     cases.push(AgentCase::new("library/character-consistency", Lang::En, Lang::En, story, "After the first paragraph, add two sentences showing how Mira feels about the water.", e, "The library says Mira is afraid of deep water since a diving accident at 19, never swims, avoids looking down from boats. Expect two sentences inserted after the first paragraph that are consistent with that (fear, avoidance), in the story's restrained past-tense voice, not over-explained.").workspace(ws));
 
     // Skills: invoked by name (the frontend expands /name), and matched by
@@ -1529,7 +1514,7 @@ pub const COMPARISON_CASES: &[&str] = &[
     "md/rewrite-keeps-inline",
     "task/summarize-in-chat",
     "task/insert-at-cursor-en",
-    "review/edit-mode-comments",
+    "review/revise-mode-comments",
     "ambiguous/make-it-better",
     "multi/en-rejected-retry",
     "agentmd/reply-language-and-spelling",

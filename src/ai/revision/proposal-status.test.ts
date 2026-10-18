@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   annotateProposalStatuses,
+  isRefusal,
   refusedProposalIds,
 } from "./proposal-status";
 import { STOPPED_TOOL_RESULT } from "../chat/cancelled-turns";
@@ -49,6 +50,16 @@ describe("refusedProposalIds", () => {
   it("never stamps a status onto a refusal", () => {
     const out = annotateProposalStatuses(turns, { cut: "rejected" });
     expect(out[3]).toBe(turns[3]);
+  });
+
+  // tools.rs's propose_insertion: a replace sent in Write mode is refused,
+  // so its streamed preview is dropped and never offered.
+  it("treats Write mode's refusal of a replace as a refusal", () => {
+    expect(
+      isRefusal(
+        "Not proposed: Write mode only adds text, with append, insert_at_cursor, insert_after, insert_before - `replace` would change or remove text that is already there.",
+      ),
+    ).toBe(true);
   });
 });
 

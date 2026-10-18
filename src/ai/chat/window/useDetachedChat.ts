@@ -19,7 +19,9 @@ import {
   type ChatHandoffState,
   type ProposalsMessage,
   type ReembedMessage,
+  type SelectionChipMessage,
 } from "./chat-bridge";
+import type { SelectionChipHandlers } from "../ChatComposer";
 
 /**
  * Which chat window this WEBVIEW is talking to.
@@ -128,6 +130,8 @@ export interface DetachedChatHandlers {
   ) => void;
   /** The chat is about to send and wants the document as it reads NOW. */
   onContextRequest: () => void;
+  /** The window's selection chip (ChatComposer's selectionChip). */
+  selectionChip: SelectionChipHandlers;
 }
 
 /**
@@ -178,6 +182,16 @@ export function useDetachedChat(handlers: DetachedChatHandlers) {
       onWindowEvent<BulkDecisionMessage>(
         CHAT_TO_EDITOR.rejectAll,
         scoped(() => latest.current.onRejectAll()),
+      ),
+      onWindowEvent<SelectionChipMessage>(
+        CHAT_TO_EDITOR.selectionChip,
+        scoped((payload) =>
+          latest.current.selectionChip.onChange(payload.chip),
+        ),
+      ),
+      onWindowEvent<DocScopedMessage>(
+        CHAT_TO_EDITOR.revealSelection,
+        scoped(() => latest.current.selectionChip.onReveal()),
       ),
       onWindowEvent(CHAT_TO_EDITOR.requestContext, () =>
         latest.current.onContextRequest(),

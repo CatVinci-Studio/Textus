@@ -53,5 +53,5 @@ metadata:
 
 ## Deliver
 - Check: one add_comment per strong finding or per cluster of weak ones, naming the pattern and why it reads as formulaic.
-- Rewrite (Edit mode): one replace per paragraph that has findings; paragraphs without findings stay untouched.
+- Rewrite (Revise mode): one replace per paragraph that has findings; paragraphs without findings stay untouched.
 - Reply: the kinds of patterns changed, any flagged item kept on purpose and why, at most two questions.

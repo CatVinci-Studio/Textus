@@ -112,7 +112,6 @@ export function useAgentConversation(
   const uiLanguage = useLatest(useSettings().settings.language);
   const [error, setError] = useState<string | null>(null);
   const [retryable, setRetryable] = useState<RetryableSend | null>(null);
-  const [lastMode, setLastMode] = useState<AgentMode | null>(null);
   // The in-flight request's id, for stop() to cancel by - null when nothing
   // is running.
   const requestIdRef = useRef<string | null>(null);
@@ -145,12 +144,11 @@ export function useAgentConversation(
      *  were extracted and inlined into `message` by the caller; images have
      *  no text to inline and travel as provider image parts instead. */
     images: ImageAttachment[] = [],
-    options: AgentRequestOptions = { mode: "ask", webSearch },
+    options: AgentRequestOptions = { mode: "review", webSearch },
   ): Promise<AgentTurn[] | undefined> {
     const trimmed = message.trim();
     if (!trimmed || busy) return undefined;
     setBusy(true);
-    setLastMode(options.mode);
     setError(null);
     setRetryable(null);
     // The user's message shows immediately as a streamed turn - the real
@@ -274,7 +272,6 @@ export function useAgentConversation(
     setBusy(false);
     setError(null);
     setRetryable(null);
-    setLastMode(null);
   }
 
   // A new, empty conversation: a fresh Quick Ask from the right-click menu
@@ -303,7 +300,6 @@ export function useAgentConversation(
     busy,
     error,
     retryable,
-    lastMode,
     send,
     stop,
     retry,

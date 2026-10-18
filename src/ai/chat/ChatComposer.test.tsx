@@ -46,6 +46,7 @@ const { BUILTIN_SKILLS } = await import("../skills/builtin");
 
 const labels = {
   dropSelection: "Remove selection",
+  showSelection: "Show in document",
   atCursor: "At the cursor",
   placeholder: "Ask anything",
   send: "Send",
@@ -54,9 +55,9 @@ const labels = {
   selectedChars: (n: number) => `${n} chars selected`,
   attachmentTruncated: "(shortened)",
   attachmentNoVision: "This provider can't read images.",
-  modeAsk: "Ask",
-  modeEdit: "Edit",
-  modePlan: "Plan",
+  modeWrite: "Write",
+  modeReview: "Review",
+  modeRevise: "Revise",
   modeLabel: "Mode",
   webSearch: "Web search",
 };
@@ -78,7 +79,7 @@ function composer({ selectedText = null, onSend = () => {} }: ComposerOptions) {
       selectedText={selectedText}
       busy={false}
       labels={labels}
-      defaultMode="ask"
+      defaultMode="review"
       defaultWebSearch={false}
       onSend={onSend}
       onStop={() => {}}
@@ -136,6 +137,44 @@ describe("ChatComposer selection chip", () => {
     expect(screen.queryByText(/chars selected/)).not.toBeInTheDocument();
   });
 
+  it("tells the document while the chip shows, is pointed at, or is clicked", () => {
+    const onChange = vi.fn();
+    const onReveal = vi.fn();
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText="first passage"
+        busy={false}
+        labels={labels}
+        defaultMode="review"
+        defaultWebSearch={false}
+        selectionChip={{ onChange, onReveal }}
+        selectionPerMessage
+        onSend={() => {}}
+        onStop={() => {}}
+        onEscape={() => {}}
+      />,
+    );
+    expect(onChange).toHaveBeenLastCalledWith({ shown: true, hot: false });
+    const chip = screen.getByTitle("Show in document");
+    fireEvent.mouseEnter(chip.parentElement!);
+    expect(onChange).toHaveBeenLastCalledWith({ shown: true, hot: true });
+    fireEvent.click(chip);
+    expect(onReveal).toHaveBeenCalledOnce();
+    fireEvent.mouseLeave(chip.parentElement!);
+    expect(onChange).toHaveBeenLastCalledWith({ shown: true, hot: false });
+
+    // In the panel a selection rides with one message: sending uses it up,
+    // and the chip and its highlight go with it.
+    fireEvent.change(screen.getByPlaceholderText("Ask anything"), {
+      target: { value: "tighten this" },
+    });
+    fireEvent.click(screen.getByText("Send"));
+    expect(screen.queryByText(/chars selected/)).not.toBeInTheDocument();
+    expect(onChange).toHaveBeenLastCalledWith({ shown: false, hot: false });
+  });
+
   it("tells send whether the selection should ride along", () => {
     const { onSend } = renderComposer({ selectedText: "passage" });
     fireEvent.change(screen.getByPlaceholderText("Ask anything"), {
@@ -143,7 +182,7 @@ describe("ChatComposer selection chip", () => {
     });
     fireEvent.click(screen.getByText("Send"));
     expect(onSend).toHaveBeenCalledWith("tighten this", [], true, {
-      mode: "ask",
+      mode: "review",
       webSearch: false,
     });
   });
@@ -151,13 +190,17 @@ describe("ChatComposer selection chip", () => {
   it("sends the selected interaction mode and web-search choice", () => {
     const { onSend } = renderComposer();
     fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
-    fireEvent.click(screen.getByRole("option", { name: "Plan" }));
+    // Write, Review, Revise - the order the owner chose.
+    expect(
+      screen.getAllByRole("option").map((option) => option.textContent),
+    ).toEqual(["Write", "Review", "Revise"]);
+    fireEvent.click(screen.getByRole("option", { name: "Write" }));
     // Named for what it picks, not for one of its choices: a screen
     // reader used to hear "Ask" over a picker set to Plan.
-    expect(screen.queryByRole("combobox", { name: "Ask" })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: "Review" })).toBeNull();
     expect(
       screen.getByRole("combobox", { name: "Mode" }).textContent,
-    ).toContain("Plan");
+    ).toContain("Write");
     fireEvent.click(screen.getByLabelText("Web search"));
     fireEvent.change(screen.getByPlaceholderText("Ask anything"), {
       target: { value: "research this" },
@@ -165,7 +208,7 @@ describe("ChatComposer selection chip", () => {
     fireEvent.click(screen.getByText("Send"));
 
     expect(onSend).toHaveBeenCalledWith("research this", [], true, {
-      mode: "plan",
+      mode: "write",
       webSearch: true,
     });
   });
@@ -237,7 +280,7 @@ describe("ChatComposer attachments", () => {
       "what is this?",
       [imageAttachment],
       true,
-      { mode: "ask", webSearch: false },
+      { mode: "review", webSearch: false },
     );
     await waitFor(() =>
       expect(screen.queryByText("chart.png")).not.toBeInTheDocument(),
@@ -271,7 +314,7 @@ describe("ChatComposer pickers", () => {
         selectedText={null}
         busy={false}
         labels={{ ...labels, picker: pickerLabels(resolveStrings("zh"), "zh") }}
-        defaultMode="ask"
+        defaultMode="review"
         defaultWebSearch={false}
         onSend={onSend}
         onStop={() => {}}
@@ -342,7 +385,7 @@ describe("ChatComposer pickers", () => {
       '<skill name="continue-story" typed="/续写"></skill>\n\n林晚走进书店',
       [],
       true,
-      { mode: "ask", webSearch: false },
+      { mode: "review", webSearch: false },
     );
   });
 

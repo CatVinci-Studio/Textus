@@ -131,7 +131,20 @@ export type ImageStorageMode = "local" | "image-host";
 export type ImageHost = "picgo" | "smms" | "imgur" | "custom";
 const IMAGE_HOSTS: ImageHost[] = ["picgo", "smms", "imgur", "custom"];
 export type ImageNamingMode = "auto" | "original" | "ask";
-export type AgentMode = "ask" | "edit" | "plan";
+/** The AI conversation's mode: Write only adds text, Review only reads and
+ *  comments, Revise changes the text that is there. Mirrors `AgentMode` in
+ *  src-tauri/src/ai/agent.rs. */
+export type AgentMode = "write" | "review" | "revise";
+export const AGENT_MODES: readonly AgentMode[] = ["write", "review", "revise"];
+
+/** A stored mode as one of today's: Ask and Edit were renamed Review and
+ *  Revise in 1.1, and Plan, removed then, opens in Review. Anything else
+ *  is null. */
+export function migrateAgentMode(value: unknown): AgentMode | null {
+  if (value === "ask" || value === "plan") return "review";
+  if (value === "edit") return "revise";
+  return AGENT_MODES.includes(value as AgentMode) ? (value as AgentMode) : null;
+}
 
 export interface Settings {
   language: Lang;
@@ -301,7 +314,7 @@ const DEFAULT_SETTINGS: Settings = {
   aiProvider: "openai",
   writingModels: {},
   agentModels: {},
-  agentDefaultMode: "ask",
+  agentDefaultMode: "review",
   revisionDisplay: "original",
   completionTone: "default",
   writingConventions: "automatic",
@@ -419,11 +432,9 @@ export function normaliseSettings(parsed: Raw | null): Settings {
       writingModels: {
         ...(parsed.writingModels as Record<string, string> | undefined),
       },
-      agentDefaultMode: ["ask", "edit", "plan"].includes(
-        parsed.agentDefaultMode as string,
-      )
-        ? (parsed.agentDefaultMode as AgentMode)
-        : DEFAULT_SETTINGS.agentDefaultMode,
+      agentDefaultMode:
+        migrateAgentMode(parsed.agentDefaultMode) ??
+        DEFAULT_SETTINGS.agentDefaultMode,
       revisionDisplay: REVISION_DISPLAYS.includes(
         parsed.revisionDisplay as RevisionDisplay,
       )

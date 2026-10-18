@@ -1,3 +1,4 @@
+use crate::ai::agent::AgentMode;
 use crate::ai::builtin;
 use crate::ai::workspace::{AgentSkill, Invocation};
 use aicompat::agent::ToolSpec;
@@ -265,6 +266,15 @@ const EDIT_ACTIONS: [&str; 7] = [
     "insert_at_cursor",
 ];
 
+/// The actions that only add text - all Write mode's propose_edit offers
+/// (agent::AgentMode).
+const INSERT_ACTIONS: [&str; 4] = [
+    "append",
+    "insert_at_cursor",
+    "insert_after",
+    "insert_before",
+];
+
 fn needs_anchor(action: &str) -> bool {
     // replace_selection targets the user's captured selection, so there is
     // no anchor to locate (and the selection may not be unique in the
@@ -364,6 +374,23 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     // overlapping previews, of which only one can be applied (round-2
     // integration, skill/zh/slash).
     format!("Edit proposed - the user now sees it with an Apply button.{size} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
+}
+
+/// Write mode's propose_edit. Its schema offers only INSERT_ACTIONS, but a
+/// model may send another action anyway; it is refused here, so nothing
+/// that changes or removes the user's text reaches the editor in this mode.
+fn propose_insertion(ctx: &ToolContext, arguments: &str) -> String {
+    let action = serde_json::from_str::<serde_json::Value>(arguments)
+        .ok()
+        .and_then(|v| v.get("action")?.as_str().map(str::to_string))
+        .unwrap_or_default();
+    if !INSERT_ACTIONS.contains(&action.as_str()) {
+        return format!(
+            "Not proposed: Write mode only adds text, with {} - `{action}` would change or remove text that is already there. Add the new text instead, or tell the user that changing existing text needs Revise mode.",
+            INSERT_ACTIONS.join(", ")
+        );
+    }
+    propose_edit(ctx, arguments)
 }
 
 /// How long a stretch of text is, in the unit its language counts in:
@@ -810,11 +837,17 @@ fn measure_text(_ctx: &ToolContext, arguments: &str) -> String {
     }
 }
 
+/// propose_edit as Revise mode offers it: every action.
+const PROPOSE_EDIT_DESCRIPTION: &str = "Propose one edit to the document. Nothing is modified directly: the user reviews the proposal and applies it with one click. Call once per distinct edit. Pick the action that matches the intent: `replace` swaps `anchor` for `text`; `replace_selection` swaps the user's currently selected text (the <selected-text> block in their message; no `anchor` needed) for `text`; `insert_before`/`insert_after` add `text` around an untouched `anchor` - inside the paragraph when the anchor is a phrase or sentence within it (write `text` as words that read on from it - after a paragraph's last sentence, this continues the paragraph), as a new paragraph when the anchor is a whole block or `text` is block content (a heading, list, several paragraphs), and as a new line of the same table or list when the anchor is a whole row or list item line and `text` is another one; `delete` removes `anchor`; `append` adds `text` at the end of the document; `insert_at_cursor` adds `text` exactly where the user's cursor is (only when their message carries a <cursor> block showing it; no `anchor` needed). `anchor` must be copied verbatim from the document and occur exactly once - if the text you need to target appears more than once, keep `anchor` as the exact text being edited and also pass `context`. `text` must be valid markdown: `-` or `1.` for lists (never `•` or other bullet symbols), `#` for headings.";
+
+/// propose_edit as Write mode offers it: the insertion actions only.
+const PROPOSE_INSERTION_DESCRIPTION: &str = "Propose new text for the document. Nothing is modified directly: the user reviews the proposal and applies it with one click. Call once per distinct addition. It only adds text and never changes or removes what is there: `append` adds `text` at the end of the document; `insert_at_cursor` adds `text` exactly where the user's cursor is (only when their message carries a <cursor> block showing it; no `anchor` needed); `insert_before`/`insert_after` add `text` around an untouched `anchor` - inside the paragraph when the anchor is a phrase or sentence within it (write `text` as words that read on from it - after a paragraph's last sentence, this continues the paragraph), as a new paragraph when the anchor is a whole block or `text` is block content (a heading, list, several paragraphs), and as a new line of the same table or list when the anchor is a whole row or list item line and `text` is another one. To write after the user's selection (the <selected-text> block), insert_after its last sentence. `anchor` must be copied verbatim from the document and occur exactly once - if it appears more than once, also pass `context`. `text` must be valid markdown: `-` or `1.` for lists (never `•` or other bullet symbols), `#` for headings.";
+
 /// The tools available to an agent conversation. Skill and file tools are
 /// only offered when there's something for them to work on - a tool that can
 /// only report "nothing there" would just waste the model's steps. Append
 /// here (or extend to merge in MCP-provided tools) as the toolset grows.
-pub fn builtin_tools(has_skills: bool, has_root: bool, allow_edits: bool) -> Vec<Tool> {
+pub fn builtin_tools(has_skills: bool, has_root: bool, mode: AgentMode) -> Vec<Tool> {
     let mut tools = vec![Tool {
             spec: ToolSpec {
                 name: SEARCH_TOOL_NAME,
@@ -913,7 +946,7 @@ pub fn builtin_tools(has_skills: bool, has_root: bool, allow_edits: bool) -> Vec
     });
 
     // Comments change nothing, so every mode has them - feedback is most
-    // often asked for in Ask mode.
+    // often asked for in Review mode.
     tools.push(Tool {
         spec: ToolSpec {
             name: ADD_COMMENT_TOOL_NAME,
@@ -940,20 +973,34 @@ pub fn builtin_tools(has_skills: bool, has_root: bool, allow_edits: bool) -> Vec
         run: add_comment,
     });
 
-    // Ask and Plan are structurally read-only: the model never receives the
-    // edit tool, so a provider cannot accidentally ignore a prompt-only mode
-    // instruction and create a proposal anyway.
-    if allow_edits {
+    // Review is structurally read-only: the model never receives the edit
+    // tool, so a provider cannot accidentally ignore a prompt-only mode
+    // instruction and create a proposal anyway. Write receives it with the
+    // insertion actions only, and propose_insertion refuses any other.
+    let edit_tool = match mode {
+        AgentMode::Review => None,
+        AgentMode::Revise => Some((
+            PROPOSE_EDIT_DESCRIPTION,
+            &EDIT_ACTIONS[..],
+            propose_edit as fn(&ToolContext, &str) -> String,
+        )),
+        AgentMode::Write => Some((
+            PROPOSE_INSERTION_DESCRIPTION,
+            &INSERT_ACTIONS[..],
+            propose_insertion as _,
+        )),
+    };
+    if let Some((description, actions, run)) = edit_tool {
         tools.push(Tool {
             spec: ToolSpec {
                 name: PROPOSE_EDIT_TOOL_NAME,
-                description: "Propose one edit to the document. Nothing is modified directly: the user reviews the proposal and applies it with one click. Call once per distinct edit. Pick the action that matches the intent: `replace` swaps `anchor` for `text`; `replace_selection` swaps the user's currently selected text (the <selected-text> block in their message; no `anchor` needed) for `text`; `insert_before`/`insert_after` add `text` around an untouched `anchor` - inside the paragraph when the anchor is a phrase or sentence within it (write `text` as words that read on from it - after a paragraph's last sentence, this continues the paragraph), as a new paragraph when the anchor is a whole block or `text` is block content (a heading, list, several paragraphs), and as a new line of the same table or list when the anchor is a whole row or list item line and `text` is another one; `delete` removes `anchor`; `append` adds `text` at the end of the document; `insert_at_cursor` adds `text` exactly where the user's cursor is (only when their message carries a <cursor> block showing it; no `anchor` needed). `anchor` must be copied verbatim from the document and occur exactly once - if the text you need to target appears more than once, keep `anchor` as the exact text being edited and also pass `context`. `text` must be valid markdown: `-` or `1.` for lists (never `•` or other bullet symbols), `#` for headings.",
+                description,
                 parameters: json!({
                     "type": "object",
                     "properties": {
                         "action": {
                             "type": "string",
-                            "enum": EDIT_ACTIONS,
+                            "enum": actions,
                             "description": "What kind of edit this is"
                         },
                         "anchor": {
@@ -976,7 +1023,7 @@ pub fn builtin_tools(has_skills: bool, has_root: bool, allow_edits: bool) -> Vec
                     "required": ["action"],
                 }),
             },
-            run: propose_edit,
+            run,
         });
     }
 
@@ -1201,8 +1248,8 @@ mod tests {
 
     #[test]
     fn the_rules_tools_are_in_every_mode() {
-        for edits in [false, true] {
-            let names: Vec<&str> = builtin_tools(false, false, edits)
+        for mode in [AgentMode::Review, AgentMode::Revise, AgentMode::Write] {
+            let names: Vec<&str> = builtin_tools(false, false, mode)
                 .iter()
                 .map(|t| t.spec.name)
                 .collect();
@@ -1229,16 +1276,53 @@ mod tests {
     }
 
     #[test]
-    fn read_only_modes_do_not_receive_the_edit_tool() {
-        let read_only = builtin_tools(true, true, false);
-        assert!(!read_only
-            .iter()
-            .any(|tool| tool.spec.name == PROPOSE_EDIT_TOOL_NAME));
+    fn review_mode_does_not_receive_the_edit_tool() {
+        let edit_tool = |mode| {
+            builtin_tools(true, true, mode)
+                .into_iter()
+                .find(|tool| tool.spec.name == PROPOSE_EDIT_TOOL_NAME)
+        };
+        assert!(edit_tool(AgentMode::Review).is_none());
+        let actions =
+            |mode| edit_tool(mode).unwrap().spec.parameters["properties"]["action"]["enum"].clone();
+        assert_eq!(actions(AgentMode::Revise), json!(EDIT_ACTIONS));
+        assert_eq!(actions(AgentMode::Write), json!(INSERT_ACTIONS));
+    }
 
-        let editing = builtin_tools(true, true, true);
-        assert!(editing
-            .iter()
-            .any(|tool| tool.spec.name == PROPOSE_EDIT_TOOL_NAME));
+    #[test]
+    fn write_mode_refuses_an_edit_that_changes_existing_text() {
+        let doc = "The cat sat on the mat.";
+        let tools = builtin_tools(false, false, AgentMode::Write);
+        let ctx = ctx(doc);
+        let run = |args: &str| execute(&tools, &ctx, PROPOSE_EDIT_TOOL_NAME, args);
+        for args in [
+            r#"{"action":"replace","anchor":"The cat sat on the mat.","text":"A dog."}"#,
+            r#"{"action":"replace_selection","text":"A dog."}"#,
+            r#"{"action":"delete","anchor":"The cat sat on the mat."}"#,
+            r#"{"action":"rewrite","text":"A dog."}"#,
+        ] {
+            let out = run(args);
+            assert!(
+                out.starts_with("Not proposed: Write mode only adds text"),
+                "{out}"
+            );
+            assert!(out.contains("Revise mode"), "{out}");
+        }
+        for args in [
+            r#"{"action":"insert_after","anchor":"The cat sat on the mat.","text":"It purred."}"#,
+            r#"{"action":"append","text":"It purred."}"#,
+        ] {
+            assert!(run(args).starts_with("Edit proposed"), "{args}");
+        }
+        // Revise keeps every action.
+        let revise = builtin_tools(false, false, AgentMode::Revise);
+        assert!(execute(
+            &revise,
+            &ctx,
+            PROPOSE_EDIT_TOOL_NAME,
+            r#"{"action":"delete","anchor":"The cat sat on the mat."}"#
+        )
+        .starts_with("Edit proposed"));
     }
 
     #[test]

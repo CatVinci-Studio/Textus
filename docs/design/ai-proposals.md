@@ -29,6 +29,27 @@ shown. Previews are pure decorations - until the user clicks Accept, the
 document text is untouched. Accept (`applyEditRange`) is the **only** write
 path: one transaction, one undo step, no direct-apply fallback.
 
+## Modes: which proposals a conversation may make
+
+The composer's mode (`AgentMode`, see
+[ai-concepts.md](ai-concepts.md#not-a-file-modes)) decides what reaches
+this pipeline, and it is enforced in Rust, not only asked for in the prompt
+(`tools.rs`'s `builtin_tools`):
+
+| Mode   | `propose_edit`                                                     |
+| ------ | ------------------------------------------------------------------ |
+| Write  | `append`, `insert_at_cursor`, `insert_after`, `insert_before` only |
+| Review | not offered                                                        |
+| Revise | every action                                                       |
+
+Write's schema lists only the insertion actions, and `propose_insertion`
+refuses any other action a model sends anyway; the refusal is a tool result
+like any validation failure, so its streamed preview is discarded
+(`isRefusal`) and nothing that replaces or deletes text reaches the editor.
+A Write proposal is the same green pending block as any insertion: shown,
+not applied, until Accept. With a selection, Write inserts after it
+(`insert_after`), never over it.
+
 ## Writing phase: the `ProposalStream` machine
 
 `ai/revision/proposal-stream.ts` - plain logic, no ProseMirror dependency. Every

@@ -18,7 +18,11 @@ import {
   type ChatMessagesLabels,
   type ChatMessagesProps,
 } from "./ChatMessages";
-import { ChatComposer, type ChatComposerLabels } from "./ChatComposer";
+import {
+  ChatComposer,
+  type ChatComposerLabels,
+  type SelectionChipHandlers,
+} from "./ChatComposer";
 import { MarkdownText } from "../MarkdownText";
 import { useRevealedText } from "./useRevealedText";
 import {
@@ -48,8 +52,6 @@ export interface ChatBodyLabels
   pendingReveal: string;
   expandInline: string;
   collapseInline: string;
-  approvePlan: string;
-  executePlanRequest: string;
 }
 
 export interface ChatBodyProps {
@@ -130,6 +132,8 @@ export interface ChatBodyProps {
   /** Quick variant docked on a phone: the panel's own controls, shown in
    *  the composer's top row (ChatComposer's `dockActions`). */
   dockActions?: React.ReactNode;
+  /** See ChatComposer's selectionChip. */
+  selectionChip?: SelectionChipHandlers;
 }
 
 /** The Quick Ask nav bar's whole contract - see ChatBodyProps.quickReview. */
@@ -228,6 +232,7 @@ export function ChatBody({
   onRevealPending,
   quickReview,
   dockActions,
+  selectionChip,
 }: ChatBodyProps) {
   const phone = usePhoneLayout();
   const {
@@ -236,7 +241,6 @@ export function ChatBody({
     busy,
     error,
     retryable,
-    lastMode,
     send,
     stop,
     retry,
@@ -401,15 +405,8 @@ export function ChatBody({
       () => ({
         message: labels.relocateRequest.replace("{text}", proposal.text ?? ""),
       }),
-      { mode: "edit", webSearch: false },
+      { mode: "revise", webSearch: false },
     );
-  }
-
-  function approvePlan() {
-    dispatchSend(() => ({ message: labels.executePlanRequest }), {
-      mode: "edit",
-      webSearch: defaultWebSearch,
-    });
   }
 
   function handleRetry() {
@@ -612,16 +609,6 @@ export function ChatBody({
           )}
         </Presence>
       )}
-      {lastMode === "plan" && !busy && history.length > 0 && (
-        <div className="agent-plan-actions">
-          <button
-            className="inline-chat-action inline-chat-action-primary"
-            onClick={approvePlan}
-          >
-            {labels.approvePlan}
-          </button>
-        </div>
-      )}
       <ChatComposer
         docPath={docPath}
         workspaceRoot={workspaceRoot}
@@ -630,7 +617,8 @@ export function ChatBody({
         labels={labels}
         defaultMode={defaultMode}
         carryMode={variant !== "quick"}
-        allowPlan={variant !== "quick"}
+        selectionChip={selectionChip}
+        selectionPerMessage={variant !== "quick"}
         compact={variant === "quick"}
         focusOnOpen={variant === "quick" || !phone}
         dockActions={dockActions}

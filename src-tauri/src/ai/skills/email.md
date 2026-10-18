@@ -46,6 +46,7 @@ metadata:
 - Add humour, ALL CAPS or stacked exclamation marks.
 
 ## Deliver
-- Edit mode: replace the notes with the email, or append it below them if the user wants the notes kept; append a reply below the email it answers; replace the parts that change in a rework.
-- Ask mode: the email in the reply.
+- Revise mode: replace the notes with the email, or append it below them if the user wants the notes kept; append a reply below the email it answers; replace the parts that change in a rework.
+- Write mode: append the email below the notes, and a reply below the email it answers; a rework changes what is there, so it needs Revise mode.
+- Review mode: the email in the reply.
 - Reply in one or two sentences, plus a question for any fact you need (a date, a name).

@@ -306,14 +306,14 @@ test("a pending replace keeps its strike on its text while the user types above 
   await expect(page.locator(".milkdown")).toContainText("Bravo 2 words here.");
 });
 
-test("Quick Ask opens on a selection in edit mode", async ({ page }) => {
+test("Quick Ask opens on a selection in Revise mode", async ({ page }) => {
   await openApp(page);
   await pasteMarkdown(page, SAMPLE_DOC);
   await page.locator(".milkdown p").nth(1).click({ clickCount: 3 });
   await page.keyboard.press("Control+Shift+K");
   await expect(page.locator(".inline-chat")).toBeVisible();
   await expect(page.locator(".inline-chat .inline-chat-mode")).toHaveText(
-    "编辑",
+    "修订",
   );
   await expect(page).toHaveScreenshot("quick-ask.png");
 });

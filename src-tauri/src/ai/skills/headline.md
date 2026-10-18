@@ -41,6 +41,7 @@ metadata:
 - Use clickbait, exaggeration or shock words (震惊, 必看, "you won't believe"), or stacked ！！.
 
 ## Deliver
-- Edit mode: replace the H1 (or insert one when the document has none). One proposal.
-- When the user asks for options, or in Ask mode: the options in the reply as a list, each within the length limit, no edit.
+- Revise mode: replace the H1 (or insert one when the document has none). One proposal.
+- Write mode: insert an H1 when the document has none; replacing one needs Revise mode.
+- When the user asks for options, or in Review mode: the options in the reply as a list, each within the length limit, no edit.
 - Reply in one sentence on the angle you chose.

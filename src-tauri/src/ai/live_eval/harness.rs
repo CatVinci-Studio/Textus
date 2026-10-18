@@ -6,7 +6,7 @@
 
 use super::checks::{self, Caret, Proposal};
 use crate::ai::agent::{
-    build_instructions, compact_history, request_context, request_user_text, MAX_STEPS,
+    build_instructions, compact_history, request_context, request_user_text, AgentMode, MAX_STEPS,
 };
 use crate::ai::tools::{self, ToolContext};
 use crate::ai::workspace::AgentWorkspace;
@@ -426,7 +426,7 @@ impl Conversation {
 
 pub struct AgentSetup<'a> {
     pub model: &'a str,
-    pub mode: &'a str,
+    pub mode: AgentMode,
     pub workspace: &'a AgentWorkspace,
     /// None: each turn sends the heading above its selection or cursor, as
     /// the editor does (headingAt); Some overrides it.
@@ -458,8 +458,7 @@ pub fn run_conversation(
 ) -> Conversation {
     let ws = setup.workspace;
     let root = ws.root.as_deref().map(Path::new);
-    let tool_set =
-        tools::builtin_tools(ws.has_usable_skills(), root.is_some(), setup.mode == "edit");
+    let tool_set = tools::builtin_tools(ws.has_usable_skills(), root.is_some(), setup.mode);
     let specs = tools::tool_specs(&tool_set);
     let mut history: Vec<AgentTurn> = Vec::new();
     let mut doc = document.to_string();

@@ -36,6 +36,7 @@ use super::checks::{self, Lang, StructureExpect};
 use super::completion_matrix::CompletionCase;
 use super::docs::*;
 use super::harness::TurnOutcome;
+use crate::ai::agent::AgentMode;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -392,7 +393,7 @@ fn workspace_cases() -> Vec<AgentCase> {
         "# 第二章\n\n秋天，书店来了一批旧书。林晚一本一本地擦。\n",
     );
     let ws = doc_folder(&dir, "第三章.md", NOVEL_ZH);
-    c.push(AgentCase::new("workspace/zh/search-chapters", Lang::ZhHans, Lang::ZhHans, NOVEL_ZH, "前面的章节里，林晚的猫叫什么名字？", no_edit().reply(&["年糕"]).check("looked in the folder", used_file_tools), "The other chapters sit in the document's folder: expect search_files/read_file to find that the cat is called 年糕 (an orange cat, chapter one), answered in Chinese without editing.").mode("ask").disk(ws));
+    c.push(AgentCase::new("workspace/zh/search-chapters", Lang::ZhHans, Lang::ZhHans, NOVEL_ZH, "前面的章节里，林晚的猫叫什么名字？", no_edit().reply(&["年糕"]).check("looked in the folder", used_file_tools), "The other chapters sit in the document's folder: expect search_files/read_file to find that the cat is called 年糕 (an orange cat, chapter one), answered in Chinese without editing.").mode(AgentMode::Review).disk(ws));
 
     // Outside the project folder: refused by the sandbox, and said so.
     let base = scratch("outside-en");
@@ -453,7 +454,7 @@ fn workspace_cases() -> Vec<AgentCase> {
         show: vec![base.clone()],
         ..DiskWorkspace::default()
     };
-    c.push(AgentCase::new("workspace/en/override-root", Lang::En, Lang::En, STORY_EN, "What does sources.md say about the 2019 survey?", no_edit().reply(&["312"]).check("looked in the folder", used_file_tools), "The project folder is set to research/ (not the document's drafts/ folder): sources.md is readable there, and the writing instructions in drafts/.textus/agent.md ('reply in French') do not apply. Expect an English answer: 312 fishing boats, down from 540 in 1990.").mode("ask").disk(ws));
+    c.push(AgentCase::new("workspace/en/override-root", Lang::En, Lang::En, STORY_EN, "What does sources.md say about the 2019 survey?", no_edit().reply(&["312"]).check("looked in the folder", used_file_tools), "The project folder is set to research/ (not the document's drafts/ folder): sources.md is readable there, and the writing instructions in drafts/.textus/agent.md ('reply in French') do not apply. Expect an English answer: 312 fishing boats, down from 540 in 1990.").mode(AgentMode::Review).disk(ws));
 
     // The document's folder with its own agent.md and notes.
     let dir = scratch("doc-folder-agentmd");
@@ -519,7 +520,7 @@ fn agentmd_library_skill_cases() -> Vec<AgentCase> {
         "---\nname: Marrow\ninclude: never\n---\nAn old trawler. (Never sent: include is never.)",
     );
     let ws = doc_folder(&dir, "chapter-2.md", STORY_EN);
-    c.push(AgentCase::new("library/en/alias-fact", Lang::En, Lang::En, STORY_EN, "How old is the Captain, and what is she afraid of?", no_edit().reply(&["52"]).check("names the fear", |o| o.reply.to_lowercase().contains("fire").then_some(()).ok_or_else(|| "no fire in the reply".into())), "The library entry Ines Duarte (aliases: the Captain) says she is 52 and afraid of fire since a 2009 engine-room blaze. Expect a short English answer from it, no edit.").mode("ask").disk(ws));
+    c.push(AgentCase::new("library/en/alias-fact", Lang::En, Lang::En, STORY_EN, "How old is the Captain, and what is she afraid of?", no_edit().reply(&["52"]).check("names the fear", |o| o.reply.to_lowercase().contains("fire").then_some(()).ok_or_else(|| "no fire in the reply".into())), "The library entry Ines Duarte (aliases: the Captain) says she is 52 and afraid of fire since a 2009 engine-room blaze. Expect a short English answer from it, no edit.").mode(AgentMode::Review).disk(ws));
 
     let dir = scratch("library-zh");
     put(&dir, ".textus/library/lin.md", "---\nname: 林晚\naliases: [晚晚]\n---\n书店店员，二十九岁。从不喝咖啡，只喝热水或者淡茶。话很少。");
@@ -709,9 +710,9 @@ fn other_languages_names(lang: Lang) -> &'static [&'static str] {
             "文风档案",
             "学习我的文风",
             "全局配置文件夹",
-            "edit モード",
-            "ask モード",
-            "plan モード",
+            "review モード",
+            "revise モード",
+            "write モード",
             "style profile",
             "writing instructions",
         ],
@@ -723,11 +724,11 @@ fn other_languages_names(lang: Lang) -> &'static [&'static str] {
             "文体プロファイル",
             "文体を学習",
             "グローバル設定フォルダー",
-            "edit 模式",
-            "ask 模式",
-            "plan 模式",
-            "edit模式",
-            "ask模式",
+            "review 模式",
+            "revise 模式",
+            "write 模式",
+            "review模式",
+            "revise模式",
             "style profile",
             "writing instructions",
         ],
@@ -767,7 +768,7 @@ fn uses_ui_names(
 }
 
 /// Questions about the concepts themselves, asked in the panel's default
-/// Ask mode from a saved document: the agent must answer with the names,
+/// Review mode from a saved document: the agent must answer with the names,
 /// menu items and Settings rows the user's UI shows, in the user's
 /// language (agent.rs's workspace_section tells it them in en, zh, ja).
 fn concept_cases() -> Vec<AgentCase> {
@@ -775,35 +776,35 @@ fn concept_cases() -> Vec<AgentCase> {
 
     let dir = scratch("concept-en-style");
     let ws = doc_folder(&dir, "mill-street.md", ESSAY_EN);
-    c.push(AgentCase::new("concept/en/style", Lang::En, Lang::En, ESSAY_EN, "How do I get you to write more like me in this project?", no_edit().check("UI names", uses_ui_names(Lang::En, &[&["style profile"], &["learn my style"]])), "Expect a short English answer: the style profile (.textus/style.md), which Learn my style from samples… in the project menu drafts from the user's own writing (or Create style profile), followed in conversations and completion. Names as in the UI; no invented settings.").mode("ask").disk(ws));
+    c.push(AgentCase::new("concept/en/style", Lang::En, Lang::En, ESSAY_EN, "How do I get you to write more like me in this project?", no_edit().check("UI names", uses_ui_names(Lang::En, &[&["style profile"], &["learn my style"]])), "Expect a short English answer: the style profile (.textus/style.md), which Learn my style from samples… in the project menu drafts from the user's own writing (or Create style profile), followed in conversations and completion. Names as in the UI; no invented settings.").mode(AgentMode::Review).disk(ws));
 
     let dir = scratch("concept-zh-style");
     let ws = doc_folder(&dir, "外婆的厨房.md", ESSAY_ZH);
-    c.push(AgentCase::new("concept/zh/style", Lang::ZhHans, Lang::ZhHans, ESSAY_ZH, "怎么才能让你以后都照我的文风来改稿？", no_edit().check("UI names", uses_ui_names(Lang::ZhHans, &[&["文风档案"], &["学习我的文风"]])), "Expect a short Chinese answer: the 文风档案 (.textus/style.md), drafted by 从样本学习我的文风… in the project menu (or 新建文风档案), followed in conversations and completion. UI names, full-width punctuation.").mode("ask").disk(ws));
+    c.push(AgentCase::new("concept/zh/style", Lang::ZhHans, Lang::ZhHans, ESSAY_ZH, "怎么才能让你以后都照我的文风来改稿？", no_edit().check("UI names", uses_ui_names(Lang::ZhHans, &[&["文风档案"], &["学习我的文风"]])), "Expect a short Chinese answer: the 文风档案 (.textus/style.md), drafted by 从样本学习我的文风… in the project menu (or 新建文风档案), followed in conversations and completion. UI names, full-width punctuation.").mode(AgentMode::Review).disk(ws));
 
     let dir = scratch("concept-zh-library");
     let ws = doc_folder(&dir, "第三章.md", NOVEL_ZH);
-    c.push(AgentCase::new("concept/zh/library", Lang::ZhHans, Lang::ZhHans, NOVEL_ZH, "小说里的人物越来越多，怎么让你记住每个人的设定，别写错？", no_edit().check("UI names", uses_ui_names(Lang::ZhHans, &[&["资料库"]])), "Expect a short Chinese answer: the 资料库 (.textus/library/, one entry per character, made with 新建资料库条目… in the project menu; an entry is sent when its name or an alias comes up). Optionally the 写作要求 for project background. UI names only.").mode("ask").disk(ws));
+    c.push(AgentCase::new("concept/zh/library", Lang::ZhHans, Lang::ZhHans, NOVEL_ZH, "小说里的人物越来越多，怎么让你记住每个人的设定，别写错？", no_edit().check("UI names", uses_ui_names(Lang::ZhHans, &[&["资料库"]])), "Expect a short Chinese answer: the 资料库 (.textus/library/, one entry per character, made with 新建资料库条目… in the project menu; an entry is sent when its name or an alias comes up). Optionally the 写作要求 for project background. UI names only.").mode(AgentMode::Review).disk(ws));
 
     let dir = scratch("concept-en-global");
     let ws = doc_folder(&dir, "welcome.md", BETA_EN);
-    c.push(AgentCase::new("concept/en/global-instructions", Lang::En, Lang::En, BETA_EN, "I want you to always reply in British English, in all my documents. Where do I set that once?", no_edit().check("UI names", uses_ui_names(Lang::En, &[&["writing instructions"], &["settings"]])), "Expect a short English answer: the global writing instructions, Settings > Textus AI > Writing Instructions (agent.md) > Edit agent.md, sent with every conversation in every document (a project's own writing instructions can add to them). No 'workspace', no invented menu.").mode("ask").disk(ws));
+    c.push(AgentCase::new("concept/en/global-instructions", Lang::En, Lang::En, BETA_EN, "I want you to always reply in British English, in all my documents. Where do I set that once?", no_edit().check("UI names", uses_ui_names(Lang::En, &[&["writing instructions"], &["settings"]])), "Expect a short English answer: the global writing instructions, Settings > Textus AI > Writing Instructions (agent.md) > Edit agent.md, sent with every conversation in every document (a project's own writing instructions can add to them). No 'workspace', no invented menu.").mode(AgentMode::Review).disk(ws));
 
     let dir = scratch("concept-en-project");
     let ws = doc_folder(&dir, "chapter-2.md", STORY_EN);
-    c.push(AgentCase::new("concept/en/project-instructions", Lang::En, Lang::En, STORY_EN, "This story needs its own rules: Ines narrates, and the tone stays dry. How do I give you rules for just this project?", no_edit().check("UI names", uses_ui_names(Lang::En, &[&["writing instructions"], &["edit project writing instructions", ".textus/agent.md"]])), "Expect a short English answer: the project's writing instructions, opened with Edit project writing instructions in the project menu (.textus/agent.md), sent after the global ones and winning where they conflict. Optionally the style profile for the dry tone and the library for Ines.").mode("ask").disk(ws));
+    c.push(AgentCase::new("concept/en/project-instructions", Lang::En, Lang::En, STORY_EN, "This story needs its own rules: Ines narrates, and the tone stays dry. How do I give you rules for just this project?", no_edit().check("UI names", uses_ui_names(Lang::En, &[&["writing instructions"], &["edit project writing instructions", ".textus/agent.md"]])), "Expect a short English answer: the project's writing instructions, opened with Edit project writing instructions in the project menu (.textus/agent.md), sent after the global ones and winning where they conflict. Optionally the style profile for the dry tone and the library for Ines.").mode(AgentMode::Review).disk(ws));
 
     let dir = scratch("concept-zh-skill");
     let ws = doc_folder(&dir, "改期说明.md", EMAIL_ZH);
-    c.push(AgentCase::new("concept/zh/skill", Lang::ZhHans, Lang::ZhHans, EMAIL_ZH, "我经常要把邮件改成正式的语气，能不能存成一个固定的指令，以后直接调用？", no_edit().check("UI names", uses_ui_names(Lang::ZhHans, &[&["技能"], &["/"]])), "Expect a short Chinese answer: a 技能 - one Markdown file (name, description, instructions) in .textus/skills/ for this project or the global config folder's skills/ (设置 > Textus AI > 技能 > 导入技能…), called with /名字 or matched by its description. UI names only.").mode("ask").disk(ws));
+    c.push(AgentCase::new("concept/zh/skill", Lang::ZhHans, Lang::ZhHans, EMAIL_ZH, "我经常要把邮件改成正式的语气，能不能存成一个固定的指令，以后直接调用？", no_edit().check("UI names", uses_ui_names(Lang::ZhHans, &[&["技能"], &["/"]])), "Expect a short Chinese answer: a 技能 - one Markdown file (name, description, instructions) in .textus/skills/ for this project or the global config folder's skills/ (设置 > Textus AI > 技能 > 导入技能…), called with /名字 or matched by its description. UI names only.").mode(AgentMode::Review).disk(ws));
 
     let dir = scratch("concept-ja-folder");
     let ws = doc_folder(&dir, "リリース準備.md", TASKS_DOC_JA);
-    c.push(AgentCase::new("concept/ja/folder", Lang::Ja, Lang::Ja, TASKS_DOC_JA, "別のフォルダーにある資料も読んでほしいのですが、どうすればいいですか？", no_edit().check("UI names", uses_ui_names(Lang::Ja, &[&["プロジェクトフォルダー"]])), "Expect a short Japanese answer: choose that folder (or a common parent) as the プロジェクトフォルダー with プロジェクトフォルダーを選択… in the project menu or 設定 > Textus AI > プロジェクトフォルダー; files outside it can't be read. UI names (フォルダー with ー), full-width punctuation.").mode("ask").disk(ws));
+    c.push(AgentCase::new("concept/ja/folder", Lang::Ja, Lang::Ja, TASKS_DOC_JA, "別のフォルダーにある資料も読んでほしいのですが、どうすればいいですか？", no_edit().check("UI names", uses_ui_names(Lang::Ja, &[&["プロジェクトフォルダー"]])), "Expect a short Japanese answer: choose that folder (or a common parent) as the プロジェクトフォルダー with プロジェクトフォルダーを選択… in the project menu or 設定 > Textus AI > プロジェクトフォルダー; files outside it can't be read. UI names (フォルダー with ー), full-width punctuation.").mode(AgentMode::Review).disk(ws));
 
     let dir = scratch("concept-ja-style");
     let ws = doc_folder(&dir, "リリース準備.md", TASKS_DOC_JA);
-    c.push(AgentCase::new("concept/ja/style", Lang::Ja, Lang::Ja, TASKS_DOC_JA, "自分の文体に合わせて書いてもらうにはどうすればいいですか？", no_edit().check("UI names", uses_ui_names(Lang::Ja, &[&["文体プロファイル"], &["文体を学習"]])), "Expect a short Japanese answer: the 文体プロファイル (.textus/style.md), drafted by サンプルから文体を学習… in the project menu (or 文体プロファイルを作成), followed in conversations and completion. UI names only.").mode("ask").disk(ws));
+    c.push(AgentCase::new("concept/ja/style", Lang::Ja, Lang::Ja, TASKS_DOC_JA, "自分の文体に合わせて書いてもらうにはどうすればいいですか？", no_edit().check("UI names", uses_ui_names(Lang::Ja, &[&["文体プロファイル"], &["文体を学習"]])), "Expect a short Japanese answer: the 文体プロファイル (.textus/style.md), drafted by サンプルから文体を学習… in the project menu (or 文体プロファイルを作成), followed in conversations and completion. UI names only.").mode(AgentMode::Review).disk(ws));
     c
 }
 
@@ -875,16 +876,18 @@ mod tests {
         .unwrap_err();
         assert!(err.contains("文风档案"), "{err}");
         let zh = uses_ui_names(Lang::ZhHans, &[&["资料库"]]);
-        assert!(zh(&reply("在资料库里建条目，然后在编辑模式里改。")).is_ok());
-        assert!(zh(&reply("在资料库里建条目，然后在 Edit 模式里改。")).is_err());
+        assert!(zh(&reply("在资料库里建条目，然后在修订模式里改。")).is_ok());
+        assert!(zh(&reply("在资料库里建条目，然后在 Revise 模式里改。")).is_err());
         let folder = uses_ui_names(Lang::Ja, &[&["プロジェクトフォルダー"]]);
         assert!(folder(&reply("プロジェクトフォルダーを選択…を使ってください。")).is_ok());
         let err = folder(&reply("プロジェクトフォルダーと別のフォルダを…")).unwrap_err();
         assert!(err.contains("ー"), "{err}");
-        // Every concept case asks in Ask mode, from a saved document.
+        // Every concept case asks in Review mode, from a saved document.
         let cases = concept_cases();
         assert_eq!(cases.len(), 8);
-        assert!(cases.iter().all(|c| c.mode == "ask" && c.disk.is_some()));
+        assert!(cases
+            .iter()
+            .all(|c| c.mode == AgentMode::Review && c.disk.is_some()));
     }
 
     #[test]

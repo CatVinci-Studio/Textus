@@ -38,8 +38,8 @@ Writing conventions (Settings row)
 Writing Assistance (Settings section)
 Enable AI completion
 Completion tone
-Ask
-Edit
-Plan
+Write
+Review
+Revise
 Accept
 Reject

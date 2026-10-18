@@ -3,6 +3,7 @@ import type { EditorRunner } from "../editor/useEditorRunner";
 import type { PendingEdits } from "./useEditorProposals";
 import type { useChatContextBridge } from "./useChatContextBridge";
 import { ChatBody } from "../ai/chat/ChatBody";
+import type { SelectionChipHandlers } from "../ai/chat/ChatComposer";
 import { AgentPanelView } from "../ai/chat/panel/AgentPanelView";
 import { CloseConfirmBar } from "../ai/chat/CloseConfirm";
 import { ProjectBar } from "../ai/chat/panel/ProjectBar";
@@ -27,6 +28,7 @@ export function EditorAgentPanel({
   conversation,
   pendingEdits,
   selectedText,
+  selectionChip,
   panelSendContext,
   showProposals,
   onRevealProposal,
@@ -48,6 +50,8 @@ export function EditorAgentPanel({
   conversation: AgentConversation;
   pendingEdits: PendingEdits;
   selectedText: string | null;
+  /** The chip's part in keeping the selection highlighted. */
+  selectionChip: SelectionChipHandlers;
   panelSendContext: ReturnType<typeof useChatContextBridge>["panelSendContext"];
   showProposals: (
     proposals: { callId: string; proposal: EditProposal }[],
@@ -102,6 +106,7 @@ export function EditorAgentPanel({
       <ChatBody
         document=""
         selectedText={selectedText}
+        selectionChip={selectionChip}
         selectionMarkdown={null}
         docPath={filePath}
         workspaceRoot={settings.agentWorkspaceRoot || null}

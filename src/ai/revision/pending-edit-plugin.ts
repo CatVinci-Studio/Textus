@@ -892,8 +892,7 @@ export function createPendingEditPlugin(options: {
         // re-notifying React (and, downstream, re-emitting the
         // statuses IPC push) on every keystroke; mapping the
         // existing DecorationSet instead of rebuilding it is the
-        // same pattern chat-selection-plugin and
-        // quick-ask-widget-plugin use.
+        // same pattern quick-ask-widget-plugin uses.
         return {
           previews: prev.previews,
           decoration: prev.decoration.map(tr.mapping, tr.doc),

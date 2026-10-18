@@ -77,18 +77,22 @@ test("the mode picker is a segmented control on a phone", async ({ page }) => {
   await openPhone(page);
   const dock = await openQuickAsk(page);
   const modes = dock.getByRole("radiogroup", { name: "Mode" });
-  // Quick Ask: Ask and Edit, Edit first on - no Plan, as on the desktop.
-  await expect(modes.getByRole("radio")).toHaveText(["Ask", "Edit"]);
-  await expect(modes.getByRole("radio", { name: "Edit" })).toHaveAttribute(
+  // Quick Ask: the three modes, Revise on.
+  await expect(modes.getByRole("radio")).toHaveText([
+    "Write",
+    "Review",
+    "Revise",
+  ]);
+  await expect(modes.getByRole("radio", { name: "Revise" })).toHaveAttribute(
     "aria-checked",
     "true",
   );
-  await modes.getByRole("radio", { name: "Ask" }).tap();
-  await expect(modes.getByRole("radio", { name: "Ask" })).toHaveAttribute(
+  await modes.getByRole("radio", { name: "Review" }).tap();
+  await expect(modes.getByRole("radio", { name: "Review" })).toHaveAttribute(
     "aria-checked",
     "true",
   );
-  await expect(modes.getByRole("radio", { name: "Edit" })).toHaveAttribute(
+  await expect(modes.getByRole("radio", { name: "Revise" })).toHaveAttribute(
     "aria-checked",
     "false",
   );
@@ -100,7 +104,7 @@ test("the mode picker is a segmented control on a phone", async ({ page }) => {
   const sheet = page.locator(".agent-panel");
   await expect(
     sheet.getByRole("radiogroup", { name: "Mode" }).getByRole("radio"),
-  ).toHaveText(["Ask", "Edit", "Plan"]);
+  ).toHaveText(["Write", "Review", "Revise"]);
   await expectTouchTarget(page, ".agent-panel .chat-mode-segments");
   await expectTouchTarget(page, ".agent-panel .inline-chat-attach");
   await expectTouchTarget(page, ".agent-panel .inline-chat-web-search");
@@ -184,7 +188,7 @@ test("continue in panel hands the exchange to the AI sheet", async ({
     ],
   });
   const dock = await openQuickAsk(page);
-  await dock.getByRole("radio", { name: "Ask" }).tap();
+  await dock.getByRole("radio", { name: "Review" }).tap();
   await dock.locator("textarea").fill("what is this about?");
   await dock.locator(".inline-chat-send").tap();
   await expect(dock).toContainText("Fieldwork scope.");

@@ -63,8 +63,23 @@ describe("Agent mode migration", () => {
   beforeAll(installTestLocalStorage);
   beforeEach(() => localStorage.clear());
 
-  it("starts new conversations in Ask mode", () => {
-    expect(loadSettings().agentDefaultMode).toBe("ask");
+  it("starts new conversations in Review mode", () => {
+    expect(loadSettings().agentDefaultMode).toBe("review");
+  });
+
+  it("reads 1.0's mode names as today's, and Plan as Review", () => {
+    for (const [saved, mode] of [
+      ["ask", "review"],
+      ["edit", "revise"],
+      ["plan", "review"],
+      ["write", "write"],
+    ]) {
+      localStorage.setItem(
+        SETTINGS_KEY,
+        JSON.stringify({ agentDefaultMode: saved }),
+      );
+      expect(loadSettings().agentDefaultMode).toBe(mode);
+    }
   });
 
   it("rejects an unknown saved mode", () => {
@@ -72,7 +87,7 @@ describe("Agent mode migration", () => {
       SETTINGS_KEY,
       JSON.stringify({ agentDefaultMode: "destroy" }),
     );
-    expect(loadSettings().agentDefaultMode).toBe("ask");
+    expect(loadSettings().agentDefaultMode).toBe("review");
   });
 });
 

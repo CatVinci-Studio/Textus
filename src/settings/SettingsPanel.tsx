@@ -439,9 +439,9 @@ export function SettingsPanel({
                       })
                     }
                   >
-                    <option value="ask">{t.agentModeAsk}</option>
-                    <option value="edit">{t.agentModeEdit}</option>
-                    <option value="plan">{t.agentModePlan}</option>
+                    <option value="write">{t.agentModeWrite}</option>
+                    <option value="review">{t.agentModeReview}</option>
+                    <option value="revise">{t.agentModeRevise}</option>
                   </Select>
                 </SettingRow>
                 <SettingRow
