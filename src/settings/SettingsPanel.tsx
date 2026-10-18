@@ -14,7 +14,12 @@ import {
   REVISION_DISPLAYS,
   type RevisionDisplay,
 } from "./SettingsContext";
-import { revisionDisplayName } from "../ai/revision/revision-display";
+import {
+  needsMargin,
+  revisionDisplayName,
+} from "../ai/revision/revision-display";
+import { useMarginAvailable } from "../ai/margin/margin-room";
+import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { LANGS, LANG_NAMES, type Lang, type TextKey } from "../i18n/strings";
 import {
   LinkRow,
@@ -107,6 +112,11 @@ export function SettingsPanel({
   viewChecks = {},
 }: SettingsPanelProps) {
   const { settings, setSettings, t } = useSettings();
+  // As in the review bar: a phone never has a margin, so there is nothing
+  // to explain there.
+  const marginAvailable = useMarginAvailable();
+  const phone = usePhoneLayout();
+  const noMarginRoom = !marginAvailable && !phone;
   const [category, setCategory] = useState<Category>("general");
   // A page of its own inside a category, with a way back, on the desktop
   // and the phone alike: General › About Textus, Editor & Appearance ›
@@ -435,7 +445,10 @@ export function SettingsPanel({
                     <option value="plan">{t.agentModePlan}</option>
                   </Select>
                 </SettingRow>
-                <SettingRow label={t.revisionDisplayLabel}>
+                <SettingRow
+                  label={t.revisionDisplayLabel}
+                  hint={noMarginRoom ? t.revisionDisplayNoRoom : undefined}
+                >
                   <Select
                     className="settings-select"
                     aria-label={t.revisionDisplayLabel}
@@ -447,7 +460,11 @@ export function SettingsPanel({
                     }
                   >
                     {REVISION_DISPLAYS.map((mode) => (
-                      <option key={mode} value={mode}>
+                      <option
+                        key={mode}
+                        value={mode}
+                        disabled={noMarginRoom && needsMargin(mode)}
+                      >
                         {revisionDisplayName(t, mode)}
                       </option>
                     ))}

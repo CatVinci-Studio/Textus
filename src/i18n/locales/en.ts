@@ -107,6 +107,7 @@ type /name in a conversation to use one.
   revisionDisplayOriginal: "Original in the text, changes in the margin",
   revisionDisplayNew: "Changes in the text, original in the margin",
   revisionDisplayFinal: "Result only, no markup",
+  revisionDisplayNoRoom: "Not enough room - close the sidebar or the AI panel",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Revision",
   reviewBarOpenChat: "Open the AI panel",

@@ -105,6 +105,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   revisionDisplayOriginal: "本文に元の文、修正は余白に",
   revisionDisplayNew: "本文に修正、元の文は余白に",
   revisionDisplayFinal: "修正後の文だけ",
+  revisionDisplayNoRoom:
+    "余白が足りません：サイドバーか AIパネルを閉じてください",
   proposalDeletedSentence: "元の文",
   reviewBarLabel: "修正",
   reviewBarOpenChat: "AIパネルを開く",
