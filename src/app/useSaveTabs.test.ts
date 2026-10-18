@@ -94,6 +94,20 @@ describe("autosaveTab", () => {
     expect(fs.writeTextFile).not.toHaveBeenCalled();
   });
 
+  it("starts an autosave's conflict prompt on Cancel, a manual save's on Overwrite", async () => {
+    vi.mocked(fs.fileMtimeMs).mockResolvedValue(5);
+    vi.mocked(showConfirm).mockResolvedValue(false);
+    const result = setup(doc);
+    await act(async () => {
+      await result.current.autosaveTab("a");
+      await result.current.saveTab("a");
+    });
+    const focusCancel = vi
+      .mocked(showConfirm)
+      .mock.calls.map(([, options]) => options.focusCancel);
+    expect(focusCancel).toEqual([true, false]);
+  });
+
   it("reports a failed write as the save error", async () => {
     vi.mocked(fs.fileMtimeMs).mockResolvedValue(1);
     vi.mocked(fs.writeTextFile).mockRejectedValue("Permission denied");

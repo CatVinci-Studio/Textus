@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { tabIsDirty, type DocTab } from "./doc-tabs";
+import { createTabIdleTimers } from "./tab-idle-timers";
 import { unlistenAll } from "../utils/tauri-events";
 
 /** What one save of a tab came to (app/useSaveTabs.ts's autosaveTab).
@@ -81,21 +82,19 @@ export function useAutosave(opts: {
   const saveRef = useRef(autosaveTab);
   saveRef.current = autosaveTab;
 
-  const timers = useRef(new Map<string, { content: string; timer: number }>());
+  const [timers] = useState(() =>
+    createTabIdleTimers<string>({
+      idleMs: AUTOSAVE_IDLE_MS,
+      same: (a, b) => a === b,
+    }),
+  );
   const paused = useRef(new Map<string, AutosavePause>());
-  // Each tab's saves one after another: a second one waiting behind a
-  // conflict prompt must see the pause the first one's Cancel left.
+  // One autosave per tab at a time, so one queued behind a prompt sees its pause.
   const chains = useRef(new Map<string, Promise<void>>());
-
-  const clearTimer = useCallback((id: string) => {
-    const pending = timers.current.get(id);
-    if (pending) clearTimeout(pending.timer);
-    timers.current.delete(id);
-  }, []);
 
   const saveNow = useCallback(
     (id: string): Promise<void> => {
-      clearTimer(id);
+      timers.cancel(id);
       const attempt = async () => {
         if (!enabledRef.current || paused.current.has(id)) return;
         const tab = tabsRef.current.find((tb) => tb.id === id);
@@ -117,7 +116,7 @@ export function useAutosave(opts: {
       });
       return next;
     },
-    [clearTimer],
+    [timers],
   );
 
   const flush = useCallback(
@@ -131,31 +130,21 @@ export function useAutosave(opts: {
 
   useEffect(() => {
     const seen = new Set(tabs.map((tb) => tb.id));
-    for (const id of [...timers.current.keys()])
-      if (!seen.has(id)) clearTimer(id);
+    for (const id of timers.ids()) if (!seen.has(id)) timers.cancel(id);
     for (const [id, pause] of [...paused.current]) {
       const tab = tabs.find((tb) => tb.id === id);
       if (!tab || pauseResolved(tab, pause)) paused.current.delete(id);
     }
     if (!enabled) {
-      for (const id of [...timers.current.keys()]) clearTimer(id);
+      timers.cancelAll();
       return;
     }
     for (const tab of tabs) {
-      if (!autosaveWants(tab, paused.current.get(tab.id))) {
-        clearTimer(tab.id);
-        continue;
-      }
-      const pending = timers.current.get(tab.id);
-      if (pending?.content === tab.content) continue;
-      clearTimer(tab.id);
-      const timer = window.setTimeout(
-        () => void saveNow(tab.id),
-        AUTOSAVE_IDLE_MS,
-      );
-      timers.current.set(tab.id, { content: tab.content, timer });
+      if (autosaveWants(tab, paused.current.get(tab.id)))
+        timers.schedule(tab.id, tab.content, () => void saveNow(tab.id));
+      else timers.cancel(tab.id);
     }
-  }, [tabs, enabled, clearTimer, saveNow]);
+  }, [tabs, enabled, timers, saveNow]);
 
   // Choosing another tab writes the one left behind.
   const previousActive = useRef(activeTabId);
@@ -183,13 +172,7 @@ export function useAutosave(opts: {
     };
   }, [flush]);
 
-  useEffect(() => {
-    const pending = timers.current;
-    return () => {
-      for (const { timer } of pending.values()) clearTimeout(timer);
-      pending.clear();
-    };
-  }, []);
+  useEffect(() => timers.cancelAll, [timers]);
 
   return flush;
 }

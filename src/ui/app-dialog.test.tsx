@@ -40,6 +40,21 @@ describe("app dialogs", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("starts on Cancel when asked, so Enter keeps things as they are", async () => {
+    render(<AppDialogHost okLabel="OK" />);
+    let answer!: Promise<boolean>;
+    act(() => {
+      answer = showConfirm("Overwrite the file?", {
+        okLabel: "Overwrite",
+        cancelLabel: "Cancel",
+        focusCancel: true,
+      });
+    });
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus();
+    fireEvent.click(document.activeElement!);
+    await expect(answer).resolves.toBe(false);
+  });
+
   it("queues a second notice behind the first", async () => {
     render(<AppDialogHost okLabel="OK" />);
     let a!: Promise<void>;

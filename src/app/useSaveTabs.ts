@@ -125,9 +125,10 @@ export function useSaveTabs(opts: {
   );
 
   // Writes a document that already has a file. "conflict": the file changed
-  // on disk and the user chose to keep that version.
+  // on disk and the user chose to keep that version. `auto`: an autosave
+  // asked, so the prompt starts on Cancel - the user didn't ask to save.
   const saveToPath = useCallback(
-    async (tabId: string): Promise<SaveOutcome> => {
+    async (tabId: string, auto: boolean): Promise<SaveOutcome> => {
       const tab = liveTabs().find((tb) => tb.id === tabId);
       if (!tab?.path) return "skipped";
       // The file changed on disk since it was read (another app, git, a sync
@@ -141,6 +142,7 @@ export function useSaveTabs(opts: {
             title: t.fileChangedOnDiskTitle,
             okLabel: t.fileChangedOnDiskOverwrite,
             cancelLabel: t.closePromptCancel,
+            focusCancel: auto,
           });
           if (!overwrite) return "conflict";
         }
@@ -152,9 +154,7 @@ export function useSaveTabs(opts: {
     [liveTabs, t, writeOrReport, commitSaved],
   );
 
-  // One save at a time per tab. A manual save racing an autosave would
-  // compare the disk against the mtime from before the other's write and
-  // take this app's own write for a change made outside it.
+  // One save per tab at a time: a racing save would see our own write as external.
   const queues = useRef(new Map<string, Promise<unknown>>());
   const serialized = useCallback(
     <T>(tabId: string, run: () => Promise<T>): Promise<T> => {
@@ -179,7 +179,9 @@ export function useSaveTabs(opts: {
       // Draft never saved before: ask where to put it, then this document
       // graduates into a real file (the sidebar tree picks up its folder).
       if (!tab.path) return saveTabAs(tabId);
-      return (await serialized(tabId, () => saveToPath(tabId))) === "saved";
+      return (
+        (await serialized(tabId, () => saveToPath(tabId, false))) === "saved"
+      );
     },
     [liveTabs, saveTabAs, saveToPath, serialized],
   );
@@ -193,7 +195,7 @@ export function useSaveTabs(opts: {
       serialized(tabId, async () => {
         const tab = liveTabs().find((tb) => tb.id === tabId);
         if (!tab?.path || !tabIsDirty(tab)) return "skipped";
-        return saveToPath(tabId);
+        return saveToPath(tabId, true);
       }),
     [liveTabs, saveToPath, serialized],
   );

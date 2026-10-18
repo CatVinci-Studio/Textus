@@ -138,7 +138,10 @@ test("a file changed on disk is not overwritten", async ({ page }) => {
   await typeAtEnd(page, " More.");
   const prompt = page.getByRole("dialog", { name: "File Changed on Disk" });
   await expect(prompt).toBeVisible({ timeout: 6000 });
-  await prompt.getByRole("button", { name: "Cancel" }).click();
+  // The user didn't ask for this save: Enter on the way back keeps the
+  // disk's version rather than overwriting it.
+  await expect(prompt.getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect(prompt).toBeHidden();
   // Typing on doesn't bring the prompt back every few seconds.
   await typeAtEnd(page, " Again.");
