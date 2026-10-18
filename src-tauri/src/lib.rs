@@ -19,6 +19,7 @@ mod distribution;
 mod levis_import;
 #[cfg(desktop)]
 mod menu;
+mod net;
 mod settings;
 #[cfg(desktop)]
 mod tab_drag;
