@@ -355,7 +355,8 @@ export const menuIpc = {
 // ---------------------------------------------------------------------------
 
 /** Our own pages, opened in the system browser. Each URL is fixed in Rust
- *  (commands/links.rs), not passed from here. */
+ *  (commands/links.rs), not passed from here - except a link followed in a
+ *  document, which Rust opens only if it is http(s) or mailto. */
 export const links = {
   /** The website's community page, in the UI's language. */
   openCommunityPage: (language: Lang) =>
@@ -368,6 +369,9 @@ export const links = {
   /** Settings › General › About Textus's links, by name. */
   openAboutLink: (page: "github" | "discord" | "qq") =>
     call<void>("open_about_link", { page }),
+  /** A web or mail link Ctrl/Cmd+clicked in a document
+   *  (editor/markdown/link-click-plugin.ts). */
+  openWebLink: (url: string) => call<void>("open_web_link", { url }),
 };
 
 export const exportDoc = {
