@@ -106,7 +106,7 @@ pinned rather than trusted.
 | `ai::catalog`           | Every pinned default model exists in the models.dev snapshot.                                                                                                                                                                                                           |
 | `commands::chat_window` | Which chat serves which editor, what a closed window frees.                                                                                                                                                                                                             |
 | `commands::attachment`  | OOXML text extraction and truncation marking.                                                                                                                                                                                                                           |
-| `atomic`, `session`     | Secret files written 0600 and atomically, what a closing window leaves in the session.                                                                                                                                                                                  |
+| `atomic`, `session`     | Secret files written 0600 and atomically, private temp files and folders, what a closing window leaves in the session.                                                                                                                                                  |
 
 ### 4. Frontend state and rendering (vitest)
 

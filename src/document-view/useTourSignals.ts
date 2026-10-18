@@ -6,9 +6,10 @@ import { sendTourSignal, type TourAi } from "../utils/events";
  * What the tour's AI lessons wait for, as this editor sees it happen: a
  * grammar card opening, a revision decided, a review note pinned, an
  * answer arriving. Only the tour's practice tab reports (`tour` set), so
- * work in another document never ticks a lesson off. The completion
- * suggestion taken and a skill sent are reported where they happen
- * (editor-plugins.ts, ChatComposer).
+ * work in another document never ticks a lesson off. A skill sent is
+ * reported by the composer through the returned `onSkillUsed`; the
+ * completion suggestion taken is reported where it happens
+ * (editor-plugins.ts).
  */
 export function useTourSignals({
   tour,
@@ -57,4 +58,8 @@ export function useTourSignals({
     // `busy`/`failed` stand for the conversations' states.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tour, busy, failed]);
+
+  // For the chat composers (ChatComposer's onSkillUsed).
+  const onSkillUsed = tour ? () => sendTourSignal("skill-sent") : undefined;
+  return { onSkillUsed };
 }

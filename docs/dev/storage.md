@@ -41,7 +41,7 @@ marked †, so a development build never rewrites an installed app's settings
 | `recent_files.json`                                                                                 | File > Open Recent (desktop).                                                                                                                                                                                                                                                     |
 | `themes/<id>/light.css`, `dark.css`                                                                 | Imported themes, and themes installed from the theme gallery (**Settings › Editor & Appearance › Browse themes**). `settings.userThemes` lists them; a gallery theme's entry also has `gallery: {id, updated, source}`, the version installed, which is how an update is noticed. |
 | `agent/agent.md`, `agent/skills/`                                                                   | The global config folder: global writing instructions and skills ([AI-CONCEPTS.md](../design/ai-concepts.md)), including copies of built-in skills made with Customize… (marked `textus-based-on`). Built-ins turned off are listed in `settings.disabledBuiltinSkills`.          |
-| `provider_keys.json`, `api_key.json`, `custom_endpoint.json`, `auth-codex.json`, `auth-claude.json` | AI credentials (owner-only on Unix).                                                                                                                                                                                                                                              |
+| `provider_keys.json`, `api_key.json`, `custom_endpoint.json`, `auth-codex.json`, `auth-claude.json` | AI credentials, and in `provider_keys.json` also the image hosts' tokens under ids starting `__image_host` (`credential_id` in `src-tauri/src/commands/image_host.rs`); owner-only on Unix.                                                                                       |
 
 `settings.json`'s `writingConventions` is also read by Rust
 (`ai::conventions`), which owns its meaning: `"automatic"` (the default; a
@@ -61,13 +61,13 @@ the channel with each update check (`check_for_update` in
 
 ### Data directory
 
-| File                       | What                                                                                                                     |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `ui-state.json` †          | Where the UI was left: `{"schemaVersion": 1, "state": {...}}` with the fields of `UiState` in `src/storage/ui-state.ts`. |
-| `chat-history.json` †      | Saved Agent conversations, most recent first, at most 60: `{"schemaVersion": 1, "entries": [...]}`.                      |
-| `clipboard-history.json` † | The clipboard panel, newest first, at most 30 entries of up to 50,000 characters.                                        |
-| `drafts/`                  | Crash recovery for unsaved documents.                                                                                    |
-| `assets/`                  | Images pasted into a document that has not been saved yet (referenced by absolute path until it is).                     |
+| File                       | What                                                                                                                                                                                                                        |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ui-state.json` †          | Where the UI was left: `{"schemaVersion": 1, "state": {...}}` with the fields of `UiState` in `src/storage/ui-state.ts`.                                                                                                    |
+| `chat-history.json` †      | Saved Agent conversations, most recent first, at most 60: `{"schemaVersion": 1, "entries": [...]}`.                                                                                                                         |
+| `clipboard-history.json` † | The clipboard panel, newest first, at most 30 entries of up to 50,000 characters.                                                                                                                                           |
+| `drafts/`                  | Crash recovery for unsaved documents.                                                                                                                                                                                       |
+| `assets/`                  | Images pasted into a document that has not been saved yet, referenced by absolute path until its first save moves them into the folder chosen by the `imageFolder` setting (`assets` by default, relative to the document). |
 
 On iOS a document path inside the app's Documents folder is stored as
 `documents:<path inside Documents>` - a chat history entry's `docPath`, like

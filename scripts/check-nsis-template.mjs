@@ -6,8 +6,9 @@
 // while the template was still 2.11.4's. CI does not build the installer,
 // so without this check a CLI update stays green until a release tag.
 //
-// When it fails, re-sync as docs/dev/windows-installer.md describes, then
-// update the "Vendored from tauri-cli vX.Y.Z" line at the top of the file.
+// When it fails, run scripts/sync-nsis-template.sh: it merges upstream's
+// changes into the file and updates its "Vendored from tauri-cli" line
+// (docs/dev/windows-installer.md).
 //
 //   node scripts/check-nsis-template.mjs     (exit 1 on a mismatch)
 import { readFileSync } from "node:fs";
@@ -34,8 +35,8 @@ if (!cli || !vendored) {
 if (cli !== vendored) {
   console.error(
     `The Windows installer template is from tauri-cli ${vendored}, but we build with ${cli}.\n` +
-      "Re-sync src-tauri/installer/installer.nsi with that version's template " +
-      "(docs/dev/windows-installer.md), then update its Vendored line.",
+      "Run scripts/sync-nsis-template.sh to merge that version's template into " +
+      "src-tauri/installer/installer.nsi (docs/dev/windows-installer.md).",
   );
   process.exit(1);
 }

@@ -9,7 +9,6 @@ import {
 } from "../ai/revision/usePendingEdits";
 import {
   pendingEditKey,
-  prefersReducedMotion,
   streamPendingInsertText,
 } from "../ai/revision/pending-edit-plugin";
 import { ProposalStream } from "../ai/revision/proposal-stream";
@@ -17,6 +16,7 @@ import { isRefusal } from "../ai/revision/proposal-status";
 import type { EditProposal } from "../ai/types";
 import type { StreamEvent } from "../platform/ipc";
 import type { Settings } from "../settings/SettingsContext";
+import { prefersReducedMotion } from "../ui/motion";
 
 /** The editor's side of AI edits: the pending previews (usePendingEdits),
  *  the two conversations that propose them (the panel's and Quick Ask's),

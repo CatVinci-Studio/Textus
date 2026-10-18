@@ -6,7 +6,12 @@ import {
 } from "../../settings/SettingsContext";
 import { ChatTabIcon, ChevronIcon } from "../../ui/icons";
 import { usePresenceProps } from "../../ui/usePresence";
-import { effectiveRevisionDisplay, needsMargin } from "./revision-display";
+import { useMarginAvailable } from "../margin/margin-room";
+import {
+  effectiveRevisionDisplay,
+  marginViewBlocked,
+  needsMargin,
+} from "./revision-display";
 import "./ReviewBar.css";
 
 export interface ReviewBarLabels {
@@ -46,15 +51,12 @@ export function ReviewBar({
   onReject,
   onOpenChat,
   display,
-  marginAvailable,
   displayName,
   onDisplay,
 }: {
   /** How revisions show (Settings.revisionDisplay), switched from here as
    *  in Word's Review ribbon. */
   display: RevisionDisplay;
-  /** Whether the editor has room for a margin (margin-room.ts). */
-  marginAvailable: boolean;
   displayName: (mode: RevisionDisplay) => string;
   onDisplay: (mode: RevisionDisplay) => void;
   labels: ReviewBarLabels;
@@ -86,10 +88,11 @@ export function ReviewBar({
   const modes = phone
     ? REVISION_DISPLAYS.filter((m) => !needsMargin(m))
     : REVISION_DISPLAYS;
-  const noRoom = !phone && !marginAvailable;
+  const marginAvailable = useMarginAvailable();
+  const noMargin = !phone && !marginAvailable;
   const shown = effectiveRevisionDisplay(display, !phone && marginAvailable);
-  const waiting = noRoom && shown !== display;
-  const noRoomId = useId();
+  const waiting = noMargin && shown !== display;
+  const noMarginId = useId();
   const view = (
     <div className="review-bar-view" ref={menuRef}>
       <button
@@ -128,9 +131,11 @@ export function ReviewBar({
               type="button"
               role="menuitemradio"
               aria-checked={shown === mode}
-              disabled={noRoom && needsMargin(mode)}
+              disabled={marginViewBlocked(mode, { phone, marginAvailable })}
               aria-describedby={
-                noRoom && needsMargin(mode) ? noRoomId : undefined
+                marginViewBlocked(mode, { phone, marginAvailable })
+                  ? noMarginId
+                  : undefined
               }
               className={
                 waiting && mode === display
@@ -145,8 +150,8 @@ export function ReviewBar({
               {displayName(mode)}
             </button>
           ))}
-          {noRoom && (
-            <p id={noRoomId} className="review-bar-menu-note">
+          {noMargin && (
+            <p id={noMarginId} className="review-bar-menu-note">
               {labels.revisionDisplayNoRoom}
             </p>
           )}

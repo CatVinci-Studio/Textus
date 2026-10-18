@@ -277,9 +277,9 @@ export function useAgentConversation(
     setLastMode(null);
   }
 
-  // Used whenever the ordinary right-click /
-  // shortcut entry point opens a fresh popup. History restoration bypasses
-  // this and explicitly loads the selected conversation instead.
+  // A new, empty conversation: a fresh Quick Ask from the right-click menu
+  // or the shortcut, or "New conversation" in the panel or chat window.
+  // Restoring from History bypasses this and loads that conversation.
   function reset() {
     load(crypto.randomUUID(), []);
   }

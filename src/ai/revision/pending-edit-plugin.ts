@@ -7,6 +7,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { renderMarkdownInlineHtml } from "../../editor/markdown/render-html";
 import { StreamReveal } from "../stream-reveal";
+import { prefersReducedMotion } from "../../ui/motion";
 import type { FoldAttention } from "../../editor/html/details-fold";
 import type { EditProposal } from "../types";
 import type { SentenceHunk } from "./sentence-diff";
@@ -162,13 +163,6 @@ function maybeSettle(callId: string) {
       view.state.tr.setMeta(pendingEditKey, { type: "settle", callId }),
     );
   }, 0);
-}
-
-export function prefersReducedMotion(): boolean {
-  return (
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
 }
 
 function stopFrame(anim: InsertAnimation) {
