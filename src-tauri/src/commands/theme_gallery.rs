@@ -216,30 +216,19 @@ fn image_mime(bytes: &[u8]) -> Option<&'static str> {
 }
 
 async fn fetch(url: &str, limit: usize) -> Result<Vec<u8>, String> {
-    let client = reqwest::Client::builder()
-        .connect_timeout(CONNECT_TIMEOUT)
-        .timeout(REQUEST_TIMEOUT)
+    let client = crate::net::client(CONNECT_TIMEOUT, REQUEST_TIMEOUT)
         // The allow-list is the URL asked for; a redirect would leave it.
         .redirect(reqwest::redirect::Policy::none())
-        .user_agent(concat!("Textus/", env!("CARGO_PKG_VERSION")))
         .build()
         .map_err(|e| e.to_string())?;
-    let mut response = client.get(url).send().await.map_err(|e| e.to_string())?;
+    let response = client.get(url).send().await.map_err(|e| e.to_string())?;
     let status = response.status();
     if !status.is_success() {
         return Err(format!("the gallery answered {status}"));
     }
-    if response.content_length().unwrap_or(0) > limit as u64 {
-        return Err("the file is larger than the gallery allows".into());
-    }
-    let mut body = Vec::new();
-    while let Some(chunk) = response.chunk().await.map_err(|e| e.to_string())? {
-        if body.len() + chunk.len() > limit {
-            return Err("the file is larger than the gallery allows".into());
-        }
-        body.extend_from_slice(&chunk);
-    }
-    Ok(body)
+    crate::net::read_limited(response, limit)
+        .await?
+        .ok_or_else(|| "the file is larger than the gallery allows".into())
 }
 
 /// The gallery's catalog (index.json).

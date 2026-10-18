@@ -133,6 +133,61 @@ pub async fn write(target: &Path, contents: impl AsRef<[u8]>) -> std::io::Result
         .map_err(std::io::Error::other)?
 }
 
+/// Creates `<temp dir>/<prefix><random><suffix>` with `create`, which has
+/// to fail with AlreadyExists rather than open whatever is already there; a
+/// name that is taken is retried with another.
+fn create_unique<T>(
+    prefix: &str,
+    suffix: &str,
+    create: impl Fn(&Path) -> std::io::Result<T>,
+) -> std::io::Result<(PathBuf, T)> {
+    use std::hash::{BuildHasher, Hasher};
+    let dir = std::env::temp_dir();
+    let mut attempts = 0;
+    loop {
+        // RandomState is seeded from the OS's randomness: enough to make
+        // the name unguessable without a dependency for it.
+        let mut hasher = std::collections::hash_map::RandomState::new().build_hasher();
+        hasher.write_u32(std::process::id());
+        hasher.write_u32(COUNTER.fetch_add(1, Ordering::Relaxed));
+        let path = dir.join(format!("{prefix}{:016x}{suffix}", hasher.finish()));
+        match create(&path) {
+            Ok(made) => return Ok((path, made)),
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists && attempts < 16 => {
+                attempts += 1;
+            }
+            Err(e) => return Err(e),
+        }
+    }
+}
+
+/// A new file only its owner can read or write. Created exclusively: an
+/// existing file is an error, and so is a symlink, which isn't followed.
+fn create_private_file(path: &Path) -> std::io::Result<std::fs::File> {
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    options.open(path)
+}
+
+/// A new folder only its owner can enter. Like the file, an existing folder
+/// or symlink of that name is an error rather than reused.
+fn create_private_dir(path: &Path) -> std::io::Result<()> {
+    let builder = std::fs::DirBuilder::new();
+    #[cfg(unix)]
+    let builder = {
+        use std::os::unix::fs::DirBuilderExt;
+        let mut builder = builder;
+        builder.mode(0o700);
+        builder
+    };
+    builder.create(path)
+}
+
 /// A scratch file in the system temp directory, removed again when this is
 /// dropped - on every path out of the code holding it, early returns and
 /// panics included.
@@ -153,37 +208,11 @@ pub struct TempFile {
 impl TempFile {
     /// Creates `<temp dir>/<prefix><random><suffix>` holding `contents`.
     pub fn create(prefix: &str, suffix: &str, contents: impl AsRef<[u8]>) -> std::io::Result<Self> {
-        use std::hash::{BuildHasher, Hasher};
-        let dir = std::env::temp_dir();
-        let mut attempts = 0;
-        loop {
-            // RandomState is seeded from the OS's randomness: enough to make
-            // the name unguessable without a dependency for it.
-            let mut hasher = std::collections::hash_map::RandomState::new().build_hasher();
-            hasher.write_u32(std::process::id());
-            hasher.write_u32(COUNTER.fetch_add(1, Ordering::Relaxed));
-            let path = dir.join(format!("{prefix}{:016x}{suffix}", hasher.finish()));
-
-            let mut options = std::fs::OpenOptions::new();
-            options.write(true).create_new(true);
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::OpenOptionsExt;
-                options.mode(0o600);
-            }
-            match options.open(&path) {
-                Ok(mut file) => {
-                    // Owned from here, so a failed write still cleans up.
-                    let temp = TempFile { path };
-                    file.write_all(contents.as_ref())?;
-                    return Ok(temp);
-                }
-                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists && attempts < 16 => {
-                    attempts += 1;
-                }
-                Err(e) => return Err(e),
-            }
-        }
+        let (path, mut file) = create_unique(prefix, suffix, create_private_file)?;
+        // Owned from here, so a failed write still cleans up.
+        let temp = TempFile { path };
+        file.write_all(contents.as_ref())?;
+        Ok(temp)
     }
 
     pub fn path(&self) -> &Path {
@@ -194,6 +223,58 @@ impl TempFile {
 impl Drop for TempFile {
     fn drop(&mut self) {
         let _ = std::fs::remove_file(&self.path);
+    }
+}
+
+/// A scratch folder in the system temp directory, for a file that has to
+/// keep its own name (PicGo uploads a file under the name it has). It is
+/// made with the care [`TempFile`] takes: a random name, created fresh and
+/// owner-only, and its files created exclusively. Dropping it removes the
+/// files written through it and then the folder - also when it is held by
+/// a future that is dropped before it finishes.
+pub struct TempDir {
+    path: PathBuf,
+    files: Vec<PathBuf>,
+}
+
+impl TempDir {
+    /// Creates `<temp dir>/<prefix><random>`, empty.
+    pub fn create(prefix: &str) -> std::io::Result<Self> {
+        let (path, ()) = create_unique(prefix, "", create_private_dir)?;
+        Ok(TempDir {
+            path,
+            files: Vec::new(),
+        })
+    }
+
+    /// Writes `contents` to a new file `name` in the folder; returns its path.
+    pub fn write_file(
+        &mut self,
+        name: &str,
+        contents: impl AsRef<[u8]>,
+    ) -> std::io::Result<PathBuf> {
+        if Path::new(name).file_name() != Some(name.as_ref()) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("{name} is not a file name"),
+            ));
+        }
+        let path = self.path.join(name);
+        let mut file = create_private_file(&path)?;
+        self.files.push(path.clone());
+        file.write_all(contents.as_ref())?;
+        Ok(path)
+    }
+}
+
+impl Drop for TempDir {
+    fn drop(&mut self) {
+        // Only what this made is removed: its own files, then the folder,
+        // which is left alone if anything else is in it.
+        for file in &self.files {
+            let _ = std::fs::remove_file(file);
+        }
+        let _ = std::fs::remove_dir(&self.path);
     }
 }
 
@@ -218,6 +299,56 @@ mod tests {
         let path = a.path().to_path_buf();
         drop(a);
         assert!(!path.exists());
+    }
+
+    #[test]
+    fn temp_dirs_are_unique_private_and_removed_on_drop() {
+        let mut a = TempDir::create("textus-test-").unwrap();
+        let b = TempDir::create("textus-test-").unwrap();
+        assert_ne!(a.path, b.path);
+        let file = a.write_file("shot.png", "png").unwrap();
+        assert_eq!(file, a.path.join("shot.png"));
+        assert_eq!(std::fs::read_to_string(&file).unwrap(), "png");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = |path: &Path| std::fs::metadata(path).unwrap().permissions().mode() & 0o777;
+            assert_eq!(mode(&a.path), 0o700);
+            assert_eq!(mode(&file), 0o600);
+        }
+        let dir = a.path.clone();
+        drop(a);
+        assert!(!file.exists() && !dir.exists());
+    }
+
+    #[test]
+    fn a_temp_dir_never_reuses_what_is_already_there() {
+        let mut temp = TempDir::create("textus-test-").unwrap();
+        assert_eq!(
+            create_private_dir(&temp.path).unwrap_err().kind(),
+            std::io::ErrorKind::AlreadyExists
+        );
+        temp.write_file("shot.png", "one").unwrap();
+        let again = temp.write_file("shot.png", "two").unwrap_err();
+        assert_eq!(again.kind(), std::io::ErrorKind::AlreadyExists);
+        assert_eq!(
+            temp.write_file("../shot.png", "x").unwrap_err().kind(),
+            std::io::ErrorKind::InvalidInput
+        );
+    }
+
+    // Unix only: symlinks.
+    #[cfg(unix)]
+    #[test]
+    fn a_planted_symlink_is_not_followed() {
+        let temp = TempDir::create("textus-test-").unwrap();
+        let target = temp.path.join("target");
+        let planted = temp.path.join("planted");
+        std::os::unix::fs::symlink(&target, &planted).unwrap();
+        assert!(create_private_dir(&planted).is_err());
+        assert!(create_private_file(&planted).is_err());
+        assert!(!target.exists());
+        std::fs::remove_file(&planted).unwrap();
     }
 
     fn scratch_dir(tag: &str) -> PathBuf {
