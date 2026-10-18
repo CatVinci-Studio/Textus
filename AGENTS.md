@@ -39,8 +39,7 @@ If another copy of the e2e suite may be running (another worktree), set
 ## How to work
 
 - Branch from `origin/main` (`feat/…`, `fix/…`, `docs/…`, `chore/…`), open a
-  pull request to `main`, and don't merge it yourself unless asked. `dev` is
-  locked; never target it.
+  pull request to `main`, and don't merge it yourself unless asked.
 - Make the smallest change that fixes the cause. Match the surrounding code:
   naming, structure, comment density. Comments say why, not what.
 - Add or update tests with the change: unit tests next to the code

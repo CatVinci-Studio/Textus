@@ -15,8 +15,7 @@ through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md
 - `release/X.Y.x` exists only when a fix must ship while `main` holds
   unreleased work: branch it from the last tag, fix, tag, then merge it back
   into `main` and delete it.
-- `dev` is a locked, read-only snapshot of the old integration branch.
-  `archive/levis` holds the last Levis code (v0.9.8).
+- `archive/levis` holds the last Levis code (v0.9.8).
 
 ## Desktop release
 
