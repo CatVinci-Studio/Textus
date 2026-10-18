@@ -237,8 +237,6 @@ export default {
     "Переносить нечего: в Textus уже есть всё, что есть в Levis.",
   levisImportFailed: "Некоторые файлы скопировать не удалось:",
   levisImportRow: "Перенести из Levis",
-  levisImportRowHint:
-    "Копирует настройки, историю, темы и другое. В Levis всё остаётся.",
   levisImportButton: "Перенести…",
   levisImportNone: "На этом компьютере нет данных Levis.",
   levisItemSettings: "настройки",

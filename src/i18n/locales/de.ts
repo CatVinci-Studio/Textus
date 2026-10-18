@@ -233,8 +233,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Nichts Neues zu übernehmen: Textus hat bereits alles, was Levis hat.",
   levisImportFailed: "Einige Dateien ließen sich nicht kopieren:",
   levisImportRow: "Aus Levis übernehmen",
-  levisImportRowHint:
-    "Kopiert Einstellungen, Verlauf, Designs und mehr. In Levis bleibt alles erhalten.",
   levisImportButton: "Übernehmen…",
   levisImportNone: "Auf diesem Computer gibt es keine Daten aus Levis.",
   levisItemSettings: "Einstellungen",

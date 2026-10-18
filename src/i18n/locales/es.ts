@@ -244,8 +244,6 @@ para usar una.
     "No hay nada nuevo que importar: Textus ya tiene lo que tiene Levis.",
   levisImportFailed: "Algunos archivos no se pudieron copiar:",
   levisImportRow: "Importar de Levis",
-  levisImportRowHint:
-    "Copia ajustes, historial, temas y más. Levis lo conserva todo.",
   levisImportButton: "Importar…",
   levisImportNone: "No hay datos de Levis en este equipo.",
   levisItemSettings: "ajustes",
