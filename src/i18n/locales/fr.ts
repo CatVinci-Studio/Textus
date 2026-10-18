@@ -115,6 +115,8 @@ utiliser une.
     "Original dans le texte, modifications dans la marge",
   revisionDisplayNew: "Modifications dans le texte, original dans la marge",
   revisionDisplayFinal: "Résultat seul, sans marques",
+  revisionDisplayNoRoom:
+    "Pas assez de place : fermez la barre latérale ou le panneau IA",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Révision",
   reviewBarOpenChat: "Ouvrir le panneau IA",
@@ -246,8 +248,6 @@ utiliser une.
     "Rien de nouveau à importer : Textus a déjà tout ce que Levis possède.",
   levisImportFailed: "Certains fichiers n’ont pas pu être copiés :",
   levisImportRow: "Importer depuis Levis",
-  levisImportRowHint:
-    "Copie réglages, historique, thèmes et plus encore. Levis garde tout.",
   levisImportButton: "Importer…",
   levisImportNone: "Aucune donnée de Levis sur cet ordinateur.",
   levisItemSettings: "réglages",
@@ -666,8 +666,6 @@ utiliser une.
   autoSuggestFilenameLabel:
     "Suggérer un nom de fichier au premier enregistrement",
   autosaveLabel: "Enregistrer automatiquement",
-  autosaveHint:
-    "Réécrit dans son fichier un document qui en a déjà un peu après que vous avez cessé de taper, ainsi qu'au changement d'onglet ou en quittant la fenêtre. Un nouveau document n'est enregistré qu'une fois nommé.",
   untitledTab: "Sans titre",
   markdownGuideTab: "Guide Markdown",
   agentGuideTab: "Guide des fonctions IA",
@@ -775,9 +773,27 @@ utiliser une.
     "Ces images collées n'ont pas pu être déplacées à côté du document enregistré. Elles se trouvent toujours à leur emplacement d'origine\u00a0:",
   imagePasteFailedMessage: "Impossible d'enregistrer l'image collée.",
   imageStorageGroupLabel: "Images",
-  imageStorageLabel: "Stockage des images",
-  imageStorageLocal: "Dossier local «\u00a0assets\u00a0»",
-  imageStorageRemote: "Hébergeur d'images",
+  imageStorageLabel: "Enregistrer les images collées",
+  imageStorageLocal: "Sur cet ordinateur",
+  imageStorageRemote: "Envoyer vers un hébergeur d'images",
+  imageFolderLabel: "Dossier",
+  imageFolderNextToDocument: "À côté du document",
+  imageFolderDocumentName: "<document>.assets/",
+  imageFolderCustom: "Dossier personnalisé",
+  imageFolderInvalid:
+    "Indiquez un dossier relatif au document, comme img ou ../images.",
+  imageHostLabel: "Service",
+  imageHostCustom: "Personnalisé",
+  imagePicgoEndpointLabel: "Adresse du serveur",
+  imagePicgoEndpointHint:
+    "Activez le serveur dans les réglages de PicGo. Il envoie les images vers les services qui y sont configurés.",
+  imagePicgoKeyLabel: "Clé du serveur",
+  imagePicgoKeyHint: "Seulement si PicList en demande une.",
+  imageSmmsTokenLabel: "Jeton d'API",
+  imageSmmsTokenHint: "Disponible dans le tableau de bord SM.MS.",
+  imageImgurClientIdLabel: "Client ID",
+  imageImgurClientIdHint:
+    "Celui d'une application enregistrée sur api.imgur.com.",
   imageUploadEndpointLabel: "URL d'envoi",
   imageUploadEndpointHint:
     "Reçoit des données multipart/form-data avec l'image dans le champ file.",
@@ -789,7 +805,6 @@ utiliser une.
     "Facultatif. Stocké de façon privée et envoyé dans l'en-tête Authorization.",
   imageUploadTokenPlaceholder: "Jeton facultatif",
   imageNamingLabel: "Nom du fichier envoyé",
-  imageNamingHint: "Comment le nom de fichier est choisi avant chaque envoi.",
   imageNamingAuto: "Renommer automatiquement",
   imageNamingOriginal: "Garder le nom d'origine",
   imageNamingAsk: "Demander à chaque fois",

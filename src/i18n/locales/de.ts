@@ -108,6 +108,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   revisionDisplayOriginal: "Original im Text, Änderungen am Rand",
   revisionDisplayNew: "Änderungen im Text, Original am Rand",
   revisionDisplayFinal: "Nur das Ergebnis, ohne Markierungen",
+  revisionDisplayNoRoom:
+    "Nicht genug Platz - schließen Sie die Seitenleiste oder den KI-Bereich",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Überarbeitung",
   reviewBarOpenChat: "KI-Bereich öffnen",
@@ -233,8 +235,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Nichts Neues zu übernehmen: Textus hat bereits alles, was Levis hat.",
   levisImportFailed: "Einige Dateien ließen sich nicht kopieren:",
   levisImportRow: "Aus Levis übernehmen",
-  levisImportRowHint:
-    "Kopiert Einstellungen, Verlauf, Designs und mehr. In Levis bleibt alles erhalten.",
   levisImportButton: "Übernehmen…",
   levisImportNone: "Auf diesem Computer gibt es keine Daten aus Levis.",
   levisItemSettings: "Einstellungen",
@@ -649,8 +649,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   autoSuggestFilenameLabel:
     "Dateinamen beim Speichern neuer Dateien vorschlagen",
   autosaveLabel: "Automatisch speichern",
-  autosaveHint:
-    "Schreibt ein Dokument, das schon eine Datei hat, kurz nach dem Tippen sowie beim Tabwechsel oder Verlassen des Fensters in diese Datei zurück. Neue Dokumente werden erst gespeichert, wenn du sie benannt hast.",
   untitledTab: "Unbenannt",
   markdownGuideTab: "Markdown-Anleitung",
   agentGuideTab: "Anleitung zu KI-Funktionen",
@@ -759,9 +757,27 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   imagePasteFailedMessage:
     "Das eingefügte Bild konnte nicht gespeichert werden.",
   imageStorageGroupLabel: "Bilder",
-  imageStorageLabel: "Speicherort für Bilder",
-  imageStorageLocal: "Lokaler Ordner „assets“",
-  imageStorageRemote: "Bildhoster",
+  imageStorageLabel: "Eingefügte Bilder speichern",
+  imageStorageLocal: "Auf diesem Computer",
+  imageStorageRemote: "Zu einem Bildhoster hochladen",
+  imageFolderLabel: "Ordner",
+  imageFolderNextToDocument: "Neben dem Dokument",
+  imageFolderDocumentName: "<Dokument>.assets/",
+  imageFolderCustom: "Eigener Ordner",
+  imageFolderInvalid:
+    "Gib einen Ordner relativ zum Dokument an, etwa img oder ../images.",
+  imageHostLabel: "Dienst",
+  imageHostCustom: "Eigener Server",
+  imagePicgoEndpointLabel: "Serveradresse",
+  imagePicgoEndpointHint:
+    "Schalte den Server in den PicGo-Einstellungen ein. Er lädt zu den dort eingerichteten Diensten hoch.",
+  imagePicgoKeyLabel: "Server-Schlüssel",
+  imagePicgoKeyHint: "Nur wenn PicList einen verlangt.",
+  imageSmmsTokenLabel: "API-Token",
+  imageSmmsTokenHint: "Findest du im SM.MS-Dashboard.",
+  imageImgurClientIdLabel: "Client ID",
+  imageImgurClientIdHint:
+    "Von einer bei api.imgur.com registrierten Anwendung.",
   imageUploadEndpointLabel: "Upload-Endpunkt",
   imageUploadEndpointHint:
     "Empfängt multipart/form-data mit dem Bild im Feld „file“.",
@@ -773,7 +789,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Optional. Wird privat gespeichert und im Authorization-Header gesendet.",
   imageUploadTokenPlaceholder: "Optionales Token",
   imageNamingLabel: "Dateiname beim Upload",
-  imageNamingHint: "Wie vor jedem Upload ein Dateiname gewählt wird.",
   imageNamingAuto: "Automatisch umbenennen",
   imageNamingOriginal: "Originalnamen behalten",
   imageNamingAsk: "Jedes Mal fragen",

@@ -30,18 +30,20 @@ function replaceAll(content: string, from: string, to: string): string {
  * A draft's pasted images live in the app's data dir with an absolute src
  * (see fs.rs's save_pasted_image) until the document itself is saved
  * somewhere real - called right after a first save (app/useSaveTabs.ts's
- * saveTabAs) to move them into a `assets/` folder next to the document and
- * rewrite the markdown to the new relative paths. A no-op (empty result)
- * for documents with no draft-origin images, which is the common case.
+ * saveTabAs) to move them into the document's image folder (`folder`,
+ * Settings > Images) and rewrite the markdown to the new relative paths. A
+ * no-op (empty result) for documents with no draft-origin images, which is
+ * the common case.
  */
 export async function migrateDraftImages(
   docPath: string,
   content: string,
+  folder: string,
 ): Promise<{ content: string; migrated: boolean; failed: string[] }> {
   const candidates = extractImageSrcs(content);
   if (candidates.length === 0) return { content, migrated: false, failed: [] };
 
-  const results = await fs.migrateDraftImages(docPath, candidates);
+  const results = await fs.migrateDraftImages(docPath, candidates, folder);
   let next = content;
   const failed: string[] = [];
   let migrated = false;

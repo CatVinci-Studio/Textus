@@ -1,5 +1,5 @@
 use serde::Serialize;
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
 use tokio::fs;
 
 #[derive(Serialize)]
@@ -205,23 +205,98 @@ pub async fn read_binary_file_base64(path: String) -> Result<String, String> {
     Ok(STANDARD.encode(bytes))
 }
 
+/// Where a saved document's images go: Settings > Images > Image folder
+/// (`imageFolder` in src/settings/SettingsContext.tsx), worked out for one
+/// document. src/settings/image-folder.ts previews the same rules for the
+/// examples in Settings; change both.
+#[derive(Debug, PartialEq)]
+struct ImageFolder {
+    dir: PathBuf,
+    /// The folder as the markdown names it: relative to the document, with
+    /// forward slashes on every platform; "" for the document's own folder.
+    src_prefix: String,
+}
+
+impl ImageFolder {
+    /// The setting is a path relative to the document, in which
+    /// `${filename}` is the document's name without its extension (Typora's
+    /// `${filename}.assets`). It may climb out with `..`, but not above the
+    /// root, and it is never absolute: one absolute folder would write this
+    /// machine's paths into every document instead of links that travel
+    /// with it. An empty segment ("img//x") is refused, not read as a root.
+    fn resolve(doc_path: &Path, setting: &str) -> Result<Self, String> {
+        let invalid = || format!("invalid image folder: {setting:?}");
+        let doc_dir = doc_path.parent().ok_or_else(invalid)?;
+        let stem = doc_path
+            .file_stem()
+            .map(|s| s.to_string_lossy())
+            .unwrap_or_default();
+        let setting = setting.trim();
+        // A Windows drive ("C:\img", or "C:img" - relative to that drive's
+        // current folder, not the document's) is a root too.
+        if setting.is_empty()
+            || Path::new(setting)
+                .components()
+                .any(|c| matches!(c, Component::Prefix(_) | Component::RootDir))
+        {
+            return Err(invalid());
+        }
+        let segments: Vec<&str> = setting.split(['/', '\\']).collect();
+        let mut parts: Vec<String> = Vec::new();
+        for (i, segment) in segments.iter().enumerate() {
+            match *segment {
+                // A trailing slash: "./", "img/".
+                "" if i > 0 && i == segments.len() - 1 => {}
+                "" => return Err(invalid()),
+                "." => {}
+                ".." if parts.last().is_some_and(|p| p != "..") => {
+                    parts.pop();
+                }
+                name => parts.push(name.replace("${filename}", &stem)),
+            }
+        }
+        let mut dir = doc_dir.to_path_buf();
+        for part in &parts {
+            if part != ".." {
+                dir.push(part);
+            } else if !dir.pop() {
+                return Err(invalid());
+            }
+        }
+        Ok(Self {
+            dir,
+            src_prefix: parts.join("/"),
+        })
+    }
+
+    /// The src the markdown gets for the file `name` in this folder.
+    fn src(&self, name: &str) -> String {
+        if self.src_prefix.is_empty() {
+            name.to_string()
+        } else {
+            format!("{}/{name}", self.src_prefix)
+        }
+    }
+}
+
 #[derive(Serialize)]
 pub struct SavedImage {
-    /// What goes into the markdown: "assets/<name>" relative to the document,
-    /// or an absolute path for a draft that has no folder yet.
+    /// What goes into the markdown: a path relative to the document, or an
+    /// absolute path for a draft that has no folder yet.
     src: String,
 }
 
-/// Persists an image pasted into the editor. Saved documents get a Typora
-/// style `assets/` folder next to them and a relative src; unsaved drafts
-/// fall back to an assets folder in the app's data dir with an absolute src
-/// (still valid after the draft is saved elsewhere).
+/// Persists an image pasted into the editor. Saved documents get it in
+/// their image folder (`folder`, see ImageFolder) and a relative src;
+/// unsaved drafts fall back to an assets folder in the app's data dir with
+/// an absolute src (still valid after the draft is saved elsewhere).
 #[tauri::command]
 pub async fn save_pasted_image(
     app: tauri::AppHandle,
     doc_path: Option<String>,
     data_base64: String,
     ext: String,
+    folder: String,
 ) -> Result<SavedImage, String> {
     use base64::{engine::general_purpose::STANDARD, Engine};
     use tauri::Manager;
@@ -231,15 +306,17 @@ pub async fn save_pasted_image(
     }
     let bytes = STANDARD.decode(&data_base64).map_err(|e| e.to_string())?;
 
-    let (dir, relative) = match doc_path.as_deref().map(Path::new).and_then(|p| p.parent()) {
-        Some(parent) => (parent.join("assets"), true),
-        None => (
-            app.path()
-                .app_data_dir()
-                .map_err(|e| e.to_string())?
-                .join("assets"),
-            false,
-        ),
+    let folder = match doc_path.as_deref() {
+        Some(doc) => Some(ImageFolder::resolve(Path::new(doc), &folder)?),
+        None => None,
+    };
+    let dir = match &folder {
+        Some(folder) => folder.dir.clone(),
+        None => app
+            .path()
+            .app_data_dir()
+            .map_err(|e| e.to_string())?
+            .join("assets"),
     };
     fs::create_dir_all(&dir).await.map_err(|e| e.to_string())?;
 
@@ -260,10 +337,9 @@ pub async fn save_pasted_image(
         .await
         .map_err(|e| e.to_string())?;
 
-    let src = if relative {
-        format!("assets/{name}")
-    } else {
-        full.to_string_lossy().to_string()
+    let src = match folder {
+        Some(folder) => folder.src(&name),
+        None => full.to_string_lossy().to_string(),
     };
     Ok(SavedImage { src })
 }
@@ -271,7 +347,7 @@ pub async fn save_pasted_image(
 #[derive(Serialize)]
 pub struct ImageMigration {
     old: String,
-    /// New "assets/<name>" src (relative to the document) on success; None
+    /// New src (relative to the document) on success; None
     /// if this one image failed to move - it's left at its old absolute
     /// path, so nothing is lost, just not tidied up.
     new: Option<String>,
@@ -288,30 +364,29 @@ async fn move_file(from: &Path, to: &Path) -> std::io::Result<()> {
     fs::remove_file(from).await
 }
 
-/// Moves a first-saved draft's pasted images from the app's data dir into a
-/// Typora-style `assets/` folder next to the now-real document, rewriting
-/// each markdown `src` to the new relative path. Only touches paths that are
-/// actually under the app data dir's `assets/` folder - anything else
-/// (http(s), data:, or already-relative) is left alone, matching the
-/// frontend's job of only offering draft-image candidates here.
+/// Moves a first-saved draft's pasted images from the app's data dir into
+/// the now-real document's image folder (`folder`, see ImageFolder),
+/// rewriting each markdown `src` to the new relative path. Only touches
+/// paths that are actually under the app data dir's `assets/` folder -
+/// anything else (http(s), data:, or already-relative) is left alone,
+/// matching the frontend's job of only offering draft-image candidates here.
 #[tauri::command]
 pub async fn migrate_draft_images(
     app: tauri::AppHandle,
     doc_path: String,
     srcs: Vec<String>,
+    folder: String,
 ) -> Result<Vec<ImageMigration>, String> {
     use tauri::Manager;
 
     require_non_empty(&doc_path)?;
-    let Some(doc_dir) = Path::new(&doc_path).parent() else {
-        return Err("document path has no parent directory".to_string());
-    };
+    let folder = ImageFolder::resolve(Path::new(&doc_path), &folder)?;
     let draft_assets_dir = app
         .path()
         .app_data_dir()
         .map_err(|e| e.to_string())?
         .join("assets");
-    let dest_dir = doc_dir.join("assets");
+    let dest_dir = &folder.dir;
 
     let mut results = Vec::with_capacity(srcs.len());
     for old in srcs {
@@ -329,7 +404,7 @@ pub async fn migrate_draft_images(
         };
 
         let new = async {
-            fs::create_dir_all(&dest_dir).await.ok()?;
+            fs::create_dir_all(dest_dir).await.ok()?;
             let mut dest_name = name.to_string_lossy().to_string();
             let mut n = 1;
             while dest_dir.join(&dest_name).exists() {
@@ -344,7 +419,7 @@ pub async fn migrate_draft_images(
                 n += 1;
             }
             move_file(path, &dest_dir.join(&dest_name)).await.ok()?;
-            Some(format!("assets/{dest_name}"))
+            Some(folder.src(&dest_name))
         }
         .await;
 
@@ -386,5 +461,85 @@ mod tests {
     #[test]
     fn open_dialog_leaves_every_file_pickable_on_macos() {
         assert!(open_document_filters("Text", "All files").is_empty());
+    }
+
+    fn doc() -> PathBuf {
+        Path::new("notes").join("week").join("My Notes.md")
+    }
+
+    /// The folder for `setting` and the src a pasted "a.png" gets in it.
+    fn image_in(setting: &str) -> (PathBuf, String) {
+        let folder = ImageFolder::resolve(&doc(), setting).unwrap();
+        let src = folder.src("a.png");
+        (folder.dir, src)
+    }
+
+    #[test]
+    fn the_default_image_folder_is_assets_next_to_the_document() {
+        let dir = doc().parent().unwrap().join("assets");
+        assert_eq!(image_in("assets"), (dir, "assets/a.png".to_string()));
+    }
+
+    #[test]
+    fn dot_slash_puts_images_beside_the_document() {
+        let dir = doc().parent().unwrap().to_path_buf();
+        assert_eq!(image_in("./"), (dir.clone(), "a.png".to_string()));
+        assert_eq!(image_in("."), (dir, "a.png".to_string()));
+    }
+
+    #[test]
+    fn filename_stands_for_the_document_name_without_its_extension() {
+        let dir = doc().parent().unwrap().join("My Notes.assets");
+        assert_eq!(
+            image_in("${filename}.assets"),
+            (dir, "My Notes.assets/a.png".to_string()),
+        );
+    }
+
+    #[test]
+    fn a_custom_folder_is_written_with_forward_slashes() {
+        let dir = doc().parent().unwrap().join("img").join("shots");
+        let expected = (dir, "img/shots/a.png".to_string());
+        assert_eq!(image_in("img/shots"), expected);
+        assert_eq!(image_in("img\\shots\\"), expected);
+        assert_eq!(image_in("  ./img/./x/../shots/  "), expected);
+    }
+
+    #[test]
+    fn a_custom_folder_may_climb_out_of_the_documents_folder() {
+        let dir = Path::new("notes").join("images");
+        assert_eq!(image_in("../images"), (dir, "../images/a.png".to_string()));
+        assert_eq!(
+            image_in("../../shared/${filename}"),
+            (
+                Path::new("shared").join("My Notes"),
+                "../../shared/My Notes/a.png".to_string()
+            ),
+        );
+    }
+
+    #[test]
+    fn an_image_folder_never_climbs_above_the_root() {
+        assert!(ImageFolder::resolve(&doc(), "../../../img").is_err());
+        let root_doc = Path::new("/").join("a.md");
+        assert!(ImageFolder::resolve(&root_doc, "../img").is_err());
+    }
+
+    #[test]
+    fn empty_absolute_and_doubled_slash_folders_are_refused() {
+        for setting in ["", "  ", "/", "/tmp/img", "\\img", "img//x", "//server/x"] {
+            assert!(
+                ImageFolder::resolve(&doc(), setting).is_err(),
+                "{setting:?} was accepted"
+            );
+        }
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn a_windows_drive_is_refused_as_an_image_folder() {
+        for setting in ["C:\\img", "C:img", "C:/img"] {
+            assert!(ImageFolder::resolve(&doc(), setting).is_err());
+        }
     }
 }

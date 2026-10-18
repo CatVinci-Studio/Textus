@@ -14,7 +14,12 @@ import {
   REVISION_DISPLAYS,
   type RevisionDisplay,
 } from "./SettingsContext";
-import { revisionDisplayName } from "../ai/revision/revision-display";
+import {
+  needsMargin,
+  revisionDisplayName,
+} from "../ai/revision/revision-display";
+import { useMarginAvailable } from "../ai/margin/margin-room";
+import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { LANGS, LANG_NAMES, type Lang, type TextKey } from "../i18n/strings";
 import {
   LinkRow,
@@ -24,7 +29,7 @@ import {
   VERBATIM_INPUT,
 } from "./sections/controls";
 import { ChevronIcon, CloseIcon } from "../ui/icons";
-import { CliCommandSection, LevisImportSection } from "./sections/general";
+import { CliCommandSection } from "./sections/general";
 import { links } from "../platform/ipc";
 import { ThemeSection } from "./sections/theme";
 import { ThemeGallerySection } from "./sections/theme-gallery";
@@ -107,6 +112,11 @@ export function SettingsPanel({
   viewChecks = {},
 }: SettingsPanelProps) {
   const { settings, setSettings, t } = useSettings();
+  // As in the review bar: a phone never has a margin, so there is nothing
+  // to explain there.
+  const marginAvailable = useMarginAvailable();
+  const phone = usePhoneLayout();
+  const noMarginRoom = !marginAvailable && !phone;
   const [category, setCategory] = useState<Category>("general");
   // A page of its own inside a category, with a way back, on the desktop
   // and the phone alike: General › About Textus, Editor & Appearance ›
@@ -187,7 +197,6 @@ export function SettingsPanel({
             />
             <ToggleRow
               label={t.autosaveLabel}
-              hint={t.autosaveHint}
               checked={settings.autosave}
               onChange={(v) => setSettings({ autosave: v })}
             />
@@ -211,7 +220,6 @@ export function SettingsPanel({
 
           <SettingsGroup title={t.generalSystemLabel}>
             {canInstallCliCommand && <CliCommandSection t={t} />}
-            <LevisImportSection t={t} lang={settings.language} />
             <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
           </SettingsGroup>
         </>
@@ -436,7 +444,10 @@ export function SettingsPanel({
                     <option value="plan">{t.agentModePlan}</option>
                   </Select>
                 </SettingRow>
-                <SettingRow label={t.revisionDisplayLabel}>
+                <SettingRow
+                  label={t.revisionDisplayLabel}
+                  hint={noMarginRoom ? t.revisionDisplayNoRoom : undefined}
+                >
                   <Select
                     className="settings-select"
                     aria-label={t.revisionDisplayLabel}
@@ -448,7 +459,11 @@ export function SettingsPanel({
                     }
                   >
                     {REVISION_DISPLAYS.map((mode) => (
-                      <option key={mode} value={mode}>
+                      <option
+                        key={mode}
+                        value={mode}
+                        disabled={noMarginRoom && needsMargin(mode)}
+                      >
                         {revisionDisplayName(t, mode)}
                       </option>
                     ))}
@@ -630,6 +645,7 @@ export function SettingsPanel({
               <button
                 key={c.id}
                 aria-current={category === c.id ? "page" : undefined}
+                data-label={c.label}
                 className={`settings-nav-item ${category === c.id ? "settings-nav-item-active" : ""}`}
                 onClick={(e) => {
                   setCategory(c.id);
@@ -666,7 +682,7 @@ export function SettingsPanel({
                 {categories.find((c) => c.id === category)?.label}
               </button>
               {subpage === "about" ? (
-                <AboutSection t={t} />
+                <AboutSection t={t} lang={settings.language} />
               ) : (
                 <>
                   <h1 className="settings-category-title">

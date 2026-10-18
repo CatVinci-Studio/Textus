@@ -21,8 +21,9 @@ export function useSaveTabs(opts: {
   tabState: TabState;
   t: Strings;
   autoSuggestFilename: boolean;
+  imageFolder: string;
 }) {
-  const { tabState, t, autoSuggestFilename } = opts;
+  const { tabState, t, autoSuggestFilename, imageFolder } = opts;
   const { liveTabs, updateTab, tabsRef } = tabState;
 
   // Writes a document, or says why it couldn't and resolves false - the tab
@@ -73,12 +74,16 @@ export function useSaveTabs(opts: {
       void session.addRecentFile(picked);
       // First save of a draft: any pasted images it holds live in the app's
       // data dir with an absolute src (fs.rs's save_pasted_image) - now that
-      // the document has a real home, move them into assets/ next to it and
+      // the document has a real home, move them into its image folder and
       // rewrite the markdown to relative paths (4.2). A no-op for documents
       // with no draft-origin images.
       let { content } = tab;
       try {
-        const migration = await migrateDraftImages(picked, tab.content);
+        const migration = await migrateDraftImages(
+          picked,
+          tab.content,
+          imageFolder,
+        );
         if (migration.migrated) {
           content = migration.content;
           await writeDocFile(picked, content);
@@ -105,7 +110,7 @@ export function useSaveTabs(opts: {
       });
       return true;
     },
-    [updateTab, liveTabs, t, autoSuggestFilename, writeOrReport],
+    [updateTab, liveTabs, t, autoSuggestFilename, imageFolder, writeOrReport],
   );
 
   // A save that reached disk: the tab turns clean and takes the file's new

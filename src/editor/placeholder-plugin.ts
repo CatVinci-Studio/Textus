@@ -1,5 +1,5 @@
 import type { Node } from "@milkdown/kit/prose/model";
-import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
+import { Plugin, PluginKey, type EditorState } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 
@@ -17,6 +17,19 @@ function isDocEmpty(doc: Node): boolean {
   return first.type.name === "paragraph" && first.content.size === 0;
 }
 
+/** Whether another plugin draws something into the document - text the AI
+ *  is writing or proposing, a completion - which the hint would overlap
+ *  although the document itself is still empty. */
+function othersDecorate(state: EditorState, self: Plugin): boolean {
+  return state.plugins.some((plugin) => {
+    if (plugin === self) return false;
+    const decorations = plugin.props.decorations?.call(plugin, state);
+    return (
+      decorations instanceof DecorationSet && decorations.find().length > 0
+    );
+  });
+}
+
 /// Shows a grayed-out hint in the first paragraph when the whole document is
 /// empty - otherwise a brand-new/blank document just looks unopened, since
 /// there's nothing on screen to show it's an editable WYSIWYG surface.
@@ -27,7 +40,8 @@ export function createPlaceholderPlugin(getPlaceholder: () => string) {
         key: placeholderKey,
         props: {
           decorations(state) {
-            if (!isDocEmpty(state.doc)) return DecorationSet.empty;
+            if (!isDocEmpty(state.doc) || othersDecorate(state, this))
+              return DecorationSet.empty;
 
             const node = state.doc.firstChild;
             if (!node) return DecorationSet.empty;

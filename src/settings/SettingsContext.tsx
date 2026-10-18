@@ -127,6 +127,9 @@ export interface GalleryOrigin {
 }
 
 export type ImageStorageMode = "local" | "image-host";
+/** Mirrors `ImageHost` in src-tauri/src/commands/image_host.rs. */
+export type ImageHost = "picgo" | "smms" | "imgur" | "custom";
+const IMAGE_HOSTS: ImageHost[] = ["picgo", "smms", "imgur", "custom"];
 export type ImageNamingMode = "auto" | "original" | "ask";
 export type AgentMode = "ask" | "edit" | "plan";
 
@@ -151,8 +154,18 @@ export interface Settings {
   /** Where newly pasted images go. Existing markdown image references are
    *  never migrated when this changes. */
   imageStorageMode: ImageStorageMode;
+  /** The folder a saved document's images go in when they are stored
+   *  locally, relative to the document (#147): "assets", "./",
+   *  "${filename}.assets" or the user's own path. Resolved by fs.rs's
+   *  ImageFolder. */
+  imageFolder: string;
+  /** Where uploaded images go: a PicGo or PicList app on this computer
+   *  (the services set up in it), SM.MS, Imgur, or the user's endpoint. */
+  imageHost: ImageHost;
   /** Filename policy used only by the remote image-host uploader. */
   imageNamingMode: ImageNamingMode;
+  /** The PicGo / PicList server's upload address; loopback only. */
+  imagePicgoEndpoint: string;
   /** A user-owned multipart endpoint. It receives the image in `file`. */
   imageUploadEndpoint: string;
   /** Dot-separated path to the public URL in the endpoint's JSON response. */
@@ -279,7 +292,10 @@ const DEFAULT_SETTINGS: Settings = {
   enableMath: true,
   enableMermaid: true,
   imageStorageMode: "local",
+  imageFolder: "assets",
+  imageHost: "picgo",
   imageNamingMode: "auto",
+  imagePicgoEndpoint: "http://127.0.0.1:36677/upload",
   imageUploadEndpoint: "",
   imageUploadUrlField: "url",
   aiProvider: "openai",
@@ -428,6 +444,14 @@ export function normaliseSettings(parsed: Raw | null): Settings {
       )
         ? (parsed.updateChannel as UpdateChannel)
         : DEFAULT_SETTINGS.updateChannel,
+      // Before the presets, the one image host was the user's endpoint: an
+      // installation that set one up keeps it.
+      imageHost: IMAGE_HOSTS.includes(parsed.imageHost as ImageHost)
+        ? (parsed.imageHost as ImageHost)
+        : typeof parsed.imageUploadEndpoint === "string" &&
+            parsed.imageUploadEndpoint.trim()
+          ? "custom"
+          : DEFAULT_SETTINGS.imageHost,
       // Any profile string is kept - a newer build's may not be in this
       // build's list - but it has to be one.
       writingConventions:

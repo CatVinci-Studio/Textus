@@ -158,6 +158,7 @@ function App() {
     tabState,
     t,
     autoSuggestFilename: settings.autoSuggestFilename,
+    imageFolder: settings.imageFolder,
   });
   const flushAutosave = useAutosave({
     tabs,
