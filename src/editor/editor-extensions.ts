@@ -61,6 +61,7 @@ import { escapeTrailingBlockPlugin } from "./markdown/escape-trailing-block-plug
 import { codeBlockIndentPlugin } from "./code/code-block-indent-plugin";
 import { pasteMarkdownSourcePlugin } from "./markdown/paste-markdown-plugin";
 import { pasteUrlPlugin } from "./markdown/paste-url";
+import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
 import { createPlainTextCopyPlugin } from "./markdown/plain-text-copy-plugin";
 import { createImagePlugin } from "./images/image-plugin";
@@ -238,6 +239,9 @@ export function withEditorCore(
       .use(createPlainTextCopyPlugin(() => settings.current.copyTextMode))
       .use(clipboard)
       .use(disk ? clipboardHistoryPlugin : [])
+      // Ctrl/Cmd+click follows a link. The playground leaves links to the
+      // browser it runs in.
+      .use(disk ? createLinkClickPlugin(() => docPath.current) : [])
       .use(listener)
       // Enter / Mod+Enter in tables, code blocks and quotes - ahead of the
       // other key handlers and the preset keymaps.

@@ -44,3 +44,16 @@ export function isInside(path: string, dir: string): boolean {
   if (!path.startsWith(dir) || path.length === dir.length) return false;
   return /[\\/]$/.test(dir) || /[\\/]/.test(path[dir.length]);
 }
+
+// A Markdown image or link destination is a URL, so other apps write a
+// space as "%20" (and Chinese as "%E5%9B%BE..."); the file on disk has the
+// decoded name. Undecoded, an image's "%20" reached the asset protocol as
+// "%2520" and found nothing (#135). A malformed escape (a file really named
+// "100%.png") is kept as written.
+export function decodeUrlPath(src: string): string {
+  try {
+    return decodeURIComponent(src);
+  } catch {
+    return src;
+  }
+}
