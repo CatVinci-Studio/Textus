@@ -1,0 +1,36 @@
+name: 功能建议
+description: 一个想法或改进建议（中文）。
+labels: ["enhancement", "lang: zh"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提交前请先搜索[已有的 issue](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aissue)，给相同的建议点 👍 能帮我们判断优先级。已经在计划中的功能可以看[路线图](https://github.com/CatVinci-Studio/Textus/blob/main/ROADMAP.zh.md)。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你想做什么
+      description: 使用场景，以及现在遇到的阻碍。
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 你希望怎样
+      description: 你设想的使用方式。
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 替代方案或其他应用的做法
+      description: 你现在的变通办法，或其他编辑器的做法。
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 其他补充
+      description: 截图、示意图、示例。

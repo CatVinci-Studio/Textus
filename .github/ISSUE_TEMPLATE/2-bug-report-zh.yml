@@ -1,0 +1,81 @@
+name: 问题反馈
+description: 某个功能没有按预期工作（中文）。
+labels: ["bug", "lang: zh"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。提交前请先搜索[已有的 issue](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aissue)，如果已经有人提过，点个 👍 比新开一个更有帮助。
+
+        不确定是不是问题？App 里的 **帮助 › Markdown 指南** 和 **帮助 › AI 功能指南** 介绍了大部分功能；“怎么做某件事”这类问题，欢迎到 [QQ 群或微信群](https://textus.catvinci.com/zh/community/) 里问。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 发生了什么
+      description: 出了什么问题，你原本期望的是什么。
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开 ...
+        2. 点击 ...
+        3. 看到 ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: Markdown 示例
+      description: 如果和文档内容有关，请附上能复现问题的最短 Markdown。说明用的是哪份内置指南也可以。
+      render: markdown
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图或录屏
+      description: 编辑和光标类问题，录屏会很有帮助。
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 平台
+      options:
+        - macOS
+        - Windows
+        - Linux (.deb)
+        - Linux (.rpm)
+        - Linux (AppImage)
+        - Linux (AUR)
+        - iPhone / iPad
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: 系统版本
+      placeholder: "macOS 26.1、Windows 11 24H2、Debian 13 GNOME、iOS 26.0 ..."
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: 应用版本
+      description: 在 设置 › 通用 › 关于 Textus 中可以看到。
+      placeholder: "1.0.5"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: reproducible
+    attributes:
+      label: 是否能稳定复现
+      options:
+        - label: 按上面的步骤每次都会出现。
