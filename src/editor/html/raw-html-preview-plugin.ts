@@ -103,8 +103,9 @@ export function commentParts(
   return { bodyFrom, bodyTo: bodyFrom + match[2].length };
 }
 
-/** The href of a paired <a ...> open tag, scheme-validated by the same
- *  sanitizer whitelist - shown as a hover title on the styled range. */
+/** The href of a paired <a ...> open tag, shown as a hover title on the
+ *  styled range. Not checked against the sanitizer's schemes: the range
+ *  gets no href, so the title is only text, never followed. */
 function pairedLinkTitle(openTag: string): string | undefined {
   const href = /\bhref\s*=\s*("([^"]*)"|'([^']*)')/i.exec(openTag);
   const value = href?.[2] ?? href?.[3];
