@@ -236,3 +236,129 @@
   background: var(--ui-primary);
   color: var(--ui-on-primary);
 }
+
+/* A library card is the open button plus a delete button in its corner,
+   shown on hover or focus. */
+.memory-entry {
+  position: relative;
+  padding: 0;
+}
+
+.memory-entry-open {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.memory-entry-delete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--editor-muted);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+.memory-entry:hover .memory-entry-delete,
+.memory-entry-delete:focus-visible {
+  opacity: 1;
+}
+
+.memory-entry-delete:hover {
+  background: color-mix(in srgb, var(--editor-text) 8%, transparent);
+  color: var(--editor-text);
+}
+
+@media (hover: none) {
+  .memory-entry-delete {
+    opacity: 1;
+  }
+}
+
+/* "AI remembered": personal, then the project's, each item its text, a
+   line of what and when, and its actions. */
+.memory-remembered-group + .memory-remembered-group {
+  margin-top: 10px;
+}
+
+.memory-remembered-group h5 {
+  margin: 0 0 6px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--editor-muted);
+}
+
+.memory-remembered-list li {
+  padding: 8px 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.memory-remembered-list li + li {
+  border-top: 1px solid var(--chat-hairline, var(--editor-border));
+}
+
+.memory-remembered-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+}
+
+.memory-not-sent .memory-remembered-text {
+  opacity: 0.6;
+}
+
+.memory-badge {
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--editor-text) 7%, transparent);
+}
+
+.memory-remembered-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.memory-remembered-actions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--editor-accent);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.memory-remembered-actions button:hover {
+  text-decoration: underline;
+}
+
+.memory-note {
+  margin: 8px 0 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--editor-muted);
+}

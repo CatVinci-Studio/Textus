@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import {
   wrapInBulletListCommand,
@@ -26,7 +26,8 @@ import type { FindReplace } from "../editor/find/useFindReplace";
 import type { EditorMenuState } from "./EditorContextMenu";
 import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
-import type { ChatHistoryEntry } from "../ai/chat/chat-history";
+import { claimChatRestore } from "../ai/chat/chat-restore";
+import { useLatest } from "../utils/hooks/useLatest";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import { findUniqueTextRange } from "../ai/doc-text";
 import type { Settings } from "../settings/SettingsContext";
@@ -69,6 +70,7 @@ export function useEditorWindowEvents({
   setMenu,
   conversation,
   agentPanel,
+  docPath,
 }: {
   run: EditorRunner;
   settings: Settings;
@@ -86,6 +88,8 @@ export function useEditorWindowEvents({
   setMenu: (menu: EditorMenuState) => void;
   conversation: AgentConversation;
   agentPanel: AgentPanelFrame;
+  /** This editor's document; null for one never saved. */
+  docPath: string | null;
 }) {
   // Every open tab's editor stays mounted (App.tsx hides the inactive ones
   // with display:none, which nulls offsetParent) but the window events below
@@ -280,16 +284,16 @@ export function useEditorWindowEvents({
     }
   });
 
-  // Chat-history panel clicks: load the saved conversation as the live one
-  // and open Quick Ask to show it - its one-line summary picks up the last
-  // reply; "open full conversation" (detach) reveals the rest on demand.
-  useWindowEvent(RESTORE_CHAT_EVENT, (e) => {
-    if (!isOnScreen()) return;
-    const entry = (e as CustomEvent<ChatHistoryEntry>).detail;
-    if (!entry || !Array.isArray(entry.turns)) return;
-    conversation.restore(entry.id, entry.turns);
-    // The full conversation belongs in the panel; Quick Ask only ever showed
-    // its last line.
+  // A conversation reopened from the Chats panel becomes the live one in
+  // its own document's editor (ai/chat/chat-restore.ts): this one, already
+  // open, when the event arrives, or a tab just opened for it, as soon as
+  // it mounts with that document.
+  const claimRestore = useLatest(() => {
+    const restore = claimChatRestore(docPath, isOnScreen);
+    if (!restore) return;
+    conversation.restore(restore.id, restore.turns);
     agentPanel.setOpen(true);
   });
+  useWindowEvent(RESTORE_CHAT_EVENT, () => claimRestore.current());
+  useEffect(() => claimRestore.current(), [docPath, claimRestore]);
 }

@@ -620,7 +620,7 @@ mod tests {
         assert_eq!(settings["textusOnly"], 1, "Textus-only fields stay");
         assert_eq!(settings[OFFERED_SETTING], true);
         assert_eq!(stores.ui_state.snapshot().0["agentPanelOpen"], true);
-        let chats = stores.chat.snapshot().0;
+        let chats = stores.chat.list();
         let ids: Vec<_> = chats
             .as_array()
             .unwrap()
@@ -628,7 +628,15 @@ mod tests {
             .map(|c| c["id"].as_str().unwrap())
             .collect();
         assert_eq!(ids, ["shared", "a"]);
-        assert_eq!(chats[0]["turns"][0], "textus", "Textus's copy wins a tie");
+        assert_eq!(
+            stores.chat.get("shared").unwrap()["turns"][0],
+            "textus",
+            "Textus's copy wins a tie"
+        );
+        // Written in the folder layout, one file per conversation.
+        stores.flush_all();
+        let chat_dir = data.join(own("chat-history").trim_end_matches(".json"));
+        assert!(chat_dir.join("a.json").is_file());
         assert_eq!(stores.clipboard.snapshot().0[0]["text"], "copied in Levis");
 
         let read = |p: &Path| std::fs::read_to_string(p).unwrap();
@@ -666,7 +674,7 @@ mod tests {
         // Running it again changes nothing and copies nothing twice.
         let again = import(&levis, &config, &data, &stores, true);
         assert!(again.kept.contains(&"session.json".to_string()));
-        assert_eq!(stores.chat.snapshot().0.as_array().unwrap().len(), 2);
+        assert_eq!(stores.chat.list().as_array().unwrap().len(), 2);
         assert_eq!(snapshot(&root.join("levis-config")), before);
         std::fs::remove_dir_all(&root).unwrap();
     }

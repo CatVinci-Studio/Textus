@@ -17,8 +17,8 @@ export const DROP_IMAGE_FILES_EVENT = "textus:drop-image-files";
 /// detail: the markdown text to insert at the cursor (clipboard history panel).
 export const INSERT_CLIPBOARD_TEXT_EVENT = "textus:insert-clipboard-text";
 
-/// detail: a ChatHistoryEntry to load as the live conversation and open the
-/// inline chat on (chat history sidebar panel).
+/// A saved conversation is waiting to be restored (Chats sidebar panel):
+/// the editor it is for takes it from ai/chat/chat-restore.ts.
 export const RESTORE_CHAT_EVENT = "textus:restore-chat";
 
 /// detail: an editing action from the app-drawn menu's Edit submenu -

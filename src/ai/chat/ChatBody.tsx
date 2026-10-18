@@ -517,6 +517,7 @@ export function ChatBody({
                     onRelocateProposal={handleRelocate}
                     canRetry={!!retryable}
                     onRetry={handleRetry}
+                    docPath={docPath}
                   />
                 </div>
               )}
@@ -552,6 +553,7 @@ export function ChatBody({
                 onRelocateProposal={handleRelocate}
                 canRetry={!!retryable}
                 onRetry={handleRetry}
+                docPath={docPath}
               />
             </div>
           )}

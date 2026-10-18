@@ -363,3 +363,61 @@ button.agent-context-chip:hover {
   color: var(--editor-text);
   word-break: break-word;
 }
+
+/* A remember call's chip (MemoryChip.tsx): what was remembered, where,
+   and the way back - "Remembered: … (project) · Undo · Make personal". */
+.agent-memory-chip {
+  align-self: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  max-width: 100%;
+  padding: 4px 10px;
+  border-radius: var(--radius-surface);
+  background: color-mix(in srgb, var(--editor-accent) 8%, transparent);
+  color: var(--editor-muted);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+}
+
+.agent-memory-chip-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--editor-text);
+}
+
+.agent-memory-chip-actions {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.agent-memory-chip-actions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--editor-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.agent-memory-chip-actions button + button::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--editor-muted);
+}
+
+.agent-memory-chip-actions button:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.agent-memory-chip-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.agent-memory-chip-error {
+  color: var(--danger);
+}

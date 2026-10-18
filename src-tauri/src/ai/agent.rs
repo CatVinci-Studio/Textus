@@ -210,6 +210,10 @@ fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -> String {
             "Project folder: {root} - chosen by the user, in {}. You can read the text files in it with list_files, search_files and read_file, and nothing outside it. Use the document's folder, in the same menu or Settings row, goes back to the open document's own folder. {one_folder}",
             where_to_choose_the_project_folder(true)
         ),
+        (Some(root), RootSource::EnclosingProject) => format!(
+            "Project folder: {root} - the nearest folder above the open document that has a .textus/ folder. You can read the text files in it with list_files, search_files and read_file, and nothing outside it; the user can choose another one in {}. {one_folder}",
+            where_to_choose_the_project_folder(true)
+        ),
         (Some(root), _) => format!(
             "Project folder: {root} - the open document's own folder, the default. You can read the text files in it with list_files, search_files and read_file, and nothing outside it; the user can choose another one in {}. {one_folder}",
             where_to_choose_the_project_folder(true)
@@ -237,7 +241,7 @@ fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -> String {
         None => String::new(),
     };
     format!(
-        "---project---\n{folder}\nWhat the app calls the things that shape your work, in its English UI: the project folder, whose .textus/ folder holds the project's own settings. The writing instructions: agent.md files in the global config folder and in .textus/, shown to you under ---user instructions--- headings and used only in conversations; the global ones open from Settings > {AI_NAME} > Writing Instructions (agent.md) > Edit agent.md, the project's from Edit project writing instructions in the project menu. Skills: reusable instructions the user calls with /name, or that you load when a request matches one, each one Markdown file - a name and a one-line description at the top, then the instructions. The app ships built-in skills, listed in Settings > {AI_NAME} > Built-in skills, where each has a switch to turn it off and Customize…, which copies it into the global config folder's skills/ and opens the copy to edit (Reset deletes the copy and brings the built-in back); the user's own skills go in .textus/skills/ or in the global config folder's skills/ (Settings > {AI_NAME} > Skills > Import Skill… copies a file there), and one with a built-in skill's name replaces it. The library: one file per person, place or term in .textus/library, an entry sent to you whenever its name or an alias appears in the user's message or the open document (aliases go on an `aliases:` line at the top of the entry); New library entry… in the project menu starts one. The style profile: .textus/style.md, sent to you as ---the author's style profile---; Learn my style from samples… in the project menu drafts it from the user's own writing (\"Learn my style\"), Create style profile starts an empty one, and once it exists Open style profile in the menu, or the Style chip next to the folder name, opens it. Writing conventions (Settings > {AI_NAME}, under Writing Assistance) picks the punctuation, spacing and number norms you, the grammar check and check_conventions follow - Automatic, or one profile such as en-GB/govuk for documents in that language; a `conventions:` line in the style profile's front matter overrides it for the project. The style profile and the library also shape completion, the grey suggestions as the user types; Enable AI completion in Settings > {AI_NAME}, under Writing Assistance, turns completion on or off, and Completion tone there sets its register. The panel's modes are Write, which drafts new text into the document, Review, which only reads and comments, and Revise, which proposes changes to the text already there; the user applies a proposal with Accept or drops it with Reject.{names}\nAsked how to do something in the app, answer in two to four plain sentences: what to use, where it is and what it does - for a skill, first a built-in skill that already does it (named as their UI names it) and Customize… to adapt it, before writing one from scratch - no headings or code blocks, no tips they didn't ask for, and no remarks about their document or their files."
+        "---project---\n{folder}\nWhat the app calls the things that shape your work, in its English UI: the project folder, whose .textus/ folder holds the project's own settings. The writing instructions: agent.md files in the global config folder and in .textus/, shown to you under ---user instructions--- headings and used only in conversations; the global ones open from Settings > {AI_NAME} > Writing Instructions (agent.md) > Edit agent.md, the project's from Edit project writing instructions in the project menu. Skills: reusable instructions the user calls with /name, or that you load when a request matches one, each one Markdown file - a name and a one-line description at the top, then the instructions. The app ships built-in skills, listed in Settings > {AI_NAME} > Built-in skills, where each has a switch to turn it off and Customize…, which copies it into the global config folder's skills/ and opens the copy to edit (Reset deletes the copy and brings the built-in back); the user's own skills go in .textus/skills/ or in the global config folder's skills/ (Settings > {AI_NAME} > Skills > Import Skill… copies a file there), and one with a built-in skill's name replaces it. The library: one file per person, place or term in .textus/library, an entry sent to you whenever its name or an alias appears in the user's message or the open document (aliases go on an `aliases:` line at the top of the entry); New library entry… in the project menu starts one. The style profile: .textus/style.md, sent to you as ---the author's style profile---; Learn my style from samples… in the project menu drafts it from the user's own writing (\"Learn my style\"), Create style profile starts an empty one, and once it exists Open style profile in the menu, or the Style chip next to the folder name, opens it. Writing conventions (Settings > {AI_NAME}, under Writing Assistance) picks the punctuation, spacing and number norms you, the grammar check and check_conventions follow - Automatic, or one profile such as en-GB/govuk for documents in that language; a `conventions:` line in the style profile's front matter overrides it for the project. The style profile and the library also shape completion, the grey suggestions as the user types; Enable AI completion in Settings > {AI_NAME}, under Writing Assistance, turns completion on or off, and Completion tone there sets its register. What you remember: what you keep with the remember tool, one small file each - the user's personal memories in the global config folder's memory/, the project's in .textus/memory/, facts about the work as library entries - shown with Undo under your reply and listed in the AI panel's Memory tab, where the user can edit, delete or move each one; Remember automatically in Settings > {AI_NAME} turns it on or off. The panel's modes are Write, which drafts new text into the document, Review, which only reads and comments, and Revise, which proposes changes to the text already there; the user applies a proposal with Accept or drops it with Reject.{names}\nAsked how to do something in the app, answer in two to four plain sentences: what to use, where it is and what it does - for a skill, first a built-in skill that already does it (named as their UI names it) and Customize… to adapt it, before writing one from scratch - no headings or code blocks, no tips they didn't ask for, and no remarks about their document or their files."
     )
 }
 
@@ -294,7 +298,11 @@ fn focus_section(document: &str, heading: &str) -> Option<(usize, String)> {
     ))
 }
 
-fn document_section(document: &str, with_tools: bool, focus_heading: Option<&str>) -> String {
+pub(crate) fn document_section(
+    document: &str,
+    with_tools: bool,
+    focus_heading: Option<&str>,
+) -> String {
     let len = document.chars().count();
     if len <= FULL_DOCUMENT_LIMIT {
         return format!("---document---\n{document}");
@@ -413,6 +421,15 @@ pub(crate) fn build_instructions(
         });
     }
 
+    // What Textus AI remembered by itself (ai::memory): personal, then the
+    // project's, after the user's own instructions, which win over both.
+    sections.extend(crate::ai::memory::prompt_sections(
+        &workspace.memories,
+        &workspace.library,
+        workspace.root.is_some(),
+        with_tools && workspace.remember,
+    ));
+
     // The skill index: names + descriptions only. Bodies load on demand via
     // use_skill, so a large skill library costs almost nothing per request.
     // /name-only skills (and turned-off built-ins) aren't offered.
@@ -527,17 +544,27 @@ pub(crate) fn request_context(
     // editor - included in full when the document is too long to embed.
     focus_heading: Option<&str>,
 ) -> String {
+    request_context_and_library(workspace, document, with_tools, focus, focus_heading).0
+}
+
+/// [`request_context`], and the library entries it carries and leaves out
+/// - which the Memory tab marks (project::record_library_use).
+fn request_context_and_library<'a>(
+    workspace: &'a AgentWorkspace,
+    document: &str,
+    with_tools: bool,
+    focus: &str,
+    focus_heading: Option<&str>,
+) -> (String, crate::ai::project::LibraryPick<'a>) {
     let document_text = document_section(document, with_tools, focus_heading);
-    let mentioned = crate::ai::project::relevant_library(
-        &workspace.library,
-        &format!("{focus}\n{document_text}"),
-    );
+    let pick =
+        crate::ai::project::pick_library(&workspace.library, &format!("{focus}\n{document_text}"));
     let mut parts: Vec<String> =
-        crate::ai::project::writing_context_section(workspace.style.as_deref(), &mentioned)
+        crate::ai::project::writing_context_section(workspace.style.as_deref(), &pick.included)
             .into_iter()
             .collect();
     parts.push(document_text);
-    parts.join("\n\n")
+    (parts.join("\n\n"), pick)
 }
 
 /// The current user message as sent: the request context, then what the
@@ -754,12 +781,19 @@ pub async fn ai_agent_message(
     // The UI language (src/i18n/langs.ts), for the names the agent is told
     // the app uses (UiNames). None - an older frontend - is English.
     ui_language: Option<String>,
+    // The conversation (`{id, title}`), recorded with what Textus AI
+    // remembers in it (ai::memory). None from an older frontend.
+    conversation: Option<crate::ai::memory::Source>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
     let cancel_rx = cancel::register(request_id.clone());
     let ui_language = ui_language.unwrap_or_else(|| "en".to_string());
+    let source = crate::ai::memory::Source {
+        document: doc_path.clone(),
+        ..conversation.unwrap_or_default()
+    };
     let result = tokio::select! {
-        result = ai_agent_message_inner(app, provider, document, doc_path, workspace_root, history, message, images, web_search, mode, model, focus_heading, ui_language, on_event) => result,
+        result = ai_agent_message_inner(app, provider, document, doc_path, workspace_root, history, message, images, web_search, mode, model, focus_heading, ui_language, source, on_event) => result,
         _ = cancel_rx => Err(cancel::CANCELLED.to_string()),
     };
     cancel::unregister(&request_id);
@@ -783,12 +817,23 @@ async fn ai_agent_message_inner(
     model: Option<String>,
     focus_heading: Option<String>,
     ui_language: String,
+    source: crate::ai::memory::Source,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
     let history = compact_history(history);
     let workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
     let library = crate::ai::conventions::library_names(&workspace);
+    // Where the remember tool writes, while Remember automatically is on.
+    let memory = workspace
+        .remember
+        .then(|| crate::ai::memory::MemoryContext {
+            dirs: crate::ai::memory::MemoryDirs::new(
+                workspace::global_agent_dir(&app).ok().as_deref(),
+                workspace.root.as_deref().map(Path::new),
+            ),
+            source,
+        });
     // What the request is about, for picking library entries: the message
     // as the user's side sent it, before the reference packs go in.
     let focus = message.clone();
@@ -815,17 +860,16 @@ async fn ai_agent_message_inner(
     }
     // Tool-calling paths: the document rides in this message (see
     // build_instructions). The tool-less fallback rebuilds its own turn.
+    let (context, sent_library) = request_context_and_library(
+        &workspace,
+        &document,
+        true,
+        &focus,
+        focus_heading.as_deref(),
+    );
+    crate::ai::project::record_library_use(doc_path.as_deref(), &sent_library);
     let user_turn = AgentTurn::User {
-        text: request_user_text(
-            &request_context(
-                &workspace,
-                &document,
-                true,
-                &focus,
-                focus_heading.as_deref(),
-            ),
-            &message,
-        ),
+        text: request_user_text(&context, &message),
         images,
     };
     let plain_message = message.clone();
@@ -838,6 +882,7 @@ async fn ai_agent_message_inner(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 mode,
+                workspace.remember,
             );
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
@@ -847,6 +892,7 @@ async fn ai_agent_message_inner(
                 root: workspace.root.as_deref().map(Path::new),
                 conventions: &conventions,
                 library: &library,
+                memory: memory.as_ref(),
                 proposed: Default::default(),
             };
 
@@ -950,6 +996,7 @@ async fn ai_agent_message_inner(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 mode,
+                workspace.remember,
             );
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
@@ -959,6 +1006,7 @@ async fn ai_agent_message_inner(
                 root: workspace.root.as_deref().map(Path::new),
                 conventions: &conventions,
                 library: &library,
+                memory: memory.as_ref(),
                 proposed: Default::default(),
             };
 
@@ -1013,6 +1061,7 @@ async fn ai_agent_message_inner(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 mode,
+                workspace.remember,
             );
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
@@ -1022,6 +1071,7 @@ async fn ai_agent_message_inner(
                 root: workspace.root.as_deref().map(Path::new),
                 conventions: &conventions,
                 library: &library,
+                memory: memory.as_ref(),
                 proposed: Default::default(),
             };
             let instructions_with_tools =
@@ -1226,7 +1276,7 @@ mod tests {
         use std::collections::VecDeque;
 
         let document = "# Notes\n\n## Methods\n\nWe sampled ten sites.\n\n## Results\n\nAll good.";
-        let tools = tools::builtin_tools(false, false, AgentMode::Revise);
+        let tools = tools::builtin_tools(false, false, AgentMode::Revise, false);
         let conventions = crate::ai::rules::Conventions::default();
         let ctx = ToolContext {
             document,
@@ -1235,6 +1285,7 @@ mod tests {
             root: None,
             conventions: &conventions,
             library: &[],
+            memory: None,
             proposed: Default::default(),
         };
         let call = |id: &str, name: &str, args: &str| AgentTurn::ToolCall {
@@ -1894,5 +1945,40 @@ mod tests {
             assert!(prompt.contains("---user instructions---\nAlways reply in English."));
             assert!(!prompt.contains("---user instructions for this project"));
         }
+    }
+
+    #[test]
+    fn remembered_memories_follow_the_users_instructions() {
+        use crate::ai::memory::{Memories, Memory, MemoryKind, Scope};
+        let memory = |scope, text: &str| Memory {
+            id: String::new(),
+            scope,
+            kind: MemoryKind::Preference,
+            text: text.into(),
+            file: String::new(),
+            remembered: Default::default(),
+            included: true,
+        };
+        let ws = AgentWorkspace {
+            instructions: vec!["Global rule.".into()],
+            memories: Memories {
+                items: vec![
+                    memory(Scope::Personal, "Reply briefly."),
+                    memory(Scope::Project, "Spell it colour."),
+                ],
+                ..Default::default()
+            },
+            remember: true,
+            ..AgentWorkspace::default()
+        };
+        let prompt = build_instructions(&ws, "draft", true, AgentMode::Review, "", "en");
+        let rule = prompt.find("Global rule.").unwrap();
+        let personal = prompt.find("Reply briefly.").unwrap();
+        let project = prompt.find("Spell it colour.").unwrap();
+        assert!(rule < personal && personal < project);
+        assert!(prompt.contains("---remembering---"), "every mode");
+        // Without tools there is no remember tool to talk about.
+        let flat = build_instructions(&ws, "draft", false, AgentMode::Review, "", "en");
+        assert!(flat.contains("Reply briefly.") && !flat.contains("---remembering---"));
     }
 }

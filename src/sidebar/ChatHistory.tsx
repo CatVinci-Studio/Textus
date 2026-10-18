@@ -1,18 +1,22 @@
 import { useSettings } from "../settings/SettingsContext";
 import { localeOf } from "../i18n/strings";
-import { useChatHistory, deleteConversation } from "../ai/chat/chat-history";
-import { RESTORE_CHAT_EVENT } from "../utils/events";
+import {
+  useChatHistory,
+  useHasArchivedConversations,
+  deleteConversation,
+} from "../ai/chat/chat-history";
+import { reopenConversation } from "./reopen-conversation";
 import { CloseIcon } from "../ui/icons";
 import { basename, dirname } from "../utils/path";
-import type { ChatHistoryEntry } from "../ai/chat/chat-history";
+import type { ChatSummary } from "../ai/chat/chat-history";
 
 /** Conversations by the folder their document lives in - the project they
  *  belong to - most recently active group first. Unsaved drafts form one
  *  group of their own. */
 export function groupByProject(
-  entries: ChatHistoryEntry[],
-): { folder: string | null; entries: ChatHistoryEntry[] }[] {
-  const groups = new Map<string | null, ChatHistoryEntry[]>();
+  entries: ChatSummary[],
+): { folder: string | null; entries: ChatSummary[] }[] {
+  const groups = new Map<string | null, ChatSummary[]>();
   for (const entry of [...entries].sort((a, b) => b.updatedAt - a.updatedAt)) {
     const folder = entry.docPath ? dirname(entry.docPath) : null;
     groups.set(folder, [...(groups.get(folder) ?? []), entry]);
@@ -22,13 +26,13 @@ export function groupByProject(
 
 /**
  * Sidebar panel over the saved agent conversations (see ai/chat/chat-history.ts),
- * grouped by project folder. Clicking an entry restores it as the live
- * conversation in the Agent panel (via RESTORE_CHAT_EVENT - same decoupling
- * as the clipboard panel's insert event).
+ * grouped by project folder. Clicking an entry reopens it with its document
+ * as the live conversation in the Agent panel (reopen-conversation.ts).
  */
 export function ChatHistory() {
   const { t, settings } = useSettings();
   const entries = useChatHistory();
+  const archived = useHasArchivedConversations(entries);
   // In the UI's language, not the OS's: a Chinese UI on an English system
   // dated its conversations in English.
   const locale = localeOf(settings.language);
@@ -39,6 +43,9 @@ export function ChatHistory() {
 
   return (
     <div className="chat-history">
+      {archived && (
+        <div className="chat-history-archived">{t.chatHistoryArchived}</div>
+      )}
       {groupByProject(entries).map((group) => (
         <section key={group.folder ?? ""} className="chat-history-group">
           <div className="chat-history-group-title" title={group.folder ?? ""}>
@@ -50,12 +57,12 @@ export function ChatHistory() {
             <div
               key={entry.id}
               className="chat-history-entry"
-              title={t.chatHistoryRestoreHint}
-              onClick={() =>
-                window.dispatchEvent(
-                  new CustomEvent(RESTORE_CHAT_EVENT, { detail: entry }),
-                )
+              title={
+                entry.docPath
+                  ? t.chatHistoryRestoreHint
+                  : t.chatHistoryRestoreHereHint
               }
+              onClick={() => void reopenConversation(entry, t)}
             >
               <div className="chat-history-entry-main">
                 <span className="chat-history-entry-title">

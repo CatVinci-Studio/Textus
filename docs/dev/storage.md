@@ -27,9 +27,10 @@ The app identifier is `com.catvinci.textus`. Tauri's app directories:
 
 ## Files
 
-Debug builds write `*.dev.json` instead of `*.json` for the four files
-marked †, so a development build never rewrites an installed app's settings
-(the two share an identifier, hence the directories).
+Debug builds write `*.dev.json` instead of `*.json` for the three files
+marked †, and use `chat-history.dev/` instead of `chat-history/`, so a
+development build never rewrites an installed app's settings (the two share
+an identifier, hence the directories).
 
 ### Config directory
 
@@ -41,6 +42,7 @@ marked †, so a development build never rewrites an installed app's settings
 | `recent_files.json`                                                                                 | File > Open Recent (desktop).                                                                                                                                                                                                                                                     |
 | `themes/<id>/light.css`, `dark.css`                                                                 | Imported themes, and themes installed from the theme gallery (**Settings › Editor & Appearance › Browse themes**). `settings.userThemes` lists them; a gallery theme's entry also has `gallery: {id, updated, source}`, the version installed, which is how an update is noticed. |
 | `agent/agent.md`, `agent/skills/`                                                                   | The global config folder: global writing instructions and skills ([AI-CONCEPTS.md](../design/ai-concepts.md)), including copies of built-in skills made with Customize… (marked `textus-based-on`). Built-ins turned off are listed in `settings.disabledBuiltinSkills`.          |
+| `agent/memory/<slug>.md`                                                                            | What Textus AI remembered about the user for every project, one memory per file (`ai::memory`); the project's own are in its `.textus/memory/`. Off with `settings.rememberAutomatically`.                                                                                        |
 | `provider_keys.json`, `api_key.json`, `custom_endpoint.json`, `auth-codex.json`, `auth-claude.json` | AI credentials, and in `provider_keys.json` also the image hosts' tokens under ids starting `__image_host` (`credential_id` in `src-tauri/src/commands/image_host.rs`); owner-only on Unix.                                                                                       |
 
 `settings.json`'s `writingConventions` is also read by Rust
@@ -64,17 +66,63 @@ the channel with each update check (`check_for_update` in
 | File                       | What                                                                                                                                                                                                                        |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ui-state.json` †          | Where the UI was left: `{"schemaVersion": 1, "state": {...}}` with the fields of `UiState` in `src/storage/ui-state.ts`.                                                                                                    |
-| `chat-history.json` †      | Saved Agent conversations, most recent first, at most 60: `{"schemaVersion": 1, "entries": [...]}`.                                                                                                                         |
+| `chat-history/`            | Saved Agent conversations, one file each - see [Chat history](#chat-history) below.                                                                                                                                         |
 | `clipboard-history.json` † | The clipboard panel, newest first, at most 30 entries of up to 50,000 characters.                                                                                                                                           |
 | `drafts/`                  | Crash recovery for unsaved documents.                                                                                                                                                                                       |
 | `assets/`                  | Images pasted into a document that has not been saved yet, referenced by absolute path until its first save moves them into the folder chosen by the `imageFolder` setting (`assets` by default, relative to the document). |
 
 On iOS a document path inside the app's Documents folder is stored as
-`documents:<path inside Documents>` - a chat history entry's `docPath`, like
-the recent documents in `ui-state.json` - because the app's container, and
+`documents:<path inside Documents>` - a conversation's `docPath`, like the
+recent documents in `ui-state.json` - because the app's container, and
 every absolute path into it, moves with each reinstall and update
 (`src/platform/documents-path.ts`). An absolute container path stored by an
 earlier version is rewritten that way when the history loads.
+
+### Chat history
+
+`src-tauri/src/settings/chat_history.rs`. Up to 1.0 the conversations were
+one `chat-history.json`, rewritten whole on every saved turn and capped at
+60 by dropping the oldest. Since 1.1.0 they are a folder:
+
+| File                            | What                                                                                                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `chat-history/<id>.json`        | One conversation: `{"schemaVersion": 1, "entry": {id, docPath, title, updatedAt, turns}}`. Attached images are kept as their name and type only.                               |
+| `chat-history/index.json`       | What the Chats tab lists, most recent first: `{"schemaVersion": 1, "entries": [{id, docPath, title, updatedAt, turnCount}]}` (`ChatSummary` in `src/ai/chat/chat-history.ts`). |
+| `chat-history/.trash/<id>.json` | Conversations moved out of the list by the cap, as they were.                                                                                                                  |
+
+- Saving a turn rewrites only that conversation's file and the index, each
+  debounced and written like every other file here. The windows hold only
+  the index; a conversation's turns are read (`chat_history_get`) when it
+  is reopened.
+- The index keeps the newest 500 conversations. A save that pushes one past
+  that moves the oldest's file into `.trash/`, and the Chats tab says that
+  older conversations were archived. `.trash/` keeps at most 200 files; past
+  that the oldest (by modification time, which a move keeps) are deleted.
+- A conversation id is a file name, so only ids of letters, digits, `-` and
+  `_` are accepted. Only files named that way are ever moved or deleted;
+  anything else put in the folder is left alone.
+- **Privacy › Clear chat history** deletes every conversation file in the
+  folder and in `.trash/`, and empties the index. Deleting one conversation
+  in the Chats tab deletes its file (not into the trash).
+- A document saved under a new path by Textus (Save As, a rename in the
+  iPhone's document list) takes its conversations along
+  (`chat_history_move_document`).
+- An index that is missing or corrupt while conversation files are there is
+  built again from the files.
+
+**Migration from `chat-history.json`.** On the first launch that finds no
+`chat-history/` folder but an old `chat-history.json` (`chat-history.dev.json`
+in a debug build), Rust splits it: every conversation's file and the index
+are written into `chat-history.migrating/`, which is then renamed to
+`chat-history/` in one step, and only then is the old file renamed to
+`chat-history.json.migrated` - never deleted. A crash before the folder's
+rename leaves no folder, and the next launch starts over; once the folder
+exists, the old file is never read again. An old file that can't be parsed
+is moved aside as `chat-history.json.corrupt-<unix time>` and the history
+starts empty, like any other file here; one that can't be read is left
+alone and nothing is saved for that session. Conversations brought by the
+move out of localStorage or the Levis import are added to the folder the
+same way.
 
 The webview's own storage also lives here (`localstorage/`, `WebKitCache/`
 and so on; `EBWebView\` under `%LOCALAPPDATA%` on Windows). Since 0.9.7 the
@@ -87,7 +135,8 @@ missing.
 - Rust holds each file in memory and is its only writer. Windows change
   settings and UI state one top-level field at a time (`settings_patch`,
   `ui_state_patch`), and the histories one entry at a time
-  (`history_upsert`, `history_remove`, `history_clear`) - never by writing a
+  (`history_upsert`, `history_remove`, `history_clear`; a conversation is
+  its own file) - never by writing a
   whole object or list back, so two windows changing different things both
   land. Every settings and history change is broadcast to all windows.
 - Writes are debounced by 250 ms and flushed when the app exits, through a
@@ -154,7 +203,8 @@ Levis installation by copying from Levis's directories (the table above with
 
 1. `settings.json`, `ui-state.json`, `chat-history.json`,
    `clipboard-history.json` - read with the same code, since the format is
-   the same. A `schemaVersion` newer than Textus knows means a newer Levis
+   the same; the conversations are written into Textus's `chat-history/`
+   folder. A `schemaVersion` newer than Textus knows means a newer Levis
    wrote it; read it best-effort (unknown fields are kept) rather than
    discard it.
 2. `themes/`, `agent/`, `recent_files.json`, `session.json`, `prefs.json`
@@ -168,11 +218,28 @@ The Levis directories are left in place, so Levis keeps working alongside.
 A Levis older than 0.9.7 has no files to copy; Textus doesn't read another
 app's webview storage, so such a user updates Levis once first.
 
-## Project folders: `.textus/` and `.levis/`
+## Project folders: `.textus/`
 
-A project's own settings (writing instructions, skills, library, style
-profile) live in its `.textus/` folder. A project made with Levis has a
-`.levis/` folder instead; while a project has no `.textus/`, Textus reads
-and writes its `.levis/` in place (`ai::workspace::project_dir`), so nothing
-is moved or copied and a Levis install sharing the folder still sees the same
-files. A project with both uses `.textus/` only.
+A project's own settings live in its `.textus/` folder
+([AI-CONCEPTS.md](../design/ai-concepts.md)):
+
+| Path                            | What                                                                                                          |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `agent.md`                      | The project's writing instructions.                                                                           |
+| `style.md`, `style.previous.md` | The style profile, and the one "Learn my style" replaced.                                                     |
+| `library/<name>.md`             | The library, one entry per file; an entry Textus AI wrote has `remembered-by: textus-ai` in its front matter. |
+| `memory/<slug>.md`              | What Textus AI remembered about the project, one memory per file (`ai::memory`).                              |
+| `skills/<name>.md`              | The project's skills.                                                                                         |
+
+The project folder is the nearest folder holding the document that has a
+`.textus/` (up to, never including, the home folder or a drive root), else
+the document's own folder, unless one was chosen.
+
+A project made with Levis has a `.levis/` folder instead, which Textus does
+not read. While `.levis/` holds files `.textus/` lacks, the project bar
+offers once to convert it: Convert copies those regular files into
+`.textus/` through the atomic writer (symlinks skipped, nothing in
+`.textus/` overwritten, `.levis/` untouched, so a Levis install sharing the
+folder keeps working) - `ai::levis_project`; Not now adds the project
+folder to `ui-state.json`'s `levisProjectsDeclined` instead, and the Memory
+tab keeps **Convert Levis data**.

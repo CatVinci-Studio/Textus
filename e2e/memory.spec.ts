@@ -16,6 +16,9 @@ const workspace = (library: unknown[]) => ({
   root: "/notes",
   style: null,
   library,
+  memories: { items: [], chars: 0, cap: 4000 },
+  remember: true,
+  levis_project: false,
 });
 
 async function createEntry(page: Page, name: string) {
@@ -77,4 +80,169 @@ test("a new library entry shows its template's comment as a note, not markup", a
     useInnerText: true,
   });
   await expect(editor.locator(".raw-html-comment")).toHaveCount(0);
+});
+
+// ---------------------------------------------------------------- remember
+
+/** What the remember tool returns when it saved something (ai/memory.rs's
+ *  Remembering). */
+const REMEMBERED = {
+  remembered: "project/memory/Use-British-spelling",
+  scope: "project",
+  created: true,
+  text: "Use British spelling.",
+  previous: null,
+  note: "Saved.",
+};
+
+const memoryWorkspace = (remember = true) => ({
+  ...workspace([]),
+  remember,
+  memories: {
+    items: remember
+      ? [
+          {
+            id: REMEMBERED.remembered,
+            scope: "project",
+            kind: "requirement",
+            text: REMEMBERED.text,
+            file: "/notes/.textus/memory/Use-British-spelling.md",
+            remembered: {
+              created: "2026-10-18T09:30:00Z",
+              updated: "2026-10-18T09:30:00Z",
+              conversation: "c-1",
+              title: "Always use British spelling",
+              document: "/notes/draft.md",
+            },
+            included: true,
+          },
+        ]
+      : [],
+    chars: 21,
+    cap: 4000,
+  },
+});
+
+const LIBRARY_USE = {
+  included: [],
+  leftOut: [],
+  lastRequest: false,
+  cap: 8000,
+};
+
+/** The calls a canned command answered (window.__devInvokeCalls). */
+async function calls(page: Page, cmd: string) {
+  return page.evaluate(
+    (name) =>
+      (
+        (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
+          .__devInvokeCalls ?? []
+      ).filter((c) => c.cmd === name),
+    cmd,
+  );
+}
+
+test("what Textus AI remembers shows under its reply, and Undo takes it back", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  const message = "Always use British spelling";
+  await mockInvoke(page, {
+    load_agent_workspace: memoryWorkspace(),
+    library_use: LIBRARY_USE,
+    ai_agent_message: [
+      { kind: "User", text: message },
+      {
+        kind: "ToolCall",
+        call_id: "r1",
+        name: "remember",
+        arguments: JSON.stringify({
+          kind: "requirement",
+          scope: "project",
+          text: REMEMBERED.text,
+        }),
+      },
+      { kind: "ToolResult", call_id: "r1", output: JSON.stringify(REMEMBERED) },
+      { kind: "Assistant", text: "Noted - British spelling from now on." },
+    ],
+    memory_undo: null,
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill(message);
+  await composer.press("Enter");
+
+  const chip = page.locator(".agent-memory-chip");
+  await expect(chip).toContainText(
+    "Remembered: Use British spelling. (project)",
+  );
+  // The request named its conversation, for the memory's record.
+  const [sent] = await calls(page, "ai_agent_message");
+  expect(sent).toMatchObject({ conversation: { title: message } });
+
+  await chip.getByRole("button", { name: "Undo" }).click();
+  await expect(chip).toHaveText("Undone. No longer remembered.");
+  expect(await calls(page, "memory_undo")).toEqual([
+    expect.objectContaining({ id: REMEMBERED.remembered, previous: null }),
+  ]);
+});
+
+test("the Memory tab lists what was remembered, and moves and deletes it", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await mockInvoke(page, {
+    load_agent_workspace: memoryWorkspace(),
+    library_use: LIBRARY_USE,
+    memory_move: "personal/memory/Use-British-spelling",
+    memory_delete: null,
+  });
+  await page.locator("#agent-tab-memory").click();
+  const remembered = page.locator(".memory-remembered");
+  await expect(remembered).toContainText("This project");
+  await expect(remembered).toContainText(REMEMBERED.text);
+  await expect(remembered).toContainText("from “Always use British spelling”");
+
+  await remembered.getByRole("button", { name: "Make personal" }).click();
+  await expect
+    .poll(async () => (await calls(page, "memory_move")).length)
+    .toBe(1);
+  expect((await calls(page, "memory_move"))[0]).toMatchObject({
+    id: REMEMBERED.remembered,
+    scope: "personal",
+  });
+
+  await remembered.getByRole("button", { name: "Delete" }).click();
+  // Asked first.
+  const dialog = page.getByRole("dialog", { name: /Delete this memory/ });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Delete" }).click();
+  await expect
+    .poll(async () => (await calls(page, "memory_delete")).length)
+    .toBe(1);
+  expect((await calls(page, "memory_delete"))[0]).toMatchObject({
+    id: REMEMBERED.remembered,
+  });
+});
+
+test("with Remember automatically off, the Memory tab says so", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", rememberAutomatically: false },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await mockInvoke(page, {
+    load_agent_workspace: memoryWorkspace(false),
+    library_use: LIBRARY_USE,
+  });
+  await page.locator("#agent-tab-memory").click();
+  await expect(page.locator(".memory-remembered")).toContainText(
+    "Remember automatically is off",
+  );
 });

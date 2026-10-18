@@ -70,6 +70,7 @@ Textus AI aprende sobre ti y tu trabajo a partir de unos pocos archivos Markdown
 | **Perfil de estilo** | Cómo escribes | `.textus/style.md` |
 | **Biblioteca** | Datos sobre personas, lugares y términos | `.textus/library/` |
 | **Instrucciones de escritura** | Normas fijas para todas las conversaciones | `agent.md`, global y por proyecto |
+| **Lo que recuerda la IA** | Lo que Textus AI guarda de tus conversaciones | `.textus/memory/`, y `memory/` en la carpeta de configuración global |
 | **Habilidades** | Instrucciones reutilizables que invocas con `/nombre` | `skills/`, global y por proyecto |
 | **Carpeta de configuración global** | Lo que se aplica a todos los documentos | La carpeta de ajustes de la aplicación |
 
@@ -94,7 +95,7 @@ El menú del proyecto crea `.textus/` y sus archivos la primera vez que los pide
 
 ### La carpeta del proyecto
 
-**La carpeta del proyecto es la carpeta en la que trabaja Textus AI.** De forma predeterminada es la carpeta del documento que estás editando: guarda un documento y su carpeta pasa a ser la carpeta del proyecto.
+**La carpeta del proyecto es la carpeta en la que trabaja Textus AI.** De forma predeterminada es la carpeta del documento que estás editando (o la carpeta más cercana por encima de ella que tenga una carpeta `.textus/`, de modo que un capítulo en `novel/part-1/` pertenece a `novel/`): guarda un documento y su carpeta pasa a ser la carpeta del proyecto.
 
 - Textus AI puede listar, leer y buscar en sus archivos de texto (Markdown, texto sin formato y formatos similares) para encontrar las escenas anteriores de un personaje, un término o tus notas. Se omiten los archivos y las carpetas ocultos, las carpetas de compilación y de dependencias (como `node_modules`) y los archivos de más de 100 KB.
 - Escribir `@` en el cuadro de texto del chat adjunta uno de sus archivos a tu mensaje.
@@ -165,6 +166,15 @@ Escribe «Shanghái», nunca «Shanghai».
 
 Las instrucciones de escritura solo se aplican a las conversaciones. El autocompletado no las lee: sigue el perfil de estilo y la biblioteca.
 
+### Lo que recuerda Textus AI
+
+**Textus AI recuerda lo que le pides y cómo escribes**, sin que tengas que escribir ningún archivo. Cuando le dices algo que debe valer más allá de una petición («escribe siempre en español de España», «nada de rayas», una corrección que tuviste que hacer dos veces) o un dato sobre tu obra, como quién es un personaje, lo guarda y lo sigue en las conversaciones siguientes. Cada vez, una línea bajo su respuesta indica qué ha recordado y dónde: **Deshacer** lo retira, y **Hacer personal** o **Pasar al proyecto** lo cambia de sitio.
+
+- **Este proyecto**: lo que trata de esta obra, en `.textus/memory/`; los datos sobre personas, lugares y términos van a la biblioteca.
+- **Para todos los proyectos**: tus hábitos generales, en `memory/` dentro de la carpeta de configuración global. Sin carpeta del proyecto, todo va aquí.
+
+La pestaña **Memoria** del panel de IA lo muestra todo en **Lo que recuerda la IA**, con cuándo y en qué conversación se recordó cada cosa: **Editar** lo abre y **Eliminar** lo borra. Tus propias instrucciones de escritura prevalecen cuando ambas no coinciden, y Textus AI nunca cambia tu `agent.md` ni tu perfil de estilo. Cuando hay demasiados recuerdos para enviarlos, se omiten los más antiguos y la pestaña Memoria lo indica. **Ajustes > Textus AI > Recordar automáticamente** lo desactiva.
+
 ### Habilidades (/nombre)
 
 **Una habilidad es un conjunto de instrucciones reutilizable y con nombre** («pulir», «esquema», «revisar las citas») guardado en un archivo Markdown: arriba, un nombre y una descripción de una línea; debajo, las instrucciones completas.
@@ -226,6 +236,7 @@ No hay perfil de estilo ni biblioteca globales: describen una obra concreta, as�
 | Perfil de estilo | ✓ | ✓ | |
 | Entradas de la biblioteca mencionadas | ✓ | ✓ | |
 | Instrucciones de escritura | ✓ | | |
+| Lo que recuerda Textus AI | ✓ | | |
 | Habilidades | ✓ | | |
 | Tono del autocompletado (Ajustes) | | ✓ | |
 

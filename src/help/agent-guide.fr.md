@@ -70,6 +70,7 @@ Textus AI apprend à vous connaître, vous et votre travail, à partir de quelqu
 | **Profil de style** | Votre façon d'écrire | `.textus/style.md` |
 | **Bibliothèque** | Les faits sur les personnes, les lieux et les termes | `.textus/library/` |
 | **Instructions d'écriture** | Des règles permanentes pour chaque conversation | `agent.md`, global et par projet |
+| **Retenu par l'IA** | Ce que Textus AI retient de vos conversations | `.textus/memory/`, et `memory/` dans le dossier de configuration globale |
 | **Compétences** | Des instructions réutilisables, appelées avec `/nom` | `skills/`, global et par projet |
 | **Dossier de configuration globale** | Ce qui s'applique à tous les documents | Le dossier des réglages de l'application |
 
@@ -94,7 +95,7 @@ Le menu du projet crée `.textus/` et ses fichiers pour vous la première fois q
 
 ### Le dossier du projet
 
-**Le dossier du projet est le dossier dans lequel Textus AI travaille.** Par défaut, c'est le dossier du document que vous modifiez : enregistrez un document, et son dossier devient le dossier du projet.
+**Le dossier du projet est le dossier dans lequel Textus AI travaille.** Par défaut, c'est le dossier du document que vous modifiez (ou le dossier le plus proche au-dessus qui contient un dossier `.textus/`, si bien qu'un chapitre dans `novel/part-1/` appartient à `novel/`) : enregistrez un document, et son dossier devient le dossier du projet.
 
 - Textus AI peut lister, lire et fouiller les fichiers texte qu'il contient (Markdown, texte brut et formats similaires) pour retrouver les scènes précédentes d'un personnage, un terme ou vos notes. Les fichiers et dossiers cachés, les dossiers de compilation et de dépendances (comme `node_modules`) et les fichiers de plus de 100 Ko sont ignorés.
 - Taper `@` dans la zone de saisie de la discussion joint l'un de ses fichiers à votre message.
@@ -165,6 +166,15 @@ Toujours répondre en français, même si le roman est en chinois.
 
 Les instructions d'écriture ne s'appliquent qu'aux conversations. La complétion ne les lit pas ; elle suit le profil de style et la bibliothèque.
 
+### Ce que Textus AI retient
+
+**Textus AI retient ce que vous lui demandez et votre façon d'écrire**, sans que vous ayez à écrire de fichier. Quand vous lui dites une chose qui doit valoir au-delà d'une seule demande (« toujours l'orthographe rectifiée », « pas de tiret cadratin », une correction que vous avez dû faire deux fois) ou un fait sur votre œuvre, comme l'identité d'un personnage, il la retient et la suit dans les conversations suivantes. À chaque fois, une ligne sous sa réponse indique ce qu'il a retenu et où : **Annuler** le retire, et **Rendre personnel** ou **Passer au projet** le déplace.
+
+- **Ce projet** : ce qui concerne cette œuvre, dans `.textus/memory/` ; les faits sur les personnes, les lieux et les termes vont dans la bibliothèque.
+- **Pour tous les projets** : vos habitudes générales, dans `memory/` du dossier de configuration globale. Sans dossier du projet, tout va ici.
+
+L'onglet **Mémoire** du panneau IA liste le tout sous **Retenu par l'IA**, avec le moment et la conversation où chaque élément a été retenu : **Modifier** l'ouvre, **Supprimer** l'efface. Vos propres instructions d'écriture l'emportent en cas de désaccord, et Textus AI ne modifie jamais votre `agent.md` ni votre profil de style. Quand il y a trop de souvenirs à envoyer, les plus anciens sont laissés de côté et l'onglet Mémoire le signale. **Réglages > Textus AI > Retenir automatiquement** désactive cette fonction.
+
 ### Compétences (/nom)
 
 **Une compétence est un ensemble d'instructions réutilisable, doté d'un nom** (« peaufiner », « plan », « vérifier les citations ») et rangé dans un seul fichier Markdown : un nom et une description d'une ligne en haut, les instructions complètes en dessous.
@@ -226,6 +236,7 @@ Il n'existe ni profil de style ni bibliothèque globaux : ils décrivent un ens
 | Profil de style | ✓ | ✓ | |
 | Fiches de la bibliothèque mentionnées | ✓ | ✓ | |
 | Instructions d'écriture | ✓ | | |
+| Ce que Textus AI a retenu | ✓ | | |
 | Compétences | ✓ | | |
 | Ton de la complétion (réglages) | | ✓ | |
 

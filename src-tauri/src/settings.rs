@@ -33,6 +33,9 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 
+mod chat_history;
+use chat_history::ChatHistory;
+
 /// Written into every file as `schemaVersion`. Bump it only for a change an
 /// older reader would misread; adding a field never needs it, since every
 /// reader fills in what's missing with its default.
@@ -124,6 +127,24 @@ impl Store {
                 (empty, SCHEMA_VERSION)
             }
         };
+        Self::new(path, key, pretty, payload, schema, missing, unreadable)
+    }
+
+    /// A store that holds `payload` in memory and never writes `path` - for
+    /// a file that is there but can't be read, or replaced, this session.
+    fn unwritable(path: PathBuf, key: &'static str, payload: Value) -> Self {
+        Self::new(path, key, false, payload, SCHEMA_VERSION, false, true)
+    }
+
+    fn new(
+        path: PathBuf,
+        key: &'static str,
+        pretty: bool,
+        payload: Value,
+        schema: u64,
+        missing_at_load: bool,
+        unreadable: bool,
+    ) -> Self {
         Self {
             path,
             key,
@@ -135,7 +156,7 @@ impl Store {
                 dirty: false,
             }),
             flush_scheduled: AtomicBool::new(false),
-            missing_at_load: missing,
+            missing_at_load,
             unreadable,
         }
     }
@@ -186,22 +207,24 @@ impl Store {
         if !inner.dirty || self.unreadable {
             return Ok(());
         }
-        let mut file = Map::new();
-        file.insert("schemaVersion".into(), json!(inner.schema));
-        file.insert(self.key.into(), inner.payload.clone());
-        let file = Value::Object(file);
-        let text = if self.pretty {
-            serde_json::to_string_pretty(&file)
-        } else {
-            serde_json::to_string(&file)
-        }
-        .map_err(std::io::Error::other)?;
-        if let Some(dir) = self.path.parent() {
-            std::fs::create_dir_all(dir)?;
-        }
-        crate::atomic::write_sync(&self.path, text)?;
+        write_file(
+            &self.path,
+            inner.schema,
+            self.key,
+            &inner.payload,
+            self.pretty,
+        )?;
         inner.dirty = false;
         Ok(())
+    }
+
+    /// Drops a change still waiting on its debounce and hands back the
+    /// lock, so the caller can move or delete the file without a write
+    /// already on its way bringing it back.
+    fn discard(&self) -> std::sync::MutexGuard<'_, Inner> {
+        let mut inner = self.inner.lock().unwrap();
+        inner.dirty = false;
+        inner
     }
 
     // -- object payloads ----------------------------------------------------
@@ -263,6 +286,31 @@ impl Store {
     pub fn clear(self: &Arc<Self>) -> u64 {
         self.update(|payload| as_list(payload).clear()).1
     }
+}
+
+/// Writes `{"schemaVersion": schema, "<key>": payload}` to `path` with the
+/// atomic writer, creating its folder if need be.
+fn write_file(
+    path: &Path,
+    schema: u64,
+    key: &str,
+    payload: &Value,
+    pretty: bool,
+) -> std::io::Result<()> {
+    let mut file = Map::new();
+    file.insert("schemaVersion".into(), json!(schema));
+    file.insert(key.into(), payload.clone());
+    let file = Value::Object(file);
+    let text = if pretty {
+        serde_json::to_string_pretty(&file)
+    } else {
+        serde_json::to_string(&file)
+    }
+    .map_err(std::io::Error::other)?;
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir)?;
+    }
+    crate::atomic::write_sync(path, text)
 }
 
 fn parse(raw: &str, key: &str, empty: &Value) -> Option<(Value, u64)> {
@@ -334,9 +382,10 @@ fn as_list(payload: &mut Value) -> &mut Vec<Value> {
 // Histories
 // ---------------------------------------------------------------------------
 
-/// The two histories. Their caps match what the frontend kept in
-/// localStorage (src/ai/chat/chat-history.ts, src/clipboard/history.ts);
-/// they're enforced here too because this is now the one writer.
+/// The two histories. Their caps match the frontend's
+/// (src/ai/chat/chat-history.ts, src/clipboard/history.ts); they're
+/// enforced here too because this is the one writer. The chat history is a
+/// folder of its own (settings/chat_history.rs), the clipboard one file.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum HistoryKind {
@@ -356,7 +405,7 @@ impl HistoryKind {
 
     fn max(self) -> usize {
         match self {
-            Self::Chat => 60,
+            Self::Chat => chat_history::MAX_CONVERSATIONS,
             Self::Clipboard => 30,
         }
     }
@@ -376,8 +425,10 @@ impl HistoryKind {
             return false;
         };
         match self {
+            // The id names the conversation's file.
             Self::Chat => {
-                entry.get("updatedAt").is_some_and(Value::is_number)
+                chat_history::safe_id(key)
+                    && entry.get("updatedAt").is_some_and(Value::is_number)
                     && entry.get("turns").is_some_and(Value::is_array)
             }
             Self::Clipboard => {
@@ -389,13 +440,14 @@ impl HistoryKind {
 
     /// Order and cap: conversations most recently active first (the stable
     /// sort keeps an upserted entry ahead of an equal timestamp); clipboard
-    /// entries stay in the order they were recorded, newest first.
-    fn tidy(self, list: &mut Vec<Value>) {
+    /// entries stay in the order they were recorded, newest first. Returns
+    /// the entries beyond the cap, taken off the list.
+    fn tidy(self, list: &mut Vec<Value>) -> Vec<Value> {
         if self == Self::Chat {
             let updated = |e: &Value| e.get("updatedAt").and_then(Value::as_f64).unwrap_or(0.0);
             list.sort_by(|a, b| updated(b).total_cmp(&updated(a)));
         }
-        list.truncate(self.max());
+        list.split_off(list.len().min(self.max()))
     }
 }
 
@@ -406,7 +458,7 @@ impl HistoryKind {
 pub struct Stores {
     pub settings: Arc<Store>,
     pub ui_state: Arc<Store>,
-    pub chat: Arc<Store>,
+    pub chat: ChatHistory,
     pub clipboard: Arc<Store>,
     legacy: Mutex<Legacy>,
 }
@@ -437,12 +489,7 @@ impl Stores {
                 json!({}),
                 true,
             )),
-            chat: Arc::new(Store::load(
-                data_dir.join(file_name(HistoryKind::Chat.stem())),
-                "entries",
-                json!([]),
-                false,
-            )),
+            chat: ChatHistory::load(data_dir),
             clipboard: Arc::new(Store::load(
                 data_dir.join(file_name(HistoryKind::Clipboard.stem())),
                 "entries",
@@ -485,13 +532,6 @@ impl Stores {
             seed.insert("restoreSessionOnStartup".into(), json!(restore));
         }
         merge_top_level(&mut inner.payload, &seed);
-    }
-
-    pub fn history(&self, kind: HistoryKind) -> &Arc<Store> {
-        match kind {
-            HistoryKind::Chat => &self.chat,
-            HistoryKind::Clipboard => &self.clipboard,
-        }
     }
 
     pub fn legacy_import_pending(&self) -> bool {
@@ -571,30 +611,13 @@ impl Stores {
                 self.ui_state.update(|p| *p = Value::Object(state));
             }
         }
-        for (kind, entries) in [
-            (HistoryKind::Chat, payload.chat_history),
-            (HistoryKind::Clipboard, payload.clipboard_history),
-        ] {
-            let store = self.history(kind);
-            let Some(entries) = entries else { continue };
-            if !store.missing_at_load() {
-                continue;
-            }
-            store.update(|p| {
-                let list = as_list(p);
-                // Entries recorded this session come first and win a tie.
-                let seen: HashSet<String> = list
-                    .iter()
-                    .filter_map(|e| kind.key_of(e).map(str::to_owned))
-                    .collect();
-                list.extend(
-                    entries
-                        .into_iter()
-                        .filter(|e| kind.valid(e))
-                        .filter(|e| kind.key_of(e).is_some_and(|k| !seen.contains(k))),
-                );
-                kind.tidy(list);
-            });
+        // Entries recorded this session come first and win a tie.
+        if let (true, Some(entries)) = (self.chat.missing_at_load(), payload.chat_history) {
+            self.chat.merge(entries);
+        }
+        if let (true, Some(entries)) = (self.clipboard.missing_at_load(), payload.clipboard_history)
+        {
+            merge_clipboard(&self.clipboard, entries);
         }
         true
     }
@@ -615,36 +638,43 @@ impl Stores {
         if let Some(state) = payload.ui_state {
             self.ui_state.update(|p| merge_top_level(p, &state));
         }
-        for (kind, entries) in [
-            (HistoryKind::Chat, payload.chat_history),
-            (HistoryKind::Clipboard, payload.clipboard_history),
-        ] {
-            let Some(entries) = entries else { continue };
-            self.history(kind).update(|p| {
-                let list = as_list(p);
-                let seen: HashSet<String> = list
-                    .iter()
-                    .filter_map(|e| kind.key_of(e).map(str::to_owned))
-                    .collect();
-                list.extend(
-                    entries
-                        .into_iter()
-                        .filter(|e| kind.valid(e))
-                        .filter(|e| kind.key_of(e).is_some_and(|k| !seen.contains(k))),
-                );
-                kind.tidy(list);
-            });
+        if let Some(entries) = payload.chat_history {
+            self.chat.merge(entries);
+        }
+        if let Some(entries) = payload.clipboard_history {
+            merge_clipboard(&self.clipboard, entries);
         }
         self.flush_all();
     }
 
     pub fn flush_all(&self) {
-        for store in [&self.settings, &self.ui_state, &self.chat, &self.clipboard] {
+        for store in [&self.settings, &self.ui_state, &self.clipboard] {
             if let Err(e) = store.flush() {
                 eprintln!("textus: cannot write {}: {e}", store.path.display());
             }
         }
+        self.chat.flush();
     }
+}
+
+/// Adds imported clipboard entries after the ones already held, which win
+/// a tie.
+fn merge_clipboard(store: &Arc<Store>, entries: Vec<Value>) {
+    let kind = HistoryKind::Clipboard;
+    store.update(|p| {
+        let list = as_list(p);
+        let seen: HashSet<String> = list
+            .iter()
+            .filter_map(|e| kind.key_of(e).map(str::to_owned))
+            .collect();
+        list.extend(
+            entries
+                .into_iter()
+                .filter(|e| kind.valid(e))
+                .filter(|e| kind.key_of(e).is_some_and(|k| !seen.contains(k))),
+        );
+        kind.tidy(list);
+    });
 }
 
 #[derive(Deserialize, Default)]
@@ -1115,14 +1145,20 @@ struct HistoryChanged {
     from: String,
 }
 
+/// The clipboard entries, or the chat history's index: each conversation's
+/// summary without its turns (`chat_history_get` has those).
 #[tauri::command]
 pub fn history_list(stores: tauri::State<Stores>, kind: HistoryKind) -> Value {
-    stores.history(kind).snapshot().0
+    match kind {
+        HistoryKind::Chat => stores.chat.list(),
+        HistoryKind::Clipboard => stores.clipboard.snapshot().0,
+    }
 }
 
 /// Adds an entry, or replaces the one with the same key, and moves it to
 /// the front. One entry per call, never the whole list: two windows saving
-/// different conversations at once both land.
+/// different conversations at once both land. A conversation is announced
+/// to the windows as its summary, the form their lists hold.
 #[tauri::command]
 pub fn history_upsert(
     app: AppHandle,
@@ -1134,7 +1170,13 @@ pub fn history_upsert(
     if !kind.valid(&entry) {
         return Err(format!("invalid {kind:?} history entry"));
     }
-    stores.history(kind).upsert(kind, entry.clone());
+    let entry = match kind {
+        HistoryKind::Chat => stores.chat.save(entry),
+        HistoryKind::Clipboard => {
+            stores.clipboard.upsert(kind, entry.clone());
+            entry
+        }
+    };
     emit_to_all(
         &app,
         "history-changed",
@@ -1155,7 +1197,12 @@ pub fn history_remove(
     kind: HistoryKind,
     key: String,
 ) {
-    stores.history(kind).remove(kind, &key);
+    match kind {
+        HistoryKind::Chat => stores.chat.remove(&key),
+        HistoryKind::Clipboard => {
+            stores.clipboard.remove(kind, &key);
+        }
+    }
     emit_to_all(
         &app,
         "history-changed",
@@ -1174,7 +1221,12 @@ pub fn history_clear(
     stores: tauri::State<Stores>,
     kind: HistoryKind,
 ) {
-    stores.history(kind).clear();
+    match kind {
+        HistoryKind::Chat => stores.chat.clear(),
+        HistoryKind::Clipboard => {
+            stores.clipboard.clear();
+        }
+    }
     emit_to_all(
         &app,
         "history-changed",
@@ -1184,6 +1236,41 @@ pub fn history_clear(
             from: window.label().to_string(),
         },
     );
+}
+
+/// One saved conversation whole, turns included - what restoring it from
+/// the Chats tab loads. `None` when its file is gone.
+#[tauri::command]
+pub fn chat_history_get(stores: tauri::State<Stores>, id: String) -> Option<Value> {
+    stores.chat.get(&id)
+}
+
+/// How many older conversations sit in the chat history's trash.
+#[tauri::command]
+pub fn chat_history_archived(stores: tauri::State<Stores>) -> usize {
+    stores.chat.archived()
+}
+
+/// A document Textus saved under a new path (Save As, a rename): its
+/// conversations follow it, and every window lists them again.
+#[tauri::command]
+pub fn chat_history_move_document(
+    app: AppHandle,
+    stores: tauri::State<Stores>,
+    from: String,
+    to: String,
+) {
+    if stores.chat.move_document(&from, &to) {
+        emit_to_all(
+            &app,
+            "history-changed",
+            HistoryChanged {
+                kind: HistoryKind::Chat,
+                op: HistoryOp::Reload,
+                from: String::new(),
+            },
+        );
+    }
 }
 
 #[cfg(test)]
@@ -1336,8 +1423,7 @@ mod tests {
         });
         let ids: Vec<_> = stores
             .chat
-            .snapshot()
-            .0
+            .list()
             .as_array()
             .unwrap()
             .iter()
@@ -1583,25 +1669,19 @@ mod tests {
         let stores = Stores::load(&dir, &dir);
         let chat = &stores.chat;
         for i in 0..70 {
-            chat.upsert(
-                HistoryKind::Chat,
-                json!({ "id": format!("c{i}"), "updatedAt": i, "turns": [] }),
-            );
+            chat.save(json!({ "id": format!("c{i}"), "updatedAt": i, "turns": [] }));
         }
         // Re-saving a conversation moves it, never duplicates it.
-        chat.upsert(
-            HistoryKind::Chat,
-            json!({ "id": "c30", "updatedAt": 100, "turns": [1] }),
-        );
-        let list = chat.snapshot().0;
+        chat.save(json!({ "id": "c30", "updatedAt": 100, "turns": [1] }));
+        let list = chat.list();
         let list = list.as_array().unwrap();
-        assert_eq!(list.len(), 60);
+        assert_eq!(list.len(), 70);
         assert_eq!(list[0]["id"], json!("c30"));
         assert_eq!(list[1]["id"], json!("c69"));
         assert_eq!(list.iter().filter(|e| e["id"] == json!("c30")).count(), 1);
 
-        chat.remove(HistoryKind::Chat, "c30");
-        assert_eq!(chat.snapshot().0[0]["id"], json!("c69"));
+        chat.remove("c30");
+        assert_eq!(chat.list()[0]["id"], json!("c69"));
 
         let clip = &stores.clipboard;
         for i in 0..35 {

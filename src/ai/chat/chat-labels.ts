@@ -43,6 +43,14 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     proposalAcceptSome: t.proposalAcceptSome,
     commentTitle: t.reviewNoteBy,
     commentLocate: t.proposalShowInText,
+    memorySaved: t.memoryChipSaved,
+    memoryScopeProject: t.memoryScopeProject,
+    memoryScopePersonal: t.memoryScopePersonal,
+    memoryUndo: t.memoryChipUndo,
+    memoryMakePersonal: t.memoryMakePersonal,
+    memoryMakeProject: t.memoryMakeProject,
+    memoryUndone: t.memoryChipUndone,
+    memoryActionFailed: t.memoryActionFailed,
     toolResult: t.toolResult,
     aiErrors: {
       notConfigured: t.aiErrorNotConfigured,
@@ -66,6 +74,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       add_comment: t.toolAddComment,
       check_conventions: t.toolCheckConventions,
       measure_text: t.toolMeasureText,
+      remember: t.toolRemember,
       // Any tool without its own line: a word, not its internal name.
       "*": t.toolWorking,
       // The edit being written, in words: Quick Ask's status line showed

@@ -11,6 +11,7 @@ import {
 } from "../document/doc-tabs";
 import type { SaveOutcome } from "../document/autosave";
 import { fs, session } from "../platform/ipc";
+import { moveConversations } from "../ai/chat/chat-history";
 import { defaultMarkdownFilename } from "../document/save-default-name";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./useTabState";
@@ -108,6 +109,9 @@ export function useSaveTabs(opts: {
         // Image migration rewrote the markdown: the editor has to load it.
         ...(content !== tab.content ? { reloadKey: tab.reloadKey + 1 } : {}),
       });
+      // The document goes on under its new name, and its past
+      // conversations with it.
+      if (tab.path) moveConversations(tab.path, picked);
       return true;
     },
     [updateTab, liveTabs, t, autoSuggestFilename, imageFolder, writeOrReport],
