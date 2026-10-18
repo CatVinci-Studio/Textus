@@ -107,7 +107,10 @@ The outline goes through the plugins, never onto the text's DOM
 `hotDecorations`). ProseMirror reads a class written onto a decorated span
 as an edit of its own and redraws the paragraph, and every strike and
 replacement in it replays its entrance - in `1.1.0-rc.4` that made the red
-and the green vanish under the pointer and fade back.
+and the green vanish under the pointer and fade back. The review bar's
+**‹ / ›** follow the same rule: the outline they move is a class the plugin
+sets on its widgets (no widget is keyed by it), and the paragraph's flash
+(`editor/reveal-position.ts`) is a Web Animation, not a class.
 
 Staleness mirrors the grammar checker: every `docChanged` maps each preview's
 range through the transaction and re-checks its text - a mismatch drops the

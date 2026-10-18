@@ -506,7 +506,7 @@ function sentenceDecorations(
             },
             {
               side: 1,
-              key: `pending-new-${p.callId}-${index}-${state}-${isFocused}-${display}`,
+              key: `pending-new-${p.callId}-${index}-${state}-${display}`,
             },
           ),
         );
@@ -530,7 +530,7 @@ function sentenceDecorations(
           },
           {
             side: 1,
-            key: `pending-new-${p.callId}-${index}-${state}-${isFocused}`,
+            key: `pending-new-${p.callId}-${index}-${state}`,
           },
         ),
       );
@@ -643,7 +643,7 @@ function buildDecorations(
  * text side is one more inline decoration over the sentence, which
  * ProseMirror merges into the spans already there and patches in place.
  * The widget side (the new text, a margin mark, the ✓ / ✕) gets the class
- * from the plugin view instead (`syncHotWidgets`): a widget redrawn for it
+ * from the plugin view instead (`syncWidgetClasses`): a widget redrawn for it
  * would replay its entrance, the new text fading in from nothing.
  *
  * Nothing may write the class onto a decorated text span from outside:
@@ -668,18 +668,28 @@ function hotDecorations(doc: ProseNode, state: PendingState): DecorationSet {
 /** `hotDecorations` per state: `decorations` is asked on every redraw. */
 const hotSets = new WeakMap<PendingState, DecorationSet>();
 
-/** The widget side of `hotDecorations`. Widgets are the plugin's own DOM,
- *  and ProseMirror leaves a class change on them alone. */
-function syncHotWidgets(view: EditorView, hot: HotSentence | null) {
+/** The widget side of `hotDecorations`, and of the review bar's pointer
+ *  (`.pending-sentence-focus` on the new text): set on the widgets as they
+ *  stand, not by redrawing them - a widget keyed by the pointer was
+ *  redrawn on every prev / next, and its new text faded in from nothing
+ *  again. Widgets are the plugin's own DOM, and ProseMirror leaves a class
+ *  change on them alone. */
+function syncWidgetClasses(
+  view: EditorView,
+  hot: HotSentence | null,
+  focused: HotSentence | null,
+) {
+  const is = (el: HTMLElement, s: HotSentence | null) =>
+    s !== null &&
+    el.dataset.call === s.callId &&
+    el.dataset.index === String(s.index);
   for (const el of view.dom.querySelectorAll<HTMLElement>(
     ".ProseMirror-widget[data-call]",
-  ))
-    el.classList.toggle(
-      "pending-sentence-hot",
-      hot !== null &&
-        el.dataset.call === hot.callId &&
-        el.dataset.index === String(hot.index),
-    );
+  )) {
+    el.classList.toggle("pending-sentence-hot", is(el, hot));
+    if (el.classList.contains("pending-sentence-new"))
+      el.classList.toggle("pending-sentence-focus", is(el, focused));
+  }
 }
 
 /**
@@ -1009,15 +1019,16 @@ export function createPendingEditPlugin(options: {
           return {
             update(view) {
               const state = pendingEditKey.getState(view.state);
-              // A redrawn widget comes back without the class: sync after
-              // any redraw, not only when the pointer moves.
+              // After any rebuild ("refocus" included), not only when the
+              // pointer moves: a redrawn widget comes back without the
+              // classes.
               if (
                 state &&
                 (state.hot !== lastHot || state.decoration !== lastDecoration)
               ) {
                 lastHot = state.hot;
                 lastDecoration = state.decoration;
-                syncHotWidgets(view, state.hot);
+                syncWidgetClasses(view, state.hot, hooks.focused());
               }
               const previews = state?.previews ?? [];
               const applied = state?.applied ?? [];

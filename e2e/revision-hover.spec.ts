@@ -192,3 +192,47 @@ test("the ✓ / ✕ outline their pair under the pointer and still decide it", a
   await expect(keep).toHaveAttribute("aria-pressed", "true");
   await expect(take).toHaveAttribute("aria-pressed", "false");
 });
+
+// The review bar's prev / next move its outline from sentence to sentence
+// without redrawing anything either: in 1.1.0-rc.4 the new text's widget
+// was keyed by the outline, so every step redrew it and it faded in from
+// nothing again.
+for (const display of ["inline", "new", "final"] as const)
+  test(`${display}: the review bar's prev / next move the outline without redrawing the new text`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1800, height: 900 });
+    await openApp(page, {
+      settings: { language: "en", revisionDisplay: display },
+      storage: { "levis-agent-panel-open": "1" },
+      animations: true,
+    });
+    await proposeRevision(page);
+    await page.mouse.move(5, 5);
+    await rememberSides(page);
+    const nav = page.locator(".review-bar-nav button");
+    for (const [button, index] of [
+      [nav.last(), 0],
+      [nav.last(), 1],
+      [nav.first(), 0],
+    ] as const) {
+      await button.click();
+      // The paragraph still flashes to be found.
+      expect(
+        await page
+          .locator(".milkdown .ProseMirror > p", { hasText: "We spent" })
+          .evaluate((p) => p.getAnimations().map((a) => a.id)),
+      ).toContain("reveal-pulse");
+      await expect(
+        page.locator(
+          `.milkdown .pending-sentence-new[data-index="${index}"].pending-sentence-focus`,
+        ),
+      ).toHaveCount(1);
+      await expect(
+        page.locator(
+          `.milkdown .pending-sentence-focus:not([data-index="${index}"])`,
+        ),
+      ).toHaveCount(0);
+      await expectSidesUnchanged(page);
+    }
+  });

@@ -1,5 +1,5 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { scrollBehavior } from "../ui/motion";
+import { animate, duration, scrollBehavior } from "../ui/motion";
 
 /**
  * Brings `pos` into view and pulses the block it is in once, so the eye
@@ -28,11 +28,29 @@ export function revealPosition(view: EditorView, pos: number) {
     node instanceof Element ? node : node.parentElement
   )?.closest<HTMLElement>(".ProseMirror > *");
   if (!block) return;
-  block.classList.remove("reveal-pulse");
+  // The accent flashes once and lets go - long enough to be found, gone
+  // before it reads as a mark. Animated, never a class: the block is
+  // ProseMirror's DOM, and a class written onto it reads as an edit, so
+  // the block was redrawn and every revision in it replayed its entrance -
+  // the new text faded in from nothing on each review bar step.
   // Restarted, if it was still pulsing from a click a moment ago.
-  void block.offsetWidth;
-  block.classList.add("reveal-pulse");
-  const done = () => block.classList.remove("reveal-pulse");
-  block.addEventListener("animationend", done, { once: true });
-  window.setTimeout(done, 1000);
+  for (const running of block.getAnimations?.() ?? [])
+    if (running.id === "reveal-pulse") running.cancel();
+  const accent = getComputedStyle(block)
+    .getPropertyValue("--editor-accent")
+    .trim();
+  animate(
+    block,
+    [
+      {
+        backgroundColor: `color-mix(in srgb, ${accent || "currentColor"} 20%, transparent)`,
+      },
+      {},
+    ],
+    {
+      duration: duration("--dur-base") * 4,
+      easing: "--ease-out",
+      id: "reveal-pulse",
+    },
+  );
 }
