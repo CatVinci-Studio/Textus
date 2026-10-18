@@ -35,7 +35,7 @@ jobs:
     timeout-minutes: 30
     steps:
       # packaging/homebrew/textus.rb is the cask's shape at that tag.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag }}
           path: app
