@@ -3,7 +3,7 @@ import { parseHeadings } from "./outline-parse";
 import { ChevronIcon } from "../ui/icons";
 import { useSettings } from "../settings/SettingsContext";
 import { scrollBehavior } from "../ui/motion";
-import { revealElement } from "../editor/html/raw-html-preview-plugin";
+import { unfoldElement } from "../editor/html/details-fold";
 import "./FileTree.css";
 
 interface OutlineProps {
@@ -44,7 +44,7 @@ function scrollToHeading(index: number) {
   const heading = root?.querySelectorAll(HEADINGS)[index];
   // One inside a folded <details> opens it first: hidden, it had no place
   // to scroll to.
-  if (heading) revealElement(heading);
+  if (heading) unfoldElement(heading);
   heading?.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
 }
 

@@ -11,7 +11,12 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { showMessage } from "../../ui/app-dialog";
 import { errorText } from "../../utils/error-text";
-import { decodeUrlPath, dirname } from "../../utils/path";
+import {
+  decodeUrlPath,
+  dirname,
+  hasUrlScheme,
+  isDrivePath,
+} from "../../utils/path";
 import { fs } from "../../platform/ipc";
 import type { Settings, ImageNamingMode } from "../../settings/SettingsContext";
 import { isScopedUrl, scopedImageSrc } from "../../platform/ios-files";
@@ -43,8 +48,8 @@ import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
 export function resolveImageSrc(src: string, docPath: string | null): string {
   // A Windows drive path ("C:\..." / "C:/...") would otherwise read as a
   // single-letter URL scheme to the test below.
-  if (/^[a-z]:[\\/]/i.test(src)) return convertFileSrc(decodeUrlPath(src));
-  if (!src || /^[a-z][a-z0-9+.-]*:/i.test(src)) return src; // http(s), data:, asset:, file:, ...
+  if (isDrivePath(src)) return convertFileSrc(decodeUrlPath(src));
+  if (!src || hasUrlScheme(src)) return src; // http(s), data:, asset:, file:, ...
   if (src.startsWith("/")) return convertFileSrc(decodeUrlPath(src));
   // An unsaved document has no folder to resolve against, so a relative
   // path is left as written (the image shows as missing) and resolves once
@@ -68,7 +73,7 @@ export function showDocImage(
   doc: string | null,
   stillWanted: () => boolean = () => true,
 ): void {
-  if (doc && isScopedUrl(doc) && !/^[a-z][a-z0-9+.-]*:|^\//i.test(src)) {
+  if (doc && isScopedUrl(doc) && !hasUrlScheme(src) && !src.startsWith("/")) {
     img.removeAttribute("src");
     void scopedImageSrc(src, doc)
       .then((url) => {

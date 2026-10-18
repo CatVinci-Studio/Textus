@@ -1,8 +1,10 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
-import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import type { Node as ProseNode, Schema } from "@milkdown/kit/prose/model";
+import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import {
+  COMPOSE_RELOCATE_DELAY_MS,
   caretAt,
   findRunClose,
   findRunOpen,
@@ -76,6 +78,63 @@ function isOurNode(name: string): boolean {
   return name === "md_span" || name === "md_code_span";
 }
 
+/** The node `spec` makes at `rung` (a code span has no rungs), holding
+ *  `text` if given, empty otherwise. */
+function spanNode(
+  schema: Schema,
+  spec: SpanSpec,
+  rung: number,
+  text?: string,
+): ProseNode {
+  const content = text === undefined ? undefined : schema.text(text);
+  return spec.nodeType === "md_span"
+    ? schema.nodes.md_span.create({ delim: spec.char, rung }, content)
+    : schema.nodes.md_code_span.create({}, content);
+}
+
+/**
+ * Closes an opening run left in the literal text before the caret
+ * (`textBefore`, starting at `runStart`) with the delimiter being typed:
+ * from that opener to `to` becomes one span. Longest rung first, so
+ * "**hello" + "*" + "*" re-forms bold rather than italic. Returns whether
+ * there was a run to close.
+ */
+function closeOpenRun(
+  view: EditorView,
+  spec: SpanSpec,
+  textBefore: string,
+  runStart: number,
+  to: number,
+): boolean {
+  const { state } = view;
+  for (let rung = spec.maxRung; rung >= spec.minRung; rung--) {
+    const open = findRunOpen(textBefore, spec.char, rung);
+    if (!open) continue;
+    const absOpen = runStart + open.openIdx;
+    const node = spanNode(state.schema, spec, rung, open.value);
+    const tr = state.tr.replaceWith(absOpen, to, node);
+    view.dispatch(caretAt(tr, absOpen + node.nodeSize));
+    return true;
+  }
+  return false;
+}
+
+/** Typing an empty shell's delimiter again: the shell (an md_span at
+ *  `nodeStart`) one rung up, "*" to "**" - or null at its top rung. */
+function upgradeRung(
+  state: EditorState,
+  nodeStart: number,
+  shell: ProseNode,
+  spec: SpanSpec,
+): Transaction | null {
+  const rung = (shell.attrs.rung as number) ?? spec.minRung;
+  if (rung >= spec.maxRung) return null;
+  return state.tr.setNodeMarkup(nodeStart, undefined, {
+    delim: spec.char,
+    rung: rung + 1,
+  });
+}
+
 /**
  * Whether a paragraph is a "```" (or "```lang") code-fence line, returning
  * the language ("" for none) or null if it isn't one. Typing three backticks
@@ -143,26 +202,7 @@ export function convertRunClosedBeforeCaret(
   // The caret sits inside a longer delimiter run - not a finished closer.
   if (literalTextAfter($pos).text.startsWith(spec.char)) return false;
   // findRunOpen expects the last closing character as "the one being typed".
-  const head = textBefore.slice(0, -1);
-  for (let rung = spec.maxRung; rung >= spec.minRung; rung--) {
-    const open = findRunOpen(head, spec.char, rung);
-    if (!open) continue;
-    const absOpen = runStart + open.openIdx;
-    const node =
-      spec.nodeType === "md_span"
-        ? state.schema.nodes.md_span.create(
-            { delim: spec.char, rung },
-            state.schema.text(open.value),
-          )
-        : state.schema.nodes.md_code_span.create(
-            {},
-            state.schema.text(open.value),
-          );
-    const tr = state.tr.replaceWith(absOpen, sel.from, node);
-    view.dispatch(caretAt(tr, absOpen + node.nodeSize));
-    return true;
-  }
-  return false;
+  return closeOpenRun(view, spec, textBefore.slice(0, -1), runStart, sel.from);
 }
 
 /**
@@ -212,16 +252,12 @@ export const createMdSpanAutopairPlugin = (options: {
               const nodeEnd = nodeStart + parent.nodeSize;
 
               if (parent.content.size === 0) {
-                const rung = (parent.attrs.rung as number) ?? spec.minRung;
-                if (spec.nodeType === "md_span" && rung < spec.maxRung) {
-                  const tr = state.tr.setNodeMarkup(nodeStart, undefined, {
-                    delim: spec.char,
-                    rung: rung + 1,
-                  });
-                  view.dispatch(tr);
-                  return true;
-                }
-                return false; // already at max rung (or a code span) - literal char as content
+                const tr =
+                  spec.nodeType === "md_span" &&
+                  upgradeRung(state, nodeStart, parent, spec);
+                if (!tr) return false; // already at max rung (or a code span) - literal char as content
+                view.dispatch(tr);
+                return true;
               }
 
               // Non-empty - already a valid node, just step past it, and
@@ -255,12 +291,8 @@ export const createMdSpanAutopairPlugin = (options: {
             ) {
               const nodeStart = from - before.nodeSize;
               if (spec.nodeType === "md_span") {
-                const rung = (before.attrs.rung as number) ?? spec.minRung;
-                if (rung >= spec.maxRung) return false;
-                const tr = state.tr.setNodeMarkup(nodeStart, undefined, {
-                  delim: spec.char,
-                  rung: rung + 1,
-                });
+                const tr = upgradeRung(state, nodeStart, before, spec);
+                if (!tr) return false;
                 view.dispatch(caretAt(tr, nodeStart + 1));
                 return true;
               }
@@ -277,26 +309,7 @@ export const createMdSpanAutopairPlugin = (options: {
             const { text: textBefore, from: runStart } =
               literalTextBefore($pos);
 
-            // Close an opening run left in literal text - longest rung first,
-            // so "**hello" + "*" + "*" re-forms bold rather than italic.
-            for (let rung = spec.maxRung; rung >= spec.minRung; rung--) {
-              const open = findRunOpen(textBefore, spec.char, rung);
-              if (!open) continue;
-              const absOpen = runStart + open.openIdx;
-              const node =
-                spec.nodeType === "md_span"
-                  ? state.schema.nodes.md_span.create(
-                      { delim: spec.char, rung },
-                      state.schema.text(open.value),
-                    )
-                  : state.schema.nodes.md_code_span.create(
-                      {},
-                      state.schema.text(open.value),
-                    );
-              const tr = state.tr.replaceWith(absOpen, to, node);
-              view.dispatch(caretAt(tr, absOpen + node.nodeSize));
-              return true;
-            }
+            if (closeOpenRun(view, spec, textBefore, runStart, to)) return true;
 
             // A longer opening run is still waiting for more closing chars
             // (e.g. "**hello" with only one "*" typed so far) - stay literal
@@ -335,16 +348,7 @@ export const createMdSpanAutopairPlugin = (options: {
               if (close) {
                 const openStart = from - (typedRun - 1);
                 const value = textAfter.slice(0, close.valueLen);
-                const node =
-                  spec.nodeType === "md_span"
-                    ? state.schema.nodes.md_span.create(
-                        { delim: spec.char, rung: typedRun },
-                        state.schema.text(value),
-                      )
-                    : state.schema.nodes.md_code_span.create(
-                        {},
-                        state.schema.text(value),
-                      );
+                const node = spanNode(state.schema, spec, typedRun, value);
                 const tr = state.tr.replaceWith(
                   openStart,
                   to + close.valueLen + typedRun,
@@ -365,13 +369,7 @@ export const createMdSpanAutopairPlugin = (options: {
             if (!options.autoClose()) return false;
 
             if (spec.minRung === 1) {
-              const node =
-                spec.nodeType === "md_span"
-                  ? state.schema.nodes.md_span.create({
-                      delim: spec.char,
-                      rung: 1,
-                    })
-                  : state.schema.nodes.md_code_span.create();
+              const node = spanNode(state.schema, spec, 1);
               const tr = state.tr.replaceWith(from, to, node);
               view.dispatch(caretAt(tr, from + 1));
               return true;
@@ -386,10 +384,7 @@ export const createMdSpanAutopairPlugin = (options: {
             if (!textBefore.endsWith(spec.char.repeat(need))) return false;
             const precedingStart = from - need;
 
-            const node = state.schema.nodes.md_span.create({
-              delim: spec.char,
-              rung: spec.minRung,
-            });
+            const node = spanNode(state.schema, spec, spec.minRung);
             const tr = state.tr.delete(precedingStart, from);
             tr.replaceWith(precedingStart, precedingStart, node);
             view.dispatch(caretAt(tr, precedingStart + 1));
@@ -400,11 +395,11 @@ export const createMdSpanAutopairPlugin = (options: {
               const committed = event.data ?? "";
               // prosemirror-view reads the committed text back in a moment
               // after this event, and enclosure.ts may move it out of an
-              // adjacent node at 30ms; look once both have happened.
+              // adjacent node; look once both have happened.
               setTimeout(() => {
                 if (view.composing || view.isDestroyed) return;
                 convertRunClosedBeforeCaret(view, committed);
-              }, 40);
+              }, COMPOSE_RELOCATE_DELAY_MS + 10);
               return false;
             },
           },

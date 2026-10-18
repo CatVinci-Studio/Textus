@@ -2,8 +2,9 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { scrollBehavior } from "../ui/motion";
 
 /**
- * "Show in document" (a comment's button): brings `pos` into view and
- * pulses the block it is in once, so the eye lands on it. A target off the
+ * Brings `pos` into view and pulses the block it is in once, so the eye
+ * lands on it - for a review note's "Show in document", the review bar's
+ * steps and a followed #heading link (link-click-plugin.ts). A target off the
  * screen by less than two screens is scrolled to smoothly - the movement
  * says which way it was; further away it jumps, since a long smooth scroll
  * is only a wait. Already in view, nothing moves.

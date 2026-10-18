@@ -8,7 +8,7 @@ import { $prose } from "@milkdown/kit/utils";
 import { renderMarkdownInlineHtml } from "../../editor/markdown/render-html";
 import { StreamReveal } from "../stream-reveal";
 import { prefersReducedMotion } from "../../ui/motion";
-import type { FoldAttention } from "../../editor/html/raw-html-preview-plugin";
+import type { FoldAttention } from "../../editor/html/details-fold";
 import type { EditProposal } from "../types";
 import type { SentenceHunk } from "./sentence-diff";
 import type { RevisionDisplay } from "../../settings/SettingsContext";

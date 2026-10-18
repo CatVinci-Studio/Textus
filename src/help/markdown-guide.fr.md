@@ -120,9 +120,11 @@ sequenceDiagram
 
 ## Images
 
-Collez une image directement depuis le presse-papiers : Textus l'enregistre dans un dossier `assets/` à côté du document et insère la référence. Vous pouvez aussi l'écrire à la main :
+Collez une image directement depuis le presse-papiers : Textus l'enregistre et insère la référence. L'endroit se choisit dans **Réglages → Éditeur et apparence → Images**. **Sur cet ordinateur**, c'est par défaut un dossier `assets/` à côté du document ; vous pouvez aussi choisir **À côté du document**, `<document>.assets/` ou un **Dossier personnalisé**. Avec **Envoyer vers un hébergeur d'images**, elle part vers PicGo / PicList, SM.MS, Imgur ou votre propre URL d'envoi (**Personnalisé**).
 
-Dans **Réglages → Éditeur et apparence → Images**, vous pouvez plutôt envoyer les images nouvellement collées vers votre propre hébergeur d'images. L'URL d'envoi reçoit des données `multipart/form-data` avec un champ `file` et peut renvoyer l'URL publique soit en texte brut, soit dans un champ JSON configurable. Les fichiers envoyés peuvent être renommés automatiquement, garder leur nom d'origine, ou vous demander un nom avant chaque envoi. Les références d'images existantes ne sont jamais modifiées quand vous changez de mode de stockage.
+Une URL d'envoi personnalisée reçoit des données `multipart/form-data` avec un champ `file` et peut renvoyer l'URL publique soit en texte brut, soit dans un champ JSON configurable. Les fichiers envoyés peuvent être renommés automatiquement, garder leur nom d'origine, ou vous demander un nom avant chaque envoi. Les références d'images existantes ne sont jamais modifiées quand vous changez de mode de stockage.
+
+Vous pouvez aussi écrire la référence à la main :
 
 ```markdown
 ![texte alternatif](assets/capture.png)

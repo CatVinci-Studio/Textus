@@ -10,6 +10,13 @@ import { toPandocMarkdown } from "./pandoc-markdown";
 import { diagramsToImages, lightDiagrams } from "./diagram-images";
 import { appearanceIsDark } from "../editor/mermaid-plugin";
 import {
+  DETAILS_CLASS_PREFIX,
+  DETAILS_END_CLASS,
+  DETAILS_FOLDED_CLASS,
+  DETAILS_HEAD_ATTR,
+  DETAILS_IN_CLASS,
+} from "../editor/html/details-fold";
+import {
   MAC_PAGE,
   WINDOWS_PAGE,
   paginateHtml,
@@ -127,36 +134,36 @@ function fitTablesToWidth(root: HTMLElement): void {
 
 // A <details> written around markdown shows in the editor as a head widget
 // with the document's own paragraphs below it, hidden while folded
-// (raw-html-preview-plugin.ts). A page has no editor to fold them, so they
+// (editor/html/details-fold.ts). A page has no editor to fold them, so they
 // go back inside one real <details>, which opens and closes by itself.
 // Innermost first, so a nested one moves into its parent whole.
 function gatherDetails(root: HTMLElement): void {
   const heads = Array.from(
-    root.querySelectorAll<HTMLDetailsElement>("details[data-details-head]"),
+    root.querySelectorAll<HTMLDetailsElement>(`details[${DETAILS_HEAD_ATTR}]`),
   ).reverse();
   for (const details of heads) {
-    const id = details.dataset.detailsHead;
-    delete details.dataset.detailsHead;
+    const id = details.getAttribute(DETAILS_HEAD_ATTR);
+    details.removeAttribute(DETAILS_HEAD_ATTR);
     let block: Element = details;
     while (block.parentElement && !block.parentElement.matches(".ProseMirror"))
       block = block.parentElement;
     if (block === details || !block.parentElement) continue;
     // The head paragraph's classes say which outer <details> it is in.
     for (const cls of Array.from(block.classList))
-      if (cls.startsWith("raw-html-details-")) details.classList.add(cls);
+      if (cls.startsWith(DETAILS_CLASS_PREFIX)) details.classList.add(cls);
     const body = Array.from(
       block.parentElement.querySelectorAll(
-        `:scope > .raw-html-details-in-${id}`,
+        `:scope > .${DETAILS_IN_CLASS}${id}`,
       ),
     );
     for (const el of body) {
-      el.classList.remove(`raw-html-details-in-${id}`);
-      el.classList.remove("raw-html-details-folded");
+      el.classList.remove(`${DETAILS_IN_CLASS}${id}`);
+      el.classList.remove(DETAILS_FOLDED_CLASS);
       details.appendChild(el);
     }
     block.replaceWith(details);
   }
-  root.querySelectorAll(".raw-html-details-end").forEach((el) => el.remove());
+  root.querySelectorAll(`.${DETAILS_END_CLASS}`).forEach((el) => el.remove());
 }
 
 // Local images render through asset: URLs (image-plugin.ts), which resolve

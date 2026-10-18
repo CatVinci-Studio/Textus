@@ -1,3 +1,5 @@
+import { isDrivePath } from "../../utils/path";
+
 /**
  * The one HTML policy for a document's own markup: what the WYSIWYG editor
  * renders of raw HTML (raw-html-sanitize.ts) and what the split view's
@@ -155,7 +157,7 @@ function sanitizeImageSrc(value: string): string | null {
     )
   )
     return trimmed;
-  if (/^[a-z]:[\\/]/i.test(trimmed)) return trimmed;
+  if (isDrivePath(trimmed)) return trimmed;
   return sanitizeUrl(value);
 }
 

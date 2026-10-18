@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
@@ -7,6 +7,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import type { Settings } from "../../settings/SettingsContext";
 import { createTestEditor } from "../../document-view/editor-test-harness";
 import { convertRunClosedBeforeCaret } from "./md-span-autopair-plugin";
+import { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure";
 
 const editors: Editor[] = [];
 afterEach(async () => {
@@ -113,10 +114,15 @@ describe("delimiters committed by an IME (#134)", () => {
     const { view, save } = await openView();
     caretToEndOfFirstBlock(view);
     commit(view, "**加粗文本**");
-    view.dom.dispatchEvent(
-      new CompositionEvent("compositionend", { data: "*" }),
-    );
-    await new Promise((resolve) => setTimeout(resolve, 80));
+    vi.useFakeTimers();
+    try {
+      view.dom.dispatchEvent(
+        new CompositionEvent("compositionend", { data: "*" }),
+      );
+      vi.advanceTimersByTime(COMPOSE_RELOCATE_DELAY_MS + 10);
+    } finally {
+      vi.useRealTimers();
+    }
     expect(view.state.doc.firstChild?.firstChild?.type.name).toBe("md_span");
     expect(save()).toBe("**加粗文本**\n");
   });

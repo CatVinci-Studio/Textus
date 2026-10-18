@@ -637,6 +637,31 @@ export function caretAt(tr: Transaction, pos: number): Transaction {
 }
 
 /**
+ * Where the browser's caret is, as a document position: null when the DOM
+ * selection isn't a caret (none, or a range) or isn't at a position the
+ * editor knows. See stateWithLiveSelection for why the state's own can lag.
+ */
+export function liveCaretPos(view: EditorView): number | null {
+  // ShadowRoot.getSelection is nonstandard (Blink-only), hence the guard.
+  const root = view.root as {
+    getSelection?: () => globalThis.Selection | null;
+  };
+  const domSel = root.getSelection ? root.getSelection() : null;
+  if (
+    !domSel ||
+    domSel.rangeCount === 0 ||
+    !domSel.isCollapsed ||
+    !domSel.anchorNode
+  )
+    return null;
+  try {
+    return view.posAtDOM(domSel.anchorNode, domSel.anchorOffset);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * The editor state's selection can lag behind the real DOM caret: native
  * caret movement (the in-content steps deliberately left to the browser)
  * only reaches ProseMirror through an asynchronous selectionchange
@@ -655,25 +680,13 @@ export function caretAt(tr: Transaction, pos: number): Transaction {
 export function stateWithLiveSelection(view: EditorView): EditorState {
   const { state } = view;
   if (!state.selection.empty) return state;
-  // ShadowRoot.getSelection is nonstandard (Blink-only), hence the guard.
-  const root = view.root as {
-    getSelection?: () => globalThis.Selection | null;
-  };
-  const domSel = root.getSelection ? root.getSelection() : null;
+  const pos = liveCaretPos(view);
   if (
-    !domSel ||
-    domSel.rangeCount === 0 ||
-    !domSel.isCollapsed ||
-    !domSel.anchorNode
+    pos === null ||
+    pos < 0 ||
+    pos > state.doc.content.size ||
+    pos === state.selection.from
   )
-    return state;
-  let pos: number;
-  try {
-    pos = view.posAtDOM(domSel.anchorNode, domSel.anchorOffset);
-  } catch {
-    return state;
-  }
-  if (pos < 0 || pos > state.doc.content.size || pos === state.selection.from)
     return state;
   const $pos = state.doc.resolve(pos);
   return state.apply(state.tr.setSelection(TextSelection.between($pos, $pos)));
@@ -847,6 +860,11 @@ function relocateComposedText(
   }
 }
 
+/** How long after compositionend the committed text is moved out of an
+ *  adjacent node (relocateComposedText, in compositionend below).
+ *  md-span-autopair-plugin.ts waits a little longer, to look after it. */
+export const COMPOSE_RELOCATE_DELAY_MS = 30;
+
 export const enclosurePlugin = $prose(() => {
   let compositionAnchors: CompositionAnchor[] = [];
   return new Plugin<DecorationSet>({
@@ -884,7 +902,10 @@ export const enclosurePlugin = $prose(() => {
           // prosemirror-view flushes the final composition change slightly
           // after this event (scheduleComposeEnd ~20ms); relocate only once
           // the committed text is actually in the state.
-          setTimeout(() => relocateComposedText(view, anchors), 30);
+          setTimeout(
+            () => relocateComposedText(view, anchors),
+            COMPOSE_RELOCATE_DELAY_MS,
+          );
           return false;
         },
       },

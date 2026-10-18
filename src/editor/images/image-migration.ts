@@ -1,4 +1,5 @@
 import { fs } from "../../platform/ipc";
+import { hasUrlScheme, isDrivePath } from "../../utils/path";
 
 // Matches standard markdown image syntax: ![alt](src "optional title") -
 // how image-plugin.ts's paste handler inserts a src, and so how draft
@@ -9,8 +10,8 @@ const IMAGE_SRC_RE = /!\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 // leading "/" is an absolute local path; anything with a URL scheme
 // (http(s), data:, asset:, ...) or a plain relative path is not.
 function isAbsoluteLocalPath(src: string): boolean {
-  if (/^[a-z]:[\\/]/i.test(src)) return true;
-  if (/^[a-z][a-z0-9+.-]*:/i.test(src)) return false;
+  if (isDrivePath(src)) return true;
+  if (hasUrlScheme(src)) return false;
   return src.startsWith("/");
 }
 

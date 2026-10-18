@@ -1,6 +1,6 @@
 //! Finds the file an Obsidian image embed (`![[name.png]]`) points at.
-//! The frontend half is src/editor/obsidian/ (embed-syntax.ts parses the
-//! embed, embed-preview-plugin.ts shows it); this side owns the filesystem.
+//! The frontend half is in src/editor/images/ (obsidian-embed.ts parses the
+//! embed, obsidian-embed-preview.ts shows it); this side owns the filesystem.
 //!
 //! Obsidian resolves a link inside its vault: the folder holding `.obsidian/`.
 //! A link with a folder in it (`attachments/a.png`) is a path from the vault
@@ -13,7 +13,8 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 /// Image types a vault embed shows - the frontend's IMAGE_EXTENSIONS in
-/// embed-syntax.ts. Anything else (a note, a PDF) stays text.
+/// src/editor/images/obsidian-embed.ts. Anything else (a note, a PDF) stays
+/// text.
 const IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "svg", "avif", "bmp"];
 
 /// The walk that indexes a vault stops here: a vault this size is rare, and a

@@ -9,12 +9,7 @@ export function basename(path: string): string {
   const name = idx >= 0 ? path.slice(idx + 1) : path;
   // A document picked on iOS is a file:// URL - "My%20Notes.md" on disk
   // is "My Notes.md".
-  if (!path.startsWith("file://")) return name;
-  try {
-    return decodeURIComponent(name);
-  } catch {
-    return name;
-  }
+  return path.startsWith("file://") ? decodeUrlPath(name) : name;
 }
 
 // The folder part of a path: "/" for a root-level "/name" (returning the
@@ -56,4 +51,16 @@ export function decodeUrlPath(src: string): string {
   } catch {
     return src;
   }
+}
+
+// A Windows drive path, "C:\..." or "C:/...". Test it before hasUrlScheme,
+// which reads the drive letter as a one-letter scheme.
+export function isDrivePath(path: string): boolean {
+  return /^[a-z]:[\\/]/i.test(path);
+}
+
+// Whether a link or image src starts with a URL scheme (http:, data:,
+// asset:, file:, ...) rather than being a path.
+export function hasUrlScheme(src: string): boolean {
+  return /^[a-z][a-z0-9+.-]*:/i.test(src);
 }
