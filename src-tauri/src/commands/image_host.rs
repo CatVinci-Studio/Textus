@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::AppHandle;
 
+use crate::atomic::TempDir;
 use crate::auth::keys::load_provider_key;
 
 const MAX_IMAGE_BYTES: usize = 25 * 1024 * 1024;
@@ -277,37 +278,28 @@ pub async fn upload_image(
     let token = load_provider_key(&app, host.credential_id())?;
 
     // PicGo reads the image from a file, named as it will be uploaded: one
-    // in a folder of its own, removed once PicGo has answered.
-    let temp_dir = (preset.body == Body::PathList).then(|| {
-        let stamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_nanos())
-            .unwrap_or_default();
-        std::env::temp_dir().join(format!("textus-upload-{stamp}"))
-    });
-    let mut path = None;
-    if let Some(dir) = &temp_dir {
-        tokio::fs::create_dir_all(dir)
-            .await
-            .map_err(|e| e.to_string())?;
-        let file = dir.join(&filename);
-        tokio::fs::write(&file, &bytes)
-            .await
-            .map_err(|e| e.to_string())?;
-        path = Some(file);
-    }
+    // in a private folder of its own, removed when `folder` drops - once
+    // PicGo has answered, or when a paste given up on drops this future.
+    let mut folder = (preset.body == Body::PathList)
+        .then(|| TempDir::create("textus-upload-"))
+        .transpose()
+        .map_err(|e| e.to_string())?;
+    let path = match &mut folder {
+        Some(folder) => Some(
+            folder
+                .write_file(&filename, &bytes)
+                .map_err(|e| e.to_string())?,
+        ),
+        None => None,
+    };
     let image = Image {
         bytes,
         filename,
         mime,
-        path: path.clone(),
+        path,
     };
-    let src = send(&preset, url, token, &url_field, image).await;
-    if let (Some(dir), Some(file)) = (temp_dir, path) {
-        let _ = tokio::fs::remove_file(file).await;
-        let _ = tokio::fs::remove_dir(dir).await;
-    }
-    Ok(UploadedImage { src: src? })
+    let src = send(&preset, url, token, &url_field, image).await?;
+    Ok(UploadedImage { src })
 }
 
 #[cfg(test)]
