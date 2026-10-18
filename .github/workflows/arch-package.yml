@@ -41,7 +41,7 @@ jobs:
 
       # The packaging scripts come from the commit this workflow runs at,
       # not from the tag: a fix on main can then rebuild an older release.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Download the Linux tarball
         run: |

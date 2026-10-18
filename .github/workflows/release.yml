@@ -40,13 +40,13 @@ jobs:
       # The checks come from the commit this workflow runs at (so a rebuild
       # of a tag older than scripts/check-versions.mjs still gets them);
       # what they check is the tag.
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.RELEASE_TAG }}
           path: tagged
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -147,7 +147,7 @@ jobs:
       - name: Preserve source line endings
         run: git config --global core.autocrlf false
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.RELEASE_TAG }}
 
@@ -170,7 +170,7 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -178,15 +178,17 @@ jobs:
         run: npm ci
 
       - name: Build and release
-        # Pinned to the commit of v0.6.2 (what @v0 resolved to): a moving
-        # major tag could change how the release is built between two tags.
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        # Pinned to the commit of v1.0.0: a moving major tag could change how
+        # the release is built between two tags. 1.0 renamed
+        # includeUpdaterJson to uploadUpdaterJson; updater-manifest.mjs
+        # checks the name that matches the version in the comment below.
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Signs the updater artifacts (the .sig files) so installed apps
           # can verify downloads against the pubkey baked into
           # tauri.conf.json. It is Levis's key, reused: that is why Textus
-          # must never publish a latest.json (see includeUpdaterJson below).
+          # must never publish a latest.json (see uploadUpdaterJson below).
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           # macOS code signing + notarization (Gatekeeper). tauri-action
@@ -221,7 +223,8 @@ jobs:
           # install Textus over themselves. The publish job writes
           # textus-latest.json from the uploaded .sig files instead.
           # scripts/updater-manifest.mjs check fails if this line goes.
-          includeUpdaterJson: false
+          # (tauri-action before 1.0 called this input includeUpdaterJson.)
+          uploadUpdaterJson: false
           # RPM versions may not contain '-', so a pre-release (1.0.4-rc.1)
           # cannot be an .rpm; rc tags ship the .deb and AppImage only.
           args: ${{ matrix.args }}${{ matrix.platform == 'ubuntu-22.04' && contains(env.RELEASE_TAG, '-') && ' --bundles deb,appimage' || '' }}
@@ -261,11 +264,11 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.RELEASE_TAG }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
