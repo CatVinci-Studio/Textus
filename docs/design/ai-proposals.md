@@ -124,7 +124,8 @@ fetch-fresh-document signal that precedes every detached send.
 ## Conversation layer
 
 `ai/chat/useAgentConversation.ts`, `ai/chat/cancelled-turns.ts`,
-`ai/revision/proposal-status.ts`; Rust side `src-tauri/src/ai/agent.rs` / `tools.rs`.
+`ai/revision/proposal-status.ts`, `ai/chat/useRevealedText.ts`; Rust side
+`src-tauri/src/ai/agent.rs` / `tools.rs`.
 
 **Every send.** History travels to the backend in full; the document goes
 into the system prompt as markdown source (long documents truncate to an
@@ -150,6 +151,40 @@ would read as the model ignoring it).
 **Failure.** Sets `error` and `retryable`; Retry resends the same message
 verbatim against the document it was composed for. Streamed half-finished
 previews are rolled back (writing phase, above).
+
+**Streaming.** Text deltas can arrive several times a frame, and each state
+update re-renders the editor that owns the conversation, so a delta only
+marks the streaming state dirty and one render per animation frame picks
+them all up (`setStreaming` with `textOnly`). Everything else - a landed
+turn, the end of the exchange - renders at once. What the chat shows is
+paced separately: `ai/chat/useRevealedText.ts` draws the reply through
+`ai/stream-reveal.ts`'s `StreamReveal`, a steady pace a little behind the
+network, the same pacing the typewriter uses for a proposal in the
+document. The end of a stream (finished, stopped or failed) shows the whole
+text at once; with reduced motion the reply shows in the steps it arrived.
+
+## Margin availability
+
+The revision views "original" and "new" put one side of each change in the
+margin, and review notes are margin cards. Whether there is room is
+measured, not assumed (`ai/margin/margin-room.ts`): the text column first
+moves left to open a margin, and when even that leaves too little - a
+narrow window, both side panels open, a large zoom - there is no margin.
+The active document's `ReviewMargin` measures on every resize and writes
+the answer to a per-window store (`useMarginAvailable`).
+
+- **The margin views fall back to inline.** With no margin, both sides of
+  each change are drawn in the text (`effectiveRevisionDisplay`) and
+  review notes go behind numbered badges, which the chat's note cards
+  repeat.
+- **The chosen view waits and returns.** The setting is not changed: the
+  review bar's view button shows what is drawn meanwhile, and the chosen
+  view comes back as soon as there is room again.
+- **The options say why they are off.** In the review bar's menu and in
+  Settings the margin views stay listed but disabled
+  (`marginViewBlocked`), with a note to close the sidebar or the AI panel.
+  A phone never has a margin, so it lists only the views that need none
+  and explains nothing.
 
 ## Draft snapshots and closing
 
@@ -179,12 +214,15 @@ previews are rolled back (writing phase, above).
 | `ai/revision/proposal-stream.ts`                                    | Writing-phase machine: place/feed/finalize/discard                         |
 | `ai/revision/usePendingEdits.ts`                                    | Anchor resolution, accept/reject/rejectAll, status map, review navigation  |
 | `ai/revision/pending-edit-plugin.ts`                                | Decorations, typewriter + settle, docChanged staleness, keyboard shortcuts |
-| `ai/stream-reveal.ts`                                               | The pace streamed text is revealed at: the typewriter and chat replies     |
 | `ai/revision/proposal-status.ts`                                    | Status notes annotated onto history at send time                           |
 | `ai/chat/cancelled-turns.ts`                                        | What a stop keeps; dangling tool-call closure                              |
 | `ai/chat/useAgentConversation.ts`                                   | Conversation state: send/stop/retry/restore, history persistence           |
+| `ai/stream-reveal.ts`                                               | The pace streamed text is revealed at: the typewriter and chat replies     |
+| `ai/chat/useRevealedText.ts`                                        | A chat reply as drawn while it streams, paced by `StreamReveal`            |
 | `ai/chat/ChatBody.tsx`                                              | Shared conversation UI; streamed-turn → proposal, idempotent afterSend     |
 | `ai/chat/window/ChatWindowApp.tsx`, `ai/chat/window/chat-bridge.ts` | Detached window and its bridge: context/status pushes, proposal forwarding |
+| `ai/margin/margin-room.ts`                                          | Whether there is room for a margin; the per-window store both menus read   |
+| `ai/revision/revision-display.ts`                                   | The view drawn without a margin; which margin views can't be picked        |
 | `document-view/MilkdownEditor.tsx`                                  | Wiring: machine effects, supersede flag, exchange-boundary effect          |
 | `draft-autosave.ts`, `startup-restore.ts`, `App.tsx`                | Draft snapshots, startup restore, close-time cleanup                       |
 | `src-tauri/src/ai/tools.rs`, `agent.rs`                             | `propose_edit` validation, system prompt, the status-note contract         |

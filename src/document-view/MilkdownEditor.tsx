@@ -41,7 +41,7 @@ import { useReviewNotes } from "../ai/margin/useReviewNotes";
 import { useGrammarPopover } from "../ai/writing/useGrammarPopover";
 import { useSettings } from "../settings/SettingsContext";
 import { useLatest } from "../utils/hooks/useLatest";
-import { sendTourSignal, type TourAi } from "../utils/events";
+import type { TourAi } from "../utils/events";
 import { useTourSignals } from "./useTourSignals";
 import { Milkdown } from "@milkdown/react";
 import "@milkdown/kit/prose/view/style/prosemirror.css";
@@ -330,14 +330,13 @@ export function MilkdownEditor({
     showAiNotice,
   });
 
-  useTourSignals({
+  const { onSkillUsed } = useTourSignals({
     tour,
     grammarCardOpen: grammar.popover !== null,
     undecidedRevisions: pendingEdits.decidable.length,
     reviewNotes: notes.notes.length,
     conversations: [conversation, quickConversation],
   });
-  const onSkillUsed = tour ? () => sendTourSignal("skill-sent") : undefined;
 
   function popOutPanel() {
     handleDetachChat();
@@ -392,7 +391,7 @@ export function MilkdownEditor({
           onDone={notes.doneNote}
           onAsk={notes.askAboutNote}
           onDecide={pendingEdits.decide}
-          onCompact={notes.setNotesCompact}
+          onNoMargin={notes.onNoMargin}
           layoutKey={pendingEdits.previews}
         />
       )}
@@ -423,7 +422,6 @@ export function MilkdownEditor({
                 onReject={pendingEdits.rejectAll}
                 onOpenChat={() => agentPanel.setOpen(true)}
                 display={settings.revisionDisplay}
-                marginAvailable={!notes.notesBadged}
                 displayName={(mode) => revisionDisplayName(t, mode)}
                 onDisplay={(mode) => setSettings({ revisionDisplay: mode })}
               />
@@ -513,7 +511,7 @@ export function MilkdownEditor({
             onRevealProposal={revealProposal}
             onLocateText={notes.locateText}
             noteNumber={(id) =>
-              notes.notesBadged
+              notes.noMargin
                 ? (notes.notes.find((n) => n.id === id)?.num ?? null)
                 : null
             }

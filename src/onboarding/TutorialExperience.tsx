@@ -182,7 +182,7 @@ export function TutorialExperience({
         watching ? { label: t.tutorialNext, onClick: tutorial.next } : null
       }
       onBack={tutorial.back}
-      onSkip={tutorial.skip}
+      onSkip={tutorial.exit}
       onSkipStep={gated ? tutorial.next : undefined}
       labels={{
         back: t.tutorialBack,

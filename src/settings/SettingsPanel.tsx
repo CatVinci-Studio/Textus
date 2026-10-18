@@ -15,7 +15,7 @@ import {
   type RevisionDisplay,
 } from "./SettingsContext";
 import {
-  needsMargin,
+  marginViewBlocked,
   revisionDisplayName,
 } from "../ai/revision/revision-display";
 import { useMarginAvailable } from "../ai/margin/margin-room";
@@ -116,7 +116,7 @@ export function SettingsPanel({
   // to explain there.
   const marginAvailable = useMarginAvailable();
   const phone = usePhoneLayout();
-  const noMarginRoom = !marginAvailable && !phone;
+  const noMargin = !phone && !marginAvailable;
   const [category, setCategory] = useState<Category>("general");
   // A page of its own inside a category, with a way back, on the desktop
   // and the phone alike: General › About Textus, Editor & Appearance ›
@@ -446,7 +446,7 @@ export function SettingsPanel({
                 </SettingRow>
                 <SettingRow
                   label={t.revisionDisplayLabel}
-                  hint={noMarginRoom ? t.revisionDisplayNoRoom : undefined}
+                  hint={noMargin ? t.revisionDisplayNoRoom : undefined}
                 >
                   <Select
                     className="settings-select"
@@ -462,7 +462,10 @@ export function SettingsPanel({
                       <option
                         key={mode}
                         value={mode}
-                        disabled={noMarginRoom && needsMargin(mode)}
+                        disabled={marginViewBlocked(mode, {
+                          phone,
+                          marginAvailable,
+                        })}
                       >
                         {revisionDisplayName(t, mode)}
                       </option>

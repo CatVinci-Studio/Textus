@@ -61,7 +61,7 @@ export function useReviewNotes({
   const notesRef = useLatest(notes);
   // Behind numbered badges (no room for a margin): the chat's note cards
   // then carry the same numbers.
-  const [notesBadged, setNotesBadged] = useState(false);
+  const [noMargin, setNoMargin] = useState(false);
   const [hotNote, setHotNote] = useState<string | null>(null);
   const [openNote, setOpenNote] = useState<{
     id: string;
@@ -194,16 +194,19 @@ export function useReviewNotes({
 
   // No room for a margin: notes go behind badges and a rewrite's
   // replacements back into the text.
-  function setNotesCompact(compact: boolean) {
-    setMarginAvailable(!compact);
-    if (compact === noMarginRef.current) return;
-    noMarginRef.current = compact;
-    setNotesBadged(compact);
+  function onNoMargin(next: boolean) {
+    setMarginAvailable(!next);
+    if (next === noMarginRef.current) return;
+    noMarginRef.current = next;
+    setNoMargin(next);
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       const redraw = () => {
         view.dispatch(
-          view.state.tr.setMeta(reviewNotesKey, { type: "compact", compact }),
+          view.state.tr.setMeta(reviewNotesKey, {
+            type: "compact",
+            compact: next,
+          }),
         );
         view.dispatch(
           view.state.tr.setMeta(pendingEditKey, { type: "refocus" }),
@@ -224,7 +227,7 @@ export function useReviewNotes({
         holdBlock(scroller, block, block.getBoundingClientRect().top, redraw);
       else redraw();
     });
-    if (!compact) setOpenNote(null);
+    if (!next) setOpenNote(null);
   }
 
   // A comment card's "Show in document": select the passage and bring it
@@ -300,7 +303,7 @@ export function useReviewNotes({
 
   return {
     notes,
-    notesBadged,
+    noMargin,
     hotNote,
     openNote,
     setOpenNote,
@@ -311,7 +314,7 @@ export function useReviewNotes({
     hoverNotes,
     doneNote,
     askAboutNote,
-    setNotesCompact,
+    onNoMargin,
     locateText,
   };
 }
