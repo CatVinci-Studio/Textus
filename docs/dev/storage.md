@@ -42,6 +42,7 @@ an identifier, hence the directories).
 | `recent_files.json`                                                                                 | File > Open Recent (desktop).                                                                                                                                                                                                                                                     |
 | `themes/<id>/light.css`, `dark.css`                                                                 | Imported themes, and themes installed from the theme gallery (**Settings › Editor & Appearance › Browse themes**). `settings.userThemes` lists them; a gallery theme's entry also has `gallery: {id, updated, source}`, the version installed, which is how an update is noticed. |
 | `agent/agent.md`, `agent/skills/`                                                                   | The global config folder: global writing instructions and skills ([AI-CONCEPTS.md](../design/ai-concepts.md)), including copies of built-in skills made with Customize… (marked `textus-based-on`). Built-ins turned off are listed in `settings.disabledBuiltinSkills`.          |
+| `agent/memory/<slug>.md`                                                                            | What Textus AI remembered about the user for every project, one memory per file (`ai::memory`); the project's own are in its `.textus/memory/`. Off with `settings.rememberAutomatically`.                                                                                        |
 | `provider_keys.json`, `api_key.json`, `custom_endpoint.json`, `auth-codex.json`, `auth-claude.json` | AI credentials, and in `provider_keys.json` also the image hosts' tokens under ids starting `__image_host` (`credential_id` in `src-tauri/src/commands/image_host.rs`); owner-only on Unix.                                                                                       |
 
 `settings.json`'s `writingConventions` is also read by Rust
@@ -217,11 +218,28 @@ The Levis directories are left in place, so Levis keeps working alongside.
 A Levis older than 0.9.7 has no files to copy; Textus doesn't read another
 app's webview storage, so such a user updates Levis once first.
 
-## Project folders: `.textus/` and `.levis/`
+## Project folders: `.textus/`
 
-A project's own settings (writing instructions, skills, library, style
-profile) live in its `.textus/` folder. A project made with Levis has a
-`.levis/` folder instead; while a project has no `.textus/`, Textus reads
-and writes its `.levis/` in place (`ai::workspace::project_dir`), so nothing
-is moved or copied and a Levis install sharing the folder still sees the same
-files. A project with both uses `.textus/` only.
+A project's own settings live in its `.textus/` folder
+([AI-CONCEPTS.md](../design/ai-concepts.md)):
+
+| Path                            | What                                                                                                          |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `agent.md`                      | The project's writing instructions.                                                                           |
+| `style.md`, `style.previous.md` | The style profile, and the one "Learn my style" replaced.                                                     |
+| `library/<name>.md`             | The library, one entry per file; an entry Textus AI wrote has `remembered-by: textus-ai` in its front matter. |
+| `memory/<slug>.md`              | What Textus AI remembered about the project, one memory per file (`ai::memory`).                              |
+| `skills/<name>.md`              | The project's skills.                                                                                         |
+
+The project folder is the nearest folder holding the document that has a
+`.textus/` (up to, never including, the home folder or a drive root), else
+the document's own folder, unless one was chosen.
+
+A project made with Levis has a `.levis/` folder instead, which Textus does
+not read. While `.levis/` holds files `.textus/` lacks, the project bar
+offers once to convert it: Convert copies those regular files into
+`.textus/` through the atomic writer (symlinks skipped, nothing in
+`.textus/` overwritten, `.levis/` untouched, so a Levis install sharing the
+folder keeps working) - `ai::levis_project`; Not now adds the project
+folder to `ui-state.json`'s `levisProjectsDeclined` instead, and the Memory
+tab keeps **Convert Levis data**.
