@@ -1,0 +1,81 @@
+name: Bug report
+description: Something doesn't work as it should (in English).
+labels: ["bug", "lang: en"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Please search [existing issues](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aissue) first; if yours is there, a 👍 helps more than a new issue.
+
+        Not sure it's a bug? **Help › Markdown Guide** and **Help › AI Features Guide** in the app cover most features, and [Discord](https://textus.catvinci.com/discord) is the place for "how do I…" questions.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened
+      description: What went wrong, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: Markdown sample
+      description: The smallest piece of Markdown that shows the problem, if it involves a document. Saying which built-in guide you used works too.
+      render: markdown
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or recording
+      description: A screen recording helps a lot for editing and cursor problems.
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS
+        - Windows
+        - Linux (.deb)
+        - Linux (.rpm)
+        - Linux (AppImage)
+        - Linux (AUR)
+        - iPhone / iPad
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version
+      placeholder: "macOS 26.1, Windows 11 24H2, Debian 13 GNOME, iOS 26.0 ..."
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      description: Shown in Settings › General › About Textus.
+      placeholder: "1.0.5"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: reproducible
+    attributes:
+      label: Reproducibility
+      options:
+        - label: It happens every time I follow the steps.
