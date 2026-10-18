@@ -45,6 +45,35 @@ test("typing a closing ** or ~~ by hand closes the span once", async ({
   );
 });
 
+test("** committed through an IME composition still makes bold (#134)", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await editor.click();
+  // Chromium's own IME path: each piece is a real composition (as Microsoft
+  // Pinyin / Sogou send even a "*" in Chinese mode), committed by insertText.
+  const cdp = await page.context().newCDPSession(page);
+  const compose = async (preedit: string, committed: string) => {
+    await cdp.send("Input.imeSetComposition", {
+      text: preedit,
+      selectionStart: preedit.length,
+      selectionEnd: preedit.length,
+    });
+    await cdp.send("Input.insertText", { text: committed });
+    // Past the post-commit check (40ms) before the next composition.
+    await page.waitForTimeout(100);
+  };
+  await compose("*", "*");
+  await compose("*", "*");
+  await compose("jiacu", "加粗");
+  await compose("*", "*");
+  await compose("*", "*");
+  await expect(editor.locator("strong")).toHaveText("加粗");
+  await page.keyboard.type(" and ~~s~~", { delay: 30 });
+  expect((await sourceOf(page)).trim()).toBe("**加粗** and ~~s~~");
+});
+
 /** Paragraphs enough to scroll several screens. */
 function longDoc(extra: { at: number; text: string }[] = []): string {
   const parts: string[] = [];
