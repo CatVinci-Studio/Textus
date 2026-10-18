@@ -179,6 +179,7 @@ previews are rolled back (writing phase, above).
 | `ai/revision/proposal-stream.ts`                                    | Writing-phase machine: place/feed/finalize/discard                         |
 | `ai/revision/usePendingEdits.ts`                                    | Anchor resolution, accept/reject/rejectAll, status map, review navigation  |
 | `ai/revision/pending-edit-plugin.ts`                                | Decorations, typewriter + settle, docChanged staleness, keyboard shortcuts |
+| `ai/stream-reveal.ts`                                               | The pace streamed text is revealed at: the typewriter and chat replies     |
 | `ai/revision/proposal-status.ts`                                    | Status notes annotated onto history at send time                           |
 | `ai/chat/cancelled-turns.ts`                                        | What a stop keeps; dangling tool-call closure                              |
 | `ai/chat/useAgentConversation.ts`                                   | Conversation state: send/stop/retry/restore, history persistence           |

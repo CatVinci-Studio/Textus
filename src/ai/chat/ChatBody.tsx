@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   AgentConversation,
   AgentRequestOptions,
@@ -20,6 +20,7 @@ import {
 } from "./ChatMessages";
 import { ChatComposer, type ChatComposerLabels } from "./ChatComposer";
 import { MarkdownText } from "../MarkdownText";
+import { useRevealedText } from "./useRevealedText";
 import {
   QuickAskPendingBar,
   type QuickAskPendingBarLabels,
@@ -231,7 +232,7 @@ export function ChatBody({
   const phone = usePhoneLayout();
   const {
     history,
-    streaming,
+    streaming: received,
     busy,
     error,
     retryable,
@@ -240,6 +241,13 @@ export function ChatBody({
     stop,
     retry,
   } = conversation;
+  // The in-flight exchange as drawn: its prose paced onto the screen
+  // (useRevealedText). The conversation keeps the text as received.
+  const revealedText = useRevealedText(received?.text ?? "", !!received);
+  const streaming = useMemo(
+    () => received && { ...received, text: revealedText },
+    [received, revealedText],
+  );
   const listRef = useRef<HTMLDivElement>(null);
   const [quickExpanded, setQuickExpanded] = useState(
     () => variant === "quick" && quickReplyExpands(history),
