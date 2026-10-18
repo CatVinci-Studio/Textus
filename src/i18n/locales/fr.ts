@@ -115,6 +115,8 @@ utiliser une.
     "Original dans le texte, modifications dans la marge",
   revisionDisplayNew: "Modifications dans le texte, original dans la marge",
   revisionDisplayFinal: "Résultat seul, sans marques",
+  revisionDisplayNoRoom:
+    "Pas assez de place : fermez la barre latérale ou le panneau IA",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Révision",
   reviewBarOpenChat: "Ouvrir le panneau IA",
@@ -246,8 +248,6 @@ utiliser une.
     "Rien de nouveau à importer : Textus a déjà tout ce que Levis possède.",
   levisImportFailed: "Certains fichiers n’ont pas pu être copiés :",
   levisImportRow: "Importer depuis Levis",
-  levisImportRowHint:
-    "Copie réglages, historique, thèmes et plus encore. Levis garde tout.",
   levisImportButton: "Importer…",
   levisImportNone: "Aucune donnée de Levis sur cet ordinateur.",
   levisItemSettings: "réglages",

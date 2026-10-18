@@ -423,6 +423,7 @@ export function MilkdownEditor({
                 onReject={pendingEdits.rejectAll}
                 onOpenChat={() => agentPanel.setOpen(true)}
                 display={settings.revisionDisplay}
+                marginAvailable={!notes.notesBadged}
                 displayName={(mode) => revisionDisplayName(t, mode)}
                 onDisplay={(mode) => setSettings({ revisionDisplay: mode })}
               />

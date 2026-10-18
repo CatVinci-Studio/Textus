@@ -106,6 +106,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   revisionDisplayOriginal: "Original no texto, alterações na margem",
   revisionDisplayNew: "Alterações no texto, original na margem",
   revisionDisplayFinal: "Só o resultado, sem marcações",
+  revisionDisplayNoRoom: "Sem espaço: feche a barra lateral ou o painel de IA",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Revisão",
   reviewBarOpenChat: "Abrir o painel de IA",
@@ -234,8 +235,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Nada novo para importar: o Textus já tem tudo o que o Levis tem.",
   levisImportFailed: "Alguns arquivos não puderam ser copiados:",
   levisImportRow: "Importar do Levis",
-  levisImportRowHint:
-    "Copia configurações, histórico, temas e mais. O Levis continua com tudo.",
   levisImportButton: "Importar…",
   levisImportNone: "Não há dados do Levis neste computador.",
   levisItemSettings: "configurações",

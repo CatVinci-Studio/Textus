@@ -11,6 +11,8 @@ import {
   type ReviewNote,
 } from "./review-notes-plugin";
 import type { MarginItem } from "./ReviewMargin";
+import { setMarginAvailable } from "./margin-room";
+import { blockAt, holdBlock } from "../../ui/hold-line";
 import type { AgentConversation } from "../chat/useAgentConversation";
 import type { AgentPanelFrame } from "../chat/panel/agent-panel";
 import {
@@ -193,14 +195,34 @@ export function useReviewNotes({
   // No room for a margin: notes go behind badges and a rewrite's
   // replacements back into the text.
   function setNotesCompact(compact: boolean) {
+    setMarginAvailable(!compact);
+    if (compact === noMarginRef.current) return;
     noMarginRef.current = compact;
     setNotesBadged(compact);
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      view.dispatch(
-        view.state.tr.setMeta(reviewNotesKey, { type: "compact", compact }),
-      );
-      view.dispatch(view.state.tr.setMeta(pendingEditKey, { type: "refocus" }));
+      const redraw = () => {
+        view.dispatch(
+          view.state.tr.setMeta(reviewNotesKey, { type: "compact", compact }),
+        );
+        view.dispatch(
+          view.state.tr.setMeta(pendingEditKey, { type: "refocus" }),
+        );
+      };
+      // Sentences moving into or out of the text reflow it: the first
+      // block wholly on screen stays put rather than the page jumping
+      // under the reader as a panel opens or closes. (Not the block the
+      // top edge cuts: that may be the very paragraph that reflows.)
+      const scroller = view.dom.closest<HTMLElement>(".editor-scroll");
+      const top = scroller?.getBoundingClientRect().top ?? 0;
+      const under = blockAt(view.dom, top);
+      const block =
+        under && under.getBoundingClientRect().top < top
+          ? (under.nextElementSibling ?? under)
+          : under;
+      if (scroller && block)
+        holdBlock(scroller, block, block.getBoundingClientRect().top, redraw);
+      else redraw();
     });
     if (!compact) setOpenNote(null);
   }

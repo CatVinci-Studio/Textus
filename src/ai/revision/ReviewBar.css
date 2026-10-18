@@ -123,6 +123,19 @@
   stroke-width: 1.5;
 }
 
+/* The chosen view waits for room: the eye names what shows meanwhile. */
+.review-bar-view-waiting {
+  display: inline-flex;
+  gap: 5px;
+  width: auto;
+  padding: 0 9px 0 6px;
+  border-radius: var(--radius-pill);
+}
+
+.review-bar-view-name {
+  font-size: var(--text-sm);
+}
+
 .review-bar-view-button:hover,
 .review-bar-view-button[aria-expanded="true"] {
   background: color-mix(in srgb, var(--ui-on-primary) 14%, transparent);
@@ -157,11 +170,17 @@
   position: relative;
 }
 
-.review-bar-menu button:hover {
+.review-bar-menu button:hover:not(:disabled) {
   background: color-mix(in srgb, var(--editor-text) 7%, transparent);
 }
 
-.review-bar-menu button[aria-checked="true"]::before {
+.review-bar-menu button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.review-bar-menu button[aria-checked="true"]::before,
+.review-bar-menu .review-bar-menu-waiting::before {
   content: "";
   position: absolute;
   left: 10px;
@@ -171,6 +190,23 @@
   margin-top: -4px;
   border-radius: 50%;
   background: var(--editor-accent);
+}
+
+/* Chosen, but waiting for room: a ring where the dot will be. */
+.review-bar-menu .review-bar-menu-waiting::before {
+  background: none;
+  box-shadow: inset 0 0 0 1.5px var(--editor-accent);
+}
+
+.review-bar-menu-note {
+  max-width: 250px;
+  margin: 4px 0 0;
+  padding: 7px 10px 5px 26px;
+  border-top: 1px solid var(--editor-border, var(--border-color));
+  color: var(--editor-muted);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  white-space: normal;
 }
 
 .review-bar-phone .review-bar-view-button {

@@ -114,6 +114,8 @@ para usar una.
   revisionDisplayOriginal: "Original en el texto, cambios en el margen",
   revisionDisplayNew: "Cambios en el texto, original en el margen",
   revisionDisplayFinal: "Solo el resultado, sin marcas",
+  revisionDisplayNoRoom:
+    "No hay espacio: cierra la barra lateral o el panel de IA",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Revisión",
   reviewBarOpenChat: "Abrir el panel de IA",
@@ -244,8 +246,6 @@ para usar una.
     "No hay nada nuevo que importar: Textus ya tiene lo que tiene Levis.",
   levisImportFailed: "Algunos archivos no se pudieron copiar:",
   levisImportRow: "Importar de Levis",
-  levisImportRowHint:
-    "Copia ajustes, historial, temas y más. Levis lo conserva todo.",
   levisImportButton: "Importar…",
   levisImportNone: "No hay datos de Levis en este equipo.",
   levisItemSettings: "ajustes",

@@ -12,7 +12,7 @@ import { Select } from "../../ui/Select";
 import { SettingRow } from "./controls";
 import { levisImport, type LevisImportStatus } from "../../platform/ipc";
 import type { Lang } from "../../i18n/strings";
-import { itemList, runLevisImport } from "../levis-import";
+import { runLevisImport } from "../levis-import";
 
 // The General category's sections beyond plain settings rows.
 
@@ -218,7 +218,7 @@ export function CliCommandSection({ t }: { t: Strings }) {
   );
 }
 
-/** Settings > General: bring a Levis installation in (again) - the same
+/** Settings › General › About Textus: bring a Levis installation in (again) - the same
  *  flow the first launch offers (settings/levis-import.ts). Shown only
  *  where there is a Levis installation to read. */
 export function LevisImportSection({ t, lang }: { t: Strings; lang: Lang }) {
@@ -232,10 +232,7 @@ export function LevisImportSection({ t, lang }: { t: Strings; lang: Lang }) {
   }, []);
   if (!status?.supported || status.items.length === 0) return null;
   return (
-    <SettingRow
-      label={t.levisImportRow}
-      hint={`${t.levisImportRowHint} (${itemList(t, lang, status.items)})`}
-    >
+    <SettingRow label={t.levisImportRow}>
       <button
         className="text-button settings-inline-button"
         disabled={busy}
