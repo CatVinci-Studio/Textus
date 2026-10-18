@@ -95,6 +95,8 @@ fn about_url(page: &str) -> Option<&'static str> {
         "github" => Some("https://github.com/CatVinci-Studio/Textus"),
         "discord" => Some("https://textus.catvinci.com/discord"),
         "qq" => Some("https://textus.catvinci.com/qq"),
+        // Settings › Browse themes, when the gallery can't be reached.
+        "themes" => Some("https://textus.catvinci.com/themes/"),
         _ => None,
     }
 }
@@ -213,6 +215,7 @@ mod tests {
     fn about_opens_only_its_own_pages() {
         assert!(super::about_url("github").is_some());
         assert!(super::about_url("qq").is_some());
+        assert!(super::about_url("themes").is_some());
         assert!(super::about_url("https://example.com").is_none());
     }
 

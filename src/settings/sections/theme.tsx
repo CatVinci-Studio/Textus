@@ -1,20 +1,20 @@
 import { errorText } from "../../utils/error-text";
 import { useId, useRef, useState } from "react";
-import {
-  useSettings,
-  THEME_MODES,
-  type UserThemeMeta,
-} from "../SettingsContext";
+import { useSettings, THEME_MODES } from "../SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../../theme/builtin-themes";
 import type { Strings } from "../../i18n/strings";
-import { importThemeCss } from "../../theme/theme-import";
+import {
+  importThemeCss,
+  saveUserTheme,
+  withUserTheme,
+} from "../../theme/theme-import";
 import { ornamentRules } from "../../theme/theme-export";
 import { basename } from "../../utils/path";
 import { showMessage } from "../../ui/app-dialog";
 import { exportDoc, fs, themes } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { Select } from "../../ui/Select";
-import { SettingRow } from "./controls";
+import { LinkRow, SettingRow } from "./controls";
 
 const CUSTOM_CSS_PLACEHOLDER = `#write > p {
   text-indent: 2em;
@@ -120,7 +120,15 @@ ${customCss.trim() ? `\n/* Custom CSS */\n${customCss}\n` : ""}`;
   }
 }
 
-export function ThemeSection({ t }: { t: Strings }) {
+/** `onBrowse` opens Browse themes, a page the panel shows in place of the
+ *  category (as it does About Textus). */
+export function ThemeSection({
+  t,
+  onBrowse,
+}: {
+  t: Strings;
+  onBrowse: () => void;
+}) {
   const { settings, setSettings } = useSettings();
   const appearanceId = useId();
   const working = useRef(false);
@@ -144,17 +152,13 @@ export function ThemeSection({ t }: { t: Strings }) {
     try {
       const picked = await fs.openCssFileDialog();
       if (!picked) return;
-      const id = `user-${crypto.randomUUID()}`;
       const css = await importThemeCss(picked);
-      await themes.saveThemeCss(id, "light", css);
-      const meta: UserThemeMeta = {
-        id,
+      const meta = await saveUserTheme(css, {
         name: basename(picked).replace(/\.css$/i, ""),
-        hasDark: false,
-      };
+      });
       setSettings({
-        userThemes: [...latest.current.userThemes, meta],
-        themeId: id,
+        userThemes: withUserTheme(latest.current.userThemes, meta),
+        themeId: meta.id,
       });
     } catch (err) {
       setError(errorText(err));
@@ -268,6 +272,12 @@ export function ThemeSection({ t }: { t: Strings }) {
           {t.themeImportButton}
         </button>
       </SettingRow>
+
+      <LinkRow
+        label={t.themeGalleryBrowse}
+        onOpen={onBrowse}
+        className="theme-gallery-entry"
+      />
 
       {/* A tweak on top of the theme, folded away until wanted. */}
       <details

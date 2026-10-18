@@ -112,6 +112,18 @@ export interface UserThemeMeta {
   id: string;
   name: string;
   hasDark: boolean;
+  /// Set when the theme was installed from the theme gallery
+  /// (theme/theme-gallery.ts): which one, and the version installed, so a
+  /// newer one shows as an update. Rust reads only `id` and `hasDark`.
+  gallery?: GalleryOrigin;
+}
+
+export interface GalleryOrigin {
+  /// The gallery's theme id (`GalleryTheme.id`).
+  id: string;
+  /// `GalleryTheme.updated` of the installed copy.
+  updated: string;
+  source: string;
 }
 
 export type ImageStorageMode = "local" | "image-host";
