@@ -8,6 +8,7 @@ import {
   type RevealState,
   type Touches,
 } from "../reveal-state";
+import { liveCaretPos } from "../marks/enclosure";
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
 
 // --- <details> around markdown ------------------------------------------
@@ -263,11 +264,8 @@ export function arrowIntoHtmlBlock(
   const dom = (view.root as Document).getSelection?.();
   if (dom?.focusNode && view.dom.contains(dom.focusNode)) {
     if (!dom.isCollapsed) return false;
-    try {
-      head = view.posAtDOM(dom.focusNode, dom.focusOffset);
-    } catch {
-      // Not a position the editor knows - keep the state's.
-    }
+    // Not a position the editor knows: keep the state's.
+    head = liveCaretPos(view) ?? head;
   } else if (!selection.empty) return false;
   const $head = doc.resolve(head);
   if ($head.depth !== 1 || !view.endOfTextblock(dir)) return false;
