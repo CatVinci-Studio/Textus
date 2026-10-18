@@ -16,15 +16,12 @@
 - **全新的新手教程。** 先连接你的 AI，后面的 AI 课就是真实效果；然后一步一步介绍主要功能，每一步都能打开一段短动画。跳过 AI 的话，这几课会改成演示给你看。[#90](https://github.com/CatVinci-Studio/Textus/issues/90)
 - **文档里支持更多 HTML。** 可折叠的 `<details>`、HTML 表格、几种内联样式（颜色、字号、对齐），以及直接写在文档里的 `<svg>` 图形，写的时候、分屏预览和导出时都能正常显示。脚本一律不会运行。
 - **测试版通道。** 在 **设置 › 通用 › 关于 Textus** 里选"测试版"，就能比大家早一步收到候选版本；默认仍是稳定版。
+- **自动保存**（需要手动打开）：边写边保存回原文件。[#133](https://github.com/CatVinci-Studio/Textus/issues/133)
+- **在 App 里使用主题分享平台**：在设置里浏览、安装、更新主题。[#89](https://github.com/CatVinci-Studio/Textus/issues/89)
+- **显示 Obsidian 的图片嵌入**（`![[image.png]]`），保存时原样写回。[#135](https://github.com/CatVinci-Studio/Textus/issues/135)
+- **可以关掉自动补全结尾的 `*`**，自己输入。[#136](https://github.com/CatVinci-Studio/Textus/issues/136)
 
-## 再下一个版本（1.2.0）
-
-新功能放在这样的中版本里发布；补丁版本（1.1.x）只修问题。已经做好、等着发布的有：
-
-- 可选的自动保存到原文件。[#133](https://github.com/CatVinci-Studio/Textus/issues/133)
-- 显示 Obsidian 的图片嵌入（`![[image.png]]`），保存时原样写回。[#135](https://github.com/CatVinci-Studio/Textus/issues/135)
-- 两个开关：不自动补全结尾的 `*`；隐藏三级、四级标题前的装饰。[#136](https://github.com/CatVinci-Studio/Textus/issues/136)
-- 在 App 里直接浏览、安装主题分享平台上的主题。[#89](https://github.com/CatVinci-Studio/Textus/issues/89)
+新功能放在这样的中版本里发布；补丁版本（1.1.x）只修问题。
 
 ## 最近完成
 
