@@ -48,6 +48,7 @@ metadata:
 - Turn an unresolved question ("launch next month?") into a decision.
 
 ## Deliver
-- Edit mode: one proposal that replaces the notes with the minutes, or appends them below if the user wants the notes kept.
-- Ask mode: the minutes in the reply.
+- Revise mode: one proposal that replaces the notes with the minutes, or appends them below if the user wants the notes kept.
+- Write mode: one proposal that appends the minutes below the notes.
+- Review mode: the minutes in the reply.
 - Reply in one or two sentences: the number of decisions and action items, and any owner or date still missing.

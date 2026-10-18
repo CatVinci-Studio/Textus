@@ -35,6 +35,7 @@ const { pressKeepingFocus, tapKeepingFocus } = await import("../ui/tap");
 
 const labels = {
   dropSelection: "Remove selection",
+  showSelection: "Show in document",
   atCursor: "At the cursor",
   placeholder: "Ask anything",
   send: "Send",
@@ -43,9 +44,9 @@ const labels = {
   selectedChars: (n: number) => `${n} chars selected`,
   attachmentTruncated: "(shortened)",
   attachmentNoVision: "No images",
-  modeAsk: "Ask",
-  modeEdit: "Edit",
-  modePlan: "Plan",
+  modeWrite: "Write",
+  modeReview: "Review",
+  modeRevise: "Revise",
   modeLabel: "Mode",
   webSearch: "Web search",
 };
@@ -61,7 +62,7 @@ function renderComposer(
       selectedText={null}
       busy={false}
       labels={labels}
-      defaultMode="edit"
+      defaultMode="revise"
       defaultWebSearch={false}
       onSend={onSend}
       onStop={() => {}}
@@ -74,15 +75,17 @@ function renderComposer(
 
 describe("the composer on a phone", () => {
   it("picks the mode with a segmented control, and sends with it", () => {
-    const { onSend } = renderComposer({ allowPlan: false });
+    const { onSend } = renderComposer();
     const modes = screen.getByRole("radiogroup", { name: "Mode" });
-    expect(modes.querySelectorAll('[role="radio"]')).toHaveLength(2);
-    expect(screen.getByRole("radio", { name: "Edit" })).toHaveAttribute(
+    expect(
+      [...modes.querySelectorAll('[role="radio"]')].map((m) => m.textContent),
+    ).toEqual(["Write", "Review", "Revise"]);
+    expect(screen.getByRole("radio", { name: "Revise" })).toHaveAttribute(
       "aria-checked",
       "true",
     );
-    fireEvent.click(screen.getByRole("radio", { name: "Ask" }));
-    expect(screen.getByRole("radio", { name: "Ask" })).toHaveAttribute(
+    fireEvent.click(screen.getByRole("radio", { name: "Review" }));
+    expect(screen.getByRole("radio", { name: "Review" })).toHaveAttribute(
       "aria-checked",
       "true",
     );
@@ -91,7 +94,7 @@ describe("the composer on a phone", () => {
     });
     fireEvent.click(screen.getByText("Send"));
     expect(onSend).toHaveBeenCalledWith("why?", [], true, {
-      mode: "ask",
+      mode: "review",
       webSearch: false,
     });
   });

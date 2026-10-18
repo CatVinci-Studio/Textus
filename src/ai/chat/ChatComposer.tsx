@@ -45,6 +45,7 @@ import {
 } from "../../ui/icons";
 import { Select } from "../../ui/Select";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
+import { useLatest } from "../../utils/hooks/useLatest";
 
 export interface ChatComposerLabels {
   /** Accessible name of the selection chip's remove button. */
@@ -60,18 +61,36 @@ export interface ChatComposerLabels {
   attachFile: string;
   /** The selection chip's text for a selection of `n` characters. */
   selectedChars: (n: number) => string;
+  /** Tooltip of the chip: a click scrolls the passage into view. */
+  showSelection: string;
   /** Suffix on an attachment chip whose text was cut at the extraction cap. */
   attachmentTruncated: string;
   /** Shown when an image is attached but the active provider has no vision. */
   attachmentNoVision: string;
-  modeAsk: string;
-  modeEdit: string;
-  modePlan: string;
+  modeWrite: string;
+  modeReview: string;
+  modeRevise: string;
   /** Accessible name of the phone's segmented mode control. */
   modeLabel: string;
   webSearch: string;
   /** The `/` and `@` pickers' words; English when left out. */
   picker?: PickerLabels;
+}
+
+/** What the selection chip tells the document: whether it shows (the
+ *  selection rides with the next message) and whether the pointer is on
+ *  it. */
+export interface SelectionChip {
+  shown: boolean;
+  hot: boolean;
+}
+
+/** The chip's link to the passage it stands for, kept highlighted in the
+ *  document while the chip shows (useChatSelectionHighlight). */
+export interface SelectionChipHandlers {
+  onChange: (chip: SelectionChip) => void;
+  /** The chip was clicked: bring the passage into view. */
+  onReveal: () => void;
 }
 
 let englishPicker: PickerLabels | null = null;
@@ -96,10 +115,13 @@ interface ChatComposerProps {
   /** The panel and the detached window: the mode picked carries over to
    *  the next conversation (last-mode.ts). Quick Ask keeps its own. */
   carryMode?: boolean;
-  /** Whether Plan is offered. Quick Ask, a command bar for changing the
-   *  text in front of you, leaves it out - planning belongs in the full
-   *  conversation. */
-  allowPlan?: boolean;
+  /** See SelectionChipHandlers. */
+  selectionChip?: SelectionChipHandlers;
+  /** The panel and the detached window: a selection rides with one
+   *  message, so sending uses it up and the chip (with the highlight) goes
+   *  until the next selection. Quick Ask's captured selection stays for its
+   *  whole conversation. */
+  selectionPerMessage?: boolean;
   /** Quick Ask: no attach or web-search buttons - those stay in the panel
    *  (an @-mention still attaches a project file). */
   compact?: boolean;
@@ -144,7 +166,8 @@ export function ChatComposer({
   labels,
   defaultMode,
   carryMode = false,
-  allowPlan = true,
+  selectionChip,
+  selectionPerMessage = false,
   compact = false,
   focusOnOpen = true,
   defaultWebSearch,
@@ -417,6 +440,7 @@ export function ChatComposer({
     const staged = attachments;
     setAttachments([]);
     onSend(message, staged, !selectionDropped, { mode, webSearch });
+    if (selectionPerMessage && selectedText) setDroppedSelection(selectedText);
     if (message !== typed) onSkillUsed?.();
   }
 
@@ -465,9 +489,9 @@ export function ChatComposer({
   }
 
   const modes: [AgentMode, string][] = [
-    ["ask", labels.modeAsk],
-    ["edit", labels.modeEdit],
-    ...(allowPlan ? [["plan", labels.modePlan] as [AgentMode, string]] : []),
+    ["write", labels.modeWrite],
+    ["review", labels.modeReview],
+    ["revise", labels.modeRevise],
   ];
 
   // On a phone, the composer's buttons leave focus - and so the keyboard -
@@ -479,6 +503,19 @@ export function ChatComposer({
     : {};
 
   const showSelection = !!selectedText && !selectionDropped;
+  const [chipHot, setChipHot] = useState(false);
+  const chipHandlers = useLatest(selectionChip);
+  const chip = { shown: showSelection, hot: showSelection && chipHot };
+  useEffect(() => {
+    chipHandlers.current?.onChange(chip);
+    // Reported by value; the handlers are read through a ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chip.shown, chip.hot, selectedText]);
+  // Gone with the composer: the panel closed, another tab came forward.
+  useEffect(
+    () => () => chipHandlers.current?.onChange({ shown: false, hot: false }),
+    [chipHandlers],
+  );
   const dropSelectionButton = (
     <button
       type="button"
@@ -571,7 +608,7 @@ export function ChatComposer({
           />
           <div className="inline-chat-toolbar">
             {phone ? (
-              // Two or three short words: they all fit in a row, and a
+              // Three short words: they all fit in a row, and a
               // segmented control shows which one is on and switches in one
               // tap, where a select is a trip through the system's picker.
               <div
@@ -631,8 +668,20 @@ export function ChatComposer({
               </>
             )}
             {selectedText && !selectionDropped && dockActions === undefined && (
-              <span className="inline-chat-selection-chip">
-                {labels.selectedChars([...selectedText].length)}
+              <span
+                className="inline-chat-selection-chip"
+                onMouseEnter={() => setChipHot(true)}
+                onMouseLeave={() => setChipHot(false)}
+              >
+                <button
+                  type="button"
+                  className="inline-chat-chip-label"
+                  title={labels.showSelection}
+                  {...holdFocus}
+                  onClick={() => selectionChip?.onReveal()}
+                >
+                  {labels.selectedChars([...selectedText].length)}
+                </button>
                 {dropSelectionButton}
               </span>
             )}

@@ -15,19 +15,20 @@ Grammar check uses only the writing conventions and the library's names.
 
 ## Glossary
 
-| Concept              | 中文              | 日本語                   | In one sentence                                                                           |
-| -------------------- | ----------------- | ------------------------ | ----------------------------------------------------------------------------------------- |
-| Project folder       | 项目文件夹        | プロジェクトフォルダー   | The folder Textus AI works in and may read.                                               |
-| `.textus/` folder    | `.textus/` 文件夹 | `.textus/` フォルダー    | The project's own settings, inside the project folder.                                    |
-| Style profile        | 文风档案          | 文体プロファイル         | How you write, so continuations and edits sound like you.                                 |
-| Learn my style       | 学习我的文风      | 文体を学習               | Drafts the style profile from samples of your writing.                                    |
-| Library              | 资料库            | ライブラリ               | Facts about people, places and terms that must stay consistent.                           |
-| Writing instructions | 写作要求          | 執筆の指示               | Standing rules sent with every conversation, in `agent.md`.                               |
-| AI remembered        | AI 记住的         | AIが覚えたこと           | What Textus AI keeps by itself from conversations: your requirements, preferences, style. |
-| Skills               | 技能              | スキル                   | Named, reusable instructions, called with `/name`.                                        |
-| Global config folder | 全局配置文件夹    | グローバル設定フォルダー | The app's folder for the writing instructions and skills that apply to every document.    |
-| Built-in skills      | 内置技能          | 組み込みスキル           | The 18 skills that come with the app; each can be turned off, customized or reset.        |
-| Writing conventions  | 写作规范          | 表記ルール               | The punctuation, spacing and number norms followed, per document language.                |
+| Concept              | 中文               | 日本語                   | In one sentence                                                                           |
+| -------------------- | ------------------ | ------------------------ | ----------------------------------------------------------------------------------------- |
+| Project folder       | 项目文件夹         | プロジェクトフォルダー   | The folder Textus AI works in and may read.                                               |
+| `.textus/` folder    | `.textus/` 文件夹  | `.textus/` フォルダー    | The project's own settings, inside the project folder.                                    |
+| Style profile        | 文风档案           | 文体プロファイル         | How you write, so continuations and edits sound like you.                                 |
+| Learn my style       | 学习我的文风       | 文体を学習               | Drafts the style profile from samples of your writing.                                    |
+| Library              | 资料库             | ライブラリ               | Facts about people, places and terms that must stay consistent.                           |
+| Writing instructions | 写作要求           | 執筆の指示               | Standing rules sent with every conversation, in `agent.md`.                               |
+| AI remembered        | AI 记住的          | AIが覚えたこと           | What Textus AI keeps by itself from conversations: your requirements, preferences, style. |
+| Skills               | 技能               | スキル                   | Named, reusable instructions, called with `/name`.                                        |
+| Global config folder | 全局配置文件夹     | グローバル設定フォルダー | The app's folder for the writing instructions and skills that apply to every document.    |
+| Built-in skills      | 内置技能           | 組み込みスキル           | The 18 skills that come with the app; each can be turned off, customized or reset.        |
+| Writing conventions  | 写作规范           | 表記ルール               | The punctuation, spacing and number norms followed, per document language.                |
+| Modes                | 写作 / 审阅 / 修订 | 執筆 / レビュー / 推敲   | What a conversation may do to the document: add text, nothing, or change it.              |
 
 ### Project folder
 
@@ -256,6 +257,27 @@ document language: a profile such as `zh-Hans-CN/fiction`, `en-GB/govuk` or
   `check_conventions` and `measure_text`, and each proposal's text is made
   to follow the P0 conventions the document already follows before the
   user sees it; completions are made to match the text before the cursor.
+
+### Not a file: modes
+
+**What a conversation may do to the document, picked in the composer:
+Write (写作) only adds new text, Review (审阅) only reads, answers and
+comments, Revise (修订) changes the text that is there.**
+
+- **Where:** the mode picker beside the composer (a segmented control on a
+  phone), in the order Write, Review, Revise. The panel starts in
+  **Settings > Textus AI > Textus AI Chat > Default mode** (Review by
+  default) and remembers the last pick; Quick Ask starts in Revise.
+- **Textus AI uses it:** the prompt's `---interaction mode---` section,
+  and the tools: Review gets no `propose_edit`, Write gets it with the
+  insertion actions only (append, insert_at_cursor, insert_after,
+  insert_before - after a selection, never over it), Revise with every
+  action. Every proposal is decided by the user either way
+  ([ai-proposals.md](ai-proposals.md)).
+- In code: `AgentMode` (`settings/SettingsContext.tsx`,
+  `ai/agent.rs`) with the values `write`, `review` and `revise`. 1.0 called
+  Review "Ask" and Revise "Edit" and had a Plan mode; stored values from
+  then are read as today's (`migrateAgentMode`), Plan as Review.
 
 ### Not a file: completion tone
 

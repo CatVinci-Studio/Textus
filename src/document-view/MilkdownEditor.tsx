@@ -9,6 +9,8 @@ import { useQuickAskDecorations } from "./useQuickAskDecorations";
 import { useEditorProposals } from "./useEditorProposals";
 import { useChatContextBridge } from "./useChatContextBridge";
 import { usePanelSelection } from "./usePanelSelection";
+import { useChatSelectionHighlight } from "./useChatSelectionHighlight";
+import type { SelectionChipHandlers } from "../ai/chat/ChatComposer";
 import { useQuickAskReview } from "./useQuickAskReview";
 import { useQuickAskControls } from "./useQuickAskControls";
 import { usePopupDismiss } from "./usePopupDismiss";
@@ -159,6 +161,7 @@ export function MilkdownEditor({
   });
   const { pendingEdits, conversation, quickConversation, showProposals } =
     proposals;
+  const windowChipRef = useRef<SelectionChipHandlers | null>(null);
 
   const {
     quickSendContext,
@@ -179,23 +182,40 @@ export function MilkdownEditor({
     isActiveRef,
     settings,
     t,
+    selectionChip: windowChipRef,
   });
 
   // The docked panel (ai/chat/panel/agent-panel.tsx): rendered by THIS editor only
   // while it is the active tab and the panel is open.
   const agentPanel = useAgentPanel();
   const panelContainer = isActive ? agentPanel.container : null;
+  // The panel, or the detached window while this is the tab it shows.
+  const chatTracking =
+    panelContainer !== null || (detachedChatLabel !== null && isActive);
   const { panelSelection, updatePanelSelection } = usePanelSelection(
     run,
-    panelContainer,
+    chatTracking,
   );
+  const { quickChipHandlers, panelChipHandlers } = useChatSelectionHighlight({
+    run,
+    inlineChat,
+    panelRange: panelSelection?.range ?? null,
+    tracking: chatTracking,
+  });
+  windowChipRef.current = panelChipHandlers;
 
   // A new selection becomes a new chip in the detached window and the
   // panel - "re-drag to highlight and it goes in" is the behaviour that
   // separates those surfaces from the in-document Quick Ask bar.
+  // Read once the transaction is in: the listener runs while it is being
+  // applied, before the view holds the new selection, and both read the
+  // view - the chip lagged a selection behind, and stayed away after a
+  // triple-click until the next transaction.
   onSelectionChangeRef.current = () => {
-    pushLiveContext();
-    updatePanelSelection();
+    queueMicrotask(() => {
+      pushLiveContext();
+      updatePanelSelection();
+    });
     grammarCaretRef.current();
   };
 
@@ -511,6 +531,7 @@ export function MilkdownEditor({
             conversation={conversation}
             pendingEdits={pendingEdits}
             selectedText={panelSelection?.text ?? null}
+            selectionChip={panelChipHandlers}
             panelSendContext={panelSendContext}
             showProposals={showProposals}
             onRevealProposal={revealProposal}
@@ -545,10 +566,11 @@ export function MilkdownEditor({
             docPath={filePath}
             workspaceRoot={settings.agentWorkspaceRoot || null}
             conversation={quickConversation}
-            // Edit-first: Quick Ask is opened on a passage to change it,
-            // and Ask mode (the general default) turned "shorten this"
-            // into a chat answer. Ask stays one click away in the picker.
-            defaultMode="edit"
+            // Revise-first: Quick Ask is opened on a passage to change it,
+            // and Review mode (the general default) turned "shorten this"
+            // into a chat answer. Review stays one click away in the picker.
+            defaultMode="revise"
+            selectionChip={quickChipHandlers}
             defaultWebSearch={settings.enableWebSearch}
             onSkillUsed={onSkillUsed}
             labels={chatLabels(t, settings.language)}

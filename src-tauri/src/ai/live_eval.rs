@@ -40,6 +40,7 @@ mod grammar_cases;
 mod grammar_matrix;
 mod harness;
 
+use crate::ai::agent::AgentMode;
 use harness::{auth, finish, par_map, Record};
 
 /// About 60k characters, past the full-document limit, so the model only
@@ -192,7 +193,7 @@ fn live_agent_caches_across_steps() {
     let ws = crate::ai::workspace::AgentWorkspace::default();
     let setup = harness::AgentSetup {
         model: &model,
-        mode: "edit",
+        mode: AgentMode::Revise,
         workspace: &ws,
         focus_heading: None,
         ui_language: "en",

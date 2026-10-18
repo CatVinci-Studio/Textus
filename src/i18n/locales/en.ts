@@ -434,9 +434,9 @@ type /name in a conversation to use one.
   providerCustom: "Custom Endpoint",
   agentModelLabel: "Chat Model",
   agentDefaultModeLabel: "Default mode",
-  agentModeAsk: "Ask",
-  agentModeEdit: "Edit",
-  agentModePlan: "Plan",
+  agentModeWrite: "Write",
+  agentModeReview: "Review",
+  agentModeRevise: "Revise",
   chatModeLabel: "Mode",
   agentPersonalizationGroupLabel: "Writing Instructions & Skills",
   agentAdvancedGroupLabel: "Advanced",
@@ -555,9 +555,6 @@ type /name in a conversation to use one.
   chatContinueInPanel: "Continue in the full conversation",
   chatExpandInline: "Expand answer",
   chatCollapseInline: "Collapse answer",
-  chatApprovePlan: "Approve and start",
-  chatExecutePlanRequest:
-    "The plan is approved. Carry it out now and propose the required document edits.",
   chatNewConversation: "New conversation",
   appMenu: "Menu",
   // The app menu itself. Rendered from src/ui/app-menu-model.ts, which

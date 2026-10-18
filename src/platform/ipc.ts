@@ -18,7 +18,7 @@ import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
 import type { SkillCategory } from "../ai/skills/builtin";
 import type { Lang } from "../i18n/langs";
 import type { GalleryTheme } from "../theme/theme-gallery";
-import type { ImageHost } from "../settings/SettingsContext";
+import type { AgentMode, ImageHost } from "../settings/SettingsContext";
 import { isDesktopApp, isIOSApp } from "./capabilities";
 import { iosFiles, isScopedUrl, newDocumentPath } from "./ios-files";
 
@@ -921,7 +921,7 @@ export const ai = {
      *  inlined into `message` by the caller. */
     images: ImageAttachment[];
     webSearch: boolean;
-    mode: "ask" | "edit" | "plan";
+    mode: AgentMode;
     model: string | null;
     requestId: string;
     /** Heading of the section the cursor/selection is in - embedded in full

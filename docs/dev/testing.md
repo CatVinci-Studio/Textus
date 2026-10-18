@@ -148,7 +148,7 @@ also needs the screen unlocked.
 An evaluation matrix for every AI feature, run through the app's own
 prompts, tools and agent loop against the real API: the agent (75 cases -
 eleven document languages, edits inside every Markdown construct, reviews,
-questions, plan mode, agent.md, style, library, skills, project files,
+questions, the three modes, agent.md, style, library, skills, project files,
 multi-turn follow-ups, a long document), inline completion (43 - every tone,
 language and block type, the cursor mid-word, candidates) and the grammar
 check (26 - every strictness level, real mistakes and correct text). Each

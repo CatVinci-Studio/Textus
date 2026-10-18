@@ -13,6 +13,7 @@ import { useDetachedChat } from "../ai/chat/window/useDetachedChat";
 import { readChatContext } from "../ai/chat/live-context";
 import type { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
 import type { SelectionTarget } from "../ai/revision/usePendingEdits";
+import type { SelectionChipHandlers } from "../ai/chat/ChatComposer";
 import type { Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
@@ -31,6 +32,7 @@ export function useChatContextBridge({
   isActiveRef,
   settings,
   t,
+  selectionChip,
 }: {
   run: EditorRunner;
   inlineChat: ReturnType<typeof useInlineChat>;
@@ -42,6 +44,9 @@ export function useChatContextBridge({
   isActiveRef: { readonly current: boolean };
   settings: Settings;
   t: Strings;
+  /** The highlight the window's selection chip drives
+   *  (useChatSelectionHighlight) - a ref, since it is made after this. */
+  selectionChip: { readonly current: SelectionChipHandlers | null };
 }) {
   const {
     pendingEdits,
@@ -134,7 +139,13 @@ export function useChatContextBridge({
     // closing: the exchange quietly becomes this document's conversation
     // again (the panel shows it next time), instead of a Quick Ask bar
     // popping up - in every tab, as it used to.
+    selectionChip: {
+      onChange: (chip) => selectionChip.current?.onChange(chip),
+      onReveal: () => selectionChip.current?.onReveal(),
+    },
     onReembed: (conversationId, turns, docPath) => {
+      // The window's chip went with it.
+      selectionChip.current?.onChange({ shown: false, hot: false });
       const mine =
         docPath !== null
           ? docPath === filePathRef.current

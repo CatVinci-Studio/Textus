@@ -2,6 +2,7 @@ import { emitTo } from "@tauri-apps/api/event";
 import { listenToThisWindow } from "../../../utils/tauri-events";
 import type { AgentTurn, EditProposal } from "../../types";
 import type { PendingStatus } from "../../revision/usePendingEdits";
+import type { SelectionChip } from "../ChatComposer";
 
 /**
  * The protocol between an editor window and its detached chat window.
@@ -42,6 +43,11 @@ export const CHAT_TO_EDITOR = {
    *  copy fresh would be pure waste - a send is the only moment it has to
    *  be exact. */
   requestContext: "chat:request-context",
+  /** The composer's selection chip showed, went or was pointed at: the
+   *  editor keeps the passage highlighted while it shows. */
+  selectionChip: "chat:selection-chip",
+  /** The selection chip was clicked: scroll the passage into view. */
+  revealSelection: "chat:reveal-selection",
 } as const;
 
 /** Rust -> every editor window: the set of open chat windows changed (one
@@ -115,6 +121,10 @@ export interface ProposalsMessage extends DocScopedMessage {
 
 export interface CallIdMessage extends DocScopedMessage {
   callId: string;
+}
+
+export interface SelectionChipMessage extends DocScopedMessage {
+  chip: SelectionChip;
 }
 
 /** Accept-all / reject-all carry no call id, but they are just as

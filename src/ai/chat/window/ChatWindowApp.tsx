@@ -366,6 +366,11 @@ export function ChatWindowApp() {
           }
           onAcceptAll={() => sendScoped(CHAT_TO_EDITOR.acceptAll, {})}
           onRejectAll={() => sendScoped(CHAT_TO_EDITOR.rejectAll, {})}
+          selectionChip={{
+            onChange: (chip) =>
+              sendScoped(CHAT_TO_EDITOR.selectionChip, { chip }),
+            onReveal: () => sendScoped(CHAT_TO_EDITOR.revealSelection, {}),
+          }}
         />
       </div>
     </div>

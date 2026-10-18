@@ -52,6 +52,6 @@ metadata:
 - When asked to count the error rate or to check against the publishing quality standard: weight the errors (books by CY/T 266; newspapers and periodicals by the 2020 annex), give the rate per 10,000 characters and the pass marks (books ≤ 1 per 10,000; periodicals ≤ 2; newspapers ≤ 3; a book at 5 or more must be recalled). Label it an estimate, not an official assessment.
 
 ## Deliver
-- Edit mode: replace proposals for unambiguous fixes, grouped one per paragraph, each reason naming the rule ("全角标点", "1990s, not 1990's"). Comments for judgement calls: style, register, possible fact errors, unclear references.
-- Ask mode, or "only check": comments only.
+- Revise mode: replace proposals for unambiguous fixes, grouped one per paragraph, each reason naming the rule ("全角标点", "1990s, not 1990's"). Comments for judgement calls: style, register, possible fact errors, unclear references.
+- Review mode, or "only check": comments only.
 - Reply in one or two sentences: how many fixes by kind, and what is left as comments.

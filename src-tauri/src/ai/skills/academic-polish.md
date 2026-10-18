@@ -45,6 +45,6 @@ metadata:
 - Touch quotations.
 
 ## Deliver
-- Edit mode: one replace per paragraph; one add_comment for each claim that needs evidence, a citation or a narrower scope, and for each reference you can't verify (mark it 【待核实】 in Chinese, "[check]" otherwise, in the comment, not in the text).
-- Ask mode: comments, and the revised paragraphs in the reply when asked.
+- Revise mode: one replace per paragraph; one add_comment for each claim that needs evidence, a citation or a narrower scope, and for each reference you can't verify (mark it 【待核实】 in Chinese, "[check]" otherwise, in the comment, not in the text).
+- Review mode: comments, and the revised paragraphs in the reply when asked.
 - Reply in one or two sentences on what changed and how many claims were flagged.

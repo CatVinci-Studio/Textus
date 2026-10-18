@@ -3,6 +3,7 @@ import type { AgentConversation } from "../useAgentConversation";
 import type { PendingStatus } from "../../revision/usePendingEdits";
 import type { EditProposal } from "../../types";
 import { ChatBody, type ChatBodyLabels } from "../ChatBody";
+import type { SelectionChipHandlers } from "../ChatComposer";
 import { CloseConfirmBar, type CloseConfirmLabels } from "../CloseConfirm";
 import { useQuickAskReveal } from "./useQuickAskReveal";
 import { useQuickAskDock } from "./quick-ask-dock";
@@ -40,6 +41,8 @@ interface InlineChatProps {
   conversation: AgentConversation;
   defaultMode: AgentMode;
   defaultWebSearch: boolean;
+  /** See ChatComposer's selectionChip. */
+  selectionChip?: SelectionChipHandlers;
   /** A message went out through a skill - see ChatComposer. */
   onSkillUsed?: () => void;
   labels: InlineChatLabels;
@@ -109,6 +112,7 @@ export function InlineChat({
   conversation,
   defaultMode,
   defaultWebSearch,
+  selectionChip,
   onSkillUsed,
   labels,
   onProposals,
@@ -224,6 +228,7 @@ export function InlineChat({
             onRejectFocused,
           }}
           dockActions={docked ? actions : undefined}
+          selectionChip={selectionChip}
           footer={
             confirm && (
               <CloseConfirmBar

@@ -9,7 +9,7 @@ use aicompat::agent::{run_agent_loop, AgentTurn, ImageAttachment, ProviderEvent,
 use aicompat::providers::{
     anthropic, custom, openai_api_key, openai_codex, openai_responses_compatible,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::future::Future;
 use std::path::Path;
 use std::pin::Pin;
@@ -241,7 +241,7 @@ fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -> String {
         None => String::new(),
     };
     format!(
-        "---project---\n{folder}\nWhat the app calls the things that shape your work, in its English UI: the project folder, whose .textus/ folder holds the project's own settings. The writing instructions: agent.md files in the global config folder and in .textus/, shown to you under ---user instructions--- headings and used only in conversations; the global ones open from Settings > {AI_NAME} > Writing Instructions (agent.md) > Edit agent.md, the project's from Edit project writing instructions in the project menu. Skills: reusable instructions the user calls with /name, or that you load when a request matches one, each one Markdown file - a name and a one-line description at the top, then the instructions. The app ships built-in skills, listed in Settings > {AI_NAME} > Built-in skills, where each has a switch to turn it off and Customize…, which copies it into the global config folder's skills/ and opens the copy to edit (Reset deletes the copy and brings the built-in back); the user's own skills go in .textus/skills/ or in the global config folder's skills/ (Settings > {AI_NAME} > Skills > Import Skill… copies a file there), and one with a built-in skill's name replaces it. The library: one file per person, place or term in .textus/library, an entry sent to you whenever its name or an alias appears in the user's message or the open document (aliases go on an `aliases:` line at the top of the entry); New library entry… in the project menu starts one. The style profile: .textus/style.md, sent to you as ---the author's style profile---; Learn my style from samples… in the project menu drafts it from the user's own writing (\"Learn my style\"), Create style profile starts an empty one, and once it exists Open style profile in the menu, or the Style chip next to the folder name, opens it. Writing conventions (Settings > {AI_NAME}, under Writing Assistance) picks the punctuation, spacing and number norms you, the grammar check and check_conventions follow - Automatic, or one profile such as en-GB/govuk for documents in that language; a `conventions:` line in the style profile's front matter overrides it for the project. The style profile and the library also shape completion, the grey suggestions as the user types; Enable AI completion in Settings > {AI_NAME}, under Writing Assistance, turns completion on or off, and Completion tone there sets its register. What you remember: what you keep with the remember tool, one small file each - the user's personal memories in the global config folder's memory/, the project's in .textus/memory/, facts about the work as library entries - shown with Undo under your reply and listed in the AI panel's Memory tab, where the user can edit, delete or move each one; Remember automatically in Settings > {AI_NAME} turns it on or off. The panel's modes are Ask, which only reads and comments, Edit, which can propose edits, and Plan, which writes a plan first; the user applies a proposal with Accept or drops it with Reject.{names}\nAsked how to do something in the app, answer in two to four plain sentences: what to use, where it is and what it does - for a skill, first a built-in skill that already does it (named as their UI names it) and Customize… to adapt it, before writing one from scratch - no headings or code blocks, no tips they didn't ask for, and no remarks about their document or their files."
+        "---project---\n{folder}\nWhat the app calls the things that shape your work, in its English UI: the project folder, whose .textus/ folder holds the project's own settings. The writing instructions: agent.md files in the global config folder and in .textus/, shown to you under ---user instructions--- headings and used only in conversations; the global ones open from Settings > {AI_NAME} > Writing Instructions (agent.md) > Edit agent.md, the project's from Edit project writing instructions in the project menu. Skills: reusable instructions the user calls with /name, or that you load when a request matches one, each one Markdown file - a name and a one-line description at the top, then the instructions. The app ships built-in skills, listed in Settings > {AI_NAME} > Built-in skills, where each has a switch to turn it off and Customize…, which copies it into the global config folder's skills/ and opens the copy to edit (Reset deletes the copy and brings the built-in back); the user's own skills go in .textus/skills/ or in the global config folder's skills/ (Settings > {AI_NAME} > Skills > Import Skill… copies a file there), and one with a built-in skill's name replaces it. The library: one file per person, place or term in .textus/library, an entry sent to you whenever its name or an alias appears in the user's message or the open document (aliases go on an `aliases:` line at the top of the entry); New library entry… in the project menu starts one. The style profile: .textus/style.md, sent to you as ---the author's style profile---; Learn my style from samples… in the project menu drafts it from the user's own writing (\"Learn my style\"), Create style profile starts an empty one, and once it exists Open style profile in the menu, or the Style chip next to the folder name, opens it. Writing conventions (Settings > {AI_NAME}, under Writing Assistance) picks the punctuation, spacing and number norms you, the grammar check and check_conventions follow - Automatic, or one profile such as en-GB/govuk for documents in that language; a `conventions:` line in the style profile's front matter overrides it for the project. The style profile and the library also shape completion, the grey suggestions as the user types; Enable AI completion in Settings > {AI_NAME}, under Writing Assistance, turns completion on or off, and Completion tone there sets its register. What you remember: what you keep with the remember tool, one small file each - the user's personal memories in the global config folder's memory/, the project's in .textus/memory/, facts about the work as library entries - shown with Undo under your reply and listed in the AI panel's Memory tab, where the user can edit, delete or move each one; Remember automatically in Settings > {AI_NAME} turns it on or off. The panel's modes are Write, which drafts new text into the document, Review, which only reads and comments, and Revise, which proposes changes to the text already there; the user applies a proposal with Accept or drops it with Reject.{names}\nAsked how to do something in the app, answer in two to four plain sentences: what to use, where it is and what it does - for a skill, first a built-in skill that already does it (named as their UI names it) and Customize… to adapt it, before writing one from scratch - no headings or code blocks, no tips they didn't ask for, and no remarks about their document or their files."
     )
 }
 
@@ -332,6 +332,30 @@ pub(crate) fn document_section(
     )
 }
 
+/// The conversation's mode, picked in the composer. Mirrors `AgentMode` in
+/// src/settings/SettingsContext.tsx. It decides what propose_edit may do
+/// (tools::builtin_tools) and what the prompt says the user is here for.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum AgentMode {
+    /// Reads, answers and comments: no propose_edit.
+    Review,
+    /// Changes the text that is there: every propose_edit action.
+    Revise,
+    /// Only adds new text: propose_edit limited to the insertion actions.
+    Write,
+}
+
+impl std::fmt::Display for AgentMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            AgentMode::Review => "review",
+            AgentMode::Revise => "revise",
+            AgentMode::Write => "write",
+        })
+    }
+}
+
 /// The static half of the layering: role + writing instructions + skill
 /// index (+ the document, tool-less) go into the system prompt; skill bodies
 /// and project files stay out of it and are pulled in dynamically through
@@ -340,7 +364,7 @@ pub(crate) fn build_instructions(
     workspace: &AgentWorkspace,
     document: &str,
     with_tools: bool,
-    mode: &str,
+    mode: AgentMode,
     // What the request is about (the user's message) - library entries are
     // picked by what it and the document mention.
     focus: &str,
@@ -351,29 +375,29 @@ pub(crate) fn build_instructions(
     let mut sections = vec![AGENT_ROLE.to_string()];
     let ui = UiNames::of(ui_language);
 
+    // The UI's names for the modes: told "read-only mode", the model
+    // called it that and never said how to get the edit made.
+    let named = |mode: &'static str, first: bool| match &ui {
+        Some(ui) if first => format!(
+            "{mode} mode ({} in their {} UI)",
+            ui.of_english(mode),
+            ui.language.english
+        ),
+        Some(ui) => format!("{mode} mode ({})", ui.of_english(mode)),
+        None => format!("{mode} mode"),
+    };
     sections.push(match mode {
-        "edit" => "---interaction mode: edit---\nCarry out the user's request. When document changes are needed, submit them through propose_edit so the user can review them before applying.".to_string(),
-        "plan" => "---interaction mode: plan---\nProduce a concrete, structured writing plan only - an outline, a revision plan, or the steps to get the document where the user wants it. You may research and inspect context, but do not call propose_edit and do not modify the document. Wait for the user to approve the plan in a later request.".to_string(),
-        // The UI's names for the modes: told "read-only mode", the model
-        // called it that and never said how to get the edit made.
-        _ => {
-            let (ask, edit) = match &ui {
-                Some(ui) => (
-                    format!(" ({} in their {} UI)", ui.of_english("Ask"), ui.language.english),
-                    format!(" ({})", ui.of_english("Edit")),
-                ),
-                None => (String::new(), String::new()),
-            };
-            format!("---interaction mode: ask---\nThe user is in Ask mode{ask}: answer, explain, discuss or research, and pin feedback to passages with add_comment; you can't change the document here. When they ask for a change anyway, give the new text in your reply and say that in Edit mode{edit} you can propose it for them to apply with one click.")
-        }
+        AgentMode::Review => format!("---interaction mode: review---\nThe user is in {}: answer, explain, discuss or research, and pin feedback to passages with add_comment; you can't change the document here. When they ask for a change anyway, give the new text in your reply and say that in {} you can propose it for them to apply with one click - or, for new text added to the document, in {}.", named("Review", true), named("Revise", false), named("Write", false)),
+        AgentMode::Revise => format!("---interaction mode: revise---\nThe user is in {}: carry out their request on the document - rewrite, tighten, fix, restructure, delete or add - and submit every document change through propose_edit so they can review it before applying.", named("Revise", true)),
+        AgentMode::Write => format!("---interaction mode: write---\nThe user is in {}: draft new text into the document - continue it, or add a paragraph, section, list, scene or dialogue - through propose_edit, which in this mode only adds text (append, insert_at_cursor, insert_after, insert_before); the user reviews each proposal before it is applied. Where it goes: with a <selected-text> block, right after the selection - insert_after with the selection's last sentence (or the whole selection) as `anchor` - never in place of it; otherwise, with a <cursor> block in a document that has text, insert_at_cursor; in an empty document, append. Questions and feedback still get a plain reply. You can't change or remove text that is already there in this mode: when the user asks for that, say it needs {}, and add nothing in its place.", named("Write", true), named("Revise", false)),
     });
 
     if with_tools {
         sections.push(
-            if mode == "edit" {
-                AGENT_TOOL_INSTRUCTIONS
-            } else {
+            if mode == AgentMode::Review {
                 AGENT_READ_ONLY_TOOL_INSTRUCTIONS
+            } else {
+                AGENT_TOOL_INSTRUCTIONS
             }
             .to_string(),
         );
@@ -749,7 +773,7 @@ pub async fn ai_agent_message(
     // `message` by the frontend; only images travel as their own parts.
     images: Vec<ImageAttachment>,
     web_search: bool,
-    mode: String,
+    mode: AgentMode,
     model: Option<String>,
     request_id: String,
     // Heading of the section the user is working in (see request_context).
@@ -789,7 +813,7 @@ async fn ai_agent_message_inner(
     message: String,
     images: Vec<ImageAttachment>,
     web_search: bool,
-    mode: String,
+    mode: AgentMode,
     model: Option<String>,
     focus_heading: Option<String>,
     ui_language: String,
@@ -853,11 +877,11 @@ async fn ai_agent_message_inner(
     let result = match entry.dialect {
         "openai-responses" => {
             let instructions =
-                build_instructions(&workspace, &document, true, &mode, &focus, &ui_language);
+                build_instructions(&workspace, &document, true, mode, &focus, &ui_language);
             let tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
-                mode == "edit",
+                mode,
                 workspace.remember,
             );
             let tool_specs = tools::tool_specs(&tools);
@@ -966,12 +990,12 @@ async fn ai_agent_message_inner(
         }
         "anthropic-messages" => {
             let instructions =
-                build_instructions(&workspace, &document, true, &mode, &focus, &ui_language);
+                build_instructions(&workspace, &document, true, mode, &focus, &ui_language);
             let auth = route::resolve_anthropic_auth(&app).await?;
             let tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
-                mode == "edit",
+                mode,
                 workspace.remember,
             );
             let tool_specs = tools::tool_specs(&tools);
@@ -1036,7 +1060,7 @@ async fn ai_agent_message_inner(
             let tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
-                mode == "edit",
+                mode,
                 workspace.remember,
             );
             let tool_specs = tools::tool_specs(&tools);
@@ -1051,7 +1075,7 @@ async fn ai_agent_message_inner(
                 proposed: Default::default(),
             };
             let instructions_with_tools =
-                build_instructions(&workspace, &document, true, &mode, &focus, &ui_language);
+                build_instructions(&workspace, &document, true, mode, &focus, &ui_language);
 
             // These providers expose server-side search through their
             // current Chat Completions compatibility layer. Other providers
@@ -1154,7 +1178,7 @@ async fn ai_agent_message_inner(
                         &workspace,
                         &document,
                         false,
-                        &mode,
+                        mode,
                         &focus,
                         &ui_language,
                     );
@@ -1172,7 +1196,7 @@ async fn ai_agent_message_inner(
         }
         _ => {
             let instructions =
-                build_instructions(&workspace, &document, false, &mode, &focus, &ui_language);
+                build_instructions(&workspace, &document, false, mode, &focus, &ui_language);
             flattened_chat_turn(
                 &app,
                 &provider,
@@ -1252,7 +1276,7 @@ mod tests {
         use std::collections::VecDeque;
 
         let document = "# Notes\n\n## Methods\n\nWe sampled ten sites.\n\n## Results\n\nAll good.";
-        let tools = tools::builtin_tools(false, false, true, false);
+        let tools = tools::builtin_tools(false, false, AgentMode::Revise, false);
         let conventions = crate::ai::rules::Conventions::default();
         let ctx = ToolContext {
             document,
@@ -1656,16 +1680,25 @@ mod tests {
         );
         // The system prompt carries it, the preference rule and the packs,
         // the same whatever the document.
-        let a = build_instructions(&ws, "# One", true, "edit", "hi", "en");
-        let b = build_instructions(&ws, "# Two\n\nOther text.", true, "edit", "other", "en");
+        let a = build_instructions(&ws, "# One", true, AgentMode::Revise, "hi", "en");
+        let b = build_instructions(
+            &ws,
+            "# Two\n\nOther text.",
+            true,
+            AgentMode::Revise,
+            "other",
+            "en",
+        );
         assert_eq!(a, b);
         assert!(a.contains("When a skill marked (project) or (yours) and an unmarked built-in skill both match a request, use the marked one."));
         assert!(a.contains("standards-zh-hant") && !a.contains("contract,"));
         // Nothing to offer, no index.
         let mut none = ws.clone();
         none.skills.iter_mut().for_each(|s| s.enabled = false);
-        assert!(!build_instructions(&none, "", true, "edit", "", "en")
-            .contains("---available skills---"));
+        assert!(
+            !build_instructions(&none, "", true, AgentMode::Revise, "", "en")
+                .contains("---available skills---")
+        );
     }
 
     #[test]
@@ -1706,14 +1739,15 @@ mod tests {
         // ones alone, and one the backend doesn't know of the same.
         assert_eq!(workspace_section(&too_broad, "xx"), text);
         // The tool-less fallback doesn't hear about file tools.
-        let prompt = build_instructions(&unsaved, "draft", false, "edit", "", "en");
+        let prompt = build_instructions(&unsaved, "draft", false, AgentMode::Revise, "", "en");
         assert!(!prompt.contains("---project---"));
-        let ask = build_instructions(&doc_folder, "draft", true, "ask", "", "en");
-        assert!(ask.contains("Ask mode:") && ask.contains("Edit mode you"));
-        let ask = build_instructions(&doc_folder, "draft", true, "ask", "", "ja");
+        let review = build_instructions(&doc_folder, "draft", true, AgentMode::Review, "", "en");
+        assert!(review.contains("Review mode:") && review.contains("Revise mode you"));
+        let review = build_instructions(&doc_folder, "draft", true, AgentMode::Review, "", "ja");
         assert!(
-            ask.contains("Ask mode (質問 in their Japanese UI)")
-                && ask.contains("Edit mode (編集)")
+            review.contains("Review mode (レビュー in their Japanese UI)")
+                && review.contains("Revise mode (推敲)")
+                && review.contains("Write mode (執筆)")
         );
     }
 
@@ -1791,7 +1825,7 @@ mod tests {
                 english,
                 "ui-names/{code}.txt names every line of en.txt, in its order"
             );
-            let prompt = build_instructions(&chosen, "draft", true, "ask", "", code);
+            let prompt = build_instructions(&chosen, "draft", true, AgentMode::Review, "", code);
             assert!(prompt.contains(&format!("\nEnglish | {}\n", language.native)));
             for (en, name) in &pairs {
                 assert!(
@@ -1807,7 +1841,7 @@ mod tests {
 
         // The labels the English description quotes, and those too short
         // to look up on their own, are exactly the strings' entries.
-        let prompt = build_instructions(&chosen, "draft", true, "ask", "", "en");
+        let prompt = build_instructions(&chosen, "draft", true, AgentMode::Review, "", "en");
         let en_ts = read("src/i18n/locales/en.ts");
         for label in [
             "Choose project folder…",
@@ -1862,12 +1896,21 @@ mod tests {
     #[test]
     fn interaction_mode_is_explicit_in_the_system_instructions() {
         let workspace = AgentWorkspace::default();
-        let plan = build_instructions(&workspace, "draft", true, "plan", "", "en");
-        assert!(plan.contains("interaction mode: plan"));
-        assert!(plan.contains("do not call propose_edit"));
+        let review = build_instructions(&workspace, "draft", true, AgentMode::Review, "", "en");
+        assert!(review.contains("interaction mode: review"));
+        assert!(review.contains("no document edit tool is available"));
 
-        let edit = build_instructions(&workspace, "draft", true, "edit", "", "en");
-        assert!(edit.contains("interaction mode: edit"));
+        let revise = build_instructions(&workspace, "draft", true, AgentMode::Revise, "", "en");
+        assert!(revise.contains("interaction mode: revise"));
+
+        // Write adds after a selection rather than replacing it, and sends
+        // a request to change what is there to Revise.
+        let write = build_instructions(&workspace, "draft", true, AgentMode::Write, "", "en");
+        assert!(write.contains("interaction mode: write"));
+        assert!(
+            write.contains("right after the selection") && write.contains("never in place of it")
+        );
+        assert!(write.contains("say it needs Revise mode"));
     }
 
     #[test]
@@ -1879,7 +1922,7 @@ mod tests {
             project_instructions: Some(project.into()),
             ..AgentWorkspace::default()
         };
-        let prompt = build_instructions(&both, "draft", true, "edit", "", "en");
+        let prompt = build_instructions(&both, "draft", true, AgentMode::Revise, "", "en");
         let global_at = prompt.find(global).unwrap();
         let project_at = prompt.find(project).unwrap();
         assert!(global_at < project_at, "global first, project after");
@@ -1898,7 +1941,7 @@ mod tests {
                 ..AgentWorkspace::default()
             },
         ] {
-            let prompt = build_instructions(&alone, "draft", true, "edit", "", "en");
+            let prompt = build_instructions(&alone, "draft", true, AgentMode::Revise, "", "en");
             assert!(prompt.contains("---user instructions---\nAlways reply in English."));
             assert!(!prompt.contains("---user instructions for this project"));
         }
@@ -1928,14 +1971,14 @@ mod tests {
             remember: true,
             ..AgentWorkspace::default()
         };
-        let prompt = build_instructions(&ws, "draft", true, "ask", "", "en");
+        let prompt = build_instructions(&ws, "draft", true, AgentMode::Review, "", "en");
         let rule = prompt.find("Global rule.").unwrap();
         let personal = prompt.find("Reply briefly.").unwrap();
         let project = prompt.find("Spell it colour.").unwrap();
         assert!(rule < personal && personal < project);
         assert!(prompt.contains("---remembering---"), "every mode");
         // Without tools there is no remember tool to talk about.
-        let flat = build_instructions(&ws, "draft", false, "ask", "", "en");
+        let flat = build_instructions(&ws, "draft", false, AgentMode::Review, "", "en");
         assert!(flat.contains("Reply briefly.") && !flat.contains("---remembering---"));
     }
 }

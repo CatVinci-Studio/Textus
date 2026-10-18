@@ -2,31 +2,16 @@ import { useEffect } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
-import { setChatSelection } from "../ai/chat/quick-ask/chat-selection-plugin";
 import { setQuickAskWidget } from "../ai/chat/quick-ask/quick-ask-widget-plugin";
 
-/** What Quick Ask draws in the document: the highlight over the passage it
- *  was opened on, and the zone widget its panel portals into. */
+/** What Quick Ask draws in the document: the zone widget its panel portals
+ *  into. The highlight over the passage it was opened on is
+ *  useChatSelectionHighlight's, shared with the AI panel. */
 export function useQuickAskDecorations(
   run: EditorRunner,
   inlineChat: ReturnType<typeof useInlineChat>,
   phone: boolean,
 ) {
-  // Keep the text the chat was opened over visibly marked for as long as
-  // the chat context lives (popup or detached window) - the native
-  // selection paint is gone the moment the composer takes focus.
-  // Only while the panel showing it is on screen: a detached or hidden
-  // Quick Ask left its old range highlighted while the window was talking
-  // about a different passage.
-  const chatRange = inlineChat.visible
-    ? (inlineChat.chatInfo?.range ?? null)
-    : null;
-  useEffect(() => {
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      view.dispatch(setChatSelection(view.state.tr, chatRange));
-    });
-  }, [chatRange, run]);
   // Shows/hides the Quick Ask zone widget. Keyed on `visible` alone (NOT
   // chatInfo.widgetPos) - once shown, the plugin remaps the widget's
   // position through edits on its own; re-running this on every chatInfo
