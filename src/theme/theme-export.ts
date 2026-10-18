@@ -12,12 +12,12 @@ const ORNAMENT_PREFIX =
  * switches those ornaments off, so an exported theme has to carry them
  * itself or it loses them on the way back in (#29) - and as real rules the
  * user can edit or delete each one. With `headingMarks` off the h3 bar and
- * h4 dot are left out, as they are on screen (#136).
+ * h4 dot are left out, as they are on screen (#136). `css` is for tests.
  */
-export function ornamentRules(
-  css: string = contentBaseCss,
-  { headingMarks = true }: { headingMarks?: boolean } = {},
-): string {
+export function ornamentRules({
+  headingMarks = true,
+  css = contentBaseCss,
+}: { headingMarks?: boolean; css?: string } = {}): string {
   const rules: string[] = [];
   const uncommented = css.replace(/\/\*[\s\S]*?\*\//g, "");
   for (const match of uncommented.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {

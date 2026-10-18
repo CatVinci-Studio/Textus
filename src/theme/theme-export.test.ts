@@ -18,13 +18,13 @@ describe("ornamentRules", () => {
     border-bottom: 1px solid var(--editor-border);
   }
 }`;
-    expect(ornamentRules(css)).toBe(
+    expect(ornamentRules({ css })).toBe(
       "#write h2 {\n  padding-bottom: 0.3em;\n  border-bottom: 1px solid var(--editor-border);\n}",
     );
   });
 
   it("carries every ornament content-base.css has (#29)", () => {
-    const rules = ornamentRules(contentBaseCss);
+    const rules = ornamentRules({ css: contentBaseCss });
     expect(rules).toContain("#write h2 {");
     expect(rules).toContain("#write h3 {");
     expect(rules).toContain("#write h4::before {");
@@ -35,7 +35,7 @@ describe("ornamentRules", () => {
   });
 
   it("leaves out the h3 bar and h4 dot when heading marks are off (#136)", () => {
-    const rules = ornamentRules(contentBaseCss, { headingMarks: false });
+    const rules = ornamentRules({ css: contentBaseCss, headingMarks: false });
     expect(rules).not.toContain("#write h3 {");
     expect(rules).not.toContain("#write h4::before {");
     expect(rules).toContain("#write h2 {");

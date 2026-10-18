@@ -107,7 +107,7 @@ ${typeRules}
 }
 
 /* Textus's ornaments - delete any you don't want */
-${ornamentRules(undefined, { headingMarks })}
+${ornamentRules({ headingMarks })}
 ${customCss.trim() ? `\n/* Custom CSS */\n${customCss}\n` : ""}`;
   const picked = await exportDoc.exportSaveDialog(
     "textus-theme.css",

@@ -502,7 +502,7 @@ utiliser une.
   enableMermaidLabel: "Diagrammes Mermaid",
   autoCloseMarksLabel: "Fermer automatiquement les marques de mise en forme",
   autoCloseMarksHint:
-    "Taper *, **, ~~, == ou ` ajoute sa marque de fermeture. Désactivé, vous la tapez vous-même ; un **texte** complet passe toujours en gras.",
+    "Taper *, **, ~~, == ou ` ajoute sa marque de fermeture. Désactivé, vous tapez vous-même la marque de fermeture, et la mise en forme s’applique alors.",
   copyTextModeLabel: "Copie vers d'autres apps",
   copyTextModeHint:
     "Les apps qui n'acceptent que du texte brut, comme WeChat, reçoivent ceci ; la mise en forme est conservée là où une app l'accepte.",
