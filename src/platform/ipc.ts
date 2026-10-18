@@ -17,6 +17,7 @@ import type {
 import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
 import type { SkillCategory } from "../ai/skills/builtin";
 import type { Lang } from "../i18n/langs";
+import type { GalleryTheme } from "../theme/theme-gallery";
 import { isDesktopApp, isIOSApp } from "./capabilities";
 import { iosFiles, isScopedUrl, newDocumentPath } from "./ios-files";
 
@@ -361,8 +362,9 @@ export const links = {
    *  one, from the top. */
   openTutorialsPage: (language: Lang, clip?: string) =>
     call<void>("open_tutorials_page", { language, clip: clip ?? null }),
-  /** Settings › General › About Textus's links, by name. */
-  openAboutLink: (page: "github" | "discord" | "qq") =>
+  /** Settings › General › About Textus's links, and the theme gallery's
+   *  website (Browse themes, when it can't be reached), by name. */
+  openAboutLink: (page: "github" | "discord" | "qq" | "themes") =>
     call<void>("open_about_link", { page }),
 };
 
@@ -406,6 +408,15 @@ export const themes = {
   loadThemeCss: (id: string, variant: "light" | "dark") =>
     call<string | null>("load_theme_css", { id, variant }),
   deleteTheme: (id: string) => call<void>("delete_theme", { id }),
+};
+
+/** The public theme gallery (src-tauri/src/commands/theme_gallery.rs). A
+ *  file is named by its path in the gallery repository, never by URL. */
+export const themeGallery = {
+  catalog: () => call<GalleryTheme[]>("theme_gallery_catalog"),
+  css: (path: string) => call<string>("theme_gallery_css", { path }),
+  /** A screenshot, as a `data:` URL. */
+  preview: (path: string) => call<string>("theme_gallery_preview", { path }),
 };
 
 // ---------------------------------------------------------------------------

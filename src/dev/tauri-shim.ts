@@ -298,6 +298,73 @@ export function installDevTauriShim(): void {
     return null;
   }
 
+  // The saved theme stylesheets of commands/themes.rs and the theme gallery
+  // of commands/theme_gallery.rs, in memory. `window.__devThemeGallery` is
+  // the gallery - `{ offline, themes, files: {path: css or data URL} }`,
+  // which a test changes to publish an update or go offline - and
+  // `window.__devThemeFiles` what was saved.
+  const themeFiles = new Map<string, string>();
+  w.__devThemeFiles = themeFiles;
+  const gallery = {
+    offline: false,
+    themes: [] as Record<string, unknown>[],
+    files: {} as Record<string, string>,
+  };
+  w.__devThemeGallery = gallery;
+  for (const [id, name, bg, text, accent] of [
+    ["paper-mint", "Paper Mint", "#eef7f1", "#183a2c", "#1f6f50"],
+    ["dusk", "Dusk", "#23202b", "#ece6f2", "#e0b26b"],
+  ]) {
+    gallery.themes.push({
+      id,
+      name,
+      author: "dev-shim",
+      description: `A canned theme from the dev shim's gallery.`,
+      license: "MIT",
+      source: "https://github.com/CatVinci-Studio/textus-themes",
+      created: "2026-10-17T00:00:00Z",
+      updated: "2026-10-17T00:00:00Z",
+      css: `themes/${id}/theme.css`,
+      previews: [`themes/${id}/preview.png`],
+    });
+    gallery.files[`themes/${id}/theme.css`] =
+      `:root { --editor-bg: ${bg}; --editor-text: ${text}; --editor-accent: ${accent}; }`;
+    gallery.files[`themes/${id}/preview.png`] =
+      `data:image/svg+xml,${encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="100"><rect width="160" height="100" fill="${bg}"/><rect x="16" y="18" width="80" height="10" fill="${accent}"/><rect x="16" y="40" width="128" height="6" fill="${text}" opacity=".4"/></svg>`,
+      )}`;
+  }
+  function themeCommand(
+    cmd: string,
+    args: Record<string, unknown> = {},
+  ): Promise<unknown> | null {
+    switch (cmd) {
+      case "save_theme_css":
+        themeFiles.set(`${args.id}/${args.variant}`, String(args.css));
+        return Promise.resolve(null);
+      case "load_theme_css":
+        return Promise.resolve(
+          themeFiles.get(`${args.id}/${args.variant}`) ?? null,
+        );
+      case "delete_theme":
+        for (const key of [...themeFiles.keys()])
+          if (key.startsWith(`${args.id}/`)) themeFiles.delete(key);
+        return Promise.resolve(null);
+      case "theme_gallery_catalog":
+      case "theme_gallery_css":
+      case "theme_gallery_preview": {
+        if (gallery.offline) return Promise.reject("error sending request");
+        if (cmd === "theme_gallery_catalog")
+          return Promise.resolve(gallery.themes);
+        const file = gallery.files[String(args.path)];
+        return file === undefined
+          ? Promise.reject("the gallery answered 404 Not Found")
+          : Promise.resolve(file);
+      }
+    }
+    return null;
+  }
+
   // The skill list of ai::workspace and Settings' commands for the
   // built-ins, in memory: the 18 built-ins, one skill of the user's own,
   // and what Customize…/Reset/the switches did. `window.__devSkills`
@@ -456,6 +523,8 @@ export function installDevTauriShim(): void {
       if (stored) return stored;
       const skill = skillCommand(cmd, args as Record<string, unknown>);
       if (skill) return skill;
+      const theme = themeCommand(cmd, args as Record<string, unknown>);
+      if (theme) return theme;
       // A canned suggestion instead of null: lets ghost-text rendering (and
       // the tour's completion lesson) be smoke-tested in the browser -
       // null would make the manual trigger path throw an error dialog.

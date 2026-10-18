@@ -26,6 +26,7 @@ import { ChevronIcon, CloseIcon } from "../ui/icons";
 import { CliCommandSection, LevisImportSection } from "./sections/general";
 import { links } from "../platform/ipc";
 import { ThemeSection } from "./sections/theme";
+import { ThemeGallerySection } from "./sections/theme-gallery";
 import { ProviderListPanel } from "./sections/providers";
 import {
   AgentModelSection,
@@ -81,6 +82,8 @@ interface SettingsPanelProps {
 
 export type Category = "general" | "editor" | "ai" | "shortcuts" | "privacy";
 
+type Subpage = "about" | "themes";
+
 function SettingsGroup({
   title,
   children,
@@ -118,9 +121,10 @@ export function SettingsPanel({
 }: SettingsPanelProps) {
   const { settings, setSettings, t } = useSettings();
   const [category, setCategory] = useState<Category>("general");
-  // General › About Textus: a page of its own inside General, with a way
-  // back, on the desktop and the phone alike.
-  const [aboutOpen, setAboutOpen] = useState(false);
+  // A page of its own inside a category, with a way back, on the desktop
+  // and the phone alike: General › About Textus, Editor & Appearance ›
+  // Browse themes.
+  const [subpage, setSubpage] = useState<Subpage | null>(null);
   // Closing Settings on a phone leaves the keyboard down: the user is
   // going back to the page, not necessarily to typing.
   const modal = useModalDialog(onClose, true, undefined, false);
@@ -215,7 +219,7 @@ export function SettingsPanel({
           <SettingsGroup title={t.generalSystemLabel}>
             {canInstallCliCommand && <CliCommandSection t={t} />}
             <LevisImportSection t={t} lang={settings.language} />
-            <HelpRow label={t.aboutTextus} onOpen={() => setAboutOpen(true)} />
+            <HelpRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
           </SettingsGroup>
         </>
       )}
@@ -223,7 +227,15 @@ export function SettingsPanel({
       {c === "editor" && (
         <>
           <SettingsGroup title={t.navTheme}>
-            <ThemeSection t={t} />
+            <ThemeSection
+              t={t}
+              browseRow={
+                <HelpRow
+                  label={t.themeGalleryBrowse}
+                  onOpen={() => setSubpage("themes")}
+                />
+              }
+            />
             <SettingRow label={t.contentWidthLabel}>
               <Select
                 className="settings-select"
@@ -630,7 +642,7 @@ export function SettingsPanel({
                 className={`settings-nav-item ${category === c.id ? "settings-nav-item-active" : ""}`}
                 onClick={(e) => {
                   setCategory(c.id);
-                  setAboutOpen(false);
+                  setSubpage(null);
                   // On a phone the tabs are one row that scrolls sideways;
                   // in a long language the chosen one can be half out of
                   // view.
@@ -645,22 +657,33 @@ export function SettingsPanel({
             ))}
           </nav>
 
-          {aboutOpen ? (
+          {subpage ? (
             <div
               className="settings-content"
-              key="about"
+              key={subpage}
               role="region"
-              aria-label={t.navAbout}
+              aria-label={
+                subpage === "about" ? t.navAbout : t.themeGalleryBrowse
+              }
             >
               <button
                 type="button"
                 className="text-button settings-back-button"
-                onClick={() => setAboutOpen(false)}
+                onClick={() => setSubpage(null)}
               >
                 <ChevronIcon className="settings-back-chevron" />
-                {t.navGeneral}
+                {categories.find((c) => c.id === category)?.label}
               </button>
-              <AboutSection t={t} />
+              {subpage === "about" ? (
+                <AboutSection t={t} />
+              ) : (
+                <>
+                  <h1 className="settings-category-title">
+                    {t.themeGalleryBrowse}
+                  </h1>
+                  <ThemeGallerySection t={t} />
+                </>
+              )}
             </div>
           ) : (
             <div

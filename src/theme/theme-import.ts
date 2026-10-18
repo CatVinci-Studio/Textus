@@ -1,4 +1,5 @@
-import { fs } from "../platform/ipc";
+import { fs, themes } from "../platform/ipc";
+import type { UserThemeMeta } from "../settings/SettingsContext";
 
 /// Typora theme files commonly `@import` a base stylesheet from the same
 /// theme folder (e.g. `phycat-orange.css` importing `./phycat/phycat.light.css`)
@@ -111,4 +112,29 @@ async function inlineFile(path: string, seen: Set<string>): Promise<string> {
 /// into a `<style>` tag at runtime.
 export async function importThemeCss(path: string): Promise<string> {
   return inlineFile(path, new Set());
+}
+
+/// Saves a self-contained stylesheet as a user theme - a new one, or over
+/// the theme `replacing` names (a gallery theme's update) - and returns its
+/// settings entry, for `withUserTheme`. Import CSS… and Browse themes both
+/// install through here.
+export async function saveUserTheme(
+  css: string,
+  meta: Omit<UserThemeMeta, "id" | "hasDark">,
+  replacing?: string,
+): Promise<UserThemeMeta> {
+  const id = replacing ?? `user-${crypto.randomUUID()}`;
+  await themes.saveThemeCss(id, "light", css);
+  return { ...meta, id, hasDark: false };
+}
+
+/// `userThemes` with `meta` in it: in its old place when it replaces a
+/// theme, at the end when it is new.
+export function withUserTheme(
+  list: UserThemeMeta[],
+  meta: UserThemeMeta,
+): UserThemeMeta[] {
+  return list.some((th) => th.id === meta.id)
+    ? list.map((th) => (th.id === meta.id ? meta : th))
+    : [...list, meta];
 }
