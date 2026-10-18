@@ -138,7 +138,38 @@ para usar una.
   memoryLibraryEmpty: `Personas, lugares, términos: añádelos a la biblioteca y ${AI_NAME} los recordará.`,
   memoryInstructionsEmpty: `Aún no hay instrucciones. Escribe las reglas que ${AI_NAME} debe seguir siempre.`,
   memoryNeedsSave: `Guarda este documento y ${AI_NAME} conservará tu estilo, tu biblioteca y tus instrucciones en su carpeta.`,
+  memoryRemembered: "Lo que recuerda la IA",
+  memoryRememberedPersonal: "Para todos los proyectos",
+  memoryRememberedProject: "Este proyecto",
+  memoryRememberedEmpty: `Nada todavía. Dile a ${AI_NAME} lo que siempre quieres y lo recordará para la próxima vez.`,
+  memoryRememberOff: `Recordar automáticamente está desactivado (Ajustes › ${AI_NAME}): ${AI_NAME} no guarda nada nuevo.`,
+  memoryKindRequirement: "Requisito",
+  memoryKindPreference: "Preferencia",
+  memoryKindStyle: "Estilo",
+  memoryKindFact: "Dato",
+  memoryFrom: "de «{title}»",
+  memoryNotSent: "No se envía",
+  memoryDelete: "Eliminar",
+  memoryDeleteConfirm: `¿Eliminar este recuerdo? ${AI_NAME} no volverá a usarlo.`,
+  memoryDeleteEntryConfirm:
+    "¿Eliminar la entrada de la biblioteca «{name}» y su archivo?",
+  memoryUsedInConversation: "Usado en esta conversación",
+  memoryNearCap:
+    "Los recuerdos ocupan {used} de {cap} caracteres. Por encima, los más antiguos dejan de enviarse.",
+  memoryOverCap:
+    "Algunos recuerdos antiguos ({n}) no caben en {cap} caracteres y no se envían. Elimina o acorta algunos.",
+  memoryLibraryLeftOut:
+    "Mencionados pero no enviados, por superar el límite de la biblioteca de {cap} caracteres: {names}.",
   memoryConvertLevis: "Convertir los datos de Levis",
+  memoryChipSaved: "Recordado: {text} ({scope})",
+  memoryScopeProject: "proyecto",
+  memoryScopePersonal: "personal",
+  memoryChipUndo: "Deshacer",
+  memoryMakePersonal: "Hacer personal",
+  memoryMakeProject: "Pasar al proyecto",
+  memoryChipUndone: "Deshecho. Ya no se recuerda.",
+  memoryActionFailed:
+    "No ha funcionado. Vuelve a intentarlo en la pestaña Memoria.",
   levisProjectTitle: "Datos de proyecto de Levis",
   levisProjectText:
     "Este proyecto tiene datos de Levis (estilo, biblioteca, instrucciones de escritura, habilidades). ¿Convertirlos al formato de Textus?",
@@ -146,6 +177,9 @@ para usar una.
   levisProjectLater: "Ahora no",
   levisProjectDone:
     "Convertido: {n} archivos copiados en .textus/. La carpeta .levis/ queda como estaba.",
+  rememberAutomaticallyLabel: "Recordar automáticamente",
+  rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en la pestaña Memoria.`,
+  toolRemember: "Recordando esto",
   agentActionInsertAtCursor: "Insertar en el cursor",
   commentLocate: "Mostrar en el documento",
   commentNotFound: "Ese fragmento ya no está en el documento.",

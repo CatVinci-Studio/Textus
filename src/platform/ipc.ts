@@ -577,6 +577,55 @@ export interface LibraryEntry {
   /** Relative to the project root. */
   file: string;
   body: string;
+  /** Set on an entry Textus AI wrote (ai::memory) - also listed under "AI
+   *  remembered". */
+  remembered: Remembered | null;
+}
+
+/** Where and when Textus AI remembered something - `Remembered` in
+ *  src-tauri/src/ai/memory.rs. */
+export interface Remembered {
+  created: string;
+  updated: string;
+  conversation: string | null;
+  title: string | null;
+  document: string | null;
+}
+
+/** One thing Textus AI remembered by itself - `Memory` in ai/memory.rs.
+ *  `id` is `<scope>/memory/<file stem>`. */
+export interface Memory {
+  id: string;
+  scope: MemoryScope;
+  kind: "requirement" | "preference" | "style";
+  text: string;
+  /** Absolute path, for Edit. */
+  file: string;
+  remembered: Remembered;
+  /** Whether it fits the prompt's budget and so goes with requests. */
+  included: boolean;
+}
+
+export type MemoryScope = "project" | "personal";
+
+/** Every memory for a document, personal first - `Memories` in
+ *  ai/memory.rs. `chars` of the included ones, of `cap`. */
+export interface Memories {
+  items: Memory[];
+  chars: number;
+  cap: number;
+}
+
+/** Which library entries reached Textus AI - `LibraryUse` in
+ *  ai/project.rs: the entries' `file`s, those that came up but didn't fit,
+ *  and whether that was the last request (or the document's text alone,
+ *  before any). */
+export interface LibraryUse {
+  included: string[];
+  leftOut: string[];
+  lastRequest: boolean;
+  /** The limit per request, in characters. */
+  cap: number;
 }
 
 /** What shapes Textus AI for one document - see docs/design/ai-concepts.md. */
@@ -596,6 +645,10 @@ export interface AgentWorkspaceInfo {
   /** What the style profile's front matter sets for the writing
    *  conventions (`conventions:` and option keys) - ai::rules::profile. */
   conventions?: ProjectConventions;
+  /** What Textus AI remembered by itself, personal and the project's. */
+  memories: Memories;
+  /** Settings > Textus AI > Remember automatically. */
+  remember: boolean;
   /** The project has a Levis project's `.levis/` with files `.textus/`
    *  lacks - offered for conversion (ai::levis_project). */
   levis_project: boolean;
@@ -877,6 +930,9 @@ export const ai = {
     /** The UI language: the agent is given that UI's names for the app's
      *  concepts and controls (agent.rs, UiNames). */
     uiLanguage?: string;
+    /** The conversation, recorded with what Textus AI remembers in it
+     *  (`Source` in ai/memory.rs). */
+    conversation?: { id: string; title: string };
     /** Live fragments while the request runs - see StreamEvent. */
     onEvent?: (event: StreamEvent) => void;
   }) => {
@@ -944,6 +1000,33 @@ export const ai = {
       template,
     }),
   pickTextFiles: () => call<string[]>("pick_text_files"),
+  /** Undoes a remember call (ai::memory): deletes what it created, or
+   *  writes back `previous`, the file before it updated it. */
+  memoryUndo: (
+    docPath: string | null,
+    workspaceRoot: string | null,
+    id: string,
+    previous: string | null,
+  ) => call<void>("memory_undo", { docPath, workspaceRoot, id, previous }),
+  /** Moves a memory to the other scope; returns its new id. */
+  memoryMove: (
+    docPath: string | null,
+    workspaceRoot: string | null,
+    id: string,
+    scope: MemoryScope,
+  ) => call<string>("memory_move", { docPath, workspaceRoot, id, scope }),
+  /** Deletes a memory or a library entry (`project/library/<stem>`). */
+  memoryDelete: (
+    docPath: string | null,
+    workspaceRoot: string | null,
+    id: string,
+  ) => call<void>("memory_delete", { docPath, workspaceRoot, id }),
+  /** The library entries the last request for the document carried. */
+  libraryUse: (
+    docPath: string | null,
+    workspaceRoot: string | null,
+    document: string,
+  ) => call<LibraryUse>("library_use", { docPath, workspaceRoot, document }),
   /** Copies a Levis project's `.levis/` into `.textus/` (never moves or
    *  deletes it); returns how many files were copied. */
   convertLevisProject: (docPath: string | null, workspaceRoot: string | null) =>

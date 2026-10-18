@@ -387,6 +387,9 @@ test.describe("connected", () => {
         root: "/notes",
         style: "---\nconventions: en\n---\n# Style\n\n- Short sentences\n",
         library: [],
+        memories: { items: [], chars: 0, cap: 4000 },
+        remember: true,
+        levis_project: false,
       },
     });
     const memory = lesson(page, "Grows over time");

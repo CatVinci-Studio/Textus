@@ -179,6 +179,13 @@ pub struct AgentWorkspace {
     /// The writing conventions the style profile's front matter sets
     /// (`conventions: zh-Hans-CN/fiction`, option keys) - rules::profile.
     pub conventions: crate::ai::rules::ProjectConventions,
+    /// What Textus AI remembered by itself, personal and the project's
+    /// (ai::memory), with which of them fit in the prompt.
+    pub memories: crate::ai::memory::Memories,
+    /// Whether Textus AI may remember things by itself: the `remember`
+    /// tool is offered only then (Settings > Textus AI > Remember
+    /// automatically, settings.json's `rememberAutomatically`).
+    pub remember: bool,
     /// The project folder has a Levis project's `.levis/` with files its
     /// `.textus/` lacks: the project bar offers to convert it
     /// (ai::levis_project).
@@ -212,7 +219,7 @@ pub enum RootSource {
     TooBroad,
 }
 
-fn global_agent_dir(app: &AppHandle) -> Result<PathBuf, String> {
+pub(crate) fn global_agent_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
         .app_config_dir()
         .map_err(|e| e.to_string())
@@ -701,12 +708,15 @@ pub fn load(
     doc_path: Option<&str>,
     root_override: Option<&str>,
 ) -> AgentWorkspace {
-    load_layers(
-        global_agent_dir(app).ok().as_deref(),
-        doc_path,
-        root_override,
-        &disabled_builtin_skills(app),
-    )
+    AgentWorkspace {
+        remember: crate::ai::memory::remember_enabled(app),
+        ..load_layers(
+            global_agent_dir(app).ok().as_deref(),
+            doc_path,
+            root_override,
+            &disabled_builtin_skills(app),
+        )
+    }
 }
 
 /// [`load`] with the global layer's folder given directly and no built-in
@@ -776,6 +786,7 @@ pub(crate) fn load_layers(
             push_layer_skill(&mut ws.skills, skill);
         }
     }
+    ws.memories = crate::ai::memory::MemoryDirs::new(global_dir, root.as_deref()).load();
 
     // A copy made by Customize… is still that built-in as far as the
     // switch in Settings goes: turning the built-in off turns the copy off.
@@ -907,14 +918,20 @@ const WINDOWS_RESERVED_NAMES: &[&str] = &[
 
 /// A file stem for a skill named `name`. The name comes from the imported
 /// file's frontmatter, i.e. from whoever wrote that file: `name: ../../x`
-/// must not become a path. Keeps letters (any script), digits, `-` and `_`,
-/// turns everything else - separators, dots, control characters - into
-/// `-`, and caps the length well under any filesystem's limit - counted in
-/// bytes, which is what that limit counts (255 on most): a Chinese or
-/// Japanese character takes three, and the atomic writer's temp name adds
-/// about 35 more.
+/// must not become a path - see safe_file_stem.
 fn skill_file_stem(name: &str) -> String {
-    const MAX_STEM_BYTES: usize = 120;
+    safe_file_stem(name, "skill", 120)
+}
+
+/// A file stem made from text someone else chose (a skill's name, what
+/// Textus AI remembered): keeps letters (any script), digits, `-` and `_`,
+/// turns everything else - separators, dots, control characters - into
+/// `-`, and caps the length at `max_bytes`, well under any filesystem's
+/// limit - counted in bytes, which is what that limit counts (255 on
+/// most): a Chinese or Japanese character takes three, and the atomic
+/// writer's temp name adds about 35 more. `fallback` stands in for an
+/// empty stem, and is appended to a name Windows refuses.
+pub(crate) fn safe_file_stem(name: &str, fallback: &str, max_bytes: usize) -> String {
     let mut stem = String::new();
     for c in name.chars() {
         let c = if c.is_alphanumeric() || c == '-' || c == '_' {
@@ -922,16 +939,16 @@ fn skill_file_stem(name: &str) -> String {
         } else {
             '-'
         };
-        if stem.len() + c.len_utf8() > MAX_STEM_BYTES {
+        if stem.len() + c.len_utf8() > max_bytes {
             break;
         }
         stem.push(c);
     }
     let stem = stem.trim_matches('-');
     if stem.is_empty() {
-        "skill".to_string()
+        fallback.to_string()
     } else if WINDOWS_RESERVED_NAMES.contains(&stem.to_lowercase().as_str()) {
-        format!("{stem}-skill")
+        format!("{stem}-{fallback}")
     } else {
         stem.to_string()
     }

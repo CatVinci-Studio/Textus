@@ -175,6 +175,14 @@ export function useAgentConversation(
         mode: options.mode,
         focusHeading: options.focusHeading ?? null,
         uiLanguage: uiLanguage.current,
+        // Recorded with what Textus AI remembers in this exchange.
+        conversation: {
+          id: conversationId,
+          title: conversationTitle([
+            ...history,
+            { kind: "User", text: trimmed },
+          ]),
+        },
         model: model || null,
         requestId,
         onEvent: (event) => {

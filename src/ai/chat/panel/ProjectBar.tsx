@@ -16,8 +16,19 @@ import { APP_NAME } from "../../../i18n/names";
 import { ChevronIcon, FolderIcon } from "../../../ui/icons";
 import { ActionSheet, type ActionSheetItem } from "../../../ui/ActionSheet";
 import { usePhoneLayout } from "../../../ui/usePhoneLayout";
-import { MemorySections } from "./MemoryView";
+import {
+  libraryEntryId,
+  MemorySections,
+  RememberedSection,
+} from "./MemoryView";
+import { showConfirm } from "../../../ui/app-dialog";
 import { convertLevisProject, offerLevisConversion } from "./levis-project";
+import type {
+  LibraryEntry,
+  LibraryUse,
+  Memory,
+  MemoryScope,
+} from "../../../platform/ipc";
 
 function openInTab(path: string) {
   window.dispatchEvent(
@@ -89,6 +100,22 @@ export function ProjectBar({
       .catch(() => setInfo(null));
   }, [docPath, workspaceRoot]);
   useEffect(reload, [reload]);
+  // The Memory tab's "used" marks: which library entries Rust sent.
+  const [libraryUse, setLibraryUse] = useState<LibraryUse | null>(null);
+  useEffect(() => {
+    if (!memory || !info?.root) return;
+    let live = true;
+    // Once typing rests: the text is only the guess before any request.
+    const timer = setTimeout(() => {
+      ai.libraryUse(docPath, workspaceRoot, documentText)
+        .then((use) => live && setLibraryUse(use))
+        .catch(() => live && setLibraryUse(null));
+    }, 300);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [memory, info, docPath, workspaceRoot, documentText]);
   // A Levis project's .levis/: asked once whether to convert it.
   const levisRoot = info?.levis_project ? info.root : null;
   useEffect(() => {
@@ -109,7 +136,8 @@ export function ProjectBar({
 
   const root = info?.root ?? null;
 
-  async function run(label: string, work: () => Promise<void>) {
+  /** `label`: what to show while it runs; null for something instant. */
+  async function run(label: string | null, work: () => Promise<void>) {
     setMenuOpen(false);
     setBusy(label);
     setMessage(null);
@@ -205,16 +233,58 @@ export function ProjectBar({
       openInTab(await ai.ensureGlobalAgentMd(t.agentInstructionsTemplate));
     });
 
+  /** Deletes a memory or library entry once the user confirms. */
+  const remove = async (id: string, question: string) => {
+    const ok = await showConfirm(question, {
+      okLabel: t.memoryDelete,
+      cancelLabel: t.cancel,
+      danger: true,
+    });
+    if (ok) await run(null, () => ai.memoryDelete(docPath, workspaceRoot, id));
+  };
+
+  /** What the Memory tab does with memories and library entries. */
+  const memoryActions = {
+    onOpenFile: openInTab,
+    onOpenEntry: (entry: LibraryEntry) =>
+      root &&
+      openInTab(
+        `${root.replace(/[\\/]+$/, "")}/${entry.file.replace(/^[\\/]+/, "")}`,
+      ),
+    onDeleteMemory: (m: Memory) => void remove(m.id, t.memoryDeleteConfirm),
+    onDeleteEntry: (entry: LibraryEntry) =>
+      void remove(
+        libraryEntryId(entry),
+        t.memoryDeleteEntryConfirm.replace("{name}", entry.name),
+      ),
+    onMoveMemory: (m: Memory, scope: MemoryScope) =>
+      void run(null, async () => {
+        await ai.memoryMove(docPath, workspaceRoot, m.id, scope);
+      }),
+  };
+
   if (info === undefined) return null;
   // An unsaved draft simply has no project yet - nothing to say about it
-  // up front (the Memory tab says why it is empty). A folder too broad to
-  // read is worth saying, once.
+  // up front (the Memory tab says why it is empty, and still lists the
+  // personal memories). A folder too broad to read is worth saying, once.
   if (!root) {
     if (memory)
       return (
-        <div className="project-bar project-bar-empty memory-no-project">
-          {docPath ? t.projectTooBroad : t.memoryNeedsSave}
-        </div>
+        <>
+          <div className="project-bar project-bar-empty memory-no-project">
+            {docPath ? t.projectTooBroad : t.memoryNeedsSave}
+          </div>
+          {info && info.memories.items.length > 0 && (
+            <div className="project-bar project-bar-memory">
+              <RememberedSection
+                info={info}
+                t={t}
+                lang={settings.language}
+                {...memoryActions}
+              />
+            </div>
+          )}
+        </>
       );
     if (!docPath) return null;
     return (
@@ -371,15 +441,13 @@ export function ProjectBar({
           info={info}
           t={t}
           lang={settings.language}
-          documentText={documentText}
+          libraryUse={libraryUse}
           onOpenStyle={openStyle}
           onLearnStyle={learnStyle}
           onNewEntry={() => setNaming(true)}
-          onOpenEntry={(entry) =>
-            openInTab(`${trimmed}/${entry.file.replace(/^[\\/]+/, "")}`)
-          }
           onOpenInstructions={openInstructions}
           onOpenGlobalInstructions={openGlobalInstructions}
+          {...memoryActions}
           onConvertLevis={() =>
             void convertLevisProject(t, docPath, workspaceRoot).then(reload)
           }

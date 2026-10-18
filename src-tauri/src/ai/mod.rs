@@ -7,6 +7,7 @@ pub mod conventions;
 pub mod levis_project;
 #[cfg(test)]
 mod live_eval;
+pub mod memory;
 pub mod project;
 pub mod route;
 pub mod rules;

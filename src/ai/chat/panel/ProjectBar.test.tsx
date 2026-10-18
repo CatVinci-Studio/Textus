@@ -43,6 +43,8 @@ const workspace = (root: string | null): AgentWorkspaceInfo => ({
   root,
   style: null,
   library: [],
+  memories: { items: [], chars: 0, cap: 4000 },
+  remember: true,
   levis_project: false,
 });
 
