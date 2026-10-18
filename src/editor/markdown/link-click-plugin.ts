@@ -5,6 +5,7 @@ import { exportDoc, fs, links } from "../../platform/ipc";
 import { isScopedUrl } from "../../platform/ios-files";
 import { modIsMeta } from "../../platform/os";
 import { OPEN_FILE_IN_TAB_EVENT } from "../../utils/events";
+import { unfoldRange } from "../html/details-fold";
 import { revealPosition } from "../reveal-position";
 import { headingSlug, linkTarget, type LinkTarget } from "./link-target";
 
@@ -43,7 +44,11 @@ function headingPos(view: EditorView, anchor: string): number | null {
 async function follow(view: EditorView, target: LinkTarget): Promise<void> {
   if (target.kind === "heading") {
     const pos = headingPos(view, target.anchor);
-    if (pos !== null) revealPosition(view, pos);
+    if (pos === null) return;
+    // A heading in a folded <details> has no place on screen to scroll to
+    // until its fold opens.
+    unfoldRange(view, pos);
+    revealPosition(view, pos);
     return;
   }
   if (target.kind === "web") return links.openWebLink(target.url);

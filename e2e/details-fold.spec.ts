@@ -44,9 +44,13 @@ function emit(page: Page, name: string) {
   );
 }
 
-async function openFolded(page: Page, storage: Record<string, string> = {}) {
+async function openFolded(
+  page: Page,
+  storage: Record<string, string> = {},
+  doc = DOC,
+) {
   await openApp(page, { settings: { language: "en" }, storage });
-  await pasteMarkdown(page, DOC);
+  await pasteMarkdown(page, doc);
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await expect(editor.locator(".raw-html-details-head summary")).toBeVisible();
   const hidden = editor.locator("p", { hasText: "zebracorn" });
@@ -92,6 +96,26 @@ test("the outline lists a heading inside a fold and opens it on a jump", async (
   await expect(row).toBeVisible();
   await row.click();
   const heading = editor.locator("h2", { hasText: "Inside heading" });
+  await expect(heading).toBeVisible();
+  await expect(heading).toBeInViewport();
+});
+
+test("Ctrl/Cmd+click on a #heading link opens the fold the heading is in", async ({
+  page,
+}) => {
+  const { editor } = await openFolded(
+    page,
+    {},
+    DOC.replace(
+      "Intro paragraph.",
+      "Intro paragraph, [see inside](#inside-heading).",
+    ),
+  );
+  const heading = editor.locator("h2", { hasText: "Inside heading" });
+  await expect(heading).toBeHidden();
+  await editor
+    .locator("a", { hasText: "see inside" })
+    .click({ modifiers: ["ControlOrMeta"] });
   await expect(heading).toBeVisible();
   await expect(heading).toBeInViewport();
 });
