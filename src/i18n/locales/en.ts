@@ -642,8 +642,6 @@ type /name in a conversation to use one.
   restoreSessionLabel: "Restore Previous Session on Startup",
   autoSuggestFilenameLabel: "Suggest a Filename When Saving a New File",
   autosaveLabel: "Save Automatically",
-  autosaveHint:
-    "Writes a document that already has a file back to it a moment after you stop typing, and when you switch tabs or leave the window. New documents aren't saved until you name them.",
   untitledTab: "Untitled",
   markdownGuideTab: "Markdown Guide",
   agentGuideTab: "AI Features Guide",

@@ -661,8 +661,6 @@ para usar una.
   restoreSessionLabel: "Restaurar la sesión anterior al iniciar",
   autoSuggestFilenameLabel: "Sugerir un nombre al guardar un archivo nuevo",
   autosaveLabel: "Guardar automáticamente",
-  autosaveHint:
-    "Guarda en su archivo un documento que ya tiene uno poco después de que dejes de escribir, y al cambiar de pestaña o salir de la ventana. Los documentos nuevos no se guardan hasta que les pongas nombre.",
   untitledTab: "Sin título",
   markdownGuideTab: "Guía de Markdown",
   agentGuideTab: "Guía de funciones de IA",

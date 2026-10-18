@@ -197,7 +197,6 @@ export function SettingsPanel({
             />
             <ToggleRow
               label={t.autosaveLabel}
-              hint={t.autosaveHint}
               checked={settings.autosave}
               onChange={(v) => setSettings({ autosave: v })}
             />
