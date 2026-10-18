@@ -38,13 +38,16 @@ async function openVaultDoc(page: Page, resolved: string | null) {
 test("an image embed shows the vault's picture and its source under the caret", async ({
   page,
 }) => {
-  const editor = await openVaultDoc(page, "/vault/attachments/cat.png");
+  const file = "/vault/notes/attachments/cat.png";
+  const editor = await openVaultDoc(page, file);
   const img = editor.locator(".obsidian-embed-rendered img");
   await expect(img).toBeVisible();
   await expect(img).toHaveAttribute(
     "src",
-    `http://asset.localhost/${encodeURIComponent("/vault/attachments/cat.png")}`,
+    `http://asset.localhost/${encodeURIComponent(file)}`,
   );
+  // An HTML export writes it beside the document, as an ordinary image.
+  await expect(img).toHaveAttribute("data-doc-src", "attachments/cat.png");
   await expect(img).toHaveCSS("width", "120px");
   await expect(editor).not.toContainText("![[", { useInnerText: true });
 

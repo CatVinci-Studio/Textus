@@ -5,6 +5,7 @@ import type { EditorState } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { fs } from "../../platform/ipc";
 import { isScopedUrl } from "../../platform/ios-files";
+import { dirname, isInside } from "../../utils/path";
 import {
   applyReveal,
   buildReveal,
@@ -15,6 +16,25 @@ import { showDocImage } from "./image-plugin";
 import { parseEmbed, type EmbedTarget } from "./obsidian-embed";
 
 const embedPreviewKey = new PluginKey<RevealState>("obsidian-embed-preview");
+
+/**
+ * The src an HTML export writes for an embed's picture (data-doc-src, see
+ * export/exporters.ts): relative to the document, as an ordinary image's
+ * is, when the file is in the document's folder or below it - the export
+ * saved beside the document then finds it, and so does a copy of the whole
+ * folder. A file elsewhere in the vault keeps its full path; a "../" one
+ * would break as soon as the export is moved.
+ */
+export function exportSrc(file: string, docPath: string): string {
+  const dir = dirname(docPath);
+  if (!isInside(file, dir)) return file;
+  return file
+    .slice(dir.length)
+    .split(/[\\/]/)
+    .filter(Boolean)
+    .map(encodeURIComponent)
+    .join("/");
+}
 
 /** The picture an image embed names, found in the document's vault by the
  *  backend. One it can't find shows its name in muted text instead. */
@@ -32,7 +52,11 @@ function embedWidget(embed: EmbedTarget, docPath: string) {
       el.replaceChildren(embed.path);
     };
     fs.resolveVaultImage(docPath, embed.path)
-      .then((file) => (file ? showDocImage(img, file, docPath) : missing()))
+      .then((file) => {
+        if (!file) return missing();
+        showDocImage(img, file, docPath);
+        img.dataset.docSrc = exportSrc(file, docPath);
+      })
       .catch(missing);
     caretToSourceOnClick(el, view, getPos);
     return el;
