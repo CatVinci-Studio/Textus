@@ -56,10 +56,35 @@ describe("updater manifest", () => {
   it("rejects a release workflow that lets tauri-action upload latest.json", () => {
     const problems = configProblems((file) =>
       file.endsWith("release.yml")
-        ? readRepo(file).replace(/includeUpdaterJson: false/, "")
+        ? readRepo(file).replace(/uploadUpdaterJson: false/, "")
         : readRepo(file),
     );
-    expect(problems.join("\n")).toMatch(/includeUpdaterJson: false/);
+    expect(problems.join("\n")).toMatch(/uploadUpdaterJson: false/);
+  });
+
+  it("rejects tauri-action 1.x with the input name from before 1.0", () => {
+    const problems = configProblems((file) =>
+      file.endsWith("release.yml")
+        ? readRepo(file).replace(
+            /uploadUpdaterJson: false/,
+            "includeUpdaterJson: false",
+          )
+        : readRepo(file),
+    );
+    expect(problems.join("\n")).toMatch(
+      /v1 must run with uploadUpdaterJson: false/,
+    );
+  });
+
+  it("accepts the old input name on a tag that still pins tauri-action v0", () => {
+    const problems = configProblems((file) =>
+      file.endsWith("release.yml")
+        ? readRepo(file)
+            .replace(/uploadUpdaterJson: false/, "includeUpdaterJson: false")
+            .replace(/# v1\.0\.0/, "# v0.6.2")
+        : readRepo(file),
+    );
+    expect(problems).toEqual([]);
   });
 
   it("lets a release carry latest.json only as the last Levis release's", () => {

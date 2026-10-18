@@ -123,7 +123,7 @@ Textus's manifest is `textus-latest.json`, never `latest.json`. Levis 0.9.x
 installs read `latest.json` from this repository (the old
 `CatVinci-Studio/Levis` URL redirects here) and trust the same signing key, so
 a `latest.json` on a Textus release would install Textus over Levis.
-tauri-action runs with `includeUpdaterJson: false`; the publish job writes
+tauri-action runs with `uploadUpdaterJson: false` (`includeUpdaterJson` before tauri-action 1.0); the publish job writes
 `textus-latest.json` from the draft's `.sig` files
 (`scripts/updater-manifest.mjs build`) and refuses to publish a draft that
 has any other `latest.json` (`… guard`). `npm run check` runs `… check`, which

@@ -10,7 +10,7 @@
 // installed over Levis.app by every Levis install. Textus therefore never
 // publishes a file of that name: its manifest is `textus-latest.json`,
 // written here from the draft release's signed artifacts (tauri-action runs
-// with includeUpdaterJson: false).
+// with uploadUpdaterJson: false - `includeUpdaterJson` before tauri-action 1.0).
 //
 // The one `latest.json` a Textus release carries is a copy of the last
 // Levis release's own (LEVIS_LAST_TAG): once Textus is "Latest", a Levis
@@ -91,9 +91,20 @@ export function configProblems(readFile) {
       );
   }
   const workflow = readFile(".github/workflows/release.yml");
-  if (!/^\s*includeUpdaterJson:\s*false\s*$/m.test(workflow))
+  // tauri-action 1.0 renamed the input, and an unknown input is ignored
+  // without a word: with the old name on v1 it would upload latest.json.
+  // Tags from before 1.0 still pin v0 and use the old name.
+  const major = Number(
+    workflow.match(/tauri-apps\/tauri-action@\S+\s*#\s*v(\d+)/)?.[1] ?? NaN,
+  );
+  const input = major >= 1 ? "uploadUpdaterJson" : "includeUpdaterJson";
+  if (Number.isNaN(major))
     problems.push(
-      `release.yml: tauri-action must run with includeUpdaterJson: false (it uploads ${LEVIS_MANIFEST_NAME} otherwise)`,
+      "release.yml: pin tauri-action to a commit with its version in a comment (`@<sha> # vX.Y.Z`)",
+    );
+  else if (!new RegExp(`^\\s*${input}:\\s*false\\s*$`, "m").test(workflow))
+    problems.push(
+      `release.yml: tauri-action v${major} must run with ${input}: false (it uploads ${LEVIS_MANIFEST_NAME} otherwise)`,
     );
   return problems;
 }
