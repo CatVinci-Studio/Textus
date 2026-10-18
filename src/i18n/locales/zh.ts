@@ -121,6 +121,14 @@ export default {
   memoryLibraryEmpty: `人物、地点、术语，写进资料库，${AI_NAME} 就会记住。`,
   memoryInstructionsEmpty: `还没有写作要求。写下你希望 ${AI_NAME} 始终遵守的规则。`,
   memoryNeedsSave: `保存这篇文档后，${AI_NAME} 会在它所在的文件夹里记住你的文风、资料和要求。`,
+  memoryConvertLevis: "转换 Levis 资料",
+  levisProjectTitle: "Levis 项目资料",
+  levisProjectText:
+    "发现 Levis 的项目资料（文风、资料库、写作要求、技能），要转成 Textus 的格式吗？",
+  levisProjectConvert: "转换",
+  levisProjectLater: "以后再说",
+  levisProjectDone:
+    "已转换：{n} 个文件复制到了 .textus/，.levis/ 文件夹保持原样。",
   agentActionInsertAtCursor: "在光标处插入",
   commentLocate: "在文档中定位",
   commentNotFound: "文档里已经找不到这段文字。",

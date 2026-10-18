@@ -17,6 +17,7 @@ import { ChevronIcon, FolderIcon } from "../../../ui/icons";
 import { ActionSheet, type ActionSheetItem } from "../../../ui/ActionSheet";
 import { usePhoneLayout } from "../../../ui/usePhoneLayout";
 import { MemorySections } from "./MemoryView";
+import { convertLevisProject, offerLevisConversion } from "./levis-project";
 
 function openInTab(path: string) {
   window.dispatchEvent(
@@ -88,6 +89,14 @@ export function ProjectBar({
       .catch(() => setInfo(null));
   }, [docPath, workspaceRoot]);
   useEffect(reload, [reload]);
+  // A Levis project's .levis/: asked once whether to convert it.
+  const levisRoot = info?.levis_project ? info.root : null;
+  useEffect(() => {
+    if (!levisRoot) return;
+    void offerLevisConversion(t, levisRoot, docPath, workspaceRoot).then(
+      (converted) => converted && reload(),
+    );
+  }, [levisRoot, t, docPath, workspaceRoot, reload]);
   // Files under .textus/ change outside this component (edited in a tab):
   // re-read whenever the window regains focus.
   useEffect(() => {
@@ -371,6 +380,9 @@ export function ProjectBar({
           }
           onOpenInstructions={openInstructions}
           onOpenGlobalInstructions={openGlobalInstructions}
+          onConvertLevis={() =>
+            void convertLevisProject(t, docPath, workspaceRoot).then(reload)
+          }
         />
       )}
     </div>

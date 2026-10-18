@@ -130,6 +130,14 @@ type /name in a conversation to use one.
   memoryLibraryEmpty: `People, places, terms: add them to the library and ${AI_NAME} remembers them.`,
   memoryInstructionsEmpty: `No writing instructions yet. Write down the rules ${AI_NAME} should always follow.`,
   memoryNeedsSave: `Save this document and ${AI_NAME} keeps your style, library and instructions in its folder.`,
+  memoryConvertLevis: "Convert Levis data",
+  levisProjectTitle: "Levis project data",
+  levisProjectText:
+    "This project has Levis data (style, library, writing instructions, skills). Convert it to Textus's format?",
+  levisProjectConvert: "Convert",
+  levisProjectLater: "Not now",
+  levisProjectDone:
+    "Converted: {n} files copied into .textus/. The .levis/ folder is left as it was.",
   agentActionInsertAtCursor: "Insert at cursor",
   commentLocate: "Show in document",
   commentNotFound: "That passage is no longer in the document.",

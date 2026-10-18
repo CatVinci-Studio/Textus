@@ -42,7 +42,8 @@ use tauri::{AppHandle, Manager};
 pub const WORKSPACE_DIR_NAME: &str = ".textus";
 
 /// Where a project's settings live: `<project folder>/.textus/`. Only this
-/// folder counts: a Levis project's `.levis/` is never read.
+/// folder counts - a Levis project's `.levis/` is never read; the project
+/// bar offers to convert it once (ai::levis_project).
 pub fn project_dir(root: &Path) -> PathBuf {
     root.join(WORKSPACE_DIR_NAME)
 }
@@ -178,6 +179,10 @@ pub struct AgentWorkspace {
     /// The writing conventions the style profile's front matter sets
     /// (`conventions: zh-Hans-CN/fiction`, option keys) - rules::profile.
     pub conventions: crate::ai::rules::ProjectConventions,
+    /// The project folder has a Levis project's `.levis/` with files its
+    /// `.textus/` lacks: the project bar offers to convert it
+    /// (ai::levis_project).
+    pub levis_project: bool,
 }
 
 impl AgentWorkspace {
@@ -433,7 +438,7 @@ fn unquote(raw: &str) -> String {
 /// pack references), `textus-aliases-<ui language>` (comma-separated),
 /// `textus-based-on` (a Customize… copy) and `textus-sources` (credits, not
 /// read). A skill written for Levis says `levis-` instead (a Customize… copy
-/// brought over by Import from Levis, a Levis project's skills);
+/// brought over by Import from Levis, a converted Levis project's skills);
 /// that prefix is read the same, `textus-` winning where a file has both.
 /// Claude Code's top-level `disable-model-invocation: true` also makes a
 /// skill /name-only.
@@ -763,6 +768,7 @@ pub(crate) fn load_layers(
         ws.style = crate::ai::project::read_style(root);
         ws.conventions = crate::ai::project::style_conventions(ws.style.as_deref());
         ws.library = crate::ai::project::read_library(root);
+        ws.levis_project = crate::ai::levis_project::unconverted(root);
         let (instructions, skills) = read_layer(&project_dir(root), SkillSource::Project);
         ws.project_instructions = instructions;
         // Project skills shadow same-named global and built-in ones.
@@ -1339,6 +1345,7 @@ mod tests {
         assert!(ws.style.is_none() && ws.library.is_empty());
         assert!(!ws.skills.iter().any(|s| s.name == "house"));
         assert_eq!(project_file(&project, "agent.md"), None);
+        assert!(ws.levis_project, "offered for conversion instead");
         std::fs::remove_dir_all(&root).ok();
     }
 

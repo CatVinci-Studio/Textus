@@ -129,6 +129,14 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   memoryLibraryEmpty: `Pessoas, lugares, termos: adicione-os à biblioteca e a ${AI_NAME} vai lembrar.`,
   memoryInstructionsEmpty: `Ainda não há instruções. Escreva as regras que a ${AI_NAME} deve sempre seguir.`,
   memoryNeedsSave: `Salve este documento e a ${AI_NAME} guarda seu estilo, sua biblioteca e suas instruções na pasta dele.`,
+  memoryConvertLevis: "Converter dados do Levis",
+  levisProjectTitle: "Dados de projeto do Levis",
+  levisProjectText:
+    "Este projeto tem dados do Levis (estilo, biblioteca, instruções de escrita, habilidades). Converter para o formato do Textus?",
+  levisProjectConvert: "Converter",
+  levisProjectLater: "Agora não",
+  levisProjectDone:
+    "Convertido: {n} arquivos copiados para .textus/. A pasta .levis/ fica como estava.",
   agentActionInsertAtCursor: "Inserir no cursor",
   commentLocate: "Mostrar no documento",
   commentNotFound: "Esse trecho não está mais no documento.",

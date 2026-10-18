@@ -121,6 +121,14 @@ export default {
   memoryLibraryEmpty: `人物、地點、術語，寫進資料庫，${AI_NAME} 就會記住。`,
   memoryInstructionsEmpty: `還沒有寫作指示。寫下你希望 ${AI_NAME} 始終遵守的規則。`,
   memoryNeedsSave: `儲存這份文件後，${AI_NAME} 會在它所在的資料夾裡記住你的文風、資料和指示。`,
+  memoryConvertLevis: "轉換 Levis 資料",
+  levisProjectTitle: "Levis 專案資料",
+  levisProjectText:
+    "發現 Levis 的專案資料（文風、資料庫、寫作指示、技能），要轉成 Textus 的格式嗎？",
+  levisProjectConvert: "轉換",
+  levisProjectLater: "以後再說",
+  levisProjectDone:
+    "已轉換：{n} 個檔案複製到了 .textus/，.levis/ 資料夾保持原樣。",
   agentActionInsertAtCursor: "在游標處插入",
   commentLocate: "在文件中顯示",
   commentNotFound: "文件中已經找不到這段文字。",

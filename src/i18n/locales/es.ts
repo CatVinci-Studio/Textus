@@ -138,6 +138,14 @@ para usar una.
   memoryLibraryEmpty: `Personas, lugares, términos: añádelos a la biblioteca y ${AI_NAME} los recordará.`,
   memoryInstructionsEmpty: `Aún no hay instrucciones. Escribe las reglas que ${AI_NAME} debe seguir siempre.`,
   memoryNeedsSave: `Guarda este documento y ${AI_NAME} conservará tu estilo, tu biblioteca y tus instrucciones en su carpeta.`,
+  memoryConvertLevis: "Convertir los datos de Levis",
+  levisProjectTitle: "Datos de proyecto de Levis",
+  levisProjectText:
+    "Este proyecto tiene datos de Levis (estilo, biblioteca, instrucciones de escritura, habilidades). ¿Convertirlos al formato de Textus?",
+  levisProjectConvert: "Convertir",
+  levisProjectLater: "Ahora no",
+  levisProjectDone:
+    "Convertido: {n} archivos copiados en .textus/. La carpeta .levis/ queda como estaba.",
   agentActionInsertAtCursor: "Insertar en el cursor",
   commentLocate: "Mostrar en el documento",
   commentNotFound: "Ese fragmento ya no está en el documento.",

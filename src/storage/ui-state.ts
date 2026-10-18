@@ -35,6 +35,10 @@ export interface UiState {
   /** The skills last run from the composer, newest first - the `/` menu
    *  lists them first (ai/chat/skill-picker.ts). */
   recentSkills: string[];
+  /** Project folders whose Levis data the user chose not to convert yet
+   *  ("Not now", ai/chat/panel/levis-project.ts) - not asked again; the
+   *  Memory tab keeps a quiet "Convert Levis data" for them. */
+  levisProjectsDeclined: string[];
 }
 
 export interface ThemeChromeCache {

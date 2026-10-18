@@ -596,6 +596,9 @@ export interface AgentWorkspaceInfo {
   /** What the style profile's front matter sets for the writing
    *  conventions (`conventions:` and option keys) - ai::rules::profile. */
   conventions?: ProjectConventions;
+  /** The project has a Levis project's `.levis/` with files `.textus/`
+   *  lacks - offered for conversion (ai::levis_project). */
+  levis_project: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -941,6 +944,10 @@ export const ai = {
       template,
     }),
   pickTextFiles: () => call<string[]>("pick_text_files"),
+  /** Copies a Levis project's `.levis/` into `.textus/` (never moves or
+   *  deletes it); returns how many files were copied. */
+  convertLevisProject: (docPath: string | null, workspaceRoot: string | null) =>
+    call<number>("convert_levis_project", { docPath, workspaceRoot }),
   /** "Learn my style": writes the project's .textus/style.md from the
    *  picked samples and returns its path. */
   learnStyle: (args: {

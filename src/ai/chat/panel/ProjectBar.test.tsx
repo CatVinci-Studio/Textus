@@ -43,6 +43,7 @@ const workspace = (root: string | null): AgentWorkspaceInfo => ({
   root,
   style: null,
   library: [],
+  levis_project: false,
 });
 
 afterEach(cleanup);

@@ -126,6 +126,14 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   memoryLibraryEmpty: `인물, 장소, 용어를 라이브러리에 적어 두면 ${AI_NAME}가 기억합니다.`,
   memoryInstructionsEmpty: `아직 글쓰기 지침이 없습니다. ${AI_NAME}가 항상 지켜야 할 규칙을 적어 두세요.`,
   memoryNeedsSave: `이 문서를 저장하면 ${AI_NAME}가 그 폴더에 문체, 라이브러리, 지침을 기억합니다.`,
+  memoryConvertLevis: "Levis 데이터 변환",
+  levisProjectTitle: "Levis 프로젝트 데이터",
+  levisProjectText:
+    "이 프로젝트에 Levis 데이터(문체, 라이브러리, 글쓰기 지침, 스킬)가 있습니다. Textus 형식으로 변환할까요?",
+  levisProjectConvert: "변환",
+  levisProjectLater: "나중에",
+  levisProjectDone:
+    "변환했습니다: 파일 {n}개를 .textus/에 복사했습니다. .levis/ 폴더는 그대로입니다.",
   agentActionInsertAtCursor: "커서 위치에 삽입",
   commentLocate: "문서에서 보기",
   commentNotFound: "해당 부분이 더 이상 문서에 없습니다.",

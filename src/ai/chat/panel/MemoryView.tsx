@@ -27,6 +27,7 @@ export function MemorySections({
   onOpenEntry,
   onOpenInstructions,
   onOpenGlobalInstructions,
+  onConvertLevis,
 }: {
   info: AgentWorkspaceInfo;
   t: Strings;
@@ -38,6 +39,7 @@ export function MemorySections({
   onOpenEntry: (entry: LibraryEntry) => void;
   onOpenInstructions: () => void;
   onOpenGlobalInstructions: () => void;
+  onConvertLevis: () => void;
 }) {
   const styleLines = useMemo(() => styleSummary(info.style), [info.style]);
   const projectRules = useMemo(
@@ -194,6 +196,12 @@ export function MemorySections({
             )}
           </div>
         </section>
+      )}
+
+      {info.levis_project && (
+        <button type="button" className="memory-link" onClick={onConvertLevis}>
+          {t.memoryConvertLevis}
+        </button>
       )}
     </div>
   );

@@ -132,6 +132,14 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   memoryLibraryEmpty: `Personen, Orte, Begriffe: Trag sie ins Lexikon ein, und ${AI_NAME} merkt sie sich.`,
   memoryInstructionsEmpty: `Noch keine Schreibanweisungen. Schreib die Regeln auf, die ${AI_NAME} immer befolgen soll.`,
   memoryNeedsSave: `Speichere dieses Dokument, dann merkt sich ${AI_NAME} Stil, Lexikon und Anweisungen in seinem Ordner.`,
+  memoryConvertLevis: "Levis-Daten umwandeln",
+  levisProjectTitle: "Levis-Projektdaten",
+  levisProjectText:
+    "Dieses Projekt hat Levis-Daten (Stil, Lexikon, Schreibanweisungen, Skills). In das Format von Textus umwandeln?",
+  levisProjectConvert: "Umwandeln",
+  levisProjectLater: "Jetzt nicht",
+  levisProjectDone:
+    "Umgewandelt: {n} Dateien nach .textus/ kopiert. Der Ordner .levis/ bleibt, wie er war.",
   agentActionInsertAtCursor: "Am Cursor einfügen",
   commentLocate: "Im Dokument anzeigen",
   commentNotFound: "Diese Stelle steht nicht mehr im Dokument.",

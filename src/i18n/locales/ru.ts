@@ -131,6 +131,14 @@ export default {
   memoryLibraryEmpty: `Люди, места, термины: добавьте их в картотеку, и ${AI_NAME} их запомнит.`,
   memoryInstructionsEmpty: `Инструкций пока нет. Запишите правила, которым ${AI_NAME} должен следовать всегда.`,
   memoryNeedsSave: `Сохраните документ, и ${AI_NAME} будет хранить ваш стиль, картотеку и инструкции в папке документа.`,
+  memoryConvertLevis: "Преобразовать данные Levis",
+  levisProjectTitle: "Данные проекта Levis",
+  levisProjectText:
+    "В этом проекте есть данные Levis (стиль, картотека, инструкции, навыки). Преобразовать их в формат Textus?",
+  levisProjectConvert: "Преобразовать",
+  levisProjectLater: "Не сейчас",
+  levisProjectDone:
+    "Готово: скопировано файлов в .textus/: {n}. Папка .levis/ осталась как была.",
   agentActionInsertAtCursor: "Вставка у курсора",
   commentLocate: "Показать в документе",
   commentNotFound: "Этого фрагмента больше нет в документе.",

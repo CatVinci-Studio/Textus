@@ -129,6 +129,14 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   memoryLibraryEmpty: `人物、場所、用語をライブラリに書いておけば、${AI_NAME} が覚えます。`,
   memoryInstructionsEmpty: `執筆の指示はまだありません。${AI_NAME} に常に守ってほしいルールを書いておけます。`,
   memoryNeedsSave: `この文書を保存すると、${AI_NAME} はそのフォルダーに文体・ライブラリ・指示を記憶します。`,
+  memoryConvertLevis: "Levisのデータを変換",
+  levisProjectTitle: "Levisのプロジェクトデータ",
+  levisProjectText:
+    "このプロジェクトにはLevisのデータ（文体、ライブラリ、執筆の指示、スキル）があります。Textusの形式に変換しますか？",
+  levisProjectConvert: "変換",
+  levisProjectLater: "今はしない",
+  levisProjectDone:
+    "変換しました：{n} 個のファイルを .textus/ にコピーしました。.levis/ フォルダーはそのままです。",
   agentActionInsertAtCursor: "カーソル位置に挿入",
   commentLocate: "文書内で表示",
   commentNotFound: "その箇所は文書内に見つかりません。",
