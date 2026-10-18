@@ -375,6 +375,10 @@ export function MilkdownEditor({
             }
       }
       onMouseOut={phone ? undefined : grammar.onMouseOut}
+      // Out of the editor altogether: nothing is under the pointer.
+      onMouseLeave={
+        phone || !notes.hotNote ? undefined : () => notes.setNoteHot(null)
+      }
       onPointerDown={() => (lastTouchRef.current = Date.now())}
       onPointerUp={() => (lastTouchRef.current = Date.now())}
     >

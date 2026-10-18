@@ -276,6 +276,11 @@
   );
 }
 
+/* Its sentence is under the pointer: the same accent as the outline there. */
+.revision-note.review-note-hot {
+  border-color: color-mix(in srgb, var(--editor-accent) 45%, transparent);
+}
+
 .revision-note .review-note-by {
   margin-bottom: 4px;
 }
@@ -327,13 +332,6 @@
 
 .review-links path.revision {
   stroke: color-mix(in srgb, var(--success-color) 70%, transparent);
-}
-
-/* A pending sentence under the pointer, or its card under it. */
-.pending-sentence-hot {
-  box-shadow: 0 0 0 2px
-    color-mix(in srgb, var(--editor-accent) 35%, transparent);
-  border-radius: var(--radius-small);
 }
 
 /* "Changes in the text": the card holds the original, struck. */

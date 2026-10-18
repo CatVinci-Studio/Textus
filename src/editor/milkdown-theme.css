@@ -218,6 +218,28 @@
     color-mix(in srgb, var(--editor-accent) 35%, transparent);
 }
 
+/* The sentence pair under the pointer, or whose margin card is
+   (pending-edit-plugin's hotDecorations): both sides stay as they are,
+   outlined and a shade deeper. Hover never hides or previews anything. */
+.pending-sentence-hot:not(.pending-pick) {
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--editor-accent) 35%, transparent);
+  border-radius: var(--radius-small);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.pending-delete.pending-sentence-hot:not(.pending-sentence-kept) {
+  background: color-mix(in srgb, var(--danger) 20%, transparent);
+}
+
+.pending-insert.pending-sentence-hot:not(
+    .pending-sentence-kept,
+    .pending-sentence-final
+  ) {
+  background: color-mix(in srgb, var(--success-color) 26%, transparent);
+}
+
 @keyframes pending-strike-in {
   from {
     color: inherit;

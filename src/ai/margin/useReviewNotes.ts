@@ -19,7 +19,10 @@ import {
   locateAnchor,
   type usePendingEdits,
 } from "../revision/usePendingEdits";
-import { pendingEditKey } from "../revision/pending-edit-plugin";
+import {
+  pendingEditKey,
+  type HotSentence,
+} from "../revision/pending-edit-plugin";
 import type { RevisionDisplay } from "../../settings/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -63,6 +66,8 @@ export function useReviewNotes({
   // then carry the same numbers.
   const [noMargin, setNoMargin] = useState(false);
   const [hotNote, setHotNote] = useState<string | null>(null);
+  // The same, at once: two pointer events can land before a render.
+  const hotRef = useRef<string | null>(null);
   const [openNote, setOpenNote] = useState<{
     id: string;
     x: number;
@@ -123,20 +128,23 @@ export function useReviewNotes({
   // What the pointer is on - a margin card or its passage ("note:<id>",
   // "rev:<callId>:<index>"): both light up together.
   function setNoteHot(key: string | null) {
+    hotRef.current = key;
     setHotNote(key);
     const id = key?.startsWith("note:") ? key.slice(5) : null;
+    let sentence: HotSentence | null = null;
+    if (key?.startsWith("rev:")) {
+      const [, callId, index] = key.split(":");
+      sentence = { callId, index: Number(index) };
+    }
+    // Through the plugins, never a class written onto the text: see
+    // pending-edit-plugin's hotDecorations.
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      view.dispatch(view.state.tr.setMeta(reviewNotesKey, { type: "hot", id }));
-      for (const el of view.dom.querySelectorAll(".pending-sentence-hot"))
-        el.classList.remove("pending-sentence-hot");
-      if (key?.startsWith("rev:")) {
-        const [, callId, index] = key.split(":");
-        for (const el of view.dom.querySelectorAll(
-          `[data-call="${CSS.escape(callId)}"][data-index="${index}"]`,
-        ))
-          el.classList.add("pending-sentence-hot");
-      }
+      view.dispatch(
+        view.state.tr
+          .setMeta(reviewNotesKey, { type: "hot", id })
+          .setMeta(pendingEditKey, { type: "hot", sentence }),
+      );
     });
   }
 
@@ -155,12 +163,13 @@ export function useReviewNotes({
       : sentence?.dataset.call
         ? `rev:${sentence.dataset.call}:${sentence.dataset.index}`
         : null;
-    if (key !== hotNote) setNoteHot(key);
+    if (key !== hotRef.current) setNoteHot(key);
   }
 
   function doneNote(id: string) {
     doneNotes.current.add(id);
     setOpenNote(null);
+    hotRef.current = null;
     setHotNote(null);
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
