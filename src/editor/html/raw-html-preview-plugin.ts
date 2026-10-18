@@ -8,6 +8,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import {
   applyReveal,
   buildReveal,
+  caretToSourceOnClick,
   type RevealState,
   type Touches,
 } from "../reveal-state";
@@ -89,30 +90,9 @@ function fragmentWidget(
     el.querySelectorAll<HTMLImageElement>("img:not(.html-svg)").forEach((img) =>
       showDocImage(img, img.getAttribute("src") ?? "", docPath()),
     );
-    caretToSourceOnClick(el, view, getPos);
+    caretToSourceOnClick(el, view, getPos, inSummary);
     return el;
   };
-}
-
-/** A click on a widget puts the caret in the source it stands for, which
- *  shows that source to edit - except on a <details> summary, which opens
- *  and closes it. */
-function caretToSourceOnClick(
-  el: HTMLElement,
-  view: EditorView,
-  getPos: () => number | undefined,
-) {
-  el.addEventListener("mousedown", (event) => {
-    if (inSummary(event)) return;
-    event.preventDefault();
-    const widgetPos = getPos();
-    if (typeof widgetPos !== "number") return;
-    const tr = view.state.tr.setSelection(
-      TextSelection.create(view.state.doc, widgetPos - 1),
-    );
-    view.dispatch(tr);
-    view.focus();
-  });
 }
 
 const COMMENT_RE = /^(\s*<!--\s*)([\s\S]*?)(\s*-->\s*)$/;
@@ -565,7 +545,7 @@ function arrowIntoHtmlBlock(view: EditorView, event: KeyboardEvent): boolean {
 function detailsHeadWidget(html: string, open: boolean, headPos: number) {
   return (view: EditorView, getPos: () => number | undefined) => {
     const el = document.createElement("div");
-    caretToSourceOnClick(el, view, getPos);
+    caretToSourceOnClick(el, view, getPos, inSummary);
     el.className = "raw-html-rendered raw-html-details-head";
     el.innerHTML = html;
     const details = el.querySelector("details");

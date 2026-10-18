@@ -1,5 +1,9 @@
-import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
-import type { Decoration } from "@milkdown/kit/prose/view";
+import {
+  TextSelection,
+  type EditorState,
+  type Transaction,
+} from "@milkdown/kit/prose/state";
+import type { Decoration, EditorView } from "@milkdown/kit/prose/view";
 import { DecorationSet } from "@milkdown/kit/prose/view";
 import { cursorTouches } from "./marks/enclosure";
 
@@ -62,4 +66,27 @@ export function applyReveal(
     if (!flipped) return prev;
   }
   return rebuild(newState);
+}
+
+/** A click on a rendered widget puts the caret in the source it stands for
+ *  (the widget sits right after it), which shows that source to edit.
+ *  `skip` leaves a click to the widget itself. */
+export function caretToSourceOnClick(
+  el: HTMLElement,
+  view: EditorView,
+  getPos: () => number | undefined,
+  skip: (event: Event) => boolean = () => false,
+): void {
+  el.addEventListener("mousedown", (event) => {
+    if (skip(event)) return;
+    event.preventDefault();
+    const widgetPos = getPos();
+    if (typeof widgetPos !== "number") return;
+    view.dispatch(
+      view.state.tr.setSelection(
+        TextSelection.create(view.state.doc, widgetPos - 1),
+      ),
+    );
+    view.focus();
+  });
 }
