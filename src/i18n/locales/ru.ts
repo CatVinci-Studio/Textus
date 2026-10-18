@@ -7,6 +7,7 @@ export const complete = true;
 export default {
   agentPanelTitle: AI_NAME,
   agentPanelToggle: "Панель ИИ",
+  sidebarPanelToggle: "Боковая панель",
   agentPanelPopOut: "Открыть в отдельном окне",
   agentPanelResize: "Изменить ширину панели ИИ",
   sidebarResize: "Изменить ширину боковой панели",

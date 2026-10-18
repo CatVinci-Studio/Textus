@@ -91,7 +91,7 @@ export function AgentPanelView({
   );
   return (
     <section className="agent-panel-view" aria-label={labels.title}>
-      <header className="agent-panel-header">
+      <header className="agent-panel-header" data-tauri-drag-region>
         <div
           className="agent-panel-tabs"
           role="tablist"

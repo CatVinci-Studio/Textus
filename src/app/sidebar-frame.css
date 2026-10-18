@@ -36,12 +36,44 @@
     visibility 0s linear var(--dur-base);
 }
 
+/* The sidebar reaches the window's top edge, and its header is the strip's
+   left segment: one row of tab buttons sharing the 28px window strip with
+   the chrome around it (window-bar.css). The left inset clears whatever
+   else owns the window's corner - the pinned menu button and sidebar
+   toggle on Windows/Linux, the traffic lights and the toggle on macOS. */
+.sidebar-header {
+  height: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+:root[data-window-chrome="app"] .sidebar-header {
+  /* Past the pinned corner cluster (4px inset, 34px menu button, 4px gap,
+     22px toggle) with some air after it. */
+  padding-left: 72px;
+}
+
+:root[data-window-chrome="native"] .sidebar-header {
+  /* Past the traffic lights and the toggle beside them. */
+  padding-left: 108px;
+}
+
+.sidebar-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+}
+
 :root:not(.zen) .sidebar:not(.sidebar-collapsed) ~ .main-pane {
   margin-left: var(--sidebar-width, 240px);
 }
 
 /* Its resize handle (ui/ResizeHandle.tsx), astride the right edge below
-   the window bar - the bar's own row stays the window's to drag. */
+   the window strip - the strip's own row stays draggable (the header above
+   carries the drag region for its stretch). */
 .sidebar-resizer {
   top: 28px;
   right: -3px;

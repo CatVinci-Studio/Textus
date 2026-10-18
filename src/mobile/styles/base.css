@@ -63,6 +63,18 @@
   background: var(--page-bg);
 }
 
+/* The pinned corner cluster takes this taller bar's height too. */
+:root[data-window-chrome="mobile"] .window-bar-left {
+  height: var(--mobile-bar);
+}
+
+/* The sidebar on iOS is a drawer opened from the app menu, not the
+   desktop's strip panel - its toggle would promise a panel the layout
+   doesn't have, so it stays out of this bar. */
+:root[data-window-chrome="mobile"] .window-bar-sidebar-toggle {
+  display: none;
+}
+
 :root[data-window-chrome="mobile"] .window-menu-button,
 :root[data-window-chrome="mobile"] .window-bar-toggle {
   width: 44px;

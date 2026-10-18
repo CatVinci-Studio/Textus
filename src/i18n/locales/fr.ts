@@ -9,6 +9,7 @@ export const complete = true;
 export default {
   agentPanelTitle: AI_NAME,
   agentPanelToggle: "Panneau IA",
+  sidebarPanelToggle: "Barre latérale",
   agentPanelPopOut: "Ouvrir dans une fenêtre séparée",
   agentPanelResize: "Redimensionner le panneau IA",
   sidebarResize: "Redimensionner la barre latérale",

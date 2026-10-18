@@ -70,7 +70,11 @@ export function Sidebar({
           editor. */}
         {presence.mounted && (
           <>
-            <div className="sidebar-header" inert={closing || undefined}>
+            <div
+              className="sidebar-header"
+              data-tauri-drag-region
+              inert={closing || undefined}
+            >
               <div className="sidebar-tabs">
                 <button
                   className={`sidebar-tab ${mode === "tree" ? "sidebar-tab-active" : ""}`}

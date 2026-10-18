@@ -1,8 +1,15 @@
 /* The window's title strip, drawn by the app because the native title bar is
    either overlaid (macOS) or gone entirely (Windows) - see
-   build_with_app_chrome in src-tauri/src/lib.rs. One strip holding everything
-   that used to float separately up here: the drag region, the filename, and
-   the document's status readouts.
+   build_with_app_chrome in src-tauri/src/lib.rs.
+
+   It is no longer a full-width row: the sidebar and the docked AI panel
+   reach the window's top edge now, each carrying its own header in this
+   strip, and the bar fills what is left between them. App.tsx publishes
+   the panels' widths as --bar-strip-left / --bar-strip-right on the
+   shell, so the bar's ends and the panels' edges stay one line; the
+   caption buttons and the menu / sidebar-toggle corner leave the flow
+   entirely and pin to the window's corners, where a window's chrome
+   belongs.
 
    Floats over the content on the theme background. Opacity is the whole
    point: the strip this replaces was fully TRANSPARENT, so text scrolling
@@ -15,26 +22,41 @@
 .window-bar {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
+  left: var(--bar-strip-left, 0px);
+  right: var(--bar-strip-right, 0px);
   height: 28px;
   z-index: 45;
   display: flex;
   align-items: center;
   /* Left inset is room for the macOS traffic lights, which float over the
-     top-left corner. */
+     top-left corner - but with the sidebar open that corner belongs to the
+     sidebar's header, whose own inset holds the lights instead. */
   padding: 0 12px 0 78px;
   background: var(--bg);
+  /* The left end follows the sidebar's sliding edge. One curve for both
+     directions, deliberately shorter than the slide: arriving early, the bar
+     covers the sidebar header as it comes in and uncovers it as it leaves,
+     and the region between the two edges is the same background the bar is,
+     so neither side of the race ever shows a seam. (Reduced motion drops
+     this in modes.css, whose transition rule loads later.) */
+  transition: left var(--dur-base) var(--ease-standard);
+}
+
+/* The sidebar's header owns the strip above it now, so the bar's own left
+   padding would only hold its drag area away from the sidebar's edge. The
+   :not() keeps the phone's drawer layout, where the bar still spans the
+   window over the sliding sidebar. */
+:root:not([data-window-chrome="mobile"]) .window-bar.window-bar-sidebar-open {
+  padding-left: 0;
 }
 
 /* Where the app owns the whole frame (Windows - main.tsx sets the attribute
-   from platform/window-chrome.ts), that left inset holds no traffic lights: the
-   menu button takes it, and the caption buttons take the right edge. Both
-   are flush to the window edge, so the row's own padding gets out of their
-   way and the components cancel what's left with a negative margin. The
-   HEIGHT deliberately does not change - .tab-bar and .sidebar-header clear
-   this bar with hardcoded offsets, and one row of chrome at one height on
-   both platforms is the point of the exercise. */
+   from platform/window-chrome.ts), that left inset holds no traffic lights:
+   the menu button takes the window's corner instead (pinned, below), and the
+   caption buttons take the right one. The HEIGHT deliberately does not
+   change - .tab-bar and the panels' headers clear this bar with hardcoded
+   offsets, and one row of chrome at one height on both platforms is the
+   point of the exercise. */
 :root[data-window-chrome="app"] .window-bar {
   padding: 0 12px 0 12px;
 }
@@ -108,8 +130,21 @@
   pointer-events: none;
 }
 
-/* The one control in the status group: opens the docked Agent panel. */
-.window-bar-toggle {
+/* Where the app draws the caption, those buttons are pinned to the window's
+   corner over this row's right end - unless a docked panel has moved the
+   row's end inboard, in which case they float over the panel's own header
+   and the status may run right up to the edge again. 126px: the three
+   46px buttons, less the row's 12px padding. */
+:root[data-window-chrome="app"] .window-bar-status {
+  margin-right: max(0px, 126px - var(--bar-strip-right, 0px));
+}
+
+/* The two controls that live in the strip itself: the status group's AI
+   panel toggle, and the corner's sidebar toggle. Deliberately NOT sharing
+   a class with anything else - several e2e flows click
+   `.window-bar-toggle` and mean the AI one exactly. */
+.window-bar-toggle,
+.window-bar-sidebar-toggle {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
@@ -126,32 +161,58 @@
 }
 
 .window-bar-toggle:hover,
-.window-bar-toggle-on {
+.window-bar-toggle-on,
+.window-bar-sidebar-toggle:hover,
+.window-bar-sidebar-toggle-on {
   opacity: 1;
   background: var(--sidebar-hover);
 }
 
 /* Hover arrives in 80ms; turning on or off changes in 120ms. */
-.window-bar-toggle {
+.window-bar-toggle,
+.window-bar-sidebar-toggle {
   transition:
     background-color var(--dur-fast) var(--ease-standard),
     opacity var(--dur-fast) var(--ease-standard);
 }
 
-.window-bar-toggle:hover {
+.window-bar-toggle:hover,
+.window-bar-sidebar-toggle:hover {
   transition-duration: var(--dur-instant);
 }
 
-.sidebar-header {
-  /* Clears the window bar floating over the top of the window. */
-  padding: 38px 10px 10px;
-  border-bottom: 1px solid var(--border-color);
+/* The window's left corner, pinned rather than laid out in the row: with
+   the sidebar open its header shares this strip, and the corner's controls
+   have to stay put while the sidebar slides in beside them. Height follows
+   the bar's on every platform; the phone styles its own (base.css). */
+.window-bar-left {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 4px;
 }
 
-.sidebar-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 6px;
+/* macOS: after the traffic lights, and down to their centre like the rest
+   of the strip's contents (the same reason the bar has a padding-top). */
+:root[data-window-chrome="native"] .window-bar-left {
+  padding-left: 78px;
+  padding-top: max(0px, var(--native-titlebar-height, 28px) - 28px);
+}
+
+/* The caption buttons belong to the window's corner, not to the row's end:
+   a docked AI panel shortens the row, and they stay in the corner, over the
+   panel's own header (which leaves them the room, agent-panel.css). Scoped
+   under .window-bar - the detached chat window keeps them in its own row. */
+.window-bar .window-caption {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 28px;
+  margin-right: 0;
 }
 
 /* 4.1: shown while ghost text / grammar check / live Mermaid preview are

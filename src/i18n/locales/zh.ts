@@ -7,6 +7,7 @@ export const complete = true;
 export default {
   agentPanelTitle: AI_NAME,
   agentPanelToggle: "AI 面板",
+  sidebarPanelToggle: "侧栏",
   agentPanelPopOut: "在独立窗口中打开",
   agentPanelResize: "调整 AI 面板宽度",
   sidebarResize: "调整侧边栏宽度",

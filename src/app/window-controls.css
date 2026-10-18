@@ -1,12 +1,20 @@
-/* The menu button sits at the LEFT end of the same row, where the traffic
-   lights would be on macOS - so the inset that row reserves for them is not
-   wasted, it just holds something else. Narrower than a caption button: it
-   is one of ours, not one of the system's. */
+/* The menu button sits at the LEFT end of the window strip, where the
+   traffic lights would be on macOS - so the inset that row reserves for
+   them is not wasted, it just holds something else. Narrower than a
+   caption button: it is one of ours, not one of the system's. In the
+   pinned corner cluster (window-bar.css) the button already starts at the
+   window's edge, so the flush-with-the-edge margin it needs there is the
+   cluster's padding's to cancel instead - everywhere but the phone, whose
+   taller bar keeps the arrangement it had. */
 .window-menu-button {
   width: 34px;
   margin-left: -8px;
   color: var(--editor-muted);
   pointer-events: auto;
+}
+
+:root:not([data-window-chrome="mobile"]) .window-bar-left .window-menu-button {
+  margin-left: 0;
 }
 
 /* Wraps the menu button together with its open menu, so a click on the

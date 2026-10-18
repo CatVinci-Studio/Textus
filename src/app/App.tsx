@@ -314,6 +314,14 @@ function App() {
     });
   const phone = usePhoneLayout();
 
+  // The docked AI panel's width, as the bar's right inset as well as the
+  // shell's: where the panel lies over the page instead (a narrow window,
+  // iOS) the strip stays the window's, edge to edge.
+  const dockedAgentWidth =
+    agentPresence.mounted && !agentOverlays && !isIOSApp
+      ? `${agentPanel.width}px`
+      : "0px";
+
   return (
     <AgentPanelProvider
       // The conversation stays in the panel while it plays its exit.
@@ -337,10 +345,14 @@ function App() {
         className="app-shell"
         style={
           {
-            "--docked-panel-width":
-              agentPresence.mounted && !agentOverlays && !isIOSApp
-                ? `${agentPanel.width}px`
-                : "0px",
+            "--docked-panel-width": dockedAgentWidth,
+            // The strip the bar fills between the two panels
+            // (window-bar.css): the sidebar's header and the AI panel's
+            // own now reach the window's top edge. On iOS both panels lie
+            // over the page, so the bar still spans it.
+            "--bar-strip-right": dockedAgentWidth,
+            "--bar-strip-left":
+              panelOpen && !isIOSApp ? `${sidebarWidth.width}px` : "0px",
             // The sidebar's dragged width (sidebar-frame.css); an iPad
             // keeps the stylesheet's, its sidebar has no handle.
             ...(!isIOSApp && {
@@ -355,6 +367,9 @@ function App() {
           dirty={activeDirty}
           largeDoc={isLargeDoc}
           words={wordCount.words}
+          sidebarOpen={panelOpen}
+          sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
+          onToggleSidebar={toggleSidebar}
           showAgentToggle={settings.enableAskAi || tutorial.active}
           agentOpen={agentPanel.open}
           agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}

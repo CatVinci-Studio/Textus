@@ -56,17 +56,36 @@
   bottom: 0;
 }
 
-/* Both ways: leaving zen fades the bar back in as entering faded it out. */
+/* Both ways: leaving zen fades the bar back in as entering faded it out.
+   And with the panels hidden there is nothing for the bar to make room
+   for: it takes the window back, edge to edge. This transition also
+   carries the bar's left-edge tracking (window-bar.css), which this
+   file's later load would otherwise drop. */
 .window-bar {
-  transition: opacity var(--dur-base) var(--ease-standard);
+  transition:
+    opacity var(--dur-base) var(--ease-standard),
+    left var(--dur-base) var(--ease-standard);
 }
 
 .zen .window-bar {
   opacity: 0;
+  left: 0;
+  right: 0;
 }
 
 .zen .window-bar:hover {
   opacity: 1;
+}
+
+/* Reduced motion: the bar's edge does not track the sidebar's slide - the
+   sidebar doesn't travel under reduced motion either (motion.css), so the
+   two still change place together, just at once. Zen's crossfade stays: a
+   fade is what reduced motion asks for instead of movement. Here rather
+   than in window-bar.css because this file's later load would drop it. */
+@media (prefers-reduced-motion: reduce) {
+  .window-bar {
+    transition: opacity var(--dur-base) var(--ease-standard);
+  }
 }
 
 .zen-hint {

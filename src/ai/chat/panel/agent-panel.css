@@ -8,7 +8,9 @@
   flex-shrink: 0;
   display: flex;
   min-width: 0;
-  /* The window bar is a fixed 28px strip over the top of the layout. */
+  /* The window bar is a fixed 28px strip over the top of the layout - for
+     the overlay variant and the phone's sheet, which lie OVER the page.
+     The docked desktop panel reaches the window's top edge instead, below. */
   padding-top: 28px;
   background: var(--editor-bg, var(--bg));
   border-left: 1px solid var(--border-color);
@@ -24,6 +26,44 @@
    shows. */
 .agent-panel[data-state="closing"] {
   animation: motion-nudge-out-end var(--dur-base) var(--ease-in) forwards;
+}
+
+/* Immersive: on the desktop the docked panel reaches the window's top edge
+   and its header shares the 28px strip with the window's chrome - the
+   caption buttons stay pinned in the corner over the header's right end,
+   which is why the header below leaves them their room. The overlay
+   variant (a narrow window, where the panel lies over the page) and the
+   phone's sheet keep the strip-clearing padding above: the strip stays the
+   page's to see, click and drag while something floats over it. */
+:root:not([data-window-chrome="mobile"])
+  .agent-panel:not(.agent-panel-overlay) {
+  padding-top: 0;
+}
+
+:root:not([data-window-chrome="mobile"])
+  .agent-panel:not(.agent-panel-overlay)
+  .agent-panel-header {
+  min-height: 0;
+  height: 28px;
+  padding: 0 8px 0 14px;
+}
+
+:root[data-window-chrome="app"]
+  .agent-panel:not(.agent-panel-overlay)
+  .agent-panel-header {
+  /* Past the caption buttons pinned over this end of the strip (3 x 46px)
+     plus the bar's 12px of air. */
+  padding-right: 146px;
+}
+
+/* The Conversation / Memory switch, compacted to the strip's height: the
+   same measured pill (AgentPanelView measures it), on a shorter row. */
+:root:not([data-window-chrome="mobile"])
+  .agent-panel:not(.agent-panel-overlay)
+  .agent-panel-tabs
+  button {
+  padding: 2px 10px;
+  line-height: 1.3;
 }
 
 .agent-panel-mount {
