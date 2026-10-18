@@ -10,7 +10,7 @@ import { ai, type CompletionHints } from "../../platform/ipc";
 import { AiNoticeError } from "../../utils/error-text";
 import { cjkChunk, isCjk, isCjkLetter } from "../../utils/cjk";
 import { headingTrail } from "../doc-markdown";
-import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 
 const DEBOUNCE_MS = 450;
 const MAX_CONTEXT_CHARS = 2000;
@@ -232,6 +232,13 @@ export function splitCandidates(raw: string): string[] {
 /// uses - for manual "trigger completion" entry points (e.g. a context menu
 /// item). Unlike the silent auto-trigger path, this throws on failure so the
 /// caller can surface the error to the user.
+/** Right after raw HTML ("</details>", a table): text written on its
+ *  line becomes part of the HTML block when the file is read again, so a
+ *  continuation there would vanish into the markup. */
+function afterRawHtml($pos: ResolvedPos): boolean {
+  return $pos.nodeBefore?.type.name === "html";
+}
+
 export async function triggerGhostTextNow(
   view: EditorView,
   provider: string,
@@ -245,7 +252,8 @@ export async function triggerGhostTextNow(
   const $pos = selection.$from;
   if (
     !$pos.parent.isTextblock ||
-    $pos.parentOffset !== $pos.parent.content.size
+    $pos.parentOffset !== $pos.parent.content.size ||
+    afterRawHtml($pos)
   ) {
     throw new AiNoticeError("completion-needs-paragraph-end");
   }
@@ -514,7 +522,8 @@ export function createGhostTextPlugin(options: {
               const $pos = selection.$from;
               const atBlockEnd =
                 $pos.parent.isTextblock &&
-                $pos.parentOffset === $pos.parent.content.size;
+                $pos.parentOffset === $pos.parent.content.size &&
+                !afterRawHtml($pos);
               if (!atBlockEnd) return;
 
               const cursorPos = selection.from;
