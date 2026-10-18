@@ -629,6 +629,7 @@ export function SettingsPanel({
               <button
                 key={c.id}
                 aria-current={category === c.id ? "page" : undefined}
+                data-label={c.label}
                 className={`settings-nav-item ${category === c.id ? "settings-nav-item-active" : ""}`}
                 onClick={(e) => {
                   setCategory(c.id);

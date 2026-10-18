@@ -308,6 +308,28 @@ test.describe("desktop", () => {
     ).toBeVisible();
     await expect(panel.getByText(t.updateChannel)).toHaveCount(0);
   });
+
+  test("every page is as wide as the others, whichever category is chosen", async ({
+    page,
+  }) => {
+    // Russian: its longest name ("Editor & Appearance") sets the nav's
+    // width, and that one turning bold once narrowed the page beside it.
+    await openApp(page, { settings: { language: "ru" } });
+    await openSettings(page);
+    const panel = page.locator(".settings-panel");
+    const items = panel.locator(".settings-nav-item");
+    await expect(items).toHaveCount(5);
+    const widths = new Set<number>();
+    for (const item of await items.all()) {
+      await item.click();
+      widths.add(
+        await panel
+          .locator(".settings-content")
+          .evaluate((el) => el.getBoundingClientRect().width),
+      );
+    }
+    expect(widths.size).toBe(1);
+  });
 });
 
 test.describe("iPad", () => {
