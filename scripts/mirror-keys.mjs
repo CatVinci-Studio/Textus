@@ -13,7 +13,9 @@ import { fileURLToPath } from "node:url";
 
 /** Each key and the installer it serves, by tauri-bundler's name for it, in
  *  the manifest's order. The x64 keys came first and keep their names;
- *  ARM64 Windows and Linux (from 1.1.0) end in -arm64. */
+ *  ARM64 Windows and Linux (from 1.1.0) end in -arm64. Keep x64 first: the
+ *  site's src/main.ts has matched files by extension alone (/-setup\.exe$/)
+ *  and takes the first match. */
 export const MIRROR_KEYS = [
   ["mac", /_aarch64\.dmg$/],
   ["mac-intel", /_x64\.dmg$/],
