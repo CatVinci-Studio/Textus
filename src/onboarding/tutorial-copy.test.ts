@@ -36,6 +36,12 @@ describe.each(LANGS)("the tour in %s", (lang) => {
     expect(names).toEqual(["tighten", "translate"]);
   });
 
+  it("calls the sidebar's outline by its tab's own name", () => {
+    const tab = t.outlineTab.toLowerCase();
+    expect(t.tutorialSidebarTask.toLowerCase()).toContain(tab);
+    expect(t.tutorialSidebarTaskPhone.toLowerCase()).toContain(tab);
+  });
+
   it("keeps each lesson to one sentence and one task", () => {
     for (const step of TUTORIAL_STEPS) {
       const body = t[step.bodyKey];

@@ -660,9 +660,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialModesTask: "Ative o Modo Zen e escolha outro tema.",
   tutorialSidebarTitle: "Barra lateral e exportação",
   tutorialSidebarBody:
-    "Arquivos e sumário ficam à esquerda; exporte quando terminar.",
-  tutorialSidebarTask: "Abra a barra lateral ({shortcut}) e veja o sumário.",
-  tutorialSidebarTaskPhone: "Abra a barra lateral pelo menu e veja o sumário.",
+    "Arquivos e estrutura ficam à esquerda; exporte quando terminar.",
+  tutorialSidebarTask: "Abra a barra lateral ({shortcut}) e veja a estrutura.",
+  tutorialSidebarTaskPhone:
+    "Abra a barra lateral pelo menu e veja a estrutura.",
   tutorialConnectTitle: "Conecte sua IA",
   tutorialConnectBody:
     "Com ela conectada, você pode experimentar de verdade o que vem a seguir.",
