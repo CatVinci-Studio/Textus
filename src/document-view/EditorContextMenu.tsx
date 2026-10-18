@@ -25,7 +25,7 @@ export function EditorContextMenu({
   run,
   t,
   settings,
-  tutorialMock,
+  inTour,
   openAgentConversation,
   triggerCompletion,
   triggerGrammarCheck,
@@ -40,7 +40,8 @@ export function EditorContextMenu({
   run: EditorRunner;
   t: Strings;
   settings: Settings;
-  tutorialMock: boolean;
+  /** This is the tour's practice tab. */
+  inTour: boolean;
   openAgentConversation: () => void;
   triggerCompletion: () => void;
   triggerGrammarCheck: () => void;
@@ -63,13 +64,12 @@ export function EditorContextMenu({
               t,
               imagePos: menu.imagePos,
               // Each AI item is only offered while its feature is enabled in
-              // Settings. The provider-free newcomer guide always exposes Ask
-              // AI so its real right-click entry point remains available even
-              // if the user previously disabled Agent chat before replaying
-              // the guide from Help. The phone's "More" leaves it to the
-              // toolbar's own button.
+              // Settings. The tour's practice tab always offers Ask AI, so
+              // its AI lessons work even for someone who turned Agent chat
+              // off before replaying the tour from Help. The phone's
+              // "More" leaves it to the toolbar's own button.
               aiItems: [
-                ...((settings.enableAskAi || tutorialMock) && !menu.phone
+                ...((settings.enableAskAi || inTour) && !menu.phone
                   ? [{ label: t.askAi, onSelect: openAgentConversation }]
                   : []),
                 ...(settings.enableCompletion

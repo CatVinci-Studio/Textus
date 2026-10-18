@@ -1,11 +1,14 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { makeBlankTab } from "../document/doc-tabs";
 import { storage } from "../platform/ipc";
 import { useLevisImportOffer } from "../settings/levis-import";
 import type { Settings } from "../settings/SettingsContext";
-import { SIDEBAR_TAB } from "../onboarding/tutorial-evaluation";
+import { MODES_PART } from "../onboarding/tutorial-evaluation";
+import { practiceDiary, withPracticeDiary } from "../onboarding/practice-diary";
+import { stepIndexOf } from "../onboarding/tutorial-steps";
 import type { Tutorial } from "../onboarding/useTutorial";
-import type { Strings } from "../i18n/strings";
+import type { AgentPanelTab } from "../ai/chat/panel/AgentPanelView";
+import type { Lang, Strings } from "../i18n/strings";
 import type { PanelMode } from "./useSidePanels";
 import type { TabState } from "./useTabState";
 
@@ -112,23 +115,86 @@ export function useTutorialTabRecovery(
   }, []);
 }
 
-/** The tour's sidebar lesson: open the panel it's about, and tick off each
- *  tab as it's shown (the one already showing counts - it's on screen).
- *  Returns whether the lesson is on, for the sidebar's spotlight. */
-export function useSidebarLesson(opts: {
+const FIRST_DIARY_STEP = stepIndexOf("blocks");
+
+/**
+ * The practice diary (onboarding/practice-diary.ts) in the tour's tab from
+ * the second writing lesson on, under whatever the learner wrote in the
+ * first. Checked on every step, so a tour resumed after a relaunch - on a
+ * new, empty practice tab - gets it back. Each step also grades the text
+ * as it stands: a table made a lesson early counts on arrival.
+ */
+export function usePracticeDiary(opts: {
+  tutorial: Tutorial;
+  tabState: TabState;
+  language: Lang;
+  evaluate: (tabId: string, markdown: string) => void;
+}): void {
+  const { tutorial, tabState, language, evaluate } = opts;
+  const { liveTabs, updateTab } = tabState;
+  const { active, tabId, stepIndex } = tutorial;
+  useEffect(() => {
+    if (!active || !tabId) return;
+    const tab = liveTabs().find((tb) => tb.id === tabId);
+    if (!tab || tab.path || tab.helpDoc) return;
+    let content = tab.content;
+    if (stepIndex >= FIRST_DIARY_STEP) {
+      content = withPracticeDiary(content, practiceDiary(language));
+      if (content !== tab.content)
+        updateTab(tab.id, { content, reloadKey: tab.reloadKey + 1 });
+    }
+    evaluate(tab.id, content);
+    // The language is read, not followed: changing it mid-tour must not
+    // add a second diary (withPracticeDiary knows both anyway).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, tabId, stepIndex, liveTabs, updateTab, evaluate]);
+}
+
+/**
+ * The tour's lessons about the window rather than the text: a writing mode
+ * and a theme tried, the sidebar's outline looked at, the AI panel opened
+ * and its Memory tab shown. Returns whether the sidebar lesson is on, for
+ * the sidebar's spotlight.
+ */
+export function useWindowLessons(opts: {
   tutorial: Tutorial;
   languageChosen: boolean;
+  panelOpen: boolean;
   panelMode: PanelMode;
-  setPanelOpen: (open: boolean) => void;
+  agentPanelOpen: boolean;
+  agentPanelTab: AgentPanelTab;
+  /** Which writing mode is on, as one string. */
+  writingMode: string;
+  /** Which theme shows, as one string. */
+  look: string;
 }): boolean {
-  const { tutorial, languageChosen, panelMode, setPanelOpen } = opts;
-  const sidebarLesson =
-    tutorial.active && languageChosen && tutorial.step.id === "sidebar";
-  const setTutorialPhase = tutorial.setPhase;
+  const { tutorial, languageChosen, panelOpen, panelMode } = opts;
+  const { agentPanelOpen, agentPanelTab, writingMode, look } = opts;
+  const lesson = tutorial.active && languageChosen ? tutorial.step.id : null;
+  const setPhase = tutorial.setPhase;
+
+  // Against how things were when the lesson began: what changed since.
+  const before = useRef<{ writingMode: string; look: string } | null>(null);
   useEffect(() => {
-    if (!sidebarLesson) return;
-    setPanelOpen(true);
-    setTutorialPhase((phase) => phase | SIDEBAR_TAB[panelMode]);
-  }, [sidebarLesson, panelMode, setTutorialPhase, setPanelOpen]);
-  return sidebarLesson;
+    if (lesson !== "modes-themes") {
+      before.current = null;
+      return;
+    }
+    before.current ??= { writingMode, look };
+    const parts =
+      (writingMode !== before.current.writingMode ? MODES_PART.mode : 0) |
+      (look !== before.current.look ? MODES_PART.theme : 0);
+    if (parts) setPhase((phase) => phase | parts);
+  }, [lesson, writingMode, look, setPhase]);
+
+  useEffect(() => {
+    if (
+      (lesson === "sidebar-export" && panelOpen && panelMode === "outline") ||
+      (lesson === "ai-panel" && agentPanelOpen) ||
+      (lesson === "memory" && agentPanelOpen && agentPanelTab === "memory")
+    )
+      setPhase((phase) => Math.max(phase, 1));
+  }, [lesson, panelOpen, panelMode, agentPanelOpen, agentPanelTab, setPhase]);
+
+  return lesson === "sidebar-export";
 }

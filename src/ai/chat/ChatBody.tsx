@@ -36,10 +36,6 @@ import {
   cursorBlock,
   userMessageBody,
 } from "./user-message";
-import {
-  AI_MESSAGE_SENT_EVENT,
-  TUTORIAL_AGENT_PROPOSAL_EVENT,
-} from "../../utils/events";
 
 export interface ChatBodyLabels
   extends ChatMessagesLabels, ChatComposerLabels, QuickAskPendingBarLabels {
@@ -68,7 +64,8 @@ export interface ChatBodyProps {
   conversation: AgentConversation;
   defaultMode: AgentMode;
   defaultWebSearch: boolean;
-  tutorialMock?: boolean;
+  /** A message went out through a skill - see ChatComposer. */
+  onSkillUsed?: () => void;
   labels: ChatBodyLabels;
   proposalStatus: (callId: string) => PendingStatus;
   pendingCount: number;
@@ -207,7 +204,7 @@ export function ChatBody({
   conversation,
   defaultMode,
   defaultWebSearch,
-  tutorialMock,
+  onSkillUsed,
   labels,
   proposalStatus,
   pendingCount,
@@ -301,11 +298,7 @@ export function ChatBody({
 
   function afterSend(newTurns: AgentTurn[] | undefined) {
     const proposals = proposalsFromTurns(newTurns ?? []);
-    if (proposals.length > 0) {
-      onProposals(proposals);
-      if (tutorialMock)
-        window.dispatchEvent(new Event(TUTORIAL_AGENT_PROPOSAL_EVENT));
-    }
+    if (proposals.length > 0) onProposals(proposals);
     requestAnimationFrame(() => {
       listRef.current?.scrollTo({
         top: listRef.current.scrollHeight,
@@ -355,9 +348,6 @@ export function ChatBody({
     includeSelection: boolean,
     options: AgentRequestOptions,
   ) {
-    // Signals the interactive tutorial's "ask AI something" step - a real
-    // send, not just opening the panel.
-    if (tutorialMock) window.dispatchEvent(new Event(AI_MESSAGE_SENT_EVENT));
     dispatchSend(({ selectionMarkdown: selection, cursor }) => {
       // Rewrites of the selection come back as replace_selection tool calls
       // (see AGENT_TOOL_INSTRUCTIONS in src-tauri/src/ai/agent.rs); the tag
@@ -638,6 +628,7 @@ export function ChatBody({
         dockActions={dockActions}
         defaultWebSearch={defaultWebSearch}
         onSend={handleSend}
+        onSkillUsed={onSkillUsed}
         onStop={stop}
         onEscape={onEscape ?? (() => {})}
       />

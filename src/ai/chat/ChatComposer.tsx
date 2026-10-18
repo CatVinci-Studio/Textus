@@ -123,6 +123,9 @@ interface ChatComposerProps {
     includeSelection: boolean,
     options: { mode: AgentMode; webSearch: boolean },
   ) => void;
+  /** The message just sent went through a skill (`/name`) - the tour's
+   *  skills lesson waits for it. */
+  onSkillUsed?: () => void;
   onStop: () => void;
   onEscape: () => void;
 }
@@ -147,6 +150,7 @@ export function ChatComposer({
   defaultWebSearch,
   dockActions,
   onSend,
+  onSkillUsed,
   onStop,
   onEscape,
 }: ChatComposerProps) {
@@ -413,6 +417,7 @@ export function ChatComposer({
     const staged = attachments;
     setAttachments([]);
     onSend(message, staged, !selectionDropped, { mode, webSearch });
+    if (message !== typed) onSkillUsed?.();
   }
 
   function onKeyDown(e: React.KeyboardEvent) {

@@ -40,9 +40,8 @@ interface InlineChatProps {
   conversation: AgentConversation;
   defaultMode: AgentMode;
   defaultWebSearch: boolean;
-  /** This chat is the onboarding tour's mock conversation - the only one
-   *  whose sends/proposals may advance the tour. */
-  tutorialMock?: boolean;
+  /** A message went out through a skill - see ChatComposer. */
+  onSkillUsed?: () => void;
   labels: InlineChatLabels;
   onProposals: (
     proposals: { callId: string; proposal: EditProposal }[],
@@ -110,7 +109,7 @@ export function InlineChat({
   conversation,
   defaultMode,
   defaultWebSearch,
-  tutorialMock,
+  onSkillUsed,
   labels,
   onProposals,
   proposalStatus,
@@ -207,7 +206,7 @@ export function InlineChat({
           conversation={conversation}
           defaultMode={defaultMode}
           defaultWebSearch={defaultWebSearch}
-          tutorialMock={tutorialMock}
+          onSkillUsed={onSkillUsed}
           labels={labels}
           proposalStatus={proposalStatus}
           pendingCount={pendingCount}

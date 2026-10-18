@@ -567,6 +567,7 @@ utiliser une.
   menuHelpMarkdown: "Guide Markdown",
   menuHelpAgent: "Guide des fonctions IA",
   menuHelpCommunity: "Rejoindre la communauté",
+  menuHelpTutorials: "Tutoriels vidéo",
   windowMinimize: "Réduire",
   windowMaximize: "Agrandir",
   windowRestore: "Niveau inférieur",
@@ -646,108 +647,83 @@ utiliser une.
   untitledTab: "Sans titre",
   markdownGuideTab: "Guide Markdown",
   agentGuideTab: "Guide des fonctions IA",
-  tutorialStepOfCount: "Leçon {i} sur {n}",
-  tutorialCourseSections: "Sections du tutoriel",
-  tutorialSectionMarkdown: "Les bases de Markdown",
-  tutorialSectionWorkspace: "Se repérer",
-  tutorialSidebarTitle: "La barre latérale",
-  tutorialSidebarBody:
-    "Le panneau de gauche est ouvert pour vous ici\u202f; affichez-le ou masquez-le à tout moment avec {shortcut} ou depuis le menu Présentation. Cliquez sur chacun de ses quatre onglets pour voir ce qu'il contient.",
-  tutorialSidebarTree:
-    "Fichiers\u00a0: le dossier du document ouvert. Cliquez sur un fichier pour l'ouvrir, sur ↑ pour remonter d'un dossier, et double-cliquez sur un dossier pour y entrer.",
-  tutorialSidebarOutline:
-    "Plan\u00a0: les titres du document. Cliquez sur l'un d'eux pour y accéder\u202f; les flèches replient une section.",
-  tutorialSidebarClipboard:
-    "Presse-papiers\u00a0: ce que vous avez copié récemment. Cliquez sur un élément pour l'insérer au curseur.",
-  tutorialSidebarChat:
-    "Discussions\u00a0: vos conversations passées avec l'IA. Cliquez sur l'une d'elles pour la reprendre là où vous l'aviez laissée.",
-  tutorialSidebarDone: "Vous avez vu tous les onglets.",
-  tutorialSectionAi: "Écrire avec l'IA",
+  tutorialStepOfCount: "Étape {i} sur {n}",
+  tutorialChapters: "Chapitres du tutoriel",
+  tutorialChapterStart: "Début",
+  tutorialChapterWriting: "Écriture",
+  tutorialChapterConnect: "Connecter l'IA",
+  tutorialChapterAi: AI_NAME,
+  tutorialChapterDone: "Terminé",
   tutorialBack: "Retour",
   tutorialNext: "Continuer",
-  tutorialStart: "Commencer le tutoriel",
+  tutorialStart: "Commencer",
   tutorialFinish: "Commencer à écrire",
   tutorialSkip: "Quitter le tutoriel",
   tutorialSkipStep: "Passer cette étape",
-  tutorialPractice: "Exercice",
-  tutorialShortcut: "Raccourci\u00a0: {shortcut}",
   tutorialCollapse: "Réduire",
   tutorialExpand: "Afficher les instructions",
-  tutorialSkipItem: "Passer cet exercice\u00a0: {item}",
-  tutorialLearned: "Vous pouvez continuer",
+  tutorialTryIt: "À vous",
+  tutorialWatch: "Voir l'animation",
+  tutorialWatchNote:
+    "Connectez une IA plus tard dans {path} pour l'essayer vous-même.",
   tutorialWelcomeTitle: `Bienvenue dans ${APP_NAME}`,
-  tutorialWelcomeBody: `${APP_NAME} est un éditeur Markdown qui affiche la mise en forme pendant que vous tapez. Essayez les titres, les styles de texte et les fonctions d'IA. Vous pouvez passer n'importe quelle étape ou quitter à tout moment.`,
-  tutorialRoadmapAiTools: "Complétion IA et correction grammaticale",
-  tutorialMarkdownIntroTitle: "Qu'est-ce que Markdown\u202f?",
-  tutorialMarkdownIntroBody: `Markdown met en forme le texte à l'aide de symboles. Commencez une ligne par # et un espace pour créer un titre, ou entourez du texte de ** pour le mettre en gras. ${APP_NAME} affiche le résultat pendant que vous tapez.`,
-  tutorialMarkdownPracticeTitle: "Essayez Markdown",
-  tutorialMarkdownPracticeBody:
-    "Tapez ces exemples dans l'éditeur, dans l'ordre de votre choix. Cliquez sur le numéro d'un élément pour le passer. Réduisez les instructions si elles masquent votre texte.",
-  tutorialMarkdownStepHeading: "Tapez # Titre de niveau 1",
-  tutorialMarkdownStepSubheading:
-    "À la ligne suivante, tapez ## Titre de niveau 2",
-  tutorialMarkdownStepBold: "Tapez **une idée importante**",
-  tutorialMarkdownStepItalic: "Tapez *du texte en italique*",
-  tutorialMarkdownStepHighlight: "Tapez ==ceci est important==",
-  tutorialMarkdownStepCode: 'Tapez `print("hello")`',
-  tutorialMarkdownStepFormula: "Tapez $E=mc^2$",
-  tutorialMarkdownDone: "Ces exercices sont terminés ou passés.",
-  tutorialAiIntroTitle: "Écrire avec l'IA",
-  tutorialAiIntroBody: `Essayez la complétion, la vérification grammaticale, la discussion et la modification du document. Ce tutoriel utilise des exemples prédéfinis et ne demande aucune connexion. Pour un usage courant, connectez un service dans Réglages > ${AI_NAME}.`,
-  tutorialCompletionTitle: "Complétion de texte",
-  tutorialCompletionBody:
-    "Les suggestions s'affichent en gris. Appuyez sur Tab pour en accepter une, ou continuez à taper pour l'ignorer. Vous pouvez aussi demander une suggestion depuis le menu contextuel.",
-  tutorialCompletionTarget: "Ce matin, le temps",
-  tutorialCompletionSuggestion:
-    " est doux et ensoleillé, idéal pour une promenade.",
-  tutorialCompletionWaiting:
-    "Tapez le texte ci-dessous, puis marquez une pause.",
-  tutorialCompletionGhostShown:
-    "Appuyez sur Tab pour accepter la suggestion en gris.",
-  tutorialCompletionAccepted: "Suggestion acceptée.",
+  tutorialWelcomeBody: "Un journal de voyage va nous servir de visite guidée.",
+  tutorialWysiwygTitle: "Tel écran, tel écrit",
+  tutorialWysiwygBody: "Le Markdown se met en forme pendant que vous écrivez.",
+  tutorialWysiwygTask: "Tapez `# {title}`, puis écrivez une liste.",
+  tutorialBlocksTitle: "Formules, tableaux, diagrammes",
+  tutorialBlocksBody: "Quelques lignes de texte suffisent à les dessiner.",
+  tutorialBlocksTask: "Écrivez votre itinéraire sous forme de tableau.",
+  tutorialModesTitle: "Modes d'écriture et thèmes",
+  tutorialModesBody: "Écrivez autrement, changez de look.",
+  tutorialModesTask: "Activez le mode zen, puis choisissez un autre thème.",
+  tutorialSidebarTitle: "Barre latérale et export",
+  tutorialSidebarBody:
+    "Les fichiers et le plan sont à gauche ; exportez une fois fini.",
+  tutorialSidebarTask:
+    "Ouvrez la barre latérale ({shortcut}) et regardez le plan.",
+  tutorialSidebarTaskPhone:
+    "Ouvrez la barre latérale depuis le menu et regardez le plan.",
+  tutorialConnectTitle: "Connectez votre IA",
+  tutorialConnectBody:
+    "Une fois connectée, vous pourrez vraiment essayer la suite.",
+  tutorialConnectTask:
+    "Connectez-vous ou collez une clé, ou passez pour l'instant.",
+  tutorialConnectSkip: "Passer pour l'instant",
+  tutorialConnected: "Connecté.",
+  tutorialAiPanelTitle: "Le panneau IA",
+  tutorialAiPanelBody: "Votre assistant d'écriture vit ici.",
+  tutorialAiPanelTask: "Appuyez sur {shortcut} pour ouvrir le panneau.",
+  tutorialAiPanelTaskPhone:
+    "Touchez le bouton du panneau IA, en haut, pour l'ouvrir.",
+  tutorialContinuationTitle: "Complétion",
+  tutorialContinuationBody: "Marquez une pause, il écrit la suite.",
+  tutorialContinuationTask:
+    "Écrivez à la fin du journal, faites une pause, puis appuyez sur Tab pour accepter.",
+  tutorialContinuationTaskPhone:
+    "Écrivez à la fin du journal, faites une pause, puis touchez le texte gris pour accepter.",
   tutorialGrammarTitle: "Vérification grammaticale",
-  tutorialGrammarBody:
-    "Les erreurs possibles sont soulignées. Survolez un soulignement pour en voir la raison et choisir d'appliquer ou non la correction.",
-  tutorialGrammarTarget: "Il faut que tu viens demain",
-  tutorialGrammarOriginal: "viens",
-  tutorialGrammarIssue: "Subjonctif après «\u00a0il faut que\u00a0»",
-  tutorialGrammarSuggestion: "viennes",
-  tutorialGrammarWaiting: "Tapez la phrase ci-dessous.",
-  tutorialGrammarShown: "Survolez le soulignement et cliquez sur Appliquer.",
-  tutorialGrammarFixed: "Correction appliquée.",
-  tutorialAgentChatTitle: "Demander à l'IA",
-  tutorialAgentChatBody:
-    "Faites un clic droit et choisissez Demander à l'IA… pour ouvrir une conversation. Le document actuel est joint à la question.",
-  tutorialAgentChatPrompt: "Donne-moi trois astuces rapides pour Markdown",
-  tutorialAgentChatWaiting:
-    "Ouvrez la conversation et envoyez la question ci-dessous.",
-  tutorialAgentChatReplied: "Message envoyé.",
-  tutorialAgentChatMockReply:
-    "Voici trois astuces rapides pour Markdown\u00a0:\n\n1. Placez deux astérisques de chaque côté d'un texte important pour le mettre en **gras**.\n2. Commencez une ligne par `-` et un espace pour créer une liste.\n3. Utilisez les titres `#`, `##` et `###` pour structurer un document.",
-  tutorialAgentEditTitle: "Modifier le document",
-  tutorialAgentEditBody:
-    "Les modifications s'affichent en aperçu. Acceptez une modification pour l'appliquer au document, ou refusez-la.",
-  tutorialAgentEditTarget:
-    "Je tenais à vous faire savoir que la réunion débutera demain à quinze heures.",
-  tutorialAgentEditPrompt: "Raccourcis cette phrase.",
-  tutorialAgentEditSuggestion: "La réunion commence demain à 15 heures.",
-  tutorialAgentEditWaiting:
-    "Tapez d'abord la phrase ci-dessous dans l'éditeur.",
-  tutorialAgentEditReady:
-    "Faites un clic droit, choisissez Demander à l'IA…, puis envoyez la demande ci-dessous.",
-  tutorialAgentEditProposed: "Vérifiez l'aperçu et cliquez sur Accepter.",
-  tutorialAgentEditApplied: "Le document a été mis à jour.",
-  tutorialAgentEditMockReply:
-    "J'ai supprimé la formule d'introduction superflue. Vérifiez l'aperçu de la modification.",
-  tutorialConnectAiTitle: "Connectez votre IA",
-  tutorialConnectAiBody:
-    "L'entraînement utilisait des réponses d'exemple. Connectez un fournisseur et la complétion, la vérification grammaticale et l'assistant fonctionneront pour de vrai.",
-  tutorialConnectAiConnected:
-    "Connecté. Les fonctions d'IA utiliseront ce fournisseur.",
-  tutorialConnectAiSkip: "Passer pour l'instant",
-  tutorialConnectAiLater: "Vous pourrez aussi le faire plus tard dans {path}.",
-  tutorialDoneTitle: "Tutoriel terminé",
-  tutorialDoneBody: `Vous pouvez maintenant commencer à écrire. Pour utiliser l'IA, connectez un service dans Réglages > ${AI_NAME}. Vous pouvez rouvrir ce tutoriel depuis le menu Aide.`,
+  tutorialGrammarBody: "Les fautes sont soulignées.",
+  tutorialGrammarTask:
+    "Ouvrez la carte du soulignement et appliquez la correction.",
+  tutorialGrammarQuiet:
+    "Cette fois, l'IA n'a rien trouvé à corriger. Vous pouvez continuer.",
+  tutorialRevisionTitle: "Révision",
+  tutorialRevisionBody:
+    "Faites-lui retravailler un paragraphe, puis décidez phrase par phrase.",
+  tutorialRevisionTask:
+    "Sélectionnez un paragraphe et demandez à l'IA de le rendre plus vivant.",
+  tutorialReviewTitle: "Relecture",
+  tutorialReviewBody: "Les suggestions arrivent dans la marge.",
+  tutorialReviewTask: "Demandez à l'IA des suggestions sur ce journal.",
+  tutorialSkillsTitle: "Compétences intégrées",
+  tutorialSkillsBody: "Tapez / pour les utiliser.",
+  tutorialSkillsTask: "Essayez `/raccourcir` ou `/traduire` dans le panneau.",
+  tutorialMemoryTitle: "Progresse avec le temps",
+  tutorialMemoryBody: "Il retient votre style et ce que vous demandez.",
+  tutorialMemoryTask: "Ouvrez Mémoire et voyez ce qu'il retient.",
+  tutorialDoneTitle: "Terminé",
+  tutorialDoneBody: "À vous d'écrire, maintenant.",
   closePromptMessage:
     "Ce document contient des modifications non enregistrées.",
   closePromptSave: "Enregistrer",

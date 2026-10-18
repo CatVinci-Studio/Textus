@@ -42,10 +42,6 @@ export interface RetryableSend {
   options: AgentRequestOptions;
 }
 
-/** A first-run lesson can return ordinary assistant prose or a realistic
- * sequence containing tool calls, without contacting an AI provider. */
-export type MockAgentReply = (message: string) => string | AgentTurn[];
-
 /// Multi-turn agent conversation state/logic backing the inline chat bar
 /// (see ai/chat/quick-ask/InlineChat.tsx) against the `ai_agent_message` backend command -
 /// pulled out on its own so any other agent surface added later can reuse
@@ -65,12 +61,6 @@ export function useAgentConversation(
   provider: string,
   webSearch: boolean,
   model: string | undefined,
-  /** When set, `send` never reaches the backend: after a short "thinking"
-   *  pause the reply is this pre-written text. The onboarding tour runs the
-   *  chat this way - first-run users have no AI account, and the tour must
-   *  behave identically for everyone. Mocked exchanges are also NOT saved
-   *  to the chat history (they aren't real conversations). */
-  mockReply?: MockAgentReply | null,
   /** Raw stream events beyond what `streaming` state captures - the editor
    *  hooks propose_edit argument fragments here to grow the in-document
    *  preview while the model is still writing it. Read through a ref, so a
@@ -107,23 +97,16 @@ export function useAgentConversation(
   const [retryable, setRetryable] = useState<RetryableSend | null>(null);
   const [lastMode, setLastMode] = useState<AgentMode | null>(null);
   // The in-flight request's id, for stop() to cancel by - null when nothing
-  // is running (or the running exchange is a mocked one, which has no
-  // backend request to cancel).
+  // is running.
   const requestIdRef = useRef<string | null>(null);
   // Incremented whenever a fresh popup replaces the current conversation.
   // A late response from the old popup must never leak into the new chat.
   const generationRef = useRef(0);
 
-  // Once a scripted exchange has landed in `history`, the conversation is
-  // tainted until reset - checking `mockReply` alone isn't enough, because
-  // the tour ending flips it to null one render BEFORE the cleanup below
-  // empties the history, and the save effect would fire in that gap.
-  const mockTainted = useRef(!!mockReply);
-
   // Every exchange updates the conversation's saved copy, so past chats can
   // be reopened from the History list even across restarts.
   useEffect(() => {
-    if (!persist || history.length === 0 || mockTainted.current) return;
+    if (!persist || history.length === 0) return;
     saveConversation({
       id: conversationId,
       docPath,
@@ -132,15 +115,6 @@ export function useAgentConversation(
       turns: history.map(withoutImageData),
     });
   }, [history, conversationId, docPath, persist]);
-
-  // Leaving mock mode (the tour ended or was skipped): drop the scripted
-  // exchange entirely - it must never ride along into a real conversation
-  // or the saved history.
-  const wasMock = useRef(!!mockReply);
-  useEffect(() => {
-    if (wasMock.current && !mockReply) reset();
-    wasMock.current = !!mockReply;
-  });
 
   /** Returns the newly arrived turns - the caller's hook for reacting to
    *  what came back, e.g. the chat bar turning propose_edit tool calls into
@@ -172,44 +146,41 @@ export function useAgentConversation(
     const generation = generationRef.current;
     requestIdRef.current = requestId;
     try {
-      if (mockReply) mockTainted.current = true;
-      const newTurns = mockReply
-        ? await mockExchange(trimmed, mockReply(trimmed))
-        : await ai.agentMessage({
-            provider,
-            document,
-            docPath,
-            workspaceRoot,
-            history: annotateProposalStatuses(history, proposalStatuses ?? {}),
-            message: trimmed,
-            images,
-            webSearch: options.webSearch,
-            mode: options.mode,
-            focusHeading: options.focusHeading ?? null,
-            uiLanguage: uiLanguage.current,
-            model: model || null,
-            requestId,
-            onEvent: (event) => {
-              if (generation !== generationRef.current) return;
-              onStreamEventRef.current?.(event);
-              if (event.type === "delta") {
-                const prev = streamingRef.current;
-                setStreaming({
-                  turns: prev?.turns ?? [],
-                  text: (prev?.text ?? "") + event.text,
-                });
-              } else if (event.type === "turn") {
-                // Interim prose that streamed before a tool call is dropped,
-                // mirroring how the backend's step parsers prefer tool calls
-                // over accompanying text - it never enters history either.
-                const prev = streamingRef.current;
-                setStreaming({
-                  turns: [...(prev?.turns ?? []), event.turn],
-                  text: "",
-                });
-              }
-            },
-          });
+      const newTurns = await ai.agentMessage({
+        provider,
+        document,
+        docPath,
+        workspaceRoot,
+        history: annotateProposalStatuses(history, proposalStatuses ?? {}),
+        message: trimmed,
+        images,
+        webSearch: options.webSearch,
+        mode: options.mode,
+        focusHeading: options.focusHeading ?? null,
+        uiLanguage: uiLanguage.current,
+        model: model || null,
+        requestId,
+        onEvent: (event) => {
+          if (generation !== generationRef.current) return;
+          onStreamEventRef.current?.(event);
+          if (event.type === "delta") {
+            const prev = streamingRef.current;
+            setStreaming({
+              turns: prev?.turns ?? [],
+              text: (prev?.text ?? "") + event.text,
+            });
+          } else if (event.type === "turn") {
+            // Interim prose that streamed before a tool call is dropped,
+            // mirroring how the backend's step parsers prefer tool calls
+            // over accompanying text - it never enters history either.
+            const prev = streamingRef.current;
+            setStreaming({
+              turns: [...(prev?.turns ?? []), event.turn],
+              text: "",
+            });
+          }
+        },
+      });
       if (generation !== generationRef.current) return undefined;
       setHistory((prev) => [...prev, ...newTurns]);
       return newTurns;
@@ -242,8 +213,7 @@ export function useAgentConversation(
     }
   }
 
-  /** Cancels the in-flight request, if any - a no-op otherwise (already
-   *  finished, or a mocked exchange with no backend request behind it). */
+  /** Cancels the in-flight request, if any - a no-op otherwise. */
   function stop() {
     if (requestIdRef.current) void ai.cancelAgentMessage(requestIdRef.current);
   }
@@ -285,10 +255,9 @@ export function useAgentConversation(
     setError(null);
     setRetryable(null);
     setLastMode(null);
-    mockTainted.current = !!mockReply;
   }
 
-  // Used when leaving mock mode and whenever the ordinary right-click /
+  // Used whenever the ordinary right-click /
   // shortcut entry point opens a fresh popup. History restoration bypasses
   // this and explicitly loads the selected conversation instead.
   function reset() {
@@ -347,18 +316,4 @@ function withoutImageData(turn: AgentTurn): AgentTurn {
       dataBase64: "",
     })),
   };
-}
-
-/** A canned user/assistant exchange with a believable "thinking" pause. */
-async function mockExchange(
-  message: string,
-  reply: string | AgentTurn[],
-): Promise<AgentTurn[]> {
-  await new Promise((resolve) => setTimeout(resolve, 1400));
-  return [
-    { kind: "User", text: message },
-    ...(typeof reply === "string"
-      ? ([{ kind: "Assistant", text: reply }] satisfies AgentTurn[])
-      : reply),
-  ];
 }

@@ -410,6 +410,10 @@ export function installDevTauriShim(): void {
     },
     invoke: (cmd: string, args?: { event?: string; handler?: number }) => {
       log(cmd);
+      // Our own pages opened in the browser (platform/ipc.ts's `links`),
+      // with what was asked for: `window.__devLinks` for assertions.
+      if (cmd.startsWith("open_") && cmd.endsWith("_page"))
+        ((w.__devLinks ??= []) as unknown[]).push({ cmd, ...args });
       // `window.__devInvokeResults = { cmd: value }` answers a command with
       // a canned value - e.g. take_chat_handoff, without which the chat
       // window (?view=chat) has no conversation to show.
@@ -453,7 +457,7 @@ export function installDevTauriShim(): void {
       const skill = skillCommand(cmd, args as Record<string, unknown>);
       if (skill) return skill;
       // A canned suggestion instead of null: lets ghost-text rendering (and
-      // the tutorial's completion step) be smoke-tested in the browser -
+      // the tour's completion lesson) be smoke-tested in the browser -
       // null would make the manual trigger path throw an error dialog.
       if (cmd === "ai_complete") {
         return Promise.resolve(
@@ -479,8 +483,8 @@ export function installDevTauriShim(): void {
         );
       }
       // A canned User/Assistant exchange (AgentTurn[]) instead of null - lets
-      // the inline chat's real send path (not just the tutorial's own
-      // mockReply) be smoke-tested in the browser; null here made
+      // the inline chat's real send path be smoke-tested in the browser;
+      // null here made
       // useAgentConversation's `[...prev, ...newTurns]` throw (newTurns not
       // iterable) and crash the whole tree, since there's no error boundary.
       // The reply is also drip-fed through the onEvent channel first, so the

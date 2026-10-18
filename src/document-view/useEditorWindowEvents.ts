@@ -27,12 +27,8 @@ import type { EditorMenuState } from "./EditorContextMenu";
 import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
 import type { ChatHistoryEntry } from "../ai/chat/chat-history";
-import { showGhostSuggestion } from "../ai/writing/ghost-text-plugin";
-import { showGrammarIssues } from "../ai/writing/grammar-check-plugin";
-import {
-  anchorGrammarIssues,
-  type TutorialGrammarMock,
-} from "../onboarding/tutorial-evaluation";
+import { TextSelection } from "@milkdown/kit/prose/state";
+import { findUniqueTextRange } from "../ai/doc-text";
 import type { Settings } from "../settings/SettingsContext";
 import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import {
@@ -50,17 +46,17 @@ import {
   IMAGE_ACTION_EVENT,
   EDITOR_MORE_EVENT,
   EDIT_ACTION_EVENT,
-  TUTORIAL_MOCK_GHOST_EVENT,
-  TUTORIAL_MOCK_GRAMMAR_EVENT,
+  TOUR_GRAMMAR_CHECK_EVENT,
+  type TourAi,
 } from "../utils/events";
 
 /** The window events (utils/events.ts) one tab's editor answers: menu
  *  commands, shortcuts, the iPhone keyboard toolbar, the sidebar panels
- *  and the tutorial's mocks. */
+ *  and the tour's grammar lesson. */
 export function useEditorWindowEvents({
   run,
   settings,
-  tutorialMock,
+  tour,
   triggerCompletion,
   triggerGrammarCheck,
   toggleAgentConversation,
@@ -76,7 +72,8 @@ export function useEditorWindowEvents({
 }: {
   run: EditorRunner;
   settings: Settings;
-  tutorialMock: boolean;
+  /** The tour's AI while this is its practice tab, else null. */
+  tour: TourAi | null;
   triggerCompletion: () => void;
   triggerGrammarCheck: () => void;
   toggleAgentConversation: () => void;
@@ -103,13 +100,14 @@ export function useEditorWindowEvents({
 
   // Shortcuts respect the same feature toggles as the context menu items -
   // a feature turned off in Settings is off through every entry point.
-  // The two backend-calling triggers are also ignored while the tutorial
-  // mocks AI; the chat stays available - it answers from the mock script.
+  // The two typing-assistance triggers are also ignored while the tour
+  // mutes the AI; the chat stays available, as the tour's AI panel lesson
+  // opens it whether or not an AI is connected.
   useWindowEvent(
     TRIGGER_COMPLETION_EVENT,
     () =>
       isOnScreen() &&
-      !tutorialMock &&
+      tour !== "muted" &&
       settings.enableCompletion &&
       triggerCompletion(),
   );
@@ -117,7 +115,7 @@ export function useEditorWindowEvents({
     TRIGGER_GRAMMAR_CHECK_EVENT,
     () =>
       isOnScreen() &&
-      !tutorialMock &&
+      tour !== "muted" &&
       settings.enableGrammarCheck &&
       triggerGrammarCheck(),
   );
@@ -125,7 +123,7 @@ export function useEditorWindowEvents({
     TOGGLE_FLOATING_CHAT_EVENT,
     () =>
       isOnScreen() &&
-      (settings.enableAskAi || tutorialMock) &&
+      (settings.enableAskAi || tour !== null) &&
       toggleAgentConversation(),
   );
   useWindowEvent(
@@ -134,30 +132,27 @@ export function useEditorWindowEvents({
   );
   useWindowEvent(CLOSE_FIND_REPLACE_EVENT, () => findReplace.dismiss());
 
-  // The tutorial's completion step: the user typed the target text, show
-  // the pre-written continuation as ghost text (Tab-accept and clear-on-
-  // edit come from the real plugin - only the request is mocked).
-  useWindowEvent(TUTORIAL_MOCK_GHOST_EVENT, (e) => {
-    if (!isOnScreen()) return;
-    const suggestion = (e as CustomEvent<string>).detail;
-    if (typeof suggestion !== "string" || !suggestion) return;
-    run((ctx) => showGhostSuggestion(ctx.get(editorViewCtx), suggestion));
-  });
-
-  // The tutorial's grammar step: underline a PRE-WRITTEN issue in the
-  // practice paragraph (same no-backend reasoning as the ghost event above).
-  // The issue offsets arrive relative to the practice sentence; re-base them
-  // onto the cursor's paragraph, which may hold earlier text too.
-  useWindowEvent(TUTORIAL_MOCK_GRAMMAR_EVENT, (e) => {
-    if (!isOnScreen()) return;
-    const detail = (e as CustomEvent<TutorialGrammarMock>).detail;
-    if (!detail || !Array.isArray(detail.issues) || detail.issues.length === 0)
+  // The tour's grammar lesson, with an AI connected: the practice diary's
+  // slip is in a paragraph the learner hasn't touched, so nothing has
+  // checked it - put the caret in it and check it, as the shortcut would.
+  // Gone from the text (edited away), the lesson waits it out instead.
+  useWindowEvent(TOUR_GRAMMAR_CHECK_EVENT, (e) => {
+    if (tour !== "live" || !isOnScreen() || !settings.enableGrammarCheck)
       return;
-    run((ctx) => {
+    const passage = (e as CustomEvent<string>).detail;
+    if (typeof passage !== "string" || !passage) return;
+    const found = run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      const para = view.state.selection.$from.parent;
-      showGrammarIssues(view, anchorGrammarIssues(para.textContent, detail));
+      const range = findUniqueTextRange(view.state.doc, passage);
+      if (!range) return false;
+      view.dispatch(
+        view.state.tr.setSelection(
+          TextSelection.create(view.state.doc, range.to),
+        ),
+      );
+      return true;
     });
+    if (found) triggerGrammarCheck();
   });
 
   // Clipboard-history panel clicks: carries the text as CustomEvent detail.

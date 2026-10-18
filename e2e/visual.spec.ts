@@ -7,23 +7,24 @@ test("first run asks for a language", async ({ page }) => {
   await expect(page).toHaveScreenshot("first-run-language.png");
 });
 
-test("the tutorial's sidebar lesson opens and highlights the sidebar", async ({
+test("the tutorial's sidebar lesson highlights the sidebar's outline", async ({
   page,
 }) => {
   await openApp(page, {
     storage: {
       "levis-tutorial-progress": JSON.stringify({
         active: true,
-        stepIndex: 3,
+        stepId: "sidebar-export",
         tabId: null,
       }),
     },
   });
+  await page.keyboard.press("Control+\\");
   await expect(page.locator(".sidebar.tutorial-spotlight")).toBeVisible();
-  // Visiting every tab completes the lesson.
-  for (const tab of await page.locator(".sidebar-tab").all()) await tab.click();
-  await expect(page.locator(".tutorial-card")).toContainText(
-    "四个标签都看过了",
+  // The diary's outline completes the lesson.
+  await page.getByRole("button", { name: "大纲" }).click();
+  await expect(page.locator(".tutorial-card .tutorial-task")).toHaveClass(
+    /is-complete/,
   );
   await expect(page).toHaveScreenshot("tutorial-sidebar-lesson.png");
 });
@@ -683,23 +684,19 @@ test("a one-character CJK fix reads with its neighbour on the grammar card", asy
   await openApp(page);
   await pasteMarkdown(page, "黛玉必竟寄人篱下，所以步步留心。");
   await page.waitForTimeout(300);
+  await mockInvoke(page, {
+    ai_grammar_check: [
+      {
+        start: 2,
+        end: 3,
+        issue: "“必竟”应为“毕竟”。",
+        suggestion: "毕",
+        original: "必",
+      },
+    ],
+  });
   await page.evaluate(() =>
-    window.dispatchEvent(
-      new CustomEvent("textus:tutorial-mock-grammar", {
-        detail: {
-          target: "黛玉必竟寄人篱下，所以步步留心。",
-          issues: [
-            {
-              start: 2,
-              end: 3,
-              issue: "“必竟”应为“毕竟”。",
-              suggestion: "毕",
-              original: "必",
-            },
-          ],
-        },
-      }),
-    ),
+    window.dispatchEvent(new Event("textus:trigger-grammar-check")),
   );
   await page.locator(".milkdown .grammar-issue").hover();
   const card = page.locator(".grammar-popover");

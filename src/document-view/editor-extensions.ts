@@ -3,6 +3,7 @@ import { withEditorCore } from "../editor/editor-extensions";
 import { withAiPlugins, type PendingEditCallbacks } from "../ai/editor-plugins";
 import type { ReviewNote } from "../ai/margin/review-notes-plugin";
 import type { Settings } from "../settings/SettingsContext";
+import type { TourAi } from "../utils/events";
 
 export type { PendingEditCallbacks };
 
@@ -27,12 +28,9 @@ export function withEditorExtensions(
     onMount: (el: HTMLElement) => void;
     onUnmount: (el: HTMLElement) => void;
   },
-  /** True while the onboarding tour runs: the typing-triggered AI plugins
-   *  go quiet so the tour's PRE-WRITTEN suggestions (utils/events.ts's
-   *  TUTORIAL_MOCK_GHOST_EVENT) are the only AI-looking thing on screen -
-   *  first-run users have no account, and a real response arriving over a
-   *  mocked one would derail the script. */
-  aiMuted: { readonly current: boolean },
+  /** The tour's AI while this is its practice tab, else null - see
+   *  withAiPlugins. */
+  tour: { readonly current: TourAi | null },
   /** A pasted image failed to save to disk - the message to show in a
    *  native alert (localized, since this plugin has no i18n access itself). */
   onImagePasteError: () => string,
@@ -51,6 +49,6 @@ export function withEditorExtensions(
       onImagePasteError,
       requestImageName,
     }),
-    { settings, docPath, pendingEdits, quickAskWidget, aiMuted, reviewNotes },
+    { settings, docPath, pendingEdits, quickAskWidget, tour, reviewNotes },
   );
 }

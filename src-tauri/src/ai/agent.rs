@@ -1794,7 +1794,7 @@ mod tests {
             (&ja_ts, "agentSkillsLabel: \"スキル\""),
             (&zh_ts, "settingsTitle: \"设置\""),
             (&ja_ts, "settingsTitle: \"設定\""),
-            (&zh_ts, "tutorialCompletionTitle: \"续写\""),
+            (&zh_ts, "tutorialContinuationTitle: \"续写\""),
             (&ja_ts, "completionToneLabel: \"補完のトーン\""),
             (&zh_ts, "proposalAccept: \"采纳\""),
             (&ja_ts, "proposalAccept: \"適用\""),
