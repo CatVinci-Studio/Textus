@@ -5,6 +5,8 @@ export const CARD_WIDTH = 232;
 export const GAP = 28;
 /** The least the text column keeps on its left when it moves over. */
 const MIN_LEFT = 16;
+/** The air kept between a card and the editor's right edge. */
+const RIGHT_EDGE = 16;
 
 export interface MarginRoom {
   /** Where the column's left edge sits on its own, centred. */
@@ -34,7 +36,7 @@ export function marginRoom(
   // The text's right edge sits inside the column's padding.
   const textRight = natural + columnWidth - padding / 2;
   const room = scrollWidth - textRight;
-  const need = CARD_WIDTH + GAP + 16;
+  const need = CARD_WIDTH + GAP + RIGHT_EDGE;
   const shift = room < need ? need - room : 0;
   return {
     natural,
