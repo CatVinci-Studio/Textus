@@ -21,8 +21,13 @@ on:
 permissions:
   contents: read
 
+# A pull request's newer push replaces its older run. A push to main or a
+# release branch never does: each commit there gets its own run, because the
+# release workflow waits for CI on the exact tagged commit - grouped by
+# branch, a pending run was replaced by the next merge and v1.0.5-rc.3 waited
+# for a CI result that never came.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
