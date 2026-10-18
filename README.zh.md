@@ -39,6 +39,11 @@
 https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
 
 <p align="center">
+  <a href="https://www.bilibili.com/video/BV19LJb6WEWb">在 B 站观看</a> ·
+  <a href="https://www.youtube.com/watch?v=k_ew9TRljz0">YouTube</a>
+</p>
+
+<p align="center">
   <img src="docs/images/readme/zh/hero.png" alt="Textus 打开着《红楼梦》和一段读书笔记，Textus AI 逐句精简笔记，每处修改都在页边，并在原文旁钉上审阅批注" width="860" /><br>
   <sub>《红楼梦》曹雪芹</sub>
 </p>

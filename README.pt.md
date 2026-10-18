@@ -38,6 +38,11 @@
 https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 <p align="center">
+  <a href="https://www.youtube.com/watch?v=k_ew9TRljz0">Assistir no YouTube</a> ·
+  <a href="https://www.bilibili.com/video/BV19LJb6WEWb">Bilibili</a>
+</p>
+
+<p align="center">
   <img src="docs/images/readme/pt/hero.png" alt="O Textus com Dom Casmurro e as notas do leitor abertas. A Textus AI enxuga as notas frase a frase, cada mudança na margem, e fixa um comentário de revisão ao lado do texto." width="860" /><br>
   <sub><i>Dom Casmurro</i>, Machado de Assis</sub>
 </p>

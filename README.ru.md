@@ -38,6 +38,11 @@
 https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 <p align="center">
+  <a href="https://www.youtube.com/watch?v=k_ew9TRljz0">Смотреть на YouTube</a> ·
+  <a href="https://www.bilibili.com/video/BV19LJb6WEWb">Bilibili</a>
+</p>
+
+<p align="center">
   <img src="docs/images/readme/ru/hero.png" alt="Textus с открытым романом «Анна Каренина» и заметками читателя. Textus AI сокращает заметки по предложениям, каждая правка на полях, и оставляет комментарий рядом с текстом." width="860" /><br>
   <sub><i>«Анна Каренина»</i>, Лев Толстой</sub>
 </p>

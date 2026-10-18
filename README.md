@@ -42,6 +42,11 @@
 https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 <p align="center">
+  <a href="https://www.youtube.com/watch?v=k_ew9TRljz0">Watch on YouTube</a> ·
+  <a href="https://www.bilibili.com/video/BV19LJb6WEWb">Bilibili</a>
+</p>
+
+<p align="center">
   <img src="docs/images/readme/en/hero.png" alt="Textus with Hamlet and the reader’s notes on it open. Textus AI tightens the notes sentence by sentence, each change in the margin, and pins a review note beside the play." width="860" /><br>
   <sub><i>Hamlet</i>, William Shakespeare</sub>
 </p>
