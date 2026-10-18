@@ -128,6 +128,8 @@ sequenceDiagram
 ![대체 텍스트](assets/screenshot.png)
 ```
 
+`![[image.png]]`나 `![[attachments/image.png|300]]` 같은 Obsidian 임베드도 그림으로 보입니다. Textus는 문서가 속한 Obsidian 보관함에서 파일을 찾고, 임베드는 쓴 그대로 저장합니다.
+
 ## 보기와 모드
 
 WYSIWYG 편집기와 소스 모드(`Cmd+/`) 외에도 Textus에는 세 가지 쓰기 방식이 있습니다(Windows와 Linux에서는 `Cmd` 대신 `Ctrl`을 쓰세요. 지금 지정된 단축키는 설정 → 단축키에서 볼 수 있습니다):

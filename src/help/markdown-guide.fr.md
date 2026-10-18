@@ -128,6 +128,8 @@ Dans **Réglages → Éditeur et apparence → Images**, vous pouvez plutôt env
 ![texte alternatif](assets/capture.png)
 ```
 
+Les intégrations Obsidian comme `![[image.png]]` ou `![[attachments/image.png|300]]` affichent aussi l'image : Textus cherche le fichier dans le coffre Obsidian du document et enregistre l'intégration telle qu'elle est écrite.
+
 ## Vues et modes
 
 Outre l'éditeur WYSIWYG et le mode source (`Cmd+/`), Textus offre trois façons d'écrire (sous Windows et Linux, utilisez `Ctrl` au lieu de `Cmd` ; Réglages → Raccourcis indique les raccourcis en vigueur) :

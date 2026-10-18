@@ -128,6 +128,8 @@ In **Settings → Editor & Appearance → Images**, you can instead send newly p
 ![alt text](assets/screenshot.png)
 ```
 
+Obsidian embeds like `![[image.png]]` or `![[attachments/image.png|300]]` show the picture too: Textus finds the file in the Obsidian vault the document belongs to, and saves the embed exactly as written.
+
 ## Views and modes
 
 Besides the WYSIWYG editor and source mode (`Cmd+/`), Textus has three ways to write (on Windows and Linux use `Ctrl` for `Cmd`; Settings → Shortcuts has the current bindings):
