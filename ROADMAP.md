@@ -29,20 +29,17 @@ TestFlight for a while and is about to go to review.
   exports. Scripts never run.
 - **A beta channel.** Choose Beta under **Settings › General › About Textus**
   to get release candidates before everyone else; Stable stays the default.
-
-## After that (1.2.0)
+- **Autosave**, if you turn it on: documents go back to their file as you
+  write. [#133](https://github.com/CatVinci-Studio/Textus/issues/133)
+- **Themes from the gallery, inside the app**: browse, install and update
+  them in Settings. [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
+- **Obsidian image embeds** (`![[image.png]]`), kept as written when you
+  save. [#135](https://github.com/CatVinci-Studio/Textus/issues/135)
+- **A switch to type closing `*` yourself.**
+  [#136](https://github.com/CatVinci-Studio/Textus/issues/136)
 
 New features come in minor releases like this one; patch releases (1.1.x)
-only fix things. Already built and waiting:
-
-- Saving to the original file automatically, if you turn it on.
-  [#133](https://github.com/CatVinci-Studio/Textus/issues/133)
-- Obsidian image embeds (`![[image.png]]`), kept as written when you save.
-  [#135](https://github.com/CatVinci-Studio/Textus/issues/135)
-- Switches to stop closing `*` for you and to hide the level-3 and level-4
-  heading marks. [#136](https://github.com/CatVinci-Studio/Textus/issues/136)
-- Browsing and installing gallery themes from inside the app.
-  [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
+only fix things.
 
 ## Recently done
 
