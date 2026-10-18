@@ -228,8 +228,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "引き継ぐ新しいデータはありません。Levis のデータはすでに Textus にあります。",
   levisImportFailed: "コピーできなかったファイルがあります：",
   levisImportRow: "Levis から引き継ぐ",
-  levisImportRowHint:
-    "設定、履歴、テーマなどをコピーします。Levis 側のデータはそのまま残ります。",
   levisImportButton: "引き継ぐ…",
   levisImportNone: "このコンピュータに Levis のデータはありません。",
   levisItemSettings: "設定",

@@ -55,6 +55,19 @@ test("Not now goes on to the language welcome, and Settings keeps the import", a
     .getByRole("button", { name: "Not now" })
     .click();
   await expect(page.locator(".language-welcome")).toBeVisible();
+  await page.locator(".language-welcome-continue").click();
+
+  // The import stays on Settings › General › About Textus.
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (name: string) => void }
+    ).__devEmitTauriEvent("menu-open-settings"),
+  );
+  const panel = page.locator(".settings-panel");
+  await panel.getByRole("button", { name: "About Textus" }).click();
+  await expect(
+    panel.locator(".settings-about").getByRole("button", { name: "Import" }),
+  ).toBeVisible();
 });
 
 test("without Levis data there is no offer", async ({ page }) => {
