@@ -26,3 +26,4 @@ pub mod session;
 pub mod themes;
 #[cfg(desktop)]
 pub mod update;
+pub mod vault;
