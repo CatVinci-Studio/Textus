@@ -17,36 +17,38 @@ first.
 TestFlight for a while and is about to go to review.
 [#87](https://github.com/CatVinci-Studio/Textus/issues/87)
 
-**A Playground.** A small page at `textus.catvinci.com/playground` where you
-can try the editor in your browser before installing anything. It only does
-writing, importing and exporting Markdown; the app has the rest.
-[#88](https://github.com/CatVinci-Studio/Textus/issues/88)
+## In the next release (1.0.5)
 
-**A place to share themes.** Post your theme as a comment on one pinned issue;
-once one of us has looked it over, it shows up on
-`textus.catvinci.com/themes` for everyone, free.
-[#89](https://github.com/CatVinci-Studio/Textus/issues/89)
+- **A new first-run tour.** Connect your AI first, so the AI lessons that
+  follow are the real thing; then the main features one step at a time, each
+  with a short animation you can open. Skip the AI and the lessons show you
+  instead. [#90](https://github.com/CatVinci-Studio/Textus/issues/90)
+- **More HTML in your documents.** Collapsible `<details>` blocks, HTML
+  tables, a few inline styles (colour, size, alignment) and inline `<svg>`
+  drawings show as they should while you write, in split view and in
+  exports. Scripts never run.
+- **A beta channel.** Choose Beta under **Settings › General › About Textus**
+  to get release candidates before everyone else; Stable stays the default.
 
-**Tutorials that actually help.** A step in the first-run tour to connect
-your AI, and a few short videos on the things people ask us about most.
-[#90](https://github.com/CatVinci-Studio/Textus/issues/90)
+## Recently done
 
-## In the next release
-
-These came from your reports - thank you, especially for the ones with
-screenshots and exact steps.
-
-- You can drag the sidebar wider or narrower.
-  [#77](https://github.com/CatVinci-Studio/Textus/issues/77)
-- PDF export on Windows and Linux prints on white, with proper margins, and
-  no longer drops lines at the bottom of a page.
-  [#68](https://github.com/CatVinci-Studio/Textus/issues/68)
-- Dropping a file on the window opens it, and **File › Open** lets you pick
-  any file. [#78](https://github.com/CatVinci-Studio/Textus/issues/78)
-- Text stays sharp while you edit in Source Code Mode on Linux.
-  [#61](https://github.com/CatVinci-Studio/Textus/issues/61)
-- Exported PDFs can have page numbers (turn it on in **Settings › Editor &
-  Appearance**).
+- **Textus 1.0.4**: drag the sidebar to any width
+  ([#77](https://github.com/CatVinci-Studio/Textus/issues/77)), PDFs on white
+  with proper margins and optional page numbers
+  ([#68](https://github.com/CatVinci-Studio/Textus/issues/68)), drop a file
+  to open it on Windows
+  ([#78](https://github.com/CatVinci-Studio/Textus/issues/78)), sharper
+  Source Code Mode on Linux
+  ([#61](https://github.com/CatVinci-Studio/Textus/issues/61)), and smaller
+  installers.
+- **The Playground** is live at
+  [textus.catvinci.com/playground](https://textus.catvinci.com/playground/):
+  try the editor in your browser before installing anything.
+  [#88](https://github.com/CatVinci-Studio/Textus/issues/88)
+- **Theme sharing** is open: post your theme as a comment on one pinned issue;
+  once one of us has looked it over, it shows up on
+  [textus.catvinci.com/themes](https://textus.catvinci.com/themes/) for
+  everyone, free. [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
 ## Later
 
