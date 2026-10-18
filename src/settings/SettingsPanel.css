@@ -185,8 +185,10 @@
 
 /* The one divider in the design: an inset hairline between adjacent rows of
    a card (fragments flatten sections into direct children, so this covers
-   every settings.* row and section root alike). */
+   every settings.* row and section root alike; a link row's own
+   `border: none` would win, so it is named). */
 .settings-group-body > * + *,
+.settings-group-body > * + button.settings-link-row,
 .provider-picker > * + * {
   border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
 }
