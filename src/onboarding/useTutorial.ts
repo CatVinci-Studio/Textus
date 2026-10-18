@@ -176,7 +176,6 @@ export function useTutorial() {
     start,
     next,
     back,
-    skip: exit,
     exit,
     rebindTab,
   };
