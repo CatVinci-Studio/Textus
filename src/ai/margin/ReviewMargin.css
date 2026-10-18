@@ -149,7 +149,10 @@
 
 .review-note-popover {
   position: fixed;
-  z-index: 400;
+  /* A popover, not a modal: at the modal tier, and portaled after the
+     app, it drew over Settings' backdrop when Settings opened from the
+     menu while it was open. */
+  z-index: var(--z-popover);
   width: 260px;
   animation: motion-pop-in var(--dur-fast) var(--ease-out);
 }
