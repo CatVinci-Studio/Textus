@@ -860,6 +860,11 @@ function relocateComposedText(
   }
 }
 
+/** How long after compositionend the committed text is moved out of an
+ *  adjacent node (relocateComposedText, in compositionend below).
+ *  md-span-autopair-plugin.ts waits a little longer, to look after it. */
+export const COMPOSE_RELOCATE_DELAY_MS = 30;
+
 export const enclosurePlugin = $prose(() => {
   let compositionAnchors: CompositionAnchor[] = [];
   return new Plugin<DecorationSet>({
@@ -897,7 +902,10 @@ export const enclosurePlugin = $prose(() => {
           // prosemirror-view flushes the final composition change slightly
           // after this event (scheduleComposeEnd ~20ms); relocate only once
           // the committed text is actually in the state.
-          setTimeout(() => relocateComposedText(view, anchors), 30);
+          setTimeout(
+            () => relocateComposedText(view, anchors),
+            COMPOSE_RELOCATE_DELAY_MS,
+          );
           return false;
         },
       },
