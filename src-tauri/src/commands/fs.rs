@@ -128,7 +128,7 @@ pub(crate) fn with_default_extension(path: String, ext: &str) -> String {
 // which is why a PDF looked like a dead button. It now has its own module -
 // see commands/attachment.rs.
 
-fn require_non_empty(path: &str) -> Result<(), String> {
+pub(crate) fn require_non_empty(path: &str) -> Result<(), String> {
     if path.trim().is_empty() {
         return Err("empty path".to_string());
     }

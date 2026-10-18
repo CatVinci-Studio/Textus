@@ -459,6 +459,27 @@
   display: none;
 }
 
+/* Obsidian embeds (images/obsidian-embed.ts): the source, quiet like raw
+   HTML's - all that a note embed ever shows, and an image embed's while the
+   caret is on it. */
+.obsidian-embed-source {
+  color: var(--editor-muted);
+}
+
+.obsidian-embed-source-hidden {
+  display: none;
+}
+
+/* An image embed whose file isn't in the vault: its name, not a broken
+   picture. */
+.milkdown .image-view.obsidian-embed-missing {
+  padding: 0 0.4em;
+  border: 1px dashed var(--editor-muted);
+  color: var(--editor-muted);
+  font-size: 0.9em;
+  line-height: inherit;
+}
+
 /* An HTML comment while the caret is away (raw-html-preview-plugin.ts):
    a note for whoever reads the file, not code. */
 .raw-html-source:has(> .raw-html-comment) {

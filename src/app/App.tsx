@@ -18,6 +18,7 @@ import { useTabDragMerge } from "./useTabDragMerge";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
 import { useExternalChangeReload } from "../document/useExternalChangeReload";
 import { useDraftAutosave } from "../document/draft-autosave";
+import { useAutosave } from "../document/autosave";
 import { useMenuBridge, useNativeMenuChecks } from "./menu-bridge";
 import { useStartupRestore } from "../document/startup-restore";
 import { Presence } from "../ui/usePresence";
@@ -153,10 +154,16 @@ function App() {
     [updateTab, evaluateTutorialDocumentChange],
   );
 
-  const { saveTab, saveTabAs } = useSaveTabs({
+  const { saveTab, saveTabAs, autosaveTab } = useSaveTabs({
     tabState,
     t,
     autoSuggestFilename: settings.autoSuggestFilename,
+  });
+  const flushAutosave = useAutosave({
+    tabs,
+    activeTabId,
+    enabled: settings.autosave,
+    autosaveTab,
   });
 
   const { zenMode, setZenMode, toggleZenMode } = useZenMode();
@@ -165,6 +172,7 @@ function App() {
   const { removeTab, requestCloseTab } = useTabRemoval({
     tabState,
     cancelDraftFlushes,
+    flushAutosave,
     setPendingClose,
   });
 
@@ -231,7 +239,7 @@ function App() {
   useOpenPathsPush(openPathInTab);
   useFileDrop(openFile, openPathInTab);
 
-  useWindowCloseGuard(liveTabs, setPendingClose);
+  useWindowCloseGuard(liveTabs, flushAutosave, setPendingClose);
 
   useExternalChangeReload(liveTabs, updateTab);
 

@@ -1,4 +1,11 @@
-import { $nodeSchema, $remark } from "@milkdown/kit/utils";
+import { schemaCtx } from "@milkdown/kit/core";
+import { Plugin } from "@milkdown/kit/prose/state";
+import { DOMSerializer } from "@milkdown/kit/prose/model";
+import type {
+  DOMOutputSpec,
+  Node as ProseNode,
+} from "@milkdown/kit/prose/model";
+import { $nodeSchema, $prose, $remark } from "@milkdown/kit/utils";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import {
   highlightFromMarkdown,
@@ -38,6 +45,45 @@ export function spanDelimText(node: {
   return (node.attrs.delim ?? "*").repeat(node.attrs.rung ?? 1);
 }
 
+// A semantic tag Textus's own parseDOM rule below still recognizes via
+// data-type, so pasting this into an EXTERNAL app (which reads only the
+// tag, not the attrs) shows real bold/italic/strikethrough/highlight
+// instead of an unstyled <span>. Bold+italic together (rung 3) has no
+// single tag for it: on the clipboard it is nested strong>em - how remark
+// itself represents "***text***", and what other apps expect to see. In the
+// editor it stays one <strong> (italic comes from content-base.css): the
+// browser types into an empty shell's <strong>, outside an inner <em>, and
+// ProseMirror, reading the content only from the <em>, dropped every
+// character typed after "***".
+function mdSpanDOM(node: ProseNode, forClipboard: boolean): DOMOutputSpec {
+  const delim = node.attrs.delim as string;
+  const rung = node.attrs.rung as number;
+  const attrs = {
+    "data-type": "md_span",
+    "data-delim": delim,
+    "data-rung": String(rung),
+    "data-syntax": spanDelimText(node),
+    class: "md-span",
+  };
+  if (delim === "~") return ["del", attrs, 0];
+  if (delim === "=") return ["mark", attrs, 0];
+  if (rung === 3)
+    return forClipboard ? ["strong", attrs, ["em", 0]] : ["strong", attrs, 0];
+  if (rung === 2) return ["strong", attrs, 0];
+  return ["em", attrs, 0];
+}
+
+/** Copies bold+italic as strong>em (see mdSpanDOM); everything else is
+ *  serialized as the schema renders it. */
+export const mdSpanClipboardPlugin = $prose((ctx) => {
+  const base = DOMSerializer.fromSchema(ctx.get(schemaCtx));
+  const serializer = new DOMSerializer(
+    { ...base.nodes, md_span: (node) => mdSpanDOM(node, true) },
+    base.marks,
+  );
+  return new Plugin({ props: { clipboardSerializer: serializer } });
+});
+
 // One node type covers bold/italic/bold+italic/strikethrough/highlight -
 // they're all "wrap some inline content in a repeated delimiter", differing
 // only in which character and how many of them. `delim`+`rung` together
@@ -63,6 +109,18 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
         delim: (dom as HTMLElement).dataset.delim || "*",
         rung: Number((dom as HTMLElement).dataset.rung) || 1,
       }),
+      // A copied bold+italic span carries an inner <em> (see
+      // mdSpanClipboardPlugin above) that the rung already says - read
+      // past it rather than nesting an italic span inside.
+      contentElement: (dom) => {
+        const el = dom as HTMLElement;
+        const inner = el.firstElementChild;
+        return el.dataset.rung === "3" &&
+          inner?.tagName === "EM" &&
+          el.childNodes.length === 1
+          ? (inner as HTMLElement)
+          : el;
+      },
     },
     // Standard semantic tags - recognizes bold/italic/strikethrough/highlight
     // pasted in from anywhere else (a browser, Notion, another editor),
@@ -79,29 +137,7 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
     { tag: "strike", priority: 40, getAttrs: () => ({ delim: "~", rung: 2 }) },
     { tag: "mark", priority: 40, getAttrs: () => ({ delim: "=", rung: 2 }) },
   ],
-  toDOM: (node) => {
-    const delim = node.attrs.delim as string;
-    const rung = node.attrs.rung as number;
-    const attrs = {
-      "data-type": "md_span",
-      "data-delim": delim,
-      "data-rung": String(rung),
-      "data-syntax": spanDelimText(node),
-      class: "md-span",
-    };
-    // A semantic tag Textus's own parseDOM rule above still recognizes via
-    // data-type, so pasting this into an EXTERNAL app (which reads only the
-    // tag, not the attrs) shows real bold/italic/strikethrough/highlight
-    // instead of an unstyled <span>. Bold+italic together (rung 3) has no
-    // single tag for it - nested strong>em is how remark itself represents
-    // "***text***", and how every other app pasting bold+italic in expects
-    // to see it too.
-    if (delim === "~") return ["del", attrs, 0];
-    if (delim === "=") return ["mark", attrs, 0];
-    if (rung === 3) return ["strong", attrs, ["em", 0]];
-    if (rung === 2) return ["strong", attrs, 0];
-    return ["em", attrs, 0];
-  },
+  toDOM: (node) => mdSpanDOM(node, false),
   parseMarkdown: {
     match: (node) =>
       node.type === "strong" ||

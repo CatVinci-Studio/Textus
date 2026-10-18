@@ -20,6 +20,8 @@ export interface UiState {
   agentPanelWidth: number;
   /** The sidebar's width as last dragged (app/sidebar-width.ts). */
   sidebarWidth: number;
+  /** Whether the sidebar was left open (app/useSidePanels.ts). */
+  sidebarOpen: boolean;
   /** iOS: recently opened documents, newest first (platform/ios-files.ts). */
   iosRecentDocuments: unknown;
   /** iOS: the document list's layout (mobile/DocumentList.tsx). */
@@ -82,6 +84,11 @@ const LEGACY: {
     key: "textus-sidebar-width",
     decode: (raw) => Number(raw),
     encode: (value) => String(Math.round(value)),
+  },
+  sidebarOpen: {
+    key: "textus-sidebar-open",
+    decode: (raw) => raw === "1",
+    encode: (value) => (value ? "1" : "0"),
   },
   iosRecentDocuments: {
     key: "levis-ios-recent-documents",

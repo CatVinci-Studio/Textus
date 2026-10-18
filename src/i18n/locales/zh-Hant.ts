@@ -609,6 +609,9 @@ export default {
   newDocumentModeTab: "目前視窗的新分頁",
   restoreSessionLabel: "啟動時恢復上次的工作階段",
   autoSuggestFilenameLabel: "儲存新檔案時建議檔名",
+  autosaveLabel: "自動儲存",
+  autosaveHint:
+    "已有檔案的文件會在停止輸入片刻後、切換分頁或離開視窗時自動寫回原檔案。新文件在你命名儲存之前不會自動儲存。",
   untitledTab: "未命名",
   markdownGuideTab: "Markdown 指南",
   agentGuideTab: "AI 功能指南",

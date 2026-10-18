@@ -32,7 +32,9 @@ jobs:
   # stable tag needs its release notes.
   preflight:
     runs-on: ubuntu-22.04
-    timeout-minutes: 10
+    # Longer than the 45-minute wait for CI below: the job's own limit must
+    # never cut that wait short (it did, for v1.0.5-rc.2, at 10 minutes).
+    timeout-minutes: 50
     steps:
       - name: Validate version tag
         run: '[[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]'

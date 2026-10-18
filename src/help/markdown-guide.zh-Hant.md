@@ -25,7 +25,7 @@ GitHub 風格的提示區塊：
 
 **粗體**（`**文字**`）、*斜體*（`*文字*`）、***粗斜體***、~~刪除線~~（`~~文字~~`）、==醒目提示==（`==文字==`），以及 `行內程式碼`。
 
-連結的寫法：[Textus 的原始碼存放庫](https://github.com/CatVinci-Studio/Textus)。行內 HTML 也會呈現，例如鍵盤按鍵 <kbd>Cmd</kbd> + <kbd>S</kbd>。`<details>` 摺疊區塊、HTML 表格、少量行內樣式（顏色、背景色、字級、粗細、對齊、底線和刪除線）和行內 `<svg>`（顯示為圖片）也會呈現；指令碼等其他 HTML 保持原始碼顯示。
+連結的寫法：[Textus 的原始碼存放庫](https://github.com/CatVinci-Studio/Textus)。按住 Ctrl/⌘ 點選連結即可跳轉：網頁連結在瀏覽器中開啟，指向另一個 Markdown 檔案的連結在新分頁中開啟，`#某個標題` 這樣的連結會捲動到該標題。行內 HTML 也會呈現，例如鍵盤按鍵 <kbd>Cmd</kbd> + <kbd>S</kbd>。`<details>` 摺疊區塊、HTML 表格、少量行內樣式（顏色、背景色、字級、粗細、對齊、底線和刪除線）和行內 `<svg>`（顯示為圖片）也會呈現；指令碼等其他 HTML 保持原始碼顯示。
 
 行內數學公式：質能等價 $E = mc^2$，歐拉恆等式 $e^{i\pi} + 1 = 0$。
 
@@ -127,6 +127,8 @@ sequenceDiagram
 ```markdown
 ![替代文字](assets/screenshot.png)
 ```
+
+Obsidian 的嵌入寫法，例如 `![[image.png]]` 或 `![[attachments/image.png|300]]`，也會顯示成圖片：Textus 會在文件所屬的 Obsidian 保存庫裡尋找檔案，儲存時原樣寫回。
 
 ## 檢視與模式
 

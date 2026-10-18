@@ -609,6 +609,9 @@ export default {
   newDocumentModeTab: "当前窗口的新标签页",
   restoreSessionLabel: "启动时恢复上次会话",
   autoSuggestFilenameLabel: "新文件保存时自动建议文件名",
+  autosaveLabel: "自动保存",
+  autosaveHint:
+    "已有文件的文档在停止输入片刻后、切换标签页或离开窗口时自动写回原文件。新建的文档在你命名保存之前不会自动保存。",
   untitledTab: "未命名",
   markdownGuideTab: "Markdown 指南",
   agentGuideTab: "AI 功能指南",

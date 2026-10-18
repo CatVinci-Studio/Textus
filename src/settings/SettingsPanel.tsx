@@ -185,6 +185,12 @@ export function SettingsPanel({
               checked={settings.autoSuggestFilename}
               onChange={(v) => setSettings({ autoSuggestFilename: v })}
             />
+            <ToggleRow
+              label={t.autosaveLabel}
+              hint={t.autosaveHint}
+              checked={settings.autosave}
+              onChange={(v) => setSettings({ autosave: v })}
+            />
           </SettingsGroup>
 
           <SettingsGroup title={t.settingsHelpGroup}>

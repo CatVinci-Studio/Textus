@@ -69,7 +69,7 @@ body:
     attributes:
       label: App version
       description: Shown in Settings › General › About Textus.
-      placeholder: "1.0.5"
+      placeholder: "1.1.0"
     validations:
       required: true
 

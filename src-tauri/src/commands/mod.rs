@@ -27,3 +27,4 @@ pub mod theme_gallery;
 pub mod themes;
 #[cfg(desktop)]
 pub mod update;
+pub mod vault;
