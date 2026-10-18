@@ -3,6 +3,7 @@ import { parseHeadings } from "./outline-parse";
 import { ChevronIcon } from "../ui/icons";
 import { useSettings } from "../settings/SettingsContext";
 import { scrollBehavior } from "../ui/motion";
+import { revealElement } from "../editor/html/raw-html-preview-plugin";
 import "./FileTree.css";
 
 interface OutlineProps {
@@ -24,6 +25,8 @@ function currentHeading(): number {
   const headings = root.querySelectorAll(HEADINGS);
   let current = -1;
   for (let i = 0; i < headings.length; i++) {
+    // Folded away in a <details>: no place on screen, not being read.
+    if (headings[i].getClientRects().length === 0) continue;
     if (headings[i].getBoundingClientRect().top > line) break;
     current = i;
   }
@@ -39,6 +42,9 @@ function scrollToHeading(index: number) {
     '[data-active-tab="true"] .editor-content .ProseMirror',
   );
   const heading = root?.querySelectorAll(HEADINGS)[index];
+  // One inside a folded <details> opens it first: hidden, it had no place
+  // to scroll to.
+  if (heading) revealElement(heading);
   heading?.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
 }
 

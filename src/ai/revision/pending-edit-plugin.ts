@@ -6,6 +6,7 @@ import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { renderMarkdownInlineHtml } from "../../editor/markdown/render-html";
+import type { FoldAttention } from "../../editor/html/raw-html-preview-plugin";
 import type { EditProposal } from "../types";
 import type { SentenceHunk } from "./sentence-diff";
 import type { RevisionDisplay } from "../../settings/SettingsContext";
@@ -865,6 +866,14 @@ export function createPendingEditPlugin(options: {
     () =>
       new Plugin<PendingState>({
         key: pendingEditKey,
+        // A proposal for text folded in a <details> opens it: an edit the
+        // writer can't see can't be decided on.
+        foldAttention: ((state) =>
+          (pendingEditKey.getState(state)?.previews ?? []).map((p) => ({
+            key: `edit:${p.callId}`,
+            from: p.from,
+            to: p.to,
+          }))) satisfies FoldAttention,
         state: {
           init: (): PendingState => ({
             previews: [],

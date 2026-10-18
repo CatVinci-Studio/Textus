@@ -51,6 +51,48 @@ describe("cloneEditorContent", () => {
     expect(html).toContain("<pre>x</pre>");
   });
 
+  it("puts the markdown folded under a <details> back inside it", () => {
+    // What raw-html-preview-plugin.ts draws for "<details><summary>…" +
+    // markdown + "</details>", nested once, the inner one folded.
+    const root0 = editor(
+      '<div class="ProseMirror">' +
+        '<p data-head="0"><span class="raw-html-source raw-html-source-hidden">&lt;details&gt;</span></p>' +
+        '<p class="raw-html-details-in-0">One</p>' +
+        '<p class="raw-html-details-in-0" data-head="9"></p>' +
+        '<p class="raw-html-details-in-0 raw-html-details-in-9 raw-html-details-folded">Two</p>' +
+        '<p class="raw-html-details-in-0 raw-html-details-end">&lt;/details&gt;</p>' +
+        '<p class="raw-html-details-end">&lt;/details&gt;</p>' +
+        "<p>After</p></div>",
+    );
+    // The widget is a <div> inside the head's <p>, which only DOM calls
+    // (as ProseMirror makes) can build.
+    for (const [id, summary, open] of [
+      ["0", "Outer", true],
+      ["9", "Inner", false],
+    ] as const) {
+      const widget = document.createElement("div");
+      widget.className = "raw-html-rendered raw-html-details-head";
+      widget.innerHTML = `<details data-details-head="${id}"><summary>${summary}</summary></details>`;
+      widget.querySelector("details")!.open = open;
+      root0.querySelector(`[data-head="${id}"]`)!.appendChild(widget);
+    }
+    const html = cloneEditorContent(root0);
+    const root = new DOMParser().parseFromString(html, "text/html");
+    const outer = root.querySelector(".ProseMirror > details")!;
+    expect(outer.hasAttribute("open")).toBe(true);
+    expect(outer.querySelector(":scope > summary")?.textContent).toBe("Outer");
+    expect(outer.querySelector(":scope > p")?.textContent).toBe("One");
+    const inner = outer.querySelector(":scope > details")!;
+    expect(inner.hasAttribute("open")).toBe(false);
+    expect(inner.querySelector(":scope > p")?.textContent).toBe("Two");
+    expect(html).not.toContain("raw-html-details-folded");
+    expect(html).not.toContain("&lt;/details&gt;");
+    expect(html).not.toContain("data-details-head");
+    expect(root.querySelector(".ProseMirror > p:last-child")?.textContent).toBe(
+      "After",
+    );
+  });
+
   it("turns a resized table's pixel columns into shares of the page width", () => {
     const html = cloneEditorContent(
       editor(

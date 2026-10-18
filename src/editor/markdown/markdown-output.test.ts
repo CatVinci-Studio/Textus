@@ -61,6 +61,34 @@ describe("saved markdown stays as written", () => {
     expect(await roundTrip(markdown)).toBe(markdown);
   });
 
+  it("keeps HTML the editor now renders, byte for byte", async () => {
+    const markdown = [
+      "# Notes",
+      "",
+      "<details>",
+      "<summary>Folded <b>markdown</b></summary>",
+      "",
+      "Some **bold** text and a [link](https://x.org).",
+      "",
+      "</details>",
+      "",
+      "<details open><summary>Inline</summary>Body text</details>",
+      "",
+      "<table>",
+      '  <tr><th colspan="2" align="center">Head</th></tr>',
+      '  <tr><td rowspan="2">a</td><td style="color: #c00">b</td></tr>',
+      "</table>",
+      "",
+      'A <span style="color: red; font-weight: bold">styled</span> word and an icon <svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="teal"/></svg> inline.',
+      "",
+      '<svg width="40" height="20">',
+      '  <rect width="40" height="20" rx="4" fill="#4a7"/>',
+      "</svg>",
+      "",
+    ].join("\n");
+    expect(await roundTrip(markdown)).toBe(markdown);
+  });
+
   it("keeps the box of a task item whose text isn't typed yet", async () => {
     const editor = await createTestEditor("- [ ] a\n- [x] b\n  - [ ] c\n");
     editors.push(editor);
