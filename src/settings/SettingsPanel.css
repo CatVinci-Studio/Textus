@@ -94,15 +94,34 @@
   font-weight: 500;
 }
 
+/* An invisible bold copy of the label holds every item at its active
+   width: the nav is as wide as its longest label, so when that label
+   turned bold the nav grew a few pixels and the page beside it narrowed
+   (Russian, 198 -> 201 px). */
+.settings-nav-item::after {
+  content: attr(data-label);
+  display: block;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: 500;
+}
+
 /* A new page fades in where the last one was; the nav's highlight moves
    at once. */
 .settings-content {
   animation: motion-settle-in var(--dur-fast) var(--ease-out);
-  scrollbar-gutter: stable;
   overscroll-behavior: contain;
   flex: 1;
   min-width: 0;
-  overflow-y: auto;
+  /* The scrollbar's room is always kept, so a page that scrolls is as wide
+     as one that doesn't. The gutter alone isn't enough in WebKit: it keeps
+     no room for a scrollbar styled with ::-webkit-scrollbar (ours, in
+     design-system.css, 10 px), and older versions ignore the property
+     altogether - a long page came in 10 px narrower than a short one.
+     With nothing to scroll the track stays empty and transparent. */
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
   padding: 24px 28px 32px;
 }
 
