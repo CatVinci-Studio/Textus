@@ -9,12 +9,25 @@
 use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::time::Duration;
 use tauri::AppHandle;
 
 use crate::atomic::TempDir;
 use crate::auth::keys::load_provider_key;
 
 const MAX_IMAGE_BYTES: usize = 25 * 1024 * 1024;
+
+/// Long enough for a 25 MB image on a slow uplink; a server that never
+/// answers still releases the paste.
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
+const UPLOAD_TIMEOUT: Duration = Duration::from_secs(120);
+
+/// An answer is a URL or a little JSON; one far larger is neither.
+const MAX_ANSWER_BYTES: usize = 1024 * 1024;
+
+/// How much of an error answer goes into the message: an error page is
+/// often a whole HTML document, and the editor shows the message on a line.
+const MAX_ERROR_CHARS: usize = 160;
 
 /// Mirrors `ImageHost` in src/settings/SettingsContext.tsx.
 #[derive(Deserialize, Clone, Copy, Debug, PartialEq)]
@@ -141,6 +154,15 @@ fn valid_public_url(value: &str) -> bool {
         .unwrap_or(false)
 }
 
+/// An error answer's first line, cut to MAX_ERROR_CHARS.
+fn first_line(text: &str) -> String {
+    let line = text.trim().lines().next().unwrap_or_default().trim_end();
+    match line.char_indices().nth(MAX_ERROR_CHARS) {
+        Some((end, _)) => format!("{}…", &line[..end]),
+        None => line.to_string(),
+    }
+}
+
 fn is_loopback(url: &reqwest::Url) -> bool {
     let Some(host) = url.host_str() else {
         return false;
@@ -188,7 +210,10 @@ async fn send(
     if let (Auth::KeyQuery, Some(token)) = (&preset.auth, &token) {
         url.query_pairs_mut().append_pair("key", token);
     }
-    let mut request = reqwest::Client::new().post(url);
+    let client = crate::net::client(CONNECT_TIMEOUT, UPLOAD_TIMEOUT)
+        .build()
+        .map_err(|e| e.to_string())?;
+    let mut request = client.post(url);
     request = match preset.body {
         Body::Multipart(field) => {
             let part = reqwest::multipart::Part::bytes(image.bytes)
@@ -216,14 +241,19 @@ async fn send(
     let response = request.send().await.map_err(|e| {
         if e.is_connect() && preset.loopback_only {
             format!("{name} isn't running, or its server is turned off")
+        } else if e.is_timeout() {
+            format!("{name} didn't answer in time")
         } else {
             format!("couldn't reach {name}: {e}")
         }
     })?;
     let status = response.status();
-    let body = response.text().await.map_err(|e| e.to_string())?;
+    let body = crate::net::read_limited(response, MAX_ANSWER_BYTES)
+        .await?
+        .ok_or_else(|| format!("{name} returned {status} and an answer too large to read"))?;
+    let body = String::from_utf8_lossy(&body);
     if !status.is_success() {
-        return Err(format!("{name} returned {status}: {}", body.trim()));
+        return Err(format!("{name} returned {status}: {}", first_line(&body)));
     }
 
     let trimmed = body.trim();
@@ -571,5 +601,34 @@ mod tests {
         .await;
         let err = src.unwrap_err();
         assert!(err.starts_with("Imgur returned 403 Forbidden"), "{err}");
+    }
+
+    #[test]
+    fn an_error_answer_is_cut_to_its_first_short_line() {
+        assert_eq!(first_line("\n  Bad token \nmore detail"), "Bad token");
+        let long = "x".repeat(MAX_ERROR_CHARS + 10);
+        assert_eq!(first_line(&long).chars().count(), MAX_ERROR_CHARS + 1);
+        assert!(first_line(&long).ends_with('…'));
+    }
+
+    #[tokio::test]
+    async fn an_html_error_page_is_not_pasted_into_the_message() {
+        let page = format!(
+            "<!DOCTYPE html>\n<html><body>{}</body></html>",
+            "<p>Bad gateway</p>".repeat(500)
+        );
+        let (src, _) = upload(
+            ImageHost::Custom,
+            None,
+            "url",
+            png(None),
+            "502 Bad Gateway",
+            &page,
+        )
+        .await;
+        assert_eq!(
+            src.unwrap_err(),
+            "The image host returned 502 Bad Gateway: <!DOCTYPE html>"
+        );
     }
 }
