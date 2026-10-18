@@ -2,6 +2,7 @@ import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
+import type { FoldAttention } from "../../editor/html/raw-html-preview-plugin";
 
 /**
  * An add_comment note pinned to its passage: the review the AI leaves
@@ -114,6 +115,14 @@ export function createReviewNotesPlugin(options: {
     () =>
       new Plugin<NotesState>({
         key: reviewNotesKey,
+        // A note on text folded in a <details> opens it, so its passage and
+        // margin card have somewhere to be.
+        foldAttention: ((state) =>
+          (reviewNotesKey.getState(state)?.notes ?? []).map((note) => ({
+            key: `note:${note.id}`,
+            from: note.from,
+            to: note.to,
+          }))) satisfies FoldAttention,
         state: {
           init: () => ({
             notes: [],

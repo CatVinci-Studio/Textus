@@ -404,6 +404,164 @@ function findDetailsSpans(doc: ProseNode): DetailsSpan[] {
 /** Folded state per <details>, by its head paragraph's position. */
 type OpenStates = Map<number, boolean>;
 
+/** Open as the reader left it, or else as written (`<details open>`). */
+function isFoldOpen(span: DetailsSpan, open: OpenStates): boolean {
+  return (
+    open.get(span.headPos) ??
+    /^<details\b[^>]*\sopen\b/i.test(span.head.text.trim())
+  );
+}
+
+/** What the plugin's state takes to open or fold: [head position, open]. */
+type FoldMeta = { set: [number, boolean][] };
+
+/**
+ * Something another plugin points the writer at - a proposed edit, a review
+ * note - declared on its spec as `foldAttention`. A folded <details> opens
+ * when an item with a key it hasn't seen lands in its hidden text; the
+ * writer can fold it again afterwards.
+ */
+export interface FoldAttentionItem {
+  key: string;
+  from: number;
+  to: number;
+}
+export type FoldAttention = (
+  state: EditorState,
+) => readonly FoldAttentionItem[];
+
+function attentionItems(state: EditorState): FoldAttentionItem[] {
+  const items: FoldAttentionItem[] = [];
+  for (const plugin of state.plugins) {
+    const read = (plugin.spec as { foldAttention?: FoldAttention })
+      .foldAttention;
+    if (read) items.push(...read(state));
+  }
+  return items;
+}
+
+// A transaction meta: open whatever folds hide [from, to] (revealRange).
+const REVEAL_META = "details-reveal";
+
+/** The folded <details> whose hidden text holds part of [from, to]. */
+function foldsHiding(
+  spans: DetailsSpan[],
+  open: OpenStates,
+  from: number,
+  to: number,
+): number[] {
+  return spans
+    .filter(
+      (s) =>
+        s.endPos > s.bodyFrom &&
+        from < s.endPos &&
+        to > s.bodyFrom &&
+        !isFoldOpen(s, open),
+    )
+    .map((s) => s.headPos);
+}
+
+/**
+ * Opens every folded <details> hiding [from, to], so whatever points there -
+ * a find match, an outline jump - lands on text the reader can see.
+ * Dispatches only when something was folded; true if it did.
+ */
+export function revealRange(
+  view: EditorView,
+  from: number,
+  to: number = from,
+): boolean {
+  const open = rawHtmlPreviewKey.getState(view.state)?.open;
+  if (!open) return false;
+  const heads = foldsHiding(findDetailsSpans(view.state.doc), open, from, to);
+  if (heads.length === 0) return false;
+  view.dispatch(view.state.tr.setMeta(REVEAL_META, { from, to }));
+  return true;
+}
+
+// The DOM event revealElement sends, for callers holding only an element.
+const REVEAL_EVENT = "textus-reveal";
+
+/** revealRange for an element of the editor's own DOM (the outline holds
+ *  its heading's element, not a position). */
+export function revealElement(el: Element): void {
+  el.dispatchEvent(new CustomEvent(REVEAL_EVENT, { bubbles: true }));
+}
+
+/**
+ * The folds to open after these transactions: one hiding the selection
+ * (the caret moved into folded text, or text was typed there), one an
+ * explicit revealRange asked for, one where another plugin's new
+ * attention item (foldAttention) landed.
+ */
+function unfoldFor(
+  trs: readonly Transaction[],
+  oldState: EditorState,
+  newState: EditorState,
+): FoldMeta | null {
+  const open = rawHtmlPreviewKey.getState(newState)?.open;
+  if (!open) return null;
+  const spans = findDetailsSpans(newState.doc);
+  if (spans.length === 0) return null;
+  const ranges: [number, number][] = [];
+  if (trs.some((tr) => tr.selectionSet || tr.docChanged))
+    ranges.push([newState.selection.from, newState.selection.to]);
+  for (const tr of trs) {
+    const reveal = tr.getMeta(REVEAL_META) as
+      { from: number; to: number } | undefined;
+    if (reveal) ranges.push([reveal.from, reveal.to]);
+  }
+  const seen = new Set(attentionItems(oldState).map((item) => item.key));
+  for (const item of attentionItems(newState))
+    if (!seen.has(item.key)) ranges.push([item.from, item.to]);
+
+  const heads = new Set<number>();
+  for (const [from, to] of ranges)
+    for (const head of foldsHiding(spans, open, from, to)) heads.add(head);
+  if (heads.size === 0) return null;
+  return { set: [...heads].map((head) => [head, true]) };
+}
+
+/** ArrowUp/Down into a paragraph that is all HTML drawn as a block (a
+ *  <details> head, a table) or hidden (a "</details>" line): the browser
+ *  has no text there to stop on and skipped it, so its source could only
+ *  be reached with the mouse. The caret goes into the source instead. */
+function arrowIntoHtmlBlock(view: EditorView, event: KeyboardEvent): boolean {
+  const dir =
+    event.key === "ArrowDown" ? "down" : event.key === "ArrowUp" ? "up" : null;
+  if (!dir || event.shiftKey || event.altKey || event.metaKey || event.ctrlKey)
+    return false;
+  const { selection, doc } = view.state;
+  // Where the browser's caret is: a key pressed right after a native caret
+  // move (End, Home, a click) can arrive before the editor state has read
+  // that move, and the state's caret is then a line or more behind.
+  let head = selection.head;
+  const dom = (view.root as Document).getSelection?.();
+  if (dom?.focusNode && view.dom.contains(dom.focusNode)) {
+    if (!dom.isCollapsed) return false;
+    try {
+      head = view.posAtDOM(dom.focusNode, dom.focusOffset);
+    } catch {
+      // Not a position the editor knows - keep the state's.
+    }
+  } else if (!selection.empty) return false;
+  const $head = doc.resolve(head);
+  if ($head.depth !== 1 || !view.endOfTextblock(dir)) return false;
+  const index = $head.index(0) + (dir === "down" ? 1 : -1);
+  if (index < 0 || index >= doc.childCount) return false;
+  let pos = 0;
+  for (let i = 0; i < index; i++) pos += doc.child(i).nodeSize;
+  const html = loneHtml(doc.child(index), pos);
+  if (!html) return false;
+  const target = dir === "down" ? html.from + 1 : html.to - 1;
+  view.dispatch(
+    view.state.tr
+      .setSelection(TextSelection.create(doc, target))
+      .scrollIntoView(),
+  );
+  return true;
+}
+
 function detailsHeadWidget(html: string, open: boolean, headPos: number) {
   return (view: EditorView, getPos: () => number | undefined) => {
     const el = document.createElement("div");
@@ -422,7 +580,7 @@ function detailsHeadWidget(html: string, open: boolean, headPos: number) {
       event.preventDefault();
       view.dispatch(
         view.state.tr
-          .setMeta(rawHtmlPreviewKey, { pos: headPos, open: !open })
+          .setMeta(rawHtmlPreviewKey, { set: [[headPos, !open]] } as FoldMeta)
           .setMeta("addToHistory", false),
       );
     });
@@ -443,16 +601,9 @@ function decorateDetails(
     handled.add(span.end.from);
     const onHead = touches(span.head.from, span.head.to);
     const onEnd = touches(span.end.from, span.end.to);
-    // The caret in the folded text opens it - typing into hidden text
-    // would be typing blind.
-    const inBody =
-      span.endPos > span.bodyFrom &&
-      touches(span.bodyFrom + 1, span.endPos - 1);
     const rendered = renderWhitelistedHtml(span.head.text);
-    const isOpen =
-      open.get(span.headPos) ??
-      /^<details\b[^>]*\sopen\b/i.test(span.head.text.trim());
-    const showBody = isOpen || inBody || onHead || onEnd || !rendered;
+    // The caret in the folded text opens it for good (unfoldFor below).
+    const showBody = isFoldOpen(span, open) || onHead || onEnd || !rendered;
 
     if (rendered && !onHead && !onEnd) {
       decorations.push(
@@ -549,10 +700,10 @@ export function createRawHtmlPreviewPlugin(
           apply: (tr, prev, oldState, newState) => {
             let open = mapOpen(prev.open, tr);
             const toggle = tr.getMeta(rawHtmlPreviewKey) as
-              { pos: number; open: boolean } | undefined;
+              FoldMeta | undefined;
             if (toggle) {
               open = new Map(open);
-              open.set(toggle.pos, toggle.open);
+              for (const [pos, value] of toggle.set) open.set(pos, value);
             }
             const build = (s: EditorState) =>
               buildDecorations(s, docPath, open);
@@ -562,9 +713,26 @@ export function createRawHtmlPreviewPlugin(
             return { reveal, open };
           },
         },
+        appendTransaction: (trs, oldState, newState) => {
+          const meta = unfoldFor(trs, oldState, newState);
+          return meta
+            ? newState.tr
+                .setMeta(rawHtmlPreviewKey, meta)
+                .setMeta("addToHistory", false)
+            : null;
+        },
         props: {
           decorations(state) {
             return rawHtmlPreviewKey.getState(state)?.reveal.set;
+          },
+          handleKeyDown: arrowIntoHtmlBlock,
+          handleDOMEvents: {
+            [REVEAL_EVENT]: (view, event) => {
+              if (!(event.target instanceof Node)) return false;
+              const pos = view.posAtDOM(event.target, 0);
+              revealRange(view, pos);
+              return true;
+            },
           },
         },
       }),

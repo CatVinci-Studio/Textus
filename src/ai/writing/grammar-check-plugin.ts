@@ -6,6 +6,7 @@ import { $prose } from "@milkdown/kit/utils";
 import { createDebouncedTask } from "./debounced-task";
 import { scalarToUtf16Offset, textOffsetToDocPos } from "../doc-text";
 import { isLargeDoc } from "../../editor/large-doc";
+import type { FoldAttention } from "../../editor/html/raw-html-preview-plugin";
 import { ai } from "../../platform/ipc";
 import { AiNoticeError } from "../../utils/error-text";
 
@@ -240,6 +241,19 @@ export function createGrammarCheckPlugin(options: {
     () =>
       new Plugin<DecorationSet>({
         key: grammarKey,
+        // An underline that lands in text folded in a <details> (a check
+        // asked for by hand with the caret there) opens it.
+        foldAttention: ((state) =>
+          (grammarKey.getState(state) as DecorationSet | undefined)
+            ?.find()
+            .map((deco) => {
+              const spec = deco.spec as GrammarDecorationSpec;
+              return {
+                key: `grammar:${spec.issue}\n${spec.original ?? ""}`,
+                from: deco.from,
+                to: deco.to,
+              };
+            }) ?? []) satisfies FoldAttention,
         state: {
           init: () => DecorationSet.empty,
           apply(tr, prev) {
