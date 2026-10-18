@@ -92,6 +92,26 @@ flowchart LR
 | `rejected`  | Declined, or superseded                      | Preview removed; chat card shows Rejected                                                                  |
 | `invalid`   | Target text changed / anchor no longer found | Preview dropped; chat card offers relocation (asks the model to re-issue against the current document)     |
 
+**Hover only points.** A rewrite decided sentence by sentence pairs each
+struck original with its replacement. With the pointer on either side, on
+the ✓ / ✕ after them, or on the pair's card in the margin, that pair is
+outlined in the accent color and its red and green tints deepen a little;
+its margin card gets the same accent border. That is all hover does, in
+every revision view: nothing is hidden, faded or previewed, and the pair
+looks as before once the pointer leaves (or leaves the editor). To read
+the result without the markup, pick **Result only, no markup** in the
+review bar's view menu.
+
+The outline goes through the plugins, never onto the text's DOM
+(`ai/margin/useReviewNotes.ts` → a `hot` meta → `pending-edit-plugin`'s
+`hotDecorations`). ProseMirror reads a class written onto a decorated span
+as an edit of its own and redraws the paragraph, and every strike and
+replacement in it replays its entrance - in `1.1.0-rc.4` that made the red
+and the green vanish under the pointer and fade back. The review bar's
+**‹ / ›** follow the same rule: the outline they move is a class the plugin
+sets on its widgets (no widget is keyed by it), and the paragraph's flash
+(`editor/reveal-position.ts`) is a Web Animation, not a class.
+
 Staleness mirrors the grammar checker: every `docChanged` maps each preview's
 range through the transaction and re-checks its text - a mismatch drops the
 preview rather than risk applying to the wrong text. Accept re-checks once
@@ -213,7 +233,7 @@ the answer to a per-window store (`useMarginAvailable`).
 | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | `ai/revision/proposal-stream.ts`                                    | Writing-phase machine: place/feed/finalize/discard                         |
 | `ai/revision/usePendingEdits.ts`                                    | Anchor resolution, accept/reject/rejectAll, status map, review navigation  |
-| `ai/revision/pending-edit-plugin.ts`                                | Decorations, typewriter + settle, docChanged staleness, keyboard shortcuts |
+| `ai/revision/pending-edit-plugin.ts`                                | Decorations, hover outline, typewriter + settle, staleness, shortcuts      |
 | `ai/revision/proposal-status.ts`                                    | Status notes annotated onto history at send time                           |
 | `ai/chat/cancelled-turns.ts`                                        | What a stop keeps; dangling tool-call closure                              |
 | `ai/chat/useAgentConversation.ts`                                   | Conversation state: send/stop/retry/restore, history persistence           |

@@ -255,7 +255,16 @@ type PendingMeta =
    *  or took the call back (null) - the in-text ✓ / ✕ and the card's. */
   | { type: "decide"; callId: string; index: number; take: boolean | null }
   /** The review bar's pointer moved: redraw the outline. */
-  | { type: "refocus" };
+  | { type: "refocus" }
+  /** The pointer is on a changed sentence or its margin card (null: on
+   *  none) - the pair is outlined, nothing else changes. */
+  | { type: "hot"; sentence: HotSentence | null };
+
+/** A changed sentence of a sentence-by-sentence preview. */
+export interface HotSentence {
+  callId: string;
+  index: number;
+}
 
 interface PendingState {
   previews: PendingPreview[];
@@ -265,6 +274,8 @@ interface PendingState {
    *  had kept saying "Applied" over the restored text), a redo back to
    *  `after` takes it away again. */
   applied: AppliedEdit[];
+  /** The sentence pair under the pointer (see `hotDecorations`). */
+  hot: HotSentence | null;
 }
 
 interface AppliedEdit {
@@ -495,7 +506,7 @@ function sentenceDecorations(
             },
             {
               side: 1,
-              key: `pending-new-${p.callId}-${index}-${state}-${isFocused}-${display}`,
+              key: `pending-new-${p.callId}-${index}-${state}-${display}`,
             },
           ),
         );
@@ -511,13 +522,15 @@ function sentenceDecorations(
             const span = document.createElement("span");
             span.className = `pending-insert pending-sentence-new pending-sentence-${state}${isFocused ? " pending-sentence-focus" : ""}`;
             span.contentEditable = "false";
+            span.dataset.call = p.callId;
+            span.dataset.index = String(index);
             span.setAttribute("style", stagger);
             span.innerHTML = renderMarkdownInlineHtml(c.after.trim());
             return span;
           },
           {
             side: 1,
-            key: `pending-new-${p.callId}-${index}-${state}-${isFocused}`,
+            key: `pending-new-${p.callId}-${index}-${state}`,
           },
         ),
       );
@@ -528,6 +541,8 @@ function sentenceDecorations(
           const pick = document.createElement("span");
           pick.className = `pending-pick pending-pick-${state}`;
           pick.contentEditable = "false";
+          pick.dataset.call = p.callId;
+          pick.dataset.index = String(index);
           pick.setAttribute("style", stagger);
           const button = (take: boolean) => {
             const b = document.createElement("button");
@@ -621,6 +636,60 @@ function buildDecorations(
     doc,
     previews.flatMap((p) => decorationsFor(p, animate, hooks)),
   );
+}
+
+/**
+ * The pointer's sentence pair, outlined (`.pending-sentence-hot`). The
+ * text side is one more inline decoration over the sentence, which
+ * ProseMirror merges into the spans already there and patches in place.
+ * The widget side (the new text, a margin mark, the ✓ / ✕) gets the class
+ * from the plugin view instead (`syncWidgetClasses`): a widget redrawn for it
+ * would replay its entrance, the new text fading in from nothing.
+ *
+ * Nothing may write the class onto a decorated text span from outside:
+ * ProseMirror reads that as a foreign edit and redraws the paragraph, and
+ * every strike and replacement in it replays its entrance - the red and
+ * the green vanished under the pointer (1.1.0-rc.4).
+ */
+function hotDecorations(doc: ProseNode, state: PendingState): DecorationSet {
+  const { hot } = state;
+  const change = hot
+    ? state.previews.find((p) => p.callId === hot.callId && !p.streaming)
+        ?.sentences?.changes[hot.index]
+    : undefined;
+  if (!change || change.from >= change.to) return state.decoration;
+  return state.decoration.add(doc, [
+    Decoration.inline(change.from, change.to, {
+      class: "pending-sentence-hot",
+    }),
+  ]);
+}
+
+/** `hotDecorations` per state: `decorations` is asked on every redraw. */
+const hotSets = new WeakMap<PendingState, DecorationSet>();
+
+/** The widget side of `hotDecorations`, and of the review bar's pointer
+ *  (`.pending-sentence-focus` on the new text): set on the widgets as they
+ *  stand, not by redrawing them - a widget keyed by the pointer was
+ *  redrawn on every prev / next, and its new text faded in from nothing
+ *  again. Widgets are the plugin's own DOM, and ProseMirror leaves a class
+ *  change on them alone. */
+function syncWidgetClasses(
+  view: EditorView,
+  hot: HotSentence | null,
+  focused: HotSentence | null,
+) {
+  const is = (el: HTMLElement, s: HotSentence | null) =>
+    s !== null &&
+    el.dataset.call === s.callId &&
+    el.dataset.index === String(s.index);
+  for (const el of view.dom.querySelectorAll<HTMLElement>(
+    ".ProseMirror-widget[data-call]",
+  )) {
+    el.classList.toggle("pending-sentence-hot", is(el, hot));
+    if (el.classList.contains("pending-sentence-new"))
+      el.classList.toggle("pending-sentence-focus", is(el, focused));
+  }
 }
 
 /**
@@ -737,7 +806,7 @@ export function createPendingEditPlugin(options: {
     tr: Transaction,
     prev: PendingState,
     meta: PendingMeta | undefined,
-  ): Omit<PendingState, "applied"> => {
+  ): Omit<PendingState, "applied" | "hot"> => {
     if (meta?.type === "add") {
       const keep = prev.previews.filter(
         (p) => !meta.previews.some((n) => n.callId === p.callId),
@@ -855,6 +924,7 @@ export function createPendingEditPlugin(options: {
             previews: [],
             decoration: DecorationSet.empty,
             applied: [],
+            hot: null,
           }),
           apply(tr, prev): PendingState {
             const meta = tr.getMeta(pendingEditKey) as PendingMeta | undefined;
@@ -864,6 +934,7 @@ export function createPendingEditPlugin(options: {
               return {
                 previews: replay.previews,
                 applied: replay.applied,
+                hot: prev.hot,
                 decoration: buildDecorations(
                   tr.doc,
                   replay.previews,
@@ -888,15 +959,23 @@ export function createPendingEditPlugin(options: {
             } else if (meta?.type === "clear") {
               applied = [];
             }
+            const hot = meta?.type === "hot" ? meta.sentence : prev.hot;
             const next = applyMeta(tr, prev, meta);
-            return next === prev && applied === prev.applied
+            return next === prev && applied === prev.applied && hot === prev.hot
               ? prev
-              : { ...next, applied };
+              : { ...next, applied, hot };
           },
         },
         props: {
           decorations(state) {
-            return pendingEditKey.getState(state)?.decoration;
+            const pending = pendingEditKey.getState(state);
+            if (!pending?.hot) return pending?.decoration;
+            let set = hotSets.get(pending);
+            if (!set) {
+              set = hotDecorations(state.doc, pending);
+              hotSets.set(pending, set);
+            }
+            return set;
           },
           handleKeyDown(view, event) {
             const mod = event.metaKey || event.ctrlKey;
@@ -935,9 +1014,22 @@ export function createPendingEditPlugin(options: {
         view() {
           let last: PendingPreview[] = [];
           let lastApplied: AppliedEdit[] = [];
+          let lastDecoration: DecorationSet | null = null;
+          let lastHot: HotSentence | null = null;
           return {
             update(view) {
               const state = pendingEditKey.getState(view.state);
+              // After any rebuild ("refocus" included), not only when the
+              // pointer moves: a redrawn widget comes back without the
+              // classes.
+              if (
+                state &&
+                (state.hot !== lastHot || state.decoration !== lastDecoration)
+              ) {
+                lastHot = state.hot;
+                lastDecoration = state.decoration;
+                syncWidgetClasses(view, state.hot, hooks.focused());
+              }
               const previews = state?.previews ?? [];
               const applied = state?.applied ?? [];
               if (previews !== last || applied !== lastApplied) {
