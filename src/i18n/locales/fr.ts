@@ -246,8 +246,6 @@ utiliser une.
     "Rien de nouveau à importer : Textus a déjà tout ce que Levis possède.",
   levisImportFailed: "Certains fichiers n’ont pas pu être copiés :",
   levisImportRow: "Importer depuis Levis",
-  levisImportRowHint:
-    "Copie réglages, historique, thèmes et plus encore. Levis garde tout.",
   levisImportButton: "Importer…",
   levisImportNone: "Aucune donnée de Levis sur cet ordinateur.",
   levisItemSettings: "réglages",

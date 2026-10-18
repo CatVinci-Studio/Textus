@@ -216,8 +216,6 @@ export default {
   levisImportNothing: "没有需要导入的新内容：Levis 的数据 Textus 都已经有了。",
   levisImportFailed: "有些文件没能复制：",
   levisImportRow: "从 Levis 导入",
-  levisImportRowHint:
-    "复制设置、历史记录、主题等内容，Levis 里的内容保持不变。",
   levisImportButton: "导入…",
   levisImportNone: "这台电脑上没有 Levis 的数据。",
   levisItemSettings: "设置",

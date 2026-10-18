@@ -24,7 +24,7 @@ import {
   VERBATIM_INPUT,
 } from "./sections/controls";
 import { ChevronIcon, CloseIcon } from "../ui/icons";
-import { CliCommandSection, LevisImportSection } from "./sections/general";
+import { CliCommandSection } from "./sections/general";
 import { links } from "../platform/ipc";
 import { ThemeSection } from "./sections/theme";
 import { ThemeGallerySection } from "./sections/theme-gallery";
@@ -211,7 +211,6 @@ export function SettingsPanel({
 
           <SettingsGroup title={t.generalSystemLabel}>
             {canInstallCliCommand && <CliCommandSection t={t} />}
-            <LevisImportSection t={t} lang={settings.language} />
             <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
           </SettingsGroup>
         </>
@@ -666,7 +665,7 @@ export function SettingsPanel({
                 {categories.find((c) => c.id === category)?.label}
               </button>
               {subpage === "about" ? (
-                <AboutSection t={t} />
+                <AboutSection t={t} lang={settings.language} />
               ) : (
                 <>
                   <h1 className="settings-category-title">

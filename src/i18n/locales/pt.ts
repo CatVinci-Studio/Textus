@@ -234,8 +234,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Nada novo para importar: o Textus já tem tudo o que o Levis tem.",
   levisImportFailed: "Alguns arquivos não puderam ser copiados:",
   levisImportRow: "Importar do Levis",
-  levisImportRowHint:
-    "Copia configurações, histórico, temas e mais. O Levis continua com tudo.",
   levisImportButton: "Importar…",
   levisImportNone: "Não há dados do Levis neste computador.",
   levisItemSettings: "configurações",

@@ -227,8 +227,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "새로 가져올 데이터가 없습니다. Levis의 데이터가 이미 Textus에 있습니다.",
   levisImportFailed: "복사하지 못한 파일이 있습니다:",
   levisImportRow: "Levis에서 가져오기",
-  levisImportRowHint:
-    "설정, 기록, 테마 등을 복사합니다. Levis의 데이터는 그대로 남습니다.",
   levisImportButton: "가져오기…",
   levisImportNone: "이 컴퓨터에 Levis 데이터가 없습니다.",
   levisItemSettings: "설정",
