@@ -177,12 +177,14 @@ fn create_private_file(path: &Path) -> std::io::Result<std::fs::File> {
 /// A new folder only its owner can enter. Like the file, an existing folder
 /// or symlink of that name is an error rather than reused.
 fn create_private_dir(path: &Path) -> std::io::Result<()> {
-    let mut builder = std::fs::DirBuilder::new();
+    let builder = std::fs::DirBuilder::new();
     #[cfg(unix)]
-    {
+    let builder = {
         use std::os::unix::fs::DirBuilderExt;
+        let mut builder = builder;
         builder.mode(0o700);
-    }
+        builder
+    };
     builder.create(path)
 }
 
