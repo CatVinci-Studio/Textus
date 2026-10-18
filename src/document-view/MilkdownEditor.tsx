@@ -41,7 +41,7 @@ import { useReviewNotes } from "../ai/margin/useReviewNotes";
 import { useGrammarPopover } from "../ai/writing/useGrammarPopover";
 import { useSettings } from "../settings/SettingsContext";
 import { useLatest } from "../utils/hooks/useLatest";
-import { sendTourSignal, type TourAi } from "../utils/events";
+import type { TourAi } from "../utils/events";
 import { useTourSignals } from "./useTourSignals";
 import { Milkdown } from "@milkdown/react";
 import "@milkdown/kit/prose/view/style/prosemirror.css";
@@ -330,14 +330,13 @@ export function MilkdownEditor({
     showAiNotice,
   });
 
-  useTourSignals({
+  const { onSkillUsed } = useTourSignals({
     tour,
     grammarCardOpen: grammar.popover !== null,
     undecidedRevisions: pendingEdits.decidable.length,
     reviewNotes: notes.notes.length,
     conversations: [conversation, quickConversation],
   });
-  const onSkillUsed = tour ? () => sendTourSignal("skill-sent") : undefined;
 
   function popOutPanel() {
     handleDetachChat();
