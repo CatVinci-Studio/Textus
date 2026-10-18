@@ -632,9 +632,6 @@ export default {
   contentWidthAuto: "Адаптивная",
   contentWidthStandard: "Стандартная",
   contentWidthFull: "Во всю ширину",
-  headingMarksLabel: "Украшения заголовков",
-  headingMarksHint:
-    "Цветная полоса у заголовков 3-го уровня и точка перед заголовками 4-го уровня во встроенных темах.",
   newDocumentModeLabel: "Открывать документы",
   newDocumentModeWindow: "В новом окне",
   newDocumentModeTab: "Во вкладке этого окна",

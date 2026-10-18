@@ -611,9 +611,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   contentWidthAuto: "자동",
   contentWidthStandard: "표준",
   contentWidthFull: "전체 너비",
-  headingMarksLabel: "제목 장식",
-  headingMarksHint:
-    "기본 제공 테마에서 제목 3 옆의 강조색 막대와 제목 4 앞의 점입니다.",
   newDocumentModeLabel: "문서 열기 위치",
   newDocumentModeWindow: "새 창",
   newDocumentModeTab: "현재 창의 새 탭",

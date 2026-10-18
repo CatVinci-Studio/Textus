@@ -623,9 +623,6 @@ type /name in a conversation to use one.
   contentWidthAuto: "Adaptive",
   contentWidthStandard: "Standard",
   contentWidthFull: "Full Width",
-  headingMarksLabel: "Heading marks",
-  headingMarksHint:
-    "The accent bar beside level 3 headings and the dot before level 4 headings in the built-in themes.",
   newDocumentModeLabel: "Open Documents In",
   newDocumentModeWindow: "A New Window",
   newDocumentModeTab: "A Tab in This Window",

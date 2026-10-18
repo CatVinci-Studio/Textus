@@ -240,12 +240,6 @@ export function SettingsPanel({
                 <option value="full">{t.contentWidthFull}</option>
               </Select>
             </SettingRow>
-            <ToggleRow
-              label={t.headingMarksLabel}
-              hint={t.headingMarksHint}
-              checked={settings.headingMarks}
-              onChange={(v) => setSettings({ headingMarks: v })}
-            />
           </SettingsGroup>
           {/* The window's view modes, beside the one that is a setting
               (typewriter): on a phone, whose menu is kept short, this is

@@ -641,9 +641,6 @@ para usar una.
   contentWidthAuto: "Adaptable",
   contentWidthStandard: "Estándar",
   contentWidthFull: "Ancho completo",
-  headingMarksLabel: "Marcas de encabezado",
-  headingMarksHint:
-    "La barra de acento junto a los encabezados de nivel 3 y el punto antes de los de nivel 4 en los temas integrados.",
   newDocumentModeLabel: "Abrir documentos en",
   newDocumentModeWindow: "Una ventana nueva",
   newDocumentModeTab: "Una pestaña de esta ventana",

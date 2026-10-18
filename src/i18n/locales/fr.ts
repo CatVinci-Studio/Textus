@@ -645,9 +645,6 @@ utiliser une.
   contentWidthAuto: "Adaptative",
   contentWidthStandard: "Standard",
   contentWidthFull: "Pleine largeur",
-  headingMarksLabel: "Ornements des titres",
-  headingMarksHint:
-    "La barre d’accent à côté des titres de niveau 3 et le point devant ceux de niveau 4 dans les thèmes intégrés.",
   newDocumentModeLabel: "Ouvrir les documents dans",
   newDocumentModeWindow: "Une nouvelle fenêtre",
   newDocumentModeTab: "Un onglet de cette fenêtre",

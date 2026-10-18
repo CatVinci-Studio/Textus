@@ -614,9 +614,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   contentWidthAuto: "自動",
   contentWidthStandard: "標準",
   contentWidthFull: "全幅",
-  headingMarksLabel: "見出しの装飾",
-  headingMarksHint:
-    "組み込みテーマで、見出し 3 の横のアクセントバーと見出し 4 の前の点を表示します。",
   newDocumentModeLabel: "文書を開く方法",
   newDocumentModeWindow: "新しいウィンドウ",
   newDocumentModeTab: "このウィンドウの新しいタブ",

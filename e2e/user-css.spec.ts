@@ -467,48 +467,6 @@ test("export then import keeps the ornaments and fonts, readable in dark", async
   }
 });
 
-test("Heading marks off hides the h3 bar and h4 dot, on screen and in the export (#136)", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await pasteMarkdown(page, DOC);
-  await installThemeBackend(page, {});
-  expect(await computed(page, "#write h3", "border-left-style")).toBe("solid");
-  expect(await computed(page, "#write h4::before", "display")).toBe(
-    "inline-block",
-  );
-
-  const dialog = await openSettings(page);
-  await dialog.getByRole("checkbox", { name: "Heading marks" }).click();
-  await expect(page.locator("html")).toHaveAttribute(
-    "data-no-heading-marks",
-    "",
-  );
-  expect(await computed(page, "#write h3", "border-left-style")).toBe("none");
-  expect(await computed(page, "#write h4::before", "content")).toBe("none");
-  // The h2 rule stays: only the h3 and h4 marks are switched off.
-  expect(await computed(page, "#write h2", "border-bottom-style")).toBe(
-    "solid",
-  );
-
-  await dialog.locator("summary", { hasText: "Custom CSS" }).click();
-  await dialog.getByRole("button", { name: "Export as CSS…" }).click();
-  const css = await page
-    .waitForFunction(
-      () =>
-        (
-          window as unknown as {
-            __themeStore: { written: Record<string, string> };
-          }
-        ).__themeStore.written["/exports/textus-theme.css"],
-    )
-    .then((h) => h.jsonValue() as Promise<string>);
-  // ("#write h3 {" itself is in the file: the commented font hook.)
-  expect(css).toContain("#write h2 {\n  padding-bottom");
-  expect(css).not.toContain("border-left: 4px solid var(--editor-accent)");
-  expect(css).not.toContain("#write h4::before {");
-});
-
 test("a theme's own transitions survive zen mode and reduced motion", async ({
   page,
 }) => {

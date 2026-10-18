@@ -627,9 +627,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   contentWidthAuto: "Adaptável",
   contentWidthStandard: "Padrão",
   contentWidthFull: "Largura total",
-  headingMarksLabel: "Marcas de título",
-  headingMarksHint:
-    "A barra de destaque ao lado dos títulos de nível 3 e o ponto antes dos de nível 4 nos temas integrados.",
   newDocumentModeLabel: "Abrir documentos em",
   newDocumentModeWindow: "Uma nova janela",
   newDocumentModeTab: "Uma aba nesta janela",

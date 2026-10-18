@@ -313,22 +313,18 @@
 
   /* Textus's own ornaments - see the header comment. Settings > Theme >
      Export writes each of these out as a #write rule (theme-export.ts), so
-     keep them one selector per rule under this exact prefix. The h3 bar
-     and h4 dot also stand down for Settings > Heading marks
-     (data-no-heading-marks), and the export leaves them out then. */
+     keep them one selector per rule under this exact prefix. */
   :root:not([data-user-theme]) .milkdown h2 {
     padding-bottom: 0.3em;
     border-bottom: 1px solid var(--editor-border);
   }
 
-  :root:not([data-user-theme]):not([data-no-heading-marks]) .milkdown h3 {
+  :root:not([data-user-theme]) .milkdown h3 {
     padding-left: 0.6em;
     border-left: 4px solid var(--editor-accent);
   }
 
-  :root:not([data-user-theme]):not([data-no-heading-marks])
-    .milkdown
-    h4::before {
+  :root:not([data-user-theme]) .milkdown h4::before {
     content: "";
     display: inline-block;
     width: 0.4em;

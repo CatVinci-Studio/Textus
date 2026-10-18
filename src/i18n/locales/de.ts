@@ -628,9 +628,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   contentWidthAuto: "Adaptiv",
   contentWidthStandard: "Standard",
   contentWidthFull: "Volle Breite",
-  headingMarksLabel: "Überschriften-Markierungen",
-  headingMarksHint:
-    "Der Akzentbalken neben Überschriften der Ebene 3 und der Punkt vor Überschriften der Ebene 4 in den integrierten Designs.",
   newDocumentModeLabel: "Dokumente öffnen",
   newDocumentModeWindow: "In neuem Fenster",
   newDocumentModeTab: "Als Tab in diesem Fenster",

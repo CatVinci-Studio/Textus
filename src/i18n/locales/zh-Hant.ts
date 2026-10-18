@@ -594,8 +594,6 @@ export default {
   contentWidthAuto: "自動調整",
   contentWidthStandard: "標準",
   contentWidthFull: "全寬",
-  headingMarksLabel: "標題裝飾",
-  headingMarksHint: "內建主題中三級標題旁的強調色豎條和四級標題前的圓點。",
   newDocumentModeLabel: "文件開啟方式",
   newDocumentModeWindow: "新視窗",
   newDocumentModeTab: "目前視窗的新分頁",

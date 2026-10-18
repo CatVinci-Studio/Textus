@@ -180,23 +180,6 @@ describe("buildStandaloneHtml", () => {
       root.removeAttribute("data-content-theme");
     }
   });
-
-  it("keeps the heading marks off when they are off on screen (#136)", () => {
-    const root = document.documentElement;
-    root.setAttribute("data-theme", "light");
-    expect(buildStandaloneHtml("a", "<p>x</p>", "")).not.toContain(
-      "data-no-heading-marks",
-    );
-    root.setAttribute("data-no-heading-marks", "");
-    try {
-      expect(buildStandaloneHtml("a", "<p>x</p>", "")).toContain(
-        '<html data-theme="light" data-no-heading-marks>',
-      );
-    } finally {
-      root.removeAttribute("data-theme");
-      root.removeAttribute("data-no-heading-marks");
-    }
-  });
 });
 
 describe("exportPdf", () => {

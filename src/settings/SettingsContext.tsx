@@ -203,10 +203,6 @@ export interface Settings {
   /// (an empty span to type into). Off, the marks are typed by hand and a
   /// complete "**text**" still turns into bold (#136).
   autoCloseMarks: boolean;
-  /// The built-in themes' heading ornaments: the accent bar beside h3 and
-  /// the dot before h4 (content-base.css). Off sets data-no-heading-marks
-  /// on the root (apply-appearance.ts, boot.js) (#136).
-  headingMarks: boolean;
   /// The user's own CSS, applied on top of whichever theme is selected -
   /// for small changes (indent, line spacing, a font) without writing a
   /// whole theme. Injected last, so it wins ties with the theme (#13).
@@ -288,7 +284,6 @@ const DEFAULT_SETTINGS: Settings = {
   typewriterMode: false,
   contentWidth: "auto",
   autoCloseMarks: true,
-  headingMarks: true,
   customCss: "",
   zoom: 1,
   shortcuts: DEFAULT_SHORTCUTS,

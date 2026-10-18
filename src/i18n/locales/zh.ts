@@ -594,8 +594,6 @@ export default {
   contentWidthAuto: "自适应",
   contentWidthStandard: "标准",
   contentWidthFull: "铺满",
-  headingMarksLabel: "标题装饰",
-  headingMarksHint: "内置主题中三级标题旁的强调色竖条和四级标题前的圆点。",
   newDocumentModeLabel: "打开文档方式",
   newDocumentModeWindow: "新窗口",
   newDocumentModeTab: "当前窗口的新标签页",
