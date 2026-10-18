@@ -28,6 +28,7 @@ import {
   remarkHighlightPlugin,
   mdSpanSchema,
   mdCodeSpanSchema,
+  mdSpanClipboardPlugin,
 } from "./marks/md-span-schema";
 import { mdSpanAutopairPlugin } from "./marks/md-span-autopair-plugin";
 import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
@@ -188,6 +189,7 @@ export function withEditorCore(
       .use(remarkHighlightPlugin)
       .use(mdSpanSchema)
       .use(mdCodeSpanSchema)
+      .use(mdSpanClipboardPlugin)
       .use(mdSpanAutopairPlugin)
       .use(formatShortcutPlugin)
       .use(enclosurePlugin)
