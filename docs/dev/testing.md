@@ -127,8 +127,9 @@ split view, zen mode, the AI panel, an agent reply with a reasoned edit, the
 sentence picker and a comment (accepting only some sentences is checked in
 the document), Quick Ask, settings. Other specs assert behaviour without a
 screenshot: the file-backed storage (the boot snapshot, a close that waits
-for settings still on their way), the CJK font stacks, the phone, and an
-iPad's keyboard shortcuts and review-step focus.
+for settings still on their way), the CJK font stacks, the phone, an
+iPad's keyboard shortcuts and review-step focus, and the Windows PDF
+export's page margins around blocks taller than a page (#151).
 
 Baselines are per platform. After an intended UI change:
 `npm run test:visual -- --update-snapshots`, then look at every changed
