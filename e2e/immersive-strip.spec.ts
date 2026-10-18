@@ -26,16 +26,46 @@ test("the strip's button opens the sidebar, whose header shares the strip", asyn
 
   // Full height: the header sits in the window's strip, not under it...
   await expectInStrip(page, ".sidebar-header");
-  // ...and the bar fills what the sidebar leaves, edge to edge against it.
+  // ...the bar fills what the sidebar leaves, edge to edge against it...
   const bar = (await page.locator(".window-bar").boundingBox())!;
   const sidebar = (await page.locator(".sidebar").boundingBox())!;
   expect(Math.round(bar.x)).toBe(Math.round(sidebar.width));
 
+  // ...and the strip's own controls (sidebar toggle first, then the menu)
+  // ride the bar's left end rather than the window's corner, so the
+  // sidebar's tabs get their whole segment back (sidebar-frame.css).
+  const cluster = (await page.locator(".window-bar-left").boundingBox())!;
+  expect(cluster.x).toBeGreaterThanOrEqual(bar.x);
+  expect(
+    await page.evaluate(
+      () =>
+        !!(
+          document
+            .querySelector(".window-bar-sidebar-toggle")!
+            .compareDocumentPosition(
+              document.querySelector(".window-menu-button")!,
+            ) & Node.DOCUMENT_POSITION_FOLLOWING
+        ),
+    ),
+  ).toBe(true);
+  // The pair sits edge to edge, without the menu button's old flush
+  // margin reaching into the toggle's box now that it leads.
+  const toggleBox = (await page
+    .locator(".window-bar-sidebar-toggle")
+    .boundingBox())!;
+  const menuBox = (await page.locator(".window-menu-button").boundingBox())!;
+  expect(menuBox.x).toBeGreaterThanOrEqual(toggleBox.x + toggleBox.width);
+  const tabs = (await page.locator(".sidebar-tabs").boundingBox())!;
+  expect(tabs.x).toBeLessThan(40);
+
   await toggle.click();
   await expect(page.locator(".sidebar")).toHaveClass(/sidebar-collapsed/);
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
-  // With the sidebar gone the bar takes the whole strip back.
+  // With the sidebar gone the bar takes the whole strip back, and its
+  // controls lead it from the window's corner again.
   expect((await page.locator(".window-bar").boundingBox())!.x).toBe(0);
+  const clusterClosed = (await page.locator(".window-bar-left").boundingBox())!;
+  expect(clusterClosed.x).toBeLessThan(cluster.x);
 });
 
 test("the docked AI panel reaches the top, and the caption stays in the corner", async ({
@@ -57,6 +87,8 @@ test("the docked AI panel reaches the top, and the caption stays in the corner",
   if (chrome === "app") {
     const caption = (await page.locator(".window-caption").boundingBox())!;
     expect(caption.y).toBe(0);
-    expect(Math.round(caption.x + caption.width)).toBe(page.viewportSize()!.width);
+    expect(Math.round(caption.x + caption.width)).toBe(
+      page.viewportSize()!.width,
+    );
   }
 });

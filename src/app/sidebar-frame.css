@@ -38,9 +38,10 @@
 
 /* The sidebar reaches the window's top edge, and its header is the strip's
    left segment: one row of tab buttons sharing the 28px window strip with
-   the chrome around it (window-bar.css). The left inset clears whatever
-   else owns the window's corner - the pinned menu button and sidebar
-   toggle on Windows/Linux, the traffic lights and the toggle on macOS. */
+   the chrome around it (window-bar.css). On Windows/Linux nothing else
+   owns this corner any more - the toggle / menu pair rides the bar's left
+   end beside the sidebar - so the tabs take the segment from their own
+   10px inset. */
 .sidebar-header {
   height: 28px;
   flex-shrink: 0;
@@ -50,15 +51,11 @@
   border-bottom: 1px solid var(--border-color);
 }
 
-:root[data-window-chrome="app"] .sidebar-header {
-  /* Past the pinned corner cluster (4px inset, 34px menu button, 4px gap,
-     22px toggle) with some air after it. */
-  padding-left: 72px;
-}
-
 :root[data-window-chrome="native"] .sidebar-header {
-  /* Past the traffic lights and the toggle beside them. */
-  padding-left: 108px;
+  /* Past the traffic lights, which stay in the window's corner over this
+     header - the strip's own controls moved over to the bar. The same
+     78px the bar reserves for them. */
+  padding-left: 78px;
 }
 
 .sidebar-body {

@@ -112,10 +112,12 @@ describe("the sidebar's toggle in the strip", () => {
     );
   });
 
-  it("lives beside the app menu, in the pinned corner cluster", () => {
+  it("leads the app menu in the strip's own cluster, in that order", () => {
     renderBar();
     const cluster = document.querySelector(".window-bar-left")!;
     expect(cluster).toHaveAttribute("data-tauri-drag-region");
+    // The sidebar's toggle first, then the menu - the order they sit in.
+    expect(cluster.firstElementChild).toHaveClass("window-bar-sidebar-toggle");
     expect(cluster.contains(screen.getByRole("button", { name: "Menu" }))).toBe(
       true,
     );

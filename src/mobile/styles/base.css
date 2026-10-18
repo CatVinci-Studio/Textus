@@ -63,7 +63,8 @@
   background: var(--page-bg);
 }
 
-/* The pinned corner cluster takes this taller bar's height too. */
+/* The corner cluster in the row's flow takes this taller bar's height
+   too. */
 :root[data-window-chrome="mobile"] .window-bar-left {
   height: var(--mobile-bar);
 }

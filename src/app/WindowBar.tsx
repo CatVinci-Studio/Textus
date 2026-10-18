@@ -23,13 +23,14 @@ import { AppMenuButton } from "./WindowControls";
  * drag-to-merge gesture in useTabDragMerge).
  *
  * The window's own corners stay the window's on every platform: the
- * menu button and the sidebar toggle are pinned to the left corner
- * (they must not slide while the sidebar arrives beside them), and
- * where the OS draws no caption (Windows, Linux) the minimize /
- * maximize / close buttons are pinned to the right one. Both are
- * children of this row so they fade with it in zen mode, and render
- * nothing where the platform supplies its own frame. See
- * platform/window-chrome.ts.
+ * sidebar toggle and the menu button lead this row at its left end -
+ * the window's corner while the sidebar is shut, just past the
+ * sidebar's edge while it is open, so the sidebar's header owns its
+ * segment of the strip in full - and where the OS draws no caption
+ * (Windows, Linux) the minimize / maximize / close buttons are pinned
+ * to the right corner. All of them are children of this row, so they
+ * fade with it in zen mode, and the pair renders nothing where the
+ * platform supplies its own frame. See platform/window-chrome.ts.
  */
 export function WindowBar({
   menuChecks,
@@ -66,14 +67,16 @@ export function WindowBar({
       className={`window-bar${sidebarOpen ? " window-bar-sidebar-open" : ""}`}
       data-tauri-drag-region
     >
-      {/* The window's left corner, pinned rather than laid out in the
-        row: with the sidebar open its header shares this strip, and the
-        corner's controls have to stay put while the sidebar slides in
-        beside them. data-tauri-drag-region on the cluster itself, not
-        just the row: a click on its empty gaps must still drag the
-        window, and Tauri only asks the event's own target. */}
+      {/* The strip's own controls, leading the row: the sidebar toggle
+        first, then the menu. In the row's flow rather than pinned, so
+        they ride its left end wherever that is - the window's corner
+        while the sidebar is shut, a hand's width past the sidebar's
+        edge while it is open, which leaves the sidebar's header its
+        whole segment of the strip (sidebar-frame.css).
+        data-tauri-drag-region on the cluster itself, not just the row:
+        a click on its empty gaps must still drag the window, and Tauri
+        only asks the event's own target. */}
       <div className="window-bar-left" data-tauri-drag-region>
-        <AppMenuButton checks={menuChecks} />
         <button
           type="button"
           className={`window-bar-sidebar-toggle${sidebarOpen ? " window-bar-sidebar-toggle-on" : ""}`}
@@ -84,6 +87,7 @@ export function WindowBar({
         >
           <SidebarToggleIcon />
         </button>
+        <AppMenuButton checks={menuChecks} />
       </div>
       {/* The unsaved dot leads the title, as a native edited-document
         title does - in the status group it sat on top of a long title

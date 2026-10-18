@@ -6,10 +6,12 @@
    reach the window's top edge now, each carrying its own header in this
    strip, and the bar fills what is left between them. App.tsx publishes
    the panels' widths as --bar-strip-left / --bar-strip-right on the
-   shell, so the bar's ends and the panels' edges stay one line; the
-   caption buttons and the menu / sidebar-toggle corner leave the flow
-   entirely and pin to the window's corners, where a window's chrome
-   belongs.
+   shell, so the bar's ends and the panels' edges stay one line. The
+   caption buttons pin to the window's right corner (the AI panel's
+   header leaves them the room); the sidebar toggle and the menu button
+   lead the row at its left end instead - the window's corner while the
+   sidebar is shut, just past the sidebar's edge while it is open, so
+   the sidebar's header owns its segment of the strip in full.
 
    Floats over the content on the theme background. Opacity is the whole
    point: the strip this replaces was fully TRANSPARENT, so text scrolling
@@ -30,29 +32,36 @@
   align-items: center;
   /* Left inset is room for the macOS traffic lights, which float over the
      top-left corner - but with the sidebar open that corner belongs to the
-     sidebar's header, whose own inset holds the lights instead. */
+     sidebar's header, whose own inset holds the lights instead. It is also
+     the padding edge the row's leading controls are laid out from (below). */
   padding: 0 12px 0 78px;
   background: var(--bg);
-  /* The left end follows the sidebar's sliding edge. One curve for both
-     directions, deliberately shorter than the slide: arriving early, the bar
-     covers the sidebar header as it comes in and uncovers it as it leaves,
-     and the region between the two edges is the same background the bar is,
-     so neither side of the race ever shows a seam. (Reduced motion drops
-     this in modes.css, whose transition rule loads later.) */
-  transition: left var(--dur-base) var(--ease-standard);
+  /* The left end follows the sidebar's sliding edge - and the inset its
+     own controls are laid out from changes with it (below). One curve for
+     both directions, deliberately shorter than the slide: arriving early,
+     the bar covers the sidebar header as it comes in and uncovers it as
+     it leaves, and the region between the two edges is the same
+     background the bar is, so neither side of the race ever shows a seam.
+     (Reduced motion drops this in modes.css, whose transition rule loads
+     later.) */
+  transition:
+    left var(--dur-base) var(--ease-standard),
+    padding-left var(--dur-base) var(--ease-standard);
 }
 
-/* The sidebar's header owns the strip above it now, so the bar's own left
-   padding would only hold its drag area away from the sidebar's edge. The
-   :not() keeps the phone's drawer layout, where the bar still spans the
-   window over the sliding sidebar. */
+/* With the sidebar open its header owns the strip above it in full, and the
+   row starts past its edge - this 12px is the air the toggle / menu pair
+   leads the row with, on macOS just as on Windows now that the traffic
+   lights sit over the sidebar's header instead. The :not() keeps the
+   phone's drawer layout, where the bar still spans the window over the
+   sliding sidebar. */
 :root:not([data-window-chrome="mobile"]) .window-bar.window-bar-sidebar-open {
-  padding-left: 0;
+  padding-left: 12px;
 }
 
 /* Where the app owns the whole frame (Windows - main.tsx sets the attribute
    from platform/window-chrome.ts), that left inset holds no traffic lights:
-   the menu button takes the window's corner instead (pinned, below), and the
+   the row's own leading controls take the corner instead (below), and the
    caption buttons take the right one. The HEIGHT deliberately does not
    change - .tab-bar and the panels' headers clear this bar with hardcoded
    offsets, and one row of chrome at one height on both platforms is the
@@ -181,26 +190,16 @@
   transition-duration: var(--dur-instant);
 }
 
-/* The window's left corner, pinned rather than laid out in the row: with
-   the sidebar open its header shares this strip, and the corner's controls
-   have to stay put while the sidebar slides in beside them. Height follows
-   the bar's on every platform; the phone styles its own (base.css). */
+/* The strip's own two controls, leading the row: the sidebar toggle
+   first, then the menu. In the row's flow rather than pinned, so they
+   ride its left end wherever that is - the window's corner with the
+   sidebar shut, just past its edge with it open (the open row's
+   padding-left above). The phone styles their height (base.css). */
 .window-bar-left {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 28px;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding-left: 4px;
-}
-
-/* macOS: after the traffic lights, and down to their centre like the rest
-   of the strip's contents (the same reason the bar has a padding-top). */
-:root[data-window-chrome="native"] .window-bar-left {
-  padding-left: 78px;
-  padding-top: max(0px, var(--native-titlebar-height, 28px) - 28px);
+  flex-shrink: 0;
 }
 
 /* The caption buttons belong to the window's corner, not to the row's end:
