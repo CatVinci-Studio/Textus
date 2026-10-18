@@ -18,6 +18,7 @@ import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
 import type { SkillCategory } from "../ai/skills/builtin";
 import type { Lang } from "../i18n/langs";
 import type { GalleryTheme } from "../theme/theme-gallery";
+import type { ImageHost } from "../settings/SettingsContext";
 import { isDesktopApp, isIOSApp } from "./capabilities";
 import { iosFiles, isScopedUrl, newDocumentPath } from "./ios-files";
 
@@ -138,9 +139,15 @@ export const fs = {
       : call<string>("read_text_file", { path }),
   readBinaryFileBase64: (path: string) =>
     call<string>("read_binary_file_base64", { path }),
-  savePastedImage: (docPath: string | null, dataBase64: string, ext: string) =>
-    call<SavedImage>("save_pasted_image", { docPath, dataBase64, ext }),
+  savePastedImage: (
+    docPath: string | null,
+    dataBase64: string,
+    ext: string,
+    folder: string,
+  ) =>
+    call<SavedImage>("save_pasted_image", { docPath, dataBase64, ext, folder }),
   uploadImage: (
+    host: ImageHost,
     dataBase64: string,
     mime: string,
     filename: string,
@@ -148,6 +155,7 @@ export const fs = {
     urlField: string,
   ) =>
     call<SavedImage>("upload_image", {
+      host,
       dataBase64,
       mime,
       filename,
@@ -158,8 +166,8 @@ export const fs = {
    *  vault (commands/vault.rs); null when there is none. */
   resolveVaultImage: (docPath: string, link: string) =>
     call<string | null>("resolve_vault_image", { docPath, link }),
-  migrateDraftImages: (docPath: string, srcs: string[]) =>
-    call<ImageMigration[]>("migrate_draft_images", { docPath, srcs }),
+  migrateDraftImages: (docPath: string, srcs: string[], folder: string) =>
+    call<ImageMigration[]>("migrate_draft_images", { docPath, srcs, folder }),
   writeTextFile: (path: string, contents: string): Promise<void> =>
     isScopedUrl(path)
       ? iosFiles.writeText(path, contents)
@@ -500,13 +508,22 @@ export const auth = {
 };
 
 /** Image-host credentials reuse the same private 0600 credential store as
- * provider keys, under a reserved id that is never shown as an AI provider. */
-const IMAGE_HOST_CREDENTIAL_ID = "__image_host";
+ * provider keys, one per host under a reserved id that is never shown as
+ * an AI provider. Mirrors `ImageHost::credential_id` in
+ * src-tauri/src/commands/image_host.rs. */
+const IMAGE_HOST_CREDENTIAL_IDS: Record<ImageHost, string> = {
+  picgo: "__image_host_picgo",
+  smms: "__image_host_smms",
+  imgur: "__image_host_imgur",
+  custom: "__image_host",
+};
 export const imageHostAuth = {
-  tokenStatus: () => auth.providerApiKeyStatus(IMAGE_HOST_CREDENTIAL_ID),
-  setToken: (token: string) =>
-    auth.setProviderApiKey(IMAGE_HOST_CREDENTIAL_ID, token),
-  clearToken: () => auth.clearProviderApiKey(IMAGE_HOST_CREDENTIAL_ID),
+  tokenStatus: (host: ImageHost) =>
+    auth.providerApiKeyStatus(IMAGE_HOST_CREDENTIAL_IDS[host]),
+  setToken: (host: ImageHost, token: string) =>
+    auth.setProviderApiKey(IMAGE_HOST_CREDENTIAL_IDS[host], token),
+  clearToken: (host: ImageHost) =>
+    auth.clearProviderApiKey(IMAGE_HOST_CREDENTIAL_IDS[host]),
 };
 
 // ---------------------------------------------------------------------------

@@ -759,9 +759,27 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   imagePasteFailedMessage:
     "Das eingefügte Bild konnte nicht gespeichert werden.",
   imageStorageGroupLabel: "Bilder",
-  imageStorageLabel: "Speicherort für Bilder",
-  imageStorageLocal: "Lokaler Ordner „assets“",
-  imageStorageRemote: "Bildhoster",
+  imageStorageLabel: "Eingefügte Bilder speichern",
+  imageStorageLocal: "Auf diesem Computer",
+  imageStorageRemote: "Zu einem Bildhoster hochladen",
+  imageFolderLabel: "Ordner",
+  imageFolderNextToDocument: "Neben dem Dokument",
+  imageFolderDocumentName: "<Dokument>.assets/",
+  imageFolderCustom: "Eigener Ordner",
+  imageFolderInvalid:
+    "Gib einen Ordner relativ zum Dokument an, etwa img oder ../images.",
+  imageHostLabel: "Dienst",
+  imageHostCustom: "Eigener Server",
+  imagePicgoEndpointLabel: "Serveradresse",
+  imagePicgoEndpointHint:
+    "Schalte den Server in den PicGo-Einstellungen ein. Er lädt zu den dort eingerichteten Diensten hoch.",
+  imagePicgoKeyLabel: "Server-Schlüssel",
+  imagePicgoKeyHint: "Nur wenn PicList einen verlangt.",
+  imageSmmsTokenLabel: "API-Token",
+  imageSmmsTokenHint: "Findest du im SM.MS-Dashboard.",
+  imageImgurClientIdLabel: "Client ID",
+  imageImgurClientIdHint:
+    "Von einer bei api.imgur.com registrierten Anwendung.",
   imageUploadEndpointLabel: "Upload-Endpunkt",
   imageUploadEndpointHint:
     "Empfängt multipart/form-data mit dem Bild im Feld „file“.",
@@ -773,7 +791,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Optional. Wird privat gespeichert und im Authorization-Header gesendet.",
   imageUploadTokenPlaceholder: "Optionales Token",
   imageNamingLabel: "Dateiname beim Upload",
-  imageNamingHint: "Wie vor jedem Upload ein Dateiname gewählt wird.",
   imageNamingAuto: "Automatisch umbenennen",
   imageNamingOriginal: "Originalnamen behalten",
   imageNamingAsk: "Jedes Mal fragen",

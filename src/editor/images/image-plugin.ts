@@ -10,6 +10,7 @@ import type { Node as ProseNode, Slice } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { showMessage } from "../../ui/app-dialog";
+import { errorText } from "../../utils/error-text";
 import { decodeUrlPath, dirname } from "../../utils/path";
 import { fs } from "../../platform/ipc";
 import type { Settings, ImageNamingMode } from "../../settings/SettingsContext";
@@ -23,12 +24,12 @@ import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
  * Image support, Typora-style, in two halves:
  *
  * - PASTE: a bitmap on the clipboard (screenshot, copied image) is written
- *   to an `assets/` folder next to the current document by the
- *   save_pasted_image command, and an image node with the relative
- *   "assets/<name>" src is inserted - so the markdown stays portable.
- *   Unsaved drafts have no folder yet; their images land in the app data
- *   dir with an absolute src instead, moved next to the document when it
- *   is first saved (image-migration.ts). An image FILE copied in a file
+ *   to the current document's image folder (Settings > Images, `assets/`
+ *   next to it by default) by the save_pasted_image command, and an image
+ *   node with the relative src is inserted - so the markdown stays
+ *   portable. Unsaved drafts have no folder yet; their images land in the
+ *   app data dir with an absolute src instead, moved into the image folder
+ *   when the document is first saved (image-migration.ts). An image FILE copied in a file
  *   manager is stored the same way (pasted-files.ts), and so is one
  *   dropped on the window (app/dropped-files.ts).
  *
@@ -179,7 +180,7 @@ interface ImageStore {
 }
 
 /** Saves one image the way Settings > Images says - into the document's
- *  assets/ folder, or up to the image host - and returns the src to
+ *  image folder, or up to the image host - and returns the src to
  *  write; null when it can't be stored or the user cancelled naming it. */
 async function storeImage(
   image: PastedImage,
@@ -189,7 +190,8 @@ async function storeImage(
   if (!ext) return null;
   const current = store.settings();
   if (current.imageStorageMode === "image-host") {
-    if (!current.imageUploadEndpoint.trim())
+    const host = current.imageHost;
+    if (host === "custom" && !current.imageUploadEndpoint.trim())
       throw new Error("image host upload endpoint is not configured");
     let stem = imageStemForMode(image, current.imageNamingMode);
     if (current.imageNamingMode === "ask") {
@@ -197,11 +199,16 @@ async function storeImage(
       if (chosen === null) return null;
       stem = safeImageStem(chosen);
     }
+    // SM.MS and Imgur have their own address; PicGo's is the one its
+    // server listens on.
     const { src } = await fs.uploadImage(
+      host,
       await image.base64(),
       image.type,
       `${stem}.${ext}`,
-      current.imageUploadEndpoint,
+      host === "picgo"
+        ? current.imagePicgoEndpoint
+        : current.imageUploadEndpoint,
       current.imageUploadUrlField || "url",
     );
     return src;
@@ -210,13 +217,18 @@ async function storeImage(
     store.docPath(),
     await image.base64(),
     ext,
+    current.imageFolder,
   );
   return src;
 }
 
 function reportFailure(err: unknown, store: ImageStore): void {
   console.error("saving pasted image failed:", err);
-  void showMessage(store.onError(), { tone: "error" });
+  // The reason underneath: "PicGo isn't running" is something the user
+  // can fix, where "couldn't save" alone left them guessing.
+  void showMessage(`${store.onError()}\n${errorText(err)}`, {
+    tone: "error",
+  });
 }
 
 async function saveAndInsertImages(
