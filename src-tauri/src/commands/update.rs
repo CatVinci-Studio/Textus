@@ -46,15 +46,19 @@ pub fn is_update(current: &Version, remote: &Version) -> bool {
     remote > current
 }
 
-/// The manifest key an .rpm install updates from (scripts/updater-manifest.mjs).
-const RPM_PLATFORM: &str = "linux-x86_64-rpm";
+/// The manifest key an .rpm install updates from (scripts/updater-manifest.mjs):
+/// `linux-x86_64-rpm` or `linux-aarch64-rpm`. On those two architectures
+/// `std::env::consts::ARCH` is what tauri-plugin-updater puts in its keys.
+fn rpm_platform() -> String {
+    format!("linux-{}-rpm", std::env::consts::ARCH)
+}
 
 /// Whether a release can update this install. Release candidates have no
 /// .rpm (RPM versions can't contain '-'), and without that entry the plugin
 /// would hand an .rpm install the AppImage, which it then refuses to
 /// install; such an install waits for the stable release instead.
 fn serves_install(release: &tauri_plugin_updater::RemoteRelease, rpm_install: bool) -> bool {
-    !rpm_install || release.download_url(RPM_PLATFORM).is_ok()
+    !rpm_install || release.download_url(&rpm_platform()).is_ok()
 }
 
 fn is_rpm_install() -> bool {
@@ -195,11 +199,34 @@ mod tests {
     #[test]
     fn an_rpm_install_waits_for_a_release_with_an_rpm() {
         // A release candidate: AppImage and .deb only.
-        let rc = release(&["linux-x86_64", "linux-x86_64-appimage", "linux-x86_64-deb"]);
+        let rc = release(&[
+            "linux-x86_64",
+            "linux-x86_64-appimage",
+            "linux-x86_64-deb",
+            "linux-aarch64",
+            "linux-aarch64-appimage",
+            "linux-aarch64-deb",
+        ]);
         assert!(!serves_install(&rc, true));
         assert!(serves_install(&rc, false));
-        let stable = release(&["linux-x86_64", "linux-x86_64-rpm"]);
+        let stable = release(&[
+            "linux-x86_64",
+            "linux-x86_64-rpm",
+            "linux-aarch64",
+            "linux-aarch64-rpm",
+        ]);
         assert!(serves_install(&stable, true));
+    }
+
+    #[test]
+    fn an_rpm_install_looks_for_its_own_architecture() {
+        let other = if cfg!(target_arch = "aarch64") {
+            "linux-x86_64-rpm"
+        } else {
+            "linux-aarch64-rpm"
+        };
+        assert!(!serves_install(&release(&[other]), true));
+        assert!(serves_install(&release(&[&rpm_platform()]), true));
     }
 
     #[test]

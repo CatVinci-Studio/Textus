@@ -21,7 +21,7 @@ Textus X.Y.Z <one sentence: what this release is about, e.g. "improves PDF expor
 - **Linux:** ...
 - **iPhone and iPad:** ...
 
-Installers for macOS (Apple silicon and Intel), Windows and Linux are below; the app updates itself.
+Installers for macOS (Apple silicon and Intel), Windows and Linux (x64 and ARM64) are below; the app updates itself.
 
 <!--
 How to write release notes (docs/releases/X.Y.Z.md) - see CONTRIBUTING.md › Writing:
