@@ -105,6 +105,8 @@ it("streams proposals independently from editor decorations and commits a subset
       delta: '{"action":"append","text":"First',
     });
   });
+  // Streamed chunks are coalesced before the preview re-renders.
+  await act(() => new Promise((r) => setTimeout(r, 120)));
   expect(result.current.preview).toContain("First");
   act(() =>
     result.current.receive([

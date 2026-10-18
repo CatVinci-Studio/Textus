@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { media } from "../platform/ipc";
+import { media, type SpeechAudio } from "../platform/ipc";
 import { speechChunks, type SpeechChunk } from "./speech-chunks";
 import { useLatest } from "../utils/hooks/useLatest";
 import { errorText } from "../utils/error-text";
@@ -7,7 +7,9 @@ import { errorText } from "../utils/error-text";
 const START_EVENT = "textus:speech-start";
 type PlaybackState = "idle" | "loading" | "playing" | "paused" | "error";
 
-/** One bounded synthesis at a time; stopping invalidates late network results. */
+/** One bounded synthesis at a time - the next chunk is fetched while the
+ *  current one plays, so paragraphs follow without a gap. Stopping
+ *  invalidates late network results. */
 export function useSpeechPlayback(
   active: boolean,
   onChunk?: (chunk: SpeechChunk) => boolean | void,
@@ -23,6 +25,18 @@ export function useSpeechPlayback(
   const audio = useRef<HTMLAudioElement | null>(null);
   const audioUrl = useRef<string | null>(null);
   const request = useRef<string | null>(null);
+  const prefetched = useRef<{
+    at: number;
+    token: number;
+    voice: string;
+    requestId: string;
+    audio: Promise<SpeechAudio>;
+  } | null>(null);
+  const dropPrefetch = useCallback(() => {
+    const ahead = prefetched.current;
+    prefetched.current = null;
+    if (ahead) void media.cancel(ahead.requestId).catch(() => {});
+  }, []);
   const queue = useRef<SpeechChunk[]>([]);
   const index = useRef(0);
   const currentVoice = useRef("");
@@ -48,12 +62,13 @@ export function useSpeechPlayback(
     generation.current++;
     if (request.current) void media.cancel(request.current).catch(() => {});
     request.current = null;
+    dropPrefetch();
     paused.current = false;
     clearAudio();
     setState("idle");
     setError(null);
     stopRef.current?.();
-  }, [clearAudio, stopRef]);
+  }, [clearAudio, stopRef, dropPrefetch]);
   useEffect(() => {
     if (!active) stop();
     return stop;
@@ -91,10 +106,26 @@ export function useSpeechPlayback(
       index.current = at;
       setPosition(at + 1);
       setState(paused.current ? "paused" : "loading");
-      const requestId = crypto.randomUUID();
+      const ahead = prefetched.current;
+      prefetched.current = null;
+      let requestId: string;
+      let pendingAudio: Promise<SpeechAudio>;
+      if (
+        ahead &&
+        ahead.at === at &&
+        ahead.token === token &&
+        ahead.voice === voice
+      ) {
+        requestId = ahead.requestId;
+        pendingAudio = ahead.audio;
+      } else {
+        if (ahead) void media.cancel(ahead.requestId).catch(() => {});
+        requestId = crypto.randomUUID();
+        pendingAudio = media.synthesize(requestId, chunk.text, voice);
+      }
       request.current = requestId;
       try {
-        const result = await media.synthesize(requestId, chunk.text, voice);
+        const result = await pendingAudio;
         if (token !== generation.current) return;
         if (chunkRef.current?.(chunk) === false) {
           stop();
@@ -134,6 +165,20 @@ export function useSpeechPlayback(
         await player.play();
         if (token === generation.current)
           setState(paused.current ? "paused" : "playing");
+        // Fetch the next paragraph while this one plays.
+        const next = queue.current[at + 1];
+        if (next && token === generation.current && !prefetched.current) {
+          const nextId = crypto.randomUUID();
+          const nextAudio = media.synthesize(nextId, next.text, voice);
+          nextAudio.catch(() => {});
+          prefetched.current = {
+            at: at + 1,
+            token,
+            voice,
+            requestId: nextId,
+            audio: nextAudio,
+          };
+        }
       } catch (err) {
         if (token === generation.current) {
           request.current = null;

@@ -1,5 +1,5 @@
 export function workspaceLabels(language: string) {
-  return language === "zh" || language === "zh-Hant"
+  return language.startsWith("zh")
     ? {
         title: "Agent 创作工作台",
         open: "与 AI 一起创作",
@@ -23,6 +23,21 @@ export function workspaceLabels(language: string) {
         newTask: "新建任务",
         resolve: "请先采纳或拒绝待处理草稿。",
         saved: "正文与编辑器共享；未采纳草稿不会保存为正文。",
+        tasks: "任务列表",
+        collapse: "收起草稿",
+        proposal: "提出修改",
+        write: "写作",
+        conversation: "当前对话",
+        history: "历史任务",
+        noHistory: "还没有历史任务",
+        heading: "与 Textus 一起创作",
+        subheading: "从一个想法开始，写成你的作品。",
+        suggestions: [
+          "帮我写一篇文章的大纲",
+          "润色全文，让表达更流畅",
+          "为这篇文档写一段摘要",
+          "续写下一节",
+        ],
       }
     : {
         title: "Agent Workspace",
@@ -48,5 +63,20 @@ export function workspaceLabels(language: string) {
         resolve: "Accept or reject the pending draft first.",
         saved:
           "Shares the editor document. Unaccepted drafts are not saved as document content.",
+        tasks: "Tasks",
+        collapse: "Hide draft",
+        proposal: "Proposed an edit",
+        write: "Write",
+        conversation: "Conversation",
+        history: "Task history",
+        noHistory: "No earlier tasks yet",
+        heading: "Create with Textus",
+        subheading: "Start with an idea. Make it yours.",
+        suggestions: [
+          "Outline an article for me",
+          "Polish the whole document",
+          "Write a summary of this document",
+          "Continue with the next section",
+        ],
       };
 }

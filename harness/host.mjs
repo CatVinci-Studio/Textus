@@ -143,7 +143,7 @@ try {
         TEXTUS_TOOL_URL: `http://127.0.0.1:${bridge.address().port}`,
         TEXTUS_DOCUMENT: request.document,
         DSH_SYSTEM_PROMPT:
-          "You are Textus, a writing assistant. Use read_document and propose_edit for document work. Proposals require user review; never claim they were applied. Follow the user language. Mode: " +
+          "You are Textus, a writing assistant. Use read_document and propose_edit for document work. Proposals require user review; never claim they were applied. Write every reply, including short notes before tool calls, in the language of the user's request. Mode: " +
           request.mode,
       },
     });

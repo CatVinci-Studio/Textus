@@ -30,7 +30,9 @@ export function useAppUpdate() {
 
   useEffect(() => {
     // iOS updates come from the App Store; the updater isn't built there.
-    if (!canAutoUpdate) return;
+    // A dev build (`tauri dev`) would otherwise offer to replace itself
+    // with the latest public release.
+    if (!canAutoUpdate || import.meta.env.DEV) return;
     let cancelled = false;
     void selfUpdateAllowed().then((allowed) => {
       if (!cancelled) setSelfUpdate(allowed);

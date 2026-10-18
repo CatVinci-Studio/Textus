@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { basename, isInside, parentDir } from "./path";
+import { basename, decodeLocalPath, isInside, parentDir } from "./path";
 
 describe("parentDir", () => {
   it("steps up on POSIX and Windows paths", () => {
@@ -33,4 +33,11 @@ describe("basename of an iOS document URL", () => {
     );
     expect(basename("/home/me/100%25.md")).toBe("100%25.md");
   });
+});
+
+it("decodes percent-encoded local image paths once and leaves malformed ones alone", () => {
+  expect(decodeLocalPath("/a/Application%20Support/x.jpg")).toBe(
+    "/a/Application Support/x.jpg",
+  );
+  expect(decodeLocalPath("/a/100%/x.jpg")).toBe("/a/100%/x.jpg");
 });

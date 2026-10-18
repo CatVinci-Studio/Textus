@@ -9,6 +9,15 @@ export function errorText(err: unknown): string {
   if (err instanceof Error && err.name === "IpcError" && "cause" in err)
     return errorText((err as Error & { cause: unknown }).cause);
   if (err instanceof Error) return err.message;
+  // Structured backend errors (media's `{ code, message }`) arrive as plain
+  // objects; String() would show "[object Object]".
+  if (
+    err &&
+    typeof err === "object" &&
+    "message" in err &&
+    typeof err.message === "string"
+  )
+    return err.message;
   return String(err);
 }
 

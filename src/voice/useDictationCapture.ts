@@ -17,6 +17,9 @@ export function useDictationCapture(
   const session = useRef<DictationTargetSession | null>(null);
   const generation = useRef(0);
   const token = useRef<number | null>(null);
+  /** The first start shows the macOS permission prompt, which takes focus;
+   *  that blur must not cancel the capture being authorized. */
+  const starting = useRef(false);
   const recording = useRecording(active, locale, provider, true);
   const recordingCancel = useRef(recording.cancel);
   recordingCancel.current = recording.cancel;
@@ -70,11 +73,14 @@ export function useDictationCapture(
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") cancel();
     };
-    window.addEventListener("blur", cancel);
+    const blur = () => {
+      if (!starting.current) cancel();
+    };
+    window.addEventListener("blur", blur);
     window.addEventListener("keydown", escape);
     return () => {
       window.removeEventListener("textus-dictation-start", competing);
-      window.removeEventListener("blur", cancel);
+      window.removeEventListener("blur", blur);
       window.removeEventListener("keydown", escape);
     };
   }, [cancel]);
@@ -110,8 +116,13 @@ export function useDictationCapture(
     setError(null);
     setListening(true);
     const run = generation.current;
+    starting.current = true;
     if (provider !== "system") {
-      await recording.start();
+      try {
+        await recording.start();
+      } finally {
+        starting.current = false;
+      }
       return;
     }
     try {
@@ -136,6 +147,8 @@ export function useDictationCapture(
         setError(errorText(err));
         cancel();
       }
+    } finally {
+      starting.current = false;
     }
   }
   return {

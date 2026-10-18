@@ -4,7 +4,6 @@ import type { EditorRunner } from "../editor/useEditorRunner";
 import type { Settings } from "../settings/SettingsContext";
 import type { useDocumentImages } from "./useDocumentImages";
 import { serializeBlocks } from "../ai/doc-markdown";
-import { documentRevisionKey } from "../ai/workspace/revision-plugin";
 import { ai, media } from "../platform/ipc";
 import { selectedEngine, engineModel } from "../ai/agent-engine";
 import { errorText } from "../utils/error-text";
@@ -16,10 +15,12 @@ export function useSelectionIllustration(
   active: boolean,
 ) {
   const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [insertJob, setInsertJob] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const request = useRef<string | null>(null);
   const generation = useRef(0);
+  const accepting = useRef<string | null>(null);
   const stop = useCallback(() => {
     generation.current++;
     if (request.current)
@@ -31,17 +32,64 @@ export function useSelectionIllustration(
     if (!active) stop();
     return stop;
   }, [documentId, active, stop]);
+  const zh = settings.language.startsWith("zh");
+  const job = insertJob
+    ? images.jobs.find((j) => j.jobId === insertJob)
+    : undefined;
+  const accept = images.accept;
   useEffect(() => {
-    const job = images.jobs.find(
-      (job) => job.jobId === insertJob && job.status === "ready",
-    );
-    if (job) {
+    if (!job) return;
+    if (job.status === "ready") {
+      if (accepting.current === job.jobId) return;
+      accepting.current = job.jobId;
+      void accept(job).then((ok) => {
+        accepting.current = null;
+        setInsertJob(null);
+        if (ok)
+          setNotice(
+            zh
+              ? "插图已插入选区下方。"
+              : "Illustration inserted below the selection.",
+          );
+        else
+          setError(
+            zh
+              ? "原段落已被修改，图片保留在下方的图片列表中。"
+              : "The original paragraph changed; the image is kept in the image list below.",
+          );
+      });
+    } else if (job.status === "failed" || job.status === "cancelled") {
       setInsertJob(null);
-      void images.accept(job);
+      if (job.status === "failed")
+        setError(
+          job.error || (zh ? "图片生成失败。" : "Image generation failed."),
+        );
     }
-  }, [images, insertJob]);
+  }, [job, accept, zh]);
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), 2600);
+    return () => clearTimeout(timer);
+  }, [notice]);
+  /** What the status chip shows: refining → queued/running → inserting. */
+  const phase: "refining" | "generating" | null = busy
+    ? "refining"
+    : job && !["failed", "cancelled", "committed"].includes(job.status)
+      ? "generating"
+      : null;
+  const dismiss = useCallback(() => {
+    setError(null);
+    setNotice(null);
+  }, []);
   const create = async () => {
-    if (request.current || images.pending) return;
+    if (request.current || insertJob) {
+      setNotice(
+        zh
+          ? "上一张插图仍在生成，请稍候。"
+          : "The previous illustration is still being generated.",
+      );
+      return;
+    }
     const captured = run((ctx) => {
       const state = ctx.get(editorViewCtx).state;
       if (state.selection.empty) return null;
@@ -53,15 +101,12 @@ export function useSelectionIllustration(
         (b) => b.from < state.selection.to && b.to >= state.selection.to,
       );
       if (!text || !block) return null;
-      return {
-        text,
-        anchor: block.markdown,
-        revision: documentRevisionKey.getState(state) ?? 0,
-      };
+      return { text, anchor: block.markdown };
     });
     if (!captured) return;
     setBusy(true);
     setError(null);
+    setNotice(null);
     const token = ++generation.current;
     const requestId = crypto.randomUUID();
     request.current = requestId;
@@ -69,7 +114,7 @@ export function useSelectionIllustration(
       const config = (await media.providers()).image;
       if (!config)
         throw new Error(
-          settings.language.startsWith("zh")
+          zh
             ? "请先在设置 → Textus AI → 多模态服务配置图片生成。"
             : "Configure image generation in Settings → Textus AI → Media first.",
         );
@@ -113,23 +158,23 @@ export function useSelectionIllustration(
           .trim();
       }
       if (!prompt || [...prompt].length > 1500)
-        throw new Error("The Agent did not return a usable image prompt.");
-      if (
-        run(
-          (ctx) =>
-            documentRevisionKey.getState(ctx.get(editorViewCtx).state) ?? 0,
-        ) !== captured.revision
-      )
         throw new Error(
-          "The selected document changed during prompt refinement. Select the passage again.",
+          zh
+            ? "Agent 没有返回可用的图片提示词，请重试。"
+            : "The Agent did not return a usable image prompt.",
         );
-      const job = await images.start({
-        prompt,
-        anchor: captured.anchor,
-        alt: captured.text.slice(0, 120),
-        caption: null,
-        size: "1024x1024",
-      });
+      // Inserted against the live document by anchor, so editing elsewhere
+      // while the image generates is fine.
+      const job = await images.start(
+        {
+          prompt,
+          anchor: captured.anchor,
+          alt: captured.text.slice(0, 120),
+          caption: null,
+          size: "1024x1024",
+        },
+        { live: true },
+      );
       if (token === generation.current && job) setInsertJob(job.jobId);
     } catch (err) {
       if (token === generation.current) setError(errorText(err));
@@ -140,5 +185,10 @@ export function useSelectionIllustration(
       }
     }
   };
-  return { busy, error, create, stop };
+  const cancel = useCallback(() => {
+    stop();
+    if (insertJob) void images.cancel(insertJob);
+    setInsertJob(null);
+  }, [stop, insertJob, images]);
+  return { busy, phase, error, notice, create, stop: cancel, dismiss };
 }

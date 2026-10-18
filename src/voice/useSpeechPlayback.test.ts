@@ -54,13 +54,19 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
 });
-it("synthesizes one bounded paragraph at a time and supports pause, resume and stop", async () => {
+it("prefetches the next paragraph while one plays and supports pause, resume and stop", async () => {
   const { result } = renderHook(() => useSpeechPlayback(true));
   act(() =>
-    result.current.start("First paragraph.\n\nSecond paragraph.", "alloy"),
+    result.current.start(
+      `First ${"a".repeat(400)}.\n\nSecond paragraph ${"b".repeat(400)}.`,
+      "alloy",
+    ),
   );
   await waitFor(() => expect(result.current.state).toBe("playing"));
-  expect(api.synthesize).toHaveBeenCalledTimes(1);
+  // The second paragraph is requested once the first is playing - never both
+  // before any audio, and never again when its turn comes.
+  expect(api.synthesize).toHaveBeenCalledTimes(2);
+  expect(api.synthesize.mock.calls[1][1]).toMatch(/^Second paragraph/);
   act(() => result.current.pause());
   expect(result.current.state).toBe("paused");
   await act(() => result.current.resume());

@@ -44,3 +44,13 @@ export function isInside(path: string, dir: string): boolean {
   if (!path.startsWith(dir) || path.length === dir.length) return false;
   return /[\\/]$/.test(dir) || /[\\/]/.test(path[dir.length]);
 }
+
+/** A Markdown image destination may be percent-encoded ("Application%20Support");
+ *  convertFileSrc encodes again, so local paths are decoded first. */
+export function decodeLocalPath(src: string): string {
+  try {
+    return decodeURI(src);
+  } catch {
+    return src;
+  }
+}

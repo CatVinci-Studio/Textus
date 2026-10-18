@@ -8,6 +8,7 @@ import {
 } from "../editor/modes/mode-switch";
 import type { DocTab } from "../document/doc-tabs";
 import type { TabState } from "./useTabState";
+import { confirmWorkspaceClose } from "../document/workspace-close";
 
 /** Switching the active tab between the rich editor, plain source mode and
  *  split view, with the caret carried across each switch. */
@@ -47,8 +48,17 @@ export function useSourceModes(tabState: TabState) {
     } else if (tab.sourceMode) {
       leaveSourceMode(tab);
     } else {
-      setPendingCaret(captureEditorCaret(tab.content));
-      updateTab(activeTabId, { content: tab.content, sourceMode: true });
+      // Entering source mode unmounts the editor and with it any running
+      // Agent task: resolve or keep that work first.
+      const id = activeTabId;
+      const caret = captureEditorCaret(tab.content);
+      void confirmWorkspaceClose([id]).then((ok) => {
+        if (!ok) return;
+        const live = liveTabs().find((tb) => tb.id === id);
+        if (!live || live.sourceMode) return;
+        setPendingCaret(caret);
+        updateTab(id, { content: live.content, sourceMode: true });
+      });
     }
   }, [activeTabId, updateTab, liveTabs, leaveSourceMode]);
 
@@ -64,11 +74,18 @@ export function useSourceModes(tabState: TabState) {
     } else if (tab.sourceMode) {
       updateTab(activeTabId, { splitView: true });
     } else {
-      setPendingCaret(captureEditorCaret(tab.content));
-      updateTab(activeTabId, {
-        content: tab.content,
-        sourceMode: true,
-        splitView: true,
+      const id = activeTabId;
+      const caret = captureEditorCaret(tab.content);
+      void confirmWorkspaceClose([id]).then((ok) => {
+        if (!ok) return;
+        const live = liveTabs().find((tb) => tb.id === id);
+        if (!live || live.sourceMode) return;
+        setPendingCaret(caret);
+        updateTab(id, {
+          content: live.content,
+          sourceMode: true,
+          splitView: true,
+        });
       });
     }
   }, [activeTabId, updateTab, liveTabs, leaveSourceMode]);

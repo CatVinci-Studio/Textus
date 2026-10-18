@@ -65,15 +65,16 @@ export function useReadAloudTarget(run: EditorRunner) {
           (documentRevisionKey.getState(view.state) ?? 0) !== snapshot.revision
         )
           return false;
-        const paragraph = snapshot.paragraphs.find(
-          (p) => p.start <= chunk.start && chunk.start < p.end,
+        // A chunk can cover several short blocks: highlight all of them.
+        const covered = snapshot.paragraphs.filter(
+          (p) => p.start < chunk.end && chunk.start < p.end,
         );
-        if (paragraph)
+        if (covered.length)
           view.dispatch(
             view.state.tr
               .setMeta(speechHighlightKey, {
-                from: paragraph.from,
-                to: paragraph.to,
+                from: covered[0].from,
+                to: covered[covered.length - 1].to,
               })
               .setMeta("addToHistory", false),
           );

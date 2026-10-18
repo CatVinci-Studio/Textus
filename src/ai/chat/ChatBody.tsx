@@ -344,10 +344,11 @@ export function ChatBody({
       cursor?: { before: string; after: string } | null;
     }) => { message: string; images?: ImageAttachment[] },
     options: AgentRequestOptions,
-  ) {
+  ): boolean {
+    // Synchronous, so a refused send can leave the composer's text in place.
+    const prepared = beforeSend?.(options);
+    if (prepared === false) return false;
     void (async () => {
-      const prepared = beforeSend?.(options);
-      if (prepared === false) return;
       const requestOptions =
         prepared && typeof prepared === "object" ? prepared : options;
       const latest = refreshContext ? await refreshContext() : null;
@@ -360,6 +361,7 @@ export function ChatBody({
         }),
       );
     })();
+    return true;
   }
 
   function handleSend(
@@ -371,7 +373,7 @@ export function ChatBody({
     // Signals the interactive tutorial's "ask AI something" step - a real
     // send, not just opening the panel.
     if (tutorialMock) window.dispatchEvent(new Event(AI_MESSAGE_SENT_EVENT));
-    dispatchSend(({ selectionMarkdown: selection, cursor }) => {
+    return dispatchSend(({ selectionMarkdown: selection, cursor }) => {
       // Rewrites of the selection come back as replace_selection tool calls
       // (see AGENT_TOOL_INSTRUCTIONS in src-tauri/src/ai/agent.rs); the tag
       // carries the selection's MARKDOWN so formatting survives the trip.

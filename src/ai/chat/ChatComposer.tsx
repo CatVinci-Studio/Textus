@@ -128,7 +128,7 @@ interface ChatComposerProps {
     /** False once the user has removed the selection chip. */
     includeSelection: boolean,
     options: { mode: AgentMode; webSearch: boolean },
-  ) => void;
+  ) => boolean | void;
   onStop: () => void;
   onEscape: () => void;
 }
@@ -419,10 +419,15 @@ export function ChatComposer({
         setRecent(recentSkills());
       }
     }
+    // false = the host is not ready (e.g. still restoring a draft): keep the
+    // typed prompt instead of silently discarding it.
+    if (
+      onSend(message, attachments, !selectionDropped, { mode, webSearch }) ===
+      false
+    )
+      return;
     setInput("");
-    const staged = attachments;
     setAttachments([]);
-    onSend(message, staged, !selectionDropped, { mode, webSearch });
   }
 
   function onKeyDown(e: React.KeyboardEvent) {

@@ -175,6 +175,21 @@ export function buildDraftTransaction(
   return transaction(ctx, state, draft);
 }
 
+/** For an explicit user action anchored to a passage (selection
+ *  illustrations): resolves against the live document, so typing elsewhere
+ *  while the image generates does not strand it. The anchor must still match. */
+export function buildAnchoredTransaction(
+  ctx: Ctx,
+  state: EditorState,
+  draft: DocumentDraft,
+) {
+  return transaction(ctx, state, {
+    ...draft,
+    conflicted: false,
+    selection: { from: state.selection.from, to: state.selection.to },
+  });
+}
+
 /** Uses the captured base so manual edits cannot silently change a preview. */
 export function previewDraft(
   ctx: Ctx,

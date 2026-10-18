@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   engineModel,
   selectEngine,
@@ -15,6 +15,8 @@ export function EngineSelector({
   const engine = useAgentEngine();
   const zh = language.startsWith("zh");
   const [model, setModel] = useState(() => engineModel(engine) ?? "");
+  // The engine can change elsewhere (another window, another selector).
+  useEffect(() => setModel(engineModel(engine) ?? ""), [engine]);
   return (
     <div className="agent-engine-controls">
       <select

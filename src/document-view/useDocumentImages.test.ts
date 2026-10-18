@@ -149,7 +149,7 @@ it("rolls back the prepared asset if the user types while the asset is saving", 
       resolve = r;
     }),
   );
-  let inserting!: Promise<void>;
+  let inserting!: Promise<unknown>;
   act(() => {
     inserting = result.current.images.accept(result.current.images.jobs[0]);
   });
@@ -179,7 +179,7 @@ it("serializes double-clicked acceptance before React rerenders", async () => {
       resolve = r;
     }),
   );
-  let pending!: Promise<void>;
+  let pending!: Promise<unknown>;
   act(() => {
     pending = result.current.images.accept(result.current.images.jobs[0]);
     void result.current.images.accept(result.current.images.jobs[0]);
@@ -198,7 +198,7 @@ it("rolls back an asset prepared for a different folder after Save As", async ()
       resolve = r;
     }),
   );
-  let inserting!: Promise<void>;
+  let inserting!: Promise<unknown>;
   act(() => {
     inserting = result.current.images.accept(result.current.images.jobs[0]);
   });

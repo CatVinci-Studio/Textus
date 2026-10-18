@@ -70,10 +70,9 @@ it("offers a compact whole-document action without configuration fields", async 
   fireEvent.click(screen.getByRole("button", { name: "Read document aloud" }));
   await waitFor(() => expect(api.synthesize).toHaveBeenCalled());
   expect(target.getText).toHaveBeenCalledWith("document");
-  expect(api.synthesize.mock.calls[0].slice(1)).toEqual([
-    "Before.",
-    "configured-voice",
-  ]);
+  // Short neighbouring paragraphs share one request.
+  expect(api.synthesize.mock.calls[0][1]).toMatch(/^Before\./);
+  expect(api.synthesize.mock.calls[0][2]).toBe("configured-voice");
   await waitFor(() => expect(rates).toEqual([1.4]));
   expect(screen.getByRole("button", { name: "Stop reading" })).toBeTruthy();
 });

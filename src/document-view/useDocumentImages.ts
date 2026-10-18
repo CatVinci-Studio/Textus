@@ -8,7 +8,10 @@ import {
 } from "../platform/ipc";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { useDocumentWorkspace } from "./useDocumentWorkspace";
-import { buildDraftTransaction } from "../ai/workspace/document-draft";
+import {
+  buildAnchoredTransaction,
+  buildDraftTransaction,
+} from "../ai/workspace/document-draft";
 import { imageMarkdown } from "../ai/multimodal/image-proposal";
 import { parseMarkdownSource } from "../editor/markdown/parse-markdown-source";
 import { errorText } from "../utils/error-text";
@@ -20,7 +23,9 @@ export function useDocumentImages(
   path: string | null,
   workspace: ReturnType<typeof useDocumentWorkspace>,
   sessionId: string,
+  language = "en",
 ) {
+  const zh = language.startsWith("zh");
   const [jobs, setJobs] = useState<ImageJob[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [inserting, setInserting] = useState<string | null>(null);
@@ -29,6 +34,8 @@ export function useDocumentImages(
   const awaiting = useRef(new Set<string>());
   const authorizations = useRef(new Map<string, ImageTaskPermission>());
   const stopped = useRef(new Set<string>());
+  /** Jobs from an explicit right-click: inserted against the live document. */
+  const liveJobs = useRef(new Set<string>());
   const insertingRef = useRef<string | null>(null);
   const alive = useRef(true);
   const latest = useLatest({ workspace, path, sessionId, jobs });
@@ -42,8 +49,23 @@ export function useDocumentImages(
   }, [pending, setMediaPending]);
   const refresh = useCallback(async () => {
     try {
-      const value = await media.imageJobs(documentId);
-      if (alive.current) setJobs(value ?? []);
+      const value = (await media.imageJobs(documentId)) ?? [];
+      // Polled while a job runs: keep the old array when nothing changed so
+      // the whole editor tree does not re-render on every tick.
+      if (alive.current)
+        setJobs((prev) =>
+          prev.length === value.length &&
+          prev.every(
+            (job, i) =>
+              job.jobId === value[i].jobId &&
+              job.status === value[i].status &&
+              job.assetSrc === value[i].assetSrc &&
+              job.error === value[i].error &&
+              job.previewPath === value[i].previewPath,
+          )
+            ? prev
+            : value,
+        );
       return true;
     } catch (err) {
       if (alive.current) setError(errorText(err));
@@ -68,18 +90,18 @@ export function useDocumentImages(
         void media.cancelImageGeneration(permission).catch(() => {});
     };
   }, [refresh]);
+  const running = jobs.some((job) =>
+    ["queued", "running", "preparing"].includes(job.status),
+  );
   useEffect(() => {
-    if (
-      !jobs.some((job) =>
-        ["queued", "running", "preparing"].includes(job.status),
-      )
-    )
-      return;
-    const timer = setTimeout(() => {
+    if (!running) return;
+    // An interval, not a timeout re-armed by `jobs`: refresh keeps the same
+    // array while nothing changed, which would otherwise end the polling.
+    const timer = setInterval(() => {
       void refresh();
     }, 750);
-    return () => clearTimeout(timer);
-  }, [jobs, refresh]);
+    return () => clearInterval(timer);
+  }, [running, refresh]);
   const authorizeTask = useCallback(
     (taskId: string, baseRevision: number): ImageTaskPermission => {
       const permission = {
@@ -97,16 +119,32 @@ export function useDocumentImages(
     [documentId],
   );
   const start = useCallback(
-    async (request: ImageGenerationRequest) => {
+    async (
+      request: ImageGenerationRequest,
+      options: { live?: boolean } = {},
+    ) => {
       const { workspace: w, sessionId: session } = latest.current;
-      if (!w.begin("edit", session)) return;
-      const draft = w.currentDraft();
-      if (!draft) return;
-      const permission = authorizeTask(draft.id, draft.baseRevision);
+      let taskId: string;
+      let revision: number;
+      if (options.live) {
+        // Its own task: one illustration never spends another task's quota.
+        taskId = crypto.randomUUID();
+        revision = 0;
+      } else {
+        if (!w.begin("edit", session)) return;
+        // begin() only captured the draft; no model exchange is routed here.
+        w.endRouting();
+        const draft = w.currentDraft();
+        if (!draft) return;
+        taskId = draft.id;
+        revision = draft.baseRevision;
+      }
+      const permission = authorizeTask(taskId, revision);
       setStarts((count) => count + 1);
       try {
         const job = await media.startImage(permission, request);
         if (alive.current && !stopped.current.has(permission.generationId)) {
+          if (options.live) liveJobs.current.add(job.jobId);
           setJobs((prev) => [
             ...prev.filter((j) => j.jobId !== job.jobId),
             job,
@@ -151,14 +189,31 @@ export function useDocumentImages(
   const accept = useCallback(
     async (job: ImageJob) => {
       if (job.status !== "ready" || insertingRef.current || !canAccept(job))
-        return;
+        return false;
+      const options = { live: liveJobs.current.has(job.jobId) };
       const { workspace: w, path: docPath, jobs: currentJobs } = latest.current;
-      const draft = w.currentDraft();
+      const captured = w.currentDraft();
+      // A live (explicit right-click) insertion only needs its anchor.
+      const draft = options.live
+        ? {
+            ...(captured ?? {
+              documentId,
+              sessionId: "",
+              baseRevision: 0,
+              baseMarkdown: "",
+              selection: { from: 0, to: 0 },
+              operations: [],
+            }),
+            id: job.taskId,
+          }
+        : captured;
       if (!draft || draft.id !== job.taskId) {
         setError(
-          "Image target is from a different task. Start a new image proposal at the current document location.",
+          zh
+            ? "图片目标属于另一个任务，请在当前位置重新生成。"
+            : "Image target is from a different task. Start a new image proposal at the current document location.",
         );
-        return;
+        return false;
       }
       const previous = currentJobs
         .filter(
@@ -182,7 +237,9 @@ export function useDocumentImages(
             if (!parsed) return null;
             anchor = ctx.get(serializerCtx)(parsed).trim();
           }
-          return buildDraftTransaction(ctx, state, {
+          return (
+            options.live ? buildAnchoredTransaction : buildDraftTransaction
+          )(ctx, state, {
             ...draft,
             operations: [
               {
@@ -198,9 +255,11 @@ export function useDocumentImages(
         });
       if (!build("assets/pending-image.png")) {
         setError(
-          "The document revision or image anchor changed. Relocate the image with a new proposal.",
+          zh
+            ? "插图位置所在的段落已更改，请重新生成。"
+            : "The document revision or image anchor changed. Relocate the image with a new proposal.",
         );
-        return;
+        return false;
       }
       insertingRef.current = job.jobId;
       setInserting(job.jobId);
@@ -212,35 +271,41 @@ export function useDocumentImages(
         prepared = true;
         if (!alive.current || latest.current.path !== docPath)
           throw new Error(
-            "The document location changed while saving the image. Its prepared asset was rolled back.",
+            zh
+              ? "保存图片时文档位置发生变化，已回滚。"
+              : "The document location changed while saving the image. Its prepared asset was rolled back.",
           );
         const tr = build(src);
         if (!tr)
           throw new Error(
-            "The document changed while saving the image. Its prepared asset was rolled back.",
+            zh
+              ? "保存图片时文档已更改，已回滚。"
+              : "The document changed while saving the image. Its prepared asset was rolled back.",
           );
         run((ctx) => ctx.get(editorViewCtx).dispatch(tr));
         committed = true;
         w.rebaseAfterCommit(tr);
         await media.finishImage(job.jobId, true);
         await refresh();
+        return true;
       } catch (err) {
         if (prepared && !committed) {
           try {
             await media.finishImage(job.jobId, false);
           } catch (rollback) {
             setError(`${errorText(err)} ${errorText(rollback)}`);
-            return;
+            return false;
           }
         }
         if (alive.current) setError(errorText(err));
+        return false;
       } finally {
         insertingRef.current = null;
         if (alive.current) setInserting(null);
         if (committed) void refresh();
       }
     },
-    [run, canAccept, latest, refresh],
+    [run, canAccept, latest, refresh, documentId, zh],
   );
   const stopRunning = useCallback(async () => {
     const permissions = new Map(authorizations.current);

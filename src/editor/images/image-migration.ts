@@ -1,4 +1,5 @@
 import { fs } from "../../platform/ipc";
+import { decodeLocalPath } from "../../utils/path";
 
 // Matches standard markdown image syntax: ![alt](src "optional title") -
 // how image-plugin.ts's paste handler inserts a src, and so how draft
@@ -52,16 +53,22 @@ export async function migrateDraftImages(
   if (candidates.length === 0)
     return { content, migrated: false, failed: [], mappings: [] };
 
+  // Generated images are written percent-encoded; the backend needs the real
+  // path, while the Markdown is rewritten using the original spelling.
+  const original = new Map(
+    candidates.map((src) => [decodeLocalPath(src), src]),
+  );
   const results = await fs.migrateDraftImages(
     docPath,
-    candidates,
+    [...original.keys()],
     sourceDocPath,
   );
   let next = content;
   const failed: string[] = [];
   let migrated = false;
   const mappings: { old: string; new: string }[] = [];
-  for (const { old, new: replacement } of results) {
+  for (const { old: decoded, new: replacement } of results) {
+    const old = original.get(decoded) ?? decoded;
     if (replacement) {
       next = replaceAll(next, old, replacement);
       migrated = true;

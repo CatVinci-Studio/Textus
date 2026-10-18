@@ -84,9 +84,10 @@ it("condenses an oversized prompt with the same selected engine and only selecte
       prompt: "Polished forest composition",
       anchor: "Forest passage.",
     }),
+    { live: true },
   );
 });
-it("rejects document edits made while the engine is refining a prompt", async () => {
+it("keeps the illustration when the document is edited during refinement", async () => {
   api.providers.mockResolvedValue({ image: { provider: "minimax" } });
   let resolve: (value: unknown) => void = () => {};
   api.agentMessage.mockImplementation(
@@ -109,6 +110,10 @@ it("rejects document edits made while the engine is refining a prompt", async ()
     resolve([{ kind: "Assistant", text: "Forest" }]);
     await pending;
   });
-  expect(start).not.toHaveBeenCalled();
-  expect(result.current.error).toContain("document changed");
+  // Inserted later by its captured anchor against the live document.
+  expect(start).toHaveBeenCalledWith(
+    expect.objectContaining({ prompt: "Forest", anchor: "Forest passage." }),
+    { live: true },
+  );
+  expect(result.current.error).toBeNull();
 });

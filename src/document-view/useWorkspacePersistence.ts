@@ -1,3 +1,4 @@
+import { errorText } from "../utils/error-text";
 import { useEffect, useRef, useState } from "react";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
@@ -94,7 +95,7 @@ export function useWorkspacePersistence({
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(String(err));
+          setError(errorText(err));
           setLoaded(true);
         }
       });
@@ -228,5 +229,14 @@ export function useWorkspacePersistence({
       }),
     [tabId, documentId, enabled, language, latest],
   );
+  // The notice describes the restored draft; it ends with that draft.
+  const operations = workspace.draft?.operations.length ?? 0;
+  const busy = conversation.busy;
+  const hadOperations = useRef(false);
+  useEffect(() => {
+    if (busy || (hadOperations.current && operations === 0))
+      setInterrupted(false);
+    hadOperations.current = operations > 0;
+  }, [busy, operations]);
   return { loaded, error, interrupted };
 }

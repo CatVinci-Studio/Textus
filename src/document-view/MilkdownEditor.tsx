@@ -1,7 +1,7 @@
 import { useSelectionIllustration } from "./useSelectionIllustration";
 import { WritePlayback, useWritePlayback } from "./WritePlayback";
 import { useEditorDictationTarget } from "./useEditorDictationTarget";
-import { type MouseEvent, useEffect, useRef, useState } from "react";
+import { type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { useDocumentWorkspace } from "./useDocumentWorkspace";
@@ -56,6 +56,19 @@ import "katex/dist/katex.min.css";
 import "../theme/content-base.css";
 import "../editor/milkdown-theme.css";
 import "../theme/content-themes.css";
+
+/** The surface each document last showed. A remount (source mode, reload)
+ *  returns to it; the startup tab and new empty documents open in Agent, and
+ *  an opened file shows its text. */
+const lastSurface = new Map<string, boolean>();
+let firstEditor = true;
+function initialSurface(documentId: string, initialValue: string) {
+  const remembered = lastSurface.get(documentId);
+  if (remembered !== undefined) return remembered;
+  const open = firstEditor || !initialValue.trim();
+  firstEditor = false;
+  return open;
+}
 
 interface MilkdownEditorProps {
   /** The owning tab - the key App.tsx flushes this editor under (see
@@ -160,14 +173,14 @@ export function MilkdownEditor({
     });
   }, [settings.language, settings.enableMagicDiary, run]);
 
-  const workspace = useDocumentWorkspace(
-    run,
-    documentId,
-    !phone && !tutorialMock,
+  const [startOpen] = useState(
+    () => !phone && !tutorialMock && initialSurface(documentId, initialValue),
   );
-  const [workspaceMounted, setWorkspaceMounted] = useState(
-    !phone && !tutorialMock,
-  );
+  const workspace = useDocumentWorkspace(run, documentId, startOpen);
+  const [workspaceMounted, setWorkspaceMounted] = useState(startOpen);
+  useEffect(() => {
+    if (!phone && !tutorialMock) lastSurface.set(documentId, workspace.open);
+  }, [documentId, workspace.open, phone, tutorialMock]);
   const [allowAutoImages, setAllowAutoImages] = useState(false);
   const reader = useWritePlayback(
     run,
@@ -192,15 +205,25 @@ export function MilkdownEditor({
     filePath,
     workspace,
     conversation.conversationId,
+    settings.language,
   );
   const refreshImages = images.refresh;
   const settleImages = images.settle;
   useEffect(() => {
     if (!conversation.busy) void settleImages();
   }, [conversation.busy, settleImages]);
+  // Only image tool turns can enqueue jobs; other streamed turns need no IPC.
+  const imageTurns = [
+    ...conversation.history,
+    ...(conversation.streaming?.turns ?? []),
+  ].filter(
+    (turn) =>
+      (turn.kind === "ToolCall" && turn.name === "generate_image") ||
+      turn.kind === "ToolResult",
+  ).length;
   useEffect(() => {
     void refreshImages();
-  }, [conversation.history, conversation.streaming?.turns, refreshImages]);
+  }, [imageTurns, refreshImages]);
   const stopTask = () => {
     conversation.stop();
     void images.stopRunning().catch(() => {});
@@ -225,9 +248,12 @@ export function MilkdownEditor({
     stopImages: images.stopRunning,
   });
   const finishWorkspace = workspace.finish;
+  const failed = !!conversation.error;
   useEffect(() => {
-    if (!conversation.busy) finishWorkspace();
-  }, [conversation.busy, finishWorkspace]);
+    // A failed stream offers Retry; keeping its partial proposal would
+    // duplicate the retried one.
+    if (!conversation.busy) finishWorkspace(failed ? "failed" : "stopped");
+  }, [conversation.busy, finishWorkspace, failed]);
 
   const {
     quickSendContext,
@@ -361,6 +387,26 @@ export function MilkdownEditor({
     agentPanel,
   });
 
+  // The Agent surface's document card: serialize only when it is visible and
+  // the document can have changed, not on every streamed chunk.
+  const hasDraftOperations = !!workspace.draft?.operations.length;
+  const workspaceVisible = workspace.open && isActive;
+  const documentMarkdown = useMemo(
+    () =>
+      workspaceVisible && !hasDraftOperations
+        ? (run((ctx) =>
+            ctx.get(serializerCtx)(ctx.get(editorViewCtx).state.doc),
+          ) ?? "")
+        : "",
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [workspaceVisible, hasDraftOperations, run, conversation.history],
+  );
+  const zh = settings.language.startsWith("zh");
+  const labels = useMemo(
+    () => chatLabels(t, settings.language),
+    [t, settings.language],
+  );
+
   const decidableCount = pendingEdits.decidable.length;
   const [panelGuard, setPanelGuard] = useState(false);
   useEffect(() => {
@@ -445,8 +491,10 @@ export function MilkdownEditor({
         createPortal(
           <nav
             className="document-surface-switch"
-            aria-label="Workspace surface"
+            aria-label={zh ? "切换工作区" : "Workspace surface"}
+            data-surface={workspace.open ? "agent" : "write"}
           >
+            <span className="surface-switch-thumb" aria-hidden />
             <button
               aria-pressed={workspace.open}
               onClick={() => {
@@ -474,22 +522,57 @@ export function MilkdownEditor({
           <WritePlayback reader={reader} language={settings.language} />,
           paneEl,
         )}
-      {(selectionIllustration.busy || selectionIllustration.error) && (
-        <p
-          role={selectionIllustration.error ? "alert" : "status"}
-          className="selection-illustration-status"
-        >
-          {selectionIllustration.error ||
-            (settings.language.startsWith("zh")
-              ? "Agent 正在润色图片提示词…"
-              : "Agent is refining the image prompt…")}
-          {selectionIllustration.busy && (
-            <button onClick={selectionIllustration.stop}>
-              {settings.language.startsWith("zh") ? "取消" : "Cancel"}
-            </button>
-          )}
-        </p>
-      )}
+      {paneEl &&
+        createPortal(
+          <Presence
+            show={
+              !!(
+                selectionIllustration.phase ||
+                selectionIllustration.error ||
+                selectionIllustration.notice
+              ) && isActive
+            }
+            exitMs={180}
+          >
+            {(selectionIllustration.phase ||
+              selectionIllustration.error ||
+              selectionIllustration.notice) && (
+              <PresenceDiv
+                role={selectionIllustration.error ? "alert" : "status"}
+                className={`selection-illustration-status${selectionIllustration.error ? " is-error" : selectionIllustration.phase ? " is-working" : " is-done"}`}
+              >
+                {selectionIllustration.phase && (
+                  <span className="illustration-spinner" aria-hidden />
+                )}
+                <span>
+                  {selectionIllustration.error ||
+                    (selectionIllustration.phase === "refining"
+                      ? zh
+                        ? "Agent 正在润色图片提示词…"
+                        : "The Agent is refining the image prompt…"
+                      : selectionIllustration.phase === "generating"
+                        ? zh
+                          ? "正在生成插图，完成后自动插入…"
+                          : "Generating the illustration; it will be inserted when ready…"
+                        : selectionIllustration.notice)}
+                </span>
+                {selectionIllustration.phase ? (
+                  <button onClick={selectionIllustration.stop}>
+                    {zh ? "取消" : "Cancel"}
+                  </button>
+                ) : (
+                  <button
+                    aria-label={zh ? "关闭" : "Dismiss"}
+                    onClick={selectionIllustration.dismiss}
+                  >
+                    ×
+                  </button>
+                )}
+              </PresenceDiv>
+            )}
+          </Presence>,
+          paneEl,
+        )}
       <Milkdown />
       {!workspace.open && (
         <ImageJobsPanel language={settings.language} images={images} />
@@ -497,18 +580,19 @@ export function MilkdownEditor({
       {workspaceMounted &&
         paneEl &&
         createPortal(
-          <div hidden={!workspace.open || !isActive}>
+          <div
+            className="agent-workspace-layer"
+            hidden={!isActive}
+            data-open={workspace.open}
+            inert={!workspace.open}
+          >
             <AgentWorkspace
               language={settings.language}
               title={docTitle}
               documentPath={filePath}
               draft={workspace.draft}
               preview={
-                workspace.draft?.operations.length
-                  ? workspace.preview
-                  : (run((ctx) =>
-                      ctx.get(serializerCtx)(ctx.get(editorViewCtx).state.doc),
-                    ) ?? "")
+                hasDraftOperations ? workspace.preview : documentMarkdown
               }
               conflict={workspace.conflict}
               conversation={conversation}
@@ -516,6 +600,7 @@ export function MilkdownEditor({
               onAccept={workspace.accept}
               onReject={workspace.discard}
               onStop={stopTask}
+              toolLabels={labels.toolActivity}
               pendingMedia={images.pending}
               mediaPreview={
                 <ImageJobsPanel language={settings.language} images={images} />
@@ -525,13 +610,12 @@ export function MilkdownEditor({
                   <label className="workspace-media-permission">
                     <input
                       type="checkbox"
+                      className="ui-check"
                       checked={allowAutoImages}
                       disabled={conversation.busy}
                       onChange={(e) => setAllowAutoImages(e.target.checked)}
                     />
-                    {settings.language.startsWith("zh")
-                      ? "允许本次请求配图"
-                      : "Allow images for this request"}
+                    {zh ? "允许本次请求配图" : "Allow images for this request"}
                   </label>
                 </>
               }
@@ -584,7 +668,7 @@ export function MilkdownEditor({
                 }}
                 defaultWebSearch={settings.enableWebSearch}
                 tutorialMock={tutorialMock}
-                labels={chatLabels(t, settings.language)}
+                labels={labels}
                 proposalStatus={(id) =>
                   workspace.statuses[id] ??
                   (workspace.draft?.operations.some((o) => o.callId === id)
@@ -800,7 +884,7 @@ export function MilkdownEditor({
             defaultMode="edit"
             defaultWebSearch={settings.enableWebSearch}
             tutorialMock={tutorialMock}
-            labels={chatLabels(t, settings.language)}
+            labels={labels}
             onProposals={showProposals}
             proposalStatus={pendingEdits.status}
             onAcceptProposal={pendingEdits.accept}

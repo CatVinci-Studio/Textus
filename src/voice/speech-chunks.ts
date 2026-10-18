@@ -40,5 +40,28 @@ export function speechChunks(text: string): SpeechChunk[] {
     }
     paragraph++;
   }
-  return chunks;
+  return mergeShort(text, chunks);
+}
+
+/** Headings, list items and table rows are a few words each: one request
+ *  per block meant hundreds of round trips and a pause before every line.
+ *  Neighbouring blocks share a request while they stay within the limit. */
+function mergeShort(text: string, chunks: SpeechChunk[]): SpeechChunk[] {
+  const merged: SpeechChunk[] = [];
+  for (const chunk of chunks) {
+    const previous = merged[merged.length - 1];
+    if (previous) {
+      const joined = text.slice(previous.start, chunk.end);
+      if (Array.from(joined).length <= 600) {
+        merged[merged.length - 1] = {
+          ...previous,
+          text: joined,
+          end: chunk.end,
+        };
+        continue;
+      }
+    }
+    merged.push(chunk);
+  }
+  return merged;
 }

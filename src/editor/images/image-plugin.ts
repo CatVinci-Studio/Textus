@@ -5,7 +5,7 @@ import type { Node as ProseNode, Slice } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { showMessage } from "../../ui/app-dialog";
-import { dirname } from "../../utils/path";
+import { decodeLocalPath, dirname } from "../../utils/path";
 import { fs } from "../../platform/ipc";
 import type { Settings, ImageNamingMode } from "../../settings/SettingsContext";
 import { isScopedUrl, scopedImageSrc } from "../../platform/ios-files";
@@ -34,11 +34,11 @@ import { unwrittenImageSrcs } from "../markdown/markdown-output";
 export function resolveImageSrc(src: string, docPath: string | null): string {
   // A Windows drive path ("C:\..." / "C:/...") would otherwise read as a
   // single-letter URL scheme to the test below.
-  if (/^[a-z]:[\\/]/i.test(src)) return convertFileSrc(src);
+  if (/^[a-z]:[\\/]/i.test(src)) return convertFileSrc(decodeLocalPath(src));
   if (!src || /^[a-z][a-z0-9+.-]*:/i.test(src)) return src; // http(s), data:, asset:, file:, ...
-  if (src.startsWith("/")) return convertFileSrc(src);
+  if (src.startsWith("/")) return convertFileSrc(decodeLocalPath(src));
   if (!docPath) return src;
-  return convertFileSrc(`${dirname(docPath)}/${src}`);
+  return convertFileSrc(`${dirname(docPath)}/${decodeLocalPath(src)}`);
 }
 
 /**

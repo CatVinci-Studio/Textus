@@ -145,3 +145,88 @@ test(
     }
   },
 );
+test(
+  "read_document returns the document the host was given",
+  { timeout: 45000 },
+  async () => {
+    const document = "# 标题\n\n" + "正文内容。".repeat(4000);
+    const seen = [];
+    const server = createServer(async (req, res) => {
+      let body = "";
+      for await (const chunk of req) body += chunk;
+      const data = JSON.parse(body);
+      seen.push(data.messages);
+      const first = seen.length === 1;
+      const delta = first
+        ? {
+            role: "assistant",
+            tool_calls: [
+              {
+                index: 0,
+                id: "call-read",
+                type: "function",
+                function: { name: "read_document", arguments: "{}" },
+              },
+            ],
+          }
+        : { role: "assistant", content: "Read." };
+      res.writeHead(200, { "Content-Type": "text/event-stream" });
+      for (const value of [
+        {
+          id: "t",
+          object: "chat.completion.chunk",
+          choices: [{ index: 0, delta, finish_reason: null }],
+        },
+        {
+          id: "t",
+          object: "chat.completion.chunk",
+          choices: [
+            {
+              index: 0,
+              delta: {},
+              finish_reason: first ? "tool_calls" : "stop",
+            },
+          ],
+          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        },
+      ])
+        res.write(`data: ${JSON.stringify(value)}\n\n`);
+      res.end("data: [DONE]\n\n");
+    });
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const child = spawn(
+      process.execPath,
+      [process.env.TEXTUS_TEST_HOST || "harness/host.mjs"],
+      { stdio: ["pipe", "pipe", "pipe"] },
+    );
+    let stdout = "";
+    child.stdout.on("data", (x) => (stdout += x));
+    child.stdin.end(
+      JSON.stringify({
+        baseUrl: `http://127.0.0.1:${server.address().port}/v1`,
+        apiKey: "test",
+        model: "fixture",
+        document,
+        mode: "ask",
+        message: "What is the title?",
+        history: [],
+      }) + "\n",
+    );
+    try {
+      await new Promise((resolve, reject) => {
+        child.on("error", reject);
+        child.on("exit", resolve);
+      });
+      const result = stdout
+        .trim()
+        .split("\n")
+        .map((x) => JSON.parse(x))
+        .find((x) => x.result)?.result;
+      const read = result?.find((t) => t.kind === "ToolResult");
+      assert.equal(read?.output, document, stdout.slice(0, 2000));
+    } finally {
+      child.kill("SIGKILL");
+      await new Promise((resolve) => server.close(resolve));
+    }
+  },
+);

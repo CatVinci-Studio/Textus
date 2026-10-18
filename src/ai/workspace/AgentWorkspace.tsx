@@ -1,11 +1,32 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { DocumentDraft } from "./document-draft";
 import type { AgentConversation } from "../chat/useAgentConversation";
 import { MarkdownText } from "../MarkdownText";
 import { workspaceLabels } from "./labels";
 import { userMessageBody } from "../chat/user-message";
 import { useChatHistory } from "../chat/chat-history";
+import {
+  CheckIcon,
+  ChevronIcon,
+  HamburgerIcon,
+  PlusIcon,
+} from "../../ui/icons";
 import "./workspace.css";
+
+/** Puts a suggestion into the composer this workspace renders, as if typed. */
+function fillComposer(root: HTMLElement | null, text: string) {
+  const input = root?.querySelector<HTMLTextAreaElement>(
+    "textarea.inline-chat-input",
+  );
+  if (!input) return;
+  Object.getOwnPropertyDescriptor(
+    HTMLTextAreaElement.prototype,
+    "value",
+  )?.set?.call(input, text);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.focus();
+  input.setSelectionRange(text.length, text.length);
+}
 
 export function AgentWorkspace({
   language,
@@ -23,6 +44,7 @@ export function AgentWorkspace({
   mediaPreview,
   pendingMedia = false,
   onStop,
+  toolLabels = {},
 }: {
   language: string;
   title: string;
@@ -39,124 +61,183 @@ export function AgentWorkspace({
   mediaPreview?: ReactNode;
   pendingMedia?: boolean;
   onStop?: () => void;
+  /** Friendly names for tool calls (chat-labels' toolActivity). */
+  toolLabels?: Record<string, string>;
 }) {
   const labels = workspaceLabels(language);
-  const savedTasks = useChatHistory().filter(
-    (entry) =>
-      entry.docPath === documentPath &&
-      entry.id !== conversation.conversationId,
+  const history = useChatHistory();
+  const savedTasks = useMemo(
+    () =>
+      history.filter(
+        (entry) =>
+          entry.docPath === documentPath &&
+          entry.id !== conversation.conversationId,
+      ),
+    [history, documentPath, conversation.conversationId],
   );
   const [notice, setNotice] = useState(false);
+  const [tasksOpen, setTasksOpen] = useState(false);
+  const root = useRef<HTMLElement>(null);
   const pending = draft?.operations ?? [];
-  const turns = [
-    ...conversation.history,
-    ...(conversation.streaming?.turns ?? []),
-  ];
-  const tasks = turns.filter((t) => t.kind === "User");
-  const steps = turns.filter((t) => t.kind === "ToolCall");
+  const streamingTurns = conversation.streaming?.turns;
+  // One pass over the turns: tasks, tool steps and each step's result.
+  const { tasks, steps } = useMemo(() => {
+    const turns = [...conversation.history, ...(streamingTurns ?? [])];
+    const results = new Map<string, string>();
+    for (const turn of turns)
+      if (turn.kind === "ToolResult")
+        results.set(
+          turn.call_id,
+          (results.has(turn.call_id) ? results.get(turn.call_id) + "\n" : "") +
+            turn.output,
+        );
+    const tasks: string[] = [];
+    const steps: {
+      id: string;
+      name: string;
+      detail: string;
+      done: boolean;
+    }[] = [];
+    for (const turn of turns) {
+      if (turn.kind === "User")
+        tasks.push(userMessageBody(turn.text).slice(0, 120));
+      else if (turn.kind === "ToolCall")
+        steps.push({
+          id: turn.call_id,
+          name: turn.name,
+          detail: results.get(turn.call_id) ?? turn.arguments,
+          done: results.has(turn.call_id),
+        });
+    }
+    return { tasks, steps };
+  }, [conversation.history, streamingTurns]);
+  const hasDraft = pending.length > 0 || pendingMedia;
+  // The panel can be tucked away to read the conversation; a new change
+  // brings it back.
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    if (pending.length) setCollapsed(false);
+  }, [pending.length]);
+  const previewOpen = hasDraft && !collapsed;
+  const status = conversation.busy
+    ? "running"
+    : pending.length
+      ? "ready"
+      : "idle";
+  const guarded = (action: () => void) => {
+    if (pending.length || pendingMedia) {
+      setNotice(true);
+      return;
+    }
+    action();
+    setNotice(false);
+    setTasksOpen(false);
+  };
+  const stepName = (name: string) =>
+    name === "propose_edit"
+      ? labels.proposal
+      : (toolLabels[name] ?? toolLabels["*"] ?? name);
   return (
     <section
-      className={`agent-workspace agent-home ${tasks.length ? "has-conversation" : "is-empty"}`}
+      ref={root}
+      className={`agent-workspace agent-home ${tasks.length ? "has-conversation" : "is-empty"}${previewOpen ? " has-draft-open" : ""}${tasksOpen ? " tasks-open" : ""}`}
       aria-label={labels.title}
     >
       <header className="workspace-header">
-        <div>
-          <strong>{title}</strong>
-          <span>{labels.title}</span>
-        </div>
-        <span role="status">
-          {conversation.busy
-            ? labels.running
-            : pending.length
-              ? labels.ready
-              : labels.idle}
+        <button
+          className="workspace-icon-button workspace-tasks-toggle"
+          aria-label={labels.tasks}
+          aria-expanded={tasksOpen}
+          onClick={() => setTasksOpen((open) => !open)}
+        >
+          <HamburgerIcon />
+        </button>
+        <span className={`workspace-status is-${status}`} role="status">
+          <span className="workspace-status-dot" aria-hidden />
+          {labels[status]}
         </span>
+        <span className="workspace-header-spacer" />
         {(conversation.busy || pendingMedia) && (
-          <button onClick={onStop ?? conversation.stop}>{labels.stop}</button>
+          <button
+            className="workspace-button is-danger"
+            onClick={onStop ?? conversation.stop}
+          >
+            {labels.stop}
+          </button>
         )}
-        <button onClick={onEditor}>Write · {title}</button>
+        <button
+          className="workspace-button workspace-to-write"
+          onClick={onEditor}
+          title={title}
+        >
+          <span>{labels.write}</span>
+          <span className="workspace-to-write-title">{title}</span>
+          <span aria-hidden>→</span>
+        </button>
       </header>
       <div className="workspace-columns">
+        <div
+          className="workspace-tasks-scrim"
+          aria-hidden
+          onClick={() => setTasksOpen(false)}
+        />
         <aside className="workspace-tasks">
           <button
+            className="workspace-new-task"
             disabled={conversation.busy}
-            onClick={() => {
-              if (pending.length || pendingMedia) {
-                setNotice(true);
-                return;
-              }
-              conversation.reset();
-              setNotice(false);
-            }}
+            onClick={() => guarded(conversation.reset)}
           >
+            <PlusIcon />
             {labels.newTask}
           </button>
-          {notice && <p role="alert">{labels.resolve}</p>}
-          <h3>{language.startsWith("zh") ? "当前对话" : "Conversation"}</h3>
-          {tasks.map((turn, i) => (
-            <p key={i}>
-              {turn.kind === "User"
-                ? userMessageBody(turn.text).slice(0, 120)
-                : ""}
+          {notice && (
+            <p className="workspace-notice" role="alert">
+              {labels.resolve}
             </p>
-          ))}
-          <ol className="workspace-timeline">
-            {steps.map((turn, i) => (
-              <li key={i}>
-                <details>
-                  <summary>
-                    {turn.kind === "ToolCall"
-                      ? turn.name === "propose_edit"
-                        ? labels.changes
-                        : turn.name
-                      : ""}{" "}
-                    {turn.kind === "ToolCall" &&
-                    turns.some(
-                      (result) =>
-                        result.kind === "ToolResult" &&
-                        result.call_id === turn.call_id,
-                    )
-                      ? "✓"
-                      : "…"}
-                  </summary>
-                  {turn.kind === "ToolCall" && (
-                    <pre>
-                      {turns.find(
-                        (result) =>
-                          result.kind === "ToolResult" &&
-                          result.call_id === turn.call_id,
-                      )?.kind === "ToolResult"
-                        ? turns
-                            .filter(
-                              (result) =>
-                                result.kind === "ToolResult" &&
-                                result.call_id === turn.call_id,
-                            )
-                            .map((result) =>
-                              result.kind === "ToolResult" ? result.output : "",
-                            )
-                            .join("\n")
-                        : turn.arguments}
-                    </pre>
-                  )}
-                </details>
-              </li>
-            ))}
-          </ol>
-          <h3>{language.startsWith("zh") ? "历史任务" : "Task history"}</h3>
+          )}
+          {tasks.length > 0 && (
+            <>
+              <h3>{labels.conversation}</h3>
+              {tasks.map((task, i) => (
+                <p className="workspace-task-line" key={i}>
+                  {task}
+                </p>
+              ))}
+            </>
+          )}
+          {steps.length > 0 && (
+            <ol className="workspace-timeline">
+              {steps.map((step) => (
+                <li
+                  key={step.id}
+                  className={step.done ? "is-done" : "is-running"}
+                >
+                  <details>
+                    <summary>
+                      <span className="workspace-step-mark" aria-hidden>
+                        {step.done ? <CheckIcon /> : null}
+                      </span>
+                      {stepName(step.name)}
+                    </summary>
+                    <pre>{step.detail}</pre>
+                  </details>
+                </li>
+              ))}
+            </ol>
+          )}
+          <h3>{labels.history}</h3>
+          {savedTasks.length === 0 && (
+            <div className="workspace-empty-history">{labels.noHistory}</div>
+          )}
           {savedTasks.map((entry) => (
             <button
               className="workspace-history-task"
               key={entry.id}
               disabled={conversation.busy}
-              onClick={() => {
-                if (pending.length || pendingMedia) {
-                  setNotice(true);
-                  return;
-                }
-                conversation.restore(entry.id, entry.turns);
-                setNotice(false);
-              }}
+              title={entry.title}
+              onClick={() =>
+                guarded(() => conversation.restore(entry.id, entry.turns))
+              }
             >
               {entry.title}
             </button>
@@ -165,28 +246,61 @@ export function AgentWorkspace({
         <div className="workspace-conversation">
           {!tasks.length && (
             <div className="agent-home-heading">
-              <span>✳</span>
-              <h1>
-                {language.startsWith("zh")
-                  ? "与 Textus 一起创作"
-                  : "Create with Textus"}
-              </h1>
-              <p>
-                {language.startsWith("zh")
-                  ? "从一个想法开始，写成你的作品。"
-                  : "Start with an idea. Make it yours."}
-              </p>
+              <span className="agent-home-mark" aria-hidden>
+                ✳
+              </span>
+              <h1>{labels.heading}</h1>
+              <p>{labels.subheading}</p>
             </div>
           )}
           {children}
+          {hasDraft && collapsed && (
+            <button
+              className="workspace-draft-pill"
+              onClick={() => setCollapsed(false)}
+            >
+              {labels.preview}
+              {pending.length > 0 && (
+                <span className="workspace-count">{pending.length}</span>
+              )}
+            </button>
+          )}
+          {!tasks.length && (
+            <div className="agent-home-suggestions">
+              {labels.suggestions.map((suggestion, i) => (
+                <button
+                  key={suggestion}
+                  style={{ "--i": i } as React.CSSProperties}
+                  onClick={() => fillComposer(root.current, suggestion)}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
           {tools && <div className="workspace-extra-tools">{tools}</div>}
         </div>
         <div
-          className={`workspace-preview ${pending.length || pendingMedia ? "has-draft" : "document-card"}`}
+          className={`workspace-preview ${previewOpen ? "has-draft" : "document-card"}`}
+          aria-hidden={!previewOpen}
+          inert={!previewOpen}
         >
           <header>
             <strong>{pending.length ? labels.preview : labels.current}</strong>
-            <span>{pending.length}</span>
+            {pending.length > 0 && (
+              <span className="workspace-count" key={pending.length}>
+                {pending.length}
+              </span>
+            )}
+            <span className="workspace-header-spacer" />
+            <button
+              className="workspace-icon-button workspace-collapse"
+              aria-label={labels.collapse}
+              title={labels.collapse}
+              onClick={() => setCollapsed(true)}
+            >
+              <ChevronIcon />
+            </button>
           </header>
           <p className="workspace-hint">{labels.saved}</p>
           {conflict && (
@@ -200,17 +314,6 @@ export function AgentWorkspace({
           {mediaPreview}
           {pending.length > 0 && (
             <>
-              <div className="workspace-review-actions">
-                <button
-                  disabled={conversation.busy || conflict}
-                  onClick={() => onAccept()}
-                >
-                  {labels.accept}
-                </button>
-                <button disabled={conversation.busy} onClick={() => onReject()}>
-                  {labels.reject}
-                </button>
-              </div>
               <details className="workspace-changes">
                 <summary>
                   {labels.changes} ({pending.length})
@@ -226,21 +329,41 @@ export function AgentWorkspace({
                       <blockquote>{proposal.anchor}</blockquote>
                     )}
                     <pre>{proposal.text}</pre>
-                    <button
-                      disabled={conversation.busy || conflict}
-                      onClick={() => onAccept(callId)}
-                    >
-                      {labels.take}
-                    </button>
-                    <button
-                      disabled={conversation.busy}
-                      onClick={() => onReject(callId)}
-                    >
-                      {labels.skip}
-                    </button>
+                    <div className="workspace-change-actions">
+                      <button
+                        className="workspace-button"
+                        disabled={conversation.busy || conflict}
+                        onClick={() => onAccept(callId)}
+                      >
+                        {labels.take}
+                      </button>
+                      <button
+                        className="workspace-button is-quiet"
+                        disabled={conversation.busy}
+                        onClick={() => onReject(callId)}
+                      >
+                        {labels.skip}
+                      </button>
+                    </div>
                   </article>
                 ))}
               </details>
+              <div className="workspace-review-actions">
+                <button
+                  className="workspace-button is-primary"
+                  disabled={conversation.busy || conflict}
+                  onClick={() => onAccept()}
+                >
+                  {labels.accept}
+                </button>
+                <button
+                  className="workspace-button"
+                  disabled={conversation.busy}
+                  onClick={() => onReject()}
+                >
+                  {labels.reject}
+                </button>
+              </div>
             </>
           )}
         </div>

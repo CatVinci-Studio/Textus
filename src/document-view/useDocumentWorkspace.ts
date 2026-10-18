@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { Transaction } from "@milkdown/kit/prose/state";
 import type { EditorRunner } from "../editor/useEditorRunner";
@@ -31,12 +31,31 @@ export function useDocumentWorkspace(
   const mode = useRef<AgentMode>("ask");
   const [conflict, setConflict] = useState(false);
   const [statuses, setStatuses] = useState<Record<string, PendingStatus>>({});
+  const frame = useRef<ReturnType<typeof setTimeout> | null>(null);
   const update = useCallback((next: DocumentDraft | null) => {
     draftRef.current = next;
+    if (frame.current) clearTimeout(frame.current);
+    frame.current = null;
     setDraft(next);
   }, []);
+  /** Streamed argument chunks arrive dozens of times a second; each render
+   *  re-parses the whole document for the preview, so coalesce them. The ref
+   *  stays exact for every reader in between. */
+  const updateSoon = useCallback((next: DocumentDraft) => {
+    draftRef.current = next;
+    frame.current ??= setTimeout(() => {
+      frame.current = null;
+      setDraft(draftRef.current);
+    }, 90);
+  }, []);
+  useEffect(
+    () => () => {
+      if (frame.current) clearTimeout(frame.current);
+    },
+    [],
+  );
   const receive = useCallback(
-    (operations: DraftOperation[]) => {
+    (operations: DraftOperation[], streaming = false) => {
       if (!routing.current) return false;
       if (mode.current !== "create" && mode.current !== "edit") return true;
       const current = draftRef.current;
@@ -47,11 +66,11 @@ export function useDocumentWorkspace(
           if (index < 0) next.push(op);
           else next[index] = op;
         }
-        update({ ...current, operations: next });
+        (streaming ? updateSoon : update)({ ...current, operations: next });
       }
       return true;
     },
-    [update],
+    [update, updateSoon],
   );
   const discard = useCallback(
     (callId?: string) => {
@@ -66,13 +85,12 @@ export function useDocumentWorkspace(
           removed.map((o) => [o.callId, "rejected" as const]),
         ),
       }));
-      update({
-        ...current,
-        operations: current.operations.filter(
-          (o) => callId && o.callId !== callId,
-        ),
-      });
-      setConflict(false);
+      const operations = current.operations.filter(
+        (o) => callId && o.callId !== callId,
+      );
+      update({ ...current, operations });
+      // Skipping one change does not resolve a conflict on the others.
+      setConflict(!!current.conflicted && operations.length > 0);
     },
     [update],
   );
@@ -80,13 +98,14 @@ export function useDocumentWorkspace(
     () =>
       new ProposalStream({
         place: (callId, proposal) => {
-          receive([{ callId, proposal }]);
+          receive([{ callId, proposal }], true);
         },
         feed: (callId, text) => {
           const op = draftRef.current?.operations.find(
             (o) => o.callId === callId,
           );
-          if (op) receive([{ callId, proposal: { ...op.proposal, text } }]);
+          if (op)
+            receive([{ callId, proposal: { ...op.proposal, text } }], true);
         },
         finalize: (callId, proposal) => {
           receive([{ callId, proposal }]);
@@ -193,16 +212,25 @@ export function useDocumentWorkspace(
     },
     [run, update],
   );
+  // Only the visible Agent surface shows the preview.
   const preview = useMemo(
     () =>
-      draft
+      draft && open && draft.operations.length
         ? (run((ctx) =>
             previewDraft(ctx, ctx.get(editorViewCtx).state, draft),
           ) ?? draft.baseMarkdown)
         : "",
-    [draft, run],
+    [draft, run, open],
   );
-  const finish = useCallback(() => stream.finish("stopped"), [stream]);
+  const finish = useCallback(
+    (outcome: "stopped" | "failed" = "stopped") => {
+      stream.finish(outcome);
+      // The exchange is over: later proposals (detached chat, Quick Ask)
+      // must not be captured into this workspace draft.
+      routing.current = false;
+    },
+    [stream],
+  );
   const endRouting = useCallback(() => {
     routing.current = false;
   }, []);
