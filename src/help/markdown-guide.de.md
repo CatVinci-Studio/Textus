@@ -128,6 +128,8 @@ Unter **Einstellungen → Editor & Design → Bilder** kannst du neu eingefügte
 ![Alternativtext](assets/screenshot.png)
 ```
 
+Obsidian-Einbettungen wie `![[image.png]]` oder `![[attachments/image.png|300]]` zeigen ebenfalls das Bild: Textus sucht die Datei im Obsidian-Tresor des Dokuments und speichert die Einbettung genau so, wie sie geschrieben ist.
+
 ## Ansichten und Modi
 
 Neben dem WYSIWYG-Editor und dem Quellcodemodus (`Cmd+/`) bietet Textus drei Arten zu schreiben (unter Windows und Linux `Ctrl` statt `Cmd`; die aktuellen Belegungen stehen unter Einstellungen → Tastenkürzel):

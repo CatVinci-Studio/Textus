@@ -153,6 +153,10 @@ export const fs = {
       endpoint,
       urlField,
     }),
+  /** The file an Obsidian image embed names, searched in the document's
+   *  vault (commands/vault.rs); null when there is none. */
+  resolveVaultImage: (docPath: string, link: string) =>
+    call<string | null>("resolve_vault_image", { docPath, link }),
   migrateDraftImages: (docPath: string, srcs: string[]) =>
     call<ImageMigration[]>("migrate_draft_images", { docPath, srcs }),
   writeTextFile: (path: string, contents: string): Promise<void> =>

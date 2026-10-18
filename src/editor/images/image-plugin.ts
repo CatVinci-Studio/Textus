@@ -15,6 +15,7 @@ import { fs } from "../../platform/ipc";
 import type { Settings, ImageNamingMode } from "../../settings/SettingsContext";
 import { isScopedUrl, scopedImageSrc } from "../../platform/ios-files";
 import { imageFilesFromClipboard, imageMimeForPath } from "./pasted-files";
+import { parseEmbed } from "./obsidian-embed";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
 import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
 
@@ -362,13 +363,19 @@ function fileImage(path: string): PastedImage {
 }
 
 /** A paragraph holding nothing but images (and line breaks between them):
- *  the "an image on its own line" case, laid out as a centred figure. */
+ *  the "an image on its own line" case, laid out as a centred figure. An
+ *  Obsidian image embed (obsidian-embed.ts) counts as an image. */
 function isImageParagraph(node: ProseNode): boolean {
   if (node.type.name !== "paragraph" || node.childCount === 0) return false;
   let images = 0;
   for (let i = 0; i < node.childCount; i++) {
     const child = node.child(i);
-    if (child.type.name === "image") images++;
+    if (
+      child.type.name === "image" ||
+      (child.type.name === "obsidian_embed" &&
+        parseEmbed(child.textContent)?.isImage)
+    )
+      images++;
     else if (child.type.name !== "hardbreak") return false;
   }
   return images > 0;

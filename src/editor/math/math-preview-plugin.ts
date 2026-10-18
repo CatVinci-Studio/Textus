@@ -1,5 +1,5 @@
 import katex from "katex";
-import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
+import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { EditorState } from "@milkdown/kit/prose/state";
@@ -8,6 +8,7 @@ import { duration, motionAllowed } from "../../ui/motion";
 import {
   applyReveal,
   buildReveal,
+  caretToSourceOnClick,
   emptyReveal,
   type RevealState,
 } from "../reveal-state";
@@ -105,16 +106,7 @@ function collectDecorations(
             ? "math-block-rendered"
             : "math-inline-rendered";
           el.innerHTML = html;
-          el.addEventListener("mousedown", (event) => {
-            event.preventDefault();
-            const widgetPos = getPos();
-            if (typeof widgetPos !== "number") return;
-            const tr = view.state.tr.setSelection(
-              TextSelection.create(view.state.doc, widgetPos - 1),
-            );
-            view.dispatch(tr);
-            view.focus();
-          });
+          caretToSourceOnClick(el, view, getPos);
           return el;
         },
         // Keyed by the source, so ProseMirror keeps the rendered element

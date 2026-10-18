@@ -633,6 +633,7 @@ pub fn run() {
             read_binary_file_base64,
             write_text_file,
             save_pasted_image,
+            commands::vault::resolve_vault_image,
             upload_image,
             migrate_draft_images,
             save_theme_css,

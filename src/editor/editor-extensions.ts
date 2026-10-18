@@ -65,6 +65,12 @@ import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
 import { createPlainTextCopyPlugin } from "./markdown/plain-text-copy-plugin";
 import { createImagePlugin } from "./images/image-plugin";
+import {
+  obsidianEmbedInputRule,
+  obsidianEmbedSchema,
+  remarkObsidianEmbedPlugin,
+} from "./images/obsidian-embed";
+import { createObsidianEmbedPreviewPlugin } from "./images/obsidian-embed-preview";
 import { createTypewriterPlugin } from "./modes/typewriter-plugin";
 import { zenFocusPlugin } from "./modes/zen-focus-plugin";
 import { keyboardRevealPlugin } from "./keys/keyboard-reveal-plugin";
@@ -157,6 +163,13 @@ export function withEditorCore(
       .use(rawHtmlSchema)
       .use(createRawHtmlPreviewPlugin({ docPath: () => docPath.current }))
       .use(brToHardbreakPlugin)
+
+      // Obsidian's ![[file]] embeds: kept as written, an image one shown as
+      // the picture from the document's vault.
+      .use(remarkObsidianEmbedPlugin)
+      .use(obsidianEmbedSchema)
+      .use(obsidianEmbedInputRule)
+      .use(createObsidianEmbedPreviewPlugin({ docPath: () => docPath.current }))
 
       // GitHub-style alerts: > [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING]
       // / [!CAUTION] blockquotes render as colored callouts with a badge.

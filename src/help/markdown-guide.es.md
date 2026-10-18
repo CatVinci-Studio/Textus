@@ -128,6 +128,8 @@ En **Ajustes → Editor y aspecto → Imágenes** puedes hacer que las imágenes
 ![texto alternativo](assets/screenshot.png)
 ```
 
+Las incrustaciones de Obsidian, como `![[image.png]]` o `![[attachments/image.png|300]]`, también muestran la imagen: Textus busca el archivo en la bóveda de Obsidian del documento y guarda la incrustación tal como está escrita.
+
 ## Vistas y modos
 
 Además del editor WYSIWYG y del modo código fuente (`Cmd+/`), Textus ofrece tres formas de escribir (en Windows y Linux, usa `Ctrl` en lugar de `Cmd`; Ajustes → Atajos de teclado muestra los atajos vigentes):

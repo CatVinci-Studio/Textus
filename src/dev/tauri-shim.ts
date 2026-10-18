@@ -408,6 +408,10 @@ export function installDevTauriShim(): void {
       currentWindow: { label: "main" },
       currentWebview: { label: "main", windowLabel: "main" },
     },
+    // Tauri's Windows form of an asset URL, which a test can answer with
+    // page.route - a custom scheme never reaches the network.
+    convertFileSrc: (path: string, protocol = "asset") =>
+      `http://${protocol}.localhost/${encodeURIComponent(path)}`,
     invoke: (cmd: string, args?: { event?: string; handler?: number }) => {
       log(cmd);
       // Pages and links opened in the browser (platform/ipc.ts's `links`),

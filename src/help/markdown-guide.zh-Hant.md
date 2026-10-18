@@ -128,6 +128,8 @@ sequenceDiagram
 ![替代文字](assets/screenshot.png)
 ```
 
+Obsidian 的嵌入寫法，例如 `![[image.png]]` 或 `![[attachments/image.png|300]]`，也會顯示成圖片：Textus 會在文件所屬的 Obsidian 保存庫裡尋找檔案，儲存時原樣寫回。
+
 ## 檢視與模式
 
 除了所見即所得編輯器和原始碼模式（`Cmd+/`），Textus 還有三種寫作方式（在 Windows 和 Linux 上以 `Ctrl` 取代 `Cmd`；目前的按鍵設定可在「設定 → 快速鍵」中查看）：

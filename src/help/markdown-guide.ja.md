@@ -128,6 +128,8 @@ sequenceDiagram
 ![説明文](assets/screenshot.png)
 ```
 
+Obsidian の埋め込み（`![[image.png]]` や `![[attachments/image.png|300]]`）も画像として表示されます。Textus は文書が属する Obsidian の保管庫からファイルを探し、埋め込みは書いたとおりに保存します。
+
 ## 表示とモード
 
 WYSIWYGエディタとソースコードモード(`Cmd+/`)のほかに、Textusには3つの書き方があります(WindowsとLinuxでは `Cmd` を `Ctrl` に読み替えてください。ショートカットを変更した場合は 設定 → ショートカット の設定が優先されます):
