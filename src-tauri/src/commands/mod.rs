@@ -16,6 +16,7 @@ pub mod default_editor;
 pub mod documents;
 pub mod drafts;
 pub mod export;
+pub mod folder;
 pub mod fs;
 pub mod image_host;
 pub mod links;

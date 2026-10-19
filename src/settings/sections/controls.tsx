@@ -132,6 +132,7 @@ export function ShortcutRow({
       toggleZenMode: t.shortcutToggleZenMode,
       toggleSourceMode: t.shortcutToggleSourceMode,
       toggleTypewriterMode: t.shortcutToggleTypewriterMode,
+      searchFiles: t.shortcutSearchFiles,
     }),
     [t],
   );

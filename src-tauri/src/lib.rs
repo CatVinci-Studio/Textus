@@ -131,6 +131,18 @@ fn take_pending_menu_event() -> Option<&'static str> {
     PENDING_MENU_EVENT.lock().unwrap().take()
 }
 
+/// A folder from File > Open Recent chosen while no window was open: the
+/// fresh window opened for it takes it into its sidebar once mounted. Same
+/// queue-then-drain as PENDING_MENU_EVENT, with the folder's path.
+#[cfg(desktop)]
+pub(crate) static PENDING_OPEN_FOLDER: Mutex<Option<String>> = Mutex::new(None);
+
+#[cfg(desktop)]
+#[tauri::command]
+fn take_pending_open_folder() -> Option<String> {
+    PENDING_OPEN_FOLDER.lock().unwrap().take()
+}
+
 /// File > Open Recent from a window that keeps what it holds (menu.rs, then
 /// useFileOpening.ts's openRecentFile): the file opens the way a file
 /// manager's open does - a window of its own, or a tab per the setting.
@@ -644,6 +656,7 @@ pub fn run() {
             open_image_file_dialog,
             save_file_dialog,
             list_dir,
+            commands::folder::index_folder,
             read_text_file,
             file_mtime_ms,
             read_binary_file_base64,
@@ -720,6 +733,14 @@ pub fn run() {
             take_pending_show_help,
             #[cfg(desktop)]
             take_pending_menu_event,
+            #[cfg(desktop)]
+            take_pending_open_folder,
+            #[cfg(desktop)]
+            commands::folder::pick_open_folder,
+            #[cfg(desktop)]
+            commands::recents::add_recent_folder,
+            #[cfg(desktop)]
+            menu::list_recent_folders,
             #[cfg(desktop)]
             open_paths,
             #[cfg(desktop)]

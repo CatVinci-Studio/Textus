@@ -518,6 +518,90 @@ export function installDevTauriShim(): void {
     return null;
   }
 
+  // A folder of documents in memory, for the sidebar's tree and search:
+  // `window.__devFs = { "/notes/a.md": "# A", ... }` (files only; folders
+  // are what their paths imply). `window.__devPickFolder` is what File >
+  // Open Folder…'s picker answers ("TOO_BROAD" refuses), and the recent
+  // lists File > Open Recent shows are `window.__devRecents`.
+  const recents = { files: [] as string[], folders: [] as string[] };
+  w.__devRecents = recents;
+  const pushRecent = (list: string[], path: string) => {
+    const at = list.indexOf(path);
+    if (at >= 0) list.splice(at, 1);
+    list.unshift(path);
+  };
+  function fsCommand(
+    cmd: string,
+    args: Record<string, unknown> = {},
+  ): Promise<unknown> | null {
+    const files = w.__devFs as Record<string, string> | undefined;
+    switch (cmd) {
+      case "pick_open_folder": {
+        const picked = w.__devPickFolder ?? null;
+        return picked === "TOO_BROAD"
+          ? Promise.reject("TOO_BROAD")
+          : Promise.resolve(picked);
+      }
+      case "add_recent_file":
+        pushRecent(recents.files, String(args.path));
+        return Promise.resolve(null);
+      case "add_recent_folder":
+        pushRecent(recents.folders, String(args.path));
+        return Promise.resolve(null);
+      case "list_recent_files":
+        return Promise.resolve([...recents.files]);
+      case "list_recent_folders":
+        return Promise.resolve([...recents.folders]);
+    }
+    if (!files) return null;
+    const path = String(args.path ?? args.root ?? "");
+    switch (cmd) {
+      case "read_text_file":
+        return path in files ? Promise.resolve(files[path]) : null;
+      case "file_mtime_ms":
+        return Promise.resolve(path in files ? 1 : null);
+      case "list_dir": {
+        const entries = new Map<string, boolean>();
+        for (const file of Object.keys(files)) {
+          if (!file.startsWith(`${path}/`)) continue;
+          const [name, ...rest] = file.slice(path.length + 1).split("/");
+          if (!name.startsWith(".")) entries.set(name, rest.length > 0);
+        }
+        return Promise.resolve(
+          [...entries]
+            .map(([name, isDir]) => ({
+              name,
+              path: `${path}/${name}`,
+              is_dir: isDir,
+            }))
+            .sort((a, b) =>
+              a.is_dir !== b.is_dir
+                ? a.is_dir
+                  ? -1
+                  : 1
+                : a.name.localeCompare(b.name),
+            ),
+        );
+      }
+      case "index_folder": {
+        // commands/folder.rs refuses these; the shim's "home" is /home/me.
+        if (path === "/" || path === "/home/me")
+          return Promise.reject("TOO_BROAD");
+        const indexed = Object.keys(files)
+          .filter(
+            (file) =>
+              file.startsWith(`${path}/`) &&
+              /\.(md|markdown|txt|text)$/i.test(file) &&
+              !file.slice(path.length).includes("/."),
+          )
+          .sort()
+          .map((file) => ({ path: file, rel: file.slice(path.length + 1) }));
+        return Promise.resolve({ files: indexed, truncated: false });
+      }
+    }
+    return null;
+  }
+
   w.__TAURI_INTERNALS__ = {
     metadata: {
       currentWindow: { label: "main" },
@@ -579,6 +663,8 @@ export function installDevTauriShim(): void {
       if (skill) return skill;
       const theme = themeCommand(cmd, args as Record<string, unknown>);
       if (theme) return theme;
+      const file = fsCommand(cmd, args as Record<string, unknown>);
+      if (file) return file;
       // A canned suggestion instead of null: lets ghost-text rendering (and
       // the tour's completion lesson) be smoke-tested in the browser -
       // null would make the manual trigger path throw an error dialog.

@@ -27,6 +27,7 @@ import { AgentPanelProvider } from "../ai/chat/panel/agent-panel";
 import { useTabState } from "./useTabState";
 import { useSidePanels } from "./useSidePanels";
 import { useActiveDocument } from "./useActiveDocument";
+import { useOpenFolder } from "./useOpenFolder";
 import { useSessionPaths, useWindowTitle } from "./useWindowSession";
 import {
   useFileDrop,
@@ -116,12 +117,36 @@ function App() {
 
   const {
     activeTab,
-    rootPath,
+    documentsFolder,
     wordCount,
     isLargeDoc,
     activeDirty,
     activeTitle,
   } = useActiveDocument(tabs, activeTabId, t);
+  const showFiles = useCallback(() => {
+    setPanelOpen(true);
+    setPanelMode("tree");
+  }, [setPanelOpen, setPanelMode]);
+  const openFolder = useOpenFolder({
+    activePath: activeTab.path,
+    fallback: documentsFolder,
+    onOpened: showFiles,
+    folderTooBroad: t.folderTooBroad,
+  });
+  // The search shortcut's request for the Files tab's search box, taken
+  // (and cleared) by the box once the sidebar shows it.
+  const [searchFocusRequest, setSearchFocusRequest] = useState(false);
+  const clearSearchFocusRequest = useCallback(
+    () => setSearchFocusRequest(false),
+    [],
+  );
+  const hasTree = openFolder.treeRoot !== null;
+  const searchFiles = useCallback(() => {
+    showFiles();
+    // No tree yet (an unsaved draft): nothing to search, and a request
+    // left standing would take the keyboard whenever a tree came.
+    if (hasTree) setSearchFocusRequest(true);
+  }, [showFiles, hasTree]);
   useWindowTitle(activeTitle);
   useSessionPaths(tabs);
 
@@ -212,6 +237,7 @@ function App() {
     toggleAgentPanel,
     toggleSplitView,
     toggleZenMode,
+    searchFiles,
   });
 
   useEffect(() => installClipboardCapture(), []);
@@ -270,6 +296,7 @@ function App() {
     splitView: !!activeTab.sourceMode && !!activeTab.splitView,
     typewriter: settings.typewriterMode,
     zen: zenMode,
+    folderOpen: openFolder.folder !== null,
   };
   useNativeMenuChecks(menuChecks);
 
@@ -291,6 +318,9 @@ function App() {
     addBlankTab,
     openFileDialog,
     openRecentFile,
+    openFolderDialog: openFolder.openFolderDialog,
+    openFolder: openFolder.openFolder,
+    closeFolder: openFolder.closeFolder,
     saveTab,
     saveTabAs,
     toggleSourceMode,
@@ -384,12 +414,14 @@ function App() {
           mode={panelMode}
           onModeChange={setPanelMode}
           width={sidebarWidth}
-          rootPath={rootPath}
+          openFolder={openFolder}
           activePath={activeTab.path}
           activeContent={activeTab.content}
           onToggle={toggleSidebar}
           onClose={() => setPanelOpen(false)}
           onOpenFile={(path) => void openFile(path)}
+          searchFocusRequest={searchFocusRequest}
+          onSearchFocusHandled={clearSearchFocusRequest}
           t={t}
         />
 

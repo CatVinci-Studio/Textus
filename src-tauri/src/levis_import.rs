@@ -441,7 +441,7 @@ pub async fn levis_import(
         .await
         .map_err(|e| e.to_string())??;
         crate::settings::broadcast_reload(&app);
-        crate::menu::rebuild_recent_menu(&app, crate::commands::recents::read_recent_files(&app));
+        crate::menu::rebuild_recent_menu(&app);
         Ok(report)
     }
     #[cfg(not(desktop))]

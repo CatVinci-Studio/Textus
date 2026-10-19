@@ -39,6 +39,14 @@ export interface UiState {
    *  ("Not now", ai/chat/panel/levis-project.ts) - not asked again; the
    *  Memory tab keeps a quiet "Convert Levis data" for them. */
   levisProjectsDeclined: string[];
+  /** The folder last opened in the sidebar (File > Open Folder…), or null
+   *  after Close Folder - the session's first window opens it again
+   *  (app/useOpenFolder.ts). */
+  openFolder: string | null;
+  /** The AI project folder (Settings.agentWorkspaceRoot) that Open Folder
+   *  set, so a later Open or Close Folder knows it may change it - and
+   *  leaves one the user chose alone (sidebar/tree-root.ts). */
+  agentRootFromFolder: string;
 }
 
 export interface ThemeChromeCache {
@@ -108,6 +116,17 @@ const LEGACY: {
     key: "levis-recent-skills",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
+  },
+  // Newer than the move, like sidebarWidth: only the fallback's keys.
+  openFolder: {
+    key: "textus-open-folder",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  agentRootFromFolder: {
+    key: "textus-agent-root-from-folder",
+    decode: (raw) => raw,
+    encode: (value) => value,
   },
 };
 

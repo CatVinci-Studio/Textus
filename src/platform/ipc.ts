@@ -94,6 +94,22 @@ export interface SavedImage {
   src: string;
 }
 
+/** One document in a folder index - IndexedFile in
+ *  src-tauri/src/commands/folder.rs; change both. */
+export interface IndexedFile {
+  /** Absolute, to open it. */
+  path: string;
+  /** From the indexed folder, "/"-separated. */
+  rel: string;
+}
+
+/** FolderIndex in src-tauri/src/commands/folder.rs; change both. */
+export interface FolderIndex {
+  files: IndexedFile[];
+  /** A limit was hit: the folder may hold more documents than `files`. */
+  truncated: boolean;
+}
+
 export interface ImageMigration {
   old: string;
   /** New "assets/<name>" relative src on success; null if this one image
@@ -133,6 +149,12 @@ export const fs = {
     isScopedUrl(path)
       ? iosFiles.listFolder(path)
       : call<DirEntryInfo[]>("list_dir", { path }),
+  /** File > Open Folder…'s picker (commands/folder.rs). Rejects with
+   *  "TOO_BROAD" for the home folder or a drive root. Desktop only. */
+  pickOpenFolder: () => desktopAction<string | null>("pick_open_folder"),
+  /** Every document under `root`, for the sidebar's file-name search
+   *  (commands/folder.rs). Rejects with "TOO_BROAD" as the picker does. */
+  indexFolder: (root: string) => call<FolderIndex>("index_folder", { root }),
   // No change watching for picked documents: the coordinator serialises
   // our writes with iCloud's, and the app re-reads on open.
   fileMtimeMs: (path: string): Promise<number | null> =>
@@ -189,6 +211,9 @@ export const session = {
     desktopQuery<void>("update_session_paths", undefined, { paths }),
   cancelQuit: () => desktopQuery<void>("cancel_session_quit", undefined),
   addRecentFile: (path: string) => call<void>("add_recent_file", { path }),
+  /** A folder opened in the sidebar, for File > Open Recent. */
+  addRecentFolder: (path: string) =>
+    desktopQuery<void>("add_recent_folder", undefined, { path }),
 };
 
 // ---------------------------------------------------------------------------
@@ -324,6 +349,10 @@ export const windowIpc = {
    *  asks once - the answer is taken. */
   takePendingMenuEvent: () =>
     desktopQuery<string | null>("take_pending_menu_event", null),
+  /** The recent folder this window was opened to show (File > Open Recent
+   *  with no window open), if any; asks once. */
+  takePendingOpenFolder: () =>
+    desktopQuery<string | null>("take_pending_open_folder", null),
   /** Opens files the way a file manager's open does: a window each, or
    *  tabs in the focused window in tab mode (lib.rs's open_paths). */
   openPaths: (paths: string[]) => desktopAction<void>("open_paths", { paths }),
@@ -367,6 +396,8 @@ export const menuIpc = {
   /** Backs File > Open Recent, whose native submenu the app-drawn menu
    *  cannot read. */
   listRecentFiles: () => desktopQuery<string[]>("list_recent_files", []),
+  /** The folders listed above the files there. */
+  listRecentFolders: () => desktopQuery<string[]>("list_recent_folders", []),
   /** Rebuilds the native (macOS) menu bar with these labels, keyed as
    *  app/app-menu-model.ts's nativeMenuLabels keys them. */
   setMenuLabels: (labels: Record<string, string>) =>

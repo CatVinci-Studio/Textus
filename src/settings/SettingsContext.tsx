@@ -62,7 +62,8 @@ export type ShortcutAction =
   | "toggleZenMode"
   | "toggleSourceMode"
   | "toggleTypewriterMode"
-  | "findReplace";
+  | "findReplace"
+  | "searchFiles";
 
 export type Shortcuts = Record<ShortcutAction, string>;
 
@@ -79,6 +80,7 @@ const DEFAULT_SHORTCUTS: Shortcuts = {
   toggleSourceMode: "mod+/",
   toggleTypewriterMode: "",
   findReplace: "mod+f",
+  searchFiles: "mod+shift+o",
 };
 
 /// Settings.revisionDisplay's values.

@@ -5,6 +5,7 @@ import {
   ownsMenuAccelerators,
 } from "../platform/window-chrome";
 import { runLocalMenuAction } from "./app-menu-actions";
+import { canOpenFolder } from "../platform/capabilities";
 import { comboFromEvent } from "../utils/shortcuts";
 import { menuIpc } from "../platform/ipc";
 import {
@@ -54,6 +55,8 @@ export function useGlobalShortcuts(opts: {
   toggleAgentPanel: () => void;
   toggleSplitView: () => void;
   toggleZenMode: () => void;
+  /** Opens the sidebar on its Files tab with the search box focused. */
+  searchFiles: () => void;
 }): void {
   const {
     activeTabId,
@@ -64,6 +67,7 @@ export function useGlobalShortcuts(opts: {
     toggleAgentPanel,
     toggleSplitView,
     toggleZenMode,
+    searchFiles,
   } = opts;
   const { settings, setSettings } = useSettings();
 
@@ -156,6 +160,9 @@ export function useGlobalShortcuts(opts: {
       } else if (combo === shortcuts.toggleZenMode) {
         e.preventDefault();
         toggleZenMode();
+      } else if (canOpenFolder && combo === shortcuts.searchFiles) {
+        e.preventDefault();
+        searchFiles();
       } else if (combo === shortcuts.toggleSourceMode) {
         e.preventDefault();
         toggleSourceMode();
@@ -178,6 +185,7 @@ export function useGlobalShortcuts(opts: {
     toggleAgentPanel,
     toggleSplitView,
     toggleZenMode,
+    searchFiles,
     setSettings,
   ]);
 }
