@@ -448,6 +448,9 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(commands::chat_window::OpenChatWindows(Mutex::new(
             Vec::new(),
         )))
+        .manage(commands::quick_note::shortcut::ShortcutStatus(Mutex::new(
+            None,
+        )))
         .on_window_event(|window, event| {
             let app = window.app_handle();
             if matches!(event, tauri::WindowEvent::Destroyed) {
@@ -486,7 +489,10 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
 /// The desktop half of startup, run from the shared setup in `run` once the
 /// main window exists.
 #[cfg(desktop)]
-fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+fn desktop_setup(
+    app: &mut tauri::App,
+    quick_note_only: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_os = "linux")]
     detect_wayland();
     // Windows/Linux hand an associated file over as a plain argv
@@ -503,7 +509,11 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     );
     #[cfg(target_os = "macos")]
     arg_paths.extend(LAUNCH_OPENED.lock().unwrap().take().unwrap_or_default());
-    let startup_paths = if !arg_paths.is_empty() {
+    let startup_paths = if quick_note_only {
+        // Last session's documents wait for the next real launch: restored
+        // now, they would open a window nobody asked for.
+        Vec::new()
+    } else if !arg_paths.is_empty() {
         arg_paths
     } else if commands::prefs::read_restore_session_on_startup(app.handle()) {
         commands::session::read_session_paths(app.handle())
@@ -524,6 +534,13 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     // menu yet to hide. One sweep here covers both.
     for (_, window) in app.webview_windows() {
         hide_native_menu_bar(&window);
+    }
+
+    // The Quick Note shortcut costs nothing until it is turned on: off, this
+    // only notes that it is.
+    commands::quick_note::shortcut::apply(app.handle());
+    if quick_note_only {
+        commands::quick_note::window::open_soon(app.handle());
     }
 
     Ok(())
@@ -595,11 +612,17 @@ pub fn run() {
     // so "open in a tab" couldn't work and two processes wrote the same
     // session. Must be the first plugin: a second launch hands its argv to
     // the running instance here and exits before setting anything else up.
-    // (macOS routes later opens to the running app itself; see
-    // RunEvent::Opened below.) Release builds only, so a dev build can run
-    // next to an installed Textus instead of forwarding to it.
-    #[cfg(all(any(windows, target_os = "linux"), not(debug_assertions)))]
+    // (macOS routes Finder's and `open`'s later opens to the running app
+    // itself, see RunEvent::Opened below; there this only catches the binary
+    // run directly, as `textus --quick-note` from a launcher is.) Release
+    // builds only, so a dev build can run next to an installed Textus
+    // instead of forwarding to it.
+    #[cfg(all(desktop, not(debug_assertions)))]
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+        if commands::quick_note::wants_quick_note(&argv) {
+            commands::quick_note::window::open_soon(app);
+            return;
+        }
         let paths = paths_from_argv(argv, std::path::Path::new(&cwd));
         if paths.is_empty() {
             // Launched again from the app menu or dock: a fresh window,
@@ -622,9 +645,17 @@ pub fn run() {
         .setup(|app| {
             // Before any window: every window's boot script is made from it.
             settings::init(app.handle());
-            build_main_window(app)?;
+            // `textus --quick-note` launches into the Quick Note window
+            // alone; the editor opens if the user asks for it from there.
             #[cfg(desktop)]
-            desktop_setup(app)?;
+            let quick_note_only = commands::quick_note::wants_quick_note(std::env::args());
+            #[cfg(not(desktop))]
+            let quick_note_only = false;
+            if !quick_note_only {
+                build_main_window(app)?;
+            }
+            #[cfg(desktop)]
+            desktop_setup(app, quick_note_only)?;
             Ok(())
         })
         // One handler list for both targets. Desktop-only commands carry
@@ -663,6 +694,7 @@ pub fn run() {
             write_text_file,
             save_pasted_image,
             commands::vault::resolve_vault_image,
+            commands::vault::resolve_vault_note,
             upload_image,
             migrate_draft_images,
             save_theme_css,
@@ -769,6 +801,32 @@ pub fn run() {
             commands::chat_window::focus_chat_window,
             #[cfg(desktop)]
             commands::chat_window::current_chat_window,
+            #[cfg(desktop)]
+            commands::quick_note::quick_note_session,
+            #[cfg(desktop)]
+            commands::quick_note::quick_note_save_draft,
+            #[cfg(desktop)]
+            commands::quick_note::quick_note_discard_draft,
+            #[cfg(desktop)]
+            commands::quick_note::quick_note_commit,
+            #[cfg(desktop)]
+            commands::quick_note::quick_note_preview_name,
+            #[cfg(desktop)]
+            commands::quick_note::quick_note_finish,
+            #[cfg(desktop)]
+            commands::quick_note::quick_note_open_in_editor,
+            #[cfg(desktop)]
+            commands::quick_note::quick_note_ready,
+            #[cfg(desktop)]
+            commands::quick_note::quick_note_folder,
+            #[cfg(desktop)]
+            commands::quick_note::quick_note_pick_folder,
+            #[cfg(desktop)]
+            commands::quick_note::quick_note_open_folder,
+            #[cfg(desktop)]
+            commands::quick_note::quick_note_cli_command,
+            #[cfg(desktop)]
+            commands::quick_note::shortcut::quick_note_shortcut_status,
             #[cfg(desktop)]
             update_session_paths,
             #[cfg(desktop)]

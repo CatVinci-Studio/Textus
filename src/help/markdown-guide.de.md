@@ -142,6 +142,12 @@ Neben dem WYSIWYG-Editor und dem Quellcodemodus (`Cmd+/`) bietet Textus drei Art
 
 Alle drei findest du auch im Menü **Ansicht**.
 
+## Schnellnotizen
+
+**Datei → Neue Schnellnotiz** öffnet ein kleines Fenster, um schnell etwas festzuhalten. Mit `Esc` (oder `Cmd+Enter`, `Cmd+S`, `Cmd+W`) wird die Notiz gespeichert und das Fenster geschlossen; eine leere Notiz wird einfach geschlossen. **In Textus öffnen** speichert sie und öffnet sie als Tab.
+
+Notizen landen in `Textus/Schnellnotizen` in deinem Dokumente-Ordner, eine Datei pro Notiz, benannt nach der ersten Zeile. Unter **Einstellungen → Allgemein → Schnellnotizen** kannst du einen anderen Ordner wählen, stattdessen **eine Datei pro Tag** führen und ein **globales Tastenkürzel** einschalten, das aus jeder App eine Schnellnotiz öffnet: `Control+Option+N` auf dem Mac, `Strg+Alt+N` unter Linux, `Win+Alt+N` unter Windows. Öffnest du innerhalb weniger Minuten wieder eine, setzt du die letzte Notiz fort. Unter Wayland legst du den dort angezeigten Befehl `textus --quick-note` in den Einstellungen deines Desktops auf eine Taste.
+
 ## Fußnoten und Trennlinien
 
 Fußnoten sehen so aus[^1], und darunter folgt eine horizontale Trennlinie:

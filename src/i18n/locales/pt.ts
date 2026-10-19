@@ -985,4 +985,55 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   playgroundImageNotice: `Imagens precisam do app de desktop do ${APP_NAME}.`,
   playgroundImportUnsupported:
     "Só é possível importar arquivos .md, .markdown e .txt.",
+  // Quick Notes (src/quick-note/, Settings › General › Quick Notes).
+  menuNewQuickNote: "Nova nota rápida",
+  menuOpenQuickNotesFolder: "Abrir pasta de notas rápidas",
+  quickNotesGroup: "Notas rápidas",
+  quickNoteShortcutToggle: "Atalho global",
+  quickNoteShortcutHint:
+    "Abre uma nota rápida a partir de qualquer app. O Textus só escuta esta combinação de teclas, nada mais do que você digita.",
+  quickNoteShortcutLabel: "Atalho",
+  quickNoteShortcutDefault: "Padrão",
+  quickNoteShortcutInApp: "O Textus já usa essa combinação. Escolha outra.",
+  quickNoteShortcutTooFew:
+    "Use pelo menos duas teclas modificadoras, ou uma com uma tecla de função.",
+  quickNoteStatusOn: "Ativado: pressione {combo} em qualquer app.",
+  quickNoteStatusInUse:
+    "{combo} já está em uso por outro app. Escolha outra combinação.",
+  quickNoteStatusWayland:
+    "O Wayland não deixa apps escutarem atalhos. Adicione um nas configurações de teclado do seu desktop que execute o comando abaixo.",
+  quickNoteStatusReserved: "O sistema usa essa combinação. Escolha outra.",
+  quickNoteStatusAltGr:
+    "No Windows, Ctrl+Alt equivale a AltGr, que digita letras em muitos layouts de teclado. Escolha uma combinação com Win ou uma tecla de função.",
+  quickNoteFolderLabel: "Pasta",
+  quickNoteFolderChange: "Alterar…",
+  quickNoteFolderShow: "Mostrar",
+  quickNotePerDayLabel: "Um arquivo por dia",
+  quickNotePerDayHint:
+    "Adiciona cada nota ao arquivo do dia, sob o horário, em vez de um arquivo por nota.",
+  quickNoteContinueLabel: "Continuar a última nota",
+  quickNoteContinueHint:
+    "Abrir uma nota rápida logo depois de salvar uma continua a anterior.",
+  quickNoteContinueNever: "Nunca",
+  quickNoteContinueMinutes: {
+    one: "Em até {n} minuto",
+    many: "Em até {n} de minutos",
+    other: "Em até {n} minutos",
+  },
+  quickNoteCommandLabel: "Comando",
+  quickNoteCommandHint: `Abre uma nota rápida mesmo com o ${APP_NAME} fechado. Atribua uma tecla a ele nas configurações do sistema.`,
+  quickNoteCommandCopy: "Copiar",
+  quickNoteCommandCopied: "Copiado",
+  quickNoteTitle: "Nota rápida",
+  quickNoteHeader: "Nota rápida → {name}",
+  quickNoteKeysHint: "Esc salva e fecha",
+  quickNoteDraftRestored: "A nota não salva foi restaurada.",
+  quickNoteContinuing: "Continuando sua última nota.",
+  quickNoteDiscard: "Descartar",
+  quickNoteDiscardConfirm: "Descartar esta nota? Ela não será salva.",
+  quickNoteOpenInTextus: `Abrir no ${APP_NAME}`,
+  quickNoteSaveFailed: "Não foi possível salvar a nota:",
+  quickNoteNoImages: `Não dá para colar imagens numa nota rápida. Abra-a no ${APP_NAME} para adicionar.`,
+  quickNoteConflictMessage:
+    "Uma nota rápida foi salva neste arquivo enquanto você tinha alterações não salvas: “{note}”. Salvar agora sobrescreve o arquivo e apaga essa nota.",
 } satisfies Translation;

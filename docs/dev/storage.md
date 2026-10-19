@@ -55,6 +55,15 @@ language key, `"automatic"` or a missing language meaning Automatic. The
 allowed values are `writing_conventions_options` (`platform/ipc.ts`:
 `WRITING_CONVENTIONS`).
 
+`settings.json`'s `quickNote*` fields are **Settings › General › Quick
+Notes**, and Rust reads them (`src-tauri/src/commands/quick_note/`):
+`quickNoteShortcutEnabled` and `quickNoteShortcut` (an accelerator such as
+`"Control+Alt+N"`, or `""` for the platform's default) for the global
+shortcut, `quickNoteFolder` (`""` until the first note is saved, then the
+default folder's path, so changing the UI language doesn't move the notes)
+and `quickNotePerDay`. `quickNoteContinueMinutes` is the frontend's. The
+notes themselves are ordinary Markdown files in that folder.
+
 `settings.json`'s `updateChannel` is **Settings › General › About Textus ›
 Update channel**: `"stable"` (the default; a missing or unknown value means
 the same) or `"beta"`. Rust doesn't read the file for it: the frontend sends
@@ -69,6 +78,7 @@ the channel with each update check (`check_for_update` in
 | `chat-history/`            | Saved Agent conversations, one file each - see [Chat history](#chat-history) below.                                                                                                                                                                                     |
 | `clipboard-history.json` † | The clipboard panel, newest first, at most 30 entries of up to 50,000 characters.                                                                                                                                                                                       |
 | `drafts/`                  | Crash recovery for unsaved documents.                                                                                                                                                                                                                                   |
+| `quick-note/`              | The Quick Note window's own: `draft.json`, what it is typing (restored if the window closed without saving), and `last.json`, the note it saved last (what opening it again soon continues). Not in `drafts/`, which the editor window restores as tabs.                |
 | `assets/`                  | Images pasted into a document that has not been saved yet, referenced by absolute path until its first save moves them into the folder chosen by the `imageFolder` setting: a subfolder of the document's folder (`assets` by default), or `./` for that folder itself. |
 
 On iOS a document path inside the app's Documents folder is stored as

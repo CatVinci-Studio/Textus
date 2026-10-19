@@ -978,6 +978,57 @@ type /name in a conversation to use one.
   playgroundImageNotice: `Images need the ${APP_NAME} desktop app.`,
   playgroundImportUnsupported:
     "Only .md, .markdown and .txt files can be imported.",
+  // Quick Notes (src/quick-note/, Settings › General › Quick Notes).
+  menuNewQuickNote: "New Quick Note",
+  menuOpenQuickNotesFolder: "Open Quick Notes Folder",
+  quickNotesGroup: "Quick Notes",
+  quickNoteShortcutToggle: "Global shortcut",
+  quickNoteShortcutHint:
+    "Opens a quick note from any app. Textus listens only for this one key combination, nothing else you type.",
+  quickNoteShortcutLabel: "Shortcut",
+  quickNoteShortcutDefault: "Use Default",
+  quickNoteShortcutInApp:
+    "Textus uses this combination itself. Choose another.",
+  quickNoteShortcutTooFew:
+    "Use at least two modifier keys, or one with a function key.",
+  quickNoteStatusOn: "On: press {combo} in any app.",
+  quickNoteStatusInUse:
+    "{combo} is in use by another app. Choose another combination.",
+  quickNoteStatusWayland:
+    "Wayland doesn't let apps listen for a shortcut. Add one in your desktop's keyboard settings that runs the command below.",
+  quickNoteStatusReserved: "The system uses this combination. Choose another.",
+  quickNoteStatusAltGr:
+    "On Windows, Ctrl+Alt is AltGr, which types letters on many keyboard layouts. Choose a combination with Win or a function key.",
+  quickNoteFolderLabel: "Folder",
+  quickNoteFolderChange: "Change…",
+  quickNoteFolderShow: "Show",
+  quickNotePerDayLabel: "One file per day",
+  quickNotePerDayHint:
+    "Adds each note to that day's file under its time, instead of a file per note.",
+  quickNoteContinueLabel: "Continue the last note",
+  quickNoteContinueHint:
+    "Opening a quick note again soon after saving one goes on with it.",
+  quickNoteContinueNever: "Never",
+  quickNoteContinueMinutes: {
+    one: "Within {n} minute",
+    other: "Within {n} minutes",
+  },
+  quickNoteCommandLabel: "Command",
+  quickNoteCommandHint: `Opens a quick note, also while ${APP_NAME} isn't running. Assign it a key in your system's settings.`,
+  quickNoteCommandCopy: "Copy",
+  quickNoteCommandCopied: "Copied",
+  quickNoteTitle: "Quick Note",
+  quickNoteHeader: "Quick Note → {name}",
+  quickNoteKeysHint: "Esc saves and closes",
+  quickNoteDraftRestored: "Restored the note you hadn't saved.",
+  quickNoteContinuing: "Continuing your last note.",
+  quickNoteDiscard: "Discard",
+  quickNoteDiscardConfirm: "Discard this note? It won't be saved.",
+  quickNoteOpenInTextus: `Open in ${APP_NAME}`,
+  quickNoteSaveFailed: "Couldn't save the note:",
+  quickNoteNoImages: `Images can't be pasted into a quick note. Open it in ${APP_NAME} to add one.`,
+  quickNoteConflictMessage:
+    "A quick note was saved into this file while you had unsaved changes: “{note}”. Saving now overwrites the file and deletes that note.",
 } satisfies Record<string, string | Plural>;
 
 export default en;

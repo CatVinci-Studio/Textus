@@ -59,6 +59,12 @@ const ZOOM_OUT_ID: &str = "zoom-out";
 const ZOOM_RESET_ID: &str = "zoom-reset";
 const FIND_REPLACE_ID: &str = "find-replace";
 const NEW_WINDOW_ID: &str = "new-window";
+/// File > New Quick Note and File > Open Quick Notes Folder
+/// (commands/quick_note). New Quick Note has no accelerator: its key is the
+/// global shortcut, shown in its label instead (nativeMenuLabels in
+/// src/app/app-menu-model.ts), which a menu accelerator would fight.
+const NEW_QUICK_NOTE_ID: &str = "new-quick-note";
+const OPEN_QUICK_NOTES_FOLDER_ID: &str = "open-quick-notes-folder";
 /// Help menu ids carry the bundled doc they open: "help-doc:<doc>", where
 /// <doc> is the frontend's HelpDoc id ("markdown" | "agent" | "welcome").
 /// "welcome" additionally re-arms the coach-mark tour on the frontend side
@@ -98,6 +104,42 @@ fn emit_to_focused_payload<S: serde::Serialize + Clone>(
     }
 }
 
+/// `emit_to_focused_payload` for a command about the document in front:
+/// Save As, Export, Format, the View modes, zoom. With the Quick Note in
+/// front it is ignored rather than sent to some document behind it - Save
+/// As would save a file the user isn't looking at. (Save, Close Tab and
+/// Find go to the note itself: `emit_to_quick_note`.)
+fn emit_document_command<S: serde::Serialize + Clone>(
+    app: &tauri::AppHandle,
+    event: &str,
+    payload: S,
+) {
+    if !quick_note_focused(app) {
+        emit_to_focused_payload(app, event, payload);
+    }
+}
+
+/// Whether the Quick Note window has focus.
+fn quick_note_focused(app: &tauri::AppHandle) -> bool {
+    app.get_webview_window(commands::quick_note::window::LABEL)
+        .is_some_and(|w| w.is_focused().unwrap_or(false))
+}
+
+/// Save, Close Tab and Find with the Quick Note in front: they act on the
+/// note (save and close it; its find bar). Returns whether it took the
+/// command.
+fn emit_to_quick_note(app: &tauri::AppHandle, event: &str) -> bool {
+    if !quick_note_focused(app) {
+        return false;
+    }
+    let _ = app.emit_to(
+        EventTarget::webview_window(commands::quick_note::window::LABEL),
+        event,
+        (),
+    );
+    true
+}
+
 /// The editor window a window-addressed message should go to - menu commands
 /// here, and lib.rs's OS-open handling, which has the same "which of several
 /// windows means *this* one" question.
@@ -117,6 +159,8 @@ pub(crate) fn focused_editor_window(app: &tauri::AppHandle) -> Option<String> {
 
     match focused {
         Some(label) if crate::commands::chat_window::is_editor_window(&label) => Some(label),
+        // The Quick Note belongs to no editor window: any one will do.
+        Some(label) if label == commands::quick_note::window::LABEL => None,
         Some(label) => app
             .try_state::<crate::commands::chat_window::OpenChatWindows>()
             .and_then(|open| crate::commands::chat_window::editor_for_chat(&label, &open)),
@@ -533,12 +577,24 @@ fn build(
         .accelerator("CmdOrCtrl+W")
         .build(app)?;
 
+    let new_quick_note_item =
+        MenuItemBuilder::with_id(NEW_QUICK_NOTE_ID, l(NEW_QUICK_NOTE_ID, "New Quick Note"))
+            .build(app)?;
+    let open_quick_notes_folder_item = MenuItemBuilder::with_id(
+        OPEN_QUICK_NOTES_FOLDER_ID,
+        l(OPEN_QUICK_NOTES_FOLDER_ID, "Open Quick Notes Folder"),
+    )
+    .build(app)?;
+
     let file_menu = SubmenuBuilder::new(app, l("menu:file", "File"))
         .item(&new_file_item)
         .item(&open_file_item)
         .item(&open_folder_item)
         .item(&open_recent_menu)
         .item(&close_folder_item)
+        .separator()
+        .item(&new_quick_note_item)
+        .item(&open_quick_notes_folder_item)
         .separator()
         .item(&save_file_item)
         .item(&save_file_as_item)
@@ -730,6 +786,18 @@ fn build(
     })
 }
 
+/// Opens `path` in the focused window's sidebar, as File > Open Folder…
+/// does (a recent folder, the Quick Notes folder); with no window open, a
+/// fresh window does once it has mounted.
+fn open_folder_in_sidebar(app_handle: &tauri::AppHandle, path: &str) {
+    if focused_editor_window(app_handle).is_some() {
+        emit_to_focused_payload(app_handle, "menu-open-recent-folder", path);
+    } else {
+        *crate::PENDING_OPEN_FOLDER.lock().unwrap() = Some(path.to_string());
+        let _ = crate::open_new_window(app_handle);
+    }
+}
+
 /// What a menu id does. Reached from a native menu click (`on_menu_event`
 /// above) and from the app-drawn menu's `trigger_menu_item`, so both entry
 /// points stay one behaviour.
@@ -754,20 +822,15 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     } else if id == CLOSE_FOLDER_ID {
         emit_to_focused(app_handle, "menu-close-folder");
     } else if id == SAVE_FILE_ID {
-        emit_to_focused(app_handle, "menu-save-file");
+        if !emit_to_quick_note(app_handle, "menu-save-file") {
+            emit_to_focused(app_handle, "menu-save-file");
+        }
     } else if id == SAVE_FILE_AS_ID {
-        emit_to_focused(app_handle, "menu-save-file-as");
+        emit_document_command(app_handle, "menu-save-file-as", ());
     } else if id == RECENT_CLEAR_ID {
         commands::recents::clear_recent_files(app_handle);
     } else if let Some(path) = id.strip_prefix(RECENT_FOLDER_PREFIX) {
-        // The focused window takes the folder into its sidebar; with none
-        // open, a fresh window does once it has mounted.
-        if focused_editor_window(app_handle).is_some() {
-            emit_to_focused_payload(app_handle, "menu-open-recent-folder", path);
-        } else {
-            *crate::PENDING_OPEN_FOLDER.lock().unwrap() = Some(path.to_string());
-            let _ = crate::open_new_window(app_handle);
-        }
+        open_folder_in_sidebar(app_handle, path);
     } else if let Some(path) = id.strip_prefix(RECENT_PREFIX) {
         // The focused window decides (useFileOpening.ts's openRecentFile): a
         // fresh, untouched one takes the file itself, as File > Open does,
@@ -780,11 +843,11 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
             crate::queue_paths_to_open(app_handle, vec![path.to_string()]);
         }
     } else if id == EXPORT_PDF_ID {
-        emit_to_focused(app_handle, "menu-export-pdf");
+        emit_document_command(app_handle, "menu-export-pdf", ());
     } else if id == EXPORT_HTML_ID {
-        emit_to_focused(app_handle, "menu-export-html");
+        emit_document_command(app_handle, "menu-export-html", ());
     } else if let Some(format) = id.strip_prefix(EXPORT_PANDOC_PREFIX) {
-        emit_to_focused_payload(app_handle, "menu-export-pandoc", format);
+        emit_document_command(app_handle, "menu-export-pandoc", format);
     } else if id == QUIT_ID {
         // Capture every editor before destruction order can progressively
         // shrink the session. A cancelled dirty-window prompt resets this
@@ -805,29 +868,43 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
             let _ = window.close();
         }
     } else if let Some(kind) = id.strip_prefix(INSERT_BLOCK_PREFIX) {
-        emit_to_focused_payload(app_handle, "menu-insert-block", kind);
+        emit_document_command(app_handle, "menu-insert-block", kind);
     } else if id == TOGGLE_SOURCE_MODE_ID {
-        emit_to_focused(app_handle, "menu-toggle-source-mode");
+        emit_document_command(app_handle, "menu-toggle-source-mode", ());
     } else if id == TOGGLE_TYPEWRITER_MODE_ID {
-        emit_to_focused(app_handle, "menu-toggle-typewriter-mode");
+        emit_document_command(app_handle, "menu-toggle-typewriter-mode", ());
     } else if id == TOGGLE_SIDEBAR_ID {
-        emit_to_focused(app_handle, "menu-toggle-sidebar");
+        emit_document_command(app_handle, "menu-toggle-sidebar", ());
     } else if id == TOGGLE_AGENT_PANEL_ID {
-        emit_to_focused(app_handle, "menu-toggle-agent-panel");
+        emit_document_command(app_handle, "menu-toggle-agent-panel", ());
     } else if id == TOGGLE_SPLIT_VIEW_ID {
-        emit_to_focused(app_handle, "menu-toggle-split-view");
+        emit_document_command(app_handle, "menu-toggle-split-view", ());
     } else if id == TOGGLE_ZEN_MODE_ID {
-        emit_to_focused(app_handle, "menu-toggle-zen-mode");
+        emit_document_command(app_handle, "menu-toggle-zen-mode", ());
     } else if id == FIND_REPLACE_ID {
-        emit_to_focused(app_handle, "menu-find-replace");
+        if !emit_to_quick_note(app_handle, "menu-find-replace") {
+            emit_to_focused(app_handle, "menu-find-replace");
+        }
     } else if id == ZOOM_IN_ID {
-        emit_to_focused(app_handle, "menu-zoom-in");
+        emit_document_command(app_handle, "menu-zoom-in", ());
     } else if id == ZOOM_OUT_ID {
-        emit_to_focused(app_handle, "menu-zoom-out");
+        emit_document_command(app_handle, "menu-zoom-out", ());
     } else if id == ZOOM_RESET_ID {
-        emit_to_focused(app_handle, "menu-zoom-reset");
+        emit_document_command(app_handle, "menu-zoom-reset", ());
     } else if id == CLOSE_TAB_ID {
-        emit_to_focused(app_handle, "menu-close-tab");
+        if !emit_to_quick_note(app_handle, "menu-close-tab") {
+            emit_to_focused(app_handle, "menu-close-tab");
+        }
+    } else if id == NEW_QUICK_NOTE_ID {
+        commands::quick_note::window::open_soon(app_handle);
+    } else if id == OPEN_QUICK_NOTES_FOLDER_ID {
+        // In the sidebar, as File > Open Folder… would open it - the notes
+        // are documents to write in. Settings › Quick Notes still shows the
+        // folder in the file manager.
+        match commands::quick_note::folder_for_use(app_handle) {
+            Ok(dir) => open_folder_in_sidebar(app_handle, &dir.to_string_lossy()),
+            Err(err) => eprintln!("quick notes: could not open the folder: {err}"),
+        }
     } else if id == CLOSE_WINDOW_ID {
         // close() (not destroy()) so the frontend's dirty-tab prompt still
         // runs, same as the red traffic-light button.

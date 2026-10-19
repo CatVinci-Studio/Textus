@@ -351,6 +351,23 @@ export interface Settings {
   enableChatHistory: boolean;
   enableClipboardHistory: boolean;
   enableDraftRecovery: boolean;
+  /** Settings › General › Quick Notes. The global shortcut, off by
+   *  default; Rust registers it (src-tauri/src/commands/quick_note/
+   *  shortcut.rs reads both fields from settings.json). */
+  quickNoteShortcutEnabled: boolean;
+  /** Its accelerator ("Control+Alt+N", utils/accelerator.ts), or "" for
+   *  the platform's default. */
+  quickNoteShortcut: string;
+  /** Where notes go. "" until the first note is saved, when Rust fixes it
+   *  to <Documents>/Textus/<"Quick Notes" in the UI language> - so a later
+   *  change of language doesn't move the notes (quick_note/mod.rs). */
+  quickNoteFolder: string;
+  /** One file per day, `YYYY-MM-DD.md`, an entry per note under its time -
+   *  instead of a file per note. Read by Rust. */
+  quickNotePerDay: boolean;
+  /** Minutes after a note was saved in which opening Quick Note again
+   *  continues it instead of starting a new one; 0 = always a new note. */
+  quickNoteContinueMinutes: number;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -409,6 +426,11 @@ const DEFAULT_SETTINGS: Settings = {
   enableChatHistory: true,
   enableClipboardHistory: true,
   enableDraftRecovery: true,
+  quickNoteShortcutEnabled: false,
+  quickNoteShortcut: "",
+  quickNoteFolder: "",
+  quickNotePerDay: false,
+  quickNoteContinueMinutes: 5,
 };
 
 const STORAGE_KEY = "catvinci-settings";
@@ -531,6 +553,11 @@ export function normaliseSettings(parsed: Raw | null): Settings {
             parsed.imageUploadEndpoint.trim()
           ? "custom"
           : DEFAULT_SETTINGS.imageHost,
+      quickNoteContinueMinutes:
+        typeof parsed.quickNoteContinueMinutes === "number" &&
+        parsed.quickNoteContinueMinutes >= 0
+          ? parsed.quickNoteContinueMinutes
+          : DEFAULT_SETTINGS.quickNoteContinueMinutes,
       // Any profile string is kept - a newer build's may not be in this
       // build's list - but it has to be one.
       writingConventions:

@@ -19,6 +19,7 @@ import { useGlobalShortcuts } from "./useGlobalShortcuts";
 import { fixedShortcutGroups } from "./fixed-shortcuts";
 import { platformName } from "../platform/window-chrome";
 import { useExternalChangeReload } from "../document/useExternalChangeReload";
+import { useQuickNoteWrites } from "../document/useQuickNoteWrites";
 import { useDraftAutosave } from "../document/draft-autosave";
 import { useAutosave } from "../document/autosave";
 import { useMenuBridge, useNativeMenuChecks } from "./menu-bridge";
@@ -284,6 +285,8 @@ function App() {
   useWindowCloseGuard(liveTabs, flushAutosave, setPendingClose);
 
   useExternalChangeReload(liveTabs, updateTab);
+  // A quick note saved into a file open here (src/quick-note/).
+  useQuickNoteWrites(liveTabs, updateTab);
 
   const {
     documentsOpen,

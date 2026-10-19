@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { useSettings } from "../settings/SettingsContext";
 import { menuIpc } from "../platform/ipc";
 import { formatCombo } from "../utils/shortcuts";
+import { comboFromAccelerator } from "../utils/accelerator";
+import { useQuickNoteShortcut } from "../platform/useQuickNoteShortcut";
 import { useViewportClamp } from "../utils/hooks/useViewportClamp";
 import { runLocalMenuAction } from "./app-menu-actions";
 import { emitMenuEvent } from "../platform/menu-events";
@@ -51,6 +53,7 @@ interface AppMenuProps {
 
 export function AppMenu({ x, y, onClose, checks }: AppMenuProps) {
   const { t, settings } = useSettings();
+  const quickNote = useQuickNoteShortcut();
   const [recents, setRecents] = useState<RecentLists>(NO_RECENTS);
   const [fullscreen, setFullscreen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -111,10 +114,15 @@ export function AppMenu({ x, y, onClose, checks }: AppMenuProps) {
       <MenuList
         items={
           hasAppMenu
-            ? buildAppMenu(t, settings.shortcuts, recents, {
-                ...checks,
-                fullscreen,
-              })
+            ? buildAppMenu(
+                t,
+                settings.shortcuts,
+                recents,
+                { ...checks, fullscreen },
+                quickNote?.state === "on"
+                  ? (comboFromAccelerator(quickNote.accelerator) ?? "")
+                  : "",
+              )
             : buildMobileMenu(t, checks)
         }
         onDismiss={onClose}

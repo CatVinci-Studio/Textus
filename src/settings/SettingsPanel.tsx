@@ -61,6 +61,7 @@ import {
 } from "./sections/skills";
 import { PrivacySection } from "./sections/privacy";
 import { ImageStorageSection } from "./sections/images";
+import { QuickNotesSection } from "./sections/quick-notes";
 import "./SettingsPanel.css";
 import { useModalDialog } from "../ui/useModalDialog";
 import { usePresenceProps } from "../ui/usePresence";
@@ -222,6 +223,13 @@ export function SettingsPanel({
               onChange={(v) => setSettings({ autosave: v })}
             />
           </SettingsGroup>
+
+          {/* A desktop's: the phone has no global shortcut or windows. */}
+          {canUseWindows && (
+            <SettingsGroup title={t.quickNotesGroup}>
+              <QuickNotesSection t={t} />
+            </SettingsGroup>
+          )}
 
           <SettingsGroup title={t.settingsHelpGroup}>
             <LinkRow

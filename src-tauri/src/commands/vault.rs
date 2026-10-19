@@ -1,6 +1,7 @@
-//! Finds the file an Obsidian image embed (`![[name.png]]`) points at.
-//! The frontend half is in src/editor/images/ (obsidian-embed.ts parses the
-//! embed, obsidian-embed-preview.ts shows it); this side owns the filesystem.
+//! Finds the file an Obsidian image embed (`![[name.png]]`) or wikilink
+//! (`[[Note]]`) points at. The frontend half is in src/editor/images/
+//! (obsidian-embed.ts parses the embed, obsidian-embed-preview.ts shows it)
+//! and src/editor/markdown/wikilink.ts; this side owns the filesystem.
 //!
 //! Obsidian resolves a link inside its vault: the folder holding `.obsidian/`.
 //! A link with a folder in it (`attachments/a.png`) is a path from the vault
@@ -53,6 +54,19 @@ fn is_image(path: &Path) -> bool {
         .is_some_and(|e| IMAGE_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()))
 }
 
+fn is_note(path: &Path) -> bool {
+    path.extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| e.eq_ignore_ascii_case("md") || e.eq_ignore_ascii_case("markdown"))
+}
+
+/// What a link may name: a picture for an embed, a note for a wikilink.
+#[derive(Clone, Copy)]
+enum LinkKind {
+    Image,
+    Note,
+}
+
 /// `base` joined with a link's relative path, `.` and `..` folded away by
 /// hand (the file may not exist, so no canonicalize). None when the path is
 /// absolute or climbs above `root` - a link never reaches outside its vault.
@@ -74,7 +88,7 @@ fn join_within(root: &Path, base: &Path, link: &str) -> Option<PathBuf> {
     out.starts_with(root).then_some(out)
 }
 
-/// The vault's image files, as paths relative to its root with `/`
+/// The vault's image and note files, as paths relative to its root with `/`
 /// separators. Hidden folders (`.obsidian`, `.git`, `.trash`) are skipped as
 /// Obsidian skips them, and so is `node_modules`; symlinks are not followed.
 fn index_vault(root: &Path) -> Vec<String> {
@@ -103,7 +117,7 @@ fn index_vault(root: &Path) -> Vec<String> {
                 if name != "node_modules" && depth + 1 < MAX_DEPTH {
                     stack.push((path, depth + 1));
                 }
-            } else if kind.is_file() && is_image(&path) {
+            } else if kind.is_file() && (is_image(&path) || is_note(&path)) {
                 if let Ok(rel) = path.strip_prefix(root) {
                     found.push(rel.to_string_lossy().replace('\\', "/"));
                 }
@@ -144,15 +158,29 @@ fn pick_from_index<'a>(index: &'a [String], link: &str, doc_dir: &[&str]) -> Opt
         .map(String::as_str)
 }
 
-/// The image file `link` names for the document at `doc_path`, if it exists
-/// inside the vault. `index` is asked only when a direct path misses.
+/// The file of `kind` that `link` names for the document at `doc_path`, if
+/// it exists inside the vault. `index` is asked only when a direct path
+/// misses. A note's link may leave out the `.md`, as Obsidian writes it.
 fn resolve_with(
     doc_path: &Path,
     link: &str,
+    kind: LinkKind,
     index: &mut dyn FnMut(&Path, bool) -> Arc<Vec<String>>,
 ) -> Option<PathBuf> {
     let link = link.trim();
-    if link.is_empty() || !is_image(Path::new(link)) {
+    let named;
+    let link = match kind {
+        LinkKind::Note if !link.is_empty() && Path::new(link).extension().is_none() => {
+            named = format!("{link}.md");
+            named.as_str()
+        }
+        _ => link,
+    };
+    let fits = match kind {
+        LinkKind::Image => is_image(Path::new(link)),
+        LinkKind::Note => is_note(Path::new(link)),
+    };
+    if link.is_empty() || !fits {
         return None;
     }
     let root = vault_root(doc_path)?;
@@ -259,8 +287,32 @@ fn cached_index(root: &Path, fresh: bool) -> Arc<Vec<String>> {
 pub async fn resolve_vault_image(doc_path: String, link: String) -> Result<Option<String>, String> {
     super::fs::require_non_empty(&doc_path)?;
     tauri::async_runtime::spawn_blocking(move || {
-        resolve_with(Path::new(&doc_path), &link, &mut cached_index)
-            .map(|p| p.to_string_lossy().to_string())
+        resolve_with(
+            Path::new(&doc_path),
+            &link,
+            LinkKind::Image,
+            &mut cached_index,
+        )
+        .map(|p| p.to_string_lossy().to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+/// The note an Obsidian wikilink (`[[Note]]`, `[[folder/Note]]`) names, as
+/// an absolute path; None when it isn't in the vault. Shape shared with
+/// fs.resolveVaultNote in src/platform/ipc.ts.
+#[tauri::command]
+pub async fn resolve_vault_note(doc_path: String, link: String) -> Result<Option<String>, String> {
+    super::fs::require_non_empty(&doc_path)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        resolve_with(
+            Path::new(&doc_path),
+            &link,
+            LinkKind::Note,
+            &mut cached_index,
+        )
+        .map(|p| p.to_string_lossy().to_string())
     })
     .await
     .map_err(|e| e.to_string())
@@ -306,7 +358,46 @@ mod tests {
     }
 
     fn resolve(doc: &Path, link: &str) -> Option<PathBuf> {
-        resolve_with(doc, link, &mut |root, _| Arc::new(index_vault(root)))
+        resolve_with(doc, link, LinkKind::Image, &mut |root, _| {
+            Arc::new(index_vault(root))
+        })
+    }
+
+    fn resolve_note(doc: &Path, link: &str) -> Option<PathBuf> {
+        resolve_with(doc, link, LinkKind::Note, &mut |root, _| {
+            Arc::new(index_vault(root))
+        })
+    }
+
+    #[test]
+    fn a_wikilink_finds_the_note_in_the_same_folder_first() {
+        let dir = tempdir("a_wikilink_finds_the_note_in_the_same_folder_first");
+        fs::create_dir_all(dir.path().join(".obsidian")).unwrap();
+        let doc = touch(dir.path(), "notes/a.md");
+        let near = touch(dir.path(), "notes/Page.md");
+        touch(dir.path(), "Page.md");
+        assert_eq!(resolve_note(&doc, "Page"), Some(near.clone()));
+        assert_eq!(resolve_note(&doc, "Page.md"), Some(near));
+    }
+
+    #[test]
+    fn a_wikilink_finds_a_note_anywhere_in_the_vault_by_name() {
+        let dir = tempdir("a_wikilink_finds_a_note_anywhere_in_the_vault_by_name");
+        fs::create_dir_all(dir.path().join(".obsidian")).unwrap();
+        let doc = touch(dir.path(), "a.md");
+        let page = touch(dir.path(), "deep/down/Page.md");
+        assert_eq!(resolve_note(&doc, "page"), Some(page.clone()));
+        assert_eq!(resolve_note(&doc, "down/Page"), Some(page));
+        assert_eq!(resolve_note(&doc, "Missing"), None);
+    }
+
+    #[test]
+    fn a_wikilink_names_notes_not_pictures() {
+        let dir = tempdir("a_wikilink_names_notes_not_pictures");
+        fs::create_dir_all(dir.path().join(".obsidian")).unwrap();
+        let doc = touch(dir.path(), "a.md");
+        touch(dir.path(), "pic.png");
+        assert_eq!(resolve_note(&doc, "pic.png"), None);
     }
 
     #[test]
@@ -439,7 +530,13 @@ mod tests {
         touch(dir.path(), "node_modules/pkg/logo.png");
         touch(dir.path(), "notes/kept.png");
         touch(dir.path(), "notes/readme.md");
-        assert_eq!(index_vault(dir.path()), vec!["notes/kept.png".to_string()]);
+        touch(dir.path(), "notes/data.csv");
+        let mut indexed = index_vault(dir.path());
+        indexed.sort();
+        assert_eq!(
+            indexed,
+            vec!["notes/kept.png".to_string(), "notes/readme.md".to_string()]
+        );
     }
 
     #[test]
@@ -450,7 +547,7 @@ mod tests {
         let stale = Arc::new(Vec::new());
         let mut asked_fresh = false;
         let image = touch(dir.path(), "late/new.png");
-        let found = resolve_with(&doc, "new.png", &mut |root, fresh| {
+        let found = resolve_with(&doc, "new.png", LinkKind::Image, &mut |root, fresh| {
             if fresh {
                 asked_fresh = true;
                 Arc::new(index_vault(root))
