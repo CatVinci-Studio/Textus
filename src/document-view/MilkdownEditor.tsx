@@ -1,4 +1,5 @@
 import { useSelectionIllustration } from "./useSelectionIllustration";
+import { modalDialogOpen } from "../ui/useModalDialog";
 import { WritePlayback, useWritePlayback } from "./WritePlayback";
 import { useEditorDictationTarget } from "./useEditorDictationTarget";
 import { type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
@@ -9,6 +10,9 @@ import { useWorkspacePersistence } from "./useWorkspacePersistence";
 import { useDocumentImages } from "./useDocumentImages";
 import { ImageJobsPanel } from "../ai/multimodal/ImageTools";
 import { AgentWorkspace } from "../ai/workspace/AgentWorkspace";
+import { suggestTitle, useAgentSuggestions } from "../ai/workspace/assist";
+import { firstLevelOneHeading } from "../document/save-default-name";
+import { setSuggestedTitle } from "../document/doc-tabs";
 import { ChatBody } from "../ai/chat/ChatBody";
 import { contextMenuTarget, insertTable } from "../editor/editor-menu";
 import { useDocumentReporting, useEditorFlush } from "./useDocumentReporting";
@@ -57,17 +61,13 @@ import "../theme/content-base.css";
 import "../editor/milkdown-theme.css";
 import "../theme/content-themes.css";
 
-/** The surface each document last showed. A remount (source mode, reload)
- *  returns to it; the startup tab and new empty documents open in Agent, and
- *  an opened file shows its text. */
-const lastSurface = new Map<string, boolean>();
-let firstEditor = true;
-function initialSurface(documentId: string, initialValue: string) {
-  const remembered = lastSurface.get(documentId);
-  if (remembered !== undefined) return remembered;
-  const open = firstEditor || !initialValue.trim();
-  firstEditor = false;
-  return open;
+/** Agent or Write is one mode for the whole window, not a per-tab
+ *  setting: switching tabs, opening a file or a remount keep the surface the
+ *  user is on. Null until the first editor decides (it opens on Agent). */
+let windowSurface: boolean | null = null;
+function initialSurface() {
+  windowSurface ??= true;
+  return windowSurface;
 }
 
 interface MilkdownEditorProps {
@@ -174,13 +174,33 @@ export function MilkdownEditor({
   }, [settings.language, settings.enableMagicDiary, run]);
 
   const [startOpen] = useState(
-    () => !phone && !tutorialMock && initialSurface(documentId, initialValue),
+    () => !phone && !tutorialMock && initialSurface(),
   );
   const workspace = useDocumentWorkspace(run, documentId, startOpen);
   const [workspaceMounted, setWorkspaceMounted] = useState(startOpen);
+  // The active tab sets the window's surface; a tab becoming active
+  // follows it.
+  const setWorkspaceOpen = workspace.setOpen;
   useEffect(() => {
-    if (!phone && !tutorialMock) lastSurface.set(documentId, workspace.open);
-  }, [documentId, workspace.open, phone, tutorialMock]);
+    if (!phone && !tutorialMock && isActive) windowSurface = workspace.open;
+  }, [workspace.open, isActive, phone, tutorialMock]);
+  useEffect(() => {
+    if (phone || tutorialMock || !isActive || windowSurface === null) return;
+    if (windowSurface) setWorkspaceMounted(true);
+    setWorkspaceOpen(windowSurface);
+    // Only on becoming active: the other effect records changes made here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive]);
+  // Leaving Agent for Write hands the caret to the page: the Agent
+  // composer had it, and Write is where the next keys belong (an empty
+  // Magic Diary waits there with its caret). Not out of an open dialog.
+  const wasOpen = useRef(workspace.open);
+  useEffect(() => {
+    const left = wasOpen.current && !workspace.open;
+    wasOpen.current = workspace.open;
+    if (left && isActive && !modalDialogOpen())
+      run((ctx) => ctx.get(editorViewCtx).focus());
+  }, [workspace.open, isActive, run]);
   const [allowAutoImages, setAllowAutoImages] = useState(false);
   const reader = useWritePlayback(
     run,
@@ -402,6 +422,33 @@ export function MilkdownEditor({
     [workspaceVisible, hasDraftOperations, run, conversation.history],
   );
   const zh = settings.language.startsWith("zh");
+  const homeEmpty =
+    !conversation.history.length &&
+    !conversation.busy &&
+    !conversation.streaming;
+  const suggestions = useAgentSuggestions(
+    settings,
+    documentMarkdown,
+    workspaceVisible && homeEmpty && !tutorialMock,
+  );
+  // Settings > Name new documents automatically: the first accepted draft
+  // of an untitled document without a heading gets a suggested title for
+  // its tab and the Save dialog; the text itself is left as accepted.
+  const titled = useRef(false);
+  const acceptDraft = (callId?: string) => {
+    if (!workspace.accept(callId)) return;
+    if (titled.current || filePath || !settings.autoTitleDocuments) return;
+    titled.current = true;
+    const markdown =
+      run((ctx) => ctx.get(serializerCtx)(ctx.get(editorViewCtx).state.doc)) ??
+      "";
+    if (!markdown.trim() || firstLevelOneHeading(markdown)) return;
+    void suggestTitle(settings, markdown)
+      .then((title) => {
+        if (title) setSuggestedTitle(tabId, title);
+      })
+      .catch(() => {});
+  };
   const labels = useMemo(
     () => chatLabels(t, settings.language),
     [t, settings.language],
@@ -422,6 +469,44 @@ export function MilkdownEditor({
   }
 
   const { rootRef, paneEl, scrollEl, contentEl } = useEditorPane();
+  // The window bar's slots (WindowBar.tsx): present once App has mounted.
+  const [barSlots, setBarSlots] = useState<{
+    start: HTMLElement | null;
+    end: HTMLElement | null;
+  } | null>(null);
+  useEffect(() => {
+    setBarSlots({
+      start: document.querySelector<HTMLElement>(".window-bar-start"),
+      end: document.querySelector<HTMLElement>(".window-bar-end"),
+    });
+  }, []);
+  // The Agent surface starts below the tab bar when there is one, so tabs
+  // stay reachable from Agent.
+  useEffect(() => {
+    if (!paneEl) return;
+    let bar: HTMLElement | null = null;
+    const sizes = new ResizeObserver(() => place());
+    const place = () => {
+      const next = paneEl.querySelector<HTMLElement>(":scope > .tab-bar");
+      if (next !== bar) {
+        if (bar) sizes.unobserve(bar);
+        if (next) sizes.observe(next);
+        bar = next;
+      }
+      paneEl.style.setProperty(
+        "--agent-top",
+        `${bar ? bar.offsetHeight : 28}px`,
+      );
+    };
+    place();
+    // Tabs opening or closing add or remove the bar itself.
+    const children = new MutationObserver(place);
+    children.observe(paneEl, { childList: true });
+    return () => {
+      sizes.disconnect();
+      children.disconnect();
+    };
+  }, [paneEl]);
   const { reviewBarShown, stepReview, revealProposal } = useReviewBar({
     run,
     pendingEdits,
@@ -485,42 +570,53 @@ export function MilkdownEditor({
       onPointerDown={() => (lastTouchRef.current = Date.now())}
       onPointerUp={() => (lastTouchRef.current = Date.now())}
     >
+      {/* Write → Agent: a quiet button at the window bar's start; Agent →
+          Write is the matching button at the Agent header's end. */}
       {!phone &&
-        paneEl &&
+        barSlots?.start &&
         isActive &&
+        !workspace.open &&
         createPortal(
-          <nav
-            className="document-surface-switch"
-            aria-label={zh ? "切换工作区" : "Workspace surface"}
-            data-surface={workspace.open ? "agent" : "write"}
+          <button
+            type="button"
+            className="surface-jump surface-jump-agent"
+            aria-label="Agent"
+            title={zh ? "回到 Agent 对话" : "Back to the Agent conversation"}
+            onClick={() => {
+              setWorkspaceMounted(true);
+              workspace.setOpen(true);
+              agentPanel.setOpen(false);
+            }}
           >
-            <span className="surface-switch-thumb" aria-hidden />
-            <button
-              aria-pressed={workspace.open}
-              onClick={() => {
-                setWorkspaceMounted(true);
-                workspace.setOpen(true);
-                agentPanel.setOpen(false);
-              }}
-            >
-              Agent
-            </button>
-            <button
-              aria-pressed={!workspace.open}
-              onClick={() => workspace.setOpen(false)}
-            >
-              Write
-            </button>
-          </nav>,
-          paneEl,
+            <span aria-hidden>←</span>
+            <span>Agent</span>
+          </button>,
+          barSlots.start,
         )}
-      {paneEl &&
+      {!phone &&
+        barSlots?.end &&
+        isActive &&
+        workspace.open &&
+        createPortal(
+          <button
+            type="button"
+            className="surface-jump surface-jump-write"
+            aria-label={`Write · ${docTitle}`}
+            title={zh ? "进入写作" : "Open the document"}
+            onClick={() => workspace.setOpen(false)}
+          >
+            <span>{zh ? "写作" : "Write"}</span>
+            <span aria-hidden>→</span>
+          </button>,
+          barSlots.end,
+        )}
+      {barSlots?.end &&
         isActive &&
         !workspace.open &&
         !tutorialMock &&
         createPortal(
           <WritePlayback reader={reader} language={settings.language} />,
-          paneEl,
+          barSlots.end,
         )}
       {paneEl &&
         createPortal(
@@ -588,7 +684,6 @@ export function MilkdownEditor({
           >
             <AgentWorkspace
               language={settings.language}
-              title={docTitle}
               documentPath={filePath}
               draft={workspace.draft}
               preview={
@@ -596,28 +691,15 @@ export function MilkdownEditor({
               }
               conflict={workspace.conflict}
               conversation={conversation}
-              onEditor={() => workspace.setOpen(false)}
-              onAccept={workspace.accept}
+              onAccept={acceptDraft}
+              suggestions={suggestions.items}
+              aiSuggestions={suggestions.ai}
               onReject={workspace.discard}
               onStop={stopTask}
               toolLabels={labels.toolActivity}
               pendingMedia={images.pending}
               mediaPreview={
                 <ImageJobsPanel language={settings.language} images={images} />
-              }
-              tools={
-                <>
-                  <label className="workspace-media-permission">
-                    <input
-                      type="checkbox"
-                      className="ui-check"
-                      checked={allowAutoImages}
-                      disabled={conversation.busy}
-                      onChange={(e) => setAllowAutoImages(e.target.checked)}
-                    />
-                    {zh ? "允许本次请求配图" : "Allow images for this request"}
-                  </label>
-                </>
               }
             >
               {recovery.error && (
@@ -680,18 +762,53 @@ export function MilkdownEditor({
                 refreshContext={panelSendContext}
                 onProposals={showProposals}
                 onAcceptProposal={(id) => {
-                  if (!conversation.busy) workspace.accept(id);
+                  if (!conversation.busy) acceptDraft(id);
                 }}
                 onRejectProposal={(id) => {
                   if (!conversation.busy) workspace.discard(id);
                 }}
                 onAcceptAll={() => {
-                  if (!conversation.busy) workspace.accept();
+                  if (!conversation.busy) acceptDraft();
                 }}
                 onRejectAll={() => {
                   if (!conversation.busy) workspace.discard();
                 }}
                 pendingBar={false}
+                composerTools={
+                  <button
+                    type="button"
+                    className={`workspace-image-toggle${allowAutoImages ? " is-active" : ""}`}
+                    aria-pressed={allowAutoImages}
+                    aria-label={
+                      zh ? "允许本次请求配图" : "Allow images for this request"
+                    }
+                    disabled={conversation.busy}
+                    title={
+                      zh
+                        ? "允许 Agent 在本次请求中生成配图（可能产生费用）"
+                        : "Let the Agent generate images for this request (may incur charges)"
+                    }
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setAllowAutoImages((on) => !on)}
+                  >
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <rect x="3" y="4" width="18" height="16" rx="3" />
+                      <circle cx="9" cy="10" r="1.6" />
+                      <path d="m21 16-5-5-9 9" />
+                    </svg>
+                    <span>{zh ? "配图" : "Images"}</span>
+                  </button>
+                }
               />
             </AgentWorkspace>
           </div>,
@@ -781,6 +898,7 @@ export function MilkdownEditor({
         toggleFindReplace={findReplace.toggle}
         openTableDialog={() => setTableDialogOpen(true)}
         onClose={() => setMenu(null)}
+        docPath={filePath}
       />
       <Presence show={!!aiNotice} exitMs={120}>
         {aiNotice && (

@@ -4,6 +4,36 @@ import { useRecording } from "./useRecording";
 import type { DictationTargetSession } from "./dictation-target";
 import { errorText } from "../utils/error-text";
 
+/** The native recognizer reports in English; the common cases read in the
+ *  interface language. */
+const NATIVE_ERRORS_ZH: [RegExp, string][] = [
+  [
+    /permission was denied.*Speech Recognition/i,
+    "语音识别权限被拒绝。请在“系统设置 → 隐私与安全性 → 语音识别”中允许 Textus。",
+  ],
+  [
+    /Microphone permission was denied/i,
+    "麦克风权限被拒绝。请在“系统设置 → 隐私与安全性 → 麦克风”中允许 Textus。",
+  ],
+  [
+    /Microphone is unavailable|Cannot start microphone/i,
+    "无法使用麦克风，请检查输入设备。",
+  ],
+  [
+    /unavailable for this language/i,
+    "当前语言无法使用系统语音识别。请在设置中改用 MiniMax，或在 macOS 设置中添加该语言。",
+  ],
+  [/Another dictation session is active/i, "另一处正在听写，请先结束它。"],
+  [
+    /available on macOS/i,
+    "系统听写仅在 macOS 上可用，请在设置中选择 MiniMax。",
+  ],
+];
+export function dictationErrorText(text: string, language: string): string {
+  if (!language.startsWith("zh")) return text;
+  return NATIVE_ERRORS_ZH.find(([pattern]) => pattern.test(text))?.[1] ?? text;
+}
+
 export function useDictationCapture(
   active: boolean,
   language: string,
@@ -91,6 +121,13 @@ export function useDictationCapture(
     },
     [cancel],
   );
+  // An error explains the last attempt; it fades instead of staying beside
+  // the microphone for good.
+  useEffect(() => {
+    if (!error) return;
+    const timer = setTimeout(() => setError(null), 6000);
+    return () => clearTimeout(timer);
+  }, [error]);
   const previousRecordingState = useRef(recording.state);
   useEffect(() => {
     const previous = previousRecordingState.current;
@@ -132,7 +169,7 @@ export function useDictationCapture(
         (event) => {
           if (run !== generation.current) return;
           if (event.error) {
-            setError(event.text);
+            setError(dictationErrorText(event.text, language));
             cancel();
             return;
           }
@@ -144,7 +181,7 @@ export function useDictationCapture(
       else token.current = id;
     } catch (err) {
       if (run === generation.current) {
-        setError(errorText(err));
+        setError(dictationErrorText(errorText(err), language));
         cancel();
       }
     } finally {

@@ -276,6 +276,10 @@ test("a new tab's submission releases the displaced pending turn", async ({
     ).__devEmitTauriEvent("menu-new-file");
   });
   await expect(page.locator(".tab-pill")).toHaveCount(2);
+  // A new tab keeps the window's surface - Write, where the diary is.
+  await expect(
+    page.getByRole("button", { name: "Agent", exact: true }),
+  ).toBeVisible();
   await pasteMarkdown(page, "第二页的问题");
   await editor(page).press("End");
   await editor(page).press("Enter");

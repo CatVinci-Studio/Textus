@@ -104,6 +104,8 @@ export function useSelectionIllustration(
       return { text, anchor: block.markdown };
     });
     if (!captured) return;
+    // The frame shows at once, through refinement, until the job takes over.
+    const release = images.holdPlaceholder?.(captured.anchor);
     setBusy(true);
     setError(null);
     setNotice(null);
@@ -179,6 +181,7 @@ export function useSelectionIllustration(
     } catch (err) {
       if (token === generation.current) setError(errorText(err));
     } finally {
+      release?.();
       if (token === generation.current) {
         request.current = null;
         setBusy(false);

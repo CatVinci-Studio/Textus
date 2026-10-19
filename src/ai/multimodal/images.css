@@ -15,6 +15,10 @@
   gap: 0.3rem;
   margin: 0.6rem 0;
 }
+.image-generator p {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
 .image-generator :is(textarea, input, select) {
   width: 100%;
   color: inherit;
@@ -23,34 +27,6 @@
   border: 1px solid #8885;
   border-radius: 5px;
   padding: 0.4rem;
-}
-.image-generator p,
-.image-job p {
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-.image-job {
-  border: 1px solid #8884;
-  border-radius: 9px;
-  padding: 0.8rem;
-  margin: 0.75rem 0;
-  font-size: 12px;
-}
-.image-job > span {
-  display: block;
-  opacity: 0.65;
-  margin-top: 0.3rem;
-}
-.image-job img {
-  display: block;
-  max-width: 100%;
-  max-height: 280px;
-  object-fit: contain;
-  margin-block: 0.75rem;
-  border-radius: 5px;
-}
-.image-job button {
-  margin: 0.5rem 0.4rem 0 0;
 }
 .workspace-launch .image-generator {
   position: relative;
@@ -73,4 +49,404 @@
   align-items: center;
   font-size: 12px;
   padding: 0.5rem;
+}
+
+/* ---------- Image job cards (ImageTools.tsx) ---------- */
+.image-jobs {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+  font-size: var(--text-sm);
+  font-family: var(--ui-font, system-ui);
+}
+.image-job {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid
+    color-mix(in srgb, var(--editor-border, #8884) 80%, transparent);
+  border-radius: var(--radius-surface);
+  background: var(--editor-bg, var(--bg));
+  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+  animation: motion-rise-in var(--dur-base) var(--ease-out);
+  transition: border-color var(--dur-fast) var(--ease-standard);
+}
+.image-job.is-ready {
+  border-color: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 45%,
+    transparent
+  );
+}
+.image-job.is-failed {
+  border-color: color-mix(in srgb, var(--danger, #c4473a) 40%, transparent);
+}
+.image-job-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-block);
+  background: color-mix(in srgb, var(--editor-text) 6%, var(--editor-bg, #fff));
+  display: grid;
+  place-items: center;
+}
+.image-job-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: motion-fade-in var(--dur-slow) var(--ease-out);
+}
+.image-job-shimmer {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      color-mix(in srgb, var(--editor-accent, #4b7bec) 30%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 75% 70%,
+      color-mix(in srgb, #e9a13b 30%, transparent),
+      transparent 55%
+    );
+}
+.image-job-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    color-mix(in srgb, var(--editor-bg, #fff) 60%, transparent) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  animation: placeholder-sheen 2.4s var(--ease-in-out) infinite;
+}
+.image-job-thumb-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--danger, #c4473a) 15%, transparent);
+  color: var(--danger, #c4473a);
+  font-weight: 600;
+}
+.image-job-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.image-job-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.image-job-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: var(--editor-muted, inherit);
+}
+.image-job-status.is-running,
+.image-job-status.is-queued,
+.image-job-status.is-preparing,
+.image-job-status.is-prepared {
+  color: var(--editor-accent, var(--chrome-primary));
+}
+.image-job-status.is-ready {
+  color: var(--success-color);
+}
+.image-job-status.is-failed {
+  color: var(--danger, #c4473a);
+}
+.image-job-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.image-job-status:is(.is-running, .is-queued, .is-preparing) .image-job-dot {
+  animation: workspace-pulse 1.4s var(--ease-standard) infinite;
+}
+.image-job-meta {
+  font-size: var(--text-xs);
+  opacity: 0.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* The prompt itself, as the card's main text: three lines, click for all. */
+.image-job-prompt {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--editor-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.image-job-prompt.is-expanded {
+  -webkit-line-clamp: unset;
+  display: block;
+}
+.image-job-anchor {
+  margin: 0;
+  font-size: var(--text-xs);
+  opacity: 0.55;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.image-job-error {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--danger, #c4473a) 10%, transparent);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+.image-job-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+.image-job-actions button,
+.prompt-refiner button {
+  height: var(--control-height-sm);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--editor-border, #8884);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-instant) var(--ease-standard);
+}
+.image-job-actions button:not(:disabled):hover,
+.prompt-refiner button:not(:disabled):hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.image-job-actions button:not(:disabled):active,
+.prompt-refiner button:not(:disabled):active {
+  transform: scale(0.97);
+}
+.image-job-actions button:disabled,
+.prompt-refiner button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+:is(.image-job-actions, .prompt-refiner) button.is-primary {
+  border-color: transparent;
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+}
+:is(.image-job-actions, .prompt-refiner)
+  button.is-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--ui-primary) 86%, transparent);
+}
+.image-job-actions button.is-quiet {
+  border-color: transparent;
+  opacity: 0.7;
+}
+@media (max-width: 520px) {
+  .image-job {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+}
+
+/* ---------- Prompt refiner (PromptRefiner.tsx): a small chat window ---------- */
+.prompt-refiner {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  width: min(380px, calc(100vw - 32px));
+  max-height: min(560px, calc(100vh - 80px));
+  border: 1px solid var(--editor-border, #8884);
+  border-radius: var(--radius-dialog);
+  background: var(--editor-bg, var(--bg));
+  color: var(--editor-text);
+  box-shadow: var(--shadow-dialog);
+  font: var(--text-md) / 1.5 var(--ui-font, system-ui);
+  overflow: hidden;
+  animation: refiner-in var(--dur-slow) var(--ease-spring);
+  transform-origin: bottom right;
+}
+@keyframes refiner-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-md)) scale(var(--scale-enter));
+  }
+}
+.prompt-refiner > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-3) var(--space-2) var(--space-4);
+}
+.prompt-refiner .prompt-refiner-close {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+}
+.prompt-refiner-close svg {
+  width: 12px;
+  height: 12px;
+}
+.prompt-refiner-body {
+  flex: 1;
+  min-height: 80px;
+  overflow-y: auto;
+  padding: 0 var(--space-4) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.prompt-refiner-anchor {
+  margin: 0;
+  font-size: var(--text-xs);
+  opacity: 0.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.prompt-refiner-intro {
+  margin: 0;
+  font-size: var(--text-sm);
+  opacity: 0.7;
+}
+.prompt-refiner-turn {
+  max-width: 88%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: var(--text-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  animation: motion-rise-in var(--dur-base) var(--ease-out);
+}
+.prompt-refiner-turn.is-user {
+  align-self: flex-end;
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 14%,
+    transparent
+  );
+  border-bottom-right-radius: 4px;
+}
+.prompt-refiner-turn.is-assistant {
+  align-self: flex-start;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  border-bottom-left-radius: 4px;
+}
+.prompt-refiner-turn.is-thinking {
+  display: inline-flex;
+  gap: 4px;
+}
+.prompt-refiner-turn.is-thinking span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+  animation: agent-thinking-pulse 1.2s ease-in-out infinite;
+}
+.prompt-refiner-turn.is-thinking span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.prompt-refiner-turn.is-thinking span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.prompt-refiner-error {
+  margin: 0;
+  color: var(--danger, #c4473a);
+  font-size: var(--text-xs);
+}
+.prompt-refiner-prompt {
+  display: grid;
+  gap: 4px;
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid
+    color-mix(in srgb, var(--editor-border, #8884) 60%, transparent);
+  font-size: var(--text-xs);
+  opacity: 0.95;
+}
+.prompt-refiner-prompt span {
+  opacity: 0.6;
+}
+.prompt-refiner textarea {
+  width: 100%;
+  resize: none;
+  border: 1px solid
+    color-mix(in srgb, var(--editor-border, #8884) 80%, transparent);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, currentColor 3%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  padding: 6px 8px;
+}
+.prompt-refiner textarea:focus {
+  outline: none;
+  border-color: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 60%,
+    transparent
+  );
+}
+.prompt-refiner-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 var(--space-4) var(--space-2);
+}
+.prompt-refiner-examples button {
+  height: 24px;
+  font-size: var(--text-xs);
+  opacity: 0.8;
+}
+.prompt-refiner-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-2);
+}
+.prompt-refiner > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  border-top: 1px solid
+    color-mix(in srgb, var(--editor-border, #8884) 60%, transparent);
+}
+.prompt-refiner > footer span {
+  font-size: var(--text-xs);
+  opacity: 0.5;
+}
+.prompt-refiner button {
+  flex: none;
+  white-space: nowrap;
 }

@@ -11,6 +11,12 @@ const FOCUSABLE =
  *  target belongs to. */
 const openDialogs: HTMLElement[] = [];
 
+/** Whether a modal dialog is open: something mounting behind it (a new
+ *  tab's Agent composer) must not take the focus out of it. */
+export function modalDialogOpen(): boolean {
+  return openDialogs.length > 0;
+}
+
 /** Shared focus lifecycle for modal dialogs; callers provide role and label.
  *  `refocusEditorOnPhone: false` leaves the keyboard down on a phone when
  *  the dialog closes, instead of handing the focus back to the editor.

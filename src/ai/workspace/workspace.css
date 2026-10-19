@@ -4,9 +4,13 @@
 /* ---------- Layer: Agent ⇄ Write cross-fade (transition, reversible) ---------- */
 .agent-workspace-layer {
   position: absolute;
-  inset: 28px 0 0;
+  inset: var(--agent-top, 28px) 0 0;
   z-index: 30;
   pointer-events: none;
+}
+/* Zen fades the tab bar out of its room (modes.css). */
+.zen .agent-workspace-layer {
+  top: 28px;
 }
 .agent-workspace-layer[hidden] {
   display: none;
@@ -165,20 +169,6 @@
     transform: scale(1.6);
     opacity: 0.35;
   }
-}
-.workspace-to-write {
-  max-width: 260px;
-}
-.workspace-to-write-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: 0.6;
-}
-.workspace-to-write > span:last-child {
-  transition: transform var(--dur-fast) var(--ease-out);
-}
-.workspace-to-write:hover > span:last-child {
-  transform: translateX(2px);
 }
 
 /* ---------- Columns ---------- */
@@ -381,6 +371,35 @@
 .agent-home.is-empty .inline-chat-messages {
   display: none;
 }
+/* Once a task starts it reads like a chat: the turns fill the column and
+   scroll, the composer rests at the bottom. */
+.agent-home.has-conversation .workspace-conversation {
+  padding-bottom: var(--space-3);
+}
+.agent-home.has-conversation .inline-chat-messages {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: var(--space-4);
+  /* Turns scrolling up under the header fade out instead of being cut. */
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--space-4));
+}
+.agent-home.has-conversation .inline-chat-bar {
+  flex: none;
+  animation: composer-dock var(--dur-slow) var(--ease-spring);
+}
+@keyframes composer-dock {
+  from {
+    transform: translateY(calc(var(--motion-distance-md) * -2));
+    opacity: 0.6;
+  }
+}
+.agent-home.has-conversation .workspace-extra-tools {
+  flex: none;
+  margin-top: var(--space-2);
+}
 .agent-home-heading {
   text-align: center;
   margin-bottom: var(--space-8);
@@ -435,6 +454,18 @@
     background-color var(--dur-fast) var(--ease-standard),
     color var(--dur-fast) var(--ease-standard),
     transform var(--dur-fast) var(--ease-out);
+}
+/* Written by the model for this document: a hint of the accent. */
+.agent-home-suggestions.is-ai button {
+  border-color: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 35%,
+    var(--editor-border, #8884)
+  );
+}
+.agent-home-suggestions.is-ai button::before {
+  content: "✦ ";
+  color: var(--editor-accent, var(--chrome-primary));
 }
 .agent-home-suggestions button:hover {
   color: var(--editor-text);
@@ -497,6 +528,43 @@
   margin: var(--space-3) var(--space-2) 0;
   font-size: var(--text-xs);
   opacity: 0.7;
+}
+/* The image switch in the composer toolbar, beside the mode picker. */
+.agent-home .inline-chat-toolbar .workspace-image-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: var(--control-height-sm);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--editor-muted, inherit);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-instant) var(--ease-standard);
+}
+.agent-home .inline-chat-toolbar .workspace-image-toggle:not(:disabled):hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  color: var(--editor-text);
+}
+.agent-home .inline-chat-toolbar .workspace-image-toggle:not(:disabled):active {
+  transform: scale(0.95);
+}
+.agent-home .inline-chat-toolbar .workspace-image-toggle.is-active {
+  color: var(--editor-accent, var(--chrome-primary));
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 12%,
+    transparent
+  );
+}
+.workspace-image-toggle.is-active svg {
+  animation: motion-pop-in var(--dur-base) var(--ease-spring-bouncy);
 }
 .workspace-media-permission {
   display: inline-flex;
@@ -666,7 +734,6 @@
   background: color-mix(in srgb, var(--editor-bg, var(--bg)) 92%, transparent);
   border-top: 1px solid
     color-mix(in srgb, var(--editor-border, #8884) 60%, transparent);
-  backdrop-filter: blur(8px);
   animation: motion-rise-in var(--dur-base) var(--ease-out);
 }
 .workspace-review-actions .workspace-button {
@@ -724,9 +791,6 @@
     padding-right: calc(min(56%, 460px) + var(--space-3));
     padding-left: var(--space-4);
   }
-  .workspace-to-write-title {
-    display: none;
-  }
 }
 @media (max-width: 650px) {
   .workspace-preview {
@@ -744,63 +808,50 @@
   }
 }
 
-/* ---------- Surface switch: a segmented control with a sliding thumb ---------- */
-.document-surface-switch {
-  position: absolute;
-  top: 36px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 42;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  padding: 3px;
-  background: color-mix(in srgb, var(--sidebar-bg) 85%, transparent);
+/* ---------- Surface navigation ----------
+   One shape on both sides: Write → Agent leads the window bar ("← Agent"),
+   Agent → Write ends the Agent header ("写作 →"). */
+.surface-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  margin-left: 4px;
+  padding: 0 8px;
   border: 1px solid
     color-mix(in srgb, var(--editor-border, #8884) 80%, transparent);
   border-radius: var(--radius-pill);
-  backdrop-filter: blur(10px);
-}
-.document-surface-switch button {
-  position: relative;
-  z-index: 1;
-  min-width: 64px;
-  border: 0;
   background: transparent;
-  color: inherit;
-  padding: 4px 16px;
-  border-radius: var(--radius-pill);
+  color: var(--editor-muted, inherit);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   cursor: pointer;
-  opacity: 0.6;
-  transition: opacity var(--dur-fast) var(--ease-standard);
+  animation: motion-fade-in var(--dur-base) var(--ease-out);
+  transition:
+    color var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard);
 }
-.document-surface-switch button[aria-pressed="true"] {
-  opacity: 1;
-  font-weight: 500;
+.surface-jump:hover {
+  color: var(--editor-text);
+  background: var(--sidebar-hover, #8882);
 }
-.document-surface-switch button:hover {
-  opacity: 1;
+.surface-jump > span:first-child {
+  transition: transform var(--dur-fast) var(--ease-out);
 }
-.surface-switch-thumb {
-  position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  width: calc(50% - 3px);
-  border-radius: var(--radius-pill);
-  background: var(--editor-bg, var(--bg));
-  box-shadow: var(--shadow-raised);
-  transition: transform var(--dur-medium) var(--ease-spring);
+.surface-jump-agent:hover > span:first-child {
+  transform: translateX(-2px);
 }
-.document-surface-switch[data-surface="write"] .surface-switch-thumb {
-  transform: translateX(100%);
+.surface-jump-write {
+  margin: 0 4px 0 0;
+}
+.surface-jump-write > span:last-child {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.surface-jump-write:hover > span:last-child {
+  transform: translateX(2px);
 }
 
 /* Write is a quiet page; media actions live in selection menus and Agent. */
-.main-pane:has(.document-surface-switch) .editor-content {
-  padding-top: 6rem;
-}
 
 /* ---------- Dictation controls ---------- */
 .inline-dictation {
@@ -946,4 +997,31 @@
   .inline-dictation .dictation-listening {
     animation: none;
   }
+}
+
+/* A narrow composer (small window, draft panel open) keeps one toolbar row:
+   the secondary labels go, the image switch keeps its icon. */
+.agent-home .inline-chat-field {
+  container-type: inline-size;
+}
+@container (max-width: 560px) {
+  .agent-home .agent-model-label,
+  .agent-home .agent-engine-controls > span {
+    display: none;
+  }
+}
+@container (max-width: 420px) {
+  .agent-home .workspace-image-toggle span {
+    display: none;
+  }
+  .agent-home .agent-engine-controls select {
+    max-width: 110px;
+  }
+}
+
+/* In Agent the window bar's chat toggle would open a second Agent: hidden
+   while the active document shows the Agent surface. */
+:root:has(.agent-workspace-layer:not([hidden])[data-open="true"])
+  .window-bar-toggle {
+  display: none;
 }

@@ -44,6 +44,9 @@ export function WindowBar({
   return (
     <header className="window-bar" data-tauri-drag-region>
       <AppMenuButton checks={menuChecks} />
+      {/* The active document's surface controls are portalled here
+        (MilkdownEditor): "← Agent" leads, read-aloud sits by the chat. */}
+      <span className="window-bar-start" />
       {/* The unsaved dot leads the title, as a native edited-document
         title does - in the status group it sat on top of a long title
         on a narrow window. */}
@@ -60,6 +63,7 @@ export function WindowBar({
         <span className="word-count">
           {words > 0 && `${words} ${t.wordsUnit}`}
         </span>
+        <span className="window-bar-end" />
         {showAgentToggle && (
           <button
             type="button"

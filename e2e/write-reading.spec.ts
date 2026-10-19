@@ -53,7 +53,8 @@ test("Write has compact reading controls; right-click sends only the selected te
             .__readingRequests,
       ),
     )
-    .toEqual(["Before paragraph."]);
+    // Short neighbouring paragraphs share one request (speech-chunks.ts).
+    .toEqual(["Before paragraph.\n\nSelected words.\n\nAfter paragraph."]);
   await reader.getByRole("button", { name: "Stop reading" }).click();
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   const selected = editor.locator("p").filter({ hasText: "Selected words." });
@@ -75,7 +76,10 @@ test("Write has compact reading controls; right-click sends only the selected te
             .__readingRequests,
       ),
     )
-    .toEqual(["Before paragraph.", "Selected words."]);
+    .toEqual([
+      "Before paragraph.\n\nSelected words.\n\nAfter paragraph.",
+      "Selected words.",
+    ]);
   await expect(editor).toContainText("Before paragraph.");
   await expect(editor).toContainText("After paragraph.");
   await reader.getByRole("button", { name: "Stop reading" }).click();
@@ -97,10 +101,11 @@ test("Write has compact reading controls; right-click sends only the selected te
     await page
       .getByRole("combobox", { name: "Agent engine" })
       .selectOption(engine);
-    const images = page.getByRole("checkbox", {
+    // A toggle in the composer's toolbar, off by default for every engine.
+    const images = page.getByRole("button", {
       name: "Allow images for this request",
     });
     await expect(images).toBeEnabled();
-    await expect(images).not.toBeChecked();
+    await expect(images).toHaveAttribute("aria-pressed", "false");
   }
 });

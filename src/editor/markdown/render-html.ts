@@ -1,9 +1,13 @@
 import { Marked, type TokenizerAndRendererExtension } from "marked";
-import katex from "katex";
+import { katexNow, mathSourceHtml } from "../math/katex-loader";
 import DOMPurify from "dompurify";
 import { normalizeMathDelimiters } from "../../utils/markdown-math";
 
 function renderMath(source: string, displayMode: boolean): string {
+  const katex = katexNow();
+  // Its first formula: the source for a moment, re-rendered once KaTeX
+  // loads (MarkdownText's useKatexReady).
+  if (!katex) return mathSourceHtml(source.trim());
   return katex.renderToString(source.trim(), {
     displayMode,
     // A half-typed or invalid formula renders as its source in red rather

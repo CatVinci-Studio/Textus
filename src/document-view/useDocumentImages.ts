@@ -15,6 +15,11 @@ import {
 import { imageMarkdown } from "../ai/multimodal/image-proposal";
 import { parseMarkdownSource } from "../editor/markdown/parse-markdown-source";
 import { errorText } from "../utils/error-text";
+import { findMarkdownMatch, serializeBlocks } from "../ai/doc-markdown";
+import {
+  imagePlaceholderKey,
+  type ImagePlaceholder,
+} from "../ai/multimodal/image-placeholder-plugin";
 import { useLatest } from "../utils/hooks/useLatest";
 
 export function useDocumentImages(
@@ -90,6 +95,66 @@ export function useDocumentImages(
         void media.cancelImageGeneration(permission).catch(() => {});
     };
   }, [refresh]);
+  /** Frames for pictures not yet queued (a prompt still being refined). */
+  const [held, setHeld] = useState<{ id: string; anchor: string }[]>([]);
+  const holdPlaceholder = useCallback((anchor: string) => {
+    const id = crypto.randomUUID();
+    setHeld((prev) => [...prev, { id, anchor }]);
+    return () => setHeld((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+  // A shimmering frame under each anchor while its picture is generated.
+  useEffect(() => {
+    const active = [
+      ...held.map((h) => ({
+        jobId: h.id,
+        status: "refining",
+        request: { anchor: h.anchor, size: "1024x1024" },
+      })),
+      ...jobs.filter((job) =>
+        ["queued", "running", "preparing"].includes(job.status),
+      ),
+    ];
+    run((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      const current = imagePlaceholderKey.getState(view.state);
+      if (!active.length && !current?.find().length) return;
+      const blocks = active.length ? serializeBlocks(ctx, view.state.doc) : [];
+      const placeholders: ImagePlaceholder[] = [];
+      for (const job of active) {
+        const match = findMarkdownMatch(blocks, job.request.anchor);
+        if (!match) continue;
+        const [w, h] = (job.request.size ?? "1024x1024").split("x").map(Number);
+        placeholders.push({
+          id: job.jobId,
+          pos: match.to,
+          ratio: w > 0 && h > 0 ? w / h : 1,
+          queued: job.status === "queued",
+          anchor: job.request.anchor,
+          label:
+            job.status === "queued"
+              ? zh
+                ? "排队等待生成…"
+                : "Waiting to generate…"
+              : job.status === "refining"
+                ? zh
+                  ? "正在构思画面…"
+                  : "Composing the picture…"
+                : job.status === "preparing"
+                  ? zh
+                    ? "正在插入图片…"
+                    : "Inserting the image…"
+                  : zh
+                    ? "正在绘制插图…"
+                    : "Painting the illustration…",
+        });
+      }
+      view.dispatch(
+        view.state.tr
+          .setMeta(imagePlaceholderKey, placeholders)
+          .setMeta("addToHistory", false),
+      );
+    });
+  }, [jobs, held, run, zh]);
   const running = jobs.some((job) =>
     ["queued", "running", "preparing"].includes(job.status),
   );
@@ -334,8 +399,19 @@ export function useDocumentImages(
       throw err;
     }
   }, [documentId, latest, refresh]);
+  /** A new picture for the same place from an adjusted prompt: the old
+   *  job is dropped, the new one is anchored like a right-click illustration
+   *  (its own quota, inserted against the live document once reviewed). */
+  const regenerate = useCallback(
+    async (job: ImageJob, prompt: string) => {
+      await cancel(job.jobId);
+      return start({ ...job.request, prompt }, { live: true });
+    },
+    [cancel, start],
+  );
   return {
     jobs,
+    regenerate,
     error,
     inserting,
     start,
@@ -347,5 +423,6 @@ export function useDocumentImages(
     refresh,
     stopRunning,
     pending,
+    holdPlaceholder,
   };
 }

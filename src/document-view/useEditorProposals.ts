@@ -116,8 +116,11 @@ export function useEditorProposals({
         streaming?: boolean;
       }[],
       target: SelectionTarget | null,
+      /** From the detached chat window: its own conversation, never the
+       *  workspace draft's. */
+      external = false,
     ) => {
-      if (workspace?.receive(proposals)) return;
+      if (!external && workspace?.receive(proposals)) return;
       if (supersedePending.current) {
         supersedePending.current = false;
         pendingEdits.rejectAll();

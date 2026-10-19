@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
+  LINE_END,
   PHONE,
   mockInvoke,
   openApp,
@@ -162,7 +163,7 @@ test("accepting one of two proposals in a paragraph keeps the other", async ({
   await composer.fill("Fix both");
   await composer.press("Enter");
   const accept = page.locator(
-    ".agent-proposal-actions .inline-chat-action-primary",
+    ".agent-proposal-actions .inline-chat-action-primary:visible",
   );
   await expect(accept).toHaveCount(2);
   // The second first, then the first: both land.
@@ -214,7 +215,7 @@ test("a narrow window numbers the notes as the chat lists them", async ({
     "1",
     "2",
   ]);
-  await expect(page.locator(".agent-comment").first()).toContainText(
+  await expect(page.locator(".agent-comment:visible").first()).toContainText(
     "About the second.",
   );
 });
@@ -250,22 +251,26 @@ test("an undone edit's card still counts what it removes", async ({ page }) => {
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("Fix it");
   await composer.press("Enter");
-  const chips = page.locator(".agent-proposal .agent-diff-summary");
+  const chips = page.locator(".agent-proposal .agent-diff-summary:visible");
   await expect(chips).toHaveText("+1−1");
   await page
-    .locator(".agent-proposal-actions .inline-chat-action-primary")
+    .locator(".agent-proposal-actions .inline-chat-action-primary:visible")
     .click();
-  await expect(page.locator(".agent-proposal-status-accepted")).toBeVisible();
+  await expect(
+    page.locator(".agent-proposal-status-accepted:visible"),
+  ).toBeVisible();
   await expect(page.locator(".milkdown p").first()).toHaveText(
     "The cat slept on the mat.",
   );
   // Undone, the edit is on offer again; the caret then moves on and
   // nothing is selected any more.
   await page.locator(".milkdown .ProseMirror").focus();
-  await page.keyboard.press("Control+z");
-  await expect(page.locator(".agent-proposal-status-accepted")).toHaveCount(0);
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(
+    page.locator(".agent-proposal-status-accepted:visible"),
+  ).toHaveCount(0);
   await page.locator(".milkdown p").last().click();
-  await expect(page.locator(".agent-proposal-actions")).toBeVisible();
+  await expect(page.locator(".agent-proposal-actions:visible")).toBeVisible();
   await expect(chips).toHaveText("+1−1");
 });
 
@@ -602,8 +607,8 @@ test("the wheel over a table scrolls the page, not the table", async ({
   const cell = page.locator(".ProseMirror td", { hasText: "the plan" });
   await cell.evaluate((el) => el.scrollIntoView({ block: "center" }));
   await cell.click();
-  await page.keyboard.press("End");
-  await page.keyboard.press("Control+Shift+Space");
+  await page.keyboard.press(LINE_END);
+  await page.keyboard.press("ControlOrMeta+Shift+Space");
   await expect(page.locator(".ghost-text")).toHaveCount(1);
   // The table's box a little shorter than the table, as a suggestion
   // wrapping the cell to a fractional height can leave it. A stylesheet,
@@ -890,7 +895,7 @@ test("Escape that closes the context menu keeps the grey suggestion", async ({
   await openApp(page);
   await pasteMarkdown(page, "The plan");
   await page.locator(".milkdown p").first().click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(LINE_END);
   await page.keyboard.type(" works");
   const ghost = page.locator(".ghost-text");
   await expect(ghost).toHaveCount(1);

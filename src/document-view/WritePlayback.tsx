@@ -142,10 +142,12 @@ export function WritePlayback({
           }}
         >
           <PlaybackIcon kind={paused ? "play" : busy ? "pause" : "speaker"} />
-          <span>
-            {busy ? `${reader.position}/${reader.total}` : zh ? "朗读" : "Read"}
-          </span>
         </button>
+        {busy && (
+          <span className="write-playback-progress" aria-live="polite">
+            {reader.position}/{reader.total}
+          </span>
+        )}
         {busy && (
           <button
             type="button"

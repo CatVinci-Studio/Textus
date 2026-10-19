@@ -11,6 +11,7 @@ import {
   HamburgerIcon,
   PlusIcon,
 } from "../../ui/icons";
+import type { Suggestion } from "./assist";
 import "./workspace.css";
 
 /** Puts a suggestion into the composer this workspace renders, as if typed. */
@@ -30,14 +31,12 @@ function fillComposer(root: HTMLElement | null, text: string) {
 
 export function AgentWorkspace({
   language,
-  title,
   documentPath,
   draft,
   preview,
   conflict,
   conversation,
   children,
-  onEditor,
   onAccept,
   onReject,
   tools,
@@ -45,16 +44,16 @@ export function AgentWorkspace({
   pendingMedia = false,
   onStop,
   toolLabels = {},
+  suggestions,
+  aiSuggestions = false,
 }: {
   language: string;
-  title: string;
   documentPath: string | null;
   draft: DocumentDraft | null;
   preview: string;
   conflict: boolean;
   conversation: AgentConversation;
   children: ReactNode;
-  onEditor: () => void;
   onAccept: (callId?: string) => void;
   onReject: (callId?: string) => void;
   tools?: ReactNode;
@@ -63,6 +62,10 @@ export function AgentWorkspace({
   onStop?: () => void;
   /** Friendly names for tool calls (chat-labels' toolActivity). */
   toolLabels?: Record<string, string>;
+  /** The home's chips (assist.ts); the labels' static ones otherwise. */
+  suggestions?: Suggestion[];
+  /** Whether those were written by the model for this document. */
+  aiSuggestions?: boolean;
 }) {
   const labels = workspaceLabels(language);
   const history = useChatHistory();
@@ -157,7 +160,9 @@ export function AgentWorkspace({
           {labels[status]}
         </span>
         <span className="workspace-header-spacer" />
-        {(conversation.busy || pendingMedia) && (
+        {/* The composer's own Stop covers a running reply; this one is for
+            images still generating after the reply ended. */}
+        {pendingMedia && !conversation.busy && (
           <button
             className="workspace-button is-danger"
             onClick={onStop ?? conversation.stop}
@@ -165,15 +170,7 @@ export function AgentWorkspace({
             {labels.stop}
           </button>
         )}
-        <button
-          className="workspace-button workspace-to-write"
-          onClick={onEditor}
-          title={title}
-        >
-          <span>{labels.write}</span>
-          <span className="workspace-to-write-title">{title}</span>
-          <span aria-hidden>→</span>
-        </button>
+        {/* Write → is in the window bar, mirroring Write's "← Agent". */}
       </header>
       <div className="workspace-columns">
         <div
@@ -266,14 +263,23 @@ export function AgentWorkspace({
             </button>
           )}
           {!tasks.length && (
-            <div className="agent-home-suggestions">
-              {labels.suggestions.map((suggestion, i) => (
+            <div
+              className={`agent-home-suggestions${aiSuggestions ? " is-ai" : ""}`}
+              // Re-mounted when the model's set replaces the fallbacks, so
+              // the chips arrive again instead of changing in place.
+              key={aiSuggestions ? "ai" : "static"}
+            >
+              {(
+                suggestions ??
+                labels.suggestions.map((prompt) => ({ label: prompt, prompt }))
+              ).map((suggestion, i) => (
                 <button
-                  key={suggestion}
+                  key={suggestion.label}
                   style={{ "--i": i } as React.CSSProperties}
-                  onClick={() => fillComposer(root.current, suggestion)}
+                  title={suggestion.prompt}
+                  onClick={() => fillComposer(root.current, suggestion.prompt)}
                 >
-                  {suggestion}
+                  {suggestion.label}
                 </button>
               ))}
             </div>

@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import {
+  LINE_END,
+  LINE_START,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+} from "./helpers";
 
 // Issues #59 and #60: what a paste puts in the markdown. The backend is the
 // dev shim, so the image commands answer with canned srcs - the Rust side
@@ -141,9 +147,9 @@ test("undo after a slow screenshot save never brings its blob: src back", async 
   await page.waitForTimeout(800);
   await releaseSave(page);
   await expect.poll(() => imageSrcs(page)).toEqual(["assets/shot.png"]);
-  await page.keyboard.press("Control+z");
+  await page.keyboard.press("ControlOrMeta+z");
   await expect.poll(() => imageSrcs(page)).toEqual([]);
-  await page.keyboard.press("Control+Shift+z");
+  await page.keyboard.press("ControlOrMeta+Shift+z");
   await expect.poll(() => imageSrcs(page)).toEqual(["assets/shot.png"]);
 });
 
@@ -151,11 +157,11 @@ test("a screenshot undone before its save lands comes back stored on redo", asyn
   page,
 }) => {
   await pasteScreenshotWithSlowSave(page);
-  await page.keyboard.press("Control+z");
+  await page.keyboard.press("ControlOrMeta+z");
   await expect.poll(() => imageSrcs(page)).toEqual([]);
   await releaseSave(page);
   await page.waitForTimeout(300);
-  await page.keyboard.press("Control+Shift+z");
+  await page.keyboard.press("ControlOrMeta+Shift+z");
   await expect.poll(() => imageSrcs(page)).toEqual(["assets/shot.png"]);
 });
 
@@ -298,8 +304,8 @@ test("the context menu's Copy and Paste keep the formatting", async ({
   await pasteMarkdown(page, LINKED + "\n\nEnd.");
   const first = page.locator(`${editor} p`).first();
   await first.click();
-  await page.keyboard.press("Home");
-  await page.keyboard.press("Shift+End");
+  await page.keyboard.press(LINE_START);
+  await page.keyboard.press(`Shift+${LINE_END}`);
   await first.click({ button: "right" });
   await page
     .locator(".context-menu-item")
@@ -315,7 +321,7 @@ test("the context menu's Copy and Paste keep the formatting", async ({
     .toBe("See Textus (https://textus.catvinci.com) and bold text.");
   const last = page.locator(`${editor} p`).last();
   await last.click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(LINE_END);
   await last.click({ button: "right" });
   await page
     .locator(".context-menu-item")

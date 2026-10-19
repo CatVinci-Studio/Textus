@@ -47,6 +47,7 @@ import {
 } from "../../ui/icons";
 import { Select } from "../../ui/Select";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
+import { modalDialogOpen } from "../../ui/useModalDialog";
 
 export interface ChatComposerLabels {
   /** Accessible name of the selection chip's remove button. */
@@ -120,6 +121,8 @@ interface ChatComposerProps {
    *  in place of the toolbar's "{n} chars selected" chip, and carries these
    *  controls (new, continue in panel, close) beside it. */
   dockActions?: ReactNode;
+  /** Extra toggles beside the mode picker (the workspace's image switch). */
+  toolbarExtra?: ReactNode;
   /** The resolved message (skill expanded) plus any attachments - InlineChat
    *  owns tagging it with selected-text/chatInfo and actually sending it. */
   onSend: (
@@ -155,6 +158,7 @@ export function ChatComposer({
   focusOnOpen = true,
   defaultWebSearch,
   dockActions,
+  toolbarExtra,
   onSend,
   onStop,
   onEscape,
@@ -580,7 +584,9 @@ export function ChatComposer({
               setPickerIndex(0);
             }}
             onKeyDown={onKeyDown}
-            autoFocus={focusOnOpen}
+            // Not out of an open dialog: a tab opened behind Settings
+            // (closing a deleted skill copy's tab) used to steal Escape.
+            autoFocus={focusOnOpen && !modalDialogOpen()}
           />
           <div className="inline-chat-toolbar">
             {allowCreate && (
@@ -632,6 +638,7 @@ export function ChatComposer({
                 ))}
               </Select>
             )}
+            {toolbarExtra}
             {!compact && (
               <>
                 <button

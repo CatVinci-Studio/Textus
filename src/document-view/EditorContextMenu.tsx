@@ -38,6 +38,7 @@ export function EditorContextMenu({
   toggleFindReplace,
   openTableDialog,
   onClose,
+  docPath = null,
 }: {
   menu: EditorMenuState;
   run: EditorRunner;
@@ -55,6 +56,7 @@ export function EditorContextMenu({
   toggleFindReplace: () => void;
   openTableDialog: () => void;
   onClose: () => void;
+  docPath?: string | null;
 }) {
   return (
     <Presence show={!!menu} exitMs={250}>
@@ -67,6 +69,8 @@ export function EditorContextMenu({
             {
               t,
               imagePos: menu.imagePos,
+              docPath,
+              language: settings.language,
               // Each AI item is only offered while its feature is enabled in
               // Settings. The provider-free newcomer guide always exposes Ask
               // AI so its real right-click entry point remains available even

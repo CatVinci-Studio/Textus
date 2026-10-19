@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown, SAMPLE_DOC } from "./helpers";
+import {
+  LINE_END,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+  SAMPLE_DOC,
+} from "./helpers";
 
 test("first run asks for a language", async ({ page }) => {
   await openApp(page, { settings: { languageChosen: false } });
@@ -43,14 +49,14 @@ for (const colorScheme of ["light", "dark"] as const) {
 test("split view shows source and preview", async ({ page }) => {
   await openApp(page);
   await pasteMarkdown(page, SAMPLE_DOC);
-  await page.keyboard.press("Control+Shift+E");
+  await page.keyboard.press("ControlOrMeta+Shift+E");
   await expect(page.locator(".split-view")).toBeVisible();
   await expect(page.locator(".split-preview h1")).toHaveText(
     "老城区更新的几点思考",
   );
   await expect(page).toHaveScreenshot("split-view.png");
   // And back to the editor.
-  await page.keyboard.press("Control+Shift+E");
+  await page.keyboard.press("ControlOrMeta+Shift+E");
   await expect(page.locator(".split-view")).toHaveCount(0);
 });
 
@@ -60,7 +66,7 @@ test("zen mode hides the chrome and dims all but the current block", async ({
   await openApp(page);
   await pasteMarkdown(page, SAMPLE_DOC);
   await page.locator(".milkdown h2").first().click();
-  await page.keyboard.press("Control+Shift+J");
+  await page.keyboard.press("ControlOrMeta+Shift+J");
   await expect(page.locator("html")).toHaveClass(/zen/);
   await expect(page.locator(".zen-current")).toHaveCount(1);
   await expect(page.locator(".sidebar")).toBeHidden();
@@ -121,26 +127,28 @@ test("an agent reply shows a reasoned edit, a sentence picker and a comment", as
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("把第二段改得更简洁");
   await composer.press("Enter");
-  await expect(page.locator(".agent-proposal-reason")).toHaveText(
+  await expect(page.locator(".agent-proposal-reason:visible")).toHaveText(
     "删去重复和冗余的修饰，保留时间和人数。",
   );
-  await expect(page.locator(".agent-comment")).toBeVisible();
+  await expect(page.locator(".agent-comment:visible")).toBeVisible();
   // The edit previews sentence by sentence: each changed sentence marked in
   // the text, its replacement and ✓ / ✕ in the margin - and the card lists
   // the same two. The comment sits in the margin too.
   await expect(page.locator(".milkdown .pending-sentence")).toHaveCount(2);
   await expect(page.locator(".revision-note")).toHaveCount(2);
   await expect(page.locator(".review-note:not(.revision-note)")).toHaveCount(1);
-  await expect(page.locator(".agent-proposal-sentences li")).toHaveCount(2);
+  await expect(
+    page.locator(".agent-proposal-sentences li:visible"),
+  ).toHaveCount(2);
   await expect(page).toHaveScreenshot("agent-reply.png");
   // Keep the second sentence as written, from the text itself: the card and
   // the review bar both now take one of the two.
   await page.locator(".revision-note .pending-pick-keep").nth(1).click();
   await expect(
-    page.locator(".agent-proposal-sentences li").nth(1),
+    page.locator(".agent-proposal-sentences li:visible").nth(1),
   ).toHaveAttribute("data-state", "kept");
   const accept = page.locator(
-    ".agent-proposal-actions .inline-chat-action-primary",
+    ".agent-proposal-actions .inline-chat-action-primary:visible",
   );
   await expect(accept).toHaveText("采纳 1/2 处");
   await expect(page.locator(".review-bar-accept")).toHaveText("采纳 1/2 处");
@@ -191,16 +199,22 @@ test("the last sentence decided in the text applies the edit", async ({
     "这项研究覆盖三个街区。",
   );
   await expect(page.locator(".milkdown")).toContainText("共访谈四十六位居民。");
-  await expect(page.locator(".agent-proposal-status-accepted")).toBeVisible();
+  await expect(
+    page.locator(".agent-proposal-status-accepted:visible"),
+  ).toBeVisible();
 
   // Undo puts the proposal back on offer, redo applies it again.
   await page.locator(".milkdown .ProseMirror").focus();
-  await page.keyboard.press("Control+z");
+  await page.keyboard.press("ControlOrMeta+z");
   await expect(page.locator(".milkdown .pending-pick")).toHaveCount(2);
-  await expect(page.locator(".agent-proposal-status-accepted")).toHaveCount(0);
-  await page.keyboard.press("Control+Shift+z");
+  await expect(
+    page.locator(".agent-proposal-status-accepted:visible"),
+  ).toHaveCount(0);
+  await page.keyboard.press("ControlOrMeta+Shift+z");
   await expect(page.locator(".milkdown .pending-pick")).toHaveCount(0);
-  await expect(page.locator(".agent-proposal-status-accepted")).toBeVisible();
+  await expect(
+    page.locator(".agent-proposal-status-accepted:visible"),
+  ).toBeVisible();
 });
 
 test("an accepted new table row and nested item land inside the table and list", async ({
@@ -247,7 +261,7 @@ test("an accepted new table row and nested item land inside the table and list",
   await composer.fill("Add a row and a sub-item");
   await composer.press("Enter");
   const accept = page.locator(
-    ".agent-proposal-actions .inline-chat-action-primary",
+    ".agent-proposal-actions .inline-chat-action-primary:visible",
   );
   await expect(accept).toHaveCount(2);
   // Top-down: the table grows by a row, and the list's preview below it
@@ -300,7 +314,7 @@ test("a pending replace keeps its strike on its text while the user types above 
   // behind ("vo two wo").
   await expect(strike).toHaveText("two words");
   await page
-    .locator(".agent-proposal-actions .inline-chat-action-primary")
+    .locator(".agent-proposal-actions .inline-chat-action-primary:visible")
     .click();
   await expect(page.locator(".milkdown")).toContainText("Bravo 2 words here.");
 });
@@ -309,7 +323,7 @@ test("Quick Ask opens on a selection in edit mode", async ({ page }) => {
   await openApp(page);
   await pasteMarkdown(page, SAMPLE_DOC);
   await page.locator(".milkdown p").nth(1).click({ clickCount: 3 });
-  await page.keyboard.press("Control+Shift+K");
+  await page.keyboard.press("ControlOrMeta+Shift+K");
   await expect(page.locator(".inline-chat")).toBeVisible();
   await expect(page.locator(".inline-chat .inline-chat-mode")).toHaveText(
     "编辑",
@@ -382,8 +396,8 @@ test("Quick Ask stays under its paragraph when an edit arrives", async ({
   });
   const paragraph = page.locator(".milkdown p").nth(1);
   await paragraph.click({ clickCount: 3 });
-  await page.keyboard.press("Control+Shift+K");
-  await expect(page.locator(".inline-chat-input")).toBeFocused();
+  await page.keyboard.press("ControlOrMeta+Shift+K");
+  await expect(page.locator(".inline-chat .inline-chat-input")).toBeFocused();
   await page.keyboard.type("精简");
   await page.keyboard.press("Enter");
   await expect(page.locator(".milkdown .pending-delete").first()).toBeVisible();
@@ -408,7 +422,7 @@ test("Quick Ask has its own conversation and hands it to the panel", async ({
     ],
   });
   await page.locator(".milkdown p").nth(1).click();
-  await page.keyboard.press("Control+Shift+K");
+  await page.keyboard.press("ControlOrMeta+Shift+K");
   const quickInput = page.locator(".inline-chat .inline-chat-input");
   await expect(quickInput).toBeFocused();
   await page.keyboard.type("这段的主旨是什么？");
@@ -629,7 +643,7 @@ test("Enter on a code block's empty last line leaves it; Ctrl+Enter leaves a quo
   await editor.locator("pre code").click();
   // Let ProseMirror read the click's caret back before keys arrive.
   await page.waitForTimeout(100);
-  await page.keyboard.press("End");
+  await page.keyboard.press(LINE_END);
   await page.keyboard.press("Enter");
   await page.keyboard.press("Enter");
   await page.keyboard.type("out");
@@ -638,7 +652,7 @@ test("Enter on a code block's empty last line leaves it; Ctrl+Enter leaves a quo
 
   await editor.locator("blockquote p").first().click();
   await page.waitForTimeout(100);
-  await page.keyboard.press("Control+Enter");
+  await page.keyboard.press("ControlOrMeta+Enter");
   await page.keyboard.type("free");
   await expect(editor.locator("blockquote p")).toHaveCount(2);
   await expect(editor.locator(":scope > p").last()).toHaveText("free");

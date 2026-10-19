@@ -5,6 +5,8 @@ import type { ReviewNote } from "../ai/margin/review-notes-plugin";
 import type { Settings } from "../settings/SettingsContext";
 import { documentRevisionPlugin } from "../ai/workspace/revision-plugin";
 import { speechHighlightPlugin } from "../voice/speech-highlight-plugin";
+import { inactiveSelectionPlugin } from "../editor/selection/inactive-selection-plugin";
+import { imagePlaceholderPlugin } from "../ai/multimodal/image-placeholder-plugin";
 
 export type { PendingEditCallbacks };
 
@@ -56,5 +58,7 @@ export function withEditorExtensions(
     { settings, docPath, pendingEdits, quickAskWidget, aiMuted, reviewNotes },
   )
     .use(documentRevisionPlugin)
-    .use(speechHighlightPlugin);
+    .use(speechHighlightPlugin)
+    .use(imagePlaceholderPlugin)
+    .use(inactiveSelectionPlugin);
 }

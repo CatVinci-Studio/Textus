@@ -3,7 +3,13 @@ import { showConfirm, showMessage } from "../ui/app-dialog";
 import { migrateDraftImages } from "../editor/images/image-migration";
 import { basename } from "../utils/path";
 import { errorText } from "../utils/error-text";
-import { statMtime, tabTitle, writeDocFile } from "../document/doc-tabs";
+import {
+  statMtime,
+  suggestedTitle,
+  tabTitle,
+  writeDocFile,
+} from "../document/doc-tabs";
+import { firstLevelOneHeading } from "../document/save-default-name";
 import { fs, session, media } from "../platform/ipc";
 import { defaultMarkdownFilename } from "../document/save-default-name";
 import type { Strings } from "../i18n/strings";
@@ -54,11 +60,16 @@ export function useSaveTabs(opts: {
     async (tabId: string): Promise<boolean> => {
       const tab = liveTabs().find((tb) => tb.id === tabId);
       if (!tab) return false;
+      // A model-suggested title (Name new documents automatically) wins
+      // over the first line, but never over the document's own heading.
+      const suggested = !firstLevelOneHeading(tab.content)
+        ? suggestedTitle(tab)
+        : null;
       const defaultName = tab.path
         ? basename(tab.path)
         : defaultMarkdownFilename(
-            tab.content,
-            tab.helpDoc ? tabTitle(tab, t) : t.untitledTab,
+            suggested ? "" : tab.content,
+            suggested ?? (tab.helpDoc ? tabTitle(tab, t) : t.untitledTab),
             autoSuggestFilename,
           );
       const picked = await fs.saveFileDialog(defaultName);

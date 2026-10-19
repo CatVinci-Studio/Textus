@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { renderMarkdownHtml } from "../editor/markdown/render-html";
+import { useKatexReady } from "../editor/math/katex-loader";
 // Replies render math with KaTeX; the detached chat window never loads the
 // editor, so the stylesheet has to come with the renderer.
 import "katex/dist/katex.min.css";
@@ -12,7 +13,13 @@ import "katex/dist/katex.min.css";
  * `dangerouslySetInnerHTML`.
  */
 export function MarkdownText({ text }: { text: string }) {
-  const html = useMemo(() => renderMarkdownHtml(text), [text]);
+  // A reply's first formula loads KaTeX; render again once it is here.
+  const katexReady = useKatexReady();
+  const html = useMemo(
+    () => renderMarkdownHtml(text),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [text, katexReady],
+  );
 
   // Safe at this boundary because the generated HTML is sanitized above.
   return (

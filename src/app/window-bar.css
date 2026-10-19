@@ -170,3 +170,17 @@
   overflow-y: auto;
   background: var(--editor-bg, var(--bg));
 }
+
+/* Slots the active document fills (MilkdownEditor): they take clicks even
+   though the status group around them leaves the bar to window dragging. */
+.window-bar-start,
+.window-bar-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  pointer-events: auto;
+}
+.window-bar-start:empty,
+.window-bar-end:empty {
+  display: none;
+}

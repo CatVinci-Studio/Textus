@@ -88,6 +88,9 @@ function collectInlinedCss(): string {
 // when the webview's PDF renderer applies print media.
 const EDITOR_CHROME_SELECTOR = [
   ".heading-marker",
+  ".image-toolbar",
+  ".image-placeholder",
+  ".image-resize-handle",
   ".enclosure-delimiter",
   ".code-block-header",
   ".table-add-row-btn",

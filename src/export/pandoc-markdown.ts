@@ -13,8 +13,10 @@
 //   "Note" in English whatever the document's language.
 
 const FENCE = /^ {0,3}(`{3,}|~{3,})/;
+// The title's presentation suffix: a width and/or a rotation (which pandoc
+// has no attribute for, so it is dropped rather than printed as the title).
 const IMAGE_WIDTH =
-  /!\[([^\]]*)\]\((\S+?)\s+"([^"]*?)\s*\{(?:textus|levis)-width=(\d{1,3})%\}"\)/g;
+  /!\[([^\]]*)\]\((\S+?)\s+"([^"]*?)\s*\{(?:\s*(?:textus|levis)-(?:width=(\d{1,3})%|rotate=\d{1,3}))+\s*\}"\)/g;
 const HIGHLIGHT = /==(?=\S)(.+?)(?<=\S)==/g;
 const ALERT = /^(\s*>\s*)\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*$/;
 
@@ -25,9 +27,10 @@ export type AlertLabels = Record<
 
 function rewriteProse(text: string): string {
   return text
-    .replace(IMAGE_WIDTH, (_m, alt: string, src: string, title: string, w) => {
+    .replace(IMAGE_WIDTH, (match, alt: string, src: string, title: string) => {
       const kept = title.trim() ? ` "${title.trim()}"` : "";
-      return `![${alt}](${src}${kept}){width=${w}%}`;
+      const w = /-width=(\d{1,3})%/.exec(match)?.[1];
+      return `![${alt}](${src}${kept})${w ? `{width=${w}%}` : ""}`;
     })
     .replace(HIGHLIGHT, "[$1]{.mark}");
 }

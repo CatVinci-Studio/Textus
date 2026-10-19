@@ -1,4 +1,4 @@
-import katex from "katex";
+import { katexNow, mathSourceHtml, onKatexReady } from "./katex-loader";
 import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
@@ -25,6 +25,9 @@ function renderKatex(value: string, displayMode: boolean): string {
   const cacheKey = `${displayMode ? "B" : "I"}${value}`;
   const cached = renderCache.get(cacheKey);
   if (cached !== undefined) return cached;
+  const katex = katexNow();
+  // Not cached: the real render replaces it once KaTeX has loaded.
+  if (!katex) return mathSourceHtml(value);
   let html: string;
   try {
     html = katex.renderToString(value || "\\,", {
@@ -174,9 +177,12 @@ export function createMathPreviewPlugin(options: { enabled: () => boolean }) {
         state: {
           init: (_config, state) => buildDecorations(state, options.enabled()),
           apply: (tr, prev, oldState, newState) =>
-            applyReveal(tr, prev, oldState, newState, (state) =>
-              buildDecorations(state, options.enabled()),
-            ),
+            // KaTeX arrived: every formula shown as source is drawn again.
+            tr.getMeta(mathPreviewKey) === "katex"
+              ? buildDecorations(newState, options.enabled())
+              : applyReveal(tr, prev, oldState, newState, (state) =>
+                  buildDecorations(state, options.enabled()),
+                ),
         },
         props: {
           decorations(state) {
@@ -184,6 +190,14 @@ export function createMathPreviewPlugin(options: { enabled: () => boolean }) {
           },
         },
         view(editorView) {
+          const stopKatexWait = onKatexReady(() => {
+            if (editorView.isDestroyed) return;
+            editorView.dispatch(
+              editorView.state.tr
+                .setMeta(mathPreviewKey, "katex")
+                .setMeta("addToHistory", false),
+            );
+          });
           const floatEl = document.createElement("div");
           floatEl.className = "math-float-preview";
           floatEl.style.display = "none";
@@ -393,6 +407,7 @@ export function createMathPreviewPlugin(options: { enabled: () => boolean }) {
             // prevState, which must not land in updateFloat's fromTimer.
             update: (view) => updateFloat(view),
             destroy() {
+              stopKatexWait();
               cancelShow();
               cancelHide();
               cancelAnimationFrame(frame);

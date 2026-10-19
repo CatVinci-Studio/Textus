@@ -1,0 +1,10 @@
+/* inactive-selection-plugin.ts: the selection, kept visible while focus is
+   in a menu or another field. The accent at a selection's usual strength. */
+.milkdown .inactive-selection {
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 22%,
+    transparent
+  );
+  border-radius: 2px;
+}

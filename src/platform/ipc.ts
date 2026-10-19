@@ -106,13 +106,23 @@ export const fs = {
       : call<string | null>("open_file_dialog"),
   openCssFileDialog: () => call<string | null>("open_css_file_dialog"),
   saveFileDialog: (defaultName: string): Promise<string | null> =>
-    isIOSApp
-      ? newDocumentPath(
-          defaultName,
-          async (path) =>
-            (await call<number | null>("file_mtime_ms", { path })) !== null,
+    // Dev builds only: an end-to-end run sets the destination instead of
+    // driving the native panel; the rest of Save As runs as for a user.
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    typeof (window as { __TEXTUS_TEST_SAVE_PATH__?: string })
+      .__TEXTUS_TEST_SAVE_PATH__ === "string"
+      ? Promise.resolve(
+          (window as { __TEXTUS_TEST_SAVE_PATH__?: string })
+            .__TEXTUS_TEST_SAVE_PATH__ ?? null,
         )
-      : call<string | null>("save_file_dialog", { defaultName }),
+      : isIOSApp
+        ? newDocumentPath(
+            defaultName,
+            async (path) =>
+              (await call<number | null>("file_mtime_ms", { path })) !== null,
+          )
+        : call<string | null>("save_file_dialog", { defaultName }),
   listDir: (path: string): Promise<DirEntryInfo[]> =>
     isScopedUrl(path)
       ? iosFiles.listFolder(path)
@@ -580,6 +590,15 @@ export const media = {
   imageJobs: (documentId: string) =>
     call<ImageJob[]>("media_image_jobs", { documentId }),
   cancelImage: (jobId: string) => call<void>("media_cancel_image", { jobId }),
+  /** The prompt a Textus-generated image came from, by its src; null for
+   *  other images. */
+  imagePrompt: (src: string) =>
+    call<{
+      prompt: string;
+      model: string | null;
+      width: number | null;
+      height: number | null;
+    } | null>("media_image_prompt", { src }),
   prepareImage: (jobId: string, docPath: string | null) =>
     call<string>("media_prepare_image", { jobId, docPath }),
   finishImage: (jobId: string, accepted: boolean) =>

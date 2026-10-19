@@ -70,16 +70,14 @@ export async function openApp(
   await page.waitForSelector('[data-active-tab="true"] .ProseMirror', {
     state: "attached",
   });
-  if (
-    !options.home &&
-    (await page.evaluate(
-      () => document.documentElement.dataset.windowChrome !== "mobile",
-    ))
-  )
-    await page
-      .locator(".document-surface-switch")
-      .getByRole("button", { name: "Write", exact: true })
-      .click();
+  // Wherever the Agent home opens (the desktop, and an iPad's desktop
+  // layout), the document tests start on Write.
+  const toWrite = page.getByRole("button", { name: /^Write ·/ });
+  // Dispatched rather than clicked: a first-run dialog (language welcome,
+  // Levis import, the tutorial) may already cover it, and the test is about
+  // that dialog.
+  if (!options.home && (await toWrite.count()) > 0)
+    await toWrite.dispatchEvent("click");
 }
 
 /** Puts markdown into the active editor the way a paste does. */
@@ -134,3 +132,12 @@ export async function openPhone(
     "mobile",
   );
 }
+
+/** The key that moves the caret to the end of its line. Chromium on macOS
+ *  follows the Mac text system there: End only scrolls, Cmd+Right moves. */
+export const LINE_END =
+  process.platform === "darwin" ? "Meta+ArrowRight" : "End";
+
+/** LINE_END's counterpart: the start of the caret's line. */
+export const LINE_START =
+  process.platform === "darwin" ? "Meta+ArrowLeft" : "Home";

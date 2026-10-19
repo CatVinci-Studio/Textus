@@ -28,10 +28,13 @@ static void finish(uint64_t token, NSString *error) {
 static void record(uint64_t token, NSString *locale) {
     if(current!=token)return;
     recognizer=[[SFSpeechRecognizer alloc] initWithLocale:[NSLocale localeWithLocaleIdentifier:locale]];
-    if(!recognizer.available || !recognizer.supportsOnDeviceRecognition) {finish(token,@"On-device speech recognition is unavailable for this language. Choose MiniMax or enable the language in macOS settings.");return;}
+    if(!recognizer || !recognizer.available) {finish(token,@"Speech recognition is unavailable for this language. Choose MiniMax or enable the language in macOS settings.");return;}
     request=[SFSpeechAudioBufferRecognitionRequest new];
     request.shouldReportPartialResults=YES;
-    request.requiresOnDeviceRecognition=YES;
+    // On-device when the language model is installed; otherwise Apple's
+    // recognition service rather than refusing outright.
+    request.requiresOnDeviceRecognition=recognizer.supportsOnDeviceRecognition;
+    if(@available(macOS 13, *)) request.addsPunctuation=YES;
     transcript=@""; heard=NO;
     started=lastVoice=NSDate.timeIntervalSinceReferenceDate;
     engine=[AVAudioEngine new];
@@ -67,7 +70,8 @@ static void record(uint64_t token, NSString *locale) {
     if(![engine startAndReturnError:&error]) {finish(token,error.localizedDescription ?: @"Cannot start microphone.");return;}
     timer=[NSTimer scheduledTimerWithTimeInterval:0.15 repeats:YES block:^(NSTimer *unused){
         (void)unused; NSTimeInterval now=NSDate.timeIntervalSinceReferenceDate;
-        if(current==token && ((heard && now-lastVoice>=1.5)||(!heard && now-started>=5)||now-started>=120))finish(token,nil);
+        // A thinking pause mid-sentence must not end dictation.
+        if(current==token && ((heard && now-lastVoice>=2.5)||(!heard && now-started>=8)||now-started>=120))finish(token,nil);
     }];
 }
 void textus_dictation_start(uint64_t token,const char *language,TextusCallback cb) {

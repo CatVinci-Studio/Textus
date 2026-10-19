@@ -1,6 +1,10 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { renderDocumentHtml, renderMarkdownHtml } from "./render-html";
+import { loadKatex } from "../math/katex-loader";
+
+// KaTeX is loaded on first use in the app; these tests render with it.
+beforeAll(() => loadKatex());
 
 describe("renderMarkdownHtml", () => {
   it("renders inline and display math with KaTeX", () => {
@@ -57,6 +61,15 @@ describe("renderDocumentHtml", () => {
     );
     expect(renderDocumentHtml("[text](https://x.org/a)")).toContain(
       '<a href="https://x.org/a">text</a>',
+    );
+  });
+});
+
+describe("before KaTeX has loaded", () => {
+  it("shows a formula's source rather than dropping it", async () => {
+    const { mathSourceHtml } = await import("../math/katex-loader");
+    expect(mathSourceHtml("a<b")).toBe(
+      '<code class="math-pending">a&lt;b</code>',
     );
   });
 });

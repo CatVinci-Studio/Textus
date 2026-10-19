@@ -474,6 +474,103 @@ pub async fn media_image_jobs(
     Ok(jobs)
 }
 
+/// The prompt an inserted image was generated from, found by the asset's file
+/// name (stable across Save As migration, which only changes its folder).
+/// None for images Textus did not generate.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImagePromptInfo {
+    prompt: String,
+    model: Option<String>,
+    width: Option<u32>,
+    height: Option<u32>,
+}
+
+fn asset_name(src: &str) -> Option<&str> {
+    src.rsplit(['/', '\\'])
+        .next()
+        .filter(|name| name.starts_with("image-") && !name.contains(".."))
+}
+
+/// `image-<time>-<pid>-<n>`: the generated part of a name, without the
+/// extension or the "-1", "-2"… a Save As collision appends.
+fn generated_stem(name: &str) -> String {
+    let stem = name.rsplit_once('.').map_or(name, |(stem, _)| stem);
+    stem.split('-').take(4).collect::<Vec<_>>().join("-")
+}
+
+#[tauri::command]
+pub async fn media_image_prompt(
+    app: AppHandle,
+    src: String,
+) -> Result<Option<ImagePromptInfo>, MediaError> {
+    recover_registry(&app)?;
+    let decoded = percent_decode(&src);
+    let Some(name) = asset_name(&decoded) else {
+        return Ok(None);
+    };
+    let registry = REGISTRY.lock().unwrap();
+    Ok(registry
+        .jobs
+        .values()
+        .filter(|job| job.status == "committed")
+        .find(|job| {
+            job.asset_src
+                .as_deref()
+                .map(percent_decode)
+                .as_deref()
+                .and_then(asset_name)
+                == Some(name)
+        })
+        .or_else(|| {
+            // Copied under a collision name the job never heard about.
+            let wanted = generated_stem(name);
+            registry
+                .jobs
+                .values()
+                .filter(|job| job.status == "committed")
+                .find(|job| {
+                    job.asset_src
+                        .as_deref()
+                        .map(percent_decode)
+                        .as_deref()
+                        .and_then(asset_name)
+                        .map(generated_stem)
+                        .as_deref()
+                        == Some(wanted.as_str())
+                })
+        })
+        .map(|job| ImagePromptInfo {
+            prompt: job.request.prompt.clone(),
+            model: job.model.clone(),
+            width: job.width,
+            height: job.height,
+        }))
+}
+
+/// Markdown image destinations are percent-encoded; file names are compared
+/// decoded.
+fn percent_decode(value: &str) -> String {
+    let bytes = value.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' && i + 2 < bytes.len() {
+            if let Some(byte) = std::str::from_utf8(&bytes[i + 1..i + 3])
+                .ok()
+                .and_then(|hex| u8::from_str_radix(hex, 16).ok())
+            {
+                out.push(byte);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(bytes[i]);
+        i += 1;
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
 #[derive(Deserialize)]
 pub struct ImageAssetMapping {
     old: String,
@@ -655,6 +752,25 @@ mod tests {
         permission.generation_id = "send-2".into();
         assert!(generation_active(&registry, &permission).is_ok());
     }
+    #[test]
+    fn image_prompt_lookup_matches_asset_names_across_folders() {
+        assert_eq!(
+            asset_name(&percent_decode(
+                "/Users/me/Application%20Support/assets/image-1-2-0.jpg"
+            )),
+            Some("image-1-2-0.jpg")
+        );
+        assert_eq!(
+            asset_name("assets/image-1-2-0.jpg"),
+            Some("image-1-2-0.jpg")
+        );
+        assert_eq!(asset_name("assets/photo.png"), None);
+        assert_eq!(generated_stem("image-1-2-0-1-1.jpg"), "image-1-2-0");
+        assert_eq!(generated_stem("image-1-2-0.jpg"), "image-1-2-0");
+        assert_eq!(percent_decode("a%2"), "a%2");
+        assert_eq!(percent_decode("%e4%b8%ad%中"), "中%中");
+    }
+
     #[test]
     fn permission_is_task_scoped_and_limits_include_retries() {
         let mut counts = HashMap::new();

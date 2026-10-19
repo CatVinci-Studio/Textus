@@ -20,8 +20,11 @@ test("starts on Agent and keeps composer, editor and Undo across surface switche
     .getByLabel("Agent engine", { exact: true })
     .selectOption("harness");
   await page.screenshot({ path: testInfo.outputPath("agent-home-light.png") });
-  const switcher = page.getByRole("navigation", { name: "Workspace surface" });
-  await switcher.getByRole("button", { name: "Write", exact: true }).click();
+  // Agent → Write at the Agent header's end; Write → Agent at the window
+  // bar's start.
+  const toWrite = page.getByRole("button", { name: /^Write ·/ });
+  const toAgent = page.getByRole("button", { name: "Agent", exact: true });
+  await toWrite.click();
   await pasteMarkdown(page, "# Persistent document\n\nKeep my Undo history.");
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await expect(editor).toContainText("Persistent document");
@@ -29,9 +32,9 @@ test("starts on Agent and keeps composer, editor and Undo across surface switche
     el.setAttribute("data-continuity", "same-editor");
     return el.getAttribute("data-continuity");
   });
-  await switcher.getByRole("button", { name: "Agent", exact: true }).click();
+  await toAgent.click();
   await expect(composer).toHaveValue("Keep this unsent idea");
-  await switcher.getByRole("button", { name: "Write", exact: true }).click();
+  await toWrite.click();
   await expect(editor).toHaveAttribute("data-continuity", identity!);
   await editor.click();
   await page.keyboard.press("ControlOrMeta+z");

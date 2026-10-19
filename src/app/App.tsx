@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
+import { setHeadingTitles, TITLES_CHANGED } from "../document/doc-tabs";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
 import { installClipboardCapture } from "../clipboard/history";
@@ -67,6 +68,14 @@ import "../theme/magic-diary-page.css";
  */
 function App() {
   const { t, settings, setSettings } = useSettings();
+  // Read by tabTitle wherever a tab is named (tab bar, window, export).
+  setHeadingTitles(settings.autoTitleDocuments);
+  // A suggested title arrives after the draft it names: show it.
+  const [, retitle] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => {
+    window.addEventListener(TITLES_CHANGED, retitle);
+    return () => window.removeEventListener(TITLES_CHANGED, retitle);
+  }, []);
   const levisOffer = useLevisOffer({
     t,
     settings,

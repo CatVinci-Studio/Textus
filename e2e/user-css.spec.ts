@@ -479,7 +479,7 @@ test("a theme's own transitions survive zen mode and reduced motion", async ({
   const plain = await transition();
   expect(plain).toContain("color 0.4s");
   await page.locator("#write h2").first().click();
-  await page.keyboard.press("Control+Shift+J");
+  await page.keyboard.press("ControlOrMeta+Shift+J");
   await expect(page.locator("html")).toHaveClass(/zen/);
   expect(await transition()).toBe(plain);
   await page.keyboard.press("Escape");

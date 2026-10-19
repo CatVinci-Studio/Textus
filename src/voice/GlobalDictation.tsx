@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { DictationIcon } from "./InlineDictation";
 import { DictationRange } from "./dictation-range";
@@ -59,7 +59,10 @@ function eligible(element: HTMLElement) {
 }
 export function GlobalDictation({ language }: { language: string }) {
   const [target, setTarget] = useState<HTMLElement | null>(null);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [position, setPosition] = useState<CSSProperties>({
+    top: 0,
+    left: 0,
+  });
   const voice = useDictationCapture(!!target, language, () =>
     target
       ? (captureDictationTarget(target) ??
@@ -86,6 +89,12 @@ export function GlobalDictation({ language }: { language: string }) {
       if (!target.isConnected || !target.getClientRects().length) {
         cancel();
         setTarget(null);
+        return;
+      }
+      // The document's microphone rests in the window's corner, clear of
+      // the text; a small field's sits at that field's corner.
+      if (hasDictationTarget(target)) {
+        setPosition({ right: 20, bottom: 20 });
         return;
       }
       const rect = target.getBoundingClientRect();
@@ -116,7 +125,10 @@ export function GlobalDictation({ language }: { language: string }) {
   if (!target) return null;
   const zh = language.startsWith("zh");
   return createPortal(
-    <div className="global-dictation inline-dictation" style={position}>
+    <div
+      className={`global-dictation inline-dictation${hasDictationTarget(target) ? " is-docked" : ""}`}
+      style={position}
+    >
       <button
         type="button"
         className={voice.listening ? "dictation-listening" : ""}

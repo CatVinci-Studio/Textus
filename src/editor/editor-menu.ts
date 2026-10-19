@@ -29,6 +29,11 @@ import {
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { ContextMenuItem } from "./ContextMenu";
 import { readImagePresentation, writeImageWidth } from "./images/image-plugin";
+import {
+  isGeneratedImage,
+  openImageAt,
+  rotateImageAt,
+} from "./images/image-actions";
 import type { EditorRunner } from "./useEditorRunner";
 import type { Strings } from "../i18n/strings";
 
@@ -305,6 +310,9 @@ export interface ContextMenuOptions {
   t: Strings;
   /** From contextMenuTarget: the image right-clicked, if any. */
   imagePos: number | null;
+  /** For the image preview: resolving relative srcs and its labels. */
+  docPath?: string | null;
+  language?: string;
   /** Already filtered down to the AI features that are switched on. */
   aiItems: ContextMenuItem[];
   copyOrCut: (cut: boolean) => void;
@@ -322,7 +330,12 @@ export function buildContextMenuItems(
   const imageItems: MenuEntry[] =
     imagePos === null
       ? []
-      : [...imageWidthItems(run, t, imagePos), "separator"];
+      : [
+          ...imageViewItems(run, options, imagePos),
+          "separator",
+          ...imageWidthItems(run, t, imagePos),
+          "separator",
+        ];
   const clipboardItems: MenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
     { label: t.copy, onSelect: () => options.copyOrCut(false) },
@@ -384,6 +397,44 @@ export function buildPhoneMoreItems(
 
 function inTable(run: EditorRunner): boolean {
   return run((ctx) => isInTable(ctx.get(editorViewCtx).state)) ?? false;
+}
+
+/** Preview, quarter turns and - for a generated image - its prompt. */
+function imageViewItems(
+  run: EditorRunner,
+  options: ContextMenuOptions,
+  imagePos: number,
+): MenuEntry[] {
+  const { t } = options;
+  const generated =
+    run((ctx) => {
+      const node = ctx.get(editorViewCtx).state.doc.nodeAt(imagePos);
+      return node?.type.name === "image"
+        ? isGeneratedImage((node.attrs.src as string) ?? "")
+        : false;
+    }) ?? false;
+  const withView = (fn: (view: EditorView) => void) => () =>
+    run((ctx) => fn(ctx.get(editorViewCtx)));
+  const open = (showPrompt: boolean) =>
+    withView((view) =>
+      openImageAt(view, imagePos, {
+        docPath: options.docPath ?? null,
+        language: options.language ?? "en",
+        showPrompt,
+      }),
+    );
+  return [
+    { label: t.imageViewLarge, onSelect: open(false) },
+    ...(generated ? [{ label: t.imageShowPrompt, onSelect: open(true) }] : []),
+    {
+      label: t.imageRotateLeft,
+      onSelect: withView((view) => rotateImageAt(view, imagePos, -1)),
+    },
+    {
+      label: t.imageRotateRight,
+      onSelect: withView((view) => rotateImageAt(view, imagePos, 1)),
+    },
+  ];
 }
 
 function imageWidthItems(

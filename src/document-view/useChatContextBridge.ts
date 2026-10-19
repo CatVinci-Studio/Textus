@@ -108,7 +108,7 @@ export function useChatContextBridge({
     isTarget: (docPath) =>
       docPath !== null ? docPath === filePathRef.current : isActiveRef.current,
     onProposals: (proposals) =>
-      addPreviews(proposals, detachedTargetRef.current),
+      addPreviews(proposals, detachedTargetRef.current, true),
     onAccept: pendingEdits.accept,
     onReject: pendingEdits.reject,
     onAcceptAll: pendingEdits.acceptAll,

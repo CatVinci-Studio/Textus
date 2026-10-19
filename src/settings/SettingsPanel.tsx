@@ -459,6 +459,18 @@ export function SettingsPanel({
                   checked={settings.enableWebSearch}
                   onChange={(v) => setSettings({ enableWebSearch: v })}
                 />
+                <ToggleRow
+                  label={t.aiSuggestionsLabel}
+                  hint={t.aiSuggestionsHint}
+                  checked={settings.enableAiSuggestions}
+                  onChange={(v) => setSettings({ enableAiSuggestions: v })}
+                />
+                <ToggleRow
+                  label={t.autoTitleLabel}
+                  hint={t.autoTitleHint}
+                  checked={settings.autoTitleDocuments}
+                  onChange={(v) => setSettings({ autoTitleDocuments: v })}
+                />
               </>
             )}
           </SettingsGroup>

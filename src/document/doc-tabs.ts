@@ -1,3 +1,4 @@
+import { firstLevelOneHeading } from "./save-default-name";
 import type { Strings } from "../i18n/strings";
 import { basename } from "../utils/path";
 import { fs } from "../platform/ipc";
@@ -70,10 +71,41 @@ export function helpDocContent(doc: HelpDoc, lang: string): string {
 
 // A tab's display name everywhere one is shown (tab pill, title strip,
 // detached-drag pill, export default filename).
+/** Settings > Textus AI > Name new documents automatically: an unsaved
+ *  document is called by its first heading. Set by App from settings. */
+let headingTitles = false;
+export function setHeadingTitles(enabled: boolean) {
+  headingTitles = enabled;
+}
+
+/** Titles the text model suggested for unsaved documents, by tab id: they
+ *  name the tab and the Save dialog without editing the text (an inserted
+ *  heading would have been a second Undo step after accepting a draft). */
+const suggestedTitles = new Map<string, string>();
+export const TITLES_CHANGED = "textus-tab-titles";
+export function setSuggestedTitle(tabId: string, title: string) {
+  suggestedTitles.set(tabId, title);
+  window.dispatchEvent(new Event(TITLES_CHANGED));
+}
+export function suggestedTitle(tab: DocTab): string | null {
+  return headingTitles && !tab.path
+    ? (suggestedTitles.get(tab.id) ?? null)
+    : null;
+}
+
 export function tabTitle(tab: DocTab, t: Strings): string {
   if (tab.path) return basename(tab.path);
   if (tab.helpDoc === "markdown") return t.markdownGuideTab;
   if (tab.helpDoc === "agent") return t.agentGuideTab;
+  if (headingTitles) {
+    // A title sits at the top: the head of the text is enough, and keeps
+    // this cheap for a long draft rendered on every keystroke.
+    const heading =
+      firstLevelOneHeading(tab.content.slice(0, 4000)) ??
+      suggestedTitles.get(tab.id);
+    if (heading)
+      return heading.length > 40 ? `${heading.slice(0, 40)}…` : heading;
+  }
   return t.untitledTab;
 }
 

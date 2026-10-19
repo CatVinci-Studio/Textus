@@ -3,6 +3,7 @@ import {
   imageStemForMode,
   readImagePresentation,
   safeImageStem,
+  writeImageRotation,
   writeImageWidth,
 } from "./image-plugin";
 
@@ -33,6 +34,7 @@ describe("image width metadata", () => {
     expect(readImagePresentation("Product shot {textus-width=70%}")).toEqual({
       title: "Product shot",
       widthPercent: 70,
+      rotate: 0,
     });
   });
 
@@ -46,6 +48,7 @@ describe("image width metadata", () => {
     expect(readImagePresentation("Shot {levis-width=40%}")).toEqual({
       title: "Shot",
       widthPercent: 40,
+      rotate: 0,
     });
     expect(writeImageWidth("Shot {levis-width=40%}", 60)).toBe(
       "Shot {textus-width=60%}",
@@ -57,5 +60,20 @@ describe("image width metadata", () => {
     expect(writeImageWidth("Product shot {textus-width=50%}", null)).toBe(
       "Product shot",
     );
+  });
+
+  it("keeps rotation and width together and turns in quarter steps", () => {
+    const turned = writeImageRotation("Shot {textus-width=50%}", 1);
+    expect(turned).toBe("Shot {textus-width=50% textus-rotate=90}");
+    expect(readImagePresentation(turned)).toEqual({
+      title: "Shot",
+      widthPercent: 50,
+      rotate: 90,
+    });
+    expect(writeImageWidth(turned, 70)).toBe(
+      "Shot {textus-width=70% textus-rotate=90}",
+    );
+    expect(writeImageRotation(null, -1)).toBe("{textus-rotate=270}");
+    expect(writeImageRotation("{textus-rotate=270}", 1)).toBeNull();
   });
 });

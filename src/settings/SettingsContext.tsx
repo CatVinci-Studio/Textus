@@ -169,6 +169,12 @@ export interface Settings {
   /// Offer the active provider's native server-side web search to Agent;
   /// providers without a compatible search API safely ignore it.
   enableWebSearch: boolean;
+  /// Agent home: starting prompts written by the text model for the
+  /// current document (cached per document state).
+  enableAiSuggestions: boolean;
+  /// An untitled document takes a title from its first accepted Agent
+  /// draft (its first heading, or one the model suggests).
+  autoTitleDocuments: boolean;
   /// Whether an agent edit's green in-document preview streams/types itself
   /// in (pending-edit-plugin's typewriter) or appears complete at once.
   enableEditAnimation: boolean;
@@ -264,6 +270,8 @@ const DEFAULT_SETTINGS_RAW: Settings = {
   completionTone: "default",
   writingConventions: "automatic",
   enableWebSearch: false,
+  enableAiSuggestions: true,
+  autoTitleDocuments: true,
   enableEditAnimation: true,
   enableMagicDiary: false,
   agentExpandToWindow: false,

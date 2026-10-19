@@ -36,3 +36,20 @@
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+
+/* The document's microphone, docked in the window's bottom-right corner. */
+.global-dictation.is-docked {
+  border-radius: 50%;
+  background: var(--editor-bg, var(--bg));
+  border: 1px solid var(--editor-border, var(--border));
+  box-shadow: var(--shadow-popover);
+  animation: motion-pop-in var(--dur-base) var(--ease-out);
+}
+.global-dictation.is-docked button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+.global-dictation.is-docked [role="alert"] {
+  bottom: 48px;
+}

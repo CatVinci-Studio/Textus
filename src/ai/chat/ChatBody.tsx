@@ -137,6 +137,8 @@ export interface ChatBodyProps {
   /** Quick variant docked on a phone: the panel's own controls, shown in
    *  the composer's top row (ChatComposer's `dockActions`). */
   dockActions?: React.ReactNode;
+  /** Passed to the composer's toolbar, beside the mode picker. */
+  composerTools?: React.ReactNode;
 }
 
 /** The Quick Ask nav bar's whole contract - see ChatBodyProps.quickReview. */
@@ -239,6 +241,7 @@ export function ChatBody({
   onRevealPending,
   quickReview,
   dockActions,
+  composerTools,
 }: ChatBodyProps) {
   const phone = usePhoneLayout();
   const {
@@ -654,6 +657,7 @@ export function ChatBody({
         compact={variant === "quick"}
         focusOnOpen={variant === "quick" || !phone}
         dockActions={dockActions}
+        toolbarExtra={composerTools}
         defaultWebSearch={defaultWebSearch}
         onSend={handleSend}
         onStop={stop}

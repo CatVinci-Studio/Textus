@@ -11,6 +11,13 @@ import type { Settings, ImageNamingMode } from "../../settings/SettingsContext";
 import { isScopedUrl, scopedImageSrc } from "../../platform/ios-files";
 import { imageFilesFromClipboard, imageMimeForPath } from "./pasted-files";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
+import {
+  isGeneratedImage,
+  openImageAt,
+  rotateImageAt,
+  sizeImageAt,
+  stringsFor,
+} from "./image-actions";
 
 /**
  * Image support, Typora-style, in two halves:
@@ -67,38 +74,70 @@ export function showDocImage(
   img.dataset.docSrc = src;
 }
 
-/** `{textus-width=N%}`; documents written by Levis say `levis-width`, read
- *  the same (and rewritten as `textus-width` when the width changes). */
-const IMAGE_WIDTH_METADATA = /\s*\{(?:textus|levis)-width=(\d{1,3})%\}\s*$/;
+/** `{textus-width=N% textus-rotate=D}` - either part optional, any order;
+ *  documents written by Levis say `levis-width`, read the same (and
+ *  rewritten as `textus-width` when the width changes). */
+const IMAGE_METADATA =
+  /\s*\{((?:\s*(?:textus|levis)-(?:width=\d{1,3}%|rotate=\d{1,3}))+)\s*\}\s*$/;
 
-/** Store image width in a standard Markdown image title suffix. */
-export function readImagePresentation(title: string | null | undefined): {
+export interface ImagePresentation {
   title: string;
   widthPercent: number | null;
-} {
-  const value = title ?? "";
-  const match = IMAGE_WIDTH_METADATA.exec(value);
-  if (!match) return { title: value, widthPercent: null };
+  /** Clockwise quarter turns, in degrees: 0, 90, 180 or 270. */
+  rotate: number;
+}
 
-  const widthPercent = Number(match[1]);
-  if (widthPercent < 1 || widthPercent > 100)
-    return { title: value, widthPercent: null };
+/** Store image width and rotation in a standard Markdown title suffix. */
+export function readImagePresentation(
+  title: string | null | undefined,
+): ImagePresentation {
+  const value = title ?? "";
+  const match = IMAGE_METADATA.exec(value);
+  if (!match) return { title: value, widthPercent: null, rotate: 0 };
+  const width = /-width=(\d{1,3})%/.exec(match[1]);
+  const rotation = /-rotate=(\d{1,3})/.exec(match[1]);
+  const percent = width ? Number(width[1]) : null;
+  const degrees = rotation ? Number(rotation[1]) : 0;
   return {
     title: value.slice(0, match.index).trimEnd(),
-    widthPercent,
+    widthPercent:
+      percent !== null && percent >= 1 && percent <= 100 ? percent : null,
+    rotate: [90, 180, 270].includes(degrees) ? degrees : 0,
   };
+}
+
+function writeImagePresentation(
+  visibleTitle: string,
+  widthPercent: number | null,
+  rotate: number,
+): string | null {
+  const parts = [
+    widthPercent === null
+      ? null
+      : `textus-width=${Math.min(100, Math.max(1, Math.round(widthPercent)))}%`,
+    rotate ? `textus-rotate=${rotate}` : null,
+  ].filter(Boolean);
+  const metadata = parts.length ? `{${parts.join(" ")}}` : "";
+  const text = [visibleTitle.trimEnd(), metadata].filter(Boolean).join(" ");
+  return text.length > 0 ? text : null;
 }
 
 export function writeImageWidth(
   title: string | null | undefined,
   widthPercent: number | null,
 ): string | null {
-  const visibleTitle = readImagePresentation(title).title.trimEnd();
-  if (widthPercent === null)
-    return visibleTitle.length > 0 ? visibleTitle : null;
+  const current = readImagePresentation(title);
+  return writeImagePresentation(current.title, widthPercent, current.rotate);
+}
 
-  const metadata = `{textus-width=${Math.min(100, Math.max(1, Math.round(widthPercent)))}%}`;
-  return visibleTitle.length > 0 ? `${visibleTitle} ${metadata}` : metadata;
+/** Turns the image a quarter clockwise (1) or counter-clockwise (-1). */
+export function writeImageRotation(
+  title: string | null | undefined,
+  quarterTurns: number,
+): string | null {
+  const current = readImagePresentation(title);
+  const rotate = (((current.rotate + quarterTurns * 90) % 360) + 360) % 360;
+  return writeImagePresentation(current.title, current.widthPercent, rotate);
 }
 
 const EXT_BY_MIME: Record<string, string> = {
@@ -394,22 +433,158 @@ const imageParagraphKey = new PluginKey<DecorationSet>("image-paragraph");
  * a share of the paragraph, stored in the title suffix like the context
  * menu's presets (writeImageWidth), so the markdown stays standard.
  */
+const TOOL_ICONS: Record<string, string> = {
+  view: '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>',
+  left: '<path d="M4 4v6h6"/><path d="M4.5 15a8 8 0 1 0 2-8.5L4 10"/>',
+  right: '<path d="M20 4v6h-6"/><path d="M19.5 15a8 8 0 1 1-2-8.5L20 10"/>',
+  prompt: '<path d="M4 6h16M4 12h16M4 18h10"/>',
+};
+
+/** The floating bar over a hovered or selected image: preview, quarter
+ *  turns, width presets and - for generated images - the prompt. */
+function createImageToolbar(
+  view: EditorView,
+  getPos: () => number | undefined,
+  docPath: () => string | null,
+  language: () => string,
+) {
+  const bar = document.createElement("span");
+  bar.className = "image-toolbar";
+  bar.contentEditable = "false";
+  const act = (fn: (pos: number) => void) => (event: Event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const pos = getPos();
+    if (pos !== undefined) fn(pos);
+  };
+  const button = (
+    label: string,
+    content: string,
+    fn: (pos: number) => void,
+    icon = true,
+  ) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.title = label;
+    b.setAttribute("aria-label", label);
+    // Text labels are drawn by CSS (::before), so the image paragraph's
+    // textContent stays empty for find, copy and screen readers alike.
+    if (icon)
+      b.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${content}</svg>`;
+    else b.dataset.label = content;
+    b.addEventListener("mousedown", (e) => e.preventDefault());
+    b.addEventListener("click", act(fn));
+    return b;
+  };
+  let promptButton: HTMLButtonElement | null = null;
+  const build = (src: string, widthPercent: number | null) => {
+    const t = stringsFor(language());
+    const open = (showPrompt: boolean) => (pos: number) =>
+      openImageAt(view, pos, {
+        docPath: docPath(),
+        language: language(),
+        showPrompt,
+      });
+    bar.textContent = "";
+    bar.append(
+      button(t.imageViewLarge, TOOL_ICONS.view, open(false)),
+      button(t.imageRotateLeft, TOOL_ICONS.left, (pos) =>
+        rotateImageAt(view, pos, -1),
+      ),
+      button(t.imageRotateRight, TOOL_ICONS.right, (pos) =>
+        rotateImageAt(view, pos, 1),
+      ),
+    );
+    const sep = document.createElement("span");
+    sep.className = "image-toolbar-sep";
+    bar.append(sep);
+    for (const [width, label] of [
+      [null, t.imageWidthShortAuto],
+      [30, "30%"],
+      [50, "50%"],
+      [70, "70%"],
+      [100, "100%"],
+    ] as const) {
+      const b = button(
+        label,
+        label,
+        (pos) => sizeImageAt(view, pos, width),
+        false,
+      );
+      b.classList.add("image-toolbar-text");
+      if (width === widthPercent) b.setAttribute("aria-pressed", "true");
+      bar.append(b);
+    }
+    promptButton = isGeneratedImage(src)
+      ? button(t.imageShowPrompt, TOOL_ICONS.prompt, open(true))
+      : null;
+    if (promptButton) {
+      const sep2 = document.createElement("span");
+      sep2.className = "image-toolbar-sep";
+      bar.append(sep2, promptButton);
+    }
+  };
+  return { bar, build };
+}
+
+// Printing lays out the whole document at once: every lazy picture loads.
+if (typeof window !== "undefined")
+  window.addEventListener("beforeprint", () => {
+    for (const img of document.querySelectorAll<HTMLImageElement>(
+      ".image-view img",
+    ))
+      img.loading = "eager";
+  });
+
 function createImageView(
   node: ProseNode,
   view: EditorView,
   getPos: () => number | undefined,
   docPath: () => string | null,
+  language: () => string = () => "en",
 ) {
   const dom = document.createElement("span");
   dom.className = "image-view";
   const img = document.createElement("img");
+  // Off-screen pictures are neither fetched nor decoded until scrolled
+  // near - a decoded 1024² image holds about 4 MB.
+  img.loading = "lazy";
+  img.decoding = "async";
   const handle = document.createElement("span");
   handle.className = "image-resize-handle";
   handle.setAttribute("aria-hidden", "true");
-  dom.append(img, handle);
+  const toolbar = createImageToolbar(view, getPos, docPath, language);
+  dom.append(img, handle, toolbar.bar);
+  // A quarter turn swaps the footprint: the wrapper takes the turned
+  // aspect ratio once the picture's own is known.
+  const ratio = () => {
+    if (!img.naturalWidth || !img.naturalHeight) return;
+    dom.style.setProperty(
+      "--image-ratio",
+      String(img.naturalWidth / img.naturalHeight),
+    );
+    // Turned and unsized: as wide as the picture is tall.
+    dom.style.setProperty("--image-turned-width", `${img.naturalHeight}px`);
+  };
+  img.addEventListener("load", () => {
+    ratio();
+    dom.classList.remove("image-view-loading");
+  });
+  img.addEventListener("error", () =>
+    dom.classList.remove("image-view-loading"),
+  );
 
   let current = node;
   const apply = (n: ProseNode) => {
+    // A new picture fades in when it arrives (a generated one replacing
+    // its placeholder); a cached one is complete at once and just shows.
+    if (n.attrs.src !== current.attrs.src || !img.src) {
+      dom.classList.add("image-view-loading");
+      queueMicrotask(() => {
+        if (img.complete && img.naturalWidth)
+          dom.classList.remove("image-view-loading");
+      });
+    }
     current = n;
     const presentation = readImagePresentation(n.attrs.title as string | null);
     showDocImage(
@@ -425,6 +600,13 @@ function createImageView(
       ? `${presentation.widthPercent}%`
       : "";
     dom.classList.toggle("image-view-sized", !!presentation.widthPercent);
+    dom.dataset.rotate = String(presentation.rotate);
+    dom.classList.toggle(
+      "image-view-turned",
+      presentation.rotate === 90 || presentation.rotate === 270,
+    );
+    ratio();
+    toolbar.build((n.attrs.src as string) ?? "", presentation.widthPercent);
   };
   apply(node);
 
@@ -481,9 +663,11 @@ function createImageView(
     },
     selectNode: () => dom.classList.add("ProseMirror-selectednode"),
     deselectNode: () => dom.classList.remove("ProseMirror-selectednode"),
-    // The handle's drag is ours, not ProseMirror's (which would start a
-    // node drag or move the selection).
-    stopEvent: (event: Event) => event.target === handle,
+    // The handle's drag and the toolbar's clicks are ours, not
+    // ProseMirror's (which would start a node drag or move the selection).
+    stopEvent: (event: Event) =>
+      event.target === handle ||
+      (event.target instanceof Node && toolbar.bar.contains(event.target)),
     // Everything inside is written by this view - the live width while
     // resizing included - never by the user typing.
     ignoreMutation: () => true,
@@ -507,6 +691,17 @@ export function createImagePlugin(options: ImageStore) {
           : null,
       props: {
         decorations: (state) => imageParagraphKey.getState(state),
+        // Double-click opens the full-window preview. Through ProseMirror's
+        // own double-click detection: a listener on the <img> loses the
+        // second click to the node selection the first one made.
+        handleDoubleClickOn(view, _pos, node, nodePos) {
+          if (node.type.name !== "image") return false;
+          openImageAt(view, nodePos, {
+            docPath: options.docPath(),
+            language: options.settings().language,
+          });
+          return true;
+        },
         handlePaste(view, event, slice) {
           const data = event.clipboardData;
           const items = Array.from(data?.items ?? []);
@@ -560,7 +755,13 @@ export function createImagePlugin(options: ImageStore) {
         },
         nodeViews: {
           image: (node, view, getPos) =>
-            createImageView(node, view, getPos, options.docPath),
+            createImageView(
+              node,
+              view,
+              getPos,
+              options.docPath,
+              () => options.settings().language,
+            ),
         },
       },
     });

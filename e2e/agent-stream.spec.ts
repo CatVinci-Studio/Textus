@@ -108,7 +108,7 @@ test("a streamed edit whose text starts empty still becomes decidable", async ({
   await composer.fill("Capitalise the first two lines");
   await composer.press("Enter");
   const accept = page.locator(
-    ".agent-proposal-actions .inline-chat-action-primary",
+    ".agent-proposal-actions .inline-chat-action-primary:visible",
   );
   // Every preview finishes typing and gets its Accept - the first one used
   // to settle while its text was still empty, then stay "Writing…" for good.
@@ -205,7 +205,7 @@ test("an edit the backend refused never stays on screen", async ({ page }) => {
   await composer.fill("Capitalise the lines");
   await composer.press("Enter");
   const accept = page.locator(
-    ".agent-proposal-actions .inline-chat-action-primary",
+    ".agent-proposal-actions .inline-chat-action-primary:visible",
   );
   await expect(page.locator(".agent-panel-view")).toContainText(
     "Second line in capitals.",

@@ -16,6 +16,8 @@ const t = {
   navAi: AI_NAME,
   navShortcuts: "Shortcuts",
   navPrivacy: "Privacy",
+  // SettingsPanel's own label, not a locale key.
+  mediaProvidersLabel: "Media providers",
   aiAccountLabel: "Connection",
   writingFeaturesLabel: "Writing Assistance",
   writingModelLabel: "Assist Model",
@@ -23,6 +25,9 @@ const t = {
   aiAskToggleLabel: `Enable ${AI_NAME} chat`,
   agentModelLabel: "Chat Model",
   webSearchHint: "Needs support from the current provider",
+  aiSuggestionsLabel: "AI suggestions on the Agent home",
+  autoTitleHint:
+    "Gives an untitled document a title from its first accepted Agent draft, so saving is one step",
   agentPersonalizationGroupLabel: "Writing Instructions & Skills",
   agentAdvancedGroupLabel: "Advanced",
   menuViewSource: "Source Mode",
@@ -58,7 +63,9 @@ test.describe("desktop", () => {
     ]);
     await panel.getByRole("button", { name: t.navAi, exact: true }).click();
 
+    // Media providers (dictation, reading aloud, illustrations) lead the page.
     await expect(panel.locator(".settings-group-title")).toHaveText([
+      t.mediaProvidersLabel,
       t.aiAccountLabel,
       t.writingFeaturesLabel,
       t.aiAskLabel,
@@ -86,8 +93,12 @@ test.describe("desktop", () => {
       group(t.aiAskLabel).getByText(t.agentModelLabel),
     ).toBeVisible();
     await expect(group(t.aiAskLabel).getByText(t.webSearchHint)).toBeVisible();
-    // The UI never says "Agent" any more.
-    await expect(panel).not.toContainText(/\bAgent\b/);
+    // "Agent" names only the Agent workspace (its home and its drafts);
+    // the chat and its settings never say it.
+    const text = (await panel.innerText())
+      .replace(t.aiSuggestionsLabel, "")
+      .replace(t.autoTitleHint, "");
+    expect(text).not.toMatch(/\bAgent\b/);
   });
 
   test("turning the chat off hides the two groups below it", async ({
@@ -102,6 +113,7 @@ test.describe("desktop", () => {
 
     await expect(chat).not.toBeChecked();
     await expect(panel.locator(".settings-group-title")).toHaveText([
+      t.mediaProvidersLabel,
       t.aiAccountLabel,
       t.writingFeaturesLabel,
       t.aiAskLabel,
@@ -112,7 +124,7 @@ test.describe("desktop", () => {
     await expect(panel.getByText(t.writingModelLabel)).toBeVisible();
 
     await chat.click();
-    await expect(panel.locator(".settings-group-title")).toHaveCount(4);
+    await expect(panel.locator(".settings-group-title")).toHaveCount(5);
   });
 
   test("Tab reaches the folded Advanced group before wrapping", async ({

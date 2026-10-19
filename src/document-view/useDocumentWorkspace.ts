@@ -224,10 +224,10 @@ export function useDocumentWorkspace(
   );
   const finish = useCallback(
     (outcome: "stopped" | "failed" = "stopped") => {
+      // Routing stays on: the exchange's final turns still arrive after
+      // busy falls. Other surfaces end it themselves (endRouting), and the
+      // detached window bypasses the workspace.
       stream.finish(outcome);
-      // The exchange is over: later proposals (detached chat, Quick Ask)
-      // must not be captured into this workspace draft.
-      routing.current = false;
     },
     [stream],
   );

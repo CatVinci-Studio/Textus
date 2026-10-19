@@ -895,6 +895,134 @@
   outline-offset: 3px;
 }
 
+/* Rotation (image-plugin.ts, {textus-rotate=D}). A half turn keeps the
+   footprint; a quarter turn swaps it, so the wrapper takes the turned
+   aspect ratio and the picture is laid across it. */
+/* `rotate` and `translate` rather than `transform`: only the turn animates;
+   the re-centring of a quarter-turned picture applies at once. */
+.milkdown .image-view img {
+  transition: rotate var(--dur-medium) var(--ease-spring);
+}
+.milkdown .image-view[data-rotate="180"] img {
+  rotate: 180deg;
+}
+.milkdown .image-view-turned {
+  container-type: inline-size;
+  aspect-ratio: calc(1 / var(--image-ratio, 1));
+}
+.milkdown .image-view-turned:not(.image-view-sized) {
+  width: min(100%, var(--image-turned-width, 320px));
+}
+.milkdown .image-view-turned img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(100cqw * var(--image-ratio, 1));
+  max-width: none;
+  translate: -50% -50%;
+  rotate: 90deg;
+}
+.milkdown .image-view-turned[data-rotate="270"] img {
+  rotate: -90deg;
+}
+.milkdown .image-view img {
+  cursor: zoom-in;
+}
+
+.milkdown .image-view img {
+  /* Opacity only: a turned image's transform is its rotation. */
+  animation: motion-fade-in var(--dur-slow) var(--ease-out);
+}
+.milkdown .image-view-loading img {
+  opacity: 0;
+  animation: none;
+}
+
+/* The floating bar over a hovered or selected image. */
+.image-toolbar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--editor-bg, #fff) 88%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--editor-border, #8884) 80%, transparent);
+  box-shadow: var(--shadow-popover);
+  line-height: 1;
+  font-family: var(--ui-font, system-ui);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(calc(var(--motion-distance-sm) * -1));
+  pointer-events: none;
+  transition:
+    opacity var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-out);
+  user-select: none;
+}
+.milkdown .image-view:hover .image-toolbar,
+.milkdown .image-view.ProseMirror-selectednode .image-toolbar {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition-duration: var(--dur-base);
+}
+.milkdown .image-view-resizing .image-toolbar {
+  opacity: 0;
+  pointer-events: none;
+}
+.image-toolbar button {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-instant) var(--ease-standard);
+}
+.image-toolbar button:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.image-toolbar button:active {
+  transform: scale(0.92);
+}
+.image-toolbar button[data-label]::before {
+  content: attr(data-label);
+}
+.image-toolbar button[aria-pressed="true"] {
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+}
+.image-toolbar-sep {
+  width: 1px;
+  height: 14px;
+  margin: 0 3px;
+  background: color-mix(in srgb, var(--editor-text) 18%, transparent);
+}
+@media (hover: none) {
+  .image-toolbar {
+    display: none;
+  }
+}
+@media print {
+  .image-toolbar,
+  .image-resize-handle {
+    display: none !important;
+  }
+}
+
 /* Images inside rendered raw-HTML blocks keep within the column. */
 .milkdown .raw-html-rendered img {
   max-width: 100%;

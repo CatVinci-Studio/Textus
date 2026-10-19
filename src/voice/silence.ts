@@ -9,8 +9,8 @@ export class SilenceStop {
       this.heard = true;
       this.lastVoice = now;
     }
-    if (this.heard && now - this.lastVoice >= 1500) return "speech";
-    if (!this.heard && now - this.started >= 5000) return "empty";
+    if (this.heard && now - this.lastVoice >= 2500) return "speech";
+    if (!this.heard && now - this.started >= 8000) return "empty";
     return null;
   }
 }
