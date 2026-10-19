@@ -14,11 +14,10 @@ const t = {
   imageStorageLabel: "Save pasted images",
   imageStorageRemote: "Upload to an image host",
   imageFolderLabel: "Folder",
-  imageFolderNextToDocument: "Next to the document",
-  imageFolderDocumentName: "<document>.assets/",
-  imageFolderCustom: "Custom folder",
-  imageFolderInvalid:
-    "Use a folder relative to the document, such as img or ../images.",
+  imageFolderSubfolder: "Subfolder",
+  imageFolderSameFolder: "Same folder as the document",
+  imageFolderNameLabel: "Subfolder name",
+  imageFolderInvalid: "Use a folder inside the document's folder, such as img.",
   imageHostLabel: "Service",
   imagePicgoEndpointLabel: "Server address",
   imageSmmsTokenLabel: "API token",
@@ -75,9 +74,13 @@ function calls(page: Page, cmd: string): Promise<Record<string, unknown>[]> {
   );
 }
 
-/** A folder choice's radio: named by its label, then the example link. */
-function radioName(label: string): RegExp {
-  return new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`);
+/** Picks `choice` in the Folder dropdown. */
+async function chooseFolder(panel: Locator, choice: string) {
+  const folder = panel.getByRole("combobox", { name: t.imageFolderLabel });
+  // In view first: the list closes when the page scrolls under it.
+  await folder.scrollIntoViewIfNeeded();
+  await folder.click();
+  await panel.page().getByRole("option", { name: choice }).click();
 }
 
 function imageSrcs(page: Page): Promise<string[]> {
@@ -94,22 +97,20 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const { choice, folder, src } of [
-  { choice: "assets/", folder: "assets", src: "assets/photo.png" },
-  { choice: t.imageFolderNextToDocument, folder: "./", src: "photo.png" },
-  {
-    choice: t.imageFolderDocumentName,
-    folder: "${filename}.assets",
-    src: "notes.assets/photo.png",
-  },
+  { choice: t.imageFolderSubfolder, folder: "assets", src: "assets/photo.png" },
+  { choice: t.imageFolderSameFolder, folder: "./", src: "photo.png" },
 ]) {
   test(`a paste goes to the folder chosen as ${choice}`, async ({ page }) => {
     const panel = await openImageSettings(page);
-    const option = page.getByRole("radio", { name: radioName(choice) });
-    await option.check();
-    // Each choice shows the link it writes.
+    await chooseFolder(panel, choice);
+    // The row shows the link it writes.
+    await expect(panel.locator(".image-folder-example")).toHaveText(
+      `![](${src})`,
+    );
+    // Only a subfolder has a name to give.
     await expect(
-      panel.locator(".image-folder-option").filter({ has: option }),
-    ).toContainText(`![](${src})`);
+      panel.getByRole("textbox", { name: t.imageFolderNameLabel }),
+    ).toHaveCount(folder === "./" ? 0 : 1);
     await panel.getByRole("button", { name: t.windowClose }).click();
 
     await mockInvoke(page, { save_pasted_image: { src } });
@@ -120,29 +121,53 @@ for (const { choice, folder, src } of [
   });
 }
 
-test("a custom folder shows its link as it is typed", async ({ page }) => {
+test("a subfolder's name shows its link as it is typed, and a refused one is never used", async ({
+  page,
+}) => {
   const panel = await openImageSettings(page);
-  const radio = page.getByRole("radio", {
-    name: radioName(t.imageFolderCustom),
-  });
-  await radio.check();
-  const field = panel.getByRole("textbox", { name: t.imageFolderCustom });
-  await field.fill("../images");
-  const custom = panel.locator(".image-folder-option").filter({ has: radio });
-  await expect(custom).toContainText("![](../images/photo.png)");
-
-  // An absolute folder would write this computer's paths into the document.
-  await field.fill("/tmp/images");
-  await expect(panel.getByText(t.imageFolderInvalid)).toBeVisible();
+  const field = panel.getByRole("textbox", { name: t.imageFolderNameLabel });
+  await expect(field).toHaveValue("assets");
   await field.fill("img");
-  await expect(panel.getByText(t.imageFolderInvalid)).toHaveCount(0);
+  await expect(panel.locator(".image-folder-example")).toHaveText(
+    "![](img/photo.png)",
+  );
+
+  // Out of the document's folder, or an absolute folder that would write
+  // this computer's paths into the document: refused.
+  for (const refused of ["../images", "/tmp/images"]) {
+    await field.fill(refused);
+    await expect(panel.getByText(t.imageFolderInvalid)).toBeVisible();
+    await expect(panel.locator(".image-folder-example")).toHaveCount(0);
+  }
   await panel.getByRole("button", { name: t.windowClose }).click();
 
+  // The last name the backend would take is the one used.
   await mockInvoke(page, { save_pasted_image: { src: "img/photo.png" } });
   await pasteScreenshot(page);
   await expect.poll(() => imageSrcs(page)).toEqual(["img/photo.png"]);
   expect((await calls(page, "save_pasted_image"))[0].folder).toBe("img");
 });
+
+for (const { stored, name } of [
+  { stored: "${filename}.assets", name: "assets" },
+  { stored: "pictures", name: "pictures" },
+  { stored: "../shared/images", name: "assets" },
+]) {
+  test(`an image folder of ${stored} from before is the subfolder ${name}`, async ({
+    page,
+  }) => {
+    await openApp(page, {
+      settings: { language: "en", imageFolder: stored },
+    });
+    const panel = await openImageSettings(page);
+    await expect(
+      panel.getByRole("combobox", { name: t.imageFolderLabel }),
+    ).toHaveText(t.imageFolderSubfolder);
+    await expect(
+      panel.getByRole("textbox", { name: t.imageFolderNameLabel }),
+    ).toHaveValue(name);
+  });
+}
 
 test("an upload shows only the chosen service's settings and goes to it", async ({
   page,

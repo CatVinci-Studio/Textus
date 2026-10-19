@@ -505,42 +505,28 @@ button.settings-inline-button {
   flex: 0 1 270px;
 }
 
-/* Settings > Images > Folder: each choice with the link it writes. */
-.image-folder-options {
+/* Settings > Images > Folder: the choice, the subfolder's name beside it,
+   and under the label the link a paste writes. */
+.image-folder-control {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.image-folder-option {
-  display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
-  min-height: var(--control-height);
-  font-size: var(--text-md);
-  color: var(--editor-text);
-  cursor: pointer;
-}
-
-.image-folder-option input {
-  margin: 0;
-  accent-color: var(--editor-accent);
-}
-
-.image-folder-example {
-  margin-left: auto;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--editor-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
 }
 
 .image-folder-input {
-  margin: 4px 0 0 21px;
-  width: min(270px, calc(100% - 21px));
+  flex: 0 1 140px;
+  width: 140px;
+}
+
+.image-folder-example {
+  display: block;
+  /* Whole, even on a narrow window: the end of the link is the part that
+     differs. */
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
 }
 
 /* ---- General > AI account: two disclosure rows + expanding panels ---- */
