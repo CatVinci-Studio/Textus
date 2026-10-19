@@ -1026,6 +1026,58 @@ button.settings-skill-action:focus-visible {
   margin-top: 0;
 }
 
+/* The fixed shortcuts: a reference list, so rows are denser than the
+   settings above them, and the keys read as keys, not buttons. */
+.shortcut-fixed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.shortcut-fixed-title {
+  margin: 0 0 var(--space-1);
+  color: var(--editor-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.shortcut-fixed-list {
+  margin: 0;
+}
+
+.shortcut-fixed-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 30px;
+  font-size: var(--text-lg);
+}
+
+.shortcut-fixed-row dt {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.shortcut-fixed-row dd {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.shortcut-fixed-row kbd {
+  padding: 1px 6px;
+  border-radius: var(--radius-small);
+  background: color-mix(in srgb, var(--editor-muted) 12%, transparent);
+  color: var(--editor-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
 .appearance-options {
   display: flex;
   flex-wrap: wrap;

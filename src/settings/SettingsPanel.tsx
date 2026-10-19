@@ -13,6 +13,7 @@ import {
   type ProxyType,
   REVISION_DISPLAYS,
   type RevisionDisplay,
+  type HeadingAction,
 } from "./SettingsContext";
 import {
   marginViewBlocked,
@@ -26,8 +27,11 @@ import {
   SettingRow,
   ToggleRow,
   ShortcutRow,
+  FixedShortcutList,
+  headingLabels,
   VERBATIM_INPUT,
 } from "./sections/controls";
+import type { FixedShortcutGroup } from "../app/fixed-shortcuts";
 import { ChevronIcon, CloseIcon } from "../ui/icons";
 import { CliCommandSection, DefaultEditorSection } from "./sections/general";
 import { links } from "../platform/ipc";
@@ -85,6 +89,9 @@ interface SettingsPanelProps {
   onFilesDeleted?: (paths: string[]) => void;
   /** Which of the window's view modes are on, for Editor > View. */
   viewChecks?: Pick<MenuChecks, "sourceMode" | "zen">;
+  /** The shortcuts that can't be changed, listed under the ones that can
+   *  (built from the app menu, app/fixed-shortcuts.ts). */
+  fixedShortcuts?: FixedShortcutGroup[];
 }
 
 export type Category = "general" | "editor" | "ai" | "shortcuts" | "privacy";
@@ -111,6 +118,7 @@ export function SettingsPanel({
   onOpenFile,
   onFilesDeleted,
   viewChecks = {},
+  fixedShortcuts = [],
 }: SettingsPanelProps) {
   const { settings, setSettings, t } = useSettings();
   // As in the review bar: a phone never has a margin, so there is nothing
@@ -613,7 +621,38 @@ export function SettingsPanel({
               setSettings={setSettings}
               t={t}
             />
+            <ShortcutRow
+              label={t.shortcutNextTab}
+              action="nextTab"
+              shortcuts={settings.shortcuts}
+              setSettings={setSettings}
+              t={t}
+            />
+            <ShortcutRow
+              label={t.shortcutPreviousTab}
+              action="previousTab"
+              shortcuts={settings.shortcuts}
+              setSettings={setSettings}
+              t={t}
+            />
           </SettingsGroup>
+          <SettingsGroup title={t.shortcutHeadingsGroupLabel}>
+            {Object.entries(headingLabels(t)).map(([action, label]) => (
+              <ShortcutRow
+                key={action}
+                label={label}
+                action={action as HeadingAction}
+                shortcuts={settings.shortcuts}
+                setSettings={setSettings}
+                t={t}
+              />
+            ))}
+          </SettingsGroup>
+          {fixedShortcuts.length > 0 && (
+            <SettingsGroup title={t.shortcutFixedGroupLabel}>
+              <FixedShortcutList groups={fixedShortcuts} />
+            </SettingsGroup>
+          )}
         </>
       )}
     </>

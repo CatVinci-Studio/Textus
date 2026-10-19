@@ -549,6 +549,13 @@ utiliser une.
     "Ce raccourci est réservé à une commande standard de l'application.",
   shortcutUnset: "Non défini",
   shortcutClear: "Effacer",
+  shortcutNextTab: "Onglet suivant",
+  shortcutPreviousTab: "Onglet précédent",
+  shortcutHeadingsGroupLabel: "Titres",
+  shortcutParagraph: "Paragraphe",
+  shortcutFixedGroupLabel: "Raccourcis fixes",
+  shortcutLeaveBlock:
+    "Sortir d'un bloc de code, d'un tableau ou d'une citation",
   contentThemeLabel: "Thème de l'éditeur",
   themeDeleteButton: "Supprimer le thème",
   themeImportButton: "Importer du CSS…",

@@ -16,6 +16,7 @@ import {
   type Strings,
 } from "../i18n/strings";
 import { ai, storage } from "../platform/ipc";
+import { modIsMeta } from "../platform/os";
 import {
   UPDATE_CHANNELS,
   type UpdateChannel,
@@ -62,24 +63,57 @@ export type ShortcutAction =
   | "toggleZenMode"
   | "toggleSourceMode"
   | "toggleTypewriterMode"
-  | "findReplace";
+  | "findReplace"
+  | "nextTab"
+  | "previousTab"
+  | HeadingAction;
+
+/// The Format menu's block levels as shortcuts: Heading 1-6, and back to
+/// body text.
+export type HeadingAction =
+  | "setHeading1"
+  | "setHeading2"
+  | "setHeading3"
+  | "setHeading4"
+  | "setHeading5"
+  | "setHeading6"
+  | "setParagraph";
 
 export type Shortcuts = Record<ShortcutAction, string>;
 
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
 
-const DEFAULT_SHORTCUTS: Shortcuts = {
-  triggerCompletion: "mod+shift+space",
-  triggerGrammarCheck: "mod+shift+g",
-  toggleFloatingChat: "mod+shift+k",
-  toggleSidebar: "mod+\\",
-  toggleAgentPanel: "mod+shift+l",
-  toggleSplitView: "mod+shift+e",
-  toggleZenMode: "mod+shift+j",
-  toggleSourceMode: "mod+/",
-  toggleTypewriterMode: "",
-  findReplace: "mod+f",
-};
+/** The shortcuts a new installation starts with, on this platform. Only
+ *  the tab keys differ: they are Ctrl+Tab on every platform, and Ctrl on a
+ *  Mac is "ctrl", not "mod" (see ../utils/shortcuts). The heading levels
+ *  start unbound, so nothing new takes a key someone already uses; Typora's
+ *  Mod+1..6 are one binding away. */
+export function defaultShortcuts(mac = modIsMeta()): Shortcuts {
+  const ctrl = mac ? "ctrl" : "mod";
+  return {
+    triggerCompletion: "mod+shift+space",
+    triggerGrammarCheck: "mod+shift+g",
+    toggleFloatingChat: "mod+shift+k",
+    toggleSidebar: "mod+\\",
+    toggleAgentPanel: "mod+shift+l",
+    toggleSplitView: "mod+shift+e",
+    toggleZenMode: "mod+shift+j",
+    toggleSourceMode: "mod+/",
+    toggleTypewriterMode: "",
+    findReplace: "mod+f",
+    nextTab: `${ctrl}+tab`,
+    previousTab: `${ctrl}+shift+tab`,
+    setHeading1: "",
+    setHeading2: "",
+    setHeading3: "",
+    setHeading4: "",
+    setHeading5: "",
+    setHeading6: "",
+    setParagraph: "",
+  };
+}
+
+const DEFAULT_SHORTCUTS: Shortcuts = defaultShortcuts();
 
 /// Settings.revisionDisplay's values.
 export const REVISION_DISPLAYS = [
