@@ -856,7 +856,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   missingImageNotInVault: "Im Tresor gibt es keine Datei mit diesem Namen.",
   missingImageFailed: "Das Bild konnte nicht geladen werden.",
   missingImageChoose: "Bild auswählen…",
-  missingImageReveal: "Im Ordner anzeigen",
   missingImageFilter: "Bilder",
   missingImageChooseFailed:
     "Das ausgewählte Bild konnte nicht verwendet werden.",
@@ -904,6 +903,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   imageWidth50: "Bildbreite: 50 %",
   imageWidth70: "Bildbreite: 70 %",
   imageWidth100: "Bildbreite: 100 %",
+  imageReveal: "Im Ordner anzeigen",
+  imageCopyPath: "Bildpfad kopieren",
   imageWidthShortAuto: "Auto",
   deleteImage: "Bild löschen",
   privacyChatHistoryLabel: "Chatverlauf",
