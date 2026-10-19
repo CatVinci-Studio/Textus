@@ -1241,9 +1241,146 @@ test("in Typewriter Mode a click on a task's box ticks it without scrolling (#13
   await expect(task.first()).toHaveAttribute("data-checked", "false");
   await page.waitForTimeout(100);
   expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
-  // A click on the text still places the caret, and the typewriter centres it.
+  // A click on the text places the caret where it is (#217), and the first
+  // key centres it.
   await page.mouse.click(box.x + 80, box.y + box.height / 2);
+  await page.waitForTimeout(100);
+  expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
+  await page.keyboard.press("ArrowRight");
   await expect
     .poll(async () => Math.abs((await scrollTop()) - before))
     .toBeGreaterThan(2);
+});
+
+/** Typewriter Mode on a long document, with "Paragraph 30" low in the pane,
+ *  well below the middle the mode centres the caret on. */
+async function typewriterBelowMiddle(page: Page) {
+  await pasteMarkdown(page, longDoc());
+  const scroller = page.locator('[data-active-tab="true"] .editor-scroll');
+  const target = page.locator('[data-active-tab="true"] .milkdown p', {
+    hasText: "Paragraph 30:",
+  });
+  await target.evaluate((el) => {
+    const s = el.closest(".editor-scroll")!;
+    const mid = s.getBoundingClientRect().top + s.clientHeight / 2;
+    s.scrollTop += el.getBoundingClientRect().top - (mid + 250);
+  });
+  await page.waitForTimeout(100);
+  return {
+    target,
+    scrollTop: () => scroller.evaluate((el) => el.scrollTop),
+    /** How far the caret's line is from the pane's middle. */
+    offMiddle: () =>
+      scroller.evaluate((s) => {
+        const range = window.getSelection()!.getRangeAt(0);
+        const r = range.getClientRects()[0] ?? range.getBoundingClientRect();
+        const box = s.getBoundingClientRect();
+        return (r.top + r.bottom) / 2 - (box.top + box.height / 2);
+      }),
+  };
+}
+
+/** Which paragraphs the selection's ends are in, and its length. */
+function selectionInfo(page: Page) {
+  return page.evaluate(() => {
+    const sel = window.getSelection()!;
+    const para = (node: Node | null) =>
+      (node instanceof Element ? node : node?.parentElement)
+        ?.closest("p")
+        ?.textContent?.slice(0, 13) ?? "";
+    return {
+      anchor: para(sel.anchorNode),
+      focus: para(sel.focusNode),
+      length: sel.toString().length,
+    };
+  });
+}
+
+test("in Typewriter Mode a click lands where it was made, without scrolling, and keys still centre the caret (#217)", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en", typewriterMode: true } });
+  const { target, scrollTop, offMiddle } = await typewriterBelowMiddle(page);
+  const before = await scrollTop();
+  const box = (await target.boundingBox())!;
+  // A click with the hand's 1-2px wobble between press and release.
+  await page.mouse.move(box.x + 120, box.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 121, box.y + 12);
+  await page.mouse.move(box.x + 122, box.y + 11);
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+  const click = await selectionInfo(page);
+  expect(click).toMatchObject({
+    anchor: "Paragraph 30:",
+    focus: "Paragraph 30:",
+  });
+  expect(click.length).toBeLessThanOrEqual(2);
+  expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
+  // The keyboard still centres the caret, as it always has.
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(async () => Math.abs(await offMiddle())).toBeLessThan(20);
+  expect(await selectionInfo(page)).toMatchObject({ focus: "Paragraph 30:" });
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(async () => Math.abs(await offMiddle())).toBeLessThan(20);
+  // And so does typing after a click.
+  const now = (await target.boundingBox())!;
+  await page.mouse.click(now.x + 40, now.y + 10);
+  await page.keyboard.type("x");
+  await expect.poll(async () => Math.abs(await offMiddle())).toBeLessThan(20);
+});
+
+test("in Typewriter Mode a drag selects what it passes over and the page stays still (#217)", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en", typewriterMode: true } });
+  const { target, scrollTop } = await typewriterBelowMiddle(page);
+  const before = await scrollTop();
+  const from = (await target.boundingBox())!;
+  const to = (await page
+    .locator('[data-active-tab="true"] .milkdown p', {
+      hasText: "Paragraph 31:",
+    })
+    .boundingBox())!;
+  await page.mouse.move(from.x + 120, from.y + 10);
+  await page.mouse.down();
+  for (let i = 1; i <= 8; i++)
+    await page.mouse.move(
+      from.x + 120,
+      from.y + 10 + ((to.y - from.y) * i) / 8,
+    );
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+  const drag = await selectionInfo(page);
+  expect(drag).toMatchObject({
+    anchor: "Paragraph 30:",
+    focus: "Paragraph 31:",
+  });
+  // From a point to the same point a paragraph down: about a paragraph's
+  // text, not the hundreds of characters a runaway scroll swept up.
+  expect(drag.length).toBeGreaterThan(60);
+  expect(drag.length).toBeLessThan(200);
+  expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
+});
+
+test.describe("phone", () => {
+  test.use(PHONE);
+  test("in Typewriter Mode a tap puts the caret where it was tapped, and typing centres it (#217)", async ({
+    page,
+  }) => {
+    await openPhone(page, { settings: { typewriterMode: true } });
+    const { target, scrollTop, offMiddle } = await typewriterBelowMiddle(page);
+    const before = await scrollTop();
+    const box = (await target.boundingBox())!;
+    await page.touchscreen.tap(box.x + 60, box.y + 10);
+    await page.waitForTimeout(150);
+    expect(await selectionInfo(page)).toMatchObject({
+      anchor: "Paragraph 30:",
+      focus: "Paragraph 30:",
+    });
+    expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
+    await page.keyboard.type("x");
+    await expect.poll(async () => Math.abs(await offMiddle())).toBeLessThan(20);
+  });
 });
