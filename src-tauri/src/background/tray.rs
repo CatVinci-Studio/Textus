@@ -147,25 +147,31 @@ pub fn on_menu(app: &AppHandle, item: &str) {
     match item {
         NEW_QUICK_NOTE => crate::commands::quick_note::window::open_soon(app),
         OPEN_APP => crate::reopen_without_windows(app),
+        // Both open in the front editor window (or a new one), as the File
+        // and app menus' items do.
         OPEN_FOLDER => {
-            if let Err(err) = crate::commands::quick_note::open_folder(app) {
-                eprintln!("quick notes: could not open the folder: {err}");
-            }
+            bring_editor_forward(app);
+            crate::menu::open_quick_notes_folder(app);
         }
         SETTINGS => {
-            // The window it opens in may be behind other apps' or
-            // minimised: the tray is clicked from anywhere.
-            if let Some(window) = crate::menu::focused_editor_window(app)
-                .and_then(|label| app.get_webview_window(&label))
-            {
-                let _ = window.unminimize();
-                let _ = window.show();
-                let _ = window.set_focus();
-            }
+            bring_editor_forward(app);
             crate::menu::open_settings(app);
         }
         QUIT => crate::menu::quit(app),
         _ => {}
+    }
+}
+
+/// The editor window a tray command lands in, brought forward: it may be
+/// behind other apps' windows or minimised, since the tray is clicked from
+/// anywhere.
+fn bring_editor_forward(app: &AppHandle) {
+    if let Some(window) =
+        crate::menu::focused_editor_window(app).and_then(|label| app.get_webview_window(&label))
+    {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
     }
 }
 

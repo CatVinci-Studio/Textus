@@ -102,6 +102,10 @@ pulldown-cmark = { version = "0.13", default-features = false }
 regex = "1"
 unicode-normalization = "0.1"
 unicode-segmentation = "1"
+# The sidebar's file-name search (commands/folder.rs): the walker ripgrep
+# and fd use - parallel, and it honours .gitignore/.ignore and skips hidden
+# files the way a writer's tools already do.
+ignore = "0.4"
 
 # Desktop only (Windows/macOS/Linux): neither plugin supports iOS or Android
 # (their platform-support metadata says "none"), and lib.rs registers them

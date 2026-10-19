@@ -781,6 +781,27 @@
   max-width: 100%;
 }
 
+/* A diagram Pele drew (Settings › Diagram engine) takes every colour from
+   these variables, so it follows the appearance and the theme - a Typora
+   one too, through the text colour it gives the page - without being drawn
+   again. --pele-bg is the box's own background: edge labels are cut out of
+   the lines with it. The face is left to the one Pele measured with
+   (diagram-engine.ts passes the editor's). */
+.mermaid-preview {
+  --pele-bg: var(--editor-code-bg);
+  --pele-fg: currentColor;
+  --pele-muted: color-mix(in srgb, currentColor 62%, var(--pele-bg));
+  --pele-line: color-mix(in srgb, currentColor 78%, var(--pele-bg));
+  --pele-surface: color-mix(in srgb, currentColor 6%, var(--pele-bg));
+  --pele-surface-alt: color-mix(in srgb, currentColor 11%, var(--pele-bg));
+  --pele-border: color-mix(in srgb, currentColor 38%, var(--pele-bg));
+  --pele-accent: var(--editor-accent);
+  --pele-critical: var(--danger);
+  --pele-error: var(--danger);
+  --pele-font-mono: var(--font-mono);
+  --pele-radius: var(--md-radius-sm);
+}
+
 /* Markdown images (image-plugin.ts's node view). The node is inline, so it
    renders inline-block - an image mid-sentence flows with the text, and the
    caret's line box stays beside the image instead of opening an empty line

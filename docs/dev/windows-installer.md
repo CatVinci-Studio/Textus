@@ -100,7 +100,7 @@ The uninstaller removes all of the above except the extensions' keys
 themselves, which other apps share; an uninstall run for an upgrade
 (`/UPDATE`) leaves them for the install that follows.
 
-**Settings › General › Default Markdown Editor** writes the same values
+**Settings › General › Default Markdown editor** writes the same values
 again (`src-tauri/src/commands/default_editor.rs`; a change to one needs the
 other) and opens **Default apps** at Textus
 (`ms-settings:defaultapps?registeredAppUser=Textus`). Windows does not let
@@ -144,9 +144,11 @@ three-way merge of upstream's changes between the two versions, keeping the
 
 ## Known rough edge
 
-The publisher shown in Add/Remove Programs is `chengaoshen`, derived from the
-bundle identifier because `bundle.publisher` is unset. Setting it would read
-better, but it also moves the registry key the installer remembers a custom
-install location under, and breaks the fingerprint used to detect an old MSI
-install - so it is left alone until there are no MSI installs left to
-migrate.
+The publisher shown in Add/Remove Programs, and as the company in
+`textus.exe`'s file properties, is `catvinci`, derived from the bundle
+identifier (`com.catvinci.textus`) because `bundle.publisher` is unset.
+Setting it would read better, but it also moves the registry key the
+installer remembers a custom install location under (`Software\catvinci\Textus`,
+which the in-app updater relies on, since it does not pass the folder), and
+breaks the fingerprint used to detect an old MSI install - so it is left
+alone until there are no MSI installs left to migrate.

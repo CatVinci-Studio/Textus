@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { redrawDiagrams, replaceMermaidBlocks } from "./diagram-images";
 
 const draw = async (code: string) =>
@@ -64,6 +64,16 @@ describe("redrawDiagrams", () => {
     expect(html).toContain('<div class="mermaid-preview"><svg>graph LR</svg>');
     expect(html).toContain('<div class="mermaid-preview"><svg>kept</svg>');
     expect(html).not.toContain("dark");
+  });
+
+  it("keeps a picture Pele drew, whose colours follow the page through CSS", async () => {
+    const draw = vi.fn(async () => "<svg>redrawn</svg>");
+    const html = await redrawDiagrams(
+      diagram("graph LR", '<svg class="pele pele-flowchart">p</svg>'),
+      draw,
+    );
+    expect(html).toContain('<svg class="pele pele-flowchart">p</svg>');
+    expect(draw).not.toHaveBeenCalled();
   });
 
   it("keeps the picture when drawing throws", async () => {

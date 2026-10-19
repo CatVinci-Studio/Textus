@@ -2,12 +2,13 @@ import { FileTree } from "../sidebar/FileTree";
 import { Outline } from "../sidebar/Outline";
 import { ClipboardHistory } from "../sidebar/ClipboardHistory";
 import { TreeTabIcon, OutlineTabIcon, ClipboardTabIcon } from "../ui/icons";
-import { isIOSApp } from "../platform/capabilities";
+import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { Presence, PresenceDiv, type PresenceHandle } from "../ui/usePresence";
 import { ResizeHandle } from "../ui/ResizeHandle";
 import type { Strings } from "../i18n/strings";
 import type { PanelMode } from "./useSidePanels";
 import type { useSidebarWidth } from "./sidebar-width";
+import type { OpenFolder } from "./useOpenFolder";
 
 /** The left sidebar (file tree, outline, clipboard history) and, on
  *  iPhone, the scrim behind its drawer. Its open state lives in
@@ -20,12 +21,14 @@ export function Sidebar({
   mode,
   onModeChange,
   width,
-  rootPath,
+  openFolder,
   activePath,
   activeContent,
   onToggle,
   onClose,
   onOpenFile,
+  searchFocusRequest,
+  onSearchFocusHandled,
   t,
 }: {
   open: boolean;
@@ -36,12 +39,16 @@ export function Sidebar({
   mode: PanelMode;
   onModeChange: (mode: PanelMode) => void;
   width: ReturnType<typeof useSidebarWidth>;
-  rootPath: string | null;
+  /** The tree's root and the opened folder (useOpenFolder.ts). */
+  openFolder: OpenFolder;
   activePath: string | null;
   activeContent: string;
   onToggle: () => void;
   onClose: () => void;
   onOpenFile: (path: string) => void;
+  /** The search shortcut asked for the Files tab's search box. */
+  searchFocusRequest: boolean;
+  onSearchFocusHandled: () => void;
   t: Strings;
 }) {
   return (
@@ -94,10 +101,11 @@ export function Sidebar({
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
               {mode === "tree" &&
-                (rootPath ? (
+                (openFolder.treeRoot ? (
                   <FileTree
-                    key={rootPath}
-                    rootPath={rootPath}
+                    root={openFolder.treeRoot}
+                    onRootChange={openFolder.setTreeRoot}
+                    folder={openFolder.folder}
                     activePath={activePath}
                     onFileSelect={(path) => {
                       // On a phone the drawer covers the page it just
@@ -109,11 +117,27 @@ export function Sidebar({
                         onClose();
                       onOpenFile(path);
                     }}
+                    onOpenFolder={
+                      canOpenFolder ? openFolder.openFolderDialog : undefined
+                    }
+                    onCloseFolder={openFolder.closeFolder}
+                    searchFocusRequest={searchFocusRequest}
+                    onSearchFocusHandled={onSearchFocusHandled}
                   />
                 ) : (
                   // An unsaved draft has no folder - an empty panel read
                   // as broken.
-                  <div className="clipboard-empty">{t.treeEmptyDraft}</div>
+                  <>
+                    <div className="clipboard-empty">{t.treeEmptyDraft}</div>
+                    {canOpenFolder && (
+                      <button
+                        className="text-button tree-empty-open"
+                        onClick={openFolder.openFolderDialog}
+                      >
+                        {t.menuOpenFolder}
+                      </button>
+                    )}
+                  </>
                 ))}
               {mode === "outline" && <Outline content={activeContent} />}
               {mode === "clipboard" && <ClipboardHistory />}

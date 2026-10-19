@@ -1,8 +1,5 @@
-import {
-  configureMermaid,
-  loadMermaid,
-  renderMermaid,
-} from "../editor/mermaid-plugin";
+import { diagramRenderer, type MermaidApi } from "../editor/diagram-engine";
+import type { DiagramEngine } from "../settings/SettingsContext";
 
 // Word, OpenDocument and EPUB have no idea what a ```mermaid block is, so
 // pandoc would print the diagram's source. Before the markdown goes to
@@ -97,42 +94,52 @@ async function svgToPng(svg: string): Promise<DiagramImage> {
 
 let exportId = 0;
 
-/** The markdown with its diagrams as pictures, for a pandoc export. */
-export async function diagramsToImages(markdown: string): Promise<string> {
+/** The markdown with its diagrams as pictures, for a pandoc export, drawn
+ *  by `engine` (Settings.diagramEngine) and Mermaid where it can't. */
+export async function diagramsToImages(
+  markdown: string,
+  engine: DiagramEngine,
+): Promise<string> {
   if (!/^ {0,3}(`{3,}|~{3,})\s*mermaid/im.test(markdown)) return markdown;
-  const mermaid = await loadMermaid();
+  const fontFamily = getComputedStyle(document.body).fontFamily;
   // A page is white whatever the app looks like, and labels are plain SVG
   // text (not HTML), so the picture can be drawn to a canvas. The editor
   // re-applies its own settings before its next render (configureMermaid).
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: "neutral",
-    securityLevel: "strict",
-    suppressErrorRendering: true,
-    htmlLabels: false,
-    flowchart: { htmlLabels: false },
-    // At the page's width: laid out at mermaid's offscreen 1200px and then
-    // shrunk onto the page, a Gantt chart's labels became unreadable.
-    gantt: {
-      useWidth: MAX_WIDTH,
-      fontSize: 13,
-      sectionFontSize: 13,
-      barHeight: 22,
-      barGap: 6,
-      axisFormat: "%m-%d",
-    },
-    fontFamily: getComputedStyle(document.body).fontFamily,
-  });
+  const configure = (mermaid: MermaidApi) =>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict",
+      suppressErrorRendering: true,
+      htmlLabels: false,
+      flowchart: { htmlLabels: false },
+      // At the page's width: laid out at mermaid's offscreen 1200px and then
+      // shrunk onto the page, a Gantt chart's labels became unreadable.
+      gantt: {
+        useWidth: MAX_WIDTH,
+        fontSize: 13,
+        sectionFontSize: 13,
+        barHeight: 22,
+        barGap: 6,
+        axisFormat: "%m-%d",
+      },
+      fontFamily,
+    });
+  const draw = diagramRenderer(
+    engine,
+    { width: MAX_WIDTH, fontFamily, dark: false },
+    configure,
+  );
   return replaceMermaidBlocks(markdown, async (code) =>
-    svgToPng(
-      await renderMermaid(mermaid, `export-diagram-${++exportId}`, code),
-    ),
+    svgToPng((await draw(code, `export-diagram-${++exportId}`)).svg),
   );
 }
 
 /** Replaces the SVG of every rendered diagram in serialized editor `html`
  *  with what `draw` makes of its source (the hidden code block just before
- *  the preview); a diagram `draw` returns null for keeps its picture. */
+ *  the preview); a diagram `draw` returns null for keeps its picture, and so
+ *  does one Pele drew: its colours are CSS variables, which a light page
+ *  answers by itself. */
 export async function redrawDiagrams(
   html: string,
   draw: (code: string) => Promise<string | null>,
@@ -145,6 +152,7 @@ export async function redrawDiagrams(
   for (const preview of previews) {
     const source = preview.previousElementSibling;
     if (!source?.classList.contains("mermaid-source-hidden")) continue;
+    if (preview.querySelector(":scope > svg.pele")) continue;
     const code = (source.querySelector("code") ?? source).textContent ?? "";
     const svg = await draw(code).catch(() => null);
     if (svg) preview.innerHTML = svg;
@@ -152,20 +160,21 @@ export async function redrawDiagrams(
   return template.innerHTML;
 }
 
-/** The editor's diagrams drawn again in mermaid's light style, for a PDF
- *  printed on white: drawn for a dark appearance, their pale lines and
+/** The editor's Mermaid diagrams drawn again in mermaid's light style, for
+ *  a PDF printed on white: drawn for a dark appearance, their pale lines and
  *  labels all but vanished on it. Laid out like the editor's own pass
  *  (`width`, `fontFamily`), which re-applies its settings before its next
- *  one (configureMermaid). */
+ *  one (configureMermaid). Those Pele drew are left as they are
+ *  (redrawDiagrams), the Mermaid ones are what Pele couldn't draw. */
 export async function lightDiagrams(
   html: string,
   width: number,
   fontFamily: string,
 ): Promise<string> {
   if (!html.includes("mermaid-preview")) return html;
-  const mermaid = await loadMermaid();
-  configureMermaid(mermaid, width, fontFamily, false);
-  return redrawDiagrams(html, (code) =>
-    renderMermaid(mermaid, `export-diagram-${++exportId}`, code),
+  const draw = diagramRenderer("mermaid", { width, fontFamily, dark: false });
+  return redrawDiagrams(
+    html,
+    async (code) => (await draw(code, `export-diagram-${++exportId}`)).svg,
   );
 }

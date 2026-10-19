@@ -36,7 +36,7 @@ export interface StartupRestoreOptions {
     open?: { restoreCaret?: boolean },
   ) => Promise<void>;
   openFile: (path: string, open?: { restoreCaret?: boolean }) => Promise<void>;
-  /** Settings › General › Restore Previous Session on Startup: reopened
+  /** Settings › General › Restore previous session on startup: reopened
    *  documents come back at the caret they were left at. */
   restoreCarets: boolean;
   startTutorial: (tabId: string) => void;

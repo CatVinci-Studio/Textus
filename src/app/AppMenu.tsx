@@ -11,6 +11,8 @@ import { emitMenuEvent } from "../platform/menu-events";
 import {
   buildAppMenu,
   buildMobileMenu,
+  NO_RECENTS,
+  type RecentLists,
   type MenuChecks,
   type MenuEntry,
   type MenuNode,
@@ -52,7 +54,7 @@ interface AppMenuProps {
 export function AppMenu({ x, y, onClose, checks }: AppMenuProps) {
   const { t, settings } = useSettings();
   const quickNote = useQuickNoteShortcut();
-  const [recents, setRecents] = useState<string[]>([]);
+  const [recents, setRecents] = useState<RecentLists>(NO_RECENTS);
   const [fullscreen, setFullscreen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const pos = useViewportClamp(ref, x, y);
@@ -66,12 +68,15 @@ export function AppMenu({ x, y, onClose, checks }: AppMenuProps) {
   useEffect(() => {
     if (!hasAppMenu) return;
     let alive = true;
-    void menuIpc
-      .listRecentFiles()
-      .then((list) => {
+    void Promise.all([menuIpc.listRecentFiles(), menuIpc.listRecentFolders()])
+      .then(([files, folders]) => {
         // The dev shim answers every command with null rather than
         // rejecting, so this cannot lean on the catch below.
-        if (alive && Array.isArray(list)) setRecents(list);
+        if (alive)
+          setRecents({
+            files: Array.isArray(files) ? files : [],
+            folders: Array.isArray(folders) ? folders : [],
+          });
       })
       .catch(() => {
         // No backend at all: Open Recent shows its empty state.

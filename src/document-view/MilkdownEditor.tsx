@@ -151,8 +151,9 @@ export function MilkdownEditor({
   const inlineChat = useInlineChat(run);
   useQuickAskDecorations(run, inlineChat, phone);
   // The empty-document placeholder reads the language when it draws, the
-  // code blocks' line numbers and the colour swatches their settings, and
-  // decorations only draw on a transaction: without one, switching the
+  // code blocks' line numbers, the colour swatches and the diagrams their
+  // settings, and decorations only draw on a transaction (the diagrams
+  // check their engine on one): without one, switching the
   // language in Settings (or on the first-run picker) left the old text,
   // and those settings did nothing until the next keystroke.
   useEffect(() => {
@@ -164,6 +165,7 @@ export function MilkdownEditor({
     settings.language,
     settings.codeLineNumbers,
     settings.inlineColorSwatches,
+    settings.diagramEngine,
     run,
   ]);
 

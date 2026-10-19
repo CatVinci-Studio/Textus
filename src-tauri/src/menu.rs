@@ -1,7 +1,8 @@
 //! The native menu bar: construction (install), the id -> frontend-event
 //! dispatch, and the mutable File > Open Recent submenu. Menu ids that carry
-//! a payload do it in the id string ("recent:<path>", "export-pandoc:<fmt>",
-//! "help-doc:<doc>", "insert-block:<kind>"); the frontend listener for each
+//! a payload do it in the id string ("recent:<path>", "recent-folder:<path>",
+//! "export-pandoc:<fmt>", "help-doc:<doc>", "insert-block:<kind>"); the
+//! frontend listener for each
 //! menu-* event lives in app/menu-bridge.ts.
 //!
 //! On Windows and Linux the bar built here is never seen - it is hidden with
@@ -29,11 +30,15 @@ use crate::commands;
 const SETTINGS_MENU_ID: &str = "settings";
 const NEW_FILE_ID: &str = "new-file";
 const OPEN_FILE_ID: &str = "open-file";
+const OPEN_FOLDER_ID: &str = "open-folder";
+const CLOSE_FOLDER_ID: &str = "close-folder";
 const SAVE_FILE_ID: &str = "save-file";
 const SAVE_FILE_AS_ID: &str = "save-file-as";
 const RECENT_CLEAR_ID: &str = "recent-clear";
 /// Menu ids of File > Open Recent entries carry their path: "recent:<path>".
 const RECENT_PREFIX: &str = "recent:";
+/// Open Recent's folders, listed above its files, carry theirs the same way.
+const RECENT_FOLDER_PREFIX: &str = "recent-folder:";
 const EXPORT_PDF_ID: &str = "export-pdf";
 const EXPORT_HTML_ID: &str = "export-html";
 /// Menu ids of pandoc-backed File > Export entries carry the pandoc writer
@@ -318,6 +323,24 @@ pub fn list_recent_files(app: tauri::AppHandle) -> Vec<String> {
     commands::recents::read_recent_files(&app)
 }
 
+/// The recent folders, listed above the files there - same reason.
+#[tauri::command]
+pub fn list_recent_folders(app: tauri::AppHandle) -> Vec<String> {
+    commands::recents::read_recent_folders(&app)
+}
+
+/// How a recent folder reads in the submenu: its path ending in a
+/// separator, which sets it apart from the files below it in any language.
+fn folder_menu_text(path: &str) -> String {
+    let sep = if path.contains('\\') && !path.contains('/') {
+        '\\'
+    } else {
+        '/'
+    };
+    let shown = abbreviate_home(path);
+    menu_text(&format!("{}{sep}", shown.trim_end_matches(['/', '\\'])))
+}
+
 fn abbreviate_home(path: &str) -> String {
     // Windows has no HOME; without USERPROFILE every recent file there shows
     // its full C:\Users\... prefix and the submenu is unreadable.
@@ -332,10 +355,13 @@ fn abbreviate_home(path: &str) -> String {
     path.to_string()
 }
 
-/// Replace the Open Recent submenu's entries with `list` (most recent
-/// first). Menus may only be mutated on the main thread, and the caller
-/// may be a command on any thread - hence the hop.
-pub(crate) fn rebuild_recent_menu(app: &tauri::AppHandle, list: Vec<String>) {
+/// Refill the Open Recent submenu from the persisted lists, most recent
+/// first: the folders, then the files. Menus may only be mutated on the
+/// main thread, and the caller may be a command on any thread - hence the
+/// hop.
+pub(crate) fn rebuild_recent_menu(app: &tauri::AppHandle) {
+    let folders = commands::recents::read_recent_folders(app);
+    let list = commands::recents::read_recent_files(app);
     let app = app.clone();
     let _ = app.clone().run_on_main_thread(move || {
         let Some(state) = app.try_state::<RecentMenu>() else {
@@ -354,7 +380,7 @@ pub(crate) fn rebuild_recent_menu(app: &tauri::AppHandle, list: Vec<String>) {
                 let _ = submenu.remove(&item);
             }
         }
-        if list.is_empty() {
+        if list.is_empty() && folders.is_empty() {
             if let Ok(item) = MenuItemBuilder::with_id(
                 "recent-none",
                 label(&labels, "recent-none", "No Recent Files"),
@@ -365,6 +391,21 @@ pub(crate) fn rebuild_recent_menu(app: &tauri::AppHandle, list: Vec<String>) {
                 let _ = submenu.append(&item);
             }
             return;
+        }
+        for path in &folders {
+            if let Ok(item) = MenuItemBuilder::with_id(
+                format!("{RECENT_FOLDER_PREFIX}{path}"),
+                folder_menu_text(path),
+            )
+            .build(&app)
+            {
+                let _ = submenu.append(&item);
+            }
+        }
+        if !folders.is_empty() && !list.is_empty() {
+            if let Ok(sep) = PredefinedMenuItem::separator(&app) {
+                let _ = submenu.append(&sep);
+            }
         }
         for path in &list {
             if let Ok(item) = MenuItemBuilder::with_id(
@@ -409,7 +450,7 @@ fn set_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Result<
     app.set_menu(built.menu)?;
     *app.state::<RecentMenu>().0.lock().unwrap() = Some(built.open_recent);
     app.state::<ViewChecks>().0.lock().unwrap().items = built.check_items;
-    rebuild_recent_menu(app, commands::recents::read_recent_files(app));
+    rebuild_recent_menu(app);
     Ok(())
 }
 
@@ -485,6 +526,12 @@ fn build(
     #[cfg(not(windows))]
     let open_file_builder = open_file_builder.accelerator("CmdOrCtrl+O");
     let open_file_item = open_file_builder.build(app)?;
+    // No accelerator: Cmd+Shift+O is the sidebar's file search, a
+    // configurable shortcut the frontend handles.
+    let open_folder_item =
+        MenuItemBuilder::with_id(OPEN_FOLDER_ID, l(OPEN_FOLDER_ID, "Open Folder…")).build(app)?;
+    let close_folder_item =
+        MenuItemBuilder::with_id(CLOSE_FOLDER_ID, l(CLOSE_FOLDER_ID, "Close Folder")).build(app)?;
     // Built empty here; rebuild_recent_menu below fills it from the
     // persisted list and keeps it current as files are opened.
     let open_recent_menu =
@@ -542,7 +589,9 @@ fn build(
     let file_menu = SubmenuBuilder::new(app, l("menu:file", "File"))
         .item(&new_file_item)
         .item(&open_file_item)
+        .item(&open_folder_item)
         .item(&open_recent_menu)
+        .item(&close_folder_item)
         .separator()
         .item(&new_quick_note_item)
         .item(&open_quick_notes_folder_item)
@@ -768,6 +817,28 @@ pub(crate) fn quit(app_handle: &tauri::AppHandle) {
     }
 }
 
+/// File › Open Quick Notes Folder, and the tray's: in the sidebar, as File
+/// > Open Folder… would open it - the notes are documents to write in.
+/// Settings › Quick Notes still shows the folder in the file manager.
+pub(crate) fn open_quick_notes_folder(app_handle: &tauri::AppHandle) {
+    match commands::quick_note::folder_for_use(app_handle) {
+        Ok(dir) => open_folder_in_sidebar(app_handle, &dir.to_string_lossy()),
+        Err(err) => eprintln!("quick notes: could not open the folder: {err}"),
+    }
+}
+
+/// Opens `path` in the focused window's sidebar, as File > Open Folder…
+/// does (a recent folder, the Quick Notes folder); with no window open, a
+/// fresh window does once it has mounted.
+fn open_folder_in_sidebar(app_handle: &tauri::AppHandle, path: &str) {
+    if focused_editor_window(app_handle).is_some() {
+        emit_to_focused_payload(app_handle, "menu-open-recent-folder", path);
+    } else {
+        *crate::PENDING_OPEN_FOLDER.lock().unwrap() = Some(path.to_string());
+        let _ = crate::open_new_window(app_handle);
+    }
+}
+
 /// What a menu id does. Reached from a native menu click (`on_menu_event`
 /// above), from the app-drawn menu's `trigger_menu_item` and from the
 /// tray's menu (Tauri sends its clicks to the same handler), so every entry
@@ -790,6 +861,10 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         }
     } else if id == OPEN_FILE_ID {
         emit_or_open_window(app_handle, "menu-open-file");
+    } else if id == OPEN_FOLDER_ID {
+        emit_or_open_window(app_handle, "menu-open-folder");
+    } else if id == CLOSE_FOLDER_ID {
+        emit_to_focused(app_handle, "menu-close-folder");
     } else if id == SAVE_FILE_ID {
         if !emit_to_quick_note(app_handle, "menu-save-file") {
             emit_to_focused(app_handle, "menu-save-file");
@@ -798,6 +873,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_document_command(app_handle, "menu-save-file-as", ());
     } else if id == RECENT_CLEAR_ID {
         commands::recents::clear_recent_files(app_handle);
+    } else if let Some(path) = id.strip_prefix(RECENT_FOLDER_PREFIX) {
+        open_folder_in_sidebar(app_handle, path);
     } else if let Some(path) = id.strip_prefix(RECENT_PREFIX) {
         // The focused window decides (useFileOpening.ts's openRecentFile): a
         // fresh, untouched one takes the file itself, as File > Open does,
@@ -848,9 +925,7 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     } else if id == NEW_QUICK_NOTE_ID {
         commands::quick_note::window::open_soon(app_handle);
     } else if id == OPEN_QUICK_NOTES_FOLDER_ID {
-        if let Err(err) = commands::quick_note::open_folder(app_handle) {
-            eprintln!("quick notes: could not open the folder: {err}");
-        }
+        open_quick_notes_folder(app_handle);
     } else if id == CLOSE_WINDOW_ID {
         // close() (not destroy()) so the frontend's dirty-tab prompt still
         // runs, same as the red traffic-light button.
@@ -900,6 +975,14 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_recent_folder_ends_in_a_separator_to_set_it_apart_from_files() {
+        assert_eq!(super::folder_menu_text("/srv/notes"), "/srv/notes/");
+        assert_eq!(super::folder_menu_text("/srv/notes/"), "/srv/notes/");
+        assert_eq!(super::folder_menu_text(r"D:\Notes"), r"D:\Notes\");
+        assert_eq!(super::folder_menu_text("/srv/Q&A"), "/srv/Q&&A/");
+    }
+
     #[test]
     fn every_label_key_is_one_the_frontend_sends() {
         // Submenus and muda's own items have no menu id to key a label by;

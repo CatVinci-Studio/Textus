@@ -1,11 +1,8 @@
 import { useDeferredValue, useEffect, useMemo, useRef } from "react";
 import { renderDocumentHtml } from "../markdown/render-html";
 import { resolveImageSrc } from "../images/image-plugin";
-import {
-  configureMermaid,
-  loadMermaid,
-  renderMermaid,
-} from "../mermaid-plugin";
+import { diagramRenderer } from "../diagram-engine";
+import { useSettings } from "../../settings/SettingsContext";
 import { SourceTextarea } from "./SourceTextarea";
 import "./SplitView.css";
 
@@ -37,6 +34,7 @@ export function SplitView({
   // deferred value and catches up a beat later.
   const deferred = useDeferredValue(content);
   const html = useMemo(() => renderDocumentHtml(deferred), [deferred]);
+  const { diagramEngine } = useSettings().settings;
 
   // Relative image paths resolve against the document's folder, as in the
   // editor; Mermaid fences become diagrams (loaded only when present).
@@ -52,23 +50,23 @@ export function SplitView({
     );
     if (diagrams.length === 0) return;
     let cancelled = false;
-    // The editor's own loader and settings: mermaid is one global, so a
-    // second initialize() here would reset the editor's diagrams too.
-    void loadMermaid().then(async (mermaid) => {
-      configureMermaid(
-        mermaid,
-        root.clientWidth,
-        getComputedStyle(root).fontFamily,
-      );
+    // The editor's own engines and settings: mermaid is one global, so a
+    // second initialize() of other settings here would reset the editor's
+    // diagrams too.
+    const draw = diagramRenderer(diagramEngine, {
+      width: root.clientWidth,
+      fontFamily: getComputedStyle(root).fontFamily,
+    });
+    void (async () => {
       let n = 0;
       for (const code of diagrams) {
         if (cancelled) return;
         try {
-          const svg = await renderMermaid(
-            mermaid,
-            `split-mermaid-${Date.now()}-${n++}`,
+          const { svg } = await draw(
             code.textContent ?? "",
+            `split-mermaid-${Date.now()}-${n++}`,
           );
+          if (cancelled) return;
           const box = document.createElement("div");
           box.className = "mermaid-preview";
           box.innerHTML = svg;
@@ -77,11 +75,11 @@ export function SplitView({
           // Incomplete diagram while typing: leave the source showing.
         }
       }
-    });
+    })();
     return () => {
       cancelled = true;
     };
-  }, [html, filePath]);
+  }, [html, filePath, diagramEngine]);
 
   // The scrollTop each side was last moved to by the other one. The scroll
   // event that move fires arrives a frame or more later (WebKitGTK, long
@@ -132,7 +130,10 @@ export function SplitView({
         }
       >
         <div className="milkdown">
+          {/* Keyed by the engine: the effect above replaces each fence
+              with its picture, so a new engine needs the fences back. */}
           <div
+            key={diagramEngine}
             id="write"
             className="ProseMirror split-preview-body"
             dangerouslySetInnerHTML={{ __html: html }}

@@ -37,8 +37,9 @@ use std::path::{Path, PathBuf};
 
 /// Directories that are never writing material: build output, dependency
 /// trees, version control. Skipping them keeps a project folder that also
-/// holds code from drowning every listing.
-const SKIPPED_DIRS: &[&str] = &[
+/// holds code from drowning every listing. The sidebar's file search skips
+/// the same ones (commands/folder.rs).
+pub(crate) const SKIPPED_DIRS: &[&str] = &[
     "node_modules",
     "target",
     "dist",

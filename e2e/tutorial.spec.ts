@@ -295,7 +295,7 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
     "true",
   );
   await modes.getByRole("button", { name: "Zen Mode" }).click();
-  await modes.getByRole("combobox", { name: "Editor Theme" }).click();
+  await modes.getByRole("combobox", { name: "Editor theme" }).click();
   await page.getByRole("option", { name: "Paper" }).click();
   await modes.getByRole("button", { name: "Continue" }).click();
 

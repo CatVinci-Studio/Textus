@@ -64,6 +64,7 @@ export type ShortcutAction =
   | "toggleSourceMode"
   | "toggleTypewriterMode"
   | "findReplace"
+  | "searchFiles"
   | "nextTab"
   | "previousTab"
   | HeadingAction;
@@ -101,6 +102,7 @@ export function defaultShortcuts(mac = modIsMeta()): Shortcuts {
     toggleSourceMode: "mod+/",
     toggleTypewriterMode: "",
     findReplace: "mod+f",
+    searchFiles: "mod+shift+o",
     nextTab: `${ctrl}+tab`,
     previousTab: `${ctrl}+shift+tab`,
     setHeading1: "",
@@ -119,6 +121,13 @@ const DEFAULT_SHORTCUTS: Shortcuts = defaultShortcuts();
 /// Interface Text Size, as a factor on the UI's type scale.
 export const UI_TEXT_SCALES = [0.9, 1, 1.1, 1.25] as const;
 export type UiTextScale = (typeof UI_TEXT_SCALES)[number];
+
+/// Settings.diagramEngine's values: Settings › Editor & Appearance ›
+/// Diagram engine (editor/diagram-engine.ts). Mermaid is the default and
+/// every diagram's fallback; Pele (pele.run) draws the same syntax faster,
+/// in a layout of its own, and is only ever the user's choice.
+export const DIAGRAM_ENGINES = ["mermaid", "pele"] as const;
+export type DiagramEngine = (typeof DIAGRAM_ENGINES)[number];
 
 /// Settings.revisionDisplay's values.
 export const REVISION_DISPLAYS = [
@@ -204,6 +213,8 @@ export interface Settings {
   enableAskAi: boolean;
   enableMath: boolean;
   enableMermaid: boolean;
+  /** Who draws ```mermaid blocks first; Mermaid draws what Pele can't. */
+  diagramEngine: DiagramEngine;
   /** Settings › Editor & Appearance › Line numbers in code blocks: a
    *  gutter of line numbers beside each code block, whose lines then
    *  scroll sideways instead of wrapping. Off by default. */
@@ -386,6 +397,7 @@ const DEFAULT_SETTINGS: Settings = {
   enableAskAi: true,
   enableMath: true,
   enableMermaid: true,
+  diagramEngine: "mermaid",
   codeLineNumbers: false,
   inlineColorSwatches: false,
   imageStorageMode: "local",
@@ -537,6 +549,11 @@ export function normaliseSettings(parsed: Raw | null): Settings {
         ...DEFAULT_SETTINGS.shortcuts,
         ...((parsed.shortcuts as Partial<Shortcuts> | undefined) ?? {}),
       },
+      diagramEngine: DIAGRAM_ENGINES.includes(
+        parsed.diagramEngine as DiagramEngine,
+      )
+        ? (parsed.diagramEngine as DiagramEngine)
+        : DEFAULT_SETTINGS.diagramEngine,
       uiTextScale: UI_TEXT_SCALES.includes(parsed.uiTextScale as UiTextScale)
         ? (parsed.uiTextScale as UiTextScale)
         : DEFAULT_SETTINGS.uiTextScale,

@@ -217,7 +217,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### Der globale Konfigurationsordner
 
-**Der globale Konfigurationsordner enthält, was für jedes Dokument gilt**: deine globale `agent.md` und deine globalen Skills. Er gehört zur App, nicht zu einem Projekt; **Einstellungen > Textus AI > Globaler Konfigurationsordner > Ordner öffnen** zeigt ihn.
+**Der globale Konfigurationsordner enthält, was für jedes Dokument gilt**: deine globale `agent.md` und deine globalen Skills. Er gehört zur App, nicht zu einem Projekt; **Einstellungen > Textus AI > Globaler Konfigurationsordner > Anzeigen** zeigt ihn.
 
 ```
 agent/                ← der globale Konfigurationsordner

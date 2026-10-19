@@ -217,7 +217,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### A pasta de configuração global
 
-**A pasta de configuração global guarda o que vale para todos os documentos**: o seu `agent.md` global e as suas habilidades globais. Ela pertence ao app, não a um projeto; **Ajustes > Textus AI > Pasta de configuração global > Abrir Pasta** a mostra.
+**A pasta de configuração global guarda o que vale para todos os documentos**: o seu `agent.md` global e as suas habilidades globais. Ela pertence ao app, não a um projeto; **Ajustes > Textus AI > Pasta de configuração global > Mostrar** a mostra.
 
 ```
 agent/                ← a pasta de configuração global

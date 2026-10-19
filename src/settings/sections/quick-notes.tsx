@@ -20,10 +20,10 @@ import { SettingRow, ToggleRow } from "./controls";
 const CONTINUE_MINUTES = [0, 1, 5, 15, 30, 60];
 
 /**
- * Settings › General › Quick Notes: the global shortcut (off until turned
- * on), where notes go and how, and the command that opens one - for
- * Wayland, where no app may register a shortcut, and for opening a note
- * while Textus isn't running. Desktop only. The window itself is
+ * Settings › General › Quick Notes: the two ways to open a note - the
+ * global shortcut (off until turned on) and the command, for Wayland, where
+ * no app may register a shortcut, and for opening a note while Textus isn't
+ * running - then where notes go and how. Desktop only. The window itself is
  * src/quick-note/; Rust registers the shortcut and writes the notes
  * (src-tauri/src/commands/quick_note/).
  */
@@ -65,6 +65,9 @@ export function QuickNotesSection({ t }: { t: Strings }) {
       {settings.quickNoteShortcutEnabled && (
         <QuickNoteShortcutRow t={t} status={status} />
       )}
+      {/* The other way to open a note, so beside the shortcut rather than
+          under the rows about where notes go. */}
+      <QuickNoteCommandRow t={t} />
       <SettingRow
         label={t.quickNoteFolderLabel}
         hint={folder ?? undefined}
@@ -121,7 +124,6 @@ export function QuickNotesSection({ t }: { t: Strings }) {
           ))}
         </Select>
       </SettingRow>
-      <QuickNoteCommandRow t={t} />
     </>
   );
 }
