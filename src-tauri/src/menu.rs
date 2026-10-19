@@ -817,8 +817,8 @@ pub(crate) fn quit(app_handle: &tauri::AppHandle) {
     }
 }
 
-/// File › Open Quick Notes Folder, and the tray's: in the sidebar, as File
-/// > Open Folder… would open it - the notes are documents to write in.
+/// File › Open Quick Notes Folder, and the tray's: in the sidebar, as
+/// File › Open Folder… would open it - the notes are documents to write in.
 /// Settings › Quick Notes still shows the folder in the file manager.
 pub(crate) fn open_quick_notes_folder(app_handle: &tauri::AppHandle) {
     match commands::quick_note::folder_for_use(app_handle) {
