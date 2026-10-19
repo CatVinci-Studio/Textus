@@ -678,6 +678,14 @@ type /name in a conversation to use one.
   cliCommandReinstallButton: "Reinstall",
   cliCommandInstalling: "Installing…",
   cliCommandFailed: "Couldn't install:",
+  defaultEditorLabel: "Default Markdown Editor",
+  defaultEditorIsDefault: `${APP_NAME} is the default`,
+  defaultEditorNotDefault: `${APP_NAME} is not the default`,
+  defaultEditorButton: "Set as Default",
+  defaultEditorChooseHint: `In Default apps, choose ${APP_NAME} for .md files.`,
+  defaultEditorUnsupported:
+    "Only an installed package (.deb, .rpm or AUR) can be the default, not the AppImage.",
+  defaultEditorFailed: "Couldn't set the default:",
   customCssLabel: "Custom CSS",
   customCssHint:
     "Applied on top of the current theme - for small changes like first-line indent, line spacing or fonts. Target the document with #write.",

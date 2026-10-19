@@ -131,9 +131,11 @@ objc2-foundation = { version = "0.3", features = [
     "NSDictionary",
     "NSValue",
 ] }
+# CFString: the LaunchServices calls of commands/default_editor.rs.
 objc2-core-foundation = { version = "0.3", default-features = false, features = [
     "std",
     "CFCGTypes",
+    "CFString",
     "objc2",
 ] }
 objc2-app-kit = { version = "0.3", default-features = false, features = [
@@ -169,7 +171,12 @@ block2 = "0.6"
 # operation. Already in the tree via wry; versions must stay on wry's.
 [target.'cfg(windows)'.dependencies]
 webview2-com = "0.39"
-windows = "0.62"
+# Win32_UI_Shell and windows-registry: Settings › General › Default Markdown
+# editor (commands/default_editor.rs) - the file-type lookup, the per-user
+# registration and Explorer's refresh. windows-registry is already in the
+# tree via hyper-util.
+windows = { version = "0.62", features = ["Win32_UI_Shell"] }
+windows-registry = "0.6"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 webkit2gtk = "2.0"

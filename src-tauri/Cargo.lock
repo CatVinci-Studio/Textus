@@ -4699,6 +4699,7 @@ dependencies = [
  "webkit2gtk",
  "webview2-com",
  "windows",
+ "windows-registry",
  "zip 4.6.1",
 ]
 

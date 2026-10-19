@@ -699,6 +699,14 @@ para usar una.
   cliCommandReinstallButton: "Reinstalar",
   cliCommandInstalling: "Instalando…",
   cliCommandFailed: "No se pudo instalar:",
+  defaultEditorLabel: "Editor de Markdown predeterminado",
+  defaultEditorIsDefault: `${APP_NAME} es el predeterminado`,
+  defaultEditorNotDefault: `${APP_NAME} no es el predeterminado`,
+  defaultEditorButton: "Establecer como predeterminado",
+  defaultEditorChooseHint: `En Aplicaciones predeterminadas, elige ${APP_NAME} para los archivos .md.`,
+  defaultEditorUnsupported:
+    "Solo un paquete instalado (.deb, .rpm o AUR) puede ser el predeterminado, no la AppImage.",
+  defaultEditorFailed: "No se pudo establecer:",
   customCssLabel: "CSS personalizado",
   customCssHint:
     "Se aplica sobre el tema actual, para cambios pequeños como la sangría de primera línea, el interlineado o las fuentes. El documento se selecciona con #write.",

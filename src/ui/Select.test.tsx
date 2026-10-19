@@ -67,6 +67,22 @@ describe("Select", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it("closes on a scroll that moves it, not on one that arrives late", () => {
+    renderSelect();
+    const trigger = screen.getByRole("combobox");
+    let top = 100;
+    trigger.getBoundingClientRect = () =>
+      ({ top, left: 20, bottom: top + 30, right: 120, width: 100 }) as DOMRect;
+    fireEvent.click(trigger);
+    // The event of a scroll made before the list opened: the trigger is
+    // where the list was placed, so the list stays.
+    fireEvent.scroll(document.body);
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    top = 40;
+    fireEvent.scroll(document.body);
+    expect(screen.queryByRole("listbox")).toBeNull();
+  });
+
   it("lists <optgroup>s under their names, and says the group when closed", () => {
     const onChange = vi.fn();
     render(
