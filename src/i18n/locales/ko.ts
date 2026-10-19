@@ -170,6 +170,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   commentLocate: "문서에서 보기",
   commentNotFound: "해당 부분이 더 이상 문서에 없습니다.",
   toolResult: "결과",
+  chatUseTheme: "이 테마 사용",
   toolSearchDocument: "문서에서 “{arg}” 검색 중",
   toolReadDocument: "“{arg}” 읽는 중",
   toolReadWholeDocument: "문서 전체 읽는 중",

@@ -164,6 +164,7 @@ export default {
   commentLocate: "在文件中顯示",
   commentNotFound: "文件中已經找不到這段文字。",
   toolResult: "結果",
+  chatUseTheme: "使用此主題",
   toolSearchDocument: "在文件中搜尋「{arg}」",
   toolReadDocument: "閱讀「{arg}」",
   toolReadWholeDocument: "閱讀全文",

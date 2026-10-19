@@ -174,6 +174,7 @@ type /name in a conversation to use one.
   commentLocate: "Show in document",
   commentNotFound: "That passage is no longer in the document.",
   toolResult: "Result",
+  chatUseTheme: "Use this theme",
   toolSearchDocument: "Searching the document for “{arg}”",
   toolReadDocument: "Reading “{arg}”",
   toolReadWholeDocument: "Reading the document",

@@ -2,10 +2,11 @@ import { useState } from "react";
 import type { AgentTurn, ImageAttachment } from "../types";
 import { MarkdownText } from "../MarkdownText";
 import { parseUserMessage } from "./user-message";
+import { ReplyThemes, type ReplyThemeLabels } from "./ReplyThemes";
 import { ChevronIcon, PaperclipIcon, SearchIcon } from "../../ui/icons";
 import "./AgentTurnView.css";
 
-export interface AgentTurnLabels {
+export interface AgentTurnLabels extends ReplyThemeLabels {
   /** Selection chip, for a selection of `n` characters. */
   selectionChip: (n: number) => string;
   /** What each tool call is doing, by tool name; "{arg}" is its main
@@ -64,6 +65,7 @@ export function AgentTurnView({
       return (
         <div className="agent-message agent-message-assistant">
           <MarkdownText text={turn.text} />
+          <ReplyThemes text={turn.text} labels={labels} />
         </div>
       );
     case "ToolCall":

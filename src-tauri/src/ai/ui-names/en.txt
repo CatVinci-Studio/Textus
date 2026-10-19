@@ -43,3 +43,6 @@ Review
 Revise
 Accept
 Reject
+Editor & Appearance (Settings page)
+Import CSS… (Settings, under Theme)
+Use this theme (under a theme in a reply)

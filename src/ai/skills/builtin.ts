@@ -32,6 +32,7 @@ export const BUILTIN_SKILLS = [
   { name: "social-post", category: "format", invocation: "both" },
   { name: "headline", category: "format", invocation: "both" },
   { name: "summarize", category: "format", invocation: "userOnly" },
+  { name: "theme", category: "format", invocation: "both" },
 ] as const satisfies readonly {
   name: string;
   category: SkillCategory;
