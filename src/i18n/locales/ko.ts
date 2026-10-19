@@ -941,4 +941,52 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   playgroundImageNotice: `이미지를 넣으려면 ${APP_NAME} 데스크톱 앱이 필요합니다.`,
   playgroundImportUnsupported:
     ".md, .markdown, .txt 파일만 가져올 수 있습니다.",
+  // Quick Notes (src/quick-note/, Settings › General › Quick Notes).
+  menuNewQuickNote: "새 빠른 메모",
+  menuOpenQuickNotesFolder: "빠른 메모 폴더 열기",
+  quickNotesGroup: "빠른 메모",
+  quickNoteShortcutToggle: "전역 단축키",
+  quickNoteShortcutHint:
+    "어느 앱에서든 빠른 메모를 엽니다. Textus는 이 키 조합 하나만 감지하며, 입력하는 다른 내용은 읽지 않습니다.",
+  quickNoteShortcutLabel: "단축키",
+  quickNoteShortcutDefault: "기본값으로",
+  quickNoteShortcutInApp:
+    "Textus가 이미 쓰는 조합입니다. 다른 조합을 고르세요.",
+  quickNoteShortcutTooFew:
+    "보조 키를 두 개 이상 쓰거나, 보조 키 하나와 기능 키를 함께 쓰세요.",
+  quickNoteStatusOn: "켜짐: 어느 앱에서든 {combo}를 누르세요.",
+  quickNoteStatusInUse:
+    "{combo}는 다른 앱이 사용 중입니다. 다른 조합을 고르세요.",
+  quickNoteStatusWayland:
+    "Wayland에서는 앱이 단축키를 감지할 수 없습니다. 데스크톱의 키보드 설정에서 아래 명령을 실행하는 단축키를 추가하세요.",
+  quickNoteStatusReserved: "시스템이 쓰는 조합입니다. 다른 조합을 고르세요.",
+  quickNoteStatusAltGr:
+    "Windows에서 Ctrl+Alt는 AltGr과 같아 여러 키보드 배열에서 글자를 입력하는 데 쓰입니다. Win 키나 기능 키가 들어간 조합을 고르세요.",
+  quickNoteFolderLabel: "저장 위치",
+  quickNoteFolderChange: "변경…",
+  quickNoteFolderShow: "보기",
+  quickNotePerDayLabel: "하루에 파일 하나",
+  quickNotePerDayHint:
+    "메모마다 파일을 만들지 않고, 그날의 파일에 시간과 함께 추가합니다.",
+  quickNoteContinueLabel: "이전 메모 이어 쓰기",
+  quickNoteContinueHint:
+    "저장한 뒤 곧 빠른 메모를 다시 열면 이전 메모를 이어 씁니다.",
+  quickNoteContinueNever: "안 함",
+  quickNoteContinueMinutes: { other: "{n}분 이내" },
+  quickNoteCommandLabel: "명령",
+  quickNoteCommandHint: `${APP_NAME}가 실행 중이 아닐 때도 빠른 메모를 엽니다. 시스템 설정에서 키를 지정하세요.`,
+  quickNoteCommandCopy: "복사",
+  quickNoteCommandCopied: "복사됨",
+  quickNoteTitle: "빠른 메모",
+  quickNoteHeader: "빠른 메모 → {name}",
+  quickNoteKeysHint: "Esc를 누르면 저장하고 닫습니다",
+  quickNoteDraftRestored: "저장하지 않은 메모를 복원했습니다.",
+  quickNoteContinuing: "이전 메모를 이어 씁니다.",
+  quickNoteDiscard: "버리기",
+  quickNoteDiscardConfirm: "이 메모를 버릴까요? 저장되지 않습니다.",
+  quickNoteOpenInTextus: `${APP_NAME}에서 열기`,
+  quickNoteSaveFailed: "메모를 저장하지 못했습니다:",
+  quickNoteNoImages: `빠른 메모에는 이미지를 붙여 넣을 수 없습니다. ${APP_NAME}에서 연 다음 추가하세요.`,
+  quickNoteConflictMessage:
+    "저장하지 않은 변경이 있는 동안 이 파일에 빠른 메모가 저장되었습니다: “{note}”. 지금 저장하면 파일을 덮어써 그 메모가 지워집니다.",
 } satisfies Translation;

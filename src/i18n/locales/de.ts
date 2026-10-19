@@ -981,4 +981,57 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   playgroundImageNotice: `Bilder brauchen die Desktop-App von ${APP_NAME}.`,
   playgroundImportUnsupported:
     "Nur .md-, .markdown- und .txt-Dateien lassen sich importieren.",
+  // Quick Notes (src/quick-note/, Settings › General › Quick Notes).
+  menuNewQuickNote: "Neue Schnellnotiz",
+  menuOpenQuickNotesFolder: "Schnellnotiz-Ordner öffnen",
+  quickNotesGroup: "Schnellnotizen",
+  quickNoteShortcutToggle: "Globales Tastenkürzel",
+  quickNoteShortcutHint:
+    "Öffnet eine Schnellnotiz aus jeder App. Textus hört nur auf diese eine Tastenkombination, nicht auf das, was du sonst tippst.",
+  quickNoteShortcutLabel: "Tastenkürzel",
+  quickNoteShortcutDefault: "Standard",
+  quickNoteShortcutInApp:
+    "Diese Kombination verwendet Textus selbst. Wähle eine andere.",
+  quickNoteShortcutTooFew:
+    "Verwende mindestens zwei Sondertasten oder eine zusammen mit einer Funktionstaste.",
+  quickNoteStatusOn: "Aktiv: Drücke {combo} in einer beliebigen App.",
+  quickNoteStatusInUse:
+    "{combo} wird bereits von einer anderen App verwendet. Wähle eine andere Kombination.",
+  quickNoteStatusWayland:
+    "Unter Wayland dürfen Apps keine Tastenkürzel abfangen. Lege in den Tastatureinstellungen deines Desktops ein Kürzel an, das den Befehl unten ausführt.",
+  quickNoteStatusReserved:
+    "Diese Kombination verwendet das System. Wähle eine andere.",
+  quickNoteStatusAltGr:
+    "Unter Windows ist Strg+Alt gleich AltGr und tippt auf vielen Tastaturbelegungen Buchstaben. Wähle eine Kombination mit Win oder einer Funktionstaste.",
+  quickNoteFolderLabel: "Ordner",
+  quickNoteFolderChange: "Ändern…",
+  quickNoteFolderShow: "Anzeigen",
+  quickNotePerDayLabel: "Eine Datei pro Tag",
+  quickNotePerDayHint:
+    "Fügt jede Notiz unter ihrer Uhrzeit in die Datei des Tages ein, statt einer Datei pro Notiz.",
+  quickNoteContinueLabel: "Letzte Notiz fortsetzen",
+  quickNoteContinueHint:
+    "Öffnest du kurz nach dem Speichern wieder eine Schnellnotiz, schreibst du die letzte weiter.",
+  quickNoteContinueNever: "Nie",
+  quickNoteContinueMinutes: {
+    one: "Innerhalb von {n} Minute",
+    other: "Innerhalb von {n} Minuten",
+  },
+  quickNoteCommandLabel: "Befehl",
+  quickNoteCommandHint: `Öffnet eine Schnellnotiz, auch wenn ${APP_NAME} nicht läuft. Weise ihn in den Systemeinstellungen einer Taste zu.`,
+  quickNoteCommandCopy: "Kopieren",
+  quickNoteCommandCopied: "Kopiert",
+  quickNoteTitle: "Schnellnotiz",
+  quickNoteHeader: "Schnellnotiz → {name}",
+  quickNoteKeysHint: "Esc speichert und schließt",
+  quickNoteDraftRestored:
+    "Die nicht gespeicherte Notiz wurde wiederhergestellt.",
+  quickNoteContinuing: "Du setzt deine letzte Notiz fort.",
+  quickNoteDiscard: "Verwerfen",
+  quickNoteDiscardConfirm: "Diese Notiz verwerfen? Sie wird nicht gespeichert.",
+  quickNoteOpenInTextus: `In ${APP_NAME} öffnen`,
+  quickNoteSaveFailed: "Die Notiz konnte nicht gespeichert werden:",
+  quickNoteNoImages: `In eine Schnellnotiz lassen sich keine Bilder einfügen. Öffne sie in ${APP_NAME}, um eines hinzuzufügen.`,
+  quickNoteConflictMessage:
+    "Während du ungespeicherte Änderungen hattest, wurde eine Schnellnotiz in diese Datei gespeichert: „{note}“. Speicherst du jetzt, wird die Datei überschrieben und die Notiz gelöscht.",
 } satisfies Translation;

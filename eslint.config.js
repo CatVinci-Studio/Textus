@@ -34,7 +34,7 @@ const FEATURES = [
   "sidebar",
   "theme",
 ];
-const SHELL = ["app", "document-view"];
+const SHELL = ["app", "document-view", "quick-note"];
 
 export default tseslint.config(
   {
@@ -99,6 +99,30 @@ export default tseslint.config(
     ],
     ignores: ["**/*.test.*"],
     rules: above(SHELL),
+  },
+  // The Quick Note window loads on its own (main.tsx) and has to take
+  // typing a moment after its shortcut: none of the editor window, the
+  // document view or the AI comes with it.
+  {
+    files: ["src/quick-note/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: ["app", "document-view", "ai", "playground"].map(
+            (folder) => ({
+              group: ["..", "../.."].flatMap((up) => [
+                `${up}/${folder}`,
+                `${up}/${folder}/**`,
+              ]),
+              allowTypeImports: true,
+              message: `The Quick Note window leaves ${folder}/ out to open fast; see docs/dev/architecture.md.`,
+            }),
+          ),
+        },
+      ],
+    },
   },
   {
     files: [

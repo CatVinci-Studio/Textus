@@ -9,9 +9,12 @@ use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
 pub const CHAT_LABEL_PREFIX: &str = "chat-";
 
 /// Whether `label` names a window that hosts a document (i.e. not the drag
-/// pill and not a detached chat).
+/// pill, a detached chat, the Quick Note window or a PDF export). Session
+/// restore, the remembered window size, tab drag, menu routing and files
+/// opened from the OS all go by this.
 pub fn is_editor_window(label: &str) -> bool {
     label != crate::tab_drag::DRAG_PILL_LABEL
+        && label != crate::commands::quick_note::window::LABEL
         && !label.starts_with(CHAT_LABEL_PREFIX)
         && !label.starts_with(crate::commands::export::PDF_EXPORT_LABEL_PREFIX)
 }
@@ -361,6 +364,17 @@ mod tests {
         assert!(!is_editor_window("chat-1"));
         assert!(!is_editor_window("chat-99"));
         assert!(!is_editor_window(crate::tab_drag::DRAG_PILL_LABEL));
+    }
+
+    /// A quick note taken for an editor window would be restored as a
+    /// session tab, sized like a document, sent Save and Close Tab for a
+    /// document it doesn't have, and handed files from the OS.
+    #[test]
+    fn the_quick_note_window_is_not_an_editor() {
+        assert!(!is_editor_window(
+            crate::commands::quick_note::window::LABEL
+        ));
+        assert!(!is_editor_window("quick-note"));
     }
 
     #[test]

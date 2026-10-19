@@ -29,6 +29,8 @@ export type NativeMenuId =
   | "new-file"
   | "new-window"
   | "open-file"
+  | "new-quick-note"
+  | "open-quick-notes-folder"
   | "recent-clear"
   | "save-file"
   | "save-file-as"
@@ -190,11 +192,17 @@ function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
   ];
 }
 
+/**
+ * `quickNoteCombo`: the Quick Note shortcut as a combo string, when it is
+ * registered - a global shortcut, so New Quick Note has no accelerator of
+ * its own to show (menu.rs gives it none).
+ */
 export function buildAppMenu(
   t: Strings,
   shortcuts: Shortcuts,
   recents: string[],
   checks: MenuChecks = {},
+  quickNoteCombo = "",
 ): MenuNode[] {
   return [
     {
@@ -219,6 +227,16 @@ export function buildAppMenu(
           action: { native: "open-file" },
         },
         { label: t.menuOpenRecent, submenu: recentEntries(t, recents) },
+        "separator",
+        {
+          label: t.menuNewQuickNote,
+          accel: quickNoteCombo || undefined,
+          action: { native: "new-quick-note" },
+        },
+        {
+          label: t.menuOpenQuickNotesFolder,
+          action: { native: "open-quick-notes-folder" },
+        },
         "separator",
         { label: t.menuSave, accel: "mod+s", action: { native: "save-file" } },
         {
@@ -398,7 +416,13 @@ export function buildMobileMenu(
  * the two menus say the same thing - plus "menu:<name>" for each submenu
  * and "predefined:<name>" for the items muda makes (menu.rs's build).
  */
-export function nativeMenuLabels(t: Strings): Record<string, string> {
+export function nativeMenuLabels(
+  t: Strings,
+  /** The Quick Note shortcut as macOS writes it ("⌃⌥N"), when it is
+   *  registered: in New Quick Note's label, as a native accelerator would
+   *  claim the keys inside Textus too. */
+  quickNoteHint = "",
+): Record<string, string> {
   const labels: Record<string, string> = {};
   const collect = (nodes: MenuNode[]) => {
     for (const node of nodes) {
@@ -413,6 +437,9 @@ export function nativeMenuLabels(t: Strings): Record<string, string> {
   const named = (template: string) => template.replace("{name}", APP_NAME);
   return {
     ...labels,
+    "new-quick-note": quickNoteHint
+      ? `${t.menuNewQuickNote} (${quickNoteHint})`
+      : t.menuNewQuickNote,
     // macOS says Quit where Windows says Exit.
     quit: named(t.menuQuit),
     "recent-none": t.menuRecentNone,

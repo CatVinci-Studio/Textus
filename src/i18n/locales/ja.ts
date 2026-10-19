@@ -950,4 +950,53 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   playgroundImageNotice: `画像を入れるには ${APP_NAME} デスクトップ版が必要です。`,
   playgroundImportUnsupported:
     "読み込めるのは .md、.markdown、.txt ファイルだけです。",
+  // Quick Notes (src/quick-note/, Settings › General › Quick Notes).
+  menuNewQuickNote: "新規クイックメモ",
+  menuOpenQuickNotesFolder: "クイックメモのフォルダを開く",
+  quickNotesGroup: "クイックメモ",
+  quickNoteShortcutToggle: "グローバルショートカット",
+  quickNoteShortcutHint:
+    "どのアプリからでもクイックメモを開けます。Textus が監視するのはこのキーの組み合わせだけで、入力したほかの内容は読みません。",
+  quickNoteShortcutLabel: "ショートカット",
+  quickNoteShortcutDefault: "デフォルトに戻す",
+  quickNoteShortcutInApp:
+    "この組み合わせは Textus 自身が使っています。別の組み合わせを選んでください。",
+  quickNoteShortcutTooFew:
+    "修飾キーを 2 つ以上、または修飾キーとファンクションキーを組み合わせてください。",
+  quickNoteStatusOn: "オン：どのアプリでも {combo} を押してください。",
+  quickNoteStatusInUse:
+    "{combo} はほかのアプリが使用中です。別の組み合わせを選んでください。",
+  quickNoteStatusWayland:
+    "Wayland ではアプリがショートカットを監視できません。デスクトップのキーボード設定で、下のコマンドを実行するショートカットを追加してください。",
+  quickNoteStatusReserved:
+    "この組み合わせはシステムが使っています。別の組み合わせを選んでください。",
+  quickNoteStatusAltGr:
+    "Windows では Ctrl+Alt は AltGr と同じで、多くのキー配列で文字の入力に使われます。Win キーかファンクションキーを含む組み合わせを選んでください。",
+  quickNoteFolderLabel: "保存先",
+  quickNoteFolderChange: "変更…",
+  quickNoteFolderShow: "表示",
+  quickNotePerDayLabel: "1 日 1 ファイル",
+  quickNotePerDayHint:
+    "メモごとにファイルを作らず、その日のファイルに時刻付きで追加します。",
+  quickNoteContinueLabel: "前のメモの続きを書く",
+  quickNoteContinueHint:
+    "保存してすぐにまたクイックメモを開くと、前のメモの続きになります。",
+  quickNoteContinueNever: "しない",
+  quickNoteContinueMinutes: { other: "{n} 分以内" },
+  quickNoteCommandLabel: "コマンド",
+  quickNoteCommandHint: `${APP_NAME} が起動していなくても、これでクイックメモを開けます。システム設定でキーに割り当ててください。`,
+  quickNoteCommandCopy: "コピー",
+  quickNoteCommandCopied: "コピーしました",
+  quickNoteTitle: "クイックメモ",
+  quickNoteHeader: "クイックメモ → {name}",
+  quickNoteKeysHint: "Esc で保存して閉じる",
+  quickNoteDraftRestored: "保存されていなかったメモを復元しました。",
+  quickNoteContinuing: "前のメモの続きです。",
+  quickNoteDiscard: "破棄",
+  quickNoteDiscardConfirm: "このメモを破棄しますか？保存されません。",
+  quickNoteOpenInTextus: `${APP_NAME} で開く`,
+  quickNoteSaveFailed: "メモを保存できませんでした：",
+  quickNoteNoImages: `クイックメモには画像を貼り付けられません。${APP_NAME} で開いてから追加してください。`,
+  quickNoteConflictMessage:
+    "未保存の変更があるあいだに、このファイルにクイックメモが保存されました：「{note}」。いま保存するとファイルが上書きされ、そのメモは消えます。",
 } satisfies Translation;

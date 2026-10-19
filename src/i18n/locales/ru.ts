@@ -975,4 +975,57 @@ export default {
   playgroundImageNotice: `Для изображений нужно настольное приложение ${APP_NAME}.`,
   playgroundImportUnsupported:
     "Импортировать можно только файлы .md, .markdown и .txt.",
+  // Quick Notes (src/quick-note/, Settings › General › Quick Notes).
+  menuNewQuickNote: "Новая быстрая заметка",
+  menuOpenQuickNotesFolder: "Открыть папку быстрых заметок",
+  quickNotesGroup: "Быстрые заметки",
+  quickNoteShortcutToggle: "Глобальное сочетание клавиш",
+  quickNoteShortcutHint:
+    "Открывает быструю заметку из любого приложения. Textus отслеживает только это сочетание клавиш и не читает ничего другого, что вы печатаете.",
+  quickNoteShortcutLabel: "Сочетание клавиш",
+  quickNoteShortcutDefault: "По умолчанию",
+  quickNoteShortcutInApp:
+    "Это сочетание уже использует Textus. Выберите другое.",
+  quickNoteShortcutTooFew:
+    "Используйте хотя бы две клавиши-модификатора или одну вместе с функциональной клавишей.",
+  quickNoteStatusOn: "Включено: нажмите {combo} в любом приложении.",
+  quickNoteStatusInUse:
+    "{combo} уже занято другим приложением. Выберите другое сочетание.",
+  quickNoteStatusWayland:
+    "В Wayland приложения не могут отслеживать сочетания клавиш. Добавьте в настройках клавиатуры вашего окружения сочетание, которое запускает команду ниже.",
+  quickNoteStatusReserved: "Это сочетание использует система. Выберите другое.",
+  quickNoteStatusAltGr:
+    "В Windows Ctrl+Alt — это AltGr, которым на многих раскладках вводят буквы. Выберите сочетание с Win или функциональной клавишей.",
+  quickNoteFolderLabel: "Папка",
+  quickNoteFolderChange: "Изменить…",
+  quickNoteFolderShow: "Показать",
+  quickNotePerDayLabel: "Один файл в день",
+  quickNotePerDayHint:
+    "Добавляет каждую заметку в файл этого дня под её временем, а не в отдельный файл.",
+  quickNoteContinueLabel: "Продолжать последнюю заметку",
+  quickNoteContinueHint:
+    "Если открыть быструю заметку вскоре после сохранения, продолжится предыдущая.",
+  quickNoteContinueNever: "Никогда",
+  quickNoteContinueMinutes: {
+    one: "В течение {n} минуты",
+    few: "В течение {n} минут",
+    many: "В течение {n} минут",
+    other: "В течение {n} минуты",
+  },
+  quickNoteCommandLabel: "Команда",
+  quickNoteCommandHint: `Открывает быструю заметку, даже когда ${APP_NAME} не запущен. Назначьте ей клавишу в настройках системы.`,
+  quickNoteCommandCopy: "Копировать",
+  quickNoteCommandCopied: "Скопировано",
+  quickNoteTitle: "Быстрая заметка",
+  quickNoteHeader: "Быстрая заметка → {name}",
+  quickNoteKeysHint: "Esc — сохранить и закрыть",
+  quickNoteDraftRestored: "Несохранённая заметка восстановлена.",
+  quickNoteContinuing: "Вы продолжаете последнюю заметку.",
+  quickNoteDiscard: "Удалить",
+  quickNoteDiscardConfirm: "Удалить эту заметку? Она не будет сохранена.",
+  quickNoteOpenInTextus: `Открыть в ${APP_NAME}`,
+  quickNoteSaveFailed: "Не удалось сохранить заметку:",
+  quickNoteNoImages: `В быструю заметку нельзя вставить изображение. Откройте её в ${APP_NAME}, чтобы добавить.`,
+  quickNoteConflictMessage:
+    "Пока у вас были несохранённые изменения, в этот файл сохранилась быстрая заметка: «{note}». Если сохранить сейчас, файл будет перезаписан и заметка удалится.",
 } satisfies Translation;
