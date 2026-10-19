@@ -6,7 +6,6 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "Panel de IA",
   agentPanelPopOut: "Abrir en una ventana aparte",
   agentPanelResize: "Cambiar el tamaño del panel de IA",
   sidebarResize: "Cambiar el tamaño de la barra lateral",
@@ -483,7 +482,7 @@ para usar una.
   agentStop: "Detener",
   agentRetry: "Reintentar",
   agentThinking: "Pensando…",
-  chatTab: "Chats",
+  chatHistoryOpen: "Historial",
   chatHistoryEmpty: "No hay conversaciones anteriores.",
   chatHistoryRestoreHint: "Reabrir esta conversación con su documento",
   chatHistoryDelete: "Eliminar conversación",
@@ -821,11 +820,10 @@ para usar una.
   imageStorageLocal: "En este equipo",
   imageStorageRemote: "Subir a un servidor de imágenes",
   imageFolderLabel: "Carpeta",
-  imageFolderNextToDocument: "Junto al documento",
-  imageFolderDocumentName: "<documento>.assets/",
-  imageFolderCustom: "Carpeta personalizada",
-  imageFolderInvalid:
-    "Usa una carpeta relativa al documento, como img o ../images.",
+  imageFolderSubfolder: "Subcarpeta",
+  imageFolderSameFolder: "La misma carpeta que el documento",
+  imageFolderNameLabel: "Nombre de la subcarpeta",
+  imageFolderInvalid: "Usa una carpeta dentro de la del documento, como img.",
   imageHostLabel: "Servicio",
   imageHostCustom: "Personalizado",
   imagePicgoEndpointLabel: "Dirección del servidor",

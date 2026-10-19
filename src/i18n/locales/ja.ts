@@ -6,7 +6,6 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "AIパネル",
   agentPanelPopOut: "別ウィンドウで開く",
   agentPanelResize: "AIパネルの幅を調整",
   sidebarResize: "サイドバーの幅を調整",
@@ -467,7 +466,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentStop: "停止",
   agentRetry: "再試行",
   agentThinking: "考え中…",
-  chatTab: "チャット",
+  chatHistoryOpen: "履歴",
   chatHistoryEmpty: "過去の会話はありません。",
   chatHistoryRestoreHint: "この会話を元の文書と一緒に開き直す",
   chatHistoryDelete: "会話を削除",
@@ -794,11 +793,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   imageStorageLocal: "このコンピューター",
   imageStorageRemote: "画像ホストにアップロード",
   imageFolderLabel: "フォルダー",
-  imageFolderNextToDocument: "ドキュメントと同じフォルダー",
-  imageFolderDocumentName: "<ドキュメント名>.assets/",
-  imageFolderCustom: "カスタムフォルダー",
+  imageFolderSubfolder: "サブフォルダー",
+  imageFolderSameFolder: "ドキュメントと同じフォルダー",
+  imageFolderNameLabel: "サブフォルダー名",
   imageFolderInvalid:
-    "ドキュメントからの相対パスで指定します（例：img、../images）。",
+    "ドキュメントのフォルダー内のフォルダーを指定します（例：img）。",
   imageHostLabel: "サービス",
   imageHostCustom: "カスタム",
   imagePicgoEndpointLabel: "サーバーのアドレス",

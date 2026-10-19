@@ -1,24 +1,69 @@
 import { describe, expect, it } from "vitest";
-import { imageFolderExample } from "./image-folder";
+import {
+  imageFolderExample,
+  isImageSubfolder,
+  migrateImageFolder,
+} from "./image-folder";
 
-const example = (folder: string) =>
-  imageFolderExample(folder, "notes", "photo.png");
+const example = (folder: string) => imageFolderExample(folder, "photo.png");
 
 describe("imageFolderExample", () => {
-  it("shows each preset's link as fs.rs writes it", () => {
+  it("shows each choice's link as fs.rs writes it", () => {
     expect(example("assets")).toBe("assets/photo.png");
     expect(example("./")).toBe("photo.png");
-    expect(example("${filename}.assets")).toBe("notes.assets/photo.png");
   });
 
-  it("writes a custom folder with forward slashes, tidied", () => {
-    expect(example("img\\shots\\")).toBe("img/shots/photo.png");
-    expect(example(" ./img/./x/../shots ")).toBe("img/shots/photo.png");
-    expect(example("../images")).toBe("../images/photo.png");
+  it("writes a subfolder with forward slashes, tidied", () => {
+    expect(example(" img\\shots\\ ")).toBe("img/shots/photo.png");
+    expect(example("./img/./shots")).toBe("img/shots/photo.png");
   });
 
   it("has no example for a folder the backend refuses", () => {
-    for (const folder of ["", " ", "/tmp/img", "\\img", "C:\\img", "a//b"])
+    for (const folder of [
+      "",
+      " ",
+      "/tmp/img",
+      "\\img",
+      "C:\\img",
+      "a//b",
+      "../images",
+      "img/../x",
+    ])
       expect(example(folder)).toBeNull();
+  });
+});
+
+describe("isImageSubfolder", () => {
+  it("takes a name inside the document's folder", () => {
+    expect(isImageSubfolder("img")).toBe(true);
+    expect(isImageSubfolder("img/shots")).toBe(true);
+  });
+
+  it("refuses the document's folder itself, a climb out and a root", () => {
+    for (const name of ["", ".", "./", "..", "../img", "/img", "C:img"])
+      expect(isImageSubfolder(name)).toBe(false);
+  });
+});
+
+describe("migrateImageFolder", () => {
+  it("keeps the two choices as they are", () => {
+    expect(migrateImageFolder("assets")).toBe("assets");
+    expect(migrateImageFolder("./")).toBe("./");
+    expect(migrateImageFolder(".")).toBe("./");
+  });
+
+  it("turns the <document>.assets pattern into assets", () => {
+    expect(migrateImageFolder("${filename}.assets")).toBe("assets");
+    expect(migrateImageFolder("img-${filename}")).toBe("assets");
+  });
+
+  it("keeps a folder of the user's own when it is one plain name", () => {
+    expect(migrateImageFolder("img")).toBe("img");
+    expect(migrateImageFolder(" pictures/ ")).toBe("pictures");
+  });
+
+  it("turns a path, a climb out or a refused folder into assets", () => {
+    for (const stored of ["img/shots", "../images", "/tmp/img", "", 3, null])
+      expect(migrateImageFolder(stored)).toBe("assets");
   });
 });

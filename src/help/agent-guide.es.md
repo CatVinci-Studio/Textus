@@ -31,14 +31,14 @@ Los posibles problemas aparecen subrayados. Pasa el puntero sobre uno, o coloca 
 
 ### 3. El panel de IA
 
-La conversación completa está en un panel a la derecha del editor. Ábrelo o ciérralo con el botón de chat del extremo derecho de la barra de la ventana o con <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+La conversación completa está en un panel a la derecha del editor. Ábrelo o ciérralo con el botón **Textus AI** (el robot) del extremo derecho de la barra de la ventana o con <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **Una conversación por documento**: cada pestaña tiene su propia conversación, y al cambiar de pestaña el panel cambia con ella. **Nueva conversación**, en la cabecera del panel, empieza de cero (si quedan cambios por revisar, pregunta antes).
 - **Modos**: el cuadro de texto ofrece tres. **Escribir** redacta texto nuevo en el documento (una continuación, un párrafo o una sección nuevos) y solo añade: con texto seleccionado, escribe a continuación de la selección. **Revisar** responde, comenta y deja comentarios sin cambiar nada. **Editar** cambia el texto que ya está. Cada cambio de Escribir o Editar es una propuesta que aceptas o rechazas. El panel empieza en el modo elegido en **Ajustes > Textus AI > Chat de Textus AI > Modo predeterminado**.
 - **Menciones con @**: escribe `@` en el cuadro de texto para elegir un archivo de texto de la carpeta del proyecto; se adjunta al mensaje.
 - **Adjuntar archivos**: el botón **+**, a la izquierda del cuadro de texto, adjunta a ese mensaje un PDF, un documento de Word, una presentación de PowerPoint, una hoja de cálculo, una imagen o un archivo de texto sin formato. Todo salvo las imágenes se convierte en texto en el propio dispositivo y viaja dentro del mensaje; las imágenes se envían como imágenes reales a los proveedores que pueden verlas (los que no pueden lo avisan de antemano en lugar de descartarlas sin decir nada). Un archivo largo solo se envía en parte, y en ese caso su etiqueta indica «(recortado)».
 - **Búsqueda web**: una vez activada en **Ajustes > Textus AI > Chat de Textus AI** (con los proveedores que la ofrecen), Textus AI puede buscar en la web por su cuenta si una petición lo requiere.
-- **Historial**: la pestaña **Chats** de la barra lateral guarda las conversaciones anteriores. Haz clic en una para volver a abrirla en el editor actual y continuarla.
+- **Historial**: el botón **Historial** (el reloj), en la cabecera del panel de IA, muestra las conversaciones anteriores agrupadas por carpeta. Haz clic en una para volver a abrirla con su documento y continuarla.
 - **Errores**: cuando una petición falla, el chat indica qué tipo de problema es y qué hacer (revisar la clave, esperar un momento, elegir otro modelo), encima del mensaje del propio proveedor.
 
 **Abrir en una ventana aparte**, en la cabecera del panel, lleva la conversación a su propia ventana, algo útil con un segundo monitor. Esa ventana te acompaña: si cambias de pestaña o de ventana, su documento, su título y su selección cambian también, y los cambios que propone llegan al archivo que estés editando en ese momento. Solo hay una por cada ventana del editor; **📌**, en su cabecera, la mantiene por encima del editor.

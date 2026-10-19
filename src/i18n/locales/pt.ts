@@ -6,7 +6,6 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "Painel de IA",
   agentPanelPopOut: "Abrir em uma janela separada",
   agentPanelResize: "Redimensionar o painel de IA",
   sidebarResize: "Redimensionar a barra lateral",
@@ -468,7 +467,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentStop: "Parar",
   agentRetry: "Tentar de novo",
   agentThinking: "Pensando…",
-  chatTab: "Conversas",
+  chatHistoryOpen: "Histórico",
   chatHistoryEmpty: "Nenhuma conversa anterior.",
   chatHistoryRestoreHint: "Reabrir esta conversa com o seu documento",
   chatHistoryDelete: "Apagar conversa",
@@ -806,11 +805,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   imageStorageLocal: "Neste computador",
   imageStorageRemote: "Enviar para uma hospedagem de imagens",
   imageFolderLabel: "Pasta",
-  imageFolderNextToDocument: "Junto ao documento",
-  imageFolderDocumentName: "<documento>.assets/",
-  imageFolderCustom: "Pasta personalizada",
-  imageFolderInvalid:
-    "Use uma pasta relativa ao documento, como img ou ../images.",
+  imageFolderSubfolder: "Subpasta",
+  imageFolderSameFolder: "A mesma pasta do documento",
+  imageFolderNameLabel: "Nome da subpasta",
+  imageFolderInvalid: "Use uma pasta dentro da pasta do documento, como img.",
   imageHostLabel: "Serviço",
   imageHostCustom: "Personalizado",
   imagePicgoEndpointLabel: "Endereço do servidor",

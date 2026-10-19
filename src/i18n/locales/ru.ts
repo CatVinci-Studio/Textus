@@ -6,7 +6,6 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "Панель ИИ",
   agentPanelPopOut: "Открыть в отдельном окне",
   agentPanelResize: "Изменить ширину панели ИИ",
   sidebarResize: "Изменить ширину боковой панели",
@@ -471,7 +470,7 @@ export default {
   agentStop: "Остановить",
   agentRetry: "Повторить",
   agentThinking: "Думает…",
-  chatTab: "Чаты",
+  chatHistoryOpen: "История",
   chatHistoryEmpty: "Прошлых диалогов нет.",
   chatHistoryRestoreHint: "Снова открыть этот диалог вместе с его документом",
   chatHistoryDelete: "Удалить диалог",
@@ -811,11 +810,10 @@ export default {
   imageStorageLocal: "На этом компьютере",
   imageStorageRemote: "Загружать на хостинг изображений",
   imageFolderLabel: "Папка",
-  imageFolderNextToDocument: "Рядом с документом",
-  imageFolderDocumentName: "<документ>.assets/",
-  imageFolderCustom: "Своя папка",
-  imageFolderInvalid:
-    "Укажите папку относительно документа, например img или ../images.",
+  imageFolderSubfolder: "Вложенная папка",
+  imageFolderSameFolder: "Та же папка, что и документ",
+  imageFolderNameLabel: "Имя вложенной папки",
+  imageFolderInvalid: "Укажите папку внутри папки документа, например img.",
   imageHostLabel: "Сервис",
   imageHostCustom: "Свой сервер",
   imagePicgoEndpointLabel: "Адрес сервера",

@@ -31,14 +31,14 @@ Possible issues get underlined. Hover over one, or move the caret into it, to se
 
 ### 3. The AI panel
 
-The full conversation lives in a panel on the right side of the editor. Open or close it with the chat button at the right end of the window bar or <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+The full conversation lives in a panel on the right side of the editor. Open or close it with the **Textus AI** button (the robot) at the right end of the window bar or <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **One conversation per document**: each tab has its own conversation, and switching tabs switches the panel with it. **New conversation** in the panel's header starts over (with edits still undecided, it asks first).
 - **Modes**: the composer has three. **Write** drafts new text into the document (a continuation, a new paragraph or section) and only ever adds: with text selected, it writes after the selection. **Review** answers, discusses and leaves comments without changing anything. **Revise** changes the text that is there. Every change Write or Revise makes is a proposal you accept or reject. The panel starts in the mode set under **Settings > Textus AI > Textus AI Chat > Default mode**.
 - **@-mentions**: type `@` in the input to pick a text file from the project folder; it is attached to the message.
 - **Attach files**: the **+** button on the left of the input attaches a PDF, Word document, PowerPoint deck, spreadsheet, image, or plain text file to that message. Everything except images is extracted to text locally and travels inside the message; images are sent as real images to providers that can see (ones that can't say so up front rather than dropping them silently). A long file is sent only in part, and the chip says "(shortened)" when that happens.
 - **Web search**: once enabled in **Settings > Textus AI > Textus AI Chat** (for providers that offer it), Textus AI can search the web on its own when a request needs it.
-- **History**: the sidebar's **Chats** tab stores past conversations. Click one to reopen it in the current editor and continue.
+- **History**: the **History** button (the clock) in the AI panel's header lists past conversations, grouped by folder. Click one to reopen it with its document and continue.
 - **Errors**: when a request fails, the chat says what kind of problem it is and what to do (check the key, wait a moment, pick another model) above the provider's own message.
 
 **Open in a separate window** in the panel's header moves the conversation into its own window — handy on a second monitor. That window follows you: switch tabs or windows and its document, title and selection follow, and the edits it proposes land in whichever file you are actually editing. There is only ever one per editor window; **📌** in its header keeps it above the editor.

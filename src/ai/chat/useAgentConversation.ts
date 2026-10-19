@@ -301,7 +301,7 @@ export function useAgentConversation(
   return {
     // Exposed so a conversation can move between windows (detached chat)
     // without being re-saved under a new id each hop, which would leave one
-    // exchange scattered across several sidebar history entries.
+    // exchange scattered across several history entries.
     conversationId,
     history,
     streaming,

@@ -180,7 +180,7 @@ Oui : de simples fichiers .md, avec tableaux, listes de tâches, notes de bas de
 1. Lancez Textus. Il s’ouvre sur un brouillon vierge ; un fichier n’est nécessaire qu’à l’enregistrement.
 2. Ouvrez **Réglages → Textus AI**, choisissez un fournisseur, puis connectez-vous ou collez une clé dans **Authentification**.
 3. Commencez à écrire. Quand vous marquez une pause, la suite apparaît en gris ; Tab l’accepte.
-4. Ouvrez le Panneau IA avec le bouton de discussion de la barre de fenêtre. **Aide → Guide des fonctions IA** présente le reste.
+4. Ouvrez le Panneau IA avec le bouton **Textus AI** (le robot) de la barre de fenêtre. **Aide → Guide des fonctions IA** présente le reste.
 
 Tous les raccourcis se consultent et se modifient dans **Réglages → Raccourcis**.
 
