@@ -565,6 +565,9 @@ para usar una.
   themeGalleryInstallFailed: "No se pudo instalar el tema:",
   enableMathLabel: "Activar fórmulas matemáticas",
   enableMermaidLabel: "Diagramas Mermaid",
+  codeLineNumbersLabel: "Números de línea en los bloques de código",
+  codeBlockCopy: "Copiar",
+  codeBlockCopied: "Copiado",
   autoCloseMarksLabel: "Cerrar las marcas de formato automáticamente",
   autoCloseMarksHint:
     "Al escribir *, **, ~~, == o ` se añade su marca de cierre. Si lo desactivas, escribes tú la marca de cierre y el formato se aplica al hacerlo.",

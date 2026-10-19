@@ -553,6 +553,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   themeGalleryInstallFailed: "Das Theme konnte nicht installiert werden:",
   enableMathLabel: "Mathematische Formeln aktivieren",
   enableMermaidLabel: "Mermaid-Diagramme",
+  codeLineNumbersLabel: "Zeilennummern in Codeblöcken",
+  codeBlockCopy: "Kopieren",
+  codeBlockCopied: "Kopiert",
   autoCloseMarksLabel: "Formatierungszeichen automatisch schließen",
   autoCloseMarksHint:
     "Beim Tippen von *, **, ~~, == oder ` wird das schließende Zeichen ergänzt. Ist es aus, tippst du das schließende Zeichen selbst, und die Formatierung greift dann trotzdem.",

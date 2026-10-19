@@ -516,6 +516,9 @@ export default {
   themeGalleryInstallFailed: "無法安裝主題：",
   enableMathLabel: "啟用數學公式",
   enableMermaidLabel: "Mermaid 圖表",
+  codeLineNumbersLabel: "程式碼區塊顯示行號",
+  codeBlockCopy: "複製",
+  codeBlockCopied: "已複製",
   autoCloseMarksLabel: "自動補上格式符號",
   autoCloseMarksHint:
     "輸入 *、**、~~、== 或 ` 時自動補上結尾符號。關閉後結尾符號由你自己輸入，輸入後格式照樣生效。",

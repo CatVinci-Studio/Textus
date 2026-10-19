@@ -53,7 +53,8 @@ import {
   taskListClickPlugin,
 } from "./markdown/task-list-plugin";
 import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
-import { codeBlockLanguageView } from "./code/code-block-language-view";
+import { createCodeBlockView } from "./code/code-block-language-view";
+import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
 import { tableColumnResizing, tableHoverView } from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
@@ -237,7 +238,17 @@ export function withEditorCore(
       .use(taskListClickPlugin)
       .use(cjkTaskInputPlugin)
       .use(syntaxHighlightPlugin)
-      .use(codeBlockLanguageView)
+      .use(
+        createCodeBlockView(() => {
+          const t = resolveStrings(settings.current.language);
+          return { copy: t.codeBlockCopy, copied: t.codeBlockCopied };
+        }),
+      )
+      .use(
+        createCodeLineNumbersPlugin({
+          enabled: () => settings.current.codeLineNumbers,
+        }),
+      )
       .use(tableHoverView)
       .use(tableColumnResizing)
       .use(

@@ -542,6 +542,9 @@ type /name in a conversation to use one.
   themeGalleryInstallFailed: "Couldn't install the theme:",
   enableMathLabel: "Enable math formulas",
   enableMermaidLabel: "Mermaid diagrams",
+  codeLineNumbersLabel: "Line numbers in code blocks",
+  codeBlockCopy: "Copy",
+  codeBlockCopied: "Copied",
   autoCloseMarksLabel: "Close formatting marks automatically",
   autoCloseMarksHint:
     "Typing *, **, ~~, == or ` adds its closing mark. When off, you type the closing mark yourself, and the formatting applies once you do.",

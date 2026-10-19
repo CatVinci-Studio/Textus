@@ -150,15 +150,17 @@ export function MilkdownEditor({
   );
   const inlineChat = useInlineChat(run);
   useQuickAskDecorations(run, inlineChat, phone);
-  // The empty-document placeholder reads the language when it draws, and
-  // decorations only draw on a transaction: without one, switching the
-  // language in Settings (or on the first-run picker) left the old text.
+  // The empty-document placeholder reads the language when it draws, the
+  // code blocks' line numbers their setting, and decorations only draw on
+  // a transaction: without one, switching the language in Settings (or on
+  // the first-run picker) left the old text, and the setting did nothing
+  // until the next keystroke.
   useEffect(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       view.dispatch(view.state.tr.setMeta("addToHistory", false));
     });
-  }, [settings.language, run]);
+  }, [settings.language, settings.codeLineNumbers, run]);
 
   const proposals = useEditorProposals({
     run,

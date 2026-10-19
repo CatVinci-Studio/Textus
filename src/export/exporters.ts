@@ -20,6 +20,7 @@ import {
   MISSING_IMAGE_CARD_CLASS,
   MISSING_IMAGE_CLASS,
 } from "../editor/images/missing-image";
+import { CODE_LINE_NUMBERS_CLASS } from "../editor/code/code-line-numbers-plugin";
 import {
   MAC_PAGE,
   WINDOWS_PAGE,
@@ -94,7 +95,8 @@ function collectInlinedCss(): string {
 }
 
 // Editing affordances that live in the editor DOM but are not document
-// content: heading "#" markers, the code-block language picker, table
+// content: heading "#" markers, the code-block header (copy button and
+// language picker) and line numbers, table
 // insert buttons, delimiters shown around the caret, AI previews. Kept in
 // step with the @media print list in print.css, which hides the same chrome
 // when the webview's PDF renderer applies print media.
@@ -102,6 +104,7 @@ const EDITOR_CHROME_SELECTOR = [
   ".heading-marker",
   ".enclosure-delimiter",
   ".code-block-header",
+  ".code-line-gutter",
   ".table-add-row-btn",
   ".table-add-col-btn",
   ".ghost-text",
@@ -193,6 +196,10 @@ export function cloneEditorContent(
   clone
     .querySelectorAll(`.${MISSING_IMAGE_CLASS}`)
     .forEach((el) => el.classList.remove(MISSING_IMAGE_CLASS));
+  // Nor do its lines stop wrapping, without the numbers they made room for.
+  clone
+    .querySelectorAll(`.${CODE_LINE_NUMBERS_CLASS}`)
+    .forEach((el) => el.classList.remove(CODE_LINE_NUMBERS_CLASS));
   gatherDetails(clone);
   fitTablesToWidth(clone);
   clone

@@ -537,6 +537,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   themeGalleryInstallFailed: "테마를 설치할 수 없습니다:",
   enableMathLabel: "수식 사용",
   enableMermaidLabel: "Mermaid 다이어그램",
+  codeLineNumbersLabel: "코드 블록에 줄 번호 표시",
+  codeBlockCopy: "복사",
+  codeBlockCopied: "복사됨",
   autoCloseMarksLabel: "서식 기호 자동으로 닫기",
   autoCloseMarksHint:
     "*, **, ~~, == 또는 `를 입력하면 닫는 기호를 자동으로 넣습니다. 끄면 닫는 기호를 직접 입력하며, 입력하면 서식이 그대로 적용됩니다.",

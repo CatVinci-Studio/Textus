@@ -568,6 +568,9 @@ utiliser une.
   themeGalleryInstallFailed: "Impossible d’installer le thème :",
   enableMathLabel: "Activer les formules mathématiques",
   enableMermaidLabel: "Diagrammes Mermaid",
+  codeLineNumbersLabel: "Numéros de ligne dans les blocs de code",
+  codeBlockCopy: "Copier",
+  codeBlockCopied: "Copié",
   autoCloseMarksLabel: "Fermer automatiquement les marques de mise en forme",
   autoCloseMarksHint:
     "Taper *, **, ~~, == ou ` ajoute sa marque de fermeture. Désactivé, vous tapez vous-même la marque de fermeture, et la mise en forme s’applique alors.",

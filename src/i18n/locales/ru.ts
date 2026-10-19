@@ -554,6 +554,9 @@ export default {
   themeGalleryInstallFailed: "Не удалось установить тему:",
   enableMathLabel: "Математические формулы",
   enableMermaidLabel: "Диаграммы Mermaid",
+  codeLineNumbersLabel: "Номера строк в блоках кода",
+  codeBlockCopy: "Копировать",
+  codeBlockCopied: "Скопировано",
   autoCloseMarksLabel: "Автоматически закрывать знаки форматирования",
   autoCloseMarksHint:
     "При вводе *, **, ~~, == или ` закрывающий знак добавляется сам. Если выключено, вы вводите закрывающий знак сами, и форматирование применяется, как только вы его введёте.",

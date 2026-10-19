@@ -549,6 +549,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   themeGalleryInstallFailed: "Não foi possível instalar o tema:",
   enableMathLabel: "Ativar fórmulas matemáticas",
   enableMermaidLabel: "Diagramas Mermaid",
+  codeLineNumbersLabel: "Números de linha nos blocos de código",
+  codeBlockCopy: "Copiar",
+  codeBlockCopied: "Copiado",
   autoCloseMarksLabel: "Fechar marcas de formatação automaticamente",
   autoCloseMarksHint:
     "Ao digitar *, **, ~~, == ou `, a marca de fechamento é adicionada. Desativado, você digita a marca de fechamento, e a formatação é aplicada quando você a digita.",
