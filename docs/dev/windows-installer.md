@@ -100,7 +100,7 @@ The uninstaller removes all of the above except the extensions' keys
 themselves, which other apps share; an uninstall run for an upgrade
 (`/UPDATE`) leaves them for the install that follows.
 
-**Settings › General › Default Markdown Editor** writes the same values
+**Settings › General › Default Markdown editor** writes the same values
 again (`src-tauri/src/commands/default_editor.rs`; a change to one needs the
 other) and opens **Default apps** at Textus
 (`ms-settings:defaultapps?registeredAppUser=Textus`). Windows does not let

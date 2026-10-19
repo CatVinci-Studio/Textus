@@ -63,7 +63,7 @@ export function useFileOpening(opts: {
   setPendingClose: (close: PendingClose) => void;
   /** File > Open's file-type names besides Markdown, in the UI language. */
   dialogFilters: { textFilter: string; allFilter: string };
-  /** Settings › General › Restore Previous Session on Startup, which
+  /** Settings › General › Restore previous session on startup, which
    *  reopening a document at its last caret follows. */
   restoreCarets: boolean;
 }) {

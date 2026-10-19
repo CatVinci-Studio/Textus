@@ -222,8 +222,8 @@ remembered).**
   `~/.config/com.catvinci.textus/agent/` (Linux),
   `~/Library/Application Support/com.catvinci.textus/agent/` (macOS),
   `%APPDATA%\com.catvinci.textus\agent\` (Windows).
-- **Create / edit:** **Settings > Textus AI > Global Config Folder > Open
-  Folder** (desktop) creates it with a starter `agent.md` and shows it in
+- **Create / edit:** **Settings > Textus AI > Global config folder > Show**
+  (desktop) creates it with a starter `agent.md` and shows it in
   the file manager; **Edit agent.md** and **Import Skill…** write into it.
 - **Textus AI uses it:** read before the project's `.textus/` on every
   conversation request. It has no style profile or library: those describe
