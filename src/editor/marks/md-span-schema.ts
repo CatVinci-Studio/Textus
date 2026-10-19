@@ -34,6 +34,44 @@ export const remarkHighlightPlugin = $remark(
   () => remarkHighlight,
 );
 
+interface MdastNode {
+  type: string;
+  data?: Record<string, unknown>;
+  children?: MdastNode[];
+  position?: { start: { offset?: number } };
+}
+
+/**
+ * How many tildes a strikethrough was written with. remark-gfm reads `~x~`
+ * as strikethrough too but keeps no count, and mdast writes "~~" - so a
+ * Pandoc subscript, `H~2~O`, was saved as `H~~2~~O`, which reads as
+ * strikethrough everywhere. Recorded here as `data.tildes`, read into the
+ * node's rung below and written back by markdown-output.ts.
+ */
+const remarkStrikethroughTildes: RemarkPluginRaw<unknown> = () => {
+  return (tree: unknown, file: { value: unknown }) => {
+    const source = String(file.value);
+    const walk = (node: MdastNode) => {
+      const start = node.position?.start.offset;
+      if (node.type === "delete" && start !== undefined)
+        node.data = {
+          ...node.data,
+          tildes: source.startsWith("~~", start) ? 2 : 1,
+        };
+      node.children?.forEach(walk);
+    };
+    walk(tree as MdastNode);
+  };
+};
+
+const tildesOf = (node: { data?: unknown }) =>
+  (node.data as { tildes?: number } | undefined)?.tildes;
+
+export const remarkStrikethroughTildesPlugin = $remark(
+  "remark-strikethrough-tildes",
+  () => remarkStrikethroughTildes,
+);
+
 // The literal markdown delimiter text a node renders from/reverts to -
 // shared by the schema's toDOM (static "data-syntax" attribute) and
 // enclosure.ts (delimiter reveal widgets, delimiter deletion/unwrap).
@@ -88,8 +126,9 @@ export const mdSpanClipboardPlugin = $prose((ctx) => {
 // they're all "wrap some inline content in a repeated delimiter", differing
 // only in which character and how many of them. `delim`+`rung` together
 // pick the rendered style and the markdown wrapper on save (see toMarkdown
-// below); `rung` only ever varies for "*" (1 = italic, 2 = bold, 3 = both) -
-// "~" and "=" are always rung 2, there's no single-character form for either.
+// below); for "*" the rung is the style (1 = italic, 2 = bold, 3 = both),
+// for "~" only how many tildes the file had (`~x~` is rung 1, though the
+// editor makes "~~"), and "=" is always rung 2.
 export const mdSpanSchema = $nodeSchema("md_span", () => ({
   content: "inline*",
   group: "inline",
@@ -151,7 +190,7 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
           : node.type === "emphasis"
             ? { delim: "*", rung: 1 }
             : node.type === "delete"
-              ? { delim: "~", rung: 2 }
+              ? { delim: "~", rung: tildesOf(node) === 1 ? 1 : 2 }
               : { delim: "=", rung: 2 };
       state.openNode(type, attrs);
       state.next(node.children);
@@ -182,7 +221,14 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
           : delim === "~"
             ? "delete"
             : "mark";
-      state.openNode(mdastType).next(node.content).closeNode();
+      state
+        .openNode(
+          mdastType,
+          undefined,
+          delim === "~" && rung === 1 ? { data: { tildes: 1 } } : undefined,
+        )
+        .next(node.content)
+        .closeNode();
     },
   },
 }));

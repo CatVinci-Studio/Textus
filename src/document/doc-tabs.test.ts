@@ -1,5 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { makeBlankTab, windowIsUntouched } from "./doc-tabs";
+import { adjacentTabId, makeBlankTab, windowIsUntouched } from "./doc-tabs";
+
+describe("adjacentTabId", () => {
+  const tabs = [{ id: "a" }, { id: "b" }, { id: "c" }];
+
+  it("steps to the next and the previous tab in bar order", () => {
+    expect(adjacentTabId(tabs, "a", 1)).toBe("b");
+    expect(adjacentTabId(tabs, "c", -1)).toBe("b");
+  });
+
+  it("wraps from the last tab to the first, and back", () => {
+    expect(adjacentTabId(tabs, "c", 1)).toBe("a");
+    expect(adjacentTabId(tabs, "a", -1)).toBe("c");
+  });
+
+  it("has nowhere to go with a single tab", () => {
+    expect(adjacentTabId([{ id: "a" }], "a", 1)).toBeNull();
+  });
+});
 
 describe("windowIsUntouched", () => {
   it("holds for a fresh window's Untitled tab", () => {

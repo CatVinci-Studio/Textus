@@ -39,6 +39,10 @@ window.__textusBoot = function (boot, themeCss) {
       settings.contentWidth === "full"
     )
       root.setAttribute("data-content-width", settings.contentWidth);
+    // UI_TEXT_SCALES in SettingsContext.tsx, minus 1 (the stylesheet's own
+    // default); theme/apply-appearance.ts sets the same property.
+    if ([0.9, 1.1, 1.25].indexOf(settings.uiTextScale) >= 0)
+      root.style.setProperty("--ui-text-scale", String(settings.uiTextScale));
     // BUILTIN_CONTENT_THEMES in SettingsContext.tsx, minus "default" (which
     // is the absence of the attribute).
     var builtin = ["paper", "slate", "forest", "parchment"];

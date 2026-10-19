@@ -16,6 +16,8 @@ import { useAppUpdate } from "./useAppUpdate";
 import { useZoom } from "./useZoom";
 import { useTabDragMerge } from "./useTabDragMerge";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
+import { fixedShortcutGroups } from "./fixed-shortcuts";
+import { platformName } from "../platform/window-chrome";
 import { useExternalChangeReload } from "../document/useExternalChangeReload";
 import { useDraftAutosave } from "../document/draft-autosave";
 import { useAutosave } from "../document/autosave";
@@ -207,7 +209,9 @@ function App() {
   const showTabBar = tabs.length > 1 || dragHoverPreview !== null;
 
   useGlobalShortcuts({
+    tabsRef,
     activeTabId,
+    setActiveTabId,
     saveTab,
     requestCloseTab,
     toggleSourceMode,
@@ -449,6 +453,7 @@ function App() {
                 sourceMode: !!activeTab.sourceMode && !activeTab.splitView,
                 zen: zenMode,
               }}
+              fixedShortcuts={fixedShortcutGroups(t, platformName())}
             />
           )}
         </Presence>

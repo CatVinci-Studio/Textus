@@ -30,7 +30,8 @@ export const EDIT_ACTION_EVENT = "textus:edit-action";
 
 /// detail: the block kind to insert at the cursor, from the native Format
 /// menu (see menu-insert-block in src-tauri/src/lib.rs) - "h1".."h6",
-/// "bullet-list", "ordered-list", "blockquote", "code-block", or "table".
+/// "bullet-list", "ordered-list", "blockquote", "code-block", or "table";
+/// or "paragraph", from the heading shortcuts (app/useGlobalShortcuts.ts).
 export const INSERT_BLOCK_EVENT = "textus:insert-block";
 
 /// detail: "heading" | "bullet-list" | "ordered-list" | "blockquote" - the

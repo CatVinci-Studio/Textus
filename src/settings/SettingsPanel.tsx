@@ -13,6 +13,9 @@ import {
   type ProxyType,
   REVISION_DISPLAYS,
   type RevisionDisplay,
+  type HeadingAction,
+  UI_TEXT_SCALES,
+  type UiTextScale,
 } from "./SettingsContext";
 import {
   marginViewBlocked,
@@ -20,14 +23,23 @@ import {
 } from "../ai/revision/revision-display";
 import { useMarginAvailable } from "../ai/margin/margin-room";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
-import { LANGS, LANG_NAMES, type Lang, type TextKey } from "../i18n/strings";
+import {
+  LANGS,
+  LANG_NAMES,
+  localeOf,
+  type Lang,
+  type TextKey,
+} from "../i18n/strings";
 import {
   LinkRow,
   SettingRow,
   ToggleRow,
   ShortcutRow,
+  FixedShortcutList,
+  headingLabels,
   VERBATIM_INPUT,
 } from "./sections/controls";
+import type { FixedShortcutGroup } from "../app/fixed-shortcuts";
 import { ChevronIcon, CloseIcon } from "../ui/icons";
 import { CliCommandSection, DefaultEditorSection } from "./sections/general";
 import { links } from "../platform/ipc";
@@ -85,6 +97,9 @@ interface SettingsPanelProps {
   onFilesDeleted?: (paths: string[]) => void;
   /** Which of the window's view modes are on, for Editor > View. */
   viewChecks?: Pick<MenuChecks, "sourceMode" | "zen">;
+  /** The shortcuts that can't be changed, listed under the ones that can
+   *  (built from the app menu, app/fixed-shortcuts.ts). */
+  fixedShortcuts?: FixedShortcutGroup[];
 }
 
 export type Category = "general" | "editor" | "ai" | "shortcuts" | "privacy";
@@ -111,6 +126,7 @@ export function SettingsPanel({
   onOpenFile,
   onFilesDeleted,
   viewChecks = {},
+  fixedShortcuts = [],
 }: SettingsPanelProps) {
   const { settings, setSettings, t } = useSettings();
   // As in the review bar: a phone never has a margin, so there is nothing
@@ -118,6 +134,10 @@ export function SettingsPanel({
   const marginAvailable = useMarginAvailable();
   const phone = usePhoneLayout();
   const noMargin = !phone && !marginAvailable;
+  // "125 %" in French, "125%" in English.
+  const percent = new Intl.NumberFormat(localeOf(settings.language), {
+    style: "percent",
+  });
   const [category, setCategory] = useState<Category>("general");
   // A page of its own inside a category, with a way back, on the desktop
   // and the phone alike: General › About Textus, Editor & Appearance ›
@@ -247,6 +267,27 @@ export function SettingsPanel({
                 <option value="full">{t.contentWidthFull}</option>
               </Select>
             </SettingRow>
+            {/* A phone's UI is sized by iOS's own text styles instead. */}
+            {!phone && (
+              <SettingRow label={t.uiTextScaleLabel}>
+                <Select
+                  className="settings-select"
+                  aria-label={t.uiTextScaleLabel}
+                  value={String(settings.uiTextScale)}
+                  onChange={(e) =>
+                    setSettings({
+                      uiTextScale: Number(e.target.value) as UiTextScale,
+                    })
+                  }
+                >
+                  {UI_TEXT_SCALES.map((scale) => (
+                    <option key={scale} value={String(scale)}>
+                      {percent.format(scale)}
+                    </option>
+                  ))}
+                </Select>
+              </SettingRow>
+            )}
           </SettingsGroup>
           {/* The window's view modes, beside the one that is a setting
               (typewriter): on a phone, whose menu is kept short, this is
@@ -624,7 +665,38 @@ export function SettingsPanel({
               setSettings={setSettings}
               t={t}
             />
+            <ShortcutRow
+              label={t.shortcutNextTab}
+              action="nextTab"
+              shortcuts={settings.shortcuts}
+              setSettings={setSettings}
+              t={t}
+            />
+            <ShortcutRow
+              label={t.shortcutPreviousTab}
+              action="previousTab"
+              shortcuts={settings.shortcuts}
+              setSettings={setSettings}
+              t={t}
+            />
           </SettingsGroup>
+          <SettingsGroup title={t.shortcutHeadingsGroupLabel}>
+            {Object.entries(headingLabels(t)).map(([action, label]) => (
+              <ShortcutRow
+                key={action}
+                label={label}
+                action={action as HeadingAction}
+                shortcuts={settings.shortcuts}
+                setSettings={setSettings}
+                t={t}
+              />
+            ))}
+          </SettingsGroup>
+          {fixedShortcuts.length > 0 && (
+            <SettingsGroup title={t.shortcutFixedGroupLabel}>
+              <FixedShortcutList groups={fixedShortcuts} />
+            </SettingsGroup>
+          )}
         </>
       )}
     </>
