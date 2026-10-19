@@ -109,10 +109,35 @@ async function expectFirstPairHot(page: Page) {
   await expect(
     page.locator('.milkdown [data-index="1"].pending-sentence-hot'),
   ).toHaveCount(0);
-  const outlined = await pair
-    .first()
-    .evaluate((el) => getComputedStyle(el).boxShadow);
-  expect(outlined).not.toBe("none");
+  // Each side drawn is outlined in its own colour: green round the new
+  // text, red round the original - the theme's --revision-* outlines, not
+  // the accent.
+  const outlines = await pair.evaluateAll((els) => {
+    const probe = document.createElement("span");
+    document.body.append(probe);
+    const resolve = (name: string) => {
+      probe.style.color = `var(${name})`;
+      return getComputedStyle(probe).color;
+    };
+    const expected = {
+      insert: resolve("--revision-insert-outline"),
+      delete: resolve("--revision-delete-outline"),
+    };
+    probe.remove();
+    return els
+      .filter((el) => el.getClientRects().length > 0)
+      .filter((el) => getComputedStyle(el).fontSize !== "0px")
+      .map((el) => ({
+        side: el.matches(".pending-insert, .pending-insert-mark")
+          ? ("insert" as const)
+          : ("delete" as const),
+        shadow: getComputedStyle(el).boxShadow,
+        expected,
+      }));
+  });
+  expect(outlines.length).toBeGreaterThan(0);
+  for (const { side, shadow, expected } of outlines)
+    expect(shadow, side).toContain(expected[side]);
 }
 
 async function hover(page: Page, target: Locator) {

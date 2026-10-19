@@ -107,6 +107,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   revisionDisplayFinal: "修正後の文だけ",
   revisionDisplayNoRoom:
     "余白が足りません：サイドバーか AIパネルを閉じてください",
+  revisionDisplayNewText:
+    "追加された文には元の文がないため、この表示でも緑色のまま本文に残ります",
   proposalDeletedSentence: "元の文",
   reviewBarLabel: "修正",
   reviewBarOpenChat: "AIパネルを開く",

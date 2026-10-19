@@ -36,7 +36,10 @@ import { useEditorClipboard } from "../editor/useEditorClipboard";
 import { useAiActions } from "../ai/writing/useAiActions";
 import { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
 import { ReviewBar } from "../ai/revision/ReviewBar";
-import { revisionDisplayName } from "../ai/revision/revision-display";
+import {
+  addsTextOnly,
+  revisionDisplayName,
+} from "../ai/revision/revision-display";
 import { ReviewMargin } from "../ai/margin/ReviewMargin";
 import { OpenReviewNote } from "../ai/margin/OpenReviewNote";
 import { useReviewNotes } from "../ai/margin/useReviewNotes";
@@ -449,6 +452,9 @@ export function MilkdownEditor({
                 display={settings.revisionDisplay}
                 displayName={(mode) => revisionDisplayName(t, mode)}
                 onDisplay={(mode) => setSettings({ revisionDisplay: mode })}
+                newText={pendingEdits.decidable.some((p) =>
+                  addsTextOnly(p.proposal),
+                )}
               />
             )}
           </Presence>,

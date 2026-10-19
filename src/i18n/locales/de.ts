@@ -110,6 +110,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   revisionDisplayFinal: "Nur das Ergebnis, ohne Markierungen",
   revisionDisplayNoRoom:
     "Nicht genug Platz - schließen Sie die Seitenleiste oder den KI-Bereich",
+  revisionDisplayNewText:
+    "Neuer Text hat kein Original: In diesen Ansichten bleibt er grün im Text",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Überarbeitung",
   reviewBarOpenChat: "KI-Bereich öffnen",

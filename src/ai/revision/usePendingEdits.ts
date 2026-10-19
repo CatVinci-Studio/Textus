@@ -121,6 +121,8 @@ function resolveAnchored(
   range: { from: number; to: number };
   replacement: string;
   strikeRange: { from: number; to: number } | null;
+  /** The markdown in `range` before the anchor (MarkdownMatch.prefix). */
+  lead: string;
 } | null {
   const match = findMarkdownMatch(
     blocks,
@@ -139,6 +141,7 @@ function resolveAnchored(
       proposal.action === "replace" || proposal.action === "delete"
         ? computeStrikeRange(ctx, doc, blocks, match)
         : null,
+    lead: match.prefix,
   };
 }
 
@@ -146,7 +149,8 @@ function resolveAnchored(
  * A rewrite's sentence-by-sentence view (PendingPreview.sentences): the
  * diff of what it replaces against its text, each change found in the
  * document. Null when the proposal isn't a rewrite, nothing changed, or a
- * piece can't be found - it is then shown and decided whole.
+ * piece can't be found - it is then shown and decided whole. `lead`: the
+ * markdown in `range` before `original` (locateHunks).
  */
 function sentencesFor(
   ctx: Ctx,
@@ -154,15 +158,23 @@ function sentencesFor(
   proposal: EditProposal,
   original: string | null,
   range: { from: number; to: number } | null,
+  lead = "",
 ): PendingPreview["sentences"] {
   if (original === null || !range || proposal.text === undefined)
     return undefined;
   const hunks = diffSentences(original, proposal.text);
   if (!hunks.some((h) => h.kind === "change")) return undefined;
-  const ranges = locateHunks(doc, range.from, range.to, hunks, (markdown) => {
-    const parsed = parseMarkdownSource(ctx, markdown);
-    return parsed && typeof parsed !== "string" ? parsed.textContent : null;
-  });
+  const ranges = locateHunks(
+    doc,
+    range.from,
+    range.to,
+    hunks,
+    (markdown) => {
+      const parsed = parseMarkdownSource(ctx, markdown);
+      return parsed && typeof parsed !== "string" ? parsed.textContent : null;
+    },
+    lead,
+  );
   if (!ranges) return undefined;
   const changes = hunks.flatMap((h, i) =>
     h.kind === "change"
@@ -372,6 +384,7 @@ export function usePendingEdits(run: EditorRunner) {
           let range: { from: number; to: number } | null = null;
           let replacement = proposal.text ?? "";
           let strikeRange: { from: number; to: number } | null = null;
+          let lead = "";
 
           if (proposal.action === "append") {
             range = { from: docSize, to: docSize };
@@ -399,7 +412,8 @@ export function usePendingEdits(run: EditorRunner) {
             }
           } else {
             const resolved = resolveAnchored(ctx, state.doc, blocks, proposal);
-            if (resolved) ({ range, replacement, strikeRange } = resolved);
+            if (resolved)
+              ({ range, replacement, strikeRange, lead } = resolved);
           }
 
           if (!range) {
@@ -411,6 +425,11 @@ export function usePendingEdits(run: EditorRunner) {
           }
           // Only the final proposal is split into sentences: a streaming
           // draft's text is still growing (and is typed in whole anyway).
+          // An anchor across paragraphs has no strike range of its own
+          // (computeStrikeRange): its sentences are found in the whole
+          // blocks, past what precedes it there. Rewriting several
+          // paragraphs at once - what Revise does to text Write just
+          // added - used to be shown whole, and no revision view applied.
           const sentences = streaming
             ? undefined
             : proposal.action === "replace"
@@ -419,7 +438,8 @@ export function usePendingEdits(run: EditorRunner) {
                   state.doc,
                   proposal,
                   proposal.anchor ?? null,
-                  strikeRange,
+                  strikeRange ?? range,
+                  strikeRange ? "" : lead,
                 )
               : proposal.action === "replace_selection"
                 ? sentencesFor(
@@ -610,15 +630,34 @@ export function usePendingEdits(run: EditorRunner) {
     [run],
   );
 
+  const reject = useCallback(
+    (callId: string) => {
+      run((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        view.dispatch(
+          view.state.tr.setMeta(pendingEditKey, { type: "remove", callId }),
+        );
+      });
+      setStatuses((prev) => ({ ...prev, [callId]: "rejected" }));
+    },
+    [run],
+  );
+
   /**
    * One sentence taken (true), kept as written (false) or undecided again
    * (null). Once every sentence of the proposal has a decision, it is
    * applied - the last ✓ / ✕ is the Accept; one that kept them all is a
    * rejection. Until then Accept (the card, the review bar, Ctrl/⌘+Enter)
-   * takes the undecided ones.
+   * takes the undecided ones. A proposal shown whole (index -1, its margin
+   * card) has one decision: ✓ accepts it, ✕ rejects it.
    */
   const decide = useCallback(
     (callId: string, index: number, take: boolean | null) => {
+      if (index < 0) {
+        if (take === true) accept(callId);
+        else if (take === false) reject(callId);
+        return;
+      }
       let complete = false;
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
@@ -640,20 +679,7 @@ export function usePendingEdits(run: EditorRunner) {
       });
       if (complete) accept(callId);
     },
-    [run, accept],
-  );
-
-  const reject = useCallback(
-    (callId: string) => {
-      run((ctx) => {
-        const view = ctx.get(editorViewCtx);
-        view.dispatch(
-          view.state.tr.setMeta(pendingEditKey, { type: "remove", callId }),
-        );
-      });
-      setStatuses((prev) => ({ ...prev, [callId]: "rejected" }));
-    },
-    [run],
+    [run, accept, reject],
   );
 
   // Reads the ids from the plugin's own state rather than the `previews`
