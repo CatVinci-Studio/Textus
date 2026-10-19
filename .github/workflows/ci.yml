@@ -12,9 +12,12 @@ name: CI
 #   ios      the iOS simulator build
 #
 # A pull request that only touches documentation runs `check` alone; the
-# other jobs are skipped, which branch protection counts as passed. One that
-# only touches the Rust backend skips `e2e` too: the flows run the frontend
-# against a mocked backend, so Rust can't change their result.
+# other jobs are skipped, which branch protection counts as passed. So does a
+# version bump (only the version lines of the five files
+# scripts/check-versions.mjs keeps in step), on its pull request and on its
+# push to main. One that only touches the Rust backend skips `e2e` too: the
+# flows run the frontend against a mocked backend, so Rust can't change their
+# result. scripts/ci-changes.mjs decides.
 
 on:
   pull_request:
@@ -34,9 +37,10 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Whether anything besides documentation changed (`code`), and whether any
-  # of it reaches the browser (`frontend`). Pushes to main always run
-  # everything.
+  # Whether anything besides documentation and a version bump changed
+  # (`code`), and whether any of it reaches the browser (`frontend`):
+  # scripts/ci-changes.mjs. A push runs everything unless it is a version
+  # bump.
   changes:
     runs-on: ubuntu-22.04
     timeout-minutes: 5
@@ -47,33 +51,18 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
       - id: diff
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE: ${{ github.event.before }}
         run: |
-          if [ -z "$BASE" ]; then
-            echo "code=true" >> "$GITHUB_OUTPUT"
-            echo "frontend=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          # Documentation: Markdown anywhere, docs/, the issue templates and
-          # the license. Anything else is code.
-          code=$(git diff --name-only "$BASE" HEAD \
-            | grep -vE '(\.md$|^docs/|^\.github/ISSUE_TEMPLATE/|^LICENSE$)' || true)
-          if [ -n "$code" ]; then
-            echo "code=true" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            node scripts/ci-changes.mjs --base "$PR_BASE" >> "$GITHUB_OUTPUT"
           else
-            echo "code=false" >> "$GITHUB_OUTPUT"
-          fi
-          # Code outside src-tauri/ is frontend, and so are the src-tauri
-          # files the browser does see: the icons the frontend imports,
-          # boot.js (which e2e/storage.spec.ts runs) and the Tauri configs.
-          if printf '%s\n' "$code" | grep -v '^src-tauri/' | grep -q . ||
-            printf '%s\n' "$code" \
-              | grep -qE '^src-tauri/(icons/|src/boot\.js$|tauri(\.[a-z]+)?\.conf\.json$)'; then
-            echo "frontend=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "frontend=false" >> "$GITHUB_OUTPUT"
+            node scripts/ci-changes.mjs --base "$PUSH_BASE" --push >> "$GITHUB_OUTPUT"
           fi
 
   check:
