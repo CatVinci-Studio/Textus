@@ -591,7 +591,6 @@ export function installDevTauriShim(): void {
           .filter(
             (file) =>
               file.startsWith(`${path}/`) &&
-              /\.(md|markdown|txt|text)$/i.test(file) &&
               !file.slice(path.length).includes("/."),
           )
           .sort()

@@ -236,6 +236,9 @@ export default {
   treeSearchTooBroad:
     "這個資料夾的範圍太大，無法搜尋。請用「檔案 › 開啟資料夾…」開啟範圍更小的資料夾。",
   treeSearchFailed: "無法讀取這個資料夾。",
+  treeSearchScope: "顯示",
+  treeSearchScopeAll: "所有檔案",
+  treeSearchScopeDocuments: "僅文件",
   shortcutSearchFiles: "搜尋檔案名稱",
   menuDocuments: "文件",
   docListTitle: "文件",

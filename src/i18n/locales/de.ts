@@ -258,6 +258,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeSearchTooBroad:
     "Dieser Ordner ist zu weit gefasst, um ihn zu durchsuchen. Öffne mit Datei › Ordner öffnen… einen spezifischeren.",
   treeSearchFailed: "Dieser Ordner kann nicht gelesen werden.",
+  treeSearchScope: "Anzeigen",
+  treeSearchScopeAll: "Alle Dateien",
+  treeSearchScopeDocuments: "Nur Dokumente",
   shortcutSearchFiles: "Dateinamen suchen",
   menuDocuments: "Dokumente",
   docListTitle: "Dokumente",

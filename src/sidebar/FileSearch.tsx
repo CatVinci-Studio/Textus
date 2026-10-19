@@ -9,7 +9,16 @@ import {
 import { fs } from "../platform/ipc";
 import { useSettings } from "../settings/SettingsContext";
 import { SearchIcon, fileIconFor } from "../ui/icons";
-import { matchFiles, searchEntries, type SearchEntry } from "./file-search";
+import { Select } from "../ui/Select";
+import { getUiState, setUiState } from "../storage/ui-state";
+import { localeOf } from "../i18n/langs";
+import { nameCollator } from "../utils/name-order";
+import {
+  matchFiles,
+  searchEntries,
+  type SearchEntry,
+  type SearchScope,
+} from "./file-search";
 import type { Strings } from "../i18n/strings";
 
 /** An index older than this is built again the next time the box gains
@@ -24,22 +33,28 @@ type IndexState =
   | { kind: "failed" };
 
 /**
- * The folder's documents, indexed by the backend (commands/folder.rs) the
+ * The folder's files, indexed by the backend (commands/folder.rs) the
  * first time the box gains focus and again on a later focus once stale, or
  * after `refreshKey` moves (the tree's Refresh). A rebuild keeps the old
- * results on screen until the new ones arrive.
+ * results on screen until the new ones arrive. Sorted here, once per
+ * index, so a keystroke only filters.
  */
-function useFolderIndex(root: string, refreshKey: number) {
+function useFolderIndex(
+  root: string,
+  refreshKey: number,
+  collator: Intl.Collator,
+) {
   const [index, setIndex] = useState<IndexState>({ kind: "none" });
   const builtAt = useRef(0);
   const request = useRef(0);
 
-  // Another folder, or Refresh: what was indexed no longer stands.
+  // Another folder, Refresh or another language's order: what was indexed
+  // no longer stands.
   useEffect(() => {
     builtAt.current = 0;
     request.current++;
     setIndex({ kind: "none" });
-  }, [root, refreshKey]);
+  }, [root, refreshKey, collator]);
 
   const ensure = useCallback(() => {
     if (Date.now() - builtAt.current < INDEX_FRESH_MS) return;
@@ -51,7 +66,7 @@ function useFolderIndex(root: string, refreshKey: number) {
         if (id !== request.current) return;
         setIndex({
           kind: "ready",
-          entries: searchEntries(result.files),
+          entries: searchEntries(result.files, collator),
           truncated: result.truncated,
         });
       },
@@ -63,7 +78,7 @@ function useFolderIndex(root: string, refreshKey: number) {
         });
       },
     );
-  }, [root]);
+  }, [root, collator]);
 
   return { index, ensure };
 }
@@ -77,12 +92,18 @@ function focusEditor() {
     ?.focus();
 }
 
+/** The filter as last left, every file by default. */
+function savedScope(): SearchScope {
+  return getUiState("fileSearchScope") === "documents" ? "documents" : "all";
+}
+
 /**
  * The search box at the top of the Files tab: file names anywhere under
- * the folder, matched as you type. While it holds a query its results
- * stand in for the tree (which stays mounted underneath, expanded as it
- * was). Enter opens the selected match, ↑/↓ move, Esc clears and goes back
- * to the editor.
+ * the folder, matched as you type - documents first, then other files,
+ * or documents only with the filter beside the box. While it holds a
+ * query its results stand in for the tree (which stays mounted underneath,
+ * expanded as it was). Enter opens the selected match the way clicking it
+ * in the tree does, ↑/↓ move, Esc clears and goes back to the editor.
  */
 export function FileSearch({
   root,
@@ -102,10 +123,12 @@ export function FileSearch({
   focusRequest: boolean;
   onFocusHandled: () => void;
 }) {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const collator = nameCollator(localeOf(settings.language));
   const input = useRef<HTMLInputElement>(null);
-  const { index, ensure } = useFolderIndex(root, refreshKey);
+  const { index, ensure } = useFolderIndex(root, refreshKey, collator);
   const [selected, setSelected] = useState(0);
+  const [scope, setScope] = useState<SearchScope>(savedScope);
 
   // The folder changed (or Refresh) while the box has the keyboard: there
   // is no focus event to come, so index the new one now.
@@ -125,8 +148,10 @@ export function FileSearch({
   const deferredQuery = useDeferredValue(query);
   const matches = useMemo(
     () =>
-      index.kind === "ready" ? matchFiles(index.entries, deferredQuery) : [],
-    [index, deferredQuery],
+      index.kind === "ready"
+        ? matchFiles(index.entries, deferredQuery, scope)
+        : [],
+    [index, deferredQuery, scope],
   );
   const active = Math.min(selected, Math.max(matches.length - 1, 0));
 
@@ -155,25 +180,42 @@ export function FileSearch({
 
   return (
     <>
-      <div className="file-search-field">
-        <SearchIcon className="file-search-icon" />
-        <input
-          ref={input}
-          className="file-search-input"
-          type="search"
-          value={query}
-          placeholder={t.treeSearchPlaceholder}
-          aria-label={t.treeSearchPlaceholder}
-          aria-controls="file-search-results"
-          spellCheck={false}
-          autoComplete="off"
-          onFocus={ensure}
+      <div className="file-search-bar">
+        <div className="file-search-field">
+          <SearchIcon className="file-search-icon" />
+          <input
+            ref={input}
+            className="file-search-input"
+            type="search"
+            value={query}
+            placeholder={t.treeSearchPlaceholder}
+            aria-label={t.treeSearchPlaceholder}
+            aria-controls="file-search-results"
+            spellCheck={false}
+            autoComplete="off"
+            onFocus={ensure}
+            onChange={(e) => {
+              onQueryChange(e.target.value);
+              setSelected(0);
+            }}
+            onKeyDown={onKeyDown}
+          />
+        </div>
+        <Select
+          className="file-search-scope"
+          value={scope}
+          aria-label={t.treeSearchScope}
+          title={t.treeSearchScope}
           onChange={(e) => {
-            onQueryChange(e.target.value);
+            const next = e.target.value === "documents" ? "documents" : "all";
+            setScope(next);
             setSelected(0);
+            setUiState("fileSearchScope", next);
           }}
-          onKeyDown={onKeyDown}
-        />
+        >
+          <option value="all">{t.treeSearchScopeAll}</option>
+          <option value="documents">{t.treeSearchScopeDocuments}</option>
+        </Select>
       </div>
       {searching && (
         <div

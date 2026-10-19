@@ -254,6 +254,9 @@ type /name in a conversation to use one.
   treeSearchTooBroad:
     "This folder is too broad to search. Open a more specific one with File › Open Folder…",
   treeSearchFailed: "This folder can't be read.",
+  treeSearchScope: "Show",
+  treeSearchScopeAll: "All files",
+  treeSearchScopeDocuments: "Documents only",
   shortcutSearchFiles: "Search file names",
   menuDocuments: "Documents",
   docListTitle: "Documents",

@@ -10,6 +10,8 @@ const FILES: Record<string, string> = {
   "/work/notes/a.md": "# Alpha",
   "/work/notes/novel/ch1.md": "# Chapter one",
   "/work/notes/novel/ch2.md": "# Chapter two",
+  "/work/notes/novel/ch10.md": "# Chapter ten",
+  "/work/notes/images/chart.png": "not really a picture",
   "/work/notes/essays/第一章 草稿.md": "# 草稿",
   "/work/notes/.hidden/secret.md": "# Hidden",
   "/work/elsewhere/c.md": "# Elsewhere",
@@ -228,8 +230,13 @@ test.describe("file name search", () => {
     await page.keyboard.press("ControlOrMeta+Shift+O");
     await expect(search(page)).toBeFocused();
     await page.keyboard.type("CH");
-    await expect(results(page)).toHaveCount(2);
-    await expect(results(page).first()).toContainText("ch1.md");
+    // Documents first, numbers in order, then the other files.
+    await expect(results(page).locator(".tree-label")).toHaveText([
+      "ch1.md",
+      "ch2.md",
+      "ch10.md",
+      "chart.png",
+    ]);
     await expect(results(page).first()).toContainText("novel");
     // The tree is hidden behind the results, not gone.
     await expect(page.locator(".tree-main")).toBeHidden();
@@ -241,6 +248,52 @@ test.describe("file name search", () => {
     await expect(search(page)).toHaveValue("");
     await expect(page.locator(".tree-main")).toBeVisible();
     await expect(page.locator(editor)).toBeFocused();
+  });
+
+  test("the filter keeps to documents, and is remembered", async ({ page }) => {
+    await open(page);
+    await openFolderFromMenu(page, "/work/notes");
+    await search(page).fill("ch");
+    await expect(results(page)).toHaveCount(4);
+    await page.getByRole("combobox", { name: "Show" }).click();
+    await page
+      .getByRole("option", { name: "Documents only", exact: true })
+      .click();
+    await expect(results(page)).toHaveCount(3);
+    await expect(results(page).filter({ hasText: "chart.png" })).toHaveCount(0);
+    expect(
+      await page.evaluate(() =>
+        localStorage.getItem("textus-file-search-scope"),
+      ),
+    ).toBe("documents");
+  });
+
+  test("opens another kind of file the way the tree does", async ({ page }) => {
+    await open(page);
+    await openFolderFromMenu(page, "/work/notes");
+    await search(page).fill("chart");
+    await results(page).first().click();
+    await expect(page.locator(".window-bar-title-text")).toHaveText(
+      "chart.png",
+    );
+    await expect(page.locator(editor)).toContainText("not really a picture");
+  });
+
+  test("the tree lists numbered names by their numbers", async ({ page }) => {
+    await open(page);
+    await openFolderFromMenu(page, "/work/notes");
+    await treeRow(page, "novel").click();
+    await expect(
+      page.locator(".sidebar .tree-main .tree-row .tree-label"),
+    ).toHaveText([
+      "essays",
+      "images",
+      "novel",
+      "ch1.md",
+      "ch2.md",
+      "ch10.md",
+      "a.md",
+    ]);
   });
 
   test("finds Chinese names and says when nothing matches", async ({

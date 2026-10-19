@@ -3,26 +3,31 @@
 //! and src/sidebar/FileSearch.tsx.
 
 use crate::ai::project::{is_too_broad, SKIPPED_DIRS};
+use ignore::{WalkBuilder, WalkState};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::Mutex;
+use std::time::{Duration, Instant};
 
-/// What the search lists: the documents Textus opens, the same types
-/// File > Open offers before "All files" (fs.rs's open_document_filters).
-const INDEXED_EXTENSIONS: &[&str] = &["md", "markdown", "txt", "text"];
-
-/// Where the walk stops. A writing folder this size is rare; a folder that
-/// is really a whole disk of code must not keep a thread busy for long.
-/// Each limit leaves the index marked `truncated`, which the sidebar says.
+/// Where the walk stops. Each limit leaves the index marked `truncated`,
+/// which the sidebar says. A folder of writing is far below all of them; a
+/// folder that is really a disk of code or photos must not keep the
+/// machine busy, and the time budget holds on a slow network drive too.
 struct Limits {
     files: usize,
+    /// Everything looked at, folders and skipped files included: a tree of
+    /// a million entries holding few files still ends.
     entries: usize,
     depth: usize,
+    time: Duration,
 }
 
 const LIMITS: Limits = Limits {
-    files: 10_000,
-    entries: 200_000,
+    files: 50_000,
+    entries: 500_000,
     depth: 24,
+    time: Duration::from_secs(3),
 };
 
 /// One indexed file. Shared with the frontend's IndexedFile in
@@ -43,78 +48,69 @@ pub struct FolderIndex {
     truncated: bool,
 }
 
-fn is_indexed(path: &Path) -> bool {
-    path.extension()
-        .and_then(|e| e.to_str())
-        .is_some_and(|e| INDEXED_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()))
-}
-
-/// The documents under `root`, depth-first in name order (a folder's files
-/// before its subfolders'), skipping hidden entries and SKIPPED_DIRS as the
-/// AI's project walk does. Symlinks are not followed, so a link back up the
-/// tree can't loop.
+/// Every file under `root`, in path order, the way fd finds them: a
+/// parallel walk (the `ignore` crate's, ripgrep's walker) that skips hidden
+/// entries and whatever `.gitignore` and `.ignore` files leave out - inside
+/// a git repository or not - plus SKIPPED_DIRS, as the AI's project walk
+/// does. Symlinks are not followed, so a link back up the tree can't loop.
 fn index(root: &Path, limits: &Limits) -> FolderIndex {
-    let mut files = Vec::new();
-    let mut visited = 0usize;
-    let mut stack: Vec<(PathBuf, usize)> = vec![(root.to_path_buf(), 0)];
-    while let Some((dir, depth)) = stack.pop() {
-        let Ok(entries) = std::fs::read_dir(&dir) else {
-            continue;
-        };
-        let mut entries: Vec<_> = entries.flatten().collect();
-        visited += entries.len();
-        if visited > limits.entries {
-            return FolderIndex {
-                files,
-                truncated: true,
-            };
-        }
-        entries.sort_by_key(|e| e.file_name().to_string_lossy().to_lowercase());
-        let mut subdirs = Vec::new();
-        for entry in entries {
-            let name = entry.file_name();
-            let name = name.to_string_lossy();
-            if name.starts_with('.') {
-                continue;
-            }
-            let Ok(kind) = entry.file_type() else {
-                continue;
-            };
-            let path = entry.path();
-            if kind.is_dir() {
-                if !SKIPPED_DIRS.contains(&name.as_ref()) && depth + 1 < limits.depth {
-                    subdirs.push((path, depth + 1));
+    let deadline = Instant::now() + limits.time;
+    let files = Mutex::new(Vec::new());
+    let visited = AtomicUsize::new(0);
+    let truncated = AtomicBool::new(false);
+    WalkBuilder::new(root)
+        .require_git(false)
+        .follow_links(false)
+        .max_depth(Some(limits.depth))
+        .filter_entry(|entry| {
+            !(entry.file_type().is_some_and(|t| t.is_dir())
+                && SKIPPED_DIRS.contains(&entry.file_name().to_string_lossy().as_ref()))
+        })
+        .build_parallel()
+        .run(|| {
+            Box::new(|entry| {
+                let Ok(entry) = entry else {
+                    return WalkState::Continue;
+                };
+                let seen = visited.fetch_add(1, Ordering::Relaxed) + 1;
+                if seen > limits.entries || Instant::now() > deadline {
+                    truncated.store(true, Ordering::Relaxed);
+                    return WalkState::Quit;
                 }
-            } else if kind.is_file() && is_indexed(&path) {
-                if files.len() >= limits.files {
-                    return FolderIndex {
-                        files,
-                        truncated: true,
-                    };
+                if !entry.file_type().is_some_and(|t| t.is_file()) {
+                    return WalkState::Continue;
                 }
+                let path = entry.path();
                 let rel = path
                     .strip_prefix(root)
-                    .unwrap_or(&path)
+                    .unwrap_or(path)
                     .to_string_lossy()
                     .replace('\\', "/");
+                let mut files = files.lock().unwrap();
+                if files.len() >= limits.files {
+                    truncated.store(true, Ordering::Relaxed);
+                    return WalkState::Quit;
+                }
                 files.push(IndexedFile {
                     path: path.to_string_lossy().into_owned(),
                     rel,
                 });
-            }
-        }
-        // Reversed so the stack pops subfolders in name order.
-        stack.extend(subdirs.into_iter().rev());
-    }
+                WalkState::Continue
+            })
+        });
+    let mut files = files.into_inner().unwrap();
+    // The threads finish in any order; the frontend sorts for the reader,
+    // this keeps the answer the same from one walk to the next.
+    files.sort_by(|a, b| a.rel.cmp(&b.rel));
     FolderIndex {
         files,
-        truncated: false,
+        truncated: truncated.into_inner(),
     }
 }
 
-/// The documents under `root`, for the sidebar's file-name search. Refuses
-/// the home folder and a drive root ("TOO_BROAD"), as the AI's project
-/// folder does: a walk there would be everything the user owns.
+/// The files under `root`, for the sidebar's file-name search. Refuses the
+/// home folder and a drive root ("TOO_BROAD"), as the AI's project folder
+/// does: a walk there would be everything the user owns.
 #[tauri::command]
 pub async fn index_folder(root: String) -> Result<FolderIndex, String> {
     crate::commands::fs::require_non_empty(&root)?;
@@ -191,21 +187,32 @@ mod tests {
         fs::write(path, b"x").unwrap();
     }
 
+    fn write(root: &Path, rel: &str, text: &str) {
+        fs::write(root.join(rel), text).unwrap();
+    }
+
     fn rels(index: &FolderIndex) -> Vec<&str> {
         index.files.iter().map(|f| f.rel.as_str()).collect()
     }
 
     #[test]
-    fn lists_documents_in_name_order_with_a_folders_files_first() {
+    fn lists_every_file_type_in_path_order() {
         let dir = scratch("order");
         touch(&dir.0, "b.md");
         touch(&dir.0, "A.txt");
         touch(&dir.0, "notes/章节一.markdown");
         touch(&dir.0, "notes/deep/c.md");
+        touch(&dir.0, "photo.png");
         let index = index(&dir.0, &LIMITS);
         assert_eq!(
             rels(&index),
-            ["A.txt", "b.md", "notes/章节一.markdown", "notes/deep/c.md"]
+            [
+                "A.txt",
+                "b.md",
+                "notes/deep/c.md",
+                "notes/章节一.markdown",
+                "photo.png"
+            ]
         );
         assert!(!index.truncated);
         assert_eq!(
@@ -215,44 +222,69 @@ mod tests {
     }
 
     #[test]
-    fn skips_hidden_entries_build_folders_and_other_file_types() {
+    fn skips_hidden_entries_and_build_folders() {
         let dir = scratch("skips");
         touch(&dir.0, "keep.md");
         touch(&dir.0, ".hidden.md");
         touch(&dir.0, ".git/notes.md");
         touch(&dir.0, "node_modules/pkg/readme.md");
         touch(&dir.0, "target/out.md");
-        touch(&dir.0, "photo.png");
-        touch(&dir.0, "data.json");
+        touch(&dir.0, "sub/node_modules/x.md");
         assert_eq!(rels(&index(&dir.0, &LIMITS)), ["keep.md"]);
     }
 
     #[test]
-    fn stops_at_the_file_limit_and_says_so() {
+    fn leaves_out_what_gitignore_and_ignore_files_do_outside_a_repository() {
+        let dir = scratch("gitignore");
+        write(&dir.0, ".gitignore", "drafts/\n*.log\n");
+        touch(&dir.0, "keep.md");
+        touch(&dir.0, "drafts/old.md");
+        touch(&dir.0, "build.log");
+        touch(&dir.0, "notes/a.md");
+        touch(&dir.0, "notes/scratch.md");
+        write(&dir.0, "notes/.ignore", "scratch.md\n");
+        assert_eq!(rels(&index(&dir.0, &LIMITS)), ["keep.md", "notes/a.md"]);
+    }
+
+    #[test]
+    fn stops_at_the_file_limit_across_threads_and_says_so() {
         let dir = scratch("files-cap");
-        for i in 0..5 {
-            touch(&dir.0, &format!("{i}.md"));
+        for i in 0..200 {
+            touch(&dir.0, &format!("{}/{i}.md", i % 8));
         }
-        let limits = Limits { files: 3, ..LIMITS };
+        let limits = Limits {
+            files: 10,
+            ..LIMITS
+        };
         let index = index(&dir.0, &limits);
-        assert_eq!(rels(&index), ["0.md", "1.md", "2.md"]);
+        assert_eq!(index.files.len(), 10);
         assert!(index.truncated);
     }
 
     #[test]
-    fn stops_at_the_entries_limit_however_few_documents_it_found() {
+    fn stops_at_the_entries_limit_however_few_files_it_found() {
         let dir = scratch("entries-cap");
-        touch(&dir.0, "a/one.md");
-        for i in 0..10 {
-            touch(&dir.0, &format!("b/{i}.png"));
+        for i in 0..50 {
+            touch(&dir.0, &format!("{}/{i}.md", i % 5));
         }
         let limits = Limits {
-            entries: 6,
+            entries: 12,
             ..LIMITS
         };
         let index = index(&dir.0, &limits);
-        assert_eq!(rels(&index), ["a/one.md"]);
+        assert!(index.files.len() < 12);
         assert!(index.truncated);
+    }
+
+    #[test]
+    fn stops_when_the_time_is_up() {
+        let dir = scratch("time");
+        touch(&dir.0, "a.md");
+        let limits = Limits {
+            time: Duration::ZERO,
+            ..LIMITS
+        };
+        assert!(index(&dir.0, &limits).truncated);
     }
 
     #[test]
@@ -284,5 +316,26 @@ mod tests {
             tauri::async_runtime::block_on(index_folder(dir.0.to_string_lossy().into_owned()))
                 .unwrap();
         assert_eq!(rels(&index), ["a.md"]);
+    }
+
+    /// How long the walk takes on a real folder: `TEXTUS_INDEX_BENCH=<dir>
+    /// cargo test --release index_benchmark -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn index_benchmark() {
+        let Some(dir) = std::env::var_os("TEXTUS_INDEX_BENCH") else {
+            return;
+        };
+        let root = PathBuf::from(dir);
+        for _ in 0..3 {
+            let start = Instant::now();
+            let index = index(&root, &LIMITS);
+            println!(
+                "{} files, truncated {}, {:?}",
+                index.files.len(),
+                index.truncated,
+                start.elapsed()
+            );
+        }
     }
 }

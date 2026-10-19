@@ -254,6 +254,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeSearchTooBroad:
     "このフォルダーは範囲が広すぎるため検索できません。「ファイル › フォルダーを開く…」でもっと具体的なフォルダーを開いてください。",
   treeSearchFailed: "このフォルダーを読み込めません。",
+  treeSearchScope: "表示",
+  treeSearchScopeAll: "すべてのファイル",
+  treeSearchScopeDocuments: "文書のみ",
   shortcutSearchFiles: "ファイル名を検索",
   menuDocuments: "書類",
   docListTitle: "書類",

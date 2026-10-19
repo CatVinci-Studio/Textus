@@ -236,6 +236,9 @@ export default {
   treeSearchTooBroad:
     "这个文件夹范围太大，不能搜索。请用“文件 › 打开文件夹…”打开更具体的文件夹。",
   treeSearchFailed: "无法读取这个文件夹。",
+  treeSearchScope: "显示",
+  treeSearchScopeAll: "所有文件",
+  treeSearchScopeDocuments: "仅文档",
   shortcutSearchFiles: "搜索文件名",
   menuDocuments: "文档",
   docListTitle: "文档",

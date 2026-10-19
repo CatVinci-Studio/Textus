@@ -265,6 +265,9 @@ utiliser une.
   treeSearchTooBroad:
     "Ce dossier est trop vaste pour y rechercher. Ouvrez-en un plus précis avec Fichier › Ouvrir un dossier…",
   treeSearchFailed: "Impossible de lire ce dossier.",
+  treeSearchScope: "Afficher",
+  treeSearchScopeAll: "Tous les fichiers",
+  treeSearchScopeDocuments: "Documents seulement",
   shortcutSearchFiles: "Rechercher des noms de fichier",
   menuDocuments: "Documents",
   docListTitle: "Documents",

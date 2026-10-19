@@ -264,6 +264,9 @@ para usar una.
   treeSearchTooBroad:
     "Esta carpeta es demasiado amplia para buscar en ella. Abre una más concreta con Archivo › Abrir carpeta…",
   treeSearchFailed: "No se puede leer esta carpeta.",
+  treeSearchScope: "Mostrar",
+  treeSearchScopeAll: "Todos los archivos",
+  treeSearchScopeDocuments: "Solo documentos",
   shortcutSearchFiles: "Buscar nombres de archivo",
   menuDocuments: "Documentos",
   docListTitle: "Documentos",

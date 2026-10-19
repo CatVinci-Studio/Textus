@@ -255,6 +255,9 @@ export default {
   treeSearchTooBroad:
     "Эта папка слишком общая для поиска. Откройте более конкретную через Файл › Открыть папку…",
   treeSearchFailed: "Не удаётся прочитать эту папку.",
+  treeSearchScope: "Показывать",
+  treeSearchScopeAll: "Все файлы",
+  treeSearchScopeDocuments: "Только документы",
   shortcutSearchFiles: "Поиск по именам файлов",
   menuDocuments: "Документы",
   docListTitle: "Документы",

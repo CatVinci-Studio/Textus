@@ -253,6 +253,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeSearchTooBroad:
     "Esta pasta é ampla demais para a busca. Abra uma mais específica em Arquivo › Abrir Pasta…",
   treeSearchFailed: "Não foi possível ler esta pasta.",
+  treeSearchScope: "Mostrar",
+  treeSearchScopeAll: "Todos os arquivos",
+  treeSearchScopeDocuments: "Só documentos",
   shortcutSearchFiles: "Buscar nomes de arquivo",
   menuDocuments: "Documentos",
   docListTitle: "Documentos",

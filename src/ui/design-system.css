@@ -534,7 +534,7 @@
 
 /* Selects: one look - a drawn chevron in place of the native arrow - in
    two sizes like the buttons. */
-:is(.settings-select, .inline-chat-mode) {
+:is(.settings-select, .inline-chat-mode, .file-search-scope) {
   appearance: none;
   -webkit-appearance: none;
   min-height: var(--control-height);
@@ -553,13 +553,13 @@
   transition: border-color var(--dur-fast) var(--ease-standard);
 }
 
-.inline-chat-mode {
+:is(.inline-chat-mode, .file-search-scope) {
   min-height: var(--control-height-sm);
   padding-left: 8px;
   font-size: var(--text-sm);
 }
 
-:is(.settings-select, .inline-chat-mode):hover {
+:is(.settings-select, .inline-chat-mode, .file-search-scope):hover {
   border-color: color-mix(
     in srgb,
     var(--editor-muted) 45%,

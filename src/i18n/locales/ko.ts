@@ -249,6 +249,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeSearchTooBroad:
     "이 폴더는 범위가 너무 넓어 검색할 수 없습니다. 파일 › 폴더 열기…로 더 구체적인 폴더를 여세요.",
   treeSearchFailed: "이 폴더를 읽을 수 없습니다.",
+  treeSearchScope: "표시",
+  treeSearchScopeAll: "모든 파일",
+  treeSearchScopeDocuments: "문서만",
   shortcutSearchFiles: "파일 이름 검색",
   menuDocuments: "문서",
   docListTitle: "문서",

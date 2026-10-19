@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { DirEntryInfo } from "../platform/fs-types";
 import {
   ArrowUpIcon,
@@ -19,6 +19,8 @@ import { ContextMenu } from "../editor/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import { useLongPress } from "../utils/hooks/useLongPress";
 import { FileSearch } from "./FileSearch";
+import { localeOf } from "../i18n/langs";
+import { compareEntries, nameCollator } from "../utils/name-order";
 import "./FileTree.css";
 
 interface FileTreeProps {
@@ -177,6 +179,15 @@ function DirNode({
       cancelled = true;
     };
   }, [open, children, path]);
+  // In the file manager's order for the UI's language (utils/name-order),
+  // not the backend's byte order: "第2章" before "第10章".
+  const { settings } = useSettings();
+  const collator = nameCollator(localeOf(settings.language));
+  const sorted = useMemo(
+    () =>
+      children && [...children].sort((a, b) => compareEntries(collator, a, b)),
+    [children, collator],
+  );
 
   return (
     <div className="dir-node">
@@ -196,9 +207,9 @@ function DirNode({
           <span className="tree-label">{basename(path)}</span>
         </button>
       )}
-      {open && children && (
+      {open && sorted && (
         <div className="dir-children">
-          {children.map((entry) =>
+          {sorted.map((entry) =>
             entry.is_dir ? (
               <DirNode
                 key={entry.path}
