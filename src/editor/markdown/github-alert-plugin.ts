@@ -30,7 +30,9 @@ const ALERT_TYPES: Record<AlertType, { icon: string }> = {
   },
 };
 
-const MARKER_RE = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/;
+// Any case, as GitHub and Obsidian read it, and with Obsidian's "-" / "+"
+// (folded / unfolded) after it.
+const MARKER_RE = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][-+]?/i;
 
 function buildTitle(
   info: { icon: string },
@@ -94,13 +96,13 @@ function collectDecorations(
     if (!match) return;
     const rest = firstText.text.slice(match[0].length);
     if (!/^[ \t]*(\n|$)/.test(rest)) return;
-    const type = match[1] as AlertType;
+    const type = match[1].toUpperCase() as AlertType;
     const info = ALERT_TYPES[type];
     const label = labelOf(type);
 
     decorations.push(
       Decoration.node(pos, pos + node.nodeSize, {
-        class: `md-alert md-alert-${match[1].toLowerCase()}`,
+        class: `md-alert md-alert-${type.toLowerCase()}`,
       }),
     );
 

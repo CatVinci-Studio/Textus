@@ -617,6 +617,20 @@ export function installDevTauriShim(): void {
       // with what was asked for: `window.__devLinks` for assertions.
       if (cmd.startsWith("open_") && /_(page|link)$/.test(cmd))
         ((w.__devLinks ??= []) as unknown[]).push({ cmd, ...args });
+      // `window.__devFiles = { path: text }` is a disk of documents, for
+      // a flow that opens more than one (a link into another file), and
+      // `window.__devFileMtimes = { path: ms }` their times (default 1).
+      const files = w.__devFiles as Record<string, string> | undefined;
+      const filePath = String((args as { path?: unknown })?.path ?? "");
+      if (files && filePath in files) {
+        if (cmd === "read_text_file") return Promise.resolve(files[filePath]);
+        if (cmd === "file_mtime_ms")
+          return Promise.resolve(
+            (w.__devFileMtimes as Record<string, number> | undefined)?.[
+              filePath
+            ] ?? 1,
+          );
+      }
       // `window.__devInvokeResults = { cmd: value }` answers a command with
       // a canned value - e.g. take_chat_handoff, without which the chat
       // window (?view=chat) has no conversation to show.

@@ -30,7 +30,8 @@ export const EDIT_ACTION_EVENT = "textus:edit-action";
 
 /// detail: the block kind to insert at the cursor, from the native Format
 /// menu (see menu-insert-block in src-tauri/src/lib.rs) - "h1".."h6",
-/// "bullet-list", "ordered-list", "blockquote", "code-block", or "table".
+/// "bullet-list", "ordered-list", "blockquote", "code-block", or "table";
+/// or "paragraph", from the heading shortcuts (app/useGlobalShortcuts.ts).
 export const INSERT_BLOCK_EVENT = "textus:insert-block";
 
 /// detail: "heading" | "bullet-list" | "ordered-list" | "blockquote" - the
@@ -89,8 +90,16 @@ export function sendTourSignal(signal: TourSignal): void {
 }
 
 /** Open a file in a new tab (the project bar's style profile and library
- *  entries) - detail: the absolute path. Handled by App. */
+ *  entries, a followed link) - detail: the absolute path, or an
+ *  OpenFileInTab. Handled by App. */
 export const OPEN_FILE_IN_TAB_EVENT = "textus:open-file-in-tab";
+
+/** OPEN_FILE_IN_TAB_EVENT's detail for a link into a file: the heading it
+ *  names is scrolled to once the file is on screen. */
+export interface OpenFileInTab {
+  path: string;
+  anchor?: string;
+}
 
 /** Zen mode turned on/off (detail: boolean) - editors refresh their
  *  focus dimming (zen-focus-plugin). Fired by App. */

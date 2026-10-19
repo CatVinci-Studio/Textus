@@ -41,6 +41,8 @@ const KEY_LABELS: Record<string, string> = {
   arrowleft: "←",
   arrowright: "→",
   escape: "Esc",
+  enter: "Enter",
+  tab: "Tab",
 };
 
 /// Renders a stored combo string for display, e.g. "mod+shift+g" -> "⌘⇧G" on
@@ -100,10 +102,18 @@ const RESERVED_COMBOS = new Set([
   // Fullscreen by convention (and the app's own handler on Windows).
   "f11",
 ]);
+// macOS's fixed Next/Previous Tab, Cmd+Shift+] and [ (app/fixed-shortcuts.ts),
+// as a US keyboard records them with Shift held, and as written.
+const MAC_RESERVED_COMBOS = new Set([
+  "mod+shift+]",
+  "mod+shift+[",
+  "mod+shift+}",
+  "mod+shift+{",
+]);
 export function isReservedCombo(combo: string): boolean {
   return (
     RESERVED_COMBOS.has(combo) ||
     combo === "mod+shift+n" ||
-    (!modIsMeta() && combo === "alt+f4")
+    (modIsMeta() ? MAC_RESERVED_COMBOS.has(combo) : combo === "alt+f4")
   );
 }

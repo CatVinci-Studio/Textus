@@ -27,11 +27,13 @@ import { createRawHtmlPreviewPlugin } from "./html/raw-html-preview-plugin";
 import { brToHardbreakPlugin } from "./markdown/br-hardbreak-plugin";
 import {
   remarkHighlightPlugin,
+  remarkStrikethroughTildesPlugin,
   mdSpanSchema,
   mdCodeSpanSchema,
   mdSpanClipboardPlugin,
 } from "./marks/md-span-schema";
 import { createMdSpanAutopairPlugin } from "./marks/md-span-autopair-plugin";
+import { createColorSwatchPlugin } from "./marks/color-swatch-plugin";
 import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
 import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
@@ -53,7 +55,8 @@ import {
   taskListClickPlugin,
 } from "./markdown/task-list-plugin";
 import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
-import { codeBlockLanguageView } from "./code/code-block-language-view";
+import { createCodeBlockView } from "./code/code-block-language-view";
+import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
 import { tableColumnResizing, tableHoverView } from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
@@ -80,7 +83,6 @@ import { createPlaceholderPlugin } from "./placeholder-plugin";
 import { findReplacePlugin } from "./find/find-replace-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../settings/SettingsContext";
-import { normalizeMathDelimiters } from "../utils/markdown-math";
 
 /** Where the editor mounts and what it opens with, plus the two DOM details
  *  the stylesheets rely on - shared by the app's editor and the browser
@@ -91,7 +93,7 @@ export function configureEditorRoot(
   initialValue: string,
 ): void {
   ctx.set(rootCtx, root);
-  ctx.set(defaultValueCtx, normalizeMathDelimiters(initialValue));
+  ctx.set(defaultValueCtx, initialValue);
   // Typora-compatible themes style their content under `#write` - aliasing
   // it here lets most community Typora themes' CSS apply directly to our
   // content with no rewriting.
@@ -210,6 +212,7 @@ export function withEditorCore(
       // Inline enclosures: bold/italic/strikethrough/highlight/inline code
       // as real nodes with synthesized, Typora-style delimiters.
       .use(remarkHighlightPlugin)
+      .use(remarkStrikethroughTildesPlugin)
       .use(mdSpanSchema)
       .use(mdCodeSpanSchema)
       .use(mdSpanClipboardPlugin)
@@ -220,8 +223,14 @@ export function withEditorCore(
       )
       .use(formatShortcutPlugin)
       .use(enclosurePlugin)
+      .use(
+        createColorSwatchPlugin({
+          enabled: () => settings.current.inlineColorSwatches,
+        }),
+      )
 
-      // Math: $/$$ enclosures sharing the same model, plus KaTeX rendering.
+      // Math: $/$$ enclosures sharing the same model, plus KaTeX rendering;
+      // LaTeX's \(...\) / \[...\] are read and kept (latex-math-syntax.ts).
       .use(remarkMathPlugin)
       .use(mathInlineSchema)
       .use(mathBlockSchema)
@@ -237,7 +246,17 @@ export function withEditorCore(
       .use(taskListClickPlugin)
       .use(cjkTaskInputPlugin)
       .use(syntaxHighlightPlugin)
-      .use(codeBlockLanguageView)
+      .use(
+        createCodeBlockView(() => {
+          const t = resolveStrings(settings.current.language);
+          return { copy: t.codeBlockCopy, copied: t.codeBlockCopied };
+        }),
+      )
+      .use(
+        createCodeLineNumbersPlugin({
+          enabled: () => settings.current.codeLineNumbers,
+        }),
+      )
       .use(tableHoverView)
       .use(tableColumnResizing)
       .use(

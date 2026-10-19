@@ -4,12 +4,13 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ShortcutRow } from "./controls";
 import { resolveStrings } from "../../i18n/strings";
-import type { Shortcuts } from "../SettingsContext";
+import { defaultShortcuts, type Shortcuts } from "../SettingsContext";
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
 const shortcuts: Shortcuts = {
+  ...defaultShortcuts(true),
   triggerCompletion: "mod+shift+space",
   triggerGrammarCheck: "mod+shift+g",
   toggleFloatingChat: "mod+shift+k",

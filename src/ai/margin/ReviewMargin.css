@@ -97,12 +97,12 @@
 .review-note-mark {
   display: inline-grid;
   place-items: center;
-  width: 16px;
-  height: 16px;
+  width: calc(16px * var(--ui-text-scale, 1));
+  height: calc(16px * var(--ui-text-scale, 1));
   border-radius: 50%;
   background: color-mix(in srgb, var(--editor-accent) 14%, transparent);
   color: var(--editor-accent);
-  font-size: 8.5px;
+  font-size: calc(8.5px * var(--ui-text-scale, 1));
   font-weight: 700;
 }
 
@@ -283,12 +283,12 @@
 .revision-note-num {
   display: inline-grid;
   place-items: center;
-  width: 16px;
-  height: 16px;
+  width: calc(16px * var(--ui-text-scale, 1));
+  height: calc(16px * var(--ui-text-scale, 1));
   border-radius: 50%;
   background: var(--success-color);
   color: #fff;
-  font-size: 9.5px;
+  font-size: calc(9.5px * var(--ui-text-scale, 1));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }

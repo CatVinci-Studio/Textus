@@ -102,6 +102,20 @@ export function windowIsUntouched(tabs: DocTab[]): boolean {
   return tabs.every(tabIsUntouchedDraft);
 }
 
+/** The tab `step` places from the active one, in tab-bar order, wrapping
+ *  at either end - what Next Tab (1) and Previous Tab (-1) switch to. Null
+ *  when there is no other tab to go to. */
+export function adjacentTabId(
+  tabs: readonly Pick<DocTab, "id">[],
+  activeId: string,
+  step: 1 | -1,
+): string | null {
+  if (tabs.length < 2) return null;
+  const index = tabs.findIndex((tab) => tab.id === activeId);
+  if (index < 0) return tabs[0].id;
+  return tabs[(index + step + tabs.length) % tabs.length].id;
+}
+
 // The full invoke arguments for start_floating_tab_drag - built here so the
 // two drag flows (tab pulled from a bar, whole single-tab window dragged)
 // can't drift apart on which fields travel with the document.

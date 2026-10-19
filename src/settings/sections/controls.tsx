@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import type { ShortcutAction, Shortcuts } from "../SettingsContext";
+import type {
+  HeadingAction,
+  ShortcutAction,
+  Shortcuts,
+} from "../SettingsContext";
 import type { Strings } from "../../i18n/strings";
+import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
 import {
   comboFromEvent,
   isBindableCombo,
@@ -104,6 +109,50 @@ export function ToggleRow({
   );
 }
 
+/** The heading shortcuts' names: the Format menu's own, and Paragraph. */
+export function headingLabels(t: Strings): Record<HeadingAction, string> {
+  const level = (n: number) => t.menuHeadingTemplate.replace("{n}", String(n));
+  return {
+    setHeading1: level(1),
+    setHeading2: level(2),
+    setHeading3: level(3),
+    setHeading4: level(4),
+    setHeading5: level(5),
+    setHeading6: level(6),
+    setParagraph: t.shortcutParagraph,
+  };
+}
+
+/** The shortcuts that can't be changed (app/fixed-shortcuts.ts), read-only,
+ *  by the menu they belong to. */
+export function FixedShortcutList({
+  groups,
+}: {
+  groups: FixedShortcutGroup[];
+}) {
+  return (
+    <div className="shortcut-fixed">
+      {groups.map((group) => (
+        <section key={group.title} className="shortcut-fixed-section">
+          <h3 className="shortcut-fixed-title">{group.title}</h3>
+          <dl className="shortcut-fixed-list">
+            {group.items.map((item) => (
+              <div key={item.label} className="shortcut-fixed-row">
+                <dt>{item.label}</dt>
+                <dd>
+                  {item.combos.map((combo) => (
+                    <kbd key={combo}>{formatCombo(combo)}</kbd>
+                  ))}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 export function ShortcutRow({
   label,
   action,
@@ -133,6 +182,9 @@ export function ShortcutRow({
       toggleSourceMode: t.shortcutToggleSourceMode,
       toggleTypewriterMode: t.shortcutToggleTypewriterMode,
       searchFiles: t.shortcutSearchFiles,
+      nextTab: t.shortcutNextTab,
+      previousTab: t.shortcutPreviousTab,
+      ...headingLabels(t),
     }),
     [t],
   );

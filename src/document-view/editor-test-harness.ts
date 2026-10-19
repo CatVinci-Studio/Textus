@@ -1,7 +1,6 @@
 import { Editor, defaultValueCtx, rootCtx } from "@milkdown/kit/core";
 import { withEditorExtensions } from "./editor-extensions";
 import { loadSettings, type Settings } from "../settings/SettingsContext";
-import { normalizeMathDelimiters } from "../utils/markdown-math";
 
 // Test-only: the full editor chain MilkdownEditor builds, mounted in jsdom
 // with no-op callbacks, for tests that need real parsing and serializing.
@@ -15,7 +14,7 @@ export async function createTestEditor(
   const editor = withEditorExtensions(
     Editor.make().config((ctx) => {
       ctx.set(rootCtx, root);
-      ctx.set(defaultValueCtx, normalizeMathDelimiters(markdown));
+      ctx.set(defaultValueCtx, markdown);
     }),
     { current: { ...loadSettings(), ...settings } },
     { current: null },

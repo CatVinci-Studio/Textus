@@ -1,10 +1,16 @@
 import { $nodeSchema, $remark, $inputRule } from "@milkdown/kit/utils";
 import { InputRule } from "@milkdown/kit/prose/inputrules";
 import remarkMath from "remark-math";
+import {
+  displayLatexBlocks,
+  latexMathFromMarkdown,
+  latexMathSyntax,
+} from "./latex-math-syntax";
 
 interface MdastNode {
   type: string;
   value?: string;
+  data?: Record<string, unknown>;
   children?: MdastNode[];
   position?: { start: { offset?: number }; end: { offset?: number } };
 }
@@ -37,13 +43,41 @@ export function revertCurrencyDollars(tree: MdastNode, source: string): void {
   walk(tree);
 }
 
+/**
+ * Records how many dollars an inline formula was written with, as
+ * `data.mathDelimiter`, when it is more than one: mdast writes the fewest
+ * that work, so an inline `$$x$$` was saved as `$x$`.
+ */
+function recordDollarRuns(tree: MdastNode, source: string): void {
+  const walk = (node: MdastNode) => {
+    if (node.type === "inlineMath") {
+      const start = node.position?.start.offset;
+      const run = start === undefined ? "" : /^\$+/.exec(source.slice(start));
+      if (run && run[0].length > 1)
+        node.data = { ...node.data, mathDelimiter: run[0] };
+    }
+    node.children?.forEach(walk);
+  };
+  walk(tree);
+}
+
+/** The delimiter a math node was read with, or null for the default. */
+const delimiterOf = (node: { data?: unknown }) =>
+  (node.data as { mathDelimiter?: string } | undefined)?.mathDelimiter ?? null;
+
 function remarkMathWithPandocDollars(
   this: unknown,
   ...args: Parameters<typeof remarkMath>
 ) {
   (remarkMath as (...a: unknown[]) => void).apply(this, args);
-  return (tree: MdastNode, file: { value: unknown }) =>
+  const data = (this as { data: () => Record<string, unknown[]> }).data();
+  (data.micromarkExtensions ??= []).push(latexMathSyntax());
+  (data.fromMarkdownExtensions ??= []).push(latexMathFromMarkdown());
+  return (tree: MdastNode, file: { value: unknown }) => {
     revertCurrencyDollars(tree, String(file.value));
+    recordDollarRuns(tree, String(file.value));
+    displayLatexBlocks(tree);
+  };
 }
 
 export const remarkMathPlugin = $remark(
@@ -56,11 +90,27 @@ export const mathInlineSchema = $nodeSchema("math_inline", () => ({
   group: "inline",
   inline: true,
   marks: "",
-  attrs: {},
-  parseDOM: [{ tag: 'span[data-type="math_inline"]' }],
-  toDOM: () => [
+  // As written in the file: "$" (the default, and all the editor makes),
+  // "$$" (see recordDollarRuns), or LaTeX's `\(` or `\[` (see
+  // latex-math-syntax.ts).
+  attrs: { delimiter: { default: "$", validate: "string" } },
+  parseDOM: [
+    {
+      tag: 'span[data-type="math_inline"]',
+      getAttrs: (dom) => ({
+        delimiter: (dom as HTMLElement).dataset.delimiter || "$",
+      }),
+    },
+  ],
+  toDOM: (node) => [
     "span",
-    { "data-type": "math_inline", class: "math-inline" },
+    {
+      "data-type": "math_inline",
+      class: "math-inline",
+      ...(node.attrs.delimiter === "$"
+        ? {}
+        : { "data-delimiter": node.attrs.delimiter as string }),
+    },
     0,
   ],
   parseMarkdown: {
@@ -69,16 +119,23 @@ export const mathInlineSchema = $nodeSchema("math_inline", () => ({
     // drop a surrounding link for the text after the formula.
     runner: (state, node, type) => {
       const value = node.value as string | undefined;
-      state.addNode(type, undefined, value ? [state.schema.text(value)] : []);
+      const delimiter = delimiterOf(node);
+      state.addNode(
+        type,
+        delimiter ? { delimiter } : undefined,
+        value ? [state.schema.text(value)] : [],
+      );
     },
   },
   toMarkdown: {
     match: (node) => node.type.name === "math_inline",
     runner: (state, node) => {
+      const delimiter = node.attrs.delimiter as string;
       state.addNode(
         "inlineMath",
         undefined,
         node.content.firstChild?.text || "",
+        delimiter === "$" ? undefined : { data: { mathDelimiter: delimiter } },
       );
     },
   },
@@ -90,24 +147,60 @@ export const mathBlockSchema = $nodeSchema("math_block", () => ({
   marks: "",
   code: true,
   defining: true,
-  attrs: {},
+  // "$$" (the default) or `\[` - see latex-math-syntax.ts - and, for `\[`,
+  // whether it shared one line with its formula: `\[x\]`.
+  attrs: {
+    delimiter: { default: "$$", validate: "string" },
+    oneLine: { default: false, validate: "boolean" },
+  },
   parseDOM: [
-    { tag: 'div[data-type="math_block"]', preserveWhitespace: "full" },
+    {
+      tag: 'div[data-type="math_block"]',
+      preserveWhitespace: "full",
+      getAttrs: (dom) => ({
+        delimiter: (dom as HTMLElement).dataset.delimiter || "$$",
+        oneLine: (dom as HTMLElement).dataset.oneLine === "true",
+      }),
+    },
   ],
   // Wrapped in an outer div so the editing state (enclosure.ts's
   // .math-block-revealed, which decorates the node's OUTERMOST DOM
   // regardless of this nesting) can get its own panel styling in
   // milkdown-theme.css, independent of the inner div's white-space/content
   // handling.
-  toDOM: () => [
+  toDOM: (node) => [
     "div",
     { class: "math-block-wrapper" },
-    ["div", { "data-type": "math_block", class: "math-block" }, 0],
+    [
+      "div",
+      {
+        "data-type": "math_block",
+        class: "math-block",
+        ...(node.attrs.delimiter === "$$"
+          ? {}
+          : {
+              "data-delimiter": node.attrs.delimiter as string,
+              "data-one-line": String(node.attrs.oneLine),
+            }),
+      },
+      0,
+    ],
   ],
   parseMarkdown: {
     match: (node) => node.type === "math",
     runner: (state, node, type) => {
-      state.openNode(type);
+      const delimiter = delimiterOf(node);
+      state.openNode(
+        type,
+        delimiter
+          ? {
+              delimiter,
+              oneLine: Boolean(
+                (node.data as { oneLine?: boolean } | undefined)?.oneLine,
+              ),
+            }
+          : undefined,
+      );
       if (node.value) state.addText(node.value as string);
       state.closeNode();
     },
@@ -115,7 +208,20 @@ export const mathBlockSchema = $nodeSchema("math_block", () => ({
   toMarkdown: {
     match: (node) => node.type.name === "math_block",
     runner: (state, node) => {
-      state.addNode("math", undefined, node.content.firstChild?.text || "");
+      const delimiter = node.attrs.delimiter as string;
+      state.addNode(
+        "math",
+        undefined,
+        node.content.firstChild?.text || "",
+        delimiter === "$$"
+          ? undefined
+          : {
+              data: {
+                mathDelimiter: delimiter,
+                oneLine: node.attrs.oneLine as boolean,
+              },
+            },
+      );
     },
   },
 }));

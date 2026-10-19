@@ -16,11 +16,14 @@ import { useAppUpdate } from "./useAppUpdate";
 import { useZoom } from "./useZoom";
 import { useTabDragMerge } from "./useTabDragMerge";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
+import { fixedShortcutGroups } from "./fixed-shortcuts";
+import { platformName } from "../platform/window-chrome";
 import { useExternalChangeReload } from "../document/useExternalChangeReload";
 import { useDraftAutosave } from "../document/draft-autosave";
 import { useAutosave } from "../document/autosave";
 import { useMenuBridge, useNativeMenuChecks } from "./menu-bridge";
 import { useStartupRestore } from "../document/startup-restore";
+import { useLastCarets } from "../document/last-carets";
 import { Presence } from "../ui/usePresence";
 import { FlipOnChange } from "../ui/flip";
 import { AgentPanelProvider } from "../ai/chat/panel/agent-panel";
@@ -165,7 +168,9 @@ function App() {
     newDocumentMode: settings.newDocumentMode,
     setPendingClose,
     dialogFilters,
+    restoreCarets: settings.restoreSessionOnStartup,
   });
+  useLastCarets(tabs, activeTabId, settings.restoreSessionOnStartup);
 
   const { openHelpTab } = useHelpTabs({
     tabState,
@@ -229,7 +234,9 @@ function App() {
   const showTabBar = tabs.length > 1 || dragHoverPreview !== null;
 
   useGlobalShortcuts({
+    tabsRef,
     activeTabId,
+    setActiveTabId,
     saveTab,
     requestCloseTab,
     toggleSourceMode,
@@ -265,6 +272,7 @@ function App() {
     markOnboardingShown: () => setSettings({ onboardingShown: true }),
     openPathInTab,
     openFile,
+    restoreCarets: settings.restoreSessionOnStartup,
     startTutorial,
     stopTutorial,
   });
@@ -477,6 +485,7 @@ function App() {
                 sourceMode: !!activeTab.sourceMode && !activeTab.splitView,
                 zen: zenMode,
               }}
+              fixedShortcuts={fixedShortcutGroups(t, platformName())}
             />
           )}
         </Presence>

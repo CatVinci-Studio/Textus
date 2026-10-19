@@ -1,5 +1,5 @@
 import { APP_NAME, type Strings } from "../i18n/strings";
-import type { Shortcuts } from "../settings/SettingsContext";
+import type { HeadingAction, Shortcuts } from "../settings/SettingsContext";
 import { basename } from "../utils/path";
 
 /**
@@ -195,9 +195,11 @@ function exportEntries(t: Strings): MenuNode[] {
   ];
 }
 
-function formatEntries(t: Strings): MenuNode[] {
+function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
   const headings = [1, 2, 3, 4, 5, 6].map((level): MenuNode => ({
     label: t.menuHeadingTemplate.replace("{n}", String(level)),
+    // Unbound unless the user binds one in Settings › Shortcuts.
+    accel: shortcuts[`setHeading${level}` as HeadingAction] || undefined,
     action: { native: `insert-block:h${level}` },
   }));
   const blocks: [string, string][] = [
@@ -294,7 +296,7 @@ export function buildAppMenu(
         },
       ],
     },
-    { label: t.menuFormat, submenu: formatEntries(t) },
+    { label: t.menuFormat, submenu: formatEntries(t, shortcuts) },
     {
       label: t.menuView,
       submenu: [

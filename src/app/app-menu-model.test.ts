@@ -5,7 +5,7 @@
 // file passes locally on a current Node and fails on CI's Node 20.
 
 import { describe, expect, it } from "vitest";
-import type { Shortcuts } from "../settings/SettingsContext";
+import { defaultShortcuts, type Shortcuts } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import { APP_NAME, resolveStrings } from "../i18n/strings";
 import { formatCombo } from "../utils/shortcuts";
@@ -34,6 +34,7 @@ import {
 const t = resolveStrings("en") as Strings;
 
 const shortcuts: Shortcuts = {
+  ...defaultShortcuts(false),
   triggerCompletion: "mod+shift+space",
   triggerGrammarCheck: "mod+shift+g",
   toggleFloatingChat: "mod+shift+k",
