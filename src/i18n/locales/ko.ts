@@ -13,9 +13,12 @@ export default {
   agentExpandWindowLabel: "전체 대화를 별도 창에서 열기",
   shortcutToggleAgentPanel: "AI 패널 보기/숨기기",
   menuToggleAgentPanel: "AI 패널",
-  agentPanelEmpty:
-    "이 문서에 대해 묻거나, 텍스트를 선택하고 어떻게 바꿀지 입력하세요.",
-  agentPanelEmptyPhone: "이 문서에 대해 물어보세요.",
+  agentPanelEmptyWrite:
+    "AI가 새 글을 써서 문서에 더합니다. 이미 있는 글은 바꾸지 않습니다.",
+  agentPanelEmptyReview:
+    "AI가 질문에 답하고 여백에 메모를 남깁니다. 글은 바꾸지 않습니다.",
+  agentPanelEmptyRevise:
+    "AI가 수정을 제안합니다. 각 제안은 수락하거나 거절할 때까지 기다립니다.",
   aiWorkingCompletion: "이어 쓰는 중…",
   aiWorkingGrammar: "이 문단을 검사하는 중…",
   noticeCompletionNeedsCaret: "이어 쓸 위치에 커서를 놓으세요.",
@@ -103,6 +106,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   revisionDisplayNew: "본문에 수정, 여백에 원문",
   revisionDisplayFinal: "수정 결과만",
   revisionDisplayNoRoom: "공간이 부족합니다: 사이드바나 AI 패널을 닫아 주세요",
+  revisionDisplayNewText:
+    "새로 추가된 글에는 원문이 없어 이 보기에서도 초록색으로 본문에 남습니다",
   proposalDeletedSentence: "원문",
   reviewBarLabel: "수정",
   reviewBarOpenChat: "AI 패널 열기",

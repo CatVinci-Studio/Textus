@@ -1,5 +1,6 @@
 import type { Strings } from "../../i18n/strings";
 import type { RevisionDisplay } from "../../settings/SettingsContext";
+import type { EditProposal } from "../types";
 
 /** A revision display's name, for the settings list and the review bar's
  *  menu. */
@@ -41,4 +42,19 @@ export function marginViewBlocked(
   { phone, marginAvailable }: { phone: boolean; marginAvailable: boolean },
 ): boolean {
   return !phone && !marginAvailable && needsMargin(mode);
+}
+
+/**
+ * Whether a proposal only adds text (what Write proposes): there is no
+ * original for a margin view to set beside it, so it is drawn as a green
+ * block in the text in every view but "final", where it reads as the
+ * result.
+ */
+export function addsTextOnly(proposal: EditProposal): boolean {
+  return (
+    proposal.action === "append" ||
+    proposal.action === "insert_at_cursor" ||
+    proposal.action === "insert_before" ||
+    proposal.action === "insert_after"
+  );
 }

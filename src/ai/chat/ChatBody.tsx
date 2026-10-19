@@ -35,6 +35,7 @@ import { toolActivityText } from "./AgentTurnView";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { Presence, PresenceDiv } from "../../ui/usePresence";
 import { scrollBehavior } from "../../ui/motion";
+import { COMPOSER_MODES } from "./last-mode";
 import {
   attachedFileBlock,
   selectedTextBlock,
@@ -96,6 +97,8 @@ export interface ChatBodyProps {
   /** Escape from the composer. The popup closes; a detached window doesn't
    *  (Escape shouldn't destroy an OS window the user placed deliberately). */
   onEscape?: () => void;
+  /** The composer's mode, now and on every switch (ChatComposer). */
+  onModeChange?: (mode: AgentMode) => void;
   /** Rendered above the composer - the popup's close-confirmation bar. */
   footer?: React.ReactNode;
   /** Jumps the editor to a pending edit. Absent in the detached window,
@@ -228,6 +231,7 @@ export function ChatBody({
   onAcceptAll,
   onRejectAll,
   onEscape,
+  onModeChange,
   footer,
   fillHeight,
   variant = "full",
@@ -621,6 +625,7 @@ export function ChatBody({
         busy={busy}
         labels={labels}
         defaultMode={defaultMode}
+        modes={COMPOSER_MODES[variant]}
         carryMode={variant !== "quick"}
         tourMode={tourMode}
         selectionChip={selectionChip}
@@ -633,6 +638,7 @@ export function ChatBody({
         onSkillUsed={onSkillUsed}
         onStop={stop}
         onEscape={onEscape ?? (() => {})}
+        onModeChange={onModeChange}
       />
       {footer}
     </>

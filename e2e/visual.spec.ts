@@ -183,11 +183,11 @@ test("the last sentence decided in the text applies the edit", async ({
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("精简");
   await composer.press("Enter");
-  await expect(page.locator(".milkdown .pending-pick")).toHaveCount(2);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(2);
   await page.locator(".milkdown .pending-pick-take").first().click();
-  await expect(page.locator(".milkdown .pending-pick")).toHaveCount(2);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(2);
   await page.locator(".milkdown .pending-pick-take").nth(1).click();
-  await expect(page.locator(".milkdown .pending-pick")).toHaveCount(0);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
   await expect(page.locator(".milkdown")).toContainText(
     "这项研究覆盖三个街区。",
   );
@@ -197,10 +197,10 @@ test("the last sentence decided in the text applies the edit", async ({
   // Undo puts the proposal back on offer, redo applies it again.
   await page.locator(".milkdown .ProseMirror").focus();
   await page.keyboard.press("Control+z");
-  await expect(page.locator(".milkdown .pending-pick")).toHaveCount(2);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(2);
   await expect(page.locator(".agent-proposal-status-accepted")).toHaveCount(0);
   await page.keyboard.press("Control+Shift+z");
-  await expect(page.locator(".milkdown .pending-pick")).toHaveCount(0);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
   await expect(page.locator(".agent-proposal-status-accepted")).toBeVisible();
 });
 
@@ -744,8 +744,10 @@ test("the review bar switches how revisions show, as Word's markup views", async
   // Changes in the text, the original in the margin.
   await pick("修改在正文，原文在页边");
   await expect(page.locator(".revision-note-original")).toHaveCount(2);
-  await expect(page.locator(".milkdown .pending-sentence-hidden")).toHaveCount(
-    2,
+  // The originals stay in the document, out of the flow.
+  await expect(page.locator(".milkdown .pending-sentence")).toHaveCount(2);
+  await expect(page.locator(".milkdown .pending-sentence:visible")).toHaveCount(
+    0,
   );
   await expect(page.locator(".milkdown")).toContainText(
     "这项研究覆盖三个街区。",
@@ -753,16 +755,18 @@ test("the review bar switches how revisions show, as Word's markup views", async
   // Everything in the text.
   await pick("全部在正文中");
   await expect(page.locator(".revision-note")).toHaveCount(0);
-  await expect(page.locator(".milkdown .pending-pick")).toHaveCount(2);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(2);
   // Only the result: no marks, no margin cards; still decided from the bar.
   await pick("只看修改后的结果");
-  await expect(page.locator(".milkdown .pending-pick")).toHaveCount(0);
-  await expect(page.locator(".milkdown .pending-sentence-final")).toHaveCount(
-    2,
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
+  await expect(page.locator(".milkdown .ProseMirror")).toHaveAttribute(
+    "data-revision-display",
+    "final",
   );
+  await expect(
+    page.locator(".milkdown .pending-sentence-new:visible"),
+  ).toHaveCount(2);
   await page.locator(".review-bar-accept").click();
   await expect(page.locator(".milkdown")).toContainText("共访谈四十六位居民。");
-  await expect(page.locator(".milkdown .pending-sentence-final")).toHaveCount(
-    0,
-  );
+  await expect(page.locator(".milkdown .pending-sentence-new")).toHaveCount(0);
 });

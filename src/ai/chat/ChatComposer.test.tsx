@@ -187,6 +187,32 @@ describe("ChatComposer selection chip", () => {
     });
   });
 
+  it("reports its mode on the first render and on every switch", () => {
+    const onModeChange = vi.fn();
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText={null}
+        busy={false}
+        labels={labels}
+        defaultMode="review"
+        defaultWebSearch={false}
+        onSend={() => {}}
+        onStop={() => {}}
+        onEscape={() => {}}
+        onModeChange={onModeChange}
+      />,
+    );
+    const picker = screen.getByRole("combobox", { name: "Mode" });
+    expect(onModeChange).toHaveBeenLastCalledWith("review");
+    fireEvent.click(picker);
+    fireEvent.click(screen.getByRole("option", { name: "Revise" }));
+    expect(onModeChange).toHaveBeenLastCalledWith("revise");
+    // The picker is words only: the icons are the empty panel's.
+    expect(picker.querySelector("svg")).toBeNull();
+  });
+
   it("sends the selected interaction mode and web-search choice", () => {
     const { onSend } = renderComposer();
     fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
