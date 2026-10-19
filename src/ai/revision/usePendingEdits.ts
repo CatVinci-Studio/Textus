@@ -17,8 +17,14 @@ import {
   sentenceTake,
   type PendingPreview,
 } from "./pending-edit-plugin";
-import { composeSentences, diffSentences } from "./sentence-diff";
-import { locateHunks } from "./sentence-locate";
+import {
+  composeSentences,
+  diffSentences,
+  pairedPrefix,
+  splitSentences,
+  trimBreaks,
+} from "./sentence-diff";
+import { findInOrder, locateHunks } from "./sentence-locate";
 import { nextFocusAfterChange, orderForReview } from "./pending-edit-focus";
 import { locatePlainText } from "./text-locate";
 import type { EditProposal } from "../types";
@@ -169,19 +175,81 @@ function sentencesFor(
     range.from,
     range.to,
     hunks,
-    (markdown) => {
-      const parsed = parseMarkdownSource(ctx, markdown);
-      return parsed && typeof parsed !== "string" ? parsed.textContent : null;
-    },
+    (markdown) => plainText(ctx, markdown),
     lead,
   );
   if (!ranges) return undefined;
   const changes = hunks.flatMap((h, i) =>
     h.kind === "change"
-      ? [{ ...ranges[i], before: h.before, after: h.after, take: null }]
+      ? [
+          {
+            ...ranges[i],
+            before: h.before,
+            after: h.after,
+            take: null,
+            ...changeParts(ctx, doc, ranges[i], h.before, h.after),
+          },
+        ]
       : [],
   );
   return { hunks, changes };
+}
+
+/** A change over several original sentences: where each stands, and where
+ *  its new text goes (PendingSentence.parts / .at) - the layout the same
+ *  rewrite has while it streams in (pending-edit-plugin's
+ *  streamDecorations). */
+function changeParts(
+  ctx: Ctx,
+  doc: ProseNode,
+  range: { from: number; to: number },
+  before: string,
+  after: string,
+): { parts?: { from: number; to: number }[]; at?: number } {
+  const sentences = splitSentences(before);
+  if (sentences.length < 2) return {};
+  const parts = findInOrder(
+    doc,
+    range.from,
+    range.to,
+    sentences.map(
+      (s) => plainText(ctx, trimBreaks(s))?.replace(/\n/g, "").trim() ?? "",
+    ),
+  );
+  if (parts.length !== sentences.length) return {};
+  return { parts, at: parts[pairedPrefix(sentences, after) - 1].to };
+}
+
+/**
+ * The original of a rewrite split into sentences, each found in the
+ * document: what lets the rewrite be laid out sentence by sentence while it
+ * is still streaming (PendingPreview.streamSource). Undefined when a
+ * sentence can't be found - it then streams in whole, as before.
+ */
+function streamSourceFor(
+  ctx: Ctx,
+  doc: ProseNode,
+  original: string | null,
+  range: { from: number; to: number } | null,
+  lead = "",
+): PendingPreview["streamSource"] {
+  if (original === null || !range) return undefined;
+  const sentences = splitSentences(original);
+  if (sentences.length === 0) return undefined;
+  const ranges = locateHunks(
+    doc,
+    range.from,
+    range.to,
+    sentences.map((text) => ({ kind: "same", text })),
+    (markdown) => plainText(ctx, markdown),
+    lead,
+  );
+  return ranges ? { sentences, ranges } : undefined;
+}
+
+function plainText(ctx: Ctx, markdown: string): string | null {
+  const parsed = parseMarkdownSource(ctx, markdown);
+  return parsed && typeof parsed !== "string" ? parsed.textContent : null;
 }
 
 /** One stop of the review bar: a changed sentence, or a whole proposal
@@ -450,6 +518,25 @@ export function usePendingEdits(run: EditorRunner) {
                     range,
                   )
                 : undefined;
+          // Also on the final add: it lands while the text is still typing
+          // in, and the layout must not fall back to one block then.
+          const streamSource =
+            proposal.action === "replace"
+              ? streamSourceFor(
+                  ctx,
+                  state.doc,
+                  proposal.anchor ?? null,
+                  strikeRange ?? range,
+                  strikeRange ? "" : lead,
+                )
+              : proposal.action === "replace_selection"
+                ? streamSourceFor(
+                    ctx,
+                    state.doc,
+                    chatInfo?.selectionMarkdown ?? null,
+                    range,
+                  )
+                : undefined;
           resolved.push({
             callId,
             proposal,
@@ -461,6 +548,7 @@ export function usePendingEdits(run: EditorRunner) {
             strikeFrom: strikeRange?.from,
             strikeTo: strikeRange?.to,
             sentences,
+            streamSource,
           });
         }
 
@@ -566,7 +654,29 @@ export function usePendingEdits(run: EditorRunner) {
         // Same transaction: one undo step restores the document exactly,
         // and the decoration is gone the instant the edit lands (no orphan
         // frame where a stale preview paints over the just-applied text).
-        tr.setMeta(pendingEditKey, { type: "remove", callId, applied: true });
+        // Where the new text now stands - the taken sentences only, for one
+        // decided by sentence - so its green can fade out there rather than
+        // vanish (the plugin's `landed`).
+        const written =
+          preview.sentences && take
+            ? preview.sentences.changes.filter((_, i) => take[i])
+            : [{ after: textOverride ?? preview.proposal.text ?? "" }];
+        const landed = findInOrder(
+          tr.doc,
+          tr.mapping.map(preview.from, -1),
+          tr.mapping.map(preview.to, 1),
+          written.map(
+            ({ after }) =>
+              plainText(ctx, trimBreaks(after))?.replace(/\n/g, "").trim() ??
+              "",
+          ),
+        );
+        tr.setMeta(pendingEditKey, {
+          type: "remove",
+          callId,
+          applied: true,
+          landed,
+        });
         // Its own undo step, never merged with typing just before it: an
         // undo then lands exactly on the text it replaced, which is what
         // brings the proposal back (pending-edit-plugin's `applied`).
@@ -600,6 +710,8 @@ export function usePendingEdits(run: EditorRunner) {
               replacement: text,
               strikeFrom: strikeRange?.from,
               strikeTo: strikeRange?.to,
+              // Settled already: nothing streams in again.
+              streamSource: undefined,
             });
           }
           if (found.length > 0)
