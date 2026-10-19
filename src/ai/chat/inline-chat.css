@@ -213,12 +213,19 @@
 }
 
 /* Input on top (grows with content via the auto-resize effect), tool row
-   below: attach button, the selection chip when text was selected, send. */
+   below: attach button, the selection chip when text was selected, send.
+   One row however narrow the panel: the chip gives way, ellipsized, and
+   nothing else shrinks - wrapped, Send went to a line of its own under the
+   others (1.1.0-rc.6, the panel at its narrowest with text selected). */
 .inline-chat-toolbar {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
+}
+
+.inline-chat-toolbar > * {
+  flex-shrink: 0;
 }
 
 .inline-chat-mode {
@@ -242,8 +249,12 @@
   padding: 2px 6px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.inline-chat-toolbar > .inline-chat-selection-chip {
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .inline-chat-selection-chip:hover {
@@ -251,6 +262,10 @@
 }
 
 .inline-chat-chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   border: none;
   background: none;
   padding: 0;
@@ -260,6 +275,7 @@
 }
 
 .inline-chat-chip-remove {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   border: none;
