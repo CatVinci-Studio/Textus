@@ -88,11 +88,6 @@ export function sendTourSignal(signal: TourSignal): void {
   );
 }
 
-/// detail: a passage of the practice document. The tour's grammar lesson,
-/// for a learner who connected an AI: check the paragraph holding it, as
-/// the grammar shortcut would with the caret there.
-export const TOUR_GRAMMAR_CHECK_EVENT = "textus:tour-grammar-check";
-
 /** Open a file in a new tab (the project bar's style profile and library
  *  entries) - detail: the absolute path. Handled by App. */
 export const OPEN_FILE_IN_TAB_EVENT = "textus:open-file-in-tab";

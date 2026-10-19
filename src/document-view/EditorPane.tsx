@@ -1,6 +1,6 @@
 import { lazy, memo, Suspense, useCallback } from "react";
 import { MilkdownProvider } from "@milkdown/react";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings, type AgentMode } from "../settings/SettingsContext";
 import type { TourAi } from "../utils/events";
 
 const MilkdownEditor = lazy(() =>
@@ -23,6 +23,8 @@ interface EditorPaneProps {
   isActive?: boolean;
   /** See MilkdownEditor: the tour's AI, on its practice tab. */
   tour?: TourAi | null;
+  /** See MilkdownEditor: the tour's AI panel mode, on its practice tab. */
+  tourMode?: AgentMode | null;
   /** Bundled guides already contain text, but that is not the user's first
    * writing action and must not trigger contextual onboarding bubbles. */
 }
@@ -47,6 +49,7 @@ export const EditorPane = memo(function EditorPane({
   onChange,
   isActive,
   tour,
+  tourMode,
 }: EditorPaneProps) {
   // No file open yet -> still show an editable blank canvas (draft mode).
   // The path is NOT a remount key: saving a draft or renaming the file is
@@ -75,6 +78,7 @@ export const EditorPane = memo(function EditorPane({
               onChange={handleChange}
               isActive={isActive}
               tour={tour}
+              tourMode={tourMode}
             />
           </MilkdownProvider>
         </Suspense>

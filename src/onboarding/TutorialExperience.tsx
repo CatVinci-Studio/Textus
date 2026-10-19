@@ -1,20 +1,24 @@
 import { useCallback, useEffect, type ReactNode } from "react";
-import type { Lang, Strings, TextKey } from "../i18n/strings";
+import type { Lang, Strings } from "../i18n/strings";
 import { links } from "../platform/ipc";
+import { isMacPlatform } from "../platform/os";
 import { ProviderListPanel } from "../settings/sections/providers";
 import { useSettings } from "../settings/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
 import { Select } from "../ui/Select";
-import { TOUR_GRAMMAR_CHECK_EVENT } from "../utils/events";
-import { practiceDiary } from "./practice-diary";
-import { GRAMMAR_QUIET, isLessonComplete } from "./tutorial-evaluation";
+import { practiceNotes } from "./practice-notes";
+import {
+  GRAMMAR_PART,
+  isLessonComplete,
+  isTaskDone,
+} from "./tutorial-evaluation";
 import { TutorialOverlay } from "./TutorialOverlay";
-import { TUTORIAL_CHAPTERS } from "./tutorial-steps";
-import type { TutorialStepId } from "./tutorial-steps";
+import { TUTORIAL_CHAPTERS, type TutorialTask } from "./tutorial-steps";
 import type { Tutorial } from "./useTutorial";
 
-/** How long the grammar lesson waits for the AI to flag something before
- *  it lets the learner go on without: a careful model may find nothing. */
+/** How long the grammar lesson waits, once the sentence is typed, for the
+ *  AI to flag something before it lets the learner go on without: a
+ *  careful model may find nothing. */
 export const GRAMMAR_WAIT_MS = 20_000;
 
 interface TutorialExperienceProps {
@@ -27,13 +31,6 @@ interface TutorialExperienceProps {
   /** Zen mode, for the modes-and-themes lesson's button. */
   zen: { on: boolean; toggle: () => void };
 }
-
-/** What a lesson asks on a phone, where it differs. */
-const PHONE_TASKS: Partial<Record<TutorialStepId, TextKey>> = {
-  "sidebar-export": "tutorialSidebarTaskPhone",
-  "ai-panel": "tutorialAiPanelTaskPhone",
-  continuation: "tutorialContinuationTaskPhone",
-};
 
 /**
  * Maps tutorial state to the card the learner sees: its copy, its gate,
@@ -50,7 +47,7 @@ export function TutorialExperience({
 }: TutorialExperienceProps) {
   const { step, phase, setPhase, watching } = tutorial;
   const live = tutorial.practiceAi === "live";
-  const diary = practiceDiary(language);
+  const notes = practiceNotes(language);
 
   // The connect lesson's phase mirrors its provider's connection (1 / 0),
   // reported by the embedded Settings panel.
@@ -59,38 +56,39 @@ export function TutorialExperience({
     [setPhase],
   );
 
-  // The grammar lesson, live: check the paragraph with the diary's slip,
-  // and give the AI a while to find it before letting the learner on.
-  const grammarLive = live && step.id === "grammar";
+  // The grammar lesson, live: once the sentence is in, give the AI a while
+  // to flag it before letting the learner on.
+  const grammarWaiting =
+    live &&
+    step.id === "grammar" &&
+    (phase & GRAMMAR_PART.typed) !== 0 &&
+    (phase & GRAMMAR_PART.card) === 0;
   useEffect(() => {
-    if (!grammarLive) return;
-    const check = window.setTimeout(
-      () =>
-        window.dispatchEvent(
-          new CustomEvent(TOUR_GRAMMAR_CHECK_EVENT, { detail: diary.slip }),
-        ),
-      300,
-    );
+    if (!grammarWaiting) return;
     const quiet = window.setTimeout(
-      () => setPhase((p) => p || GRAMMAR_QUIET),
+      () =>
+        setPhase((p) => (p & GRAMMAR_PART.card ? p : p | GRAMMAR_PART.quiet)),
       GRAMMAR_WAIT_MS,
     );
-    return () => {
-      window.clearTimeout(check);
-      window.clearTimeout(quiet);
-    };
-  }, [grammarLive, diary.slip, setPhase]);
+    return () => window.clearTimeout(quiet);
+  }, [grammarWaiting, setPhase]);
 
-  const complete = isLessonComplete(step.id, phase);
-  const taskKey = (phone && PHONE_TASKS[step.id]) || step.taskKey;
-  const task = taskKey
-    ? t[taskKey]
-        .replace("{title}", diary.title)
-        .replace(
-          "{shortcut}",
-          step.id === "ai-panel" ? shortcuts.agentPanel : shortcuts.sidebar,
-        )
-    : undefined;
+  const mac = isMacPlatform();
+  const lineText = (task: TutorialTask) =>
+    t[(phone && task.phoneKey) || (mac && task.macKey) || task.key]
+      .replace("{title}", notes.title)
+      .replace("{slip}", notes.slip)
+      .replace(
+        "{shortcut}",
+        step.id === "sidebar-export" ? shortcuts.sidebar : shortcuts.agentPanel,
+      );
+  const tasks = step.tasks?.map((task) => ({
+    text: lineText(task),
+    done:
+      !watching && step.layout === "card" && isTaskDone(step, task.part, phase),
+  }));
+
+  const complete = isLessonComplete(step, phase);
   const watch = step.clip
     ? {
         label: t.tutorialWatch,
@@ -100,6 +98,9 @@ export function TutorialExperience({
   const settingsPath = `${t.settingsTitle} › ${t.navAi}`;
 
   let status: string | null = null;
+  let note: string | null = watching
+    ? t.tutorialWatchNote.replace("{path}", settingsPath)
+    : null;
   let controls: ReactNode = null;
   if (step.id === "connect") {
     status = phase >= 1 ? t.tutorialConnected : null;
@@ -110,11 +111,12 @@ export function TutorialExperience({
         onActiveConnectedChange={onConnectedChange}
       />
     );
-  } else if (step.id === "grammar" && phase === GRAMMAR_QUIET) {
+  } else if (step.id === "grammar" && phase & GRAMMAR_PART.quiet) {
     status = t.tutorialGrammarQuiet;
   } else if (step.id === "modes-themes") {
     controls = <ModesThemesControls t={t} zen={zen} />;
   } else if (step.id === "done") {
+    note = t.tutorialDoneMemory;
     controls = (
       <div className="tutorial-links">
         <button
@@ -144,22 +146,20 @@ export function TutorialExperience({
     done: index < chapterIndex,
   }));
 
+  // A watched AI lesson can't be done here, so it never locks.
   const isLast = tutorial.stepIndex === tutorial.totalSteps - 1;
-  const gated = step.layout === "card" && !watching;
-  const primary =
-    watching && watch
-      ? watch
-      : {
-          label: isLast
-            ? t.tutorialFinish
-            : step.id === "welcome"
-              ? t.tutorialStart
-              : step.id === "connect" && phase < 1
-                ? t.tutorialConnectSkip
-                : t.tutorialNext,
-          onClick: tutorial.next,
-          disabled: gated && !complete,
-        };
+  const gated = step.layout === "card" && !watching && !step.optional;
+  const primary = {
+    label: isLast
+      ? t.tutorialFinish
+      : step.id === "welcome"
+        ? t.tutorialStart
+        : step.id === "connect" && phase < 1
+          ? t.tutorialConnectSkip
+          : t.tutorialNext,
+    onClick: tutorial.next,
+    disabled: gated && !complete,
+  };
 
   return (
     <TutorialOverlay
@@ -170,20 +170,16 @@ export function TutorialExperience({
       chapters={chapters}
       title={t[step.titleKey]}
       body={t[step.bodyKey]}
-      task={task}
+      tasks={tasks}
       status={status}
       complete={step.id !== "connect" && !watching && complete}
-      note={
-        watching ? t.tutorialWatchNote.replace("{path}", settingsPath) : null
-      }
-      watch={watching ? null : watch}
+      note={note}
+      watch={watch}
       primary={primary}
-      secondary={
-        watching ? { label: t.tutorialNext, onClick: tutorial.next } : null
-      }
       onBack={tutorial.back}
       onSkip={tutorial.exit}
       onSkipStep={gated ? tutorial.next : undefined}
+      phone={phone}
       labels={{
         back: t.tutorialBack,
         collapse: t.tutorialCollapse,

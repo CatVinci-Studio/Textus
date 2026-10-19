@@ -21,9 +21,9 @@ test("the tutorial's sidebar lesson highlights the sidebar's outline", async ({
   });
   await page.keyboard.press("Control+\\");
   await expect(page.locator(".sidebar.tutorial-spotlight")).toBeVisible();
-  // The diary's outline completes the lesson.
+  // The notes' outline completes the lesson.
   await page.getByRole("button", { name: "大纲" }).click();
-  await expect(page.locator(".tutorial-card .tutorial-task")).toHaveClass(
+  await expect(page.locator(".tutorial-card .tutorial-task-line")).toHaveClass(
     /is-complete/,
   );
   await expect(page).toHaveScreenshot("tutorial-sidebar-lesson.png");

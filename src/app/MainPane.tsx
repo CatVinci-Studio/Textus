@@ -6,6 +6,7 @@ import { SourceTextarea } from "../editor/modes/SourceTextarea";
 import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
+import type { AgentMode } from "../settings/SettingsContext";
 import { TabBar } from "./TabBar";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
@@ -38,8 +39,9 @@ export function MainPane({
   previewTab: TabBarProps["previewTab"];
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
-  /** The tour's practice tab and its AI while the tour runs, else null. */
-  tour: { tabId: string; ai: TourAi } | null;
+  /** The tour's practice tab, its AI and the AI panel mode its lesson
+   *  needs, while the tour runs; else null. */
+  tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
   t: Strings;
 }) {
   return (
@@ -97,6 +99,7 @@ export function MainPane({
               onChange={onChange}
               isActive={tab.id === activeTabId}
               tour={tour && tab.id === tour.tabId ? tour.ai : null}
+              tourMode={tour && tab.id === tour.tabId ? tour.mode : null}
             />
           )}
         </div>

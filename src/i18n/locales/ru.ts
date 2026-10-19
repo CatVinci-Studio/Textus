@@ -720,59 +720,91 @@ export default {
   tutorialWatchNote:
     "Подключите ИИ позже в разделе {path}, чтобы попробовать самим.",
   tutorialWelcomeTitle: `Добро пожаловать в ${APP_NAME}`,
-  tutorialWelcomeBody: "Покажем всё на примере дневника путешествия.",
+  tutorialWelcomeBody:
+    "Покажем всё на примере ваших заметок об «Анне Карениной».",
   tutorialWysiwygTitle: "Что видишь, то и получаешь",
-  tutorialWysiwygBody: "Markdown оформляется прямо по ходу письма.",
-  tutorialWysiwygTask: "Введите `# {title}`, затем напишите список.",
-  tutorialBlocksTitle: "Формулы, таблицы, диаграммы",
-  tutorialBlocksBody: "Нескольких строк текста хватает, чтобы их нарисовать.",
-  tutorialBlocksTask: "Запишите маршрут в виде таблицы.",
+  tutorialWysiwygBody:
+    "Markdown оформляется прямо по ходу письма; дважды нажмите Enter, чтобы закончить список.",
+  tutorialWysiwygHeading: "Заголовок: `# {title}`, затем Enter",
+  tutorialWysiwygList: "Список: `- Облонский`, Enter, `Долли`",
+  tutorialWysiwygNumbered: "Нумерованный список: `1. Часть первая`",
+  tutorialWysiwygTaskItem: "Задача: `- [ ] Дочитать первую часть`",
+  tutorialMarksTitle: "Жирный, цитаты, код и ссылки",
+  tutorialMarksBody:
+    "Ниже ваши заметки к первой главе; введите эти строки в конце.",
+  tutorialMarksEmphasis: "Жирный и курсив: `Долли **терпелива** и *горда*.`",
+  tutorialMarksQuote: "Цитата: `> Все смешалось в доме Облонских.`",
+  tutorialMarksCode: "Код: ``Перечитать `главу I`.``",
+  tutorialMarksLink: "Ссылка: `[Викитека](https://ru.wikisource.org)`",
+  tutorialTableTitle: "Таблицы",
+  tutorialTableBody:
+    "Строка ячеек между | по нажатию Enter становится таблицей.",
+  tutorialTableHeader: "Введите `| Герой | Впечатление |`, затем Enter",
+  tutorialTableRow: "Заполните строку: `Долли`, Tab, `Терпение`",
+  tutorialBlocksTitle: "Формулы и диаграммы",
+  tutorialBlocksBody:
+    "По желанию: несколько символов дают формулу, несколько строк - диаграмму.",
+  tutorialBlocksFormula: "Формула: `$E=mc^2$`",
+  tutorialBlocksDiagram:
+    "Диаграмма: ```` ```mermaid ````, Enter, затем `graph LR; A-->B`",
   tutorialModesTitle: "Режимы письма и темы",
   tutorialModesBody: "Пишите по-другому, смотрите по-другому.",
   tutorialModesTask: "Включите режим дзен, затем выберите другую тему.",
   tutorialSidebarTitle: "Боковая панель и экспорт",
-  tutorialSidebarBody: "Файлы и оглавление слева; закончив, экспортируйте.",
+  tutorialSidebarBody:
+    "В боковой панели ваши файлы, оглавление и буфер обмена; экспорт - в меню Файл › Экспорт.",
   tutorialSidebarTask:
-    "Откройте боковую панель ({shortcut}) и посмотрите оглавление.",
+    "Нажмите меню ☰ слева вверху, выберите Вид › Боковая панель ({shortcut}) и откройте Оглавление",
+  tutorialSidebarTaskMac:
+    "В строке меню выберите Вид › Боковая панель ({shortcut}) и откройте Оглавление",
   tutorialSidebarTaskPhone:
-    "Откройте боковую панель из меню и посмотрите оглавление.",
+    "Нажмите меню ☰ слева вверху, затем Боковая панель, и откройте Оглавление",
   tutorialConnectTitle: "Подключите ИИ",
   tutorialConnectBody:
     "С подключённым ИИ всё, что дальше, можно попробовать по-настоящему.",
   tutorialConnectTask: "Войдите или вставьте ключ - или пропустите пока.",
   tutorialConnectSkip: "Пропустить пока",
   tutorialConnected: "Подключено.",
-  tutorialAiPanelTitle: "Панель ИИ",
-  tutorialAiPanelBody: "Здесь живёт ваш помощник в письме.",
-  tutorialAiPanelTask: "Нажмите {shortcut}, чтобы открыть панель.",
-  tutorialAiPanelTaskPhone:
-    "Нажмите кнопку панели ИИ вверху, чтобы открыть её.",
+  tutorialWriteTitle: "Написание с ИИ",
+  tutorialWriteBody: `В режиме «Написание» ${AI_NAME} только добавляет текст, зелёным, пока вы его не примете.`,
+  tutorialWriteOpen:
+    "Откройте панель ИИ: значок робота справа вверху ({shortcut})",
+  tutorialWriteOpenPhone: "Откройте панель ИИ: нажмите значок робота вверху",
+  tutorialWriteSend:
+    "Отправьте `Продолжи мои заметки ещё одним абзацем` и нажмите «Принять»",
+  tutorialReviewTitle: "Рецензия",
+  tutorialReviewBody:
+    "В режиме «Разбор» он оставляет замечания на полях и не трогает ваш текст.",
+  tutorialReviewTask:
+    "Отправьте `Прокомментируй мои заметки` и прочитайте замечания на полях",
+  tutorialRevisionTitle: "Правка",
+  tutorialRevisionBody:
+    "В режиме «Правка» он переписывает, а вы решаете по каждой фразе.",
+  tutorialRevisionSelect: "Выделите первую фразу ваших заметок",
+  tutorialRevisionSend:
+    "Отправьте `Сделай короче` и выберите «Принять» или «Отклонить»",
+  tutorialGrammarTitle: "Проверка грамматики",
+  tutorialGrammarBody: "Описки подчёркиваются прямо по ходу письма.",
+  tutorialGrammarType: "В конце, с новой строки, введите `{slip}`",
+  tutorialGrammarApply:
+    "Дождитесь подчёркивания, наведите на него указатель и нажмите «Применить»",
+  tutorialGrammarApplyPhone:
+    "Дождитесь подчёркивания, коснитесь его и нажмите «Применить»",
+  tutorialGrammarQuiet:
+    "На этот раз ИИ не нашёл, что исправить. Можно продолжать.",
   tutorialContinuationTitle: "Автодополнение",
   tutorialContinuationBody: "Сделайте паузу - и он продолжит за вас.",
   tutorialContinuationTask:
-    "Допишите в конце дневника, сделайте паузу и примите вариант клавишей Tab.",
+    "В конце введите `Главное в первой фразе то, что`, сделайте паузу и нажмите Tab",
   tutorialContinuationTaskPhone:
-    "Допишите в конце дневника, сделайте паузу и коснитесь серого текста.",
-  tutorialGrammarTitle: "Проверка грамматики",
-  tutorialGrammarBody: "Описки подчёркиваются.",
-  tutorialGrammarTask:
-    "Откройте карточку у подчёркивания и примените исправление.",
-  tutorialGrammarQuiet:
-    "На этот раз ИИ не нашёл, что исправить. Можно продолжать.",
-  tutorialRevisionTitle: "Правка",
-  tutorialRevisionBody: "Попросите переписать абзац и решайте по фразам.",
-  tutorialRevisionTask: "Выделите абзац и попросите ИИ сделать его живее.",
-  tutorialReviewTitle: "Рецензия",
-  tutorialReviewBody: "Советы появляются на полях.",
-  tutorialReviewTask: "Попросите ИИ дать советы по этому дневнику.",
+    "В конце введите `Главное в первой фразе то, что`, сделайте паузу и коснитесь серого текста",
   tutorialSkillsTitle: "Встроенные навыки",
-  tutorialSkillsBody: "Введите /, чтобы ими пользоваться.",
-  tutorialSkillsTask: "Попробуйте в панели `/сжать` или `/перевести`.",
-  tutorialMemoryTitle: "Растёт со временем",
-  tutorialMemoryBody: "Он помнит ваш стиль и ваши просьбы.",
-  tutorialMemoryTask: "Откройте «Память» и посмотрите, что он запомнил.",
+  tutorialSkillsBody: "Введите / в панели ИИ, чтобы выбрать навык.",
+  tutorialSkillsTask:
+    "Выделите одну из заметок и отправьте `/сжать` или `/перевести`",
   tutorialDoneTitle: "Готово",
   tutorialDoneBody: "Теперь пишите своё.",
+  tutorialDoneMemory: `${AI_NAME} со временем запоминает ваши требования и стиль; загляните на вкладку «Память» в панели ИИ.`,
   closePromptMessage: "В документе есть несохранённые изменения.",
   closePromptSave: "Сохранить",
   closePromptDiscard: "Не сохранять",

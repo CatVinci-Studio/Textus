@@ -719,23 +719,45 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialWatchNote:
     "Verbinde später unter {path} eine KI, um es selbst auszuprobieren.",
   tutorialWelcomeTitle: `Willkommen bei ${APP_NAME}`,
-  tutorialWelcomeBody: "Wir zeigen dir alles an einem Reisetagebuch.",
+  tutorialWelcomeBody:
+    "Wir zeigen dir alles an deinen Lesenotizen zur Verwandlung.",
   tutorialWysiwygTitle: "Was du siehst, bekommst du",
-  tutorialWysiwygBody: "Markdown wird beim Schreiben formatiert.",
-  tutorialWysiwygTask: "Tippe `# {title}` und schreib dann eine Liste.",
-  tutorialBlocksTitle: "Formeln, Tabellen, Diagramme",
-  tutorialBlocksBody: "Ein paar Zeilen Text zeichnen sie.",
-  tutorialBlocksTask: "Schreib deine Reiseroute als Tabelle.",
+  tutorialWysiwygBody:
+    "Markdown wird beim Schreiben formatiert; zweimal Enter beendet eine Liste.",
+  tutorialWysiwygHeading: "Eine Überschrift: `# {title}`, dann Enter",
+  tutorialWysiwygList: "Eine Liste: `- Gregor Samsa`, Enter, `Grete`",
+  tutorialWysiwygNumbered: "Eine nummerierte Liste: `1. Kapitel I`",
+  tutorialWysiwygTaskItem: "Eine Aufgabe: `- [ ] Kapitel III lesen`",
+  tutorialMarksTitle: "Fett, Zitate, Code und Links",
+  tutorialMarksBody:
+    "Darunter stehen deine Notizen zu Kapitel I; tippe diese Zeilen ans Ende.",
+  tutorialMarksEmphasis: "Fett und kursiv: `Grete ist **mutig** und *still*.`",
+  tutorialMarksQuote: "Ein Zitat: `> Es war kein Traum.`",
+  tutorialMarksCode: "Code: ``Das `Kapitel I` noch einmal lesen.``",
+  tutorialMarksLink: "Ein Link: `[Gutenberg](https://gutenberg.org)`",
+  tutorialTableTitle: "Tabellen",
+  tutorialTableBody:
+    "Eine Zeile mit Zellen zwischen | wird mit Enter zur Tabelle.",
+  tutorialTableHeader: "Tippe `| Figur | Eindruck |`, dann Enter",
+  tutorialTableRow: "Füll eine Zeile aus: `Gregor`, Tab, `Pflichtbewusst`",
+  tutorialBlocksTitle: "Formeln und Diagramme",
+  tutorialBlocksBody:
+    "Optional: Ein paar Zeichen ergeben eine Formel, ein paar Zeilen ein Diagramm.",
+  tutorialBlocksFormula: "Eine Formel: `$E=mc^2$`",
+  tutorialBlocksDiagram:
+    "Ein Diagramm: ```` ```mermaid ````, Enter, dann `graph LR; A-->B`",
   tutorialModesTitle: "Schreibmodi und Designs",
   tutorialModesBody: "Anders schreiben, anders aussehen.",
   tutorialModesTask: "Schalte den Zen-Modus ein und wähl ein anderes Design.",
   tutorialSidebarTitle: "Seitenleiste und Export",
   tutorialSidebarBody:
-    "Dateien und Gliederung links; exportieren, wenn du fertig bist.",
+    "In der Seitenleiste sind deine Dateien, die Gliederung und die Zwischenablage; exportieren kannst du über Datei › Exportieren.",
   tutorialSidebarTask:
-    "Öffne die Seitenleiste ({shortcut}) und sieh dir die Gliederung an.",
+    "Klick oben links auf das Menü ☰, wähl Ansicht › Seitenleiste ({shortcut}) und öffne die Gliederung",
+  tutorialSidebarTaskMac:
+    "Wähl in der Menüleiste Ansicht › Seitenleiste ({shortcut}) und öffne die Gliederung",
   tutorialSidebarTaskPhone:
-    "Öffne die Seitenleiste über das Menü und sieh dir die Gliederung an.",
+    "Tippe oben links auf das Menü ☰, dann auf Seitenleiste, und öffne die Gliederung",
   tutorialConnectTitle: "KI verbinden",
   tutorialConnectBody:
     "Ist sie verbunden, kannst du das Folgende wirklich ausprobieren.",
@@ -743,40 +765,48 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Melde dich an oder füge einen Schlüssel ein - oder überspring es vorerst.",
   tutorialConnectSkip: "Später",
   tutorialConnected: "Verbunden.",
-  tutorialAiPanelTitle: "Der KI-Bereich",
-  tutorialAiPanelBody: "Hier wohnt dein Schreibassistent.",
-  tutorialAiPanelTask: "Drück {shortcut}, um den Bereich zu öffnen.",
-  tutorialAiPanelTaskPhone:
-    "Tippe oben auf die Taste des KI-Bereichs, um ihn zu öffnen.",
+  tutorialWriteTitle: "Mit KI schreiben",
+  tutorialWriteBody: `Im Modus Schreiben fügt ${AI_NAME} nur Text hinzu, grün, bis du ihn annimmst.`,
+  tutorialWriteOpen:
+    "Öffne den KI-Bereich: das Robotersymbol oben rechts ({shortcut})",
+  tutorialWriteOpenPhone:
+    "Öffne den KI-Bereich: Tippe oben auf das Robotersymbol",
+  tutorialWriteSend:
+    "Sende `Schreib meine Notizen um einen Absatz weiter` und klick auf Annehmen",
+  tutorialReviewTitle: "Lektorat",
+  tutorialReviewBody:
+    "Im Modus Prüfen kommentiert sie am Rand und lässt deinen Text in Ruhe.",
+  tutorialReviewTask:
+    "Sende `Kommentiere meine Notizen` und lies die Notizen am Rand",
+  tutorialRevisionTitle: "Überarbeiten",
+  tutorialRevisionBody:
+    "Im Modus Überarbeiten schreibt sie um, und du entscheidest Satz für Satz.",
+  tutorialRevisionSelect: "Markiere den ersten Satz deiner Notizen",
+  tutorialRevisionSend:
+    "Sende `Mach ihn knapper` und wähl Annehmen oder Ablehnen",
+  tutorialGrammarTitle: "Grammatikprüfung",
+  tutorialGrammarBody: "Flüchtigkeitsfehler werden beim Tippen unterstrichen.",
+  tutorialGrammarType: "Tippe am Ende in einer neuen Zeile `{slip}`",
+  tutorialGrammarApply:
+    "Warte auf die Unterstreichung, zeig darauf und klick auf Übernehmen",
+  tutorialGrammarApplyPhone:
+    "Warte auf die Unterstreichung, tippe darauf und dann auf Übernehmen",
+  tutorialGrammarQuiet:
+    "Diesmal hat die KI nichts zu korrigieren gefunden. Du kannst weitermachen.",
   tutorialContinuationTitle: "Vervollständigung",
   tutorialContinuationBody:
     "Halte kurz inne, und sie schreibt für dich weiter.",
   tutorialContinuationTask:
-    "Schreib am Ende des Tagebuchs weiter, halte inne und nimm mit Tab an.",
+    "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und drück Tab",
   tutorialContinuationTaskPhone:
-    "Schreib am Ende des Tagebuchs weiter, halte inne und tippe auf den grauen Text.",
-  tutorialGrammarTitle: "Grammatikprüfung",
-  tutorialGrammarBody: "Flüchtigkeitsfehler werden unterstrichen.",
-  tutorialGrammarTask:
-    "Öffne die Karte an der Unterstreichung und übernimm die Korrektur.",
-  tutorialGrammarQuiet:
-    "Diesmal hat die KI nichts zu korrigieren gefunden. Du kannst weitermachen.",
-  tutorialRevisionTitle: "Überarbeiten",
-  tutorialRevisionBody:
-    "Lass einen Absatz überarbeiten und entscheide Satz für Satz.",
-  tutorialRevisionTask:
-    "Markiere einen Absatz und bitte die KI, ihn lebendiger zu machen.",
-  tutorialReviewTitle: "Lektorat",
-  tutorialReviewBody: "Vorschläge erscheinen am Rand.",
-  tutorialReviewTask: "Bitte die KI um Vorschläge zu diesem Tagebuch.",
+    "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und tippe auf den grauen Text",
   tutorialSkillsTitle: "Integrierte Skills",
-  tutorialSkillsBody: "Tippe /, um sie zu nutzen.",
-  tutorialSkillsTask: "Probier `/kürzen` oder `/übersetzen` im Bereich.",
-  tutorialMemoryTitle: "Wächst mit der Zeit",
-  tutorialMemoryBody: "Sie merkt sich deinen Stil und deine Wünsche.",
-  tutorialMemoryTask: "Öffne Gedächtnis und sieh nach, was sie sich merkt.",
+  tutorialSkillsBody: "Tippe / im KI-Bereich, um einen auszuwählen.",
+  tutorialSkillsTask:
+    "Markiere eine deiner Notizen und sende `/kürzen` oder `/übersetzen`",
   tutorialDoneTitle: "Fertig",
   tutorialDoneBody: "Jetzt schreib dein Eigenes.",
+  tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Gedächtnis nach.`,
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",
   closePromptSave: "Speichern",
   closePromptDiscard: "Nicht speichern",

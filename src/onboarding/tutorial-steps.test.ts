@@ -9,21 +9,22 @@ import {
 } from "./tutorial-steps";
 
 describe("the tour", () => {
-  it("follows the website: four on writing, connecting, then the AI", () => {
+  it("writes, connects, then follows the AI from Write to the skills", () => {
     expect(TUTORIAL_STEPS.map((step) => step.id)).toEqual([
       "welcome",
       "wysiwyg",
+      "marks",
+      "table",
       "blocks",
       "modes-themes",
       "sidebar-export",
       "connect",
-      "ai-panel",
-      "continuation",
-      "grammar",
-      "revision",
+      "write",
       "review",
+      "revision",
+      "grammar",
+      "continuation",
       "skills",
-      "memory",
       "done",
     ]);
   });
@@ -44,8 +45,8 @@ describe("the tour", () => {
       wysiwyg: "writing",
       "sidebar-export": "writing",
       connect: "connect",
-      "ai-panel": "ai",
-      memory: "ai",
+      write: "ai",
+      skills: "ai",
       done: "done",
     });
     // A chapter's steps are next to each other.
@@ -63,14 +64,34 @@ describe("the tour", () => {
     ).toEqual(["welcome", "connect", "done"]);
   });
 
-  it("gives every lesson a task and an animation; the AI ones are AI", () => {
+  it("gives every lesson things to do and an animation; the AI ones are AI", () => {
     for (const step of TUTORIAL_STEPS) {
       const lesson = step.layout === "card";
       expect(!!step.clip, step.id).toBe(lesson);
-      expect(step.clip ?? step.id, step.id).toBe(step.id);
       expect(!!step.ai, step.id).toBe(step.chapter === "ai");
-      if (lesson) expect(step.taskKey, step.id).toBeTruthy();
+      if (lesson) expect(step.tasks?.length, step.id).toBeGreaterThan(0);
     }
+  });
+
+  it("sets the AI panel's mode for the lessons that need one", () => {
+    const modes = Object.fromEntries(
+      TUTORIAL_STEPS.filter((step) => step.agentMode).map((step) => [
+        step.id,
+        step.agentMode,
+      ]),
+    );
+    expect(modes).toEqual({
+      write: "write",
+      review: "review",
+      revision: "revise",
+      skills: "revise",
+    });
+  });
+
+  it("locks every lesson until it is done, except formulas and diagrams", () => {
+    expect(
+      TUTORIAL_STEPS.filter((step) => step.optional).map((step) => step.id),
+    ).toEqual(["blocks"]);
   });
 
   it("links to the clips Rust lets it open, and only those", () => {
@@ -81,19 +102,8 @@ describe("the tour", () => {
       (m) => m[1],
     );
     expect(clips).toEqual([...TUTORIAL_CLIPS]);
-    expect(TUTORIAL_CLIPS).toEqual([
-      "wysiwyg",
-      "blocks",
-      "modes-themes",
-      "sidebar-export",
-      "ai-panel",
-      "continuation",
-      "grammar",
-      "revision",
-      "review",
-      "skills",
-      "memory",
-    ]);
+    for (const step of TUTORIAL_STEPS)
+      if (step.clip) expect(TUTORIAL_CLIPS, step.id).toContain(step.clip);
   });
 });
 
@@ -105,8 +115,8 @@ describe("resuming saved progress", () => {
     expect(resolveSavedProgress({ stepId: "skills", aiMode: "watch" })).toEqual(
       { stepIndex: stepIndexOf("skills"), aiMode: "watch" },
     );
-    expect(resolveSavedProgress({ stepId: "blocks" })).toEqual({
-      stepIndex: stepIndexOf("blocks"),
+    expect(resolveSavedProgress({ stepId: "marks" })).toEqual({
+      stepIndex: stepIndexOf("marks"),
       aiMode: null,
     });
   });
@@ -119,6 +129,15 @@ describe("resuming saved progress", () => {
       });
   });
 
+  it("takes the second tour's AI panel lesson to AI writing, its memory one to the end", () => {
+    expect(
+      resolveSavedProgress({ stepId: "ai-panel", aiMode: "live" }),
+    ).toEqual({ stepIndex: stepIndexOf("write"), aiMode: "live" });
+    expect(resolveSavedProgress({ stepId: "memory", aiMode: "watch" })).toEqual(
+      { stepIndex: stepIndexOf("done"), aiMode: "watch" },
+    );
+  });
+
   it.each([
     ["welcome", "welcome"],
     ["markdownIntro", "wysiwyg"],
@@ -126,13 +145,13 @@ describe("resuming saved progress", () => {
     ["sidebar", "sidebar-export"],
     ["aiIntro", "connect"],
     ["completion", "connect"],
-    // A step of both tours: the old one's had no mode to resume in.
+    // A step of every tour: the first one's had no mode to resume in.
     ["grammar", "connect"],
     ["agentChat", "connect"],
     ["agentEdit", "connect"],
     ["connectAi", "connect"],
     ["done", "done"],
-  ])("takes the previous tour's %s to %s", (old, now) => {
+  ])("takes the first tour's %s to %s", (old, now) => {
     expect(resolveSavedProgress({ stepId: old })).toEqual({
       stepIndex: stepIndexOf(now as never),
       aiMode: null,
