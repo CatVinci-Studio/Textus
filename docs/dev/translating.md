@@ -36,7 +36,7 @@ For a language `{code}`:
 | `src-tauri/src/ai/ui-names/{code}.txt`       | What the AI is told your UI calls things, so its answers point at labels that exist. Exists already, comment only. One line per line of `en.txt`: `English name = yours`.                   |
 | `src-tauri/src/ai/style-headings/{code}.txt` | The headings "Learn my style" gives a style profile written in your language. Exists already, comment only. One line: title and seven sections, separated by `/`.                           |
 | `src-tauri/src/ai/rules/messages/{code}.txt` | What the grammar check and the conventions check say when a rule for every language fires on text in your language (a space before a comma, a doubled word). One line per line of `en.txt`. |
-| `src/i18n/skills/{code}.ts`                  | The built-in skills' names in the `/` menu and Settings: a label, a one-line hint and the aliases people type after `/`, for each of the eighteen. Every skill is required.                 |
+| `src/i18n/skills/{code}.ts`                  | The built-in skills' names in the `/` menu and Settings: a label, a one-line hint and the aliases people type after `/`, for each of the nineteen. Every skill is required.                 |
 
 Anything a file leaves out falls back to English, so a half-done language
 still works - but only a language whose seven files are all filled in is

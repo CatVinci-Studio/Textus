@@ -173,6 +173,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   commentLocate: "Mostrar no documento",
   commentNotFound: "Esse trecho não está mais no documento.",
   toolResult: "Resultado",
+  chatUseTheme: "Usar este tema",
   toolSearchDocument: "Buscando “{arg}” no documento",
   toolReadDocument: "Lendo “{arg}”",
   toolReadWholeDocument: "Lendo o documento",

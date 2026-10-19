@@ -92,4 +92,9 @@ export default {
     hint: "원하는 길이로 충실하게 요약합니다",
     aliases: ["정리"],
   },
+  theme: {
+    label: "테마 만들기",
+    hint: "설명에 맞춰 편집기 테마를 만들어 바로 쓸 수 있습니다",
+    aliases: ["테마"],
+  },
 } satisfies SkillTexts;

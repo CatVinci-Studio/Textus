@@ -2,7 +2,7 @@
 //!
 //! ```text
 //! skills/
-//! ├── continue-story.md … summarize.md   <- the built-in skills (SKILL_FILES)
+//! ├── continue-story.md … theme.md       <- the built-in skills (SKILL_FILES)
 //! ├── packs/                             <- the reference packs (PACK_FILES)
 //! │   ├── contract.md                    <- the editing contract every built-in follows
 //! │   ├── craft.md                       <- fiction, plain language, email, platforms
@@ -56,6 +56,7 @@ pub(crate) const SKILL_FILES: &[(&str, &str)] = bundled!("skills/";
     "social-post",
     "headline",
     "summarize",
+    "theme",
 );
 
 /// The reference packs, by file stem (= the name use_skill loads them by).
@@ -914,7 +915,7 @@ mod tests {
         let mut listed: Vec<String> = PACK_FILES.iter().map(|(s, _)| s.to_string()).collect();
         listed.sort();
         assert_eq!(stems(dir.join("packs")), listed);
-        assert_eq!(SKILL_FILES.len(), 18);
+        assert_eq!(SKILL_FILES.len(), 19);
         assert_eq!(PACK_FILES.len(), 12);
     }
 
@@ -1450,6 +1451,25 @@ mod tests {
             expand_message("/润色", &user, doc_zh(), "zh"),
             "<skill name=\"润色\">\nPolish it.\n</skill>"
         );
+    }
+
+    #[test]
+    fn the_theme_skill_answers_to_its_name_in_every_ui_language() {
+        let skills: Vec<AgentSkill> = skills().to_vec();
+        let theme = find("theme").expect("theme is built in");
+        assert_eq!(theme.category.as_deref(), Some("format"));
+        for code in UI_CODES {
+            for alias in &theme.aliases[*code] {
+                assert_eq!(
+                    find_invocable(&skills, alias).map(|s| s.name.as_str()),
+                    Some("theme"),
+                    "{code}: /{alias}"
+                );
+            }
+        }
+        let message = expand_message("/theme a calm dark page", &skills, "", "en");
+        assert!(message.starts_with("<skill name=\"theme\">\n"));
+        assert!(message.contains("`--editor-bg`") && message.ends_with("a calm dark page"));
     }
 
     #[test]

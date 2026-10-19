@@ -26,7 +26,7 @@ Grammar check uses only the writing conventions and the library's names.
 | AI remembered        | AI 记住的          | AIが覚えたこと           | What Textus AI keeps by itself from conversations: your requirements, preferences, style. |
 | Skills               | 技能               | スキル                   | Named, reusable instructions, called with `/name`.                                        |
 | Global config folder | 全局配置文件夹     | グローバル設定フォルダー | The app's folder for the writing instructions and skills that apply to every document.    |
-| Built-in skills      | 内置技能           | 組み込みスキル           | The 18 skills that come with the app; each can be turned off, customized or reset.        |
+| Built-in skills      | 内置技能           | 組み込みスキル           | The 19 skills that come with the app; each can be turned off, customized or reset.        |
 | Writing conventions  | 写作规范           | 表記ルール               | The punctuation, spacing and number norms followed, per document language.                |
 | Modes                | 写作 / 审阅 / 修订 | 執筆 / レビュー / 推敲   | What a conversation may do to the document: add text, nothing, or change it.              |
 
@@ -179,7 +179,7 @@ Textus AI never changes them.
 calls with `/name` or Textus AI loads by itself when a request matches its
 description.**
 
-- **On disk:** built-in: 18 skills bundled with the app
+- **On disk:** built-in: 19 skills bundled with the app
   (`src-tauri/src/ai/skills/*.md`, read-only); global: `skills/*.md` in the
   global config folder; project: `.textus/skills/*.md`. Frontmatter `name`
   and `description` (block scalars allowed), Textus-only keys under

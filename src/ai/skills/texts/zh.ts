@@ -93,4 +93,9 @@ export default {
     hint: "按你要的篇幅如实概括",
     aliases: ["总结", "摘要", "概括"],
   },
+  theme: {
+    label: "设计主题",
+    hint: "按你的描述写一份编辑器主题，可直接使用",
+    aliases: ["主题", "编辑器主题"],
+  },
 } satisfies SkillTexts;

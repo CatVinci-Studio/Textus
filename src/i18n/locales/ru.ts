@@ -174,6 +174,7 @@ export default {
   commentLocate: "Показать в документе",
   commentNotFound: "Этого фрагмента больше нет в документе.",
   toolResult: "Результат",
+  chatUseTheme: "Использовать эту тему",
   toolSearchDocument: "Поиск в документе: «{arg}»",
   toolReadDocument: "Чтение: «{arg}»",
   toolReadWholeDocument: "Чтение документа",

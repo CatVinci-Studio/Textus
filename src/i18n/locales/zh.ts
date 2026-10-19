@@ -163,6 +163,7 @@ export default {
   commentLocate: "在文档中定位",
   commentNotFound: "文档里已经找不到这段文字。",
   toolResult: "结果",
+  chatUseTheme: "使用此主题",
   toolSearchDocument: "在文档中搜索「{arg}」",
   toolReadDocument: "阅读「{arg}」",
   toolReadWholeDocument: "阅读全文",
