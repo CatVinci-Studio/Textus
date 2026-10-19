@@ -41,15 +41,19 @@
   --control-height: 32px;
   /* Buttons inside panels, bars and toasts. */
   --control-height-sm: 26px;
-  /* Type scale for the app's own UI (the document has its own). */
-  --text-xs: 11px;
-  --text-sm: 12px;
-  --text-md: 13px;
-  --text-lg: 14px;
+  /* Type scale for the app's own UI (the document has its own). Times
+     --ui-text-scale, Settings › Editor & Appearance › Interface Text Size
+     (set on <html> by theme/apply-appearance.ts; 1 when unset). A font
+     size in the UI written in px rather than with a token multiplies by it
+     too, so it grows with the rest. */
+  --text-xs: calc(11px * var(--ui-text-scale, 1));
+  --text-sm: calc(12px * var(--ui-text-scale, 1));
+  --text-md: calc(13px * var(--ui-text-scale, 1));
+  --text-lg: calc(14px * var(--ui-text-scale, 1));
   /* Display steps, for titles only: a sheet's, a panel's or the phone's
      navigation title (iOS "headline"), and a welcome or empty state. */
-  --text-xl: 17px;
-  --text-2xl: 22px;
+  --text-xl: calc(17px * var(--ui-text-scale, 1));
+  --text-2xl: calc(22px * var(--ui-text-scale, 1));
   /* The phone's text styles (iOS Dynamic Type at its default size). */
   --ios-body: 17px;
   --ios-callout: 16px;
@@ -176,8 +180,12 @@
   line-height: 1.5;
 }
 
+/* A control that sets no size of its own (the sidebar's rows, for one)
+   took the browser's, 13.33px, and stayed there whatever Interface Text
+   Size said; the scale's 13px instead. */
 :where(button, input, select, textarea) {
   font-family: inherit;
+  font-size: var(--text-md);
 }
 
 :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {

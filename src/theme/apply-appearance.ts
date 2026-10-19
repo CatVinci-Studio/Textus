@@ -100,6 +100,18 @@ export function useApplyAppearance(
     else root.setAttribute("data-content-width", settings.contentWidth);
   }, [settings.contentWidth]);
 
+  // The UI's type scale (ui/design-system.css's --text-* tokens) reads this;
+  // the document's text doesn't. A factor on font sizes rather than CSS
+  // zoom on the panels: WebKit's zoom leaves popovers and pointer
+  // coordinates in the unzoomed space (see app/useZoom.ts).
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.uiTextScale === 1)
+      root.style.removeProperty("--ui-text-scale");
+    else
+      root.style.setProperty("--ui-text-scale", String(settings.uiTextScale));
+  }, [settings.uiTextScale]);
+
   useEffect(() => {
     let styleEl = document.getElementById(
       CUSTOM_CSS_STYLE_ID,

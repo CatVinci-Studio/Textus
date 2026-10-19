@@ -1,5 +1,8 @@
 import { useEffect } from "react";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings, type HeadingAction } from "../settings/SettingsContext";
+import { adjacentTabId, type DocTab } from "../document/doc-tabs";
+import { modIsMeta } from "../platform/os";
+import { macTabStep } from "./fixed-shortcuts";
 import {
   appDrawsWindowFrame,
   ownsMenuAccelerators,
@@ -12,7 +15,20 @@ import {
   TRIGGER_GRAMMAR_CHECK_EVENT,
   TOGGLE_FLOATING_CHAT_EVENT,
   TOGGLE_FIND_REPLACE_EVENT,
+  INSERT_BLOCK_EVENT,
 } from "../utils/events";
+
+/** The heading shortcuts, by the Format menu's block kind they apply
+ *  (INSERT_BLOCK_EVENT). */
+const HEADING_KINDS: [HeadingAction, string][] = [
+  ["setHeading1", "h1"],
+  ["setHeading2", "h2"],
+  ["setHeading3", "h3"],
+  ["setHeading4", "h4"],
+  ["setHeading5", "h5"],
+  ["setHeading6", "h6"],
+  ["setParagraph", "paragraph"],
+];
 
 /** The native menu's fixed accelerators (src-tauri/src/menu.rs), for
  *  Linux, where the hidden menu bar no longer fires them. Save, Close Tab,
@@ -46,7 +62,10 @@ const WEBVIEW_FILE_COMMANDS: Record<string, string> = {
  * Pulled out of App.tsx; every action it triggers is handed in from there.
  */
 export function useGlobalShortcuts(opts: {
+  /** The window's tabs, read when a tab key is pressed. */
+  tabsRef: { readonly current: readonly DocTab[] };
   activeTabId: string;
+  setActiveTabId: (id: string) => void;
   saveTab: (tabId: string) => Promise<boolean>;
   requestCloseTab: (tabId: string) => void;
   toggleSourceMode: () => void;
@@ -56,7 +75,9 @@ export function useGlobalShortcuts(opts: {
   toggleZenMode: () => void;
 }): void {
   const {
+    tabsRef,
     activeTabId,
+    setActiveTabId,
     saveTab,
     requestCloseTab,
     toggleSourceMode,
@@ -132,6 +153,32 @@ export function useGlobalShortcuts(opts: {
         return;
       }
       const { shortcuts } = settings;
+      const tabStep =
+        macTabStep(e, modIsMeta()) ??
+        (combo === shortcuts.nextTab
+          ? 1
+          : combo === shortcuts.previousTab
+            ? -1
+            : null);
+      if (tabStep !== null) {
+        e.preventDefault();
+        // Kept from the editor too: its Tab handler (tab-extend-plugin)
+        // doesn't look at Ctrl, and would indent the code block left behind.
+        e.stopPropagation();
+        const next = adjacentTabId(tabsRef.current, activeTabId, tabStep);
+        if (next) setActiveTabId(next);
+        return;
+      }
+      const heading = HEADING_KINDS.find(
+        ([action]) => combo === shortcuts[action],
+      );
+      if (heading) {
+        e.preventDefault();
+        window.dispatchEvent(
+          new CustomEvent(INSERT_BLOCK_EVENT, { detail: heading[1] }),
+        );
+        return;
+      }
       if (combo === shortcuts.triggerCompletion) {
         e.preventDefault();
         window.dispatchEvent(new CustomEvent(TRIGGER_COMPLETION_EVENT));
@@ -171,7 +218,9 @@ export function useGlobalShortcuts(opts: {
   }, [
     saveTab,
     requestCloseTab,
+    tabsRef,
     activeTabId,
+    setActiveTabId,
     settings,
     toggleSourceMode,
     toggleSidebar,

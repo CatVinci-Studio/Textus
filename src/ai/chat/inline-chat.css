@@ -512,13 +512,14 @@
      auto-resize effect can only set an integer height, so every line box
      left the content a half pixel taller than the box it sits in. WebKit
      took that as a scrollable textarea - permanent scrollbars around an
-     EMPTY input, and a caret painted against a hair of scroll offset. */
-  line-height: 20px;
+     EMPTY input, and a caret painted against a hair of scroll offset.
+     Every Interface Text Size keeps it whole: 18, 20, 22 and 25px. */
+  line-height: calc(20px * var(--ui-text-scale, 1));
   padding: 4px 6px;
   /* Grows with content via the auto-resize effect, up to ~6 lines. That
      effect owns overflow-y too, flipping it to auto only once this
      max-height actually clamps the box - see ChatComposer. */
-  max-height: 120px;
+  max-height: calc(120px * var(--ui-text-scale, 1));
   overflow-y: hidden;
   /* A textarea wraps; it has nothing to scroll sideways to. Explicit
      because `overflow-y` alone would compute the x axis to `auto`
@@ -1300,13 +1301,14 @@
   flex: none;
   display: inline-grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  /* The disc grows with the number in it (Interface Text Size). */
+  width: calc(18px * var(--ui-text-scale, 1));
+  height: calc(18px * var(--ui-text-scale, 1));
   margin-top: 1px;
   border-radius: 50%;
   background: var(--success-color);
   color: #fff;
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--ui-text-scale, 1));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   transition: background var(--dur-fast) var(--ease-standard);
@@ -1368,12 +1370,13 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   flex: none;
   display: inline-grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: calc(18px * var(--ui-text-scale, 1));
+  height: calc(18px * var(--ui-text-scale, 1));
   border-radius: 50%;
   background: var(--review-note-line);
   color: #fff;
-  font: 700 10.5px/1 var(--font-ui, sans-serif);
+  font: 700 calc(10.5px * var(--ui-text-scale, 1)) / 1
+    var(--font-ui, sans-serif);
 }
 
 .agent-comment .agent-proposal-show {
