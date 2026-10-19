@@ -114,6 +114,8 @@ function MarkdownFileIcon({ className }: IconProps) {
   );
 }
 
+const IMAGE_PICTURE_PATH = "M2.5 11.5L6 8L8.5 10.2L10.8 7.5L13.5 11";
+
 export function ImageFileIcon({ className }: IconProps) {
   return (
     <svg
@@ -134,7 +136,7 @@ export function ImageFileIcon({ className }: IconProps) {
       />
       <circle cx="5.3" cy="5.8" r="1.1" fill="currentColor" />
       <path
-        d="M2.5 11.5L6 8L8.5 10.2L10.8 7.5L13.5 11"
+        d={IMAGE_PICTURE_PATH}
         stroke="currentColor"
         strokeWidth="1.1"
         strokeLinecap="round"
@@ -143,6 +145,15 @@ export function ImageFileIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+/** ImageFileIcon as markup, for a missing image's card - built by a
+ *  ProseMirror node view, like PLUS_ICON_HTML's buttons. */
+export const IMAGE_ICON_HTML =
+  `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">` +
+  `<rect x="1.5" y="2" width="13" height="12" rx="1.5" stroke="currentColor" stroke-width="1.1"/>` +
+  `<circle cx="5.3" cy="5.8" r="1.1" fill="currentColor"/>` +
+  `<path d="${IMAGE_PICTURE_PATH}" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>` +
+  `</svg>`;
 
 export function GenericFileIcon({ className }: IconProps) {
   return (

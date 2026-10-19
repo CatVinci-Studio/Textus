@@ -560,14 +560,85 @@
   display: none;
 }
 
-/* An image embed whose file isn't in the vault: its name, not a broken
-   picture. */
-.milkdown .image-view.obsidian-embed-missing {
-  padding: 0 0.4em;
+/* A picture that won't load (images/missing-image.ts) - a Markdown image or
+   an Obsidian embed: a card with its name, the reason and what to do, in
+   place of the broken-image icon. The picture's own parts stay in the DOM
+   for an export, which drops the card, and for print. */
+@media screen {
+  .milkdown .image-view.image-missing > :not(.missing-image-card) {
+    display: none;
+  }
+}
+
+/* A width set for the picture would squeeze the card. */
+.milkdown .image-view.image-missing {
+  width: auto !important;
+  line-height: inherit;
+}
+
+.missing-image-card,
+.image-missing-name {
   border: 1px dashed var(--editor-muted);
   color: var(--editor-muted);
+}
+
+/* An embed's name, as an export shows a missing one. */
+.image-missing-name {
+  padding: 0 0.4em;
   font-size: 0.9em;
-  line-height: inherit;
+}
+
+.missing-image-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--md-radius);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+  cursor: default;
+}
+
+.missing-image-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--editor-text);
+  font-weight: 600;
+}
+
+.missing-image-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--editor-muted);
+}
+
+.missing-image-alt {
+  font-style: italic;
+}
+
+.missing-image-reason {
+  font-size: var(--text-sm);
+}
+
+.missing-image-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.missing-image-actions button {
+  color: var(--editor-text);
 }
 
 /* An HTML comment while the caret is away (raw-html-preview-plugin.ts):

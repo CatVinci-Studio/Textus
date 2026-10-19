@@ -41,7 +41,8 @@ use commands::drafts::{
 use commands::export::export_save_dialog;
 use commands::fs::{
     file_mtime_ms, list_dir, migrate_draft_images, open_css_file_dialog, open_file_dialog,
-    read_binary_file_base64, read_text_file, save_file_dialog, save_pasted_image, write_text_file,
+    open_image_file_dialog, read_binary_file_base64, read_text_file, save_file_dialog,
+    save_pasted_image, write_text_file,
 };
 use commands::image_host::upload_image;
 use commands::theme_gallery::{theme_gallery_catalog, theme_gallery_css, theme_gallery_preview};
@@ -640,6 +641,7 @@ pub fn run() {
             commands::recents::add_recent_file,
             open_file_dialog,
             open_css_file_dialog,
+            open_image_file_dialog,
             save_file_dialog,
             list_dir,
             read_text_file,

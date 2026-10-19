@@ -43,7 +43,8 @@
   .quick-ask-anchor,
   .pending-insert,
   .image-resize-handle,
-  .frontmatter-block {
+  .frontmatter-block,
+  .missing-image-card {
     display: none !important;
   }
 

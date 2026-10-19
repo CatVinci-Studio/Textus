@@ -43,20 +43,32 @@ export function linkTarget(
   // The anchor of a link into another file is dropped: that file opens at
   // its top.
   const hash = link.indexOf("#");
-  const file = decodeUrlPath(hash < 0 ? link : link.slice(0, hash));
-  if (!file) return null;
-  const absolute = drive || /^[\\/]/.test(file);
-  if (!absolute && !docPath) return null;
-  const path = absolute ? file : `${dirname(docPath!)}/${file}`;
-  // Spelled the way the OS spells it, so a document already open in a tab
-  // (opened from a dialog, with "\" on Windows) is found by its path.
-  const resolved = normalizePath(
-    path,
-    /^[a-z]:|^\\/i.test(absolute ? file : docPath!) ? "\\" : "/",
+  const resolved = localPath(
+    decodeUrlPath(hash < 0 ? link : link.slice(0, hash)),
+    docPath,
   );
+  if (!resolved) return null;
   return MARKDOWN_FILE.test(resolved)
     ? { kind: "document", path: resolved }
     : { kind: "file", path: resolved };
+}
+
+/**
+ * A decoded path from the document at `docPath` as a full path: a relative
+ * one resolves against the document's folder, so an unsaved document has
+ * none (null). Spelled the way the OS spells it, so a document already
+ * open in a tab (opened from a dialog, with "\" on Windows) is found by its
+ * path. Shared with a missing image's card (images/missing-image.ts).
+ */
+export function localPath(file: string, docPath: string | null): string | null {
+  if (!file) return null;
+  const absolute = isDrivePath(file) || /^[\\/]/.test(file);
+  if (!absolute && !docPath) return null;
+  const path = absolute ? file : `${dirname(docPath!)}/${file}`;
+  return normalizePath(
+    path,
+    /^[a-z]:|^\\/i.test(absolute ? file : docPath!) ? "\\" : "/",
+  );
 }
 
 /** `path` with "." and ".." steps taken and `sep` between its parts. */

@@ -170,7 +170,12 @@ export function withEditorCore(
       .use(remarkObsidianEmbedPlugin)
       .use(obsidianEmbedSchema)
       .use(obsidianEmbedInputRule)
-      .use(createObsidianEmbedPreviewPlugin({ docPath: () => docPath.current }))
+      .use(
+        createObsidianEmbedPreviewPlugin({
+          docPath: () => docPath.current,
+          settings: () => settings.current,
+        }),
+      )
 
       // GitHub-style alerts: > [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING]
       // / [!CAUTION] blockquotes render as colored callouts with a badge.

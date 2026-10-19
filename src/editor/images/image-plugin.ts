@@ -8,7 +8,9 @@ import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode, Slice } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { closeHistory } from "@milkdown/kit/prose/history";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { resolveStrings } from "../../i18n/strings";
 import { showMessage } from "../../ui/app-dialog";
 import { errorText } from "../../utils/error-text";
 import {
@@ -18,9 +20,26 @@ import {
   isDrivePath,
 } from "../../utils/path";
 import { fs } from "../../platform/ipc";
+import {
+  canPickImageFile,
+  canRevealInFileManager,
+} from "../../platform/capabilities";
 import type { Settings, ImageNamingMode } from "../../settings/SettingsContext";
 import { isScopedUrl, scopedImageSrc } from "../../platform/ios-files";
-import { imageFilesFromClipboard, imageMimeForPath } from "./pasted-files";
+import {
+  IMAGE_FILE_EXTENSIONS,
+  imageFilesFromClipboard,
+  imageMimeForPath,
+} from "./pasted-files";
+import {
+  MISSING_IMAGE_CLASS,
+  imageDisplayName,
+  imageLocation,
+  isMissingCardAction,
+  missingImageCard,
+  probeMissing,
+  revealNearest,
+} from "./missing-image";
 import { parseEmbed } from "./obsidian-embed";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
 import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
@@ -218,20 +237,45 @@ async function storeImage(
     );
     return src;
   }
+  return saveToImageFolder(image, ext, store);
+}
+
+async function saveToImageFolder(
+  image: PastedImage,
+  ext: string,
+  store: Pick<ImageStore, "docPath" | "settings">,
+): Promise<string> {
   const { src } = await fs.savePastedImage(
     store.docPath(),
     await image.base64(),
     ext,
-    current.imageFolder,
+    store.settings().imageFolder,
   );
   return src;
 }
 
-function reportFailure(err: unknown, store: ImageStore): void {
+/** Copies an image file into the document's image folder (Settings ›
+ *  Images › Folder) whatever the storage mode, and returns its src there
+ *  - for an Obsidian embed, which names a file in the vault and never an
+ *  upload. Null for a file type the store doesn't take. */
+export async function copyToImageFolder(
+  path: string,
+  store: Pick<ImageStore, "docPath" | "settings">,
+): Promise<string | null> {
+  const image = fileImage(path);
+  const ext = EXT_BY_MIME[image.type];
+  return ext ? saveToImageFolder(image, ext, store) : null;
+}
+
+function reportFailure(
+  err: unknown,
+  store: ImageStore,
+  message = store.onError(),
+): void {
   console.error("saving pasted image failed:", err);
   // The reason underneath: "PicGo isn't running" is something the user
   // can fix, where "couldn't save" alone left them guessing.
-  void showMessage(`${store.onError()}\n${errorText(err)}`, {
+  void showMessage(`${message}\n${errorText(err)}`, {
     tone: "error",
   });
 }
@@ -379,6 +423,49 @@ function fileImage(path: string): PastedImage {
   };
 }
 
+/** Asks for an image file in the native picker; null when cancelled. */
+export function pickImageFile(language: Settings["language"]) {
+  return fs.openImageFileDialog(
+    resolveStrings(language).missingImageFilter,
+    IMAGE_FILE_EXTENSIONS,
+  );
+}
+
+/**
+ * "Choose image…" on a missing image's card: the picked file is stored as
+ * a dropped one is - Settings › Images: copied into the image folder, or
+ * uploaded - so the document gets the src a drop would give it, relative
+ * to the document. Alt text and title stay; the change is one undo step
+ * of its own.
+ */
+async function replaceImage(
+  view: EditorView,
+  getPos: () => number | undefined,
+  store: ImageStore,
+): Promise<void> {
+  const language = store.settings().language;
+  const path = await pickImageFile(language);
+  if (!path) return;
+  try {
+    const src = await storeImage(fileImage(path), store);
+    if (src === null) return;
+    const pos = getPos();
+    const node = pos === undefined ? null : view.state.doc.nodeAt(pos);
+    if (pos === undefined || node?.type.name !== "image") return;
+    view.dispatch(
+      closeHistory(
+        view.state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, src }),
+      ),
+    );
+  } catch (err) {
+    reportFailure(
+      err,
+      store,
+      resolveStrings(language).missingImageChooseFailed,
+    );
+  }
+}
+
 /** A paragraph holding nothing but images (and line breaks between them):
  *  the "an image on its own line" case, laid out as a centred figure. An
  *  Obsidian image embed (obsidian-embed.ts) counts as an image. */
@@ -434,8 +521,9 @@ function createImageView(
   node: ProseNode,
   view: EditorView,
   getPos: () => number | undefined,
-  docPath: () => string | null,
+  store: ImageStore,
 ) {
+  const { docPath } = store;
   const dom = document.createElement("span");
   dom.className = "image-view";
   const img = document.createElement("img");
@@ -445,8 +533,51 @@ function createImageView(
   dom.append(img, handle);
 
   let current = node;
+  // Which picture is on show: its src, in this document.
+  const shown = () => `${docPath()}\n${(current.attrs.src as string) ?? ""}`;
+  let card: HTMLElement | null = null;
+  const clearMissing = () => {
+    card?.remove();
+    card = null;
+    dom.classList.remove(MISSING_IMAGE_CLASS);
+  };
+  // A picture that won't load gets its card instead of the broken-image
+  // icon (missing-image.ts), once the backend has said why.
+  const showMissing = async () => {
+    const key = shown();
+    const src = (current.attrs.src as string) ?? "";
+    const location = imageLocation(src, docPath());
+    const reason = await probeMissing(location);
+    if (key !== shown() || (img.complete && img.naturalWidth > 0)) return;
+    const next = missingImageCard(
+      {
+        name: imageDisplayName(src),
+        alt: (current.attrs.alt as string) ?? "",
+        reason,
+        location,
+        onChoose: canPickImageFile
+          ? () => void replaceImage(view, getPos, store)
+          : undefined,
+        onReveal:
+          canRevealInFileManager && location.kind === "local"
+            ? () => revealNearest(location.path)
+            : undefined,
+      },
+      resolveStrings(store.settings().language),
+    );
+    clearMissing();
+    card = next;
+    dom.classList.add(MISSING_IMAGE_CLASS);
+    dom.append(card);
+  };
+  img.addEventListener("load", clearMissing);
+  img.addEventListener("error", () => void showMissing());
+
   const apply = (n: ProseNode) => {
+    const before = shown();
     current = n;
+    // Another picture: the card goes, until that one fails too.
+    if (shown() !== before) clearMissing();
     const presentation = readImagePresentation(n.attrs.title as string | null);
     showDocImage(
       img,
@@ -518,8 +649,9 @@ function createImageView(
     selectNode: () => dom.classList.add("ProseMirror-selectednode"),
     deselectNode: () => dom.classList.remove("ProseMirror-selectednode"),
     // The handle's drag is ours, not ProseMirror's (which would start a
-    // node drag or move the selection).
-    stopEvent: (event: Event) => event.target === handle,
+    // node drag or move the selection); so are the card's buttons.
+    stopEvent: (event: Event) =>
+      event.target === handle || isMissingCardAction(event),
     // Everything inside is written by this view - the live width while
     // resizing included - never by the user typing.
     ignoreMutation: () => true,
@@ -626,7 +758,7 @@ export function createImagePlugin(options: ImageStore) {
         },
         nodeViews: {
           image: (node, view, getPos) =>
-            createImageView(node, view, getPos, options.docPath),
+            createImageView(node, view, getPos, options),
         },
       },
     });

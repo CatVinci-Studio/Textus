@@ -51,6 +51,22 @@ describe("cloneEditorContent", () => {
     expect(html).toContain("<pre>x</pre>");
   });
 
+  it("exports a missing image as the image it was written as, without its card", () => {
+    const html = cloneEditorContent(
+      editor(
+        '<p><span class="image-view image-missing">' +
+          '<img src="http://asset.localhost/x" data-doc-src="assets/cat.png">' +
+          '<span class="missing-image-card">Image not found: cat.png' +
+          '<span class="missing-image-actions"><button>Choose image…</button></span>' +
+          "</span></span></p>",
+      ),
+    );
+    expect(html).toContain('<img src="assets/cat.png">');
+    expect(html).not.toContain("missing-image");
+    expect(html).not.toContain("image-missing");
+    expect(html).not.toContain("<button");
+  });
+
   it("puts the markdown folded under a <details> back inside it", () => {
     // What details-fold.ts draws for "<details><summary>…" +
     // markdown + "</details>", nested once, the inner one folded.

@@ -846,6 +846,20 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Diese eingefügten Bilder konnten nicht neben das gespeicherte Dokument verschoben werden und liegen weiterhin am ursprünglichen Ort:",
   imagePasteFailedMessage:
     "Das eingefügte Bild konnte nicht gespeichert werden.",
+  missingImageTitle: "Bild nicht gefunden: {name}",
+  missingImageUnsupportedTitle: "Bild kann nicht angezeigt werden: {name}",
+  missingImageNotFound: "Unter diesem Pfad gibt es keine Datei.",
+  missingImageUnsupported: `Die Datei ist vorhanden, aber kein Bildformat, das ${APP_NAME} anzeigen kann.`,
+  missingImageRemote: "Konnte nicht von {host} geladen werden.",
+  missingImageUnsaved:
+    "Speichere zuerst das Dokument: Ein relativer Pfad wird vom Ordner des Dokuments aus gesucht.",
+  missingImageNotInVault: "Im Tresor gibt es keine Datei mit diesem Namen.",
+  missingImageFailed: "Das Bild konnte nicht geladen werden.",
+  missingImageChoose: "Bild auswählen…",
+  missingImageReveal: "Im Ordner anzeigen",
+  missingImageFilter: "Bilder",
+  missingImageChooseFailed:
+    "Das ausgewählte Bild konnte nicht verwendet werden.",
   imageStorageGroupLabel: "Bilder",
   imageStorageLabel: "Eingefügte Bilder speichern",
   imageStorageLocal: "Auf diesem Computer",

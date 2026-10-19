@@ -67,7 +67,8 @@ test("an embed whose file isn't in the vault shows its name", async ({
   page,
 }) => {
   const editor = await openVaultDoc(page, null);
-  await expect(editor.locator(".obsidian-embed-missing")).toHaveText(
-    "attachments/cat.png",
+  // The missing image's card (missing-image.spec.ts has the rest).
+  await expect(editor.locator(".missing-image-title")).toHaveText(
+    "Image not found: cat.png",
   );
 });
