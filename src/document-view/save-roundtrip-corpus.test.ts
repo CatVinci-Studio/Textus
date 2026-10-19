@@ -81,6 +81,8 @@ const LIST_IN_ITEM =
   "micromark doesn't start a list at 2 as a new item's first line";
 const NESTED_EMPHASIS = "emphasis directly inside emphasis of its kind";
 const FLANKING = "bold starting with punctuation, glued to a word before it";
+const RAGGED_TABLE =
+  "a table with rows of different lengths is filled out when typed in, and undo keeps that";
 const BARE_LINK = "a bare GFM link followed by a character it may take";
 const KNOWN: Record<string, string> = {
   "commonmark-spec/0175.md insert-heading": UNCLOSED_HTML,
@@ -92,6 +94,9 @@ const KNOWN: Record<string, string> = {
   "gfm-spec/0378.md type-word": NESTED_EMPHASIS,
   "commonmark-spec/0419.md toggle-bold": NESTED_EMPHASIS,
   "gfm-spec/0426.md toggle-bold": NESTED_EMPHASIS,
+  "gfm-spec/0382.md type-word": NESTED_EMPHASIS,
+  "gfm-spec/0204.md undo-edit": RAGGED_TABLE,
+  "gfm-spec/0205.md undo-edit": RAGGED_TABLE,
   "commonmark-spec/0392.md type-word": FLANKING,
   "gfm-spec/0373.md type-word": FLANKING,
   "gfm-spec/0626.md toggle-bold": BARE_LINK,

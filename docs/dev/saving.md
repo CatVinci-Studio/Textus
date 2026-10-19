@@ -105,7 +105,11 @@ The harness is `src/document-view/save-roundtrip.ts`. For each file it:
 - makes one edit of each kind, each on a fresh load: types a word into a
   paragraph, deletes a word, makes a word bold (`toggleSpan`, as the
   toolbar does), adds a list item (Enter at the end of an item), types into
-  a table cell, and inserts a heading between two blocks. Each edit is
+  a table cell, inserts a heading between two blocks, pastes Markdown text
+  at the end of a paragraph (through the editor's paste handling),
+  replaces a whole paragraph with new Markdown as an AI edit does, and
+  types a word then undoes it (the save must then be the file, byte for
+  byte). Each edit is
   picked by a generator seeded from the file's name, so a failure names
   the file, the edit and the seed that reproduce it.
 
@@ -171,10 +175,20 @@ no way to write what the editor holds, or a reading the parser makes:
   after it is read as part of it.
 - `* 2. foo` as the first line of a new item is read as text: micromark
   doesn't let a list that starts at 2 begin there.
-- Emphasis directly inside emphasis of its kind, `*(*foo*)*` once edited,
-  and bold whose text starts with punctuation right after a word,
-  `foo**(bar)**`: the serializer writes the same delimiters, which then
-  don't open or close.
+- Emphasis directly inside emphasis of its kind, `*(*foo*)*` once edited:
+  the serializer writes the same delimiters, which then don't open or
+  close. (Bold that starts or ends with punctuation right against a word,
+  `foo**(bar)**`, is written with that word's letter as a character
+  reference, `fo&#x6F;**(bar)**`, except next to CJK text.)
+- A table whose rows have different numbers of cells is filled out with
+  empty cells the first time you type in it (the table editing plugin
+  does this), and undoing the typing keeps them, so that save isn't the
+  file byte for byte.
+- Text pasted or typed onto the last line of an HTML block is part of
+  the block: CommonMark ends it only at a blank line.
+- Deleting or rewriting a reference definition, `[ref]: url`, leaves the
+  references to it, `[text][ref]`, as plain text on reopening; the editor
+  still shows them as links until then.
 - A bare GFM link followed by a character it may take as part of itself:
   `www.x.org/a<b` or `a@b.c_` once edited.
 

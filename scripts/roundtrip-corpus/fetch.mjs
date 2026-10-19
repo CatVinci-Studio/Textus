@@ -114,6 +114,43 @@ const SOURCES = [
     repo: "https://github.com/kepano/kepano-obsidian",
     licence: "MIT",
   },
+  // Notes written in a Markdown editor: Chinese study notes with images,
+  // tables, highlights and maths, as Typora users keep them.
+  {
+    name: "javaguide",
+    repo: "https://github.com/Snailclimb/JavaGuide",
+    licence: "Apache-2.0",
+    sparse: ["/docs/**/*.md"],
+    take: 300,
+  },
+  // Blog and site generators' pages: front matter, shortcodes, tag plugins.
+  {
+    name: "hexo-site",
+    repo: "https://github.com/hexojs/site",
+    licence: "MIT",
+    sparse: ["/source/**/*.md"],
+    take: 300,
+  },
+  {
+    name: "hugo-docs",
+    repo: "https://github.com/gohugoio/hugoDocs",
+    licence: "Apache-2.0",
+    sparse: ["/content/en/**/*.md"],
+    take: 300,
+  },
+  // Table-heavy pages: curricula and lesson plans.
+  {
+    name: "ossu-cs",
+    repo: "https://github.com/ossu/computer-science",
+    licence: "MIT",
+  },
+  {
+    name: "web-dev-for-beginners",
+    repo: "https://github.com/microsoft/Web-Dev-For-Beginners",
+    licence: "MIT",
+    sparse: ["/[0-9]*/**/README.md", "/README.md"],
+    take: 150,
+  },
   // The specs' examples, one file each.
   {
     name: "commonmark-spec",

@@ -8,7 +8,7 @@ import { snippetDocuments } from "./save-roundtrip-snippets";
 // bugs in; this repository's own Markdown is in save-roundtrip-docs.test.ts
 // and save-roundtrip-help.test.ts, so the three run in parallel. Each
 // document is opened, saved unedited (byte for byte the file), and edited
-// six ways on fresh loads, with the untouched blocks checked byte for byte
+// nine ways on fresh loads, with the untouched blocks checked byte for byte
 // and the text read back. The full corpus is `npm run test:roundtrip`.
 
 vi.mock("mermaid", () => ({
@@ -23,10 +23,15 @@ const css = (globalThis.CSS ?? {}) as { escape?: (value: string) => string };
 css.escape ??= (value) => value.replace(/["\\]/g, "\\$&");
 (globalThis as { CSS?: unknown }).CSS = css;
 
-describe("saving after an edit keeps the rest and loses nothing", () => {
-  it.each(snippetDocuments(250))("%s", async (id, markdown) => {
-    const report = await roundTripFile(markdown, hashString(id));
-    expect(report.failures).toEqual([]);
-    expect(report.unpaired).toBe(false);
-  });
-});
+// CI runs these once, in `check`, and only for a change that can reach
+// saving (scripts/ci-changes.mjs); the native jobs set this to skip them.
+describe.skipIf(process.env.TEXTUS_SKIP_ROUNDTRIP === "1")(
+  "saving after an edit keeps the rest and loses nothing",
+  () => {
+    it.each(snippetDocuments(250))("%s", async (id, markdown) => {
+      const report = await roundTripFile(markdown, hashString(id));
+      expect(report.failures).toEqual([]);
+      expect(report.unpaired).toBe(false);
+    });
+  },
+);

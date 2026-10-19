@@ -459,7 +459,9 @@ function compose(
     }
     for (let u = piece.from; u <= piece.to; u++)
       if (units[u].nodes.some(isDefinition))
-        definitions.push(unitText(source, u));
+        // Without its indent: read after a join that ends in a list, an
+        // indented `  [ref]: url` would be part of the list's last item.
+        definitions.push(unitText(source, u).trimStart());
     return text.slice(units[piece.from].start!, units[piece.to].end!);
   });
   const first = pieces[0];

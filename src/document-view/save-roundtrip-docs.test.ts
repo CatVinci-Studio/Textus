@@ -38,14 +38,19 @@ function markdownFiles(dir: string): [string, string][] {
   return found;
 }
 
-describe("saving after an edit keeps the rest of the developer and design docs and loses nothing", () => {
-  it.each(markdownFiles("docs"))(
-    "%s",
-    async (id, markdown) => {
-      const report = await roundTripFile(markdown, hashString(id));
-      expect(report.failures).toEqual([]);
-      expect(report.unpaired).toBe(false);
-    },
-    60_000,
-  );
-});
+// CI runs these once, in `check`, and only for a change that can reach
+// saving (scripts/ci-changes.mjs); the native jobs set this to skip them.
+describe.skipIf(process.env.TEXTUS_SKIP_ROUNDTRIP === "1")(
+  "saving after an edit keeps the rest of the developer and design docs and loses nothing",
+  () => {
+    it.each(markdownFiles("docs"))(
+      "%s",
+      async (id, markdown) => {
+        const report = await roundTripFile(markdown, hashString(id));
+        expect(report.failures).toEqual([]);
+        expect(report.unpaired).toBe(false);
+      },
+      60_000,
+    );
+  },
+);

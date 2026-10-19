@@ -52,14 +52,12 @@ import { writeLatexMath } from "../math/latex-math-syntax";
  */
 const thematicBreak: Handle = (node, parent) => {
   const isFirstBlock = parent?.type === "root" && parent.children[0] === node;
-  // In a list item, "---" right after the marker makes the whole line a
-  // rule (`- ---`), and in a tight item, on the line under a paragraph, it
-  // underlines that paragraph into a heading.
-  const siblings = (parent?.children ?? []) as { type: string }[];
-  const before = siblings[siblings.indexOf(node) - 1];
-  const inItem =
-    parent?.type === "listItem" && (!before || before.type === "paragraph");
-  return isFirstBlock || inItem ? "***" : "---";
+  // In a list item it is "___": right after the marker, a rule of the
+  // marker's character makes the whole line a rule (`- ---`, `* ***`), and
+  // in a tight item "---" on the line under a paragraph underlines it into
+  // a heading.
+  if (isFirstBlock) return "***";
+  return parent?.type === "listItem" ? "___" : "---";
 };
 
 /**
@@ -597,14 +595,17 @@ const defaultLink = defaultHandlers.link as PeekingHandle;
 
 /** A bare `www.x.org`, which GFM links with an `http://` URL. It has no
  *  `<...>` form - remark wrote `[www.x.org](http://www.x.org)` - and,
- *  written bare as it was, it reads back the same (see `root` below). */
-function bareWww(node: Link): string | null {
+ *  written bare as it was, it reads back the same (see `root` below).
+ *  Not with text right after it, which would read as more of the address
+ *  (`www.x.orgPasted`): then it is written `[www.x.org](http://www.x.org)`. */
+function bareWww(node: Link, after = ""): string | null {
   const syntax = (node.data as { linkSyntax?: LinkSyntax } | undefined)
     ?.linkSyntax;
   const text = textOf(node);
   return syntax === "autolink" &&
     /^www\./i.test(text) &&
-    node.url === `http://${text}`
+    node.url === `http://${text}` &&
+    !/^[^\s<?!.,:*_~)]/.test(after)
     ? text
     : null;
 }
@@ -612,7 +613,7 @@ function bareWww(node: Link): string | null {
 /** Writes a link in the syntax it was read in (LinkSyntax above). */
 const link = Object.assign(
   ((node, parent, state, info) => {
-    const www = bareWww(node);
+    const www = bareWww(node, info.after);
     if (www) return www;
     const empty =
       (node.data as { linkSyntax?: LinkSyntax } | undefined)?.linkSyntax ===
@@ -820,9 +821,83 @@ function joinAdjacent(node: Phrasing): void {
   children.forEach(joinAdjacent);
 }
 
+/** The first or last character a node is written with, nested spans and
+ *  all. A link, an image, code or maths starts and ends with punctuation
+ *  (`[`, `)`, a backtick, `$`), whatever is inside. */
+function edgeCharacter(node: Phrasing, end: "first" | "last"): string {
+  if (node.type === "text") {
+    const chars = [...(node.value ?? "")];
+    return (end === "first" ? chars[0] : chars.at(-1)) ?? "";
+  }
+  if (!ATTENTION.has(node.type)) return node.type === "break" ? "" : ".";
+  if (!node.children?.length) return "";
+  return edgeCharacter(
+    node.children[end === "first" ? 0 : node.children.length - 1],
+    end,
+  );
+}
+
+const ATTENTION = new Set(["strong", "emphasis"]);
+const PUNCTUATION = /^[\p{P}\p{S}]$/u;
+// CJK text is read by remark-cjk-friendly, which lets bold stand against it.
+const WORD =
+  /^(?![\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Hangul}])[\p{L}\p{N}]$/u;
+
+/** `text` with its first or last character as a character reference, an
+ *  inline HTML node (which is written as it is), and the rest. */
+function referenced(text: Phrasing, end: "first" | "last"): Phrasing[] {
+  const chars = [...(text.value ?? "")];
+  const char = end === "first" ? chars.shift()! : chars.pop()!;
+  const html: Phrasing = {
+    type: "html",
+    value: `&#x${char.codePointAt(0)!.toString(16).toUpperCase()};`,
+  };
+  const rest: Phrasing[] = chars.length
+    ? [{ ...text, value: chars.join("") }]
+    : [];
+  return end === "first" ? [html, ...rest] : [...rest, html];
+}
+
+/**
+ * Bold or italic whose text starts or ends with punctuation, right against
+ * a word: `**per file.**Pasted` doesn't close (a closing `**` after
+ * punctuation needs a space or punctuation after it), so the bold read
+ * back as text with asterisks in it - text typed or pasted straight after
+ * a bold sentence. The word's letter beside it is written as a character
+ * reference, `**per file.**&#x50;asted`, which reads as the letter, as
+ * remark itself does; CJK text is left alone.
+ */
+function encodeAroundAttention(node: Phrasing): void {
+  if (!node.children) return;
+  node.children.forEach(encodeAroundAttention);
+  const children = node.children;
+  for (let i = 0; i < children.length; i++) {
+    const span = children[i];
+    if (!ATTENTION.has(span.type)) continue;
+    const before = children[i - 1];
+    const after = children[i + 1];
+    if (
+      after?.type === "text" &&
+      PUNCTUATION.test(edgeCharacter(span, "last")) &&
+      WORD.test(edgeCharacter(after, "first"))
+    )
+      children.splice(i + 1, 1, ...referenced(after, "first"));
+    if (
+      before?.type === "text" &&
+      PUNCTUATION.test(edgeCharacter(span, "first")) &&
+      WORD.test(edgeCharacter(before, "last"))
+    ) {
+      const parts = referenced(before, "last");
+      children.splice(i - 1, 1, ...parts);
+      i += parts.length - 1;
+    }
+  }
+}
+
 /** Set up per serialization, before any node is written. */
 const root: Handle = (node, parent, state, info) => {
   joinAdjacent(node as Phrasing);
+  encodeAroundAttention(node as Phrasing);
   state.unsafe = state.unsafe
     .filter((pattern) => !isAutolinkLiteralGuard(pattern))
     .map((pattern) => (isHeadingGuard(pattern) ? headingGuard : pattern))

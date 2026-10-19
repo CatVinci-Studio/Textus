@@ -3,6 +3,7 @@ import { editorViewCtx, parserCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { splitListItem } from "@milkdown/kit/prose/schema-list";
+import { undo } from "@milkdown/kit/prose/history";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { createTestEditor } from "./editor-test-harness";
@@ -34,6 +35,9 @@ export const EDIT_KINDS = [
   "add-list-item",
   "edit-table-cell",
   "insert-heading",
+  "paste-markdown",
+  "replace-paragraph",
+  "undo-edit",
 ] as const;
 export type EditKind = (typeof EDIT_KINDS)[number];
 
@@ -42,6 +46,7 @@ export type EditKind = (typeof EDIT_KINDS)[number];
  *  preservation's; the rest are preservation's. */
 export type FailureKind =
   | "exception"
+  | "undo-changed"
   | "unedited-changed"
   | "untouched-changed"
   | "text-changed"
@@ -104,6 +109,8 @@ const pick = <T>(rand: () => number, list: readonly T[]): T =>
 interface Edited {
   touched: number[];
   insertedAt?: number;
+  /** The edit was undone: the document is the file again. */
+  undone?: boolean;
 }
 
 const topIndex = (doc: ProseNode, pos: number) => doc.resolve(pos).index(0);
@@ -136,10 +143,37 @@ function proseWords(doc: ProseNode) {
   return words;
 }
 
+/** Markdown pasted as text, which the editor reads as Markdown. */
+const PASTED =
+  "Pasted **bold**, a [link](https://example.com/p) and `code`.\n\n- one\n- two";
+
+/** A paragraph as an assistant rewrites it, in Markdown. */
+const REWRITTEN =
+  "Rewritten with *emphasis*, a [link](https://example.com/ai) and $x^2$.";
+
+/** End positions of the top-level paragraphs that hold text. */
+function paragraphEnds(doc: ProseNode): { index: number; end: number }[] {
+  const ends: { index: number; end: number }[] = [];
+  let pos = 0;
+  doc.forEach((node, _offset, index) => {
+    // Prose: not a definition's line, whose rewriting cuts its references
+    // loose, nor an HTML block, which takes in what is pasted onto its
+    // last line (docs/dev/saving.md, "What a save can't keep").
+    const raw = ["link_definition", "html"].includes(
+      node.lastChild?.type.name ?? "",
+    );
+    if (node.type.name === "paragraph" && node.textContent.trim() && !raw)
+      ends.push({ index, end: pos + node.nodeSize - 1 });
+    pos += node.nodeSize;
+  });
+  return ends;
+}
+
 function makeEdit(
   view: EditorView,
   kind: EditKind,
   rand: () => number,
+  ctx: Ctx,
 ): Edited | null {
   const { state } = view;
   const { doc, schema } = state;
@@ -225,6 +259,41 @@ function makeEdit(
       );
       view.dispatch(state.tr.insert(pos, heading));
       return { touched: [], insertedAt: index };
+    }
+    case "paste-markdown": {
+      // At the end of a paragraph, through the editor's own paste path.
+      const ends = paragraphEnds(doc);
+      if (!ends.length) return null;
+      const { index, end } = pick(rand, ends);
+      view.dispatch(state.tr.setSelection(TextSelection.create(doc, end)));
+      // Plain text on the clipboard, as from a text editor.
+      // (A plain Event: jsdom has no ClipboardEvent.)
+      const event = new Event("paste") as ClipboardEvent;
+      Object.defineProperty(event, "clipboardData", {
+        value: {
+          getData: (type: string) => (type === "text/plain" ? PASTED : ""),
+        },
+      });
+      if (!view.pasteText(PASTED, event)) return null;
+      return { touched: [index], insertedAt: index + 1 };
+    }
+    case "replace-paragraph": {
+      // A whole paragraph swapped for new Markdown, as an AI edit does.
+      const ends = paragraphEnds(doc);
+      if (!ends.length) return null;
+      const { index, end } = pick(rand, ends);
+      const block = doc.child(index);
+      const from = end + 1 - block.nodeSize;
+      const content = ctx.get(parserCtx)(REWRITTEN).content;
+      view.dispatch(state.tr.replaceWith(from, end + 1, content));
+      return { touched: [index] };
+    }
+    case "undo-edit": {
+      // A word typed, then undone: the save must be the file again.
+      const edited = makeEdit(view, "type-word", rand, ctx);
+      if (!edited) return null;
+      if (!undo(view.state, view.dispatch)) return null;
+      return { touched: [], undone: true };
     }
   }
 }
@@ -489,7 +558,8 @@ export async function saveAfterEdit(
   try {
     return opened.editor.action((ctx) => {
       const view = ctx.get(editorViewCtx);
-      if (kind !== "none" && !makeEdit(view, kind, random(seed))) return null;
+      if (kind !== "none" && !makeEdit(view, kind, random(seed), ctx))
+        return null;
       const { doc } = view.state;
       const { text, source, mountDoc } = opened;
       return {
@@ -522,11 +592,16 @@ async function checkEdit(
     const { text, source, mountDoc } = opened;
     opened.editor.action((ctx) => {
       const view = ctx.get(editorViewCtx);
-      const edited = makeEdit(view, kind, random(seed));
+      const edited = makeEdit(view, kind, random(seed), ctx);
       if (!edited) return;
       report.edits[kind] = (report.edits[kind] ?? 0) + 1;
       const doc = view.state.doc;
       const out = saved(ctx, text, source, mountDoc, doc);
+      if (edited.undone) {
+        if (out !== text)
+          fail("undo-changed", kind, seed, firstDifference(text, out));
+        return;
+      }
 
       // (a) The blocks the edit didn't touch, as the file had them, in
       // order. A kept block right beside the edit may be serialized when
@@ -548,13 +623,16 @@ async function checkEdit(
           const unit = source.units[u];
           if (touched.has(u) || unit.start === null) continue;
           const own = text.slice(unit.start, unit.end!);
+          // A kept block beside the edit may have been serialized, and
+          // the same text further down mustn't count for it.
+          if (near.has(u)) {
+            const at = out.indexOf(own, cursor);
+            if (at < 0) report.neighboursSerialized++;
+            continue;
+          }
           const at = out.indexOf(own, cursor);
           if (at >= 0) {
             cursor = at + own.length;
-            continue;
-          }
-          if (near.has(u)) {
-            report.neighboursSerialized++;
             continue;
           }
           fail(

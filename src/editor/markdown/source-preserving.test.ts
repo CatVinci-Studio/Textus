@@ -287,6 +287,24 @@ describe("saving after an edit elsewhere keeps as written", () => {
     expect(out).toBe(`## New\n\n${markdown}`);
   });
 
+  it("checks a list's join with an indented definition elsewhere", async () => {
+    // The definitions are read after each join; indented, they joined a
+    // list that ended the join, so it never read back and the blocks
+    // around it were serialized too.
+    const markdown =
+      "Intro _x_\n\n  [r]: https://x.org\n  [s]: https://y.org\n\nPara _y_\n";
+    const out = await saveAfter(markdown, (view) => {
+      const { schema, doc } = view.state;
+      const item = schema.nodes.list_item.create(
+        null,
+        schema.nodes.paragraph.create(null, schema.text("a")),
+      );
+      const list = schema.nodes.bullet_list.create(null, item);
+      view.dispatch(view.state.tr.insert(doc.content.size, list));
+    });
+    expect(out).toBe(`${markdown}\n* a\n`);
+  });
+
   it("doesn't bring back a deleted definition a setext heading was read with", async () => {
     // The heading's position starts at the definition's line.
     const markdown = "[foo]: /url\nbar\n===\n\n[foo]\n";

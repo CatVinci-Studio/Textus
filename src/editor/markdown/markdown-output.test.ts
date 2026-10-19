@@ -475,6 +475,45 @@ describe("an edited block is saved so it reads back the same", () => {
     );
   });
 
+  it("closes bold that ends in punctuation before a word", async () => {
+    // The space between the bold and the word deleted.
+    const joining = (next: string) => (view: EditorView) => {
+      const at = find(view.state.doc, ` ${next}`);
+      view.dispatch(view.state.tr.delete(at, at + 1));
+    };
+    expect(await savedAfter("**per file.** after\n", joining("after"))).toBe(
+      "**per file.**&#x61;fter\n",
+    );
+    const before = (view: EditorView) => {
+      const at = find(view.state.doc, "foo ") + 3;
+      view.dispatch(view.state.tr.delete(at, at + 1));
+    };
+    expect(await savedAfter("foo **(bar)**\n", before)).toBe(
+      "fo&#x6F;**(bar)**\n",
+    );
+    expect(await savedAfter("*see [it](/u)* now\n", joining("now"))).toBe(
+      "*see [it](/u)*&#x6E;ow\n",
+    );
+    // CJK text is read by remark-cjk-friendly as it stands.
+    expect(await savedAfter("**「加粗」** 中文\n", joining("中文"))).toBe(
+      "**「加粗」**中文\n",
+    );
+  });
+
+  it("writes a bare www. link with text right after it as a link", async () => {
+    // Unlinked text against the link, as a paste puts it there.
+    const glued = (view: EditorView) => {
+      const { tr, schema, doc } = view.state;
+      view.dispatch(tr.insert(find(doc, " end"), schema.text("Next")));
+    };
+    expect(await savedAfter("www.example.org end\n", glued)).toBe(
+      "[www.example.org](http://www.example.org)Next end\n",
+    );
+    expect(await roundTrip("www.example.org. end\n")).toBe(
+      "www.example.org. end\n",
+    );
+  });
+
   it("keeps a heading's closing hashes in its text", async () => {
     expect(await savedAfter("### foo \\### b\n", deleting("b"))).toBe(
       "### foo ##\\# \n",
@@ -512,10 +551,10 @@ describe("an edited block is saved so it reads back the same", () => {
 
   it("writes a rule in a list item so it stays one", async () => {
     expect(await savedAfter("- Foo\n- * * *\n", typingAfter("Foo", "!"))).toBe(
-      "- Foo!\n- ***\n",
+      "- Foo!\n- ___\n",
     );
     expect(await savedAfter("- Foo\n\n  ***\n", typingAfter("Foo", "!"))).toBe(
-      "- Foo!\n\n  ***\n",
+      "- Foo!\n\n  ___\n",
     );
   });
 });
