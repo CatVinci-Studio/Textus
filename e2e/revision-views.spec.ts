@@ -257,26 +257,39 @@ test("switching views cross-fades: the same elements, no entrance replayed, noth
   }
 });
 
-test("the outlines are the theme's --revision-* colours", async ({ page }) => {
+test("hover and the review bar darken a pair in the theme's --revision-*-hover-bg, with no outline", async ({
+  page,
+}) => {
   await open(page);
   await write(page);
   await page
     .locator(".agent-proposal-actions .inline-chat-action-primary")
     .click();
   await revise(page);
-  // What an imported theme or custom CSS would set.
+  // What an imported theme or custom CSS would set - including the outline
+  // variables of 1.1.0, which no longer draw anything.
   await page.addStyleTag({
     content:
-      ":root { --revision-insert-outline: rgb(1, 120, 2); --revision-delete-outline: rgb(140, 3, 4); --revision-insert-focus: rgb(5, 100, 6); --revision-delete-focus: rgb(110, 7, 8); }",
+      ":root { --revision-insert-hover-bg: rgb(1, 120, 2); --revision-delete-hover-bg: rgb(140, 3, 4); --revision-insert-outline: rgb(5, 100, 6); --revision-delete-outline: rgb(110, 7, 8); --revision-insert-focus: rgb(5, 100, 6); --revision-delete-focus: rgb(110, 7, 8); }",
   });
   const del = page.locator('.milkdown .pending-delete[data-index="0"]');
   const ins = page.locator('.milkdown .pending-insert[data-index="0"]');
+  const resting = {
+    del: await del.evaluate((el) => getComputedStyle(el).backgroundColor),
+    ins: await ins.evaluate((el) => getComputedStyle(el).backgroundColor),
+  };
   await del.hover();
-  await expect(del).toHaveCSS("box-shadow", /rgb\(140, 3, 4\)/);
-  await expect(ins).toHaveCSS("box-shadow", /rgb\(1, 120, 2\)/);
+  await expect(del).toHaveCSS("background-color", "rgb(140, 3, 4)");
+  await expect(ins).toHaveCSS("background-color", "rgb(1, 120, 2)");
+  await expect(del).toHaveCSS("box-shadow", "none");
+  await expect(ins).toHaveCSS("box-shadow", "none");
   await page.mouse.move(5, 5);
-  // The review bar's pointer: the focus colours.
+  await expect(del).toHaveCSS("background-color", resting.del);
+  await expect(ins).toHaveCSS("background-color", resting.ins);
+  // The review bar's pointer: the same darker tints.
   await page.locator(".review-bar-nav button").last().click();
-  await expect(del).toHaveCSS("box-shadow", /rgb\(110, 7, 8\)/);
-  await expect(ins).toHaveCSS("box-shadow", /rgb\(5, 100, 6\)/);
+  await expect(del).toHaveCSS("background-color", "rgb(140, 3, 4)");
+  await expect(ins).toHaveCSS("background-color", "rgb(1, 120, 2)");
+  await expect(del).toHaveCSS("box-shadow", "none");
+  await expect(ins).toHaveCSS("box-shadow", "none");
 });

@@ -118,24 +118,25 @@ flowchart LR
 
 **Hover only points.** A rewrite decided sentence by sentence pairs each
 struck original with its replacement. With the pointer on either side, on
-the ✓ / ✕ after them, or on the pair's card in the margin, that pair is
-outlined - dark green round the new text, dark red round the original -
-and its red and green tints deepen a little; its margin card gets the
-outline of the side it holds. The review bar's pointer uses the same two
-colours. All of them are theme variables (`--revision-*`,
+the ✓ / ✕ after them, or on the pair's card in the margin, that pair's
+tints turn a shade darker - a darker green for the new text, a darker red
+for the original - the way a review note's passage darkens under the
+pointer, and its margin card's text darkens with it. The pair the review
+bar points at looks the same, card included. There is no outline. The
+tints are theme variables (`--revision-*-hover-bg`,
 [design-language.md](design-language.md#theme-rules)). That is all hover does, in
 every revision view: nothing is hidden, faded or previewed, and the pair
 looks as before once the pointer leaves (or leaves the editor). To read
 the result without the markup, pick **Result only, no markup** in the
 review bar's view menu.
 
-The outline goes through the plugins, never onto the text's DOM
+The hover class goes through the plugins, never onto the text's DOM
 (`ai/margin/useReviewNotes.ts` → a `hot` meta → `pending-edit-plugin`'s
 `hotDecorations`). ProseMirror reads a class written onto a decorated span
 as an edit of its own and redraws the paragraph, and every strike and
 replacement in it replays its entrance - in `1.1.0-rc.4` that made the red
 and the green vanish under the pointer and fade back. The review bar's
-**‹ / ›** follow the same rule: the outline they move is a class the plugin
+**‹ / ›** follow the same rule: the pointer they move is a class the plugin
 sets on its widgets (no widget is keyed by it), and the paragraph's flash
 (`editor/reveal-position.ts`) is a Web Animation, not a class.
 
@@ -292,7 +293,7 @@ the answer to a per-window store (`useMarginAvailable`).
 | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | `ai/revision/proposal-stream.ts`                                    | Writing-phase machine: place/feed/finalize/discard                         |
 | `ai/revision/usePendingEdits.ts`                                    | Anchor resolution, accept/reject/rejectAll, status map, review navigation  |
-| `ai/revision/pending-edit-plugin.ts`                                | Decorations, hover outline, typewriter + settle, staleness, shortcuts      |
+| `ai/revision/pending-edit-plugin.ts`                                | Decorations, hover tint, typewriter + settle, staleness, shortcuts         |
 | `ai/revision/proposal-status.ts`                                    | Status notes annotated onto history at send time                           |
 | `ai/chat/cancelled-turns.ts`                                        | What a stop keeps; dangling tool-call closure                              |
 | `ai/chat/useAgentConversation.ts`                                   | Conversation state: send/stop/retry/restore, history persistence           |

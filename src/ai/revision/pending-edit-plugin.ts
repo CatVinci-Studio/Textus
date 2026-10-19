@@ -257,10 +257,10 @@ type PendingMeta =
   /** The writer took (true) or kept the original of (false) one sentence,
    *  or took the call back (null) - the in-text ✓ / ✕ and the card's. */
   | { type: "decide"; callId: string; index: number; take: boolean | null }
-  /** The review bar's pointer moved: redraw the outline. */
+  /** The review bar's pointer moved: move its darker tint. */
   | { type: "refocus" }
   /** The pointer is on a changed sentence or its margin card (null: on
-   *  none) - the pair is outlined, nothing else changes. */
+   *  none) - the pair's tints darken, nothing else changes. */
   | { type: "hot"; sentence: HotSentence | null };
 
 /** A changed sentence of a sentence-by-sentence preview. */
@@ -546,7 +546,7 @@ function sentenceDecorations(
 interface SentenceHooks {
   labels: () => SentencePickLabels;
   decide: (callId: string, index: number, take: boolean | null) => void;
-  /** The sentence the review bar points at, outlined in the text (index
+  /** The sentence the review bar points at, darker in the text (index
    *  -1: a proposal shown whole). */
   focused: () => { callId: string; index: number } | null;
 }
@@ -669,7 +669,7 @@ function buildDecorations(
 }
 
 /**
- * The pointer's sentence pair, outlined (`.pending-sentence-hot`). The
+ * The pointer's sentence pair, a shade darker (`.pending-sentence-hot`). The
  * text side is one more inline decoration over the sentence, which
  * ProseMirror merges into the spans already there and patches in place.
  * The widget side (the new text, a margin mark, the ✓ / ✕) gets the class
