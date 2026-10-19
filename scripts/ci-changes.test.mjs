@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { classify, rustIncludes } from "./ci-changes.mjs";
+import { classify, reachesSaving, rustIncludes } from "./ci-changes.mjs";
 
 const VERSION_FILES = [
   "package.json",
@@ -218,5 +218,30 @@ describe("which CI jobs a push needs", () => {
     for (const file of ["docs/dev/testing.md", "src-tauri/src/lib.rs"]) {
       expect(edit([file], { push: true }), file).toEqual(ALL);
     }
+  });
+});
+
+describe("the save round trip in CI", () => {
+  const runs = (...files) => reachesSaving({ files, push: false });
+
+  it("runs for a change to the editor, the document code or the dependencies", () => {
+    expect(runs("src/editor/markdown/markdown-output.ts")).toBe(true);
+    expect(runs("src/document-view/useDocumentReporting.ts")).toBe(true);
+    expect(runs("src/document/file-format.ts")).toBe(true);
+    expect(runs("package-lock.json")).toBe(true);
+  });
+
+  it("runs for a change to the documents it reads", () => {
+    expect(runs("docs/design/ai-eval.md")).toBe(true);
+    expect(runs("src/help/markdown-guide.en.md")).toBe(true);
+  });
+
+  it("skips a change that can't reach saving", () => {
+    expect(runs("src-tauri/src/main.rs")).toBe(false);
+    expect(runs("src/sidebar/Sidebar.tsx", "README.md")).toBe(false);
+  });
+
+  it("always runs on a push", () => {
+    expect(reachesSaving({ files: ["README.md"], push: true })).toBe(true);
   });
 });

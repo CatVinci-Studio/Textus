@@ -19,6 +19,7 @@
     "format:check": "prettier --check . --ignore-unknown",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:roundtrip": "node scripts/roundtrip-corpus/run.mjs",
     "test:e2e": "playwright test --ignore-snapshots",
     "test:visual": "playwright test",
     "setup:e2e": "playwright install chromium",

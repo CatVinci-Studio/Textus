@@ -27,7 +27,11 @@ file change. Now only the edited block does.
    No second parse is needed. When the editor has mounted,
    `readSourceBlocks` pairs those blocks with the editor's document. A
    block that doesn't match (a plugin changed it on load, and it no longer
-   serializes the same) is never written from the file.
+   serializes the same) is never written from the file. A block's stretch
+   starts at the beginning of its first line, so its indent goes with it
+   (` -    one` and the indented code under it stay a list and code), and
+   never inside the stretch before it: a setext heading under a
+   definition, `[foo]: /url\nbar\n===`, starts where the definition does.
 2. **Saving.** `writePreservingSource` walks the editor's top-level blocks.
    ProseMirror keeps a block nobody touched as the same node object through
    every edit elsewhere, so a block that is still that object is written as
@@ -44,7 +48,9 @@ file change. Now only the edited block does.
    indented code block after a list joins the list, a `---` that becomes
    the first block opens front matter. So every join the file didn't have
    is parsed again, with the document's link and footnote definitions after
-   it, and compared with what the editor holds. Where the two sides don't
+   it, and compared with what the editor holds. A run of empty paragraphs
+   writes nothing, so the blocks on either side of it are the ones that
+   meet there. Where the two sides don't
    come back as they are, the kept blocks beside that join are serialized
    too, and the check runs again. After a few rounds the whole document is
    serialized, as before 1.2.0.
@@ -85,6 +91,106 @@ written back as CRLF.
 - A document whose blocks don't line up with the file on opening - an
   empty file, which the editor opens as one empty paragraph - is
   serialized whole on every save, as before.
+
+## The round-trip test
+
+A save that writes the wrong thing destroys someone's file, so saving is
+tested on real documents, in the same editor the app runs: the full
+extension chain (`createTestEditor`), the real parse, ProseMirror document
+and serializer, and the save the tab makes (`useDocumentReporting.ts`).
+The harness is `src/document-view/save-roundtrip.ts`. For each file it:
+
+- opens it and saves it without an edit: the output must be the file, byte
+  for byte;
+- makes one edit of each kind, each on a fresh load: types a word into a
+  paragraph, deletes a word, makes a word bold (`toggleSpan`, as the
+  toolbar does), adds a list item (Enter at the end of an item), types into
+  a table cell, inserts a heading between two blocks, pastes Markdown text
+  at the end of a paragraph (through the editor's paste handling),
+  replaces a whole paragraph with new Markdown as an AI edit does, and
+  types a word then undoes it (the save must then be the file, byte for
+  byte). Each edit is
+  picked by a generator seeded from the file's name, so a failure names
+  the file, the edit and the seed that reproduce it.
+
+After each edit it checks that:
+
+- every top-level block the edit didn't touch is in the output as the file
+  had it, byte for byte, in order (a kept block right beside the edit may
+  be serialized by the join check above, and is then checked by the next
+  point);
+- the output, read again, holds the editor's text: the same text in every
+  textblock, the same link targets, images and footnote references, and
+  the same top-level blocks;
+- nothing threw.
+
+The text comparison leaves out only what Markdown can't hold or writes
+differently and reads the same: spaces at the ends of a line of prose, line
+ends (shown as spaces) more than one at a time or at a paragraph's end, a
+hard break at a paragraph's end, empty paragraphs, spaces at a link's
+edges, a line end in inline code, and the space written between two
+formulas left side by side (`contentText` lists them). A failure that
+the whole-document serializer shares is reported as the serializer's
+(`-serializer`); the rest are the preservation's.
+
+### Running it
+
+```sh
+npx vitest run src/document-view/save-roundtrip           # CI's subset, under a minute
+node scripts/roundtrip-corpus/fetch.mjs                   # download the corpus, once
+npm run test:roundtrip                                     # the whole corpus, about 2 minutes
+npm run test:roundtrip -- --rounds 3                       # each edit kind three times per file
+```
+
+The subset is part of `npm run check`: every construct in
+`save-roundtrip-snippets.ts` alone, the shapes the corpus run found bugs
+in and 250 documents mixed from the constructs (`save-roundtrip.test.ts`),
+and this repository's own `docs/` and `src/help/`
+(`save-roundtrip-docs.test.ts`, `save-roundtrip-help.test.ts`), three
+files so they run in parallel. All of it is ours, so it is committed.
+
+The corpus is not: it is about 3,700 files, downloaded into
+`.cache/roundtrip-corpus/` (gitignored), and only read as text. The
+sources, with their licences, are in `scripts/roundtrip-corpus/fetch.mjs`:
+the Rust book and Rust by Example (MIT or Apache-2.0), MDN's JavaScript and
+CSS pages (CC-BY-SA-2.5), tldr pages in English and Chinese (CC-BY-4.0),
+awesome lists (CC0-1.0, CC-BY-4.0), free-programming-books (CC-BY-4.0),
+Chinese technical writing (es6tutorial, CC-BY-NC-4.0; docsify's Chinese
+docs, MIT), d2l-zh's maths-heavy textbook (Apache-2.0), Pandoc's manual and
+test files (GPL-2.0-or-later), an Obsidian vault (kepano, MIT), every
+example of the CommonMark and GFM specs (CC-BY-SA-4.0), and thirty popular
+READMEs. `npm run test:roundtrip` prints the failures by kind with the
+first few of each, how many blocks the serializer alone would write
+differently from the file (for information: what an edited block turns
+into), and writes `.cache/roundtrip-corpus/report/summary.json`.
+
+### What a save can't keep
+
+The corpus run is clean apart from these, listed in
+`save-roundtrip-corpus.test.ts` by file and edit. Each is Markdown having
+no way to write what the editor holds, or a reading the parser makes:
+
+- An HTML block that is never closed, such as `<style>` without
+  `</style>`, runs to the end of the file in CommonMark: a block added
+  after it is read as part of it.
+- `* 2. foo` as the first line of a new item is read as text: micromark
+  doesn't let a list that starts at 2 begin there.
+- Emphasis directly inside emphasis of its kind, `*(*foo*)*` once edited:
+  the serializer writes the same delimiters, which then don't open or
+  close. (Bold that starts or ends with punctuation right against a word,
+  `foo**(bar)**`, is written with that word's letter as a character
+  reference, `fo&#x6F;**(bar)**`, except next to CJK text.)
+- A table whose rows have different numbers of cells is filled out with
+  empty cells the first time you type in it (the table editing plugin
+  does this), and undoing the typing keeps them, so that save isn't the
+  file byte for byte.
+- Text pasted or typed onto the last line of an HTML block is part of
+  the block: CommonMark ends it only at a blank line.
+- Deleting or rewriting a reference definition, `[ref]: url`, leaves the
+  references to it, `[text][ref]`, as plain text on reopening; the editor
+  still shows them as links until then.
+- A bare GFM link followed by a character it may take as part of itself:
+  `www.x.org/a<b` or `a@b.c_` once edited.
 
 ## Performance
 

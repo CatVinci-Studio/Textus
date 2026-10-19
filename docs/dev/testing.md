@@ -13,7 +13,13 @@ cd src-tauri && cargo test --lib live_eval -- --ignored --nocapture --test-threa
                                        # real Anthropic API (costs money - docs/design/ai-eval.md)
 ```
 
-The first three run in CI, the same commands on every platform. The rest
+The first three run in CI, the same commands on every platform. One part
+of `npm run check` runs in CI only once, in the `check` job, and on a pull
+request only when the change can reach saving: the save round trip
+(`src/document-view/save-roundtrip*.test.ts`, see
+[saving.md](saving.md#the-round-trip-test)), which tests
+platform-independent code. The native jobs' `npm test` skips it with
+`TEXTUS_SKIP_ROUNDTRIP=1`; locally `npm run check` always runs it. The rest
 need a display, a desktop session or an API key, and are run by hand before
 a release. The e2e flows need Chromium once: `npm run setup:e2e`.
 `npm run test:visual` adds the screenshot comparison of `e2e/visual.spec.ts`
@@ -78,6 +84,7 @@ user's document.
 | `ai/text-locate`        | Locating plain text inside a block for the strike range.                                                                      |
 | `ai/chat/user-message`  | The `<selected-text>`/`<attached-file>` wire format, round-tripped through the writer.                                        |
 | `ai/ghost-text-plugin`  | Completion echo stripping, word-by-word accept, candidate splitting.                                                          |
+| `save-roundtrip`        | Saving after an edit: untouched blocks kept byte for byte, no text lost on reading back (saving.md).                          |
 
 ### 2. Wire formats and provider dialects (`aicompat`)
 

@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 // Which CI jobs a change needs: the `changes` job of .github/workflows/ci.yml
-// runs this and passes its two answers on to the other jobs.
+// runs this and passes its answers on to the other jobs.
 //
-//   e2e      the change can reach the browser: the Playwright flows run
-//   native   the change can reach the Rust build or its tests: the three
-//            native-platform jobs and the iOS build run
+//   e2e        the change can reach the browser: the Playwright flows run
+//   native     the change can reach the Rust build or its tests: the three
+//              native-platform jobs and the iOS build run
+//   roundtrip  the change can reach saving: `check` runs the save round
+//              trip (src/document-view/save-roundtrip*.test.ts); a push
+//              always does
 //
 // A pull request is compared with its base:
 //
@@ -25,7 +28,7 @@
 //   node scripts/ci-changes.mjs --base SHA --push    (a push; SHA is the
 //                                                     commit before it)
 //
-// Prints `e2e=...` and `native=...` lines for $GITHUB_OUTPUT. Without a
+// Prints `e2e=...`, `native=...` and `roundtrip=...` lines for $GITHUB_OUTPUT. Without a
 // usable base (a new branch, a force push) everything runs.
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
@@ -57,6 +60,18 @@ const NATIVE =
  *  boot.js (which e2e/storage.spec.ts runs) and the Tauri configs. */
 const BROWSER_NATIVE =
   /^src-tauri\/(icons\/|src\/boot\.js$|tauri(\.[a-z]+)?\.conf\.json$)/;
+
+/** What the save round trip (src/document-view/save-roundtrip*.test.ts)
+ *  can be changed by: the editor and the document code it runs, the
+ *  Markdown helpers, the npm dependencies, CI itself, and the documents it
+ *  reads (our docs and help guides). */
+const ROUNDTRIP =
+  /^(src\/editor\/|src\/document[^/]*\/|src\/utils\/markdown|src\/help\/|docs\/|package\.json$|package-lock\.json$|\.github\/workflows\/)/;
+
+/** Whether `files` can change what the save round trip finds. */
+export function reachesSaving({ files, push }) {
+  return push || files.some((file) => ROUNDTRIP.test(file));
+}
 
 /** A JSON file whose only change may be the version fields `paths` name. */
 function jsonVersions(...paths) {
@@ -170,23 +185,29 @@ function show(rev, file) {
 function main(argv) {
   const at = argv.indexOf("--base");
   const base = at === -1 ? "" : (argv[at + 1] ?? "");
-  let result = { e2e: true, native: true };
+  let result = { e2e: true, native: true, roundtrip: true };
   if (base && !/^0+$/.test(base)) {
     try {
       const files = git("diff", "--name-only", "--no-renames", base, "HEAD")
         .split("\n")
         .filter(Boolean);
-      result = classify({
-        files,
-        push: argv.includes("--push"),
-        read: (file) => [show(base, file), show("HEAD", file)],
-        rustReads: rustIncludes(),
-      });
+      const push = argv.includes("--push");
+      result = {
+        ...classify({
+          files,
+          push,
+          read: (file) => [show(base, file), show("HEAD", file)],
+          rustReads: rustIncludes(),
+        }),
+        roundtrip: reachesSaving({ files, push }),
+      };
     } catch {
       // The base isn't in this clone (a force push): run everything.
     }
   }
-  console.log(`e2e=${result.e2e}\nnative=${result.native}`);
+  console.log(
+    `e2e=${result.e2e}\nnative=${result.native}\nroundtrip=${result.roundtrip}`,
+  );
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
