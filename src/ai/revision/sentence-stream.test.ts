@@ -218,7 +218,7 @@ describe("alignStream", () => {
       (_, i) => `Sentence ${i} now says a little more about the sea. `,
     );
     let reached = 0;
-    let slowest = 0;
+    const times: number[] = [];
     for (let k = 1; k <= n; k++) {
       const start = performance.now();
       const l = alignStream(
@@ -227,12 +227,15 @@ describe("alignStream", () => {
         false,
         reached,
       );
-      slowest = Math.max(slowest, performance.now() - start);
+      times.push(performance.now() - start);
       expect(l.reached).toBeGreaterThanOrEqual(reached);
       reached = l.reached;
     }
     expect(reached).toBe(n);
     // Run once per completed sentence, not per frame; well under a frame.
-    expect(slowest).toBeLessThan(40);
+    // The median, not the slowest run: one garbage collection or the first
+    // compile on a busy CI runner can take longer than all the work.
+    times.sort((a, b) => a - b);
+    expect(times[Math.floor(n / 2)]).toBeLessThan(16);
   });
 });
