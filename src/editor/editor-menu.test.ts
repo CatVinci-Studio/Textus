@@ -133,6 +133,41 @@ describe("the editor menu", () => {
     ]);
   });
 
+  it("offers a picture's file next to its width, as far as it has one", () => {
+    const { run } = editorAt(imageSelected);
+    const menu = (imageLocation: ContextMenuOptions["imageLocation"]) =>
+      labels(
+        buildContextMenuItems(run, { ...options(imagePos), imageLocation }),
+      ).slice(0, 9);
+    const local = menu({ kind: "local", path: "/notes/a.png" });
+    expect(local).toEqual([
+      `✓ ${t.imageWidthAuto}`,
+      t.imageWidth30,
+      t.imageWidth50,
+      t.imageWidth70,
+      t.imageWidth100,
+      "-",
+      t.imageReveal,
+      t.imageCopyPath,
+      "-",
+    ]);
+    // A web image has an address to copy but no folder; a data: URI neither.
+    const remote = menu({ kind: "remote", url: "https://x/a.png", host: "x" });
+    expect(remote).toContain(t.imageCopyPath);
+    expect(remote).not.toContain(t.imageReveal);
+    expect(menu({ kind: "other" })).not.toContain(t.imageCopyPath);
+
+    // An Obsidian embed has no width items, only its file.
+    expect(
+      labels(
+        buildContextMenuItems(editorAt(caretIn("text")).run, {
+          ...options(null),
+          imageLocation: { kind: "local", path: "/vault/cat.png" },
+        }),
+      ).slice(0, 4),
+    ).toEqual([t.imageReveal, t.imageCopyPath, "-", t.cut]);
+  });
+
   it("gives the phone's More only what its toolbar lacks", () => {
     const inTable = labels(
       buildPhoneMoreItems(editorAt(caretIn("1")).run, options(null)),

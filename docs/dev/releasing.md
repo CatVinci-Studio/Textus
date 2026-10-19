@@ -9,8 +9,12 @@ through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md
 
 - `main` is the only working branch. Every change is a short-lived branch
   (`feat/…`, `fix/…`, `docs/…`, `chore/…`) and a pull request to `main`.
-  Branch protection requires the `check`, `e2e` and `native` CI jobs and an
-  up-to-date branch.
+  Branch protection requires the `check`, `e2e` and `native` CI jobs. It
+  doesn't require the branch to be up to date with `main`: a pull request
+  that passed is merged as it is, and the CI run on `main` after the merge
+  catches the rare case where two changes only break together.
+- Small, unrelated fixes for a patch release can share one branch and one
+  pull request, one commit per fix, so CI runs once.
 - Large features that are not ready stay on their own branch until they are.
 - `release/X.Y.x` exists only when a fix must ship while `main` holds
   unreleased work: branch it from the last tag, fix, tag, then merge it back

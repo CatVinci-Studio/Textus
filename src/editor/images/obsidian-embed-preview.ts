@@ -98,6 +98,10 @@ async function replaceEmbed(
   }
 }
 
+/** Each embed picture's file in the vault, or - missing - where it was
+ *  looked for (embedFileAt). Kept off the DOM, which an export copies. */
+const embedFiles = new WeakMap<Element, string>();
+
 /** The picture an image embed names, found in the document's vault by the
  *  backend. One it can't find, or can't show, gets the missing image's
  *  card (missing-image.ts). */
@@ -120,6 +124,7 @@ function embedWidget(
       const location: ImageLocation = path
         ? { kind: "local", path }
         : { kind: "other" };
+      if (path) embedFiles.set(el, path);
       const card = missingImageCard(
         {
           name: basename(embed.path),
@@ -147,14 +152,33 @@ function embedWidget(
     fs.resolveVaultImage(docPath, embed.path)
       .then((file) => {
         if (!file) return missing("notInVault", localPath(embed.path, docPath));
+        embedFiles.set(el, file);
         img.addEventListener("error", () => missing("unsupported", file));
         showDocImage(img, file, docPath);
         img.dataset.docSrc = exportSrc(file, docPath);
       })
       .catch(() => missing("failed", null));
-    caretToSourceOnClick(el, view, getPos, isMissingCardAction);
+    // A right-click is for the picture's menu (embedFileAt): moving the
+    // caret onto the source would take the picture away under it.
+    caretToSourceOnClick(
+      el,
+      view,
+      getPos,
+      (event) =>
+        isMissingCardAction(event) ||
+        (event as MouseEvent).button !== 0 ||
+        (event as MouseEvent).ctrlKey,
+    );
     return el;
   };
+}
+
+/** The vault file the embed picture at `target` shows - or, missing,
+ *  where it was looked for - for the right-click menu's Show in folder
+ *  and Copy image path; null off an embed, or before the vault answered. */
+export function embedFileAt(target: Element): string | null {
+  const el = target.closest(".obsidian-embed-rendered");
+  return (el && embedFiles.get(el)) ?? null;
 }
 
 interface EmbedPreviewOptions {
