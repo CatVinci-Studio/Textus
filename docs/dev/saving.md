@@ -132,7 +132,7 @@ the whole-document serializer shares is reported as the serializer's
 ### Running it
 
 ```sh
-npx vitest run src/document-view/save-roundtrip.test.ts   # CI's subset, under a minute
+npx vitest run src/document-view/save-roundtrip           # CI's subset, under a minute
 node scripts/roundtrip-corpus/fetch.mjs                   # download the corpus, once
 npm run test:roundtrip                                     # the whole corpus, about 2 minutes
 npm run test:roundtrip -- --rounds 3                       # each edit kind three times per file
@@ -140,8 +140,10 @@ npm run test:roundtrip -- --rounds 3                       # each edit kind thre
 
 The subset is part of `npm run check`: every construct in
 `save-roundtrip-snippets.ts` alone, the shapes the corpus run found bugs
-in, 250 documents mixed from the constructs, and this repository's own
-`docs/` and `src/help/`. All of it is ours, so it is committed.
+in and 250 documents mixed from the constructs (`save-roundtrip.test.ts`),
+and this repository's own `docs/` and `src/help/`
+(`save-roundtrip-docs.test.ts`, `save-roundtrip-help.test.ts`), three
+files so they run in parallel. All of it is ours, so it is committed.
 
 The corpus is not: it is about 3,700 files, downloaded into
 `.cache/roundtrip-corpus/` (gitignored), and only read as text. The
