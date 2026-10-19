@@ -669,6 +669,11 @@ export function WindowCloseIcon({ className }: IconProps) {
 
 const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "gif", "svg", "webp", "bmp"]);
 
+/** A picture file, by its extension. */
+export function isImageName(name: string): boolean {
+  return IMAGE_EXTS.has(name.split(".").pop()?.toLowerCase() ?? "");
+}
+
 export function fileIconFor(name: string) {
   const ext = name.split(".").pop()?.toLowerCase() ?? "";
   if (ext === "md" || ext === "markdown") return MarkdownFileIcon;

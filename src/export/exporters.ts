@@ -1,7 +1,7 @@
 import { errorText } from "../utils/error-text";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import type { Strings } from "../i18n/strings";
-import { basename, dirname } from "../utils/path";
+import { basename, decodeLocalPath, dirname } from "../utils/path";
 import { tabTitle, type DocTab } from "../document/doc-tabs";
 import { exportDoc, fs } from "../platform/ipc";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
@@ -147,8 +147,9 @@ export function cloneEditorContent(
   clone
     .querySelectorAll<HTMLImageElement>("img[data-doc-src]")
     .forEach((img) => {
-      if (images === "document")
-        img.setAttribute("src", img.dataset.docSrc ?? "");
+      // "inline" keeps the document path: inlineImages reads the file.
+      if (images === "inline") return;
+      img.setAttribute("src", img.dataset.docSrc ?? "");
       img.removeAttribute("data-doc-src");
     });
   return clone.outerHTML;
@@ -163,17 +164,62 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-// Replaces every asset: image in `html` with a data URL, so a render in a
+// Replaces every local image in `html` with a data URL, so a render in a
 // webview that has no asset protocol (the macOS PDF path) still shows it.
-// An image that can't be read is left as-is rather than failing the export.
-async function inlineImages(html: string): Promise<string> {
+// Read from disk by the document's own path (data-doc-src): fetching the
+// asset: URL back through the webview failed on macOS, which left the
+// picture as an unloadable asset: link - a blank or "?" in the PDF. The
+// fetch stays as the fallback. An image that can't be read is left as-is
+// rather than failing the export.
+const IMAGE_MIME: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  svg: "image/svg+xml",
+  bmp: "image/bmp",
+  avif: "image/avif",
+};
+
+/** The file a document image src names, or null for a URL. */
+export function localImagePath(
+  src: string,
+  docPath: string | null,
+): string | null {
+  if (!src) return null;
+  if (/^[a-z]:[\\/]/i.test(src) || src.startsWith("/"))
+    return decodeLocalPath(src);
+  if (/^[a-z][a-z0-9+.-]*:/i.test(src) || !docPath) return null;
+  return `${dirname(docPath)}/${decodeLocalPath(src)}`;
+}
+
+async function inlineImages(
+  html: string,
+  docPath: string | null,
+): Promise<string> {
   const template = document.createElement("template");
   template.innerHTML = html;
-  const local = Array.from(
+  const images = Array.from(
     template.content.querySelectorAll<HTMLImageElement>("img[src]"),
-  ).filter((img) => /^(asset|https?:\/\/asset\.localhost)/i.test(img.src));
+  );
   await Promise.all(
-    local.map(async (img) => {
+    images.map(async (img) => {
+      const path = localImagePath(img.dataset.docSrc ?? "", docPath);
+      img.removeAttribute("data-doc-src");
+      if (path) {
+        const ext = /\.([a-z0-9]+)$/i.exec(path)?.[1]?.toLowerCase() ?? "";
+        try {
+          const data = await fs.readBinaryFileBase64(path);
+          if (data) {
+            img.src = `data:${IMAGE_MIME[ext] ?? "image/png"};base64,${data}`;
+            return;
+          }
+        } catch {
+          // Unreadable from disk - try the webview's copy below.
+        }
+      }
+      if (!/^(asset|https?:\/\/asset\.localhost)/i.test(img.src)) return;
       try {
         const response = await fetch(img.src);
         if (response.ok) img.src = await blobToDataUrl(await response.blob());
@@ -344,7 +390,10 @@ export async function exportPdf(tab: DocTab, t: Strings): Promise<void> {
   try {
     await nextFrame();
     await settleRender(editor);
-    const content = await inlineImages(cloneEditorContent(editor, "inline"));
+    const content = await inlineImages(
+      cloneEditorContent(editor, "inline"),
+      tab.path,
+    );
     const page = platformPage();
     const standalone = buildStandaloneHtml(base, content, pdfLayoutCss(page));
     const html = page ? await paginateHtml(standalone, page) : standalone;
@@ -371,8 +420,10 @@ export async function exportPdf(tab: DocTab, t: Strings): Promise<void> {
 }
 
 // Serializes the tab's live editor DOM into a self-contained HTML file.
-// Relative image paths (assets/...) are kept as-is, like Typora's HTML export
-// next to the document.
+// Saved next to the document, relative image paths (assets/...) are kept
+// as-is, like Typora's HTML export; anywhere else (or for a document never
+// saved, whose pictures sit in the app's own folder) they would point at
+// nothing, so the pictures are embedded instead.
 export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
   const editor = document.querySelector('[data-active-tab="true"] .milkdown');
   if (!editor) {
@@ -386,11 +437,12 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
     "html",
   );
   if (!picked) return;
-  const html = buildStandaloneHtml(
-    base,
-    cloneEditorContent(editor),
-    HTML_LAYOUT_CSS,
-  );
+  const beside = !!tab.path && dirname(tab.path) === dirname(picked);
+  await settleRender(editor);
+  const content = beside
+    ? cloneEditorContent(editor)
+    : await inlineImages(cloneEditorContent(editor, "inline"), tab.path);
+  const html = buildStandaloneHtml(base, content, HTML_LAYOUT_CSS);
   await fs.writeTextFile(picked, html);
   void exportDoc.revealInDir(picked);
 }

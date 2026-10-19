@@ -2,7 +2,7 @@ import { useSelectionIllustration } from "./useSelectionIllustration";
 import { modalDialogOpen } from "../ui/useModalDialog";
 import { basename, decodeLocalPath } from "../utils/path";
 import { ai } from "../platform/ipc";
-import { FolderIcon, ImageFileIcon, SparkleIcon } from "../ui/icons";
+import { FolderIcon, ImageFileIcon, OutlineTabIcon } from "../ui/icons";
 import type { ComposerMenuItem } from "../ai/chat/ComposerMenu";
 import { WritePlayback, useWritePlayback } from "./WritePlayback";
 import { useEditorDictationTarget } from "./useEditorDictationTarget";
@@ -15,6 +15,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { useDocumentWorkspace } from "./useDocumentWorkspace";
 import { useWorkspacePersistence } from "./useWorkspacePersistence";
@@ -23,6 +24,14 @@ import { ImageJobsPanel } from "../ai/multimodal/ImageTools";
 import { PromptRefiner } from "../ai/multimodal/PromptRefiner";
 import { AgentWorkspace } from "../ai/workspace/AgentWorkspace";
 import { AutoWriter, type AutoWriterHost } from "../ai/workspace/AutoWriter";
+import { ProjectChip } from "../ai/workspace/ProjectChip";
+import { SurfaceSwitch } from "../ai/workspace/SurfaceSwitch";
+import { formatCombo } from "../utils/shortcuts";
+import type { EditProposal } from "../ai/types";
+import {
+  useProjectMaterial,
+  type AutoWriteRequest,
+} from "../ai/workspace/useProjectMaterial";
 import { proposalsFromTurns } from "../ai/chat/ChatBody";
 import {
   findConversation,
@@ -38,6 +47,7 @@ import {
 import {
   getWindowSurface,
   REWRITE_IMAGE_SRCS_EVENT,
+  TOGGLE_SURFACE_EVENT,
   RESTORE_TASK_EVENT,
   pendingTaskRestores,
   type RewriteImageSrcs,
@@ -93,12 +103,13 @@ import "../editor/milkdown-theme.css";
 import "../theme/content-themes.css";
 
 /** The window's Agent/Write mode lives in doc-tabs (source mode reads it
- *  too); the first editor opens on Agent. */
-function initialSurface() {
+ *  too); the first editor opens on the start page chosen in Settings
+ *  (默认首页: Agent unless set to Write). */
+function initialSurface(agentFirst: boolean) {
   const current = getWindowSurface();
   if (current !== null) return current;
-  setWindowSurface(true);
-  return true;
+  setWindowSurface(agentFirst);
+  return agentFirst;
 }
 
 interface MilkdownEditorProps {
@@ -221,7 +232,10 @@ export function MilkdownEditor({
   }, [settings.language, settings.enableMagicDiary, run]);
 
   const [startOpen] = useState(
-    () => !phone && !tutorialMock && initialSurface(),
+    () =>
+      !phone &&
+      !tutorialMock &&
+      initialSurface(settings.defaultHome !== "write"),
   );
   const workspace = useDocumentWorkspace(run, documentId, startOpen);
   const [workspaceMounted, setWorkspaceMounted] = useState(startOpen);
@@ -255,7 +269,37 @@ export function MilkdownEditor({
     wasOpen.current = workspace.open;
     if (left && isActive && !modalDialogOpen())
       run((ctx) => ctx.get(editorViewCtx).focus());
+    // The page rises into place as Agent steps back (workspace.css).
+    const root = rootRef.current;
+    if (left && isActive && root) {
+      root.classList.remove("surface-arrive");
+      void root.offsetWidth;
+      root.classList.add("surface-arrive");
+      const done = (event: AnimationEvent) => {
+        if (event.target !== root) return;
+        root.classList.remove("surface-arrive");
+        root.removeEventListener("animationend", done);
+      };
+      root.addEventListener("animationend", done);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspace.open, isActive, run]);
+  /** Agent (true) or Write: the surface switch, and its shortcut. */
+  const switchSurface = (agent: boolean) => {
+    if (agent === workspace.open) return;
+    if (agent) {
+      setWorkspaceMounted(true);
+      agentPanel.setOpen(false);
+    }
+    workspace.setOpen(agent);
+  };
+  const switchRef = useLatest(switchSurface);
+  useEffect(() => {
+    if (!isActive || phone || tutorialMock) return;
+    const flip = () => switchRef.current(!wasOpen.current);
+    window.addEventListener(TOGGLE_SURFACE_EVENT, flip);
+    return () => window.removeEventListener(TOGGLE_SURFACE_EVENT, flip);
+  }, [isActive, phone, tutorialMock, switchRef]);
   const [allowAutoImages, setAllowAutoImages] = useState(false);
   const reader = useWritePlayback(
     run,
@@ -293,6 +337,11 @@ export function MilkdownEditor({
         moved.set(old, next);
         moved.set(decodeLocalPath(old), next);
       }
+      // The rewritten srcs are relative to the new location, and the image
+      // views resolve them as they redraw - right now, before the tab's
+      // new path has come back down as a prop. Read against the old (no)
+      // path they drew a broken picture until the document was reopened.
+      (filePathRef as { current: string | null }).current = detail.docPath;
       const done = run((ctx) => {
         const view = ctx.get(editorViewCtx);
         const tr = view.state.tr;
@@ -309,7 +358,7 @@ export function MilkdownEditor({
     };
     window.addEventListener(REWRITE_IMAGE_SRCS_EVENT, rewrite);
     return () => window.removeEventListener(REWRITE_IMAGE_SRCS_EVENT, rewrite);
-  }, [tabId, run]);
+  }, [tabId, run, filePathRef]);
   // Links this conversation's saved copy to its document once an exchange
   // or an accepted draft has settled: by identity, and for an untitled
   // document by its text, so the history list can bring both back.
@@ -574,19 +623,51 @@ export function MilkdownEditor({
   useEffect(() => {
     agentShownRef.current = workspaceVisible;
   }, [workspaceVisible]);
-  // Pictures still on their way, shown in the panel under their anchors.
+  // Pictures still on their way, shown in the panel under their anchors. A
+  // finished one waiting for its text shows itself; one that is finished
+  // but could not go in by itself is the job list's (ImageJobsPanel), not
+  // a "making this picture" card that never ends.
+  // Pictures accepted on their own while their text still waits
+  // (acceptDraftImage): shown as 已采纳, inserted with that text.
+  const [approvedImages, setApprovedImages] = useState<ReadonlySet<string>>(
+    new Set(),
+  );
+  const { waitsForDraft, isLive, skipped } = images;
   const pendingImages = useMemo(
     () =>
-      images.jobs
-        .filter((job) =>
-          ["queued", "running", "preparing", "ready"].includes(job.status),
+      images.jobs.flatMap((job) => {
+        const ready = job.status === "ready";
+        const waiting = ready && waitsForDraft(job);
+        if (
+          !["queued", "running", "preparing"].includes(job.status) &&
+          !waiting &&
+          !(ready && isLive(job.jobId))
         )
-        .map((job) => ({
-          id: job.jobId,
-          anchor: job.request.anchor,
-          prompt: job.request.prompt,
-        })),
-    [images.jobs],
+          return [];
+        return [
+          {
+            id: job.jobId,
+            anchor: job.request.anchor,
+            prompt: job.request.prompt,
+            ...(waiting && job.previewPath
+              ? { preview: convertFileSrc(job.previewPath) }
+              : {}),
+            // Decided while painting, or once painted and waiting.
+            ...(skipped.has(job.jobId) ? { skipped: true } : {}),
+            ...(approvedImages.has(job.jobId) ? { approved: true } : {}),
+          },
+        ];
+      }),
+    // workspace.draft: whether a picture still waits for its text.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      images.jobs,
+      waitsForDraft,
+      isLive,
+      skipped,
+      approvedImages,
+      workspace.draft,
+    ],
   );
   // The review card's container, once ProseMirror has drawn the expanded
   // card (a widget, so a frame or two after the state change).
@@ -617,16 +698,136 @@ export function MilkdownEditor({
     documentMarkdown,
     workspaceVisible && homeEmpty && !tutorialMock,
   );
+  // Draft text that went in, however it was accepted - auto-writing
+  // moves on to the next section once one of its own is (AutoWriter).
+  const acceptedCount = useRef(0);
   const acceptDraft = (callId?: string) => {
     const task = workspace.currentDraft()?.id;
     if (!workspace.accept(callId)) return;
+    acceptedCount.current++;
     // Pictures the Agent made for this text can go in now that it exists.
     if (task) images.adoptTask(task);
   };
+  /** The draft's unfinished pictures whose paragraph is in change `callId`
+   *  (any change when omitted: all of the draft's pictures). */
+  const draftImageJobs = (callId?: string) => {
+    const draft = workspace.currentDraft();
+    if (!draft) return [];
+    const texts = draft.operations
+      .filter((op) => !callId || op.callId === callId || op.parent === callId)
+      .map((op) => op.proposal.text ?? "");
+    return images.jobs.filter((job) => {
+      if (
+        job.taskId !== draft.id ||
+        ["committed", "cancelled", "failed"].includes(job.status)
+      )
+        return false;
+      if (!callId) return true;
+      const line = job.request.anchor
+        .split("\n")
+        .find((l) => l.trim())
+        ?.trim();
+      return !!line && texts.some((text) => text.includes(line));
+    });
+  };
+  // Rejected text takes its pictures with it: they would wait forever for
+  // a paragraph that is never coming.
+  // Rejected text sets its pictures aside with it, not away: taking the
+  // text after all (restoreChange) brings them back.
+  const rejectDraft = (callId?: string) => {
+    for (const job of draftImageJobs(callId)) images.skip(job.jobId);
+    workspace.discard(callId);
+  };
+  /** One paragraph of a change, decided in the preview: the change is
+   *  split into paragraphs first (once), then just that one is taken or
+   *  set aside - with the pictures made for it. */
+  const decidePart = (callId: string, part: number, take: boolean) => {
+    let id = callId;
+    if (part >= 0) {
+      const parts = workspace.explode(callId);
+      // Still arriving: nothing to split yet, so nothing is decided.
+      if (!parts.length) return;
+      id = parts[part] ?? callId;
+    }
+    if (take) acceptDraft(id);
+    else rejectDraft(id);
+  };
+  /** A rejected paragraph or change back to undecided (恢复), its
+   *  pictures with it. */
+  const undoReject = (callId: string) => {
+    const op = workspace.rejected.find((o) => o.callId === callId);
+    if (!op) return;
+    const text = op.proposal.text ?? "";
+    if (!workspace.undoReject(callId, op.proposal, conversation.conversationId))
+      return;
+    for (const job of images.jobs) {
+      const line = job.request.anchor
+        .split("\n")
+        .find((l) => l.trim())
+        ?.trim();
+      if (line && text.includes(line)) images.unskip(job.jobId);
+    }
+  };
+  /** A rejected change taken after all - from its chat card or the change
+   *  list - with the pictures made for its text. */
+  const restoreChange = (callId: string, proposal: EditProposal) => {
+    const text = proposal.text ?? "";
+    const held = images.jobs.filter((job) => {
+      if (["committed", "cancelled", "failed"].includes(job.status))
+        return false;
+      const line = job.request.anchor
+        .split("\n")
+        .find((l) => l.trim())
+        ?.trim();
+      return !!line && text.includes(line);
+    });
+    if (!workspace.reinstate(callId, proposal, conversation.conversationId))
+      return;
+    acceptedCount.current++;
+    for (const job of held) {
+      images.unskip(job.jobId);
+      images.adoptTask(job.taskId);
+    }
+  };
+  // A finished picture accepted on its own: only the picture, never text
+  // with it. Its paragraph already in the document, it goes in now; still
+  // in the draft, it is marked and goes in when that text is accepted.
+  const acceptDraftImage = (jobId: string) => {
+    images.unskip(jobId);
+    const job = images.jobs.find((j) => j.jobId === jobId);
+    if (!job) return;
+    if (job.status === "ready" && images.anchorLive(job)) {
+      void images.accept(job);
+      return;
+    }
+    setApprovedImages((prev) => new Set(prev).add(jobId));
+  };
+  const skipDraftImage = (jobId: string) => {
+    setApprovedImages((prev) => {
+      const next = new Set(prev);
+      next.delete(jobId);
+      return next;
+    });
+    images.skip(jobId);
+  };
+
   // Auto-writing (AutoWriter.tsx): each section is one ordinary create
   // request through this workspace, so it lands as a reviewed draft - with
-  // images authorized for that request when the section asks for one.
-  const [autoWriting, setAutoWriting] = useState(false);
+  // images authorized for that request when the section asks for one. It
+  // starts from a send in Create mode once project material is picked in
+  // the composer's folder chip (ProjectChip).
+  const [autoRequest, setAutoRequest] = useState<AutoWriteRequest | null>(null);
+  // "分节写作" in "+": this request is planned as sections and written one
+  // by one, folder or not (project material only adds to what it reads).
+  const [sectioned, setSectioned] = useState(false);
+  // The project folder is optional: the composer shows it only once added
+  // from "+", and its × takes it away again.
+  const [folderAdded, setFolderAdded] = useState(false);
+  const project = useProjectMaterial(
+    filePath,
+    settings.agentWorkspaceRoot || null,
+    workspace.open && isActive,
+  );
   const autoHost: AutoWriterHost = {
     docPath: filePath,
     busy: conversation.busy,
@@ -659,36 +860,61 @@ export function MilkdownEditor({
       return true;
     },
     pending: () => workspace.currentDraft()?.operations.length ?? 0,
+    pendingCount: workspace.draft?.operations.length ?? 0,
+    acceptedCount: () => acceptedCount.current,
     acceptAll: () => acceptDraft(),
-    rejectAll: () => workspace.discard(),
+    rejectAll: () => rejectDraft(),
     stop: stopTask,
   };
   // The Agent's own entries in the composer's "+" menu.
-  const projectRoot = settings.agentWorkspaceRoot || null;
   const agentMenu: ComposerMenuItem[] = [
     {
       key: "project",
       section: "add",
       icon: <FolderIcon />,
-      label: projectRoot
-        ? `${zh ? "在项目中使用" : "Use project"} ${basename(projectRoot)}`
-        : zh
-          ? "选择项目文件夹"
-          : "Choose project folder",
-      hint: projectRoot
+      label: folderAdded
         ? zh
           ? "更换项目文件夹"
-          : "Change the folder"
+          : "Change project folder"
         : zh
-          ? "资料、技能和 @ 文件从这里读取"
-          : "Where material, skills and @ files come from",
-      select: () =>
+          ? "添加项目文件夹"
+          : "Add project folder",
+      hint: folderAdded
+        ? project.folder
+          ? basename(project.folder)
+          : ""
+        : zh
+          ? "可选：参考里面的大纲、资料和图片写作"
+          : "Optional: write from its outline, material and pictures",
+      select: () => {
+        // The document's own folder (or the one chosen before) is offered
+        // first; a document with neither asks for one.
+        if (!folderAdded && project.folder) {
+          setFolderAdded(true);
+          return;
+        }
         void ai
           .pickWorkspaceRoot()
           .then((picked) => {
-            if (picked) setSettings({ agentWorkspaceRoot: picked });
+            if (!picked) return;
+            setSettings({ agentWorkspaceRoot: picked });
+            setFolderAdded(true);
           })
-          .catch(() => {}),
+          .catch(() => {});
+      },
+    },
+    {
+      key: "sections",
+      section: "tools",
+      icon: <OutlineTabIcon />,
+      label: zh ? "分节写作" : "Write in sections",
+      chip: zh ? "分节写作" : "Sections",
+      hint: zh
+        ? "先列出章节，再逐节写成草稿，适合长文"
+        : "Plans the sections, then drafts them one by one - for long pieces",
+      on: sectioned,
+      disabled: conversation.busy || !!autoRequest,
+      select: () => setSectioned((on) => !on),
     },
     {
       key: "images",
@@ -702,17 +928,6 @@ export function MilkdownEditor({
       on: allowAutoImages,
       disabled: conversation.busy,
       select: () => setAllowAutoImages((on) => !on),
-    },
-    {
-      key: "auto-write",
-      section: "tools",
-      icon: <SparkleIcon />,
-      label: zh ? "自动写作" : "Auto-writing",
-      hint: zh
-        ? "按项目里的大纲和要求逐节写作"
-        : "Writes section by section from your project's outline",
-      disabled: conversation.busy || autoWriting,
-      select: () => setAutoWriting(true),
     },
   ];
   const labels = useMemo(
@@ -751,11 +966,36 @@ export function MilkdownEditor({
     start: HTMLElement | null;
     end: HTMLElement | null;
   } | null>(null);
+  // Found again whenever the bar is drawn anew: holding on to slots that
+  // left the page put "写作 →" and "← Agent" somewhere no one could see.
   useEffect(() => {
-    setBarSlots({
-      start: document.querySelector<HTMLElement>(".window-bar-start"),
-      end: document.querySelector<HTMLElement>(".window-bar-end"),
+    const find = () => {
+      const start = document.querySelector<HTMLElement>(".window-bar-start");
+      const end = document.querySelector<HTMLElement>(".window-bar-end");
+      setBarSlots((prev) =>
+        prev?.start === start && prev?.end === end ? prev : { start, end },
+      );
+    };
+    // A new bar is a child change of the shell; new slots inside the same
+    // bar (its children redrawn or reordered) are child changes of the bar
+    // and of its status group. What is portalled INTO a slot changes the
+    // slot's own children, which nothing here watches.
+    const shell = document.querySelector(".app-shell") ?? document.body;
+    const watch = new MutationObserver(() => {
+      find();
+      observe();
     });
+    const observe = () => {
+      watch.disconnect();
+      watch.observe(shell, { childList: true });
+      for (const el of document.querySelectorAll(
+        ".window-bar, .window-bar-status",
+      ))
+        watch.observe(el, { childList: true });
+    };
+    find();
+    observe();
+    return () => watch.disconnect();
   }, []);
   // The Agent surface starts below the tab bar when there is one, so tabs
   // stay reachable from Agent.
@@ -816,9 +1056,12 @@ export function MilkdownEditor({
     // Portals (Quick Ask, the find bar) bubble React events through here:
     // their text fields keep the native Cut/Copy/Paste menu instead of the
     // editor's, whose Paste would have gone into the document.
+    // Nor the Agent surface, portalled under this root too: its parts have
+    // their own menus (a past task's), and the editor's - Paste, lists,
+    // tables - would act on a document it isn't showing.
     if (
       (e.target as HTMLElement).closest?.(
-        ".inline-chat, .find-replace-bar, input, textarea",
+        ".inline-chat, .find-replace-bar, .agent-workspace-layer, input, textarea",
       )
     )
       return;
@@ -847,67 +1090,19 @@ export function MilkdownEditor({
       onPointerDown={() => (lastTouchRef.current = Date.now())}
       onPointerUp={() => (lastTouchRef.current = Date.now())}
     >
-      {/* Write → Agent: a quiet button at the window bar's start; Agent →
-          Write is the matching button at the Agent header's end. */}
+      {/* Agent | 写作: one switch at the window bar's start, in both. */}
       {!phone &&
         barSlots?.start &&
         isActive &&
-        !workspace.open &&
         createPortal(
-          <button
-            type="button"
-            className="surface-jump surface-jump-agent"
-            aria-label="Agent"
-            title={zh ? "回到 Agent 对话" : "Back to the Agent conversation"}
-            onClick={() => {
-              setWorkspaceMounted(true);
-              workspace.setOpen(true);
-              agentPanel.setOpen(false);
-            }}
-          >
-            <span aria-hidden>
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M13 8H3.5M7.5 4 3.5 8l4 4" />
-              </svg>
-            </span>
-            <span>Agent</span>
-          </button>,
+          <SurfaceSwitch
+            agent={workspace.open}
+            zh={zh}
+            docTitle={docTitle}
+            shortcut={formatCombo(settings.shortcuts.toggleSurface)}
+            onChange={switchSurface}
+          />,
           barSlots.start,
-        )}
-      {!phone &&
-        barSlots?.end &&
-        isActive &&
-        workspace.open &&
-        createPortal(
-          <button
-            type="button"
-            className="surface-jump surface-jump-write"
-            aria-label={`Write · ${docTitle}`}
-            title={zh ? "进入写作" : "Open the document"}
-            onClick={() => workspace.setOpen(false)}
-          >
-            <span>{zh ? "写作" : "Write"}</span>
-            <span aria-hidden>
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 8h9.5M8.5 4l4 4-4 4" />
-              </svg>
-            </span>
-          </button>,
-          barSlots.end,
         )}
       {barSlots?.end &&
         isActive &&
@@ -988,23 +1183,36 @@ export function MilkdownEditor({
               conflict={workspace.conflict}
               conversation={conversation}
               onAccept={acceptDraft}
+              onImageAccept={acceptDraftImage}
+              onImageReject={skipDraftImage}
               suggestions={suggestions.items}
               aiSuggestions={suggestions.ai}
-              onReject={workspace.discard}
+              onReject={rejectDraft}
+              rejected={workspace.rejected}
+              onRestore={restoreChange}
+              onDecidePart={decidePart}
+              onUndoReject={undoReject}
+              isSettled={workspace.isSettled}
               onStop={stopTask}
               toolLabels={labels.toolActivity}
               documentId={documentId}
               autoWriter={
-                autoWriting ? (
+                autoRequest ? (
                   <AutoWriter
+                    key={autoRequest.id}
                     host={autoHost}
-                    onClose={() => setAutoWriting(false)}
+                    request={autoRequest}
+                    onClose={() => setAutoRequest(null)}
                   />
                 ) : null
               }
               pendingMedia={images.pending}
               mediaPreview={
-                <ImageJobsPanel language={settings.language} images={images} />
+                <ImageJobsPanel
+                  language={settings.language}
+                  images={images}
+                  actionableOnly
+                />
               }
               pendingImages={pendingImages}
             >
@@ -1058,29 +1266,72 @@ export function MilkdownEditor({
                 tutorialMock={tutorialMock}
                 labels={labels}
                 proposalStatus={(id) =>
-                  workspace.statuses[id] ??
-                  (workspace.draft?.operations.some((o) => o.callId === id)
-                    ? "pending"
-                    : pendingEdits.status(id))
+                  workspace.statusOf(id) ?? pendingEdits.status(id)
                 }
                 pendingCount={workspace.draft?.operations.length ?? 0}
                 fillHeight
                 refreshContext={panelSendContext}
                 onProposals={showProposals}
                 onAcceptProposal={(id) => {
-                  if (!conversation.busy) acceptDraft(id);
+                  acceptDraft(id);
                 }}
                 onRejectProposal={(id) => {
-                  if (!conversation.busy) workspace.discard(id);
+                  rejectDraft(id);
                 }}
+                onRestoreProposal={restoreChange}
                 onAcceptAll={() => {
-                  if (!conversation.busy) acceptDraft();
+                  acceptDraft();
                 }}
                 onRejectAll={() => {
-                  if (!conversation.busy) workspace.discard();
+                  rejectDraft();
                 }}
                 pendingBar={false}
                 composerMenu={agentMenu}
+                composerExtra={
+                  folderAdded && (
+                    <ProjectChip
+                      project={project}
+                      zh={zh}
+                      disabled={conversation.busy || !!autoRequest}
+                      onChangeFolder={() =>
+                        void ai
+                          .pickWorkspaceRoot()
+                          .then((picked) => {
+                            if (picked)
+                              setSettings({ agentWorkspaceRoot: picked });
+                          })
+                          .catch(() => {})
+                      }
+                      onRemove={() => {
+                        project.clear();
+                        setFolderAdded(false);
+                      }}
+                    />
+                  )
+                }
+                interceptSend={(message, options) => {
+                  const picked =
+                    folderAdded &&
+                    !!project.folder &&
+                    project.material.length + project.pictures.length > 0;
+                  if (
+                    options.mode !== "create" ||
+                    !(sectioned || picked) ||
+                    autoRequest
+                  )
+                    return false;
+                  setAutoRequest({
+                    id: crypto.randomUUID(),
+                    folder: picked ? project.folder : null,
+                    material: picked ? project.material : [],
+                    pictures: picked ? project.pictures : [],
+                    extra: message,
+                    images: allowAutoImages,
+                  });
+                  setAllowAutoImages(false);
+                  setSectioned(false);
+                  return true;
+                }}
               />
             </AgentWorkspace>
           </div>,

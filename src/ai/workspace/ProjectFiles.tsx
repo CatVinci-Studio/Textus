@@ -70,6 +70,7 @@ export function ProjectFiles({
   entries,
   selected,
   zh,
+  summary = true,
   onToggle,
   onOpenFolder,
   onRefresh,
@@ -80,6 +81,8 @@ export function ProjectFiles({
   entries: ProjectEntry[] | null;
   selected: ReadonlySet<string>;
   zh: boolean;
+  /** The "N selected" line under the tree (off where the host says it). */
+  summary?: boolean;
   onToggle: (paths: string[], on: boolean) => void;
   onOpenFolder: () => void;
   onRefresh: () => void;
@@ -163,7 +166,7 @@ export function ProjectFiles({
           )}
         </div>
       )}
-      {entries && entries.length > 0 && (
+      {summary && entries && entries.length > 0 && (
         <p className="project-files-summary">
           {zh
             ? `已选资料 ${counts.material} 份 · 图片 ${counts.pictures} 张`

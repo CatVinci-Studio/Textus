@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { ai, type ProjectEntry } from "../../platform/ipc";
+import { ai } from "../../platform/ipc";
 import { useSettings } from "../../settings/SettingsContext";
 import { errorText } from "../../utils/error-text";
-import { CloseIcon } from "../../ui/icons";
+import { CloseIcon, ImageFileIcon } from "../../ui/icons";
 import { quickText } from "./assist";
-import { ProjectFiles } from "./ProjectFiles";
+import type { AutoWriteRequest } from "./useProjectMaterial";
 import {
   ensureIllustrated,
-  looksLikePlanFile,
   parsePlan,
   pictureSrc,
   planMaterial,
@@ -27,37 +26,54 @@ export interface AutoWriterHost {
   send: (message: string, allowImages: boolean) => Promise<boolean>;
   /** Changes waiting in the draft right now. */
   pending: () => number;
+  /** The same, as of this render: a change decided in the draft (its
+   *  全部采纳, a paragraph's ✓) re-renders the card. */
+  pendingCount: number;
+  /** How many times draft text has been accepted, by any button. */
+  acceptedCount: () => number;
   acceptAll: () => void;
   rejectAll: () => void;
   stop: () => void;
 }
 
 type Phase =
-  "setup" | "planning" | "outline" | "writing" | "review" | "paused" | "done";
+  | "planning"
+  | "failed"
+  | "outline"
+  | "writing"
+  | "review"
+  | "paused"
+  | "done";
 type SectionState = "todo" | "writing" | "review" | "done" | "skipped";
 
+/** Auto-writing, started from the Agent's composer: a send in Create mode
+ *  with project material picked (ProjectChip) - the folder, the ticked
+ *  files and pictures, and the message as the extra requirements. The card
+ *  plans the sections straight away, then shows the outline and each
+ *  section's progress and review. */
 export function AutoWriter({
   host,
+  request,
   onClose,
 }: {
   host: AutoWriterHost;
+  request: AutoWriteRequest;
   onClose: () => void;
 }) {
-  const { settings, setSettings } = useSettings();
+  const { settings } = useSettings();
   const zh = settings.language.startsWith("zh");
   const root = settings.agentWorkspaceRoot || null;
-  // The folder in use (the chosen one, else the document's own) and all of
-  // its files; ticked text/documents are material, ticked pictures are
-  // offered to the sections.
-  const [folder, setFolder] = useState<string | null>(null);
-  const [entries, setEntries] = useState<ProjectEntry[] | null>(null);
-  const [reload, setReload] = useState(0);
-  const [chosen, setChosen] = useState<Set<string>>(new Set());
-  const [reading, setReading] = useState<string | null>(null);
-  const [extra, setExtra] = useState("");
+  const {
+    folder,
+    material,
+    pictures,
+    extra,
+    images,
+  } = request;
+  // Asked at the outline, where the writing is about to start.
   const [eachSection, setEachSection] = useState(true);
-  const [images, setImages] = useState(false);
-  const [phase, setPhase] = useState<Phase>("setup");
+  const [reading, setReading] = useState<string | null>(null);
+  const [phase, setPhase] = useState<Phase>("planning");
   const [plan, setPlan] = useState<WritingPlan | null>(null);
   const [states, setStates] = useState<SectionState[]>([]);
   const [current, setCurrent] = useState(0);
@@ -81,46 +97,6 @@ export function AutoWriter({
       ? new Promise<void>((resolve) => idleWaiters.current.push(resolve))
       : Promise.resolve();
 
-  // The project's files: plan-like documents and the pictures start ticked.
-  useEffect(() => {
-    let live = true;
-    setEntries(null);
-    void Promise.all([
-      ai.projectFolder(host.docPath, root).catch(() => null),
-      ai.listProjectEntries(host.docPath, root).catch(() => []),
-    ]).then(([dir, list]) => {
-      if (!live) return;
-      setFolder(dir);
-      setEntries(dir ? (list ?? []) : []);
-      setChosen(
-        new Set(
-          (list ?? [])
-            .filter(
-              (e) =>
-                (e.kind !== "image" && looksLikePlanFile(e.path)) ||
-                e.kind === "image",
-            )
-            .slice(0, 60)
-            .map((e) => e.path),
-        ),
-      );
-    });
-    return () => {
-      live = false;
-    };
-  }, [host.docPath, root, reload]);
-  const kindOf = (path: string) =>
-    entries?.find((e) => e.path === path)?.kind ?? "other";
-  const material = [...chosen].filter(
-    (p) => kindOf(p) === "text" || kindOf(p) === "document",
-  );
-  const pictures = [...chosen].filter((p) => kindOf(p) === "image");
-
-  const pickFolder = async () => {
-    const picked = await ai.pickWorkspaceRoot().catch(() => null);
-    if (picked) setSettings({ agentWorkspaceRoot: picked });
-  };
-
   const makePlan = async () => {
     setError(null);
     setPhase("planning");
@@ -139,8 +115,8 @@ export function AutoWriter({
       if (!texts.length && !extra.trim())
         throw new Error(
           zh
-            ? "请至少勾选一个规划文件，或写下写作要求。"
-            : "Choose at least one plan file or write your requirements.",
+            ? "请写下要写什么，或在文件夹里勾选大纲和资料。"
+            : "Say what to write, or tick an outline and material in the folder.",
         );
       const reply = await quickText(
         settings,
@@ -162,9 +138,18 @@ export function AutoWriter({
     } catch (err) {
       setReading(null);
       setError(errorText(err));
-      setPhase("setup");
+      setPhase("failed");
     }
   };
+  // Planned as soon as the request arrives (once - StrictMode re-runs
+  // effects, and a plan is a paid request).
+  const planned = useRef<string | null>(null);
+  useEffect(() => {
+    if (planned.current === request.id) return;
+    planned.current = request.id;
+    void makePlan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request.id]);
 
   const mark = (index: number, state: SectionState) =>
     setStates((prev) => prev.map((s, i) => (i === index ? state : s)));
@@ -188,6 +173,9 @@ export function AutoWriter({
     setPhase("writing");
     mark(index, "writing");
     await hostIdle();
+    // From here, any of this section's text taken counts - in the draft
+    // while the Agent is still finishing its turn included.
+    acceptedAtReview.current = hostRef.current.acceptedCount();
     const section = plan.sections[index];
     const sent = await hostRef.current.send(
       sectionPrompt(
@@ -206,6 +194,14 @@ export function AutoWriter({
       ),
       images && section.image && !section.picture,
     );
+    const takenAlready =
+      hostRef.current.acceptedCount() > acceptedAtReview.current;
+    if (sent && hostRef.current.pending() === 0 && takenAlready) {
+      // Accepted before the request even ended: done, on to the next.
+      mark(index, "done");
+      void write(index + 1);
+      return;
+    }
     if (!sent || hostRef.current.pending() === 0) {
       mark(index, "todo");
       setError(
@@ -222,12 +218,54 @@ export function AutoWriter({
       return;
     }
     hostRef.current.acceptAll();
+    if (hostRef.current.pending() > 0) {
+      // It could not go in (the document changed under it): stop here
+      // rather than write the next section after a missing one.
+      mark(index, "review");
+      setError(
+        zh
+          ? "这一节没能写入文档（文档在写作期间被改动过）。可以在草稿里处理，或重写本节。"
+          : "This section couldn't go into the document (it changed meanwhile). Decide it in the draft, or rewrite it.",
+      );
+      setPhase("review");
+      return;
+    }
     mark(index, "done");
     void write(index + 1);
   };
 
+  // A section decided in the draft itself - 全部采纳 there, or every
+  // paragraph taken or not - goes on like 采纳并继续 once any of it went
+  // in. All of it rejected stays here: rewrite it, or skip it.
+  const acceptedAtReview = useRef(0);
+  // The section being written stays in view in a long outline.
+  const outlineRef = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    if (phase !== "writing" && phase !== "review") return;
+    outlineRef.current?.children[current]?.scrollIntoView({
+      block: "nearest",
+      behavior: "smooth",
+    });
+  }, [current, phase]);
+  useEffect(() => {
+    if (phase !== "review" || error || host.pendingCount > 0) return;
+    if (host.acceptedCount() <= acceptedAtReview.current) return;
+    mark(current, "done");
+    void write(current + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, host.pendingCount, error]);
   const acceptAndContinue = () => {
     if (hostRef.current.pending() > 0) hostRef.current.acceptAll();
+    // Still waiting: it did not go in (the document was typed into since
+    // it was written). Say so - moving on would leave a hole in the text.
+    if (hostRef.current.pending() > 0) {
+      setError(
+        zh
+          ? "这一节没能写入：文档在审阅期间被改动过。可以按意见重写本节，或跳过。"
+          : "This section couldn't go in: the document was edited during review. Rewrite it or skip it.",
+      );
+      return;
+    }
     mark(current, "done");
     void write(current + 1);
   };
@@ -255,28 +293,16 @@ export function AutoWriter({
     (
       ({
         title: ["自动写作", "Auto-writing"],
-        intro: [
-          "勾选项目文件夹里的大纲、要求和资料（文本、Word、PDF），AI 先规划章节再逐节写作，每一节都是待审阅的草稿；勾选的图片会用在合适的章节。",
-          "Tick the outline, requirements and material (text, Word, PDF) in the project folder: the AI plans the sections and writes them one by one, each a draft for review; ticked pictures go into the sections they fit.",
-        ],
-        extra: [
-          "补充要求（可选）：主题、读者、篇幅、文风……",
-          "Further requirements (optional): topic, readers, length, tone…",
-        ],
+        retry: ["重试", "Retry"],
         each: ["每写完一节暂停审阅", "Pause for review after each section"],
-        images: [
-          "为合适的章节配图（会调用图片服务）",
-          "Illustrate suitable sections (uses the image service)",
-        ],
-        plan: ["规划章节", "Plan sections"],
         planning: ["正在规划章节…", "Planning the sections…"],
         reading: ["正在读取", "Reading"],
         start: ["开始写作", "Start writing"],
         replan: ["重新规划", "Plan again"],
         writing: ["正在写作", "Writing"],
         review: [
-          "这一节已写好，请在右侧草稿中审阅。",
-          "This section is ready - review it in the draft on the right.",
+          "这一节已写好。在草稿里采纳后会自动写下一节。",
+          "This section is ready. Accept it in the draft and the next one starts.",
         ],
         accept: ["采纳并继续", "Accept and continue"],
         revise: ["按意见重写本节", "Rewrite this section"],
@@ -293,6 +319,7 @@ export function AutoWriter({
         picture: ["本节配图", "Picture for this section"],
         noPicture: ["不配图", "No picture"],
         generate: ["AI 生成", "Generate"],
+        aiPicture: ["AI 配图", "AI picture"],
       }) as Record<string, [string, string]>
     )[key][zh ? 0 : 1];
 
@@ -316,62 +343,10 @@ export function AutoWriter({
         </button>
       </header>
 
-      {phase === "setup" && (
-        <>
-          <p className="auto-writer-intro">{label("intro")}</p>
-          <ProjectFiles
-            root={folder}
-            entries={entries}
-            selected={chosen}
-            zh={zh}
-            onToggle={(paths, on) =>
-              setChosen((prev) => {
-                const next = new Set(prev);
-                for (const path of paths) {
-                  if (on) next.add(path);
-                  else next.delete(path);
-                }
-                return next;
-              })
-            }
-            onOpenFolder={() => void pickFolder()}
-            onRefresh={() => setReload((n) => n + 1)}
-          />
-          <textarea
-            rows={2}
-            value={extra}
-            placeholder={label("extra")}
-            onChange={(e) => setExtra(e.target.value)}
-          />
-          <label className="auto-writer-option">
-            <input
-              type="checkbox"
-              className="ui-check"
-              checked={eachSection}
-              onChange={(e) => setEachSection(e.target.checked)}
-            />
-            {label("each")}
-          </label>
-          <label className="auto-writer-option">
-            <input
-              type="checkbox"
-              className="ui-check"
-              checked={images}
-              onChange={(e) => setImages(e.target.checked)}
-            />
-            {label("images")}
-          </label>
-          <div className="auto-writer-actions">
-            <button
-              type="button"
-              className="is-primary"
-              disabled={host.busy || (!material.length && !extra.trim())}
-              onClick={() => void makePlan()}
-            >
-              {label("plan")}
-            </button>
-          </div>
-        </>
+      {extra.trim() && (
+        <p className="auto-writer-request" title={extra}>
+          {extra}
+        </p>
       )}
 
       {phase === "planning" && (
@@ -383,10 +358,13 @@ export function AutoWriter({
         </p>
       )}
 
-      {plan && phase !== "setup" && phase !== "planning" && (
+      {plan && phase !== "planning" && phase !== "failed" && (
         <>
           {plan.title && <p className="auto-writer-doc-title">{plan.title}</p>}
-          <ol className="auto-writer-outline">
+          <ol
+            ref={outlineRef}
+            className={`auto-writer-outline${phase === "outline" ? "" : " is-running"}`}
+          >
             {plan.sections.map((section, i) => (
               <li key={i} className={`is-${states[i]}`}>
                 <span className="auto-writer-mark" aria-hidden />
@@ -448,9 +426,12 @@ export function AutoWriter({
                 ) : (
                   (section.picture || (images && section.image)) && (
                     <span className="auto-writer-picture-tag">
-                      {section.picture
-                        ? section.picture.split("/").pop()
-                        : label("generate")}
+                      <ImageFileIcon />
+                      <span>
+                        {section.picture
+                          ? section.picture.split("/").pop()
+                          : label("aiPicture")}
+                      </span>
                     </span>
                   )
                 )}
@@ -478,7 +459,16 @@ export function AutoWriter({
 
       {phase === "outline" && (
         <div className="auto-writer-actions">
-          <button type="button" onClick={() => setPhase("setup")}>
+          <label className="auto-writer-option auto-writer-each">
+            <input
+              type="checkbox"
+              className="ui-check"
+              checked={eachSection}
+              onChange={(e) => setEachSection(e.target.checked)}
+            />
+            {label("each")}
+          </label>
+          <button type="button" onClick={() => void makePlan()}>
             {label("replan")}
           </button>
           <button
@@ -595,10 +585,24 @@ export function AutoWriter({
         </div>
       )}
 
-      {error && phase === "setup" && (
-        <p className="auto-writer-error" role="alert">
-          {error}
-        </p>
+      {phase === "failed" && (
+        <div className="auto-writer-review">
+          <p className="auto-writer-error" role="alert">
+            {error}
+          </p>
+          <div className="auto-writer-actions">
+            <button type="button" className="is-quiet" onClick={onClose}>
+              {label("close")}
+            </button>
+            <button
+              type="button"
+              className="is-primary"
+              onClick={() => void makePlan()}
+            >
+              {label("retry")}
+            </button>
+          </div>
+        </div>
       )}
     </section>
   );

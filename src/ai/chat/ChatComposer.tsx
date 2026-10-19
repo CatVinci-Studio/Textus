@@ -126,6 +126,9 @@ interface ChatComposerProps {
   /** The host's own entries in the "+" menu (the Agent's project folder,
    *  image switch and auto-writing), after the composer's own. */
   menuItems?: ComposerMenuItem[];
+  /** Leads the toolbar row after the mode chip: the Agent's project folder
+   *  (ProjectChip). */
+  toolbarExtra?: ReactNode;
   /** The resolved message (skill expanded) plus any attachments - InlineChat
    *  owns tagging it with selected-text/chatInfo and actually sending it. */
   onSend: (
@@ -162,6 +165,7 @@ export function ChatComposer({
   defaultWebSearch,
   dockActions,
   menuItems = [],
+  toolbarExtra,
   onSend,
   onStop,
   onEscape,
@@ -791,6 +795,7 @@ export function ChatComposer({
                 {modes.find(([value]) => value === mode)?.[1]}
               </button>
             )}
+            {!compact && toolbarExtra}
             {!compact &&
               switchesOn.map((item) => (
                 <button

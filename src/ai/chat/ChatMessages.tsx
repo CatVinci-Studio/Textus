@@ -15,7 +15,7 @@ import type { AgentTurn, EditAction, EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import type { StreamingState } from "./useAgentConversation";
 import { parseProposal } from "./proposal";
-import { parseUserMessage } from "./user-message";
+import { parseUserMessage, userMessageBody } from "./user-message";
 import { refusedProposalIds } from "../revision/proposal-status";
 import { classifyAiError, type AiErrorKind } from "../error-messages";
 import { diffLines } from "./line-diff";
@@ -93,6 +93,9 @@ export interface ChatMessagesProps {
   proposalStatus: (callId: string) => PendingStatus;
   /** `text`: a partial acceptance - see useSentenceChanges. */
   onAcceptProposal: (callId: string, text?: string) => void;
+  /** A rejected change taken after all ("万一后悔"): its card keeps a way
+   *  back. Without it a rejection is final. */
+  onRestoreProposal?: (callId: string, proposal: EditProposal) => void;
   /** A pending rewrite's sentences and the writer's call on each
    *  (usePendingEdits.sentences); absent where the document isn't reachable
    *  (the detached window), which shows the card without them. */
@@ -126,6 +129,52 @@ export interface ChatMessagesProps {
   onRetry: () => void;
 }
 
+/** An auto-writing section's request (auto-writer.ts's sectionPrompt). */
+const AUTO_SECTION =
+  /^(?:【自动写作 (\d+)\/(\d+)】|\[Auto-writing (\d+)\/(\d+)\])\s*(.*)$/;
+
+interface AutoSection {
+  /** Index of its first turn after the request (exclusive end below). */
+  end: number;
+  index: number;
+  total: number;
+  title: string;
+  zh: boolean;
+  callIds: string[];
+}
+
+/** Each auto-written section's turns - its request, the checks, the
+ *  proposal card and the report - by the index of its request. */
+function autoSections(turns: AgentTurn[]): Map<number, AutoSection> {
+  const sections = new Map<number, AutoSection>();
+  let open: AutoSection | null = null;
+  turns.forEach((turn, i) => {
+    if (turn.kind === "User") {
+      if (open) open.end = i;
+      open = null;
+      const line = userMessageBody(turn.text).split("\n")[0] ?? "";
+      const match = AUTO_SECTION.exec(line.trim());
+      if (match) {
+        open = {
+          end: turns.length,
+          index: Number(match[1] ?? match[3]),
+          total: Number(match[2] ?? match[4]),
+          title: match[5] ?? "",
+          zh: match[1] !== undefined,
+          callIds: [],
+        };
+        sections.set(i, open);
+      }
+    } else if (
+      open &&
+      turn.kind === "ToolCall" &&
+      turn.name === "propose_edit"
+    )
+      open.callIds.push(turn.call_id);
+  });
+  return sections;
+}
+
 /**
  * The turn history: proposal cards, plain turns, and the busy/error states.
  * While a request runs, the streamed turns and the assistant prose being
@@ -148,6 +197,7 @@ export function ChatMessages({
   labels,
   proposalStatus,
   onAcceptProposal,
+  onRestoreProposal,
   onRejectProposal,
   onRelocateProposal,
   proposalActions = true,
@@ -206,6 +256,18 @@ export function ChatMessages({
   }, [shown]);
   // Plain tool steps fold into one line per run (tool-steps.ts).
   const toolSteps = useMemo(() => foldToolSteps(shown), [shown]);
+  // Auto-writing: each section folds to one row (its number, title and
+  // state); the card above the chat holds the outline, so the requests,
+  // checks and reports underneath stay out of the way until opened.
+  const sections = useMemo(() => autoSections(shown), [shown]);
+  const [openSections, setOpenSections] = useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
+  const insideFolded = (i: number) => {
+    for (const [start, section] of sections)
+      if (i > start && i < section.end) return !openSections.has(start);
+    return false;
+  };
   // A call the backend refused (tools.rs) was never a proposal: the model
   // was told and resends it, so it gets no card - nor its result.
   const refused = useMemo(() => refusedProposalIds(shown), [shown]);
@@ -243,6 +305,40 @@ export function ChatMessages({
               "--reveal-delay": `${Math.min(i - revealFrom.current, 3) * 40}ms`,
             } as CSSProperties)
           : undefined;
+        const section = sections.get(i);
+        if (section) {
+          const statuses = section.callIds.map((id) => proposalStatus(id));
+          const running = busy && section.end === shown.length;
+          const state = running
+            ? "writing"
+            : statuses.some((x) => x === "pending" || x === "streaming")
+              ? "review"
+              : statuses.some((x) => x === "accepted")
+                ? "done"
+                : statuses.some((x) => x === "rejected")
+                  ? "skipped"
+                  : "empty";
+          const open = openSections.has(i);
+          return (
+            <AutoSectionRow
+              key={i}
+              section={section}
+              state={state}
+              open={open}
+              className={reveal ? "turn-reveal" : undefined}
+              style={style}
+              onToggle={() =>
+                setOpenSections((prev) => {
+                  const next = new Set(prev);
+                  if (open) next.delete(i);
+                  else next.add(i);
+                  return next;
+                })
+              }
+            />
+          );
+        }
+        if (insideFolded(i)) return null;
         if (
           (turn.kind === "ToolCall" || turn.kind === "ToolResult") &&
           refused.has(turn.call_id)
@@ -289,6 +385,7 @@ export function ChatMessages({
               onDecide={onDecideSentence}
               onReveal={onRevealProposal}
               onAccept={onAcceptProposal}
+              onRestore={onRestoreProposal}
               onReject={onRejectProposal}
               onRelocate={onRelocateProposal}
               actions={proposalActions}
@@ -376,6 +473,66 @@ export function ChatMessages({
         />
       )}
     </>
+  );
+}
+
+const SECTION_STATES = {
+  writing: ["正在写作", "Writing"],
+  review: ["待审阅", "To review"],
+  done: ["已采纳", "Accepted"],
+  skipped: ["已跳过", "Skipped"],
+  empty: ["无改动", "No changes"],
+} as const;
+
+/** One auto-written section in the chat, folded: its number, title and
+ *  state; opening it shows what happened (the request, checks, proposal
+ *  and report). */
+function AutoSectionRow({
+  section,
+  state,
+  open,
+  className,
+  style,
+  onToggle,
+}: {
+  section: AutoSection;
+  state: keyof typeof SECTION_STATES;
+  open: boolean;
+  className?: string;
+  style?: CSSProperties;
+  onToggle: () => void;
+}) {
+  const { zh } = section;
+  return (
+    <div
+      className={`agent-section-row is-${state}${open ? " is-open" : ""}${className ? ` ${className}` : ""}`}
+      style={style}
+    >
+      <button type="button" aria-expanded={open} onClick={onToggle}>
+        <span className="agent-section-mark" aria-hidden />
+        <span className="agent-section-number">
+          {zh
+            ? `第 ${section.index}/${section.total} 节`
+            : `${section.index}/${section.total}`}
+        </span>
+        <span className="agent-section-title">{section.title}</span>
+        <span className="agent-section-state">
+          {SECTION_STATES[state][zh ? 0 : 1]}
+        </span>
+        <svg
+          className="agent-section-chevron"
+          viewBox="0 0 16 16"
+          aria-hidden
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M6 4l4 4-4 4" />
+        </svg>
+      </button>
+    </div>
   );
 }
 
@@ -467,6 +624,7 @@ function ProposalCard({
   onDecide,
   onReveal,
   onAccept,
+  onRestore,
   onReject,
   onRelocate,
   actions = true,
@@ -482,6 +640,7 @@ function ProposalCard({
   onDecide?: (callId: string, index: number, take: boolean | null) => void;
   onReveal?: (callId: string, index: number) => void;
   onAccept: (callId: string, text?: string) => void;
+  onRestore?: (callId: string, proposal: EditProposal) => void;
   onReject: (callId: string) => void;
   onRelocate: (proposal: EditProposal) => void;
   actions?: boolean;
@@ -678,6 +837,17 @@ function ProposalCard({
             {labels.proposalRelocate}
           </button>
         </>
+      ) : status === "rejected" && onRestore && actions ? (
+        <div className="agent-proposal-status agent-proposal-status-rejected">
+          {labels.proposalStatus.rejected}
+          <button
+            type="button"
+            className="agent-proposal-restore"
+            onClick={() => onRestore(callId, proposal)}
+          >
+            {labels.proposalAccept}
+          </button>
+        </div>
       ) : (
         <div
           className={`agent-proposal-status agent-proposal-status-${status}`}

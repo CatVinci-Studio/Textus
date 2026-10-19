@@ -3,11 +3,15 @@ import type { DirEntryInfo } from "../platform/fs-types";
 import {
   ArrowUpIcon,
   ChevronIcon,
+  CloseIcon,
   FolderIcon,
   FolderOpenIcon,
   RefreshIcon,
   fileIconFor,
+  isImageName,
 } from "../ui/icons";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { ImageViewer } from "./ImageViewer";
 import { fs } from "../platform/ipc";
 import { useSettings } from "../settings/SettingsContext";
 import { basename, isInside, parentDir } from "../utils/path";
@@ -22,21 +26,35 @@ interface FileTreeProps {
   /** The active document's folder: where the tree starts. The caller keys
    *  the tree on it, so switching to a document elsewhere starts over. */
   rootPath: string;
+  /** The tree is a folder the user opened (not the document's own). */
+  opened?: boolean;
+  onOpenFolder?: () => void;
+  onCloseFolder?: () => void;
   activePath: string | null;
   onFileSelect: (path: string) => void;
 }
 
 export function FileTree({
   rootPath,
+  opened = false,
+  onOpenFolder,
+  onCloseFolder,
   activePath,
   onFileSelect,
 }: FileTreeProps) {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const zh = settings.language.startsWith("zh");
   // Where the tree is rooted right now; "up" walks it toward the filesystem
   // root without touching the open document.
   const [root, setRoot] = useState(rootPath);
   // Bumped by Refresh: remounts every node so each re-reads its folder.
   const [generation, setGeneration] = useState(0);
+  // A picture opened from the tree: shown on its own (ImageViewer), with
+  // the other pictures of its folder a key away.
+  const [viewer, setViewer] = useState<{
+    paths: string[];
+    start: number;
+  } | null>(null);
   // Not on iOS: above Documents is the app's private container, and above
   // a folder picked in Files is outside what the user granted.
   const parent = isIOSApp ? null : parentDir(root);
@@ -66,6 +84,30 @@ export function FileTree({
         >
           <RefreshIcon />
         </button>
+        {!isIOSApp && onOpenFolder && (
+          <button
+            className="tree-tool"
+            onClick={onOpenFolder}
+            title={zh ? "打开文件夹" : "Open folder"}
+            aria-label={zh ? "打开文件夹" : "Open folder"}
+          >
+            <FolderOpenIcon />
+          </button>
+        )}
+        {opened && onCloseFolder && (
+          <button
+            className="tree-tool"
+            onClick={onCloseFolder}
+            title={
+              zh
+                ? "关闭文件夹，跟随当前文档"
+                : "Close folder - follow the document"
+            }
+            aria-label={zh ? "关闭文件夹" : "Close folder"}
+          >
+            <CloseIcon />
+          </button>
+        )}
       </div>
       <DirNode
         key={`${root}\n${generation}`}
@@ -73,8 +115,17 @@ export function FileTree({
         depth={0}
         activePath={activePath}
         onFileSelect={onFileSelect}
+        onPreview={(paths, start) => setViewer({ paths, start })}
         onEnter={setRoot}
       />
+      {viewer && (
+        <ImageViewer
+          paths={viewer.paths}
+          start={viewer.start}
+          docPath={activePath}
+          onClose={() => setViewer(null)}
+        />
+      )}
     </div>
   );
 }
@@ -84,6 +135,8 @@ interface DirNodeProps {
   depth: number;
   activePath: string | null;
   onFileSelect: (path: string) => void;
+  /** A picture clicked: its folder's pictures and which one. */
+  onPreview: (paths: string[], start: number) => void;
   /** Re-roots the tree at a folder (double-click on its row). */
   onEnter: (path: string) => void;
 }
@@ -93,6 +146,7 @@ function DirNode({
   depth,
   activePath,
   onFileSelect,
+  onPreview,
   onEnter,
 }: DirNodeProps) {
   // The root is always open; a folder on the way down to the open document
@@ -135,7 +189,7 @@ function DirNode({
       )}
       {open && children && (
         <div className="dir-children">
-          {children.map((entry) =>
+          {children.map((entry, _, all) =>
             entry.is_dir ? (
               <DirNode
                 key={entry.path}
@@ -143,6 +197,7 @@ function DirNode({
                 depth={depth + 1}
                 activePath={activePath}
                 onFileSelect={onFileSelect}
+                onPreview={onPreview}
                 onEnter={onEnter}
               />
             ) : (
@@ -151,7 +206,16 @@ function DirNode({
                 entry={entry}
                 depth={depth + 1}
                 active={entry.path === activePath}
-                onSelect={onFileSelect}
+                onSelect={
+                  isImageName(entry.name)
+                    ? () => {
+                        const pictures = all
+                          .filter((e) => !e.is_dir && isImageName(e.name))
+                          .map((e) => e.path);
+                        onPreview(pictures, pictures.indexOf(entry.path));
+                      }
+                    : onFileSelect
+                }
               />
             ),
           )}
@@ -175,6 +239,7 @@ function FileNode({
   const { t } = useSettings();
   const Icon = fileIconFor(entry.name);
   const press = useLongPress();
+  const [thumbFailed, setThumbFailed] = useState(false);
   return (
     <>
       <button
@@ -185,7 +250,18 @@ function FileNode({
         }}
         {...(isIOSApp ? press.handlers : {})}
       >
-        <Icon className="tree-icon" />
+        {isImageName(entry.name) && !thumbFailed ? (
+          <img
+            className="tree-thumb"
+            src={convertFileSrc(entry.path)}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={() => setThumbFailed(true)}
+          />
+        ) : (
+          <Icon className="tree-icon" />
+        )}
         <span className="tree-label">{entry.name}</span>
       </button>
       <Presence show={!!press.at} exitMs={250}>

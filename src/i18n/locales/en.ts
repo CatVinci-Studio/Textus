@@ -13,6 +13,7 @@ const en = {
   agentPanelResize: "Resize the AI panel",
   agentPanelSheet: "Expand or collapse the AI panel",
   agentExpandWindowLabel: "Open full conversations in a separate window",
+  shortcutToggleSurface: "Switch Agent / Write",
   shortcutToggleAgentPanel: "Toggle AI panel",
   menuToggleAgentPanel: "AI Panel",
   agentPanelEmpty:
@@ -615,6 +616,9 @@ type /name in a conversation to use one.
   contentWidthAuto: "Adaptive",
   contentWidthStandard: "Standard",
   contentWidthFull: "Full Width",
+  defaultHomeLabel: "Start Page",
+  defaultHomeAgent: "Agent",
+  defaultHomeWrite: "Write",
   newDocumentModeLabel: "Open Documents In",
   newDocumentModeWindow: "A New Window",
   newDocumentModeTab: "A Tab in This Window",

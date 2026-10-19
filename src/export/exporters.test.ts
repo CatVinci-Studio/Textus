@@ -8,9 +8,13 @@ const mocks = vi.hoisted(() => ({
     revealInDir: vi.fn(),
   },
   showMessage: vi.fn(),
+  fs: { readBinaryFileBase64: vi.fn() },
 }));
 
-vi.mock("../platform/ipc", () => ({ exportDoc: mocks.exportDoc, fs: {} }));
+vi.mock("../platform/ipc", () => ({
+  exportDoc: mocks.exportDoc,
+  fs: mocks.fs,
+}));
 vi.mock("../platform/capabilities", () => ({
   canExportPdf: true,
   canExportWithPandoc: true,
@@ -22,7 +26,12 @@ vi.mock("../ui/app-dialog", () => ({
 
 import type { Strings } from "../i18n/strings";
 import type { DocTab } from "../document/doc-tabs";
-import { cloneEditorContent, exportPdf, pdfLayoutCss } from "./exporters";
+import {
+  cloneEditorContent,
+  exportPdf,
+  localImagePath,
+  pdfLayoutCss,
+} from "./exporters";
 import { MAC_PAGE } from "./paginate";
 
 function editor(html: string): HTMLElement {
@@ -130,5 +139,45 @@ describe("exportPdf", () => {
     // message and its button, and the spinner never stopped (#62).
     expect(overlayUnderMessage).toBeNull();
     expect(document.querySelector(".pdf-export-overlay")).toBeNull();
+  });
+});
+
+describe("localImagePath", () => {
+  it("names the file a document image src points at", () => {
+    expect(localImagePath("assets/a%20b.png", "/docs/x.md")).toBe(
+      "/docs/assets/a b.png",
+    );
+    expect(
+      localImagePath("/Users/me/Application%20Support/assets/i.jpg", null),
+    ).toBe("/Users/me/Application Support/assets/i.jpg");
+    expect(localImagePath("https://x/i.png", "/docs/x.md")).toBeNull();
+    expect(localImagePath("assets/a.png", null)).toBeNull();
+  });
+});
+
+describe("exportPdf images", () => {
+  it("embeds each picture read from disk, not through the webview", async () => {
+    document.body.innerHTML =
+      '<div data-active-tab="true"><div class="milkdown"><p><img src="asset://localhost/x" data-doc-src="assets/a.jpg"></p></div></div>';
+    mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/a.pdf");
+    mocks.exportDoc.exportPdfNative.mockResolvedValue(undefined);
+    mocks.fs.readBinaryFileBase64.mockResolvedValue("QUJD");
+    const img = document.querySelector("img")!;
+    Object.defineProperty(img, "complete", { value: true });
+    Object.defineProperty(img, "naturalWidth", { value: 10 });
+
+    await exportPdf({ id: "1", path: "/docs/a.md" } as DocTab, {
+      exportFailedTitle: "",
+      pdfFailed: "",
+      pdfPreparing: "",
+    } as Strings);
+
+    expect(mocks.fs.readBinaryFileBase64).toHaveBeenCalledWith(
+      "/docs/assets/a.jpg",
+    );
+    const { html } = mocks.exportDoc.exportPdfNative.mock.calls.at(-1)![0];
+    expect(html).toContain('src="data:image/jpeg;base64,QUJD"');
+    expect(html).not.toContain("asset://");
+    expect(html).not.toContain("data-doc-src");
   });
 });

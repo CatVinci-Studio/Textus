@@ -48,6 +48,12 @@
   padding-top: max(0px, var(--native-titlebar-height, 28px) - 28px);
 }
 
+/* Full screen hides the traffic lights, so their inset would only leave a
+   gap before "← Agent": the bar's controls go flush left, like the tabs. */
+.window-bar[data-fullscreen] {
+  padding-left: 12px;
+}
+
 /* Modal backdrops stop at the window bar instead of covering it. Where the
    app draws the caption (Windows/Linux) that bar holds the only minimize/
    maximize/close buttons and the window's drag area, so a full-window
@@ -186,5 +192,41 @@
 }
 .window-bar-start:empty,
 .window-bar-end:empty {
+  display: none;
+}
+
+/* The files sidebar's switch, right after the Agent | 写作 switch:
+   drawn like the chat switch, and like it hidden in Agent. */
+.window-bar-sidebar {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 24px;
+  margin-left: 6px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-control);
+  background: none;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    opacity var(--dur-fast) var(--ease-standard);
+}
+.window-bar-sidebar svg {
+  width: 15px;
+  height: 15px;
+}
+.window-bar-sidebar:hover,
+.window-bar-sidebar.is-on {
+  opacity: 1;
+  background: var(--sidebar-hover);
+}
+:root:has(.agent-workspace-layer:not([hidden])[data-open="true"])
+  .window-bar-sidebar,
+:root[data-window-chrome="mobile"] .window-bar-sidebar {
   display: none;
 }

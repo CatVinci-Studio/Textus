@@ -12,6 +12,7 @@ export default {
   agentPanelSheet: "Expandir o contraer el panel de IA",
   agentExpandWindowLabel:
     "Abrir las conversaciones completas en una ventana aparte",
+  shortcutToggleSurface: "Cambiar entre Agent y Escribir",
   shortcutToggleAgentPanel: "Panel de IA",
   menuToggleAgentPanel: "Panel de IA",
   agentPanelEmpty:
@@ -633,6 +634,9 @@ para usar una.
   contentWidthAuto: "Adaptable",
   contentWidthStandard: "Estándar",
   contentWidthFull: "Ancho completo",
+  defaultHomeLabel: "Página de inicio",
+  defaultHomeAgent: "Agent",
+  defaultHomeWrite: "Escribir",
   newDocumentModeLabel: "Abrir documentos en",
   newDocumentModeWindow: "Una ventana nueva",
   newDocumentModeTab: "Una pestaña de esta ventana",

@@ -49,7 +49,7 @@ export function withImageSrc(
   template.innerHTML = html;
   for (const img of template.content.querySelectorAll("img")) {
     const src = img.getAttribute("src");
-    if (!src) continue;
+    if (!src || img.hasAttribute("data-draft-picture")) continue;
     img.setAttribute("data-doc-src", src);
     img.setAttribute("src", imageSrc(src));
   }

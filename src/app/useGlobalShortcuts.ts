@@ -7,6 +7,7 @@ import {
 import { runLocalMenuAction } from "./app-menu-actions";
 import { comboFromEvent } from "../utils/shortcuts";
 import { menuIpc } from "../platform/ipc";
+import { TOGGLE_SURFACE_EVENT } from "../document/doc-tabs";
 import {
   TRIGGER_COMPLETION_EVENT,
   TRIGGER_GRAMMAR_CHECK_EVENT,
@@ -141,6 +142,10 @@ export function useGlobalShortcuts(opts: {
       } else if (combo === shortcuts.toggleAgentPanel) {
         e.preventDefault();
         toggleAgentPanel();
+      } else if (combo === shortcuts.toggleSurface) {
+        // The active document's editor switches (MilkdownEditor).
+        e.preventDefault();
+        window.dispatchEvent(new Event(TOGGLE_SURFACE_EVENT));
       } else if (combo === shortcuts.toggleSplitView) {
         e.preventDefault();
         toggleSplitView();

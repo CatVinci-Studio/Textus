@@ -47,6 +47,27 @@ describe("document draft transactions", () => {
     });
   });
 
+  it("appends over blank paragraphs at the end instead of after them", async () => {
+    editor = await createTestEditor("");
+    editor.action((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      const empty = view.state.schema.nodes.paragraph.create();
+      view.dispatch(view.state.tr.insert(view.state.doc.content.size, empty));
+      const draft = captureDraft(ctx, view.state, "document", "session");
+      draft.operations = [
+        { callId: "a", proposal: { action: "append", text: "# Title" } },
+        { callId: "b", proposal: { action: "append", text: "## One\n\nText." } },
+      ];
+      const tr = buildDraftTransaction(ctx, view.state, draft);
+      expect(tr).not.toBeNull();
+      view.dispatch(tr!);
+      const doc = view.state.doc;
+      expect(doc.firstChild?.type.name).toBe("heading");
+      expect(doc.firstChild?.textContent).toBe("Title");
+      expect(doc.childCount).toBe(3);
+    });
+  });
+
   it("rejects a stale revision even after undo restores identical text", async () => {
     editor = await createTestEditor("Start.");
     editor.action((ctx) => {

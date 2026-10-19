@@ -271,3 +271,31 @@ it("a historical failed image does not silently block a new selection illustrati
   });
   expect(api.startImage).toHaveBeenCalledTimes(2);
 });
+it("cancels its pictures when the editor goes, not when an effect merely re-runs", async () => {
+  editor = await createTestEditor("## Section\n\nOriginal.");
+  const run: EditorRunner = (callback) => editor!.action(callback);
+  const hook = renderHook(
+    ({ id }) => {
+      const workspace = useDocumentWorkspace(run, "document");
+      return useDocumentImages(run, id, null, workspace, "session");
+    },
+    { initialProps: { id: "document" } },
+  );
+  act(() => {
+    hook.result.current.authorizeTask("task", 0);
+  });
+  api.cancelImageGeneration.mockClear();
+  // The effect's cleanup and setup run again (as on a hot reload): the
+  // picture still painting is kept.
+  hook.rerender({ id: "document-again" });
+  await act(() => new Promise((r) => setTimeout(r, 10)));
+  // (An earlier test's closed editor may cancel its own meanwhile.)
+  expect(api.cancelImageGeneration).not.toHaveBeenCalledWith(
+    expect.objectContaining({ taskId: "task" }),
+  );
+  hook.unmount();
+  await act(() => new Promise((r) => setTimeout(r, 10)));
+  expect(api.cancelImageGeneration).toHaveBeenCalledWith(
+    expect.objectContaining({ taskId: "task" }),
+  );
+});

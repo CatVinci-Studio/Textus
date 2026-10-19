@@ -13,26 +13,38 @@ import {
   showDocImage,
 } from "../../editor/images/image-plugin";
 import { isScopedUrl } from "../../platform/ios-files";
-import type { DocumentDraft } from "./document-draft";
+import type { DocumentDraft, DraftOperation } from "./document-draft";
+import type { EditProposal } from "../types";
 import type { AgentConversation } from "../chat/useAgentConversation";
 import { withImageSrc } from "../MarkdownText";
 import { renderDocumentHtml } from "../../editor/markdown/render-html";
 import { useKatexReady } from "../../editor/math/katex-loader";
 import {
   markDraftChanges,
+  withChangeActions,
+  type ChangeTarget,
   withImagePlaceholders,
   type PendingImage,
 } from "./draft-diff";
 import { workspaceLabels } from "./labels";
 import { userMessageBody } from "../chat/user-message";
 import { foldToolSteps, isCardTool, toolStepCounts } from "../chat/tool-steps";
-import { useChatHistory, type ChatHistoryEntry } from "../chat/chat-history";
+import {
+  deleteConversation,
+  saveConversation,
+  useChatHistory,
+  type ChatHistoryEntry,
+} from "../chat/chat-history";
+import { createPortal } from "react-dom";
+import { ContextMenu } from "../../editor/ContextMenu";
+import { Presence } from "../../ui/usePresence";
 import { parseProposal } from "../chat/proposal";
 import { basename } from "../../utils/path";
 import { firstLevelOneHeading } from "../../document/save-default-name";
 import {
   CheckIcon,
   ChevronIcon,
+  CloseIcon,
   HamburgerIcon,
   PlusIcon,
 } from "../../ui/icons";
@@ -77,6 +89,17 @@ function textFromProposals(entry: ChatHistoryEntry): string | null {
 }
 
 const NO_PENDING_IMAGES: PendingImage[] = [];
+const NO_REJECTED: DraftOperation[] = [];
+/** An auto-writing section's request (auto-writer.ts's sectionPrompt). */
+const AUTO_SECTION_LINE =
+  /^(?:【自动写作 (\d+)\/(\d+)】|\[Auto-writing (\d+)\/(\d+)\])/;
+const ALWAYS_SETTLED = () => true;
+/** Changes whose paragraphs can be taken one at a time: text added at
+ *  the end (useDocumentWorkspace's explode says why only that). */
+const INSERTS = new Set(["append"]);
+const TASKS_HIDDEN_KEY = "textus.agentTasksHidden";
+/** Where the task list turns into a drawer (workspace.css). */
+const NARROW = "(max-width: 1000px)";
 
 export function AgentWorkspace({
   language,
@@ -88,6 +111,13 @@ export function AgentWorkspace({
   children,
   onAccept,
   onReject,
+  onImageAccept,
+  onImageReject,
+  rejected = NO_REJECTED,
+  onRestore,
+  onDecidePart,
+  onUndoReject,
+  isSettled = ALWAYS_SETTLED,
   tools,
   mediaPreview,
   pendingMedia = false,
@@ -108,6 +138,22 @@ export function AgentWorkspace({
   children: ReactNode;
   onAccept: (callId?: string) => void;
   onReject: (callId?: string) => void;
+  /** A finished picture shown in the draft: put in (with its paragraph)
+   *  or dropped. */
+  onImageAccept?: (jobId: string) => void;
+  onImageReject?: (jobId: string) => void;
+  /** This task's rejected changes, listed with 采纳 so one can be taken
+   *  after all (onRestore). */
+  rejected?: DraftOperation[];
+  onRestore?: (callId: string, proposal: EditProposal) => void;
+  /** One paragraph of a change taken or not: `part` is its index in an
+   *  unsplit change (-1: `callId` is already that paragraph). */
+  onDecidePart?: (callId: string, part: number, take: boolean) => void;
+  /** A rejected paragraph back to undecided (恢复 in the preview). */
+  onUndoReject?: (callId: string) => void;
+  /** Whether a change has finished arriving: one still being written
+   *  waits, the rest can be decided while the Agent keeps working. */
+  isSettled?: (callId: string) => boolean;
   tools?: ReactNode;
   mediaPreview?: ReactNode;
   pendingMedia?: boolean;
@@ -156,6 +202,53 @@ export function AgentWorkspace({
   );
   // One rendering for the document and the draft: the draft's changes
   // marked, pictures still being made shown where they will go.
+  // Where each pending change sits in the marked document - the text of
+  // the blocks it writes (a deletion: the passage it removes) - with its
+  // paragraphs, and those of them already rejected.
+  const pendingOps = draft?.operations;
+  const changeTargets = useMemo(() => {
+    const blockTexts = (markdown: string) => {
+      const template = document.createElement("template");
+      template.innerHTML = renderDocumentHtml(markdown);
+      return [...template.content.children].map((el) => el.textContent ?? "");
+    };
+    const groups = new Map<string, ChangeTarget>();
+    for (const { callId, proposal, parent } of pendingOps ?? []) {
+      const id = parent ?? callId;
+      const target = groups.get(id) ?? {
+        callId: id,
+        parts: [],
+        splittable: INSERTS.has(proposal.action),
+      };
+      groups.set(id, target);
+      const source =
+        proposal.action === "delete"
+          ? (proposal.anchor ?? "")
+          : (proposal.text ?? "");
+      if (parent) target.parts.push({ call: callId, part: -1, text: source });
+      else
+        blockTexts(source).forEach((text, part) =>
+          target.parts.push({ call: callId, part, text }),
+        );
+    }
+    for (const op of rejected) {
+      const target = op.parent ? groups.get(op.parent) : undefined;
+      if (!target || op.part === undefined || !op.parts) continue;
+      // After the nearest earlier paragraph still on show.
+      let after = "";
+      for (let j = op.part - 1; j >= 0 && !after; j--) {
+        const shown = target.parts.find((p) => p.call === `${op.parent}::${j}`);
+        if (shown) after = blockTexts(shown.text)[0] ?? "";
+      }
+      (target.rejected ??= []).push({
+        call: op.callId,
+        part: op.part,
+        html: renderDocumentHtml(op.proposal.text ?? ""),
+        after,
+      });
+    }
+    return [...groups.values()];
+  }, [pendingOps, rejected]);
   const marked = useMemo(() => {
     const { html, changes } = draftPreview
       ? markDraftChanges(baseHtml, renderDocumentHtml(draftPreview))
@@ -164,7 +257,30 @@ export function AgentWorkspace({
       changes,
       inner: {
         __html: withImageSrc(
-          withImagePlaceholders(html, pendingImages, labels.imagePending),
+          withChangeActions(
+            withImagePlaceholders(
+              html,
+              pendingImages,
+              labels.imagePending,
+              labels.imageReady,
+              onImageAccept
+                ? {
+                    accept: labels.take,
+                    reject: labels.skip,
+                    skipped: labels.imageSkipped,
+                    approved: labels.imageApproved,
+                  }
+                : undefined,
+            ),
+            draftPreview ? changeTargets : [],
+            {
+              accept: labels.take,
+              reject: labels.dontTake,
+              acceptPart: labels.takePart,
+              rejectPart: labels.dontTakePart,
+              restore: labels.restore,
+            },
+          ),
           scoped ? undefined : imageSrc,
         ),
       },
@@ -175,6 +291,7 @@ export function AgentWorkspace({
     baseHtml,
     shownDocument,
     pendingImages,
+    changeTargets,
     imageSrc,
     scoped,
     katexReady,
@@ -253,10 +370,53 @@ export function AgentWorkspace({
       }),
     );
   };
+  // A past task's own menu (right-click) and its × on hover: deleting is
+  // undoable for a few seconds - the history has no other way back.
+  const [taskMenu, setTaskMenu] = useState<{
+    entry: ChatHistoryEntry;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [deleted, setDeleted] = useState<ChatHistoryEntry | null>(null);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (undoTimer.current) clearTimeout(undoTimer.current);
+    },
+    [],
+  );
+  const deleteTask = (entry: ChatHistoryEntry) => {
+    deleteConversation(entry.id);
+    setDeleted(entry);
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    undoTimer.current = setTimeout(() => setDeleted(null), 6000);
+  };
+  const undoDelete = () => {
+    if (deleted) saveConversation(deleted);
+    setDeleted(null);
+  };
   const [notice, setNotice] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(false);
+  // In a wide window the task list is a column that can be folded away
+  // (remembered); narrow, it is a drawer (tasksOpen).
+  const [tasksHidden, setTasksHidden] = useState(
+    () => localStorage.getItem(TASKS_HIDDEN_KEY) === "1",
+  );
+  const toggleTasks = () => {
+    if (window.matchMedia(NARROW).matches) {
+      setTasksOpen((open) => !open);
+      return;
+    }
+    setTasksHidden((hidden) => {
+      localStorage.setItem(TASKS_HIDDEN_KEY, hidden ? "0" : "1");
+      return !hidden;
+    });
+  };
   const root = useRef<HTMLElement>(null);
   const pending = draft?.operations ?? [];
+  // Deciding does not wait for the Agent to finish talking - only for the
+  // text itself to have arrived.
+  const anySettled = pending.some((op) => isSettled(op.callId));
   const streamingTurns = conversation.streaming?.turns;
   // One pass over the turns: tasks, tool steps and each step's result.
   const { tasks, steps } = useMemo(() => {
@@ -279,9 +439,30 @@ export function AgentWorkspace({
       done: boolean;
     }[] = [];
     const { groups } = foldToolSteps(turns);
+    // Auto-writing's sections are one task ("已写 3/4 节"), and only the
+    // section in hand lists its steps.
+    let autoTask = -1;
     turns.forEach((turn, i) => {
-      if (turn.kind === "User")
-        tasks.push(userMessageBody(turn.text).slice(0, 120));
+      if (turn.kind === "User") {
+        const body = userMessageBody(turn.text);
+        const auto = AUTO_SECTION_LINE.exec(body);
+        if (auto) {
+          const [k, n] = [auto[1] ?? auto[3], auto[2] ?? auto[4]];
+          const line = auto[1]
+            ? `自动写作 · 已写 ${k}/${n} 节`
+            : `Auto-writing · section ${k}/${n}`;
+          if (autoTask >= 0 && autoTask === tasks.length - 1)
+            tasks[autoTask] = line;
+          else {
+            tasks.push(line);
+            autoTask = tasks.length - 1;
+          }
+          steps.length = 0;
+        } else {
+          autoTask = -1;
+          tasks.push(body.slice(0, 120));
+        }
+      }
       const run = groups.get(i);
       if (run && turn.kind === "ToolCall")
         steps.push({
@@ -351,15 +532,16 @@ export function AgentWorkspace({
   return (
     <section
       ref={root}
-      className={`agent-workspace agent-home ${tasks.length || autoWriter ? "has-conversation" : "is-empty"}${autoWriter ? " is-auto-writing" : ""}${previewOpen ? " has-draft-open" : ""}${tasksOpen ? " tasks-open" : ""}`}
+      className={`agent-workspace agent-home ${tasks.length || autoWriter ? "has-conversation" : "is-empty"}${autoWriter ? " is-auto-writing" : ""}${previewOpen ? " has-draft-open" : ""}${tasksOpen ? " tasks-open" : ""}${tasksHidden ? " tasks-hidden" : ""}`}
       aria-label={labels.title}
     >
       <header className="workspace-header">
         <button
           className="workspace-icon-button workspace-tasks-toggle"
           aria-label={labels.tasks}
-          aria-expanded={tasksOpen}
-          onClick={() => setTasksOpen((open) => !open)}
+          aria-expanded={tasksOpen || !tasksHidden}
+          title={labels.tasks}
+          onClick={toggleTasks}
         >
           <HamburgerIcon />
         </button>
@@ -453,25 +635,77 @@ export function AgentWorkspace({
           {savedTasks.length === 0 && (
             <div className="workspace-empty-history">{labels.noHistory}</div>
           )}
+          {deleted && (
+            <div className="workspace-history-undo" role="status">
+              <span>{labels.taskDeleted}</span>
+              <button type="button" onClick={undoDelete}>
+                {labels.undo}
+              </button>
+            </div>
+          )}
           {savedTasks.map((entry) => (
-            <button
-              className="workspace-history-task"
-              key={entry.id}
-              disabled={conversation.busy}
-              title={entry.title}
-              onClick={() => openTask(entry)}
-            >
-              <span className="workspace-history-title">{entry.title}</span>
-              {!ownTask(entry) && (entry.docPath || entry.snapshot) && (
-                <span className="workspace-history-doc">
-                  {entry.docPath
-                    ? basename(entry.docPath)
-                    : (firstLevelOneHeading(entry.snapshot ?? "") ??
-                      labels.untitledDoc)}
-                </span>
-              )}
-            </button>
+            <div className="workspace-history-row" key={entry.id}>
+              <button
+                className="workspace-history-task"
+                disabled={conversation.busy}
+                title={entry.title}
+                onClick={() => openTask(entry)}
+                onContextMenu={(event) => {
+                  // Its own menu - not the editor's, which the Agent
+                  // surface would otherwise reach through its portal.
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setTaskMenu({ entry, x: event.clientX, y: event.clientY });
+                }}
+              >
+                <span className="workspace-history-title">{entry.title}</span>
+                {!ownTask(entry) && (entry.docPath || entry.snapshot) && (
+                  <span className="workspace-history-doc">
+                    {entry.docPath
+                      ? basename(entry.docPath)
+                      : (firstLevelOneHeading(entry.snapshot ?? "") ??
+                        labels.untitledDoc)}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                className="workspace-history-delete"
+                aria-label={labels.deleteTask}
+                title={labels.deleteTask}
+                onClick={() => deleteTask(entry)}
+              >
+                <CloseIcon />
+              </button>
+            </div>
           ))}
+          {/* On the page itself: the task list scrolls, and the surface
+              it sits in moves while Agent opens. */}
+          {createPortal(
+            <Presence show={!!taskMenu} exitMs={150}>
+              {taskMenu && (
+                <ContextMenu
+                  x={taskMenu.x}
+                  y={taskMenu.y}
+                  title={taskMenu.entry.title}
+                  onClose={() => setTaskMenu(null)}
+                  items={[
+                    {
+                      label: labels.openTask,
+                      onSelect: () => openTask(taskMenu.entry),
+                    },
+                    "separator",
+                    {
+                      label: labels.deleteTask,
+                      danger: true,
+                      onSelect: () => deleteTask(taskMenu.entry),
+                    },
+                  ]}
+                />
+              )}
+            </Presence>,
+            document.body,
+          )}
         </aside>
         <div className="workspace-conversation" ref={conversationView}>
           {autoWriter}
@@ -571,18 +805,69 @@ export function AgentWorkspace({
               </button>
             </div>
           )}
-          <div className="workspace-document" ref={documentView}>
+          <div
+            className="workspace-document"
+            ref={documentView}
+            onClick={(event) => {
+              // Each change's own 采纳 / 不采纳 (draft-diff.ts): markup too.
+              const change = (event.target as HTMLElement).closest<HTMLElement>(
+                "[data-change-action]",
+              );
+              const call = change?.dataset.call;
+              if (call) {
+                if (change.dataset.changeAction === "reject") onReject(call);
+                else if (!conflict) onAccept(call);
+                return;
+              }
+              // One paragraph of a change, and a rejected one's 恢复.
+              const part = (event.target as HTMLElement).closest<HTMLElement>(
+                "[data-part-action]",
+              );
+              if (part?.dataset.call) {
+                const take = part.dataset.partAction === "accept";
+                if (!take || !conflict)
+                  onDecidePart?.(
+                    part.dataset.call,
+                    Number(part.dataset.part ?? -1),
+                    take,
+                  );
+                return;
+              }
+              const back = (event.target as HTMLElement).closest<HTMLElement>(
+                "[data-restore]",
+              );
+              if (back?.dataset.restore) {
+                onUndoReject?.(back.dataset.restore);
+                return;
+              }
+              // The ready pictures' buttons (draft-diff.ts): markup, not React.
+              const button = (event.target as HTMLElement).closest<HTMLElement>(
+                "[data-image-action]",
+              );
+              const job = button?.dataset.job;
+              if (!job) return;
+              if (button.dataset.imageAction === "accept") {
+                if (!conflict) onImageAccept?.(job);
+              } else onImageReject?.(job);
+            }}
+          >
             <div
               className={`agent-markdown${draftPreview ? " draft-document" : ""}`}
               dangerouslySetInnerHTML={marked.inner}
             />
           </div>
           {mediaPreview}
-          {pending.length > 0 && (
+          {(pending.length > 0 || rejected.length > 0) && (
             <>
               <details className="workspace-changes">
                 <summary>
                   {labels.changes} ({pending.length})
+                  {rejected.length > 0 && (
+                    <span className="workspace-changes-skipped">
+                      {" · "}
+                      {labels.skippedCount(rejected.length)}
+                    </span>
+                  )}
                 </summary>
                 {pending.map(({ callId, proposal }) => (
                   <article key={callId}>
@@ -598,14 +883,14 @@ export function AgentWorkspace({
                     <div className="workspace-change-actions">
                       <button
                         className="workspace-button"
-                        disabled={conversation.busy || conflict}
+                        disabled={conflict || !isSettled(callId)}
                         onClick={() => onAccept(callId)}
                       >
                         {labels.take}
                       </button>
                       <button
                         className="workspace-button is-quiet"
-                        disabled={conversation.busy}
+                        disabled={!isSettled(callId)}
                         onClick={() => onReject(callId)}
                       >
                         {labels.skip}
@@ -613,23 +898,60 @@ export function AgentWorkspace({
                     </div>
                   </article>
                 ))}
+                {/* Skipped, not gone ("万一后悔"): folded, with 采纳. */}
+                {rejected.map(({ callId, proposal }) => (
+                  <article key={callId} className="is-skipped">
+                    <strong>
+                      {proposal.reason ||
+                        proposal.text?.split("\n")[0] ||
+                        proposal.action}
+                    </strong>
+                    <div className="workspace-change-actions">
+                      <span className="workspace-change-state">
+                        {labels.skipped}
+                      </span>
+                      {onRestore && (
+                        <button
+                          className="workspace-button"
+                          onClick={() => onRestore(callId, proposal)}
+                        >
+                          {labels.take}
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                ))}
               </details>
-              <div className="workspace-review-actions">
-                <button
-                  className="workspace-button is-primary"
-                  disabled={conversation.busy || conflict}
-                  onClick={() => onAccept()}
-                >
-                  {labels.accept}
-                </button>
-                <button
-                  className="workspace-button"
-                  disabled={conversation.busy}
-                  onClick={() => onReject()}
-                >
-                  {labels.reject}
-                </button>
-              </div>
+              {pending.length > 0 && (
+                <div className="workspace-review-actions">
+                  <button
+                    className="workspace-button is-primary"
+                    aria-label={labels.accept}
+                    disabled={conflict || !anySettled}
+                    onClick={() => onAccept()}
+                  >
+                    {labels.accept}
+                    {changeTargets.length > 1 && (
+                      <span className="workspace-review-count" aria-hidden>
+                        {changeTargets.length}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    className="workspace-button"
+                    aria-label={labels.reject}
+                    disabled={!anySettled}
+                    onClick={() => onReject()}
+                  >
+                    {labels.reject}
+                    {changeTargets.length > 1 && (
+                      <span className="workspace-review-count" aria-hidden>
+                        {changeTargets.length}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>

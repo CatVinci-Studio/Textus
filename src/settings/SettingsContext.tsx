@@ -34,6 +34,8 @@ export type ThemeMode = "system" | "light" | "dark";
 /// the source of truth for which providers exist, fetched at runtime.
 export type AiProvider = string;
 export type NewDocumentMode = "window" | "tab";
+/** What a new window opens on: the Agent's home or the page (Write). */
+export type DefaultHome = "agent" | "write";
 /** What a copy from the editor puts in the clipboard's plain text, the part
  *  apps like WeChat read: the words as they read ("readable") or the
  *  Markdown source ("markdown"). The formatted (HTML) flavor is the same
@@ -53,6 +55,7 @@ export type ShortcutAction =
   | "toggleFloatingChat"
   | "toggleSidebar"
   | "toggleAgentPanel"
+  | "toggleSurface"
   | "toggleSplitView"
   | "toggleZenMode"
   | "toggleSourceMode"
@@ -69,6 +72,7 @@ const DEFAULT_SHORTCUTS: Shortcuts = {
   toggleFloatingChat: "mod+shift+k",
   toggleSidebar: "mod+\\",
   toggleAgentPanel: "mod+shift+l",
+  toggleSurface: "mod+shift+a",
   toggleSplitView: "mod+shift+e",
   toggleZenMode: "mod+shift+j",
   toggleSourceMode: "mod+/",
@@ -225,6 +229,8 @@ export interface Settings {
   /// the settings file (commands/prefs.rs), since window-vs-tab is decided
   /// there, often before any webview exists.
   newDocumentMode: NewDocumentMode;
+  /// The surface a window starts on: the Agent home (default) or Write.
+  defaultHome: DefaultHome;
   /// Whether startup reopens last session's documents (default) or starts
   /// blank. Read by Rust straight from the settings file, since the decision
   /// is made in setup() before any webview exists; this is also what lets an
@@ -288,6 +294,7 @@ const DEFAULT_SETTINGS_RAW: Settings = {
   themeId: "default",
   userThemes: [],
   newDocumentMode: "window",
+  defaultHome: "agent",
   restoreSessionOnStartup: true,
   autoSuggestFilename: true,
   copyTextMode: "readable",

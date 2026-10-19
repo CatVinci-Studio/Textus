@@ -118,7 +118,12 @@ export function useSaveTabs(opts: {
       let rewroteInPlace = false;
       if (content !== tab.content && migrationMappings.length) {
         const event = new CustomEvent(REWRITE_IMAGE_SRCS_EVENT, {
-          detail: { tabId, mappings: migrationMappings, handled: false },
+          detail: {
+            tabId,
+            docPath: picked,
+            mappings: migrationMappings,
+            handled: false,
+          },
         });
         window.dispatchEvent(event);
         rewroteInPlace = event.detail.handled;

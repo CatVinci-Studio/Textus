@@ -11,6 +11,7 @@ export default {
   agentPanelResize: "Redimensionar o painel de IA",
   agentPanelSheet: "Expandir ou recolher o painel de IA",
   agentExpandWindowLabel: "Abrir conversas completas em uma janela separada",
+  shortcutToggleSurface: "Alternar Agent / Escrever",
   shortcutToggleAgentPanel: "Alternar painel de IA",
   menuToggleAgentPanel: "Painel de IA",
   agentPanelEmpty:
@@ -619,6 +620,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   contentWidthAuto: "Adaptável",
   contentWidthStandard: "Padrão",
   contentWidthFull: "Largura total",
+  defaultHomeLabel: "Página inicial",
+  defaultHomeAgent: "Agent",
+  defaultHomeWrite: "Escrever",
   newDocumentModeLabel: "Abrir documentos em",
   newDocumentModeWindow: "Uma nova janela",
   newDocumentModeTab: "Uma aba nesta janela",

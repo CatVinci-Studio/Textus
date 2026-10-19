@@ -246,9 +246,14 @@ function ImageJobCard({
 export function ImageJobsPanel({
   language,
   images,
+  actionableOnly = false,
 }: {
   language: string;
   images: ReturnType<typeof useDocumentImages>;
+  /** In Agent, where the document panel already shows each picture under
+   *  its paragraph: only the ones that need the user - failed, or finished
+   *  but unable to go in by themselves. */
+  actionableOnly?: boolean;
 }) {
   const zh = language.startsWith("zh");
   const [refining, setRefining] = useState<ImageJob | null>(null);
@@ -256,7 +261,14 @@ export function ImageJobsPanel({
   const visible = images.jobs.filter(
     (job) =>
       !["cancelled", "committed"].includes(job.status) &&
-      !images.isLive(job.jobId),
+      !images.isLive(job.jobId) &&
+      (!actionableOnly ||
+        job.status === "failed" ||
+        (job.status === "ready" &&
+          !images.waitsForDraft(job) &&
+          // Set aside with text that is not in the document (rejected):
+          // it comes back with the text, not as a stray Insert.
+          !(images.skipped.has(job.jobId) && !images.anchorLive(job)))),
   );
   if (!visible.length && !images.error && !refining) return null;
   return (

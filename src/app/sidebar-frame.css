@@ -37,6 +37,24 @@
   margin-left: 240px;
 }
 
+/* Agent has its own task list: the files sidebar steps out while Agent is
+   showing, and is back as it was on Write (the sidebar stays "open" - only
+   the surface hides it). */
+:root:has(.agent-workspace-layer:not([hidden])[data-open="true"]) .sidebar {
+  transform: translateX(calc(-100% * var(--motion-travel)));
+  opacity: var(--motion-travel-fade);
+  visibility: hidden;
+  transition:
+    transform var(--dur-base) var(--ease-in),
+    opacity var(--dur-base) var(--ease-in),
+    visibility 0s linear var(--dur-base);
+}
+:root:has(.agent-workspace-layer:not([hidden])[data-open="true"])
+  .sidebar
+  ~ .main-pane {
+  margin-left: 0;
+}
+
 /* Thin, unobtrusive sidebar scrollbar: invisible until the pointer is over
    the sidebar, so it reads like a macOS overlay scrollbar. */
 .sidebar-body::-webkit-scrollbar {

@@ -1,57 +1,122 @@
-/* Clipboard-history sidebar panel. Entries are hairline-separated rather
-   than gap-separated: a clipboard entry is several clamped lines of the
-   user's own prose, so without a rule where one ends and the next begins,
-   two entries read as one run-on block. */
+/* Clipboard-history sidebar panel: a small header (what it is, how many,
+   clear), then one soft card per entry - the user's own prose, clamped,
+   with when it was copied underneath. Cards rather than hairline rows:
+   each is one thing to pick up and drop into the page. */
 .clipboard-history {
   display: flex;
   flex-direction: column;
-  padding: 4px;
+  min-height: 100%;
 }
 
 .clipboard-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   display: flex;
-  justify-content: flex-end;
-  padding: 2px 4px 6px;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 6px;
+  background: var(--sidebar-bg);
+}
+
+.clipboard-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--sidebar-text);
+}
+
+.clipboard-count {
+  min-width: 18px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  font-size: 10.5px;
+  line-height: 16px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--sidebar-text);
+  background: color-mix(in srgb, var(--sidebar-text) 9%, transparent);
 }
 
 .clipboard-clear {
+  margin-left: auto;
   border: none;
   background: none;
+  font: inherit;
   font-size: var(--text-xs);
   color: var(--sidebar-text);
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: pointer;
-  padding: 2px 6px;
-  border-radius: var(--radius-control);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  transition:
+    opacity var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
 }
 
 .clipboard-clear:hover {
-  background: var(--sidebar-hover);
+  background: color-mix(in srgb, var(--danger, #c4473a) 10%, transparent);
+  color: var(--danger, #c4473a);
   opacity: 1;
 }
 
-.clipboard-entry {
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 6px 8px;
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  color: var(--sidebar-text);
-  line-height: 1.45;
+.clipboard-list {
+  display: grid;
+  gap: 6px;
+  padding: 2px 8px 12px;
 }
 
-.clipboard-entry + .clipboard-entry {
-  border-top: 1px solid var(--editor-border);
+.clipboard-entry {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  padding: 9px 10px 8px;
+  border: 1px solid
+    color-mix(in srgb, var(--sidebar-text) 9%, transparent);
+  border-radius: var(--radius-block);
+  background: color-mix(in srgb, var(--editor-bg, #fff) 70%, transparent);
+  color: var(--sidebar-text);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  cursor: pointer;
+  animation: motion-fade-in var(--dur-base) var(--ease-out);
+  transition:
+    border-color var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard),
+    transform var(--dur-instant) var(--ease-standard);
 }
 
 .clipboard-entry:hover {
-  background: var(--sidebar-hover);
+  border-color: color-mix(in srgb, var(--sidebar-text) 18%, transparent);
+  background: var(--editor-bg, #fff);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 6%);
+}
+
+.clipboard-entry:active {
+  transform: scale(0.985);
+}
+
+.clipboard-entry:focus-visible {
+  outline: 2px solid var(--editor-accent, var(--chrome-primary));
+  outline-offset: 1px;
+}
+
+/* Inserted: a brief accent wash says it went into the page. */
+.clipboard-entry.is-inserted {
+  border-color: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 55%,
+    transparent
+  );
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 8%,
+    var(--editor-bg, #fff)
+  );
 }
 
 .clipboard-entry-text {
-  flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
   display: -webkit-box;
@@ -60,32 +125,99 @@
   overflow: hidden;
 }
 
-.clipboard-entry-copy {
-  border: none;
-  background: none;
-  color: var(--sidebar-text);
-  cursor: pointer;
+/* Code and TeX read as what they are. */
+.clipboard-entry-text:is(.is-code, .is-math) {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.clipboard-entry-meta {
   display: flex;
   align-items: center;
-  padding: 0 2px;
-  border-radius: var(--radius-control);
+  gap: 6px;
+  min-height: 18px;
+  font-size: 10.5px;
+  color: var(--sidebar-text);
+  opacity: 0.55;
+}
+
+.clipboard-entry-kind {
+  padding: 0 5px;
+  border-radius: 4px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: color-mix(in srgb, var(--sidebar-text) 10%, transparent);
+}
+
+/* On the meta row's right, so the text keeps the card's full width. */
+.clipboard-entry-actions {
+  position: absolute;
+  right: 5px;
+  bottom: 4px;
+  display: inline-flex;
+  gap: 1px;
   opacity: 0;
-  flex-shrink: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
-.clipboard-entry:hover .clipboard-entry-copy {
-  opacity: 0.7;
+.clipboard-entry:is(:hover, :focus-within) .clipboard-entry-actions {
+  opacity: 1;
 }
 
-.clipboard-entry-copy:hover {
-  opacity: 1 !important;
+.clipboard-entry-action {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--sidebar-text);
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.clipboard-entry-action:hover {
+  opacity: 1;
+  background: var(--sidebar-hover);
+}
+
+.clipboard-entry-action svg {
+  width: 12px;
+  height: 12px;
 }
 
 .clipboard-empty {
-  padding: 16px 12px;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 40px 20px;
   font-size: var(--text-sm);
+  line-height: 1.6;
+  text-align: center;
   color: var(--sidebar-text);
+}
+
+.clipboard-empty > svg {
+  width: 22px;
+  height: 22px;
+  opacity: 0.35;
+}
+
+.clipboard-empty > p {
+  margin: 0;
   opacity: 0.65;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clipboard-entry {
+    animation: none;
+  }
+  .clipboard-entry:active {
+    transform: none;
+  }
 }
 
 /* Chat-history sidebar panel - visually a sibling of the clipboard panel. */
@@ -171,4 +303,35 @@
 
 .chat-history-entry-delete:hover {
   opacity: 1 !important;
+}
+
+/* An untitled document's tree: a way to open a folder instead. */
+.tree-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+}
+.tree-empty p {
+  margin: 0;
+}
+.tree-open-folder {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--control-height-sm);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--sidebar-border, var(--border-color));
+  border-radius: var(--radius-pill);
+  background: var(--sidebar-bg, transparent);
+  color: var(--sidebar-text, inherit);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.tree-open-folder:hover {
+  background: var(--sidebar-hover);
+}
+.tree-open-folder svg {
+  width: 14px;
+  height: 14px;
 }

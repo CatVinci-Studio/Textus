@@ -98,6 +98,13 @@ describe("planningPrompt", () => {
     expect(prompt).toContain("写给孩子");
     expect(prompt).toContain('"sections"');
   });
+
+  it("plans from the request alone when there is no folder material", () => {
+    const prompt = planningPrompt("", "写一篇关于雨夜搬家的短篇小说", true);
+    expect(prompt).not.toContain("项目文件夹");
+    expect(prompt).toContain("用户的要求");
+    expect(prompt).toContain("写一篇关于雨夜搬家的短篇小说");
+  });
 });
 
 describe("illustrations", () => {

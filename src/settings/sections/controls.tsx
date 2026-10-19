@@ -103,6 +103,7 @@ export function ShortcutRow({
       findReplace: t.shortcutFindReplace,
       toggleSidebar: t.shortcutToggleSidebar,
       toggleAgentPanel: t.shortcutToggleAgentPanel,
+      toggleSurface: t.shortcutToggleSurface,
       toggleSplitView: t.shortcutToggleSplitView,
       toggleZenMode: t.shortcutToggleZenMode,
       toggleSourceMode: t.shortcutToggleSourceMode,

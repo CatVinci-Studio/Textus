@@ -11,3 +11,14 @@ it("escapes model-provided alt and caption text and keeps local resource paths",
   expect(markdown).toContain("a\\] \\[link\\]");
   expect(markdown).toContain("\\<img\\>");
 });
+
+it("never captions a picture with the passage it was made from", () => {
+  const markdown = imageMarkdown("assets/a.png", {
+    prompt: "test",
+    anchor: "雨不大，斜着落。\n\n声控灯抖了一下。",
+    alt: "雨不大，斜着落。 声控灯抖了一下。",
+    caption: null,
+    size: "1024x1024",
+  });
+  expect(markdown).toBe("![雨不大，斜着落。 声控灯抖了一下。](assets/a.png)");
+});

@@ -39,6 +39,10 @@ export function recordClipboardEntry(text: string): void {
   history.upsert({ text, at: Date.now() });
 }
 
+export function removeClipboardEntry(text: string): void {
+  history.remove(text);
+}
+
 export function clearClipboardHistory(): void {
   history.clear();
 }

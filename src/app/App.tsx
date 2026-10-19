@@ -6,6 +6,7 @@ import {
   RESTORE_TASK_EVENT,
   type OpenTask,
   NEW_DOCUMENT_EVENT,
+  setWindowSurface,
   setHeadingTitles,
   TITLES_CHANGED,
 } from "../document/doc-tabs";
@@ -62,6 +63,7 @@ import { DraftRestoredToast, UpdateToast, ZenHint } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
 import { FootprintLayer } from "../ai/magic-diary/FootprintLayer";
 import { GlobalDictation } from "../voice/GlobalDictation";
+import { ai } from "../platform/ipc";
 import "./App.css";
 // The Magic Diary's aged-paper skin for the whole window (theme/), applied
 // by html[data-magic-diary]. Loaded here rather than by the plugin: it
@@ -75,6 +77,9 @@ import "../theme/magic-diary-page.css";
  * this folder; this is where they meet. The hooks keep the order they had
  * when all of this was one function, so their effects still run in it.
  */
+/** The folder opened in the sidebar's tree, across launches. */
+const OPENED_FOLDER_KEY = "textus.openedFolder";
+
 function App() {
   const { t, settings, setSettings } = useSettings();
   // Read by tabTitle wherever a tab is named (tab bar, window, export).
@@ -96,10 +101,15 @@ function App() {
     tabState;
   const { updateTab, reorderTab, addBlankTab } = tabState;
   // The Agent home's "New document" (AgentWorkspace): a tab here, whatever
-  // File > New does, so the conversation surface stays in this window.
+  // File > New does, and it stays on Agent - the next task starts on the
+  // new document, right where it was asked for.
   useEffect(() => {
-    window.addEventListener(NEW_DOCUMENT_EVENT, addBlankTab);
-    return () => window.removeEventListener(NEW_DOCUMENT_EVENT, addBlankTab);
+    const open = () => {
+      setWindowSurface(true);
+      addBlankTab();
+    };
+    window.addEventListener(NEW_DOCUMENT_EVENT, open);
+    return () => window.removeEventListener(NEW_DOCUMENT_EVENT, open);
   }, [addBlankTab]);
   // The one save/discard/cancel prompt (close-flow.ts's PendingClose).
   const [pendingClose, setPendingClose] = useState<PendingClose | null>(null);
@@ -145,6 +155,16 @@ function App() {
     activeDirty,
     activeTitle,
   } = useActiveDocument(tabs, activeTabId, t);
+  // A folder opened from the sidebar: the tree starts there, whatever the
+  // document in front - an untitled one included - until it is closed.
+  const [openedFolder, setOpenedFolder] = useState<string | null>(
+    () => localStorage.getItem(OPENED_FOLDER_KEY) || null,
+  );
+  const openFolder = (folder: string | null) => {
+    setOpenedFolder(folder);
+    if (folder) localStorage.setItem(OPENED_FOLDER_KEY, folder);
+    else localStorage.removeItem(OPENED_FOLDER_KEY);
+  };
   useWindowTitle(activeTitle);
   useSessionPaths(tabs);
 
@@ -392,6 +412,9 @@ function App() {
           agentOpen={agentPanel.open}
           agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}
           onToggleAgent={toggleAgentPanel}
+          sidebarOpen={panelOpen}
+          sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
+          onToggleSidebar={toggleSidebar}
         />
         <Sidebar
           open={panelOpen}
@@ -400,7 +423,20 @@ function App() {
           spotlight={sidebarLesson}
           mode={panelMode}
           onModeChange={setPanelMode}
-          rootPath={rootPath}
+          rootPath={openedFolder ?? rootPath}
+          openedFolder={openedFolder}
+          onOpenFolder={() =>
+            void ai
+              .pickWorkspaceRoot()
+              .then((picked) => {
+                if (!picked) return;
+                openFolder(picked);
+                setPanelMode("tree");
+                setPanelOpen(true);
+              })
+              .catch(() => {})
+          }
+          onCloseFolder={() => openFolder(null)}
           activePath={activeTab.path}
           activeContent={activeTab.content}
           onToggle={toggleSidebar}

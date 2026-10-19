@@ -25,3 +25,13 @@ it("finds the blanks to fill, shows them as chips, and leaves code alone", async
     [...view.dom.querySelectorAll(".fill-slot")].map((el) => el.textContent),
   ).toEqual(["【开幕日期】", "【场馆】", "【票务信息】"]);
 });
+
+it("leaves the writer's own bracketed text alone", async () => {
+  editor = await createTestEditor(
+    "【17岁，雨天，别开窗】\n\n她说【那扇窗，还开着】。\n\n## 【第一幕】\n\n【第二幕】\n\n联系：【联系方式】",
+  );
+  const view = editor.ctx.get(editorViewCtx);
+  expect(findFillSlots(view.state.doc).map((s) => s.label)).toEqual([
+    "联系方式",
+  ]);
+});

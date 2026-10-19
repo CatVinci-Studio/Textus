@@ -72,13 +72,22 @@ export function useDocumentImages(
       ),
     [run],
   );
+  /** Pictures the user skipped in the draft: kept, not cancelled, so they
+   *  can still be taken ("万一后悔") - never inserted by themselves. */
+  const [skipped, setSkipped] = useState<ReadonlySet<string>>(new Set());
   const insertingRef = useRef<string | null>(null);
   const alive = useRef(true);
   const latest = useLatest({ workspace, path, sessionId, jobs });
+  // A picture set aside (skipped, or its text rejected) waits on nobody: it
+  // must not hold the Agent's draft open as work in progress.
   const pending =
     starts > 0 ||
     unsettled > 0 ||
-    jobs.some((j) => !["committed", "cancelled", "failed"].includes(j.status));
+    jobs.some(
+      (j) =>
+        !["committed", "cancelled", "failed"].includes(j.status) &&
+        !(j.status === "ready" && skipped.has(j.jobId)),
+    );
   const setMediaPending = workspace.setMediaPending;
   useEffect(() => {
     setMediaPending(pending);
@@ -122,8 +131,14 @@ export function useDocumentImages(
     void refresh();
     return () => {
       alive.current = false;
-      for (const permission of ownedGenerations.values())
-        void media.cancelImageGeneration(permission).catch(() => {});
+      // Only for good: an effect that is merely re-run (a hot reload, a
+      // re-render that re-creates `refresh`) sets `alive` again before
+      // this runs, and must not cancel the pictures still painting.
+      setTimeout(() => {
+        if (alive.current) return;
+        for (const permission of ownedGenerations.values())
+          void media.cancelImageGeneration(permission).catch(() => {});
+      }, 0);
     };
   }, [refresh]);
   /** Frames for pictures not yet queued (a prompt still being refined). */
@@ -476,10 +491,13 @@ export function useDocumentImages(
       (job) =>
         job.status === "ready" &&
         !stuck.has(job.jobId) &&
+        !skipped.has(job.jobId) &&
+        // An adopted task's picture whose paragraph is still in the draft
+        // (only part of it accepted) waits for it rather than failing.
+        anchorLive(job) &&
         (inPlace(job) ||
           // Started in this session (not one left from before a restart).
-          (authorizations.current.has(job.generationId ?? "") &&
-            anchorLive(job))),
+          authorizations.current.has(job.generationId ?? "")),
     );
     if (!ready || autoInserting.current) return;
     autoInserting.current = ready.jobId;
@@ -488,7 +506,7 @@ export function useDocumentImages(
       if (!ok) setStuck((prev) => new Set(prev).add(ready.jobId));
     });
     // inPlace reads refs; `adoptions` re-runs this when a task is adopted.
-  }, [jobs, stuck, adoptions, anchorLive]);
+  }, [jobs, stuck, skipped, adoptions, anchorLive]);
   const stopRunning = useCallback(async () => {
     const permissions = new Map(authorizations.current);
     for (const job of latest.current.jobs)
@@ -526,33 +544,58 @@ export function useDocumentImages(
     },
     [cancel, start],
   );
-  return {
-    jobs,
-    regenerate,
-    /** Right-click illustrations: shown in their frame, not the job list. */
-    isLive: (jobId: string) => {
+  const isLive = useCallback(
+    (jobId: string) => {
       const job = jobs.find((j) => j.jobId === jobId);
       return (
         (liveJobs.current.has(jobId) ||
           (!!job && adoptedTasks.current.has(job.taskId))) &&
-        !stuck.has(jobId)
+        !stuck.has(jobId) &&
+        !skipped.has(jobId)
       );
     },
+    // `adoptions`: adoptedTasks is a ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [jobs, stuck, skipped, adoptions],
+  );
+  const waitsForDraft = useCallback(
+    (job: ImageJob) => {
+      const draft = latest.current.workspace.currentDraft();
+      return (
+        draft?.id === job.taskId &&
+        draft.operations.length > 0 &&
+        !anchorLive(job)
+      );
+    },
+    [latest, anchorLive],
+  );
+  const skip = useCallback((jobId: string) => {
+    setSkipped((prev) => new Set(prev).add(jobId));
+  }, []);
+  const unskip = useCallback((jobId: string) => {
+    setSkipped((prev) => {
+      const next = new Set(prev);
+      next.delete(jobId);
+      return next;
+    });
+  }, []);
+  return {
+    jobs,
+    regenerate,
+    /** Its paragraph is in the document now. */
+    anchorLive,
+    skipped,
+    skip,
+    unskip,
+    /** Right-click illustrations: shown in their frame, not the job list. */
+    isLive,
     /** The Agent's draft holding this picture's anchor was accepted. */
     adoptTask: (taskId: string) => {
       adoptedTasks.current.add(taskId);
       setAdoptions((n) => n + 1);
     },
     /** Its paragraph is still only in the pending draft. */
-    waitsForDraft: (job: ImageJob) => {
-      const draft = latest.current.workspace.currentDraft();
-      return (
-        !inPlace(job) &&
-        draft?.id === job.taskId &&
-        draft.operations.length > 0 &&
-        !anchorLive(job)
-      );
-    },
+    waitsForDraft,
     error,
     inserting,
     start,

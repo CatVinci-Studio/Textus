@@ -11,6 +11,7 @@ export default {
   agentPanelResize: "Изменить ширину панели ИИ",
   agentPanelSheet: "Развернуть или свернуть панель ИИ",
   agentExpandWindowLabel: "Открывать полные диалоги в отдельном окне",
+  shortcutToggleSurface: "Переключить Agent / Письмо",
   shortcutToggleAgentPanel: "Панель ИИ",
   menuToggleAgentPanel: "Панель ИИ",
   agentPanelEmpty:
@@ -624,6 +625,9 @@ export default {
   contentWidthAuto: "Адаптивная",
   contentWidthStandard: "Стандартная",
   contentWidthFull: "Во всю ширину",
+  defaultHomeLabel: "Начальный экран",
+  defaultHomeAgent: "Agent",
+  defaultHomeWrite: "Письмо",
   newDocumentModeLabel: "Открывать документы",
   newDocumentModeWindow: "В новом окне",
   newDocumentModeTab: "Во вкладке этого окна",

@@ -90,17 +90,24 @@ export function planningPrompt(
   pictures: string[] = [],
 ): string {
   const listed = pictures.map((p) => `- ${p}`).join("\n");
+  const fromFolder = !!material.trim();
   return [
-    zh
-      ? "你是写作项目的规划助手。下面是用户在项目文件夹里准备的提纲、大纲、要求等资料。请据此规划要写的文档。"
-      : "You plan a writing project. Below is the outline, requirements and notes the user prepared in their project folder. Plan the document from them.",
+    fromFolder
+      ? zh
+        ? "你是写作项目的规划助手。下面是用户在项目文件夹里准备的提纲、大纲、要求等资料。请据此规划要写的文档。"
+        : "You plan a writing project. Below is the outline, requirements and notes the user prepared in their project folder. Plan the document from them."
+      : zh
+        ? "你是写作项目的规划助手。请根据用户的要求规划要写的文档。"
+        : "You plan a writing project. Plan the document from the user's requirements.",
     material,
     extra.trim()
-      ? `${zh ? "用户补充要求" : "Further requirements from the user"}:\n${extra.trim()}`
+      ? fromFolder
+        ? `${zh ? "用户补充要求" : "Further requirements from the user"}:\n${extra.trim()}`
+        : `${zh ? "用户的要求" : "The user's requirements"}:\n${extra.trim()}`
       : "",
     zh
-      ? '只输出一个 JSON 对象：{"title":"文档标题","guide":"所有章节都要遵守的写作要求摘要（文风、受众、篇幅、术语、格式等，300 字以内）","sections":[{"title":"章节标题","brief":"本节要写的要点（100 字以内）","length":本节建议字数,"image":是否适合配一张插图}]}。章节顺序即写作顺序，严格依据资料，不要编造资料中没有的结构；没有明确大纲时按资料内容合理拆成 3–8 节。不要调用工具，不要输出其他文字。'
-      : 'Output ONLY a JSON object: {"title":"document title","guide":"the requirements every section must follow (tone, audience, length, terminology, format) in under 80 words","sections":[{"title":"section heading","brief":"what this section covers, under 40 words","length":suggested words,"image":whether it suits one illustration}]}. Sections in writing order, following the material; without an explicit outline, split the content into 3-8 sections. No tools, no other text.',
+      ? '只输出一个 JSON 对象：{"title":"文档标题","guide":"所有章节都要遵守的写作要求摘要（文风、受众、篇幅、术语、格式等，300 字以内）","sections":[{"title":"章节标题","brief":"本节要写的要点（100 字以内）","length":本节建议字数,"image":是否适合配一张插图}]}。章节顺序即写作顺序，有资料时严格依据资料，不要编造资料中没有的结构；没有明确大纲时按内容合理拆成 3–8 节。不要调用工具，不要输出其他文字。'
+      : 'Output ONLY a JSON object: {"title":"document title","guide":"the requirements every section must follow (tone, audience, length, terminology, format) in under 80 words","sections":[{"title":"section heading","brief":"what this section covers, under 40 words","length":suggested words,"image":whether it suits one illustration}]}. Sections in writing order, following the material when there is some; without an explicit outline, split the content into 3-8 sections. No tools, no other text.',
     pictures.length
       ? zh
         ? `项目里已有这些图片：\n${listed}\n内容合适的章节直接用其中一张：在该节写 "picture":"图片路径"（照抄上面的路径），每张最多用一次。`

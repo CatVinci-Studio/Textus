@@ -137,10 +137,11 @@ pub fn image_tool() -> Tool {
             name: "generate_image",
             description: "Generate one illustration for the document - offered only when the user switched images on for this request, which is their request for pictures. Returns a background job immediately: continue without waiting. Write the prompt yourself (subject, setting, composition, light, style). `anchor` is a verbatim unique heading or passage, from the document or from a section you proposed in this task, and the picture is inserted right after it automatically - no approval step. Never insert a temporary URL into Markdown. Maximum two image requests per user request, including retries.",
             parameters: json!({"type":"object", "properties": {
-                "prompt":{"type":"string"}, "anchor":{"type":"string"}, "alt":{"type":"string"}, "caption":{"type":"string"},
+                "prompt":{"type":"string"}, "anchor":{"type":"string"}, "alt":{"type":"string","description":"A short description of what the picture shows, for screen readers - not the passage's text."},
+                "caption":{"type":"string","description":"The caption under the picture: a short title you write for it (under 20 characters in Chinese, 12 words otherwise), in the document's language - never a sentence copied from the passage."},
                 "size":{"type":"string","enum":["1024x1024","1536x1024","1024x1536"]},
                 "quality":{"type":"string","enum":["auto","low","medium","high","standard","hd"]}
-            }, "required":["prompt","anchor","alt"]}),
+            }, "required":["prompt","anchor","alt","caption"]}),
         },
         run: |ctx, arguments| {
             let Some(context) = ctx.image.filter(|c| c.allowed()) else { return "Image generation denied: no task authorization or a read-only mode.".into(); };

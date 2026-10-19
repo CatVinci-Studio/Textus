@@ -82,6 +82,8 @@ export interface ChatBodyProps {
     proposals: { callId: string; proposal: EditProposal }[],
   ) => void;
   onAcceptProposal: (callId: string, text?: string) => void;
+  /** Takes a rejected change after all (ChatMessages). */
+  onRestoreProposal?: (callId: string, proposal: EditProposal) => void;
   /** See ChatMessages' proposalSentences, onDecideSentence and
    *  onRevealProposal - the card's view of the in-text decisions. */
   proposalSentences?: ChatMessagesProps["proposalSentences"];
@@ -140,6 +142,12 @@ export interface ChatBodyProps {
   dockActions?: React.ReactNode;
   /** The host's entries in the composer's "+" menu. */
   composerMenu?: ComposerMenuItem[];
+  /** In the composer's toolbar (ChatComposer's toolbarExtra). */
+  composerExtra?: React.ReactNode;
+  /** Takes a send over before it becomes a chat request - true when it
+   *  did (the Agent's auto-writing, started from a send in Create mode with
+   *  project material picked). The composer clears as after any send. */
+  interceptSend?: (message: string, options: AgentRequestOptions) => boolean;
 }
 
 /** The Quick Ask nav bar's whole contract - see ChatBodyProps.quickReview. */
@@ -225,6 +233,7 @@ export function ChatBody({
   pendingCount,
   onProposals,
   onAcceptProposal,
+  onRestoreProposal,
   proposalSentences,
   onDecideSentence,
   onRevealProposal,
@@ -243,6 +252,8 @@ export function ChatBody({
   quickReview,
   dockActions,
   composerMenu,
+  composerExtra,
+  interceptSend,
 }: ChatBodyProps) {
   const phone = usePhoneLayout();
   const {
@@ -388,6 +399,7 @@ export function ChatBody({
     // Signals the interactive tutorial's "ask AI something" step - a real
     // send, not just opening the panel.
     if (tutorialMock) window.dispatchEvent(new Event(AI_MESSAGE_SENT_EVENT));
+    if (interceptSend?.(message, options)) return true;
     return dispatchSend(({ selectionMarkdown: selection, cursor }) => {
       // Rewrites of the selection come back as replace_selection tool calls
       // (see AGENT_TOOL_INSTRUCTIONS in src-tauri/src/ai/agent.rs); the tag
@@ -543,6 +555,7 @@ export function ChatBody({
                     labels={labels}
                     proposalStatus={proposalStatus}
                     onAcceptProposal={onAcceptProposal}
+                    onRestoreProposal={onRestoreProposal}
                     proposalSentences={proposalSentences}
                     onDecideSentence={onDecideSentence}
                     onRevealProposal={onRevealProposal}
@@ -578,6 +591,7 @@ export function ChatBody({
                 labels={labels}
                 proposalStatus={proposalStatus}
                 onAcceptProposal={onAcceptProposal}
+                onRestoreProposal={onRestoreProposal}
                 proposalSentences={proposalSentences}
                 onDecideSentence={onDecideSentence}
                 onRevealProposal={onRevealProposal}
@@ -670,6 +684,7 @@ export function ChatBody({
         focusOnOpen={variant === "quick" || !phone}
         dockActions={dockActions}
         menuItems={composerMenu}
+        toolbarExtra={composerExtra}
         defaultWebSearch={defaultWebSearch}
         onSend={handleSend}
         onStop={stop}

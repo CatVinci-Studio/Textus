@@ -16,6 +16,7 @@ const shortcuts: Shortcuts = {
   findReplace: "mod+f",
   toggleSidebar: "mod+\\",
   toggleAgentPanel: "mod+shift+l",
+  toggleSurface: "mod+shift+a",
   toggleSplitView: "mod+shift+e",
   toggleZenMode: "mod+shift+j",
   toggleSourceMode: "mod+/",

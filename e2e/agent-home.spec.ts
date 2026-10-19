@@ -20,7 +20,7 @@ test("starts on Agent and keeps composer, editor and Undo across surface switche
   await page.screenshot({ path: testInfo.outputPath("agent-home-light.png") });
   // Agent → Write at the Agent header's end; Write → Agent at the window
   // bar's start.
-  const toWrite = page.getByRole("button", { name: /^Write ·/ });
+  const toWrite = page.getByRole("button", { name: /^(Write|写作) ·/ });
   const toAgent = page.getByRole("button", { name: "Agent", exact: true });
   await toWrite.click();
   await pasteMarkdown(page, "# Persistent document\n\nKeep my Undo history.");

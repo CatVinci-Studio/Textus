@@ -15,6 +15,39 @@ import { documentRevisionKey } from "./revision-plugin";
 export interface DraftOperation {
   callId: string;
   proposal: EditProposal;
+  /** One paragraph of a change split for per-paragraph decisions
+   *  (useDocumentWorkspace's explode): the change it came from, its place
+   *  in it, and every part's text - how it finds its neighbours. */
+  parent?: string;
+  part?: number;
+  parts?: string[];
+}
+
+/** Where a split change's part goes: next to a neighbouring part already
+ *  in the document (after the nearest earlier one, else before the nearest
+ *  later one), so parts accepted in any order keep their order. With no
+ *  neighbour in yet, the change's own placement. */
+function placed(
+  ctx: Ctx,
+  state: EditorState,
+  op: DraftOperation,
+): EditProposal {
+  const { parts, part } = op;
+  if (!op.parent || !parts || part === undefined) return op.proposal;
+  const blocks = serializeBlocks(ctx, state.doc);
+  const text = op.proposal.text ?? "";
+  for (let j = part - 1; j >= 0; j--)
+    if (findMarkdownMatch(blocks, parts[j]))
+      return { ...op.proposal, action: "insert_after", anchor: parts[j], text };
+  for (let j = part + 1; j < parts.length; j++)
+    if (findMarkdownMatch(blocks, parts[j]))
+      return {
+        ...op.proposal,
+        action: "insert_before",
+        anchor: parts[j],
+        text,
+      };
+  return op.proposal;
 }
 export interface DocumentDraft {
   id: string;
@@ -84,12 +117,19 @@ function resolve(
   proposal: EditProposal,
   selection: DocumentDraft["selection"],
 ) {
-  if (proposal.action === "append")
-    return {
-      from: state.doc.content.size,
-      to: state.doc.content.size,
-      text: proposal.text ?? "",
-    };
+  if (proposal.action === "append") {
+    // Empty paragraphs at the end (a blank document is one) are taken over
+    // rather than kept: appended after them they stayed as blank lines -
+    // above the title on a new document, between sections on a long run.
+    const { doc } = state;
+    let from = doc.content.size;
+    for (let i = doc.childCount - 1; i >= 0; i--) {
+      const block = doc.child(i);
+      if (block.type.name !== "paragraph" || block.content.size) break;
+      from -= block.nodeSize;
+    }
+    return { from, to: doc.content.size, text: proposal.text ?? "" };
+  }
   if (
     proposal.action === "replace_selection" ||
     proposal.action === "insert_at_cursor"
@@ -128,27 +168,39 @@ function transaction(ctx: Ctx, state: EditorState, draft: DocumentDraft) {
   // operations touching the same block require a new proposal, not a guess.
   const ranges: { from: number; to: number }[] = [];
   const ids = new Set<string>();
-  for (const { callId, proposal } of draft.operations) {
+  const parents = new Set<string>();
+  for (const op of draft.operations) {
+    const { callId } = op;
+    const proposal = placed(ctx, state, op);
     if (
       ids.has(callId) ||
       (proposal.action !== "delete" && typeof proposal.text !== "string")
     )
       return null;
     ids.add(callId);
+    // A later part of a change whose earlier part goes in first is placed
+    // beside it once that is applied, below - not against the base.
+    if (op.parent) {
+      if (parents.has(op.parent)) continue;
+      parents.add(op.parent);
+    }
     const range = resolve(ctx, state, proposal, draft.selection);
-    if (!range || ranges.some((r) => range.from < r.to && r.from < range.to))
-      return null;
+    if (!range) return null;
+    // Appends stack at the end in order - each takes the blank tail only
+    // when it is still there - so they never collide with each other.
+    if (proposal.action === "append") continue;
+    if (ranges.some((r) => range.from < r.to && r.from < range.to)) return null;
     ranges.push(range);
   }
   let next = state;
   const batch = state.tr;
   try {
-    for (const { proposal } of draft.operations) {
+    for (const op of draft.operations) {
       const mapped = {
         from: batch.mapping.map(draft.selection.from),
         to: batch.mapping.map(draft.selection.to),
       };
-      const target = resolve(ctx, next, proposal, mapped);
+      const target = resolve(ctx, next, placed(ctx, next, op), mapped);
       if (!target || !parseMarkdownSource(ctx, target.text)) return null;
       const tr = applyEditRange(next, ctx, target.from, target.to, target.text);
       for (const step of tr.steps) batch.step(step);

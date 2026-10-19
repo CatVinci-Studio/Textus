@@ -6,6 +6,7 @@ import {
   type CompletionTone,
   type AgentMode,
   type GrammarStrictness,
+  type DefaultHome,
   type NewDocumentMode,
   type CopyTextMode,
   type ContentWidth,
@@ -165,6 +166,23 @@ export function SettingsPanel({
                 ))}
               </Select>
             </SettingRow>
+            {!isIOSApp && (
+              <SettingRow label={t.defaultHomeLabel}>
+                <Select
+                  className="settings-select"
+                  aria-label={t.defaultHomeLabel}
+                  value={settings.defaultHome}
+                  onChange={(e) =>
+                    setSettings({
+                      defaultHome: e.target.value as DefaultHome,
+                    })
+                  }
+                >
+                  <option value="agent">{t.defaultHomeAgent}</option>
+                  <option value="write">{t.defaultHomeWrite}</option>
+                </Select>
+              </SettingRow>
+            )}
             {canUseWindows && (
               <>
                 <SettingRow label={t.newDocumentModeLabel}>
@@ -566,6 +584,13 @@ export function SettingsPanel({
             <ShortcutRow
               label={t.shortcutToggleAgentPanel}
               action="toggleAgentPanel"
+              shortcuts={settings.shortcuts}
+              setSettings={setSettings}
+              t={t}
+            />
+            <ShortcutRow
+              label={t.shortcutToggleSurface}
+              action="toggleSurface"
               shortcuts={settings.shortcuts}
               setSettings={setSettings}
               t={t}

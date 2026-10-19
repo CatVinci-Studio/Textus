@@ -104,6 +104,8 @@ export const pendingTaskRestores = new Map<string, string>();
 export const REWRITE_IMAGE_SRCS_EVENT = "textus:rewrite-image-srcs";
 export interface RewriteImageSrcs {
   tabId: string;
+  /** Where the document now lives: the new relative srcs resolve here. */
+  docPath: string;
   mappings: { old: string; new: string }[];
   handled: boolean;
 }
@@ -132,6 +134,9 @@ export function getWindowSurface(): boolean | null {
 export function setWindowSurface(agent: boolean) {
   windowSurface = agent;
 }
+/** The switch-surface shortcut: the active document's editor flips
+ *  between Agent and Write (useGlobalShortcuts, MilkdownEditor). */
+export const TOGGLE_SURFACE_EVENT = "textus:toggle-surface";
 
 /** Nothing to lose: no file, no text, no Agent work. */
 export function tabIsPristine(tab: DocTab): boolean {

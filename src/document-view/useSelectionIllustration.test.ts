@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { editorViewCtx, type Editor } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
 const api = vi.hoisted(() => ({
@@ -131,4 +131,20 @@ it("keeps the illustration when the document is edited during refinement", async
     { live: true },
   );
   expect(result.current.error).toBeNull();
+});
+
+describe("parseRefined", () => {
+  it("reads the caption and prompt", async () => {
+    const { parseRefined } = await import("./useSelectionIllustration");
+    expect(
+      parseRefined('{"caption":"雨夜搬家","prompt":"Rainy dusk"}'),
+    ).toEqual({ caption: "雨夜搬家", prompt: "Rainy dusk" });
+  });
+  it("takes a plain reply as the prompt, with no caption", async () => {
+    const { parseRefined } = await import("./useSelectionIllustration");
+    expect(parseRefined(" Polished forest ")).toEqual({
+      caption: "",
+      prompt: "Polished forest",
+    });
+  });
 });

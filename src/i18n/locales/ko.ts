@@ -11,6 +11,7 @@ export default {
   agentPanelResize: "AI 패널 크기 조절",
   agentPanelSheet: "AI 패널 펼치기 또는 접기",
   agentExpandWindowLabel: "전체 대화를 별도 창에서 열기",
+  shortcutToggleSurface: "Agent / 글쓰기 전환",
   shortcutToggleAgentPanel: "AI 패널 보기/숨기기",
   menuToggleAgentPanel: "AI 패널",
   agentPanelEmpty:
@@ -604,6 +605,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   contentWidthAuto: "자동",
   contentWidthStandard: "표준",
   contentWidthFull: "전체 너비",
+  defaultHomeLabel: "시작 화면",
+  defaultHomeAgent: "Agent",
+  defaultHomeWrite: "글쓰기",
   newDocumentModeLabel: "문서 열기 위치",
   newDocumentModeWindow: "새 창",
   newDocumentModeTab: "현재 창의 새 탭",

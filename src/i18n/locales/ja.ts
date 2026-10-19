@@ -11,6 +11,7 @@ export default {
   agentPanelResize: "AIパネルの幅を調整",
   agentPanelSheet: "AIパネルを広げる・縮める",
   agentExpandWindowLabel: "会話全体を別ウィンドウで開く",
+  shortcutToggleSurface: "Agent / 執筆を切り替え",
   shortcutToggleAgentPanel: "AIパネルの表示切替",
   menuToggleAgentPanel: "AIパネル",
   agentPanelEmpty:
@@ -607,6 +608,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   contentWidthAuto: "自動",
   contentWidthStandard: "標準",
   contentWidthFull: "全幅",
+  defaultHomeLabel: "起動時の画面",
+  defaultHomeAgent: "Agent",
+  defaultHomeWrite: "執筆",
   newDocumentModeLabel: "文書を開く方法",
   newDocumentModeWindow: "新しいウィンドウ",
   newDocumentModeTab: "このウィンドウの新しいタブ",

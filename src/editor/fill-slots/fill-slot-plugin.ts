@@ -26,7 +26,14 @@ export interface FillSlotRequest {
   rect: { left: number; top: number; bottom: number };
 }
 
-/** The blanks in `doc`, in order. Code is left alone. */
+/** Sentence punctuation: a blank names one thing (开幕日期, 场馆); a bracket
+ *  holding a phrase like 【17岁，雨天，别开窗】 is the writer's own text. */
+const PHRASE = /[，,。！!？?；;、：:…]/;
+
+/** The blanks in `doc`, in order. Code is left alone, and so are brackets
+ *  that are not blanks: a phrase (PHRASE), or a bracket standing as a whole
+ *  line on its own - a scene or section mark in prose (【第一幕】), where
+ *  the Agent's blanks always sit inside a sentence or after a label. */
 export function findFillSlots(
   doc: ProseNode,
 ): { from: number; to: number; label: string }[] {
@@ -36,6 +43,12 @@ export function findFillSlots(
     if (!node.isText || !node.text) return true;
     if (node.marks.some((mark) => mark.type.spec.code)) return false;
     for (const match of node.text.matchAll(FILL_SLOT)) {
+      if (
+        PHRASE.test(match[1]) ||
+        parent?.textContent.trim() === match[0] ||
+        parent?.type.name === "heading"
+      )
+        continue;
       const from = pos + (match.index ?? 0);
       slots.push({ from, to: from + match[0].length, label: match[1].trim() });
     }

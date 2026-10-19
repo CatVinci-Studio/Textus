@@ -12,6 +12,7 @@ export default {
   agentPanelSheet: "KI-Bereich auf- oder zuklappen",
   agentExpandWindowLabel:
     "Vollständige Unterhaltungen in einem eigenen Fenster öffnen",
+  shortcutToggleSurface: "Agent / Schreiben wechseln",
   shortcutToggleAgentPanel: "KI-Bereich ein-/ausblenden",
   menuToggleAgentPanel: "KI-Bereich",
   agentPanelEmpty:
@@ -620,6 +621,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   contentWidthAuto: "Adaptiv",
   contentWidthStandard: "Standard",
   contentWidthFull: "Volle Breite",
+  defaultHomeLabel: "Startseite",
+  defaultHomeAgent: "Agent",
+  defaultHomeWrite: "Schreiben",
   newDocumentModeLabel: "Dokumente öffnen",
   newDocumentModeWindow: "In neuem Fenster",
   newDocumentModeTab: "Als Tab in diesem Fenster",

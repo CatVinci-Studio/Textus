@@ -38,6 +38,7 @@ const shortcuts: Shortcuts = {
   toggleFloatingChat: "mod+shift+k",
   toggleSidebar: "mod+\\",
   toggleAgentPanel: "mod+shift+l",
+  toggleSurface: "mod+shift+a",
   toggleSplitView: "mod+shift+e",
   toggleZenMode: "mod+shift+j",
   toggleSourceMode: "mod+/",

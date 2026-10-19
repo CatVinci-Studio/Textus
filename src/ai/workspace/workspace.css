@@ -15,25 +15,55 @@
 .agent-workspace-layer[hidden] {
   display: none;
 }
+/* Agent comes forward: from a little smaller and out of focus, on the
+   spring; it steps back the same way, quicker, as the page comes up
+   (.surface-arrive below). Reduced motion keeps only the fade. */
 .agent-workspace-layer > .agent-workspace {
   pointer-events: auto;
   opacity: 1;
   transform: none;
+  filter: none;
   visibility: visible;
+  transform-origin: 50% 30%;
   transition:
     opacity var(--dur-base) var(--ease-out),
-    transform var(--dur-base) var(--ease-out),
+    transform var(--dur-slow) var(--ease-spring),
+    filter var(--dur-base) var(--ease-out),
     visibility 0s linear 0s;
 }
 .agent-workspace-layer[data-open="false"] > .agent-workspace {
   pointer-events: none;
   opacity: 0;
-  transform: translateY(var(--motion-distance-sm));
+  transform: scale(var(--scale-enter-dialog))
+    translateY(var(--motion-distance-md));
   visibility: hidden;
   transition:
     opacity var(--dur-fast) var(--ease-in),
     transform var(--dur-fast) var(--ease-in),
+    filter var(--dur-fast) var(--ease-in),
     visibility 0s linear var(--dur-fast);
+}
+/* A blur costs a main-thread composite on WebKitGTK: not on Linux. */
+:root:not([data-platform="linux"])
+  .agent-workspace-layer[data-open="false"]
+  > .agent-workspace {
+  filter: blur(6px);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .agent-workspace-layer[data-open="false"] > .agent-workspace {
+    filter: none;
+  }
+}
+/* The page, back from Agent: it rises into place (the editor's root,
+   for the length of the animation - MilkdownEditor). */
+.surface-arrive {
+  animation: surface-arrive var(--dur-slow) var(--ease-spring) both;
+}
+@keyframes surface-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--motion-distance-md) * 1.5));
+  }
 }
 
 .agent-workspace {
@@ -130,8 +160,27 @@
 .workspace-header-spacer {
   flex: 1;
 }
+/* Folds the task list away in a wide window; opens it as a drawer in a
+   narrow one. */
 .workspace-tasks-toggle {
-  display: none;
+  opacity: 0.7;
+}
+.workspace-tasks-toggle:hover {
+  opacity: 1;
+}
+.workspace-columns {
+  transition: grid-template-columns var(--dur-slow) var(--ease-out);
+}
+@media (min-width: 1001px) {
+  .agent-home.tasks-hidden .workspace-columns {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+  .agent-home.tasks-hidden .workspace-tasks {
+    visibility: hidden;
+    padding-inline: 0;
+    border-right-width: 0;
+    overflow: hidden;
+  }
 }
 .workspace-status {
   display: inline-flex;
@@ -187,6 +236,11 @@
   grid-template-columns: 220px minmax(0, 1fr);
   flex: 1;
   min-height: 0;
+  /* The draft panel's width and the room the conversation leaves for it
+     are both shares of THIS box (cqw): as percentages, the room was a
+     share of the narrower conversation column, and the panel covered the
+     right edge of what was beside it (the auto-writing card's buttons). */
+  container-type: inline-size;
 }
 .workspace-tasks-scrim {
   display: none;
@@ -564,7 +618,7 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  width: min(46%, 520px);
+  width: min(46cqw, 520px);
   min-width: 0;
   padding: var(--space-4) var(--space-5) 0;
   overflow: auto;
@@ -591,7 +645,7 @@
     visibility 0s linear var(--dur-slow-exit);
 }
 .agent-home.has-draft-open .workspace-conversation {
-  padding-right: calc(min(46%, 520px) + var(--space-4));
+  padding-right: calc(min(46cqw, 520px) + var(--space-4));
   max-width: none;
 }
 .workspace-preview > header {
@@ -713,9 +767,6 @@
 
 /* ---------- Narrow windows: the task list becomes a drawer ---------- */
 @media (max-width: 1000px) {
-  .workspace-tasks-toggle {
-    display: grid;
-  }
   .workspace-columns {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -755,10 +806,10 @@
     pointer-events: auto;
   }
   .workspace-preview {
-    width: min(56%, 460px);
+    width: min(56cqw, 460px);
   }
   .agent-home.has-draft-open .workspace-conversation {
-    padding-right: calc(min(56%, 460px) + var(--space-3));
+    padding-right: calc(min(56cqw, 460px) + var(--space-3));
     padding-left: var(--space-4);
   }
 }
@@ -778,56 +829,109 @@
   }
 }
 
-/* ---------- Surface navigation ----------
-   One shape on both sides: Write → Agent leads the window bar ("← Agent"),
-   Agent → Write ends the Agent header ("写作 →"). */
-/* Sized for the 28px window bar it sits in: a 24px pill with body-size
-   text, readable at a glance in a large window. */
-.surface-jump {
+/* ---------- Agent | 写作 (SurfaceSwitch.tsx) ----------
+   One segmented switch at the window bar's start, in both surfaces. The
+   highlight slides to the side that is on with a little give (the bouncy
+   spring), and the icon of the side just turned on gives a small pop. */
+.surface-switch {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 24px;
-  margin-left: 4px;
-  padding: 0 11px;
-  border: 1px solid
-    color-mix(in srgb, var(--editor-border, #8884) 90%, transparent);
+  height: 26px;
+  margin-left: 2px;
+  padding: 2px;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--editor-text) 3%, transparent);
-  color: var(--editor-text);
-  font: inherit;
-  font-size: var(--text-md);
-  font-weight: 500;
-  cursor: pointer;
+  background: color-mix(in srgb, var(--editor-text) 6%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--editor-border, #8884) 55%, transparent);
   animation: motion-fade-in var(--dur-base) var(--ease-out);
+}
+.surface-switch-thumb {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  z-index: 0;
+  border-radius: var(--radius-pill);
+  background: var(--editor-bg, var(--bg));
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 8%),
+    0 0 0 0.5px color-mix(in srgb, var(--editor-border, #8884) 80%, transparent);
+}
+.surface-switch.is-ready .surface-switch-thumb {
   transition:
-    color var(--dur-fast) var(--ease-standard),
-    background-color var(--dur-fast) var(--ease-standard);
+    transform var(--dur-sheet, 380ms) var(--ease-spring-bouncy),
+    width var(--dur-sheet, 380ms) var(--ease-spring-bouncy),
+    scale var(--dur-fast) var(--ease-out);
 }
-.surface-jump:hover {
+/* Pressed: the highlight gives under the finger before it moves. */
+.surface-switch:has(.surface-switch-option:active) .surface-switch-thumb {
+  scale: 0.96;
+}
+.surface-switch-option {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 11px 0 9px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--editor-muted, inherit);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+.surface-switch-option:not([aria-pressed="true"]):hover,
+.surface-switch-option[aria-pressed="true"] {
   color: var(--editor-text);
-  background: var(--sidebar-hover, #8882);
 }
-.surface-jump svg {
-  display: block;
+.surface-switch-option:focus-visible {
+  outline: 2px solid var(--editor-accent, var(--chrome-primary));
+  outline-offset: 1px;
+}
+.surface-switch-option svg {
+  flex: none;
   width: 13px;
   height: 13px;
-  opacity: 0.7;
+  transition:
+    color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-base) var(--ease-spring);
 }
-.surface-jump > span:first-child {
-  transition: transform var(--dur-fast) var(--ease-out);
+.surface-switch-option:not([aria-pressed="true"]):hover svg {
+  transform: scale(1.12);
 }
-.surface-jump-agent:hover > span:first-child {
-  transform: translateX(-2px);
+.surface-switch-option.is-agent[aria-pressed="true"] svg {
+  color: var(--editor-accent, var(--chrome-primary));
 }
-.surface-jump-write {
-  margin: 0 4px 0 0;
+.surface-switch.is-ready .surface-switch-option[aria-pressed="true"] svg {
+  animation: surface-switch-pop var(--dur-sheet, 380ms)
+    var(--ease-spring-bouncy);
 }
-.surface-jump-write > span:last-child {
-  transition: transform var(--dur-fast) var(--ease-out);
+@keyframes surface-switch-pop {
+  0% {
+    transform: scale(0.6) rotate(-20deg);
+  }
+  60% {
+    transform: scale(1.15) rotate(6deg);
+  }
+  100% {
+    transform: none;
+  }
 }
-.surface-jump-write:hover > span:last-child {
-  transform: translateX(2px);
+@media (prefers-reduced-motion: reduce) {
+  .surface-switch.is-ready .surface-switch-option[aria-pressed="true"] svg {
+    animation: none;
+  }
+  .surface-switch:has(.surface-switch-option:active) .surface-switch-thumb {
+    scale: none;
+  }
 }
 
 /* Write is a quiet page; media actions live in selection menus and Agent. */
@@ -959,16 +1063,25 @@
   display: none;
 }
 
-/* "New document" in the Agent header: a quiet pill, icon-led. */
+/* "New document" in the Agent header: a quiet text button that shows its
+   pill shape only on hover. */
 .workspace-new-document {
+  gap: 5px;
+  height: 24px;
+  padding: 0 11px;
+  border-color: transparent;
   color: var(--editor-muted, inherit);
+  font-size: var(--text-md);
+  font-weight: 500;
 }
 .workspace-new-document svg {
   width: 12px;
   height: 12px;
+  opacity: 0.8;
 }
-.workspace-new-document:hover {
+.workspace-new-document:not(:disabled):hover {
   color: var(--editor-text);
+  background: var(--sidebar-hover, #8882);
 }
 
 /* A past task from another document names that document under its title. */
@@ -1145,7 +1258,9 @@
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--editor-border, #8884);
-  border-radius: var(--radius-button);
+  /* Not the pill radius of buttons: on a two-line field it made an oval
+     the floating microphone sat on the rim of. */
+  border-radius: var(--radius-control);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -1204,7 +1319,11 @@
   margin: 0;
   font-size: var(--text-md);
   font-weight: 600;
+  line-height: 1.4;
 }
+/* The outline as a timeline: a ring per section on a thin rail, the title,
+   its brief, and the picture it gets on a line of its own - nothing beside
+   the text, so a narrow column keeps the full width for reading. */
 .auto-writer-outline {
   display: grid;
   gap: 2px;
@@ -1213,19 +1332,45 @@
   list-style: none;
 }
 .auto-writer-outline li {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  padding: 6px var(--space-2);
-  border-radius: var(--radius-button);
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "mark section remove"
+    ". picture picture";
+  column-gap: var(--space-3);
+  row-gap: 6px;
+  align-items: start;
+  padding: 8px var(--space-2);
+  border-radius: var(--radius-block);
   animation: motion-rise-in var(--dur-base) var(--ease-out) both;
-  transition: opacity var(--dur-base) var(--ease-standard);
+  transition:
+    opacity var(--dur-base) var(--ease-standard),
+    background-color var(--dur-base) var(--ease-standard);
+}
+/* The rail: from under this ring to the next one. */
+.auto-writer-outline li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--space-2) + 6.25px);
+  top: 27px;
+  bottom: -11px;
+  width: 1.5px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--editor-text) 10%, transparent);
+}
+.auto-writer-outline li.is-done:not(:last-child)::before {
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 45%,
+    transparent
+  );
 }
 .auto-writer-outline li.is-writing,
 .auto-writer-outline li.is-review {
   background: color-mix(
     in srgb,
-    var(--editor-accent, var(--chrome-primary)) 7%,
+    var(--editor-accent, var(--chrome-primary)) 6%,
     transparent
   );
 }
@@ -1235,18 +1380,55 @@
 .auto-writer-outline li.is-skipped strong {
   text-decoration: line-through;
 }
+.auto-writer-outline .auto-writer-mark {
+  grid-area: mark;
+}
 .auto-writer-section {
+  grid-area: section;
   display: grid;
-  gap: 2px;
-  flex: 1;
+  gap: 3px;
   min-width: 0;
 }
 .auto-writer-section strong {
   font-weight: 500;
+  line-height: 1.45;
 }
+/* Briefs stay short until their section is the one being written. */
 .auto-writer-section small {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   font-size: var(--text-xs);
-  line-height: 1.5;
+  line-height: 1.55;
+  color: var(--editor-muted, inherit);
+}
+.is-writing .auto-writer-section small,
+.is-review .auto-writer-section small {
+  -webkit-line-clamp: unset;
+}
+.auto-writer-outline .auto-writer-picture,
+.auto-writer-outline .auto-writer-picture-tag {
+  grid-area: picture;
+  justify-self: start;
+}
+.auto-writer-picture-tag svg {
+  flex: none;
+  width: 11px;
+  height: 11px;
+}
+.auto-writer-picture-tag > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.auto-writer-outline .auto-writer-remove {
+  grid-area: remove;
+  margin-top: -2px;
+  opacity: 0;
+}
+.auto-writer-outline li:hover .auto-writer-remove,
+.auto-writer-outline .auto-writer-remove:focus-visible {
   opacity: 0.55;
 }
 /* The outline's titles read as text, editable in place. */
@@ -1324,7 +1506,11 @@
 }
 .auto-writer-revise {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
+}
+.auto-writer-revise > input {
+  flex: 1 1 160px;
 }
 .auto-writer-error {
   margin: 0;
@@ -1548,16 +1734,17 @@ button.auto-writer-image:active {
   font-size: var(--text-xs);
 }
 .auto-writer-picture-tag {
-  flex: none;
-  max-width: 132px;
-  overflow: hidden;
-  padding: 1px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 1px 8px 1px 6px;
   border-radius: var(--radius-pill);
   font-size: var(--text-xs);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 18px;
   color: var(--editor-accent, var(--chrome-primary));
-  background: color-mix(in srgb, currentColor 10%, transparent);
+  background: color-mix(in srgb, currentColor 9%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
   .project-files-loading {
@@ -1717,6 +1904,28 @@ button.auto-writer-image:active {
   transform: translateX(-100%);
   animation: placeholder-sheen 1.8s var(--ease-in-out) infinite;
 }
+/* A painted picture waiting for its text: shown as it will sit. */
+.workspace-document .draft-image-ready {
+  margin: var(--space-3) 0;
+  animation: motion-fade-in var(--dur-base) var(--ease-out);
+}
+.workspace-document .draft-image-ready img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-block);
+}
+.workspace-document .draft-image-ready figcaption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--editor-muted, inherit);
+}
+.workspace-document .draft-image-ready figcaption > span {
+  margin-inline-end: auto;
+}
 .draft-image-pending-text {
   display: grid;
   gap: 2px;
@@ -1749,4 +1958,513 @@ button.auto-writer-image:active {
 }
 .workspace-document .agent-markdown p:has(> img) + p:has(> em:only-child) em {
   font-style: normal;
+}
+
+/* What auto-writing was asked for: the message it was started with. */
+.auto-writer-request {
+  display: -webkit-box;
+  margin: calc(var(--space-1) * -1) 0 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--editor-muted, inherit);
+}
+
+/* ---------- Project folder chip (ProjectChip.tsx) ----------
+   In the composer's toolbar, beside the mode: quiet until files are
+   ticked, then an accent chip like the other switches. */
+.project-chip {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  border-radius: var(--radius-pill);
+  color: var(--editor-muted);
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+.project-chip:hover {
+  background: color-mix(in srgb, var(--editor-text) 7%, transparent);
+  color: var(--editor-text);
+}
+.project-chip.is-active {
+  background: color-mix(in srgb, var(--editor-accent) 11%, transparent);
+  color: var(--editor-accent);
+  animation: motion-pop-in var(--dur-base) var(--ease-spring);
+}
+.project-chip.is-active:hover {
+  background: color-mix(in srgb, var(--editor-accent) 18%, transparent);
+}
+.project-chip button {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.project-chip button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.project-chip-main {
+  gap: 5px;
+  height: 28px;
+  min-width: 0;
+  max-width: 260px;
+  padding: 0 10px 0 8px;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+/* The × always follows: the folder can be taken out again. */
+.project-chip .project-chip-main {
+  padding-right: 4px;
+}
+.project-chip-main svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+.project-chip-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.project-chip-count {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+.project-chip-count::before {
+  content: "·";
+  margin-right: 5px;
+}
+.project-chip-clear {
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 3px;
+  padding: 0;
+  border-radius: 50%;
+  opacity: 0.7;
+}
+.project-chip-clear:hover {
+  opacity: 1;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+.project-chip-clear svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* The picker: rises from the composer, as wide as it. */
+.project-popover {
+  position: fixed;
+  z-index: 400;
+  display: grid;
+  gap: var(--space-3);
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border: 1px solid
+    color-mix(in srgb, var(--editor-border, #8884) 80%, transparent);
+  border-radius: var(--radius-surface);
+  background: var(--editor-bg, var(--bg));
+  box-shadow: var(--shadow-popover);
+  color: var(--editor-text);
+  font-size: var(--text-sm);
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
+}
+.project-popover button {
+  height: var(--control-height-sm);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--editor-border, #8884);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+.project-popover button:hover {
+  background: color-mix(in srgb, currentColor 7%, transparent);
+}
+.project-popover button.project-files-icon {
+  display: inline-grid;
+  place-items: center;
+  width: var(--control-height-sm);
+  padding: 0;
+  border-color: transparent;
+}
+.project-popover-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: 10px var(--space-3);
+  border: 1px solid
+    color-mix(in srgb, var(--editor-border, #8884) 70%, transparent);
+  border-radius: var(--radius-block);
+  cursor: pointer;
+}
+.project-popover-option > input {
+  margin-top: 1px;
+}
+.project-popover-option > span {
+  display: grid;
+  gap: 2px;
+  line-height: 1.4;
+}
+.project-popover-option small {
+  font-size: var(--text-xs);
+  color: var(--editor-muted, inherit);
+}
+.project-popover-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--editor-muted, inherit);
+}
+.project-popover-foot > span {
+  flex: 1;
+}
+.project-popover button.project-popover-done {
+  flex: none;
+  border-color: transparent;
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+}
+.project-popover button.project-popover-done:hover {
+  background: color-mix(in srgb, var(--ui-primary) 86%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-popover,
+  .project-chip.is-active {
+    animation: none;
+  }
+}
+
+/* At the outline, beside 开始写作: whether to stop after each section. */
+.auto-writer-actions .auto-writer-each {
+  margin-right: auto;
+  font-size: var(--text-xs);
+  color: var(--editor-muted, inherit);
+}
+
+/* A skipped picture, folded to one line under its paragraph: still there
+   to take after all. */
+.workspace-document .draft-image-skipped {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+  padding: 6px var(--space-2);
+  border: 1px dashed
+    color-mix(in srgb, var(--editor-border, #8884) 90%, transparent);
+  border-radius: var(--radius-block);
+  font-size: var(--text-xs);
+  color: var(--editor-muted, inherit);
+  animation: motion-fade-in var(--dur-base) var(--ease-out);
+}
+.draft-image-skipped-thumb {
+  flex: none;
+  width: 36px;
+  height: 27px;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+.workspace-document .draft-image-skipped > span:nth-child(2) {
+  flex: 1;
+}
+
+/* Skipped changes stay in the list, folded and quiet, with 采纳. */
+.workspace-changes article.is-skipped {
+  opacity: 0.7;
+}
+.workspace-changes article.is-skipped strong {
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+.workspace-changes-skipped {
+  font-weight: 400;
+  color: var(--editor-muted, inherit);
+}
+.workspace-change-state {
+  margin-right: auto;
+  font-size: var(--text-xs);
+  color: var(--editor-muted, inherit);
+}
+
+/* Accepted on its own, waiting for its text: the note says so in accent. */
+.workspace-document .draft-image-ready.is-approved figcaption > span {
+  color: var(--editor-accent, var(--chrome-primary));
+}
+
+/* Each change's own decision, right under its last block (draft-diff.ts's
+   withChangeActions): small, quiet until the change is hovered. */
+.workspace-document .draft-change-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin: 4px 0 var(--space-3);
+  opacity: 0.75;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+.workspace-document .draft-change-actions:hover,
+.workspace-document :is(.draft-added, .draft-changed, .draft-removed):hover
+  ~ .draft-change-actions {
+  opacity: 1;
+}
+.workspace-document .draft-change-actions .workspace-button {
+  height: 24px;
+  padding: 0 10px;
+  font-size: var(--text-xs);
+}
+
+/* Each paragraph of a change: ✓ / ✕ at its top right, shown on hover (and
+   on keyboard focus). */
+.workspace-document .draft-part {
+  position: relative;
+}
+.workspace-document .draft-part-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid
+    color-mix(in srgb, var(--editor-border, #8884) 80%, transparent);
+  border-radius: var(--radius-pill);
+  background: var(--editor-bg, var(--bg));
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  line-height: 1;
+  opacity: 0;
+  transform: translateY(2px);
+  pointer-events: none;
+  transition:
+    opacity var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-out);
+}
+.workspace-document .draft-part:hover > .draft-part-actions,
+.workspace-document .draft-part-actions:focus-within {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.workspace-document .draft-part-button svg {
+  width: 13px;
+  height: 13px;
+}
+.workspace-document .draft-part-button {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--editor-muted, inherit);
+  font: inherit;
+  cursor: pointer;
+}
+.workspace-document .draft-part-button[data-part-action="accept"]:hover {
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 14%,
+    transparent
+  );
+  color: var(--editor-accent, var(--chrome-primary));
+}
+.workspace-document .draft-part-button[data-part-action="reject"]:hover {
+  background: color-mix(in srgb, var(--danger, #c4473a) 12%, transparent);
+  color: var(--danger, #c4473a);
+}
+
+/* A paragraph not taken: still in its place, struck through, with 恢复. */
+.workspace-document .draft-part-rejected {
+  position: relative;
+  margin: 4px 0;
+  padding: 2px 76px 2px 12px;
+  border-left: 3px solid
+    color-mix(in srgb, var(--editor-border, #8884) 90%, transparent);
+  border-radius: 4px;
+  color: var(--editor-muted, inherit);
+  opacity: 0.75;
+}
+.workspace-document .draft-part-rejected > :is(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote) {
+  margin: 4px 0;
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+.workspace-document .draft-part-rejected .draft-part-restore {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  height: 24px;
+  padding: 0 10px;
+  font-size: var(--text-xs);
+  transform: translateY(-50%);
+}
+
+/* How many changes 全部采纳 / 全部拒绝 decide, when there is more than one
+   (each also has its own 采纳 / 不采纳 under it in the draft). */
+.workspace-review-count {
+  min-width: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}
+
+/* Once writing starts the outline is a progress list: titles only, with
+   the brief of the section being written (or reviewed) open. */
+.auto-writer-outline.is-running li {
+  padding-block: 5px;
+  row-gap: 4px;
+}
+.auto-writer-outline.is-running
+  li:not(.is-writing, .is-review)
+  .auto-writer-section
+  small,
+.auto-writer-outline.is-running li.is-done .auto-writer-picture-tag {
+  display: none;
+}
+.auto-writer-outline.is-running li:not(:last-child)::before {
+  top: 24px;
+  bottom: -8px;
+}
+
+/* The change's own 采纳 reads as the confirm it is: in the accent. */
+.workspace-document
+  .draft-change-actions
+  .workspace-button[data-change-action="accept"] {
+  border-color: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 45%,
+    transparent
+  );
+  color: var(--editor-accent, var(--chrome-primary));
+}
+.workspace-document
+  .draft-change-actions
+  .workspace-button[data-change-action="accept"]:not(:disabled):hover {
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 10%,
+    transparent
+  );
+}
+
+/* A past task: the row is the hover target; its × fades in at the right
+   (the title keeps room for it only then). */
+.workspace-history-row {
+  position: relative;
+}
+.workspace-history-row:hover .workspace-history-task:not(:disabled),
+.workspace-history-row:focus-within .workspace-history-task:not(:disabled) {
+  padding-right: 30px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.workspace-history-delete {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  color: inherit;
+  opacity: 0;
+  transform: translateY(-50%);
+  cursor: pointer;
+  transition:
+    opacity var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+.workspace-history-row:hover .workspace-history-delete,
+.workspace-history-delete:focus-visible {
+  opacity: 0.55;
+}
+.workspace-history-row .workspace-history-delete:hover {
+  opacity: 1;
+  color: var(--danger, #c4473a);
+  background: color-mix(in srgb, var(--danger, #c4473a) 12%, transparent);
+}
+.workspace-history-delete svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* Just deleted: a way back, for a few seconds. */
+.workspace-history-undo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-1);
+  padding: 6px var(--space-2);
+  border-radius: var(--radius-control);
+  font-size: var(--text-xs);
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  animation: motion-fade-in var(--dur-base) var(--ease-out);
+}
+.workspace-history-undo span {
+  flex: 1;
+  opacity: 0.7;
+}
+.workspace-history-undo button {
+  padding: 2px 8px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--editor-accent, var(--chrome-primary));
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.workspace-history-undo button:hover {
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 10%,
+    transparent
+  );
+}
+
+/* A picture still painting can be decided already: 采纳 / 跳过 at the
+   card's end. Taken, the card says so in the accent. */
+.workspace-document .draft-image-pending-actions {
+  display: inline-flex;
+  flex: none;
+  gap: 4px;
+  margin-left: auto;
+}
+.workspace-document .draft-image-pending-actions .workspace-button {
+  height: 24px;
+  padding: 0 10px;
+  font-size: var(--text-xs);
+}
+.workspace-document .draft-image-pending.is-approved {
+  border-style: solid;
 }

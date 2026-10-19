@@ -72,7 +72,7 @@ export async function openApp(
   });
   // Wherever the Agent home opens (the desktop, and an iPad's desktop
   // layout), the document tests start on Write.
-  const toWrite = page.getByRole("button", { name: /^Write ·/ });
+  const toWrite = page.getByRole("button", { name: /^(Write|写作) ·/ });
   // Dispatched rather than clicked: a first-run dialog (language welcome,
   // Levis import, the tutorial) may already cover it, and the test is about
   // that dialog.
