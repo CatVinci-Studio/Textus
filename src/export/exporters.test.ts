@@ -51,6 +51,30 @@ describe("cloneEditorContent", () => {
     expect(html).toContain("<pre>x</pre>");
   });
 
+  it("drops a code block's copy button and line numbers, and lets its lines wrap again", () => {
+    const html = cloneEditorContent(
+      editor(
+        '<div class="code-block-wrapper md-fences code-block-numbered">' +
+          '<div class="code-block-header"><button class="code-block-copy">Copy</button></div>' +
+          '<pre><span class="code-line-gutter"><span>1</span></span><code>x</code></pre></div>',
+      ),
+    );
+    expect(html).not.toContain("Copy");
+    expect(html).not.toContain("code-line-gutter");
+    expect(html).not.toContain("code-block-numbered");
+    expect(html).toContain("<pre><code>x</code></pre>");
+  });
+
+  it("drops a colour code's swatch, keeping the code", () => {
+    const html = cloneEditorContent(
+      editor(
+        '<p>White <code class="md-code-span"><span class="color-swatch" style="--color-swatch: #fff"></span>#fff</code></p>',
+      ),
+    );
+    expect(html).not.toContain("color-swatch");
+    expect(html).toContain('<code class="md-code-span">#fff</code>');
+  });
+
   it("exports a missing image as the image it was written as, without its card", () => {
     const html = cloneEditorContent(
       editor(

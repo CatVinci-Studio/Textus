@@ -322,6 +322,17 @@ export function SettingsPanel({
               onChange={(v) => setSettings({ enableMermaid: v })}
             />
             <ToggleRow
+              label={t.codeLineNumbersLabel}
+              checked={settings.codeLineNumbers}
+              onChange={(v) => setSettings({ codeLineNumbers: v })}
+            />
+            <ToggleRow
+              label={t.inlineColorSwatchesLabel}
+              hint={t.inlineColorSwatchesHint}
+              checked={settings.inlineColorSwatches}
+              onChange={(v) => setSettings({ inlineColorSwatches: v })}
+            />
+            <ToggleRow
               label={t.autoCloseMarksLabel}
               hint={t.autoCloseMarksHint}
               checked={settings.autoCloseMarks}
