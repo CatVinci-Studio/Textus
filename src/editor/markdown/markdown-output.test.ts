@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
+import { DOMParser, DOMSerializer } from "@milkdown/kit/prose/model";
 import { createTestEditor } from "../../document-view/editor-test-harness";
 import { unwrittenImageSrcs } from "./markdown-output";
 
@@ -17,6 +18,18 @@ async function roundTrip(markdown: string): Promise<string> {
   return editor.action((ctx) =>
     ctx.get(serializerCtx)(ctx.get(editorViewCtx).state.doc),
   );
+}
+
+/** Opens `markdown`, sends it through HTML the way Milkdown's clipboard
+ *  plugin pastes plain text, and saves what comes back. */
+async function throughClipboard(markdown: string): Promise<string> {
+  const editor = await createTestEditor(markdown);
+  editors.push(editor);
+  return editor.action((ctx) => {
+    const { doc, schema } = ctx.get(editorViewCtx).state;
+    const dom = DOMSerializer.fromSchema(schema).serializeFragment(doc.content);
+    return ctx.get(serializerCtx)(DOMParser.fromSchema(schema).parse(dom));
+  });
 }
 
 describe("saved markdown stays as written", () => {
@@ -52,6 +65,7 @@ describe("saved markdown stays as written", () => {
     ["a literal == that would open a highlight", "a \\==b== stays text\n"],
     ["a highlight", "一段==高亮==文字\n"],
     ["a footnote", "正文[^1]\n\n[^1]: 脚注\n"],
+    ["an image without a title", "![图](a.png)\n"],
     ["an image width", '![图](a.png "{textus-width=30%}")\n'],
     ["an autolink", "See <https://x.org/a> here\n"],
     ["a link whose text is its URL", "[https://x.org/a](https://x.org/a)\n"],
@@ -59,6 +73,14 @@ describe("saved markdown stays as written", () => {
     ["a titled empty-text link", '[](https://x.org/a "t")\n'],
   ])("keeps %s", async (_name, markdown) => {
     expect(await roundTrip(markdown)).toBe(markdown);
+  });
+
+  it.each([
+    ["an image", "![美女](https://x.org/a.jpg)\n"],
+    ["an image without alt", "![](assets/a.png)\n"],
+    ["a titled image", '![a](s.png "t")\n'],
+  ])("keeps %s pasted as text, adding no title", async (_name, markdown) => {
+    expect(await throughClipboard(markdown)).toBe(markdown);
   });
 
   it("keeps HTML the editor now renders, byte for byte", async () => {
