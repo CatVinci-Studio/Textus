@@ -13,7 +13,7 @@ import { useModeSwitchCaret } from "../editor/modes/useModeSwitchCaret";
 import type { Settings } from "../settings/SettingsContext";
 import { useLatest } from "../utils/hooks/useLatest";
 import { normalizeMathDelimiters } from "../utils/markdown-math";
-import { createImageNoticePlugin } from "./image-notice-plugin";
+import { createImageNoticePlugin } from "../editor/images/image-notice-plugin";
 import "@milkdown/kit/prose/view/style/prosemirror.css";
 import "katex/dist/katex.min.css";
 import "../theme/content-base.css";

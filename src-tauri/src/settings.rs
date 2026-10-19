@@ -1026,6 +1026,15 @@ pub fn settings_patch(
     if patch.contains_key("theme") {
         theme_changed(&app);
     }
+    // The Quick Note shortcut is registered in Rust: turned on, off or
+    // changed in Settings, it is registered again (on this, the main
+    // thread, as the hotkey manager wants).
+    #[cfg(desktop)]
+    if patch.contains_key(crate::commands::quick_note::shortcut::ENABLED_SETTING)
+        || patch.contains_key(crate::commands::quick_note::shortcut::ACCELERATOR_SETTING)
+    {
+        crate::commands::quick_note::shortcut::apply(&app);
+    }
     emit_to_all(
         &app,
         "settings-changed",

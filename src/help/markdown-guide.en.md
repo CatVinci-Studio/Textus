@@ -142,6 +142,12 @@ Besides the WYSIWYG editor and source mode (`Cmd+/`), Textus has three ways to w
 
 All three are also in the **View** menu.
 
+## Quick Notes
+
+**File → New Quick Note** opens a small window for jotting something down. Press `Esc` (or `Cmd+Enter`, `Cmd+S`, `Cmd+W`) and the note is saved and the window closes; an empty note is simply closed. **Open in Textus** saves it and opens it as a tab.
+
+Notes go to `Textus/Quick Notes` in your Documents folder, one file each, named after the first line. In **Settings → General → Quick Notes** you can choose another folder, keep **one file per day** instead, and turn on a **global shortcut** that opens a quick note from any app: `Control+Option+N` on a Mac, `Ctrl+Alt+N` on Linux, `Win+Alt+N` on Windows. Opening one again within a few minutes continues the last note. On Wayland, bind the `textus --quick-note` command shown there to a key in your desktop's settings.
+
 ## Footnotes and rules
 
 Footnotes look like this[^1], and below is a horizontal rule:

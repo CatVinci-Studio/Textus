@@ -995,4 +995,59 @@ utiliser une.
   playgroundImageNotice: `Les images nécessitent l’app de bureau ${APP_NAME}.`,
   playgroundImportUnsupported:
     "Seuls les fichiers .md, .markdown et .txt peuvent être importés.",
+  // Quick Notes (src/quick-note/, Settings › General › Quick Notes).
+  menuNewQuickNote: "Nouvelle note rapide",
+  menuOpenQuickNotesFolder: "Ouvrir le dossier des notes rapides",
+  quickNotesGroup: "Notes rapides",
+  quickNoteShortcutToggle: "Raccourci global",
+  quickNoteShortcutHint:
+    "Ouvre une note rapide depuis n’importe quelle app. Textus n’écoute que cette combinaison de touches, rien d’autre de ce que vous tapez.",
+  quickNoteShortcutLabel: "Raccourci",
+  quickNoteShortcutDefault: "Par défaut",
+  quickNoteShortcutInApp:
+    "Textus utilise déjà cette combinaison. Choisissez-en une autre.",
+  quickNoteShortcutTooFew:
+    "Utilisez au moins deux touches de modification, ou une avec une touche de fonction.",
+  quickNoteStatusOn:
+    "Activé\u00a0: appuyez sur {combo} dans n’importe quelle app.",
+  quickNoteStatusInUse:
+    "{combo} est déjà utilisé par une autre app. Choisissez une autre combinaison.",
+  quickNoteStatusWayland:
+    "Wayland ne permet pas aux apps d’écouter un raccourci. Ajoutez-en un dans les réglages clavier de votre bureau qui lance la commande ci-dessous.",
+  quickNoteStatusReserved:
+    "Le système utilise cette combinaison. Choisissez-en une autre.",
+  quickNoteStatusAltGr:
+    "Sous Windows, Ctrl+Alt équivaut à AltGr, qui tape des lettres sur de nombreuses dispositions de clavier. Choisissez une combinaison avec Win ou une touche de fonction.",
+  quickNoteFolderLabel: "Dossier",
+  quickNoteFolderChange: "Modifier…",
+  quickNoteFolderShow: "Afficher",
+  quickNotePerDayLabel: "Un fichier par jour",
+  quickNotePerDayHint:
+    "Ajoute chaque note au fichier du jour, sous son heure, au lieu d’un fichier par note.",
+  quickNoteContinueLabel: "Reprendre la dernière note",
+  quickNoteContinueHint:
+    "Rouvrir une note rapide peu après en avoir enregistré une la reprend.",
+  quickNoteContinueNever: "Jamais",
+  quickNoteContinueMinutes: {
+    one: "Moins de {n} minute",
+    many: "Moins de {n} de minutes",
+    other: "Moins de {n} minutes",
+  },
+  quickNoteCommandLabel: "Commande",
+  quickNoteCommandHint: `Ouvre une note rapide, même quand ${APP_NAME} n’est pas lancé. Associez-la à une touche dans les réglages du système.`,
+  quickNoteCommandCopy: "Copier",
+  quickNoteCommandCopied: "Copié",
+  quickNoteTitle: "Note rapide",
+  quickNoteHeader: "Note rapide → {name}",
+  quickNoteKeysHint: "Échap enregistre et ferme",
+  quickNoteDraftRestored: "La note non enregistrée a été restaurée.",
+  quickNoteContinuing: "Vous reprenez votre dernière note.",
+  quickNoteDiscard: "Supprimer",
+  quickNoteDiscardConfirm:
+    "Supprimer cette note\u202f? Elle ne sera pas enregistrée.",
+  quickNoteOpenInTextus: `Ouvrir dans ${APP_NAME}`,
+  quickNoteSaveFailed: "Impossible d’enregistrer la note\u00a0:",
+  quickNoteNoImages: `Impossible de coller une image dans une note rapide. Ouvrez-la dans ${APP_NAME} pour en ajouter.`,
+  quickNoteConflictMessage:
+    "Une note rapide a été enregistrée dans ce fichier pendant que vous aviez des modifications non enregistrées\u00a0: «\u00a0{note}\u00a0». Enregistrer maintenant écrase le fichier et supprime cette note.",
 } satisfies Translation;

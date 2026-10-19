@@ -142,6 +142,12 @@ Outre l'éditeur WYSIWYG et le mode source (`Cmd+/`), Textus offre trois façons
 
 Les trois se trouvent aussi dans le menu **Présentation**.
 
+## Notes rapides
+
+**Fichier → Nouvelle note rapide** ouvre une petite fenêtre pour noter quelque chose au vol. Appuyez sur `Échap` (ou `Cmd+Entrée`, `Cmd+S`, `Cmd+W`) : la note est enregistrée et la fenêtre se ferme ; une note vide est simplement fermée. **Ouvrir dans Textus** l’enregistre et l’ouvre dans un onglet.
+
+Les notes vont dans `Textus/Notes rapides`, dans votre dossier Documents, un fichier par note, nommé d’après sa première ligne. Dans **Réglages → Général → Notes rapides**, vous pouvez choisir un autre dossier, passer à **un fichier par jour** et activer un **raccourci global** qui ouvre une note rapide depuis n’importe quelle app : `Contrôle+Option+N` sur Mac, `Ctrl+Alt+N` sous Linux, `Win+Alt+N` sous Windows. En rouvrir une dans les minutes qui suivent reprend la dernière note. Sous Wayland, associez la commande `textus --quick-note` affichée là à une touche dans les réglages de votre bureau.
+
 ## Notes de bas de page et filets
 
 Les notes de bas de page s'écrivent ainsi[^1], et voici un filet horizontal :

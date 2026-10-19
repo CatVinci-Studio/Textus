@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Shared by desktop and iOS: the editor windows and the detached chat window (desktop), the single main webview (iOS). Desktop-only permissions live in desktop.json.",
-  "windows": ["main", "window-*", "chat-*"],
+  "description": "Shared by desktop and iOS: the editor windows, the detached chat window and the Quick Note window (desktop), the single main webview (iOS). Desktop-only permissions live in desktop.json.",
+  "windows": ["main", "window-*", "chat-*", "quick-note"],
   "permissions": [
     "core:default",
     "opener:default",

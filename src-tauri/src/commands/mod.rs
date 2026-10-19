@@ -1,9 +1,10 @@
 //! Commands invoked by the frontend. Shared by desktop and iOS unless gated:
 //! the modules below `#[cfg(desktop)]` are about OS windows (the detached
-//! chat window, per-window session restore, window-mode prefs) or the desktop
-//! shell (the `textus` terminal command, the default Markdown editor, the
-//! update check); `documents` (rename and delete for the iPhone's document
-//! list) is `#[cfg(mobile)]`. See docs/dev/ios-code-map.md.
+//! chat window, the Quick Note window, per-window session restore,
+//! window-mode prefs) or the desktop shell (the `textus` terminal command,
+//! the default Markdown editor, the update check); `documents` (rename and
+//! delete for the iPhone's document list) is `#[cfg(mobile)]`. See
+//! docs/dev/ios-code-map.md.
 
 pub mod attachment;
 #[cfg(desktop)]
@@ -23,6 +24,8 @@ pub mod links;
 pub mod pdf_page_numbers;
 #[cfg(desktop)]
 pub mod prefs;
+#[cfg(desktop)]
+pub mod quick_note;
 pub mod recents;
 #[cfg(desktop)]
 pub mod session;

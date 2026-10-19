@@ -142,6 +142,12 @@ Além do editor WYSIWYG e do modo código-fonte (`Cmd+/`), o Textus tem três ma
 
 Os três também estão no menu **Visualizar**.
 
+## Notas rápidas
+
+**Arquivo → Nova nota rápida** abre uma janela pequena para anotar algo na hora. Pressione `Esc` (ou `Cmd+Enter`, `Cmd+S`, `Cmd+W`) e a nota é salva e a janela fecha; uma nota vazia simplesmente fecha. **Abrir no Textus** salva a nota e a abre numa aba.
+
+As notas vão para `Textus/Notas rápidas` na sua pasta Documentos, um arquivo por nota, com o nome da primeira linha. Em **Ajustes → Geral → Notas rápidas** você pode escolher outra pasta, usar **um arquivo por dia** e ativar um **atalho global** que abre uma nota rápida em qualquer app: `Control+Option+N` no Mac, `Ctrl+Alt+N` no Linux, `Win+Alt+N` no Windows. Abrir outra poucos minutos depois continua a última nota. No Wayland, associe o comando `textus --quick-note` mostrado ali a uma tecla nas configurações do seu desktop.
+
 ## Notas de rodapé e linhas horizontais
 
 Notas de rodapé ficam assim[^1], e logo abaixo há uma linha horizontal:
