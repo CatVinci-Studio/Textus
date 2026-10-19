@@ -1,3 +1,5 @@
+import type { CaretPlace } from "./tab-caret";
+
 /**
  * Where a tab's editor should put the reader once it is on screen: handed
  * over by whoever opened the document (app/useFileOpening.ts), taken by the
@@ -8,7 +10,10 @@
  */
 export type TabJump =
   /** A followed `./other.md#heading` link: scroll to that heading. */
-  { kind: "heading"; anchor: string };
+  | { kind: "heading"; anchor: string }
+  /** A document reopened (the last session, Open Recent): the caret where
+   *  it was left (tab-caret.ts). */
+  | { kind: "caret"; at: CaretPlace };
 
 const pending = new Map<string, TabJump>();
 const listeners = new Set<(tabId: string) => void>();

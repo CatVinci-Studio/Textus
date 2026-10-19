@@ -30,6 +30,7 @@ import { FindReplaceBar } from "../editor/find/FindReplaceBar";
 import { useFindReplace } from "../editor/find/useFindReplace";
 import { useModeSwitchCaret } from "../editor/modes/useModeSwitchCaret";
 import { useTabJump } from "../editor/useTabJump";
+import { useTabCaret } from "../editor/useTabCaret";
 import { useFocusModeRefresh } from "../editor/modes/useFocusModeRefresh";
 import { Presence, PresenceDiv } from "../ui/usePresence";
 import { useEditorRunner } from "../editor/useEditorRunner";
@@ -274,7 +275,13 @@ export function MilkdownEditor({
   });
 
   useModeSwitchCaret(run, isActive, initialValue);
-  useTabJump(run, tabId, isActive);
+  useTabJump(run, tabId, isActive, initialValue, settings.typewriterMode);
+  useTabCaret(
+    run,
+    tabId,
+    isActive,
+    () => reporting.reportedMarkdownRef.current ?? initialValue,
+  );
   useFocusModeRefresh(run, isActive, settings.typewriterMode);
 
   const grammar = useGrammarPopover(run, () => t.grammarApplyStale);
