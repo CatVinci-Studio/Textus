@@ -95,6 +95,8 @@ export interface ChatBodyProps {
   /** Escape from the composer. The popup closes; a detached window doesn't
    *  (Escape shouldn't destroy an OS window the user placed deliberately). */
   onEscape?: () => void;
+  /** The composer's mode, now and on every switch (ChatComposer). */
+  onModeChange?: (mode: AgentMode) => void;
   /** Rendered above the composer - the popup's close-confirmation bar. */
   footer?: React.ReactNode;
   /** Jumps the editor to a pending edit. Absent in the detached window,
@@ -226,6 +228,7 @@ export function ChatBody({
   onAcceptAll,
   onRejectAll,
   onEscape,
+  onModeChange,
   footer,
   fillHeight,
   variant = "full",
@@ -631,6 +634,7 @@ export function ChatBody({
         onSkillUsed={onSkillUsed}
         onStop={stop}
         onEscape={onEscape ?? (() => {})}
+        onModeChange={onModeChange}
       />
       {footer}
     </>

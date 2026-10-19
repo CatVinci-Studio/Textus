@@ -15,9 +15,12 @@ export default {
     "Abrir las conversaciones completas en una ventana aparte",
   shortcutToggleAgentPanel: "Panel de IA",
   menuToggleAgentPanel: "Panel de IA",
-  agentPanelEmpty:
-    "Pregunta sobre este documento o selecciona texto y di cómo cambiarlo.",
-  agentPanelEmptyPhone: "Pregunta sobre este documento.",
+  agentPanelEmptyWrite:
+    "La IA redacta texto nuevo en tu documento sin cambiar lo que ya está escrito.",
+  agentPanelEmptyReview:
+    "La IA responde y deja notas en el margen, sin cambiar tu texto.",
+  agentPanelEmptyRevise:
+    "La IA propone cambios en tu texto; cada uno espera a que lo aceptes o lo rechaces.",
   aiWorkingCompletion: "Escribiendo una continuación…",
   aiWorkingGrammar: "Revisando este párrafo…",
   noticeCompletionNeedsCaret: "Coloca el cursor donde debe ir la continuación.",

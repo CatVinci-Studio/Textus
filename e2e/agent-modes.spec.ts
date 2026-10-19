@@ -108,7 +108,90 @@ test("Quick Ask offers Revise and Review only, on Revise, even after Write was p
   await expect(picker).toHaveText("修订");
   await picker.click();
   await expect(page.getByRole("option")).toHaveText(["修订", "审阅"]);
+  expect(
+    await page
+      .getByRole("option")
+      .locator(".chat-mode-icon")
+      .evaluateAll((els) => els.map((el) => el.getAttribute("data-mode"))),
+  ).toEqual(["revise", "review"]);
 });
+
+/** Each mode: its name in the picker, and what the empty panel says. */
+const MODE_LINES: Record<
+  "en" | "zh",
+  { mode: string; name: string; line: string }[]
+> = {
+  en: [
+    {
+      mode: "write",
+      name: "Write",
+      line: "The AI drafts new text into your document and doesn't change what's already there.",
+    },
+    {
+      mode: "review",
+      name: "Review",
+      line: "The AI answers and leaves notes in the margin, and doesn't change your text.",
+    },
+    {
+      mode: "revise",
+      name: "Revise",
+      line: "The AI suggests changes to your text; each one waits for you to accept or reject it.",
+    },
+  ],
+  zh: [
+    {
+      mode: "write",
+      name: "写作",
+      line: "AI 帮你起草新的文字加进文档，不改动已有的内容。",
+    },
+    {
+      mode: "review",
+      name: "审阅",
+      line: "AI 只回答问题、在页边留批注，不会改动你的文字。",
+    },
+    {
+      mode: "revise",
+      name: "修订",
+      line: "AI 会提出修改建议，每一处都由你决定接受还是拒绝。",
+    },
+  ],
+};
+
+for (const language of ["en", "zh"] as const)
+  test(`${language}: the mode's icon is on the picker and its options, and the empty panel says what the mode does`, async ({
+    page,
+  }) => {
+    await openPanel(page, language);
+    const modes = MODE_LINES[language];
+    const picker = page
+      .locator(".agent-panel-view")
+      .getByRole("combobox", { name: language === "zh" ? "模式" : "Mode" });
+    const mark = page.locator(".agent-panel-empty-mark .chat-mode-icon");
+    const hint = page.locator(".agent-panel-empty-text");
+    // Review is the default.
+    await expect(picker.locator(".chat-mode-icon")).toHaveAttribute(
+      "data-mode",
+      "review",
+    );
+    await expect(mark).toHaveAttribute("data-mode", "review");
+    await expect(hint).toHaveText(modes[1].line);
+    for (const { mode, name, line } of modes) {
+      await picker.click();
+      expect(
+        await page
+          .getByRole("option")
+          .locator(".chat-mode-icon")
+          .evaluateAll((els) => els.map((el) => el.getAttribute("data-mode"))),
+      ).toEqual(modes.map((m) => m.mode));
+      await page.getByRole("option", { name }).click();
+      await expect(picker.locator(".chat-mode-icon")).toHaveAttribute(
+        "data-mode",
+        mode,
+      );
+      await expect(mark).toHaveAttribute("data-mode", mode);
+      await expect(hint).toHaveText(line);
+    }
+  });
 
 test("the modes in Chinese: 写作, 审阅, 修订", async ({ page }) => {
   await openPanel(page, "zh");

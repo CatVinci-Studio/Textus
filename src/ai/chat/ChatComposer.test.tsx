@@ -187,6 +187,39 @@ describe("ChatComposer selection chip", () => {
     });
   });
 
+  it("shows each mode's icon in the picker and its menu, and reports a switch", () => {
+    const onModeChange = vi.fn();
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText={null}
+        busy={false}
+        labels={labels}
+        defaultMode="review"
+        defaultWebSearch={false}
+        onSend={() => {}}
+        onStop={() => {}}
+        onEscape={() => {}}
+        onModeChange={onModeChange}
+      />,
+    );
+    const picker = screen.getByRole("combobox", { name: "Mode" });
+    const iconOf = (el: Element) =>
+      el.querySelector(".chat-mode-icon")?.getAttribute("data-mode");
+    expect(iconOf(picker)).toBe("review");
+    expect(onModeChange).toHaveBeenLastCalledWith("review");
+    fireEvent.click(picker);
+    expect(screen.getAllByRole("option").map(iconOf)).toEqual([
+      "write",
+      "review",
+      "revise",
+    ]);
+    fireEvent.click(screen.getByRole("option", { name: "Revise" }));
+    expect(iconOf(picker)).toBe("revise");
+    expect(onModeChange).toHaveBeenLastCalledWith("revise");
+  });
+
   it("sends the selected interaction mode and web-search choice", () => {
     const { onSend } = renderComposer();
     fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));

@@ -403,3 +403,10 @@
   font-size: var(--text-md);
   color: var(--editor-muted);
 }
+
+/* The empty state shows the composer's mode: a switch brings in the new
+   icon and line (a new element each, keyed by the mode). */
+.agent-panel-empty-mark .chat-mode-icon,
+.agent-panel-empty-text {
+  animation: motion-fade-in var(--dur-fast) var(--ease-out);
+}

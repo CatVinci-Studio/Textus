@@ -11,9 +11,10 @@ import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
 import { chatLabels } from "../ai/chat/chat-labels";
 import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { EditProposal } from "../ai/types";
-import { canDetachChat, isIOSApp } from "../platform/capabilities";
-import { SparkleIcon } from "../ui/icons";
-import type { Settings } from "../settings/SettingsContext";
+import { canDetachChat } from "../platform/capabilities";
+import { useState } from "react";
+import { ModeIcon } from "../ai/chat/mode-icons";
+import type { AgentMode, Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /** What this editor draws in the docked AI panel (ai/chat/panel/) while it
@@ -66,6 +67,14 @@ export function EditorAgentPanel({
   guard: boolean;
   setGuard: (guard: boolean) => void;
 }) {
+  // What the composer is set to: the empty state says what the AI will do
+  // in it.
+  const [mode, setMode] = useState<AgentMode>(settings.agentDefaultMode);
+  const emptyText = {
+    write: t.agentPanelEmptyWrite,
+    review: t.agentPanelEmptyReview,
+    revise: t.agentPanelEmptyRevise,
+  }[mode];
   return (
     <AgentPanelView
       labels={{
@@ -94,12 +103,10 @@ export function EditorAgentPanel({
       {conversation.history.length === 0 && !conversation.busy && (
         <div className="agent-panel-empty">
           <span className="agent-panel-empty-mark" aria-hidden="true">
-            <SparkleIcon />
+            <ModeIcon key={mode} mode={mode} />
           </span>
-          <p className="agent-panel-empty-text">
-            {/* No selecting-then-asking on a phone: the system's
-                own text menu takes the long press. */}
-            {isIOSApp ? t.agentPanelEmptyPhone : t.agentPanelEmpty}
+          <p className="agent-panel-empty-text" key={mode}>
+            {emptyText}
           </p>
         </div>
       )}
@@ -131,6 +138,7 @@ export function EditorAgentPanel({
         onAcceptAll={pendingEdits.acceptAll}
         onRejectAll={pendingEdits.rejectAll}
         onRevealPending={onRevealPending}
+        onModeChange={setMode}
         footer={
           guard && (
             <CloseConfirmBar

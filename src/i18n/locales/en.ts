@@ -16,9 +16,12 @@ const en = {
   agentExpandWindowLabel: "Open full conversations in a separate window",
   shortcutToggleAgentPanel: "Toggle AI panel",
   menuToggleAgentPanel: "AI Panel",
-  agentPanelEmpty:
-    "Ask about this document, or select text and say how to change it.",
-  agentPanelEmptyPhone: "Ask about this document.",
+  agentPanelEmptyWrite:
+    "The AI drafts new text into your document and doesn't change what's already there.",
+  agentPanelEmptyReview:
+    "The AI answers and leaves notes in the margin, and doesn't change your text.",
+  agentPanelEmptyRevise:
+    "The AI suggests changes to your text; each one waits for you to accept or reject it.",
   aiWorkingCompletion: "Writing a continuation…",
   aiWorkingGrammar: "Checking this paragraph…",
   noticeCompletionNeedsCaret:

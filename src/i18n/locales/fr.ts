@@ -17,9 +17,12 @@ export default {
     "Ouvrir les conversations complètes dans une fenêtre séparée",
   shortcutToggleAgentPanel: "Afficher/masquer le panneau IA",
   menuToggleAgentPanel: "Panneau IA",
-  agentPanelEmpty:
-    "Posez une question sur ce document, ou sélectionnez du texte et dites comment le modifier.",
-  agentPanelEmptyPhone: "Posez une question sur ce document.",
+  agentPanelEmptyWrite:
+    "L'IA rédige du nouveau texte dans votre document sans modifier ce qui s'y trouve déjà.",
+  agentPanelEmptyReview:
+    "L'IA répond et laisse des notes dans la marge, sans modifier votre texte.",
+  agentPanelEmptyRevise:
+    "L'IA propose des modifications de votre texte ; chacune attend que vous l'acceptiez ou la refusiez.",
   aiWorkingCompletion: "Rédaction de la suite…",
   aiWorkingGrammar: "Vérification du paragraphe…",
   noticeCompletionNeedsCaret:

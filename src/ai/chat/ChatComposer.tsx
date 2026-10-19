@@ -48,6 +48,7 @@ import {
   PlusIcon,
   SearchIcon,
 } from "../../ui/icons";
+import { ModeIcon } from "./mode-icons";
 import { Select } from "../../ui/Select";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -158,6 +159,9 @@ interface ChatComposerProps {
   onSkillUsed?: () => void;
   onStop: () => void;
   onEscape: () => void;
+  /** The mode as it is now - on the first render and on every switch (the
+   *  AI panel's empty state says what it will do). */
+  onModeChange?: (mode: AgentMode) => void;
 }
 
 /**
@@ -185,6 +189,7 @@ export function ChatComposer({
   onSkillUsed,
   onStop,
   onEscape,
+  onModeChange,
 }: ChatComposerProps) {
   const phone = usePhoneLayout();
   // Derived here rather than passed in: this is the only place an image can
@@ -204,6 +209,8 @@ export function ChatComposer({
   const [mode, setModeState] = useState<AgentMode>(() =>
     fitMode(carryMode ? initialMode(defaultMode) : defaultMode, offeredModes),
   );
+  const onModeChangeRef = useLatest(onModeChange);
+  useEffect(() => onModeChangeRef.current?.(mode), [mode, onModeChangeRef]);
   const setMode = (next: AgentMode) => {
     setModeState(next);
     if (carryMode) rememberMode(next, defaultMode);
@@ -636,6 +643,7 @@ export function ChatComposer({
                     {...holdFocus}
                     onClick={() => setMode(value)}
                   >
+                    <ModeIcon mode={value} />
                     {label}
                   </button>
                 ))}
@@ -649,7 +657,10 @@ export function ChatComposer({
               >
                 {modes.map(([value, label]) => (
                   <option key={value} value={value}>
-                    {label}
+                    <span className="chat-mode-option">
+                      <ModeIcon mode={value} />
+                      <span className="chat-mode-name">{label}</span>
+                    </span>
                   </option>
                 ))}
               </Select>
