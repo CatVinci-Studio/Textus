@@ -34,7 +34,7 @@ async function dragHandle(page: Page, dx: number) {
   await page.mouse.up();
 }
 
-test("dragging the sidebar's edge resizes it, and the width is remembered", async ({
+test("dragging the sidebar's edge resizes it, and it comes back open at that width", async ({
   page,
 }) => {
   await openApp(page);
@@ -62,17 +62,7 @@ test("dragging the sidebar's edge resizes it, and the width is remembered", asyn
   expect(await mainPaneLeft(page)).toBe(320);
 });
 
-test("the sidebar can't be dragged past its bounds", async ({ page }) => {
-  await openApp(page);
-  await openSidebar(page);
-  await dragHandle(page, 900);
-  // 480px at most (45% of this 1180px window would be more).
-  expect(await sidebarWidth(page)).toBe(480);
-  await dragHandle(page, -900);
-  expect(await sidebarWidth(page)).toBe(180);
-});
-
-test("the sidebar resizes from the keyboard and resets on a double click", async ({
+test("the sidebar resizes from the keyboard within its bounds, and resets on a double click", async ({
   page,
 }) => {
   await openApp(page);
@@ -96,6 +86,13 @@ test("the sidebar resizes from the keyboard and resets on a double click", async
   await handle.dblclick();
   await expect(handle).toHaveAttribute("aria-valuenow", "240");
   expect(await sidebarWidth(page)).toBe(240);
+
+  // Nor can a drag take it past those bounds.
+  await dragHandle(page, 900);
+  // 480px at most (45% of this 1180px window would be more).
+  expect(await sidebarWidth(page)).toBe(480);
+  await dragHandle(page, -900);
+  expect(await sidebarWidth(page)).toBe(180);
 });
 
 test("a remembered width too wide for a small window is narrowed to fit", async ({
@@ -110,9 +107,7 @@ test("a remembered width too wide for a small window is narrowed to fit", async 
   await expect.poll(() => sidebarWidth(page)).toBe(460);
 });
 
-test("the sidebar comes back open or closed, the way it was left", async ({
-  page,
-}) => {
+test("a sidebar closed again comes back closed", async ({ page }) => {
   const collapsed = /sidebar-collapsed/;
   const reload = async () => {
     await page.reload();
@@ -120,10 +115,8 @@ test("the sidebar comes back open or closed, the way it was left", async ({
   };
   await openApp(page);
   await expect(page.locator(".sidebar")).toHaveClass(collapsed);
+  // Left open, it comes back open: the first test checks that.
   await openSidebar(page);
-  await reload();
-  await expect(page.locator(".sidebar")).not.toHaveClass(collapsed);
-
   await page.evaluate(() =>
     (
       window as unknown as { __devEmitTauriEvent: (name: string) => void }

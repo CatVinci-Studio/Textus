@@ -7,18 +7,11 @@ import { openApp, pasteMarkdown, PHONE } from "./helpers";
 // its own; now the chip gives way first, ellipsized, and Send keeps its
 // place at the end of the row.
 
-const LANGUAGES = [
-  "en",
-  "zh",
-  "zh-Hant",
-  "ja",
-  "ko",
-  "es",
-  "fr",
-  "de",
-  "ru",
-  "pt",
-] as const;
+// What in the row doesn't give way is the mode's name and Send. Two of
+// the ten locales are left out as the same widths again: zh-Hant's are
+// zh's (two Han characters each, 審閱 / 傳送), pt's are es's word for word
+// (Revisar / Enviar); the chip ellipsizes in every one.
+const LANGUAGES = ["en", "zh", "ja", "ko", "es", "fr", "de", "ru"] as const;
 
 /** A long passage: the chip counts its characters, five digits of them. */
 const PASSAGE = "Alpha beta gamma delta epsilon. ".repeat(400).trim();

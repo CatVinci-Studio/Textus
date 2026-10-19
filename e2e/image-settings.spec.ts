@@ -148,26 +148,23 @@ test("a subfolder's name shows its link as it is typed, and a refused one is nev
   expect((await calls(page, "save_pasted_image"))[0].folder).toBe("img");
 });
 
-for (const { stored, name } of [
-  { stored: "${filename}.assets", name: "assets" },
-  { stored: "pictures", name: "pictures" },
-  { stored: "../shared/images", name: "assets" },
-]) {
-  test(`an image folder of ${stored} from before is the subfolder ${name}`, async ({
-    page,
-  }) => {
-    await openApp(page, {
-      settings: { language: "en", imageFolder: stored },
-    });
-    const panel = await openImageSettings(page);
-    await expect(
-      panel.getByRole("combobox", { name: t.imageFolderLabel }),
-    ).toHaveText(t.imageFolderSubfolder);
-    await expect(
-      panel.getByRole("textbox", { name: t.imageFolderNameLabel }),
-    ).toHaveValue(name);
+// Which stored folder becomes which choice (Typora's ${filename}.assets,
+// a folder outside the document's) is loadSettings's, unit-tested in
+// settings/SettingsContext.test.ts; here, that Settings shows the result.
+test("an image folder from before shows as the subfolder it names", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", imageFolder: "pictures" },
   });
-}
+  const panel = await openImageSettings(page);
+  await expect(
+    panel.getByRole("combobox", { name: t.imageFolderLabel }),
+  ).toHaveText(t.imageFolderSubfolder);
+  await expect(
+    panel.getByRole("textbox", { name: t.imageFolderNameLabel }),
+  ).toHaveValue("pictures");
+});
 
 test("an upload shows only the chosen service's settings and goes to it", async ({
   page,

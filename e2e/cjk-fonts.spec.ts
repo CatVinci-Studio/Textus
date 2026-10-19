@@ -71,7 +71,7 @@ test("a Latin face comes before the CJK ones outside Chinese, Japanese and Korea
   }
 });
 
-test("every language falls back to the Simplified Chinese faces last", async ({
+test("every language falls back to the Simplified Chinese faces last, and the Paper theme's serif follows the language", async ({
   page,
 }) => {
   await openApp(page, { settings: { themeId: "paper" } });
@@ -106,16 +106,8 @@ test("every language falls back to the Simplified Chinese faces last", async ({
       stack.indexOf(last),
     );
   }
-});
 
-test("the Paper theme's serif follows the language too", async ({ page }) => {
-  await openApp(page, { settings: { themeId: "paper" } });
-  const editor = '[data-active-tab="true"] .ProseMirror';
-  await expect(page.locator(editor)).toBeVisible();
-  await expect(page.locator("html")).toHaveAttribute(
-    "data-content-theme",
-    "paper",
-  );
+  // The Paper theme's serif follows the language too.
   expect(await firstCjkFace(page, "zh-CN", editor)).toBe("Songti SC");
   expect(await firstCjkFace(page, "ja", editor)).toBe("Hiragino Mincho ProN");
   expect(await firstCjkFace(page, "zh-HK", editor)).toBe("Songti TC");

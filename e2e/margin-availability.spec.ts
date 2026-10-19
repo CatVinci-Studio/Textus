@@ -75,7 +75,7 @@ const open = {
   "textus-sidebar-open": "1",
 };
 
-test("with no room for the margin, its views can't be picked and the chosen one waits", async ({
+test("with no room for the margin, its views can't be picked and the chosen one waits; with room, every view can be picked", async ({
   page,
 }) => {
   // A laptop window with the sidebar and the AI panel open.
@@ -124,33 +124,13 @@ test("with no room for the margin, its views can't be picked and the chosen one 
   await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
   await expect(page.locator(".review-bar-view-name")).toHaveCount(0);
   await page.locator(".review-bar-view-button").click();
-  await expect(item(t.original)).toBeEnabled();
+  // With room, every view can be picked, in the bar and in Settings.
+  for (const name of [t.inline, t.original, t.changed])
+    await expect(item(name)).toBeEnabled();
   await expect(item(t.original)).toHaveAttribute("aria-checked", "true");
   await expect(page.locator(".review-bar-menu-note")).toHaveCount(0);
-  expect(await storedDisplay(page)).toBe("original");
-});
-
-test("with room for the margin, every view can be picked", async ({ page }) => {
-  await page.setViewportSize({ width: 1800, height: 900 });
-  await openApp(page, {
-    settings: { language: "en", revisionDisplay: "original" },
-    storage: open,
-  });
-  await proposeRevision(page);
-  await expect(page.locator(".revision-note")).toHaveCount(2);
-  await expect(page.locator(".review-bar-view-name")).toHaveCount(0);
   await page.locator(".review-bar-view-button").click();
-  for (const name of [t.inline, t.original, t.changed])
-    await expect(
-      page.getByRole("menuitemradio", { name, exact: true }),
-    ).toBeEnabled();
-  await expect(page.locator(".review-bar-menu-note")).toHaveCount(0);
-  await page.locator(".review-bar-view-button").click();
-
-  const settings = await openSettings(page);
-  const row = settings.locator(".settings-row", {
-    hasText: t.revisionDisplayLabel,
-  });
+  await openSettings(page);
   await expect(row.locator(".settings-row-hint")).toHaveCount(0);
   await row.getByRole("combobox").click();
   await expect(

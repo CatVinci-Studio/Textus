@@ -71,23 +71,6 @@ function proposal(args: object) {
 const accept = (page: Page) =>
   page.locator(".agent-proposal-actions .inline-chat-action-primary").click();
 
-test("the composer offers Write, Review and Revise, in that order", async ({
-  page,
-}) => {
-  await openPanel(page);
-  const picker = page
-    .locator(".agent-panel-view")
-    .getByRole("combobox", { name: "Mode" });
-  // Review is the panel's default.
-  await expect(picker).toHaveText("Review");
-  await picker.click();
-  await expect(page.getByRole("option")).toHaveText([
-    "Write",
-    "Review",
-    "Revise",
-  ]);
-});
-
 test("Quick Ask offers Revise and Review only, on Revise, even after Write was picked in the panel", async ({
   page,
 }) => {
@@ -152,7 +135,7 @@ const MODE_LINES: Record<
 };
 
 for (const language of ["en", "zh"] as const)
-  test(`${language}: the empty panel shows the mode's icon and says what it does, and follows a switch`, async ({
+  test(`${language}: the composer offers Write, Review and Revise; the empty panel shows the mode's icon and says what it does, and follows a switch`, async ({
     page,
   }) => {
     await openPanel(page, language);
@@ -163,27 +146,22 @@ for (const language of ["en", "zh"] as const)
     const mark = page.locator(".agent-panel-empty-mark .chat-mode-icon");
     const hint = page.locator(".agent-panel-empty-text");
     // Review is the default. The composer's picker and menu are words only.
+    await expect(picker).toHaveText(modes[1].name);
     await expect(picker.locator("svg")).toHaveCount(0);
     await expect(mark).toHaveAttribute("data-mode", "review");
     await expect(hint).toHaveText(modes[1].line);
     for (const { mode, name, line } of modes) {
       await picker.click();
+      // Write, Review and Revise, in that order.
+      await expect(page.getByRole("option")).toHaveText(
+        modes.map((m) => m.name),
+      );
       await expect(page.getByRole("option").locator("svg")).toHaveCount(0);
       await page.getByRole("option", { name }).click();
       await expect(mark).toHaveAttribute("data-mode", mode);
       await expect(hint).toHaveText(line);
     }
   });
-
-test("the modes in Chinese: 写作, 审阅, 修订", async ({ page }) => {
-  await openPanel(page, "zh");
-  const picker = page
-    .locator(".agent-panel-view")
-    .getByRole("combobox", { name: "模式" });
-  await expect(picker).toHaveText("审阅");
-  await picker.click();
-  await expect(page.getByRole("option")).toHaveText(["写作", "审阅", "修订"]);
-});
 
 test("Write in an empty document proposes a green block that waits for Accept", async ({
   page,

@@ -64,7 +64,9 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       await page.emulateMedia({ reducedMotion });
     });
 
-    test("a menu and a Select open and close", async ({ page }) => {
+    test("a menu, Settings and a Select in it open and close", async ({
+      page,
+    }) => {
       await openApp(page, { animations: true });
       await page.locator(".window-menu-button").click();
       const menu = page.locator(".app-menu-list");
@@ -73,6 +75,20 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       await expect(menu).toHaveCSS("opacity", "1");
       await page.keyboard.press("Escape");
       await expect(menu).toHaveCount(0, GONE);
+
+      await emit(page, "menu-open-settings");
+      await expect(page.locator(".settings-panel")).toBeVisible();
+      // Its keys work during the entrance, as soon as it has the focus
+      // (moved in an effect, a frame after it first shows).
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () => !!document.activeElement?.closest(".settings-panel"),
+          ),
+        )
+        .toBe(true);
+      await page.keyboard.press("Escape");
+      await expect(page.locator(".settings-backdrop")).toHaveCount(0, GONE);
 
       await emit(page, "menu-open-settings");
       await page.getByRole("button", { name: "编辑与外观" }).click();
@@ -89,24 +105,6 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
         page.getByRole("combobox", { name: "编辑器主题" }),
       ).toContainText("纸张");
       await expect(list).toHaveCount(0, GONE);
-    });
-
-    test("Settings opens and closes", async ({ page }) => {
-      await openApp(page, { animations: true });
-      await emit(page, "menu-open-settings");
-      const panel = page.locator(".settings-panel");
-      await expect(panel).toBeVisible();
-      // Its keys work during the entrance, as soon as it has the focus
-      // (moved in an effect, a frame after it first shows).
-      await expect
-        .poll(() =>
-          page.evaluate(
-            () => !!document.activeElement?.closest(".settings-panel"),
-          ),
-        )
-        .toBe(true);
-      await page.keyboard.press("Escape");
-      await expect(page.locator(".settings-backdrop")).toHaveCount(0, GONE);
     });
 
     test("a confirm dialog answers and leaves", async ({ page }) => {
