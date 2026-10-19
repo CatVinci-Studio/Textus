@@ -552,6 +552,37 @@ function computeDelete(state: EditorState): DeleteAction | null {
 }
 
 /**
+ * Backspace on the one character that directly follows an inline enclosure
+ * ("**3**位|" -> "**3**|"), and Delete on the one that directly precedes
+ * one. Left to the browser, the deletion leaves the DOM caret normalized
+ * into the neighbouring element - at the end (or start) of the bold text,
+ * before the revealed closing "**" - and ProseMirror reads that back as a
+ * position inside the node, so the next keystroke went bold. Deleting the
+ * character ourselves keeps the caret where it was: outside the node,
+ * after (or before) its delimiter. Returns the range to delete, or null.
+ */
+export function computeCharDeleteBesideEnclosure(
+  state: EditorState,
+  dir: "backward" | "forward",
+): { from: number; to: number } | null {
+  const sel = state.selection;
+  if (!sel.empty) return null;
+  const $pos = sel.$from;
+  const text = dir === "backward" ? $pos.nodeBefore : $pos.nodeAfter;
+  if (!text?.isText) return null;
+  const chars = Array.from(text.text ?? "");
+  // Only when a single character separates the caret from the node.
+  const char = dir === "backward" ? chars[0] : chars[chars.length - 1];
+  if (chars.length !== 1 || !char) return null;
+  const from = dir === "backward" ? sel.from - char.length : sel.from;
+  const to = from + char.length;
+  const $edge = state.doc.resolve(dir === "backward" ? from : to);
+  const beside = dir === "backward" ? $edge.nodeBefore : $edge.nodeAfter;
+  if (!beside || !isEnclosure(beside) || beside.isBlock) return null;
+  return { from, to };
+}
+
+/**
  * Backspace/Delete on a RANGE selection that exactly spans an enclosure
  * node's content (selecting all of "hello" in "*hello*" and pressing either
  * key) must not remove the wrapper in the same step - erasing the content
@@ -948,19 +979,25 @@ export const enclosurePlugin = $prose(() => {
           }
         }
 
-        if (event.key === "Backspace") {
-          const action = computeBackspace(state);
-          if (!action) return false;
+        if (event.key === "Backspace" || event.key === "Delete") {
+          const forward = event.key === "Delete";
+          const action = forward
+            ? computeDelete(state)
+            : computeBackspace(state);
+          if (action) {
+            event.preventDefault();
+            applyDeleteAction(view, action);
+            return true;
+          }
+          const range = computeCharDeleteBesideEnclosure(
+            state,
+            forward ? "forward" : "backward",
+          );
+          if (!range) return false;
           event.preventDefault();
-          applyDeleteAction(view, action);
-          return true;
-        }
-
-        if (event.key === "Delete") {
-          const action = computeDelete(state);
-          if (!action) return false;
-          event.preventDefault();
-          applyDeleteAction(view, action);
+          view.dispatch(
+            caretAt(view.state.tr.delete(range.from, range.to), range.from),
+          );
           return true;
         }
 

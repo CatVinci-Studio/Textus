@@ -76,6 +76,38 @@ test("** committed through an IME composition still makes bold (#134)", async ({
   expect((await sourceOf(page)).trim()).toBe("**加粗** and ~~s~~");
 });
 
+test("deleting the text after bold or italic leaves the caret after the closing mark (#199)", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await editor.click();
+  await page.keyboard.type("前**3**位。", { delay: 30 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("前*3*位。", { delay: 30 });
+  for (const [line, tag] of [
+    [0, "strong"],
+    [1, "em"],
+  ] as const) {
+    const paragraph = editor.locator("p").nth(line);
+    // Caret after 位, then erase it: the caret is now right after the span.
+    await paragraph.click();
+    await page.keyboard.press("End");
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("Backspace");
+    // The browser's own deletion used to leave its caret at the end of the
+    // span's text, before the revealed closing mark, so typing went bold.
+    const caretInSpan = await page.evaluate(
+      (t) => !!document.getSelection()?.anchorNode?.parentElement?.closest(t),
+      tag,
+    );
+    expect(caretInSpan).toBe(false);
+    await page.keyboard.type("x", { delay: 30 });
+    await expect(paragraph.locator(tag)).toHaveText("3");
+  }
+  expect((await sourceOf(page)).trim()).toBe("前**3**x。\n\n前*3*x。");
+});
+
 test("with closing marks off, ** stays as typed and **x** still turns bold (#136)", async ({
   page,
 }) => {
