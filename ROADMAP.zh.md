@@ -34,17 +34,24 @@
 - **Playground 已上线**：[textus.catvinci.com/playground](https://textus.catvinci.com/playground/)，不用安装就能在浏览器里试试编辑器。[#88](https://github.com/CatVinci-Studio/Textus/issues/88)
 - **主题分享已开放**：在置顶的 issue 里发一条评论，我们看过之后，你的主题就会出现在 [textus.catvinci.com/themes](https://textus.catvinci.com/themes/) 上，大家都能免费下载。[#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
-## 以后：Textus 1.3.0
+## 以后：Textus 1.3.0，全面扩展，体验优先
 
-- **Textus AI 生成图片。** 写作时让它画插图、示意图，像其他提议一样确认后插进文档；支持国内外主流的图片服务。[#194](https://github.com/CatVinci-Studio/Textus/issues/194)
-- **插件和插件分享平台**，和主题分享平台一样。插件在沙盒里运行，只拿到你允许的权限，不装就不会运行；Textus AI 也能帮你写一个或改一个，就像 `/theme` 做主题那样。
+- **长文档**打开和滚动都流畅。
+- **Textus AI 联网搜索**，所有 AI 服务都能用，来源可以查证。
+- **简单地选择 AI 思考的深度**：自动、快速或深入。
+- **Textus AI 生成图片**，像其他提议一样由你确认，支持国内外主流的图片服务。[#194](https://github.com/CatVinci-Studio/Textus/issues/194)
 - **Textus AI 能读项目文件夹里的 Word、PDF、幻灯片和表格。**
+- **插件和插件分享平台。** 插件在沙盒里运行，只拿到你允许的权限，不装就不会运行；Textus AI 也能帮你写一个。上线时附带几款基础插件。
 
-## 以后：Textus 1.4.0
+## 以后：Textus 1.4.0，稳定打磨
 
 - **语音输入**，慢慢打磨，做好再发。[#195](https://github.com/CatVinci-Studio/Textus/issues/195)
-- **第一批官方插件**：日记和日历、任务、看板。
-- **文档的版本历史。**
+- **文档的版本历史**：可以回到之前的版本，也能看到 Textus AI 改了什么。
+- **Textus AI 从你接受和拒绝的修订里学习。**
+- **更多插件**：第二版插件接口，以及日历、任务、看板等官方插件。
+- **图片查看器。**
+- **无障碍**：支持读屏软件、完全用键盘操作和高对比度。
+- **Windows 版加上代码签名，并上架 Flathub。**
 
 ## 想帮忙？
 

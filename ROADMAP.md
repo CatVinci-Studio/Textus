@@ -91,26 +91,33 @@ only fix things.
   [textus.catvinci.com/themes](https://textus.catvinci.com/themes/) for
   everyone, free. [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
-## Later: Textus 1.3.0
+## Later: Textus 1.3.0, a full expansion, experience first
 
-- **Images made by Textus AI.** Ask for an illustration or a diagram while
-  you write and accept it like any other suggestion, with the major Chinese
-  and international image providers.
+- **Long documents** that open and scroll smoothly.
+- **Web search for Textus AI** with every AI provider, with sources you can
+  check.
+- **A simple choice of how hard the AI thinks**: Auto, Fast or Deep.
+- **Images made by Textus AI**, as suggestions you accept, with the major
+  Chinese and international image providers.
   [#194](https://github.com/CatVinci-Studio/Textus/issues/194)
-- **Plugins, and a plugin gallery** like the theme gallery. Plugins run
-  sandboxed with only the permissions you grant, and nothing runs unless you
-  install it; Textus AI can write or adapt one for you, as `/theme` does for
-  themes.
 - **Textus AI reads Word, PDF, slide and spreadsheet files** in your project
   folder.
+- **Plugins, and a plugin gallery.** Plugins run sandboxed with only the
+  permissions you grant, and nothing runs unless you install it; Textus AI
+  can write one for you. A few basic plugins come with the launch.
 
-## Later: Textus 1.4.0
+## Later: Textus 1.4.0, steady and polished
 
 - **Voice input**, taken slowly to get it right.
   [#195](https://github.com/CatVinci-Studio/Textus/issues/195)
-- **The first official plugins**: daily notes and a calendar, tasks, and a
-  kanban board.
-- **Version history** for your documents.
+- **Version history** for your documents: go back to an earlier version, and
+  see what Textus AI changed.
+- **Textus AI learns from the revisions you accept and reject.**
+- **More plugins**: a second version of the plugin API, and official plugins
+  for a calendar, tasks and a kanban board.
+- **An image viewer.**
+- **Accessibility**: screen readers, full keyboard use and high contrast.
+- **A signed Windows app, and Textus on Flathub.**
 
 ## Want to help?
 
