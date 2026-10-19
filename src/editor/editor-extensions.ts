@@ -26,6 +26,7 @@ import { createRawHtmlPreviewPlugin } from "./html/raw-html-preview-plugin";
 import { brToHardbreakPlugin } from "./markdown/br-hardbreak-plugin";
 import {
   remarkHighlightPlugin,
+  remarkStrikethroughTildesPlugin,
   mdSpanSchema,
   mdCodeSpanSchema,
   mdSpanClipboardPlugin,
@@ -207,6 +208,7 @@ export function withEditorCore(
       // Inline enclosures: bold/italic/strikethrough/highlight/inline code
       // as real nodes with synthesized, Typora-style delimiters.
       .use(remarkHighlightPlugin)
+      .use(remarkStrikethroughTildesPlugin)
       .use(mdSpanSchema)
       .use(mdCodeSpanSchema)
       .use(mdSpanClipboardPlugin)

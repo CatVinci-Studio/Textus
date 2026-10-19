@@ -416,10 +416,32 @@ const isAutolinkLiteralGuard = (pattern: Unsafe) =>
   (pattern.character === "." && pattern.before === "[Ww]") ||
   (pattern.character === ":" && pattern.before === "[ps]");
 
+/**
+ * Writes a strikethrough with as many tildes as it was read with (see
+ * remarkStrikethroughTildes in md-span-schema.ts): `~x~` stays single. It
+ * wraps whichever `delete` handler the extensions installed - the
+ * CJK-friendly one - for this one serialization, as `list` does listItem.
+ */
+function withTildesAsWritten(del: Handle): Handle {
+  return Object.assign(
+    ((node, parent, state, info) => {
+      const out = del(node, parent, state, info);
+      const single = (node.data as { tildes?: number } | undefined)?.tildes;
+      return single === 1 && out.startsWith("~~") && out.endsWith("~~")
+        ? `~${out.slice(2, -2)}~`
+        : out;
+    }) as Handle,
+    { peek: (del as Partial<PeekingHandle>).peek },
+  );
+}
+
+/** Set up per serialization, before any node is written. */
 const root: Handle = (node, parent, state, info) => {
   state.unsafe = state.unsafe.filter(
     (pattern) => !isAutolinkLiteralGuard(pattern),
   );
+  const del = state.handlers.delete as Handle | undefined;
+  if (del) state.handlers.delete = withTildesAsWritten(del);
   return defaultHandlers.root(node, parent, state, info);
 };
 
