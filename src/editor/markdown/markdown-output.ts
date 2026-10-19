@@ -1,11 +1,18 @@
 import type { Ctx } from "@milkdown/kit/ctx";
 import { defaultValueCtx, remarkStringifyOptionsCtx } from "@milkdown/kit/core";
-import { imageSchema, linkSchema } from "@milkdown/kit/preset/commonmark";
+import {
+  codeBlockSchema,
+  imageSchema,
+  linkSchema,
+} from "@milkdown/kit/preset/commonmark";
+import type { DOMOutputSpec } from "@milkdown/kit/prose/model";
 import type { MarkdownNode } from "@milkdown/kit/transformer";
+import type { Link } from "mdast";
 import {
   defaultHandlers,
   type Handle,
   type State,
+  type Unsafe,
 } from "mdast-util-to-markdown";
 import {
   imageMarkdownHtml,
@@ -13,6 +20,7 @@ import {
   readImagePresentation,
   type ImageAttrs,
 } from "../images/image-html";
+import { writeLatexMath } from "../math/latex-math-syntax";
 
 // How the editor writes markdown back out. Every rule here exists to keep a
 // saved file close to what the user wrote, instead of remark-stringify's
@@ -304,6 +312,68 @@ function configureImageNode(ctx: Ctx): void {
 }
 
 /**
+ * A code fence's info string past the language - ```` ```js title="a.js" ````
+ * - kept in a `meta` attr and written back. Milkdown's code block keeps
+ * only the language, so the rest was dropped on the first save, and with
+ * it the file names and line highlights other tools draw from it.
+ */
+function keepCodeFenceMeta(ctx: Ctx): void {
+  ctx.update(codeBlockSchema.key, (prev) => (innerCtx) => {
+    const schema = prev(innerCtx);
+    return {
+      ...schema,
+      attrs: { ...schema.attrs, meta: { default: "", validate: "string" } },
+      parseDOM: [
+        {
+          tag: "pre",
+          preserveWhitespace: "full",
+          getAttrs: (dom) =>
+            dom instanceof HTMLElement && {
+              language: dom.dataset.language ?? "",
+              meta: dom.dataset.meta ?? "",
+            },
+        },
+      ],
+      toDOM: (node) => {
+        // Kept on the <pre> for a copy and paste inside the editor.
+        const [tag, attrs, ...rest] = schema.toDOM!(node) as [
+          string,
+          Record<string, unknown>,
+          ...DOMOutputSpec[],
+        ];
+        const meta = node.attrs.meta as string;
+        return [tag, meta ? { ...attrs, "data-meta": meta } : attrs, ...rest];
+      },
+      parseMarkdown: {
+        match: schema.parseMarkdown.match,
+        runner: (state, node, type) => {
+          state.openNode(type, {
+            language: (node.lang as string | null) ?? "",
+            meta: (node.meta as string | null) ?? "",
+          });
+          if (node.value) state.addText(node.value as string);
+          state.closeNode();
+        },
+      },
+      toMarkdown: {
+        match: schema.toMarkdown.match,
+        runner: (state, node) => {
+          state.addNode(
+            "code",
+            undefined,
+            node.content.firstChild?.text || "",
+            {
+              lang: node.attrs.language,
+              meta: (node.attrs.meta as string) || null,
+            },
+          );
+        },
+      },
+    };
+  });
+}
+
+/**
  * Runs one of remark's link functions with its `resourceLink` switch ("never
  * <...>") set the way this link's syntax asks. The option is shared by the
  * whole serialization, so it is set only around the one call.
@@ -328,9 +398,25 @@ function asWritten<T>(
 type PeekingHandle = Handle & { peek: Handle };
 const defaultLink = defaultHandlers.link as PeekingHandle;
 
+/** A bare `www.x.org`, which GFM links with an `http://` URL. It has no
+ *  `<...>` form - remark wrote `[www.x.org](http://www.x.org)` - and,
+ *  written bare as it was, it reads back the same (see `root` below). */
+function bareWww(node: Link): string | null {
+  const syntax = (node.data as { linkSyntax?: LinkSyntax } | undefined)
+    ?.linkSyntax;
+  const text = textOf(node);
+  return syntax === "autolink" &&
+    /^www\./i.test(text) &&
+    node.url === `http://${text}`
+    ? text
+    : null;
+}
+
 /** Writes a link in the syntax it was read in (LinkSyntax above). */
 const link = Object.assign(
   ((node, parent, state, info) => {
+    const www = bareWww(node);
+    if (www) return www;
     const empty =
       (node.data as { linkSyntax?: LinkSyntax } | undefined)?.linkSyntax ===
       "empty";
@@ -344,6 +430,7 @@ const link = Object.assign(
   {
     // containerPhrasing asks `peek` which character the link starts with.
     peek: ((node, parent, state, info) =>
+      bareWww(node)?.charAt(0) ??
       asWritten(node, state, () =>
         defaultLink.peek(node, parent, state, info),
       )) as Handle,
@@ -376,6 +463,101 @@ const image = Object.assign(
 );
 
 /**
+ * A URL or email address typed as plain text is written as typed. remark-gfm
+ * escapes the character that would make GitHub link it - `https\://x.org`,
+ * `www\.x.org`, `a\@b.com` - to keep it text, so the address the user
+ * typed was no longer a link on GitHub, and read wrongly anywhere the
+ * escape isn't understood. Unescaped, it is the autolink GitHub (and
+ * Textus, once reopened) makes of it, which is what typing one means;
+ * `link` above writes that autolink back the way it was typed.
+ * The guards are dropped from this one serialization's own copy of the
+ * unsafe list.
+ */
+const isAutolinkLiteralGuard = (pattern: Unsafe) =>
+  (pattern.character === "@" && pattern.before === "[+\\-.\\w]") ||
+  (pattern.character === "." && pattern.before === "[Ww]") ||
+  (pattern.character === ":" && pattern.before === "[ps]");
+
+/**
+ * Writes a strikethrough with as many tildes as it was read with (see
+ * remarkStrikethroughTildes in md-span-schema.ts): `~x~` stays single. It
+ * wraps whichever `delete` handler the extensions installed - the
+ * CJK-friendly one - for this one serialization, as `list` does listItem.
+ */
+function withTildesAsWritten(del: Handle): Handle {
+  return Object.assign(
+    ((node, parent, state, info) => {
+      const out = del(node, parent, state, info);
+      const single = (node.data as { tildes?: number } | undefined)?.tildes;
+      return single === 1 && out.startsWith("~~") && out.endsWith("~~")
+        ? `~${out.slice(2, -2)}~`
+        : out;
+    }) as Handle,
+    { peek: (del as Partial<PeekingHandle>).peek },
+  );
+}
+
+type MathData = { mathDelimiter?: string; oneLine?: boolean } | undefined;
+
+/**
+ * Writes inline math in the delimiter it was read with - remark-math writes
+ * the fewest dollars that work: as many dollars as the file had (see
+ * recordDollarRuns in math-schema.ts), so an inline `$$x$$` stays as it
+ * was, or LaTeX's `\(x\)` / `\[x\]` (latex-math-syntax.ts). Wraps
+ * remark-math's handler for this one serialization, as above.
+ */
+function withInlineMathAsWritten(inlineMath: Handle): Handle {
+  const latex = (node: { value?: string; data?: unknown }) => {
+    const wanted = (node.data as MathData)?.mathDelimiter;
+    return wanted ? writeLatexMath(node.value ?? "", wanted, false) : null;
+  };
+  const peek = (inlineMath as Partial<PeekingHandle>).peek;
+  return Object.assign(
+    ((node, parent, state, info) => {
+      const written = latex(node);
+      if (written) return written;
+      const out = inlineMath(node, parent, state, info);
+      const wanted = (node.data as MathData)?.mathDelimiter;
+      const used = /^\$+/.exec(out)?.[0] ?? "";
+      return wanted && /^\$+$/.test(wanted) && wanted.length > used.length
+        ? wanted + out.slice(used.length, out.length - used.length) + wanted
+        : out;
+    }) as Handle,
+    {
+      peek: ((node, parent, state, info) =>
+        latex(node) ? "\\" : peek?.(node, parent, state, info)) as Handle,
+    },
+  );
+}
+
+/** A math block read as `\[...\]` is written that way again, on one line
+ *  or with the delimiters on lines of their own, as it was. */
+function withMathBlockAsWritten(math: Handle): Handle {
+  return ((node, parent, state, info) => {
+    const data = node.data as MathData;
+    const written =
+      data?.mathDelimiter &&
+      writeLatexMath(node.value ?? "", data.mathDelimiter, !data.oneLine);
+    return written || math(node, parent, state, info);
+  }) as Handle;
+}
+
+/** Set up per serialization, before any node is written. */
+const root: Handle = (node, parent, state, info) => {
+  state.unsafe = state.unsafe.filter(
+    (pattern) => !isAutolinkLiteralGuard(pattern),
+  );
+  const del = state.handlers.delete as Handle | undefined;
+  if (del) state.handlers.delete = withTildesAsWritten(del);
+  const inlineMath = state.handlers.inlineMath as Handle | undefined;
+  if (inlineMath)
+    state.handlers.inlineMath = withInlineMathAsWritten(inlineMath);
+  const math = state.handlers.math as Handle | undefined;
+  if (math) state.handlers.math = withMathBlockAsWritten(math);
+  return defaultHandlers.root(node, parent, state, info);
+};
+
+/**
  * The bullet the document's own lists use ("-", "*" or "+"), by majority,
  * or null when it has none. remark writes "*" whatever the file had, so
  * the first edit to a README written with "-" rewrote every bullet in it
@@ -390,12 +572,16 @@ export function documentBullet(markdown: string): "-" | "*" | "+" | null {
 }
 
 /**
- * A GitHub alert's marker - `> [!NOTE]` and its kin, opening a quote - is
+ * A callout's marker - `> [!NOTE]` and its kin, opening a quote - is
  * written as it was typed. remark escapes the bracket ("\\[!NOTE]") in case
  * it starts a reference link, which Textus still reads as an alert
  * (github-alert-plugin.ts) but GitHub and every other tool no longer do.
+ * Any type word in any case counts, with Obsidian's fold sign after it
+ * (`[!tip]-`): Obsidian has callout types of its own (`[!question]`), which
+ * Textus shows as a plain quote but must not break for the tools that
+ * read them.
  */
-const ALERT_MARKER = /^\\\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/;
+const ALERT_MARKER = /^\\(\[![A-Za-z]+\])/;
 
 function keepAlertMarker(text: Handle): Handle {
   return (node, parent, state, info) => {
@@ -404,7 +590,7 @@ function keepAlertMarker(text: Handle): Handle {
       parent?.type === "paragraph" &&
       parent.children[0] === node &&
       state.stack.includes("blockquote");
-    return opensQuote ? out.replace(ALERT_MARKER, "[!$1]") : out;
+    return opensQuote ? out.replace(ALERT_MARKER, "$1") : out;
   };
 }
 
@@ -414,6 +600,7 @@ function keepAlertMarker(text: Handle): Handle {
 export function configureMarkdownOutput(ctx: Ctx): void {
   keepLinkAcrossInlineNodes(ctx);
   configureImageNode(ctx);
+  keepCodeFenceMeta(ctx);
   // The editor's opening text (MilkdownEditor sets it before this runs).
   const initial = ctx.get(defaultValueCtx);
   const bullet = typeof initial === "string" ? documentBullet(initial) : null;
@@ -422,6 +609,7 @@ export function configureMarkdownOutput(ctx: Ctx): void {
     ...(bullet ? { bullet } : {}),
     handlers: {
       ...options.handlers,
+      root,
       thematicBreak,
       list,
       link,
