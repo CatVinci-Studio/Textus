@@ -42,6 +42,9 @@ this pipeline, and it is enforced in Rust, not only asked for in the prompt
 | Review | not offered                                                        |
 | Revise | every action                                                       |
 
+The panel and the detached window offer all three; Quick Ask offers Revise
+and Review only (`COMPOSER_MODES`, [ai-concepts.md](ai-concepts.md#not-a-file-modes)).
+
 Write's schema lists only the insertion actions, and `propose_insertion`
 refuses any other action a model sends anyway; the refusal is a tool result
 like any validation failure, so its streamed preview is discarded

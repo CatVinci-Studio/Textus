@@ -35,6 +35,7 @@ import { toolActivityText } from "./AgentTurnView";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { Presence, PresenceDiv } from "../../ui/usePresence";
 import { scrollBehavior } from "../../ui/motion";
+import { COMPOSER_MODES } from "./last-mode";
 import {
   attachedFileBlock,
   selectedTextBlock,
@@ -618,6 +619,7 @@ export function ChatBody({
         busy={busy}
         labels={labels}
         defaultMode={defaultMode}
+        modes={COMPOSER_MODES[variant]}
         carryMode={variant !== "quick"}
         selectionChip={selectionChip}
         selectionPerMessage={variant !== "quick"}

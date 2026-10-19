@@ -88,6 +88,28 @@ test("the composer offers Write, Review and Revise, in that order", async ({
   ]);
 });
 
+test("Quick Ask offers Revise and Review only, on Revise, even after Write was picked in the panel", async ({
+  page,
+}) => {
+  await openPanel(page, "zh");
+  // The panel's last pick carries over to its next conversation - not into
+  // Quick Ask, which has no Write.
+  const panelPicker = page
+    .locator(".agent-panel-view")
+    .getByRole("combobox", { name: "模式" });
+  await panelPicker.click();
+  await page.getByRole("option", { name: "写作" }).click();
+  await pasteMarkdown(page, "A short note to ask about.");
+  await page.locator(".milkdown p").first().click({ clickCount: 3 });
+  await page.keyboard.press("Control+Shift+K");
+  const picker = page
+    .locator(".inline-chat")
+    .getByRole("combobox", { name: "模式" });
+  await expect(picker).toHaveText("修订");
+  await picker.click();
+  await expect(page.getByRole("option")).toHaveText(["修订", "审阅"]);
+});
+
 test("the modes in Chinese: 写作, 审阅, 修订", async ({ page }) => {
   await openPanel(page, "zh");
   const picker = page

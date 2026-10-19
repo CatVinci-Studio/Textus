@@ -265,9 +265,13 @@ Write (写作) only adds new text, Review (审阅) only reads, answers and
 comments, Revise (修订) changes the text that is there.**
 
 - **Where:** the mode picker beside the composer (a segmented control on a
-  phone), in the order Write, Review, Revise. The panel starts in
+  phone). The panel and the detached chat window offer Write, Review,
+  Revise, in that order; Quick Ask, for a quick change to the passage it
+  was opened on, offers Revise and Review only - no Write
+  (`COMPOSER_MODES` in `ai/chat/last-mode.ts`). The panel starts in
   **Settings > Textus AI > Textus AI Chat > Default mode** (Review by
-  default) and remembers the last pick; Quick Ask starts in Revise.
+  default) and remembers the last pick; Quick Ask starts in Revise, and a
+  mode it doesn't offer falls back to Revise.
 - **Textus AI uses it:** the prompt's `---interaction mode---` section,
   and the tools: Review gets no `propose_edit`, Write gets it with the
   insertion actions only (append, insert_at_cursor, insert_after,
