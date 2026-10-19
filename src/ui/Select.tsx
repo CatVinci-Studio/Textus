@@ -189,6 +189,8 @@ function DrawnSelect({
   const [place, setPlace] = useState<CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  // Where the trigger was when the list was placed beside it.
+  const placedAt = useRef<DOMRect | null>(null);
   const listId = useId();
   // The list stays a moment after it closes, shrinking back into the
   // trigger; the choice has already gone through by then.
@@ -218,6 +220,7 @@ function DrawnSelect({
     if (!open) return;
     const rect = triggerRef.current?.getBoundingClientRect();
     if (!rect) return;
+    placedAt.current = rect;
     const below = window.innerHeight - rect.bottom - 8;
     const above = rect.top - 8;
     const up = below < Math.min(MENU_MAX_HEIGHT, 160) && above > below;
@@ -256,13 +259,23 @@ function DrawnSelect({
       if (listRef.current?.contains(e.target as Node)) return;
       close(false);
     };
+    // A scroll event arrives a frame after the scroll itself, so one made
+    // just before the list opened (the trigger scrolled into view, a wheel
+    // still settling) lands after the list was placed where the trigger
+    // already is. Only a scroll that moved the trigger leaves it behind.
+    const onScroll = (e: Event) => {
+      const now = triggerRef.current?.getBoundingClientRect();
+      const then = placedAt.current;
+      if (now && then && now.top === then.top && now.left === then.left) return;
+      onMove(e);
+    };
     document.addEventListener("mousedown", onPointer, true);
-    window.addEventListener("scroll", onMove, true);
+    window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", onMove);
     window.addEventListener("blur", onMove);
     return () => {
       document.removeEventListener("mousedown", onPointer, true);
-      window.removeEventListener("scroll", onMove, true);
+      window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", onMove);
       window.removeEventListener("blur", onMove);
     };
