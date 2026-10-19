@@ -93,6 +93,7 @@ export function ReviewMargin({
   view,
   items,
   hot,
+  focused,
   scrollEl,
   contentEl,
   labels,
@@ -109,6 +110,8 @@ export function ReviewMargin({
   view: EditorView | null;
   items: MarginItem[];
   hot: string | null;
+  /** The revision the review bar points at ("rev:<callId>:<index>"). */
+  focused: string | null;
   scrollEl: HTMLElement;
   contentEl: HTMLElement;
   labels: ReviewMarginLabels;
@@ -296,6 +299,7 @@ export function ReviewMargin({
             key={item.key}
             item={item}
             hot={hot === item.key}
+            focused={focused === item.key}
             labels={labels}
             style={style}
             onHot={(on) => onHot(on ? item.key : null)}
@@ -325,6 +329,7 @@ const CROSS = (
 function RevisionCard({
   item,
   hot,
+  focused,
   labels,
   style,
   onHot,
@@ -333,6 +338,7 @@ function RevisionCard({
 }: {
   item: Extract<MarginItem, { kind: "revision" }>;
   hot: boolean;
+  focused: boolean;
   labels: ReviewMarginLabels;
   style: CSSProperties;
   onHot: (on: boolean) => void;
@@ -345,7 +351,7 @@ function RevisionCard({
   return (
     <div
       ref={ref}
-      className={`review-note revision-note revision-note-${state}${hot ? " review-note-hot" : ""}`}
+      className={`review-note revision-note revision-note-${state}${hot ? " review-note-hot" : ""}${focused ? " revision-note-focus" : ""}`}
       style={style}
       onMouseEnter={() => onHot(true)}
       onMouseLeave={() => onHot(false)}

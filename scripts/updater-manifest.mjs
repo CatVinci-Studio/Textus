@@ -12,13 +12,12 @@
 // written here from the draft release's signed artifacts (tauri-action runs
 // with uploadUpdaterJson: false - `includeUpdaterJson` before tauri-action 1.0).
 //
-// The one `latest.json` a Textus release carries is a copy of the last
-// Levis release's own (LEVIS_LAST_TAG): once Textus is "Latest", a Levis
-// install older than that still finds it there, updates to the last Levis
-// - which tells its user about Textus - and the last Levis sees itself as
-// current. The release workflow refuses to publish a draft whose
-// `latest.json` is anything else: a Levis version, Levis assets on a
-// v0.9.x tag, nothing that could install Textus.
+// Releases up to 1.1.0 carried one `latest.json`: a copy of the last Levis
+// release's (v0.9.8), so a Levis install updated to that Levis, which told
+// its user about Textus. Levis support ended after 1.1.0, and later releases
+// carry no copy: once one of them is "Latest", a Levis install finds no
+// manifest and so no update. A `latest.json` on a release is now always an
+// error, and the release workflow refuses to publish one.
 //
 //   node scripts/updater-manifest.mjs check [--root DIR]
 //       tauri.conf.json's updater endpoints name textus-latest.json, the
@@ -34,24 +33,17 @@
 //       exit 1 unless it is a complete manifest of V, else print "advance"
 //       when it is not older than CURRENT (the beta manifest there now,
 //       none when absent) and "keep" when it is
-//   node scripts/updater-manifest.mjs bridge --levis-manifest FILE
-//       exit 1 unless FILE is the last Levis release's latest.json
 //   node scripts/updater-manifest.mjs guard --assets-file FILE
-//       [--levis-manifest FILE]
 //       FILE lists a release's asset names, one per line; exit 1 if the
-//       release carries latest.json and the given copy of it is not the
-//       last Levis release's
+//       release carries latest.json
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /** What Textus's updater reads and the release workflow uploads. */
 export const MANIFEST_NAME = "textus-latest.json";
-/** What Levis's updater reads. On a Textus release, only as a copy of the
- *  last Levis release's own. */
+/** What Levis's updater reads. Never on a Textus release. */
 export const LEVIS_MANIFEST_NAME = "latest.json";
-/** The last Levis release: the one every older Levis install updates to. */
-export const LEVIS_LAST_TAG = "v0.9.8";
 /** What the beta update channel reads: the newest release of any kind,
  *  release candidates included, kept on the website's download bucket
  *  (scripts/update-beta-manifest.sh) because GitHub's releases/latest
@@ -224,35 +216,12 @@ export function betaAdvances(current, candidate) {
   return compareVersions(candidate.version, current.version) >= 0;
 }
 
-/** Why `manifest` is not the last Levis release's latest.json - empty when
- *  it is: that version, and every download a Levis asset on that tag. */
-export function levisBridgeProblems(manifest) {
-  const problems = [];
-  const version = LEVIS_LAST_TAG.slice(1);
-  if (manifest?.version !== version)
-    problems.push(
-      `latest.json says ${manifest?.version}, not Levis ${version}`,
-    );
-  const entries = Object.entries(manifest?.platforms ?? {});
-  if (entries.length === 0) problems.push("latest.json has no platforms");
-  for (const [key, entry] of entries) {
-    const url = String(entry?.url ?? "");
-    const asset = decodeURIComponent(url.split("/").pop() ?? "");
-    if (!url.includes(`/releases/download/${LEVIS_LAST_TAG}/`))
-      problems.push(`${key}: ${url} is not on ${LEVIS_LAST_TAG}`);
-    if (!/^Levis[_-]/.test(asset) || /textus/i.test(url))
-      problems.push(`${key}: ${asset} is not a Levis asset`);
-  }
-  return problems;
-}
-
-/** Why a release with these assets can't be published: a latest.json that
- *  is not the last Levis release's (`levisManifest`, its parsed content). */
-export function forbiddenAssets(names, levisManifest) {
-  if (!names.some((name) => name.trim() === LEVIS_MANIFEST_NAME)) return [];
-  if (levisManifest === undefined)
-    return [`${LEVIS_MANIFEST_NAME} is on the release but was not checked`];
-  return levisBridgeProblems(levisManifest);
+/** Why a release with these assets can't be published: it carries
+ *  latest.json, which every Levis install would read and install. */
+export function forbiddenAssets(names) {
+  return names.some((name) => name.trim() === LEVIS_MANIFEST_NAME)
+    ? [`${LEVIS_MANIFEST_NAME} is on the release`]
+    : [];
 }
 
 function fail(lines) {
@@ -306,27 +275,17 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       ? JSON.parse(readFileSync(currentFile, "utf8"))
       : null;
     console.log(betaAdvances(current, manifest) ? "advance" : "keep");
-  } else if (command === "bridge") {
-    const manifest = JSON.parse(
-      readFileSync(required("--levis-manifest"), "utf8"),
-    );
-    const problems = levisBridgeProblems(manifest);
-    if (problems.length > 0) fail(problems);
   } else if (command === "guard") {
     const names = readFileSync(required("--assets-file"), "utf8").split("\n");
-    const file = option("--levis-manifest");
-    const bad = forbiddenAssets(
-      names,
-      file ? JSON.parse(readFileSync(file, "utf8")) : undefined,
-    );
+    const bad = forbiddenAssets(names);
     if (bad.length > 0)
       fail([
-        `this release's ${LEVIS_MANIFEST_NAME} is not ${LEVIS_LAST_TAG}'s: every Levis install reads it and could install Textus over itself.`,
         ...bad,
+        `every Levis install reads ${LEVIS_MANIFEST_NAME} from this repository and trusts the same signing key, so it would install Textus over itself. Delete the asset from the draft and run the job again.`,
       ]);
   } else {
     fail([
-      `unknown command ${command ?? "(none)"}: check, build, beta, bridge or guard`,
+      `unknown command ${command ?? "(none)"}: check, build, beta or guard`,
     ]);
   }
 }
