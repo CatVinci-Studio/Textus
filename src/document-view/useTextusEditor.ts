@@ -53,7 +53,7 @@ export function useTextusEditor({
   setQuickAskEl: Dispatch<SetStateAction<HTMLElement | null>>;
   requestImageName: (stem: string, extension: string) => Promise<string | null>;
 }): EditorBridges {
-  const { reportedDocRef, mountDocRef, reportMarkdown } = reporting;
+  const { reportedDocRef, onMounted, reportDoc } = reporting;
   // The pending-edit plugin's callbacks need to exist at chain-construction
   // time below, but the real accept/reject/sync functions come from
   // usePendingEdits, which needs `run` - only available after useEditor sets
@@ -90,16 +90,14 @@ export function useTextusEditor({
           ctx
             .get(listenerCtx)
             .mounted((ctx) => {
-              const { doc } = ctx.get(editorViewCtx).state;
-              reportedDocRef.current = doc;
-              mountDocRef.current = doc;
+              onMounted(ctx, ctx.get(editorViewCtx).state.doc);
             })
-            // Fires just before markdownUpdated, from the same debounce.
-            .updated((_ctx, doc) => {
+            // The listener's debounced report of an edit. Not
+            // markdownUpdated: that serializes the whole document, and a
+            // save writes only the changed blocks (useDocumentReporting).
+            .updated((ctx, doc) => {
               reportedDocRef.current = doc;
-            })
-            .markdownUpdated((ctx, markdown) => {
-              reportMarkdown(ctx, markdown);
+              reportDoc(ctx, doc);
             })
             // Every new selection has to reach the detached chat window as a
             // fresh selection chip - that surface is defined by following
