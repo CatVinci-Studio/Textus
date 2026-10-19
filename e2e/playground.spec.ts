@@ -217,3 +217,29 @@ test.describe("in Chinese", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   });
 });
+
+for (let i = 0; i < 15; i++)
+  test(`DEBUG race ${i}`, async ({ page }) => {
+    await openPlayground(page);
+    const h1 = page.locator(`${editor} h1`);
+    const box = await h1.boundingBox();
+    const sel = () =>
+      page.evaluate(() => {
+        const s = getSelection()!;
+        return `${s.anchorNode?.nodeName}:${JSON.stringify(s.anchorNode?.textContent)}@${s.anchorOffset}`;
+      });
+    const textRect = await page.evaluate(() => {
+      const h = document.querySelector(".editor-content .ProseMirror h1")!;
+      const r = document.createRange();
+      r.selectNodeContents(h);
+      const b = r.getBoundingClientRect();
+      return { left: b.left, right: b.right };
+    });
+    await h1.click();
+    const afterClick = await sel();
+    await page.keyboard.press("End");
+    const afterEnd = await sel();
+    await page.keyboard.type("!");
+    const text = await h1.textContent();
+    console.log(`DEBUG ${i}`, JSON.stringify(box), JSON.stringify(textRect), afterClick, afterEnd, JSON.stringify(text));
+  });
