@@ -78,6 +78,7 @@ user's document.
 | `ai/text-locate`        | Locating plain text inside a block for the strike range.                                                                      |
 | `ai/chat/user-message`  | The `<selected-text>`/`<attached-file>` wire format, round-tripped through the writer.                                        |
 | `ai/ghost-text-plugin`  | Completion echo stripping, word-by-word accept, candidate splitting.                                                          |
+| `save-roundtrip`        | Saving after an edit: untouched blocks kept byte for byte, no text lost on reading back (saving.md).                          |
 
 ### 2. Wire formats and provider dialects (`aicompat`)
 

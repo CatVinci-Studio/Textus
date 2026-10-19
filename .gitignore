@@ -41,3 +41,7 @@ playwright-report/
 
 # Throwaway app profiles for local previews (tutorial, diary)
 .*-preview/
+
+# The save round-trip corpus (scripts/roundtrip-corpus/fetch.mjs):
+# third-party files, downloaded, never committed
+.cache/
