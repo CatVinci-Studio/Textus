@@ -46,6 +46,29 @@ export function createTypewriterPlugin(options: { enabled: () => boolean }) {
             if (options.enabled() && !editorView.composing) center(editorView);
           };
           window.addEventListener("resize", onResize);
+          // A caret or selection placed with the mouse or a finger stays
+          // where it was put, as in Typora; the next key centres it.
+          // Centring while the button was down scrolled the text under the
+          // still pointer, the browser extended the selection to where the
+          // pointer now was, and that centred again - a click landed on
+          // another paragraph and a drag ran away (#217). Centring once on
+          // release would still pull the text from under a double click's
+          // second press. Set by a press in the document, cleared by any
+          // key or a press anywhere else (the find bar, the outline), which
+          // move the caret for the user.
+          let pointerPlaced = false;
+          const onPointerDown = (event: PointerEvent) => {
+            pointerPlaced =
+              event.target instanceof Node &&
+              editorView.dom.contains(event.target);
+          };
+          const onKey = () => {
+            pointerPlaced = false;
+          };
+          window.addEventListener("pointerdown", onPointerDown, true);
+          window.addEventListener("keydown", onKey, true);
+          // A phone's keyboard may type without a usable keydown.
+          editorView.dom.addEventListener("beforeinput", onKey);
           return {
             update(view, prevState) {
               const enabled = options.enabled();
@@ -54,16 +77,17 @@ export function createTypewriterPlugin(options: { enabled: () => boolean }) {
               if (!enabled) return;
               if (view.composing) return;
               if (typewriterKey.getState(view.state)) return;
-              if (
-                !justEnabled &&
-                view.state.doc.eq(prevState.doc) &&
-                view.state.selection.eq(prevState.selection)
-              )
-                return;
+              if (!justEnabled && view.state.doc.eq(prevState.doc)) {
+                if (view.state.selection.eq(prevState.selection)) return;
+                if (pointerPlaced) return;
+              }
               center(view);
             },
             destroy() {
               window.removeEventListener("resize", onResize);
+              window.removeEventListener("pointerdown", onPointerDown, true);
+              window.removeEventListener("keydown", onKey, true);
+              editorView.dom.removeEventListener("beforeinput", onKey);
             },
           };
         },
