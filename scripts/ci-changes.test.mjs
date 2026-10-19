@@ -14,19 +14,31 @@ const current = Object.fromEntries(
   VERSION_FILES.map((file) => [file, readFileSync(file, "utf8")]),
 );
 
-/** The real files as a bump to 9.9.9 leaves them: the app's version
- *  replaced where it appears, the way PRs like #192 change it. */
-const bumped = Object.fromEntries(
-  VERSION_FILES.map((file) => [
-    file,
-    file === "src-tauri/Cargo.lock"
-      ? current[file].replace(
-          `name = "textus"\nversion = "${version}"`,
-          'name = "textus"\nversion = "9.9.9"',
-        )
-      : current[file].replaceAll(`"${version}"`, '"9.9.9"'),
-  ]),
-);
+/** The real files as a bump to 9.9.9 leaves them: only the app's own
+ *  version lines, the way PRs like #192 change them. A dependency can carry
+ *  the same version number (1.1.0 did), and must stay as it is. */
+const bumpedLock = JSON.parse(current["package-lock.json"]);
+bumpedLock.version = "9.9.9";
+bumpedLock.packages[""].version = "9.9.9";
+const bumped = {
+  "package.json": current["package.json"].replace(
+    `"version": "${version}"`,
+    '"version": "9.9.9"',
+  ),
+  "package-lock.json": `${JSON.stringify(bumpedLock, null, 2)}\n`,
+  "src-tauri/Cargo.toml": current["src-tauri/Cargo.toml"].replace(
+    `version = "${version}"`,
+    'version = "9.9.9"',
+  ),
+  "src-tauri/Cargo.lock": current["src-tauri/Cargo.lock"].replace(
+    `name = "textus"\nversion = "${version}"`,
+    'name = "textus"\nversion = "9.9.9"',
+  ),
+  "src-tauri/tauri.conf.json": current["src-tauri/tauri.conf.json"].replace(
+    `"version": "${version}"`,
+    '"version": "9.9.9"',
+  ),
+};
 
 const rustReads = rustIncludes();
 
