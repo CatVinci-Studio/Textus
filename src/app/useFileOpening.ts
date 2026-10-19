@@ -18,6 +18,7 @@ import {
   DROP_IMAGE_FILES_EVENT,
   OPEN_FILE_IN_TAB_EVENT,
 } from "../utils/events";
+import { samePath } from "../utils/path";
 import { isIOSApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
@@ -43,7 +44,11 @@ export function useFileOpening(opts: {
 
   const openPathInTab = useCallback(
     async (path: string) => {
-      const existing = tabsRef.current.find((tab) => tab.path === path);
+      // The same file however its path is written (a quick note's path
+      // comes from Rust, a tab's from a dialog: utils/path.ts's samePath).
+      const existing = tabsRef.current.find(
+        (tab) => !!tab.path && samePath(tab.path, path),
+      );
       if (existing) {
         setActiveTabId(existing.id);
         return;

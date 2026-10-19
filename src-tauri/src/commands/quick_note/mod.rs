@@ -617,6 +617,12 @@ mod tests {
             .collect()
     }
 
+    /// A file in the test's folder, joined as the code joins it - "\\" on
+    /// Windows, "/" elsewhere; Path compares the two forms as equal.
+    fn notes(name: &str) -> PathBuf {
+        Path::new("/notes").join(name)
+    }
+
     fn run(
         disk: &HashMap<PathBuf, String>,
         text: &str,
@@ -655,7 +661,7 @@ mod tests {
     fn a_new_note_gets_a_file_of_its_own() {
         let disk = files(&[("/notes/Idea.md", "old")]);
         let plan = run(&disk, "Idea\nmore", None, false, &[]);
-        assert_eq!(plan.written.path, "/notes/Idea-2.md");
+        assert_eq!(Path::new(&plan.written.path), notes("Idea-2.md"));
         assert_eq!(plan.written.after, "Idea\nmore\n");
         assert_eq!(plan.written.before, None);
     }
@@ -664,7 +670,7 @@ mod tests {
     fn per_day_notes_are_appended_under_their_time() {
         let disk = files(&[("/notes/2026-10-19.md", "## 09:00\n\nMorning\n")]);
         let plan = run(&disk, "Afternoon", None, true, &[]);
-        assert_eq!(plan.written.path, "/notes/2026-10-19.md");
+        assert_eq!(Path::new(&plan.written.path), notes("2026-10-19.md"));
         assert_eq!(
             plan.written.after,
             "## 09:00\n\nMorning\n\n## 14:32\n\nAfternoon\n"
@@ -688,8 +694,8 @@ mod tests {
             base: "Draft".into(),
         };
         let plan = run(&disk, "Plan\nDraft", Some(&target), false, &[]);
-        assert_eq!(plan.written.path, "/notes/Plan.md");
-        assert_eq!(plan.remove.as_deref(), Some(Path::new("/notes/Draft.md")));
+        assert_eq!(Path::new(&plan.written.path), notes("Plan.md"));
+        assert_eq!(plan.remove, Some(notes("Draft.md")));
         // Open in a window: the name stays, so the tab keeps its file.
         let plan = run(
             &disk,
@@ -698,7 +704,7 @@ mod tests {
             false,
             &["/notes/Draft.md"],
         );
-        assert_eq!(plan.written.path, "/notes/Draft.md");
+        assert_eq!(Path::new(&plan.written.path), notes("Draft.md"));
         assert_eq!(plan.remove, None);
         assert_eq!(plan.written.before.as_deref(), Some("Draft\n"));
     }
@@ -712,7 +718,7 @@ mod tests {
             base: "Draft".into(),
         };
         let plan = run(&disk, "Draft and more", Some(&target), false, &[]);
-        assert_eq!(plan.written.path, "/notes/Draft and more.md");
+        assert_eq!(Path::new(&plan.written.path), notes("Draft and more.md"));
         assert_eq!(plan.remove, None);
     }
 

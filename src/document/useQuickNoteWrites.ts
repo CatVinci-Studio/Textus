@@ -4,6 +4,7 @@ import { reloadChangedTabs } from "./useExternalChangeReload";
 import { notePreview, syncWithQuickNote } from "./quick-note-merge";
 import { QUICK_NOTE_WRITTEN, type QuickNoteWritten } from "../platform/ipc";
 import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
+import { samePath } from "../utils/path";
 
 /**
  * A quick note was saved to a file this window has open (Rust tells every
@@ -26,7 +27,10 @@ export function useQuickNoteWrites(
           QUICK_NOTE_WRITTEN,
           ({ payload }) => {
             void (async () => {
-              const ofFile = (tab: DocTab) => tab.path === payload.path;
+              // Rust's path and the tab's may differ in separators or a
+              // drive letter's case on Windows.
+              const ofFile = (tab: DocTab) =>
+                !!tab.path && samePath(tab.path, payload.path);
               const mtime = await statMtime(payload.path);
               // Read after the await, and applied without another: an
               // edit typed meanwhile is part of what gets merged.
