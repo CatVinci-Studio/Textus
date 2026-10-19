@@ -707,9 +707,16 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     } else if id == RECENT_CLEAR_ID {
         commands::recents::clear_recent_files(app_handle);
     } else if let Some(path) = id.strip_prefix(RECENT_PREFIX) {
-        // Routes through the same queue as Finder/CLI opens, so it lands as
-        // a tab or a window per the user's setting.
-        crate::queue_paths_to_open(app_handle, vec![path.to_string()]);
+        // The focused window decides (useFileOpening.ts's openRecentFile): a
+        // fresh, untouched one takes the file itself, as File > Open does,
+        // instead of a second window opening beside it; any other sends it
+        // back through open_paths. With no window to ask, it goes through
+        // the same queue as Finder/CLI opens.
+        if focused_editor_window(app_handle).is_some() {
+            emit_to_focused_payload(app_handle, "menu-open-recent", path);
+        } else {
+            crate::queue_paths_to_open(app_handle, vec![path.to_string()]);
+        }
     } else if id == EXPORT_PDF_ID {
         emit_to_focused(app_handle, "menu-export-pdf");
     } else if id == EXPORT_HTML_ID {

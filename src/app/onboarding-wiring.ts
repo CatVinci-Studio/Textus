@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { makeBlankTab } from "../document/doc-tabs";
+import { makeBlankTab, tabIsUntouchedDraft } from "../document/doc-tabs";
 import { storage } from "../platform/ipc";
 import { useLevisImportOffer } from "../settings/levis-import";
 import type { Settings } from "../settings/SettingsContext";
@@ -75,8 +75,7 @@ export function usePracticeTab(
   // never land in real content.
   const claimPracticeTab = useCallback((): string => {
     const active = tabsRef.current.find((tb) => tb.id === activeTabId);
-    if (active && !active.path && !active.helpDoc && active.content === "")
-      return active.id;
+    if (active && tabIsUntouchedDraft(active)) return active.id;
     const blank = makeBlankTab();
     setTabs((prev) => [...prev, blank]);
     setActiveTabId(blank.id);

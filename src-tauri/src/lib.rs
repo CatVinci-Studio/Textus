@@ -130,6 +130,15 @@ fn take_pending_menu_event() -> Option<&'static str> {
     PENDING_MENU_EVENT.lock().unwrap().take()
 }
 
+/// File > Open Recent from a window that keeps what it holds (menu.rs, then
+/// useFileOpening.ts's openRecentFile): the file opens the way a file
+/// manager's open does - a window of its own, or a tab per the setting.
+#[cfg(desktop)]
+#[tauri::command]
+fn open_paths(app: tauri::AppHandle, paths: Vec<String>) {
+    queue_paths_to_open(&app, paths);
+}
+
 #[tauri::command]
 fn take_pending_open_path(pending: State<PendingOpenPaths>) -> Option<String> {
     UI_READY.store(true, Ordering::Relaxed);
@@ -709,6 +718,8 @@ pub fn run() {
             take_pending_show_help,
             #[cfg(desktop)]
             take_pending_menu_event,
+            #[cfg(desktop)]
+            open_paths,
             #[cfg(desktop)]
             menu::trigger_menu_item,
             #[cfg(desktop)]

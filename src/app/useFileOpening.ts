@@ -9,9 +9,10 @@ import {
   makeBlankTab,
   readDocFromDisk,
   tabIsDirty,
+  windowIsUntouched,
   type DocTab,
 } from "../document/doc-tabs";
-import { fs, session } from "../platform/ipc";
+import { fs, session, windowIpc } from "../platform/ipc";
 import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import {
   DROP_IMAGE_FILES_EVENT,
@@ -37,7 +38,8 @@ export function useFileOpening(opts: {
   dialogFilters: { textFilter: string; allFilter: string };
 }) {
   const { tabState, newDocumentMode, setPendingClose, dialogFilters } = opts;
-  const { tabsRef, setTabs, activeTabId, setActiveTabId, updateTab } = tabState;
+  const { tabsRef, liveTabs, setTabs, activeTabId, setActiveTabId, updateTab } =
+    tabState;
 
   const openPathInTab = useCallback(
     async (path: string) => {
@@ -132,7 +134,25 @@ export function useFileOpening(opts: {
     if (picked) await openFile(picked);
   }, [openFile, dialogFilters]);
 
-  return { openPathInTab, replaceTabWithFile, openFile, openFileDialog };
+  // File > Open Recent, chosen while this window has focus (menu.rs): a
+  // fresh, untouched window takes the file the way File > Open would;
+  // otherwise it opens as a file from outside does - its own window, or a
+  // tab in tab mode (lib.rs's queue_paths_to_open).
+  const openRecentFile = useCallback(
+    async (path: string) => {
+      if (windowIsUntouched(liveTabs())) await openFile(path);
+      else await windowIpc.openPaths([path]);
+    },
+    [liveTabs, openFile],
+  );
+
+  return {
+    openPathInTab,
+    replaceTabWithFile,
+    openFile,
+    openFileDialog,
+    openRecentFile,
+  };
 }
 
 /**
