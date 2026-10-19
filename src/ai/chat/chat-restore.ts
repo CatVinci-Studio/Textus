@@ -1,7 +1,7 @@
 import type { AgentTurn } from "../types";
 import { RESTORE_CHAT_EVENT } from "../../utils/events";
 
-/** A saved conversation on its way from the Chats panel to an editor. */
+/** A saved conversation on its way from the history list to an editor. */
 export interface ChatRestore {
   id: string;
   turns: AgentTurn[];

@@ -458,7 +458,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentStop: "중지",
   agentRetry: "다시 시도",
   agentThinking: "생각하는 중…",
-  chatTab: "채팅",
+  chatHistoryOpen: "기록",
   chatHistoryEmpty: "지난 대화가 없습니다.",
   chatHistoryRestoreHint: "이 대화를 해당 문서와 함께 다시 열기",
   chatHistoryDelete: "대화 삭제",

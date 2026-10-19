@@ -484,7 +484,7 @@ utiliser une.
   agentStop: "Arrêter",
   agentRetry: "Réessayer",
   agentThinking: "Réflexion…",
-  chatTab: "Discussions",
+  chatHistoryOpen: "Historique",
   chatHistoryEmpty: "Aucune conversation passée.",
   chatHistoryRestoreHint: "Rouvrir cette conversation avec son document",
   chatHistoryDelete: "Supprimer la conversation",

@@ -14,7 +14,7 @@ import { useAgentPanelState } from "../ai/chat/panel/agent-panel";
 import { getUiState, setUiState } from "../storage/ui-state";
 import { useSidebarWidth } from "./sidebar-width";
 
-export type PanelMode = "tree" | "outline" | "clipboard" | "chat";
+export type PanelMode = "tree" | "outline" | "clipboard";
 
 /** The narrowest text column the docked panel may leave beside the
  *  sidebar. */

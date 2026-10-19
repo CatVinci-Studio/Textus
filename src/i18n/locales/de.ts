@@ -470,7 +470,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentStop: "Stoppen",
   agentRetry: "Erneut versuchen",
   agentThinking: "Denkt nach…",
-  chatTab: "Chats",
+  chatHistoryOpen: "Verlauf",
   chatHistoryEmpty: "Keine früheren Unterhaltungen.",
   chatHistoryRestoreHint: "Diese Unterhaltung mit ihrem Dokument wieder öffnen",
   chatHistoryDelete: "Unterhaltung löschen",

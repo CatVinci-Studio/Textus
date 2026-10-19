@@ -1,6 +1,6 @@
 //! Saved Agent conversations: one file per conversation in
-//! `<data>/chat-history/`, plus `index.json`, the small list the Chats
-//! sidebar shows (docs/dev/storage.md).
+//! `<data>/chat-history/`, plus `index.json`, the small list the AI panel's
+//! history shows (docs/dev/storage.md).
 //!
 //! Up to 1.0 they were one `chat-history.json`, rewritten whole on every
 //! saved turn and capped at 60 by silently dropping the oldest. A long
@@ -295,7 +295,7 @@ impl ChatHistory {
         true
     }
 
-    /// How many conversations the trash holds - the Chats tab says when
+    /// How many conversations the trash holds - the history list says when
     /// there are any.
     pub fn archived(&self) -> usize {
         conversation_files(&self.dir.join(TRASH)).len()

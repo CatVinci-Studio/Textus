@@ -464,7 +464,7 @@ type /name in a conversation to use one.
   agentStop: "Stop",
   agentRetry: "Retry",
   agentThinking: "Thinking…",
-  chatTab: "Chats",
+  chatHistoryOpen: "History",
   chatHistoryEmpty: "No past conversations.",
   chatHistoryRestoreHint: "Reopen this conversation with its document",
   chatHistoryDelete: "Delete conversation",

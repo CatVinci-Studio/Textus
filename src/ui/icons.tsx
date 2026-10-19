@@ -277,6 +277,27 @@ export function ChatTabIcon({ className }: IconProps) {
   );
 }
 
+/** Past conversations (the AI panel's header): a clock turned back. */
+export function HistoryIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M2.7 8A5.3 5.3 0 1 0 4.25 4.25M2.5 2.4V4.6H4.7M8 5.2V8L10 9.4"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /** Textus AI itself: a four-pointed spark, with a small one beside it (the
  *  AI panel's empty state). */
 export function SparkleIcon({ className }: IconProps) {

@@ -100,7 +100,11 @@
 /* The desktop's 12-14px glyphs read as specks in a 44pt button; iOS draws
    bar and toolbar symbols at about 20pt. */
 :root[data-window-chrome="mobile"]
-  :is(.window-menu-button, .window-bar-toggle, .agent-panel-actions button)
+  :is(
+    .window-menu-button,
+    .window-bar-toggle,
+    .agent-panel-actions .inline-chat-header-button
+  )
   svg {
   width: 20px;
   height: 20px;

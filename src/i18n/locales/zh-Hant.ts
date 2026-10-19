@@ -443,7 +443,7 @@ export default {
   agentStop: "停止",
   agentRetry: "重試",
   agentThinking: "思考中…",
-  chatTab: "對話",
+  chatHistoryOpen: "紀錄",
   chatHistoryEmpty: "沒有過去的對話。",
   chatHistoryRestoreHint: "連同其文件重新開啟這段對話",
   chatHistoryDelete: "刪除對話",

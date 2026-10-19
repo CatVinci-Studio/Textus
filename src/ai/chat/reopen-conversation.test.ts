@@ -1,23 +1,23 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { reopenConversation } from "./reopen-conversation";
-import { claimChatRestore } from "../ai/chat/chat-restore";
-import { deleteConversation } from "../ai/chat/chat-history";
-import { fs } from "../platform/ipc";
-import { showConfirm } from "../ui/app-dialog";
-import { OPEN_FILE_IN_TAB_EVENT } from "../utils/events";
-import type { Strings } from "../i18n/strings";
+import { claimChatRestore } from "./chat-restore";
+import { deleteConversation } from "./chat-history";
+import { fs } from "../../platform/ipc";
+import { showConfirm } from "../../ui/app-dialog";
+import { OPEN_FILE_IN_TAB_EVENT } from "../../utils/events";
+import type { Strings } from "../../i18n/strings";
 
 const turns = [{ kind: "User", text: "hello" }];
 
-vi.mock("../ai/chat/chat-history", () => ({
+vi.mock("./chat-history", () => ({
   loadConversationTurns: vi.fn((id: string) =>
     Promise.resolve(id === "gone" ? null : turns),
   ),
   deleteConversation: vi.fn(),
 }));
-vi.mock("../platform/ipc", () => ({ fs: { readTextFile: vi.fn() } }));
-vi.mock("../ui/app-dialog", () => ({ showConfirm: vi.fn() }));
+vi.mock("../../platform/ipc", () => ({ fs: { readTextFile: vi.fn() } }));
+vi.mock("../../ui/app-dialog", () => ({ showConfirm: vi.fn() }));
 
 const t = {
   chatHistoryMissingText: "{name} is gone",
@@ -89,5 +89,20 @@ describe("reopening a past conversation", () => {
     await reopenConversation(entry("gone", "/a.md"), t);
     expect(deleteConversation).toHaveBeenCalledWith("gone");
     expect(claimChatRestore("/a.md", () => true)).toBeNull();
+  });
+
+  it("lands where its target says: the detached window takes it itself", async () => {
+    vi.mocked(fs.readTextFile).mockResolvedValue("text");
+    const target = { restore: vi.fn(), openDocument: vi.fn() };
+    await reopenConversation(entry("a", "/novel/ch1.md"), t, target);
+    expect(target.restore).toHaveBeenCalledWith({
+      id: "a",
+      turns,
+      docPath: "/novel/ch1.md",
+    });
+    expect(target.openDocument).toHaveBeenCalledWith("/novel/ch1.md");
+    // Nothing for this window's editors to claim.
+    expect(opened).toEqual([]);
+    expect(claimChatRestore("/novel/ch1.md", () => true)).toBeNull();
   });
 });

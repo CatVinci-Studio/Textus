@@ -467,7 +467,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentStop: "Parar",
   agentRetry: "Tentar de novo",
   agentThinking: "Pensando…",
-  chatTab: "Conversas",
+  chatHistoryOpen: "Histórico",
   chatHistoryEmpty: "Nenhuma conversa anterior.",
   chatHistoryRestoreHint: "Reabrir esta conversa com o seu documento",
   chatHistoryDelete: "Apagar conversa",

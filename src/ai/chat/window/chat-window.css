@@ -23,6 +23,8 @@
    right-aligned along with the pin so both clear the traffic lights floating
    over the top-left, without hardcoding a macOS-only inset. */
 .chat-window-header {
+  /* The history list (ChatHistoryMenu) drops down across it. */
+  position: relative;
   flex: 0 0 auto;
   display: flex;
   align-items: center;

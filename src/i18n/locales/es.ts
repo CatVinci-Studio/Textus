@@ -482,7 +482,7 @@ para usar una.
   agentStop: "Detener",
   agentRetry: "Reintentar",
   agentThinking: "Pensando…",
-  chatTab: "Chats",
+  chatHistoryOpen: "Historial",
   chatHistoryEmpty: "No hay conversaciones anteriores.",
   chatHistoryRestoreHint: "Reabrir esta conversación con su documento",
   chatHistoryDelete: "Eliminar conversación",

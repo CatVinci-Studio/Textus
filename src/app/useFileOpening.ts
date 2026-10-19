@@ -1,6 +1,11 @@
 import { useCallback, useEffect } from "react";
 import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
 import {
+  CHAT_TO_EDITOR,
+  onWindowEvent,
+  type OpenDocumentMessage,
+} from "../ai/chat/window/chat-bridge";
+import {
   makeBlankTab,
   readDocFromDisk,
   tabIsDirty,
@@ -109,6 +114,18 @@ export function useFileOpening(opts: {
     const path = (e as CustomEvent<string>).detail;
     if (typeof path === "string" && path) void openPathInTab(path);
   });
+  // The detached chat window reopened a past conversation: its document
+  // comes up here, the window's editor (chat-bridge.ts).
+  useEffect(
+    () =>
+      unlistenAll(
+        onWindowEvent<OpenDocumentMessage>(
+          CHAT_TO_EDITOR.openDocument,
+          ({ path }) => void openPathInTab(path),
+        ),
+      ),
+    [openPathInTab],
+  );
 
   const openFileDialog = useCallback(async () => {
     const picked = await fs.openFileDialog(dialogFilters);

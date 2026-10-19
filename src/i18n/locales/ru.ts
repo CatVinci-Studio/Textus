@@ -470,7 +470,7 @@ export default {
   agentStop: "Остановить",
   agentRetry: "Повторить",
   agentThinking: "Думает…",
-  chatTab: "Чаты",
+  chatHistoryOpen: "История",
   chatHistoryEmpty: "Прошлых диалогов нет.",
   chatHistoryRestoreHint: "Снова открыть этот диалог вместе с его документом",
   chatHistoryDelete: "Удалить диалог",

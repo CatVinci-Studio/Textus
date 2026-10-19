@@ -442,7 +442,7 @@ export default {
   agentStop: "停止",
   agentRetry: "重试",
   agentThinking: "思考中…",
-  chatTab: "对话",
+  chatHistoryOpen: "历史记录",
   chatHistoryEmpty: "暂无历史对话。",
   chatHistoryRestoreHint: "连同其文档重新打开这段对话",
   chatHistoryDelete: "删除该对话",
