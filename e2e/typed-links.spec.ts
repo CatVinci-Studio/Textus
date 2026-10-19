@@ -114,10 +114,7 @@ for (const [way, write] of ways) {
       "alt",
       "美女",
     );
-    // A paste goes through the DOM, where Milkdown's image takes its alt
-    // as a title too; that is not what this issue is about.
-    const source = (await sourceOf(page)).replace(` "美女")`, ")");
-    expect(source).toBe(`${LINK}\n\n${IMAGE}`);
+    expect(await sourceOf(page)).toBe(`${LINK}\n\n${IMAGE}`);
   });
 }
 

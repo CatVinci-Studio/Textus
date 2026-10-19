@@ -1,6 +1,6 @@
 import type { Ctx } from "@milkdown/kit/ctx";
 import { defaultValueCtx, remarkStringifyOptionsCtx } from "@milkdown/kit/core";
-import { linkSchema } from "@milkdown/kit/preset/commonmark";
+import { imageSchema, linkSchema } from "@milkdown/kit/preset/commonmark";
 import type { MarkdownNode } from "@milkdown/kit/transformer";
 import {
   defaultHandlers,
@@ -217,6 +217,32 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
 }
 
 /**
+ * An image read from HTML takes its title from `title` alone. Milkdown's
+ * parseDOM falls back to the alt, and its clipboard plugin pastes plain
+ * text by parsing it as markdown, drawing it as HTML and reading that back -
+ * so a pasted `![alt](src)` was saved as `![alt](src "alt")` (issue #189).
+ */
+function keepImageTitleAsWritten(ctx: Ctx): void {
+  ctx.update(imageSchema.key, (prev) => (innerCtx) => {
+    const schema = prev(innerCtx);
+    return {
+      ...schema,
+      parseDOM: [
+        {
+          tag: "img[src]",
+          getAttrs: (dom) =>
+            dom instanceof HTMLElement && {
+              src: dom.getAttribute("src") ?? "",
+              alt: dom.getAttribute("alt") ?? "",
+              title: dom.getAttribute("title") ?? "",
+            },
+        },
+      ],
+    };
+  });
+}
+
+/**
  * Runs one of remark's link functions with its `resourceLink` switch ("never
  * <...>") set the way this link's syntax asks. The option is shared by the
  * whole serialization, so it is set only around the one call.
@@ -326,6 +352,7 @@ function keepAlertMarker(text: Handle): Handle {
  *  would drop them. */
 export function configureMarkdownOutput(ctx: Ctx): void {
   keepLinkAcrossInlineNodes(ctx);
+  keepImageTitleAsWritten(ctx);
   // The editor's opening text (MilkdownEditor sets it before this runs).
   const initial = ctx.get(defaultValueCtx);
   const bullet = typeof initial === "string" ? documentBullet(initial) : null;
