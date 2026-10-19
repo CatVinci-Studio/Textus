@@ -268,6 +268,7 @@
   .update-toast button,
   .draft-restored-toast button,
   .project-bar-naming button,
+  .missing-image-actions button,
   .inline-chat-send
 ) {
   display: inline-flex;
@@ -293,6 +294,7 @@
   .update-toast button,
   .draft-restored-toast button,
   .project-bar-naming button,
+  .missing-image-actions button,
   .inline-chat-send
 ) {
   min-height: var(--control-height-sm);
@@ -310,7 +312,8 @@
     .inline-chat-action,
     .update-toast button,
     .draft-restored-toast button,
-    .project-bar-naming button
+    .project-bar-naming button,
+    .missing-image-actions button
   ):not(:disabled):hover {
   background: color-mix(in srgb, currentColor 8%, transparent);
   transition-duration: var(--dur-instant);
@@ -376,7 +379,8 @@
     .inline-chat-action,
     .update-toast button,
     .draft-restored-toast button,
-    .project-bar-naming button
+    .project-bar-naming button,
+    .missing-image-actions button
   ):not(:disabled):active {
   background: color-mix(in srgb, currentColor 14%, transparent);
   transition-duration: 0s;

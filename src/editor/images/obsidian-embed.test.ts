@@ -4,7 +4,7 @@ import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
 import { readFileSync } from "node:fs";
-import { IMAGE_EXTENSIONS, parseEmbed } from "./obsidian-embed";
+import { IMAGE_EXTENSIONS, parseEmbed, withEmbedPath } from "./obsidian-embed";
 import { exportSrc } from "./obsidian-embed-preview";
 
 describe("an embed's src in an HTML export", () => {
@@ -90,6 +90,23 @@ describe("parseEmbed", () => {
       expect(parseEmbed(source)).toBeNull();
     },
   );
+});
+
+describe("an embed pointed at another file", () => {
+  it("names the new file and keeps its alt text and size", () => {
+    expect(withEmbedPath("![[old.png|A cat|300x200]]", "assets/new.png")).toBe(
+      "![[assets/new.png|A cat|300x200]]",
+    );
+  });
+
+  it("is a plain embed of the file when there was nothing after the name", () => {
+    expect(withEmbedPath("![[old.png]]", "assets/new.png")).toBe(
+      "![[assets/new.png]]",
+    );
+    expect(parseEmbed(withEmbedPath("![[old.png|120]]", "a b.png"))).toEqual(
+      expect.objectContaining({ path: "a b.png", width: 120, isImage: true }),
+    );
+  });
 });
 
 const editors: Editor[] = [];

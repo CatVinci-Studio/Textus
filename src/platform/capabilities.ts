@@ -64,6 +64,11 @@ export const canExportWithPandoc = isDesktopApp;
 /** Showing a file or folder in Finder/Explorer/the file manager. */
 export const canRevealInFileManager = isDesktopApp;
 
+/** A picker for an image file on disk ("Choose image…" on a missing
+ *  image's card). iOS has only the Files app's document picker, whose
+ *  files the image store can't read by path. */
+export const canPickImageFile = isDesktopApp;
+
 /** A folder picker: the dialog plugin's on desktop, the Files app's
  *  (platform/ios-files.ts) on iOS. */
 export const canPickFolder = isDesktopApp || isIOSApp;

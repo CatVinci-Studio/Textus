@@ -89,6 +89,28 @@ pub async fn open_css_file_dialog(window: tauri::WebviewWindow) -> Option<String
     .flatten()
 }
 
+/// Opens a native file picker for one image: "Choose image…" on a missing
+/// image's card (src/editor/images/missing-image.ts). The frontend names the
+/// filter in the UI language and lists the types its image store takes
+/// (IMAGE_FILE_EXTENSIONS in src/editor/images/pasted-files.ts).
+#[tauri::command]
+pub async fn open_image_file_dialog(
+    window: tauri::WebviewWindow,
+    filter_name: String,
+    extensions: Vec<String>,
+) -> Option<String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let exts: Vec<&str> = extensions.iter().map(String::as_str).collect();
+        window_file_dialog(&window)
+            .add_filter(&filter_name, &exts)
+            .blocking_pick_file()
+            .map(|p| p.to_string())
+    })
+    .await
+    .ok()
+    .flatten()
+}
+
 /// Opens a native "Save As" dialog for a new, never-saved document.
 #[tauri::command]
 pub async fn save_file_dialog(
