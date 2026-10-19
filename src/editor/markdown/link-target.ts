@@ -11,8 +11,9 @@ export type LinkTarget =
   | { kind: "heading"; anchor: string }
   /** http(s) or mailto, for the system browser or mail app. */
   | { kind: "web"; url: string }
-  /** A Markdown file, to open in a tab. */
-  | { kind: "document"; path: string }
+  /** A Markdown file, to open in a tab - at the heading `anchor` names,
+   *  when the link has one (`./other.md#heading`). */
+  | { kind: "document"; path: string; anchor?: string }
   /** Any other local file, to show in the file manager. */
   | { kind: "file"; path: string };
 
@@ -40,17 +41,19 @@ export function linkTarget(
   const drive = isDrivePath(link);
   if (!drive && hasUrlScheme(link))
     return /^(https?|mailto):/i.test(link) ? { kind: "web", url: link } : null;
-  // The anchor of a link into another file is dropped: that file opens at
-  // its top.
   const hash = link.indexOf("#");
   const resolved = localPath(
     decodeUrlPath(hash < 0 ? link : link.slice(0, hash)),
     docPath,
   );
   if (!resolved) return null;
-  return MARKDOWN_FILE.test(resolved)
-    ? { kind: "document", path: resolved }
-    : { kind: "file", path: resolved };
+  // Any other file is only shown in the file manager, where an anchor has
+  // nowhere to lead.
+  if (!MARKDOWN_FILE.test(resolved)) return { kind: "file", path: resolved };
+  const anchor = hash < 0 ? "" : decodeUrlPath(link.slice(hash + 1));
+  return anchor
+    ? { kind: "document", path: resolved, anchor }
+    : { kind: "document", path: resolved };
 }
 
 /**

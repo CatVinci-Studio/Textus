@@ -39,6 +39,13 @@ export interface UiState {
    *  ("Not now", ai/chat/panel/levis-project.ts) - not asked again; the
    *  Memory tab keeps a quiet "Convert Levis data" for them. */
   levisProjectsDeclined: string[];
+  /** Where the caret was in each document left recently, by path, least
+   *  recent first, with the file's modified time then
+   *  (document/last-carets.ts). */
+  lastCarets: Record<
+    string,
+    { mtime: number } & ({ offset: number } | { pos: number })
+  >;
 }
 
 export interface ThemeChromeCache {
@@ -106,6 +113,12 @@ const LEGACY: {
   },
   recentSkills: {
     key: "levis-recent-skills",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  // Newer than the move, like sidebarWidth.
+  lastCarets: {
+    key: "textus-last-carets",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },
@@ -179,6 +192,33 @@ export function setUiState<K extends UiStateKey>(
   } catch {
     // Storage unavailable: it just won't be remembered.
   }
+}
+
+/**
+ * Changes a field from its live value, for one every window adds to (the
+ * last carets): setUiState from this page's copy would drop what another
+ * window wrote since this one loaded. The read and the write go out at
+ * once and are tracked together, so a closing window waits for both.
+ */
+export function updateUiState<K extends UiStateKey>(
+  key: K,
+  change: (current: unknown) => UiState[K],
+): void {
+  const file = fileCache();
+  if (!file) {
+    setUiState(key, change(readLegacy(key)));
+    return;
+  }
+  written.add(key);
+  trackWrite(
+    storage.uiStateGet().then((live) => {
+      const value = change(live[key]);
+      // The cache may have been replaced by the refresh meanwhile.
+      const cached = fileCache();
+      if (cached) cached[key] = value;
+      return storage.uiStatePatch({ [key]: value });
+    }),
+  ).catch(() => {});
 }
 
 /** Resolves once the live values have replaced the boot snapshot - for a

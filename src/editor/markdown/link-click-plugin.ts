@@ -4,10 +4,9 @@ import { $prose } from "@milkdown/kit/utils";
 import { exportDoc, fs, links } from "../../platform/ipc";
 import { isScopedUrl } from "../../platform/ios-files";
 import { modIsMeta } from "../../platform/os";
-import { OPEN_FILE_IN_TAB_EVENT } from "../../utils/events";
-import { unfoldRange } from "../html/details-fold";
-import { revealPosition } from "../reveal-position";
-import { headingSlug, linkTarget, type LinkTarget } from "./link-target";
+import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
+import { revealHeading } from "./heading-jump";
+import { linkTarget, type LinkTarget } from "./link-target";
 import { parseWikilink } from "./wikilink";
 
 /** The link under a mouse event in this editor, if any. */
@@ -32,42 +31,19 @@ function isFollowClick(event: MouseEvent): boolean {
   return event.button === 0 && (modIsMeta() ? event.metaKey : event.ctrlKey);
 }
 
-/** The position inside the heading `anchor` names, numbering repeats the
- *  way GitHub does ("intro", "intro-1"), or null. */
-function headingPos(view: EditorView, anchor: string): number | null {
-  const wanted = headingSlug(anchor);
-  const seen = new Map<string, number>();
-  let found: number | null = null;
-  view.state.doc.descendants((node, pos) => {
-    if (found !== null) return false;
-    if (node.type.name !== "heading") return true;
-    const slug = headingSlug(node.textContent);
-    const repeat = seen.get(slug) ?? 0;
-    seen.set(slug, repeat + 1);
-    if ((repeat ? `${slug}-${repeat}` : slug) === wanted) found = pos + 1;
-    return false;
-  });
-  return found;
-}
-
-/** Scrolls to the heading `anchor` names in this document. */
-function revealHeading(view: EditorView, anchor: string): void {
-  const pos = headingPos(view, anchor);
-  if (pos === null) return;
-  // A heading in a folded <details> has no place on screen to scroll to
-  // until its fold opens.
-  unfoldRange(view, pos);
-  revealPosition(view, pos);
-}
-
 async function follow(view: EditorView, target: LinkTarget): Promise<void> {
-  if (target.kind === "heading") return revealHeading(view, target.anchor);
+  if (target.kind === "heading") {
+    revealHeading(view, target.anchor);
+    return;
+  }
   if (target.kind === "web") return links.openWebLink(target.url);
   // A link to a file that isn't there opens nothing.
   if ((await fs.fileMtimeMs(target.path)) === null) return;
   if (target.kind === "document")
     window.dispatchEvent(
-      new CustomEvent(OPEN_FILE_IN_TAB_EVENT, { detail: target.path }),
+      new CustomEvent<OpenFileInTab>(OPEN_FILE_IN_TAB_EVENT, {
+        detail: { path: target.path, anchor: target.anchor },
+      }),
     );
   // Shown, not opened: opening hands the file to the system, which runs a
   // linked program or script as readily as it shows a PDF.
@@ -75,8 +51,8 @@ async function follow(view: EditorView, target: LinkTarget): Promise<void> {
 }
 
 /** A wikilink: `[[#Heading]]` scrolls to a heading here, `[[Note]]` opens
- *  the note the document's vault holds by that name (at its top - a
- *  `#heading` in another note isn't reached). */
+ *  the note the document's vault holds by that name, and `[[Note#Heading]]`
+ *  opens it at that heading. */
 async function followWikilink(
   view: EditorView,
   source: string,
@@ -92,15 +68,18 @@ async function followWikilink(
   const path = await fs.resolveVaultNote(docPath, target.note);
   if (path)
     window.dispatchEvent(
-      new CustomEvent(OPEN_FILE_IN_TAB_EVENT, { detail: path }),
+      new CustomEvent<OpenFileInTab>(OPEN_FILE_IN_TAB_EVENT, {
+        detail: { path, anchor: target.heading || undefined },
+      }),
     );
 }
 
 /**
  * Following links: Ctrl/Cmd+click opens a web link in the browser, a
- * Markdown file in a tab, any other file in the file manager, and scrolls
- * to a `#heading` of this document; on a wikilink it opens the note. A
- * plain click only places the caret.
+ * Markdown file in a tab (scrolled to its `#heading`, if the link names
+ * one), any other file in the file manager, and scrolls to a `#heading` of
+ * this document; on a wikilink it opens the note. A plain click only
+ * places the caret.
  *
  * The webview must never follow a link itself: WebView2 opened a
  * Ctrl+clicked relative link in the browser as http://tauri.localhost/...
