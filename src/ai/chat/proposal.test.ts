@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveSkillMessage } from "./proposal";
+import { parseProposal, resolveSkillMessage } from "./proposal";
 
 const skills = [
   { name: "tighten", description: "Tighten prose", prompt: "Cut filler." },
@@ -38,5 +38,14 @@ describe("resolveSkillMessage", () => {
     ).toBe('<skill name="continue-story" typed="/续写"></skill>');
     // An unknown word after 、 is just a sentence.
     expect(resolveSkillMessage("、然后", skills, resolve)).toBe("、然后");
+  });
+});
+
+describe("parseProposal", () => {
+  it("writes the reply's LaTeX maths in dollars", () => {
+    const proposal = parseProposal(
+      JSON.stringify({ action: "append", text: "so \\(x\\) and\n\\[y\\]" }),
+    );
+    expect(proposal?.text).toBe("so $x$ and\n$$\ny\n$$");
   });
 });

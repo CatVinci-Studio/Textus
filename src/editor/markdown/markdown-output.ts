@@ -8,6 +8,7 @@ import {
 import type { DOMOutputSpec } from "@milkdown/kit/prose/model";
 import type { MarkdownNode } from "@milkdown/kit/transformer";
 import type { Link } from "mdast";
+import { writeLatexMath } from "../math/latex-math-syntax";
 import {
   defaultHandlers,
   type Handle,
@@ -435,25 +436,49 @@ function withTildesAsWritten(del: Handle): Handle {
   );
 }
 
+type MathData = { mathDelimiter?: string; oneLine?: boolean } | undefined;
+
 /**
- * Writes inline math with as many dollars as it was read with (see
- * recordDollarRuns in math-schema.ts) - more than the fewest that work,
- * which is all remark-math writes - so an inline `$$x$$` stays as it was.
- * Wraps remark-math's handler for this one serialization, as above.
+ * Writes inline math in the delimiter it was read with - remark-math writes
+ * the fewest dollars that work: as many dollars as the file had (see
+ * recordDollarRuns in math-schema.ts), so an inline `$$x$$` stays as it
+ * was, or LaTeX's `\(x\)` / `\[x\]` (latex-math-syntax.ts). Wraps
+ * remark-math's handler for this one serialization, as above.
  */
-function withDollarsAsWritten(inlineMath: Handle): Handle {
+function withInlineMathAsWritten(inlineMath: Handle): Handle {
+  const latex = (node: { value?: string; data?: unknown }) => {
+    const wanted = (node.data as MathData)?.mathDelimiter;
+    return wanted ? writeLatexMath(node.value ?? "", wanted, false) : null;
+  };
+  const peek = (inlineMath as Partial<PeekingHandle>).peek;
   return Object.assign(
     ((node, parent, state, info) => {
+      const written = latex(node);
+      if (written) return written;
       const out = inlineMath(node, parent, state, info);
-      const wanted = (node.data as { mathDelimiter?: string } | undefined)
-        ?.mathDelimiter;
+      const wanted = (node.data as MathData)?.mathDelimiter;
       const used = /^\$+/.exec(out)?.[0] ?? "";
       return wanted && /^\$+$/.test(wanted) && wanted.length > used.length
         ? wanted + out.slice(used.length, out.length - used.length) + wanted
         : out;
     }) as Handle,
-    { peek: (inlineMath as Partial<PeekingHandle>).peek },
+    {
+      peek: ((node, parent, state, info) =>
+        latex(node) ? "\\" : peek?.(node, parent, state, info)) as Handle,
+    },
   );
+}
+
+/** A math block read as `\[...\]` is written that way again, on one line
+ *  or with the delimiters on lines of their own, as it was. */
+function withMathBlockAsWritten(math: Handle): Handle {
+  return ((node, parent, state, info) => {
+    const data = node.data as MathData;
+    const written =
+      data?.mathDelimiter &&
+      writeLatexMath(node.value ?? "", data.mathDelimiter, !data.oneLine);
+    return written || math(node, parent, state, info);
+  }) as Handle;
 }
 
 /** Set up per serialization, before any node is written. */
@@ -464,7 +489,10 @@ const root: Handle = (node, parent, state, info) => {
   const del = state.handlers.delete as Handle | undefined;
   if (del) state.handlers.delete = withTildesAsWritten(del);
   const inlineMath = state.handlers.inlineMath as Handle | undefined;
-  if (inlineMath) state.handlers.inlineMath = withDollarsAsWritten(inlineMath);
+  if (inlineMath)
+    state.handlers.inlineMath = withInlineMathAsWritten(inlineMath);
+  const math = state.handlers.math as Handle | undefined;
+  if (math) state.handlers.math = withMathBlockAsWritten(math);
   return defaultHandlers.root(node, parent, state, info);
 };
 

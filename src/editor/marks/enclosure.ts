@@ -83,12 +83,16 @@ function isEnclosure(node: ProseNode): boolean {
   return ENCLOSURE_NODES.has(node.type.name);
 }
 
-/** The literal delimiter text an enclosure node's syntax is rendered as. */
-function enclosureDelimText(node: ProseNode): string {
+/** The literal delimiters an enclosure node's syntax is rendered as,
+ *  opening and closing: the same but for LaTeX's `\(...\)` and `\[...\]`
+ *  (math-schema.ts). */
+function enclosureDelims(node: ProseNode): { open: string; close: string } {
+  let open = spanDelimText(node);
   if (node.type.name === "math_inline")
-    return (node.attrs.delimiter as string | undefined) ?? "$";
-  if (node.type.name === "math_block") return "$$";
-  return spanDelimText(node);
+    open = (node.attrs.delimiter as string | undefined) ?? "$";
+  if (node.type.name === "math_block") open = "$$";
+  const close = open === "\\(" ? "\\)" : open === "\\[" ? "\\]" : open;
+  return { open, close };
 }
 
 /**
@@ -347,7 +351,7 @@ function buildDecorations(state: EditorState): DecorationSet {
     // widgets would squeeze onto one line with the source, and the content
     // area must keep a real line box of its own so the caret has somewhere
     // to sit even while the block is empty.
-    const delim = enclosureDelimText(node);
+    const { open, close } = enclosureDelims(node);
     if (node.isBlock) {
       decorations.push(
         Decoration.node(from, to, { class: "math-block-revealed" }),
@@ -358,15 +362,15 @@ function buildDecorations(state: EditorState): DecorationSet {
       // "adjacent" phase in the diagram above), and makes text typed there
       // land outside the enclosure too.
       decorations.push(
-        Decoration.widget(from, () => makeDelimiterEl(delim), {
+        Decoration.widget(from, () => makeDelimiterEl(open), {
           side: 1,
-          key: `enc-open:${delim}`,
+          key: `enc-open:${open}`,
         }),
       );
       decorations.push(
-        Decoration.widget(to, () => makeDelimiterEl(delim), {
+        Decoration.widget(to, () => makeDelimiterEl(close), {
           side: -1,
-          key: `enc-close:${delim}`,
+          key: `enc-close:${close}`,
         }),
       );
     }
@@ -745,11 +749,11 @@ function deleteDelimiter(
   drop: "opening" | "closing",
 ): void {
   const { state } = view;
-  const delimText = state.schema.text(enclosureDelimText(node));
+  const { open, close } = enclosureDelims(node);
   const frag =
     drop === "closing"
-      ? Fragment.from(delimText).append(node.content)
-      : node.content.append(Fragment.from(delimText));
+      ? Fragment.from(state.schema.text(open)).append(node.content)
+      : node.content.append(Fragment.from(state.schema.text(close)));
   const tr = state.tr.replaceWith(start, start + node.nodeSize, frag);
   tr.setSelection(
     TextSelection.create(

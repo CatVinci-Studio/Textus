@@ -1,6 +1,11 @@
 import { $nodeSchema, $remark, $inputRule } from "@milkdown/kit/utils";
 import { InputRule } from "@milkdown/kit/prose/inputrules";
 import remarkMath from "remark-math";
+import {
+  displayLatexBlocks,
+  latexMathFromMarkdown,
+  latexMathSyntax,
+} from "./latex-math-syntax";
 
 interface MdastNode {
   type: string;
@@ -65,9 +70,13 @@ function remarkMathWithPandocDollars(
   ...args: Parameters<typeof remarkMath>
 ) {
   (remarkMath as (...a: unknown[]) => void).apply(this, args);
+  const data = (this as { data: () => Record<string, unknown[]> }).data();
+  (data.micromarkExtensions ??= []).push(latexMathSyntax());
+  (data.fromMarkdownExtensions ??= []).push(latexMathFromMarkdown());
   return (tree: MdastNode, file: { value: unknown }) => {
     revertCurrencyDollars(tree, String(file.value));
     recordDollarRuns(tree, String(file.value));
+    displayLatexBlocks(tree);
   };
 }
 
@@ -81,8 +90,9 @@ export const mathInlineSchema = $nodeSchema("math_inline", () => ({
   group: "inline",
   inline: true,
   marks: "",
-  // As written in the file: "$" (the default, and all the editor makes) or
-  // "$$" - see recordDollarRuns.
+  // As written in the file: "$" (the default, and all the editor makes),
+  // "$$" (see recordDollarRuns), or LaTeX's `\(` or `\[` (see
+  // latex-math-syntax.ts).
   attrs: { delimiter: { default: "$", validate: "string" } },
   parseDOM: [
     {
@@ -137,24 +147,60 @@ export const mathBlockSchema = $nodeSchema("math_block", () => ({
   marks: "",
   code: true,
   defining: true,
-  attrs: {},
+  // "$$" (the default) or `\[` - see latex-math-syntax.ts - and, for `\[`,
+  // whether it shared one line with its formula: `\[x\]`.
+  attrs: {
+    delimiter: { default: "$$", validate: "string" },
+    oneLine: { default: false, validate: "boolean" },
+  },
   parseDOM: [
-    { tag: 'div[data-type="math_block"]', preserveWhitespace: "full" },
+    {
+      tag: 'div[data-type="math_block"]',
+      preserveWhitespace: "full",
+      getAttrs: (dom) => ({
+        delimiter: (dom as HTMLElement).dataset.delimiter || "$$",
+        oneLine: (dom as HTMLElement).dataset.oneLine === "true",
+      }),
+    },
   ],
   // Wrapped in an outer div so the editing state (enclosure.ts's
   // .math-block-revealed, which decorates the node's OUTERMOST DOM
   // regardless of this nesting) can get its own panel styling in
   // milkdown-theme.css, independent of the inner div's white-space/content
   // handling.
-  toDOM: () => [
+  toDOM: (node) => [
     "div",
     { class: "math-block-wrapper" },
-    ["div", { "data-type": "math_block", class: "math-block" }, 0],
+    [
+      "div",
+      {
+        "data-type": "math_block",
+        class: "math-block",
+        ...(node.attrs.delimiter === "$$"
+          ? {}
+          : {
+              "data-delimiter": node.attrs.delimiter as string,
+              "data-one-line": String(node.attrs.oneLine),
+            }),
+      },
+      0,
+    ],
   ],
   parseMarkdown: {
     match: (node) => node.type === "math",
     runner: (state, node, type) => {
-      state.openNode(type);
+      const delimiter = delimiterOf(node);
+      state.openNode(
+        type,
+        delimiter
+          ? {
+              delimiter,
+              oneLine: Boolean(
+                (node.data as { oneLine?: boolean } | undefined)?.oneLine,
+              ),
+            }
+          : undefined,
+      );
       if (node.value) state.addText(node.value as string);
       state.closeNode();
     },
@@ -162,7 +208,20 @@ export const mathBlockSchema = $nodeSchema("math_block", () => ({
   toMarkdown: {
     match: (node) => node.type.name === "math_block",
     runner: (state, node) => {
-      state.addNode("math", undefined, node.content.firstChild?.text || "");
+      const delimiter = node.attrs.delimiter as string;
+      state.addNode(
+        "math",
+        undefined,
+        node.content.firstChild?.text || "",
+        delimiter === "$$"
+          ? undefined
+          : {
+              data: {
+                mathDelimiter: delimiter,
+                oneLine: node.attrs.oneLine as boolean,
+              },
+            },
+      );
     },
   },
 }));
