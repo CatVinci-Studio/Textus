@@ -93,4 +93,9 @@ export default {
     hint: "Résume fidèlement, à la longueur demandée",
     aliases: ["résumé", "resume"],
   },
+  theme: {
+    label: "Créer un thème",
+    hint: "Écrit un thème pour l'éditeur d'après votre description, prêt à l'emploi",
+    aliases: ["thème", "créer-thème"],
+  },
 } satisfies SkillTexts;

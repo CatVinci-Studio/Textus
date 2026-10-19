@@ -338,7 +338,7 @@ describe("ChatComposer pickers", () => {
       expect(list).toHaveTextContent("/continue-story");
       for (const group of ["写作", "修改", "检查", "文体"])
         expect(screen.getByRole("group", { name: group })).toBeInTheDocument();
-      expect(screen.getAllByRole("option")).toHaveLength(18);
+      expect(screen.getAllByRole("option")).toHaveLength(19);
     },
   );
 

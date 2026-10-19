@@ -876,6 +876,21 @@
   text-align: center;
 }
 
+/* Equation numbers - (1), (2), ... after each row of a gather, align or
+   equation - are CSS counters in KaTeX's stylesheet, reset on <body>. The
+   column (.editor-content) is a size container, and container-type brings
+   style containment, which cuts counters off from any reset outside it: each
+   number started a fresh counter and every row read (1) (#182), in the
+   editor and in the HTML/PDF exports, which keep that column. Resetting them
+   on the document itself numbers it as LaTeX does, in order across all its
+   formulas - there and in the split view's preview, also a .milkdown. The
+   live preview of the formula being edited sits outside it, in <body>, and
+   numbers that formula alone. */
+.milkdown,
+.math-float-preview {
+  counter-reset: katexEqnNo mmlEqnNo;
+}
+
 /* GitHub-style alerts (github-alert-plugin.ts): a blockquote led by
    [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION] gets the
    matching accent on its border and a badge in place of the marker.

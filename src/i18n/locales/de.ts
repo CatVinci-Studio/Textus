@@ -180,6 +180,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   commentLocate: "Im Dokument anzeigen",
   commentNotFound: "Diese Stelle steht nicht mehr im Dokument.",
   toolResult: "Ergebnis",
+  chatUseTheme: "Dieses Design verwenden",
   toolSearchDocument: "Durchsucht das Dokument nach „{arg}“",
   toolReadDocument: "Liest „{arg}“",
   toolReadWholeDocument: "Liest das Dokument",

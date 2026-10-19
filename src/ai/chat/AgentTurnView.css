@@ -365,8 +365,11 @@ button.agent-context-chip:hover {
 }
 
 /* A remember call's chip (MemoryChip.tsx): what was remembered, where,
-   and the way back - "Remembered: … (project) · Undo · Make personal". */
-.agent-memory-chip {
+   and the way back - "Remembered: … (project) · Undo · Make personal".
+   A theme in a reply gets the same chip (ReplyThemes.tsx): its name and
+   "Use this theme". */
+.agent-memory-chip,
+.agent-theme-chip {
   align-self: flex-start;
   display: flex;
   flex-wrap: wrap;
@@ -394,7 +397,8 @@ button.agent-context-chip:hover {
   gap: 8px;
 }
 
-.agent-memory-chip-actions button {
+.agent-memory-chip-actions button,
+.agent-theme-chip button {
   padding: 0;
   border: 0;
   background: none;
@@ -409,13 +413,25 @@ button.agent-context-chip:hover {
   color: var(--editor-muted);
 }
 
-.agent-memory-chip-actions button:hover:not(:disabled) {
+.agent-memory-chip-actions button:hover:not(:disabled),
+.agent-theme-chip button:hover:not(:disabled) {
   text-decoration: underline;
 }
 
-.agent-memory-chip-actions button:disabled {
+.agent-memory-chip-actions button:disabled,
+.agent-theme-chip button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+/* Inside the reply, under the code block it installs. */
+.agent-theme-chip {
+  display: inline-flex;
+  margin-top: 6px;
+}
+
+.agent-theme-chip-name {
+  color: var(--editor-text);
 }
 
 .agent-memory-chip-error {

@@ -92,4 +92,9 @@ export default {
     hint: "Sum up faithfully, at the length you ask for",
     aliases: ["summary", "tldr", "abstract"],
   },
+  theme: {
+    label: "Design a theme",
+    hint: "Write an editor theme from your description, ready to use",
+    aliases: ["theme-css", "stylesheet"],
+  },
 } satisfies SkillTexts;

@@ -186,6 +186,7 @@ utiliser une.
   commentLocate: "Afficher dans le document",
   commentNotFound: "Ce passage ne figure plus dans le document.",
   toolResult: "Résultat",
+  chatUseTheme: "Utiliser ce thème",
   toolSearchDocument: "Recherche de «\u00a0{arg}\u00a0» dans le document",
   toolReadDocument: "Lecture de «\u00a0{arg}\u00a0»",
   toolReadWholeDocument: "Lecture du document",

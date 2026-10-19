@@ -34,3 +34,6 @@ Review = Prüfen
 Revise = Überarbeiten
 Accept = Annehmen
 Reject = Ablehnen
+Editor & Appearance (Settings page) = Editor & Design
+Import CSS… (Settings, under Theme) = CSS importieren…
+Use this theme (under a theme in a reply) = Dieses Design verwenden

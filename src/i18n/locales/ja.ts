@@ -177,6 +177,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   commentLocate: "文書内で表示",
   commentNotFound: "その箇所は文書内に見つかりません。",
   toolResult: "結果",
+  chatUseTheme: "このテーマを使う",
   toolSearchDocument: "文書内を「{arg}」で検索",
   toolReadDocument: "「{arg}」を読む",
   toolReadWholeDocument: "文書全体を読む",
