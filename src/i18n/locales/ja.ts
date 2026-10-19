@@ -550,6 +550,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   themeGalleryInstallFailed: "テーマをインストールできませんでした：",
   enableMathLabel: "数式を有効にする",
   enableMermaidLabel: "Mermaid 図表",
+  codeLineNumbersLabel: "コードブロックに行番号を表示",
+  inlineColorSwatchesLabel: "インラインコードに色見本を表示",
+  inlineColorSwatchesHint:
+    "#ff8800 や rgb(0 128 255) のように色を表すインラインコードの前に、その色の小さな四角を表示します。red のような色名はそのままです。",
+  codeBlockCopy: "コピー",
+  codeBlockCopied: "コピーしました",
   autoCloseMarksLabel: "書式記号を自動で閉じる",
   autoCloseMarksHint:
     "*、**、~~、==、` を入力すると閉じる記号を自動で追加します。オフにすると閉じる記号は自分で入力し、入力すると書式が適用されます。",

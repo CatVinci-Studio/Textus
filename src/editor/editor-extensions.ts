@@ -33,6 +33,7 @@ import {
   mdSpanClipboardPlugin,
 } from "./marks/md-span-schema";
 import { createMdSpanAutopairPlugin } from "./marks/md-span-autopair-plugin";
+import { createColorSwatchPlugin } from "./marks/color-swatch-plugin";
 import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
 import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
@@ -54,7 +55,8 @@ import {
   taskListClickPlugin,
 } from "./markdown/task-list-plugin";
 import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
-import { codeBlockLanguageView } from "./code/code-block-language-view";
+import { createCodeBlockView } from "./code/code-block-language-view";
+import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
 import { tableColumnResizing, tableHoverView } from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
@@ -221,6 +223,11 @@ export function withEditorCore(
       )
       .use(formatShortcutPlugin)
       .use(enclosurePlugin)
+      .use(
+        createColorSwatchPlugin({
+          enabled: () => settings.current.inlineColorSwatches,
+        }),
+      )
 
       // Math: $/$$ enclosures sharing the same model, plus KaTeX rendering;
       // LaTeX's \(...\) / \[...\] are read and kept (latex-math-syntax.ts).
@@ -239,7 +246,17 @@ export function withEditorCore(
       .use(taskListClickPlugin)
       .use(cjkTaskInputPlugin)
       .use(syntaxHighlightPlugin)
-      .use(codeBlockLanguageView)
+      .use(
+        createCodeBlockView(() => {
+          const t = resolveStrings(settings.current.language);
+          return { copy: t.codeBlockCopy, copied: t.codeBlockCopied };
+        }),
+      )
+      .use(
+        createCodeLineNumbersPlugin({
+          enabled: () => settings.current.codeLineNumbers,
+        }),
+      )
       .use(tableHoverView)
       .use(tableColumnResizing)
       .use(

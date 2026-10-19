@@ -42,10 +42,23 @@ describe("linkTarget", () => {
     );
   });
 
-  it("opens a linked file at its top, dropping the anchor", () => {
-    expect(linkTarget("./ch1.md#section-2", "/home/me/index.md")).toEqual(
+  it("keeps the heading anchor of a link into another Markdown file", () => {
+    expect(linkTarget("./ch1.md#section-2", "/home/me/index.md")).toEqual({
+      ...doc("/home/me/ch1.md"),
+      anchor: "section-2",
+    });
+    expect(
+      linkTarget("./ch1.md#%E7%AB%A0%E7%AF%80", "/home/me/index.md"),
+    ).toEqual({ ...doc("/home/me/ch1.md"), anchor: "章節" });
+    // An empty anchor is no anchor: the file opens at its top.
+    expect(linkTarget("./ch1.md#", "/home/me/index.md")).toStrictEqual(
       doc("/home/me/ch1.md"),
     );
+    // Any other file is shown, not opened: its anchor leads nowhere.
+    expect(linkTarget("./a.pdf#page=2", "/home/me/index.md")).toEqual({
+      kind: "file",
+      path: "/home/me/a.pdf",
+    });
   });
 
   it("takes an absolute path as it is", () => {

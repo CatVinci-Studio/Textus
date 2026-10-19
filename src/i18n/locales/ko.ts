@@ -543,6 +543,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   themeGalleryInstallFailed: "테마를 설치할 수 없습니다:",
   enableMathLabel: "수식 사용",
   enableMermaidLabel: "Mermaid 다이어그램",
+  codeLineNumbersLabel: "코드 블록에 줄 번호 표시",
+  inlineColorSwatchesLabel: "인라인 코드에 색상 견본 표시",
+  inlineColorSwatchesHint:
+    "#ff8800, rgb(0 128 255)처럼 색상을 나타내는 인라인 코드 앞에 그 색의 작은 사각형을 표시합니다. red 같은 색 이름은 그대로 둡니다.",
+  codeBlockCopy: "복사",
+  codeBlockCopied: "복사됨",
   autoCloseMarksLabel: "서식 기호 자동으로 닫기",
   autoCloseMarksHint:
     "*, **, ~~, == 또는 `를 입력하면 닫는 기호를 자동으로 넣습니다. 끄면 닫는 기호를 직접 입력하며, 입력하면 서식이 그대로 적용됩니다.",

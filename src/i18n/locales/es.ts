@@ -571,6 +571,12 @@ para usar una.
   themeGalleryInstallFailed: "No se pudo instalar el tema:",
   enableMathLabel: "Activar fórmulas matemáticas",
   enableMermaidLabel: "Diagramas Mermaid",
+  codeLineNumbersLabel: "Números de línea en los bloques de código",
+  inlineColorSwatchesLabel: "Muestras de color en el código en línea",
+  inlineColorSwatchesHint:
+    "El código en línea que es un color, como #ff8800 o rgb(0 128 255), muestra delante un pequeño cuadrado de ese color. Los nombres de color como red se quedan como están.",
+  codeBlockCopy: "Copiar",
+  codeBlockCopied: "Copiado",
   autoCloseMarksLabel: "Cerrar las marcas de formato automáticamente",
   autoCloseMarksHint:
     "Al escribir *, **, ~~, == o ` se añade su marca de cierre. Si lo desactivas, escribes tú la marca de cierre y el formato se aplica al hacerlo.",

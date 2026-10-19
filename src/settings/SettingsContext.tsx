@@ -204,6 +204,14 @@ export interface Settings {
   enableAskAi: boolean;
   enableMath: boolean;
   enableMermaid: boolean;
+  /** Settings › Editor & Appearance › Line numbers in code blocks: a
+   *  gutter of line numbers beside each code block, whose lines then
+   *  scroll sideways instead of wrapping. Off by default. */
+  codeLineNumbers: boolean;
+  /** Settings › Editor & Appearance › Colour swatches (#146): a small
+   *  square of the colour before inline code that is one (`#ff8800`,
+   *  `rgb(0 128 255)`). Off by default. */
+  inlineColorSwatches: boolean;
   /** Where newly pasted images go. Existing markdown image references are
    *  never migrated when this changes. */
   imageStorageMode: ImageStorageMode;
@@ -371,6 +379,8 @@ const DEFAULT_SETTINGS: Settings = {
   enableAskAi: true,
   enableMath: true,
   enableMermaid: true,
+  codeLineNumbers: false,
+  inlineColorSwatches: false,
   imageStorageMode: "local",
   imageFolder: DEFAULT_IMAGE_SUBFOLDER,
   imageHost: "picgo",

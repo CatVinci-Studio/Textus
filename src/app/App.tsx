@@ -24,6 +24,7 @@ import { useDraftAutosave } from "../document/draft-autosave";
 import { useAutosave } from "../document/autosave";
 import { useMenuBridge, useNativeMenuChecks } from "./menu-bridge";
 import { useStartupRestore } from "../document/startup-restore";
+import { useLastCarets } from "../document/last-carets";
 import { Presence } from "../ui/usePresence";
 import { FlipOnChange } from "../ui/flip";
 import { AgentPanelProvider } from "../ai/chat/panel/agent-panel";
@@ -143,7 +144,9 @@ function App() {
     newDocumentMode: settings.newDocumentMode,
     setPendingClose,
     dialogFilters,
+    restoreCarets: settings.restoreSessionOnStartup,
   });
+  useLastCarets(tabs, activeTabId, settings.restoreSessionOnStartup);
 
   const { openHelpTab } = useHelpTabs({
     tabState,
@@ -244,6 +247,7 @@ function App() {
     markOnboardingShown: () => setSettings({ onboardingShown: true }),
     openPathInTab,
     openFile,
+    restoreCarets: settings.restoreSessionOnStartup,
     startTutorial,
     stopTutorial,
   });

@@ -47,9 +47,11 @@
     min-height: 0;
   }
 
-  /* Editor-only chrome (code-block-language-view.ts's language picker) -
-     not part of the document, shouldn't end up baked into the PDF. */
+  /* Editor-only chrome (code-block-language-view.ts's header and line
+     numbers) - not part of the document, shouldn't end up baked into the
+     PDF. */
   .code-block-header,
+  .code-line-gutter,
   .chat-selection-layer {
     display: none;
   }
@@ -863,6 +865,33 @@
   user-select: none;
 }
 
+/* A colour code's swatch (marks/color-swatch-plugin.ts), at the start of
+   its inline code. The colour is painted over a checkerboard, so a
+   translucent one reads as translucent; the hairline keeps white on a
+   white page and black on a dark one visible. Not a place for the caret:
+   a click on it lands in the code. */
+.color-swatch {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin-right: 0.3em;
+  vertical-align: -0.05em;
+  border-radius: 2px;
+  background:
+    linear-gradient(var(--color-swatch), var(--color-swatch)),
+    repeating-conic-gradient(#c8c8c8 0 25%, #fff 0 50%) 0 0 / 0.4em 0.4em;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--editor-text) 25%, transparent);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* A colour code is short: kept on one line, it never leaves its swatch at
+   the end of the line above. */
+.md-code-span:has(> .color-swatch) {
+  white-space: nowrap;
+}
+
 /* Block math edits like a fenced block: while the cursor touches it
    (enclosure.ts adds .math-block-revealed), leaving the source area its own
    line(s) for the cursor - even when the block is still empty. */
@@ -1021,6 +1050,8 @@
   top: 100%;
   right: 0;
   z-index: 2;
+  display: flex;
+  gap: 4px;
   padding-top: 2px;
   opacity: 0;
   pointer-events: none;
@@ -1033,7 +1064,8 @@
   pointer-events: auto;
 }
 
-.code-block-language-select {
+.code-block-language-select,
+.code-block-copy {
   font-size: 0.72em;
   color: var(--editor-muted);
   /* Opaque: it can overlap the text right below the block. */
@@ -1045,9 +1077,65 @@
 }
 
 .code-block-language-select:hover,
-.code-block-language-select:focus-visible {
+.code-block-language-select:focus-visible,
+.code-block-copy:hover,
+.code-block-copy:focus-visible {
   background: var(--editor-bg, var(--bg));
   color: var(--editor-text);
+}
+
+.code-block-copy {
+  font-family: inherit;
+  line-height: inherit;
+}
+
+.code-block-copy.is-copied {
+  color: var(--editor-accent);
+}
+
+/* Line numbers (code-line-numbers-plugin.ts): the gutter floats at the
+   start of the <pre>, one number per line, and the code beside it scrolls
+   sideways on its own (a block that scrolls doesn't flow under a float),
+   so the numbers stay put and nothing has to paint over the code. Its
+   lines don't wrap - a number would sit beside half a line - and take
+   the <pre>'s size and line height, as the numbers do, so each line is
+   as tall as its number: a theme's own size for block code, or the code's
+   font on the <pre>'s baseline, made the lines a pixel taller apiece and
+   the numbers drifted up the block. The <pre>'s start padding moves into
+   the gutter. On screen only: a printed page can't scroll, and the print
+   and export drop the gutter. Id-weighted, as Typora themes style
+   `#write pre`. */
+@media screen {
+  #write .code-block-numbered pre {
+    padding-left: 0;
+  }
+
+  #write .code-block-numbered pre code {
+    display: block;
+    overflow-x: auto;
+    white-space: pre;
+    word-break: normal;
+    overflow-wrap: normal;
+    font-size: inherit;
+    line-height: inherit;
+  }
+}
+
+.code-line-gutter {
+  float: left;
+  margin-right: 0.9em;
+  padding: 0 0.6em 0 0.9em;
+  border-right: 1px solid var(--editor-border);
+  color: var(--editor-muted);
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  pointer-events: none;
+}
+
+.code-line-gutter > span {
+  display: block;
 }
 
 /* Typora themes style inline code as `#write code`, which beats

@@ -17,14 +17,40 @@ import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import {
   DROP_IMAGE_FILES_EVENT,
   OPEN_FILE_IN_TAB_EVENT,
+  type OpenFileInTab,
 } from "../utils/events";
 import { samePath } from "../utils/path";
+import { setTabJump, type TabJump } from "../editor/tab-jump";
+import { lastCaret } from "../document/last-carets";
 import { isIOSApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
 import type { NewDocumentMode } from "../settings/SettingsContext";
 import type { PendingClose } from "./close-flow";
 import type { TabState } from "./useTabState";
+
+/** How a document opens, beyond which file. */
+export interface OpenOptions {
+  /** A followed link's `#heading`, scrolled to once the tab is showing
+   *  (editor/tab-jump.ts). */
+  anchor?: string;
+  /** Reopening it (the last session, Open Recent): at the caret it was
+   *  left at (document/last-carets.ts). */
+  restoreCaret?: boolean;
+}
+
+/** Where a document just read from disk should open, if not at its top. */
+function openingJump(
+  open: OpenOptions,
+  path: string,
+  diskMtime: number | null,
+  restoreCarets: boolean,
+): TabJump | null {
+  if (open.anchor) return { kind: "heading", anchor: open.anchor };
+  const at =
+    open.restoreCaret && restoreCarets ? lastCaret(path, diskMtime) : null;
+  return at && { kind: "caret", at };
+}
 
 /**
  * Every way a file on disk becomes an open document in this window: a new
@@ -37,19 +63,35 @@ export function useFileOpening(opts: {
   setPendingClose: (close: PendingClose) => void;
   /** File > Open's file-type names besides Markdown, in the UI language. */
   dialogFilters: { textFilter: string; allFilter: string };
+  /** Settings › General › Restore Previous Session on Startup, which
+   *  reopening a document at its last caret follows. */
+  restoreCarets: boolean;
 }) {
-  const { tabState, newDocumentMode, setPendingClose, dialogFilters } = opts;
+  const {
+    tabState,
+    newDocumentMode,
+    setPendingClose,
+    dialogFilters,
+    restoreCarets,
+  } = opts;
   const { tabsRef, liveTabs, setTabs, activeTabId, setActiveTabId, updateTab } =
     tabState;
 
   const openPathInTab = useCallback(
-    async (path: string) => {
+    async (path: string, open: OpenOptions = {}) => {
       // The same file however its path is written (a quick note's path
       // comes from Rust, a tab's from a dialog: utils/path.ts's samePath).
       const existing = tabsRef.current.find(
         (tab) => !!tab.path && samePath(tab.path, path),
       );
       if (existing) {
+        // Source Mode has no headings to scroll to: the tab just comes up.
+        if (open.anchor && !existing.sourceMode)
+          setTabJump(
+            existing.id,
+            { kind: "heading", anchor: open.anchor },
+            true,
+          );
         setActiveTabId(existing.id);
         return;
       }
@@ -62,18 +104,23 @@ export function useFileOpening(opts: {
         savedContent: text,
         diskMtime,
       };
+      const jump = openingJump(open, path, diskMtime, restoreCarets);
+      if (jump) setTabJump(newTab.id, jump);
       setTabs((prev) => [...prev, newTab]);
       setActiveTabId(newTab.id);
     },
-    [tabsRef, setTabs, setActiveTabId],
+    [tabsRef, setTabs, setActiveTabId, restoreCarets],
   );
 
   // "window" mode's actual replace step, shared between the no-dirty fast
   // path and the save/discard prompt's resolution (2.3: unsaved protection).
   const replaceTabWithFile = useCallback(
-    async (tabId: string, path: string) => {
+    async (tabId: string, path: string, open: OpenOptions = {}) => {
       const { content: text, diskMtime } = await readDocFromDisk(path);
       void session.addRecentFile(path);
+      // Taken by the editor the new reloadKey mounts.
+      const jump = openingJump(open, path, diskMtime, restoreCarets);
+      if (jump) setTabJump(tabId, jump);
       const reloadKey =
         (tabsRef.current.find((tb) => tb.id === tabId)?.reloadKey ?? 0) + 1;
       updateTab(tabId, {
@@ -84,13 +131,13 @@ export function useFileOpening(opts: {
         reloadKey,
       });
     },
-    [tabsRef, updateTab],
+    [tabsRef, updateTab, restoreCarets],
   );
 
   const openFile = useCallback(
-    async (path: string) => {
+    async (path: string, open: OpenOptions = {}) => {
       if (newDocumentMode === "tab") {
-        await openPathInTab(path);
+        await openPathInTab(path, open);
         return;
       }
       // "window" mode: replace the active tab's document in place, same as
@@ -102,7 +149,7 @@ export function useFileOpening(opts: {
         setPendingClose({ kind: "replace", tabId: activeTabId, path });
         return;
       }
-      await replaceTabWithFile(activeTabId, path);
+      await replaceTabWithFile(activeTabId, path, open);
     },
     [
       newDocumentMode,
@@ -116,10 +163,13 @@ export function useFileOpening(opts: {
 
   // The Agent panel's project bar opens the style profile and library
   // entries beside the document being written - always a new tab, never
-  // replacing that document (window mode would otherwise swap it out).
+  // replacing that document (window mode would otherwise swap it out). A
+  // followed link comes the same way, with the heading it names.
   useWindowEvent(OPEN_FILE_IN_TAB_EVENT, (e) => {
-    const path = (e as CustomEvent<string>).detail;
-    if (typeof path === "string" && path) void openPathInTab(path);
+    const detail = (e as CustomEvent<string | OpenFileInTab>).detail;
+    const { path, anchor } =
+      typeof detail === "string" ? { path: detail, anchor: undefined } : detail;
+    if (typeof path === "string" && path) void openPathInTab(path, { anchor });
   });
   // The detached chat window reopened a past conversation: its document
   // comes up here, the window's editor (chat-bridge.ts).
@@ -145,7 +195,8 @@ export function useFileOpening(opts: {
   // tab in tab mode (lib.rs's queue_paths_to_open).
   const openRecentFile = useCallback(
     async (path: string) => {
-      if (windowIsUntouched(liveTabs())) await openFile(path);
+      if (windowIsUntouched(liveTabs()))
+        await openFile(path, { restoreCaret: true });
       else await windowIpc.openPaths([path]);
     },
     [liveTabs, openFile],
@@ -168,13 +219,17 @@ export function useFileOpening(opts: {
  * would open the file in every open window (see listenToThisWindow).
  */
 export function useOpenPathsPush(
-  openPathInTab: (path: string) => Promise<void>,
+  openPathInTab: (path: string, open?: OpenOptions) => Promise<void>,
 ): void {
   useEffect(() => {
     const unlisten = listenToThisWindow<string[]>(
       "open-paths-as-tabs",
       async (event) => {
-        for (const p of event.payload) await openPathInTab(p);
+        // File > Open Recent from a window that already holds something
+        // arrives this way too (openRecentFile), as the last session does
+        // in a new window (startup-restore.ts).
+        for (const p of event.payload)
+          await openPathInTab(p, { restoreCaret: true });
       },
     );
     return unlistenAll(unlisten);

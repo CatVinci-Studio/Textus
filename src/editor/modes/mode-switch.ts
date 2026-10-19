@@ -1,6 +1,7 @@
 import type { Ctx } from "@milkdown/kit/ctx";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
+import type { EditorView } from "@milkdown/kit/prose/view";
 import { parseMarkdownSource } from "../markdown/parse-markdown-source";
 
 /**
@@ -91,14 +92,19 @@ function scrollerOf(el: Element): HTMLElement | null {
   return el.closest<HTMLElement>(".editor-scroll");
 }
 
-/** The WYSIWYG caret as a markdown offset (reporter side). */
-export function readEditorCaret(ctx: Ctx, markdown: string): ModeSwitchCaret {
-  const view = ctx.get(editorViewCtx);
-  // ProseMirror reads a click's new DOM selection asynchronously; a switch
-  // pressed right after clicking would otherwise report the old caret.
+/** ProseMirror reads a click's new DOM selection asynchronously: the state
+ *  read right after a click (a switch pressed, a page unloading) would
+ *  otherwise hold the old caret. */
+export function flushDomSelection(view: EditorView): void {
   (
     view as unknown as { domObserver?: { flush?: () => void } }
   ).domObserver?.flush?.();
+}
+
+/** The WYSIWYG caret as a markdown offset (reporter side). */
+export function readEditorCaret(ctx: Ctx, markdown: string): ModeSwitchCaret {
+  const view = ctx.get(editorViewCtx);
+  flushDomSelection(view);
   const { doc, selection } = view.state;
   const serialize = ctx.get(serializerCtx);
   const offset = alignPrefixOffset(
@@ -117,13 +123,15 @@ export function readEditorCaret(ctx: Ctx, markdown: string): ModeSwitchCaret {
   return { offset, viewportY };
 }
 
-/** Places the WYSIWYG caret at a markdown offset (just remounted). */
+/** Places the WYSIWYG caret at a markdown offset (just remounted).
+ *  `centre`: with no `viewportY` to keep, its line goes to the middle of
+ *  the pane (Typewriter Mode) rather than a third of the way down. */
 export function applyEditorCaret(
   ctx: Ctx,
   markdown: string,
   caret: ModeSwitchCaret,
+  centre = false,
 ): void {
-  const view = ctx.get(editorViewCtx);
   const prefixDoc = parseMarkdownSource(
     ctx,
     markdown.slice(0, Math.min(caret.offset, markdown.length)),
@@ -132,20 +140,35 @@ export function applyEditorCaret(
   prefixDoc?.descendants((node, nodePos) => {
     if (node.isTextblock) pos = nodePos + 1 + node.content.size;
   });
+  placeEditorCaret(ctx.get(editorViewCtx), pos, caret.viewportY, centre);
+}
+
+/** Places the WYSIWYG caret at document position `pos` (clamped to the
+ *  document) and scrolls it to `viewportY`, as applyEditorCaret does. */
+export function placeEditorCaret(
+  view: EditorView,
+  pos: number,
+  viewportY: number | null,
+  centre = false,
+): void {
   const { doc } = view.state;
-  pos = Math.max(0, Math.min(pos, doc.content.size));
+  const at = Math.max(0, Math.min(pos, doc.content.size));
   view.dispatch(
-    view.state.tr.setSelection(TextSelection.near(doc.resolve(pos))),
+    view.state.tr.setSelection(TextSelection.near(doc.resolve(at))),
   );
   view.focus();
   const scroller = scrollerOf(view.dom);
   if (!scroller) return;
   const head = view.state.selection.head;
   try {
-    const top = view.coordsAtPos(head).top;
+    const coords = view.coordsAtPos(head);
     const box = scroller.getBoundingClientRect();
-    const target = caret.viewportY ?? box.height / 3;
-    scroller.scrollTop += top - box.top - target;
+    const target =
+      viewportY ??
+      (centre
+        ? box.height / 2 - (coords.bottom - coords.top) / 2
+        : box.height / 3);
+    scroller.scrollTop += coords.top - box.top - target;
   } catch {
     // No layout yet - the caret is set; scrolling is best effort.
   }

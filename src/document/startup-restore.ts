@@ -10,6 +10,8 @@ import {
   type HelpDoc,
 } from "./doc-tabs";
 import type { NewDocumentMode } from "../settings/SettingsContext";
+import { setTabJump } from "../editor/tab-jump";
+import { lastCaret } from "./last-carets";
 
 // Module-scoped, NOT a ref: React StrictMode (dev builds) runs mount effects
 // twice on the same component, and this drain is a destructive pull from
@@ -29,8 +31,14 @@ export interface StartupRestoreOptions {
   setTabs: (updater: (prev: DocTab[]) => DocTab[]) => void;
   setDraftsRestoredCount: (n: number) => void;
   markOnboardingShown: () => void;
-  openPathInTab: (path: string) => Promise<void>;
-  openFile: (path: string) => Promise<void>;
+  openPathInTab: (
+    path: string,
+    open?: { restoreCaret?: boolean },
+  ) => Promise<void>;
+  openFile: (path: string, open?: { restoreCaret?: boolean }) => Promise<void>;
+  /** Settings › General › Restore Previous Session on Startup: reopened
+   *  documents come back at the caret they were left at. */
+  restoreCarets: boolean;
   startTutorial: (tabId: string) => void;
   stopTutorial: () => void;
 }
@@ -67,6 +75,12 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
             : tab,
         ),
       );
+    // A document reopened into the initial tab: at its last caret
+    // (last-carets.ts), taken by the editor its reloadKey remounts.
+    const restoreCaret = (path: string, diskMtime: number | null) => {
+      const at = opts.restoreCarets ? lastCaret(path, diskMtime) : null;
+      if (at) setTabJump(opts.activeTabId, { kind: "caret", at });
+    };
     void (async () => {
       // A tab dragged out of another window's tab bar (see TabBar.tsx /
       // detachTab). Checked FIRST, ahead of draft recovery: this window was
@@ -173,6 +187,7 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
             loadRecoveredIntoInitialTab(recovered);
           } else {
             const { content: text, diskMtime } = await readDocFromDisk(first);
+            restoreCaret(first, diskMtime);
             loadIntoInitialTab({
               path: first,
               content: text,
@@ -183,7 +198,7 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
           for (const p of rest) {
             // Its recovered tab is already open: that is this document.
             if (recoveredFor(p)) continue;
-            await opts.openPathInTab(p);
+            await opts.openPathInTab(p, { restoreCaret: true });
           }
           return;
         }
@@ -193,7 +208,7 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
           opts.stopTutorial();
           const recovered = recoveredFor(pending);
           if (recovered) loadRecoveredIntoInitialTab(recovered);
-          else await opts.openFile(pending);
+          else await opts.openFile(pending, { restoreCaret: true });
           return;
         }
       }
@@ -210,6 +225,7 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
       if (last) {
         try {
           const { content: text, diskMtime } = await readDocFromDisk(last);
+          restoreCaret(last, diskMtime);
           loadIntoInitialTab({
             path: last,
             content: text,
