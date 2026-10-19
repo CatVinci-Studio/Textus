@@ -179,6 +179,31 @@ async function typeLines(page: Page, lines: string[]) {
   }
 }
 
+/** Whether the lesson card leaves every `selector` on screen uncovered: it
+ *  moves off what the lesson is about once the pointer is off it. */
+async function expectCardClearOf(page: Page, selector: string) {
+  await page.mouse.move(4, 300);
+  await expect
+    .poll(() =>
+      page.evaluate((sel) => {
+        const card = document
+          .querySelector(".tutorial-card")!
+          .getBoundingClientRect();
+        return Array.from(document.querySelectorAll(sel)).flatMap((el) =>
+          Array.from(el.getClientRects()).filter(
+            (r) =>
+              r.width > 0 &&
+              r.right > card.left &&
+              r.left < card.right &&
+              r.bottom > card.top &&
+              r.top < card.bottom,
+          ),
+        ).length;
+      }, selector),
+    )
+    .toBe(0);
+}
+
 function agentReply(prompt: string, tool: string, args: object, said: string) {
   return [
     { kind: "User", text: prompt },
@@ -517,6 +542,8 @@ test.describe("connected", () => {
       await expect(editor(page).locator(".pending-insert")).toContainText(
         run.write.text,
       );
+      // The card never hides the new text or the bar that takes it.
+      await expectCardClearOf(page, ".pending-insert, .review-bar");
       await page.locator(".review-bar-accept").click();
       await expect(editor(page)).toContainText(run.write.text);
       await next(write).click();
@@ -535,6 +562,7 @@ test.describe("connected", () => {
       await composer(page).fill(run.review.prompt);
       await composer(page).press("Enter");
       await expect(page.locator(".review-anchor").first()).toBeVisible();
+      await expectCardClearOf(page, ".review-note");
       await next(review).click();
 
       // Revision: the notes' first sentence reworked, then decided.
@@ -554,6 +582,10 @@ test.describe("connected", () => {
       await composer(page).fill(run.revise.prompt);
       await composer(page).press("Enter");
       await expect(next(revision)).toBeDisabled();
+      await expectCardClearOf(
+        page,
+        ".pending-edit, .pending-delete, .review-note, .review-bar",
+      );
       await page.locator(".review-bar-accept").click();
       await expect(editor(page)).toContainText(run.revise.text);
       await next(revision).click();
@@ -581,6 +613,7 @@ test.describe("connected", () => {
       await expect(ticked(grammar)).toHaveCount(1);
       const underline = editor(page).locator(".grammar-issue");
       await expect(underline).toHaveText(run.grammar.wrong);
+      await expectCardClearOf(page, ".grammar-issue");
       await underline.hover();
       await page.locator(".grammar-popover-apply").click();
       await expect(editor(page)).toContainText(
@@ -594,6 +627,7 @@ test.describe("connected", () => {
       await newLineAtEnd(page);
       await page.keyboard.type(run.continuation.typed);
       await expect(editor(page).locator(".ghost-text")).toBeVisible();
+      await expectCardClearOf(page, ".ghost-text");
       await page.keyboard.press("Tab");
       await expect(editor(page)).toContainText(
         run.continuation.typed + run.continuation.text,

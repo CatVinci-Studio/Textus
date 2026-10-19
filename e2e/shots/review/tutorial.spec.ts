@@ -395,6 +395,29 @@ test.describe("phone", () => {
     await shot(page, "phone-en-09-write-watch");
   });
 
+  test("zh on a phone: AI writing done for real", async ({ page }) => {
+    await page.addInitScript(() => {
+      (window as unknown as { __devInvokeResults: object }).__devInvokeResults =
+        { claude_auth_status: { configured: true } };
+    });
+    await openPhone(page, {
+      settings: { language: "zh", aiProvider: "anthropic" },
+      storage: at("write", { aiMode: "live" }),
+    });
+    await shot(page, "phone-zh-09a-write-live");
+    await page.locator(".window-bar-toggle").tap();
+    await answer(page, {
+      ai_agent_message: agentReply("接着我的笔记再写一段", "propose_edit", {
+        action: "append",
+        text: "黛玉觉得眼熟，宝玉说曾见过，两人一见如故，正是木石前盟在今生的回响。",
+      }),
+    });
+    await composer(page).fill("接着我的笔记再写一段");
+    await composer(page).press("Enter");
+    await expect(editor(page).locator(".pending-insert")).toBeVisible();
+    await shot(page, "phone-zh-09b-write-live-proposal");
+  });
+
   test("zh on a phone", async ({ page }) => {
     await page.addInitScript(() => {
       Object.defineProperty(navigator, "platform", { get: () => "iPhone" });

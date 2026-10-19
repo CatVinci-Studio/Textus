@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useModalDialog } from "../ui/useModalDialog";
+import { useCardPlacement } from "./card-placement";
 import type { TutorialStepId } from "./tutorial-steps";
 import "./TutorialOverlay.css";
 import appIcon from "../../src-tauri/icons/128x128@2x.png";
@@ -68,6 +69,8 @@ interface TutorialOverlayProps {
    *  must never leave "exit the whole guide" as the only way out. */
   onSkipStep?: () => void;
   labels: TutorialOverlayLabels;
+  /** The phone layout: a card goes to the top or the bottom. */
+  phone?: boolean;
 }
 
 // The welcome step shows the app icon instead (see the header below).
@@ -151,16 +154,28 @@ export function TutorialOverlay({
   onSkip,
   onSkipStep,
   labels,
+  phone = false,
 }: TutorialOverlayProps) {
   const titleId = useId();
   const bodyId = useId();
   const contentId = useId();
   const primaryRef = useRef<HTMLButtonElement>(null);
   const modal = useModalDialog(onSkip, layout === "overlay");
-  const [collapsedStep, setCollapsedStep] = useState<TutorialStepId | null>(
-    null,
+  // A lesson card keeps clear of the proposal, the notes and the review
+  // bar it is about; with no room anywhere it folds to its header until
+  // there is - unless the learner opened or folded it on this lesson.
+  const placement = useCardPlacement(
+    modal.ref,
+    layout === "card",
+    phone,
+    stepId,
   );
-  const collapsed = collapsedStep === stepId;
+  const [folded, setFolded] = useState<{
+    stepId: TutorialStepId;
+    collapsed: boolean;
+  } | null>(null);
+  const collapsed =
+    folded?.stepId === stepId ? folded.collapsed : !placement.roomy;
   const progressLabel = labels.stepOfCount
     .replace("{i}", String(stepIndex + 1))
     .replace("{n}", String(totalSteps));
@@ -173,6 +188,8 @@ export function TutorialOverlay({
     <div
       {...modal}
       className={`tutorial-surface tutorial-${layout} tutorial-step-${stepId} floating-surface`}
+      style={placement.style}
+      data-place={placement.place ?? undefined}
       role="dialog"
       aria-modal={layout === "overlay"}
       aria-labelledby={titleId}
@@ -224,7 +241,7 @@ export function TutorialOverlay({
             className="tutorial-collapse"
             aria-expanded={!collapsed}
             aria-controls={contentId}
-            onClick={() => setCollapsedStep(collapsed ? null : stepId)}
+            onClick={() => setFolded({ stepId, collapsed: !collapsed })}
           >
             {collapsed ? labels.expand : labels.collapse}
           </button>

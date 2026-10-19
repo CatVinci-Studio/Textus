@@ -179,6 +179,7 @@ export function TutorialExperience({
       onBack={tutorial.back}
       onSkip={tutorial.exit}
       onSkipStep={gated ? tutorial.next : undefined}
+      phone={phone}
       labels={{
         back: t.tutorialBack,
         collapse: t.tutorialCollapse,
