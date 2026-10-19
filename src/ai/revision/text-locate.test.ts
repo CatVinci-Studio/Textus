@@ -79,4 +79,38 @@ describe("locatePlainText", () => {
     expect(end).not.toBeNull();
     expect(d.textBetween(end!.from, end!.to)).toBe("end");
   });
+
+  it("counts a hard break, so a strike after one ends where the text does", () => {
+    const withBreak = new Schema({
+      nodes: schema.spec.nodes.append({
+        hardbreak: {
+          group: "inline",
+          inline: true,
+          leafText: () => "\n",
+          toDOM: () => ["br"],
+        },
+      }),
+    });
+    const d = withBreak.node("doc", null, [
+      withBreak.node("paragraph", null, [
+        withBreak.text("First line."),
+        withBreak.node("hardbreak"),
+        withBreak.text("Second line."),
+        withBreak.node("hardbreak"),
+        withBreak.text("Third."),
+      ]),
+    ]);
+    const match = locatePlainText(
+      d,
+      0,
+      d.content.size,
+      "First line.\nSecond line.",
+    );
+    expect(match).not.toBeNull();
+    expect(d.textBetween(match!.from, match!.to, "", "|")).toBe(
+      "First line.|Second line.",
+    );
+    const third = locatePlainText(d, 0, d.content.size, "Third.");
+    expect(d.textBetween(third!.from, third!.to)).toBe("Third.");
+  });
 });

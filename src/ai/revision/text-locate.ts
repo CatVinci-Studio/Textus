@@ -40,10 +40,23 @@ export function locatePlainText(
   let posStart: number | null = null;
   let posEnd: number | null = null;
   doc.nodesBetween(from, to, (node, pos) => {
-    if (!node.isText) return true;
+    // A hard break (or another inline leaf) is text in textBetween - its
+    // leafText, "\n" by default - and has to count here too: skipped, every
+    // strike after one ended a character late (1.1).
+    const leaf = node.isLeaf && !node.isText && node.isInline;
+    if (!node.isText && !leaf) return true;
     const nodeFrom = Math.max(pos, from);
     const nodeTo = Math.min(pos + node.nodeSize, to);
-    const len = nodeTo - nodeFrom;
+    const len = leaf
+      ? (node.type.spec.leafText?.(node) ?? "\n").length
+      : nodeTo - nodeFrom;
+    if (leaf) {
+      // Nothing to point into: a match that takes any of it takes all.
+      if (posStart === null && consumed + len > start) posStart = pos;
+      if (posEnd === null && consumed + len >= end) posEnd = pos + 1;
+      consumed += len;
+      return true;
+    }
     if (posStart === null && consumed + len > start) {
       posStart = nodeFrom + (start - consumed);
     }
