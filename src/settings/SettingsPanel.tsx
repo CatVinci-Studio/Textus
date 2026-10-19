@@ -16,6 +16,7 @@ import {
   type HeadingAction,
   UI_TEXT_SCALES,
   type UiTextScale,
+  type DiagramEngine,
 } from "./SettingsContext";
 import {
   marginViewBlocked,
@@ -329,6 +330,26 @@ export function SettingsPanel({
               checked={settings.enableMermaid}
               onChange={(v) => setSettings({ enableMermaid: v })}
             />
+            {settings.enableMermaid && (
+              <SettingRow
+                label={t.diagramEngineLabel}
+                hint={t.diagramEngineHint}
+              >
+                <Select
+                  className="settings-select"
+                  aria-label={t.diagramEngineLabel}
+                  value={settings.diagramEngine}
+                  onChange={(e) =>
+                    setSettings({
+                      diagramEngine: e.target.value as DiagramEngine,
+                    })
+                  }
+                >
+                  <option value="mermaid">{t.diagramEngineMermaid}</option>
+                  <option value="pele">{t.diagramEnginePele}</option>
+                </Select>
+              </SettingRow>
+            )}
             <ToggleRow
               label={t.codeLineNumbersLabel}
               checked={settings.codeLineNumbers}

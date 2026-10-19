@@ -536,6 +536,11 @@ export default {
   themeGalleryInstallFailed: "无法安装主题：",
   enableMathLabel: "开启数学公式",
   enableMermaidLabel: "Mermaid 图表",
+  diagramEngineLabel: "图表引擎",
+  diagramEngineMermaid: "Mermaid（兼容性最好）",
+  diagramEnginePele: "Pele（更快）",
+  diagramEngineHint:
+    "Pele 画图更快，但排版和 GitHub、Mermaid 不完全一样，标签里的 HTML 等少数写法不支持；它画不了的图会自动交给 Mermaid。",
   codeLineNumbersLabel: "代码块显示行号",
   inlineColorSwatchesLabel: "行内代码显示颜色色块",
   inlineColorSwatchesHint:

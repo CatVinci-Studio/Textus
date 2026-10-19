@@ -591,6 +591,11 @@ utiliser une.
   themeGalleryInstallFailed: "Impossible d’installer le thème :",
   enableMathLabel: "Activer les formules mathématiques",
   enableMermaidLabel: "Diagrammes Mermaid",
+  diagramEngineLabel: "Moteur de diagrammes",
+  diagramEngineMermaid: "Mermaid (le plus compatible)",
+  diagramEnginePele: "Pele (plus rapide)",
+  diagramEngineHint:
+    "Pele dessine plus vite, mais dispose les diagrammes autrement que GitHub et Mermaid et ignore quelques fonctions, comme le HTML dans les libellés ; Mermaid dessine ce que Pele ne peut pas.",
   codeLineNumbersLabel: "Numéros de ligne dans les blocs de code",
   inlineColorSwatchesLabel: "Pastilles de couleur dans le code en ligne",
   inlineColorSwatchesHint:

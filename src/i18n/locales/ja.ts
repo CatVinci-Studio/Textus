@@ -566,6 +566,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   themeGalleryInstallFailed: "テーマをインストールできませんでした：",
   enableMathLabel: "数式を有効にする",
   enableMermaidLabel: "Mermaid 図表",
+  diagramEngineLabel: "図表エンジン",
+  diagramEngineMermaid: "Mermaid（互換性重視）",
+  diagramEnginePele: "Pele（高速）",
+  diagramEngineHint:
+    "Pele は描画が速い一方、レイアウトは GitHub や Mermaid と異なり、ラベル内の HTML など一部の機能に対応していません。Pele で描けない図は Mermaid が描きます。",
   codeLineNumbersLabel: "コードブロックに行番号を表示",
   inlineColorSwatchesLabel: "インラインコードに色見本を表示",
   inlineColorSwatchesHint:
