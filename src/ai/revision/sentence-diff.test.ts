@@ -3,6 +3,7 @@ import {
   composeSentences,
   diffSentences,
   splitSentences,
+  trimBreaks,
 } from "./sentence-diff";
 
 describe("splitSentences", () => {
@@ -17,6 +18,36 @@ describe("splitSentences", () => {
     const en = "One. Two is here! Three?";
     expect(splitSentences(en).join("")).toBe(en);
     expect(splitSentences(en)).toHaveLength(3);
+  });
+
+  it("keeps a full stop inside a sentence in it", () => {
+    // A decimal or a URL used to fail the split, and the rewrite was
+    // shown whole.
+    expect(splitSentences("Pi is 3.14 or so. See example.com today.")).toEqual([
+      "Pi is 3.14 or so. ",
+      "See example.com today.",
+    ]);
+  });
+
+  it("ends a sentence at a hard break, which goes with it", () => {
+    expect(splitSentences("One.\\\nTwo.  \nThree.<br>Four")).toEqual([
+      "One.\\\n",
+      "Two.  \n",
+      "Three.<br>",
+      "Four",
+    ]);
+    expect(splitSentences("No stop\\\nNext.")).toEqual([
+      "No stop\\\n",
+      "Next.",
+    ]);
+  });
+});
+
+describe("trimBreaks", () => {
+  it("leaves a sentence without the break it ends with", () => {
+    expect(trimBreaks("One.\\\n")).toBe("One.");
+    expect(trimBreaks("Three.<br> ")).toBe("Three.");
+    expect(trimBreaks("  Two.  \n")).toBe("Two.");
   });
 });
 

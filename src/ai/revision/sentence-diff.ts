@@ -15,20 +15,47 @@ export type SentenceHunk =
   | { kind: "change"; before: string; after: string };
 
 export function splitSentences(text: string): string[] {
+  // A full stop ends a sentence before a space, a line break (a Markdown
+  // hard break, `\` or `<br>`, too) or the end; elsewhere (3.14, a URL) it
+  // is part of the sentence - which used to fail the whole split, and the
+  // rewrite was shown whole. The break after a sentence goes with it.
   const parts =
     text.match(
-      /[^。！？!?.;；\n]*(?:[。！？!?;；]+|\.(?=\s|$)|\n+|$)[”’"')）」』\]]*\s*/g,
+      /(?:[^。！？!?.;；\n]|\.(?!\s|$|\\\n|<br\s*\/?>))*(?:[。！？!?;；]+|\.|\n+|$)[”’"')）」』\]]*(?:\\\n|<br\s*\/?>|\s)*/g,
     ) ?? [];
   const out = parts.filter((p) => p.length > 0);
   // Anything the pattern skipped (shouldn't happen) is kept rather than lost.
   return out.join("") === text ? out : [text];
 }
 
+/** A sentence as it is shown on its own: without the whitespace and the
+ *  line break (`\` or `<br>`) it carries at its end, which stays the
+ *  document's - parsed alone, a trailing `\` is a literal backslash. */
+export function trimBreaks(sentence: string): string {
+  return sentence
+    .trim()
+    .replace(/(?:\\|<br\s*\/?>)+$/, "")
+    .trim();
+}
+
 /** LCS over sentences, then runs of non-matching sentences become change
  *  hunks (see flush). */
 export function diffSentences(before: string, after: string): SentenceHunk[] {
-  const a = splitSentences(before);
-  const b = splitSentences(after);
+  return diffSentenceLists(splitSentences(before), splitSentences(after));
+}
+
+/**
+ * `diffSentences` over sentences already split. `alignTail` aligns the last
+ * run of changed sentences - the one that reaches the end of `a` - and
+ * defaults to `alignRun`; a rewrite still streaming in (sentence-stream.ts)
+ * passes its own, which leaves out the originals the new text hasn't
+ * reached yet instead of calling them deleted.
+ */
+export function diffSentenceLists(
+  a: string[],
+  b: string[],
+  alignTail: typeof alignRun = alignRun,
+): SentenceHunk[] {
   const lcs: number[][] = Array.from({ length: a.length + 1 }, () =>
     new Array<number>(b.length + 1).fill(0),
   );
@@ -45,8 +72,8 @@ export function diffSentences(before: string, after: string): SentenceHunk[] {
   // A run of changed sentences is aligned sentence to sentence by what
   // they say (alignRun), so each becomes its own decision - also when the
   // rewrite split one sentence in two or joined two into one.
-  const flush = () => {
-    for (const group of alignRun(pendingBefore, pendingAfter))
+  const flush = (align = alignRun) => {
+    for (const group of align(pendingBefore, pendingAfter))
       hunks.push({ kind: "change", ...group });
     pendingBefore = [];
     pendingAfter = [];
@@ -68,20 +95,29 @@ export function diffSentences(before: string, after: string): SentenceHunk[] {
       pendingBefore.push(a[i++]);
     }
   }
-  flush();
+  flush(alignTail);
   return hunks;
 }
 
 /** Character bigrams (single characters for one-character text), for a
  *  similarity that works the same for CJK and for spaced scripts. */
 function bigrams(text: string): Map<string, number> {
+  const known = bigramCache.get(text);
+  if (known) return known;
   const chars = [...text.replace(/\s+/g, " ").trim().toLowerCase()];
   const grams = new Map<string, number>();
   const add = (g: string) => grams.set(g, (grams.get(g) ?? 0) + 1);
   if (chars.length < 2) chars.forEach(add);
   for (let k = 0; k + 1 < chars.length; k++) add(chars[k] + chars[k + 1]);
+  // The alignment compares the same sentences (and pairs of them) many
+  // times over - and again for every sentence a streaming rewrite adds.
+  if (bigramCache.size >= BIGRAM_CACHE) bigramCache.clear();
+  bigramCache.set(text, grams);
   return grams;
 }
+
+const BIGRAM_CACHE = 4096;
+const bigramCache = new Map<string, Map<string, number>>();
 
 /** Dice similarity of two texts' bigrams, 0..1. */
 export function similarity(a: string, b: string): number {
@@ -98,7 +134,7 @@ export function similarity(a: string, b: string): number {
 }
 
 /** Below this, two sentences are not the same sentence rewritten. */
-const MATCH = 0.25;
+export const MATCH = 0.25;
 
 /**
  * Pairs the sentences of a changed run: each original sentence with the
@@ -110,6 +146,7 @@ const MATCH = 0.25;
 export function alignRun(
   before: string[],
   after: string[],
+  band = Infinity,
 ): { before: string; after: string }[] {
   if (before.length === 0 || after.length === 0)
     return before.length || after.length
@@ -129,6 +166,10 @@ export function alignRun(
     [1, 0],
     [0, 1],
   ];
+  // `band`: only alignments that stay this near the diagonal (beyond the
+  // runs' difference in length) - for a rewrite streaming in, which runs
+  // this once per sentence it completes.
+  const reach = band + Math.abs(m - n);
   for (let i = 0; i <= m; i++)
     for (let j = 0; j <= n; j++) {
       const here = best[i][j];
@@ -136,7 +177,7 @@ export function alignRun(
       for (const [di, dj] of moves) {
         const ni = i + di;
         const nj = j + dj;
-        if (ni > m || nj > n) continue;
+        if (ni > m || nj > n || Math.abs(ni - nj) > reach) continue;
         let gain: number;
         if (di === 0 || dj === 0) gain = 0;
         else {
@@ -187,6 +228,27 @@ export function alignRun(
     };
   }
   return merged;
+}
+
+/**
+ * How many of a change's original sentences its new text stands for, from
+ * the first: the rest were dropped and joined to it (`alignRun`), and its
+ * new text goes after those it replaces, not after the dropped ones - so a
+ * rewrite streaming in doesn't move a sentence's new text when the stream
+ * passes the one after it and finds it dropped.
+ */
+export function pairedPrefix(before: string[], after: string): number {
+  if (before.length <= 1 || !after.trim()) return before.length;
+  let best = before.length;
+  let score = similarity(before.join(""), after);
+  for (let k = before.length - 1; k >= 1; k--) {
+    const s = similarity(before.slice(0, k).join(""), after);
+    if (s > score) {
+      best = k;
+      score = s;
+    }
+  }
+  return best;
 }
 
 /** The text with only the chosen changes applied (`take[k]` for the k-th
