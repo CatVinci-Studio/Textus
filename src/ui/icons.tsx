@@ -944,8 +944,8 @@ export function ListViewIcon({ className }: IconProps) {
   );
 }
 
-// The composer's three modes (ai/chat/mode-icons.tsx). No magnifier for
-// Review: the footer already has one, for web search.
+// The composer's three modes, shown in the AI panel's empty state
+// (ai/chat/mode-icons.tsx). No magnifier for Review: that is web search's.
 
 /** Write: a pen nib - new text. */
 export function WriteModeIcon({ className }: IconProps) {

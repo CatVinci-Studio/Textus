@@ -7,8 +7,8 @@ const ICONS = {
   revise: ReviseModeIcon,
 } satisfies Record<AgentMode, unknown>;
 
-/** A mode's icon: in front of its name in the composer's picker and its
- *  menu, and large in the AI panel's empty state. */
+/** A mode's icon, large in the AI panel's empty state (the composer's
+ *  picker is words only). */
 export function ModeIcon({
   mode,
   className,

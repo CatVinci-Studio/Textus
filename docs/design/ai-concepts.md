@@ -271,10 +271,10 @@ comments, Revise (修订) changes the text that is there.**
   (`COMPOSER_MODES` in `ai/chat/last-mode.ts`). The panel starts in
   **Settings > Textus AI > Textus AI Chat > Default mode** (Review by
   default) and remembers the last pick; Quick Ask starts in Revise, and a
-  mode it doesn't offer falls back to Revise. Each mode has an icon
-  (`ai/chat/mode-icons.tsx`: a pen nib, a speech bubble, a pencil - no
-  magnifier, which is web search's) before its name, and the empty AI
-  panel shows the chosen mode's icon and a line on what it will do.
+  mode it doesn't offer falls back to Revise. The empty AI
+  panel shows the chosen mode's icon (`ai/chat/mode-icons.tsx`: a pen
+  nib, a speech bubble, a pencil) and a line on what it will do; the
+  picker itself is words only.
 - **Textus AI uses it:** the prompt's `---interaction mode---` section,
   and the tools: Review gets no `propose_edit`, Write gets it with the
   insertion actions only (append, insert_at_cursor, insert_after,

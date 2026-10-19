@@ -48,7 +48,6 @@ import {
   PlusIcon,
   SearchIcon,
 } from "../../ui/icons";
-import { ModeIcon } from "./mode-icons";
 import { Select } from "../../ui/Select";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -643,7 +642,6 @@ export function ChatComposer({
                     {...holdFocus}
                     onClick={() => setMode(value)}
                   >
-                    <ModeIcon mode={value} />
                     {label}
                   </button>
                 ))}
@@ -657,10 +655,7 @@ export function ChatComposer({
               >
                 {modes.map(([value, label]) => (
                   <option key={value} value={value}>
-                    <span className="chat-mode-option">
-                      <ModeIcon mode={value} />
-                      <span className="chat-mode-name">{label}</span>
-                    </span>
+                    {label}
                   </option>
                 ))}
               </Select>

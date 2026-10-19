@@ -108,12 +108,6 @@ test("Quick Ask offers Revise and Review only, on Revise, even after Write was p
   await expect(picker).toHaveText("修订");
   await picker.click();
   await expect(page.getByRole("option")).toHaveText(["修订", "审阅"]);
-  expect(
-    await page
-      .getByRole("option")
-      .locator(".chat-mode-icon")
-      .evaluateAll((els) => els.map((el) => el.getAttribute("data-mode"))),
-  ).toEqual(["revise", "review"]);
 });
 
 /** Each mode: its name in the picker, and what the empty panel says. */
@@ -158,7 +152,7 @@ const MODE_LINES: Record<
 };
 
 for (const language of ["en", "zh"] as const)
-  test(`${language}: the mode's icon is on the picker and its options, and the empty panel says what the mode does`, async ({
+  test(`${language}: the empty panel shows the mode's icon and says what it does, and follows a switch`, async ({
     page,
   }) => {
     await openPanel(page, language);
@@ -168,26 +162,14 @@ for (const language of ["en", "zh"] as const)
       .getByRole("combobox", { name: language === "zh" ? "模式" : "Mode" });
     const mark = page.locator(".agent-panel-empty-mark .chat-mode-icon");
     const hint = page.locator(".agent-panel-empty-text");
-    // Review is the default.
-    await expect(picker.locator(".chat-mode-icon")).toHaveAttribute(
-      "data-mode",
-      "review",
-    );
+    // Review is the default. The composer's picker and menu are words only.
+    await expect(picker.locator("svg")).toHaveCount(0);
     await expect(mark).toHaveAttribute("data-mode", "review");
     await expect(hint).toHaveText(modes[1].line);
     for (const { mode, name, line } of modes) {
       await picker.click();
-      expect(
-        await page
-          .getByRole("option")
-          .locator(".chat-mode-icon")
-          .evaluateAll((els) => els.map((el) => el.getAttribute("data-mode"))),
-      ).toEqual(modes.map((m) => m.mode));
+      await expect(page.getByRole("option").locator("svg")).toHaveCount(0);
       await page.getByRole("option", { name }).click();
-      await expect(picker.locator(".chat-mode-icon")).toHaveAttribute(
-        "data-mode",
-        mode,
-      );
       await expect(mark).toHaveAttribute("data-mode", mode);
       await expect(hint).toHaveText(line);
     }
