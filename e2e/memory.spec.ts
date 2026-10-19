@@ -31,30 +31,7 @@ async function createEntry(page: Page, name: string) {
   await page.getByRole("button", { name: "Create", exact: true }).click();
 }
 
-test("a new library entry opens with the panel still on Memory", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
-  });
-  await mockInvoke(page, {
-    load_agent_workspace: workspace([]),
-    ensure_project_file: ENTRY_PATH,
-    read_text_file: "---\nname: Lin\naliases: []\ninclude: detected\n---\n\n",
-  });
-  await createEntry(page, "Lin");
-  // The entry opened in a tab of its own...
-  await expect(page.locator(".tab-pill")).toHaveCount(2);
-  // ...and the panel, now drawn by that tab's editor, is still on Memory.
-  await expect(page.locator("#agent-tab-memory")).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
-  await expect(page.locator(".agent-panel-memory")).toBeVisible();
-});
-
-test("a new library entry shows its template's comment as a note, not markup", async ({
+test("a new library entry opens in a tab with the panel still on Memory, its template's comment a note, not markup", async ({
   page,
 }) => {
   await openApp(page, {
@@ -70,7 +47,14 @@ test("a new library entry shows its template's comment as a note, not markup", a
     read_text_file: `---\nname: Lin\naliases: []\ninclude: detected\n---\n\n<!-- ${note} -->\n\n`,
   });
   await createEntry(page, "Lin");
+  // The entry opened in a tab of its own...
   await expect(page.locator(".tab-pill")).toHaveCount(2);
+  // ...and the panel, now drawn by that tab's editor, is still on Memory.
+  await expect(page.locator("#agent-tab-memory")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page.locator(".agent-panel-memory")).toBeVisible();
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await expect(editor.locator(".raw-html-comment")).toHaveText(note);
   await expect(editor).not.toContainText("<!--", { useInnerText: true });

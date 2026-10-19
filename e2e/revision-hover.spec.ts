@@ -145,56 +145,100 @@ async function hover(page: Page, target: Locator) {
   await page.mouse.move(box.x + 8, box.y + box.height / 2);
 }
 
+/** The review bar's prev / next move its outline from sentence to sentence
+ *  without redrawing anything either: in 1.1.0-rc.4 the new text's widget
+ *  was keyed by the outline, so every step redrew it and it faded in from
+ *  nothing again. */
+async function stepWithReviewBar(page: Page) {
+  const nav = page.locator(".review-bar-nav button");
+  for (const [button, index] of [
+    [nav.last(), 0],
+    [nav.last(), 1],
+    [nav.first(), 0],
+  ] as const) {
+    await button.click();
+    // The paragraph still flashes to be found.
+    expect(
+      await page
+        .locator(".milkdown .ProseMirror > p", { hasText: "We spent" })
+        .evaluate((p) => p.getAnimations().map((a) => a.id)),
+    ).toContain("reveal-pulse");
+    await expect(
+      page.locator(
+        `.milkdown .pending-sentence-new[data-index="${index}"].pending-sentence-focus`,
+      ),
+    ).toHaveCount(1);
+    await expect(
+      page.locator(
+        `.milkdown .pending-sentence-focus:not([data-index="${index}"])`,
+      ),
+    ).toHaveCount(0);
+    await expectSidesUnchanged(page);
+  }
+}
+
 const MODES = [
-  // [display, the sides drawn in the text, whether there are margin cards]
-  ["inline", ["pending-delete", "pending-insert"], false],
-  ["original", ["pending-delete"], true],
-  ["new", ["pending-insert"], true],
-  ["final", ["pending-insert"], false],
+  // [display, the sides drawn in the text, whether there are margin cards,
+  //  whether the new text is in the text for the review bar to step through]
+  ["inline", ["pending-delete", "pending-insert"], false, true],
+  ["original", ["pending-delete"], true, false],
+  ["new", ["pending-insert"], true, true],
+  ["final", ["pending-insert"], false, true],
 ] as const;
 
-for (const colorScheme of ["light", "dark"] as const)
-  for (const [display, sides, margin] of MODES)
-    test(`${display} (${colorScheme}): hovering a revised sentence outlines its pair and hides nothing`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width: 1800, height: 900 });
-      await openApp(page, {
-        settings: { language: "en", revisionDisplay: display },
-        storage: { "levis-agent-panel-open": "1" },
-        colorScheme,
-        // The bug was an entrance replaying: keep the motion on.
-        animations: true,
-      });
-      await proposeRevision(page);
-      await expect(page.locator(".revision-note")).toHaveCount(margin ? 2 : 0);
-      await page.mouse.move(5, 5);
-      await rememberSides(page);
+// Every view in light. In dark only the inline view: it draws both sides
+// with their hover tints, which with the --revision-* outlines are all of
+// this that differs by colour scheme.
+const CASES = [
+  ...MODES.map((mode) => [mode, "light"] as const),
+  [MODES[0], "dark"] as const,
+];
 
-      for (const side of sides) {
-        await hover(page, page.locator(`.milkdown .${side}`).first());
-        await expectFirstPairHot(page);
-        await expectSidesUnchanged(page);
-        if (margin)
-          await expect(page.locator(".revision-note").first()).toHaveClass(
-            /review-note-hot/,
-          );
-        // Leaving takes the outline away, again without a redraw.
-        await page.mouse.move(5, 5);
-        await expect(
-          page.locator(".milkdown .pending-sentence-hot"),
-        ).toHaveCount(0);
-        await expectSidesUnchanged(page);
-      }
-
-      if (margin) {
-        // The card lights its pair in the text the same way.
-        await hover(page, page.locator(".revision-note").first());
-        await expectFirstPairHot(page);
-        await expectSidesUnchanged(page);
-        await page.mouse.move(5, 5);
-      }
+for (const [[display, sides, margin, steps], colorScheme] of CASES) {
+  const stepping = steps && colorScheme === "light";
+  test(`${display} (${colorScheme}): hovering a revised sentence outlines its pair and hides nothing${stepping ? ", nor do the review bar's prev / next" : ""}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1800, height: 900 });
+    await openApp(page, {
+      settings: { language: "en", revisionDisplay: display },
+      storage: { "levis-agent-panel-open": "1" },
+      colorScheme,
+      // The bug was an entrance replaying: keep the motion on.
+      animations: true,
     });
+    await proposeRevision(page);
+    await expect(page.locator(".revision-note")).toHaveCount(margin ? 2 : 0);
+    await page.mouse.move(5, 5);
+    await rememberSides(page);
+
+    for (const side of sides) {
+      await hover(page, page.locator(`.milkdown .${side}`).first());
+      await expectFirstPairHot(page);
+      await expectSidesUnchanged(page);
+      if (margin)
+        await expect(page.locator(".revision-note").first()).toHaveClass(
+          /review-note-hot/,
+        );
+      // Leaving takes the outline away, again without a redraw.
+      await page.mouse.move(5, 5);
+      await expect(page.locator(".milkdown .pending-sentence-hot")).toHaveCount(
+        0,
+      );
+      await expectSidesUnchanged(page);
+    }
+
+    if (margin) {
+      // The card lights its pair in the text the same way.
+      await hover(page, page.locator(".revision-note").first());
+      await expectFirstPairHot(page);
+      await expectSidesUnchanged(page);
+      await page.mouse.move(5, 5);
+    }
+
+    if (stepping) await stepWithReviewBar(page);
+  });
+}
 
 test("the ✓ / ✕ outline their pair under the pointer and still decide it", async ({
   page,
@@ -217,47 +261,3 @@ test("the ✓ / ✕ outline their pair under the pointer and still decide it", a
   await expect(keep).toHaveAttribute("aria-pressed", "true");
   await expect(take).toHaveAttribute("aria-pressed", "false");
 });
-
-// The review bar's prev / next move its outline from sentence to sentence
-// without redrawing anything either: in 1.1.0-rc.4 the new text's widget
-// was keyed by the outline, so every step redrew it and it faded in from
-// nothing again.
-for (const display of ["inline", "new", "final"] as const)
-  test(`${display}: the review bar's prev / next move the outline without redrawing the new text`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1800, height: 900 });
-    await openApp(page, {
-      settings: { language: "en", revisionDisplay: display },
-      storage: { "levis-agent-panel-open": "1" },
-      animations: true,
-    });
-    await proposeRevision(page);
-    await page.mouse.move(5, 5);
-    await rememberSides(page);
-    const nav = page.locator(".review-bar-nav button");
-    for (const [button, index] of [
-      [nav.last(), 0],
-      [nav.last(), 1],
-      [nav.first(), 0],
-    ] as const) {
-      await button.click();
-      // The paragraph still flashes to be found.
-      expect(
-        await page
-          .locator(".milkdown .ProseMirror > p", { hasText: "We spent" })
-          .evaluate((p) => p.getAnimations().map((a) => a.id)),
-      ).toContain("reveal-pulse");
-      await expect(
-        page.locator(
-          `.milkdown .pending-sentence-new[data-index="${index}"].pending-sentence-focus`,
-        ),
-      ).toHaveCount(1);
-      await expect(
-        page.locator(
-          `.milkdown .pending-sentence-focus:not([data-index="${index}"])`,
-        ),
-      ).toHaveCount(0);
-      await expectSidesUnchanged(page);
-    }
-  });

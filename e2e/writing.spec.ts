@@ -32,7 +32,7 @@ async function sourceOf(page: Page): Promise<string> {
   return value;
 }
 
-test("typing a closing ** or ~~ by hand closes the span once", async ({
+test("typing a closing ** or ~~ by hand closes the span once, and text after *** goes into the bold-italic span", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
@@ -40,18 +40,11 @@ test("typing a closing ** or ~~ by hand closes the span once", async ({
   await page.keyboard.type("A **bold** and *it* end. ~~s~~ done", {
     delay: 30,
   });
-  expect((await sourceOf(page)).trim()).toBe(
-    "A **bold** and *it* end. ~~s~~ done",
-  );
-});
-
-test("text typed after *** goes into the bold-italic span", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await page.locator('[data-active-tab="true"] .ProseMirror').click();
+  await page.keyboard.press("Enter");
   await page.keyboard.type("A ***both*** end", { delay: 30 });
-  expect((await sourceOf(page)).trim()).toBe("A ***both*** end");
+  expect((await sourceOf(page)).trim()).toBe(
+    "A **bold** and *it* end. ~~s~~ done\n\nA ***both*** end",
+  );
 });
 
 test("** committed through an IME composition still makes bold (#134)", async ({

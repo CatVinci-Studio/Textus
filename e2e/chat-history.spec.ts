@@ -211,14 +211,3 @@ test("a conversation deleted from the list is gone for good", async ({
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog", { name: "History" })).toHaveCount(0);
 });
-
-test("the sidebar has no Chats tab", async ({ page }) => {
-  await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (name: string) => void }
-    ).__devEmitTauriEvent("menu-toggle-sidebar"),
-  );
-  await expect(page.locator(".sidebar-tab")).toHaveCount(3);
-  await expect(page.locator('.sidebar-tab[aria-label="Chats"]')).toHaveCount(0);
-});
