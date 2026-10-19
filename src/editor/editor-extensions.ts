@@ -32,6 +32,7 @@ import {
   mdSpanClipboardPlugin,
 } from "./marks/md-span-schema";
 import { createMdSpanAutopairPlugin } from "./marks/md-span-autopair-plugin";
+import { createColorSwatchPlugin } from "./marks/color-swatch-plugin";
 import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
 import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
@@ -221,6 +222,11 @@ export function withEditorCore(
       )
       .use(formatShortcutPlugin)
       .use(enclosurePlugin)
+      .use(
+        createColorSwatchPlugin({
+          enabled: () => settings.current.inlineColorSwatches,
+        }),
+      )
 
       // Math: $/$$ enclosures sharing the same model, plus KaTeX rendering.
       .use(remarkMathPlugin)

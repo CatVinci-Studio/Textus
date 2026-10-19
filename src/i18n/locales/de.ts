@@ -554,6 +554,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   enableMathLabel: "Mathematische Formeln aktivieren",
   enableMermaidLabel: "Mermaid-Diagramme",
   codeLineNumbersLabel: "Zeilennummern in Codeblöcken",
+  inlineColorSwatchesLabel: "Farbfelder in Inline-Code",
+  inlineColorSwatchesHint:
+    "Inline-Code, der eine Farbe ist, etwa #ff8800 oder rgb(0 128 255), bekommt ein kleines Quadrat in dieser Farbe davor. Farbnamen wie red bleiben, wie sie sind.",
   codeBlockCopy: "Kopieren",
   codeBlockCopied: "Kopiert",
   autoCloseMarksLabel: "Formatierungszeichen automatisch schließen",

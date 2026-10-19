@@ -569,6 +569,9 @@ utiliser une.
   enableMathLabel: "Activer les formules mathématiques",
   enableMermaidLabel: "Diagrammes Mermaid",
   codeLineNumbersLabel: "Numéros de ligne dans les blocs de code",
+  inlineColorSwatchesLabel: "Pastilles de couleur dans le code en ligne",
+  inlineColorSwatchesHint:
+    "Le code en ligne qui est une couleur, comme #ff8800 ou rgb(0 128 255), est précédé d'un petit carré de cette couleur. Les noms de couleur comme red restent tels quels.",
   codeBlockCopy: "Copier",
   codeBlockCopied: "Copié",
   autoCloseMarksLabel: "Fermer automatiquement les marques de mise en forme",

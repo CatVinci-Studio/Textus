@@ -543,6 +543,9 @@ type /name in a conversation to use one.
   enableMathLabel: "Enable math formulas",
   enableMermaidLabel: "Mermaid diagrams",
   codeLineNumbersLabel: "Line numbers in code blocks",
+  inlineColorSwatchesLabel: "Colour swatches in inline code",
+  inlineColorSwatchesHint:
+    "Inline code that is a colour, like #ff8800 or rgb(0 128 255), gets a small square of that colour before it. Colour names like red stay as they are.",
   codeBlockCopy: "Copy",
   codeBlockCopied: "Copied",
   autoCloseMarksLabel: "Close formatting marks automatically",

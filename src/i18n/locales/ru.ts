@@ -555,6 +555,9 @@ export default {
   enableMathLabel: "Математические формулы",
   enableMermaidLabel: "Диаграммы Mermaid",
   codeLineNumbersLabel: "Номера строк в блоках кода",
+  inlineColorSwatchesLabel: "Образцы цвета во встроенном коде",
+  inlineColorSwatchesHint:
+    "Перед встроенным кодом, который задаёт цвет, например #ff8800 или rgb(0 128 255), появляется маленький квадрат этого цвета. Названия цветов вроде red остаются как есть.",
   codeBlockCopy: "Копировать",
   codeBlockCopied: "Скопировано",
   autoCloseMarksLabel: "Автоматически закрывать знаки форматирования",

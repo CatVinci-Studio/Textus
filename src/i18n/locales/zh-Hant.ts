@@ -517,6 +517,9 @@ export default {
   enableMathLabel: "啟用數學公式",
   enableMermaidLabel: "Mermaid 圖表",
   codeLineNumbersLabel: "程式碼區塊顯示行號",
+  inlineColorSwatchesLabel: "行內程式碼顯示顏色色塊",
+  inlineColorSwatchesHint:
+    "內容是色碼的行內程式碼（如 #ff8800 或 rgb(0 128 255)）前面會顯示一個該顏色的小方塊。red 這類顏色名稱維持原樣。",
   codeBlockCopy: "複製",
   codeBlockCopied: "已複製",
   autoCloseMarksLabel: "自動補上格式符號",

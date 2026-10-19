@@ -65,6 +65,16 @@ describe("cloneEditorContent", () => {
     expect(html).toContain("<pre><code>x</code></pre>");
   });
 
+  it("drops a colour code's swatch, keeping the code", () => {
+    const html = cloneEditorContent(
+      editor(
+        '<p>White <code class="md-code-span"><span class="color-swatch" style="--color-swatch: #fff"></span>#fff</code></p>',
+      ),
+    );
+    expect(html).not.toContain("color-swatch");
+    expect(html).toContain('<code class="md-code-span">#fff</code>');
+  });
+
   it("exports a missing image as the image it was written as, without its card", () => {
     const html = cloneEditorContent(
       editor(

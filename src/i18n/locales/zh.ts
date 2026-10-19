@@ -516,6 +516,9 @@ export default {
   enableMathLabel: "开启数学公式",
   enableMermaidLabel: "Mermaid 图表",
   codeLineNumbersLabel: "代码块显示行号",
+  inlineColorSwatchesLabel: "行内代码显示颜色色块",
+  inlineColorSwatchesHint:
+    "内容是颜色值的行内代码（如 #ff8800 或 rgb(0 128 255)）前面会显示一个该颜色的小方块。red 这样的颜色名称不受影响。",
   codeBlockCopy: "复制",
   codeBlockCopied: "已复制",
   autoCloseMarksLabel: "自动补全格式符号",

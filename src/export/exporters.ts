@@ -21,6 +21,7 @@ import {
   MISSING_IMAGE_CLASS,
 } from "../editor/images/missing-image";
 import { CODE_LINE_NUMBERS_CLASS } from "../editor/code/code-line-numbers-plugin";
+import { COLOR_SWATCH_CLASS } from "../editor/marks/color-swatch-plugin";
 import {
   MAC_PAGE,
   WINDOWS_PAGE,
@@ -96,7 +97,7 @@ function collectInlinedCss(): string {
 
 // Editing affordances that live in the editor DOM but are not document
 // content: heading "#" markers, the code-block header (copy button and
-// language picker) and line numbers, table
+// language picker) and line numbers, colour swatches, table
 // insert buttons, delimiters shown around the caret, AI previews. Kept in
 // step with the @media print list in print.css, which hides the same chrome
 // when the webview's PDF renderer applies print media.
@@ -105,6 +106,7 @@ const EDITOR_CHROME_SELECTOR = [
   ".enclosure-delimiter",
   ".code-block-header",
   ".code-line-gutter",
+  `.${COLOR_SWATCH_CLASS}`,
   ".table-add-row-btn",
   ".table-add-col-btn",
   ".ghost-text",

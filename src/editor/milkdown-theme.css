@@ -865,6 +865,33 @@
   user-select: none;
 }
 
+/* A colour code's swatch (marks/color-swatch-plugin.ts), at the start of
+   its inline code. The colour is painted over a checkerboard, so a
+   translucent one reads as translucent; the hairline keeps white on a
+   white page and black on a dark one visible. Not a place for the caret:
+   a click on it lands in the code. */
+.color-swatch {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin-right: 0.3em;
+  vertical-align: -0.05em;
+  border-radius: 2px;
+  background:
+    linear-gradient(var(--color-swatch), var(--color-swatch)),
+    repeating-conic-gradient(#c8c8c8 0 25%, #fff 0 50%) 0 0 / 0.4em 0.4em;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--editor-text) 25%, transparent);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* A colour code is short: kept on one line, it never leaves its swatch at
+   the end of the line above. */
+.md-code-span:has(> .color-swatch) {
+  white-space: nowrap;
+}
+
 /* Block math edits like a fenced block: while the cursor touches it
    (enclosure.ts adds .math-block-revealed), leaving the source area its own
    line(s) for the cursor - even when the block is still empty. */

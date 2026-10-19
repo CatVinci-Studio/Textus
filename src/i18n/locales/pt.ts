@@ -550,6 +550,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   enableMathLabel: "Ativar fórmulas matemáticas",
   enableMermaidLabel: "Diagramas Mermaid",
   codeLineNumbersLabel: "Números de linha nos blocos de código",
+  inlineColorSwatchesLabel: "Amostras de cor no código em linha",
+  inlineColorSwatchesHint:
+    "O código em linha que é uma cor, como #ff8800 ou rgb(0 128 255), ganha um pequeno quadrado dessa cor antes dele. Nomes de cor como red ficam como estão.",
   codeBlockCopy: "Copiar",
   codeBlockCopied: "Copiado",
   autoCloseMarksLabel: "Fechar marcas de formatação automaticamente",
