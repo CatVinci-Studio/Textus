@@ -96,14 +96,15 @@
   /* A proposed revision in the document (pending-edit-plugin.ts) and its
      margin card - what a theme sets to recolour revisions (Settings >
      Theme > Export writes them out). currentColor is the text's own
-     colour where it is drawn. The outlines mark the pair under the
-     pointer (hover) and the one the review bar points at (focus): green
-     round new text, red round the original. */
+     colour where it is drawn. The hover tints, a shade darker, mark the
+     pair under the pointer and the one the review bar points at - a
+     darker green for new text, a darker red for the original - as a
+     review note's passage darkens under the pointer. */
   --revision-insert-bg: var(--diff-insert-bg);
   --revision-insert-text: currentColor;
   --revision-insert-hover-bg: color-mix(
     in srgb,
-    var(--success-color) 26%,
+    var(--success-color) 34%,
     transparent
   );
   --revision-delete-bg: var(--diff-delete-bg);
@@ -111,13 +112,9 @@
   --revision-delete-text: color-mix(in srgb, currentColor 55%, transparent);
   --revision-delete-hover-bg: color-mix(
     in srgb,
-    var(--danger) 20%,
+    var(--danger) 28%,
     transparent
   );
-  --revision-insert-outline: #1f6a44;
-  --revision-delete-outline: #a3293d;
-  --revision-insert-focus: var(--revision-insert-outline);
-  --revision-delete-focus: var(--revision-delete-outline);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -133,8 +130,6 @@
     --shadow-dialog: 0 16px 48px rgb(0 0 0 / 32%);
     --shadow-sheet: 0 -8px 24px rgb(0 0 0 / 40%);
     --shadow-drawer: 8px 0 24px rgb(0 0 0 / 40%);
-    --revision-insert-outline: #5cbf8c;
-    --revision-delete-outline: #ee7d8f;
   }
 }
 
@@ -150,8 +145,6 @@
   --shadow-dialog: 0 16px 48px rgb(0 0 0 / 32%);
   --shadow-sheet: 0 -8px 24px rgb(0 0 0 / 40%);
   --shadow-drawer: 8px 0 24px rgb(0 0 0 / 40%);
-  --revision-insert-outline: #5cbf8c;
-  --revision-delete-outline: #ee7d8f;
 }
 
 /* Existing component styles use editor aliases. Rebind them at UI boundaries

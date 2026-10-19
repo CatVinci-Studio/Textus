@@ -105,19 +105,15 @@ How a proposed AI revision is drawn in the document and its margin card
 light and a dark value; **Settings › Theme › Export** writes them out, so a
 theme can set any of them.
 
-| Variable                     | Controls                                                                 |
-| ---------------------------- | ------------------------------------------------------------------------ |
-| `--revision-insert-bg`       | The new text's tint.                                                     |
-| `--revision-insert-text`     | The new text's colour. `currentColor`: the text's own.                   |
-| `--revision-insert-hover-bg` | The new text's tint while its pair is under the pointer.                 |
-| `--revision-insert-outline`  | The outline round the new text of the pair under the pointer (green).    |
-| `--revision-insert-focus`    | The same, for the pair the review bar points at.                         |
-| `--revision-delete-bg`       | The original's tint.                                                     |
-| `--revision-delete-text`     | The original's colour - by default the text's own, faded.                |
-| `--revision-delete-strike`   | The line through the original.                                           |
-| `--revision-delete-hover-bg` | The original's tint while its pair is under the pointer.                 |
-| `--revision-delete-outline`  | The outline round the original of the pair under the pointer (red).      |
-| `--revision-delete-focus`    | The same, for the pair the review bar points at.                         |
+| Variable                     | Controls                                                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `--revision-insert-bg`       | The new text's tint.                                                                                         |
+| `--revision-insert-text`     | The new text's colour. `currentColor`: the text's own.                                                       |
+| `--revision-insert-hover-bg` | The new text's darker tint while its pair is under the pointer or the review bar's pointer, and in its card. |
+| `--revision-delete-bg`       | The original's tint.                                                                                         |
+| `--revision-delete-text`     | The original's colour - by default the text's own, faded.                                                    |
+| `--revision-delete-strike`   | The line through the original.                                                                               |
+| `--revision-delete-hover-bg` | The original's darker tint while its pair is under the pointer or the review bar's pointer, and in its card. |
 
 Built-in content themes leave them alone: the tints follow `--success-color`
 and `--danger`, which the dark palette already tunes.
