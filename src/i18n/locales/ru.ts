@@ -335,7 +335,6 @@ export default {
   navShortcuts: "Сочетания клавиш",
   generalBasicsLabel: "Общие",
   generalSystemLabel: "Приложение",
-  settingsCopyExportGroup: "Копирование и экспорт",
   settingsFilesGroup: "Файлы",
   shortcutAiGroupLabel: "ИИ и текст",
   shortcutEditorGroupLabel: "Редактор и навигация",
@@ -360,8 +359,8 @@ export default {
   agentWorkspaceLabel: "Папка глобальных настроек",
   agentWorkspaceOpenButton: "Показать",
   agentWorkspaceRootLabel: "Папка проекта",
-  agentWorkspaceRootHint: `${AI_NAME} может читать только эту папку: {path}`,
-  agentWorkspaceRootDefault: "папка текущего документа",
+  agentWorkspaceRootHelp: `${AI_NAME} может читать только эту папку.`,
+  agentWorkspaceRootDefault: "Папка текущего документа",
   agentWorkspaceRootPick: "Выбрать…",
   agentSystemPromptLabel: "Инструкции (agent.md)",
   agentSystemPromptHint: "Отправляются с каждым диалогом, для всех документов",
@@ -451,7 +450,7 @@ export default {
   deleteRow: "Удалить строку",
   deleteColumn: "Удалить столбец",
   deleteTable: "Удалить таблицу",
-  apiKeyHintTemplate: "Вставьте API-ключ {name}.",
+  apiKeyLabelTemplate: "API-ключ {name}",
   apiKeyOptionalHintTemplate:
     "API-ключ не обязателен: укажите его, только если доступ к {name} защищён.",
   providerNoKeyRequired: "Ключ не нужен",
@@ -513,6 +512,7 @@ export default {
   },
   cut: "Вырезать",
   copy: "Скопировать",
+  copyAsMarkdown: "Копировать как Markdown",
   paste: "Вставить",
   selectAll: "Выбрать все",
   findReplace: "Найти и заменить",
@@ -584,22 +584,13 @@ export default {
   diagramEngineHint:
     "Pele рисует быстрее, но располагает элементы иначе, чем GitHub и Mermaid, и не поддерживает некоторые возможности, например HTML в подписях; то, что Pele нарисовать не может, рисует Mermaid.",
   codeLineNumbersLabel: "Номера строк в блоках кода",
-  inlineColorSwatchesLabel: "Образцы цвета во встроенном коде",
-  inlineColorSwatchesHint:
-    "Перед встроенным кодом, который задаёт цвет, например #ff8800 или rgb(0 128 255), появляется маленький квадрат этого цвета. Названия цветов вроде red остаются как есть.",
+  inlineColorSwatchesLabel: "Показывать образец перед кодом цвета",
   codeBlockCopy: "Копировать",
   codeBlockCopied: "Скопировано",
   autoCloseMarksLabel: "Автоматически закрывать знаки форматирования",
-  autoCloseMarksHint:
-    "При вводе *, **, ~~, == или ` закрывающий знак добавляется сам. Если выключено, вы вводите закрывающий знак сами, и форматирование применяется, как только вы его введёте.",
-  copyTextModeLabel: "При копировании в другие приложения",
-  copyTextModeHint:
-    "Приложения, принимающие только простой текст (например, WeChat), получат это; там, где формат поддерживается, он сохранится.",
-  copyTextModeReadable: "Читаемый текст",
-  copyTextModeMarkdown: "Исходный Markdown",
-  pdfPageNumbersLabel: "Номера страниц в PDF",
-  pdfPageNumbersHint:
-    "В экспортированном PDF внизу каждой страницы стоит её номер.",
+  pdfPageNumbersLabel: "Показывать номера страниц при экспорте",
+  infoTipLabel: "Подробнее о «{label}»",
+  infoTipLabelPlain: "Подробнее",
   askAi: "Спросить ИИ…",
   agentProposalTitle: "Предлагаемая правка",
   chatClose: "Закрыть чат",
@@ -1002,9 +993,9 @@ export default {
   menuNewQuickNote: "Новая быстрая заметка",
   menuOpenQuickNotesFolder: "Открыть папку быстрых заметок",
   quickNotesGroup: "Быстрые заметки",
-  quickNoteShortcutToggle: "Глобальное сочетание клавиш",
+  quickNoteShortcutToggle: "Открывать глобальным сочетанием клавиш",
   quickNoteShortcutHint:
-    "Открывает быструю заметку из любого приложения. Textus отслеживает только это сочетание клавиш и не читает ничего другого, что вы печатаете.",
+    "Textus отслеживает только это сочетание клавиш и не читает ничего другого, что вы печатаете.",
   quickNoteShortcutLabel: "Сочетание клавиш",
   quickNoteShortcutDefault: "По умолчанию",
   quickNoteShortcutInApp:
@@ -1022,12 +1013,8 @@ export default {
   quickNoteFolderLabel: "Папка",
   quickNoteFolderChange: "Изменить…",
   quickNoteFolderShow: "Показать",
-  quickNotePerDayLabel: "Один файл в день",
-  quickNotePerDayHint:
-    "Добавляет каждую заметку в файл этого дня под её временем, а не в отдельный файл.",
-  quickNoteContinueLabel: "Продолжать последнюю заметку",
-  quickNoteContinueHint:
-    "Если открыть быструю заметку вскоре после сохранения, продолжится предыдущая.",
+  quickNotePerDayLabel: "Хранить заметки за день в одном файле",
+  quickNoteContinueLabel: "При повторном открытии продолжать последнюю заметку",
   quickNoteContinueNever: "Никогда",
   quickNoteContinueMinutes: {
     one: "В течение {n} минуты",
@@ -1035,7 +1022,7 @@ export default {
     many: "В течение {n} минут",
     other: "В течение {n} минуты",
   },
-  quickNoteCommandLabel: "Команда",
+  quickNoteCommandLabel: "Команда, открывающая быструю заметку",
   quickNoteCommandHint: `Открывает быструю заметку, даже когда ${APP_NAME} не запущен. Назначьте ей клавишу в настройках системы.`,
   quickNoteCommandCopy: "Копировать",
   quickNoteCommandCopied: "Скопировано",
@@ -1057,8 +1044,7 @@ export default {
   backgroundHintWindows: `После закрытия последнего окна ${APP_NAME} продолжает работать, а в области уведомлений остаётся значок: щёлкните его, чтобы создать быструю заметку. Чтобы полностью закрыть ${APP_NAME}, выберите «Завершить ${APP_NAME}» в меню значка.`,
   backgroundHintLinux: `После закрытия последнего окна ${APP_NAME} продолжает работать, а в системном лотке остаётся значок. Чтобы полностью закрыть ${APP_NAME}, выберите «Завершить ${APP_NAME}» в меню значка. GNOME показывает такие значки только с расширением AppIndicator.`,
   backgroundTrayUnavailable: `На этом рабочем столе нет системного лотка: не установлена libayatana-appindicator. ${APP_NAME} всё равно работает в фоне; откройте его из меню приложений или сочетанием клавиш быстрой заметки.`,
-  openAtLoginToggle: "Открывать при входе в систему",
-  openAtLoginHint: `Запускает ${APP_NAME} в фоне при входе в систему, без окон.`,
+  openAtLoginToggle: "Запускать в фоне при входе в систему",
   openAtLoginFailed: "Не удалось изменить автозапуск: {error}",
   trayOpenTextus: `Открыть ${APP_NAME}`,
 } satisfies Translation;

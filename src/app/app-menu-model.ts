@@ -42,6 +42,7 @@ export type NativeMenuId =
   | "close-window"
   | "quit"
   | "find-replace"
+  | "copy-as-markdown"
   | "toggle-source-mode"
   | "toggle-typewriter-mode"
   | "toggle-sidebar"
@@ -304,6 +305,7 @@ export function buildAppMenu(
         "separator",
         { label: t.cut, accel: "mod+x", action: { local: "cut" } },
         { label: t.copy, accel: "mod+c", action: { local: "copy" } },
+        { label: t.copyAsMarkdown, action: { native: "copy-as-markdown" } },
         { label: t.paste, accel: "mod+v", action: { local: "paste" } },
         { label: t.selectAll, accel: "mod+a", action: { local: "select-all" } },
         "separator",

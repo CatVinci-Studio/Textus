@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
+import type { Ctx } from "@milkdown/kit/ctx";
 import { Slice } from "@milkdown/kit/prose/model";
 import { AllSelection } from "@milkdown/kit/prose/state";
 import type { EditorRunner } from "./useEditorRunner";
@@ -9,6 +10,9 @@ import { bareUrl, insertUrlLink } from "./markdown/paste-url";
 
 export interface EditorClipboard {
   copyOrCut: (cut: boolean) => void;
+  /** The selection's Markdown source, for an app that should get the marks
+   *  themselves (Copy gives plain-text apps the words as they read). */
+  copyAsMarkdown: () => void;
   paste: () => void;
   selectAll: () => void;
   /** Insert arbitrary markdown text at the cursor, exactly like pasting it. */
@@ -17,8 +21,8 @@ export interface EditorClipboard {
 
 /**
  * Clipboard actions for the context menu: copy/cut put on the clipboard
- * what Cmd+C does (the formatted HTML, and plain text as the Copy setting
- * says), and paste parses clipboard text as
+ * what Cmd+C does (the formatted HTML, and the words as they read for
+ * plain-text apps), Copy as Markdown the Markdown source, and paste parses clipboard text as
  * markdown so formatted content lands as rendered nodes instead of staying
  * literal source. Cmd+C/V already behave this way via milkdown's clipboard
  * plugin - these are the menu-driven equivalents, which can't go through
@@ -39,23 +43,29 @@ async function ownHtml(): Promise<string | null> {
   return null;
 }
 
+/** The selection as Markdown source; its bare text if that won't
+ *  serialize. */
+function selectionMarkdown(ctx: Ctx): string {
+  const { state } = ctx.get(editorViewCtx);
+  const { from, to } = state.selection;
+  try {
+    return ctx.get(serializerCtx)(state.doc.cut(from, to)).trimEnd();
+  } catch {
+    return state.doc.textBetween(from, to, "\n");
+  }
+}
+
 export function useEditorClipboard(run: EditorRunner): EditorClipboard {
   const copyOrCut = useCallback(
     (cut: boolean) => {
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
         const { state } = view;
-        const { from, to } = state.selection;
         // The history keeps the Markdown source, as for Cmd+C
         // (clipboard/history-plugin.ts).
-        let markdown: string;
-        try {
-          markdown = ctx.get(serializerCtx)(state.doc.cut(from, to)).trimEnd();
-        } catch {
-          markdown = state.doc.textBetween(from, to, "\n");
-        }
+        const markdown = selectionMarkdown(ctx);
         // The clipboard gets what Cmd+C puts there: the formatted HTML, and
-        // the plain text the Copy setting asks for (plain-text-copy-plugin).
+        // the words as they read for plain-text apps (plain-text-copy-plugin).
         const { dom, text } = view.serializeForClipboard(
           state.selection.content(),
         );
@@ -83,6 +93,31 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
     },
     [run],
   );
+
+  const copyAsMarkdown = useCallback(() => {
+    run((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      const markdown = selectionMarkdown(ctx);
+      if (!markdown) return;
+      void (async () => {
+        // The plain text is the source, so every app gets the marks; the
+        // Markdown flavour too where the webview can write one (Chromium
+        // refuses the type, and the plain text alone goes).
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              "text/plain": new Blob([markdown], { type: "text/plain" }),
+              "text/markdown": new Blob([markdown], { type: "text/markdown" }),
+            }),
+          ]);
+        } catch {
+          await navigator.clipboard.writeText(markdown).catch(() => {});
+        }
+        recordClipboardEntry(markdown);
+        view.focus();
+      })();
+    });
+  }, [run]);
 
   const insertText = useCallback(
     (text: string) => {
@@ -145,5 +180,5 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
     });
   }, [run]);
 
-  return { copyOrCut, paste, selectAll, insertText };
+  return { copyOrCut, copyAsMarkdown, paste, selectAll, insertText };
 }

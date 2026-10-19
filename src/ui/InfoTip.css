@@ -1,0 +1,61 @@
+/* The "?" after a label (InfoTip.tsx): quiet until asked - a muted ring
+   that darkens on hover, focus or while its card is open. */
+.info-tip {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-inline-start: var(--space-1);
+}
+
+.info-tip-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(16px * var(--ui-text-scale, 1));
+  height: calc(16px * var(--ui-text-scale, 1));
+  padding: 0;
+  border: 1px solid var(--editor-border, var(--border-color));
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--editor-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--dur-instant) var(--ease-standard),
+    border-color var(--dur-instant) var(--ease-standard);
+}
+
+/* A finger needs more than 16 px: the target reaches past the ring. */
+.info-tip-button::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+.info-tip-button:is(:hover, :focus-visible, [aria-expanded="true"]) {
+  color: var(--editor-text);
+  border-color: var(--editor-muted);
+}
+
+/* Over the dialog it is opened from (Settings), as a Select's list is. */
+.info-tip-card {
+  position: fixed;
+  z-index: var(--z-select);
+  max-width: min(300px, calc(100vw - 16px));
+  padding: var(--space-2) var(--space-3);
+  color: var(--editor-text);
+  font-size: var(--text-md);
+  font-weight: normal;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  transform-origin: var(--transform-origin, top left);
+  animation: motion-pop-in var(--dur-base) var(--ease-out);
+}
+
+.info-tip-card[data-state="closing"] {
+  animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
+}

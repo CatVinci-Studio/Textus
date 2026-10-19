@@ -104,7 +104,7 @@ export function AgentSkillsSection({ t }: { t: Strings }) {
     <>
       <SettingRow
         label={t.agentSkillsLabel}
-        hint={t.agentSkillsHint}
+        help={t.agentSkillsHint}
         error={error}
       >
         <button

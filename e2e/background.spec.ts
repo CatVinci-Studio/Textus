@@ -3,13 +3,15 @@ import { mockInvoke, openApp } from "./helpers";
 
 // Settings › General › Background against a canned background_status
 // standing in for src-tauri/src/background/. The page's user agent is
-// Windows Chrome's (playwright.config.ts), so the hint is Windows's.
+// Windows Chrome's (playwright.config.ts), so the explanation behind the
+// switch's "?" is Windows's.
 
 // English labels, as in src/i18n/locales/en.ts.
 const t = {
   group: "Background",
   toggle: "Keep running in the background",
-  login: "Open at login",
+  login: "Start in the background at login",
+  more: "More about Keep running in the background",
   windowsHint:
     "Closing the last window leaves Textus running, with an icon in the notification area: click it for a quick note. To close Textus completely, choose Quit in the icon’s menu.",
   trayUnavailable:
@@ -60,13 +62,16 @@ const emitStatus = (page: Page, status: unknown) =>
   );
 
 test.describe("Settings › General › Background", () => {
-  test("is off by default, and Open at login appears only once it is on", async ({
+  test("is off by default, and the login switch appears only once it is on", async ({
     page,
   }) => {
     const group = await openSettings(page);
-    const toggle = group.getByLabel(t.toggle);
+    const toggle = group.getByLabel(t.toggle, { exact: true });
     await expect(toggle).not.toBeChecked();
-    await expect(group).toContainText(t.windowsHint);
+    await expect(group.getByText(t.windowsHint)).toBeHidden();
+    await expect(
+      group.getByRole("button", { name: t.more }),
+    ).toHaveAccessibleDescription(t.windowsHint);
     await expect(group.getByLabel(t.login)).toHaveCount(0);
 
     await toggle.check();

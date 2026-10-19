@@ -2,9 +2,10 @@ import { test, type Page } from "@playwright/test";
 import { PHONE, openApp, openPhone } from "../../helpers";
 
 // Every page of Settings at its full length - each category and About
-// Textus, in English and Chinese, on the desktop and the phone, light - for
-// reviewing how Settings is grouped and ordered, not a baseline. Runs only
-// with TEXTUS_SHOTS_DIR set to where the PNGs go:
+// Textus, in English and Chinese, on the desktop (light and dark) and the
+// phone (light) - and a row's "?" open, for reviewing how Settings is
+// grouped, ordered and explained, not a baseline. Runs only with
+// TEXTUS_SHOTS_DIR set to where the PNGs go:
 //
 //   TEXTUS_SHOTS_DIR=../assets/working/settings-1.2.0/after npm run screenshots:review -- settings-layout
 
@@ -82,10 +83,16 @@ async function shootPages(page: Page, prefix: string) {
 }
 
 for (const language of LANGUAGES)
-  test(`Settings, every page, desktop, ${language}`, async ({ page }) => {
-    await openApp(page, { settings: { language } });
-    await shootPages(page, `desktop-${language}`);
-  });
+  for (const colorScheme of ["light", "dark"] as const)
+    test(`Settings, every page, desktop, ${language}, ${colorScheme}`, async ({
+      page,
+    }) => {
+      await openApp(page, { settings: { language }, colorScheme });
+      await shootPages(
+        page,
+        `desktop-${language}${colorScheme === "dark" ? "-dark" : ""}`,
+      );
+    });
 
 test.describe("phone", () => {
   test.use(PHONE);
@@ -95,3 +102,22 @@ test.describe("phone", () => {
       await shootPages(page, `phone-${language}`);
     });
 });
+
+/** A row's "?" open, as a click leaves it: the diagram engine's trade-off. */
+for (const language of LANGUAGES)
+  for (const colorScheme of ["light", "dark"] as const)
+    test(`Settings, a ? open, desktop, ${language}, ${colorScheme}`, async ({
+      page,
+    }) => {
+      await openApp(page, { settings: { language }, colorScheme });
+      await openSettings(page);
+      const panel = page.locator(".settings-panel");
+      await panel.locator(".settings-nav-item").nth(1).click();
+      const help = panel.locator(".info-tip-button").nth(1);
+      await help.scrollIntoViewIfNeeded();
+      await help.click();
+      await page.getByRole("tooltip").waitFor();
+      await page.screenshot({
+        path: `${DIR}/desktop-${language}${colorScheme === "dark" ? "-dark" : ""}-help-open.png`,
+      });
+    });

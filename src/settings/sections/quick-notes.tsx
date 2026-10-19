@@ -58,7 +58,7 @@ export function QuickNotesSection({ t }: { t: Strings }) {
     <>
       <ToggleRow
         label={t.quickNoteShortcutToggle}
-        hint={t.quickNoteShortcutHint}
+        help={t.quickNoteShortcutHint}
         checked={settings.quickNoteShortcutEnabled}
         onChange={(v) => setSettings({ quickNoteShortcutEnabled: v })}
       />
@@ -90,14 +90,10 @@ export function QuickNotesSection({ t }: { t: Strings }) {
       </SettingRow>
       <ToggleRow
         label={t.quickNotePerDayLabel}
-        hint={t.quickNotePerDayHint}
         checked={settings.quickNotePerDay}
         onChange={(v) => setSettings({ quickNotePerDay: v })}
       />
-      <SettingRow
-        label={t.quickNoteContinueLabel}
-        hint={t.quickNoteContinueHint}
-      >
+      <SettingRow label={t.quickNoteContinueLabel}>
         <Select
           className="settings-select"
           aria-label={t.quickNoteContinueLabel}
@@ -289,13 +285,11 @@ function QuickNoteCommandRow({ t }: { t: Strings }) {
   return (
     <SettingRow
       label={t.quickNoteCommandLabel}
+      help={t.quickNoteCommandHint}
       hint={
-        <>
-          <code className="settings-inline-code quick-note-command">
-            {command}
-          </code>
-          <div>{t.quickNoteCommandHint}</div>
-        </>
+        <code className="settings-inline-code quick-note-command">
+          {command}
+        </code>
       }
     >
       <button

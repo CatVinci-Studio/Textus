@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import type {
-  HeadingAction,
-  ShortcutAction,
-  Shortcuts,
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import {
+  useSettings,
+  type HeadingAction,
+  type ShortcutAction,
+  type Shortcuts,
 } from "../SettingsContext";
-import type { Strings } from "../../i18n/strings";
+import { resolveStrings, type Strings } from "../../i18n/strings";
 import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
 import {
   comboFromEvent,
@@ -13,6 +14,7 @@ import {
   isReservedCombo,
 } from "../../utils/shortcuts";
 import { ChevronIcon } from "../../ui/icons";
+import { InfoTip } from "../../ui/InfoTip";
 
 // Generic row controls shared by the settings categories.
 
@@ -31,19 +33,24 @@ export const VERBATIM_INPUT = {
 
 /**
  * One setting: its name on the left, its control on the right - the shape
- * every row in Settings takes, on the desktop and the phone alike. `hint`
- * is for the few rows whose label can't say enough on its own (a value
- * such as the folder in use, a fetched-on date, the link a pasted image
- * gets); most rows have none, so the page reads as a list of names rather
- * than paragraphs of grey text.
+ * every row in Settings takes, on the desktop and the phone alike.
+ *
+ * The label says what the setting does, so most rows need nothing else.
+ * `help` is the explanation a label can't carry - a trade-off, what
+ * happens behind the scenes - behind a "?" after the label, never as grey
+ * text on the page. `hint` is for what is live rather than explained: a
+ * value (the folder in use, a fetched-on date, the link a pasted image
+ * gets) or a status (no room for the margin, a shortcut in use).
  */
 export function SettingRow({
   label,
+  help,
   hint,
   error,
   children,
 }: {
   label: ReactNode;
+  help?: ReactNode;
   hint?: ReactNode;
   error?: string | null;
   children?: ReactNode;
@@ -51,12 +58,38 @@ export function SettingRow({
   return (
     <div className="settings-row">
       <div className="settings-row-text">
-        <div className="settings-row-label">{label}</div>
+        <div className="settings-row-label">
+          {label}
+          {help && <RowHelp label={label}>{help}</RowHelp>}
+        </div>
         {hint && <div className="settings-row-hint">{hint}</div>}
         {error && <div className="settings-error">{error}</div>}
       </div>
       {children && <div className="settings-row-control">{children}</div>}
     </div>
+  );
+}
+
+/** A row's "?" (ui/InfoTip.tsx), named after the row: "More about …". */
+export function RowHelp({
+  label,
+  children,
+}: {
+  label: ReactNode;
+  children: ReactNode;
+}) {
+  const { settings } = useSettings();
+  const t = resolveStrings(settings.language);
+  return (
+    <InfoTip
+      label={
+        typeof label === "string"
+          ? t.infoTipLabel.replace("{label}", label)
+          : t.infoTipLabelPlain
+      }
+    >
+      {children}
+    </InfoTip>
   );
 }
 
@@ -83,25 +116,35 @@ export function LinkRow({
   );
 }
 
+/**
+ * A switch row; the whole row toggles it. `help` as SettingRow's.
+ * The switch is named by the label alone (aria-labelledby): the "?" sits
+ * inside the <label>, and would otherwise be read as part of the name.
+ */
 export function ToggleRow({
   label,
-  hint,
+  help,
   checked,
   onChange,
 }: {
   label: string;
-  hint?: string;
+  help?: ReactNode;
   checked: boolean;
   onChange: (checked: boolean) => void;
 }) {
+  const id = useId();
   return (
-    <label className="settings-row settings-toggle-row">
+    <label className="settings-row settings-toggle-row" htmlFor={id}>
       <div className="settings-row-text">
-        <div className="settings-row-label">{label}</div>
-        {hint && <div className="settings-row-hint">{hint}</div>}
+        <div className="settings-row-label">
+          <span id={`${id}-label`}>{label}</span>
+          {help && <RowHelp label={label}>{help}</RowHelp>}
+        </div>
       </div>
       <input
+        id={id}
         type="checkbox"
+        aria-labelledby={`${id}-label`}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
       />

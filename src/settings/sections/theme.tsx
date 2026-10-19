@@ -14,7 +14,7 @@ import { showMessage } from "../../ui/app-dialog";
 import { exportDoc, fs, themes } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { Select } from "../../ui/Select";
-import { LinkRow, SettingRow } from "./controls";
+import { LinkRow, RowHelp, SettingRow } from "./controls";
 
 const CUSTOM_CSS_PLACEHOLDER = `#write > p {
   text-indent: 2em;
@@ -294,10 +294,10 @@ export function ThemeSection({
         onToggle={(e) => setCustomCssOpen(e.currentTarget.open)}
       >
         <summary className="settings-disclosure-summary">
-          {t.customCssLabel}
+          <span>{t.customCssLabel}</span>
+          <RowHelp label={t.customCssLabel}>{t.customCssHint}</RowHelp>
         </summary>
         <div className="settings-disclosure-body">
-          <div className="settings-row-hint">{t.customCssHint}</div>
           <textarea
             className="settings-code-input"
             aria-label={t.customCssLabel}
