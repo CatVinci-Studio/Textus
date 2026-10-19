@@ -89,6 +89,38 @@ for (const language of LANGUAGES)
     );
   });
 
+// Fonts differ from machine to machine: the CI runner's set Russian 4.5px
+// wider than a desktop's and pushed Send out. With every word in the
+// footer much wider than any real font makes it, the row still holds:
+// the chip goes to its x, then the mode's name to an ellipsis.
+for (const language of ["de", "ru"] as const)
+  test(`${language}: the footer holds its row in a wider font too`, async ({
+    page,
+  }) => {
+    await openApp(page, {
+      settings: { language },
+      storage: {
+        "levis-agent-panel-open": "1",
+        "levis-agent-panel-width": "300",
+      },
+    });
+    await page.addStyleTag({
+      content:
+        ".agent-panel-view .inline-chat-toolbar * { letter-spacing: 0.12em; }",
+    });
+    await selectPassage(page);
+    const view = page.locator(".agent-panel-view");
+    await view.locator("textarea").click();
+    await expect(view.locator(".inline-chat-selection-chip")).toBeVisible();
+    await expectOneRow(view.locator(".inline-chat-toolbar"));
+    // The mode is still there to pick, if shortened.
+    await expect(
+      view.getByRole("combobox", {
+        name: language === "de" ? "Modus" : "Режим",
+      }),
+    ).toBeVisible();
+  });
+
 for (const language of ["de", "ru"] as const)
   test(`${language}: the detached chat window's footer stays one row at its narrowest`, async ({
     page,
