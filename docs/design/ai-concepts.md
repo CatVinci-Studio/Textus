@@ -44,7 +44,11 @@ there, and the project's own settings live in its `.textus/` folder.**
   the project folder, and a chapter in `novel/part-1/` belongs to `novel/`
   once `novel/.textus/` exists. **Choose project folder…** in the project bar's menu,
   or **Settings > Textus AI > Project Folder**, picks another one; **Use the
-  document's folder** goes back to the default.
+  document's folder** goes back to the default. **File > Open Folder…** sets
+  it too, but only while the AI has no folder of its own (none chosen, or
+  the one an earlier Open Folder set); **Close Folder** then puts the
+  default back. A folder chosen for the AI is never replaced by the
+  sidebar's (`sidebar/tree-root.ts`'s `agentRootOnOpen`).
 - **Textus AI uses it:** conversations list, read and search its text files
   (`list_files`, `read_file`, `search_files`), and `@` in the composer
   attaches one. Hidden entries, build and dependency folders and files over

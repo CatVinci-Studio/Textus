@@ -484,6 +484,15 @@ test.describe("desktop", () => {
       t.shortcutHeadingsGroupLabel,
       t.shortcutFixedGroupLabel,
     ]);
+    // Finding, in the document and among the folder's files, comes first.
+    await expect(
+      panel.locator(".settings-group").first().locator(".settings-row-label"),
+    ).toHaveText([
+      "Find & replace",
+      "Search file names",
+      "Next tab",
+      "Previous tab",
+    ]);
   });
 });
 

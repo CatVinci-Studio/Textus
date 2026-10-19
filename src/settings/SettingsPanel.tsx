@@ -219,9 +219,7 @@ export function SettingsPanel({
           </SettingsGroup>
 
           {/* How documents reach the disk - used daily, so above the rarer
-              groups. Slot: Open Folder's settings go at the end of this
-              group (Settings › Textus AI › Project folder points here once
-              it follows the open folder). */}
+              groups. */}
           <SettingsGroup title={t.settingsFilesGroup}>
             <ToggleRow
               label={t.autosaveLabel}
@@ -572,10 +570,10 @@ export function SettingsPanel({
           {settings.enableAskAi && (
             <>
               <SettingsGroup title={t.agentPersonalizationGroupLabel}>
-                {/* What the AI may read. Once Open Folder lands, this
-                    row's default should be the folder open in the sidebar
-                    and its hint say so, rather than a second folder
-                    setting beside General › Files. */}
+                {/* What the AI may read - File › Open Folder… sets it
+                    too while the AI has no folder of its own
+                    (sidebar/tree-root.ts), so there is one folder setting,
+                    not a second one in General. */}
                 {canPickFolder && <AgentWorkspaceRootSection t={t} />}
                 <ToggleRow
                   label={t.rememberAutomaticallyLabel}
@@ -625,7 +623,8 @@ export function SettingsPanel({
 
       {c === "shortcuts" && (
         <>
-          {/* Most used first: finding and moving between tabs, then the
+          {/* Most used first: finding - in the document, then among the
+              folder's file names - and moving between tabs, then the
               panels and modes of the window, then the AI's keys. The
               Quick Notes shortcut is system-wide and lives with the rest
               of Quick Notes, in General. */}
@@ -635,6 +634,7 @@ export function SettingsPanel({
                 t.shortcutEditorGroupLabel,
                 [
                   ["findReplace", t.shortcutFindReplace],
+                  ["searchFiles", t.shortcutSearchFiles],
                   ["nextTab", t.shortcutNextTab],
                   ["previousTab", t.shortcutPreviousTab],
                 ],

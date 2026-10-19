@@ -92,7 +92,7 @@ fn folder(app: &AppHandle) -> PathBuf {
 
 /// The folder, created, and written into Settings if it was the default -
 /// the first time Quick Notes uses it.
-fn folder_for_use(app: &AppHandle) -> Result<PathBuf, String> {
+pub(crate) fn folder_for_use(app: &AppHandle) -> Result<PathBuf, String> {
     let dir = folder(app);
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     if setting_str(app, FOLDER_SETTING).is_none() {

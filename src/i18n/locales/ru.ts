@@ -243,6 +243,22 @@ export default {
   outlineEmpty:
     "Заголовков пока нет — здесь появятся строки, начинающиеся с #.",
   treeRefresh: "Обновить",
+  menuOpenFolder: "Открыть папку…",
+  menuCloseFolder: "Закрыть папку",
+  folderTooBroad:
+    "Эта папка слишком общая, чтобы её открыть (домашняя папка или целый диск). Выберите более конкретную папку.",
+  treeSearchPlaceholder: "Поиск по именам файлов",
+  treeSearchIndexing: "Просматриваем папку…",
+  treeSearchNoMatches: "Нет подходящих имён файлов.",
+  treeSearchCapped:
+    "Поиск только по первым {n} файлам. Откройте папку поменьше, чтобы искать по всей.",
+  treeSearchTooBroad:
+    "Эта папка слишком общая для поиска. Откройте более конкретную через Файл › Открыть папку…",
+  treeSearchFailed: "Не удаётся прочитать эту папку.",
+  treeSearchScope: "Показывать",
+  treeSearchScopeAll: "Все файлы",
+  treeSearchScopeDocuments: "Только документы",
+  shortcutSearchFiles: "Поиск по именам файлов",
   menuDocuments: "Документы",
   docListTitle: "Документы",
   docListClose: "Закрыть",

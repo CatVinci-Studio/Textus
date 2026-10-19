@@ -246,6 +246,22 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   outlineEmpty:
     "Noch keine Überschriften – Zeilen, die mit # beginnen, erscheinen hier.",
   treeRefresh: "Aktualisieren",
+  menuOpenFolder: "Ordner öffnen…",
+  menuCloseFolder: "Ordner schließen",
+  folderTooBroad:
+    "Dieser Ordner ist zu weit gefasst, um ihn zu öffnen (dein Benutzerordner oder ein ganzes Laufwerk). Wähle einen spezifischeren Ordner.",
+  treeSearchPlaceholder: "Dateinamen suchen",
+  treeSearchIndexing: "Ordner wird durchsucht…",
+  treeSearchNoMatches: "Kein Dateiname passt.",
+  treeSearchCapped:
+    "Nur die ersten {n} Dateien wurden durchsucht. Öffne einen kleineren Ordner, um alles zu durchsuchen.",
+  treeSearchTooBroad:
+    "Dieser Ordner ist zu weit gefasst, um ihn zu durchsuchen. Öffne mit Datei › Ordner öffnen… einen spezifischeren.",
+  treeSearchFailed: "Dieser Ordner kann nicht gelesen werden.",
+  treeSearchScope: "Anzeigen",
+  treeSearchScopeAll: "Alle Dateien",
+  treeSearchScopeDocuments: "Nur Dokumente",
+  shortcutSearchFiles: "Dateinamen suchen",
   menuDocuments: "Dokumente",
   docListTitle: "Dokumente",
   docListClose: "Schließen",

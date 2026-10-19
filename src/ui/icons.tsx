@@ -78,6 +78,33 @@ export function FolderOpenIcon({ className }: IconProps) {
   );
 }
 
+/** File > Open Folder… in the sidebar's toolbar: the folder outline with a
+ *  plus in it. */
+export function OpenFolderIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d={FOLDER_PATH}
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 6.5V10.5M6 8.5H10"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function MarkdownFileIcon({ className }: IconProps) {
   return (
     <svg
