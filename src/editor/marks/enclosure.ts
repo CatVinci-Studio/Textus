@@ -85,7 +85,8 @@ function isEnclosure(node: ProseNode): boolean {
 
 /** The literal delimiter text an enclosure node's syntax is rendered as. */
 function enclosureDelimText(node: ProseNode): string {
-  if (node.type.name === "math_inline") return "$";
+  if (node.type.name === "math_inline")
+    return (node.attrs.delimiter as string | undefined) ?? "$";
   if (node.type.name === "math_block") return "$$";
   return spanDelimText(node);
 }

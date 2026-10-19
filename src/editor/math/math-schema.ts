@@ -5,6 +5,7 @@ import remarkMath from "remark-math";
 interface MdastNode {
   type: string;
   value?: string;
+  data?: Record<string, unknown>;
   children?: MdastNode[];
   position?: { start: { offset?: number }; end: { offset?: number } };
 }
@@ -37,13 +38,37 @@ export function revertCurrencyDollars(tree: MdastNode, source: string): void {
   walk(tree);
 }
 
+/**
+ * Records how many dollars an inline formula was written with, as
+ * `data.mathDelimiter`, when it is more than one: mdast writes the fewest
+ * that work, so an inline `$$x$$` was saved as `$x$`.
+ */
+function recordDollarRuns(tree: MdastNode, source: string): void {
+  const walk = (node: MdastNode) => {
+    if (node.type === "inlineMath") {
+      const start = node.position?.start.offset;
+      const run = start === undefined ? "" : /^\$+/.exec(source.slice(start));
+      if (run && run[0].length > 1)
+        node.data = { ...node.data, mathDelimiter: run[0] };
+    }
+    node.children?.forEach(walk);
+  };
+  walk(tree);
+}
+
+/** The delimiter a math node was read with, or null for the default. */
+const delimiterOf = (node: { data?: unknown }) =>
+  (node.data as { mathDelimiter?: string } | undefined)?.mathDelimiter ?? null;
+
 function remarkMathWithPandocDollars(
   this: unknown,
   ...args: Parameters<typeof remarkMath>
 ) {
   (remarkMath as (...a: unknown[]) => void).apply(this, args);
-  return (tree: MdastNode, file: { value: unknown }) =>
+  return (tree: MdastNode, file: { value: unknown }) => {
     revertCurrencyDollars(tree, String(file.value));
+    recordDollarRuns(tree, String(file.value));
+  };
 }
 
 export const remarkMathPlugin = $remark(
@@ -56,11 +81,26 @@ export const mathInlineSchema = $nodeSchema("math_inline", () => ({
   group: "inline",
   inline: true,
   marks: "",
-  attrs: {},
-  parseDOM: [{ tag: 'span[data-type="math_inline"]' }],
-  toDOM: () => [
+  // As written in the file: "$" (the default, and all the editor makes) or
+  // "$$" - see recordDollarRuns.
+  attrs: { delimiter: { default: "$", validate: "string" } },
+  parseDOM: [
+    {
+      tag: 'span[data-type="math_inline"]',
+      getAttrs: (dom) => ({
+        delimiter: (dom as HTMLElement).dataset.delimiter || "$",
+      }),
+    },
+  ],
+  toDOM: (node) => [
     "span",
-    { "data-type": "math_inline", class: "math-inline" },
+    {
+      "data-type": "math_inline",
+      class: "math-inline",
+      ...(node.attrs.delimiter === "$"
+        ? {}
+        : { "data-delimiter": node.attrs.delimiter as string }),
+    },
     0,
   ],
   parseMarkdown: {
@@ -69,16 +109,23 @@ export const mathInlineSchema = $nodeSchema("math_inline", () => ({
     // drop a surrounding link for the text after the formula.
     runner: (state, node, type) => {
       const value = node.value as string | undefined;
-      state.addNode(type, undefined, value ? [state.schema.text(value)] : []);
+      const delimiter = delimiterOf(node);
+      state.addNode(
+        type,
+        delimiter ? { delimiter } : undefined,
+        value ? [state.schema.text(value)] : [],
+      );
     },
   },
   toMarkdown: {
     match: (node) => node.type.name === "math_inline",
     runner: (state, node) => {
+      const delimiter = node.attrs.delimiter as string;
       state.addNode(
         "inlineMath",
         undefined,
         node.content.firstChild?.text || "",
+        delimiter === "$" ? undefined : { data: { mathDelimiter: delimiter } },
       );
     },
   },

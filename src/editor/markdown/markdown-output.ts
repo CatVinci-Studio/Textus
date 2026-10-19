@@ -435,6 +435,27 @@ function withTildesAsWritten(del: Handle): Handle {
   );
 }
 
+/**
+ * Writes inline math with as many dollars as it was read with (see
+ * recordDollarRuns in math-schema.ts) - more than the fewest that work,
+ * which is all remark-math writes - so an inline `$$x$$` stays as it was.
+ * Wraps remark-math's handler for this one serialization, as above.
+ */
+function withDollarsAsWritten(inlineMath: Handle): Handle {
+  return Object.assign(
+    ((node, parent, state, info) => {
+      const out = inlineMath(node, parent, state, info);
+      const wanted = (node.data as { mathDelimiter?: string } | undefined)
+        ?.mathDelimiter;
+      const used = /^\$+/.exec(out)?.[0] ?? "";
+      return wanted && /^\$+$/.test(wanted) && wanted.length > used.length
+        ? wanted + out.slice(used.length, out.length - used.length) + wanted
+        : out;
+    }) as Handle,
+    { peek: (inlineMath as Partial<PeekingHandle>).peek },
+  );
+}
+
 /** Set up per serialization, before any node is written. */
 const root: Handle = (node, parent, state, info) => {
   state.unsafe = state.unsafe.filter(
@@ -442,6 +463,8 @@ const root: Handle = (node, parent, state, info) => {
   );
   const del = state.handlers.delete as Handle | undefined;
   if (del) state.handlers.delete = withTildesAsWritten(del);
+  const inlineMath = state.handlers.inlineMath as Handle | undefined;
+  if (inlineMath) state.handlers.inlineMath = withDollarsAsWritten(inlineMath);
   return defaultHandlers.root(node, parent, state, info);
 };
 
