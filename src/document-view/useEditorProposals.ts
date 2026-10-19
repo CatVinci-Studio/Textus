@@ -61,8 +61,8 @@ export function useEditorProposals({
       view.dispatch(view.state.tr.setMeta(pendingEditKey, { type: "refocus" }));
     });
   }, [settings.revisionDisplay, run]);
-  // The review bar's pointer is drawn in the text (an outline round the
-  // sentence): redraw when it moves.
+  // The review bar's pointer is drawn in the text (the sentence's tints a
+  // shade darker): redraw when it moves.
   const focusedStopKey = pendingEdits.focusedStop
     ? `${pendingEdits.focusedStop.callId}:${pendingEdits.focusedStop.index}`
     : null;

@@ -167,7 +167,16 @@ tauri-action runs with `uploadUpdaterJson: false` (`includeUpdaterJson`
 before tauri-action 1.0); before publishing, the publish job writes
 `textus-latest.json` from the draft's `.sig` files
 (`scripts/updater-manifest.mjs build`) and refuses to publish a draft that
-has any other `latest.json` (`… guard`). `npm run check` runs `… check`, which
+has a `latest.json` at all (`… guard`).
+
+Releases up to 1.1.0 carried a copy of Levis 0.9.8's own `latest.json`, so
+Levis installs updated to that last Levis, which told its user about Textus.
+Levis support ended after 1.1.0: later releases carry no copy, and once one
+of them is "Latest" a Levis install finds no manifest and stays as it is. The
+name stays forbidden for the reason above. A rebuild of a 1.1.0-or-older tag
+stops at the guard until that copy is deleted from its release.
+
+`npm run check` runs `… check`, which
 fails if the updater endpoint, the beta channel's endpoint or the workflow
 drifts back. The beta manifest is `textus-beta.json` and lives only on the
 download bucket, never on a GitHub release.

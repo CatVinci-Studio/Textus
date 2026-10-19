@@ -332,6 +332,12 @@ export function useReviewNotes({
     revisionDisplay,
   ]);
 
+  // The margin card of the sentence the review bar points at.
+  const { focusedStop } = pendingEdits;
+  const focusedItem = focusedStop
+    ? `rev:${focusedStop.callId}:${focusedStop.index}`
+    : null;
+
   const openNoteData = openNote
     ? (notes.find((n) => n.id === openNote.id) ?? null)
     : null;
@@ -340,6 +346,7 @@ export function useReviewNotes({
     notes,
     noMargin,
     hotNote,
+    focusedItem,
     openNote,
     setOpenNote,
     openNoteData,

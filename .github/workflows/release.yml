@@ -329,34 +329,18 @@ jobs:
           jq '{version, platforms: (.platforms | keys)}' "$RUNNER_TEMP/textus-latest.json"
           gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/textus-latest.json" --clobber
 
-      # Levis installs read latest.json from the newest release (the old
-      # repository URL redirects here). Once this release is "Latest", the
-      # copy of the last Levis release's own manifest keeps them updating to
-      # that Levis - which points its user to Textus. It names only Levis
-      # assets on that tag, so nothing here can install Textus over Levis.
-      # The last Levis release must be out first; this step fails until it is.
-      - name: Carry the last Levis release's manifest (latest.json)
-        run: |
-          last=$(node -e "import('./scripts/updater-manifest.mjs').then(m => console.log(m.LEVIS_LAST_TAG))")
-          mkdir -p "$RUNNER_TEMP/levis"
-          gh release download "$last" --pattern latest.json --dir "$RUNNER_TEMP/levis" --clobber
-          node scripts/updater-manifest.mjs bridge --levis-manifest "$RUNNER_TEMP/levis/latest.json"
-          gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/levis/latest.json" --clobber
-
-      # The last gate before anything is public: the release's latest.json
-      # (whatever is there now) must be the last Levis release's. Anything
-      # else would be installed by every Levis install (same signing key).
-      - name: latest.json is the last Levis release's
+      # The last gate before anything is public: no latest.json on the
+      # release. Levis installs read that name from the newest release (the
+      # old repository URL redirects here) and trust the same signing key,
+      # so they would install whatever it names over Levis. Releases up to
+      # 1.1.0 carried a copy of Levis 0.9.8's own; Levis support ended
+      # there, so none is allowed now. A rebuild of one of those tags stops
+      # here until that copy is deleted from the release.
+      - name: No latest.json on the release
         run: |
           gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' \
             > "$RUNNER_TEMP/assets.txt"
-          check=()
-          if grep -qx latest.json "$RUNNER_TEMP/assets.txt"; then
-            mkdir -p "$RUNNER_TEMP/now"
-            gh release download "$RELEASE_TAG" --pattern latest.json --dir "$RUNNER_TEMP/now" --clobber
-            check=(--levis-manifest "$RUNNER_TEMP/now/latest.json")
-          fi
-          node scripts/updater-manifest.mjs guard --assets-file "$RUNNER_TEMP/assets.txt" "${check[@]}"
+          node scripts/updater-manifest.mjs guard --assets-file "$RUNNER_TEMP/assets.txt"
 
       # A workflow_dispatch rebuild of an old tag republishes that release,
       # but making it "Latest" or pointing the cask or arch-repo at it

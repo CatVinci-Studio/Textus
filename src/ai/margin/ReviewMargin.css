@@ -276,16 +276,6 @@
   );
 }
 
-/* Its sentence is under the pointer: the outline there, green round the
-   new text the card holds, red round the original. */
-.revision-note.review-note-hot {
-  border-color: var(--revision-insert-outline);
-}
-
-.revision-note.review-note-hot:has(.revision-note-original) {
-  border-color: var(--revision-delete-outline);
-}
-
 .revision-note .review-note-by {
   margin-bottom: 4px;
 }
@@ -354,6 +344,24 @@
   margin-bottom: 1px;
   font-size: var(--text-xs);
   color: var(--editor-muted);
+}
+
+/* Its pair under the pointer or the review bar's pointer: the text it
+   holds darkens with the pair's in the document - a darker green for new
+   text, a darker red for the original - as a note's passage does. A kept
+   one stays as it is. */
+.revision-note:is(.review-note-hot, .revision-note-focus):not(
+    .revision-note-kept
+  )
+  .revision-note-text:not(.revision-note-original) {
+  background: var(--revision-insert-hover-bg);
+}
+
+.revision-note:is(.review-note-hot, .revision-note-focus):not(
+    .revision-note-kept
+  )
+  .revision-note-original {
+  background: var(--revision-delete-hover-bg);
 }
 
 /* Kept: the original is the text again. */
