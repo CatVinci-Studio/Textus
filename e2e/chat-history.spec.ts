@@ -2,9 +2,10 @@ import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// The Chats sidebar tab (sidebar/ChatHistory.tsx): a past conversation
-// reopens with its own document - never filed under whichever document is
-// on screen - and one whose document is gone asks first. The last test
+// The history button in the AI panel's header (ai/chat/ChatHistoryMenu.tsx):
+// a past conversation reopens with its own document - never filed under
+// whichever document is on screen - and one whose document is gone asks
+// first. The last test
 // boots the page the way Rust does, where the list is the index of
 // conversations (settings/chat_history.rs) and each one's turns are read
 // from its own file when it reopens.
@@ -53,19 +54,19 @@ async function installDisk(page: Page) {
   }, CHAPTER);
 }
 
-async function openChats(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (name: string) => void }
-    ).__devEmitTauriEvent("menu-toggle-sidebar"),
-  );
-  await page.locator('.sidebar-tab[aria-label="Chats"]').click();
+const panel = (page: Page) => page.locator(".agent-panel-view");
+
+/** Opens the AI panel, if it isn't, and its history list. */
+async function openHistory(page: Page) {
+  const toggle = page.locator(".window-bar-toggle");
+  if ((await toggle.getAttribute("aria-pressed")) !== "true")
+    await toggle.click();
+  await panel(page).getByRole("button", { name: "History" }).click();
+  await expect(page.getByRole("dialog", { name: "History" })).toBeVisible();
 }
 
 const entry = (page: Page, title: string) =>
   page.locator(".chat-history-entry", { hasText: title });
-
-const panel = (page: Page) => page.locator(".agent-panel-view");
 
 test("a past conversation reopens with its own document", async ({ page }) => {
   await openApp(page, {
@@ -73,7 +74,7 @@ test("a past conversation reopens with its own document", async ({ page }) => {
     storage: { "levis-chat-history": JSON.stringify(SAVED) },
   });
   await installDisk(page);
-  await openChats(page);
+  await openHistory(page);
 
   await entry(page, "Tighten the opening paragraph").click();
   // Its document opens, and the conversation is restored there...
@@ -98,15 +99,16 @@ test("a conversation whose document is gone asks before continuing here", async 
     storage: { "levis-chat-history": JSON.stringify(SAVED) },
   });
   await installDisk(page);
-  await openChats(page);
+  await openHistory(page);
 
   await entry(page, "Check the dates in this draft").click();
   const dialog = page.locator(".app-dialog");
   await expect(dialog).toContainText("deleted.md");
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toBeHidden();
-  await expect(panel(page)).toHaveCount(0);
+  await expect(panel(page)).not.toContainText("Check the dates in this draft");
 
+  await openHistory(page);
   await entry(page, "Check the dates in this draft").click();
   await dialog.getByRole("button", { name: "Continue Here" }).click();
   await expect(panel(page)).toContainText("Check the dates in this draft");
@@ -119,7 +121,7 @@ test("a never-saved document's conversation continues in the current one", async
     settings: { language: "en" },
     storage: { "levis-chat-history": JSON.stringify(SAVED) },
   });
-  await openChats(page);
+  await openHistory(page);
   const draft = entry(page, "Brainstorm a title");
   await expect(draft).toHaveAttribute("title", /current document/);
   await draft.click();
@@ -163,7 +165,7 @@ test("with Rust, the list is the index and older conversations are noted as arch
   );
   await openApp(page, { settings: { language: "en" } });
   await installDisk(page);
-  await openChats(page);
+  await openHistory(page);
 
   await expect(page.locator(".chat-history-archived")).toContainText(
     "Older conversations were moved to the archive",
@@ -182,4 +184,41 @@ test("with Rust, the list is the index and older conversations are noted as arch
   await entry(page, "Tighten the opening paragraph").click();
   await expect(page.locator(editor)).toContainText("Chapter one begins here.");
   await expect(panel(page)).toContainText("Tighten the opening paragraph");
+});
+
+test("a conversation deleted from the list is gone for good", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "levis-chat-history": JSON.stringify(SAVED) },
+  });
+  await openHistory(page);
+  const line = entry(page, "Brainstorm a title");
+  await line.hover();
+  await line.getByRole("button", { name: "Delete conversation" }).click();
+  await expect(line).toHaveCount(0);
+  // The list stays open on the rest.
+  await expect(page.locator(".chat-history-entry")).toHaveCount(2);
+  const stored = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("levis-chat-history")!) as {
+        id: string;
+      }[],
+  );
+  expect(stored.map((c) => c.id)).toEqual(["c1", "c2"]);
+  // Escape closes the list.
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "History" })).toHaveCount(0);
+});
+
+test("the sidebar has no Chats tab", async ({ page }) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (name: string) => void }
+    ).__devEmitTauriEvent("menu-toggle-sidebar"),
+  );
+  await expect(page.locator(".sidebar-tab")).toHaveCount(3);
+  await expect(page.locator('.sidebar-tab[aria-label="Chats"]')).toHaveCount(0);
 });

@@ -28,8 +28,9 @@ export const VERBATIM_INPUT = {
  * One setting: its name on the left, its control on the right - the shape
  * every row in Settings takes, on the desktop and the phone alike. `hint`
  * is for the few rows whose label can't say enough on its own (a value
- * such as the folder in use, a fetched-on date); most rows have none, so
- * the page reads as a list of names rather than paragraphs of grey text.
+ * such as the folder in use, a fetched-on date, the link a pasted image
+ * gets); most rows have none, so the page reads as a list of names rather
+ * than paragraphs of grey text.
  */
 export function SettingRow({
   label,
@@ -38,7 +39,7 @@ export function SettingRow({
   children,
 }: {
   label: ReactNode;
-  hint?: string;
+  hint?: ReactNode;
   error?: string | null;
   children?: ReactNode;
 }) {

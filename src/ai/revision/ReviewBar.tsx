@@ -4,7 +4,7 @@ import {
   REVISION_DISPLAYS,
   type RevisionDisplay,
 } from "../../settings/SettingsContext";
-import { ChatTabIcon, ChevronIcon } from "../../ui/icons";
+import { AssistantIcon, ChevronIcon } from "../../ui/icons";
 import { usePresenceProps } from "../../ui/usePresence";
 import { useMarginAvailable } from "../margin/margin-room";
 import {
@@ -228,7 +228,7 @@ export function ReviewBar({
             title={labels.reviewBarOpenChat}
             onClick={onOpenChat}
           >
-            <ChatTabIcon />
+            <AssistantIcon />
           </button>
         )}
       </div>

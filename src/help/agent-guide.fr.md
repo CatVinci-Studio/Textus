@@ -31,14 +31,14 @@ Les problèmes possibles sont soulignés. Survolez-en un, ou placez le curseur d
 
 ### 3. Le panneau IA
 
-La conversation complète se trouve dans un panneau à droite de l'éditeur. Ouvrez-le ou fermez-le avec le bouton de discussion à l'extrémité droite de la barre de la fenêtre, ou avec <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+La conversation complète se trouve dans un panneau à droite de l'éditeur. Ouvrez-le ou fermez-le avec le bouton **Textus AI** (le robot) à l'extrémité droite de la barre de la fenêtre, ou avec <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **Une conversation par document** : chaque onglet a sa propre conversation, et changer d'onglet change aussi celle du panneau. **Nouvelle conversation**, dans l'en-tête du panneau, repart de zéro (s'il reste des modifications en attente, une confirmation est d'abord demandée).
 - **Modes** : la zone de saisie en propose trois. **Écrire** rédige du texte nouveau dans le document (une suite, un paragraphe ou une section) et ne fait qu'ajouter : avec du texte sélectionné, il écrit après la sélection. **Relire** répond, discute et laisse des commentaires sans rien modifier. **Réviser** modifie le texte existant. Chaque changement d'Écrire ou de Réviser est une proposition que vous acceptez ou refusez. Le panneau s'ouvre dans le mode choisi sous **Réglages > Textus AI > Discussion avec Textus AI > Mode par défaut**.
 - **Mentions @** : tapez `@` dans la zone de saisie pour choisir un fichier texte du dossier du projet ; il est joint au message.
 - **Pièces jointes** : le bouton **+**, à gauche de la zone de saisie, joint au message un PDF, un document Word, une présentation PowerPoint, une feuille de calcul, une image ou un fichier texte. Tout, sauf les images, est converti en texte sur votre appareil et voyage dans le message ; les images sont envoyées telles quelles aux fournisseurs capables de les voir (les autres le signalent d'emblée au lieu de les ignorer en silence). Un long fichier n'est envoyé qu'en partie, et sa pastille affiche alors « (tronqué) ».
 - **Recherche web** : une fois activée sous **Réglages > Textus AI > Discussion avec Textus AI** (pour les fournisseurs qui la proposent), Textus AI peut chercher sur le web de lui-même quand une demande l'exige.
-- **Historique** : l'onglet **Discussions** de la barre latérale conserve les conversations passées. Cliquez sur l'une d'elles pour la rouvrir dans l'éditeur actuel et la poursuivre.
+- **Historique** : le bouton **Historique** (l'horloge), en haut du panneau IA, liste les conversations passées, groupées par dossier. Cliquez sur l'une d'elles pour la rouvrir avec son document et la poursuivre.
 - **Erreurs** : quand une requête échoue, la discussion indique le type de problème et la marche à suivre (vérifier la clé, patienter un instant, choisir un autre modèle), au-dessus du message du fournisseur.
 
 **Ouvrir dans une fenêtre séparée**, dans l'en-tête du panneau, déplace la conversation dans sa propre fenêtre, ce qui est pratique sur un second écran. Cette fenêtre vous suit : changez d'onglet ou de fenêtre, et son document, son titre et sa sélection suivent ; les modifications qu'elle propose arrivent dans le fichier que vous êtes réellement en train de modifier. Il n'y en a jamais qu'une par fenêtre d'éditeur ; **📌**, dans son en-tête, la garde au-dessus de l'éditeur.

@@ -819,6 +819,7 @@ input[type="checkbox"].ui-check:checked {
       .ui-select-menu,
       .context-menu,
       .project-bar-menu,
+      .chat-history-menu,
       .quick-ask-split-menu,
       .grammar-popover,
       .find-replace-bar,

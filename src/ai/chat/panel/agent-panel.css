@@ -53,6 +53,8 @@
 }
 
 .agent-panel-header {
+  /* The history list (ChatHistoryMenu) drops down across it. */
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;

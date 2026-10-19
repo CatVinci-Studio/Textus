@@ -6,7 +6,6 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "KI-Bereich",
   agentPanelPopOut: "In eigenem Fenster öffnen",
   agentPanelResize: "Breite des KI-Bereichs ändern",
   sidebarResize: "Breite der Seitenleiste ändern",
@@ -476,7 +475,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentStop: "Stoppen",
   agentRetry: "Erneut versuchen",
   agentThinking: "Denkt nach…",
-  chatTab: "Chats",
+  chatHistoryOpen: "Verlauf",
   chatHistoryEmpty: "Keine früheren Unterhaltungen.",
   chatHistoryRestoreHint: "Diese Unterhaltung mit ihrem Dokument wieder öffnen",
   chatHistoryDelete: "Unterhaltung löschen",
@@ -814,11 +813,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   imageStorageLocal: "Auf diesem Computer",
   imageStorageRemote: "Zu einem Bildhoster hochladen",
   imageFolderLabel: "Ordner",
-  imageFolderNextToDocument: "Neben dem Dokument",
-  imageFolderDocumentName: "<Dokument>.assets/",
-  imageFolderCustom: "Eigener Ordner",
-  imageFolderInvalid:
-    "Gib einen Ordner relativ zum Dokument an, etwa img oder ../images.",
+  imageFolderSubfolder: "Unterordner",
+  imageFolderSameFolder: "Derselbe Ordner wie das Dokument",
+  imageFolderNameLabel: "Name des Unterordners",
+  imageFolderInvalid: "Gib einen Ordner im Ordner des Dokuments an, etwa img.",
   imageHostLabel: "Dienst",
   imageHostCustom: "Eigener Server",
   imagePicgoEndpointLabel: "Serveradresse",

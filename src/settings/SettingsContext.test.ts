@@ -163,6 +163,17 @@ describe("where images go", () => {
     expect(settings.imageHost).toBe("picgo");
   });
 
+  it("moves an image folder from before the two choices onto one of them", () => {
+    const folderOf = (imageFolder: string) => {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ imageFolder }));
+      return loadSettings().imageFolder;
+    };
+    expect(folderOf("./")).toBe("./");
+    expect(folderOf("${filename}.assets")).toBe("assets");
+    expect(folderOf("pictures")).toBe("pictures");
+    expect(folderOf("../shared/images")).toBe("assets");
+  });
+
   it("keeps an endpoint set up before the presets as the custom host", () => {
     localStorage.setItem(
       SETTINGS_KEY,

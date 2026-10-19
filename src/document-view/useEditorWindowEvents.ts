@@ -284,7 +284,7 @@ export function useEditorWindowEvents({
     }
   });
 
-  // A conversation reopened from the Chats panel becomes the live one in
+  // A conversation reopened from the history list becomes the live one in
   // its own document's editor (ai/chat/chat-restore.ts): this one, already
   // open, when the event arrives, or a tab just opened for it, as soon as
   // it mounts with that document.

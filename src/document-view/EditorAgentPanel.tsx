@@ -5,6 +5,8 @@ import type { useChatContextBridge } from "./useChatContextBridge";
 import { ChatBody } from "../ai/chat/ChatBody";
 import type { SelectionChipHandlers } from "../ai/chat/ChatComposer";
 import { AgentPanelView } from "../ai/chat/panel/AgentPanelView";
+import { ChatHistoryMenu } from "../ai/chat/ChatHistoryMenu";
+import { reopenConversation } from "../ai/chat/reopen-conversation";
 import { CloseConfirmBar } from "../ai/chat/CloseConfirm";
 import { ProjectBar } from "../ai/chat/panel/ProjectBar";
 import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
@@ -88,6 +90,12 @@ export function EditorAgentPanel({
       onNewConversation={onNewConversation}
       onPopOut={canDetachChat ? onPopOut : undefined}
       onClose={() => agentPanel.setOpen(false)}
+      history={
+        <ChatHistoryMenu
+          buttonClassName="inline-chat-header-button"
+          onReopen={(entry) => void reopenConversation(entry, t)}
+        />
+      }
       tab={agentPanel.tab}
       onTabChange={agentPanel.setTab}
       memory={() => (

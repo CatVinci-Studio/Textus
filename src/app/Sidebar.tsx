@@ -1,13 +1,7 @@
 import { FileTree } from "../sidebar/FileTree";
 import { Outline } from "../sidebar/Outline";
 import { ClipboardHistory } from "../sidebar/ClipboardHistory";
-import { ChatHistory } from "../sidebar/ChatHistory";
-import {
-  TreeTabIcon,
-  OutlineTabIcon,
-  ClipboardTabIcon,
-  ChatTabIcon,
-} from "../ui/icons";
+import { TreeTabIcon, OutlineTabIcon, ClipboardTabIcon } from "../ui/icons";
 import { isIOSApp } from "../platform/capabilities";
 import { Presence, PresenceDiv, type PresenceHandle } from "../ui/usePresence";
 import { ResizeHandle } from "../ui/ResizeHandle";
@@ -15,7 +9,7 @@ import type { Strings } from "../i18n/strings";
 import type { PanelMode } from "./useSidePanels";
 import type { useSidebarWidth } from "./sidebar-width";
 
-/** The left sidebar (file tree, outline, clipboard, chat history) and, on
+/** The left sidebar (file tree, outline, clipboard history) and, on
  *  iPhone, the scrim behind its drawer. Its open state lives in
  *  useSidePanels. */
 export function Sidebar({
@@ -96,14 +90,6 @@ export function Sidebar({
                 >
                   <ClipboardTabIcon />
                 </button>
-                <button
-                  className={`sidebar-tab ${mode === "chat" ? "sidebar-tab-active" : ""}`}
-                  onClick={() => onModeChange("chat")}
-                  title={t.chatTab}
-                  aria-label={t.chatTab}
-                >
-                  <ChatTabIcon />
-                </button>
               </div>
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
@@ -131,7 +117,6 @@ export function Sidebar({
                 ))}
               {mode === "outline" && <Outline content={activeContent} />}
               {mode === "clipboard" && <ClipboardHistory />}
-              {mode === "chat" && <ChatHistory />}
             </div>
             {/* Its width is the user's to drag on a desktop; an iPad's
               sidebar keeps the one the layout gives it. */}

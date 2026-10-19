@@ -6,6 +6,9 @@ import type { PendingStatus } from "../../revision/usePendingEdits";
 import type { EditProposal } from "../../types";
 import { ChatBody } from "../ChatBody";
 import { chatLabels } from "../chat-labels";
+import { ChatHistoryMenu } from "../ChatHistoryMenu";
+import type { ChatRestore } from "../chat-restore";
+import { reopenConversation, type ReopenTarget } from "../reopen-conversation";
 import {
   CHAT_ADOPT_HANDOFF,
   CHAT_TO_EDITOR,
@@ -13,10 +16,12 @@ import {
   onWindowEvent,
   sendToWindow,
   type ChatContext,
+  type OpenDocumentMessage,
 } from "./chat-bridge";
 import { windowIpc } from "../../../platform/ipc";
 import { flushPendingWrites } from "../../../storage/pending-writes";
 import { PinIcon, PlusIcon } from "../../../ui/icons";
+import { AppDialogHost } from "../../../ui/app-dialog";
 import { WindowCaptionButtons } from "../../../ui/WindowCaptionButtons";
 import { listenToThisWindow, unlistenAll } from "../../../utils/tauri-events";
 import { useLatest } from "../../../utils/hooks/useLatest";
@@ -237,6 +242,24 @@ export function ChatWindowApp() {
     [sendScoped, docPath],
   );
 
+  // A conversation picked from the history list waits here until the
+  // editor has its document on screen: restored any earlier, its first save
+  // would file it under whichever document the window was following. One
+  // of a document never saved (or continued here) has nothing to wait for.
+  const [reopening, setReopening] = useState<ChatRestore | null>(null);
+  useEffect(() => {
+    if (!reopening) return;
+    if (reopening.docPath !== null && reopening.docPath !== docPath) return;
+    setReopening(null);
+    proposalDocs.current.clear();
+    conversation.restore(reopening.id, reopening.turns);
+  }, [reopening, docPath, conversation]);
+  const reopenTarget: ReopenTarget = {
+    restore: setReopening,
+    openDocument: (path) =>
+      send(CHAT_TO_EDITOR.openDocument, { path } satisfies OpenDocumentMessage),
+  };
+
   /** Asks the active editor for its document/selection as they read right
    *  now, and resolves with the answer. See ChatBody's `refreshContext`. */
   const refreshContext = useCallback(
@@ -290,6 +313,11 @@ export function ChatWindowApp() {
       <span className="chat-window-doc" title={context?.docPath ?? undefined}>
         {context?.docTitle ?? ""}
       </span>
+      <ChatHistoryMenu
+        buttonClassName="chat-window-pin"
+        disabled={conversation.busy || !context}
+        onReopen={(entry) => void reopenConversation(entry, t, reopenTarget)}
+      />
       <button
         type="button"
         className="chat-window-pin"
@@ -317,11 +345,15 @@ export function ChatWindowApp() {
     </div>
   );
 
+  // The history list's "document not found" question (app-dialog.tsx).
+  const dialogs = <AppDialogHost okLabel={t.dialogOk} />;
+
   if (lost)
     return (
       <div className="chat-window">
         {header}
         <div className="chat-window-lost">{t.chatWindowLost}</div>
+        {dialogs}
       </div>
     );
   if (!claimed || !context)
@@ -329,6 +361,7 @@ export function ChatWindowApp() {
       <div className="chat-window">
         {header}
         <div className="chat-window-loading">{t.agentThinking}</div>
+        {dialogs}
       </div>
     );
 
@@ -373,6 +406,7 @@ export function ChatWindowApp() {
           }}
         />
       </div>
+      {dialogs}
     </div>
   );
 }
