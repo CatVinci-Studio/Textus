@@ -7,7 +7,10 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { renderMarkdownInlineHtml } from "../../editor/markdown/render-html";
 import { StreamReveal } from "../stream-reveal";
-import { prefersReducedMotion } from "../../ui/motion";
+import {
+  animate as animateElement,
+  prefersReducedMotion,
+} from "../../ui/motion";
 import type { FoldAttention } from "../../editor/html/details-fold";
 import type { EditProposal } from "../types";
 import type { SentenceHunk } from "./sentence-diff";
@@ -339,13 +342,19 @@ function textWidget(
   pos: number,
   side: -1 | 1,
   animate: boolean,
+  replaces: boolean,
 ) {
   return Decoration.widget(
     pos,
     (view) => {
       const span = document.createElement("span");
-      span.className = "pending-insert";
+      // `pending-replaces`: there is an original, which the margin views
+      // can show instead. New text alone (Write) has none, and stays in
+      // the text, green, in every view but "final".
+      span.className = `pending-insert pending-whole${replaces ? " pending-replaces" : ""}`;
       span.contentEditable = "false";
+      span.dataset.call = p.callId;
+      span.dataset.index = "-1";
       const text = p.proposal.text ?? "";
       if (!animate || prefersReducedMotion()) {
         span.innerHTML = renderMarkdownInlineHtml(text);
@@ -419,6 +428,13 @@ export interface SentencePickLabels {
  * keep the original. Kept sentences read as the original again (the new
  * text dims and is struck instead). Unchanged sentences get nothing.
  *
+ * Every view's parts are drawn whatever the view: the struck original, the
+ * new text, the ✓ / ✕ and the marks where a pure insertion or deletion
+ * stands. The view is an attribute on the editor (`syncDisplay`) and the
+ * stylesheet shows the parts it needs, so switching views redraws nothing:
+ * a widget keyed by the view was drawn again on every switch, and the text
+ * came back from nothing (1.1.0-rc.6).
+ *
  * The widgets' keys carry the decision, so a decision redraws them and
  * their CSS entrance runs as the change of state; `--i` staggers the
  * first appearance sentence by sentence.
@@ -445,75 +461,21 @@ function sentenceDecorations(
           "data-index": String(index),
         }),
       );
-    const display = hooks.display();
-    const mark = (cls: string) =>
+    const mark = (kind: "insert" | "delete") =>
       Decoration.widget(
         c.to,
         () => {
           const el = document.createElement("span");
-          el.className = cls;
+          el.className = `pending-${kind}-mark pending-sentence-${state}`;
           el.dataset.call = p.callId;
           el.dataset.index = String(index);
           return el;
         },
-        {
-          side: 1,
-          key: `pending-mark-${p.callId}-${index}-${state}-${display}`,
-        },
+        { side: 1, key: `pending-mark-${kind}-${p.callId}-${index}-${state}` },
       );
-    // The original in the text, the replacement and its ✓ / ✕ a card in
-    // the margin (ReviewMargin.tsx); a pure insertion marked by a caret.
-    if (display === "original") {
-      if (c.from === c.to)
-        decos.push(mark(`pending-insert-mark pending-sentence-${state}`));
-      return;
-    }
-    // The replacement in the text, as it would read - the original in the
-    // margin ("new"), or nowhere ("final": only the result, its decision
-    // left to the review bar and the AI card). A kept sentence is simply
-    // the original again.
-    if (display === "new" || display === "final") {
-      if (state === "kept") {
-        if (c.from < c.to && display === "new")
-          decos.push(
-            Decoration.inline(c.from, c.to, {
-              class: "pending-sentence-kept-original",
-              "data-call": p.callId,
-              "data-index": String(index),
-            }),
-          );
-        else if (display === "new")
-          decos.push(mark("pending-insert-mark pending-sentence-kept"));
-        return;
-      }
-      if (c.from < c.to)
-        decos.push(
-          Decoration.inline(c.from, c.to, { class: "pending-sentence-hidden" }),
-        );
-      if (c.after.trim())
-        decos.push(
-          Decoration.widget(
-            c.to,
-            () => {
-              const span = document.createElement("span");
-              span.className = `pending-insert pending-sentence-new pending-sentence-${state}${display === "final" ? " pending-sentence-final" : ""}${isFocused ? " pending-sentence-focus" : ""}`;
-              span.contentEditable = "false";
-              span.dataset.call = p.callId;
-              span.dataset.index = String(index);
-              span.setAttribute("style", stagger);
-              span.innerHTML = renderMarkdownInlineHtml(c.after.trim());
-              return span;
-            },
-            {
-              side: 1,
-              key: `pending-new-${p.callId}-${index}-${state}-${display}`,
-            },
-          ),
-        );
-      else if (display === "new")
-        decos.push(mark(`pending-delete-mark pending-sentence-${state}`));
-      return;
-    }
+    // Where a pure insertion goes, for the views that leave its new text
+    // to the margin ("original").
+    if (c.from === c.to) decos.push(mark("insert"));
     if (c.after.trim())
       decos.push(
         Decoration.widget(
@@ -534,6 +496,9 @@ function sentenceDecorations(
           },
         ),
       );
+    // Where a deleted sentence was, for the views that leave the original
+    // to the margin ("new").
+    else decos.push(mark("delete"));
     decos.push(
       Decoration.widget(
         c.to,
@@ -579,12 +544,75 @@ function sentenceDecorations(
 }
 
 interface SentenceHooks {
-  /** How a rewrite is drawn (revision-display.ts): Word's markup views. */
-  display: () => RevisionDisplay;
   labels: () => SentencePickLabels;
   decide: (callId: string, index: number, take: boolean | null) => void;
-  /** The sentence the review bar points at, outlined in the text. */
+  /** The sentence the review bar points at, outlined in the text (index
+   *  -1: a proposal shown whole). */
   focused: () => { callId: string; index: number } | null;
+}
+
+/** The revision views (Word's markup views, revision-display.ts), as the
+ *  editor's `data-revision-display`: the stylesheet shows each view's parts
+ *  (milkdown-theme.css). */
+export const REVISION_DISPLAY_ATTR = "data-revision-display";
+
+/** The parts a view switch can show or hide. */
+const REVISION_PARTS =
+  ".pending-delete, .pending-insert, .pending-pick, .pending-insert-mark, .pending-delete-mark";
+
+function shown(el: HTMLElement): boolean {
+  // Hidden text stays in the document, out of the flow (font-size 0, see
+  // milkdown-theme.css): display:none would start its entrance again when
+  // it comes back.
+  const style = getComputedStyle(el);
+  return style.display !== "none" && style.fontSize !== "0px";
+}
+
+/**
+ * Puts the view on the editor, and cross-fades what it brings in: the
+ * parts that stay are left alone (the same elements, at full opacity), the
+ * ones it shows fade in shortly from faint. Never their entrances: those
+ * are for new proposals, and the parts a view switch shows are not new -
+ * the plugin settles them (`pending-settled`, its own class on its own
+ * widgets), and the struck originals are only ever hidden in the flow.
+ * Script-driven, so reduced motion (and the e2e stylesheet) switch it off
+ * through ui/motion.ts.
+ */
+function syncDisplay(view: EditorView, display: RevisionDisplay) {
+  const root = view.dom as HTMLElement;
+  const before = root.getAttribute(REVISION_DISPLAY_ATTR);
+  if (before === display) return;
+  const parts = [...root.querySelectorAll<HTMLElement>(REVISION_PARTS)];
+  const was = before === null ? null : new Set(parts.filter(shown));
+  root.setAttribute(REVISION_DISPLAY_ATTR, display);
+  if (!was) return;
+  for (const el of parts) {
+    if (el.classList.contains("ProseMirror-widget"))
+      el.classList.add("pending-settled");
+    if (!was.has(el) && shown(el))
+      animateElement(el, [{ opacity: 0.3 }, { opacity: 1 }], {
+        duration: "--dur-base",
+        easing: "--ease-out",
+      });
+  }
+}
+
+// Only actions that actually remove text get the strikethrough; an
+// insert_before/insert_after keeps the anchor blocks verbatim, so striking
+// them through would wrongly read as "this is being deleted".
+function removesTextOf(p: PendingPreview): boolean {
+  return (
+    p.proposal.action === "replace" ||
+    p.proposal.action === "replace_selection" ||
+    p.proposal.action === "delete"
+  );
+}
+
+/** What a proposal shown whole strikes - null for new text alone. */
+function wholeStrike(p: PendingPreview): { from: number; to: number } | null {
+  const from = p.strikeFrom ?? p.from;
+  const to = p.strikeTo ?? p.to;
+  return removesTextOf(p) && from < to ? { from, to } : null;
 }
 
 function decorationsFor(
@@ -595,18 +623,18 @@ function decorationsFor(
   if (p.sentences && !p.streaming)
     return sentenceDecorations(p, p.sentences.changes, hooks);
   const decos: Decoration[] = [];
-  // Only actions that actually remove text get the strikethrough; an
-  // insert_before/insert_after keeps the anchor blocks verbatim, so striking
-  // them through would wrongly read as "this is being deleted".
-  const removesText =
-    p.proposal.action === "replace" ||
-    p.proposal.action === "replace_selection" ||
-    p.proposal.action === "delete";
-  const strikeFrom = p.strikeFrom ?? p.from;
+  const removesText = removesTextOf(p);
   const strikeTo = p.strikeTo ?? p.to;
-  if (strikeFrom < strikeTo && removesText) {
+  const focused = hooks.focused();
+  const isFocused = focused?.callId === p.callId && focused.index === -1;
+  const strike = wholeStrike(p);
+  if (strike) {
     decos.push(
-      Decoration.inline(strikeFrom, strikeTo, { class: "pending-delete" }),
+      Decoration.inline(strike.from, strike.to, {
+        class: `pending-delete pending-whole${isFocused ? " pending-sentence-focus" : ""}`,
+        "data-call": p.callId,
+        "data-index": "-1",
+      }),
     );
   }
   const text = p.proposal.text;
@@ -621,7 +649,9 @@ function decorationsFor(
       : p.proposal.action === "replace"
         ? strikeTo
         : p.to;
-    decos.push(textWidget(p, insertPos, atStart ? -1 : 1, animate));
+    decos.push(
+      textWidget(p, insertPos, atStart ? -1 : 1, animate, removesText),
+    );
   }
   return decos;
 }
@@ -653,13 +683,19 @@ function buildDecorations(
  */
 function hotDecorations(doc: ProseNode, state: PendingState): DecorationSet {
   const { hot } = state;
-  const change = hot
+  const preview = hot
     ? state.previews.find((p) => p.callId === hot.callId && !p.streaming)
-        ?.sentences?.changes[hot.index]
     : undefined;
-  if (!change || change.from >= change.to) return state.decoration;
+  if (!hot || !preview) return state.decoration;
+  // A proposal shown whole (index -1): its struck text, if it has any.
+  const range = preview.sentences
+    ? preview.sentences.changes[hot.index]
+    : hot.index < 0
+      ? wholeStrike(preview)
+      : null;
+  if (!range || range.from >= range.to) return state.decoration;
   return state.decoration.add(doc, [
-    Decoration.inline(change.from, change.to, {
+    Decoration.inline(range.from, range.to, {
       class: "pending-sentence-hot",
     }),
   ]);
@@ -687,7 +723,7 @@ function syncWidgetClasses(
     ".ProseMirror-widget[data-call]",
   )) {
     el.classList.toggle("pending-sentence-hot", is(el, hot));
-    if (el.classList.contains("pending-sentence-new"))
+    if (!el.classList.contains("pending-pick"))
       el.classList.toggle("pending-sentence-focus", is(el, focused));
   }
 }
@@ -782,12 +818,12 @@ export function createPendingEditPlugin(options: {
   /** The sentence the review bar points at (usePendingEdits). */
   getFocusedSentence?: () => { callId: string; index: number } | null;
   /** How a rewrite is drawn, already fallen back to "inline" where there
-   *  is no margin - read live; a "refocus" meta redraws after it changes. */
+   *  is no margin - read live; any transaction (a "refocus" meta after it
+   *  changes) puts it on the editor (`syncDisplay`). */
   revisionDisplay?: () => RevisionDisplay;
 }) {
   const animate = () => options.animationEnabled?.() ?? false;
   const hooks: SentenceHooks = {
-    display: () => options.revisionDisplay?.() ?? "inline",
     labels: () =>
       options.sentenceLabels?.() ?? { take: "Accept", keep: "Keep original" },
     decide: (callId, index, take) => options.onDecide?.(callId, index, take),
@@ -1010,13 +1046,16 @@ export function createPendingEditPlugin(options: {
             return false;
           },
         },
-        view() {
+        view(editorView) {
           let last: PendingPreview[] = [];
           let lastApplied: AppliedEdit[] = [];
           let lastDecoration: DecorationSet | null = null;
           let lastHot: HotSentence | null = null;
+          const display = () => options.revisionDisplay?.() ?? "inline";
+          syncDisplay(editorView, display());
           return {
             update(view) {
+              syncDisplay(view, display());
               const state = pendingEditKey.getState(view.state);
               // After any rebuild ("refocus" included), not only when the
               // pointer moves: a redrawn widget comes back without the

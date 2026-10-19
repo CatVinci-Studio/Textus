@@ -35,7 +35,12 @@ import { errorText } from "../../utils/error-text";
 import { basename } from "../../utils/path";
 import { useActiveProvider } from "../provider-catalog";
 import type { AgentMode } from "../../settings/SettingsContext";
-import { initialMode, rememberMode } from "./last-mode";
+import {
+  COMPOSER_MODES,
+  fitMode,
+  initialMode,
+  rememberMode,
+} from "./last-mode";
 import {
   CloseIcon,
   GenericFileIcon,
@@ -112,6 +117,9 @@ interface ChatComposerProps {
   busy: boolean;
   labels: ChatComposerLabels;
   defaultMode: AgentMode;
+  /** The modes offered, in order (last-mode.ts's COMPOSER_MODES): a mode
+   *  not among them falls back to the first. Default: all three. */
+  modes?: readonly AgentMode[];
   /** The panel and the detached window: the mode picked carries over to
    *  the next conversation (last-mode.ts). Quick Ask keeps its own. */
   carryMode?: boolean;
@@ -153,6 +161,9 @@ interface ChatComposerProps {
   onSkillUsed?: () => void;
   onStop: () => void;
   onEscape: () => void;
+  /** The mode as it is now - on the first render and on every switch (the
+   *  AI panel's empty state says what it will do). */
+  onModeChange?: (mode: AgentMode) => void;
 }
 
 /**
@@ -168,6 +179,7 @@ export function ChatComposer({
   busy,
   labels,
   defaultMode,
+  modes: offeredModes = COMPOSER_MODES.full,
   carryMode = false,
   tourMode = null,
   selectionChip,
@@ -180,6 +192,7 @@ export function ChatComposer({
   onSkillUsed,
   onStop,
   onEscape,
+  onModeChange,
 }: ChatComposerProps) {
   const phone = usePhoneLayout();
   // Derived here rather than passed in: this is the only place an image can
@@ -197,11 +210,15 @@ export function ChatComposer({
   const [recent, setRecent] = useState<string[]>(recentSkills);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [mode, setModeState] = useState<AgentMode>(
-    () => tourMode ?? (carryMode ? initialMode(defaultMode) : defaultMode),
+    () =>
+      tourMode ??
+      fitMode(carryMode ? initialMode(defaultMode) : defaultMode, offeredModes),
   );
   useEffect(() => {
     if (tourMode) setModeState(tourMode);
   }, [tourMode]);
+  const onModeChangeRef = useLatest(onModeChange);
+  useEffect(() => onModeChangeRef.current?.(mode), [mode, onModeChangeRef]);
   const setMode = (next: AgentMode) => {
     setModeState(next);
     if (carryMode) rememberMode(next, defaultMode);
@@ -495,11 +512,12 @@ export function ChatComposer({
     if (e.key === "Escape") onEscape();
   }
 
-  const modes: [AgentMode, string][] = [
-    ["write", labels.modeWrite],
-    ["review", labels.modeReview],
-    ["revise", labels.modeRevise],
-  ];
+  const modeLabels: Record<AgentMode, string> = {
+    write: labels.modeWrite,
+    review: labels.modeReview,
+    revise: labels.modeRevise,
+  };
+  const modes = offeredModes.map((m) => [m, modeLabels[m]] as const);
 
   // On a phone, the composer's buttons leave focus - and so the keyboard -
   // in the textarea: a tap's default is to blur it, which drops the

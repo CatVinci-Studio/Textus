@@ -14,6 +14,24 @@
   background: color-mix(in srgb, var(--editor-text) 8%, transparent);
 }
 
+/* In the AI sheet the modes are a row of their own and the tools and Send
+   the row under them: three 44pt words and three 44pt controls don't share
+   a phone's width in German or Russian, and wrapped wherever they ran out,
+   Send ended up apart from the rest. */
+:root[data-window-chrome="mobile"] .agent-panel .inline-chat-toolbar {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+:root[data-window-chrome="mobile"] .agent-panel .chat-mode-segments {
+  display: flex;
+  flex: 1 0 100%;
+}
+
+:root[data-window-chrome="mobile"] .agent-panel .chat-mode-segment {
+  flex: 1 1 0;
+}
+
 :root[data-window-chrome="mobile"] .chat-mode-segment {
   min-width: 56px;
   min-height: 40px;

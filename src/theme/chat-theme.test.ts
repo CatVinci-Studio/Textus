@@ -91,9 +91,24 @@ describe("the theme skill and its sample", () => {
     "--md-alert-warning",
     "--md-alert-caution",
   ];
+  // Listed too, for a theme that wants them; not part of every theme.
+  const revisionVariables = [
+    "--revision-insert-bg",
+    "--revision-insert-text",
+    "--revision-insert-hover-bg",
+    "--revision-insert-outline",
+    "--revision-insert-focus",
+    "--revision-delete-bg",
+    "--revision-delete-text",
+    "--revision-delete-strike",
+    "--revision-delete-hover-bg",
+    "--revision-delete-outline",
+    "--revision-delete-focus",
+  ];
 
   it("lists every variable a theme sets, and only ones the app reads", () => {
-    for (const name of variables) expect(skill).toContain(`\`${name}\``);
+    for (const name of [...variables, ...revisionVariables])
+      expect(skill).toContain(`\`${name}\``);
     const appCss = [
       readFileSync("src/theme/content-base.css", "utf8"),
       readFileSync("src/ui/base.css", "utf8"),

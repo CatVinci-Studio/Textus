@@ -14,9 +14,12 @@ export default {
     "Vollständige Unterhaltungen in einem eigenen Fenster öffnen",
   shortcutToggleAgentPanel: "KI-Bereich ein-/ausblenden",
   menuToggleAgentPanel: "KI-Bereich",
-  agentPanelEmpty:
-    "Frag etwas zu diesem Dokument oder wähle Text aus und sag, wie er sich ändern soll.",
-  agentPanelEmptyPhone: "Frag etwas zu diesem Dokument.",
+  agentPanelEmptyWrite:
+    "Die KI schreibt neuen Text in Ihr Dokument und ändert nichts an dem, was schon dasteht.",
+  agentPanelEmptyReview:
+    "Die KI antwortet und hinterlässt Notizen am Rand, ohne Ihren Text zu ändern.",
+  agentPanelEmptyRevise:
+    "Die KI schlägt Änderungen an Ihrem Text vor; jede wartet, bis Sie sie annehmen oder ablehnen.",
   aiWorkingCompletion: "Fortsetzung wird geschrieben…",
   aiWorkingGrammar: "Absatz wird geprüft…",
   noticeCompletionNeedsCaret:
@@ -109,6 +112,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   revisionDisplayFinal: "Nur das Ergebnis, ohne Markierungen",
   revisionDisplayNoRoom:
     "Nicht genug Platz - schließen Sie die Seitenleiste oder den KI-Bereich",
+  revisionDisplayNewText:
+    "Neuer Text hat kein Original: In diesen Ansichten bleibt er grün im Text",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Überarbeitung",
   reviewBarOpenChat: "KI-Bereich öffnen",

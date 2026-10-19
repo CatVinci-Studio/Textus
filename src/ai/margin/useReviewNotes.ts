@@ -22,10 +22,31 @@ import {
 import {
   pendingEditKey,
   type HotSentence,
+  type PendingPreview,
+  type PendingSentence,
 } from "../revision/pending-edit-plugin";
 import type { RevisionDisplay } from "../../settings/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { useLatest } from "../../utils/hooks/useLatest";
+
+/** A proposal shown whole as a margin card's change: what it replaces and
+ *  with what. Null for new text alone, which has no original. */
+function wholeChange(p: PendingPreview): PendingSentence | null {
+  const { action, anchor, text } = p.proposal;
+  if (
+    action !== "replace" &&
+    action !== "replace_selection" &&
+    action !== "delete"
+  )
+    return null;
+  return {
+    from: p.strikeFrom ?? p.from,
+    to: p.strikeTo ?? p.to,
+    before: anchor ?? p.expectedText,
+    after: action === "delete" ? "" : (text ?? ""),
+    take: null,
+  };
+}
 
 /** Review notes (review-notes-plugin.ts, ReviewMargin.tsx): every
  *  add_comment of this tab's conversations, pinned to its passage and
@@ -268,7 +289,9 @@ export function useReviewNotes({
   }
 
   // The margin's items: the notes, then each pending sentence numbered in
-  // the review bar's order.
+  // the review bar's order - or a proposal shown whole, as one card (index
+  // -1). New text alone (Write) has no original to set beside it: it stays
+  // in the text, and gets no card.
   const marginItems = useMemo<MarginItem[]>(() => {
     const items: MarginItem[] = notes.map((note) => ({
       kind: "note",
@@ -277,12 +300,15 @@ export function useReviewNotes({
     }));
     const display = revisionDisplay;
     pendingEdits.reviewStops.forEach((stop, i) => {
-      if (stop.index < 0) return;
       if (display !== "original" && display !== "new") return;
       const preview = pendingEdits.decidable.find(
         (p) => p.callId === stop.callId,
       );
-      const c = preview?.sentences?.changes[stop.index];
+      if (!preview) return;
+      const c =
+        stop.index < 0
+          ? wholeChange(preview)
+          : preview.sentences?.changes[stop.index];
       if (!c) return;
       items.push({
         kind: "revision",

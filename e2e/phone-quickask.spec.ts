@@ -77,12 +77,8 @@ test("the mode picker is a segmented control on a phone", async ({ page }) => {
   await openPhone(page);
   const dock = await openQuickAsk(page);
   const modes = dock.getByRole("radiogroup", { name: "Mode" });
-  // Quick Ask: the three modes, Revise on.
-  await expect(modes.getByRole("radio")).toHaveText([
-    "Write",
-    "Review",
-    "Revise",
-  ]);
+  // Quick Ask: Revise (on) and Review - no Write.
+  await expect(modes.getByRole("radio")).toHaveText(["Revise", "Review"]);
   await expect(modes.getByRole("radio", { name: "Revise" })).toHaveAttribute(
     "aria-checked",
     "true",

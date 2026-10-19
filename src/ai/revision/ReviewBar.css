@@ -209,6 +209,11 @@
   white-space: normal;
 }
 
+.review-bar-menu-note + .review-bar-menu-note {
+  margin-top: 0;
+  border-top: none;
+}
+
 .review-bar-phone .review-bar-view-button {
   width: 34px;
   height: 34px;

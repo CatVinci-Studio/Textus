@@ -42,6 +42,9 @@ this pipeline, and it is enforced in Rust, not only asked for in the prompt
 | Review | not offered                                                        |
 | Revise | every action                                                       |
 
+The panel and the detached window offer all three; Quick Ask offers Revise
+and Review only (`COMPOSER_MODES`, [ai-concepts.md](ai-concepts.md#not-a-file-modes)).
+
 Write's schema lists only the insertion actions, and `propose_insertion`
 refuses any other action a model sends anyway; the refusal is a tool result
 like any validation failure, so its streamed preview is discarded
@@ -116,8 +119,11 @@ flowchart LR
 **Hover only points.** A rewrite decided sentence by sentence pairs each
 struck original with its replacement. With the pointer on either side, on
 the ✓ / ✕ after them, or on the pair's card in the margin, that pair is
-outlined in the accent color and its red and green tints deepen a little;
-its margin card gets the same accent border. That is all hover does, in
+outlined - dark green round the new text, dark red round the original -
+and its red and green tints deepen a little; its margin card gets the
+outline of the side it holds. The review bar's pointer uses the same two
+colours. All of them are theme variables (`--revision-*`,
+[design-language.md](design-language.md#theme-rules)). That is all hover does, in
 every revision view: nothing is hidden, faded or previewed, and the pair
 looks as before once the pointer leaves (or leaves the editor). To read
 the result without the markup, pick **Result only, no markup** in the
@@ -132,6 +138,38 @@ and the green vanish under the pointer and fade back. The review bar's
 **‹ / ›** follow the same rule: the outline they move is a class the plugin
 sets on its widgets (no widget is keyed by it), and the paragraph's flash
 (`editor/reveal-position.ts`) is a Web Animation, not a class.
+
+## Revision views
+
+The review bar's view menu (and **Settings › AI**) picks how pending
+revisions are drawn, as Word's markup views:
+
+| View                                        | Original    | New text                    |
+| ------------------------------------------- | ----------- | --------------------------- |
+| **All in the text** (`inline`)              | struck, red | green, with ✓ / ✕           |
+| **Original in the text, changes in margin** | struck, red | margin card                 |
+| **Changes in the text, original in margin** | margin card | green                       |
+| **Result only, no markup** (`final`)        | hidden      | unmarked, faint dotted line |
+
+A rewrite is shown sentence by sentence when its sentences can be found
+in the text - also when its anchor spans several paragraphs, which resolve
+to their whole blocks (`sentence-locate.ts` skips the text before the
+anchor). One that can't be (a heading or list turned into something else)
+is shown whole, and the views apply to it as one change with one card.
+
+New text alone - what Write proposes - has no original, so the margin views
+have nothing to set beside it: it stays a green block in the text there,
+and the view menu says so. In **Result only** it reads as the result.
+
+Every view's parts are always drawn, and the view is an attribute on the
+editor (`data-revision-display`, `pending-edit-plugin`'s `syncDisplay`)
+that the stylesheet reads. Switching views redraws nothing: what stays is
+the same elements at full opacity, and what the new view brings in fades
+in briefly (a Web Animation, off with reduced motion). In `1.1.0-rc.6` the
+widgets were keyed by the view, so every switch drew them again and the
+text came back from nothing. An original the view takes out of the text is
+hidden in the flow (`font-size: 0`), not `display: none`, which would start
+its entrance over when it came back.
 
 Staleness mirrors the grammar checker: every `docChanged` maps each preview's
 range through the transaction and re-checks its text - a mismatch drops the

@@ -117,6 +117,43 @@ describe("a rewrite decided sentence by sentence", () => {
 });
 
 describe("locateHunks", () => {
+  it("finds a rewrite across paragraphs past the words before its anchor", async () => {
+    editor = await createTestEditor("Keep. One. Two.\n\nThree. Four.\n");
+    const result = editor.action((ctx) => {
+      const { doc } = ctx.get(editorViewCtx).state;
+      const hunks = diffSentences("One. Two.\n\nThree.", "One. 2.\n\nIII.");
+      const ranges = locateHunks(
+        doc,
+        0,
+        doc.content.size,
+        hunks,
+        // As the parser's textContent: paragraphs run together.
+        (md) => md.replace(/\n+/g, ""),
+        "Keep. ",
+      );
+      return ranges?.map((r) => doc.textBetween(r.from, r.to));
+    });
+    // "One." stays; the two changes, too unalike to pair, are one.
+    expect(result).toEqual(["One.", "Two.Three."]);
+  });
+
+  it("gives up when the words before the anchor aren't where it starts", async () => {
+    editor = await createTestEditor("One. Two.\n");
+    const result = editor.action((ctx) => {
+      const { doc } = ctx.get(editorViewCtx).state;
+      const hunks = diffSentences("Two.", "2.");
+      return locateHunks(
+        doc,
+        0,
+        doc.content.size,
+        hunks,
+        (md) => md,
+        "Missing. ",
+      );
+    });
+    expect(result).toBeNull();
+  });
+
   it("gives up when a piece is not next in the text", async () => {
     editor = await createTestEditor("One. Two. Three.\n");
     const result = editor.action((ctx) => {
