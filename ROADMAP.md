@@ -117,7 +117,6 @@ only fix things.
   for a calendar, tasks and a kanban board.
 - **An image viewer.**
 - **Accessibility**: screen readers, full keyboard use and high contrast.
-- **A signed Windows app, and Textus on Flathub.**
 
 ## Want to help?
 
