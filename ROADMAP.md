@@ -33,8 +33,8 @@ TestFlight for a while and is about to go to review.
   [#79](https://github.com/CatVinci-Studio/Textus/issues/79)
 - **Saving changes only what you edited.** Every paragraph you didn't touch
   is written back exactly as it was, so a file you also keep in Git shows a
-  small diff. Obsidian wikilinks (`[[Note]]`, `[[Note#Heading]]`) open the
-  note, and they and `#tags` are kept as written.
+  small diff. Wikilinks (`[[Note]]`, `[[Note#Heading]]`) open the note, and
+  they and `#tags` are kept as written.
   [#234](https://github.com/CatVinci-Studio/Textus/pull/234)
 - **Revise, sentence by sentence, as it streams in.** Each changed sentence
   appears beside the one it rewrites, instead of the whole passage being
@@ -71,8 +71,8 @@ only fix things.
   in your documents, a beta channel, autosave
   ([#133](https://github.com/CatVinci-Studio/Textus/issues/133)), the theme
   gallery inside the app
-  ([#89](https://github.com/CatVinci-Studio/Textus/issues/89)), Obsidian
-  image embeds ([#135](https://github.com/CatVinci-Studio/Textus/issues/135))
+  ([#89](https://github.com/CatVinci-Studio/Textus/issues/89)), image
+  embeds written as `![[image.png]]` ([#135](https://github.com/CatVinci-Studio/Textus/issues/135))
   and your choice of image folder or image host
   ([#147](https://github.com/CatVinci-Studio/Textus/issues/147)).
 - **Textus 1.1.1**: calmer revision highlights, a card in place of an image
@@ -91,20 +91,26 @@ only fix things.
   [textus.catvinci.com/themes](https://textus.catvinci.com/themes/) for
   everyone, free. [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
-## Later (1.3.0)
+## Later: Textus 1.3.0
 
 - **Images made by Textus AI.** Ask for an illustration or a diagram while
-  you write, and accept it into your document like any other suggestion.
+  you write and accept it like any other suggestion, with the major Chinese
+  and international image providers.
   [#194](https://github.com/CatVinci-Studio/Textus/issues/194)
-- **Voice input**, into the document or the message box for Textus AI.
+- **Plugins, and a plugin gallery** like the theme gallery. Plugins run
+  sandboxed with only the permissions you grant, and nothing runs unless you
+  install it; Textus AI can write or adapt one for you, as `/theme` does for
+  themes.
+- **Textus AI reads Word, PDF, slide and spreadsheet files** in your project
+  folder.
+
+## Later: Textus 1.4.0
+
+- **Voice input**, taken slowly to get it right.
   [#195](https://github.com/CatVinci-Studio/Textus/issues/195)
-- **Hints as you type LaTeX**: suggestions and completion for the commands in
-  a formula. [#182](https://github.com/CatVinci-Studio/Textus/issues/182)
-- **Sync through WebDAV**, to keep your documents on a server of your own.
-- **Textus AI learns from what you accept and reject**: when you keep turning
-  down the same kind of change, it offers to remember that.
-- **MkDocs and Zensical documents** saved without breaking their own syntax.
-  [#220](https://github.com/CatVinci-Studio/Textus/issues/220)
+- **The first official plugins**: daily notes and a calendar, tasks, and a
+  kanban board.
+- **Version history** for your documents.
 
 ## Want to help?
 
