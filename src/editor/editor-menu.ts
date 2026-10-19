@@ -28,7 +28,7 @@ import {
 } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { ContextMenuItem } from "./ContextMenu";
-import { readImagePresentation, writeImageWidth } from "./images/image-plugin";
+import { imageWidthOf, withImageWidth } from "./images/image-html";
 import type { EditorRunner } from "./useEditorRunner";
 import type { Strings } from "../i18n/strings";
 
@@ -172,10 +172,11 @@ export function setImageWidth(
     const view = ctx.get(editorViewCtx);
     const node = view.state.doc.nodeAt(pos);
     if (node?.type.name !== "image") return;
-    const tr = view.state.tr.setNodeMarkup(pos, undefined, {
-      ...node.attrs,
-      title: writeImageWidth(node.attrs.title as string | null, widthPercent),
-    });
+    const tr = view.state.tr.setNodeMarkup(
+      pos,
+      undefined,
+      withImageWidth(node.attrs, widthPercent),
+    );
     if (keepSelected) tr.setSelection(NodeSelection.create(tr.doc, pos));
     view.dispatch(tr);
     view.focus();
@@ -394,12 +395,11 @@ function imageWidthItems(
   const currentWidth =
     run((ctx) => {
       const node = ctx.get(editorViewCtx).state.doc.nodeAt(imagePos);
-      return node?.type.name === "image"
-        ? readImagePresentation(node.attrs.title as string | null).widthPercent
-        : null;
+      return node?.type.name === "image" ? imageWidthOf(node.attrs) : null;
     }) ?? null;
+  // A width written by hand - "320", "45%" - ticks none of them.
   const widthItem = (widthPercent: number | null, label: string) => ({
-    label: `${currentWidth === widthPercent ? "✓ " : ""}${label}`,
+    label: `${currentWidth === (widthPercent && `${widthPercent}%`) ? "✓ " : ""}${label}`,
     onSelect: () => setImageWidth(run, imagePos, widthPercent),
   });
   return [

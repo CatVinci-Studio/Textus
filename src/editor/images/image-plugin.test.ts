@@ -1,10 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   imageStemForMode,
-  readImagePresentation,
   resolveImageSrc,
   safeImageStem,
-  writeImageWidth,
 } from "./image-plugin";
 
 // Tauri's own convertFileSrc percent-encodes the whole path the same way.
@@ -38,38 +36,6 @@ describe("image upload filenames", () => {
   it("creates a collision-resistant automatic name", () => {
     const file = new File(["image"], "image.png", { type: "image/png" });
     expect(imageStemForMode(file, "auto")).toMatch(/^\d{8}-\d{6}-[a-z0-9]{4}$/);
-  });
-});
-
-describe("image width metadata", () => {
-  it("reads a saved width without exposing it as the image tooltip", () => {
-    expect(readImagePresentation("Product shot {textus-width=70%}")).toEqual({
-      title: "Product shot",
-      widthPercent: 70,
-    });
-  });
-
-  it("updates the width while preserving a regular Markdown title", () => {
-    expect(writeImageWidth("Product shot {textus-width=50%}", 70)).toBe(
-      "Product shot {textus-width=70%}",
-    );
-  });
-
-  it("reads a width Levis saved and rewrites it with the textus key", () => {
-    expect(readImagePresentation("Shot {levis-width=40%}")).toEqual({
-      title: "Shot",
-      widthPercent: 40,
-    });
-    expect(writeImageWidth("Shot {levis-width=40%}", 60)).toBe(
-      "Shot {textus-width=60%}",
-    );
-  });
-
-  it("can restore automatic sizing and remove metadata-only titles", () => {
-    expect(writeImageWidth("{textus-width=50%}", null)).toBe("");
-    expect(writeImageWidth("Product shot {textus-width=50%}", null)).toBe(
-      "Product shot",
-    );
   });
 });
 

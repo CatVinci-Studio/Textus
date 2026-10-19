@@ -5,6 +5,7 @@ import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { DOMParser, DOMSerializer } from "@milkdown/kit/prose/model";
 import { createTestEditor } from "../../document-view/editor-test-harness";
 import { unwrittenImageSrcs } from "./markdown-output";
+import { withImageWidth } from "../images/image-html";
 
 const editors: Editor[] = [];
 afterEach(async () => {
@@ -66,7 +67,15 @@ describe("saved markdown stays as written", () => {
     ["a highlight", "一段==高亮==文字\n"],
     ["a footnote", "正文[^1]\n\n[^1]: 脚注\n"],
     ["an image without a title", "![图](a.png)\n"],
-    ["an image width", '![图](a.png "{textus-width=30%}")\n'],
+    [
+      "an image width an older Textus saved",
+      '![图](a.png "{textus-width=30%}")\n',
+    ],
+    ["an image width", '<img src="assets/a.png" alt="图" width="50%">\n'],
+    ["an <img> in a line", 'A <img src="a.png" width="30%"> icon\n'],
+    ["a pixel width", "<img src='a b.png' width=320 />\n"],
+    ["Typora's zoom", '<img src="a.png" alt="x" style="zoom:50%;" />\n'],
+    ["an <img> with a height", '<img src="a.png" height="100">\n'],
     ["an autolink", "See <https://x.org/a> here\n"],
     ["a link whose text is its URL", "[https://x.org/a](https://x.org/a)\n"],
     ["an empty-text link", "See [](https://x.org/a) here\n"],
@@ -79,8 +88,15 @@ describe("saved markdown stays as written", () => {
     ["an image", "![美女](https://x.org/a.jpg)\n"],
     ["an image without alt", "![](assets/a.png)\n"],
     ["a titled image", '![a](s.png "t")\n'],
+    ["a sized image", '<img src="a.png" alt="x" width="50%">\n'],
   ])("keeps %s pasted as text, adding no title", async (_name, markdown) => {
     expect(await throughClipboard(markdown)).toBe(markdown);
+  });
+
+  it("pastes an older Textus's sized image as <img width>", async () => {
+    expect(
+      await throughClipboard('![x](a.png "Cap {textus-width=30%}")\n'),
+    ).toBe('<img src="a.png" alt="x" title="Cap" width="30%">\n');
   });
 
   it("keeps HTML the editor now renders, byte for byte", async () => {
@@ -180,5 +196,90 @@ describe("saved markdown stays as written", () => {
   it("writes a thematic break as '---', but '***' as the first block", async () => {
     expect(await roundTrip("段\n\n***\n")).toBe("段\n\n---\n");
     expect(await roundTrip("***\n\n段\n")).toBe("***\n\n段\n");
+  });
+});
+
+describe("an image's width", () => {
+  /** Opens `markdown`, gives its first image `widthPercent` the way the
+   *  width menu does, and saves. */
+  async function resized(
+    markdown: string,
+    widthPercent: number | null,
+  ): Promise<string> {
+    const editor = await createTestEditor(markdown);
+    editors.push(editor);
+    return editor.action((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      let pos = -1;
+      view.state.doc.descendants((node, at) => {
+        if (pos < 0 && node.type.name === "image") pos = at;
+      });
+      expect(pos).toBeGreaterThanOrEqual(0);
+      const node = view.state.doc.nodeAt(pos)!;
+      view.dispatch(
+        view.state.tr.setNodeMarkup(
+          pos,
+          undefined,
+          withImageWidth(node.attrs, widthPercent),
+        ),
+      );
+      return ctx.get(serializerCtx)(view.state.doc);
+    });
+  }
+
+  it("is saved as <img width>, and Auto saves it as Markdown again", async () => {
+    expect(await resized("![图](assets/a.png)\n", 50)).toBe(
+      '<img src="assets/a.png" alt="图" width="50%">\n',
+    );
+    expect(await resized('![x](a.png "Cap")\n', 30)).toBe(
+      '<img src="a.png" alt="x" title="Cap" width="30%">\n',
+    );
+    expect(
+      await resized('<img src="assets/a.png" alt="图" width="50%">\n', null),
+    ).toBe("![图](assets/a.png)\n");
+    expect(
+      await resized('<img src="a.png" title="Cap" width="320">\n', null),
+    ).toBe('![](a.png "Cap")\n');
+  });
+
+  it("moves out of an older Textus's title once it changes", async () => {
+    expect(await resized('![x](a.png "Cap {textus-width=50%}")\n', 70)).toBe(
+      '<img src="a.png" alt="x" title="Cap" width="70%">\n',
+    );
+    expect(await resized('![x](a.png "{textus-width=50%}")\n', null)).toBe(
+      "![x](a.png)\n",
+    );
+  });
+
+  it("keeps a path with spaces working both ways", async () => {
+    expect(await resized("![a](<my pic.png>)\n", 50)).toBe(
+      '<img src="my pic.png" alt="a" width="50%">\n',
+    );
+    expect(await resized('<img src="my pic.png" width="50%">\n', null)).toBe(
+      "![](<my pic.png>)\n",
+    );
+  });
+
+  it("reads an <img> as an image, a resized Typora one included", async () => {
+    expect(
+      await resized(
+        'Text <img src="a.png" alt="x" style="zoom:50%;" /> more\n',
+        50,
+      ),
+    ).toBe('Text <img src="a.png" alt="x" width="50%"> more\n');
+  });
+
+  it("leaves an <img> it can't carry as raw HTML", async () => {
+    const editor = await createTestEditor('<img src="a.png" height="9">\n');
+    editors.push(editor);
+    const types = editor.action((ctx) => {
+      const names: string[] = [];
+      ctx.get(editorViewCtx).state.doc.descendants((node) => {
+        names.push(node.type.name);
+      });
+      return names;
+    });
+    expect(types).toContain("html");
+    expect(types).not.toContain("image");
   });
 });

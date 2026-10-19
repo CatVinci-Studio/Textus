@@ -2,9 +2,10 @@ import { expect, test, type Page } from "@playwright/test";
 import { PHONE, openApp, openPhone, pasteMarkdown } from "./helpers";
 
 // An image's width preset - right-click › Image width, or the phone's
-// keyboard toolbar - is stored as `{textus-width=N%}` in its title, and
-// Image width: Auto takes it out again. On an image without a caption that
-// once left a null title, which the image node refuses: Auto did nothing.
+// keyboard toolbar - is saved as `<img width>` (image-width-html.spec.ts),
+// and Image width: Auto takes it out again. On an image without a caption
+// that once left a null title, which the image node refuses: Auto did
+// nothing.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 // A 200x100 block, narrower than the page, so Auto and 50% differ.

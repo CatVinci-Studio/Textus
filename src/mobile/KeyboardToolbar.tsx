@@ -58,9 +58,9 @@ interface CaretBlock {
   orderedList: boolean;
   quote: boolean;
   table: boolean;
-  /** A tapped (node-selected) image, and its width in percent - null for
-   *  auto. */
-  image: { width: number | null } | null;
+  /** A tapped (node-selected) image, and its CSS width ("50%", "320px") -
+   *  null for auto. */
+  image: { width: string | null } | null;
 }
 const NO_BLOCK: CaretBlock = {
   heading: 0,
@@ -79,9 +79,8 @@ function caretBlock(): CaretBlock {
     ".image-view.ProseMirror-selectednode",
   );
   if (image) {
-    // The view sets its width from the markdown's (writeImageWidth).
-    const width = parseFloat(image.style.width);
-    return { ...NO_BLOCK, image: { width: isNaN(width) ? null : width } };
+    // The view sets its width from the image's (image-plugin.ts).
+    return { ...NO_BLOCK, image: { width: image.style.width || null } };
   }
   const node = document.getSelection()?.anchorNode;
   const el = node instanceof Element ? node : node?.parentElement;
@@ -224,7 +223,7 @@ export function KeyboardToolbar() {
           label: t[`imageWidth${percent}` as const],
           content: `${percent}%`,
           className: "kbt-text",
-          on: width === percent,
+          on: width === `${percent}%`,
           run: image(`width:${percent}`),
         })),
       ],
