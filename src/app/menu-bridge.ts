@@ -35,6 +35,10 @@ export interface MenuBridgeHandlers {
   openFileDialog: () => Promise<void>;
   /** File > Open Recent (useFileOpening.ts). */
   openRecentFile: (path: string) => Promise<void>;
+  /** File > Open Folder…, a recent folder, Close Folder (useOpenFolder.ts). */
+  openFolderDialog: () => Promise<void>;
+  openFolder: (path: string) => void;
+  closeFolder: () => void;
   saveTab: (tabId: string) => Promise<boolean>;
   saveTabAs: (tabId: string) => Promise<boolean>;
   toggleSourceMode: () => void;
@@ -85,6 +89,11 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         "menu-open-recent",
         (event) => void h().openRecentFile(event.payload),
       ),
+      listenToThisWindow("menu-open-folder", () => void h().openFolderDialog()),
+      listenToThisWindow<string>("menu-open-recent-folder", (event) =>
+        h().openFolder(event.payload),
+      ),
+      listenToThisWindow("menu-close-folder", () => h().closeFolder()),
       listenToThisWindow("menu-documents", () => h().onOpenDocuments()),
       listenToThisWindow("menu-share", () => void h().shareActiveTab()),
       listenToThisWindow(
@@ -175,6 +184,8 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         if (event === "menu-open-settings") latest.current.onOpenSettings();
         else if (event === "menu-open-file")
           void latest.current.openFileDialog();
+        else if (event === "menu-open-folder")
+          void latest.current.openFolderDialog();
       })
       .catch(() => {});
   }, []);

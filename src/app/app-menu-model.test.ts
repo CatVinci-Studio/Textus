@@ -13,6 +13,7 @@ import { LANGS } from "../i18n/langs";
 import {
   buildAppMenu,
   buildMobileMenu,
+  NO_RECENTS,
   nativeMenuChecks,
   nativeMenuLabels,
   type MenuNode,
@@ -44,6 +45,7 @@ const shortcuts: Shortcuts = {
   toggleSourceMode: "mod+/",
   toggleTypewriterMode: "",
   findReplace: "mod+f",
+  searchFiles: "mod+shift+o",
 };
 
 /** Every entry in the tree, submenus included. */
@@ -55,7 +57,7 @@ function flatten(nodes: MenuNode[]): Exclude<MenuNode, "separator">[] {
   );
 }
 
-const entries = flatten(buildAppMenu(t, shortcuts, []));
+const entries = flatten(buildAppMenu(t, shortcuts, NO_RECENTS));
 
 function accelOf(label: string): string | undefined {
   const found = entries.find((entry) => entry.label === label);
@@ -66,7 +68,7 @@ function accelOf(label: string): string | undefined {
 describe("the Windows app menu", () => {
   it("hints the Quick Note shortcut only while it is registered", () => {
     const quick = (combo?: string) =>
-      flatten(buildAppMenu(t, shortcuts, [], {}, combo)).find(
+      flatten(buildAppMenu(t, shortcuts, NO_RECENTS, {}, combo)).find(
         (entry) => entry.label === t.menuNewQuickNote,
       );
     expect(quick()?.accel).toBeUndefined();
@@ -120,7 +122,7 @@ describe("the View menu's on/off items", () => {
     "never say Toggle, and all carry a check state (%s)",
     (lang) => {
       const strings = resolveStrings(lang) as Strings;
-      const view = buildAppMenu(strings, shortcuts, []).find(
+      const view = buildAppMenu(strings, shortcuts, NO_RECENTS).find(
         (node) => node !== "separator" && node.label === strings.menuView,
       );
       expect(view).toBeDefined();
@@ -141,7 +143,7 @@ describe("the View menu's on/off items", () => {
   );
 
   it("show what is on", () => {
-    const view = buildAppMenu(t, shortcuts, [], {
+    const view = buildAppMenu(t, shortcuts, NO_RECENTS, {
       sidebar: true,
       zen: true,
       fullscreen: true,
@@ -157,7 +159,7 @@ describe("the View menu's on/off items", () => {
   });
 
   it("send the macOS bar every native on/off item by id", () => {
-    const ids = flatten(buildAppMenu(t, shortcuts, []))
+    const ids = flatten(buildAppMenu(t, shortcuts, NO_RECENTS))
       .filter((item) => item.checked !== undefined)
       .flatMap((item) =>
         item.action && "native" in item.action ? [item.action.native] : [],
@@ -166,6 +168,47 @@ describe("the View menu's on/off items", () => {
     expect(nativeMenuChecks({ splitView: true })["toggle-split-view"]).toBe(
       true,
     );
+  });
+});
+
+describe("File > Open Recent", () => {
+  const recentMenu = (recents: Parameters<typeof buildAppMenu>[2]) =>
+    flatten(buildAppMenu(t, shortcuts, recents)).find(
+      (item) => item.label === t.menuOpenRecent,
+    )!.submenu!;
+
+  it("lists folders above files, each folder's name ending in a separator", () => {
+    const menu = recentMenu({
+      files: ["/notes/a.md"],
+      folders: ["/notes/novel", "D:\\Writing\\"],
+    });
+    expect(
+      menu.map((node) =>
+        node === "separator" ? "-" : [node.label, node.action],
+      ),
+    ).toEqual([
+      ["novel/", { native: "recent-folder:/notes/novel" }],
+      ["Writing\\", { native: "recent-folder:D:\\Writing\\" }],
+      "-",
+      ["a.md", { native: "recent:/notes/a.md" }],
+      "-",
+      [t.menuRecentClear, { native: "recent-clear" }],
+    ]);
+  });
+
+  it("says it is empty with neither", () => {
+    expect(recentMenu(NO_RECENTS)).toEqual([
+      { label: t.menuRecentNone, disabled: true },
+    ]);
+  });
+
+  it("offers Close Folder only while a folder is open", () => {
+    const close = (folderOpen: boolean) =>
+      flatten(buildAppMenu(t, shortcuts, NO_RECENTS, { folderOpen })).find(
+        (item) => item.label === t.menuCloseFolder,
+      )!;
+    expect(close(false).disabled).toBe(true);
+    expect(close(true).disabled).toBe(false);
   });
 });
 
@@ -182,7 +225,7 @@ describe("the macOS menu bar's labels", () => {
         if (node.submenu) collect(node.submenu);
       }
     };
-    collect(buildAppMenu(zh, shortcuts, []));
+    collect(buildAppMenu(zh, shortcuts, NO_RECENTS));
     for (const id of ids) expect(labels[id], id).toBeTruthy();
     expect(labels["insert-block:h2"]).toBe(
       zh.menuHeadingTemplate.replace("{n}", "2"),

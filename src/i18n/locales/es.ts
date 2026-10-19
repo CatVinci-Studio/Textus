@@ -252,6 +252,22 @@ para usar una.
   outlineEmpty:
     "Aún no hay encabezados. Las líneas que empiezan con # aparecen aquí.",
   treeRefresh: "Actualizar",
+  menuOpenFolder: "Abrir carpeta…",
+  menuCloseFolder: "Cerrar carpeta",
+  folderTooBroad:
+    "Esta carpeta es demasiado amplia para abrirla (es tu carpeta personal o una unidad entera). Elige una más concreta.",
+  treeSearchPlaceholder: "Buscar nombres de archivo",
+  treeSearchIndexing: "Revisando la carpeta…",
+  treeSearchNoMatches: "Ningún nombre de archivo coincide.",
+  treeSearchCapped:
+    "Solo se buscó en los primeros {n} archivos. Abre una carpeta más pequeña para buscar en toda.",
+  treeSearchTooBroad:
+    "Esta carpeta es demasiado amplia para buscar en ella. Abre una más concreta con Archivo › Abrir carpeta…",
+  treeSearchFailed: "No se puede leer esta carpeta.",
+  treeSearchScope: "Mostrar",
+  treeSearchScopeAll: "Todos los archivos",
+  treeSearchScopeDocuments: "Solo documentos",
+  shortcutSearchFiles: "Buscar nombres de archivo",
   menuDocuments: "Documentos",
   docListTitle: "Documentos",
   docListClose: "Cerrar",

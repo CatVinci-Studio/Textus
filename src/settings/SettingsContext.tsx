@@ -64,6 +64,7 @@ export type ShortcutAction =
   | "toggleSourceMode"
   | "toggleTypewriterMode"
   | "findReplace"
+  | "searchFiles"
   | "nextTab"
   | "previousTab"
   | HeadingAction;
@@ -101,6 +102,7 @@ export function defaultShortcuts(mac = modIsMeta()): Shortcuts {
     toggleSourceMode: "mod+/",
     toggleTypewriterMode: "",
     findReplace: "mod+f",
+    searchFiles: "mod+shift+o",
     nextTab: `${ctrl}+tab`,
     previousTab: `${ctrl}+shift+tab`,
     setHeading1: "",

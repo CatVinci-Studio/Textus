@@ -2,22 +2,26 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::Manager;
 
-/// Recently opened files, backing File > Open Recent. Persisted as a plain
-/// JSON array (most recent first) next to prefs.json, so the menu survives
-/// restarts. The frontend reports every successful open/save-as via
-/// add_recent_file; the Rust side owns the list and the menu that mirrors
-/// it (menu.rs's rebuild_recent_menu).
+/// Recently opened files and folders, backing File > Open Recent. Each list
+/// is persisted as a plain JSON array (most recent first) next to
+/// prefs.json, so the menu survives restarts. The frontend reports every
+/// successful open/save-as via add_recent_file and every File > Open Folder
+/// via add_recent_folder; the Rust side owns the lists and the menu that
+/// mirrors them (menu.rs's rebuild_recent_menu).
 const MAX_RECENT_FILES: usize = 10;
+/// Fewer folders than files: a writer keeps a handful of projects, and they
+/// sit above the files in the same submenu.
+const MAX_RECENT_FOLDERS: usize = 5;
 
-fn recents_file(app: &tauri::AppHandle) -> Option<PathBuf> {
-    app.path()
-        .app_config_dir()
-        .ok()
-        .map(|dir| dir.join("recent_files.json"))
+const FILES_LIST: &str = "recent_files.json";
+const FOLDERS_LIST: &str = "recent_folders.json";
+
+fn list_file(app: &tauri::AppHandle, name: &str) -> Option<PathBuf> {
+    app.path().app_config_dir().ok().map(|dir| dir.join(name))
 }
 
-pub fn read_recent_files(app: &tauri::AppHandle) -> Vec<String> {
-    let Some(path) = recents_file(app) else {
+fn read_list(app: &tauri::AppHandle, name: &str) -> Vec<String> {
+    let Some(path) = list_file(app, name) else {
         return Vec::new();
     };
     fs::read_to_string(path)
@@ -26,8 +30,8 @@ pub fn read_recent_files(app: &tauri::AppHandle) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn write_recent_files(app: &tauri::AppHandle, list: &[String]) {
-    let Some(path) = recents_file(app) else {
+fn write_list(app: &tauri::AppHandle, name: &str, list: &[String]) {
+    let Some(path) = list_file(app, name) else {
         return;
     };
     if let Some(parent) = path.parent() {
@@ -38,21 +42,69 @@ fn write_recent_files(app: &tauri::AppHandle, list: &[String]) {
     }
 }
 
-#[tauri::command]
-pub fn add_recent_file(app: tauri::AppHandle, path: String) {
-    let mut list = read_recent_files(&app);
+/// `list` with `path` moved to the front, at most `max` long.
+fn push_front(mut list: Vec<String>, path: String, max: usize) -> Vec<String> {
     list.retain(|p| p != &path);
     list.insert(0, path);
-    list.truncate(MAX_RECENT_FILES);
-    write_recent_files(&app, &list);
+    list.truncate(max);
+    list
+}
+
+pub fn read_recent_files(app: &tauri::AppHandle) -> Vec<String> {
+    read_list(app, FILES_LIST)
+}
+
+pub fn read_recent_folders(app: &tauri::AppHandle) -> Vec<String> {
+    read_list(app, FOLDERS_LIST)
+}
+
+#[tauri::command]
+pub fn add_recent_file(app: tauri::AppHandle, path: String) {
+    let list = push_front(read_recent_files(&app), path, MAX_RECENT_FILES);
+    write_list(&app, FILES_LIST, &list);
     // The list itself is shared; the File > Open Recent menu mirroring it is
     // desktop only (iOS has no menu bar).
     #[cfg(desktop)]
-    crate::menu::rebuild_recent_menu(&app, list);
+    crate::menu::rebuild_recent_menu(&app);
 }
 
 #[cfg(desktop)]
+#[tauri::command]
+pub fn add_recent_folder(app: tauri::AppHandle, path: String) {
+    let list = push_front(read_recent_folders(&app), path, MAX_RECENT_FOLDERS);
+    write_list(&app, FOLDERS_LIST, &list);
+    crate::menu::rebuild_recent_menu(&app);
+}
+
+/// Clear Menu empties both lists: it is one submenu to the user.
+#[cfg(desktop)]
 pub fn clear_recent_files(app: &tauri::AppHandle) {
-    write_recent_files(app, &[]);
-    crate::menu::rebuild_recent_menu(app, Vec::new());
+    write_list(app, FILES_LIST, &[]);
+    write_list(app, FOLDERS_LIST, &[]);
+    crate::menu::rebuild_recent_menu(app);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn list(items: &[&str]) -> Vec<String> {
+        items.iter().map(|s| (*s).to_string()).collect()
+    }
+
+    #[test]
+    fn reopening_an_entry_moves_it_to_the_top_without_a_duplicate() {
+        assert_eq!(
+            push_front(list(&["/a", "/b", "/c"]), "/b".into(), 5),
+            list(&["/b", "/a", "/c"])
+        );
+    }
+
+    #[test]
+    fn the_oldest_entry_drops_off_at_the_limit() {
+        assert_eq!(
+            push_front(list(&["/a", "/b"]), "/c".into(), 2),
+            list(&["/c", "/a"])
+        );
+    }
 }

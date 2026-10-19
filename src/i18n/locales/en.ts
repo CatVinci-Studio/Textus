@@ -242,6 +242,22 @@ type /name in a conversation to use one.
   treeEmptyDraft: "Save this document and its folder shows up here.",
   outlineEmpty: "No headings yet - lines starting with # appear here.",
   treeRefresh: "Refresh",
+  menuOpenFolder: "Open Folder…",
+  menuCloseFolder: "Close Folder",
+  folderTooBroad:
+    "This folder is too broad to open (your home folder or a whole drive). Choose a more specific folder.",
+  treeSearchPlaceholder: "Search file names",
+  treeSearchIndexing: "Looking through the folder…",
+  treeSearchNoMatches: "No file names match.",
+  treeSearchCapped:
+    "Searched the first {n} files only. Open a smaller folder to search all of it.",
+  treeSearchTooBroad:
+    "This folder is too broad to search. Open a more specific one with File › Open Folder…",
+  treeSearchFailed: "This folder can't be read.",
+  treeSearchScope: "Show",
+  treeSearchScopeAll: "All files",
+  treeSearchScopeDocuments: "Documents only",
+  shortcutSearchFiles: "Search file names",
   menuDocuments: "Documents",
   docListTitle: "Documents",
   docListClose: "Close",
