@@ -47,7 +47,7 @@ import {
 import {
   useLevisOffer,
   usePracticeTab,
-  usePracticeDiary,
+  usePracticeNotes,
   useTutorialTabRecovery,
   useWindowLessons,
 } from "./onboarding-wiring";
@@ -104,8 +104,10 @@ function App() {
   const tutorial = useTutorial();
   const startTutorial = tutorial.start;
   const stopTutorial = tutorial.exit;
-  const evaluateTutorialDocumentChange =
-    useTutorialDocumentEvaluation(tutorial);
+  const evaluateTutorialDocumentChange = useTutorialDocumentEvaluation(
+    tutorial,
+    settings.language,
+  );
   const cancelDraftFlushes = useDraftAutosave(
     tabs,
     settings.enableDraftRecovery,
@@ -210,7 +212,7 @@ function App() {
   useEffect(() => installClipboardCapture(), []);
 
   useTutorialTabRecovery(tutorial, tabState, claimPracticeTab);
-  usePracticeDiary({
+  usePracticeNotes({
     tutorial,
     tabState,
     language: settings.language,
@@ -301,7 +303,6 @@ function App() {
     panelOpen,
     panelMode,
     agentPanelOpen: agentPanel.open,
-    agentPanelTab: agentPanel.tab,
     writingMode: [
       zenMode,
       settings.typewriterMode,
@@ -400,7 +401,11 @@ function App() {
           typewriter={settings.typewriterMode}
           tour={
             tutorial.active && tutorial.tabId
-              ? { tabId: tutorial.tabId, ai: tutorial.practiceAi }
+              ? {
+                  tabId: tutorial.tabId,
+                  ai: tutorial.practiceAi,
+                  mode: tutorial.agentMode,
+                }
               : null
           }
           t={t}

@@ -15,7 +15,7 @@ import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { EditProposal } from "../ai/types";
 import { canDetachChat, isIOSApp } from "../platform/capabilities";
 import { SparkleIcon } from "../ui/icons";
-import type { Settings } from "../settings/SettingsContext";
+import type { AgentMode, Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /** What this editor draws in the docked AI panel (ai/chat/panel/) while it
@@ -26,6 +26,7 @@ export function EditorAgentPanel({
   settings,
   filePath,
   onSkillUsed,
+  tourMode,
   agentPanel,
   conversation,
   pendingEdits,
@@ -48,6 +49,8 @@ export function EditorAgentPanel({
   filePath: string | null;
   /** A message went out through a skill (the tour's skills lesson). */
   onSkillUsed?: () => void;
+  /** The mode the tour's lesson sets in the composer. */
+  tourMode: AgentMode | null;
   agentPanel: AgentPanelFrame;
   conversation: AgentConversation;
   pendingEdits: PendingEdits;
@@ -120,6 +123,7 @@ export function EditorAgentPanel({
         workspaceRoot={settings.agentWorkspaceRoot || null}
         conversation={conversation}
         defaultMode={settings.agentDefaultMode}
+        tourMode={tourMode}
         defaultWebSearch={settings.enableWebSearch}
         onSkillUsed={onSkillUsed}
         labels={chatLabels(t, settings.language)}

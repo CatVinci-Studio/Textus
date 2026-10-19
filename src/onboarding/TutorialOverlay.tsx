@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useModalDialog } from "../ui/useModalDialog";
+import { useCardPlacement } from "./card-placement";
 import type { TutorialStepId } from "./tutorial-steps";
 import "./TutorialOverlay.css";
 import appIcon from "../../src-tauri/icons/128x128@2x.png";
@@ -30,6 +31,12 @@ interface TutorialButton {
   onClick: () => void;
 }
 
+/** One line of what to do, and whether it is done. */
+export interface TutorialTaskLine {
+  text: string;
+  done: boolean;
+}
+
 interface TutorialOverlayProps {
   /** Opening, connecting and ending dim the app; lessons leave the editor
    *  to work in, with the card at its side. */
@@ -41,22 +48,20 @@ interface TutorialOverlayProps {
   title: string;
   /** The one sentence under the title. */
   body: string;
-  /** What to do. `code` spans (backticks) are what to type. */
-  task?: string;
+  /** What to do, a line each. `code` spans (backticks) are what to type. */
+  tasks?: TutorialTaskLine[];
   /** One line of feedback on the exercise. */
   status?: string | null;
+  /** The whole lesson is done (its feedback line turns to success). */
   complete?: boolean;
   /** A quieter line under the exercise (watching instead of doing). */
   note?: string | null;
-  /** The lesson's animation on the website, as a link; absent when it is
-   *  the primary action instead. */
+  /** The lesson's animation on the website, as a link. */
   watch?: TutorialButton | null;
   /** Lesson-specific controls (the provider picker, the theme picker, the
    *  ending's links). */
   children?: ReactNode;
   primary: TutorialButton & { disabled?: boolean };
-  /** A plain button before the primary one (Continue, while watching). */
-  secondary?: TutorialButton | null;
   onBack: () => void;
   onSkip: () => void;
   /** Advance past THIS lesson without completing it. Shown only while the
@@ -64,30 +69,65 @@ interface TutorialOverlayProps {
    *  must never leave "exit the whole guide" as the only way out. */
   onSkipStep?: () => void;
   labels: TutorialOverlayLabels;
+  /** The phone layout: a card goes to the top or the bottom. */
+  phone?: boolean;
 }
 
 // The welcome step shows the app icon instead (see the header below).
 const STEP_GLYPHS: Record<Exclude<TutorialStepId, "welcome">, string> = {
   wysiwyg: "M↓",
+  marks: "B",
+  table: "▦",
   blocks: "∑",
   "modes-themes": "◐",
   "sidebar-export": "◧",
   connect: "⇄",
-  "ai-panel": "✦",
-  continuation: "↹",
-  grammar: "✓",
-  revision: "✎",
+  write: "✦",
   review: "❝",
+  revision: "✎",
+  grammar: "✓",
+  continuation: "↹",
   skills: "/",
-  memory: "◎",
   done: "✓",
 };
 
-/** `text` with its backtick spans as code - what the learner types. */
-function withCode(text: string): ReactNode[] {
-  return text
-    .split("`")
-    .map((part, i) => (i % 2 === 1 ? <code key={i}>{part}</code> : part));
+/** `text` with its code spans as code - what the learner types. As in
+ *  Markdown, a span opened by a run of backticks closes at the next run as
+ *  long, so ``a `b` c`` shows backticks (one space inside each end is
+ *  dropped); an unclosed run stays text. */
+export function withCode(text: string): ReactNode[] {
+  const out: ReactNode[] = [];
+  let plain = "";
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] !== "`") {
+      plain += text[i++];
+      continue;
+    }
+    let n = 0;
+    while (text[i + n] === "`") n++;
+    const fence = "`".repeat(n);
+    let close = text.indexOf(fence, i + n);
+    while (close !== -1 && text[close + n] === "`") {
+      let skip = close;
+      while (text[skip] === "`") skip++;
+      close = text.indexOf(fence, skip);
+    }
+    if (close === -1) {
+      plain += fence;
+      i += n;
+      continue;
+    }
+    let code = text.slice(i + n, close);
+    if (code.length > 2 && code.startsWith(" ") && code.endsWith(" "))
+      code = code.slice(1, -1);
+    if (plain) out.push(plain);
+    plain = "";
+    out.push(<code key={out.length}>{code}</code>);
+    i = close + n;
+  }
+  if (plain) out.push(plain);
+  return out;
 }
 
 /**
@@ -103,28 +143,39 @@ export function TutorialOverlay({
   chapters,
   title,
   body,
-  task,
+  tasks,
   status,
   complete,
   note,
   watch,
   children,
   primary,
-  secondary,
   onBack,
   onSkip,
   onSkipStep,
   labels,
+  phone = false,
 }: TutorialOverlayProps) {
   const titleId = useId();
   const bodyId = useId();
   const contentId = useId();
   const primaryRef = useRef<HTMLButtonElement>(null);
   const modal = useModalDialog(onSkip, layout === "overlay");
-  const [collapsedStep, setCollapsedStep] = useState<TutorialStepId | null>(
-    null,
+  // A lesson card keeps clear of the proposal, the notes and the review
+  // bar it is about; with no room anywhere it folds to its header until
+  // there is - unless the learner opened or folded it on this lesson.
+  const placement = useCardPlacement(
+    modal.ref,
+    layout === "card",
+    phone,
+    stepId,
   );
-  const collapsed = collapsedStep === stepId;
+  const [folded, setFolded] = useState<{
+    stepId: TutorialStepId;
+    collapsed: boolean;
+  } | null>(null);
+  const collapsed =
+    folded?.stepId === stepId ? folded.collapsed : !placement.roomy;
   const progressLabel = labels.stepOfCount
     .replace("{i}", String(stepIndex + 1))
     .replace("{n}", String(totalSteps));
@@ -137,6 +188,8 @@ export function TutorialOverlay({
     <div
       {...modal}
       className={`tutorial-surface tutorial-${layout} tutorial-step-${stepId} floating-surface`}
+      style={placement.style}
+      data-place={placement.place ?? undefined}
       role="dialog"
       aria-modal={layout === "overlay"}
       aria-labelledby={titleId}
@@ -188,7 +241,7 @@ export function TutorialOverlay({
             className="tutorial-collapse"
             aria-expanded={!collapsed}
             aria-controls={contentId}
-            onClick={() => setCollapsedStep(collapsed ? null : stepId)}
+            onClick={() => setFolded({ stepId, collapsed: !collapsed })}
           >
             {collapsed ? labels.expand : labels.collapse}
           </button>
@@ -202,15 +255,21 @@ export function TutorialOverlay({
         <p className="tutorial-body" id={bodyId}>
           {body}
         </p>
-        {task && (
-          <section
-            className={`tutorial-task${complete ? " is-complete" : ""}`}
-            aria-label={labels.tryIt}
-          >
-            <span className="tutorial-task-icon" aria-hidden>
-              {complete ? "✓" : "→"}
-            </span>
-            <span>{withCode(task)}</span>
+        {tasks && tasks.length > 0 && (
+          <section className="tutorial-task" aria-label={labels.tryIt}>
+            <ol className="tutorial-task-lines">
+              {tasks.map((line, i) => (
+                <li
+                  key={i}
+                  className={`tutorial-task-line${line.done ? " is-complete" : ""}`}
+                >
+                  <span className="tutorial-task-icon" aria-hidden>
+                    {line.done ? "✓" : tasks.length > 1 ? i + 1 : "→"}
+                  </span>
+                  <span>{withCode(line.text)}</span>
+                </li>
+              ))}
+            </ol>
           </section>
         )}
         {status && (
@@ -255,15 +314,6 @@ export function TutorialOverlay({
           {stepIndex > 0 && (
             <button type="button" className="tutorial-btn" onClick={onBack}>
               {labels.back}
-            </button>
-          )}
-          {secondary && (
-            <button
-              type="button"
-              className="tutorial-btn"
-              onClick={secondary.onClick}
-            >
-              {secondary.label}
             </button>
           )}
           <button

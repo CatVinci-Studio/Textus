@@ -31,11 +31,11 @@ describe("useTutorial navigation", () => {
     const { result } = renderHook(() => useTutorial());
     act(() => result.current.start("practice-tab"));
     goTo(result, "wysiwyg");
-    act(() => result.current.setPhase(3));
+    act(() => result.current.setPhase(15));
     act(() => result.current.next());
     act(() => result.current.back());
     expect(result.current.step.id).toBe("wysiwyg");
-    expect(result.current.phase).toBe(3);
+    expect(result.current.phase).toBe(15);
   });
 
   it("saves the step's id beside its index", () => {
@@ -82,11 +82,11 @@ describe("the AI mode", () => {
     const result = resumeAt("connect");
     act(() => result.current.setPhase(1));
     act(() => result.current.next());
-    expect(result.current.step.id).toBe("ai-panel");
+    expect(result.current.step.id).toBe("write");
     expect(result.current.aiMode).toBe("live");
     expect(result.current.watching).toBe(false);
     expect(result.current.practiceAi).toBe("live");
-    expect(saved()).toMatchObject({ stepId: "ai-panel", aiMode: "live" });
+    expect(saved()).toMatchObject({ stepId: "write", aiMode: "live" });
   });
 
   it("is watch when the connect lesson is skipped", () => {
@@ -99,7 +99,7 @@ describe("the AI mode", () => {
   });
 
   it("is decided again when the learner goes back to connect", () => {
-    const result = resumeAt("ai-panel", { aiMode: "watch" });
+    const result = resumeAt("write", { aiMode: "watch" });
     act(() => result.current.back());
     expect(result.current.step.id).toBe("connect");
     act(() => result.current.setPhase(1));
@@ -122,15 +122,37 @@ describe("the AI mode", () => {
   });
 
   it("starts over with no mode", () => {
-    const result = resumeAt("memory", { aiMode: "live" });
+    const result = resumeAt("skills", { aiMode: "live" });
     act(() => result.current.start("practice"));
     expect(result.current.aiMode).toBeNull();
     expect(result.current.stepIndex).toBe(0);
   });
 });
 
+describe("the AI panel's mode", () => {
+  it("is the one each AI lesson needs, and none elsewhere", () => {
+    expect(resumeAt("write", { aiMode: "live" }).current.agentMode).toBe(
+      "write",
+    );
+    expect(resumeAt("review", { aiMode: "watch" }).current.agentMode).toBe(
+      "review",
+    );
+    expect(resumeAt("revision", { aiMode: "live" }).current.agentMode).toBe(
+      "revise",
+    );
+    expect(resumeAt("grammar", { aiMode: "live" }).current.agentMode).toBe(
+      null,
+    );
+    const result = resumeAt("skills", { aiMode: "live" });
+    expect(result.current.agentMode).toBe("revise");
+    act(() => result.current.exit());
+    expect(result.current.agentMode).toBe(null);
+  });
+});
+
 describe("the AI lessons' signals", () => {
   it.each([
+    ["write", "revision-decided"],
     ["continuation", "completion-accepted"],
     ["grammar", "grammar-card"],
     ["revision", "revision-decided"],
@@ -142,6 +164,13 @@ describe("the AI lessons' signals", () => {
     expect(result.current.phase).toBe(0);
     act(() => sendTourSignal(signal));
     expect(result.current.phase).toBe(1);
+  });
+
+  it("keep the parts already done", () => {
+    const result = resumeAt("grammar", { aiMode: "live" });
+    act(() => result.current.setPhase(2));
+    act(() => sendTourSignal("grammar-card"));
+    expect(result.current.phase).toBe(3);
   });
 
   it("only complete the lesson they belong to", () => {

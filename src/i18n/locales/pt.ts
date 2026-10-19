@@ -723,60 +723,92 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialWatchNote:
     "Conecte uma IA depois em {path} para experimentar você mesmo.",
   tutorialWelcomeTitle: `Boas-vindas ao ${APP_NAME}`,
-  tutorialWelcomeBody: "Vamos mostrar tudo com um diário de viagem.",
+  tutorialWelcomeBody:
+    "Vamos mostrar tudo com suas notas de leitura sobre Dom Casmurro.",
   tutorialWysiwygTitle: "O que você vê é o que você obtém",
-  tutorialWysiwygBody: "O Markdown se formata enquanto você escreve.",
-  tutorialWysiwygTask: "Digite `# {title}` e depois escreva uma lista.",
-  tutorialBlocksTitle: "Fórmulas, tabelas, diagramas",
-  tutorialBlocksBody: "Poucas linhas de texto bastam para desenhá-los.",
-  tutorialBlocksTask: "Escreva seu roteiro como uma tabela.",
+  tutorialWysiwygBody:
+    "O Markdown se formata enquanto você escreve; pressione Enter duas vezes para terminar uma lista.",
+  tutorialWysiwygHeading: "Um título: `# {title}` e Enter",
+  tutorialWysiwygList: "Uma lista: `- Bentinho`, Enter, `Capitu`",
+  tutorialWysiwygNumbered: "Uma lista numerada: `1. Do título`",
+  tutorialWysiwygTaskItem: "Uma tarefa: `- [ ] Terminar o livro`",
+  tutorialMarksTitle: "Negrito, citações, código e links",
+  tutorialMarksBody:
+    "Suas notas sobre o capítulo I estão abaixo; digite estas linhas no fim.",
+  tutorialMarksEmphasis:
+    "Negrito e itálico: `Capitu é **esperta** e *misteriosa*.`",
+  tutorialMarksQuote: "Uma citação: `> Não consultes diccionarios.`",
+  tutorialMarksCode: "Código: ``Reler o `capítulo I`.``",
+  tutorialMarksLink: "Um link: `[Gutenberg](https://gutenberg.org)`",
+  tutorialTableTitle: "Tabelas",
+  tutorialTableBody:
+    "Uma linha de células entre | vira tabela quando você pressiona Enter.",
+  tutorialTableHeader: "Digite `| Personagem | Impressão |` e pressione Enter",
+  tutorialTableRow: "Preencha uma linha: `Capitu`, Tab, `Enigmática`",
+  tutorialBlocksTitle: "Fórmulas e diagramas",
+  tutorialBlocksBody:
+    "Opcional: poucos caracteres fazem uma fórmula, poucas linhas um diagrama.",
+  tutorialBlocksFormula: "Uma fórmula: `$E=mc^2$`",
+  tutorialBlocksDiagram:
+    "Um diagrama: ```` ```mermaid ````, Enter e depois `graph LR; A-->B`",
   tutorialModesTitle: "Modos de escrita e temas",
   tutorialModesBody: "Escreva de outro jeito, veja com outra cara.",
   tutorialModesTask: "Ative o Modo Zen e escolha outro tema.",
   tutorialSidebarTitle: "Barra lateral e exportação",
   tutorialSidebarBody:
-    "Arquivos e estrutura ficam à esquerda; exporte quando terminar.",
-  tutorialSidebarTask: "Abra a barra lateral ({shortcut}) e veja a estrutura.",
+    "A barra lateral tem seus arquivos, a estrutura e a área de transferência; para exportar, use Arquivo › Exportar.",
+  tutorialSidebarTask:
+    "Clique no menu ☰ no canto superior esquerdo, escolha Visualizar › Barra Lateral ({shortcut}) e abra Estrutura",
+  tutorialSidebarTaskMac:
+    "Na barra de menus, escolha Visualizar › Barra Lateral ({shortcut}) e abra Estrutura",
   tutorialSidebarTaskPhone:
-    "Abra a barra lateral pelo menu e veja a estrutura.",
+    "Toque no menu ☰ no canto superior esquerdo, depois em Barra Lateral, e abra Estrutura",
   tutorialConnectTitle: "Conecte sua IA",
   tutorialConnectBody:
     "Com ela conectada, você pode experimentar de verdade o que vem a seguir.",
   tutorialConnectTask: "Entre ou cole uma chave - ou pule por agora.",
   tutorialConnectSkip: "Pular por agora",
   tutorialConnected: "Conectado.",
-  tutorialAiPanelTitle: "O painel de IA",
-  tutorialAiPanelBody: "Seu assistente de escrita fica aqui.",
-  tutorialAiPanelTask: "Pressione {shortcut} para abrir o painel.",
-  tutorialAiPanelTaskPhone:
-    "Toque no botão do painel de IA, no topo, para abri-lo.",
+  tutorialWriteTitle: "Escrever com IA",
+  tutorialWriteBody: `No modo Escrever, o ${AI_NAME} só acrescenta texto, em verde até você aceitar.`,
+  tutorialWriteOpen:
+    "Abra o painel de IA: o ícone de robô no canto superior direito ({shortcut})",
+  tutorialWriteOpenPhone: "Abra o painel de IA: toque no ícone de robô no topo",
+  tutorialWriteSend:
+    "Envie `Continue minhas notas com mais um parágrafo` e clique em Aceitar",
+  tutorialReviewTitle: "Comentários",
+  tutorialReviewBody:
+    "No modo Revisar, ele comenta na margem e não mexe no seu texto.",
+  tutorialReviewTask:
+    "Envie `Comente minhas notas` e leia os comentários na margem",
+  tutorialRevisionTitle: "Revisão",
+  tutorialRevisionBody:
+    "No modo Editar, ele reescreve e você decide frase por frase.",
+  tutorialRevisionSelect: "Selecione a primeira frase das suas notas",
+  tutorialRevisionSend:
+    "Envie `Deixe mais conciso` e escolha Aceitar ou Rejeitar",
+  tutorialGrammarTitle: "Verificação gramatical",
+  tutorialGrammarBody: "Os deslizes ficam sublinhados enquanto você escreve.",
+  tutorialGrammarType: "Numa linha nova no fim, digite `{slip}`",
+  tutorialGrammarApply:
+    "Espere o sublinhado, passe o ponteiro sobre ele e clique em Aplicar",
+  tutorialGrammarApplyPhone:
+    "Espere o sublinhado, toque nele e toque em Aplicar",
+  tutorialGrammarQuiet:
+    "Desta vez a IA não achou nada para corrigir. Você pode continuar.",
   tutorialContinuationTitle: "Continuação",
   tutorialContinuationBody: "Faça uma pausa e ele continua por você.",
   tutorialContinuationTask:
-    "Continue escrevendo no fim do diário, faça uma pausa e pressione Tab para aceitar.",
+    "No fim, digite `O que Bentinho esconde é`, faça uma pausa e pressione Tab",
   tutorialContinuationTaskPhone:
-    "Continue escrevendo no fim do diário, faça uma pausa e toque no texto cinza para aceitar.",
-  tutorialGrammarTitle: "Verificação gramatical",
-  tutorialGrammarBody: "Os deslizes ficam sublinhados.",
-  tutorialGrammarTask: "Abra o cartão do sublinhado e aplique a correção.",
-  tutorialGrammarQuiet:
-    "Desta vez a IA não achou nada para corrigir. Você pode continuar.",
-  tutorialRevisionTitle: "Revisão",
-  tutorialRevisionBody:
-    "Peça para reescrever um parágrafo e decida frase por frase.",
-  tutorialRevisionTask:
-    "Selecione um parágrafo e peça à IA para deixá-lo mais vivo.",
-  tutorialReviewTitle: "Comentários",
-  tutorialReviewBody: "As sugestões aparecem na margem.",
-  tutorialReviewTask: "Peça à IA sugestões para este diário.",
+    "No fim, digite `O que Bentinho esconde é`, faça uma pausa e toque no texto cinza",
   tutorialSkillsTitle: "Habilidades integradas",
-  tutorialSkillsBody: "Digite / para usá-las.",
-  tutorialSkillsTask: "Experimente `/encurtar` ou `/traduzir` no painel.",
-  tutorialMemoryTitle: "Cresce com o tempo",
-  tutorialMemoryBody: "Ele lembra seu estilo e o que você pede.",
-  tutorialMemoryTask: "Abra Memória e veja o que ele guarda.",
+  tutorialSkillsBody: "Digite / no painel de IA para escolher uma.",
+  tutorialSkillsTask:
+    "Selecione uma das suas notas e envie `/encurtar` ou `/traduzir`",
   tutorialDoneTitle: "Pronto",
   tutorialDoneBody: "Agora comece a escrever o seu.",
+  tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja a aba Memória no painel de IA.`,
   closePromptMessage: "Este documento tem alterações não salvas.",
   closePromptSave: "Salvar",
   closePromptDiscard: "Não Salvar",
