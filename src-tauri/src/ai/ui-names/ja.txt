@@ -34,3 +34,6 @@ Review = レビュー
 Revise = 推敲
 Accept = 適用
 Reject = 却下
+Editor & Appearance (Settings page) = 編集と外観
+Import CSS… (Settings, under Theme) = CSSをインポート…
+Use this theme (under a theme in a reply) = このテーマを使う
