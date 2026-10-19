@@ -55,26 +55,6 @@ test("the phone menu is short; the view modes are switched in Settings", async (
   ).toBeAttached();
 });
 
-test("Settings fills the phone's screen and Done closes it", async ({
-  page,
-}) => {
-  await openPhone(page);
-  await page.locator(".window-menu-button").tap();
-  await page.getByRole("menuitem", { name: "Settings…" }).tap();
-  const panel = page.getByRole("dialog", { name: "Settings" });
-  expect(await panel.boundingBox()).toMatchObject({
-    x: 0,
-    y: 0,
-    width: 430,
-    height: 932,
-  });
-  // The categories are tabs along the top; a phone has no Shortcuts.
-  await expect(page.getByRole("button", { name: "General" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Shortcuts" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Done" }).tap();
-  await expect(panel).toHaveCount(0);
-});
-
 test("opening Textus AI while typing puts the keyboard away", async ({
   page,
 }) => {
@@ -162,7 +142,7 @@ test("Documents opens as its own page and closes again", async ({ page }) => {
   await expect(list).toHaveCount(0);
 });
 
-test("the keyboard toolbar formats without leaving the document", async ({
+test("the keyboard toolbar formats without leaving the document, and leaves copy and paste to the system's menu", async ({
   page,
 }) => {
   await openPhone(page);
@@ -171,6 +151,9 @@ test("the keyboard toolbar formats without leaving the document", async ({
   const para = page.locator('[data-active-tab="true"] .milkdown p').first();
   await para.click();
   await expect(toolbar).toBeVisible();
+  await expect(toolbar.getByRole("button", { name: "Undo" })).toBeVisible();
+  await expect(toolbar.getByRole("button", { name: "Copy" })).toHaveCount(0);
+  await expect(toolbar.getByRole("button", { name: "Paste" })).toHaveCount(0);
   // A selection inside the paragraph, as the iPhone's handles make one.
   await page.keyboard.press("Home");
   await page.keyboard.press("Shift+End");
@@ -290,27 +273,41 @@ test("with the keyboard up, the AI sheet rises once it has gone", async ({
   expect(Math.round(box.y + box.height)).toBe(932);
 });
 
-for (const scheme of ["light", "dark"] as const) {
-  test(`the screen's edge strips take Settings' colour (${scheme})`, async ({
-    page,
-  }) => {
-    await openPhone(page);
-    await page.emulateMedia({ colorScheme: scheme });
-    await page.locator(".window-menu-button").tap();
-    await page.getByRole("menuitem", { name: "Settings…" }).tap();
-    const panel = page.locator(".settings-panel");
-    await expect(panel).toBeVisible();
-    const [body, sheet] = await page.evaluate(() => [
-      getComputedStyle(document.body).backgroundColor,
-      getComputedStyle(document.querySelector(".settings-panel")!)
-        .backgroundColor,
-    ]);
-    expect(body).toBe(sheet);
-    expect(body).toBe(
-      scheme === "dark" ? "rgb(0, 0, 0)" : "rgb(242, 242, 247)",
-    );
+test("Settings fills the phone's screen, its edge strips take its colour in light and dark, and Done closes it", async ({
+  page,
+}) => {
+  await openPhone(page);
+  await page.locator(".window-menu-button").tap();
+  await page.getByRole("menuitem", { name: "Settings…" }).tap();
+  const panel = page.getByRole("dialog", { name: "Settings" });
+  expect(await panel.boundingBox()).toMatchObject({
+    x: 0,
+    y: 0,
+    width: 430,
+    height: 932,
   });
-}
+  // The categories are tabs along the top; a phone has no Shortcuts.
+  await expect(page.getByRole("button", { name: "General" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Shortcuts" })).toHaveCount(0);
+  // The screen's edge strips take Settings' colour.
+  for (const [scheme, colour] of [
+    ["light", "rgb(242, 242, 247)"],
+    ["dark", "rgb(0, 0, 0)"],
+  ] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await expect
+      .poll(() =>
+        page.evaluate(() => [
+          getComputedStyle(document.body).backgroundColor,
+          getComputedStyle(document.querySelector(".settings-panel")!)
+            .backgroundColor,
+        ]),
+      )
+      .toEqual([colour, colour]);
+  }
+  await page.getByRole("button", { name: "Done" }).tap();
+  await expect(panel).toHaveCount(0);
+});
 
 test("document thumbnails are the page's colour in dark mode", async ({
   page,
@@ -329,18 +326,6 @@ test("document thumbnails are the page's colour in dark mode", async ({
   });
   expect(sheet).not.toBe("rgb(255, 255, 255)");
   expect(text).not.toBe(sheet);
-});
-
-test("the keyboard toolbar leaves copy and paste to the system's menu", async ({
-  page,
-}) => {
-  await openPhone(page);
-  await pasteMarkdown(page, "plain words");
-  await page.locator('[data-active-tab="true"] .milkdown p').first().click();
-  const toolbar = page.getByRole("toolbar", { name: "Formatting" });
-  await expect(toolbar.getByRole("button", { name: "Undo" })).toBeVisible();
-  await expect(toolbar.getByRole("button", { name: "Copy" })).toHaveCount(0);
-  await expect(toolbar.getByRole("button", { name: "Paste" })).toHaveCount(0);
 });
 
 test("opening the sidebar closes the find bar, without bringing the keyboard up", async ({

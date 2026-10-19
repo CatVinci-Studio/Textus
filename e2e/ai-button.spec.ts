@@ -8,10 +8,11 @@ import { PHONE, openApp, openPhone } from "./helpers";
 
 const button = '.window-bar-toggle[aria-label="Textus AI"]';
 
-test("the AI panel's button is Textus AI, with its shortcut in the tooltip", async ({
+test("the AI panel's button is Textus AI, untranslated, with its shortcut in the tooltip", async ({
   page,
 }) => {
-  await openApp(page, { settings: { language: "en" } });
+  // In Chinese: the product's name is not translated.
+  await openApp(page, { settings: { language: "zh" } });
   const toggle = page.locator(button);
   await expect(toggle).toHaveAttribute("title", /^Textus AI \(.+L\)$/);
   // The robot: a head, and an antenna and two eyes.
@@ -20,11 +21,6 @@ test("the AI panel's button is Textus AI, with its shortcut in the tooltip", asy
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".agent-panel-view")).toBeVisible();
-});
-
-test("the product's name is not translated", async ({ page }) => {
-  await openApp(page, { settings: { language: "zh" } });
-  await expect(page.locator(button)).toHaveAttribute("title", /^Textus AI /);
 });
 
 test.describe("on a phone", () => {

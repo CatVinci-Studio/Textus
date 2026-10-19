@@ -76,7 +76,7 @@ async function openSettings(page: Page) {
 }
 
 test.describe("desktop", () => {
-  test("the AI page connects first, then lists each feature with its model", async ({
+  test("the AI page connects first, then lists each feature with its model; the chat off hides the two groups below it", async ({
     page,
   }) => {
     await openApp(page, { settings: { language: "en" } });
@@ -121,14 +121,8 @@ test.describe("desktop", () => {
     await expect(group(t.aiAskLabel).getByText(t.webSearchHint)).toBeVisible();
     // The UI never says "Agent" any more.
     await expect(panel).not.toContainText(/\bAgent\b/);
-  });
 
-  test("turning the chat off hides the two groups below it", async ({
-    page,
-  }) => {
-    await openApp(page, { settings: { language: "en" } });
-    const panel = await openSettings(page);
-    await panel.getByRole("button", { name: t.navAi, exact: true }).click();
+    // Turning the chat off hides the two groups below it.
     const chat = panel.getByRole("checkbox", { name: t.aiAskToggleLabel });
     await expect(chat).toBeChecked();
     await chat.click();
@@ -465,15 +459,7 @@ test.describe("phone", () => {
     expect(scroll).toBeLessThanOrEqual(client);
   });
 
-  test("no PDF page number switch, with no PDF export", async ({ page }) => {
-    await openPhone(page);
-    const panel = await openSettings(page);
-    await panel.getByRole("button", { name: t.navEditor }).tap();
-    await expect(panel.getByText(t.menuViewSource)).toBeVisible();
-    await expect(panel.getByText(t.pdfPageNumbersLabel)).toHaveCount(0);
-  });
-
-  test("no default editor row: iOS has no default app to set", async ({
+  test("no PDF page numbers, default editor row or updates: iOS has none of them", async ({
     page,
   }) => {
     await openPhone(page);
@@ -481,15 +467,17 @@ test.describe("phone", () => {
       default_editor_status: defaultEditorStatus.mac,
     });
     const panel = await openSettings(page);
+    // No default editor row: iOS has no default app to set.
     await expect(panel.getByText(t.aboutTextus)).toBeVisible();
     await expect(panel.getByText(t.defaultEditorLabel)).toHaveCount(0);
-  });
 
-  test("no update button or channel: the App Store updates the app", async ({
-    page,
-  }) => {
-    await openPhone(page);
-    const panel = await openSettings(page);
+    // No PDF page number switch, with no PDF export.
+    await panel.getByRole("button", { name: t.navEditor }).tap();
+    await expect(panel.getByText(t.menuViewSource)).toBeVisible();
+    await expect(panel.getByText(t.pdfPageNumbersLabel)).toHaveCount(0);
+
+    // No update button or channel: the App Store updates the app.
+    await panel.getByRole("button", { name: t.navGeneral }).tap();
     await panel.getByRole("button", { name: t.aboutTextus }).tap();
     await expect(panel.getByText(t.aboutMadeBy)).toBeVisible();
     await expect(panel.getByText(t.updateCheckButton)).toHaveCount(0);

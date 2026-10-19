@@ -79,9 +79,24 @@ test("find and replace spans the screen under the title row", async ({
   expect(close.height).toBeGreaterThanOrEqual(44);
   await page.locator(".find-replace-chevron").tap();
   await expect(page.locator(".find-replace-row")).toHaveCount(2);
+
+  // The menu opens over the find bar.
+  await page.locator(".window-menu-button").tap();
+  const first = page.getByRole("menuitem", { name: "Documents" });
+  const box = (await first.boundingBox())!;
+  // What a tap on the first row would land on: the row, not the find bar.
+  const hit = await page.evaluate(
+    ({ x, y }) =>
+      document.elementFromPoint(x, y)?.closest("[role=menuitem]")
+        ?.textContent ?? null,
+    { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+  );
+  expect(hit).toBe("Documents");
 });
 
-test("tabs have a close button a finger can hit", async ({ page }) => {
+test("tabs have a close button a finger can hit; closing an edited tab asks with an action sheet", async ({
+  page,
+}) => {
   await openPhone(page);
   await menuItem(page, "New File");
   const closes = page.locator(".tab-pill-close");
@@ -95,11 +110,8 @@ test("tabs have a close button a finger can hit", async ({ page }) => {
   }
   const pill = (await page.locator(".tab-pill").first().boundingBox())!;
   expect(pill.height).toBeGreaterThanOrEqual(36);
-});
 
-test("closing an edited tab asks with an action sheet", async ({ page }) => {
-  await openPhone(page);
-  await menuItem(page, "New File");
+  // Edited, it asks before it closes.
   await page.locator('[data-active-tab="true"] .milkdown p').first().click();
   await page.keyboard.type("draft");
   await page.locator(".tab-pill-active .tab-pill-close").tap();
@@ -137,23 +149,6 @@ test("the menu is a pull-down menu and a tap beside it closes it", async ({
   // A tap on the page's text, which sends no mousedown on iOS.
   await page.tap(".main-pane", { position: { x: 380, y: 600 } });
   await expect(list).toHaveCount(0);
-});
-
-test("the menu opens over the find bar", async ({ page }) => {
-  await openPhone(page);
-  await menuItem(page, "Find & Replace…");
-  await expect(page.locator(".find-replace-bar")).toBeVisible();
-  await page.locator(".window-menu-button").tap();
-  const first = page.getByRole("menuitem", { name: "Documents" });
-  const box = (await first.boundingBox())!;
-  // What a tap on the first row would land on: the row, not the find bar.
-  const hit = await page.evaluate(
-    ({ x, y }) =>
-      document.elementFromPoint(x, y)?.closest("[role=menuitem]")
-        ?.textContent ?? null,
-    { x: box.x + box.width / 2, y: box.y + box.height / 2 },
-  );
-  expect(hit).toBe("Documents");
 });
 
 test("a full-screen page covers the find bar but not its own alerts", async ({

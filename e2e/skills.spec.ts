@@ -54,24 +54,28 @@ async function openSettings(page: Page) {
 }
 
 test.describe("the / picker", () => {
-  for (const key of ["/", "／", "、", "・"]) {
-    test(`opens on ${key} with the built-ins, grouped and in Chinese`, async ({
-      page,
-    }) => {
-      const input = await openWithPanel(page, "zh");
+  test("opens on / and on what a Chinese or Japanese IME types for it (／、・), with the built-ins, grouped and in Chinese", async ({
+    page,
+  }) => {
+    const input = await openWithPanel(page, "zh");
+    const menu = page.locator(".composer-picker");
+    for (const key of ["/", "／", "、", "・"]) {
       await input.fill(key);
-      const menu = page.locator(".composer-picker");
-      await expect(menu).toBeVisible();
-      await expect(menu.getByRole("option")).toHaveCount(20);
-      await expect(menu.getByRole("group", { name: "写作" })).toContainText(
-        "接着写",
-      );
-      await expect(menu.getByRole("group", { name: "我的技能" })).toContainText(
-        "/house-style",
-      );
-      await expect(menu).toContainText("↑↓ 选择");
-    });
-  }
+      await expect(menu, key).toBeVisible();
+      await expect(menu.getByRole("option"), key).toHaveCount(20);
+      await expect(
+        menu.getByRole("group", { name: "写作" }),
+        key,
+      ).toContainText("接着写");
+      await expect(
+        menu.getByRole("group", { name: "我的技能" }),
+        key,
+      ).toContainText("/house-style");
+      await expect(menu, key).toContainText("↑↓ 选择");
+      await input.fill("");
+      await expect(menu, key).toHaveCount(0);
+    }
+  });
 
   test("says so when nothing matches, and when there are no skills", async ({
     page,
@@ -130,17 +134,19 @@ test.describe("the / picker", () => {
 });
 
 test.describe("the @ picker", () => {
-  for (const key of ["@", "＠"]) {
-    test(`${key} in an unsaved document explains how to attach files`, async ({
-      page,
-    }) => {
-      const input = await openWithPanel(page, "zh");
+  test("@ or ＠ in an unsaved document explains how to attach files", async ({
+    page,
+  }) => {
+    const input = await openWithPanel(page, "zh");
+    const empty = page.locator(".composer-picker [role=status]");
+    for (const key of ["@", "＠"]) {
       await input.fill(`参考 ${key}`);
-      const empty = page.locator(".composer-picker [role=status]");
-      await expect(empty).toContainText("输入 @ 引用项目文件夹中的文件");
-      await expect(empty).toContainText("保存文档或选择项目文件夹");
-    });
-  }
+      await expect(empty, key).toContainText("输入 @ 引用项目文件夹中的文件");
+      await expect(empty, key).toContainText("保存文档或选择项目文件夹");
+      await input.fill("");
+      await expect(empty, key).toHaveCount(0);
+    }
+  });
 
   test("lists the project's files with their folders", async ({ page }) => {
     const input = await openWithPanel(page, "en");
