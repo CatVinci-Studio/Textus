@@ -16,9 +16,19 @@
   },
   "bundle": {
     "targets": ["nsis"],
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown"],
+        "name": "Textus.Markdown",
+        "description": "Markdown document",
+        "role": "Editor",
+        "mimeType": "text/markdown"
+      }
+    ],
     "windows": {
       "nsis": {
         "template": "installer/installer.nsi",
+        "installerHooks": "installer/hooks.nsh",
         "installerIcon": "icons/icon.ico",
         "uninstallerIcon": "icons/icon.ico",
         "headerImage": "installer/header.bmp",

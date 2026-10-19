@@ -29,7 +29,7 @@ import {
   VERBATIM_INPUT,
 } from "./sections/controls";
 import { ChevronIcon, CloseIcon } from "../ui/icons";
-import { CliCommandSection } from "./sections/general";
+import { CliCommandSection, DefaultEditorSection } from "./sections/general";
 import { links } from "../platform/ipc";
 import { ThemeSection } from "./sections/theme";
 import { ThemeGallerySection } from "./sections/theme-gallery";
@@ -61,6 +61,7 @@ import {
   canInstallCliCommand,
   canPickFolder,
   canRevealInFileManager,
+  canSetDefaultEditor,
   canUseWindows,
   isIOSApp,
 } from "../platform/capabilities";
@@ -219,6 +220,7 @@ export function SettingsPanel({
           </SettingsGroup>
 
           <SettingsGroup title={t.generalSystemLabel}>
+            {canSetDefaultEditor && <DefaultEditorSection t={t} />}
             {canInstallCliCommand && <CliCommandSection t={t} />}
             <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
           </SettingsGroup>

@@ -681,6 +681,14 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   cliCommandReinstallButton: "Neu installieren",
   cliCommandInstalling: "Wird installiert…",
   cliCommandFailed: "Installation fehlgeschlagen:",
+  defaultEditorLabel: "Standard-Markdown-Editor",
+  defaultEditorIsDefault: `${APP_NAME} ist der Standard`,
+  defaultEditorNotDefault: `${APP_NAME} ist nicht der Standard`,
+  defaultEditorButton: "Als Standard festlegen",
+  defaultEditorChooseHint: `Wählen Sie unter Standard-Apps ${APP_NAME} für .md-Dateien.`,
+  defaultEditorUnsupported:
+    "Nur ein installiertes Paket (.deb, .rpm oder AUR) kann der Standard sein, nicht das AppImage.",
+  defaultEditorFailed: "Festlegen fehlgeschlagen:",
   customCssLabel: "Eigenes CSS",
   customCssHint:
     "Wird zusätzlich zum aktuellen Design angewendet – für kleine Anpassungen wie Erstzeileneinzug, Zeilenabstand oder Schriften. Das Dokument sprichst du mit #write an.",

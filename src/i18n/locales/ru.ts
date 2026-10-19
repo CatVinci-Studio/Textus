@@ -683,6 +683,14 @@ export default {
   cliCommandReinstallButton: "Переустановить",
   cliCommandInstalling: "Установка…",
   cliCommandFailed: "Не удалось установить:",
+  defaultEditorLabel: "Редактор Markdown по умолчанию",
+  defaultEditorIsDefault: `${APP_NAME} используется по умолчанию`,
+  defaultEditorNotDefault: `${APP_NAME} не используется по умолчанию`,
+  defaultEditorButton: "Сделать основным",
+  defaultEditorChooseHint: `В разделе «Приложения по умолчанию» выберите ${APP_NAME} для файлов .md.`,
+  defaultEditorUnsupported:
+    "Основным может быть только установленный пакет (.deb, .rpm или AUR), но не AppImage.",
+  defaultEditorFailed: "Не удалось назначить:",
   customCssLabel: "Свой CSS",
   customCssHint:
     "Применяется поверх текущей темы — для небольших изменений: отступа первой строки, межстрочного интервала или шрифтов. Документ выбирается селектором #write.",
