@@ -139,6 +139,31 @@ test("with no room for the margin, its views can't be picked and the chosen one 
   expect(await storedDisplay(page)).toBe("original");
 });
 
+test("the adaptive column leaves room for the margin views beside the AI panel at 1341 and 1920px (#211)", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1341, height: 800 });
+  await openApp(page, {
+    settings: { language: "en", revisionDisplay: "original" },
+    storage: { "levis-agent-panel-open": "1", "textus-sidebar-open": "0" },
+  });
+  await proposeRevision(page);
+  await expect(page.locator(".revision-note")).toHaveCount(2);
+  await page.setViewportSize({ width: 1920, height: 900 });
+  await expect(page.locator(".revision-note")).toHaveCount(2);
+  // The sidebar too, on a large screen.
+  await page.evaluate(() =>
+    (
+      window as unknown as {
+        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
+      }
+    ).__devEmitTauriEvent("menu-toggle-sidebar"),
+  );
+  await expect(page.locator(".sidebar:not(.sidebar-collapsed)")).toBeVisible();
+  await expect(page.locator(".revision-note")).toHaveCount(2);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
+});
+
 test("the line being read stays put as revisions move between the text and the margin", async ({
   page,
 }) => {

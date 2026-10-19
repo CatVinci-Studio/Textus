@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import { toPandocMarkdown } from "./pandoc-markdown";
 
@@ -18,6 +19,28 @@ describe("toPandocMarkdown", () => {
     );
     expect(toPandocMarkdown('![x](a.png "A caption {levis-width=50%}")')).toBe(
       '![x](a.png "A caption"){width=50%}',
+    );
+  });
+
+  it("turns a sized <img> into an image with a width attribute", () => {
+    expect(
+      toPandocMarkdown('<img src="assets/a.png" alt="图" width="50%">'),
+    ).toBe("![图](assets/a.png){width=50%}");
+    expect(
+      toPandocMarkdown(
+        'See <img src="my pic.png" alt="a [b]" title="say &quot;hi&quot;" width="320"> here',
+      ),
+    ).toBe('See ![a \\[b\\]](<my pic.png> "say \\"hi\\""){width=320px} here');
+    expect(toPandocMarkdown('<img src="a.png" style="zoom:50%;" />')).toBe(
+      "![](a.png)",
+    );
+  });
+
+  it("leaves an <img> an image node doesn't carry as HTML", () => {
+    const tag = '<img src="a.png" height="100">';
+    expect(toPandocMarkdown(tag)).toBe(tag);
+    expect(toPandocMarkdown('`<img src="a.png" width="5">`')).toBe(
+      '`<img src="a.png" width="5">`',
     );
   });
 

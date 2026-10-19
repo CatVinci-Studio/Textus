@@ -8,13 +8,19 @@ import {
 import type { DOMOutputSpec } from "@milkdown/kit/prose/model";
 import type { MarkdownNode } from "@milkdown/kit/transformer";
 import type { Link } from "mdast";
-import { writeLatexMath } from "../math/latex-math-syntax";
 import {
   defaultHandlers,
   type Handle,
   type State,
   type Unsafe,
 } from "mdast-util-to-markdown";
+import {
+  imageMarkdownHtml,
+  imageWidthOf,
+  readImagePresentation,
+  type ImageAttrs,
+} from "../images/image-html";
+import { writeLatexMath } from "../math/latex-math-syntax";
 
 // How the editor writes markdown back out. Every rule here exists to keep a
 // saved file close to what the user wrote, instead of remark-stringify's
@@ -225,16 +231,28 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
 }
 
 /**
+ * The image node, with a width and the `<img>` tag it was read from
+ * (images/image-html.ts): a sized image is saved as `<img width>`, and a
+ * tag nobody changed as it was written.
+ *
  * An image read from HTML takes its title from `title` alone. Milkdown's
  * parseDOM falls back to the alt, and its clipboard plugin pastes plain
  * text by parsing it as markdown, drawing it as HTML and reading that back -
  * so a pasted `![alt](src)` was saved as `![alt](src "alt")` (issue #189).
+ * Its width comes back from `data-width`, which only the editor's own
+ * images carry: a picture pasted from a web page, sized for that page,
+ * stays `![]()`.
  */
-function keepImageTitleAsWritten(ctx: Ctx): void {
+function configureImageNode(ctx: Ctx): void {
   ctx.update(imageSchema.key, (prev) => (innerCtx) => {
     const schema = prev(innerCtx);
     return {
       ...schema,
+      attrs: {
+        ...schema.attrs,
+        width: { default: "", validate: "string" },
+        html: { default: "", validate: "string" },
+      },
       parseDOM: [
         {
           tag: "img[src]",
@@ -243,9 +261,52 @@ function keepImageTitleAsWritten(ctx: Ctx): void {
               src: dom.getAttribute("src") ?? "",
               alt: dom.getAttribute("alt") ?? "",
               title: dom.getAttribute("title") ?? "",
+              width: dom.dataset.width ?? "",
             },
         },
       ],
+      // The stock toDOM spreads every attr onto the <img>; the tag's
+      // source isn't one. The width shows in another app it's pasted into,
+      // one an older Textus kept in the title included (and not the title).
+      toDOM: (node) => {
+        const { src, alt } = node.attrs as ImageAttrs;
+        const { title } = readImagePresentation(node.attrs.title as string);
+        const width = imageWidthOf(node.attrs);
+        return [
+          "img",
+          width
+            ? { src, alt, title, width, "data-width": width }
+            : { src, alt, title },
+        ];
+      },
+      parseMarkdown: {
+        match: schema.parseMarkdown.match,
+        runner: (state, node, type) => {
+          const data = node.data as { width?: string; html?: string } | null;
+          state.addNode(type, {
+            src: node.url as string,
+            alt: (node.alt as string | null) ?? "",
+            title: (node.title as string | null) ?? "",
+            width: data?.width ?? "",
+            html: data?.html ?? "",
+          });
+        },
+      },
+      toMarkdown: {
+        match: schema.toMarkdown.match,
+        runner: (state, node) => {
+          const attrs = node.attrs as ImageAttrs;
+          const html = imageMarkdownHtml(attrs);
+          if (html === null)
+            state.addNode("image", undefined, undefined, {
+              title: attrs.title,
+              url: attrs.src,
+              alt: attrs.alt,
+            });
+          else if (!unwrittenImageSrcs.has(attrs.src))
+            state.addNode("html", undefined, html);
+        },
+      },
     };
   });
 }
@@ -538,7 +599,7 @@ function keepAlertMarker(text: Handle): Handle {
  *  would drop them. */
 export function configureMarkdownOutput(ctx: Ctx): void {
   keepLinkAcrossInlineNodes(ctx);
-  keepImageTitleAsWritten(ctx);
+  configureImageNode(ctx);
   keepCodeFenceMeta(ctx);
   // The editor's opening text (MilkdownEditor sets it before this runs).
   const initial = ctx.get(defaultValueCtx);

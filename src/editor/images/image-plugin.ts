@@ -41,6 +41,11 @@ import {
   revealNearest,
 } from "./missing-image";
 import { parseEmbed } from "./obsidian-embed";
+import {
+  imageWidthOf,
+  readImagePresentation,
+  withImageWidth,
+} from "./image-html";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
 import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
 
@@ -105,39 +110,9 @@ export function showDocImage(
   img.dataset.docSrc = src;
 }
 
-/** `{textus-width=N%}`; documents written by Levis say `levis-width`, read
- *  the same (and rewritten as `textus-width` when the width changes). */
-const IMAGE_WIDTH_METADATA = /\s*\{(?:textus|levis)-width=(\d{1,3})%\}\s*$/;
-
-/** Store image width in a standard Markdown image title suffix. */
-export function readImagePresentation(title: string | null | undefined): {
-  title: string;
-  widthPercent: number | null;
-} {
-  const value = title ?? "";
-  const match = IMAGE_WIDTH_METADATA.exec(value);
-  if (!match) return { title: value, widthPercent: null };
-
-  const widthPercent = Number(match[1]);
-  if (widthPercent < 1 || widthPercent > 100)
-    return { title: value, widthPercent: null };
-  return {
-    title: value.slice(0, match.index).trimEnd(),
-    widthPercent,
-  };
-}
-
-/** Never null: the image node's title attr validates as a string, so a null
- *  title made Auto throw on an image without a caption. */
-export function writeImageWidth(
-  title: string | null | undefined,
-  widthPercent: number | null,
-): string {
-  const visibleTitle = readImagePresentation(title).title.trimEnd();
-  if (widthPercent === null) return visibleTitle;
-
-  const metadata = `{textus-width=${Math.min(100, Math.max(1, Math.round(widthPercent)))}%}`;
-  return visibleTitle.length > 0 ? `${visibleTitle} ${metadata}` : metadata;
+/** The width as CSS: a bare number is pixels, as in HTML. */
+function cssWidth(width: string): string {
+  return /^\d+$/.test(width) ? `${width}px` : width;
 }
 
 const EXT_BY_MIME: Record<string, string> = {
@@ -515,8 +490,8 @@ const imageParagraphKey = new PluginKey<DecorationSet>("image-paragraph");
  * figure layout from that paragraph instead (image-paragraph above).
  *
  * The wrapper also carries the resize handle: dragging it sets the width as
- * a share of the paragraph, stored in the title suffix like the context
- * menu's presets (writeImageWidth), so the markdown stays standard.
+ * a share of the paragraph, saved like the context menu's presets
+ * (withImageWidth).
  */
 function createImageView(
   node: ProseNode,
@@ -579,7 +554,8 @@ function createImageView(
     current = n;
     // Another picture: the card goes, until that one fails too.
     if (shown() !== before) clearMissing();
-    const presentation = readImagePresentation(n.attrs.title as string | null);
+    const { title } = readImagePresentation(n.attrs.title as string);
+    const width = imageWidthOf(n.attrs);
     showDocImage(
       img,
       (n.attrs.src as string) ?? "",
@@ -587,12 +563,10 @@ function createImageView(
       () => current === n,
     );
     img.alt = (n.attrs.alt as string) ?? "";
-    if (presentation.title) img.title = presentation.title;
+    if (title) img.title = title;
     else img.removeAttribute("title");
-    dom.style.width = presentation.widthPercent
-      ? `${presentation.widthPercent}%`
-      : "";
-    dom.classList.toggle("image-view-sized", !!presentation.widthPercent);
+    dom.style.width = width ? cssWidth(width) : "";
+    dom.classList.toggle("image-view-sized", width !== null);
   };
   apply(node);
 
@@ -626,13 +600,11 @@ function createImageView(
       const pos = getPos();
       if (pos === undefined) return;
       view.dispatch(
-        view.state.tr.setNodeMarkup(pos, undefined, {
-          ...current.attrs,
-          title: writeImageWidth(
-            current.attrs.title as string | null,
-            Math.round(percent),
-          ),
-        }),
+        view.state.tr.setNodeMarkup(
+          pos,
+          undefined,
+          withImageWidth(current.attrs, percent),
+        ),
       );
     };
     handle.addEventListener("pointermove", move);

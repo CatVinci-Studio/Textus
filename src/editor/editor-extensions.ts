@@ -22,6 +22,7 @@ import {
 } from "./markdown/frontmatter-schema";
 import { createGithubAlertPlugin } from "./markdown/github-alert-plugin";
 import { rawHtmlSchema } from "./html/raw-html-schema";
+import { remarkHtmlImages } from "./images/image-html";
 import { createRawHtmlPreviewPlugin } from "./html/raw-html-preview-plugin";
 import { brToHardbreakPlugin } from "./markdown/br-hardbreak-plugin";
 import {
@@ -162,6 +163,8 @@ export function withEditorCore(
       // in reduced-presets.ts) so it stays editable; a whitelist of common
       // tags renders while the cursor is elsewhere.
       .use(rawHtmlSchema)
+      // An <img> tag is an image, sized by its width (images/image-html.ts).
+      .use(remarkHtmlImages)
       .use(createRawHtmlPreviewPlugin({ docPath: () => docPath.current }))
       .use(brToHardbreakPlugin)
 

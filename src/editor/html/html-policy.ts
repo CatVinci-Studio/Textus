@@ -124,7 +124,7 @@ function sanitizeAlign(value: string): string | null {
   return ALIGN_VALUES.has(lower) ? lower : null;
 }
 
-function sanitizeDimension(value: string): string | null {
+export function sanitizeDimension(value: string): string | null {
   return /^\d{1,5}(%|px)?$/.test(value.trim()) ? value.trim() : null;
 }
 
