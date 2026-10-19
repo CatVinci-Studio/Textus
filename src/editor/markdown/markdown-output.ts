@@ -14,6 +14,7 @@ import {
   type State,
   type Unsafe,
 } from "mdast-util-to-markdown";
+import { referenceFor, type LinkReference } from "./reference-links";
 import {
   imageMarkdownHtml,
   imageWidthOf,
@@ -160,6 +161,8 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
       attrs: {
         ...schema.attrs,
         syntax: { default: "resource", validate: "string" },
+        // How a reference link was written (reference-links.ts).
+        reference: { default: "", validate: "string" },
       },
       parseDOM: [
         {
@@ -180,8 +183,13 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
       ],
       toDOM: (mark, inline) => {
         // The stock toDOM spreads every attr onto the <a>, which would add
-        // a meaningless syntax="resource" attribute to each link.
-        const { syntax, ...attrs } = mark.attrs;
+        // a meaningless syntax="resource" attribute to each link. A
+        // reference stays off it too: pasted where its definition isn't, it
+        // would link to nothing, so a copy is an ordinary link.
+        const attrs: Record<string, unknown> = { ...mark.attrs };
+        const { syntax } = mark.attrs;
+        delete attrs.syntax;
+        delete attrs.reference;
         const [tag, domAttrs] = schema.toDOM!(
           { ...mark, attrs } as typeof mark,
           inline,
@@ -196,11 +204,16 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
       parseMarkdown: {
         match: schema.parseMarkdown.match,
         runner: (state, node, markType) => {
-          const syntax = linkSyntaxOf(node);
+          const reference = (node.data as { reference?: LinkReference })
+            ?.reference;
+          // `[text]` alone ends one character after its text, as an
+          // autolink does.
+          const syntax = reference ? "resource" : linkSyntaxOf(node);
           const attrs = {
             href: node.url as string,
             title: node.title as string,
             syntax,
+            reference: reference ? JSON.stringify(reference) : "",
           };
           if (syntax === "empty") {
             if (!attrs.href) return; // `[]()` has nothing to show
@@ -219,11 +232,16 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
       toMarkdown: {
         match: schema.toMarkdown.match,
         runner: (state, mark) => {
-          state.withMark(mark, "link", undefined, {
-            title: mark.attrs.title,
-            url: mark.attrs.href,
-            data: { linkSyntax: mark.attrs.syntax },
-          });
+          const { href, title, reference } = mark.attrs;
+          const written = referenceFor(reference, href, title);
+          if (written)
+            state.withMark(mark, "linkReference", undefined, written);
+          else
+            state.withMark(mark, "link", undefined, {
+              title,
+              url: href,
+              data: { linkSyntax: mark.attrs.syntax },
+            });
         },
       },
     };
@@ -252,6 +270,8 @@ function configureImageNode(ctx: Ctx): void {
         ...schema.attrs,
         width: { default: "", validate: "string" },
         html: { default: "", validate: "string" },
+        // How a reference image was written (reference-links.ts).
+        reference: { default: "", validate: "string" },
       },
       parseDOM: [
         {
@@ -282,13 +302,18 @@ function configureImageNode(ctx: Ctx): void {
       parseMarkdown: {
         match: schema.parseMarkdown.match,
         runner: (state, node, type) => {
-          const data = node.data as { width?: string; html?: string } | null;
+          const data = node.data as {
+            width?: string;
+            html?: string;
+            reference?: LinkReference;
+          } | null;
           state.addNode(type, {
             src: node.url as string,
             alt: (node.alt as string | null) ?? "",
             title: (node.title as string | null) ?? "",
             width: data?.width ?? "",
             html: data?.html ?? "",
+            reference: data?.reference ? JSON.stringify(data.reference) : "",
           });
         },
       },
@@ -297,7 +322,15 @@ function configureImageNode(ctx: Ctx): void {
         runner: (state, node) => {
           const attrs = node.attrs as ImageAttrs;
           const html = imageMarkdownHtml(attrs);
-          if (html === null)
+          const written =
+            html === null &&
+            referenceFor(node.attrs.reference, attrs.src, attrs.title);
+          if (written)
+            state.addNode("imageReference", undefined, undefined, {
+              ...written,
+              alt: attrs.alt,
+            });
+          else if (html === null)
             state.addNode("image", undefined, undefined, {
               title: attrs.title,
               url: attrs.src,
@@ -542,11 +575,29 @@ function withMathBlockAsWritten(math: Handle): Handle {
   }) as Handle;
 }
 
+/**
+ * A "#" at the start of a line is escaped only where it would open a
+ * heading: up to six of them followed by a space, a tab or the line's end.
+ * remark escaped every one, so an Obsidian tag, `#idea`, was saved as
+ * `\#idea`.
+ */
+const isHeadingGuard = (pattern: Unsafe) =>
+  pattern.character === "#" &&
+  pattern.atBreak === true &&
+  !pattern.after &&
+  !pattern.inConstruct;
+
+const headingGuard: Unsafe = {
+  character: "#",
+  atBreak: true,
+  after: "#{0,5}(?:[ \\t\\r\\n]|$)",
+};
+
 /** Set up per serialization, before any node is written. */
 const root: Handle = (node, parent, state, info) => {
-  state.unsafe = state.unsafe.filter(
-    (pattern) => !isAutolinkLiteralGuard(pattern),
-  );
+  state.unsafe = state.unsafe
+    .filter((pattern) => !isAutolinkLiteralGuard(pattern))
+    .map((pattern) => (isHeadingGuard(pattern) ? headingGuard : pattern));
   const del = state.handlers.delete as Handle | undefined;
   if (del) state.handlers.delete = withTildesAsWritten(del);
   const inlineMath = state.handlers.inlineMath as Handle | undefined;

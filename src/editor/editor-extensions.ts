@@ -38,6 +38,16 @@ import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
 import { compositionPruneGuardPlugin } from "./keys/composition-prune-guard-plugin";
 import { configureMarkdownOutput } from "./markdown/markdown-output";
+import { openedParseRecorder } from "./markdown/source-preserving";
+import {
+  linkDefinitionSchema,
+  remarkReferenceLinksPlugin,
+} from "./markdown/reference-links";
+import {
+  remarkWikilinkPlugin,
+  wikilinkInputRule,
+  wikilinkSchema,
+} from "./markdown/wikilink";
 import {
   remarkMathPlugin,
   mathInlineSchema,
@@ -146,6 +156,9 @@ export function withEditorCore(
     editor
       // How saved markdown is written (markdown-output.ts).
       .config(configureMarkdownOutput)
+      // Which part of the file each block was read from, so a save writes
+      // the blocks the user didn't touch as they were (source-preserving.ts).
+      .use(openedParseRecorder)
       .use(macNavigationPlugin)
       .use(linuxImeEnterPlugin)
       .use(compositionPruneGuardPlugin)
@@ -168,11 +181,21 @@ export function withEditorCore(
       .use(createRawHtmlPreviewPlugin({ docPath: () => docPath.current }))
       .use(brToHardbreakPlugin)
 
+      // Reference links, `[text][ref]`, and their `[ref]: url` definitions:
+      // read as links, written back as references.
+      .use(remarkReferenceLinksPlugin)
+      .use(linkDefinitionSchema)
+
       // Obsidian's ![[file]] embeds: kept as written, an image one shown as
       // the picture from the document's vault.
       .use(remarkObsidianEmbedPlugin)
       .use(obsidianEmbedSchema)
       .use(obsidianEmbedInputRule)
+      // And its wikilinks, [[Note]]: kept as written, Ctrl/Cmd+click opens
+      // the note.
+      .use(remarkWikilinkPlugin)
+      .use(wikilinkSchema)
+      .use(wikilinkInputRule)
       .use(
         createObsidianEmbedPreviewPlugin({
           docPath: () => docPath.current,

@@ -18,6 +18,7 @@ import {
   toggleInlineCodeCommand,
   htmlSchema,
   htmlAttr,
+  remarkInlineLinkPlugin,
   remarkPreserveEmptyLinePlugin,
   syncListOrderPlugin,
 } from "@milkdown/kit/preset/commonmark";
@@ -71,6 +72,11 @@ import { isLinuxPlatform } from "../../platform/os";
 // does anything here: numbering is a CSS counter on the parent <ol> (see
 // milkdown-theme.css) and list_item's toMarkdown never reads them.
 //
+// remarkInlineLinkPlugin is excluded because it rewrote every reference
+// link, `[text][ref]`, as an inline one and deleted the `[ref]: url`
+// definitions: the first save of an edit dropped them from the file.
+// reference-links.ts reads references and definitions instead.
+//
 // $markSchema/$nodeSchema (and some other composable pieces) return
 // array-like tuples that get spread apart by the presets' own internal
 // `.flat()` calls - flattening this exclusion list the same way before
@@ -97,6 +103,7 @@ const excludedCommonmarkPieces = [
   htmlAttr,
   remarkPreserveEmptyLinePlugin,
   syncListOrderPlugin,
+  remarkInlineLinkPlugin,
 ].flat();
 
 // autoInsertSpanPlugin (prosemirror-safari-ime-span) is left out on Linux.
