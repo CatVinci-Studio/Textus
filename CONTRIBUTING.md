@@ -55,12 +55,14 @@ history left out, and keeps its one document in the browser's localStorage.
 
 ```sh
 npm run dev:playground     # http://localhost:1450/playground/
-npm run build:playground   # dist-playground/, built for /playground/
+npm run build:playground   # dist-playground/playground/, built for /playground/
 ```
 
 Its entry is `playground.html` and its Vite config `vite.playground.config.ts`,
 so `npm run build` and `dist/` are unaffected. CI builds it in the `check` job;
 `e2e/playground.spec.ts` runs as the `playground` project of `npm run test:e2e`.
+Every push to `main` that touches it deploys it (`deploy-playground.yml`,
+[infrastructure.md](docs/dev/infrastructure.md#playground)).
 
 ## Where things are
 

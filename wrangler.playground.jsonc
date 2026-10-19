@@ -1,0 +1,27 @@
+// The browser playground's Worker: textus.catvinci.com/playground/.
+// Static assets only, no script. Deployed by .github/workflows/deploy-playground.yml
+// after `npm run build:playground`; docs/dev/infrastructure.md#playground.
+//
+// Reproduces the Worker as it was first uploaded by hand (version 1,
+// 2026-10-18). The route textus.catvinci.com/playground* (zone catvinci.com)
+// is deliberately not listed: the deploy token can't manage routes, and a
+// deploy without `routes` leaves the existing one as it is. Add or change the
+// route in the dashboard.
+{
+  "name": "textus-playground",
+  "account_id": "49abb4d436c552f6e4497b1782fc9beb",
+  "compatibility_date": "2026-10-01",
+  // Served only through the route: no *.workers.dev address, no preview URLs.
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    // The site root. The build writes into its playground/ folder, so the
+    // files are at the same paths as the route serves them.
+    "directory": "./dist-playground",
+    // /playground redirects to /playground/, index.html to its folder.
+    "html_handling": "auto-trailing-slash",
+    // An unknown path is a plain 404, not the page: the playground has no
+    // client-side routes.
+    "not_found_handling": "none",
+  },
+}

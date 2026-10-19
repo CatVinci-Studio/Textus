@@ -7,7 +7,7 @@ import { katexWoff2Only } from "./vite.katex-fonts";
  * textus.catvinci.com/playground/. Its own build, into dist-playground/, so
  * the app's `npm run build` and dist/ stay exactly as they are.
  *
- *   npm run build:playground   builds dist-playground/
+ *   npm run build:playground   builds dist-playground/playground/
  *   npm run dev:playground     serves it at http://localhost:1450/playground/
  */
 
@@ -45,7 +45,9 @@ export default defineConfig({
   // optimizing into one cache reloaded each other's pages mid-test.
   cacheDir: "node_modules/.vite-playground",
   build: {
-    outDir: "dist-playground",
+    // dist-playground/ is the site root the Worker serves
+    // (wrangler.playground.jsonc), so the files sit under /playground/ there.
+    outDir: "dist-playground/playground",
     emptyOutDir: true,
     rollupOptions: { input: ENTRY },
   },
