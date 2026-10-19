@@ -99,7 +99,8 @@ checked too.
 
 CI runs `check` on every pull request, and `e2e`, `native` (on Linux, macOS
 and Windows) and an iOS simulator build whenever code changed; a
-documentation-only change runs `check` alone.
+documentation-only change runs `check` alone, and a change only to the Rust
+backend (`src-tauri/`) skips `e2e`.
 
 ## Tests
 
