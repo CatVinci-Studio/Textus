@@ -44,7 +44,7 @@ import { ReviewMargin } from "../ai/margin/ReviewMargin";
 import { OpenReviewNote } from "../ai/margin/OpenReviewNote";
 import { useReviewNotes } from "../ai/margin/useReviewNotes";
 import { useGrammarPopover } from "../ai/writing/useGrammarPopover";
-import { useSettings } from "../settings/SettingsContext";
+import { useSettings, type AgentMode } from "../settings/SettingsContext";
 import { useLatest } from "../utils/hooks/useLatest";
 import type { TourAi } from "../utils/events";
 import { useTourSignals } from "./useTourSignals";
@@ -76,6 +76,8 @@ interface MilkdownEditorProps {
    *  go quiet; either way the tab reports what its lessons wait for
    *  (useTourSignals) and the AI panel opens even with Ask AI off. */
   tour?: TourAi | null;
+  /** The AI panel's mode the tour's lesson needs, on its practice tab. */
+  tourMode?: AgentMode | null;
 }
 
 export function MilkdownEditor({
@@ -86,6 +88,7 @@ export function MilkdownEditor({
   onChange,
   isActive = true,
   tour = null,
+  tourMode = null,
 }: MilkdownEditorProps) {
   const [menu, setMenu] = useState<EditorMenuState>(null);
   const [tableDialogOpen, setTableDialogOpen] = useState(false);
@@ -533,6 +536,7 @@ export function MilkdownEditor({
             settings={settings}
             filePath={filePath}
             onSkillUsed={onSkillUsed}
+            tourMode={tourMode}
             agentPanel={agentPanel}
             conversation={conversation}
             pendingEdits={pendingEdits}

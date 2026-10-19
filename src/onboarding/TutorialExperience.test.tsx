@@ -21,10 +21,10 @@ import {
 import { resolveStrings, type Lang } from "../i18n/strings";
 import { installTestLocalStorage } from "../dev/test-local-storage";
 import { auth, links } from "../platform/ipc";
-import { TOUR_GRAMMAR_CHECK_EVENT } from "../utils/events";
 import { GRAMMAR_WAIT_MS, TutorialExperience } from "./TutorialExperience";
-import { practiceDiary } from "./practice-diary";
-import { useTutorial } from "./useTutorial";
+import { practiceNotes } from "./practice-notes";
+import { GRAMMAR_PART } from "./tutorial-evaluation";
+import { useTutorial, type Tutorial } from "./useTutorial";
 
 const providerMocks = vi.hoisted(() => ({
   catalog: [
@@ -78,11 +78,15 @@ const t = resolveStrings("en");
 function Harness({
   language = "en",
   phone = false,
+  onTutorial,
 }: {
   language?: Lang;
   phone?: boolean;
+  /** Hands the tour's state out, to act as the app would. */
+  onTutorial?: (tutorial: Tutorial) => void;
 }) {
   const tutorial = useTutorial();
+  onTutorial?.(tutorial);
   return (
     <TutorialExperience
       tutorial={tutorial}
@@ -128,8 +132,8 @@ describe("the connect lesson", () => {
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
-    const panel = screen.getByRole("dialog", { name: t.tutorialAiPanelTitle });
-    expect(panel).toHaveTextContent(
+    const write = screen.getByRole("dialog", { name: t.tutorialWriteTitle });
+    expect(write).toHaveTextContent(
       "Connect an AI later in Settings › Textus AI to try it yourself.",
     );
   });
@@ -144,8 +148,8 @@ describe("the connect lesson", () => {
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: t.tutorialNext }));
     // Connected, the AI lessons are done for real: no watch note.
-    const panel = screen.getByRole("dialog", { name: t.tutorialAiPanelTitle });
-    expect(panel).not.toHaveTextContent("Connect an AI later");
+    const write = screen.getByRole("dialog", { name: t.tutorialWriteTitle });
+    expect(write).not.toHaveTextContent("Connect an AI later");
     expect(screen.getByRole("button", { name: t.tutorialNext })).toBeDisabled();
   });
 
@@ -166,77 +170,105 @@ describe("the connect lesson", () => {
 });
 
 describe("watching an AI lesson", () => {
-  it("makes the animation the main action, and moving on always possible", () => {
+  it("keeps the lines to follow, Continue as the way on, the animation as an extra", () => {
     resumeAt("revision", { aiMode: "watch" });
     render(<Harness language="zh" />);
     const zh = resolveStrings("zh");
-    fireEvent.click(screen.getByRole("button", { name: zh.tutorialWatch }));
+    expect(screen.getByText("改得更简洁")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: /观看动画/ }));
     expect(links.openTutorialsPage).toHaveBeenCalledWith("zh", "revision");
     const next = screen.getByRole("button", { name: zh.tutorialNext });
     expect(next).toBeEnabled();
     fireEvent.click(next);
     expect(
-      screen.getByRole("dialog", { name: zh.tutorialReviewTitle }),
+      screen.getByRole("dialog", { name: zh.tutorialGrammarTitle }),
     ).toBeInTheDocument();
   });
 });
 
 describe("the lessons' copy", () => {
-  it("fills in the diary's title and the shortcuts", () => {
+  it("fills in the notes' title and slip, and the shortcuts", () => {
     resumeAt("wysiwyg");
-    const { unmount } = render(<Harness language="zh" />);
-    expect(screen.getByText(`# ${practiceDiary("zh").title}`)).toBeVisible();
-    unmount();
-    resumeAt("ai-panel", { aiMode: "live" });
+    const first = render(<Harness language="zh" />);
+    expect(screen.getByText(`# ${practiceNotes("zh").title}`)).toBeVisible();
+    first.unmount();
+    resumeAt("grammar", { aiMode: "live" });
+    const second = render(<Harness />);
+    expect(screen.getByText(practiceNotes("en").slip).tagName).toBe("CODE");
+    second.unmount();
+    resumeAt("write", { aiMode: "live" });
     render(<Harness />);
     expect(
-      screen.getByText("Press Ctrl+Shift+L to open the panel."),
+      screen.getByText(
+        "Open the AI panel: the robot icon at the top right (Ctrl+Shift+L)",
+      ),
+    ).toBeVisible();
+  });
+
+  it("finds the sidebar through the menu, and its shortcut", () => {
+    resumeAt("sidebar-export");
+    render(<Harness />);
+    expect(
+      screen.getByText(
+        "Click the menu ☰ at the top left, choose View › Sidebar (Ctrl+\\), then open Outline",
+      ),
     ).toBeVisible();
   });
 
   it("speaks of taps on a phone", () => {
     resumeAt("continuation", { aiMode: "live" });
+    const { unmount } = render(<Harness phone />);
+    expect(screen.getByText(/pause, then tap the gray text/)).toBeVisible();
+    unmount();
+    resumeAt("write", { aiMode: "live" });
     render(<Harness phone />);
-    expect(screen.getByText(t.tutorialContinuationTaskPhone)).toBeVisible();
+    expect(screen.getByText(t.tutorialWriteOpenPhone)).toBeVisible();
   });
 
-  it("ends with the video tutorials and the community", () => {
+  it("ends with the video tutorials, the community and the Memory tab", () => {
     resumeAt("done");
     render(<Harness language="ko" />);
     const ko = resolveStrings("ko");
+    expect(screen.getByText(ko.tutorialDoneMemory)).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: ko.menuHelpTutorials }));
     fireEvent.click(screen.getByRole("button", { name: ko.menuHelpCommunity }));
     expect(links.openTutorialsPage).toHaveBeenCalledWith("ko");
     expect(links.openCommunityPage).toHaveBeenCalledWith("ko");
   });
+
+  it("never locks the optional formulas and diagrams", () => {
+    resumeAt("blocks");
+    render(<Harness />);
+    expect(screen.getByRole("button", { name: t.tutorialNext })).toBeEnabled();
+    expect(
+      screen.queryByRole("button", { name: t.tutorialSkipStep }),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe("the grammar lesson, live", () => {
-  it("checks the slip's paragraph, then lets the learner on after a wait", () => {
+  it("waits for the sentence, then gives the AI a while before letting the learner on", () => {
     vi.useFakeTimers();
-    const checked: string[] = [];
-    const listener = (e: Event) =>
-      checked.push((e as CustomEvent<string>).detail);
-    window.addEventListener(TOUR_GRAMMAR_CHECK_EVENT, listener);
+    let tutorial: Tutorial | null = null;
     resumeAt("grammar", { aiMode: "live" });
-    render(<Harness />);
-    act(() => vi.advanceTimersByTime(500));
-    expect(checked).toEqual([practiceDiary("en").slip]);
+    render(<Harness onTutorial={(tour) => (tutorial = tour)} />);
+    act(() => vi.advanceTimersByTime(GRAMMAR_WAIT_MS + 500));
+    // Nothing typed yet: nothing to wait for.
     expect(screen.getByRole("button", { name: t.tutorialNext })).toBeDisabled();
+    act(() => tutorial!.setPhase(GRAMMAR_PART.typed));
     act(() => vi.advanceTimersByTime(GRAMMAR_WAIT_MS));
     expect(screen.getByText(t.tutorialGrammarQuiet)).toBeVisible();
     expect(screen.getByRole("button", { name: t.tutorialNext })).toBeEnabled();
-    window.removeEventListener(TOUR_GRAMMAR_CHECK_EVENT, listener);
   });
 
-  it("checks nothing while watching", () => {
+  it("goes on as soon as the card is opened", () => {
     vi.useFakeTimers();
-    const listener = vi.fn();
-    window.addEventListener(TOUR_GRAMMAR_CHECK_EVENT, listener);
-    resumeAt("grammar", { aiMode: "watch" });
-    render(<Harness />);
-    act(() => vi.advanceTimersByTime(GRAMMAR_WAIT_MS + 500));
-    expect(listener).not.toHaveBeenCalled();
-    window.removeEventListener(TOUR_GRAMMAR_CHECK_EVENT, listener);
+    let tutorial: Tutorial | null = null;
+    resumeAt("grammar", { aiMode: "live" });
+    render(<Harness onTutorial={(tour) => (tutorial = tour)} />);
+    act(() => tutorial!.setPhase(GRAMMAR_PART.typed | GRAMMAR_PART.card));
+    expect(screen.getByRole("button", { name: t.tutorialNext })).toBeEnabled();
+    act(() => vi.advanceTimersByTime(GRAMMAR_WAIT_MS));
+    expect(screen.queryByText(t.tutorialGrammarQuiet)).not.toBeInTheDocument();
   });
 });

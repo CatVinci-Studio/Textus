@@ -123,6 +123,9 @@ interface ChatComposerProps {
   /** The panel and the detached window: the mode picked carries over to
    *  the next conversation (last-mode.ts). Quick Ask keeps its own. */
   carryMode?: boolean;
+  /** The tour's lesson's mode (onboarding/), put in place whenever it
+   *  changes; the learner can still pick another. Not carried over. */
+  tourMode?: AgentMode | null;
   /** See SelectionChipHandlers. */
   selectionChip?: SelectionChipHandlers;
   /** The panel and the detached window: a selection rides with one
@@ -178,6 +181,7 @@ export function ChatComposer({
   defaultMode,
   modes: offeredModes = COMPOSER_MODES.full,
   carryMode = false,
+  tourMode = null,
   selectionChip,
   selectionPerMessage = false,
   compact = false,
@@ -205,9 +209,14 @@ export function ChatComposer({
   const [skillList, setSkillList] = useState<SkillListItem[] | null>(null);
   const [recent, setRecent] = useState<string[]>(recentSkills);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
-  const [mode, setModeState] = useState<AgentMode>(() =>
-    fitMode(carryMode ? initialMode(defaultMode) : defaultMode, offeredModes),
+  const [mode, setModeState] = useState<AgentMode>(
+    () =>
+      tourMode ??
+      fitMode(carryMode ? initialMode(defaultMode) : defaultMode, offeredModes),
   );
+  useEffect(() => {
+    if (tourMode) setModeState(tourMode);
+  }, [tourMode]);
   const onModeChangeRef = useLatest(onModeChange);
   useEffect(() => onModeChangeRef.current?.(mode), [mode, onModeChangeRef]);
   const setMode = (next: AgentMode) => {

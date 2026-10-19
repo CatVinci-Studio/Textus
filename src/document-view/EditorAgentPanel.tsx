@@ -27,6 +27,7 @@ export function EditorAgentPanel({
   settings,
   filePath,
   onSkillUsed,
+  tourMode,
   agentPanel,
   conversation,
   pendingEdits,
@@ -49,6 +50,8 @@ export function EditorAgentPanel({
   filePath: string | null;
   /** A message went out through a skill (the tour's skills lesson). */
   onSkillUsed?: () => void;
+  /** The mode the tour's lesson sets in the composer. */
+  tourMode: AgentMode | null;
   agentPanel: AgentPanelFrame;
   conversation: AgentConversation;
   pendingEdits: PendingEdits;
@@ -127,6 +130,7 @@ export function EditorAgentPanel({
         workspaceRoot={settings.agentWorkspaceRoot || null}
         conversation={conversation}
         defaultMode={settings.agentDefaultMode}
+        tourMode={tourMode}
         defaultWebSearch={settings.enableWebSearch}
         onSkillUsed={onSkillUsed}
         labels={chatLabels(t, settings.language)}

@@ -714,59 +714,89 @@ type /name in a conversation to use one.
   tutorialWatch: "Watch the animation",
   tutorialWatchNote: "Connect an AI later in {path} to try it yourself.",
   tutorialWelcomeTitle: `Welcome to ${APP_NAME}`,
-  tutorialWelcomeBody: "We'll show you around with a travel diary.",
+  tutorialWelcomeBody: "We'll show you around with reading notes on Hamlet.",
   tutorialWysiwygTitle: "What you see is what you get",
-  tutorialWysiwygBody: "Markdown is formatted as you write.",
-  tutorialWysiwygTask: "Type `# {title}`, then write a list.",
-  tutorialBlocksTitle: "Formulas, tables, diagrams",
-  tutorialBlocksBody: "A few lines of text draw them.",
-  tutorialBlocksTask: "Write your itinerary as a table.",
+  tutorialWysiwygBody:
+    "Markdown is formatted as you type; press Enter twice to end a list.",
+  tutorialWysiwygHeading: "A heading: `# {title}`, then Enter",
+  tutorialWysiwygList: "A list: `- Hamlet`, Enter, `Horatio`",
+  tutorialWysiwygNumbered: "A numbered list: `1. Act I`",
+  tutorialWysiwygTaskItem: "A task: `- [ ] Finish Act V`",
+  tutorialMarksTitle: "Bold, quotes, code and links",
+  tutorialMarksBody:
+    "Your notes on Act III are below; type these lines at the end.",
+  tutorialMarksEmphasis: "Bold and italic: `Horatio is **loyal** and *calm*.`",
+  tutorialMarksQuote:
+    "A quote: `> Something is rotten in the state of Denmark.`",
+  tutorialMarksCode: "Code: ``Read `Act I` again.``",
+  tutorialMarksLink: "A link: `[Gutenberg](https://gutenberg.org)`",
+  tutorialTableTitle: "Tables",
+  tutorialTableBody:
+    "A line of cells between | marks becomes a table when you press Enter.",
+  tutorialTableHeader: "Type `| Character | Impression |`, then Enter",
+  tutorialTableRow: "Fill in a row: `Hamlet`, Tab, `Torn`",
+  tutorialBlocksTitle: "Formulas and diagrams",
+  tutorialBlocksBody:
+    "Optional: a few characters make a formula, a few lines a diagram.",
+  tutorialBlocksFormula: "A formula: `$E=mc^2$`",
+  tutorialBlocksDiagram:
+    "A diagram: ```` ```mermaid ````, Enter, then `graph LR; A-->B`",
   tutorialModesTitle: "Writing modes and themes",
   tutorialModesBody: "Write a different way, see a different look.",
   tutorialModesTask: "Turn on Zen Mode, then pick another theme.",
   tutorialSidebarTitle: "Sidebar and export",
   tutorialSidebarBody:
-    "Files and the outline are on the left; export when you're done.",
-  tutorialSidebarTask: "Open the sidebar ({shortcut}) and look at the outline.",
+    "The sidebar holds your files, the outline and the clipboard; to export, use File › Export.",
+  tutorialSidebarTask:
+    "Click the menu ☰ at the top left, choose View › Sidebar ({shortcut}), then open Outline",
+  tutorialSidebarTaskMac:
+    "Choose View › Sidebar in the menu bar ({shortcut}), then open Outline",
   tutorialSidebarTaskPhone:
-    "Open Sidebar from the menu and look at the outline.",
+    "Tap the menu ☰ at the top left, then Sidebar, then open Outline",
   tutorialConnectTitle: "Connect your AI",
   tutorialConnectBody:
     "Once it's connected, you can really try the AI features that follow.",
   tutorialConnectTask: "Sign in or paste a key - or skip for now.",
   tutorialConnectSkip: "Skip for now",
   tutorialConnected: "Connected.",
-  tutorialAiPanelTitle: "The AI panel",
-  tutorialAiPanelBody: "Your writing assistant lives here.",
-  tutorialAiPanelTask: "Press {shortcut} to open the panel.",
-  tutorialAiPanelTaskPhone: "Tap the AI panel button at the top to open it.",
+  tutorialWriteTitle: "AI writing",
+  tutorialWriteBody: `In Write mode, ${AI_NAME} only adds text, shown in green until you accept it.`,
+  tutorialWriteOpen:
+    "Open the AI panel: the robot icon at the top right ({shortcut})",
+  tutorialWriteOpenPhone: "Open the AI panel: tap the robot icon at the top",
+  tutorialWriteSend:
+    "Send `Continue my notes with one more paragraph`, then click Accept",
+  tutorialReviewTitle: "Review",
+  tutorialReviewBody:
+    "In Review mode, it comments in the margin and leaves your text alone.",
+  tutorialReviewTask:
+    "Send `Comment on my notes`, then read the notes in the margin",
+  tutorialRevisionTitle: "Revision",
+  tutorialRevisionBody:
+    "In Revise mode, it rewrites and you decide sentence by sentence.",
+  tutorialRevisionSelect: "Select the first sentence of your notes",
+  tutorialRevisionSend:
+    "Send `Make it more concise`, then choose Accept or Reject",
+  tutorialGrammarTitle: "Grammar check",
+  tutorialGrammarBody: "Slips are underlined as you type.",
+  tutorialGrammarType: "On a new line at the end, type `{slip}`",
+  tutorialGrammarApply: "Wait for the underline, point at it, and click Apply",
+  tutorialGrammarApplyPhone: "Wait for the underline, tap it, and tap Apply",
+  tutorialGrammarQuiet:
+    "The AI found nothing to fix this time. You can continue.",
   tutorialContinuationTitle: "Continuation",
   tutorialContinuationBody: "Pause, and it writes on for you.",
   tutorialContinuationTask:
-    "Write on at the end of the diary, pause, then press Tab to accept.",
+    "At the end, type `What really stops Hamlet is`, pause, then press Tab",
   tutorialContinuationTaskPhone:
-    "Write on at the end of the diary, pause, then tap the gray text to accept.",
-  tutorialGrammarTitle: "Grammar check",
-  tutorialGrammarBody: "Slips get underlined.",
-  tutorialGrammarTask: "Open the card on the underline and apply the fix.",
-  tutorialGrammarQuiet:
-    "The AI found nothing to fix this time. You can continue.",
-  tutorialRevisionTitle: "Revision",
-  tutorialRevisionBody:
-    "Have it rework a paragraph, then decide sentence by sentence.",
-  tutorialRevisionTask:
-    "Select a paragraph and ask the AI to make it more vivid.",
-  tutorialReviewTitle: "Review",
-  tutorialReviewBody: "Suggestions appear in the margin.",
-  tutorialReviewTask: "Ask the AI for suggestions on this diary.",
+    "At the end, type `What really stops Hamlet is`, pause, then tap the gray text",
   tutorialSkillsTitle: "Built-in skills",
-  tutorialSkillsBody: "Type / to use them.",
-  tutorialSkillsTask: "Try `/tighten` or `/translate` in the panel.",
-  tutorialMemoryTitle: "Grows over time",
-  tutorialMemoryBody: "It remembers your style and what you ask for.",
-  tutorialMemoryTask: "Open Memory and see what it keeps.",
+  tutorialSkillsBody: "Type / in the AI panel to pick one.",
+  tutorialSkillsTask:
+    "Select one of your notes, then send `/tighten` or `/translate`",
   tutorialDoneTitle: "All done",
   tutorialDoneBody: "Now start writing your own.",
+  tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see the Memory tab in the AI panel.`,
   closePromptMessage: "This document has unsaved changes.",
   closePromptSave: "Save",
   closePromptDiscard: "Don't Save",

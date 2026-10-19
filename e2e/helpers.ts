@@ -114,12 +114,17 @@ export async function openPhone(
     animations?: boolean;
     storage?: Record<string, string>;
     colorScheme?: "light" | "dark";
+    /** Settings over English. */
+    settings?: Record<string, unknown>;
   } = {},
 ) {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "platform", { get: () => "iPhone" });
   });
-  await openApp(page, { settings: { language: "en" }, ...options });
+  await openApp(page, {
+    ...options,
+    settings: { language: "en", ...options.settings },
+  });
   await expect(page.locator("html")).toHaveAttribute(
     "data-window-chrome",
     "mobile",

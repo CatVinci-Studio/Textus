@@ -132,14 +132,25 @@ Start from `zh.ts` or `ja.ts`:
 
 ### The tutorial
 
-The first-run tour is a short card per lesson: a title, one sentence, one
-thing to do. Keep them that short in your language.
+The first-run tour is a short card per lesson: a title, one sentence, and
+the things to do, one line each. Keep them that short in your language.
 
-- Each `...Body` is one sentence; each `...Task` one line. `{title}` is the
-  practice diary's title (written in English and Chinese; other languages
-  get the English diary), `{shortcut}` a keyboard shortcut, `{path}` where
-  in Settings an AI is connected. Text in backticks is what the learner
-  types, shown as code.
+- Each `...Body` is one sentence; every task line (the lesson's other keys)
+  one line, without a final full stop. Text in backticks is what the
+  learner types, shown as code; to show backticks inside it, open and close
+  with two (``` `` `Act I` `` ```), as in Markdown. `{title}` is the
+  practice notes' title, `{slip}` their grammar lesson's sentence,
+  `{shortcut}` a keyboard shortcut, `{path}` where in Settings an AI is
+  connected.
+- The practice notes (`src/onboarding/practice-notes.ts`, one entry per
+  language) quote the classic the website shows for your language
+  (`site/content/classics/<code>.json` in the website repository) and add
+  the reader's own notes. The lines the learner types (characters, a
+  quote, the prompts to the AI) come from the same work. The AI lessons
+  only ever change the notes, never the quoted text.
+- Name controls as your strings do: the menu path (`menuView` ›
+  `menuToggleSidebar`), `outlineTab`, `proposalAccept`, `proposalReject`,
+  `grammarApply`, `agentTabMemory`.
 - Lesson titles follow the website's names for the features
   (`site/i18n/<code>.mjs` in the
   [website repository](https://github.com/CatVinci-Studio/levis-homepage/tree/main/site/i18n),
@@ -149,8 +160,9 @@ thing to do. Keep them that short in your language.
   `translate` in your language (`src/ai/skills/texts/<code>.ts`) without a
   space in it.
 
-`src/onboarding/tutorial-copy.test.ts` checks both: one sentence per body,
-and that each `/word` runs the skill it should.
+`src/onboarding/tutorial-copy.test.ts` checks these: one sentence per body,
+one line per task, code spans that close, the controls' names, and that
+each `/word` runs the skill it should.
 
 ### The help guides
 

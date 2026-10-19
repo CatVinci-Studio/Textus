@@ -67,6 +67,8 @@ export interface ChatBodyProps {
   workspaceRoot: string | null;
   conversation: AgentConversation;
   defaultMode: AgentMode;
+  /** The tour's lesson's mode - see ChatComposer. */
+  tourMode?: AgentMode | null;
   defaultWebSearch: boolean;
   /** A message went out through a skill - see ChatComposer. */
   onSkillUsed?: () => void;
@@ -211,6 +213,7 @@ export function ChatBody({
   workspaceRoot,
   conversation,
   defaultMode,
+  tourMode,
   defaultWebSearch,
   onSkillUsed,
   labels,
@@ -624,6 +627,7 @@ export function ChatBody({
         defaultMode={defaultMode}
         modes={COMPOSER_MODES[variant]}
         carryMode={variant !== "quick"}
+        tourMode={tourMode}
         selectionChip={selectionChip}
         selectionPerMessage={variant !== "quick"}
         compact={variant === "quick"}

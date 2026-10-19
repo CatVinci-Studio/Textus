@@ -7,6 +7,7 @@ import {
   type TutorialAiMode,
   type TutorialStepId,
 } from "./tutorial-steps";
+import { LESSON_DONE } from "./tutorial-evaluation";
 import { getUiState, setUiState } from "../storage/ui-state";
 import {
   TOUR_SIGNAL_EVENT,
@@ -33,16 +34,17 @@ const IDLE_PROGRESS: TutorialProgress = {
 };
 
 const CONNECT = stepIndexOf("connect");
-const AI_PANEL = stepIndexOf("ai-panel");
+const FIRST_AI = stepIndexOf("write");
 
-/** The lesson each signal from the practice tab completes. */
-const SIGNAL_LESSON: Record<TourSignal, TutorialStepId> = {
-  "completion-accepted": "continuation",
-  "grammar-card": "grammar",
-  "revision-decided": "revision",
-  "review-note": "review",
-  reply: "review",
-  "skill-sent": "skills",
+/** The lessons each signal from the practice tab completes. New text from
+ *  Write and a rewrite from Revise are both decided in the review bar. */
+const SIGNAL_LESSONS: Record<TourSignal, TutorialStepId[]> = {
+  "completion-accepted": ["continuation"],
+  "grammar-card": ["grammar"],
+  "revision-decided": ["write", "revision"],
+  "review-note": ["review"],
+  reply: ["review"],
+  "skill-sent": ["skills"],
 };
 
 function loadProgress(): TutorialProgress {
@@ -140,8 +142,8 @@ export function useTutorial() {
   useEffect(() => {
     if (!active) return;
     const handler = (e: Event) => {
-      const lesson = SIGNAL_LESSON[(e as CustomEvent<TourSignal>).detail];
-      if (lesson === step.id) setPhase((p) => Math.max(p, 1));
+      const lessons = SIGNAL_LESSONS[(e as CustomEvent<TourSignal>).detail];
+      if (lessons?.includes(step.id)) setPhase((p) => p | LESSON_DONE);
     };
     window.addEventListener(TOUR_SIGNAL_EVENT, handler);
     return () => window.removeEventListener(TOUR_SIGNAL_EVENT, handler);
@@ -156,10 +158,10 @@ export function useTutorial() {
     setProgress((p) => (p.active ? { ...p, tabId } : p));
   }, []);
 
-  /** The practice tab's AI: live from the AI panel lesson on for a learner
+  /** The practice tab's AI: live from the first AI lesson on for a learner
    *  who connected one, muted everywhere else in the tour. */
   const practiceAi: TourAi =
-    aiMode === "live" && progress.stepIndex >= AI_PANEL ? "live" : "muted";
+    aiMode === "live" && progress.stepIndex >= FIRST_AI ? "live" : "muted";
 
   return {
     active,
@@ -169,6 +171,8 @@ export function useTutorial() {
     tabId: progress.tabId,
     aiMode,
     practiceAi,
+    /** The AI panel's mode this lesson sets, when it needs one. */
+    agentMode: active ? (step.agentMode ?? null) : null,
     /** This AI lesson is watched (no AI connected), not done. */
     watching: !!step.ai && aiMode !== "live",
     phase,
