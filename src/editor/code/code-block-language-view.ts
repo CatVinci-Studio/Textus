@@ -67,10 +67,7 @@ export const codeBlockLanguageView = $view(
       // curated list gets an option of its own: falling back to "plain
       // text" mislabelled a block that is in fact highlighted, and picking
       // from the menu would then have rewritten its fence.
-      if (
-        lang &&
-        !select.querySelector(`option[value="${CSS.escape(lang)}"]`)
-      ) {
+      if (lang && !Array.from(select.options).some((o) => o.value === lang)) {
         const opt = document.createElement("option");
         opt.value = lang;
         opt.textContent = lang;
@@ -84,9 +81,8 @@ export const codeBlockLanguageView = $view(
     select.addEventListener("change", () => {
       const pos = getPos();
       if (pos == null) return;
-      const tr = view.state.tr.setNodeMarkup(pos, undefined, {
-        language: select.value,
-      });
+      // Only the language: the fence's meta (` title="a.js"`) stays.
+      const tr = view.state.tr.setNodeAttribute(pos, "language", select.value);
       view.dispatch(tr);
       view.focus();
     });

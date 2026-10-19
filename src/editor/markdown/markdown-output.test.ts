@@ -70,6 +70,8 @@ describe("saved markdown stays as written", () => {
     ["a literal == that would open a highlight", "a \\==b== stays text\n"],
     ["a highlight", "一段==高亮==文字\n"],
     ["a footnote", "正文[^1]\n\n[^1]: 脚注\n"],
+    ["a code fence's meta", '```js title="a.js" {1,3}\nx\n```\n'],
+    ["a code fence's line marks", "```py {1,3} linenums\nx\n```\n"],
     ["an image without a title", "![图](a.png)\n"],
     ["an image width", '![图](a.png "{textus-width=30%}")\n'],
     ["an autolink", "See <https://x.org/a> here\n"],
@@ -163,6 +165,25 @@ describe("saved markdown stays as written", () => {
       ctx.get(editorViewCtx).dom.querySelector("blockquote"),
     );
     expect(quote?.classList.contains(className)).toBe(true);
+  });
+
+  it("keeps a code fence's meta when its language is changed", async () => {
+    const editor = await createTestEditor('```js title="a.js"\nx\n```\n');
+    editors.push(editor);
+    const saved = editor.action((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      const select = view.dom.querySelector("select")!;
+      select.value = "typescript";
+      select.dispatchEvent(new Event("change"));
+      return ctx.get(serializerCtx)(view.state.doc);
+    });
+    expect(saved).toBe('```typescript title="a.js"\nx\n```\n');
+  });
+
+  it("keeps a code fence's meta pasted as HTML", async () => {
+    expect(await throughClipboard('```js title="a.js"\nx\n```\n')).toBe(
+      '```js title="a.js"\nx\n```\n',
+    );
   });
 
   it("keeps a link on a bold word inside it", async () => {

@@ -1,6 +1,11 @@
 import type { Ctx } from "@milkdown/kit/ctx";
 import { defaultValueCtx, remarkStringifyOptionsCtx } from "@milkdown/kit/core";
-import { imageSchema, linkSchema } from "@milkdown/kit/preset/commonmark";
+import {
+  codeBlockSchema,
+  imageSchema,
+  linkSchema,
+} from "@milkdown/kit/preset/commonmark";
+import type { DOMOutputSpec } from "@milkdown/kit/prose/model";
 import type { MarkdownNode } from "@milkdown/kit/transformer";
 import {
   defaultHandlers,
@@ -243,6 +248,68 @@ function keepImageTitleAsWritten(ctx: Ctx): void {
 }
 
 /**
+ * A code fence's info string past the language - ```` ```js title="a.js" ````
+ * - kept in a `meta` attr and written back. Milkdown's code block keeps
+ * only the language, so the rest was dropped on the first save, and with
+ * it the file names and line highlights other tools draw from it.
+ */
+function keepCodeFenceMeta(ctx: Ctx): void {
+  ctx.update(codeBlockSchema.key, (prev) => (innerCtx) => {
+    const schema = prev(innerCtx);
+    return {
+      ...schema,
+      attrs: { ...schema.attrs, meta: { default: "", validate: "string" } },
+      parseDOM: [
+        {
+          tag: "pre",
+          preserveWhitespace: "full",
+          getAttrs: (dom) =>
+            dom instanceof HTMLElement && {
+              language: dom.dataset.language ?? "",
+              meta: dom.dataset.meta ?? "",
+            },
+        },
+      ],
+      toDOM: (node) => {
+        // Kept on the <pre> for a copy and paste inside the editor.
+        const [tag, attrs, ...rest] = schema.toDOM!(node) as [
+          string,
+          Record<string, unknown>,
+          ...DOMOutputSpec[],
+        ];
+        const meta = node.attrs.meta as string;
+        return [tag, meta ? { ...attrs, "data-meta": meta } : attrs, ...rest];
+      },
+      parseMarkdown: {
+        match: schema.parseMarkdown.match,
+        runner: (state, node, type) => {
+          state.openNode(type, {
+            language: (node.lang as string | null) ?? "",
+            meta: (node.meta as string | null) ?? "",
+          });
+          if (node.value) state.addText(node.value as string);
+          state.closeNode();
+        },
+      },
+      toMarkdown: {
+        match: schema.toMarkdown.match,
+        runner: (state, node) => {
+          state.addNode(
+            "code",
+            undefined,
+            node.content.firstChild?.text || "",
+            {
+              lang: node.attrs.language,
+              meta: (node.attrs.meta as string) || null,
+            },
+          );
+        },
+      },
+    };
+  });
+}
+
+/**
  * Runs one of remark's link functions with its `resourceLink` switch ("never
  * <...>") set the way this link's syntax asks. The option is shared by the
  * whole serialization, so it is set only around the one call.
@@ -357,6 +424,7 @@ function keepAlertMarker(text: Handle): Handle {
 export function configureMarkdownOutput(ctx: Ctx): void {
   keepLinkAcrossInlineNodes(ctx);
   keepImageTitleAsWritten(ctx);
+  keepCodeFenceMeta(ctx);
   // The editor's opening text (MilkdownEditor sets it before this runs).
   const initial = ctx.get(defaultValueCtx);
   const bullet = typeof initial === "string" ? documentBullet(initial) : null;
