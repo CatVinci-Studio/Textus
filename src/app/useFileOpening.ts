@@ -17,13 +17,22 @@ import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import {
   DROP_IMAGE_FILES_EVENT,
   OPEN_FILE_IN_TAB_EVENT,
+  type OpenFileInTab,
 } from "../utils/events";
+import { setTabJump } from "../editor/tab-jump";
 import { isIOSApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
 import type { NewDocumentMode } from "../settings/SettingsContext";
 import type { PendingClose } from "./close-flow";
 import type { TabState } from "./useTabState";
+
+/** How a document opens, beyond which file. */
+export interface OpenOptions {
+  /** A followed link's `#heading`, scrolled to once the tab is showing
+   *  (editor/tab-jump.ts). */
+  anchor?: string;
+}
 
 /**
  * Every way a file on disk becomes an open document in this window: a new
@@ -42,9 +51,16 @@ export function useFileOpening(opts: {
     tabState;
 
   const openPathInTab = useCallback(
-    async (path: string) => {
+    async (path: string, open: OpenOptions = {}) => {
       const existing = tabsRef.current.find((tab) => tab.path === path);
       if (existing) {
+        // Source Mode has no headings to scroll to: the tab just comes up.
+        if (open.anchor && !existing.sourceMode)
+          setTabJump(
+            existing.id,
+            { kind: "heading", anchor: open.anchor },
+            true,
+          );
         setActiveTabId(existing.id);
         return;
       }
@@ -57,6 +73,8 @@ export function useFileOpening(opts: {
         savedContent: text,
         diskMtime,
       };
+      if (open.anchor)
+        setTabJump(newTab.id, { kind: "heading", anchor: open.anchor });
       setTabs((prev) => [...prev, newTab]);
       setActiveTabId(newTab.id);
     },
@@ -111,10 +129,13 @@ export function useFileOpening(opts: {
 
   // The Agent panel's project bar opens the style profile and library
   // entries beside the document being written - always a new tab, never
-  // replacing that document (window mode would otherwise swap it out).
+  // replacing that document (window mode would otherwise swap it out). A
+  // followed link comes the same way, with the heading it names.
   useWindowEvent(OPEN_FILE_IN_TAB_EVENT, (e) => {
-    const path = (e as CustomEvent<string>).detail;
-    if (typeof path === "string" && path) void openPathInTab(path);
+    const detail = (e as CustomEvent<string | OpenFileInTab>).detail;
+    const { path, anchor } =
+      typeof detail === "string" ? { path: detail, anchor: undefined } : detail;
+    if (typeof path === "string" && path) void openPathInTab(path, { anchor });
   });
   // The detached chat window reopened a past conversation: its document
   // comes up here, the window's editor (chat-bridge.ts).
