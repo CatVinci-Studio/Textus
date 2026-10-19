@@ -276,9 +276,14 @@
   );
 }
 
-/* Its sentence is under the pointer: the same accent as the outline there. */
+/* Its sentence is under the pointer: the outline there, green round the
+   new text the card holds, red round the original. */
 .revision-note.review-note-hot {
-  border-color: color-mix(in srgb, var(--editor-accent) 45%, transparent);
+  border-color: var(--revision-insert-outline);
+}
+
+.revision-note.review-note-hot:has(.revision-note-original) {
+  border-color: var(--revision-delete-outline);
 }
 
 .revision-note .review-note-by {
@@ -306,7 +311,7 @@
   padding: 1px 4px;
   margin: 0 -4px;
   border-radius: var(--radius-small);
-  background: var(--diff-insert-bg);
+  background: var(--revision-insert-bg);
   overflow-wrap: anywhere;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
@@ -336,12 +341,12 @@
 
 /* "Changes in the text": the card holds the original, struck. */
 .revision-note-original {
-  background: var(--diff-delete-bg);
+  background: var(--revision-delete-bg);
   color: var(--editor-muted);
 }
 
 .revision-note-original s {
-  text-decoration-color: var(--diff-delete-line);
+  text-decoration-color: var(--revision-delete-strike);
 }
 
 .revision-note-was {
@@ -365,7 +370,6 @@
 
 /* Where a pure insertion would go, with its card in the margin. */
 .pending-insert-mark {
-  display: inline-block;
   width: 2px;
   height: 1.1em;
   margin: 0 1px;

@@ -13,9 +13,12 @@ export default {
   agentExpandWindowLabel: "Abrir conversas completas em uma janela separada",
   shortcutToggleAgentPanel: "Alternar painel de IA",
   menuToggleAgentPanel: "Painel de IA",
-  agentPanelEmpty:
-    "Pergunte sobre este documento ou selecione um trecho e diga como alterá-lo.",
-  agentPanelEmptyPhone: "Pergunte sobre este documento.",
+  agentPanelEmptyWrite:
+    "A IA redige texto novo no seu documento sem alterar o que já está escrito.",
+  agentPanelEmptyReview:
+    "A IA responde e deixa notas na margem, sem alterar o seu texto.",
+  agentPanelEmptyRevise:
+    "A IA sugere alterações no seu texto; cada uma espera que você a aceite ou rejeite.",
   aiWorkingCompletion: "Escrevendo uma continuação…",
   aiWorkingGrammar: "Verificando este parágrafo…",
   noticeCompletionNeedsCaret:
@@ -106,6 +109,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   revisionDisplayNew: "Alterações no texto, original na margem",
   revisionDisplayFinal: "Só o resultado, sem marcações",
   revisionDisplayNoRoom: "Sem espaço: feche a barra lateral ou o painel de IA",
+  revisionDisplayNewText:
+    "Texto novo não tem original: nestas vistas ele fica no texto, em verde",
   proposalDeletedSentence: "Original",
   reviewBarLabel: "Revisão",
   reviewBarOpenChat: "Abrir o painel de IA",

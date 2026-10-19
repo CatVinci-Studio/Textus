@@ -213,12 +213,22 @@
 }
 
 /* Input on top (grows with content via the auto-resize effect), tool row
-   below: attach button, the selection chip when text was selected, send. */
+   below: attach button, the selection chip when text was selected, send.
+   One row however narrow the panel, whatever the font: the chip gives
+   way first, ellipsized down to its x, and only then the mode's name -
+   wrapped, Send went to a line of its own under the others (1.1.0-rc.6,
+   the panel at its narrowest with text selected). Send, + and search
+   never shrink. Tuned to one font's widths, Russian fitted to the pixel on
+   one machine and pushed Send out by 4px on another. */
 .inline-chat-toolbar {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
+}
+
+.inline-chat-toolbar > * {
+  flex-shrink: 0;
 }
 
 .inline-chat-mode {
@@ -242,8 +252,21 @@
   padding: 2px 6px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.inline-chat-toolbar > .inline-chat-selection-chip {
+  /* Shrinks long before the mode does: shrink is shared out by weight. */
+  flex: 0 1000 auto;
+  /* Never past its x: padding, border and the 12px button. */
+  min-width: 26px;
+}
+
+/* The last resort: the mode's name ellipsizes, its chevron and a few
+   letters stay. */
+.inline-chat-toolbar > .inline-chat-mode {
+  flex-shrink: 1;
+  min-width: 52px;
 }
 
 .inline-chat-selection-chip:hover {
@@ -251,6 +274,10 @@
 }
 
 .inline-chat-chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   border: none;
   background: none;
   padding: 0;
@@ -260,6 +287,7 @@
 }
 
 .inline-chat-chip-remove {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   border: none;

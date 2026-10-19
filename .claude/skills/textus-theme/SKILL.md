@@ -98,6 +98,30 @@ alert blocks.
 Both follow the same three-block light/dark structure. Built-in content themes
 do not override them; a theme that wants its own syntax palette can.
 
+### Revisions, in `design-system.css`
+
+How a proposed AI revision is drawn in the document and its margin card
+(`pending-edit-plugin.ts`, `milkdown-theme.css`). Defined on `:root` with a
+light and a dark value; **Settings › Theme › Export** writes them out, so a
+theme can set any of them.
+
+| Variable                     | Controls                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------ |
+| `--revision-insert-bg`       | The new text's tint.                                                     |
+| `--revision-insert-text`     | The new text's colour. `currentColor`: the text's own.                   |
+| `--revision-insert-hover-bg` | The new text's tint while its pair is under the pointer.                 |
+| `--revision-insert-outline`  | The outline round the new text of the pair under the pointer (green).    |
+| `--revision-insert-focus`    | The same, for the pair the review bar points at.                         |
+| `--revision-delete-bg`       | The original's tint.                                                     |
+| `--revision-delete-text`     | The original's colour - by default the text's own, faded.                |
+| `--revision-delete-strike`   | The line through the original.                                           |
+| `--revision-delete-hover-bg` | The original's tint while its pair is under the pointer.                 |
+| `--revision-delete-outline`  | The outline round the original of the pair under the pointer (red).      |
+| `--revision-delete-focus`    | The same, for the pair the review bar points at.                         |
+
+Built-in content themes leave them alone: the tints follow `--success-color`
+and `--danger`, which the dark palette already tunes.
+
 ## Adding a built-in theme
 
 Three files, all required - miss one and the theme is invisible or crashes the

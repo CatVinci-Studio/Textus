@@ -943,3 +943,85 @@ export function ListViewIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+// The composer's three modes, shown in the AI panel's empty state
+// (ai/chat/mode-icons.tsx). No magnifier for Review: that is web search's.
+
+/** Write: a pen nib - new text. */
+export function WriteModeIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M8 14.2L3.4 8.4L5.4 2.6H10.6L12.6 8.4L8 14.2Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 14.2V9.8"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <circle cx="8" cy="8.5" r="1.2" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  );
+}
+
+/** Review: a speech bubble with a note in it - Review only comments. */
+export function ReviewModeIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M2 3.8C2 3.02 2.63 2.4 3.4 2.4H12.6C13.37 2.4 14 3.02 14 3.8V9.4C14 10.17 13.37 10.8 12.6 10.8H6.4L3.6 13.2V10.8H3.4C2.63 10.8 2 10.17 2 9.4V3.8Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5 5.4H11M5 7.8H9"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** Revise: a pencil over a change mark - the text that is there, changed. */
+export function ReviseModeIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M10.4 2.6L13.4 5.6L6.4 12.6L2.8 13.2L3.4 9.6L10.4 2.6Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 4L12 7M9.6 13.4H13.4"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

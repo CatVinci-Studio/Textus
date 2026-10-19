@@ -141,15 +141,19 @@
    (like .ghost-text above) but green-tinted so it reads as "about to be
    added" rather than "already there but faint". Neither is editable -
    accept/reject (PendingEditControls, or ⌘Enter/⌘Backspace) is what commits
-   or discards them, never direct typing on the decoration itself. */
+   or discards them, never direct typing on the decoration itself. Their
+   colours are the --revision-* variables (design-system.css), which a theme
+   can set. */
 .pending-delete {
+  color: var(--revision-delete-text);
   text-decoration: line-through;
-  text-decoration-color: var(--diff-delete-line);
-  background: var(--diff-delete-bg);
+  text-decoration-color: var(--revision-delete-strike);
+  background: var(--revision-delete-bg);
 }
 
 .pending-insert {
-  background: var(--diff-insert-bg);
+  color: var(--revision-insert-text);
+  background: var(--revision-insert-bg);
   border-radius: var(--md-radius-sm);
   padding: 0 2px;
   /* Renders real markdown (renderMarkdownInlineHtml), not source text - the
@@ -176,7 +180,6 @@
    sentence by sentence (--i): the strike draws, the new words rise, the
    buttons pop. */
 .pending-sentence {
-  color: color-mix(in srgb, var(--editor-text) 55%, transparent);
   border-radius: var(--md-radius-sm);
   transition:
     color var(--dur-fast) var(--ease-standard),
@@ -213,32 +216,39 @@
   animation: pending-fade-kept var(--dur-fast) var(--ease-out);
 }
 
-/* The review bar's pointer. */
-.pending-sentence-focus {
-  box-shadow: 0 0 0 2px
-    color-mix(in srgb, var(--editor-accent) 35%, transparent);
-}
-
-/* The sentence pair under the pointer, or whose margin card is
-   (pending-edit-plugin's hotDecorations): both sides stay as they are,
-   outlined and a shade deeper. Hover never hides or previews anything. */
-.pending-sentence-hot:not(.pending-pick) {
-  box-shadow: 0 0 0 2px
-    color-mix(in srgb, var(--editor-accent) 35%, transparent);
+/* The review bar's pointer, and the pair under the mouse pointer or whose
+   margin card is (pending-edit-plugin's hotDecorations): both sides stay as
+   they are, outlined - green round the new text, red round the original -
+   and a shade deeper. Hover never hides or previews anything. */
+:is(.pending-sentence-focus, .pending-sentence-hot):not(.pending-pick) {
   border-radius: var(--radius-small);
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
 
-.pending-delete.pending-sentence-hot:not(.pending-sentence-kept) {
-  background: color-mix(in srgb, var(--danger) 20%, transparent);
+:is(.pending-delete, .pending-delete-mark).pending-sentence-focus {
+  box-shadow: 0 0 0 2px var(--revision-delete-focus);
 }
 
-.pending-insert.pending-sentence-hot:not(
-    .pending-sentence-kept,
-    .pending-sentence-final
-  ) {
-  background: color-mix(in srgb, var(--success-color) 26%, transparent);
+:is(.pending-insert, .pending-insert-mark).pending-sentence-focus {
+  box-shadow: 0 0 0 2px var(--revision-insert-focus);
+}
+
+:is(.pending-delete, .pending-delete-mark).pending-sentence-hot {
+  box-shadow: 0 0 0 1.5px var(--revision-delete-outline);
+}
+
+:is(.pending-insert, .pending-insert-mark).pending-sentence-hot {
+  box-shadow: 0 0 0 1.5px var(--revision-insert-outline);
+}
+
+.pending-delete.pending-sentence-hot:not(.pending-sentence-kept) {
+  background: var(--revision-delete-hover-bg);
+}
+
+.ProseMirror:not([data-revision-display="final"])
+  .pending-insert.pending-sentence-hot:not(.pending-sentence-kept) {
+  background: var(--revision-insert-hover-bg);
 }
 
 @keyframes pending-strike-in {
@@ -262,15 +272,52 @@
   }
 }
 
-/* "Changes in the text" and "Result only" (Settings > revision display):
-   the original is taken out of the flow while the replacement stands in
-   its place - green in the first, unmarked but for a faint dotted line in
-   the second, so a pending change can still be told from settled text. */
-.pending-sentence-hidden {
+/* The revision views (Settings > Show revisions, the review bar's menu),
+   which the editor carries as data-revision-display (pending-edit-plugin's
+   syncDisplay). Every view's parts are always drawn; each view shows its
+   own, so a switch redraws nothing and replays no entrance.
+
+   - inline (and no attribute): both sides in the text, with ✓ / ✕;
+   - original: the original in the text, the new text in the margin;
+   - new: the new text in the text, the original in the margin;
+   - final: the result, unmarked but for a faint dotted line, so a pending
+     change can still be told from settled text.
+
+   New text with no original (Write's insertions) has nothing to put in the
+   margin: it stays in the text, green, in "original" and "new" too, and
+   reads as the result in "final".
+
+   An original taken out of the text is hidden in the flow, not with
+   display: none - shown again, an element that was display: none starts
+   its CSS entrance over, and the strike drew in again on every switch. */
+.ProseMirror[data-revision-display]:not([data-revision-display="inline"])
+  .pending-pick,
+.pending-insert-mark,
+.pending-delete-mark,
+.ProseMirror[data-revision-display="original"]
+  :is(.pending-sentence-new, .pending-insert.pending-replaces):not(
+    .pending-insert-typing
+  ),
+.ProseMirror:is([data-revision-display="new"], [data-revision-display="final"])
+  .pending-sentence-new.pending-sentence-kept {
   display: none;
 }
 
-.pending-insert.pending-sentence-final {
+.ProseMirror:is([data-revision-display="new"], [data-revision-display="final"])
+  .pending-delete:not(.pending-sentence-kept) {
+  font-size: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* An inline atom (an image, a formula) in a hidden original. */
+.ProseMirror:is([data-revision-display="new"], [data-revision-display="final"])
+  .pending-delete:not(span, .pending-sentence-kept) {
+  display: none;
+}
+
+.ProseMirror[data-revision-display="final"] .pending-insert {
   background: none;
   padding: 0;
   text-decoration: underline dotted;
@@ -284,7 +331,8 @@
 
 /* A kept sentence whose original card is in the margin: a faint line ties
    it to the card. */
-.pending-sentence-kept-original {
+.ProseMirror[data-revision-display="new"]
+  .pending-sentence.pending-sentence-kept {
   text-decoration: underline dotted;
   text-decoration-color: color-mix(
     in srgb,
@@ -294,15 +342,28 @@
   text-underline-offset: 0.2em;
 }
 
-/* Where a deleted sentence was, with its card in the margin. */
-.pending-delete-mark {
+/* Where a pure insertion goes, or where a deleted sentence was, with its
+   card in the margin. */
+.ProseMirror[data-revision-display="original"] .pending-insert-mark,
+.ProseMirror[data-revision-display="new"]
+  .pending-insert-mark.pending-sentence-kept,
+.ProseMirror[data-revision-display="new"]
+  .pending-delete-mark:not(.pending-sentence-kept) {
   display: inline-block;
+}
+
+.pending-delete-mark {
   width: 2px;
   height: 1.1em;
   margin: 0 1px;
   vertical-align: -0.15em;
   border-radius: 1px;
   background: var(--danger);
+}
+
+/* What a view switch shows is not new: no entrance (syncDisplay). */
+.ProseMirror .ProseMirror-widget.pending-settled {
+  animation: none;
 }
 
 /* The ✓ / ✕ pair after a changed sentence (and in the AI card): outlined

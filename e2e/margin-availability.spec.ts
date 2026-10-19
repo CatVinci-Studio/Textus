@@ -87,7 +87,7 @@ test("with no room for the margin, its views can't be picked and the chosen one 
   await proposeRevision(page);
   // Everything in the text, and the bar says so.
   await expect(page.locator(".revision-note")).toHaveCount(0);
-  await expect(page.locator(".milkdown .pending-pick")).toHaveCount(2);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(2);
   await expect(page.locator(".review-bar-view-name")).toHaveText(t.inline);
 
   await page.locator(".review-bar-view-button").click();
@@ -121,7 +121,7 @@ test("with no room for the margin, its views can't be picked and the chosen one 
   // Closing the AI panel makes room: the chosen view comes back by itself.
   await page.keyboard.press("Control+Shift+L");
   await expect(page.locator(".revision-note")).toHaveCount(2);
-  await expect(page.locator(".milkdown .pending-pick")).toHaveCount(0);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
   await expect(page.locator(".review-bar-view-name")).toHaveCount(0);
   await page.locator(".review-bar-view-button").click();
   await expect(item(t.original)).toBeEnabled();
@@ -187,7 +187,7 @@ test("the line being read stays put as revisions move between the text and the m
     .evaluate((s, by) => (s.scrollTop += by), (await at()) - 60);
   const before = await at();
   await page.setViewportSize({ width: 990, height: 500 });
-  await expect(page.locator(".milkdown .pending-pick")).toHaveCount(2);
+  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(2);
   expect(Math.abs((await at()) - before)).toBeLessThan(2);
   await page.setViewportSize({ width: 1100, height: 500 });
   await expect(page.locator(".revision-note")).toHaveCount(2);

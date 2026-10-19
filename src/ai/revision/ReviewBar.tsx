@@ -17,6 +17,7 @@ import "./ReviewBar.css";
 export interface ReviewBarLabels {
   revisionDisplayLabel: string;
   revisionDisplayNoRoom: string;
+  revisionDisplayNewText: string;
   reviewBarLabel: string;
   reviewBarOpenChat: string;
   proposalAccept: string;
@@ -53,7 +54,12 @@ export function ReviewBar({
   display,
   displayName,
   onDisplay,
+  newText,
 }: {
+  /** Some pending proposal is new text alone (Write): it has no original
+   *  for a margin view to show, so it stays in the text - the menu says
+   *  so beside those views. */
+  newText: boolean;
   /** How revisions show (Settings.revisionDisplay), switched from here as
    *  in Word's Review ribbon. */
   display: RevisionDisplay;
@@ -93,6 +99,8 @@ export function ReviewBar({
   const shown = effectiveRevisionDisplay(display, !phone && marginAvailable);
   const waiting = noMargin && shown !== display;
   const noMarginId = useId();
+  const newTextId = useId();
+  const newTextNote = newText && !phone;
   const view = (
     <div className="review-bar-view" ref={menuRef}>
       <button
@@ -133,9 +141,13 @@ export function ReviewBar({
               aria-checked={shown === mode}
               disabled={marginViewBlocked(mode, { phone, marginAvailable })}
               aria-describedby={
-                marginViewBlocked(mode, { phone, marginAvailable })
-                  ? noMarginId
-                  : undefined
+                [
+                  marginViewBlocked(mode, { phone, marginAvailable }) &&
+                    noMarginId,
+                  newTextNote && needsMargin(mode) && newTextId,
+                ]
+                  .filter(Boolean)
+                  .join(" ") || undefined
               }
               className={
                 waiting && mode === display
@@ -153,6 +165,11 @@ export function ReviewBar({
           {noMargin && (
             <p id={noMarginId} className="review-bar-menu-note">
               {labels.revisionDisplayNoRoom}
+            </p>
+          )}
+          {newTextNote && (
+            <p id={newTextId} className="review-bar-menu-note">
+              {labels.revisionDisplayNewText}
             </p>
           )}
         </div>

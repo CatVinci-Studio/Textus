@@ -36,6 +36,8 @@ The interface uses neutral backgrounds, light borders and a single accent color.
 
 Built-in themes only change the document text area. Default, Paper, Slate, Forest and Parchment are each checked in light and dark. System dark and explicit dark use the same variables. Tests check the contrast of body text, links and secondary text against the document and code backgrounds.
 
+A proposed AI revision is drawn with the `--revision-*` variables in `src/ui/design-system.css`: the tint, text colour and strike of the original and of the new text, and the outlines that mark the pair under the pointer or under the review bar's pointer - green round new text, red round the original, never the accent. They have a light and a dark value, **Settings › Theme › Export** writes them out, and a theme may set any of them. The `textus-theme` skill (`.claude/skills/textus-theme/SKILL.md`) lists them.
+
 An imported theme also sets the global interface colors. `src/theme/theme-chrome.ts` reads the theme's background, text and link colors in a separate document. It then generates the interface colors and any missing editor variables. Buttons, status notices and selected items get contrast correction. When the user switches back to a built-in theme, the derived styles are removed, and a late theme read does not overwrite the new choice.
 
 The theme's original CSS is kept. A theme with only one color scheme keeps that scheme. It is not forced into dark. Remote `@import`, image backgrounds, layouts that depend on a specific Typora DOM, and arbitrary global CSS are not part of the full compatibility promise. Check them against each real theme.
