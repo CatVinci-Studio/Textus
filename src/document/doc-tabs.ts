@@ -90,6 +90,18 @@ export function tabIsDirty(tab: DocTab): boolean {
   return tab.content !== tab.savedContent;
 }
 
+/** A new Untitled tab nobody has written in: no file, no Help document,
+ *  nothing typed. Something opened here replaces it without losing anything. */
+export function tabIsUntouchedDraft(tab: DocTab): boolean {
+  return !tab.path && !tab.helpDoc && tab.content === "" && !tabIsDirty(tab);
+}
+
+/** A window holding only untouched drafts - what a fresh window shows. Pass
+ *  liveTabs(), so an edit still being debounced counts. */
+export function windowIsUntouched(tabs: DocTab[]): boolean {
+  return tabs.every(tabIsUntouchedDraft);
+}
+
 // The full invoke arguments for start_floating_tab_drag - built here so the
 // two drag flows (tab pulled from a bar, whole single-tab window dragged)
 // can't drift apart on which fields travel with the document.
