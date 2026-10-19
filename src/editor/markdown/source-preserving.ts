@@ -209,12 +209,29 @@ export function readSourceBlocks(
       start !== null &&
       end !== null &&
       blocks.every((node, k) => sameBlock(ctx, node, nodes[k]));
+    // A setext heading under a definition, `[foo]: /url\nbar\n===`, starts
+    // where the definition does: its stretch begins after the one before,
+    // or deleting the definition left it in the file.
+    let from = kept ? Math.min(start, orphanStart ?? start) : null;
+    const previousEnd = units.at(-1)?.end ?? null;
+    if (from !== null && previousEnd !== null && from < previousEnd) {
+      from = previousEnd;
+      while (text[from] === "\n") from++;
+    }
+    // From the start of its line: ` -    one` and the `     two` under
+    // it are a list and indented code; without the space before the
+    // marker, written after a new first block, they were one list item.
+    if (from !== null) {
+      let lineStart = from;
+      while (
+        lineStart > (previousEnd ?? 0) &&
+        /[ \t]/.test(text[lineStart - 1])
+      )
+        lineStart--;
+      if (lineStart === 0 || text[lineStart - 1] === "\n") from = lineStart;
+    }
     byNode.set(nodes[0], units.length);
-    units.push({
-      nodes,
-      start: kept ? Math.min(start, orphanStart ?? start) : null,
-      end: kept ? end : null,
-    });
+    units.push({ nodes, start: from, end: kept ? end : null });
     orphanStart = null;
     index += blocks.length;
   }
@@ -547,20 +564,24 @@ function checkJoins(
     );
   };
   const failed: number[] = [];
+  // The pieces that write something: a run of empty paragraphs writes
+  // nothing, and the blocks on either side of it meet.
+  const shown = pieces.flatMap((_, p) => (pieceTexts[p] ? [p] : []));
+  if (shown.length === 0) return failed;
   // The first block, when it isn't the file's first: a "---" there opens
   // front matter, which runs to the next "---" however far down - more
   // than a join's neighbours can show. Such a block is serialized
   // (thematicBreak writes the first block's rule "***").
-  const first = pieces[0];
+  const first = pieces[shown[0]];
   if (
     first.kind === "kept" &&
     first.from !== 0 &&
     /^(?:---|\+\+\+)/.test(unitText(source, first.from))
   )
     failed.push(first.from);
-  for (let p = 1; p < pieces.length; p++) {
-    const left = side(p - 1, "last");
-    const right = side(p, "first");
+  for (let k = 1; k < shown.length; k++) {
+    const left = side(shown[k - 1], "last");
+    const right = side(shown[k], "first");
     if (joinReads(left, right)) continue;
     if (left.unit !== null) failed.push(left.unit);
     if (right.unit !== null) failed.push(right.unit);

@@ -250,6 +250,50 @@ describe("saving after an edit elsewhere keeps as written", () => {
     expect(doc.child(1).type.name).toBe("code_block");
   });
 
+  it("keeps a file's own <br> through an edit elsewhere", async () => {
+    // A heading's id is set by a transaction on opening, which used to turn
+    // every <br> in the file into a break, and rewrite its block.
+    const markdown =
+      "# Title\n\n- one<br>\n  two\n- **bold**<br>more\n\nEdit me\n";
+    expect(await saveAfter(markdown, typeInto(2))).toBe(
+      markdown.replace("Edit me", "Edit me edited"),
+    );
+  });
+
+  it("keeps two code blocks apart when the paragraph between them is emptied", async () => {
+    // An empty paragraph writes nothing, so the blocks on either side of
+    // it meet: indented code merges, as two lists would.
+    const out = await saveAfter("    one\n\npara\n\n    two\n", (view) => {
+      const from = blockStart(view.state.doc, 1) + 1;
+      view.dispatch(view.state.tr.delete(from, from + "para".length));
+    });
+    const doc = await readAs(out);
+    expect(doc.childCount).toBe(2);
+    expect(doc.child(1).textContent).toBe("two");
+  });
+
+  it("keeps a block's first-line indent when a block goes in before it", async () => {
+    // The space before the marker puts "two" outside the item, as code.
+    const markdown = " -    one\n\n     two\n";
+    const out = await saveAfter(markdown, (view) => {
+      const { schema } = view.state;
+      view.dispatch(
+        view.state.tr.insert(
+          0,
+          schema.nodes.heading.create({ level: 2 }, schema.text("New")),
+        ),
+      );
+    });
+    expect(out).toBe(`## New\n\n${markdown}`);
+  });
+
+  it("doesn't bring back a deleted definition a setext heading was read with", async () => {
+    // The heading's position starts at the definition's line.
+    const markdown = "[foo]: /url\nbar\n===\n\n[foo]\n";
+    const out = await saveAfter(markdown, deleteBlock(0));
+    expect(out).toBe("bar\n===\n\n[foo]\n");
+  });
+
   it("keeps a Windows file's line endings and BOM through an edit", async () => {
     const raw = "﻿Title\r\n=====\r\n\r\n_em_ text\r\n";
     const out = await saveAfter(toEditorText(raw), typeInto(1));

@@ -38,7 +38,10 @@ import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
 import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
 import { compositionPruneGuardPlugin } from "./keys/composition-prune-guard-plugin";
-import { configureMarkdownOutput } from "./markdown/markdown-output";
+import {
+  configureMarkdownOutput,
+  linksOnSpansSerializer,
+} from "./markdown/markdown-output";
 import { openedParseRecorder } from "./markdown/source-preserving";
 import {
   linkDefinitionSchema,
@@ -161,6 +164,7 @@ export function withEditorCore(
       // Which part of the file each block was read from, so a save writes
       // the blocks the user didn't touch as they were (source-preserving.ts).
       .use(openedParseRecorder)
+      .use(linksOnSpansSerializer)
       .use(macNavigationPlugin)
       .use(linuxImeEnterPlugin)
       .use(compositionPruneGuardPlugin)

@@ -3,7 +3,11 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { DOMParser, DOMSerializer } from "@milkdown/kit/prose/model";
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import { TextSelection } from "@milkdown/kit/prose/state";
+import type { EditorView } from "@milkdown/kit/prose/view";
 import { createTestEditor } from "../../document-view/editor-test-harness";
+import { toggleSpan } from "../marks/span-commands";
 import { unwrittenImageSrcs } from "./markdown-output";
 import { withImageWidth } from "../images/image-html";
 
@@ -215,9 +219,10 @@ describe("saved markdown stays as written", () => {
   });
 
   it("keeps a link on a bold word inside it", async () => {
-    expect(await roundTrip("[**bold** text](u) after\n")).toContain("](u)");
-    expect(await roundTrip("[**bold** text](u) after\n")).toContain(
-      "[text](u)",
+    // One link, not `[**bold**](u) [text](u)`: the parser leaves the
+    // link on the bold span's text only.
+    expect(await roundTrip("[**bold** text](u) after\n")).toBe(
+      "[**bold** text](u) after\n",
     );
   });
 
@@ -349,5 +354,191 @@ describe("an image's width", () => {
     });
     expect(types).toContain("html");
     expect(types).not.toContain("image");
+  });
+});
+
+describe("an edited block is saved so it reads back the same", () => {
+  // Each from the save round trip on real files (docs/dev/saving.md): the
+  // edit, then the block as the serializer writes it.
+
+  /** Opens `markdown`, makes `edit`, and saves the whole document. */
+  async function savedAfter(
+    markdown: string,
+    edit: (view: EditorView) => void,
+  ): Promise<string> {
+    const editor = await createTestEditor(markdown);
+    editors.push(editor);
+    return editor.action((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      edit(view);
+      return ctx.get(serializerCtx)(view.state.doc);
+    });
+  }
+
+  /** Where `text` starts in the document's text. */
+  function find(doc: ProseNode, text: string): number {
+    let at = -1;
+    doc.descendants((node, pos) => {
+      if (at < 0 && node.isText && node.text!.includes(text))
+        at = pos + node.text!.indexOf(text);
+      return at < 0;
+    });
+    if (at < 0) throw new Error(`no ${text}`);
+    return at;
+  }
+
+  const deleting = (text: string) => (view: EditorView) => {
+    const at = find(view.state.doc, text);
+    view.dispatch(view.state.tr.delete(at, at + text.length));
+  };
+
+  const typingAfter = (text: string, typed: string) => (view: EditorView) =>
+    view.dispatch(
+      view.state.tr.insertText(typed, find(view.state.doc, text) + text.length),
+    );
+
+  const boldening = (word: string) => (view: EditorView) => {
+    const at = find(view.state.doc, word);
+    view.dispatch(
+      view.state.tr.setSelection(
+        TextSelection.create(view.state.doc, at, at + word.length),
+      ),
+    );
+    toggleSpan(view, 2);
+  };
+
+  it("writes one link around bold made inside it", async () => {
+    expect(await savedAfter("[a b c](u)\n", boldening("b"))).toBe(
+      "[a **b** c](u)\n",
+    );
+    expect(await savedAfter("[The `match` Flow](u)\n", boldening("Flow"))).toBe(
+      "[The `match` **Flow**](u)\n",
+    );
+  });
+
+  it("keeps a link on everything inside a span in it", async () => {
+    expect(
+      await savedAfter("[link *foo `#`*](/uri)\n", typingAfter("link", "!")),
+    ).toBe("[link! *foo `#`*](/uri)\n");
+  });
+
+  it("writes nothing for a span whose words were deleted", async () => {
+    expect(await savedAfter("a **foo** b\n", deleting("foo"))).toBe("a  b\n");
+    expect(await savedAfter("x *_foo_* y\n", deleting("foo"))).toBe("x  y\n");
+    expect(await savedAfter("a `foo` b\n", deleting("foo"))).toBe("a  b\n");
+    expect(await savedAfter("[a **b** c](u)\n", deleting("b"))).toBe(
+      "[a  c](u)\n",
+    );
+  });
+
+  it("moves the spaces at a span's ends outside it", async () => {
+    expect(await savedAfter("x *Anno di 2005* y\n", deleting("2005"))).toBe(
+      "x *Anno di*  y\n",
+    );
+    expect(await savedAfter("**foo *bar***\n", deleting("bar"))).toBe(
+      "**foo** \n",
+    );
+  });
+
+  it("joins spans and code side by side, and parts formulas", async () => {
+    expect(await savedAfter("foo**bar**\n", boldening("foo"))).toBe(
+      "**foobar**\n",
+    );
+    expect(await savedAfter("`a`变为`b`\n", deleting("变为"))).toBe("`ab`\n");
+    expect(await savedAfter("$a$ to $b$\n", deleting(" to "))).toBe(
+      "$a$ $b$\n",
+    );
+  });
+
+  it("doesn't escape brackets into LaTeX maths", async () => {
+    const saved = await savedAfter(
+      "[Tech [Episodes]](u)\n",
+      typingAfter("Tech", "!"),
+    );
+    expect(saved).toBe("[Tech! \\[Episodes&#93;](u)\n");
+    const editor = await createTestEditor(saved);
+    editors.push(editor);
+    expect(
+      editor.action((ctx) => ctx.get(editorViewCtx).state.doc.textContent),
+    ).toBe("Tech! [Episodes]");
+  });
+
+  it("escapes text before a space at the start of a line", async () => {
+    expect(await savedAfter("foo\n\\# bar baz\n", boldening("baz"))).toBe(
+      "foo\n\\# bar **baz**\n",
+    );
+    expect(await savedAfter("> foo\n> \\- bar\n", deleting("bar"))).toBe(
+      "> foo\n> \\- \n",
+    );
+    expect(await savedAfter("&#9;foo\n", boldening("foo"))).toBe(
+      "&#x9;**foo**\n",
+    );
+  });
+
+  it("keeps a heading's closing hashes in its text", async () => {
+    expect(await savedAfter("### foo \\### b\n", deleting("b"))).toBe(
+      "### foo ##\\# \n",
+    );
+  });
+
+  it("writes line ends one at a time, and none at a paragraph's end", async () => {
+    expect(await savedAfter("aaa\nbbb\nccc\n", deleting("bbb"))).toBe(
+      "aaa\nccc\n",
+    );
+    expect(await savedAfter("aaa\nbbb\n", deleting("bbb"))).toBe("aaa\n");
+    expect(await savedAfter("aaa\\\nbbb\n", deleting("bbb"))).toBe("aaa\n");
+  });
+
+  it("writes a <br> at the end of a line as one break", async () => {
+    const saved = await savedAfter("a\nb\n", (view) => {
+      const { schema } = view.state;
+      const br = schema.nodes.html.create(null, schema.text("<br>"));
+      view.dispatch(view.state.tr.insert(find(view.state.doc, "a") + 1, br));
+    });
+    expect(saved).toBe("a\\\nb\n");
+  });
+
+  it("starts an item whose first line was emptied with its next block", async () => {
+    expect(await savedAfter("- foo\n\n  bar\n", deleting("foo"))).toBe(
+      "- bar\n",
+    );
+    expect(
+      await savedAfter(
+        "1.     indented code\n\n   paragraph\n",
+        typingAfter("paragraph", "!"),
+      ),
+    ).toBe("1. ```\n   indented code\n   ```\n\n   paragraph!\n");
+  });
+
+  it("writes a rule in a list item so it stays one", async () => {
+    expect(await savedAfter("- Foo\n- * * *\n", typingAfter("Foo", "!"))).toBe(
+      "- Foo!\n- ***\n",
+    );
+    expect(await savedAfter("- Foo\n\n  ***\n", typingAfter("Foo", "!"))).toBe(
+      "- Foo!\n\n  ***\n",
+    );
+  });
+});
+
+describe("a file that opens with a rule", () => {
+  it("reads its lists and quotes as lists and quotes", async () => {
+    const editor = await createTestEditor(
+      "---\n\n1. one\n\n- two\n\n> three\n",
+    );
+    editors.push(editor);
+    const kinds = editor.action((ctx) => {
+      const names: string[] = [];
+      ctx
+        .get(editorViewCtx)
+        .state.doc.forEach((node) => names.push(node.type.name));
+      return names;
+    });
+    expect(kinds).toEqual(["hr", "ordered_list", "bullet_list", "blockquote"]);
+  });
+
+  it("still reads closed front matter", async () => {
+    expect(await roundTrip("---\ntitle: x\n---\n\n- a\n")).toBe(
+      "---\ntitle: x\n---\n\n- a\n",
+    );
   });
 });
