@@ -59,4 +59,27 @@ describe("renderDocumentHtml", () => {
       '<a href="https://x.org/a">text</a>',
     );
   });
+
+  // The numbers themselves are CSS counters (milkdown-theme.css); what the
+  // preview has to keep is the element each one is drawn on.
+  it("keeps a number slot on every row of gather and align, but not of their starred forms", () => {
+    const slots = (source: string) =>
+      renderDocumentHtml(`$$\n${source}\n$$`).match(/class="eqn-num"/g)
+        ?.length ?? 0;
+    expect(slots("\\begin{gather}a\\\\b\\end{gather}")).toBe(2);
+    expect(slots("\\begin{align}a&=b\\\\c&=d\\end{align}")).toBe(2);
+    expect(slots("\\begin{gather*}a\\\\b\\end{gather*}")).toBe(0);
+    expect(slots("\\begin{align*}a&=b\\\\c&=d\\end{align*}")).toBe(0);
+  });
+
+  it("puts a \\tag label in place of its row's number and drops a \\notag row's", () => {
+    const html = renderDocumentHtml(
+      "$$\n\\begin{align}a&=b\\tag{A}\\\\c&=d\\notag\\\\e&=f\\end{align}\n$$",
+    );
+    expect(html.match(/class="eqn-num"/g)).toHaveLength(1);
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    expect(doc.querySelector(".katex-html .katex-tag")?.textContent).toContain(
+      "(A)",
+    );
+  });
 });
