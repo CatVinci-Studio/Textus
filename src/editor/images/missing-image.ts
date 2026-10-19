@@ -215,7 +215,7 @@ export function missingImageCard(
   if (content.onChoose)
     actions.push(["choose", t.missingImageChoose, content.onChoose]);
   if (content.onReveal)
-    actions.push(["reveal", t.missingImageReveal, content.onReveal]);
+    actions.push(["reveal", t.imageReveal, content.onReveal]);
   if (actions.length > 0) {
     const row = document.createElement("span");
     row.className = "missing-image-actions";

@@ -66,7 +66,7 @@ describe("image width metadata", () => {
   });
 
   it("can restore automatic sizing and remove metadata-only titles", () => {
-    expect(writeImageWidth("{textus-width=50%}", null)).toBeNull();
+    expect(writeImageWidth("{textus-width=50%}", null)).toBe("");
     expect(writeImageWidth("Product shot {textus-width=50%}", null)).toBe(
       "Product shot",
     );
