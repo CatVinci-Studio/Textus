@@ -21,10 +21,11 @@ export type AgentPanelTab = "chat" | "memory";
 
 /**
  * The docked panel's chrome: one header row - the Conversation / Memory
- * switch on the left, new / pop out / close on the right - over the chat
- * body (ChatBody, variant "full") its editor renders into `children`, or
- * the Memory view. The conversation stays mounted while Memory shows, so
- * its scroll, draft and any reply still arriving are where they were.
+ * switch on the left, history / new / pop out / close on the right - over
+ * the chat body (ChatBody, variant "full") its editor renders into
+ * `children`, or the Memory view. The conversation stays mounted while
+ * Memory shows, so its scroll, draft and any reply still arriving are where
+ * they were.
  * Purely presentational - the editor owns the conversation and wires the
  * actions.
  */
@@ -33,6 +34,7 @@ export function AgentPanelView({
   onNewConversation,
   onPopOut,
   onClose,
+  history,
   memory,
   tab,
   onTabChange: setTab,
@@ -44,6 +46,8 @@ export function AgentPanelView({
    *  the button is not drawn. */
   onPopOut?: () => void;
   onClose: () => void;
+  /** The history button and its list (ChatHistoryMenu). */
+  history: ReactNode;
   /** The Memory tab's content, drawn only while it shows. */
   memory?: () => ReactNode;
   /** The tab showing - kept by the panel's frame (agent-panel.tsx), so it
@@ -103,6 +107,7 @@ export function AgentPanelView({
           {memory && tabButton("memory", labels.tabMemory)}
         </div>
         <div className="agent-panel-actions">
+          {history}
           <button
             type="button"
             className="inline-chat-header-button"

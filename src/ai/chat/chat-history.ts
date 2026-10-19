@@ -17,10 +17,10 @@ import {
 
 /**
  * Persisted agent conversations, so past chats can be reopened and continued
- * (the Chats sidebar panel). Kept by Rust, one file per conversation plus an
+ * (ChatHistoryMenu, in the AI panel's header). Kept by Rust, one file per conversation plus an
  * index of them (src-tauri/src/settings/chat_history.rs), and capped: beyond
  * the cap the oldest move to the folder's trash. A persisted list
- * (storage/persisted-list.ts) of the index, so the sidebar list re-renders
+ * (storage/persisted-list.ts) of the index, so the history list re-renders
  * live as conversations are saved or deleted, in every window; a
  * conversation's turns are read from its file when it is reopened.
  */

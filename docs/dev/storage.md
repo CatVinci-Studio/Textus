@@ -63,13 +63,13 @@ the channel with each update check (`check_for_update` in
 
 ### Data directory
 
-| File                       | What                                                                                                                                                                                                                        |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ui-state.json` †          | Where the UI was left: `{"schemaVersion": 1, "state": {...}}` with the fields of `UiState` in `src/storage/ui-state.ts`.                                                                                                    |
-| `chat-history/`            | Saved Agent conversations, one file each - see [Chat history](#chat-history) below.                                                                                                                                         |
-| `clipboard-history.json` † | The clipboard panel, newest first, at most 30 entries of up to 50,000 characters.                                                                                                                                           |
-| `drafts/`                  | Crash recovery for unsaved documents.                                                                                                                                                                                       |
-| `assets/`                  | Images pasted into a document that has not been saved yet, referenced by absolute path until its first save moves them into the folder chosen by the `imageFolder` setting (`assets` by default, relative to the document). |
+| File                       | What                                                                                                                                                                                                                                                                    |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ui-state.json` †          | Where the UI was left: `{"schemaVersion": 1, "state": {...}}` with the fields of `UiState` in `src/storage/ui-state.ts`.                                                                                                                                                |
+| `chat-history/`            | Saved Agent conversations, one file each - see [Chat history](#chat-history) below.                                                                                                                                                                                     |
+| `clipboard-history.json` † | The clipboard panel, newest first, at most 30 entries of up to 50,000 characters.                                                                                                                                                                                       |
+| `drafts/`                  | Crash recovery for unsaved documents.                                                                                                                                                                                                                                   |
+| `assets/`                  | Images pasted into a document that has not been saved yet, referenced by absolute path until its first save moves them into the folder chosen by the `imageFolder` setting: a subfolder of the document's folder (`assets` by default), or `./` for that folder itself. |
 
 On iOS a document path inside the app's Documents folder is stored as
 `documents:<path inside Documents>` - a conversation's `docPath`, like the
@@ -84,18 +84,18 @@ earlier version is rewritten that way when the history loads.
 one `chat-history.json`, rewritten whole on every saved turn and capped at
 60 by dropping the oldest. Since 1.1.0 they are a folder:
 
-| File                            | What                                                                                                                                                                           |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `chat-history/<id>.json`        | One conversation: `{"schemaVersion": 1, "entry": {id, docPath, title, updatedAt, turns}}`. Attached images are kept as their name and type only.                               |
-| `chat-history/index.json`       | What the Chats tab lists, most recent first: `{"schemaVersion": 1, "entries": [{id, docPath, title, updatedAt, turnCount}]}` (`ChatSummary` in `src/ai/chat/chat-history.ts`). |
-| `chat-history/.trash/<id>.json` | Conversations moved out of the list by the cap, as they were.                                                                                                                  |
+| File                            | What                                                                                                                                                                                    |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `chat-history/<id>.json`        | One conversation: `{"schemaVersion": 1, "entry": {id, docPath, title, updatedAt, turns}}`. Attached images are kept as their name and type only.                                        |
+| `chat-history/index.json`       | What the AI panel's history shows, most recent first: `{"schemaVersion": 1, "entries": [{id, docPath, title, updatedAt, turnCount}]}` (`ChatSummary` in `src/ai/chat/chat-history.ts`). |
+| `chat-history/.trash/<id>.json` | Conversations moved out of the list by the cap, as they were.                                                                                                                           |
 
 - Saving a turn rewrites only that conversation's file and the index, each
   debounced and written like every other file here. The windows hold only
   the index; a conversation's turns are read (`chat_history_get`) when it
   is reopened.
 - The index keeps the newest 500 conversations. A save that pushes one past
-  that moves the oldest's file into `.trash/`, and the Chats tab says that
+  that moves the oldest's file into `.trash/`, and the history list says that
   older conversations were archived. `.trash/` keeps at most 200 files; past
   that the oldest (by modification time, which a move keeps) are deleted.
 - A conversation id is a file name, so only ids of letters, digits, `-` and
@@ -103,7 +103,7 @@ one `chat-history.json`, rewritten whole on every saved turn and capped at
   anything else put in the folder is left alone.
 - **Privacy › Clear chat history** deletes every conversation file in the
   folder and in `.trash/`, and empties the index. Deleting one conversation
-  in the Chats tab deletes its file (not into the trash).
+  in the history list deletes its file (not into the trash).
 - A document saved under a new path by Textus (Save As, a rename in the
   iPhone's document list) takes its conversations along
   (`chat_history_move_document`).

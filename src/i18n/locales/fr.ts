@@ -8,7 +8,6 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "Panneau IA",
   agentPanelPopOut: "Ouvrir dans une fenêtre séparée",
   agentPanelResize: "Redimensionner le panneau IA",
   sidebarResize: "Redimensionner la barre latérale",
@@ -485,7 +484,7 @@ utiliser une.
   agentStop: "Arrêter",
   agentRetry: "Réessayer",
   agentThinking: "Réflexion…",
-  chatTab: "Discussions",
+  chatHistoryOpen: "Historique",
   chatHistoryEmpty: "Aucune conversation passée.",
   chatHistoryRestoreHint: "Rouvrir cette conversation avec son document",
   chatHistoryDelete: "Supprimer la conversation",
@@ -857,11 +856,11 @@ utiliser une.
   imageStorageLocal: "Sur cet ordinateur",
   imageStorageRemote: "Envoyer vers un hébergeur d'images",
   imageFolderLabel: "Dossier",
-  imageFolderNextToDocument: "À côté du document",
-  imageFolderDocumentName: "<document>.assets/",
-  imageFolderCustom: "Dossier personnalisé",
+  imageFolderSubfolder: "Sous-dossier",
+  imageFolderSameFolder: "Même dossier que le document",
+  imageFolderNameLabel: "Nom du sous-dossier",
   imageFolderInvalid:
-    "Indiquez un dossier relatif au document, comme img ou ../images.",
+    "Indiquez un dossier situé dans celui du document, comme img.",
   imageHostLabel: "Service",
   imageHostCustom: "Personnalisé",
   imagePicgoEndpointLabel: "Adresse du serveur",

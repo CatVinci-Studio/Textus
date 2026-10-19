@@ -48,6 +48,10 @@ export const CHAT_TO_EDITOR = {
   selectionChip: "chat:selection-chip",
   /** The selection chip was clicked: scroll the passage into view. */
   revealSelection: "chat:reveal-selection",
+  /** A conversation picked from the window's history list belongs to this
+   *  document: open it in a tab, so the context that follows names it and
+   *  the window can restore the conversation (reopen-conversation.ts). */
+  openDocument: "chat:open-document",
 } as const;
 
 /** Rust -> every editor window: the set of open chat windows changed (one
@@ -94,7 +98,7 @@ export interface ChatHandoffState {
   context: ChatContext;
   /** Carried across so the conversation keeps ONE id through detach and
    *  re-embed - minting a new one each hop scatters a single exchange over
-   *  several sidebar history entries. */
+   *  several history entries. */
   conversationId: string;
   turns: AgentTurn[];
   /** Statuses of proposals already on screen, so a detached window doesn't
@@ -139,6 +143,10 @@ export interface ReembedMessage {
   /** The document the conversation was last about - only that tab takes it
    *  back (null: an unsaved draft, matched as the active tab). */
   docPath: string | null;
+}
+
+export interface OpenDocumentMessage {
+  path: string;
 }
 
 /** Typed `emitTo` - keeps event name and payload shape together. */

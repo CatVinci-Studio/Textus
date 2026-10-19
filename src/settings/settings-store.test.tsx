@@ -81,7 +81,7 @@ function Probe() {
   });
   return (
     <div data-testid="probe">
-      {settings.theme}|{settings.zoom}|{settings.customCss}|{t.agentPanelToggle}
+      {settings.theme}|{settings.zoom}|{settings.customCss}|{t.settingsTitle}
     </div>
   );
 }
@@ -334,7 +334,7 @@ describe("language", () => {
         <Probe />
       </SettingsProvider>,
     );
-    expect(screen.getByTestId("probe").textContent).toContain("AI panel");
+    expect(screen.getByTestId("probe").textContent).toContain("Settings");
     expect(document.documentElement.lang).toBe("en");
   });
 

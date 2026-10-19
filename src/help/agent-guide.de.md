@@ -31,14 +31,14 @@ Mögliche Fehler werden unterstrichen. Bewege den Zeiger auf eine Unterstreichun
 
 ### 3. Der KI-Bereich
 
-Die vollständige Unterhaltung findet in einem Bereich rechts neben dem Editor statt. Du öffnest und schließt ihn mit der Chat-Schaltfläche am rechten Ende der Titelleiste oder mit <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+Die vollständige Unterhaltung findet in einem Bereich rechts neben dem Editor statt. Du öffnest und schließt ihn mit der Schaltfläche **Textus AI** (dem Roboter) am rechten Ende der Titelleiste oder mit <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **Eine Unterhaltung pro Dokument**: Jeder Tab hat seine eigene Unterhaltung, und wenn du den Tab wechselst, wechselt der Bereich mit. **Neue Unterhaltung** im Kopf des Bereichs fängt von vorn an (sind noch Änderungen offen, wird vorher nachgefragt).
 - **Modi**: Das Eingabefeld bietet drei. **Schreiben** entwirft neuen Text im Dokument (eine Fortsetzung, einen neuen Absatz oder Abschnitt) und fügt nur hinzu: Ist Text ausgewählt, schreibt es hinter der Auswahl weiter. **Prüfen** beantwortet Fragen, bespricht und kommentiert, ohne etwas zu ändern. **Überarbeiten** ändert den vorhandenen Text. Jede Änderung aus Schreiben oder Überarbeiten ist ein Vorschlag, den du annimmst oder ablehnst. Der Bereich startet in dem Modus, der unter **Einstellungen > Textus AI > Chat mit Textus AI > Standardmodus** eingestellt ist.
 - **@-Erwähnungen**: Tippe `@` ins Eingabefeld, um eine Textdatei aus dem Projektordner auszuwählen; sie wird an die Nachricht angehängt.
 - **Dateien anhängen**: Die Schaltfläche **+** links neben dem Eingabefeld hängt ein PDF, ein Word-Dokument, eine PowerPoint-Präsentation, eine Tabelle, ein Bild oder eine Textdatei an die Nachricht an. Alles außer Bildern wird lokal in Text umgewandelt und mit der Nachricht verschickt; Bilder gehen als echte Bilder an Anbieter, die sie lesen können (die anderen sagen das vorher, statt sie stillschweigend wegzulassen). Von einer langen Datei wird nur ein Teil gesendet; der Chip zeigt dann „(gekürzt)“.
 - **Websuche**: Sobald sie unter **Einstellungen > Textus AI > Chat mit Textus AI** aktiviert ist (bei Anbietern, die das unterstützen), kann Textus AI selbstständig im Web suchen, wenn eine Anfrage es erfordert.
-- **Verlauf**: Der Tab **Chats** in der Seitenleiste speichert frühere Unterhaltungen. Klicke auf eine, um sie im aktuellen Editor wieder zu öffnen und fortzusetzen.
+- **Verlauf**: Die Schaltfläche **Verlauf** (die Uhr) oben im KI-Bereich listet frühere Unterhaltungen nach Ordnern auf. Klicke auf eine, um sie mit ihrem Dokument wieder zu öffnen und fortzusetzen.
 - **Fehler**: Schlägt eine Anfrage fehl, nennt der Chat über der Meldung des Anbieters die Art des Problems und was zu tun ist (Schlüssel prüfen, kurz warten, ein anderes Modell wählen).
 
 **In eigenem Fenster öffnen** im Kopf des Bereichs verschiebt die Unterhaltung in ein eigenes Fenster – praktisch auf einem zweiten Bildschirm. Dieses Fenster folgt dir: Wechselst du Tabs oder Fenster, wechseln Dokument, Titel und Auswahl mit, und die vorgeschlagenen Änderungen landen in der Datei, die du gerade bearbeitest. Pro Editorfenster gibt es immer nur eines; **📌** in seinem Kopf hält es über dem Editor.

@@ -1,14 +1,17 @@
-import { useSettings } from "../settings/SettingsContext";
-import { localeOf } from "../i18n/strings";
+import { useCallback, useState } from "react";
+import { useSettings } from "../../settings/SettingsContext";
+import { localeOf } from "../../i18n/strings";
 import {
   useChatHistory,
   useHasArchivedConversations,
   deleteConversation,
-} from "../ai/chat/chat-history";
-import { reopenConversation } from "./reopen-conversation";
-import { CloseIcon } from "../ui/icons";
-import { basename, dirname } from "../utils/path";
-import type { ChatSummary } from "../ai/chat/chat-history";
+} from "./chat-history";
+import { CloseIcon, HistoryIcon } from "../../ui/icons";
+import { Presence, PresenceDiv } from "../../ui/usePresence";
+import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
+import { basename, dirname } from "../../utils/path";
+import type { ChatSummary } from "./chat-history";
+import "./chat-history-menu.css";
 
 /** Conversations by the folder their document lives in - the project they
  *  belong to - most recently active group first. Unsaved drafts form one
@@ -25,11 +28,64 @@ export function groupByProject(
 }
 
 /**
- * Sidebar panel over the saved agent conversations (see ai/chat/chat-history.ts),
- * grouped by project folder. Clicking an entry reopens it with its document
- * as the live conversation in the Agent panel (reopen-conversation.ts).
+ * The history button in a chat surface's header (the AI panel's, the
+ * detached window's) and the list of saved conversations it opens
+ * (ai/chat/chat-history.ts), grouped by project folder. Picking one hands
+ * it to `onReopen` (reopen-conversation.ts) and closes the list. The list
+ * spans the header it sits in, which is its containing block.
  */
-export function ChatHistory() {
+export function ChatHistoryMenu({
+  buttonClassName,
+  disabled,
+  onReopen,
+}: {
+  buttonClassName: string;
+  disabled?: boolean;
+  onReopen: (entry: ChatSummary) => void;
+}) {
+  const { t } = useSettings();
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const ref = useCloseOnOutsideClick<HTMLDivElement>(close, true, open);
+  return (
+    <div className="chat-history-anchor" ref={ref}>
+      <button
+        type="button"
+        className={buttonClassName}
+        aria-label={t.chatHistoryOpen}
+        title={t.chatHistoryOpen}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        disabled={disabled}
+        onClick={() => setOpen(!open)}
+      >
+        <HistoryIcon />
+      </button>
+      <Presence show={open} exitMs={120}>
+        {open && (
+          <PresenceDiv
+            className="chat-history-menu floating-surface"
+            role="dialog"
+            aria-label={t.chatHistoryOpen}
+          >
+            <ChatHistoryList
+              onReopen={(entry) => {
+                close();
+                onReopen(entry);
+              }}
+            />
+          </PresenceDiv>
+        )}
+      </Presence>
+    </div>
+  );
+}
+
+function ChatHistoryList({
+  onReopen,
+}: {
+  onReopen: (entry: ChatSummary) => void;
+}) {
   const { t, settings } = useSettings();
   const entries = useChatHistory();
   const archived = useHasArchivedConversations(entries);
@@ -38,7 +94,7 @@ export function ChatHistory() {
   const locale = localeOf(settings.language);
 
   if (entries.length === 0) {
-    return <div className="clipboard-empty">{t.chatHistoryEmpty}</div>;
+    return <div className="chat-history-empty">{t.chatHistoryEmpty}</div>;
   }
 
   return (
@@ -62,7 +118,7 @@ export function ChatHistory() {
                   ? t.chatHistoryRestoreHint
                   : t.chatHistoryRestoreHereHint
               }
-              onClick={() => void reopenConversation(entry, t)}
+              onClick={() => onReopen(entry)}
             >
               <div className="chat-history-entry-main">
                 <span className="chat-history-entry-title">
@@ -76,6 +132,7 @@ export function ChatHistory() {
               <button
                 className="chat-history-entry-delete"
                 title={t.chatHistoryDelete}
+                aria-label={t.chatHistoryDelete}
                 onClick={(e) => {
                   e.stopPropagation();
                   deleteConversation(entry.id);

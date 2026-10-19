@@ -1,5 +1,5 @@
 import { errorText } from "../../utils/error-text";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
 import { imageHostAuth } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
 import {
@@ -8,7 +8,12 @@ import {
   type ImageNamingMode,
   type ImageStorageMode,
 } from "../SettingsContext";
-import { IMAGE_FOLDER_PRESETS, imageFolderExample } from "../image-folder";
+import {
+  DEFAULT_IMAGE_SUBFOLDER,
+  SAME_FOLDER,
+  imageFolderExample,
+  isImageSubfolder,
+} from "../image-folder";
 import { Select } from "../../ui/Select";
 import { SettingRow, VERBATIM_INPUT } from "./controls";
 
@@ -39,79 +44,66 @@ export function ImageStorageSection({ t }: { t: Strings }) {
   );
 }
 
-/** The link a choice writes, shown beside it: what "assets" or "./" means
- *  is clearer as the Markdown it produces than as a description. */
-function Example({ folder }: { folder: string }) {
-  const src = imageFolderExample(folder, "notes", "photo.png");
-  return src === null ? null : (
-    <code className="image-folder-example">{`![](${src})`}</code>
-  );
-}
-
+/** Where a saved document's images go: its own folder, or a subfolder
+ *  named beside the choice. Under it, the link a paste writes - what
+ *  "assets" means is clearer as the Markdown it produces than as a
+ *  description. The name is kept as typed but only stored once the
+ *  backend would take it, so a half-typed or refused name never reaches
+ *  a paste. */
 function ImageFolderRow({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
-  const folder = settings.imageFolder;
-  const [custom, setCustom] = useState(
-    () => !IMAGE_FOLDER_PRESETS.includes(folder),
+  const same = settings.imageFolder === SAME_FOLDER;
+  const [name, setName] = useState(() =>
+    same ? DEFAULT_IMAGE_SUBFOLDER : settings.imageFolder,
   );
-  const name = useId();
-  const presetLabels: Record<string, string> = {
-    assets: "assets/",
-    "./": t.imageFolderNextToDocument,
-    "${filename}.assets": t.imageFolderDocumentName,
-  };
+  const valid = isImageSubfolder(name);
+  const example = imageFolderExample(same ? SAME_FOLDER : name, "photo.png");
   return (
-    <div className="settings-row settings-row-stacked">
-      <div className="settings-row-label" id={`${name}-label`}>
-        {t.imageFolderLabel}
-      </div>
-      <div
-        className="image-folder-options"
-        role="radiogroup"
-        aria-labelledby={`${name}-label`}
-      >
-        {IMAGE_FOLDER_PRESETS.map((preset) => (
-          <label key={preset} className="image-folder-option">
-            <input
-              type="radio"
-              name={name}
-              checked={!custom && folder === preset}
-              onChange={() => {
-                setCustom(false);
-                setSettings({ imageFolder: preset });
-              }}
-            />
-            <span>{presetLabels[preset]}</span>
-            <Example folder={preset} />
-          </label>
-        ))}
-        <label className="image-folder-option">
+    <SettingRow
+      label={t.imageFolderLabel}
+      hint={
+        example === null ? undefined : (
+          <code className="image-folder-example">{`![](${example})`}</code>
+        )
+      }
+      error={!same && !valid ? t.imageFolderInvalid : null}
+    >
+      <div className="image-folder-control">
+        <Select
+          className="settings-select"
+          aria-label={t.imageFolderLabel}
+          value={same ? "same" : "subfolder"}
+          onChange={(e) =>
+            setSettings({
+              imageFolder:
+                e.target.value === "same"
+                  ? SAME_FOLDER
+                  : valid
+                    ? name.trim()
+                    : DEFAULT_IMAGE_SUBFOLDER,
+            })
+          }
+        >
+          <option value="subfolder">{t.imageFolderSubfolder}</option>
+          <option value="same">{t.imageFolderSameFolder}</option>
+        </Select>
+        {!same && (
           <input
-            type="radio"
-            name={name}
-            checked={custom}
-            onChange={() => setCustom(true)}
+            {...VERBATIM_INPUT}
+            className="settings-text-input image-folder-input"
+            aria-label={t.imageFolderNameLabel}
+            aria-invalid={!valid}
+            placeholder={DEFAULT_IMAGE_SUBFOLDER}
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (isImageSubfolder(e.target.value))
+                setSettings({ imageFolder: e.target.value.trim() });
+            }}
           />
-          <span>{t.imageFolderCustom}</span>
-          {custom && <Example folder={folder} />}
-        </label>
-        {custom && (
-          <>
-            <input
-              {...VERBATIM_INPUT}
-              className="settings-text-input image-folder-input"
-              aria-label={t.imageFolderCustom}
-              placeholder="img"
-              value={folder}
-              onChange={(e) => setSettings({ imageFolder: e.target.value })}
-            />
-            {imageFolderExample(folder, "notes", "photo.png") === null && (
-              <div className="settings-error">{t.imageFolderInvalid}</div>
-            )}
-          </>
         )}
       </div>
-    </div>
+    </SettingRow>
   );
 }
 

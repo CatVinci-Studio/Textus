@@ -92,8 +92,9 @@
   }
 
   /* The sheet's header rides up beside the grip instead of a row of its
-     own - Conversation / Memory on the left, + and x on the right; the
-     rest of that row lets touches through to the grip under it. */
+     own - Conversation / Memory on the left, history, + and x on the
+     right; the rest of that row lets touches through to the grip under
+     it. */
   :root[data-window-chrome="mobile"] .agent-panel-header {
     /* The grip's height: the buttons centre on the grip's line. */
     margin-top: -44px;
@@ -113,8 +114,8 @@
     font-size: var(--text-md);
   }
 
-  /* New conversation and close: finger-sized, like every other button on
-     the phone. */
+  /* History, new conversation and close: finger-sized, like every other
+     button on the phone. */
   :root[data-window-chrome="mobile"]
     .agent-panel-actions
     .inline-chat-header-button {

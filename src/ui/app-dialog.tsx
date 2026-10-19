@@ -7,8 +7,9 @@ import { usePresence } from "./usePresence";
  * (@tauri-apps/plugin-dialog's `message`/`ask`), which drew a GTK or Win32
  * box in the middle of an otherwise themed window. Callable from anywhere -
  * export code and editor plugins have no React tree of their own - and
- * shown by the one AppDialogHost that App mounts. Requests queue: a second
- * one waits for the first to be answered.
+ * shown by the one AppDialogHost each window mounts (App, and the detached
+ * chat window's ChatWindowApp). Requests queue: a second one waits for the
+ * first to be answered.
  */
 export interface AppDialogOptions {
   title?: string;
@@ -102,7 +103,7 @@ function answer(request: Request, ok: boolean, value?: string) {
   request.resolve(ok, value);
 }
 
-/** Mounted once, by App. */
+/** Mounted once per window: by App, and by ChatWindowApp. */
 export function AppDialogHost({ okLabel }: { okLabel: string }) {
   const [pending, setPending] = useState<Request[]>(queue);
   useEffect(() => {

@@ -1239,7 +1239,7 @@ pub fn history_clear(
 }
 
 /// One saved conversation whole, turns included - what restoring it from
-/// the Chats tab loads. `None` when its file is gone.
+/// the history list loads. `None` when its file is gone.
 #[tauri::command]
 pub fn chat_history_get(stores: tauri::State<Stores>, id: String) -> Option<Value> {
     stores.chat.get(&id)
