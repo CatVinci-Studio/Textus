@@ -61,7 +61,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 Homebrewでもインストールできます：
 
 ```sh
-brew install --cask catvinci-studio/tap/textus
+brew install --cask textus
 ```
 
 Arch Linux は署名付きの [`[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) pacman リポジトリで（設定は一度だけ。以後は `sudo pacman -Syu` で Textus も最新に保たれます）：
