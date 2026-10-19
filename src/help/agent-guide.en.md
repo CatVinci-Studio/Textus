@@ -31,7 +31,7 @@ Possible issues get underlined. Hover over one, or move the caret into it, to se
 
 ### 3. The AI panel
 
-The full conversation lives in a panel on the right side of the editor. Open or close it with the chat button at the right end of the window bar or <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+The full conversation lives in a panel on the right side of the editor. Open or close it with the **Textus AI** button (the robot) at the right end of the window bar or <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **One conversation per document**: each tab has its own conversation, and switching tabs switches the panel with it. **New conversation** in the panel's header starts over (with edits still undecided, it asks first).
 - **Modes**: the composer has three. **Write** drafts new text into the document (a continuation, a new paragraph or section) and only ever adds: with text selected, it writes after the selection. **Review** answers, discusses and leaves comments without changing anything. **Revise** changes the text that is there. Every change Write or Revise makes is a proposal you accept or reject. The panel starts in the mode set under **Settings > Textus AI > Textus AI Chat > Default mode**.

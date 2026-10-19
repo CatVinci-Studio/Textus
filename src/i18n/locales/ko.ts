@@ -6,7 +6,6 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "AI 패널",
   agentPanelPopOut: "별도 창에서 열기",
   agentPanelResize: "AI 패널 크기 조절",
   sidebarResize: "사이드바 크기 조절",

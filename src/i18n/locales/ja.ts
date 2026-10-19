@@ -6,7 +6,6 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "AIパネル",
   agentPanelPopOut: "別ウィンドウで開く",
   agentPanelResize: "AIパネルの幅を調整",
   sidebarResize: "サイドバーの幅を調整",

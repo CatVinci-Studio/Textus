@@ -1,5 +1,5 @@
 import { useSettings } from "../settings/SettingsContext";
-import { ChatTabIcon } from "../ui/icons";
+import { AssistantIcon } from "../ui/icons";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./app-menu-model";
 import { AppMenuButton } from "./WindowControls";
@@ -65,11 +65,11 @@ export function WindowBar({
             type="button"
             className={`window-bar-toggle${agentOpen ? " window-bar-toggle-on" : ""}`}
             aria-pressed={agentOpen}
-            aria-label={t.agentPanelToggle}
-            title={`${t.agentPanelToggle} (${agentShortcut})`}
+            aria-label={t.agentPanelTitle}
+            title={`${t.agentPanelTitle} (${agentShortcut})`}
             onClick={onToggleAgent}
           >
-            <ChatTabIcon />
+            <AssistantIcon />
           </button>
         )}
       </div>

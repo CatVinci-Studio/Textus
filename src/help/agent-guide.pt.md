@@ -31,7 +31,7 @@ Possíveis problemas aparecem sublinhados. Passe o ponteiro sobre um deles, ou l
 
 ### 3. O painel de IA
 
-A conversa completa fica em um painel no lado direito do editor. Abra ou feche o painel com o botão de chat na ponta direita da barra da janela ou com <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+A conversa completa fica em um painel no lado direito do editor. Abra ou feche o painel com o botão **Textus AI** (o robô) na ponta direita da barra da janela ou com <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **Uma conversa por documento**: cada aba tem a sua conversa, e trocar de aba troca o painel junto. **Nova conversa**, no cabeçalho do painel, recomeça do zero (se ainda houver edições sem decisão, o app pergunta antes).
 - **Modos**: o campo de mensagem tem três. **Escrever** redige texto novo no documento (uma continuação, um parágrafo ou uma seção nova) e só acrescenta: com texto selecionado, escreve depois da seleção. **Revisar** responde, conversa e deixa comentários sem mudar nada. **Editar** altera o texto que já existe. Cada mudança de Escrever ou Editar é uma proposta que você aceita ou rejeita. O painel começa no modo definido em **Ajustes > Textus AI > Chat da Textus AI > Modo padrão**.

@@ -31,7 +31,7 @@ Mögliche Fehler werden unterstrichen. Bewege den Zeiger auf eine Unterstreichun
 
 ### 3. Der KI-Bereich
 
-Die vollständige Unterhaltung findet in einem Bereich rechts neben dem Editor statt. Du öffnest und schließt ihn mit der Chat-Schaltfläche am rechten Ende der Titelleiste oder mit <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+Die vollständige Unterhaltung findet in einem Bereich rechts neben dem Editor statt. Du öffnest und schließt ihn mit der Schaltfläche **Textus AI** (dem Roboter) am rechten Ende der Titelleiste oder mit <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **Eine Unterhaltung pro Dokument**: Jeder Tab hat seine eigene Unterhaltung, und wenn du den Tab wechselst, wechselt der Bereich mit. **Neue Unterhaltung** im Kopf des Bereichs fängt von vorn an (sind noch Änderungen offen, wird vorher nachgefragt).
 - **Modi**: Das Eingabefeld bietet drei. **Schreiben** entwirft neuen Text im Dokument (eine Fortsetzung, einen neuen Absatz oder Abschnitt) und fügt nur hinzu: Ist Text ausgewählt, schreibt es hinter der Auswahl weiter. **Prüfen** beantwortet Fragen, bespricht und kommentiert, ohne etwas zu ändern. **Überarbeiten** ändert den vorhandenen Text. Jede Änderung aus Schreiben oder Überarbeiten ist ein Vorschlag, den du annimmst oder ablehnst. Der Bereich startet in dem Modus, der unter **Einstellungen > Textus AI > Chat mit Textus AI > Standardmodus** eingestellt ist.

@@ -258,7 +258,10 @@ export function ClipboardTabIcon({ className }: IconProps) {
   );
 }
 
-export function ChatTabIcon({ className }: IconProps) {
+/** Textus AI's own button - the window bar's toggle for the AI panel, and
+ *  the review bar's way back to it on a phone: a small robot, so it reads
+ *  as the assistant rather than as one more chat. */
+export function AssistantIcon({ className }: IconProps) {
   return (
     <svg
       className={className}
@@ -267,12 +270,24 @@ export function ChatTabIcon({ className }: IconProps) {
       viewBox="0 0 16 16"
       fill="none"
     >
-      <path
-        d="M2 3.8C2 3.02 2.63 2.4 3.4 2.4H12.6C13.37 2.4 14 3.02 14 3.8V9.4C14 10.17 13.37 10.8 12.6 10.8H6.4L3.6 13.2V10.8H3.4C2.63 10.8 2 10.17 2 9.4V3.8Z"
+      <rect
+        x="2.5"
+        y="5"
+        width="11"
+        height="8.5"
+        rx="2.2"
         stroke="currentColor"
         strokeWidth="1.1"
-        strokeLinejoin="round"
       />
+      <path
+        d="M8 5V3M1 8.3V10.2M15 8.3V10.2M6.3 11.2H9.7"
+        stroke="currentColor"
+        strokeWidth="1.1"
+        strokeLinecap="round"
+      />
+      <circle cx="8" cy="2.4" r="0.9" fill="currentColor" />
+      <circle cx="5.9" cy="8.5" r="1" fill="currentColor" />
+      <circle cx="10.1" cy="8.5" r="1" fill="currentColor" />
     </svg>
   );
 }

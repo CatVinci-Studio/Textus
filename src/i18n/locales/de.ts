@@ -6,7 +6,6 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "KI-Bereich",
   agentPanelPopOut: "In eigenem Fenster öffnen",
   agentPanelResize: "Breite des KI-Bereichs ändern",
   sidebarResize: "Breite der Seitenleiste ändern",

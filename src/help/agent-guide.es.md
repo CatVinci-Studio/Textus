@@ -31,7 +31,7 @@ Los posibles problemas aparecen subrayados. Pasa el puntero sobre uno, o coloca 
 
 ### 3. El panel de IA
 
-La conversación completa está en un panel a la derecha del editor. Ábrelo o ciérralo con el botón de chat del extremo derecho de la barra de la ventana o con <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+La conversación completa está en un panel a la derecha del editor. Ábrelo o ciérralo con el botón **Textus AI** (el robot) del extremo derecho de la barra de la ventana o con <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **Una conversación por documento**: cada pestaña tiene su propia conversación, y al cambiar de pestaña el panel cambia con ella. **Nueva conversación**, en la cabecera del panel, empieza de cero (si quedan cambios por revisar, pregunta antes).
 - **Modos**: el cuadro de texto ofrece tres. **Escribir** redacta texto nuevo en el documento (una continuación, un párrafo o una sección nuevos) y solo añade: con texto seleccionado, escribe a continuación de la selección. **Revisar** responde, comenta y deja comentarios sin cambiar nada. **Editar** cambia el texto que ya está. Cada cambio de Escribir o Editar es una propuesta que aceptas o rechazas. El panel empieza en el modo elegido en **Ajustes > Textus AI > Chat de Textus AI > Modo predeterminado**.

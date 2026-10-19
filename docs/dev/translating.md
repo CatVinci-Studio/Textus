@@ -60,7 +60,7 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "KI-Bereich",
+  settingsTitle: "Einstellungen",
   // ...
 } satisfies Translation;
 ```

@@ -6,7 +6,6 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "AI 面板",
   agentPanelPopOut: "在獨立視窗中開啟",
   agentPanelResize: "調整 AI 面板寬度",
   sidebarResize: "調整側邊欄寬度",

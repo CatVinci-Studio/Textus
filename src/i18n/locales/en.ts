@@ -8,7 +8,6 @@ import type { Plural } from "../plural";
  */
 const en = {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "AI panel",
   agentPanelPopOut: "Open in a separate window",
   agentPanelResize: "Resize the AI panel",
   sidebarResize: "Resize the sidebar",

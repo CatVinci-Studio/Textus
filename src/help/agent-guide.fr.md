@@ -31,7 +31,7 @@ Les problèmes possibles sont soulignés. Survolez-en un, ou placez le curseur d
 
 ### 3. Le panneau IA
 
-La conversation complète se trouve dans un panneau à droite de l'éditeur. Ouvrez-le ou fermez-le avec le bouton de discussion à l'extrémité droite de la barre de la fenêtre, ou avec <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+La conversation complète se trouve dans un panneau à droite de l'éditeur. Ouvrez-le ou fermez-le avec le bouton **Textus AI** (le robot) à l'extrémité droite de la barre de la fenêtre, ou avec <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **Une conversation par document** : chaque onglet a sa propre conversation, et changer d'onglet change aussi celle du panneau. **Nouvelle conversation**, dans l'en-tête du panneau, repart de zéro (s'il reste des modifications en attente, une confirmation est d'abord demandée).
 - **Modes** : la zone de saisie en propose trois. **Écrire** rédige du texte nouveau dans le document (une suite, un paragraphe ou une section) et ne fait qu'ajouter : avec du texte sélectionné, il écrit après la sélection. **Relire** répond, discute et laisse des commentaires sans rien modifier. **Réviser** modifie le texte existant. Chaque changement d'Écrire ou de Réviser est une proposition que vous acceptez ou refusez. Le panneau s'ouvre dans le mode choisi sous **Réglages > Textus AI > Discussion avec Textus AI > Mode par défaut**.

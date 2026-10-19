@@ -6,7 +6,6 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "Painel de IA",
   agentPanelPopOut: "Abrir em uma janela separada",
   agentPanelResize: "Redimensionar o painel de IA",
   sidebarResize: "Redimensionar a barra lateral",
