@@ -948,4 +948,14 @@ export default {
   quickNoteNoImages: `速記中無法貼上圖片。請在 ${APP_NAME} 中打開後再加入。`,
   quickNoteConflictMessage:
     "你有未儲存的修改時，一則速記被存入了這個檔案：「{note}」。現在儲存會覆寫檔案並刪除這則速記。",
+  backgroundGroup: "背景執行",
+  backgroundToggle: "在背景持續執行",
+  backgroundHintMac: `在選單列顯示 ${APP_NAME} 圖示，隨時新增速記、打開文件或結束。`,
+  backgroundHintWindows: `關閉最後一個視窗後，${APP_NAME} 仍在執行，通知區域會顯示它的圖示，按一下即可新增速記。要完全關閉 ${APP_NAME}，請在圖示選單中選擇「結束」。`,
+  backgroundHintLinux: `關閉最後一個視窗後，${APP_NAME} 仍在執行，系統匣會顯示它的圖示。要完全關閉 ${APP_NAME}，請在圖示選單中選擇「結束」。GNOME 需安裝 AppIndicator 擴充功能才會顯示系統匣圖示。`,
+  backgroundTrayUnavailable: `這個桌面沒有可用的系統匣：未安裝 libayatana-appindicator。${APP_NAME} 仍會在背景執行，可以從啟動器或用速記快速鍵打開。`,
+  openAtLoginToggle: "登入時開啟",
+  openAtLoginHint: `登入時在背景開啟 ${APP_NAME}，不打開視窗。`,
+  openAtLoginFailed: "無法變更登入項目：{error}",
+  trayOpenTextus: `打開 ${APP_NAME}`,
 } satisfies Translation;

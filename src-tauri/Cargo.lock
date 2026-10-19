@@ -4724,6 +4724,7 @@ dependencies = [
  "block2",
  "calamine",
  "gtk",
+ "libloading",
  "lopdf",
  "objc2",
  "objc2-app-kit",

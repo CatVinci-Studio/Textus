@@ -1034,4 +1034,15 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   quickNoteNoImages: `In eine Schnellnotiz lassen sich keine Bilder einfügen. Öffne sie in ${APP_NAME}, um eines hinzuzufügen.`,
   quickNoteConflictMessage:
     "Während du ungespeicherte Änderungen hattest, wurde eine Schnellnotiz in diese Datei gespeichert: „{note}“. Speicherst du jetzt, wird die Datei überschrieben und die Notiz gelöscht.",
+  backgroundGroup: "Hintergrund",
+  backgroundToggle: "Im Hintergrund weiterlaufen",
+  backgroundHintMac: `Zeigt ${APP_NAME} in der Menüleiste: für eine Schnellnotiz, deine Dokumente oder Beenden, jederzeit.`,
+  backgroundHintWindows: `Nach dem Schließen des letzten Fensters läuft ${APP_NAME} weiter, mit einem Symbol im Infobereich: Ein Klick darauf öffnet eine Schnellnotiz. Um ${APP_NAME} ganz zu beenden, wähle „${APP_NAME} beenden“ im Menü des Symbols.`,
+  backgroundHintLinux: `Nach dem Schließen des letzten Fensters läuft ${APP_NAME} weiter, mit einem Symbol im System-Tray. Um ${APP_NAME} ganz zu beenden, wähle „${APP_NAME} beenden“ im Menü des Symbols. GNOME zeigt Tray-Symbole nur mit der AppIndicator-Erweiterung.`,
+  backgroundTrayUnavailable: `Diese Arbeitsumgebung hat keinen Tray: libayatana-appindicator ist nicht installiert. ${APP_NAME} läuft trotzdem im Hintergrund weiter; öffne es über den Starter oder das Schnellnotiz-Tastenkürzel.`,
+  openAtLoginToggle: "Bei der Anmeldung öffnen",
+  openAtLoginHint: `Startet ${APP_NAME} bei der Anmeldung im Hintergrund, ohne Fenster.`,
+  openAtLoginFailed:
+    "Der Start bei der Anmeldung ließ sich nicht ändern: {error}",
+  trayOpenTextus: `${APP_NAME} öffnen`,
 } satisfies Translation;

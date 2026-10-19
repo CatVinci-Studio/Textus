@@ -62,6 +62,7 @@ import {
 import { PrivacySection } from "./sections/privacy";
 import { ImageStorageSection } from "./sections/images";
 import { QuickNotesSection } from "./sections/quick-notes";
+import { BackgroundSection } from "./sections/background";
 import "./SettingsPanel.css";
 import { useModalDialog } from "../ui/useModalDialog";
 import { usePresenceProps } from "../ui/usePresence";
@@ -228,6 +229,11 @@ export function SettingsPanel({
           {canUseWindows && (
             <SettingsGroup title={t.quickNotesGroup}>
               <QuickNotesSection t={t} />
+            </SettingsGroup>
+          )}
+          {canUseWindows && (
+            <SettingsGroup title={t.backgroundGroup}>
+              <BackgroundSection t={t} />
             </SettingsGroup>
           )}
 

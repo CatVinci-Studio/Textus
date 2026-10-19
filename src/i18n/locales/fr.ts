@@ -1056,4 +1056,15 @@ utiliser une.
   quickNoteNoImages: `Impossible de coller une image dans une note rapide. Ouvrez-la dans ${APP_NAME} pour en ajouter.`,
   quickNoteConflictMessage:
     "Une note rapide a été enregistrée dans ce fichier pendant que vous aviez des modifications non enregistrées\u00a0: «\u00a0{note}\u00a0». Enregistrer maintenant écrase le fichier et supprime cette note.",
+  backgroundGroup: "Arrière-plan",
+  backgroundToggle: "Rester ouvert en arrière-plan",
+  backgroundHintMac: `Affiche ${APP_NAME} dans la barre des menus : une note rapide, vos documents ou Quitter, à tout moment.`,
+  backgroundHintWindows: `Fermer la dernière fenêtre laisse ${APP_NAME} ouvert, avec une icône dans la zone de notification : cliquez dessus pour prendre une note rapide. Pour fermer ${APP_NAME} complètement, choisissez Quitter dans le menu de l’icône.`,
+  backgroundHintLinux: `Fermer la dernière fenêtre laisse ${APP_NAME} ouvert, avec une icône dans la zone de notification du système. Pour fermer ${APP_NAME} complètement, choisissez Quitter dans le menu de l’icône. GNOME n’affiche ces icônes qu’avec l’extension AppIndicator.`,
+  backgroundTrayUnavailable: `Ce bureau n’a pas de zone de notification : libayatana-appindicator n’est pas installé. ${APP_NAME} reste ouvert en arrière-plan ; ouvrez-le depuis votre lanceur ou avec le raccourci des notes rapides.`,
+  openAtLoginToggle: "Ouvrir à l’ouverture de session",
+  openAtLoginHint: `Lance ${APP_NAME} en arrière-plan à l’ouverture de session, sans fenêtre.`,
+  openAtLoginFailed:
+    "Impossible de modifier le lancement à l’ouverture de session : {error}",
+  trayOpenTextus: `Ouvrir ${APP_NAME}`,
 } satisfies Translation;

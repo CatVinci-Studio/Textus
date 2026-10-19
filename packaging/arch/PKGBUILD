@@ -14,7 +14,8 @@ arch=('x86_64')
 url="https://github.com/CatVinci-Studio/Textus"
 license=('MIT')
 depends=('webkit2gtk-4.1' 'gtk3' 'hicolor-icon-theme')
-optdepends=('pandoc: export to more formats')
+optdepends=('pandoc: export to more formats'
+            'libayatana-appindicator: the tray icon of background mode')
 provides=('textus')
 # Levis was renamed Textus at 1.0.0. `pacman -Syu` swaps an installed
 # levis-bin for textus-bin; the two ship different files (/usr/bin/levis vs

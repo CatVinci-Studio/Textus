@@ -64,6 +64,15 @@ default folder's path, so changing the UI language doesn't move the notes)
 and `quickNotePerDay`. `quickNoteContinueMinutes` is the frontend's. The
 notes themselves are ordinary Markdown files in that folder.
 
+`settings.json`'s `runInBackground` and `openAtLogin` are **Settings ›
+General › Background**, both off by default, and Rust reads them
+(`src-tauri/src/background/`). With both on, Textus writes a login entry
+outside its own folders, and removes it when either is turned off: the
+`Textus` value of `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` on
+Windows (the uninstaller removes it too), `~/Library/LaunchAgents/
+com.catvinci.textus.plist` on macOS, `~/.config/autostart/textus.desktop`
+(`$XDG_CONFIG_HOME`) on Linux. [lifecycle.md](lifecycle.md) has the rest.
+
 `settings.json`'s `updateChannel` is **Settings › General › About Textus ›
 Update channel**: `"stable"` (the default; a missing or unknown value means
 the same) or `"beta"`. Rust doesn't read the file for it: the frontend sends

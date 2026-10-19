@@ -1036,4 +1036,14 @@ para usar una.
   quickNoteNoImages: `No se pueden pegar imágenes en una nota rápida. Ábrela en ${APP_NAME} para añadirlas.`,
   quickNoteConflictMessage:
     "Se guardó una nota rápida en este archivo mientras tenías cambios sin guardar: «{note}». Si guardas ahora, sobrescribirás el archivo y esa nota se borrará.",
+  backgroundGroup: "Segundo plano",
+  backgroundToggle: "Seguir abierto en segundo plano",
+  backgroundHintMac: `Muestra ${APP_NAME} en la barra de menús, con una nota rápida, tus documentos y Salir siempre a mano.`,
+  backgroundHintWindows: `Al cerrar la última ventana, ${APP_NAME} sigue abierto, con un icono en el área de notificación: haz clic en él para tomar una nota rápida. Para cerrar ${APP_NAME} del todo, elige Salir en el menú del icono.`,
+  backgroundHintLinux: `Al cerrar la última ventana, ${APP_NAME} sigue abierto, con un icono en la bandeja del sistema. Para cerrar ${APP_NAME} del todo, elige Salir en el menú del icono. GNOME solo muestra iconos de bandeja con la extensión AppIndicator.`,
+  backgroundTrayUnavailable: `Este escritorio no tiene bandeja: falta libayatana-appindicator. ${APP_NAME} sigue abierto en segundo plano; ábrelo desde el lanzador o con el atajo de notas rápidas.`,
+  openAtLoginToggle: "Abrir al iniciar sesión",
+  openAtLoginHint: `Inicia ${APP_NAME} en segundo plano al iniciar sesión, sin abrir ninguna ventana.`,
+  openAtLoginFailed: "No se pudo cambiar el inicio automático: {error}",
+  trayOpenTextus: `Abrir ${APP_NAME}`,
 } satisfies Translation;

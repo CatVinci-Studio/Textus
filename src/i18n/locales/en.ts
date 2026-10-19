@@ -1013,6 +1013,16 @@ type /name in a conversation to use one.
   quickNoteNoImages: `Images can't be pasted into a quick note. Open it in ${APP_NAME} to add one.`,
   quickNoteConflictMessage:
     "A quick note was saved into this file while you had unsaved changes: “{note}”. Saving now overwrites the file and deletes that note.",
+  backgroundGroup: "Background",
+  backgroundToggle: "Keep running in the background",
+  backgroundHintMac: `Puts a ${APP_NAME} icon in the menu bar, for a quick note, your documents or Quit at any time.`,
+  backgroundHintWindows: `Closing the last window leaves ${APP_NAME} running, with an icon in the notification area: click it for a quick note. To close ${APP_NAME} completely, choose Quit in the icon’s menu.`,
+  backgroundHintLinux: `Closing the last window leaves ${APP_NAME} running, with an icon in the system tray. To close ${APP_NAME} completely, choose Quit in the icon’s menu. GNOME shows tray icons only with the AppIndicator extension.`,
+  backgroundTrayUnavailable: `This desktop has no tray: libayatana-appindicator isn’t installed. ${APP_NAME} still keeps running; open it from your launcher or with the Quick Note shortcut.`,
+  openAtLoginToggle: "Open at login",
+  openAtLoginHint: `Starts ${APP_NAME} in the background when you log in, with no window open.`,
+  openAtLoginFailed: "Couldn’t change the login item: {error}",
+  trayOpenTextus: `Open ${APP_NAME}`,
 } satisfies Record<string, string | Plural>;
 
 export default en;
