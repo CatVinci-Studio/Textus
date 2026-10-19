@@ -667,6 +667,14 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   cliCommandReinstallButton: "再インストール",
   cliCommandInstalling: "インストール中…",
   cliCommandFailed: "インストールできませんでした：",
+  defaultEditorLabel: "既定の Markdown エディタ",
+  defaultEditorIsDefault: `${APP_NAME} が既定です`,
+  defaultEditorNotDefault: `${APP_NAME} は既定ではありません`,
+  defaultEditorButton: "既定にする",
+  defaultEditorChooseHint: `「既定のアプリ」で .md ファイルに ${APP_NAME} を選んでください。`,
+  defaultEditorUnsupported:
+    "既定にできるのはパッケージ（.deb、.rpm、AUR）でインストールした場合だけで、AppImage はできません。",
+  defaultEditorFailed: "設定できませんでした：",
   customCssLabel: "カスタム CSS",
   customCssHint:
     "現在のテーマの上に適用されます。字下げ・行間・フォントなどの部分的な調整に。本文は #write で指定します。",

@@ -1082,6 +1082,26 @@ export const cli = {
 };
 
 // ---------------------------------------------------------------------------
+// default editor (src-tauri/src/commands/default_editor.rs) - desktop only
+// ---------------------------------------------------------------------------
+
+/** Mirrors `DefaultEditorStatus` in default_editor.rs - change both. */
+export interface DefaultEditorStatus {
+  /** False where this installation can't be the default (an AppImage). */
+  supported: boolean;
+  isDefault: boolean;
+  /** The choice is the user's, made in the system's settings, which
+   *  `set` opens (Windows). */
+  chooseInSettings: boolean;
+}
+
+export const defaultEditor = {
+  status: () =>
+    desktopQuery<DefaultEditorStatus | null>("default_editor_status", null),
+  set: () => desktopAction<void>("set_default_editor"),
+};
+
+// ---------------------------------------------------------------------------
 // distribution (src-tauri/src/distribution.rs)
 // ---------------------------------------------------------------------------
 

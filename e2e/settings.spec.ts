@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, PHONE, openPhone } from "./helpers";
+import { mockInvoke, openApp, PHONE, openPhone } from "./helpers";
 
 // The Settings panel: the AI page's layout and the focus/state bugs fixed
 // with it.
@@ -37,7 +37,32 @@ const t = {
   updateChannelStable: "Stable",
   updateChannelBeta: "Beta",
   updateChannelHint: "Beta gets release candidates before everyone else.",
+  defaultEditorLabel: "Default Markdown Editor",
+  defaultEditorIsDefault: "Textus is the default",
+  defaultEditorNotDefault: "Textus is not the default",
+  defaultEditorButton: "Set as Default",
+  defaultEditorChooseHint: "In Default apps, choose Textus for .md files.",
+  defaultEditorUnsupported:
+    "Only an installed package (.deb, .rpm or AUR) can be the default, not the AppImage.",
 };
+
+/** What default_editor_status reports: macOS and Linux set the default
+ *  themselves, Windows has the user choose it, an AppImage can't. */
+const defaultEditorStatus = {
+  mac: { supported: true, isDefault: false, chooseInSettings: false },
+  windows: { supported: true, isDefault: false, chooseInSettings: true },
+  appImage: { supported: false, isDefault: false, chooseInSettings: false },
+};
+
+/** The canned commands Settings sent, in order (dev-tauri-shim). */
+function invokeCalls(page: Page) {
+  return page.evaluate(() =>
+    (
+      (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
+        .__devInvokeCalls ?? []
+    ).map((c) => c.cmd),
+  );
+}
 
 async function openSettings(page: Page) {
   await page.evaluate(() =>
@@ -309,6 +334,69 @@ test.describe("desktop", () => {
     await expect(panel.getByText(t.updateChannel)).toHaveCount(0);
   });
 
+  test("the default editor button makes Textus the default where the system allows it", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await mockInvoke(page, {
+      default_editor_status: defaultEditorStatus.mac,
+      set_default_editor: null,
+    });
+    const panel = await openSettings(page);
+    const row = panel
+      .locator(".settings-row")
+      .filter({ hasText: t.defaultEditorLabel });
+    await expect(row).toContainText(t.defaultEditorNotDefault);
+    // What the system reports once the command has run.
+    await page.evaluate(() => {
+      (
+        window as unknown as { __devInvokeResults: Record<string, unknown> }
+      ).__devInvokeResults.default_editor_status = {
+        supported: true,
+        isDefault: true,
+        chooseInSettings: false,
+      };
+    });
+    await row.getByRole("button", { name: t.defaultEditorButton }).click();
+    await expect(row).toContainText(t.defaultEditorIsDefault);
+    await expect(row.getByRole("button")).toHaveCount(0);
+    expect(await invokeCalls(page)).toContain("set_default_editor");
+  });
+
+  test("on Windows the button opens Default apps and says what to choose", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await mockInvoke(page, {
+      default_editor_status: defaultEditorStatus.windows,
+      set_default_editor: null,
+    });
+    const panel = await openSettings(page);
+    const row = panel
+      .locator(".settings-row")
+      .filter({ hasText: t.defaultEditorLabel });
+    await expect(row.getByText(t.defaultEditorChooseHint)).toHaveCount(0);
+    await row.getByRole("button", { name: t.defaultEditorButton }).click();
+    await expect(row.getByText(t.defaultEditorChooseHint)).toBeVisible();
+    await expect(row).toContainText(t.defaultEditorNotDefault);
+    expect(await invokeCalls(page)).toContain("set_default_editor");
+  });
+
+  test("an AppImage explains instead of offering the button", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await mockInvoke(page, {
+      default_editor_status: defaultEditorStatus.appImage,
+    });
+    const panel = await openSettings(page);
+    const row = panel
+      .locator(".settings-row")
+      .filter({ hasText: t.defaultEditorLabel });
+    await expect(row.getByText(t.defaultEditorUnsupported)).toBeVisible();
+    await expect(row.getByRole("button")).toHaveCount(0);
+  });
+
   test("every page is as wide as the others, whichever category is chosen", async ({
     page,
   }) => {
@@ -383,6 +471,18 @@ test.describe("phone", () => {
     await panel.getByRole("button", { name: t.navEditor }).tap();
     await expect(panel.getByText(t.menuViewSource)).toBeVisible();
     await expect(panel.getByText(t.pdfPageNumbersLabel)).toHaveCount(0);
+  });
+
+  test("no default editor row: iOS has no default app to set", async ({
+    page,
+  }) => {
+    await openPhone(page);
+    await mockInvoke(page, {
+      default_editor_status: defaultEditorStatus.mac,
+    });
+    const panel = await openSettings(page);
+    await expect(panel.getByText(t.aboutTextus)).toBeVisible();
+    await expect(panel.getByText(t.defaultEditorLabel)).toHaveCount(0);
   });
 
   test("no update button or channel: the App Store updates the app", async ({

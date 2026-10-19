@@ -697,6 +697,14 @@ utiliser une.
   cliCommandReinstallButton: "Réinstaller",
   cliCommandInstalling: "Installation…",
   cliCommandFailed: "Installation impossible\u00a0:",
+  defaultEditorLabel: "Éditeur Markdown par défaut",
+  defaultEditorIsDefault: `${APP_NAME} est l’éditeur par défaut`,
+  defaultEditorNotDefault: `${APP_NAME} n’est pas l’éditeur par défaut`,
+  defaultEditorButton: "Définir par défaut",
+  defaultEditorChooseHint: `Dans Applications par défaut, choisissez ${APP_NAME} pour les fichiers .md.`,
+  defaultEditorUnsupported:
+    "Seul un paquet installé (.deb, .rpm ou AUR) peut être l’éditeur par défaut, pas l’AppImage.",
+  defaultEditorFailed: "Impossible de définir\u00a0:",
   customCssLabel: "CSS personnalisé",
   customCssHint:
     "S'applique par-dessus le thème actuel, pour de petits ajustements comme le retrait de première ligne, l'interligne ou les polices. Ciblez le document avec #write.",

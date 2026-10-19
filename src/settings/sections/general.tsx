@@ -3,7 +3,13 @@ import { useEffect, useState } from "react";
 import type { Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import type { Strings } from "../../i18n/strings";
-import { cli, updater, type UpdateChannel } from "../../platform/ipc";
+import {
+  cli,
+  defaultEditor,
+  updater,
+  type DefaultEditorStatus,
+  type UpdateChannel,
+} from "../../platform/ipc";
 import { flushPendingWrites } from "../../storage/pending-writes";
 import { checkChannel, selfUpdateAllowed } from "../../platform/distribution";
 import { canAutoUpdate } from "../../platform/capabilities";
@@ -214,6 +220,77 @@ export function CliCommandSection({ t }: { t: Strings }) {
             ? t.cliCommandReinstallButton
             : t.cliCommandInstallButton}
       </button>
+    </SettingRow>
+  );
+}
+
+/**
+ * Make Textus the app that opens .md files (default_editor.rs). On macOS
+ * and Linux the button does it; Windows only lets the user choose, so there
+ * it opens Default apps and says what to pick, and the status is read again
+ * when the user comes back to the window.
+ */
+export function DefaultEditorSection({ t }: { t: Strings }) {
+  const [status, setStatus] = useState<DefaultEditorStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [opened, setOpened] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const refresh = () =>
+      void defaultEditor
+        .status()
+        .then(setStatus)
+        .catch(() => setStatus(null));
+    refresh();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, []);
+
+  async function makeDefault() {
+    setBusy(true);
+    setError(null);
+    try {
+      await defaultEditor.set();
+      if (status?.chooseInSettings) setOpened(true);
+      else setStatus(await defaultEditor.status());
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!status) return null;
+  if (!status.supported)
+    return (
+      <SettingRow
+        label={t.defaultEditorLabel}
+        hint={t.defaultEditorUnsupported}
+      />
+    );
+  return (
+    <SettingRow
+      label={t.defaultEditorLabel}
+      hint={opened && !status.isDefault ? t.defaultEditorChooseHint : undefined}
+      error={error && `${t.defaultEditorFailed} ${error}`}
+    >
+      {!error && (
+        <span className="settings-row-value">
+          {status.isDefault
+            ? t.defaultEditorIsDefault
+            : t.defaultEditorNotDefault}
+        </span>
+      )}
+      {!status.isDefault && (
+        <button
+          className="text-button settings-inline-button"
+          onClick={makeDefault}
+          disabled={busy}
+        >
+          {t.defaultEditorButton}
+        </button>
+      )}
     </SettingRow>
   );
 }

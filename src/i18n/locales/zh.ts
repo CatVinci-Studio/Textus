@@ -640,6 +640,14 @@ export default {
   cliCommandReinstallButton: "重新安装",
   cliCommandInstalling: "安装中…",
   cliCommandFailed: "安装失败:",
+  defaultEditorLabel: "默认 Markdown 编辑器",
+  defaultEditorIsDefault: `${APP_NAME} 是默认编辑器`,
+  defaultEditorNotDefault: `${APP_NAME} 不是默认编辑器`,
+  defaultEditorButton: "设为默认",
+  defaultEditorChooseHint: `在“默认应用”中为 .md 文件选择 ${APP_NAME}。`,
+  defaultEditorUnsupported:
+    "只有安装包（.deb、.rpm 或 AUR）能设为默认，AppImage 不能。",
+  defaultEditorFailed: "设置失败:",
   customCssLabel: "自定义 CSS",
   customCssHint:
     "在当前主题之上生效，适合首行缩进、行距、字体等局部调整。用 #write 选中正文。",
