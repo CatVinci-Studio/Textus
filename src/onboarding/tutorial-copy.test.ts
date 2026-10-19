@@ -8,10 +8,18 @@ import {
 } from "../ai/chat/skill-picker";
 import type { SkillListItem } from "../platform/ipc";
 import { TUTORIAL_STEPS } from "./tutorial-steps";
+import { withCode } from "./TutorialOverlay";
 
 // The tour's copy as the learner reads it, in every language.
 describe.each(LANGS)("the tour in %s", (lang) => {
   const t = resolveStrings(lang);
+  const lines = TUTORIAL_STEPS.flatMap((step) =>
+    (step.tasks ?? []).flatMap((task) =>
+      [task.key, task.macKey, task.phoneKey].flatMap((key) =>
+        key ? [{ step: step.id, key, text: t[key] }] : [],
+      ),
+    ),
+  );
 
   it("names built-in skills that a typed /word really runs", () => {
     const items = BUILTIN_SKILLS.map(
@@ -36,13 +44,32 @@ describe.each(LANGS)("the tour in %s", (lang) => {
     expect(names).toEqual(["tighten", "translate"]);
   });
 
-  it("calls the sidebar's outline by its tab's own name", () => {
-    const tab = t.outlineTab.toLowerCase();
-    expect(t.tutorialSidebarTask.toLowerCase()).toContain(tab);
-    expect(t.tutorialSidebarTaskPhone.toLowerCase()).toContain(tab);
+  it("finds the sidebar through the View menu's own labels", () => {
+    const outline = t.outlineTab.toLowerCase();
+    const sidebar = t.menuToggleSidebar.toLowerCase();
+    for (const text of [t.tutorialSidebarTask, t.tutorialSidebarTaskMac]) {
+      expect(text.toLowerCase()).toContain(outline);
+      expect(text).toContain(`${t.menuView} › ${t.menuToggleSidebar}`);
+    }
+    expect(t.tutorialSidebarTaskPhone.toLowerCase()).toContain(outline);
+    expect(t.tutorialSidebarTaskPhone.toLowerCase()).toContain(sidebar);
   });
 
-  it("keeps each lesson to one sentence and one task", () => {
+  it("names the buttons the learner clicks as the app does", () => {
+    expect(t.tutorialWriteSend).toContain(t.proposalAccept);
+    expect(t.tutorialRevisionSend).toContain(t.proposalAccept);
+    expect(t.tutorialRevisionSend).toContain(t.proposalReject);
+    expect(t.tutorialGrammarApply).toContain(t.grammarApply);
+    expect(t.tutorialGrammarApplyPhone).toContain(t.grammarApply);
+    expect(t.tutorialDoneMemory).toContain(t.agentTabMemory);
+  });
+
+  it("has the learner type the practice notes' title and slip", () => {
+    expect(t.tutorialWysiwygHeading).toContain("`# {title}`");
+    expect(t.tutorialGrammarType).toContain("`{slip}`");
+  });
+
+  it("keeps each lesson to one sentence and one line per thing to do", () => {
     for (const step of TUTORIAL_STEPS) {
       const body = t[step.bodyKey];
       // One sentence: no break, and no full stop before its last one.
@@ -50,7 +77,14 @@ describe.each(LANGS)("the tour in %s", (lang) => {
       expect(body.replace(/[.。！!]\s*$/, ""), step.id).not.toMatch(
         /\.(\s|$)|[。！？]/,
       );
-      if (step.taskKey) expect(t[step.taskKey], step.id).not.toContain("\n");
+    }
+    for (const line of lines) {
+      expect(line.text, line.key).not.toContain("\n");
+      // Every code span closes: a stray backtick would show as text.
+      const prose = withCode(line.text).filter(
+        (part) => typeof part === "string",
+      );
+      expect(prose.join(""), line.key).not.toContain("`");
     }
   });
 });

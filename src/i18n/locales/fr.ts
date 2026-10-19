@@ -735,23 +735,48 @@ utiliser une.
   tutorialWatchNote:
     "Connectez une IA plus tard dans {path} pour l'essayer vous-même.",
   tutorialWelcomeTitle: `Bienvenue dans ${APP_NAME}`,
-  tutorialWelcomeBody: "Un journal de voyage va nous servir de visite guidée.",
+  tutorialWelcomeBody:
+    "Vos notes de lecture sur Les Misérables vont nous servir de visite guidée.",
   tutorialWysiwygTitle: "Tel écran, tel écrit",
-  tutorialWysiwygBody: "Le Markdown se met en forme pendant que vous écrivez.",
-  tutorialWysiwygTask: "Tapez `# {title}`, puis écrivez une liste.",
-  tutorialBlocksTitle: "Formules, tableaux, diagrammes",
-  tutorialBlocksBody: "Quelques lignes de texte suffisent à les dessiner.",
-  tutorialBlocksTask: "Écrivez votre itinéraire sous forme de tableau.",
+  tutorialWysiwygBody:
+    "Le Markdown se met en forme pendant que vous écrivez ; appuyez deux fois sur Entrée pour finir une liste.",
+  tutorialWysiwygHeading: "Un titre : `# {title}`, puis Entrée",
+  tutorialWysiwygList:
+    "Une liste : `- Monseigneur Bienvenu`, Entrée, `Mademoiselle Baptistine`",
+  tutorialWysiwygNumbered: "Une liste numérotée : `1. Livre premier`",
+  tutorialWysiwygTaskItem: "Une tâche : `- [ ] Finir le tome I`",
+  tutorialMarksTitle: "Gras, citations, code et liens",
+  tutorialMarksBody:
+    "Vos notes sur le livre premier sont en dessous ; tapez ces lignes à la fin.",
+  tutorialMarksEmphasis:
+    "Gras et italique : `Myriel est **bon** et *modeste*.`",
+  tutorialMarksQuote:
+    "Une citation : `> C'était un vieillard d'environ soixante-quinze ans.`",
+  tutorialMarksCode: "Du code : ``Relire le `livre I`.``",
+  tutorialMarksLink: "Un lien : `[Gutenberg](https://gutenberg.org)`",
+  tutorialTableTitle: "Tableaux",
+  tutorialTableBody:
+    "Une ligne de cellules entre des | devient un tableau quand vous appuyez sur Entrée.",
+  tutorialTableHeader: "Tapez `| Personnage | Impression |`, puis Entrée",
+  tutorialTableRow: "Remplissez une ligne : `Myriel`, Tab, `Bon`",
+  tutorialBlocksTitle: "Formules et diagrammes",
+  tutorialBlocksBody:
+    "Facultatif : quelques caractères font une formule, quelques lignes un diagramme.",
+  tutorialBlocksFormula: "Une formule : `$E=mc^2$`",
+  tutorialBlocksDiagram:
+    "Un diagramme : ```` ```mermaid ````, Entrée, puis `graph LR; A-->B`",
   tutorialModesTitle: "Modes d'écriture et thèmes",
   tutorialModesBody: "Écrivez autrement, changez de look.",
   tutorialModesTask: "Activez le mode zen, puis choisissez un autre thème.",
   tutorialSidebarTitle: "Barre latérale et export",
   tutorialSidebarBody:
-    "Les fichiers et le plan sont à gauche ; exportez une fois fini.",
+    "La barre latérale contient vos fichiers, le plan et le presse-papiers ; pour exporter, passez par Fichier › Exporter.",
   tutorialSidebarTask:
-    "Ouvrez la barre latérale ({shortcut}) et regardez le plan.",
+    "Cliquez sur le menu ☰ en haut à gauche, choisissez Présentation › Barre latérale ({shortcut}), puis ouvrez Plan",
+  tutorialSidebarTaskMac:
+    "Dans la barre des menus, choisissez Présentation › Barre latérale ({shortcut}), puis ouvrez Plan",
   tutorialSidebarTaskPhone:
-    "Ouvrez la barre latérale depuis le menu et regardez le plan.",
+    "Touchez le menu ☰ en haut à gauche, puis Barre latérale, et ouvrez Plan",
   tutorialConnectTitle: "Connectez votre IA",
   tutorialConnectBody:
     "Une fois connectée, vous pourrez vraiment essayer la suite.",
@@ -759,39 +784,47 @@ utiliser une.
     "Connectez-vous ou collez une clé, ou passez pour l'instant.",
   tutorialConnectSkip: "Passer pour l'instant",
   tutorialConnected: "Connecté.",
-  tutorialAiPanelTitle: "Le panneau IA",
-  tutorialAiPanelBody: "Votre assistant d'écriture vit ici.",
-  tutorialAiPanelTask: "Appuyez sur {shortcut} pour ouvrir le panneau.",
-  tutorialAiPanelTaskPhone:
-    "Touchez le bouton du panneau IA, en haut, pour l'ouvrir.",
+  tutorialWriteTitle: "Écrire avec l'IA",
+  tutorialWriteBody: `En mode Écrire, ${AI_NAME} ne fait qu'ajouter du texte, en vert tant que vous ne l'avez pas accepté.`,
+  tutorialWriteOpen:
+    "Ouvrez le panneau IA : l'icône du robot, en haut à droite ({shortcut})",
+  tutorialWriteOpenPhone:
+    "Ouvrez le panneau IA : touchez l'icône du robot, en haut",
+  tutorialWriteSend:
+    "Envoyez `Ajoute un paragraphe à mes notes`, puis cliquez sur Accepter",
+  tutorialReviewTitle: "Relecture",
+  tutorialReviewBody:
+    "En mode Relire, il commente dans la marge sans toucher à votre texte.",
+  tutorialReviewTask:
+    "Envoyez `Commente mes notes`, puis lisez les notes dans la marge",
+  tutorialRevisionTitle: "Révision",
+  tutorialRevisionBody:
+    "En mode Réviser, il réécrit et vous décidez phrase par phrase.",
+  tutorialRevisionSelect: "Sélectionnez la première phrase de vos notes",
+  tutorialRevisionSend:
+    "Envoyez `Rends-la plus concise`, puis choisissez Accepter ou Refuser",
+  tutorialGrammarTitle: "Vérification grammaticale",
+  tutorialGrammarBody: "Les fautes sont soulignées pendant que vous écrivez.",
+  tutorialGrammarType: "Sur une nouvelle ligne à la fin, tapez `{slip}`",
+  tutorialGrammarApply:
+    "Attendez le soulignement, survolez-le et cliquez sur Appliquer",
+  tutorialGrammarApplyPhone:
+    "Attendez le soulignement, touchez-le, puis Appliquer",
+  tutorialGrammarQuiet:
+    "Cette fois, l'IA n'a rien trouvé à corriger. Vous pouvez continuer.",
   tutorialContinuationTitle: "Complétion",
   tutorialContinuationBody: "Marquez une pause, il écrit la suite.",
   tutorialContinuationTask:
-    "Écrivez à la fin du journal, faites une pause, puis appuyez sur Tab pour accepter.",
+    "À la fin, tapez `Ce que Hugo veut montrer, c'est`, faites une pause, puis appuyez sur Tab",
   tutorialContinuationTaskPhone:
-    "Écrivez à la fin du journal, faites une pause, puis touchez le texte gris pour accepter.",
-  tutorialGrammarTitle: "Vérification grammaticale",
-  tutorialGrammarBody: "Les fautes sont soulignées.",
-  tutorialGrammarTask:
-    "Ouvrez la carte du soulignement et appliquez la correction.",
-  tutorialGrammarQuiet:
-    "Cette fois, l'IA n'a rien trouvé à corriger. Vous pouvez continuer.",
-  tutorialRevisionTitle: "Révision",
-  tutorialRevisionBody:
-    "Faites-lui retravailler un paragraphe, puis décidez phrase par phrase.",
-  tutorialRevisionTask:
-    "Sélectionnez un paragraphe et demandez à l'IA de le rendre plus vivant.",
-  tutorialReviewTitle: "Relecture",
-  tutorialReviewBody: "Les suggestions arrivent dans la marge.",
-  tutorialReviewTask: "Demandez à l'IA des suggestions sur ce journal.",
+    "À la fin, tapez `Ce que Hugo veut montrer, c'est`, faites une pause, puis touchez le texte gris",
   tutorialSkillsTitle: "Compétences intégrées",
-  tutorialSkillsBody: "Tapez / pour les utiliser.",
-  tutorialSkillsTask: "Essayez `/raccourcir` ou `/traduire` dans le panneau.",
-  tutorialMemoryTitle: "Progresse avec le temps",
-  tutorialMemoryBody: "Il retient votre style et ce que vous demandez.",
-  tutorialMemoryTask: "Ouvrez Mémoire et voyez ce qu'il retient.",
+  tutorialSkillsBody: "Tapez / dans le panneau IA pour en choisir une.",
+  tutorialSkillsTask:
+    "Sélectionnez une de vos notes, puis envoyez `/raccourcir` ou `/traduire`",
   tutorialDoneTitle: "Terminé",
   tutorialDoneBody: "À vous d'écrire, maintenant.",
+  tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez l'onglet Mémoire du panneau IA.`,
   closePromptMessage:
     "Ce document contient des modifications non enregistrées.",
   closePromptSave: "Enregistrer",

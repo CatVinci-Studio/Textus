@@ -28,8 +28,6 @@ import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
 import { claimChatRestore } from "../ai/chat/chat-restore";
 import { useLatest } from "../utils/hooks/useLatest";
-import { TextSelection } from "@milkdown/kit/prose/state";
-import { findUniqueTextRange } from "../ai/doc-text";
 import type { Settings } from "../settings/SettingsContext";
 import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import {
@@ -47,13 +45,12 @@ import {
   IMAGE_ACTION_EVENT,
   EDITOR_MORE_EVENT,
   EDIT_ACTION_EVENT,
-  TOUR_GRAMMAR_CHECK_EVENT,
   type TourAi,
 } from "../utils/events";
 
 /** The window events (utils/events.ts) one tab's editor answers: menu
- *  commands, shortcuts, the iPhone keyboard toolbar, the sidebar panels
- *  and the tour's grammar lesson. */
+ *  commands, shortcuts, the iPhone keyboard toolbar and the sidebar
+ *  panels. */
 export function useEditorWindowEvents({
   run,
   settings,
@@ -135,29 +132,6 @@ export function useEditorWindowEvents({
     () => isOnScreen() && findReplace.toggle(),
   );
   useWindowEvent(CLOSE_FIND_REPLACE_EVENT, () => findReplace.dismiss());
-
-  // The tour's grammar lesson, with an AI connected: the practice diary's
-  // slip is in a paragraph the learner hasn't touched, so nothing has
-  // checked it - put the caret in it and check it, as the shortcut would.
-  // Gone from the text (edited away), the lesson waits it out instead.
-  useWindowEvent(TOUR_GRAMMAR_CHECK_EVENT, (e) => {
-    if (tour !== "live" || !isOnScreen() || !settings.enableGrammarCheck)
-      return;
-    const passage = (e as CustomEvent<string>).detail;
-    if (typeof passage !== "string" || !passage) return;
-    const found = run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      const range = findUniqueTextRange(view.state.doc, passage);
-      if (!range) return false;
-      view.dispatch(
-        view.state.tr.setSelection(
-          TextSelection.create(view.state.doc, range.to),
-        ),
-      );
-      return true;
-    });
-    if (found) triggerGrammarCheck();
-  });
 
   // Clipboard-history panel clicks: carries the text as CustomEvent detail.
   useWindowEvent(INSERT_CLIPBOARD_TEXT_EVENT, (e) => {

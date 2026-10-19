@@ -30,6 +30,12 @@ interface TutorialButton {
   onClick: () => void;
 }
 
+/** One line of what to do, and whether it is done. */
+export interface TutorialTaskLine {
+  text: string;
+  done: boolean;
+}
+
 interface TutorialOverlayProps {
   /** Opening, connecting and ending dim the app; lessons leave the editor
    *  to work in, with the card at its side. */
@@ -41,22 +47,20 @@ interface TutorialOverlayProps {
   title: string;
   /** The one sentence under the title. */
   body: string;
-  /** What to do. `code` spans (backticks) are what to type. */
-  task?: string;
+  /** What to do, a line each. `code` spans (backticks) are what to type. */
+  tasks?: TutorialTaskLine[];
   /** One line of feedback on the exercise. */
   status?: string | null;
+  /** The whole lesson is done (its feedback line turns to success). */
   complete?: boolean;
   /** A quieter line under the exercise (watching instead of doing). */
   note?: string | null;
-  /** The lesson's animation on the website, as a link; absent when it is
-   *  the primary action instead. */
+  /** The lesson's animation on the website, as a link. */
   watch?: TutorialButton | null;
   /** Lesson-specific controls (the provider picker, the theme picker, the
    *  ending's links). */
   children?: ReactNode;
   primary: TutorialButton & { disabled?: boolean };
-  /** A plain button before the primary one (Continue, while watching). */
-  secondary?: TutorialButton | null;
   onBack: () => void;
   onSkip: () => void;
   /** Advance past THIS lesson without completing it. Shown only while the
@@ -69,25 +73,58 @@ interface TutorialOverlayProps {
 // The welcome step shows the app icon instead (see the header below).
 const STEP_GLYPHS: Record<Exclude<TutorialStepId, "welcome">, string> = {
   wysiwyg: "M↓",
+  marks: "B",
+  table: "▦",
   blocks: "∑",
   "modes-themes": "◐",
   "sidebar-export": "◧",
   connect: "⇄",
-  "ai-panel": "✦",
-  continuation: "↹",
-  grammar: "✓",
-  revision: "✎",
+  write: "✦",
   review: "❝",
+  revision: "✎",
+  grammar: "✓",
+  continuation: "↹",
   skills: "/",
-  memory: "◎",
   done: "✓",
 };
 
-/** `text` with its backtick spans as code - what the learner types. */
-function withCode(text: string): ReactNode[] {
-  return text
-    .split("`")
-    .map((part, i) => (i % 2 === 1 ? <code key={i}>{part}</code> : part));
+/** `text` with its code spans as code - what the learner types. As in
+ *  Markdown, a span opened by a run of backticks closes at the next run as
+ *  long, so ``a `b` c`` shows backticks (one space inside each end is
+ *  dropped); an unclosed run stays text. */
+export function withCode(text: string): ReactNode[] {
+  const out: ReactNode[] = [];
+  let plain = "";
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] !== "`") {
+      plain += text[i++];
+      continue;
+    }
+    let n = 0;
+    while (text[i + n] === "`") n++;
+    const fence = "`".repeat(n);
+    let close = text.indexOf(fence, i + n);
+    while (close !== -1 && text[close + n] === "`") {
+      let skip = close;
+      while (text[skip] === "`") skip++;
+      close = text.indexOf(fence, skip);
+    }
+    if (close === -1) {
+      plain += fence;
+      i += n;
+      continue;
+    }
+    let code = text.slice(i + n, close);
+    if (code.length > 2 && code.startsWith(" ") && code.endsWith(" "))
+      code = code.slice(1, -1);
+    if (plain) out.push(plain);
+    plain = "";
+    out.push(<code key={out.length}>{code}</code>);
+    i = close + n;
+  }
+  if (plain) out.push(plain);
+  return out;
 }
 
 /**
@@ -103,14 +140,13 @@ export function TutorialOverlay({
   chapters,
   title,
   body,
-  task,
+  tasks,
   status,
   complete,
   note,
   watch,
   children,
   primary,
-  secondary,
   onBack,
   onSkip,
   onSkipStep,
@@ -202,15 +238,21 @@ export function TutorialOverlay({
         <p className="tutorial-body" id={bodyId}>
           {body}
         </p>
-        {task && (
-          <section
-            className={`tutorial-task${complete ? " is-complete" : ""}`}
-            aria-label={labels.tryIt}
-          >
-            <span className="tutorial-task-icon" aria-hidden>
-              {complete ? "✓" : "→"}
-            </span>
-            <span>{withCode(task)}</span>
+        {tasks && tasks.length > 0 && (
+          <section className="tutorial-task" aria-label={labels.tryIt}>
+            <ol className="tutorial-task-lines">
+              {tasks.map((line, i) => (
+                <li
+                  key={i}
+                  className={`tutorial-task-line${line.done ? " is-complete" : ""}`}
+                >
+                  <span className="tutorial-task-icon" aria-hidden>
+                    {line.done ? "✓" : tasks.length > 1 ? i + 1 : "→"}
+                  </span>
+                  <span>{withCode(line.text)}</span>
+                </li>
+              ))}
+            </ol>
           </section>
         )}
         {status && (
@@ -255,15 +297,6 @@ export function TutorialOverlay({
           {stepIndex > 0 && (
             <button type="button" className="tutorial-btn" onClick={onBack}>
               {labels.back}
-            </button>
-          )}
-          {secondary && (
-            <button
-              type="button"
-              className="tutorial-btn"
-              onClick={secondary.onClick}
-            >
-              {secondary.label}
             </button>
           )}
           <button

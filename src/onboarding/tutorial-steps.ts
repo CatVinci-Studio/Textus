@@ -1,10 +1,22 @@
 import type { TextKey } from "../i18n/strings";
+import type { AgentMode } from "../settings/SettingsContext";
+import {
+  GRAMMAR_PART,
+  LESSON_DONE,
+  MARKS_PART,
+  MODES_PART,
+  TABLE_PART,
+  WRITE_PART,
+  WYSIWYG_PART,
+} from "./tutorial-evaluation";
 
 /**
- * The first-run tour, laid out like the website: the four things about
- * writing, connecting an AI, then the six kinds of Textus AI with the
- * panel they live in. Every lesson is one card - a title, one sentence,
- * one thing to do, and a link to its animation on the website.
+ * The first-run tour, on reading notes about a classic (practice-notes.ts):
+ * Markdown typed for real, the window around the editor, connecting an AI,
+ * then Textus AI working on the learner's notes - never on the classic's
+ * own words. Every lesson is one card: a title, one sentence, and the exact
+ * things to type or click, one per line, each ticked off as it is done.
+ * The animation on the website is an optional extra, never the way through.
  */
 
 type TutorialChapterId = "start" | "writing" | "connect" | "ai" | "done";
@@ -12,30 +24,54 @@ type TutorialChapterId = "start" | "writing" | "connect" | "ai" | "done";
 export type TutorialStepId =
   | "welcome"
   | "wysiwyg"
+  | "marks"
+  | "table"
   | "blocks"
   | "modes-themes"
   | "sidebar-export"
   | "connect"
-  | "ai-panel"
-  | "continuation"
-  | "grammar"
-  | "revision"
+  | "write"
   | "review"
+  | "revision"
+  | "grammar"
+  | "continuation"
   | "skills"
-  | "memory"
   | "done";
 
-/** The lessons with an animation on the website's tutorials page, by the
- *  id of its clip there. Rust opens the page and accepts only these
- *  (TUTORIAL_CLIPS in src-tauri/src/commands/links.rs - change both). */
-export type TutorialClipId = Exclude<
-  TutorialStepId,
-  "welcome" | "connect" | "done"
->;
+/** The clips on the website's tutorials page. Rust opens the page and
+ *  accepts only these (TUTORIAL_CLIPS in src-tauri/src/commands/links.rs -
+ *  change both). */
+export const TUTORIAL_CLIPS = [
+  "wysiwyg",
+  "blocks",
+  "modes-themes",
+  "sidebar-export",
+  "ai-panel",
+  "continuation",
+  "grammar",
+  "revision",
+  "review",
+  "skills",
+  "memory",
+] as const;
+
+export type TutorialClipId = (typeof TUTORIAL_CLIPS)[number];
 
 export interface TutorialChapter {
   id: TutorialChapterId;
   titleKey: TextKey;
+}
+
+/** One line of what to do. */
+export interface TutorialTask {
+  key: TextKey;
+  /** Its wording on a phone (taps, no shortcuts), where it differs. */
+  phoneKey?: TextKey;
+  /** Its wording on a Mac (the native menu bar), where it differs. */
+  macKey?: TextKey;
+  /** The bit of the lesson's phase that ticks this line. Without one it is
+   *  ticked with the lesson. */
+  part?: number;
 }
 
 export interface TutorialStep {
@@ -47,12 +83,16 @@ export interface TutorialStep {
   titleKey: TextKey;
   /** The one sentence under the title. */
   bodyKey: TextKey;
-  /** What to do, when the lesson asks for something. */
-  taskKey?: TextKey;
+  /** What to do, a line each. */
+  tasks?: TutorialTask[];
   /** Its clip on the website's tutorials page, when it has one. */
   clip?: TutorialClipId;
   /** A Textus AI lesson: with no AI connected it is watched, not done. */
   ai?: boolean;
+  /** The AI panel's mode this lesson needs; the tour sets it. */
+  agentMode?: AgentMode;
+  /** Never locked: Continue is there whether or not it was tried. */
+  optional?: boolean;
 }
 
 export const TUTORIAL_CHAPTERS: TutorialChapter[] = [
@@ -72,13 +112,46 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     bodyKey: "tutorialWelcomeBody",
   },
   {
+    // On an empty document: what the learner types here heads the notes.
     id: "wysiwyg",
     chapter: "writing",
     layout: "card",
     titleKey: "tutorialWysiwygTitle",
     bodyKey: "tutorialWysiwygBody",
-    taskKey: "tutorialWysiwygTask",
+    tasks: [
+      { key: "tutorialWysiwygHeading", part: WYSIWYG_PART.heading },
+      { key: "tutorialWysiwygList", part: WYSIWYG_PART.list },
+      { key: "tutorialWysiwygNumbered", part: WYSIWYG_PART.numbered },
+      { key: "tutorialWysiwygTaskItem", part: WYSIWYG_PART.task },
+    ],
     clip: "wysiwyg",
+  },
+  {
+    // The practice notes arrive here, under what was typed.
+    id: "marks",
+    chapter: "writing",
+    layout: "card",
+    titleKey: "tutorialMarksTitle",
+    bodyKey: "tutorialMarksBody",
+    tasks: [
+      { key: "tutorialMarksEmphasis", part: MARKS_PART.emphasis },
+      { key: "tutorialMarksQuote", part: MARKS_PART.quote },
+      { key: "tutorialMarksCode", part: MARKS_PART.code },
+      { key: "tutorialMarksLink", part: MARKS_PART.link },
+    ],
+    clip: "wysiwyg",
+  },
+  {
+    id: "table",
+    chapter: "writing",
+    layout: "card",
+    titleKey: "tutorialTableTitle",
+    bodyKey: "tutorialTableBody",
+    tasks: [
+      { key: "tutorialTableHeader", part: TABLE_PART.table },
+      { key: "tutorialTableRow", part: TABLE_PART.row },
+    ],
+    clip: "blocks",
   },
   {
     id: "blocks",
@@ -86,8 +159,12 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     layout: "card",
     titleKey: "tutorialBlocksTitle",
     bodyKey: "tutorialBlocksBody",
-    taskKey: "tutorialBlocksTask",
+    tasks: [
+      { key: "tutorialBlocksFormula", part: LESSON_DONE },
+      { key: "tutorialBlocksDiagram", part: LESSON_DONE },
+    ],
     clip: "blocks",
+    optional: true,
   },
   {
     id: "modes-themes",
@@ -95,7 +172,9 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     layout: "card",
     titleKey: "tutorialModesTitle",
     bodyKey: "tutorialModesBody",
-    taskKey: "tutorialModesTask",
+    tasks: [
+      { key: "tutorialModesTask", part: MODES_PART.mode | MODES_PART.theme },
+    ],
     clip: "modes-themes",
   },
   {
@@ -104,7 +183,13 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     layout: "card",
     titleKey: "tutorialSidebarTitle",
     bodyKey: "tutorialSidebarBody",
-    taskKey: "tutorialSidebarTask",
+    tasks: [
+      {
+        key: "tutorialSidebarTask",
+        macKey: "tutorialSidebarTaskMac",
+        phoneKey: "tutorialSidebarTaskPhone",
+      },
+    ],
     clip: "sidebar-export",
   },
   {
@@ -116,18 +201,66 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     layout: "overlay",
     titleKey: "tutorialConnectTitle",
     bodyKey: "tutorialConnectBody",
-    taskKey: "tutorialConnectTask",
+    tasks: [{ key: "tutorialConnectTask" }],
   },
   {
     // Opens the real panel whether or not an AI is connected: it is where
-    // the next lessons happen, and it works without one.
-    id: "ai-panel",
+    // the next lessons happen.
+    id: "write",
     chapter: "ai",
     layout: "card",
-    titleKey: "tutorialAiPanelTitle",
-    bodyKey: "tutorialAiPanelBody",
-    taskKey: "tutorialAiPanelTask",
+    titleKey: "tutorialWriteTitle",
+    bodyKey: "tutorialWriteBody",
+    tasks: [
+      {
+        key: "tutorialWriteOpen",
+        phoneKey: "tutorialWriteOpenPhone",
+        part: WRITE_PART.panel,
+      },
+      { key: "tutorialWriteSend", part: LESSON_DONE },
+    ],
     clip: "ai-panel",
+    ai: true,
+    agentMode: "write",
+  },
+  {
+    id: "review",
+    chapter: "ai",
+    layout: "card",
+    titleKey: "tutorialReviewTitle",
+    bodyKey: "tutorialReviewBody",
+    tasks: [{ key: "tutorialReviewTask" }],
+    clip: "review",
+    ai: true,
+    agentMode: "review",
+  },
+  {
+    id: "revision",
+    chapter: "ai",
+    layout: "card",
+    titleKey: "tutorialRevisionTitle",
+    bodyKey: "tutorialRevisionBody",
+    tasks: [{ key: "tutorialRevisionSelect" }, { key: "tutorialRevisionSend" }],
+    clip: "revision",
+    ai: true,
+    agentMode: "revise",
+  },
+  {
+    // The slip is in a sentence the learner types, never in the classic.
+    id: "grammar",
+    chapter: "ai",
+    layout: "card",
+    titleKey: "tutorialGrammarTitle",
+    bodyKey: "tutorialGrammarBody",
+    tasks: [
+      { key: "tutorialGrammarType", part: GRAMMAR_PART.typed },
+      {
+        key: "tutorialGrammarApply",
+        phoneKey: "tutorialGrammarApplyPhone",
+        part: GRAMMAR_PART.card,
+      },
+    ],
+    clip: "grammar",
     ai: true,
   },
   {
@@ -136,38 +269,13 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     layout: "card",
     titleKey: "tutorialContinuationTitle",
     bodyKey: "tutorialContinuationBody",
-    taskKey: "tutorialContinuationTask",
+    tasks: [
+      {
+        key: "tutorialContinuationTask",
+        phoneKey: "tutorialContinuationTaskPhone",
+      },
+    ],
     clip: "continuation",
-    ai: true,
-  },
-  {
-    id: "grammar",
-    chapter: "ai",
-    layout: "card",
-    titleKey: "tutorialGrammarTitle",
-    bodyKey: "tutorialGrammarBody",
-    taskKey: "tutorialGrammarTask",
-    clip: "grammar",
-    ai: true,
-  },
-  {
-    id: "revision",
-    chapter: "ai",
-    layout: "card",
-    titleKey: "tutorialRevisionTitle",
-    bodyKey: "tutorialRevisionBody",
-    taskKey: "tutorialRevisionTask",
-    clip: "revision",
-    ai: true,
-  },
-  {
-    id: "review",
-    chapter: "ai",
-    layout: "card",
-    titleKey: "tutorialReviewTitle",
-    bodyKey: "tutorialReviewBody",
-    taskKey: "tutorialReviewTask",
-    clip: "review",
     ai: true,
   },
   {
@@ -176,19 +284,10 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     layout: "card",
     titleKey: "tutorialSkillsTitle",
     bodyKey: "tutorialSkillsBody",
-    taskKey: "tutorialSkillsTask",
+    tasks: [{ key: "tutorialSkillsTask" }],
     clip: "skills",
     ai: true,
-  },
-  {
-    id: "memory",
-    chapter: "ai",
-    layout: "card",
-    titleKey: "tutorialMemoryTitle",
-    bodyKey: "tutorialMemoryBody",
-    taskKey: "tutorialMemoryTask",
-    clip: "memory",
-    ai: true,
+    agentMode: "revise",
   },
   {
     id: "done",
@@ -199,38 +298,35 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   },
 ];
 
-/** Every clip the tour links to, in tour order. */
-export const TUTORIAL_CLIPS: readonly TutorialClipId[] = TUTORIAL_STEPS.flatMap(
-  (step) => (step.clip ? [step.clip] : []),
-);
-
 export function stepIndexOf(id: TutorialStepId): number {
   return TUTORIAL_STEPS.findIndex((step) => step.id === id);
 }
 
-/** How the AI lessons run: for real with a connected AI ("live"), or as
- *  animations to watch ("watch"). Decided on leaving the connect lesson,
- *  null before that. */
+/** How the AI lessons run: for real with a connected AI ("live"), or
+ *  watched ("watch"). Decided on leaving the connect lesson, null before
+ *  that. */
 export type TutorialAiMode = "live" | "watch";
 
 /**
- * The tours before this one, by their step ids. Their writing lessons map
- * onto the matching new ones; anything in or after their AI chapter -
- * which ran on scripted replies and never asked about an AI - restarts at
- * the connect lesson, where the new AI chapter begins.
+ * The tours before this one, by their step ids. The second tour's lessons
+ * that are gone map onto their nearest; the first tour's writing lessons
+ * onto the matching ones, and anything in or after its AI chapter - which
+ * ran on scripted replies and never asked about an AI - restarts at the
+ * connect lesson.
  */
 const LEGACY_STEP_IDS = new Map<string, TutorialStepId>([
-  ["welcome", "welcome"],
+  // The second tour (1.1.0-rc.1 to rc.6).
+  ["ai-panel", "write"],
+  ["memory", "done"],
+  // The first tour.
   ["markdownIntro", "wysiwyg"],
   ["markdownPractice", "wysiwyg"],
   ["sidebar", "sidebar-export"],
   ["aiIntro", "connect"],
   ["completion", "connect"],
-  ["grammar", "connect"],
   ["agentChat", "connect"],
   ["agentEdit", "connect"],
   ["connectAi", "connect"],
-  ["done", "done"],
 ]);
 
 /** The first tour's steps. Its progress holds only a `stepIndex` into
@@ -250,7 +346,7 @@ const LEGACY_INDEXED_IDS = [
 
 /**
  * Where saved progress resumes, and in which AI mode. Read by `stepId`:
- * one of this tour's, one of the tour before (LEGACY_STEP_IDS), or - from
+ * one of this tour's, one of a tour before (LEGACY_STEP_IDS), or - from
  * the first tour - only a `stepIndex`. An AI lesson resumes only with its
  * mode saved beside it; without one (an older tour, or a damaged save) the
  * learner is asked about connecting again.
@@ -262,12 +358,10 @@ export function resolveSavedProgress(saved: {
 }): { stepIndex: number; aiMode: TutorialAiMode | null } {
   const aiMode =
     saved.aiMode === "live" || saved.aiMode === "watch" ? saved.aiMode : null;
-  let id: TutorialStepId | undefined;
-  if (typeof saved.stepId === "string") {
-    id =
-      TUTORIAL_STEPS.find((step) => step.id === saved.stepId)?.id ??
-      LEGACY_STEP_IDS.get(saved.stepId);
-  }
+  const known = (stepId: string) =>
+    TUTORIAL_STEPS.find((step) => step.id === stepId)?.id ??
+    LEGACY_STEP_IDS.get(stepId);
+  let id = typeof saved.stepId === "string" ? known(saved.stepId) : undefined;
   if (!id) {
     const raw =
       typeof saved.stepIndex === "number" && Number.isFinite(saved.stepIndex)
@@ -277,7 +371,7 @@ export function resolveSavedProgress(saved: {
       LEGACY_INDEXED_IDS[
         Math.min(Math.max(0, raw), LEGACY_INDEXED_IDS.length - 1)
       ];
-    id = LEGACY_STEP_IDS.get(legacy) ?? "welcome";
+    id = known(legacy) ?? "welcome";
   }
   const step = TUTORIAL_STEPS[stepIndexOf(id)];
   if (step.ai && !aiMode)

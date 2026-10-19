@@ -173,20 +173,32 @@
   line-height: 1.55;
 }
 
-/* The one thing to do. Ticked once it's done. */
+/* What to do, a line each, each ticked once it's done. */
 .tutorial-task {
-  display: grid;
-  grid-template-columns: 20px 1fr;
-  align-items: start;
-  gap: 9px;
-  padding: 11px 12px;
+  padding: 10px 12px;
   border: 1px solid var(--tutorial-line);
   border-radius: var(--radius-surface);
   background: var(--chrome-subtle);
   color: var(--editor-text);
-  font-size: var(--text-lg);
+  font-size: var(--text-md);
   font-weight: 500;
   line-height: 1.5;
+}
+
+.tutorial-task-lines {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tutorial-task-line {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  align-items: start;
+  gap: 9px;
+  overflow-wrap: anywhere;
 }
 
 .tutorial-task code {
@@ -216,7 +228,7 @@
     border-color var(--dur-base) var(--ease-standard);
 }
 
-.tutorial-task.is-complete .tutorial-task-icon {
+.tutorial-task-line.is-complete .tutorial-task-icon {
   border-color: var(--chrome-primary);
   color: var(--ui-on-primary, #fff);
   background: var(--chrome-primary);
