@@ -683,6 +683,14 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   cliCommandReinstallButton: "Reinstalar",
   cliCommandInstalling: "Instalando…",
   cliCommandFailed: "Não foi possível instalar:",
+  defaultEditorLabel: "Editor de Markdown padrão",
+  defaultEditorIsDefault: `${APP_NAME} é o padrão`,
+  defaultEditorNotDefault: `${APP_NAME} não é o padrão`,
+  defaultEditorButton: "Definir como padrão",
+  defaultEditorChooseHint: `Em Aplicativos padrão, escolha ${APP_NAME} para arquivos .md.`,
+  defaultEditorUnsupported:
+    "Só um pacote instalado (.deb, .rpm ou AUR) pode ser o padrão, não o AppImage.",
+  defaultEditorFailed: "Não foi possível definir:",
   customCssLabel: "CSS personalizado",
   customCssHint:
     "Aplicado sobre o tema atual, para pequenas mudanças como recuo da primeira linha, espaçamento entre linhas ou fontes. Para estilizar o documento, use o seletor #write.",

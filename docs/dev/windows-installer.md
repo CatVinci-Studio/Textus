@@ -65,6 +65,48 @@ an upgrade, and kept for:
 - a **WiX/MSI install**, which this installer cannot overwrite - it has to
   run the old uninstaller first, and needs the user's consent to do it.
 
+## File associations
+
+Textus registers itself for `.md` and `.markdown` per user, under
+`HKEY_CURRENT_USER`, like the rest of the install. Two files do it:
+
+- `bundle.fileAssociations` in `src-tauri/tauri.windows.conf.json` - the
+  template's own association. It creates the ProgID `Textus.Markdown` and
+  sets it as the extension's default value, keeping the previous value to
+  put back on uninstall.
+- `src-tauri/installer/hooks.nsh` (`installerHooks`) - everything that
+  names Textus in a value of its own, so that another installer taking the
+  default leaves Textus under **Open with** and in **Default apps**.
+
+| Key under `HKCU\Software`                        | Value                                            |
+| ------------------------------------------------ | ------------------------------------------------ |
+| `Classes\.md` (and `.markdown`)                  | default value `Textus.Markdown` (the template)   |
+| `Classes\.md\OpenWithProgids` (and `.markdown`)  | `Textus.Markdown`, empty (`REG_NONE`)            |
+| `Classes\Textus.Markdown`                        | description, `DefaultIcon`, `shell\open\command` |
+| `Classes\Applications\Textus.exe`                | `FriendlyAppName`, `shell\open\command`          |
+| `Classes\Applications\Textus.exe\SupportedTypes` | `.md`, `.markdown`                               |
+| `Textus\Capabilities`                            | `ApplicationName`, `ApplicationDescription`      |
+| `Textus\Capabilities\FileAssociations`           | `.md`, `.markdown` = `Textus.Markdown`           |
+| `RegisteredApplications`                         | `Textus` = `Software\Textus\Capabilities`        |
+
+The ProgID was `Markdown` up to 1.1.0-rc.6. That is the name other editors
+use too - MarkText's installer writes its own command into it - so
+installing one of them took `.md` from Textus entirely, "Open with"
+included (#183). Upgrading leaves an old `Markdown` key in place, since a
+default chosen in **Default apps** may still point at it; the uninstaller
+removes it while it still opens this copy of Textus.
+
+The uninstaller removes all of the above except the extensions' keys
+themselves, which other apps share; an uninstall run for an upgrade
+(`/UPDATE`) leaves them for the install that follows.
+
+**Settings › General › Default Markdown Editor** writes the same values
+again (`src-tauri/src/commands/default_editor.rs`; a change to one needs the
+other) and opens **Default apps** at Textus
+(`ms-settings:defaultapps?registeredAppUser=Textus`). Windows does not let
+an app make itself the default - the user's choice is a hashed `UserChoice`
+only the Settings app writes - so the user picks Textus there.
+
 ## Changing things
 
 **The artwork** - `src-tauri/installer/header.bmp` (150x57, top strip) and

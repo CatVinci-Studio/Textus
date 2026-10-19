@@ -666,6 +666,14 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   cliCommandReinstallButton: "다시 설치",
   cliCommandInstalling: "설치 중…",
   cliCommandFailed: "설치하지 못했습니다:",
+  defaultEditorLabel: "기본 Markdown 편집기",
+  defaultEditorIsDefault: `${APP_NAME}이(가) 기본 편집기입니다`,
+  defaultEditorNotDefault: `${APP_NAME}이(가) 기본 편집기가 아닙니다`,
+  defaultEditorButton: "기본으로 설정",
+  defaultEditorChooseHint: `기본 앱에서 .md 파일에 ${APP_NAME}을(를) 선택하세요.`,
+  defaultEditorUnsupported:
+    "패키지(.deb, .rpm, AUR)로 설치한 경우에만 기본으로 설정할 수 있으며 AppImage는 안 됩니다.",
+  defaultEditorFailed: "설정하지 못했습니다:",
   customCssLabel: "사용자 지정 CSS",
   customCssHint:
     "현재 테마 위에 덧붙여 적용됩니다. 첫 줄 들여쓰기, 줄 간격, 글꼴 같은 작은 변경에 알맞습니다. 문서 본문은 #write로 지정하세요.",

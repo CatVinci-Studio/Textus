@@ -70,3 +70,7 @@ export const canPickFolder = isDesktopApp || isIOSApp;
 
 /** Settings' "install the `textus` terminal command" (cli.rs). */
 export const canInstallCliCommand = isDesktopApp;
+
+/** Settings' "Default Markdown editor" (default_editor.rs). iOS opens
+ *  documents through the Files app, which has no default app to set. */
+export const canSetDefaultEditor = isDesktopApp;
