@@ -329,12 +329,16 @@ export function documentBullet(markdown: string): "-" | "*" | "+" | null {
 }
 
 /**
- * A GitHub alert's marker - `> [!NOTE]` and its kin, opening a quote - is
+ * A callout's marker - `> [!NOTE]` and its kin, opening a quote - is
  * written as it was typed. remark escapes the bracket ("\\[!NOTE]") in case
  * it starts a reference link, which Textus still reads as an alert
  * (github-alert-plugin.ts) but GitHub and every other tool no longer do.
+ * Any type word in any case counts, with Obsidian's fold sign after it
+ * (`[!tip]-`): Obsidian has callout types of its own (`[!question]`), which
+ * Textus shows as a plain quote but must not break for the tools that
+ * read them.
  */
-const ALERT_MARKER = /^\\\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/;
+const ALERT_MARKER = /^\\(\[![A-Za-z]+\])/;
 
 function keepAlertMarker(text: Handle): Handle {
   return (node, parent, state, info) => {
@@ -343,7 +347,7 @@ function keepAlertMarker(text: Handle): Handle {
       parent?.type === "paragraph" &&
       parent.children[0] === node &&
       state.stack.includes("blockquote");
-    return opensQuote ? out.replace(ALERT_MARKER, "[!$1]") : out;
+    return opensQuote ? out.replace(ALERT_MARKER, "$1") : out;
   };
 }
 

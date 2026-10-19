@@ -60,6 +60,11 @@ describe("saved markdown stays as written", () => {
     ["a link with math inside", "[see $x$ here](u) after\n"],
     ["inline math", "$x$ and $y_1$\n"],
     ["a GitHub alert", "> [!NOTE]\n> 提示\n"],
+    ["a lower-case alert", "> [!note]\n> 提示\n"],
+    ["a capitalised alert", "> [!Tip]\n> 提示\n"],
+    ["a folded Obsidian callout", "> [!tip]-\n> 提示\n"],
+    ["an unfolded Obsidian callout", "> [!tip]+\n> 提示\n"],
+    ["an Obsidian callout type", "> [!question]\n> 提示\n"],
     ["an equals sign", "2+2=4 and a = b\n"],
     ["equals signs in a row", "x == y but not ==mark==\n"],
     ["a literal == that would open a highlight", "a \\==b== stays text\n"],
@@ -145,6 +150,19 @@ describe("saved markdown stays as written", () => {
     expect(await roundTrip("text [!NOTE] here\n")).toBe(
       "text \\[!NOTE] here\n",
     );
+  });
+
+  it.each([
+    ["> [!note]\n> a\n", "md-alert-note"],
+    ["> [!Tip]\n> a\n", "md-alert-tip"],
+    ["> [!warning]-\n> a\n", "md-alert-warning"],
+  ])("shows %j as an alert", async (markdown, className) => {
+    const editor = await createTestEditor(markdown);
+    editors.push(editor);
+    const quote = editor.action((ctx) =>
+      ctx.get(editorViewCtx).dom.querySelector("blockquote"),
+    );
+    expect(quote?.classList.contains(className)).toBe(true);
   });
 
   it("keeps a link on a bold word inside it", async () => {
