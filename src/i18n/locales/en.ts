@@ -838,7 +838,6 @@ type /name in a conversation to use one.
   missingImageNotInVault: "There's no file by this name in the vault.",
   missingImageFailed: "The image couldn't be loaded.",
   missingImageChoose: "Choose image…",
-  missingImageReveal: "Show in folder",
   missingImageFilter: "Images",
   missingImageChooseFailed: "Couldn't use the chosen image.",
   imageStorageGroupLabel: "Images",
@@ -884,6 +883,10 @@ type /name in a conversation to use one.
   imageWidth50: "Image width: 50%",
   imageWidth70: "Image width: 70%",
   imageWidth100: "Image width: 100%",
+  // An image's right-click menu; Show in folder is also the missing
+  // image card's button.
+  imageReveal: "Show in folder",
+  imageCopyPath: "Copy image path",
   imageWidthShortAuto: "Auto",
   deleteImage: "Delete Image",
   privacyChatHistoryLabel: "Chat History",

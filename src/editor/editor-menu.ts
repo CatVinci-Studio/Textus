@@ -29,6 +29,13 @@ import {
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { ContextMenuItem } from "./ContextMenu";
 import { readImagePresentation, writeImageWidth } from "./images/image-plugin";
+import {
+  imageLocation,
+  revealNearest,
+  type ImageLocation,
+} from "./images/missing-image";
+import { embedFileAt } from "./images/obsidian-embed-preview";
+import { canRevealInFileManager } from "../platform/capabilities";
 import type { EditorRunner } from "./useEditorRunner";
 import type { Strings } from "../i18n/strings";
 
@@ -253,9 +260,18 @@ function leaveTableForClick(
   );
 }
 
+/** What a right-click landed on, for the menu's image items. */
+export interface ContextMenuTarget {
+  /** The image node's doc position, for the width items. */
+  imagePos: number | null;
+  /** Where the picture's file is - an image's or an Obsidian embed's -
+   *  for Show in folder and Copy image path. */
+  imageLocation: ImageLocation | null;
+}
+
 /**
  * Prepares the editor for a right-click and reports the image under the
- * pointer, if any (its doc position, for the width items).
+ * pointer, if any.
  *
  * macOS WebKit selects the word under the pointer while handling a right
  * click in editable content - inside the engine, before any DOM event, so
@@ -268,9 +284,11 @@ function leaveTableForClick(
 export function contextMenuTarget(
   run: EditorRunner,
   e: { target: EventTarget | null; clientX?: number; clientY?: number },
-): number | null {
+  docPath: string | null,
+): ContextMenuTarget {
+  const none = { imagePos: null, imageLocation: null };
   return (
-    run((ctx) => {
+    run((ctx): ContextMenuTarget => {
       const view = ctx.get(editorViewCtx);
       const coords =
         e.clientX === undefined || e.clientY === undefined
@@ -290,14 +308,28 @@ export function contextMenuTarget(
 
       const target =
         e.target instanceof Element ? e.target.closest(".image-view") : null;
-      if (!target) return null;
+      if (!target) return none;
+      const embedFile = embedFileAt(target);
+      if (embedFile)
+        return {
+          imagePos: null,
+          imageLocation: { kind: "local", path: embedFile },
+        };
       try {
         const pos = view.posAtDOM(target, 0);
-        return view.state.doc.nodeAt(pos)?.type.name === "image" ? pos : null;
+        const node = view.state.doc.nodeAt(pos);
+        if (node?.type.name !== "image") return none;
+        return {
+          imagePos: pos,
+          imageLocation: imageLocation(
+            (node.attrs.src as string) ?? "",
+            docPath,
+          ),
+        };
       } catch {
-        return null;
+        return none;
       }
-    }) ?? null
+    }) ?? none
   );
 }
 
@@ -305,6 +337,7 @@ export interface ContextMenuOptions {
   t: Strings;
   /** From contextMenuTarget: the image right-clicked, if any. */
   imagePos: number | null;
+  imageLocation?: ImageLocation | null;
   /** Already filtered down to the AI features that are switched on. */
   aiItems: ContextMenuItem[];
   copyOrCut: (cut: boolean) => void;
@@ -319,10 +352,11 @@ export function buildContextMenuItems(
   options: ContextMenuOptions,
 ): MenuEntry[] {
   const { t, imagePos } = options;
-  const imageItems: MenuEntry[] =
-    imagePos === null
-      ? []
-      : [...imageWidthItems(run, t, imagePos), "separator"];
+  const imageItems = joinGroups(
+    imagePos === null ? [] : imageWidthItems(run, t, imagePos),
+    imageFileItems(t, options.imageLocation ?? null),
+  );
+  if (imageItems.length > 0) imageItems.push("separator");
   const clipboardItems: MenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
     { label: t.copy, onSelect: () => options.copyOrCut(false) },
@@ -409,6 +443,45 @@ function imageWidthItems(
     widthItem(70, t.imageWidth70),
     widthItem(100, t.imageWidth100),
   ];
+}
+
+/**
+ * Show in folder and Copy image path. Show in folder goes where the
+ * missing image card's button does (revealNearest): the file selected, or
+ * the nearest folder that exists. A web image has only its address to
+ * copy; a data: URI, nothing.
+ */
+function imageFileItems(
+  t: Strings,
+  location: ImageLocation | null,
+): MenuEntry[] {
+  const items: MenuEntry[] = [];
+  if (location?.kind === "local" && canRevealInFileManager)
+    items.push({
+      label: t.imageReveal,
+      onSelect: () => revealNearest(location.path),
+    });
+  const text =
+    location?.kind === "local"
+      ? location.path
+      : location?.kind === "remote"
+        ? location.url
+        : null;
+  if (text !== null)
+    items.push({
+      label: t.imageCopyPath,
+      onSelect: () => void navigator.clipboard.writeText(text).catch(() => {}),
+    });
+  return items;
+}
+
+/** The groups that have items, a separator between each two. */
+function joinGroups(...groups: MenuEntry[][]): MenuEntry[] {
+  return groups
+    .filter((group) => group.length > 0)
+    .flatMap((group, i) =>
+      i === 0 ? group : ["separator" as const, ...group],
+    );
 }
 
 /** Select All, Find, and the AI items: offered wherever the caret is. */

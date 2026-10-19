@@ -384,7 +384,7 @@ export function MilkdownEditor({
     setMenu({
       x: e.clientX,
       y: e.clientY,
-      imagePos: contextMenuTarget(run, e),
+      ...contextMenuTarget(run, e, filePath),
     });
   }
 

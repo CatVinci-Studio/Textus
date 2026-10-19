@@ -7,12 +7,15 @@ import { ContextMenu } from "../editor/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import type { Settings } from "../settings/SettingsContext";
 import type { Strings } from "../i18n/strings";
+import type { ImageLocation } from "../editor/images/missing-image";
 
 /** Where the editor's menu is open, and on what. */
 export type EditorMenuState = {
   x: number;
   y: number;
   imagePos: number | null;
+  /** Where the right-clicked picture's file is (contextMenuTarget). */
+  imageLocation?: ImageLocation | null;
   /** Opened by the iPhone keyboard toolbar's "More": the phone's items
    *  (buildPhoneMoreItems), as an action sheet. */
   phone?: boolean;
@@ -63,6 +66,7 @@ export function EditorContextMenu({
             {
               t,
               imagePos: menu.imagePos,
+              imageLocation: menu.imageLocation,
               // Each AI item is only offered while its feature is enabled in
               // Settings. The tour's practice tab always offers Ask AI, so
               // its AI lessons work even for someone who turned Agent chat
