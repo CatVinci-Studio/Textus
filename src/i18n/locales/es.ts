@@ -721,6 +721,7 @@ para usar una.
   contentWidthAuto: "Adaptable",
   contentWidthStandard: "Estándar",
   contentWidthFull: "Ancho completo",
+  uiTextScaleLabel: "Tamaño del texto de la interfaz",
   newDocumentModeLabel: "Abrir documentos en",
   newDocumentModeWindow: "Una ventana nueva",
   newDocumentModeTab: "Una pestaña de esta ventana",

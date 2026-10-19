@@ -708,6 +708,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   contentWidthAuto: "Adaptiv",
   contentWidthStandard: "Standard",
   contentWidthFull: "Volle Breite",
+  uiTextScaleLabel: "Schriftgröße der Oberfläche",
   newDocumentModeLabel: "Dokumente öffnen",
   newDocumentModeWindow: "In neuem Fenster",
   newDocumentModeTab: "Als Tab in diesem Fenster",

@@ -14,6 +14,8 @@ import {
   REVISION_DISPLAYS,
   type RevisionDisplay,
   type HeadingAction,
+  UI_TEXT_SCALES,
+  type UiTextScale,
 } from "./SettingsContext";
 import {
   marginViewBlocked,
@@ -21,7 +23,13 @@ import {
 } from "../ai/revision/revision-display";
 import { useMarginAvailable } from "../ai/margin/margin-room";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
-import { LANGS, LANG_NAMES, type Lang, type TextKey } from "../i18n/strings";
+import {
+  LANGS,
+  LANG_NAMES,
+  localeOf,
+  type Lang,
+  type TextKey,
+} from "../i18n/strings";
 import {
   LinkRow,
   SettingRow,
@@ -126,6 +134,10 @@ export function SettingsPanel({
   const marginAvailable = useMarginAvailable();
   const phone = usePhoneLayout();
   const noMargin = !phone && !marginAvailable;
+  // "125 %" in French, "125%" in English.
+  const percent = new Intl.NumberFormat(localeOf(settings.language), {
+    style: "percent",
+  });
   const [category, setCategory] = useState<Category>("general");
   // A page of its own inside a category, with a way back, on the desktop
   // and the phone alike: General › About Textus, Editor & Appearance ›
@@ -255,6 +267,27 @@ export function SettingsPanel({
                 <option value="full">{t.contentWidthFull}</option>
               </Select>
             </SettingRow>
+            {/* A phone's UI is sized by iOS's own text styles instead. */}
+            {!phone && (
+              <SettingRow label={t.uiTextScaleLabel}>
+                <Select
+                  className="settings-select"
+                  aria-label={t.uiTextScaleLabel}
+                  value={String(settings.uiTextScale)}
+                  onChange={(e) =>
+                    setSettings({
+                      uiTextScale: Number(e.target.value) as UiTextScale,
+                    })
+                  }
+                >
+                  {UI_TEXT_SCALES.map((scale) => (
+                    <option key={scale} value={String(scale)}>
+                      {percent.format(scale)}
+                    </option>
+                  ))}
+                </Select>
+              </SettingRow>
+            )}
           </SettingsGroup>
           {/* The window's view modes, beside the one that is a setting
               (typewriter): on a phone, whose menu is kept short, this is

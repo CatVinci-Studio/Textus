@@ -700,6 +700,7 @@ type /name in a conversation to use one.
   contentWidthAuto: "Adaptive",
   contentWidthStandard: "Standard",
   contentWidthFull: "Full Width",
+  uiTextScaleLabel: "Interface Text Size",
   newDocumentModeLabel: "Open Documents In",
   newDocumentModeWindow: "A New Window",
   newDocumentModeTab: "A Tab in This Window",

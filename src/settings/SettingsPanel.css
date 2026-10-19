@@ -816,7 +816,7 @@ button.settings-inline-button {
   color: var(--editor-muted);
   font-size: var(--text-xs);
   font-weight: 500;
-  line-height: 18px;
+  line-height: calc(18px * var(--ui-text-scale, 1));
   vertical-align: 1px;
   white-space: nowrap;
 }
@@ -1202,13 +1202,13 @@ button.settings-skill-action:focus-visible {
 }
 
 .settings-about-name {
-  font-size: 1.35rem;
+  font-size: calc(1.35rem * var(--ui-text-scale, 1));
   font-weight: 600;
   color: var(--chrome-text);
 }
 
 .settings-about-version {
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--ui-text-scale, 1));
   color: var(--chrome-muted);
   cursor: default;
   user-select: none;
@@ -1240,7 +1240,7 @@ button.settings-skill-action:focus-visible {
 
 .settings-about-credit {
   margin-top: 4px;
-  font-size: 0.8rem;
+  font-size: calc(0.8rem * var(--ui-text-scale, 1));
   color: var(--chrome-muted);
 }
 
@@ -1327,7 +1327,7 @@ button.settings-skill-action:focus-visible {
 
 .settings-about-status {
   flex-basis: 100%;
-  font-size: 0.8rem;
+  font-size: calc(0.8rem * var(--ui-text-scale, 1));
   color: var(--chrome-muted);
 }
 

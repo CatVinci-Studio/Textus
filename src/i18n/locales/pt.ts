@@ -705,6 +705,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   contentWidthAuto: "Adaptável",
   contentWidthStandard: "Padrão",
   contentWidthFull: "Largura total",
+  uiTextScaleLabel: "Tamanho do texto da interface",
   newDocumentModeLabel: "Abrir documentos em",
   newDocumentModeWindow: "Uma nova janela",
   newDocumentModeTab: "Uma aba nesta janela",

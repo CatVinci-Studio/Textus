@@ -710,6 +710,7 @@ export default {
   contentWidthAuto: "Адаптивная",
   contentWidthStandard: "Стандартная",
   contentWidthFull: "Во всю ширину",
+  uiTextScaleLabel: "Размер текста интерфейса",
   newDocumentModeLabel: "Открывать документы",
   newDocumentModeWindow: "В новом окне",
   newDocumentModeTab: "Во вкладке этого окна",

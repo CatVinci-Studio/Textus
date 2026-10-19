@@ -666,6 +666,7 @@ export default {
   contentWidthAuto: "自動調整",
   contentWidthStandard: "標準",
   contentWidthFull: "全寬",
+  uiTextScaleLabel: "介面文字大小",
   newDocumentModeLabel: "文件開啟方式",
   newDocumentModeWindow: "新視窗",
   newDocumentModeTab: "目前視窗的新分頁",

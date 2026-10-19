@@ -122,7 +122,7 @@
   padding: 1px 6px;
   border-radius: var(--radius-small);
   background: color-mix(in srgb, var(--editor-bg, var(--bg)) 20%, transparent);
-  font: 500 10.5px var(--font-mono);
+  font: 500 calc(10.5px * var(--ui-text-scale, 1)) var(--font-mono);
 }
 
 .grammar-popover-apply:hover {

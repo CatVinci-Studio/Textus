@@ -115,6 +115,11 @@ export function defaultShortcuts(mac = modIsMeta()): Shortcuts {
 
 const DEFAULT_SHORTCUTS: Shortcuts = defaultShortcuts();
 
+/// Settings.uiTextScale's values: Settings › Editor & Appearance ›
+/// Interface Text Size, as a factor on the UI's type scale.
+export const UI_TEXT_SCALES = [0.9, 1, 1.1, 1.25] as const;
+export type UiTextScale = (typeof UI_TEXT_SCALES)[number];
+
 /// Settings.revisionDisplay's values.
 export const REVISION_DISPLAYS = [
   "inline",
@@ -289,6 +294,11 @@ export interface Settings {
   /// View menu (see ../utils/useZoom). Saved here so it survives restarts;
   /// each window applies it independently on mount.
   zoom: number;
+  /// The size of the app's own text - sidebar, outline, AI panel, tabs,
+  /// menus, Settings - as a factor on the type scale (1 = 100%), for every
+  /// window. Published as `--ui-text-scale` (theme/apply-appearance.ts);
+  /// the document has its own zoom, above.
+  uiTextScale: UiTextScale;
   shortcuts: Shortcuts;
   /// Either a built-in theme id (theme/builtin-themes.ts) or a
   /// `UserThemeMeta.id`.
@@ -372,6 +382,7 @@ const DEFAULT_SETTINGS: Settings = {
   autoCloseMarks: true,
   customCss: "",
   zoom: 1,
+  uiTextScale: 1,
   shortcuts: DEFAULT_SHORTCUTS,
   themeId: "default",
   userThemes: [],
@@ -485,6 +496,9 @@ export function normaliseSettings(parsed: Raw | null): Settings {
         ...DEFAULT_SETTINGS.shortcuts,
         ...((parsed.shortcuts as Partial<Shortcuts> | undefined) ?? {}),
       },
+      uiTextScale: UI_TEXT_SCALES.includes(parsed.uiTextScale as UiTextScale)
+        ? (parsed.uiTextScale as UiTextScale)
+        : DEFAULT_SETTINGS.uiTextScale,
       // An unknown language (a newer build's, a hand edit) is English, not
       // a string table that isn't there.
       language: isLang(parsed.language) ? parsed.language : "en",

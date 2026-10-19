@@ -725,6 +725,7 @@ utiliser une.
   contentWidthAuto: "Adaptative",
   contentWidthStandard: "Standard",
   contentWidthFull: "Pleine largeur",
+  uiTextScaleLabel: "Taille du texte de l'interface",
   newDocumentModeLabel: "Ouvrir les documents dans",
   newDocumentModeWindow: "Une nouvelle fenêtre",
   newDocumentModeTab: "Un onglet de cette fenêtre",
