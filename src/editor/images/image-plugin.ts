@@ -127,13 +127,14 @@ export function readImagePresentation(title: string | null | undefined): {
   };
 }
 
+/** Never null: the image node's title attr validates as a string, so a null
+ *  title made Auto throw on an image without a caption. */
 export function writeImageWidth(
   title: string | null | undefined,
   widthPercent: number | null,
-): string | null {
+): string {
   const visibleTitle = readImagePresentation(title).title.trimEnd();
-  if (widthPercent === null)
-    return visibleTitle.length > 0 ? visibleTitle : null;
+  if (widthPercent === null) return visibleTitle;
 
   const metadata = `{textus-width=${Math.min(100, Math.max(1, Math.round(widthPercent)))}%}`;
   return visibleTitle.length > 0 ? `${visibleTitle} ${metadata}` : metadata;
