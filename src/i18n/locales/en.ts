@@ -8,7 +8,6 @@ import type { Plural } from "../plural";
  */
 const en = {
   agentPanelTitle: AI_NAME,
-  agentPanelToggle: "AI panel",
   agentPanelPopOut: "Open in a separate window",
   agentPanelResize: "Resize the AI panel",
   sidebarResize: "Resize the sidebar",
@@ -465,7 +464,7 @@ type /name in a conversation to use one.
   agentStop: "Stop",
   agentRetry: "Retry",
   agentThinking: "Thinking…",
-  chatTab: "Chats",
+  chatHistoryOpen: "History",
   chatHistoryEmpty: "No past conversations.",
   chatHistoryRestoreHint: "Reopen this conversation with its document",
   chatHistoryDelete: "Delete conversation",
@@ -791,11 +790,10 @@ type /name in a conversation to use one.
   imageStorageLocal: "On this computer",
   imageStorageRemote: "Upload to an image host",
   imageFolderLabel: "Folder",
-  imageFolderNextToDocument: "Next to the document",
-  imageFolderDocumentName: "<document>.assets/",
-  imageFolderCustom: "Custom folder",
-  imageFolderInvalid:
-    "Use a folder relative to the document, such as img or ../images.",
+  imageFolderSubfolder: "Subfolder",
+  imageFolderSameFolder: "Same folder as the document",
+  imageFolderNameLabel: "Subfolder name",
+  imageFolderInvalid: "Use a folder inside the document's folder, such as img.",
   imageHostLabel: "Service",
   imageHostCustom: "Custom",
   imagePicgoEndpointLabel: "Server address",

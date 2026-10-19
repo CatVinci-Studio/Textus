@@ -31,14 +31,14 @@ Possíveis problemas aparecem sublinhados. Passe o ponteiro sobre um deles, ou l
 
 ### 3. O painel de IA
 
-A conversa completa fica em um painel no lado direito do editor. Abra ou feche o painel com o botão de chat na ponta direita da barra da janela ou com <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+A conversa completa fica em um painel no lado direito do editor. Abra ou feche o painel com o botão **Textus AI** (o robô) na ponta direita da barra da janela ou com <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **Uma conversa por documento**: cada aba tem a sua conversa, e trocar de aba troca o painel junto. **Nova conversa**, no cabeçalho do painel, recomeça do zero (se ainda houver edições sem decisão, o app pergunta antes).
 - **Modos**: o campo de mensagem tem três. **Escrever** redige texto novo no documento (uma continuação, um parágrafo ou uma seção nova) e só acrescenta: com texto selecionado, escreve depois da seleção. **Revisar** responde, conversa e deixa comentários sem mudar nada. **Editar** altera o texto que já existe. Cada mudança de Escrever ou Editar é uma proposta que você aceita ou rejeita. O painel começa no modo definido em **Ajustes > Textus AI > Chat da Textus AI > Modo padrão**.
 - **Menções com @**: digite `@` no campo para escolher um arquivo de texto da pasta do projeto; ele é anexado à mensagem.
 - **Anexar arquivos**: o botão **+** à esquerda do campo anexa à mensagem um PDF, um documento do Word, uma apresentação do PowerPoint, uma planilha, uma imagem ou um arquivo de texto simples. Tudo, menos as imagens, é convertido em texto no seu computador e vai dentro da mensagem; as imagens são enviadas como imagens de verdade aos provedores que conseguem vê-las (os que não conseguem avisam na hora, em vez de descartá-las sem dizer nada). Um arquivo longo é enviado só em parte, e o anexo mostra “(parcial)” quando isso acontece.
 - **Busca na web**: depois de ativada em **Ajustes > Textus AI > Chat da Textus AI** (nos provedores que oferecem o recurso), a Textus AI pode buscar na web por conta própria quando um pedido precisar.
-- **Histórico**: a aba **Conversas** da barra lateral guarda as conversas anteriores. Clique em uma para reabri-la no editor atual e continuar.
+- **Histórico**: o botão **Histórico** (o relógio), no topo do painel de IA, lista as conversas anteriores agrupadas por pasta. Clique em uma para reabri-la com o documento dela e continuar.
 - **Erros**: quando uma solicitação falha, o chat diz que tipo de problema houve e o que fazer (verificar a chave, esperar um pouco, escolher outro modelo), acima da mensagem do próprio provedor.
 
 **Abrir em uma janela separada**, no cabeçalho do painel, leva a conversa para uma janela própria, o que ajuda quando você tem um segundo monitor. Essa janela acompanha você: troque de aba ou de janela e o documento, o título e a seleção mudam junto, e as edições que ela propõe vão para o arquivo que você está editando de fato. Há no máximo uma dessas janelas por janela do editor; **📌**, no cabeçalho dela, a mantém na frente do editor.

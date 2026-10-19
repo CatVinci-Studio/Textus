@@ -25,6 +25,7 @@ import { importLegacyStorage } from "../storage/legacy-import";
 import { trackWrite } from "../storage/pending-writes";
 import { listenToThisWindow } from "../utils/tauri-events";
 import { SettingsSync, type Raw } from "./settings-sync";
+import { DEFAULT_IMAGE_SUBFOLDER, migrateImageFolder } from "./image-folder";
 import { useApplyAppearance } from "../theme/apply-appearance";
 
 /// Light/dark, orthogonal to which content theme is selected: `themeId`
@@ -168,9 +169,9 @@ export interface Settings {
    *  never migrated when this changes. */
   imageStorageMode: ImageStorageMode;
   /** The folder a saved document's images go in when they are stored
-   *  locally, relative to the document (#147): "assets", "./",
-   *  "${filename}.assets" or the user's own path. Resolved by fs.rs's
-   *  ImageFolder. */
+   *  locally (#147): "./" for the document's own folder, or the name of a
+   *  subfolder of it ("assets" by default). Resolved by fs.rs's
+   *  ImageFolder; settings/image-folder.ts has the rules. */
   imageFolder: string;
   /** Where uploaded images go: a PicGo or PicList app on this computer
    *  (the services set up in it), SM.MS, Imgur, or the user's endpoint. */
@@ -310,7 +311,7 @@ const DEFAULT_SETTINGS: Settings = {
   enableMath: true,
   enableMermaid: true,
   imageStorageMode: "local",
-  imageFolder: "assets",
+  imageFolder: DEFAULT_IMAGE_SUBFOLDER,
   imageHost: "picgo",
   imageNamingMode: "auto",
   imagePicgoEndpoint: "http://127.0.0.1:36677/upload",
@@ -461,6 +462,7 @@ export function normaliseSettings(parsed: Raw | null): Settings {
       )
         ? (parsed.updateChannel as UpdateChannel)
         : DEFAULT_SETTINGS.updateChannel,
+      imageFolder: migrateImageFolder(parsed.imageFolder),
       // Before the presets, the one image host was the user's endpoint: an
       // installation that set one up keeps it.
       imageHost: IMAGE_HOSTS.includes(parsed.imageHost as ImageHost)

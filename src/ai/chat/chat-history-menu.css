@@ -1,0 +1,128 @@
+/* The history list in a chat header (ChatHistoryMenu.tsx). The header is
+   its containing block, so the list drops down across the panel's (or the
+   detached window's) whole width, however near the edge the button sits. */
+.chat-history-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 8px;
+  right: 8px;
+  z-index: 30;
+  max-height: min(420px, 60vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transform-origin: top right;
+  animation: motion-pop-in var(--dur-base) var(--ease-out);
+}
+
+.chat-history-menu[data-state="closing"] {
+  animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
+}
+
+.chat-history-empty {
+  padding: 16px 12px;
+  font-size: var(--text-sm);
+  color: var(--editor-muted);
+}
+
+/* Entries are hairline-separated, as the clipboard history's are: a title
+   and a date line per entry run together without a rule between them. */
+.chat-history {
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+}
+
+.chat-history-group-title {
+  padding: 10px 8px 4px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--editor-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Older conversations were moved to the trash folder (beyond the cap). */
+.chat-history-archived {
+  padding: 6px 8px 2px;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+}
+
+.chat-history-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--editor-text);
+  line-height: 1.45;
+}
+
+.chat-history-entry + .chat-history-entry {
+  border-top: 1px solid var(--editor-border);
+}
+
+.chat-history-entry:hover {
+  background: var(--sidebar-hover);
+}
+
+.chat-history-entry-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.chat-history-entry-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-history-entry-meta {
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-history-entry-delete {
+  border: none;
+  background: none;
+  color: var(--editor-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px 4px;
+  border-radius: var(--radius-control);
+  opacity: 0;
+  flex-shrink: 0;
+}
+
+.chat-history-entry:hover .chat-history-entry-delete,
+.chat-history-entry-delete:focus-visible {
+  opacity: 1;
+}
+
+.chat-history-entry-delete:hover {
+  color: var(--editor-text);
+}
+
+/* A finger has no hover to bring the delete button out, and needs room
+   to hit it. */
+@media (pointer: coarse) {
+  .chat-history-entry-delete {
+    opacity: 1;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+    margin: -6px -6px -6px 0;
+  }
+}

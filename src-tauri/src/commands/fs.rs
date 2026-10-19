@@ -205,10 +205,10 @@ pub async fn read_binary_file_base64(path: String) -> Result<String, String> {
     Ok(STANDARD.encode(bytes))
 }
 
-/// Where a saved document's images go: Settings > Images > Image folder
+/// Where a saved document's images go: Settings > Images > Folder
 /// (`imageFolder` in src/settings/SettingsContext.tsx), worked out for one
 /// document. src/settings/image-folder.ts previews the same rules for the
-/// examples in Settings; change both.
+/// example in Settings; change both.
 #[derive(Debug, PartialEq)]
 struct ImageFolder {
     dir: PathBuf,
@@ -218,19 +218,14 @@ struct ImageFolder {
 }
 
 impl ImageFolder {
-    /// The setting is a path relative to the document, in which
-    /// `${filename}` is the document's name without its extension (Typora's
-    /// `${filename}.assets`). It may climb out with `..`, but not above the
-    /// root, and it is never absolute: one absolute folder would write this
-    /// machine's paths into every document instead of links that travel
-    /// with it. An empty segment ("img//x") is refused, not read as a root.
+    /// The setting is "./" (the document's own folder) or a subfolder of
+    /// it. It never leaves that folder - no "..", nothing absolute: an
+    /// absolute folder would write this machine's paths into every document
+    /// instead of links that travel with it. An empty segment ("img//x") is
+    /// refused, not read as a root.
     fn resolve(doc_path: &Path, setting: &str) -> Result<Self, String> {
         let invalid = || format!("invalid image folder: {setting:?}");
         let doc_dir = doc_path.parent().ok_or_else(invalid)?;
-        let stem = doc_path
-            .file_stem()
-            .map(|s| s.to_string_lossy())
-            .unwrap_or_default();
         let setting = setting.trim();
         // A Windows drive ("C:\img", or "C:img" - relative to that drive's
         // current folder, not the document's) is a root too.
@@ -242,29 +237,20 @@ impl ImageFolder {
             return Err(invalid());
         }
         let segments: Vec<&str> = setting.split(['/', '\\']).collect();
-        let mut parts: Vec<String> = Vec::new();
+        let mut parts: Vec<&str> = Vec::new();
         for (i, segment) in segments.iter().enumerate() {
             match *segment {
                 // A trailing slash: "./", "img/".
                 "" if i > 0 && i == segments.len() - 1 => {}
-                "" => return Err(invalid()),
+                "" | ".." => return Err(invalid()),
                 "." => {}
-                ".." if parts.last().is_some_and(|p| p != "..") => {
-                    parts.pop();
-                }
-                name => parts.push(name.replace("${filename}", &stem)),
-            }
-        }
-        let mut dir = doc_dir.to_path_buf();
-        for part in &parts {
-            if part != ".." {
-                dir.push(part);
-            } else if !dir.pop() {
-                return Err(invalid());
+                name => parts.push(name),
             }
         }
         Ok(Self {
-            dir,
+            dir: parts
+                .iter()
+                .fold(doc_dir.to_path_buf(), |dir, p| dir.join(p)),
             src_prefix: parts.join("/"),
         })
     }
@@ -488,41 +474,22 @@ mod tests {
     }
 
     #[test]
-    fn filename_stands_for_the_document_name_without_its_extension() {
-        let dir = doc().parent().unwrap().join("My Notes.assets");
-        assert_eq!(
-            image_in("${filename}.assets"),
-            (dir, "My Notes.assets/a.png".to_string()),
-        );
-    }
-
-    #[test]
-    fn a_custom_folder_is_written_with_forward_slashes() {
+    fn a_subfolder_is_written_with_forward_slashes() {
         let dir = doc().parent().unwrap().join("img").join("shots");
         let expected = (dir, "img/shots/a.png".to_string());
         assert_eq!(image_in("img/shots"), expected);
         assert_eq!(image_in("img\\shots\\"), expected);
-        assert_eq!(image_in("  ./img/./x/../shots/  "), expected);
+        assert_eq!(image_in("  ./img/./shots/  "), expected);
     }
 
     #[test]
-    fn a_custom_folder_may_climb_out_of_the_documents_folder() {
-        let dir = Path::new("notes").join("images");
-        assert_eq!(image_in("../images"), (dir, "../images/a.png".to_string()));
-        assert_eq!(
-            image_in("../../shared/${filename}"),
-            (
-                Path::new("shared").join("My Notes"),
-                "../../shared/My Notes/a.png".to_string()
-            ),
-        );
-    }
-
-    #[test]
-    fn an_image_folder_never_climbs_above_the_root() {
-        assert!(ImageFolder::resolve(&doc(), "../../../img").is_err());
-        let root_doc = Path::new("/").join("a.md");
-        assert!(ImageFolder::resolve(&root_doc, "../img").is_err());
+    fn an_image_folder_never_leaves_the_documents_folder() {
+        for setting in ["..", "../images", "img/../../x", "img/.."] {
+            assert!(
+                ImageFolder::resolve(&doc(), setting).is_err(),
+                "{setting:?} was accepted"
+            );
+        }
     }
 
     #[test]
