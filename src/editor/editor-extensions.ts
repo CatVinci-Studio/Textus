@@ -60,7 +60,7 @@ import { tabExtendPlugin } from "./keys/tab-extend-plugin";
 import { escapeTrailingBlockPlugin } from "./markdown/escape-trailing-block-plugin";
 import { codeBlockIndentPlugin } from "./code/code-block-indent-plugin";
 import { pasteMarkdownSourcePlugin } from "./markdown/paste-markdown-plugin";
-import { linkInputRule } from "./markdown/link-input-rule";
+import { imageInputRule, linkInputRule } from "./markdown/link-input-rule";
 import { pasteUrlPlugin } from "./markdown/paste-url";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
@@ -253,6 +253,7 @@ export function withEditorCore(
             }),
       )
       .use(linkInputRule)
+      .use(imageInputRule)
       .use(pasteUrlPlugin)
       .use(pasteMarkdownSourcePlugin)
       .use(createPlainTextCopyPlugin(() => settings.current.copyTextMode))
