@@ -34,9 +34,13 @@ import { fileURLToPath } from "node:url";
 
 const ownRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Documentation: Markdown anywhere, docs/, the issue templates and the
- *  license. */
+/** Documentation: Markdown, docs/, the issue templates and the license. */
 const DOCS = /(\.md$|^docs\/|^\.github\/ISSUE_TEMPLATE\/|^LICENSE$)/;
+
+/** Markdown in these trees is the app's own content or test input, not
+ *  documentation: the skills Rust embeds (src-tauri/src/ai/skills/), the
+ *  help guides and playground samples the frontend imports (?raw). */
+const CODE_TREES = /^(src|e2e|src-tauri)\//;
 
 /** Changes that run everything: CI itself, the Node version every job
  *  installs, and the npm manifest and lockfile (a bump's version lines
@@ -105,7 +109,10 @@ function versionOnly(file, before, after) {
  *  outside src-tauri/ that the Rust code embeds (rustIncludes()). */
 export function classify({ files, push, read, rustReads = [] }) {
   const all = { e2e: true, native: true };
-  const code = files.filter((file) => !DOCS.test(file));
+  const code = files.filter(
+    (file) =>
+      !DOCS.test(file) || CODE_TREES.test(file) || rustReads.includes(file),
+  );
   if (code.length === 0) return push ? all : { e2e: false, native: false };
   const rest = code.filter((file) => !versionOnly(file, ...read(file)));
   if (rest.length === 0) return { e2e: false, native: false };

@@ -55,7 +55,44 @@ const NATIVE = { e2e: false, native: true };
 
 describe("which CI jobs a pull request needs", () => {
   it("runs check alone for documentation", () => {
-    expect(edit(["docs/dev/testing.md", "README.md", "LICENSE"])).toEqual(NONE);
+    expect(
+      edit([
+        "docs/dev/testing.md",
+        "README.md",
+        "packaging/arch/README.md",
+        ".github/pull_request_template.md",
+        "LICENSE",
+      ]),
+    ).toEqual(NONE);
+  });
+
+  it("runs native for the Markdown skills Rust embeds", () => {
+    expect(
+      edit([
+        "src-tauri/src/ai/skills/de-ai.md",
+        "src-tauri/src/ai/skills/packs/README.md",
+      ]),
+    ).toEqual(NATIVE);
+  });
+
+  it("runs e2e for the Markdown the frontend imports", () => {
+    expect(
+      edit([
+        "src/help/markdown-guide.en.md",
+        "src/playground/samples/zh.md",
+        "src/theme/fixtures/theme-skill-reply.md",
+      ]),
+    ).toEqual(E2E);
+  });
+
+  it("runs native for Markdown outside src-tauri/ that Rust embeds", () => {
+    const change = classify({
+      files: ["notes/prompt.md"],
+      push: false,
+      read: () => ["a\n", "b\n"],
+      rustReads: ["notes/prompt.md"],
+    });
+    expect(change.native).toBe(true);
   });
 
   it("runs check alone for a version bump", () => {

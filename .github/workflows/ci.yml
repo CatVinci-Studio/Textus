@@ -23,7 +23,9 @@ name: CI
 #
 # The e2e flows run the frontend against a mocked backend, so Rust can't
 # change their result; native and ios embed only a few frontend files, which
-# the script finds. A version bump changes only the version lines of the five
+# the script finds. Markdown under src/, e2e/ or src-tauri/ (help guides,
+# the AI skills) is code, not documentation. A version bump changes only the
+# version lines of the five
 # files scripts/check-versions.mjs keeps in step. A push to main or a release
 # branch runs everything, except a version bump's.
 #
@@ -138,6 +140,14 @@ jobs:
           path: ~/.cache/ms-playwright
           key: ${{ steps.browser.outputs.cache-primary-key }}
       - run: npm run test:e2e -- --shard=${{ matrix.shard }}/3
+      # A failed flow's error context (the page as it was) and any
+      # screenshots and traces it left.
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-test-results-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 7
 
   # One required check for the three shards, like `native` below: passes only
   # when all of them passed (or were skipped together, when the change can't
