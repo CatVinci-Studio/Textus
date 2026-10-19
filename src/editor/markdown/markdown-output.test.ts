@@ -60,12 +60,25 @@ describe("saved markdown stays as written", () => {
     ["a link with code inside", "[see `code` here](u) after\n"],
     ["a link with math inside", "[see $x$ here](u) after\n"],
     ["inline math", "$x$ and $y_1$\n"],
+    ["inline math in two dollars", "a $$x$$ b\n"],
+    ["a paragraph of inline $$ math", "$$x^2$$\n"],
+    ["inline math holding a dollar", "a $$x \\$ y$$ b\n"],
     ["a GitHub alert", "> [!NOTE]\n> 提示\n"],
+    ["a lower-case alert", "> [!note]\n> 提示\n"],
+    ["a capitalised alert", "> [!Tip]\n> 提示\n"],
+    ["a folded Obsidian callout", "> [!tip]-\n> 提示\n"],
+    ["an unfolded Obsidian callout", "> [!tip]+\n> 提示\n"],
+    ["an Obsidian callout type", "> [!question]\n> 提示\n"],
     ["an equals sign", "2+2=4 and a = b\n"],
     ["equals signs in a row", "x == y but not ==mark==\n"],
     ["a literal == that would open a highlight", "a \\==b== stays text\n"],
     ["a highlight", "一段==高亮==文字\n"],
+    ["a single-tilde subscript", "H~2~O\n"],
+    ["single and double tildes", "~一~ and ~~二~~\n"],
+    ["a single tilde around bold", "~a **b** c~\n"],
     ["a footnote", "正文[^1]\n\n[^1]: 脚注\n"],
+    ["a code fence's meta", '```js title="a.js" {1,3}\nx\n```\n'],
+    ["a code fence's line marks", "```py {1,3} linenums\nx\n```\n"],
     ["an image without a title", "![图](a.png)\n"],
     [
       "an image width an older Textus saved",
@@ -77,6 +90,7 @@ describe("saved markdown stays as written", () => {
     ["Typora's zoom", '<img src="a.png" alt="x" style="zoom:50%;" />\n'],
     ["an <img> with a height", '<img src="a.png" height="100">\n'],
     ["an autolink", "See <https://x.org/a> here\n"],
+    ["a bare www link", "See www.x.org/a here\n"],
     ["a link whose text is its URL", "[https://x.org/a](https://x.org/a)\n"],
     ["an empty-text link", "See [](https://x.org/a) here\n"],
     ["a titled empty-text link", '[](https://x.org/a "t")\n'],
@@ -163,6 +177,38 @@ describe("saved markdown stays as written", () => {
     );
   });
 
+  it.each([
+    ["> [!note]\n> a\n", "md-alert-note"],
+    ["> [!Tip]\n> a\n", "md-alert-tip"],
+    ["> [!warning]-\n> a\n", "md-alert-warning"],
+  ])("shows %j as an alert", async (markdown, className) => {
+    const editor = await createTestEditor(markdown);
+    editors.push(editor);
+    const quote = editor.action((ctx) =>
+      ctx.get(editorViewCtx).dom.querySelector("blockquote"),
+    );
+    expect(quote?.classList.contains(className)).toBe(true);
+  });
+
+  it("keeps a code fence's meta when its language is changed", async () => {
+    const editor = await createTestEditor('```js title="a.js"\nx\n```\n');
+    editors.push(editor);
+    const saved = editor.action((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      const select = view.dom.querySelector("select")!;
+      select.value = "typescript";
+      select.dispatchEvent(new Event("change"));
+      return ctx.get(serializerCtx)(view.state.doc);
+    });
+    expect(saved).toBe('```typescript title="a.js"\nx\n```\n');
+  });
+
+  it("keeps a code fence's meta pasted as HTML", async () => {
+    expect(await throughClipboard('```js title="a.js"\nx\n```\n')).toBe(
+      '```js title="a.js"\nx\n```\n',
+    );
+  });
+
   it("keeps a link on a bold word inside it", async () => {
     expect(await roundTrip("[**bold** text](u) after\n")).toContain("](u)");
     expect(await roundTrip("[**bold** text](u) after\n")).toContain(
@@ -191,6 +237,23 @@ describe("saved markdown stays as written", () => {
     expect(await roundTrip("See https://x.org/a here\n")).toBe(
       "See <https://x.org/a> here\n",
     );
+  });
+
+  it.each([
+    ["a URL", "see https://x.org/a here", "see <https://x.org/a> here\n"],
+    ["a www address", "see www.x.org here", "see www.x.org here\n"],
+    ["an email address", "mail a@b.com now", "mail <a@b.com> now\n"],
+  ])("writes %s typed as text unescaped", async (_name, typed, reopened) => {
+    const editor = await createTestEditor("");
+    editors.push(editor);
+    const markdown = editor.action((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      view.dispatch(view.state.tr.insertText(typed, 1));
+      return ctx.get(serializerCtx)(view.state.doc);
+    });
+    expect(markdown).toBe(`${typed}\n`);
+    // Reopened, it is the autolink GitHub makes of it.
+    expect(await roundTrip(markdown)).toBe(reopened);
   });
 
   it("writes a thematic break as '---', but '***' as the first block", async () => {
