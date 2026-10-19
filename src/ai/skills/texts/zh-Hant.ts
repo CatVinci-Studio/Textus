@@ -93,4 +93,9 @@ export default {
     hint: "依你要的篇幅忠實摘要",
     aliases: ["總結", "概述"],
   },
+  theme: {
+    label: "設計主題",
+    hint: "依你的描述寫一份編輯器主題，可直接使用",
+    aliases: ["主題", "編輯器主題"],
+  },
 } satisfies SkillTexts;

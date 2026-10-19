@@ -111,6 +111,12 @@ const DEV_BUILTIN_SKILLS: [string, string, string, string][] = [
     "userOnly",
     "Summarizes faithfully at the length asked for.",
   ],
+  [
+    "theme",
+    "format",
+    "both",
+    "Designs an editor theme and writes it as one CSS file in the reply.",
+  ],
 ];
 
 export function installDevTauriShim(): void {
@@ -408,7 +414,7 @@ export function installDevTauriShim(): void {
   }
 
   // The skill list of ai::workspace and Settings' commands for the
-  // built-ins, in memory: the 18 built-ins, one skill of the user's own,
+  // built-ins, in memory: the 19 built-ins, one skill of the user's own,
   // and what Customize…/Reset/the switches did. `window.__devSkills`
   // exposes the state for assertions.
   const skills = {

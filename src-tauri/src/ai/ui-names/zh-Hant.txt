@@ -34,3 +34,6 @@ Review = 審閱
 Revise = 修訂
 Accept = 接受
 Reject = 拒絕
+Editor & Appearance (Settings page) = 編輯器與外觀
+Import CSS… (Settings, under Theme) = 匯入 CSS…
+Use this theme (under a theme in a reply) = 使用此主題

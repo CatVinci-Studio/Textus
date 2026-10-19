@@ -52,6 +52,9 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     memoryUndone: t.memoryChipUndone,
     memoryActionFailed: t.memoryActionFailed,
     toolResult: t.toolResult,
+    useTheme: t.chatUseTheme,
+    themeInUse: t.themeGalleryInUse,
+    themeFallbackName: t.navTheme,
     aiErrors: {
       notConfigured: t.aiErrorNotConfigured,
       auth: t.aiErrorAuth,

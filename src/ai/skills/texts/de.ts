@@ -93,4 +93,9 @@ export default {
     hint: "Fasst getreu zusammen, in der gewünschten Länge",
     aliases: ["zusammenfassung"],
   },
+  theme: {
+    label: "Design entwerfen",
+    hint: "Schreibt ein Editor-Design nach deiner Beschreibung, sofort nutzbar",
+    aliases: ["design", "farbschema"],
+  },
 } satisfies SkillTexts;
