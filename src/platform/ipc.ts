@@ -318,6 +318,9 @@ export const windowIpc = {
    *  asks once - the answer is taken. */
   takePendingMenuEvent: () =>
     desktopQuery<string | null>("take_pending_menu_event", null),
+  /** Opens files the way a file manager's open does: a window each, or
+   *  tabs in the focused window in tab mode (lib.rs's open_paths). */
+  openPaths: (paths: string[]) => desktopAction<void>("open_paths", { paths }),
   takePendingOpenPath: () => call<string | null>("take_pending_open_path"),
   takePendingOpenPaths: () => call<string[]>("take_pending_open_paths"),
   /** Pops the chat panel out into its own OS window; resolves to its label,

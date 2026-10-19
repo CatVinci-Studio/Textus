@@ -129,13 +129,18 @@ function App() {
     () => ({ textFilter: t.openDialogText, allFilter: t.openDialogAll }),
     [t],
   );
-  const { openPathInTab, replaceTabWithFile, openFile, openFileDialog } =
-    useFileOpening({
-      tabState,
-      newDocumentMode: settings.newDocumentMode,
-      setPendingClose,
-      dialogFilters,
-    });
+  const {
+    openPathInTab,
+    replaceTabWithFile,
+    openFile,
+    openFileDialog,
+    openRecentFile,
+  } = useFileOpening({
+    tabState,
+    newDocumentMode: settings.newDocumentMode,
+    setPendingClose,
+    dialogFilters,
+  });
 
   const { openHelpTab } = useHelpTabs({
     tabState,
@@ -285,6 +290,7 @@ function App() {
     onToggleZenMode: toggleZenMode,
     addBlankTab,
     openFileDialog,
+    openRecentFile,
     saveTab,
     saveTabAs,
     toggleSourceMode,

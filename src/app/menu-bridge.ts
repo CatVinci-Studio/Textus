@@ -29,6 +29,8 @@ export interface MenuBridgeHandlers {
   onToggleZenMode: () => void;
   addBlankTab: () => void;
   openFileDialog: () => Promise<void>;
+  /** File > Open Recent (useFileOpening.ts). */
+  openRecentFile: (path: string) => Promise<void>;
   saveTab: (tabId: string) => Promise<boolean>;
   saveTabAs: (tabId: string) => Promise<boolean>;
   toggleSourceMode: () => void;
@@ -75,6 +77,10 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       // a fresh window itself instead of emitting this.
       listenToThisWindow("menu-new-file", () => h().addBlankTab()),
       listenToThisWindow("menu-open-file", () => void h().openFileDialog()),
+      listenToThisWindow<string>(
+        "menu-open-recent",
+        (event) => void h().openRecentFile(event.payload),
+      ),
       listenToThisWindow("menu-documents", () => h().onOpenDocuments()),
       listenToThisWindow("menu-share", () => void h().shareActiveTab()),
       listenToThisWindow(
