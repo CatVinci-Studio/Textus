@@ -68,6 +68,15 @@ function isImageFile(file: string): boolean {
   return (IMAGE_EXTENSIONS as readonly string[]).includes(ext ?? "");
 }
 
+const EMBED_SOURCE = /^!\[\[([^[\]\n]+)\]\]$/;
+
+/** An embed's source (`![[old.png|alt|300]]`) naming `path` instead, its
+ *  alt text and size kept. */
+export function withEmbedPath(source: string, path: string): string {
+  const options = EMBED_SOURCE.exec(source)?.[1].split("|").slice(1) ?? [];
+  return `![[${[path, ...options].join("|")}]]`;
+}
+
 export interface EmbedTarget {
   /** The file as written: a name or a path from the vault root. */
   path: string;
@@ -81,7 +90,7 @@ export interface EmbedTarget {
 /** What an embed's source (`![[path|alt|300x200]]`) asks for; null when it
  *  isn't one. */
 export function parseEmbed(source: string): EmbedTarget | null {
-  const match = /^!\[\[([^[\]\n]+)\]\]$/.exec(source);
+  const match = EMBED_SOURCE.exec(source);
   if (!match) return null;
   const [path, ...options] = match[1].split("|");
   let width: number | null = null;

@@ -17,6 +17,10 @@ import {
   DETAILS_IN_CLASS,
 } from "../editor/html/details-fold";
 import {
+  MISSING_IMAGE_CARD_CLASS,
+  MISSING_IMAGE_CLASS,
+} from "../editor/images/missing-image";
+import {
   MAC_PAGE,
   WINDOWS_PAGE,
   paginateHtml,
@@ -106,6 +110,9 @@ const EDITOR_CHROME_SELECTOR = [
   ".image-resize-handle",
   // Front matter is metadata for tools, not part of the page.
   ".frontmatter-block",
+  // A missing image's card and its buttons: the page keeps the image as
+  // written (cloneEditorContent).
+  `.${MISSING_IMAGE_CARD_CLASS}`,
 ].join(", ");
 
 // A resized table carries pixel widths (an inline table width plus one per
@@ -182,6 +189,10 @@ export function cloneEditorContent(
     .querySelectorAll("[contenteditable]")
     .forEach((el) => el.removeAttribute("contenteditable"));
   clone.querySelectorAll(EDITOR_CHROME_SELECTOR).forEach((el) => el.remove());
+  // Without its card, a missing image is the <img> it always was.
+  clone
+    .querySelectorAll(`.${MISSING_IMAGE_CLASS}`)
+    .forEach((el) => el.classList.remove(MISSING_IMAGE_CLASS));
   gatherDetails(clone);
   fitTablesToWidth(clone);
   clone

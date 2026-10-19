@@ -115,6 +115,12 @@ export const fs = {
       ? iosFiles.pickDocument()
       : call<string | null>("open_file_dialog", filters),
   openCssFileDialog: () => call<string | null>("open_css_file_dialog"),
+  /** A picker for one image file - "Choose image…" on a missing image's
+   *  card (editor/images/missing-image.ts). `filterName` names
+   *  `extensions` in the UI language (commands/fs.rs). Offered on
+   *  desktop only (capabilities.ts's canPickImageFile). */
+  openImageFileDialog: (filterName: string, extensions: readonly string[]) =>
+    call<string | null>("open_image_file_dialog", { filterName, extensions }),
   saveFileDialog: (defaultName: string): Promise<string | null> =>
     isIOSApp
       ? newDocumentPath(

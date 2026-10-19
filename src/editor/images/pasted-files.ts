@@ -19,6 +19,10 @@ const MIME_BY_EXT: Record<string, string> = {
   tiff: "image/tiff",
 };
 
+/** The image files the image store takes (image-plugin.ts's storeImage),
+ *  for a file picker's filter. */
+export const IMAGE_FILE_EXTENSIONS = Object.keys(MIME_BY_EXT);
+
 /** The image type a file's extension names, or null if it isn't one. */
 export function imageMimeForPath(path: string): string | null {
   const ext = /\.([a-z0-9]+)$/i.exec(path)?.[1]?.toLowerCase();
