@@ -555,6 +555,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   themeGalleryInstallFailed: "Não foi possível instalar o tema:",
   enableMathLabel: "Ativar fórmulas matemáticas",
   enableMermaidLabel: "Diagramas Mermaid",
+  diagramEngineLabel: "Motor de diagramas",
+  diagramEngineMermaid: "Mermaid (mais compatível)",
+  diagramEnginePele: "Pele (mais rápido)",
+  diagramEngineHint:
+    "O Pele desenha mais rápido, mas organiza os diagramas de forma diferente do GitHub e do Mermaid e não suporta alguns recursos, como HTML nos rótulos; o Mermaid desenha o que o Pele não consegue.",
   codeLineNumbersLabel: "Números de linha nos blocos de código",
   inlineColorSwatchesLabel: "Amostras de cor no código em linha",
   inlineColorSwatchesHint:

@@ -522,6 +522,11 @@ export default {
   themeGalleryInstallFailed: "無法安裝主題：",
   enableMathLabel: "啟用數學公式",
   enableMermaidLabel: "Mermaid 圖表",
+  diagramEngineLabel: "圖表引擎",
+  diagramEngineMermaid: "Mermaid（相容性最佳）",
+  diagramEnginePele: "Pele（更快）",
+  diagramEngineHint:
+    "Pele 繪圖更快，但版面配置與 GitHub、Mermaid 不盡相同，也不支援標籤中的 HTML 等少數功能；Pele 畫不了的圖會自動改由 Mermaid 繪製。",
   codeLineNumbersLabel: "程式碼區塊顯示行號",
   inlineColorSwatchesLabel: "行內程式碼顯示顏色色塊",
   inlineColorSwatchesHint:

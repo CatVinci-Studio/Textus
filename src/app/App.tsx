@@ -292,6 +292,7 @@ function App() {
     liveTabs,
     t,
     pdfPageNumbers: settings.pdfPageNumbers,
+    diagramEngine: settings.diagramEngine,
     onOpenSettings: () => setSettingsOpen(true),
     onToggleTypewriter: () =>
       setSettings({ typewriterMode: !settings.typewriterMode }),

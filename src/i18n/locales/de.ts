@@ -559,6 +559,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   themeGalleryInstallFailed: "Das Theme konnte nicht installiert werden:",
   enableMathLabel: "Mathematische Formeln aktivieren",
   enableMermaidLabel: "Mermaid-Diagramme",
+  diagramEngineLabel: "Diagramm-Engine",
+  diagramEngineMermaid: "Mermaid (am kompatibelsten)",
+  diagramEnginePele: "Pele (schneller)",
+  diagramEngineHint:
+    "Pele zeichnet schneller, ordnet Diagramme aber anders an als GitHub und Mermaid und kennt einige Funktionen nicht, etwa HTML in Beschriftungen; was Pele nicht zeichnen kann, zeichnet Mermaid.",
   codeLineNumbersLabel: "Zeilennummern in Codeblöcken",
   inlineColorSwatchesLabel: "Farbfelder in Inline-Code",
   inlineColorSwatchesHint:

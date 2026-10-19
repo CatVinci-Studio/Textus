@@ -548,6 +548,11 @@ type /name in a conversation to use one.
   themeGalleryInstallFailed: "Couldn't install the theme:",
   enableMathLabel: "Enable math formulas",
   enableMermaidLabel: "Mermaid diagrams",
+  diagramEngineLabel: "Diagram engine",
+  diagramEngineMermaid: "Mermaid (most compatible)",
+  diagramEnginePele: "Pele (faster)",
+  diagramEngineHint:
+    "Pele is faster, but lays diagrams out differently from GitHub and Mermaid and skips a few features, such as HTML in labels; Mermaid draws whatever Pele can't.",
   codeLineNumbersLabel: "Line numbers in code blocks",
   inlineColorSwatchesLabel: "Colour swatches in inline code",
   inlineColorSwatchesHint:

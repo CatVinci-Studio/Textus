@@ -8,7 +8,8 @@ import { isMacPlatform, isWindowsPlatform } from "../platform/os";
 import { canExportPdf, canExportWithPandoc } from "../platform/capabilities";
 import { toPandocMarkdown } from "./pandoc-markdown";
 import { diagramsToImages, lightDiagrams } from "./diagram-images";
-import { appearanceIsDark } from "../editor/mermaid-plugin";
+import { appearanceIsDark } from "../editor/diagram-engine";
+import type { DiagramEngine } from "../settings/SettingsContext";
 import {
   DETAILS_CLASS_PREFIX,
   DETAILS_END_CLASS,
@@ -493,6 +494,7 @@ export async function exportViaPandoc(
   tab: DocTab,
   format: string,
   t: Strings,
+  diagramEngine: DiagramEngine,
 ): Promise<void> {
   const info = PANDOC_FORMATS[format];
   if (!info || !canExportWithPandoc) return;
@@ -526,7 +528,9 @@ export async function exportViaPandoc(
     });
     await exportDoc.exportViaPandoc({
       pandocPath: pandoc,
-      markdown: EMBEDS_IMAGES.has(format) ? await diagramsToImages(text) : text,
+      markdown: EMBEDS_IMAGES.has(format)
+        ? await diagramsToImages(text, diagramEngine)
+        : text,
       outputPath: picked,
       format,
       resourceDir: tab.path ? dirname(tab.path) : null,

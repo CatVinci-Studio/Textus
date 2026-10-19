@@ -543,6 +543,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   themeGalleryInstallFailed: "테마를 설치할 수 없습니다:",
   enableMathLabel: "수식 사용",
   enableMermaidLabel: "Mermaid 다이어그램",
+  diagramEngineLabel: "다이어그램 엔진",
+  diagramEngineMermaid: "Mermaid (호환성 우선)",
+  diagramEnginePele: "Pele (더 빠름)",
+  diagramEngineHint:
+    "Pele는 더 빠르게 그리지만 배치가 GitHub·Mermaid와 다르고, 레이블 속 HTML 등 일부 기능은 지원하지 않습니다. Pele가 그리지 못하는 다이어그램은 Mermaid가 그립니다.",
   codeLineNumbersLabel: "코드 블록에 줄 번호 표시",
   inlineColorSwatchesLabel: "인라인 코드에 색상 견본 표시",
   inlineColorSwatchesHint:

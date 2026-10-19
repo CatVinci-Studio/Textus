@@ -560,6 +560,11 @@ export default {
   themeGalleryInstallFailed: "Не удалось установить тему:",
   enableMathLabel: "Математические формулы",
   enableMermaidLabel: "Диаграммы Mermaid",
+  diagramEngineLabel: "Движок диаграмм",
+  diagramEngineMermaid: "Mermaid (наибольшая совместимость)",
+  diagramEnginePele: "Pele (быстрее)",
+  diagramEngineHint:
+    "Pele рисует быстрее, но располагает элементы иначе, чем GitHub и Mermaid, и не поддерживает некоторые возможности, например HTML в подписях; то, что Pele нарисовать не может, рисует Mermaid.",
   codeLineNumbersLabel: "Номера строк в блоках кода",
   inlineColorSwatchesLabel: "Образцы цвета во встроенном коде",
   inlineColorSwatchesHint:
