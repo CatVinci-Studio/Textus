@@ -142,7 +142,7 @@ export function UpdateChannelRow({ t }: { t: Strings }) {
   if (!canAutoUpdate || !selfUpdate) return null;
   return (
     <div className="settings-about-channel">
-      <SettingRow label={t.updateChannelLabel} hint={t.updateChannelHint}>
+      <SettingRow label={t.updateChannelLabel} help={t.updateChannelHint}>
         <Select
           className="settings-select"
           aria-label={t.updateChannelLabel}

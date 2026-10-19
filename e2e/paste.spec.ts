@@ -279,16 +279,35 @@ test("a copy's plain text reads as words, links with their address", async ({
   expect(clip["text/html"]).toContain('href="https://textus.catvinci.com');
 });
 
-test("set to Markdown, a copy's plain text is the source", async ({ page }) => {
+test("Copy as Markdown puts the source on the clipboard; an old Markdown copy setting changes nothing", async ({
+  page,
+}) => {
+  // The Copy setting is gone (1.2.0): a settings file that still says
+  // "markdown" loads, and Cmd+C gives the readable text as for everyone.
   await openApp(page, {
     settings: { language: "en", copyTextMode: "markdown" },
   });
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await pasteMarkdown(page, LINKED);
-  await page.locator(`${editor} p`).first().click();
+  const first = page.locator(`${editor} p`).first();
+  await first.click();
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.press("ControlOrMeta+c");
-  expect((await clipboardNow(page))["text/plain"].trimEnd()).toBe(LINKED);
+  expect((await clipboardNow(page))["text/plain"]).toBe(
+    "See Textus (https://textus.catvinci.com) and bold text.",
+  );
+  await first.click({ button: "right" });
+  await page
+    .locator(".context-menu-item")
+    .getByText("Copy as Markdown", { exact: true })
+    .click();
+  await expect
+    .poll(() =>
+      clipboardNow(page)
+        .then((c) => c["text/plain"].trimEnd())
+        .catch(() => ""),
+    )
+    .toBe(LINKED);
 });
 
 test("the context menu's Copy and Paste keep the formatting", async ({

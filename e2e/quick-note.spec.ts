@@ -12,7 +12,7 @@ import { mockInvoke, openApp } from "./helpers";
 // English labels, as in src/i18n/locales/en.ts.
 const t = {
   quickNotesGroup: "Quick Notes",
-  shortcutToggle: "Global shortcut",
+  shortcutToggle: "Open with a global shortcut",
   shortcutLabel: "Shortcut",
   inApp: "Textus uses this combination itself. Choose another.",
   draftRestored: "Restored the note you hadn't saved.",
@@ -319,7 +319,7 @@ test.describe("Settings › General › Quick Notes", () => {
     await expect(group.getByText(t.shortcutLabel, { exact: true })).toHaveCount(
       0,
     );
-    await group.getByLabel(t.shortcutToggle).check();
+    await group.getByLabel(t.shortcutToggle, { exact: true }).check();
     expect((await stored(page)).quickNoteShortcutEnabled).toBe(true);
 
     const record = group.getByRole("button", { name: /^Shortcut:/ });
@@ -335,7 +335,7 @@ test.describe("Settings › General › Quick Notes", () => {
 
   test("says what the OS made of the shortcut", async ({ page }) => {
     const group = await openSettings(page);
-    await group.getByLabel(t.shortcutToggle).check();
+    await group.getByLabel(t.shortcutToggle, { exact: true }).check();
     await emitStatus(page, {
       state: "on",
       accelerator: "Super+Alt+N",

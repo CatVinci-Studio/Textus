@@ -40,11 +40,6 @@ export type ThemeMode = "system" | "light" | "dark";
 /// the source of truth for which providers exist, fetched at runtime.
 export type AiProvider = string;
 export type NewDocumentMode = "window" | "tab";
-/** What a copy from the editor puts in the clipboard's plain text, the part
- *  apps like WeChat read: the words as they read ("readable") or the
- *  Markdown source ("markdown"). The formatted (HTML) flavor is the same
- *  either way. */
-export type CopyTextMode = "readable" | "markdown";
 /** How wide the text column runs: "auto" widens with the window, "standard"
  *  keeps the classic fixed measure, "full" uses the whole pane. Applied as
  *  `data-content-width` on the root (app/editor-column.css). */
@@ -341,7 +336,6 @@ export interface Settings {
    *  has a file back to it once typing rests (document/autosave.ts). Off by
    *  default. */
   autosave: boolean;
-  copyTextMode: CopyTextMode;
   /** File > Export as PDF numbers each page in its bottom margin
    *  (commands/pdf_page_numbers.rs). Off by default (#68). */
   pdfPageNumbers: boolean;
@@ -436,7 +430,6 @@ const DEFAULT_SETTINGS: Settings = {
   restoreSessionOnStartup: true,
   autoSuggestFilename: true,
   autosave: false,
-  copyTextMode: "readable",
   pdfPageNumbers: false,
   updateChannel: "stable",
   onboardingShown: false,

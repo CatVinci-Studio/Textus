@@ -58,6 +58,10 @@ const ZOOM_IN_ID: &str = "zoom-in";
 const ZOOM_OUT_ID: &str = "zoom-out";
 const ZOOM_RESET_ID: &str = "zoom-reset";
 const FIND_REPLACE_ID: &str = "find-replace";
+/// Edit > Copy as Markdown: the selection's Markdown source, where Copy
+/// gives plain-text apps the words as they read
+/// (src/editor/useEditorClipboard.ts).
+const COPY_AS_MARKDOWN_ID: &str = "copy-as-markdown";
 const NEW_WINDOW_ID: &str = "new-window";
 /// File > New Quick Note and File > Open Quick Notes Folder
 /// (commands/quick_note). New Quick Note has no accelerator: its key is the
@@ -610,6 +614,11 @@ fn build(
     let find_replace_item =
         MenuItemBuilder::with_id(FIND_REPLACE_ID, l(FIND_REPLACE_ID, "Find & Replace…"))
             .build(app)?;
+    let copy_as_markdown_item = MenuItemBuilder::with_id(
+        COPY_AS_MARKDOWN_ID,
+        l(COPY_AS_MARKDOWN_ID, "Copy as Markdown"),
+    )
+    .build(app)?;
 
     let edit_menu = SubmenuBuilder::new(app, l("menu:edit", "Edit"))
         .undo_with_text(l("predefined:undo", "Undo"))
@@ -617,6 +626,7 @@ fn build(
         .separator()
         .cut_with_text(l("predefined:cut", "Cut"))
         .copy_with_text(l("predefined:copy", "Copy"))
+        .item(&copy_as_markdown_item)
         .paste_with_text(l("predefined:paste", "Paste"))
         .select_all_with_text(l("predefined:select-all", "Select All"))
         .separator()
@@ -908,6 +918,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_document_command(app_handle, "menu-toggle-split-view", ());
     } else if id == TOGGLE_ZEN_MODE_ID {
         emit_document_command(app_handle, "menu-toggle-zen-mode", ());
+    } else if id == COPY_AS_MARKDOWN_ID {
+        emit_document_command(app_handle, "menu-copy-as-markdown", ());
     } else if id == FIND_REPLACE_ID {
         if !emit_to_quick_note(app_handle, "menu-find-replace") {
             emit_to_focused(app_handle, "menu-find-replace");

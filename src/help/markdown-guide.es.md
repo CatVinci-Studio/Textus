@@ -27,7 +27,7 @@ Alertas al estilo de GitHub:
 
 Los enlaces se ven así: [el repositorio de Textus](https://github.com/CatVinci-Studio/Textus). Con Ctrl/⌘+clic se sigue un enlace: uno web se abre en el navegador, uno a otro archivo Markdown lo abre en una pestaña y uno a `#un-encabezado` desplaza hasta él. También se representa el HTML en línea, como las teclas <kbd>Cmd</kbd> + <kbd>S</kbd>. También se representan los bloques plegables `<details>`, las tablas HTML, algunos estilos en línea (color, fondo, tamaño, grosor, alineación, subrayado y tachado) y el `<svg>` en línea, que se muestra como imagen. Los scripts y el resto del HTML se quedan como código. Un enlace a un encabezado de otro archivo, como `[ver](notas.md#un-encabezado)`, abre ese archivo en ese encabezado. Los wikilinks de Obsidian (`[[Nota]]`, `[[Nota|texto]]` y `[[Nota#Encabezado]]`) se abren igual, desde la carpeta del documento o desde cualquier parte de su bóveda; ellos y las `#etiquetas` al principio de una línea se guardan tal como se escribieron.
 
-Con **Ajustes → Editor y aspecto → Muestras de color en el código en línea** activado, el código en línea que es un color, como `#ff8800` o `rgb(0 128 255)`, muestra delante un pequeño cuadrado de ese color.
+Con **Ajustes → Editor y aspecto → Mostrar una muestra antes de los códigos de color** activado, el código en línea que es un color, como `#ff8800` o `rgb(0 128 255)`, muestra delante un pequeño cuadrado de ese color.
 
 Fórmulas en línea: la equivalencia entre masa y energía $E = mc^2$, la identidad de Euler $e^{i\pi} + 1 = 0$.
 
@@ -158,7 +158,7 @@ Los tres están también en el menú **Visualización**.
 
 Las notas van a `Textus/Notas rápidas` dentro de tu carpeta Documentos, un archivo por nota, con el nombre de su primera línea. En **Ajustes → General → Notas rápidas** puedes elegir otra carpeta, usar **un archivo por día** y activar un **atajo global** que abre una nota rápida desde cualquier app: `Control+Opción+N` en un Mac, `Ctrl+Alt+N` en Linux, `Win+Alt+N` en Windows. Si vuelves a abrir una a los pocos minutos, continúas la última nota. En Wayland, asigna una tecla al comando `textus --quick-note` que aparece allí, en los ajustes de tu escritorio.
 
-Para tener Textus a mano aunque no haya ninguna ventana abierta, activa **Ajustes → General → Segundo plano → Seguir abierto en segundo plano**: al cerrar la última ventana, Textus sigue abierto, con un icono en el área de notificación (Windows), la bandeja del sistema (Linux) o la barra de menús (Mac). Su menú abre una nota rápida nueva, tus documentos, la carpeta de notas rápidas y los ajustes; **Salir de Textus** en ese menú cierra Textus del todo. **Abrir al iniciar sesión** lo inicia así al iniciar sesión. GNOME solo muestra el icono de bandeja con la extensión AppIndicator.
+Para tener Textus a mano aunque no haya ninguna ventana abierta, activa **Ajustes → General → Segundo plano → Seguir abierto en segundo plano**: al cerrar la última ventana, Textus sigue abierto, con un icono en el área de notificación (Windows), la bandeja del sistema (Linux) o la barra de menús (Mac). Su menú abre una nota rápida nueva, tus documentos, la carpeta de notas rápidas y los ajustes; **Salir de Textus** en ese menú cierra Textus del todo. **Iniciar en segundo plano al iniciar sesión** lo inicia así al iniciar sesión. GNOME solo muestra el icono de bandeja con la extensión AppIndicator.
 
 ## Notas al pie y líneas horizontales
 

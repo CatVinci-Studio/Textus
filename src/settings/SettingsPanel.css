@@ -284,7 +284,8 @@ button.settings-danger-button {
 }
 
 /* Only the few rows that need one have a hint - a value (the folder in
-   use, a fetched-on date) or a line that prevents a mistake. */
+   use, a fetched-on date) or a live status. Explanations go behind the
+   row's "?" (ui/InfoTip.tsx) instead. */
 .settings-row-hint {
   color: var(--editor-muted);
   font-size: var(--text-md);

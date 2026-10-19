@@ -30,11 +30,14 @@ export function useCloseOnOutsideClick<T extends HTMLElement>(
       )
         return;
       const target = e.target as Node;
-      // A Select's open list and the app menu are portalled to <body>;
-      // picking from them is still a click inside whatever opened them.
+      // A Select's open list, the app menu and an InfoTip's card are
+      // portalled to <body>; a click in them is still a click inside
+      // whatever opened them.
       if (
         target instanceof Element &&
-        target.closest("[data-floating-select], [data-floating-menu]")
+        target.closest(
+          "[data-floating-select], [data-floating-menu], [data-floating-tip]",
+        )
       )
         return;
       if (ref.current && !ref.current.contains(target)) {
@@ -61,7 +64,9 @@ export function useCloseOnOutsideClick<T extends HTMLElement>(
       if (ref.current?.contains(target)) return;
       if (
         target instanceof Element &&
-        target.closest("[data-floating-select], [data-floating-menu]")
+        target.closest(
+          "[data-floating-select], [data-floating-menu], [data-floating-tip]",
+        )
       )
         return;
       onKeyDown(e);

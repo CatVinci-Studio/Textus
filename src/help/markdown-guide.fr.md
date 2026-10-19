@@ -27,7 +27,7 @@ Les encadrés de style GitHub :
 
 Les liens s'écrivent ainsi : [le dépôt de Textus](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+clic suit un lien : un lien web s'ouvre dans le navigateur, un lien vers un autre fichier Markdown l'ouvre dans un onglet, et un lien vers `#un-titre` fait défiler jusqu'à ce titre. Le HTML en ligne s'affiche aussi, par exemple les touches du clavier <kbd>Cmd</kbd> + <kbd>S</kbd>. De même pour les blocs repliables `<details>`, les tableaux HTML, quelques styles en ligne (couleur, fond, taille, graisse, alignement, soulignement et barré) et le `<svg>` en ligne, affiché comme une image. Les scripts et le reste du HTML restent en code source. Un lien vers un titre d'un autre fichier, comme `[voir](notes.md#un-titre)`, ouvre ce fichier à ce titre. Les wikiliens d'Obsidian (`[[Note]]`, `[[Note|texte]]` et `[[Note#Titre]]`) s'ouvrent de la même façon, depuis le dossier du document ou n'importe où dans son coffre ; eux et les `#étiquettes` en début de ligne sont enregistrés tels qu'ils ont été écrits.
 
-Avec **Réglages → Éditeur et apparence → Pastilles de couleur dans le code en ligne** activé, le code en ligne qui désigne une couleur, comme `#ff8800` ou `rgb(0 128 255)`, est précédé d'un petit carré de cette couleur.
+Avec **Réglages → Éditeur et apparence → Afficher une pastille avant les codes couleur** activé, le code en ligne qui désigne une couleur, comme `#ff8800` ou `rgb(0 128 255)`, est précédé d'un petit carré de cette couleur.
 
 Formules en ligne : l'équivalence masse-énergie $E = mc^2$, l'identité d'Euler $e^{i\pi} + 1 = 0$.
 
@@ -158,7 +158,7 @@ Les trois se trouvent aussi dans le menu **Présentation**.
 
 Les notes vont dans `Textus/Notes rapides`, dans votre dossier Documents, un fichier par note, nommé d’après sa première ligne. Dans **Réglages → Général → Notes rapides**, vous pouvez choisir un autre dossier, passer à **un fichier par jour** et activer un **raccourci global** qui ouvre une note rapide depuis n’importe quelle app : `Contrôle+Option+N` sur Mac, `Ctrl+Alt+N` sous Linux, `Win+Alt+N` sous Windows. En rouvrir une dans les minutes qui suivent reprend la dernière note. Sous Wayland, associez la commande `textus --quick-note` affichée là à une touche dans les réglages de votre bureau.
 
-Pour garder Textus à portée de main sans fenêtre ouverte, activez **Réglages → Général → Arrière-plan → Rester ouvert en arrière-plan** : fermer la dernière fenêtre laisse alors Textus ouvert, avec une icône dans la zone de notification (Windows), la zone de notification du système (Linux) ou la barre des menus (Mac). Son menu ouvre une nouvelle note rapide, vos documents, le dossier des notes rapides et les réglages ; **Quitter Textus** dans ce menu quitte vraiment. **Ouvrir à l’ouverture de session** le lance ainsi à l’ouverture de session. GNOME n’affiche l’icône qu’avec l’extension AppIndicator.
+Pour garder Textus à portée de main sans fenêtre ouverte, activez **Réglages → Général → Arrière-plan → Rester ouvert en arrière-plan** : fermer la dernière fenêtre laisse alors Textus ouvert, avec une icône dans la zone de notification (Windows), la zone de notification du système (Linux) ou la barre des menus (Mac). Son menu ouvre une nouvelle note rapide, vos documents, le dossier des notes rapides et les réglages ; **Quitter Textus** dans ce menu quitte vraiment. **Démarrer en arrière-plan à l’ouverture de session** le lance ainsi à l’ouverture de session. GNOME n’affiche l’icône qu’avec l’extension AppIndicator.
 
 ## Notes de bas de page et filets
 

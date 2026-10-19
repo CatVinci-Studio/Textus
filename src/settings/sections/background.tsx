@@ -61,7 +61,7 @@ export function BackgroundSection({ t }: { t: Strings }) {
     <>
       <ToggleRow
         label={t.backgroundToggle}
-        hint={backgroundHint(t)}
+        help={backgroundHint(t)}
         checked={settings.runInBackground}
         onChange={(v) => setSettings({ runInBackground: v })}
       />
@@ -73,7 +73,6 @@ export function BackgroundSection({ t }: { t: Strings }) {
       {settings.runInBackground && (
         <ToggleRow
           label={t.openAtLoginToggle}
-          hint={t.openAtLoginHint}
           checked={settings.openAtLogin}
           onChange={(v) => setSettings({ openAtLogin: v })}
         />

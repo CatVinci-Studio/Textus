@@ -345,7 +345,6 @@ utiliser une.
   navShortcuts: "Raccourcis",
   generalBasicsLabel: "Réglages de base",
   generalSystemLabel: "Application",
-  settingsCopyExportGroup: "Copie et export",
   settingsFilesGroup: "Fichiers",
   shortcutAiGroupLabel: "IA et écriture",
   shortcutEditorGroupLabel: "Éditeur et navigation",
@@ -370,8 +369,8 @@ utiliser une.
   agentWorkspaceLabel: "Dossier de configuration globale",
   agentWorkspaceOpenButton: "Afficher",
   agentWorkspaceRootLabel: "Dossier du projet",
-  agentWorkspaceRootHint: `${AI_NAME} ne peut lire que ce dossier\u00a0: {path}`,
-  agentWorkspaceRootDefault: "le dossier du document actuel",
+  agentWorkspaceRootHelp: `${AI_NAME} ne peut lire que ce dossier.`,
+  agentWorkspaceRootDefault: "Le dossier du document actuel",
   agentWorkspaceRootPick: "Choisir…",
   agentSystemPromptLabel: "Instructions d'écriture (agent.md)",
   agentSystemPromptHint:
@@ -464,7 +463,7 @@ utiliser une.
   deleteRow: "Supprimer la ligne",
   deleteColumn: "Supprimer la colonne",
   deleteTable: "Supprimer le tableau",
-  apiKeyHintTemplate: "Collez une clé API {name}.",
+  apiKeyLabelTemplate: "Clé API {name}",
   apiKeyOptionalHintTemplate:
     "Aucune clé API n'est requise\u202f; ajoutez-en une seulement si {name} est protégé.",
   providerNoKeyRequired: "Aucune clé requise",
@@ -526,6 +525,7 @@ utiliser une.
   },
   cut: "Couper",
   copy: "Copier",
+  copyAsMarkdown: "Copier en Markdown",
   paste: "Coller",
   selectAll: "Tout sélectionner",
   findReplace: "Rechercher et remplacer",
@@ -599,22 +599,13 @@ utiliser une.
   diagramEngineHint:
     "Pele dessine plus vite, mais dispose les diagrammes autrement que GitHub et Mermaid et ignore quelques fonctions, comme le HTML dans les libellés ; Mermaid dessine ce que Pele ne peut pas.",
   codeLineNumbersLabel: "Numéros de ligne dans les blocs de code",
-  inlineColorSwatchesLabel: "Pastilles de couleur dans le code en ligne",
-  inlineColorSwatchesHint:
-    "Le code en ligne qui est une couleur, comme #ff8800 ou rgb(0 128 255), est précédé d'un petit carré de cette couleur. Les noms de couleur comme red restent tels quels.",
+  inlineColorSwatchesLabel: "Afficher une pastille avant les codes couleur",
   codeBlockCopy: "Copier",
   codeBlockCopied: "Copié",
   autoCloseMarksLabel: "Fermer automatiquement les marques de mise en forme",
-  autoCloseMarksHint:
-    "Taper *, **, ~~, == ou ` ajoute sa marque de fermeture. Désactivé, vous tapez vous-même la marque de fermeture, et la mise en forme s’applique alors.",
-  copyTextModeLabel: "Copie vers d'autres apps",
-  copyTextModeHint:
-    "Les apps qui n'acceptent que du texte brut, comme WeChat, reçoivent ceci ; la mise en forme est conservée là où une app l'accepte.",
-  copyTextModeReadable: "Texte lisible",
-  copyTextModeMarkdown: "Source Markdown",
-  pdfPageNumbersLabel: "Numéros de page dans le PDF",
-  pdfPageNumbersHint:
-    "Les PDF exportés affichent le numéro de chaque page en bas.",
+  pdfPageNumbersLabel: "Afficher les numéros de page à l’export",
+  infoTipLabel: "En savoir plus sur « {label} »",
+  infoTipLabelPlain: "En savoir plus",
   askAi: "Demander à l'IA…",
   agentProposalTitle: "Modification proposée",
   chatClose: "Fermer la discussion",
@@ -1028,9 +1019,9 @@ utiliser une.
   menuNewQuickNote: "Nouvelle note rapide",
   menuOpenQuickNotesFolder: "Ouvrir le dossier des notes rapides",
   quickNotesGroup: "Notes rapides",
-  quickNoteShortcutToggle: "Raccourci global",
+  quickNoteShortcutToggle: "Ouvrir avec un raccourci global",
   quickNoteShortcutHint:
-    "Ouvre une note rapide depuis n’importe quelle app. Textus n’écoute que cette combinaison de touches, rien d’autre de ce que vous tapez.",
+    "Textus n’écoute que cette combinaison de touches, rien d’autre de ce que vous tapez.",
   quickNoteShortcutLabel: "Raccourci",
   quickNoteShortcutDefault: "Par défaut",
   quickNoteShortcutInApp:
@@ -1050,19 +1041,15 @@ utiliser une.
   quickNoteFolderLabel: "Dossier",
   quickNoteFolderChange: "Modifier…",
   quickNoteFolderShow: "Afficher",
-  quickNotePerDayLabel: "Un fichier par jour",
-  quickNotePerDayHint:
-    "Ajoute chaque note au fichier du jour, sous son heure, au lieu d’un fichier par note.",
-  quickNoteContinueLabel: "Reprendre la dernière note",
-  quickNoteContinueHint:
-    "Rouvrir une note rapide peu après en avoir enregistré une la reprend.",
+  quickNotePerDayLabel: "Regrouper les notes de chaque jour dans un fichier",
+  quickNoteContinueLabel: "Reprendre la dernière note à la réouverture",
   quickNoteContinueNever: "Jamais",
   quickNoteContinueMinutes: {
     one: "Moins de {n} minute",
     many: "Moins de {n} de minutes",
     other: "Moins de {n} minutes",
   },
-  quickNoteCommandLabel: "Commande",
+  quickNoteCommandLabel: "Commande pour ouvrir une note rapide",
   quickNoteCommandHint: `Ouvre une note rapide, même quand ${APP_NAME} n’est pas lancé. Associez-la à une touche dans les réglages du système.`,
   quickNoteCommandCopy: "Copier",
   quickNoteCommandCopied: "Copié",
@@ -1085,8 +1072,7 @@ utiliser une.
   backgroundHintWindows: `Fermer la dernière fenêtre laisse ${APP_NAME} ouvert, avec une icône dans la zone de notification : cliquez dessus pour prendre une note rapide. Pour fermer ${APP_NAME} complètement, choisissez Quitter dans le menu de l’icône.`,
   backgroundHintLinux: `Fermer la dernière fenêtre laisse ${APP_NAME} ouvert, avec une icône dans la zone de notification du système. Pour fermer ${APP_NAME} complètement, choisissez Quitter dans le menu de l’icône. GNOME n’affiche ces icônes qu’avec l’extension AppIndicator.`,
   backgroundTrayUnavailable: `Ce bureau n’a pas de zone de notification : libayatana-appindicator n’est pas installé. ${APP_NAME} reste ouvert en arrière-plan ; ouvrez-le depuis votre lanceur ou avec le raccourci des notes rapides.`,
-  openAtLoginToggle: "Ouvrir à l’ouverture de session",
-  openAtLoginHint: `Lance ${APP_NAME} en arrière-plan à l’ouverture de session, sans fenêtre.`,
+  openAtLoginToggle: "Démarrer en arrière-plan à l’ouverture de session",
   openAtLoginFailed:
     "Impossible de modifier le lancement à l’ouverture de session : {error}",
   trayOpenTextus: `Ouvrir ${APP_NAME}`,

@@ -27,7 +27,7 @@ Hinweise im GitHub-Stil:
 
 Links sehen so aus: [das Textus-Repository](https://github.com/CatVinci-Studio/Textus). Mit Strg/⌘+Klick folgst du einem Link: Ein Weblink öffnet sich im Browser, ein Link auf eine andere Markdown-Datei öffnet sie in einem Tab, und ein Link auf `#eine-überschrift` scrollt dorthin. Auch HTML im Text wird dargestellt, etwa Tasten wie <kbd>Cmd</kbd> + <kbd>S</kbd>. Ebenso aufklappbare `<details>`-Blöcke, HTML-Tabellen, einige Inline-Stile (Farbe, Hintergrund, Größe, Stärke, Ausrichtung, Unter- und Durchstreichung) und eingebettetes `<svg>`, das als Bild erscheint. Skripte und anderes HTML bleiben als Quelltext stehen. Ein Link auf eine Überschrift in einer anderen Datei, etwa `[siehe](notizen.md#eine-überschrift)`, öffnet diese Datei an der Überschrift. Obsidian-Wikilinks (`[[Notiz]]`, `[[Notiz|Text]]` und `[[Notiz#Überschrift]]`) öffnen sich genauso, aus dem Ordner des Dokuments oder von überall in seinem Vault; sie und `#Tags` am Zeilenanfang werden genau so gespeichert, wie sie geschrieben sind.
 
-Ist **Einstellungen → Editor & Design → Farbfelder in Inline-Code** eingeschaltet, steht vor Inline-Code, der eine Farbe ist, etwa `#ff8800` oder `rgb(0 128 255)`, ein kleines Quadrat in dieser Farbe.
+Ist **Einstellungen → Editor & Design → Farbfeld vor Farbcodes anzeigen** eingeschaltet, steht vor Inline-Code, der eine Farbe ist, etwa `#ff8800` oder `rgb(0 128 255)`, ein kleines Quadrat in dieser Farbe.
 
 Formeln im Text: die Äquivalenz von Masse und Energie $E = mc^2$, die eulersche Identität $e^{i\pi} + 1 = 0$.
 
@@ -158,7 +158,7 @@ Alle drei findest du auch im Menü **Ansicht**.
 
 Notizen landen in `Textus/Schnellnotizen` in deinem Dokumente-Ordner, eine Datei pro Notiz, benannt nach der ersten Zeile. Unter **Einstellungen → Allgemein → Schnellnotizen** kannst du einen anderen Ordner wählen, stattdessen **eine Datei pro Tag** führen und ein **globales Tastenkürzel** einschalten, das aus jeder App eine Schnellnotiz öffnet: `Control+Option+N` auf dem Mac, `Strg+Alt+N` unter Linux, `Win+Alt+N` unter Windows. Öffnest du innerhalb weniger Minuten wieder eine, setzt du die letzte Notiz fort. Unter Wayland legst du den dort angezeigten Befehl `textus --quick-note` in den Einstellungen deines Desktops auf eine Taste.
 
-Damit Textus auch ohne offenes Fenster griffbereit bleibt, schalte **Einstellungen → Allgemein → Hintergrund → Im Hintergrund weiterlaufen** ein: Nach dem Schließen des letzten Fensters läuft Textus dann weiter, mit einem Symbol im Infobereich (Windows), im System-Tray (Linux) oder in der Menüleiste (Mac). Sein Menü öffnet eine neue Schnellnotiz, deine Dokumente, den Schnellnotiz-Ordner und die Einstellungen; **Textus beenden** dort beendet Textus wirklich. **Bei der Anmeldung öffnen** startet Textus so bei der Anmeldung. GNOME zeigt das Tray-Symbol nur mit der AppIndicator-Erweiterung.
+Damit Textus auch ohne offenes Fenster griffbereit bleibt, schalte **Einstellungen → Allgemein → Hintergrund → Im Hintergrund weiterlaufen** ein: Nach dem Schließen des letzten Fensters läuft Textus dann weiter, mit einem Symbol im Infobereich (Windows), im System-Tray (Linux) oder in der Menüleiste (Mac). Sein Menü öffnet eine neue Schnellnotiz, deine Dokumente, den Schnellnotiz-Ordner und die Einstellungen; **Textus beenden** dort beendet Textus wirklich. **Bei der Anmeldung im Hintergrund starten** startet Textus so bei der Anmeldung. GNOME zeigt das Tray-Symbol nur mit der AppIndicator-Erweiterung.
 
 ## Fußnoten und Trennlinien
 

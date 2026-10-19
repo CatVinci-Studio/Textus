@@ -27,7 +27,7 @@ GitHub-style alerts:
 
 Links look like this: [the Textus repository](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+click one to follow it: a web link opens in your browser, a link to another Markdown file opens it in a tab, and a link to `#a-heading` scrolls there. Inline HTML renders too, e.g. keyboard keys <kbd>Cmd</kbd> + <kbd>S</kbd>. So do `<details>` folds, HTML tables, a few inline styles (colour, background, size, weight, alignment, underline and strikethrough) and inline `<svg>`, which shows as a picture. Scripts and other HTML stay as source. A link to a heading in another file, such as `[see](notes.md#a-heading)`, opens that file at the heading. Obsidian wikilinks (`[[Note]]`, `[[Note|text]]` and `[[Note#Heading]]`) open the same way, from the document's folder or anywhere in its vault; they and `#tags` at the start of a line are saved exactly as written.
 
-With **Settings → Editor & Appearance → Colour swatches in inline code** on, inline code that is a colour, such as `#ff8800` or `rgb(0 128 255)`, shows a small square of that colour.
+With **Settings → Editor & Appearance → Show a swatch before colour codes** on, inline code that is a colour, such as `#ff8800` or `rgb(0 128 255)`, shows a small square of that colour.
 
 Inline math: mass–energy equivalence $E = mc^2$, Euler's identity $e^{i\pi} + 1 = 0$.
 
@@ -158,7 +158,7 @@ All three are also in the **View** menu.
 
 Notes go to `Textus/Quick Notes` in your Documents folder, one file each, named after the first line. In **Settings → General → Quick Notes** you can choose another folder, keep **one file per day** instead, and turn on a **global shortcut** that opens a quick note from any app: `Control+Option+N` on a Mac, `Ctrl+Alt+N` on Linux, `Win+Alt+N` on Windows. Opening one again within a few minutes continues the last note. On Wayland, bind the `textus --quick-note` command shown there to a key in your desktop's settings.
 
-To keep Textus within reach when no window is open, turn on **Settings → General → Background → Keep running in the background**: closing the last window then leaves Textus running, with an icon in the notification area (Windows), the system tray (Linux) or the menu bar (Mac). Its menu opens a new quick note, your documents, the Quick Notes folder and Settings; **Quit Textus** there quits for real. **Open at login** starts Textus that way when you log in. GNOME shows the tray icon only with the AppIndicator extension.
+To keep Textus within reach when no window is open, turn on **Settings → General → Background → Keep running in the background**: closing the last window then leaves Textus running, with an icon in the notification area (Windows), the system tray (Linux) or the menu bar (Mac). Its menu opens a new quick note, your documents, the Quick Notes folder and Settings; **Quit Textus** there quits for real. **Start in the background at login** starts Textus that way when you log in. GNOME shows the tray icon only with the AppIndicator extension.
 
 ## Footnotes and rules
 

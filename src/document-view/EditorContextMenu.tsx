@@ -33,6 +33,7 @@ export function EditorContextMenu({
   triggerCompletion,
   triggerGrammarCheck,
   copyOrCut,
+  copyAsMarkdown,
   paste,
   selectAll,
   toggleFindReplace,
@@ -49,6 +50,7 @@ export function EditorContextMenu({
   triggerCompletion: () => void;
   triggerGrammarCheck: () => void;
   copyOrCut: (cut: boolean) => void;
+  copyAsMarkdown: () => void;
   paste: () => void;
   selectAll: () => void;
   toggleFindReplace: () => void;
@@ -94,6 +96,7 @@ export function EditorContextMenu({
                   : []),
               ],
               copyOrCut,
+              copyAsMarkdown,
               paste,
               selectAll,
               toggleFindReplace,

@@ -28,7 +28,7 @@ const t = {
   settingsViewGroup: "View",
   navMarkdown: "Markdown",
   imageStorageGroupLabel: "Images",
-  settingsCopyExportGroup: "Copy & Export",
+  menuExport: "Export",
   contentWidthLabel: "Text width",
   shortcutEditorGroupLabel: "Editor & Navigation",
   shortcutAiGroupLabel: "AI & Writing",
@@ -40,14 +40,19 @@ const t = {
   aiAskLabel: `${AI_NAME} Chat`,
   aiAskToggleLabel: `Enable ${AI_NAME} chat`,
   agentModelLabel: "Chat model",
+  webSearchLabel: "Web search",
   webSearchHint: "Needs support from the current provider",
+  diagramEngineLabel: "Diagram engine",
+  diagramEngineHint:
+    "Pele is faster, but lays diagrams out differently from GitHub and Mermaid and skips a few features, such as HTML in labels; Mermaid draws whatever Pele can't.",
+  infoTipLabel: "More about {label}",
   agentPersonalizationGroupLabel: "Writing Instructions & Skills",
   agentAdvancedGroupLabel: "Advanced",
   menuViewSource: "Source Mode",
   customCssLabel: "Custom CSS",
   privacyClearButton: "Clear",
   privacyClearClipboard: "Clear Clipboard History",
-  pdfPageNumbersLabel: "Page numbers in PDF",
+  pdfPageNumbersLabel: "Show page numbers in exports",
   aboutTextus: "About Textus",
   aboutMadeBy: "Made by CatVinci Studio",
   updateCheckButton: "Check for Updates",
@@ -63,6 +68,9 @@ const t = {
   defaultEditorUnsupported:
     "Only an installed package (.deb, .rpm or AUR) can be the default, not the AppImage.",
 };
+
+/** A row's "?" button, by the row it explains. */
+const more = (label: string) => t.infoTipLabel.replace("{label}", label);
 
 /** What default_editor_status reports: macOS and Linux set the default
  *  themselves, Windows has the user choose it, an AppImage can't. */
@@ -136,7 +144,17 @@ test.describe("desktop", () => {
     await expect(
       group(t.aiAskLabel).getByText(t.agentModelLabel),
     ).toBeVisible();
-    await expect(group(t.aiAskLabel).getByText(t.webSearchHint)).toBeVisible();
+    // Web search's caveat is behind its "?", not under the row.
+    await expect(group(t.aiAskLabel).getByText(t.webSearchHint)).toBeHidden();
+    await group(t.aiAskLabel)
+      .getByRole("button", { name: more(t.webSearchLabel) })
+      .click();
+    await expect(page.getByRole("tooltip")).toHaveText(t.webSearchHint);
+    await expect(
+      panel.getByRole("checkbox", { name: t.webSearchLabel, exact: true }),
+    ).not.toBeChecked();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("tooltip")).toHaveCount(0);
     // The UI never says "Agent" any more.
     await expect(panel).not.toContainText(/\bAgent\b/);
 
@@ -295,7 +313,10 @@ test.describe("desktop", () => {
     ).toBeVisible();
     const channel = panel.getByRole("combobox", { name: t.updateChannel });
     await expect(channel).toHaveText(t.updateChannelStable);
-    await expect(panel.getByText(t.updateChannelHint)).toBeVisible();
+    await expect(panel.getByText(t.updateChannelHint)).toBeHidden();
+    await expect(
+      panel.getByRole("button", { name: more(t.updateChannel) }),
+    ).toHaveAccessibleDescription(t.updateChannelHint);
 
     await channel.click();
     await page.getByRole("option", { name: t.updateChannelBeta }).click();
@@ -431,6 +452,39 @@ test.describe("desktop", () => {
     expect(widths.size).toBe(1);
   });
 
+  test("an explanation is behind a ? that hover, Tab and Escape drive, and Escape closes it before Settings", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    const panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.navEditor }).click();
+    // Not on the page as grey text under the row.
+    await expect(panel.getByText(t.diagramEngineHint)).toBeHidden();
+    const help = panel.getByRole("button", {
+      name: more(t.diagramEngineLabel),
+    });
+    await expect(help).toHaveAccessibleDescription(t.diagramEngineHint);
+
+    // A resting mouse opens it; moving away closes it.
+    await help.hover();
+    const tip = page.getByRole("tooltip");
+    await expect(tip).toHaveText(t.diagramEngineHint);
+    await page.mouse.move(5, 5);
+    await expect(tip).toHaveCount(0);
+
+    // Tab to it: the card shows, Escape closes it, a second closes Settings.
+    await help.focus();
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
+    await expect(help).toBeFocused();
+    await expect(tip).toHaveText(t.diagramEngineHint);
+    await page.keyboard.press("Escape");
+    await expect(tip).toHaveCount(0);
+    await expect(panel).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+  });
+
   test("each page's groups go from the most used to the links out", async ({
     page,
   }) => {
@@ -466,7 +520,7 @@ test.describe("desktop", () => {
       t.settingsViewGroup,
       t.navMarkdown,
       t.imageStorageGroupLabel,
-      t.settingsCopyExportGroup,
+      t.menuExport,
     ]);
     // The text's width and the interface's size are layout, not theme.
     const view = panel.locator(".settings-group", {
@@ -541,6 +595,24 @@ test.describe("phone", () => {
       client: el.clientWidth,
     }));
     expect(scroll).toBeLessThanOrEqual(client);
+  });
+
+  test("a tap on a ? opens its explanation, a tap outside closes it", async ({
+    page,
+  }) => {
+    await openPhone(page, { settings: { language: "en" } });
+    const panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.navAi, exact: true }).tap();
+    const help = panel.getByRole("button", { name: more(t.webSearchLabel) });
+    await help.scrollIntoViewIfNeeded();
+    await help.tap();
+    await expect(page.getByRole("tooltip")).toHaveText(t.webSearchHint);
+    // The switch beside it stayed as it was.
+    await expect(
+      panel.getByRole("checkbox", { name: t.webSearchLabel, exact: true }),
+    ).not.toBeChecked();
+    await panel.locator(".settings-group-title").first().tap();
+    await expect(page.getByRole("tooltip")).toHaveCount(0);
   });
 
   test("no PDF page numbers, default editor row or updates: iOS has none of them", async ({

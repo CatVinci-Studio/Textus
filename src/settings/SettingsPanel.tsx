@@ -8,7 +8,6 @@ import {
   type AgentMode,
   type GrammarStrictness,
   type NewDocumentMode,
-  type CopyTextMode,
   type ContentWidth,
   type ProxyType,
   REVISION_DISPLAYS,
@@ -350,7 +349,7 @@ export function SettingsPanel({
             {settings.enableMermaid && (
               <SettingRow
                 label={t.diagramEngineLabel}
-                hint={t.diagramEngineHint}
+                help={t.diagramEngineHint}
               >
                 <Select
                   className="settings-select"
@@ -374,13 +373,11 @@ export function SettingsPanel({
             />
             <ToggleRow
               label={t.inlineColorSwatchesLabel}
-              hint={t.inlineColorSwatchesHint}
               checked={settings.inlineColorSwatches}
               onChange={(v) => setSettings({ inlineColorSwatches: v })}
             />
             <ToggleRow
               label={t.autoCloseMarksLabel}
-              hint={t.autoCloseMarksHint}
               checked={settings.autoCloseMarks}
               onChange={(v) => setSettings({ autoCloseMarks: v })}
             />
@@ -388,33 +385,17 @@ export function SettingsPanel({
           <SettingsGroup title={t.imageStorageGroupLabel}>
             <ImageStorageSection t={t} />
           </SettingsGroup>
-          {/* What leaves Textus: text copied into another app, a PDF. */}
-          <SettingsGroup title={t.settingsCopyExportGroup}>
-            <SettingRow label={t.copyTextModeLabel} hint={t.copyTextModeHint}>
-              <Select
-                className="settings-select"
-                aria-label={t.copyTextModeLabel}
-                value={settings.copyTextMode}
-                onChange={(e) =>
-                  setSettings({
-                    copyTextMode: e.target.value as CopyTextMode,
-                  })
-                }
-              >
-                <option value="readable">{t.copyTextModeReadable}</option>
-                <option value="markdown">{t.copyTextModeMarkdown}</option>
-              </Select>
-            </SettingRow>
-            {/* No PDF export on the phone (canExportPdf). */}
-            {canExportPdf && (
+          {/* What a PDF export looks like. No PDF export on the phone
+              (canExportPdf), so no group there either. */}
+          {canExportPdf && (
+            <SettingsGroup title={t.menuExport}>
               <ToggleRow
                 label={t.pdfPageNumbersLabel}
-                hint={t.pdfPageNumbersHint}
                 checked={settings.pdfPageNumbers}
                 onChange={(v) => setSettings({ pdfPageNumbers: v })}
               />
-            )}
-          </SettingsGroup>
+            </SettingsGroup>
+          )}
         </>
       )}
 
@@ -577,7 +558,7 @@ export function SettingsPanel({
                 </SettingRow>
                 <ToggleRow
                   label={t.webSearchLabel}
-                  hint={t.webSearchHint}
+                  help={t.webSearchHint}
                   checked={settings.enableWebSearch}
                   onChange={(v) => setSettings({ enableWebSearch: v })}
                 />
@@ -599,7 +580,7 @@ export function SettingsPanel({
                 {canPickFolder && <AgentWorkspaceRootSection t={t} />}
                 <ToggleRow
                   label={t.rememberAutomaticallyLabel}
-                  hint={t.rememberAutomaticallyHint}
+                  help={t.rememberAutomaticallyHint}
                   checked={settings.rememberAutomatically}
                   onChange={(v) => setSettings({ rememberAutomatically: v })}
                 />

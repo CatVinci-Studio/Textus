@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
 // #146: inline code that is a colour gets a small swatch of it, with
-// Settings › Editor & Appearance › Colour swatches in inline code on (off
+// Settings › Editor & Appearance › Show a swatch before colour codes on (off
 // by default). The code itself is unchanged, and so is the way the caret
 // moves through it.
 

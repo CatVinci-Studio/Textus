@@ -12,7 +12,7 @@ import { ChevronIcon } from "../../ui/icons";
 import { auth, type CustomEndpointConfig } from "../../platform/ipc";
 import { Select } from "../../ui/Select";
 import { isIOSApp } from "../../platform/capabilities";
-import { VERBATIM_INPUT } from "./controls";
+import { RowHelp, VERBATIM_INPUT } from "./controls";
 
 // General > AI Login Settings: two compact disclosure rows (provider, then
 // credentials) plus the per-provider account/API-key/custom panels.
@@ -468,12 +468,13 @@ function ApiKeyProviderPanel({
     <div>
       <div className="settings-row">
         <div>
-          <div className="settings-row-label">{label}</div>
-          <div className="settings-row-hint">
-            {(keyOptional
-              ? t.apiKeyOptionalHintTemplate
-              : t.apiKeyHintTemplate
-            ).replace("{name}", label)}
+          <div className="settings-row-label">
+            {t.apiKeyLabelTemplate.replace("{name}", label)}
+            {keyOptional && (
+              <RowHelp label={t.apiKeyLabelTemplate.replace("{name}", label)}>
+                {t.apiKeyOptionalHintTemplate.replace("{name}", label)}
+              </RowHelp>
+            )}
           </div>
         </div>
         {configured ? (
