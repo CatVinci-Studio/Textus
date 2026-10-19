@@ -14,6 +14,7 @@ import {
   REVISION_DISPLAYS,
   type RevisionDisplay,
   type HeadingAction,
+  type ShortcutAction,
   UI_TEXT_SCALES,
   type UiTextScale,
 } from "./SettingsContext";
@@ -210,17 +211,27 @@ export function SettingsPanel({
                   checked={settings.restoreSessionOnStartup}
                   onChange={(v) => setSettings({ restoreSessionOnStartup: v })}
                 />
+                {/* Slot: Open at login and Keep running in background (the
+                    tray) go here - how Textus starts and stays, beside how
+                    it reopens. */}
               </>
             )}
-            <ToggleRow
-              label={t.autoSuggestFilenameLabel}
-              checked={settings.autoSuggestFilename}
-              onChange={(v) => setSettings({ autoSuggestFilename: v })}
-            />
+          </SettingsGroup>
+
+          {/* How documents reach the disk - used daily, so above the rarer
+              groups. Slot: Open Folder's settings go at the end of this
+              group (Settings › Textus AI › Project folder points here once
+              it follows the open folder). */}
+          <SettingsGroup title={t.settingsFilesGroup}>
             <ToggleRow
               label={t.autosaveLabel}
               checked={settings.autosave}
               onChange={(v) => setSettings({ autosave: v })}
+            />
+            <ToggleRow
+              label={t.autoSuggestFilenameLabel}
+              checked={settings.autoSuggestFilename}
+              onChange={(v) => setSettings({ autoSuggestFilename: v })}
             />
           </SettingsGroup>
 
@@ -231,6 +242,15 @@ export function SettingsPanel({
             </SettingsGroup>
           )}
 
+          <SettingsGroup title={t.generalSystemLabel}>
+            {canSetDefaultEditor && <DefaultEditorSection t={t} />}
+            {canInstallCliCommand && <CliCommandSection t={t} />}
+            <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
+          </SettingsGroup>
+
+          {/* Last: links out rather than settings. The desktop also has
+              them in the Help menu; a phone's menu is kept short, so there
+              this is where they are. */}
           <SettingsGroup title={t.settingsHelpGroup}>
             <LinkRow
               label={t.menuHelpMarkdown}
@@ -246,12 +266,6 @@ export function SettingsPanel({
               onOpen={() => void links.openCommunityPage(settings.language)}
             />
           </SettingsGroup>
-
-          <SettingsGroup title={t.generalSystemLabel}>
-            {canSetDefaultEditor && <DefaultEditorSection t={t} />}
-            {canInstallCliCommand && <CliCommandSection t={t} />}
-            <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
-          </SettingsGroup>
         </>
       )}
 
@@ -259,6 +273,13 @@ export function SettingsPanel({
         <>
           <SettingsGroup title={t.navTheme}>
             <ThemeSection t={t} onBrowse={() => setSubpage("themes")} />
+          </SettingsGroup>
+          {/* How the window lays out - the text's width and the interface's
+              size - then the window's view modes, beside the one that is a
+              setting (typewriter): on a phone, whose menu is kept short,
+              this is where they are switched. Each mode goes through the
+              same event as its menu item, so the two never disagree. */}
+          <SettingsGroup title={t.settingsViewGroup}>
             <SettingRow label={t.contentWidthLabel}>
               <Select
                 className="settings-select"
@@ -296,12 +317,6 @@ export function SettingsPanel({
                 </Select>
               </SettingRow>
             )}
-          </SettingsGroup>
-          {/* The window's view modes, beside the one that is a setting
-              (typewriter): on a phone, whose menu is kept short, this is
-              where they are switched. Each goes through the same event as
-              its menu item, so the two never disagree. */}
-          <SettingsGroup title={t.settingsViewGroup}>
             <ToggleRow
               label={t.menuViewSource}
               checked={!!viewChecks.sourceMode}
@@ -318,12 +333,15 @@ export function SettingsPanel({
               onChange={() => emitMenuEvent("toggle-zen-mode")}
             />
           </SettingsGroup>
+          {/* What the document shows, then how typing behaves. */}
           <SettingsGroup title={t.navMarkdown}>
             <ToggleRow
               label={t.enableMathLabel}
               checked={settings.enableMath}
               onChange={(v) => setSettings({ enableMath: v })}
             />
+            {/* Slot: the diagram engine (Mermaid or Pele) takes this row's
+                place, or follows it if it is shown only with diagrams on. */}
             <ToggleRow
               label={t.enableMermaidLabel}
               checked={settings.enableMermaid}
@@ -346,6 +364,12 @@ export function SettingsPanel({
               checked={settings.autoCloseMarks}
               onChange={(v) => setSettings({ autoCloseMarks: v })}
             />
+          </SettingsGroup>
+          <SettingsGroup title={t.imageStorageGroupLabel}>
+            <ImageStorageSection t={t} />
+          </SettingsGroup>
+          {/* What leaves Textus: text copied into another app, a PDF. */}
+          <SettingsGroup title={t.settingsCopyExportGroup}>
             <SettingRow label={t.copyTextModeLabel} hint={t.copyTextModeHint}>
               <Select
                 className="settings-select"
@@ -370,9 +394,6 @@ export function SettingsPanel({
                 onChange={(v) => setSettings({ pdfPageNumbers: v })}
               />
             )}
-          </SettingsGroup>
-          <SettingsGroup title={t.imageStorageGroupLabel}>
-            <ImageStorageSection t={t} />
           </SettingsGroup>
         </>
       )}
@@ -551,6 +572,10 @@ export function SettingsPanel({
           {settings.enableAskAi && (
             <>
               <SettingsGroup title={t.agentPersonalizationGroupLabel}>
+                {/* What the AI may read. Once Open Folder lands, this
+                    row's default should be the folder open in the sidebar
+                    and its hint say so, rather than a second folder
+                    setting beside General › Files. */}
                 {canPickFolder && <AgentWorkspaceRootSection t={t} />}
                 <ToggleRow
                   label={t.rememberAutomaticallyLabel}
@@ -600,94 +625,54 @@ export function SettingsPanel({
 
       {c === "shortcuts" && (
         <>
-          <SettingsGroup title={t.shortcutAiGroupLabel}>
-            <ShortcutRow
-              label={t.shortcutTriggerCompletion}
-              action="triggerCompletion"
-              shortcuts={settings.shortcuts}
-              setSettings={setSettings}
-              t={t}
-            />
-            <ShortcutRow
-              label={t.shortcutTriggerGrammarCheck}
-              action="triggerGrammarCheck"
-              shortcuts={settings.shortcuts}
-              setSettings={setSettings}
-              t={t}
-            />
-            <ShortcutRow
-              label={t.shortcutToggleFloatingChat}
-              action="toggleFloatingChat"
-              shortcuts={settings.shortcuts}
-              setSettings={setSettings}
-              t={t}
-            />
-          </SettingsGroup>
-          <SettingsGroup title={t.shortcutEditorGroupLabel}>
-            <ShortcutRow
-              label={t.shortcutFindReplace}
-              action="findReplace"
-              shortcuts={settings.shortcuts}
-              setSettings={setSettings}
-              t={t}
-            />
-            <ShortcutRow
-              label={t.shortcutToggleSidebar}
-              action="toggleSidebar"
-              shortcuts={settings.shortcuts}
-              setSettings={setSettings}
-              t={t}
-            />
-            <ShortcutRow
-              label={t.shortcutToggleAgentPanel}
-              action="toggleAgentPanel"
-              shortcuts={settings.shortcuts}
-              setSettings={setSettings}
-              t={t}
-            />
-            <ShortcutRow
-              label={t.shortcutToggleSplitView}
-              action="toggleSplitView"
-              shortcuts={settings.shortcuts}
-              setSettings={setSettings}
-              t={t}
-            />
-            <ShortcutRow
-              label={t.shortcutToggleZenMode}
-              action="toggleZenMode"
-              shortcuts={settings.shortcuts}
-              setSettings={setSettings}
-              t={t}
-            />
-            <ShortcutRow
-              label={t.shortcutToggleSourceMode}
-              action="toggleSourceMode"
-              shortcuts={settings.shortcuts}
-              setSettings={setSettings}
-              t={t}
-            />
-            <ShortcutRow
-              label={t.shortcutToggleTypewriterMode}
-              action="toggleTypewriterMode"
-              shortcuts={settings.shortcuts}
-              setSettings={setSettings}
-              t={t}
-            />
-            <ShortcutRow
-              label={t.shortcutNextTab}
-              action="nextTab"
-              shortcuts={settings.shortcuts}
-              setSettings={setSettings}
-              t={t}
-            />
-            <ShortcutRow
-              label={t.shortcutPreviousTab}
-              action="previousTab"
-              shortcuts={settings.shortcuts}
-              setSettings={setSettings}
-              t={t}
-            />
-          </SettingsGroup>
+          {/* Most used first: finding and moving between tabs, then the
+              panels and modes of the window, then the AI's keys. The
+              Quick Notes shortcut is system-wide and lives with the rest
+              of Quick Notes, in General. */}
+          {(
+            [
+              [
+                t.shortcutEditorGroupLabel,
+                [
+                  ["findReplace", t.shortcutFindReplace],
+                  ["nextTab", t.shortcutNextTab],
+                  ["previousTab", t.shortcutPreviousTab],
+                ],
+              ],
+              [
+                t.settingsViewGroup,
+                [
+                  ["toggleSidebar", t.shortcutToggleSidebar],
+                  ["toggleAgentPanel", t.shortcutToggleAgentPanel],
+                  ["toggleSplitView", t.shortcutToggleSplitView],
+                  ["toggleSourceMode", t.shortcutToggleSourceMode],
+                  ["toggleTypewriterMode", t.shortcutToggleTypewriterMode],
+                  ["toggleZenMode", t.shortcutToggleZenMode],
+                ],
+              ],
+              [
+                t.shortcutAiGroupLabel,
+                [
+                  ["triggerCompletion", t.shortcutTriggerCompletion],
+                  ["triggerGrammarCheck", t.shortcutTriggerGrammarCheck],
+                  ["toggleFloatingChat", t.shortcutToggleFloatingChat],
+                ],
+              ],
+            ] satisfies [string, [ShortcutAction, string][]][]
+          ).map(([title, rows]) => (
+            <SettingsGroup key={title} title={title}>
+              {rows.map(([action, label]) => (
+                <ShortcutRow
+                  key={action}
+                  label={label}
+                  action={action}
+                  shortcuts={settings.shortcuts}
+                  setSettings={setSettings}
+                  t={t}
+                />
+              ))}
+            </SettingsGroup>
+          ))}
           <SettingsGroup title={t.shortcutHeadingsGroupLabel}>
             {Object.entries(headingLabels(t)).map(([action, label]) => (
               <ShortcutRow

@@ -11,7 +11,7 @@ Textus has a built-in AI made for writing, Textus AI: completion, grammar checki
 
 Signing in happens in your browser. Whether images, web search and document edits are available depends on the service and model you choose.
 
-The built-in model list only holds each provider's defaults (for Anthropic: Claude Sonnet 5.5 for chat, Claude Haiku 5.5 for completion and grammar). Press **Fetch Models** on the Model List row under **Connection** to load the provider's current list and choose any model from it.
+The built-in model list only holds each provider's defaults (for Anthropic: Claude Sonnet 5.5 for chat, Claude Haiku 5.5 for completion and grammar). Press **Fetch Models** on the Model list row under **Connection** to load the provider's current list and choose any model from it.
 
 Shortcuts below use macOS notation; on Windows and Linux, read Cmd as Ctrl and Option as Alt. If you have changed a shortcut, **Settings > Shortcuts** has the current one.
 
@@ -217,7 +217,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### The global config folder
 
-**The global config folder holds what applies to every document**: your global `agent.md` and your global skills. It belongs to the app, not to any project; **Settings > Textus AI > Global Config Folder > Open Folder** shows it.
+**The global config folder holds what applies to every document**: your global `agent.md` and your global skills. It belongs to the app, not to any project; **Settings > Textus AI > Global config folder > Show** shows it.
 
 ```
 agent/                ← the global config folder

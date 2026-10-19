@@ -82,7 +82,7 @@ test.describe("theme gallery", () => {
 
     // An ordinary user theme in the picker, by its gallery name.
     await dialog.locator(".settings-back-button").click();
-    await expect(dialog.getByLabel("Editor Theme")).toContainText("Paper Mint");
+    await expect(dialog.getByLabel("Editor theme")).toContainText("Paper Mint");
   });
 
   test("offers an update when the catalog has a newer version", async ({

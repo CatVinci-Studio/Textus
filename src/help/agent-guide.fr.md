@@ -217,7 +217,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### Le dossier de configuration globale
 
-**Le dossier de configuration globale contient ce qui s'applique à tous les documents** : votre `agent.md` global et vos compétences globales. Il appartient à l'application, pas à un projet ; **Réglages > Textus AI > Dossier de configuration globale > Ouvrir le dossier** l'affiche.
+**Le dossier de configuration globale contient ce qui s'applique à tous les documents** : votre `agent.md` global et vos compétences globales. Il appartient à l'application, pas à un projet ; **Réglages > Textus AI > Dossier de configuration globale > Afficher** l'affiche.
 
 ```
 agent/                ← le dossier de configuration globale

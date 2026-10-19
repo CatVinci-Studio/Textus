@@ -16,12 +16,29 @@ const t = {
   navAi: AI_NAME,
   navShortcuts: "Shortcuts",
   navPrivacy: "Privacy",
+  generalBasicsLabel: "Basics",
+  settingsFilesGroup: "Files",
+  quickNotesGroup: "Quick Notes",
+  generalSystemLabel: "Application",
+  settingsHelpGroup: "Help",
+  autosaveLabel: "Save automatically",
+  autoSuggestFilenameLabel: "Suggest a filename when saving a new file",
+  navTheme: "Theme",
+  settingsViewGroup: "View",
+  navMarkdown: "Markdown",
+  imageStorageGroupLabel: "Images",
+  settingsCopyExportGroup: "Copy & Export",
+  contentWidthLabel: "Text width",
+  shortcutEditorGroupLabel: "Editor & Navigation",
+  shortcutAiGroupLabel: "AI & Writing",
+  shortcutHeadingsGroupLabel: "Headings",
+  shortcutFixedGroupLabel: "Fixed Shortcuts",
   aiAccountLabel: "Connection",
   writingFeaturesLabel: "Writing Assistance",
-  writingModelLabel: "Assist Model",
+  writingModelLabel: "Assist model",
   aiAskLabel: `${AI_NAME} Chat`,
   aiAskToggleLabel: `Enable ${AI_NAME} chat`,
-  agentModelLabel: "Chat Model",
+  agentModelLabel: "Chat model",
   webSearchHint: "Needs support from the current provider",
   agentPersonalizationGroupLabel: "Writing Instructions & Skills",
   agentAdvancedGroupLabel: "Advanced",
@@ -37,7 +54,7 @@ const t = {
   updateChannelStable: "Stable",
   updateChannelBeta: "Beta",
   updateChannelHint: "Beta gets release candidates before everyone else.",
-  defaultEditorLabel: "Default Markdown Editor",
+  defaultEditorLabel: "Default Markdown editor",
   defaultEditorIsDefault: "Textus is the default",
   defaultEditorNotDefault: "Textus is not the default",
   defaultEditorButton: "Set as Default",
@@ -411,6 +428,62 @@ test.describe("desktop", () => {
       );
     }
     expect(widths.size).toBe(1);
+  });
+
+  test("each page's groups go from the most used to the links out", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    const panel = await openSettings(page);
+    const titles = panel.locator(".settings-group-title");
+    const open = (name: string) =>
+      panel.getByRole("button", { name, exact: true }).click();
+
+    // Help is links out, not settings: last.
+    await expect(titles).toHaveText([
+      t.generalBasicsLabel,
+      t.settingsFilesGroup,
+      t.quickNotesGroup,
+      t.generalSystemLabel,
+      t.settingsHelpGroup,
+    ]);
+    // Saving, used daily, is a group of its own under the basics.
+    const files = panel.locator(".settings-group", {
+      has: page.locator(".settings-group-title", {
+        hasText: t.settingsFilesGroup,
+      }),
+    });
+    await expect(files.locator(".settings-row-label")).toHaveText([
+      t.autosaveLabel,
+      t.autoSuggestFilenameLabel,
+    ]);
+
+    await open(t.navEditor);
+    await expect(titles).toHaveText([
+      t.navTheme,
+      t.settingsViewGroup,
+      t.navMarkdown,
+      t.imageStorageGroupLabel,
+      t.settingsCopyExportGroup,
+    ]);
+    // The text's width and the interface's size are layout, not theme.
+    const view = panel.locator(".settings-group", {
+      has: page.locator(".settings-group-title", {
+        hasText: t.settingsViewGroup,
+      }),
+    });
+    await expect(view.locator(".settings-row-label").first()).toHaveText(
+      t.contentWidthLabel,
+    );
+
+    await open(t.navShortcuts);
+    await expect(titles).toHaveText([
+      t.shortcutEditorGroupLabel,
+      t.settingsViewGroup,
+      t.shortcutAiGroupLabel,
+      t.shortcutHeadingsGroupLabel,
+      t.shortcutFixedGroupLabel,
+    ]);
   });
 });
 
