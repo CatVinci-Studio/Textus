@@ -25,7 +25,9 @@ Les encadrés de style GitHub :
 
 **Gras** (`**texte**`), *italique* (`*texte*`), ***gras italique***, ~~barré~~ (`~~texte~~`), ==surligné== (`==texte==`) et `code en ligne`.
 
-Les liens s'écrivent ainsi : [le dépôt de Textus](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+clic suit un lien : un lien web s'ouvre dans le navigateur, un lien vers un autre fichier Markdown l'ouvre dans un onglet, et un lien vers `#un-titre` fait défiler jusqu'à ce titre. Le HTML en ligne s'affiche aussi, par exemple les touches du clavier <kbd>Cmd</kbd> + <kbd>S</kbd>. De même pour les blocs repliables `<details>`, les tableaux HTML, quelques styles en ligne (couleur, fond, taille, graisse, alignement, soulignement et barré) et le `<svg>` en ligne, affiché comme une image. Les scripts et le reste du HTML restent en code source.
+Les liens s'écrivent ainsi : [le dépôt de Textus](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+clic suit un lien : un lien web s'ouvre dans le navigateur, un lien vers un autre fichier Markdown l'ouvre dans un onglet, et un lien vers `#un-titre` fait défiler jusqu'à ce titre. Le HTML en ligne s'affiche aussi, par exemple les touches du clavier <kbd>Cmd</kbd> + <kbd>S</kbd>. De même pour les blocs repliables `<details>`, les tableaux HTML, quelques styles en ligne (couleur, fond, taille, graisse, alignement, soulignement et barré) et le `<svg>` en ligne, affiché comme une image. Les scripts et le reste du HTML restent en code source. Un lien vers un titre d'un autre fichier, comme `[voir](notes.md#un-titre)`, ouvre ce fichier à ce titre. Les wikiliens d'Obsidian (`[[Note]]`, `[[Note|texte]]` et `[[Note#Titre]]`) s'ouvrent de la même façon, depuis le dossier du document ou n'importe où dans son coffre ; eux et les `#étiquettes` en début de ligne sont enregistrés tels qu'ils ont été écrits.
+
+Avec **Réglages → Éditeur et apparence → Pastilles de couleur dans le code en ligne** activé, le code en ligne qui désigne une couleur, comme `#ff8800` ou `rgb(0 128 255)`, est précédé d'un petit carré de cette couleur.
 
 Formules en ligne : l'équivalence masse-énergie $E = mc^2$, l'identité d'Euler $e^{i\pi} + 1 = 0$.
 
@@ -56,7 +58,7 @@ Survolez un tableau pour ajouter ou supprimer des lignes et des colonnes. Tapez 
 
 ## Blocs de code
 
-Blocs de code délimités, avec coloration syntaxique (changez de langage dans le coin supérieur droit du bloc). Entrée sur la dernière ligne vide quitte le bloc, tout comme Ctrl/⌘+Entrée à tout moment ; il en va de même pour les citations.
+Blocs de code délimités, avec coloration syntaxique (changez de langage dans le coin supérieur droit du bloc). Entrée sur la dernière ligne vide quitte le bloc, tout comme Ctrl/⌘+Entrée à tout moment ; il en va de même pour les citations. Le bouton **Copier**, à côté du langage, copie le code du bloc, et **Réglages → Éditeur et apparence → Numéros de ligne dans les blocs de code** numérote ses lignes ; ni l'un ni les autres n'apparaissent dans les exports ou à l'impression.
 
 ```python
 def fib(n: int) -> int:
@@ -118,6 +120,8 @@ sequenceDiagram
     Textus-->>Vous: Rendu en direct
 ```
 
+**Réglages → Éditeur et apparence → Moteur de diagrammes** choisit ce qui dessine ces blocs : Mermaid, par défaut, ou Pele, plus rapide, mais qui dispose les diagrammes à sa façon et laisse de côté quelques fonctions ; un diagramme que Pele ne sait pas dessiner est dessiné par Mermaid.
+
 ## Images
 
 Collez une image directement depuis le presse-papiers : Textus l'enregistre et insère la référence. L'endroit se choisit dans **Réglages → Éditeur et apparence → Images**. **Sur cet ordinateur**, c'est un **Sous-dossier** du dossier du document, `assets/` par défaut, dont vous pouvez changer le nom, ou le **Même dossier que le document** ; les réglages montrent le lien que reçoit l'image collée. Avec **Envoyer vers un hébergeur d'images**, elle part vers PicGo / PicList, SM.MS, Imgur ou votre propre URL d'envoi (**Personnalisé**).
@@ -141,6 +145,12 @@ Outre l'éditeur WYSIWYG et le mode source (`Cmd+/`), Textus offre trois façons
 - **Mode zen** (`Cmd+Shift+J`) : masque tout sauf le texte, passe en plein écran et atténue tous les paragraphes sauf celui que vous écrivez. Appuyez sur `Esc` pour en sortir.
 
 Les trois se trouvent aussi dans le menu **Présentation**.
+
+**Réglages → Éditeur et apparence → Taille du texte de l'interface** agrandit ou réduit le texte de la barre latérale, des onglets, des menus, du panneau de l'IA et des Réglages ; le document garde son propre zoom. `Ctrl+Tab` et `Ctrl+Shift+Tab` passent à l'onglet suivant et au précédent.
+
+## Dossiers et recherche de fichiers
+
+**Fichier → Ouvrir un dossier…** ouvre tout un dossier dans la barre latérale : l'arborescence y reste pendant que vous ouvrez les documents qu'il contient, le dossier revient avec votre session, et **Fichier → Fermer le dossier** laisse de nouveau l'arborescence suivre le document. La zone en haut de l'onglet **Fichiers** de la barre latérale cherche des noms de fichier dans tout le dossier ; `Cmd+Shift+O` y mène directement. Tapez pour filtrer, `↑`/`↓` pour vous déplacer, `Entrée` pour ouvrir, `Échap` pour effacer. Les deux ne sont disponibles que sur ordinateur.
 
 ## Notes rapides
 
