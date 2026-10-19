@@ -5,13 +5,33 @@ name: CI
 #
 #   check    npm run check         types, lint, unit tests, formatting,
 #                                  README/version/updater checks; and the build
-#   e2e      npm run test:e2e      the Playwright flows, desktop and phone
+#   e2e      npm run test:e2e      the Playwright flows, desktop and phone -
+#                                  split by spec file across three machines
 #   native   npm run check:native  rustfmt, clippy, Rust tests - on Linux,
 #                                  macOS and Windows
 #   ios      the iOS simulator build
 #
-# A pull request that only touches documentation runs `check` alone; the
-# other jobs are skipped, which branch protection counts as passed.
+# `check` always runs. A pull request runs the others only where its change
+# can reach them (scripts/ci-changes.mjs decides; skipped jobs count as
+# passed for branch protection):
+#
+#   documentation, or a version bump      check alone
+#   the frontend only                     check, e2e
+#   the Rust backend only                 check, native, ios
+#   both; a workflow, .nvmrc, or the npm
+#   dependencies                          everything
+#
+# The e2e flows run the frontend against a mocked backend, so Rust can't
+# change their result; native and ios embed only a few frontend files, which
+# the script finds. Markdown under src/, e2e/ or src-tauri/ (help guides,
+# the AI skills) is code, not documentation. A version bump changes only the
+# version lines of the five
+# files scripts/check-versions.mjs keeps in step. A push to main or a release
+# branch runs everything, except a version bump's.
+#
+# Caches: Rust builds and the Playwright browser are saved from main only.
+# Pull requests restore main's and write none, so they don't evict main's
+# from the repository's 10 GB.
 
 on:
   pull_request:
@@ -31,32 +51,30 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Whether anything besides documentation changed. Pushes to main always
-  # run everything.
+  # Whether the change can reach the browser (`e2e`) and the Rust build
+  # (`native`, also ios): scripts/ci-changes.mjs.
   changes:
     runs-on: ubuntu-22.04
     timeout-minutes: 5
     outputs:
-      code: ${{ steps.diff.outputs.code }}
+      e2e: ${{ steps.diff.outputs.e2e }}
+      native: ${{ steps.diff.outputs.native }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
       - id: diff
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE: ${{ github.event.before }}
         run: |
-          if [ -z "$BASE" ]; then
-            echo "code=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          # Documentation: Markdown anywhere, docs/, the issue templates and
-          # the license. Anything else is code.
-          if git diff --name-only "$BASE" HEAD \
-            | grep -qvE '(\.md$|^docs/|^\.github/ISSUE_TEMPLATE/|^LICENSE$)'; then
-            echo "code=true" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            node scripts/ci-changes.mjs --base "$PR_BASE" >> "$GITHUB_OUTPUT"
           else
-            echo "code=false" >> "$GITHUB_OUTPUT"
+            node scripts/ci-changes.mjs --base "$PUSH_BASE" --push >> "$GITHUB_OUTPUT"
           fi
 
   check:
@@ -83,9 +101,16 @@ jobs:
           npm run build:playground 2>&1 | tee build-playground.log
           ! grep -q 'css-syntax-error' build-playground.log
 
-  e2e:
+  # On one machine the flows took eight to nine minutes; --shard splits them
+  # by spec file across three.
+  e2e-shard:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.e2e == 'true'
+    name: e2e (${{ matrix.shard }}/3)
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
@@ -95,12 +120,55 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      # Chromium comes from the cache when this Playwright version's is there;
+      # its system libraries are installed either way.
+      - id: playwright
+        run: echo "version=$(node -p 'require("./package-lock.json").packages["node_modules/@playwright/test"].version')" >> "$GITHUB_OUTPUT"
+      - id: browser
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.browser.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - if: steps.browser.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      # Saved from main only, and by one shard (three would race for the key).
+      - if: steps.browser.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main' && matrix.shard == 1
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.browser.outputs.cache-primary-key }}
+      - run: npm run test:e2e -- --shard=${{ matrix.shard }}/3
+      # A failed flow's error context (the page as it was) and any
+      # screenshots and traces it left.
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-test-results-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 7
+
+  # One required check for the three shards, like `native` below: passes only
+  # when all of them passed (or were skipped together, when the change can't
+  # reach the browser).
+  e2e:
+    needs: [changes, e2e-shard]
+    if: always()
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every shard
+        env:
+          CHANGES: ${{ needs.changes.result }}
+          RESULT: ${{ needs.e2e-shard.result }}
+        run: |
+          test "$CHANGES" = success
+          test "$RESULT" = success || test "$RESULT" = skipped
 
   native-platform:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.native == 'true'
     name: native (${{ matrix.os }})
     strategy:
       fail-fast: false
@@ -132,10 +200,12 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: "./src-tauri -> target"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: npm run check:native
 
   # One required check for the three platforms: passes only when all of
-  # them passed (or were skipped together, for a documentation change).
+  # them passed (or were skipped together, when the change can't reach the
+  # Rust build).
   native:
     needs: native-platform
     if: always()
@@ -154,7 +224,7 @@ jobs:
   # iOS port is young.
   ios:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.native == 'true'
     runs-on: macos-26
     timeout-minutes: 60
     steps:
@@ -182,6 +252,7 @@ jobs:
         with:
           workspaces: "./src-tauri -> target"
           key: ios
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install XcodeGen (used by tauri ios init)
         run: brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
       - run: npm ci
