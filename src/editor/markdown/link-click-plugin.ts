@@ -7,6 +7,7 @@ import { modIsMeta } from "../../platform/os";
 import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import { revealHeading } from "./heading-jump";
 import { linkTarget, type LinkTarget } from "./link-target";
+import { parseWikilink } from "./wikilink";
 
 /** The link under a mouse event in this editor, if any. */
 function linkAt(view: EditorView, event: MouseEvent): HTMLAnchorElement | null {
@@ -14,6 +15,14 @@ function linkAt(view: EditorView, event: MouseEvent): HTMLAnchorElement | null {
   return link instanceof HTMLAnchorElement && view.dom.contains(link)
     ? link
     : null;
+}
+
+/** The wikilink (wikilink.ts) under a mouse event in this editor, if any. */
+function wikilinkAt(view: EditorView, event: MouseEvent): HTMLElement | null {
+  const link = (event.target as Element | null)?.closest?.(
+    '[data-type="wikilink"]',
+  );
+  return link instanceof HTMLElement && view.dom.contains(link) ? link : null;
 }
 
 /** Ctrl+click, or Cmd+click where Mod is Cmd (a Mac, an iPad's keyboard) -
@@ -41,11 +50,36 @@ async function follow(view: EditorView, target: LinkTarget): Promise<void> {
   else return exportDoc.revealInDir(target.path);
 }
 
+/** A wikilink: `[[#Heading]]` scrolls to a heading here, `[[Note]]` opens
+ *  the note the document's vault holds by that name, and `[[Note#Heading]]`
+ *  opens it at that heading. */
+async function followWikilink(
+  view: EditorView,
+  source: string,
+  docPath: string | null,
+): Promise<void> {
+  const target = parseWikilink(source);
+  if (!target) return;
+  if (!target.note) {
+    if (target.heading) revealHeading(view, target.heading);
+    return;
+  }
+  if (!docPath) return;
+  const path = await fs.resolveVaultNote(docPath, target.note);
+  if (path)
+    window.dispatchEvent(
+      new CustomEvent<OpenFileInTab>(OPEN_FILE_IN_TAB_EVENT, {
+        detail: { path, anchor: target.heading || undefined },
+      }),
+    );
+}
+
 /**
  * Following links: Ctrl/Cmd+click opens a web link in the browser, a
  * Markdown file in a tab (scrolled to its `#heading`, if the link names
  * one), any other file in the file manager, and scrolls to a `#heading` of
- * this document. A plain click only places the caret.
+ * this document; on a wikilink it opens the note. A plain click only
+ * places the caret.
  *
  * The webview must never follow a link itself: WebView2 opened a
  * Ctrl+clicked relative link in the browser as http://tauri.localhost/...
@@ -62,21 +96,31 @@ export function createLinkClickPlugin(docPath: () => string | null) {
             // The editor's own mousedown would place the caret, or with
             // Ctrl/Cmd held select the whole block, before the click.
             mousedown(view, event) {
-              if (!isFollowClick(event) || !linkAt(view, event)) return false;
+              if (!isFollowClick(event)) return false;
+              if (!linkAt(view, event) && !wikilinkAt(view, event))
+                return false;
               event.preventDefault();
               return true;
             },
             click(view, event) {
+              const doc = docPath();
+              // A document picked in iOS Files is a scoped URL with no
+              // folder this app may read beside it.
+              const folder = doc && !isScopedUrl(doc) ? doc : null;
+              const wikilink = wikilinkAt(view, event);
+              if (wikilink && isFollowClick(event)) {
+                event.preventDefault();
+                const source = wikilink.textContent ?? "";
+                void followWikilink(view, source, folder).catch(() => {});
+                return true;
+              }
               const link = linkAt(view, event);
               if (!link) return false;
               event.preventDefault();
               if (!isFollowClick(event)) return false;
-              const doc = docPath();
-              // A document picked in iOS Files is a scoped URL with no
-              // folder this app may read beside it.
               const target = linkTarget(
                 link.getAttribute("href") ?? "",
-                doc && !isScopedUrl(doc) ? doc : null,
+                folder,
               );
               if (target) void follow(view, target).catch(() => {});
               return true;

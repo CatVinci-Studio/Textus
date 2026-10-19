@@ -95,6 +95,20 @@ test("an edited document is written back once typing rests", async ({
   await expect(page.locator(editor)).not.toContainText("More.");
 });
 
+test("an edit leaves the rest of the file as it was written", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en", autosave: true } });
+  const text =
+    "Notes\n=====\n\n_em_ and a snake_case [link][r].\n\n[r]: https://x.org\n\nSaved text.\n";
+  await installDisk(page, text);
+  await openDoc(page);
+  await typeAtEnd(page, " More.");
+  await expect
+    .poll(async () => (await disk(page)).writes, { timeout: 6000 })
+    .toEqual([text.replace("Saved text.", "Saved text. More.")]);
+});
+
 test("with the setting off nothing is written", async ({ page }) => {
   await openApp(page, { settings: { language: "en" } });
   await installDisk(page, "# Notes\n\nSaved text.\n");

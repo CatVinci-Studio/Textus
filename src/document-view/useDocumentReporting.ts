@@ -3,6 +3,11 @@ import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { registerEditorFlush } from "../editor/editor-flush";
+import {
+  readSourceBlocks,
+  writePreservingSource,
+  type SourceBlocks,
+} from "../editor/markdown/source-preserving";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import { useLatest } from "../utils/hooks/useLatest";
 
@@ -11,8 +16,9 @@ import { useLatest } from "../utils/hooks/useLatest";
 export interface DocumentReporting {
   reportedDocRef: { current: ProseNode | null };
   reportedMarkdownRef: { current: string | null };
-  mountDocRef: { current: ProseNode | null };
-  reportMarkdown: (ctx: Ctx, markdown: string) => void;
+  /** The editor has mounted with `doc`, read from the opened file. */
+  onMounted: (ctx: Ctx, doc: ProseNode) => void;
+  reportDoc: (ctx: Ctx, doc: ProseNode) => void;
 }
 
 export function useDocumentReporting(
@@ -25,37 +31,52 @@ export function useDocumentReporting(
   // editor-flush.ts.
   const reportedDocRef = useRef<ProseNode | null>(null);
   const reportedMarkdownRef = useRef<string | null>(null);
-  // The file as it was opened, and what the editor would write for the doc
-  // it parsed that into (computed the first time it is needed). A change
-  // that serializes back to that same text - a plugin touching node attrs
-  // on mount, an edit undone - is not an edit: the tab reports the file's
-  // own text, so it stays clean and a save leaves the file byte-for-byte
-  // as it was instead of rewriting it in the serializer's house style.
+  // The file as it was opened, paired block by block with the doc it was
+  // read into: a save writes every block the user didn't change as the
+  // file has it, and serializes only the rest (source-preserving.ts). An
+  // unedited document, or one whose edits were undone, is the file's own
+  // text byte for byte, so the tab stays clean.
   const openedValueRef = useRef(initialValue);
   const mountDocRef = useRef<ProseNode | null>(null);
+  const sourceRef = useRef<SourceBlocks | null>(null);
+  // Without that pairing (the doc didn't line up with the file), what the
+  // editor would write for the doc it opened: a doc that serializes the
+  // same is reported as the file's own text, as before.
   const mountMarkdownRef = useRef<string | null>(null);
-  const reportMarkdown = useCallback(
-    (ctx: Ctx, markdown: string) => {
-      const mountDoc = mountDocRef.current;
-      if (mountDoc && mountMarkdownRef.current === null)
-        mountMarkdownRef.current = ctx.get(serializerCtx)(mountDoc);
-      const value =
-        markdown === mountMarkdownRef.current
-          ? openedValueRef.current
-          : markdown;
+  const onMounted = useCallback((ctx: Ctx, doc: ProseNode) => {
+    reportedDocRef.current = doc;
+    mountDocRef.current = doc;
+    sourceRef.current = readSourceBlocks(ctx, openedValueRef.current, doc);
+  }, []);
+  const reportDoc = useCallback(
+    (ctx: Ctx, doc: ProseNode) => {
+      const source = sourceRef.current;
+      let value: string;
+      if (source) value = writePreservingSource(ctx, source, doc);
+      else {
+        const serializer = ctx.get(serializerCtx);
+        const mountDoc = mountDocRef.current;
+        if (mountDoc && mountMarkdownRef.current === null)
+          mountMarkdownRef.current = serializer(mountDoc);
+        const markdown = serializer(doc);
+        value =
+          markdown === mountMarkdownRef.current
+            ? openedValueRef.current
+            : markdown;
+      }
       reportedMarkdownRef.current = value;
       onChangeRef.current(value);
     },
     [onChangeRef],
   );
-  return { reportedDocRef, reportedMarkdownRef, mountDocRef, reportMarkdown };
+  return { reportedDocRef, reportedMarkdownRef, onMounted, reportDoc };
 }
 
 /** Registers this editor's flush under its tab (see editor-flush.ts). */
 export function useEditorFlush(
   tabId: string,
   run: EditorRunner,
-  { reportedDocRef, reportedMarkdownRef, reportMarkdown }: DocumentReporting,
+  { reportedDocRef, reportedMarkdownRef, reportDoc }: DocumentReporting,
 ) {
   // The listener's debounce reports the same doc again later - a harmless
   // repeat of the markdown already handed over here.
@@ -69,11 +90,11 @@ export function useEditorFlush(
             const reported = reportedDocRef.current;
             if (reported && !doc.eq(reported)) {
               reportedDocRef.current = doc;
-              reportMarkdown(ctx, ctx.get(serializerCtx)(doc));
+              reportDoc(ctx, doc);
             }
             return reportedMarkdownRef.current;
           }) ?? null,
       ),
-    [tabId, run, reportMarkdown, reportedDocRef, reportedMarkdownRef],
+    [tabId, run, reportDoc, reportedDocRef, reportedMarkdownRef],
   );
 }

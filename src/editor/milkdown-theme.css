@@ -562,6 +562,20 @@
   display: none;
 }
 
+/* A reference link's definition, `[ref]: url` (markdown/reference-links.ts):
+   source, quiet like raw HTML's. */
+.link-definition-source {
+  color: var(--editor-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+/* An Obsidian wikilink, `[[Note]]` (markdown/wikilink.ts): its source in
+   the link colour; Ctrl/Cmd+click opens the note. */
+.wikilink {
+  color: var(--editor-accent);
+}
+
 /* A picture that won't load (images/missing-image.ts) - a Markdown image or
    an Obsidian embed: a card with its name, the reason and what to do, in
    place of the broken-image icon. The picture's own parts stay in the DOM
