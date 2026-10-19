@@ -1232,6 +1232,26 @@ export const quickNote = {
 };
 
 // ---------------------------------------------------------------------------
+// background mode (src-tauri/src/background/) - desktop only
+// ---------------------------------------------------------------------------
+
+/** Rust -> every window: the tray and the login item changed. Mirrors
+ *  STATUS_EVENT and `Status` in background/mod.rs - change both. */
+export const BACKGROUND_STATUS = "background-status";
+export interface BackgroundStatus {
+  /** "unavailable": Linux without libayatana-appindicator (or
+   *  libappindicator); the process still stays in the background. */
+  tray: "off" | "on" | "unavailable";
+  login: "off" | "on" | "failed";
+  loginError: string | null;
+}
+
+export const background = {
+  status: () =>
+    desktopQuery<BackgroundStatus | null>("background_status", null),
+};
+
+// ---------------------------------------------------------------------------
 // default editor (src-tauri/src/commands/default_editor.rs) - desktop only
 // ---------------------------------------------------------------------------
 

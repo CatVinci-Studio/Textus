@@ -148,6 +148,8 @@ All three are also in the **View** menu.
 
 Notes go to `Textus/Quick Notes` in your Documents folder, one file each, named after the first line. In **Settings → General → Quick Notes** you can choose another folder, keep **one file per day** instead, and turn on a **global shortcut** that opens a quick note from any app: `Control+Option+N` on a Mac, `Ctrl+Alt+N` on Linux, `Win+Alt+N` on Windows. Opening one again within a few minutes continues the last note. On Wayland, bind the `textus --quick-note` command shown there to a key in your desktop's settings.
 
+To keep Textus within reach when no window is open, turn on **Settings → General → Background → Keep running in the background**: closing the last window then leaves Textus running, with an icon in the notification area (Windows), the system tray (Linux) or the menu bar (Mac). Its menu opens a new quick note, your documents, the Quick Notes folder and Settings; **Quit Textus** there quits for real. **Open at login** starts Textus that way when you log in. GNOME shows the tray icon only with the AppIndicator extension.
+
 ## Footnotes and rules
 
 Footnotes look like this[^1], and below is a horizontal rule:

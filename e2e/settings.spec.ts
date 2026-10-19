@@ -19,6 +19,7 @@ const t = {
   generalBasicsLabel: "Basics",
   settingsFilesGroup: "Files",
   quickNotesGroup: "Quick Notes",
+  backgroundGroup: "Background",
   generalSystemLabel: "Application",
   settingsHelpGroup: "Help",
   autosaveLabel: "Save automatically",
@@ -444,6 +445,7 @@ test.describe("desktop", () => {
       t.generalBasicsLabel,
       t.settingsFilesGroup,
       t.quickNotesGroup,
+      t.backgroundGroup,
       t.generalSystemLabel,
       t.settingsHelpGroup,
     ]);

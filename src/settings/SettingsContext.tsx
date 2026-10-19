@@ -377,6 +377,13 @@ export interface Settings {
   /** Minutes after a note was saved in which opening Quick Note again
    *  continues it instead of starting a new one; 0 = always a new note. */
   quickNoteContinueMinutes: number;
+  /** Settings › General › Background: closing the last window leaves the
+   *  process running, with a tray (menu bar) icon. Off by default, desktop
+   *  only; Rust reads it (src-tauri/src/background/). */
+  runInBackground: boolean;
+  /** Start in the background at login (`textus --background`). Only takes
+   *  effect while `runInBackground` is on. */
+  openAtLogin: boolean;
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -441,6 +448,8 @@ const DEFAULT_SETTINGS: Settings = {
   quickNoteFolder: "",
   quickNotePerDay: false,
   quickNoteContinueMinutes: 5,
+  runInBackground: false,
+  openAtLogin: false,
 };
 
 const STORAGE_KEY = "catvinci-settings";

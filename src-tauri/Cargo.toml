@@ -47,9 +47,16 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 # macos-private-api: required for transparent webview windows (the floating
 # drag-pill window a tab turns into while being dragged between windows).
+# tray-icon: Settings › General › Background's tray and menu bar icon
+# (src/background/tray.rs). Compiled in on desktop (Tauri builds no tray
+# for iOS), but none of it runs until the setting is turned on; with the
+# rest of background mode it adds 250 KB to the Linux x86_64 release
+# binary (17.18 -> 17.43 MB, measured for 1.2.0). On Linux
+# the tauri CLI then also makes the .deb depend on libayatana-appindicator
+# and copies the library into the AppImage.
 # Keep the minor in step with @tauri-apps/api in package.json; the tauri
 # CLI warns when the JS and Rust versions drift apart.
-tauri = { version = "2.12", features = ["protocol-asset", "macos-private-api"] }
+tauri = { version = "2.12", features = ["protocol-asset", "macos-private-api", "tray-icon"] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
@@ -189,10 +196,17 @@ webview2-com = "0.39"
 # editor (commands/default_editor.rs) - the file-type lookup, the per-user
 # registration and Explorer's refresh. windows-registry is already in the
 # tree via hyper-util.
-windows = { version = "0.62", features = ["Win32_UI_Shell"] }
+# Win32_UI_WindowsAndMessaging: the notification area's icon size at the
+# display's scale (src/background/tray.rs).
+windows = { version = "0.62", features = ["Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
 windows-registry = "0.6"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 webkit2gtk = "2.0"
 gtk = "0.18"
+# Whether libayatana-appindicator (or libappindicator) loads, asked before
+# the tray is built (src/background/tray.rs): tray-icon loads it on first
+# use and panics when neither is installed. Already in the tree through
+# libappindicator-sys, at this version.
+libloading = "0.7"
 
