@@ -75,6 +75,7 @@ describe("saved markdown stays as written", () => {
     ["an image without a title", "![图](a.png)\n"],
     ["an image width", '![图](a.png "{textus-width=30%}")\n'],
     ["an autolink", "See <https://x.org/a> here\n"],
+    ["a bare www link", "See www.x.org/a here\n"],
     ["a link whose text is its URL", "[https://x.org/a](https://x.org/a)\n"],
     ["an empty-text link", "See [](https://x.org/a) here\n"],
     ["a titled empty-text link", '[](https://x.org/a "t")\n'],
@@ -214,6 +215,23 @@ describe("saved markdown stays as written", () => {
     expect(await roundTrip("See https://x.org/a here\n")).toBe(
       "See <https://x.org/a> here\n",
     );
+  });
+
+  it.each([
+    ["a URL", "see https://x.org/a here", "see <https://x.org/a> here\n"],
+    ["a www address", "see www.x.org here", "see www.x.org here\n"],
+    ["an email address", "mail a@b.com now", "mail <a@b.com> now\n"],
+  ])("writes %s typed as text unescaped", async (_name, typed, reopened) => {
+    const editor = await createTestEditor("");
+    editors.push(editor);
+    const markdown = editor.action((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      view.dispatch(view.state.tr.insertText(typed, 1));
+      return ctx.get(serializerCtx)(view.state.doc);
+    });
+    expect(markdown).toBe(`${typed}\n`);
+    // Reopened, it is the autolink GitHub makes of it.
+    expect(await roundTrip(markdown)).toBe(reopened);
   });
 
   it("writes a thematic break as '---', but '***' as the first block", async () => {

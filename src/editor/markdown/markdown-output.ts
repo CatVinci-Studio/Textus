@@ -7,10 +7,12 @@ import {
 } from "@milkdown/kit/preset/commonmark";
 import type { DOMOutputSpec } from "@milkdown/kit/prose/model";
 import type { MarkdownNode } from "@milkdown/kit/transformer";
+import type { Link } from "mdast";
 import {
   defaultHandlers,
   type Handle,
   type State,
+  type Unsafe,
 } from "mdast-util-to-markdown";
 
 // How the editor writes markdown back out. Every rule here exists to keep a
@@ -334,9 +336,25 @@ function asWritten<T>(
 type PeekingHandle = Handle & { peek: Handle };
 const defaultLink = defaultHandlers.link as PeekingHandle;
 
+/** A bare `www.x.org`, which GFM links with an `http://` URL. It has no
+ *  `<...>` form - remark wrote `[www.x.org](http://www.x.org)` - and,
+ *  written bare as it was, it reads back the same (see `root` below). */
+function bareWww(node: Link): string | null {
+  const syntax = (node.data as { linkSyntax?: LinkSyntax } | undefined)
+    ?.linkSyntax;
+  const text = textOf(node);
+  return syntax === "autolink" &&
+    /^www\./i.test(text) &&
+    node.url === `http://${text}`
+    ? text
+    : null;
+}
+
 /** Writes a link in the syntax it was read in (LinkSyntax above). */
 const link = Object.assign(
   ((node, parent, state, info) => {
+    const www = bareWww(node);
+    if (www) return www;
     const empty =
       (node.data as { linkSyntax?: LinkSyntax } | undefined)?.linkSyntax ===
       "empty";
@@ -350,6 +368,7 @@ const link = Object.assign(
   {
     // containerPhrasing asks `peek` which character the link starts with.
     peek: ((node, parent, state, info) =>
+      bareWww(node)?.charAt(0) ??
       asWritten(node, state, () =>
         defaultLink.peek(node, parent, state, info),
       )) as Handle,
@@ -380,6 +399,29 @@ const image = Object.assign(
         : defaultImage.peek(node, parent, state, info)) as Handle,
   },
 );
+
+/**
+ * A URL or email address typed as plain text is written as typed. remark-gfm
+ * escapes the character that would make GitHub link it - `https\://x.org`,
+ * `www\.x.org`, `a\@b.com` - to keep it text, so the address the user
+ * typed was no longer a link on GitHub, and read wrongly anywhere the
+ * escape isn't understood. Unescaped, it is the autolink GitHub (and
+ * Textus, once reopened) makes of it, which is what typing one means;
+ * `link` above writes that autolink back the way it was typed.
+ * The guards are dropped from this one serialization's own copy of the
+ * unsafe list.
+ */
+const isAutolinkLiteralGuard = (pattern: Unsafe) =>
+  (pattern.character === "@" && pattern.before === "[+\\-.\\w]") ||
+  (pattern.character === "." && pattern.before === "[Ww]") ||
+  (pattern.character === ":" && pattern.before === "[ps]");
+
+const root: Handle = (node, parent, state, info) => {
+  state.unsafe = state.unsafe.filter(
+    (pattern) => !isAutolinkLiteralGuard(pattern),
+  );
+  return defaultHandlers.root(node, parent, state, info);
+};
 
 /**
  * The bullet the document's own lists use ("-", "*" or "+"), by majority,
@@ -433,6 +475,7 @@ export function configureMarkdownOutput(ctx: Ctx): void {
     ...(bullet ? { bullet } : {}),
     handlers: {
       ...options.handlers,
+      root,
       thematicBreak,
       list,
       link,
