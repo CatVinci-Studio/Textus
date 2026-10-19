@@ -80,6 +80,13 @@ The two endings that matter:
 - **Stop keeps.** A user stop freezes a revealing draft at the text streamed
   so far and re-shows it as an ordinary decidable preview. The user watched
   that content arrive; stopping means "that's enough", not "throw it away".
+  A rewrite streaming in sentence by sentence (below) keeps what it reads
+  as on screen: the sentences it completed, then the original's sentences
+  it hadn't reached, which were still plain text - not struck, as the
+  streamed text alone would have them. A sentence cut off halfway goes and
+  its original stays; with no sentence completed, nothing is kept
+  (`pending-edit-plugin`'s `stopRewrite`, applied by
+  `useEditorProposals`' `addPreviews` to the re-shown proposal).
 - **Failure discards.** The error path offers Retry, and a kept preview
   would duplicate the retried proposal.
 
@@ -140,6 +147,24 @@ and the green vanish under the pointer and fade back. The review bar's
 sets on its widgets (no widget is keyed by it), and the paragraph's flash
 (`editor/reveal-position.ts`) is a Web Animation, not a class.
 
+**The tint is the text's.** New text over several lines - hard breaks
+(`\`, two trailing spaces, `<br>`) or two paragraphs - is tinted line by
+line (`renderPendingHtml`'s `.pending-line`), with the breaks between the
+lines untinted; one box over all of them painted its padding at every line
+end and a stub on the empty line between paragraphs, the darker hover tint
+more so. The hover tint over a struck original covers its text runs only
+(`textRuns`), never a hard break.
+
+**Motion.** One timing throughout, from `ui/motion.css`: whatever comes in -
+a strike, new text, the ✓ / ✕, a sentence a stream completes or moves, what
+a view switch brings in - enters over `--dur-base` with `--ease-out`,
+opacity only (the ✓ / ✕ also grow from `--scale-enter`); a settled
+proposal's sentences follow each other a `--dur-instant` apart, at most
+eight steps; tints change over `--dur-instant` (hover) and a decision over
+`--dur-fast`. Accepted text fades from green where it now stands over
+`--dur-slow` (`.pending-landed`). Reduced motion keeps the fades and drops
+the stagger and the growth.
+
 ## Revision views
 
 The review bar's view menu (and **Settings › AI**) picks how pending
@@ -157,6 +182,35 @@ in the text - also when its anchor spans several paragraphs, which resolve
 to their whole blocks (`sentence-locate.ts` skips the text before the
 anchor). One that can't be (a heading or list turned into something else)
 is shown whole, and the views apply to it as one change with one card.
+
+**Streaming in place.** Such a rewrite is laid out sentence by sentence
+while it is still streaming in, not only once it settles
+(`sentence-stream.ts`, `pending-edit-plugin`'s `streamDecorations`). Each
+completed sentence of the new text is aligned against the original the
+way the finished rewrite is (`diffSentenceLists`), except for the last run
+of changes, where an original the stream hasn't reached is still to come,
+not deleted. So:
+
+- a kept sentence shows nothing; a changed one is struck where it stands
+  with its new text beside it the moment it completes, in every view;
+- the sentence being written types in beside the original it rewrites,
+  which is struck while it is written - or, a sentence of its own, where it
+  goes. While it still repeats an original word for word, or is too short
+  to tell which one it rewrites, it shows nothing;
+- an original is struck only once the stream reaches or passes it, and an
+  original once reached is never handed back (`reachedAtLeast`); a
+  re-alignment that moves a sentence's new text (a dropped sentence joins
+  the change before it) cross-fades it there;
+- each completed change's ✓ / ✕ come in faint and inert and take clicks
+  once the whole rewrite is in; the margin views' cards come then too, and
+  until then both sides stay in the text.
+
+When the stream ends, the layout is exactly the one the finished proposal
+has, on the same elements: nothing is redrawn, nothing moves. The alignment
+runs once per completed sentence, on an animation frame; the sentence being
+written is placed every frame. A rewrite whose sentences can't be found,
+Write's new text and anything with edit animation off stream in as before:
+one block, after the struck original.
 
 New text alone - what Write proposes - has no original, so the margin views
 have nothing to set beside it: it stays a green block in the text there,
@@ -294,6 +348,7 @@ the answer to a per-window store (`useMarginAvailable`).
 | `ai/revision/proposal-stream.ts`                                    | Writing-phase machine: place/feed/finalize/discard                         |
 | `ai/revision/usePendingEdits.ts`                                    | Anchor resolution, accept/reject/rejectAll, status map, review navigation  |
 | `ai/revision/pending-edit-plugin.ts`                                | Decorations, hover tint, typewriter + settle, staleness, shortcuts         |
+| `ai/revision/sentence-stream.ts`                                    | A rewrite's sentence layout while it streams in                            |
 | `ai/revision/proposal-status.ts`                                    | Status notes annotated onto history at send time                           |
 | `ai/chat/cancelled-turns.ts`                                        | What a stop keeps; dangling tool-call closure                              |
 | `ai/chat/useAgentConversation.ts`                                   | Conversation state: send/stop/retry/restore, history persistence           |

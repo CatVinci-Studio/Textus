@@ -1,5 +1,5 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
-import type { SentenceHunk } from "./sentence-diff";
+import { trimBreaks, type SentenceHunk } from "./sentence-diff";
 
 /**
  * Where each piece of a sentence diff (sentence-diff.ts) sits in the
@@ -24,17 +24,17 @@ import type { SentenceHunk } from "./sentence-diff";
  * Returns one range per hunk, `same` and `change` alike, in order; an empty
  * `before` (a pure insertion) gets an empty range where it would go.
  */
-export function locateHunks(
+/**
+ * The range's text, and each character's document position - unlike
+ * textBetween, nothing between text nodes (a hard break, an inline atom, a
+ * block boundary) adds characters, so a piece never has to match across a
+ * separator.
+ */
+function textPositions(
   doc: ProseNode,
   from: number,
   to: number,
-  hunks: SentenceHunk[],
-  plainOf: (markdown: string) => string | null,
-  lead = "",
-): { from: number; to: number }[] | null {
-  // The range's text, and each character's document position - unlike
-  // textBetween, nothing between text nodes (a hard break, an inline atom)
-  // adds characters, so a piece never has to match across a separator.
+): { text: string; positions: number[] } {
   const positions: number[] = [];
   let text = "";
   doc.nodesBetween(from, to, (node, pos) => {
@@ -45,14 +45,56 @@ export function locateHunks(
     text += node.text.slice(a - pos, b - pos);
     return true;
   });
+  return { text, positions };
+}
+
+/**
+ * Where each of `needles` (plain text, line breaks left out) stands in
+ * [from, to), in order - for the text an Accept just wrote. One not found
+ * is skipped.
+ */
+export function findInOrder(
+  doc: ProseNode,
+  from: number,
+  to: number,
+  needles: string[],
+): { from: number; to: number }[] {
+  const { text, positions } = textPositions(doc, from, to);
+  const out: { from: number; to: number }[] = [];
+  let cursor = 0;
+  for (const needle of needles) {
+    const index = needle ? text.indexOf(needle, cursor) : -1;
+    if (index === -1) continue;
+    out.push({
+      from: positions[index],
+      to: positions[index + needle.length - 1] + 1,
+    });
+    cursor = index + needle.length;
+  }
+  return out;
+}
+
+export function locateHunks(
+  doc: ProseNode,
+  from: number,
+  to: number,
+  hunks: SentenceHunk[],
+  plainOf: (markdown: string) => string | null,
+  lead = "",
+): { from: number; to: number }[] | null {
+  const { text, positions } = textPositions(doc, from, to);
   if (positions.length === 0) return null;
   const at = (i: number) =>
     i < positions.length ? positions[i] : positions[positions.length - 1] + 1;
 
+  // A piece's text as `text` has it: a hard break inside it is a "\n" in
+  // the parse and nothing here.
+  const plainPiece = (markdown: string) =>
+    plainOf(trimBreaks(markdown))?.replace(/\n/g, "").trim();
   const out: { from: number; to: number }[] = [];
   let cursor = 0;
   if (lead.trim()) {
-    const plain = plainOf(lead.trim())?.trim();
+    const plain = plainPiece(lead);
     const index = plain ? text.indexOf(plain) : -1;
     if (!plain || index === -1 || text.slice(0, index).trim()) return null;
     cursor = index + plain.length;
@@ -64,7 +106,7 @@ export function locateHunks(
       out.push({ from: p, to: p });
       continue;
     }
-    const plain = plainOf(markdown.trim())?.trim();
+    const plain = plainPiece(markdown);
     if (!plain) return null;
     const index = text.indexOf(plain, cursor);
     // Found, and nothing but whitespace skipped on the way - text in

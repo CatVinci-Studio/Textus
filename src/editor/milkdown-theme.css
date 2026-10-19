@@ -151,7 +151,7 @@
   text-decoration: line-through;
   text-decoration-color: var(--revision-delete-strike);
   background: var(--revision-delete-bg);
-  transition: background var(--dur-fast) var(--ease-standard);
+  transition: background var(--dur-instant) var(--ease-standard);
 }
 
 .pending-insert {
@@ -168,7 +168,57 @@
   white-space: normal;
   user-select: none;
   animation: motion-fade-in var(--dur-base) var(--ease-out);
-  transition: background var(--dur-fast) var(--ease-standard);
+  transition: background var(--dur-instant) var(--ease-standard);
+}
+
+/* New text over several lines (pending-edit-plugin's renderPendingHtml):
+   the tint is on each line's span, the line breaks between them get none -
+   one box over all of them painted its padding at every line end and a
+   stub on an empty line, under the hover tint too. */
+.pending-insert.pending-insert-lines {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.pending-insert-lines > .pending-line {
+  background: var(--revision-insert-bg);
+  border-radius: var(--md-radius-sm);
+  padding: 0 2px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background var(--dur-instant) var(--ease-standard);
+}
+
+.ProseMirror
+  .pending-insert.pending-insert-lines:is(
+    .pending-sentence-hot,
+    .pending-sentence-focus
+  ):not(.pending-sentence-kept) {
+  background: none;
+}
+
+.ProseMirror
+  .pending-insert.pending-insert-lines:is(
+    .pending-sentence-hot,
+    .pending-sentence-focus
+  ):not(.pending-sentence-kept)
+  > .pending-line {
+  background: var(--revision-insert-hover-bg);
+}
+
+.pending-sentence-new.pending-sentence-kept > .pending-line,
+.ProseMirror[data-revision-display="final"]
+  .pending-insert-lines
+  > .pending-line {
+  background: none;
+  padding: 0;
+}
+
+/* A line break inside a struck original is struck with it (and hidden with
+   it in the views that take the original out), never painted. */
+br:is(.pending-delete, .pending-sentence-hot) {
+  background: none;
 }
 
 .pending-insert code {
@@ -181,19 +231,29 @@
    replacement right after, then a ✓ / ✕. Undecided and taken read the
    same - Accept takes them; a kept sentence turns back into ordinary text
    and its replacement dims, struck in turn. The first appearance runs
-   sentence by sentence (--i): the strike draws, the new words rise, the
-   buttons pop. */
+   sentence by sentence (--i, a step of --dur-instant, at most eight): the
+   strike draws, the new words fade in, the buttons come. One timing for
+   all of it, an entry's (--dur-base, --ease-out), and the hover tints a
+   colour change (--dur-instant). A rewrite that streamed in sentence by
+   sentence has --i 0 throughout: its sentences came in as they were
+   written. */
 .pending-sentence {
   border-radius: var(--md-radius-sm);
   transition:
-    color var(--dur-fast) var(--ease-standard),
-    background var(--dur-fast) var(--ease-standard);
+    color var(--dur-instant) var(--ease-standard),
+    background var(--dur-instant) var(--ease-standard);
 }
 
 .pending-sentence-open,
 .pending-sentence-taken {
-  animation: pending-strike-in var(--dur-slow) var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 160ms);
+  animation: pending-strike-in var(--dur-base) var(--ease-out) both;
+  animation-delay: calc(min(var(--i, 0), 8) * var(--dur-instant));
+}
+
+/* Streamed in: the plugin draws the strike in once (drawStrikesIn), since
+   ProseMirror may draw the span again while the stream goes on. */
+.pending-sentence.pending-streamed {
+  animation: none;
 }
 
 .pending-sentence.pending-sentence-kept {
@@ -204,8 +264,8 @@
 
 .pending-sentence-new.pending-sentence-open,
 .pending-sentence-new.pending-sentence-taken {
-  animation: pending-new-in var(--dur-slow) var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 160ms + 120ms);
+  animation: motion-fade-in var(--dur-base) var(--ease-out) both;
+  animation-delay: calc((min(var(--i, 0), 8) + 1) * var(--dur-instant));
 }
 
 .pending-sentence-new.pending-sentence-kept {
@@ -217,7 +277,7 @@
     var(--editor-text) 40%,
     transparent
   );
-  animation: pending-fade-kept var(--dur-fast) var(--ease-out);
+  animation: pending-fade-kept var(--dur-fast) var(--ease-standard);
 }
 
 /* The review bar's pointer, and the pair under the mouse pointer or whose
@@ -254,10 +314,20 @@
   }
 }
 
-@keyframes pending-new-in {
+/* The text an Accept just wrote (pending-edit-plugin's `landed`): the
+   green it was proposed in fades out where it now stands, so the eye
+   follows it from proposal to text instead of seeing it blink. */
+.pending-landed {
+  border-radius: var(--md-radius-sm);
+  animation: pending-landed var(--dur-slow) var(--ease-out) both;
+}
+
+@keyframes pending-landed {
   from {
-    opacity: 0;
-    filter: blur(2px);
+    background: var(--revision-insert-bg);
+  }
+  to {
+    background: transparent;
   }
 }
 
@@ -291,7 +361,8 @@
 .pending-delete-mark,
 .ProseMirror[data-revision-display="original"]
   :is(.pending-sentence-new, .pending-insert.pending-replaces):not(
-    .pending-insert-typing
+    .pending-insert-typing,
+    .pending-streaming
   ),
 .ProseMirror:is([data-revision-display="new"], [data-revision-display="final"])
   .pending-sentence-new.pending-sentence-kept {
@@ -370,13 +441,26 @@
   vertical-align: 0.12em;
   white-space: nowrap;
   user-select: none;
-  animation: pending-pick-in var(--dur-medium) var(--ease-spring-bouncy) both;
-  animation-delay: calc(var(--i, 0) * 160ms + 260ms);
+  animation: pending-pick-in var(--dur-base) var(--ease-out) both;
+  animation-delay: calc((min(var(--i, 0), 8) + 2) * var(--dur-instant));
 }
 
 .pending-pick-kept,
 .pending-pick-taken {
   animation: none;
+}
+
+/* A rewrite still streaming in (pending-edit-plugin's streamDecorations):
+   a completed sentence's ✓ / ✕ wait faint and inert until the whole
+   rewrite is in, and the margin views' marks wait unseen. Drawn already,
+   so the end of the stream moves nothing. */
+.pending-pick.pending-streaming {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+:is(.pending-insert-mark, .pending-delete-mark).pending-streaming {
+  visibility: hidden;
 }
 
 :is(.pending-pick, .agent-proposal-pick) button {
@@ -393,7 +477,7 @@
     background var(--dur-fast) var(--ease-standard),
     border-color var(--dur-fast) var(--ease-standard),
     color var(--dur-fast) var(--ease-standard),
-    transform var(--dur-fast) var(--ease-spring-bouncy);
+    transform var(--dur-instant) var(--ease-standard);
 }
 
 :is(.pending-pick, .agent-proposal-pick) button svg {
@@ -452,15 +536,17 @@
 @keyframes pending-pick-in {
   from {
     opacity: 0;
-    transform: scale(0.6);
+    transform: scale(var(--scale-enter));
   }
 }
 
+/* Reduced motion: fades, all at once - no stagger, and the ✓ / ✕ don't
+   grow (--scale-enter is 1 there). */
 @media (prefers-reduced-motion: reduce) {
   .pending-sentence,
   .pending-sentence-new,
   .pending-pick {
-    animation: none !important;
+    animation-delay: 0s !important;
   }
 }
 

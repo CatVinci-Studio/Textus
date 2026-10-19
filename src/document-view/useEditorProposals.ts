@@ -9,6 +9,8 @@ import {
 } from "../ai/revision/usePendingEdits";
 import {
   pendingEditKey,
+  stopRewrite,
+  stoppedRewrite,
   streamPendingInsertText,
 } from "../ai/revision/pending-edit-plugin";
 import { ProposalStream } from "../ai/revision/proposal-stream";
@@ -104,13 +106,26 @@ export function useEditorProposals({
         supersedePending.current = false;
         pendingEdits.rejectAll();
       }
-      pendingEdits.showPreviews(proposals, target);
+      // A rewrite stopped while it streamed in sentence by sentence offers
+      // what it reads as on screen (stopRewrite) - also when the stopped
+      // turn is shown again from the conversation - and one that completed
+      // no sentence offers nothing.
+      const shown = proposals.flatMap((p) => {
+        const kept = p.streaming ? undefined : stoppedRewrite(p.callId);
+        if (kept === undefined) return [p];
+        if (kept === null) {
+          pendingEdits.reject(p.callId);
+          return [];
+        }
+        return [{ ...p, proposal: { ...p.proposal, text: kept } }];
+      });
+      pendingEdits.showPreviews(shown, target);
     },
     // Member functions only - both are stable per editor ([run]), and
     // depending on the whole `pendingEdits` object (fresh every render)
     // would destabilize the ProposalStream memo below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pendingEdits.rejectAll, pendingEdits.showPreviews],
+    [pendingEdits.rejectAll, pendingEdits.showPreviews, pendingEdits.reject],
   );
   // A streaming propose_edit grows its green preview in the document while
   // the model is still writing it. All lifecycle decisions - when a draft is
@@ -132,8 +147,11 @@ export function useEditorProposals({
             requestTargetRef.current,
           ),
         feed: streamPendingInsertText,
-        finalize: (callId, proposal) =>
-          addPreviews([{ callId, proposal }], requestTargetRef.current),
+        finalize: (callId, proposal) => {
+          const kept = stopRewrite(callId, proposal.text ?? "");
+          if (kept) streamPendingInsertText(callId, kept, true);
+          addPreviews([{ callId, proposal }], requestTargetRef.current);
+        },
         discard: pendingEdits.reject,
       }),
     // requestTargetRef is a stable ref; addPreviews/reject are stable per

@@ -23,7 +23,9 @@ import type { EditProposal } from "../types";
  *
  * "stopped" keeps what the user already watched type into the document -
  * frozen at the text streamed so far, re-shown without the streaming flag so
- * it becomes decidable. "failed" discards instead: the error path offers
+ * it becomes decidable (a rewrite laid out sentence by sentence keeps what
+ * it reads as on screen: pending-edit-plugin's stopRewrite, which the
+ * editor's finalize applies). "failed" discards instead: the error path offers
  * Retry, and a kept preview would duplicate the retried proposal.
  *
  * The machine ends where the DECIDING phase begins: after finalize/feed-done
