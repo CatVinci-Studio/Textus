@@ -37,7 +37,10 @@ import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
 import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
 import { compositionPruneGuardPlugin } from "./keys/composition-prune-guard-plugin";
-import { configureMarkdownOutput } from "./markdown/markdown-output";
+import {
+  configureMarkdownOutput,
+  linksOnSpansSerializer,
+} from "./markdown/markdown-output";
 import {
   remarkMathPlugin,
   mathInlineSchema,
@@ -146,6 +149,7 @@ export function withEditorCore(
     editor
       // How saved markdown is written (markdown-output.ts).
       .config(configureMarkdownOutput)
+      .use(linksOnSpansSerializer)
       .use(macNavigationPlugin)
       .use(linuxImeEnterPlugin)
       .use(compositionPruneGuardPlugin)

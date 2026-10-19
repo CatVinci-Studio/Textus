@@ -1,12 +1,16 @@
 import { schemaCtx } from "@milkdown/kit/core";
 import { Plugin } from "@milkdown/kit/prose/state";
-import { DOMSerializer } from "@milkdown/kit/prose/model";
+import { DOMSerializer, Fragment } from "@milkdown/kit/prose/model";
 import type {
   DOMOutputSpec,
   Node as ProseNode,
 } from "@milkdown/kit/prose/model";
 import { $nodeSchema, $prose, $remark } from "@milkdown/kit/utils";
-import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
+import type {
+  MarkdownNode,
+  RemarkPluginRaw,
+  SerializerState,
+} from "@milkdown/kit/transformer";
 import {
   highlightFromMarkdown,
   highlightSyntax,
@@ -202,36 +206,109 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
     runner: (state, node) => {
       const delim = node.attrs.delim as string;
       const rung = node.attrs.rung as number;
-      if (delim === "*" && rung === 3) {
-        // Bold+italic together: mdast represents this as nested strong>emphasis,
-        // not a single node - matches how remark itself parses "***text***".
-        state
-          .openNode("strong")
-          .openNode("emphasis")
-          .next(node.content)
-          .closeNode()
-          .closeNode();
-        return;
+      // Spaces and line ends at the span's edges go outside it: `*Anno di *`
+      // is no emphasis, and read back as text with two asterisks in it -
+      // what a span became when its last word was deleted. An empty span
+      // (its only word deleted) writes nothing rather than a literal `**`.
+      const { inner, before, after } = withoutEdgeSpaces(node.content);
+      if (before) state.addNode("text", undefined, before);
+      const children = inner.size ? phrasing(state, inner) : [];
+      if (children.length) {
+        if (delim === "*" && rung === 3)
+          // Bold+italic together: mdast represents this as nested
+          // strong>emphasis, not a single node - matches how remark itself
+          // parses "***text***".
+          state.addNode("strong", [{ type: "emphasis", children }]);
+        else
+          state.addNode(
+            delim === "*"
+              ? rung === 2
+                ? "strong"
+                : "emphasis"
+              : delim === "~"
+                ? "delete"
+                : "mark",
+            children,
+            undefined,
+            delim === "~" && rung === 1 ? { data: { tildes: 1 } } : undefined,
+          );
       }
-      const mdastType =
-        delim === "*"
-          ? rung === 2
-            ? "strong"
-            : "emphasis"
-          : delim === "~"
-            ? "delete"
-            : "mark";
-      state
-        .openNode(
-          mdastType,
-          undefined,
-          delim === "~" && rung === 1 ? { data: { tildes: 1 } } : undefined,
-        )
-        .next(node.content)
-        .closeNode();
+      if (after) state.addNode("text", undefined, after);
     },
   },
 }));
+
+/** A span with no text in it, or only empty spans: written as nothing. */
+export function isEmptySpan(node: ProseNode): boolean {
+  if (node.type.name === "md_code_span") return node.textContent === "";
+  if (node.type.name !== "md_span") return false;
+  let empty = true;
+  node.forEach((child) => {
+    empty &&= isEmptySpan(child);
+  });
+  return empty;
+}
+
+/** A span's content without the spaces and line ends at its two ends,
+ *  and those, as text. */
+function withoutEdgeSpaces(content: Fragment): {
+  inner: Fragment;
+  before: string;
+  after: string;
+} {
+  const nodes: ProseNode[] = [];
+  content.forEach((node) => {
+    if (!isEmptySpan(node)) nodes.push(node);
+  });
+  /** The white space at one end, taken off `nodes`. */
+  const take = (atStart: boolean) => {
+    let taken = "";
+    while (nodes.length) {
+      const index = atStart ? 0 : nodes.length - 1;
+      const node = nodes[index];
+      // A line end inside a paragraph (Milkdown's inline hardbreak).
+      if (node.type.name === "hardbreak" && node.attrs.isInline) {
+        nodes.splice(index, 1);
+        taken = atStart ? taken + "\n" : "\n" + taken;
+        continue;
+      }
+      if (!node.isText) break;
+      const text = node.text!;
+      const spaces = (atStart ? /^[ \t]*/ : /[ \t]*$/).exec(text)![0];
+      const rest = atStart
+        ? text.slice(spaces.length)
+        : text.slice(0, text.length - spaces.length);
+      taken = atStart ? taken + spaces : spaces + taken;
+      if (rest) {
+        nodes[index] = node.type.schema.text(rest, node.marks);
+        break;
+      }
+      nodes.splice(index, 1);
+    }
+    return taken;
+  };
+  const before = take(true);
+  const after = take(false);
+  return { inner: Fragment.from(nodes), before, after };
+}
+
+/**
+ * A span's content as mdast, from a serializer of its own. Milkdown's
+ * serializer keeps a mark open only while the next node has it, and at the
+ * end of a span's content there is no next node: a link the span stood in
+ * was closed inside it, so `[a **b** c](u)` was written as three links,
+ * `[a](u) **[b](u)** [c](u)`. Written apart, the content can't close what
+ * is open around the span, and linksOnSpans (markdown-output.ts) puts the
+ * link on the span itself.
+ */
+function phrasing(state: SerializerState, content: Fragment): MarkdownNode[] {
+  const Serializer = state.constructor as new (
+    schema: SerializerState["schema"],
+  ) => SerializerState;
+  const own = new Serializer(state.schema);
+  own.openNode("paragraph").next(content);
+  return (own.build().children ?? []) as MarkdownNode[];
+}
 
 // Inline code is kept as its own, separate node type (rather than another
 // md_span rung) because its content must never contain nested formatting -
@@ -278,11 +355,9 @@ export const mdCodeSpanSchema = $nodeSchema("md_code_span", () => ({
   toMarkdown: {
     match: (node) => node.type.name === "md_code_span",
     runner: (state, node) => {
-      state.addNode(
-        "inlineCode",
-        undefined,
-        node.content.firstChild?.text || "",
-      );
+      // An emptied span writes nothing: two backticks read back as text.
+      const text = node.content.firstChild?.text;
+      if (text) state.addNode("inlineCode", undefined, text);
     },
   },
 }));
