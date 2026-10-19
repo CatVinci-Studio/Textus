@@ -45,6 +45,8 @@ export default tseslint.config(
       "src-tauri/target/**",
       // Local git worktrees (.claude/worktrees) are other checkouts.
       ".claude/**",
+      // The save round-trip corpus: downloaded third-party files.
+      ".cache/**",
     ],
   },
   js.configs.recommended,

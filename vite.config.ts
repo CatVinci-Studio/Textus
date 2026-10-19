@@ -18,6 +18,7 @@ export default defineConfig(async () => ({
       "e2e/**",
       "src-tauri/**",
       ".claude/**",
+      ".cache/**",
     ],
   },
 

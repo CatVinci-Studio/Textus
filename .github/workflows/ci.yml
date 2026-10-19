@@ -11,9 +11,13 @@ name: CI
 #                                  macOS and Windows
 #   ios      the iOS simulator build
 #
-# `check` always runs. A pull request runs the others only where its change
-# can reach them (scripts/ci-changes.mjs decides; skipped jobs count as
-# passed for branch protection):
+# `check` always runs. Its save round trip (src/document-view/
+# save-roundtrip*.test.ts, platform-independent) runs there alone, not in
+# the native jobs, and on a pull request only when the change can reach
+# saving: the editor, src/document*/, the Markdown helpers, the documents
+# it reads, the npm dependencies or CI. A pull request runs the other jobs
+# only where its change can reach them (scripts/ci-changes.mjs decides;
+# skipped jobs count as passed for branch protection):
 #
 #   documentation, or a version bump      check alone
 #   the frontend only                     check, e2e
@@ -59,6 +63,7 @@ jobs:
     outputs:
       e2e: ${{ steps.diff.outputs.e2e }}
       native: ${{ steps.diff.outputs.native }}
+      roundtrip: ${{ steps.diff.outputs.roundtrip }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -78,6 +83,7 @@ jobs:
           fi
 
   check:
+    needs: changes
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
@@ -87,7 +93,10 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # The save round trip only where the change can reach saving.
       - run: npm run check
+        env:
+          TEXTUS_SKIP_ROUNDTRIP: ${{ needs.changes.outputs.roundtrip != 'true' && '1' || '' }}
       # The minifier only warns on a broken selector list - and a warning
       # dropped a whole design-system rule once, unnoticed for three releases.
       - name: Build, failing on CSS syntax warnings
@@ -191,8 +200,11 @@ jobs:
           cache: npm
       - run: npm ci
       # The unit tests once per platform too: path handling, line endings
-      # and the like differ between them. The rest of `check` does not.
+      # and the like differ between them. The rest of `check` does not, nor
+      # does the save round trip, which `check` runs once.
       - run: npm test
+        env:
+          TEXTUS_SKIP_ROUNDTRIP: "1"
       # Installs the toolchain src-tauri/rust-toolchain.toml names.
       - uses: dtolnay/rust-toolchain@stable
         with:

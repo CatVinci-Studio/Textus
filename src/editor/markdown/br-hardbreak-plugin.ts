@@ -22,12 +22,22 @@ const TABLE_CELL_TYPES = new Set(["table_cell", "table_header"]);
  * outside a table is really just a line break - normalize it to a genuine
  * hardbreak node so it round-trips as a proper markdown break (backslash +
  * newline) instead of literal `<br/>` text surviving in the saved file.
+ *
+ * Only where a transaction changed the document - a `<br>` typed or pasted.
+ * The file's own `<br>`s stay as written: saving writes every block the
+ * user didn't edit back as the file has it (source-preserving.ts), and a
+ * `<br>` turned into a break on the first edit anywhere - or on opening,
+ * when a plugin's first transaction (heading ids) touched the document -
+ * made its block one the user didn't edit but the save rewrote.
+ *
+ * A `<br>` that starts or ends its paragraph has no Markdown break to
+ * become, and stays HTML: a break only stands between two pieces of a
+ * paragraph (at the end, `\` is a literal backslash). A `<br>` at the end of a line is the
+ * break and the line end together, `a<br>\nb`: it becomes one break, not a
+ * break and then a line end, which wrote a blank line and split the
+ * paragraph.
  */
 export const brToHardbreakPlugin = $prose(() => {
-  // A file's existing <br> nodes are normalized on its first edit, so that
-  // edit walks the whole document; every later one only re-checks the
-  // ranges it touched, the only places a new <br> can have appeared.
-  let normalizedAll = false;
   return new Plugin({
     key: new PluginKey("br-to-hardbreak"),
     appendTransaction(transactions, _oldState, newState) {
@@ -43,17 +53,18 @@ export const brToHardbreakPlugin = $prose(() => {
         for (let d = $pos.depth; d >= 0; d--) {
           if (TABLE_CELL_TYPES.has($pos.node(d).type.name)) return true;
         }
+        const next = $pos.parent.maybeChild($pos.index() + 1);
+        if (!next || $pos.index() === 0) return true;
+        const to =
+          next.type === hardbreakType && next.attrs.isInline
+            ? pos + node.nodeSize + next.nodeSize
+            : pos + node.nodeSize;
         if (!targets.some((t) => t.from === pos))
-          targets.push({ from: pos, to: pos + node.nodeSize });
+          targets.push({ from: pos, to });
         return true;
       };
-      if (normalizedAll) {
-        for (const [from, to] of changedRanges(transactions, newState.doc))
-          newState.doc.nodesBetween(from, to, visit);
-      } else {
-        newState.doc.descendants(visit);
-        normalizedAll = true;
-      }
+      for (const [from, to] of changedRanges(transactions, newState.doc))
+        newState.doc.nodesBetween(from, to, visit);
       if (targets.length === 0) return null;
 
       let tr = newState.tr;
