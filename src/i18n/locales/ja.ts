@@ -242,6 +242,22 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeEmptyDraft: "文書を保存すると、そのフォルダーがここに表示されます。",
   outlineEmpty: "まだ見出しがありません。# で始まる行がここに表示されます。",
   treeRefresh: "更新",
+  menuOpenFolder: "フォルダーを開く…",
+  menuCloseFolder: "フォルダーを閉じる",
+  folderTooBroad:
+    "このフォルダーは範囲が広すぎるため（ホームフォルダーやドライブ全体）、開けません。もっと具体的なフォルダーを選んでください。",
+  treeSearchPlaceholder: "ファイル名を検索",
+  treeSearchIndexing: "フォルダーを調べています…",
+  treeSearchNoMatches: "一致するファイル名はありません。",
+  treeSearchCapped:
+    "最初の {n} 件のファイルだけを検索しました。すべて検索するには、もっと小さいフォルダーを開いてください。",
+  treeSearchTooBroad:
+    "このフォルダーは範囲が広すぎるため検索できません。「ファイル › フォルダーを開く…」でもっと具体的なフォルダーを開いてください。",
+  treeSearchFailed: "このフォルダーを読み込めません。",
+  treeSearchScope: "表示",
+  treeSearchScopeAll: "すべてのファイル",
+  treeSearchScopeDocuments: "文書のみ",
+  shortcutSearchFiles: "ファイル名を検索",
   menuDocuments: "書類",
   docListTitle: "書類",
   docListClose: "閉じる",

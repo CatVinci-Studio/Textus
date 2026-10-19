@@ -253,6 +253,22 @@ utiliser une.
   outlineEmpty:
     "Aucun titre pour l'instant. Les lignes commençant par # apparaîtront ici.",
   treeRefresh: "Actualiser",
+  menuOpenFolder: "Ouvrir un dossier…",
+  menuCloseFolder: "Fermer le dossier",
+  folderTooBroad:
+    "Ce dossier est trop vaste pour être ouvert (votre dossier personnel ou un disque entier). Choisissez un dossier plus précis.",
+  treeSearchPlaceholder: "Rechercher des noms de fichier",
+  treeSearchIndexing: "Parcours du dossier…",
+  treeSearchNoMatches: "Aucun nom de fichier ne correspond.",
+  treeSearchCapped:
+    "Seuls les {n} premiers fichiers ont été parcourus. Ouvrez un dossier plus petit pour tout rechercher.",
+  treeSearchTooBroad:
+    "Ce dossier est trop vaste pour y rechercher. Ouvrez-en un plus précis avec Fichier › Ouvrir un dossier…",
+  treeSearchFailed: "Impossible de lire ce dossier.",
+  treeSearchScope: "Afficher",
+  treeSearchScopeAll: "Tous les fichiers",
+  treeSearchScopeDocuments: "Documents seulement",
+  shortcutSearchFiles: "Rechercher des noms de fichier",
   menuDocuments: "Documents",
   docListTitle: "Documents",
   docListClose: "Fermer",

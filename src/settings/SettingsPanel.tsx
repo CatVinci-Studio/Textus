@@ -639,6 +639,13 @@ export function SettingsPanel({
               t={t}
             />
             <ShortcutRow
+              label={t.shortcutSearchFiles}
+              action="searchFiles"
+              shortcuts={settings.shortcuts}
+              setSettings={setSettings}
+              t={t}
+            />
+            <ShortcutRow
               label={t.shortcutToggleAgentPanel}
               action="toggleAgentPanel"
               shortcuts={settings.shortcuts}
