@@ -13,15 +13,20 @@
    fixed-position overlays (find bar, popovers) live OUTSIDE the zoomed
    nodes and keep their unzoomed viewport coordinates. */
 /* The column's unzoomed width (Settings > Editor > Text Width). "auto"
-   holds a 680px column on ordinary windows - about 80 Latin characters a
-   line at 16.5px, 38 Chinese; the classic 760px ran English to 95 - and
-   widens with the pane on large screens, where a fixed column left two
-   thirds of the window empty. "Standard" keeps the classic 760px.
-   Percentages resolve against the scroll pane, so an open sidebar narrows
-   it too. An imported theme that sizes #write itself (theme-chrome.ts's
-   --theme-content-width) takes over "auto". */
+   holds at least a 680px column - about 80 Latin characters a line at
+   16.5px, 38 Chinese; the classic 760px ran English to 95 - and takes 62%
+   of a pane wider than about 1100px, up to 960px, where a fixed column
+   left two thirds of the window empty. At 56% it stayed at the floor up to
+   a 1214px pane, narrower than Standard on a 1280-1340px laptop (#211).
+   The floor is what keeps a pane narrowed by the sidebar and the AI panel
+   from crowding them, and the margin views of a revision available
+   (ai/margin/margin-room.ts wants 244px beside the column), so it stays
+   at 680px. "Standard" keeps the classic 760px. Percentages resolve
+   against the scroll pane, so an open sidebar narrows it too. An imported
+   theme that sizes #write itself (theme-chrome.ts's --theme-content-width)
+   takes over "auto". */
 :root {
-  --content-width: var(--theme-content-width, max(680px, min(960px, 56%)));
+  --content-width: var(--theme-content-width, max(680px, min(960px, 62%)));
 }
 
 :root[data-content-width="standard"] {

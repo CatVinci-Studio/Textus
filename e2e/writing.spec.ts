@@ -465,6 +465,34 @@ test("an empty document doesn't scroll", async ({ page }) => {
   ).toBeLessThanOrEqual(0);
 });
 
+test("the adaptive column takes 62% of a pane past about 1100px, between 680 and 960px, and Standard stays 760px (#211)", async ({
+  page,
+}) => {
+  const column = page.locator('[data-active-tab="true"] .editor-content');
+  const width = () => column.evaluate((el) => (el as HTMLElement).offsetWidth);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "levis-agent-panel-open": "0", "textus-sidebar-open": "0" },
+  });
+  // A laptop window: wider than Standard, where 56% held it at 680.
+  expect(await width()).toBe(Math.round(1280 * 0.62));
+  await page.setViewportSize({ width: 1000, height: 800 });
+  expect(await width()).toBe(680);
+  await page.setViewportSize({ width: 1920, height: 800 });
+  expect(await width()).toBe(960);
+  // The AI panel narrows the pane: the column keeps its floor beside it
+  // rather than crowding it.
+  await page.setViewportSize({ width: 1341, height: 800 });
+  await emit(page, "menu-toggle-agent-panel");
+  await expect(page.locator(".agent-panel")).toBeVisible();
+  await expect.poll(width).toBe(680);
+  await page.evaluate(() => {
+    document.documentElement.setAttribute("data-content-width", "standard");
+  });
+  expect(await width()).toBe(760);
+});
+
 test("zooming keeps the line being read in place", async ({ page }) => {
   await openApp(page, {
     // Full width: the column can't widen with the zoom, so the text
@@ -966,7 +994,7 @@ test("h4 to h6 are never smaller than the text, and h6 is lighter than h5 (#58)"
 test("source mode: body-sized text, centred on a whole pixel, unchanged by focus (#61)", async ({
   page,
 }) => {
-  // An odd leftover beside the 680px column: `margin: auto` put the
+  // An odd leftover beside the adaptive column: `margin: auto` put the
   // textarea at x.5, which WebKitGTK blurs once the textarea has focus.
   await page.setViewportSize({ width: 1181, height: 780 });
   await openApp(page, { settings: { language: "en" } });
