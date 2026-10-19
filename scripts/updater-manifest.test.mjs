@@ -9,30 +9,9 @@ import {
   compareVersions,
   configProblems,
   forbiddenAssets,
-  LEVIS_LAST_TAG,
-  levisBridgeProblems,
   manifestProblems,
   MANIFEST_NAME,
 } from "./updater-manifest.mjs";
-
-const levisBase = `https://github.com/CatVinci-Studio/Levis/releases/download/${LEVIS_LAST_TAG}`;
-const lastLevis = {
-  version: LEVIS_LAST_TAG.slice(1),
-  platforms: {
-    "darwin-aarch64": {
-      signature: "s",
-      url: `${levisBase}/Levis_aarch64.app.tar.gz`,
-    },
-    "linux-x86_64": {
-      signature: "s",
-      url: `${levisBase}/Levis_0.9.8_amd64.AppImage`,
-    },
-    "windows-x86_64": {
-      signature: "s",
-      url: `${levisBase}/Levis_0.9.8_x64-setup.exe`,
-    },
-  },
-};
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const readRepo = (file) => readFileSync(join(root, file), "utf8");
@@ -87,30 +66,14 @@ describe("updater manifest", () => {
     expect(problems).toEqual([]);
   });
 
-  it("lets a release carry latest.json only as the last Levis release's", () => {
+  it("refuses any release that carries latest.json", () => {
     expect(
       forbiddenAssets([MANIFEST_NAME, "Textus_1.0.0_x64-setup.exe", ""]),
     ).toEqual([]);
-    expect(forbiddenAssets(["latest.json", MANIFEST_NAME], lastLevis)).toEqual(
-      [],
-    );
-    expect(forbiddenAssets(["latest.json"])).toHaveLength(1);
-  });
-
-  it("refuses a latest.json that could install Textus or another Levis", () => {
-    const textus = structuredClone(lastLevis);
-    textus.version = "1.0.0";
-    textus.platforms["windows-x86_64"].url =
-      "https://github.com/CatVinci-Studio/Textus/releases/download/v1.0.0/Textus_1.0.0_x64-setup.exe";
-    expect(levisBridgeProblems(textus).join("\n")).toMatch(
-      /not Levis[\s\S]*not on v0\.9\.8[\s\S]*not a Levis asset/,
-    );
-    const older = structuredClone(lastLevis);
-    older.version = "0.9.7";
-    expect(levisBridgeProblems(older)).toEqual([
-      `latest.json says 0.9.7, not Levis ${LEVIS_LAST_TAG.slice(1)}`,
+    expect(forbiddenAssets(["latest.json", MANIFEST_NAME])).toEqual([
+      "latest.json is on the release",
     ]);
-    expect(levisBridgeProblems(lastLevis)).toEqual([]);
+    expect(forbiddenAssets(["latest.json\r"])).toHaveLength(1);
   });
 
   // A stable release's signed assets, named as tauri-bundler names them:

@@ -415,6 +415,7 @@ export function MilkdownEditor({
           view={notes.editorView}
           items={notes.marginItems}
           hot={notes.hotNote}
+          focused={notes.focusedItem}
           scrollEl={scrollEl}
           contentEl={contentEl}
           labels={t}

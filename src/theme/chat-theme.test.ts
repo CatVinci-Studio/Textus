@@ -96,14 +96,10 @@ describe("the theme skill and its sample", () => {
     "--revision-insert-bg",
     "--revision-insert-text",
     "--revision-insert-hover-bg",
-    "--revision-insert-outline",
-    "--revision-insert-focus",
     "--revision-delete-bg",
     "--revision-delete-text",
     "--revision-delete-strike",
     "--revision-delete-hover-bg",
-    "--revision-delete-outline",
-    "--revision-delete-focus",
   ];
 
   it("lists every variable a theme sets, and only ones the app reads", () => {

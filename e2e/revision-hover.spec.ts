@@ -1,8 +1,9 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// Hovering a changed sentence, or its card in the margin, outlines the
-// pair it belongs to and nothing more: the struck original and the
+// Hovering a changed sentence, or its card in the margin, darkens the
+// pair's tints - as a review note's passage darkens under the pointer -
+// and nothing more: no outline, and the struck original and the
 // replacement both stay drawn as they were. In 1.1.0-rc.4 the hover wrote
 // a class onto the decorated text, ProseMirror redrew the paragraph, and
 // every strike and replacement in it replayed its entrance - the red and
@@ -80,7 +81,15 @@ async function expectSidesUnchanged(page: Page) {
       for (const { el, bg, line } of sides) {
         const name = `${el.className} "${el.textContent?.slice(0, 20)}"`;
         if (!el.isConnected) out.push(`redrawn: ${name}`);
-        if (el.getAnimations().some((a) => a.playState !== "finished"))
+        // An entrance is a CSS animation; the tint's darkening is a
+        // transition.
+        if (
+          el
+            .getAnimations()
+            .some(
+              (a) => a instanceof CSSAnimation && a.playState !== "finished",
+            )
+        )
           out.push(`entrance replayed: ${name}`);
         const s = getComputedStyle(el);
         if (s.opacity !== "1") out.push(`opacity ${s.opacity}: ${name}`);
@@ -96,8 +105,56 @@ async function expectSidesUnchanged(page: Page) {
   expect(problems).toEqual([]);
 }
 
-/** The first change's pair: both its sides (where drawn) carry the
- *  outline, and no other change does. */
+/** Each drawn side of a change, or the text of its margin card, is in its
+ *  darker hover tint - green for the new text, red for the original, the
+ *  theme's --revision-*-hover-bg - and none is outlined. Colours are
+ *  compared as values: after the transition Chromium reports the tint in
+ *  oklab, the variable in srgb. */
+async function expectDarker(sides: Locator) {
+  await expect
+    .poll(() =>
+      sides.evaluateAll((els) => {
+        const probe = document.createElement("span");
+        document.body.append(probe);
+        const srgb = (c: string) => {
+          probe.style.color = `color-mix(in srgb, ${c} 100%, transparent)`;
+          return (getComputedStyle(probe).color.match(/[\d.]+/g) ?? []).map(
+            Number,
+          );
+        };
+        const expected = {
+          insert: srgb("var(--revision-insert-hover-bg)"),
+          delete: srgb("var(--revision-delete-hover-bg)"),
+        };
+        const drawn = els
+          .filter((el) => el.getClientRects().length > 0)
+          .filter((el) => getComputedStyle(el).fontSize !== "0px")
+          .filter((el) =>
+            el.matches(".pending-insert, .pending-delete, .revision-note-text"),
+          );
+        const out = drawn.length === 0 ? ["no side drawn"] : [];
+        for (const el of drawn) {
+          const side = el.matches(".pending-delete, .revision-note-original")
+            ? "delete"
+            : "insert";
+          const s = getComputedStyle(el);
+          const got = srgb(s.backgroundColor);
+          if (
+            got.length !== expected[side].length ||
+            got.some((v, i) => Math.abs(v - expected[side][i]) > 0.01)
+          )
+            out.push(`${side} background ${s.backgroundColor}`);
+          if (s.boxShadow !== "none") out.push(`${side} outlined`);
+        }
+        probe.remove();
+        return out;
+      }),
+    )
+    .toEqual([]);
+}
+
+/** The first change's pair: both its sides (where drawn) carry the hover
+ *  class and its darker tint, and no other change does. */
 async function expectFirstPairHot(page: Page) {
   const pair = page.locator(
     '.milkdown [data-call="e1"][data-index="0"]:not(.pending-pick)',
@@ -109,35 +166,14 @@ async function expectFirstPairHot(page: Page) {
   await expect(
     page.locator('.milkdown [data-index="1"].pending-sentence-hot'),
   ).toHaveCount(0);
-  // Each side drawn is outlined in its own colour: green round the new
-  // text, red round the original - the theme's --revision-* outlines, not
-  // the accent.
-  const outlines = await pair.evaluateAll((els) => {
-    const probe = document.createElement("span");
-    document.body.append(probe);
-    const resolve = (name: string) => {
-      probe.style.color = `var(${name})`;
-      return getComputedStyle(probe).color;
-    };
-    const expected = {
-      insert: resolve("--revision-insert-outline"),
-      delete: resolve("--revision-delete-outline"),
-    };
-    probe.remove();
-    return els
-      .filter((el) => el.getClientRects().length > 0)
-      .filter((el) => getComputedStyle(el).fontSize !== "0px")
-      .map((el) => ({
-        side: el.matches(".pending-insert, .pending-insert-mark")
-          ? ("insert" as const)
-          : ("delete" as const),
-        shadow: getComputedStyle(el).boxShadow,
-        expected,
-      }));
-  });
-  expect(outlines.length).toBeGreaterThan(0);
-  for (const { side, shadow, expected } of outlines)
-    expect(shadow, side).toContain(expected[side]);
+  await expectDarker(pair);
+}
+
+/** A margin card's text is in its darker tint, and the card is not
+ *  outlined in green or red: its border is the resting one. */
+async function expectCardDarker(card: Locator, border: string) {
+  await expectDarker(card.locator(".revision-note-text"));
+  await expect(card).toHaveCSS("border-top-color", border);
 }
 
 async function hover(page: Page, target: Locator) {
@@ -145,9 +181,9 @@ async function hover(page: Page, target: Locator) {
   await page.mouse.move(box.x + 8, box.y + box.height / 2);
 }
 
-/** The review bar's prev / next move its outline from sentence to sentence
+/** The review bar's prev / next move its tint from sentence to sentence
  *  without redrawing anything either: in 1.1.0-rc.4 the new text's widget
- *  was keyed by the outline, so every step redrew it and it faded in from
+ *  was keyed by the pointer, so every step redrew it and it faded in from
  *  nothing again. */
 async function stepWithReviewBar(page: Page) {
   const nav = page.locator(".review-bar-nav button");
@@ -173,6 +209,20 @@ async function stepWithReviewBar(page: Page) {
         `.milkdown .pending-sentence-focus:not([data-index="${index}"])`,
       ),
     ).toHaveCount(0);
+    // The pair it points at is in the same darker tints as under the
+    // pointer, unoutlined.
+    await expectDarker(
+      page.locator(
+        `.milkdown [data-call="e1"][data-index="${index}"].pending-sentence-focus`,
+      ),
+    );
+    // And so is its card, where the margin holds the other side.
+    const cards = page.locator(".revision-note");
+    if ((await cards.count()) > 0) {
+      await expect(cards.nth(index)).toHaveClass(/revision-note-focus/);
+      await expect(page.locator(".revision-note-focus")).toHaveCount(1);
+      await expectDarker(cards.nth(index).locator(".revision-note-text"));
+    }
     await expectSidesUnchanged(page);
   }
 }
@@ -187,8 +237,8 @@ const MODES = [
 ] as const;
 
 // Every view in light. In dark only the inline view: it draws both sides
-// with their hover tints, which with the --revision-* outlines are all of
-// this that differs by colour scheme.
+// with their hover tints, which are all of this that differs by colour
+// scheme.
 const CASES = [
   ...MODES.map((mode) => [mode, "light"] as const),
   [MODES[0], "dark"] as const,
@@ -196,7 +246,7 @@ const CASES = [
 
 for (const [[display, sides, margin, steps], colorScheme] of CASES) {
   const stepping = steps && colorScheme === "light";
-  test(`${display} (${colorScheme}): hovering a revised sentence outlines its pair and hides nothing${stepping ? ", nor do the review bar's prev / next" : ""}`, async ({
+  test(`${display} (${colorScheme}): hovering a revised sentence darkens its pair and hides nothing${stepping ? ", nor do the review bar's prev / next" : ""}`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1800, height: 900 });
@@ -211,16 +261,20 @@ for (const [[display, sides, margin, steps], colorScheme] of CASES) {
     await expect(page.locator(".revision-note")).toHaveCount(margin ? 2 : 0);
     await page.mouse.move(5, 5);
     await rememberSides(page);
+    const card = page.locator(".revision-note").first();
+    const border = margin
+      ? await card.evaluate((el) => getComputedStyle(el).borderTopColor)
+      : "";
 
     for (const side of sides) {
       await hover(page, page.locator(`.milkdown .${side}`).first());
       await expectFirstPairHot(page);
       await expectSidesUnchanged(page);
-      if (margin)
-        await expect(page.locator(".revision-note").first()).toHaveClass(
-          /review-note-hot/,
-        );
-      // Leaving takes the outline away, again without a redraw.
+      if (margin) {
+        await expect(card).toHaveClass(/review-note-hot/);
+        await expectCardDarker(card, border);
+      }
+      // Leaving takes the darker tint away, again without a redraw.
       await page.mouse.move(5, 5);
       await expect(page.locator(".milkdown .pending-sentence-hot")).toHaveCount(
         0,
@@ -229,9 +283,10 @@ for (const [[display, sides, margin, steps], colorScheme] of CASES) {
     }
 
     if (margin) {
-      // The card lights its pair in the text the same way.
-      await hover(page, page.locator(".revision-note").first());
+      // The card darkens its pair in the text the same way, and itself.
+      await hover(page, card);
       await expectFirstPairHot(page);
+      await expectCardDarker(card, border);
       await expectSidesUnchanged(page);
       await page.mouse.move(5, 5);
     }
@@ -240,7 +295,7 @@ for (const [[display, sides, margin, steps], colorScheme] of CASES) {
   });
 }
 
-test("the ✓ / ✕ outline their pair under the pointer and still decide it", async ({
+test("the ✓ / ✕ darken their pair under the pointer and still decide it", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1800, height: 900 });
@@ -254,7 +309,7 @@ test("the ✓ / ✕ outline their pair under the pointer and still decide it", a
   await expectFirstPairHot(page);
   await take.click();
   await expect(take).toHaveAttribute("aria-pressed", "true");
-  // Still outlined under the pointer after the redraw the decision makes.
+  // Still darker under the pointer after the redraw the decision makes.
   await expectFirstPairHot(page);
   const keep = page.locator(".milkdown .pending-pick-keep").first();
   await keep.click();

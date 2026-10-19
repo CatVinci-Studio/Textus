@@ -149,6 +149,7 @@
   text-decoration: line-through;
   text-decoration-color: var(--revision-delete-strike);
   background: var(--revision-delete-bg);
+  transition: background var(--dur-fast) var(--ease-standard);
 }
 
 .pending-insert {
@@ -165,6 +166,7 @@
   white-space: normal;
   user-select: none;
   animation: motion-fade-in var(--dur-base) var(--ease-out);
+  transition: background var(--dur-fast) var(--ease-standard);
 }
 
 .pending-insert code {
@@ -218,36 +220,27 @@
 
 /* The review bar's pointer, and the pair under the mouse pointer or whose
    margin card is (pending-edit-plugin's hotDecorations): both sides stay as
-   they are, outlined - green round the new text, red round the original -
-   and a shade deeper. Hover never hides or previews anything. */
+   they are, their tints a shade darker - the new text a darker green, the
+   original a darker red - as a review note's passage darkens under the
+   pointer (.review-anchor-hot). The result-only view draws the new text
+   untinted, so there the darker green is what shows. Hover never hides or
+   previews anything. */
 :is(.pending-sentence-focus, .pending-sentence-hot):not(.pending-pick) {
   border-radius: var(--radius-small);
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
 
-:is(.pending-delete, .pending-delete-mark).pending-sentence-focus {
-  box-shadow: 0 0 0 2px var(--revision-delete-focus);
-}
-
-:is(.pending-insert, .pending-insert-mark).pending-sentence-focus {
-  box-shadow: 0 0 0 2px var(--revision-insert-focus);
-}
-
-:is(.pending-delete, .pending-delete-mark).pending-sentence-hot {
-  box-shadow: 0 0 0 1.5px var(--revision-delete-outline);
-}
-
-:is(.pending-insert, .pending-insert-mark).pending-sentence-hot {
-  box-shadow: 0 0 0 1.5px var(--revision-insert-outline);
-}
-
-.pending-delete.pending-sentence-hot:not(.pending-sentence-kept) {
+.pending-delete:is(.pending-sentence-hot, .pending-sentence-focus):not(
+    .pending-sentence-kept
+  ) {
   background: var(--revision-delete-hover-bg);
 }
 
-.ProseMirror:not([data-revision-display="final"])
-  .pending-insert.pending-sentence-hot:not(.pending-sentence-kept) {
+.ProseMirror
+  .pending-insert:is(.pending-sentence-hot, .pending-sentence-focus):not(
+    .pending-sentence-kept
+  ) {
   background: var(--revision-insert-hover-bg);
 }
 
