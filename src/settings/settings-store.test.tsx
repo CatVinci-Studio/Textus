@@ -17,8 +17,10 @@ import {
   resetSettingsStoreForTests,
   SettingsProvider,
   type Settings,
+  UI_TEXT_SCALES,
   useSettings,
 } from "./SettingsContext";
+import { readFileSync } from "node:fs";
 import { storage } from "../platform/ipc";
 import { resetBootForTests } from "../storage/boot";
 import {
@@ -350,5 +352,38 @@ describe("language", () => {
       </SettingsProvider>,
     );
     expect(document.documentElement.lang).toBe("zh-CN");
+  });
+});
+
+describe("interface text size", () => {
+  it("keeps a size it offers and falls back to 100% for any other", () => {
+    expect(normaliseSettings({ uiTextScale: 1.25 }).uiTextScale).toBe(1.25);
+    expect(normaliseSettings({ uiTextScale: 3 }).uiTextScale).toBe(1);
+    expect(normaliseSettings({ uiTextScale: "big" }).uiTextScale).toBe(1);
+    expect(normaliseSettings(null).uiTextScale).toBe(1);
+  });
+
+  it("puts the size on the page for the UI's type scale, and takes it off at 100%", () => {
+    boot({ uiTextScale: 1.1, languageChosen: true });
+    render(
+      <SettingsProvider>
+        <Probe />
+      </SettingsProvider>,
+    );
+    const root = document.documentElement;
+    expect(root.style.getPropertyValue("--ui-text-scale")).toBe("1.1");
+    act(() => lastSet({ uiTextScale: 1 }));
+    expect(root.style.getPropertyValue("--ui-text-scale")).toBe("");
+  });
+
+  it("is applied by the boot script for the same sizes", () => {
+    // Its own copy of UI_TEXT_SCALES, less 1 (the stylesheet's default).
+    const script = readFileSync("src-tauri/src/boot.js", "utf8");
+    const list = /\[([\d., ]+)\]\.indexOf\(settings\.uiTextScale\)/.exec(
+      script,
+    );
+    expect(list?.[1].split(",").map(Number)).toEqual(
+      UI_TEXT_SCALES.filter((scale) => scale !== 1),
+    );
   });
 });

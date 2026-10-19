@@ -143,13 +143,19 @@ export function useEditorWindowEvents({
   // Native Format menu clicks (see menu-insert-block in src-tauri/src/lib.rs,
   // relayed through App.tsx): same commands the right-click Insert submenu
   // (editor-menu.ts) uses, keyed by the menu item's kind string instead of
-  // a click.
+  // a click. The heading shortcuts (useGlobalShortcuts) come here too, with
+  // "paragraph" for body text.
   useWindowEvent(INSERT_BLOCK_EVENT, (e) => {
     if (!isOnScreen()) return;
     const kind = (e as CustomEvent<string>).detail;
     const headingMatch = /^h([1-6])$/.exec(kind);
     if (headingMatch) {
       insertHeading(run, Number(headingMatch[1]));
+      return;
+    }
+    if (kind === "paragraph") {
+      // Milkdown's WrapInHeading turns a level below 1 into a paragraph.
+      insertHeading(run, 0);
       return;
     }
     switch (kind) {

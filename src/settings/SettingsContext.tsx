@@ -16,6 +16,7 @@ import {
   type Strings,
 } from "../i18n/strings";
 import { ai, storage } from "../platform/ipc";
+import { modIsMeta } from "../platform/os";
 import {
   UPDATE_CHANNELS,
   type UpdateChannel,
@@ -62,24 +63,62 @@ export type ShortcutAction =
   | "toggleZenMode"
   | "toggleSourceMode"
   | "toggleTypewriterMode"
-  | "findReplace";
+  | "findReplace"
+  | "nextTab"
+  | "previousTab"
+  | HeadingAction;
+
+/// The Format menu's block levels as shortcuts: Heading 1-6, and back to
+/// body text.
+export type HeadingAction =
+  | "setHeading1"
+  | "setHeading2"
+  | "setHeading3"
+  | "setHeading4"
+  | "setHeading5"
+  | "setHeading6"
+  | "setParagraph";
 
 export type Shortcuts = Record<ShortcutAction, string>;
 
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
 
-const DEFAULT_SHORTCUTS: Shortcuts = {
-  triggerCompletion: "mod+shift+space",
-  triggerGrammarCheck: "mod+shift+g",
-  toggleFloatingChat: "mod+shift+k",
-  toggleSidebar: "mod+\\",
-  toggleAgentPanel: "mod+shift+l",
-  toggleSplitView: "mod+shift+e",
-  toggleZenMode: "mod+shift+j",
-  toggleSourceMode: "mod+/",
-  toggleTypewriterMode: "",
-  findReplace: "mod+f",
-};
+/** The shortcuts a new installation starts with, on this platform. Only
+ *  the tab keys differ: they are Ctrl+Tab on every platform, and Ctrl on a
+ *  Mac is "ctrl", not "mod" (see ../utils/shortcuts). The heading levels
+ *  start unbound, so nothing new takes a key someone already uses; Typora's
+ *  Mod+1..6 are one binding away. */
+export function defaultShortcuts(mac = modIsMeta()): Shortcuts {
+  const ctrl = mac ? "ctrl" : "mod";
+  return {
+    triggerCompletion: "mod+shift+space",
+    triggerGrammarCheck: "mod+shift+g",
+    toggleFloatingChat: "mod+shift+k",
+    toggleSidebar: "mod+\\",
+    toggleAgentPanel: "mod+shift+l",
+    toggleSplitView: "mod+shift+e",
+    toggleZenMode: "mod+shift+j",
+    toggleSourceMode: "mod+/",
+    toggleTypewriterMode: "",
+    findReplace: "mod+f",
+    nextTab: `${ctrl}+tab`,
+    previousTab: `${ctrl}+shift+tab`,
+    setHeading1: "",
+    setHeading2: "",
+    setHeading3: "",
+    setHeading4: "",
+    setHeading5: "",
+    setHeading6: "",
+    setParagraph: "",
+  };
+}
+
+const DEFAULT_SHORTCUTS: Shortcuts = defaultShortcuts();
+
+/// Settings.uiTextScale's values: Settings › Editor & Appearance ›
+/// Interface Text Size, as a factor on the UI's type scale.
+export const UI_TEXT_SCALES = [0.9, 1, 1.1, 1.25] as const;
+export type UiTextScale = (typeof UI_TEXT_SCALES)[number];
 
 /// Settings.revisionDisplay's values.
 export const REVISION_DISPLAYS = [
@@ -255,6 +294,11 @@ export interface Settings {
   /// View menu (see ../utils/useZoom). Saved here so it survives restarts;
   /// each window applies it independently on mount.
   zoom: number;
+  /// The size of the app's own text - sidebar, outline, AI panel, tabs,
+  /// menus, Settings - as a factor on the type scale (1 = 100%), for every
+  /// window. Published as `--ui-text-scale` (theme/apply-appearance.ts);
+  /// the document has its own zoom, above.
+  uiTextScale: UiTextScale;
   shortcuts: Shortcuts;
   /// Either a built-in theme id (theme/builtin-themes.ts) or a
   /// `UserThemeMeta.id`.
@@ -338,6 +382,7 @@ const DEFAULT_SETTINGS: Settings = {
   autoCloseMarks: true,
   customCss: "",
   zoom: 1,
+  uiTextScale: 1,
   shortcuts: DEFAULT_SHORTCUTS,
   themeId: "default",
   userThemes: [],
@@ -451,6 +496,9 @@ export function normaliseSettings(parsed: Raw | null): Settings {
         ...DEFAULT_SETTINGS.shortcuts,
         ...((parsed.shortcuts as Partial<Shortcuts> | undefined) ?? {}),
       },
+      uiTextScale: UI_TEXT_SCALES.includes(parsed.uiTextScale as UiTextScale)
+        ? (parsed.uiTextScale as UiTextScale)
+        : DEFAULT_SETTINGS.uiTextScale,
       // An unknown language (a newer build's, a hand edit) is English, not
       // a string table that isn't there.
       language: isLang(parsed.language) ? parsed.language : "en",

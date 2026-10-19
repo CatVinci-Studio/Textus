@@ -55,32 +55,34 @@ async function selectPassage(page: Page) {
   await page.locator(".milkdown p").first().click({ clickCount: 3 });
 }
 
-for (const language of LANGUAGES)
-  test(`${language}: the footer stays one row with a long selection chip at the panel's narrowest`, async ({
-    page,
-  }) => {
-    await openApp(page, {
-      settings: { language },
-      storage: {
-        "levis-agent-panel-open": "1",
-        "levis-agent-panel-width": "300",
-      },
+// And with Settings › Interface Text Size at its largest, 125% (#150).
+for (const uiTextScale of [1, 1.25])
+  for (const language of LANGUAGES)
+    test(`${language}: the footer stays one row with a long selection chip at the panel's narrowest${uiTextScale === 1 ? "" : `, at ${uiTextScale * 100}% text`}`, async ({
+      page,
+    }) => {
+      await openApp(page, {
+        settings: { language, uiTextScale },
+        storage: {
+          "levis-agent-panel-open": "1",
+          "levis-agent-panel-width": "300",
+        },
+      });
+      await selectPassage(page);
+      const view = page.locator(".agent-panel-view");
+      await view.locator("textarea").click();
+      const chip = view.locator(".inline-chat-selection-chip");
+      await expect(chip).toBeVisible();
+      await expectOneRow(view.locator(".inline-chat-toolbar"));
+      // The chip's ✕ stays whole: the label gives way, not the button.
+      const remove = chip.locator(".inline-chat-chip-remove");
+      await expect(remove).toBeVisible();
+      const removeBox = (await remove.boundingBox())!;
+      const chipBox = (await chip.boundingBox())!;
+      expect(removeBox.x + removeBox.width).toBeLessThanOrEqual(
+        chipBox.x + chipBox.width + 0.5,
+      );
     });
-    await selectPassage(page);
-    const view = page.locator(".agent-panel-view");
-    await view.locator("textarea").click();
-    const chip = view.locator(".inline-chat-selection-chip");
-    await expect(chip).toBeVisible();
-    await expectOneRow(view.locator(".inline-chat-toolbar"));
-    // The chip's ✕ stays whole: the label gives way, not the button.
-    const remove = chip.locator(".inline-chat-chip-remove");
-    await expect(remove).toBeVisible();
-    const removeBox = (await remove.boundingBox())!;
-    const chipBox = (await chip.boundingBox())!;
-    expect(removeBox.x + removeBox.width).toBeLessThanOrEqual(
-      chipBox.x + chipBox.width + 0.5,
-    );
-  });
 
 // Fonts differ from machine to machine: the CI runner's set Russian 4.5px
 // wider than a desktop's and pushed Send out. With every word in the
@@ -114,49 +116,51 @@ for (const language of ["de", "ru"] as const)
     ).toBeVisible();
   });
 
-for (const language of ["de", "ru"] as const)
-  test(`${language}: the detached chat window's footer stays one row at its narrowest`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 320, height: 560 });
-    await page.addInitScript(
-      ({ language, passage }) => {
-        localStorage.setItem(
-          "catvinci-settings",
-          JSON.stringify({
-            language,
-            languageChosen: true,
-            onboardingShown: true,
-          }),
-        );
-        (
-          window as unknown as { __devInvokeResults: unknown }
-        ).__devInvokeResults = {
-          take_chat_handoff: {
-            editorLabel: "main",
-            state: {
-              context: {
-                document: passage,
-                selectedText: passage,
-                selectionMarkdown: passage,
-                docPath: null,
-                docTitle: "Untitled",
-                editorLabel: "main",
+for (const uiTextScale of [1, 1.25])
+  for (const language of ["de", "ru"] as const)
+    test(`${language}: the detached chat window's footer stays one row at its narrowest${uiTextScale === 1 ? "" : `, at ${uiTextScale * 100}% text`}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 320, height: 560 });
+      await page.addInitScript(
+        ({ language, passage, uiTextScale }) => {
+          localStorage.setItem(
+            "catvinci-settings",
+            JSON.stringify({
+              language,
+              languageChosen: true,
+              onboardingShown: true,
+              uiTextScale,
+            }),
+          );
+          (
+            window as unknown as { __devInvokeResults: unknown }
+          ).__devInvokeResults = {
+            take_chat_handoff: {
+              editorLabel: "main",
+              state: {
+                context: {
+                  document: passage,
+                  selectedText: passage,
+                  selectionMarkdown: passage,
+                  docPath: null,
+                  docTitle: "Untitled",
+                  editorLabel: "main",
+                },
+                conversationId: "c1",
+                turns: [],
+                statuses: {},
               },
-              conversationId: "c1",
-              turns: [],
-              statuses: {},
             },
-          },
-        };
-      },
-      { language, passage: PASSAGE },
-    );
-    await page.goto("/?view=chat");
-    const body = page.locator(".chat-window-body");
-    await expect(body.locator(".inline-chat-selection-chip")).toBeVisible();
-    await expectOneRow(body.locator(".inline-chat-toolbar"));
-  });
+          };
+        },
+        { language, passage: PASSAGE, uiTextScale },
+      );
+      await page.goto("/?view=chat");
+      const body = page.locator(".chat-window-body");
+      await expect(body.locator(".inline-chat-selection-chip")).toBeVisible();
+      await expectOneRow(body.locator(".inline-chat-toolbar"));
+    });
 
 test.describe("on a phone", () => {
   test.use(PHONE);
