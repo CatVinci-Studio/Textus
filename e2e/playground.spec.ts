@@ -90,7 +90,18 @@ test("an edit the debounce still holds is kept on leaving", async ({
   page,
 }) => {
   await openPlayground(page);
-  await page.locator(`${editor} h1`).click();
+  // At the end of the heading's text. A click in the heading's middle
+  // landed inside "Textus" with CI's fonts, and an End sent at once - while
+  // the click first draws the heading's "# " marker - was sometimes lost in
+  // Chromium, so the "!" went in before the "s": "Textu!s" (also on the
+  // commit before #245, with the CPU slowed down).
+  const end = await page.locator(`${editor} h1`).evaluate((heading) => {
+    const range = document.createRange();
+    range.selectNodeContents(heading);
+    const box = range.getBoundingClientRect();
+    return { x: box.right - 1, y: box.top + box.height / 2 };
+  });
+  await page.mouse.click(end.x, end.y);
   await page.keyboard.press("End");
   await page.keyboard.type("!");
   // Straight away, before the listener reports it.
