@@ -4,6 +4,8 @@ Maintainers only. Releases are tags on `main`: there is no release branch to
 merge first. The desktop app ships from a `vX.Y.Z` tag through
 `.github/workflows/release.yml`; the iOS app ships from an `ios-vX.Y.Z` tag
 through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md)).
+The browser playground isn't released: it deploys from `main` on every
+change ([infrastructure.md](infrastructure.md#playground)).
 
 ## Branches
 
