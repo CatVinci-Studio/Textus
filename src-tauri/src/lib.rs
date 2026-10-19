@@ -675,6 +675,8 @@ pub fn run() {
             crate::ai::workspace::set_builtin_skill_enabled,
             crate::ai::builtin::builtin_skills_attribution,
             crate::ai::project::list_project_files,
+            crate::ai::project::list_project_entries,
+            crate::ai::project::project_folder,
             crate::ai::project::read_project_file,
             crate::ai::project::ensure_project_file,
             crate::ai::project::pick_text_files,

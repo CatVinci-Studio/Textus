@@ -107,6 +107,46 @@ fn file_name_of(path: &Path) -> String {
         .unwrap_or_else(|| path.to_string_lossy().to_string())
 }
 
+/// Formats whose text the project reader extracts too (ai::project): the
+/// project folder's Word, PDF, slides and sheets are writing material as
+/// much as its markdown.
+pub(crate) const DOCUMENT_EXTENSIONS: &[&str] =
+    &["pdf", "docx", "pptx", "xlsx", "xlsm", "xlsb", "xls", "ods"];
+
+/// Pictures a document can show (the editor's formats, svg included).
+pub(crate) fn is_image_extension(ext: &str) -> bool {
+    image_mime(ext).is_some() || ext == "svg" || ext == "bmp" || ext == "avif"
+}
+
+/// The text of a PDF, Word, PowerPoint or spreadsheet file, capped like an
+/// attachment's. A PDF the extractor panics on is reported, not fatal - the
+/// agent's read_file runs this outside the picker's spawn_blocking guard.
+pub(crate) fn document_text(path: &Path) -> Result<String, String> {
+    let text = match extension_of(path).as_str() {
+        "pdf" => {
+            let owned = path.to_path_buf();
+            let text = std::panic::catch_unwind(move || pdf_extract::extract_text(&owned))
+                .ok()
+                .and_then(Result::ok)
+                .ok_or_else(|| "This PDF can't be read.".to_string())?;
+            if text.trim().is_empty() {
+                return Err(
+                    "This PDF has no text layer - it's likely a scan, so there is nothing to read."
+                        .to_string(),
+                );
+            }
+            tidy_lines(&text)
+        }
+        "docx" => extract_docx(path)?,
+        "pptx" => extract_pptx(path)?,
+        _ => extract_spreadsheet(path)?,
+    };
+    if text.trim().is_empty() {
+        return Err(format!("`{}` has no readable text.", file_name_of(path)));
+    }
+    Ok(cap_text(text).0)
+}
+
 /// Mime type for the image formats every vision-capable provider accepts.
 /// Deliberately a closed list: an unrecognized extension is reported as
 /// unsupported rather than guessed at and rejected by the provider later.

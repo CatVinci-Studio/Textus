@@ -42,9 +42,10 @@
   }
 
   :root[data-window-chrome="mobile"] .inline-chat-send {
+    width: 44px;
+    height: 44px;
     min-height: 44px;
-    padding: 0 18px;
-    font-size: var(--text-md);
+    padding: 0;
   }
 
   /* The chips stay small to look at; their x reaches past their edges. */

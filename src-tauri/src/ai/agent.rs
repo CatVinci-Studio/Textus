@@ -164,10 +164,25 @@ Style: avoid the tics that make text read as machine-written unless the author's
 
 /// Only appended for providers that actually run the tool loop; telling a
 /// tool-less provider to call tools would just confuse it.
-const AGENT_TOOL_INSTRUCTIONS: &str = "Use search_document to locate something specific in a long document, and read_document to see a whole section before you revise it - never guess at text you haven't seen. Read first, propose after: never send a propose_edit in the same step as the read it depends on. If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (once per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. Pick the action that matches the intent: replace to swap existing text, replace_selection to swap the user's selected text (when their message carries a <selected-text> block and asks to rewrite/modify it - no anchor needed), insert_before/insert_after to add text next to existing text, insert_at_cursor to add text where the user's cursor is (when their message carries a <cursor> block marking it - for \"write a transition here\"), delete to remove text, append to add text at the end of the document. To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal must target its own passage - for several changes inside one passage, send a single replace covering it, since overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE, and both fields work in that same markdown. `anchor` must be copied verbatim out of it - including any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This` - and must occur exactly once. When the text you need to target appears MORE than once in the document, keep `anchor` as the exact text being edited and additionally pass `context`: a longer quote copied verbatim from the document that contains the anchor and itself occurs exactly once - the edit lands on the anchor inside that context. `text` replaces it and must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. Get the text right before you call propose_edit: a second proposal for the same passage in one reply overlaps the first and can't be applied. The user reviews and applies each proposal themselves, so your reply only says, in a sentence or two, what you proposed and why. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. Proposing new edits automatically replaces any still-undecided proposals in the editor, so never re-propose or try to retract an undecided one yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin each point to its passage with add_comment and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose.";
+/// Added when the user switched images on for this request (the composer's
+/// image switch, or auto-writing with illustrations): the switch is the
+/// request for pictures - without saying so, the model treated it as mere
+/// permission and wrote the text alone.
+const IMAGE_INSTRUCTIONS: &str = "---images for this request---\nThe user switched images on for this request: illustrate it, without asking again. After proposing the text, illustrate the one or two places where a picture helps the reader most (one is enough for a short piece). When the project folder has pictures (list_files shows them with their src), use a fitting one first - put `![alt text](src)` on a line of its own in a proposal - and generate only what is missing with generate_image. Write each prompt yourself - the concrete subject, setting, composition, light and style, in under 1000 characters - and choose where it goes: `anchor` is a heading or passage copied verbatim from the document or from a section you proposed in this request, and the picture is placed right after it. Pictures are generated and inserted automatically (anchored to proposed text, once the user accepts that text); never ask the user to approve a prompt, and never describe a picture in place of generating it.";
+
+/// The instructions, with IMAGE_INSTRUCTIONS when pictures are on.
+fn with_image_instructions(instructions: String, images: bool) -> String {
+    if images {
+        format!("{instructions}\n\n{IMAGE_INSTRUCTIONS}")
+    } else {
+        instructions
+    }
+}
+
+const AGENT_TOOL_INSTRUCTIONS: &str = "Never invent a fact the text needs but you don't have - a date, a venue, a name, a number, a price, a contact: write a blank in full-width brackets naming what goes there, such as 【开幕日期】 or 【Opening date】, and keep it as it is when you check the text. The author fills each blank with one click. Use search_document to locate something specific in a long document, and read_document to see a whole section before you revise it - never guess at text you haven't seen. Read first, propose after: never send a propose_edit in the same step as the read it depends on. If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (once per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. Pick the action that matches the intent: replace to swap existing text, replace_selection to swap the user's selected text (when their message carries a <selected-text> block and asks to rewrite/modify it - no anchor needed), insert_before/insert_after to add text next to existing text, insert_at_cursor to add text where the user's cursor is (when their message carries a <cursor> block marking it - for \"write a transition here\"), delete to remove text, append to add text at the end of the document. To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal must target its own passage - for several changes inside one passage, send a single replace covering it, since overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE, and both fields work in that same markdown. `anchor` must be copied verbatim out of it - including any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This` - and must occur exactly once. When the text you need to target appears MORE than once in the document, keep `anchor` as the exact text being edited and additionally pass `context`: a longer quote copied verbatim from the document that contains the anchor and itself occurs exactly once - the edit lands on the anchor inside that context. `text` replaces it and must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. Get the text right before you call propose_edit: a second proposal for the same passage in one reply overlaps the first and can't be applied. The user reviews and applies each proposal themselves, so your reply only says, in a sentence or two, what you proposed and why. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. Proposing new edits automatically replaces any still-undecided proposals in the editor, so never re-propose or try to retract an undecided one yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin each point to its passage with add_comment and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose.";
 
 /// The rules engine's two tools, in every mode (tools.rs).
-const RULES_TOOL_INSTRUCTIONS: &str = "check_conventions checks text against the document's writing conventions (punctuation, spacing, numbers, spelling lists, consistency with the rest of the document) with a deterministic rules engine: when you proofread or fix conventions, ground your changes in what it reports instead of guessing, change only what it flags or what you are certain of, and check a draft with its `text` argument before proposing it. Its \"check\" findings only point at something to look at. measure_text counts text exactly (characters, words, X and Bluesky limits, WeChat titles...): whenever a length limit matters, measure the exact text instead of estimating, and give the count in your reply.";
+const RULES_TOOL_INSTRUCTIONS: &str = "check_conventions checks text against the document's writing conventions (punctuation, spacing, numbers, spelling lists, consistency with the rest of the document) with a deterministic rules engine: when you proofread or fix conventions, ground your changes in what it reports instead of guessing, change only what it flags or what you are certain of, and check a draft once with its `text` argument before proposing it - fix what it flags, then propose; don't check it again. Its \"check\" findings only point at something to look at. measure_text counts text exactly (characters, words, X and Bluesky limits, WeChat titles...): when a platform's hard limit matters, measure the exact text instead of estimating, and give the count in your reply. A length the user asks for (\"800 字\", \"about 500 words\") is a target, not a limit: within about 10% is fine - measure your draft once, adjust it once if it is far off, then propose it. Never measure draft after draft: each request has only a few tool steps.";
 
 const AGENT_READ_ONLY_TOOL_INSTRUCTIONS: &str = "Use search_document to locate specific passages in a long document and read_document to read a section in full, rather than guessing. These tools are for inspection and research only; no document edit tool is available in this mode. For feedback on specific passages, pin each point with add_comment.";
 
@@ -797,6 +812,10 @@ async fn ai_agent_message_inner(
         });
     let history = compact_history(history);
     let workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
+    let doc_dir = doc_path
+        .as_deref()
+        .and_then(|path| Path::new(path).parent())
+        .map(Path::to_path_buf);
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
     let library = crate::ai::conventions::library_names(&workspace);
     // What the request is about, for picking library entries: the message
@@ -842,8 +861,10 @@ async fn ai_agent_message_inner(
 
     let result = match entry.dialect {
         "openai-responses" => {
-            let instructions =
-                build_instructions(&workspace, &document, true, &mode, &focus, &ui_language);
+            let instructions = with_image_instructions(
+                build_instructions(&workspace, &document, true, &mode, &focus, &ui_language),
+                image_context.is_some(),
+            );
             let mut tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
@@ -862,6 +883,7 @@ async fn ai_agent_message_inner(
                 library: &library,
                 proposed: Default::default(),
                 image: image_context.as_ref(),
+                doc_dir: doc_dir.as_deref(),
             };
 
             match route::resolve_openai_auth(&app).await? {
@@ -957,8 +979,10 @@ async fn ai_agent_message_inner(
             }
         }
         "anthropic-messages" => {
-            let instructions =
-                build_instructions(&workspace, &document, true, &mode, &focus, &ui_language);
+            let instructions = with_image_instructions(
+                build_instructions(&workspace, &document, true, &mode, &focus, &ui_language),
+                image_context.is_some(),
+            );
             let auth = route::resolve_anthropic_auth(&app).await?;
             let mut tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
@@ -978,6 +1002,7 @@ async fn ai_agent_message_inner(
                 library: &library,
                 proposed: Default::default(),
                 image: image_context.as_ref(),
+                doc_dir: doc_dir.as_deref(),
             };
 
             let agent_model = model.unwrap_or_else(|| {
@@ -1045,9 +1070,12 @@ async fn ai_agent_message_inner(
                 library: &library,
                 proposed: Default::default(),
                 image: image_context.as_ref(),
+                doc_dir: doc_dir.as_deref(),
             };
-            let instructions_with_tools =
-                build_instructions(&workspace, &document, true, &mode, &focus, &ui_language);
+            let instructions_with_tools = with_image_instructions(
+                build_instructions(&workspace, &document, true, &mode, &focus, &ui_language),
+                image_context.is_some(),
+            );
 
             // These providers expose server-side search through their
             // current Chat Completions compatibility layer. Other providers
@@ -1236,6 +1264,23 @@ async fn flattened_chat_turn(
 #[cfg(test)]
 mod tests {
     #[test]
+    fn unknown_facts_are_written_as_blanks_to_fill() {
+        assert!(super::AGENT_TOOL_INSTRUCTIONS.contains("【开幕日期】"));
+    }
+
+    #[test]
+    fn switched_on_images_ask_for_pictures_without_an_approval_step() {
+        let plain = super::with_image_instructions("base".into(), false);
+        assert_eq!(plain, "base");
+        let on = super::with_image_instructions("base".into(), true);
+        assert!(on.starts_with("base\n\n---images for this request---"));
+        assert!(on.contains("generate_image"));
+        // The author's own pictures come first.
+        assert!(on.contains("list_files shows them with their src"));
+        assert!(on.contains("never ask the user to approve a prompt"));
+    }
+
+    #[test]
     fn only_create_and_edit_can_propose_document_changes() {
         assert!(super::allows_document_edits("create"));
         assert!(super::allows_document_edits("edit"));
@@ -1267,6 +1312,7 @@ mod tests {
             library: &[],
             proposed: Default::default(),
             image: None,
+            doc_dir: None,
         };
         let call = |id: &str, name: &str, args: &str| AgentTurn::ToolCall {
             call_id: id.into(),

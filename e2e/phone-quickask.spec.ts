@@ -102,8 +102,9 @@ test("the mode picker is a segmented control on a phone", async ({ page }) => {
     sheet.getByRole("radiogroup", { name: "Mode" }).getByRole("radio"),
   ).toHaveText(["Ask", "Edit", "Plan"]);
   await expectTouchTarget(page, ".agent-panel .chat-mode-segments");
+  // "+" holds files and web search; Send is round.
   await expectTouchTarget(page, ".agent-panel .inline-chat-attach");
-  await expectTouchTarget(page, ".agent-panel .inline-chat-web-search");
+  await expectTouchTarget(page, ".agent-panel .inline-chat-send");
 });
 
 test("a proposed edit is reviewed in the dock and lands in the document", async ({

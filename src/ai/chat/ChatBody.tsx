@@ -1,3 +1,4 @@
+import type { ComposerMenuItem } from "./ComposerMenu";
 import { useEffect, useRef, useState } from "react";
 import type {
   AgentConversation,
@@ -137,8 +138,8 @@ export interface ChatBodyProps {
   /** Quick variant docked on a phone: the panel's own controls, shown in
    *  the composer's top row (ChatComposer's `dockActions`). */
   dockActions?: React.ReactNode;
-  /** Passed to the composer's toolbar, beside the mode picker. */
-  composerTools?: React.ReactNode;
+  /** The host's entries in the composer's "+" menu. */
+  composerMenu?: ComposerMenuItem[];
 }
 
 /** The Quick Ask nav bar's whole contract - see ChatBodyProps.quickReview. */
@@ -166,7 +167,7 @@ interface QuickReview {
  *  consumers (usePendingEdits directly, or the detached-window bridge)
  *  expect. Shared by the settled afterSend path and the live streamed-turn
  *  path so the two can't drift. */
-function proposalsFromTurns(turns: AgentTurn[]) {
+export function proposalsFromTurns(turns: AgentTurn[]) {
   const refused = refusedProposalIds(turns);
   return turns.flatMap((turn) => {
     if (turn.kind !== "ToolCall" || turn.name !== "propose_edit") return [];
@@ -241,7 +242,7 @@ export function ChatBody({
   onRevealPending,
   quickReview,
   dockActions,
-  composerTools,
+  composerMenu,
 }: ChatBodyProps) {
   const phone = usePhoneLayout();
   const {
@@ -305,11 +306,22 @@ export function ChatBody({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streaming?.turns]);
 
-  // Keep the newest streamed content in view while it grows.
+  // Keep the newest streamed content in view while it grows - once a
+  // frame at most (deltas arrive faster, and each read of scrollHeight
+  // forces a layout), and only while the reader is at the bottom: someone
+  // who scrolled up to reread is not pulled back down on every token.
+  const followFrame = useRef(0);
   useEffect(() => {
-    if (!streaming) return;
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
+    if (!streaming || followFrame.current) return;
+    followFrame.current = requestAnimationFrame(() => {
+      followFrame.current = 0;
+      const list = listRef.current;
+      if (!list) return;
+      const fromBottom = list.scrollHeight - list.scrollTop - list.clientHeight;
+      if (fromBottom < 120) list.scrollTop = list.scrollHeight;
+    });
   }, [streaming]);
+  useEffect(() => () => cancelAnimationFrame(followFrame.current), []);
 
   function afterSend(newTurns: AgentTurn[] | undefined) {
     const proposals = proposalsFromTurns(newTurns ?? []);
@@ -657,7 +669,7 @@ export function ChatBody({
         compact={variant === "quick"}
         focusOnOpen={variant === "quick" || !phone}
         dockActions={dockActions}
-        toolbarExtra={composerTools}
+        menuItems={composerMenu}
         defaultWebSearch={defaultWebSearch}
         onSend={handleSend}
         onStop={stop}

@@ -838,6 +838,16 @@ export interface TextMeasure {
  * and the project's .textus/skills/, each layer replacing same-named skills
  * of the layers before it. Hidden skills are never listed.
  */
+/** One file of the project folder (ai::project::ProjectEntry). */
+export interface ProjectEntry {
+  /** Relative to the project folder, `/`-separated. */
+  path: string;
+  /** text: read as is; document: Word/PDF/slides/sheet, text extracted;
+   *  image: shown by path; other: listed only. */
+  kind: "text" | "document" | "image" | "other";
+  bytes: number;
+}
+
 export interface SkillListItem {
   /** Canonical, ASCII kebab-case for a built-in; what follows the `/`. */
   name: string;
@@ -1027,6 +1037,13 @@ export const ai = {
   /** The project folder's text files, for @-mentions (ai::project). */
   listProjectFiles: (docPath: string | null, workspaceRoot: string | null) =>
     call<string[]>("list_project_files", { docPath, workspaceRoot }),
+  /** Every file of the project folder with its kind (ai::project) - the
+   *  auto-writing file tree. */
+  listProjectEntries: (docPath: string | null, workspaceRoot: string | null) =>
+    call<ProjectEntry[]>("list_project_entries", { docPath, workspaceRoot }),
+  /** The project folder in use: the chosen one, else the document's own. */
+  projectFolder: (docPath: string | null, workspaceRoot: string | null) =>
+    call<string | null>("project_folder", { docPath, workspaceRoot }),
   readProjectFile: (
     docPath: string | null,
     workspaceRoot: string | null,

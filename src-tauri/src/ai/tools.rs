@@ -30,6 +30,9 @@ pub struct ToolContext<'a> {
     /// context serves one request, every step of it.
     pub proposed: std::sync::Mutex<ProposalLedger>,
     pub image: Option<&'a crate::media::jobs::ImageTaskContext>,
+    /// The document's folder (saved documents): project images under it
+    /// are given to the model by paths relative to it.
+    pub doc_dir: Option<&'a Path>,
 }
 
 /// What this request's propose_edit calls have done so far.
@@ -40,6 +43,34 @@ pub struct ProposalLedger {
     /// Replacements refused once as looking cut off (degenerate_replacement),
     /// as `anchor\0text`: the same call sent again is meant, and goes through.
     refused_short: Vec<String>,
+    /// Proposals refused for broken characters (see propose_edit).
+    garbled: usize,
+    /// measure_text and check_conventions calls so far (check_budget).
+    measures: usize,
+    convention_checks: usize,
+}
+
+/// How often one request may measure, and check conventions, before those
+/// tools stop answering. Asked for "800 字", a model drafted, measured,
+/// rewrote and measured again until its steps ran out - and never proposed
+/// the text at all.
+const MEASURE_BUDGET: usize = 3;
+const CONVENTIONS_BUDGET: usize = 2;
+
+/// Some(refusal) once this request has spent the check's budget.
+fn check_budget(ctx: &ToolContext, name: &str) -> Option<String> {
+    let mut ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
+    let (used, budget) = match name {
+        MEASURE_TEXT_TOOL_NAME => (&mut ledger.measures, MEASURE_BUDGET),
+        CHECK_CONVENTIONS_TOOL_NAME => (&mut ledger.convention_checks, CONVENTIONS_BUDGET),
+        _ => return None,
+    };
+    *used += 1;
+    (*used > budget).then(|| {
+        format!(
+            "Not run: {name} was already used {budget} times in this request. Stop checking and deliver now: a length the user asked for is a target, and within about 10% of it is fine - propose your latest draft with propose_edit (when the request changes the document), then reply with its count."
+        )
+    })
 }
 
 /// A passage one of this request's proposals replaces or deletes: where it
@@ -104,7 +135,7 @@ pub fn image_tool() -> Tool {
     Tool {
         spec: ToolSpec {
             name: "generate_image",
-            description: "Generate one proposed illustration only when the user requested an image. Returns a background job immediately: continue drafting text without waiting. The UI reviews the image before insertion. `anchor` is a verbatim unique section heading or passage at the intended insertion point, including a heading you proposed in this task. Never insert a temporary URL into Markdown. Maximum two image requests per task, including retries.",
+            description: "Generate one illustration for the document - offered only when the user switched images on for this request, which is their request for pictures. Returns a background job immediately: continue without waiting. Write the prompt yourself (subject, setting, composition, light, style). `anchor` is a verbatim unique heading or passage, from the document or from a section you proposed in this task, and the picture is inserted right after it automatically - no approval step. Never insert a temporary URL into Markdown. Maximum two image requests per user request, including retries.",
             parameters: json!({"type":"object", "properties": {
                 "prompt":{"type":"string"}, "anchor":{"type":"string"}, "alt":{"type":"string"}, "caption":{"type":"string"},
                 "size":{"type":"string","enum":["1024x1024","1536x1024","1024x1536"]},
@@ -340,6 +371,18 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     // called a 20% cut "about 70% of the original" and an expansion that
     // shrank "expanded into two paragraphs" (docs/AI-EVAL.md, round 2).
     let text = parsed.get("text").and_then(|v| v.as_str()).unwrap_or("");
+    // Characters the stream broke (U+FFFD): some servers decode a model's
+    // byte-level tokens one at a time and send a replacement character for
+    // each byte - 《百年孤独》 arrived as 《百年孤���》. The data is gone by
+    // then, so the proposal is sent again (twice at most - the tokens are
+    // a sampling accident, and a resend almost always comes through whole).
+    if text.contains('\u{FFFD}') {
+        let mut ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
+        if ledger.garbled < 2 {
+            ledger.garbled += 1;
+            return "Not proposed: some characters of `text` arrived broken (shown as \u{FFFD}) - a transmission glitch, not your mistake. Send the same proposal again, unchanged, and don't mention this in your reply.".to_string();
+        }
+    }
     if let Some(problem) = degenerate_replacement(action, anchor, text) {
         // Refused once; the identical call again means it ("replace this
         // sentence with TBD").
@@ -590,22 +633,37 @@ const READ_FILE_TOOL_NAME: &str = "read_file";
 const MAX_LISTED_FILES: usize = 200;
 const SEARCH_FILES_TOOL_NAME: &str = "search_files";
 
-/// The project folder's text files (paths relative to it). Hidden entries
-/// and build/dependency folders are skipped - see ai::project.
+/// The project folder's files (paths relative to it), each with what it is:
+/// text and documents (Word, PDF, slides, sheets) read_file can read, and
+/// images with the `src` a proposal shows them by. Hidden entries and
+/// build/dependency folders are skipped - see ai::project.
 fn list_files(ctx: &ToolContext, _arguments: &str) -> String {
     let Some(root) = ctx.root else {
         return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to list."
             .to_string();
     };
-    let files = crate::ai::project::walk_text_files(root);
-    if files.is_empty() {
-        return "The project folder has no text files.".to_string();
+    let entries = crate::ai::project::walk_entries(root);
+    if entries.is_empty() {
+        return "The project folder has no files.".to_string();
     }
-    let mut lines: Vec<String> = files.iter().take(MAX_LISTED_FILES).cloned().collect();
-    if files.len() > MAX_LISTED_FILES {
+    let mut lines: Vec<String> = entries
+        .iter()
+        .take(MAX_LISTED_FILES)
+        .map(|entry| match entry.kind {
+            "image" => format!(
+                "{} (image; src: {})",
+                entry.path,
+                crate::ai::project::image_src(root, &entry.path, ctx.doc_dir)
+            ),
+            "document" => format!("{} (document - read_file gives its text)", entry.path),
+            "other" => format!("{} (can't be read)", entry.path),
+            _ => entry.path.clone(),
+        })
+        .collect();
+    if entries.len() > MAX_LISTED_FILES {
         lines.push(format!(
             "... ({} more - use search_files to find something specific)",
-            files.len() - MAX_LISTED_FILES
+            entries.len() - MAX_LISTED_FILES
         ));
     }
     lines.join("\n")
@@ -915,7 +973,7 @@ pub fn builtin_tools(has_skills: bool, has_root: bool, allow_edits: bool) -> Vec
     tools.push(Tool {
         spec: ToolSpec {
             name: MEASURE_TEXT_TOOL_NAME,
-            description: "Count text exactly for a length limit - never estimate a count yourself. Metrics: x_weighted (X, limit 280: URLs count 23, CJK characters and emoji 2), bluesky (300 graphemes and 3,000 bytes), threads (500), instagram (2,200, at most 5 hashtags), mastodon (500 by default), linkedin (3,000, fold near 140), wechat_title (32), wechat_digest (120), wechat_content, xhs_title (20), xhs_body (1,000), weibo, govuk_title (65), govuk_summary (160), zh_academic_title (25 字), and plain chars, words, cjk_chars, utf8_bytes. Without `metric` it returns the basic counts. Use it on the exact text before proposing anything that must fit a limit, and give the count in your reply.",
+            description: "Count text exactly for a length limit - never estimate a count yourself. Metrics: x_weighted (X, limit 280: URLs count 23, CJK characters and emoji 2), bluesky (300 graphemes and 3,000 bytes), threads (500), instagram (2,200, at most 5 hashtags), mastodon (500 by default), linkedin (3,000, fold near 140), wechat_title (32), wechat_digest (120), wechat_content, xhs_title (20), xhs_body (1,000), weibo, govuk_title (65), govuk_summary (160), zh_academic_title (25 字), and plain chars, words, cjk_chars, utf8_bytes. Without `metric` it returns the basic counts. Use it on the exact text before proposing anything that must fit a platform's hard limit, and give the count in your reply. A length the user asks for in words (\"800 字\", \"about 500 words\") is a target, not a limit: within about 10% is fine - measure the draft once, adjust it once if it is far off, then propose it. Never measure draft after draft.",
             parameters: json!({
                 "type": "object",
                 "properties": {
@@ -1044,7 +1102,7 @@ pub fn builtin_tools(has_skills: bool, has_root: bool, allow_edits: bool) -> Vec
         tools.push(Tool {
             spec: ToolSpec {
                 name: LIST_FILES_TOOL_NAME,
-                description: "List the text files in the project folder (recursively, paths relative to it). Use it to discover reference material - notes, other chapters, data - before reading one.",
+                description: "List the files in the project folder (recursively, paths relative to it): text files, documents (Word, PDF, slides, sheets) and images. Use it to discover reference material - notes, outlines, other chapters, data - before reading one, and to find pictures the author already has: to use one, put `![alt text](src)` on a line of its own in a proposal, with the src listed for it, rather than generating a new picture.",
                 parameters: json!({"type": "object", "properties": {}}),
             },
             run: list_files,
@@ -1052,7 +1110,7 @@ pub fn builtin_tools(has_skills: bool, has_root: bool, allow_edits: bool) -> Vec
         tools.push(Tool {
             spec: ToolSpec {
                 name: READ_FILE_TOOL_NAME,
-                description: "Read a text file from the project folder. Use the relative path as shown by list_files or search_files.",
+                description: "Read a file from the project folder as text - a text file as it is, a Word/PDF/slides/sheet document as its extracted text. Use the relative path as shown by list_files or search_files.",
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -1077,7 +1135,7 @@ pub fn tool_specs(tools: &[Tool]) -> Vec<ToolSpec> {
 
 pub fn execute(tools: &[Tool], ctx: &ToolContext, name: &str, arguments: &str) -> String {
     match tools.iter().find(|t| t.spec.name == name) {
-        Some(tool) => (tool.run)(ctx, arguments),
+        Some(tool) => check_budget(ctx, name).unwrap_or_else(|| (tool.run)(ctx, arguments)),
         None => format!("Unknown tool: {name}"),
     }
 }
@@ -1135,6 +1193,7 @@ mod tests {
             library: &[],
             proposed: Default::default(),
             image: None,
+            doc_dir: None,
         };
         let call = |name: &str| use_skill(&ctx, &json!({ "name": name }).to_string());
         let dialogue = call("dialogue");
@@ -1167,6 +1226,59 @@ mod tests {
             library: &[],
             proposed: Default::default(),
             image: None,
+            doc_dir: None,
+        }
+    }
+
+    #[test]
+    fn a_proposal_with_broken_characters_is_sent_again() {
+        let context = ctx("");
+        let garbled =
+            "{\"action\":\"append\",\"text\":\"# 《百年孤\u{FFFD}\u{FFFD}\u{FFFD}》阅读概要\"}";
+        for _ in 0..2 {
+            let out = propose_edit(&context, garbled);
+            assert!(
+                out.starts_with("Not proposed") && out.contains("Send the same proposal again")
+            );
+        }
+        // Not a loop: the third one stands.
+        assert!(propose_edit(&context, garbled).starts_with("Edit proposed"));
+        assert!(
+            propose_edit(&ctx(""), r#"{"action":"append","text":"《百年孤独》"}"#)
+                .starts_with("Edit proposed")
+        );
+    }
+
+    #[test]
+    fn measuring_and_checking_stop_after_their_budget() {
+        let tools = builtin_tools(false, false, true);
+        let context = ctx("草稿");
+        for _ in 0..MEASURE_BUDGET {
+            let out = execute(
+                &tools,
+                &context,
+                MEASURE_TEXT_TOOL_NAME,
+                r#"{"text":"草稿"}"#,
+            );
+            assert!(!out.starts_with("Not run"), "{out}");
+        }
+        let refused = execute(
+            &tools,
+            &context,
+            MEASURE_TEXT_TOOL_NAME,
+            r#"{"text":"草稿"}"#,
+        );
+        assert!(refused.starts_with("Not run") && refused.contains("propose your latest draft"));
+        // Each check has its own budget.
+        for _ in 0..CONVENTIONS_BUDGET {
+            let out = execute(&tools, &context, CHECK_CONVENTIONS_TOOL_NAME, "{}");
+            assert!(!out.starts_with("Not run"), "{out}");
+        }
+        assert!(execute(&tools, &context, CHECK_CONVENTIONS_TOOL_NAME, "{}").starts_with("Not run"));
+        // Other tools are not counted.
+        for _ in 0..5 {
+            let out = execute(&tools, &context, "search_document", r#"{"query":"草"}"#);
+            assert!(!out.starts_with("Not run"), "{out}");
         }
     }
 

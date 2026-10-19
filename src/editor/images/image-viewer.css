@@ -139,3 +139,27 @@
 .image-viewer-copy:hover {
   background: rgb(255 255 255 / 10%);
 }
+
+/* The picture's caption, as under it in the document. */
+.image-viewer-caption {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--space-6) + 52px);
+  max-width: min(720px, 80vw);
+  margin: 0;
+  padding: 6px 14px;
+  transform: translateX(-50%);
+  border-radius: var(--radius-pill);
+  background: rgb(30 32 38 / 72%);
+  color: rgb(255 255 255 / 92%);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  text-align: center;
+  pointer-events: none;
+  animation: motion-fade-in var(--dur-base) var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .image-viewer-caption {
+    animation: none;
+  }
+}

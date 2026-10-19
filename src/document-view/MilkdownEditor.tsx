@@ -1,18 +1,49 @@
 import { useSelectionIllustration } from "./useSelectionIllustration";
 import { modalDialogOpen } from "../ui/useModalDialog";
+import { basename, decodeLocalPath } from "../utils/path";
+import { ai } from "../platform/ipc";
+import { FolderIcon, ImageFileIcon, SparkleIcon } from "../ui/icons";
+import type { ComposerMenuItem } from "../ai/chat/ComposerMenu";
 import { WritePlayback, useWritePlayback } from "./WritePlayback";
 import { useEditorDictationTarget } from "./useEditorDictationTarget";
-import { type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type MouseEvent,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { useDocumentWorkspace } from "./useDocumentWorkspace";
 import { useWorkspacePersistence } from "./useWorkspacePersistence";
 import { useDocumentImages } from "./useDocumentImages";
 import { ImageJobsPanel } from "../ai/multimodal/ImageTools";
+import { PromptRefiner } from "../ai/multimodal/PromptRefiner";
 import { AgentWorkspace } from "../ai/workspace/AgentWorkspace";
-import { suggestTitle, useAgentSuggestions } from "../ai/workspace/assist";
-import { firstLevelOneHeading } from "../document/save-default-name";
-import { setSuggestedTitle } from "../document/doc-tabs";
+import { AutoWriter, type AutoWriterHost } from "../ai/workspace/AutoWriter";
+import { proposalsFromTurns } from "../ai/chat/ChatBody";
+import {
+  findConversation,
+  rememberConversationDocument,
+} from "../ai/chat/chat-history";
+import { useAgentSuggestions } from "../ai/workspace/assist";
+import { useAutoTitle } from "./useAutoTitle";
+import { FillSlotCard } from "./FillSlotCard";
+import {
+  FILL_SLOT_EVENT,
+  type FillSlotRequest,
+} from "../editor/fill-slots/fill-slot-plugin";
+import {
+  getWindowSurface,
+  REWRITE_IMAGE_SRCS_EVENT,
+  RESTORE_TASK_EVENT,
+  pendingTaskRestores,
+  type RewriteImageSrcs,
+  setTabEngaged,
+  setWindowSurface,
+} from "../document/doc-tabs";
 import { ChatBody } from "../ai/chat/ChatBody";
 import { contextMenuTarget, insertTable } from "../editor/editor-menu";
 import { useDocumentReporting, useEditorFlush } from "./useDocumentReporting";
@@ -61,13 +92,13 @@ import "../theme/content-base.css";
 import "../editor/milkdown-theme.css";
 import "../theme/content-themes.css";
 
-/** Agent or Write is one mode for the whole window, not a per-tab
- *  setting: switching tabs, opening a file or a remount keep the surface the
- *  user is on. Null until the first editor decides (it opens on Agent). */
-let windowSurface: boolean | null = null;
+/** The window's Agent/Write mode lives in doc-tabs (source mode reads it
+ *  too); the first editor opens on Agent. */
 function initialSurface() {
-  windowSurface ??= true;
-  return windowSurface;
+  const current = getWindowSurface();
+  if (current !== null) return current;
+  setWindowSurface(true);
+  return true;
 }
 
 interface MilkdownEditorProps {
@@ -126,7 +157,23 @@ export function MilkdownEditor({
   const isActiveRef = useLatest(isActive);
   const tutorialMockRef = useLatest(tutorialMock);
   const tRef = useLatest(t);
-  const reporting = useDocumentReporting(initialValue, onChange);
+  // Untitled documents are named from their text (useAutoTitle.ts).
+  const noteTitleContent = useAutoTitle(
+    tabId,
+    filePath,
+    settings,
+    initialValue,
+  );
+  // Every change while the Agent shows this document re-renders its panel:
+  // a picture inserted when its job finishes - after the reply - used to
+  // leave the panel showing the text without it.
+  const [docVersion, bumpDocVersion] = useReducer((n: number) => n + 1, 0);
+  const agentShownRef = useRef(false);
+  const reporting = useDocumentReporting(initialValue, (markdown) => {
+    onChange(markdown);
+    noteTitleContent(markdown);
+    if (agentShownRef.current) bumpDocVersion();
+  });
   // Defined further down (useGrammarPopover); read through a ref here.
   const grammarCaretRef = useRef<() => void>(() => {});
 
@@ -181,13 +228,21 @@ export function MilkdownEditor({
   // The active tab sets the window's surface; a tab becoming active
   // follows it.
   const setWorkspaceOpen = workspace.setOpen;
+  // Recorded only when the user switches surface on the active tab - not
+  // when a tab becomes active, which would write that tab's own old mode
+  // over the window's before the next effect applies it.
+  const wasActive = useRef(isActive);
   useEffect(() => {
-    if (!phone && !tutorialMock && isActive) windowSurface = workspace.open;
+    const becameActive = isActive && !wasActive.current;
+    wasActive.current = isActive;
+    if (!phone && !tutorialMock && isActive && !becameActive)
+      setWindowSurface(workspace.open);
   }, [workspace.open, isActive, phone, tutorialMock]);
   useEffect(() => {
-    if (phone || tutorialMock || !isActive || windowSurface === null) return;
-    if (windowSurface) setWorkspaceMounted(true);
-    setWorkspaceOpen(windowSurface);
+    const surface = getWindowSurface();
+    if (phone || tutorialMock || !isActive || surface === null) return;
+    if (surface) setWorkspaceMounted(true);
+    setWorkspaceOpen(surface);
     // Only on becoming active: the other effect records changes made here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
@@ -227,6 +282,96 @@ export function MilkdownEditor({
     conversation.conversationId,
     settings.language,
   );
+  // Save As copied this document's images next to it: point the image
+  // nodes at their new paths without remounting (useSaveTabs).
+  useEffect(() => {
+    const rewrite = (event: Event) => {
+      const detail = (event as CustomEvent<RewriteImageSrcs>).detail;
+      if (detail.tabId !== tabId) return;
+      const moved = new Map<string, string>();
+      for (const { old, new: next } of detail.mappings) {
+        moved.set(old, next);
+        moved.set(decodeLocalPath(old), next);
+      }
+      const done = run((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const tr = view.state.tr;
+        view.state.doc.descendants((node, pos) => {
+          if (node.type.name !== "image") return;
+          const next = moved.get(node.attrs.src as string);
+          if (next)
+            tr.setNodeMarkup(pos, undefined, { ...node.attrs, src: next });
+        });
+        if (tr.docChanged) view.dispatch(tr.setMeta("addToHistory", false));
+        return true;
+      });
+      if (done) detail.handled = true;
+    };
+    window.addEventListener(REWRITE_IMAGE_SRCS_EVENT, rewrite);
+    return () => window.removeEventListener(REWRITE_IMAGE_SRCS_EVENT, rewrite);
+  }, [tabId, run]);
+  // Links this conversation's saved copy to its document once an exchange
+  // or an accepted draft has settled: by identity, and for an untitled
+  // document by its text, so the history list can bring both back.
+  const historyLength = conversation.history.length;
+  const conversationId = conversation.conversationId;
+  const settled = !conversation.busy;
+  useEffect(() => {
+    if (!settled || historyLength === 0 || tutorialMock) return;
+    const timer = setTimeout(() => {
+      const text = filePath
+        ? null
+        : run((ctx) =>
+            ctx.get(serializerCtx)(ctx.get(editorViewCtx).state.doc),
+          );
+      rememberConversationDocument(
+        conversationId,
+        documentId,
+        text?.trim() ? text : null,
+      );
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [
+    settled,
+    historyLength,
+    conversationId,
+    documentId,
+    filePath,
+    run,
+    tutorialMock,
+    workspace.draft,
+  ]);
+  // A task opened from the history list for this document (App routed it
+  // here): restore its conversation, on the Agent surface.
+  const restoreConversation = conversation.restore;
+  useEffect(() => {
+    const check = () => {
+      const key = [`path:${filePath}`, `doc:${documentId}`].find((k) =>
+        pendingTaskRestores.has(k),
+      );
+      if (!key) return;
+      const entry = findConversation(pendingTaskRestores.get(key)!);
+      pendingTaskRestores.delete(key);
+      if (!entry) return;
+      restoreConversation(entry.id, entry.turns);
+      setWindowSurface(true);
+      setWorkspaceMounted(true);
+      setWorkspaceOpen(true);
+    };
+    check();
+    window.addEventListener(RESTORE_TASK_EVENT, check);
+    return () => window.removeEventListener(RESTORE_TASK_EVENT, check);
+  }, [filePath, documentId, restoreConversation, setWorkspaceOpen]);
+  // Tells File > Open not to replace this tab while it holds Agent work.
+  const engaged =
+    conversation.history.length > 0 ||
+    conversation.busy ||
+    !!workspace.draft?.operations.length ||
+    images.pending;
+  useEffect(() => {
+    setTabEngaged(tabId, engaged);
+  }, [tabId, engaged]);
+  useEffect(() => () => setTabEngaged(tabId, false), [tabId]);
   const refreshImages = images.refresh;
   const settleImages = images.settle;
   useEffect(() => {
@@ -253,7 +398,6 @@ export function MilkdownEditor({
     settings,
     images,
     documentId,
-    isActive,
   );
   const recovery = useWorkspacePersistence({
     workspace,
@@ -419,8 +563,50 @@ export function MilkdownEditor({
           ) ?? "")
         : "",
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [workspaceVisible, hasDraftOperations, run, conversation.history],
+    [
+      workspaceVisible,
+      hasDraftOperations,
+      run,
+      conversation.history,
+      docVersion,
+    ],
   );
+  useEffect(() => {
+    agentShownRef.current = workspaceVisible;
+  }, [workspaceVisible]);
+  // Pictures still on their way, shown in the panel under their anchors.
+  const pendingImages = useMemo(
+    () =>
+      images.jobs
+        .filter((job) =>
+          ["queued", "running", "preparing", "ready"].includes(job.status),
+        )
+        .map((job) => ({
+          id: job.jobId,
+          anchor: job.request.anchor,
+          prompt: job.request.prompt,
+        })),
+    [images.jobs],
+  );
+  // The review card's container, once ProseMirror has drawn the expanded
+  // card (a widget, so a frame or two after the state change).
+  const editorFrame = selectionIllustration.editorFrame;
+  const [refinerHost, setRefinerHost] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    let frame = 0;
+    let tries = 0;
+    const find = () => {
+      const host = editorFrame
+        ? document.querySelector<HTMLElement>(
+            `[data-placeholder-editor="${editorFrame}"]`,
+          )
+        : null;
+      if (host || !editorFrame || tries++ > 30) setRefinerHost(host);
+      else frame = requestAnimationFrame(find);
+    };
+    find();
+    return () => cancelAnimationFrame(frame);
+  }, [editorFrame]);
   const zh = settings.language.startsWith("zh");
   const homeEmpty =
     !conversation.history.length &&
@@ -431,24 +617,104 @@ export function MilkdownEditor({
     documentMarkdown,
     workspaceVisible && homeEmpty && !tutorialMock,
   );
-  // Settings > Name new documents automatically: the first accepted draft
-  // of an untitled document without a heading gets a suggested title for
-  // its tab and the Save dialog; the text itself is left as accepted.
-  const titled = useRef(false);
   const acceptDraft = (callId?: string) => {
+    const task = workspace.currentDraft()?.id;
     if (!workspace.accept(callId)) return;
-    if (titled.current || filePath || !settings.autoTitleDocuments) return;
-    titled.current = true;
-    const markdown =
-      run((ctx) => ctx.get(serializerCtx)(ctx.get(editorViewCtx).state.doc)) ??
-      "";
-    if (!markdown.trim() || firstLevelOneHeading(markdown)) return;
-    void suggestTitle(settings, markdown)
-      .then((title) => {
-        if (title) setSuggestedTitle(tabId, title);
-      })
-      .catch(() => {});
+    // Pictures the Agent made for this text can go in now that it exists.
+    if (task) images.adoptTask(task);
   };
+  // Auto-writing (AutoWriter.tsx): each section is one ordinary create
+  // request through this workspace, so it lands as a reviewed draft - with
+  // images authorized for that request when the section asks for one.
+  const [autoWriting, setAutoWriting] = useState(false);
+  const autoHost: AutoWriterHost = {
+    docPath: filePath,
+    busy: conversation.busy,
+    send: async (message, allowImages) => {
+      if (
+        !recovery.loaded ||
+        !workspace.begin("create", conversation.conversationId)
+      )
+        return false;
+      const draft = workspace.currentDraft();
+      const imageTask =
+        allowImages && draft && !draft.conflicted && draft.baseRevision >= 0
+          ? images.authorizeTask(draft.id, draft.baseRevision)
+          : null;
+      const context = await panelSendContext();
+      const turns = await conversation.send(
+        context?.document ?? "",
+        message,
+        [],
+        {
+          mode: "create",
+          webSearch: false,
+          imageTask,
+          focusHeading: context?.focusHeading ?? null,
+        },
+      );
+      if (!turns) return false;
+      const proposals = proposalsFromTurns(turns);
+      if (proposals.length) showProposals(proposals);
+      return true;
+    },
+    pending: () => workspace.currentDraft()?.operations.length ?? 0,
+    acceptAll: () => acceptDraft(),
+    rejectAll: () => workspace.discard(),
+    stop: stopTask,
+  };
+  // The Agent's own entries in the composer's "+" menu.
+  const projectRoot = settings.agentWorkspaceRoot || null;
+  const agentMenu: ComposerMenuItem[] = [
+    {
+      key: "project",
+      section: "add",
+      icon: <FolderIcon />,
+      label: projectRoot
+        ? `${zh ? "在项目中使用" : "Use project"} ${basename(projectRoot)}`
+        : zh
+          ? "选择项目文件夹"
+          : "Choose project folder",
+      hint: projectRoot
+        ? zh
+          ? "更换项目文件夹"
+          : "Change the folder"
+        : zh
+          ? "资料、技能和 @ 文件从这里读取"
+          : "Where material, skills and @ files come from",
+      select: () =>
+        void ai
+          .pickWorkspaceRoot()
+          .then((picked) => {
+            if (picked) setSettings({ agentWorkspaceRoot: picked });
+          })
+          .catch(() => {}),
+    },
+    {
+      key: "images",
+      section: "tools",
+      icon: <ImageFileIcon />,
+      label: zh ? "允许本次请求配图" : "Allow images for this request",
+      chip: zh ? "配图" : "Images",
+      hint: zh
+        ? "调用图片服务，可能产生费用"
+        : "Uses the image service; may incur charges",
+      on: allowAutoImages,
+      disabled: conversation.busy,
+      select: () => setAllowAutoImages((on) => !on),
+    },
+    {
+      key: "auto-write",
+      section: "tools",
+      icon: <SparkleIcon />,
+      label: zh ? "自动写作" : "Auto-writing",
+      hint: zh
+        ? "按项目里的大纲和要求逐节写作"
+        : "Writes section by section from your project's outline",
+      disabled: conversation.busy || autoWriting,
+      select: () => setAutoWriting(true),
+    },
+  ];
   const labels = useMemo(
     () => chatLabels(t, settings.language),
     [t, settings.language],
@@ -469,6 +735,17 @@ export function MilkdownEditor({
   }
 
   const { rootRef, paneEl, scrollEl, contentEl } = useEditorPane();
+  // Blanks to fill (【开幕日期】, fill-slot-plugin.ts): a click on one in
+  // this editor opens the card that fills it.
+  const [fillRequest, setFillRequest] = useState<FillSlotRequest | null>(null);
+  useEffect(() => {
+    const open = (event: Event) => {
+      if (!contentEl?.contains(event.target as Node)) return;
+      setFillRequest((event as CustomEvent<FillSlotRequest>).detail);
+    };
+    window.addEventListener(FILL_SLOT_EVENT, open);
+    return () => window.removeEventListener(FILL_SLOT_EVENT, open);
+  }, [contentEl]);
   // The window bar's slots (WindowBar.tsx): present once App has mounted.
   const [barSlots, setBarSlots] = useState<{
     start: HTMLElement | null;
@@ -588,7 +865,18 @@ export function MilkdownEditor({
               agentPanel.setOpen(false);
             }}
           >
-            <span aria-hidden>←</span>
+            <span aria-hidden>
+              <svg
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M13 8H3.5M7.5 4 3.5 8l4 4" />
+              </svg>
+            </span>
             <span>Agent</span>
           </button>,
           barSlots.start,
@@ -606,7 +894,18 @@ export function MilkdownEditor({
             onClick={() => workspace.setOpen(false)}
           >
             <span>{zh ? "写作" : "Write"}</span>
-            <span aria-hidden>→</span>
+            <span aria-hidden>
+              <svg
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 8h9.5M8.5 4l4 4-4 4" />
+              </svg>
+            </span>
           </button>,
           barSlots.end,
         )}
@@ -618,56 +917,53 @@ export function MilkdownEditor({
           <WritePlayback reader={reader} language={settings.language} />,
           barSlots.end,
         )}
+      {/* Progress and approval live in the picture's frame in the document;
+          this chip only reports how an illustration ended. */}
       {paneEl &&
         createPortal(
           <Presence
             show={
-              !!(
-                selectionIllustration.phase ||
-                selectionIllustration.error ||
-                selectionIllustration.notice
-              ) && isActive
+              !!(selectionIllustration.error || selectionIllustration.notice) &&
+              isActive
             }
             exitMs={180}
           >
-            {(selectionIllustration.phase ||
-              selectionIllustration.error ||
-              selectionIllustration.notice) && (
+            {(selectionIllustration.error || selectionIllustration.notice) && (
               <PresenceDiv
                 role={selectionIllustration.error ? "alert" : "status"}
-                className={`selection-illustration-status${selectionIllustration.error ? " is-error" : selectionIllustration.phase ? " is-working" : " is-done"}`}
+                className={`selection-illustration-status${selectionIllustration.error ? " is-error" : " is-done"}`}
               >
-                {selectionIllustration.phase && (
-                  <span className="illustration-spinner" aria-hidden />
-                )}
                 <span>
-                  {selectionIllustration.error ||
-                    (selectionIllustration.phase === "refining"
-                      ? zh
-                        ? "Agent 正在润色图片提示词…"
-                        : "The Agent is refining the image prompt…"
-                      : selectionIllustration.phase === "generating"
-                        ? zh
-                          ? "正在生成插图，完成后自动插入…"
-                          : "Generating the illustration; it will be inserted when ready…"
-                        : selectionIllustration.notice)}
+                  {selectionIllustration.error || selectionIllustration.notice}
                 </span>
-                {selectionIllustration.phase ? (
-                  <button onClick={selectionIllustration.stop}>
-                    {zh ? "取消" : "Cancel"}
-                  </button>
-                ) : (
-                  <button
-                    aria-label={zh ? "关闭" : "Dismiss"}
-                    onClick={selectionIllustration.dismiss}
-                  >
-                    ×
-                  </button>
-                )}
+                <button
+                  aria-label={zh ? "关闭" : "Dismiss"}
+                  onClick={selectionIllustration.dismiss}
+                >
+                  ×
+                </button>
               </PresenceDiv>
             )}
           </Presence>,
           paneEl,
+        )}
+      {/* Adjusting a drafted prompt happens inside its card in the
+          document: the card leaves a container for this conversation. */}
+      {refinerHost &&
+        selectionIllustration.review &&
+        createPortal(
+          <PromptRefiner
+            inline
+            approve
+            prompt={selectionIllustration.review.prompt}
+            anchor={selectionIllustration.review.anchor}
+            onClose={selectionIllustration.closeEditor}
+            onCancel={selectionIllustration.stop}
+            onRegenerate={(prompt) =>
+              void selectionIllustration.approve(prompt)
+            }
+          />,
+          refinerHost,
         )}
       <Milkdown />
       {!workspace.open && (
@@ -697,10 +993,20 @@ export function MilkdownEditor({
               onReject={workspace.discard}
               onStop={stopTask}
               toolLabels={labels.toolActivity}
+              documentId={documentId}
+              autoWriter={
+                autoWriting ? (
+                  <AutoWriter
+                    host={autoHost}
+                    onClose={() => setAutoWriting(false)}
+                  />
+                ) : null
+              }
               pendingMedia={images.pending}
               mediaPreview={
                 <ImageJobsPanel language={settings.language} images={images} />
               }
+              pendingImages={pendingImages}
             >
               {recovery.error && (
                 <p role="alert">
@@ -774,41 +1080,7 @@ export function MilkdownEditor({
                   if (!conversation.busy) workspace.discard();
                 }}
                 pendingBar={false}
-                composerTools={
-                  <button
-                    type="button"
-                    className={`workspace-image-toggle${allowAutoImages ? " is-active" : ""}`}
-                    aria-pressed={allowAutoImages}
-                    aria-label={
-                      zh ? "允许本次请求配图" : "Allow images for this request"
-                    }
-                    disabled={conversation.busy}
-                    title={
-                      zh
-                        ? "允许 Agent 在本次请求中生成配图（可能产生费用）"
-                        : "Let the Agent generate images for this request (may incur charges)"
-                    }
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => setAllowAutoImages((on) => !on)}
-                  >
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.7"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <rect x="3" y="4" width="18" height="16" rx="3" />
-                      <circle cx="9" cy="10" r="1.6" />
-                      <path d="m21 16-5-5-9 9" />
-                    </svg>
-                    <span>{zh ? "配图" : "Images"}</span>
-                  </button>
-                }
+                composerMenu={agentMenu}
               />
             </AgentWorkspace>
           </div>,
@@ -976,6 +1248,14 @@ export function MilkdownEditor({
           />,
           panelContainer,
         )}
+      {fillRequest && (
+        <FillSlotCard
+          request={fillRequest}
+          run={run}
+          settings={settings}
+          onClose={() => setFillRequest(null)}
+        />
+      )}
       {inlineChat.chatInfo &&
         inlineChat.visible &&
         quickAskHost &&

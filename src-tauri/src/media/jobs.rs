@@ -62,6 +62,9 @@ struct Registry {
     stopped: HashSet<String>,
     jobs: HashMap<String, ImageJob>,
     counts: HashMap<String, usize>,
+    /// Image requests per send (generation): the cap the model works within.
+    /// `counts` stays per task - it numbers the task's jobs.
+    per_generation: HashMap<String, usize>,
 }
 static REGISTRY: LazyLock<Mutex<Registry>> = LazyLock::new(|| Mutex::new(Registry::default()));
 static LANE: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(1);
@@ -144,8 +147,14 @@ pub async fn media_cancel_image_generation(
     }
     Ok(())
 }
+/// Two image requests per send, retries included: each send is authorized
+/// on its own (the composer's image switch resets after every request), so
+/// a long conversation - or an auto-writing run, one send per section - is
+/// not cut off after its first two pictures. Returns the job's number within
+/// its task.
 fn reserve(
     counts: &mut HashMap<String, usize>,
+    per_generation: &mut HashMap<String, usize>,
     permission: &ImageTaskPermission,
 ) -> Result<usize, MediaError> {
     if !permission.allow_automatic
@@ -157,14 +166,18 @@ fn reserve(
             "Image generation is not authorized for this task",
         ));
     }
-    let key = format!("{}/{}", permission.document_id, permission.task_id);
-    let count = counts.entry(key).or_default();
-    if *count >= 2 {
+    let used = per_generation
+        .entry(generation_key(permission))
+        .or_default();
+    if *used >= 2 {
         return Err(MediaError::new(
             "limit",
-            "This task has reached its two image-request limit",
+            "This request has reached its two image-request limit",
         ));
     }
+    *used += 1;
+    let key = format!("{}/{}", permission.document_id, permission.task_id);
+    let count = counts.entry(key).or_default();
     *count += 1;
     Ok(*count)
 }
@@ -231,7 +244,14 @@ pub fn start_job(
     recover_registry(&context.app)?;
     let mut registry = REGISTRY.lock().unwrap();
     generation_active(&registry, &context.permission)?;
-    let sequence = reserve(&mut registry.counts, &context.permission)?;
+    let sequence = {
+        let Registry {
+            counts,
+            per_generation,
+            ..
+        } = &mut *registry;
+        reserve(counts, per_generation, &context.permission)?
+    };
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -772,8 +792,9 @@ mod tests {
     }
 
     #[test]
-    fn permission_is_task_scoped_and_limits_include_retries() {
+    fn permission_is_request_scoped_and_limits_include_retries() {
         let mut counts = HashMap::new();
+        let mut per_generation = HashMap::new();
         let mut permission = ImageTaskPermission {
             generation_id: "generation".into(),
             task_id: "task".into(),
@@ -781,12 +802,28 @@ mod tests {
             base_revision: 0,
             allow_automatic: false,
         };
-        assert!(reserve(&mut counts, &permission).is_err());
+        assert!(reserve(&mut counts, &mut per_generation, &permission).is_err());
         permission.allow_automatic = true;
-        assert_eq!(reserve(&mut counts, &permission).unwrap(), 1);
-        assert_eq!(reserve(&mut counts, &permission).unwrap(), 2);
-        assert!(reserve(&mut counts, &permission).is_err());
+        assert_eq!(
+            reserve(&mut counts, &mut per_generation, &permission).unwrap(),
+            1
+        );
+        assert_eq!(
+            reserve(&mut counts, &mut per_generation, &permission).unwrap(),
+            2
+        );
+        assert!(reserve(&mut counts, &mut per_generation, &permission).is_err());
+        // The next send of the same task gets its own two; the task's jobs
+        // keep counting on.
+        permission.generation_id = "next-send".into();
+        assert_eq!(
+            reserve(&mut counts, &mut per_generation, &permission).unwrap(),
+            3
+        );
         permission.document_id = "other-document".into();
-        assert_eq!(reserve(&mut counts, &permission).unwrap(), 1);
+        assert_eq!(
+            reserve(&mut counts, &mut per_generation, &permission).unwrap(),
+            1
+        );
     }
 }

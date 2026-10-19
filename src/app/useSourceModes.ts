@@ -9,6 +9,7 @@ import {
 import type { DocTab } from "../document/doc-tabs";
 import type { TabState } from "./useTabState";
 import { confirmWorkspaceClose } from "../document/workspace-close";
+import { windowShowsAgent } from "../document/doc-tabs";
 
 /** Switching the active tab between the rich editor, plain source mode and
  *  split view, with the caret carried across each switch. */
@@ -36,6 +37,9 @@ export function useSourceModes(tabState: TabState) {
   );
 
   const toggleSourceMode = useCallback(() => {
+    // Source mode is a way of writing: from Agent it would unmount the
+    // conversation with the editor. It applies on the Write surface.
+    if (windowShowsAgent()) return;
     // Live content: entering source mode unmounts the editor, and with it
     // any edit its debounce still holds.
     const tab = liveTabs().find((tb) => tb.id === activeTabId);
@@ -67,6 +71,7 @@ export function useSourceModes(tabState: TabState) {
   // split view it returns to the rich editor; from plain source mode it
   // just adds the preview.
   const toggleSplitView = useCallback(() => {
+    if (windowShowsAgent()) return;
     const tab = liveTabs().find((tb) => tb.id === activeTabId);
     if (!tab) return;
     if (tab.sourceMode && tab.splitView) {

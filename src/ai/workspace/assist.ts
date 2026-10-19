@@ -8,7 +8,7 @@ import type { Settings } from "../../settings/SettingsContext";
  * (no engine: no Node runtime to start) in Ask mode, on the configured text
  * model, and never edit the document.
  */
-async function quickText(
+export async function quickText(
   settings: Settings,
   document: string,
   message: string,
@@ -330,5 +330,136 @@ export async function refineImagePrompt(
       .join("\n\n"),
     crypto.randomUUID(),
   );
-  return text.replace(/^```\w*\n?|```$/g, "").trim();
+  const next = text.replace(/^```\w*\n?|```$/g, "").trim();
+  // Models overshoot the length they are asked for; the image services
+  // refuse a prompt over the limit, so an overlong rewrite is condensed.
+  return promptLength(next) > IMAGE_PROMPT_LIMIT
+    ? condenseImagePrompt(settings, next)
+    : next;
+}
+
+/** The longest prompt the image services accept (media/jobs.rs). */
+export const IMAGE_PROMPT_LIMIT = 1500;
+export const promptLength = (prompt: string) => [...prompt.trim()].length;
+
+/** Shortens an image prompt below the services' limit, keeping its
+ *  subject, composition and style; falls back to cutting at a sentence. */
+export async function condenseImagePrompt(
+  settings: Settings,
+  prompt: string,
+): Promise<string> {
+  const zh = settings.language.startsWith("zh");
+  const text = await quickText(
+    settings,
+    "",
+    [
+      zh
+        ? "把下面的图片生成提示词精简到 800 字以内，保留主体、人物特征、构图、光线与画风，删去重复和次要细节。只输出精简后的提示词本身，不要解释、不要调用工具。"
+        : "Condense the image prompt below to under 800 characters, keeping the subjects, their features, composition, lighting and style; drop repetition and minor detail. Output only the condensed prompt - no explanation, no tools.",
+      `<prompt>\n${prompt}\n</prompt>`,
+    ].join("\n\n"),
+    crypto.randomUUID(),
+  ).catch(() => "");
+  const condensed = text.replace(/^```\w*\n?|```$/g, "").trim();
+  if (condensed && promptLength(condensed) <= IMAGE_PROMPT_LIMIT)
+    return condensed;
+  // Still too long (or no answer): cut at the last sentence that fits.
+  const chars = [...prompt.trim()].slice(0, IMAGE_PROMPT_LIMIT);
+  const cut = chars.join("");
+  const stop = Math.max(
+    ...[". ", "。", "！", "？", "; ", "；"].map((mark) =>
+      cut.lastIndexOf(mark),
+    ),
+  );
+  return (stop > IMAGE_PROMPT_LIMIT / 2 ? cut.slice(0, stop + 1) : cut).trim();
+}
+
+/** Ready alternatives for an image prompt, each a different direction the
+ *  user can pick to generate at once (PromptRefiner's suggestion chips). */
+export async function suggestPromptVariants(
+  settings: Settings,
+  prompt: string,
+  anchor: string,
+): Promise<Suggestion[]> {
+  const zh = settings.language.startsWith("zh");
+  const text = await quickText(
+    settings,
+    anchor,
+    [
+      zh
+        ? "下面是为文档中一段文字配图的生成提示词，该段落已作为上下文提供。"
+        : "Below is the generation prompt for an illustration of a passage (provided as context).",
+      `${zh ? "当前提示词" : "Current prompt"}:\n${prompt}`,
+      zh
+        ? "给出 3 个不同方向的改写版本（例如换一种画风、换构图或视角、调整氛围与光线），都要忠于段落内容。每个包含 label（不超过 8 个汉字，说明改了什么）和 prompt（完整的新提示词，不超过 900 字）。"
+        : "Give 3 rewrites in different directions (e.g. another medium, another composition or viewpoint, another mood or light), all faithful to the passage. Each has a label (at most 4 words, what changed) and a prompt (the complete new prompt, at most 900 characters).",
+      zh
+        ? '只输出 JSON 数组，例如 [{"label":"…","prompt":"…"}]，不要其他文字，不要调用工具。'
+        : 'Output ONLY a JSON array like [{"label":"…","prompt":"…"}]; no other text, no tools.',
+    ].join("\n\n"),
+    crypto.randomUUID(),
+  );
+  const json = /\[[\s\S]*\]/.exec(text)?.[0];
+  if (!json) return [];
+  try {
+    const value = JSON.parse(json) as unknown;
+    return Array.isArray(value)
+      ? value
+          .filter(
+            (item): item is Suggestion =>
+              !!item &&
+              typeof item.label === "string" &&
+              typeof item.prompt === "string" &&
+              item.prompt.trim().length > 10,
+          )
+          .slice(0, 3)
+          .map((item) => ({
+            label: [...item.label.trim()].slice(0, 16).join(""),
+            prompt: [...item.prompt.trim()]
+              .slice(0, IMAGE_PROMPT_LIMIT)
+              .join(""),
+          }))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * What a blank in the document (【开幕日期】) should say: the value the
+ * document itself gives, or - when it doesn't - a few real, fitting
+ * candidates, most likely first. Never more than five.
+ */
+export async function suggestFill(
+  settings: Settings,
+  document: string,
+  label: string,
+  paragraph: string,
+): Promise<string[]> {
+  const zh = settings.language.startsWith("zh");
+  const text = await quickText(
+    settings,
+    document.slice(0, 8000),
+    zh
+      ? `文档里有一处待填写的空白【${label}】，所在段落：\n${paragraph}\n\n给出最合适的填写内容：文档里有依据就直接给出；没有依据时，给出 3 个真实、贴合语境的候选。只输出 JSON：{"options":["…","…"]}，最推荐的放第一个；每项只写要填进去的内容本身（不带括号、不解释），不要调用工具。`
+      : `The document has a blank to fill, 【${label}】, in this paragraph:\n${paragraph}\n\nGive what it should say: the value the document supports, or - without one - 3 real candidates that fit. Output only JSON: {"options":["…","…"]}, the best first; each only the text that goes in (no brackets, no explanation). No tools.`,
+    crypto.randomUUID(),
+  );
+  const json = /\{[\s\S]*\}/.exec(text)?.[0];
+  if (!json) return [];
+  try {
+    const options = (JSON.parse(json) as { options?: unknown }).options;
+    return Array.isArray(options)
+      ? [
+          ...new Set(
+            options
+              .filter((o): o is string => typeof o === "string")
+              .map((o) => o.replace(/^【|】$/g, "").trim())
+              .filter((o) => o && o.length <= 80),
+          ),
+        ].slice(0, 5)
+      : [];
+  } catch {
+    return [];
+  }
 }

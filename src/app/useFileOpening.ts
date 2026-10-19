@@ -4,6 +4,7 @@ import {
   makeBlankTab,
   readDocFromDisk,
   tabIsDirty,
+  tabIsPristine,
   type DocTab,
 } from "../document/doc-tabs";
 import { fs, session } from "../platform/ipc";
@@ -64,6 +65,9 @@ export function useFileOpening(opts: {
         (tabsRef.current.find((tb) => tb.id === tabId)?.reloadKey ?? 0) + 1;
       updateTab(tabId, {
         workspaceId: crypto.randomUUID(),
+        // A guide's tab now holds the user's file: no longer a guide (a
+        // language switch would otherwise swap the guide back in).
+        helpDoc: undefined,
         path,
         content: text,
         savedContent: text,
@@ -80,11 +84,16 @@ export function useFileOpening(opts: {
         await openPathInTab(path);
         return;
       }
-      // "window" mode: replace the active tab's document in place, same as
-      // this app has always worked for a single document per window - unless
-      // that would silently lose unsaved edits, in which case the same
-      // save/discard/cancel prompt used for closing steps in first.
+      // "window" mode: the active tab's document is replaced in place only
+      // when there is nothing in it to lose - a fresh untitled tab. A
+      // document being written or discussed with the Agent stays, and the
+      // file opens beside it in a new tab (the Agent conversation, its
+      // drafts and the surface the user is on all survive).
       const activeTab = tabsRef.current.find((tb) => tb.id === activeTabId);
+      if (activeTab && !tabIsPristine(activeTab)) {
+        await openPathInTab(path);
+        return;
+      }
       if (activeTab && tabIsDirty(activeTab)) {
         setPendingClose({ kind: "replace", tabId: activeTabId, path });
         return;

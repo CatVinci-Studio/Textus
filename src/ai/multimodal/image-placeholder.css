@@ -1,36 +1,54 @@
-/* image-placeholder-plugin.ts: the frame where a picture is being made. */
+/* image-placeholder-plugin.ts: the card where a picture is being made,
+   matching the image job cards (images.css). */
 .milkdown .image-placeholder {
-  position: relative;
-  width: min(100%, 440px);
-  margin: var(--md-gap-box, 1rem) auto;
-  aspect-ratio: var(--placeholder-ratio, 1);
-  max-height: 52vh;
-  overflow: hidden;
-  border-radius: var(--md-radius, var(--radius-block));
-  background: color-mix(in srgb, var(--editor-text) 5%, var(--editor-bg, #fff));
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: var(--space-4);
+  margin: var(--md-gap-box, 1rem) 0;
+  padding: var(--space-3);
   border: 1px solid
-    color-mix(in srgb, var(--editor-border, #8884) 70%, transparent);
+    color-mix(in srgb, var(--editor-border, #8884) 80%, transparent);
+  border-radius: var(--radius-surface);
+  background: var(--editor-bg, var(--bg));
+  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+  font-family: var(--ui-font, system-ui);
+  font-size: var(--text-sm);
+  line-height: 1.5;
   user-select: none;
-  animation: placeholder-in var(--dur-slow) var(--ease-out) both;
+  animation: placeholder-in var(--dur-base) var(--ease-out) both;
+  transition: border-color var(--dur-fast) var(--ease-standard);
 }
 .milkdown .image-placeholder.is-continuing {
   animation: none;
 }
+.milkdown .image-placeholder.is-review {
+  border-color: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 45%,
+    transparent
+  );
+}
 @keyframes placeholder-in {
   from {
     opacity: 0;
-    transform: scale(var(--scale-enter));
+    transform: translateY(var(--motion-distance-md));
   }
 }
-.image-placeholder-canvas {
-  position: absolute;
-  inset: 0;
-  opacity: 0.8;
+
+/* The thumbnail: colour drifting where the picture will be, a sheen across
+   it while the service works. */
+.image-placeholder-thumb {
+  position: relative;
+  align-self: start;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-block);
+  background: color-mix(in srgb, var(--editor-text) 5%, var(--editor-bg, #fff));
+  pointer-events: none;
 }
-/* Colour arriving: soft blobs drifting, as a picture forming. */
 .image-placeholder-blob {
   position: absolute;
-  width: 55%;
+  width: 70%;
   aspect-ratio: 1;
   border-radius: 50%;
   /* Soft edges drawn by the gradient itself: no blur filter to run on
@@ -40,23 +58,23 @@
     var(--blob, var(--editor-accent, var(--chrome-primary))),
     transparent
   );
-  opacity: 0.45;
+  opacity: 0.4;
   animation: placeholder-drift 7.2s var(--ease-in-out) infinite alternate;
   animation-delay: var(--placeholder-phase, 0ms);
 }
 .image-placeholder-blob:nth-child(1) {
-  top: -10%;
-  left: -5%;
+  top: -15%;
+  left: -15%;
 }
 .image-placeholder-blob:nth-child(2) {
-  right: -10%;
+  right: -20%;
   top: 25%;
   --blob: color-mix(in srgb, var(--editor-accent, #4b7bec) 40%, #e9a13b);
   animation-duration: 8.4s;
 }
 .image-placeholder-blob:nth-child(3) {
-  left: 20%;
-  bottom: -20%;
+  left: 10%;
+  bottom: -30%;
   --blob: color-mix(in srgb, var(--editor-accent, #4b7bec) 40%, #43b48a);
   animation-duration: 9.6s;
 }
@@ -65,8 +83,7 @@
     transform: translate(18%, 14%) scale(1.15);
   }
 }
-/* The sheen sweeping across. */
-.milkdown .image-placeholder::after {
+.image-placeholder-thumb::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -80,49 +97,155 @@
   animation: placeholder-sheen 2.4s var(--ease-in-out) infinite;
   animation-delay: var(--placeholder-phase, 0ms);
 }
-.milkdown .image-placeholder.is-queued::after {
-  animation-duration: 3.6s;
-  opacity: 0.6;
-}
 @keyframes placeholder-sheen {
   to {
     transform: translateX(100%);
   }
 }
-.image-placeholder-caption {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 1;
+/* Waiting for the user: the picture holds still. */
+.image-placeholder.is-review .image-placeholder-thumb::after {
+  animation: none;
+  opacity: 0;
+}
+.image-placeholder.is-review .image-placeholder-blob {
+  animation-play-state: paused;
+}
+
+.image-placeholder-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.image-placeholder-head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-2);
-  padding: 6px var(--space-3);
+}
+.image-placeholder-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--editor-bg, #fff) 82%, transparent);
-  color: var(--editor-text);
-  font: var(--text-sm) / 1 var(--ui-font, system-ui);
-  white-space: nowrap;
-  transform: translate(-50%, -50%);
-  box-shadow: var(--shadow-popover);
+  font-size: var(--text-xs);
+  color: var(--editor-accent, var(--chrome-primary));
+  background: color-mix(in srgb, currentColor 10%, transparent);
 }
-.image-placeholder-spinner {
-  width: 12px;
-  height: 12px;
+.image-placeholder-status.is-review {
+  color: var(--warning-color);
+}
+.image-placeholder-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  border: 2px solid
-    color-mix(in srgb, var(--editor-accent, #4b7bec) 25%, transparent);
-  border-top-color: var(--editor-accent, var(--chrome-primary));
-  animation: placeholder-spin 0.8s linear infinite;
+  background: currentColor;
+  animation: placeholder-pulse 1.4s var(--ease-standard) infinite;
 }
-@keyframes placeholder-spin {
+.image-placeholder-status.is-review .image-placeholder-dot {
+  animation: none;
+}
+@keyframes placeholder-pulse {
+  50% {
+    transform: scale(1.6);
+    opacity: 0.35;
+  }
+}
+.image-placeholder-meta {
+  font-size: var(--text-xs);
+  opacity: 0.5;
+  white-space: nowrap;
+}
+/* The prompt, as the card's main text. */
+.milkdown .image-placeholder-prompt {
+  margin: 0;
+  color: var(--editor-text);
+  line-height: 1.6;
+  max-height: 8em;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  user-select: text;
+  animation: motion-fade-in var(--dur-base) var(--ease-out);
+}
+/* While the prompt is written: lines where it will be. */
+.image-placeholder-lines {
+  display: grid;
+  gap: 8px;
+  padding: 4px 0;
+}
+.image-placeholder-lines span {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--editor-text) 6%, transparent) 25%,
+    color-mix(in srgb, var(--editor-text) 12%, transparent) 50%,
+    color-mix(in srgb, var(--editor-text) 6%, transparent) 75%
+  );
+  background-size: 200% 100%;
+  animation: placeholder-lines 1.4s linear infinite;
+}
+.image-placeholder-lines span:nth-child(2) {
+  width: 92%;
+}
+.image-placeholder-lines span:nth-child(3) {
+  width: 60%;
+}
+@keyframes placeholder-lines {
   to {
-    transform: rotate(360deg);
+    background-position: -200% 0;
+  }
+}
+.milkdown .image-placeholder-anchor {
+  margin: 0;
+  font-size: var(--text-xs);
+  opacity: 0.55;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.image-placeholder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+.image-placeholder-actions button {
+  height: var(--control-height-sm);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--editor-border, #8884);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-instant) var(--ease-standard);
+}
+.image-placeholder-actions button:hover {
+  background: color-mix(in srgb, var(--editor-text) 6%, transparent);
+}
+.image-placeholder-actions button:active {
+  transform: scale(0.96);
+}
+.image-placeholder-actions button.is-primary {
+  border-color: transparent;
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+}
+@media (max-width: 520px) {
+  .milkdown .image-placeholder {
+    grid-template-columns: 72px minmax(0, 1fr);
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .image-placeholder-blob,
-  .milkdown .image-placeholder::after {
+  .image-placeholder-thumb::after,
+  .image-placeholder-dot,
+  .image-placeholder-lines span {
     animation: none;
   }
 }

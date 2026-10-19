@@ -11,14 +11,12 @@ test("starts on Agent and keeps composer, editor and Undo across surface switche
   ).toBeVisible();
   const composer = home.locator(".inline-chat-input");
   await composer.fill("Keep this unsent idea");
-  await home.getByLabel("Agent engine", { exact: true }).selectOption("codex");
-  await expect(home.getByLabel("Engine model", { exact: true })).toBeVisible();
-  await home
-    .getByLabel("Agent engine", { exact: true })
-    .selectOption("claude-code");
-  await home
-    .getByLabel("Agent engine", { exact: true })
-    .selectOption("harness");
+  // One built-in agent: no engine picker, "+" leads the toolbar.
+  await expect(home.getByLabel("Agent engine", { exact: true })).toHaveCount(0);
+  const tools = await home
+    .locator(".inline-chat-toolbar > *")
+    .evaluateAll((items) => items.map((item) => item.className));
+  expect(tools[0]).toContain("inline-chat-attach");
   await page.screenshot({ path: testInfo.outputPath("agent-home-light.png") });
   // Agent → Write at the Agent header's end; Write → Agent at the window
   // bar's start.

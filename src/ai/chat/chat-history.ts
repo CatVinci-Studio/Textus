@@ -27,6 +27,12 @@ export interface ChatHistoryEntry {
    *  the folder moves with every reinstall and update - and handed out
    *  resolved again by useChatHistory. */
   docPath: string | null;
+  /** The document's identity in the editor (a tab's workspaceId or id), so
+   *  reopening the task finds its tab while it is still open. */
+  documentId?: string;
+  /** An untitled document's text after the last exchange: reopening the
+   *  task brings it back in a tab even when the tab is gone. Capped. */
+  snapshot?: string;
   /** First user message, cleaned and truncated - the list's display name. */
   title: string;
   updatedAt: number;
@@ -112,7 +118,34 @@ export function useChatHistory(): ChatHistoryEntry[] {
  *  A no-op while Settings > Privacy > Chat History is off. */
 export function saveConversation(entry: ChatHistoryEntry) {
   if (!loadSettings().enableChatHistory) return;
-  history.upsert(entry);
+  // Keeps the document link rememberConversationDocument added.
+  const previous = history.get().find((e) => e.id === entry.id);
+  history.upsert({
+    documentId: previous?.documentId,
+    snapshot: entry.docPath ? undefined : previous?.snapshot,
+    ...entry,
+  });
+}
+
+const MAX_SNAPSHOT_CHARS = 200_000;
+
+/** Ties a saved conversation to its document: the identity always, the text
+ *  only while the document has no file to reopen. */
+export function rememberConversationDocument(
+  id: string,
+  documentId: string,
+  snapshot: string | null,
+) {
+  if (!loadSettings().enableChatHistory) return;
+  const entry = history.get().find((e) => e.id === id);
+  if (!entry) return;
+  const next = snapshot ? snapshot.slice(0, MAX_SNAPSHOT_CHARS) : undefined;
+  if (entry.documentId === documentId && entry.snapshot === next) return;
+  history.upsert({ ...entry, documentId, snapshot: next });
+}
+
+export function findConversation(id: string): ChatHistoryEntry | undefined {
+  return history.get().find((e) => e.id === id);
 }
 
 export function deleteConversation(id: string) {

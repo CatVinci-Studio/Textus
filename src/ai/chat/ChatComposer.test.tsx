@@ -78,9 +78,27 @@ it("offers Create only in a document workspace", () => {
       onEscape={() => {}}
     />,
   );
-  fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
-  expect(screen.getByRole("option", { name: "Create" })).toBeInTheDocument();
+  // The modes live in the "+" menu, the current one on a chip beside it.
+  expect(screen.getByRole("button", { name: "Mode: Create" })).toBeVisible();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Add content and tools" }),
+  );
+  expect(screen.getByRole("menuitemradio", { name: /Create/ })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
 });
+
+/** Opens "+" and picks the entry whose name matches. */
+function pick(
+  role: "menuitem" | "menuitemradio" | "menuitemcheckbox",
+  name: RegExp,
+) {
+  fireEvent.click(
+    screen.getByRole("button", { name: "Add content and tools" }),
+  );
+  fireEvent.click(screen.getByRole(role, { name }));
+}
 
 type ComposerOptions = {
   selectedText?: string | null;
@@ -162,7 +180,7 @@ describe("ChatComposer selection chip", () => {
     fireEvent.change(screen.getByPlaceholderText("Ask anything"), {
       target: { value: "tighten this" },
     });
-    fireEvent.click(screen.getByText("Send"));
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
     expect(onSend).toHaveBeenCalledWith("tighten this", [], true, {
       mode: "ask",
       webSearch: false,
@@ -171,24 +189,60 @@ describe("ChatComposer selection chip", () => {
 
   it("sends the selected interaction mode and web-search choice", () => {
     const { onSend } = renderComposer();
-    fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
-    fireEvent.click(screen.getByRole("option", { name: "Plan" }));
-    // Named for what it picks, not for one of its choices: a screen
-    // reader used to hear "Ask" over a picker set to Plan.
-    expect(screen.queryByRole("combobox", { name: "Ask" })).toBeNull();
+    pick("menuitemradio", /Plan/);
+    // The chip says which mode is on, by its name and the mode's.
+    expect(screen.getByRole("button", { name: "Mode: Plan" })).toBeVisible();
+    pick("menuitemcheckbox", /Web search/);
+    // A switch that is on shows beside "+", and turns off from there.
     expect(
-      screen.getByRole("combobox", { name: "Mode" }).textContent,
-    ).toContain("Plan");
-    fireEvent.click(screen.getByLabelText("Web search"));
+      screen.getByRole("button", { name: /Web search/, pressed: true }),
+    ).toBeVisible();
     fireEvent.change(screen.getByPlaceholderText("Ask anything"), {
       target: { value: "research this" },
     });
-    fireEvent.click(screen.getByText("Send"));
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
     expect(onSend).toHaveBeenCalledWith("research this", [], true, {
       mode: "plan",
       webSearch: true,
     });
+  });
+});
+
+describe("ChatComposer skills", () => {
+  it("takes a picked skill back whole with one Backspace", async () => {
+    listSkills.mockResolvedValue([
+      {
+        name: "polish",
+        description: "Polish",
+        category: null,
+        invocation: "both",
+        source: "global",
+        overridesBuiltin: false,
+        enabled: true,
+        aliases: {},
+      },
+    ]);
+    renderComposer();
+    const input = screen.getByPlaceholderText("Ask anything");
+    fireEvent.change(input, { target: { value: "/polish " } });
+    // The list loads when the menu opens; reopen it to resolve the name.
+    fireEvent.change(input, { target: { value: "/polish" } });
+    await screen.findByText("/polish");
+    fireEvent.change(input, { target: { value: "/polish " } });
+    (input as HTMLTextAreaElement).setSelectionRange(8, 8);
+    fireEvent.keyDown(input, { key: "Backspace" });
+    expect(input).toHaveValue("");
+  });
+
+  it("leaves Backspace alone inside a name still being typed", () => {
+    renderComposer();
+    const input = screen.getByPlaceholderText("Ask anything");
+    fireEvent.change(input, { target: { value: "/pol" } });
+    (input as HTMLTextAreaElement).setSelectionRange(4, 4);
+    const event = fireEvent.keyDown(input, { key: "Backspace" });
+    // Not prevented: the browser deletes one character as usual.
+    expect(event).toBe(true);
   });
 });
 
@@ -202,7 +256,7 @@ describe("ChatComposer attachments", () => {
     );
     renderComposer();
 
-    fireEvent.click(screen.getByTitle("Attach a file"));
+    pick("menuitem", /Files and images/);
     expect(
       await screen.findByText("This PDF has no text layer."),
     ).toBeInTheDocument();
@@ -213,7 +267,7 @@ describe("ChatComposer attachments", () => {
     pickAttachmentFile.mockResolvedValue(imageAttachment);
     renderComposer();
 
-    fireEvent.click(screen.getByTitle("Attach a file"));
+    pick("menuitem", /Files and images/);
     expect(
       await screen.findByText("This provider can't read images."),
     ).toBeInTheDocument();
@@ -224,7 +278,7 @@ describe("ChatComposer attachments", () => {
     pickAttachmentFile.mockResolvedValue(imageAttachment);
     renderComposer();
 
-    fireEvent.click(screen.getByTitle("Attach a file"));
+    pick("menuitem", /Files and images/);
     expect(await screen.findByText("chart.png")).toBeInTheDocument();
   });
 
@@ -239,7 +293,7 @@ describe("ChatComposer attachments", () => {
     } satisfies ChatAttachment);
     renderComposer();
 
-    fireEvent.click(screen.getByTitle("Attach a file"));
+    pick("menuitem", /Files and images/);
     expect(await screen.findByText("(shortened)")).toBeInTheDocument();
   });
 
@@ -247,12 +301,12 @@ describe("ChatComposer attachments", () => {
     pickAttachmentFile.mockResolvedValue(imageAttachment);
     const { onSend } = renderComposer();
 
-    fireEvent.click(screen.getByTitle("Attach a file"));
+    pick("menuitem", /Files and images/);
     await screen.findByText("chart.png");
     fireEvent.change(screen.getByPlaceholderText("Ask anything"), {
       target: { value: "what is this?" },
     });
-    fireEvent.click(screen.getByText("Send"));
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
     expect(onSend).toHaveBeenCalledWith(
       "what is this?",

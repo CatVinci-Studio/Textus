@@ -363,3 +363,85 @@ button.agent-context-chip:hover {
   color: var(--editor-text);
   word-break: break-word;
 }
+
+/* A run of tool steps (tool-steps.ts): one quiet line with counts, opening
+   to each step and its result. */
+.agent-tool-group {
+  align-self: flex-start;
+  max-width: 92%;
+  padding: 0 2px;
+  color: var(--editor-muted);
+  font-size: var(--text-xs);
+}
+
+.agent-tool-group > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  list-style: none;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+
+.agent-tool-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.agent-tool-group > summary:hover {
+  color: var(--editor-text);
+}
+
+.agent-tool-group > summary .agent-tool-icon {
+  width: 11px;
+  height: 11px;
+  opacity: 0.8;
+}
+
+.agent-tool-group-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-tool-group > summary::after {
+  content: "";
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  opacity: 0.7;
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+
+.agent-tool-group[open] > summary::after {
+  transform: rotate(90deg);
+}
+
+.agent-tool-group ol {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 0 0 0 17px;
+  list-style: none;
+  animation: motion-fade-in var(--dur-fast) var(--ease-out);
+}
+
+.agent-tool-group pre {
+  max-height: 160px;
+  margin: 3px 0 0;
+  padding: 6px 8px;
+  overflow: auto;
+  border-radius: var(--radius-block);
+  background: var(--editor-code-bg);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-tool-group ol {
+    animation: none;
+  }
+}

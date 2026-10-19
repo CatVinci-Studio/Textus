@@ -1,6 +1,12 @@
 import { useEffect } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { readDocText, statMtime, tabIsDirty, type DocTab } from "./doc-tabs";
+import {
+  readDocText,
+  statMtime,
+  tabIsDirty,
+  type DocTab,
+  tabIsEngaged,
+} from "./doc-tabs";
 import { unlistenAll } from "../utils/tauri-events";
 
 // External-change pickup: whenever this window regains focus, compare each
@@ -36,6 +42,8 @@ export function useExternalChangeReload(
             }
             if (mtime === tab.diskMtime) continue;
             if (tabIsDirty(tab)) continue; // dirty: defer to the save-time prompt
+            // A remount would drop its Agent conversation, draft or images.
+            if (tabIsEngaged(tab.id)) continue;
             const content = await readDocText(tab.path).catch(() => null);
             if (content === null) continue;
             // Re-check against the LIVE tab: the user may have started typing

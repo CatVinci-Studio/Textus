@@ -12,10 +12,6 @@ vi.mock("../platform/ipc", () => ({
   ai: api,
   media: { providers: api.providers },
 }));
-vi.mock("../ai/agent-engine", () => ({
-  selectedEngine: () => "codex",
-  engineModel: () => "",
-}));
 import { createTestEditor } from "./editor-test-harness";
 import { useSelectionIllustration } from "./useSelectionIllustration";
 import type { EditorRunner } from "../editor/useEditorRunner";
@@ -45,6 +41,9 @@ async function setup() {
     jobs: [],
     start,
     accept: vi.fn(),
+    cancel: vi.fn(),
+    isLive: () => true,
+    holdPlaceholder: vi.fn(() => () => {}),
   } as unknown as ReturnType<typeof useDocumentImages>;
   const settings = {
     language: "en",
@@ -52,7 +51,7 @@ async function setup() {
     agentModels: {},
   } as unknown as Settings;
   const hook = renderHook(() =>
-    useSelectionIllustration(run, settings, images, "doc", true),
+    useSelectionIllustration(run, settings, images, "doc"),
   );
   return { ...hook, start, run };
 }
@@ -64,7 +63,7 @@ it("rejects missing image settings before invoking paid prompt refinement", asyn
   expect(api.agentMessage).not.toHaveBeenCalled();
   expect(start).not.toHaveBeenCalled();
 });
-it("condenses an oversized prompt with the same selected engine and only selected source", async () => {
+it("condenses an oversized prompt on the built-in agent with only the selected source", async () => {
   api.providers.mockResolvedValue({ image: { provider: "minimax" } });
   api.agentMessage
     .mockResolvedValueOnce([{ kind: "Assistant", text: "x".repeat(1600) }])
@@ -75,10 +74,17 @@ it("condenses an oversized prompt with the same selected engine and only selecte
   await act(async () => result.current.create());
   expect(api.agentMessage).toHaveBeenCalledTimes(2);
   for (const [request] of api.agentMessage.mock.calls) {
-    expect(request.engine).toBe("codex");
+    expect(request.engine).toBeUndefined();
     expect(request.document).toBe("Forest passage.");
     expect(request.document).not.toContain("Private");
   }
+  // Nothing is generated until the user approves the drafted prompt.
+  expect(start).not.toHaveBeenCalled();
+  expect(result.current.review).toMatchObject({
+    prompt: "Polished forest composition",
+    anchor: "Forest passage.",
+  });
+  await act(async () => result.current.approve("Polished forest composition"));
   expect(start).toHaveBeenCalledWith(
     expect.objectContaining({
       prompt: "Polished forest composition",
@@ -110,9 +116,18 @@ it("keeps the illustration when the document is edited during refinement", async
     resolve([{ kind: "Assistant", text: "Forest" }]);
     await pending;
   });
-  // Inserted later by its captured anchor against the live document.
+  // Approved later, inserted by its captured anchor against the live
+  // document.
+  expect(result.current.review).toMatchObject({
+    prompt: "Forest",
+    anchor: "Forest passage.",
+  });
+  await act(async () => result.current.approve("An edited forest prompt"));
   expect(start).toHaveBeenCalledWith(
-    expect.objectContaining({ prompt: "Forest", anchor: "Forest passage." }),
+    expect.objectContaining({
+      prompt: "An edited forest prompt",
+      anchor: "Forest passage.",
+    }),
     { live: true },
   );
   expect(result.current.error).toBeNull();

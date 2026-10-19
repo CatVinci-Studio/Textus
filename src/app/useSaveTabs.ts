@@ -10,6 +10,7 @@ import {
   writeDocFile,
 } from "../document/doc-tabs";
 import { firstLevelOneHeading } from "../document/save-default-name";
+import { REWRITE_IMAGE_SRCS_EVENT } from "../document/doc-tabs";
 import { fs, session, media } from "../platform/ipc";
 import { defaultMarkdownFilename } from "../document/save-default-name";
 import type { Strings } from "../i18n/strings";
@@ -80,6 +81,7 @@ export function useSaveTabs(opts: {
       // rewrite the markdown to relative paths (4.2). A no-op for documents
       // with no draft-origin images.
       let { content } = tab;
+      let migrationMappings: { old: string; new: string }[] = [];
       try {
         const migration = await migrateDraftImages(
           picked,
@@ -88,6 +90,7 @@ export function useSaveTabs(opts: {
         );
         if (migration.migrated) {
           content = migration.content;
+          migrationMappings = migration.mappings;
         }
         if (migration.failed.length > 0) {
           await showMessage(
@@ -112,14 +115,28 @@ export function useSaveTabs(opts: {
         });
         return false;
       }
+      let rewroteInPlace = false;
+      if (content !== tab.content && migrationMappings.length) {
+        const event = new CustomEvent(REWRITE_IMAGE_SRCS_EVENT, {
+          detail: { tabId, mappings: migrationMappings, handled: false },
+        });
+        window.dispatchEvent(event);
+        rewroteInPlace = event.detail.handled;
+      }
       void session.addRecentFile(picked);
       updateTab(tabId, {
+        // Saved somewhere of the user's choosing: theirs, not a guide.
+        helpDoc: undefined,
         path: picked,
         content,
         savedContent: content,
         diskMtime: await statMtime(picked),
-        // Image migration rewrote the markdown: the editor has to load it.
-        ...(content !== tab.content ? { reloadKey: tab.reloadKey + 1 } : {}),
+        // Image migration rewrote the markdown. The editor rewrites its
+        // image srcs in place (keeping Undo, the Agent conversation and any
+        // image still painting); only an editor that is not there remounts.
+        ...(content !== tab.content && !rewroteInPlace
+          ? { reloadKey: tab.reloadKey + 1 }
+          : {}),
       });
       return true;
     },

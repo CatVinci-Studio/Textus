@@ -192,7 +192,14 @@ function ImageJobCard({
           </p>
         )}
         <div className="image-job-actions">
-          {job.status === "ready" && (
+          {images.waitsForDraft(job) && (
+            <span className="image-job-wait">
+              {zh
+                ? "采纳正文后自动插入到对应段落"
+                : "Inserted below its paragraph once the text is accepted"}
+            </span>
+          )}
+          {job.status === "ready" && !images.waitsForDraft(job) && (
             <button
               type="button"
               className="is-primary"
@@ -245,8 +252,11 @@ export function ImageJobsPanel({
 }) {
   const zh = language.startsWith("zh");
   const [refining, setRefining] = useState<ImageJob | null>(null);
+  // Right-click pictures live in their frame in the document.
   const visible = images.jobs.filter(
-    (job) => !["cancelled", "committed"].includes(job.status),
+    (job) =>
+      !["cancelled", "committed"].includes(job.status) &&
+      !images.isLive(job.jobId),
   );
   if (!visible.length && !images.error && !refining) return null;
   return (

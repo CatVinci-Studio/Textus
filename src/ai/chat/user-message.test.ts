@@ -8,6 +8,14 @@ import {
 } from "./user-message";
 
 describe("parseUserMessage", () => {
+  it("folds a task brief out of the body", () => {
+    expect(
+      parseUserMessage(
+        "【自动写作 1/3】缘起\n\n<task-brief>\n请写第 1 节\n</task-brief>",
+      ).body,
+    ).toBe("【自动写作 1/3】缘起");
+  });
+
   it("leaves a plain message alone", () => {
     expect(parseUserMessage("rewrite this")).toEqual({
       body: "rewrite this",

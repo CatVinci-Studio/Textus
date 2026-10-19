@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
-import { setHeadingTitles, TITLES_CHANGED } from "../document/doc-tabs";
+import {
+  makeBlankTab,
+  OPEN_TASK_EVENT,
+  pendingTaskRestores,
+  RESTORE_TASK_EVENT,
+  type OpenTask,
+  NEW_DOCUMENT_EVENT,
+  setHeadingTitles,
+  TITLES_CHANGED,
+} from "../document/doc-tabs";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
 import { installClipboardCapture } from "../clipboard/history";
@@ -86,6 +95,12 @@ function App() {
   const { tabs, setTabs, activeTabId, setActiveTabId, tabsRef, liveTabs } =
     tabState;
   const { updateTab, reorderTab, addBlankTab } = tabState;
+  // The Agent home's "New document" (AgentWorkspace): a tab here, whatever
+  // File > New does, so the conversation surface stays in this window.
+  useEffect(() => {
+    window.addEventListener(NEW_DOCUMENT_EVENT, addBlankTab);
+    return () => window.removeEventListener(NEW_DOCUMENT_EVENT, addBlankTab);
+  }, [addBlankTab]);
   // The one save/discard/cancel prompt (close-flow.ts's PendingClose).
   const [pendingClose, setPendingClose] = useState<PendingClose | null>(null);
   const {
@@ -228,6 +243,42 @@ function App() {
   });
 
   // The same, pushed to an already-running window (useFileOpening.ts).
+  // A past Agent task (AgentWorkspace's history list): its document comes
+  // up here - the file, its still-open tab, or its saved text - and the
+  // editor showing it restores the conversation (RESTORE_TASK_EVENT).
+  useEffect(() => {
+    const open = (event: Event) => {
+      const task = (event as CustomEvent<OpenTask>).detail;
+      const restoreIn = (key: string) => {
+        pendingTaskRestores.set(key, task.entryId);
+        window.dispatchEvent(new Event(RESTORE_TASK_EVENT));
+      };
+      if (task.docPath) {
+        restoreIn(`path:${task.docPath}`);
+        void openPathInTab(task.docPath).catch(() => {});
+        return;
+      }
+      const open = tabState.tabsRef.current.find(
+        (tab) => (tab.workspaceId ?? tab.id) === task.documentId,
+      );
+      if (open) {
+        restoreIn(`doc:${task.documentId}`);
+        tabState.setActiveTabId(open.id);
+        return;
+      }
+      const tab = {
+        ...makeBlankTab(),
+        // Unsaved text: dirty, so closing it asks, and draft recovery
+        // keeps it.
+        content: task.snapshot ?? "",
+      };
+      restoreIn(`doc:${tab.id}`);
+      tabState.setTabs((prev) => [...prev, tab]);
+      tabState.setActiveTabId(tab.id);
+    };
+    window.addEventListener(OPEN_TASK_EVENT, open);
+    return () => window.removeEventListener(OPEN_TASK_EVENT, open);
+  }, [openPathInTab, tabState]);
   useOpenPathsPush(openPathInTab);
 
   useWindowCloseGuard(liveTabs, setPendingClose);

@@ -125,12 +125,11 @@ test("Write keeps only the document and navigation, without media forms or launc
   ).not.toBeVisible();
 });
 
-test("right-click selection refines the image prompt with the selected engine and inserts below the passage", async ({
+test("right-click selection refines the image prompt on the built-in agent and inserts below the passage", async ({
   page,
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "textus-agent-engine": "codex" },
   });
   await pasteMarkdown(
     page,
@@ -146,7 +145,7 @@ test("right-click selection refines the image prompt with the selected engine an
     runtime.invoke = async (command: string, args: any) => {
       if (command === "ai_agent_message") {
         if (
-          args.engine !== "codex" ||
+          args.engine !== undefined ||
           args.document !== "A forest beside a blue lake." ||
           !args.message.includes("A forest beside a blue lake.")
         )
@@ -207,6 +206,12 @@ test("right-click selection refines the image prompt with the selected engine an
   await page
     .getByText("Generate image below selection", { exact: true })
     .click();
+  // The drafted prompt waits in the picture's frame: nothing is generated
+  // (or charged) until it is approved.
+  const frame = editor.locator(".image-placeholder.is-review");
+  await expect(frame).toContainText("A cinematic forest framing");
+  await expect(editor.locator('img[src*="selection.png"]')).toHaveCount(0);
+  await frame.getByRole("button", { name: "Generate", exact: true }).click();
   await expect(editor.locator('img[src*="selection.png"]')).toHaveCount(1);
   const blocks = await editor
     .locator(":scope > *")

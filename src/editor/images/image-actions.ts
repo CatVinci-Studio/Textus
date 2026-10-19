@@ -7,6 +7,7 @@ import {
   resolveImageSrc,
   writeImageRotation,
   writeImageWidth,
+  imageCaptionAt,
 } from "./image-plugin";
 import { openImageViewer, type ImageViewerLabels } from "./image-viewer";
 
@@ -85,6 +86,7 @@ export function openImageAt(
   openImageViewer({
     src: resolveImageSrc(src, options.docPath),
     alt: (node.attrs.alt as string) ?? "",
+    caption: imageCaptionAt(view.state.doc, pos),
     rotate: readImagePresentation(node.attrs.title as string | null).rotate,
     labels: viewerLabels(t),
     showPrompt: options.showPrompt,

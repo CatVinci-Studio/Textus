@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { usePopoverPlace } from "./ComposerMenu";
 import type { Lang, Strings } from "../../i18n/strings";
 import { tapKeepingFocus } from "../../ui/tap";
 import type { PickerGroupId } from "./skill-picker";
@@ -74,6 +75,7 @@ export function ComposerPicker({
   empty,
   active,
   keys,
+  floating = false,
 }: {
   kind: "skill" | "mention";
   /** The listbox's accessible name. */
@@ -85,8 +87,15 @@ export function ComposerPicker({
   active: number;
   /** The keyboard hint, or null (a phone has no arrow keys). */
   keys: string | null;
+  /** A card over (or under) the composer, like the "+" menu, rather than a
+   *  block above it: the empty Agent home has the composer mid-window, and
+   *  the block, squeezed into the column above it, showed one row. */
+  floating?: boolean;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const measured = usePopoverPlace(rootRef);
+  const place = floating ? measured : null;
   const count = sections.reduce((n, s) => n + s.rows.length, 0);
 
   // The highlighted row stays in view by scrolling the menu alone (as
@@ -107,7 +116,18 @@ export function ComposerPicker({
 
   let index = 0;
   return (
-    <div className="inline-chat-skill-menu composer-picker" data-picker={kind}>
+    <div
+      ref={rootRef}
+      className={`inline-chat-skill-menu composer-picker${floating ? " is-floating" : ""}${place?.down ? " is-below" : ""}`}
+      style={
+        floating
+          ? place
+            ? { maxHeight: place.max }
+            : { visibility: "hidden" }
+          : undefined
+      }
+      data-picker={kind}
+    >
       {count === 0 ? (
         <div className="composer-picker-empty" role="status">
           {empty.map((line, i) => (

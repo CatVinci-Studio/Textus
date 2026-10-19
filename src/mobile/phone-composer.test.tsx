@@ -89,7 +89,7 @@ describe("the composer on a phone", () => {
     fireEvent.change(screen.getByPlaceholderText("Ask anything"), {
       target: { value: "why?" },
     });
-    fireEvent.click(screen.getByText("Send"));
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
     expect(onSend).toHaveBeenCalledWith("why?", [], true, {
       mode: "ask",
       webSearch: false,

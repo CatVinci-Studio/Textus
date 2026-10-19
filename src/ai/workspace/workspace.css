@@ -141,8 +141,11 @@
   border-radius: var(--radius-pill);
   font-size: var(--text-xs);
   color: var(--editor-muted, inherit);
-  background: color-mix(in srgb, currentColor 6%, transparent);
-  transition: color var(--dur-fast) var(--ease-standard);
+  /* Each state's own background, no colour transition: WebKit left stale
+     tiles of a currentColor-mixed background behind while the colour
+     animated - a darker block beside the pill. */
+  background: color-mix(in srgb, var(--editor-text) 6%, transparent);
+  contain: paint;
 }
 .workspace-status-dot {
   width: 6px;
@@ -153,6 +156,11 @@
 }
 .workspace-status.is-running {
   color: var(--editor-accent, var(--chrome-primary));
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 10%,
+    transparent
+  );
 }
 .workspace-status.is-running .workspace-status-dot {
   opacity: 1;
@@ -160,6 +168,7 @@
 }
 .workspace-status.is-ready {
   color: var(--warning-color);
+  background: color-mix(in srgb, var(--warning-color) 12%, transparent);
 }
 .workspace-status.is-ready .workspace-status-dot {
   opacity: 1;
@@ -191,6 +200,12 @@
   background: var(--sidebar-bg);
   border-right: 1px solid
     color-mix(in srgb, var(--editor-border, #8884) 60%, transparent);
+}
+/* Rows keep their height and the list scrolls: in a fixed-height drawer
+   (narrow windows) a long history used to squeeze every row - "New task"
+   to a sliver, two-line tasks to clipped text - until it looked empty. */
+.workspace-tasks > * {
+  flex-shrink: 0;
 }
 .workspace-tasks h3 {
   margin: var(--space-5) var(--space-2) var(--space-1);
@@ -511,60 +526,15 @@
 .agent-home .inline-chat-toolbar button {
   border: 0;
 }
-.agent-home :is(.inline-chat-attach, .inline-chat-web-search) {
-  padding: 6px;
-  width: 28px;
-  min-width: 28px;
-  height: 28px;
-  background: transparent;
-  display: grid;
-  place-items: center;
-}
-.agent-home :is(.inline-chat-attach, .inline-chat-web-search) svg {
-  width: 16px;
-  height: 16px;
+.agent-home .inline-chat-toolbar .inline-chat-send {
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
 }
 .workspace-extra-tools {
   margin: var(--space-3) var(--space-2) 0;
   font-size: var(--text-xs);
   opacity: 0.7;
-}
-/* The image switch in the composer toolbar, beside the mode picker. */
-.agent-home .inline-chat-toolbar .workspace-image-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: var(--control-height-sm);
-  padding: 0 var(--space-2);
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--editor-muted, inherit);
-  font: inherit;
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition:
-    background-color var(--dur-fast) var(--ease-standard),
-    color var(--dur-fast) var(--ease-standard),
-    transform var(--dur-instant) var(--ease-standard);
-}
-.agent-home .inline-chat-toolbar .workspace-image-toggle:not(:disabled):hover {
-  background: color-mix(in srgb, currentColor 10%, transparent);
-  color: var(--editor-text);
-}
-.agent-home .inline-chat-toolbar .workspace-image-toggle:not(:disabled):active {
-  transform: scale(0.95);
-}
-.agent-home .inline-chat-toolbar .workspace-image-toggle.is-active {
-  color: var(--editor-accent, var(--chrome-primary));
-  background: color-mix(
-    in srgb,
-    var(--editor-accent, var(--chrome-primary)) 12%,
-    transparent
-  );
-}
-.workspace-image-toggle.is-active svg {
-  animation: motion-pop-in var(--dur-base) var(--ease-spring-bouncy);
 }
 .workspace-media-permission {
   display: inline-flex;
@@ -811,20 +781,23 @@
 /* ---------- Surface navigation ----------
    One shape on both sides: Write → Agent leads the window bar ("← Agent"),
    Agent → Write ends the Agent header ("写作 →"). */
+/* Sized for the 28px window bar it sits in: a 24px pill with body-size
+   text, readable at a glance in a large window. */
 .surface-jump {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  height: 20px;
+  gap: 6px;
+  height: 24px;
   margin-left: 4px;
-  padding: 0 8px;
+  padding: 0 11px;
   border: 1px solid
-    color-mix(in srgb, var(--editor-border, #8884) 80%, transparent);
+    color-mix(in srgb, var(--editor-border, #8884) 90%, transparent);
   border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--editor-muted, inherit);
+  background: color-mix(in srgb, var(--editor-text) 3%, transparent);
+  color: var(--editor-text);
   font: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-md);
+  font-weight: 500;
   cursor: pointer;
   animation: motion-fade-in var(--dur-base) var(--ease-out);
   transition:
@@ -834,6 +807,12 @@
 .surface-jump:hover {
   color: var(--editor-text);
   background: var(--sidebar-hover, #8882);
+}
+.surface-jump svg {
+  display: block;
+  width: 13px;
+  height: 13px;
+  opacity: 0.7;
 }
 .surface-jump > span:first-child {
   transition: transform var(--dur-fast) var(--ease-out);
@@ -897,32 +876,6 @@
   color: var(--danger, #cf655f);
   max-width: 240px;
   animation: motion-fade-in var(--dur-fast) var(--ease-out);
-}
-
-/* ---------- Engine controls in the composer ---------- */
-.agent-engine-controls {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: var(--text-xs);
-  flex-wrap: wrap;
-}
-.agent-engine-controls select,
-.agent-engine-controls input {
-  font: inherit;
-  color: inherit;
-  border: 0;
-  background: transparent;
-  padding: 5px;
-  max-width: 160px;
-  border-radius: var(--radius-control);
-}
-.agent-engine-controls select {
-  background: color-mix(in srgb, currentColor 6%, transparent);
-}
-.agent-model-label,
-.agent-engine-controls > span {
-  opacity: 0.6;
 }
 
 /* ---------- Selection illustration: a floating status chip ---------- */
@@ -999,29 +952,801 @@
   }
 }
 
-/* A narrow composer (small window, draft panel open) keeps one toolbar row:
-   the secondary labels go, the image switch keeps its icon. */
-.agent-home .inline-chat-field {
-  container-type: inline-size;
-}
-@container (max-width: 560px) {
-  .agent-home .agent-model-label,
-  .agent-home .agent-engine-controls > span {
-    display: none;
-  }
-}
-@container (max-width: 420px) {
-  .agent-home .workspace-image-toggle span {
-    display: none;
-  }
-  .agent-home .agent-engine-controls select {
-    max-width: 110px;
-  }
-}
-
 /* In Agent the window bar's chat toggle would open a second Agent: hidden
    while the active document shows the Agent surface. */
 :root:has(.agent-workspace-layer:not([hidden])[data-open="true"])
   .window-bar-toggle {
   display: none;
+}
+
+/* "New document" in the Agent header: a quiet pill, icon-led. */
+.workspace-new-document {
+  color: var(--editor-muted, inherit);
+}
+.workspace-new-document svg {
+  width: 12px;
+  height: 12px;
+}
+.workspace-new-document:hover {
+  color: var(--editor-text);
+}
+
+/* A past task from another document names that document under its title. */
+.workspace-history-task {
+  display: grid;
+  gap: 1px;
+}
+.workspace-history-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.workspace-history-doc {
+  font-size: var(--text-xs);
+  opacity: 0.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Auto-writing (AutoWriter.tsx) ----------
+   A card at the top of the conversation: the plan files, then the outline
+   with each section's state, then the review step. The turns it sends
+   stream in the chat below it as usual. */
+.agent-home.is-auto-writing .workspace-conversation {
+  gap: var(--space-3);
+}
+.auto-writer {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: min(62vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-4);
+  border: 1px solid
+    color-mix(in srgb, var(--editor-border, #8884) 80%, transparent);
+  border-radius: var(--radius-surface);
+  background: var(--editor-bg, var(--bg));
+  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+  font-size: var(--text-sm);
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
+}
+.auto-writer > header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.auto-writer > header strong {
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+.auto-writer-progress {
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--editor-accent, var(--chrome-primary));
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.auto-writer-close,
+.auto-writer-remove {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: inherit;
+  opacity: 0.55;
+  transition:
+    opacity var(--dur-fast) var(--ease-standard),
+    transform var(--dur-instant) var(--ease-standard);
+}
+.auto-writer-close svg,
+.auto-writer-remove svg {
+  width: 12px;
+  height: 12px;
+}
+.auto-writer-close:not(:disabled):hover,
+.auto-writer-remove:hover {
+  opacity: 1;
+}
+.auto-writer-close:not(:disabled):active,
+.auto-writer-remove:active {
+  transform: scale(0.92);
+}
+.auto-writer-intro,
+.auto-writer-empty {
+  margin: 0;
+  line-height: 1.6;
+  opacity: 0.65;
+}
+.auto-writer-folder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  opacity: 0.8;
+}
+.auto-writer :where(button:not(.auto-writer-close, .auto-writer-remove)) {
+  height: var(--control-height-sm);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--editor-border, #8884);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    opacity var(--dur-fast) var(--ease-standard),
+    transform var(--dur-instant) var(--ease-standard);
+}
+.auto-writer button:not(:disabled):hover {
+  background: color-mix(in srgb, currentColor 7%, transparent);
+}
+.auto-writer button:not(:disabled):active {
+  transform: scale(0.96);
+}
+.auto-writer button:disabled {
+  opacity: 0.45;
+}
+.auto-writer button.is-primary {
+  border-color: transparent;
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+}
+.auto-writer button.is-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--ui-primary) 86%, transparent);
+}
+.auto-writer button.is-quiet {
+  border-color: transparent;
+  opacity: 0.7;
+}
+.auto-writer-files {
+  display: grid;
+  gap: 2px;
+  max-height: 180px;
+  margin: 0;
+  padding: var(--space-1);
+  overflow-y: auto;
+  list-style: none;
+  border-radius: var(--radius-block);
+  background: color-mix(in srgb, var(--editor-text) 3%, transparent);
+}
+.auto-writer-files label,
+.auto-writer-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px var(--space-2);
+  border-radius: var(--radius-button);
+  cursor: pointer;
+}
+.auto-writer-files label:hover {
+  background: color-mix(in srgb, var(--editor-text) 5%, transparent);
+}
+.auto-writer-files span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.auto-writer-option {
+  padding-inline: 0;
+}
+.auto-writer textarea,
+.auto-writer input:not([type="checkbox"]) {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--editor-border, #8884);
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+  transition: border-color var(--dur-fast) var(--ease-standard);
+}
+.auto-writer textarea:focus,
+.auto-writer input:not([type="checkbox"]):focus {
+  outline: none;
+  border-color: var(--editor-accent, var(--chrome-primary));
+}
+.auto-writer-loading {
+  height: 72px;
+  border-radius: var(--radius-block);
+  background: color-mix(in srgb, var(--editor-text) 5%, transparent);
+  animation: auto-writer-breathe 1.4s var(--ease-in-out) infinite alternate;
+}
+@keyframes auto-writer-breathe {
+  to {
+    opacity: 0.4;
+  }
+}
+.auto-writer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.auto-writer-actions .auto-writer-status {
+  margin-right: auto;
+}
+.auto-writer-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  min-width: 0;
+  opacity: 0.8;
+}
+.auto-writer-spinner {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid
+    color-mix(
+      in srgb,
+      var(--editor-accent, var(--chrome-primary)) 25%,
+      transparent
+    );
+  border-top-color: var(--editor-accent, var(--chrome-primary));
+  animation: workspace-spin 0.8s linear infinite;
+}
+.auto-writer-doc-title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+.auto-writer-outline {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.auto-writer-outline li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: 6px var(--space-2);
+  border-radius: var(--radius-button);
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
+  transition: opacity var(--dur-base) var(--ease-standard);
+}
+.auto-writer-outline li.is-writing,
+.auto-writer-outline li.is-review {
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 7%,
+    transparent
+  );
+}
+.auto-writer-outline li.is-skipped {
+  opacity: 0.45;
+}
+.auto-writer-outline li.is-skipped strong {
+  text-decoration: line-through;
+}
+.auto-writer-section {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.auto-writer-section strong {
+  font-weight: 500;
+}
+.auto-writer-section small {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  opacity: 0.55;
+}
+/* The outline's titles read as text, editable in place. */
+.auto-writer .auto-writer-section input {
+  margin-left: calc(var(--space-2) * -1);
+  padding: 1px var(--space-2);
+  border-color: transparent;
+  font-weight: 500;
+}
+.auto-writer .auto-writer-section input:hover {
+  border-color: var(--editor-border, #8884);
+}
+.auto-writer-remove {
+  margin-left: 0;
+}
+/* Each section's state: open ring, turning ring, waiting dot, check. */
+.auto-writer-mark {
+  position: relative;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--editor-text) 30%, transparent);
+}
+.is-writing > .auto-writer-mark {
+  border-color: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 25%,
+    transparent
+  );
+  border-top-color: var(--editor-accent, var(--chrome-primary));
+  animation: workspace-spin 0.8s linear infinite;
+}
+.is-review > .auto-writer-mark {
+  border-color: var(--warning-color, #d39b2a);
+  background: var(--warning-color, #d39b2a);
+  animation: motion-pop-in var(--dur-base) var(--ease-spring);
+}
+.is-done > .auto-writer-mark {
+  border-color: var(--editor-accent, var(--chrome-primary));
+  background: var(--editor-accent, var(--chrome-primary));
+  animation: motion-pop-in var(--dur-base) var(--ease-spring);
+}
+.is-done > .auto-writer-mark::after {
+  content: "";
+  position: absolute;
+  left: 3.5px;
+  top: 1px;
+  width: 3px;
+  height: 6px;
+  border: solid var(--ui-on-primary, #fff);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+.is-skipped > .auto-writer-mark::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 5px;
+  height: 1.5px;
+  background: currentColor;
+}
+.auto-writer-review {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid
+    color-mix(in srgb, var(--editor-border, #8884) 70%, transparent);
+  animation: motion-fade-in var(--dur-base) var(--ease-out);
+}
+.auto-writer-review > p {
+  margin: 0;
+}
+.auto-writer-revise {
+  display: flex;
+  gap: var(--space-2);
+}
+.auto-writer-error {
+  margin: 0;
+  color: var(--danger, #c4473a);
+}
+@media (prefers-reduced-motion: reduce) {
+  .auto-writer,
+  .auto-writer-outline li,
+  .auto-writer-loading,
+  .auto-writer-spinner,
+  .auto-writer-mark {
+    animation: none !important;
+  }
+}
+/* Which sections get a picture: a toggle on the outline, a mark later. */
+.auto-writer-image {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--editor-muted, inherit);
+  opacity: 0.45;
+  transition:
+    opacity var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-instant) var(--ease-standard);
+}
+.auto-writer-image svg {
+  width: 14px;
+  height: 14px;
+}
+.auto-writer-image.is-on {
+  color: var(--editor-accent, var(--chrome-primary));
+  opacity: 1;
+}
+button.auto-writer-image:hover {
+  opacity: 1;
+}
+button.auto-writer-image:active {
+  transform: scale(0.92);
+}
+/* A tool run again straight after itself: one timeline row, counted. */
+.workspace-step-count {
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.6;
+}
+
+/* ---------- Project folder tree (ProjectFiles.tsx) ---------- */
+.project-files {
+  display: grid;
+  gap: var(--space-2);
+}
+.project-files-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.project-files-head > svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: var(--editor-accent, var(--chrome-primary));
+}
+.project-files-head strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.project-files-count {
+  margin-right: auto;
+  font-size: var(--text-xs);
+  opacity: 0.55;
+  white-space: nowrap;
+}
+.auto-writer button.project-files-icon {
+  display: inline-grid;
+  place-items: center;
+  width: var(--control-height-sm);
+  padding: 0;
+  border-color: transparent;
+}
+.project-files-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.project-files-tree {
+  max-height: min(300px, 40vh);
+  padding: var(--space-1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--radius-block);
+  background: color-mix(in srgb, var(--editor-text) 3%, transparent);
+}
+.project-folder > summary,
+.project-file {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 30px;
+  padding: 2px var(--space-2) 2px calc(var(--space-2) + var(--depth, 0) * 18px);
+  border-radius: var(--radius-button);
+  cursor: pointer;
+  transition: background-color var(--dur-instant) var(--ease-standard);
+}
+.project-folder > summary {
+  list-style: none;
+  font-weight: 500;
+}
+.project-folder > summary::-webkit-details-marker {
+  display: none;
+}
+.project-folder > summary:hover,
+.project-file:hover {
+  background: color-mix(in srgb, var(--editor-text) 5%, transparent);
+}
+.project-folder-chevron {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  opacity: 0.5;
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+.project-folder[open] > summary .project-folder-chevron {
+  transform: rotate(90deg);
+}
+.project-folder-icon,
+.project-file-icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  opacity: 0.7;
+}
+.project-file {
+  padding-left: calc(var(--space-2) + 18px + var(--depth, 0) * 18px);
+}
+.project-file.is-other {
+  cursor: default;
+  opacity: 0.45;
+}
+.project-file-thumb {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--editor-text) 8%, transparent);
+}
+.project-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.project-file-tag {
+  flex: none;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  color: var(--editor-accent, var(--chrome-primary));
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.project-file-meta {
+  flex: none;
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.5;
+}
+.project-files-summary,
+.project-files-more,
+.project-files-none {
+  margin: 0;
+  font-size: var(--text-xs);
+  opacity: 0.65;
+}
+.project-files-loading {
+  height: 120px;
+  border-radius: var(--radius-block);
+  background: color-mix(in srgb, var(--editor-text) 5%, transparent);
+  animation: auto-writer-breathe 1.4s var(--ease-in-out) infinite alternate;
+}
+.project-files.is-empty {
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4);
+  border: 1px dashed var(--editor-border, #8884);
+  border-radius: var(--radius-block);
+  text-align: center;
+}
+.project-files.is-empty > svg {
+  width: 26px;
+  height: 26px;
+  opacity: 0.5;
+}
+.project-files.is-empty p {
+  margin: 0;
+  max-width: 36em;
+  line-height: 1.6;
+  opacity: 0.7;
+}
+
+/* A section's picture: chosen on the outline, a quiet tag afterwards. */
+.auto-writer .auto-writer-picture {
+  flex: none;
+  max-width: 132px;
+  height: var(--control-height-sm);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--editor-border, #8884);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-xs);
+}
+.auto-writer-picture-tag {
+  flex: none;
+  max-width: 132px;
+  overflow: hidden;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--editor-accent, var(--chrome-primary));
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-files-loading {
+    animation: none;
+  }
+}
+
+/* ---------- What the draft changes (draft-diff.ts) ----------
+   A bar in the margin by each changed block - green added, amber
+   rewritten, red removed - the new words tinted, the lost ones struck. */
+.workspace-change-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 2px;
+  margin: var(--space-2) 0 var(--space-1);
+  padding: 2px 4px 2px 10px;
+  border-radius: var(--radius-pill);
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 10%,
+    var(--editor-bg, var(--bg))
+  );
+  color: var(--editor-accent, var(--chrome-primary));
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  animation: motion-pop-in var(--dur-base) var(--ease-spring);
+}
+.workspace-change-nav .workspace-icon-button {
+  width: 22px;
+  height: 22px;
+  color: inherit;
+}
+.workspace-change-nav svg {
+  width: 10px;
+  height: 10px;
+}
+.workspace-change-nav svg.is-up {
+  transform: rotate(-90deg);
+}
+.workspace-change-nav svg.is-down {
+  transform: rotate(90deg);
+}
+.draft-document :is(.draft-added, .draft-changed, .draft-removed) {
+  position: relative;
+}
+.draft-document :is(.draft-added, .draft-changed, .draft-removed)::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: -12px;
+  width: 3px;
+  border-radius: 2px;
+}
+.draft-document .draft-added {
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--success-color) 7%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--success-color) 7%, transparent);
+}
+.draft-document .draft-added::before {
+  background: var(--success-color);
+}
+.draft-document .draft-changed::before {
+  background: var(--warning-color);
+}
+.draft-document .draft-removed {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.draft-document .draft-removed::before {
+  background: var(--danger, #c4473a);
+}
+.draft-document ins.draft-ins {
+  padding: 0 1px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--success-color) 22%, transparent);
+  text-decoration: none;
+}
+.draft-document del.draft-del {
+  margin-right: 2px;
+  color: var(--danger, #c4473a);
+  opacity: 0.8;
+}
+/* Jumped to from the change bar: a moment's glow. */
+.draft-document .draft-focus::after {
+  content: "";
+  position: absolute;
+  inset: -4px -8px;
+  border-radius: 6px;
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 16%,
+    transparent
+  );
+  pointer-events: none;
+  animation: draft-flash 1.4s var(--ease-out) forwards;
+}
+@keyframes draft-flash {
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-change-nav,
+  .draft-document .draft-focus::after {
+    animation: none;
+  }
+  .draft-document .draft-focus::after {
+    opacity: 0;
+  }
+}
+
+/* A picture on its way, where it will go in the document panel. */
+.workspace-document .draft-image-pending {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+  padding: var(--space-2);
+  border: 1px dashed
+    color-mix(
+      in srgb,
+      var(--editor-accent, var(--chrome-primary)) 45%,
+      transparent
+    );
+  border-radius: var(--radius-block);
+  font-size: var(--text-xs);
+  animation: motion-fade-in var(--dur-base) var(--ease-out);
+}
+.draft-image-pending-thumb {
+  position: relative;
+  flex: none;
+  width: 64px;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 6px;
+  background: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 12%,
+    var(--editor-bg, var(--bg))
+  );
+}
+.draft-image-pending-thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    color-mix(in srgb, var(--editor-bg, #fff) 70%, transparent) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  animation: placeholder-sheen 1.8s var(--ease-in-out) infinite;
+}
+.draft-image-pending-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.draft-image-pending-text strong {
+  color: var(--editor-accent, var(--chrome-primary));
+  font-weight: 600;
+}
+.draft-image-pending-text span {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  opacity: 0.7;
+}
+@media (prefers-reduced-motion: reduce) {
+  .draft-image-pending-thumb::after {
+    animation: none;
+  }
+}
+
+/* The document panel shows a picture's caption (*Caption* right after it)
+   the way the editor does: centred under it. */
+.workspace-document .agent-markdown p:has(> img) + p:has(> em:only-child) {
+  margin-top: -0.4em;
+  text-align: center;
+  font-size: 0.88em;
+  color: var(--editor-muted);
+}
+.workspace-document .agent-markdown p:has(> img) + p:has(> em:only-child) em {
+  font-style: normal;
 }

@@ -18,8 +18,21 @@ import { errorText } from "../utils/error-text";
 import { findMarkdownMatch, serializeBlocks } from "../ai/doc-markdown";
 import {
   imagePlaceholderKey,
+  placeholderActions,
   type ImagePlaceholder,
 } from "../ai/multimodal/image-placeholder-plugin";
+
+/** A frame for a picture that is not a job yet: its prompt being written,
+ *  or waiting for the user's approval (useSelectionIllustration). */
+interface HeldFrame {
+  id: string;
+  anchor: string;
+  status: "refining" | "review";
+  editing?: boolean;
+  prompt?: string;
+  actions?: { id: string; label: string; primary?: boolean }[];
+  handlers?: Record<string, () => void>;
+}
 import { useLatest } from "../utils/hooks/useLatest";
 
 export function useDocumentImages(
@@ -37,10 +50,28 @@ export function useDocumentImages(
   const [starts, setStarts] = useState(0);
   const [unsettled, setUnsettled] = useState(0);
   const awaiting = useRef(new Set<string>());
+  const cancelRef = useRef<(jobId: string) => Promise<void>>(async () => {});
   const authorizations = useRef(new Map<string, ImageTaskPermission>());
   const stopped = useRef(new Set<string>());
   /** Jobs from an explicit right-click: inserted against the live document. */
   const liveJobs = useRef(new Set<string>());
+  /** Agent tasks whose text was accepted: their pictures go in by anchor
+   *  like right-click ones (the anchor only existed in the draft before). */
+  const adoptedTasks = useRef(new Set<string>());
+  const [adoptions, setAdoptions] = useState(0);
+  const inPlace = (job: ImageJob) =>
+    liveJobs.current.has(job.jobId) || adoptedTasks.current.has(job.taskId);
+  /** Its anchor is in the document now (not only in a pending draft). */
+  const anchorLive = useCallback(
+    (job: ImageJob) =>
+      !!run((ctx) =>
+        findMarkdownMatch(
+          serializeBlocks(ctx, ctx.get(editorViewCtx).state.doc),
+          job.request.anchor,
+        ),
+      ),
+    [run],
+  );
   const insertingRef = useRef<string | null>(null);
   const alive = useRef(true);
   const latest = useLatest({ workspace, path, sessionId, jobs });
@@ -96,19 +127,39 @@ export function useDocumentImages(
     };
   }, [refresh]);
   /** Frames for pictures not yet queued (a prompt still being refined). */
-  const [held, setHeld] = useState<{ id: string; anchor: string }[]>([]);
-  const holdPlaceholder = useCallback((anchor: string) => {
-    const id = crypto.randomUUID();
-    setHeld((prev) => [...prev, { id, anchor }]);
-    return () => setHeld((prev) => prev.filter((p) => p.id !== id));
-  }, []);
+  const [held, setHeld] = useState<HeldFrame[]>([]);
+  const holdPlaceholder = useCallback(
+    (
+      anchor: string,
+      status: "refining" | "review" = "refining",
+      details: Pick<
+        HeldFrame,
+        "prompt" | "actions" | "handlers" | "editing"
+      > = {},
+    ) => {
+      const id = crypto.randomUUID();
+      setHeld((prev) => [...prev, { id, anchor, status, ...details }]);
+      // The id names the frame's editor container (data-placeholder-editor).
+      return Object.assign(
+        () => {
+          placeholderActions.delete(id);
+          setHeld((prev) => prev.filter((p) => p.id !== id));
+        },
+        { id },
+      );
+    },
+    [],
+  );
   // A shimmering frame under each anchor while its picture is generated.
   useEffect(() => {
     const active = [
       ...held.map((h) => ({
         jobId: h.id,
-        status: "refining",
-        request: { anchor: h.anchor, size: "1024x1024" },
+        status: h.status as string,
+        request: { anchor: h.anchor, size: "1024x1024", prompt: h.prompt },
+        actions: h.actions,
+        handlers: h.handlers,
+        editing: h.editing,
       })),
       ...jobs.filter((job) =>
         ["queued", "running", "preparing"].includes(job.status),
@@ -122,30 +173,54 @@ export function useDocumentImages(
       const placeholders: ImagePlaceholder[] = [];
       for (const job of active) {
         const match = findMarkdownMatch(blocks, job.request.anchor);
-        if (!match) continue;
+        if (!match) {
+          // Its paragraph was edited away: a waiting prompt is withdrawn
+          // rather than left invisible and unanswerable.
+          if ("handlers" in job)
+            queueMicrotask(() => job.handlers?.missing?.());
+          continue;
+        }
         const [w, h] = (job.request.size ?? "1024x1024").split("x").map(Number);
+        const isHeld = "handlers" in job;
+        // A queued or painting job can be cancelled from its frame.
+        const actions = isHeld
+          ? job.actions
+          : job.status === "preparing"
+            ? []
+            : [{ id: "cancel", label: zh ? "取消" : "Cancel" }];
+        placeholderActions.set(
+          job.jobId,
+          isHeld
+            ? (job.handlers ?? {})
+            : { cancel: () => void cancelRef.current(job.jobId) },
+        );
         placeholders.push({
           id: job.jobId,
           pos: match.to,
           ratio: w > 0 && h > 0 ? w / h : 1,
-          queued: job.status === "queued",
+          queued: job.status === "queued" || job.status === "review",
+          review: job.status === "review",
+          editing: "editing" in job && job.editing === true,
+          prompt: job.status === "refining" ? undefined : job.request.prompt,
+          actions,
           anchor: job.request.anchor,
+          meta: job.request.size ?? undefined,
           label:
-            job.status === "queued"
-              ? zh
-                ? "排队等待生成…"
-                : "Waiting to generate…"
-              : job.status === "refining"
-                ? zh
-                  ? "正在构思画面…"
-                  : "Composing the picture…"
-                : job.status === "preparing"
-                  ? zh
-                    ? "正在插入图片…"
-                    : "Inserting the image…"
-                  : zh
-                    ? "正在绘制插图…"
-                    : "Painting the illustration…",
+            (zh
+              ? {
+                  queued: "排队中",
+                  refining: "构思中",
+                  review: "待确认",
+                  preparing: "正在插入",
+                  running: "正在绘制",
+                }
+              : {
+                  queued: "Queued",
+                  refining: "Composing",
+                  review: "Awaiting approval",
+                  preparing: "Inserting",
+                  running: "Painting",
+                })[job.status as "queued"] ?? (zh ? "正在绘制" : "Painting"),
         });
       }
       view.dispatch(
@@ -154,7 +229,8 @@ export function useDocumentImages(
           .setMeta("addToHistory", false),
       );
     });
-  }, [jobs, held, run, zh]);
+    // `adoptions`: accepted Agent text brings its pictures' anchors in.
+  }, [jobs, held, run, zh, adoptions]);
   const running = jobs.some((job) =>
     ["queued", "running", "preparing"].includes(job.status),
   );
@@ -238,6 +314,9 @@ export function useDocumentImages(
     },
     [refresh],
   );
+  useEffect(() => {
+    cancelRef.current = cancel;
+  }, [cancel]);
   const canAccept = useCallback(
     (job: ImageJob) =>
       !latest.current.jobs.some(
@@ -255,7 +334,7 @@ export function useDocumentImages(
     async (job: ImageJob) => {
       if (job.status !== "ready" || insertingRef.current || !canAccept(job))
         return false;
-      const options = { live: liveJobs.current.has(job.jobId) };
+      const options = { live: inPlace(job) || anchorLive(job) };
       const { workspace: w, path: docPath, jobs: currentJobs } = latest.current;
       const captured = w.currentDraft();
       // A live (explicit right-click) insertion only needs its anchor.
@@ -294,6 +373,15 @@ export function useDocumentImages(
         run((ctx) => {
           const state = ctx.get(editorViewCtx).state;
           let anchor = job.request.anchor;
+          // A picture follows its whole paragraph: anchored to a sentence
+          // inside one, it used to land mid-paragraph, inline in the text.
+          if (options.live && !previous?.assetSrc) {
+            const block = findMarkdownMatch(
+              serializeBlocks(ctx, state.doc),
+              anchor,
+            );
+            if (block) anchor = block.markdown;
+          }
           if (previous?.assetSrc) {
             const parsed = parseMarkdownSource(
               ctx,
@@ -370,8 +458,37 @@ export function useDocumentImages(
         if (committed) void refresh();
       }
     },
-    [run, canAccept, latest, refresh, documentId, zh],
+    [run, canAccept, latest, refresh, documentId, zh, anchorLive],
   );
+  // Right-click and refined pictures go straight under their paragraph when
+  // ready, and so do the Agent's - asked for with the image switch, so no
+  // second approval - once their anchor is in the document (text from a
+  // draft: when it is accepted). One that cannot (its paragraph changed)
+  // falls back to the job list for a manual decision.
+  const acceptRef = useRef<typeof accept | null>(null);
+  useEffect(() => {
+    acceptRef.current = accept;
+  }, [accept]);
+  const [stuck, setStuck] = useState<ReadonlySet<string>>(new Set());
+  const autoInserting = useRef<string | null>(null);
+  useEffect(() => {
+    const ready = jobs.find(
+      (job) =>
+        job.status === "ready" &&
+        !stuck.has(job.jobId) &&
+        (inPlace(job) ||
+          // Started in this session (not one left from before a restart).
+          (authorizations.current.has(job.generationId ?? "") &&
+            anchorLive(job))),
+    );
+    if (!ready || autoInserting.current) return;
+    autoInserting.current = ready.jobId;
+    void acceptRef.current?.(ready).then((ok) => {
+      autoInserting.current = null;
+      if (!ok) setStuck((prev) => new Set(prev).add(ready.jobId));
+    });
+    // inPlace reads refs; `adoptions` re-runs this when a task is adopted.
+  }, [jobs, stuck, adoptions, anchorLive]);
   const stopRunning = useCallback(async () => {
     const permissions = new Map(authorizations.current);
     for (const job of latest.current.jobs)
@@ -412,6 +529,30 @@ export function useDocumentImages(
   return {
     jobs,
     regenerate,
+    /** Right-click illustrations: shown in their frame, not the job list. */
+    isLive: (jobId: string) => {
+      const job = jobs.find((j) => j.jobId === jobId);
+      return (
+        (liveJobs.current.has(jobId) ||
+          (!!job && adoptedTasks.current.has(job.taskId))) &&
+        !stuck.has(jobId)
+      );
+    },
+    /** The Agent's draft holding this picture's anchor was accepted. */
+    adoptTask: (taskId: string) => {
+      adoptedTasks.current.add(taskId);
+      setAdoptions((n) => n + 1);
+    },
+    /** Its paragraph is still only in the pending draft. */
+    waitsForDraft: (job: ImageJob) => {
+      const draft = latest.current.workspace.currentDraft();
+      return (
+        !inPlace(job) &&
+        draft?.id === job.taskId &&
+        draft.operations.length > 0 &&
+        !anchorLive(job)
+      );
+    },
     error,
     inserting,
     start,

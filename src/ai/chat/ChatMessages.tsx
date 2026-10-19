@@ -5,7 +5,12 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { AgentTurnView, type AgentTurnLabels } from "./AgentTurnView";
+import {
+  AgentTurnView,
+  ToolStepGroup,
+  type AgentTurnLabels,
+} from "./AgentTurnView";
+import { foldToolSteps } from "./tool-steps";
 import type { AgentTurn, EditAction, EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import type { StreamingState } from "./useAgentConversation";
@@ -199,6 +204,8 @@ export function ChatMessages({
     }
     return map;
   }, [shown]);
+  // Plain tool steps fold into one line per run (tool-steps.ts).
+  const toolSteps = useMemo(() => foldToolSteps(shown), [shown]);
   // A call the backend refused (tools.rs) was never a proposal: the model
   // was told and resends it, so it gets no card - nor its result.
   const refused = useMemo(() => refusedProposalIds(shown), [shown]);
@@ -241,6 +248,18 @@ export function ChatMessages({
           refused.has(turn.call_id)
         )
           return null;
+        if (toolSteps.folded.has(i)) return null;
+        const steps = toolSteps.groups.get(i);
+        if (steps)
+          return (
+            <div
+              key={i}
+              className={reveal ? "turn-reveal" : undefined}
+              style={style}
+            >
+              <ToolStepGroup steps={steps} labels={labels} />
+            </div>
+          );
         if (turn.kind === "ToolCall" && turn.name === "propose_edit") {
           const parsed = parsedProposals.get(turn.call_id);
           const proposal = parsed?.proposal;

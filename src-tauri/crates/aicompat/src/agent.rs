@@ -136,7 +136,11 @@ where
     turns.push(user_turn.clone());
     let mut new_turns = vec![user_turn];
 
-    for _ in 0..max_steps {
+    for step_index in 0..max_steps {
+        // Steps still to come after this one. When few are left the model
+        // is told so (in what it is shown, not what is recorded): one that
+        // kept checking its work used to run out with nothing delivered.
+        let remaining = max_steps - step_index - 1;
         match step(turns.clone()).await? {
             StepResult::Done(text) => {
                 let turn = AgentTurn::Assistant { text };
@@ -154,7 +158,7 @@ where
                     turns.push(call.clone());
                     new_turns.push(call.clone());
                 }
-                for call in &calls {
+                for (index, call) in calls.iter().enumerate() {
                     let AgentTurn::ToolCall {
                         call_id,
                         name,
@@ -169,8 +173,14 @@ where
                         output,
                     };
                     on_turn(&result_turn);
-                    turns.push(result_turn.clone());
-                    new_turns.push(result_turn);
+                    new_turns.push(result_turn.clone());
+                    turns.push(
+                        if index + 1 == calls.len() && (1..=2).contains(&remaining) {
+                            with_budget_note(result_turn, remaining)
+                        } else {
+                            result_turn
+                        },
+                    );
                 }
             }
         }
@@ -185,6 +195,22 @@ where
         ),
     });
     Ok(new_turns)
+}
+
+/// A step's last tool result, as the model sees it when `remaining` steps
+/// are left. Added once, when the result is first sent, so the turns before
+/// it stay unchanged from step to step (and their prompt cache valid).
+fn with_budget_note(turn: AgentTurn, remaining: usize) -> AgentTurn {
+    let AgentTurn::ToolResult { call_id, output } = turn else {
+        return turn;
+    };
+    let steps = if remaining == 1 { "step" } else { "steps" };
+    AgentTurn::ToolResult {
+        call_id,
+        output: format!(
+            "{output}\n\n[Only {remaining} {steps} left in this request: stop gathering or checking and deliver your result now - make any edit proposals, then give your final reply.]"
+        ),
+    }
 }
 
 #[cfg(test)]
@@ -297,6 +323,38 @@ mod tests {
             panic!("the exchange must end with an assistant turn");
         };
         assert!(text.contains("Stopped after 3 tool steps"));
+    }
+
+    #[test]
+    fn the_last_steps_are_announced_to_the_model_only() {
+        let looping = (0..4)
+            .map(|i| StepResult::ToolCalls(vec![call(&i.to_string(), "measure_text", "{}")]))
+            .collect();
+        let (turns, seen) = run_scripted(looping, 4, |_, _| "12 chars".into());
+        let note = |history: &Vec<AgentTurn>| {
+            history.iter().any(|t| {
+                matches!(t, AgentTurn::ToolResult { output, .. } if output.contains("left in this request"))
+            })
+        };
+        // The second step is told nothing; the third sees the two steps
+        // still to come, the last that it is the last.
+        assert!(!note(&seen[1]));
+        assert!(matches!(
+            seen[2].last(),
+            Some(AgentTurn::ToolResult { output, .. })
+                if output.starts_with("12 chars") && output.contains("Only 2 steps left")
+        ));
+        assert!(matches!(
+            seen[3].last(),
+            Some(AgentTurn::ToolResult { output, .. }) if output.contains("Only 1 step left")
+        ));
+        // Earlier turns are shown as they were first sent.
+        assert_eq!(
+            format!("{:?}", &seen[3][..seen[2].len()]),
+            format!("{:?}", seen[2])
+        );
+        // What is recorded (and shown to the user) carries no note.
+        assert!(!note(&turns));
     }
 
     #[test]

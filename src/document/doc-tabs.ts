@@ -83,9 +83,70 @@ export function setHeadingTitles(enabled: boolean) {
  *  heading would have been a second Undo step after accepting a draft). */
 const suggestedTitles = new Map<string, string>();
 export const TITLES_CHANGED = "textus-tab-titles";
+/** A past Agent task opened from the history list: App brings up its
+ *  document (by file, open tab or saved snapshot) and the editor showing it
+ *  restores the conversation. */
+export const OPEN_TASK_EVENT = "textus:open-task";
+export const RESTORE_TASK_EVENT = "textus:restore-task";
+export interface OpenTask {
+  entryId: string;
+  docPath: string | null;
+  documentId: string | null;
+  snapshot: string | null;
+  title: string;
+}
+/** Which editor should restore which conversation: `path:<file>` or
+ *  `doc:<documentId>` → history entry id. */
+export const pendingTaskRestores = new Map<string, string>();
+
+/** Save As moved a document's images: the tab's editor rewrites their srcs
+ *  in place and sets `handled` (useSaveTabs, MilkdownEditor). */
+export const REWRITE_IMAGE_SRCS_EVENT = "textus:rewrite-image-srcs";
+export interface RewriteImageSrcs {
+  tabId: string;
+  mappings: { old: string; new: string }[];
+  handled: boolean;
+}
+
+/** Tabs whose document is in use beyond its text: an Agent conversation,
+ *  a pending draft or an image in progress (MilkdownEditor reports them).
+ *  Opening a file never replaces such a tab in place. */
+const engagedTabs = new Set<string>();
+export function setTabEngaged(tabId: string, engaged: boolean) {
+  if (engaged) engagedTabs.add(tabId);
+  else engagedTabs.delete(tabId);
+}
+export function tabIsEngaged(tabId: string): boolean {
+  return engagedTabs.has(tabId);
+}
+
+/** Agent or Write: one mode for the whole window (MilkdownEditor sets it).
+ *  Null until the first editor decides. */
+let windowSurface: boolean | null = null;
+export function windowShowsAgent(): boolean {
+  return windowSurface === true;
+}
+export function getWindowSurface(): boolean | null {
+  return windowSurface;
+}
+export function setWindowSurface(agent: boolean) {
+  windowSurface = agent;
+}
+
+/** Nothing to lose: no file, no text, no Agent work. */
+export function tabIsPristine(tab: DocTab): boolean {
+  return (
+    !tab.path && !tab.helpDoc && !tab.content.trim() && !engagedTabs.has(tab.id)
+  );
+}
+/** Asks App for a blank tab in this window (the Agent home's New document). */
+export const NEW_DOCUMENT_EVENT = "textus:new-document";
 export function setSuggestedTitle(tabId: string, title: string) {
   suggestedTitles.set(tabId, title);
   window.dispatchEvent(new Event(TITLES_CHANGED));
+}
+export function hasSuggestedTitle(tabId: string): boolean {
+  return suggestedTitles.has(tabId);
 }
 export function suggestedTitle(tab: DocTab): string | null {
   return headingTitles && !tab.path

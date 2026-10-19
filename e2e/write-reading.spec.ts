@@ -97,15 +97,11 @@ test("Write has compact reading controls; right-click sends only the selected te
   await page.getByRole("button", { name: "Agent", exact: true }).click();
   await expect(reader).toHaveCount(0);
   await expect(page.locator(".speech-player, .image-generator")).toHaveCount(0);
-  for (const engine of ["harness", "codex", "claude-code"]) {
-    await page
-      .getByRole("combobox", { name: "Agent engine" })
-      .selectOption(engine);
-    // A toggle in the composer's toolbar, off by default for every engine.
-    const images = page.getByRole("button", {
-      name: "Allow images for this request",
-    });
-    await expect(images).toBeEnabled();
-    await expect(images).toHaveAttribute("aria-pressed", "false");
-  }
+  // A switch in the composer's "+" menu, off by default.
+  await page.getByRole("button", { name: "Add content and tools" }).click();
+  const images = page.getByRole("menuitemcheckbox", {
+    name: /Allow images for this request/,
+  });
+  await expect(images).toBeEnabled();
+  await expect(images).toHaveAttribute("aria-checked", "false");
 });

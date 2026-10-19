@@ -1,4 +1,3 @@
-import { EngineSelector } from "./EngineSelector";
 import {
   useEffect,
   useLayoutEffect,
@@ -39,12 +38,15 @@ import type { AgentMode } from "../../settings/SettingsContext";
 import { InlineDictation } from "../../voice/InlineDictation";
 import { initialMode, rememberMode } from "./last-mode";
 import {
+  ArrowUpIcon,
   CloseIcon,
   GenericFileIcon,
   ImageFileIcon,
+  PaperclipIcon,
   PlusIcon,
   SearchIcon,
 } from "../../ui/icons";
+import { ComposerMenu, type ComposerMenuItem } from "./ComposerMenu";
 import { Select } from "../../ui/Select";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { modalDialogOpen } from "../../ui/useModalDialog";
@@ -121,8 +123,9 @@ interface ChatComposerProps {
    *  in place of the toolbar's "{n} chars selected" chip, and carries these
    *  controls (new, continue in panel, close) beside it. */
   dockActions?: ReactNode;
-  /** Extra toggles beside the mode picker (the workspace's image switch). */
-  toolbarExtra?: ReactNode;
+  /** The host's own entries in the "+" menu (the Agent's project folder,
+   *  image switch and auto-writing), after the composer's own. */
+  menuItems?: ComposerMenuItem[];
   /** The resolved message (skill expanded) plus any attachments - InlineChat
    *  owns tagging it with selected-text/chatInfo and actually sending it. */
   onSend: (
@@ -158,7 +161,7 @@ export function ChatComposer({
   focusOnOpen = true,
   defaultWebSearch,
   dockActions,
-  toolbarExtra,
+  menuItems = [],
   onSend,
   onStop,
   onEscape,
@@ -206,6 +209,8 @@ export function ChatComposer({
   const selectionDropped =
     droppedSelection !== null && droppedSelection === selectedText;
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const plusRef = useRef<HTMLButtonElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Skills come from the agent workspace on disk (global dir + the workspace
   // root's .textus/skills). Loaded fresh each time the chat opens, so editing
@@ -441,6 +446,22 @@ export function ChatComposer({
     // the confirming keydown just after compositionend with isComposing
     // already false but the legacy keyCode still 229, so check both.
     if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+    // A picked skill reads as one token: Backspace right after "/name"
+    // (or "/name ") takes the whole name, not its last letter.
+    if (e.key === "Backspace" && !e.altKey && !e.metaKey && !e.ctrlKey) {
+      const el = inputRef.current;
+      const caret = el?.selectionStart ?? 0;
+      if (el && caret === el.selectionEnd) {
+        const token = /^[/／、・](\S+)\s?$/.exec(input.slice(0, caret));
+        if (token && resolveName(token[1])) {
+          e.preventDefault();
+          setInput(input.slice(caret).replace(/^\s+/, ""));
+          setPickerIndex(0);
+          requestAnimationFrame(() => el.setSelectionRange(0, 0));
+          return;
+        }
+      }
+    }
     // While a picker is open, the navigation keys drive it instead of the
     // chat (Enter completes the name rather than sending), and Escape
     // closes it rather than the chat.
@@ -495,6 +516,117 @@ export function ChatComposer({
     ? { onMouseDown: (e: React.MouseEvent) => e.preventDefault() }
     : {};
 
+  // The "+" menu's own words; the rest come from the labels.
+  const zh = picker.lang.startsWith("zh");
+  const words = zh
+    ? {
+        menu: "添加内容和工具",
+        add: "添加",
+        mode: "模式",
+        modeHints: {
+          ask: "只回答问题，不改文档",
+          edit: "修改当前文档，审阅后应用",
+          create: "从头写作，可配图",
+          plan: "先列计划，确认后执行",
+        },
+        tools: "工具",
+        file: "文件和图片",
+        fileHint: "PDF、Word、表格、图片…",
+        mention: "引用项目文件",
+        mentionHint: "也可以直接输入 @",
+        skill: "使用技能",
+        skillHint: "也可以直接输入 /",
+        skillBusy: "清空输入框后可用",
+        webHint: "需要时让 AI 搜索网络",
+        off: "点击关闭",
+      }
+    : {
+        menu: "Add content and tools",
+        add: "Add",
+        mode: "Mode",
+        modeHints: {
+          ask: "Answers only; the document stays as is",
+          edit: "Changes this document, after your review",
+          create: "Writes from scratch, with images if allowed",
+          plan: "A plan first, carried out once you agree",
+        },
+        tools: "Tools",
+        file: "Files and images",
+        fileHint: "PDF, Word, sheets, images…",
+        mention: "Project file",
+        mentionHint: "or type @",
+        skill: "Use a skill",
+        skillHint: "or type /",
+        skillBusy: "Clear the message first",
+        webHint: "Let the AI search when it needs to",
+        off: "Click to turn off",
+      };
+  /** Types `@` or `/` for the user: the same pickers open as when typed. */
+  const typeTrigger = (char: "@" | "/") => {
+    setInput((prev) =>
+      char === "/" ? "/" : `${prev}${prev && !/\s$/.test(prev) ? " " : ""}@`,
+    );
+    setDismissedInput(null);
+    setPickerIndex(0);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      el?.focus();
+      el?.setSelectionRange(el.value.length, el.value.length);
+    });
+  };
+  const ownItems: ComposerMenuItem[] = [
+    {
+      key: "file",
+      section: "add",
+      icon: <PaperclipIcon />,
+      label: words.file,
+      hint: words.fileHint,
+      select: () => void attachFile(),
+    },
+    {
+      key: "mention",
+      section: "add",
+      icon: <span className="composer-menu-glyph">@</span>,
+      label: words.mention,
+      hint: words.mentionHint,
+      select: () => typeTrigger("@"),
+    },
+    {
+      key: "web",
+      section: "tools",
+      icon: <SearchIcon />,
+      label: labels.webSearch,
+      hint: words.webHint,
+      on: webSearch,
+      select: () => setWebSearch((value) => !value),
+    },
+  ];
+  const skillItem: ComposerMenuItem = {
+    key: "skill",
+    section: "tools",
+    icon: <span className="composer-menu-glyph">/</span>,
+    label: words.skill,
+    hint: input.trim() ? words.skillBusy : words.skillHint,
+    disabled: !!input.trim(),
+    select: () => typeTrigger("/"),
+  };
+  // On a desktop the modes live in "+" too (the phone keeps its segmented
+  // control, Quick Ask - which has no "+" - its select).
+  const modesInMenu = !compact && !phone;
+  const modeItems: ComposerMenuItem[] = modesInMenu
+    ? modes.map(([value, label]) => ({
+        key: `mode-${value}`,
+        section: "mode",
+        icon: <ModeIcon mode={value} />,
+        label,
+        hint: words.modeHints[value],
+        selected: mode === value,
+        select: () => setMode(value),
+      }))
+    : [];
+  const allItems = [...ownItems, ...modeItems, ...menuItems, skillItem];
+  const switchesOn = allItems.filter((item) => item.on);
+
   const showSelection = !!selectedText && !selectionDropped;
   const dropSelectionButton = (
     <button
@@ -511,7 +643,7 @@ export function ChatComposer({
 
   return (
     <>
-      {pickerOpen && (
+      {pickerOpen && (compact || phone) && (
         <ComposerPicker
           kind={skillMenuOpen ? "skill" : "mention"}
           label={labels.placeholder}
@@ -534,6 +666,46 @@ export function ChatComposer({
         </div>
       )}
       <div className="inline-chat-bar">
+        {/* The panel's, window's and Agent's pickers float like "+" does;
+            Quick Ask's sits in its card above the field, and a phone's
+            above the field in its sheet (under the sheet's handle). */}
+        {pickerOpen && !compact && !phone && (
+          <ComposerPicker
+            kind={skillMenuOpen ? "skill" : "mention"}
+            label={labels.placeholder}
+            sections={pickerSections}
+            empty={pickerEmpty}
+            active={activePickerIndex}
+            keys={phone ? null : picker.keys}
+            floating
+          />
+        )}
+        {menuOpen && (
+          <ComposerMenu
+            label={words.menu}
+            trigger={plusRef}
+            sections={[
+              {
+                title: words.add,
+                items: allItems.filter((item) => item.section === "add"),
+              },
+              {
+                title: words.mode,
+                items: allItems.filter((item) => item.section === "mode"),
+              },
+              {
+                title: words.tools,
+                items: allItems.filter(
+                  (item) => item.section !== "add" && item.section !== "mode",
+                ),
+              },
+            ]}
+            onClose={(refocus) => {
+              setMenuOpen(false);
+              if (refocus) plusRef.current?.focus();
+            }}
+          />
+        )}
         {attachError && (
           <div className="inline-chat-attach-error">{attachError}</div>
         )}
@@ -589,19 +761,62 @@ export function ChatComposer({
             autoFocus={focusOnOpen && !modalDialogOpen()}
           />
           <div className="inline-chat-toolbar">
-            {allowCreate && (
-              <EngineSelector disabled={busy} language={voiceLanguage} />
-            )}
+            {/* "+" leads the row: everything to add, and the tools. */}
             {!compact && (
-              <InlineDictation
-                active={active && !busy}
-                language={voiceLanguage}
-                value={input}
-                inputRef={inputRef}
-                onChange={setInput}
-              />
+              <button
+                ref={plusRef}
+                type="button"
+                className="inline-chat-attach"
+                title={words.menu}
+                aria-label={words.menu}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                {...holdFocus}
+                onClick={() => setMenuOpen((open) => !open)}
+              >
+                <PlusIcon />
+              </button>
             )}
-            {phone ? (
+            {modesInMenu && (
+              <button
+                type="button"
+                className="composer-chip is-mode"
+                aria-label={`${labels.modeLabel}: ${modes.find(([value]) => value === mode)?.[1] ?? mode}`}
+                aria-haspopup="menu"
+                onClick={() => setMenuOpen(true)}
+              >
+                <span className="composer-chip-icon" aria-hidden="true">
+                  <ModeIcon mode={mode} />
+                </span>
+                {modes.find(([value]) => value === mode)?.[1]}
+              </button>
+            )}
+            {!compact &&
+              switchesOn.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  className="composer-chip"
+                  aria-pressed="true"
+                  title={`${item.label} · ${words.off}`}
+                  disabled={item.disabled}
+                  {...holdFocus}
+                  onClick={item.select}
+                >
+                  <span className="composer-chip-icon" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  {item.chip ?? item.label}
+                </button>
+              ))}
+            {selectedText && !selectionDropped && dockActions === undefined && (
+              <span className="inline-chat-selection-chip">
+                {labels.selectedChars([...selectedText].length)}
+                {dropSelectionButton}
+              </span>
+            )}
+            <span className="inline-chat-toolbar-spacer" />
+            {modesInMenu ? null : phone ? (
               // Two or three short words: they all fit in a row, and a
               // segmented control shows which one is on and switches in one
               // tap, where a select is a trip through the system's picker.
@@ -638,47 +853,79 @@ export function ChatComposer({
                 ))}
               </Select>
             )}
-            {toolbarExtra}
             {!compact && (
-              <>
-                <button
-                  className="inline-chat-attach"
-                  title={labels.attachFile}
-                  aria-label={labels.attachFile}
-                  onClick={attachFile}
-                >
-                  <PlusIcon />
-                </button>
-                <button
-                  type="button"
-                  className={`inline-chat-web-search${webSearch ? " is-active" : ""}`}
-                  title={labels.webSearch}
-                  aria-label={labels.webSearch}
-                  aria-pressed={webSearch}
-                  {...holdFocus}
-                  onClick={() => setWebSearch((value) => !value)}
-                >
-                  <SearchIcon />
-                </button>
-              </>
-            )}
-            {selectedText && !selectionDropped && dockActions === undefined && (
-              <span className="inline-chat-selection-chip">
-                {labels.selectedChars([...selectedText].length)}
-                {dropSelectionButton}
-              </span>
+              <InlineDictation
+                active={active && !busy}
+                language={voiceLanguage}
+                value={input}
+                inputRef={inputRef}
+                onChange={setInput}
+              />
             )}
             <button
-              className="inline-chat-send"
+              className={`inline-chat-send${busy ? " is-stop" : ""}`}
+              aria-label={busy ? labels.stop : labels.send}
+              title={busy ? labels.stop : labels.send}
               {...holdFocus}
               onClick={busy ? onStop : submit}
               disabled={!busy && !input.trim()}
             >
-              {busy ? labels.stop : labels.send}
+              {busy ? (
+                <span className="inline-chat-stop-mark" aria-hidden="true" />
+              ) : (
+                <ArrowUpIcon />
+              )}
             </button>
           </div>
         </div>
       </div>
     </>
+  );
+}
+
+/** Each mode's glyph in the "+" menu and on its chip. */
+function ModeIcon({ mode }: { mode: AgentMode }) {
+  const paths: Record<AgentMode, ReactNode> = {
+    ask: (
+      <>
+        <path d="M21 12a8.5 8.5 0 0 1-12.4 7.6L3 21l1.4-5.1A8.5 8.5 0 1 1 21 12Z" />
+        <path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.4" />
+        <path d="M12 16.6h.01" />
+      </>
+    ),
+    edit: (
+      <>
+        <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" />
+        <path d="m13.5 6.5 4 4" />
+      </>
+    ),
+    create: (
+      <>
+        <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+        <path d="m6.3 6.3 2.1 2.1M15.6 15.6l2.1 2.1M6.3 17.7l2.1-2.1M15.6 8.4l2.1-2.1" />
+      </>
+    ),
+    plan: (
+      <>
+        <path d="M9 6h11M9 12h11M9 18h11" />
+        <path d="m3.5 6 1 1 2-2M3.5 12l1 1 2-2" />
+        <circle cx="5" cy="18" r="1.2" />
+      </>
+    ),
+  };
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {paths[mode]}
+    </svg>
   );
 }

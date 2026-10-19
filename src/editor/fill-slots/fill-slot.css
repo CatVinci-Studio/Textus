@@ -1,0 +1,146 @@
+/* Blanks to fill (fill-slot-plugin.ts): a dashed chip in the text, and the
+   card that fills one (FillSlotCard.tsx). */
+.milkdown .fill-slot {
+  padding: 0 2px;
+  border-radius: 4px;
+  outline: 1px dashed color-mix(in srgb, var(--editor-accent) 55%, transparent);
+  outline-offset: -1px;
+  background: color-mix(in srgb, var(--editor-accent) 8%, transparent);
+  color: var(--editor-accent);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+.milkdown .fill-slot:hover {
+  background: color-mix(in srgb, var(--editor-accent) 16%, transparent);
+}
+
+.fill-slot-card {
+  position: fixed;
+  z-index: var(--z-popover);
+  display: grid;
+  gap: var(--space-2);
+  width: min(320px, calc(100vw - 16px));
+  padding: var(--space-3);
+  border: 1px solid var(--editor-border, var(--border-color));
+  border-radius: var(--radius-surface);
+  background: var(--editor-bg, var(--bg));
+  box-shadow: var(--shadow-popover);
+  color: var(--editor-text);
+  font-family: var(--ui-font, system-ui);
+  font-size: var(--text-sm);
+  animation: fill-slot-in var(--dur-base) var(--ease-out);
+}
+@keyframes fill-slot-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+.fill-slot-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+}
+.fill-slot-card-label {
+  color: var(--editor-accent);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.fill-slot-card-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.fill-slot-card-options button,
+.fill-slot-card-own button {
+  min-height: var(--control-height-sm);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--editor-border, var(--border-color));
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-instant) var(--ease-standard);
+}
+.fill-slot-card-options button {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: fill-slot-option-in var(--dur-base) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+@keyframes fill-slot-option-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+.fill-slot-card-options button:hover,
+.fill-slot-card-own button:not(:disabled):hover {
+  background: color-mix(in srgb, var(--editor-text) 7%, transparent);
+}
+.fill-slot-card-options button:active,
+.fill-slot-card-own button:not(:disabled):active {
+  transform: scale(0.96);
+}
+.fill-slot-card-options button.is-primary {
+  border-color: transparent;
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+}
+.fill-slot-card-options button.is-primary:hover {
+  background: color-mix(in srgb, var(--ui-primary) 86%, transparent);
+}
+.fill-slot-card-skeleton {
+  width: 72px;
+  height: var(--control-height-sm);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--editor-text) 7%, transparent);
+  animation: fill-slot-breathe 1.2s var(--ease-in-out) infinite alternate;
+}
+.fill-slot-card-skeleton:nth-child(2) {
+  width: 96px;
+}
+@keyframes fill-slot-breathe {
+  to {
+    opacity: 0.4;
+  }
+}
+.fill-slot-card-own {
+  display: flex;
+  gap: var(--space-2);
+}
+.fill-slot-card-own input {
+  flex: 1;
+  min-width: 0;
+  height: var(--control-height-sm);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--editor-border, var(--border-color));
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+.fill-slot-card-own input:focus {
+  outline: none;
+  border-color: var(--editor-accent);
+}
+.fill-slot-card-none,
+.fill-slot-card-note {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fill-slot-card,
+  .fill-slot-card-options button,
+  .fill-slot-card-skeleton {
+    animation: none;
+  }
+}

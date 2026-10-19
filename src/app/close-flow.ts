@@ -66,12 +66,14 @@ export function useTabRemoval(opts: {
   const requestCloseTab = useCallback(
     async (id: string) => {
       const tab = liveTabs().find((tb) => tb.id === id);
-      if (!(await confirmWorkspaceClose([id]))) return;
-      if (!tab || !tabIsDirty(tab)) {
-        removeTab(id);
+      // Unsaved text asks first: the workspace guard stops the Agent task,
+      // which a Cancel in that prompt could not undo.
+      if (tab && tabIsDirty(tab)) {
+        setPendingClose({ kind: "tab", tabId: id });
         return;
       }
-      setPendingClose({ kind: "tab", tabId: id });
+      if (!(await confirmWorkspaceClose([id]))) return;
+      removeTab(id);
     },
     [removeTab, liveTabs, setPendingClose],
   );
@@ -99,13 +101,15 @@ export function useWindowCloseGuard(
 ): void {
   useEffect(() => {
     const unlisten = getCurrentWindow().onCloseRequested(async (event) => {
-      if (!(await confirmWorkspaceClose(liveTabs().map((tab) => tab.id)))) {
-        event.preventDefault();
-        return;
-      }
+      // The save prompt first (its Cancel keeps everything running); the
+      // Agent work is resolved once the close is really going ahead.
       if (liveTabs().some(tabIsDirty)) {
         event.preventDefault();
         setPendingClose({ kind: "window" });
+        return;
+      }
+      if (!(await confirmWorkspaceClose(liveTabs().map((tab) => tab.id)))) {
+        event.preventDefault();
         return;
       }
       await flushPendingWrites();
@@ -152,10 +156,28 @@ export function useClosePrompt(opts: {
     );
   }, [cancelDraftFlushes, tabsRef]);
 
+  /** The Agent work in what is closing (a running task, a draft, images):
+   *  asked after the save prompt, so Cancel there leaves it untouched. A
+   *  replacement asks inside replaceTabWithFile itself. */
+  const workspaceAllows = useCallback(
+    async (action: NonNullable<PendingClose>) => {
+      if (action.kind === "replace") return true;
+      const ids =
+        action.kind === "window"
+          ? liveTabs().map((tab) => tab.id)
+          : [action.tabId];
+      if (await confirmWorkspaceClose(ids)) return true;
+      if (action.kind === "window") await session.cancelQuit();
+      return false;
+    },
+    [liveTabs],
+  );
+
   const closeSaving = useCallback(async () => {
     const action = pendingClose;
     setPendingClose(null);
     if (!action) return;
+    if (!(await workspaceAllows(action))) return;
     if (action.kind === "window") {
       // Whole window: save every dirty tab, aborting (leaving the window
       // open) if any of them hits a cancelled Save As.
@@ -187,12 +209,14 @@ export function useClosePrompt(opts: {
     replaceTabWithFile,
     clearWindowDrafts,
     liveTabs,
+    workspaceAllows,
   ]);
 
   const closeDiscarding = useCallback(async () => {
     const action = pendingClose;
     setPendingClose(null);
     if (!action) return;
+    if (!(await workspaceAllows(action))) return;
     if (action.kind === "window") {
       // "Don't Save" is a decision - the discarded content must not come
       // back as a recovered draft on the next launch.
@@ -207,6 +231,7 @@ export function useClosePrompt(opts: {
     removeTab,
     replaceTabWithFile,
     clearWindowDrafts,
+    workspaceAllows,
   ]);
 
   const cancelClose = () => {

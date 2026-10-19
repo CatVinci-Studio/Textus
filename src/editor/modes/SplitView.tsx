@@ -36,7 +36,13 @@ export function SplitView({
   // Typing stays responsive on long documents: the preview renders the
   // deferred value and catches up a beat later.
   const deferred = useDeferredValue(content);
-  const html = useMemo(() => renderDocumentHtml(deferred), [deferred]);
+  // A stable `__html` object: React 19 compares it by identity, so a new
+  // one per render rewrote the preview (and reloaded its images) on every
+  // keystroke, deferred or not.
+  const html = useMemo(
+    () => ({ __html: renderDocumentHtml(deferred) }),
+    [deferred],
+  );
 
   // Relative image paths resolve against the document's folder, as in the
   // editor; Mermaid fences become diagrams (loaded only when present).
@@ -135,7 +141,7 @@ export function SplitView({
           <div
             id="write"
             className="ProseMirror split-preview-body"
-            dangerouslySetInnerHTML={{ __html: html }}
+            dangerouslySetInnerHTML={html}
           />
         </div>
       </div>

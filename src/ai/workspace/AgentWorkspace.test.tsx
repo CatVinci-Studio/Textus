@@ -48,3 +48,40 @@ it("restores a saved task but protects pending media from history switches", () 
   fireEvent.click(screen.getByRole("button", { name: "Saved task" }));
   expect(restore).toHaveBeenCalledWith("saved", []);
 });
+
+it("shows the document's pictures from their paths, as the editor does", () => {
+  (window as unknown as { __TAURI_INTERNALS__: unknown }).__TAURI_INTERNALS__ =
+    { convertFileSrc: (path: string) => `asset://localhost/${path}` };
+  const conversation = {
+    history: [],
+    streaming: null,
+    conversationId: "current",
+    busy: false,
+    restore: vi.fn(),
+    reset: vi.fn(),
+    stop: vi.fn(),
+  } as unknown as AgentConversation;
+  const { container } = render(
+    <AgentWorkspace
+      language="en"
+      documentPath="/docs/a.md"
+      draft={null}
+      preview={
+        "# Lake\n\n![Saved](assets/lake.jpg)\n\n![Unsaved](/Users/me/Library/assets/hill.jpg)"
+      }
+      conflict={false}
+      conversation={conversation}
+      onAccept={vi.fn()}
+      onReject={vi.fn()}
+    >
+      {null}
+    </AgentWorkspace>,
+  );
+  const sources = [
+    ...container.querySelectorAll<HTMLImageElement>(".workspace-document img"),
+  ].map((img) => img.getAttribute("src"));
+  expect(sources).toEqual([
+    "asset://localhost//docs/assets/lake.jpg",
+    "asset://localhost//Users/me/Library/assets/hill.jpg",
+  ]);
+});

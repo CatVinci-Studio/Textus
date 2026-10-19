@@ -26,7 +26,8 @@ export function useHelpTabs(opts: {
     setTabs((prev) => {
       let changed = false;
       const next = prev.map((tab) => {
-        if (!tab.helpDoc || tab.content !== tab.savedContent) return tab;
+        if (!tab.helpDoc || tab.path || tab.content !== tab.savedContent)
+          return tab;
         const content = helpDocContent(tab.helpDoc, language);
         if (content === tab.content) return tab;
         changed = true;

@@ -401,18 +401,67 @@ function isImageParagraph(node: ProseNode): boolean {
   return images > 0;
 }
 
+/** A picture's caption: a short paragraph that is all emphasis, right
+ *  after the picture - `*Caption*`, the way the Agent writes one and the
+ *  way markdown elsewhere shows it. */
+export function isCaptionParagraph(node: ProseNode): boolean {
+  if (node.type.name !== "paragraph" || node.childCount !== 1) return false;
+  // Italics are an md_span node here (md-span-schema.ts): `*` once.
+  const span = node.child(0);
+  return (
+    span.type.name === "md_span" &&
+    (span.attrs.delim === "*" || span.attrs.delim === "_") &&
+    span.attrs.rung === 1 &&
+    span.textContent.trim().length > 0 &&
+    span.textContent.length <= 200
+  );
+}
+
+/** The caption under the picture at `pos`, if it has one (above), else its
+ *  title's visible text. */
+export function imageCaptionAt(doc: ProseNode, pos: number): string {
+  const $pos = doc.resolve(pos);
+  const image = doc.nodeAt(pos);
+  const title = readImagePresentation(
+    image?.attrs.title as string | null,
+  ).title.trim();
+  if ($pos.depth < 1) return title;
+  const paragraph = $pos.node($pos.depth);
+  const container = $pos.node($pos.depth - 1);
+  const index = $pos.index($pos.depth - 1);
+  const next =
+    index + 1 < container.childCount ? container.child(index + 1) : null;
+  if (isImageParagraph(paragraph) && next && isCaptionParagraph(next))
+    return next.textContent.trim();
+  return title;
+}
+
 function imageParagraphDecorations(doc: ProseNode): DecorationSet {
   const decorations: Decoration[] = [];
+  // Whether the textblock visited just before was a picture's paragraph.
+  let afterImage = false;
   doc.descendants((node, pos) => {
     if (node.isTextblock) {
-      if (isImageParagraph(node))
+      if (isImageParagraph(node)) {
         decorations.push(
           Decoration.node(pos, pos + node.nodeSize, {
             class: "image-paragraph",
           }),
         );
+        afterImage = true;
+      } else {
+        if (afterImage && isCaptionParagraph(node))
+          decorations.push(
+            Decoration.node(pos, pos + node.nodeSize, {
+              class: "image-caption",
+            }),
+          );
+        afterImage = false;
+      }
       return false;
     }
+    if (!node.isBlock) return true;
+    afterImage = false;
     return true;
   });
   return DecorationSet.create(doc, decorations);
@@ -627,7 +676,9 @@ function createImageView(
     handle.setPointerCapture(event.pointerId);
     dom.classList.add("image-view-resizing");
 
+    let moved = false;
     const move = (e: PointerEvent) => {
+      moved ||= Math.abs(e.clientX - startX) > 2;
       const width = startWidth + (e.clientX - startX) * factor;
       percent = Math.min(100, Math.max(5, (width / scale / available) * 100));
       dom.style.width = `${percent}%`;
@@ -637,6 +688,8 @@ function createImageView(
       handle.removeEventListener("pointerup", finish);
       handle.removeEventListener("pointercancel", finish);
       dom.classList.remove("image-view-resizing");
+      // A click on the handle without a drag changes nothing.
+      if (!moved) return;
       const pos = getPos();
       if (pos === undefined) return;
       view.dispatch(

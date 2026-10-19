@@ -512,6 +512,7 @@ pub fn run_conversation(
             library: &library,
             proposed: Default::default(),
             image: None,
+            doc_dir: None,
         };
         let usage = RefCell::new(Vec::new());
         let postfix = RefCell::new(Vec::new());

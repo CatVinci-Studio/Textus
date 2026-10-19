@@ -28,6 +28,8 @@ export interface ImagePromptDetails {
 export interface ImageViewerOptions {
   src: string;
   alt: string;
+  /** Shown centred under the picture, as in the document. */
+  caption?: string;
   rotate: number;
   labels: ImageViewerLabels;
   /** Generated images: resolves their prompt (null when there is none). */
@@ -193,7 +195,13 @@ export function openImageViewer(options: ImageViewerOptions): () => void {
       : []),
     iconButton("close", labels.close, () => close()),
   );
-  root.append(stage, toolbar, panel);
+  const caption = options.caption?.trim();
+  if (caption) {
+    const figcaption = document.createElement("p");
+    figcaption.className = "image-viewer-caption";
+    figcaption.textContent = caption;
+    root.append(stage, figcaption, toolbar, panel);
+  } else root.append(stage, toolbar, panel);
 
   stage.addEventListener(
     "wheel",

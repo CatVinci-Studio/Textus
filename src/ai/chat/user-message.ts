@@ -31,6 +31,12 @@ export function cursorBlock(before: string, after: string): string {
   return `<cursor>\n${before}⟦cursor⟧${after}\n</cursor>`;
 }
 
+/** Instructions an app feature writes for the model behind a short visible
+ *  line (auto-writing's per-section brief): sent in full, never shown. */
+export function taskBriefBlock(text: string): string {
+  return `<task-brief>\n${text}\n</task-brief>`;
+}
+
 /** Wraps one attachment's extracted text. */
 export function attachedFileBlock(name: string, content: string): string {
   return `<attached-file name="${name}">\n${content}\n</attached-file>`;
@@ -90,6 +96,7 @@ export interface ParsedUserMessage {
 
 const SELECTED_TEXT = /<selected-text>\n?([\s\S]*?)\n?<\/selected-text>\n*/;
 const CURSOR = /<cursor>\n?[\s\S]*?\n?<\/cursor>\n*/;
+const TASK_BRIEF = /\n*<task-brief>\n?[\s\S]*?\n?<\/task-brief>\n*/;
 const ATTACHED_FILE =
   /<attached-file name="([^"]*)">\n?[\s\S]*?\n?<\/attached-file>\n*/g;
 const SKILL =
@@ -102,7 +109,7 @@ export function parseUserMessage(text: string): ParsedUserMessage {
     return "";
   });
 
-  body = body.replace(CURSOR, "");
+  body = body.replace(CURSOR, "").replace(TASK_BRIEF, "\n");
   // A /name skill went out with its whole prompt; the user typed the name.
   body = body.replace(
     SKILL,

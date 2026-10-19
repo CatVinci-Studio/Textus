@@ -7,6 +7,7 @@ import { documentRevisionPlugin } from "../ai/workspace/revision-plugin";
 import { speechHighlightPlugin } from "../voice/speech-highlight-plugin";
 import { inactiveSelectionPlugin } from "../editor/selection/inactive-selection-plugin";
 import { imagePlaceholderPlugin } from "../ai/multimodal/image-placeholder-plugin";
+import { fillSlotPlugin } from "../editor/fill-slots/fill-slot-plugin";
 
 export type { PendingEditCallbacks };
 
@@ -60,5 +61,6 @@ export function withEditorExtensions(
     .use(documentRevisionPlugin)
     .use(speechHighlightPlugin)
     .use(imagePlaceholderPlugin)
+    .use(fillSlotPlugin)
     .use(inactiveSelectionPlugin);
 }

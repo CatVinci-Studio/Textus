@@ -13,12 +13,19 @@ let loading: Promise<Katex> | null = null;
 const listeners = new Set<() => void>();
 
 export function loadKatex(): Promise<Katex> {
-  loading ??= import("katex").then((module) => {
-    katex = module.default;
-    for (const listener of listeners) listener();
-    listeners.clear();
-    return katex;
-  });
+  loading ??= import("katex").then(
+    (module) => {
+      katex = module.default;
+      for (const listener of listeners) listener();
+      listeners.clear();
+      return katex;
+    },
+    (error) => {
+      // A failed fetch can be tried again on the next formula.
+      loading = null;
+      throw error;
+    },
+  );
   return loading;
 }
 
@@ -37,10 +44,15 @@ export function onKatexReady(listener: () => void): () => void {
 /** Re-renders a component once KaTeX arrives (a memo key). */
 export function useKatexReady(): boolean {
   const [ready, setReady] = useState(katex !== null);
-  useEffect(
-    () => (ready ? undefined : onKatexReady(() => setReady(true))),
-    [ready],
-  );
+  useEffect(() => {
+    if (ready) return;
+    // Loaded between this render and the effect: no event will come.
+    if (katex) {
+      setReady(true);
+      return;
+    }
+    return onKatexReady(() => setReady(true));
+  }, [ready]);
   return ready;
 }
 

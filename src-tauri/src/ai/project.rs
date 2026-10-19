@@ -56,6 +56,9 @@ const TEXT_EXTENSIONS: &[&str] = &[
 ];
 
 const MAX_FILE_BYTES: u64 = 100 * 1024;
+/// A Word/PDF/slides/sheet source is larger than its text: its text is
+/// capped after extraction instead (commands::attachment).
+const MAX_DOCUMENT_BYTES: u64 = 32 * 1024 * 1024;
 const MAX_WALKED_FILES: usize = 2000;
 const MAX_SEARCH_MATCHES: usize = 40;
 const MAX_LIBRARY_CHARS: usize = 8_000;
@@ -85,11 +88,67 @@ fn is_text_file(path: &Path) -> bool {
         .is_some_and(|e| TEXT_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()))
 }
 
+/// What a project file is to a writer: text (read as it is), a document
+/// (Word, PDF, slides, sheets - its text extracted), an image (shown in the
+/// document by its path) or something else (listed only).
+pub fn entry_kind(path: &Path) -> &'static str {
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    if TEXT_EXTENSIONS.contains(&ext.as_str()) {
+        "text"
+    } else if crate::commands::attachment::DOCUMENT_EXTENSIONS.contains(&ext.as_str()) {
+        "document"
+    } else if crate::commands::attachment::is_image_extension(&ext) {
+        "image"
+    } else {
+        "other"
+    }
+}
+
+/// One file of the project folder, for the file tree (auto-writing) and the
+/// agent's list_files.
+#[derive(Serialize, Clone, Debug, PartialEq)]
+pub struct ProjectEntry {
+    /// Relative to the project folder, `/`-separated.
+    pub path: String,
+    pub kind: &'static str,
+    pub bytes: u64,
+}
+
+/// Every file under `root`, of any kind - see walk_text_files.
+pub fn walk_entries(root: &Path) -> Vec<ProjectEntry> {
+    let mut out = Vec::new();
+    walk(root, &mut |path, rel| {
+        out.push(ProjectEntry {
+            kind: entry_kind(path),
+            bytes: std::fs::metadata(path).map(|m| m.len()).unwrap_or(0),
+            path: rel,
+        });
+        out.len() < MAX_WALKED_FILES
+    });
+    out
+}
+
 /// Every text file under `root` (relative paths, sorted, depth-first),
 /// skipping hidden entries and SKIPPED_DIRS. Bounded: a huge tree stops at
 /// MAX_WALKED_FILES rather than stalling the request.
 pub fn walk_text_files(root: &Path) -> Vec<String> {
     let mut out = Vec::new();
+    walk(root, &mut |path, rel| {
+        if is_text_file(path) {
+            out.push(rel);
+        }
+        out.len() < MAX_WALKED_FILES
+    });
+    out
+}
+
+/// Visits the files under `root` in name order, depth-first, with their
+/// `/`-separated relative paths, until `visit` returns false.
+fn walk(root: &Path, visit: &mut dyn FnMut(&Path, String) -> bool) {
     let mut pending = vec![root.to_path_buf()];
     while let Some(dir) = pending.pop() {
         let Ok(entries) = std::fs::read_dir(&dir) else {
@@ -111,18 +170,32 @@ pub fn walk_text_files(root: &Path) -> Vec<String> {
                 if !SKIPPED_DIRS.contains(&name) {
                     subdirs.push(path);
                 }
-            } else if is_text_file(&path) {
-                if let Ok(rel) = path.strip_prefix(root) {
-                    out.push(rel.to_string_lossy().replace('\\', "/"));
-                }
-                if out.len() >= MAX_WALKED_FILES {
-                    return out;
+            } else if let Ok(rel) = path.strip_prefix(root) {
+                let rel = rel.to_string_lossy().replace('\\', "/");
+                if !visit(&path, rel) {
+                    return;
                 }
             }
         }
         pending.extend(subdirs.into_iter().rev());
     }
-    out
+}
+
+/// How a document shows the project image `rel`: relative to the document's
+/// folder when it sits under it, else by absolute path - percent-encoded
+/// where markdown would break (spaces, brackets), as the app's own assets.
+pub fn image_src(root: &Path, rel: &str, doc_dir: Option<&Path>) -> String {
+    let abs = root.join(rel);
+    let path = doc_dir
+        .and_then(|dir| abs.strip_prefix(dir).ok())
+        .map(|p| p.to_string_lossy().replace('\\', "/"))
+        .unwrap_or_else(|| abs.to_string_lossy().replace('\\', "/"));
+    path.replace('%', "%25")
+        .replace(' ', "%20")
+        .replace('(', "%28")
+        .replace(')', "%29")
+        .replace('<', "%3C")
+        .replace('>', "%3E")
 }
 
 /// Reads `rel` from inside `root`: canonical containment (no `..`, absolute
@@ -157,8 +230,24 @@ pub fn read_text(root: &Path, rel: &str) -> Result<String, String> {
             "Hidden files and folders (names starting with \".\") can't be read.".to_string(),
         );
     }
+    let kind = entry_kind(&path);
+    if kind == "image" {
+        return Err(format!(
+            "`{rel}` is an image, not text. To show it in the document, put it on a line of its own in a proposal as list_files gives it: ![alt text](src)."
+        ));
+    }
     match std::fs::metadata(&path) {
         Ok(meta) if meta.is_dir() => Err(format!("`{rel}` is a folder, not a file.")),
+        Ok(meta) if kind == "document" => {
+            if meta.len() > MAX_DOCUMENT_BYTES {
+                return Err(format!(
+                    "`{rel}` is too large to read ({} MB; the limit is {} MB).",
+                    meta.len() / (1024 * 1024),
+                    MAX_DOCUMENT_BYTES / (1024 * 1024)
+                ));
+            }
+            crate::commands::attachment::document_text(&path)
+        }
         Ok(meta) if meta.len() > MAX_FILE_BYTES => Err(format!(
             "`{rel}` is too large to read ({} KB; the limit is {} KB).",
             meta.len() / 1024,
@@ -385,6 +474,77 @@ pub fn writing_context_section(style: Option<&str>, entries: &[&LibraryEntry]) -
 mod tests {
     use super::*;
 
+    /// A scratch project folder, removed when dropped.
+    struct Scratch(PathBuf);
+    impl Drop for Scratch {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+    fn scratch(files: &[(&str, &[u8])]) -> Scratch {
+        let root = std::env::temp_dir().join(format!(
+            "textus-project-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        for (rel, bytes) in files {
+            let path = root.join(rel);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(path, bytes).unwrap();
+        }
+        Scratch(root)
+    }
+
+    #[test]
+    fn the_listing_holds_every_kind_of_file_but_hidden_ones() {
+        let project = scratch(&[
+            ("大纲.md", b"# outline"),
+            ("资料/人物.docx", b"not really a zip"),
+            ("图片/封面 1.jpg", b"jpg"),
+            ("misc.bin", b"x"),
+            (".secret/key.txt", b"no"),
+        ]);
+        let entries = walk_entries(&project.0);
+        let kinds: Vec<(&str, &str)> = entries.iter().map(|e| (e.path.as_str(), e.kind)).collect();
+        assert_eq!(
+            kinds,
+            [
+                ("misc.bin", "other"),
+                ("大纲.md", "text"),
+                ("图片/封面 1.jpg", "image"),
+                ("资料/人物.docx", "document"),
+            ]
+        );
+        // Text-only callers (@-mentions, search) still see text only.
+        assert_eq!(walk_text_files(&project.0), ["大纲.md"]);
+    }
+
+    #[test]
+    fn images_are_given_by_a_path_the_document_can_show() {
+        let root = Path::new("/p/novel");
+        // The document sits above the picture: relative, encoded.
+        assert_eq!(
+            image_src(root, "图片/封面 (1).jpg", Some(root)),
+            "图片/封面%20%281%29.jpg"
+        );
+        // Unsaved, or elsewhere: by absolute path.
+        assert_eq!(image_src(root, "a.png", None), "/p/novel/a.png");
+        assert_eq!(
+            image_src(root, "a.png", Some(Path::new("/elsewhere"))),
+            "/p/novel/a.png"
+        );
+    }
+
+    #[test]
+    fn reading_an_image_says_how_to_use_it_instead() {
+        let project = scratch(&[("cover.png", b"png")]);
+        let err = read_text(&project.0, "cover.png").unwrap_err();
+        assert!(err.contains("is an image") && err.contains("![alt text](src)"));
+    }
+
     #[test]
     fn library_entries_parse_frontmatter_lists_in_both_scripts() {
         let entry = parse_library_entry(
@@ -561,7 +721,8 @@ fn project_root(doc_path: Option<&str>, workspace_root: Option<&str>) -> Result<
         .ok_or_else(|| "NO_PROJECT".to_string())
 }
 
-/// The project's text files, for the composer's @-mention picker.
+/// The project's readable files - text and documents - for the composer's
+/// @-mention picker.
 #[tauri::command]
 pub async fn list_project_files(
     doc_path: Option<String>,
@@ -569,11 +730,41 @@ pub async fn list_project_files(
 ) -> Vec<String> {
     tauri::async_runtime::spawn_blocking(move || {
         project_root(doc_path.as_deref(), workspace_root.as_deref())
-            .map(|root| walk_text_files(&root))
+            .map(|root| {
+                walk_entries(&root)
+                    .into_iter()
+                    .filter(|e| e.kind == "text" || e.kind == "document")
+                    .map(|e| e.path)
+                    .collect()
+            })
             .unwrap_or_default()
     })
     .await
     .unwrap_or_default()
+}
+
+/// Every file of the project, with its kind - the auto-writing file tree.
+#[tauri::command]
+pub async fn list_project_entries(
+    doc_path: Option<String>,
+    workspace_root: Option<String>,
+) -> Vec<ProjectEntry> {
+    tauri::async_runtime::spawn_blocking(move || {
+        project_root(doc_path.as_deref(), workspace_root.as_deref())
+            .map(|root| walk_entries(&root))
+            .unwrap_or_default()
+    })
+    .await
+    .unwrap_or_default()
+}
+
+/// The project folder in use (explicit, or the document's own folder), for
+/// showing which one it is.
+#[tauri::command]
+pub fn project_folder(doc_path: Option<String>, workspace_root: Option<String>) -> Option<String> {
+    project_root(doc_path.as_deref(), workspace_root.as_deref())
+        .ok()
+        .map(|root| root.to_string_lossy().to_string())
 }
 
 /// One project file's text, for an @-mention - the same safety rules as the

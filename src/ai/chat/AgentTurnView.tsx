@@ -3,6 +3,7 @@ import type { AgentTurn, ImageAttachment } from "../types";
 import { MarkdownText } from "../MarkdownText";
 import { parseUserMessage } from "./user-message";
 import { ChevronIcon, PaperclipIcon, SearchIcon } from "../../ui/icons";
+import { toolStepCounts, type ToolStep } from "./tool-steps";
 import "./AgentTurnView.css";
 
 export interface AgentTurnLabels {
@@ -83,6 +84,41 @@ export function AgentTurnView({
     default:
       return null;
   }
+}
+
+/**
+ * A run of tool steps as one line - "Counting ×9 · Checking conventions ×3"
+ * - that opens to each step and its result (tool-steps.ts).
+ */
+export function ToolStepGroup({
+  steps,
+  labels,
+}: {
+  steps: ToolStep[];
+  labels: AgentTurnLabels;
+}) {
+  const summary = toolStepCounts(steps)
+    .map(
+      ({ name, count, arguments: args }) =>
+        `${toolActivityText(name, args, labels)}${count > 1 ? ` ×${count}` : ""}`,
+    )
+    .join(" · ");
+  return (
+    <details className="agent-tool-group">
+      <summary>
+        <SearchIcon className="agent-tool-icon" />
+        <span className="agent-tool-group-text">{summary}</span>
+      </summary>
+      <ol>
+        {steps.map((step, i) => (
+          <li key={i}>
+            <span>{toolActivityText(step.name, step.arguments, labels)}</span>
+            {step.output !== null && <pre>{step.output}</pre>}
+          </li>
+        ))}
+      </ol>
+    </details>
+  );
 }
 
 /**
