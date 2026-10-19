@@ -98,9 +98,10 @@ place. `check:native` passes `--workspace`, so the `aicompat` crate is
 checked too.
 
 CI runs `check` on every pull request, and `e2e`, `native` (on Linux, macOS
-and Windows) and an iOS simulator build whenever code changed; a
-documentation-only change or a version bump runs `check` alone, and a change
-only to the Rust backend (`src-tauri/`) skips `e2e`
+and Windows) and an iOS simulator build where the change can reach them: a
+documentation-only change or a version bump runs `check` alone, a
+frontend-only change skips `native` and iOS, and a change only to the Rust
+backend (`src-tauri/`) skips `e2e`
 ([scripts/ci-changes.mjs](scripts/ci-changes.mjs) decides).
 
 ## Tests

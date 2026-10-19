@@ -11,13 +11,25 @@ name: CI
 #                                  macOS and Windows
 #   ios      the iOS simulator build
 #
-# A pull request that only touches documentation runs `check` alone; the
-# other jobs are skipped, which branch protection counts as passed. So does a
-# version bump (only the version lines of the five files
-# scripts/check-versions.mjs keeps in step), on its pull request and on its
-# push to main. One that only touches the Rust backend skips `e2e` too: the
-# flows run the frontend against a mocked backend, so Rust can't change their
-# result. scripts/ci-changes.mjs decides.
+# `check` always runs. A pull request runs the others only where its change
+# can reach them (scripts/ci-changes.mjs decides; skipped jobs count as
+# passed for branch protection):
+#
+#   documentation, or a version bump      check alone
+#   the frontend only                     check, e2e
+#   the Rust backend only                 check, native, ios
+#   both; a workflow, .nvmrc, or the npm
+#   dependencies                          everything
+#
+# The e2e flows run the frontend against a mocked backend, so Rust can't
+# change their result; native and ios embed only a few frontend files, which
+# the script finds. A version bump changes only the version lines of the five
+# files scripts/check-versions.mjs keeps in step. A push to main or a release
+# branch runs everything, except a version bump's.
+#
+# Caches: Rust builds and the Playwright browser are saved from main only.
+# Pull requests restore main's and write none, so they don't evict main's
+# from the repository's 10 GB.
 
 on:
   pull_request:
@@ -37,16 +49,14 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Whether anything besides documentation and a version bump changed
-  # (`code`), and whether any of it reaches the browser (`frontend`):
-  # scripts/ci-changes.mjs. A push runs everything unless it is a version
-  # bump.
+  # Whether the change can reach the browser (`e2e`) and the Rust build
+  # (`native`, also ios): scripts/ci-changes.mjs.
   changes:
     runs-on: ubuntu-22.04
     timeout-minutes: 5
     outputs:
-      code: ${{ steps.diff.outputs.code }}
-      frontend: ${{ steps.diff.outputs.frontend }}
+      e2e: ${{ steps.diff.outputs.e2e }}
+      native: ${{ steps.diff.outputs.native }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -93,7 +103,7 @@ jobs:
   # by spec file across three.
   e2e-shard:
     needs: changes
-    if: needs.changes.outputs.frontend == 'true'
+    if: needs.changes.outputs.e2e == 'true'
     name: e2e (${{ matrix.shard }}/3)
     strategy:
       fail-fast: false
@@ -108,12 +118,30 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # Chromium comes from the cache when this Playwright version's is there;
+      # its system libraries are installed either way.
+      - id: playwright
+        run: echo "version=$(node -p 'require("./package-lock.json").packages["node_modules/@playwright/test"].version')" >> "$GITHUB_OUTPUT"
+      - id: browser
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.browser.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - if: steps.browser.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      # Saved from main only, and by one shard (three would race for the key).
+      - if: steps.browser.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main' && matrix.shard == 1
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.browser.outputs.cache-primary-key }}
       - run: npm run test:e2e -- --shard=${{ matrix.shard }}/3
 
   # One required check for the three shards, like `native` below: passes only
-  # when all of them passed (or were skipped together, for a documentation or
-  # Rust-only change).
+  # when all of them passed (or were skipped together, when the change can't
+  # reach the browser).
   e2e:
     needs: [changes, e2e-shard]
     if: always()
@@ -130,7 +158,7 @@ jobs:
 
   native-platform:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.native == 'true'
     name: native (${{ matrix.os }})
     strategy:
       fail-fast: false
@@ -162,10 +190,12 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: "./src-tauri -> target"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: npm run check:native
 
   # One required check for the three platforms: passes only when all of
-  # them passed (or were skipped together, for a documentation change).
+  # them passed (or were skipped together, when the change can't reach the
+  # Rust build).
   native:
     needs: native-platform
     if: always()
@@ -184,7 +214,7 @@ jobs:
   # iOS port is young.
   ios:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.native == 'true'
     runs-on: macos-26
     timeout-minutes: 60
     steps:
@@ -212,6 +242,7 @@ jobs:
         with:
           workspaces: "./src-tauri -> target"
           key: ios
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install XcodeGen (used by tauri ios init)
         run: brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
       - run: npm ci

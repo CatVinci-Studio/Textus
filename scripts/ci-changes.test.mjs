@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { classify } from "./ci-changes.mjs";
+import { classify, rustIncludes } from "./ci-changes.mjs";
 
 const VERSION_FILES = [
   "package.json",
@@ -28,6 +28,8 @@ const bumped = Object.fromEntries(
   ]),
 );
 
+const rustReads = rustIncludes();
+
 /** A change from `before` to `after` (maps of file to text); files missing
  *  from either side don't exist there. */
 function change(before, after, { push = false } = {}) {
@@ -36,107 +38,136 @@ function change(before, after, { push = false } = {}) {
     files,
     push,
     read: (file) => [before[file] ?? null, after[file] ?? null],
+    rustReads,
   });
 }
 
-const edited = (file) => ({
-  before: { [file]: "a\n" },
-  after: { [file]: "b\n" },
-});
+/** Each of `files` edited from "a" to "b". */
+function edit(files, options) {
+  const side = (text) => Object.fromEntries(files.map((f) => [f, text]));
+  return change(side("a\n"), side("b\n"), options);
+}
 
-describe("which CI jobs a change needs", () => {
+const NONE = { e2e: false, native: false };
+const ALL = { e2e: true, native: true };
+const E2E = { e2e: true, native: false };
+const NATIVE = { e2e: false, native: true };
+
+describe("which CI jobs a pull request needs", () => {
   it("runs check alone for documentation", () => {
-    const { before, after } = edited("docs/dev/testing.md");
-    expect(change(before, after)).toEqual({ code: false, frontend: false });
+    expect(edit(["docs/dev/testing.md", "README.md", "LICENSE"])).toEqual(NONE);
   });
 
-  it("runs check alone for a version bump, on the pull request and on its push", () => {
+  it("runs check alone for a version bump", () => {
     expect(bumped["src-tauri/Cargo.lock"]).not.toBe(
       current["src-tauri/Cargo.lock"],
     );
-    const off = { code: false, frontend: false };
-    expect(change(current, bumped)).toEqual(off);
-    expect(change(current, bumped, { push: true })).toEqual(off);
+    expect(change(current, bumped)).toEqual(NONE);
   });
 
-  it("runs everything when a bump also adds an npm dependency", () => {
-    const pkg = JSON.parse(bumped["package.json"]);
-    pkg.dependencies["left-pad"] = "^1.3.0";
-    const after = { ...bumped, "package.json": JSON.stringify(pkg, null, 2) };
-    expect(change(current, after)).toEqual({ code: true, frontend: true });
+  it("runs e2e alone for a frontend change", () => {
+    expect(
+      edit(["src/editor/editor.ts", "e2e/writing.spec.ts", "vite.config.ts"]),
+    ).toEqual(E2E);
   });
 
-  it("runs everything when a bump also changes the lockfile's packages", () => {
-    const lock = JSON.parse(bumped["package-lock.json"]);
-    lock.packages["node_modules/left-pad"] = { version: "1.3.0" };
-    const after = {
-      ...bumped,
-      "package-lock.json": JSON.stringify(lock, null, 2),
-    };
-    expect(change(current, after).code).toBe(true);
+  it("runs native alone for a Rust change", () => {
+    expect(
+      edit([
+        "src-tauri/src/lib.rs",
+        "src-tauri/crates/aicompat/src/lib.rs",
+        "src-tauri/rust-toolchain.toml",
+        "scripts/ios-prepare.sh",
+      ]),
+    ).toEqual(NATIVE);
   });
 
-  it("runs everything when a bump also adds a Rust dependency", () => {
-    const after = {
-      ...bumped,
-      "src-tauri/Cargo.toml": bumped["src-tauri/Cargo.toml"].replace(
-        "[dependencies]\n",
-        '[dependencies]\nleft-pad = "1"\n',
-      ),
-    };
-    expect(after["src-tauri/Cargo.toml"]).not.toBe(
-      bumped["src-tauri/Cargo.toml"],
-    );
-    expect(change(current, after).code).toBe(true);
+  it("runs both for a frontend file the Rust tests embed", () => {
+    expect(rustReads).toContain("index.html");
+    expect(rustReads).toContain("src/app/app-menu-model.ts");
+    expect(edit(["src/app/app-menu-model.ts"])).toEqual(ALL);
   });
 
-  it("runs everything when Cargo.lock moves another package's version", () => {
-    const lock = current["src-tauri/Cargo.lock"];
-    const other = lock.match(/name = "serde"\nversion = "([^"]+)"/);
-    const after = {
-      "src-tauri/Cargo.lock": lock.replace(
-        other[0],
-        'name = "serde"\nversion = "0.0.1"',
-      ),
-    };
-    expect(change({ "src-tauri/Cargo.lock": lock }, after)).toEqual({
-      code: true,
-      frontend: false,
-    });
-  });
-
-  it("skips e2e for a pull request that only changes the Rust backend", () => {
-    const { before, after } = edited("src-tauri/src/lib.rs");
-    expect(change(before, after)).toEqual({ code: true, frontend: false });
-  });
-
-  it("runs e2e for the src-tauri files the browser sees", () => {
+  it("runs both for the src-tauri files the browser sees", () => {
     for (const file of [
       "src-tauri/icons/128x128.png",
       "src-tauri/src/boot.js",
       "src-tauri/tauri.conf.json",
       "src-tauri/tauri.ios.conf.json",
     ]) {
-      const { before, after } = edited(file);
-      expect(change(before, after), file).toEqual({
-        code: true,
-        frontend: true,
-      });
+      expect(edit([file]), file).toEqual(ALL);
     }
   });
 
-  it("runs everything on a push that isn't a bump", () => {
-    for (const file of ["src-tauri/src/lib.rs", "docs/dev/testing.md"]) {
-      const { before, after } = edited(file);
-      expect(change(before, after, { push: true }), file).toEqual({
-        code: true,
-        frontend: true,
-      });
-    }
+  it("runs both for a change to both sides", () => {
+    expect(edit(["src/main.tsx", "src-tauri/src/lib.rs"])).toEqual(ALL);
+  });
+
+  it("runs everything for a workflow or Node version change", () => {
+    expect(edit([".github/workflows/ci.yml"])).toEqual(ALL);
+    expect(edit([".nvmrc"])).toEqual(ALL);
+  });
+
+  it("ignores a bump's version lines in a mixed change", () => {
+    const after = { ...bumped, "src/main.tsx": "b\n" };
+    expect(change({ ...current, "src/main.tsx": "a\n" }, after)).toEqual(E2E);
+  });
+
+  it("runs everything when the npm dependencies change", () => {
+    const pkg = JSON.parse(bumped["package.json"]);
+    pkg.dependencies["left-pad"] = "^1.3.0";
+    const after = { ...bumped, "package.json": JSON.stringify(pkg, null, 2) };
+    expect(change(current, after)).toEqual(ALL);
+  });
+
+  it("runs everything when the lockfile adds a package", () => {
+    const lock = JSON.parse(current["package-lock.json"]);
+    lock.packages["node_modules/left-pad"] = { version: "1.3.0" };
+    const file = "package-lock.json";
+    expect(
+      change(
+        { [file]: current[file] },
+        { [file]: JSON.stringify(lock, null, 2) },
+      ),
+    ).toEqual(ALL);
+  });
+
+  it("runs native when a bump also adds a Rust dependency", () => {
+    const toml = bumped["src-tauri/Cargo.toml"].replace(
+      "[dependencies]\n",
+      '[dependencies]\nleft-pad = "1"\n',
+    );
+    expect(toml).not.toBe(bumped["src-tauri/Cargo.toml"]);
+    const after = { ...bumped, "src-tauri/Cargo.toml": toml };
+    expect(change(current, after)).toEqual(NATIVE);
+  });
+
+  it("runs native when Cargo.lock moves another package's version", () => {
+    const file = "src-tauri/Cargo.lock";
+    const other = current[file].match(/name = "serde"\nversion = "[^"]+"/)[0];
+    const after = current[file].replace(
+      other,
+      'name = "serde"\nversion = "0.0.1"',
+    );
+    expect(change({ [file]: current[file] }, { [file]: after })).toEqual(
+      NATIVE,
+    );
   });
 
   it("runs everything when a version file is added or removed", () => {
-    expect(change({}, { "package.json": "{}" }).code).toBe(true);
-    expect(change({ "package.json": "{}" }, {}).code).toBe(true);
+    expect(change({}, { "package.json": "{}" })).toEqual(ALL);
+    expect(change({ "package.json": "{}" }, {})).toEqual(ALL);
+  });
+});
+
+describe("which CI jobs a push needs", () => {
+  it("runs check alone for a version bump", () => {
+    expect(change(current, bumped, { push: true })).toEqual(NONE);
+  });
+
+  it("runs everything otherwise, documentation and Rust alone included", () => {
+    for (const file of ["docs/dev/testing.md", "src-tauri/src/lib.rs"]) {
+      expect(edit([file], { push: true }), file).toEqual(ALL);
+    }
   });
 });
