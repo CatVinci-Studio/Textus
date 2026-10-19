@@ -1022,4 +1022,14 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   quickNoteNoImages: `クイックメモには画像を貼り付けられません。${APP_NAME} で開いてから追加してください。`,
   quickNoteConflictMessage:
     "未保存の変更があるあいだに、このファイルにクイックメモが保存されました：「{note}」。いま保存するとファイルが上書きされ、そのメモは消えます。",
+  backgroundGroup: "バックグラウンド",
+  backgroundToggle: "バックグラウンドで実行し続ける",
+  backgroundHintMac: `メニューバーに ${APP_NAME} のアイコンを表示し、いつでもクイックメモ、書類、終了を選べるようにします。`,
+  backgroundHintWindows: `最後のウィンドウを閉じても ${APP_NAME} は実行を続け、通知領域にアイコンを表示します。クリックするとクイックメモが開きます。完全に終了するには、アイコンのメニューで「${APP_NAME}を終了」を選びます。`,
+  backgroundHintLinux: `最後のウィンドウを閉じても ${APP_NAME} は実行を続け、システムトレイにアイコンを表示します。完全に終了するには、アイコンのメニューで「${APP_NAME}を終了」を選びます。GNOME では AppIndicator 拡張機能がないとトレイアイコンは表示されません。`,
+  backgroundTrayUnavailable: `このデスクトップではトレイを使えません（libayatana-appindicator がインストールされていません）。${APP_NAME} はバックグラウンドで実行を続けます。ランチャーかクイックメモのショートカットから開いてください。`,
+  openAtLoginToggle: "ログイン時に開く",
+  openAtLoginHint: `ログイン時に ${APP_NAME} をウィンドウなしでバックグラウンド起動します。`,
+  openAtLoginFailed: "ログイン項目を変更できませんでした: {error}",
+  trayOpenTextus: `${APP_NAME} を開く`,
 } satisfies Translation;

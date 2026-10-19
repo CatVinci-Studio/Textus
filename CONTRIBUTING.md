@@ -27,7 +27,7 @@ You need:
   - **Windows:** Microsoft C++ Build Tools (the "Desktop development with
     C++" workload) and WebView2, which Windows 10 and 11 already have;
   - **Linux (Debian/Ubuntu):**
-    `sudo apt install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf`.
+    `sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf`.
 
 Then:
 

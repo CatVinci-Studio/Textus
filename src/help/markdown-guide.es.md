@@ -148,6 +148,8 @@ Los tres están también en el menú **Visualización**.
 
 Las notas van a `Textus/Notas rápidas` dentro de tu carpeta Documentos, un archivo por nota, con el nombre de su primera línea. En **Ajustes → General → Notas rápidas** puedes elegir otra carpeta, usar **un archivo por día** y activar un **atajo global** que abre una nota rápida desde cualquier app: `Control+Opción+N` en un Mac, `Ctrl+Alt+N` en Linux, `Win+Alt+N` en Windows. Si vuelves a abrir una a los pocos minutos, continúas la última nota. En Wayland, asigna una tecla al comando `textus --quick-note` que aparece allí, en los ajustes de tu escritorio.
 
+Para tener Textus a mano aunque no haya ninguna ventana abierta, activa **Ajustes → General → Segundo plano → Seguir abierto en segundo plano**: al cerrar la última ventana, Textus sigue abierto, con un icono en el área de notificación (Windows), la bandeja del sistema (Linux) o la barra de menús (Mac). Su menú abre una nota rápida nueva, tus documentos, la carpeta de notas rápidas y los ajustes; **Salir de Textus** en ese menú cierra Textus del todo. **Abrir al iniciar sesión** lo inicia así al iniciar sesión. GNOME solo muestra el icono de bandeja con la extensión AppIndicator.
+
 ## Notas al pie y líneas horizontales
 
 Las notas al pie se ven así[^1], y debajo hay una línea horizontal:

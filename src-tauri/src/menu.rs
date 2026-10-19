@@ -786,6 +786,47 @@ fn build(
     })
 }
 
+/// Settings…: in the front editor window, or a new one.
+pub(crate) fn open_settings(app: &tauri::AppHandle) {
+    emit_or_open_window(app, "menu-open-settings");
+}
+
+/// Quit, from the menu bar (⌘Q, File › Quit) or the tray: every window is
+/// asked to close, so each unsaved document gets its prompt, and the app
+/// exits once the last one is gone (lib.rs's Destroyed handler) - with an
+/// exit code, which background mode never holds back (background/mod.rs's
+/// keeps_running).
+pub(crate) fn quit(app_handle: &tauri::AppHandle) {
+    // Capture every editor before destruction order can progressively
+    // shrink the session. A cancelled dirty-window prompt resets this
+    // through cancel_session_quit.
+    commands::session::begin_app_quit(
+        app_handle,
+        &app_handle.state::<commands::session::SessionTabsState>(),
+    );
+    // close() (not destroy()) so each frontend gets its close-requested
+    // prompt.
+    let windows = app_handle.webview_windows();
+    if windows.is_empty() {
+        // No window open (macOS, or background mode): nothing to close,
+        // nothing to ask.
+        app_handle.exit(0);
+    }
+    for (_, window) in windows {
+        let _ = window.close();
+    }
+}
+
+/// File › Open Quick Notes Folder, and the tray's: in the sidebar, as
+/// File › Open Folder… would open it - the notes are documents to write in.
+/// Settings › Quick Notes still shows the folder in the file manager.
+pub(crate) fn open_quick_notes_folder(app_handle: &tauri::AppHandle) {
+    match commands::quick_note::folder_for_use(app_handle) {
+        Ok(dir) => open_folder_in_sidebar(app_handle, &dir.to_string_lossy()),
+        Err(err) => eprintln!("quick notes: could not open the folder: {err}"),
+    }
+}
+
 /// Opens `path` in the focused window's sidebar, as File > Open Folder…
 /// does (a recent folder, the Quick Notes folder); with no window open, a
 /// fresh window does once it has mounted.
@@ -799,11 +840,14 @@ fn open_folder_in_sidebar(app_handle: &tauri::AppHandle, path: &str) {
 }
 
 /// What a menu id does. Reached from a native menu click (`on_menu_event`
-/// above) and from the app-drawn menu's `trigger_menu_item`, so both entry
-/// points stay one behaviour.
+/// above), from the app-drawn menu's `trigger_menu_item` and from the
+/// tray's menu (Tauri sends its clicks to the same handler), so every entry
+/// point stays one behaviour.
 fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     if id == SETTINGS_MENU_ID {
-        emit_or_open_window(app_handle, "menu-open-settings");
+        open_settings(app_handle);
+    } else if let Some(item) = id.strip_prefix(crate::background::tray::MENU_PREFIX) {
+        crate::background::tray::on_menu(app_handle, item);
     } else if id == NEW_FILE_ID {
         // Honors the same Settings choice as opening files: a new tab in the
         // focused window in tab mode, a fresh window otherwise (or when
@@ -849,24 +893,7 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     } else if let Some(format) = id.strip_prefix(EXPORT_PANDOC_PREFIX) {
         emit_document_command(app_handle, "menu-export-pandoc", format);
     } else if id == QUIT_ID {
-        // Capture every editor before destruction order can progressively
-        // shrink the session. A cancelled dirty-window prompt resets this
-        // through cancel_session_quit.
-        commands::session::begin_app_quit(
-            app_handle,
-            &app_handle.state::<commands::session::SessionTabsState>(),
-        );
-        // close() (not destroy()) so each frontend gets its close-requested
-        // prompt; the app exits once the last window actually closes
-        // (lib.rs's Destroyed handler).
-        let windows = app_handle.webview_windows();
-        if windows.is_empty() {
-            // macOS with no window open: nothing to close, nothing to ask.
-            app_handle.exit(0);
-        }
-        for (_, window) in windows {
-            let _ = window.close();
-        }
+        quit(app_handle);
     } else if let Some(kind) = id.strip_prefix(INSERT_BLOCK_PREFIX) {
         emit_document_command(app_handle, "menu-insert-block", kind);
     } else if id == TOGGLE_SOURCE_MODE_ID {
@@ -898,13 +925,7 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     } else if id == NEW_QUICK_NOTE_ID {
         commands::quick_note::window::open_soon(app_handle);
     } else if id == OPEN_QUICK_NOTES_FOLDER_ID {
-        // In the sidebar, as File > Open Folder… would open it - the notes
-        // are documents to write in. Settings › Quick Notes still shows the
-        // folder in the file manager.
-        match commands::quick_note::folder_for_use(app_handle) {
-            Ok(dir) => open_folder_in_sidebar(app_handle, &dir.to_string_lossy()),
-            Err(err) => eprintln!("quick notes: could not open the folder: {err}"),
-        }
+        open_quick_notes_folder(app_handle);
     } else if id == CLOSE_WINDOW_ID {
         // close() (not destroy()) so the frontend's dirty-tab prompt still
         // runs, same as the red traffic-light button.

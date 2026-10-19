@@ -1035,6 +1035,16 @@ pub fn settings_patch(
     {
         crate::commands::quick_note::shortcut::apply(&app);
     }
+    // Background mode's tray and login entry, likewise; the tray's menu
+    // follows the UI language.
+    #[cfg(desktop)]
+    if patch.contains_key(crate::background::ENABLED_SETTING)
+        || patch.contains_key(crate::background::LOGIN_SETTING)
+    {
+        crate::background::apply(&app, crate::background::Change::Settings);
+    } else if patch.contains_key("language") {
+        crate::background::apply(&app, crate::background::Change::Language);
+    }
     emit_to_all(
         &app,
         "settings-changed",
