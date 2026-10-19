@@ -34,7 +34,13 @@ const schema = new Schema({
     image: {
       group: "inline",
       inline: true,
-      attrs: { src: { default: "" }, alt: { default: "" }, title: {} },
+      attrs: {
+        src: { default: "" },
+        alt: { default: "" },
+        title: {},
+        width: { default: "" },
+        html: { default: "" },
+      },
     },
     table: { ...cells.table, content: "table_header_row table_row+" },
     table_header_row: { ...cells.table_row, content: "table_header*" },
@@ -195,7 +201,7 @@ describe("the editor menu", () => {
     const { view, run } = editorAt(imageSelected);
     expect(selectedImagePos(run)).toBe(imagePos);
     setImageWidth(run, imagePos, 50, true);
-    expect(view.state.doc.nodeAt(imagePos)?.attrs.title).toMatch(/50/);
+    expect(view.state.doc.nodeAt(imagePos)?.attrs.width).toBe("50%");
     expect(selectedImagePos(run)).toBe(imagePos);
   });
 });

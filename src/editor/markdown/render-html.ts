@@ -1,8 +1,9 @@
-import { Marked, type TokenizerAndRendererExtension } from "marked";
+import { Marked, Renderer, type TokenizerAndRendererExtension } from "marked";
 import katex from "katex";
 import DOMPurify from "dompurify";
 import { normalizeMathDelimiters } from "../../utils/markdown-math";
 import { sanitizeNodes } from "../html/html-policy";
+import { readImagePresentation } from "../images/image-html";
 
 function renderMath(source: string, displayMode: boolean): string {
   return katex.renderToString(source.trim(), {
@@ -108,6 +109,19 @@ const documentMarked = new Marked({
     mathSlots.push(DOMPurify.sanitize(mathHtml(source, display, block)));
     return `<${MATH_SLOT_TAG} data-slot="${mathSlots.length - 1}"></${MATH_SLOT_TAG}>`;
   }),
+  renderer: {
+    // A width an older Textus kept in the title (images/image-html.ts)
+    // sizes the picture, as in the editor, instead of being its tooltip.
+    image(token) {
+      const { title, widthPercent } = readImagePresentation(token.title);
+      if (widthPercent === null) return false;
+      const html = Renderer.prototype.image.call(this, {
+        ...token,
+        title: title || null,
+      });
+      return html.replace(/^<img /, `<img width="${widthPercent}%" `);
+    },
+  },
   // `[](https://...)` shows its URL, as it does in the editor
   // (markdown-output.ts) - rendered empty, the link was there but invisible.
   walkTokens: (token) => {

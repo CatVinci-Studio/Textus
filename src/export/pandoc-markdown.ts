@@ -5,14 +5,19 @@
 //
 // - `==text==` (highlight) becomes `[text]{.mark}`, which Word shows as a
 //   highlight; left alone it would print with its equals signs.
-// - An image's width, kept in its title as `{textus-width=N%}`
-//   (image-plugin.ts), becomes `{width=N%}`, so the picture keeps its size
+// - A sized image, saved as `<img width>` (editor/images/image-html.ts),
+//   becomes `![alt](src){width=...}`: pandoc leaves raw HTML out of a Word
+//   file, picture and all. One an older Textus saved with
+//   `{textus-width=N%}` in its title gets `{width=N%}` the same way,
 //   instead of filling the page with the marker as its title.
 // - A GitHub alert (`> [!NOTE]`) becomes a quote led by its label in bold,
 //   in the words the editor shows (备注, Hinweis...); pandoc would title it
 //   "Note" in English whatever the document's language.
 
+import { parseImageTag } from "../editor/images/image-html";
+
 const FENCE = /^ {0,3}(`{3,}|~{3,})/;
+const IMG_TAG = /<img\b(?:[^<>"']|"[^"]*"|'[^']*')*>/gi;
 const IMAGE_WIDTH =
   /!\[([^\]]*)\]\((\S+?)\s+"([^"]*?)\s*\{(?:textus|levis)-width=(\d{1,3})%\}"\)/g;
 const HIGHLIGHT = /==(?=\S)(.+?)(?<=\S)==/g;
@@ -23,8 +28,23 @@ export type AlertLabels = Record<
   string
 >;
 
+/** An `<img>` tag as a pandoc image, or the tag itself when it isn't one
+ *  an image node carries (it then stays HTML, as it always was). */
+function imageTag(tag: string): string {
+  const image = parseImageTag(tag);
+  if (!image) return tag;
+  const alt = image.alt.replace(/([[\]\\])/g, "\\$1");
+  const src = /[\s()<>]/.test(image.src) ? `<${image.src}>` : image.src;
+  const title = image.title
+    ? ` "${image.title.replace(/(["\\])/g, "\\$1")}"`
+    : "";
+  const width = /^\d+$/.test(image.width) ? `${image.width}px` : image.width;
+  return `![${alt}](${src}${title})${width ? `{width=${width}}` : ""}`;
+}
+
 function rewriteProse(text: string): string {
   return text
+    .replace(IMG_TAG, imageTag)
     .replace(IMAGE_WIDTH, (_m, alt: string, src: string, title: string, w) => {
       const kept = title.trim() ? ` "${title.trim()}"` : "";
       return `![${alt}](${src}${kept}){width=${w}%}`;

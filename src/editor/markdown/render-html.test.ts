@@ -51,6 +51,17 @@ describe("renderMarkdownHtml", () => {
 });
 
 describe("renderDocumentHtml", () => {
+  it("sizes an image by its width, old form or new", () => {
+    expect(
+      renderDocumentHtml('<img src="a.png" alt="图" width="50%">'),
+    ).toContain('width="50%"');
+    const old = renderDocumentHtml('![x](a.png "Cap {textus-width=30%}")');
+    expect(old).toContain('width="30%"');
+    expect(old).toContain('title="Cap"');
+    expect(old).not.toContain("textus-width");
+    expect(renderDocumentHtml("![x](a.png)")).not.toContain("width");
+  });
+
   it("shows an empty-text link's URL", () => {
     expect(renderDocumentHtml("see [](https://x.org/a) here")).toContain(
       '<a href="https://x.org/a">https://x.org/a</a>',
