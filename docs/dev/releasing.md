@@ -48,10 +48,15 @@ through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md
    (x64 and ARM64 each; see [Installers](#installers)),
    writes the updater manifest onto the draft, publishes the GitHub release,
    points the beta channel's manifest at it, mirrors the
-   installers to the website's download bucket, points the Homebrew cask at
-   both DMGs, and sends the tested `textus-bin` package to the `[catvinci]`
-   pacman repository in `CatVinci-Studio/arch-repo` (see
-   `packaging/arch/README.md`).
+   installers to the website's download bucket, and sends the tested
+   `textus-bin` package to the `[catvinci]` pacman repository in
+   `CatVinci-Studio/arch-repo` (see `packaging/arch/README.md`).
+
+   The Homebrew cask is not ours to update: it is the official
+   [`textus` cask](https://github.com/Homebrew/homebrew-cask/blob/main/Casks/t/textus.rb)
+   (`Casks/t/textus.rb` in `Homebrew/homebrew-cask`), and Homebrew's bot
+   bumps it after each stable release, usually within a few hours.
+
 6. Verify the release:
    - the GitHub release is public and has every file in
      [Installers](#installers), and a `.sig` beside each one with updater
@@ -61,24 +66,24 @@ through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md
      `darwin-aarch64`, `darwin-x86_64`, `linux-x86_64`, `linux-aarch64`,
      `windows-x86_64` and `windows-aarch64`, each also with its installer
      suffix;
-   - the Homebrew cask (`CatVinci-Studio/homebrew-tap`) has the new version
-     and both sha256 sums;
    - <https://textus.catvinci.com/download/manifest.json> names the new
      files under all ten keys, `windows-arm64`, `linux-arm64`, `deb-arm64`
      and `rpm-arm64` included;
    - <https://textus.catvinci.com/download/textus-beta.json> has the new
      version;
-   - the Arch repository has `textus-bin-X.Y.Z-1`.
+   - the Arch repository has `textus-bin-X.Y.Z-1`;
+   - later that day, `brew info --cask textus` shows the new version. If
+     Homebrew's bot hasn't bumped it after a day, open the bump pull
+     request by hand with `brew bump-cask-pr textus --version X.Y.Z`.
 
 A failed run can be rebuilt with
 `gh workflow run release.yml --ref main -f tag=vX.Y.Z`: the workflows, the
 preflight checks and the Arch package's scripts (`packaging/arch/`) come from
 the ref; the app, its installers and tarball, and the updater manifest are
-built from the tag. The four steps after
+built from the tag. The three steps after
 publishing are separate workflows, so one of them can be retried alone:
 `gh workflow run mirror-downloads.yml -f tag=vX.Y.Z`, and the same for
-`update-beta-manifest.yml`, `update-homebrew-tap.yml` and
-`update-arch-repo.yml`.
+`update-beta-manifest.yml` and `update-arch-repo.yml`.
 
 ## Installers
 
@@ -121,9 +126,8 @@ required for stable tags. Linux (x64 and ARM64) gets the `.deb` and AppImage but
 (RPM versions can't contain `-`).
 
 A release candidate reaches only the users who chose **Settings › General ›
-About Textus › Update channel › Beta**. It skips the Homebrew cask, the
-download mirror and the `[catvinci]` pacman repository, and the stable
-channel never sees it: that channel reads
+About Textus › Update channel › Beta**. It skips the download mirror and
+the `[catvinci]` pacman repository, and the stable channel never sees it: that channel reads
 `releases/latest/download/textus-latest.json`, and `releases/latest`
 excludes pre-releases. To check a release candidate before tagging the
 stable release, switch a test install to Beta and use **Check for Updates**.
@@ -184,8 +188,8 @@ download bucket, never on a GitHub release.
 ## Rebuilds
 
 Running the Release workflow by hand on an existing tag rebuilds and
-republishes that release. The Homebrew cask, the download mirror and the
-pacman repository only move when the tag is the newest stable one, and the
+republishes that release. The download mirror and the pacman repository
+only move when the tag is the newest stable one, and the
 beta manifest only when the tag is not older than the one it names, so
 rebuilding an old tag never downgrades anyone.
 

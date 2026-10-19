@@ -61,7 +61,7 @@ Gratuit et open source, sous licence MIT.
 Ou avec Homebrew:
 
 ```sh
-brew install --cask catvinci-studio/tap/textus
+brew install --cask textus
 ```
 
 Arch Linux avec le dépôt pacman signé [`[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) (une seule fois ; ensuite `sudo pacman -Syu` garde Textus à jour) :

@@ -76,7 +76,7 @@ so `npm run build` and `dist/` are unaffected. CI builds it in the `check` job;
 | `docs/dev/`                  | developer docs: architecture, testing, storage, …   |
 | `docs/design/`               | design rules and how the AI features work           |
 | `docs/releases/`             | release notes, one file per version                 |
-| `packaging/`                 | Homebrew cask, Arch package                         |
+| `packaging/`                 | Arch package, Linux desktop entry                   |
 
 [docs/README.md](docs/README.md) lists every document.
 

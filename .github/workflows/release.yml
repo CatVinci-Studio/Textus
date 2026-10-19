@@ -14,7 +14,7 @@ on:
 env:
   RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
   # The one place the product's name is spelled for this workflow: the
-  # release title and the DMG the Homebrew cask points at.
+  # release title.
   PRODUCT_NAME: Textus
 
 permissions:
@@ -343,7 +343,7 @@ jobs:
           node scripts/updater-manifest.mjs guard --assets-file "$RUNNER_TEMP/assets.txt"
 
       # A workflow_dispatch rebuild of an old tag republishes that release,
-      # but making it "Latest" or pointing the cask or arch-repo at it
+      # but making it "Latest" or pointing the mirror or arch-repo at it
       # would downgrade everyone. Asked here, after the builds, not when
       # the run started: a hotfix tag pushed while this one was still
       # building is newer by the time this one is published.
@@ -388,23 +388,16 @@ jobs:
       tag: ${{ inputs.tag || github.ref_name }}
     secrets: inherit
 
-  # After publishing, only for the newest stable tag: the download mirror,
-  # the Homebrew cask and the [catvinci] pacman repository. Pre-releases have
-  # no channel of their own in any of them, so pointing them at an rc would
-  # hand it to everyone; an older tag would downgrade. Each is its own
-  # workflow and can be re-run by hand for one tag.
+  # After publishing, only for the newest stable tag: the download mirror
+  # and the [catvinci] pacman repository. Pre-releases have no channel of
+  # their own in either, so pointing them at an rc would hand it to
+  # everyone; an older tag would downgrade. Each is its own workflow and can
+  # be re-run by hand for one tag. The Homebrew cask is Homebrew's own
+  # (Casks/t/textus.rb in Homebrew/homebrew-cask); its bot bumps it.
   mirror-downloads:
     needs: publish
     if: ${{ needs.publish.outputs.newest-stable == 'true' }}
     uses: ./.github/workflows/mirror-downloads.yml
-    with:
-      tag: ${{ inputs.tag || github.ref_name }}
-    secrets: inherit
-
-  update-homebrew-tap:
-    needs: publish
-    if: ${{ needs.publish.outputs.newest-stable == 'true' }}
-    uses: ./.github/workflows/update-homebrew-tap.yml
     with:
       tag: ${{ inputs.tag || github.ref_name }}
     secrets: inherit
