@@ -1,3 +1,4 @@
+import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import { $nodeSchema, $remark } from "@milkdown/kit/utils";
 import remarkFrontmatter from "remark-frontmatter";
 
@@ -13,9 +14,47 @@ import remarkFrontmatter from "remark-frontmatter";
 // "Missing `type` in matter" on every parse - blanking the whole editor.
 export const remarkFrontmatterPlugin = $remark(
   "remark-frontmatter",
-  () => remarkFrontmatter,
+  () => remarkClosedFrontmatter,
   "yaml",
 );
+
+/** The part of unified's processor this needs. */
+interface RemarkProcessor {
+  data(): { micromarkExtensions?: unknown[] };
+  parser?: (document: string, file: unknown) => unknown;
+}
+
+/** A file that opens with front matter: a `---` line, and another below. */
+const CLOSED_FRONTMATTER =
+  /^---[ \t]*\r?\n(?:[\s\S]*?\r?\n)?---[ \t]*(?:\r?\n|$)/;
+
+/**
+ * remark-frontmatter, used only on a file whose front matter is closed.
+ * Its syntax reads a first-line `---` as the start of front matter until
+ * the end of the file, and fails there when no `---` closes it, but by
+ * then the lines it ran over were read without lists or quotes: in a file
+ * that opens with a rule, every `1. item`, `- item` and `> quote` came out
+ * as a paragraph of text, and was saved escaped as one once edited.
+ */
+const remarkClosedFrontmatter: RemarkPluginRaw<string> = function (
+  this: RemarkProcessor,
+  options: string,
+) {
+  remarkFrontmatter.call(this as never, options as "yaml");
+  const extensions = this.data().micromarkExtensions!;
+  const syntax = extensions.at(-1)!;
+  const parse = this.parser!;
+  this.parser = (document, file) => {
+    if (CLOSED_FRONTMATTER.test(document)) return parse(document, file);
+    const at = extensions.indexOf(syntax);
+    extensions.splice(at, 1);
+    try {
+      return parse(document, file);
+    } finally {
+      extensions.splice(at, 0, syntax);
+    }
+  };
+} as unknown as RemarkPluginRaw<string>;
 
 /**
  * Deliberately plain: raw text content, no language selector or collapse

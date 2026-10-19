@@ -43,8 +43,19 @@ export const brToHardbreakPlugin = $prose(() => {
         for (let d = $pos.depth; d >= 0; d--) {
           if (TABLE_CELL_TYPES.has($pos.node(d).type.name)) return true;
         }
+        // A <br> that starts or ends its paragraph stays HTML: a Markdown
+        // break only stands between two pieces of a paragraph, and one on
+        // a line of its own was saved as nothing. One at the end of a line
+        // becomes one break with that line end, not a break and a line
+        // end, which wrote a blank line and split the paragraph.
+        const next = $pos.parent.maybeChild($pos.index() + 1);
+        if (!next || $pos.index() === 0) return true;
+        const to =
+          next.type === hardbreakType && next.attrs.isInline
+            ? pos + node.nodeSize + next.nodeSize
+            : pos + node.nodeSize;
         if (!targets.some((t) => t.from === pos))
-          targets.push({ from: pos, to: pos + node.nodeSize });
+          targets.push({ from: pos, to });
         return true;
       };
       if (normalizedAll) {

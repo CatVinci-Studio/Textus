@@ -1,11 +1,21 @@
-import type { Ctx } from "@milkdown/kit/ctx";
-import { defaultValueCtx, remarkStringifyOptionsCtx } from "@milkdown/kit/core";
+import type { Ctx, MilkdownPlugin } from "@milkdown/kit/ctx";
+import {
+  SerializerReady,
+  defaultValueCtx,
+  remarkStringifyOptionsCtx,
+  serializerCtx,
+} from "@milkdown/kit/core";
 import {
   codeBlockSchema,
   imageSchema,
   linkSchema,
 } from "@milkdown/kit/preset/commonmark";
-import type { DOMOutputSpec } from "@milkdown/kit/prose/model";
+import { Fragment } from "@milkdown/kit/prose/model";
+import type {
+  DOMOutputSpec,
+  Mark,
+  Node as ProseNode,
+} from "@milkdown/kit/prose/model";
 import type { MarkdownNode } from "@milkdown/kit/transformer";
 import type { Link } from "mdast";
 import {
@@ -20,6 +30,7 @@ import {
   readImagePresentation,
   type ImageAttrs,
 } from "../images/image-html";
+import { isEmptySpan } from "../marks/md-span-schema";
 import { writeLatexMath } from "../math/latex-math-syntax";
 
 // How the editor writes markdown back out. Every rule here exists to keep a
@@ -209,11 +220,18 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
             state.closeMark(markType);
             return;
           }
+          const content = state.top()!.content;
+          const from = content.length;
           for (const child of (node.children ?? []) as MarkdownNode[]) {
             state.openMark(markType, attrs);
             state.next(child);
             state.closeMark(markType);
           }
+          // Inside a span the marks are forgotten again: in
+          // `[a *b `c`*](u)` the "c" came out unlinked.
+          const link = markType.create(attrs);
+          for (let i = from; i < content.length; i++)
+            content[i] = withLinkInside(content[i], link);
         },
       },
       toMarkdown: {
@@ -228,6 +246,123 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
       },
     };
   });
+}
+
+/** Whether `link` is on `node`, or on everything inside it. */
+function linked(node: ProseNode, link: Mark): boolean {
+  if (link.isInSet(node.marks)) return true;
+  if (node.isLeaf) return false;
+  // An emptied span inside holds nothing to be outside the link.
+  let all = true;
+  node.forEach((child) => {
+    all &&= linked(child, link);
+  });
+  return all;
+}
+
+/** The link on the first text in `node`, nested spans and all. */
+function firstLink(node: ProseNode): Mark | undefined {
+  let found: Mark | undefined;
+  node.descendants((child) => {
+    found ??= child.marks.find((mark) => mark.type.name === "link");
+    return !found && !child.isText;
+  });
+  return found;
+}
+
+function withoutMark(content: Fragment, link: Mark): Fragment {
+  const nodes: ProseNode[] = [];
+  content.forEach((node) => {
+    const marks = link.removeFromSet(node.marks);
+    nodes.push(
+      node.isText
+        ? node.mark(marks)
+        : node.type.create(node.attrs, withoutMark(node.content, link), marks),
+    );
+  });
+  return Fragment.from(nodes);
+}
+
+/** Inline content with the link moved onto each bold or italic span that
+ *  stands inside it; null when there is none. */
+function linksOnSpansIn(content: Fragment): Fragment | null {
+  let changed = false;
+  const nodes: ProseNode[] = [];
+  content.forEach((node, _offset, index) => {
+    // An emptied span writes nothing, and isn't left to end the link.
+    if (isEmptySpan(node)) {
+      changed = true;
+      return;
+    }
+    let next = node;
+    const inner = node.isText ? null : linksOnSpansIn(node.content);
+    if (inner) next = node.copy(inner);
+    if (next.type.name === "md_span" && next.childCount > 0) {
+      const link = firstLink(next);
+      const neighbours = [
+        content.maybeChild(index - 1),
+        content.maybeChild(index + 1),
+      ];
+      if (
+        link &&
+        !link.isInSet(next.marks) &&
+        linked(next, link) &&
+        neighbours.some(
+          (side) => side && side.textContent !== "" && linked(side, link),
+        )
+      )
+        next = next.type.create(
+          next.attrs,
+          withoutMark(next.content, link),
+          link.addToSet(next.marks),
+        );
+    }
+    if (next !== node) changed = true;
+    nodes.push(next);
+  });
+  return changed ? Fragment.from(nodes) : null;
+}
+
+function linksOnSpans(node: ProseNode): ProseNode {
+  if (node.isTextblock) {
+    const content = linksOnSpansIn(node.content);
+    return content ? node.copy(content) : node;
+  }
+  if (node.isLeaf) return node;
+  let changed = false;
+  const children: ProseNode[] = [];
+  node.forEach((child) => {
+    const next = linksOnSpans(child);
+    if (next !== child) changed = true;
+    children.push(next);
+  });
+  return changed ? node.copy(Fragment.from(children)) : node;
+}
+
+/**
+ * Serializes a link around bold or italic as one link. Its marks are on
+ * the text only, `[a **b** c](u)` being "a ", a span holding "b", and " c",
+ * all linked; Milkdown's serializer closes a mark at a node that doesn't
+ * carry it, so the link was written as three, `[a](u) **[b](u)** [c](u)`,
+ * once anything in that paragraph was edited. Here a span whose content is
+ * all inside a link that goes on beside it carries the link itself, as
+ * inline code does (md-span-schema.ts writes the span's content apart).
+ * A span that is a whole link of its own, `**[b](u)**`, stays as it is.
+ */
+export const linksOnSpansSerializer: MilkdownPlugin = (ctx) => async () => {
+  await ctx.wait(SerializerReady);
+  const serialize = ctx.get(serializerCtx);
+  ctx.set(serializerCtx, (doc) => serialize(linksOnSpans(doc)));
+};
+
+/** `node` with `link` on all its text: on the text inside a span, and on
+ *  a node whose own content takes no marks (inline code), on the node. */
+function withLinkInside(node: ProseNode, link: Mark): ProseNode {
+  if (node.isText || node.isLeaf || node.type.spec.marks === "")
+    return node.mark(link.addToSet(node.marks));
+  const children: ProseNode[] = [];
+  node.forEach((child) => children.push(withLinkInside(child, link)));
+  return node.copy(Fragment.from(children));
 }
 
 /**
@@ -594,6 +729,62 @@ function keepAlertMarker(text: Handle): Handle {
   };
 }
 
+/**
+ * Text ending in a space is escaped like any other. Milkdown's text
+ * handler returns such text as it is, to keep the space from being written
+ * `&#x20;`, and so wrote `# bar ` at the start of a line unescaped - a
+ * heading on reopening - once the word after it was deleted or made bold;
+ * a `- ` or `1. ` likewise became a list. The space is still kept as it is.
+ */
+function escapingBeforeSpaces(text: Handle): Handle {
+  return (node, parent, state, info) => {
+    const value = node.value;
+    const body = value.replace(/\s+$/, "");
+    if (body === value || /[*_\\]/.test(value))
+      return text(node, parent, state, info);
+    const spaces = value.slice(body.length);
+    if (body)
+      return state.safe(body, { ...info, after: spaces, encode: [] }) + spaces;
+    // Spaces alone, at the start of a line with more after them, are
+    // encoded: a tab there opens indented code. A line of spaces only
+    // stays as it is (an empty Quick Note is still empty).
+    const lineStart = !info.before || /[\r\n]$/.test(info.before);
+    const more = info.after !== undefined && !/^[\r\n]?$/.test(info.after);
+    return lineStart && more && !/[\r\n]/.test(spaces)
+      ? state.safe(spaces, { ...info, encode: [] })
+      : spaces;
+  };
+}
+
+/** Per serialization: the escaped openers, `\\[` and `\\(`, written so far. */
+const openEscapes = new WeakMap<State, Set<string>>();
+const OPENERS: Record<string, string> = { "]": "[", ")": "(" };
+const REFERENCES: Record<string, string> = { "]": "&#93;", ")": "&#41;" };
+
+/**
+ * Brackets escaped as text never pair into LaTeX math. Textus reads
+ * `\\[...\\]` and `\\(...\\)` as maths (latex-math-syntax.ts), and remark
+ * escapes both brackets of a link text's `[b]` - so editing
+ * `[Tech [Episodes]](u)` saved `[Tech \\[Episodes\\]](u)`, which read back
+ * as a formula. Every escaped closer after an escaped opener is written as
+ * a character reference instead, which reads as the bracket everywhere.
+ */
+function withoutLatexPairs(text: Handle): Handle {
+  return (node, parent, state, info) => {
+    const out = text(node, parent, state, info);
+    if (!out.includes("\\")) return out;
+    let open = openEscapes.get(state);
+    if (!open) openEscapes.set(state, (open = new Set()));
+    const opened = open;
+    return out.replace(/\\([\s\S])/g, (escape, char: string) => {
+      if (char === "[" || char === "(") opened.add(char);
+      else if (OPENERS[char] && opened.has(OPENERS[char]))
+        return REFERENCES[char];
+      return escape;
+    });
+  };
+}
+
 /** Installs the rules above. `update`, not `set`: the slice already carries
  *  Milkdown's own text/strong/emphasis handlers, and replacing it wholesale
  *  would drop them. */
@@ -614,8 +805,13 @@ export function configureMarkdownOutput(ctx: Ctx): void {
       list,
       link,
       image,
-      text: keepAlertMarker(
-        (options.handlers?.text as Handle | undefined) ?? defaultHandlers.text,
+      text: withoutLatexPairs(
+        keepAlertMarker(
+          escapingBeforeSpaces(
+            (options.handlers?.text as Handle | undefined) ??
+              defaultHandlers.text,
+          ),
+        ),
       ),
     },
   }));
