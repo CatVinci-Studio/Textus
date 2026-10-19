@@ -1,6 +1,6 @@
 /* ui/Select.tsx. The closed control takes its frame, chevron and size from
-   design-system.css's select rules (.settings-select, .inline-chat-mode);
-   this adds what a <button> needs to behave like one. */
+   design-system.css's select rules (.settings-select, .inline-chat-mode,
+   .file-search-scope); this adds what a <button> needs to behave like one. */
 .ui-select {
   display: inline-flex;
   align-items: center;

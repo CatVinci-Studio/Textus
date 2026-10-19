@@ -10,7 +10,7 @@ import {
   type ShortcutAction,
 } from "../settings/SettingsContext";
 import { isBindableCombo, isReservedCombo } from "../utils/shortcuts";
-import { buildAppMenu, type MenuNode } from "./app-menu-model";
+import { buildAppMenu, NO_RECENTS, type MenuNode } from "./app-menu-model";
 import {
   fixedShortcutGroups,
   macTabStep,
@@ -70,7 +70,7 @@ describe("the fixed shortcuts in Settings", () => {
     const unbound = Object.fromEntries(
       Object.keys(defaultShortcuts()).map((key) => [key, ""]),
     ) as Record<ShortcutAction, string>;
-    const fromMenu = menuCombos(buildAppMenu(t, unbound, []));
+    const fromMenu = menuCombos(buildAppMenu(t, unbound, NO_RECENTS));
     expect(fromMenu.length).toBeGreaterThan(10);
     expect(fixedCombos("windows")).toEqual(expect.arrayContaining(fromMenu));
   });
@@ -156,7 +156,7 @@ describe("the default configurable shortcuts", () => {
     });
   });
 
-  it("leave the heading levels unbound and Mod+Shift+O free", () => {
+  it("leave the heading levels unbound and Mod+Shift+O to the file search", () => {
     for (const mac of [true, false]) {
       const shortcuts = defaultShortcuts(mac);
       for (const action of [
@@ -169,8 +169,10 @@ describe("the default configurable shortcuts", () => {
         "setParagraph",
       ] as const)
         expect(shortcuts[action]).toBe("");
-      // Taken by another 1.2.0 feature.
-      expect(Object.values(shortcuts)).not.toContain("mod+shift+o");
+      // The sidebar's file-name search, and nothing else.
+      expect(
+        Object.entries(shortcuts).filter(([, c]) => c === "mod+shift+o"),
+      ).toEqual([["searchFiles", "mod+shift+o"]]);
     }
   });
 });

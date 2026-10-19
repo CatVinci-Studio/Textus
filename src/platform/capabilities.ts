@@ -73,6 +73,12 @@ export const canPickImageFile = isDesktopApp;
  *  (platform/ios-files.ts) on iOS. */
 export const canPickFolder = isDesktopApp || isIOSApp;
 
+/** File > Open Folder…: the sidebar rooted at a folder, with its file-name
+ *  search (commands/folder.rs). Not on iOS: a folder picked in Files is a
+ *  security-scoped URL the backend can't walk for the search, and the
+ *  sidebar there keeps the app's Documents folder it always had. */
+export const canOpenFolder = isDesktopApp;
+
 /** Settings' "install the `textus` terminal command" (cli.rs). */
 export const canInstallCliCommand = isDesktopApp;
 

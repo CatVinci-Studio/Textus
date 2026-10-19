@@ -21,6 +21,7 @@ const shortcuts: Shortcuts = {
   toggleZenMode: "mod+shift+j",
   toggleSourceMode: "mod+/",
   toggleTypewriterMode: "",
+  searchFiles: "mod+shift+o",
 };
 function setup() {
   vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");

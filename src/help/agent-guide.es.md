@@ -217,7 +217,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### La carpeta de configuración global
 
-**La carpeta de configuración global guarda lo que se aplica a todos los documentos**: tu `agent.md` global y tus habilidades globales. Pertenece a la aplicación, no a un proyecto; **Ajustes > Textus AI > Carpeta de configuración global > Abrir carpeta** la muestra.
+**La carpeta de configuración global guarda lo que se aplica a todos los documentos**: tu `agent.md` global y tus habilidades globales. Pertenece a la aplicación, no a un proyecto; **Ajustes > Textus AI > Carpeta de configuración global > Mostrar** la muestra.
 
 ```
 agent/                ← la carpeta de configuración global

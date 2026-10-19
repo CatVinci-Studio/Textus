@@ -29,6 +29,8 @@ export type NativeMenuId =
   | "new-file"
   | "new-window"
   | "open-file"
+  | "open-folder"
+  | "close-folder"
   | "new-quick-note"
   | "open-quick-notes-folder"
   | "recent-clear"
@@ -50,6 +52,7 @@ export type NativeMenuId =
   | "zoom-out"
   | "zoom-reset"
   | `recent:${string}`
+  | `recent-folder:${string}`
   | `export-pandoc:${string}`
   | `insert-block:${string}`
   | `help-doc:${string}`
@@ -100,6 +103,9 @@ export interface MenuChecks {
   typewriter?: boolean;
   zen?: boolean;
   fullscreen?: boolean;
+  /** Not a check mark: a folder is open, so Close Folder has something to
+   *  close. The macOS menu bar keeps it enabled (it is app-wide). */
+  folderOpen?: boolean;
 }
 
 export type MenuNode = MenuEntry | "separator";
@@ -121,19 +127,42 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
   };
 }
 
+/** What File > Open Recent lists (menu.rs's recents), most recent first. */
+export interface RecentLists {
+  files: string[];
+  /** Opened with File > Open Folder…; listed above the files. */
+  folders: string[];
+}
+
+export const NO_RECENTS: RecentLists = { files: [], folders: [] };
+
 /** Recent files are listed by name, with the full path on hover - a Windows
  *  home directory eats most of the width of `C:\Users\...\notes.md`, and two
- *  files can share a name. */
-function recentEntries(t: Strings, recents: string[]): MenuNode[] {
-  if (recents.length === 0) {
+ *  files can share a name. A folder's name ends in a separator, as in the
+ *  native menu, to tell it from the files below it. */
+function recentEntries(t: Strings, recents: RecentLists): MenuNode[] {
+  const { files, folders } = recents;
+  if (files.length === 0 && folders.length === 0) {
     return [{ label: t.menuRecentNone, disabled: true }];
   }
-  return [
-    ...recents.map((path): MenuNode => ({
-      label: basename(path) || path,
+  const folderNodes = folders.map((path): MenuNode => {
+    const trimmed = path.replace(/[\\/]+$/, "");
+    const sep = trimmed.includes("\\") && !trimmed.includes("/") ? "\\" : "/";
+    return {
+      label: `${basename(trimmed) || trimmed}${sep}`,
       title: path,
-      action: { native: `recent:${path}` },
-    })),
+      action: { native: `recent-folder:${path}` },
+    };
+  });
+  const fileNodes = files.map((path): MenuNode => ({
+    label: basename(path) || path,
+    title: path,
+    action: { native: `recent:${path}` },
+  }));
+  return [
+    ...folderNodes,
+    ...(folderNodes.length && fileNodes.length ? ["separator" as const] : []),
+    ...fileNodes,
     "separator",
     { label: t.menuRecentClear, action: { native: "recent-clear" } },
   ];
@@ -200,7 +229,7 @@ function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
 export function buildAppMenu(
   t: Strings,
   shortcuts: Shortcuts,
-  recents: string[],
+  recents: RecentLists,
   checks: MenuChecks = {},
   quickNoteCombo = "",
 ): MenuNode[] {
@@ -226,7 +255,13 @@ export function buildAppMenu(
           accel: "mod+o",
           action: { native: "open-file" },
         },
+        { label: t.menuOpenFolder, action: { native: "open-folder" } },
         { label: t.menuOpenRecent, submenu: recentEntries(t, recents) },
+        {
+          label: t.menuCloseFolder,
+          action: { native: "close-folder" },
+          disabled: !checks.folderOpen,
+        },
         "separator",
         {
           label: t.menuNewQuickNote,
@@ -433,7 +468,7 @@ export function nativeMenuLabels(
     }
   };
   // Accelerators play no part in a label.
-  collect(buildAppMenu(t, {} as Shortcuts, []));
+  collect(buildAppMenu(t, {} as Shortcuts, NO_RECENTS));
   const named = (template: string) => template.replace("{name}", APP_NAME);
   return {
     ...labels,

@@ -243,6 +243,22 @@ export default {
   outlineEmpty:
     "Заголовков пока нет — здесь появятся строки, начинающиеся с #.",
   treeRefresh: "Обновить",
+  menuOpenFolder: "Открыть папку…",
+  menuCloseFolder: "Закрыть папку",
+  folderTooBroad:
+    "Эта папка слишком общая, чтобы её открыть (домашняя папка или целый диск). Выберите более конкретную папку.",
+  treeSearchPlaceholder: "Поиск по именам файлов",
+  treeSearchIndexing: "Просматриваем папку…",
+  treeSearchNoMatches: "Нет подходящих имён файлов.",
+  treeSearchCapped:
+    "Поиск только по первым {n} файлам. Откройте папку поменьше, чтобы искать по всей.",
+  treeSearchTooBroad:
+    "Эта папка слишком общая для поиска. Откройте более конкретную через Файл › Открыть папку…",
+  treeSearchFailed: "Не удаётся прочитать эту папку.",
+  treeSearchScope: "Показывать",
+  treeSearchScopeAll: "Все файлы",
+  treeSearchScopeDocuments: "Только документы",
+  shortcutSearchFiles: "Поиск по именам файлов",
   menuDocuments: "Документы",
   docListTitle: "Документы",
   docListClose: "Закрыть",
@@ -319,6 +335,8 @@ export default {
   navShortcuts: "Сочетания клавиш",
   generalBasicsLabel: "Общие",
   generalSystemLabel: "Приложение",
+  settingsCopyExportGroup: "Копирование и экспорт",
+  settingsFilesGroup: "Файлы",
   shortcutAiGroupLabel: "ИИ и текст",
   shortcutEditorGroupLabel: "Редактор и навигация",
   languageLabel: "Язык",
@@ -340,7 +358,7 @@ export default {
   webSearchHint: "Работает, если текущий провайдер это поддерживает",
   editAnimationLabel: "Анимировать предпросмотр правок",
   agentWorkspaceLabel: "Папка глобальных настроек",
-  agentWorkspaceOpenButton: "Открыть папку",
+  agentWorkspaceOpenButton: "Показать",
   agentWorkspaceRootLabel: "Папка проекта",
   agentWorkspaceRootHint: `${AI_NAME} может читать только эту папку: {path}`,
   agentWorkspaceRootDefault: "папка текущего документа",
@@ -560,6 +578,11 @@ export default {
   themeGalleryInstallFailed: "Не удалось установить тему:",
   enableMathLabel: "Математические формулы",
   enableMermaidLabel: "Диаграммы Mermaid",
+  diagramEngineLabel: "Движок диаграмм",
+  diagramEngineMermaid: "Mermaid (наибольшая совместимость)",
+  diagramEnginePele: "Pele (быстрее)",
+  diagramEngineHint:
+    "Pele рисует быстрее, но располагает элементы иначе, чем GitHub и Mermaid, и не поддерживает некоторые возможности, например HTML в подписях; то, что Pele нарисовать не может, рисует Mermaid.",
   codeLineNumbersLabel: "Номера строк в блоках кода",
   inlineColorSwatchesLabel: "Образцы цвета во встроенном коде",
   inlineColorSwatchesHint:

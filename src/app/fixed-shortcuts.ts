@@ -1,6 +1,6 @@
 import { APP_NAME, type Strings } from "../i18n/strings";
 import { defaultShortcuts, type Shortcuts } from "../settings/SettingsContext";
-import { buildAppMenu, type MenuNode } from "./app-menu-model";
+import { buildAppMenu, NO_RECENTS, type MenuNode } from "./app-menu-model";
 
 /**
  * The shortcuts that can't be changed, as Settings › Shortcuts lists them
@@ -68,7 +68,7 @@ export function fixedShortcutGroups(
   const groups: FixedShortcutGroup[] = [];
   // The menu's root items (Settings, Exit) go with File, as on macOS.
   const root: FixedShortcut[] = [];
-  for (const node of buildAppMenu(t, unbound(), [])) {
+  for (const node of buildAppMenu(t, unbound(), NO_RECENTS)) {
     if (node === "separator") continue;
     if (!node.submenu) {
       withCombos([node], root);

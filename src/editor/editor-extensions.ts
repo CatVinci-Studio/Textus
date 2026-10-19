@@ -289,6 +289,7 @@ export function withEditorCore(
       .use(
         createMermaidPreviewPlugin({
           enabled: () => settings.current.enableMermaid,
+          engine: () => settings.current.diagramEngine,
         }),
       )
 

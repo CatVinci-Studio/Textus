@@ -13,6 +13,7 @@ import { exportHtml, exportPdf, exportViaPandoc } from "../export/exporters";
 import { TOGGLE_FIND_REPLACE_EVENT, INSERT_BLOCK_EVENT } from "../utils/events";
 import type { DocTab, HelpDoc } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
+import type { DiagramEngine } from "../settings/SettingsContext";
 
 export interface MenuBridgeHandlers {
   activeTabId: string;
@@ -23,6 +24,7 @@ export interface MenuBridgeHandlers {
   t: Strings;
   /** Settings › "Page numbers in PDF", read when File > Export as PDF runs. */
   pdfPageNumbers: boolean;
+  diagramEngine: DiagramEngine;
   onOpenSettings: () => void;
   onToggleTypewriter: () => void;
   onToggleSidebar: () => void;
@@ -33,6 +35,10 @@ export interface MenuBridgeHandlers {
   openFileDialog: () => Promise<void>;
   /** File > Open Recent (useFileOpening.ts). */
   openRecentFile: (path: string) => Promise<void>;
+  /** File > Open Folder…, a recent folder, Close Folder (useOpenFolder.ts). */
+  openFolderDialog: () => Promise<void>;
+  openFolder: (path: string) => void;
+  closeFolder: () => void;
   saveTab: (tabId: string) => Promise<boolean>;
   saveTabAs: (tabId: string) => Promise<boolean>;
   toggleSourceMode: () => void;
@@ -83,6 +89,11 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         "menu-open-recent",
         (event) => void h().openRecentFile(event.payload),
       ),
+      listenToThisWindow("menu-open-folder", () => void h().openFolderDialog()),
+      listenToThisWindow<string>("menu-open-recent-folder", (event) =>
+        h().openFolder(event.payload),
+      ),
+      listenToThisWindow("menu-close-folder", () => h().closeFolder()),
       listenToThisWindow("menu-documents", () => h().onOpenDocuments()),
       listenToThisWindow("menu-share", () => void h().shareActiveTab()),
       listenToThisWindow(
@@ -107,7 +118,8 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       // Payload is the pandoc writer name (docx, epub, ...) from the menu id.
       listenToThisWindow<string>("menu-export-pandoc", (event) => {
         const tab = activeTabNow();
-        if (tab) void exportViaPandoc(tab, event.payload, h().t);
+        if (tab)
+          void exportViaPandoc(tab, event.payload, h().t, h().diagramEngine);
       }),
       listenToThisWindow("menu-toggle-source-mode", () =>
         h().toggleSourceMode(),
@@ -172,6 +184,8 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         if (event === "menu-open-settings") latest.current.onOpenSettings();
         else if (event === "menu-open-file")
           void latest.current.openFileDialog();
+        else if (event === "menu-open-folder")
+          void latest.current.openFolderDialog();
       })
       .catch(() => {});
   }, []);

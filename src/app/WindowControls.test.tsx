@@ -36,6 +36,7 @@ vi.mock("../platform/ipc", () => ({
   menuIpc: {
     triggerMenuItem: (id: string) => triggerMenuItem(id),
     listRecentFiles: () => Promise.resolve([]),
+    listRecentFolders: () => Promise.resolve([]),
   },
 }));
 
@@ -74,6 +75,7 @@ vi.mock("../settings/SettingsContext", async () => {
           toggleSourceMode: "mod+/",
           toggleTypewriterMode: "",
           findReplace: "mod+f",
+          searchFiles: "mod+shift+o",
         },
       },
     }),

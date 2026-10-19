@@ -10,88 +10,16 @@ import {
   type RevealState,
 } from "./reveal-state";
 import { isLargeDoc } from "./large-doc";
+import { appearanceIsDark, diagramRenderer } from "./diagram-engine";
+import type { DiagramEngine } from "../settings/SettingsContext";
 
 const mermaidKey = new PluginKey("mermaid-preview");
 const DEBOUNCE_MS = 500;
-type MermaidApi = (typeof import("mermaid"))["default"];
-let mermaidPromise: Promise<MermaidApi> | null = null;
 // Render ids are unique across every editor, not per editor: two tabs
 // rendering at startup both used "mermaid-preview-1-0", and the first one
 // to finish removed the other's measuring node mid-render (renderMermaid's
 // cleanup), so the diagram in the other tab failed and stayed raw source.
 let renderIdCounter = 0;
-
-export function loadMermaid(): Promise<MermaidApi> {
-  mermaidPromise ??= import("mermaid").then(({ default: mermaid }) => mermaid);
-  return mermaidPromise;
-}
-
-// Re-applied before every render pass because the diagram width follows the
-// text column. Gantt charts lay themselves out at a fixed width (1200px when
-// rendered offscreen, as here) and are then scaled to fit the preview box,
-// which shrank their 11px labels to unreadable; at the column's own width
-// they render at their real size. securityLevel "strict" is mermaid's
-// default, stated because the SVG lands in the editor as innerHTML.
-export function configureMermaid(
-  mermaid: MermaidApi,
-  width: number,
-  fontFamily?: string,
-  dark = appearanceIsDark(),
-): void {
-  mermaid.initialize({
-    startOnLoad: false,
-    // Follows the app's appearance - "neutral" in a dark theme left white
-    // boxes and near-invisible arrows on the dark page. In the document's
-    // own face rather than mermaid's "trebuchet ms".
-    theme: dark ? "dark" : "neutral",
-    ...(fontFamily ? { fontFamily, themeVariables: { fontFamily } } : {}),
-    securityLevel: "strict",
-    // A broken diagram must not draw mermaid's "Syntax error" bomb into a
-    // node of its own: render() throws, and the caller keeps the source.
-    suppressErrorRendering: true,
-    gantt: {
-      useWidth: Math.max(320, Math.round(width)),
-      fontSize: 13,
-      sectionFontSize: 13,
-      barHeight: 22,
-      barGap: 6,
-      // Full dates overlapped at column width; a diagram's own axisFormat
-      // directive still wins over this default.
-      axisFormat: "%m-%d",
-    },
-  });
-}
-
-/** Whether the app is showing its dark appearance: the explicit choice
- *  (data-theme on <html>, set by SettingsContext), else the system's. */
-export function appearanceIsDark(): boolean {
-  // A one-design imported theme shows its light page in either appearance.
-  if (document.documentElement.hasAttribute("data-light-page")) return false;
-  const chosen = document.documentElement.getAttribute("data-theme");
-  if (chosen === "dark") return true;
-  if (chosen === "light") return false;
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
-}
-
-/**
- * mermaid.render, minus what it leaves behind: it measures in a temporary
- * `#d<id>` node appended to <body>, and on a failure (or when it is cut
- * short) that node stays there - a 150px block under the app that gave the
- * whole window a second scrollbar.
- */
-export async function renderMermaid(
-  mermaid: MermaidApi,
-  id: string,
-  code: string,
-): Promise<string> {
-  try {
-    const { svg } = await mermaid.render(id, code);
-    return svg;
-  } finally {
-    document.getElementById(`d${id}`)?.remove();
-    document.getElementById(id)?.remove();
-  }
-}
 
 // Cheap stable hash of a diagram's source, for the widget key below.
 function hashCode(text: string): string {
@@ -100,6 +28,18 @@ function hashCode(text: string): string {
     hash = (Math.imul(31, hash) + text.charCodeAt(i)) | 0;
   }
   return (hash >>> 0).toString(36);
+}
+
+/** A diagram as the preview last drew it. */
+interface Drawn {
+  svg: string;
+  engine: DiagramEngine;
+  /** What it was drawn for (the render pass's `styleOf`). */
+  style: string;
+  /** Part of its widget's key: with the source alone as the key,
+   *  ProseMirror kept the old widget DOM, so a switch to dark redrew the
+   *  diagrams and still showed the light ones. */
+  id: number;
 }
 
 interface MermaidBlock {
@@ -132,6 +72,8 @@ function collectMermaidBlocks(doc: EditorState["doc"]): MermaidBlock[] {
  */
 export function createMermaidPreviewPlugin(options: {
   enabled: () => boolean;
+  /** Settings.diagramEngine: which engine draws first (diagram-engine.ts). */
+  engine: () => DiagramEngine;
 }) {
   return $prose(() => {
     let debounceTimer: ReturnType<typeof setTimeout> | undefined;
@@ -144,18 +86,10 @@ export function createMermaidPreviewPlugin(options: {
     // (position-keyed) on every one of those keystrokes and flash the raw
     // source back until the next debounced render, even though the diagram
     // itself never changed.
-    let lastRenders = new Map<string, string>();
-    // The width lastRenders was laid out at: a pass at the same width only
-    // renders sources it hasn't seen, instead of every diagram again 500ms
-    // after each keystroke anywhere in the document.
-    let lastWidth = 0;
-    // And the appearance and face it was drawn in (see configureMermaid).
-    let lastStyle = "";
-    // Bumped whenever a pass draws every diagram afresh (a new width or
-    // appearance). Part of each widget's key: with the source alone as the
-    // key, ProseMirror kept the old widget DOM, so a switch to dark redrew
-    // the diagrams and still showed the light ones.
-    let renderGeneration = 0;
+    let lastRenders = new Map<string, Drawn>();
+    // The engine the last pass was started for: a change in Settings draws
+    // every diagram again (view.update below).
+    let drawnFor = options.engine();
 
     function buildDecorations(state: EditorState): RevealState {
       if (!options.enabled()) return emptyReveal;
@@ -173,8 +107,9 @@ export function createMermaidPreviewPlugin(options: {
       for (const { from, to, code } of collectMermaidBlocks(state.doc)) {
         const nth = seen.get(code) ?? 0;
         seen.set(code, nth + 1);
-        const svg = lastRenders.get(code);
-        if (!svg) continue;
+        const drawn = lastRenders.get(code);
+        if (!drawn) continue;
+        const { svg } = drawn;
         if (touches(from, to)) continue; // editing it - keep source visible
 
         decorations.push(
@@ -215,7 +150,7 @@ export function createMermaidPreviewPlugin(options: {
             // repeat of an identical source it is tells copies apart.
             {
               side: 1,
-              key: `mermaid-${hashCode(code)}-${nth}-${renderGeneration}`,
+              key: `mermaid-${hashCode(code)}-${nth}-${drawn.id}`,
             },
           ),
         );
@@ -268,34 +203,41 @@ export function createMermaidPreviewPlugin(options: {
             return;
           }
 
-          // Mermaid is by far the editor's largest optional dependency. It
-          // is fetched only after a real diagram block exists, so ordinary
-          // Markdown documents never pay its startup or parse cost.
-          const mermaid = await loadMermaid();
-          if (mySeq !== renderSeq) return;
           // The preview box's inner width: the column less its padding.
           const width = editorView.dom.clientWidth - 40;
           const fontFamily = getComputedStyle(editorView.dom).fontFamily;
-          const style = `${appearanceIsDark()}|${fontFamily}`;
-          configureMermaid(mermaid, width, fontFamily);
-          const reusable =
-            width === lastWidth && style === lastStyle
-              ? lastRenders
-              : new Map();
+          const engine = options.engine();
+          const dark = appearanceIsDark();
+          // What a drawing depends on. A Pele one takes its colours from CSS
+          // variables (milkdown-theme.css), so a switch of appearance keeps
+          // it; a Mermaid one has its palette baked in and is drawn again.
+          const layout = `${width}|${fontFamily}|${engine}`;
+          const styleOf = (by: DiagramEngine) =>
+            by === "pele" ? layout : `${layout}|${dark}`;
+          // Mermaid and Pele are the editor's largest optional dependencies.
+          // One is fetched only when a real diagram has to be drawn, so
+          // ordinary Markdown documents never pay for either.
+          const draw = diagramRenderer(engine, { width, fontFamily, dark });
 
-          const rendered = new Map<string, string>();
+          const rendered = new Map<string, Drawn>();
           for (const { code } of blocks) {
             if (!code.trim() || rendered.has(code)) continue; // identical diagrams share one render
-            const cached = reusable.get(code);
-            if (cached) {
+            // Drawn for the same width, face and engine: a pass only draws
+            // sources it hasn't seen, instead of every diagram again 500ms
+            // after each keystroke anywhere in the document.
+            const cached = lastRenders.get(code);
+            if (cached && cached.style === styleOf(cached.engine)) {
               rendered.set(code, cached);
               continue;
             }
             try {
-              const id = `mermaid-preview-${++renderIdCounter}`;
-              const svg = await renderMermaid(mermaid, id, code);
+              const id = ++renderIdCounter;
+              const { svg, engine: by } = await draw(
+                code,
+                `mermaid-preview-${id}`,
+              );
               if (mySeq !== renderSeq) return; // superseded by a newer render pass
-              rendered.set(code, svg);
+              rendered.set(code, { svg, engine: by, style: styleOf(by), id });
             } catch {
               // invalid/incomplete diagram syntax mid-typing - just skip this block
             }
@@ -305,14 +247,11 @@ export function createMermaidPreviewPlugin(options: {
           // Nothing new rendered and nothing dropped: the decorations
           // already show exactly this, so skip the rebuild.
           const unchanged =
-            width === lastWidth &&
-            style === lastStyle &&
             rendered.size === lastRenders.size &&
-            [...rendered].every(([code, svg]) => lastRenders.get(code) === svg);
-          if (width !== lastWidth || style !== lastStyle) renderGeneration++;
+            [...rendered].every(
+              ([code, drawn]) => lastRenders.get(code) === drawn,
+            );
           lastRenders = rendered;
-          lastWidth = width;
-          lastStyle = style;
           if (unchanged) return;
           editorView.dispatch(
             editorView.state.tr.setMeta(mermaidKey, "rerender"),
@@ -349,6 +288,14 @@ export function createMermaidPreviewPlugin(options: {
 
         return {
           update(view, prevState) {
+            // Settings › Diagram engine changed (MilkdownEditor dispatches a
+            // transaction for it): every diagram again, at once.
+            if (options.engine() !== drawnFor) {
+              drawnFor = options.engine();
+              if (debounceTimer) clearTimeout(debounceTimer);
+              void renderAll();
+              return;
+            }
             if (view.state.doc.eq(prevState.doc)) return;
             // Large-doc mode (4.1): existing diagrams stay pinned (their
             // cached SVG is keyed by source text, untouched here) - only new

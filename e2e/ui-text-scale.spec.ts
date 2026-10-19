@@ -51,7 +51,7 @@ test("Interface Text Size scales the sidebar, the tabs and the AI panel, not the
   await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.getByRole("button", { name: "Editor & Appearance" }).click();
-  await panel.getByRole("combobox", { name: "Interface Text Size" }).click();
+  await panel.getByRole("combobox", { name: "Interface text size" }).click();
   await page.getByRole("option", { name: "125%" }).click();
   await page.keyboard.press("Escape");
   await expect(panel).toHaveCount(0);
