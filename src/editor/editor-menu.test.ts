@@ -96,6 +96,7 @@ const options = (pos: number | null): ContextMenuOptions => ({
   imagePos: pos,
   aiItems: [],
   copyOrCut: () => {},
+  copyAsMarkdown: () => {},
   paste: () => {},
   selectAll: () => {},
   toggleFindReplace: () => {},
@@ -105,11 +106,12 @@ const labels = (items: ReturnType<typeof buildContextMenuItems>) =>
   items.map((item) => (item === "separator" ? "-" : item.label));
 
 describe("the editor menu", () => {
-  it("keeps the desktop's table menu as it was", () => {
+  it("keeps the desktop's table menu as it was, with Copy as Markdown", () => {
     const { run } = editorAt(caretIn("1"));
     expect(labels(buildContextMenuItems(run, options(null)))).toEqual([
       t.cut,
       t.copy,
+      t.copyAsMarkdown,
       t.paste,
       t.selectAll,
       "-",
@@ -175,6 +177,8 @@ describe("the editor menu", () => {
     expect(inTable).toContain(t.alignCenter);
     expect(inTable).not.toContain(t.insertRowBelow);
     expect(inTable).not.toContain(t.copy);
+    // The toolbar copies; only the menu has the Markdown source.
+    expect(inTable).toContain(t.copyAsMarkdown);
 
     const inText = labels(
       buildPhoneMoreItems(editorAt(caretIn("text")).run, options(null)),

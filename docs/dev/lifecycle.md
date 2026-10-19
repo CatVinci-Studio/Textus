@@ -89,7 +89,7 @@ extension; Settings' hint says so.
 
 ## Open at login
 
-**Settings › General › Background › Open at login** (`openAtLogin`, off by
+**Settings › General › Background › Start in the background at login** (`openAtLogin`, off by
 default, shown only with background mode on). With both on,
 `background/login.rs` writes an entry that runs `textus --background`:
 

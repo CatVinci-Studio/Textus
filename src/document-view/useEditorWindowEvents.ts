@@ -61,6 +61,7 @@ export function useEditorWindowEvents({
   findReplace,
   insertText,
   copyOrCut,
+  copyAsMarkdown,
   paste,
   selectAll,
   openTableDialog,
@@ -79,6 +80,7 @@ export function useEditorWindowEvents({
   findReplace: FindReplace;
   insertText: (text: string) => void;
   copyOrCut: (cut: boolean) => void;
+  copyAsMarkdown: () => void;
   paste: () => void;
   selectAll: () => void;
   openTableDialog: () => void;
@@ -254,6 +256,9 @@ export function useEditorWindowEvents({
         break;
       case "copy":
         copyOrCut(false);
+        break;
+      case "copy-as-markdown":
+        copyAsMarkdown();
         break;
       case "paste":
         paste();

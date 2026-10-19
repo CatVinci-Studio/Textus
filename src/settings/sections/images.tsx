@@ -1,5 +1,5 @@
 import { errorText } from "../../utils/error-text";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { imageHostAuth } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
 import {
@@ -15,7 +15,7 @@ import {
   isImageSubfolder,
 } from "../image-folder";
 import { Select } from "../../ui/Select";
-import { SettingRow, VERBATIM_INPUT } from "./controls";
+import { RowHelp, SettingRow, VERBATIM_INPUT } from "./controls";
 
 /** Settings > Images: one choice - this computer or an image host - and
  *  then only what that choice needs. */
@@ -138,7 +138,7 @@ function ImageHostRows({ t }: { t: Strings }) {
       {host === "picgo" && (
         <TextFieldRow
           label={t.imagePicgoEndpointLabel}
-          hint={t.imagePicgoEndpointHint}
+          help={t.imagePicgoEndpointHint}
           type="url"
           placeholder="http://127.0.0.1:36677/upload"
           value={settings.imagePicgoEndpoint}
@@ -149,7 +149,7 @@ function ImageHostRows({ t }: { t: Strings }) {
         <>
           <TextFieldRow
             label={t.imageUploadEndpointLabel}
-            hint={t.imageUploadEndpointHint}
+            help={t.imageUploadEndpointHint}
             type="url"
             placeholder="https://images.example.com/upload"
             value={settings.imageUploadEndpoint}
@@ -157,7 +157,7 @@ function ImageHostRows({ t }: { t: Strings }) {
           />
           <TextFieldRow
             label={t.imageUploadUrlFieldLabel}
-            hint={t.imageUploadUrlFieldHint}
+            help={t.imageUploadUrlFieldHint}
             placeholder="url"
             value={settings.imageUploadUrlField}
             onChange={(v) => setSettings({ imageUploadUrlField: v })}
@@ -188,26 +188,32 @@ function ImageHostRows({ t }: { t: Strings }) {
 
 function TextFieldRow({
   label,
-  hint,
+  help,
   type = "text",
   placeholder,
   value,
   onChange,
 }: {
   label: string;
-  hint: string;
+  help: string;
   type?: "text" | "url";
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
 }) {
+  // The field is named by the label alone: the "?" inside the <label>
+  // would otherwise be read as part of its name, or taken as what the
+  // <label> labels.
+  const id = useId();
   return (
-    <label className="settings-row image-settings-row">
-      <div>
-        <div className="settings-row-label">{label}</div>
-        <div className="settings-row-hint">{hint}</div>
+    <label className="settings-row image-settings-row" htmlFor={id}>
+      <div className="settings-row-label">
+        <span id={`${id}-label`}>{label}</span>
+        <RowHelp label={label}>{help}</RowHelp>
       </div>
       <input
+        id={id}
+        aria-labelledby={`${id}-label`}
         {...VERBATIM_INPUT}
         className="settings-text-input image-settings-input"
         type={type}
@@ -224,25 +230,25 @@ function ImageHostTokenRow({ host, t }: { host: ImageHost; t: Strings }) {
   const [tokenConfigured, setTokenConfigured] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // What each host calls its token, and whether it can do without one.
-  const { label, hint, optional } = {
+  const { label, help, optional } = {
     picgo: {
       label: t.imagePicgoKeyLabel,
-      hint: t.imagePicgoKeyHint,
+      help: t.imagePicgoKeyHint,
       optional: true,
     },
     smms: {
       label: t.imageSmmsTokenLabel,
-      hint: t.imageSmmsTokenHint,
+      help: t.imageSmmsTokenHint,
       optional: false,
     },
     imgur: {
       label: t.imageImgurClientIdLabel,
-      hint: t.imageImgurClientIdHint,
+      help: t.imageImgurClientIdHint,
       optional: false,
     },
     custom: {
       label: t.imageUploadTokenLabel,
-      hint: t.imageUploadTokenHint,
+      help: t.imageUploadTokenHint,
       optional: true,
     },
   }[host];
@@ -277,7 +283,7 @@ function ImageHostTokenRow({ host, t }: { host: ImageHost; t: Strings }) {
   }
 
   return (
-    <SettingRow label={label} hint={hint} error={error}>
+    <SettingRow label={label} help={help} error={error}>
       {tokenConfigured ? (
         <div className="api-key-configured">
           <span className="settings-row-hint">{t.apiKeyConfigured}</span>

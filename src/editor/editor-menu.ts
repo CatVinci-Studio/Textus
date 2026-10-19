@@ -342,6 +342,7 @@ export interface ContextMenuOptions {
   /** Already filtered down to the AI features that are switched on. */
   aiItems: ContextMenuItem[];
   copyOrCut: (cut: boolean) => void;
+  copyAsMarkdown: () => void;
   paste: () => void;
   selectAll: () => void;
   toggleFindReplace: () => void;
@@ -361,6 +362,7 @@ export function buildContextMenuItems(
   const clipboardItems: MenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
     { label: t.copy, onSelect: () => options.copyOrCut(false) },
+    { label: t.copyAsMarkdown, onSelect: options.copyAsMarkdown },
     { label: t.paste, onSelect: options.paste },
     ...generalItems(options),
   ];
@@ -388,7 +390,8 @@ export function buildContextMenuItems(
  * stands in for the right-click menu a phone never opens: what that menu
  * offers where the caret is, less what the toolbar already carries there -
  * copy and paste always, the insert and delete buttons in a table, the
- * width presets on an image, lists, quote and code block elsewhere. The
+ * width presets on an image, lists, quote and code block elsewhere - and
+ * Copy as Markdown, which the toolbar lacks. The
  * caller leaves Ask AI out of aiItems: the toolbar has its own button.
  */
 export function buildPhoneMoreItems(
@@ -396,23 +399,25 @@ export function buildPhoneMoreItems(
   options: ContextMenuOptions,
 ): MenuEntry[] {
   const { t, imagePos } = options;
-  const cut: MenuEntry = {
-    label: t.cut,
-    onSelect: () => options.copyOrCut(true),
-  };
+  // The toolbar has Copy, but not the Markdown source: the phone has no
+  // Edit menu to offer it.
+  const clipboard: MenuEntry[] = [
+    { label: t.cut, onSelect: () => options.copyOrCut(true) },
+    { label: t.copyAsMarkdown, onSelect: options.copyAsMarkdown },
+  ];
   if (inTable(run)) {
     return [
       ...tableLayoutItems(run, t),
       "separator",
-      cut,
+      ...clipboard,
       ...generalItems(options),
     ];
   }
-  if (imagePos !== null) return [cut, ...generalItems(options)];
+  if (imagePos !== null) return [...clipboard, ...generalItems(options)];
   return [
     { label: t.insertTable, onSelect: options.openTableDialog },
     "separator",
-    cut,
+    ...clipboard,
     ...generalItems(options),
   ];
 }

@@ -351,10 +351,11 @@ part of the project.
 ## Where the user meets each concept
 
 - **Settings > Textus AI**, group "Writing Instructions & Skills": Project
-  Folder (its hint names the folder Textus AI may read), Writing Instructions
-  (agent.md) (hint: for all documents), Skills (hint: how to call one),
-  Remember automatically (hint: where to see and undo) and Global Config
-  Folder (no hint). Few hints on purpose; the guide explains.
+  Folder (the folder in use under it; its "?" says Textus AI reads only
+  that folder), Writing Instructions (agent.md) ("?": for all documents),
+  Skills ("?": how to call one), Remember automatically ("?": where to see
+  and undo) and Global Config Folder (nothing). Explanations sit behind the
+  "?" on purpose; the guide explains the rest.
 - **The AI panel's project bar**: the folder name (tooltip: "Project folder"
   and the path), the **Style** and **Library N** chips, and the menu that
   chooses the folder and creates each project-level file; for a project
