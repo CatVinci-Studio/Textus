@@ -871,7 +871,7 @@ button.settings-inline-button {
   gap: 4px;
 }
 
-/* Customize… / Open / Reset: words, not boxed buttons - eighteen rows of
+/* Customize… / Open / Reset: words, not boxed buttons - nineteen rows of
    boxes outweighed the skills they belong to. */
 button.settings-skill-action {
   width: auto;

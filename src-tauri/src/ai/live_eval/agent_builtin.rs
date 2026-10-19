@@ -64,7 +64,8 @@ const LANG_FR: &str = include_str!("docs/lang-fr.md");
 const LANG_PT: &str = include_str!("docs/lang-pt.md");
 const LANG_RU: &str = include_str!("docs/lang-ru.md");
 
-/// The 18 skills, in the catalogue's order.
+/// The 18 writing skills, in the catalogue's order (`theme`, which writes
+/// CSS rather than prose, has no live cases).
 pub const SKILLS: &[&str] = &[
     "continue-story",
     "describe",

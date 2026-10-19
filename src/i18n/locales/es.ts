@@ -184,6 +184,7 @@ para usar una.
   commentLocate: "Mostrar en el documento",
   commentNotFound: "Ese fragmento ya no está en el documento.",
   toolResult: "Resultado",
+  chatUseTheme: "Usar este tema",
   toolSearchDocument: "Buscando «{arg}» en el documento",
   toolReadDocument: "Leyendo «{arg}»",
   toolReadWholeDocument: "Leyendo el documento",

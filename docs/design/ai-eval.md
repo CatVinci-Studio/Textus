@@ -95,7 +95,7 @@ workspace and writing-style features explicit.
   layers), library facts by alias and a character-consistency check, a
   `/skill` and a skill matched by description, a project skill shadowing a
   global one. Since the built-in skills, these disk workspaces also carry
-  the 18 built-ins (the loader adds them, as in the app), and a `/name`
+  the 19 built-ins (the loader adds them, as in the app), and a `/name`
   message is expanded by the production `builtin::expand_message`, packs
   included; the in-memory workspaces of the matrix cases don't.
 - **Concepts (added in the 0.9.7 integration, 8 cases)**: questions about

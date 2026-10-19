@@ -1580,7 +1580,7 @@ mod tests {
             ..Default::default()
         });
         let list = listed(skills);
-        assert_eq!(list.len(), 18);
+        assert_eq!(list.len(), 19);
         let describe = list.iter().find(|s| s.name == "describe").unwrap();
         assert!(!describe.enabled && describe.source == SkillSource::Builtin);
         let json = serde_json::to_value(&list[0]).unwrap();

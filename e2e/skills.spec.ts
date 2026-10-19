@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp, PHONE } from "./helpers";
 
 // The composer's `/` and `@` pickers and Settings' skills, against the dev
-// shim's skill list (dev/tauri-shim.ts: the 18 built-ins and one skill
+// shim's skill list (dev/tauri-shim.ts: the 19 built-ins and one skill
 // of the user's own).
 
 const AI_NAME = "Textus AI";
@@ -62,7 +62,7 @@ test.describe("the / picker", () => {
       await input.fill(key);
       const menu = page.locator(".composer-picker");
       await expect(menu).toBeVisible();
-      await expect(menu.getByRole("option")).toHaveCount(19);
+      await expect(menu.getByRole("option")).toHaveCount(20);
       await expect(menu.getByRole("group", { name: "写作" })).toContainText(
         "接着写",
       );
@@ -166,9 +166,9 @@ test.describe("Settings > Textus AI skills", () => {
     await panel.getByRole("button", { name: AI_NAME, exact: true }).click();
     const builtins = panel.locator(".settings-builtin-skills");
     await builtins.locator("summary").click();
-    await expect(builtins.locator("summary")).toContainText("18 of 18 on");
+    await expect(builtins.locator("summary")).toContainText("19 of 19 on");
     await builtins.getByRole("checkbox", { name: "Proofread" }).click();
-    await expect(builtins.locator("summary")).toContainText("17 of 18 on");
+    await expect(builtins.locator("summary")).toContainText("18 of 19 on");
     expect(
       await page.evaluate(() =>
         Array.from(

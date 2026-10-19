@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { SkillListItem } from "../../platform/ipc";
+import { LANGS } from "../../i18n/langs";
 import { BUILTIN_SKILLS } from "../skills/builtin";
+import { SKILL_TEXTS } from "../skills/texts";
 import {
   MENTION_TRIGGER,
   SKILL_COMMAND,
@@ -72,7 +74,7 @@ describe("pickerSkills", () => {
     );
     expect(list.map((s) => s.name)).not.toContain("continue-story");
     expect(list.map((s) => s.name)).not.toContain("standards-en");
-    expect(list).toHaveLength(17);
+    expect(list).toHaveLength(18);
   });
 
   it("shows a built-in by its label and hint in the UI language", () => {
@@ -99,6 +101,23 @@ describe("pickerSkills", () => {
     expect(skill.terms).toEqual(
       expect.arrayContaining(["house-style", "house", "文风手册"]),
     );
+  });
+});
+
+describe.each(LANGS)("the theme skill in %s", (lang) => {
+  const skills = pickerSkills(builtins, lang);
+  const text = SKILL_TEXTS[lang].theme;
+
+  it("is in the / list under Formats, by its label", () => {
+    const theme = skills.find((s) => s.name === "theme");
+    expect(theme).toMatchObject({ label: text.label, category: "format" });
+    const format = groupSkills(skills, []).find((g) => g.id === "format")!;
+    expect(format.skills.map((s) => s.name)).toContain("theme");
+  });
+
+  it("answers to /theme, its label and its aliases", () => {
+    for (const term of ["theme", text.label, ...text.aliases])
+      expect(resolveSkillName(term, skills), term).toBe("theme");
   });
 });
 

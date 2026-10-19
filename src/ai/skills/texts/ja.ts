@@ -92,4 +92,9 @@ export default {
     hint: "指定した長さで忠実に要約します",
     aliases: ["まとめ", "要旨"],
   },
+  theme: {
+    label: "テーマを作る",
+    hint: "説明に合わせてエディターのテーマを書き、すぐ使えます",
+    aliases: ["テーマ", "テーマ作成"],
+  },
 } satisfies SkillTexts;
