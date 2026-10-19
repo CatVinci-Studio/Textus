@@ -17,59 +17,71 @@ first.
 TestFlight for a while and is about to go to review.
 [#87](https://github.com/CatVinci-Studio/Textus/issues/87)
 
-## In the next release (1.1.0)
+## In the next release (1.2.0)
 
-- **Three ways to work with Textus AI.** **Write** drafts new text into
-  your document without changing what is there, **Review** answers and leaves
-  notes in the margin, and **Revise** suggests changes, sentence by sentence;
-  every change is still yours to accept or reject.
-  [#179](https://github.com/CatVinci-Studio/Textus/pull/179)
-- **Textus AI remembers.** Tell it something that should hold beyond one
-  request - a spelling, a tone, a character's details - and it keeps it, for
-  this project or for all your work. You can see, edit and delete everything
-  it remembers. [#180](https://github.com/CatVinci-Studio/Textus/pull/180)
-- **Themes made in the chat.** Type `/theme`, describe the look you want, and
-  switch to it with one click.
-- **A new first-run tour** on reading notes about a classic in your language:
-  type each Markdown mark, connect your AI, then write, review and revise your
-  own notes with it. Skip the AI and the lessons are still there, with an
-  animation to watch. [#90](https://github.com/CatVinci-Studio/Textus/issues/90)
-- **Native ARM64 builds** for Windows (Snapdragon laptops) and Linux.
-- **Set Textus as your default Markdown editor** from Settings.
-  [#183](https://github.com/CatVinci-Studio/Textus/issues/183)
-- **More HTML in your documents.** Collapsible `<details>` blocks, HTML
-  tables, a few inline styles (colour, size, alignment) and inline `<svg>`
-  drawings show as they should while you write, in split view and in
-  exports. Scripts never run.
-- **A beta channel.** Choose Beta under **Settings › General › About Textus**
-  to get release candidates before everyone else; Stable stays the default.
-- **Autosave**, if you turn it on: documents go back to their file as you
-  write. [#133](https://github.com/CatVinci-Studio/Textus/issues/133)
-- **Themes from the gallery, inside the app**: browse, install and update
-  them in Settings. [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
-- **Obsidian image embeds** (`![[image.png]]`), kept as written when you
-  save. [#135](https://github.com/CatVinci-Studio/Textus/issues/135)
-- **A switch to type closing `*` yourself.**
-  [#136](https://github.com/CatVinci-Studio/Textus/issues/136)
-- **Your choice of image folder, or an image host.** Pasted images can go to
-  a subfolder (`assets` unless you name another), next to the document, or be
-  uploaded through PicGo, SM.MS or Imgur.
-  [#147](https://github.com/CatVinci-Studio/Textus/issues/147)
+- **Quick notes from anywhere.** A small Markdown window that opens from the
+  File menu, the tray or a global shortcut you turn on: jot a few lines, press
+  `Esc`, and they are saved as a Markdown file, one per note or one per day.
+  [#193](https://github.com/CatVinci-Studio/Textus/issues/193)
+- **Textus in the background**, if you turn it on: it keeps running after you
+  close its last window, with an icon in the notification area, the system
+  tray or the menu bar, and can start at login.
+  [#244](https://github.com/CatVinci-Studio/Textus/pull/244)
+- **Open a whole folder** in the sidebar and search its file names with
+  `Ctrl/⌘ + Shift + O`.
+  [#152](https://github.com/CatVinci-Studio/Textus/issues/152),
+  [#79](https://github.com/CatVinci-Studio/Textus/issues/79)
+- **Saving changes only what you edited.** Every paragraph you didn't touch
+  is written back exactly as it was, so a file you also keep in Git shows a
+  small diff. Wikilinks (`[[Note]]`, `[[Note#Heading]]`) open the note, and
+  they and `#tags` are kept as written.
+  [#234](https://github.com/CatVinci-Studio/Textus/pull/234)
+- **Revise, sentence by sentence, as it streams in.** Each changed sentence
+  appears beside the one it rewrites, instead of the whole passage being
+  struck first. [#243](https://github.com/CatVinci-Studio/Textus/pull/243)
+- **Links to headings in other files** (`[see](notes.md#heading)`) open at
+  that heading. [#233](https://github.com/CatVinci-Studio/Textus/pull/233)
+- **Documents reopen where you left off**, with the caret where it was.
+  [#218](https://github.com/CatVinci-Studio/Textus/issues/218)
+- **More shortcuts**: next and previous tab, Heading 1 to 6 and Paragraph,
+  and a list of the shortcuts that can't be changed.
+  [#214](https://github.com/CatVinci-Studio/Textus/issues/214)
+- **Interface text size**: make the sidebar, tabs, menus and the AI panel
+  larger or smaller without zooming the document.
+  [#150](https://github.com/CatVinci-Studio/Textus/issues/150)
+- **Colour swatches** beside colour codes in inline code, and a **Copy**
+  button and optional line numbers for code blocks.
+  [#146](https://github.com/CatVinci-Studio/Textus/issues/146)
+- **A choice of diagram engine.** Mermaid stays the default; Pele draws the
+  same diagrams faster. [#242](https://github.com/CatVinci-Studio/Textus/pull/242)
 
-New features come in minor releases like this one; patch releases (1.1.x)
+New features come in minor releases like this one; patch releases (1.2.x)
 only fix things.
 
 ## Recently done
 
-- **Textus 1.0.4**: drag the sidebar to any width
-  ([#77](https://github.com/CatVinci-Studio/Textus/issues/77)), PDFs on white
-  with proper margins and optional page numbers
-  ([#68](https://github.com/CatVinci-Studio/Textus/issues/68)), drop a file
-  to open it on Windows
-  ([#78](https://github.com/CatVinci-Studio/Textus/issues/78)), sharper
-  Source Code Mode on Linux
-  ([#61](https://github.com/CatVinci-Studio/Textus/issues/61)), and smaller
-  installers.
+- **Textus 1.1.0**: three ways to work with Textus AI - Write, Review and
+  Revise ([#179](https://github.com/CatVinci-Studio/Textus/pull/179)) - and
+  a Textus AI that remembers what you ask for
+  ([#180](https://github.com/CatVinci-Studio/Textus/pull/180)), themes made
+  in the chat, a new first-run tour
+  ([#90](https://github.com/CatVinci-Studio/Textus/issues/90)), native ARM64
+  builds for Windows and Linux, Textus as your default Markdown editor
+  ([#183](https://github.com/CatVinci-Studio/Textus/issues/183)), more HTML
+  in your documents, a beta channel, autosave
+  ([#133](https://github.com/CatVinci-Studio/Textus/issues/133)), the theme
+  gallery inside the app
+  ([#89](https://github.com/CatVinci-Studio/Textus/issues/89)), image
+  embeds written as `![[image.png]]` ([#135](https://github.com/CatVinci-Studio/Textus/issues/135))
+  and your choice of image folder or image host
+  ([#147](https://github.com/CatVinci-Studio/Textus/issues/147)).
+- **Textus 1.1.1**: calmer revision highlights, a card in place of an image
+  that can't be loaded, **Show in folder** for images, image widths other
+  apps understand, and fixes for typed links and images
+  ([#189](https://github.com/CatVinci-Studio/Textus/issues/189)), clicks in
+  Typewriter Mode
+  ([#217](https://github.com/CatVinci-Studio/Textus/issues/217)) and Open
+  Recent ([#201](https://github.com/CatVinci-Studio/Textus/issues/201)).
 - **The Playground** is live at
   [textus.catvinci.com/playground](https://textus.catvinci.com/playground/):
   try the editor in your browser before installing anything.
@@ -79,18 +91,32 @@ only fix things.
   [textus.catvinci.com/themes](https://textus.catvinci.com/themes/) for
   everyone, free. [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
-## Later
+## Later: Textus 1.3.0, a full expansion, experience first
 
-- **Quick notes from anywhere.** A small Markdown window that opens with a
-  global shortcut: jot a few lines, close it, and they are saved.
-  [#193](https://github.com/CatVinci-Studio/Textus/issues/193)
-- **Images made by Textus AI.** Ask for an illustration or a diagram while
-  you write, and accept it into your document like any other suggestion.
+- **Long documents** that open and scroll smoothly.
+- **Web search for Textus AI** with every AI provider, with sources you can
+  check.
+- **A simple choice of how hard the AI thinks**: Auto, Fast or Deep.
+- **Images made by Textus AI**, as suggestions you accept, with the major
+  Chinese and international image providers.
   [#194](https://github.com/CatVinci-Studio/Textus/issues/194)
-- **Voice input**, into the document or the message box for Textus AI.
+- **Textus AI reads Word, PDF, slide and spreadsheet files** in your project
+  folder.
+- **Plugins, and a plugin gallery.** Plugins run sandboxed with only the
+  permissions you grant, and nothing runs unless you install it; Textus AI
+  can write one for you. A few basic plugins come with the launch.
+
+## Later: Textus 1.4.0, steady and polished
+
+- **Voice input**, taken slowly to get it right.
   [#195](https://github.com/CatVinci-Studio/Textus/issues/195)
-- An outline that covers a whole folder, not just one file.
-  [#79](https://github.com/CatVinci-Studio/Textus/issues/79)
+- **Version history** for your documents: go back to an earlier version, and
+  see what Textus AI changed.
+- **Textus AI learns from the revisions you accept and reject.**
+- **More plugins**: a second version of the plugin API, and official plugins
+  for a calendar, tasks and a kanban board.
+- **An image viewer.**
+- **Accessibility**: screen readers, full keyboard use and high contrast.
 
 ## Want to help?
 

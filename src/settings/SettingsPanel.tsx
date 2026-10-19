@@ -212,9 +212,6 @@ export function SettingsPanel({
                   checked={settings.restoreSessionOnStartup}
                   onChange={(v) => setSettings({ restoreSessionOnStartup: v })}
                 />
-                {/* Slot: Open at login and Keep running in background (the
-                    tray) go here - how Textus starts and stays, beside how
-                    it reopens. */}
               </>
             )}
           </SettingsGroup>
@@ -344,8 +341,6 @@ export function SettingsPanel({
               checked={settings.enableMath}
               onChange={(v) => setSettings({ enableMath: v })}
             />
-            {/* Slot: the diagram engine (Mermaid or Pele) takes this row's
-                place, or follows it if it is shown only with diagrams on. */}
             <ToggleRow
               label={t.enableMermaidLabel}
               checked={settings.enableMermaid}

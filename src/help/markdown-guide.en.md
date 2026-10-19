@@ -25,7 +25,9 @@ GitHub-style alerts:
 
 **Bold** (`**text**`), *italic* (`*text*`), ***bold italic***, ~~strikethrough~~ (`~~text~~`), ==highlight== (`==text==`), and `inline code`.
 
-Links look like this: [the Textus repository](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+click one to follow it: a web link opens in your browser, a link to another Markdown file opens it in a tab, and a link to `#a-heading` scrolls there. Inline HTML renders too, e.g. keyboard keys <kbd>Cmd</kbd> + <kbd>S</kbd>. So do `<details>` folds, HTML tables, a few inline styles (colour, background, size, weight, alignment, underline and strikethrough) and inline `<svg>`, which shows as a picture. Scripts and other HTML stay as source.
+Links look like this: [the Textus repository](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+click one to follow it: a web link opens in your browser, a link to another Markdown file opens it in a tab, and a link to `#a-heading` scrolls there. Inline HTML renders too, e.g. keyboard keys <kbd>Cmd</kbd> + <kbd>S</kbd>. So do `<details>` folds, HTML tables, a few inline styles (colour, background, size, weight, alignment, underline and strikethrough) and inline `<svg>`, which shows as a picture. Scripts and other HTML stay as source. A link to a heading in another file, such as `[see](notes.md#a-heading)`, opens that file at the heading. Obsidian wikilinks (`[[Note]]`, `[[Note|text]]` and `[[Note#Heading]]`) open the same way, from the document's folder or anywhere in its vault; they and `#tags` at the start of a line are saved exactly as written.
+
+With **Settings → Editor & Appearance → Show a swatch before colour codes** on, inline code that is a colour, such as `#ff8800` or `rgb(0 128 255)`, shows a small square of that colour.
 
 Inline math: mass–energy equivalence $E = mc^2$, Euler's identity $e^{i\pi} + 1 = 0$.
 
@@ -56,7 +58,7 @@ Hover over a table to add or remove rows and columns. Type `| Name | Age |` and 
 
 ## Code blocks
 
-Fenced code blocks with syntax highlighting (switch the language from the block's top-right corner). Enter on the empty last line leaves the block, as does Ctrl/⌘+Enter at any time; the same goes for quotes.
+Fenced code blocks with syntax highlighting (switch the language from the block's top-right corner). Enter on the empty last line leaves the block, as does Ctrl/⌘+Enter at any time; the same goes for quotes. The **Copy** button beside the language copies the block's code, and **Settings → Editor & Appearance → Line numbers in code blocks** numbers its lines; neither shows in exports or printouts.
 
 ```python
 def fib(n: int) -> int:
@@ -118,6 +120,8 @@ sequenceDiagram
     Textus-->>You: Rendered live
 ```
 
+**Settings → Editor & Appearance → Diagram engine** chooses what draws these blocks: Mermaid, the default, or Pele, which is faster but lays diagrams out its own way and leaves out a few features; a diagram Pele can't draw is drawn by Mermaid.
+
 ## Images
 
 Paste an image straight from the clipboard — Textus saves it and inserts the reference. Where it goes is set in **Settings → Editor & Appearance → Images**. **On this computer**, it is a **Subfolder** of the document's folder, `assets/` by default, whose name you can change; **Same folder as the document** is the other choice. Settings shows the link a pasted image gets. **Upload to an image host** sends it to PicGo / PicList, SM.MS, Imgur or an endpoint of your own (**Custom**) instead.
@@ -141,6 +145,12 @@ Besides the WYSIWYG editor and source mode (`Cmd+/`), Textus has three ways to w
 - **Zen mode** (`Cmd+Shift+J`): hides everything but the text, goes fullscreen and dims every paragraph except the one you are writing. Press `Esc` to leave.
 
 All three are also in the **View** menu.
+
+**Settings → Editor & Appearance → Interface text size** makes the text of the sidebar, tabs, menus, the AI panel and Settings larger or smaller; the document keeps its own zoom. `Ctrl+Tab` and `Ctrl+Shift+Tab` move to the next and the previous tab.
+
+## Folders and file search
+
+**File → Open Folder…** opens a whole folder in the sidebar: the file tree stays there while you open documents inside it, the folder comes back with your session, and **File → Close Folder** lets the tree follow the document again. The box at the top of the sidebar's **Files** tab searches file names across the folder; `Cmd+Shift+O` jumps to it. Type to filter, `↑`/`↓` to move, `Enter` to open, `Esc` to clear. Both are on the desktop only.
 
 ## Quick Notes
 
