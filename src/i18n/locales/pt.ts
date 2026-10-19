@@ -1043,4 +1043,15 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   quickNoteNoImages: `Não dá para colar imagens numa nota rápida. Abra-a no ${APP_NAME} para adicionar.`,
   quickNoteConflictMessage:
     "Uma nota rápida foi salva neste arquivo enquanto você tinha alterações não salvas: “{note}”. Salvar agora sobrescreve o arquivo e apaga essa nota.",
+  backgroundGroup: "Segundo plano",
+  backgroundToggle: "Continuar em segundo plano",
+  backgroundHintMac: `Mostra o ${APP_NAME} na barra de menus, com uma nota rápida, seus documentos e Encerrar sempre à mão.`,
+  backgroundHintWindows: `Ao fechar a última janela, o ${APP_NAME} continua aberto, com um ícone na área de notificação: clique nele para uma nota rápida. Para fechar o ${APP_NAME} de vez, escolha Encerrar no menu do ícone.`,
+  backgroundHintLinux: `Ao fechar a última janela, o ${APP_NAME} continua aberto, com um ícone na bandeja do sistema. Para fechar o ${APP_NAME} de vez, escolha Encerrar no menu do ícone. O GNOME só mostra ícones de bandeja com a extensão AppIndicator.`,
+  backgroundTrayUnavailable: `Este ambiente não tem bandeja: o libayatana-appindicator não está instalado. O ${APP_NAME} continua em segundo plano; abra-o pelo lançador ou pelo atalho de notas rápidas.`,
+  openAtLoginToggle: "Abrir ao iniciar sessão",
+  openAtLoginHint: `Inicia o ${APP_NAME} em segundo plano ao iniciar sessão, sem abrir janelas.`,
+  openAtLoginFailed:
+    "Não foi possível alterar a abertura ao iniciar sessão: {error}",
+  trayOpenTextus: `Abrir o ${APP_NAME}`,
 } satisfies Translation;

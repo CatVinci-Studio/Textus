@@ -360,6 +360,10 @@ mod pdf_offscreen {
                         render_to_file(&window, &output_path, tx.clone());
                     })
                     .build()
+                    .inspect(|_window| {
+                        #[cfg(target_os = "linux")]
+                        crate::end_web_process_with_window(_window);
+                    })
                     .map_err(|e| e.to_string())
             })
         };

@@ -20,7 +20,11 @@
         "desktopTemplate": "../packaging/linux/textus.desktop"
       },
       "rpm": {
-        "desktopTemplate": "../packaging/linux/textus.desktop"
+        "desktopTemplate": "../packaging/linux/textus.desktop",
+        "recommends": [
+          "libayatana-appindicator-gtk3",
+          "libayatana-appindicator3-1"
+        ]
       }
     }
   }

@@ -4783,6 +4783,7 @@ dependencies = [
  "calamine",
  "gtk",
  "ignore",
+ "libloading",
  "lopdf",
  "objc2",
  "objc2-app-kit",

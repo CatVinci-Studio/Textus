@@ -1012,4 +1012,14 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   quickNoteNoImages: `빠른 메모에는 이미지를 붙여 넣을 수 없습니다. ${APP_NAME}에서 연 다음 추가하세요.`,
   quickNoteConflictMessage:
     "저장하지 않은 변경이 있는 동안 이 파일에 빠른 메모가 저장되었습니다: “{note}”. 지금 저장하면 파일을 덮어써 그 메모가 지워집니다.",
+  backgroundGroup: "백그라운드",
+  backgroundToggle: "백그라운드에서 계속 실행",
+  backgroundHintMac: `메뉴 막대에 ${APP_NAME} 아이콘을 표시해 언제든 빠른 메모, 문서, 종료를 고를 수 있습니다.`,
+  backgroundHintWindows: `마지막 창을 닫아도 ${APP_NAME}가 계속 실행되며 알림 영역에 아이콘이 표시됩니다. 클릭하면 빠른 메모가 열립니다. 완전히 끄려면 아이콘 메뉴에서 ‘${APP_NAME} 종료’를 고르세요.`,
+  backgroundHintLinux: `마지막 창을 닫아도 ${APP_NAME}가 계속 실행되며 시스템 트레이에 아이콘이 표시됩니다. 완전히 끄려면 아이콘 메뉴에서 ‘${APP_NAME} 종료’를 고르세요. GNOME에서는 AppIndicator 확장이 있어야 트레이 아이콘이 보입니다.`,
+  backgroundTrayUnavailable: `이 데스크톱에서는 트레이를 쓸 수 없습니다(libayatana-appindicator가 설치되지 않음). ${APP_NAME}는 백그라운드에서 계속 실행되니 런처나 빠른 메모 단축키로 여세요.`,
+  openAtLoginToggle: "로그인 시 열기",
+  openAtLoginHint: `로그인할 때 창 없이 백그라운드에서 ${APP_NAME}를 시작합니다.`,
+  openAtLoginFailed: "로그인 항목을 변경하지 못했습니다: {error}",
+  trayOpenTextus: `${APP_NAME} 열기`,
 } satisfies Translation;

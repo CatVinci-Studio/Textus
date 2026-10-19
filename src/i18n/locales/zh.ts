@@ -965,4 +965,14 @@ export default {
   quickNoteNoImages: `速记里不能粘贴图片。在 ${APP_NAME} 中打开后再添加。`,
   quickNoteConflictMessage:
     "你有未保存的修改时，一条速记被存进了这个文件：“{note}”。现在保存会覆盖文件，这条速记就没了。",
+  backgroundGroup: "后台运行",
+  backgroundToggle: "在后台保持运行",
+  backgroundHintMac: `在菜单栏显示 ${APP_NAME} 图标，随时新建速记、打开文稿或退出。`,
+  backgroundHintWindows: `关闭最后一个窗口后，${APP_NAME} 仍在运行，通知区域会显示它的图标，单击即可新建速记。要彻底关闭 ${APP_NAME}，请在图标菜单中选择“退出”。`,
+  backgroundHintLinux: `关闭最后一个窗口后，${APP_NAME} 仍在运行，系统托盘会显示它的图标。要彻底关闭 ${APP_NAME}，请在图标菜单中选择“退出”。GNOME 需要安装 AppIndicator 扩展才会显示托盘图标。`,
+  backgroundTrayUnavailable: `当前桌面没有可用的托盘：未安装 libayatana-appindicator。${APP_NAME} 仍会在后台运行，可以从启动器或用速记快捷键打开。`,
+  openAtLoginToggle: "登录时启动",
+  openAtLoginHint: `登录系统时在后台启动 ${APP_NAME}，不打开窗口。`,
+  openAtLoginFailed: "无法更改登录启动项：{error}",
+  trayOpenTextus: `打开 ${APP_NAME}`,
 } satisfies Translation;

@@ -148,6 +148,8 @@ Les trois se trouvent aussi dans le menu **Présentation**.
 
 Les notes vont dans `Textus/Notes rapides`, dans votre dossier Documents, un fichier par note, nommé d’après sa première ligne. Dans **Réglages → Général → Notes rapides**, vous pouvez choisir un autre dossier, passer à **un fichier par jour** et activer un **raccourci global** qui ouvre une note rapide depuis n’importe quelle app : `Contrôle+Option+N` sur Mac, `Ctrl+Alt+N` sous Linux, `Win+Alt+N` sous Windows. En rouvrir une dans les minutes qui suivent reprend la dernière note. Sous Wayland, associez la commande `textus --quick-note` affichée là à une touche dans les réglages de votre bureau.
 
+Pour garder Textus à portée de main sans fenêtre ouverte, activez **Réglages → Général → Arrière-plan → Rester ouvert en arrière-plan** : fermer la dernière fenêtre laisse alors Textus ouvert, avec une icône dans la zone de notification (Windows), la zone de notification du système (Linux) ou la barre des menus (Mac). Son menu ouvre une nouvelle note rapide, vos documents, le dossier des notes rapides et les réglages ; **Quitter Textus** dans ce menu quitte vraiment. **Ouvrir à l’ouverture de session** le lance ainsi à l’ouverture de session. GNOME n’affiche l’icône qu’avec l’extension AppIndicator.
+
 ## Notes de bas de page et filets
 
 Les notes de bas de page s'écrivent ainsi[^1], et voici un filet horizontal :

@@ -14,6 +14,8 @@ mod ai;
 mod app_identity;
 mod atomic;
 mod auth;
+#[cfg(desktop)]
+mod background;
 mod commands;
 mod distribution;
 mod levis_import;
@@ -299,7 +301,28 @@ pub(crate) fn build_with_app_chrome(
     let builder = builder.decorations(false);
     let window = builder.build()?;
     hide_native_menu_bar(&window);
+    #[cfg(target_os = "linux")]
+    end_web_process_with_window(&window);
     Ok(window)
+}
+
+/// Linux: a window's web process ends with the window. WebKitGTK left it
+/// running after the window was destroyed - a closed window's page, some
+/// 150 MB, still there minutes later, and not reused by the next window,
+/// which got a process of its own. Without background mode the app exits
+/// with its last window, so it went unnoticed; in background mode the app
+/// stays, and so did that memory (docs/dev/lifecycle.md has the numbers).
+/// Textus opens no related views (window.open), so each window's
+/// WebKitWebView has a process to itself and ending it touches no other.
+#[cfg(target_os = "linux")]
+pub(crate) fn end_web_process_with_window(window: &tauri::WebviewWindow) {
+    let _ = window.with_webview(|webview| {
+        use gtk::prelude::WidgetExt;
+        use webkit2gtk::WebViewExt;
+        webview
+            .inner()
+            .connect_destroy(|view| view.terminate_web_process());
+    });
 }
 
 /// The height of a native title bar, in points: what the traffic lights are
@@ -451,6 +474,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(commands::quick_note::shortcut::ShortcutStatus(Mutex::new(
             None,
         )))
+        .manage(background::BackgroundStatus::default())
         .on_window_event(|window, event| {
             let app = window.app_handle();
             if matches!(event, tauri::WindowEvent::Destroyed) {
@@ -491,8 +515,9 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
 #[cfg(desktop)]
 fn desktop_setup(
     app: &mut tauri::App,
-    quick_note_only: bool,
+    launch: background::Launch,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let quick_note_only = launch == background::Launch::QuickNote;
     #[cfg(target_os = "linux")]
     detect_wayland();
     // Windows/Linux hand an associated file over as a plain argv
@@ -509,9 +534,10 @@ fn desktop_setup(
     );
     #[cfg(target_os = "macos")]
     arg_paths.extend(LAUNCH_OPENED.lock().unwrap().take().unwrap_or_default());
-    let startup_paths = if quick_note_only {
-        // Last session's documents wait for the next real launch: restored
-        // now, they would open a window nobody asked for.
+    let startup_paths = if launch != background::Launch::Editor {
+        // Last session's documents wait for the next real launch (or Open
+        // Textus in the tray): restored now, they would open a window
+        // nobody asked for.
         Vec::new()
     } else if !arg_paths.is_empty() {
         arg_paths
@@ -542,18 +568,24 @@ fn desktop_setup(
     if quick_note_only {
         commands::quick_note::window::open_soon(app.handle());
     }
+    // Background mode, likewise: off, this is one settings read.
+    if background::enabled(app.handle()) {
+        background::apply(app.handle(), background::Change::Startup);
+    }
 
     Ok(())
 }
 
-/// The Dock icon clicked while the app shows no window: a minimised editor
-/// window comes back (AppKit leaves that to the app when no window is
-/// visible), or else the app opens as a launch would - with the documents
-/// the last window had open, when Settings restores the session, and with a
-/// blank window otherwise. So closing the last window and clicking the Dock
-/// icon gives the same documents as quitting and launching again.
-#[cfg(target_os = "macos")]
-fn reopen_without_windows(app: &tauri::AppHandle) {
+/// The Dock icon clicked while the app shows no window, Open Textus in the
+/// tray, or Textus launched again while it runs in the background: a
+/// minimised or hidden editor window comes back (AppKit leaves that to the
+/// app when no window is visible), or else the app opens as a launch
+/// would: with the documents the last window had open, when Settings
+/// restores the session, and with a blank window otherwise. So closing the
+/// last window and coming back gives the same documents as quitting and
+/// launching again.
+#[cfg(desktop)]
+pub(crate) fn reopen_without_windows(app: &tauri::AppHandle) {
     let existing = app
         .webview_windows()
         .into_iter()
@@ -561,6 +593,7 @@ fn reopen_without_windows(app: &tauri::AppHandle) {
         .map(|(_, window)| window);
     if let Some(window) = existing {
         let _ = window.unminimize();
+        let _ = window.show();
         let _ = window.set_focus();
         return;
     }
@@ -600,7 +633,11 @@ fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
         Some((width, height)) => builder.inner_size(width, height),
         None => builder,
     };
-    settings::with_boot(builder, app.handle(), "main").build()?;
+    let window = settings::with_boot(builder, app.handle(), "main").build()?;
+    #[cfg(target_os = "linux")]
+    end_web_process_with_window(&window);
+    #[cfg(not(target_os = "linux"))]
+    let _ = window;
     Ok(())
 }
 
@@ -619,12 +656,26 @@ pub fn run() {
     // instead of forwarding to it.
     #[cfg(all(desktop, not(debug_assertions)))]
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
-        if commands::quick_note::wants_quick_note(&argv) {
-            commands::quick_note::window::open_soon(app);
-            return;
+        match background::launch(&argv, true) {
+            background::Launch::QuickNote => {
+                commands::quick_note::window::open_soon(app);
+                return;
+            }
+            // The login entry's launch, with Textus already running: it is
+            // already where that launch would have put it.
+            background::Launch::Background => return,
+            _ => {}
         }
         let paths = paths_from_argv(argv, std::path::Path::new(&cwd));
-        if paths.is_empty() {
+        let editor_open = app
+            .webview_windows()
+            .keys()
+            .any(|label| commands::chat_window::is_editor_window(label));
+        if paths.is_empty() && !editor_open {
+            // Launched again while running in the background with no
+            // window: the same documents a fresh launch would restore.
+            reopen_without_windows(app);
+        } else if paths.is_empty() {
             // Launched again from the app menu or dock: a fresh window,
             // as a second process used to give.
             let _ = open_new_window(app);
@@ -646,16 +697,33 @@ pub fn run() {
             // Before any window: every window's boot script is made from it.
             settings::init(app.handle());
             // `textus --quick-note` launches into the Quick Note window
-            // alone; the editor opens if the user asks for it from there.
+            // alone, and `textus --background` (the login entry) into no
+            // window at all; the editor opens when the user asks for it.
             #[cfg(desktop)]
-            let quick_note_only = commands::quick_note::wants_quick_note(std::env::args());
-            #[cfg(not(desktop))]
-            let quick_note_only = false;
-            if !quick_note_only {
-                build_main_window(app)?;
+            let launch = background::launch(
+                &std::env::args().collect::<Vec<_>>(),
+                background::enabled(app.handle()),
+            );
+            #[cfg(desktop)]
+            if launch == background::Launch::Exit {
+                // Background mode was turned off since the login entry was
+                // written: take the entry away, and with it this launch.
+                let _ = background::login::set(app.handle(), false);
+                std::process::exit(0);
             }
             #[cfg(desktop)]
-            desktop_setup(app, quick_note_only)?;
+            let main_window = launch == background::Launch::Editor;
+            #[cfg(not(desktop))]
+            let main_window = true;
+            if main_window {
+                build_main_window(app)?;
+            } else {
+                // No initial window will drain the open queue: anything
+                // opened from here on needs a window of its own.
+                UI_READY.store(true, Ordering::Relaxed);
+            }
+            #[cfg(desktop)]
+            desktop_setup(app, launch)?;
             Ok(())
         })
         // One handler list for both targets. Desktop-only commands carry
@@ -828,6 +896,8 @@ pub fn run() {
             #[cfg(desktop)]
             commands::quick_note::shortcut::quick_note_shortcut_status,
             #[cfg(desktop)]
+            background::background_status,
+            #[cfg(desktop)]
             update_session_paths,
             #[cfg(desktop)]
             cancel_session_quit,
@@ -867,19 +937,24 @@ pub fn run() {
             if let tauri::RunEvent::Exit = event {
                 settings::flush_all(app_handle);
             }
-            // macOS: closing the last window leaves the app running, as Mac
-            // apps do - in the Dock and the menu bar, reopened from either.
-            // Tauri asks to exit when its last window is destroyed (`code`
-            // None); a programmatic exit (File > Quit's app.exit, a restart
-            // for an update) has a code and goes ahead, and so do Cmd+Q from
-            // the menu bar, the Dock's Quit and logging out, which end the
-            // app without this request.
-            #[cfg(target_os = "macos")]
-            if let tauri::RunEvent::ExitRequested {
-                code: None, api, ..
-            } = &event
-            {
-                api.prevent_exit();
+            // Closing the last window leaves the app running on macOS, as
+            // Mac apps do - in the Dock and the menu bar, reopened from
+            // either - and on Windows and Linux in background mode, in the
+            // tray. Tauri asks to exit when its last window is destroyed
+            // (`code` None); a programmatic exit (File > Quit's and the
+            // tray's app.exit, a restart for an update) has a code and goes
+            // ahead, and so do the Dock's Quit and logging out, which end
+            // the app without this request. background/mod.rs's
+            // keeps_running is the rule, tested there.
+            #[cfg(desktop)]
+            if let tauri::RunEvent::ExitRequested { code, api, .. } = &event {
+                if background::keeps_running(
+                    *code,
+                    commands::quick_note::shortcut::Os::current(),
+                    background::enabled(app_handle),
+                ) {
+                    api.prevent_exit();
+                }
             }
             // macOS: the Dock icon clicked (or the app opened again from
             // Finder) while it shows no window.
