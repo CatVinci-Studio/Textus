@@ -133,16 +133,47 @@ pub fn replace_citation_markers(text: &str, number: impl Fn(usize) -> Option<Str
 pub struct ToolOutput {
     pub text: String,
     pub images: Vec<ImageAttachment>,
+    /// The call's arguments as they are to be recorded, for a
+    /// [`ToolRun::Amending`] tool: generate_image's call carries the picture
+    /// it made, which is what the frontend shows the proposal from.
+    pub call_arguments: Option<String>,
 }
 
 impl From<String> for ToolOutput {
     fn from(text: String) -> Self {
         Self {
             text,
-            images: Vec::new(),
+            ..Self::default()
         }
     }
 }
+
+/// One call [`run_agent_loop`] hands its `execute_tool`.
+#[derive(Clone, Debug, Default)]
+pub struct ToolCall {
+    pub call_id: String,
+    pub name: String,
+    pub arguments: String,
+}
+
+/// How [`run_agent_loop`] runs a tool's calls.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ToolRun {
+    /// It only reads: the calls of a step run at the same time, up to
+    /// [`MAX_CONCURRENT_TOOLS`], so one waiting on the network doesn't hold
+    /// up the rest.
+    Concurrent,
+    /// It proposes or changes something: one call at a time, in the order
+    /// the model sent them.
+    InOrder,
+    /// In order, and its output gives its call's final arguments
+    /// ([`ToolOutput::call_arguments`]); a step with such a call reports
+    /// its calls once they have run.
+    Amending,
+}
+
+/// How many read-only calls of one step run at once.
+pub const MAX_CONCURRENT_TOOLS: usize = 4;
 
 /// The text a user message carries next to images a tool showed, where the
 /// dialect can't put them in the tool result itself - so the model reads
@@ -320,7 +351,14 @@ pub type EventSink<'a> = &'a (dyn Fn(ProviderEvent<'_>) + Send + Sync);
 /// interleaved they couldn't tell parallel calls from sequential steps, and
 /// merging every step into one message rewrote the earlier steps' messages
 /// - and their prompt cache - on each new step.
-pub async fn run_agent_loop<Step, StepFut, ExecuteTool, Output, OnEvent>(
+///
+/// `execute_tool` is async, so a tool waiting on the network (a web search,
+/// a picture being made) holds no thread, and dropping the loop's future -
+/// the chat's Stop (ai::cancel in the main crate) - drops the request in
+/// flight with it. `tool_run` says how each tool's calls are run
+/// ([`ToolRun`]); results are recorded in call order whatever order they
+/// finish in.
+pub async fn run_agent_loop<Step, StepFut, ExecuteTool, ToolFut, Output, HowToRun, OnEvent>(
     history: Vec<AgentTurn>,
     // `user_turn` is a whole AgentTurn rather than the bare message string it
     // used to be, because the turn the user just sent may carry images
@@ -328,14 +366,17 @@ pub async fn run_agent_loop<Step, StepFut, ExecuteTool, Output, OnEvent>(
     user_turn: AgentTurn,
     max_steps: usize,
     mut step: Step,
-    mut execute_tool: ExecuteTool,
+    execute_tool: ExecuteTool,
+    tool_run: HowToRun,
     mut on_event: OnEvent,
 ) -> Result<Vec<AgentTurn>, String>
 where
     Step: FnMut(Vec<AgentTurn>) -> StepFut,
     StepFut: std::future::Future<Output = Result<StepResult, String>>,
-    ExecuteTool: FnMut(&str, &str) -> Output,
+    ExecuteTool: Fn(ToolCall) -> ToolFut,
+    ToolFut: std::future::Future<Output = Output>,
     Output: Into<ToolOutput>,
+    HowToRun: Fn(&str) -> ToolRun,
     OnEvent: FnMut(LoopEvent<'_>),
 {
     let mut turns = history;
@@ -363,36 +404,48 @@ where
                 return Ok(new_turns);
             }
             StepResult::ToolCalls(calls) => {
-                let calls: Vec<AgentTurn> = calls
+                let mut calls: Vec<AgentTurn> = calls
                     .into_iter()
                     .filter(|call| matches!(call, AgentTurn::ToolCall { .. }))
                     .collect();
+                let amends = calls
+                    .iter()
+                    .any(|call| tool_run(call_name(call)) == ToolRun::Amending);
+                if !amends {
+                    for call in &calls {
+                        on_event(LoopEvent::Turn(call));
+                    }
+                }
+                let outputs = run_calls(&calls, &execute_tool, &tool_run).await;
+                for (call, output) in calls.iter_mut().zip(&outputs) {
+                    if let (AgentTurn::ToolCall { arguments, .. }, Some(amended)) =
+                        (call, &output.call_arguments)
+                    {
+                        arguments.clone_from(amended);
+                    }
+                }
                 for call in &calls {
-                    on_event(LoopEvent::Turn(call));
+                    if amends {
+                        on_event(LoopEvent::Turn(call));
+                    }
                     turns.push(call.clone());
                     new_turns.push(call.clone());
                 }
                 let remaining = max_steps - step_index - 1;
-                for (index, call) in calls.iter().enumerate() {
-                    let AgentTurn::ToolCall {
-                        call_id,
-                        name,
-                        arguments,
-                        ..
-                    } = call
-                    else {
+                let count = calls.len();
+                for (index, (call, output)) in calls.iter().zip(outputs).enumerate() {
+                    let AgentTurn::ToolCall { call_id, .. } = call else {
                         continue;
                     };
-                    let ToolOutput { text, images } = execute_tool(name, arguments).into();
                     let result_turn = AgentTurn::ToolResult {
                         call_id: call_id.clone(),
-                        output: text,
-                        images,
+                        output: output.text,
+                        images: output.images,
                     };
                     on_event(LoopEvent::Turn(&result_turn));
                     new_turns.push(result_turn.clone());
                     turns.push(match budget_note(remaining) {
-                        Some(note) if index + 1 == calls.len() => with_note(result_turn, &note),
+                        Some(note) if index + 1 == count => with_note(result_turn, &note),
                         _ => result_turn,
                     });
                 }
@@ -407,6 +460,69 @@ where
         "(Stopped after {max_steps} tool steps without finishing. Ask me to continue, or narrow the request.)"
     )));
     Ok(new_turns)
+}
+
+fn call_name(call: &AgentTurn) -> &str {
+    match call {
+        AgentTurn::ToolCall { name, .. } => name,
+        _ => "",
+    }
+}
+
+/// Runs one step's calls and returns their outputs in call order: a run of
+/// [`ToolRun::Concurrent`] calls together (bounded), every other call on its
+/// own once the calls before it are done - a proposal still lands after
+/// the reads the model sent before it.
+async fn run_calls<ExecuteTool, ToolFut, Output, HowToRun>(
+    calls: &[AgentTurn],
+    execute_tool: &ExecuteTool,
+    tool_run: &HowToRun,
+) -> Vec<ToolOutput>
+where
+    ExecuteTool: Fn(ToolCall) -> ToolFut,
+    ToolFut: std::future::Future<Output = Output>,
+    Output: Into<ToolOutput>,
+    HowToRun: Fn(&str) -> ToolRun,
+{
+    use futures_util::stream::{self, StreamExt};
+    let run = |call: &AgentTurn| {
+        let call = match call {
+            AgentTurn::ToolCall {
+                call_id,
+                name,
+                arguments,
+                ..
+            } => ToolCall {
+                call_id: call_id.clone(),
+                name: name.clone(),
+                arguments: arguments.clone(),
+            },
+            _ => ToolCall::default(),
+        };
+        let fut = execute_tool(call);
+        async move { fut.await.into() }
+    };
+    let mut outputs = Vec::with_capacity(calls.len());
+    let mut rest = calls;
+    while let Some(first) = rest.first() {
+        if tool_run(call_name(first)) != ToolRun::Concurrent {
+            outputs.push(run(first).await);
+            rest = &rest[1..];
+            continue;
+        }
+        let batch = rest
+            .iter()
+            .take_while(|call| tool_run(call_name(call)) == ToolRun::Concurrent)
+            .count();
+        let done: Vec<ToolOutput> = stream::iter(&rest[..batch])
+            .map(run)
+            .buffered(MAX_CONCURRENT_TOOLS)
+            .collect()
+            .await;
+        outputs.extend(done);
+        rest = &rest[batch..];
+    }
+    outputs
 }
 
 /// Whether a step came back with U+FFFD in its text or in a tool call's
@@ -485,7 +601,7 @@ mod tests {
     fn run_scripted<R: Into<ToolOutput>>(
         script: Vec<StepResult>,
         max_steps: usize,
-        execute: impl FnMut(&str, &str) -> R,
+        execute: impl Fn(&str, &str) -> R,
     ) -> (Vec<AgentTurn>, Vec<Vec<AgentTurn>>) {
         let script = RefCell::new(VecDeque::from(script));
         let seen = RefCell::new(Vec::new());
@@ -498,7 +614,8 @@ mod tests {
                 let next = script.borrow_mut().pop_front();
                 async move { next.ok_or_else(|| "script ran out".to_string()) }
             },
-            execute,
+            |call: ToolCall| std::future::ready(execute(&call.name, &call.arguments)),
+            |_| ToolRun::InOrder,
             |_| {},
         ))
         .unwrap();
@@ -601,6 +718,7 @@ mod tests {
                     mime: "image/png".into(),
                     data_base64: "AAAA".into(),
                 }],
+                ..ToolOutput::default()
             },
         );
         let AgentTurn::ToolResult { output, images, .. } = &turns[2] else {
@@ -667,7 +785,8 @@ mod tests {
                 let next = script.borrow_mut().pop_front();
                 async move { next.ok_or_else(|| "script ran out".to_string()) }
             },
-            |name, _| name.to_string(),
+            |call: ToolCall| std::future::ready(call.name),
+            |_| ToolRun::InOrder,
             |event| {
                 if let LoopEvent::Retry = event {
                     *retries.borrow_mut() += 1;
@@ -719,6 +838,160 @@ mod tests {
         assert!(!garbled(&StepResult::Done("《百年孤独》".into())));
     }
 
+    /// A read that finishes only after the next one has: run one call at a
+    /// time it gives up (and says so) instead of waiting forever.
+    fn waits_for(
+        flag: &std::sync::atomic::AtomicBool,
+    ) -> impl std::future::Future<Output = String> + '_ {
+        let mut polls = 0;
+        std::future::poll_fn(move |cx| {
+            if flag.load(std::sync::atomic::Ordering::SeqCst) {
+                return std::task::Poll::Ready("slow".to_string());
+            }
+            polls += 1;
+            if polls > 1_000 {
+                return std::task::Poll::Ready("ran alone".to_string());
+            }
+            cx.waker().wake_by_ref();
+            std::task::Poll::Pending
+        })
+    }
+
+    fn results(turns: &[AgentTurn]) -> Vec<(String, String)> {
+        turns
+            .iter()
+            .filter_map(|t| match t {
+                AgentTurn::ToolResult {
+                    call_id, output, ..
+                } => Some((call_id.clone(), output.clone())),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn reads_in_one_step_run_together_and_are_recorded_in_call_order() {
+        use std::sync::atomic::{AtomicBool, Ordering};
+        let fast_done = AtomicBool::new(false);
+        let script = RefCell::new(VecDeque::from(vec![
+            StepResult::ToolCalls(vec![
+                call("1", "web_fetch", "slow"),
+                call("2", "web_fetch", "fast"),
+            ]),
+            StepResult::Done(String::new()),
+        ]));
+        let turns = tauri::async_runtime::block_on(run_agent_loop(
+            vec![],
+            user("go"),
+            12,
+            |_| {
+                let next = script.borrow_mut().pop_front();
+                async move { next.ok_or_else(|| "script ran out".to_string()) }
+            },
+            |call: ToolCall| {
+                let fast_done = &fast_done;
+                async move {
+                    if call.arguments == "fast" {
+                        fast_done.store(true, Ordering::SeqCst);
+                        "fast".to_string()
+                    } else {
+                        waits_for(fast_done).await
+                    }
+                }
+            },
+            |_| ToolRun::Concurrent,
+            |_| {},
+        ))
+        .unwrap();
+        assert_eq!(
+            results(&turns),
+            [("1".into(), "slow".into()), ("2".into(), "fast".into())]
+        );
+    }
+
+    #[test]
+    fn a_proposal_waits_for_the_reads_before_it() {
+        use std::sync::atomic::{AtomicBool, Ordering};
+        let read_done = AtomicBool::new(false);
+        let script = RefCell::new(VecDeque::from(vec![
+            StepResult::ToolCalls(vec![
+                call("r", "read_document", "{}"),
+                call("p", "propose_edit", "{}"),
+            ]),
+            StepResult::Done(String::new()),
+        ]));
+        let turns = tauri::async_runtime::block_on(run_agent_loop(
+            vec![],
+            user("go"),
+            12,
+            |_| {
+                let next = script.borrow_mut().pop_front();
+                async move { next.ok_or_else(|| "script ran out".to_string()) }
+            },
+            |call: ToolCall| {
+                let read_done = &read_done;
+                async move {
+                    if call.name == "read_document" {
+                        read_done.store(true, Ordering::SeqCst);
+                        "read".to_string()
+                    } else if read_done.load(Ordering::SeqCst) {
+                        "proposed after the read".to_string()
+                    } else {
+                        "proposed first".to_string()
+                    }
+                }
+            },
+            |name| match name {
+                "propose_edit" => ToolRun::InOrder,
+                _ => ToolRun::Concurrent,
+            },
+            |_| {},
+        ))
+        .unwrap();
+        assert_eq!(results(&turns)[1].1, "proposed after the read");
+    }
+
+    /// generate_image's call is recorded, and reported, with the picture
+    /// its run made - after it ran.
+    #[test]
+    fn an_amending_tool_rewrites_its_call_before_it_is_reported() {
+        let script = RefCell::new(VecDeque::from(vec![
+            StepResult::ToolCalls(vec![call("i", "generate_image", r#"{"prompt":"a cat"}"#)]),
+            StepResult::Done(String::new()),
+        ]));
+        let reported = RefCell::new(Vec::new());
+        let turns = tauri::async_runtime::block_on(run_agent_loop(
+            vec![],
+            user("go"),
+            12,
+            |_| {
+                let next = script.borrow_mut().pop_front();
+                async move { next.ok_or_else(|| "script ran out".to_string()) }
+            },
+            |_| {
+                std::future::ready(ToolOutput {
+                    text: "Image proposed".into(),
+                    call_arguments: Some(r#"{"prompt":"a cat","image":{"id":"x"}}"#.into()),
+                    ..ToolOutput::default()
+                })
+            },
+            |_| ToolRun::Amending,
+            |event| {
+                if let LoopEvent::Turn(turn) = event {
+                    reported.borrow_mut().push(format!("{turn:?}"));
+                }
+            },
+        ))
+        .unwrap();
+        let AgentTurn::ToolCall { arguments, .. } = &turns[1] else {
+            panic!("the call follows the user turn");
+        };
+        assert!(arguments.contains(r#""id":"x""#));
+        let reported = reported.into_inner();
+        assert_eq!(reported.len(), 2, "the call, then its result");
+        assert!(reported[0].contains("ToolCall") && reported[0].contains(r#"\"id\":\"x\""#));
+    }
+
     #[test]
     fn a_step_error_aborts_the_exchange() {
         let result = tauri::async_runtime::block_on(run_agent_loop(
@@ -726,7 +999,8 @@ mod tests {
             user("go"),
             12,
             |_| async { Err::<StepResult, _>("429 rate limited".to_string()) },
-            |_, _| String::new(),
+            |_| std::future::ready(String::new()),
+            |_| ToolRun::InOrder,
             |_| {},
         ));
         assert_eq!(result.unwrap_err(), "429 rate limited");

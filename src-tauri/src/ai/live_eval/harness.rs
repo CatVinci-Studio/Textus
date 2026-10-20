@@ -10,7 +10,7 @@ use crate::ai::agent::{
 };
 use crate::ai::tools::{self, ToolContext};
 use crate::ai::workspace::AgentWorkspace;
-use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, StepResult};
+use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, StepResult, ToolCall};
 use aicompat::capabilities::ThinkingLevel;
 use aicompat::providers::anthropic::{self, AnthropicAuth, StepUsage};
 use aicompat::providers::{AgentProvider, Endpoint};
@@ -628,7 +628,10 @@ pub fn run_conversation(
                     Ok(step)
                 }
             },
-            |name, args| tools::execute(&tool_set, &ctx, name, args),
+            |call: ToolCall| {
+                std::future::ready(tools::execute(&tool_set, &ctx, &call.name, &call.arguments))
+            },
+            tools::how_to_run,
             |_| {},
         ));
         let latency_ms = started.elapsed().as_millis();

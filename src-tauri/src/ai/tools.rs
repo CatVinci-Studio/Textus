@@ -1,7 +1,7 @@
 use crate::ai::agent::AgentMode;
 use crate::ai::builtin;
 use crate::ai::workspace::{AgentSkill, Invocation};
-use aicompat::agent::{ToolOutput, ToolSpec};
+use aicompat::agent::{ToolOutput, ToolRun, ToolSpec};
 use serde_json::json;
 use std::path::Path;
 
@@ -702,6 +702,7 @@ fn view_image(ctx: &ToolContext, arguments: &str) -> ToolOutput {
         Ok(image) => ToolOutput {
             text: format!("Here is `{}` ({}).", image.name, image.mime),
             images: vec![image],
+            ..ToolOutput::default()
         },
         Err(err) => err.into(),
     }
@@ -1287,6 +1288,30 @@ pub fn builtin_tools(
     }
 
     tools
+}
+
+/// How the agent loop runs a tool's calls (aicompat's ToolRun): the ones
+/// that only read run together, and the rest one at a time in call order -
+/// proposals, comments and memories land in the order the model sent them,
+/// and generate_image records the picture it made in its call.
+pub fn how_to_run(name: &str) -> ToolRun {
+    match name {
+        PROPOSE_EDIT_TOOL_NAME | ADD_COMMENT_TOOL_NAME | REMEMBER_TOOL_NAME => ToolRun::InOrder,
+        crate::ai::images::GENERATE_IMAGE_TOOL_NAME => ToolRun::Amending,
+        SEARCH_TOOL_NAME
+        | READ_DOCUMENT_TOOL_NAME
+        | CHECK_CONVENTIONS_TOOL_NAME
+        | MEASURE_TEXT_TOOL_NAME
+        | USE_SKILL_TOOL_NAME
+        | LIST_FILES_TOOL_NAME
+        | READ_FILE_TOOL_NAME
+        | VIEW_IMAGE_TOOL_NAME
+        | SEARCH_FILES_TOOL_NAME
+        | FIND_FILES_TOOL_NAME
+        | crate::ai::web::WEB_SEARCH_TOOL
+        | crate::ai::web::WEB_FETCH_TOOL => ToolRun::Concurrent,
+        _ => ToolRun::InOrder,
+    }
 }
 
 pub fn tool_specs(tools: &[Tool]) -> Vec<ToolSpec> {

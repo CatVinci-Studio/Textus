@@ -3,8 +3,8 @@
 //! can't make one), the generate_image tool the agent gets while one is
 //! chosen, and the pictures waiting for the user's decision.
 //!
-//! A picture is a proposal like any other edit. The tool's step runs the
-//! request ([`with_images`]) and keeps the picture here, in memory; the
+//! A picture is a proposal like any other edit. The tool runs the request
+//! ([`ImageRun::execute`]) and keeps the picture here, in memory; the
 //! frontend shows it in place with Accept and Reject, and only Accept
 //! saves it - into the image folder, under the naming rules, or up to the
 //! image host, as Settings › Images says for a pasted picture - and writes
@@ -14,9 +14,9 @@
 //! apart from failures.
 
 use crate::ai::agent::AgentMode;
-use crate::ai::agent::{StepFuture, StreamEvent};
+use crate::ai::agent::StreamEvent;
 use crate::ai::tools::{self, Run, Tool, ToolContext};
-use aicompat::agent::{AgentTurn, StepResult, ToolSpec};
+use aicompat::agent::{ToolCall, ToolOutput, ToolSpec};
 use aicompat::images::{self as gen, Aspect, GeneratedImage, ImageApi, ImageTarget};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -271,57 +271,31 @@ impl ImageRun {
     }
 }
 
-// TODO(agent-async): the bridge from the sync tool interface. Once tool
-// execution is async, `ImageRun::run_call` becomes generate_image's own
-// run, and this wrapper (and its call sites in agent.rs) goes away. It
-// runs inside the step's future rather than through block_on, so the
-// chat's Stop still cancels a picture being made.
-/// A provider step with each generate_image call it returns carried out
-/// before the call reaches the tool, the history and the frontend - as
-/// postfix_step fixes a proposal's text - so the call itself carries the
-/// picture's id and the frontend shows the proposal from it. Without an
-/// image model the step passes through.
-pub fn with_images<'a, S>(
-    mut step: S,
-    run: Option<&'a ImageRun>,
-    document: &'a str,
-    channel: &'a Channel<StreamEvent>,
-) -> impl FnMut(Vec<AgentTurn>) -> StepFuture<'a> + 'a
-where
-    S: FnMut(Vec<AgentTurn>) -> StepFuture<'a> + 'a,
-{
-    move |turns| {
-        let fut = step(turns);
-        Box::pin(async move {
-            let mut result = fut.await?;
-            let (Some(run), StepResult::ToolCalls(calls)) = (run, &mut result) else {
-                return Ok(result);
-            };
-            for call in calls {
-                let AgentTurn::ToolCall {
-                    call_id,
-                    name,
-                    arguments,
-                    ..
-                } = call
-                else {
-                    continue;
-                };
-                if name != GENERATE_IMAGE_TOOL_NAME {
-                    continue;
-                }
-                // The provider may not have streamed the call's start; the
-                // frontend says "Generating an image…" from this.
-                let announce = || {
-                    let _ = channel.send(StreamEvent::ToolStart {
-                        call_id: call_id.clone(),
-                        name: name.clone(),
-                    });
-                };
-                *arguments = run.run_call(arguments, document, announce).await;
-            }
-            Ok(result)
-        }) as StepFuture<'a>
+impl ImageRun {
+    /// Runs one generate_image call: the picture is made (or why not is
+    /// said) and recorded in the call's arguments, which is where the
+    /// frontend shows the proposal from (ToolRun::Amending). Async like any
+    /// tool, so the chat's Stop drops a picture being made.
+    pub async fn execute(
+        &self,
+        call: &ToolCall,
+        document: &str,
+        channel: &Channel<StreamEvent>,
+    ) -> ToolOutput {
+        // The provider may not have streamed the call's start; the
+        // frontend says "Generating an image…" from this.
+        let announce = || {
+            let _ = channel.send(StreamEvent::ToolStart {
+                call_id: call.call_id.clone(),
+                name: call.name.clone(),
+            });
+        };
+        let arguments = self.run_call(&call.arguments, document, announce).await;
+        ToolOutput {
+            text: outcome(&arguments),
+            call_arguments: Some(arguments),
+            ..ToolOutput::default()
+        }
     }
 }
 
@@ -370,8 +344,9 @@ pub fn tool() -> Tool {
     }
 }
 
-/// What the model is told came of its call - read off what with_images
-/// recorded in the arguments.
+/// What the model is told came of its call - read off what
+/// ImageRun::execute recorded in the arguments; without an image model
+/// (no ImageRun), that there is none.
 fn generate_image(_ctx: &ToolContext, arguments: &str) -> String {
     outcome(arguments)
 }

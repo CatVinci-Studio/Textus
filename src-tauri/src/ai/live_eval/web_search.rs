@@ -9,7 +9,7 @@
 use super::harness::secret;
 use crate::ai::web::search::{Backend, Service};
 use crate::ai::web::{WebPlan, WEB_FETCH_TOOL};
-use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent};
+use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, ToolCall};
 use aicompat::capabilities::{NativeSearch, ThinkingLevel};
 use aicompat::providers::{anthropic, AgentProvider, Endpoint};
 
@@ -79,7 +79,7 @@ fn live_web_fetch_reads_real_pages() {
 }
 
 /// One exchange with Claude (the cheap model) under `web`, through the
-/// app's loop and the web tools' bridge, with its sources attached. None
+/// app's loop and web tools, with its sources attached. None
 /// without a key.
 fn ask_claude(web: &WebPlan, question: &str) -> Option<Vec<AgentTurn>> {
     let Some(key) = secret("ANTHROPIC_API_KEY") else {
@@ -121,12 +121,8 @@ fn ask_claude(web: &WebPlan, question: &str) -> Option<Vec<AgentTurn>> {
                     .map(|(step, _)| web.finish_step(step))
             }
         },
-        // The bridge agent.rs's run_tool uses (TODO(agent-async)).
-        |name, arguments| {
-            tokio::task::block_in_place(|| {
-                tokio::runtime::Handle::current().block_on(web.execute(name, arguments, ""))
-            })
-        },
+        |call: ToolCall| async move { web.execute(&call.name, &call.arguments, "").await },
+        crate::ai::tools::how_to_run,
         |_| {},
     ))
     .unwrap();
