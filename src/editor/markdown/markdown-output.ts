@@ -17,7 +17,7 @@ import type {
   Node as ProseNode,
 } from "@milkdown/kit/prose/model";
 import type { MarkdownNode } from "@milkdown/kit/transformer";
-import type { Link, ListItem } from "mdast";
+import type { Link, List, ListItem, Parents } from "mdast";
 import {
   defaultHandlers,
   type Handle,
@@ -92,6 +92,22 @@ function withoutEmptyLead(item: ListItem): void {
     item.children = rest;
 }
 
+/**
+ * Whether `node` is a list right under a paragraph of a tight item,
+ * `* PHP\n  * Symfony`. An empty item can't interrupt a paragraph in
+ * CommonMark, so with its only word deleted the first item's bullet read
+ * back as text, "PHP *". That item is written with a space as a character
+ * reference, which reads back as an item with nothing to show.
+ */
+function interruptsParagraph(node: List, parent: Parents | undefined) {
+  const siblings = (parent?.children ?? []) as Phrasing[];
+  return (
+    parent?.type === "listItem" &&
+    !toBoolean(parent.spread) &&
+    siblings[siblings.indexOf(node as never) - 1]?.type === "paragraph"
+  );
+}
+
 const list: Handle = (node, parent, state, info) => {
   node.spread = toBoolean(node.spread);
   for (const item of node.children) {
@@ -99,7 +115,14 @@ const list: Handle = (node, parent, state, info) => {
     withoutEmptyLead(item);
   }
   const listItem = state.handlers.listItem;
-  state.handlers.listItem = withEmptyTasks(listItem);
+  const tasks = withEmptyTasks(listItem);
+  const first = interruptsParagraph(node, parent) ? node.children[0] : null;
+  state.handlers.listItem = (item, itemParent, itemState, itemInfo) => {
+    const out = tasks(item, itemParent, itemState, itemInfo);
+    return item === first && /^(?:[*+-]|\d+[.)])$/.test(out)
+      ? `${out} &#x20;`
+      : out;
+  };
   try {
     return defaultHandlers.list(node, parent, state, info);
   } finally {
@@ -597,23 +620,48 @@ const defaultLink = defaultHandlers.link as PeekingHandle;
  *  `<...>` form - remark wrote `[www.x.org](http://www.x.org)` - and,
  *  written bare as it was, it reads back the same (see `root` below).
  *  Not with text right after it, which would read as more of the address
- *  (`www.x.orgPasted`): then it is written `[www.x.org](http://www.x.org)`. */
-function bareWww(node: Link, after = ""): string | null {
+ *  (`www.x.orgPasted`), nor with punctuation and then text
+ *  (`www.x.org/a.b.Pasted`: GFM leaves out only punctuation at the end):
+ *  then it is written `[www.x.org](http://www.x.org)`. */
+function bareWww(node: Link, parent: Parents | undefined): string | null {
   const syntax = (node.data as { linkSyntax?: LinkSyntax } | undefined)
     ?.linkSyntax;
   const text = textOf(node);
   return syntax === "autolink" &&
     /^www\./i.test(text) &&
     node.url === `http://${text}` &&
-    !/^[^\s<?!.,:*_~)]/.test(after)
+    endsAddress(textAfter(node, parent))
     ? text
     : null;
 }
 
+/** What is written right after `node` in its paragraph, as far as its
+ *  text goes; anything else after it is "\uFFFC". A line break ends it. */
+function textAfter(node: Link, parent: Parents | undefined): string {
+  const siblings = (parent?.children ?? []) as Phrasing[];
+  let rest = "";
+  for (const next of siblings.slice(siblings.indexOf(node as never) + 1)) {
+    if (next.type === "text") {
+      rest += next.value ?? "";
+      continue;
+    }
+    if (next.type !== "break") rest += "\uFFFC";
+    break;
+  }
+  return rest;
+}
+
+/** Whether a GFM link literal ends where `rest` starts: at white space
+ *  or the line's end, after only the punctuation GFM leaves off the end of
+ *  an address. Not at `<`, which also ends one but is written `\<` before
+ *  a letter, and the backslash reads as more of the address; nor after
+ *  punctuation the text would write escaped. */
+const endsAddress = (rest: string) => /^[.,:;!?"')]*(?:\s|$)/u.test(rest);
+
 /** Writes a link in the syntax it was read in (LinkSyntax above). */
 const link = Object.assign(
   ((node, parent, state, info) => {
-    const www = bareWww(node, info.after);
+    const www = bareWww(node, parent);
     if (www) return www;
     const empty =
       (node.data as { linkSyntax?: LinkSyntax } | undefined)?.linkSyntax ===
@@ -628,7 +676,7 @@ const link = Object.assign(
   {
     // containerPhrasing asks `peek` which character the link starts with.
     peek: ((node, parent, state, info) =>
-      bareWww(node)?.charAt(0) ??
+      bareWww(node, parent)?.charAt(0) ??
       asWritten(node, state, () =>
         defaultLink.peek(node, parent, state, info),
       )) as Handle,
@@ -772,6 +820,8 @@ interface Phrasing {
   data?: unknown;
   value?: string;
   children?: Phrasing[];
+  /** The delimiter Milkdown's strong and emphasis handlers write. */
+  marker?: string;
 }
 
 const SPANS = new Set(["strong", "emphasis", "delete", "mark"]);
@@ -831,10 +881,11 @@ function edgeCharacter(node: Phrasing, end: "first" | "last"): string {
   }
   if (!ATTENTION.has(node.type)) return node.type === "break" ? "" : ".";
   if (!node.children?.length) return "";
-  return edgeCharacter(
-    node.children[end === "first" ? 0 : node.children.length - 1],
-    end,
-  );
+  const child = node.children[end === "first" ? 0 : node.children.length - 1];
+  // A span inside written with other delimiters doesn't join this one's.
+  return ATTENTION.has(child.type) && child.marker === "_"
+    ? "_"
+    : edgeCharacter(child, end);
 }
 
 const ATTENTION = new Set(["strong", "emphasis"]);
@@ -894,9 +945,51 @@ function encodeAroundAttention(node: Phrasing): void {
   }
 }
 
+/**
+ * Bold directly inside bold, or italic inside italic, at its end and with
+ * text right after it: `*foo *bar**Pasted`. The two closing runs are one,
+ * `**`, which can open as well as close there, and the rule of 3 then
+ * keeps it from closing a single `*`: both spans read back as text with
+ * asterisks in it - text pasted or typed after a nested span. The inner
+ * span is written with underscores, `*foo _bar_*`, so the runs stay
+ * apart, and encodeAroundAttention writes the word's letter after it as a
+ * character reference. The same at the start, with text right before.
+ * Not where the underscores would stand against a word inside the span:
+ * they don't open or close in a word.
+ */
+function alternateNestedMarkers(node: Phrasing): void {
+  if (!node.children) return;
+  node.children.forEach(alternateNestedMarkers);
+  const children = node.children;
+  const outside = (child: Phrasing | undefined, end: "first" | "last") =>
+    child !== undefined && /^\S$/u.test(edgeCharacter(child, end));
+  const free = (child: Phrasing | undefined, end: "first" | "last") =>
+    child === undefined || !/^[\p{L}\p{N}]$/u.test(edgeCharacter(child, end));
+  children.forEach((span, i) => {
+    const inner = span.children ?? [];
+    if (!ATTENTION.has(span.type) || !inner.length) return;
+    const last = inner[inner.length - 1];
+    if (
+      last.type === span.type &&
+      outside(children[i + 1], "first") &&
+      free(inner[inner.length - 2], "last")
+    )
+      last.marker = "_";
+    const first = inner[0];
+    if (
+      first.type === span.type &&
+      outside(children[i - 1], "last") &&
+      free(inner[1], "first")
+    )
+      first.marker = "_";
+  });
+}
+
 /** Set up per serialization, before any node is written. */
 const root: Handle = (node, parent, state, info) => {
   joinAdjacent(node as Phrasing);
+  alternateNestedMarkers(node as Phrasing);
+  markLatexAhead(node as Phrasing);
   encodeAroundAttention(node as Phrasing);
   state.unsafe = state.unsafe
     .filter((pattern) => !isAutolinkLiteralGuard(pattern))
@@ -981,6 +1074,34 @@ const openEscapes = new WeakMap<State, Set<string>>();
 const OPENERS: Record<string, string> = { "]": "[", ")": "(" };
 const REFERENCES: Record<string, string> = { "]": "&#93;", ")": "&#41;" };
 
+/** Text nodes with a formula written `\\[...\\]` or `\\(...\\)` after them
+ *  in their paragraph, heading or cell, by its opening bracket. */
+const latexAhead = new WeakMap<Phrasing, Set<string>>();
+const PHRASING_BLOCKS = new Set(["paragraph", "heading", "tableCell"]);
+
+function markLatexAhead(node: Phrasing): void {
+  if (!PHRASING_BLOCKS.has(node.type)) {
+    node.children?.forEach(markLatexAhead);
+    return;
+  }
+  const leaves: Phrasing[] = [];
+  const walk = (child: Phrasing) => {
+    if (child.children) child.children.forEach(walk);
+    else leaves.push(child);
+  };
+  walk(node);
+  const ahead = new Set<string>();
+  for (const leaf of leaves.reverse()) {
+    const delimiter =
+      leaf.type === "inlineMath"
+        ? (leaf.data as MathData)?.mathDelimiter
+        : undefined;
+    if (delimiter?.startsWith("\\")) ahead.add(delimiter.charAt(1));
+    else if (leaf.type === "text" && ahead.size)
+      latexAhead.set(leaf, new Set(ahead));
+  }
+}
+
 /**
  * Brackets escaped as text never pair into LaTeX math. Textus reads
  * `\\[...\\]` and `\\(...\\)` as maths (latex-math-syntax.ts), and remark
@@ -988,6 +1109,10 @@ const REFERENCES: Record<string, string> = { "]": "&#93;", ")": "&#41;" };
  * `[Tech [Episodes]](u)` saved `[Tech \\[Episodes\\]](u)`, which read back
  * as a formula. Every escaped closer after an escaped opener is written as
  * a character reference instead, which reads as the bracket everywhere.
+ * So is an escaped opener with a formula in LaTeX's brackets after it in
+ * its block: before `\\[x\\]`, a `\\[` the text was written with opened a
+ * formula that ran to that one's end (`[['\\[', '\\]']` in a config
+ * snippet, once edited).
  */
 function withoutLatexPairs(text: Handle): Handle {
   return (node, parent, state, info) => {
@@ -997,8 +1122,11 @@ function withoutLatexPairs(text: Handle): Handle {
     if (!open) openEscapes.set(state, (open = new Set()));
     const opened = open;
     return out.replace(/\\([\s\S])/g, (escape, char: string) => {
-      if (char === "[" || char === "(") opened.add(char);
-      else if (OPENERS[char] && opened.has(OPENERS[char]))
+      if (char === "[" || char === "(") {
+        if (latexAhead.get(node as Phrasing)?.has(char))
+          return char === "[" ? "&#91;" : "&#40;";
+        opened.add(char);
+      } else if (OPENERS[char] && opened.has(OPENERS[char]))
         return REFERENCES[char];
       return escape;
     });

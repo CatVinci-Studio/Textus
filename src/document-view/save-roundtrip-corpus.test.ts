@@ -83,7 +83,8 @@ const NESTED_EMPHASIS = "emphasis directly inside emphasis of its kind";
 const FLANKING = "bold starting with punctuation, glued to a word before it";
 const RAGGED_TABLE =
   "a table with rows of different lengths is filled out when typed in, and undo keeps that";
-const BARE_LINK = "a bare GFM link followed by a character it may take";
+const EMAIL_LIKE =
+  "text that is no email address only for the character after it, until text is glued on";
 const KNOWN: Record<string, string> = {
   "commonmark-spec/0175.md insert-heading": UNCLOSED_HTML,
   "gfm-spec/0142.md insert-heading": UNCLOSED_HTML,
@@ -99,9 +100,8 @@ const KNOWN: Record<string, string> = {
   "gfm-spec/0205.md undo-edit": RAGGED_TABLE,
   "commonmark-spec/0392.md type-word": FLANKING,
   "gfm-spec/0373.md type-word": FLANKING,
-  "gfm-spec/0626.md toggle-bold": BARE_LINK,
-  "gfm-spec/0627.md type-word": BARE_LINK,
-  "gfm-spec/0631.md type-word": BARE_LINK,
+  "gfm-spec/0631.md type-word": EMAIL_LIKE,
+  "gfm-spec/0631.md paste-markdown": EMAIL_LIKE,
 };
 
 const reports: Record<string, FileReport & { known: Failure[] }> = {};
