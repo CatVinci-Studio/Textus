@@ -102,7 +102,6 @@ function App() {
     toggleSidebar,
     sidebarWidth,
     agentPanel,
-    agentOverlays,
     agentPanelEl,
     setAgentPanelEl,
     toggleAgentPanel,
@@ -406,7 +405,7 @@ function App() {
       setTab={agentPanel.setTab}
     >
       <FlipOnChange
-        watch={`${panelOpen} ${agentPresence.mounted} ${zenMode}`}
+        watch={`${panelOpen} ${zenMode}`}
         targets={() =>
           document.querySelectorAll(
             '[data-active-tab="true"] > .editor-scroll > .editor-content, [data-active-tab="true"] > .source-view, .tab-bar > [data-flip-id]',
@@ -485,7 +484,6 @@ function App() {
           <AgentPanelDock
             presence={agentPresence}
             closing={agentClosing}
-            overlays={agentOverlays}
             sheetFull={sheetFull}
             onSheetFullChange={setSheetFull}
             width={agentPanel.width}

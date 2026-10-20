@@ -18,10 +18,6 @@ import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
 
 export type PanelMode = "tree" | "outline" | "clipboard";
 
-/** The narrowest text column the docked panel may leave beside the
- *  sidebar. */
-const MIN_TEXT_COLUMN = 420;
-
 function subscribeWindowResize(onChange: () => void) {
   window.addEventListener("resize", onChange);
   return () => window.removeEventListener("resize", onChange);
@@ -55,18 +51,13 @@ export function useSidePanels(aiOn: boolean) {
   // The docked Agent panel on the right (ai/chat/panel/agent-panel.tsx). App owns
   // the frame; the active tab's editor renders its conversation into it.
   const agentPanel = useAgentPanelState();
-  // With the sidebar and the docked panel both open, a small window left
-  // the text column ~120px wide - a word a line. Below this much room for
-  // the text the panel lies over the page instead, as it does on a narrow
-  // window (agent-panel.css).
+  // The docked panel stays beside the page whatever the sidebar does: it
+  // used to lie over the page when both were open in a small window, so
+  // opening the sidebar changed the panel and played it in again.
   const windowWidth = useSyncExternalStore(subscribeWindowResize, () =>
     typeof window === "undefined" ? 0 : window.innerWidth,
   );
   const sidebarWidth = useSidebarWidth(windowWidth);
-  const agentOverlays =
-    !isIOSApp &&
-    panelOpen &&
-    windowWidth - sidebarWidth.width - agentPanel.width < MIN_TEXT_COLUMN;
   const [agentPanelEl, setAgentPanelEl] = useState<HTMLElement | null>(null);
   // On a phone, opening the sheet puts the keyboard away in one movement:
   // the document gives up focus here and the sheet's input doesn't take it
@@ -107,11 +98,15 @@ export function useSidePanels(aiOn: boolean) {
   // (App.tsx's FlipOnChange) rather than reflowing on every frame.
   const sidebarPresence = usePresence(panelOpen, { exitMs: 250 });
   const sidebarClosing = sidebarPresence.state === "closing";
-  const agentPresence = usePresence(agentPanel.open, { exitMs: 250 });
+  // On the desktop the AI panel comes and goes at once: its slide, with
+  // the editor gliding aside, squeezed the page and pushed it back on a
+  // Mac. The phone's sheet still slides (mobile/styles/ai-sheet.css).
+  const agentPresence = usePresence(agentPanel.open, {
+    exitMs: isIOSApp ? 250 : 0,
+  });
   const agentClosing = agentPresence.state === "closing";
   // What the find bar and the tutorial card keep clear of on the right.
-  const dockedWidth =
-    agentPresence.mounted && !agentOverlays && !isIOSApp ? agentPanel.width : 0;
+  const dockedWidth = agentPresence.mounted && !isIOSApp ? agentPanel.width : 0;
   useLayoutEffect(() => setDockedPanelWidth(dockedWidth), [dockedWidth]);
   // The phone's AI sheet leaves where it stood: closing with the keyboard
   // up, the web view grew back under it as the keyboard went and its
@@ -148,7 +143,6 @@ export function useSidePanels(aiOn: boolean) {
     toggleSidebar,
     sidebarWidth,
     agentPanel,
-    agentOverlays,
     agentPanelEl,
     setAgentPanelEl,
     toggleAgentPanel,

@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { canToggleFullscreen } from "../platform/capabilities";
 import { ZEN_MODE_EVENT } from "../utils/events";
 
 /**
  * Zen mode: only the text. Sidebar, tab bar, AI panel and window-bar
- * readouts go away, the window goes fullscreen, and every paragraph but
- * the one being written dims (editor/modes/zen-focus-plugin.ts). Esc leaves.
+ * readouts go away and every paragraph but the one being written dims
+ * (editor/modes/zen-focus-plugin.ts). The window stays as it is - it used
+ * to go fullscreen too, which nobody asked of a reading light. Esc leaves.
  */
 export function useZenMode() {
   const [zenMode, setZenMode] = useState(false);
@@ -18,21 +17,6 @@ export function useZenMode() {
   }, [zenMode]);
   useEffect(() => {
     window.dispatchEvent(new CustomEvent(ZEN_MODE_EVENT, { detail: zenMode }));
-    if (!zenMode || !canToggleFullscreen) return;
-    const win = getCurrentWindow();
-    // Leaving zen may come before isFullscreen() answers: then fullscreen
-    // is never entered, rather than entered after the restore already ran.
-    let left = false;
-    let restore = false;
-    void win.isFullscreen().then((already) => {
-      if (already || left) return;
-      restore = true;
-      void win.setFullscreen(true);
-    });
-    return () => {
-      left = true;
-      if (restore) void win.setFullscreen(false);
-    };
   }, [zenMode]);
   useEffect(() => {
     if (!zenMode) return;

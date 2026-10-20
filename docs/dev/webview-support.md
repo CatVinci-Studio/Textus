@@ -63,11 +63,12 @@ current one, before and after:
   neither is a container there. The document's type then stays at the
   standard 16.5px instead of growing with a wide column, and the empty
   state keeps its spark and hint when room is short.
-- **Inheriting a registered property (Chromium 107).** The sidebar and
-  main pane take `--sidebar-width`, registered as not inherited, from
-  their parent with `inherit`, and the old engine didn't restyle them when
-  it changed: the sidebar couldn't be resized. `ui/engine-quirks.ts`
-  registers the property only where that works.
+- **Inheriting a registered property (Chromium 107, and WebKit).** A
+  custom property registered as not inherited and taken with `inherit` is
+  not restyled when the parent's value changes. 1.2.0-rc.3 did that with
+  `--sidebar-width`, and the sidebar couldn't be resized on old WebView2
+  and on every Mac; startup's probe passed in WebKit, which still failed
+  on a drag. `--sidebar-width` is an ordinary inherited property again.
 - **round() (Chromium 125).** The source view centred itself with a
   `round()` that names a `var()`, so the old engine computed its margin to
   0 and the text sat against the left edge. It is behind `@supports` now.

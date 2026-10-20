@@ -16,7 +16,6 @@ import { TextusAiOffNote } from "../ai/TextusAiSwitch";
 export function AgentPanelDock({
   presence,
   closing,
-  overlays,
   sheetFull,
   onSheetFullChange,
   width,
@@ -30,8 +29,6 @@ export function AgentPanelDock({
 }: {
   presence: PresenceHandle;
   closing: boolean;
-  /** Lies over the page instead of beside it (useSidePanels). */
-  overlays: boolean;
   sheetFull: boolean;
   onSheetFullChange: (full: boolean) => void;
   width: number;
@@ -53,7 +50,7 @@ export function AgentPanelDock({
       aria-label={t.agentPanelTitle}
       data-state={presence.state}
       inert={closing || undefined}
-      className={`agent-panel${sheetFull ? " agent-panel-sheet-full" : ""}${overlays ? " agent-panel-overlay" : ""}`}
+      className={`agent-panel${sheetFull ? " agent-panel-sheet-full" : ""}`}
       style={{ width }}
     >
       {/* Phone widths: the panel is a bottom sheet (mobile/styles)

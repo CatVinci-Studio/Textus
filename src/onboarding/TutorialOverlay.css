@@ -62,11 +62,6 @@
     top: auto;
     bottom: 18px;
   }
-
-  .app-shell:has(> .agent-panel-overlay) .tutorial-card {
-    right: auto;
-    left: 18px;
-  }
 }
 
 /* Where the lesson sits: five chapters, the current one marked. */
