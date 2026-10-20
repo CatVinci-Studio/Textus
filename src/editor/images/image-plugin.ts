@@ -49,6 +49,7 @@ import {
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
 import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
 import { decorateAll, redecorateChanged } from "../changed-ranges";
+import { isLargeDoc } from "../large-doc";
 
 /**
  * Image support, Typora-style, in two halves:
@@ -98,6 +99,7 @@ export function showDocImage(
   doc: string | null,
   stillWanted: () => boolean = () => true,
 ): void {
+  img.decoding = "async";
   if (doc && isScopedUrl(doc) && !hasUrlScheme(src) && !src.startsWith("/")) {
     img.removeAttribute("src");
     void scopedImageSrc(src, doc)
@@ -494,6 +496,9 @@ function createImageView(
   const dom = document.createElement("span");
   dom.className = "image-view";
   const img = document.createElement("img");
+  // In a large document, loaded only as it comes near the screen (set
+  // before the src, or it loads at once).
+  if (isLargeDoc(view.state.doc)) img.loading = "lazy";
   const handle = document.createElement("span");
   handle.className = "image-resize-handle";
   handle.setAttribute("aria-hidden", "true");

@@ -10,6 +10,7 @@ import {
 } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
 import { katexLoaded, loadKatex } from "../editor/math/katex-loader";
+import { drawEverything } from "../editor/draw-when-visible";
 import { tabTitle, type DocTab } from "../document/doc-tabs";
 import { exportDoc, fs } from "../platform/ipc";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
@@ -220,6 +221,11 @@ export function cloneEditorContent(
   clone
     .querySelectorAll(`.${COLOR_SWATCH_TEXT_CLASS}`)
     .forEach((el) => el.replaceWith(...el.childNodes));
+  // A picture the editor loads only near the screen (a large document's)
+  // loads at once in the page made from this.
+  clone
+    .querySelectorAll("img[loading]")
+    .forEach((img) => img.removeAttribute("loading"));
   gatherDetails(clone);
   fitTablesToWidth(clone);
   clone
@@ -431,19 +437,22 @@ function showPdfOverlay(t: Strings): HTMLElement {
 
 // KaTeX loads on a document's first formula (katex-loader.ts); one still
 // waiting for it would export as its source, and without KaTeX's
-// stylesheet among the rules collectInlinedCss copies. Drawn first.
+// stylesheet among the rules collectInlinedCss copies. Drawn first. So is
+// every formula and diagram still waiting to come near the screen
+// (draw-when-visible.ts): the export copies the page as it is.
 async function drawMath(editor: Element): Promise<void> {
-  if (katexLoaded()) return;
   if (
-    !editor.querySelector('[data-type="math_inline"], [data-type="math_block"]')
-  )
-    return;
-  try {
-    await loadKatex();
-  } catch {
-    return; // Exported as source rather than not at all.
+    !katexLoaded() &&
+    editor.querySelector('[data-type="math_inline"], [data-type="math_block"]')
+  ) {
+    try {
+      await loadKatex();
+      await nextFrame();
+    } catch {
+      // Exported as source rather than not at all.
+    }
   }
-  await nextFrame();
+  await drawEverything(editor);
 }
 
 // Lets web fonts (theme fonts like Parchment's script face) and images settle
