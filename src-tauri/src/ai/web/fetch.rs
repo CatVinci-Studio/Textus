@@ -276,14 +276,14 @@ pub(crate) fn read_page(
     };
     let (title, text) = match mime {
         "text/html" | "application/xhtml+xml" => {
-            super::extract::html_to_markdown(&decode(content_type, body), url.as_str())
+            super::extract::page_markdown(&decode(content_type, body), url.as_str())
         }
         "application/pdf" => (String::new(), crate::extract::pdf_text_from_bytes(body)?),
         "" if body.starts_with(b"%PDF") => {
             (String::new(), crate::extract::pdf_text_from_bytes(body)?)
         }
         _ if mime.is_empty() && looks_html() => {
-            super::extract::html_to_markdown(&decode(content_type, body), url.as_str())
+            super::extract::page_markdown(&decode(content_type, body), url.as_str())
         }
         _ if mime.starts_with("text/")
             || mime == "application/json"

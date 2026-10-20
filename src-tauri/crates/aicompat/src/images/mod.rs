@@ -26,8 +26,6 @@ mod siliconflow;
 mod sniff;
 mod zhipu;
 
-pub use sniff::MAX_IMAGE_BYTES;
-
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::time::Duration;

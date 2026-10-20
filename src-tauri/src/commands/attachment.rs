@@ -85,10 +85,9 @@ fn file_name_of(path: &Path) -> String {
         .unwrap_or_else(|| path.to_string_lossy().to_string())
 }
 
-/// Extensions the picker offers. The same list `extract` dispatches on, in
-/// the same order, so adding a format is one edit - a second, hand-kept copy
-/// in the dialog filter would silently stop offering formats the extractor
-/// gained (or offer ones it never learned).
+/// Extensions the picker offers: the text formats, crate::extract's
+/// DOCUMENT_EXTENSIONS and the image types, kept by hand - a test checks
+/// that each one offered is one `extract` handles.
 const SUPPORTED_EXTENSIONS: &[&str] = &[
     // Extracted to text
     "md", "markdown", "txt", "csv", "tsv", "json", "yaml", "yml",

@@ -49,7 +49,7 @@ const TEXT_EXTENSIONS: &[&str] = &[
 
 /// What the sidebar lists first as a document (src/sidebar/file-search.ts);
 /// find_files does the same.
-const DOCUMENT_EXTENSIONS: &[&str] = &["md", "markdown", "txt", "text"];
+const SIDEBAR_DOCUMENT_EXTENSIONS: &[&str] = &["md", "markdown", "txt", "text"];
 
 /// Most an @-mention inlines: the whole file goes into the message.
 const MAX_FILE_BYTES: u64 = 100 * 1024;
@@ -93,14 +93,8 @@ fn is_hidden(name: &str) -> bool {
     name.starts_with('.')
 }
 
-fn has_extension(path: &Path, extensions: &[&str]) -> bool {
-    path.extension()
-        .and_then(|e| e.to_str())
-        .is_some_and(|e| extensions.contains(&e.to_ascii_lowercase().as_str()))
-}
-
 fn is_text_file(path: &Path) -> bool {
-    has_extension(path, TEXT_EXTENSIONS)
+    TEXT_EXTENSIONS.contains(&crate::extract::extension_of(path).as_str())
 }
 
 /// What the project tools make of a file, by its extension.
@@ -110,7 +104,7 @@ pub enum FileKind {
     /// PDF, Word, PowerPoint, a spreadsheet, EPUB or RTF: read as the
     /// Markdown crate::extract makes of it. (An .html file is Text, checked
     /// first: here it is source to read as written.) Not what the sidebar calls a document
-    /// (DOCUMENT_EXTENSIONS), which is a text file.
+    /// (SIDEBAR_DOCUMENT_EXTENSIONS), which is a text file.
     Document,
     /// PNG, JPEG, GIF or WebP: shown to a model that can see (view_image).
     Image,
@@ -661,7 +655,8 @@ pub fn find(root: &Path, query: &str, images: bool) -> String {
         } else {
             2
         };
-        let other = !has_extension(Path::new(rel), DOCUMENT_EXTENSIONS);
+        let ext = crate::extract::extension_of(Path::new(rel));
+        let other = !SIDEBAR_DOCUMENT_EXTENSIONS.contains(&ext.as_str());
         groups[usize::from(other) * 3 + class].push(rel);
     }
     let found = groups.concat();
