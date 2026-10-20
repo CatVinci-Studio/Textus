@@ -1,4 +1,4 @@
-use crate::agent::{AgentTurn, EventSink, ProviderEvent, StepResult, ToolSpec};
+use crate::agent::{tool_images_note, AgentTurn, EventSink, ProviderEvent, StepResult, ToolSpec};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -286,12 +286,34 @@ fn turn_to_input_item(turn: &AgentTurn) -> Value {
             "name": name,
             "arguments": arguments,
         }),
-        AgentTurn::ToolResult { call_id, output } => json!({
+        AgentTurn::ToolResult {
+            call_id, output, ..
+        } => json!({
             "type": "function_call_output",
             "call_id": call_id,
             "output": output,
         }),
     }
+}
+
+/// One turn's `input` items: its own, and after a tool result that showed
+/// images, a user message carrying them. The public API takes images inside
+/// a `function_call_output`, but the Codex backend and the
+/// Responses-compatible servers (xAI, Qwen) aren't known to, while every
+/// one of them reads an `input_image` in a user message.
+fn turn_to_input_items(turn: &AgentTurn) -> Vec<Value> {
+    let mut items = vec![turn_to_input_item(turn)];
+    if let AgentTurn::ToolResult { images, .. } = turn {
+        if !images.is_empty() {
+            let mut content: Vec<Value> = images
+                .iter()
+                .map(|image| json!({"type": "input_image", "image_url": image.data_url()}))
+                .collect();
+            content.push(json!({"type": "input_text", "text": tool_images_note(images)}));
+            items.push(json!({"type": "message", "role": "user", "content": content}));
+        }
+    }
+    items
 }
 
 fn tool_to_schema(tool: &ToolSpec) -> Value {
@@ -316,7 +338,7 @@ pub fn agent_request_body(
     web_search: bool,
     streaming: bool,
 ) -> Value {
-    let input: Vec<Value> = history.iter().map(turn_to_input_item).collect();
+    let input: Vec<Value> = history.iter().flat_map(turn_to_input_items).collect();
     let mut tool_schemas: Vec<Value> = tools.iter().map(tool_to_schema).collect();
     // OpenAI's server-side web search: unlike function tools it runs inside
     // the response (search calls surface as ignored `web_search_call` output
@@ -413,6 +435,7 @@ mod tests {
             AgentTurn::ToolResult {
                 call_id: "c1".to_string(),
                 output: "no matches".to_string(),
+                images: Vec::new(),
             },
         ];
         let tools = [ToolSpec {
@@ -454,6 +477,7 @@ mod tests {
             AgentTurn::ToolResult {
                 call_id: "c1".to_string(),
                 output: "text".to_string(),
+                images: Vec::new(),
             },
         ]);
         let after = agent_request_body("gpt-6-luna", "rules", &turns, &[], false, true);
@@ -487,6 +511,43 @@ mod tests {
         // The question follows the picture it is about.
         assert_eq!(item["content"][1]["type"], "input_text");
         assert_eq!(item["content"][1]["text"], "what is this?");
+    }
+
+    /// A tool's images follow its output as a user message: the one place
+    /// the Codex backend and the Responses-compatible servers take them.
+    #[test]
+    fn tool_result_images_follow_the_output_as_a_user_message() {
+        let history = vec![
+            AgentTurn::ToolCall {
+                call_id: "v".to_string(),
+                name: "view_image".to_string(),
+                arguments: "{}".to_string(),
+            },
+            AgentTurn::ToolResult {
+                call_id: "v".to_string(),
+                output: "Here is map.png.".to_string(),
+                images: vec![ImageAttachment {
+                    name: "map.png".to_string(),
+                    mime: "image/png".to_string(),
+                    data_base64: "AAAA".into(),
+                }],
+            },
+        ];
+        let body = agent_request_body("gpt-5-mini", "rules", &history, &[], false, true);
+        let input = body["input"].as_array().unwrap();
+        assert_eq!(input.len(), 3);
+        assert_eq!(input[1]["type"], "function_call_output");
+        assert_eq!(input[1]["output"], "Here is map.png.");
+        assert_eq!(input[2]["role"], "user");
+        assert_eq!(input[2]["content"][0]["type"], "input_image");
+        assert_eq!(
+            input[2]["content"][0]["image_url"],
+            "data:image/png;base64,AAAA"
+        );
+        assert!(input[2]["content"][1]["text"]
+            .as_str()
+            .unwrap()
+            .contains("not sent by the user: map.png"));
     }
 
     #[test]

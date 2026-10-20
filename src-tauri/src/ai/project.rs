@@ -32,10 +32,12 @@
 
 use crate::ai::memory::Remembered;
 use crate::ai::workspace::{project_dir, project_file, strip_html_comments, WORKSPACE_DIR_NAME};
+use base64::Engine;
 use serde::Serialize;
+use std::io::BufRead;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 use unicode_normalization::UnicodeNormalization;
 
@@ -49,7 +51,18 @@ const TEXT_EXTENSIONS: &[&str] = &[
 /// find_files does the same.
 const DOCUMENT_EXTENSIONS: &[&str] = &["md", "markdown", "txt", "text"];
 
+/// Most an @-mention inlines: the whole file goes into the message.
 const MAX_FILE_BYTES: u64 = 100 * 1024;
+/// Largest text file read_file and search_files read: a whole book in one
+/// file (a 300,000-word novel is about 2 MB, a long Chinese one about 6 MB),
+/// well short of what a log or a data dump runs to. read_file shows it in
+/// parts (MAX_READ_UNITS); search_files reads it a line at a time.
+const MAX_TEXT_BYTES: u64 = 16 * 1024 * 1024;
+/// Most of a file one read_file call returns, in characters with Chinese,
+/// Japanese and Korean ones counting 3 (`char_units`): about 40,000
+/// characters of English or 13,000 of Chinese, roughly the same number of
+/// tokens either way - a chapter, not a book.
+const MAX_READ_UNITS: usize = 40_000;
 const MAX_SEARCH_MATCHES: usize = 40;
 /// Most names find_files returns: past this the answer is a longer name.
 const MAX_FOUND_FILES: usize = 50;
@@ -90,23 +103,72 @@ fn is_text_file(path: &Path) -> bool {
     has_extension(path, TEXT_EXTENSIONS)
 }
 
-/// The project's text files, as relative paths.
-pub struct TextFiles {
+/// What the project tools make of a file, by its extension.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum FileKind {
+    Text,
+    /// PDF, Word, PowerPoint or a spreadsheet: read as its extracted text
+    /// (crate::extract). Not what the sidebar calls a document
+    /// (DOCUMENT_EXTENSIONS), which is a text file.
+    Document,
+    /// PNG, JPEG, GIF or WebP: shown to a model that can see (view_image).
+    Image,
+}
+
+pub fn file_kind(path: &Path) -> Option<FileKind> {
+    let ext = crate::extract::extension_of(path);
+    if TEXT_EXTENSIONS.contains(&ext.as_str()) {
+        Some(FileKind::Text)
+    } else if crate::extract::DOCUMENT_EXTENSIONS.contains(&ext.as_str()) {
+        Some(FileKind::Document)
+    } else if crate::extract::image_mime(&ext).is_some() {
+        Some(FileKind::Image)
+    } else {
+        None
+    }
+}
+
+/// Project files, as relative paths.
+pub struct ProjectFiles {
     /// In the sidebar's tree order (crate::walk).
     pub files: Vec<String>,
     /// The walk hit a limit: there may be more.
     pub truncated: bool,
 }
 
-/// Every text file under `root`, walked as the sidebar's file search walks
-/// (crate::walk): hidden entries, what `.gitignore`/`.ignore` leave out and
-/// SKIPPED_DIRS are skipped, and a huge tree stops at the walk's limits
-/// rather than stalling the request.
-pub fn walk_text_files(root: &Path) -> TextFiles {
-    let walk = crate::walk::walk(root, &crate::walk::LIMITS, is_text_file);
-    TextFiles {
+/// The project files `keep` accepts, walked as the sidebar's file search
+/// walks (crate::walk): hidden entries, what `.gitignore`/`.ignore` leave
+/// out and SKIPPED_DIRS are skipped, and a huge tree stops at the walk's
+/// limits rather than stalling the request.
+fn walk_files(root: &Path, keep: impl Fn(&Path) -> bool + Sync) -> ProjectFiles {
+    let walk = crate::walk::walk(root, &crate::walk::LIMITS, keep);
+    ProjectFiles {
         files: walk.files.into_iter().map(|f| f.rel).collect(),
         truncated: walk.truncated,
+    }
+}
+
+/// Every text file under `root` - what an @-mention can attach.
+pub fn walk_text_files(root: &Path) -> ProjectFiles {
+    walk_files(root, is_text_file)
+}
+
+/// Every file the agent's tools can read: text files and documents, and
+/// images when the model can see them (`images`).
+pub fn walk_readable_files(root: &Path, images: bool) -> ProjectFiles {
+    walk_files(root, |path| match file_kind(path) {
+        Some(FileKind::Image) => images,
+        kind => kind.is_some(),
+    })
+}
+
+/// A file as list_files and find_files show it: images are marked, so the
+/// model opens them with view_image rather than read_file.
+pub fn listed(rel: &str) -> String {
+    if file_kind(Path::new(rel)) == Some(FileKind::Image) {
+        format!("{rel} (image)")
+    } else {
+        rel.to_string()
     }
 }
 
@@ -114,9 +176,10 @@ pub fn walk_text_files(root: &Path) -> TextFiles {
 const WALK_TRUNCATED_NOTE: &str =
     "... (the project folder is too large to go through completely; some files were not looked at)";
 
-/// Reads `rel` from inside `root`: canonical containment (no `..`, absolute
-/// paths or symlinks out), no hidden components, text only, size-capped.
-pub fn read_text(root: &Path, rel: &str) -> Result<String, String> {
+/// `rel` inside `root`, checked: canonical containment (no `..`, absolute
+/// paths or symlinks out) and no hidden components. Returns the path and
+/// `rel` as the model should see it.
+fn resolve(root: &Path, rel: &str) -> Result<(PathBuf, String), String> {
     let rel = rel.trim().trim_start_matches('@');
     if rel.is_empty() {
         return Err("No path provided.".to_string());
@@ -146,26 +209,284 @@ pub fn read_text(root: &Path, rel: &str) -> Result<String, String> {
             "Hidden files and folders (names starting with \".\") can't be read.".to_string(),
         );
     }
-    match std::fs::metadata(&path) {
-        Ok(meta) if meta.is_dir() => Err(format!("`{rel}` is a folder, not a file.")),
-        Ok(meta) if meta.len() > MAX_FILE_BYTES => Err(format!(
+    if path.is_dir() {
+        return Err(format!("`{rel}` is a folder, not a file."));
+    }
+    Ok((path, rel.to_string()))
+}
+
+fn size_of(path: &Path) -> u64 {
+    std::fs::metadata(path).map_or(0, |m| m.len())
+}
+
+fn megabytes(bytes: u64) -> String {
+    format!("{:.1} MB", bytes as f64 / (1024.0 * 1024.0))
+}
+
+/// The whole text of `path`, or why it can't be read as text. A NUL byte
+/// is a binary file with a text-looking extension.
+fn whole_text(path: &Path, rel: &str) -> Result<String, String> {
+    std::fs::read_to_string(path)
+        .ok()
+        .filter(|text| !text.contains('\0'))
+        .ok_or_else(|| format!("`{rel}` isn't a readable text file."))
+}
+
+/// Reads `rel` from inside `root` whole, for an @-mention: text only,
+/// size-capped (resolve has the safety rules).
+pub fn read_text(root: &Path, rel: &str) -> Result<String, String> {
+    let (path, rel) = resolve(root, rel)?;
+    let size = size_of(&path);
+    if size > MAX_FILE_BYTES {
+        return Err(format!(
             "`{rel}` is too large to read ({} KB; the limit is {} KB).",
-            meta.len() / 1024,
+            size / 1024,
             MAX_FILE_BYTES / 1024
-        )),
-        _ => std::fs::read_to_string(&path)
-            .map_err(|_| format!("`{rel}` isn't a readable text file.")),
+        ));
+    }
+    whole_text(&path, &rel)
+}
+
+/// A document's extracted text, kept while the file is unchanged: reading
+/// a long PDF in parts, or searching it again, would otherwise extract the
+/// whole file on every call.
+struct Extracted {
+    path: PathBuf,
+    /// The file's size and modification time when it was extracted.
+    stamp: (u64, Option<std::time::SystemTime>),
+    text: Arc<String>,
+}
+
+/// How many extracted documents are kept, newest first, and how much text
+/// in all - a folder of reports, not a library.
+const MAX_CACHED_DOCUMENTS: usize = 16;
+const MAX_CACHED_BYTES: usize = 32 * 1024 * 1024;
+
+static EXTRACTED: Mutex<Vec<Extracted>> = Mutex::new(Vec::new());
+
+/// The text of the document at `path` (FileKind::Document), extracted once
+/// per version of the file.
+fn document_text(path: &Path) -> Result<Arc<String>, String> {
+    let stamp = std::fs::metadata(path)
+        .map(|m| (m.len(), m.modified().ok()))
+        .map_err(|e| e.to_string())?;
+    if stamp.0 > crate::extract::MAX_SOURCE_BYTES {
+        return Err(format!(
+            "It is too large to read ({}; the limit is {}).",
+            megabytes(stamp.0),
+            megabytes(crate::extract::MAX_SOURCE_BYTES)
+        ));
+    }
+    let cached = |cache: &mut Vec<Extracted>| {
+        let i = cache
+            .iter()
+            .position(|e| e.path == path && e.stamp == stamp)?;
+        let entry = cache.remove(i);
+        let text = entry.text.clone();
+        cache.insert(0, entry);
+        Some(text)
+    };
+    if let Some(text) = cached(&mut EXTRACTED.lock().unwrap()) {
+        return Ok(text);
+    }
+    // Extracted outside the lock: a slow PDF holds up no other read.
+    let ext = crate::extract::extension_of(path);
+    let text = crate::extract::document_text(path, &ext)
+        .unwrap_or_else(|| Err("It isn't a document Textus can read.".to_string()))?;
+    if text.trim().is_empty() {
+        return Err("It has no readable text.".to_string());
+    }
+    let text = Arc::new(text);
+    let mut cache = EXTRACTED.lock().unwrap();
+    cache.retain(|e| e.path != path);
+    cache.insert(
+        0,
+        Extracted {
+            path: path.to_path_buf(),
+            stamp,
+            text: text.clone(),
+        },
+    );
+    let mut total = 0;
+    let keep = cache
+        .iter()
+        .take(MAX_CACHED_DOCUMENTS)
+        .take_while(|e| {
+            total += e.text.len();
+            total <= MAX_CACHED_BYTES
+        })
+        .count()
+        .max(1);
+    cache.truncate(keep);
+    Ok(text)
+}
+
+/// A character's weight in MAX_READ_UNITS: Chinese, Japanese and Korean
+/// characters are about a token each where English takes about four
+/// letters to one, so they count 3.
+fn char_units(c: char) -> usize {
+    match c {
+        '\u{1100}'..='\u{11ff}'
+        | '\u{2e80}'..='\u{9fff}'
+        | '\u{ac00}'..='\u{d7af}'
+        | '\u{f900}'..='\u{faff}'
+        | '\u{ff00}'..='\u{ffef}'
+        | '\u{20000}'..='\u{3ffff}' => 3,
+        _ => 1,
     }
 }
 
-/// Case-insensitive line search across the project's text files, as
-/// `path:line: text`. Capped so a common word can't flood the context.
+/// A line's weight in MAX_READ_UNITS, its line break included.
+fn line_units(line: &str) -> usize {
+    line.chars().map(char_units).sum::<usize>() + 1
+}
+
+/// Which lines read_file shows: 1-based and inclusive, as search_files and
+/// read_document number them. None reads from the start / to the end.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct LineRange {
+    pub start: Option<usize>,
+    pub end: Option<usize>,
+}
+
+/// read_file: `rel`'s text, or the part of it `range` asks for, at most
+/// MAX_READ_UNITS. A file that fits comes back as it is; otherwise the
+/// answer says which lines of how many it holds and how to read on.
+/// Documents are read as their extracted text, numbered the same way
+/// search_files numbers them. Images are view_image's (`images`: whether
+/// it is offered).
+pub fn read_part(root: &Path, rel: &str, range: LineRange, images: bool) -> Result<String, String> {
+    let (path, rel) = resolve(root, rel)?;
+    let text = match file_kind(&path) {
+        Some(FileKind::Image) if images => {
+            return Err(format!(
+                "`{rel}` is an image - use view_image to look at it."
+            ))
+        }
+        Some(FileKind::Image) => {
+            return Err(format!(
+                "`{rel}` is an image, and the model in use can't see images - ask the user to describe it, or to switch to a provider that can."
+            ))
+        }
+        Some(FileKind::Document) => {
+            document_text(&path).map_err(|e| format!("`{rel}` can't be read: {e}"))?
+        }
+        _ => {
+            let size = size_of(&path);
+            if size > MAX_TEXT_BYTES {
+                return Err(format!(
+                    "`{rel}` is too large to read ({}; the limit is {}).",
+                    megabytes(size),
+                    megabytes(MAX_TEXT_BYTES)
+                ));
+            }
+            Arc::new(whole_text(&path, &rel)?)
+        }
+    };
+    Ok(excerpt(&rel, &text, range))
+}
+
+/// The lines of `text` that `range` asks for, cut to MAX_READ_UNITS.
+fn excerpt(rel: &str, text: &str, range: LineRange) -> String {
+    let lines: Vec<&str> = text.lines().collect();
+    let total = lines.len();
+    if total == 0 {
+        return format!("`{rel}` is empty.");
+    }
+    let start = range.start.unwrap_or(1).clamp(1, total) - 1;
+    let end = range.end.unwrap_or(total).clamp(start + 1, total);
+    let mut out = String::new();
+    let mut used = 0;
+    let mut shown_end = start;
+    let mut long_line = false;
+    for line in &lines[start..end] {
+        let units = line_units(line);
+        if used + units > MAX_READ_UNITS {
+            // One line longer than a whole read (a PDF without line breaks,
+            // minified data): its beginning, rather than nothing at all.
+            if out.is_empty() {
+                let mut budget = MAX_READ_UNITS;
+                for c in line.chars() {
+                    let cost = char_units(c);
+                    if cost > budget {
+                        break;
+                    }
+                    budget -= cost;
+                    out.push(c);
+                }
+                out.push('\n');
+                shown_end += 1;
+                long_line = true;
+            }
+            break;
+        }
+        out.push_str(line);
+        out.push('\n');
+        used += units;
+        shown_end += 1;
+    }
+    let ranged = range.start.is_some() || range.end.is_some();
+    if !ranged && shown_end == total && !long_line {
+        return text.to_string();
+    }
+    let mut reply = format!(
+        "`{rel}`, lines {}-{shown_end} of {total}:\n{out}",
+        start + 1
+    );
+    if long_line {
+        reply.push_str(&format!(
+            "[... line {shown_end} is longer than one read can show; this is its beginning]"
+        ));
+    } else if shown_end < end {
+        let next = shown_end + 1;
+        reply.push_str(&if ranged {
+            format!("[... cut for length - continue with start_line={next}]")
+        } else {
+            format!(
+                "[... {} more lines not shown - read on with start_line={next}, or read the lines around a match search_files found]",
+                total - shown_end
+            )
+        });
+    }
+    reply.trim_end().to_string()
+}
+
+/// view_image: the image at `rel`, for the model to look at, within the
+/// size every provider accepts (crate::extract::MAX_IMAGE_BYTES). Textus
+/// has no way to shrink an image, so a larger one is refused with why.
+pub fn read_image(root: &Path, rel: &str) -> Result<aicompat::agent::ImageAttachment, String> {
+    let (path, rel) = resolve(root, rel)?;
+    let ext = crate::extract::extension_of(&path);
+    let Some(mime) = crate::extract::image_mime(&ext) else {
+        return Err(format!(
+            "`{rel}` isn't an image Textus can show (PNG, JPEG, GIF or WebP) - read_file reads text and documents."
+        ));
+    };
+    let size = size_of(&path);
+    if size > crate::extract::MAX_IMAGE_BYTES {
+        return Err(format!(
+            "`{rel}` is too large to show ({}; the limit is {}), and Textus can't make images smaller - ask the user for a smaller copy.",
+            megabytes(size),
+            megabytes(crate::extract::MAX_IMAGE_BYTES)
+        ));
+    }
+    let bytes = std::fs::read(&path).map_err(|e| format!("`{rel}` can't be read: {e}"))?;
+    Ok(aicompat::agent::ImageAttachment {
+        name: rel,
+        mime: mime.to_string(),
+        data_base64: base64::engine::general_purpose::STANDARD.encode(bytes),
+    })
+}
+
+/// Case-insensitive line search across the project's text files and
+/// documents, as `path:line: text`. Capped so a common word can't flood
+/// the context.
 pub fn search(root: &Path, query: &str) -> String {
     let needle = query.trim().to_lowercase();
     if needle.is_empty() {
         return "No query provided.".to_string();
     }
-    let walked = walk_text_files(root);
+    let walked = walk_readable_files(root, false);
     let found = search_in_order(root, &walked.files, &needle, Instant::now() + SEARCH_TIME);
     let mut hits = found.hits;
     if hits.len() > MAX_SEARCH_MATCHES {
@@ -247,21 +568,57 @@ fn search_in_order(root: &Path, files: &[String], needle: &str, deadline: Instan
 }
 
 /// One file's lines containing `needle` (lowercase), at most one more than
-/// the search returns. Files read_text refuses - too large, not UTF-8 - have
-/// none.
+/// the search returns, numbered as read_file numbers them. A text file is
+/// read a line at a time, so a book costs no more memory than a chapter; one
+/// read_file refuses - too large, not UTF-8 - has none, and so does a
+/// document that can't be extracted.
 fn matching_lines(root: &Path, rel: &str, needle: &str) -> Vec<String> {
-    let Ok(text) = read_text(root, rel) else {
+    let path = root.join(rel);
+    let mut hits = Vec::new();
+    let mut add = |number: usize, line: &str| {
+        if line.to_lowercase().contains(needle) {
+            let shown: String = line.trim().chars().take(200).collect();
+            hits.push(format!("{rel}:{number}: {shown}"));
+        }
+        hits.len() <= MAX_SEARCH_MATCHES
+    };
+    if file_kind(&path) == Some(FileKind::Document) {
+        let Ok(text) = document_text(&path) else {
+            return Vec::new();
+        };
+        for (i, line) in text.lines().enumerate() {
+            if !add(i + 1, line) {
+                break;
+            }
+        }
+        return hits;
+    }
+    if size_of(&path) > MAX_TEXT_BYTES {
+        return Vec::new();
+    }
+    let Ok(file) = std::fs::File::open(&path) else {
         return Vec::new();
     };
-    text.lines()
-        .enumerate()
-        .filter(|(_, line)| line.to_lowercase().contains(needle))
-        .take(MAX_SEARCH_MATCHES + 1)
-        .map(|(i, line)| {
-            let shown: String = line.trim().chars().take(200).collect();
-            format!("{rel}:{}: {shown}", i + 1)
-        })
-        .collect()
+    let mut reader = std::io::BufReader::new(file);
+    let mut line = String::new();
+    let mut number = 0;
+    loop {
+        line.clear();
+        match reader.read_line(&mut line) {
+            Ok(0) => break,
+            // Not UTF-8, or a NUL byte: a binary file, whatever its name.
+            Ok(_) if line.contains('\0') => return Vec::new(),
+            Ok(_) => {
+                number += 1;
+                let text = line.strip_suffix('\n').unwrap_or(&line);
+                if !add(number, text.strip_suffix('\r').unwrap_or(text)) {
+                    break;
+                }
+            }
+            Err(_) => return Vec::new(),
+        }
+    }
+    hits
 }
 
 /// A name as find_files compares it: one Unicode form (macOS hands names
@@ -274,19 +631,20 @@ fn fold_name(text: &str) -> String {
         .collect()
 }
 
-/// The project's text files whose path holds every word of `query`,
-/// ignoring case - the way the sidebar's file search finds names. Documents
-/// come first, and within them names that start with the query, then names
-/// that contain it, then paths that only hold its words; each group in walk
-/// order. At most MAX_FOUND_FILES.
-pub fn find(root: &Path, query: &str) -> String {
+/// The project files whose path holds every word of `query`, ignoring case,
+/// the way the sidebar's file search finds names; images among them when
+/// the model can see (`images`). Documents come first, and within them
+/// names that start with the query, then names that contain it, then paths
+/// that only hold its words; each group in walk order. At most
+/// MAX_FOUND_FILES.
+pub fn find(root: &Path, query: &str, images: bool) -> String {
     let whole = fold_name(query.trim());
     let words: Vec<&str> = whole.split_whitespace().collect();
     if words.is_empty() {
         return "No name provided.".to_string();
     }
     let whole = words.join(" ");
-    let walked = walk_text_files(root);
+    let walked = walk_readable_files(root, images);
     // [document: name starts, name contains, path holds; other: the same]
     let mut groups: [Vec<&str>; 6] = Default::default();
     for rel in &walked.files {
@@ -319,7 +677,7 @@ pub fn find(root: &Path, query: &str) -> String {
     let mut lines: Vec<String> = found
         .iter()
         .take(MAX_FOUND_FILES)
-        .map(|s| s.to_string())
+        .map(|s| listed(s))
         .collect();
     if found.len() > MAX_FOUND_FILES {
         lines.push(format!(
@@ -670,7 +1028,7 @@ mod tests {
         ]);
         assert_eq!(walk_text_files(dir.path()).files, ["notes.md"]);
         assert_eq!(search(dir.path(), "beta"), "notes.md:1: beta");
-        assert!(find(dir.path(), "old").starts_with("No file"));
+        assert!(find(dir.path(), "old", false).starts_with("No file"));
     }
 
     #[test]
@@ -697,14 +1055,243 @@ mod tests {
 
     #[test]
     fn search_skips_files_too_large_or_not_text() {
-        let big = format!("beta {}", "x".repeat(MAX_FILE_BYTES as usize));
-        let dir = project(&[("big.md", &big), ("small.md", "beta")]);
+        let huge = format!("beta {}", "x".repeat(MAX_TEXT_BYTES as usize));
+        let dir = project(&[
+            ("huge.md", &huge),
+            ("nul.txt", "beta\0"),
+            ("small.md", "beta"),
+        ]);
         std::fs::write(
             dir.path().join("binary.txt"),
-            [b'b', b'e', b't', b'a', 0xff, 0xfe],
+            [b'b', b'e', b't', b'a', b'\n', 0xff, 0xfe],
         )
         .unwrap();
         assert_eq!(search(dir.path(), "beta"), "small.md:1: beta");
+        assert!(
+            read_part(dir.path(), "huge.md", LineRange::default(), false)
+                .unwrap_err()
+                .contains("too large to read (16.0 MB; the limit is 16.0 MB)")
+        );
+        assert!(
+            read_part(dir.path(), "nul.txt", LineRange::default(), false)
+                .unwrap_err()
+                .contains("isn't a readable text file")
+        );
+    }
+
+    /// A book in one file: past MAX_FILE_BYTES, which an @-mention still
+    /// keeps to, read_file shows it in parts and search_files points into
+    /// it by line, the way read_file numbers lines.
+    #[test]
+    fn a_big_file_reads_in_parts_and_search_points_into_it() {
+        let book: String = (1..=6_000)
+            .map(|n| {
+                if n == 4_321 {
+                    "The lighthouse keeper's name was Abel Mora.\n".to_string()
+                } else {
+                    format!("Line {n} of the long manuscript, nothing to see here.\n")
+                }
+            })
+            .collect();
+        assert!(book.len() as u64 > MAX_FILE_BYTES);
+        let dir = project(&[("book.md", &book)]);
+        let root = dir.path();
+        assert!(
+            read_text(root, "book.md").is_err(),
+            "an @-mention still can't"
+        );
+
+        let first = read_part(root, "book.md", LineRange::default(), false).unwrap();
+        let header = first.lines().next().unwrap();
+        assert!(header.starts_with("`book.md`, lines 1-"), "{header}");
+        assert!(header.ends_with("of 6000:"), "{header}");
+        let shown: usize = header["`book.md`, lines 1-".len()..]
+            .split(' ')
+            .next()
+            .unwrap()
+            .parse()
+            .unwrap();
+        assert!(first.chars().count() <= MAX_READ_UNITS + 200);
+        assert!(first.ends_with(&format!(
+            "[... {} more lines not shown - read on with start_line={}, or read the lines around a match search_files found]",
+            6_000 - shown,
+            shown + 1
+        )));
+
+        let next = read_part(
+            root,
+            "book.md",
+            LineRange {
+                start: Some(shown + 1),
+                end: None,
+            },
+            false,
+        )
+        .unwrap();
+        assert!(next.starts_with(&format!("`book.md`, lines {}-", shown + 1)));
+        assert!(next.contains("[... cut for length - continue with start_line="));
+
+        assert_eq!(
+            search(root, "abel mora"),
+            "book.md:4321: The lighthouse keeper's name was Abel Mora."
+        );
+        let around = read_part(
+            root,
+            "book.md",
+            LineRange {
+                start: Some(4_320),
+                end: Some(4_322),
+            },
+            false,
+        )
+        .unwrap();
+        assert_eq!(
+            around,
+            "`book.md`, lines 4320-4322 of 6000:\nLine 4320 of the long manuscript, nothing to see here.\nThe lighthouse keeper's name was Abel Mora.\nLine 4322 of the long manuscript, nothing to see here."
+        );
+    }
+
+    #[test]
+    fn a_read_counts_chinese_characters_by_weight() {
+        let line = "灯塔看守人的名字叫阿贝尔，他每天傍晚都会爬上那段螺旋楼梯。".repeat(4);
+        let text = format!("{line}\n").repeat(400);
+        let dir = project(&[("书.md", &text)]);
+        let out = read_part(dir.path(), "书.md", LineRange::default(), false).unwrap();
+        let cjk = out.chars().filter(|&c| char_units(c) == 3).count();
+        assert!((12_000..=MAX_READ_UNITS / 3).contains(&cjk), "{cjk}");
+        assert!(out.contains("more lines not shown"));
+    }
+
+    #[test]
+    fn a_line_longer_than_a_read_shows_its_beginning() {
+        let dir = project(&[("one-line.txt", &"word ".repeat(20_000))]);
+        let out = read_part(dir.path(), "one-line.txt", LineRange::default(), false).unwrap();
+        assert!(out.starts_with("`one-line.txt`, lines 1-1 of 1:\nword word"));
+        assert!(
+            out.ends_with("[... line 1 is longer than one read can show; this is its beginning]")
+        );
+        assert!(out.len() < MAX_READ_UNITS + 200);
+    }
+
+    #[test]
+    fn a_small_file_reads_whole_and_a_range_says_where_it_is() {
+        let dir = project(&[("a.md", "one\ntwo\nthree\n"), ("empty.md", "")]);
+        let whole = read_part(dir.path(), "@a.md", LineRange::default(), false).unwrap();
+        assert_eq!(whole, "one\ntwo\nthree\n");
+        let range = LineRange {
+            start: Some(2),
+            end: Some(9),
+        };
+        assert_eq!(
+            read_part(dir.path(), "a.md", range, false).unwrap(),
+            "`a.md`, lines 2-3 of 3:\ntwo\nthree"
+        );
+        assert_eq!(
+            read_part(dir.path(), "empty.md", range, false).unwrap(),
+            "`empty.md` is empty."
+        );
+        assert!(read_part(dir.path(), ".", range, false)
+            .unwrap_err()
+            .contains("is a folder"));
+    }
+
+    #[test]
+    fn documents_are_listed_read_and_searched_as_their_text() {
+        let dir = project(&[
+            ("notes.md", "Harbour notes."),
+            ("broken.pdf", "%PDF-1.4 no"),
+        ]);
+        std::fs::create_dir_all(dir.path().join("research")).unwrap();
+        std::fs::write(
+            dir.path().join("research/interview.docx"),
+            crate::extract::test_docx(&["Maria Lopez, 12 March", "She takes the 6:40 bus."]),
+        )
+        .unwrap();
+        std::fs::write(dir.path().join("map.png"), [0x89, b'P', b'N', b'G']).unwrap();
+        let root = dir.path();
+        assert_eq!(
+            walk_readable_files(root, false).files,
+            ["research/interview.docx", "broken.pdf", "notes.md"]
+        );
+        assert_eq!(walk_text_files(root).files, ["notes.md"]);
+        assert_eq!(
+            read_part(root, "research/interview.docx", LineRange::default(), false).unwrap(),
+            "Maria Lopez, 12 March\nShe takes the 6:40 bus."
+        );
+        assert_eq!(
+            read_part(
+                root,
+                "research/interview.docx",
+                LineRange {
+                    start: Some(2),
+                    end: None
+                },
+                false
+            )
+            .unwrap(),
+            "`research/interview.docx`, lines 2-2 of 2:\nShe takes the 6:40 bus."
+        );
+        assert_eq!(
+            search(root, "6:40"),
+            "research/interview.docx:2: She takes the 6:40 bus."
+        );
+        assert_eq!(
+            read_part(root, "broken.pdf", LineRange::default(), false).unwrap_err(),
+            "`broken.pdf` can't be read: This PDF can't be read."
+        );
+        assert_eq!(find(root, "interview", false), "research/interview.docx");
+    }
+
+    #[test]
+    fn images_are_listed_and_shown_only_to_a_model_that_can_see() {
+        let dir = project(&[("notes.md", "")]);
+        let root = dir.path();
+        std::fs::write(root.join("map.png"), [0x89, b'P', b'N', b'G']).unwrap();
+        std::fs::write(
+            root.join("poster.jpg"),
+            vec![0u8; crate::extract::MAX_IMAGE_BYTES as usize + 1],
+        )
+        .unwrap();
+        assert_eq!(walk_readable_files(root, false).files, ["notes.md"]);
+        assert_eq!(
+            walk_readable_files(root, true).files,
+            ["map.png", "notes.md", "poster.jpg"]
+        );
+        assert_eq!(find(root, "map", true), "map.png (image)");
+        assert!(find(root, "map", false).starts_with("No file"));
+
+        let image = read_image(root, "map.png").unwrap();
+        assert_eq!(
+            (image.name.as_str(), image.mime.as_str()),
+            ("map.png", "image/png")
+        );
+        assert_eq!(image.data_base64, "iVBORw==");
+        assert_eq!(
+            read_image(root, "poster.jpg").unwrap_err(),
+            "`poster.jpg` is too large to show (6.0 MB; the limit is 6.0 MB), and Textus can't make images smaller - ask the user for a smaller copy."
+        );
+        assert!(read_image(root, "notes.md")
+            .unwrap_err()
+            .starts_with("`notes.md` isn't an image"));
+        assert!(read_image(root, "../map.png").is_err());
+        assert_eq!(
+            read_part(root, "map.png", LineRange::default(), true).unwrap_err(),
+            "`map.png` is an image - use view_image to look at it."
+        );
+        assert!(read_part(root, "map.png", LineRange::default(), false)
+            .unwrap_err()
+            .contains("can't see images"));
+    }
+
+    #[test]
+    fn a_document_is_extracted_once_per_version() {
+        let dir = project(&[]);
+        let path = dir.path().join("a.docx");
+        std::fs::write(&path, crate::extract::test_docx(&["first"])).unwrap();
+        let once = document_text(&path).unwrap();
+        assert!(Arc::ptr_eq(&once, &document_text(&path).unwrap()));
+        std::fs::write(&path, crate::extract::test_docx(&["second", "version"])).unwrap();
+        assert_eq!(document_text(&path).unwrap().as_str(), "second\nversion");
     }
 
     #[test]
@@ -726,10 +1313,10 @@ mod tests {
             ("chapter-13.md", ""),
         ]);
         assert_eq!(
-            find(dir.path(), "chapter 3"),
+            find(dir.path(), "chapter 3", false),
             "drafts/Chapter 3.md\nold-chapter-3.txt\nchapter-3/notes.md\nchapter-13.md\ndata/chapter-3.json"
         );
-        assert_eq!(find(dir.path(), "  "), "No name provided.");
+        assert_eq!(find(dir.path(), "  ", false), "No name provided.");
     }
 
     #[test]
@@ -737,7 +1324,7 @@ mod tests {
         let files: Vec<(String, &str)> = (0..60).map(|i| (format!("note-{i}.md"), "")).collect();
         let refs: Vec<(&str, &str)> = files.iter().map(|(p, b)| (p.as_str(), *b)).collect();
         let dir = project(&refs);
-        let found = find(dir.path(), "NOTE");
+        let found = find(dir.path(), "NOTE", false);
         let lines: Vec<&str> = found.lines().collect();
         assert_eq!(lines.len(), MAX_FOUND_FILES + 1);
         assert_eq!(lines[0], "note-0.md");
@@ -827,9 +1414,26 @@ mod tests {
                 out.lines().last().unwrap_or_default()
             );
         };
+        for rel in walk_readable_files(&root, false).files {
+            let path = root.join(&rel);
+            if file_kind(&path) != Some(FileKind::Document) {
+                continue;
+            }
+            let ext = crate::extract::extension_of(&path);
+            let start = Instant::now();
+            let text = crate::extract::document_text(&path, &ext).unwrap();
+            println!(
+                "extract {rel} ({} KB): {:?}, {} characters",
+                size_of(&path) / 1024,
+                start.elapsed(),
+                text.map_or(0, |t| t.chars().count())
+            );
+        }
+        // The first round extracts every document; the later ones read
+        // them from the cache.
         for _ in 0..3 {
             let start = Instant::now();
-            let walked = walk_text_files(&root);
+            let walked = walk_readable_files(&root, false);
             println!(
                 "walk: {:?}, {} text files, truncated {}",
                 start.elapsed(),
@@ -838,7 +1442,7 @@ mod tests {
             );
             timed("search, rare word", &|| search(&root, rare));
             timed("search, common word", &|| search(&root, common));
-            timed("find", &|| find(&root, name));
+            timed("find", &|| find(&root, name, false));
         }
     }
 

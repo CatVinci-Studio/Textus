@@ -444,6 +444,12 @@ const REJECTED_NOTE: &str =
 /// Longest tool result kept in a case's record (the model saw all of it).
 const RECORDED_RESULT_CHARS: usize = 4_000;
 
+/// Whether the app offers images to the provider the eval runs on - the
+/// image cases need it, and a provider without would skip them.
+pub fn sees_images() -> bool {
+    crate::ai::catalog::find("anthropic").is_some_and(|e| e.supports_vision)
+}
+
 /// Runs a scripted conversation the way the app does: each message goes out
 /// with the current document (request_context), the loop runs the real
 /// tools, the stored history keeps the plain message, and before the next
@@ -459,8 +465,9 @@ pub fn run_conversation(
     let ws = setup.workspace;
     let root = ws.root.as_deref().map(Path::new);
     let tool_set =
-        // No remember tool: an eval run writes no memories.
-        tools::builtin_tools(ws.has_usable_skills(), root.is_some(), setup.mode, false);
+        // No remember tool: an eval run writes no memories. Images as the
+        // app offers them to the provider the eval runs on (Anthropic).
+        tools::builtin_tools(ws.has_usable_skills(), root.is_some(), setup.mode, false, sees_images());
     let specs = tools::tool_specs(&tool_set);
     let mut history: Vec<AgentTurn> = Vec::new();
     let mut doc = document.to_string();
@@ -509,6 +516,7 @@ pub fn run_conversation(
             skills: &ws.skills,
             ui_language: setup.ui_language,
             root,
+            sees_images: sees_images(),
             conventions: &conventions,
             library: &library,
             memory: None,
@@ -608,6 +616,7 @@ pub fn run_conversation(
                             AgentTurn::ToolResult {
                                 call_id: id,
                                 output,
+                                ..
                             } if id == call_id => Some(output.as_str()),
                             _ => None,
                         })
@@ -654,7 +663,10 @@ pub fn run_conversation(
             REJECTED_NOTE
         };
         for turn in turns.iter_mut() {
-            if let AgentTurn::ToolResult { call_id, output } = turn {
+            if let AgentTurn::ToolResult {
+                call_id, output, ..
+            } = turn
+            {
                 if proposal_ids.contains(call_id) {
                     *output = format!("{output}\n\n[{note}]");
                 }

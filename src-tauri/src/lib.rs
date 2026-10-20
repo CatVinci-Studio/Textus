@@ -18,6 +18,7 @@ mod auth;
 mod background;
 mod commands;
 mod distribution;
+mod extract;
 mod levis_import;
 #[cfg(desktop)]
 mod menu;

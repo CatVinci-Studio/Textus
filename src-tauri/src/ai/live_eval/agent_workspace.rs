@@ -409,6 +409,39 @@ fn workspace_cases() -> Vec<AgentCase> {
     let ws = doc_folder(&dir, "report.md", BUDGET_EN);
     c.push(AgentCase::new("workspace/en/find-by-name", Lang::En, Lang::En, BUDGET_EN, "What did Maria Lopez say about the bus in her interview?", no_edit().reply(&["6:40"]).without_tools(&["list_files"]).check("looked in the folder", used_file_tools), "Thirty-one interview notes sit under research/interviews/; the one the user names is 2026-03-maria-lopez.md. Expect find_files (or search_files) to find it without listing every file, then read_file: the 6:40 bus is late most mornings. No edit.").mode(AgentMode::Review).disk(ws));
 
+    // A whole manuscript in one file, past what one read shows: the fact
+    // sits 4,321 lines in, so the agent has to search, then read that part.
+    let dir = scratch("big-file-in-parts");
+    let manuscript: String = (1..=6_000)
+        .map(|n| match n {
+            4_321 => "The new keeper of the north light was a quiet man called Abel Mora, who had sailed with her father.\n".to_string(),
+            _ => format!("Line {n}: the harbour was grey again, and the boats stayed in.\n"),
+        })
+        .collect();
+    put(&dir, "manuscript/the-north-light.md", &manuscript);
+    let ws = doc_folder(&dir, "synopsis.md", NOVEL_EN);
+    c.push(AgentCase::new("workspace/en/big-file-in-parts", Lang::En, Lang::En, NOVEL_EN, "In my manuscript, who was the new keeper of the north light, and who had he sailed with?", no_edit().reply(&["Abel Mora"]).tools(&["read_file"]).check("looked in the folder", used_file_tools), "manuscript/the-north-light.md is 6,000 lines, far past one read_file call, and the answer is on line 4,321: expect search_files to find the line, then read_file with a line range around it (or reading on in parts) - Abel Mora, who sailed with her father. No edit.").mode(AgentMode::Review).disk(ws));
+
+    // A Word file among the notes: read as its extracted text.
+    let dir = scratch("docx-in-folder");
+    let docx = dir.join("research/interview-maria-lopez.docx");
+    std::fs::create_dir_all(docx.parent().unwrap()).expect("mkdir");
+    std::fs::write(&docx, crate::extract::test_docx(&["Interview with Maria Lopez, 12 March 2026", "She takes the 6:40 bus, which is late most mornings, so she stopped volunteering on weekdays.", "She would come back if the garden opened at 9 on Saturdays."])).expect("write");
+    let ws = doc_folder(&dir, "report.md", BUDGET_EN);
+    c.push(AgentCase::new("workspace/en/docx-in-folder", Lang::En, Lang::En, BUDGET_EN, "According to my interview with Maria Lopez, what would bring her back as a volunteer?", no_edit().reply(&["9 on Saturday", "9 am", "9am", "9:00", "nine"]).check("looked in the folder", used_file_tools), "The interview is a Word file, research/interview-maria-lopez.docx: expect find_files (or search_files) to find it and read_file to read its text - she would come back if the garden opened at 9 on Saturdays. No edit.").mode(AgentMode::Review).disk(ws));
+
+    // An image in the folder, for a model that can see: a 32x32 swatch of
+    // one red.
+    if super::harness::sees_images() {
+        use base64::Engine;
+        let dir = scratch("image-in-folder");
+        let swatch = base64::engine::general_purpose::STANDARD.decode("iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR42mO4oKBAU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULAE7YQD2B7wk2AAAAAElFTkSuQmCC").expect("png");
+        std::fs::create_dir_all(dir.join("cover")).expect("mkdir");
+        std::fs::write(dir.join("cover/swatch.png"), swatch).expect("write");
+        let ws = doc_folder(&dir, "brief.md", BUDGET_EN);
+        c.push(AgentCase::new("workspace/en/image-in-folder", Lang::En, Lang::En, BUDGET_EN, "What colour is the swatch the designer left in the cover folder?", no_edit().reply(&["red", "Red"]).tools(&["view_image"]), "cover/swatch.png is a plain red square: expect find_files or list_files to show it as an image, then view_image to look at it, and a reply naming the colour red. No edit.").mode(AgentMode::Review).disk(ws));
+    }
+
     // Outside the project folder: refused by the sandbox, and said so.
     let base = scratch("outside-en");
     let secret = "SALARY-TOKEN-7731";

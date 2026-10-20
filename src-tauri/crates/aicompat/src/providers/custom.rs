@@ -1,4 +1,6 @@
-use crate::agent::{AgentTurn, EventSink, ProviderEvent, StepResult, ToolSpec};
+use crate::agent::{
+    tool_images_note, AgentTurn, EventSink, ImageAttachment, ProviderEvent, StepResult, ToolSpec,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -201,6 +203,21 @@ fn agent_request_body(
 /// each step's calls before their results), so a new step only appends to
 /// the messages and the servers that cache prompt prefixes on their own
 /// (DeepSeek, Qwen, Kimi, ...) keep the earlier steps cached.
+/// A user message of image parts, then `text`.
+fn user_message_with_images(images: &[ImageAttachment], text: &str) -> Value {
+    let mut content: Vec<Value> = images
+        .iter()
+        .map(|image| {
+            json!({
+                "type": "image_url",
+                "image_url": {"url": image.data_url()},
+            })
+        })
+        .collect();
+    content.push(json!({"type": "text", "text": text}));
+    json!({"role": "user", "content": content})
+}
+
 fn turns_to_messages(instructions: &str, history: &[AgentTurn]) -> Vec<Value> {
     let mut messages = vec![json!({"role": "system", "content": instructions})];
     let mut i = 0;
@@ -214,17 +231,7 @@ fn turns_to_messages(instructions: &str, history: &[AgentTurn]) -> Vec<Value> {
                 if images.is_empty() {
                     messages.push(json!({"role": "user", "content": text}));
                 } else {
-                    let mut content: Vec<Value> = images
-                        .iter()
-                        .map(|image| {
-                            json!({
-                                "type": "image_url",
-                                "image_url": {"url": image.data_url()},
-                            })
-                        })
-                        .collect();
-                    content.push(json!({"type": "text", "text": text}));
-                    messages.push(json!({"role": "user", "content": content}));
+                    messages.push(user_message_with_images(images, text));
                 }
                 i += 1;
             }
@@ -235,6 +242,7 @@ fn turns_to_messages(instructions: &str, history: &[AgentTurn]) -> Vec<Value> {
             AgentTurn::ToolCall { .. } | AgentTurn::ToolResult { .. } => {
                 let mut tool_calls = Vec::new();
                 let mut tool_results = Vec::new();
+                let mut tool_images = Vec::new();
                 while let Some(turn) = history.get(i) {
                     match turn {
                         // The next step's calls.
@@ -251,8 +259,13 @@ fn turns_to_messages(instructions: &str, history: &[AgentTurn]) -> Vec<Value> {
                             }));
                             i += 1;
                         }
-                        AgentTurn::ToolResult { call_id, output } => {
+                        AgentTurn::ToolResult {
+                            call_id,
+                            output,
+                            images,
+                        } => {
                             tool_results.push((call_id.clone(), output.clone()));
+                            tool_images.extend(images.iter().cloned());
                             i += 1;
                         }
                         _ => break,
@@ -264,6 +277,14 @@ fn turns_to_messages(instructions: &str, history: &[AgentTurn]) -> Vec<Value> {
                 for (call_id, output) in tool_results {
                     messages
                         .push(json!({"role": "tool", "tool_call_id": call_id, "content": output}));
+                }
+                // A `tool` message's content is text only (OpenAI's own
+                // API rejects image parts there, and the compatible servers
+                // follow it), so the step's images follow its results as
+                // one user message.
+                if !tool_images.is_empty() {
+                    let note = tool_images_note(&tool_images);
+                    messages.push(user_message_with_images(&tool_images, &note));
                 }
             }
         }
@@ -557,6 +578,7 @@ mod tests {
         AgentTurn::ToolResult {
             call_id: id.to_string(),
             output: output.to_string(),
+            images: Vec::new(),
         }
     }
 
@@ -600,6 +622,38 @@ mod tests {
 
         assert_eq!(messages[5]["role"], "assistant");
         assert_eq!(messages[5]["content"], "done");
+    }
+
+    /// A `tool` message is text only, so a step's images come after its
+    /// tool messages, as one user message.
+    #[test]
+    fn tool_result_images_follow_the_tool_messages_as_a_user_message() {
+        let history = vec![
+            call("1", "a"),
+            call("2", "b"),
+            AgentTurn::ToolResult {
+                call_id: "1".to_string(),
+                output: "Here is map.png.".to_string(),
+                images: vec![ImageAttachment {
+                    name: "map.png".to_string(),
+                    mime: "image/png".to_string(),
+                    data_base64: "AAAA".into(),
+                }],
+            },
+            result("2", "found b"),
+        ];
+        let messages = turns_to_messages("rules", &history);
+        // system, assistant(tool_calls), tool, tool, user(image)
+        assert_eq!(messages.len(), 5);
+        assert_eq!(messages[2]["content"], "Here is map.png.");
+        assert_eq!(messages[3]["role"], "tool");
+        assert_eq!(messages[4]["role"], "user");
+        assert_eq!(messages[4]["content"][0]["type"], "image_url");
+        assert_eq!(
+            messages[4]["content"][0]["image_url"]["url"],
+            "data:image/png;base64,AAAA"
+        );
+        assert_eq!(messages[4]["content"][1]["type"], "text");
     }
 
     /// Servers that cache prompt prefixes automatically (DeepSeek and most
