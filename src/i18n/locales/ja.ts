@@ -548,6 +548,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentRetry: "再試行",
   agentThinking: "考え中…",
   agentDeepThinking: "じっくり考える",
+  agentDeepThinkingHint: `じっくり考える：オンにすると、${AI_NAME} は時間をかけて考えてから答えます`,
+  toggleOnHint: "{label}（オン・もう一度クリックでオフ）",
   agentThinkingFor: { other: "考え中 · {n} 秒" },
   agentThoughtFor: { other: "{n} 秒考えました" },
   chatHistoryOpen: "履歴",

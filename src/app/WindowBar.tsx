@@ -3,6 +3,7 @@ import { AssistantIcon } from "../ui/icons";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./app-menu-model";
 import { AppMenuButton } from "./WindowControls";
+import { Tooltip } from "../ui/Tooltip";
 
 /**
  * The window's one top strip: traffic-light room, which document this
@@ -61,16 +62,17 @@ export function WindowBar({
           {words > 0 && `${words} ${t.wordsUnit}`}
         </span>
         {showAgentToggle && (
-          <button
-            type="button"
-            className={`window-bar-toggle${agentOpen ? " window-bar-toggle-on" : ""}`}
-            aria-pressed={agentOpen}
-            aria-label={t.agentPanelTitle}
-            title={`${t.agentPanelTitle} (${agentShortcut})`}
-            onClick={onToggleAgent}
-          >
-            <AssistantIcon />
-          </button>
+          <Tooltip text={`${t.agentPanelTitle} (${agentShortcut})`}>
+            <button
+              type="button"
+              className={`window-bar-toggle${agentOpen ? " window-bar-toggle-on" : ""}`}
+              aria-pressed={agentOpen}
+              aria-label={t.agentPanelTitle}
+              onClick={onToggleAgent}
+            >
+              <AssistantIcon />
+            </button>
+          </Tooltip>
         )}
       </div>
       <WindowCaptionButtons />

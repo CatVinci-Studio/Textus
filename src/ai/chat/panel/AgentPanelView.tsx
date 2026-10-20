@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { CloseIcon, DetachIcon, PlusIcon } from "../../../ui/icons";
+import { Tooltip } from "../../../ui/Tooltip";
 
 export interface AgentPanelLabels {
   title: string;
@@ -108,38 +109,41 @@ export function AgentPanelView({
         </div>
         <div className="agent-panel-actions">
           {history}
-          <button
-            type="button"
-            className="inline-chat-header-button"
-            aria-label={labels.newConversation}
-            title={labels.newConversation}
-            onClick={() => {
-              setTab("chat");
-              onNewConversation();
-            }}
-          >
-            <PlusIcon />
-          </button>
-          {onPopOut && (
+          <Tooltip text={labels.newConversation}>
             <button
               type="button"
               className="inline-chat-header-button"
-              aria-label={labels.popOut}
-              title={labels.popOut}
-              onClick={onPopOut}
+              aria-label={labels.newConversation}
+              onClick={() => {
+                setTab("chat");
+                onNewConversation();
+              }}
             >
-              <DetachIcon />
+              <PlusIcon />
             </button>
+          </Tooltip>
+          {onPopOut && (
+            <Tooltip text={labels.popOut}>
+              <button
+                type="button"
+                className="inline-chat-header-button"
+                aria-label={labels.popOut}
+                onClick={onPopOut}
+              >
+                <DetachIcon />
+              </button>
+            </Tooltip>
           )}
-          <button
-            type="button"
-            className="inline-chat-header-button"
-            aria-label={labels.close}
-            title={labels.close}
-            onClick={onClose}
-          >
-            <CloseIcon />
-          </button>
+          <Tooltip text={labels.close}>
+            <button
+              type="button"
+              className="inline-chat-header-button"
+              aria-label={labels.close}
+              onClick={onClose}
+            >
+              <CloseIcon />
+            </button>
+          </Tooltip>
         </div>
       </header>
       <div

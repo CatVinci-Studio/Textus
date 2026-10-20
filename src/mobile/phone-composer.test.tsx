@@ -55,6 +55,9 @@ const labels = {
   modeLabel: "Mode",
   webSearch: "Web search",
   deepThinking: "Deep thinking",
+  deepThinkingHint:
+    "Deep thinking: when it's on, Textus AI thinks longer before it answers",
+  toggleOnHint: "{label} (On - click again to turn it off)",
   webSearchNeedsService: "Choose a search service",
 };
 

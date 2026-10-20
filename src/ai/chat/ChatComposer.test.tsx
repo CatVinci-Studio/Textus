@@ -80,6 +80,9 @@ const labels = {
   modeLabel: "Mode",
   webSearch: "Web search",
   deepThinking: "Deep thinking",
+  deepThinkingHint:
+    "Deep thinking: when it's on, Textus AI thinks longer before it answers",
+  toggleOnHint: "{label} (On - click again to turn it off)",
   webSearchNeedsService: "Choose a search service",
 };
 
@@ -141,7 +144,7 @@ describe("ChatComposer web search", () => {
     expect(button).not.toHaveClass("needs-setup");
     fireEvent.click(button);
     expect(button).toHaveClass("needs-setup");
-    expect(button).toHaveAttribute("title", "Choose a search service");
+    expect(button).toHaveAccessibleDescription("Choose a search service");
   });
 
   it("shows no warning where the model or a service can search", () => {
@@ -381,7 +384,7 @@ describe("ChatComposer attachments", () => {
     );
     renderComposer();
 
-    fireEvent.click(screen.getByTitle("Attach a file"));
+    fireEvent.click(screen.getByLabelText("Attach a file"));
     expect(
       await screen.findByText("This PDF has no text layer."),
     ).toBeInTheDocument();
@@ -392,7 +395,7 @@ describe("ChatComposer attachments", () => {
     pickAttachmentFile.mockResolvedValue(imageAttachment);
     renderComposer();
 
-    fireEvent.click(screen.getByTitle("Attach a file"));
+    fireEvent.click(screen.getByLabelText("Attach a file"));
     expect(
       await screen.findByText("This provider can't read images."),
     ).toBeInTheDocument();
@@ -403,7 +406,7 @@ describe("ChatComposer attachments", () => {
     pickAttachmentFile.mockResolvedValue(imageAttachment);
     renderComposer();
 
-    fireEvent.click(screen.getByTitle("Attach a file"));
+    fireEvent.click(screen.getByLabelText("Attach a file"));
     expect(await screen.findByText("chart.png")).toBeInTheDocument();
   });
 
@@ -418,7 +421,7 @@ describe("ChatComposer attachments", () => {
     } satisfies ChatAttachment);
     renderComposer();
 
-    fireEvent.click(screen.getByTitle("Attach a file"));
+    fireEvent.click(screen.getByLabelText("Attach a file"));
     expect(await screen.findByText("(shortened)")).toBeInTheDocument();
   });
 
@@ -426,7 +429,7 @@ describe("ChatComposer attachments", () => {
     pickAttachmentFile.mockResolvedValue(imageAttachment);
     const { onSend } = renderComposer();
 
-    fireEvent.click(screen.getByTitle("Attach a file"));
+    fireEvent.click(screen.getByLabelText("Attach a file"));
     await screen.findByText("chart.png");
     fireEvent.change(screen.getByPlaceholderText("Ask anything"), {
       target: { value: "what is this?" },

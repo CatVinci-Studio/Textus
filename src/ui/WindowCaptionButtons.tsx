@@ -8,6 +8,7 @@ import {
   WindowRestoreIcon,
 } from "./icons";
 import { appDrawsWindowFrame } from "../platform/window-chrome";
+import { Tooltip } from "./Tooltip";
 import "./window-caption.css";
 
 /**
@@ -59,33 +60,36 @@ export function WindowCaptionButtons() {
 
   return (
     <div className="window-caption">
-      <button
-        type="button"
-        className="window-caption-button"
-        aria-label={t.windowMinimize}
-        title={t.windowMinimize}
-        onClick={() => void getCurrentWindow().minimize()}
-      >
-        <WindowMinimizeIcon />
-      </button>
-      <button
-        type="button"
-        className="window-caption-button"
-        aria-label={maximized ? t.windowRestore : t.windowMaximize}
-        title={maximized ? t.windowRestore : t.windowMaximize}
-        onClick={() => void getCurrentWindow().toggleMaximize()}
-      >
-        {maximized ? <WindowRestoreIcon /> : <WindowMaximizeIcon />}
-      </button>
-      <button
-        type="button"
-        className="window-caption-button window-caption-close"
-        aria-label={t.windowClose}
-        title={t.windowClose}
-        onClick={() => void getCurrentWindow().close()}
-      >
-        <WindowCloseIcon />
-      </button>
+      <Tooltip text={t.windowMinimize}>
+        <button
+          type="button"
+          className="window-caption-button"
+          aria-label={t.windowMinimize}
+          onClick={() => void getCurrentWindow().minimize()}
+        >
+          <WindowMinimizeIcon />
+        </button>
+      </Tooltip>
+      <Tooltip text={maximized ? t.windowRestore : t.windowMaximize}>
+        <button
+          type="button"
+          className="window-caption-button"
+          aria-label={maximized ? t.windowRestore : t.windowMaximize}
+          onClick={() => void getCurrentWindow().toggleMaximize()}
+        >
+          {maximized ? <WindowRestoreIcon /> : <WindowMaximizeIcon />}
+        </button>
+      </Tooltip>
+      <Tooltip text={t.windowClose}>
+        <button
+          type="button"
+          className="window-caption-button window-caption-close"
+          aria-label={t.windowClose}
+          onClick={() => void getCurrentWindow().close()}
+        >
+          <WindowCloseIcon />
+        </button>
+      </Tooltip>
     </div>
   );
 }

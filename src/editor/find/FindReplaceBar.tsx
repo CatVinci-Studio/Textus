@@ -4,6 +4,7 @@ import type { FindReplace } from "./useFindReplace";
 import { ArrowUpIcon, ChevronIcon, CloseIcon } from "../../ui/icons";
 import { usePresenceProps } from "../../ui/usePresence";
 import { useDockedPanelWidth } from "../../utils/hooks/useDockedPanelWidth";
+import { Tooltip } from "../../ui/Tooltip";
 import "./FindReplaceBar.css";
 
 type FindReplaceBarLabels = Pick<
@@ -74,14 +75,16 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
       onKeyDown={onBarKeyDown}
     >
       <div className="find-replace-row">
-        <button
-          type="button"
-          className={`find-replace-chevron ${replaceOpen ? "find-replace-chevron-open" : ""}`}
-          title={labels.replace}
-          onClick={() => setReplaceOpen((v) => !v)}
-        >
-          <ChevronIcon />
-        </button>
+        <Tooltip text={labels.replace}>
+          <button
+            type="button"
+            aria-label={labels.replace}
+            className={`find-replace-chevron ${replaceOpen ? "find-replace-chevron-open" : ""}`}
+            onClick={() => setReplaceOpen((v) => !v)}
+          >
+            <ChevronIcon />
+          </button>
+        </Tooltip>
         <div className="find-replace-field">
           <input
             className="find-replace-input"
@@ -97,52 +100,57 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
           >
             {countLabel}
           </span>
-          <button
-            type="button"
-            className={`find-replace-toggle ${caseSensitive ? "find-replace-toggle-active" : ""}`}
-            title={labels.matchCase}
-            onClick={findReplace.toggleCaseSensitive}
-          >
-            Aa
-          </button>
-          <button
-            type="button"
-            className={`find-replace-toggle ${useRegex ? "find-replace-toggle-active" : ""}`}
-            title={labels.useRegex}
-            onClick={findReplace.toggleUseRegex}
-          >
-            .*
-          </button>
+          <Tooltip text={labels.matchCase}>
+            <button
+              type="button"
+              className={`find-replace-toggle ${caseSensitive ? "find-replace-toggle-active" : ""}`}
+              onClick={findReplace.toggleCaseSensitive}
+            >
+              Aa
+            </button>
+          </Tooltip>
+          <Tooltip text={labels.useRegex}>
+            <button
+              type="button"
+              className={`find-replace-toggle ${useRegex ? "find-replace-toggle-active" : ""}`}
+              onClick={findReplace.toggleUseRegex}
+            >
+              .*
+            </button>
+          </Tooltip>
         </div>
         <div className="find-replace-nav">
-          <button
-            type="button"
-            onClick={findReplace.prev}
-            disabled={status.matchCount === 0}
-            aria-label={labels.findPreviousMatch}
-            title={labels.findPreviousMatch}
-          >
-            <ArrowUpIcon />
-          </button>
-          <button
-            type="button"
-            onClick={findReplace.next}
-            disabled={status.matchCount === 0}
-            aria-label={labels.findNextMatch}
-            title={labels.findNextMatch}
-          >
-            {/* Same arrow, flipped - see ArrowUpIcon. */}
-            <ArrowUpIcon className="find-replace-arrow-down" />
-          </button>
-          <button
-            type="button"
-            className="find-replace-close"
-            onClick={findReplace.close}
-            aria-label={labels.findClose}
-            title={labels.findClose}
-          >
-            <CloseIcon />
-          </button>
+          <Tooltip text={labels.findPreviousMatch}>
+            <button
+              type="button"
+              onClick={findReplace.prev}
+              disabled={status.matchCount === 0}
+              aria-label={labels.findPreviousMatch}
+            >
+              <ArrowUpIcon />
+            </button>
+          </Tooltip>
+          <Tooltip text={labels.findNextMatch}>
+            <button
+              type="button"
+              onClick={findReplace.next}
+              disabled={status.matchCount === 0}
+              aria-label={labels.findNextMatch}
+            >
+              {/* Same arrow, flipped - see ArrowUpIcon. */}
+              <ArrowUpIcon className="find-replace-arrow-down" />
+            </button>
+          </Tooltip>
+          <Tooltip text={labels.findClose}>
+            <button
+              type="button"
+              className="find-replace-close"
+              onClick={findReplace.close}
+              aria-label={labels.findClose}
+            >
+              <CloseIcon />
+            </button>
+          </Tooltip>
         </div>
       </div>
       {replaceOpen && (

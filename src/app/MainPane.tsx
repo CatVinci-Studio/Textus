@@ -63,6 +63,7 @@ export function MainPane({
           onDetach={canDragTabsBetweenWindows ? onDetach : undefined}
           onReorder={onReorder}
           previewTab={previewTab}
+          labels={{ close: t.menuCloseTab, add: t.menuNewFile }}
         />
       )}
 

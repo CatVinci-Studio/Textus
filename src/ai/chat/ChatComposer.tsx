@@ -55,6 +55,7 @@ import {
   useCanThinkDeeper,
 } from "./deep-thinking";
 import { Select } from "../../ui/Select";
+import { Tooltip } from "../../ui/Tooltip";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { useLatest } from "../../utils/hooks/useLatest";
 
@@ -85,6 +86,10 @@ export interface ChatComposerLabels {
   modeLabel: string;
   webSearch: string;
   deepThinking: string;
+  /** Deep thinking's tooltip: what turning it on does. */
+  deepThinkingHint: string;
+  /** A toggle's tooltip while it is on: "{label}" and how to turn it off. */
+  toggleOnHint: string;
   /** The Web search button's tooltip when nothing can search: the model
    *  can't, and no search service is set up. */
   webSearchNeedsService: string;
@@ -569,16 +574,17 @@ export function ChatComposer({
     [chipHandlers],
   );
   const dropSelectionButton = (
-    <button
-      type="button"
-      className="inline-chat-chip-remove"
-      aria-label={labels.dropSelection}
-      title={labels.dropSelection}
-      {...holdFocus}
-      onClick={() => setDroppedSelection(selectedText)}
-    >
-      <CloseIcon />
-    </button>
+    <Tooltip text={labels.dropSelection} side="above">
+      <button
+        type="button"
+        className="inline-chat-chip-remove"
+        aria-label={labels.dropSelection}
+        {...holdFocus}
+        onClick={() => setDroppedSelection(selectedText)}
+      >
+        <CloseIcon />
+      </button>
+    </Tooltip>
   );
 
   return (
@@ -698,51 +704,73 @@ export function ChatComposer({
             )}
             {!compact && (
               <>
-                <button
-                  className="inline-chat-attach"
-                  title={labels.attachFile}
-                  aria-label={labels.attachFile}
-                  onClick={attachFile}
-                >
-                  <PlusIcon />
-                </button>
-                <button
-                  type="button"
-                  className={`inline-chat-toggle inline-chat-web-search${webSearch ? " is-active" : ""}${
-                    webSearch && searchUnavailable ? " needs-setup" : ""
-                  }`}
-                  title={
+                <Tooltip text={labels.attachFile} side="above">
+                  <button
+                    className="inline-chat-attach"
+                    aria-label={labels.attachFile}
+                    onClick={attachFile}
+                  >
+                    <PlusIcon />
+                  </button>
+                </Tooltip>
+                <Tooltip
+                  side="above"
+                  description={
                     webSearch && searchUnavailable
                       ? labels.webSearchNeedsService
-                      : labels.webSearch
+                      : null
                   }
-                  aria-label={labels.webSearch}
-                  aria-description={
+                  text={
                     webSearch && searchUnavailable
                       ? labels.webSearchNeedsService
-                      : undefined
+                      : webSearch
+                        ? labels.toggleOnHint.replace(
+                            "{label}",
+                            labels.webSearch,
+                          )
+                        : labels.webSearch
                   }
-                  aria-pressed={webSearch}
-                  {...holdFocus}
-                  onClick={() => setWebSearch((value) => !value)}
                 >
-                  <SearchIcon />
-                </button>
-                {canThinkDeeper && (
                   <button
                     type="button"
-                    className={`inline-chat-toggle inline-chat-deep-thinking${deepThinking ? " is-active" : ""}`}
-                    title={labels.deepThinking}
-                    aria-label={labels.deepThinking}
-                    aria-pressed={deepThinking}
+                    className={`inline-chat-toggle inline-chat-web-search${webSearch ? " is-active" : ""}${
+                      webSearch && searchUnavailable ? " needs-setup" : ""
+                    }`}
+                    aria-label={labels.webSearch}
+                    aria-pressed={webSearch}
                     {...holdFocus}
-                    onClick={() => {
-                      rememberDeepThinking(!deepThinking);
-                      setDeepThinking(!deepThinking);
-                    }}
+                    onClick={() => setWebSearch((value) => !value)}
                   >
-                    <LightbulbIcon />
+                    <SearchIcon />
                   </button>
+                </Tooltip>
+                {canThinkDeeper && (
+                  <Tooltip
+                    side="above"
+                    description={labels.deepThinkingHint}
+                    text={
+                      deepThinking
+                        ? labels.toggleOnHint.replace(
+                            "{label}",
+                            labels.deepThinkingHint,
+                          )
+                        : labels.deepThinkingHint
+                    }
+                  >
+                    <button
+                      type="button"
+                      className={`inline-chat-toggle inline-chat-deep-thinking${deepThinking ? " is-active" : ""}`}
+                      aria-label={labels.deepThinking}
+                      aria-pressed={deepThinking}
+                      {...holdFocus}
+                      onClick={() => {
+                        rememberDeepThinking(!deepThinking);
+                        setDeepThinking(!deepThinking);
+                      }}
+                    >
+                      <LightbulbIcon />
+                    </button>
+                  </Tooltip>
                 )}
               </>
             )}

@@ -554,6 +554,8 @@ export default {
   agentRetry: "Повторить",
   agentThinking: "Думает…",
   agentDeepThinking: "Глубокое размышление",
+  agentDeepThinkingHint: `Глубокое размышление: когда включено, ${AI_NAME} дольше думает, прежде чем ответить`,
+  toggleOnHint: "{label} (Включено — нажмите ещё раз, чтобы выключить)",
   agentThinkingFor: {
     one: "Думает · {n} секунду",
     few: "Думает · {n} секунды",

@@ -116,6 +116,8 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     modeLabel: t.chatModeLabel,
     webSearch: t.webSearchLabel,
     deepThinking: t.agentDeepThinking,
+    deepThinkingHint: t.agentDeepThinkingHint,
+    toggleOnHint: t.toggleOnHint,
     webSearchNeedsService: t.webSearchNeedsService,
     close: t.chatClose,
     detach: t.chatDetach,

@@ -516,6 +516,8 @@ export default {
   agentRetry: "重試",
   agentThinking: "思考中…",
   agentDeepThinking: "深度思考",
+  agentDeepThinkingHint: `深度思考：開啟後 ${AI_NAME} 會先想得更久再回答`,
+  toggleOnHint: "{label}（已開啟，再按一下關閉）",
   agentThinkingFor: { other: "思考中 · {n} 秒" },
   agentThoughtFor: { other: "已思考 {n} 秒" },
   chatHistoryOpen: "紀錄",

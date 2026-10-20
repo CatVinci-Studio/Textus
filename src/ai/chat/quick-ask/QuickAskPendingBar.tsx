@@ -4,6 +4,7 @@ import { useCloseOnOutsideClick } from "../../../utils/hooks/useCloseOnOutsideCl
 import { Presence, PresenceDiv } from "../../../ui/usePresence";
 import { ActionSheet } from "../../../ui/ActionSheet";
 import { usePhoneLayout } from "../../../ui/usePhoneLayout";
+import { Tooltip } from "../../../ui/Tooltip";
 
 export interface QuickAskPendingBarLabels {
   proposalAccept: string;
@@ -57,29 +58,31 @@ export function QuickAskPendingBar({
     <div className="quick-ask-pending-bar">
       {total > 1 && (
         <div className="quick-ask-pending-nav">
-          <button
-            type="button"
-            className="quick-ask-pending-nav-button"
-            aria-label={labels.quickAskPrevEdit}
-            title={labels.quickAskPrevEdit}
-            onClick={onFocusPrevious}
-          >
-            ‹
-          </button>
+          <Tooltip text={labels.quickAskPrevEdit}>
+            <button
+              type="button"
+              className="quick-ask-pending-nav-button"
+              aria-label={labels.quickAskPrevEdit}
+              onClick={onFocusPrevious}
+            >
+              ‹
+            </button>
+          </Tooltip>
           <span className="quick-ask-pending-position">
             {labels.quickAskPosition
               .replace("{i}", String(focusIndex + 1))
               .replace("{n}", String(total))}
           </span>
-          <button
-            type="button"
-            className="quick-ask-pending-nav-button"
-            aria-label={labels.quickAskNextEdit}
-            title={labels.quickAskNextEdit}
-            onClick={onFocusNext}
-          >
-            ›
-          </button>
+          <Tooltip text={labels.quickAskNextEdit}>
+            <button
+              type="button"
+              className="quick-ask-pending-nav-button"
+              aria-label={labels.quickAskNextEdit}
+              onClick={onFocusNext}
+            >
+              ›
+            </button>
+          </Tooltip>
         </div>
       )}
       <div className="quick-ask-pending-actions">

@@ -538,6 +538,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentRetry: "다시 시도",
   agentThinking: "생각하는 중…",
   agentDeepThinking: "깊이 생각하기",
+  agentDeepThinkingHint: `깊이 생각하기: 켜면 ${AI_NAME}가 더 오래 생각한 뒤 답합니다`,
+  toggleOnHint: "{label} (켜짐 - 다시 클릭하면 꺼집니다)",
   agentThinkingFor: { other: "생각하는 중 · {n}초" },
   agentThoughtFor: { other: "{n}초 동안 생각함" },
   chatHistoryOpen: "기록",

@@ -11,6 +11,7 @@ import { Presence, PresenceDiv } from "../../ui/usePresence";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { basename, dirname } from "../../utils/path";
 import type { ChatSummary } from "./chat-history";
+import { Tooltip } from "../../ui/Tooltip";
 import "./chat-history-menu.css";
 
 /** Conversations by the folder their document lives in - the project they
@@ -49,18 +50,19 @@ export function ChatHistoryMenu({
   const ref = useCloseOnOutsideClick<HTMLDivElement>(close, true, open);
   return (
     <div className="chat-history-anchor" ref={ref}>
-      <button
-        type="button"
-        className={buttonClassName}
-        aria-label={t.chatHistoryOpen}
-        title={t.chatHistoryOpen}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        disabled={disabled}
-        onClick={() => setOpen(!open)}
-      >
-        <HistoryIcon />
-      </button>
+      <Tooltip text={t.chatHistoryOpen}>
+        <button
+          type="button"
+          className={buttonClassName}
+          aria-label={t.chatHistoryOpen}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          disabled={disabled}
+          onClick={() => setOpen(!open)}
+        >
+          <HistoryIcon />
+        </button>
+      </Tooltip>
       <Presence show={open} exitMs={120}>
         {open && (
           <PresenceDiv

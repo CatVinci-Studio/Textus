@@ -3,6 +3,7 @@ import { CloseIcon } from "../ui/icons";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { animate, scrollBehavior } from "../ui/motion";
 import { ListMotion, measure, play, type PendingFlip } from "../ui/flip";
+import { Tooltip } from "../ui/Tooltip";
 
 interface TabInfo {
   id: string;
@@ -34,6 +35,8 @@ interface TabBarProps {
   // tabs sliding out of its way, exactly like a within-bar reorder. On
   // release it becomes the real tab in that same slot.
   previewTab: { title: string; dirty: boolean; x: number } | null;
+  /** What the icon-only buttons' tooltips say. */
+  labels: { close: string; add: string };
 }
 
 // How far a tab must be dragged vertically, away from the bar, before it
@@ -58,6 +61,7 @@ export function TabBar({
   onDetach,
   onReorder,
   previewTab,
+  labels,
 }: TabBarProps) {
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -252,6 +256,7 @@ export function TabBar({
           tab={tab}
           tabIds={tabs.map((t) => t.id)}
           isActive={tab.id === activeTabId}
+          labels={labels}
           onActivate={onActivate}
           onClose={onClose}
           onDetach={onDetach}
@@ -268,9 +273,11 @@ export function TabBar({
           <span className="tab-pill-title">{previewTab.title}</span>
         </div>
       )}
-      <button className="tab-bar-add" data-flip-id="__add__" onClick={onAdd}>
-        +
-      </button>
+      <Tooltip text={labels.add}>
+        <button className="tab-bar-add" data-flip-id="__add__" onClick={onAdd}>
+          +
+        </button>
+      </Tooltip>
     </div>
   );
 }
@@ -285,6 +292,7 @@ function TabPill({
   tab,
   tabIds,
   isActive,
+  labels,
   onActivate,
   onClose,
   onDetach,
@@ -294,6 +302,7 @@ function TabPill({
   tab: TabInfo;
   tabIds: string[];
   isActive: boolean;
+  labels: TabBarProps["labels"];
   onActivate: (id: string) => void;
   onClose: (id: string) => void;
   onDetach?: (id: string) => void;
@@ -458,16 +467,19 @@ function TabPill({
     >
       {tab.dirty && <span className="tab-pill-dirty-dot" />}
       <span className="tab-pill-title">{title}</span>
-      <button
-        className="tab-pill-close"
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose(tab.id);
-        }}
-      >
-        <CloseIcon />
-      </button>
+      <Tooltip text={labels.close}>
+        <button
+          className="tab-pill-close"
+          aria-label={labels.close}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose(tab.id);
+          }}
+        >
+          <CloseIcon />
+        </button>
+      </Tooltip>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { CloseIcon, DetachIcon, PlusIcon } from "../../../ui/icons";
 import type { AgentMode } from "../../../settings/SettingsContext";
 import "../AgentTurnView.css";
 import "../inline-chat.css";
+import { Tooltip } from "../../../ui/Tooltip";
 
 export interface InlineChatLabels extends ChatBodyLabels, CloseConfirmLabels {
   /** Accessible name / tooltip of the header's close button. */
@@ -146,34 +147,37 @@ export function InlineChat({
     <>
       {/* Nothing to start over from on a fresh panel. */}
       {(conversation.history.length > 0 || conversation.busy) && (
+        <Tooltip text={labels.newConversation}>
+          <button
+            type="button"
+            className="inline-chat-header-button"
+            aria-label={labels.newConversation}
+            onClick={onNewConversation}
+          >
+            <PlusIcon />
+          </button>
+        </Tooltip>
+      )}
+      <Tooltip text={labels.continueInPanel}>
         <button
           type="button"
           className="inline-chat-header-button"
-          aria-label={labels.newConversation}
-          title={labels.newConversation}
-          onClick={onNewConversation}
+          aria-label={labels.continueInPanel}
+          onClick={onDetach}
         >
-          <PlusIcon />
+          <DetachIcon />
         </button>
-      )}
-      <button
-        type="button"
-        className="inline-chat-header-button"
-        aria-label={labels.continueInPanel}
-        title={labels.continueInPanel}
-        onClick={onDetach}
-      >
-        <DetachIcon />
-      </button>
-      <button
-        type="button"
-        className="inline-chat-header-button inline-chat-close"
-        aria-label={labels.close}
-        title={labels.close}
-        onClick={onRequestClose}
-      >
-        <CloseIcon />
-      </button>
+      </Tooltip>
+      <Tooltip text={labels.close}>
+        <button
+          type="button"
+          className="inline-chat-header-button inline-chat-close"
+          aria-label={labels.close}
+          onClick={onRequestClose}
+        >
+          <CloseIcon />
+        </button>
+      </Tooltip>
     </>
   );
 
