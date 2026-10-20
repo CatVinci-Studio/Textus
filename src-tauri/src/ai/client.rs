@@ -111,13 +111,20 @@ pub fn set_ai_proxy(proxy: Option<String>) -> Result<(), String> {
 // The completion contract, end to end:
 //   - context: the frontend sends the text around the CURSOR - up to the
 //     last 2000 chars before it and the first 500 after (ghost-text-plugin's
-//     MAX_CONTEXT_CHARS / MAX_AFTER_CONTEXT_CHARS), and only once there are
-//     at least 20 words/CJK chars before the cursor. Cursor-anchored, not
-//     document-anchored: completing mid-document must continue from the
-//     cursor, not from wherever the document happens to end.
+//     MAX_CONTEXT_CHARS / MAX_AFTER_CONTEXT_CHARS), and outside code only
+//     when some of it is prose (not after a diagram alone). Cursor-
+//     anchored, not document-anchored: completing mid-document must
+//     continue from the cursor, not from wherever the document happens to
+//     end.
 //   - where: CompletionHints adds the document title, the heading path to
 //     the cursor and the block type, so a list item gets an item and a
 //     section gets text about that section.
+//   - language: the language of the prose around the cursor, told
+//     outright (completion_language) - from the prose alone, with code
+//     blocks and diagram source left out, else the app's language. Left to
+//     the model, a document opening with a Mermaid diagram (Latin keywords,
+//     no prose) got continuations in a language nobody wrote (Russian, in
+//     a Chinese app).
 //   - length: one sentence for the as-you-type nudge; two to four sentences
 //     when the writer explicitly triggers a continuation.
 //   - the join: a word the cursor is in or right after travels in its own
@@ -140,7 +147,7 @@ const COMPLETION_INSTRUCTIONS: &str = "You are the inline autocomplete of a mark
 The input marks the insertion point: <text-before-cursor> ends exactly at the cursor and <text-after-cursor> starts exactly there (it may be empty). When the cursor is inside a word or right after one, that word is not in <text-before-cursor> but in <word-at-cursor>, which comes right after it: the letters typed so far, with the cursor at their end. When present, <document-title>, <section> (the headings around the cursor, outermost first) and <block> (what the cursor is in) say where in the document this is. The text is plain text with its formatting removed, and what you write is inserted as plain text.
 
 Write ONLY the text to insert at the cursor:
-- When there is a <word-at-cursor>, start with that word written out in full - the same letters, finished if they are only its beginning - and go on from there; the letters already typed are removed before the writer sees your text. It may already be a whole word (for, de, the, Уроки): then write it unchanged and continue with the next words. Finish a cut-off word as the word the sentence needs (\"the extra freight co\" is cost or costs). That word alone is never the answer: always add what comes after it. Otherwise start right at the last character.
+- When there is a <word-at-cursor>, start with that word written out in full - the same letters, finished if they are only its beginning - and go on from there; the letters already typed are removed before the writer sees your text. It may already be a whole word (for, de, the): then write it unchanged and continue with the next words. Finish a cut-off word as the word the sentence needs (\"the extra freight co\" is cost or costs). That word alone is never the answer: always add what comes after it. Otherwise start right at the last character.
 - Move the text forward with what the text already supports: finish the thought, draw the consequence it sets up, give the next step or point it promises. Never invent facts the writer hasn't given - figures, names, dates, times, findings, causes, quotes, product claims, what a cited study or the writer's own interviews or analysis found or did, function or option names: where the next words would need one, stay general (\"move the meeting to another day\", not \"to next Friday\") or stop. In an empty paragraph after a heading or a finished section, open or connect with what the document already says. Never restate, summarize or paraphrase what is already written. Skip generic filler and stock phrases (pivotal, crucial, delve, \"plays a vital role\", \"not just X but Y\", 至关重要, 不仅……更……) unless the writer already writes that way.
 - Write as this writer writes: same language (including any mixing), register, person, tense, terminology and punctuation style, such as full-width punctuation in Chinese - and from the writer's side: in a letter, what they would say to the recipient, never the recipient's reply. In verse, keep each line about as long as the lines around it and don't repeat their words. After a finished sentence, what you write is a new sentence and starts like one, with a capital letter where the script has them.
 - Stay inside the block: in a list item write only the rest of that one item, in a heading only the heading, in a table cell only the cell, in a code block only code in that language and indentation. Never add a line break (except inside code), a list marker or markdown syntax such as backticks or asterisks - outside code, write plain words.
@@ -169,10 +176,61 @@ pub struct CompletionHints {
     /// separated by CANDIDATE_SEPARATOR lines.
     #[serde(default)]
     pub(crate) candidates: Option<u8>,
+    /// The prose of the context: its text without code blocks, diagram
+    /// and math source - what the language is read from.
+    #[serde(default)]
+    pub(crate) prose: Option<String>,
+    /// The app's UI language (src/i18n/langs.ts), the fallback when the
+    /// prose is too short to tell its language.
+    #[serde(default, rename = "uiLanguage")]
+    pub(crate) ui_language: Option<String>,
 }
 
 /// The line between alternative continuations in one response.
 pub(crate) const CANDIDATE_SEPARATOR: &str = "<<<>>>";
+
+/// The language the completion is written in, and whether it was read from
+/// the prose (true) or is the app's (false): the prose's when it tells
+/// (rules::detect), else the one its script alone gives - unless that is
+/// Chinese in a Chinese app, whose script variant then decides - else the
+/// UI language. None in a code block, or with neither prose nor UI
+/// language (the live eval's bare cases).
+pub(crate) fn completion_language(
+    before: &str,
+    after: &str,
+    hints: &CompletionHints,
+) -> Option<(&'static str, bool)> {
+    use crate::ai::rules::detect::{self, Lang};
+    if hints.block.as_deref() == Some(CODE_BLOCK_HINT) {
+        return None;
+    }
+    let prose = hints
+        .prose
+        .clone()
+        .unwrap_or_else(|| format!("{before}\n\n{after}"));
+    let ui = hints.ui_language.as_deref().and_then(|code| {
+        crate::ai::ui_language::UI_LANGUAGES
+            .iter()
+            .find(|l| l.code == code)
+    });
+    let name = |lang: Lang| {
+        let code = lang.ui_code();
+        crate::ai::ui_language::UI_LANGUAGES
+            .iter()
+            .find(|l| l.code == code)
+            .map(|l| l.english)
+    };
+    if let Some(lang) = detect::detect(&prose) {
+        return name(lang).map(|n| (n, true));
+    }
+    if let Some(lang) = detect::guess(&prose) {
+        let chinese_ui = ui.is_some_and(|l| l.code == "zh" || l.code == "zh-Hant");
+        if !(lang.is_chinese() && chinese_ui) {
+            return name(lang).map(|n| (n, true));
+        }
+    }
+    ui.map(|l| (l.english, false))
+}
 
 /// The completion request's user turn: the optional where-am-I tags, then
 /// the text split at the cursor, with the word the cursor is in or right
@@ -630,17 +688,26 @@ pub(crate) fn completion_prompt(
         Some("long") => COMPLETION_LENGTH_LONG,
         _ => COMPLETION_LENGTH_SHORT,
     };
+    let mut instructions = format!("{COMPLETION_INSTRUCTIONS}\n\n{length}");
+    match completion_language(before, after, hints) {
+        Some((language, true)) => instructions.push_str(&format!(
+            "\n\nLanguage: the writer's prose here is in {language}, so write in {language} (terms they mix in from other languages stay as they are). Code and diagram source in the text are not prose and don't change the language."
+        )),
+        Some((language, false)) => instructions.push_str(&format!(
+            "\n\nLanguage: the text around the cursor has too little prose to tell its language (code and diagram source are not prose), so write in {language}, the language of the writer's app."
+        )),
+        None => {}
+    }
     // The tone preset the user picked in Settings rides along after the base
     // contract. It decides the register - picking "Formal" means formal even
     // where the draft is plainer, which "write as this writer writes" used
     // to win in short completions while long ones overshot - but it can't
     // override the format, length and no-invention rules.
-    let mut instructions = match style.map(str::trim) {
-        Some(style) if !style.is_empty() => format!(
-            "{COMPLETION_INSTRUCTIONS}\n\n{length}\n\nTone the user chose in Settings: {style} It sets the register of your text in place of the writer's own; every other rule above still applies."
-        ),
-        _ => format!("{COMPLETION_INSTRUCTIONS}\n\n{length}"),
-    };
+    if let Some(style) = style.map(str::trim).filter(|s| !s.is_empty()) {
+        instructions.push_str(&format!(
+            "\n\nTone the user chose in Settings: {style} It sets the register of your text in place of the writer's own; every other rule above still applies."
+        ));
+    }
     // One request for all alternatives: cheaper than N calls, and the model
     // can make them genuinely different rather than N near-copies. The
     // length is repeated per alternative: said once, the model shortened
@@ -1132,6 +1199,84 @@ mod tests {
         assert!(grammar_instructions(None, Some("xx")).contains("the paragraph's language"));
     }
 
+    fn hints_with(prose: &str, ui: Option<&str>) -> CompletionHints {
+        CompletionHints {
+            block: Some("paragraph".into()),
+            prose: Some(prose.into()),
+            ui_language: ui.map(str::to_string),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn a_diagram_with_no_prose_around_it_completes_in_the_apps_language() {
+        let before = "graph TD\n  A[Start] --> B{Is it?}\n  B -->|Yes| C[OK]";
+        let hints = hints_with("", Some("zh"));
+        assert_eq!(
+            completion_language(before, "", &hints),
+            Some(("Chinese", false))
+        );
+        let (instructions, _) = completion_prompt(before, "", &hints, None);
+        assert!(instructions.contains("so write in Chinese, the language of the writer's app"));
+        // Without the frontend's prose (whose labels above are English
+        // words), bare diagram keywords still don't read as a language.
+        let bare = CompletionHints {
+            ui_language: Some("zh".into()),
+            ..Default::default()
+        };
+        assert_eq!(
+            completion_language("graph TD\n  A --> B\n  B --> C", "", &bare),
+            Some(("Chinese", false))
+        );
+    }
+
+    #[test]
+    fn the_prose_decides_the_language_over_the_app_and_the_code() {
+        let code = "SELECT id, name FROM users WHERE active = true ORDER BY name";
+        let zh = hints_with("这项研究在三个街区进行，我们和居民做了访谈。", Some("en"));
+        assert_eq!(completion_language(code, "", &zh), Some(("Chinese", true)));
+        let en = hints_with(
+            "The survey ran in three districts, and we talked to the people who live there.",
+            Some("zh"),
+        );
+        assert_eq!(completion_language(code, "", &en), Some(("English", true)));
+        // Too short for the detector, but its script says enough.
+        let ru = hints_with("Привет", Some("zh"));
+        assert_eq!(completion_language("", "", &ru), Some(("Russian", true)));
+        // A few ideographs: the Chinese the app is in, not a guess between
+        // Simplified and Traditional.
+        let hant = hints_with("圖表", Some("zh-Hant"));
+        assert_eq!(
+            completion_language("", "", &hant),
+            Some(("Traditional Chinese", false))
+        );
+    }
+
+    #[test]
+    fn code_and_bare_requests_get_no_language_line() {
+        let code = CompletionHints {
+            block: Some(CODE_BLOCK_HINT.into()),
+            ui_language: Some("zh".into()),
+            ..Default::default()
+        };
+        assert_eq!(completion_language("fn main() {", "", &code), None);
+        assert_eq!(
+            completion_language("", "", &CompletionHints::default()),
+            None
+        );
+        let (instructions, _) = completion_prompt("", "", &CompletionHints::default(), None);
+        assert!(!instructions.contains("Language:"));
+    }
+
+    #[test]
+    fn the_completion_prompt_has_no_example_words_in_cyrillic() {
+        // A Russian example word in the prompt is what a context with no
+        // prose of its own fell back on.
+        assert!(!COMPLETION_INSTRUCTIONS
+            .chars()
+            .any(|c| ('\u{0400}'..='\u{04ff}').contains(&c)));
+    }
+
     #[test]
     fn completion_user_text_puts_hints_before_the_cursor_split() {
         let hints = CompletionHints {
@@ -1139,7 +1284,7 @@ mod tests {
             section: vec!["Methods".into(), "Sampling".into()],
             block: Some("list item".into()),
             length: Some("short".into()),
-            candidates: None,
+            ..Default::default()
         };
         let text = completion_user_text("We took, ", "", &hints);
         assert_eq!(

@@ -71,6 +71,7 @@ export function withAiPlugins(
         model: () =>
           settings.current.writingModels[settings.current.aiProvider] || null,
         style: () => buildCompletionStyle(settings.current.completionTone),
+        uiLanguage: () => settings.current.language,
         project: () => ({
           docPath: docPath.current,
           workspaceRoot: settings.current.agentWorkspaceRoot || null,

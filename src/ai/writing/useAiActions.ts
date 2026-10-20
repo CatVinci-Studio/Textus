@@ -66,7 +66,8 @@ export function useAiActions(
   const triggerCompletion = useCallback(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      const { aiProvider, completionTone, writingModels } = getSettings();
+      const { aiProvider, completionTone, writingModels, language } =
+        getSettings();
       const style = buildCompletionStyle(completionTone);
       report(
         triggerGhostTextNow(
@@ -78,6 +79,7 @@ export function useAiActions(
             docPath: getDocPath(),
             workspaceRoot: getSettings().agentWorkspaceRoot || null,
           },
+          language,
         ),
         getT().aiWorkingCompletion,
       );

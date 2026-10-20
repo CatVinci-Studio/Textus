@@ -1,5 +1,6 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
+import { Plugin, PluginKey, type Transaction } from "@milkdown/kit/prose/state";
+import { ReplaceStep } from "@milkdown/kit/prose/transform";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent } from "../../editor/marks/enclosure";
@@ -107,29 +108,59 @@ export function completionHints(
   return { title, section, block, length };
 }
 
-function completionContext(
-  view: EditorView,
+/**
+ * The prose between two positions: the text of its textblocks, less code
+ * blocks (a Mermaid diagram's source among them) and inline atoms such as
+ * math. Keywords like `graph TD` aren't a language the writer writes in:
+ * read as one, a document opening with a diagram got continuations in
+ * Russian in a Chinese app.
+ */
+export function proseText(doc: ProseNode, from: number, to: number): string {
+  const parts: string[] = [];
+  doc.nodesBetween(from, to, (node, pos) => {
+    if (node.type.spec.code) return false;
+    if (!node.isTextblock) return true;
+    const start = Math.max(0, from - pos - 1);
+    const end = Math.min(node.content.size, to - pos - 1);
+    const text = node.textBetween(start, end, undefined, () => "");
+    if (text) parts.push(text);
+    return false;
+  });
+  return parts.join("\n\n");
+}
+
+/** Whether there are words to continue: some letter in the prose. */
+export function hasProse(prose: string): boolean {
+  return /\p{L}/u.test(prose);
+}
+
+export function completionContext(
+  doc: ProseNode,
   cursorPos: number,
-): { before: string; after: string } {
+): { before: string; after: string; prose: string } {
   // Scanned over a bounded window around the cursor, not the whole document:
   // this runs on every keystroke at a block end, BEFORE the debounce. A
   // character occupies at least one position, so a 4x-margin position window
   // always covers the characters actually kept below (block boundaries eat
   // positions without emitting characters - hence the margin, not 1x).
-  const { doc } = view.state;
-  const before = doc.textBetween(
-    Math.max(0, cursorPos - 4 * MAX_CONTEXT_CHARS),
-    cursorPos,
-    "\n\n",
+  const from = Math.max(0, cursorPos - 4 * MAX_CONTEXT_CHARS);
+  const to = Math.min(
+    doc.content.size,
+    cursorPos + 4 * MAX_AFTER_CONTEXT_CHARS,
   );
-  const after = doc.textBetween(
-    cursorPos,
-    Math.min(doc.content.size, cursorPos + 4 * MAX_AFTER_CONTEXT_CHARS),
-    "\n\n",
-  );
+  const before = doc.textBetween(from, cursorPos, "\n\n");
+  const after = doc.textBetween(cursorPos, to, "\n\n");
+  const proseBefore = proseText(doc, from, cursorPos);
+  const proseAfter = proseText(doc, cursorPos, to);
   return {
     before: before.slice(Math.max(0, before.length - MAX_CONTEXT_CHARS)),
     after: after.slice(0, MAX_AFTER_CONTEXT_CHARS),
+    prose: [
+      proseBefore.slice(Math.max(0, proseBefore.length - MAX_CONTEXT_CHARS)),
+      proseAfter.slice(0, MAX_AFTER_CONTEXT_CHARS),
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
   };
 }
 
@@ -151,7 +182,7 @@ function ghostDecoration(
    *  (after Ctrl+Right) or its next alternative: only that fades in - a
    *  continuing one stays put, it must not flash. */
   fresh = true,
-): GhostMeta {
+): Extract<GhostMeta, { type: "set" }> {
   const candidates = Array.isArray(suggestion) ? suggestion : [suggestion];
   const shown = candidates[index] ?? "";
   const decorations = [
@@ -234,6 +265,39 @@ function afterRawHtml($pos: ResolvedPos): boolean {
   return $pos.nodeBefore?.type.name === "html";
 }
 
+/** Whether a reply asked for at `cursorPos` in `doc` still belongs there
+ *  when it arrives: the document as it was (nothing typed, pasted, undone
+ *  or written in by Textus AI since), the caret where it was, no IME
+ *  composition under way (dispatching would break it) and no AI edit on
+ *  show. The caret alone said too little after an edit that asks for no
+ *  new request of its own (one mid-composition, or with an AI edit on
+ *  show): the reply then continued text that was no longer there. */
+function stillFits(
+  view: EditorView,
+  doc: ProseNode,
+  cursorPos: number,
+): boolean {
+  const { selection } = view.state;
+  return (
+    selection.empty &&
+    selection.from === cursorPos &&
+    !view.composing &&
+    !hasPendingEdits(view.state) &&
+    view.state.doc.eq(doc)
+  );
+}
+
+/** Ends the suggestion as IME input begins - its first key (keyCode 229)
+ *  or compositionstart - rather than when the committed text reaches the
+ *  document: an IME that keeps its preedit in its own window (fcitx5 can)
+ *  changes nothing in the document until the commit, and the suggestion
+ *  stayed on show the whole time. Done only while no composition is under
+ *  way yet; a transaction mid-composition would break it. */
+function dismissForIme(view: EditorView) {
+  if (view.composing || !ghostTextKey.getState(view.state)?.suggestion) return;
+  view.dispatch(view.state.tr.setMeta(ghostTextKey, { type: "clear" }));
+}
+
 /// Runs a completion request right now at the cursor and shows it as ghost
 /// text, bypassing the debounce/word-count gating the typing-triggered path
 /// uses - for manual "trigger completion" entry points (e.g. a context menu
@@ -245,6 +309,8 @@ export async function triggerGhostTextNow(
   style: string | null,
   model: string | null,
   project: { docPath: string | null; workspaceRoot: string | null },
+  /** The app's language: what to write in when there's no prose to go by. */
+  uiLanguage: string | null = null,
 ): Promise<void> {
   const { selection } = view.state;
   if (!selection.empty) throw new AiNoticeError("completion-needs-caret");
@@ -259,14 +325,17 @@ export async function triggerGhostTextNow(
   }
 
   const cursorPos = selection.from;
-  const { before, after } = completionContext(view, cursorPos);
+  const doc = view.state.doc;
+  const { before, after, prose } = completionContext(doc, cursorPos);
   // An explicit request earns more than the as-you-type nudge: a few
   // sentences carrying the paragraph on, which is what "continue writing"
   // means when someone asks for it.
   // Three alternatives on an explicit ask, cycled with Alt+[ / Alt+].
-  const hints = {
-    ...completionHints(view.state.doc, cursorPos, "long"),
+  const hints: CompletionHints = {
+    ...completionHints(doc, cursorPos, "long"),
     candidates: 3,
+    prose,
+    uiLanguage,
   };
 
   const raw = await ai.complete(
@@ -283,13 +352,12 @@ export async function triggerGhostTextNow(
       tidySuggestion(
         before,
         stripEcho(before, text),
-        isOneLineBlock(view.state.doc, cursorPos),
+        isOneLineBlock(doc, cursorPos),
       ),
     )
     .filter((text, i, all) => text.trim() && all.indexOf(text) === i);
   if (candidates.length === 0) throw new AiNoticeError("completion-empty");
-  if (view.state.selection.from !== cursorPos) return; // cursor moved while we were waiting
-  if (view.composing) return; // mid-IME - dispatching now would break the composition
+  if (!stillFits(view, doc, cursorPos)) return;
 
   view.dispatch(
     view.state.tr.setMeta(
@@ -332,6 +400,49 @@ const CLEARED: GhostState = {
   from: 0,
 };
 
+/**
+ * The suggestion left after an edit that typed exactly its next characters
+ * at its spot (" w" of " works" leaves "orks"), or null when the edit was
+ * anything else. Alternatives that don't start with the typed text drop
+ * out. An IME's preedit never matches (pinyin isn't the Chinese it turns
+ * into); its commit can.
+ */
+export function typedThrough(
+  tr: Transaction,
+  prev: Pick<GhostState, "suggestion" | "candidates" | "index" | "from">,
+): GhostState | null {
+  if (!prev.suggestion || tr.steps.length !== 1) return null;
+  const step = tr.steps[0];
+  if (
+    !(step instanceof ReplaceStep) ||
+    step.from !== prev.from ||
+    step.to !== prev.from
+  )
+    return null;
+  let typed = "";
+  let onlyText = true;
+  step.slice.content.forEach((node) => {
+    if (node.isText) typed += node.text;
+    else onlyText = false;
+  });
+  const to = prev.from + typed.length;
+  if (!onlyText || !typed || !tr.selection.empty || tr.selection.from !== to)
+    return null;
+  const rest = (text: string) =>
+    text.startsWith(typed) ? text.slice(typed.length) : "";
+  const shown = rest(prev.suggestion);
+  if (!shown.trim()) return null;
+  const candidates = prev.candidates.map(rest).filter((text) => text.trim());
+  const { decoration, suggestion, index, from } = ghostDecoration(
+    tr.doc,
+    to,
+    candidates,
+    candidates.indexOf(shown),
+    false,
+  );
+  return { decoration, suggestion, candidates, index, from };
+}
+
 export function createGhostTextPlugin(options: {
   enabled: () => boolean;
   provider: () => string;
@@ -342,6 +453,9 @@ export function createGhostTextPlugin(options: {
   /** The project folder the completion takes its style profile and
    *  library from. */
   project: () => { docPath: string | null; workspaceRoot: string | null };
+  /** The app's language: what a completion is written in when the text
+   *  around the caret has too little prose to tell. */
+  uiLanguage: () => string;
   /** A suggestion was taken (Tab, a tap) - the tour's completion lesson. */
   onAccept?: () => void;
 }) {
@@ -364,7 +478,11 @@ export function createGhostTextPlugin(options: {
               const { decoration, suggestion, candidates, index, from } = meta;
               return { decoration, suggestion, candidates, index, from };
             }
-            if (meta?.type === "clear" || tr.docChanged) return CLEARED;
+            if (meta?.type === "clear") return CLEARED;
+            // Typing the suggestion's own next letters keeps the rest on
+            // offer; any other edit ends it - text that differs, a paste,
+            // an undo, an IME's preedit, a Textus AI edit going in.
+            if (tr.docChanged) return typedThrough(tr, prev) ?? CLEARED;
             // The caret moved off the suggestion: it no longer belongs where
             // the user is. Kept alive, a later Tab (say, indenting a list
             // item elsewhere) inserted it back at the old spot.
@@ -399,9 +517,16 @@ export function createGhostTextPlugin(options: {
               options.onAccept?.();
               return true;
             },
+            compositionstart(view) {
+              dismissForIme(view);
+              return false;
+            },
           },
           handleKeyDown(view, event) {
-            if (isImeKeyEvent(view, event)) return false;
+            if (isImeKeyEvent(view, event)) {
+              dismissForIme(view);
+              return false;
+            }
             const state = ghostTextKey.getState(view.state);
             if (!state?.suggestion) return false;
             if (event.key === "Escape") {
@@ -491,9 +616,18 @@ export function createGhostTextPlugin(options: {
                 view.state.selection.from === ghost.from;
               view.dom.classList.toggle("ghost-text-caret", pinned);
 
+              // Any edit or caret move makes a request still waiting out
+              // the debounce stale, whether or not a new one is asked for
+              // below - during an IME composition or an AI edit too, which
+              // return early: the old request used to go out regardless.
+              if (
+                view.state.doc !== prevState.doc ||
+                !view.state.selection.eq(prevState.selection)
+              )
+                debounced.cancel();
+
               if (accepted) {
                 accepted = false;
-                debounced.cancel();
                 return;
               }
               if (!options.enabled()) return;
@@ -514,9 +648,7 @@ export function createGhostTextPlugin(options: {
               // accepting one via Tab could land inside the other.
               if (hasPendingEdits(view.state)) return;
 
-              debounced.cancel();
-
-              const { selection } = view.state;
+              const { selection, doc } = view.state;
               if (!selection.empty) return;
 
               const $pos = selection.$from;
@@ -527,7 +659,10 @@ export function createGhostTextPlugin(options: {
               if (!atBlockEnd) return;
 
               const cursorPos = selection.from;
-              const { before, after } = completionContext(view, cursorPos);
+              const { before, after, prose } = completionContext(
+                doc,
+                cursorPos,
+              );
               // The cursor is at the end of its own paragraph, but the
               // document keeps going right after it (e.g. editing mid-
               // document) - a suggestion here would be inserted ahead of
@@ -543,6 +678,10 @@ export function createGhostTextPlugin(options: {
               // is the only real no-op case - "continue from the exact end
               // of the before-text" is meaningless with no before-text.
               if (!before.trim()) return;
+              // Outside code, a before-text of only code (a diagram's
+              // source above an empty paragraph) has no prose to continue
+              // either: what came back was text in no one's language.
+              if (!$pos.parent.type.spec.code && !hasProse(prose)) return;
 
               debounced.schedule(async (isCurrent) => {
                 let suggestion: string;
@@ -553,7 +692,11 @@ export function createGhostTextPlugin(options: {
                     after,
                     options.style(),
                     options.model(),
-                    completionHints(view.state.doc, cursorPos, "short"),
+                    {
+                      ...completionHints(doc, cursorPos, "short"),
+                      prose,
+                      uiLanguage: options.uiLanguage(),
+                    },
                     options.project(),
                   );
                 } catch (err) {
@@ -567,12 +710,11 @@ export function createGhostTextPlugin(options: {
                 suggestion = tidySuggestion(
                   before,
                   stripEcho(before, suggestion),
-                  isOneLineBlock(view.state.doc, cursorPos),
+                  isOneLineBlock(doc, cursorPos),
                 );
                 if (!suggestion?.trim()) return;
-                if (!view.hasFocus() || view.state.selection.from !== cursorPos)
+                if (!view.hasFocus() || !stillFits(view, doc, cursorPos))
                   return;
-                if (view.composing) return; // mid-IME - dispatching now would break the composition
 
                 view.dispatch(
                   view.state.tr.setMeta(
