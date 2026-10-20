@@ -867,6 +867,26 @@ br:is(.pending-delete, .pending-sentence-hot) {
   max-width: 100%;
 }
 
+/* A diagram in Textus AI's proposed text (pending-diagram.ts): a box of its
+   own in the green of new text. Until it is drawn it shows its source. */
+.pending-insert .pending-diagram {
+  cursor: default;
+  white-space: pre-wrap;
+  background: var(--revision-insert-bg);
+}
+.pending-insert .pending-diagram:not(.pending-diagram-drawn) {
+  justify-content: flex-start;
+}
+.ProseMirror[data-revision-display="final"] .pending-insert .pending-diagram {
+  background: var(--editor-code-bg);
+}
+
+/* The parts a growing diagram just gained, as new text comes in; the
+   parts it had stay as they are. */
+.pending-diagram .diagram-part-enter {
+  animation: motion-fade-in var(--dur-base) var(--ease-out) both;
+}
+
 /* A diagram Pele drew (Settings › Diagram engine) takes every colour from
    these variables, so it follows the appearance and the theme - a Typora
    one too, through the text colour it gives the page - without being drawn
