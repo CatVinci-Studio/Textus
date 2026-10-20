@@ -16,6 +16,16 @@ proof that it builds.
 - [ ] `npm run test:e2e`
 - [ ] `npm run check:native`
 
+## Window and layout
+
+<!-- REQUIRED if this touches the window bar or title bar, traffic lights,
+     dragging, full screen, the sidebar or AI panel's layout or motion, or
+     keyboard shortcuts. The e2e flows can't see these. Delete otherwise. -->
+
+- [ ] Ran the built app on macOS, windowed and full screen
+- [ ] Ran it on Windows / Linux (say which), or it doesn't change there
+- Recording:
+
 ## Exercised by hand
 
 <!-- The e2e flows run the frontend against a stand-in backend; windows,
