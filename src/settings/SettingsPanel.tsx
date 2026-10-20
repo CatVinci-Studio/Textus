@@ -47,6 +47,7 @@ import { links } from "../platform/ipc";
 import { ThemeSection } from "./sections/theme";
 import { ThemeGallerySection } from "./sections/theme-gallery";
 import { ProviderListPanel } from "./sections/providers";
+import { ImageModelSection } from "./sections/image-model";
 import {
   AgentModelSection,
   ModelListRow,
@@ -550,6 +551,7 @@ export function SettingsPanel({
                   checked={settings.enableWebSearch}
                   onChange={(v) => setSettings({ enableWebSearch: v })}
                 />
+                <ImageModelSection t={t} />
               </>
             )}
           </SettingsGroup>

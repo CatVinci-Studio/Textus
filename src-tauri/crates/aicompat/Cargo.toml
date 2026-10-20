@@ -15,4 +15,7 @@ sha2 = "0.10"
 base64 = "0.22"
 rand = "0.8"
 url = "2"
+# Image generation (images/): the download resolver and nothing else -
+# already in the tree through reqwest, so no new crates.
+tokio = { version = "1", features = ["net"] }
 tauri-plugin-oauth = "2"

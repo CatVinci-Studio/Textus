@@ -16,10 +16,20 @@ import {
 } from "../ai/revision/pending-edit-plugin";
 import { ProposalStream } from "../ai/revision/proposal-stream";
 import { isRefusal } from "../ai/revision/proposal-status";
+import { isProposalTool } from "../ai/chat/proposal";
 import type { EditProposal } from "../ai/types";
 import type { StreamEvent } from "../platform/ipc";
 import type { Settings } from "../settings/SettingsContext";
 import { prefersReducedMotion } from "../ui/motion";
+import { storeImage } from "../editor/images/image-plugin";
+import {
+  generatedImageData,
+  loadGeneratedImage,
+} from "../ai/revision/generated-images";
+import { showMessage } from "../ui/app-dialog";
+import { errorText } from "../utils/error-text";
+import { resolveStrings } from "../i18n/strings";
+import { useLatest } from "../utils/hooks/useLatest";
 
 /** The editor's side of AI edits: the pending previews (usePendingEdits),
  *  the two conversations that propose them (the panel's and Quick Ask's),
@@ -31,6 +41,7 @@ export function useEditorProposals({
   settings,
   filePath,
   onDecided,
+  requestImageName,
 }: {
   run: EditorRunner;
   pendingEditActionsRef: { current: PendingEditCallbacks };
@@ -39,8 +50,37 @@ export function useEditorProposals({
   filePath: string | null;
   /** The writer decided a proposal (useRevisionLearning). */
   onDecided?: (callId: string, changes: DecidedChange[]) => void;
+  /** Asks for an accepted picture's file name, when Settings › Images
+   *  says to ask. */
+  requestImageName: (stem: string, extension: string) => Promise<string | null>;
 }) {
-  const pendingEdits = usePendingEdits(run, onDecided);
+  const filePathRef = useLatest(filePath);
+  // An accepted picture is stored as a pasted one is (Settings › Images):
+  // into the image folder, or up to the image host.
+  const pendingEdits = usePendingEdits(run, {
+    onDecided,
+    storeImage: (image, alt) =>
+      storeImage(
+        {
+          name: alt || "image",
+          type: image.mime,
+          base64: () => Promise.resolve(image.dataBase64),
+        },
+        {
+          docPath: () => filePathRef.current,
+          settings: () => settingsRef.current,
+          requestName: requestImageName,
+          onError: () =>
+            resolveStrings(settingsRef.current.language).imageSaveFailed,
+        },
+      ),
+    onImageError: (err) => {
+      const t = resolveStrings(settingsRef.current.language);
+      void showMessage(`${t.imageSaveFailed}\n${errorText(err)}`, {
+        tone: "error",
+      });
+    },
+  });
   useEffect(() => {
     pendingEditActionsRef.current = {
       onAccept: pendingEdits.accept,
@@ -105,7 +145,20 @@ export function useEditorProposals({
         streaming?: boolean;
       }[],
       target: SelectionTarget | null,
+      fetched = false,
     ) => {
+      // A picture is shown once its bytes are here: drawn at once, never
+      // a broken image that fills in later. One the backend no longer has
+      // is shown anyway - its Accept then says so.
+      const waiting = proposals.filter(
+        (p) => p.proposal.image && !generatedImageData(p.proposal.image.id),
+      );
+      if (waiting.length > 0 && !fetched) {
+        void Promise.all(
+          waiting.map((p) => loadGeneratedImage(p.proposal.image!.id)),
+        ).then(() => addPreviews(proposals, target, true));
+        return;
+      }
       if (supersedePending.current) {
         supersedePending.current = false;
         pendingEdits.discardAll();
@@ -177,7 +230,7 @@ export function useEditorProposals({
       if (
         event.type === "turn" &&
         event.turn.kind === "ToolCall" &&
-        event.turn.name === "propose_edit"
+        isProposalTool(event.turn.name)
       )
         proposalCallIds.current.add(event.turn.call_id);
       if (

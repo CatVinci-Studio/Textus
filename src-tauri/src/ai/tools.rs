@@ -283,7 +283,7 @@ const EDIT_ACTIONS: [&str; 7] = [
 
 /// The actions that only add text - all Write mode's propose_edit offers
 /// (agent::AgentMode).
-const INSERT_ACTIONS: [&str; 4] = [
+pub(crate) const INSERT_ACTIONS: [&str; 4] = [
     "append",
     "insert_at_cursor",
     "insert_after",
@@ -495,7 +495,11 @@ fn collapse_whitespace(text: &str) -> String {
 /// it repeats, through `context` (a longer verbatim quote containing it that
 /// occurs once; the frontend resolves it the same way). The error is the
 /// tool result that tells the model how to fix its quote.
-fn check_anchor(document: &str, args: &serde_json::Value, anchor: &str) -> Result<(), String> {
+pub(crate) fn check_anchor(
+    document: &str,
+    args: &serde_json::Value,
+    anchor: &str,
+) -> Result<(), String> {
     match anchor_match_count(document, anchor) {
         0 => Err("No exact match for `anchor` in the document. Quote it exactly as it appears, including punctuation and whitespace.".to_string()),
         1 => Ok(()),

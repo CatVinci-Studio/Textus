@@ -50,6 +50,7 @@ mod doubao;
 mod grammar_cases;
 mod grammar_matrix;
 mod harness;
+mod images;
 mod tokens;
 
 use crate::ai::agent::AgentMode;

@@ -1,5 +1,6 @@
 import type { AgentTurn } from "../types";
 import { STOPPED_TOOL_RESULT } from "../chat/cancelled-turns";
+import { isProposalTool } from "../chat/proposal";
 import type { PendingStatus } from "./usePendingEdits";
 
 /**
@@ -16,18 +17,24 @@ import type { PendingStatus } from "./usePendingEdits";
  *  preview - the editor would otherwise show an edit the backend rejected
  *  ("due" for a whole sentence, round 4 of docs/design/ai-eval.md). */
 const PROPOSED_PREFIX = "Edit proposed";
+/** The same for generate_image (ai/images.rs): a picture was made. */
+const IMAGE_PROPOSED_PREFIX = "Image proposed";
 
-/** A propose_edit result that refused the proposal. Results replaced by a
+/** A propose_edit (or generate_image) result that refused the proposal. Results replaced by a
  *  stop (cancelled-turns.ts) aren't refusals: what streamed is kept. */
 export function isRefusal(output: string): boolean {
-  return !output.startsWith(PROPOSED_PREFIX) && output !== STOPPED_TOOL_RESULT;
+  return (
+    !output.startsWith(PROPOSED_PREFIX) &&
+    !output.startsWith(IMAGE_PROPOSED_PREFIX) &&
+    output !== STOPPED_TOOL_RESULT
+  );
 }
 
 /** Call ids of the propose_edit calls in `turns` whose result refused them. */
 export function refusedProposalIds(turns: AgentTurn[]): Set<string> {
   const proposals = new Set(
     turns.flatMap((t) =>
-      t.kind === "ToolCall" && t.name === "propose_edit" ? [t.call_id] : [],
+      t.kind === "ToolCall" && isProposalTool(t.name) ? [t.call_id] : [],
     ),
   );
   const refused = new Set<string>();

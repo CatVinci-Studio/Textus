@@ -19,6 +19,7 @@
 //! provider that answers 400 to the parameters is asked once more without
 //! them and then left alone for the rest of the session ([`with_fallback`]).
 
+use crate::images::ImageApi;
 use crate::providers::custom::NativeWebSearch;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -97,6 +98,9 @@ pub struct ProviderCaps {
     /// Anthropic's thinking blocks are always sent back - that is the
     /// Messages API's own rule, not a per-provider choice.
     pub replay_reasoning: bool,
+    /// How the same key asks for a picture, where the provider makes them
+    /// (aicompat::images; the image model in Settings, ai/images.rs).
+    pub image: Option<ImageApi>,
 }
 
 /// A provider id the table doesn't list - a newly added catalog entry, or
@@ -105,6 +109,7 @@ const DEFAULT_CAPS: ProviderCaps = ProviderCaps {
     thinking: ThinkingFormat::OpenAi,
     native_search: NativeSearch::None,
     replay_reasoning: false,
+    image: None,
 };
 
 const PROVIDERS: &[(&str, ProviderCaps)] = &[
@@ -114,6 +119,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::ResponsesTool,
             replay_reasoning: false,
+            image: Some(ImageApi::OpenAi),
         },
     ),
     (
@@ -122,17 +128,25 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::Anthropic,
             native_search: NativeSearch::AnthropicTool,
             replay_reasoning: false,
+            image: None,
         },
     ),
     // Gemini's OpenAI compatibility layer maps `reasoning_effort` onto its
     // thinkingConfig (thinkingLevel on Gemini 3, a budget on 2.5).
-    ("google", DEFAULT_CAPS),
+    (
+        "google",
+        ProviderCaps {
+            image: Some(ImageApi::Gemini),
+            ..DEFAULT_CAPS
+        },
+    ),
     (
         "deepseek",
         ProviderCaps {
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
             replay_reasoning: true,
+            image: None,
         },
     ),
     (
@@ -141,6 +155,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::CompatibleResponses,
             replay_reasoning: false,
+            image: None,
         },
     ),
     // Mistral rejects unknown fields, and none of its chat models think.
@@ -150,6 +165,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::None,
             native_search: NativeSearch::None,
             replay_reasoning: false,
+            image: None,
         },
     ),
     (
@@ -158,6 +174,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::ChatCompletions(NativeWebSearch::Groq),
             replay_reasoning: false,
+            image: None,
         },
     ),
     (
@@ -166,6 +183,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::OpenRouter,
             native_search: NativeSearch::ChatCompletions(NativeWebSearch::OpenRouter),
             replay_reasoning: false,
+            image: None,
         },
     ),
     (
@@ -174,6 +192,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
             replay_reasoning: true,
+            image: None,
         },
     ),
     (
@@ -182,6 +201,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::ChatCompletions(NativeWebSearch::Zhipu),
             replay_reasoning: true,
+            image: Some(ImageApi::Zhipu),
         },
     ),
     (
@@ -190,6 +210,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::Qwen,
             native_search: NativeSearch::Qwen,
             replay_reasoning: false,
+            image: Some(ImageApi::DashScope),
         },
     ),
     // Ark takes `reasoning_effort` (`none` to `max` on Seed) and maps it
@@ -201,6 +222,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::None,
             replay_reasoning: true,
+            image: Some(ImageApi::Seedream),
         },
     ),
     // Ollama's /v1 endpoint takes `reasoning_effort` and maps it onto its

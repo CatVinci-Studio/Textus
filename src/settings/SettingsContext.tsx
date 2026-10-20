@@ -265,6 +265,13 @@ export interface Settings {
   /// Offer the active provider's native server-side web search to Agent;
   /// providers without a compatible search API safely ignore it.
   enableWebSearch: boolean;
+  /// Settings > Textus AI > Image model: the service ("" for none, the
+  /// default - a picture costs money), its model ("" for its default) and,
+  /// for an OpenAI-compatible endpoint, its address. What generate_image
+  /// uses (ai/image-models.ts, src-tauri ai/images.rs).
+  imageModelProvider: string;
+  imageModel: string;
+  imageModelEndpoint: string;
   /// Settings > Textus AI > Remember automatically: Textus AI may keep
   /// requirements, preferences, style and facts it learns in a
   /// conversation (the remember tool, src-tauri ai/memory.rs, which reads
@@ -389,6 +396,9 @@ const DEFAULT_SETTINGS: Settings = {
   completionTone: "default",
   writingConventions: "automatic",
   enableWebSearch: false,
+  imageModelProvider: "",
+  imageModel: "",
+  imageModelEndpoint: "",
   rememberAutomatically: true,
   enableEditAnimation: true,
   agentExpandToWindow: false,

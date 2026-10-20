@@ -14,6 +14,7 @@ import {
 } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useSettings, type AgentMode } from "../../settings/SettingsContext";
+import { imageModelOf } from "../image-models";
 
 export interface AgentRequestOptions {
   mode: AgentMode;
@@ -34,6 +35,9 @@ export interface StreamingState {
   text: string;
   /** The exchange's thinking so far, once the model has thought. */
   thought: Thought | null;
+  /** A tool that works for a while before its call lands - generate_image,
+   *  for "Generating an image…" in place of "Thinking…". */
+  tool?: string;
 }
 
 /** The (document, message) pair behind the last failed send - lets the
@@ -117,8 +121,11 @@ export function useAgentConversation(
   };
   const [busy, setBusy] = useState(false);
   const onStreamEventRef = useLatest(onStreamEvent);
+  const { settings } = useSettings();
   // The agent is told the UI's names for things in this language.
-  const uiLanguage = useLatest(useSettings().settings.language);
+  const uiLanguage = useLatest(settings.language);
+  // generate_image is offered only with an image model.
+  const imageModel = useLatest(imageModelOf(settings));
   const [error, setError] = useState<string | null>(null);
   const [retryable, setRetryable] = useState<RetryableSend | null>(null);
   // The in-flight request's id, for stop() to cancel by - null when nothing
@@ -202,6 +209,7 @@ export function useAgentConversation(
           ]),
         },
         model: model || null,
+        imageModel: imageModel.current,
         requestId,
         onEvent: (event) => {
           if (generation !== generationRef.current) return;
@@ -237,6 +245,16 @@ export function useAgentConversation(
             // The attempt that streamed this prose came back garbled and
             // is being sent again; the new attempt streams in its place.
             setStreaming({ turns: prev?.turns ?? [], text: "", thought });
+          } else if (
+            event.type === "toolStart" &&
+            event.name === "generate_image"
+          ) {
+            setStreaming({
+              turns: prev?.turns ?? [],
+              text: "",
+              thought,
+              tool: event.name,
+            });
           } else if (event.type === "turn") {
             // Interim prose that streamed before a tool call is dropped,
             // mirroring how the backend's step parsers prefer tool calls

@@ -20,6 +20,9 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     thinking: t.agentThinking,
     thinkingFor: (n) => plural(t.agentThinkingFor, n, lang),
     thoughtFor: (n) => plural(t.agentThoughtFor, n, lang),
+    generatingImage: t.agentGeneratingImage,
+    proposalImage: t.proposalImage,
+    imageNotGenerated: t.imageNotGenerated,
     attachFile: t.agentAttachFile,
     attachmentTruncated: t.chatAttachmentTruncated,
     attachmentNoVision: t.chatAttachmentNoVision,
@@ -81,6 +84,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       check_conventions: t.toolCheckConventions,
       measure_text: t.toolMeasureText,
       remember: t.toolRemember,
+      generate_image: t.toolGenerateImage,
       // Any tool without its own line: a word, not its internal name.
       "*": t.toolWorking,
       // The edit being written, in words: Quick Ask's status line showed

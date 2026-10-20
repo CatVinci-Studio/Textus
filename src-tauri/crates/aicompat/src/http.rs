@@ -41,9 +41,7 @@ pub fn set_proxy(url: Option<String>) -> Result<(), String> {
 }
 
 fn builder() -> reqwest::ClientBuilder {
-    reqwest::Client::builder()
-        .connect_timeout(CONNECT_TIMEOUT)
-        .timeout(REQUEST_TIMEOUT)
+    with_timeouts(reqwest::Client::builder())
 }
 
 fn streaming_builder() -> reqwest::ClientBuilder {
@@ -52,12 +50,8 @@ fn streaming_builder() -> reqwest::ClientBuilder {
         .read_timeout(STREAM_READ_TIMEOUT)
 }
 
-fn with_proxy(build: fn() -> reqwest::ClientBuilder) -> reqwest::Client {
-    PROXY_URL
-        .read()
-        .unwrap()
-        .clone()
-        .and_then(|u| reqwest::Proxy::all(u).ok())
+fn with_proxy(build: impl Fn() -> reqwest::ClientBuilder) -> reqwest::Client {
+    proxy()
         .and_then(|p| build().proxy(p).build().ok())
         .or_else(|| build().build().ok())
         .unwrap_or_default()
@@ -77,6 +71,33 @@ pub(crate) fn client() -> reqwest::Client {
 /// only the per-read idle timeout guards against a hung connection.
 pub(crate) fn streaming_client() -> reqwest::Client {
     with_proxy(streaming_builder)
+}
+
+/// The configured proxy, for a client that sets up the rest itself.
+pub(crate) fn proxy() -> Option<reqwest::Proxy> {
+    PROXY_URL
+        .read()
+        .unwrap()
+        .clone()
+        .and_then(|u| reqwest::Proxy::all(u).ok())
+}
+
+/// `builder` with the whole-body request timeouts.
+pub(crate) fn with_timeouts(builder: reqwest::ClientBuilder) -> reqwest::ClientBuilder {
+    builder
+        .connect_timeout(CONNECT_TIMEOUT)
+        .timeout(REQUEST_TIMEOUT)
+}
+
+/// A whole-body client for one slow request - an image takes a model a
+/// minute or two to make, where the usual cap is for text.
+pub(crate) fn long_client(timeout: Duration) -> reqwest::Client {
+    let builder = || {
+        reqwest::Client::builder()
+            .connect_timeout(CONNECT_TIMEOUT)
+            .timeout(timeout)
+    };
+    with_proxy(builder)
 }
 
 /// Reassembles `data:` payload lines from raw SSE body chunks, whose
