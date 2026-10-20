@@ -167,8 +167,11 @@ defaults side by side with the other current models. Results land in a
 `.jsonl` and `.md` per suite. `docs/design/ai-eval.md` has the matrix, how to run
 and filter it, and the latest before/after results.
 
-The key comes from `$TEXTUS_ANTHROPIC_KEY_FILE` or `.anthropic-api-key.local`
-(git-ignored); without one every test passes vacuously. A full run costs
+Keys live in one env file, `.env.local` at the repository root (git-ignored;
+`TEXTUS_ENV_FILE` points elsewhere), one `NAME=value` per line -
+`ANTHROPIC_API_KEY`, `VOLCENGINE_ARK_API_KEY` and so on - or in the
+environment, which wins. The older `.anthropic-api-key.local` still works.
+Without a key every test passes vacuously. A full run costs
 real money - filter with `TEXTUS_EVAL_FILTER` and skip the judge with
 `TEXTUS_EVAL_JUDGE=0` while iterating. The checking code itself is
 unit-tested and runs with the normal `cargo test`.
