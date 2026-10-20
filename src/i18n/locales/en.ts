@@ -550,6 +550,8 @@ type /name in a conversation to use one.
   agentRetry: "Retry",
   agentThinking: "Thinking…",
   agentDeepThinking: "Deep thinking",
+  agentDeepThinkingHint: `Deep thinking: when it's on, ${AI_NAME} thinks longer before it answers`,
+  toggleOnHint: "{label} (On - click again to turn it off)",
   agentThinkingFor: {
     one: "Thinking · {n} second",
     other: "Thinking · {n} seconds",

@@ -21,6 +21,7 @@ import { useLongPress } from "../utils/hooks/useLongPress";
 import { FileSearch } from "./FileSearch";
 import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
+import { Tooltip } from "../ui/Tooltip";
 import "./FileTree.css";
 
 interface FileTreeProps {
@@ -84,47 +85,51 @@ export function FileTree({
       <div className="tree-main" hidden={searching}>
         <div className="tree-toolbar">
           {!isIOSApp && (
-            <button
-              className="tree-tool"
-              onClick={() => parent && onRootChange(parent)}
-              disabled={!parent}
-              title={t.treeParentFolder}
-              aria-label={t.treeParentFolder}
-            >
-              <ArrowUpIcon />
-            </button>
+            <Tooltip text={t.treeParentFolder}>
+              <button
+                className="tree-tool"
+                onClick={() => parent && onRootChange(parent)}
+                disabled={!parent}
+                aria-label={t.treeParentFolder}
+              >
+                <ArrowUpIcon />
+              </button>
+            </Tooltip>
           )}
           <span className="tree-root-label" title={root}>
             {basename(root.replace(/[\\/]+$/, "")) || root}
           </span>
           {onOpenFolder && (
-            <button
-              className="tree-tool"
-              onClick={onOpenFolder}
-              title={t.menuOpenFolder}
-              aria-label={t.menuOpenFolder}
-            >
-              <OpenFolderIcon />
-            </button>
+            <Tooltip text={t.menuOpenFolder}>
+              <button
+                className="tree-tool"
+                onClick={onOpenFolder}
+                aria-label={t.menuOpenFolder}
+              >
+                <OpenFolderIcon />
+              </button>
+            </Tooltip>
           )}
           {folder && (
+            <Tooltip text={t.menuCloseFolder}>
+              <button
+                className="tree-tool"
+                onClick={onCloseFolder}
+                aria-label={t.menuCloseFolder}
+              >
+                <CloseIcon />
+              </button>
+            </Tooltip>
+          )}
+          <Tooltip text={t.treeRefresh}>
             <button
               className="tree-tool"
-              onClick={onCloseFolder}
-              title={t.menuCloseFolder}
-              aria-label={t.menuCloseFolder}
+              onClick={() => setGeneration((g) => g + 1)}
+              aria-label={t.treeRefresh}
             >
-              <CloseIcon />
+              <RefreshIcon />
             </button>
-          )}
-          <button
-            className="tree-tool"
-            onClick={() => setGeneration((g) => g + 1)}
-            title={t.treeRefresh}
-            aria-label={t.treeRefresh}
-          >
-            <RefreshIcon />
-          </button>
+          </Tooltip>
         </div>
         <DirNode
           key={`${root}\n${generation}`}

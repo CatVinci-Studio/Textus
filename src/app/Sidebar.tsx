@@ -14,6 +14,7 @@ import type { Strings } from "../i18n/strings";
 import type { PanelMode } from "./useSidePanels";
 import type { useSidebarWidth } from "./sidebar-width";
 import type { OpenFolder } from "./useOpenFolder";
+import { Tooltip } from "../ui/Tooltip";
 
 /** The left sidebar (file tree, outline, clipboard history) and, on
  *  iPhone, the scrim behind its drawer. Its open state lives in
@@ -85,30 +86,33 @@ export function Sidebar({
               inert={closing || undefined}
             >
               <div className="sidebar-tabs">
-                <button
-                  className={`sidebar-tab ${mode === "tree" ? "sidebar-tab-active" : ""}`}
-                  onClick={() => onModeChange("tree")}
-                  title={t.treeTab}
-                  aria-label={t.treeTab}
-                >
-                  <TreeTabIcon />
-                </button>
-                <button
-                  className={`sidebar-tab ${mode === "outline" ? "sidebar-tab-active" : ""}`}
-                  onClick={() => onModeChange("outline")}
-                  title={t.outlineTab}
-                  aria-label={t.outlineTab}
-                >
-                  <OutlineTabIcon />
-                </button>
-                <button
-                  className={`sidebar-tab ${mode === "clipboard" ? "sidebar-tab-active" : ""}`}
-                  onClick={() => onModeChange("clipboard")}
-                  title={t.clipboardTab}
-                  aria-label={t.clipboardTab}
-                >
-                  <ClipboardTabIcon />
-                </button>
+                <Tooltip text={t.treeTab}>
+                  <button
+                    className={`sidebar-tab ${mode === "tree" ? "sidebar-tab-active" : ""}`}
+                    onClick={() => onModeChange("tree")}
+                    aria-label={t.treeTab}
+                  >
+                    <TreeTabIcon />
+                  </button>
+                </Tooltip>
+                <Tooltip text={t.outlineTab}>
+                  <button
+                    className={`sidebar-tab ${mode === "outline" ? "sidebar-tab-active" : ""}`}
+                    onClick={() => onModeChange("outline")}
+                    aria-label={t.outlineTab}
+                  >
+                    <OutlineTabIcon />
+                  </button>
+                </Tooltip>
+                <Tooltip text={t.clipboardTab}>
+                  <button
+                    className={`sidebar-tab ${mode === "clipboard" ? "sidebar-tab-active" : ""}`}
+                    onClick={() => onModeChange("clipboard")}
+                    aria-label={t.clipboardTab}
+                  >
+                    <ClipboardTabIcon />
+                  </button>
+                </Tooltip>
               </div>
             </div>
             <div className="sidebar-body" inert={closing || undefined}>

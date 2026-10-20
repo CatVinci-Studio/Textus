@@ -33,6 +33,7 @@ import "../../../ui/base.css";
 import "../../../ui/app-dialog.css";
 import "../AgentTurnView.css";
 import "../inline-chat.css";
+import { Tooltip } from "../../../ui/Tooltip";
 import "./chat-window.css";
 
 /** How long a send waits for the editor to answer a context request before
@@ -318,29 +319,31 @@ export function ChatWindowApp() {
         disabled={conversation.busy || !context}
         onReopen={(entry) => void reopenConversation(entry, t, reopenTarget)}
       />
-      <button
-        type="button"
-        className="inline-chat-header-button"
-        aria-label={t.chatNewConversation}
-        title={t.chatNewConversation}
-        disabled={conversation.busy}
-        onClick={() => {
-          proposalDocs.current.clear();
-          conversation.reset();
-        }}
-      >
-        <PlusIcon />
-      </button>
-      <button
-        type="button"
-        className={`inline-chat-header-button ${pinned ? "chat-window-pin-on" : ""}`}
-        aria-pressed={pinned}
-        aria-label={t.chatWindowPin}
-        title={pinned ? t.chatWindowUnpinHint : t.chatWindowPinHint}
-        onClick={() => setSettings({ pinAgentWindow: !pinned })}
-      >
-        <PinIcon />
-      </button>
+      <Tooltip text={t.chatNewConversation}>
+        <button
+          type="button"
+          className="inline-chat-header-button"
+          aria-label={t.chatNewConversation}
+          disabled={conversation.busy}
+          onClick={() => {
+            proposalDocs.current.clear();
+            conversation.reset();
+          }}
+        >
+          <PlusIcon />
+        </button>
+      </Tooltip>
+      <Tooltip text={pinned ? t.chatWindowUnpinHint : t.chatWindowPinHint}>
+        <button
+          type="button"
+          className={`inline-chat-header-button ${pinned ? "chat-window-pin-on" : ""}`}
+          aria-pressed={pinned}
+          aria-label={t.chatWindowPin}
+          onClick={() => setSettings({ pinAgentWindow: !pinned })}
+        >
+          <PinIcon />
+        </button>
+      </Tooltip>
       <WindowCaptionButtons />
     </div>
   );

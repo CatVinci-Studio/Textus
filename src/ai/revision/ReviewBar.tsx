@@ -12,6 +12,7 @@ import {
   marginViewBlocked,
   needsMargin,
 } from "./revision-display";
+import { Tooltip } from "../../ui/Tooltip";
 import "./ReviewBar.css";
 
 export interface ReviewBarLabels {
@@ -108,30 +109,34 @@ export function ReviewBar({
   const newTextNote = newText && !phone;
   const view = (
     <div className="review-bar-view" ref={menuRef}>
-      <button
-        type="button"
-        className={`review-bar-view-button${waiting ? " review-bar-view-waiting" : ""}`}
-        aria-haspopup="menu"
-        aria-expanded={menuOpen}
-        aria-label={
-          waiting
-            ? `${labels.revisionDisplayLabel}: ${displayName(shown)}`
-            : labels.revisionDisplayLabel
-        }
-        title={
+      <Tooltip
+        side="above"
+        text={
           waiting ? labels.revisionDisplayNoRoom : labels.revisionDisplayLabel
         }
-        onClick={() => setMenuOpen(!menuOpen)}
       >
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8s-2.4 4.5-6.5 4.5S1.5 8 1.5 8z" />
-          <circle cx="8" cy="8" r="2" />
-        </svg>
-        {/* The chosen view waits for room: what shows meanwhile. */}
-        {waiting && (
-          <span className="review-bar-view-name">{displayName(shown)}</span>
-        )}
-      </button>
+        <button
+          type="button"
+          className={`review-bar-view-button${waiting ? " review-bar-view-waiting" : ""}`}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          aria-label={
+            waiting
+              ? `${labels.revisionDisplayLabel}: ${displayName(shown)}`
+              : labels.revisionDisplayLabel
+          }
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8s-2.4 4.5-6.5 4.5S1.5 8 1.5 8z" />
+            <circle cx="8" cy="8" r="2" />
+          </svg>
+          {/* The chosen view waits for room: what shows meanwhile. */}
+          {waiting && (
+            <span className="review-bar-view-name">{displayName(shown)}</span>
+          )}
+        </button>
+      </Tooltip>
       {menuOpen && (
         <div
           className="review-bar-menu floating-surface"
@@ -194,15 +199,16 @@ export function ReviewBar({
   if (!counted && (stops > 1 || streaming)) setCounted(true);
   const nav = (counted || stops > 1 || streaming) && (
     <span className="review-bar-nav">
-      <button
-        type="button"
-        aria-label={labels.quickAskPrevEdit}
-        title={labels.quickAskPrevEdit}
-        disabled={stops < 2}
-        onClick={onPrevious}
-      >
-        <ChevronIcon className="review-bar-prev" />
-      </button>
+      <Tooltip text={labels.quickAskPrevEdit} side="above">
+        <button
+          type="button"
+          aria-label={labels.quickAskPrevEdit}
+          disabled={stops < 2}
+          onClick={onPrevious}
+        >
+          <ChevronIcon className="review-bar-prev" />
+        </button>
+      </Tooltip>
       <span className="review-bar-pos">
         {position < 0
           ? labels.proposalChangeCount.replace("{n}", String(stops))
@@ -210,15 +216,16 @@ export function ReviewBar({
               .replace("{i}", String(position + 1))
               .replace("{n}", String(stops))}
       </span>
-      <button
-        type="button"
-        aria-label={labels.quickAskNextEdit}
-        title={labels.quickAskNextEdit}
-        disabled={stops < 2}
-        onClick={onNext}
-      >
-        <ChevronIcon className="review-bar-next" />
-      </button>
+      <Tooltip text={labels.quickAskNextEdit} side="above">
+        <button
+          type="button"
+          aria-label={labels.quickAskNextEdit}
+          disabled={stops < 2}
+          onClick={onNext}
+        >
+          <ChevronIcon className="review-bar-next" />
+        </button>
+      </Tooltip>
     </span>
   );
   return (
@@ -233,15 +240,16 @@ export function ReviewBar({
         {nav}
         {view}
         {phone && onOpenChat && (
-          <button
-            type="button"
-            className="review-bar-chat"
-            aria-label={labels.reviewBarOpenChat}
-            title={labels.reviewBarOpenChat}
-            onClick={onOpenChat}
-          >
-            <AssistantIcon />
-          </button>
+          <Tooltip text={labels.reviewBarOpenChat} side="above">
+            <button
+              type="button"
+              className="review-bar-chat"
+              aria-label={labels.reviewBarOpenChat}
+              onClick={onOpenChat}
+            >
+              <AssistantIcon />
+            </button>
+          </Tooltip>
         )}
       </div>
       {!phone && <span className="review-bar-sep" aria-hidden="true" />}

@@ -7,6 +7,7 @@ import { HamburgerIcon } from "../ui/icons";
 import { appDrawsWindowFrame } from "../platform/window-chrome";
 import { Presence } from "../ui/usePresence";
 import { isIOSApp } from "../platform/capabilities";
+import { Tooltip } from "../ui/Tooltip";
 import "./window-controls.css";
 
 /**
@@ -56,35 +57,37 @@ export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
 
   return (
     <div ref={ref} className="window-menu-anchor">
-      <button
-        type="button"
-        className="window-caption-button window-menu-button"
-        aria-label={t.appMenu}
-        title={t.appMenu}
-        aria-haspopup="menu"
-        aria-expanded={anchor !== null}
-        onClick={(e) => {
-          if (anchor) {
-            close();
-            return;
-          }
-          if (isIOSApp) {
-            // The phone: leave the editor, which takes the keyboard and the
-            // system's "Paste | Format" bubble with it (that bubble belongs
-            // to the selection and otherwise floats over the menu), and
-            // don't hand focus back afterwards - it would only bring the
-            // keyboard back up over whatever the menu just opened.
-            (document.activeElement as HTMLElement | null)?.blur();
-            focusOnClose.current = null;
-          } else {
-            focusOnClose.current = document.activeElement as HTMLElement | null;
-          }
-          const rect = e.currentTarget.getBoundingClientRect();
-          setAnchor({ x: rect.left, y: rect.bottom + 2 });
-        }}
-      >
-        <HamburgerIcon />
-      </button>
+      <Tooltip text={t.appMenu}>
+        <button
+          type="button"
+          className="window-caption-button window-menu-button"
+          aria-label={t.appMenu}
+          aria-haspopup="menu"
+          aria-expanded={anchor !== null}
+          onClick={(e) => {
+            if (anchor) {
+              close();
+              return;
+            }
+            if (isIOSApp) {
+              // The phone: leave the editor, which takes the keyboard and the
+              // system's "Paste | Format" bubble with it (that bubble belongs
+              // to the selection and otherwise floats over the menu), and
+              // don't hand focus back afterwards - it would only bring the
+              // keyboard back up over whatever the menu just opened.
+              (document.activeElement as HTMLElement | null)?.blur();
+              focusOnClose.current = null;
+            } else {
+              focusOnClose.current =
+                document.activeElement as HTMLElement | null;
+            }
+            const rect = e.currentTarget.getBoundingClientRect();
+            setAnchor({ x: rect.left, y: rect.bottom + 2 });
+          }}
+        >
+          <HamburgerIcon />
+        </button>
+      </Tooltip>
       <Presence show={anchor !== null} exitMs={120}>
         {anchor && (
           <AppMenu x={anchor.x} y={anchor.y} onClose={close} checks={checks} />

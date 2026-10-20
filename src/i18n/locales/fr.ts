@@ -571,6 +571,8 @@ utiliser une.
   agentRetry: "Réessayer",
   agentThinking: "Réflexion…",
   agentDeepThinking: "Réflexion approfondie",
+  agentDeepThinkingHint: `Réflexion approfondie\u00a0: une fois activée, ${AI_NAME} réfléchit plus longtemps avant de répondre`,
+  toggleOnHint: "{label} (Activée\u00a0: cliquez à nouveau pour la désactiver)",
   agentThinkingFor: {
     one: "Réflexion · {n} seconde",
     many: "Réflexion · {n} de secondes",

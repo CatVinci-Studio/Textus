@@ -567,6 +567,8 @@ para usar una.
   agentRetry: "Reintentar",
   agentThinking: "Pensando…",
   agentDeepThinking: "Pensamiento profundo",
+  agentDeepThinkingHint: `Pensamiento profundo: si está activado, ${AI_NAME} piensa más antes de responder`,
+  toggleOnHint: "{label} (Activado: haz clic otra vez para desactivar)",
   agentThinkingFor: {
     one: "Pensando · {n} segundo",
     many: "Pensando · {n} de segundos",

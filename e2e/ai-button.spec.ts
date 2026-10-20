@@ -14,7 +14,7 @@ test("the AI panel's button is Textus AI, untranslated, with its shortcut in the
   // In Chinese: the product's name is not translated.
   await openApp(page, { settings: { language: "zh" } });
   const toggle = page.locator(button);
-  await expect(toggle).toHaveAttribute("title", /^Textus AI \(.+L\)$/);
+  await expect(toggle).toHaveAccessibleDescription(/^Textus AI \(.+L\)$/);
   // The robot: a head, and an antenna and two eyes.
   await expect(toggle.locator("svg rect")).toHaveCount(1);
   await expect(toggle.locator("svg circle")).toHaveCount(3);
