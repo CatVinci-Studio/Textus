@@ -6,7 +6,7 @@
 //! **Project folder** (in code, the workspace root): the folder the AI may
 //! read - the open document's own folder by default, or a chosen one (the
 //! override) - holding project files (read_file / search_files /
-//! list_files) and its `.textus/` folder: the library
+//! find_files / list_files) and its `.textus/` folder: the library
 //! (`.textus/library/*.md`, entries picked by name or alias), the writing
 //! instructions (`.textus/agent.md`) and skills (`.textus/skills/*.md`); plus
 //! the global config folder (the app config dir's `agent/`), whose writing
@@ -123,7 +123,7 @@ const CANNOT_ZH: &[&str] = &[
 fn used_file_tools(o: &TurnOutcome) -> Result<(), String> {
     o.tools
         .iter()
-        .any(|t| t == "read_file" || t == "search_files" || t == "list_files")
+        .any(|t| t == "read_file" || t == "search_files" || t == "list_files" || t == "find_files")
         .then_some(())
         .ok_or_else(|| "never looked in the project folder".into())
 }
@@ -395,6 +395,20 @@ fn workspace_cases() -> Vec<AgentCase> {
     let ws = doc_folder(&dir, "第三章.md", NOVEL_ZH);
     c.push(AgentCase::new("workspace/zh/search-chapters", Lang::ZhHans, Lang::ZhHans, NOVEL_ZH, "前面的章节里，林晚的猫叫什么名字？", no_edit().reply(&["年糕"]).check("looked in the folder", used_file_tools), "The other chapters sit in the document's folder: expect search_files/read_file to find that the cat is called 年糕 (an orange cat, chapter one), answered in Chinese without editing.").mode(AgentMode::Review).disk(ws));
 
+    // A file named in the request, deep in a folder of many: find_files
+    // finds it by name, where listing every file costs a long answer.
+    let dir = scratch("find-by-name");
+    for i in 1..=30 {
+        put(
+            &dir,
+            &format!("research/interviews/2026-0{}-resident-{i}.md", i % 9 + 1),
+            "Talked about the community garden and the weekend market.\n",
+        );
+    }
+    put(&dir, "research/interviews/2026-03-maria-lopez.md", "# Maria Lopez\n\nShe takes the 6:40 bus, which is late most mornings, so she stopped volunteering on weekdays.\n");
+    let ws = doc_folder(&dir, "report.md", BUDGET_EN);
+    c.push(AgentCase::new("workspace/en/find-by-name", Lang::En, Lang::En, BUDGET_EN, "What did Maria Lopez say about the bus in her interview?", no_edit().reply(&["6:40"]).without_tools(&["list_files"]).check("looked in the folder", used_file_tools), "Thirty-one interview notes sit under research/interviews/; the one the user names is 2026-03-maria-lopez.md. Expect find_files (or search_files) to find it without listing every file, then read_file: the 6:40 bus is late most mornings. No edit.").mode(AgentMode::Review).disk(ws));
+
     // Outside the project folder: refused by the sandbox, and said so.
     let base = scratch("outside-en");
     let secret = "SALARY-TOKEN-7731";
@@ -432,7 +446,7 @@ fn workspace_cases() -> Vec<AgentCase> {
 
     // An unsaved draft: no folder, so no file tools at all.
     let no_folder = DiskWorkspace::default();
-    c.push(AgentCase::new("workspace/en/unsaved-draft", Lang::En, Lang::En, BUDGET_EN, "Update the Costs paragraph with the figures from my notes/costs.md file.", either().check("no invented figures", no_new_numbers).check("says it can't read it", |o| says_cannot(&o.reply, CANNOT_EN)).check("says why and what to do", |o| mentions(&o.reply, &["save", "project folder", "settings"])).without_tools(&["read_file", "list_files", "search_files"]), "The document is unsaved and no project folder is chosen, so there is no folder to read (no file tools are offered). Expect the agent to say it can't open the file and ask for the figures (or to save the document in a folder / choose a project folder); no invented numbers.").disk(no_folder.clone()));
+    c.push(AgentCase::new("workspace/en/unsaved-draft", Lang::En, Lang::En, BUDGET_EN, "Update the Costs paragraph with the figures from my notes/costs.md file.", either().check("no invented figures", no_new_numbers).check("says it can't read it", |o| says_cannot(&o.reply, CANNOT_EN)).check("says why and what to do", |o| mentions(&o.reply, &["save", "project folder", "settings"])).without_tools(&["read_file", "list_files", "search_files", "find_files"]), "The document is unsaved and no project folder is chosen, so there is no folder to read (no file tools are offered). Expect the agent to say it can't open the file and ask for the figures (or to save the document in a folder / choose a project folder); no invented numbers.").disk(no_folder.clone()));
     c.push(AgentCase::new("workspace/zh/unsaved-draft", Lang::ZhHans, Lang::ZhHans, INVITE_ZH, "根据我 notes.md 里记的场地，补上活动地点。", either().lacks(&["图书馆", "多功能厅"]).check("says it can't read it", |o| says_cannot(&o.reply, CANNOT_ZH)).check("says why and what to do", |o| mentions(&o.reply, &["保存", "项目文件夹", "设置"])), "Unsaved draft, no project folder: the agent can't read notes.md. Expect a Chinese reply saying so and asking for the venue (a clearly marked placeholder is acceptable), never an invented venue.").disk(no_folder));
 
     // A chosen project folder: another folder than the document's.

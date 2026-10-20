@@ -171,6 +171,7 @@ export default {
   toolReadDocument: "閱讀「{arg}」",
   toolReadWholeDocument: "閱讀全文",
   toolSearchFiles: "在專案中搜尋「{arg}」",
+  toolFindFiles: "尋找名稱含「{arg}」的檔案",
   toolListFiles: "查看專案的檔案",
   toolReadFile: "讀取 {arg}",
   toolUseSkill: "使用技能 {arg}",

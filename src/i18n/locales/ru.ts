@@ -184,6 +184,7 @@ export default {
   toolReadDocument: "Чтение: «{arg}»",
   toolReadWholeDocument: "Чтение документа",
   toolSearchFiles: "Поиск в проекте: «{arg}»",
+  toolFindFiles: "Поиск файлов по имени: «{arg}»",
   toolListFiles: "Просмотр файлов проекта",
   toolReadFile: "Чтение файла {arg}",
   toolUseSkill: "Применение навыка {arg}",

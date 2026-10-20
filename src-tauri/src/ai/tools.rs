@@ -605,6 +605,7 @@ const READ_FILE_TOOL_NAME: &str = "read_file";
 /// blow up the prompt.
 const MAX_LISTED_FILES: usize = 200;
 const SEARCH_FILES_TOOL_NAME: &str = "search_files";
+const FIND_FILES_TOOL_NAME: &str = "find_files";
 
 /// The project folder's text files (paths relative to it). Hidden entries
 /// and build/dependency folders are skipped - see ai::project.
@@ -613,15 +614,21 @@ fn list_files(ctx: &ToolContext, _arguments: &str) -> String {
         return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to list."
             .to_string();
     };
-    let files = crate::ai::project::walk_text_files(root);
+    let walked = crate::ai::project::walk_text_files(root);
+    let files = walked.files;
     if files.is_empty() {
         return "The project folder has no text files.".to_string();
     }
     let mut lines: Vec<String> = files.iter().take(MAX_LISTED_FILES).cloned().collect();
-    if files.len() > MAX_LISTED_FILES {
+    if files.len() > MAX_LISTED_FILES || walked.truncated {
+        let more = files.len().saturating_sub(MAX_LISTED_FILES);
+        let more = if walked.truncated {
+            format!("{more} or more")
+        } else {
+            more.to_string()
+        };
         lines.push(format!(
-            "... ({} more - use search_files to find something specific)",
-            files.len() - MAX_LISTED_FILES
+            "... ({more} more - use find_files for a file by name, search_files for words inside files)"
         ));
     }
     lines.join("\n")
@@ -652,6 +659,16 @@ fn search_files(ctx: &ToolContext, arguments: &str) -> String {
             .to_string();
     };
     crate::ai::project::search(root, &path_argument(arguments, "query"))
+}
+
+/// Finds project files by name - what the sidebar's file search does for
+/// the writer, and cheaper for the model than listing everything.
+fn find_files(ctx: &ToolContext, arguments: &str) -> String {
+    let Some(root) = ctx.root else {
+        return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to find."
+            .to_string();
+    };
+    crate::ai::project::find(root, &path_argument(arguments, "name"))
 }
 
 const CHECK_CONVENTIONS_TOOL_NAME: &str = "check_conventions";
@@ -1112,6 +1129,23 @@ pub fn builtin_tools(
     if has_root {
         tools.push(Tool {
             spec: ToolSpec {
+                name: FIND_FILES_TOOL_NAME,
+                description: "Find text files in the project folder by name (case-insensitive; every word must appear in the path, so \"chapter 3\" finds drafts/chapter-3.md). Documents come first. Use it whenever you know or can guess part of a file's name - a chapter, a character's notes, an outline - instead of listing every file; then read_file.",
+                parameters: json!({
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Part of the file's name or path"
+                        }
+                    },
+                    "required": ["name"],
+                }),
+            },
+            run: find_files,
+        });
+        tools.push(Tool {
+            spec: ToolSpec {
                 name: SEARCH_FILES_TOOL_NAME,
                 description: "Search every text file in the project folder for a word or phrase (case-insensitive). Returns `path:line: text` matches - use it to find where a character, term or fact appears across chapters and notes, then read_file for the full context.",
                 parameters: json!({
@@ -1130,7 +1164,7 @@ pub fn builtin_tools(
         tools.push(Tool {
             spec: ToolSpec {
                 name: LIST_FILES_TOOL_NAME,
-                description: "List the text files in the project folder (recursively, paths relative to it). Use it to discover reference material - notes, other chapters, data - before reading one.",
+                description: "List the text files in the project folder (recursively, paths relative to it). Use it to see what reference material there is - notes, other chapters, data - when you have no name to look for; to find a file by name, use find_files instead.",
                 parameters: json!({"type": "object", "properties": {}}),
             },
             run: list_files,
@@ -1138,7 +1172,7 @@ pub fn builtin_tools(
         tools.push(Tool {
             spec: ToolSpec {
                 name: READ_FILE_TOOL_NAME,
-                description: "Read a text file from the project folder. Use the relative path as shown by list_files or search_files.",
+                description: "Read a text file from the project folder. Use the relative path as shown by find_files, search_files or list_files.",
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -1322,6 +1356,40 @@ mod tests {
                 "{names:?}"
             );
         }
+    }
+
+    #[test]
+    fn the_project_file_tools_are_offered_only_with_a_project_folder() {
+        let names = |has_root: bool| -> Vec<&str> {
+            builtin_tools(false, has_root, AgentMode::Revise, false)
+                .iter()
+                .map(|t| t.spec.name)
+                .filter(|n| n.ends_with("_files") || *n == READ_FILE_TOOL_NAME)
+                .collect()
+        };
+        assert_eq!(
+            names(true),
+            ["find_files", "search_files", "list_files", "read_file"]
+        );
+        assert!(names(false).is_empty());
+    }
+
+    #[test]
+    fn find_files_finds_project_files_by_name() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join("notes")).unwrap();
+        std::fs::write(dir.path().join("notes/Lin Wan.md"), "").unwrap();
+        std::fs::write(dir.path().join("chapter-1.md"), "").unwrap();
+        let tools = builtin_tools(false, true, AgentMode::Revise, false);
+        let in_project = ToolContext {
+            root: Some(dir.path()),
+            ..ctx("")
+        };
+        let run = |args: &str| execute(&tools, &in_project, FIND_FILES_TOOL_NAME, args);
+        assert_eq!(run(r#"{"name":"lin_wan"}"#), "notes/Lin Wan.md");
+        assert!(run(r#"{"name":"zebra"}"#).starts_with("No file in the project folder"));
+        assert!(find_files(&ctx(""), r#"{"name":"lin"}"#).starts_with("There is no project folder"));
+        assert!(list_files(&in_project, "{}").starts_with("notes/Lin Wan.md\nchapter-1.md"));
     }
 
     #[test]

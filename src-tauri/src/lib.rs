@@ -25,6 +25,7 @@ mod net;
 mod settings;
 #[cfg(desktop)]
 mod tab_drag;
+mod walk;
 
 use ai::agent::ai_agent_message;
 use ai::cancel::ai_cancel;

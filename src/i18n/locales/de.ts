@@ -187,6 +187,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolReadDocument: "Liest „{arg}“",
   toolReadWholeDocument: "Liest das Dokument",
   toolSearchFiles: "Durchsucht das Projekt nach „{arg}“",
+  toolFindFiles: "Sucht Dateien namens „{arg}“",
   toolListFiles: "Sieht sich die Projektdateien an",
   toolReadFile: "Liest {arg}",
   toolUseSkill: "Verwendet den Skill {arg}",

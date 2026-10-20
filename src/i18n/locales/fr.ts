@@ -193,6 +193,7 @@ utiliser une.
   toolReadDocument: "Lecture de «\u00a0{arg}\u00a0»",
   toolReadWholeDocument: "Lecture du document",
   toolSearchFiles: "Recherche de «\u00a0{arg}\u00a0» dans le projet",
+  toolFindFiles: "Recherche des fichiers nommés «\u00a0{arg}\u00a0»",
   toolListFiles: "Consultation des fichiers du projet",
   toolReadFile: "Lecture de {arg}",
   toolUseSkill: "Utilisation de la compétence {arg}",

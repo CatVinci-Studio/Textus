@@ -1125,6 +1125,7 @@ pub fn process_talk(reply: &str) -> Option<String> {
         "read_document",
         "search_document",
         "list_files",
+        "find_files",
         "read_file",
         "search_files",
         "use_skill",

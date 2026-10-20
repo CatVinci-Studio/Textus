@@ -102,9 +102,10 @@ pulldown-cmark = { version = "0.13", default-features = false }
 regex = "1"
 unicode-normalization = "0.1"
 unicode-segmentation = "1"
-# The sidebar's file-name search (commands/folder.rs): the walker ripgrep
-# and fd use - parallel, and it honours .gitignore/.ignore and skips hidden
-# files the way a writer's tools already do.
+# Every folder walk (src/walk.rs): the sidebar's file-name search and
+# Textus AI's project tools. The walker ripgrep and fd use - parallel, and
+# it honours .gitignore/.ignore and skips hidden files the way a writer's
+# tools already do. Pure Rust, so it builds for iOS as well.
 ignore = "0.4"
 
 # Desktop only (Windows/macOS/Linux): neither plugin supports iOS or Android
@@ -203,3 +204,7 @@ libloading = "0.7"
 [target.'cfg(any(windows, target_os = "linux"))'.dependencies]
 tauri-plugin-single-instance = "2"
 
+[dev-dependencies]
+# Throwaway folders for the walker's tests (src/walk.rs), removed when
+# dropped. Already in the tree through tauri-plugin-updater.
+tempfile = "3"

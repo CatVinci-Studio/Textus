@@ -4753,6 +4753,7 @@ dependencies = [
  "tauri-plugin-single-instance",
  "tauri-plugin-textus-files",
  "tauri-plugin-updater",
+ "tempfile",
  "tokio",
  "unicode-normalization",
  "unicode-segmentation",
