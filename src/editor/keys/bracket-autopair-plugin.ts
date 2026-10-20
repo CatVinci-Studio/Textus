@@ -17,6 +17,7 @@ import {
   isImeKeyEvent,
   stateWithLiveSelection,
 } from "../marks/enclosure";
+import { typedLinkEndingAt } from "../markdown/link-input-rule";
 
 /** Each opening bracket or quote and the partner typed after it. The
  *  full-width ones are what Chinese and Japanese input methods commit. */
@@ -261,6 +262,25 @@ export const createBracketAutopairPlugin = (options: {
           return next;
         },
       },
+      // A ")" put in after `[text](url` is a link's end the user never
+      // typed: moving on past it - an arrow, End, a click - makes the link,
+      // as typing it would have (link-input-rule.ts).
+      appendTransaction(trs, oldState, newState) {
+        const before = pairsOf(oldState).filter(
+          (pair) => pair.closer === ")" && !pair.orphan,
+        );
+        if (!before.length) return null;
+        const after = pairsOf(newState);
+        for (const pair of before) {
+          let close = pair.close;
+          for (const tr of trs) close = tr.mapping.map(close, 1);
+          if (after.some((p) => p.close === close)) continue;
+          if (charAt(newState.doc, close) !== ")") continue;
+          const tr = typedLinkEndingAt(newState, close + 1);
+          if (tr) return tr;
+        }
+        return null;
+      },
       props: {
         handleTextInput(view, from, to, text) {
           // Dispatching mid-composition aborts the input method's preedit;
@@ -303,6 +323,21 @@ export const createBracketAutopairPlugin = (options: {
           return true;
         },
         handleKeyDown(view, event) {
+          // Enter right before a ")" put in after `[text](url`: the link
+          // first, then the new line after it - not the ")" carried down.
+          if (
+            event.key === "Enter" &&
+            !event.shiftKey &&
+            !isImeKeyEvent(view, event)
+          ) {
+            const state = stateWithLiveSelection(view);
+            const { from, empty } = state.selection;
+            const pair = empty && pairClosingAt(state, from);
+            if (!pair || pair.closer !== ")" || pair.orphan) return false;
+            const tr = typedLinkEndingAt(state, from + 1);
+            if (tr) view.dispatch(tr);
+            return false;
+          }
           if (
             event.key !== "Backspace" ||
             event.shiftKey ||
