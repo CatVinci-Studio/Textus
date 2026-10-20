@@ -149,4 +149,4 @@ body {
 }
 ```
 
-To use it, press **Use this theme** under this reply, or save it as `night-harbor.css` and import it with **Settings > Editor & Appearance > Import CSS…**. You can share it in the theme gallery by posting it on https://github.com/CatVinci-Studio/textus-themes/issues/1.
+To use it, press **Use this theme** under this reply, or save it as `night-harbor.css` and import it with **Settings > Editor & Appearance > More themes > Import CSS…**. You can share it in the theme gallery by posting it on https://github.com/CatVinci-Studio/textus-themes/issues/1.

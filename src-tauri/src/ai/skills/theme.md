@@ -70,6 +70,6 @@ The app's revision colours follow the page by themselves (they are built on its 
 - One line on the design (palette, fonts, light or dark page), then the whole theme in one ```css code block (two blocks only for a light and a dark version).
 - Then how to use it, naming the app's controls as the user's UI names them:
   - Use this theme under the reply installs it and switches to it;
-  - or save it as a .css file and import it with Settings > Editor & Appearance > Import CSS…; the theme menu there switches back.
+  - or save it as a .css file and import it with Settings > Editor & Appearance > More themes > Import CSS…; the theme menu there switches back.
 - Then one line: they can share it in the theme gallery by posting it on https://github.com/CatVinci-Studio/textus-themes/issues/1 (a name, a one-sentence description, a license, the CSS and a screenshot).
 - Nothing else after the block: no list of the colours again.

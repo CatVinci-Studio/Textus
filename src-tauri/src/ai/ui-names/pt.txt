@@ -35,5 +35,6 @@ Revise = Editar
 Accept = Aceitar
 Reject = Rejeitar
 Editor & Appearance (Settings page) = Editor e aparência
-Import CSS… (Settings, under Theme) = Importar CSS…
+More themes (Settings row, under Theme) = Mais temas
+Import CSS… (Settings, under More themes) = Importar CSS…
 Use this theme (under a theme in a reply) = Usar este tema

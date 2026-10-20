@@ -269,15 +269,15 @@ test("clipboard history is recorded entry by entry in the store", async ({
   ).toBeNull();
 });
 
-/** In English, with Custom CSS empty (so its box starts folded). */
+/** In English, with Custom CSS empty. */
 const TYPING = { ...SETTINGS, language: "en", customCss: "" };
 
-/** Settings > Editor & Appearance > Custom CSS, unfolded. */
+/** Settings > Editor & Appearance > More themes > Custom CSS. */
 async function customCssField(page: Page) {
   await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.getByRole("button", { name: "Editor & Appearance" }).click();
-  await panel.getByText("Custom CSS", { exact: true }).click();
+  await panel.getByRole("button", { name: "More themes" }).click();
   return panel.getByRole("textbox", { name: "Custom CSS" });
 }
 

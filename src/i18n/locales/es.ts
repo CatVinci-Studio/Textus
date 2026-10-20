@@ -645,6 +645,8 @@ para usar una.
   shortcutLeaveBlock: "Salir de un bloque de código, una tabla o una cita",
   contentThemeLabel: "Tema del editor",
   themeDeleteButton: "Eliminar tema",
+  themeImportLabel: "Añadir un tema desde un archivo CSS",
+  themeMoreLabel: "Más temas",
   themeImportButton: "Importar CSS…",
   themeGalleryBrowse: "Explorar temas",
   themeGalleryLoading: "Cargando temas…",

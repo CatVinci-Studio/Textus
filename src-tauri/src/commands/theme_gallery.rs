@@ -1,5 +1,5 @@
 //! The public theme gallery (github.com/CatVinci-Studio/textus-themes),
-//! browsed from Settings › Editor & Appearance › Browse themes.
+//! browsed from Settings › Editor & Appearance › More themes › Browse themes.
 //!
 //! Every request goes to one fixed place: the gallery repository's files on
 //! raw.githubusercontent.com. The frontend names a file by its path inside

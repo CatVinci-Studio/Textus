@@ -635,6 +635,8 @@ export default {
   shortcutLeaveBlock: "Выйти из блока кода, таблицы или цитаты",
   contentThemeLabel: "Тема редактора",
   themeDeleteButton: "Удалить тему",
+  themeImportLabel: "Добавить тему из файла CSS",
+  themeMoreLabel: "Другие темы",
   themeImportButton: "Импортировать CSS…",
   themeGalleryBrowse: "Обзор тем",
   themeGalleryLoading: "Загрузка тем…",

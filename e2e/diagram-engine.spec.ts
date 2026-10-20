@@ -294,7 +294,7 @@ test("a PDF export printed on white keeps a Pele diagram drawn in a dark appeara
     .toContain('class="pele pele-flowchart"');
 });
 
-/** Imports `css` as a theme through Settings › Import CSS…, answering the
+/** Imports `css` as a theme through Settings › More themes › Import CSS…, answering the
  *  file picker and the theme store from memory (as user-css.spec.ts). */
 async function importTheme(page: Page, css: string) {
   await page.evaluate((css) => {
@@ -324,6 +324,7 @@ async function importTheme(page: Page, css: string) {
   await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.getByRole("button", { name: "Editor & Appearance" }).click();
+  await panel.getByRole("button", { name: "More themes" }).click();
   await panel.getByRole("button", { name: "Import CSS…" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-user-theme", "");
   await page.keyboard.press("Escape");

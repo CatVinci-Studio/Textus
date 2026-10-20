@@ -1,13 +1,13 @@
 import { test, type Page } from "@playwright/test";
 import { PHONE, openApp, openPhone } from "../../helpers";
 
-// Every page of Settings at its full length - each category and About
-// Textus, in English and Chinese, on the desktop (light and dark) and the
-// phone (light) - and a row's "?" open, for reviewing how Settings is
+// Every page of Settings at its full length - each category, About Textus
+// and More themes, in English and Chinese, on the desktop and the phone,
+// light and dark - and a row's "?" open, for reviewing how Settings is
 // grouped, ordered and explained, not a baseline. Runs only with
 // TEXTUS_SHOTS_DIR set to where the PNGs go:
 //
-//   TEXTUS_SHOTS_DIR=../assets/working/settings-1.2.0/after npm run screenshots:review -- settings-layout
+//   TEXTUS_SHOTS_DIR=../assets/working/settings-themes-1.2.0/after npm run screenshots:review -- settings-layout
 
 const DIR = process.env.TEXTUS_SHOTS_DIR;
 test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");
@@ -79,6 +79,15 @@ async function shootPages(page: Page, prefix: string) {
       await shoot("1b-about");
       await panel.locator(".settings-back-button").click();
     }
+    if (CATEGORY_IDS[label] === "editor") {
+      await panel
+        .locator(".settings-link-row", {
+          hasText: /^(More themes|更多主题)$/,
+        })
+        .click();
+      await shoot("2b-more-themes");
+      await panel.locator(".settings-back-button").click();
+    }
   }
 }
 
@@ -97,10 +106,16 @@ for (const language of LANGUAGES)
 test.describe("phone", () => {
   test.use(PHONE);
   for (const language of LANGUAGES)
-    test(`Settings, every page, phone, ${language}`, async ({ page }) => {
-      await openPhone(page, { settings: { language } });
-      await shootPages(page, `phone-${language}`);
-    });
+    for (const colorScheme of ["light", "dark"] as const)
+      test(`Settings, every page, phone, ${language}, ${colorScheme}`, async ({
+        page,
+      }) => {
+        await openPhone(page, { settings: { language }, colorScheme });
+        await shootPages(
+          page,
+          `phone-${language}${colorScheme === "dark" ? "-dark" : ""}`,
+        );
+      });
 });
 
 /** A row's "?" open, as a click leaves it: the diagram engine's trade-off. */

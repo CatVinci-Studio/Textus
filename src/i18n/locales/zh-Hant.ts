@@ -579,6 +579,8 @@ export default {
   shortcutLeaveBlock: "跳出程式碼區塊、表格或引用區塊",
   contentThemeLabel: "編輯器主題",
   themeDeleteButton: "刪除主題",
+  themeImportLabel: "從 CSS 檔案加入主題",
+  themeMoreLabel: "更多主題",
   themeImportButton: "匯入 CSS…",
   themeGalleryBrowse: "瀏覽主題",
   themeGalleryLoading: "正在載入主題…",

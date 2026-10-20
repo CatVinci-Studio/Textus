@@ -138,13 +138,18 @@
     hyphens: auto;
   }
 
+  /* Stacked (Custom CSS), that basis would be a height: a gap under the
+     name. */
+  :root[data-window-chrome="mobile"] .settings-row-stacked > *:first-child {
+    flex-basis: auto;
+  }
+
   :root[data-window-chrome="mobile"]
     :is(
       .settings-row-label,
       .provider-disclosure-label,
       .combobox-trigger,
       button.settings-link-row,
-      .settings-disclosure-summary,
       .settings-advanced > summary
     ) {
     font-size: var(--ios-callout);

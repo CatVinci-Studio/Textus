@@ -621,6 +621,8 @@ type /name in a conversation to use one.
   shortcutLeaveBlock: "Leave a code block, table or quote",
   contentThemeLabel: "Editor theme",
   themeDeleteButton: "Delete Theme",
+  themeImportLabel: "Add a theme from a CSS file",
+  themeMoreLabel: "More themes",
   themeImportButton: "Import CSS…",
   themeGalleryBrowse: "Browse themes",
   themeGalleryLoading: "Loading themes…",

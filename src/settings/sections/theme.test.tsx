@@ -9,7 +9,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveStrings } from "../../i18n/strings";
-import { ThemeSection } from "./theme";
+import { MoreThemesSection, ThemeSection } from "./theme";
 import { fs, themes } from "../../platform/ipc";
 const mock = vi.hoisted(() => ({
   setSettings: vi.fn(),
@@ -37,16 +37,40 @@ afterEach(cleanup);
 beforeEach(() => vi.clearAllMocks());
 describe("theme settings", () => {
   it("offers named appearance choices with the current selection", () => {
-    render(<ThemeSection t={resolveStrings("en")} onBrowse={() => {}} />);
+    render(<ThemeSection t={resolveStrings("en")} onMore={() => {}} />);
     expect(screen.getByRole("radio", { name: "Follow system" })).toBeChecked();
     fireEvent.click(screen.getByRole("radio", { name: "Dark" }));
     expect(mock.setSettings).toHaveBeenCalledWith({ theme: "dark" });
+  });
+  it("keeps getting and editing themes on the More themes page", () => {
+    const t = resolveStrings("en");
+    const onMore = vi.fn();
+    render(<ThemeSection t={t} onMore={onMore} />);
+    expect(
+      screen.queryByRole("button", { name: t.themeImportButton }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: t.customCssLabel }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: t.themeMoreLabel }));
+    expect(onMore).toHaveBeenCalled();
+    cleanup();
+    const onBrowse = vi.fn();
+    render(<MoreThemesSection t={t} onBrowse={onBrowse} />);
+    expect(
+      screen.getByRole("button", { name: t.themeImportButton }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: t.customCssLabel }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: t.themeGalleryBrowse }));
+    expect(onBrowse).toHaveBeenCalled();
   });
   it("shows picker errors and allows retry", async () => {
     vi.mocked(fs.openCssFileDialog).mockRejectedValueOnce(
       new Error("Cannot open picker"),
     );
-    render(<ThemeSection t={resolveStrings("en")} onBrowse={() => {}} />);
+    render(<MoreThemesSection t={resolveStrings("en")} onBrowse={() => {}} />);
     fireEvent.click(
       screen.getByRole("button", {
         name: resolveStrings("en").themeImportButton,
@@ -67,7 +91,7 @@ describe("theme settings", () => {
     vi.mocked(themes.deleteTheme).mockRejectedValueOnce(
       new Error("Read-only folder"),
     );
-    render(<ThemeSection t={resolveStrings("en")} onBrowse={() => {}} />);
+    render(<ThemeSection t={resolveStrings("en")} onMore={() => {}} />);
     fireEvent.click(
       screen.getByRole("button", {
         name: resolveStrings("en").themeDeleteButton,

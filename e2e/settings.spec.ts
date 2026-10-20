@@ -47,6 +47,7 @@ const t = {
   agentAdvancedGroupLabel: "Advanced",
   menuViewSource: "Source Mode",
   customCssLabel: "Custom CSS",
+  themeMoreLabel: "More themes",
   privacyClearButton: "Clear",
   privacyClearClipboard: "Clear Clipboard History",
   pdfPageNumbersLabel: "Show page numbers in exports",
@@ -243,11 +244,11 @@ test.describe("desktop", () => {
       .toBe(true);
   });
 
-  test("Custom CSS stays open while it is emptied", async ({ page }) => {
+  test("Custom CSS keeps the focus while it is emptied", async ({ page }) => {
     await openApp(page, { settings: { language: "en" } });
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: t.navEditor }).click();
-    await panel.getByText(t.customCssLabel, { exact: true }).click();
+    await panel.getByRole("button", { name: t.themeMoreLabel }).click();
     const css = panel.getByRole("textbox", { name: t.customCssLabel });
     await css.fill("p { color: red; }");
     await css.press("ControlOrMeta+a");

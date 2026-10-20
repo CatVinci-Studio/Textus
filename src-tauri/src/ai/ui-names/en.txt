@@ -44,5 +44,6 @@ Revise
 Accept
 Reject
 Editor & Appearance (Settings page)
-Import CSS… (Settings, under Theme)
+More themes (Settings row, under Theme)
+Import CSS… (Settings, under More themes)
 Use this theme (under a theme in a reply)
