@@ -98,12 +98,27 @@ export interface PendingPreview {
     sentences: string[];
     ranges: { from: number; to: number }[];
   };
+  /** The changes of a rewrite streaming in sentence by sentence that are
+   *  complete and drawn so far (streamDecorations), numbered as its
+   *  settled `sentences` will be: what the review bar counts and the
+   *  margin shows while it streams, one more as each sentence completes.
+   *  Set by the plugin, read only while `streaming`. */
+  streamChanges?: PendingSentence[];
 }
 
 /** Accept's text for a sentence-by-sentence preview: the original with the
  *  changes the writer didn't turn down (undecided ones are taken). */
 export function sentenceTake(p: PendingPreview): boolean[] | null {
   return p.sentences ? p.sentences.changes.map((c) => c.take !== false) : null;
+}
+
+/** The changes a preview is reviewed by - its sentences once settled,
+ *  those drawn so far while it streams in - or null when it is shown
+ *  whole. A streaming rewrite's final sentences, there while its text is
+ *  still being revealed, wait their turn: they would count changes not
+ *  on screen yet. */
+export function reviewChanges(p: PendingPreview): PendingSentence[] | null {
+  return (p.streaming ? p.streamChanges : p.sentences?.changes) ?? null;
 }
 
 // --- Typewriter reveal for the green pending-insert widget --------------
@@ -161,6 +176,8 @@ interface StreamState {
   struck: Set<string>;
   /** Set once stopped mid-stream: the text it keeps (stopRewrite). */
   stopped?: string | null;
+  /** The completed changes as last drawn (PendingPreview.streamChanges). */
+  changes: PendingSentence[];
 }
 
 const animations = new Map<string, InsertAnimation>();
@@ -641,6 +658,7 @@ function textWidget(
     },
     {
       side,
+      part: "text",
       // Decorations are rebuilt wholesale on every docChanged; the key
       // makes ProseMirror keep the DOM node across rebuilds, so the
       // typewriter isn't restarted by unrelated keystrokes.
@@ -757,8 +775,7 @@ function changeDecorations(
   const at = c.at ?? c.to;
   // While the rewrite streams in, everything a change will have once it
   // settles is drawn already, so the settle moves nothing: the ✓ / ✕ faint
-  // and inert, the margin views' marks unseen (`pending-streaming`, which
-  // syncStreaming takes off).
+  // and inert (`pending-streaming`, which syncStreaming takes off).
   const streaming = draw.stream ? " pending-streaming" : "";
   const mark = (kind: "insert" | "delete") =>
     Decoration.widget(
@@ -770,7 +787,11 @@ function changeDecorations(
         el.dataset.index = String(index);
         return el;
       },
-      { side: 1, key: `pending-mark-${kind}-${callId}-${index}-${state}` },
+      {
+        side: 1,
+        key: `pending-mark-${kind}-${callId}-${index}-${state}`,
+        part: kind === "delete" ? "mark" : undefined,
+      },
     );
   // Where a pure insertion goes, for the views that leave its new text
   // to the margin ("original").
@@ -797,7 +818,7 @@ function changeDecorations(
             span.classList.add("pending-settled");
           return span;
         },
-        { side: 1, key },
+        { side: 1, key, part: "text" },
       ),
     );
   }
@@ -878,12 +899,17 @@ function sentenceStrike(
   // not from CSS - ProseMirror may draw a span again as the sentences
   // around it change, and a CSS entrance played again each time.
   const streamed = animations.get(callId)?.stream ? " pending-streamed" : "";
-  return Decoration.inline(range.from, range.to, {
-    class: `pending-delete pending-sentence pending-sentence-${state}${focus}${streamed}`,
-    style: stagger,
-    "data-call": callId,
-    "data-index": String(index),
-  });
+  return Decoration.inline(
+    range.from,
+    range.to,
+    {
+      class: `pending-delete pending-sentence pending-sentence-${state}${focus}${streamed}`,
+      style: stagger,
+      "data-call": callId,
+      "data-index": String(index),
+    },
+    { part: state === "kept" ? undefined : "struck" },
+  );
 }
 
 /**
@@ -901,8 +927,7 @@ function streamEntrance(
   after: string,
   at: number,
 ) {
-  // `pending-streaming`: in the text in every view until it settles - the
-  // margin views' cards only come with the ✓ / ✕ (syncStreaming).
+  // `pending-streaming`: still being written (syncStreaming).
   span.classList.add("pending-settled", "pending-streaming");
   const before = s.shown.get(index);
   s.shown.set(index, { after, at });
@@ -918,6 +943,36 @@ function streamEntrance(
     [{ opacity: before === undefined ? 0 : 0.3 }, { opacity: 1 }],
     { duration: "--dur-base", easing: "--ease-out" },
   );
+}
+
+/** The completed changes of a streaming rewrite's layout, where they
+ *  stand in the document. */
+function streamChanges(
+  source: NonNullable<PendingPreview["streamSource"]>,
+  s: StreamState,
+): PendingSentence[] {
+  const { ranges } = source;
+  const at = (i: number) => (i > 0 ? ranges[i - 1].to : ranges[0].from);
+  return s.layout.pieces.flatMap((piece) => {
+    if (piece.kind === "same") return [];
+    const struck = piece.end > piece.start;
+    const from = struck ? ranges[piece.start].from : at(piece.start);
+    const paired = pairedPrefix(
+      s.sentences.slice(piece.start, piece.end),
+      piece.after,
+    );
+    return [
+      {
+        from,
+        to: struck ? ranges[piece.end - 1].to : from,
+        before: piece.before,
+        after: piece.after,
+        take: null,
+        parts: ranges.slice(piece.start, piece.end),
+        at: struck ? ranges[piece.start + paired - 1].to : undefined,
+      },
+    ];
+  });
 }
 
 /**
@@ -938,40 +993,20 @@ function streamDecorations(
   const { ranges } = source;
   const at = (i: number) => (i > 0 ? ranges[i - 1].to : ranges[0].from);
   const decos: Decoration[] = [];
-  let index = 0;
-  for (const piece of s.layout.pieces) {
-    if (piece.kind === "same") continue;
-    const struck = piece.end > piece.start;
-    const from = struck ? ranges[piece.start].from : at(piece.start);
-    const to = struck ? ranges[piece.end - 1].to : from;
-    const parts = ranges.slice(piece.start, piece.end);
-    const paired = pairedPrefix(
-      s.sentences.slice(piece.start, piece.end),
-      piece.after,
-    );
+  const focused = hooks.focused();
+  s.changes = streamChanges(source, s);
+  s.changes.forEach((c, index) =>
     decos.push(
-      ...changeDecorations(
-        p.callId,
-        index,
-        {
-          from,
-          to,
-          after: piece.after,
-          take: null,
-          parts,
-          at: struck ? ranges[piece.start + paired - 1].to : undefined,
-        },
-        {
-          focused: false,
-          stagger: 0,
-          labels: hooks.labels(),
-          decide: hooks.decide,
-          stream: s,
-        },
-      ),
-    );
-    index++;
-  }
+      ...changeDecorations(p.callId, index, c, {
+        focused: focused?.callId === p.callId && focused.index === index,
+        stagger: 0,
+        labels: hooks.labels(),
+        decide: hooks.decide,
+        stream: s,
+      }),
+    ),
+  );
+  const index = s.changes.length;
   const { partial } = s.layout;
   s.partialIndex = partial ? index : null;
   s.drawn = layoutSignature(s.layout);
@@ -1001,6 +1036,7 @@ function streamDecorations(
       {
         // After the new text of a change ending at the same place.
         side: 3,
+        part: "text",
         key: `pending-insert-${p.callId}`,
         destroy: (node) => {
           const anim = animations.get(p.callId);
@@ -1111,6 +1147,7 @@ function streamFor(p: PendingPreview, animate: boolean): StreamState | null {
       shown: new Map(),
       partialIndex: null,
       struck: new Set(),
+      changes: [],
     };
     refreshStream(anim);
   }
@@ -1134,11 +1171,16 @@ function decorationsFor(
   const strike = wholeStrike(p);
   if (strike) {
     decos.push(
-      Decoration.inline(strike.from, strike.to, {
-        class: `pending-delete pending-whole${isFocused ? " pending-sentence-focus" : ""}`,
-        "data-call": p.callId,
-        "data-index": "-1",
-      }),
+      Decoration.inline(
+        strike.from,
+        strike.to,
+        {
+          class: `pending-delete pending-whole${isFocused ? " pending-sentence-focus" : ""}`,
+          "data-call": p.callId,
+          "data-index": "-1",
+        },
+        { part: "struck" },
+      ),
     );
   }
   const text = p.proposal.text;
@@ -1166,10 +1208,68 @@ function buildDecorations(
   animate: boolean,
   hooks: SentenceHooks,
 ): DecorationSet {
-  return DecorationSet.create(
-    doc,
-    previews.flatMap((p) => decorationsFor(p, animate, hooks)),
+  const decos = previews.flatMap((p) => decorationsFor(p, animate, hooks));
+  return DecorationSet.create(doc, [...decos, ...struckBlocks(doc, decos)]);
+}
+
+/**
+ * The blocks whose text is all struck and that hold no new text: a
+ * paragraph a rewrite folds into the one before it, or one it deletes.
+ * The views that take the originals out of the text ("new", "final") take
+ * these out of the flow too (`pending-struck-block`): their text hidden,
+ * they still stood there as empty lines with a paragraph's margins, and a
+ * rewrite that joins paragraphs left blank gaps in the text. One that
+ * holds the mark of a deleted sentence (`pending-struck-marked`) keeps
+ * its line in "new", where the mark shows. Read off the decorations' own
+ * `part`: "struck" for an original those views hide, "text" for new text,
+ * "mark" for a deleted sentence's mark.
+ */
+function struckBlocks(doc: ProseNode, decos: Decoration[]): Decoration[] {
+  const part = (d: Decoration) => (d.spec as { part?: string }).part;
+  const struck = decos
+    .filter((d) => part(d) === "struck" && d.from < d.to)
+    .map((d) => ({ from: d.from, to: d.to }))
+    .sort((a, b) => a.from - b.from);
+  if (struck.length === 0) return [];
+  // Touching strikes (a change's sentences and the space between them)
+  // cover as one.
+  const covered: { from: number; to: number }[] = [];
+  for (const r of struck) {
+    const last = covered[covered.length - 1];
+    if (last && r.from <= last.to) last.to = Math.max(last.to, r.to);
+    else covered.push({ ...r });
+  }
+  const isCovered = (from: number, to: number) =>
+    covered.some((r) => r.from <= from && to <= r.to);
+  const texts = decos.filter((d) => part(d) === "text").map((d) => d.from);
+  const marks = decos.filter((d) => part(d) === "mark").map((d) => d.from);
+  const out: Decoration[] = [];
+  doc.nodesBetween(
+    covered[0].from,
+    covered[covered.length - 1].to,
+    (node, pos) => {
+      if (node.isInline) return false;
+      const end = pos + node.nodeSize;
+      const inside = (at: number) => at > pos && at < end;
+      if (texts.some(inside)) return true;
+      let all = covered.some((r) => r.from < end && pos < r.to);
+      node.descendants((child, at) => {
+        if (all && child.isText)
+          all = isCovered(pos + 1 + at, pos + 1 + at + child.nodeSize);
+        return all;
+      });
+      if (!all) return true;
+      out.push(
+        Decoration.node(pos, end, {
+          class: marks.some(inside)
+            ? "pending-struck-block pending-struck-marked"
+            : "pending-struck-block",
+        }),
+      );
+      return false;
+    },
   );
+  return out;
 }
 
 /**
@@ -1194,15 +1294,16 @@ function hotDecorations(doc: ProseNode, state: PendingState): DecorationSet {
     ),
   );
   const preview = hot
-    ? state.previews.find((p) => p.callId === hot.callId && !p.streaming)
+    ? state.previews.find((p) => p.callId === hot.callId)
     : undefined;
+  const changes = preview && reviewChanges(preview);
   // A proposal shown whole (index -1): its struck text, if it has any.
   const range =
     !hot || !preview
       ? null
-      : preview.sentences
-        ? preview.sentences.changes[hot.index]
-        : hot.index < 0
+      : changes
+        ? changes[hot.index]
+        : hot.index < 0 && !preview.streaming
           ? wholeStrike(preview)
           : null;
   const extra =
@@ -1246,9 +1347,9 @@ const hotSets = new WeakMap<PendingState, DecorationSet>();
  * rebuild: the reveal is handed the view (it may have no widget to get it
  * from - nothing is drawn while a sentence repeats its original) and
  * keeps going, and the widgets of a rewrite that settled lose
- * `pending-streaming`, which kept them in the text in the margin views
- * until their cards could be drawn. A class on the plugin's own widgets,
- * not a redraw: the settle keeps every element on screen as it is.
+ * `pending-streaming`: its ✓ / ✕ start taking clicks. A class on the
+ * plugin's own widgets, not a redraw: the settle keeps every element on
+ * screen as it is.
  */
 function syncStreaming(view: EditorView, previews: PendingPreview[]) {
   const streaming = new Set<string>();
@@ -1323,11 +1424,11 @@ function syncWidgetClasses(
   hot: HotSentence | null,
   focused: HotSentence | null,
 ) {
-  // A rewrite still streaming in can't be pointed at yet: its strike
-  // doesn't darken either (hotDecorations).
+  // A rewrite streaming in can be pointed at by its completed sentences
+  // (they have their cards), not by the one being written.
   const is = (el: HTMLElement, s: HotSentence | null) =>
     s !== null &&
-    !el.classList.contains("pending-streaming") &&
+    !el.classList.contains("pending-partial") &&
     el.dataset.call === s.callId &&
     el.dataset.index === String(s.index);
   for (const el of view.dom.querySelectorAll<HTMLElement>(
@@ -1397,6 +1498,38 @@ function mapPreviews(
     });
   }
   return { survivors, changed };
+}
+
+/** The previews with each streaming rewrite's completed changes as last
+ *  drawn (PendingPreview.streamChanges): a new preview only when they
+ *  changed, so React hears of each change as it completes, not of every
+ *  frame of the sentence being written. */
+function withStreamChanges(previews: PendingPreview[]): PendingPreview[] {
+  let out: PendingPreview[] | null = null;
+  previews.forEach((p, i) => {
+    const changes = p.streaming
+      ? animations.get(p.callId)?.stream?.changes
+      : undefined;
+    if (!changes || sameChanges(changes, p.streamChanges)) return;
+    out ??= previews.slice();
+    out[i] = { ...p, streamChanges: changes };
+  });
+  return out ?? previews;
+}
+
+function sameChanges(a: PendingSentence[], b: PendingSentence[] | undefined) {
+  return (
+    b !== undefined &&
+    a.length === b.length &&
+    a.every(
+      (c, i) =>
+        c.from === b[i].from &&
+        c.to === b[i].to &&
+        c.at === b[i].at &&
+        c.before === b[i].before &&
+        c.after === b[i].after,
+    )
+  );
 }
 
 /**
@@ -1631,12 +1764,14 @@ export function createPendingEditPlugin(options: {
                   ? []
                   : prev.landed;
             const next = applyMeta(tr, prev, meta);
+            const previews = withStreamChanges(next.previews);
             return next === prev &&
+              previews === prev.previews &&
               applied === prev.applied &&
               hot === prev.hot &&
               landed === prev.landed
               ? prev
-              : { ...next, applied, hot, landed };
+              : { ...next, previews, applied, hot, landed };
           },
         },
         props: {

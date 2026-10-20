@@ -37,13 +37,20 @@ export type MarginItem =
        *  original stays in the text) or the original ("new"). */
       shows: "original" | "new";
       take: boolean | null;
+      /** Its rewrite is still streaming in: shown, not decided yet. */
+      streaming: boolean;
     };
 
 const STACK_GAP = 8;
+/** How far a card can be pushed down by the ones above it and still draw
+ *  its line all the time. */
+const LINE_DRIFT = 20;
 
 interface Placed {
   item: MarginItem;
   top: number;
+  /** How far the cards above pushed it below its passage. */
+  drift: number;
   /** Where the line starts: the end of the passage's first line, in the
    *  layer's coordinates. */
   ax: number;
@@ -75,11 +82,15 @@ function anchorSelector(item: MarginItem): string {
  * The page's margin: review notes and the changed sentences of a pending
  * rewrite, beside the text they are about (review-notes-plugin.ts and
  * pending-edit-plugin.ts mark it). Each card sits level with the first line
- * of its passage, cards that would overlap stack downward, and a thin line
- * runs to the card from the text column's edge, level with that first line
- * - not from the passage's end, which would cross the words after it or,
- * when it wraps, throw the line across the page. Hovering either side
- * lights both.
+ * of its passage, cards that would overlap stack downward - the cards move,
+ * never the text - and a thin line runs to the card from the text column's
+ * edge, level with that first line - not from the passage's end, which
+ * would cross the words after it or, when it wraps, throw the line across
+ * the page. A card the stack pushed below its passage draws its line only
+ * while it is under the pointer or the review bar's pointer: every such
+ * line ran down the narrow gap between text and cards, and a stack of
+ * them read as a tangle of stray strokes. Hovering either side lights
+ * both.
  *
  * The margin is made, not assumed: when the space right of the text is too
  * narrow the text column moves left to open it (animated, via its margin),
@@ -199,6 +210,7 @@ export function ReviewMargin({
         placed.push({
           item,
           top: first.top - top0 - 8,
+          drift: 0,
           // From the column's edge, level with the passage's first line -
           // never from inside the text, where it would cross the words
           // after the passage.
@@ -209,7 +221,8 @@ export function ReviewMargin({
       placed.sort((a, b) => a.top - b.top);
       let floor = -Infinity;
       for (const p of placed) {
-        p.top = Math.max(p.top, floor);
+        p.drift = Math.max(0, floor - p.top);
+        p.top += p.drift;
         floor = p.top + (heights.current.get(p.item.key) ?? 64) + STACK_GAP;
       }
       setLayout({ left, placed });
@@ -267,13 +280,19 @@ export function ReviewMargin({
     <div className="review-margin">
       <svg className="review-links" aria-hidden="true">
         {layout.placed.map((p) => {
+          const lit = hot === p.item.key || focused === p.item.key;
+          if (p.drift > LINE_DRIFT && !lit) return null;
           const x2 = layout.left;
           const y2 = p.top + 16;
           const dx = Math.max(16, (x2 - p.ax) / 2);
           return (
             <path
               key={p.item.key}
-              className={`${p.item.kind}${hot === p.item.key ? " hot" : ""}`}
+              // Its length as 1, for the dash it draws in with: a fixed
+              // dash length left a long line - a card stacked far below
+              // its passage - broken into stray pieces.
+              pathLength={1}
+              className={`${p.item.kind}${lit ? " hot" : ""}`}
               d={`M${p.ax} ${p.ay} C ${p.ax + dx} ${p.ay}, ${x2 - dx} ${y2}, ${x2} ${y2}`}
             />
           );
@@ -351,7 +370,7 @@ function RevisionCard({
   return (
     <div
       ref={ref}
-      className={`review-note revision-note revision-note-${state}${hot ? " review-note-hot" : ""}${focused ? " revision-note-focus" : ""}`}
+      className={`review-note revision-note revision-note-${state}${hot ? " review-note-hot" : ""}${focused ? " revision-note-focus" : ""}${item.streaming ? " revision-note-streaming" : ""}`}
       style={style}
       onMouseEnter={() => onHot(true)}
       onMouseLeave={() => onHot(false)}
@@ -366,6 +385,7 @@ function RevisionCard({
             type="button"
             className="pending-pick-take"
             aria-pressed={item.take === true}
+            disabled={item.streaming}
             aria-label={labels.proposalTakeSentence}
             title={labels.proposalTakeSentence}
             onClick={() =>
@@ -382,6 +402,7 @@ function RevisionCard({
             type="button"
             className="pending-pick-keep"
             aria-pressed={item.take === false}
+            disabled={item.streaming}
             aria-label={labels.proposalKeepSentence}
             title={labels.proposalKeepSentence}
             onClick={() =>

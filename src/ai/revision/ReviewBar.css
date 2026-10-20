@@ -253,6 +253,20 @@
   color: var(--ui-primary);
 }
 
+/* While a rewrite streams in (Accept, Reject), and with nothing to step
+   to (‹ ›): there, faint and inert. */
+.review-bar :is(.review-bar-button, .review-bar-nav button):disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
+.review-bar :is(.review-bar-button, .review-bar-nav button) {
+  transition:
+    background var(--dur-fast) var(--ease-standard),
+    opacity var(--dur-base) var(--ease-standard);
+}
+
 .review-bar button:focus-visible {
   outline: 2px solid var(--ui-on-primary);
   outline-offset: 2px;

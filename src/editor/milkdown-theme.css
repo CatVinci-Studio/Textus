@@ -361,8 +361,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 .pending-delete-mark,
 .ProseMirror[data-revision-display="original"]
   :is(.pending-sentence-new, .pending-insert.pending-replaces):not(
-    .pending-insert-typing,
-    .pending-streaming
+    .pending-whole.pending-insert-typing
   ),
 .ProseMirror:is([data-revision-display="new"], [data-revision-display="final"])
   .pending-sentence-new.pending-sentence-kept {
@@ -375,6 +374,20 @@ br:is(.pending-delete, .pending-sentence-hot) {
   padding: 0;
   background: none;
   box-shadow: none;
+}
+
+/* A block whose text is all hidden (pending-edit-plugin's struckBlocks): a
+   paragraph a rewrite joins to the one before it. Out of the flow with it,
+   so the text reads as it will once accepted - left standing, it was a
+   blank line with a paragraph's margins. Taken out of the flow rather
+   than display: none, for the same reason as its text; out of the flow,
+   the margins round it meet as if it weren't there. */
+.ProseMirror[data-revision-display="new"]
+  .pending-struck-block:not(.pending-struck-marked),
+.ProseMirror[data-revision-display="final"] .pending-struck-block {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* An inline atom (an image, a formula) in a hidden original. */
@@ -452,15 +465,14 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 /* A rewrite still streaming in (pending-edit-plugin's streamDecorations):
    a completed sentence's ✓ / ✕ wait faint and inert until the whole
-   rewrite is in, and the margin views' marks wait unseen. Drawn already,
-   so the end of the stream moves nothing. */
+   rewrite is in. Each completed sentence has its margin card from the
+   start, so in "original" its new text is in the card only, and the
+   sentence being written shows there once it is complete: in the text it
+   would come and go. Drawn already, so the end of the stream moves
+   nothing. */
 .pending-pick.pending-streaming {
   opacity: 0.35;
   pointer-events: none;
-}
-
-:is(.pending-insert-mark, .pending-delete-mark).pending-streaming {
-  visibility: hidden;
 }
 
 :is(.pending-pick, .agent-proposal-pick) button {

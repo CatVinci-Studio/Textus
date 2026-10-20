@@ -14,6 +14,7 @@ import { applyEditRange } from "./apply-edit";
 import { isIOSApp } from "../../platform/capabilities";
 import {
   pendingEditKey,
+  reviewChanges,
   sentenceTake,
   type PendingPreview,
 } from "./pending-edit-plugin";
@@ -311,24 +312,39 @@ export function usePendingEdits(run: EditorRunner) {
     lastOrderRef.current = newOrder;
   }, [decidable]);
 
+  // What the review bar and the margin go through: the decidable
+  // previews, and the rewrites still streaming in sentence by sentence,
+  // whose completed changes are counted and shown as each one comes
+  // (PendingPreview.streamChanges) - they can be looked at, not decided
+  // yet.
+  const reviewed = useMemo(
+    () =>
+      previews
+        .filter((p) => !p.streaming || p.streamChanges)
+        .sort((a, b) => a.from - b.from),
+    [previews],
+  );
+  const reviewStreaming = reviewed.some((p) => p.streaming);
+
   // The review bar walks sentence by sentence: every changed sentence of a
   // proposal shown that way, or the proposal itself otherwise, top to
   // bottom. The pointer is kept by identity, falling back to the stop now
   // at its old place when its own went (decided, applied).
   const reviewStops = useMemo<ReviewStop[]>(
     () =>
-      decidable
-        .flatMap((p) =>
-          p.sentences
-            ? p.sentences.changes.map((c, index) => ({
+      reviewed
+        .flatMap((p) => {
+          const changes = reviewChanges(p);
+          return changes
+            ? changes.map((c, index) => ({
                 callId: p.callId,
                 index,
                 from: c.from,
               }))
-            : [{ callId: p.callId, index: -1, from: p.from }],
-        )
+            : [{ callId: p.callId, index: -1, from: p.from }];
+        })
         .sort((a, b) => a.from - b.from),
-    [decidable],
+    [reviewed],
   );
   const [stopKey, setStopKey] = useState<string | null>(null);
   const stopIndex = stopKey
@@ -385,8 +401,10 @@ export function usePendingEdits(run: EditorRunner) {
   const reviewCount = useMemo(() => {
     let taken = 0;
     let total = 0;
-    for (const p of decidable) {
-      const take = sentenceTake(p);
+    for (const p of reviewed) {
+      const take = p.streaming
+        ? (p.streamChanges ?? []).map(() => true)
+        : sentenceTake(p);
       if (take) {
         total += take.length;
         taken += take.filter(Boolean).length;
@@ -396,7 +414,7 @@ export function usePendingEdits(run: EditorRunner) {
       }
     }
     return { taken, total };
-  }, [decidable]);
+  }, [reviewed]);
 
   /** Wired (via a ref-indirected callback, see MilkdownEditor) to the
    *  plugin's onPreviewsChange - the only path React learns about a preview
@@ -908,6 +926,8 @@ export function usePendingEdits(run: EditorRunner) {
     status,
     syncFromPlugin,
     decidable,
+    reviewed,
+    reviewStreaming,
     focusIndex,
     focusedPreview,
     focusNext,

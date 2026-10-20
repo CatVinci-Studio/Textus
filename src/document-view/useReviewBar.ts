@@ -30,9 +30,10 @@ export function useEditorPane() {
 }
 
 /** The review bar (ai/revision/ReviewBar.tsx) floats over the bottom of the
- *  pane this editor scrolls in, while there is anything to decide - except
- *  while Quick Ask, which has its own, is open, and on a phone while the
- *  AI sheet covers the text. */
+ *  pane this editor scrolls in, while there is anything to decide, or a
+ *  rewrite streaming in whose changes will be (usePendingEdits.reviewed) -
+ *  except while Quick Ask, which has its own, is open, and on a phone while
+ *  the AI sheet covers the text. */
 export function useReviewBar({
   run,
   pendingEdits,
@@ -52,7 +53,7 @@ export function useReviewBar({
 }) {
   const reviewBarShown =
     isActive &&
-    pendingEdits.decidable.length > 0 &&
+    pendingEdits.reviewed.length > 0 &&
     !quickAskVisible &&
     !(phone && panelContainer);
   // On a phone, the edits arriving fold the AI sheet away so the text they

@@ -183,6 +183,18 @@ to their whole blocks (`sentence-locate.ts` skips the text before the
 anchor). One that can't be (a heading or list turned into something else)
 is shown whole, and the views apply to it as one change with one card.
 
+**The text reads as the result.** Where a view takes the originals out of
+the text ("Changes in the text", "Result only"), a block whose text is
+all struck and holds no new text - a paragraph the rewrite joins to the
+one before it - goes out of the flow with it (`struckBlocks`,
+`.pending-struck-block`); left standing it was an empty line with a
+paragraph's margins, a blank gap (`1.2.0-rc.1`). One that holds a deleted
+sentence's mark keeps its line in "Changes in the text". The margin never
+moves the text: cards stack downward and move instead, and a card the
+stack pushed below its passage draws its line only while it is under the
+pointer or the review bar's pointer - drawn all the time, those lines ran
+together down the gap between text and cards as stray strokes.
+
 **Streaming in place.** Such a rewrite is laid out sentence by sentence
 while it is still streaming in, not only once it settles
 (`sentence-stream.ts`, `pending-edit-plugin`'s `streamDecorations`). Each
@@ -201,9 +213,16 @@ not deleted. So:
   original once reached is never handed back (`reachedAtLeast`); a
   re-alignment that moves a sentence's new text (a dropped sentence joins
   the change before it) cross-fades it there;
-- each completed change's ✓ / ✕ come in faint and inert and take clicks
-  once the whole rewrite is in; the margin views' cards come then too, and
-  until then both sides stay in the text.
+- each completed change's margin card comes with it, and the review bar is
+  there from the start of the stream, its count growing one change at a
+  time (`streamChanges`, `usePendingEdits`' `reviewed`); ‹ › and the view
+  menu already work. In "Original in the text" the sentence being written
+  doesn't show in the text - it would only come and go - but in its card
+  once complete;
+- each completed change's ✓ / ✕ (in the text and on its card) come in
+  faint and inert and take clicks once the whole rewrite is in, and so do
+  the review bar's Accept and Reject: half a rewrite isn't something to
+  take. The AI panel's Stop ends it early, with what it completed.
 
 When the stream ends, the layout is exactly the one the finished proposal
 has, on the same elements: nothing is redrawn, nothing moves. The alignment

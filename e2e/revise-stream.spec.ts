@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { streamRevise } from "./revise-mock";
 
 /**
  * A Revise rewrite streaming in is laid out sentence by sentence from the
@@ -24,101 +25,6 @@ type Sample = {
    *  its element: one drawn again shows up with a new id. */
   drawn: { text: string; id: number }[];
 };
-
-/**
- * The backend streaming `calls` (propose_edit arguments) in `chunk`-sized
- * argument fragments every `every` ms, then the turns. `hold`: the stream
- * stops after this many fragments and waits for a stop (ai_cancel).
- */
-export async function streamRevise(
-  page: Page,
-  calls: { id: string; args: object }[],
-  options: { chunk?: number; every?: number; hold?: number } = {},
-) {
-  await page.evaluate(
-    ({ calls, chunk, every, hold }) => {
-      type Send = (event: unknown) => void;
-      const internals = (
-        window as unknown as {
-          __TAURI_INTERNALS__: {
-            invoke: (cmd: string, args?: unknown) => Promise<unknown>;
-          };
-        }
-      ).__TAURI_INTERNALS__;
-      const original = internals.invoke;
-      let cancel: (() => void) | null = null;
-      internals.invoke = (cmd, args) => {
-        if (cmd === "ai_cancel") {
-          cancel?.();
-          return Promise.resolve(null);
-        }
-        if (cmd !== "ai_agent_message") return original(cmd, args);
-        const { message, onEvent } = args as {
-          message: string;
-          onEvent?: { onmessage?: Send };
-        };
-        const send: Send = (event) => onEvent?.onmessage?.(event);
-        const steps: (() => void)[] = [];
-        const turns: unknown[] = [];
-        let fragments = 0;
-        for (const call of calls) {
-          const json = JSON.stringify(call.args);
-          steps.push(() =>
-            send({ type: "toolStart", callId: call.id, name: "propose_edit" }),
-          );
-          for (let from = 0; from < json.length; from += chunk) {
-            const delta = json.slice(from, from + chunk);
-            steps.push(() => {
-              fragments++;
-              send({ type: "toolArgsDelta", callId: call.id, delta });
-            });
-          }
-          const turn = {
-            kind: "ToolCall",
-            call_id: call.id,
-            name: "propose_edit",
-            arguments: json,
-          };
-          const result = {
-            kind: "ToolResult",
-            call_id: call.id,
-            output: "Edit proposed",
-          };
-          turns.push(turn, result);
-          steps.push(() => send({ type: "turn", turn }));
-          steps.push(() => send({ type: "turn", turn: result }));
-        }
-        const reply = { kind: "Assistant", text: "Tightened." };
-        turns.push(reply);
-        steps.push(() => send({ type: "turn", turn: reply }));
-        return new Promise((resolve, reject) => {
-          let timer = 0;
-          cancel = () => {
-            window.clearTimeout(timer);
-            reject("cancelled");
-          };
-          const next = () => {
-            if (hold !== null && fragments >= hold) return;
-            const step = steps.shift();
-            if (!step) {
-              resolve([{ kind: "User", text: message }, ...turns]);
-              return;
-            }
-            step();
-            timer = window.setTimeout(next, every);
-          };
-          next();
-        });
-      };
-    },
-    {
-      calls,
-      chunk: options.chunk ?? 6,
-      every: options.every ?? 30,
-      hold: options.hold ?? null,
-    },
-  );
-}
 
 /** Records the proposal's parts every frame until `stop()`. */
 async function record(page: Page) {
@@ -358,27 +264,40 @@ test("a streaming CJK rewrite completes each sentence at 。！？ in place", as
   ).toBe(true);
 });
 
-test("each display mode draws a streaming rewrite's completed sentences", async ({
+test("each display mode draws a streaming rewrite's completed sentences, with their cards", async ({
   page,
 }) => {
+  // Held while the second change is being written: the first is complete.
+  const json = JSON.stringify(REVISE.args);
+  const hold = Math.ceil((json.indexOf("The lamp was warm") + 22) / 6);
   for (const display of ["original", "new", "final"] as const) {
     await open(page, { revisionDisplay: display });
-    await streamRevise(page, [REVISE], { every: 40 });
+    await streamRevise(page, [REVISE], { hold });
     await send(page);
+    await expect(page.locator(".milkdown .pending-partial")).toBeAttached();
     const fresh = page.locator(".milkdown .pending-sentence-new", {
       hasText: "He climbed the stairs one by one.",
     });
-    // Visible in the text while it streams in, in every view - the
-    // margin views' cards come once it settles.
-    await expect(fresh).toBeVisible();
     await expect(page.locator(".milkdown .pending-whole")).toHaveCount(0);
     await expect(page.locator(".review-bar")).toBeVisible();
+    // The completed change has its card already, the one being written
+    // none yet; "original" leaves the new text to the card.
     if (display === "original") {
-      await expect(page.locator(".revision-note")).toHaveCount(2);
+      await expect(page.locator(".revision-note")).toHaveText([
+        /He climbed the stairs one by one\./,
+      ]);
       await expect(fresh).toBeHidden();
+      await expect(page.locator(".milkdown .pending-partial")).toBeHidden();
+    } else {
+      await expect(fresh).toBeVisible();
+      await expect(page.locator(".milkdown .pending-partial")).toBeVisible();
     }
     if (display === "new")
-      await expect(page.locator(".revision-note-original")).toHaveCount(2);
+      await expect(page.locator(".revision-note-original")).toHaveText([
+        /He climbed the stairs slowly\./,
+      ]);
+    if (display === "final")
+      await expect(page.locator(".revision-note")).toHaveCount(0);
     await page.reload();
   }
 });
