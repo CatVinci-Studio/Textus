@@ -11,6 +11,7 @@ import {
   type Touches,
 } from "./reveal-state";
 import { isLargeDoc } from "./large-doc";
+import { registerDrawAll } from "./draw-when-visible";
 import { appearanceIsDark, diagramRenderer } from "./diagram-engine";
 import {
   redrawPendingDiagrams,
@@ -224,7 +225,41 @@ export function createMermaidPreviewPlugin(options: {
           return { svg: drawn.svg, idPrefix: `mermaid-preview-${drawn.id}` };
         });
 
-        async function renderAll() {
+        /** Whether the block at `pos` is within a screen of what the
+         *  editor's scroller shows. */
+        function nearView(pos: number): boolean {
+          const scroller = editorView.dom.closest(".editor-scroll");
+          const dom = editorView.nodeDOM(pos);
+          if (!scroller || !(dom instanceof HTMLElement)) return true;
+          const view = scroller.getBoundingClientRect();
+          const box = dom.getBoundingClientRect();
+          return (
+            box.bottom >= view.top - view.height &&
+            box.top <= view.bottom + view.height
+          );
+        }
+
+        // In a large document, diagrams off screen wait
+        // (draw-when-visible.ts says why): a pass draws those near the
+        // screen, and scrolling draws the rest as they come near. `all`
+        // draws every one, for an export.
+        let scroller: Element | null = null;
+        let scrollTimer: ReturnType<typeof setTimeout> | undefined;
+        const onScroll = () => {
+          clearTimeout(scrollTimer);
+          scrollTimer = setTimeout(() => void renderAll(), 100);
+        };
+        function waitForScroll(waiting: boolean) {
+          const next = waiting
+            ? editorView.dom.closest(".editor-scroll")
+            : null;
+          if (next === scroller) return;
+          scroller?.removeEventListener("scroll", onScroll);
+          next?.addEventListener("scroll", onScroll, { passive: true });
+          scroller = next;
+        }
+
+        async function renderAll(all = false) {
           if (!options.enabled()) {
             lastRenders = new Map();
             editorView.dispatch(
@@ -255,7 +290,9 @@ export function createMermaidPreviewPlugin(options: {
           const { draw, styleOf } = drawing();
 
           const rendered = new Map<string, Drawn>();
-          for (const { code } of blocks) {
+          let offScreen = false;
+          const large = isLargeDoc(editorView.state.doc);
+          for (const { from, code } of blocks) {
             if (!code.trim() || rendered.has(code)) continue; // identical diagrams share one render
             // Drawn for the same width, face and engine: a pass only draws
             // sources it hasn't seen, instead of every diagram again 500ms
@@ -263,6 +300,10 @@ export function createMermaidPreviewPlugin(options: {
             const cached = lastRenders.get(code) ?? pendingDrawn.get(code);
             if (cached && cached.style === styleOf(cached.engine)) {
               rendered.set(code, cached);
+              continue;
+            }
+            if (!all && large && !nearView(from)) {
+              offScreen = true;
               continue;
             }
             try {
@@ -279,6 +320,7 @@ export function createMermaidPreviewPlugin(options: {
           }
 
           if (mySeq !== renderSeq) return;
+          waitForScroll(offScreen);
           // Nothing new rendered and nothing dropped: the decorations
           // already show exactly this, so skip the rebuild.
           const unchanged =
@@ -321,6 +363,7 @@ export function createMermaidPreviewPlugin(options: {
         systemDark?.addEventListener("change", restyle);
 
         void renderAll();
+        registerDrawAll(editorView.dom, () => renderAll(true));
 
         return {
           update(view, prevState) {
@@ -339,10 +382,13 @@ export function createMermaidPreviewPlugin(options: {
             // re-render passes, the expensive part, stop scheduling.
             if (isLargeDoc(view.state.doc)) return;
             if (debounceTimer) clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(renderAll, DEBOUNCE_MS);
+            debounceTimer = setTimeout(() => void renderAll(), DEBOUNCE_MS);
           },
           destroy() {
             if (debounceTimer) clearTimeout(debounceTimer);
+            clearTimeout(scrollTimer);
+            waitForScroll(false);
+            registerDrawAll(editorView.dom, null);
             registerPendingDrawer(editorView.dom, null);
             shown?.disconnect();
             appearance.disconnect();

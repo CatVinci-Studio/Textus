@@ -1131,6 +1131,12 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-align: center;
 }
 
+/* Not drawn yet, being off screen (draw-when-visible.ts): about a display
+   formula's height, so little moves when it is. */
+.math-block-rendered[data-draw-pending] {
+  min-height: 2.6em;
+}
+
 /* Equation numbers - (1), (2), ... after each row of a gather, align or
    equation - are CSS counters in KaTeX's stylesheet, reset on <body>. The
    column (.editor-content) is a size container, and container-type brings

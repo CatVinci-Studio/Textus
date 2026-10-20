@@ -13,6 +13,8 @@ import {
   type RevealState,
   type Touches,
 } from "../reveal-state";
+import { drawWhenVisible } from "../draw-when-visible";
+import { isLargeDoc } from "../large-doc";
 import { katexNow, mathSourceHtml, onKatexReady } from "./katex-loader";
 
 const mathPreviewKey = new PluginKey("math-preview");
@@ -21,13 +23,17 @@ const KATEX_READY = "katex-ready";
 // A formula is drawn again whenever the caret enters or leaves it, or the
 // block holding it is edited, and KaTeX is the expensive part. Renders are
 // pure in (source, mode), so they are cached; the cap only bounds a
-// session that types through thousands of formulas.
+// session that types through thousands of formulas. A formula first drawn
+// waits until it is near the screen (draw-when-visible.ts).
 const RENDER_CACHE_LIMIT = 1000;
 const renderCache = new Map<string, string>();
 
 /** The formula drawn, or null until KaTeX has loaded (katex-loader.ts). */
+const cacheKeyOf = (value: string, displayMode: boolean) =>
+  `${displayMode ? "B" : "I"}${value}`;
+
 function renderKatex(value: string, displayMode: boolean): string | null {
-  const cacheKey = `${displayMode ? "B" : "I"}${value}`;
+  const cacheKey = cacheKeyOf(value, displayMode);
   const cached = renderCache.get(cacheKey);
   if (cached !== undefined) return cached;
   const katex = katexNow();
@@ -90,10 +96,10 @@ function decorateMath(
       : [];
   }
 
-  const displayMode = node.type.name === "math_block";
-  const html = renderKatex(node.textContent, displayMode);
   // KaTeX still loading: the source stays in view until it is drawn.
-  if (html === null) return [];
+  if (!katexNow()) return [];
+  const displayMode = node.type.name === "math_block";
+  const source = node.textContent;
   return [
     Decoration.inline(from + 1, to - 1, { class: "math-source-hidden" }),
     Decoration.widget(
@@ -103,7 +109,21 @@ function decorateMath(
         el.className = displayMode
           ? "math-block-rendered"
           : "math-inline-rendered";
-        el.innerHTML = html;
+        const draw = () => {
+          el.innerHTML =
+            renderKatex(source, displayMode) ?? mathSourceHtml(source);
+        };
+        // In a large document, one not drawn before waits until it comes
+        // near the screen, its source standing in, about as wide.
+        if (
+          renderCache.has(cacheKeyOf(source, displayMode)) ||
+          !isLargeDoc(view.state.doc)
+        )
+          draw();
+        else {
+          el.innerHTML = mathSourceHtml(source);
+          drawWhenVisible(el, view.dom, draw);
+        }
         caretToSourceOnClick(el, view, getPos);
         return el;
       },
