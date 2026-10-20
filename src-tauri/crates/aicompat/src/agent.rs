@@ -26,6 +26,7 @@ impl ImageAttachment {
 
 /// One entry in an agent conversation. Kept provider-agnostic so the main
 /// crate's loop doesn't need to know about each provider's wire format.
+/// Mirrored by `AgentTurn` in src/ai/types.ts.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "kind")]
 pub enum AgentTurn {
@@ -48,7 +49,43 @@ pub enum AgentTurn {
     ToolResult {
         call_id: String,
         output: String,
+        /// Images the tool showed the model (Textus AI's view_image). Each
+        /// dialect delivers them its own way - inside the tool result where
+        /// the API takes images there, as a user message right after it
+        /// where it doesn't. They are for the request in flight only: the
+        /// main crate drops them before the turn reaches the frontend's
+        /// history, as the frontend drops a user turn's images.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        images: Vec<ImageAttachment>,
     },
+}
+
+/// What a tool returns to the loop: text, and any images it shows the
+/// model. A plain `String` converts, so tools without images return text.
+#[derive(Clone, Debug, Default)]
+pub struct ToolOutput {
+    pub text: String,
+    pub images: Vec<ImageAttachment>,
+}
+
+impl From<String> for ToolOutput {
+    fn from(text: String) -> Self {
+        Self {
+            text,
+            images: Vec::new(),
+        }
+    }
+}
+
+/// The text a user message carries next to images a tool showed, where the
+/// dialect can't put them in the tool result itself - so the model reads
+/// them as the tool's answer, not as something the user sent.
+pub fn tool_images_note(images: &[ImageAttachment]) -> String {
+    let names: Vec<&str> = images.iter().map(|i| i.name.as_str()).collect();
+    format!(
+        "(Opened by the tool call above, not sent by the user: {})",
+        names.join(", ")
+    )
 }
 
 /// A tool the model may call. `parameters` is a JSON schema object.
@@ -115,7 +152,7 @@ pub type EventSink<'a> = &'a (dyn Fn(ProviderEvent<'_>) + Send + Sync);
 /// interleaved they couldn't tell parallel calls from sequential steps, and
 /// merging every step into one message rewrote the earlier steps' messages
 /// - and their prompt cache - on each new step.
-pub async fn run_agent_loop<Step, StepFut, ExecuteTool, OnTurn>(
+pub async fn run_agent_loop<Step, StepFut, ExecuteTool, Output, OnTurn>(
     history: Vec<AgentTurn>,
     // `user_turn` is a whole AgentTurn rather than the bare message string it
     // used to be, because the turn the user just sent may carry images
@@ -129,7 +166,8 @@ pub async fn run_agent_loop<Step, StepFut, ExecuteTool, OnTurn>(
 where
     Step: FnMut(Vec<AgentTurn>) -> StepFut,
     StepFut: std::future::Future<Output = Result<StepResult, String>>,
-    ExecuteTool: FnMut(&str, &str) -> String,
+    ExecuteTool: FnMut(&str, &str) -> Output,
+    Output: Into<ToolOutput>,
     OnTurn: FnMut(&AgentTurn),
 {
     let mut turns = history;
@@ -163,10 +201,11 @@ where
                     else {
                         continue;
                     };
-                    let output = execute_tool(name, arguments);
+                    let ToolOutput { text, images } = execute_tool(name, arguments).into();
                     let result_turn = AgentTurn::ToolResult {
                         call_id: call_id.clone(),
-                        output,
+                        output: text,
+                        images,
                     };
                     on_turn(&result_turn);
                     turns.push(result_turn.clone());
@@ -210,10 +249,10 @@ mod tests {
 
     /// Drives the loop with a scripted "model": each step pops the next
     /// response, and records the history it was shown.
-    fn run_scripted(
+    fn run_scripted<R: Into<ToolOutput>>(
         script: Vec<StepResult>,
         max_steps: usize,
-        execute: impl FnMut(&str, &str) -> String,
+        execute: impl FnMut(&str, &str) -> R,
     ) -> (Vec<AgentTurn>, Vec<Vec<AgentTurn>>) {
         let script = RefCell::new(VecDeque::from(script));
         let seen = RefCell::new(Vec::new());
@@ -288,11 +327,35 @@ mod tests {
     }
 
     #[test]
+    fn a_tools_images_land_in_its_result_turn() {
+        let (turns, _) = run_scripted(
+            vec![
+                StepResult::ToolCalls(vec![call("v", "view_image", "{}")]),
+                StepResult::Done(String::new()),
+            ],
+            12,
+            |_, _| ToolOutput {
+                text: "Here is map.png.".into(),
+                images: vec![ImageAttachment {
+                    name: "map.png".into(),
+                    mime: "image/png".into(),
+                    data_base64: "AAAA".into(),
+                }],
+            },
+        );
+        let AgentTurn::ToolResult { output, images, .. } = &turns[2] else {
+            panic!("the call's result follows it");
+        };
+        assert_eq!(output, "Here is map.png.");
+        assert_eq!(images[0].name, "map.png");
+    }
+
+    #[test]
     fn running_out_of_steps_still_ends_with_a_reply() {
         let looping = (0..3)
             .map(|i| StepResult::ToolCalls(vec![call(&i.to_string(), "search_document", "{}")]))
             .collect();
-        let (turns, _) = run_scripted(looping, 3, |_, _| "nothing".into());
+        let (turns, _) = run_scripted(looping, 3, |_, _| "nothing".to_string());
         let AgentTurn::Assistant { text } = turns.last().unwrap() else {
             panic!("the exchange must end with an assistant turn");
         };

@@ -1,7 +1,7 @@
 use crate::ai::agent::AgentMode;
 use crate::ai::builtin;
 use crate::ai::workspace::{AgentSkill, Invocation};
-use aicompat::agent::ToolSpec;
+use aicompat::agent::{ToolOutput, ToolSpec};
 use serde_json::json;
 use std::path::Path;
 
@@ -21,6 +21,10 @@ pub struct ToolContext<'a> {
     /// draft with no folder chosen, or a folder too broad to use, in which
     /// case the file tools aren't offered at all.
     pub root: Option<&'a Path>,
+    /// The provider takes images (catalog's `supports_vision`, the gate on
+    /// the chat's image attachments): the file tools then list images and
+    /// view_image shows them.
+    pub sees_images: bool,
     /// The writing conventions (setting and style-profile front matter)
     /// check_conventions checks against.
     pub conventions: &'a crate::ai::rules::Conventions,
@@ -99,7 +103,14 @@ impl ProposedPassage {
 /// request - the registry and dispatch below don't need to change either way.
 pub struct Tool {
     pub spec: ToolSpec,
-    pub run: fn(&ToolContext, &str) -> String,
+    pub run: Run,
+}
+
+/// A tool's implementation, by what it answers with.
+pub enum Run {
+    Text(fn(&ToolContext, &str) -> String),
+    /// Text and images for the model to look at (view_image).
+    Seeing(fn(&ToolContext, &str) -> ToolOutput),
 }
 
 const SEARCH_TOOL_NAME: &str = "search_document";
@@ -599,6 +610,7 @@ fn remember(ctx: &ToolContext, arguments: &str) -> String {
 
 const LIST_FILES_TOOL_NAME: &str = "list_files";
 const READ_FILE_TOOL_NAME: &str = "read_file";
+const VIEW_IMAGE_TOOL_NAME: &str = "view_image";
 
 /// How much of the project the listing shows: enough for reference
 /// material next to the document, small enough that a huge folder can't
@@ -607,19 +619,24 @@ const MAX_LISTED_FILES: usize = 200;
 const SEARCH_FILES_TOOL_NAME: &str = "search_files";
 const FIND_FILES_TOOL_NAME: &str = "find_files";
 
-/// The project folder's text files (paths relative to it). Hidden entries
-/// and build/dependency folders are skipped - see ai::project.
+/// The project folder's files the tools can read (paths relative to it),
+/// images marked. Hidden entries and build/dependency folders are skipped -
+/// see ai::project.
 fn list_files(ctx: &ToolContext, _arguments: &str) -> String {
     let Some(root) = ctx.root else {
         return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to list."
             .to_string();
     };
-    let walked = crate::ai::project::walk_text_files(root);
+    let walked = crate::ai::project::walk_readable_files(root, ctx.sees_images);
     let files = walked.files;
     if files.is_empty() {
-        return "The project folder has no text files.".to_string();
+        return "The project folder has no files to read.".to_string();
     }
-    let mut lines: Vec<String> = files.iter().take(MAX_LISTED_FILES).cloned().collect();
+    let mut lines: Vec<String> = files
+        .iter()
+        .take(MAX_LISTED_FILES)
+        .map(|rel| crate::ai::project::listed(rel))
+        .collect();
     if files.len() > MAX_LISTED_FILES || walked.truncated {
         let more = files.len().saturating_sub(MAX_LISTED_FILES);
         let more = if walked.truncated {
@@ -641,14 +658,47 @@ fn path_argument(arguments: &str, key: &str) -> String {
         .unwrap_or_default()
 }
 
-/// Reads a text file from inside the project folder - containment, hidden
-/// files and size are enforced by ai::project::read_text.
+/// Reads a text file or a document from inside the project folder, whole
+/// or a line range of it - containment, hidden files and size are enforced
+/// by ai::project::read_part.
 fn read_file(ctx: &ToolContext, arguments: &str) -> String {
     let Some(root) = ctx.root else {
         return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to read."
             .to_string();
     };
-    crate::ai::project::read_text(root, &path_argument(arguments, "path")).unwrap_or_else(|err| err)
+    let args: serde_json::Value = serde_json::from_str(arguments).unwrap_or_default();
+    let line = |key: &str| args.get(key).and_then(|v| v.as_u64()).map(|n| n as usize);
+    let range = crate::ai::project::LineRange {
+        start: line("start_line"),
+        end: line("end_line"),
+    };
+    crate::ai::project::read_part(
+        root,
+        &path_argument(arguments, "path"),
+        range,
+        ctx.sees_images,
+    )
+    .unwrap_or_else(|err| err)
+}
+
+/// Shows the model an image from the project folder - offered only when the
+/// provider takes images (ToolContext::sees_images).
+fn view_image(ctx: &ToolContext, arguments: &str) -> ToolOutput {
+    let Some(root) = ctx.root else {
+        return "There is no project folder for this document, so there are no images to look at."
+            .to_string()
+            .into();
+    };
+    // list_files and find_files mark images "(image)"; a model may copy it.
+    let path = path_argument(arguments, "path");
+    let path = path.trim().trim_end_matches("(image)").trim_end();
+    match crate::ai::project::read_image(root, path) {
+        Ok(image) => ToolOutput {
+            text: format!("Here is `{}` ({}).", image.name, image.mime),
+            images: vec![image],
+        },
+        Err(err) => err.into(),
+    }
 }
 
 /// Finds which project files mention something - the cross-file companion
@@ -668,7 +718,7 @@ fn find_files(ctx: &ToolContext, arguments: &str) -> String {
         return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to find."
             .to_string();
     };
-    crate::ai::project::find(root, &path_argument(arguments, "name"))
+    crate::ai::project::find(root, &path_argument(arguments, "name"), ctx.sees_images)
 }
 
 const CHECK_CONVENTIONS_TOOL_NAME: &str = "check_conventions";
@@ -872,16 +922,23 @@ const PROPOSE_EDIT_DESCRIPTION: &str = "Propose one edit to the document. Nothin
 /// propose_edit as Write mode offers it: the insertion actions only.
 const PROPOSE_INSERTION_DESCRIPTION: &str = "Propose new text for the document. Nothing is modified directly: the user reviews the proposal and applies it with one click. Call once per distinct addition. It only adds text and never changes or removes what is there: `append` adds `text` at the end of the document; `insert_at_cursor` adds `text` exactly where the user's cursor is (only when their message carries a <cursor> block showing it; no `anchor` needed); `insert_before`/`insert_after` add `text` around an untouched `anchor` - inside the paragraph when the anchor is a phrase or sentence within it (write `text` as words that read on from it - after a paragraph's last sentence, this continues the paragraph), as a new paragraph when the anchor is a whole block or `text` is block content (a heading, list, several paragraphs), and as a new line of the same table or list when the anchor is a whole row or list item line and `text` is another one. To write after the user's selection (the <selected-text> block), insert_after its last sentence. `anchor` must be copied verbatim from the document and occur exactly once - if it appears more than once, also pass `context`. `text` must be valid markdown: `-` or `1.` for lists (never `•` or other bullet symbols), `#` for headings.";
 
+const FIND_FILES_DESCRIPTION: &str = "Find files in the project folder by name - text files, and PDF, Word, PowerPoint and spreadsheet files (case-insensitive; every word must appear in the path, so \"chapter 3\" finds drafts/chapter-3.md). Markdown and plain-text documents come first. Use it whenever you know or can guess part of a file's name - a chapter, a character's notes, an outline - instead of listing every file; then read_file.";
+const FIND_FILES_DESCRIPTION_WITH_IMAGES: &str = "Find files in the project folder by name - text files, PDF, Word, PowerPoint and spreadsheet files, and images, marked \"(image)\" (case-insensitive; every word must appear in the path, so \"chapter 3\" finds drafts/chapter-3.md). Markdown and plain-text documents come first. Use it whenever you know or can guess part of a file's name - a chapter, a character's notes, an outline, a map - instead of listing every file; then read_file, or view_image for an image.";
+const LIST_FILES_DESCRIPTION: &str = "List the files in the project folder you can read - text files, and PDF, Word, PowerPoint and spreadsheet files (recursively, paths relative to it). Use it to see what reference material there is - notes, other chapters, data - when you have no name to look for; to find a file by name, use find_files instead.";
+const LIST_FILES_DESCRIPTION_WITH_IMAGES: &str = "List the files in the project folder you can read - text files, PDF, Word, PowerPoint and spreadsheet files, and images, marked \"(image)\" (recursively, paths relative to it). Use it to see what reference material there is - notes, other chapters, data, pictures - when you have no name to look for; to find a file by name, use find_files instead.";
+
 /// The tools available to an agent conversation. Skill and file tools are
 /// only offered when there's something for them to work on - a tool that can
 /// only report "nothing there" would just waste the model's steps. Append
 /// here (or extend to merge in MCP-provided tools) as the toolset grows.
 /// `can_remember`: Settings > Textus AI > Remember automatically is on.
+/// `sees_images`: the provider takes images (ToolContext::sees_images).
 pub fn builtin_tools(
     has_skills: bool,
     has_root: bool,
     mode: AgentMode,
     can_remember: bool,
+    sees_images: bool,
 ) -> Vec<Tool> {
     let mut tools = vec![Tool {
             spec: ToolSpec {
@@ -898,7 +955,7 @@ pub fn builtin_tools(
                     "required": ["query"],
                 }),
             },
-            run: search_document,
+            run: Run::Text(search_document),
         }, Tool {
             spec: ToolSpec {
                 name: READ_DOCUMENT_TOOL_NAME,
@@ -921,7 +978,7 @@ pub fn builtin_tools(
                     },
                 }),
             },
-            run: read_document,
+            run: Run::Text(read_document),
         }];
 
     // The rules engine's read-only tools: every mode has them.
@@ -955,7 +1012,7 @@ pub fn builtin_tools(
                 },
             }),
         },
-        run: check_conventions,
+        run: Run::Text(check_conventions),
     });
     tools.push(Tool {
         spec: ToolSpec {
@@ -977,7 +1034,7 @@ pub fn builtin_tools(
                 "required": ["text"],
             }),
         },
-        run: measure_text,
+        run: Run::Text(measure_text),
     });
 
     // Comments change nothing, so every mode has them - feedback is most
@@ -1005,7 +1062,7 @@ pub fn builtin_tools(
                 "required": ["anchor", "comment"],
             }),
         },
-        run: add_comment,
+        run: Run::Text(add_comment),
     });
 
     // Remembering writes memory, never the document, so every mode has it.
@@ -1048,7 +1105,7 @@ pub fn builtin_tools(
                     "required": ["kind", "text"],
                 }),
             },
-            run: remember,
+            run: Run::Text(remember),
         });
     }
 
@@ -1102,7 +1159,7 @@ pub fn builtin_tools(
                     "required": ["action"],
                 }),
             },
-            run,
+            run: Run::Text(run),
         });
     }
 
@@ -1122,7 +1179,7 @@ pub fn builtin_tools(
                     "required": ["name"],
                 }),
             },
-            run: use_skill,
+            run: Run::Text(use_skill),
         });
     }
 
@@ -1130,7 +1187,11 @@ pub fn builtin_tools(
         tools.push(Tool {
             spec: ToolSpec {
                 name: FIND_FILES_TOOL_NAME,
-                description: "Find text files in the project folder by name (case-insensitive; every word must appear in the path, so \"chapter 3\" finds drafts/chapter-3.md). Documents come first. Use it whenever you know or can guess part of a file's name - a chapter, a character's notes, an outline - instead of listing every file; then read_file.",
+                description: if sees_images {
+                    FIND_FILES_DESCRIPTION_WITH_IMAGES
+                } else {
+                    FIND_FILES_DESCRIPTION
+                },
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -1142,12 +1203,12 @@ pub fn builtin_tools(
                     "required": ["name"],
                 }),
             },
-            run: find_files,
+            run: Run::Text(find_files),
         });
         tools.push(Tool {
             spec: ToolSpec {
                 name: SEARCH_FILES_TOOL_NAME,
-                description: "Search every text file in the project folder for a word or phrase (case-insensitive). Returns `path:line: text` matches - use it to find where a character, term or fact appears across chapters and notes, then read_file for the full context.",
+                description: "Search every text file and document (PDF, Word, PowerPoint, spreadsheet) in the project folder for a word or phrase (case-insensitive), however long the file. Returns `path:line: text` matches - use it to find where a character, term or fact appears across chapters and notes, then read_file with start_line and end_line around the match for its context.",
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -1159,33 +1220,64 @@ pub fn builtin_tools(
                     "required": ["query"],
                 }),
             },
-            run: search_files,
+            run: Run::Text(search_files),
         });
         tools.push(Tool {
             spec: ToolSpec {
                 name: LIST_FILES_TOOL_NAME,
-                description: "List the text files in the project folder (recursively, paths relative to it). Use it to see what reference material there is - notes, other chapters, data - when you have no name to look for; to find a file by name, use find_files instead.",
+                description: if sees_images {
+                    LIST_FILES_DESCRIPTION_WITH_IMAGES
+                } else {
+                    LIST_FILES_DESCRIPTION
+                },
                 parameters: json!({"type": "object", "properties": {}}),
             },
-            run: list_files,
+            run: Run::Text(list_files),
         });
         tools.push(Tool {
             spec: ToolSpec {
                 name: READ_FILE_TOOL_NAME,
-                description: "Read a text file from the project folder. Use the relative path as shown by find_files, search_files or list_files.",
+                description: "Read a text file, or the text of a PDF, Word, PowerPoint or spreadsheet file, from the project folder. Use the relative path as shown by find_files, search_files or list_files. A long file comes back in parts: the answer says which lines of how many it shows and where to read on; pass start_line and end_line to read a part - say, a few dozen lines around a line search_files found.",
                 parameters: json!({
                     "type": "object",
                     "properties": {
                         "path": {
                             "type": "string",
                             "description": "Path relative to the project folder"
+                        },
+                        "start_line": {
+                            "type": "integer",
+                            "description": "First line to read, 1-based (as in search_files results)."
+                        },
+                        "end_line": {
+                            "type": "integer",
+                            "description": "Last line to read, inclusive."
                         }
                     },
                     "required": ["path"],
                 }),
             },
-            run: read_file,
+            run: Run::Text(read_file),
         });
+        if sees_images {
+            tools.push(Tool {
+                spec: ToolSpec {
+                    name: VIEW_IMAGE_TOOL_NAME,
+                    description: "Look at an image in the project folder (PNG, JPEG, GIF or WebP, up to 6 MB) - a map, a photo, a chart, a scanned page. Use the relative path as list_files or find_files show it.",
+                    parameters: json!({
+                        "type": "object",
+                        "properties": {
+                            "path": {
+                                "type": "string",
+                                "description": "Path relative to the project folder"
+                            }
+                        },
+                        "required": ["path"],
+                    }),
+                },
+                run: Run::Seeing(view_image),
+            });
+        }
     }
 
     tools
@@ -1195,10 +1287,11 @@ pub fn tool_specs(tools: &[Tool]) -> Vec<ToolSpec> {
     tools.iter().map(|t| t.spec.clone()).collect()
 }
 
-pub fn execute(tools: &[Tool], ctx: &ToolContext, name: &str, arguments: &str) -> String {
-    match tools.iter().find(|t| t.spec.name == name) {
-        Some(tool) => (tool.run)(ctx, arguments),
-        None => format!("Unknown tool: {name}"),
+pub fn execute(tools: &[Tool], ctx: &ToolContext, name: &str, arguments: &str) -> ToolOutput {
+    match tools.iter().find(|t| t.spec.name == name).map(|t| &t.run) {
+        Some(Run::Text(run)) => run(ctx, arguments).into(),
+        Some(Run::Seeing(run)) => run(ctx, arguments),
+        None => format!("Unknown tool: {name}").into(),
     }
 }
 
@@ -1251,6 +1344,7 @@ mod tests {
             skills: &ws.skills,
             ui_language: "en",
             root: None,
+            sees_images: false,
             conventions: &NO_CONVENTIONS,
             library: &[],
             memory: None,
@@ -1283,6 +1377,7 @@ mod tests {
             skills: &[],
             ui_language: "en",
             root: None,
+            sees_images: false,
             conventions: &NO_CONVENTIONS,
             library: &[],
             memory: None,
@@ -1347,7 +1442,7 @@ mod tests {
     #[test]
     fn the_rules_tools_are_in_every_mode() {
         for mode in [AgentMode::Review, AgentMode::Revise, AgentMode::Write] {
-            let names: Vec<&str> = builtin_tools(false, false, mode, false)
+            let names: Vec<&str> = builtin_tools(false, false, mode, false, false)
                 .iter()
                 .map(|t| t.spec.name)
                 .collect();
@@ -1361,7 +1456,7 @@ mod tests {
     #[test]
     fn the_project_file_tools_are_offered_only_with_a_project_folder() {
         let names = |has_root: bool| -> Vec<&str> {
-            builtin_tools(false, has_root, AgentMode::Revise, false)
+            builtin_tools(false, has_root, AgentMode::Revise, false, false)
                 .iter()
                 .map(|t| t.spec.name)
                 .filter(|n| n.ends_with("_files") || *n == READ_FILE_TOOL_NAME)
@@ -1375,17 +1470,86 @@ mod tests {
     }
 
     #[test]
+    fn view_image_is_offered_only_to_a_model_that_can_see() {
+        let offered = |has_root: bool, sees_images: bool| {
+            builtin_tools(false, has_root, AgentMode::Review, false, sees_images)
+                .iter()
+                .any(|t| t.spec.name == VIEW_IMAGE_TOOL_NAME)
+        };
+        assert!(offered(true, true));
+        assert!(!offered(true, false));
+        assert!(!offered(false, true));
+    }
+
+    #[test]
+    fn view_image_shows_the_image_and_the_listing_marks_it() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("map.png"), [0x89, b'P', b'N', b'G']).unwrap();
+        std::fs::write(dir.path().join("notes.md"), "").unwrap();
+        let tools = builtin_tools(false, true, AgentMode::Review, false, true);
+        let seeing = ToolContext {
+            root: Some(dir.path()),
+            sees_images: true,
+            ..ctx("")
+        };
+        assert_eq!(list_files(&seeing, "{}"), "map.png (image)\nnotes.md");
+        // The path as the listing shows it works too.
+        let out = execute(
+            &tools,
+            &seeing,
+            VIEW_IMAGE_TOOL_NAME,
+            r#"{"path":"map.png (image)"}"#,
+        );
+        assert_eq!(out.text, "Here is `map.png` (image/png).");
+        assert_eq!(out.images.len(), 1);
+        let out = execute(
+            &tools,
+            &seeing,
+            VIEW_IMAGE_TOOL_NAME,
+            r#"{"path":"notes.md"}"#,
+        );
+        assert!(out.text.starts_with("`notes.md` isn't an image"));
+        assert!(out.images.is_empty());
+        let blind = ToolContext {
+            root: Some(dir.path()),
+            ..ctx("")
+        };
+        assert_eq!(list_files(&blind, "{}"), "notes.md");
+    }
+
+    #[test]
+    fn read_file_takes_a_line_range() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("a.md"), "one\ntwo\nthree\n").unwrap();
+        let in_project = ToolContext {
+            root: Some(dir.path()),
+            ..ctx("")
+        };
+        assert_eq!(
+            read_file(
+                &in_project,
+                r#"{"path":"a.md","start_line":2,"end_line":2}"#
+            ),
+            "`a.md`, lines 2-2 of 3:\ntwo"
+        );
+        assert_eq!(
+            read_file(&in_project, r#"{"path":"a.md"}"#),
+            "one\ntwo\nthree\n"
+        );
+    }
+
+    #[test]
     fn find_files_finds_project_files_by_name() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(dir.path().join("notes")).unwrap();
         std::fs::write(dir.path().join("notes/Lin Wan.md"), "").unwrap();
         std::fs::write(dir.path().join("chapter-1.md"), "").unwrap();
-        let tools = builtin_tools(false, true, AgentMode::Revise, false);
+        let tools = builtin_tools(false, true, AgentMode::Revise, false, false);
         let in_project = ToolContext {
             root: Some(dir.path()),
             ..ctx("")
         };
-        let run = |args: &str| execute(&tools, &in_project, FIND_FILES_TOOL_NAME, args);
+        let run = |args: &str| execute(&tools, &in_project, FIND_FILES_TOOL_NAME, args).text;
         assert_eq!(run(r#"{"name":"lin_wan"}"#), "notes/Lin Wan.md");
         assert!(run(r#"{"name":"zebra"}"#).starts_with("No file in the project folder"));
         assert!(find_files(&ctx(""), r#"{"name":"lin"}"#).starts_with("There is no project folder"));
@@ -1395,7 +1559,7 @@ mod tests {
     #[test]
     fn remember_is_offered_in_every_mode_only_while_the_setting_is_on() {
         let has = |mode: AgentMode, remember: bool| {
-            builtin_tools(true, true, mode, remember)
+            builtin_tools(true, true, mode, remember, false)
                 .iter()
                 .any(|t| t.spec.name == REMEMBER_TOOL_NAME)
         };
@@ -1427,7 +1591,7 @@ mod tests {
     #[test]
     fn review_mode_does_not_receive_the_edit_tool() {
         let edit_tool = |mode| {
-            builtin_tools(true, true, mode, false)
+            builtin_tools(true, true, mode, false, false)
                 .into_iter()
                 .find(|tool| tool.spec.name == PROPOSE_EDIT_TOOL_NAME)
         };
@@ -1441,9 +1605,9 @@ mod tests {
     #[test]
     fn write_mode_refuses_an_edit_that_changes_existing_text() {
         let doc = "The cat sat on the mat.";
-        let tools = builtin_tools(false, false, AgentMode::Write, false);
+        let tools = builtin_tools(false, false, AgentMode::Write, false, false);
         let ctx = ctx(doc);
-        let run = |args: &str| execute(&tools, &ctx, PROPOSE_EDIT_TOOL_NAME, args);
+        let run = |args: &str| execute(&tools, &ctx, PROPOSE_EDIT_TOOL_NAME, args).text;
         for args in [
             r#"{"action":"replace","anchor":"The cat sat on the mat.","text":"A dog."}"#,
             r#"{"action":"replace_selection","text":"A dog."}"#,
@@ -1464,13 +1628,14 @@ mod tests {
             assert!(run(args).starts_with("Edit proposed"), "{args}");
         }
         // Revise keeps every action.
-        let revise = builtin_tools(false, false, AgentMode::Revise, false);
+        let revise = builtin_tools(false, false, AgentMode::Revise, false, false);
         assert!(execute(
             &revise,
             &ctx,
             PROPOSE_EDIT_TOOL_NAME,
             r#"{"action":"delete","anchor":"The cat sat on the mat."}"#
         )
+        .text
         .starts_with("Edit proposed"));
     }
 

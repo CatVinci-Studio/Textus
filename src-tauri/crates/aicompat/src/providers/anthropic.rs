@@ -1,4 +1,4 @@
-use crate::agent::{AgentTurn, EventSink, ProviderEvent, StepResult, ToolSpec};
+use crate::agent::{AgentTurn, EventSink, ImageAttachment, ProviderEvent, StepResult, ToolSpec};
 use crate::pkce::{generate_pkce, now_ms};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -350,6 +350,18 @@ fn tool_to_schema(tool: &ToolSpec) -> Value {
 /// before the loop recorded calls first interleave Call1, Result1, Call2,
 /// Result2 - those replay as one pair per call, which is valid and only
 /// loses the fact that the calls ran in parallel.
+/// An image as a Messages API content block.
+fn image_block(image: &ImageAttachment) -> Value {
+    json!({
+        "type": "image",
+        "source": {
+            "type": "base64",
+            "media_type": image.mime,
+            "data": image.data_base64,
+        },
+    })
+}
+
 fn turns_to_messages(history: &[AgentTurn]) -> Vec<Value> {
     let mut messages = Vec::new();
     let mut i = 0;
@@ -363,19 +375,7 @@ fn turns_to_messages(history: &[AgentTurn]) -> Vec<Value> {
                 if images.is_empty() {
                     messages.push(json!({"role": "user", "content": text}));
                 } else {
-                    let mut content: Vec<Value> = images
-                        .iter()
-                        .map(|image| {
-                            json!({
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": image.mime,
-                                    "data": image.data_base64,
-                                },
-                            })
-                        })
-                        .collect();
+                    let mut content: Vec<Value> = images.iter().map(image_block).collect();
                     content.push(json!({"type": "text", "text": text}));
                     messages.push(json!({"role": "user", "content": content}));
                 }
@@ -414,11 +414,24 @@ fn turns_to_messages(history: &[AgentTurn]) -> Vec<Value> {
                             }));
                             i += 1;
                         }
-                        AgentTurn::ToolResult { call_id, output } => {
+                        AgentTurn::ToolResult {
+                            call_id,
+                            output,
+                            images,
+                        } => {
+                            // A tool_result takes image blocks next to its
+                            // text, so a tool's images stay in its result.
+                            let content = if images.is_empty() {
+                                json!(output)
+                            } else {
+                                let mut blocks = vec![json!({"type": "text", "text": output})];
+                                blocks.extend(images.iter().map(image_block));
+                                Value::Array(blocks)
+                            };
                             tool_results.push(json!({
                                 "type": "tool_result",
                                 "tool_use_id": call_id,
-                                "content": output,
+                                "content": content,
                             }));
                             i += 1;
                         }
@@ -884,6 +897,7 @@ mod tests {
         AgentTurn::ToolResult {
             call_id: id.to_string(),
             output: output.to_string(),
+            images: Vec::new(),
         }
     }
 
@@ -891,6 +905,35 @@ mod tests {
         AgentTurn::Assistant {
             text: text.to_string(),
         }
+    }
+
+    /// Messages takes image blocks inside a tool_result, so a tool's
+    /// images stay with its text - no extra user message.
+    #[test]
+    fn tool_result_images_ride_inside_the_tool_result() {
+        let history = vec![
+            call("v", "map"),
+            AgentTurn::ToolResult {
+                call_id: "v".to_string(),
+                output: "Here is map.png.".to_string(),
+                images: vec![ImageAttachment {
+                    name: "map.png".to_string(),
+                    mime: "image/png".to_string(),
+                    data_base64: "AAAA".into(),
+                }],
+            },
+            result("w", "plain"),
+        ];
+        let messages = turns_to_messages(&history);
+        assert_eq!(messages.len(), 2);
+        let results = messages[1]["content"].as_array().unwrap();
+        let blocks = results[0]["content"].as_array().unwrap();
+        assert_eq!(blocks[0]["text"], "Here is map.png.");
+        assert_eq!(blocks[1]["type"], "image");
+        assert_eq!(blocks[1]["source"]["media_type"], "image/png");
+        assert_eq!(blocks[1]["source"]["data"], "AAAA");
+        // A result without images keeps the plain string.
+        assert_eq!(results[1]["content"], "plain");
     }
 
     #[test]

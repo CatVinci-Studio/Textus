@@ -66,9 +66,10 @@ base64 = "0.22"
 reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
 aicompat = { path = "crates/aicompat" }
 
-# Chat attachment extraction (commands/attachment.rs). Everything the "+"
-# button accepts has to become either text in the prompt or a base64 image
-# part, so each format needs a reader:
+# Text extraction (src/extract.rs), for chat attachments (commands/
+# attachment.rs) and Textus AI's project tools (ai/project.rs). Everything
+# the "+" button accepts has to become either text in the prompt or a base64
+# image part, so each format needs a reader:
 #   pdf-extract  PDF text layer (scanned/image-only PDFs have none, and are
 #                reported as such rather than silently attaching nothing)
 #   calamine     xlsx/xls/xlsb/ods, rendered as one markdown table per sheet

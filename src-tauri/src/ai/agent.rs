@@ -205,18 +205,18 @@ fn where_to_choose_the_project_folder(has_menu: bool) -> String {
 fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -> String {
     use crate::ai::workspace::RootSource;
     let one_folder = "There is one project folder at a time: for material in two places, the user chooses a folder that contains both.";
-    let file_tools = "To find a file by name, use find_files - whenever you know or can guess part of the name; search_files finds words inside files, list_files lists every file (only to see what there is), and read_file reads one.";
+    let file_tools = "To find a file by name, use find_files - whenever you know or can guess part of the name; search_files finds words inside files, list_files lists every file (only to see what there is), and read_file reads one - a long one in parts, by line range, starting from where search_files found what you need; view_image, when you have it, shows you an image.";
     let folder = match (&workspace.root, workspace.root_source) {
         (Some(root), RootSource::Chosen) => format!(
-            "Project folder: {root} - chosen by the user, in {}. You can read the text files in it, and nothing outside it. Use the document's folder, in the same menu or Settings row, goes back to the open document's own folder. {file_tools} {one_folder}",
+            "Project folder: {root} - chosen by the user, in {}. You can read its text files and its PDF, Word, PowerPoint and spreadsheet files, and nothing outside it. Use the document's folder, in the same menu or Settings row, goes back to the open document's own folder. {file_tools} {one_folder}",
             where_to_choose_the_project_folder(true)
         ),
         (Some(root), RootSource::EnclosingProject) => format!(
-            "Project folder: {root} - the nearest folder above the open document that has a .textus/ folder. You can read the text files in it, and nothing outside it; the user can choose another one in {}. {file_tools} {one_folder}",
+            "Project folder: {root} - the nearest folder above the open document that has a .textus/ folder. You can read its text files and its PDF, Word, PowerPoint and spreadsheet files, and nothing outside it; the user can choose another one in {}. {file_tools} {one_folder}",
             where_to_choose_the_project_folder(true)
         ),
         (Some(root), _) => format!(
-            "Project folder: {root} - the open document's own folder, the default. You can read the text files in it, and nothing outside it; the user can choose another one in {}. {file_tools} {one_folder}",
+            "Project folder: {root} - the open document's own folder, the default. You can read its text files and its PDF, Word, PowerPoint and spreadsheet files, and nothing outside it; the user can choose another one in {}. {file_tools} {one_folder}",
             where_to_choose_the_project_folder(true)
         ),
         (None, RootSource::TooBroad) => format!("Project folder: none - the document's folder is the user's home folder or a whole drive, which is too broad to open to you, so you can't read any files, and there is no project menu. If the user refers to a file, say so, ask them to paste what you need, and tell them they can choose a narrower project folder in {}.", where_to_choose_the_project_folder(false)),
@@ -669,8 +669,11 @@ pub(crate) fn compact_history(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
     let mut turns: Vec<AgentTurn> = history
         .into_iter()
         .map(|turn| match turn {
-            AgentTurn::ToolResult { call_id, output }
-                if output.chars().count() > OLD_TOOL_OUTPUT_LIMIT
+            AgentTurn::ToolResult {
+                call_id,
+                output,
+                images,
+            } if output.chars().count() > OLD_TOOL_OUTPUT_LIMIT
                     && tool_names.get(&call_id).map(String::as_str) != Some("propose_edit") =>
             {
                 let omitted = output.chars().count() - OLD_TOOL_OUTPUT_KEEP;
@@ -678,7 +681,11 @@ pub(crate) fn compact_history(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
                     "{}\n[... {omitted} more characters of this earlier result omitted to save space - call the tool again if you need them]",
                     char_prefix(&output, OLD_TOOL_OUTPUT_KEEP)
                 );
-                AgentTurn::ToolResult { call_id, output }
+                AgentTurn::ToolResult {
+                    call_id,
+                    output,
+                    images,
+                }
             }
             turn => turn,
         })
@@ -884,6 +891,7 @@ async fn ai_agent_message_inner(
                 workspace.root.is_some(),
                 mode,
                 workspace.remember,
+                entry.supports_vision,
             );
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
@@ -891,6 +899,7 @@ async fn ai_agent_message_inner(
                 skills: &workspace.skills,
                 ui_language: &ui_language,
                 root: workspace.root.as_deref().map(Path::new),
+                sees_images: entry.supports_vision,
                 conventions: &conventions,
                 library: &library,
                 memory: memory.as_ref(),
@@ -942,7 +951,9 @@ async fn ai_agent_message_inner(
                         step,
                         |name, arguments| tools::execute(&tools, &tool_ctx, name, arguments),
                         |turn| {
-                            let _ = on_event.send(StreamEvent::Turn { turn: turn.clone() });
+                            let _ = on_event.send(StreamEvent::Turn {
+                                turn: for_history(turn.clone()),
+                            });
                         },
                     )
                     .await
@@ -982,7 +993,9 @@ async fn ai_agent_message_inner(
                         step,
                         |name, arguments| tools::execute(&tools, &tool_ctx, name, arguments),
                         |turn| {
-                            let _ = on_event.send(StreamEvent::Turn { turn: turn.clone() });
+                            let _ = on_event.send(StreamEvent::Turn {
+                                turn: for_history(turn.clone()),
+                            });
                         },
                     )
                     .await
@@ -998,6 +1011,7 @@ async fn ai_agent_message_inner(
                 workspace.root.is_some(),
                 mode,
                 workspace.remember,
+                entry.supports_vision,
             );
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
@@ -1005,6 +1019,7 @@ async fn ai_agent_message_inner(
                 skills: &workspace.skills,
                 ui_language: &ui_language,
                 root: workspace.root.as_deref().map(Path::new),
+                sees_images: entry.supports_vision,
                 conventions: &conventions,
                 library: &library,
                 memory: memory.as_ref(),
@@ -1046,7 +1061,9 @@ async fn ai_agent_message_inner(
                 step,
                 |name, arguments| tools::execute(&tools, &tool_ctx, name, arguments),
                 |turn| {
-                    let _ = on_event.send(StreamEvent::Turn { turn: turn.clone() });
+                    let _ = on_event.send(StreamEvent::Turn {
+                        turn: for_history(turn.clone()),
+                    });
                 },
             )
             .await
@@ -1063,6 +1080,7 @@ async fn ai_agent_message_inner(
                 workspace.root.is_some(),
                 mode,
                 workspace.remember,
+                entry.supports_vision,
             );
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
@@ -1070,6 +1088,7 @@ async fn ai_agent_message_inner(
                 skills: &workspace.skills,
                 ui_language: &ui_language,
                 root: workspace.root.as_deref().map(Path::new),
+                sees_images: entry.supports_vision,
                 conventions: &conventions,
                 library: &library,
                 memory: memory.as_ref(),
@@ -1168,7 +1187,9 @@ async fn ai_agent_message_inner(
                 step,
                 |name, arguments| tools::execute(&tools, &tool_ctx, name, arguments),
                 |turn| {
-                    let _ = on_event.send(StreamEvent::Turn { turn: turn.clone() });
+                    let _ = on_event.send(StreamEvent::Turn {
+                        turn: for_history(turn.clone()),
+                    });
                 },
             )
             .await
@@ -1212,12 +1233,35 @@ async fn ai_agent_message_inner(
     // What history keeps is the message as the user wrote it - the document
     // copy was for this request only, and replaying it in every later
     // request would multiply the prompt by the number of turns.
-    result.map(|mut turns| {
+    result.map(|turns| {
+        let mut turns: Vec<AgentTurn> = turns.into_iter().map(for_history).collect();
         if let Some(AgentTurn::User { text, .. }) = turns.first_mut() {
             *text = plain_message;
         }
         turns
     })
+}
+
+/// A turn as the frontend keeps it: a tool result without the images it
+/// showed the model, which were for this request only - base64 in the saved
+/// chat history would grow it by megabytes a picture, as the frontend's own
+/// note on a user turn's images says (useAgentConversation.ts). The result
+/// says so, so a later request that needs the picture opens it again.
+fn for_history(turn: AgentTurn) -> AgentTurn {
+    match turn {
+        AgentTurn::ToolResult {
+            call_id,
+            output,
+            images,
+        } if !images.is_empty() => AgentTurn::ToolResult {
+            call_id,
+            output: format!(
+                "{output}\n[The image was shown for that request only - call view_image again to look at it.]"
+            ),
+            images: Vec::new(),
+        },
+        turn => turn,
+    }
 }
 
 /// Providers without tool-calling support get the conversation flattened
@@ -1277,13 +1321,14 @@ mod tests {
         use std::collections::VecDeque;
 
         let document = "# Notes\n\n## Methods\n\nWe sampled ten sites.\n\n## Results\n\nAll good.";
-        let tools = tools::builtin_tools(false, false, AgentMode::Revise, false);
+        let tools = tools::builtin_tools(false, false, AgentMode::Revise, false, false);
         let conventions = crate::ai::rules::Conventions::default();
         let ctx = ToolContext {
             document,
             skills: &[],
             ui_language: "en",
             root: None,
+            sees_images: false,
             conventions: &conventions,
             library: &[],
             memory: None,
@@ -1328,9 +1373,9 @@ mod tests {
             turns
                 .iter()
                 .find_map(|t| match t {
-                    AgentTurn::ToolResult { call_id, output } if call_id == id => {
-                        Some(output.clone())
-                    }
+                    AgentTurn::ToolResult {
+                        call_id, output, ..
+                    } if call_id == id => Some(output.clone()),
                     _ => None,
                 })
                 .unwrap()
@@ -1350,6 +1395,35 @@ mod tests {
     }
 
     #[test]
+    fn history_keeps_no_tool_images_and_says_so() {
+        let shown = AgentTurn::ToolResult {
+            call_id: "v".into(),
+            output: "Here is `map.png` (image/png).".into(),
+            images: vec![ImageAttachment {
+                name: "map.png".into(),
+                mime: "image/png".into(),
+                data_base64: "AAAA".into(),
+            }],
+        };
+        let AgentTurn::ToolResult { output, images, .. } = for_history(shown) else {
+            panic!("still a tool result");
+        };
+        assert!(images.is_empty());
+        assert!(
+            output.ends_with("call view_image again to look at it.]"),
+            "{output}"
+        );
+        let plain = AgentTurn::ToolResult {
+            call_id: "r".into(),
+            output: "text".into(),
+            images: Vec::new(),
+        };
+        assert!(
+            matches!(for_history(plain), AgentTurn::ToolResult { output, .. } if output == "text")
+        );
+    }
+
+    #[test]
     fn compact_history_stubs_old_reads_but_keeps_edit_results() {
         let big = "x".repeat(5_000);
         let history = vec![
@@ -1365,6 +1439,7 @@ mod tests {
             AgentTurn::ToolResult {
                 call_id: "r".into(),
                 output: big.clone(),
+                images: Vec::new(),
             },
             AgentTurn::ToolCall {
                 call_id: "e".into(),
@@ -1374,6 +1449,7 @@ mod tests {
             AgentTurn::ToolResult {
                 call_id: "e".into(),
                 output: big.clone(),
+                images: Vec::new(),
             },
         ];
         let out = compact_history(history);
@@ -1422,6 +1498,7 @@ mod tests {
             AgentTurn::ToolResult {
                 call_id: format!("r{n}"),
                 output: "z".repeat(2_000),
+                images: Vec::new(),
             },
             AgentTurn::Assistant {
                 text: "a".repeat(chars),
