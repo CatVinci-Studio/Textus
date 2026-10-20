@@ -663,6 +663,7 @@ para usar una.
     "Este atajo está reservado para una acción estándar de la aplicación.",
   shortcutUnset: "Sin asignar",
   shortcutClear: "Borrar",
+  shortcutReset: "Restablecer",
   shortcutNextTab: "Pestaña siguiente",
   shortcutPreviousTab: "Pestaña anterior",
   shortcutHeadingsGroupLabel: "Encabezados",

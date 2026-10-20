@@ -162,19 +162,33 @@ describe("the default configurable shortcuts", () => {
     });
   });
 
-  it("leave the heading levels unbound and Mod+Shift+O to the file search", () => {
+  it("set Heading 1-6 with Mod+1..6, as Typora does, and leave Paragraph unbound", () => {
     for (const mac of [true, false]) {
       const shortcuts = defaultShortcuts(mac);
-      for (const action of [
-        "setHeading1",
-        "setHeading2",
-        "setHeading3",
-        "setHeading4",
-        "setHeading5",
-        "setHeading6",
-        "setParagraph",
-      ] as const)
-        expect(shortcuts[action]).toBe("");
+      expect(shortcuts).toMatchObject({
+        setHeading1: "mod+1",
+        setHeading2: "mod+2",
+        setHeading3: "mod+3",
+        setHeading4: "mod+4",
+        setHeading5: "mod+5",
+        setHeading6: "mod+6",
+        // Mod+0 is Actual Size.
+        setParagraph: "",
+      });
+    }
+    expect(isReservedCombo("mod+0")).toBe(true);
+  });
+
+  it("are no fixed key on an iPad keyboard either", () => {
+    onPlatform("ios");
+    const fixed = fixedCombos("ios");
+    for (const combo of Object.values(defaultShortcuts()).filter(Boolean))
+      expect(fixed, combo).not.toContain(combo);
+  });
+
+  it("leave Mod+Shift+O to the file search", () => {
+    for (const mac of [true, false]) {
+      const shortcuts = defaultShortcuts(mac);
       // The sidebar's file-name search, and nothing else.
       expect(
         Object.entries(shortcuts).filter(([, c]) => c === "mod+shift+o"),

@@ -7,7 +7,7 @@ Te damos la bienvenida. Este documento integrado muestra el Markdown que admite 
 
 ## Encabezados y citas
 
-Escribe `#` y un espacio al principio de una línea para crear un encabezado de nivel 1, o `##` y un espacio para uno de nivel 2. Los encabezados de arriba muestran el resultado.
+Escribe `#` y un espacio al principio de una línea para crear un encabezado de nivel 1, o `##` y un espacio para uno de nivel 2. Los encabezados de arriba muestran el resultado. `Ctrl+1` a `Ctrl+6` (`Cmd+1` a `Cmd+6` en un Mac) convierten la línea actual en un encabezado de ese nivel.
 
 Una cita:
 

@@ -7,7 +7,7 @@ Welcome! This built-in document demonstrates the Markdown rendering Textus suppo
 
 ## Headings and quotes
 
-Type `#` plus a space at the start of a line for a level-1 heading, or `##` plus a space for level 2. The headings above show the rendered result.
+Type `#` plus a space at the start of a line for a level-1 heading, or `##` plus a space for level 2. The headings above show the rendered result. `Ctrl+1` to `Ctrl+6` (`Cmd+1` to `Cmd+6` on a Mac) make the current line a heading of that level.
 
 A blockquote:
 

@@ -647,6 +647,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   shortcutReserved: "Este atalho é reservado para uma ação padrão do app.",
   shortcutUnset: "Não definido",
   shortcutClear: "Limpar",
+  shortcutReset: "Restaurar",
   shortcutNextTab: "Próxima aba",
   shortcutPreviousTab: "Aba anterior",
   shortcutHeadingsGroupLabel: "Títulos",

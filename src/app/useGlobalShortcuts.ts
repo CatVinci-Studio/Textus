@@ -96,14 +96,26 @@ export function useGlobalShortcuts(opts: {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.defaultPrevented || e.isComposing || e.keyCode === 229) return;
-      // Dialogs (including shortcut recording) own their keyboard input.
-      if (
-        e.target instanceof Element &&
-        e.target.closest('[aria-modal="true"]')
-      )
-        return;
       const combo = comboFromEvent(e);
       if (!combo) return;
+      const { shortcuts } = settings;
+      const heading = HEADING_KINDS.find(
+        ([action]) => combo === shortcuts[action],
+      );
+      const target = e.target instanceof Element ? e.target : null;
+      // Dialogs (including shortcut recording) own their keyboard input.
+      // A heading key is swallowed there, and in a text field outside the
+      // document (the AI panel, Quick Ask, a search box): it means nothing
+      // in either, and left alone it would reach the macOS menu bar's own
+      // key for the level (menu.rs), which changes the document behind.
+      if (target?.closest('[aria-modal="true"]')) {
+        if (heading) e.preventDefault();
+        return;
+      }
+      if (heading && target?.closest("input, textarea")) {
+        e.preventDefault();
+        return;
+      }
       if (combo === "mod+s") {
         e.preventDefault();
         void saveTab(activeTabId);
@@ -167,7 +179,6 @@ export function useGlobalShortcuts(opts: {
         runLocalMenuAction("fullscreen");
         return;
       }
-      const { shortcuts } = settings;
       const tabStep =
         macTabStep(e, modIsMeta()) ??
         (combo === shortcuts.nextTab
@@ -184,9 +195,6 @@ export function useGlobalShortcuts(opts: {
         if (next) setActiveTabId(next);
         return;
       }
-      const heading = HEADING_KINDS.find(
-        ([action]) => combo === shortcuts[action],
-      );
       if (heading) {
         e.preventDefault();
         window.dispatchEvent(

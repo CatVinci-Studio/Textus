@@ -16,6 +16,7 @@ import {
   normaliseSettings,
   resetSettingsStoreForTests,
   SettingsProvider,
+  SHORTCUTS_REVISION,
   type Settings,
   UI_TEXT_SCALES,
   useSettings,
@@ -385,5 +386,115 @@ describe("interface text size", () => {
     expect(list?.[1].split(",").map(Number)).toEqual(
       UI_TEXT_SCALES.filter((scale) => scale !== 1),
     );
+  });
+});
+
+describe("heading shortcuts", () => {
+  const levels = (shortcuts: Settings["shortcuts"]) =>
+    [1, 2, 3, 4, 5, 6].map(
+      (n) => shortcuts[`setHeading${n}` as keyof Settings["shortcuts"]],
+    );
+  const TYPORA = ["mod+1", "mod+2", "mod+3", "mod+4", "mod+5", "mod+6"];
+  /** What 1.2.0-rc.1 and rc.2 saved: every action, the levels as "". */
+  const RC_SHORTCUTS = {
+    ...normaliseSettings(null).shortcuts,
+    setHeading1: "",
+    setHeading2: "",
+    setHeading3: "",
+    setHeading4: "",
+    setHeading5: "",
+    setHeading6: "",
+    setParagraph: "",
+  };
+
+  it("start a new installation on Mod+1..6, under the current revision", () => {
+    const settings = normaliseSettings(null);
+    expect(levels(settings.shortcuts)).toEqual(TYPORA);
+    expect(settings.shortcuts.setParagraph).toBe("");
+    expect(settings.shortcutsRevision).toBe(SHORTCUTS_REVISION);
+  });
+
+  it("reach an installation from before the heading shortcuts", () => {
+    // 1.1.x saved no heading keys at all.
+    const settings = normaliseSettings({
+      shortcuts: { toggleZenMode: "mod+shift+j" },
+    });
+    expect(levels(settings.shortcuts)).toEqual(TYPORA);
+    expect(settings.shortcutsRevision).toBe(0);
+  });
+
+  it("replace the empty levels a release candidate saved, but not Paragraph", () => {
+    const settings = normaliseSettings({ shortcuts: RC_SHORTCUTS });
+    expect(levels(settings.shortcuts)).toEqual(TYPORA);
+    expect(settings.shortcuts.setParagraph).toBe("");
+    expect(settings.shortcuts.toggleTypewriterMode).toBe("");
+  });
+
+  it("keep a level cleared since, and every combo the user chose", () => {
+    const settings = normaliseSettings({
+      shortcuts: {
+        ...normaliseSettings(null).shortcuts,
+        setHeading2: "",
+        setHeading3: "alt+3",
+      },
+      shortcutsRevision: SHORTCUTS_REVISION,
+    });
+    expect(levels(settings.shortcuts)).toEqual([
+      "mod+1",
+      "",
+      "alt+3",
+      "mod+4",
+      "mod+5",
+      "mod+6",
+    ]);
+    expect(
+      normaliseSettings({
+        shortcuts: { ...RC_SHORTCUTS, setHeading1: "alt+1" },
+      }).shortcuts.setHeading1,
+    ).toBe("alt+1");
+  });
+
+  it("leave a default unbound when another action has its combo", () => {
+    const settings = normaliseSettings({
+      shortcuts: { ...RC_SHORTCUTS, toggleZenMode: "mod+2" },
+    });
+    expect(settings.shortcuts.toggleZenMode).toBe("mod+2");
+    expect(levels(settings.shortcuts)).toEqual([
+      "mod+1",
+      "",
+      "mod+3",
+      "mod+4",
+      "mod+5",
+      "mod+6",
+    ]);
+  });
+
+  it("keep the actions of a newer build", () => {
+    const stored = { ...RC_SHORTCUTS, someLaterAction: "mod+7" };
+    expect(normaliseSettings({ shortcuts: stored }).shortcuts).toMatchObject({
+      someLaterAction: "mod+7",
+    });
+  });
+
+  it("save a level cleared after the update so it stays cleared", () => {
+    boot({ shortcuts: RC_SHORTCUTS, languageChosen: true });
+    render(
+      <SettingsProvider>
+        <Probe />
+      </SettingsProvider>,
+    );
+    const shortcuts = { ...loadSettings().shortcuts, setHeading2: "" };
+    act(() => lastSet({ shortcuts }));
+    expect(storage.settingsPatch).toHaveBeenCalledWith({
+      shortcuts,
+      shortcutsRevision: SHORTCUTS_REVISION,
+    });
+    // What the next launch reads.
+    const next = normaliseSettings({
+      shortcuts,
+      shortcutsRevision: SHORTCUTS_REVISION,
+    });
+    expect(next.shortcuts.setHeading2).toBe("");
+    expect(next.shortcuts.setHeading1).toBe("mod+1");
   });
 });

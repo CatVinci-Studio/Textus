@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import { menuIpc, windowIpc } from "../platform/ipc";
 import { hasNativeMenuBar } from "../platform/capabilities";
 import {
+  nativeMenuAccelerators,
   nativeMenuChecks,
   nativeMenuLabels,
   type MenuChecks,
@@ -15,7 +16,7 @@ import {
 } from "../utils/events";
 import type { DocTab, HelpDoc } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
-import type { DiagramEngine } from "../settings/SettingsContext";
+import type { DiagramEngine, Shortcuts } from "../settings/SettingsContext";
 
 export interface MenuBridgeHandlers {
   activeTabId: string;
@@ -193,6 +194,21 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       })
       .catch(() => {});
   }, []);
+}
+
+/**
+ * The macOS menu bar's heading keys, from Settings › Shortcuts: sent as the
+ * window opens and whenever they change. The settings are every window's,
+ * so they all send the same, and Rust rebuilds the bar only on a change.
+ */
+export function useNativeMenuAccelerators(shortcuts: Shortcuts) {
+  const key = JSON.stringify(nativeMenuAccelerators(shortcuts));
+  useEffect(() => {
+    if (!hasNativeMenuBar) return;
+    void menuIpc
+      .setMenuAccelerators(JSON.parse(key) as Record<string, string>)
+      .catch(() => {});
+  }, [key]);
 }
 
 /**

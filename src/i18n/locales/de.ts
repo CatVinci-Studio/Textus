@@ -645,6 +645,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Dieses Tastenkürzel ist für eine Standardaktion der App reserviert.",
   shortcutUnset: "Nicht belegt",
   shortcutClear: "Entfernen",
+  shortcutReset: "Zurücksetzen",
   shortcutNextTab: "Nächster Tab",
   shortcutPreviousTab: "Vorheriger Tab",
   shortcutHeadingsGroupLabel: "Überschriften",

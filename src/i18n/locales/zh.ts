@@ -584,6 +584,7 @@ export default {
   shortcutReserved: "此快捷键已用于应用的标准操作。",
   shortcutUnset: "未设置",
   shortcutClear: "清除",
+  shortcutReset: "还原",
   shortcutNextTab: "下一个标签页",
   shortcutPreviousTab: "上一个标签页",
   shortcutHeadingsGroupLabel: "标题",

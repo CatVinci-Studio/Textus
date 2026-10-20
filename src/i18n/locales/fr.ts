@@ -668,6 +668,7 @@ utiliser une.
     "Ce raccourci est réservé à une commande standard de l'application.",
   shortcutUnset: "Non défini",
   shortcutClear: "Effacer",
+  shortcutReset: "Réinitialiser",
   shortcutNextTab: "Onglet suivant",
   shortcutPreviousTab: "Onglet précédent",
   shortcutHeadingsGroupLabel: "Titres",

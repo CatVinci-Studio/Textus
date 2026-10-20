@@ -199,7 +199,7 @@ function exportEntries(t: Strings): MenuNode[] {
 function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
   const headings = [1, 2, 3, 4, 5, 6].map((level): MenuNode => ({
     label: t.menuHeadingTemplate.replace("{n}", String(level)),
-    // Unbound unless the user binds one in Settings › Shortcuts.
+    // Ctrl/Cmd+1..6 unless rebound in Settings › Shortcuts.
     accel: shortcuts[`setHeading${level}` as HeadingAction] || undefined,
     action: { native: `insert-block:h${level}` },
   }));
@@ -477,4 +477,41 @@ export function nativeMenuLabels(t: Strings): Record<string, string> {
     "predefined:maximize": t.menuZoomWindow,
     "predefined:bring-all-to-front": t.menuBringAllToFront,
   };
+}
+
+/**
+ * The macOS menu bar's keys for the Format menu's heading levels, for
+ * menu.rs's set_menu_accelerators: keyed by native menu id, written as muda
+ * reads them, and only for the levels bound in Settings › Shortcuts. The
+ * bar then shows the user's keys, and a level rebound or cleared there
+ * keeps no native key that would go on firing.
+ */
+export function nativeMenuAccelerators(
+  shortcuts: Shortcuts,
+): Record<string, string> {
+  const accelerators: Record<string, string> = {};
+  for (const level of [1, 2, 3, 4, 5, 6]) {
+    const combo = shortcuts[`setHeading${level}` as HeadingAction];
+    if (combo)
+      accelerators[`insert-block:h${level}`] = nativeAccelerator(combo);
+  }
+  return accelerators;
+}
+
+const NATIVE_MODIFIERS: Record<string, string> = {
+  // CmdOrCtrl, never Cmd: see the accelerators in menu.rs's build.
+  mod: "CmdOrCtrl",
+  ctrl: "Ctrl",
+  alt: "Alt",
+  shift: "Shift",
+  meta: "Super",
+};
+
+/** "mod+shift+1" -> "CmdOrCtrl+Shift+1". muda reads key names in any case;
+ *  one it can't read leaves the item without a key (menu.rs). */
+export function nativeAccelerator(combo: string): string {
+  return combo
+    .split("+")
+    .map((part) => NATIVE_MODIFIERS[part] ?? part)
+    .join("+");
 }

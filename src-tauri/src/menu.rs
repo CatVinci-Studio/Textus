@@ -167,6 +167,12 @@ struct MenuLabels(Mutex<HashMap<String, String>>);
 #[derive(Default)]
 struct ViewChecks(Mutex<ViewCheckState>);
 
+/// The Format menu's heading keys, keyed by menu id, as the frontend last
+/// sent them (`set_menu_accelerators`) - Settings › Shortcuts' bindings,
+/// kept so every rebuild of the bar carries them. Empty off macOS.
+#[derive(Default)]
+struct MenuAccelerators(Mutex<HashMap<String, String>>);
+
 #[derive(Default)]
 struct ViewCheckState {
     checked: HashMap<String, bool>,
@@ -250,6 +256,38 @@ pub fn set_menu_checks(app: AppHandle, checks: HashMap<String, bool>) {
     }
     #[cfg(not(target_os = "macos"))]
     let _ = (app, checks);
+}
+
+/// The Format menu's heading keys (Ctrl/Cmd+1..6 unless rebound), keyed by
+/// menu id - mirrors `nativeMenuAccelerators` in src/app/app-menu-model.ts.
+/// They follow Settings › Shortcuts, unlike a fixed accelerator: a level
+/// rebound or cleared there must not keep a native key that goes on
+/// firing. The frontend handles the keys itself and stops them, so the
+/// bar's key only acts where the page doesn't (no window, say). Only macOS
+/// shows this menu; on Windows a native key would fire twice beside the
+/// frontend's, so elsewhere this does nothing.
+#[tauri::command(async)]
+pub fn set_menu_accelerators(app: AppHandle, accelerators: HashMap<String, String>) {
+    #[cfg(target_os = "macos")]
+    {
+        let Some(state) = app.try_state::<MenuAccelerators>() else {
+            return;
+        };
+        {
+            let mut current = state.0.lock().unwrap();
+            if *current == accelerators {
+                return;
+            }
+            *current = accelerators;
+        }
+        let handle = app.clone();
+        let _ = app.run_on_main_thread(move || {
+            let labels = handle.state::<MenuLabels>().0.lock().unwrap().clone();
+            let _ = set_menu(&handle, &labels);
+        });
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = (app, accelerators);
 }
 
 /// Runs a menu id exactly as clicking that item in the native menu would.
@@ -397,6 +435,7 @@ pub(crate) fn install(app: &tauri::App) -> tauri::Result<()> {
     app.manage(MenuLabels::default());
     app.manage(RecentMenu(Mutex::new(None)));
     app.manage(ViewChecks::default());
+    app.manage(MenuAccelerators::default());
     set_menu(app.handle(), &HashMap::new())?;
     app.on_menu_event(move |app_handle, event| dispatch(app_handle, event.id().as_ref()));
     Ok(())
@@ -406,7 +445,8 @@ pub(crate) fn install(app: &tauri::App) -> tauri::Result<()> {
 /// filled from the persisted list.
 fn set_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Result<()> {
     let checked = app.state::<ViewChecks>().0.lock().unwrap().checked.clone();
-    let built = build(app, labels, &checked)?;
+    let accelerators = app.state::<MenuAccelerators>().0.lock().unwrap().clone();
+    let built = build(app, labels, &checked, &accelerators)?;
     app.set_menu(built.menu)?;
     *app.state::<RecentMenu>().0.lock().unwrap() = Some(built.open_recent);
     app.state::<ViewChecks>().0.lock().unwrap().items = built.check_items;
@@ -415,11 +455,13 @@ fn set_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Result<
 }
 
 /// The whole menu bar, its Open Recent submenu (built empty) and the View
-/// menu's on/off items, marked as `checked` has them.
+/// menu's on/off items, marked as `checked` has them, and the heading
+/// levels with the keys in `accelerators`.
 fn build(
     app: &AppHandle,
     labels: &HashMap<String, String>,
     checked: &HashMap<String, bool>,
+    accelerators: &HashMap<String, String>,
 ) -> tauri::Result<BuiltMenu> {
     let l = |key: &str, english: &'static str| label(labels, key, english);
     let name = app_identity::APP_NAME;
@@ -588,6 +630,11 @@ fn build(
     ] {
         let id = format!("{INSERT_BLOCK_PREFIX}{kind}");
         let item = MenuItemBuilder::with_id(&id, l(&id, label)).build(app)?;
+        // Set after the build: a key muda can't read leaves the item
+        // without one, where the builder would fail the whole bar.
+        if let Some(accelerator) = accelerators.get(&id) {
+            let _ = item.set_accelerator(Some(accelerator));
+        }
         format_menu_builder = format_menu_builder.item(&item);
     }
     format_menu_builder = format_menu_builder.separator();

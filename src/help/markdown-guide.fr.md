@@ -7,7 +7,7 @@ Bienvenue dans ce document intégré, qui présente le rendu Markdown pris en ch
 
 ## Titres et citations
 
-Tapez `#` suivi d'un espace en début de ligne pour un titre de niveau 1, ou `##` suivi d'un espace pour le niveau 2. Les titres ci-dessus montrent le résultat.
+Tapez `#` suivi d'un espace en début de ligne pour un titre de niveau 1, ou `##` suivi d'un espace pour le niveau 2. Les titres ci-dessus montrent le résultat. `Ctrl+1` à `Ctrl+6` (`Cmd+1` à `Cmd+6` sur Mac) font de la ligne courante un titre de ce niveau.
 
 Une citation :
 

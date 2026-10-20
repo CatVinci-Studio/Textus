@@ -439,6 +439,10 @@ export const menuIpc = {
    *  (app/app-menu-model.ts's nativeMenuChecks). */
   setMenuChecks: (checks: Record<string, boolean>) =>
     desktopQuery<void>("set_menu_checks", undefined, { checks }),
+  /** Sets the native (macOS) Format items' keys, keyed by menu id
+   *  (app/app-menu-model.ts's nativeMenuAccelerators). */
+  setMenuAccelerators: (accelerators: Record<string, string>) =>
+    desktopQuery<void>("set_menu_accelerators", undefined, { accelerators }),
 };
 
 // ---------------------------------------------------------------------------

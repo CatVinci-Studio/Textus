@@ -7,7 +7,7 @@ Este documento integrado mostra a renderização de Markdown que o Textus oferec
 
 ## Títulos e citações
 
-Digite `#` e um espaço no início de uma linha para criar um título de nível 1, ou `##` e um espaço para o nível 2. Os títulos acima mostram o resultado renderizado.
+Digite `#` e um espaço no início de uma linha para criar um título de nível 1, ou `##` e um espaço para o nível 2. Os títulos acima mostram o resultado renderizado. `Ctrl+1` a `Ctrl+6` (`Cmd+1` a `Cmd+6` no Mac) transformam a linha atual em um título desse nível.
 
 Uma citação:
 
