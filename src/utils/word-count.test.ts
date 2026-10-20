@@ -25,4 +25,10 @@ describe("countWords", () => {
   it("leaves fenced code out", () => {
     expect(countWords("一二\n```\nlet x = 1;\n```\n三").words).toBe(3);
   });
+
+  it("counts a document as the sum of its paragraphs, edited or not", () => {
+    const doc = "Two words.\n\n红楼梦\n\n```\ncode\n```\n\nthree more words";
+    expect(countWords(doc).words).toBe(2 + 3 + 3);
+    expect(countWords(doc.replace("Two", "Now two")).words).toBe(3 + 3 + 3);
+  });
 });
