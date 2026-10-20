@@ -12,6 +12,7 @@ import {
   selectedRect,
   CellSelection,
 } from "@milkdown/kit/prose/tables";
+import { splitBlock } from "@milkdown/kit/prose/commands";
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
 import { modIsMeta } from "../../platform/os";
@@ -32,7 +33,9 @@ import { modIsMeta } from "../../platform/os";
  *
  * Shift+Enter is left to Milkdown's hardbreak keymap (a line break; a
  * second one right after a break becomes a new paragraph), except where
- * its rule misfires - see shiftEnterWithTrailingBreak.
+ * its rule misfires - see shiftEnterWithTrailingBreak - and where a line
+ * break can't go: a heading, which can't hold one, splits as with Enter,
+ * and a code block takes a newline (Milkdown's filter dropped the key).
  *
  * Registered before every other key handler in editor-extensions.ts, and
  * $prose plugins run ahead of the preset keymaps, so these win over gfm's
@@ -247,13 +250,43 @@ export const shiftEnterWithTrailingBreak: Command = (state, dispatch) => {
   return true;
 };
 
+/** Shift+Enter where Markdown has no line break. A heading is one line:
+ *  a break in it saved as a setext heading, `# a` becoming `a\` / `b` /
+ *  `==`. A code or math block is all lines already. */
+export const shiftEnterWithoutBreak: Command = (state, dispatch) => {
+  const { $from } = state.selection;
+  let depth = $from.depth;
+  while (depth > 0 && !$from.node(depth).isTextblock) depth--;
+  const block = $from.node(depth);
+  if (block.type.name === "heading") return splitBlock(state, dispatch);
+  if (!block.isTextblock || !block.type.spec.code) return false;
+  dispatch?.(state.tr.insertText("\n").scrollIntoView());
+  return true;
+};
+
+/** Enter in inline code (or a wikilink or embed, kept as source text):
+ *  a new line, as in bold, where the span splits in two - not a newline
+ *  inside the span, which ProseMirror gives anything marked as code and
+ *  which reads back as a space. Inline math has its own Enter. */
+export const splitInlineCode: Command = (state, dispatch) => {
+  const { $from, empty } = state.selection;
+  const parent = $from.parent;
+  if (!empty || !parent.isInline || !parent.type.spec.code) return false;
+  if (parent.type.name === "math_inline") return false;
+  return splitBlock(state, dispatch);
+};
+
 const onEnter: Command[] = [
+  splitInlineCode,
   enterInTable,
   pipeRowToTable,
   leaveTextBlockOnEmptyLastLine,
 ];
 const onModEnter: Command[] = [leaveBlockquote];
-const onShiftEnter: Command[] = [shiftEnterWithTrailingBreak];
+const onShiftEnter: Command[] = [
+  shiftEnterWithoutBreak,
+  shiftEnterWithTrailingBreak,
+];
 
 /** How soon before Enter a Shift press still counts as part of the same
  *  stroke rather than held on purpose. macOS Pinyin toggles 中/英 with a

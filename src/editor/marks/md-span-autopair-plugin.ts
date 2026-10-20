@@ -1,5 +1,6 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
+import { canJoin, findWrapping } from "@milkdown/kit/prose/transform";
 import type { Node as ProseNode, Schema } from "@milkdown/kit/prose/model";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
@@ -210,6 +211,71 @@ function codeFenceLanguage(paragraph: ProseNode): string | null {
 }
 
 /**
+ * An empty "*" shell that is all its paragraph holds: what "*" or "***" at
+ * the start of a line leaves, the autopair having taken the stars. Those
+ * are a list marker and a rule there, as "-" and "---" are; returns the
+ * shell's rung and the paragraph's position, or null.
+ */
+function lineStartStars(
+  $pos: ReturnType<ProseNode["resolve"]>,
+): { rung: number; paragraphPos: number } | null {
+  const shell = $pos.parent;
+  if (
+    shell.type.name !== "md_span" ||
+    shell.attrs.delim !== "*" ||
+    shell.content.size !== 0 ||
+    $pos.depth < 2
+  )
+    return null;
+  const paragraph = $pos.node($pos.depth - 1);
+  if (paragraph.type.name !== "paragraph" || paragraph.childCount !== 1)
+    return null;
+  return {
+    rung: (shell.attrs.rung as number) ?? 1,
+    paragraphPos: $pos.before($pos.depth - 1),
+  };
+}
+
+/** The paragraph at `paragraphPos` as a horizontal rule, the caret on a
+ *  new line below it. */
+function paragraphToRule(
+  state: EditorState,
+  paragraphPos: number,
+): Transaction | null {
+  const { hr, paragraph } = state.schema.nodes;
+  if (!hr || !paragraph) return null;
+  const size = state.doc.nodeAt(paragraphPos)!.nodeSize;
+  const tr = state.tr.replaceWith(paragraphPos, paragraphPos + size, [
+    hr.create(),
+    paragraph.create(),
+  ]);
+  return caretAt(tr, paragraphPos + 2);
+}
+
+/** The paragraph at `paragraphPos`, emptied, as the first item of a
+ *  bullet list - joined to a bullet list right above, as "- " does. */
+function paragraphToBulletItem(
+  state: EditorState,
+  paragraphPos: number,
+): Transaction | null {
+  const list = state.schema.nodes.bullet_list;
+  const paragraph = state.doc.nodeAt(paragraphPos)!;
+  const tr = state.tr.delete(
+    paragraphPos + 1,
+    paragraphPos + paragraph.nodeSize - 1,
+  );
+  const $start = tr.doc.resolve(paragraphPos + 1);
+  const range = $start.blockRange();
+  const wrapping = list && range && findWrapping(range, list);
+  if (!range || !wrapping) return null;
+  tr.wrap(range, wrapping);
+  const before = tr.doc.resolve(paragraphPos).nodeBefore;
+  if (before?.type === list && canJoin(tr.doc, paragraphPos))
+    tr.join(paragraphPos);
+  return tr.scrollIntoView();
+}
+
+/**
  * The IME counterpart of the run-closing path in handleTextInput below.
  * Several Windows IMEs in Chinese mode (Microsoft Pinyin, Sogou) deliver
  * even a plain "*" through a composition, and handleTextInput must stay out
@@ -273,6 +339,32 @@ export const createMdSpanAutopairPlugin = (options: {
             if (from !== to) return false;
             if (redirectMisattributedInput(view, from, to, text)) return true;
             if (swallowPendingCloser(view, from, text)) return true;
+
+            if (text === " ") {
+              const stars = lineStartStars(view.state.doc.resolve(from));
+              const tr =
+                stars?.rung === 1
+                  ? paragraphToBulletItem(view.state, stars.paragraphPos)
+                  : stars?.rung === 3
+                    ? paragraphToRule(view.state, stars.paragraphPos)
+                    : null;
+              if (tr) {
+                view.dispatch(tr);
+                return true;
+              }
+              // Where no list can start (a list item's first line), the
+              // star stays what was typed, as a dash does there - not an
+              // italic span around the rest of the line.
+              if (stars?.rung === 1) {
+                const literal = view.state.tr.replaceWith(
+                  from - 1,
+                  from + 1,
+                  view.state.schema.text("* "),
+                );
+                view.dispatch(caretAt(literal, from + 1));
+                return true;
+              }
+            }
 
             const spec = SPECS.find((s) => s.char === text);
             if (!spec) return false;
@@ -457,6 +549,14 @@ export const createMdSpanAutopairPlugin = (options: {
             const state = stateWithLiveSelection(view);
             const { $from, empty } = state.selection;
             if (!empty) return false;
+            const stars = lineStartStars($from);
+            const rule =
+              stars?.rung === 3 && paragraphToRule(state, stars.paragraphPos);
+            if (rule) {
+              view.dispatch(rule.scrollIntoView());
+              event.preventDefault();
+              return true;
+            }
             const parent = $from.parent;
             if (parent.type.name !== "paragraph") return false;
             if ($from.parentOffset !== parent.content.size) return false; // fence must be what was just typed
