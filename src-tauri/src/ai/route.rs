@@ -162,6 +162,8 @@ pub async fn agent_provider(
 pub fn chat_vendor(base_url: &str) -> custom::Vendor {
     if base_url.contains(".volces.com") {
         custom::Vendor::Ark
+    } else if base_url.contains("api.deepseek.com") {
+        custom::Vendor::DeepSeek
     } else {
         custom::Vendor::Generic
     }
@@ -172,7 +174,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn ark_is_recognized_by_host_for_doubao_and_custom_endpoints() {
+    fn vendors_are_recognized_by_host_for_catalog_and_custom_endpoints() {
         let doubao = crate::ai::catalog::find("doubao")
             .and_then(|e| e.base_url)
             .unwrap();
@@ -183,6 +185,10 @@ mod tests {
         );
         assert_eq!(
             chat_vendor("https://api.deepseek.com/v1"),
+            custom::Vendor::DeepSeek
+        );
+        assert_eq!(
+            chat_vendor("https://api.moonshot.cn/v1"),
             custom::Vendor::Generic
         );
     }

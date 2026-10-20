@@ -27,6 +27,9 @@ struct ChatRequest {
     /// Ark's switch for its thinking models - see [`Vendor::Ark`].
     #[serde(skip_serializing_if = "Option::is_none")]
     reasoning_effort: Option<&'static str>,
+    /// DeepSeek's switch - see [`Vendor::DeepSeek`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    thinking: Option<Value>,
 }
 
 /// Which server is behind the generic dialect, where one's defaults differ
@@ -45,6 +48,11 @@ pub enum Vendor {
     /// cut a long edit's tool arguments off mid-JSON. On Seed the cap
     /// leaves the reasoning out.
     Ark,
+    /// DeepSeek. Both its models think by default, at effort `high`: the
+    /// live eval saw a grammar check spend 260-400 reasoning tokens and
+    /// half again the time on one paragraph. Writing calls switch it off
+    /// with `thinking: {"type": "disabled"}`, which both models take.
+    DeepSeek,
 }
 
 /// Ark's answer cap for agent steps - the budget the Anthropic dialect
@@ -88,6 +96,7 @@ fn completion_request(
             },
         ],
         reasoning_effort: (vendor == Vendor::Ark).then_some("minimal"),
+        thinking: (vendor == Vendor::DeepSeek).then(|| json!({"type": "disabled"})),
     }
 }
 
@@ -1376,6 +1385,20 @@ mod tests {
         ))
         .unwrap();
         assert!(generic.get("reasoning_effort").is_none());
+        assert!(generic.get("thinking").is_none());
+    }
+
+    #[test]
+    fn deepseek_writing_calls_switch_thinking_off() {
+        let deepseek = serde_json::to_value(completion_request(
+            "deepseek-flash",
+            "rules".to_string(),
+            "text".to_string(),
+            Vendor::DeepSeek,
+        ))
+        .unwrap();
+        assert_eq!(deepseek["thinking"], json!({"type": "disabled"}));
+        assert!(deepseek.get("reasoning_effort").is_none());
     }
 
     /// Ark (like DeepSeek) streams a thinking model's reasoning as

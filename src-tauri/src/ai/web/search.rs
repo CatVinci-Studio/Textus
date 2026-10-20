@@ -13,6 +13,9 @@ use std::time::Duration;
 
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 const TOTAL_TIMEOUT: Duration = Duration::from_secs(30);
+/// The longest `query` and `ori_question` DeepSeek's Search API takes
+/// (api-docs.deepseek.com/guides/search).
+const DEEPSEEK_FIELD_CHARS: usize = 128;
 
 /// One search service. The ids are what Settings stores
 /// (`aiSearchService` in src/settings/SettingsContext.tsx, which lists the
@@ -156,13 +159,25 @@ impl Service {
         let url = self.url();
         let key = self.credential.as_str();
         match self.backend {
-            Backend::Deepseek => client.post(url).bearer_auth(key).json(&json!({
-                "query": query,
-                "count": count,
+            Backend::Deepseek => {
+                // Each field takes 1-128 characters, and DeepSeek answers 400
+                // to an empty or longer one: a model's long query is cut to
+                // fit, and no question (a message of only images) is left out.
+                let fit = |s: &str| {
+                    s.trim()
+                        .chars()
+                        .take(DEEPSEEK_FIELD_CHARS)
+                        .collect::<String>()
+                };
+                let mut body = json!({ "query": fit(query), "count": count });
                 // What the user asked, for ranking: DeepSeek Harness sends
-                // the same, cut to 128 characters.
-                "ori_question": question.chars().take(128).collect::<String>(),
-            })),
+                // the same.
+                let question = fit(question);
+                if !question.is_empty() {
+                    body["ori_question"] = json!(question);
+                }
+                client.post(url).bearer_auth(key).json(&body)
+            }
             Backend::Zhipu => client.post(url).bearer_auth(key).json(&json!({
                 "search_query": query,
                 "search_engine": "search_std",
@@ -252,7 +267,7 @@ impl Service {
             }
             let value: Value = serde_json::from_str(&body)
                 .map_err(|_| "DeepSeek sent an answer that isn't JSON.".to_string())?;
-            let content = text(&value, "content");
+            let content = without_escapes(&text(&value, "content"));
             if content.trim().is_empty() {
                 return Err("DeepSeek found no readable text on that page.".to_string());
             }
@@ -285,6 +300,25 @@ fn text(value: &Value, key: &str) -> String {
 
 fn optional(value: &Value, key: &str) -> Option<String> {
     Some(text(value, key)).filter(|s| !s.is_empty())
+}
+
+/// DeepSeek's page reader escapes every ASCII punctuation mark in the
+/// Markdown it returns, code included (`Rust 1\.99\.1`, `fn main\(\)`): a
+/// twentieth of a page in backslashes, and quotes that match nothing. The
+/// marks as written, the way a Markdown reader shows them.
+fn without_escapes(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        match chars.peek() {
+            Some(&next) if c == '\\' && next.is_ascii_punctuation() => {
+                out.push(next);
+                chars.next();
+            }
+            _ => out.push(c),
+        }
+    }
+    out
 }
 
 /// Brave marks the query's words in its descriptions with <strong>.
@@ -535,6 +569,53 @@ mod tests {
                 date: Some("2026-02-02T16:00:00+00:00".into()),
                 site: Some("Sea".into()),
             }]
+        );
+    }
+
+    #[tokio::test]
+    async fn deepseek_cuts_a_long_query_and_leaves_out_an_empty_question() {
+        let (url, requests) = serve("200 OK", r#"{"results":[]}"#);
+        let service = Service {
+            backend: Backend::Deepseek,
+            credential: "test-key".into(),
+            endpoint: Some(url),
+        };
+        service.search(&"潮".repeat(200), 8, "  ").await.unwrap();
+        let request = requests.recv().unwrap();
+        let (_, body) = request.split_once("\r\n\r\n").unwrap();
+        let body: Value = serde_json::from_str(body).unwrap();
+        assert_eq!(body["query"], "潮".repeat(128));
+        assert!(body.get("ori_question").is_none(), "{body}");
+    }
+
+    /// The shape api.deepseek.com/v1/tools/fetch really answers in: every
+    /// punctuation mark escaped, code included.
+    #[tokio::test]
+    async fn deepseek_fetch_reads_the_page_without_its_escapes() {
+        let (url, requests) = serve(
+            "200 OK",
+            r#"{"title":"Rust Blog","content":"\\#\\# Posts\n\nOct\\. 15 \\| Announcing Rust 1\\.99\\.1\nfn main\\(\\) \\{ \\}\nC:\\\\Users\\Ada"}"#,
+        );
+        let service = Service {
+            backend: Backend::Deepseek,
+            credential: "test-key".into(),
+            endpoint: Some(url),
+        };
+        let (title, page) = service
+            .fetch_page("https://blog.rust-lang.org/")
+            .await
+            .unwrap()
+            .unwrap();
+        let request = requests.recv().unwrap();
+        assert!(request.starts_with("POST /search/fetch "), "{request}");
+        assert!(
+            request.contains(r#"{"url":"https://blog.rust-lang.org/"}"#),
+            "{request}"
+        );
+        assert_eq!(title, "Rust Blog");
+        assert_eq!(
+            page,
+            "## Posts\n\nOct. 15 | Announcing Rust 1.99.1\nfn main() { }\nC:\\Users\\Ada"
         );
     }
 
