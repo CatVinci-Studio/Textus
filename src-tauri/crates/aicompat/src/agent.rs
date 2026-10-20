@@ -122,6 +122,15 @@ pub enum ProviderEvent<'a> {
     ToolArgs { call_id: &'a str, delta: &'a str },
 }
 
+/// What [`run_agent_loop`] reports while it runs.
+pub enum LoopEvent<'a> {
+    /// An intermediate turn - a ToolCall or its ToolResult - has landed.
+    Turn(&'a AgentTurn),
+    /// The step that just streamed came back garbled (see `garbled`) and
+    /// is being asked for again: whatever it streamed is void.
+    Retry,
+}
+
 /// The callback streaming-capable `agent_step`s report [`ProviderEvent`]s
 /// through. A shared reference (not a generic) so provider signatures stay
 /// object-simple and a no-op `&|_| {}` works at call sites without events.
@@ -139,11 +148,15 @@ pub type EventSink<'a> = &'a (dyn Fn(ProviderEvent<'_>) + Send + Sync);
 /// touching this loop: a provider implements `step`, a tool source
 /// contributes entries that `execute_tool` can dispatch to.
 ///
-/// `on_turn` fires for every intermediate turn as it lands (each ToolCall
-/// and its ToolResult) - the loop-level counterpart of [`ProviderEvent`],
-/// letting a UI show tool activity live. The final Assistant turn is NOT
-/// reported: its text already streamed out as ProviderEvent::Text, and the
-/// returned turn list is the authoritative ending either way.
+/// `on_event` gets every intermediate turn as it lands (each ToolCall and
+/// its ToolResult) - the loop-level counterpart of [`ProviderEvent`],
+/// letting a UI show tool activity live - and a [`LoopEvent::Retry`] when a
+/// step is sent again. The final Assistant turn is NOT reported: its text
+/// already streamed out as ProviderEvent::Text, and the returned turn list
+/// is the authoritative ending either way.
+///
+/// Near the end of `max_steps` the model is told how many steps it has
+/// left, in what it is shown but not in what is recorded (`budget_note`).
 ///
 /// A step's turns are recorded as all of its calls, then all of their
 /// results (Call1, Call2, Result1, Result2), so a ToolCall right after a
@@ -152,7 +165,7 @@ pub type EventSink<'a> = &'a (dyn Fn(ProviderEvent<'_>) + Send + Sync);
 /// interleaved they couldn't tell parallel calls from sequential steps, and
 /// merging every step into one message rewrote the earlier steps' messages
 /// - and their prompt cache - on each new step.
-pub async fn run_agent_loop<Step, StepFut, ExecuteTool, Output, OnTurn>(
+pub async fn run_agent_loop<Step, StepFut, ExecuteTool, Output, OnEvent>(
     history: Vec<AgentTurn>,
     // `user_turn` is a whole AgentTurn rather than the bare message string it
     // used to be, because the turn the user just sent may carry images
@@ -161,21 +174,33 @@ pub async fn run_agent_loop<Step, StepFut, ExecuteTool, Output, OnTurn>(
     max_steps: usize,
     mut step: Step,
     mut execute_tool: ExecuteTool,
-    mut on_turn: OnTurn,
+    mut on_event: OnEvent,
 ) -> Result<Vec<AgentTurn>, String>
 where
     Step: FnMut(Vec<AgentTurn>) -> StepFut,
     StepFut: std::future::Future<Output = Result<StepResult, String>>,
     ExecuteTool: FnMut(&str, &str) -> Output,
     Output: Into<ToolOutput>,
-    OnTurn: FnMut(&AgentTurn),
+    OnEvent: FnMut(LoopEvent<'_>),
 {
     let mut turns = history;
     turns.push(user_turn.clone());
     let mut new_turns = vec![user_turn];
+    let mut retried = false;
 
-    for _ in 0..max_steps {
-        match step(turns.clone()).await? {
+    for step_index in 0..max_steps {
+        let mut result = step(turns.clone()).await?;
+        // A garbled step is asked for again, once per request: the broken
+        // characters are a sampling accident that a second try almost
+        // always gets through whole, while text that really contains
+        // U+FFFD (quoted from a damaged document) must not cost a retry
+        // on every step.
+        if !retried && garbled(&result) {
+            retried = true;
+            on_event(LoopEvent::Retry);
+            result = step(turns.clone()).await?;
+        }
+        match result {
             StepResult::Done(text) => {
                 let turn = AgentTurn::Assistant { text };
                 turns.push(turn.clone());
@@ -188,11 +213,12 @@ where
                     .filter(|call| matches!(call, AgentTurn::ToolCall { .. }))
                     .collect();
                 for call in &calls {
-                    on_turn(call);
+                    on_event(LoopEvent::Turn(call));
                     turns.push(call.clone());
                     new_turns.push(call.clone());
                 }
-                for call in &calls {
+                let remaining = max_steps - step_index - 1;
+                for (index, call) in calls.iter().enumerate() {
                     let AgentTurn::ToolCall {
                         call_id,
                         name,
@@ -207,9 +233,12 @@ where
                         output: text,
                         images,
                     };
-                    on_turn(&result_turn);
-                    turns.push(result_turn.clone());
-                    new_turns.push(result_turn);
+                    on_event(LoopEvent::Turn(&result_turn));
+                    new_turns.push(result_turn.clone());
+                    turns.push(match budget_note(remaining) {
+                        Some(note) if index + 1 == calls.len() => with_note(result_turn, &note),
+                        _ => result_turn,
+                    });
                 }
             }
         }
@@ -224,6 +253,55 @@ where
         ),
     });
     Ok(new_turns)
+}
+
+/// Whether a step came back with U+FFFD in its text or in a tool call's
+/// arguments. Some servers decode a model's byte-level tokens one at a
+/// time and send a replacement character for each byte of a character
+/// split across tokens - 《百年孤独》 arrived as 《百年孤���》 - and by then
+/// the text is lost: shown, or applied as an edit, it would put the broken
+/// characters in front of the user. The escaped form is what a server that
+/// JSON-encodes with ASCII escapes sends inside tool arguments.
+fn garbled(result: &StepResult) -> bool {
+    let broken = |s: &str| s.contains('\u{FFFD}') || s.contains("\\ufffd") || s.contains("\\uFFFD");
+    match result {
+        StepResult::Done(text) => broken(text),
+        StepResult::ToolCalls(calls) => calls
+            .iter()
+            .any(|call| matches!(call, AgentTurn::ToolCall { arguments, .. } if broken(arguments))),
+    }
+}
+
+/// What the model is told after a step with `remaining` steps still to
+/// come, when they are few. One that kept checking its work used to run
+/// out of steps mid-task and leave the user with nothing.
+fn budget_note(remaining: usize) -> Option<String> {
+    let steps = match remaining {
+        1 => "1 step",
+        2 => "2 steps",
+        _ => return None,
+    };
+    Some(format!(
+        "[Only {steps} left in this request: stop gathering or checking and deliver your result now - send any edit proposals, then give your final reply.]"
+    ))
+}
+
+/// A tool result with `note` after its output. Added to the step's last
+/// result once, when it is first sent, so the turns before it stay as they
+/// were from step to step (and their prompt cache valid).
+fn with_note(turn: AgentTurn, note: &str) -> AgentTurn {
+    match turn {
+        AgentTurn::ToolResult {
+            call_id,
+            output,
+            images,
+        } => AgentTurn::ToolResult {
+            call_id,
+            output: format!("{output}\n\n{note}"),
+            images,
+        },
+        other => other,
+    }
 }
 
 #[cfg(test)]
@@ -360,6 +438,103 @@ mod tests {
             panic!("the exchange must end with an assistant turn");
         };
         assert!(text.contains("Stopped after 3 tool steps"));
+    }
+
+    #[test]
+    fn the_last_steps_are_announced_to_the_model_only() {
+        let looping = (0..4)
+            .map(|i| StepResult::ToolCalls(vec![call(&i.to_string(), "measure_text", "{}")]))
+            .collect();
+        let (turns, seen) = run_scripted(looping, 4, |_, _| "12 chars".to_string());
+        let noted = |history: &[AgentTurn]| {
+            history.iter().any(|t| {
+                matches!(t, AgentTurn::ToolResult { output, .. } if output.contains("left in this request"))
+            })
+        };
+        // The second step is told nothing; the third sees the two steps
+        // still to come, the last that it is the last.
+        assert!(!noted(&seen[1]));
+        assert!(matches!(
+            seen[2].last(),
+            Some(AgentTurn::ToolResult { output, .. })
+                if output.starts_with("12 chars") && output.contains("Only 2 steps left")
+        ));
+        assert!(matches!(
+            seen[3].last(),
+            Some(AgentTurn::ToolResult { output, .. }) if output.contains("Only 1 step left")
+        ));
+        // Earlier turns are shown as they were first sent.
+        assert_eq!(
+            format!("{:?}", &seen[3][..seen[2].len()]),
+            format!("{:?}", seen[2])
+        );
+        // What is recorded (and shown to the user) carries no note.
+        assert!(!noted(&turns));
+    }
+
+    /// Runs the loop on `script`, returning the turns and how many times
+    /// it reported a retry.
+    fn run_counting_retries(script: Vec<StepResult>) -> (Vec<AgentTurn>, usize) {
+        let script = RefCell::new(VecDeque::from(script));
+        let retries = RefCell::new(0);
+        let turns = tauri::async_runtime::block_on(run_agent_loop(
+            vec![],
+            user("go"),
+            12,
+            |_| {
+                let next = script.borrow_mut().pop_front();
+                async move { next.ok_or_else(|| "script ran out".to_string()) }
+            },
+            |name, _| name.to_string(),
+            |event| {
+                if let LoopEvent::Retry = event {
+                    *retries.borrow_mut() += 1;
+                }
+            },
+        ))
+        .unwrap();
+        (turns, retries.into_inner())
+    }
+
+    #[test]
+    fn a_garbled_step_is_asked_for_again_once() {
+        let edit = |text: &str| {
+            StepResult::ToolCalls(vec![call(
+                "e",
+                "propose_edit",
+                &format!(r#"{{"action":"append","text":"{text}"}}"#),
+            )])
+        };
+        let (turns, retries) = run_counting_retries(vec![
+            edit("《百年孤\u{FFFD}\u{FFFD}\u{FFFD}》"),
+            edit("《百年孤独》"),
+            StepResult::Done("《百年孤\u{FFFD}》".into()),
+        ]);
+        assert_eq!(retries, 1);
+        // The garbled call never ran; the one sent again did.
+        let AgentTurn::ToolCall { arguments, .. } = &turns[1] else {
+            panic!("the call follows the user turn");
+        };
+        assert!(arguments.contains("《百年孤独》"));
+        // Once per request: a later garbled reply stands.
+        assert!(
+            matches!(turns.last(), Some(AgentTurn::Assistant { text }) if text.contains('\u{FFFD}'))
+        );
+    }
+
+    #[test]
+    fn a_garbled_reply_is_asked_for_again() {
+        let (turns, retries) = run_counting_retries(vec![
+            StepResult::Done("《百年孤\u{FFFD}》".into()),
+            StepResult::Done("《百年孤独》".into()),
+        ]);
+        assert_eq!(retries, 1);
+        assert!(matches!(&turns[1], AgentTurn::Assistant { text } if text == "《百年孤独》"));
+        // An escaped replacement character in tool arguments counts too.
+        let escaped =
+            StepResult::ToolCalls(vec![call("e", "propose_edit", r#"{"text":"\ufffd"}"#)]);
+        assert!(garbled(&escaped));
+        assert!(!garbled(&StepResult::Done("《百年孤独》".into())));
     }
 
     #[test]
