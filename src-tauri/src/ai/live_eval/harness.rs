@@ -521,6 +521,7 @@ pub fn run_conversation(
             library: &library,
             memory: None,
             proposed: Default::default(),
+            checks: Default::default(),
         };
         let usage = RefCell::new(Vec::new());
         let postfix = RefCell::new(Vec::new());

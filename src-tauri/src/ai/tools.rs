@@ -36,6 +36,8 @@ pub struct ToolContext<'a> {
     /// (their `context`, else their anchor; "" for the selection). One
     /// context serves one request, every step of it.
     pub proposed: std::sync::Mutex<ProposalLedger>,
+    /// How often this request has called each check tool (CHECK_BUDGETS).
+    pub checks: std::sync::Mutex<std::collections::HashMap<&'static str, usize>>,
 }
 
 /// What this request's propose_edit calls have done so far.
@@ -1287,7 +1289,46 @@ pub fn tool_specs(tools: &[Tool]) -> Vec<ToolSpec> {
     tools.iter().map(|t| t.spec.clone()).collect()
 }
 
+/// How often one request may call each check tool before it stops
+/// answering. Asked for "800 字", a model drafted, measured, rewrote and
+/// measured again until its steps ran out, and never proposed the text at
+/// all; a check that keeps answering invites exactly that loop. Measuring
+/// against a platform's limit is not counted (`measures_a_limit`): text
+/// that must fit is worth trimming until it does, and a budget refused an
+/// X post and headline options still over their limit in the live eval.
+const CHECK_BUDGETS: &[(&str, usize)] = &[
+    (MEASURE_TEXT_TOOL_NAME, 3),
+    (CHECK_CONVENTIONS_TOOL_NAME, 4),
+];
+
+/// Whether a measure_text call measures against a platform's limit (a
+/// metric with one, such as x_weighted), not a plain count.
+fn measures_a_limit(arguments: &str) -> bool {
+    serde_json::from_str::<serde_json::Value>(arguments)
+        .ok()
+        .and_then(|args| crate::ai::rules::measure::measure("", args.get("metric")?.as_str()?))
+        .is_some_and(|m| m.limit.is_some())
+}
+
+/// Counts a call to a check tool, and refuses it once the request has used
+/// up that tool's budget. None for every other call, and within budget.
+fn spend_check(ctx: &ToolContext, name: &str, arguments: &str) -> Option<String> {
+    let &(name, budget) = CHECK_BUDGETS.iter().find(|(tool, _)| *tool == name)?;
+    if name == MEASURE_TEXT_TOOL_NAME && measures_a_limit(arguments) {
+        return None;
+    }
+    let mut checks = ctx.checks.lock().unwrap_or_else(|e| e.into_inner());
+    let used = checks.entry(name).or_default();
+    *used += 1;
+    (*used > budget).then(|| {
+        format!("Not run: {name} was already called {budget} times in this request, which is all it gets. Stop checking and finish with what you have: propose your latest draft (when the request changes the document), then reply.")
+    })
+}
+
 pub fn execute(tools: &[Tool], ctx: &ToolContext, name: &str, arguments: &str) -> ToolOutput {
+    if let Some(refusal) = spend_check(ctx, name, arguments) {
+        return refusal.into();
+    }
     match tools.iter().find(|t| t.spec.name == name).map(|t| &t.run) {
         Some(Run::Text(run)) => run(ctx, arguments).into(),
         Some(Run::Seeing(run)) => run(ctx, arguments),
@@ -1349,6 +1390,7 @@ mod tests {
             library: &[],
             memory: None,
             proposed: Default::default(),
+            checks: Default::default(),
         };
         let call = |name: &str| use_skill(&ctx, &json!({ "name": name }).to_string());
         let dialogue = call("dialogue");
@@ -1382,6 +1424,41 @@ mod tests {
             library: &[],
             memory: None,
             proposed: Default::default(),
+            checks: Default::default(),
+        }
+    }
+
+    #[test]
+    fn check_tools_stop_answering_once_their_budget_is_spent() {
+        let tools = builtin_tools(false, false, AgentMode::Revise, false, false);
+        let context = ctx("草稿");
+        let run = |name: &str, args: &str| execute(&tools, &context, name, args).text;
+        let measure = |metric: &str| {
+            run(
+                MEASURE_TEXT_TOOL_NAME,
+                &json!({ "text": "草稿", "metric": metric }).to_string(),
+            )
+        };
+        for metric in ["", "chars", "cjk_chars"] {
+            assert!(!measure(metric).starts_with("Not run"));
+        }
+        let refused = measure("words");
+        assert!(
+            refused.starts_with("Not run: measure_text was already called 3 times"),
+            "{refused}"
+        );
+        // A platform's limit is measured as often as it takes.
+        for _ in 0..10 {
+            assert!(measure("x_weighted").starts_with("x_weighted: 4 of 280"));
+        }
+        // Each check has its own budget, and other tools have none.
+        for _ in 0..4 {
+            assert!(!run(CHECK_CONVENTIONS_TOOL_NAME, "{}").starts_with("Not run"));
+        }
+        assert!(run(CHECK_CONVENTIONS_TOOL_NAME, "{}").starts_with("Not run"));
+        for _ in 0..5 {
+            let out = run(SEARCH_TOOL_NAME, r#"{"query":"草"}"#);
+            assert!(!out.starts_with("Not run"), "{out}");
         }
     }
 
