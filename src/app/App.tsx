@@ -21,7 +21,11 @@ import { platformName } from "../platform/window-chrome";
 import { useExternalChangeReload } from "../document/useExternalChangeReload";
 import { useDraftAutosave } from "../document/draft-autosave";
 import { useAutosave } from "../document/autosave";
-import { useMenuBridge, useNativeMenuChecks } from "./menu-bridge";
+import {
+  useMenuBridge,
+  useNativeMenuAccelerators,
+  useNativeMenuChecks,
+} from "./menu-bridge";
 import { useStartupRestore } from "../document/startup-restore";
 import { useLastCarets } from "../document/last-carets";
 import { Presence } from "../ui/usePresence";
@@ -322,6 +326,7 @@ function App() {
     folderOpen: openFolder.folder !== null,
   };
   useNativeMenuChecks(menuChecks);
+  useNativeMenuAccelerators(settings.shortcuts);
 
   // Menu events from Rust (menu.rs's dispatch) - every File/View/Format/Help
   // action the frontend owns arrives here as a window event; see

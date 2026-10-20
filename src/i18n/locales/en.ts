@@ -636,6 +636,7 @@ type /name in a conversation to use one.
   shortcutReserved: "This shortcut is reserved for a standard app action.",
   shortcutUnset: "Not set",
   shortcutClear: "Clear",
+  shortcutReset: "Reset",
   shortcutNextTab: "Next tab",
   shortcutPreviousTab: "Previous tab",
   shortcutHeadingsGroupLabel: "Headings",

@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import {
+  defaultShortcuts,
   useSettings,
   type HeadingAction,
   type ShortcutAction,
@@ -211,6 +212,8 @@ export function ShortcutRow({
 }) {
   const [recording, setRecording] = useState(false);
   const combo = shortcuts[action];
+  /** The combo a new installation has here, which Reset puts back. */
+  const fallback = defaultShortcuts()[action];
   const [error, setError] = useState("");
   const actionLabels = useMemo<Record<ShortcutAction, string>>(
     () => ({
@@ -248,22 +251,26 @@ export function ShortcutRow({
         setError(t.shortcutReserved);
         return;
       }
-      const conflict = (Object.keys(shortcuts) as ShortcutAction[]).find(
-        (other) => other !== action && shortcuts[other] === captured,
-      );
-      if (conflict) {
-        setError(
-          t.shortcutConflict.replace("{action}", actionLabels[conflict]),
-        );
-        return;
-      }
-      setError("");
-      setSettings({ shortcuts: { ...shortcuts, [action]: captured } });
-      setRecording(false);
+      if (bind(captured)) setRecording(false);
     }
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [recording, shortcuts, setSettings, action, actionLabels, t]);
+  });
+
+  /** Gives this action `next`, unless another action has it already.
+   *  Whether it did. */
+  function bind(next: string): boolean {
+    const conflict = (Object.keys(shortcuts) as ShortcutAction[]).find(
+      (other) => other !== action && shortcuts[other] === next,
+    );
+    if (conflict) {
+      setError(t.shortcutConflict.replace("{action}", actionLabels[conflict]));
+      return false;
+    }
+    setError("");
+    setSettings({ shortcuts: { ...shortcuts, [action]: next } });
+    return true;
+  }
 
   function clear() {
     setError("");
@@ -298,6 +305,16 @@ export function ShortcutRow({
               onClick={clear}
             >
               {t.shortcutClear}
+            </button>
+          )}
+          {fallback && combo !== fallback && !recording && (
+            <button
+              className="text-button settings-inline-button"
+              aria-label={`${t.shortcutReset}: ${label}`}
+              title={formatCombo(fallback)}
+              onClick={() => bind(fallback)}
+            >
+              {t.shortcutReset}
             </button>
           )}
         </div>

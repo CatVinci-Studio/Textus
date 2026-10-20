@@ -610,6 +610,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   shortcutReserved: "앱의 기본 동작에 예약된 단축키입니다.",
   shortcutUnset: "지정 안 됨",
   shortcutClear: "지우기",
+  shortcutReset: "초기화",
   shortcutNextTab: "다음 탭",
   shortcutPreviousTab: "이전 탭",
   shortcutHeadingsGroupLabel: "제목",

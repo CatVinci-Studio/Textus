@@ -585,6 +585,7 @@ export default {
   shortcutReserved: "這組快速鍵保留給應用程式的標準動作。",
   shortcutUnset: "未設定",
   shortcutClear: "清除",
+  shortcutReset: "還原",
   shortcutNextTab: "下一個分頁",
   shortcutPreviousTab: "上一個分頁",
   shortcutHeadingsGroupLabel: "標題",

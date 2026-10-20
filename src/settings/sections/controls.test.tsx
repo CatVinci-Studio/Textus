@@ -70,3 +70,47 @@ describe("shortcut recording", () => {
     expect(save).not.toHaveBeenCalled();
   });
 });
+describe("resetting a shortcut", () => {
+  function heading(current: Shortcuts) {
+    vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");
+    const save = vi.fn();
+    render(
+      <ShortcutRow
+        label="Heading 2"
+        action="setHeading2"
+        shortcuts={current}
+        setSettings={save}
+        t={resolveStrings("en")}
+      />,
+    );
+    return save;
+  }
+  it("is offered only away from the default, and puts it back", () => {
+    const save = heading({ ...shortcuts, setHeading2: "" });
+    expect(
+      screen.getByRole("button", { name: "Heading 2: Not set" }),
+    ).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Reset: Heading 2" }));
+    expect(save).toHaveBeenCalledWith({
+      shortcuts: { ...shortcuts, setHeading2: "mod+2" },
+    });
+    cleanup();
+    heading(shortcuts);
+    expect(screen.getByRole("button", { name: "Heading 2: ⌘2" })).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Reset: Heading 2" }),
+    ).toBeNull();
+  });
+  it("reports the action that has the default now instead of taking it", () => {
+    const save = heading({
+      ...shortcuts,
+      setHeading2: "",
+      toggleZenMode: "mod+2",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Reset: Heading 2" }));
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      resolveStrings("en").shortcutToggleZenMode,
+    );
+    expect(save).not.toHaveBeenCalled();
+  });
+});

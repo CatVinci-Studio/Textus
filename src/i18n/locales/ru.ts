@@ -656,6 +656,7 @@ export default {
     "Это сочетание зарезервировано для стандартного действия приложения.",
   shortcutUnset: "Не задано",
   shortcutClear: "Очистить",
+  shortcutReset: "Сбросить",
   shortcutNextTab: "Следующая вкладка",
   shortcutPreviousTab: "Предыдущая вкладка",
   shortcutHeadingsGroupLabel: "Заголовки",

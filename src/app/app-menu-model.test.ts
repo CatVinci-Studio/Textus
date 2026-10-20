@@ -14,10 +14,12 @@ import {
   buildAppMenu,
   buildMobileMenu,
   NO_RECENTS,
+  nativeMenuAccelerators,
   nativeMenuChecks,
   nativeMenuLabels,
   type MenuNode,
 } from "./app-menu-model";
+import { readFileSync } from "node:fs";
 
 /**
  * The app-drawn menu is the ONLY menu Windows users see, so the combos it
@@ -229,5 +231,35 @@ describe("the macOS menu bar's labels", () => {
     expect(labels.quit).toBe(`Quit ${APP_NAME}`);
     expect(labels["predefined:about"]).toBe(`About ${APP_NAME}`);
     expect(labels["predefined:hide"]).toBe(`Hide ${APP_NAME}`);
+  });
+});
+
+describe("the Format menu's heading keys", () => {
+  it("show Ctrl+1..6 in the app-drawn menu by default", () => {
+    for (const level of [1, 2, 3, 4, 5, 6])
+      expect(accelOf(`Heading ${level}`)).toBe(`mod+${level}`);
+  });
+
+  it("go to the macOS bar as muda reads them, only for bound levels", () => {
+    expect(
+      nativeMenuAccelerators({
+        ...shortcuts,
+        setHeading2: "mod+shift+2",
+        setHeading3: "",
+        setHeading4: "ctrl+alt+4",
+      }),
+    ).toEqual({
+      "insert-block:h1": "CmdOrCtrl+1",
+      "insert-block:h2": "CmdOrCtrl+Shift+2",
+      "insert-block:h4": "Ctrl+Alt+4",
+      "insert-block:h5": "CmdOrCtrl+5",
+      "insert-block:h6": "CmdOrCtrl+6",
+    });
+  });
+
+  it("match the ids menu.rs builds the heading items with", () => {
+    const source = readFileSync("src-tauri/src/menu.rs", "utf8");
+    expect(source).toContain('("h2", "Heading 2")');
+    expect(source).toContain('INSERT_BLOCK_PREFIX: &str = "insert-block:"');
   });
 });

@@ -82,8 +82,8 @@ export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
 /** The shortcuts a new installation starts with, on this platform. Only
  *  the tab keys differ: they are Ctrl+Tab on every platform, and Ctrl on a
  *  Mac is "ctrl", not "mod" (see ../utils/shortcuts). The heading levels
- *  start unbound, so nothing new takes a key someone already uses; Typora's
- *  Mod+1..6 are one binding away. */
+ *  are Typora's, Ctrl/Cmd+1..6; Paragraph has none, as Ctrl/Cmd+0 is
+ *  Actual Size. */
 export function defaultShortcuts(mac = modIsMeta()): Shortcuts {
   const ctrl = mac ? "ctrl" : "mod";
   return {
@@ -100,17 +100,60 @@ export function defaultShortcuts(mac = modIsMeta()): Shortcuts {
     searchFiles: "mod+shift+o",
     nextTab: `${ctrl}+tab`,
     previousTab: `${ctrl}+shift+tab`,
-    setHeading1: "",
-    setHeading2: "",
-    setHeading3: "",
-    setHeading4: "",
-    setHeading5: "",
-    setHeading6: "",
+    setHeading1: "mod+1",
+    setHeading2: "mod+2",
+    setHeading3: "mod+3",
+    setHeading4: "mod+4",
+    setHeading5: "mod+5",
+    setHeading6: "mod+6",
     setParagraph: "",
   };
 }
 
 const DEFAULT_SHORTCUTS: Shortcuts = defaultShortcuts();
+
+/** Settings.shortcutsRevision's current value. 1: Heading 1-6 gained
+ *  defaults. Before that they were saved as "" whether or not anyone chose
+ *  to leave them unbound. */
+export const SHORTCUTS_REVISION = 1;
+
+const HEADING_LEVELS: ShortcutAction[] = [
+  "setHeading1",
+  "setHeading2",
+  "setHeading3",
+  "setHeading4",
+  "setHeading5",
+  "setHeading6",
+];
+
+/**
+ * Stored shortcuts -> the bindings in force. An action stored with a combo,
+ * or with "" under the current revision, keeps it: that is the user's own
+ * choice. An action not stored at all (saved by a build from before it)
+ * takes its default, and so does a heading level stored as "" before
+ * revision 1, which can't be told apart from never having been set. A
+ * default is only taken while no stored action has that combo already: two
+ * actions on one key would leave one of them dead.
+ */
+export function migrateShortcuts(
+  stored: unknown,
+  revision: number,
+  defaults: Shortcuts = DEFAULT_SHORTCUTS,
+): Shortcuts {
+  const saved = (isRecord(stored) ? stored : {}) as Partial<Shortcuts>;
+  const taken = new Set(Object.values(saved).filter(Boolean));
+  // Spread, to keep the actions of a newer build this one doesn't know.
+  const result = { ...defaults, ...saved } as Shortcuts;
+  for (const action of Object.keys(defaults) as ShortcutAction[]) {
+    const value = saved[action];
+    const unset =
+      typeof value !== "string" ||
+      (value === "" && revision < 1 && HEADING_LEVELS.includes(action));
+    if (unset)
+      result[action] = taken.has(defaults[action]) ? "" : defaults[action];
+  }
+  return result;
+}
 
 /// Settings.uiTextScale's values: Settings › Editor & Appearance ›
 /// Interface Text Size, as a factor on the UI's type scale.
@@ -361,6 +404,10 @@ export interface Settings {
   /// the document has its own zoom, above.
   uiTextScale: UiTextScale;
   shortcuts: Shortcuts;
+  /// The SHORTCUTS_REVISION `shortcuts` was last saved under, so a later
+  /// build can tell an action left unbound on purpose from one that had no
+  /// default yet (migrateShortcuts). 0 for shortcuts saved before it.
+  shortcutsRevision: number;
   /// Either a built-in theme id (theme/builtin-themes.ts) or a
   /// `UserThemeMeta.id`.
   themeId: string;
@@ -457,6 +504,7 @@ const DEFAULT_SETTINGS: Settings = {
   zoom: 1,
   uiTextScale: 1,
   shortcuts: DEFAULT_SHORTCUTS,
+  shortcutsRevision: SHORTCUTS_REVISION,
   themeId: "default",
   userThemes: [],
   newDocumentMode: "window",
@@ -534,6 +582,10 @@ export function normaliseSettings(parsed: Raw | null): Settings {
   if (!parsed || Object.keys(parsed).length === 0)
     return { ...DEFAULT_SETTINGS, language: guessLanguage() };
   try {
+    const shortcutsRevision =
+      typeof parsed.shortcutsRevision === "number"
+        ? parsed.shortcutsRevision
+        : 0;
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
@@ -565,10 +617,8 @@ export function normaliseSettings(parsed: Raw | null): Settings {
       )
         ? (parsed.revisionDisplay as RevisionDisplay)
         : DEFAULT_SETTINGS.revisionDisplay,
-      shortcuts: {
-        ...DEFAULT_SETTINGS.shortcuts,
-        ...((parsed.shortcuts as Partial<Shortcuts> | undefined) ?? {}),
-      },
+      shortcuts: migrateShortcuts(parsed.shortcuts, shortcutsRevision),
+      shortcutsRevision,
       diagramEngine: DIAGRAM_ENGINES.includes(
         parsed.diagramEngine as DiagramEngine,
       )
@@ -849,8 +899,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   useApplyAppearance(settings, setSettings);
 
   function setSettings(patch: Partial<Settings>) {
-    setSettingsState((prev) => ({ ...prev, ...patch }));
-    persist(patch);
+    // Shortcuts saved from now on are this build's: a "" in them is the
+    // user's own (see migrateShortcuts).
+    const full = patch.shortcuts
+      ? { ...patch, shortcutsRevision: SHORTCUTS_REVISION }
+      : patch;
+    setSettingsState((prev) => ({ ...prev, ...full }));
+    persist(full);
   }
 
   const t = resolveStrings(settings.language);

@@ -619,6 +619,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   shortcutReserved: "このキーはアプリの標準操作に予約されています。",
   shortcutUnset: "未設定",
   shortcutClear: "クリア",
+  shortcutReset: "リセット",
   shortcutNextTab: "次のタブ",
   shortcutPreviousTab: "前のタブ",
   shortcutHeadingsGroupLabel: "見出し",
