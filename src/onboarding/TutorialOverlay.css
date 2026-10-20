@@ -37,7 +37,8 @@
 }
 
 /* Beside the docked AI panel, never over it: the AI lessons happen there.
-   App.tsx sets --docked-panel-width while one is docked. */
+   The card has --docked-panel-width while one is docked
+   (utils/hooks/useDockedPanelWidth.ts). */
 .tutorial-card {
   position: fixed;
   top: 48px;

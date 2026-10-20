@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import type { Strings } from "../../i18n/strings";
 import type { FindReplace } from "./useFindReplace";
 import { ArrowUpIcon, ChevronIcon, CloseIcon } from "../../ui/icons";
 import { usePresenceProps } from "../../ui/usePresence";
+import { useDockedPanelWidth } from "../../utils/hooks/useDockedPanelWidth";
 import "./FindReplaceBar.css";
 
 type FindReplaceBarLabels = Pick<
@@ -29,6 +30,7 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
   const [replaceOpen, setReplaceOpen] = useState(false);
   const { query, replacement, caseSensitive, useRegex, status } = findReplace;
   const presence = usePresenceProps<HTMLDivElement>();
+  const dockedWidth = useDockedPanelWidth();
 
   function onFindKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter") {
@@ -68,6 +70,7 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
     <div
       {...presence}
       className="find-replace-bar floating-surface"
+      style={{ "--docked-panel-width": `${dockedWidth}px` } as CSSProperties}
       onKeyDown={onBarKeyDown}
     >
       <div className="find-replace-row">

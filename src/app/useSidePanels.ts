@@ -12,6 +12,7 @@ import { usePresence } from "../ui/usePresence";
 import { CLOSE_FIND_REPLACE_EVENT } from "../utils/events";
 import { useAgentPanelState } from "../ai/chat/panel/agent-panel";
 import { getUiState, setUiState } from "../storage/ui-state";
+import { setDockedPanelWidth } from "../utils/hooks/useDockedPanelWidth";
 import { useSidebarWidth } from "./sidebar-width";
 
 export type PanelMode = "tree" | "outline" | "clipboard";
@@ -99,6 +100,10 @@ export function useSidePanels() {
   const sidebarClosing = sidebarPresence.state === "closing";
   const agentPresence = usePresence(agentPanel.open, { exitMs: 250 });
   const agentClosing = agentPresence.state === "closing";
+  // What the find bar and the tutorial card keep clear of on the right.
+  const dockedWidth =
+    agentPresence.mounted && !agentOverlays && !isIOSApp ? agentPanel.width : 0;
+  useLayoutEffect(() => setDockedPanelWidth(dockedWidth), [dockedWidth]);
   // The phone's AI sheet leaves where it stood: closing with the keyboard
   // up, the web view grew back under it as the keyboard went and its
   // height (a share of the view) jumped the top up ~170pt in one frame.
