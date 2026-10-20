@@ -59,6 +59,47 @@ test("a document with maths opens with its formulas already drawn", async ({
   expect(first).toEqual([2, 2]);
 });
 
+test("a formula in a Textus AI proposal is drawn as soon as KaTeX loads", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(page, "The first paragraph.\n\nThe second paragraph.");
+  // KaTeX arrives well after the proposal is shown, as on a slow disk.
+  await page.route(/katex-bundle/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await route.continue();
+  });
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "go" },
+      {
+        kind: "ToolCall",
+        call_id: "m1",
+        name: "propose_edit",
+        arguments: JSON.stringify({
+          action: "insert_after",
+          anchor: "The first paragraph.",
+          text: "Its area is $\\pi r^2$.",
+        }),
+      },
+      { kind: "ToolResult", call_id: "m1", output: "Edit proposed" },
+      { kind: "Assistant", text: "Added it." },
+    ],
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Add the area");
+  await composer.press("Enter");
+  const proposal = page.locator(`${editor} .pending-insert`);
+  // The source while KaTeX loads, then the formula - with nothing else
+  // happening in the editor to draw it again.
+  await expect(proposal.locator(".math-pending")).toHaveCount(1);
+  await expect(proposal.locator(".katex")).toHaveCount(1);
+  await expect(proposal.locator(".math-pending")).toHaveCount(0);
+});
+
 test("a formula added to a document without maths is drawn once KaTeX loads", async ({
   page,
 }) => {
