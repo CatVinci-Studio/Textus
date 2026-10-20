@@ -6,8 +6,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 
 /**
  * Above this size the editor draws lazily: a formula, a diagram or a
- * picture off screen waits until it comes near (draw-when-visible.ts), on
- * Chromium the blocks off screen skip layout (content-visibility.ts), and
+ * picture off screen waits until it comes near (draw-when-visible.ts), and
  * a tab's caret is kept as a document position rather than written out as
  * a Markdown offset. Below it, everything is drawn as it always was.
  */

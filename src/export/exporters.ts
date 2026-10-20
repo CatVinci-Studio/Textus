@@ -10,7 +10,6 @@ import {
 } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
 import { katexLoaded, loadKatex } from "../editor/math/katex-loader";
-import { LARGE_DOC_CLASS } from "../editor/content-visibility";
 import { drawEverything } from "../editor/draw-when-visible";
 import { tabTitle, type DocTab } from "../document/doc-tabs";
 import { exportDoc, fs } from "../platform/ipc";
@@ -227,11 +226,6 @@ export function cloneEditorContent(
   clone
     .querySelectorAll("img[loading]")
     .forEach((img) => img.removeAttribute("loading"));
-  // Every block of the page is laid out, not only those on screen.
-  clone.classList.remove(LARGE_DOC_CLASS);
-  clone
-    .querySelectorAll(`.${LARGE_DOC_CLASS}`)
-    .forEach((el) => el.classList.remove(LARGE_DOC_CLASS));
   gatherDetails(clone);
   fitTablesToWidth(clone);
   clone
