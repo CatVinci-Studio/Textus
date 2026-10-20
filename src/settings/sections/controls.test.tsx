@@ -114,3 +114,43 @@ describe("resetting a shortcut", () => {
     expect(save).not.toHaveBeenCalled();
   });
 });
+
+describe("a key a fixed shortcut owns", () => {
+  const fixed = [
+    { title: "View", items: [{ label: "Actual Size", combos: ["mod+0"] }] },
+  ];
+
+  it("is refused with the fixed shortcut's name", () => {
+    vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");
+    const save = vi.fn();
+    render(
+      <ShortcutRow
+        label="Paragraph"
+        action="setParagraph"
+        shortcuts={shortcuts}
+        setSettings={save}
+        t={resolveStrings("en")}
+        fixed={fixed}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Paragraph: Not set" }));
+    fireEvent.keyDown(window, { key: "0", metaKey: true });
+    expect(screen.getByRole("alert")).toHaveTextContent("Actual Size");
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it("bound already, is shown as taken", () => {
+    vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");
+    render(
+      <ShortcutRow
+        label="Paragraph"
+        action="setParagraph"
+        shortcuts={{ ...shortcuts, setParagraph: "mod+0" }}
+        setSettings={vi.fn()}
+        t={resolveStrings("en")}
+        fixed={fixed}
+      />,
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent("Actual Size");
+  });
+});

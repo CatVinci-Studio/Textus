@@ -10,6 +10,7 @@ import {
   imageSchema,
   linkSchema,
 } from "@milkdown/kit/preset/commonmark";
+import { remarkGFMPlugin } from "@milkdown/kit/preset/gfm";
 import { Fragment } from "@milkdown/kit/prose/model";
 import type {
   DOMOutputSpec,
@@ -1266,6 +1267,79 @@ const hardBreak: Handle = (node, parent, state, info) => {
     : out;
 };
 
+/** A hard break as two spaces at the line's end, for a document written
+ *  that way (documentBreaks) - after text only: spaces opening a line are
+ *  nothing, and a break there stays a backslash. */
+const hardBreakAsSpaces: Handle = (node, parent, state, info) => {
+  const out = hardBreak(node, parent, state, info);
+  const siblings = (parent?.children ?? []) as Phrasing[];
+  const before = siblings.slice(0, siblings.indexOf(node as Phrasing));
+  const afterText = before.some(
+    (child) => child.type !== "break" && !/^\s*$/.test(child.value ?? "x"),
+  );
+  return afterText && /[^\s]$/.test(info.before)
+    ? out.replace(/^\\\n/, "  \n")
+    : out;
+};
+
+/**
+ * How the document's own hard breaks are written, by majority: a
+ * backslash or two spaces at the end of the line. remark writes the
+ * backslash, so an edit to a paragraph with a two-space break rewrote it.
+ * Lines inside fenced code don't count.
+ */
+export function documentBreaks(markdown: string): "backslash" | "spaces" {
+  let spaces = 0;
+  let backslashes = 0;
+  let fence: string | null = null;
+  const lines = markdown.split(/\r?\n/);
+  lines.forEach((line, i) => {
+    const marker = /^\s{0,3}(`{3,}|~{3,})/.exec(line)?.[1];
+    if (marker && (!fence || marker.startsWith(fence))) {
+      fence = fence ? null : marker.slice(0, 3);
+      return;
+    }
+    if (fence || !lines[i + 1]?.trim() || !line.trim()) return;
+    if (/\S {2,}$/.test(line)) spaces++;
+    else if (/(^|[^\\])(\\\\)*\\$/.test(line)) backslashes++;
+  });
+  return spaces > backslashes ? "spaces" : "backslash";
+}
+
+/**
+ * How wide a table cell's text is in a monospaced editor, for padding the
+ * columns of a table written back: Chinese, Japanese and Korean
+ * characters, full-width forms and most emoji take two columns. Counted as
+ * one, a column of Chinese came out ragged in every source view.
+ */
+export function displayWidth(text: string): number {
+  let width = 0;
+  for (const char of text) {
+    const code = char.codePointAt(0)!;
+    width += isWide(code) ? 2 : 1;
+  }
+  return width;
+}
+
+function isWide(code: number): boolean {
+  return (
+    (code >= 0x1100 && code <= 0x115f) ||
+    (code >= 0x2e80 && code <= 0x303e) ||
+    (code >= 0x3041 && code <= 0x33ff) ||
+    (code >= 0x3400 && code <= 0x4dbf) ||
+    (code >= 0x4e00 && code <= 0x9fff) ||
+    (code >= 0xa000 && code <= 0xa4cf) ||
+    (code >= 0xac00 && code <= 0xd7a3) ||
+    (code >= 0xf900 && code <= 0xfaff) ||
+    (code >= 0xfe30 && code <= 0xfe4f) ||
+    (code >= 0xff00 && code <= 0xff60) ||
+    (code >= 0xffe0 && code <= 0xffe6) ||
+    (code >= 0x1f300 && code <= 0x1f64f) ||
+    (code >= 0x1f900 && code <= 0x1f9ff) ||
+    (code >= 0x20000 && code <= 0x3fffd)
+  );
+}
+
 /** Installs the rules above. `update`, not `set`: the slice already carries
  *  Milkdown's own text/strong/emphasis handlers, and replacing it wholesale
  *  would drop them. */
@@ -1273,9 +1347,15 @@ export function configureMarkdownOutput(ctx: Ctx): void {
   keepLinkAcrossInlineNodes(ctx);
   configureImageNode(ctx);
   keepCodeFenceMeta(ctx);
+  ctx.update(remarkGFMPlugin.options.key, (options) => ({
+    ...options,
+    stringLength: displayWidth,
+  }));
   // The editor's opening text (MilkdownEditor sets it before this runs).
   const initial = ctx.get(defaultValueCtx);
   const bullet = typeof initial === "string" ? documentBullet(initial) : null;
+  const breaks =
+    typeof initial === "string" ? documentBreaks(initial) : "backslash";
   ctx.update(remarkStringifyOptionsCtx, (options) => ({
     ...options,
     ...(bullet ? { bullet } : {}),
@@ -1286,7 +1366,7 @@ export function configureMarkdownOutput(ctx: Ctx): void {
       list,
       link,
       image,
-      break: hardBreak,
+      break: breaks === "spaces" ? hardBreakAsSpaces : hardBreak,
       text: withSingleLineEnds(
         withoutLatexPairs(
           keepAlertMarker(

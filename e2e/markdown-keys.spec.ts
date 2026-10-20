@@ -154,3 +154,119 @@ test("the arrows leave a table that starts or ends the document from any cell", 
     "above\n\n| a | b |\n| - | - |\n| c | d |\n\nbelow",
   );
 });
+
+test("~~~ opens a code block, --- on the first line front matter, 1) a list; === stays text", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("---", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("title: x", { delay: 20 });
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.type("1) one", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("~~~py", { delay: 20 });
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("x = 1", { delay: 20 });
+  await page.keyboard.press("ControlOrMeta+Enter");
+  await page.keyboard.type("=== and ~~gone~~", { delay: 20 });
+  await expect(page.locator(`${editor} mark`)).toHaveCount(0);
+  expect(await sourceOf(page)).toBe(
+    "---\ntitle: x\n---\n\n1. one\n\n```py\nx = 1\n```\n\n\\=== and ~~gone~~",
+  );
+});
+
+test("Backspace at a heading's start makes it text; at a callout's first line it keeps the callout, then makes a plain quote", async ({
+  page,
+}) => {
+  await open(page, "### Title\n\n> [!NOTE]\n> Body text\n");
+  await page.locator(`${editor} h3`).click();
+  await page.keyboard.press("Home");
+  await page.keyboard.press("Backspace");
+  await expect(page.locator(`${editor} h3`)).toHaveCount(0);
+  // Down onto the callout's body line, the marker hidden above it.
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Home");
+  await page.keyboard.press("Backspace");
+  await expect(page.locator(`${editor} .md-alert`)).toHaveCount(1);
+  await expect(page.locator(`${editor} p`).first()).toHaveText("Title");
+  await page.keyboard.press("Backspace");
+  await expect(page.locator(`${editor} .md-alert`)).toHaveCount(0);
+  expect(await sourceOf(page)).toBe("Title\n\n> Body text");
+});
+
+test("Tab and Shift+Tab in a paragraph leave the focus in the text", async ({
+  page,
+}) => {
+  await open(page, "Some text\n");
+  await page.locator(`${editor} p`).first().click();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.locator(editor)).toBeFocused();
+  await page.keyboard.type("!", { delay: 20 });
+  expect(await sourceOf(page)).toMatch(/!/);
+});
+
+test("Format › Ordered List turns a bullet list into one, every item", async ({
+  page,
+}) => {
+  await open(page, "- one\n- two\n");
+  await page.locator(`${editor} li`).first().click();
+  await emit(page, "menu-insert-block", "ordered-list");
+  expect(await sourceOf(page)).toBe("1. one\n2. two");
+});
+
+test("HTML, a <br> and a footnote reference typed out are saved as typed", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("a <kbd>K</kbd> b<br>c[^1] d", { delay: 20 });
+  expect(await sourceOf(page)).toBe("a <kbd>K</kbd> b<br>c[^1] d");
+});
+
+test("Left steps one character onto inline HTML, as Right does", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("ab <b>XY</b> cd", { delay: 20 });
+  // Back over "cd" and the space, onto "</b>": its source shows, the
+  // caret after its ">".
+  for (let i = 0; i < 3; i++) await page.keyboard.press("ArrowLeft");
+  await page.keyboard.type("!", { delay: 20 });
+  // And one more: into the tag, not past "XY" and "<b>".
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.type("?", { delay: 20 });
+  expect(await sourceOf(page)).toBe("ab <b>XY</?b>! cd");
+});
+
+test("one Right from before bold-italic is inside it, all its marks showing", async ({
+  page,
+}) => {
+  await open(page, "ab ***XY*** cd\n");
+  await page.locator(`${editor} p`).first().click();
+  await page.keyboard.press("Home");
+  for (let i = 0; i < 3; i++) await page.keyboard.press("ArrowRight");
+  await expect(page.locator(`${editor} .enclosure-delimiter`)).toHaveText([
+    "*",
+    "**",
+    "**",
+    "*",
+  ]);
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.type("!", { delay: 20 });
+  expect(await sourceOf(page)).toBe("ab ***!XY*** cd");
+});
+
+test("Enter before a space starts the new line without it", async ({
+  page,
+}) => {
+  await open(page, "one two\n");
+  await page.locator(`${editor} p`).first().click();
+  await page.keyboard.press("Home");
+  for (let i = 0; i < 3; i++) await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("Enter");
+  expect(await sourceOf(page)).toBe("one\n\ntwo");
+});

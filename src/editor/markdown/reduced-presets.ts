@@ -24,6 +24,10 @@ import {
   syncListOrderPlugin,
   wrapInHeadingInputRule,
   headingSchema,
+  insertHrInputRule,
+  hrSchema,
+  wrapInOrderedListInputRule,
+  orderedListSchema,
 } from "@milkdown/kit/preset/commonmark";
 import {
   autoInsertSpanPlugin,
@@ -35,7 +39,11 @@ import {
   toggleStrikethroughCommand,
 } from "@milkdown/kit/preset/gfm";
 import { editorViewCtx } from "@milkdown/kit/core";
-import { textblockTypeInputRule } from "@milkdown/kit/prose/inputrules";
+import {
+  InputRule,
+  textblockTypeInputRule,
+  wrappingInputRule,
+} from "@milkdown/kit/prose/inputrules";
 import { $inputRule } from "@milkdown/kit/utils";
 import { isLinuxPlatform } from "../../platform/os";
 
@@ -89,7 +97,10 @@ import { isLinuxPlatform } from "../../platform/os";
 //
 // wrapInHeadingInputRule is replaced by headingInputRule below: it made a
 // heading of any number of "#"s, and "####### " gave a level-7 heading,
-// drawn as an unknown <h7> element and saved as "######".
+// drawn as an unknown <h7> element and saved as "######". insertHrInputRule
+// and wrapInOrderedListInputRule are replaced by ruleInputRule and
+// orderedListInputRule: "---" on the first line is front matter's start,
+// and "1) " is a list as well as "1. ".
 //
 // $markSchema/$nodeSchema (and some other composable pieces) return
 // array-like tuples that get spread apart by the presets' own internal
@@ -120,6 +131,8 @@ const excludedCommonmarkPieces = [
   syncHeadingIdPlugin,
   remarkInlineLinkPlugin,
   wrapInHeadingInputRule,
+  insertHrInputRule,
+  wrapInOrderedListInputRule,
 ].flat();
 
 // autoInsertSpanPlugin (prosemirror-safari-ime-span) is left out on Linux.
@@ -150,6 +163,39 @@ export const headingInputRule = $inputRule((ctx) =>
       block.type.name === "heading" ? Number(block.attrs.level) + typed : typed;
     return { level: Math.min(level, 6) };
   }),
+);
+
+/** "---", "___ " or "*** " alone on a line makes a rule - except "---" on
+ *  the document's first line, which Enter turns into front matter
+ *  (block-keys-plugin.ts); "--- " makes a rule there. */
+export const ruleInputRule = $inputRule(
+  (ctx) =>
+    new InputRule(
+      /^(?:---|---\s|___\s|\*\*\*\s)$/,
+      (state, match, start, end) => {
+        const $start = state.doc.resolve(start);
+        const firstLine = $start.depth === 1 && $start.index(0) === 0;
+        if (match[0] === "---" && firstLine) return null;
+        // The rule goes above the line, which keeps the caret and any text
+        // after it.
+        return state.tr
+          .delete(start, end)
+          .insert($start.before(), hrSchema.type(ctx).create());
+      },
+    ),
+);
+
+/** "1. " or "1) " at the start of a line starts an ordered list from that
+ *  number, joined to a list right above that it continues - the stock
+ *  rule, which took only the dot. */
+export const orderedListInputRule = $inputRule((ctx) =>
+  wrappingInputRule(
+    /^\s*(\d+)[.)]\s$/,
+    orderedListSchema.type(ctx),
+    (match) => ({ order: Number(match[1]) }),
+    (match, node) =>
+      node.childCount + (node.attrs.order as number) === Number(match[1]),
+  ),
 );
 
 const excludedCommonmarkSet = new Set<unknown>(excludedCommonmarkPieces);

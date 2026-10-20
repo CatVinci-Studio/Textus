@@ -37,6 +37,7 @@ import {
 import { embedFileAt } from "./images/obsidian-embed-preview";
 import { canRevealInFileManager } from "../platform/capabilities";
 import type { EditorRunner } from "./useEditorRunner";
+import { convertList } from "./keys/block-toggles";
 import type { Strings } from "../i18n/strings";
 
 // The editor commands behind the right-click menu, the native Format menu
@@ -500,6 +501,21 @@ function generalItems(options: ContextMenuOptions): MenuEntry[] {
   ];
 }
 
+/** A list from the Format or Insert menu: the block wrapped in one, or -
+ *  in a list of the other kind - that list changed over (convertList). */
+export function insertList(
+  run: EditorRunner,
+  kind: "bullet_list" | "ordered_list",
+): void {
+  if (run((ctx) => convertList(ctx.get(editorViewCtx), kind))) return;
+  runCommand(
+    run,
+    kind === "bullet_list"
+      ? wrapInBulletListCommand.key
+      : wrapInOrderedListCommand.key,
+  );
+}
+
 function insertItems(
   run: EditorRunner,
   options: ContextMenuOptions,
@@ -508,11 +524,11 @@ function insertItems(
   return [
     {
       label: t.insertBulletList,
-      onSelect: () => runCommand(run, wrapInBulletListCommand.key),
+      onSelect: () => insertList(run, "bullet_list"),
     },
     {
       label: t.insertOrderedList,
-      onSelect: () => runCommand(run, wrapInOrderedListCommand.key),
+      onSelect: () => insertList(run, "ordered_list"),
     },
     {
       label: t.insertBlockquote,

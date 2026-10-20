@@ -69,3 +69,26 @@ describe("Ctrl+B and Ctrl+I over a selection", () => {
     });
   });
 });
+
+describe("Ctrl+B and Ctrl+I on their own formatting", () => {
+  // "a **bold** c": a(0) space(1) span(2), its text 3-7, after it 8.
+  it("takes bold off around the caret", async () => {
+    expect(await pressOver("a **bold** c\n", 4, 4)).toEqual({
+      saved: "a bold c\n",
+      handled: true,
+    });
+  });
+
+  it("takes bold off a selection inside it or around it", async () => {
+    expect((await pressOver("a **bold** c\n", 4, 6)).saved).toBe("a bold c\n");
+    expect((await pressOver("a **bold** c\n", 2, 8)).saved).toBe("a bold c\n");
+  });
+
+  it("takes italic off with Ctrl+I", async () => {
+    expect((await pressOver("a *it* c\n", 4, 4, "i")).saved).toBe("a it c\n");
+  });
+
+  it("keeps the italic half of bold-italic", async () => {
+    expect((await pressOver("a ***bi*** c\n", 5, 5)).saved).toBe("a *bi* c\n");
+  });
+});

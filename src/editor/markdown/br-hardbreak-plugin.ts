@@ -63,7 +63,8 @@ export const remarkTableCellBreaks = $remark(
  * hardbreak node so it round-trips as a proper markdown break (backslash +
  * newline) instead of literal `<br/>` text surviving in the saved file.
  *
- * Only where a transaction changed the document - a `<br>` typed or pasted.
+ * Only where a paste or a drop changed the document - a `<br>` typed is
+ * the user's to keep.
  * The file's own `<br>`s stay as written: saving writes every block the
  * user didn't edit back as the file has it (source-preserving.ts), and a
  * `<br>` turned into a break on the first edit anywhere - or on opening,
@@ -84,7 +85,14 @@ export const brToHardbreakPlugin = $prose(() => {
   return new Plugin({
     key: new PluginKey("br-to-hardbreak"),
     appendTransaction(transactions, _oldState, newState) {
-      if (!transactions.some((tr) => tr.docChanged)) return null;
+      // Pasted or dropped only: a `<br>` typed by hand is kept as typed
+      // (markdown/source-input-rules.ts).
+      const pasted = transactions.filter(
+        (tr) =>
+          tr.docChanged &&
+          ["paste", "drop"].includes(tr.getMeta("uiEvent") as string),
+      );
+      if (!pasted.length) return null;
       const hardbreakType = newState.schema.nodes.hardbreak;
       if (!hardbreakType) return null;
 
@@ -125,7 +133,11 @@ export const brToHardbreakPlugin = $prose(() => {
           targets.push({ from: pos, to });
         return true;
       };
-      for (const [from, to] of changedRanges(transactions, newState.doc))
+      for (const [from, to] of changedRanges(
+        transactions,
+        newState.doc,
+        pasted,
+      ))
         newState.doc.nodesBetween(from, to, visit);
       if (targets.length === 0) return null;
 
@@ -139,13 +151,16 @@ export const brToHardbreakPlugin = $prose(() => {
   });
 });
 
-/** The ranges `transactions` rewrote, in `doc`'s (the final) positions. */
+/** The ranges the transactions in `only` rewrote, in `doc`'s (the final)
+ *  positions - `transactions` being all of them, in order. */
 function changedRanges(
   transactions: readonly Transaction[],
   doc: ProseNode,
+  only: readonly Transaction[],
 ): [number, number][] {
   const ranges: [number, number][] = [];
   transactions.forEach((tr, t) => {
+    if (!only.includes(tr)) return;
     tr.mapping.maps.forEach((map, i) => {
       map.forEach((_oldStart, _oldEnd, newStart, newEnd) => {
         // Carried through every later step, this transaction's and the

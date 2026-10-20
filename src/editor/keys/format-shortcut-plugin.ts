@@ -1,4 +1,9 @@
-import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
+import {
+  Plugin,
+  TextSelection,
+  type EditorState,
+  type Transaction,
+} from "@milkdown/kit/prose/state";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import {
@@ -25,18 +30,64 @@ const SHORTCUTS: Record<string, FormatSpec> = {
 const WRAPPABLE = new Set(["md_code_span", "math_inline"]);
 
 /**
+ * The shortcut pressed again on its own formatting takes it off, as in
+ * every editor: with the caret or the selection inside a bold span (or
+ * the selection covering one), Cmd/Ctrl+B unwraps it back to text.
+ * Bold-italic typed as one `***` span keeps the other half. Null when the
+ * selection isn't in or on such a span.
+ */
+function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
+  const { $from, $to, from, to, empty } = state.selection;
+  const matches = (node: ProseNode | null | undefined) =>
+    node?.type.name === "md_span" &&
+    node.attrs.delim === spec.delim &&
+    (node.attrs.rung === spec.rung || node.attrs.rung === 3);
+  const unwrap = (start: number, node: ProseNode, shift: number) => {
+    if (node.attrs.rung === 3)
+      return state.tr.setNodeMarkup(start, undefined, {
+        delim: spec.delim,
+        rung: 3 - spec.rung,
+      });
+    const tr = state.tr.replaceWith(start, start + node.nodeSize, node.content);
+    return tr.setSelection(
+      TextSelection.create(
+        tr.doc,
+        from - shift,
+        Math.max(from, to - 1) - shift,
+      ),
+    );
+  };
+  for (let d = $from.depth; d > 0; d--) {
+    const node = $from.node(d);
+    if ($to.depth < d || $to.node(d) !== node) break;
+    if (matches(node)) return unwrap($from.before(d), node, 1);
+  }
+  // A selection from just before a span to just after it.
+  if (!empty && $from.sameParent($to)) {
+    const node = state.doc.nodeAt(from);
+    if (matches(node) && from + node!.nodeSize === to) {
+      const tr = unwrap(from, node!, 0);
+      if (node!.attrs.rung === 3) return tr;
+      return tr.setSelection(TextSelection.create(tr.doc, from, to - 2));
+    }
+  }
+  return null;
+}
+
+/**
  * Cmd/Ctrl+B and Cmd/Ctrl+I, built on the same md_span nodes as typing the
  * delimiters (there are no strong/em marks in this schema - see
  * reduced-presets.ts, which strips the stock keymaps along with the marks):
  *
  * - With no selection: open an empty shell, cursor inside, exactly like
  *   typing "**" - and pressing the shortcut again while that shell is still
- *   empty removes it, so an accidental press undoes itself.
+ *   empty removes it (toggleOff), so an accidental press undoes itself.
  * - With a selection of text (code and maths in it too) inside one
  *   textblock: wrap it in the shell (whitespace at the edges stays
  *   outside - delimiters hugging spaces wouldn't serialize to valid
  *   markdown).
- * - Inside code/math or an existing shell: do nothing, matching the
+ * - In or on a span of the same style: take it off (toggleOff).
+ * - Inside code/math or another shell: do nothing, matching the
  *   autopair plugins' no-nesting rule.
  */
 export const formatShortcutPlugin = $prose(
@@ -57,25 +108,18 @@ export const formatShortcutPlugin = $prose(
           // Live selection: Cmd+B right after fast caret movement must not
           // act on a position one step behind (see stateWithLiveSelection).
           const state = stateWithLiveSelection(view);
+          const off = toggleOff(state, spec);
+          if (off) {
+            view.dispatch(off);
+            event.preventDefault();
+            return true;
+          }
+
           const mdSpan = state.schema.nodes.md_span;
           const { $from, $to, empty } = state.selection;
           const parent = $from.parent;
 
           if (empty) {
-            // Second press while the shell is still empty - take it back out.
-            if (
-              parent.type.name === "md_span" &&
-              parent.content.size === 0 &&
-              parent.attrs.delim === spec.delim &&
-              parent.attrs.rung === spec.rung
-            ) {
-              const nodeStart = $from.before($from.depth);
-              view.dispatch(
-                state.tr.delete(nodeStart, nodeStart + parent.nodeSize),
-              );
-              event.preventDefault();
-              return true;
-            }
             if (
               !parent.isTextblock ||
               parent.type.spec.code ||

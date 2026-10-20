@@ -72,6 +72,30 @@ export const headingMarkerPlugin = $prose(
         handleKeyDown(view, event) {
           if (isImeKeyEvent(view, event)) return false;
 
+          // Backspace at the start of a heading makes it body text, at any
+          // level, as in Typora - Milkdown's keymap stepped it down one
+          // level at a time (an H3 took three presses).
+          if (
+            event.key === "Backspace" &&
+            !event.metaKey &&
+            !event.altKey &&
+            !event.ctrlKey &&
+            !event.shiftKey
+          ) {
+            const state = stateWithLiveSelection(view);
+            const { $from, empty } = state.selection;
+            if (!empty || $from.parent.type.name !== "heading") return false;
+            if ($from.parentOffset !== 0) return false;
+            event.preventDefault();
+            view.dispatch(
+              state.tr.setNodeMarkup(
+                $from.before(),
+                state.schema.nodes.paragraph,
+              ),
+            );
+            return true;
+          }
+
           // Cmd+Backspace (macOS "delete to beginning of line"): with the
           // revealed "# " widget sitting at the line start, WebKit's native
           // line-start computation stalls against the non-editable element
