@@ -15,6 +15,7 @@ import { useQuickAskReview } from "./useQuickAskReview";
 import { useQuickAskControls } from "./useQuickAskControls";
 import { usePopupDismiss } from "./usePopupDismiss";
 import { useEditorWindowEvents } from "./useEditorWindowEvents";
+import { useTextusAiOff } from "./useTextusAiOff";
 import { useEditorPane, useReviewBar } from "./useReviewBar";
 import { EditorContextMenu, type EditorMenuState } from "./EditorContextMenu";
 import { useIllustrateParagraph } from "./useIllustrateParagraph";
@@ -320,6 +321,10 @@ export function MilkdownEditor({
       requestAnimationFrame(onGrammarCaret);
   };
   const findReplace = useFindReplace(run);
+  useTextusAiOff(run, settings.textusAi, {
+    quickAsk: inlineChat.hide,
+    grammarCard: grammar.hide,
+  });
 
   // A phone shows the menu and the grammar card as action sheets, which
   // usePopupDismiss leaves alone.
@@ -605,7 +610,9 @@ export function MilkdownEditor({
         t={t}
         onStale={() => showAiNotice(t.grammarApplyStale)}
       />
+      {/* Off, the panel shows that instead (app/AgentPanelDock.tsx). */}
       {panelContainer &&
+        settings.textusAi &&
         createPortal(
           <EditorAgentPanel
             run={run}

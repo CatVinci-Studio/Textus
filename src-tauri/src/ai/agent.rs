@@ -965,6 +965,7 @@ pub async fn ai_agent_message(
     image_model: Option<crate::ai::images::ImageModel>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
+    crate::ai::ensure_on(&app)?;
     let web_service = web_search
         .then(|| web::resolve_service(&app, search_service.as_deref(), searxng_url.as_deref()))
         .flatten();

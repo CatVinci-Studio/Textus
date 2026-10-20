@@ -6,6 +6,16 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
+  textusAiToggleLabel: `${AI_NAME} aktivieren`,
+  textusAiOffHint: "Aus: Es wird nichts an einen KI-Dienst gesendet.",
+  textusAiOnTooltip: `${AI_NAME} ist an · Klicken zum Ausschalten`,
+  textusAiOffTooltip: `${AI_NAME} ist aus · Klicken zum Einschalten`,
+  textusAiOff: `${AI_NAME} ist aus`,
+  textusAiTurnOn: `${AI_NAME} einschalten`,
+  announceTextusAiOn: `${AI_NAME} ist an.`,
+  announceTextusAiOff: `${AI_NAME} ist aus.`,
+  shortcutToggleTextusAi: `${AI_NAME} ein- oder ausschalten`,
+  menuTextusAi: AI_NAME,
   agentPanelPopOut: "In eigenem Fenster öffnen",
   agentPanelResize: "Breite des KI-Bereichs ändern",
   sidebarResize: "Breite der Seitenleiste ändern",

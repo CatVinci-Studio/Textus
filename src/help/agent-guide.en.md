@@ -274,6 +274,12 @@ There is no global style profile or library: those describe one body of work, so
 - A task you ask for again and again → a **skill**.
 - Notes, research, earlier chapters → ordinary files in the **project folder**; Textus AI reads them when a request needs them.
 
+## Turning Textus AI off
+
+The switch at the right end of the window bar, beside the robot, turns all of Textus AI off in one click: it is lit while Textus AI is on and dim while it is off, and a second click turns it back on. **View > Textus AI**, **Settings > Textus AI > Enable Textus AI** and a shortcut you can set under **Settings > Shortcuts** do the same. The separate AI window has the switch in its header; on an iPhone it is in the title row and in the menu.
+
+While it is off, nothing is sent to any AI service, from the moment Textus opens: no completion, no grammar check, no conversation, nothing remembered. The AI panel, Quick Ask and the AI items of the right-click menu go away, and a reply still being written stops. Edits already proposed in the document stay, for you to accept or reject. Each feature keeps its own setting, and they all apply again once Textus AI is back on.
+
 ## A note on privacy
 
 Your document, attached and @-mentioned files, your writing instructions, the style profile, the library entries that come up, and any project files Textus AI reads are sent to the provider you selected as part of each request; **Learn my style** sends the samples you pick. With web search on, searches go to your provider, or to the search service shown in Settings, and the pages Textus AI reads are fetched from this computer. Turn any feature off in Settings when you don't want that.

@@ -16,6 +16,7 @@ import {
   type Strings,
 } from "../i18n/strings";
 import { ai, storage } from "../platform/ipc";
+import { gateAiRequests } from "../platform/ai-gate";
 import { modIsMeta } from "../platform/os";
 import {
   UPDATE_CHANNELS,
@@ -52,6 +53,7 @@ export type ShortcutAction =
   | "triggerCompletion"
   | "triggerGrammarCheck"
   | "toggleFloatingChat"
+  | "toggleTextusAi"
   | "toggleSidebar"
   | "toggleAgentPanel"
   | "toggleSplitView"
@@ -90,6 +92,7 @@ export function defaultShortcuts(mac = modIsMeta()): Shortcuts {
     triggerCompletion: "mod+shift+space",
     triggerGrammarCheck: "mod+shift+g",
     toggleFloatingChat: "mod+shift+k",
+    toggleTextusAi: "",
     toggleSidebar: "mod+\\",
     toggleAgentPanel: "mod+shift+l",
     toggleSplitView: "mod+shift+e",
@@ -276,6 +279,13 @@ export interface Settings {
   levisImportOffered: boolean;
   /// Appearance: follow the OS, or pin light/dark. Independent of `themeId`.
   theme: ThemeMode;
+  /** Settings › Textus AI › Enable Textus AI, and the window bar's switch
+   *  (#196): off, Textus AI does nothing at all - no completion, grammar
+   *  check, conversation or any other request to an AI service - whatever
+   *  the features below are set to. They keep their own values, and apply
+   *  again once it is back on (textus-ai.ts). Rust reads it too, as
+   *  TEXTUS_AI_SETTING in src-tauri/src/ai/mod.rs. On by default. */
+  textusAi: boolean;
   enableCompletion: boolean;
   enableGrammarCheck: boolean;
   /// How aggressive the grammar check is - from confident typos only up to
@@ -459,6 +469,7 @@ const DEFAULT_SETTINGS: Settings = {
   languageChosen: false,
   levisImportOffered: false,
   theme: "system",
+  textusAi: true,
   enableCompletion: true,
   enableGrammarCheck: true,
   grammarStrictness: "standard",
@@ -842,6 +853,11 @@ export function loadSettings(): Settings {
     normalised = { raw: store.raw, settings: normaliseSettings(store.raw) };
   return normalised.settings;
 }
+
+// Every request to an AI service asks the switch as it goes out - this
+// window's latest value, so a request made right after turning Textus AI
+// off is refused, and one made at launch goes by what was saved.
+gateAiRequests(() => loadSettings().textusAi);
 
 /** Forgets the store, for tests that install a different boot snapshot. */
 export function resetSettingsStoreForTests(): void {

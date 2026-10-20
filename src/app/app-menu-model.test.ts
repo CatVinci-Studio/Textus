@@ -122,9 +122,9 @@ describe("the View menu's on/off items", () => {
         view === undefined || view === "separator" ? [] : (view.submenu ?? []),
       );
       const onOff = items.filter((item) => item.checked !== undefined);
-      // Sidebar, AI Panel, Source Code Mode, Split View, Typewriter Mode,
-      // Zen Mode, Full Screen.
-      expect(onOff).toHaveLength(7);
+      // Sidebar, AI Panel, Textus AI, Source Code Mode, Split View,
+      // Typewriter Mode, Zen Mode, Full Screen.
+      expect(onOff).toHaveLength(8);
       for (const item of items) expect(item.label).not.toMatch(TOGGLE_WORDS);
       const phone = flatten(buildMobileMenu(strings));
       for (const item of phone) expect(item.label).not.toMatch(TOGGLE_WORDS);
@@ -137,6 +137,7 @@ describe("the View menu's on/off items", () => {
   it("show what is on", () => {
     const view = buildAppMenu(t, shortcuts, NO_RECENTS, {
       sidebar: true,
+      textusAi: false,
       zen: true,
       fullscreen: true,
     });
@@ -148,6 +149,26 @@ describe("the View menu's on/off items", () => {
       t.menuToggleZenMode,
       t.menuFullscreen,
     ]);
+  });
+
+  it("show Textus AI on unless it is turned off, and the AI panel out of reach then", () => {
+    const items = (checks: { textusAi?: boolean }) =>
+      flatten(buildAppMenu(t, shortcuts, NO_RECENTS, checks));
+    const textusAi = (checks: { textusAi?: boolean }) =>
+      items(checks).find((item) => item.label === t.menuTextusAi);
+    const panel = (checks: { textusAi?: boolean }) =>
+      items(checks).find((item) => item.label === t.menuToggleAgentPanel);
+    expect(textusAi({})?.checked).toBe(true);
+    expect(panel({})?.disabled).toBe(false);
+    expect(textusAi({ textusAi: false })?.checked).toBe(false);
+    expect(panel({ textusAi: false })?.disabled).toBe(true);
+    expect(nativeMenuChecks({ textusAi: false })["toggle-textus-ai"]).toBe(
+      false,
+    );
+    const phone = flatten(buildMobileMenu(t, { textusAi: false }));
+    expect(phone.find((item) => item.label === t.menuTextusAi)?.checked).toBe(
+      false,
+    );
   });
 
   it("send the macOS bar every native on/off item by id", () => {

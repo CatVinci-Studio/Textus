@@ -6,6 +6,16 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
+  textusAiToggleLabel: `Включить ${AI_NAME}`,
+  textusAiOffHint: "Выключен: ничего не отправляется ни в один сервис ИИ.",
+  textusAiOnTooltip: `${AI_NAME} включён · Нажмите, чтобы выключить`,
+  textusAiOffTooltip: `${AI_NAME} выключен · Нажмите, чтобы включить`,
+  textusAiOff: `${AI_NAME} выключен`,
+  textusAiTurnOn: `Включить ${AI_NAME}`,
+  announceTextusAiOn: `${AI_NAME} включён.`,
+  announceTextusAiOff: `${AI_NAME} выключен.`,
+  shortcutToggleTextusAi: `Включить или выключить ${AI_NAME}`,
+  menuTextusAi: AI_NAME,
   agentPanelPopOut: "Открыть в отдельном окне",
   agentPanelResize: "Изменить ширину панели ИИ",
   sidebarResize: "Изменить ширину боковой панели",

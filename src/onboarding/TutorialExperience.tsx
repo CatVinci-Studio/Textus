@@ -3,6 +3,7 @@ import type { Lang, Strings } from "../i18n/strings";
 import { links } from "../platform/ipc";
 import { isMacPlatform } from "../platform/os";
 import { ProviderListPanel } from "../settings/sections/providers";
+import { TextusAiOffNote } from "../ai/TextusAiSwitch";
 import { useSettings } from "../settings/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
 import { Select } from "../ui/Select";
@@ -46,6 +47,7 @@ export function TutorialExperience({
   zen,
 }: TutorialExperienceProps) {
   const { step, phase, setPhase, watching } = tutorial;
+  const { settings } = useSettings();
   const live = tutorial.practiceAi === "live";
   const notes = practiceNotes(language);
 
@@ -104,12 +106,15 @@ export function TutorialExperience({
   let controls: ReactNode = null;
   if (step.id === "connect") {
     status = phase >= 1 ? t.tutorialConnected : null;
-    controls = (
+    // Nothing to connect while Textus AI is off: its lessons are watched.
+    controls = settings.textusAi ? (
       <ProviderListPanel
         t={t}
         expandCredentials
         onActiveConnectedChange={onConnectedChange}
       />
+    ) : (
+      <TextusAiOffNote />
     );
   } else if (step.id === "grammar" && phase & GRAMMAR_PART.quiet) {
     status = t.tutorialGrammarQuiet;

@@ -274,6 +274,12 @@ Ein globales Stilprofil oder Lexikon gibt es nicht: Beide beschreiben ein bestim
 - Eine Aufgabe, um die du immer wieder bittest → ein **Skill**.
 - Notizen, Recherche, frühere Kapitel → normale Dateien im **Projektordner**; Textus AI liest sie, wenn eine Anfrage sie braucht.
 
+## Textus AI ausschalten
+
+Der Schalter am rechten Ende der Fensterleiste, neben dem Roboter, schaltet Textus AI mit einem Klick ganz aus: Er leuchtet, solange Textus AI an ist, ist gedimmt, solange sie aus ist, und ein zweiter Klick schaltet sie wieder ein. **Ansicht > Textus AI**, **Einstellungen > Textus AI > Textus AI aktivieren** und ein Tastenkürzel, das Sie unter **Einstellungen > Tastenkürzel** festlegen können, tun dasselbe. Das separate KI-Fenster hat den Schalter in seiner Kopfzeile, ein iPhone in der Titelzeile und im Menü.
+
+Solange sie aus ist, wird ab dem Start von Textus nichts an einen KI-Dienst gesendet: keine Vervollständigung, keine Grammatikprüfung, kein Gespräch, nichts wird gemerkt. Der KI-Bereich, die Schnellfrage und die KI-Einträge im Kontextmenü verschwinden, und eine Antwort, die gerade geschrieben wird, hält an. Bereits vorgeschlagene Änderungen im Dokument bleiben, damit Sie sie annehmen oder ablehnen können. Jede Funktion behält ihre eigene Einstellung, und alle gelten wieder, sobald Textus AI wieder an ist.
+
 ## Ein Hinweis zum Datenschutz
 
 Dein Dokument, angehängte und per `@` erwähnte Dateien, deine Schreibanweisungen, das Stilprofil, die vorkommenden Lexikoneinträge und alle Projektdateien, die Textus AI liest, werden mit jeder Anfrage an den gewählten Anbieter gesendet; **Meinen Stil lernen** sendet die Textproben, die du auswählst. Bei eingeschalteter Websuche gehen Suchanfragen an deinen Anbieter oder an den Suchdienst, den die Einstellungen anzeigen, und die Seiten, die Textus AI liest, werden von diesem Computer abgerufen. Schalte in den Einstellungen jede Funktion aus, bei der du das nicht möchtest.

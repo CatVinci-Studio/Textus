@@ -1675,6 +1675,7 @@ pub async fn learn_style(
     workspace_root: Option<String>,
     files: Vec<String>,
 ) -> Result<String, String> {
+    crate::ai::ensure_on(&app)?;
     let (root, samples) = {
         tauri::async_runtime::spawn_blocking(move || -> Result<(PathBuf, String), String> {
             let root = project_root(doc_path.as_deref(), workspace_root.as_deref())?;

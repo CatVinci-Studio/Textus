@@ -6,6 +6,7 @@ import {
 import { ContextMenu } from "../editor/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import type { Settings } from "../settings/SettingsContext";
+import { aiFeatures } from "../settings/textus-ai";
 import type { Strings } from "../i18n/strings";
 import type { ImageLocation } from "../editor/images/missing-image";
 
@@ -62,6 +63,7 @@ export function EditorContextMenu({
   openTableDialog: () => void;
   onClose: () => void;
 }) {
+  const ai = aiFeatures(settings);
   return (
     <Presence show={!!menu} exitMs={250}>
       {menu && (
@@ -76,17 +78,18 @@ export function EditorContextMenu({
               imagePos: menu.imagePos,
               imageLocation: menu.imageLocation,
               // Each AI item is only offered while its feature is enabled in
-              // Settings. The tour's practice tab always offers Ask AI, so
-              // its AI lessons work even for someone who turned Agent chat
-              // off before replaying the tour from Help. The phone's
-              // "More" leaves it to the toolbar's own button.
+              // Settings, and none while Textus AI is off. The tour's
+              // practice tab always offers Ask AI, so its AI lessons work
+              // even for someone who turned Agent chat off before replaying
+              // the tour from Help. The phone's "More" leaves it to the
+              // toolbar's own button.
               aiItems: [
-                ...((settings.enableAskAi || inTour) && !menu.phone
+                ...(aiFeatures(settings, inTour).chat && !menu.phone
                   ? [{ label: t.askAi, onSelect: openAgentConversation }]
                   : []),
                 // A picture costs money: offered once an image model is
                 // chosen (Settings › Textus AI › Image model).
-                ...(settings.enableAskAi && settings.imageModelProvider
+                ...(ai.chat && settings.imageModelProvider
                   ? [
                       {
                         label: t.illustrateParagraph,
@@ -94,7 +97,7 @@ export function EditorContextMenu({
                       },
                     ]
                   : []),
-                ...(settings.enableCompletion
+                ...(ai.completion
                   ? [
                       {
                         label: t.triggerCompletion,
@@ -102,7 +105,7 @@ export function EditorContextMenu({
                       },
                     ]
                   : []),
-                ...(settings.enableGrammarCheck
+                ...(ai.grammar
                   ? [
                       {
                         label: t.triggerGrammarCheck,

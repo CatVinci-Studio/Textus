@@ -31,6 +31,8 @@ import { useLastCarets } from "../document/last-carets";
 import { Presence } from "../ui/usePresence";
 import { FlipOnChange } from "../ui/flip";
 import { AgentPanelProvider } from "../ai/chat/panel/agent-panel";
+import { useTextusAi } from "../ai/TextusAiSwitch";
+import { aiFeatures } from "../settings/textus-ai";
 import { useTabState } from "./useTabState";
 import { useSidePanels } from "./useSidePanels";
 import { useActiveDocument } from "./useActiveDocument";
@@ -92,6 +94,7 @@ function App() {
   const { updateTab, reorderTab, addBlankTab } = tabState;
   // The one save/discard/cancel prompt (close-flow.ts's PendingClose).
   const [pendingClose, setPendingClose] = useState<PendingClose | null>(null);
+  const textusAi = useTextusAi();
   const {
     panelOpen,
     setPanelOpen,
@@ -110,11 +113,11 @@ function App() {
     setSheetFull,
     panelMode,
     setPanelMode,
-  } = useSidePanels();
+  } = useSidePanels(textusAi.on);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const appUpdate = useAppUpdate(settings.updateChannel);
   useZoom(settings.zoom, (zoom) => setSettings({ zoom }));
-  const tutorial = useTutorial();
+  const tutorial = useTutorial(textusAi.on);
   const startTutorial = tutorial.start;
   const stopTutorial = tutorial.exit;
   const evaluateTutorialDocumentChange = useTutorialDocumentEvaluation(
@@ -263,6 +266,7 @@ function App() {
     toggleSplitView,
     toggleZenMode,
     searchFiles,
+    toggleTextusAi: textusAi.toggle,
   });
 
   useEffect(() => installClipboardCapture(), []);
@@ -319,6 +323,7 @@ function App() {
   const menuChecks = {
     sidebar: panelOpen,
     agentPanel: agentPanel.open,
+    textusAi: textusAi.on,
     sourceMode: !!activeTab.sourceMode && !activeTab.splitView,
     splitView: !!activeTab.sourceMode && !!activeTab.splitView,
     typewriter: settings.typewriterMode,
@@ -342,6 +347,7 @@ function App() {
       setSettings({ typewriterMode: !settings.typewriterMode }),
     onToggleSidebar: toggleSidebar,
     onToggleAgentPanel: toggleAgentPanel,
+    onToggleTextusAi: textusAi.toggle,
     onToggleSplitView: toggleSplitView,
     onToggleZenMode: toggleZenMode,
     addBlankTab,
@@ -429,7 +435,7 @@ function App() {
           sidebarOpen={panelOpen}
           sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
           onToggleSidebar={toggleSidebar}
-          showAgentToggle={settings.enableAskAi || tutorial.active}
+          showAgentToggle={aiFeatures(settings, tutorial.active).chat}
           agentOpen={agentPanel.open}
           agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}
           onToggleAgent={toggleAgentPanel}
@@ -490,6 +496,7 @@ function App() {
             mountRef={setAgentPanelEl}
             sourceMode={!!activeTab.sourceMode}
             onToggleSourceMode={toggleSourceMode}
+            aiOn={textusAi.on}
             t={t}
           />
         )}

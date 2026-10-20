@@ -77,6 +77,8 @@ export function useGlobalShortcuts(opts: {
   toggleZenMode: () => void;
   /** Opens the sidebar on its Files tab with the search box focused. */
   searchFiles: () => void;
+  /** Turns Textus AI on or off (ai/TextusAiSwitch.tsx's useTextusAi). */
+  toggleTextusAi: () => void;
 }): void {
   const {
     tabsRef,
@@ -90,6 +92,7 @@ export function useGlobalShortcuts(opts: {
     toggleSplitView,
     toggleZenMode,
     searchFiles,
+    toggleTextusAi,
   } = opts;
   const { settings, setSettings } = useSettings();
 
@@ -211,6 +214,9 @@ export function useGlobalShortcuts(opts: {
       } else if (combo === shortcuts.toggleFloatingChat) {
         e.preventDefault();
         window.dispatchEvent(new CustomEvent(TOGGLE_FLOATING_CHAT_EVENT));
+      } else if (combo === shortcuts.toggleTextusAi) {
+        e.preventDefault();
+        toggleTextusAi();
       } else if (combo === shortcuts.findReplace) {
         e.preventDefault();
         window.dispatchEvent(new CustomEvent(TOGGLE_FIND_REPLACE_EVENT));
@@ -258,6 +264,7 @@ export function useGlobalShortcuts(opts: {
     toggleSplitView,
     toggleZenMode,
     searchFiles,
+    toggleTextusAi,
     setSettings,
   ]);
 }

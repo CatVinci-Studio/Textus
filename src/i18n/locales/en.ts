@@ -8,6 +8,16 @@ import type { Plural } from "../plural";
  */
 const en = {
   agentPanelTitle: AI_NAME,
+  textusAiToggleLabel: `Enable ${AI_NAME}`,
+  textusAiOffHint: "Off: nothing is sent to any AI service.",
+  textusAiOnTooltip: `${AI_NAME} is on · Click to turn off`,
+  textusAiOffTooltip: `${AI_NAME} is off · Click to turn on`,
+  textusAiOff: `${AI_NAME} is off`,
+  textusAiTurnOn: `Turn on ${AI_NAME}`,
+  announceTextusAiOn: `${AI_NAME} is on.`,
+  announceTextusAiOff: `${AI_NAME} is off.`,
+  shortcutToggleTextusAi: `Turn ${AI_NAME} on or off`,
+  menuTextusAi: AI_NAME,
   agentPanelPopOut: "Open in a separate window",
   agentPanelResize: "Resize the AI panel",
   sidebarResize: "Resize the sidebar",

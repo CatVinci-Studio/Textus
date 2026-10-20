@@ -99,7 +99,8 @@ export async function triggerGrammarCheckNow(
 /// whole set, wiping A's underlines the moment the user typed elsewhere.
 type GrammarMeta =
   | { type: "paragraph"; from: number; to: number; decorations: Decoration[] }
-  | { type: "ignore"; original: string; suggestion: string };
+  | { type: "ignore"; original: string; suggestion: string }
+  | { type: "clear" };
 
 /** Replaces the underlines of the paragraph at `contentStart` with `issues`. */
 function paragraphMeta(
@@ -134,6 +135,18 @@ export function ignoreGrammarIssue(
       original: original ?? "",
       suggestion,
     } satisfies GrammarMeta),
+  );
+}
+
+/// Takes every underline away - Textus AI was turned off. Turned back on,
+/// the paragraphs are checked again as they are edited.
+export function clearGrammarIssues(view: EditorView): void {
+  const set = grammarKey.getState(view.state) as DecorationSet | undefined;
+  if (!set || set === DecorationSet.empty) return;
+  view.dispatch(
+    view.state.tr
+      .setMeta(grammarKey, { type: "clear" } satisfies GrammarMeta)
+      .setMeta("addToHistory", false),
   );
 }
 
@@ -263,6 +276,7 @@ export function createGrammarCheckPlugin(options: {
                 .remove(prev.find(meta.from, meta.to))
                 .add(tr.doc, meta.decorations);
             }
+            if (meta?.type === "clear") return DecorationSet.empty;
             if (meta?.type === "ignore") {
               return prev.remove(
                 prev.find().filter((deco) => {
@@ -335,6 +349,8 @@ export function createGrammarCheckPlugin(options: {
               const contentStart = $from.start($from.depth);
 
               debounced.schedule(async (isCurrent) => {
+                // Turned off while the request waited out the debounce.
+                if (!options.enabled()) return;
                 let issues: GrammarIssue[];
                 try {
                   issues = await ai.grammarCheck(
@@ -352,7 +368,7 @@ export function createGrammarCheckPlugin(options: {
                   console.error("[grammar-check] request failed:", err);
                   return;
                 }
-                if (!isCurrent()) return;
+                if (!isCurrent() || !options.enabled()) return;
                 if (!view.hasFocus()) return;
                 if (view.composing) return; // mid-IME - offsets would go stale the moment it commits
                 if (!paragraphUnchanged(view, contentStart, text)) return;

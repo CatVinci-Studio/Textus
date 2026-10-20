@@ -32,6 +32,9 @@ const t = {
   shortcutAiGroupLabel: "AI & Writing",
   shortcutHeadingsGroupLabel: "Headings",
   shortcutFixedGroupLabel: "Fixed Shortcuts",
+  menuTextusAi: AI_NAME,
+  textusAiToggleLabel: `Enable ${AI_NAME}`,
+  textusAiOffHint: "Off: nothing is sent to any AI service.",
   aiAccountLabel: "Connection",
   writingFeaturesLabel: "Writing Assistance",
   writingModelLabel: "Assist model",
@@ -115,6 +118,7 @@ test.describe("desktop", () => {
     await panel.getByRole("button", { name: t.navAi, exact: true }).click();
 
     await expect(panel.locator(".settings-group-title")).toHaveText([
+      t.menuTextusAi,
       t.aiAccountLabel,
       t.writingFeaturesLabel,
       t.aiAskLabel,
@@ -158,6 +162,7 @@ test.describe("desktop", () => {
 
     await expect(chat).not.toBeChecked();
     await expect(panel.locator(".settings-group-title")).toHaveText([
+      t.menuTextusAi,
       t.aiAccountLabel,
       t.writingFeaturesLabel,
       t.aiAskLabel,
@@ -168,7 +173,21 @@ test.describe("desktop", () => {
     await expect(panel.getByText(t.writingModelLabel)).toBeVisible();
 
     await chat.click();
-    await expect(panel.locator(".settings-group-title")).toHaveCount(4);
+    await expect(panel.locator(".settings-group-title")).toHaveCount(5);
+
+    // Textus AI itself off: only its own switch is left.
+    const textusAi = panel.getByRole("checkbox", {
+      name: t.textusAiToggleLabel,
+      exact: true,
+    });
+    await textusAi.click();
+    await expect(panel.locator(".settings-group-title")).toHaveText([
+      t.menuTextusAi,
+    ]);
+    await expect(panel.getByText(t.textusAiOffHint)).toBeVisible();
+    await textusAi.click();
+    await expect(panel.locator(".settings-group-title")).toHaveCount(5);
+    await expect(chat).toBeChecked();
   });
 
   test("Tab reaches the folded Advanced group before wrapping", async ({

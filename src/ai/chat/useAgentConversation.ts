@@ -176,7 +176,7 @@ export function useAgentConversation(
     options: AgentRequestOptions = { mode: "review", webSearch },
   ): Promise<AgentTurn[] | undefined> {
     const trimmed = message.trim();
-    if (!trimmed || busy) return undefined;
+    if (!trimmed || busy || !settings.textusAi) return undefined;
     setBusy(true);
     setError(null);
     setRetryable(null);
@@ -322,6 +322,15 @@ export function useAgentConversation(
   function stop() {
     if (requestIdRef.current) void ai.cancelAgentMessage(requestIdRef.current);
   }
+
+  // Textus AI was turned off - here, in Settings or in another window: a
+  // request still running stops, as Stop would stop it, keeping what has
+  // streamed so far.
+  const aiOn = settings.textusAi;
+  useEffect(() => {
+    if (!aiOn && requestIdRef.current)
+      void ai.cancelAgentMessage(requestIdRef.current);
+  }, [aiOn]);
 
   // The editor that owns this conversation went away (tab closed, source
   // mode): nobody is left to show the reply, so stop paying for it.

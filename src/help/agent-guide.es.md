@@ -274,6 +274,12 @@ No hay perfil de estilo ni biblioteca globales: describen una obra concreta, as�
 - Una tarea que pides una y otra vez → una **habilidad**.
 - Notas, documentación, capítulos anteriores → archivos normales en la **carpeta del proyecto**; Textus AI los lee cuando una petición lo requiere.
 
+## Desactivar Textus AI
+
+El interruptor del extremo derecho de la barra de la ventana, junto al robot, desactiva todo Textus AI con un clic: está iluminado mientras Textus AI está activada y atenuado mientras está desactivada, y otro clic la vuelve a activar. **Visualización > Textus AI**, **Ajustes > Textus AI > Activar Textus AI** y un atajo que puedes asignar en **Ajustes > Atajos de teclado** hacen lo mismo. La ventana de IA separada tiene el interruptor en su cabecera; en un iPhone está en la fila del título y en el menú.
+
+Mientras está desactivada, no se envía nada a ningún servicio de IA desde que se abre Textus: ni completado, ni revisión gramatical, ni conversación, ni nada que recordar. El panel de IA, la pregunta rápida y las opciones de IA del menú contextual desaparecen, y una respuesta que se estaba escribiendo se detiene. Las ediciones ya propuestas en el documento se quedan para que las aceptes o rechaces. Cada función conserva su propio ajuste, y todas vuelven a aplicarse en cuanto Textus AI está activada de nuevo.
+
 ## Una nota sobre la privacidad
 
 Tu documento, los archivos adjuntos y mencionados con @, tus instrucciones de escritura, el perfil de estilo, las entradas de la biblioteca mencionadas y los archivos del proyecto que lea Textus AI se envían al proveedor seleccionado como parte de cada petición; **Aprender mi estilo** envía las muestras que elijas. Con la búsqueda web activada, las búsquedas van a tu proveedor o al servicio de búsqueda que muestran los Ajustes, y las páginas que lee Textus AI se descargan desde este ordenador. Desactiva cualquier función en Ajustes cuando no quieras que eso ocurra.

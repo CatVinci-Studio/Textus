@@ -6,6 +6,17 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
+  textusAiToggleLabel: `${AI_NAME} 사용`,
+  textusAiOffHint:
+    "꺼져 있는 동안에는 어떤 AI 서비스에도 아무것도 보내지 않습니다.",
+  textusAiOnTooltip: `${AI_NAME} 켜짐 · 클릭하여 끄기`,
+  textusAiOffTooltip: `${AI_NAME} 꺼짐 · 클릭하여 켜기`,
+  textusAiOff: `${AI_NAME}가 꺼져 있습니다`,
+  textusAiTurnOn: `${AI_NAME} 켜기`,
+  announceTextusAiOn: `${AI_NAME}를 켰습니다.`,
+  announceTextusAiOff: `${AI_NAME}를 껐습니다.`,
+  shortcutToggleTextusAi: `${AI_NAME} 켜기/끄기`,
+  menuTextusAi: AI_NAME,
   agentPanelPopOut: "별도 창에서 열기",
   agentPanelResize: "AI 패널 크기 조절",
   sidebarResize: "사이드바 크기 조절",

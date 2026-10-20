@@ -23,6 +23,7 @@ import type { GalleryTheme } from "../theme/theme-gallery";
 import type { AgentMode, ImageHost } from "../settings/SettingsContext";
 import { isDesktopApp, isIOSApp } from "./capabilities";
 import { iosFiles, isScopedUrl, newDocumentPath } from "./ios-files";
+import { AI_OFF, aiRequestsAllowed } from "./ai-gate";
 
 /**
  * Thin, typed wrappers around every Tauri command the frontend calls -
@@ -59,6 +60,19 @@ async function call<T>(command: string, args?: object): Promise<T> {
   } catch (err) {
     throw new IpcError(command, err);
   }
+}
+
+/**
+ * A command that sends something to an AI service - a completion, a
+ * grammar check, a conversation, a model list. While Textus AI is off it
+ * is refused here, before it reaches Rust (which refuses it too). Every
+ * entry point already checks the switch (settings/textus-ai.ts); this is
+ * the backstop that keeps a missed one from making a request.
+ */
+function aiCall<T>(command: string, args?: object): Promise<T> {
+  return aiRequestsAllowed()
+    ? call<T>(command, args)
+    : Promise.reject(new IpcError(command, AI_OFF));
 }
 
 /**
@@ -588,9 +602,9 @@ export const auth = {
     call<void>("set_custom_endpoint", { baseUrl, apiKey, model }),
   clearCustomEndpoint: () => call<void>("clear_custom_endpoint"),
   fetchCustomModels: (baseUrl: string, apiKey: string | null) =>
-    call<string[]>("fetch_custom_models", { baseUrl, apiKey }),
+    aiCall<string[]>("fetch_custom_models", { baseUrl, apiKey }),
   testCustomEndpoint: (baseUrl: string, apiKey: string | null) =>
-    call<void>("test_custom_endpoint", { baseUrl, apiKey }),
+    aiCall<void>("test_custom_endpoint", { baseUrl, apiKey }),
 };
 
 /** Image-host credentials reuse the same private 0600 credential store as
@@ -976,7 +990,7 @@ export const ai = {
   discardGeneratedImage: (id: string) =>
     call<void>("ai_discard_generated_image", { id }),
   fetchAgentModels: (provider: string) =>
-    call<string[]>("fetch_agent_models", { provider }),
+    aiCall<string[]>("fetch_agent_models", { provider }),
   setAiProxy: (proxy: string | null) => call<void>("set_ai_proxy", { proxy }),
   complete: (
     provider: string,
@@ -992,7 +1006,7 @@ export const ai = {
       workspaceRoot: null,
     },
   ) =>
-    call<string>("ai_complete", {
+    aiCall<string>("ai_complete", {
       provider,
       before,
       after,
@@ -1016,7 +1030,7 @@ export const ai = {
     /** The app's language: the explanations are written in it. */
     uiLanguage: string | null = null,
   ) =>
-    call<GrammarIssue[]>("ai_grammar_check", {
+    aiCall<GrammarIssue[]>("ai_grammar_check", {
       provider,
       paragraph,
       strictness,
@@ -1069,7 +1083,7 @@ export const ai = {
   }) => {
     const channel = new Channel<StreamEvent>();
     if (onEvent) channel.onmessage = onEvent;
-    return call<AgentTurn[]>("ai_agent_message", {
+    return aiCall<AgentTurn[]>("ai_agent_message", {
       ...args,
       onEvent: channel,
     });
@@ -1208,7 +1222,7 @@ export const ai = {
     docPath: string | null;
     workspaceRoot: string | null;
     files: string[];
-  }) => call<string>("learn_style", args),
+  }) => aiCall<string>("learn_style", args),
   /** Folder picker behind "Choose project folder…" (the project bar's menu
    *  and Settings > Textus AI > Project Folder). */
   pickWorkspaceRoot: (): Promise<string | null> =>

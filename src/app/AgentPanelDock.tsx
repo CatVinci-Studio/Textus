@@ -8,6 +8,7 @@ import {
 } from "../ai/chat/panel/agent-panel";
 import { ResizeHandle } from "../ui/ResizeHandle";
 import type { Strings } from "../i18n/strings";
+import { TextusAiOffNote } from "../ai/TextusAiSwitch";
 
 /** The docked Agent panel's frame on the right (a bottom sheet on a
  *  phone). App owns the frame; the active tab's editor renders its
@@ -24,6 +25,7 @@ export function AgentPanelDock({
   mountRef,
   sourceMode,
   onToggleSourceMode,
+  aiOn,
   t,
 }: {
   presence: PresenceHandle;
@@ -40,6 +42,9 @@ export function AgentPanelDock({
   /** The active tab is in source mode or split view. */
   sourceMode: boolean;
   onToggleSourceMode: () => void;
+  /** Textus AI is on. Off, the panel closes (useSidePanels); one opened
+   *  anyway (a tour lesson) says so and offers to turn it back on. */
+  aiOn: boolean;
   t: Strings;
 }) {
   return (
@@ -74,8 +79,10 @@ export function AgentPanelDock({
       <div className="agent-panel-mount" ref={mountRef} />
       {/* The conversation lives in the rich editor (each tab's
         MilkdownEditor renders it here); source mode and split view
-        have none to render, so say so instead of an empty column. */}
-      {sourceMode && (
+        have none to render, and nothing does while Textus AI is off,
+        so say so instead of an empty column. */}
+      {!aiOn && <TextusAiOffNote className="agent-panel-placeholder" />}
+      {aiOn && sourceMode && (
         <div className="agent-panel-placeholder">
           <p>{t.agentPanelSourceMode}</p>
           <button

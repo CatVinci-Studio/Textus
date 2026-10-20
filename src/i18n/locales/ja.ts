@@ -6,6 +6,16 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
+  textusAiToggleLabel: `${AI_NAME} を有効にする`,
+  textusAiOffHint: "オフの間は、どの AI サービスにも何も送信しません。",
+  textusAiOnTooltip: `${AI_NAME} はオン · クリックでオフ`,
+  textusAiOffTooltip: `${AI_NAME} はオフ · クリックでオン`,
+  textusAiOff: `${AI_NAME} はオフです`,
+  textusAiTurnOn: `${AI_NAME} をオンにする`,
+  announceTextusAiOn: `${AI_NAME} をオンにしました。`,
+  announceTextusAiOff: `${AI_NAME} をオフにしました。`,
+  shortcutToggleTextusAi: `${AI_NAME} のオン/オフ`,
+  menuTextusAi: AI_NAME,
   agentPanelPopOut: "別ウィンドウで開く",
   agentPanelResize: "AIパネルの幅を調整",
   sidebarResize: "サイドバーの幅を調整",

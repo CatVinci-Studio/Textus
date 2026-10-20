@@ -6,6 +6,16 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
+  textusAiToggleLabel: `开启 ${AI_NAME}`,
+  textusAiOffHint: "已关闭：不会向任何 AI 服务发送内容。",
+  textusAiOnTooltip: `${AI_NAME} 已开启 · 点击关闭`,
+  textusAiOffTooltip: `${AI_NAME} 已关闭 · 点击开启`,
+  textusAiOff: `${AI_NAME} 已关闭`,
+  textusAiTurnOn: `开启 ${AI_NAME}`,
+  announceTextusAiOn: `${AI_NAME} 已开启。`,
+  announceTextusAiOff: `${AI_NAME} 已关闭。`,
+  shortcutToggleTextusAi: `开启或关闭 ${AI_NAME}`,
+  menuTextusAi: AI_NAME,
   agentPanelPopOut: "在独立窗口中打开",
   agentPanelResize: "调整 AI 面板宽度",
   sidebarResize: "调整侧边栏宽度",
