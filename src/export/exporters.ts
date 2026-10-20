@@ -440,7 +440,7 @@ function showPdfOverlay(t: Strings): HTMLElement {
 // stylesheet among the rules collectInlinedCss copies. Drawn first. So is
 // every formula and diagram still waiting to come near the screen
 // (draw-when-visible.ts): the export copies the page as it is.
-async function drawMath(editor: Element): Promise<void> {
+async function drawPending(editor: Element): Promise<void> {
   if (
     !katexLoaded() &&
     editor.querySelector('[data-type="math_inline"], [data-type="math_block"]')
@@ -457,10 +457,10 @@ async function drawMath(editor: Element): Promise<void> {
 
 // Lets web fonts (theme fonts like Parchment's script face) and images settle
 // before serializing, so the offscreen render doesn't miss them. Diagrams and
-// math are already inline SVG/HTML in the DOM (drawMath), so no extra pass
+// math are already inline SVG/HTML in the DOM (drawPending), so no extra pass
 // is needed.
 async function settleRender(editor: Element): Promise<void> {
-  await drawMath(editor);
+  await drawPending(editor);
   try {
     await document.fonts.ready;
   } catch {
@@ -563,7 +563,7 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
     "html",
   );
   if (!picked) return;
-  await drawMath(editor);
+  await drawPending(editor);
   const besideDocument = !!tab.path && dirname(tab.path) === dirname(picked);
   const content = besideDocument
     ? cloneEditorContent(editor)

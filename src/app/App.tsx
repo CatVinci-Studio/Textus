@@ -137,7 +137,7 @@ function App() {
     activeTab,
     documentsFolder,
     wordCount,
-    isLargeDoc,
+    featuresPaused,
     activeDirty,
     activeTitle,
   } = useActiveDocument(tabs, activeTabId, t);
@@ -430,7 +430,7 @@ function App() {
           menuChecks={menuChecks}
           title={activeTitle}
           dirty={activeDirty}
-          largeDoc={isLargeDoc}
+          largeDoc={featuresPaused}
           words={wordCount.words}
           sidebarOpen={panelOpen}
           sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}

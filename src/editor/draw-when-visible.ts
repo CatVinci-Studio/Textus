@@ -1,5 +1,5 @@
-// Drawing deferred until it is near the screen: a formula's KaTeX, a
-// diagram. A long document holds hundreds of them, and drawing them all
+// Drawing deferred until it is near the screen: a formula's KaTeX (a
+// diagram waits in mermaid-plugin.ts and registers its draw-all here). A long document holds hundreds of them, and drawing them all
 // when it opens is much of what opening costs; the reader sees a screen or
 // two of them. Each waits behind a placeholder until an
 // IntersectionObserver on its editor's scroller sees it within a screen of
