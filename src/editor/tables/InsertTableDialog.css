@@ -10,7 +10,7 @@
 
 .insert-table-dialog {
   max-width: calc(100vw - 32px);
-  max-height: calc(100dvh - 32px);
+  max-height: calc(100% - 32px);
   overflow: auto;
   box-sizing: border-box;
 

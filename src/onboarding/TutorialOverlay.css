@@ -2,8 +2,9 @@
   position: fixed;
   inset: 0;
   z-index: 230;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 24px;
   background: var(--overlay-bg);
 }
@@ -29,8 +30,10 @@
   animation: tutorial-enter var(--dur-base) var(--ease-out) both;
 }
 
+/* Inside the backdrop's padding, which starts under the window bar (see
+   .settings-panel for why not dvh). */
 .tutorial-overlay {
-  max-height: calc(100dvh - 48px);
+  max-height: 100%;
   overflow-y: auto;
   width: min(540px, calc(100vw - 48px));
   padding: 22px 24px 24px;

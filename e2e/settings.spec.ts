@@ -541,6 +541,43 @@ test.describe("desktop", () => {
       "Previous tab",
     ]);
   });
+
+  test("in a short window Settings fits under the window bar and its page scrolls to the last setting (#260)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1000, height: 460 });
+    await openApp(page, { settings: { language: "en", uiTextScale: 1.25 } });
+    const panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.navEditor }).click();
+
+    // The whole card is on screen, below the 28px window bar: its title
+    // and Close at the top, the categories beside the page.
+    const box = (await panel.boundingBox())!;
+    expect(box.y).toBeGreaterThanOrEqual(28);
+    expect(box.y + box.height).toBeLessThanOrEqual(460);
+    await expect(panel.locator(".settings-header")).toBeInViewport({
+      ratio: 1,
+    });
+    await expect(
+      panel.getByRole("button", { name: t.windowClose }),
+    ).toBeInViewport({ ratio: 1 });
+    await expect(
+      panel.getByRole("button", { name: t.navGeneral }),
+    ).toBeInViewport({ ratio: 1 });
+
+    // The page is taller than the card and scrolls inside it.
+    const content = panel.locator(".settings-content");
+    const last = content.locator(".settings-row").last();
+    await expect(last).not.toBeInViewport();
+    await content.evaluate((el) => (el.scrollTop = el.scrollHeight));
+    await expect(last).toBeInViewport({ ratio: 1 });
+    await expect(
+      panel.getByRole("button", { name: t.windowClose }),
+    ).toBeInViewport({ ratio: 1 });
+
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+  });
 });
 
 test.describe("iPad", () => {
