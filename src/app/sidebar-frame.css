@@ -46,44 +46,12 @@
     visibility 0s linear var(--dur-base);
 }
 
-/* On the desktop it reaches the window's top edge, over the window bar's
-   left end (45), and its tabs are the strip's left segment - one row with
-   the bar, whose contents make room beside it (window-bar.css). Below the
-   menus, popovers and dialogs above that. The phone's drawer and the
-   iPad's sidebar stay under the taller bar there (mobile/styles). */
-:root:not([data-window-chrome="mobile"]) .sidebar {
-  z-index: 46;
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  height: 28px;
-  padding: 0 10px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-/* macOS: past the traffic lights, which float over this corner, and level
-   with them where the native title bar is taller than the strip (the
-   same drop as .window-bar's). */
-:root[data-window-chrome="native"] .sidebar-header {
-  padding-top: max(0px, var(--native-titlebar-height, 28px) - 28px);
-  padding-left: 78px;
-}
-
-.sidebar-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 6px;
-}
-
 :root:not(.zen) .sidebar:not(.sidebar-collapsed) ~ .main-pane {
   margin-left: var(--sidebar-width, 240px);
 }
 
 /* Its resize handle (ui/ResizeHandle.tsx), astride the right edge below
-   the window's top strip - the strip stays the window's to drag. */
+   the window bar - the bar's own row stays the window's to drag. */
 .sidebar-resizer {
   top: 28px;
   right: -3px;
@@ -119,7 +87,6 @@
 }
 
 .sidebar-tabs {
-  flex: 1;
   display: flex;
   gap: 2px;
 }
@@ -130,8 +97,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* 21px tall: inside the strip's 28px with air above and below. */
-  padding: 3px 4px;
+  padding: 6px 4px;
   border: none;
   border-radius: var(--radius-control);
   background: transparent;

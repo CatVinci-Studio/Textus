@@ -432,9 +432,6 @@ function App() {
           dirty={activeDirty}
           largeDoc={featuresPaused}
           words={wordCount.words}
-          sidebarOpen={panelOpen}
-          sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
-          onToggleSidebar={toggleSidebar}
           showAgentToggle={aiFeatures(settings, tutorial.active).chat}
           agentOpen={agentPanel.open}
           agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}

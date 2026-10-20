@@ -1,12 +1,9 @@
 /* The sidebar on a phone: a drawer over the page rather than a column
    beside it, with rows a finger can hit. */
 
-/* The header stays under the taller title row here, rather than in it as
-   on the desktop (app/sidebar-frame.css): the bar spans the screen over
-   the drawer and beside the iPad's sidebar. */
+/* Everything that cleared the desktop's 28px row clears this one. */
 :root[data-window-chrome="mobile"] .sidebar-header {
-  height: auto;
-  padding: calc(var(--mobile-bar) + 10px) 10px 10px;
+  padding-top: calc(var(--mobile-bar) + 10px);
 }
 
 @media (max-width: 760px) {
