@@ -44,6 +44,13 @@
     color: var(--editor-text);
   }
 
+  /* No column container to measure on an engine whose containers trap
+     position: fixed (app/editor-column.css); cqi would fall back to the
+     window's width. The standard measure's size instead. */
+  :root[data-early-containers] .milkdown {
+    font-size: 1.03125rem;
+  }
+
   /* An imported Typora theme sets the type on body or html; let it reach
      the document instead of Textus's own. */
   :root[data-user-theme] .milkdown {

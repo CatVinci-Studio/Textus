@@ -21,6 +21,7 @@ where the project is heading.
 | [ios-release.md](dev/ios-release.md)                | Shipping the iOS app: App Store Connect setup, keys, TestFlight, review                           |
 | [ios-code-map.md](dev/ios-code-map.md)              | What the desktop and iOS apps share and what is desktop-only; building on a Mac                   |
 | [windows-installer.md](dev/windows-installer.md)    | The NSIS installer, and why there is no MSI                                                       |
+| [webview-support.md](dev/webview-support.md)        | The oldest web engines supported (WebView2 on Chromium 105), what broke below, the check that guards it |
 
 ## Design (`design/`)
 

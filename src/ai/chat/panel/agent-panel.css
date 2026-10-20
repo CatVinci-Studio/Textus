@@ -187,6 +187,13 @@
   animation: motion-fade-in var(--dur-slow) var(--ease-out);
 }
 
+/* An early container-query engine restarted the fade of everything inside
+   it every few frames (ui/engine-quirks.ts); there the spark and hint
+   simply stay when room is short. */
+:root[data-early-containers] .agent-panel-empty {
+  container-type: normal;
+}
+
 /* The (empty) message list after it gives it the room - its padding too,
    over the panel's (inline-chat.css), which held 30px of nothing there. */
 .agent-panel-body .agent-panel-empty + .inline-chat-messages {

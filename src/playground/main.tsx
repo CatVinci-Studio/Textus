@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { detectLang, localeOf } from "../i18n/strings";
 import { normaliseSettings } from "../settings/SettingsContext";
 import { installScrollReveal } from "../ui/scroll-reveal";
+import { installPolyfills } from "../utils/polyfills";
 import { installNativeStandIn } from "./native-stand-in";
 import { Playground } from "./Playground";
 import "./playground.css";
@@ -10,6 +11,7 @@ import "./playground.css";
 // The browser playground's entry (playground.html, built by
 // `npm run build:playground`). The app's own entry is src/main.tsx.
 
+installPolyfills();
 installNativeStandIn();
 installScrollReveal();
 

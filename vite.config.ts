@@ -2,12 +2,18 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { katexWoff2Only } from "./vite.katex-fonts";
+import { colorMixFallback } from "./vite.color-mix-fallback";
 
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
   plugins: [react(), katexWoff2Only()],
+  css: { postcss: { plugins: [colorMixFallback()] } },
+  // The oldest engines Textus runs in: WebView2 on Chromium 105 (Windows
+  // 10 without updates) and WKWebView on iOS 16. Syntax newer than these
+  // is lowered; APIs and CSS aren't - docs/dev/webview-support.md.
+  build: { target: ["chrome105", "safari16"] },
 
   // Unit tests only; e2e/ holds the Playwright flows (npm run test:e2e)
   // and screenshot generators, which vitest must not try to run.

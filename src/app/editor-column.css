@@ -47,6 +47,14 @@
   padding: 3rem 1.5rem 6rem;
 }
 
+/* An engine whose containers trap position: fixed (ui/engine-quirks.ts)
+   gets no container here, or the editor's menus and dialogs were placed
+   against the column. The document's type then keeps the standard
+   measure's 16.5px instead of following the column (content-base.css). */
+:root[data-early-containers] .editor-content {
+  container-type: normal;
+}
+
 :root[data-content-width="full"] .editor-content {
   padding-inline: max(1.5rem, 4%);
 }
@@ -66,17 +74,6 @@
   width: 100%;
   max-width: var(--content-width);
   margin: 0 auto;
-  /* Centred on a whole pixel. `auto` splits an odd leftover into two
-     half pixels, and WebKitGTK composites a focused textarea's scroller as
-     a layer of its own: at x.5 that layer is resampled and the text goes
-     soft the moment you click in (#61). The step is in the node's own
-     zoomed px, hence the divide, so the edge lands whole on screen at any
-     zoom. Browsers without round() keep the plain auto above. */
-  margin-left: round(
-    down,
-    calc((100% - min(100%, var(--content-width))) / 2),
-    calc(1px / var(--content-zoom, 1))
-  );
   padding: 3rem 1.5rem 6rem;
   border: none;
   outline: none;
@@ -89,6 +86,24 @@
      theme's `html { font-size }` reaches it; zoom scales it as above. */
   font-size: 1.03125rem;
   line-height: 1.7;
+}
+
+/* Centred on a whole pixel. `auto` splits an odd leftover into two half
+   pixels, and WebKitGTK composites a focused textarea's scroller as a
+   layer of its own: at x.5 that layer is resampled and the text goes soft
+   the moment you click in (#61). The step is in the node's own zoomed px,
+   hence the divide, so the edge lands whole on screen at any zoom. Behind
+   @supports: the value names a var(), so an engine without round()
+   (WebView2 before Chromium 125) would keep it and compute it to 0, not
+   fall back to the auto above - the source text sat against the left. */
+@supports (margin-left: round(down, 1px, 1px)) {
+  .source-view {
+    margin-left: round(
+      down,
+      calc((100% - min(100%, var(--content-width))) / 2),
+      calc(1px / var(--content-zoom, 1))
+    );
+  }
 }
 
 /* No focus ring: the pane is the field. design-system.css's ring for
