@@ -254,6 +254,10 @@ utiliser une.
   toolCheckConventions: "Vérification des conventions d'écriture",
   toolMeasureText: "Comptage des mots",
   toolWorking: "Traitement en cours",
+  toolWebSearch: "Recherche de « {arg} » sur le web",
+  toolWebFetch: "Lecture de {arg}",
+  webSources: "Sources",
+  proposalSourcesAsFootnotes: "Ajouter les sources en notes de bas de page",
   menuToggleSplitView: "Vue partagée",
   shortcutToggleSplitView:
     "Activer/désactiver la vue partagée (source | aperçu)",
@@ -417,6 +421,17 @@ utiliser une.
   completionTone_academic: "Académique",
   completionTone_concise: "Concis",
   webSearchLabel: "Recherche web",
+  webSearchNeedsService: `Ce modèle ne peut pas chercher sur le web par lui-même\u00a0: choisissez un service de recherche dans Réglages > ${AI_NAME}.`,
+  searchServiceLabel: "Service de recherche",
+  searchServiceAuto: "Automatique",
+  searchServiceZhipu: "Zhipu",
+  searchServiceBocha: "Bocha",
+  searchServiceNativeHint:
+    "Le modèle de la conversation cherche par lui-même ; ceci sert aux modèles qui ne le peuvent pas.",
+  searchServiceSendsTo: "Les recherches sont envoyées à {name}.",
+  searchServiceNone:
+    "Rien pour chercher pour l'instant : choisissez un service et ajoutez sa clé.",
+  searxngUrlLabel: "Adresse de SearXNG",
   editAnimationLabel: "Animer l'aperçu des modifications",
   agentWorkspaceLabel: "Dossier de configuration globale",
   agentWorkspaceOpenButton: "Afficher",

@@ -13,6 +13,8 @@ import type { StreamingState } from "./useAgentConversation";
 import type { Thought } from "./thought";
 import { ThoughtRow, type ThoughtRowLabels } from "./ThoughtRow";
 import { isProposalTool, parseToolProposal } from "./proposal";
+import { hasCitations } from "../citations";
+import { useSettings } from "../../settings/SettingsContext";
 import { parseUserMessage } from "./user-message";
 import { refusedProposalIds } from "../revision/proposal-status";
 import { classifyAiError, type AiErrorKind } from "../error-messages";
@@ -82,6 +84,8 @@ export interface ChatMessagesLabels
   proposalKeepSentence: string;
   /** Scrolls the document to the proposal. */
   proposalShowInText: string;
+  /** The checkbox on a proposal that cites the web. */
+  proposalSourcesAsFootnotes: string;
   /** An add_comment card's title and jump-to-passage link. */
   commentTitle: string;
   commentLocate: string;
@@ -609,6 +613,9 @@ function ProposalCard({
   actions?: boolean;
 }) {
   const [diffOpen, setDiffOpen] = useState(status === "invalid");
+  // The proposal cites the web: Accept writes the sources as footnotes, or
+  // leaves them out (usePendingEdits) - the last card's choice stands.
+  const { settings, setSettings } = useSettings();
   // A proposal that turns invalid after mounting (its preview resolved and
   // failed) must pop open - the card just became the only view of it.
   useEffect(() => {
@@ -765,6 +772,19 @@ function ProposalCard({
             );
           })}
         </ol>
+      )}
+      {status === "pending" && hasCitations(proposal.text ?? "") && (
+        <label className="agent-proposal-footnotes">
+          <input
+            type="checkbox"
+            className="ui-check"
+            checked={settings.sourcesAsFootnotes}
+            onChange={(e) =>
+              setSettings({ sourcesAsFootnotes: e.target.checked })
+            }
+          />
+          {labels.proposalSourcesAsFootnotes}
+        </label>
       )}
       {status === "pending" ? (
         actions && (

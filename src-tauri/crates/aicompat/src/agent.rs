@@ -40,6 +40,13 @@ pub enum AgentTurn {
     },
     Assistant {
         text: String,
+        /// The web pages the reply cites as [n] - Textus's own web_search
+        /// and web_fetch results and the provider's native search
+        /// citations, numbered once per conversation. Defaulted and skipped
+        /// when empty, so conversations saved before web sources keep
+        /// deserializing and a reply without any stays `{kind, text}`.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        sources: Vec<Source>,
     },
     ToolCall {
         call_id: String,
@@ -67,6 +74,57 @@ pub enum AgentTurn {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         images: Vec<ImageAttachment>,
     },
+}
+
+/// One web page a reply cites as `[n]`. Mirrored by `WebSource` in
+/// src/ai/types.ts.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct Source {
+    pub n: u32,
+    pub url: String,
+    pub title: String,
+}
+
+impl AgentTurn {
+    /// A final reply that cites no web sources.
+    pub fn assistant(text: impl Into<String>) -> Self {
+        AgentTurn::Assistant {
+            text: text.into(),
+            sources: Vec::new(),
+        }
+    }
+}
+
+const MARKER_OPEN: char = '\u{E000}';
+const MARKER_CLOSE: char = '\u{E001}';
+
+/// Where a step's text cites the `k`th (1-based) [`ProviderEvent::Citation`]
+/// it reported: the number between two private-use characters, which no
+/// model writes, so the caller can swap each for the `[n]` it gives that
+/// page across the conversation (see [`replace_citation_markers`]).
+pub fn citation_marker(k: usize) -> String {
+    format!("{MARKER_OPEN}{k}{MARKER_CLOSE}")
+}
+
+/// `text` with each [`citation_marker`] replaced by what `number` makes of
+/// its index, or removed when it returns None.
+pub fn replace_citation_markers(text: &str, number: impl Fn(usize) -> Option<String>) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(start) = rest.find(MARKER_OPEN) {
+        out.push_str(&rest[..start]);
+        let after = &rest[start + MARKER_OPEN.len_utf8()..];
+        let Some(end) = after.find(MARKER_CLOSE) else {
+            rest = after;
+            continue;
+        };
+        if let Some(n) = after[..end].parse().ok().and_then(&number) {
+            out.push_str(&n);
+        }
+        rest = &after[end + MARKER_CLOSE.len_utf8()..];
+    }
+    out.push_str(rest);
+    out
 }
 
 /// What a tool returns to the loop: text, and any images it shows the
@@ -134,6 +192,89 @@ pub enum ProviderEvent<'a> {
     /// display, an OpenAI reasoning item without a summary). Never part of
     /// the step's answer.
     Thinking(&'a str),
+    /// A page the provider's own web search cited. Reported once per page
+    /// and step, in the order first cited: the step's final text marks each
+    /// place it is cited with [`citation_marker`] of its place in that order.
+    Citation { url: &'a str, title: &'a str },
+}
+
+/// One step's citations as a provider reads them: each page once, in the
+/// order first cited, reported through the sink as it is found.
+#[derive(Default)]
+pub struct StepCitations {
+    urls: Vec<String>,
+}
+
+impl StepCitations {
+    /// The marker for `url`, reporting the page first if this step hasn't.
+    pub fn cite(&mut self, url: &str, title: &str, on_event: EventSink<'_>) -> String {
+        let k = match self.urls.iter().position(|u| u == url) {
+            Some(i) => i + 1,
+            None => {
+                self.urls.push(url.to_string());
+                on_event(ProviderEvent::Citation { url, title });
+                self.urls.len()
+            }
+        };
+        citation_marker(k)
+    }
+}
+
+/// A span of a reply's text that cites a page: character (not byte)
+/// offsets, end exclusive, as OpenAI-style `url_citation` annotations give
+/// them.
+pub struct CitedSpan<'a> {
+    pub start: usize,
+    pub end: usize,
+    pub url: &'a str,
+    pub title: &'a str,
+}
+
+/// `text` with each cited span marked. Where a span is the inline link the
+/// provider wrote for its citation - OpenAI's "([site](url))", xAI's
+/// "[[1]](url)", OpenRouter's "[site](url)" - the link gives way to the
+/// marker; a span of plain prose keeps its words and gets the marker after
+/// them. A span that doesn't fit the text (a server counting otherwise)
+/// still has its page cited, at the end.
+pub fn mark_cited_spans(
+    text: &str,
+    mut spans: Vec<CitedSpan<'_>>,
+    citations: &mut StepCitations,
+    on_event: EventSink<'_>,
+) -> String {
+    let chars: Vec<char> = text.chars().collect();
+    spans.sort_by_key(|s| (s.start, s.end));
+    let mut out = String::with_capacity(text.len());
+    let mut at = 0;
+    let mut trailing = String::new();
+    for span in spans {
+        let marker = citations.cite(span.url, span.title, on_event);
+        if span.start < at || span.end > chars.len() || span.start > span.end {
+            if !out.contains(&marker) && !trailing.contains(&marker) {
+                trailing.push_str(&marker);
+            }
+            continue;
+        }
+        out.extend(&chars[at..span.start]);
+        let cited: String = chars[span.start..span.end].iter().collect();
+        if cited.contains("](") || cited.contains("http") {
+            // "fact ([site](url))." reads "fact [1]." - the parentheses
+            // around the link go with it, whether or not the span has them.
+            let wrapped = out.ends_with('(') && chars.get(span.end) == Some(&')');
+            if wrapped {
+                out.pop();
+            }
+            out.push_str(&marker);
+            at = span.end + usize::from(wrapped);
+        } else {
+            out.push_str(&cited);
+            out.push_str(&marker);
+            at = span.end;
+        }
+    }
+    out.extend(&chars[at.min(chars.len())..]);
+    out.push_str(&trailing);
+    out
 }
 
 /// What [`run_agent_loop`] reports while it runs.
@@ -216,7 +357,7 @@ where
         }
         match result {
             StepResult::Done(text) => {
-                let turn = AgentTurn::Assistant { text };
+                let turn = AgentTurn::assistant(text);
                 turns.push(turn.clone());
                 new_turns.push(turn);
                 return Ok(new_turns);
@@ -262,11 +403,9 @@ where
     // Out of steps while the model still wanted tools. Ending on a bare
     // ToolResult left the exchange with no reply at all - the UI then showed
     // the PREVIOUS exchange's answer as this one's - so say what happened.
-    new_turns.push(AgentTurn::Assistant {
-        text: format!(
-            "(Stopped after {max_steps} tool steps without finishing. Ask me to continue, or narrow the request.)"
-        ),
-    });
+    new_turns.push(AgentTurn::assistant(format!(
+        "(Stopped after {max_steps} tool steps without finishing. Ask me to continue, or narrow the request.)"
+    )));
     Ok(new_turns)
 }
 
@@ -367,6 +506,33 @@ mod tests {
     }
 
     #[test]
+    fn citation_markers_are_swapped_or_dropped() {
+        let text = format!("A{}B{}C", citation_marker(1), citation_marker(2));
+        assert_eq!(
+            replace_citation_markers(&text, |k| (k == 1).then(|| "[7]".to_string())),
+            "A[7]BC"
+        );
+        assert_eq!(replace_citation_markers("plain [1]", |_| None), "plain [1]");
+    }
+
+    #[test]
+    fn a_span_that_does_not_fit_the_text_is_still_cited_at_the_end() {
+        let mut citations = StepCitations::default();
+        let text = mark_cited_spans(
+            "Short.",
+            vec![CitedSpan {
+                start: 40,
+                end: 50,
+                url: "https://a.example/",
+                title: "",
+            }],
+            &mut citations,
+            &|_| {},
+        );
+        assert_eq!(text, format!("Short.{}", citation_marker(1)));
+    }
+
+    #[test]
     fn tool_results_are_fed_back_before_the_final_answer() {
         let (turns, seen) = run_scripted(
             vec![
@@ -380,7 +546,7 @@ mod tests {
         assert!(
             matches!(&turns[2], AgentTurn::ToolResult { output, .. } if output == "ran search_document")
         );
-        assert!(matches!(&turns[3], AgentTurn::Assistant { text } if text == "found it"));
+        assert!(matches!(&turns[3], AgentTurn::Assistant { text, .. } if text == "found it"));
         // The second step saw the call and its result.
         assert_eq!(seen[1].len(), 3);
     }
@@ -450,7 +616,7 @@ mod tests {
             .map(|i| StepResult::ToolCalls(vec![call(&i.to_string(), "search_document", "{}")]))
             .collect();
         let (turns, _) = run_scripted(looping, 3, |_, _| "nothing".to_string());
-        let AgentTurn::Assistant { text } = turns.last().unwrap() else {
+        let AgentTurn::Assistant { text, .. } = turns.last().unwrap() else {
             panic!("the exchange must end with an assistant turn");
         };
         assert!(text.contains("Stopped after 3 tool steps"));
@@ -534,7 +700,7 @@ mod tests {
         assert!(arguments.contains("《百年孤独》"));
         // Once per request: a later garbled reply stands.
         assert!(
-            matches!(turns.last(), Some(AgentTurn::Assistant { text }) if text.contains('\u{FFFD}'))
+            matches!(turns.last(), Some(AgentTurn::Assistant { text, .. }) if text.contains('\u{FFFD}'))
         );
     }
 
@@ -545,7 +711,7 @@ mod tests {
             StepResult::Done("《百年孤独》".into()),
         ]);
         assert_eq!(retries, 1);
-        assert!(matches!(&turns[1], AgentTurn::Assistant { text } if text == "《百年孤独》"));
+        assert!(matches!(&turns[1], AgentTurn::Assistant { text, .. } if text == "《百年孤独》"));
         // An escaped replacement character in tool arguments counts too.
         let escaped =
             StepResult::ToolCalls(vec![call("e", "propose_edit", r#"{"text":"\ufffd"}"#)]);

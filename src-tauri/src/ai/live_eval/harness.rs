@@ -711,7 +711,7 @@ pub fn run_conversation(
                         outcome.comments.push((s("anchor"), s("comment")));
                     }
                 }
-                AgentTurn::Assistant { text } => outcome.reply = text.clone(),
+                AgentTurn::Assistant { text, .. } => outcome.reply = text.clone(),
                 _ => {}
             }
         }

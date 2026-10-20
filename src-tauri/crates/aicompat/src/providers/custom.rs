@@ -1,5 +1,6 @@
 use crate::agent::{
-    tool_images_note, AgentTurn, EventSink, ImageAttachment, ProviderEvent, StepResult, ToolSpec,
+    mark_cited_spans, tool_images_note, AgentTurn, CitedSpan, EventSink, ImageAttachment,
+    ProviderEvent, StepCitations, StepResult, ToolSpec,
 };
 use crate::capabilities::Thinking;
 use serde::{Deserialize, Serialize};
@@ -284,7 +285,7 @@ fn turns_to_messages(
                 }
                 i += 1;
             }
-            AgentTurn::Assistant { text } => {
+            AgentTurn::Assistant { text, .. } => {
                 messages.push(json!({"role": "assistant", "content": text}));
                 i += 1;
             }
@@ -350,10 +351,181 @@ fn turns_to_messages(
     messages
 }
 
+/// What a native web search said about the pages it used, gathered from a
+/// response or its stream chunks - each provider puts it somewhere else.
+#[derive(Default)]
+struct SearchReport {
+    /// OpenRouter: `url_citation` annotations on the message.
+    annotations: Vec<Value>,
+    /// Zhipu: a top-level `web_search` list, which the text cites as
+    /// `[ref_1]` (or `[来源：ref_1]`) by each result's `refer`.
+    zhipu_results: Vec<Value>,
+    /// Groq: the browser_search calls the model made, with their results.
+    executed_tools: Vec<Value>,
+}
+
+impl SearchReport {
+    /// What `message` (a message, or a stream chunk's delta) and its
+    /// `response` (or chunk) carry. A stream may repeat a list in several
+    /// chunks; each entry is kept once.
+    fn take(&mut self, message: &Value, response: &Value) {
+        fn add(into: &mut Vec<Value>, list: Option<&Value>) {
+            for v in list.and_then(|v| v.as_array()).into_iter().flatten() {
+                if !into.contains(v) {
+                    into.push(v.clone());
+                }
+            }
+        }
+        add(&mut self.annotations, message.get("annotations"));
+        add(&mut self.executed_tools, message.get("executed_tools"));
+        add(&mut self.zhipu_results, response.get("web_search"));
+    }
+
+    /// `text` with the pages it cites marked, every page reported.
+    fn cite(&self, text: &str, on_event: EventSink<'_>) -> String {
+        let mut citations = StepCitations::default();
+        let spans: Vec<CitedSpan<'_>> = self
+            .annotations
+            .iter()
+            .filter_map(|a| {
+                let c = a.get("url_citation")?;
+                let index = |key: &str| c.get(key).and_then(|v| v.as_u64()).map(|v| v as usize);
+                Some(CitedSpan {
+                    start: index("start_index")?,
+                    end: index("end_index")?,
+                    url: c.get("url")?.as_str()?,
+                    title: c.get("title").and_then(|t| t.as_str()).unwrap_or(""),
+                })
+            })
+            .collect();
+        let mut text = if spans.is_empty() {
+            text.to_string()
+        } else {
+            mark_cited_spans(text, spans, &mut citations, on_event)
+        };
+        if !self.zhipu_results.is_empty() {
+            text = cite_zhipu_refs(&text, &self.zhipu_results, &mut citations, on_event);
+        }
+        if !self.executed_tools.is_empty() {
+            // Groq's text points into its browser's pages as 【2†L6-L10】,
+            // which name no page: the marks go, the pages are still listed.
+            text = strip_between(&text, '【', '】', |inner| inner.contains('†'));
+            for result in self.executed_tools.iter().flat_map(|t| {
+                t.pointer("/search_results/results")
+                    .and_then(|r| r.as_array())
+                    .cloned()
+                    .unwrap_or_default()
+            }) {
+                if let Some(url) = result.get("url").and_then(|u| u.as_str()) {
+                    let title = result.get("title").and_then(|t| t.as_str()).unwrap_or("");
+                    citations.cite(url, title, on_event);
+                }
+            }
+        }
+        text
+    }
+}
+
+/// `text` without the `open`...`close` runs whose inside `drop` accepts.
+fn strip_between(text: &str, open: char, close: char, drop: impl Fn(&str) -> bool) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(start) = rest.find(open) {
+        let after = &rest[start + open.len_utf8()..];
+        match after.find(close) {
+            Some(end) if drop(&after[..end]) => {
+                out.push_str(&rest[..start]);
+                rest = &after[end + close.len_utf8()..];
+            }
+            _ => {
+                out.push_str(&rest[..start + open.len_utf8()]);
+                rest = after;
+            }
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
+/// Zhipu's `[ref_1]`, `[来源：ref_1]` or `【ref_1】` as citation markers, by
+/// the `refer` of each result - or, when the text marks none, every result
+/// with a link reported.
+fn cite_zhipu_refs(
+    text: &str,
+    results: &[Value],
+    citations: &mut StepCitations,
+    on_event: EventSink<'_>,
+) -> String {
+    let page = |refer: &str| {
+        results.iter().find_map(|r| {
+            (r.get("refer").and_then(|v| v.as_str()) == Some(refer)).then(|| {
+                (
+                    r.get("link").and_then(|v| v.as_str()).unwrap_or(""),
+                    r.get("title").and_then(|v| v.as_str()).unwrap_or(""),
+                )
+            })
+        })
+    };
+    let mut out = String::with_capacity(text.len());
+    let mut matched = false;
+    let mut rest = text;
+    while let Some(start) = rest.find(['[', '【']) {
+        out.push_str(&rest[..start]);
+        let open = rest[start..].chars().next().unwrap();
+        let close = if open == '[' { ']' } else { '】' };
+        let after = &rest[start + open.len_utf8()..];
+        let inner_end = after.find(close).filter(|&end| end <= 40);
+        let refer = inner_end.and_then(|end| {
+            let inner = &after[..end];
+            let at = inner.find("ref_")?;
+            let refer = &inner[at..];
+            refer[4..]
+                .chars()
+                .all(|c| c.is_ascii_digit())
+                .then_some(refer)
+        });
+        match (inner_end, refer.and_then(page)) {
+            (Some(end), Some((url, title))) if !url.is_empty() => {
+                out.push_str(&citations.cite(url, title, on_event));
+                matched = true;
+                rest = &after[end + close.len_utf8()..];
+            }
+            _ => {
+                out.push(open);
+                rest = after;
+            }
+        }
+    }
+    out.push_str(rest);
+    // A reply that searched but marked nothing still names its pages.
+    if matched {
+        return out;
+    }
+    for r in results {
+        if let Some(url) = r
+            .get("link")
+            .and_then(|v| v.as_str())
+            .filter(|u| !u.is_empty())
+        {
+            citations.cite(
+                url,
+                r.get("title").and_then(|v| v.as_str()).unwrap_or(""),
+                on_event,
+            );
+        }
+    }
+    out
+}
+
 /// Parses a Chat Completions `choices[0].message` object into a
 /// [`StepResult`]: any `tool_calls` become tool calls the caller must
-/// execute, otherwise `content` is the model's final answer.
-fn parse_agent_response(message: &Value) -> StepResult {
+/// execute, otherwise `content` is the model's final answer, with the
+/// pages a native search cited (`report`) marked and reported.
+fn parse_agent_response(
+    message: &Value,
+    report: &SearchReport,
+    on_event: EventSink<'_>,
+) -> StepResult {
     let mut calls: Vec<AgentTurn> = message
         .get("tool_calls")
         .and_then(|v| v.as_array())
@@ -381,13 +553,11 @@ fn parse_agent_response(message: &Value) -> StepResult {
         attach_reasoning(&mut calls, reasoning_of(message).unwrap_or_default());
         return StepResult::ToolCalls(calls);
     }
-    StepResult::Done(
-        message
-            .get("content")
-            .and_then(|c| c.as_str())
-            .unwrap_or_default()
-            .to_string(),
-    )
+    let text = message
+        .get("content")
+        .and_then(|c| c.as_str())
+        .unwrap_or_default();
+    StepResult::Done(report.cite(text, on_event))
 }
 
 /// The reasoning an OpenAI-compatible message or delta carries: DeepSeek,
@@ -432,6 +602,7 @@ struct ChatStreamAccumulator {
     reasoning: String,
     calls: Vec<StreamToolCall>,
     error: Option<String>,
+    search: SearchReport,
 }
 
 impl ChatStreamAccumulator {
@@ -454,8 +625,10 @@ impl ChatStreamAccumulator {
             .and_then(|c| c.first())
             .and_then(|c| c.get("delta"))
         else {
+            self.search.take(&Value::Null, &chunk);
             return;
         };
+        self.search.take(delta, &chunk);
 
         if let Some(thought) = reasoning_of(delta) {
             if !thought.is_empty() {
@@ -521,7 +694,7 @@ impl ChatStreamAccumulator {
         }
     }
 
-    fn into_step_result(self) -> StepResult {
+    fn into_step_result(self, on_event: EventSink<'_>) -> StepResult {
         let mut calls: Vec<AgentTurn> = self
             .calls
             .into_iter()
@@ -541,7 +714,7 @@ impl ChatStreamAccumulator {
             attach_reasoning(&mut calls, &self.reasoning);
             StepResult::ToolCalls(calls)
         } else {
-            StepResult::Done(self.text)
+            StepResult::Done(self.search.cite(&self.text, on_event))
         }
     }
 }
@@ -587,7 +760,7 @@ pub async fn agent_step_streaming(
     if let Some(error) = acc.error {
         return Err(error);
     }
-    Ok(acc.into_step_result())
+    Ok(acc.into_step_result(on_event))
 }
 
 /// Runs one round-trip against a Chat Completions-compatible endpoint with
@@ -603,6 +776,7 @@ pub async fn agent_step(
     web_search: Option<NativeWebSearch>,
     vendor: Vendor,
     thinking: &Thinking,
+    on_event: EventSink<'_>,
 ) -> Result<StepResult, String> {
     let body = agent_request_body(
         model,
@@ -634,7 +808,9 @@ pub async fn agent_step(
         .and_then(|c| c.get("message"))
         .cloned()
         .unwrap_or(Value::Null);
-    Ok(parse_agent_response(&message))
+    let mut report = SearchReport::default();
+    report.take(&message, &parsed);
+    Ok(parse_agent_response(&message, &report, on_event))
 }
 
 #[cfg(test)]
@@ -708,9 +884,7 @@ mod tests {
             call("2", "b"),
             result("1", "found a"),
             result("2", "found b"),
-            AgentTurn::Assistant {
-                text: "done".to_string(),
-            },
+            AgentTurn::assistant("done".to_string()),
         ];
 
         let messages = turns_to_messages("be helpful", &history, false);
@@ -809,7 +983,7 @@ mod tests {
                 "function": { "name": "propose_edit", "arguments": "{\"action\":\"append\"}" },
             }],
         });
-        match parse_agent_response(&message) {
+        match parse_agent_response(&message, &SearchReport::default(), &|_| {}) {
             StepResult::ToolCalls(calls) => {
                 assert_eq!(calls.len(), 1);
                 let AgentTurn::ToolCall { call_id, name, .. } = &calls[0] else {
@@ -825,7 +999,7 @@ mod tests {
     #[test]
     fn parse_agent_response_falls_back_to_content() {
         let message = json!({ "role": "assistant", "content": "plain answer" });
-        match parse_agent_response(&message) {
+        match parse_agent_response(&message, &SearchReport::default(), &|_| {}) {
             StepResult::Done(text) => assert_eq!(text, "plain answer"),
             StepResult::ToolCalls(_) => panic!("expected a final answer"),
         }
@@ -841,6 +1015,7 @@ mod tests {
                 ProviderEvent::ToolStart { call_id, name } => format!("S:{call_id}:{name}"),
                 ProviderEvent::ToolArgs { call_id, delta } => format!("A:{call_id}:{delta}"),
                 ProviderEvent::Thinking(t) => format!("R:{t}"),
+                ProviderEvent::Citation { url, .. } => format!("C:{url}"),
             });
         };
         let mut acc = ChatStreamAccumulator::default();
@@ -861,7 +1036,7 @@ mod tests {
             "[DONE]",
         ]);
         assert_eq!(events, vec!["T:Hel", "T:lo"]);
-        match acc.into_step_result() {
+        match acc.into_step_result(&|_| {}) {
             StepResult::Done(text) => assert_eq!(text, "Hello"),
             StepResult::ToolCalls(_) => panic!("expected a final answer"),
         }
@@ -880,7 +1055,7 @@ mod tests {
             events,
             vec!["S:c1:propose_edit", "A:c1:{\"action\":", "A:c1:\"append\"}",]
         );
-        match acc.into_step_result() {
+        match acc.into_step_result(&|_| {}) {
             StepResult::ToolCalls(calls) => {
                 let AgentTurn::ToolCall {
                     call_id,
@@ -924,7 +1099,7 @@ mod tests {
             events,
             vec!["R:Need the ", "R:section.", "S:c1:read_document", "A:c1:{}"]
         );
-        let StepResult::ToolCalls(calls) = acc.into_step_result() else {
+        let StepResult::ToolCalls(calls) = acc.into_step_result(&|_| {}) else {
             panic!("expected tool calls");
         };
         let AgentTurn::ToolCall { reasoning, .. } = &calls[0] else {
@@ -938,7 +1113,7 @@ mod tests {
             r#"{"choices":[{"delta":{"content":"Yes."}}]}"#,
         ]);
         assert_eq!(events, vec!["R:hm", "T:Yes."]);
-        assert!(matches!(acc.into_step_result(), StepResult::Done(t) if t == "Yes."));
+        assert!(matches!(acc.into_step_result(&|_| {}), StepResult::Done(t) if t == "Yes."));
     }
 
     #[test]
@@ -963,10 +1138,14 @@ mod tests {
         assert!(kept[2].get("reasoning_content").is_none());
 
         // The non-streaming answer's reasoning lands on the call the same way.
-        let StepResult::ToolCalls(calls) = parse_agent_response(&json!({
-            "reasoning_content": "Look first.",
-            "tool_calls": [{"id": "c", "function": {"name": "read_document", "arguments": "{}"}}],
-        })) else {
+        let StepResult::ToolCalls(calls) = parse_agent_response(
+            &json!({
+                "reasoning_content": "Look first.",
+                "tool_calls": [{"id": "c", "function": {"name": "read_document", "arguments": "{}"}}],
+            }),
+            &SearchReport::default(),
+            &|_| {},
+        ) else {
             panic!("expected tool calls");
         };
         assert!(
@@ -993,6 +1172,73 @@ mod tests {
         assert_eq!(body["thinking"]["type"], "enabled");
         assert_eq!(body["reasoning_effort"], "high");
         assert!(deep.replay);
+    }
+
+    /// The streamed chunks' text, with markers as [k], and the pages
+    /// reported.
+    fn cited_stream(chunks: &[&str]) -> (String, Vec<String>) {
+        let pages = std::sync::Mutex::new(Vec::new());
+        let sink = |e: ProviderEvent<'_>| {
+            if let ProviderEvent::Citation { url, .. } = e {
+                pages.lock().unwrap().push(url.to_string());
+            }
+        };
+        let mut acc = ChatStreamAccumulator::default();
+        for chunk in chunks {
+            acc.apply(chunk, &sink);
+        }
+        let StepResult::Done(text) = acc.into_step_result(&sink) else {
+            panic!("expected a final answer");
+        };
+        let text = crate::agent::replace_citation_markers(&text, |k| Some(format!("[{k}]")));
+        (text, pages.into_inner().unwrap())
+    }
+
+    #[test]
+    fn openrouter_annotations_mark_their_links_once_however_often_streamed() {
+        let annotation = r#"{"type":"url_citation","url_citation":{"url":"https://a.example/","title":"A","start_index":12,"end_index":43}}"#;
+        let (text, pages) = cited_stream(&[
+            r#"{"choices":[{"delta":{"content":"Tides turn ("}}]}"#,
+            r#"{"choices":[{"delta":{"content":"[a.example](https://a.example/)) daily."}}]}"#,
+            &format!(r#"{{"choices":[{{"delta":{{"annotations":[{annotation}]}}}}]}}"#),
+            &format!(
+                r#"{{"choices":[{{"delta":{{"annotations":[{annotation}]}},"finish_reason":"stop"}}]}}"#
+            ),
+        ]);
+        assert_eq!(text, "Tides turn [1] daily.");
+        assert_eq!(pages, ["https://a.example/"]);
+    }
+
+    #[test]
+    fn zhipu_refs_become_markers_by_their_results() {
+        let (text, pages) = cited_stream(&[
+            r#"{"web_search":[{"title":"潮汐","link":"https://z.example/1","refer":"ref_1"},{"title":"月相","link":"https://z.example/2","refer":"ref_2"}],"choices":[{"delta":{"content":"每天两次[ref_1]，"}}]}"#,
+            r#"{"choices":[{"delta":{"content":"满月最高[来源：ref_2]。[note]"}}]}"#,
+        ]);
+        assert_eq!(text, "每天两次[1]，满月最高[2]。[note]");
+        assert_eq!(pages, ["https://z.example/1", "https://z.example/2"]);
+    }
+
+    #[test]
+    fn groq_browser_marks_go_and_its_pages_are_reported() {
+        let message = json!({
+            "role": "assistant",
+            "content": "Tides turn twice a day【2†L6-L10】.",
+            "executed_tools": [{"type": "browser.search", "search_results": {"results": [{"title": "Tides", "url": "https://g.example/", "content": "…"}]}}],
+        });
+        let mut report = SearchReport::default();
+        report.take(&message, &json!({}));
+        let pages = std::sync::Mutex::new(Vec::new());
+        let sink = |e: ProviderEvent<'_>| {
+            if let ProviderEvent::Citation { url, .. } = e {
+                pages.lock().unwrap().push(url.to_string());
+            }
+        };
+        let StepResult::Done(text) = parse_agent_response(&message, &report, &sink) else {
+            panic!("expected a final answer");
+        };
+        assert_eq!(text, "Tides turn twice a day.");
+        assert_eq!(pages.into_inner().unwrap(), ["https://g.example/"]);
     }
 
     #[test]
@@ -1115,7 +1361,7 @@ mod tests {
             events,
             vec!["R:The user wants", "R: a title.", "T:Field notes"]
         );
-        match acc.into_step_result() {
+        match acc.into_step_result(&|_| {}) {
             StepResult::Done(text) => assert_eq!(text, "Field notes"),
             StepResult::ToolCalls(_) => panic!("expected a final answer"),
         }

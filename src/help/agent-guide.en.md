@@ -39,7 +39,7 @@ The full conversation lives in a panel on the right side of the editor. Open or 
 - **Modes**: the composer has three. **Write** drafts new text into the document (a continuation, a new paragraph or section) and only ever adds: with text selected, it writes after the selection. **Review** answers, discusses and leaves comments without changing anything. **Revise** changes the text that is there. Every change Write or Revise makes is a proposal you accept or reject. The panel starts in the mode set under **Settings > Textus AI > Textus AI Chat > Default mode**.
 - **@-mentions**: type `@` in the input to pick a text file from the project folder; it is attached to the message.
 - **Attach files**: the **+** button on the left of the input attaches a PDF, Word document, PowerPoint deck, spreadsheet, EPUB e-book, RTF or HTML file, image, or plain text file to that message. Everything except images is extracted to text locally and travels inside the message; images are sent as real images to providers that can see (ones that can't say so up front rather than dropping them silently). A long file is sent only in part, and the chip says "(shortened)" when that happens.
-- **Web search**: once enabled in **Settings > Textus AI > Textus AI Chat** (for providers that offer it), Textus AI can search the web on its own when a request needs it.
+- **Web search**: the magnifier button next to the input lets Textus AI search the web when a request needs it — see **7. Web search** below.
 - **Deep thinking**: the button beside web search (the light bulb) asks the model to think its answer through before it replies — slower and more expensive, for hard questions and bigger rewrites. It stays on, across documents, until you press it again. While the model thinks, the panel shows "Thinking · 8 seconds"; afterwards "Thought for 12 seconds", which you can click to read the reasoning where the provider shares it. The button only appears for models that can think harder; Quick Ask always asks for a quick answer.
 - **History**: the **History** button (the clock) in the AI panel's header lists past conversations, grouped by folder. Click one to reopen it with its document and continue.
 - **Errors**: when a request fails, the chat says what kind of problem it is and what to do (check the key, wait a moment, pick another model) above the provider's own message.
@@ -70,6 +70,15 @@ Textus AI can make a picture for your document once you choose an **Image model*
 - Ask in Write or Revise mode ("add a picture of the harbour after the first paragraph"), or right-click a paragraph and choose **Illustrate this paragraph**.
 - The picture arrives as a proposal in place, like any other insertion. Nothing is saved until you accept: then it is stored the way **Settings > Images** says for a pasted image and inserted as a Markdown image. Reject leaves nothing behind.
 - If the service turns the description down, the panel shows the reason it gave. A request makes at most two pictures.
+
+### 7. Web search
+
+Turn on the **Web search** button next to the input (or **Settings > Textus AI > Textus AI Chat > Web search** to have it on from the start), and Textus AI looks things up when a request needs facts that are current or that it isn't sure of. It can also read a page whose address you paste.
+
+- **Who searches**: models that search by themselves — OpenAI, Claude, Grok, OpenRouter, Groq, Qwen and Zhipu GLM — use their own search. For any other model (DeepSeek, Gemini, Mistral, Kimi, local models, custom endpoints), Textus does the searching, on the **Search service** chosen under Web search in Settings: **Automatic** uses a DeepSeek, Zhipu or Kimi key you already saved for chat; or pick Bocha, Tavily, Brave Search or Exa and paste its key, or SearXNG and enter the address of your own server. The row says where your searches go. With nothing to search with, the button shows a red dot.
+- **Sources**: the reply cites what it found as [1], [2], and lists those pages under it; click one to open it in your browser. The numbers stay the same for the whole conversation.
+- **Sources as footnotes**: when a proposal draws on the web, its card has **Add sources as footnotes**. Ticked, accepting it adds Markdown footnotes for its sources at the end of the document; unticked, the text goes in without them. The card remembers your last choice.
+- **Pages are read, not obeyed**: what a page says never instructs Textus AI, and it still only proposes edits. Textus reads pages from the public web only, never from your computer or local network.
 
 ## Make Textus AI yours
 
@@ -267,4 +276,4 @@ There is no global style profile or library: those describe one body of work, so
 
 ## A note on privacy
 
-Your document, attached and @-mentioned files, your writing instructions, the style profile, the library entries that come up, and any project files Textus AI reads are sent to the provider you selected as part of each request; **Learn my style** sends the samples you pick. Web search runs on that provider's servers. Turn any feature off in Settings when you don't want that.
+Your document, attached and @-mentioned files, your writing instructions, the style profile, the library entries that come up, and any project files Textus AI reads are sent to the provider you selected as part of each request; **Learn my style** sends the samples you pick. With web search on, searches go to your provider, or to the search service shown in Settings, and the pages Textus AI reads are fetched from this computer. Turn any feature off in Settings when you don't want that.

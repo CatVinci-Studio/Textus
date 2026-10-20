@@ -1,4 +1,4 @@
-use crate::agent::{AgentTurn, StepResult, ToolSpec};
+use crate::agent::{AgentTurn, EventSink, StepResult, ToolSpec};
 use crate::capabilities::Thinking;
 use crate::responses_api;
 
@@ -9,7 +9,8 @@ fn responses_url(base_url: &str) -> String {
 /// Runs an Agent step against a third-party OpenAI-compatible Responses API.
 /// xAI uses this path because its native web search is available on
 /// `/responses`, while its `/chat/completions` endpoint does not expose the
-/// same server-side tool.
+/// same server-side tool. Not streamed: the page citations come with the
+/// finished output, reported through `on_event`.
 #[allow(clippy::too_many_arguments)]
 pub async fn agent_step(
     base_url: &str,
@@ -20,6 +21,7 @@ pub async fn agent_step(
     tools: &[ToolSpec],
     web_search: bool,
     thinking: &Thinking,
+    on_event: EventSink<'_>,
 ) -> Result<StepResult, String> {
     let body = responses_api::agent_request_body(
         model,
@@ -49,7 +51,7 @@ pub async fn agent_step(
         .and_then(|o| o.as_array())
         .cloned()
         .unwrap_or_default();
-    Ok(responses_api::parse_agent_output(&output))
+    Ok(responses_api::parse_agent_output(&output, on_event))
 }
 
 #[cfg(test)]

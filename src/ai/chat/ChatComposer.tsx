@@ -33,7 +33,7 @@ import {
 } from "./skill-picker";
 import { errorText } from "../../utils/error-text";
 import { basename } from "../../utils/path";
-import { useActiveProvider } from "../provider-catalog";
+import { useActiveProvider, useWebSearchStatus } from "../provider-catalog";
 import type { AgentMode } from "../../settings/SettingsContext";
 import {
   COMPOSER_MODES,
@@ -85,6 +85,9 @@ export interface ChatComposerLabels {
   modeLabel: string;
   webSearch: string;
   deepThinking: string;
+  /** The Web search button's tooltip when nothing can search: the model
+   *  can't, and no search service is set up. */
+  webSearchNeedsService: string;
   /** The `/` and `@` pickers' words; English when left out. */
   picker?: PickerLabels;
 }
@@ -208,6 +211,12 @@ export function ChatComposer({
   // forget - which is exactly what happened when it was a prop, leaving Quick
   // Ask happy to attach an image to a provider that can't read one.
   const supportsVision = useActiveProvider()?.supportsVision ?? true;
+  // With search on but nothing to search with - a model that can't search
+  // by itself and no search service set up - the button says so, rather
+  // than the request quietly going out without the web.
+  const searchStatus = useWebSearchStatus();
+  const searchUnavailable =
+    !!searchStatus && !searchStatus.native && !searchStatus.service;
   const picker = labels.picker ?? defaultPickerLabels();
   const [input, setInput] = useState("");
   const [pickerIndex, setPickerIndex] = useState(0);
@@ -699,9 +708,20 @@ export function ChatComposer({
                 </button>
                 <button
                   type="button"
-                  className={`inline-chat-toggle inline-chat-web-search${webSearch ? " is-active" : ""}`}
-                  title={labels.webSearch}
+                  className={`inline-chat-toggle inline-chat-web-search${webSearch ? " is-active" : ""}${
+                    webSearch && searchUnavailable ? " needs-setup" : ""
+                  }`}
+                  title={
+                    webSearch && searchUnavailable
+                      ? labels.webSearchNeedsService
+                      : labels.webSearch
+                  }
                   aria-label={labels.webSearch}
+                  aria-description={
+                    webSearch && searchUnavailable
+                      ? labels.webSearchNeedsService
+                      : undefined
+                  }
                   aria-pressed={webSearch}
                   {...holdFocus}
                   onClick={() => setWebSearch((value) => !value)}

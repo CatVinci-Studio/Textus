@@ -24,11 +24,13 @@ const pickAttachmentFile = vi.fn();
 const listSkills = vi.fn();
 const listProjectFiles = vi.fn();
 let supportsVision = true;
+let webSearchStatus: { native: boolean; service: string | null } | null = null;
 
 // The composer derives vision support from the active provider itself (so no
 // caller can forget to pass it), which is what this stands in for.
 vi.mock("../provider-catalog", () => ({
   useActiveProvider: () => ({ supportsVision }),
+  useWebSearchStatus: () => webSearchStatus,
 }));
 
 // Whether the provider's model can think deeper is the capability table's
@@ -78,6 +80,7 @@ const labels = {
   modeLabel: "Mode",
   webSearch: "Web search",
   deepThinking: "Deep thinking",
+  webSearchNeedsService: "Choose a search service",
 };
 
 type ComposerOptions = {
@@ -126,6 +129,35 @@ beforeEach(() => {
   supportsVision = true;
   canThinkDeeper = true;
   localStorage.clear();
+  webSearchStatus = null;
+});
+
+describe("ChatComposer web search", () => {
+  it("says when nothing can search instead of searching nothing", () => {
+    webSearchStatus = { native: false, service: null };
+    renderComposer();
+    const button = screen.getByLabelText("Web search");
+    // Off, there is nothing to warn about.
+    expect(button).not.toHaveClass("needs-setup");
+    fireEvent.click(button);
+    expect(button).toHaveClass("needs-setup");
+    expect(button).toHaveAttribute("title", "Choose a search service");
+  });
+
+  it("shows no warning where the model or a service can search", () => {
+    for (const status of [
+      { native: true, service: null },
+      { native: false, service: "tavily" },
+    ]) {
+      webSearchStatus = status;
+      renderComposer();
+      fireEvent.click(screen.getByLabelText("Web search"));
+      expect(screen.getByLabelText("Web search")).not.toHaveClass(
+        "needs-setup",
+      );
+      cleanup();
+    }
+  });
 });
 
 // No vitest globals config, so RTL's auto-cleanup never registers - without

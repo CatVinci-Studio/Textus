@@ -4,6 +4,7 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import {
   composeMarkdownEdit,
+  documentMarkdown,
   findMarkdownMatch,
   serializeBlocks,
   serializeRange,
@@ -11,6 +12,13 @@ import {
   type MarkdownMatch,
 } from "../doc-markdown";
 import { applyEditRange } from "./apply-edit";
+import {
+  citationsAsFootnotes,
+  footnoteLabels,
+  hasCitations,
+  withoutCitations,
+} from "../citations";
+import type { WebSource } from "../types";
 import { isIOSApp } from "../../platform/capabilities";
 import {
   pendingEditKey,
@@ -61,6 +69,14 @@ export type PendingStatus =
  * model was actually shown. `InlineChatInfo` satisfies this structurally, so
  * the Quick Ask path is unchanged.
  */
+/** What accepting a proposal does with its web citations (citations.ts). */
+export interface CitationStyle {
+  /** Settings' sourcesAsFootnotes, set from the proposal card. */
+  asFootnotes: boolean;
+  /** The conversation's sources, which title the footnotes. */
+  sources: WebSource[];
+}
+
 export interface SelectionTarget {
   range: { from: number; to: number } | null;
   selectionMarkdown: string | null;
@@ -334,6 +350,9 @@ export interface PendingEditOptions {
   ) => Promise<string | null>;
   /** Tells the user an accepted picture couldn't be saved. */
   onImageError?: (err: unknown) => void;
+  /** How an accepted proposal's web citations are written, asked when it
+   *  is accepted. Left out: they are left out. */
+  citationStyle?: () => CitationStyle;
 }
 
 export function usePendingEdits(
@@ -800,12 +819,31 @@ export function usePendingEdits(
             );
           }
         }
+        // Web citations ([2](url)): footnotes at the end of the document,
+        // or left out - the proposal card's "Add sources as footnotes".
+        let footnotes: string[] = [];
+        if (hasCitations(replacement)) {
+          const cite = optionsRef.current.citationStyle?.();
+          if (cite?.asFootnotes) {
+            ({ text: replacement, definitions: footnotes } =
+              citationsAsFootnotes(
+                replacement,
+                cite.sources,
+                footnoteLabels(
+                  documentMarkdown(serializeBlocks(ctx, state.doc)),
+                ),
+              ));
+          } else {
+            replacement = withoutCitations(replacement);
+          }
+        }
         const tr = applyEditRange(
           state,
           ctx,
           preview.from,
           preview.to,
           replacement,
+          footnotes,
         );
         // Same transaction: one undo step restores the document exactly,
         // and the decoration is gone the instant the edit lands (no orphan
@@ -823,8 +861,9 @@ export function usePendingEdits(
           tr.mapping.map(preview.to, 1),
           written.map(
             ({ after }) =>
-              plainText(ctx, trimBreaks(after))?.replace(/\n/g, "").trim() ??
-              "",
+              plainText(ctx, trimBreaks(withoutCitations(after)))
+                ?.replace(/\n/g, "")
+                .trim() ?? "",
           ),
         );
         tr.setMeta(pendingEditKey, {

@@ -7,13 +7,21 @@ import {
   writeFetchedModels,
 } from "../../ai/model-info";
 import { useCallback, useEffect, useState } from "react";
-import { useSettings } from "../SettingsContext";
+import {
+  SEARCH_SERVICES,
+  useSettings,
+  type SearchService,
+} from "../SettingsContext";
 import { localeOf, type Strings } from "../../i18n/strings";
 import {
   OPENAI_OAUTH_AGENT_MODEL_PRESETS,
   OPENAI_OAUTH_WRITING_MODEL_PRESETS,
 } from "../agent-models";
-import { useActiveProvider } from "../../ai/provider-catalog";
+import {
+  notifyWebSearchSetup,
+  useActiveProvider,
+  useWebSearchStatus,
+} from "../../ai/provider-catalog";
 import { ai, auth } from "../../platform/ipc";
 import { Select } from "../../ui/Select";
 import { SettingRow, VERBATIM_INPUT } from "./controls";
@@ -397,6 +405,179 @@ export function AgentSystemPromptSection({
       >
         {t.agentSystemPromptEdit}
       </button>
+    </SettingRow>
+  );
+}
+
+/** Where each search service's key is kept: the AI provider's own key for
+ *  the three that share it. Mirrors `Backend::key_id` in
+ *  src-tauri/src/ai/web/search.rs. */
+const SEARCH_KEY_IDS: Partial<Record<SearchService, string>> = {
+  deepseek: "deepseek",
+  zhipu: "zhipu",
+  kimi: "moonshot",
+  bocha: "search-bocha",
+  tavily: "search-tavily",
+  brave: "search-brave",
+  exa: "search-exa",
+};
+
+/** A search service's name as the UI shows it - brand names, but for the
+ *  ones with a name of their own in Chinese, and Automatic. */
+export function searchServiceName(t: Strings, id: string): string {
+  switch (id) {
+    case "auto":
+      return t.searchServiceAuto;
+    case "zhipu":
+      return t.searchServiceZhipu;
+    case "bocha":
+      return t.searchServiceBocha;
+    case "deepseek":
+      return "DeepSeek";
+    case "kimi":
+      return "Kimi";
+    case "tavily":
+      return "Tavily";
+    case "brave":
+      return "Brave Search";
+    case "exa":
+      return "Exa";
+    case "searxng":
+      return "SearXNG";
+    default:
+      return id;
+  }
+}
+
+/**
+ * Settings > Textus AI > Search service, under Web search: what Textus's own
+ * web_search uses when the chat model can't search by itself. Shown only
+ * where it matters - the chosen model has no search of its own, or a
+ * service was chosen before - with the key (or SearXNG's address) right
+ * under it, and the row saying where queries go.
+ */
+export function SearchServiceSection({ t }: { t: Strings }) {
+  const { settings, setSettings } = useSettings();
+  const status = useWebSearchStatus();
+  const chosen = settings.searchService;
+  if (!status || (status.native && chosen === "auto")) return null;
+  const hint = status.native
+    ? t.searchServiceNativeHint
+    : status.service
+      ? t.searchServiceSendsTo.replace(
+          "{name}",
+          searchServiceName(t, status.service),
+        )
+      : t.searchServiceNone;
+  const keyId = SEARCH_KEY_IDS[chosen];
+  return (
+    <>
+      <SettingRow label={t.searchServiceLabel} hint={hint}>
+        <Select
+          className="settings-select"
+          aria-label={t.searchServiceLabel}
+          value={chosen}
+          onChange={(e) =>
+            setSettings({ searchService: e.target.value as SearchService })
+          }
+        >
+          {SEARCH_SERVICES.map((id) => (
+            <option key={id} value={id}>
+              {searchServiceName(t, id)}
+            </option>
+          ))}
+        </Select>
+      </SettingRow>
+      {keyId && (
+        <SearchKeyRow
+          key={keyId}
+          t={t}
+          keyId={keyId}
+          name={searchServiceName(t, chosen)}
+        />
+      )}
+      {chosen === "searxng" && (
+        <SettingRow label={t.searxngUrlLabel}>
+          <input
+            type="url"
+            {...VERBATIM_INPUT}
+            className="settings-text-input"
+            aria-label={t.searxngUrlLabel}
+            placeholder="https://searx.example.org"
+            value={settings.searxngUrl}
+            onChange={(e) => setSettings({ searxngUrl: e.target.value })}
+          />
+        </SettingRow>
+      )}
+    </>
+  );
+}
+
+/** A search service's key: saved with the AI providers' keys
+ *  (auth/keys.rs), never in Settings. */
+function SearchKeyRow({
+  t,
+  keyId,
+  name,
+}: {
+  t: Strings;
+  keyId: string;
+  name: string;
+}) {
+  const [saved, setSaved] = useState(false);
+  const [input, setInput] = useState("");
+  const label = t.apiKeyLabelTemplate.replace("{name}", name);
+  useEffect(() => {
+    let live = true;
+    auth
+      .providerApiKeyStatus(keyId)
+      .then((ok) => {
+        if (live) setSaved(ok);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [keyId]);
+  async function save() {
+    if (!input.trim()) return;
+    await auth.setProviderApiKey(keyId, input.trim());
+    setInput("");
+    setSaved(true);
+    notifyWebSearchSetup();
+  }
+  async function clear() {
+    await auth.clearProviderApiKey(keyId);
+    setSaved(false);
+    notifyWebSearchSetup();
+  }
+  return (
+    <SettingRow label={label}>
+      {saved ? (
+        <div className="api-key-configured">
+          <span className="settings-row-hint">{t.apiKeyConfigured}</span>
+          <button
+            className="text-button settings-inline-button"
+            onClick={clear}
+          >
+            {t.apiKeyClear}
+          </button>
+        </div>
+      ) : (
+        <div className="api-key-input-row">
+          <input
+            type="password"
+            className="settings-text-input api-key-input"
+            aria-label={label}
+            placeholder={t.apiKeyPlaceholder}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+          />
+          <button className="text-button settings-inline-button" onClick={save}>
+            {t.apiKeySave}
+          </button>
+        </div>
+      )}
     </SettingRow>
   );
 }

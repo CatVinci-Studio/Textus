@@ -146,6 +146,33 @@ export const COMPLETION_TONES: CompletionTone[] = [
   "concise",
 ];
 
+/// Settings > Textus AI > Search service: what Textus's own web_search uses
+/// when the chat model can't search by itself. "auto" takes the first of
+/// the DeepSeek, Zhipu and Kimi keys already saved. Mirrors `Backend` in
+/// src-tauri/src/ai/web/search.rs.
+export type SearchService =
+  | "auto"
+  | "deepseek"
+  | "zhipu"
+  | "kimi"
+  | "bocha"
+  | "tavily"
+  | "brave"
+  | "exa"
+  | "searxng";
+
+export const SEARCH_SERVICES: SearchService[] = [
+  "auto",
+  "deepseek",
+  "zhipu",
+  "kimi",
+  "bocha",
+  "tavily",
+  "brave",
+  "exa",
+  "searxng",
+];
+
 export type GrammarStrictness = "typos" | "standard" | "strict";
 
 /// A user-imported (Typora-style) theme. The actual CSS lives on disk under
@@ -262,8 +289,8 @@ export interface Settings {
   /// settings/writing-conventions.ts lists the values). A project's style
   /// profile overrides it.
   writingConventions: string;
-  /// Offer the active provider's native server-side web search to Agent;
-  /// providers without a compatible search API safely ignore it.
+  /// The composer's Web search button starts on. The provider's own
+  /// search where it has one, else Textus's web_search on `searchService`.
   enableWebSearch: boolean;
   /// Settings > Textus AI > Image model: the service ("" for none, the
   /// default - a picture costs money), its model ("" for its default) and,
@@ -272,6 +299,13 @@ export interface Settings {
   imageModelProvider: string;
   imageModel: string;
   imageModelEndpoint: string;
+  searchService: SearchService;
+  /// The SearXNG server `searchService: "searxng"` sends queries to.
+  searxngUrl: string;
+  /// The proposal card's "Add sources as footnotes": a proposal's web
+  /// citations become Markdown footnotes when it is accepted (off: they
+  /// are left out). Remembered from the last card, not set in Settings.
+  sourcesAsFootnotes: boolean;
   /// Settings > Textus AI > Remember automatically: Textus AI may keep
   /// requirements, preferences, style and facts it learns in a
   /// conversation (the remember tool, src-tauri ai/memory.rs, which reads
@@ -399,6 +433,9 @@ const DEFAULT_SETTINGS: Settings = {
   imageModelProvider: "",
   imageModel: "",
   imageModelEndpoint: "",
+  searchService: "auto",
+  searxngUrl: "",
+  sourcesAsFootnotes: false,
   rememberAutomatically: true,
   enableEditAnimation: true,
   agentExpandToWindow: false,

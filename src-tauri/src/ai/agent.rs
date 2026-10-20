@@ -4,9 +4,10 @@ use crate::ai::route::{self, OpenaiAuth, NOT_CONFIGURED};
 use crate::ai::rules::Conventions;
 use crate::ai::tools::{self, ToolContext};
 use crate::ai::ui_language::{UiLanguage, UiNames};
+use crate::ai::web::{self, WebPlan};
 use crate::ai::workspace::{self, AgentWorkspace};
 use aicompat::agent::{
-    run_agent_loop, AgentTurn, ImageAttachment, LoopEvent, ProviderEvent, StepResult,
+    run_agent_loop, AgentTurn, ImageAttachment, LoopEvent, ProviderEvent, StepResult, ToolOutput,
 };
 use aicompat::capabilities::{self, NativeSearch, ThinkingLevel};
 use aicompat::providers::{
@@ -52,8 +53,14 @@ pub enum StreamEvent {
 /// Forwards a provider-level fragment onto the frontend channel. Send
 /// failures are ignored deliberately - a closed webview mid-request must
 /// not fail the agent loop, which still returns turns for the history.
-fn forward(channel: &Channel<StreamEvent>, event: ProviderEvent<'_>) {
+/// A native search citation goes to the request's sources instead (it is
+/// shown with the finished reply).
+fn forward(channel: &Channel<StreamEvent>, web: &WebPlan, event: ProviderEvent<'_>) {
     let event = match event {
+        ProviderEvent::Citation { url, title } => {
+            web.cite(url, title);
+            return;
+        }
         ProviderEvent::Text(text) => StreamEvent::Delta {
             text: text.to_string(),
         },
@@ -139,11 +146,13 @@ pub(crate) fn postfix_step(
 pub(crate) type StepFuture<'a> =
     Pin<Box<dyn Future<Output = Result<StepResult, String>> + Send + 'a>>;
 
-/// A provider step with [`postfix_step`] applied to what it returns.
+/// A provider step with [`postfix_step`] applied to what it returns, and
+/// its native search citations numbered (WebPlan::finish_step).
 fn with_postfix<'a, S, F>(
     mut step: S,
     document: &'a str,
     conventions: &'a Conventions,
+    web: &'a WebPlan,
 ) -> impl FnMut(Vec<AgentTurn>) -> StepFuture<'a> + 'a
 where
     S: FnMut(Vec<AgentTurn>) -> F + 'a,
@@ -151,7 +160,42 @@ where
 {
     move |turns| {
         let fut = step(turns);
-        Box::pin(async move { fut.await.map(|r| postfix_step(r, document, conventions).0) })
+        Box::pin(async move {
+            fut.await
+                .map(|r| postfix_step(web.finish_step(r), document, conventions).0)
+        })
+    }
+}
+
+/// Runs one tool call: the web tools through ai::web's async core, the rest
+/// as before (tools.rs). `question` is the user's message, which a search
+/// service may rank by.
+fn run_tool(
+    tools: &[tools::Tool],
+    ctx: &ToolContext,
+    web: &WebPlan,
+    question: &str,
+    name: &str,
+    arguments: &str,
+) -> ToolOutput {
+    if web.handles(name) {
+        // TODO(agent-async): the agent loop runs tools synchronously, so a
+        // web tool holds this worker thread until it returns (ai::web bounds
+        // each request in time), and Stop lands after it. Await it directly
+        // once tool execution is async.
+        return tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(web.execute(name, arguments, question))
+        })
+        .into();
+    }
+    tools::execute(tools, ctx, name, arguments)
+}
+
+/// The system prompt with what it says about the web, when search is on.
+fn with_web_section(instructions: String, web: &WebPlan) -> String {
+    match web.prompt_section() {
+        Some(section) => format!("{instructions}\n\n{section}"),
+        None => instructions,
     }
 }
 
@@ -661,7 +705,7 @@ const HISTORY_DROP_STEP: usize = HISTORY_BUDGET / 3;
 
 fn turn_chars(turn: &AgentTurn) -> usize {
     match turn {
-        AgentTurn::User { text, .. } | AgentTurn::Assistant { text } => text.len(),
+        AgentTurn::User { text, .. } | AgentTurn::Assistant { text, .. } => text.len(),
         AgentTurn::ToolCall { arguments, .. } => arguments.len(),
         AgentTurn::ToolResult { output, .. } => output.len(),
     }
@@ -806,6 +850,11 @@ pub async fn ai_agent_message(
     // the composer's Deep thinking is on, Fast from Quick Ask. None - an
     // older frontend - is Auto, the provider's default.
     thinking: Option<ThinkingLevel>,
+    // Settings > Textus AI > Search service: "auto" (None from an older
+    // frontend) or a service id, and the SearXNG server address - what
+    // web_search uses when the model has no search of its own (ai::web).
+    search_service: Option<String>,
+    searxng_url: Option<String>,
     mode: AgentMode,
     model: Option<String>,
     request_id: String,
@@ -823,13 +872,16 @@ pub async fn ai_agent_message(
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
     let cancel_rx = cancel::register(request_id.clone());
+    let web_service = web_search
+        .then(|| web::resolve_service(&app, search_service.as_deref(), searxng_url.as_deref()))
+        .flatten();
     let ui_language = ui_language.unwrap_or_else(|| "en".to_string());
     let source = crate::ai::memory::Source {
         document: doc_path.clone(),
         ..conversation.unwrap_or_default()
     };
     let result = tokio::select! {
-        result = ai_agent_message_inner(app, provider, document, doc_path, workspace_root, history, message, images, web_search, thinking.unwrap_or_default(), mode, model, focus_heading, ui_language, source, image_model, on_event) => result,
+        result = ai_agent_message_inner(app, provider, document, doc_path, workspace_root, history, message, images, web_search, web_service, thinking.unwrap_or_default(), mode, model, focus_heading, ui_language, source, image_model, on_event) => result,
         _ = cancel_rx => Err(cancel::CANCELLED.to_string()),
     };
     cancel::unregister(&request_id);
@@ -849,6 +901,7 @@ async fn ai_agent_message_inner(
     message: String,
     images: Vec<ImageAttachment>,
     web_search: bool,
+    web_service: Option<web::search::Service>,
     thinking: ThinkingLevel,
     mode: AgentMode,
     model: Option<String>,
@@ -858,7 +911,6 @@ async fn ai_agent_message_inner(
     image_model: Option<crate::ai::images::ImageModel>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
-    let history = compact_history(history);
     let workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
     let library = crate::ai::conventions::library_names(&workspace);
@@ -885,6 +937,22 @@ async fn ai_agent_message_inner(
         crate::ai::builtin::chosen_profile(&conventions, &document).as_deref(),
     );
     let entry = catalog::find(&provider).ok_or_else(|| format!("unknown provider: {provider}"))?;
+    // Numbered on from the sources earlier replies cited - so from the
+    // history as it came, before it is cut down for sending.
+    let web_plan = WebPlan::new(
+        web_search,
+        web::native_search(
+            &provider,
+            model
+                .as_deref()
+                .or(entry.agent_default_model)
+                .unwrap_or_default(),
+        ),
+        web_service,
+        &history,
+    );
+    let web = &web_plan;
+    let history = compact_history(web::with_sources_in_text(history));
 
     // Refuse rather than drop. Sending the images to a provider that can't
     // read them would get an answer confidently written about a picture the
@@ -917,8 +985,10 @@ async fn ai_agent_message_inner(
 
     let result = match entry.dialect {
         "openai-responses" => {
-            let instructions =
-                build_instructions(&workspace, &document, true, mode, &focus, &ui_language);
+            let instructions = with_web_section(
+                build_instructions(&workspace, &document, true, mode, &focus, &ui_language),
+                web,
+            );
             let mut tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
@@ -927,7 +997,7 @@ async fn ai_agent_message_inner(
                 entry.supports_vision,
             );
             tools.extend(image_run.as_ref().map(|_| crate::ai::images::tool()));
-            let tool_specs = tools::tool_specs(&tools);
+            let tool_specs = [tools::tool_specs(&tools), web.tool_specs()].concat();
             let tool_ctx = ToolContext {
                 document: &document,
                 skills: &workspace.skills,
@@ -965,7 +1035,7 @@ async fn ai_agent_message_inner(
                         let plan = capabilities::plan(&provider, &agent_model, thinking);
                         let provider = provider.clone();
                         async move {
-                            let sink = move |e: ProviderEvent<'_>| forward(&channel, e);
+                            let sink = move |e: ProviderEvent<'_>| forward(&channel, web, e);
                             capabilities::with_fallback(&provider, &agent_model, &plan, |plan| {
                                 let (instructions, turns, tool_specs, sink) =
                                     (&instructions, &turns, &tool_specs, &sink);
@@ -979,7 +1049,7 @@ async fn ai_agent_message_inner(
                                         instructions,
                                         turns,
                                         tool_specs,
-                                        web_search,
+                                        web.native.is_some(),
                                         &plan,
                                         agent_model,
                                         sink,
@@ -991,7 +1061,7 @@ async fn ai_agent_message_inner(
                         }
                     };
                     let step = crate::ai::images::with_images(
-                        with_postfix(step, &document, &conventions),
+                        with_postfix(step, &document, &conventions, web),
                         image_run.as_ref(),
                         &document,
                         &on_event,
@@ -1001,7 +1071,7 @@ async fn ai_agent_message_inner(
                         user_turn,
                         MAX_STEPS,
                         step,
-                        |name, arguments| tools::execute(&tools, &tool_ctx, name, arguments),
+                        |name, arguments| run_tool(&tools, &tool_ctx, web, &focus, name, arguments),
                         report(&on_event),
                     )
                     .await
@@ -1022,7 +1092,7 @@ async fn ai_agent_message_inner(
                         let plan = capabilities::plan(&provider, &agent_model, thinking);
                         let provider = provider.clone();
                         async move {
-                            let sink = move |e: ProviderEvent<'_>| forward(&channel, e);
+                            let sink = move |e: ProviderEvent<'_>| forward(&channel, web, e);
                             capabilities::with_fallback(&provider, &agent_model, &plan, |plan| {
                                 let (instructions, turns, tool_specs, sink) =
                                     (&instructions, &turns, &tool_specs, &sink);
@@ -1033,7 +1103,7 @@ async fn ai_agent_message_inner(
                                         instructions,
                                         turns,
                                         tool_specs,
-                                        web_search,
+                                        web.native.is_some(),
                                         &plan,
                                         agent_model,
                                         sink,
@@ -1045,7 +1115,7 @@ async fn ai_agent_message_inner(
                         }
                     };
                     let step = crate::ai::images::with_images(
-                        with_postfix(step, &document, &conventions),
+                        with_postfix(step, &document, &conventions, web),
                         image_run.as_ref(),
                         &document,
                         &on_event,
@@ -1055,7 +1125,7 @@ async fn ai_agent_message_inner(
                         user_turn,
                         MAX_STEPS,
                         step,
-                        |name, arguments| tools::execute(&tools, &tool_ctx, name, arguments),
+                        |name, arguments| run_tool(&tools, &tool_ctx, web, &focus, name, arguments),
                         report(&on_event),
                     )
                     .await
@@ -1063,8 +1133,10 @@ async fn ai_agent_message_inner(
             }
         }
         "anthropic-messages" => {
-            let instructions =
-                build_instructions(&workspace, &document, true, mode, &focus, &ui_language);
+            let instructions = with_web_section(
+                build_instructions(&workspace, &document, true, mode, &focus, &ui_language),
+                web,
+            );
             let auth = route::resolve_anthropic_auth(&app).await?;
             let mut tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
@@ -1074,7 +1146,7 @@ async fn ai_agent_message_inner(
                 entry.supports_vision,
             );
             tools.extend(image_run.as_ref().map(|_| crate::ai::images::tool()));
-            let tool_specs = tools::tool_specs(&tools);
+            let tool_specs = [tools::tool_specs(&tools), web.tool_specs()].concat();
             let tool_ctx = ToolContext {
                 document: &document,
                 skills: &workspace.skills,
@@ -1103,7 +1175,7 @@ async fn ai_agent_message_inner(
                 let plan = capabilities::plan(&provider, &agent_model, thinking);
                 let provider = provider.clone();
                 async move {
-                    let sink = move |e: ProviderEvent<'_>| forward(&channel, e);
+                    let sink = move |e: ProviderEvent<'_>| forward(&channel, web, e);
                     capabilities::with_fallback(&provider, &agent_model, &plan, |plan| {
                         let (instructions, turns, tool_specs, sink) =
                             (&instructions, &turns, &tool_specs, &sink);
@@ -1114,7 +1186,7 @@ async fn ai_agent_message_inner(
                                 instructions,
                                 turns,
                                 tool_specs,
-                                web_search,
+                                web.native.is_some(),
                                 &plan,
                                 agent_model,
                                 sink,
@@ -1127,7 +1199,7 @@ async fn ai_agent_message_inner(
             };
 
             let step = crate::ai::images::with_images(
-                with_postfix(step, &document, &conventions),
+                with_postfix(step, &document, &conventions, web),
                 image_run.as_ref(),
                 &document,
                 &on_event,
@@ -1137,7 +1209,7 @@ async fn ai_agent_message_inner(
                 user_turn,
                 MAX_STEPS,
                 step,
-                |name, arguments| tools::execute(&tools, &tool_ctx, name, arguments),
+                |name, arguments| run_tool(&tools, &tool_ctx, web, &focus, name, arguments),
                 report(&on_event),
             )
             .await
@@ -1157,7 +1229,7 @@ async fn ai_agent_message_inner(
                 entry.supports_vision,
             );
             tools.extend(image_run.as_ref().map(|_| crate::ai::images::tool()));
-            let tool_specs = tools::tool_specs(&tools);
+            let tool_specs = [tools::tool_specs(&tools), web.tool_specs()].concat();
             let tool_ctx = ToolContext {
                 document: &document,
                 skills: &workspace.skills,
@@ -1170,16 +1242,15 @@ async fn ai_agent_message_inner(
                 proposed: Default::default(),
                 checks: Default::default(),
             };
-            let instructions_with_tools =
-                build_instructions(&workspace, &document, true, mode, &focus, &ui_language);
+            let instructions_with_tools = with_web_section(
+                build_instructions(&workspace, &document, true, mode, &focus, &ui_language),
+                web,
+            );
 
             // How the provider's own search is switched on (the capability
-            // table); without one, the model just has the local tools.
-            let search = if web_search {
-                capabilities::search_route(&provider, &endpoint_model)
-            } else {
-                NativeSearch::None
-            };
+            // table, as ai::web read it); without one, the model has
+            // Textus's web tools.
+            let search = web.native.unwrap_or(NativeSearch::None);
             let native_web_search = match search {
                 NativeSearch::ChatCompletions(switch) => Some(switch),
                 _ => None,
@@ -1197,7 +1268,7 @@ async fn ai_agent_message_inner(
                 let plan = capabilities::plan(&provider, &endpoint_model, thinking);
                 let provider = provider.clone();
                 async move {
-                    let sink = move |e: ProviderEvent<'_>| forward(&channel, e);
+                    let sink = move |e: ProviderEvent<'_>| forward(&channel, web, e);
                     capabilities::with_fallback(&provider, &endpoint_model, &plan, |plan| {
                         let (base_url, api_key, endpoint_model) =
                             (&base_url, api_key.as_deref(), &endpoint_model);
@@ -1214,6 +1285,7 @@ async fn ai_agent_message_inner(
                                     tool_specs,
                                     true,
                                     &plan,
+                                    sink,
                                 )
                                 .await;
                             }
@@ -1254,6 +1326,7 @@ async fn ai_agent_message_inner(
                                         native_web_search,
                                         vendor,
                                         &plan.without_parameters(),
+                                        sink,
                                     )
                                     .await
                                 }
@@ -1271,7 +1344,7 @@ async fn ai_agent_message_inner(
             // outright. `history`/`message` are cloned so the fallback still
             // has them; `run_agent_loop` would otherwise have consumed them.
             let step = crate::ai::images::with_images(
-                with_postfix(step, &document, &conventions),
+                with_postfix(step, &document, &conventions, web),
                 image_run.as_ref(),
                 &document,
                 &on_event,
@@ -1281,7 +1354,7 @@ async fn ai_agent_message_inner(
                 user_turn,
                 MAX_STEPS,
                 step,
-                |name, arguments| tools::execute(&tools, &tool_ctx, name, arguments),
+                |name, arguments| run_tool(&tools, &tool_ctx, web, &focus, name, arguments),
                 report(&on_event),
             )
             .await
@@ -1296,6 +1369,12 @@ async fn ai_agent_message_inner(
                         &focus,
                         &ui_language,
                     );
+                    // No tools here, so no web_search: the user's message
+                    // is searched up front instead.
+                    let instructions = match web.search_ahead(&focus).await {
+                        Some(results) => format!("{instructions}\n\n{results}"),
+                        None => instructions,
+                    };
                     flattened_chat_turn(
                         &app,
                         &provider,
@@ -1330,6 +1409,7 @@ async fn ai_agent_message_inner(
         if let Some(AgentTurn::User { text, .. }) = turns.first_mut() {
             *text = plain_message;
         }
+        web.attach_sources(&mut turns);
         turns
     })
 }
@@ -1386,7 +1466,7 @@ async fn flattened_chat_turn(
             // providers with no tool calling and no vision, and the command
             // has already refused an image-carrying message for those.
             AgentTurn::User { text, .. } => Some(format!("User: {text}")),
-            AgentTurn::Assistant { text } => Some(format!("Assistant: {text}")),
+            AgentTurn::Assistant { text, .. } => Some(format!("Assistant: {text}")),
             _ => None,
         }
     }
@@ -1408,7 +1488,7 @@ async fn flattened_chat_turn(
         model,
     )
     .await?;
-    Ok(vec![user_turn, AgentTurn::Assistant { text }])
+    Ok(vec![user_turn, AgentTurn::assistant(text)])
 }
 
 #[cfg(test)]
@@ -1580,12 +1660,12 @@ mod tests {
                 text: long.clone(),
                 images: Vec::new(),
             },
-            AgentTurn::Assistant { text: "a1".into() },
+            AgentTurn::assistant("a1"),
             AgentTurn::User {
                 text: "recent".into(),
                 images: Vec::new(),
             },
-            AgentTurn::Assistant { text: "a2".into() },
+            AgentTurn::assistant("a2"),
         ];
         let out = compact_history(history);
         assert_eq!(out.len(), 2);
@@ -1610,9 +1690,7 @@ mod tests {
                 output: "z".repeat(2_000),
                 images: Vec::new(),
             },
-            AgentTurn::Assistant {
-                text: "a".repeat(chars),
-            },
+            AgentTurn::assistant("a".repeat(chars)),
         ]
     }
 
@@ -1678,9 +1756,7 @@ mod tests {
                 text: format!("<attached-file>{}</attached-file>", "p".repeat(130_000)),
                 images: Vec::new(),
             },
-            AgentTurn::Assistant {
-                text: "summary".into(),
-            },
+            AgentTurn::assistant("summary"),
         ]);
         history.extend(exchange(5, 5_000));
         let out = compact_history(history);

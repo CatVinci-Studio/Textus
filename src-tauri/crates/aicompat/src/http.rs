@@ -40,6 +40,13 @@ pub fn set_proxy(url: Option<String>) -> Result<(), String> {
     Ok(())
 }
 
+/// The proxy set with [`set_proxy`], for requests that build their own
+/// client (the main crate's web_fetch, which pins addresses and handles
+/// redirects itself).
+pub fn proxy_url() -> Option<String> {
+    PROXY_URL.read().unwrap().clone()
+}
+
 fn builder() -> reqwest::ClientBuilder {
     with_timeouts(reqwest::Client::builder())
 }

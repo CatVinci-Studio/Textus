@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ai } from "../platform/ipc";
+import { ai, type WebSearchStatus } from "../platform/ipc";
 import { useSettings } from "../settings/SettingsContext";
 
 /**
@@ -114,4 +114,44 @@ export function useProviderCatalog(): ProviderCatalogEntry[] {
   }, []);
 
   return catalog;
+}
+
+/** Fired when a search service's key is saved or cleared - a key isn't a
+ *  setting, so useWebSearchStatus wouldn't otherwise ask again. */
+const WEB_SEARCH_SETUP = "textus:web-search-setup";
+
+export function notifyWebSearchSetup() {
+  window.dispatchEvent(new Event(WEB_SEARCH_SETUP));
+}
+
+/// What the composer's Web search button can do with the chat provider and
+/// model chosen in Settings: the provider's own search, or the search
+/// service Textus uses instead (src-tauri ai/web/mod.rs decides). Null
+/// until it is known.
+export function useWebSearchStatus(): WebSearchStatus | null {
+  const { settings } = useSettings();
+  const provider = settings.aiProvider;
+  const model = settings.agentModels[provider] || null;
+  const { searchService, searxngUrl } = settings;
+  const [status, setStatus] = useState<WebSearchStatus | null>(null);
+  const [setups, setSetups] = useState(0);
+  useEffect(() => {
+    const bump = () => setSetups((n) => n + 1);
+    window.addEventListener(WEB_SEARCH_SETUP, bump);
+    return () => window.removeEventListener(WEB_SEARCH_SETUP, bump);
+  }, []);
+  useEffect(() => {
+    let live = true;
+    ai.webSearchStatus(provider, model, searchService, searxngUrl)
+      .then((s) => {
+        if (live) setStatus(s);
+      })
+      .catch(() => {
+        if (live) setStatus(null);
+      });
+    return () => {
+      live = false;
+    };
+  }, [provider, model, searchService, searxngUrl, setups]);
+  return status;
 }

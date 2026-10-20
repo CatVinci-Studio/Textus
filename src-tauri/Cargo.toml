@@ -61,7 +61,9 @@ tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tokio = { version = "1", features = ["fs", "sync", "macros", "rt"] }
+# rt-multi-thread (in the tree through tauri): the web tools' bridge from the
+# synchronous agent loop, block_in_place (ai/agent.rs, run_tool).
+tokio = { version = "1", features = ["fs", "sync", "macros", "rt", "rt-multi-thread", "net"] }
 base64 = "0.22"
 reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
 aicompat = { path = "crates/aicompat" }
@@ -83,8 +85,10 @@ aicompat = { path = "crates/aicompat" }
 #                are downloaded, but it is new code in the binary: this
 #                Markdown extraction as a whole took the Linux x86_64 release
 #                from 15.31 to 16.24 MB (+0.9 MB), nearly all of it
-#                html5ever and its entity table. Shared with any later
-#                web page reader (html_to_markdown).
+#                html5ever and its entity table. Shared with Textus AI's
+#                web_fetch (ai/web/extract.rs): web search and web_fetch add
+#                no crates, and 0.30 MB to that binary (16.34 -> 16.63 MB,
+#                measured for 1.2.0).
 #   encoding_rs + codepage  RTF's `\'hh` bytes in the code page the file
 #                declares; both already in the tree via calamine.
 pdf-extract = "0.12"

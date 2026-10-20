@@ -1,6 +1,10 @@
 import type { EditorState } from "@milkdown/kit/prose/state";
 import type { Ctx } from "@milkdown/kit/ctx";
-import { Slice } from "@milkdown/kit/prose/model";
+import {
+  Fragment,
+  Slice,
+  type Node as ProseNode,
+} from "@milkdown/kit/prose/model";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 
 /**
@@ -28,8 +32,33 @@ export function applyEditRange(
   from: number,
   to: number,
   rawText: string,
+  /** Footnote definitions `rawText` refers to (`[^3]: …`), which go at
+   *  the end of the document. Parsed together with the text: a `[^3]`
+   *  whose definition isn't in the same parse stays literal text. */
+  footnotes: string[] = [],
 ) {
   const text = normalizeAiMarkdown(rawText);
+  if (footnotes.length > 0) {
+    const parsed = parseMarkdownSource(
+      ctx,
+      `${text}\n\n${footnotes.join("\n")}`,
+    );
+    if (parsed) {
+      const body: ProseNode[] = [];
+      const definitions: ProseNode[] = [];
+      parsed.content.forEach((node) =>
+        (node.type.name === "footnote_definition" ? definitions : body).push(
+          node,
+        ),
+      );
+      const tr = state.tr.replaceRange(
+        from,
+        to,
+        Slice.maxOpen(Fragment.from(body)),
+      );
+      return tr.insert(tr.doc.content.size, definitions);
+    }
+  }
   const parsed = parseMarkdownSource(ctx, text);
   return parsed
     ? state.tr.replaceRange(from, to, Slice.maxOpen(parsed.content))

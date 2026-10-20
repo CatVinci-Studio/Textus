@@ -308,6 +308,22 @@
   color: var(--editor-accent);
 }
 
+/* On, but nothing can search: a dot on the button, its tooltip says why. */
+.inline-chat-web-search.needs-setup {
+  position: relative;
+}
+
+.inline-chat-web-search.needs-setup::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
 .inline-chat-attachments {
   display: flex;
   flex-wrap: wrap;
@@ -1310,6 +1326,16 @@
   font-size: var(--text-md);
   line-height: 1.5;
   color: var(--editor-text);
+}
+
+/* A proposal that cites the web: how Accept writes its sources. */
+.agent-proposal-footnotes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+  cursor: pointer;
 }
 
 /* The changed sentences, numbered as the text marks them, each with the

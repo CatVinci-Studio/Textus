@@ -1,4 +1,7 @@
-use crate::agent::{tool_images_note, AgentTurn, EventSink, ProviderEvent, StepResult, ToolSpec};
+use crate::agent::{
+    mark_cited_spans, tool_images_note, AgentTurn, CitedSpan, EventSink, ProviderEvent,
+    StepCitations, StepResult, ToolSpec,
+};
 use crate::capabilities::Thinking;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -283,7 +286,7 @@ fn turn_to_input_item(turn: &AgentTurn) -> Value {
                 "content": content,
             })
         }
-        AgentTurn::Assistant { text } => json!({
+        AgentTurn::Assistant { text, .. } => json!({
             "type": "message",
             "role": "assistant",
             "content": [{"type": "output_text", "text": text}],
@@ -379,16 +382,67 @@ pub fn agent_request_body(
     body
 }
 
+/// A message part's text with its `url_citation` annotations marked
+/// ([`mark_cited_spans`]). xAI's annotations carry the citation's number as
+/// their `title`, not the page's: a title that is only digits is no title.
+fn cited_part_text(part: &Value, citations: &mut StepCitations, on_event: EventSink<'_>) -> String {
+    let text = part
+        .get("text")
+        .and_then(|t| t.as_str())
+        .unwrap_or_default();
+    let spans: Vec<CitedSpan<'_>> = part
+        .get("annotations")
+        .and_then(|a| a.as_array())
+        .into_iter()
+        .flatten()
+        .filter(|a| a.get("type").and_then(|t| t.as_str()) == Some("url_citation"))
+        .filter_map(|a| {
+            let index = |key: &str| a.get(key).and_then(|v| v.as_u64()).map(|v| v as usize);
+            let title = a.get("title").and_then(|t| t.as_str()).unwrap_or_default();
+            Some(CitedSpan {
+                start: index("start_index")?,
+                end: index("end_index")?,
+                url: a.get("url").and_then(|u| u.as_str())?,
+                title: if title.chars().all(|c| c.is_ascii_digit()) {
+                    ""
+                } else {
+                    title
+                },
+            })
+        })
+        .collect();
+    if spans.is_empty() {
+        return text.to_string();
+    }
+    mark_cited_spans(text, spans, citations, on_event)
+}
+
 /// Parses a Responses API `output` item array (streamed or not - both shapes
 /// match) into a [`StepResult`]: any `function_call` items become tool
 /// calls the caller must execute, otherwise the `message` items' text is the
-/// model's final answer.
-pub fn parse_agent_output(output: &[Value]) -> StepResult {
+/// model's final answer. The pages a native web search cited are reported
+/// through `on_event` - in the text's annotations, and the sources a
+/// `web_search_call` lists (Qwen's only way of naming them).
+pub fn parse_agent_output(output: &[Value], on_event: EventSink<'_>) -> StepResult {
     let mut tool_calls = Vec::new();
     let mut text_parts = Vec::new();
+    let mut citations = StepCitations::default();
 
     for item in output {
         match item.get("type").and_then(|t| t.as_str()) {
+            Some("web_search_call") => {
+                for source in item
+                    .pointer("/action/sources")
+                    .and_then(|s| s.as_array())
+                    .into_iter()
+                    .flatten()
+                {
+                    if let Some(url) = source.get("url").and_then(|u| u.as_str()) {
+                        let title = source.get("title").and_then(|t| t.as_str()).unwrap_or("");
+                        citations.cite(url, title, on_event);
+                    }
+                }
+            }
             Some("function_call") => {
                 let call_id = item
                     .get("call_id")
@@ -412,8 +466,8 @@ pub fn parse_agent_output(output: &[Value]) -> StepResult {
             Some("message") => {
                 if let Some(content) = item.get("content").and_then(|c| c.as_array()) {
                     for part in content {
-                        if let Some(text) = part.get("text").and_then(|t| t.as_str()) {
-                            text_parts.push(text.to_string());
+                        if part.get("text").and_then(|t| t.as_str()).is_some() {
+                            text_parts.push(cited_part_text(part, &mut citations, on_event));
                         }
                     }
                 }
@@ -441,9 +495,7 @@ mod tests {
                 text: "hi".to_string(),
                 images: Vec::new(),
             },
-            AgentTurn::Assistant {
-                text: "hello".to_string(),
-            },
+            AgentTurn::assistant("hello".to_string()),
             AgentTurn::ToolCall {
                 call_id: "c1".to_string(),
                 name: "search_document".to_string(),
@@ -664,7 +716,7 @@ mod tests {
             json!({"type": "function_call", "call_id": "c1", "name": "propose_edit", "arguments": "{\"action\":\"append\"}"}),
             json!({"type": "message", "content": [{"text": "ignored while a tool call is pending"}]}),
         ];
-        match parse_agent_output(&output) {
+        match parse_agent_output(&output, &|_| {}) {
             StepResult::ToolCalls(calls) => {
                 assert_eq!(calls.len(), 1);
                 let AgentTurn::ToolCall { call_id, name, .. } = &calls[0] else {
@@ -677,12 +729,82 @@ mod tests {
         }
     }
 
+    /// Runs `output` through parse_agent_output and shows its markers as
+    /// [k], with the pages it reported.
+    fn cited(output: &[Value]) -> (String, Vec<(String, String)>) {
+        let pages = std::sync::Mutex::new(Vec::new());
+        let sink = |e: ProviderEvent<'_>| {
+            if let ProviderEvent::Citation { url, title } = e {
+                pages
+                    .lock()
+                    .unwrap()
+                    .push((url.to_string(), title.to_string()));
+            }
+        };
+        let StepResult::Done(text) = parse_agent_output(output, &sink) else {
+            panic!("expected a final answer");
+        };
+        let text = crate::agent::replace_citation_markers(&text, |k| Some(format!("[{k}]")));
+        (text, pages.into_inner().unwrap())
+    }
+
+    #[test]
+    fn openai_inline_citation_links_become_numbered_markers() {
+        let text = "Spring tides peak at full moon ([noaa.gov](https://noaa.gov/tides)). Neap tides are weakest ([例子](https://例.example/x)).";
+        let span = |needle: &str| {
+            let byte = text.find(needle).unwrap();
+            let start = text[..byte].chars().count();
+            (start, start + needle.chars().count())
+        };
+        let (a0, a1) = span("[noaa.gov](https://noaa.gov/tides)");
+        let (b0, b1) = span("([例子](https://例.example/x))");
+        let output = vec![json!({"type": "message", "content": [{
+            "type": "output_text",
+            "text": text,
+            "annotations": [
+                {"type": "url_citation", "url": "https://noaa.gov/tides", "title": "Tides", "start_index": a0, "end_index": a1},
+                {"type": "url_citation", "url": "https://例.example/x", "title": "例子", "start_index": b0, "end_index": b1},
+            ],
+        }]})];
+        let (text, pages) = cited(&output);
+        assert_eq!(
+            text,
+            "Spring tides peak at full moon [1]. Neap tides are weakest [2]."
+        );
+        assert_eq!(pages[0], ("https://noaa.gov/tides".into(), "Tides".into()));
+    }
+
+    /// xAI writes "[[1]](url)" and puts the number, not the page's title,
+    /// in `title`; Qwen names its pages only in the web_search_call.
+    #[test]
+    fn xai_numbers_are_not_titles_and_qwen_sources_are_reported() {
+        let text = "It rose 3% [[1]](https://x.example/a).";
+        let start = text.find("[[").unwrap();
+        let output = vec![
+            json!({"type": "web_search_call", "action": {"type": "search", "sources": [{"url": "https://q.example/"}]}}),
+            json!({"type": "message", "content": [{
+                "type": "output_text",
+                "text": text,
+                "annotations": [{"type": "url_citation", "url": "https://x.example/a", "title": "1", "start_index": start, "end_index": text.len() - 1}],
+            }]}),
+        ];
+        let (text, pages) = cited(&output);
+        assert_eq!(text, "It rose 3% [2].");
+        assert_eq!(
+            pages,
+            vec![
+                ("https://q.example/".to_string(), String::new()),
+                ("https://x.example/a".to_string(), String::new())
+            ]
+        );
+    }
+
     #[test]
     fn parse_agent_output_joins_message_text_when_no_tool_calls() {
         let output = vec![
             json!({"type": "message", "content": [{"text": "part one"}, {"text": "part two"}]}),
         ];
-        match parse_agent_output(&output) {
+        match parse_agent_output(&output, &|_| {}) {
             StepResult::Done(text) => assert_eq!(text, "part one\npart two"),
             StepResult::ToolCalls(_) => panic!("expected a final answer"),
         }

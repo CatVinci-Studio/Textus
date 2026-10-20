@@ -437,3 +437,55 @@ button.agent-context-chip:hover {
 .agent-memory-chip-error {
   color: var(--danger);
 }
+
+/* The pages a reply cites: a row of small chips under it, quiet enough to
+   read past, each opening its page. */
+.agent-sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+}
+
+.agent-sources-label {
+  margin-right: 2px;
+}
+
+.agent-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 8px 2px 3px;
+  border: 1px solid var(--editor-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--editor-text);
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+
+.agent-source:hover {
+  background: var(--editor-code-bg);
+}
+
+.agent-source-num {
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--editor-code-bg);
+  color: var(--editor-muted);
+  text-align: center;
+}
+
+.agent-source-title {
+  overflow: hidden;
+  max-width: 16em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--editor-muted);
+}

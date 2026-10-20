@@ -45,6 +45,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     proposalTakeSentence: t.proposalTakeSentence,
     proposalKeepSentence: t.proposalKeepSentence,
     proposalShowInText: t.proposalShowInText,
+    proposalSourcesAsFootnotes: t.proposalSourcesAsFootnotes,
     proposalAcceptSome: t.proposalAcceptSome,
     commentTitle: t.reviewNoteBy,
     commentLocate: t.proposalShowInText,
@@ -57,6 +58,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     memoryUndone: t.memoryChipUndone,
     memoryActionFailed: t.memoryActionFailed,
     toolResult: t.toolResult,
+    sources: t.webSources,
     useTheme: t.chatUseTheme,
     themeInUse: t.themeGalleryInUse,
     themeFallbackName: t.navTheme,
@@ -85,6 +87,8 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       measure_text: t.toolMeasureText,
       remember: t.toolRemember,
       generate_image: t.toolGenerateImage,
+      web_search: t.toolWebSearch,
+      web_fetch: t.toolWebFetch,
       // Any tool without its own line: a word, not its internal name.
       "*": t.toolWorking,
       // The edit being written, in words: Quick Ask's status line showed
@@ -112,6 +116,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     modeLabel: t.chatModeLabel,
     webSearch: t.webSearchLabel,
     deepThinking: t.agentDeepThinking,
+    webSearchNeedsService: t.webSearchNeedsService,
     close: t.chatClose,
     detach: t.chatDetach,
     continueInPanel: t.chatContinueInPanel,
