@@ -449,7 +449,7 @@ test("the outline marks the section being read", async ({ page }) => {
   await page
     .locator(".outline-row .tree-label", { hasText: "Late section" })
     .click();
-  const current = page.locator('.outline-row [aria-current="location"]');
+  const current = page.locator('.outline-row[aria-current="location"]');
   await expect(current).toHaveText("Late section");
   await page
     .locator(".outline-row .tree-label", { hasText: "Early section" })

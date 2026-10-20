@@ -428,6 +428,21 @@ export function MilkdownEditor({
     )
       return;
     e.preventDefault();
+    // Shift+F10 or the Menu key (no mouse button): the menu opens at the
+    // caret, with the focus in it.
+    if (e.button !== 2) {
+      const at = run((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        return view.coordsAtPos(view.state.selection.head);
+      });
+      setMenu({
+        x: at?.left ?? 0,
+        y: at?.bottom ?? 0,
+        keyboard: true,
+        ...contextMenuTarget(run, { target: e.target }, filePath),
+      });
+      return;
+    }
     setMenu({
       x: e.clientX,
       y: e.clientY,

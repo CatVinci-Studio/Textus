@@ -55,6 +55,10 @@ Textus is used with a screen reader, with the keyboard alone and with the system
 - A proposed change is `role="deletion"` and `role="insertion"` in the text; its margin card is a group that says what is replaced by what. Colour is never the only sign: the original is struck through.
 - Text, secondary text included, keeps a contrast of 4.5:1 against its background in the default light and dark appearance (3:1 for text of 18 px and larger). Lower the contrast of a part with a darker or lighter colour, not with `opacity` on text.
 - A hover-only affordance whose action the keyboard reaches elsewhere (a table's **+** buttons, which the context menu repeats) is `tabindex="-1"` and `aria-hidden`.
+- Every action works from the keyboard. `F6` / `Shift + F6` move between the regions (`src/app/regions.ts`: window bar, sidebar, tabs, document, review bar, AI panel), each taking the focus back where it last had it; that is the way out of the editor, where `Tab` indents in lists, code blocks and tables. A new region goes into that list.
+- A list of like items is one stop in the tab order, walked with the arrow keys: trees (`role="tree"`, `src/ui/useTreeKeys.ts`) for the file tree and the outline, a tab list for the tabs, menus (`role="menu"`) for the app menu and the context menu. A control inside a row (a tab's ✕, the outline's chevron) is for the pointer and stays out of the tab order; the row's keys do the same.
+- Escape closes the topmost surface only, and the focus goes back to what opened it. A menu opened from the keyboard (`Shift + F10`) takes the focus; one opened by the pointer leaves it in the text.
+- The focus ring is the theme's accent (`--chrome-accent`), 2 px, 3 px with more contrast. In a scrolling list or bar it sits inside the row (`outline-offset: -2px`), where the scroller would cut it off.
 
 ## Acceptance checks
 

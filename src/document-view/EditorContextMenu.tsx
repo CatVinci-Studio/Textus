@@ -19,6 +19,8 @@ export type EditorMenuState = {
   /** Opened by the iPhone keyboard toolbar's "More": the phone's items
    *  (buildPhoneMoreItems), as an action sheet. */
   phone?: boolean;
+  /** Opened from the keyboard, at the caret (ContextMenu's `keyboard`). */
+  keyboard?: boolean;
 } | null;
 
 /** The editor's right-click menu (and the phone's "More" sheet), with the
@@ -66,6 +68,7 @@ export function EditorContextMenu({
         <ContextMenu
           x={menu.x}
           y={menu.y}
+          keyboard={menu.keyboard}
           items={(menu.phone ? buildPhoneMoreItems : buildContextMenuItems)(
             run,
             {

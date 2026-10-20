@@ -19,6 +19,11 @@
   white-space: nowrap;
 }
 
+/* Inside the ring: the sidebar scrolls, and clips what lies outside it. */
+:is(.tree-row, .outline-row):focus-visible {
+  outline-offset: -2px;
+}
+
 .tree-row:hover {
   background: var(--sidebar-hover);
 }

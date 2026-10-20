@@ -95,6 +95,12 @@ describe("the fixed shortcuts in Settings", () => {
       "mod+enter",
       MAC_NEXT_TAB,
       MAC_PREVIOUS_TAB,
+      // The window's own keys (app/regions.ts, document-view/useReviewBar.ts).
+      "f6",
+      "shift+f6",
+      "f7",
+      "shift+f7",
+      "mod+backspace",
     ]);
     expect(mac.filter((combo) => !outsideMenuRs.has(combo)).sort()).toEqual(
       [...new Set(native)].sort(),

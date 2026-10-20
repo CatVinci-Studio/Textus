@@ -115,5 +115,18 @@ export function fixedShortcutGroups(
       { label: t.shortcutLeaveBlock, combos: ["mod+enter"] },
     ],
   });
+  // The keyboard's way round the window (app/regions.ts) and through
+  // Textus AI's changes (document-view/useReviewBar.ts).
+  groups.push({
+    title: t.shortcutKeyboardGroupLabel,
+    items: [
+      { label: t.shortcutCycleRegions, combos: ["f6", "shift+f6"] },
+      { label: t.quickAskNextEdit, combos: ["f7"] },
+      { label: t.quickAskPrevEdit, combos: ["shift+f7"] },
+      // pending-edit-plugin's keys, per sentence once ‹ › or F7 point at one.
+      { label: t.shortcutTakeChange, combos: ["mod+enter"] },
+      { label: t.shortcutKeepOriginal, combos: ["mod+backspace"] },
+    ],
+  });
   return groups;
 }

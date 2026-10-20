@@ -1838,9 +1838,18 @@ export function createPendingEditPlugin(options: {
               (focused && previews.some((p) => p.callId === focused)
                 ? focused
                 : null) ?? previews[0].callId;
+            // The sentence the review bar points at (‹ › or F7) is the
+            // one decided, as its ✓ / ✕ would.
+            const sentence = options.getFocusedSentence?.() ?? null;
+            const pointed =
+              sentence && sentence.index >= 0 && sentence.callId === targetId
+                ? sentence
+                : null;
             if (event.key === "Enter") {
               event.preventDefault();
-              options.onAccept?.(targetId);
+              if (pointed)
+                options.onDecide?.(pointed.callId, pointed.index, true);
+              else options.onAccept?.(targetId);
               return true;
             }
             if (event.key === "Backspace") {
@@ -1855,7 +1864,9 @@ export function createPendingEditPlugin(options: {
               );
               if (!here) return false;
               event.preventDefault();
-              options.onReject?.(here.callId);
+              if (pointed && pointed.callId === here.callId)
+                options.onDecide?.(pointed.callId, pointed.index, false);
+              else options.onReject?.(here.callId);
               return true;
             }
             return false;

@@ -60,6 +60,11 @@
   animation: none;
 }
 
+/* Inside the ring: the bar scrolls, and clips what lies outside it. */
+.tab-pill:focus-visible {
+  outline-offset: -2px;
+}
+
 .tab-pill:hover {
   background: var(--sidebar-hover);
 }
