@@ -1702,6 +1702,23 @@ mod tests {
     }
 
     #[test]
+    fn the_academic_skill_is_indexed_in_one_line() {
+        let ws = crate::ai::workspace::load_layers(None, None, None, &[]);
+        let zh = skill_index(&ws, "zh");
+        let line = zh
+            .lines()
+            .find(|l| l.starts_with("- academic-polish [/学术润色 in their UI]: "))
+            .unwrap_or_else(|| panic!("{zh}"));
+        // Sent with every request: one line, under the 500 cap uncut, and
+        // it names grant proposals so they route here.
+        assert!(
+            !line.ends_with('…') && line.contains("grant proposal"),
+            "{line}"
+        );
+        assert!(!zh.contains("research-writing"));
+    }
+
+    #[test]
     fn the_workspace_section_says_which_folder_and_why() {
         use crate::ai::workspace::{load_from, RootSource};
         let doc_folder = load_from(None, Some("/tmp/novel/chapter-1.md"), None);

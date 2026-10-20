@@ -1,6 +1,6 @@
 //! The built-in skills suite (built-in skills catalogue §1.2-§1.20 and
-//! §5.10): 56 skill cases, `builtin/<skill>/<lang>/<case>`, two to four
-//! per skill, and 20 routing cases, `route/<skill>/<lang>` for requests
+//! §5.10): 58 skill cases, `builtin/<skill>/<lang>/<case>`, two to four
+//! per skill, and 21 routing cases, `route/<skill>/<lang>` for requests
 //! whose description should load that skill and `route/none/<lang>/<case>`
 //! for requests that should load none.
 //!
@@ -53,6 +53,8 @@ pub const GONGMUN_KO: &str = include_str!("docs/gongmun-ko.md");
 pub const HAN_TW: &str = include_str!("docs/han-tw.md");
 pub const OFFICE_MOVE_EN: &str = include_str!("docs/office-move-en.md");
 pub const STANDUP_EN: &str = include_str!("docs/standup-en.md");
+pub const ACADEMIC_TELLS_EN: &str = include_str!("docs/academic-tells-en.md");
+pub const GRANT_ZH: &str = include_str!("docs/grant-zh.md");
 
 // The one-report-per-language documents (docs.rs's LANG_DOCS).
 const LANG_EN: &str = include_str!("docs/lang-en.md");
@@ -240,6 +242,43 @@ fn within(
     to: &'static str,
 ) -> impl Fn(&TurnOutcome) -> Result<(), String> + Send + Sync {
     move |o| cb::span_within(&o.doc_before, &o.doc_after, from, to)
+}
+
+/// The citations in square brackets - numbers, ranges and `@` cite keys,
+/// one per item, whether or not the editor escaped the bracket.
+pub fn bracket_citations(text: &str) -> std::collections::BTreeSet<String> {
+    let mut out = std::collections::BTreeSet::new();
+    let mut rest = text;
+    while let Some(open) = rest.find('[') {
+        let Some(close) = rest[open..].find(']') else {
+            break;
+        };
+        let inside = &rest[open + 1..open + close];
+        rest = &rest[open + close + 1..];
+        let items: Vec<&str> = inside
+            .split([',', ';'])
+            .map(|s| s.trim().trim_start_matches('@'))
+            .collect();
+        if items.iter().all(|s| {
+            !s.is_empty()
+                && s.chars()
+                    .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '–' | '_' | ':'))
+        }) {
+            out.extend(items.into_iter().map(str::to_string));
+        }
+    }
+    out
+}
+
+/// Every bracketed citation in the document survives, none is added.
+fn citations_kept(o: &TurnOutcome) -> Result<(), String> {
+    let (before, after) = (
+        bracket_citations(&o.doc_before),
+        bracket_citations(&o.doc_after),
+    );
+    (before == after)
+        .then_some(())
+        .ok_or_else(|| format!("citations {before:?} -> {after:?}"))
 }
 
 fn appended(o: &TurnOutcome) -> Result<(), String> {
@@ -673,6 +712,12 @@ fn format_cases() -> Vec<AgentCase> {
     let ws = plain("academic-zh", ACADEMIC_ZH);
     c.push(AgentCase::new("builtin/academic-polish/zh/review", Lang::ZhHans, Lang::ZhHans, ACADEMIC_ZH, "/academic-polish 文献综述", edit_in(para(ACADEMIC_ZH, 0), StructureExpect::Same).lacks(&["其实", "大家基本上都觉得"]).has(&["2019", "2021", "2022", "2.3", "1,056", "500 米", "王明和李华（2019）", "陈静（2021）", "张伟，2022"]), "Academic register; every citation and figure intact; the claims no stronger than the cited studies.").disk(ws));
 
+    let ws = plain("academic-tells-en", ACADEMIC_TELLS_EN);
+    c.push(AgentCase::new("builtin/academic-polish/en/tells", Lang::En, Lang::En, ACADEMIC_TELLS_EN, "/academic-polish the Introduction", edit_in(para(ACADEMIC_TELLS_EN, 0), StructureExpect::Any).lacks(&["In recent years", "novel framework", "to the best of our knowledge", "delve", "paving the way", "results prove", "significantly outperforms all", "extensive experiments", "wide range of", "—"]).has(&["0.061", "0.047", "DrainNet"]).check("citations kept", citations_kept).no_new_numbers(), "The introduction opens on the problem, without hype, novelty padding or 'prove'; the claim is scoped to what the Results show (38 stations, the strongest baseline) and points to no table or figure the paper lacks; every citation and cite key ([3, 7, 9, 12, 15], @okafor2022, @lindqvist2019) kept, with the bare list left as it is or flagged in a comment rather than explained with invented content; no em dashes; the reply is a short change report.").disk(ws));
+
+    let ws = plain("academic-grant-zh", GRANT_ZH);
+    c.push(AgentCase::new("builtin/academic-polish/zh/grant", Lang::ZhHans, Lang::ZhHans, GRANT_ZH, "/academic-polish 立项依据", edit_anywhere().lacks(&["随着人工智能技术的快速发展", "具有重要的理论意义和深远的现实影响", "卓有成效", "赋能", "助力", "显著提升", "综上所述"]).has(&["46 个", "3.1 万", "2021—2024", "30 分钟", "4.2 厘米", "李明等，2023"]).check("citations kept", citations_kept).no_new_numbers(), "立项依据 starts from the concrete problem (minute-level forecasts fall short) and the gap, keeps the 前期工作 as feasibility evidence with every figure and citation as written ([1-4], 李明等，2023, the 2021—2024 range with its dash); no 赋能/助力 slogans or 显著提升 without data; no invented results or targets; the reply in Chinese.").disk(ws));
+
     // social-post
     let ws = plain("social-x", SOCIAL_EN);
     c.push(AgentCase::new("builtin/social-post/en/x", Lang::En, Lang::En, SOCIAL_EN, "Turn this into a post for X.", edit_anywhere().loads("social-post").check("fits X (280 weighted)", measured(Metric::XWeighted, 1, 280, post)).has(&["textus.app", "2,000"]).reply(&["280"]), "Hook first, one idea, nothing invented (no discount, no new feature); the reply states the count against 280.").disk(ws));
@@ -887,6 +932,15 @@ fn route_cases() -> Vec<AgentCase> {
         .caret(caret),
     );
     c.push(route(
+        "route/academic-polish/zh/grant",
+        Lang::ZhHans,
+        Lang::ZhHans,
+        GRANT_ZH,
+        "这份基金申请书的立项依据写得太虚，论断也说得太满，帮我改实在一些",
+        "academic-polish",
+        plain("route-academic-grant", GRANT_ZH),
+    ));
+    c.push(route(
         "route/social-post/pt",
         Lang::Pt,
         Lang::Pt,
@@ -981,9 +1035,9 @@ mod tests {
             .iter()
             .filter(|c| c.id.starts_with("route/"))
             .collect();
-        assert_eq!(skill.len(), 56, "skill cases");
-        assert_eq!(route.len(), 20, "routing cases");
-        assert_eq!(cases.len(), 76);
+        assert_eq!(skill.len(), 58, "skill cases");
+        assert_eq!(route.len(), 21, "routing cases");
+        assert_eq!(cases.len(), 79);
         let mut ids = HashSet::new();
         let mut per_skill: BTreeMap<&str, usize> = BTreeMap::new();
         for c in &cases {
@@ -996,7 +1050,8 @@ mod tests {
             } else if parts[1] == "none" {
                 assert_eq!(parts.len(), 4, "{}", c.id);
             } else {
-                assert_eq!(parts.len(), 3, "{}", c.id);
+                // route/<skill>/<lang>, or /<case> for a second one.
+                assert!((3..=4).contains(&parts.len()), "{}", c.id);
                 assert!(SKILLS.contains(&parts[1]), "{}: unknown skill", c.id);
             }
         }
@@ -1008,7 +1063,7 @@ mod tests {
             .iter()
             .filter(|c| !c.id.starts_with("route/none/"))
             .count();
-        assert_eq!(positives, 14);
+        assert_eq!(positives, 15);
     }
 
     #[test]
@@ -1090,6 +1145,25 @@ mod tests {
             doc_after: after.into(),
             ..TurnOutcome::default()
         }
+    }
+
+    #[test]
+    fn bracketed_citations_are_read_item_by_item() {
+        let set = |items: &[&str]| -> std::collections::BTreeSet<String> {
+            items.iter().map(|s| s.to_string()).collect()
+        };
+        assert_eq!(
+            bracket_citations(ACADEMIC_TELLS_EN),
+            set(&["12", "15", "3", "7", "9", "lindqvist2019", "okafor2022"])
+        );
+        assert_eq!(bracket_citations(GRANT_ZH), set(&["1-4"]));
+        // Split, reordered or unescaped, the same set; links and tasks
+        // aren't citations.
+        assert_eq!(
+            bracket_citations("TabNet [7] and others [3, 9, 12, 15] [@okafor2022; @lindqvist2019]"),
+            bracket_citations(ACADEMIC_TELLS_EN)
+        );
+        assert!(bracket_citations("[a link](x) and - [ ] a task").is_empty());
     }
 
     #[test]

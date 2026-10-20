@@ -75,8 +75,8 @@ export default {
   },
   "academic-polish": {
     label: "Wissenschaftlich überarbeiten",
-    hint: "Förmliche, abgewogene Wissenschaftssprache, Zitate bleiben unberührt",
-    aliases: ["wissenschaftlich"],
+    hint: "Sachlich-wissenschaftliche Formulierungen für Paper und Förderanträge, ohne Floskeln; Zitate bleiben unverändert",
+    aliases: ["wissenschaftlich", "förderantrag"],
   },
   "social-post": {
     label: "Social-Media-Beitrag",

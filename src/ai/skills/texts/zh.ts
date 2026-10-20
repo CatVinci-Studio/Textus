@@ -75,8 +75,8 @@ export default {
   },
   "academic-polish": {
     label: "学术润色",
-    hint: "改成正式、分寸得当的学术表达，引文不动",
-    aliases: ["论文润色", "学术"],
+    hint: "论文和基金申请书：正式、分寸得当，去掉套话，数字和引用不动",
+    aliases: ["论文润色", "学术", "基金申请书", "国自然"],
   },
   "social-post": {
     label: "社媒文案",

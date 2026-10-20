@@ -75,8 +75,8 @@ export default {
   },
   "academic-polish": {
     label: "Pulido académico",
-    hint: "Lenguaje académico formal y prudente, sin tocar las citas",
-    aliases: ["académico", "academico"],
+    hint: "Redacción académica formal y medida para artículos y propuestas, sin fórmulas vacías; citas intactas",
+    aliases: ["académico", "academico", "propuesta", "subvención"],
   },
   "social-post": {
     label: "Publicación en redes",

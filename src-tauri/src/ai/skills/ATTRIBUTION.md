@@ -15,6 +15,7 @@ The parts listed below are adapted from openly licensed or reusable texts. Their
 - **Regelwerk:** Rat für deutsche Rechtschreibung: *Amtliches Regelwerk der deutschen Rechtschreibung* (2024), doi:10.14618/s99n-fk38, licensed under CC BY 4.0. Adapted.
 - **EU:** Includes material adapted from the Interinstitutional Style Guide, Publications Office of the European Union, © European Union. Reproduction authorised provided the source is acknowledged.
 - **W3C:** This file includes material derived from *Requirements for Chinese Text Layout* (https://www.w3.org/TR/clreq/) and *Requirements for Japanese Text Layout* (https://www.w3.org/TR/jlreq/). Copyright © World Wide Web Consortium. Used under the W3C Software and Document License (https://www.w3.org/copyright/software-license/). The licence notice follows below.
+- **academic-humanizer:** The academic tells, claims and evidence, voice and venue, and grant-proposal sections of the academic-polish skill are adapted from academic-humanizer (https://github.com/AIScientists-Dev/academic-humanizer), Copyright (c) 2026 AIScientists-Dev, which builds on "humanizer" by blader (https://github.com/blader/humanizer, MIT). Reworded and restructured, with a Chinese section of our own. Used under the MIT License; the notice follows below.
 
 ## Public domain and unprotected official texts
 
@@ -43,3 +44,13 @@ Disclaimers: THIS WORK IS PROVIDED "AS IS," AND COPYRIGHT HOLDERS MAKE NO REPRES
 COPYRIGHT HOLDERS WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THE SOFTWARE OR DOCUMENT.
 
 The name and trademarks of copyright holders may NOT be used in advertising or publicity pertaining to the work without specific, written prior permission. Title to copyright in this work will at all times remain with copyright holders.
+
+## academic-humanizer MIT License
+
+Copyright (c) 2026 AIScientists-Dev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.

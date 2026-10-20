@@ -75,8 +75,8 @@ export default {
   },
   "academic-polish": {
     label: "Style académique",
-    hint: "Une formulation universitaire soutenue et nuancée, citations intactes",
-    aliases: ["académique", "academique"],
+    hint: "Style académique sobre et précis pour articles et demandes de financement, sans formules creuses ; citations intactes",
+    aliases: ["académique", "academique", "financement"],
   },
   "social-post": {
     label: "Publication réseaux sociaux",
