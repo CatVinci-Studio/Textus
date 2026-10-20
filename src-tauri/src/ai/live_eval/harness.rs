@@ -80,11 +80,40 @@ pub fn block_on<F: std::future::Future>(future: F) -> F::Output {
 /// (how the matrix is re-run against another model).
 pub fn agent_model() -> String {
     std::env::var("TEXTUS_EVAL_AGENT_MODEL").unwrap_or_else(|_| {
-        crate::ai::catalog::find("anthropic")
+        crate::ai::catalog::find(agent_provider_id())
             .and_then(|e| e.agent_default_model)
-            .expect("anthropic has an agent default")
+            .expect("the eval's provider has an agent default")
             .to_string()
     })
+}
+
+/// TEXTUS_EVAL_PROVIDER=doubao: the agent cases run on Volcengine Ark
+/// (VOLCENGINE_ARK_API_KEY) instead of Claude, through the same
+/// AgentProvider path - to compare a change on a second provider, or when
+/// the Claude key can't be used. The judge stays Claude.
+pub fn agent_provider_id() -> &'static str {
+    match std::env::var("TEXTUS_EVAL_PROVIDER").as_deref() {
+        Ok("doubao") => "doubao",
+        _ => "anthropic",
+    }
+}
+
+/// The endpoint the agent cases run on (see agent_provider_id).
+fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
+    match agent_provider_id() {
+        "doubao" => {
+            let base_url = crate::ai::catalog::find("doubao")
+                .and_then(|e| e.base_url)
+                .expect("doubao has a base_url");
+            Endpoint::ChatCompletions {
+                base_url: base_url.to_string(),
+                api_key: Some(secret("VOLCENGINE_ARK_API_KEY").expect("VOLCENGINE_ARK_API_KEY")),
+                vendor: crate::ai::route::chat_vendor(base_url),
+                stream_usage: true,
+            }
+        }
+        _ => Endpoint::Anthropic { auth: auth.clone() },
+    }
 }
 
 /// The shipped writing (completion + grammar) model, unless
@@ -186,6 +215,8 @@ pub fn price(model: &str) -> [f64; 4] {
     match model {
         "claude-haiku-5-5" => [0.10, 0.125, 0.01, 0.50],
         "claude-sonnet-5-5" => [2.0, 2.5, 0.20, 10.0],
+        // Approximate, from Ark's yuan list prices.
+        m if m.starts_with("doubao-") => [0.55, 0.0, 0.11, 2.2],
         _ => [4.0, 5.0, 0.20, 20.0],
     }
 }
@@ -574,11 +605,12 @@ pub fn run_conversation(
         let postfix = RefCell::new(Vec::new());
         let thinking_events = AtomicUsize::new(0);
         let thinking_chars = AtomicUsize::new(0);
-        // The app's provider path (route::agent_provider), on Claude.
+        // The app's provider path (route::agent_provider), on Claude unless
+        // TEXTUS_EVAL_PROVIDER says otherwise.
         let agent = AgentProvider {
-            id: "anthropic".to_string(),
+            id: agent_provider_id().to_string(),
             model: setup.model.to_string(),
-            endpoint: Endpoint::Anthropic { auth: auth.clone() },
+            endpoint: agent_endpoint(auth),
             thinking: setup.thinking,
             native_search: None,
             enforce_binding: true,
