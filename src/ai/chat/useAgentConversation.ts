@@ -195,6 +195,11 @@ export function useAgentConversation(
               },
               { textOnly: true },
             );
+          } else if (event.type === "retry") {
+            // The attempt that streamed this prose came back garbled and
+            // is being sent again; the new attempt streams in its place.
+            const prev = streamingRef.current;
+            setStreaming({ turns: prev?.turns ?? [], text: "" });
           } else if (event.type === "turn") {
             // Interim prose that streamed before a tool call is dropped,
             // mirroring how the backend's step parsers prefer tool calls

@@ -5,7 +5,9 @@ use crate::ai::rules::Conventions;
 use crate::ai::tools::{self, ToolContext};
 use crate::ai::ui_language::{UiLanguage, UiNames};
 use crate::ai::workspace::{self, AgentWorkspace};
-use aicompat::agent::{run_agent_loop, AgentTurn, ImageAttachment, ProviderEvent, StepResult};
+use aicompat::agent::{
+    run_agent_loop, AgentTurn, ImageAttachment, LoopEvent, ProviderEvent, StepResult,
+};
 use aicompat::providers::{
     anthropic, custom, openai_api_key, openai_codex, openai_responses_compatible,
 };
@@ -37,6 +39,10 @@ pub enum StreamEvent {
     ToolArgsDelta { call_id: String, delta: String },
     /// A completed intermediate turn (ToolCall/ToolResult) as it lands.
     Turn { turn: AgentTurn },
+    /// The step being streamed came back garbled and is asked for again
+    /// (aicompat's run_agent_loop): drop what it streamed - its prose and
+    /// its proposal drafts - and show the new attempt instead.
+    Retry,
 }
 
 /// Forwards a provider-level fragment onto the frontend channel. Send
@@ -57,6 +63,20 @@ fn forward(channel: &Channel<StreamEvent>, event: ProviderEvent<'_>) {
         },
     };
     let _ = channel.send(event);
+}
+
+/// Forwards what the agent loop reports onto the frontend channel, each
+/// turn as the frontend's history keeps it (see `forward` on send errors).
+fn report(channel: &Channel<StreamEvent>) -> impl FnMut(LoopEvent<'_>) + '_ {
+    move |event| {
+        let event = match event {
+            LoopEvent::Turn(turn) => StreamEvent::Turn {
+                turn: for_history(turn.clone()),
+            },
+            LoopEvent::Retry => StreamEvent::Retry,
+        };
+        let _ = channel.send(event);
+    }
 }
 
 /// Proposal post-processing (rules::postfix, CATALOGUE.md §3.13): the
@@ -951,11 +971,7 @@ async fn ai_agent_message_inner(
                         MAX_STEPS,
                         step,
                         |name, arguments| tools::execute(&tools, &tool_ctx, name, arguments),
-                        |turn| {
-                            let _ = on_event.send(StreamEvent::Turn {
-                                turn: for_history(turn.clone()),
-                            });
-                        },
+                        report(&on_event),
                     )
                     .await
                 }
@@ -993,11 +1009,7 @@ async fn ai_agent_message_inner(
                         MAX_STEPS,
                         step,
                         |name, arguments| tools::execute(&tools, &tool_ctx, name, arguments),
-                        |turn| {
-                            let _ = on_event.send(StreamEvent::Turn {
-                                turn: for_history(turn.clone()),
-                            });
-                        },
+                        report(&on_event),
                     )
                     .await
                 }
@@ -1062,11 +1074,7 @@ async fn ai_agent_message_inner(
                 MAX_STEPS,
                 step,
                 |name, arguments| tools::execute(&tools, &tool_ctx, name, arguments),
-                |turn| {
-                    let _ = on_event.send(StreamEvent::Turn {
-                        turn: for_history(turn.clone()),
-                    });
-                },
+                report(&on_event),
             )
             .await
         }
@@ -1189,11 +1197,7 @@ async fn ai_agent_message_inner(
                 MAX_STEPS,
                 step,
                 |name, arguments| tools::execute(&tools, &tool_ctx, name, arguments),
-                |turn| {
-                    let _ = on_event.send(StreamEvent::Turn {
-                        turn: for_history(turn.clone()),
-                    });
-                },
+                report(&on_event),
             )
             .await
             {

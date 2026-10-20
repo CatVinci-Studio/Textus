@@ -160,6 +160,12 @@ export function useEditorProposals({
   );
   const handleStreamEvent = useCallback(
     (event: StreamEvent) => {
+      // The step came back garbled and is asked for again: the drafts it
+      // streamed must go, as when a request fails.
+      if (event.type === "retry") {
+        proposalStream.finish("failed");
+        return;
+      }
       // A propose_edit the backend refused (tools.rs: a cut-off `text`)
       // may already be on screen - streamed, or placed from its call turn
       // a moment before this result arrived. The model resends it; this
