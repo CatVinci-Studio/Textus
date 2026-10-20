@@ -31,7 +31,7 @@ import { useLastCarets } from "../document/last-carets";
 import { Presence } from "../ui/usePresence";
 import { FlipOnChange } from "../ui/flip";
 import { AgentPanelProvider } from "../ai/chat/panel/agent-panel";
-import { useTextusAi } from "../ai/TextusAiSwitch";
+import { useTextusAi, useTextusAiResume } from "../ai/TextusAiSwitch";
 import { aiFeatures } from "../settings/textus-ai";
 import { useTabState } from "./useTabState";
 import { useSidePanels } from "./useSidePanels";
@@ -95,6 +95,7 @@ function App() {
   // The one save/discard/cancel prompt (close-flow.ts's PendingClose).
   const [pendingClose, setPendingClose] = useState<PendingClose | null>(null);
   const textusAi = useTextusAi();
+  useTextusAiResume();
   const {
     panelOpen,
     setPanelOpen,
@@ -432,9 +433,6 @@ function App() {
           dirty={activeDirty}
           largeDoc={featuresPaused}
           words={wordCount.words}
-          sidebarOpen={panelOpen}
-          sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
-          onToggleSidebar={toggleSidebar}
           showAgentToggle={aiFeatures(settings, tutorial.active).chat}
           agentOpen={agentPanel.open}
           agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}

@@ -257,21 +257,6 @@
   animation: motion-edge-in-end var(--dur-slow) var(--ease-spring);
 }
 
-/* Where a small window brings it over the sidebar too, it lies over that
-   (46, app/sidebar-frame.css) - but still not over the window's top
-   strip: it starts below it rather than behind it. */
-:root:not([data-window-chrome="mobile"]) .agent-panel.agent-panel-overlay {
-  top: 28px;
-  padding-top: 0;
-  z-index: 47;
-}
-
-:root:not([data-window-chrome="mobile"])
-  .agent-panel-overlay
-  :is(.agent-panel-resizer, .agent-panel-placeholder) {
-  top: 0;
-}
-
 .agent-panel.agent-panel-overlay[data-state="closing"] {
   animation: motion-edge-out-end var(--dur-base) var(--ease-in) forwards;
 }

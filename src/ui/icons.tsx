@@ -15,6 +15,8 @@
  * Add new icons here rather than inline, and keep to the same grid and
  * stroke weight, or the set stops being a set.
  */
+import { useId } from "react";
+
 type IconProps = { className?: string };
 
 export function ChevronIcon({ className }: IconProps) {
@@ -297,9 +299,14 @@ export function ClipboardTabIcon({ className }: IconProps) {
 }
 
 /** Textus AI's own button - the window bar's toggle for the AI panel, and
- *  the review bar's way back to it on a phone: a small robot, so it reads
- *  as the assistant rather than as one more chat. */
-export function AssistantIcon({ className }: IconProps) {
+ *  the review bar's way back to it on a phone: a speech bubble, struck
+ *  through while Textus AI is off (`off`, ai/TextusAiSwitch.tsx). The
+ *  stroke is cut out of the bubble, so it reads on any background. */
+export function AssistantIcon({
+  className,
+  off = false,
+}: IconProps & { off?: boolean }) {
+  const cut = useId();
   return (
     <svg
       className={className}
@@ -308,86 +315,37 @@ export function AssistantIcon({ className }: IconProps) {
       viewBox="0 0 16 16"
       fill="none"
     >
-      <rect
-        x="2.5"
-        y="5"
-        width="11"
-        height="8.5"
-        rx="2.2"
-        stroke="currentColor"
-        strokeWidth="1.1"
-      />
+      {off && (
+        <mask id={cut} maskUnits="userSpaceOnUse">
+          <rect width="16" height="16" fill="white" />
+          <path
+            d={STRIKE}
+            stroke="black"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </mask>
+      )}
       <path
-        d="M8 5V3M1 8.3V10.2M15 8.3V10.2M6.3 11.2H9.7"
+        d="M2 3.8C2 3.02 2.63 2.4 3.4 2.4H12.6C13.37 2.4 14 3.02 14 3.8V9.4C14 10.17 13.37 10.8 12.6 10.8H6.4L3.6 13.2V10.8H3.4C2.63 10.8 2 10.17 2 9.4V3.8Z"
         stroke="currentColor"
         strokeWidth="1.1"
-        strokeLinecap="round"
+        mask={off ? `url(#${cut})` : undefined}
       />
-      <circle cx="8" cy="2.4" r="0.9" fill="currentColor" />
-      <circle cx="5.9" cy="8.5" r="1" fill="currentColor" />
-      <circle cx="10.1" cy="8.5" r="1" fill="currentColor" />
+      {off && (
+        <path
+          d={STRIKE}
+          stroke="currentColor"
+          strokeWidth="1.1"
+          strokeLinecap="round"
+        />
+      )}
     </svg>
   );
 }
 
-/** Textus AI's own switch (ai/TextusAiSwitch.tsx): a small toggle switch,
- *  so it reads as on/off rather than as one more panel. Its stylesheet
- *  fills the track and slides the knob over (`.switch-icon-knob`) when
- *  it is on. */
-export function SwitchIcon({ className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      width="15"
-      height="15"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <rect
-        className="switch-icon-track"
-        x="1.2"
-        y="4.2"
-        width="13.6"
-        height="7.6"
-        rx="3.8"
-        stroke="currentColor"
-        strokeWidth="1.1"
-      />
-      <circle
-        className="switch-icon-knob"
-        cx="5"
-        cy="8"
-        r="2.1"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-/** The window bar's toggle for the sidebar: a window with its left pane
- *  drawn - what pressing it brings back or takes away. */
-export function SidebarToggleIcon({ className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      width="15"
-      height="15"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <rect
-        x="1.8"
-        y="2.8"
-        width="12.4"
-        height="10.4"
-        rx="2.2"
-        stroke="currentColor"
-        strokeWidth="1.1"
-      />
-      <path d="M6.2 3.1v9.8" stroke="currentColor" strokeWidth="1.1" />
-    </svg>
-  );
-}
+/** AssistantIcon's line through the bubble while Textus AI is off. */
+const STRIKE = "M2.2 1.4L13.8 13.6";
 
 /** Past conversations (the AI panel's header): a clock turned back. */
 export function HistoryIcon({ className }: IconProps) {

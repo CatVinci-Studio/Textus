@@ -8,7 +8,10 @@ export default {
   agentPanelTitle: AI_NAME,
   textusAiToggleLabel: `Включить ${AI_NAME}`,
   textusAiOffHint: "Выключен: ничего не отправляется ни в один сервис ИИ.",
-  textusAiOnTooltip: `${AI_NAME} включён · Нажмите, чтобы выключить`,
+  textusAiMenuHint: "Правый щелчок — приостановить или выключить",
+  textusAiPause: "Приостановить на час",
+  textusAiTurnOff: `Выключить ${AI_NAME}`,
+  textusAiPausedTooltip: `${AI_NAME} приостановлен до {time} · Нажмите, чтобы включить`,
   textusAiOffTooltip: `${AI_NAME} выключен · Нажмите, чтобы включить`,
   textusAiOff: `${AI_NAME} выключен`,
   textusAiTurnOn: `Включить ${AI_NAME}`,
@@ -931,8 +934,8 @@ export default {
   tutorialWriteTitle: "Написание с ИИ",
   tutorialWriteBody: `В режиме «Написание» ${AI_NAME} только добавляет текст, зелёным, пока вы его не примете.`,
   tutorialWriteOpen:
-    "Откройте панель ИИ: значок робота справа вверху ({shortcut})",
-  tutorialWriteOpenPhone: "Откройте панель ИИ: нажмите значок робота вверху",
+    "Откройте панель ИИ: значок облачка справа вверху ({shortcut})",
+  tutorialWriteOpenPhone: "Откройте панель ИИ: нажмите значок облачка вверху",
   tutorialWriteSend:
     "Отправьте `Продолжи мои заметки ещё одним абзацем` и нажмите «Принять»",
   tutorialReviewTitle: "Рецензия",

@@ -270,3 +270,22 @@ test("Enter before a space starts the new line without it", async ({
   await page.keyboard.press("Enter");
   expect(await sourceOf(page)).toBe("one\n\ntwo");
 });
+
+test("Mod+B and Mod+I pressed again at the end of what was typed end it, and the text goes on", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.press("ControlOrMeta+b");
+  await page.keyboard.type("bold");
+  await page.keyboard.press("ControlOrMeta+b");
+  await page.keyboard.type(" and ");
+  await page.keyboard.press("ControlOrMeta+i");
+  await page.keyboard.type("it");
+  await page.keyboard.press("ControlOrMeta+i");
+  await page.keyboard.type(" after");
+  expect(await sourceOf(page)).toBe("**bold** and *it* after");
+  // Inside the word it still takes the bold off.
+  await page.locator(`${editor} strong`).click();
+  await page.keyboard.press("ControlOrMeta+b");
+  expect(await sourceOf(page)).toBe("bold and *it* after");
+});

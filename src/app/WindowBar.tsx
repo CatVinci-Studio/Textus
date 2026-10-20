@@ -1,11 +1,9 @@
-import { isIOSApp } from "../platform/capabilities";
 import { useSettings } from "../settings/SettingsContext";
-import { AssistantIcon, SidebarToggleIcon } from "../ui/icons";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./app-menu-model";
 import { AppMenuButton } from "./WindowControls";
 import { Tooltip } from "../ui/Tooltip";
-import { TextusAiSwitch } from "../ai/TextusAiSwitch";
+import { TextusAiButton } from "../ai/TextusAiSwitch";
 
 /**
  * The window's one top strip: traffic-light room, which document this
@@ -15,12 +13,6 @@ import { TextusAiSwitch } from "../ai/TextusAiSwitch";
  * fixed strip meant the document scrolled underneath and the filename
  * sat on top of the text. It is also the drag region (both for moving
  * the window and for the drag-to-merge gesture in useTabDragMerge).
- *
- * On the desktop the sidebar reaches the window's top edge and lies over
- * this row's left end, its tabs in the strip (sidebar-frame.css). The
- * row's own controls - the sidebar's toggle, then the app menu - ride
- * just past its edge while it is open, and the title centres over what
- * is left (window-bar.css).
  *
  * Where the OS supplies no frame at all (Windows), this same row is
  * ALSO the caption and the way into the app menu - the two components
@@ -33,9 +25,6 @@ export function WindowBar({
   dirty,
   largeDoc,
   words,
-  sidebarOpen,
-  sidebarShortcut,
-  onToggleSidebar,
   showAgentToggle,
   agentOpen,
   agentShortcut,
@@ -46,10 +35,6 @@ export function WindowBar({
   dirty: boolean;
   largeDoc: boolean;
   words: number;
-  sidebarOpen: boolean;
-  /** The sidebar's shortcut, as shown in the button's tooltip. */
-  sidebarShortcut: string;
-  onToggleSidebar: () => void;
   /** The AI panel can be opened: Textus AI is on, and so is its chat. */
   showAgentToggle: boolean;
   agentOpen: boolean;
@@ -59,29 +44,8 @@ export function WindowBar({
 }) {
   const { t } = useSettings();
   return (
-    <header
-      className={`window-bar${sidebarOpen ? " window-bar-sidebar-open" : ""}`}
-      data-tauri-drag-region
-    >
-      {/* A drag region of its own: Tauri asks only the event's target, and
-        a press between the two buttons should still move the window. */}
-      <div className="window-bar-left" data-tauri-drag-region>
-        {/* The phone and the iPad open the sidebar from the menu. */}
-        {!isIOSApp && (
-          <Tooltip text={`${t.menuToggleSidebar} (${sidebarShortcut})`}>
-            <button
-              type="button"
-              className={`window-bar-sidebar-toggle${sidebarOpen ? " window-bar-sidebar-toggle-on" : ""}`}
-              aria-pressed={sidebarOpen}
-              aria-label={t.menuToggleSidebar}
-              onClick={onToggleSidebar}
-            >
-              <SidebarToggleIcon />
-            </button>
-          </Tooltip>
-        )}
-        <AppMenuButton checks={menuChecks} />
-      </div>
+    <header className="window-bar" data-tauri-drag-region>
+      <AppMenuButton checks={menuChecks} />
       {/* The unsaved dot leads the title, as a native edited-document
         title does - in the status group it sat on top of a long title
         on a narrow window. */}
@@ -106,22 +70,15 @@ export function WindowBar({
         <span className="word-count">
           {words > 0 && `${words} ${t.wordsUnit}`}
         </span>
-        {/* Textus AI's switch, lit while it is on (#196), then the robot
-          for its panel, which goes while there is no chat to open. */}
-        <TextusAiSwitch className="window-bar-ai-switch" />
-        {showAgentToggle && (
-          <Tooltip text={`${t.agentPanelTitle} (${agentShortcut})`}>
-            <button
-              type="button"
-              className={`window-bar-toggle${agentOpen ? " window-bar-toggle-on" : ""}`}
-              aria-pressed={agentOpen}
-              aria-label={t.agentPanelTitle}
-              onClick={onToggleAgent}
-            >
-              <AssistantIcon />
-            </button>
-          </Tooltip>
-        )}
+        {/* Textus AI's one button: the AI panel, struck through while
+          Textus AI is off; right-click pauses or turns it off (#196). */}
+        <TextusAiButton
+          className="window-bar-toggle"
+          panelOpen={agentOpen}
+          showPanel={showAgentToggle}
+          shortcut={agentShortcut}
+          onTogglePanel={onToggleAgent}
+        />
       </div>
       <WindowCaptionButtons />
     </header>

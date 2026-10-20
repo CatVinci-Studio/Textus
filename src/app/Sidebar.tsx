@@ -79,14 +79,7 @@ export function Sidebar({
           editor. */}
         {presence.mounted && (
           <>
-            {/* In the window's top strip on the desktop
-              (sidebar-frame.css), so it moves the window as the rest of
-              the strip does. */}
-            <div
-              className="sidebar-header"
-              data-tauri-drag-region
-              inert={closing || undefined}
-            >
+            <div className="sidebar-header" inert={closing || undefined}>
               <div className="sidebar-tabs">
                 <Tooltip text={t.treeTab}>
                   <button

@@ -34,7 +34,7 @@ import "../../../ui/app-dialog.css";
 import "../AgentTurnView.css";
 import "../inline-chat.css";
 import { Tooltip } from "../../../ui/Tooltip";
-import { TextusAiOffNote, TextusAiSwitch } from "../../TextusAiSwitch";
+import { TextusAiOffNote } from "../../TextusAiSwitch";
 import "./chat-window.css";
 
 /** How long a send waits for the editor to answer a context request before
@@ -345,7 +345,6 @@ export function ChatWindowApp() {
           <PinIcon />
         </button>
       </Tooltip>
-      <TextusAiSwitch className="inline-chat-header-button" />
       <WindowCaptionButtons />
     </div>
   );

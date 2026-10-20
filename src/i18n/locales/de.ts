@@ -8,7 +8,10 @@ export default {
   agentPanelTitle: AI_NAME,
   textusAiToggleLabel: `${AI_NAME} aktivieren`,
   textusAiOffHint: "Aus: Es wird nichts an einen KI-Dienst gesendet.",
-  textusAiOnTooltip: `${AI_NAME} ist an · Klicken zum Ausschalten`,
+  textusAiMenuHint: "Rechtsklick zum Pausieren oder Ausschalten",
+  textusAiPause: "Eine Stunde pausieren",
+  textusAiTurnOff: `${AI_NAME} ausschalten`,
+  textusAiPausedTooltip: `${AI_NAME} pausiert bis {time} · Klicken zum Einschalten`,
   textusAiOffTooltip: `${AI_NAME} ist aus · Klicken zum Einschalten`,
   textusAiOff: `${AI_NAME} ist aus`,
   textusAiTurnOn: `${AI_NAME} einschalten`,
@@ -923,9 +926,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialWriteTitle: "Mit KI schreiben",
   tutorialWriteBody: `Im Modus Schreiben fügt ${AI_NAME} nur Text hinzu, grün, bis du ihn annimmst.`,
   tutorialWriteOpen:
-    "Öffne den KI-Bereich: das Robotersymbol oben rechts ({shortcut})",
+    "Öffne den KI-Bereich: das Sprechblasensymbol oben rechts ({shortcut})",
   tutorialWriteOpenPhone:
-    "Öffne den KI-Bereich: Tippe oben auf das Robotersymbol",
+    "Öffne den KI-Bereich: Tippe oben auf das Sprechblasensymbol",
   tutorialWriteSend:
     "Sende `Schreib meine Notizen um einen Absatz weiter` und klick auf Annehmen",
   tutorialReviewTitle: "Lektorat",

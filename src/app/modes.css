@@ -18,19 +18,11 @@
    did, with no allow-discrete needed. */
 .tab-bar,
 .agent-panel,
-.window-bar-status {
-  transition:
-    opacity var(--dur-slow) var(--ease-in-out),
-    visibility 0s;
-}
-
-/* The title also glides with the editor's column when the sidebar opens
-   or closes beside it (window-bar.css). */
+.window-bar-status,
 .window-bar-title {
   transition:
     opacity var(--dur-slow) var(--ease-in-out),
-    visibility 0s,
-    transform calc(var(--dur-slow) * var(--motion-travel)) var(--ease-spring);
+    visibility 0s;
 }
 
 .zen .sidebar,

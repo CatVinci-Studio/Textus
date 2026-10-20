@@ -8,7 +8,10 @@ export default {
   agentPanelTitle: AI_NAME,
   textusAiToggleLabel: `Ativar ${AI_NAME}`,
   textusAiOffHint: "Desativada: nada é enviado a nenhum serviço de IA.",
-  textusAiOnTooltip: `${AI_NAME} está ativada · Clique para desativar`,
+  textusAiMenuHint: "Clique com o botão direito para pausar ou desativar",
+  textusAiPause: "Pausar por uma hora",
+  textusAiTurnOff: `Desativar ${AI_NAME}`,
+  textusAiPausedTooltip: `${AI_NAME} está em pausa até {time} · Clique para ativar`,
   textusAiOffTooltip: `${AI_NAME} está desativada · Clique para ativar`,
   textusAiOff: `${AI_NAME} está desativada`,
   textusAiTurnOn: `Ativar ${AI_NAME}`,
@@ -923,8 +926,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialWriteTitle: "Escrever com IA",
   tutorialWriteBody: `No modo Escrever, o ${AI_NAME} só acrescenta texto, em verde até você aceitar.`,
   tutorialWriteOpen:
-    "Abra o painel de IA: o ícone de robô no canto superior direito ({shortcut})",
-  tutorialWriteOpenPhone: "Abra o painel de IA: toque no ícone de robô no topo",
+    "Abra o painel de IA: o ícone de balão de fala no canto superior direito ({shortcut})",
+  tutorialWriteOpenPhone:
+    "Abra o painel de IA: toque no ícone de balão de fala no topo",
   tutorialWriteSend:
     "Envie `Continue minhas notas com mais um parágrafo` e clique em Aceitar",
   tutorialReviewTitle: "Comentários",

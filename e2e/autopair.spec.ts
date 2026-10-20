@@ -75,6 +75,24 @@ test("a typed [text](url) still becomes a link", async ({ page }) => {
   expect(await sourceOf(page)).toBe("[Textus](https://textus.catvinci.com) on");
 });
 
+// The ")" is already there: the address typed, the caret moves on - an
+// arrow, End, Home, Enter - without typing it.
+for (const leave of ["ArrowRight", "End", "Enter", "Home"])
+  test(`[text](url with its ")" put in becomes a link on ${leave}`, async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await editorOf(page).click();
+    await page.keyboard.type("See [Textus](https://textus.catvinci.com", {
+      delay: 30,
+    });
+    await page.keyboard.press(leave);
+    await expect(editorOf(page).locator("a")).toHaveText("Textus");
+    expect(await sourceOf(page)).toBe(
+      "See [Textus](https://textus.catvinci.com)",
+    );
+  });
+
 test("brackets committed by an input method close themselves too", async ({
   page,
   browserName,

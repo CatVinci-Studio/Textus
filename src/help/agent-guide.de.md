@@ -33,7 +33,7 @@ Mögliche Fehler werden unterstrichen. Bewege den Zeiger auf eine Unterstreichun
 
 ### 3. Der KI-Bereich
 
-Die vollständige Unterhaltung findet in einem Bereich rechts neben dem Editor statt. Du öffnest und schließt ihn mit der Schaltfläche **Textus AI** (dem Roboter) am rechten Ende der Titelleiste oder mit <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+Die vollständige Unterhaltung findet in einem Bereich rechts neben dem Editor statt. Du öffnest und schließt ihn mit der Schaltfläche **Textus AI** (der Sprechblase) am rechten Ende der Titelleiste oder mit <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **Eine Unterhaltung pro Dokument**: Jeder Tab hat seine eigene Unterhaltung, und wenn du den Tab wechselst, wechselt der Bereich mit. **Neue Unterhaltung** im Kopf des Bereichs fängt von vorn an (sind noch Änderungen offen, wird vorher nachgefragt).
 - **Modi**: Das Eingabefeld bietet drei. **Schreiben** entwirft neuen Text im Dokument (eine Fortsetzung, einen neuen Absatz oder Abschnitt) und fügt nur hinzu: Ist Text ausgewählt, schreibt es hinter der Auswahl weiter. **Prüfen** beantwortet Fragen, bespricht und kommentiert, ohne etwas zu ändern. **Überarbeiten** ändert den vorhandenen Text. Jede Änderung aus Schreiben oder Überarbeiten ist ein Vorschlag, den du annimmst oder ablehnst. Der Bereich startet in dem Modus, der unter **Einstellungen > Textus AI > Chat mit Textus AI > Standardmodus** eingestellt ist.
@@ -276,7 +276,7 @@ Ein globales Stilprofil oder Lexikon gibt es nicht: Beide beschreiben ein bestim
 
 ## Textus AI ausschalten
 
-Der Schalter am rechten Ende der Fensterleiste, neben dem Roboter, schaltet Textus AI mit einem Klick ganz aus: Er leuchtet, solange Textus AI an ist, ist gedimmt, solange sie aus ist, und ein zweiter Klick schaltet sie wieder ein. **Ansicht > Textus AI**, **Einstellungen > Textus AI > Textus AI aktivieren** und ein Tastenkürzel, das Sie unter **Einstellungen > Tastenkürzel** festlegen können, tun dasselbe. Das separate KI-Fenster hat den Schalter in seiner Kopfzeile, ein iPhone in der Titelzeile und im Menü.
+Ein Rechtsklick auf die Schaltfläche **Textus AI** am rechten Ende der Fensterleiste pausiert Textus AI für eine Stunde oder schaltet sie aus. Solange sie aus ist, ist die Sprechblase durchgestrichen, und ein Klick darauf bietet an, Textus AI wieder einzuschalten; eine Pause endet nach der Stunde von selbst. **Ansicht > Textus AI**, **Einstellungen > Textus AI > Textus AI aktivieren** und ein Tastenkürzel, das Sie unter **Einstellungen > Tastenkürzel** festlegen können, schalten sie ebenfalls ein oder aus; auf dem iPhone steht es im Menü.
 
 Solange sie aus ist, wird ab dem Start von Textus nichts an einen KI-Dienst gesendet: keine Vervollständigung, keine Grammatikprüfung, kein Gespräch, nichts wird gemerkt. Der KI-Bereich, die Schnellfrage und die KI-Einträge im Kontextmenü verschwinden, und eine Antwort, die gerade geschrieben wird, hält an. Bereits vorgeschlagene Änderungen im Dokument bleiben, damit Sie sie annehmen oder ablehnen können. Jede Funktion behält ihre eigene Einstellung, und alle gelten wieder, sobald Textus AI wieder an ist.
 

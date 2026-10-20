@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import "./resize-handle.css";
 
 /** How far one arrow key press moves the edge. */
@@ -37,18 +37,6 @@ export function ResizeHandle({
     null,
   );
   const [dragging, setDragging] = useState(false);
-  // Which edge is being dragged, on the root, for what elsewhere has to
-  // follow it at once (window-bar.css). Not a :root:has() rule: that made
-  // the browser recheck the whole page on every change to the DOM - Enter
-  // in a long document restyled all of it.
-  useEffect(() => {
-    if (!dragging) return;
-    const root = document.documentElement;
-    root.dataset.resizing = className;
-    return () => {
-      delete root.dataset.resizing;
-    };
-  }, [dragging, className]);
   const end = () => {
     const d = drag.current;
     if (!d) return;

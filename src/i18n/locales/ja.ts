@@ -8,7 +8,10 @@ export default {
   agentPanelTitle: AI_NAME,
   textusAiToggleLabel: `${AI_NAME} を有効にする`,
   textusAiOffHint: "オフの間は、どの AI サービスにも何も送信しません。",
-  textusAiOnTooltip: `${AI_NAME} はオン · クリックでオフ`,
+  textusAiMenuHint: "右クリックで一時停止またはオフ",
+  textusAiPause: "1 時間停止",
+  textusAiTurnOff: `${AI_NAME} をオフにする`,
+  textusAiPausedTooltip: `${AI_NAME} は {time} まで停止中 · クリックでオン`,
   textusAiOffTooltip: `${AI_NAME} はオフ · クリックでオン`,
   textusAiOff: `${AI_NAME} はオフです`,
   textusAiTurnOn: `${AI_NAME} をオンにする`,
@@ -886,8 +889,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialWriteTitle: "AI で執筆",
   tutorialWriteBody:
     "執筆モードの AI は文章を足すだけで、適用するまで緑色で表示されます。",
-  tutorialWriteOpen: "右上のロボットのアイコン（{shortcut}）で AIパネルを開く",
-  tutorialWriteOpenPhone: "上部のロボットのアイコンをタップして AIパネルを開く",
+  tutorialWriteOpen: "右上の吹き出しのアイコン（{shortcut}）で AIパネルを開く",
+  tutorialWriteOpenPhone: "上部の吹き出しのアイコンをタップして AIパネルを開く",
   tutorialWriteSend: "`ノートの続きを一段落書いて` と送り、「適用」をクリック",
   tutorialReviewTitle: "レビュー",
   tutorialReviewBody:

@@ -60,7 +60,14 @@ function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
   for (let d = $from.depth; d > 0; d--) {
     const node = $from.node(d);
     if ($to.depth < d || $to.node(d) !== node) break;
-    if (matches(node)) return unwrap($from.before(d), node, 1);
+    if (!matches(node)) continue;
+    // The caret at the end of what was just typed bold: the press ends
+    // the bold and the text goes on after it, as in Typora - not undo it.
+    if (empty && node.content.size > 0 && from === $from.end(d))
+      return state.tr.setSelection(
+        TextSelection.create(state.doc, $from.after(d)),
+      );
+    return unwrap($from.before(d), node, 1);
   }
   // A selection from just before a span to just after it.
   if (!empty && $from.sameParent($to)) {

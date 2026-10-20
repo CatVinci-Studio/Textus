@@ -23,32 +23,20 @@
   align-items: center;
   /* Left inset is room for the macOS traffic lights, which float over the
      top-left corner. */
-  --window-bar-inset: 78px;
-  padding: 0 12px 0 var(--window-bar-inset);
+  padding: 0 12px 0 78px;
   background: var(--bg);
 }
 
-/* On the desktop the open sidebar reaches the window's top edge and lies
-   over this row's left end (sidebar-frame.css), so the row's contents
-   make room for it: its own controls ride just past the sidebar's edge,
-   and the title centres over what is left. Moved, not laid out again, so
-   they travel with the sidebar's slide and the editor's glide (App.tsx's
-   FlipOnChange). Zen hides the sidebar, and the phone's drawer lies over
-   the whole bar. */
-:root:not(.zen):not([data-window-chrome="mobile"]) .window-bar-sidebar-open {
-  --bar-strip-left: var(--sidebar-width, 240px);
-}
-
 /* Where the app owns the whole frame (Windows - main.tsx sets the attribute
-   from platform/window-chrome.ts), that left inset holds no traffic lights:
-   the sidebar's toggle and the menu button take it, and the caption
-   buttons take the right edge, flush to it (their negative margin cancels
-   the row's padding). The HEIGHT deliberately does not change - .tab-bar
-   clears this bar with a hardcoded offset and .sidebar-header is sized to
-   it, and one row of chrome at one height on both platforms is the point
-   of the exercise. */
+   from platform/window-chrome.ts), that left inset holds no traffic lights: the
+   menu button takes it, and the caption buttons take the right edge. Both
+   are flush to the window edge, so the row's own padding gets out of their
+   way and the components cancel what's left with a negative margin. The
+   HEIGHT deliberately does not change - .tab-bar and .sidebar-header clear
+   this bar with hardcoded offsets, and one row of chrome at one height on
+   both platforms is the point of the exercise. */
 :root[data-window-chrome="app"] .window-bar {
-  --window-bar-inset: 12px;
+  padding: 0 12px 0 12px;
 }
 
 /* macOS centres the traffic lights in a native title bar, not in this row:
@@ -110,36 +98,6 @@
   max-width: max(0px, calc(100% - 300px));
 }
 
-/* Beside the open sidebar the window's middle may lie under it, so the
-   title centres in the room the row has left between its controls and
-   its status instead - roughly: 46px for the toggle past the sidebar's
-   edge and 124px for the status (84px and 262px where the menu and the
-   caption buttons join them). The glide is in modes.css, beside the
-   title's fade for zen. */
-:root:not(.zen):not([data-window-chrome="mobile"])
-  .window-bar-sidebar-open
-  .window-bar-title {
-  --room-left: 46px;
-  --room-right: 124px;
-  transform: translateX(
-    calc(
-      -50% + (var(--bar-strip-left) + var(--room-left) - var(--room-right)) / 2
-    )
-  );
-  max-width: min(
-    45%,
-    max(
-      0px,
-      100% - var(--bar-strip-left) - var(--room-left) - var(--room-right)
-    )
-  );
-}
-
-:root[data-window-chrome="app"] .window-bar-sidebar-open .window-bar-title {
-  --room-left: 84px;
-  --room-right: 262px;
-}
-
 .window-bar-status {
   margin-left: auto;
   display: flex;
@@ -150,39 +108,8 @@
   pointer-events: none;
 }
 
-/* The row's own controls, leading it: the sidebar's toggle, then the app
-   menu. From the corner (past the traffic lights on macOS) while the
-   sidebar is shut, from 12px past its edge while it is open. */
-.window-bar-left {
-  display: flex;
-  align-items: center;
-  align-self: stretch;
-  gap: 4px;
-  flex-shrink: 0;
-  transform: translateX(
-    max(0px, var(--bar-strip-left, 0px) + 12px - var(--window-bar-inset))
-  );
-  transition: transform calc(var(--dur-slow) * var(--motion-travel))
-    var(--ease-spring);
-}
-
-/* A dragged edge is followed at once, not caught up with
-   (ResizeHandle.tsx marks the root). */
-:root[data-resizing~="sidebar-resizer"]
-  .window-bar
-  :is(.window-bar-left, .window-bar-title) {
-  transition: none;
-}
-
-/* The AI panel's toggle and Textus AI's switch in the status group, the
-   sidebar's toggle at the row's start and the app menu's button beside it:
-   one size and one hover for every control in the strip, so none reads as
-   a different kind of thing from its neighbours. A class each: several e2e
-   flows click `.window-bar-toggle` and mean the AI panel's exactly. */
-.window-bar-toggle,
-.window-bar-ai-switch,
-.window-bar-sidebar-toggle,
-.window-menu-button {
+/* The one control in the status group: opens the docked Agent panel. */
+.window-bar-toggle {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
@@ -199,30 +126,32 @@
 }
 
 .window-bar-toggle:hover,
-.window-bar-toggle-on,
-.window-bar-ai-switch:hover,
-.window-bar-sidebar-toggle:hover,
-.window-bar-sidebar-toggle-on,
-.window-menu-button:hover {
+.window-bar-toggle-on {
   opacity: 1;
   background: var(--sidebar-hover);
 }
 
 /* Hover arrives in 80ms; turning on or off changes in 120ms. */
-.window-bar-toggle,
-.window-bar-ai-switch,
-.window-bar-sidebar-toggle,
-.window-menu-button {
+.window-bar-toggle {
   transition:
     background-color var(--dur-fast) var(--ease-standard),
     opacity var(--dur-fast) var(--ease-standard);
 }
 
-.window-bar-toggle:hover,
-.window-bar-ai-switch:hover,
-.window-bar-sidebar-toggle:hover,
-.window-menu-button:hover {
+.window-bar-toggle:hover {
   transition-duration: var(--dur-instant);
+}
+
+.sidebar-header {
+  /* Clears the window bar floating over the top of the window. */
+  padding: 38px 10px 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
 }
 
 /* 4.1: shown while ghost text / grammar check / live Mermaid preview are
