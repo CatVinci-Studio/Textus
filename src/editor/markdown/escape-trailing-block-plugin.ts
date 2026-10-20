@@ -3,7 +3,7 @@ import { TextSelection } from "@milkdown/kit/prose/state";
 import { liftTarget } from "@milkdown/kit/prose/transform";
 import { $prose } from "@milkdown/kit/utils";
 import { isInTable, selectedRect } from "@milkdown/kit/prose/tables";
-import { isImeKeyEvent } from "../marks/enclosure";
+import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
 import type { Node, ResolvedPos } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 
@@ -103,7 +103,8 @@ function backspaceOutOfBlockquote(view: EditorView): boolean {
 }
 
 /**
- * A code block, math block, or table at the very start or end of the
+ * A code block or math block (tables: tableEdgeArrowPlugin below) at the
+ * very start or end of the
  * document has nothing before/after it to move a cursor into - normal
  * arrow-key navigation can't escape it in that direction, and gets stuck.
  * This adds a trailing/leading empty paragraph on demand so there's always
@@ -179,20 +180,50 @@ export function createEscapeTrailingBlockPlugin() {
           return escapeAfterLastNode(view);
         }
 
-        // Table: only escape from the bottom-right-most cell, moving down.
-        if (event.key !== "ArrowDown") return false;
+        // Tables: tableEdgeArrowPlugin, which has to run first.
+        return false;
+      },
+    },
+  });
+}
+
+/**
+ * Up off a table's first row, or down off its last, where the table starts
+ * or ends the document: a new paragraph there, from any cell, as for code
+ * blocks above. prosemirror-tables takes these keys first and, finding no
+ * line beyond the table, put the caret back in its first or last cell -
+ * the next cell along instead of a line up or down - so this plugin is
+ * registered ahead of the table plugin (editor-extensions.ts).
+ */
+export function createTableEdgeArrowPlugin() {
+  return new Plugin({
+    props: {
+      handleKeyDown(view, event) {
+        if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return false;
+        if (isImeKeyEvent(view, event)) return false;
+        if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey)
+          return false;
+        // The caret a click or fast arrowing has just moved
+        // (enclosure.ts's stateWithLiveSelection).
+        const state = stateWithLiveSelection(view);
+        const { $from, empty } = state.selection;
+        if (!empty || !isInTable(state)) return false;
         const rect = selectedRect(state);
-        const atLastCell =
-          rect.bottom === rect.map.height && rect.right === rect.map.width;
-        if (!atLastCell) return false;
+        if (event.key === "ArrowUp") {
+          if (rect.top !== 0 || !isFirstTopLevelNode($from)) return false;
+          if (!view.endOfTextblock("up")) return false;
+          return escapeBeforeFirstNode(view);
+        }
+        if (rect.bottom !== rect.map.height) return false;
         if (!isLastTopLevelNode($from, state.doc)) return false;
         if (!view.endOfTextblock("down")) return false;
-
         return escapeAfterLastNode(view);
       },
     },
   });
 }
+
+export const tableEdgeArrowPlugin = $prose(createTableEdgeArrowPlugin);
 
 export const escapeTrailingBlockPlugin = $prose(
   createEscapeTrailingBlockPlugin,

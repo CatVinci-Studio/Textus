@@ -279,6 +279,12 @@ export function hasPendingRunOpen(
   return false;
 }
 
+/** Inline nodes kept as their source text (markdown/wikilink.ts,
+ *  images/obsidian-embed.ts): no delimiters, but text typed right after
+ *  one lands in it the same way - "[[Note]] and" typed by hand linked to
+ *  "Note]] and". */
+const SOURCE_INLINE_NODES = new Set(["wikilink", "obsidian_embed"]);
+
 /**
  * WKWebView (the Tauri webview) normalizes a caret sitting just outside an
  * inline element's boundary to just inside it, so text typed right after
@@ -307,7 +313,8 @@ export function redirectMisattributedInput(
   const sel = state.selection;
   if (!sel.empty) return false;
   const $typed = state.doc.resolve(from);
-  if (!isEnclosureName($typed.parent.type.name)) return false;
+  const name = $typed.parent.type.name;
+  if (!isEnclosureName(name) && !SOURCE_INLINE_NODES.has(name)) return false;
   const nodeStart = $typed.before($typed.depth);
   const nodeEnd = $typed.after($typed.depth);
   if (sel.from > nodeStart && sel.from < nodeEnd) return false; // genuinely typing inside

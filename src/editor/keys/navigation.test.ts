@@ -12,7 +12,10 @@ import {
   createMacNavigationPlugin,
   visualLineBoundary,
 } from "./mac-navigation-plugin";
-import { createEscapeTrailingBlockPlugin } from "../markdown/escape-trailing-block-plugin";
+import {
+  createEscapeTrailingBlockPlugin,
+  createTableEdgeArrowPlugin,
+} from "../markdown/escape-trailing-block-plugin";
 
 const schema = new Schema({
   nodes: {
@@ -204,7 +207,7 @@ describe("block boundary navigation", () => {
       );
       vi.spyOn(view, "endOfTextblock").mockReturnValue(true);
       const doc = view.state.doc;
-      expect(press(createEscapeTrailingBlockPlugin(), "ArrowDown")).toBe(
+      expect(press(createTableEdgeArrowPlugin(), "ArrowDown")).toBe(
         !hasFollowing,
       );
       if (hasFollowing) expect(view.state.doc).toBe(doc);
@@ -212,4 +215,17 @@ describe("block boundary navigation", () => {
       view.destroy();
     },
   );
+  it("leaves a table that starts the document upwards", () => {
+    const table = schema.node("table", null, [
+      schema.node("table_row", null, [
+        schema.node("table_cell", null, [block("paragraph", "cell")]),
+      ]),
+    ]);
+    const { view, press } = fixture([table, block("paragraph", "after")], 8);
+    vi.spyOn(view, "endOfTextblock").mockReturnValue(true);
+    expect(press(createTableEdgeArrowPlugin(), "ArrowUp")).toBe(true);
+    expect(view.state.doc.firstChild?.type.name).toBe("paragraph");
+    expect(view.state.selection.$from.parent).toBe(view.state.doc.firstChild);
+    view.destroy();
+  });
 });

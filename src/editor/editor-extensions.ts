@@ -15,6 +15,7 @@ import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethr
 import {
   commonmarkWithoutMarks,
   gfmWithoutStrikethrough,
+  headingInputRule,
 } from "./markdown/reduced-presets";
 import {
   remarkFrontmatterPlugin,
@@ -79,7 +80,10 @@ import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { contentVisibilityPlugin } from "./content-visibility";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
 import { tabExtendPlugin } from "./keys/tab-extend-plugin";
-import { escapeTrailingBlockPlugin } from "./markdown/escape-trailing-block-plugin";
+import {
+  escapeTrailingBlockPlugin,
+  tableEdgeArrowPlugin,
+} from "./markdown/escape-trailing-block-plugin";
 import { codeBlockIndentPlugin } from "./code/code-block-indent-plugin";
 import { pasteMarkdownSourcePlugin } from "./markdown/paste-markdown-plugin";
 import { imageInputRule, linkInputRule } from "./markdown/link-input-rule";
@@ -186,8 +190,11 @@ export function withEditorCore(
       // Markdown baseline: commonmark/GFM with bold/italic/strike marks
       // stripped - those are node-based below.
       .use(commonmarkWithoutMarks)
+      .use(headingInputRule)
       .use(headingIdsOnParse)
       .use(headingIdPlugin)
+      // Ahead of gfm's table keys (escape-trailing-block-plugin.ts).
+      .use(tableEdgeArrowPlugin)
       .use(gfmWithoutStrikethrough)
 
       // Leading "---\n...\n---" block, parsed before anything else gets a

@@ -345,3 +345,11 @@ test("the context menu's Copy and Paste keep the formatting", async ({
     page.locator(`${editor} strong, ${editor} .md-strong`),
   ).toHaveCount(2);
 });
+
+test("lines pasted into a table cell stay in that cell", async ({ page }) => {
+  await pasteMarkdown(page, "| a | b |\n| - | - |\n| c | d |");
+  await page.locator(`${editor} td p`).first().click();
+  await page.keyboard.press("End");
+  await pasteHere(page, "one\n\ntwo");
+  await expect(page.locator(`${editor} td`)).toHaveText(["cone two", "d"]);
+});

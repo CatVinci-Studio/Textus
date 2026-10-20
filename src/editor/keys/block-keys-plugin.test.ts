@@ -12,6 +12,8 @@ import {
   leaveTextBlockOnEmptyLastLine,
   parsePipeRow,
   pipeRowToTable,
+  shiftEnterWithoutBreak,
+  splitInlineCode,
 } from "./block-keys-plugin";
 
 // The node names gfm/commonmark register, with just enough spec to run
@@ -24,10 +26,21 @@ const cells = tableNodes({
 const schema = new Schema({
   nodes: {
     doc: { content: "block+" },
-    paragraph: { group: "block", content: "text*" },
+    paragraph: { group: "block", content: "inline*" },
+    heading: {
+      group: "block",
+      content: "inline*",
+      attrs: { level: { default: 1 } },
+    },
     blockquote: { group: "block", content: "block+" },
     code_block: { group: "block", content: "text*", code: true },
-    text: {},
+    text: { group: "inline" },
+    md_code_span: {
+      group: "inline",
+      inline: true,
+      content: "text*",
+      code: true,
+    },
     table: { ...cells.table, content: "table_header_row table_row+" },
     table_header_row: { ...cells.table_row, content: "table_header*" },
     table_row: { ...cells.table_row, content: "table_cell*" },
@@ -259,5 +272,48 @@ describe("leaveBlockquote", () => {
 
   it("does nothing outside a quote", () => {
     expect(run(leaveBlockquote, stateAt(docOf(p("x")), "x"))).toBeNull();
+  });
+});
+
+describe("shiftEnterWithoutBreak", () => {
+  it("splits a heading instead of putting a line break in it", () => {
+    const heading = n.heading.create({ level: 2 }, schema.text("Title"));
+    const next = run(shiftEnterWithoutBreak, stateAt(docOf(heading), "Title"))!;
+    expect(next.doc.childCount).toBe(2);
+    expect(next.doc.child(0).textContent).toBe("Title");
+    expect(next.selection.$from.parent).toBe(next.doc.child(1));
+  });
+
+  it("puts a newline in a code block", () => {
+    const next = run(shiftEnterWithoutBreak, stateAt(docOf(code("ab")), "ab"))!;
+    expect(next.doc.firstChild!.textContent).toBe("ab\n");
+  });
+
+  it("leaves paragraphs to the line break", () => {
+    expect(run(shiftEnterWithoutBreak, stateAt(docOf(p("x")), "x"))).toBeNull();
+  });
+});
+
+describe("splitInlineCode", () => {
+  it("splits the line and the code span, instead of a newline in the span", () => {
+    const line = n.paragraph.create(null, [
+      schema.text("a "),
+      n.md_code_span.create(null, schema.text("bc")),
+    ]);
+    const state = EditorState.create({ schema, doc: docOf(line) });
+    // Between "b" and "c", inside the span.
+    const inside = state.apply(
+      state.tr.setSelection(TextSelection.create(state.doc, 5)),
+    );
+    const next = run(splitInlineCode, inside)!;
+    expect(next.doc.childCount).toBe(2);
+    expect(next.doc.child(0).lastChild!.textContent).toBe("b");
+    expect(next.doc.child(1).firstChild!.type.name).toBe("md_code_span");
+    expect(next.doc.child(1).textContent).toBe("c");
+  });
+
+  it("does nothing outside an inline code node", () => {
+    expect(run(splitInlineCode, stateAt(docOf(p("x")), "x"))).toBeNull();
+    expect(run(splitInlineCode, stateAt(docOf(code("x")), "x"))).toBeNull();
   });
 });

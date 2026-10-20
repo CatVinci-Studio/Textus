@@ -22,6 +22,8 @@ import {
   remarkPreserveEmptyLinePlugin,
   syncHeadingIdPlugin,
   syncListOrderPlugin,
+  wrapInHeadingInputRule,
+  headingSchema,
 } from "@milkdown/kit/preset/commonmark";
 import {
   autoInsertSpanPlugin,
@@ -32,6 +34,9 @@ import {
   strikethroughKeymap,
   toggleStrikethroughCommand,
 } from "@milkdown/kit/preset/gfm";
+import { editorViewCtx } from "@milkdown/kit/core";
+import { textblockTypeInputRule } from "@milkdown/kit/prose/inputrules";
+import { $inputRule } from "@milkdown/kit/utils";
 import { isLinuxPlatform } from "../../platform/os";
 
 // Bold/italic/strikethrough/inline code are handled by our own md_span /
@@ -82,6 +87,10 @@ import { isLinuxPlatform } from "../../platform/os";
 // definitions: the first save of an edit dropped them from the file.
 // reference-links.ts reads references and definitions instead.
 //
+// wrapInHeadingInputRule is replaced by headingInputRule below: it made a
+// heading of any number of "#"s, and "####### " gave a level-7 heading,
+// drawn as an unknown <h7> element and saved as "######".
+//
 // $markSchema/$nodeSchema (and some other composable pieces) return
 // array-like tuples that get spread apart by the presets' own internal
 // `.flat()` calls - flattening this exclusion list the same way before
@@ -110,6 +119,7 @@ const excludedCommonmarkPieces = [
   syncListOrderPlugin,
   syncHeadingIdPlugin,
   remarkInlineLinkPlugin,
+  wrapInHeadingInputRule,
 ].flat();
 
 // autoInsertSpanPlugin (prosemirror-safari-ime-span) is left out on Linux.
@@ -128,6 +138,19 @@ const excludedGfmPieces = [
   toggleStrikethroughCommand,
   ...(isLinuxPlatform() ? [autoInsertSpanPlugin] : []),
 ].flat();
+
+/** "# " to "###### " at the start of a line makes that heading; in a
+ *  heading, the "#"s typed add to its level, up to 6 - as the stock rule. */
+export const headingInputRule = $inputRule((ctx) =>
+  textblockTypeInputRule(/^(#{1,6})\s$/, headingSchema.type(ctx), (match) => {
+    const typed = match[1].length;
+    const { $from } = ctx.get(editorViewCtx).state.selection;
+    const block = $from.parent;
+    const level =
+      block.type.name === "heading" ? Number(block.attrs.level) + typed : typed;
+    return { level: Math.min(level, 6) };
+  }),
+);
 
 const excludedCommonmarkSet = new Set<unknown>(excludedCommonmarkPieces);
 const excludedGfmSet = new Set<unknown>(excludedGfmPieces);
