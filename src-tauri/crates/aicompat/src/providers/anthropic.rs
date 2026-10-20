@@ -56,11 +56,13 @@ fn system_blocks(instructions: String, auth: &AnthropicAuth) -> Vec<SystemBlock>
         blocks.push(SystemBlock {
             kind: "text",
             text: CLAUDE_CODE_IDENTITY.to_string(),
+            cache_control: None,
         });
     }
     blocks.push(SystemBlock {
         kind: "text",
         text: instructions,
+        cache_control: None,
     });
     blocks
 }
@@ -163,6 +165,8 @@ struct SystemBlock {
     #[serde(rename = "type")]
     kind: &'static str,
     text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cache_control: Option<Value>,
 }
 
 #[derive(Serialize)]
@@ -207,6 +211,43 @@ struct MessagesResponse {
     usage: ResponseUsage,
 }
 
+/// The body of a single-call request (completion, grammar check, the
+/// one-off writing calls). The system prompt ends in a cache breakpoint:
+/// completions fire on every typing pause and grammar checks on every
+/// paragraph, each with the same ~1,100 tokens of instructions in front of
+/// a few hundred tokens of text, and Haiku 5.5 caches a prefix from 512
+/// tokens - so every request after the first in five minutes reads the
+/// instructions at a tenth of the price. The user text after the
+/// breakpoint changes every time, so it is never marked.
+fn completion_request(
+    auth: &AnthropicAuth,
+    instructions: String,
+    user_text: String,
+    model: Option<&str>,
+) -> MessagesRequest {
+    let model = model.unwrap_or(COMPLETION_MODEL);
+    let mut system = system_blocks(instructions, auth);
+    if let Some(last) = system.last_mut() {
+        last.cache_control = Some(json!({"type": EPHEMERAL}));
+    }
+    MessagesRequest {
+        model: model.to_string(),
+        // Room for the longest single-call output (a style profile, a
+        // grammar report); short completions never come near it.
+        max_tokens: 4096,
+        system,
+        messages: vec![Message {
+            role: "user",
+            content: user_text,
+        }],
+        // Haiku 5.5 thinks by default, which is latency an inline
+        // suggestion can't afford; it accepts `disabled` at its default
+        // effort. Only for this model - a user-picked one may reject it
+        // (Opus 5.5 does, at every effort).
+        thinking: (model == COMPLETION_MODEL).then(|| json!({"type": "disabled"})),
+    }
+}
+
 /// Calls the standard public Anthropic Messages API with either auth kind.
 /// `model` overrides COMPLETION_MODEL when set.
 pub async fn call_completion(
@@ -228,24 +269,7 @@ pub async fn call_completion_with_usage(
     user_text: String,
     model: Option<&str>,
 ) -> Result<(String, StepUsage), String> {
-    let model = model.unwrap_or(COMPLETION_MODEL);
-    let body = MessagesRequest {
-        model: model.to_string(),
-        // Room for the longest single-call output (a style profile, a
-        // grammar report); short completions never come near it.
-        max_tokens: 4096,
-        system: system_blocks(instructions, auth),
-        messages: vec![Message {
-            role: "user",
-            content: user_text,
-        }],
-        // Haiku 5.5 thinks by default, which is latency an inline
-        // suggestion can't afford; it accepts `disabled` at its default
-        // effort. Only for this model - a user-picked one may reject it
-        // (Opus 5.5 does, at every effort).
-        thinking: (model == COMPLETION_MODEL).then(|| json!({"type": "disabled"})),
-    };
-
+    let body = completion_request(auth, instructions, user_text, model);
     let client = crate::http::client();
     let res = apply_auth(client.post(MESSAGES_URL), auth)
         .json(&body)
@@ -1454,6 +1478,27 @@ mod tests {
         assert!(auto.get("thinking").is_none());
         assert!(auto.get("output_config").is_none());
         assert_eq!(auto["max_tokens"], AGENT_MAX_TOKENS);
+    }
+
+    #[test]
+    fn a_single_call_caches_its_instructions_but_not_its_text() {
+        for auth in [api_key(), AnthropicAuth::Oauth("t".to_string())] {
+            let body = serde_json::to_value(completion_request(
+                &auth,
+                "rules".to_string(),
+                "<text-before-cursor>The".to_string(),
+                None,
+            ))
+            .unwrap();
+            let system = body["system"].as_array().unwrap();
+            let (last, before) = system.split_last().unwrap();
+            assert_eq!(last["text"], "rules");
+            assert_eq!(last["cache_control"]["type"], EPHEMERAL);
+            // The OAuth identity block ahead of it carries no marker of its own.
+            assert!(before.iter().all(|b| b.get("cache_control").is_none()));
+            assert_eq!(body["messages"][0]["content"], "<text-before-cursor>The");
+            assert!(body.get("cache_control").is_none());
+        }
     }
 
     #[test]
