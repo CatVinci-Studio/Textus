@@ -150,9 +150,11 @@ class Writer {
           ? `![picture ${n}](images/pic-${n % 12}.png)`
           : `<img src="images/pic-${n % 12}.png" width="320" alt="picture ${n}">`;
       case "inlineMath":
-        return `${this.sentence(12)} $${this.pick(FORMULAS)}$ ${this.sentence(10)}`;
+        // Each formula its own, as in a real paper: the same source would
+        // come from the editor's render cache.
+        return `${this.sentence(12)} $${this.pick(FORMULAS)} + k_{${n}}$ ${this.sentence(10)}`;
       case "blockMath":
-        return `$$\n${this.pick(BLOCK_FORMULAS)}\n$$`;
+        return `$$\n${this.pick(BLOCK_FORMULAS)} \\quad (${n})\n$$`;
       case "table": {
         const rows = ["| 序号 | 名称 | 数量 | 备注 |", "|---|---|---|---|"];
         for (let r = 0; r < 5; r++)

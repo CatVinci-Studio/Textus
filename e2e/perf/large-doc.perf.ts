@@ -7,8 +7,8 @@ import { mixedDoc, plainDoc, type LargeDoc } from "./large-docs";
 
 // The large-document benchmark (design §6.4): opens each generated
 // document the way a file drop does, then measures opening, typing in the
-// middle, scrolling end to end, an outline-style jump to the last heading
-// and a save. Not a test - it asserts nothing about the numbers - and not
+// middle, Enter, scrolling end to end, an outline-style jump to the last
+// heading and a save. Not a test - it asserts nothing about the numbers - and not
 // in `npm run test:e2e`: `npm run bench:large-doc` (playwright.perf.config.ts).
 //
 //   PERF_DOCS=zh-5k,en-5k   only these documents
@@ -60,20 +60,25 @@ function installProbes() {
   // frame's style, layout and paint are queued.
   const latencies: number[] = [];
   let pending: Promise<void> = Promise.resolve();
+  const measure = (event: Event) => {
+    const stamp = event.timeStamp;
+    pending = new Promise((resolve) =>
+      requestAnimationFrame(() => {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = () => {
+          latencies.push(performance.now() - stamp);
+          resolve();
+        };
+        channel.port2.postMessage(null);
+      }),
+    );
+  };
+  window.addEventListener("beforeinput", measure, true);
+  // ProseMirror takes Enter at keydown, and the browser sends no input.
   window.addEventListener(
-    "beforeinput",
+    "keydown",
     (event) => {
-      const stamp = event.timeStamp;
-      pending = new Promise((resolve) =>
-        requestAnimationFrame(() => {
-          const channel = new MessageChannel();
-          channel.port1.onmessage = () => {
-            latencies.push(performance.now() - stamp);
-            resolve();
-          };
-          channel.port2.postMessage(null);
-        }),
-      );
+      if (event.key === "Enter") measure(event);
     },
     true,
   );
@@ -307,6 +312,24 @@ async function typeInMiddle(page: Page, doc: LargeDoc) {
   }, start);
 }
 
+/** Enter pressed in the middle: a new block, which the browser lays out
+ *  in place of the old one (unlike a character typed into a line). */
+async function pressEnter(page: Page, count: number) {
+  await page.evaluate(() => {
+    (window as unknown as BenchWindow).__bench.latencies.length = 0;
+  });
+  for (let i = 0; i < count; i++) {
+    await page.keyboard.press("Enter");
+    await page.evaluate(() =>
+      (window as unknown as BenchWindow).__bench.settled(),
+    );
+    await page.waitForTimeout(100);
+  }
+  return page.evaluate(() => [
+    ...(window as unknown as BenchWindow).__bench.latencies,
+  ]);
+}
+
 /** Chinese committed through an input method: a composition, then its
  *  commit (Chromium's Input.imeSetComposition and Input.insertText). */
 async function typeWithIme(page: Page, count: number) {
@@ -455,6 +478,7 @@ for (const doc of docs) {
 
     const typing = await typeInMiddle(page, doc);
     const ime = doc.name.startsWith("zh") ? await typeWithIme(page, 50) : [];
+    const enter = await pressEnter(page, 20);
     const frames = await scrollThrough(page);
     const jump = await jumpToEnd(page);
     await caretToMiddle(page);
@@ -485,6 +509,8 @@ for (const doc of docs) {
       longestTaskTyping: Math.round(Math.max(0, ...typing.longTasks)),
       imeLatencyP50: ime.length ? r1(pct(ime, 0.5)) : null,
       imeLatencyP95: ime.length ? r1(pct(ime, 0.95)) : null,
+      enterLatencyP50: r1(pct(enter, 0.5)),
+      enterLatencyP95: r1(pct(enter, 0.95)),
       scrollFrames: frames.length,
       scrollFpsMedian: Math.round(1000 / Math.max(1, pct(frames, 0.5))),
       scrollFramesOver50: frames.filter((f) => f > 50).length,
