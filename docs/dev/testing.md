@@ -47,6 +47,44 @@ CI also builds the iOS app for the simulator, unsigned, on macOS (the `ios`
 job) - proof that the desktop/iOS split in `docs/dev/ios-code-map.md` still
 compiles. Running it on a device is a manual step on a Mac.
 
+## How CI is laid out
+
+`.github/workflows/ci.yml` runs these jobs on a pull request. The required
+checks are `check`, `e2e` and `native`; `e2e` and `native` are one-line jobs
+that pass when every job they stand for passed, or when all of them were
+skipped.
+
+| Job                                   | Runs                                                                | When                           |
+| ------------------------------------- | ------------------------------------------------------------------- | ------------------------------ |
+| `changes`                             | `scripts/ci-changes.mjs`: which of the jobs below to run            | always                         |
+| `check`                               | `npm run check`, then `vite build` of the app and of the playground | always                         |
+| `e2e (1/4)` to `e2e (4/4)`            | `npm run test:e2e -- --shard=N/4`                                   | the change reaches the browser |
+| `native (ubuntu-22.04)`               | `npm run check:native`                                              | the change reaches Rust        |
+| `native (macos-26)`                   | `npm test`, then `npm run check:native`                             | the change reaches Rust        |
+| `native (windows-latest)`             | `npm run check:native`                                              | the change reaches Rust        |
+| `native (windows-latest, unit tests)` | `npm test`                                                          | the change reaches Rust        |
+| `ios`                                 | the unsigned iOS simulator build                                    | the change reaches Rust        |
+
+`scripts/ci-changes.mjs` has the rules for "reaches"; the header of
+`ci.yml` sums them up. Some choices that keep a pull request's checks short:
+
+- The e2e flows are spread over four shards test by test, not file by file
+  (`fullyParallel` in `playwright.config.ts`), and each shard runs two
+  workers: a runner has four cores. A shard takes two to three and a half
+  minutes. Locally the suite runs one worker unless you pass `--workers`.
+- The unit tests run once per platform, but not twice on Linux: `check`
+  already runs them on the same image the Linux native job uses. On
+  Windows they get a job of their own, because there both they and the
+  Rust build are slowest; on macOS they stay in the Rust job, as macOS
+  runners are the scarce ones.
+- `check` builds with `vite build`, not `npm run build`: the `tsc` in front
+  of the latter has just run in `npm run check`.
+- Rust builds without debug info (`CARGO_PROFILE_DEV_DEBUG=0`): smaller
+  caches to restore, and less to link.
+- Rust builds and the Playwright browser are cached from `main` only. A pull
+  request restores `main`'s caches and saves none, so the repository's
+  10 GB of cache space holds `main`'s and isn't churned by every branch.
+
 ## Large-document benchmark
 
 ```sh

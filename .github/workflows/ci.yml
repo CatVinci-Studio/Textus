@@ -6,9 +6,10 @@ name: CI
 #   check    npm run check         types, lint, unit tests, formatting,
 #                                  README/version/updater checks; and the build
 #   e2e      npm run test:e2e      the Playwright flows, desktop and phone -
-#                                  split by spec file across three machines
+#                                  split by test across four machines
 #   native   npm run check:native  rustfmt, clippy, Rust tests - on Linux,
-#                                  macOS and Windows
+#                                  macOS and Windows; and npm test on macOS
+#                                  and Windows
 #   ios      the iOS simulator build
 #
 # `check` always runs. Its save round trip (src/document-view/
@@ -99,27 +100,31 @@ jobs:
           TEXTUS_SKIP_ROUNDTRIP: ${{ needs.changes.outputs.roundtrip != 'true' && '1' || '' }}
       # The minifier only warns on a broken selector list - and a warning
       # dropped a whole design-system rule once, unnoticed for three releases.
+      # Both builds are `vite build` without the `tsc` that `npm run build`
+      # puts in front of it: `npm run check` has just type-checked the same
+      # project.
       - name: Build, failing on CSS syntax warnings
         run: |
-          npm run build 2>&1 | tee build.log
+          npx vite build 2>&1 | tee build.log
           ! grep -q 'css-syntax-error' build.log
       # The browser playground (src/playground/) shares the editor: a change
       # that breaks its build shows up here, before it is deployed.
       - name: Build the playground
         run: |
-          npm run build:playground 2>&1 | tee build-playground.log
+          npx vite build --config vite.playground.config.ts 2>&1 | tee build-playground.log
           ! grep -q 'css-syntax-error' build-playground.log
 
-  # On one machine the flows took eight to nine minutes; --shard splits them
-  # by spec file across three.
+  # On one machine with one worker the flows took fifteen minutes; --shard
+  # splits them by test across four, each running two workers
+  # (playwright.config.ts).
   e2e-shard:
     needs: changes
     if: needs.changes.outputs.e2e == 'true'
-    name: e2e (${{ matrix.shard }}/3)
+    name: e2e (${{ matrix.shard }}/4)
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4]
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
@@ -142,13 +147,13 @@ jobs:
         run: npx playwright install-deps chromium
       - if: steps.browser.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
-      # Saved from main only, and by one shard (three would race for the key).
+      # Saved from main only, and by one shard (the others would race it for the key).
       - if: steps.browser.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main' && matrix.shard == 1
         uses: actions/cache/save@v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ steps.browser.outputs.cache-primary-key }}
-      - run: npm run test:e2e -- --shard=${{ matrix.shard }}/3
+      - run: npm run test:e2e -- --shard=${{ matrix.shard }}/4
       # A failed flow's error context (the page as it was) and any
       # screenshots and traces it left.
       - if: failure()
@@ -158,7 +163,7 @@ jobs:
           path: test-results/
           retention-days: 7
 
-  # One required check for the three shards, like `native` below: passes only
+  # One required check for the four shards, like `native` below: passes only
   # when all of them passed (or were skipped together, when the change can't
   # reach the browser).
   e2e:
@@ -178,15 +183,40 @@ jobs:
   native-platform:
     needs: changes
     if: needs.changes.outputs.native == 'true'
-    name: native (${{ matrix.os }})
+    name: native (${{ matrix.name }})
     strategy:
       fail-fast: false
       matrix:
+        # The Rust checks on each platform, and the unit tests on each one
+        # too: path handling, line endings and the like differ between them.
+        # Not again on Linux, where `check` runs them on the same image. On
+        # Windows, the slowest machine for both, in a job of their own beside
+        # the Rust one. macOS keeps them in one job: its runners are the
+        # scarce ones, and the ios job already takes a second.
+        #
         # macos-26: what macos-latest points at today, pinned (as in the
         # release workflows) so an image switch is a deliberate change.
-        os: [ubuntu-22.04, macos-26, windows-latest]
+        include:
+          - name: ubuntu-22.04
+            os: ubuntu-22.04
+            rust: true
+          - name: macos-26
+            os: macos-26
+            rust: true
+            unit: true
+          - name: windows-latest
+            os: windows-latest
+            rust: true
+          - name: windows-latest, unit tests
+            os: windows-latest
+            unit: true
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
+    env:
+      # Debug info is most of what the dev and test profiles write and link
+      # (on Windows a .pdb per binary), and CI never opens a debugger; a
+      # failing test still names its file and line.
+      CARGO_PROFILE_DEV_DEBUG: "0"
     steps:
       - uses: actions/checkout@v7
       - name: Install Linux dependencies
@@ -199,21 +229,24 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      # The unit tests once per platform too: path handling, line endings
-      # and the like differ between them. The rest of `check` does not, nor
-      # does the save round trip, which `check` runs once.
-      - run: npm test
+      # The rest of `check` doesn't differ between platforms, nor does the
+      # save round trip, which `check` runs once.
+      - if: matrix.unit
+        run: npm test
         env:
           TEXTUS_SKIP_ROUNDTRIP: "1"
       # Installs the toolchain src-tauri/rust-toolchain.toml names.
-      - uses: dtolnay/rust-toolchain@stable
+      - if: matrix.rust
+        uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - uses: swatinem/rust-cache@v2
+      - if: matrix.rust
+        uses: swatinem/rust-cache@v2
         with:
           workspaces: "./src-tauri -> target"
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: npm run check:native
+      - if: matrix.rust
+        run: npm run check:native
 
   # One required check for the three platforms: passes only when all of
   # them passed (or were skipped together, when the change can't reach the
@@ -239,6 +272,9 @@ jobs:
     if: needs.changes.outputs.native == 'true'
     runs-on: macos-26
     timeout-minutes: 60
+    env:
+      # As in native-platform: no debug info for a build nothing debugs.
+      CARGO_PROFILE_DEV_DEBUG: "0"
     steps:
       - uses: actions/checkout@v7
       # The same Xcode the TestFlight upload uses (ios-release.yml has why
