@@ -412,24 +412,13 @@ pub(crate) fn build_instructions(
     ui_language: &str,
 ) -> String {
     let mut sections = vec![AGENT_ROLE.to_string()];
-    let ui = UiNames::of(ui_language);
-
-    // The UI's names for the modes: told "read-only mode", the model
-    // called it that and never said how to get the edit made.
-    let named = |mode: &'static str, first: bool| match &ui {
-        Some(ui) if first => format!(
-            "{mode} mode ({} in their {} UI)",
-            ui.of_english(mode),
-            ui.language.english
-        ),
-        Some(ui) => format!("{mode} mode ({})", ui.of_english(mode)),
-        None => format!("{mode} mode"),
-    };
-    sections.push(match mode {
-        AgentMode::Review => format!("---interaction mode: review---\nThe user is in {}: answer, explain, discuss or research, and pin feedback to passages with add_comment; you can't change the document here. When they ask for a change anyway, give the new text in your reply and say that in {} you can propose it for them to apply with one click - or, for new text added to the document, in {}.", named("Review", true), named("Revise", false), named("Write", false)),
-        AgentMode::Revise => format!("---interaction mode: revise---\nThe user is in {}: carry out their request on the document - rewrite, tighten, fix, restructure, delete or add - and submit every document change through propose_edit so they can review it before applying.", named("Revise", true)),
-        AgentMode::Write => format!("---interaction mode: write---\nThe user is in {}: draft new text into the document - continue it, or add a paragraph, section, list, scene or dialogue - through propose_edit, which in this mode only adds text (append, insert_at_cursor, insert_after, insert_before); the user reviews each proposal before it is applied. Where it goes: with a <selected-text> block, right after the selection - insert_after with the selection's last sentence (or the whole selection) as `anchor` - never in place of it; otherwise, with a <cursor> block in a document that has text, insert_at_cursor; in an empty document, append. Questions and feedback still get a plain reply. You can't change or remove text that is already there in this mode: when the user asks for that, say it needs {}, and add nothing in its place.", named("Write", true), named("Revise", false)),
-    });
+    // Tool-less, everything goes in the system prompt; with tools, what
+    // changes from request to request comes with the message instead (see
+    // request_preamble), so a switch between Write and Revise, or a memory
+    // saved, leaves the cached prefix as it was.
+    if !with_tools {
+        sections.push(mode_section(mode, ui_language));
+    }
 
     if with_tools {
         sections.push(
@@ -461,13 +450,21 @@ pub(crate) fn build_instructions(
     }
 
     // What Textus AI remembered by itself (ai::memory): personal, then the
-    // project's, after the user's own instructions, which win over both.
-    sections.extend(crate::ai::memory::prompt_sections(
-        &workspace.memories,
-        &workspace.library,
-        workspace.root.is_some(),
-        with_tools && workspace.remember,
-    ));
+    // project's, after the user's own instructions, which win over both -
+    // here only without tools; with them, how to remember stays here and
+    // what is remembered comes with the message (request_preamble).
+    if with_tools {
+        sections.extend(crate::ai::memory::remember_instructions(
+            workspace.root.is_some(),
+            workspace.remember,
+        ));
+    } else {
+        sections.extend(crate::ai::memory::memory_sections(
+            &workspace.memories,
+            &workspace.library,
+            false,
+        ));
+    }
 
     // The skill index: names + descriptions only. Bodies load on demand via
     // use_skill, so a large skill library costs almost nothing per request.
@@ -491,6 +488,47 @@ pub(crate) fn build_instructions(
     if !with_tools {
         sections.push(request_context(workspace, document, false, focus, None));
     }
+    sections.join("\n\n")
+}
+
+/// The `---interaction mode---` section: what the user is in the panel for.
+fn mode_section(mode: AgentMode, ui_language: &str) -> String {
+    let ui = UiNames::of(ui_language);
+
+    // The UI's names for the modes: told "read-only mode", the model
+    // called it that and never said how to get the edit made.
+    let named = |mode: &'static str, first: bool| match &ui {
+        Some(ui) if first => format!(
+            "{mode} mode ({} in their {} UI)",
+            ui.of_english(mode),
+            ui.language.english
+        ),
+        Some(ui) => format!("{mode} mode ({})", ui.of_english(mode)),
+        None => format!("{mode} mode"),
+    };
+    match mode {
+        AgentMode::Review => format!("---interaction mode: review---\nThe user is in {}: answer, explain, discuss or research, and pin feedback to passages with add_comment; you can't change the document here. When they ask for a change anyway, give the new text in your reply and say that in {} you can propose it for them to apply with one click - or, for new text added to the document, in {}.", named("Review", true), named("Revise", false), named("Write", false)),
+        AgentMode::Revise => format!("---interaction mode: revise---\nThe user is in {}: carry out their request on the document - rewrite, tighten, fix, restructure, delete or add - and submit every document change through propose_edit so they can review it before applying.", named("Revise", true)),
+        AgentMode::Write => format!("---interaction mode: write---\nThe user is in {}: draft new text into the document - continue it, or add a paragraph, section, list, scene or dialogue - through propose_edit, which in this mode only adds text (append, insert_at_cursor, insert_after, insert_before); the user reviews each proposal before it is applied. Where it goes: with a <selected-text> block, right after the selection - insert_after with the selection's last sentence (or the whole selection) as `anchor` - never in place of it; otherwise, with a <cursor> block in a document that has text, insert_at_cursor; in an empty document, append. Questions and feedback still get a plain reply. You can't change or remove text that is already there in this mode: when the user asks for that, say it needs {}, and add nothing in its place.", named("Write", true), named("Revise", false)),
+    }
+}
+
+/// What a tool-calling request says before its context, rather than in the
+/// system prompt: the mode, and what Textus AI remembers. Both change
+/// within a conversation (the mode switch in the composer, a memory saved),
+/// and in the system prompt each change rewrote the whole cached prefix and
+/// history (docs/design/ai-tokens.md); here they cost only this message.
+pub(crate) fn request_preamble(
+    workspace: &AgentWorkspace,
+    mode: AgentMode,
+    ui_language: &str,
+) -> String {
+    let mut sections = vec![mode_section(mode, ui_language)];
+    sections.extend(crate::ai::memory::memory_sections(
+        &workspace.memories,
+        &workspace.library,
+        workspace.remember,
+    ));
     sections.join("\n\n")
 }
 
@@ -621,6 +659,19 @@ pub(crate) fn request_user_text(context: &str, message: &str) -> String {
         ),
         None => format!("{context}\n\n---the user's message---\n{message}"),
     }
+}
+
+/// The current user message on the tool path: the preamble (the mode, what
+/// Textus AI remembers), the request context, then what the user wrote.
+pub(crate) fn request_message(
+    workspace: &AgentWorkspace,
+    mode: AgentMode,
+    ui_language: &str,
+    context: &str,
+    message: &str,
+) -> String {
+    let preamble = request_preamble(workspace, mode, ui_language);
+    request_user_text(&format!("{preamble}\n\n{context}"), message)
 }
 
 /// The language of what the user typed, in English ("Chinese"), or None
@@ -965,7 +1016,7 @@ async fn ai_agent_message_inner(
     );
     crate::ai::project::record_library_use(doc_path.as_deref(), &sent_library);
     let user_turn = AgentTurn::User {
-        text: request_user_text(&context, &message),
+        text: request_message(&workspace, mode, &ui_language, &context, &message),
         images,
     };
     let plain_message = message.clone();
@@ -1690,9 +1741,9 @@ mod tests {
         // The tool-less fallback doesn't hear about file tools.
         let prompt = build_instructions(&unsaved, "draft", false, AgentMode::Revise, "", "en");
         assert!(!prompt.contains("---project---"));
-        let review = build_instructions(&doc_folder, "draft", true, AgentMode::Review, "", "en");
+        let review = request_preamble(&doc_folder, AgentMode::Review, "en");
         assert!(review.contains("Review mode:") && review.contains("Revise mode you"));
-        let review = build_instructions(&doc_folder, "draft", true, AgentMode::Review, "", "ja");
+        let review = request_preamble(&doc_folder, AgentMode::Review, "ja");
         assert!(
             review.contains("Review mode (レビュー in their Japanese UI)")
                 && review.contains("Revise mode (推敲)")
@@ -1843,23 +1894,71 @@ mod tests {
     }
 
     #[test]
-    fn interaction_mode_is_explicit_in_the_system_instructions() {
+    fn interaction_mode_is_explicit_in_every_message() {
         let workspace = AgentWorkspace::default();
-        let review = build_instructions(&workspace, "draft", true, AgentMode::Review, "", "en");
+        let message =
+            |mode| request_message(&workspace, mode, "en", "---document---\ndraft", "Go.");
+        let review = message(AgentMode::Review);
         assert!(review.contains("interaction mode: review"));
-        assert!(review.contains("no document edit tool is available"));
+        assert!(
+            build_instructions(&workspace, "draft", true, AgentMode::Review, "", "en")
+                .contains("no document edit tool is available")
+        );
 
-        let revise = build_instructions(&workspace, "draft", true, AgentMode::Revise, "", "en");
-        assert!(revise.contains("interaction mode: revise"));
+        assert!(message(AgentMode::Revise).contains("interaction mode: revise"));
 
         // Write adds after a selection rather than replacing it, and sends
         // a request to change what is there to Revise.
-        let write = build_instructions(&workspace, "draft", true, AgentMode::Write, "", "en");
+        let write = message(AgentMode::Write);
         assert!(write.contains("interaction mode: write"));
         assert!(
             write.contains("right after the selection") && write.contains("never in place of it")
         );
         assert!(write.contains("say it needs Revise mode"));
+        // The mode comes before the document and the user's words.
+        assert!(write.find("interaction mode").unwrap() < write.find("---document---").unwrap());
+        // Tool-less, it stays in the system prompt with everything else.
+        assert!(
+            build_instructions(&workspace, "draft", false, AgentMode::Write, "", "en")
+                .contains("interaction mode: write")
+        );
+    }
+
+    /// Switching between Write and Revise, or saving a memory, must not
+    /// change the system prompt or the tool list: either rewrote the whole
+    /// cached prefix and the history after it (docs/design/ai-tokens.md).
+    #[test]
+    fn the_cached_prefix_survives_a_mode_switch_and_a_new_memory() {
+        use crate::ai::memory::{Memories, Memory, MemoryKind, Scope};
+        let mut ws = AgentWorkspace {
+            remember: true,
+            ..AgentWorkspace::default()
+        };
+        let prefix = |ws: &AgentWorkspace, mode| {
+            let tools = ToolRegistry::builtin(false, false, mode, true, false);
+            let specs: Vec<String> = tools
+                .specs()
+                .iter()
+                .map(|s| format!("{}{}{}", s.name, s.description, s.parameters))
+                .collect();
+            (build_instructions(ws, "draft", true, mode, "", "en"), specs)
+        };
+        let revise = prefix(&ws, AgentMode::Revise);
+        assert_eq!(prefix(&ws, AgentMode::Write), revise);
+        ws.memories = Memories {
+            items: vec![Memory {
+                id: "personal/memory/x".into(),
+                scope: Scope::Personal,
+                kind: MemoryKind::Preference,
+                text: "Reply briefly.".into(),
+                file: String::new(),
+                remembered: Default::default(),
+                included: true,
+            }],
+            ..Default::default()
+        };
+        assert_eq!(prefix(&ws, AgentMode::Revise), revise);
+        assert!(request_message(&ws, AgentMode::Revise, "en", "", "Go.").contains("Reply briefly."));
     }
 
     #[test]
@@ -1921,11 +2020,13 @@ mod tests {
             ..AgentWorkspace::default()
         };
         let prompt = build_instructions(&ws, "draft", true, AgentMode::Review, "", "en");
-        let rule = prompt.find("Global rule.").unwrap();
-        let personal = prompt.find("Reply briefly.").unwrap();
-        let project = prompt.find("Spell it colour.").unwrap();
-        assert!(rule < personal && personal < project);
         assert!(prompt.contains("---remembering---"), "every mode");
+        // What is remembered comes with the message, after the user's own
+        // instructions (in the system prompt).
+        let message = request_message(&ws, AgentMode::Review, "en", "", "Go.");
+        let personal = message.find("Reply briefly.").unwrap();
+        let project = message.find("Spell it colour.").unwrap();
+        assert!(prompt.contains("Global rule.") && personal < project);
         // Without tools there is no remember tool to talk about.
         let flat = build_instructions(&ws, "draft", false, AgentMode::Review, "", "en");
         assert!(flat.contains("Reply briefly.") && !flat.contains("---remembering---"));

@@ -958,9 +958,6 @@ fn measure_text(_ctx: &ToolContext, arguments: &str) -> String {
 /// propose_edit as Revise mode offers it: every action.
 const PROPOSE_EDIT_DESCRIPTION: &str = "Propose one edit to the document. Nothing is modified directly: the user reviews the proposal and applies it with one click. Call once per distinct edit. Pick the action that matches the intent: `replace` swaps `anchor` for `text`; `replace_selection` swaps the user's currently selected text (the <selected-text> block in their message; no `anchor` needed) for `text`; `insert_before`/`insert_after` add `text` around an untouched `anchor` - inside the paragraph when the anchor is a phrase or sentence within it (write `text` as words that read on from it - after a paragraph's last sentence, this continues the paragraph), as a new paragraph when the anchor is a whole block or `text` is block content (a heading, list, several paragraphs), and as a new line of the same table or list when the anchor is a whole row or list item line and `text` is another one; `delete` removes `anchor`; `append` adds `text` at the end of the document; `insert_at_cursor` adds `text` exactly where the user's cursor is (only when their message carries a <cursor> block showing it; no `anchor` needed). `anchor` must be copied verbatim from the document and occur exactly once - if the text you need to target appears more than once, keep `anchor` as the exact text being edited and also pass `context`. `text` must be valid markdown: `-` or `1.` for lists (never `•` or other bullet symbols), `#` for headings.";
 
-/// propose_edit as Write mode offers it: the insertion actions only.
-const PROPOSE_INSERTION_DESCRIPTION: &str = "Propose new text for the document. Nothing is modified directly: the user reviews the proposal and applies it with one click. Call once per distinct addition. It only adds text and never changes or removes what is there: `append` adds `text` at the end of the document; `insert_at_cursor` adds `text` exactly where the user's cursor is (only when their message carries a <cursor> block showing it; no `anchor` needed); `insert_before`/`insert_after` add `text` around an untouched `anchor` - inside the paragraph when the anchor is a phrase or sentence within it (write `text` as words that read on from it - after a paragraph's last sentence, this continues the paragraph), as a new paragraph when the anchor is a whole block or `text` is block content (a heading, list, several paragraphs), and as a new line of the same table or list when the anchor is a whole row or list item line and `text` is another one. To write after the user's selection (the <selected-text> block), insert_after its last sentence. `anchor` must be copied verbatim from the document and occur exactly once - if it appears more than once, also pass `context`. `text` must be valid markdown: `-` or `1.` for lists (never `•` or other bullet symbols), `#` for headings.";
-
 const FIND_FILES_DESCRIPTION: &str = "Find files in the project folder by name - text files, and PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files (case-insensitive; every word must appear in the path, so \"chapter 3\" finds drafts/chapter-3.md). Markdown and plain-text documents come first. Use it whenever you know or can guess part of a file's name - a chapter, a character's notes, an outline - instead of listing every file; then read_file.";
 const FIND_FILES_DESCRIPTION_WITH_IMAGES: &str = "Find files in the project folder by name - text files, PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files, and images, marked \"(image)\" (case-insensitive; every word must appear in the path, so \"chapter 3\" finds drafts/chapter-3.md). Markdown and plain-text documents come first. Use it whenever you know or can guess part of a file's name - a chapter, a character's notes, an outline, a map - instead of listing every file; then read_file, or view_image for an image.";
 const LIST_FILES_DESCRIPTION: &str = "List the files in the project folder you can read - text files, and PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files (recursively, paths relative to it). Use it to see what reference material there is - notes, other chapters, data - when you have no name to look for; to find a file by name, use find_files instead.";
@@ -1162,32 +1159,28 @@ pub fn builtin_tools<'a>(
 
     // Review is structurally read-only: the model never receives the edit
     // tool, so a provider cannot accidentally ignore a prompt-only mode
-    // instruction and create a proposal anyway. Write receives it with the
-    // insertion actions only, and propose_insertion refuses any other.
-    for (description, actions, run, modes) in [
+    // instruction and create a proposal anyway. Write and Revise get the
+    // same tool - one tool list, so switching between them keeps the
+    // provider's cached prefix (docs/design/ai-tokens.md) - and in Write
+    // the mode section says it only adds text, which propose_insertion
+    // holds it to: any other action is refused.
+    for (run, modes) in [
         (
-            PROPOSE_EDIT_DESCRIPTION,
-            &EDIT_ACTIONS[..],
             propose_edit as fn(&ToolContext, &str) -> String,
             &[AgentMode::Revise][..],
         ),
-        (
-            PROPOSE_INSERTION_DESCRIPTION,
-            &INSERT_ACTIONS[..],
-            propose_insertion as _,
-            &[AgentMode::Write][..],
-        ),
+        (propose_insertion as _, &[AgentMode::Write][..]),
     ] {
         tools.push(Tool {
             spec: ToolSpec {
                 name: PROPOSE_EDIT_TOOL_NAME.into(),
-                description: description.into(),
+                description: PROPOSE_EDIT_DESCRIPTION.into(),
                 parameters: json!({
                     "type": "object",
                     "properties": {
                         "action": {
                             "type": "string",
-                            "enum": actions,
+                            "enum": EDIT_ACTIONS,
                             "description": "What kind of edit this is"
                         },
                         "anchor": {
@@ -1871,10 +1864,10 @@ mod tests {
                 .find(|tool| tool.spec.name == PROPOSE_EDIT_TOOL_NAME)
         };
         assert!(edit_tool(AgentMode::Review).is_none());
-        let actions =
-            |mode| edit_tool(mode).unwrap().spec.parameters["properties"]["action"]["enum"].clone();
-        assert_eq!(actions(AgentMode::Revise), json!(EDIT_ACTIONS));
-        assert_eq!(actions(AgentMode::Write), json!(INSERT_ACTIONS));
+        // Write and Revise share the tool as the model sees it (the cached
+        // prefix); Write's run refuses what changes existing text (below).
+        let spec = |mode| format!("{:?}", edit_tool(mode).unwrap().spec);
+        assert_eq!(spec(AgentMode::Write), spec(AgentMode::Revise));
     }
 
     #[test]

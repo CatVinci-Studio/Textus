@@ -6,7 +6,7 @@
 
 use super::checks::{self, Caret, Proposal};
 use crate::ai::agent::{
-    build_instructions, compact_history, request_context, request_user_text, AgentMode, MAX_STEPS,
+    build_instructions, compact_history, request_context, request_message, AgentMode, MAX_STEPS,
 };
 use crate::ai::tools::{self, ToolContext};
 use crate::ai::workspace::AgentWorkspace;
@@ -593,7 +593,10 @@ pub fn run_conversation(
         let result = block_on(run_agent_loop(
             compact_history(history.clone()),
             AgentTurn::User {
-                text: request_user_text(
+                text: request_message(
+                    ws,
+                    setup.mode,
+                    setup.ui_language,
                     &request_context(ws, &doc, true, &message_sent, focus_heading.as_deref()),
                     &message_sent,
                 ),
