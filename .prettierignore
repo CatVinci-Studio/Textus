@@ -19,3 +19,5 @@ src-tauri/src/ai/live_eval/docs/*.md
 # a Korean 끝 matter); prettier would rewrite them.
 src-tauri/src/ai/skills/**/*.md
 .claude
+# Written by scripts/sync-models.mjs; its layout is the script's.
+src-tauri/crates/aicompat/data/model-capabilities.json

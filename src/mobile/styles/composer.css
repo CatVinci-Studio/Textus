@@ -54,7 +54,7 @@
 
 @media (max-width: 760px) {
   :root[data-window-chrome="mobile"]
-    :is(.inline-chat-attach, .inline-chat-web-search) {
+    :is(.inline-chat-attach, .inline-chat-toggle) {
     width: 44px;
     height: 44px;
   }
@@ -108,7 +108,7 @@
   :root[data-window-chrome="mobile"]
     :is(
       .inline-chat-attach,
-      .inline-chat-web-search:not(.is-active),
+      .inline-chat-toggle:not(.is-active),
       .inline-chat-header-button,
       .quick-ask-pending-nav-button
     ):not(:disabled, :active):hover {
@@ -137,7 +137,7 @@
   :root[data-window-chrome="mobile"]
     :is(
       .inline-chat-attach,
-      .inline-chat-web-search,
+      .inline-chat-toggle,
       .inline-chat-header-button,
       .quick-ask-pending-nav-button,
       .inline-chat-action:not(.inline-chat-action-primary),

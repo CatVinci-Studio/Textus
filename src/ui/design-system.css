@@ -448,7 +448,7 @@
   .tree-tool,
   .icon-button,
   .inline-chat-attach,
-  .inline-chat-web-search
+  .inline-chat-toggle
 ) {
   display: inline-flex;
   align-items: center;
@@ -475,7 +475,7 @@
   height: 30px;
 }
 
-:is(.inline-chat-attach, .inline-chat-web-search) {
+:is(.inline-chat-attach, .inline-chat-toggle) {
   width: var(--control-height-sm);
   height: var(--control-height-sm);
   border: 1px solid var(--editor-border, var(--border-color));
@@ -487,7 +487,7 @@
     .tree-tool,
     .icon-button,
     .inline-chat-attach,
-    .inline-chat-web-search
+    .inline-chat-toggle
   ):not(:disabled):hover {
   background: color-mix(in srgb, currentColor 10%, transparent);
   color: var(--editor-text);
@@ -500,7 +500,7 @@
     .tree-tool,
     .icon-button,
     .inline-chat-attach,
-    .inline-chat-web-search
+    .inline-chat-toggle
   ):not(:disabled):active {
   background: color-mix(in srgb, currentColor 16%, transparent);
   transition-duration: 0s;
@@ -524,7 +524,7 @@
       .tree-tool,
       .icon-button,
       .inline-chat-attach,
-      .inline-chat-web-search,
+      .inline-chat-toggle,
       .inline-chat-send,
       .language-welcome-continue
     ):not(:disabled):active {

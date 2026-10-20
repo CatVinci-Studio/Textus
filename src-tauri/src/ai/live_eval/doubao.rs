@@ -13,6 +13,7 @@ use super::harness::{block_on, secret, with_retry};
 use crate::ai::catalog;
 use crate::ai::route::chat_vendor;
 use aicompat::agent::{AgentTurn, ImageAttachment, ProviderEvent, StepResult, ToolSpec};
+use aicompat::capabilities::{self, Thinking, ThinkingLevel};
 use aicompat::providers::custom;
 use serde_json::json;
 use std::sync::Mutex;
@@ -49,14 +50,28 @@ fn ark() -> Option<Ark> {
 /// One streamed agent step, returning its result and the reply text that
 /// was streamed (reasoning must not be part of it).
 fn streamed_step(ark: &Ark, history: &[AgentTurn], tools: &[ToolSpec]) -> (StepResult, String) {
+    let (result, streamed, _) = thinking_step(ark, history, tools, &Thinking::default());
+    (result, streamed)
+}
+
+/// [`streamed_step`] with thinking parameters, also returning the reasoning
+/// that streamed as thinking.
+fn thinking_step(
+    ark: &Ark,
+    history: &[AgentTurn],
+    tools: &[ToolSpec],
+    thinking: &Thinking,
+) -> (StepResult, String, String) {
     let streamed = Mutex::new(String::new());
-    let sink = |e: ProviderEvent<'_>| {
-        if let ProviderEvent::Text(t) = e {
-            streamed.lock().unwrap().push_str(t);
-        }
+    let thought = Mutex::new(String::new());
+    let sink = |e: ProviderEvent<'_>| match e {
+        ProviderEvent::Text(t) => streamed.lock().unwrap().push_str(t),
+        ProviderEvent::Thinking(t) => thought.lock().unwrap().push_str(t),
+        _ => {}
     };
     let result = with_retry(|| {
         streamed.lock().unwrap().clear();
+        thought.lock().unwrap().clear();
         block_on(custom::agent_step_streaming(
             ark.base_url,
             Some(&ark.key),
@@ -66,11 +81,68 @@ fn streamed_step(ark: &Ark, history: &[AgentTurn], tools: &[ToolSpec]) -> (StepR
             tools,
             None,
             chat_vendor(ark.base_url),
+            thinking,
             &sink,
         ))
     })
     .unwrap_or_else(|e| panic!("Ark agent step failed: {e}"));
-    (result, streamed.into_inner().unwrap())
+    (
+        result,
+        streamed.into_inner().unwrap(),
+        thought.into_inner().unwrap(),
+    )
+}
+
+/// The thinking levels on Ark's agent model: Deep thinks (and streams its
+/// reasoning as thinking), a tool step after it is accepted with that
+/// reasoning sent back, and Fast is accepted too.
+#[test]
+#[ignore = "live API - see module docs"]
+fn live_doubao_thinking_levels() {
+    let Some(ark) = ark() else { return };
+    let tools = [ToolSpec {
+        name: "search_document",
+        description: "Search the user's document for a phrase.",
+        parameters: json!({
+            "type": "object",
+            "properties": {"query": {"type": "string"}},
+            "required": ["query"],
+        }),
+    }];
+    let user = AgentTurn::User {
+        text: "Find where my document mentions \"field notes\". Use the tool, then say in one sentence what you found.".to_string(),
+        images: Vec::new(),
+    };
+    for level in [ThinkingLevel::Deep, ThinkingLevel::Fast] {
+        let plan = capabilities::plan("doubao", ark.agent_model, level);
+        let started = std::time::Instant::now();
+        let (first, _, thought) = thinking_step(&ark, std::slice::from_ref(&user), &tools, &plan);
+        let StepResult::ToolCalls(calls) = first else {
+            panic!("{level:?}: expected a tool call");
+        };
+        let call_id = match &calls[0] {
+            AgentTurn::ToolCall { call_id, .. } => call_id.clone(),
+            _ => panic!("expected a ToolCall turn"),
+        };
+        let mut history = vec![user.clone()];
+        history.extend(calls);
+        history.push(AgentTurn::ToolResult {
+            call_id,
+            output: "Line 12: \"Field notes from the March survey.\"".to_string(),
+            images: Vec::new(),
+        });
+        let (second, reply, _) = thinking_step(&ark, &history, &tools, &plan);
+        eprintln!(
+            "doubao {level:?}: {} chars of thinking, {:?} in {:?}",
+            thought.chars().count(),
+            reply,
+            started.elapsed()
+        );
+        assert!(matches!(second, StepResult::Done(_)), "{level:?}");
+        if level == ThinkingLevel::Deep {
+            assert!(!thought.is_empty(), "Deep streamed no reasoning");
+        }
+    }
 }
 
 #[test]

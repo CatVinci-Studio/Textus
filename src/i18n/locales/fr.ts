@@ -502,6 +502,17 @@ utiliser une.
   agentStop: "Arrêter",
   agentRetry: "Réessayer",
   agentThinking: "Réflexion…",
+  agentDeepThinking: "Réflexion approfondie",
+  agentThinkingFor: {
+    one: "Réflexion · {n} seconde",
+    many: "Réflexion · {n} de secondes",
+    other: "Réflexion · {n} secondes",
+  },
+  agentThoughtFor: {
+    one: "A réfléchi {n} seconde",
+    many: "A réfléchi {n} de secondes",
+    other: "A réfléchi {n} secondes",
+  },
   chatHistoryOpen: "Historique",
   chatHistoryEmpty: "Aucune conversation passée.",
   chatHistoryRestoreHint: "Rouvrir cette conversation avec son document",

@@ -12,6 +12,10 @@ vi.mock("../platform/capabilities", async (importOriginal) => ({
 vi.mock("../ai/provider-catalog", () => ({
   useActiveProvider: () => ({ supportsVision: true }),
 }));
+vi.mock("../ai/chat/deep-thinking", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  useCanThinkDeeper: () => false,
+}));
 vi.mock("../platform/ipc", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   ai: {
@@ -49,6 +53,7 @@ const labels = {
   modeRevise: "Revise",
   modeLabel: "Mode",
   webSearch: "Web search",
+  deepThinking: "Deep thinking",
 };
 
 function renderComposer(
@@ -96,6 +101,7 @@ describe("the composer on a phone", () => {
     expect(onSend).toHaveBeenCalledWith("why?", [], true, {
       mode: "review",
       webSearch: false,
+      thinking: "auto",
     });
   });
 

@@ -1,4 +1,5 @@
 use crate::agent::{tool_images_note, AgentTurn, EventSink, ProviderEvent, StepResult, ToolSpec};
+use crate::capabilities::Thinking;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -179,6 +180,12 @@ pub async fn read_streamed_output(
                 let Some(item) = event.get("item") else {
                     return;
                 };
+                // A reasoning item opens: the model is thinking, whether or
+                // not a summary of it follows.
+                if item.get("type").and_then(|t| t.as_str()) == Some("reasoning") {
+                    on_event(ProviderEvent::Thinking(""));
+                    return;
+                }
                 if item.get("type").and_then(|t| t.as_str()) != Some("function_call") {
                     return;
                 }
@@ -194,6 +201,11 @@ pub async fn read_streamed_output(
                     call_ids.insert(id.to_string(), call_id.to_string());
                 }
                 on_event(ProviderEvent::ToolStart { call_id, name });
+            }
+            Some("response.reasoning_summary_text.delta") => {
+                if let Some(delta) = event.get("delta").and_then(|d| d.as_str()) {
+                    on_event(ProviderEvent::Thinking(delta));
+                }
             }
             Some("response.output_text.delta") => {
                 if let Some(delta) = event.get("delta").and_then(|d| d.as_str()) {
@@ -280,6 +292,7 @@ fn turn_to_input_item(turn: &AgentTurn) -> Value {
             call_id,
             name,
             arguments,
+            ..
         } => json!({
             "type": "function_call",
             "call_id": call_id,
@@ -329,13 +342,15 @@ fn tool_to_schema(tool: &ToolSpec) -> Value {
 /// history (mapped to `input` items) plus tool definitions. `streaming`
 /// picks `stream: true`/`false` - the Codex backend only serves SSE, the
 /// public API accepts either and non-streaming is simpler for callers that
-/// don't need it.
+/// don't need it. Reasoning items are not sent back: with `store: false`
+/// the API needs only the calls and their outputs, as it always had.
 pub fn agent_request_body(
     model: &str,
     instructions: &str,
     history: &[AgentTurn],
     tools: &[ToolSpec],
     web_search: bool,
+    thinking: &Thinking,
     streaming: bool,
 ) -> Value {
     let input: Vec<Value> = history.iter().flat_map(turn_to_input_items).collect();
@@ -360,6 +375,7 @@ pub fn agent_request_body(
     if supports_verbosity(model) {
         body["text"] = json!({"verbosity": "low"});
     }
+    thinking.apply_responses(&mut body);
     body
 }
 
@@ -390,6 +406,7 @@ pub fn parse_agent_output(output: &[Value]) -> StepResult {
                     call_id: call_id.to_string(),
                     name: name.to_string(),
                     arguments: arguments.to_string(),
+                    reasoning: None,
                 });
             }
             Some("message") => {
@@ -431,6 +448,7 @@ mod tests {
                 call_id: "c1".to_string(),
                 name: "search_document".to_string(),
                 arguments: "{}".to_string(),
+                reasoning: None,
             },
             AgentTurn::ToolResult {
                 call_id: "c1".to_string(),
@@ -444,7 +462,15 @@ mod tests {
             parameters: json!({"type": "object"}),
         }];
 
-        let body = agent_request_body("gpt-5-mini", "be helpful", &history, &tools, false, true);
+        let body = agent_request_body(
+            "gpt-5-mini",
+            "be helpful",
+            &history,
+            &tools,
+            false,
+            &Thinking::default(),
+            true,
+        );
 
         assert_eq!(body["model"], "gpt-5-mini");
         assert_eq!(body["stream"], true);
@@ -467,12 +493,21 @@ mod tests {
             text: "doc + q".to_string(),
             images: Vec::new(),
         }];
-        let before = agent_request_body("gpt-6-luna", "rules", &turns, &[], false, true);
+        let before = agent_request_body(
+            "gpt-6-luna",
+            "rules",
+            &turns,
+            &[],
+            false,
+            &Thinking::default(),
+            true,
+        );
         turns.extend([
             AgentTurn::ToolCall {
                 call_id: "c1".to_string(),
                 name: "read_document".to_string(),
                 arguments: "{}".to_string(),
+                reasoning: None,
             },
             AgentTurn::ToolResult {
                 call_id: "c1".to_string(),
@@ -480,7 +515,15 @@ mod tests {
                 images: Vec::new(),
             },
         ]);
-        let after = agent_request_body("gpt-6-luna", "rules", &turns, &[], false, true);
+        let after = agent_request_body(
+            "gpt-6-luna",
+            "rules",
+            &turns,
+            &[],
+            false,
+            &Thinking::default(),
+            true,
+        );
         let (before, after) = (
             before["input"].as_array().unwrap(),
             after["input"].as_array().unwrap(),
@@ -522,6 +565,7 @@ mod tests {
                 call_id: "v".to_string(),
                 name: "view_image".to_string(),
                 arguments: "{}".to_string(),
+                reasoning: None,
             },
             AgentTurn::ToolResult {
                 call_id: "v".to_string(),
@@ -533,7 +577,15 @@ mod tests {
                 }],
             },
         ];
-        let body = agent_request_body("gpt-5-mini", "rules", &history, &[], false, true);
+        let body = agent_request_body(
+            "gpt-5-mini",
+            "rules",
+            &history,
+            &[],
+            false,
+            &Thinking::default(),
+            true,
+        );
         let input = body["input"].as_array().unwrap();
         assert_eq!(input.len(), 3);
         assert_eq!(input[1]["type"], "function_call_output");
@@ -552,10 +604,41 @@ mod tests {
 
     #[test]
     fn agent_request_body_appends_web_search_tool_and_skips_verbosity_on_old_models() {
-        let body = agent_request_body("gpt-4o-mini", "be helpful", &[], &[], true, false);
+        let body = agent_request_body(
+            "gpt-4o-mini",
+            "be helpful",
+            &[],
+            &[],
+            true,
+            &Thinking::default(),
+            false,
+        );
         assert_eq!(body["tools"].as_array().unwrap().len(), 1);
         assert_eq!(body["tools"][0]["type"], "web_search");
         assert!(body.get("text").is_none());
+    }
+
+    #[test]
+    fn agent_request_body_carries_the_thinking_plan() {
+        let deep = crate::capabilities::plan(
+            "openai",
+            "gpt-6.1-sol",
+            crate::capabilities::ThinkingLevel::Deep,
+        );
+        let body = agent_request_body("gpt-6.1-sol", "rules", &[], &[], false, &deep, true);
+        assert_eq!(body["reasoning"]["effort"], "high");
+        assert_eq!(body["reasoning"]["summary"], "auto");
+        // Auto is the request as it always was.
+        let auto = agent_request_body(
+            "gpt-6.1-sol",
+            "rules",
+            &[],
+            &[],
+            false,
+            &Thinking::default(),
+            true,
+        );
+        assert!(auto.get("reasoning").is_none());
     }
 
     #[test]

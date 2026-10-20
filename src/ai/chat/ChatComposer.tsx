@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { AgentSkill, ChatAttachment } from "../types";
+import type { AgentSkill, ChatAttachment, ThinkingLevel } from "../types";
 import { resolveSkillMessage } from "./proposal";
 import { ai, type SkillListItem } from "../../platform/ipc";
 import { resolveStrings } from "../../i18n/strings";
@@ -45,9 +45,15 @@ import {
   CloseIcon,
   GenericFileIcon,
   ImageFileIcon,
+  LightbulbIcon,
   PlusIcon,
   SearchIcon,
 } from "../../ui/icons";
+import {
+  deepThinkingOn,
+  rememberDeepThinking,
+  useCanThinkDeeper,
+} from "./deep-thinking";
 import { Select } from "../../ui/Select";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -78,6 +84,7 @@ export interface ChatComposerLabels {
   /** Accessible name of the phone's segmented mode control. */
   modeLabel: string;
   webSearch: string;
+  deepThinking: string;
   /** The `/` and `@` pickers' words; English when left out. */
   picker?: PickerLabels;
 }
@@ -133,8 +140,9 @@ interface ChatComposerProps {
    *  until the next selection. Quick Ask's captured selection stays for its
    *  whole conversation. */
   selectionPerMessage?: boolean;
-  /** Quick Ask: no attach or web-search buttons - those stay in the panel
-   *  (an @-mention still attaches a project file). */
+  /** Quick Ask: no attach, web-search or Deep thinking buttons - those
+   *  stay in the panel (an @-mention still attaches a project file) - and
+   *  it asks for a fast answer: it is for a quick change. */
   compact?: boolean;
   /** Focus the input as the composer appears (default). Off for the
    *  phone's AI sheet: focusing it raised the keyboard straight after the
@@ -154,7 +162,7 @@ interface ChatComposerProps {
     attachments: ChatAttachment[],
     /** False once the user has removed the selection chip. */
     includeSelection: boolean,
-    options: { mode: AgentMode; webSearch: boolean },
+    options: { mode: AgentMode; webSearch: boolean; thinking: ThinkingLevel },
   ) => void;
   /** The message just sent went through a skill (`/name`) - the tour's
    *  skills lesson waits for it. */
@@ -224,6 +232,16 @@ export function ChatComposer({
     if (carryMode) rememberMode(next, defaultMode);
   };
   const [webSearch, setWebSearch] = useState(defaultWebSearch);
+  const [deepThinking, setDeepThinking] = useState(deepThinkingOn);
+  // Shown only where it changes something: a model that doesn't think, or
+  // thinks one fixed way, has no button - and no Deep, even if it was left
+  // on for another model.
+  const canThinkDeeper = useCanThinkDeeper(!compact);
+  const thinking: ThinkingLevel = compact
+    ? "fast"
+    : deepThinking && canThinkDeeper
+      ? "deep"
+      : "auto";
   // Why an attachment couldn't be used ("this PDF has no text layer", "too
   // large", ...). Shown, never swallowed: the previous version caught and
   // discarded every failure, so picking a PDF - which could not work at all,
@@ -463,7 +481,7 @@ export function ChatComposer({
     setInput("");
     const staged = attachments;
     setAttachments([]);
-    onSend(message, staged, !selectionDropped, { mode, webSearch });
+    onSend(message, staged, !selectionDropped, { mode, webSearch, thinking });
     if (selectionPerMessage && selectedText) setDroppedSelection(selectedText);
     if (message !== typed) onSkillUsed?.();
   }
@@ -681,7 +699,7 @@ export function ChatComposer({
                 </button>
                 <button
                   type="button"
-                  className={`inline-chat-web-search${webSearch ? " is-active" : ""}`}
+                  className={`inline-chat-toggle inline-chat-web-search${webSearch ? " is-active" : ""}`}
                   title={labels.webSearch}
                   aria-label={labels.webSearch}
                   aria-pressed={webSearch}
@@ -690,6 +708,22 @@ export function ChatComposer({
                 >
                   <SearchIcon />
                 </button>
+                {canThinkDeeper && (
+                  <button
+                    type="button"
+                    className={`inline-chat-toggle inline-chat-deep-thinking${deepThinking ? " is-active" : ""}`}
+                    title={labels.deepThinking}
+                    aria-label={labels.deepThinking}
+                    aria-pressed={deepThinking}
+                    {...holdFocus}
+                    onClick={() => {
+                      rememberDeepThinking(!deepThinking);
+                      setDeepThinking(!deepThinking);
+                    }}
+                  >
+                    <LightbulbIcon />
+                  </button>
+                )}
               </>
             )}
             {selectedText && !selectionDropped && dockActions === undefined && (

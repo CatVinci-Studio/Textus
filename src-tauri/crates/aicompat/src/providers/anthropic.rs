@@ -1,4 +1,5 @@
 use crate::agent::{AgentTurn, EventSink, ImageAttachment, ProviderEvent, StepResult, ToolSpec};
+use crate::capabilities::{Thinking, THINKING_BINDING_BETA};
 use crate::pkce::{generate_pkce, now_ms};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -403,7 +404,17 @@ fn turns_to_messages(history: &[AgentTurn]) -> Vec<Value> {
                             call_id,
                             name,
                             arguments,
+                            reasoning,
                         } => {
+                            // The step's thinking blocks, ahead of its first
+                            // tool_use as Claude wrote them: thinking with
+                            // tools needs them back, signatures untouched,
+                            // until the step's results are answered.
+                            if tool_uses.is_empty() {
+                                if let Some(Value::Array(blocks)) = reasoning {
+                                    tool_uses.extend(blocks.iter().cloned());
+                                }
+                            }
                             let input: Value =
                                 serde_json::from_str(arguments).unwrap_or_else(|_| json!({}));
                             tool_uses.push(json!({
@@ -511,8 +522,9 @@ fn agent_request_body(
     history: &[AgentTurn],
     tools: &[ToolSpec],
     web_search: bool,
+    thinking: &Thinking,
     model: &str,
-) -> Value {
+) -> (Value, bool) {
     let mut system: Vec<Value> = system_blocks(instructions.to_string(), auth)
         .iter()
         .map(|b| json!({"type": b.kind, "text": b.text}))
@@ -531,25 +543,30 @@ fn agent_request_body(
             "max_uses": 5,
         }));
     }
-    json!({
+    let mut body = json!({
         "model": model,
         // Room for a rewritten section inside one propose_edit call; at
-        // 4096 a long rewrite was cut off mid-arguments.
-        "max_tokens": AGENT_MAX_TOKENS,
+        // 4096 a long rewrite was cut off mid-arguments. Deep thinking
+        // spends from the same limit, so it gets twice the room.
+        "max_tokens": if thinking.show { DEEP_MAX_TOKENS } else { AGENT_MAX_TOKENS },
         "stream": true,
         "system": system,
         "messages": messages_with_cache_breakpoints(history),
         "tools": tool_schemas,
         "cache_control": {"type": EPHEMERAL},
-    })
+    });
+    let binding_beta = thinking.apply_anthropic(&mut body);
+    (body, binding_beta)
 }
 
 /// Parses a Messages API `content` block array into a [`StepResult`]: any
 /// `tool_use` blocks become tool calls the caller must execute, otherwise
-/// the `text` blocks are the model's final answer.
+/// the `text` blocks are the model's final answer. A tool step's thinking
+/// blocks ride on its first call, verbatim, to be sent back with it.
 fn parse_agent_response(content: &[Value]) -> StepResult {
     let mut tool_calls = Vec::new();
     let mut text_parts = Vec::new();
+    let mut thinking = Vec::new();
 
     for block in content {
         match block.get("type").and_then(|t| t.as_str()) {
@@ -568,8 +585,10 @@ fn parse_agent_response(content: &[Value]) -> StepResult {
                     call_id: call_id.to_string(),
                     name: name.to_string(),
                     arguments,
+                    reasoning: None,
                 });
             }
+            Some("thinking" | "redacted_thinking") => thinking.push(block.clone()),
             Some("text") => {
                 if let Some(text) = block.get("text").and_then(|t| t.as_str()) {
                     text_parts.push(text.to_string());
@@ -580,6 +599,11 @@ fn parse_agent_response(content: &[Value]) -> StepResult {
     }
 
     if !tool_calls.is_empty() {
+        if let (Some(AgentTurn::ToolCall { reasoning, .. }), false) =
+            (tool_calls.first_mut(), thinking.is_empty())
+        {
+            *reasoning = Some(Value::Array(thinking));
+        }
         StepResult::ToolCalls(tool_calls)
     } else {
         StepResult::Done(text_parts.join("\n"))
@@ -588,10 +612,18 @@ fn parse_agent_response(content: &[Value]) -> StepResult {
 
 /// One in-flight content block while a streamed Messages response is being
 /// read. Only the kinds parse_agent_response cares about get accumulated;
-/// everything else (server_tool_use, web_search results, thinking) stays
-/// Ignored, exactly as the non-streaming path ignores those block types.
+/// everything else (server_tool_use, web_search results) stays Ignored,
+/// exactly as the non-streaming path ignores those block types.
 enum StreamBlock {
     Text(String),
+    /// Readable (or, by default, empty) thinking and the signature that
+    /// lets it be sent back.
+    Thinking {
+        text: String,
+        signature: String,
+    },
+    /// Thinking Claude returned encrypted - sent back as it came.
+    Redacted(Value),
     ToolUse {
         id: String,
         name: String,
@@ -648,6 +680,24 @@ impl StreamAccumulator {
                 };
                 match block.get("type").and_then(|t| t.as_str()) {
                     Some("text") => *self.block_at(index) = StreamBlock::Text(String::new()),
+                    Some("thinking") => {
+                        on_event(ProviderEvent::Thinking(""));
+                        let field = |k: &str| {
+                            block
+                                .get(k)
+                                .and_then(|v| v.as_str())
+                                .unwrap_or_default()
+                                .to_string()
+                        };
+                        *self.block_at(index) = StreamBlock::Thinking {
+                            text: field("thinking"),
+                            signature: field("signature"),
+                        };
+                    }
+                    Some("redacted_thinking") => {
+                        on_event(ProviderEvent::Thinking(""));
+                        *self.block_at(index) = StreamBlock::Redacted(block.clone());
+                    }
                     Some("tool_use") => {
                         let id = block.get("id").and_then(|v| v.as_str()).unwrap_or_default();
                         let name = block
@@ -676,6 +726,23 @@ impl StreamAccumulator {
                         if let StreamBlock::Text(buf) = self.block_at(index) {
                             buf.push_str(text);
                             on_event(ProviderEvent::Text(text));
+                        }
+                    }
+                    Some("thinking_delta") => {
+                        let Some(part) = delta.get("thinking").and_then(|t| t.as_str()) else {
+                            return;
+                        };
+                        if let StreamBlock::Thinking { text, .. } = self.block_at(index) {
+                            text.push_str(part);
+                            on_event(ProviderEvent::Thinking(part));
+                        }
+                    }
+                    Some("signature_delta") => {
+                        let Some(part) = delta.get("signature").and_then(|t| t.as_str()) else {
+                            return;
+                        };
+                        if let StreamBlock::Thinking { signature, .. } = self.block_at(index) {
+                            signature.push_str(part);
                         }
                     }
                     Some("input_json_delta") => {
@@ -726,6 +793,12 @@ impl StreamAccumulator {
             .into_iter()
             .filter_map(|block| match block {
                 StreamBlock::Text(text) => Some(json!({"type": "text", "text": text})),
+                StreamBlock::Thinking { text, signature } => Some(json!({
+                    "type": "thinking",
+                    "thinking": text,
+                    "signature": signature,
+                })),
+                StreamBlock::Redacted(block) => Some(block),
                 StreamBlock::ToolUse { id, name, args } => {
                     let input: Value = serde_json::from_str(&args).unwrap_or_else(|_| json!({}));
                     Some(json!({"type": "tool_use", "id": id, "name": name, "input": input}))
@@ -737,17 +810,20 @@ impl StreamAccumulator {
 }
 
 const AGENT_MAX_TOKENS: u32 = 16384;
+const DEEP_MAX_TOKENS: u32 = 32768;
 
 /// Runs one round-trip against Claude with the full turn history and tool
 /// definitions - the Anthropic twin of `openai_codex::agent_step`. Streams
 /// (`stream: true`) so text and tool-call fragments surface through
 /// `on_event` as they're generated.
+#[allow(clippy::too_many_arguments)]
 pub async fn agent_step(
     auth: &AnthropicAuth,
     instructions: &str,
     history: &[AgentTurn],
     tools: &[ToolSpec],
     web_search: bool,
+    thinking: &Thinking,
     model: &str,
     on_event: EventSink<'_>,
 ) -> Result<StepResult, String> {
@@ -757,6 +833,7 @@ pub async fn agent_step(
         history,
         tools,
         web_search,
+        thinking,
         model,
         on_event,
     )
@@ -765,23 +842,36 @@ pub async fn agent_step(
 }
 
 /// [`agent_step`] plus the step's token usage.
+#[allow(clippy::too_many_arguments)]
 pub async fn agent_step_with_usage(
     auth: &AnthropicAuth,
     instructions: &str,
     history: &[AgentTurn],
     tools: &[ToolSpec],
     web_search: bool,
+    thinking: &Thinking,
     model: &str,
     on_event: EventSink<'_>,
 ) -> Result<(StepResult, StepUsage), String> {
-    let body = agent_request_body(auth, instructions, history, tools, web_search, model);
+    let (body, binding_beta) = agent_request_body(
+        auth,
+        instructions,
+        history,
+        tools,
+        web_search,
+        thinking,
+        model,
+    );
+    let max_tokens = body["max_tokens"].as_u64().unwrap_or_default();
 
     let client = crate::http::streaming_client();
-    let res = apply_auth(client.post(MESSAGES_URL), auth)
-        .json(&body)
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
+    let mut req = apply_auth(client.post(MESSAGES_URL), auth);
+    if binding_beta {
+        // OAuth requests already carry an anthropic-beta list; a second
+        // header of the same name is joined to it.
+        req = req.header("anthropic-beta", THINKING_BINDING_BETA);
+    }
+    let res = req.json(&body).send().await.map_err(|e| e.to_string())?;
 
     let mut acc = StreamAccumulator::default();
     crate::http::read_sse(res, "Claude", |data| acc.apply(data, on_event)).await?;
@@ -795,7 +885,7 @@ pub async fn agent_step_with_usage(
         && matches!(acc.blocks.last(), Some(StreamBlock::ToolUse { .. }))
     {
         return Err(format!(
-            "Claude hit the {AGENT_MAX_TOKENS}-token output limit in the middle of an edit. \
+            "Claude hit the {max_tokens}-token output limit in the middle of an edit. \
              Try asking for a smaller change at a time."
         ));
     }
@@ -890,6 +980,7 @@ mod tests {
             call_id: id.to_string(),
             name: "search_document".to_string(),
             arguments: format!("{{\"query\":\"{query}\"}}"),
+            reasoning: None,
         }
     }
 
@@ -1016,7 +1107,16 @@ mod tests {
     }
 
     fn body(history: &[AgentTurn]) -> Value {
-        agent_request_body(&api_key(), "rules", history, &[], false, "m")
+        agent_request_body(
+            &api_key(),
+            "rules",
+            history,
+            &[],
+            false,
+            &Thinking::default(),
+            "m",
+        )
+        .0
     }
 
     /// Where the request's cache_control markers sit, as "system/i" and
@@ -1097,8 +1197,10 @@ mod tests {
             &[user("q")],
             &[],
             false,
+            &Thinking::default(),
             "m",
-        );
+        )
+        .0;
         assert_eq!(breakpoints(&oauth), ["system/1"]);
     }
 
@@ -1170,6 +1272,7 @@ mod tests {
                     call_id,
                     name,
                     arguments,
+                    ..
                 } = &calls[0]
                 else {
                     panic!("expected a ToolCall turn");
@@ -1192,6 +1295,7 @@ mod tests {
                 ProviderEvent::Text(t) => format!("T:{t}"),
                 ProviderEvent::ToolStart { call_id, name } => format!("S:{call_id}:{name}"),
                 ProviderEvent::ToolArgs { call_id, delta } => format!("A:{call_id}:{delta}"),
+                ProviderEvent::Thinking(t) => format!("R:{t}"),
             });
         };
         let mut acc = StreamAccumulator::default();
@@ -1252,6 +1356,104 @@ mod tests {
         ]);
         assert_eq!(events, vec!["T:answer"]);
         assert!(acc.error.as_deref().unwrap().contains("overloaded_error"));
+    }
+
+    /// Thinking with tools: the stream's thinking blocks (text, signature,
+    /// encrypted ones) come back on the step's first call exactly as Claude
+    /// wrote them, and the thinking shows as its own events.
+    #[test]
+    fn stream_accumulator_keeps_thinking_blocks_with_their_signatures() {
+        let (acc, events) = run_stream(&[
+            json!({"type": "content_block_start", "index": 0, "content_block": {"type": "thinking", "thinking": "", "signature": ""}}),
+            json!({"type": "content_block_delta", "index": 0, "delta": {"type": "thinking_delta", "thinking": "Read it "}}),
+            json!({"type": "content_block_delta", "index": 0, "delta": {"type": "thinking_delta", "thinking": "first."}}),
+            json!({"type": "content_block_delta", "index": 0, "delta": {"type": "signature_delta", "signature": "sig-1"}}),
+            json!({"type": "content_block_start", "index": 1, "content_block": {"type": "redacted_thinking", "data": "enc"}}),
+            json!({"type": "content_block_start", "index": 2, "content_block": {"type": "tool_use", "id": "tu", "name": "read_document"}}),
+            json!({"type": "content_block_delta", "index": 2, "delta": {"type": "input_json_delta", "partial_json": "{}"}}),
+        ]);
+        assert_eq!(
+            events,
+            vec![
+                "R:",
+                "R:Read it ",
+                "R:first.",
+                "R:",
+                "S:tu:read_document",
+                "A:tu:{}"
+            ]
+        );
+        let StepResult::ToolCalls(calls) = parse_agent_response(&acc.into_content()) else {
+            panic!("expected tool calls");
+        };
+        let AgentTurn::ToolCall {
+            reasoning: Some(Value::Array(blocks)),
+            ..
+        } = &calls[0]
+        else {
+            panic!("the first call carries the step's thinking");
+        };
+        assert_eq!(
+            blocks[0],
+            json!({"type": "thinking", "thinking": "Read it first.", "signature": "sig-1"})
+        );
+        assert_eq!(
+            blocks[1],
+            json!({"type": "redacted_thinking", "data": "enc"})
+        );
+    }
+
+    /// Replay: the step's thinking blocks lead its assistant message, ahead
+    /// of the tool_use blocks, and only that step's.
+    #[test]
+    fn a_steps_thinking_blocks_lead_its_assistant_message() {
+        let thought = json!({"type": "thinking", "thinking": "", "signature": "s"});
+        let history = vec![
+            user("q"),
+            AgentTurn::ToolCall {
+                call_id: "1".to_string(),
+                name: "read_document".to_string(),
+                arguments: "{}".to_string(),
+                reasoning: Some(json!([thought.clone()])),
+            },
+            call("2", "b"),
+            result("1", "x"),
+            result("2", "y"),
+            call("3", "c"),
+            result("3", "z"),
+        ];
+        let messages = turns_to_messages(&history);
+        let first = messages[1]["content"].as_array().unwrap();
+        assert_eq!(first[0], thought);
+        assert_eq!(first[1]["type"], "tool_use");
+        assert_eq!(first[2]["type"], "tool_use");
+        assert_eq!(messages[3]["content"][0]["type"], "tool_use");
+        // The cache breakpoint still lands on a tool_use, never a thinking
+        // block (which can't carry one).
+        let request = body(&history);
+        let blocks = request["messages"][1]["content"].as_array().unwrap();
+        assert!(blocks[0].get("cache_control").is_none());
+    }
+
+    #[test]
+    fn deep_thinking_request_shape() {
+        let deep = crate::capabilities::plan(
+            "anthropic",
+            "claude-sonnet-5-5",
+            crate::capabilities::ThinkingLevel::Deep,
+        );
+        let (request, beta) =
+            agent_request_body(&api_key(), "rules", &[user("q")], &[], false, &deep, "m");
+        assert!(!beta);
+        assert_eq!(request["thinking"]["type"], "adaptive");
+        assert_eq!(request["thinking"]["display"], "summarized");
+        assert_eq!(request["output_config"]["effort"], "high");
+        assert_eq!(request["max_tokens"], DEEP_MAX_TOKENS);
+        // Auto: the request as it was, no thinking fields.
+        let auto = body(&[user("q")]);
+        assert!(auto.get("thinking").is_none());
+        assert!(auto.get("output_config").is_none());
+        assert_eq!(auto["max_tokens"], AGENT_MAX_TOKENS);
     }
 
     #[test]

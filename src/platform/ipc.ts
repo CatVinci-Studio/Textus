@@ -13,6 +13,7 @@ import type {
   AgentTurn,
   ChatAttachment,
   ImageAttachment,
+  ThinkingLevel,
 } from "../ai/types";
 import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
 import type { SkillCategory } from "../ai/skills/builtin";
@@ -612,7 +613,10 @@ export type StreamEvent =
   | { type: "turn"; turn: AgentTurn }
   /** The step being streamed came back garbled and is asked for again:
    *  drop what it streamed. */
-  | { type: "retry" };
+  | { type: "retry" }
+  /** The model is thinking: a fragment of its reasoning, or "" where the
+   *  provider only says that it thinks. Never part of the reply. */
+  | { type: "thinking"; text: string };
 
 /** Where the cursor sits, beyond the raw text around it - what lets a
  *  completion fit the document instead of guessing from 2000 characters.
@@ -919,6 +923,11 @@ export interface SkillListItem {
 
 export const ai = {
   listProviders: () => call<ProviderCatalogEntry[]>("list_providers"),
+  /** Whether Deep thinking changes anything for this provider and Agent
+   *  model (null: the provider's default) - ai_can_think_deeper in
+   *  src-tauri/src/ai/catalog.rs. */
+  canThinkDeeper: (provider: string, model: string | null) =>
+    call<boolean>("ai_can_think_deeper", { provider, model }),
   fetchAgentModels: (provider: string) =>
     call<string[]>("fetch_agent_models", { provider }),
   setAiProxy: (proxy: string | null) => call<void>("set_ai_proxy", { proxy }),
@@ -987,6 +996,8 @@ export const ai = {
      *  inlined into `message` by the caller. */
     images: ImageAttachment[];
     webSearch: boolean;
+    /** How hard the model thinks; left out, the provider's default. */
+    thinking?: ThinkingLevel;
     mode: AgentMode;
     model: string | null;
     requestId: string;

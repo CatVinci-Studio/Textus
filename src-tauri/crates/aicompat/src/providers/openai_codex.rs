@@ -1,4 +1,5 @@
 use crate::agent::{AgentTurn, EventSink, StepResult, ToolSpec};
+use crate::capabilities::Thinking;
 use crate::pkce::{decode_base64url, generate_pkce, generate_state, now_ms};
 use crate::responses_api::{
     self, read_streamed_output, text_from_streamed_output, ResponsesRequest,
@@ -207,12 +208,20 @@ pub async fn agent_step(
     history: &[AgentTurn],
     tools: &[ToolSpec],
     web_search: bool,
+    thinking: &Thinking,
     model: &str,
     on_event: EventSink<'_>,
 ) -> Result<StepResult, String> {
     // The ChatGPT backend only serves SSE (streaming: true is mandatory).
-    let body =
-        responses_api::agent_request_body(model, instructions, history, tools, web_search, true);
+    let body = responses_api::agent_request_body(
+        model,
+        instructions,
+        history,
+        tools,
+        web_search,
+        thinking,
+        true,
+    );
 
     let client = crate::http::streaming_client();
     let res = client

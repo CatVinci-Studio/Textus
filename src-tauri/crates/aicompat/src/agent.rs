@@ -45,6 +45,15 @@ pub enum AgentTurn {
         call_id: String,
         name: String,
         arguments: String,
+        /// The model's reasoning for the step this call opens, in its
+        /// provider's own wire shape (Claude's thinking blocks, an
+        /// OpenAI-compatible `reasoning_content` string) - on the first call
+        /// of a step only. Sent back with the step's calls for the rest of
+        /// the exchange, where thinking with tools requires it; the main
+        /// crate drops it before the turn reaches the frontend, so it never
+        /// outlives the exchange (or appears in `AgentTurn` in types.ts).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        reasoning: Option<Value>,
     },
     ToolResult {
         call_id: String,
@@ -120,6 +129,11 @@ pub enum ProviderEvent<'a> {
     /// concatenate to the same string the final ToolCall turn carries;
     /// consumers doing live display must parse it as PARTIAL json.
     ToolArgs { call_id: &'a str, delta: &'a str },
+    /// The model is thinking: a fragment of its readable reasoning, or ""
+    /// where the provider only says that it thinks (Claude's default
+    /// display, an OpenAI reasoning item without a summary). Never part of
+    /// the step's answer.
+    Thinking(&'a str),
 }
 
 /// What [`run_agent_loop`] reports while it runs.
@@ -223,6 +237,7 @@ where
                         call_id,
                         name,
                         arguments,
+                        ..
                     } = call
                     else {
                         continue;
@@ -315,6 +330,7 @@ mod tests {
             call_id: id.into(),
             name: name.into(),
             arguments: arguments.into(),
+            reasoning: None,
         }
     }
 

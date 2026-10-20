@@ -188,11 +188,11 @@
 /* Inside the box the tools go frameless - one frame (the field's) is
    enough; the mode reads as a quiet chip, the icons as plain glyphs. */
 :is(.agent-panel-body, .chat-window-body)
-  :is(.inline-chat-attach, .inline-chat-web-search) {
+  :is(.inline-chat-attach, .inline-chat-toggle) {
   border-color: transparent;
 }
 
-:is(.agent-panel-body, .chat-window-body) .inline-chat-web-search.is-active {
+:is(.agent-panel-body, .chat-window-body) .inline-chat-toggle.is-active {
   border-color: transparent;
 }
 
@@ -302,7 +302,7 @@
   opacity: 1;
 }
 
-.inline-chat-web-search.is-active {
+.inline-chat-toggle.is-active {
   border-color: var(--editor-accent);
   background: color-mix(in srgb, var(--editor-accent) 14%, transparent);
   color: var(--editor-accent);
@@ -1039,6 +1039,54 @@
   gap: 6px;
   font-size: var(--text-sm);
   color: var(--editor-muted);
+}
+
+/* How long the model thought (ThoughtRow): one grey line under the
+   question, which opens to the reasoning when the provider shared it. */
+.agent-thought {
+  font-size: var(--text-sm);
+  color: var(--editor-muted);
+}
+
+.agent-thought-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.agent-thought-toggle:hover {
+  color: var(--editor-text);
+}
+
+.agent-thought-chevron {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+
+.agent-thought-toggle[aria-expanded="true"] .agent-thought-chevron {
+  transform: rotate(90deg);
+}
+
+.agent-thought-text {
+  margin-top: 4px;
+  padding-left: 10px;
+  border-left: 2px solid var(--editor-border);
+  font-size: var(--text-xs);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .agent-thinking-dots {

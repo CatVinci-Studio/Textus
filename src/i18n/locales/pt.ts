@@ -486,6 +486,17 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentStop: "Parar",
   agentRetry: "Tentar de novo",
   agentThinking: "Pensando…",
+  agentDeepThinking: "Raciocínio profundo",
+  agentThinkingFor: {
+    one: "Pensando · {n} segundo",
+    many: "Pensando · {n} de segundos",
+    other: "Pensando · {n} segundos",
+  },
+  agentThoughtFor: {
+    one: "Pensou por {n} segundo",
+    many: "Pensou por {n} de segundos",
+    other: "Pensou por {n} segundos",
+  },
   chatHistoryOpen: "Histórico",
   chatHistoryEmpty: "Nenhuma conversa anterior.",
   chatHistoryRestoreHint: "Reabrir esta conversa com o seu documento",

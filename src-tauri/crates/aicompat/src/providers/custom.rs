@@ -1,6 +1,7 @@
 use crate::agent::{
     tool_images_note, AgentTurn, EventSink, ImageAttachment, ProviderEvent, StepResult, ToolSpec,
 };
+use crate::capabilities::Thinking;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -200,6 +201,7 @@ fn agent_request_body(
     tools: &[ToolSpec],
     web_search: Option<NativeWebSearch>,
     vendor: Vendor,
+    thinking: &Thinking,
 ) -> Value {
     let mut tool_schemas = tools.iter().map(tool_to_schema).collect::<Vec<_>>();
     match web_search {
@@ -220,7 +222,7 @@ fn agent_request_body(
 
     let mut body = json!({
         "model": model,
-        "messages": turns_to_messages(instructions, history),
+        "messages": turns_to_messages(instructions, history, thinking.replay),
         "tools": tool_schemas,
         "tool_choice": "auto",
     });
@@ -230,19 +232,10 @@ fn agent_request_body(
     if vendor == Vendor::Ark {
         body["max_tokens"] = json!(ARK_AGENT_MAX_TOKENS);
     }
+    thinking.apply_chat_completions(&mut body);
     body
 }
 
-/// Groups the flat `AgentTurn` history into Chat Completions messages.
-/// Like the Anthropic dialect, every `ToolCall` of a step must land in ONE
-/// assistant message's `tool_calls` array - but each `ToolResult` becomes
-/// its OWN `role: "tool"` message afterward (not grouped into one, unlike
-/// Anthropic's `tool_result` content blocks), matching what
-/// api.openai.com/v1/chat/completions and compatible servers expect. A call
-/// after a result starts the next step's message (`run_agent_loop` records
-/// each step's calls before their results), so a new step only appends to
-/// the messages and the servers that cache prompt prefixes on their own
-/// (DeepSeek, Qwen, Kimi, ...) keep the earlier steps cached.
 /// A user message of image parts, then `text`.
 fn user_message_with_images(images: &[ImageAttachment], text: &str) -> Value {
     let mut content: Vec<Value> = images
@@ -258,7 +251,23 @@ fn user_message_with_images(images: &[ImageAttachment], text: &str) -> Value {
     json!({"role": "user", "content": content})
 }
 
-fn turns_to_messages(instructions: &str, history: &[AgentTurn]) -> Vec<Value> {
+/// Groups the flat `AgentTurn` history into Chat Completions messages.
+/// Like the Anthropic dialect, every `ToolCall` of a step must land in ONE
+/// assistant message's `tool_calls` array - but each `ToolResult` becomes
+/// its OWN `role: "tool"` message afterward (not grouped into one, unlike
+/// Anthropic's `tool_result` content blocks), matching what
+/// api.openai.com/v1/chat/completions and compatible servers expect. A call
+/// after a result starts the next step's message (`run_agent_loop` records
+/// each step's calls before their results), so a new step only appends to
+/// the messages and the servers that cache prompt prefixes on their own
+/// (DeepSeek, Qwen, Kimi, ...) keep the earlier steps cached. With
+/// `replay_reasoning`, a step's `reasoning_content` goes back on its
+/// assistant message (see `ProviderCaps::replay_reasoning`).
+fn turns_to_messages(
+    instructions: &str,
+    history: &[AgentTurn],
+    replay_reasoning: bool,
+) -> Vec<Value> {
     let mut messages = vec![json!({"role": "system", "content": instructions})];
     let mut i = 0;
     while i < history.len() {
@@ -283,6 +292,7 @@ fn turns_to_messages(instructions: &str, history: &[AgentTurn]) -> Vec<Value> {
                 let mut tool_calls = Vec::new();
                 let mut tool_results = Vec::new();
                 let mut tool_images = Vec::new();
+                let mut reasoning = None;
                 while let Some(turn) = history.get(i) {
                     match turn {
                         // The next step's calls.
@@ -291,7 +301,11 @@ fn turns_to_messages(instructions: &str, history: &[AgentTurn]) -> Vec<Value> {
                             call_id,
                             name,
                             arguments,
+                            reasoning: step_reasoning,
                         } => {
+                            if reasoning.is_none() {
+                                reasoning = step_reasoning.as_ref().and_then(|r| r.as_str());
+                            }
                             tool_calls.push(json!({
                                 "id": call_id,
                                 "type": "function",
@@ -312,7 +326,11 @@ fn turns_to_messages(instructions: &str, history: &[AgentTurn]) -> Vec<Value> {
                     }
                 }
                 if !tool_calls.is_empty() {
-                    messages.push(json!({"role": "assistant", "content": Value::Null, "tool_calls": tool_calls}));
+                    let mut message = json!({"role": "assistant", "content": Value::Null, "tool_calls": tool_calls});
+                    if let Some(reasoning) = reasoning.filter(|_| replay_reasoning) {
+                        message["reasoning_content"] = json!(reasoning);
+                    }
+                    messages.push(message);
                 }
                 for (call_id, output) in tool_results {
                     messages
@@ -336,7 +354,7 @@ fn turns_to_messages(instructions: &str, history: &[AgentTurn]) -> Vec<Value> {
 /// [`StepResult`]: any `tool_calls` become tool calls the caller must
 /// execute, otherwise `content` is the model's final answer.
 fn parse_agent_response(message: &Value) -> StepResult {
-    let calls: Vec<AgentTurn> = message
+    let mut calls: Vec<AgentTurn> = message
         .get("tool_calls")
         .and_then(|v| v.as_array())
         .into_iter()
@@ -354,11 +372,13 @@ fn parse_agent_response(message: &Value) -> StepResult {
                 call_id,
                 name,
                 arguments,
+                reasoning: None,
             })
         })
         .collect();
 
     if !calls.is_empty() {
+        attach_reasoning(&mut calls, reasoning_of(message).unwrap_or_default());
         return StepResult::ToolCalls(calls);
     }
     StepResult::Done(
@@ -368,6 +388,25 @@ fn parse_agent_response(message: &Value) -> StepResult {
             .unwrap_or_default()
             .to_string(),
     )
+}
+
+/// The reasoning an OpenAI-compatible message or delta carries: DeepSeek,
+/// Kimi, Qwen and GLM call it `reasoning_content`; OpenRouter, Groq and
+/// Ollama `reasoning`.
+fn reasoning_of(message: &Value) -> Option<&str> {
+    ["reasoning_content", "reasoning"]
+        .iter()
+        .find_map(|key| message.get(*key).and_then(|r| r.as_str()))
+}
+
+/// A step's reasoning rides on its first call (`AgentTurn::ToolCall`).
+fn attach_reasoning(calls: &mut [AgentTurn], text: &str) {
+    if text.is_empty() {
+        return;
+    }
+    if let Some(AgentTurn::ToolCall { reasoning, .. }) = calls.first_mut() {
+        *reasoning = Some(json!(text));
+    }
 }
 
 /// One tool call under construction while a Chat Completions stream is
@@ -390,6 +429,7 @@ struct StreamToolCall {
 #[derive(Default)]
 struct ChatStreamAccumulator {
     text: String,
+    reasoning: String,
     calls: Vec<StreamToolCall>,
     error: Option<String>,
 }
@@ -416,6 +456,13 @@ impl ChatStreamAccumulator {
         else {
             return;
         };
+
+        if let Some(thought) = reasoning_of(delta) {
+            if !thought.is_empty() {
+                self.reasoning.push_str(thought);
+                on_event(ProviderEvent::Thinking(thought));
+            }
+        }
 
         if let Some(text) = delta.get("content").and_then(|c| c.as_str()) {
             if !text.is_empty() {
@@ -475,7 +522,7 @@ impl ChatStreamAccumulator {
     }
 
     fn into_step_result(self) -> StepResult {
-        let calls: Vec<AgentTurn> = self
+        let mut calls: Vec<AgentTurn> = self
             .calls
             .into_iter()
             .filter(|c| !c.id.is_empty() && !c.name.is_empty())
@@ -487,9 +534,11 @@ impl ChatStreamAccumulator {
                 } else {
                     c.args
                 },
+                reasoning: None,
             })
             .collect();
         if !calls.is_empty() {
+            attach_reasoning(&mut calls, &self.reasoning);
             StepResult::ToolCalls(calls)
         } else {
             StepResult::Done(self.text)
@@ -512,9 +561,18 @@ pub async fn agent_step_streaming(
     tools: &[ToolSpec],
     web_search: Option<NativeWebSearch>,
     vendor: Vendor,
+    thinking: &Thinking,
     on_event: EventSink<'_>,
 ) -> Result<StepResult, String> {
-    let mut body = agent_request_body(model, instructions, history, tools, web_search, vendor);
+    let mut body = agent_request_body(
+        model,
+        instructions,
+        history,
+        tools,
+        web_search,
+        vendor,
+        thinking,
+    );
     body["stream"] = json!(true);
 
     let client = crate::http::streaming_client();
@@ -544,8 +602,17 @@ pub async fn agent_step(
     tools: &[ToolSpec],
     web_search: Option<NativeWebSearch>,
     vendor: Vendor,
+    thinking: &Thinking,
 ) -> Result<StepResult, String> {
-    let body = agent_request_body(model, instructions, history, tools, web_search, vendor);
+    let body = agent_request_body(
+        model,
+        instructions,
+        history,
+        tools,
+        web_search,
+        vendor,
+        thinking,
+    );
 
     let client = crate::http::client();
     let mut req = client.post(chat_completions_url(base_url)).json(&body);
@@ -591,6 +658,7 @@ mod tests {
                     data_base64: "AAAA".to_string(),
                 }],
             }],
+            false,
         );
         assert_eq!(with_image[1]["content"][0]["type"], "image_url");
         assert_eq!(
@@ -605,6 +673,7 @@ mod tests {
                 text: "hi".to_string(),
                 images: Vec::new(),
             }],
+            false,
         );
         assert_eq!(text_only[1]["content"], "hi");
     }
@@ -614,6 +683,7 @@ mod tests {
             call_id: id.to_string(),
             name: "search_document".to_string(),
             arguments: format!("{{\"query\":\"{query}\"}}"),
+            reasoning: None,
         }
     }
 
@@ -643,7 +713,7 @@ mod tests {
             },
         ];
 
-        let messages = turns_to_messages("be helpful", &history);
+        let messages = turns_to_messages("be helpful", &history, false);
         // system, user, assistant(tool_calls x2), tool, tool, assistant
         assert_eq!(messages.len(), 6);
         assert_eq!(messages[0]["role"], "system");
@@ -685,7 +755,7 @@ mod tests {
             },
             result("2", "found b"),
         ];
-        let messages = turns_to_messages("rules", &history);
+        let messages = turns_to_messages("rules", &history, false);
         // system, assistant(tool_calls), tool, tool, user(image)
         assert_eq!(messages.len(), 5);
         assert_eq!(messages[2]["content"], "Here is map.png.");
@@ -708,7 +778,7 @@ mod tests {
             text: "doc + q".to_string(),
             images: Vec::new(),
         }];
-        let mut before = turns_to_messages("rules", &turns);
+        let mut before = turns_to_messages("rules", &turns, false);
         for step in [
             vec![call("r", "a"), result("r", "x")],
             vec![
@@ -719,7 +789,7 @@ mod tests {
             ],
         ] {
             turns.extend(step);
-            let after = turns_to_messages("rules", &turns);
+            let after = turns_to_messages("rules", &turns, false);
             assert_eq!(after[..before.len()], before[..]);
             before = after;
         }
@@ -770,6 +840,7 @@ mod tests {
                 ProviderEvent::Text(t) => format!("T:{t}"),
                 ProviderEvent::ToolStart { call_id, name } => format!("S:{call_id}:{name}"),
                 ProviderEvent::ToolArgs { call_id, delta } => format!("A:{call_id}:{delta}"),
+                ProviderEvent::Thinking(t) => format!("R:{t}"),
             });
         };
         let mut acc = ChatStreamAccumulator::default();
@@ -815,6 +886,7 @@ mod tests {
                     call_id,
                     name,
                     arguments,
+                    ..
                 } = &calls[0]
                 else {
                     panic!("expected a ToolCall turn");
@@ -838,6 +910,91 @@ mod tests {
         assert!(acc.error.as_deref().unwrap().contains("rate limited"));
     }
 
+    /// DeepSeek-style thinking with tools: the reasoning streams as its own
+    /// events, never into the reply, and rides on the step's first call.
+    #[test]
+    fn chat_stream_keeps_reasoning_out_of_the_reply_and_on_the_call() {
+        let (acc, events) = run_stream(&[
+            r#"{"choices":[{"delta":{"reasoning_content":"Need the "}}]}"#,
+            r#"{"choices":[{"delta":{"reasoning_content":"section."}}]}"#,
+            r#"{"choices":[{"delta":{"tool_calls":[{"index":0,"id":"c1","type":"function","function":{"name":"read_document","arguments":"{}"}}]}}]}"#,
+            "[DONE]",
+        ]);
+        assert_eq!(
+            events,
+            vec!["R:Need the ", "R:section.", "S:c1:read_document", "A:c1:{}"]
+        );
+        let StepResult::ToolCalls(calls) = acc.into_step_result() else {
+            panic!("expected tool calls");
+        };
+        let AgentTurn::ToolCall { reasoning, .. } = &calls[0] else {
+            panic!("expected a ToolCall turn");
+        };
+        assert_eq!(reasoning.as_ref().unwrap(), "Need the section.");
+
+        // OpenRouter, Groq and Ollama name the field `reasoning`.
+        let (acc, events) = run_stream(&[
+            r#"{"choices":[{"delta":{"reasoning":"hm"}}]}"#,
+            r#"{"choices":[{"delta":{"content":"Yes."}}]}"#,
+        ]);
+        assert_eq!(events, vec!["R:hm", "T:Yes."]);
+        assert!(matches!(acc.into_step_result(), StepResult::Done(t) if t == "Yes."));
+    }
+
+    #[test]
+    fn a_steps_reasoning_goes_back_only_where_the_provider_wants_it() {
+        let history = vec![
+            AgentTurn::User {
+                text: "q".to_string(),
+                images: Vec::new(),
+            },
+            AgentTurn::ToolCall {
+                call_id: "1".to_string(),
+                name: "read_document".to_string(),
+                arguments: "{}".to_string(),
+                reasoning: Some(json!("Need the section.")),
+            },
+            result("1", "text"),
+        ];
+        let replayed = turns_to_messages("rules", &history, true);
+        assert_eq!(replayed[2]["reasoning_content"], "Need the section.");
+        assert_eq!(replayed[2]["tool_calls"][0]["id"], "1");
+        let kept = turns_to_messages("rules", &history, false);
+        assert!(kept[2].get("reasoning_content").is_none());
+
+        // The non-streaming answer's reasoning lands on the call the same way.
+        let StepResult::ToolCalls(calls) = parse_agent_response(&json!({
+            "reasoning_content": "Look first.",
+            "tool_calls": [{"id": "c", "function": {"name": "read_document", "arguments": "{}"}}],
+        })) else {
+            panic!("expected tool calls");
+        };
+        assert!(
+            matches!(&calls[0], AgentTurn::ToolCall { reasoning: Some(r), .. } if r == "Look first.")
+        );
+    }
+
+    #[test]
+    fn deepseek_deep_thinking_request_shape() {
+        let deep = crate::capabilities::plan(
+            "deepseek",
+            "deepseek-v4-pro",
+            crate::capabilities::ThinkingLevel::Deep,
+        );
+        let body = agent_request_body(
+            "deepseek-v4-pro",
+            "help",
+            &[],
+            &[],
+            None,
+            Vendor::Generic,
+            &deep,
+        );
+        assert_eq!(body["thinking"]["type"], "enabled");
+        assert_eq!(body["reasoning_effort"], "high");
+        assert!(deep.replay);
+    }
+
     #[test]
     fn agent_request_body_adds_each_native_search_shape() {
         let openrouter = agent_request_body(
@@ -847,6 +1004,7 @@ mod tests {
             &[],
             Some(NativeWebSearch::OpenRouter),
             Vendor::Generic,
+            &Thinking::default(),
         );
         assert_eq!(openrouter["tools"][0]["type"], "openrouter:web_search");
 
@@ -857,6 +1015,7 @@ mod tests {
             &[],
             Some(NativeWebSearch::Groq),
             Vendor::Generic,
+            &Thinking::default(),
         );
         assert_eq!(groq["tools"][0]["type"], "browser_search");
 
@@ -867,6 +1026,7 @@ mod tests {
             &[],
             Some(NativeWebSearch::Qwen),
             Vendor::Generic,
+            &Thinking::default(),
         );
         assert_eq!(qwen["enable_search"], true);
 
@@ -877,6 +1037,7 @@ mod tests {
             &[],
             Some(NativeWebSearch::Zhipu),
             Vendor::Generic,
+            &Thinking::default(),
         );
         assert_eq!(zhipu["tools"][0]["type"], "web_search");
         assert_eq!(zhipu["tools"][0]["web_search"]["enable"], true);
@@ -896,13 +1057,22 @@ mod tests {
             &tools,
             None,
             Vendor::Ark,
+            &Thinking::default(),
         );
         assert_eq!(ark["max_tokens"], ARK_AGENT_MAX_TOKENS);
         assert_eq!(ark["tools"][0]["function"]["name"], "propose_edit");
         assert!(ark.get("reasoning_effort").is_none());
         assert!(ark.get("thinking").is_none());
 
-        let generic = agent_request_body("m", "help", &[], &tools, None, Vendor::Generic);
+        let generic = agent_request_body(
+            "m",
+            "help",
+            &[],
+            &tools,
+            None,
+            Vendor::Generic,
+            &Thinking::default(),
+        );
         assert!(generic.get("max_tokens").is_none());
     }
 
@@ -940,7 +1110,11 @@ mod tests {
             r#"{"choices":[{"delta":{"content":"Field notes"}}]}"#,
             "[DONE]",
         ]);
-        assert_eq!(events, vec!["T:Field notes"]);
+        // The reasoning shows as thinking, never as reply text.
+        assert_eq!(
+            events,
+            vec!["R:The user wants", "R: a title.", "T:Field notes"]
+        );
         match acc.into_step_result() {
             StepResult::Done(text) => assert_eq!(text, "Field notes"),
             StepResult::ToolCalls(_) => panic!("expected a final answer"),
