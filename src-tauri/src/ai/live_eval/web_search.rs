@@ -10,8 +10,8 @@ use super::harness::secret;
 use crate::ai::web::search::{Backend, Service};
 use crate::ai::web::{WebPlan, WEB_FETCH_TOOL};
 use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent};
-use aicompat::capabilities::{self, NativeSearch, ThinkingLevel};
-use aicompat::providers::anthropic;
+use aicompat::capabilities::{NativeSearch, ThinkingLevel};
+use aicompat::providers::{anthropic, AgentProvider, Endpoint};
 
 /// Each service, and the .env.local name of its key (SearXNG: its address).
 const SERVICES: &[(Backend, &str)] = &[
@@ -92,11 +92,14 @@ fn ask_claude(web: &WebPlan, question: &str) -> Option<Vec<AgentTurn>> {
         web.prompt_section().unwrap()
     );
     let tools = web.tool_specs();
-    let thinking = capabilities::plan(
-        "anthropic",
-        anthropic::COMPLETION_MODEL,
-        ThinkingLevel::Auto,
-    );
+    let agent = AgentProvider {
+        id: "anthropic".to_string(),
+        model: anthropic::COMPLETION_MODEL.to_string(),
+        endpoint: Endpoint::Anthropic { auth },
+        thinking: ThinkingLevel::Auto,
+        native_search: web.native,
+        enforce_binding: false,
+    };
     let sink = |e: ProviderEvent<'_>| {
         if let ProviderEvent::Citation { url, title } = e {
             web.cite(url, title);
@@ -110,21 +113,12 @@ fn ask_claude(web: &WebPlan, question: &str) -> Option<Vec<AgentTurn>> {
         },
         4,
         |history| {
-            let (instructions, tools, auth, sink, thinking) =
-                (&instructions, &tools, &auth, &sink, &thinking);
+            let (instructions, tools, agent, sink) = (&instructions, &tools, &agent, &sink);
             async move {
-                anthropic::agent_step(
-                    auth,
-                    instructions,
-                    &history,
-                    tools,
-                    web.native.is_some(),
-                    thinking,
-                    anthropic::COMPLETION_MODEL,
-                    sink,
-                )
-                .await
-                .map(|step| web.finish_step(step))
+                agent
+                    .step(instructions, &history, tools, sink)
+                    .await
+                    .map(|(step, _)| web.finish_step(step))
             }
         },
         // The bridge agent.rs's run_tool uses (TODO(agent-async)).

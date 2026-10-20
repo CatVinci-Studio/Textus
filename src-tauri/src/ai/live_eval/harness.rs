@@ -11,8 +11,9 @@ use crate::ai::agent::{
 use crate::ai::tools::{self, ToolContext};
 use crate::ai::workspace::AgentWorkspace;
 use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, StepResult};
-use aicompat::capabilities::{self, ThinkingLevel};
+use aicompat::capabilities::ThinkingLevel;
 use aicompat::providers::anthropic::{self, AnthropicAuth, StepUsage};
+use aicompat::providers::{AgentProvider, Endpoint};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -573,9 +574,14 @@ pub fn run_conversation(
         let postfix = RefCell::new(Vec::new());
         let thinking_events = AtomicUsize::new(0);
         let thinking_chars = AtomicUsize::new(0);
-        let thinking = capabilities::Thinking {
+        // The app's provider path (route::agent_provider), on Claude.
+        let agent = AgentProvider {
+            id: "anthropic".to_string(),
+            model: setup.model.to_string(),
+            endpoint: Endpoint::Anthropic { auth: auth.clone() },
+            thinking: setup.thinking,
+            native_search: None,
             enforce_binding: true,
-            ..capabilities::plan("anthropic", setup.model, setup.thinking)
         };
         let sink = |event: ProviderEvent<'_>| {
             if let ProviderEvent::Thinking(text) = event {
@@ -597,26 +603,15 @@ pub fn run_conversation(
             |h: Vec<AgentTurn>| {
                 let (instructions, specs, usage, postfix) =
                     (&instructions, &specs, &usage, &postfix);
-                let (thinking, sink) = (&thinking, &sink);
+                let (agent, sink) = (&agent, &sink);
                 let (doc, conventions) = (&doc, &conventions);
                 async move {
                     // with_retry's loop, inline: this already runs inside
                     // block_on, which can't be nested.
                     let mut waits = [3u64, 10, 30].into_iter();
                     let (step, used): (StepResult, StepUsage) = loop {
-                        match anthropic::agent_step_with_usage(
-                            auth,
-                            instructions,
-                            &h,
-                            specs,
-                            false,
-                            thinking,
-                            setup.model,
-                            sink,
-                        )
-                        .await
-                        {
-                            Ok(v) => break v,
+                        match agent.step(instructions, &h, specs, sink).await {
+                            Ok((step, used)) => break (step, used.unwrap_or_default()),
                             Err(e) if transient(&e) => match waits.next() {
                                 Some(w) => std::thread::sleep(std::time::Duration::from_secs(w)),
                                 None => return Err(e),

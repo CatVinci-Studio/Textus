@@ -3,8 +3,9 @@
 //! `agent.rs` only deal in dialects, not per-provider auth special-casing.
 
 use crate::ai::catalog::ProviderCatalogEntry;
-use aicompat::providers::anthropic::AnthropicAuth;
-use aicompat::providers::custom;
+use aicompat::capabilities::{NativeSearch, ThinkingLevel};
+use aicompat::providers::anthropic::{self, AnthropicAuth};
+use aicompat::providers::{custom, openai_api_key, openai_codex, AgentProvider, Endpoint};
 use tauri::AppHandle;
 
 pub(crate) const NOT_CONFIGURED: &str =
@@ -70,6 +71,88 @@ pub async fn resolve_chat_completions(
         return Err(NOT_CONFIGURED.to_string());
     }
     Ok((base_url, key, entry.default_model.map(str::to_string)))
+}
+
+/// The provider, credentials and model an agent request runs on - None for
+/// a dialect without tool calling, which gets one plain completion
+/// (agent.rs's flattened_chat_turn). `model` is the user's Settings choice,
+/// or None for the provider's agent default.
+pub async fn agent_provider(
+    app: &AppHandle,
+    entry: &ProviderCatalogEntry,
+    model: Option<String>,
+    thinking: ThinkingLevel,
+    native_search: Option<NativeSearch>,
+) -> Result<Option<AgentProvider>, String> {
+    let (model, endpoint) = match entry.dialect {
+        "openai-responses" => match resolve_openai_auth(app).await? {
+            OpenaiAuth::Codex {
+                access_token,
+                account_id,
+            } => (
+                // Clamped, not just defaulted: a model saved while the
+                // API-key auth method was active is a hard 400 here.
+                openai_codex::usable_model(
+                    model.as_deref(),
+                    entry
+                        .agent_default_model
+                        .unwrap_or(openai_codex::COMPLETION_MODEL),
+                )
+                .to_string(),
+                Endpoint::Codex {
+                    access_token,
+                    account_id,
+                    originator: crate::app_identity::ORIGINATOR.to_string(),
+                },
+            ),
+            OpenaiAuth::ApiKey(api_key) => (
+                model.unwrap_or_else(|| {
+                    entry
+                        .agent_default_model
+                        .unwrap_or(openai_api_key::PUBLIC_API_MODEL)
+                        .to_string()
+                }),
+                Endpoint::OpenaiApiKey { api_key },
+            ),
+        },
+        "anthropic-messages" => {
+            let auth = resolve_anthropic_auth(app).await?;
+            (
+                model.unwrap_or_else(|| {
+                    entry
+                        .agent_default_model
+                        .unwrap_or(anthropic::COMPLETION_MODEL)
+                        .to_string()
+                }),
+                Endpoint::Anthropic { auth },
+            )
+        }
+        "openai-chat-completions" => {
+            let (base_url, api_key, default_model) = resolve_chat_completions(app, entry).await?;
+            let model = model
+                .or_else(|| entry.agent_default_model.map(str::to_string))
+                .or(default_model)
+                .ok_or_else(|| NOT_CONFIGURED.to_string())?;
+            let vendor = chat_vendor(&base_url);
+            (
+                model,
+                Endpoint::ChatCompletions {
+                    base_url,
+                    api_key,
+                    vendor,
+                },
+            )
+        }
+        _ => return Ok(None),
+    };
+    Ok(Some(AgentProvider {
+        id: entry.id.to_string(),
+        model,
+        endpoint,
+        thinking,
+        native_search,
+        enforce_binding: false,
+    }))
 }
 
 /// Which server a chat-completions base URL points at, for the request
