@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { compileQuery, findReplaceKey } from "./find-replace-plugin";
@@ -48,7 +48,16 @@ function scrollToActive(view: EditorView, behavior = scrollBehavior()) {
 
 /** Owns the find & replace bar's open state and drives find-replace-plugin.ts via meta transactions. */
 export function useFindReplace(run: EditorRunner) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(false);
+  // What toggle and dismiss read. The window-event listeners that call them
+  // are re-attached in an effect after each render, so a second Find menu
+  // event right after the first can reach the previous render's callbacks:
+  // reading `open` there, the reopen closed the closing bar again.
+  const openRef = useRef(false);
+  const setOpen = useCallback((value: boolean) => {
+    openRef.current = value;
+    setOpenState(value);
+  }, []);
   const [query, setQuery] = useState("");
   const [replacement, setReplacement] = useState("");
   const [caseSensitive, setCaseSensitive] = useState(false);
@@ -161,26 +170,26 @@ export function useFindReplace(run: EditorRunner) {
     });
     setOpen(false);
     setStatus(IDLE_STATUS);
-  }, [run]);
+  }, [run, setOpen]);
 
   /** Closes the bar without handing focus back to the document: something
    *  else is taking the screen (the iPhone's sidebar drawer), and focusing
    *  the page there would bring the keyboard up under it. */
   const dismiss = useCallback(() => {
-    if (!open) return;
+    if (!openRef.current) return;
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       view.dispatch(view.state.tr.setMeta(findReplaceKey, { type: "clear" }));
     });
     setOpen(false);
     setStatus(IDLE_STATUS);
-  }, [open, run]);
+  }, [run, setOpen]);
 
   const toggle = useCallback(() => {
     // Opening with a kept query re-searches via the dispatch effect above.
-    if (open) close();
+    if (openRef.current) close();
     else setOpen(true);
-  }, [open, close]);
+  }, [close, setOpen]);
 
   // Escape closes the bar even when focus has moved to the editor (Replace/
   // Replace All refocus it) - the bar's own Escape handler only fires while
