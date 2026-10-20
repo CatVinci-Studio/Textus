@@ -3,7 +3,8 @@
 //! HTML. Two callers, one extraction: chat attachments
 //! (commands/attachment.rs, the composer's "+") and Textus AI's project tools
 //! (ai/project.rs), so a file reads the same whether it was attached or found
-//! in the project folder.
+//! in the project folder. A Word file is also opened as a document of its
+//! own (commands/word_import.rs), through docx.rs's document mode.
 //!
 //! Markdown rather than flat text because structure is what a model reads a
 //! document by: which line is a heading, which lines are one list, which
@@ -28,6 +29,8 @@ use std::path::Path;
 
 /// Also for anything holding a web page, such as a fetch tool.
 pub(crate) use html::html_to_markdown;
+
+pub(crate) use docx::docx_document;
 
 /// The formats converted to Markdown, as lowercase extensions - the arms of
 /// `document_text`. HTML is here for attachments; the project tools read an
@@ -220,6 +223,9 @@ fn cell_text(cell: &calamine::Data) -> String {
 
 /// A minimal .docx holding `paragraphs`, for tests that need a real Word
 /// file on disk (here, ai/project.rs, the live eval).
+#[cfg(test)]
+pub(crate) use docx::test_docx_with;
+
 #[cfg(test)]
 pub(crate) fn test_docx(paragraphs: &[&str]) -> Vec<u8> {
     let body: String = paragraphs

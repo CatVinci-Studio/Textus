@@ -32,3 +32,4 @@ pub mod themes;
 #[cfg(desktop)]
 pub mod update;
 pub mod vault;
+pub mod word_import;

@@ -13,6 +13,7 @@ import type { SaveOutcome } from "../document/autosave";
 import { fs, session } from "../platform/ipc";
 import { moveConversations } from "../ai/chat/chat-history";
 import { defaultMarkdownFilename } from "../document/save-default-name";
+import { isWordDocument, wordSaveSuggestion } from "../document/word-import";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./useTabState";
 
@@ -62,15 +63,26 @@ export function useSaveTabs(opts: {
     async (tabId: string): Promise<boolean> => {
       const tab = liveTabs().find((tb) => tb.id === tabId);
       if (!tab) return false;
+      // Made from a Word document: a .md of the same name, beside it.
+      const fromWord = tab.importedFrom
+        ? wordSaveSuggestion(tab.importedFrom)
+        : null;
       const defaultName = tab.path
         ? basename(tab.path)
-        : defaultMarkdownFilename(
+        : (fromWord?.name ??
+          defaultMarkdownFilename(
             tab.content,
             tab.helpDoc ? tabTitle(tab, t) : t.untitledTab,
             autoSuggestFilename,
-          );
-      const picked = await fs.saveFileDialog(defaultName);
+          ));
+      const picked = await fs.saveFileDialog(defaultName, fromWord?.dir);
       if (!picked) return false;
+      // Markdown written into a .docx would destroy the Word document - the
+      // one this was opened from, most likely.
+      if (isWordDocument(picked)) {
+        await showMessage(t.wordSaveRefused, { tone: "warning" });
+        return false;
+      }
       if (!(await writeOrReport(picked, tab.content))) return false;
       void session.addRecentFile(picked);
       // First save of a draft: any pasted images it holds live in the app's
@@ -105,6 +117,7 @@ export function useSaveTabs(opts: {
       }
       updateTab(tabId, {
         path: picked,
+        importedFrom: undefined,
         content,
         savedContent: content,
         diskMtime: await statMtime(picked),

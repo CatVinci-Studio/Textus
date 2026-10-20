@@ -24,6 +24,11 @@ import { lastCaret } from "../document/last-carets";
 import { isIOSApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
+import { isWordDocument, wordDocumentTab } from "../document/word-import";
+import { showMessage } from "../ui/app-dialog";
+import { basename } from "../utils/path";
+import { errorText } from "../utils/error-text";
+import type { Strings } from "../i18n/strings";
 import type { NewDocumentMode } from "../settings/SettingsContext";
 import type { PendingClose } from "./close-flow";
 import type { TabState } from "./useTabState";
@@ -61,10 +66,13 @@ export function useFileOpening(opts: {
   newDocumentMode: NewDocumentMode;
   setPendingClose: (close: PendingClose) => void;
   /** File > Open's file-type names besides Markdown, in the UI language. */
-  dialogFilters: { textFilter: string; allFilter: string };
+  dialogFilters: { textFilter: string; wordFilter: string; allFilter: string };
   /** Settings › General › Restore previous session on startup, which
    *  reopening a document at its last caret follows. */
   restoreCarets: boolean;
+  t: Strings;
+  /** A Word document was opened as a new document (word-import.ts). */
+  onWordDocumentOpened: (path: string) => void;
 }) {
   const {
     tabState,
@@ -72,13 +80,48 @@ export function useFileOpening(opts: {
     setPendingClose,
     dialogFilters,
     restoreCarets,
+    t,
+    onWordDocumentOpened,
   } = opts;
   const { tabsRef, liveTabs, setTabs, activeTabId, setActiveTabId, updateTab } =
     tabState;
 
+  // What a tab holds once `path` is opened in it. A Word document is
+  // converted into a new, unsaved document instead (word-import.ts); null
+  // when that failed, which is said here.
+  const readDocument = useCallback(
+    async (path: string): Promise<Partial<DocTab> | null> => {
+      if (isWordDocument(path)) {
+        try {
+          const doc = await wordDocumentTab(path);
+          onWordDocumentOpened(path);
+          return doc;
+        } catch (err) {
+          void showMessage(
+            `${t.wordImportFailed.replace("{name}", basename(path))}\n${errorText(err)}`,
+            { tone: "error" },
+          );
+          return null;
+        }
+      }
+      const { content, diskMtime } = await readDocFromDisk(path);
+      void session.addRecentFile(path); // feeds File > Open Recent
+      return {
+        path,
+        content,
+        savedContent: content,
+        diskMtime,
+        importedFrom: undefined,
+      };
+    },
+    [t, onWordDocumentOpened],
+  );
+
   const openPathInTab = useCallback(
     async (path: string, open: OpenOptions = {}) => {
-      const existing = tabsRef.current.find((tab) => tab.path === path);
+      const existing = tabsRef.current.find(
+        (tab) => tab.path === path || tab.importedFrom === path,
+      );
       if (existing) {
         // Source Mode has no headings to scroll to: the tab just comes up.
         if (open.anchor && !existing.sourceMode)
@@ -90,43 +133,34 @@ export function useFileOpening(opts: {
         setActiveTabId(existing.id);
         return;
       }
-      const { content: text, diskMtime } = await readDocFromDisk(path);
-      void session.addRecentFile(path); // feeds File > Open Recent
-      const newTab: DocTab = {
-        ...makeBlankTab(),
-        path,
-        content: text,
-        savedContent: text,
-        diskMtime,
-      };
-      const jump = openingJump(open, path, diskMtime, restoreCarets);
+      const doc = await readDocument(path);
+      if (!doc) return;
+      const newTab: DocTab = { ...makeBlankTab(), ...doc };
+      const jump =
+        newTab.path && openingJump(open, path, newTab.diskMtime, restoreCarets);
       if (jump) setTabJump(newTab.id, jump);
       setTabs((prev) => [...prev, newTab]);
       setActiveTabId(newTab.id);
     },
-    [tabsRef, setTabs, setActiveTabId, restoreCarets],
+    [tabsRef, setTabs, setActiveTabId, restoreCarets, readDocument],
   );
 
   // "window" mode's actual replace step, shared between the no-dirty fast
   // path and the save/discard prompt's resolution (2.3: unsaved protection).
   const replaceTabWithFile = useCallback(
     async (tabId: string, path: string, open: OpenOptions = {}) => {
-      const { content: text, diskMtime } = await readDocFromDisk(path);
-      void session.addRecentFile(path);
+      const doc = await readDocument(path);
+      if (!doc) return;
       // Taken by the editor the new reloadKey mounts.
-      const jump = openingJump(open, path, diskMtime, restoreCarets);
+      const jump =
+        doc.path &&
+        openingJump(open, path, doc.diskMtime ?? null, restoreCarets);
       if (jump) setTabJump(tabId, jump);
       const reloadKey =
         (tabsRef.current.find((tb) => tb.id === tabId)?.reloadKey ?? 0) + 1;
-      updateTab(tabId, {
-        path,
-        content: text,
-        savedContent: text,
-        diskMtime,
-        reloadKey,
-      });
+      updateTab(tabId, { ...doc, reloadKey });
     },
-    [tabsRef, updateTab, restoreCarets],
+    [tabsRef, updateTab, restoreCarets, readDocument],
   );
 
   const openFile = useCallback(

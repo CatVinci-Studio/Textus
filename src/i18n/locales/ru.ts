@@ -262,6 +262,7 @@ export default {
   zenExitButton: "Выйти из режима дзен",
   openDialogText: "Текстовые файлы",
   openDialogAll: "Все файлы",
+  openDialogWord: "Документы Word",
   agentPanelSourceMode: `${AI_NAME} работает в визуальном режиме редактора. Вернитесь в него, чтобы продолжить диалог.`,
   agentPanelBackToEditor: "Вернуться в редактор",
   modelTagVision: "изображения",
@@ -934,6 +935,12 @@ export default {
   draftRestoredMessage:
     "Восстановлено несохранённое содержимое прошлого сеанса.",
   draftRestoredDismiss: "Понятно",
+  wordImportNotice:
+    "{name} открыт как новый документ Markdown. Часть оформления может выглядеть иначе, чем в Word; сам файл Word не изменён.",
+  wordImportDismiss: "Понятно",
+  wordImportFailed: "Не удалось открыть {name}.",
+  wordSaveRefused:
+    "Документ Markdown нельзя сохранить поверх документа Word. Выберите имя, оканчивающееся на .md.",
   fileChangedOnDiskTitle: "Файл изменён на диске",
   fileChangedOnDiskMessage:
     "Этот файл изменён на диске другой программой. При сохранении эти изменения будут перезаписаны.",

@@ -10,32 +10,83 @@
 //! on them) become headings, "Title" a top heading.
 
 use super::markdown::{self, Blocks, Inline, Marks};
-use super::xml::{zip_entry, Node, Pull, Rels, Tag};
+use super::xml::{resolve_part, zip_entry, Node, Pull, Rels, Tag};
 use std::collections::HashMap;
 use std::path::Path;
 
+/// Saves one picture of a document being opened - its file name in the
+/// .docx and its bytes - and returns the src to link it by.
+pub(crate) type SaveImage<'a> = dyn FnMut(&str, &[u8]) -> Option<String> + 'a;
+
+/// The src a picture's relationship target is saved as (`convert`).
+type Picture<'a> = dyn FnMut(&str) -> Option<String> + 'a;
+
+/// The Markdown the AI reads: the text as written, pictures by their path
+/// inside the file.
 pub(super) fn docx_markdown(path: &Path) -> Result<String, String> {
+    convert(path, None)
+}
+
+/// The Markdown of a Word file opened as a document (File > Open; the
+/// command is commands/word_import.rs). Unlike the AI's, the text is
+/// escaped so it reads back as the same words, line breaks stay breaks,
+/// and each picture is handed to `save_image` with its file name and bytes;
+/// the src it returns is what the document links to (None: the picture is
+/// linked by its path inside the file, and shows as missing).
+pub(crate) fn docx_document(path: &Path, save_image: &mut SaveImage<'_>) -> Result<String, String> {
+    convert(path, Some(save_image))
+}
+
+fn convert(path: &Path, save_image: Option<&mut SaveImage<'_>>) -> Result<String, String> {
     let file = std::fs::File::open(path).map_err(|e| e.to_string())?;
     let mut zip = zip::ZipArchive::new(file)
         .map_err(|_| "This .docx is not a readable Word file.".to_string())?;
     let body = zip_entry(&mut zip, "word/document.xml")
         .ok_or_else(|| "This .docx has no document body.".to_string())?;
     let part = |zip: &mut zip::ZipArchive<_>, name: &str| zip_entry(zip, name).unwrap_or_default();
+    let styles = Styles::parse(&part(&mut zip, "word/styles.xml"));
+    let numbering = Numbering::parse(&part(&mut zip, "word/numbering.xml"));
+    let notes: Vec<_> = ["footnote", "endnote"]
+        .into_iter()
+        .map(|kind| {
+            let xml = part(&mut zip, &format!("word/{kind}s.xml"));
+            let rels = Rels::parse(&part(&mut zip, &format!("word/_rels/{kind}s.xml.rels")));
+            (kind, xml, rels)
+        })
+        .collect();
+    let rels = Rels::parse(&part(&mut zip, "word/_rels/document.xml.rels"));
+
+    // The pictures are read out of the file as the text reaches them; one
+    // used twice is saved once.
+    let mut saved: HashMap<String, Option<String>> = HashMap::new();
+    let mut picture = save_image.map(|save| {
+        move |target: &str| -> Option<String> {
+            if let Some(src) = saved.get(target) {
+                return src.clone();
+            }
+            let entry = resolve_part("word", target);
+            let name = entry.rsplit('/').next().unwrap_or_default().to_string();
+            let src = zip_entry(&mut zip, &entry).and_then(|bytes| save(&name, &bytes));
+            saved.insert(target.to_string(), src.clone());
+            src
+        }
+    });
 
     let mut doc = Docx {
-        styles: Styles::parse(&part(&mut zip, "word/styles.xml")),
-        numbering: Numbering::parse(&part(&mut zip, "word/numbering.xml")),
+        styles,
+        numbering,
         rels: Rels::default(),
         notes: HashMap::new(),
         cited: Vec::new(),
+        picture: picture.as_mut().map(|f| f as &mut Picture<'_>),
+        one_line: 0,
     };
     // Notes first, so a reference in the body can number itself.
-    for kind in ["footnote", "endnote"] {
-        let xml = part(&mut zip, &format!("word/{kind}s.xml"));
-        doc.rels = Rels::parse(&part(&mut zip, &format!("word/_rels/{kind}s.xml.rels")));
+    for (kind, xml, rels) in notes {
+        doc.rels = rels;
         doc.read_notes(&xml, kind);
     }
-    doc.rels = Rels::parse(&part(&mut zip, "word/_rels/document.xml.rels"));
+    doc.rels = rels;
 
     let mut out = Blocks::default();
     doc.blocks(&mut Pull::new(&body), &mut out);
@@ -49,7 +100,7 @@ pub(super) fn docx_markdown(path: &Path) -> Result<String, String> {
     Ok(text.trim().to_string())
 }
 
-struct Docx {
+struct Docx<'a> {
     styles: Styles,
     numbering: Numbering,
     rels: Rels,
@@ -58,6 +109,13 @@ struct Docx {
     /// The notes in the order the body refers to them; a note's number is
     /// its place here.
     cited: Vec<(&'static str, String)>,
+    /// Set when the file is opened as a document (`docx_document`): the src
+    /// a picture's relationship target is saved as. It also means the text
+    /// is escaped.
+    picture: Option<&'a mut Picture<'a>>,
+    /// Inside a table cell or a note, whose paragraphs are written on one
+    /// line: a line break there is no Markdown break.
+    one_line: usize,
 }
 
 /// What `<w:pPr>` says about a paragraph.
@@ -69,7 +127,37 @@ struct ParaProps {
     numbering: Option<(usize, String)>,
 }
 
-impl Docx {
+impl Docx<'_> {
+    /// Opened as a document rather than read for the AI.
+    fn opening(&self) -> bool {
+        self.picture.is_some()
+    }
+
+    /// A run's text as Markdown text, `in_link` when it is a link's.
+    fn text(&self, text: &str, in_link: bool) -> String {
+        if self.opening() {
+            markdown::escape_text(text, in_link)
+        } else {
+            text.to_string()
+        }
+    }
+
+    /// A paragraph's rendered runs as the lines of one block. Opened as a
+    /// document, a line break is a hard break (`\` at the line's end) and
+    /// not the soft one that reads as a space, and no line may start a
+    /// block of its own.
+    fn lines(&self, text: String) -> String {
+        if !self.opening() {
+            return text;
+        }
+        let text = markdown::escape_line_starts(&text);
+        if self.one_line > 0 {
+            text
+        } else {
+            text.replace('\n', "\\\n")
+        }
+    }
+
     /// Paragraphs and tables until the Close of the element they sit in (the
     /// body, a table cell, a text box, a note). Everything else - content
     /// controls, custom XML, inserted revisions - is looked through.
@@ -117,25 +205,25 @@ impl Docx {
             .or_else(|| style.and_then(|s| self.styles.numbering(s)))
             .filter(|(_, id)| id != "0");
         if let Some(level) = heading.filter(|_| !line.render_plain().is_empty()) {
-            out.push(&format!(
-                "{} {}",
-                "#".repeat(level.min(6)),
-                line.render_plain()
-            ));
+            let mut text = line.render_plain();
+            if self.opening() {
+                text = markdown::escape_closing_hashes(&text);
+            }
+            out.push(&format!("{} {text}", "#".repeat(level.min(6))));
         } else if let Some((level, id)) = numbering {
-            let text = line.render();
+            let text = self.lines(line.render());
             let marker = if self.numbering.is_bullet(&id, level) {
-                "-"
+                "-".to_string()
             } else {
-                "1."
+                format!("{}.", self.numbering.next_number(&id, level))
             };
-            out.push_item(level, marker, &text);
+            out.push_item(level, &marker, &text);
         } else if style.is_some_and(|s| self.styles.is_quote(s)) {
-            let text = line.render();
+            let text = self.lines(line.render());
             let quoted: Vec<String> = text.lines().map(|l| format!("> {l}")).collect();
             out.push(&quoted.join("\n"));
         } else {
-            out.push(&line.render());
+            out.push(&self.lines(line.render()));
         }
         if !boxed.is_empty() {
             out.push(&boxed.finish());
@@ -192,7 +280,10 @@ impl Docx {
             };
             match tag.name.as_str() {
                 "rPr" => marks = self.run_props(x),
-                "t" => line.push(&x.text(), marks, link),
+                "t" => {
+                    let text = self.text(&x.text(), link.is_some());
+                    line.push(&text, marks, link);
+                }
                 "tab" => {
                     x.skip();
                     line.push("\t", marks, link);
@@ -285,7 +376,13 @@ impl Docx {
                 Node::End => break,
             }
         }
-        let target = target?;
+        let mut target = target?;
+        // An external picture (TargetMode="External") is a URL already.
+        if !target.contains("://") {
+            if let Some(src) = self.picture.as_mut().and_then(|save| save(&target)) {
+                target = src;
+            }
+        }
         Some(format!("![{alt}]({})", markdown::link_target(&target)))
     }
 
@@ -336,6 +433,7 @@ impl Docx {
     fn cell(&mut self, x: &mut Pull) -> (String, usize) {
         let mut span = 1;
         let mut content = Blocks::default();
+        self.one_line += 1;
         loop {
             match x.next() {
                 Node::Open(tag) => match tag.name.as_str() {
@@ -348,6 +446,7 @@ impl Docx {
                 Node::Text(_) => {}
             }
         }
+        self.one_line -= 1;
         (content.finish(), span)
     }
 
@@ -358,7 +457,9 @@ impl Docx {
                 Node::Open(tag) if tag.name == kind => {
                     let id = tag.attr("id").unwrap_or_default().to_string();
                     let mut content = Blocks::default();
+                    self.one_line += 1;
                     self.blocks(&mut x, &mut content);
+                    self.one_line -= 1;
                     // A definition is one paragraph; the separator "notes"
                     // Word keeps beside the real ones are empty.
                     let text = content
@@ -564,13 +665,22 @@ fn style(x: &mut Pull) -> Style {
     }
 }
 
-/// Which list levels are bullets: numId -> abstractNumId -> each level's
-/// numFmt.
+/// Which list levels are bullets, and what number each numbered item
+/// shows: numId -> abstractNumId -> each level's numFmt and start, with the
+/// numId's own start overrides on top.
 #[derive(Default)]
 struct Numbering {
     abstract_of: HashMap<String, String>,
     /// (abstractNumId, ilvl) -> numFmt
     formats: HashMap<(String, usize), String>,
+    /// (abstractNumId, ilvl) -> w:start
+    starts: HashMap<(String, usize), usize>,
+    /// (numId, ilvl) -> w:startOverride: Word's "Restart at 1" is a new
+    /// numId on the same definition, with this.
+    start_overrides: HashMap<(String, usize), usize>,
+    /// The number last shown at each level of each numId, counted as the
+    /// body is read.
+    counters: HashMap<String, Vec<Option<usize>>>,
 }
 
 impl Numbering {
@@ -580,27 +690,51 @@ impl Numbering {
         let mut abstract_id = String::new();
         let mut num_id = String::new();
         let mut level = 0;
+        let number = |tag: &Tag, name: &str| tag.attr(name).and_then(|v| v.parse().ok());
         loop {
             match x.next() {
                 Node::Open(tag) => match tag.name.as_str() {
                     "abstractNum" => {
                         abstract_id = tag.attr("abstractNumId").unwrap_or_default().to_string()
                     }
-                    "lvl" => level = tag.attr("ilvl").and_then(|v| v.parse().ok()).unwrap_or(0),
+                    "lvl" => level = number(&tag, "ilvl").unwrap_or(0),
                     "numFmt" => {
                         let format = tag.attr("val").unwrap_or_default().to_string();
                         numbering
                             .formats
                             .insert((abstract_id.clone(), level), format);
                     }
+                    "start" => {
+                        if let Some(start) = number(&tag, "val") {
+                            numbering.starts.insert((abstract_id.clone(), level), start);
+                        }
+                    }
                     "num" => num_id = tag.attr("numId").unwrap_or_default().to_string(),
                     "abstractNumId" => {
                         let id = tag.attr("val").unwrap_or_default().to_string();
                         numbering.abstract_of.insert(num_id.clone(), id);
                     }
-                    // A level override restates a level's format; the
+                    // A level override may restate a level's format too; the
                     // abstract definition is close enough to say "bullet".
-                    "lvlOverride" => x.skip(),
+                    "lvlOverride" => {
+                        let level = number(&tag, "ilvl").unwrap_or(0);
+                        loop {
+                            match x.next() {
+                                Node::Open(child) => {
+                                    if child.name == "startOverride" {
+                                        if let Some(start) = number(&child, "val") {
+                                            numbering
+                                                .start_overrides
+                                                .insert((num_id.clone(), level), start);
+                                        }
+                                    }
+                                    x.skip();
+                                }
+                                Node::Close | Node::End => break,
+                                Node::Text(_) => {}
+                            }
+                        }
+                    }
                     _ => {}
                 },
                 Node::End => break,
@@ -618,6 +752,29 @@ impl Numbering {
             .get(num_id)
             .and_then(|a| self.formats.get(&(a.clone(), level)));
         !matches!(format.map(String::as_str), Some(f) if f != "bullet" && f != "none")
+    }
+
+    /// The number the next item at `level` of list `num_id` shows, counted
+    /// as Word counts: on from the item before it at that level, and from
+    /// the level's start again after an item of a higher level. Markdown
+    /// keeps a list's first number, so this is what makes a list that starts
+    /// at 5, or goes on after a paragraph, read as it does in Word. Letters
+    /// and Roman numerals are written as the numbers they count.
+    fn next_number(&mut self, num_id: &str, level: usize) -> usize {
+        let start = self
+            .start_overrides
+            .get(&(num_id.to_string(), level))
+            .or_else(|| {
+                let abstract_id = self.abstract_of.get(num_id)?;
+                self.starts.get(&(abstract_id.clone(), level))
+            })
+            .copied()
+            .unwrap_or(1);
+        let counters = self.counters.entry(num_id.to_string()).or_default();
+        counters.resize(level + 1, None);
+        let number = counters[level].map_or(start, |last| last + 1);
+        counters[level] = Some(number);
+        number
     }
 }
 
@@ -720,7 +877,7 @@ mod tests {
         .concat();
         assert_eq!(
             convert(&body, &[STYLES, numbering]),
-            "1. First\n    - Detail\n1. Second\n\nBetween.\n\n- Styled bullet"
+            "1. First\n    - Detail\n2. Second\n\nBetween.\n\n- Styled bullet"
         );
     }
 
@@ -796,5 +953,220 @@ mod tests {
             <mc:Fallback><w:pict><v:imagedata xmlns:v="v" r:id="rId4"/></w:pict></mc:Fallback>
         </mc:AlternateContent></w:r></w:p>"#;
         assert_eq!(convert(body, &[rels]), "![A red barn](media/image1.png)");
+    }
+
+    #[test]
+    fn numbered_items_show_the_number_word_shows() {
+        // Level 0 starts at 5; numId 3 is "Restart at 1" on the same list.
+        let numbering = (
+            "word/numbering.xml",
+            r#"<w:numbering {W}>
+                <w:abstractNum w:abstractNumId="0">
+                    <w:lvl w:ilvl="0"><w:start w:val="5"/><w:numFmt w:val="decimal"/></w:lvl>
+                    <w:lvl w:ilvl="1"><w:start w:val="1"/><w:numFmt w:val="lowerLetter"/></w:lvl>
+                </w:abstractNum>
+                <w:num w:numId="2"><w:abstractNumId w:val="0"/></w:num>
+                <w:num w:numId="3"><w:abstractNumId w:val="0"/><w:lvlOverride w:ilvl="0"><w:startOverride w:val="1"/></w:lvlOverride></w:num>
+            </w:numbering>"#,
+        );
+        let item = |ilvl: u8, num: u8, text: &str| {
+            format!(
+                r#"<w:p><w:pPr><w:numPr><w:ilvl w:val="{ilvl}"/><w:numId w:val="{num}"/></w:numPr></w:pPr><w:r><w:t>{text}</w:t></w:r></w:p>"#
+            )
+        };
+        let body = [
+            item(0, 2, "Five"),
+            item(1, 2, "a"),
+            item(1, 2, "b"),
+            item(0, 2, "Six"),
+            item(1, 2, "a again"),
+            p("Normal", "Between."),
+            item(0, 2, "Seven, after the paragraph"),
+            item(0, 3, "Restarted"),
+            item(0, 3, "Two"),
+        ]
+        .concat();
+        assert_eq!(
+            convert(&body, &[numbering]),
+            "5. Five\n    1. a\n    2. b\n6. Six\n    1. a again\n\nBetween.\n\n\
+             7. Seven, after the paragraph\n1. Restarted\n2. Two"
+        );
+    }
+
+    /// `body` opened as a document, with the pictures it saved: (name in
+    /// the file, bytes).
+    fn open(body: &str, parts: &[(&str, &str)]) -> (String, Vec<(String, Vec<u8>)>) {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("t.docx");
+        std::fs::write(&path, test_docx_with(body, parts)).unwrap();
+        let mut saved = Vec::new();
+        let markdown = docx_document(&path, &mut |name, bytes| {
+            saved.push((name.to_string(), bytes.to_vec()));
+            Some(format!("/drafts/image-{}.png", saved.len()))
+        })
+        .unwrap();
+        (markdown, saved)
+    }
+
+    /// `text` as the runs of one paragraph: a `\n` is a line break.
+    fn runs(text: &str) -> String {
+        text.replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .split('\n')
+            .map(|line| format!(r#"<w:r><w:t xml:space="preserve">{line}</w:t></w:r>"#))
+            .collect::<Vec<_>>()
+            .join("<w:r><w:br/></w:r>")
+    }
+
+    /// Each block's text as a CommonMark reader reads `markdown` back:
+    /// paragraphs, headings, list items, table cells and footnote
+    /// definitions, a hard break as `\n`. Anything read as markup is named.
+    fn read_back(markdown: &str) -> Vec<String> {
+        use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
+        let options = Options::ENABLE_TABLES
+            | Options::ENABLE_FOOTNOTES
+            | Options::ENABLE_STRIKETHROUGH
+            | Options::ENABLE_MATH;
+        let mut blocks = Vec::new();
+        let mut text = String::new();
+        let mut flush = |text: &mut String| {
+            if !text.is_empty() {
+                blocks.push(std::mem::take(text));
+            }
+        };
+        for event in Parser::new_ext(markdown, options) {
+            match event {
+                Event::Text(t) => text.push_str(&t),
+                Event::Code(t) => text.push_str(&format!("<code {t}>")),
+                Event::InlineMath(t) | Event::DisplayMath(t) => {
+                    text.push_str(&format!("<math {t}>"))
+                }
+                Event::InlineHtml(t) | Event::Html(t) => text.push_str(&format!("<html {t}>")),
+                Event::SoftBreak => text.push(' '),
+                Event::HardBreak => text.push('\n'),
+                Event::FootnoteReference(label) => text.push_str(&format!("[^{label}]")),
+                Event::Start(
+                    Tag::Emphasis | Tag::Strong | Tag::Strikethrough | Tag::Link { .. },
+                ) => text.push_str("<markup>"),
+                Event::Start(Tag::List(_) | Tag::Item)
+                | Event::End(
+                    TagEnd::Paragraph
+                    | TagEnd::Heading(_)
+                    | TagEnd::Item
+                    | TagEnd::TableCell
+                    | TagEnd::FootnoteDefinition,
+                ) => flush(&mut text),
+                _ => {}
+            }
+        }
+        flush(&mut text);
+        blocks
+    }
+
+    #[derive(serde::Deserialize)]
+    struct WordText {
+        heading: String,
+        paragraphs: Vec<String>,
+        table: Vec<Vec<String>>,
+    }
+
+    /// The text of testdata/word-text.json as Word would hold it, opened:
+    /// the Markdown is testdata/word-text.md, which the frontend's test reads
+    /// back through the editor itself (src/document-view/word-text.test.ts).
+    #[test]
+    fn opened_as_a_document_text_reads_back_as_the_same_words() {
+        let fixture: WordText =
+            serde_json::from_str(include_str!("testdata/word-text.json")).unwrap();
+        let row = |cells: &Vec<String>| {
+            let cells: String = cells
+                .iter()
+                .map(|c| format!("<w:tc><w:p>{}</w:p></w:tc>", runs(c)))
+                .collect();
+            format!("<w:tr>{cells}</w:tr>")
+        };
+        let body = [
+            format!(
+                r#"<w:p><w:pPr><w:outlineLvl w:val="0"/></w:pPr>{}</w:p>"#,
+                runs(&fixture.heading)
+            ),
+            fixture
+                .paragraphs
+                .iter()
+                .map(|text| format!("<w:p>{}</w:p>", runs(text)))
+                .collect(),
+            format!(
+                "<w:tbl>{}</w:tbl>",
+                fixture.table.iter().map(row).collect::<String>()
+            ),
+        ]
+        .concat();
+        let (markdown, _) = open(&body, &[]);
+        assert_eq!(markdown, include_str!("testdata/word-text.md").trim_end());
+
+        let mut expected = vec![fixture.heading.clone()];
+        expected.extend(fixture.paragraphs.iter().cloned());
+        expected.extend(fixture.table.iter().flatten().cloned());
+        assert_eq!(read_back(&markdown), expected);
+        // The AI reads the same file as written, unescaped.
+        assert!(convert(&body, &[]).contains("Price: $5 and $10, *each* or _two_"));
+    }
+
+    #[test]
+    fn opened_as_a_document_emphasis_lists_and_footnotes_still_mean_markdown() {
+        let notes = (
+            "word/footnotes.xml",
+            r#"<w:footnotes {W}><w:footnote w:id="1"><w:p><w:r><w:t xml:space="preserve">See [1], p. 5*</w:t></w:r></w:p></w:footnote></w:footnotes>"#,
+        );
+        let numbering = (
+            "word/numbering.xml",
+            r#"<w:numbering {W}><w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:numFmt w:val="decimal"/></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>"#,
+        );
+        let body = r#"
+            <w:p><w:r><w:rPr><w:b/></w:rPr><w:t>2 * 3</w:t></w:r><w:r><w:t xml:space="preserve"> is six</w:t></w:r><w:r><w:footnoteReference w:id="1"/></w:r></w:p>
+            <w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>1. item</w:t></w:r><w:r><w:br/><w:t># line</w:t></w:r></w:p>
+            <w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>_two_</w:t></w:r></w:p>"#;
+        let (markdown, _) = open(body, &[notes, numbering]);
+        assert_eq!(
+            markdown,
+            "**2 \\* 3** is six[^1]\n\n1. 1\\. item\\\n   \\# line\n2. \\_two\\_\n\n[^1]: See \\[1], p. 5\\*"
+        );
+        assert_eq!(
+            read_back(&markdown),
+            [
+                "<markup>2 * 3 is six[^1]",
+                "1. item\n# line",
+                "_two_",
+                "See [1], p. 5*"
+            ]
+        );
+    }
+
+    #[test]
+    fn opened_as_a_document_pictures_are_saved_once_and_linked() {
+        let rels = (
+            "word/_rels/document.xml.rels",
+            r#"<Relationships>
+                <Relationship Id="rId4" Type="image" Target="media/image1.png"/>
+                <Relationship Id="rId5" Type="image" Target="https://example.com/logo.png" TargetMode="External"/>
+            </Relationships>"#,
+        );
+        let picture = |id: &str, alt: &str| {
+            format!(
+                r#"<w:p><w:r><w:drawing><wp:inline xmlns:wp="wp"><wp:docPr id="1" descr="{alt}"/><a:graphic xmlns:a="a"><a:graphicData><pic:pic xmlns:pic="pic"><pic:blipFill><a:blip r:embed="{id}"/></pic:blipFill></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>"#
+            )
+        };
+        let body = [
+            picture("rId4", "A barn"),
+            picture("rId4", "The barn again"),
+            picture("rId5", "Logo"),
+        ]
+        .concat();
+        let (markdown, saved) = open(&body, &[rels, ("word/media/image1.png", "PNG bytes")]);
+        assert_eq!(
+            markdown,
+            "![A barn](/drafts/image-1.png)\n\n![The barn again](/drafts/image-1.png)\n\n![Logo](https://example.com/logo.png)"
+        );
+        assert_eq!(saved, [("image1.png".to_string(), b"PNG bytes".to_vec())]);
     }
 }

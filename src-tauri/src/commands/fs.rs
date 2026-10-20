@@ -28,7 +28,8 @@ pub(crate) fn window_file_dialog(
 }
 
 /// The file types File > Open offers, in order: Markdown first, as the
-/// one picked by default, then plain text and any file at all (issue #78 -
+/// one picked by default, then plain text, Word documents (opened as a new
+/// Markdown document, word_import.rs) and any file at all (issue #78 -
 /// Markdown alone locked every other file out). The names come from the
 /// frontend, in the UI language.
 ///
@@ -36,13 +37,18 @@ pub(crate) fn window_file_dialog(
 /// what the filters leave out (rfd hands it every filter's extensions at
 /// once, with no "any file" among them), so no filter is the "All files"
 /// choice there. iOS has its own picker and never opens this one.
-fn open_document_filters(text: &str, all: &str) -> Vec<(String, &'static [&'static str])> {
+fn open_document_filters(
+    text: &str,
+    word: &str,
+    all: &str,
+) -> Vec<(String, &'static [&'static str])> {
     if cfg!(any(target_os = "macos", target_os = "ios")) {
         return Vec::new();
     }
     vec![
         ("Markdown".to_string(), &["md", "markdown"]),
         (text.to_string(), &["txt", "text"]),
+        (word.to_string(), &["docx"]),
         // rfd writes it out as the any-file pattern each dialog takes.
         (all.to_string(), &["*"]),
     ]
@@ -54,10 +60,12 @@ fn open_document_filters(text: &str, all: &str) -> Vec<(String, &'static [&'stat
 pub async fn open_file_dialog(
     window: tauri::WebviewWindow,
     text_filter: Option<String>,
+    word_filter: Option<String>,
     all_filter: Option<String>,
 ) -> Option<String> {
     let filters = open_document_filters(
         text_filter.as_deref().unwrap_or("Text files"),
+        word_filter.as_deref().unwrap_or("Word documents"),
         all_filter.as_deref().unwrap_or("All files"),
     );
     tauri::async_runtime::spawn_blocking(move || {
@@ -111,11 +119,14 @@ pub async fn open_image_file_dialog(
     .flatten()
 }
 
-/// Opens a native "Save As" dialog for a new, never-saved document.
+/// Opens a native "Save As" dialog for a new, never-saved document - in
+/// `default_dir` when given: beside the Word file a document was opened
+/// from.
 #[tauri::command]
 pub async fn save_file_dialog(
     window: tauri::WebviewWindow,
     default_name: String,
+    default_dir: Option<String>,
 ) -> Option<String> {
     tauri::async_runtime::spawn_blocking(move || {
         let default_name = if default_name.trim().is_empty() {
@@ -123,7 +134,12 @@ pub async fn save_file_dialog(
         } else {
             default_name.trim()
         };
-        window_file_dialog(&window)
+        let dialog = window_file_dialog(&window);
+        let dialog = match default_dir.filter(|dir| Path::new(dir).is_dir()) {
+            Some(dir) => dialog.set_directory(dir),
+            None => dialog,
+        };
+        dialog
             .set_file_name(default_name)
             .add_filter("Markdown", &["md"])
             .blocking_save_file()
@@ -294,6 +310,18 @@ pub struct SavedImage {
     src: String,
 }
 
+/// Where the images of a document that has no file yet are kept: a pasted
+/// one (save_pasted_image), a Word document's (word_import.rs). They move
+/// into the document's image folder when it is first saved
+/// (migrate_draft_images).
+pub(crate) fn draft_assets_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    use tauri::Manager;
+    app.path()
+        .app_data_dir()
+        .map(|dir| dir.join("assets"))
+        .map_err(|e| e.to_string())
+}
+
 /// Persists an image pasted into the editor. Saved documents get it in
 /// their image folder (`folder`, see ImageFolder) and a relative src;
 /// unsaved drafts fall back to an assets folder in the app's data dir with
@@ -307,7 +335,6 @@ pub async fn save_pasted_image(
     folder: String,
 ) -> Result<SavedImage, String> {
     use base64::{engine::general_purpose::STANDARD, Engine};
-    use tauri::Manager;
 
     if !ext.chars().all(|c| c.is_ascii_alphanumeric()) || ext.is_empty() {
         return Err("invalid extension".to_string());
@@ -320,11 +347,7 @@ pub async fn save_pasted_image(
     };
     let dir = match &folder {
         Some(folder) => folder.dir.clone(),
-        None => app
-            .path()
-            .app_data_dir()
-            .map_err(|e| e.to_string())?
-            .join("assets"),
+        None => draft_assets_dir(&app)?,
     };
     fs::create_dir_all(&dir).await.map_err(|e| e.to_string())?;
 
@@ -367,27 +390,40 @@ async fn write_new_file(
     bytes: &[u8],
     reuse: bool,
 ) -> std::io::Result<String> {
+    let (dir, name, bytes) = (dir.to_path_buf(), name.to_string(), bytes.to_vec());
+    tokio::task::spawn_blocking(move || write_new_file_sync(&dir, &name, &bytes, reuse))
+        .await
+        .map_err(std::io::Error::other)?
+}
+
+/// `write_new_file` for a caller already off the async runtime - a Word
+/// document's pictures, saved while it is converted (word_import.rs).
+pub(crate) fn write_new_file_sync(
+    dir: &Path,
+    name: &str,
+    bytes: &[u8],
+    reuse: bool,
+) -> std::io::Result<String> {
     for n in 0..10_000 {
         let candidate = numbered_name(name, n);
         let path = dir.join(&candidate);
-        match fs::OpenOptions::new()
+        match std::fs::OpenOptions::new()
             .write(true)
             .create_new(true)
             .open(&path)
-            .await
         {
             Ok(claimed) => {
                 drop(claimed);
                 // Through a temp file: a crash mid-write must not leave a
                 // truncated image that the document already links to.
-                if let Err(e) = crate::atomic::write(&path, bytes).await {
-                    let _ = fs::remove_file(&path).await;
+                if let Err(e) = crate::atomic::write_sync(&path, bytes) {
+                    let _ = std::fs::remove_file(&path);
                     return Err(e);
                 }
                 return Ok(candidate);
             }
             Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
-                if reuse && fs::read(&path).await.is_ok_and(|held| held == bytes) {
+                if reuse && std::fs::read(&path).is_ok_and(|held| held == bytes) {
                     return Ok(candidate);
                 }
             }
@@ -450,14 +486,8 @@ pub async fn migrate_draft_images(
     folder: String,
     source_doc_path: Option<String>,
 ) -> Result<Vec<ImageMigration>, String> {
-    use tauri::Manager;
-
     require_non_empty(&doc_path)?;
-    let draft_assets_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| e.to_string())?
-        .join("assets");
+    let draft_assets_dir = draft_assets_dir(&app)?;
     migrate_images(
         Path::new(&doc_path),
         srcs,
@@ -468,7 +498,7 @@ pub async fn migrate_draft_images(
     .await
 }
 
-async fn migrate_images(
+pub(super) async fn migrate_images(
     doc_path: &Path,
     srcs: Vec<String>,
     folder: &str,
@@ -536,17 +566,18 @@ mod tests {
     #[cfg(not(target_os = "macos"))]
     #[test]
     fn open_dialog_defaults_to_markdown_and_offers_any_file() {
-        let filters = open_document_filters("Text", "All files");
+        let filters = open_document_filters("Text", "Word", "All files");
         let names: Vec<&str> = filters.iter().map(|(name, _)| name.as_str()).collect();
-        assert_eq!(names, ["Markdown", "Text", "All files"]);
+        assert_eq!(names, ["Markdown", "Text", "Word", "All files"]);
         assert_eq!(filters[0].1, ["md", "markdown"]);
-        assert_eq!(filters[2].1, ["*"]);
+        assert_eq!(filters[2].1, ["docx"]);
+        assert_eq!(filters[3].1, ["*"]);
     }
 
     #[cfg(target_os = "macos")]
     #[test]
     fn open_dialog_leaves_every_file_pickable_on_macos() {
-        assert!(open_document_filters("Text", "All files").is_empty());
+        assert!(open_document_filters("Text", "Word", "All files").is_empty());
     }
 
     fn doc() -> PathBuf {

@@ -152,6 +152,8 @@ Alle drei findest du auch im Menü **Ansicht**.
 
 **Datei → Ordner öffnen…** öffnet einen ganzen Ordner in der Seitenleiste: Der Dateibaum bleibt dort, während du Dokumente darin öffnest, der Ordner kommt mit deiner Sitzung zurück, und **Datei → Ordner schließen** lässt den Baum wieder dem Dokument folgen. Das Feld oben im Tab **Dateien** der Seitenleiste sucht Dateinamen im ganzen Ordner; `Cmd+Shift+O` springt dorthin. Tippe zum Filtern, `↑`/`↓` zum Bewegen, `Enter` zum Öffnen, `Esc` zum Leeren. Beides gibt es nur auf dem Desktop.
 
+**Datei → Öffnen…** öffnet auch ein Word-Dokument (`.docx`), ebenso das Ablegen auf dem Fenster: Es wird ein neues, noch nicht gespeichertes Markdown-Dokument gleichen Namens mit seinen Überschriften, Listen, Tabellen, Links, Fußnoten und Bildern. Die Bilder kommen beim Speichern dorthin, wo **Einstellungen → Editor & Design → Bilder** eingefügte Bilder ablegt, und **Speichern** schlägt eine `.md`-Datei neben der Word-Datei vor. Manche Formatierung kann anders aussehen; die Word-Datei selbst wird nie verändert. Nur auf dem Desktop.
+
 ## Im Hintergrund weiterlaufen
 
 Schalte **Einstellungen → Allgemein → Anwendung → Im Hintergrund weiterlaufen** ein, dann läuft Textus nach dem Schließen des letzten Fensters weiter, mit seinem Symbol im Infobereich (Windows), im System-Tray (Linux) oder in der Menüleiste (Mac). **Textus öffnen** im Menü des Symbols bringt deine Dokumente zurück; **Textus beenden** dort beendet Textus wirklich. GNOME zeigt das Tray-Symbol nur mit der AppIndicator-Erweiterung.
