@@ -29,6 +29,8 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const port = Number(process.env.PLAYWRIGHT_PORT) || 1430;
 const playgroundPort = port + 10;
+/** The specs the opt-in WebKit project runs (projects below). */
+const WEBKIT_SPECS = ["tab-scroll.spec.ts"];
 
 export default defineConfig({
   testDir: "./e2e",
@@ -79,6 +81,21 @@ export default defineConfig({
         locale: "en-US",
       },
     },
+    // The flows that broke in WebKit only, in Playwright's WebKit - the
+    // engine of WebKitGTK and WKWebView, though not their build. Opt in:
+    // E2E_WEBKIT=1, after `npx playwright install webkit`; CI doesn't.
+    ...(process.env.E2E_WEBKIT
+      ? [
+          {
+            name: "webkit",
+            testMatch: WEBKIT_SPECS,
+            use: {
+              ...devices["Desktop Safari"],
+              viewport: { width: 1180, height: 780 },
+            },
+          },
+        ]
+      : []),
   ],
   webServer: [
     {
