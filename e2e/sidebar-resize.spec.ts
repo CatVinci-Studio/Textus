@@ -107,6 +107,23 @@ test("a remembered width too wide for a small window is narrowed to fit", async 
   await expect.poll(() => sidebarWidth(page)).toBe(460);
 });
 
+test("the sidebar comes back on the tab it was left on", async ({ page }) => {
+  await openApp(page);
+  await openSidebar(page);
+  const tabs = page.locator(".sidebar-tabs");
+  const outlineTab = tabs.getByRole("button", { name: "大纲" });
+  const filesTab = tabs.getByRole("button", { name: "文件树" });
+  await expect(filesTab).toHaveClass(/sidebar-tab-active/);
+  await outlineTab.click();
+  await expect(outlineTab).toHaveClass(/sidebar-tab-active/);
+
+  await page.reload();
+  await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
+  await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar-collapsed/);
+  await expect(outlineTab).toHaveClass(/sidebar-tab-active/);
+  await expect(filesTab).not.toHaveClass(/sidebar-tab-active/);
+});
+
 test("a sidebar closed again comes back closed", async ({ page }) => {
   const collapsed = /sidebar-collapsed/;
   const reload = async () => {

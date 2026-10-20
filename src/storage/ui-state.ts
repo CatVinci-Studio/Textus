@@ -22,6 +22,9 @@ export interface UiState {
   sidebarWidth: number;
   /** Whether the sidebar was left open (app/useSidePanels.ts). */
   sidebarOpen: boolean;
+  /** The sidebar tab last shown: files, outline or clipboard
+   *  (app/sidebar-tab.ts). */
+  sidebarTab: string;
   /** iOS: recently opened documents, newest first (platform/ios-files.ts). */
   iosRecentDocuments: unknown;
   /** iOS: the document list's layout (mobile/DocumentList.tsx). */
@@ -111,6 +114,11 @@ const LEGACY: {
     key: "textus-sidebar-open",
     decode: (raw) => raw === "1",
     encode: (value) => (value ? "1" : "0"),
+  },
+  sidebarTab: {
+    key: "textus-sidebar-tab",
+    decode: (raw) => raw,
+    encode: (value) => value,
   },
   iosRecentDocuments: {
     key: "levis-ios-recent-documents",
