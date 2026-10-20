@@ -37,8 +37,13 @@ export default defineConfig({
   // Screenshot generators run on their own (playwright.shots.config.ts).
   testIgnore: ["shots/**"],
   timeout: 30_000,
-  fullyParallel: false,
-  workers: 1,
+  // Every test opens its own page and shares nothing with the others in its
+  // file, so tests - not whole files - are spread over workers and over
+  // CI's shards (`--shard`), which keeps the shards even. On CI each shard
+  // runs two workers: a runner has four cores, and one worker left half of
+  // them idle. Locally one, so a run does not depend on the machine's load.
+  fullyParallel: true,
+  workers: process.env.CI ? 2 : 1,
   // On CI a failed test runs once more. One that passes the second time is
   // reported as "flaky" - named in the list's summary and as a GitHub
   // annotation - and doesn't fail the job, so a flake is seen without
