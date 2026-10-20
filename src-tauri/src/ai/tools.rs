@@ -621,6 +621,10 @@ fn use_skill(ctx: &ToolContext, arguments: &str) -> String {
                 builtin::chosen_profile(ctx.conventions, ctx.document).as_deref(),
             )
         ),
+        None if name == crate::ai::agent::APP_GUIDE => format!(
+            "The app guide - answer from it:\n\n{}",
+            crate::ai::agent::app_guide()
+        ),
         None => match builtin::load_reference(&name, ctx.document, ctx.ui_language) {
             Some(text) => format!("Reference `{name}` - apply it to this request:\n\n{text}"),
             None => {

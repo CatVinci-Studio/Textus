@@ -264,3 +264,11 @@ with the live eval (Sonnet 5.5, `TEXTUS_EVAL_JUDGE=0`) on the same cases.
   and judge mean 4.62 before, 10/10 and 4.56 after. The 30-case probe on
   Doubao (`TEXTUS_EVAL_PROVIDER=doubao`): 27/30 before and after (different
   cases failing), 72 requests to 58.
+- **Items 4-6, each rule once, a slimmer skill index, the app guide on
+  demand.** The tool instructions no longer repeat propose_edit's action
+  list and anchor rules; a built-in skill is indexed by its "Use when ..."
+  clause without the request words in eight languages; the app guide loads
+  with `use_skill app-guide` (inline where use_skill isn't offered). With
+  `count_tokens` unavailable, measured on Doubao's tokenizer: the same
+  Review request went from 6,418 to 4,558 prompt tokens. On Doubao, concept
+  and routing cases: 7/8 and 15/20 before, 8/8 and 17/20 after.
