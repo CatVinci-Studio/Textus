@@ -19,10 +19,8 @@ TestFlight for a while and is about to go to review.
 
 ## In the next release (1.2.0)
 
-- **Textus in the background**, if you turn it on: it keeps running after you
-  close its last window, with an icon in the notification area, the system
-  tray or the menu bar.
-  [#244](https://github.com/CatVinci-Studio/Textus/pull/244)
+Textus AI that can do more, an editor that feels better, and a lot of fixes.
+
 - **Open a whole folder** in the sidebar and search its file names with
   `Ctrl/⌘ + Shift + O`.
   [#152](https://github.com/CatVinci-Studio/Textus/issues/152),
@@ -32,24 +30,40 @@ TestFlight for a while and is about to go to review.
   small diff. Wikilinks (`[[Note]]`, `[[Note#Heading]]`) open the note, and
   they and `#tags` are kept as written.
   [#234](https://github.com/CatVinci-Studio/Textus/pull/234)
-- **Revise, sentence by sentence, as it streams in.** Each changed sentence
-  appears beside the one it rewrites, instead of the whole passage being
-  struck first. [#243](https://github.com/CatVinci-Studio/Textus/pull/243)
-- **Links to headings in other files** (`[see](notes.md#heading)`) open at
-  that heading. [#233](https://github.com/CatVinci-Studio/Textus/pull/233)
-- **Documents reopen where you left off**, with the caret where it was.
-  [#218](https://github.com/CatVinci-Studio/Textus/issues/218)
-- **More shortcuts**: next and previous tab, Heading 1 to 6 and Paragraph,
-  and a list of the shortcuts that can't be changed.
-  [#214](https://github.com/CatVinci-Studio/Textus/issues/214)
-- **Interface text size**: make the sidebar, tabs, menus and the AI panel
-  larger or smaller without zooming the document.
-  [#150](https://github.com/CatVinci-Studio/Textus/issues/150)
-- **Colour swatches** beside colour codes in inline code, and a **Copy**
-  button and optional line numbers for code blocks.
-  [#146](https://github.com/CatVinci-Studio/Textus/issues/146)
-- **A choice of diagram engine.** Mermaid stays the default; Pele draws the
-  same diagrams faster. [#242](https://github.com/CatVinci-Studio/Textus/pull/242)
+- **Revise, change by change, as it streams in.** Each changed sentence
+  appears in its place, with its card in the margin and the count in the
+  review bar growing as Textus AI writes.
+  [#243](https://github.com/CatVinci-Studio/Textus/pull/243)
+- **Diagrams Textus AI draws build up as it writes them**, and show before
+  you accept them. [#254](https://github.com/CatVinci-Studio/Textus/pull/254)
+- **Textus AI reads more of your project folder**: long files a part at a
+  time, Word, PDF, slide and spreadsheet files, and images with a model that
+  can see; it finds files by name and skips what `.gitignore` leaves out.
+- **Web search for Textus AI** with every AI provider, with numbered sources
+  you can check, as footnotes if you like.
+- **A deep-thinking button** beside the web-search one.
+- **Images made by Textus AI**, as suggestions you accept, with the major
+  Chinese and international image providers.
+  [#194](https://github.com/CatVinci-Studio/Textus/issues/194)
+- **Textus AI learns from the revisions you reject**, and offers to remember
+  what you keep turning down.
+- **Doubao (Volcengine)** as an AI provider.
+- **Long documents** that open, scroll and take typing smoothly.
+- **Accessibility**: screen readers, full keyboard use and high contrast.
+- **Textus in the background**, if you turn it on, with an icon in the
+  notification area, the system tray or the menu bar.
+  [#244](https://github.com/CatVinci-Studio/Textus/pull/244)
+- **Links to headings in other files** open at that heading
+  ([#233](https://github.com/CatVinci-Studio/Textus/pull/233)), and
+  documents reopen where you left off
+  ([#218](https://github.com/CatVinci-Studio/Textus/issues/218)).
+- **More shortcuts**, an **interface text size**, a **Copy** button and line
+  numbers for code blocks, **colour swatches** beside colour codes, and a
+  choice of **diagram engine** (Mermaid, or the faster Pele).
+  [#214](https://github.com/CatVinci-Studio/Textus/issues/214),
+  [#150](https://github.com/CatVinci-Studio/Textus/issues/150),
+  [#146](https://github.com/CatVinci-Studio/Textus/issues/146),
+  [#242](https://github.com/CatVinci-Studio/Textus/pull/242)
 
 New features come in minor releases like this one; patch releases (1.2.x)
 only fix things.
@@ -87,35 +101,29 @@ only fix things.
   [textus.catvinci.com/themes](https://textus.catvinci.com/themes/) for
   everyone, free. [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
-## Later: Textus 1.3.0, a full expansion, experience first
+## Later: Textus 1.3.0, plugins
 
-- **Long documents** that open and scroll smoothly.
-- **Web search for Textus AI** with every AI provider, with sources you can
-  check.
-- **A simple choice of how hard the AI thinks**: Auto, Fast or Deep.
-- **Images made by Textus AI**, as suggestions you accept, with the major
-  Chinese and international image providers.
-  [#194](https://github.com/CatVinci-Studio/Textus/issues/194)
-- **Textus AI reads Word, PDF, slide and spreadsheet files** in your project
-  folder.
-- **Plugins, and a plugin gallery.** Plugins run sandboxed with only the
-  permissions you grant, and nothing runs unless you install it; Textus AI
-  can write one for you. A few basic plugins come with the launch, among
-  them **quick notes from anywhere**: a small Markdown window that opens
-  from a global shortcut, saved as a Markdown file when you close it.
-  [#193](https://github.com/CatVinci-Studio/Textus/issues/193)
-
-## Later: Textus 1.4.0, steady and polished
-
-- **Voice input**, taken slowly to get it right.
-  [#195](https://github.com/CatVinci-Studio/Textus/issues/195)
-- **Version history** for your documents: go back to an earlier version, and
-  see what Textus AI changed.
-- **Textus AI learns from the revisions you accept and reject.**
-- **More plugins**: a second version of the plugin API, and official plugins
-  for a calendar, tasks and a kanban board.
-- **An image viewer.**
-- **Accessibility**: screen readers, full keyboard use and high contrast.
+- **Plugins, a plugin gallery and an MCP gallery**, and Textus AI can write
+  a plugin for you. What every plugin has to keep to:
+  - It runs in a sandbox and gets only the permissions you grant when you
+    install it - reading or writing a folder, the network - and asks again
+    if an update wants more.
+  - Nothing runs unless you install it, and one switch turns every plugin
+    off, leaving Textus as if none were there.
+  - A plugin that fails or slows Textus down is turned off by itself and
+    tells you why.
+  - Textus AI uses a plugin only if you allow it, and only to read or to
+    propose: a change to your document is a suggestion you accept, as now.
+  - Plugins in the gallery are looked over by one of us before they appear,
+    like themes, and one that turns out to be harmful can be taken down.
+- **A first batch of plugins**: quick notes from anywhere
+  ([#193](https://github.com/CatVinci-Studio/Textus/issues/193)), version
+  history for your documents, SVG and PDF viewers, an image viewer, a
+  calendar and daily notes, tasks, and a kanban board.
+- **A second version of the plugin API**, shaped by what the first plugins
+  need.
+- **Smoother motion** throughout: animations, scrolling and panels that keep
+  up on every platform.
 
 ## Want to help?
 
