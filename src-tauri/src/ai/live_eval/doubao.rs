@@ -4,12 +4,12 @@
 //! thinking turned down, a tool call through the streamed step, and an image
 //! read by the vision path. Not a quality matrix: one request each.
 //!
-//! Needs VOLCENGINE_ARK_API_KEY (an Ark API key, with the catalog's Doubao
+//! Needs VOLCENGINE_ARK_API_KEY, in the environment or .env.local (an Ark API key, with the catalog's Doubao
 //! models enabled for the account in the Ark console); without it each test
 //! prints a notice and passes. Run from src-tauri/:
 //!   VOLCENGINE_ARK_API_KEY=... cargo test --lib live_eval::doubao -- --ignored --nocapture
 
-use super::harness::{block_on, with_retry};
+use super::harness::{block_on, secret, with_retry};
 use crate::ai::catalog;
 use crate::ai::route::chat_vendor;
 use aicompat::agent::{AgentTurn, ImageAttachment, ProviderEvent, StepResult, ToolSpec};
@@ -30,14 +30,14 @@ struct Ark {
 }
 
 fn ark() -> Option<Ark> {
-    let key = std::env::var(KEY_VAR).ok().filter(|k| !k.trim().is_empty());
+    let key = secret(KEY_VAR);
     let Some(key) = key else {
         eprintln!("live_eval: no {KEY_VAR} - skipping Doubao");
         return None;
     };
     let entry = catalog::find("doubao").expect("doubao is in the catalog");
     Some(Ark {
-        key: key.trim().to_string(),
+        key,
         base_url: entry.base_url.expect("doubao has a base_url"),
         writing_model: entry.default_model.expect("doubao has a writing default"),
         agent_model: entry

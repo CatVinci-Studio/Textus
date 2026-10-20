@@ -11,8 +11,12 @@
 //!   TEXTUS_EVAL_JUDGE=0 cargo test --lib live_eval::live_agent_builtin -- --ignored --nocapture
 //!
 //! Knobs, all optional:
-//!   TEXTUS_ANTHROPIC_KEY_FILE  key file (default: .anthropic-api-key.local at
-//!                             the repository root, git-ignored)
+//!   ANTHROPIC_API_KEY          the key; like every key a live run uses, read
+//!                             from the environment or from `.env.local` at the
+//!                             repository root (git-ignored), or the file
+//!                             TEXTUS_ENV_FILE names (harness::secret)
+//!   TEXTUS_ANTHROPIC_KEY_FILE  the older one-key file (default:
+//!                             .anthropic-api-key.local at the repository root)
 //!   TEXTUS_EVAL_FILTER         only cases whose id contains one of these
 //!                             comma-separated substrings
 //!   TEXTUS_EVAL_AGENT_MODEL    run the agent matrix on another model

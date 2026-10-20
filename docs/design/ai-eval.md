@@ -293,8 +293,11 @@ there for runs that want it.
 From `src-tauri/`:
 
 ```sh
-TEXTUS_ANTHROPIC_KEY_FILE=/path/to/key cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
+cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
 ```
+
+The keys come from the environment or `.env.local` at the repository root,
+one `NAME=value` per line (`ANTHROPIC_API_KEY`, `VOLCENGINE_ARK_API_KEY`, ...).
 
 `--test-threads=1` runs the suites one after another; each suite runs six
 cases at a time itself. Useful variables:

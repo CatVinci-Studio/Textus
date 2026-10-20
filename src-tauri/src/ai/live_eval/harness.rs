@@ -22,13 +22,49 @@ use std::time::Instant;
 
 // ------------------------------------------------------------- environment
 
+/// A key for a live run: the environment variable `name`, else the line
+/// `name=value` in the one env file every key can live in - TEXTUS_ENV_FILE,
+/// or `.env.local` at the repository root (git-ignored). Quotes around the
+/// value and `export ` before the name are allowed; `#` starts a comment.
+pub fn secret(name: &str) -> Option<String> {
+    if let Some(value) = std::env::var(name).ok().filter(|v| !v.trim().is_empty()) {
+        return Some(value.trim().to_string());
+    }
+    let path = std::env::var("TEXTUS_ENV_FILE")
+        .unwrap_or_else(|_| format!("{}/../.env.local", env!("CARGO_MANIFEST_DIR")));
+    let text = std::fs::read_to_string(path).ok()?;
+    env_file_value(&text, name)
+}
+
+fn env_file_value(text: &str, name: &str) -> Option<String> {
+    text.lines().find_map(|line| {
+        let line = line.trim();
+        let line = line.strip_prefix("export ").unwrap_or(line);
+        let (key, value) = line.split_once('=')?;
+        if line.starts_with('#') || key.trim() != name {
+            return None;
+        }
+        let value = value.trim();
+        let value = value
+            .strip_prefix('"')
+            .and_then(|v| v.strip_suffix('"'))
+            .or_else(|| value.strip_prefix('\'').and_then(|v| v.strip_suffix('\'')))
+            .unwrap_or(value);
+        (!value.is_empty()).then(|| value.to_string())
+    })
+}
+
 pub fn auth() -> Option<AnthropicAuth> {
+    if let Some(key) = secret("ANTHROPIC_API_KEY") {
+        return Some(AnthropicAuth::ApiKey(key));
+    }
+    // The key file that came before the env file still works.
     let path = std::env::var("TEXTUS_ANTHROPIC_KEY_FILE")
         .unwrap_or_else(|_| format!("{}/../.anthropic-api-key.local", env!("CARGO_MANIFEST_DIR")));
     match std::fs::read_to_string(&path) {
         Ok(key) if !key.trim().is_empty() => Some(AnthropicAuth::ApiKey(key.trim().to_string())),
         _ => {
-            eprintln!("live_eval: no API key at {path} - skipping");
+            eprintln!("live_eval: no ANTHROPIC_API_KEY in the environment or .env.local, and no key at {path} - skipping");
             None
         }
     }
@@ -1228,5 +1264,26 @@ mod tests {
         total.add("claude-haiku-5-5", &u);
         assert_eq!(total.requests, 2);
         assert!((total.cost_usd - 3.36).abs() < 1e-9);
+    }
+}
+
+#[cfg(test)]
+mod env_file_tests {
+    use super::env_file_value;
+
+    #[test]
+    fn reads_one_key_from_an_env_file() {
+        let text = "# keys\nexport ANTHROPIC_API_KEY=\"sk-a\"\nVOLCENGINE_ARK_API_KEY = 'ark-b'\n#OTHER=x\nEMPTY=\n";
+        assert_eq!(
+            env_file_value(text, "ANTHROPIC_API_KEY").as_deref(),
+            Some("sk-a")
+        );
+        assert_eq!(
+            env_file_value(text, "VOLCENGINE_ARK_API_KEY").as_deref(),
+            Some("ark-b")
+        );
+        assert_eq!(env_file_value(text, "OTHER"), None);
+        assert_eq!(env_file_value(text, "EMPTY"), None);
+        assert_eq!(env_file_value(text, "MISSING"), None);
     }
 }
