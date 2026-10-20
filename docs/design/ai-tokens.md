@@ -164,11 +164,10 @@ Completion and grammar, before this change: every request was uncached
   end. The prefix is byte-stable: no timestamps or ids, a fixed tool order,
   the document and library after the cached part, `compact_history` cutting
   the same way every time, the budget note added once to the result it
-  follows. What still breaks it: switching mode (another tool list),
-  turning web search on or off (a server tool is added to the tools), a
-  memory saved with `remember` (the memory list is in the system prompt, so
-  the next message rewrites the prefix and the history), a 5-minute pause
-  (the cache's lifetime). Single calls (completion, grammar, Learn my style)
+  follows. What still breaks it: switching to or from Review (another tool
+  list), turning web search on or off (a server tool is added to the
+  tools), a 5-minute pause (the cache's lifetime). Switching between Write
+  and Revise and saving a memory no longer do (item 7, below). Single calls (completion, grammar, Learn my style)
   had no breakpoint at all: Haiku 5.5 caches from 512 tokens, and their
   instructions are 1,100. Fixed in this change.
 - **OpenAI (Responses API).** Automatic prefix caching from 1,024 tokens;
@@ -225,3 +224,21 @@ Looked at and left alone:
 - The completion prompt was tuned case by case in the live eval (the
   comments in `client.rs` record why each rule is there); trimming it would
   save a few hundred tokens that are now cached anyway.
+
+## Done since
+
+Each item measured with `live_token_usage` before and after, and checked
+with the live eval (Sonnet 5.5, `TEXTUS_EVAL_JUDGE=0`) on the same cases.
+
+- **Item 7, the prefix across mode switches and memories.** Write and
+  Revise get the same tool list (one propose_edit; in Write, the mode
+  section says it only adds text and `propose_insertion` refuses anything
+  else), and the interaction mode and the remembered memories moved from
+  the system prompt into the message (`request_preamble`); how to use
+  `remember` stays in the system prompt. Review keeps its own, read-only
+  tool list. A Write message after a Revise one now reads the prefix
+  instead of writing it: the run's "Write, continue" step 1.1 went from
+  11,017 tokens written and 0 read to 614 written and 10,482 read. The
+  prefix itself is 10,482 tokens (was 10,555). Live eval: the 30-case agent
+  probe 30/30 before and after, six more Write, Review, memory and
+  multi-turn cases 6/6 before and after; no Write proposal was refused.

@@ -45,8 +45,10 @@ this pipeline, and it is enforced in Rust, not only asked for in the prompt
 The panel and the detached window offer all three; Quick Ask offers Revise
 and Review only (`COMPOSER_MODES`, [ai-concepts.md](ai-concepts.md#not-a-file-modes)).
 
-Write's schema lists only the insertion actions, and `propose_insertion`
-refuses any other action a model sends anyway; the refusal is a tool result
+Write gets the same propose_edit as Revise (one tool list for both, so a
+switch keeps the provider's cached prefix); the mode section in the
+message says it only adds text, and `propose_insertion` refuses any other
+action a model sends; the refusal is a tool result
 like any validation failure, so its streamed preview is discarded
 (`isRefusal`) and nothing that replaces or deletes text reaches the editor.
 A Write proposal is the same green pending block as any insertion: shown,

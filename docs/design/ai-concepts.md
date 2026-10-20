@@ -300,11 +300,11 @@ comments, Revise (修订) changes the text that is there.**
   panel shows the chosen mode's icon (`ai/chat/mode-icons.tsx`: a pen
   nib, a speech bubble, a pencil) and a line on what it will do; the
   picker itself is words only.
-- **Textus AI uses it:** the prompt's `---interaction mode---` section,
-  and the tools: Review gets no `propose_edit`, Write gets it with the
-  insertion actions only (append, insert_at_cursor, insert_after,
-  insert_before - after a selection, never over it), Revise with every
-  action. Every proposal is decided by the user either way
+- **Textus AI uses it:** the `---interaction mode---` section at the top
+  of each message, and the tools: Review gets no `propose_edit`; Write
+  and Revise get the same one, and in Write it accepts the insertion
+  actions only (append, insert_at_cursor, insert_after, insert_before -
+  after a selection, never over it), refusing the rest. Every proposal is decided by the user either way
   ([ai-proposals.md](ai-proposals.md)).
 - In code: `AgentMode` (`settings/SettingsContext.tsx`,
   `ai/agent.rs`) with the values `write`, `review` and `revise`. 1.0 called

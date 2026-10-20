@@ -784,14 +784,30 @@ fn timestamp(secs: u64) -> String {
 /// How Textus AI is told to use the remember tool - only when it has it.
 const REMEMBER_INSTRUCTIONS: &str = "You can remember things for later conversations with the remember tool. Call it when the user states, or clearly shows by correcting you, something that should hold beyond this request: a requirement (\"always…\", \"never…\", \"from now on…\"), a preference about your replies and edits, or a trait of how they write (kind requirement, preference or style); or a fact about their work - a person, place or term and what is true of it (kind fact, with its name and any aliases; it goes into the project's library). Don't remember a one-off request, what the document already says, your own suggestions, or anything private such as passwords, addresses or health details. Scope: something about this work (its characters, its terms, how this piece must be written) is project; the user's general habits and preferences are personal; with no project folder everything is personal. Before remembering, check what you already remember below: to change or correct one, call remember with `replaces` set to its id instead of adding another. Write each memory as one or a few plain sentences in the user's language, as an instruction to yourself (\"Use 「」 for quotations.\"). The ids in brackets are for the tool only - never show them to the user.";
 
+/// How to use the remember tool, for the system prompt - while it is
+/// offered. What has been remembered goes with each message instead
+/// ([`memory_sections`]), so saving a memory doesn't change the system
+/// prompt and its cache.
+pub fn remember_instructions(has_project: bool, remember: bool) -> Option<String> {
+    if !remember {
+        return None;
+    }
+    let mut text = format!("---remembering---\n{REMEMBER_INSTRUCTIONS}");
+    if !has_project {
+        text.push_str(
+            "\nThere is no project folder now, so use scope personal and don't remember facts.",
+        );
+    }
+    Some(text)
+}
+
 /// The prompt sections for what Textus AI remembered (after the user's
 /// writing instructions): personal first, then the project's, which wins a
-/// conflict - as with agent.md. `remember`: the tool is offered, so ids,
-/// the instructions and the library entries it wrote are listed too.
-pub fn prompt_sections(
+/// conflict - as with agent.md. `remember`: the tool is offered, so ids
+/// and the library entries it wrote are listed too.
+pub fn memory_sections(
     memories: &Memories,
     library: &[LibraryEntry],
-    has_project: bool,
     remember: bool,
 ) -> Vec<String> {
     let line = |m: &Memory| {
@@ -843,19 +859,12 @@ pub fn prompt_sections(
                 format!("- [project/{LIBRARY_FOLDER}/{stem}] {}", e.name)
             })
             .collect();
-        let mut text = format!("---remembering---\n{REMEMBER_INSTRUCTIONS}");
-        if !has_project {
-            text.push_str(
-                "\nThere is no project folder now, so use scope personal and don't remember facts.",
-            );
-        }
         if !facts.is_empty() {
-            text.push_str(&format!(
-                "\nLibrary entries you wrote (update one with replaces; the others are the user's and you never change them):\n{}",
+            sections.push(format!(
+                "---library entries you wrote (update one with remember's replaces; the others are the user's and you never change them)---\n{}",
                 facts.join("\n")
             ));
         }
-        sections.push(text);
     }
     sections
 }
@@ -1309,7 +1318,7 @@ mod tests {
             [Scope::Project, Scope::Project],
             "the project's win the budget"
         );
-        let sections = prompt_sections(&memories, &[], true, false);
+        let sections = memory_sections(&memories, &[], false);
         assert!(sections
             .iter()
             .any(|s| s.contains("1 older memories don't fit")));
@@ -1333,17 +1342,18 @@ mod tests {
         )
         .unwrap();
         let memories = dirs.load();
-        let with_tool = prompt_sections(&memories, &[], true, true).join("\n\n");
+        let with_tool = memory_sections(&memories, &[], true).join("\n\n");
         let personal = with_tool.find("Reply briefly.").unwrap();
         let project = with_tool.find("Spell it colour.").unwrap();
         assert!(personal < project);
         assert!(with_tool
             .contains("where these conflict with the personal memories above, follow these"));
         assert!(with_tool.contains("- [personal/memory/Reply-briefly] (preference) Reply briefly."));
-        assert!(with_tool.contains("---remembering---"));
-        let without = prompt_sections(&memories, &[], true, false).join("\n\n");
+        assert!(remember_instructions(true, true).is_some_and(|s| s.contains("---remembering---")));
+        assert!(remember_instructions(true, false).is_none());
+        let without = memory_sections(&memories, &[], false).join("\n\n");
         assert!(without.contains("- (requirement) Spell it colour."));
-        assert!(!without.contains("[project/") && !without.contains("---remembering---"));
+        assert!(!without.contains("[project/"));
         std::fs::remove_dir_all(&base).ok();
     }
 
