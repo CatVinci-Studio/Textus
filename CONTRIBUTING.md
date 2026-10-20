@@ -77,7 +77,7 @@ Every push to `main` that touches it deploys it (`deploy-playground.yml`,
 | `scripts/`                   | checks and release tooling, written in Node         |
 | `docs/dev/`                  | developer docs: architecture, testing, storage, …   |
 | `docs/design/`               | design rules and how the AI features work           |
-| `docs/releases/`             | release notes, one file per version                 |
+| `docs/releases/`             | release notes per version; unreleased in `next/`    |
 | `packaging/`                 | Arch package, Linux desktop entry                   |
 
 [docs/README.md](docs/README.md) lists every document.
@@ -93,6 +93,7 @@ npm run check          # types, lint, unit tests, formatting, README/version/upd
 npm run test:e2e       # the Playwright flows (first time: npm run setup:e2e)
 npm run check:native   # rustfmt, clippy, Rust tests in src-tauri/ (builds dist/ if missing)
 npm run check:all      # all three, in that order
+npm run check:quick    # while you work: `check` for the files you changed only
 ```
 
 `npm run format` and `cargo fmt --all` (in `src-tauri/`) fix formatting in
@@ -218,7 +219,9 @@ Rust modules `snake_case.rs`, scripts `verb-noun.mjs`.
 
 **Interface text** is in ten languages: `src/i18n/locales/` holds en, zh,
 zh-Hant, ja, ko, es, fr, de, ru and pt. Every new string goes into all ten,
-and `npm run check` fails if one is missing. If you only know some of the
+and `npm run check` fails if one is missing. Put a new key beside the keys
+of the same feature, not at the end of the file, where every other pull
+request adds its own and they conflict. If you only know some of the
 languages, put the English text in the others and say so in the pull
 request; we'll translate them. More in
 [docs/dev/translating.md](docs/dev/translating.md).
@@ -242,6 +245,21 @@ Release notes start from [docs/releases/TEMPLATE.md](docs/releases/TEMPLATE.md):
 sections New, Improved, Fixed, Platform notes, in that order; one change per
 bullet, starting with a verb, describing what the user notices; the issue or
 pull request at the end, as in `(#68)`.
+
+A pull request doesn't edit `docs/releases/X.Y.Z.md`: it adds its note as a
+file of its own in [docs/releases/next/](docs/releases/next/README.md),
+named after the change (`pdf-page-numbers.md`), holding the section heading
+and the bullet:
+
+```md
+### Fixed
+
+- Keeps the caret where it was when you switch tabs. (#123)
+```
+
+Pull requests then never change the same lines, so one merged before yours
+doesn't send yours back for a rebase. The release collects the fragments
+into `docs/releases/X.Y.Z.md` ([releasing.md](docs/dev/releasing.md)).
 
 The README (`README.md` and its nine translations) is for users. Its
 translations keep the English file's headings, code blocks and links;

@@ -28,13 +28,15 @@ Same on Linux, macOS and Windows:
 npm install
 npm run tauri dev      # run the app
 npm run check          # types, lint, unit tests, formatting, README/version checks
+npm run check:quick    # the same for only the files you changed - while you work
 npm run test:e2e       # Playwright flows (first time: npm run setup:e2e)
 npm run check:native   # rustfmt, clippy, Rust tests
 npm run check:all      # all three - run before you open a pull request
 ```
 
 If another copy of the e2e suite may be running (another worktree), set
-`PLAYWRIGHT_PORT` to a free port.
+`PLAYWRIGHT_PORT` to a free port. Building in many worktrees:
+[docs/dev/local-builds.md](docs/dev/local-builds.md).
 
 ## How to work
 
@@ -62,8 +64,9 @@ If another copy of the e2e suite may be running (another worktree), set
   `Co-authored-by` except to credit an outside contributor whose work the
   commit ports.
 - Documentation and release notes are English and follow the format in
-  CONTRIBUTING.md › Writing; release notes start from
-  `docs/releases/TEMPLATE.md`.
+  CONTRIBUTING.md › Writing. A release note goes in a new file of its own
+  under `docs/releases/next/` (see its README), never into
+  `docs/releases/X.Y.Z.md`.
 
 ## Safety
 

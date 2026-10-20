@@ -30,9 +30,16 @@ change ([infrastructure.md](infrastructure.md#playground)).
    and `cargo check` (in `src-tauri/`) so `package-lock.json` (both of its
    version fields) and `Cargo.lock` follow. `node scripts/check-versions.mjs`
    (part of `npm run check`) fails until all five files agree.
-2. Write the release notes in `docs/releases/X.Y.Z.md`, starting from
-   [TEMPLATE.md](../releases/TEMPLATE.md). The release workflow refuses a
-   stable tag without them, and uses them as the GitHub release's text.
+2. Collect the release notes: `node scripts/release-notes.mjs build X.Y.Z`
+   adds every fragment in `docs/releases/next/` to `docs/releases/X.Y.Z.md`
+   (creating it in the outline of [TEMPLATE.md](../releases/TEMPLATE.md)
+   if it doesn't exist), each bullet at the end of its section, oldest
+   first, and deletes the fragments. Then edit the file: write the summary
+   sentence, merge bullets that describe one change, order each section.
+   The release workflow refuses a stable tag without the notes, and
+   `check-versions.mjs --tag` (step 4, and the workflow's preflight) a stable
+   tag with fragments left over or the summary unwritten; the notes are the
+   GitHub release's text and the updater's.
 3. Commit as `chore: bump version to X.Y.Z` in a pull request and merge it.
 4. Check the merged `main` and tag that exact commit:
 

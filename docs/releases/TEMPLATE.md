@@ -26,8 +26,11 @@ Installers for macOS (Apple silicon and Intel), Windows and Linux (x64 and ARM64
 <!--
 How to write release notes (docs/releases/X.Y.Z.md) - see CONTRIBUTING.md › Writing:
 
-- English, from 1.0.4 on. Copy this file to docs/releases/X.Y.Z.md and delete
-  this comment, the placeholders and any empty section.
+- English, from 1.0.4 on. A pull request adds its bullets as a fragment in
+  docs/releases/next/ (see its README); `node scripts/release-notes.mjs build`
+  collects them into docs/releases/X.Y.Z.md in this outline at release time.
+  Writing the file by hand instead: copy this file and delete this comment,
+  the placeholders and any empty section.
 - Sections in this order: New, Improved, Fixed, Platform notes. Leave out a
   section with nothing in it.
 - One change per bullet, one sentence, starting with a verb ("Opens",
