@@ -4,6 +4,7 @@ import { serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { Selection, type EditorState } from "@milkdown/kit/prose/state";
 import { escapeRegExp } from "../utils/regexp";
+import { blockMarkdown } from "../editor/markdown/block-markdown";
 import type { EditAction } from "./types";
 
 /**
@@ -174,11 +175,12 @@ export function serializeRange(
  * what lets a markdown-space match land back on a real document position.
  */
 export function serializeBlocks(ctx: Ctx, doc: ProseNode): MarkdownBlock[] {
-  const serializer = ctx.get(serializerCtx);
   const blocks: MarkdownBlock[] = [];
   let offset = 0;
   doc.forEach((node, pos) => {
-    const markdown = serializer(doc.cut(pos, pos + node.nodeSize)).trimEnd();
+    // Cached per block (block-markdown.ts): after an edit only the blocks
+    // it touched are serialized again, not all of a long document's.
+    const markdown = blockMarkdown(ctx, node).trimEnd();
     blocks.push({ from: pos, to: pos + node.nodeSize, markdown, offset });
     offset += markdown.length + BLOCK_SEPARATOR.length;
   });
