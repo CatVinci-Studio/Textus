@@ -197,8 +197,12 @@
     font-size: var(--ios-body);
   }
 
+  /* From the list: without a parent, the sibling rule cost the editor a
+     restyle of its blocks whenever one was added (see inline-chat.css's
+     header rule). */
   :root[data-window-chrome="mobile"]
-    .app-menu-row
+    .app-menu-list
+    > .app-menu-row
     + .app-menu-row
     > .app-menu-item {
     border-top: 1px solid var(--editor-border);
@@ -300,8 +304,10 @@
     border: none;
   }
 
-  /* Replace and Replace All: text buttons, as in a toolbar. */
-  :root[data-window-chrome="mobile"] .find-replace-nav button:not(:has(svg)) {
+  /* Replace and Replace All: text buttons, as in a toolbar. A class, not
+     :not(:has(svg)): that had every element added to the editor asked
+     again. */
+  :root[data-window-chrome="mobile"] .find-replace-nav .find-replace-text {
     padding: 0 8px;
     color: var(--editor-accent);
     font-size: var(--ios-subhead);
