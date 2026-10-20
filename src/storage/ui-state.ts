@@ -57,9 +57,11 @@ export interface UiState {
     string,
     { mtime: number } & ({ offset: number } | { pos: number })
   >;
-  /** The file-name search's filter: documents only, or every file
-   *  (sidebar/FileSearch.tsx). */
+  /** The Files tab's filter, for the tree and its search: documents
+   *  only, or every file (sidebar/FileTree.tsx). */
   fileSearchScope: string;
+  /** The file tree's order: "name" or "modified" (sidebar/FileTree.tsx). */
+  fileTreeSort: string;
 }
 
 export interface ThemeChromeCache {
@@ -148,6 +150,11 @@ const LEGACY: {
   },
   fileSearchScope: {
     key: "textus-file-search-scope",
+    decode: (raw) => raw,
+    encode: (value) => value,
+  },
+  fileTreeSort: {
+    key: "textus-file-tree-sort",
     decode: (raw) => raw,
     encode: (value) => value,
   },

@@ -176,6 +176,16 @@ export const fs = {
     isScopedUrl(path)
       ? iosFiles.listFolder(path)
       : call<DirEntryInfo[]>("list_dir", { path }),
+  /** The sidebar tree's New Document and New Folder, and moving an entry
+   *  into a folder by dragging it there (commands/tree_ops.rs). Each
+   *  returns the new path and refuses a name that is already taken.
+   *  Desktop only. */
+  createDocument: (dir: string, name: string) =>
+    desktopAction<string>("tree_create_document", { dir, name }),
+  createFolder: (dir: string, name: string) =>
+    desktopAction<string>("tree_create_folder", { dir, name }),
+  moveEntry: (path: string, into: string) =>
+    desktopAction<string>("tree_move_entry", { path, into }),
   /** File > Open Folder…'s picker (commands/folder.rs). Rejects with
    *  "TOO_BROAD" for the home folder or a drive root. Desktop only. */
   pickOpenFolder: () => desktopAction<string | null>("pick_open_folder"),

@@ -1,0 +1,194 @@
+import { expect, test, type Page } from "@playwright/test";
+import { openApp } from "./helpers";
+
+// The sidebar's file tree as a small file manager (sidebar/FileTree.tsx):
+// up by the parent folder's name, sort and filter, New Document and New
+// Folder from the right-click menu, and dragging a row into a folder. The
+// dev shim's in-memory folder (window.__devFs) stands in for the disk
+// (commands/tree_ops.rs in the app).
+
+const FILES: Record<string, string> = {
+  "/work/notes/b.md": "# Bravo",
+  "/work/notes/a.md": "# Alpha",
+  "/work/notes/chart.png": "not really a picture",
+  "/work/notes/drafts/old.md": "# Old",
+  "/work/other.md": "# Other",
+};
+// b.md is the newest, a.md the oldest.
+const MTIMES: Record<string, number> = {
+  "/work/notes/a.md": 1000,
+  "/work/notes/chart.png": 2000,
+  "/work/notes/b.md": 3000,
+};
+
+const editor = '[data-active-tab="true"] .ProseMirror';
+
+async function open(page: Page) {
+  await page.addInitScript(
+    ([files, mtimes]) => {
+      const w = window as unknown as Record<string, unknown>;
+      w.__devFs = files;
+      w.__devMtimes = mtimes;
+      w.__devPickFolder = "/work/notes";
+    },
+    [FILES, MTIMES] as const,
+  );
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-open-recent", "/work/notes/a.md");
+  await expect(page.locator(`${editor} h1`)).toContainText("Alpha");
+  await emit(page, "menu-toggle-sidebar");
+}
+
+function emit(page: Page, event: string, payload?: unknown) {
+  return page.evaluate(
+    ([name, value]) =>
+      (
+        window as unknown as {
+          __devEmitTauriEvent: (name: string, payload: unknown) => void;
+        }
+      ).__devEmitTauriEvent(name as string, value),
+    [event, payload] as const,
+  );
+}
+
+const rows = (page: Page) => page.locator(".sidebar .tree-main .tree-row");
+const row = (page: Page, name: string) =>
+  page.locator(".sidebar .tree-main .tree-row", { hasText: name });
+const files = (page: Page) =>
+  page.evaluate(() =>
+    Object.keys(
+      (window as unknown as { __devFs: Record<string, string> }).__devFs,
+    ).sort(),
+  );
+
+test("the parent folder's name takes the tree up a level in one click", async ({
+  page,
+}) => {
+  await open(page);
+  await expect(page.locator(".sidebar .tree-root-label")).toHaveText("notes");
+  const up = page.locator(".sidebar .tree-crumb");
+  await expect(up).toHaveText("work");
+  await up.click();
+  await expect(page.locator(".sidebar .tree-root-label")).toHaveText("work");
+  await expect(row(page, "other.md")).toBeVisible();
+});
+
+test("sorts by name or by date modified, and filters to documents", async ({
+  page,
+}) => {
+  await open(page);
+  await expect(rows(page)).toHaveText(["drafts", "a.md", "b.md", "chart.png"]);
+
+  await page.getByRole("button", { name: "Sort" }).click();
+  await page.getByRole("menuitemradio", { name: "By date modified" }).click();
+  // Folders first still, then newest first.
+  await expect(rows(page)).toHaveText(["drafts", "b.md", "chart.png", "a.md"]);
+  await page.getByRole("button", { name: "Sort" }).click();
+  await expect(
+    page.getByRole("menuitemradio", { name: "By date modified" }),
+  ).toHaveAttribute("aria-checked", "true");
+  await page.keyboard.press("Escape");
+
+  // The filter beside the search box is the tree's too.
+  await page.getByRole("combobox", { name: "Show" }).click();
+  await page
+    .getByRole("option", { name: "Documents only", exact: true })
+    .click();
+  await expect(rows(page)).toHaveText(["drafts", "b.md", "a.md"]);
+  expect(
+    await page.evaluate(() => [
+      localStorage.getItem("textus-file-tree-sort"),
+      localStorage.getItem("textus-file-search-scope"),
+    ]),
+  ).toEqual(["modified", "documents"]);
+});
+
+test("New Document and New Folder from the right-click menu", async ({
+  page,
+}) => {
+  await open(page);
+  // On a folder: inside it.
+  await row(page, "drafts").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "New Document" }).click();
+  const name = page.getByRole("dialog").getByRole("textbox");
+  await name.fill("Chapter 1");
+  await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+  await expect(row(page, "Chapter 1.md")).toBeVisible();
+  // The new document opens.
+  await expect(page.locator(".window-bar-title-text")).toHaveText(
+    "Chapter 1.md",
+  );
+
+  // On the tree's empty space: in its root.
+  const body = (await page.locator(".sidebar .tree-body").boundingBox())!;
+  await page.mouse.click(body.x + 40, body.y + body.height - 20, {
+    button: "right",
+  });
+  await page.getByRole("menuitem", { name: "New Folder" }).click();
+  await page.getByRole("dialog").getByRole("textbox").fill("Research");
+  await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+  await expect(row(page, "Research")).toBeVisible();
+  expect(await files(page)).toContain("/work/notes/Research/.keep");
+  expect(await files(page)).toContain("/work/notes/drafts/Chapter 1.md");
+
+  // A name already taken says so, and nothing is replaced.
+  await row(page, "a.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "New Document" }).click();
+  await page.getByRole("dialog").getByRole("textbox").fill("b");
+  await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+  await expect(
+    page.getByText("There is already something named “b” here."),
+  ).toBeVisible();
+});
+
+test("a row dragged onto a folder moves into it, and its open tab follows", async ({
+  page,
+}) => {
+  await open(page);
+  const from = (await row(page, "a.md").boundingBox())!;
+  const to = (await row(page, "drafts").boundingBox())!;
+  await page.mouse.move(from.x + 30, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 34, from.y + from.height / 2 - 6, {
+    steps: 3,
+  });
+  await page.mouse.move(to.x + 40, to.y + to.height / 2, { steps: 6 });
+  await expect(row(page, "drafts")).toHaveClass(/tree-row-drop/);
+  await expect(page.locator(".tree-drag-ghost")).toHaveText("a.md");
+  await page.mouse.up();
+
+  await expect(page.locator(".tree-drag-ghost")).toHaveCount(0);
+  expect(await files(page)).toContain("/work/notes/drafts/a.md");
+  expect(await files(page)).not.toContain("/work/notes/a.md");
+  // The drop isn't also a click: the open document is still a.md, now in
+  // drafts, and saving writes it there.
+  await expect(page.locator(".window-bar-title-text")).toHaveText("a.md");
+  await page.locator(editor).click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" moved");
+  await page.keyboard.press("ControlOrMeta+s");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __devFs: Record<string, string> }).__devFs[
+            "/work/notes/drafts/a.md"
+          ],
+      ),
+    )
+    .toContain("moved");
+});
+
+test("a folder can't be dragged into itself", async ({ page }) => {
+  await open(page);
+  await row(page, "drafts").click();
+  await expect(row(page, "old.md")).toBeVisible();
+  const from = (await row(page, "drafts").boundingBox())!;
+  const into = (await row(page, "old.md").boundingBox())!;
+  await page.mouse.move(from.x + 30, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(into.x + 40, into.y + into.height / 2, { steps: 6 });
+  await expect(page.locator(".tree-row-drop")).toHaveCount(0);
+  await page.mouse.up();
+  expect(await files(page)).toContain("/work/notes/drafts/old.md");
+});

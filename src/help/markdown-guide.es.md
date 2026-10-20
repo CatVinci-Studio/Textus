@@ -154,6 +154,8 @@ Los tres están también en el menú **Visualización**.
 
 **Archivo → Abrir carpeta…** abre una carpeta entera en la barra lateral: el árbol de archivos se queda en ella mientras abres los documentos que contiene, la carpeta vuelve con tu sesión y **Archivo → Cerrar carpeta** hace que el árbol vuelva a seguir al documento. El cuadro de la parte superior de la pestaña **Archivos** de la barra lateral busca nombres de archivo en toda la carpeta; `Cmd+Shift+O` salta a él. Escribe para filtrar, usa `↑`/`↓` para moverte, `Enter` para abrir y `Esc` para borrar. Ambas funciones son solo de escritorio.
 
+El árbol también es un pequeño gestor de archivos. El nombre de la carpeta superior, encima, te lleva un nivel arriba. **Ordenar** lo ordena por nombre o por fecha de modificación, y el filtro junto al cuadro de búsqueda, **Todos los archivos** o **Solo documentos**, se aplica al árbol igual que a la búsqueda. Haz clic derecho en una carpeta, un archivo o el espacio vacío de abajo para crear allí un **Nuevo documento** o una **Nueva carpeta**, y arrastra un archivo o carpeta sobre otra carpeta para moverlo; un documento abierto lo sigue a su nuevo lugar. Nunca se reemplaza nada: un nombre ya usado se rechaza.
+
 **Archivo → Abrir…** también abre un documento de Word (`.docx`), y lo mismo pasa al soltarlo en la ventana: se convierte en un documento Markdown nuevo con el mismo nombre, aún sin guardar, con sus títulos, listas, tablas, enlaces, notas al pie e imágenes. Las imágenes van, al guardarlo, adonde **Ajustes → Editor y aspecto → Imágenes** pone las pegadas, y **Guardar** propone un archivo `.md` junto al de Word. Parte del formato puede verse distinto; el archivo de Word nunca cambia. Solo en escritorio.
 
 ## Seguir abierto en segundo plano

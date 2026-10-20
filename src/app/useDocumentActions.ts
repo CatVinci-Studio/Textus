@@ -4,11 +4,13 @@ import { forgetIOSDocument } from "../document/ios-recents";
 import { moveConversations } from "../ai/chat/chat-history";
 import { makeBlankTab, tabIsDirty } from "../document/doc-tabs";
 import type { TabState } from "./useTabState";
+import { isInside } from "../utils/path";
 
 /**
  * What happens to open tabs when their files change under them from inside
- * the app - the iPhone's document list (open, rename, delete, share) and
- * Settings > Skills > Reset - and the document list's own open state.
+ * the app - the iPhone's document list (open, rename, delete, share), a
+ * drag in the sidebar's tree and Settings > Skills > Reset - and the
+ * document list's own open state.
  */
 export function useDocumentActions(opts: {
   tabState: TabState;
@@ -40,6 +42,29 @@ export function useDocumentActions(opts: {
       moveConversations(from, to);
     },
     [setTabs],
+  );
+  // The sidebar's tree moved a file or a whole folder into another folder:
+  // every open tab in it follows, with its conversations.
+  const entryMoved = useCallback(
+    (from: string, to: string) => {
+      const moved = (path: string | null) =>
+        path === from
+          ? to
+          : path && isInside(path, from)
+            ? to + path.slice(from.length)
+            : null;
+      for (const tab of tabsRef.current) {
+        const next = moved(tab.path);
+        if (tab.path && next) moveConversations(tab.path, next);
+      }
+      setTabs((prev) =>
+        prev.map((tab) => {
+          const next = moved(tab.path);
+          return next ? { ...tab, path: next } : tab;
+        }),
+      );
+    },
+    [tabsRef, setTabs],
   );
   const documentDeleted = useCallback(
     (path: string) => {
@@ -92,6 +117,7 @@ export function useDocumentActions(opts: {
     setDocumentsOpen,
     openFromDocuments,
     documentRenamed,
+    entryMoved,
     documentDeleted,
     skillFilesDeleted,
     shareActiveTab,

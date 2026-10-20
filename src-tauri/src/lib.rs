@@ -795,6 +795,12 @@ pub fn run() {
             #[cfg(desktop)]
             commands::folder::pick_open_folder,
             #[cfg(desktop)]
+            commands::tree_ops::tree_create_document,
+            #[cfg(desktop)]
+            commands::tree_ops::tree_create_folder,
+            #[cfg(desktop)]
+            commands::tree_ops::tree_move_entry,
+            #[cfg(desktop)]
             commands::recents::add_recent_folder,
             #[cfg(desktop)]
             menu::list_recent_folders,

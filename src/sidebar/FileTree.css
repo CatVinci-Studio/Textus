@@ -1,7 +1,23 @@
+/* The whole height of the sidebar, so the empty space under the tree is
+   the tree's: a right-click there makes something in its root, and a drag
+   dropped there goes into the root. */
 .file-tree {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
   font-size: var(--text-md);
   color: var(--sidebar-text);
   user-select: none;
+}
+
+.tree-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.tree-main[hidden] {
+  display: none;
 }
 
 .tree-row {
@@ -78,6 +94,74 @@
 .tree-tool:disabled {
   cursor: default;
   opacity: 0.3;
+}
+
+/* The way up: the parent folder by name, before the current one. */
+.tree-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 45%;
+  padding: 2px 4px;
+  border: none;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--sidebar-muted, inherit);
+  font: inherit;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.tree-crumb:hover {
+  background: var(--sidebar-hover);
+  opacity: 1;
+}
+
+.tree-crumb-back {
+  flex-shrink: 0;
+  transform: rotate(180deg);
+}
+
+.tree-crumb-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-crumb-sep {
+  flex-shrink: 0;
+  opacity: 0.4;
+}
+
+/* Dragging a row (FileTree's drag): the folder it would go into, and the
+   name under the pointer. Over the tree's own empty space it goes into
+   the root. */
+.tree-body {
+  flex: 1;
+  border-radius: var(--radius-control);
+}
+
+.file-tree-dragging,
+.file-tree-dragging .tree-row {
+  cursor: grabbing;
+}
+
+.tree-row-drop,
+.tree-body-drop {
+  background: var(--sidebar-active);
+  box-shadow: inset 0 0 0 1px var(--chrome-accent);
+}
+
+.tree-drag-ghost {
+  position: fixed;
+  z-index: 100;
+  padding: 3px 8px;
+  font-size: var(--text-sm);
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 /* The file-name search at the top of the Files tab (FileSearch.tsx). */
@@ -172,28 +256,6 @@
   font-size: var(--text-sm);
   opacity: 0.65;
   user-select: text;
-}
-
-/* Under the empty Files tab's note, lined up with its text. Only as wide
-   as its label - a full-width .text-button plus this margin ran past the
-   sidebar's border - and compact like the search box above a tree
-   (design-system.css). A label too long for a narrow sidebar at a large
-   text size wraps rather than being cut short. */
-.text-button.tree-empty-open {
-  width: auto;
-  max-width: calc(100% - 2 * var(--space-3));
-  margin: 0 var(--space-3);
-  padding-block: 3px;
-  text-align: start;
-}
-
-.tree-empty-open svg {
-  flex-shrink: 0;
-}
-
-.tree-empty-open-label {
-  min-width: 0;
-  overflow-wrap: anywhere;
 }
 
 /* Outline: the disclosure triangle sits in its own gutter so headings

@@ -656,6 +656,27 @@ export function ArrowUpIcon({ className }: IconProps) {
 }
 
 /** Re-read a listing from disk (the file tree). */
+/** The file tree's sort (sidebar/FileTree.tsx): three lines, shorter
+ *  each, the way a list is ordered. */
+export function SortIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M3 4.5H13M3 8H10M3 11.5H7"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function RefreshIcon({ className }: IconProps) {
   return (
     <svg

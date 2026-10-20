@@ -22,3 +22,19 @@
 .context-menu-item.context-menu-item-danger {
   color: var(--danger);
 }
+
+/* A choice of several (the file tree's sort): the check before the one in
+   force, its room kept before the others so the labels line up. */
+.context-menu-item[role="menuitemradio"] {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.context-menu-check {
+  flex-shrink: 0;
+}
+
+.context-menu-check-off {
+  visibility: hidden;
+}
