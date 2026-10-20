@@ -25,6 +25,8 @@ GitHub-style alerts:
 
 **Bold** (`**text**`), *italic* (`*text*`), ***bold italic***, ~~strikethrough~~ (`~~text~~`), ==highlight== (`==text==`), and `inline code`.
 
+Typing `(`, `[`, `{`, a quote, or a bracket from a Chinese or Japanese input method such as `（`, `【` or `「` puts its closing partner in after the caret: typing the closer steps over it, Backspace right after the opener takes both, and with text selected the pair goes around it. **Settings → Editor & Appearance → Auto-close brackets and quotes** turns this off.
+
 Links look like this: [the Textus repository](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+click one to follow it: a web link opens in your browser, a link to another Markdown file opens it in a tab, and a link to `#a-heading` scrolls there. Inline HTML renders too, e.g. keyboard keys <kbd>Cmd</kbd> + <kbd>S</kbd>. So do `<details>` folds, HTML tables, a few inline styles (colour, background, size, weight, alignment, underline and strikethrough) and inline `<svg>`, which shows as a picture. Scripts and other HTML stay as source. A link to a heading in another file, such as `[see](notes.md#a-heading)`, opens that file at the heading. Obsidian wikilinks (`[[Note]]`, `[[Note|text]]` and `[[Note#Heading]]`) open the same way, from the document's folder or anywhere in its vault; they and `#tags` at the start of a line are saved exactly as written.
 
 **Settings → Editor & Appearance → Swatches before colour codes** puts a small square of the colour before a colour code. **In code only** draws it in inline code that is a colour, such as `#0af` or `rgb(0 128 255)`, and before the colour literals in code blocks; **Everywhere** also before one written in the text with six or eight digits, such as #ff8800, or as a colour function, such as hsl(210 100% 50%). Short codes in the text, tags like #cafe, issue numbers like #234 and links stay as they are.
@@ -54,7 +56,7 @@ Task list (click a checkbox to toggle it):
 | Highlight | `==text==` | ==text== |
 | Inline math | `$x^2$` | $x^2$ |
 
-Hover over a table to add or remove rows and columns. Type `| Name | Age |` and press Enter to make a table. Enter moves down a row, adds one at the last row, and leaves the table from a new row left empty; Ctrl/⌘+Enter leaves it at any time.
+Hover over a table to add or remove rows and columns. Type `| Name | Age |` and press Enter to make a table. Enter moves down a row, adds one at the last row, and leaves the table from a new row left empty; Ctrl/⌘+Enter leaves it at any time. In a table, Tab and Shift+Tab move to the next and the previous cell, and Shift+Enter starts a new line inside a cell.
 
 ## Code blocks
 

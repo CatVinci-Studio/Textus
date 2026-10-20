@@ -159,7 +159,7 @@ describe("saving after an edit elsewhere keeps as written", () => {
   it("writes wikilinks and a #tag in an edited block as written", async () => {
     const markdown = "#idea [[Page]] and [[a_b|the *b*]] _x_\n";
     expect(await saveAfter(markdown, typeInto(0))).toBe(
-      "#idea [[Page]] and [[a_b|the *b*]] *x* edited\n",
+      "#idea [[Page]] and [[a_b|the *b*]] _x_ edited\n",
     );
   });
 
@@ -172,9 +172,9 @@ describe("saving after an edit elsewhere keeps as written", () => {
   });
 
   it("serializes the changed block in the editor's own style", async () => {
-    const markdown = "_em_ here\n\nTitle\n=====\n";
+    const markdown = "__em__ here\n\nTitle\n=====\n";
     expect(await saveAfter(markdown, typeInto(0))).toBe(
-      "*em* here edited\n\nTitle\n=====\n",
+      "**em** here edited\n\nTitle\n=====\n",
     );
   });
 
@@ -204,7 +204,7 @@ describe("saving after an edit elsewhere keeps as written", () => {
   });
 
   it("keeps a missing final newline", async () => {
-    expect(await saveAfter("_a_\n\nb", typeInto(0))).toBe("*a* edited\n\nb");
+    expect(await saveAfter("_a_\n\nb", typeInto(0))).toBe("_a_ edited\n\nb");
     expect(await saveAfter("_a_\n\nb", typeInto(1))).toBe("_a_\n\nb edited");
   });
 
@@ -316,7 +316,7 @@ describe("saving after an edit elsewhere keeps as written", () => {
     const raw = "﻿Title\r\n=====\r\n\r\n_em_ text\r\n";
     const out = await saveAfter(toEditorText(raw), typeInto(1));
     expect(toFileText(out, detectFormat(raw))).toBe(
-      "﻿Title\r\n=====\r\n\r\n*em* text edited\r\n",
+      "﻿Title\r\n=====\r\n\r\n_em_ text edited\r\n",
     );
   });
 });
@@ -351,7 +351,7 @@ describe("saving a long document", () => {
       expect(out).toBe(
         markdown.replace(
           "Paragraph 501 with _em_ and snake_case words.",
-          "Paragraph 501 with *em* and snake_case words.!",
+          "Paragraph 501 with _em_ and snake_case words.!",
         ),
       );
       // The whole document is what the editor serialized on every edit

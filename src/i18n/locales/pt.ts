@@ -702,6 +702,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   codeBlockCopy: "Copiar",
   codeBlockCopied: "Copiado",
   autoCloseMarksLabel: "Fechar marcas de formatação automaticamente",
+  autoCloseBracketsLabel: "Fechar parênteses e aspas automaticamente",
   pdfPageNumbersLabel: "Mostrar números de página ao exportar",
   infoTipLabel: "Mais sobre “{label}”",
   infoTipLabelPlain: "Mais informações",

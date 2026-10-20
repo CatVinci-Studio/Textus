@@ -820,7 +820,9 @@ interface Phrasing {
   data?: unknown;
   value?: string;
   children?: Phrasing[];
-  /** The delimiter Milkdown's strong and emphasis handlers write. */
+  /** The delimiter Milkdown's strong and emphasis handlers write: "_"
+   *  for italic read or typed with underscores, and see
+   *  alternateNestedMarkers. */
   marker?: string;
 }
 
@@ -995,9 +997,32 @@ function alternateNestedMarkers(node: Phrasing): void {
   });
 }
 
+/**
+ * Italic written `_text_` (md-span-schema.ts) right against a letter or a
+ * digit, `a_text_`: underscores don't open or close inside a word, so it
+ * read back as text with underscores in it - a word typed against the
+ * italic. Written with asterisks there, which do.
+ */
+function underscoresAtWordEdges(node: Phrasing): void {
+  if (!node.children) return;
+  node.children.forEach(underscoresAtWordEdges);
+  const word = /^[\p{L}\p{N}]$/u;
+  node.children.forEach((span, i, children) => {
+    if (span.type !== "emphasis" || span.marker !== "_") return;
+    const before = children[i - 1];
+    const after = children[i + 1];
+    if (
+      (before && word.test(edgeCharacter(before, "last"))) ||
+      (after && word.test(edgeCharacter(after, "first")))
+    )
+      delete span.marker;
+  });
+}
+
 /** Set up per serialization, before any node is written. */
 const root: Handle = (node, parent, state, info) => {
   joinAdjacent(node as Phrasing);
+  underscoresAtWordEdges(node as Phrasing);
   alternateNestedMarkers(node as Phrasing);
   markLatexAhead(node as Phrasing);
   encodeAroundAttention(node as Phrasing);
@@ -1175,7 +1200,8 @@ function withSingleLineEnds(text: Handle): Handle {
  * the end of a line came back as one. Before a line end that is already in
  * the text (a `<br>` at the end of a line, br-hardbreak-plugin.ts) it is
  * the backslash alone: its own line end and that one made a blank line,
- * which split the paragraph.
+ * which split the paragraph. In a table cell it is `<br>`, and nothing
+ * at the cell's end, as at a paragraph's.
  */
 const hardBreak: Handle = (node, parent, state, info) => {
   const siblings = (parent?.children ?? []) as {
@@ -1191,6 +1217,10 @@ const hardBreak: Handle = (node, parent, state, info) => {
     )
   )
     return "";
+  // A table row is one line: a break in a cell is written as the HTML
+  // one, read back as a break (br-hardbreak-plugin.ts). remark wrote a
+  // space.
+  if (state.stack.includes("tableCell")) return "<br>";
   const out = defaultHandlers.break(node, parent, state, info);
   return rest[0]?.type === "text" && rest[0].value?.startsWith("\n")
     ? out.replace(/\n$/, "")

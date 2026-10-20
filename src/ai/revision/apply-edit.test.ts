@@ -34,7 +34,7 @@ describe("an AI edit accepted into one paragraph", () => {
       return writePreservingSource(ctx, source, view.state.doc);
     });
     expect(saved).toBe(
-      "Notes\n=====\n\nFirst _one_ with snake_case.\n\nA *new* second one.\n\n| a | b |\n|---|---|\n| 1 | 2 |\n",
+      "Notes\n=====\n\nFirst _one_ with snake_case.\n\nA _new_ second one.\n\n| a | b |\n|---|---|\n| 1 | 2 |\n",
     );
   });
 });

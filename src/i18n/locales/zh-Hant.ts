@@ -639,6 +639,7 @@ export default {
   codeBlockCopy: "複製",
   codeBlockCopied: "已複製",
   autoCloseMarksLabel: "自動補上格式符號",
+  autoCloseBracketsLabel: "自動補上括號和引號",
   pdfPageNumbersLabel: "匯出時顯示頁碼",
   infoTipLabel: "關於「{label}」的說明",
   infoTipLabelPlain: "說明",

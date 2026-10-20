@@ -3,6 +3,7 @@ import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { TYPEWRITER_HOLD } from "../modes/typewriter-plugin";
+import { BRACKET_COMPOSITION_DELAY_MS } from "../keys/bracket-autopair-plugin";
 
 const CHECKBOX_HIT_WIDTH = 24;
 
@@ -199,6 +200,12 @@ export const cjkTaskInputPlugin = $prose(
             last?.doc === view.state.doc &&
             last.pos === view.state.selection.head;
           if (justConverted && text === " ") return true;
+          // A box made at its paired "[ ]" (bracket-autopair-plugin.ts)
+          // before its "]" was typed: that "]", and the space after it.
+          if (justConverted && /^[\]】］]$/.test(text)) {
+            markConverted(view);
+            return true;
+          }
           const { $from } = view.state.selection;
           if ($from.parent.type.name !== "paragraph") return false;
           const start = $from.start();
@@ -210,14 +217,27 @@ export const cjkTaskInputPlugin = $prose(
         },
         handleDOMEvents: {
           // An IME commit doesn't go through handleTextInput; look once
-          // ProseMirror has read the committed text back in.
-          compositionend(view) {
+          // ProseMirror has read the committed text back in, and once a
+          // committed 【 has its 】 (bracket-autopair-plugin.ts).
+          compositionend(view, event) {
+            const committed = event.data ?? "";
             setTimeout(() => {
               if (view.composing || view.isDestroyed) return;
               const { $from } = view.state.selection;
               if ($from.parent.type.name !== "paragraph") return;
+              // The 】 of a box made at its paired 【】, as above.
+              const last = converted.get(view);
+              if (
+                /^[\]】］]$/.test(committed) &&
+                $from.parent.textContent === committed &&
+                last?.pos === $from.pos - committed.length
+              ) {
+                view.dispatch(view.state.tr.delete($from.start(), $from.end()));
+                markConverted(view);
+                return;
+              }
               convertCjkTask(view, $from.parent.textContent);
-            });
+            }, BRACKET_COMPOSITION_DELAY_MS + 10);
             return false;
           },
         },

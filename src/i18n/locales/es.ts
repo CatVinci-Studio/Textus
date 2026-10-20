@@ -718,6 +718,7 @@ para usar una.
   codeBlockCopy: "Copiar",
   codeBlockCopied: "Copiado",
   autoCloseMarksLabel: "Cerrar las marcas de formato automáticamente",
+  autoCloseBracketsLabel: "Cerrar paréntesis y comillas automáticamente",
   pdfPageNumbersLabel: "Mostrar números de página al exportar",
   infoTipLabel: "Más sobre «{label}»",
   infoTipLabelPlain: "Más información",

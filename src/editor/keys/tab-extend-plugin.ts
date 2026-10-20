@@ -1,5 +1,7 @@
 import {
   Plugin,
+  Selection,
+  type Command,
   type EditorState,
   type Transaction,
 } from "@milkdown/kit/prose/state";
@@ -53,11 +55,29 @@ export function indentCodeLines(
 }
 
 /**
+ * Tab / Shift+Tab in a table: the next / previous cell, with the caret at
+ * the end of its text. prosemirror-tables' own command (gfm's Tab keymap)
+ * selects the whole cell instead, and the next character typed replaced
+ * it. In the first cell Shift+Tab does nothing here.
+ */
+export const moveToCell =
+  (direction: 1 | -1): Command =>
+  (state, dispatch) => {
+    let moved: Transaction | undefined;
+    if (!goToNextCell(direction)(state, (tr) => (moved = tr))) return false;
+    if (dispatch && moved) {
+      const $end = moved.doc.resolve(moved.selection.to);
+      dispatch(moved.setSelection(Selection.near($end, -1)).scrollIntoView());
+    }
+    return true;
+  };
+
+/**
  * Tab at the last cell of a table adds a new row and jumps into it (like
- * spreadsheets/Notion), instead of doing nothing. Registered after gfm in
- * the plugin chain, so gfm's own Tab-to-next-cell keymap already handles
- * every other case - this only ever fires once that's failed (i.e. at the
- * boundary) or when the selection is inside a code block (indentCodeLines).
+ * spreadsheets/Notion), instead of doing nothing; anywhere else in a table
+ * Tab and Shift+Tab move between cells (moveToCell). $prose plugins run
+ * ahead of the preset keymaps, so this wins over gfm's table keymap. In a
+ * code block Tab indents (indentCodeLines).
  */
 export const tabExtendPlugin = $prose(
   () =>
@@ -77,16 +97,17 @@ export const tabExtendPlugin = $prose(
             // Never on to the browser, which moves the focus out.
             return true;
           }
-          if (event.shiftKey) return false;
+          if (event.shiftKey)
+            return isInTable(state) && moveToCell(-1)(state, view.dispatch);
 
           if (isInTable(state)) {
             const rect = selectedRect(state);
             const atLastCell =
               rect.bottom === rect.map.height && rect.right === rect.map.width;
-            if (!atLastCell) return false;
+            if (!atLastCell) return moveToCell(1)(state, view.dispatch);
 
-            addRowAfter(view.state, view.dispatch);
-            goToNextCell(1)(view.state, view.dispatch);
+            addRowAfter(state, view.dispatch);
+            moveToCell(1)(view.state, view.dispatch);
             return true;
           }
 

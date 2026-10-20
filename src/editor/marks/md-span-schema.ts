@@ -76,6 +76,36 @@ export const remarkStrikethroughTildesPlugin = $remark(
   () => remarkStrikethroughTildes,
 );
 
+/**
+ * Italic written with underscores, `_text_`: recorded as `data.marker`,
+ * read into the node's delim below and written back with underscores
+ * (markdown-output.ts), where mdast alone would turn it into `*text*`.
+ */
+const remarkEmphasisUnderscores: RemarkPluginRaw<unknown> = () => {
+  return (tree: unknown, file: { value: unknown }) => {
+    const source = String(file.value);
+    const walk = (node: MdastNode) => {
+      const start = node.position?.start.offset;
+      if (
+        node.type === "emphasis" &&
+        start !== undefined &&
+        source[start] === "_"
+      )
+        node.data = { ...node.data, marker: "_" };
+      node.children?.forEach(walk);
+    };
+    walk(tree as MdastNode);
+  };
+};
+
+const markerOf = (node: { data?: unknown }) =>
+  (node.data as { marker?: string } | undefined)?.marker;
+
+export const remarkEmphasisUnderscoresPlugin = $remark(
+  "remark-emphasis-underscores",
+  () => remarkEmphasisUnderscores,
+);
+
 // The literal markdown delimiter text a node renders from/reverts to -
 // shared by the schema's toDOM (static "data-syntax" attribute) and
 // enclosure.ts (delimiter reveal widgets, delimiter deletion/unwrap).
@@ -132,7 +162,8 @@ export const mdSpanClipboardPlugin = $prose((ctx) => {
 // pick the rendered style and the markdown wrapper on save (see toMarkdown
 // below); for "*" the rung is the style (1 = italic, 2 = bold, 3 = both),
 // for "~" only how many tildes the file had (`~x~` is rung 1, though the
-// editor makes "~~"), and "=" is always rung 2.
+// editor makes "~~"), and "=" is always rung 2. "_" is italic written
+// `_text_`, always rung 1.
 export const mdSpanSchema = $nodeSchema("md_span", () => ({
   content: "inline*",
   group: "inline",
@@ -192,7 +223,7 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
         node.type === "strong"
           ? { delim: "*", rung: 2 }
           : node.type === "emphasis"
-            ? { delim: "*", rung: 1 }
+            ? { delim: markerOf(node) === "_" ? "_" : "*", rung: 1 }
             : node.type === "delete"
               ? { delim: "~", rung: tildesOf(node) === 1 ? 1 : 2 }
               : { delim: "=", rung: 2 };
@@ -219,6 +250,9 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
           // strong>emphasis, not a single node - matches how remark itself
           // parses "***text***".
           state.addNode("strong", [{ type: "emphasis", children }]);
+        else if (delim === "_")
+          // Milkdown's emphasis handler writes the node's own marker.
+          state.addNode("emphasis", children, undefined, { marker: "_" });
         else
           state.addNode(
             delim === "*"

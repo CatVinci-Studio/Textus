@@ -400,6 +400,9 @@ export interface Settings {
   /// (an empty span to type into). Off, the marks are typed by hand and a
   /// complete "**text**" still turns into bold (#136).
   autoCloseMarks: boolean;
+  /// Typing "(", "[", "{", a quote or a full-width bracket ("（", "【",
+  /// "「"...) puts its partner in after the caret, as in Typora.
+  autoCloseBrackets: boolean;
   /// The user's own CSS, applied on top of whichever theme is selected -
   /// for small changes (indent, line spacing, a font) without writing a
   /// whole theme. Injected last, so it wins ties with the theme (#13).
@@ -511,6 +514,7 @@ const DEFAULT_SETTINGS: Settings = {
   typewriterMode: false,
   contentWidth: "auto",
   autoCloseMarks: true,
+  autoCloseBrackets: true,
   customCss: "",
   zoom: 1,
   uiTextScale: 1,

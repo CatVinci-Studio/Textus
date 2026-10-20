@@ -29,16 +29,21 @@ import {
 import { rawHtmlSchema } from "./html/raw-html-schema";
 import { remarkHtmlImages } from "./images/image-html";
 import { createRawHtmlPreviewPlugin } from "./html/raw-html-preview-plugin";
-import { brToHardbreakPlugin } from "./markdown/br-hardbreak-plugin";
+import {
+  brToHardbreakPlugin,
+  remarkTableCellBreaks,
+} from "./markdown/br-hardbreak-plugin";
 import {
   remarkHighlightPlugin,
   remarkStrikethroughTildesPlugin,
+  remarkEmphasisUnderscoresPlugin,
   mdSpanSchema,
   mdCodeSpanSchema,
   mdSpanClipboardPlugin,
 } from "./marks/md-span-schema";
 import { createMdSpanAutopairPlugin } from "./marks/md-span-autopair-plugin";
 import { createColorSwatchPlugin } from "./marks/color-swatch-plugin";
+import { createBracketAutopairPlugin } from "./keys/bracket-autopair-plugin";
 import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
 import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
@@ -209,6 +214,7 @@ export function withEditorCore(
       .use(remarkHtmlImages)
       .use(createRawHtmlPreviewPlugin({ docPath: () => docPath.current }))
       .use(brToHardbreakPlugin)
+      .use(remarkTableCellBreaks)
 
       // Reference links, `[text][ref]`, and their `[ref]: url` definitions:
       // read as links, written back as references.
@@ -263,12 +269,18 @@ export function withEditorCore(
       // as real nodes with synthesized, Typora-style delimiters.
       .use(remarkHighlightPlugin)
       .use(remarkStrikethroughTildesPlugin)
+      .use(remarkEmphasisUnderscoresPlugin)
       .use(mdSpanSchema)
       .use(mdCodeSpanSchema)
       .use(mdSpanClipboardPlugin)
       .use(
         createMdSpanAutopairPlugin({
           autoClose: () => settings.current.autoCloseMarks,
+        }),
+      )
+      .use(
+        createBracketAutopairPlugin({
+          enabled: () => settings.current.autoCloseBrackets,
         }),
       )
       .use(formatShortcutPlugin)

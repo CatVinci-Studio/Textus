@@ -162,6 +162,42 @@ function closeOpenRun(
   return false;
 }
 
+/** Italic written with underscores - only ever closed, never opened as an
+ *  empty shell: see closeUnderscoreRun. */
+const UNDERSCORE: SpanSpec = {
+  char: "_",
+  nodeType: "md_span",
+  minRung: 1,
+  maxRung: 1,
+};
+const LETTER_OR_DIGIT = /^[\p{L}\p{N}]$/u;
+/** Closing brackets and quotes, and nothing else. */
+const ONLY_CLOSERS = /^[)\]}"'」』）】》”’]+$/u;
+
+/**
+ * The closing "_" of `_italic_`, at `to`, after the literal `textBefore`
+ * (from `runStart`): the pair becomes italic by CommonMark's rule for
+ * underscores, which open and close only at a word's edges - the opening
+ * one not after a letter or digit, the closing one not before one - so
+ * snake_case and file_name_v2 stay text. "_" never opens an empty shell
+ * the way "*" does: in a word it is just a character.
+ */
+function closeUnderscoreRun(
+  view: EditorView,
+  textBefore: string,
+  runStart: number,
+  to: number,
+): boolean {
+  const $to = view.state.doc.resolve(to);
+  if (!pairsIn($to.parent, UNDERSCORE)) return false;
+  const open = findRunOpen(textBefore, "_", 1);
+  if (!open) return false;
+  if (LETTER_OR_DIGIT.test(textBefore.charAt(open.openIdx - 1))) return false;
+  const next = literalTextAfter($to).text.charAt(0);
+  if (next === "_" || LETTER_OR_DIGIT.test(next)) return false;
+  return closeOpenRun(view, UNDERSCORE, textBefore, runStart, to);
+}
+
 /** Typing an empty shell's delimiter again: the shell (an md_span at
  *  `nodeStart`) one rung up, "*" to "**" - or null at its top rung. */
 function upgradeRung(
@@ -299,6 +335,13 @@ export function convertRunClosedBeforeCaret(
   const sel = state.selection;
   if (!sel.empty) return false;
   const $pos = sel.$from;
+  if (committed.endsWith("_")) {
+    const { text, from } = literalTextBefore($pos, true);
+    return (
+      text.endsWith("_") &&
+      closeUnderscoreRun(view, text.slice(0, -1), from, sel.from)
+    );
+  }
   const spec = SPECS.find((s) => committed.endsWith(s.char));
   if (!spec || !pairsIn($pos.parent, spec)) return false;
   const { text: textBefore, from: runStart } = literalTextBefore(
@@ -364,6 +407,14 @@ export const createMdSpanAutopairPlugin = (options: {
                 view.dispatch(caretAt(literal, from + 1));
                 return true;
               }
+            }
+
+            if (text === "_") {
+              const { text: before, from: runStart } = literalTextBefore(
+                view.state.doc.resolve(from),
+                true,
+              );
+              return closeUnderscoreRun(view, before, runStart, to);
             }
 
             const spec = SPECS.find((s) => s.char === text);
@@ -502,8 +553,16 @@ export const createMdSpanAutopairPlugin = (options: {
             // With content still following the caret the character is being
             // typed into the middle of existing text - never spawn a fresh
             // empty shell there, keep it literal. (Closing/converting an
-            // opening run above still works mid-line.)
-            if ($pos.parentOffset !== parent.content.size) return false;
+            // opening run above still works mid-line.) Closing brackets and
+            // quotes don't count: "(" puts in its ")" (bracket-autopair-
+            // plugin.ts), and "(**" should open bold inside as at a line end.
+            const rest = parent.textBetween(
+              $pos.parentOffset,
+              parent.content.size,
+              "",
+              "\uFFFC",
+            );
+            if (rest && !ONLY_CLOSERS.test(rest)) return false;
 
             // Everything below opens an empty shell, closing mark and all.
             if (!options.autoClose()) return false;
