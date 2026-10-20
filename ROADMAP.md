@@ -49,6 +49,8 @@ Textus AI that can do more, an editor that feels better, and a lot of fixes.
   what you keep turning down.
 - **Doubao (Volcengine)** as an AI provider.
 - **Long documents** that open, scroll and take typing smoothly.
+- **Smoother motion** throughout: animations, scrolling and panels that keep
+  up on every platform.
 - **Accessibility**: screen readers, full keyboard use and high contrast.
 - **Textus in the background**, if you turn it on, with an icon in the
   notification area, the system tray or the menu bar.
@@ -110,20 +112,21 @@ only fix things.
     if an update wants more.
   - Nothing runs unless you install it, and one switch turns every plugin
     off, leaving Textus as if none were there.
+  - An installed plugin loads only when you first use it, so however many
+    you have, Textus starts as fast as it does with none.
   - A plugin that fails or slows Textus down is turned off by itself and
     tells you why.
   - Textus AI uses a plugin only if you allow it, and only to read or to
     propose: a change to your document is a suggestion you accept, as now.
   - Plugins in the gallery are looked over by one of us before they appear,
     like themes, and one that turns out to be harmful can be taken down.
-- **A first batch of plugins**: quick notes from anywhere
+- **A first batch of official plugins**, each made with as much care for how
+  it looks as Textus itself: quick notes from anywhere
   ([#193](https://github.com/CatVinci-Studio/Textus/issues/193)), version
   history for your documents, SVG and PDF viewers, an image viewer, a
-  calendar and daily notes, tasks, and a kanban board.
+  calendar and daily notes, tasks, a kanban board, and Zotero for citations.
 - **A second version of the plugin API**, shaped by what the first plugins
   need.
-- **Smoother motion** throughout: animations, scrolling and panels that keep
-  up on every platform.
 
 ## Want to help?
 
