@@ -29,6 +29,7 @@ where the project is heading.
 | [ai-concepts.md](design/ai-concepts.md)          | The AI concepts: project folder, style profile, library, writing rules, skills, priority |
 | [ai-proposals.md](design/ai-proposals.md)        | An AI edit's life from streaming to the document, and the three chat surfaces            |
 | [ai-eval.md](design/ai-eval.md)                  | Evaluating the AI features against real providers                                       |
+| [ai-tokens.md](design/ai-tokens.md)              | What each AI request sends, what is cached, and the plan for using fewer tokens         |
 
 ## Other
 

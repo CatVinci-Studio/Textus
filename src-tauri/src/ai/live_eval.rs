@@ -32,6 +32,9 @@
 //!
 //! doubao.rs is the one suite on another provider: a few request-shape
 //! checks against Volcengine Ark, keyed by VOLCENGINE_ARK_API_KEY.
+//!
+//! tokens.rs measures what each kind of request sends and caches
+//! (docs/design/ai-tokens.md) rather than how good the answers are.
 
 mod agent_builtin;
 mod agent_everyday;
@@ -48,6 +51,7 @@ mod grammar_cases;
 mod grammar_matrix;
 mod harness;
 mod images;
+mod tokens;
 
 use crate::ai::agent::AgentMode;
 use harness::{auth, finish, par_map, Record};
