@@ -145,6 +145,9 @@ pub type EventSink<'a> = &'a (dyn Fn(ProviderEvent<'_>) + Send + Sync);
 /// reported: its text already streamed out as ProviderEvent::Text, and the
 /// returned turn list is the authoritative ending either way.
 ///
+/// Near the end of `max_steps` the model is told how many steps it has
+/// left, in what it is shown but not in what is recorded (`budget_note`).
+///
 /// A step's turns are recorded as all of its calls, then all of their
 /// results (Call1, Call2, Result1, Result2), so a ToolCall right after a
 /// ToolResult always starts a new step. The providers group a step's calls
@@ -174,7 +177,7 @@ where
     turns.push(user_turn.clone());
     let mut new_turns = vec![user_turn];
 
-    for _ in 0..max_steps {
+    for step_index in 0..max_steps {
         match step(turns.clone()).await? {
             StepResult::Done(text) => {
                 let turn = AgentTurn::Assistant { text };
@@ -192,7 +195,8 @@ where
                     turns.push(call.clone());
                     new_turns.push(call.clone());
                 }
-                for call in &calls {
+                let remaining = max_steps - step_index - 1;
+                for (index, call) in calls.iter().enumerate() {
                     let AgentTurn::ToolCall {
                         call_id,
                         name,
@@ -208,8 +212,11 @@ where
                         images,
                     };
                     on_turn(&result_turn);
-                    turns.push(result_turn.clone());
-                    new_turns.push(result_turn);
+                    new_turns.push(result_turn.clone());
+                    turns.push(match budget_note(remaining) {
+                        Some(note) if index + 1 == calls.len() => with_note(result_turn, &note),
+                        _ => result_turn,
+                    });
                 }
             }
         }
@@ -224,6 +231,38 @@ where
         ),
     });
     Ok(new_turns)
+}
+
+/// What the model is told after a step with `remaining` steps still to
+/// come, when they are few. One that kept checking its work used to run
+/// out of steps mid-task and leave the user with nothing.
+fn budget_note(remaining: usize) -> Option<String> {
+    let steps = match remaining {
+        1 => "1 step",
+        2 => "2 steps",
+        _ => return None,
+    };
+    Some(format!(
+        "[Only {steps} left in this request: stop gathering or checking and deliver your result now - send any edit proposals, then give your final reply.]"
+    ))
+}
+
+/// A tool result with `note` after its output. Added to the step's last
+/// result once, when it is first sent, so the turns before it stay as they
+/// were from step to step (and their prompt cache valid).
+fn with_note(turn: AgentTurn, note: &str) -> AgentTurn {
+    match turn {
+        AgentTurn::ToolResult {
+            call_id,
+            output,
+            images,
+        } => AgentTurn::ToolResult {
+            call_id,
+            output: format!("{output}\n\n{note}"),
+            images,
+        },
+        other => other,
+    }
 }
 
 #[cfg(test)]
@@ -360,6 +399,38 @@ mod tests {
             panic!("the exchange must end with an assistant turn");
         };
         assert!(text.contains("Stopped after 3 tool steps"));
+    }
+
+    #[test]
+    fn the_last_steps_are_announced_to_the_model_only() {
+        let looping = (0..4)
+            .map(|i| StepResult::ToolCalls(vec![call(&i.to_string(), "measure_text", "{}")]))
+            .collect();
+        let (turns, seen) = run_scripted(looping, 4, |_, _| "12 chars".to_string());
+        let noted = |history: &[AgentTurn]| {
+            history.iter().any(|t| {
+                matches!(t, AgentTurn::ToolResult { output, .. } if output.contains("left in this request"))
+            })
+        };
+        // The second step is told nothing; the third sees the two steps
+        // still to come, the last that it is the last.
+        assert!(!noted(&seen[1]));
+        assert!(matches!(
+            seen[2].last(),
+            Some(AgentTurn::ToolResult { output, .. })
+                if output.starts_with("12 chars") && output.contains("Only 2 steps left")
+        ));
+        assert!(matches!(
+            seen[3].last(),
+            Some(AgentTurn::ToolResult { output, .. }) if output.contains("Only 1 step left")
+        ));
+        // Earlier turns are shown as they were first sent.
+        assert_eq!(
+            format!("{:?}", &seen[3][..seen[2].len()]),
+            format!("{:?}", seen[2])
+        );
+        // What is recorded (and shown to the user) carries no note.
+        assert!(!noted(&turns));
     }
 
     #[test]
