@@ -463,6 +463,16 @@ describe("an edited block is saved so it reads back the same", () => {
     ).toBe("Tech! [Episodes]");
   });
 
+  it("doesn't escape a bracket into a LaTeX formula after it", async () => {
+    // `\[', '\]` is a formula; the `[[` before it is escaped.
+    const saved = await savedAfter(
+      "x = [['\\[', '\\]']] end\n",
+      deleting(" end"),
+    );
+    expect(saved).toBe("x = &#91;&#91;'\\[', '\\]']]\n");
+    expect(await roundTrip(saved)).toBe(saved);
+  });
+
   it("escapes text before a space at the start of a line", async () => {
     expect(await savedAfter("foo\n\\# bar baz\n", boldening("baz"))).toBe(
       "foo\n\\# bar **baz**\n",
@@ -500,6 +510,24 @@ describe("an edited block is saved so it reads back the same", () => {
     );
   });
 
+  it("closes a span nested in one of its kind before text glued to it", async () => {
+    const atEnd = (typed: string) => (view: EditorView) =>
+      view.dispatch(
+        view.state.tr.insertText(typed, view.state.doc.content.size - 1),
+      );
+    expect(await savedAfter("*foo *bar**\n", atEnd("Pasted"))).toBe(
+      "*foo _bar_*&#x50;asted\n",
+    );
+    expect(await savedAfter("**foo **bar****\n", atEnd("Pasted"))).toBe(
+      "**foo __bar__**&#x50;asted\n",
+    );
+    expect(await savedAfter("*x *!`c`**\n", atEnd("."))).toBe("*x _!`c`_*.\n");
+    // With a space after, the delimiters close as they are.
+    expect(await savedAfter("*foo *bar**\n", atEnd(" end"))).toBe(
+      "*foo *bar** end\n",
+    );
+  });
+
   it("writes a bare www. link with text right after it as a link", async () => {
     // Unlinked text against the link, as a paste puts it there.
     const glued = (view: EditorView) => {
@@ -512,6 +540,18 @@ describe("an edited block is saved so it reads back the same", () => {
     expect(await roundTrip("www.example.org. end\n")).toBe(
       "www.example.org. end\n",
     );
+    // Punctuation and then text: GFM takes the punctuation into the link.
+    const after = (view: EditorView) => {
+      const { tr, schema, doc } = view.state;
+      view.dispatch(tr.insert(find(doc, ". end") + 1, schema.text("Next")));
+    };
+    expect(await savedAfter("www.example.org/a.b. end\n", after)).toBe(
+      "[www.example.org/a.b](http://www.example.org/a.b).Next end\n",
+    );
+    // `<` ends the link, but before a letter it is written `\<`.
+    expect(
+      await savedAfter("www.example.org/he<lp end\n", deleting(" end")),
+    ).toBe("[www.example.org/he](http://www.example.org/he)\\<lp\n");
   });
 
   it("keeps a heading's closing hashes in its text", async () => {
@@ -547,6 +587,24 @@ describe("an edited block is saved so it reads back the same", () => {
         typingAfter("paragraph", "!"),
       ),
     ).toBe("1. ```\n   indented code\n   ```\n\n   paragraph!\n");
+  });
+
+  it("keeps a nested item whose only word was deleted an item", async () => {
+    const saved = await savedAfter(
+      "* PHP\n  * Symfony\n* Python\n",
+      deleting("Symfony"),
+    );
+    expect(saved).toBe("* PHP\n  * &#x20;\n* Python\n");
+    const editor = await createTestEditor(saved);
+    editors.push(editor);
+    const items = editor.action((ctx) => {
+      let count = 0;
+      ctx.get(editorViewCtx).state.doc.descendants((node) => {
+        if (node.type.name === "list_item") count++;
+      });
+      return count;
+    });
+    expect(items).toBe(3);
   });
 
   it("writes a rule in a list item so it stays one", async () => {

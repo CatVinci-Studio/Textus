@@ -179,7 +179,9 @@ no way to write what the editor holds, or a reading the parser makes:
   the serializer writes the same delimiters, which then don't open or
   close. (Bold that starts or ends with punctuation right against a word,
   `foo**(bar)**`, is written with that word's letter as a character
-  reference, `fo&#x6F;**(bar)**`, except next to CJK text.)
+  reference, `fo&#x6F;**(bar)**`, except next to CJK text. A span of its
+  kind at the very start or end, with text glued on outside, is written
+  with underscores, `*foo _bar_*&#x50;asted`.)
 - A table whose rows have different numbers of cells is filled out with
   empty cells the first time you type in it (the table editing plugin
   does this), and undoing the typing keeps them, so that save isn't the
@@ -189,8 +191,12 @@ no way to write what the editor holds, or a reading the parser makes:
 - Deleting or rewriting a reference definition, `[ref]: url`, leaves the
   references to it, `[text][ref]`, as plain text on reopening; the editor
   still shows them as links until then.
-- A bare GFM link followed by a character it may take as part of itself:
-  `www.x.org/a<b` or `a@b.c_` once edited.
+- Text that isn't a link only because of the character after it, such as
+  `a@b.c_`: with text typed or pasted onto it, it reads as an address and
+  is linked on reopening. An address typed as text is written unescaped on
+  purpose, so GitHub links it too (`markdown-output.ts`). A bare
+  `www.` link itself is written as `[www.x.org](http://www.x.org)` once
+  what follows it would read as more of the address.
 
 ## Performance
 
