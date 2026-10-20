@@ -1,5 +1,13 @@
 import { AboutSection } from "./sections/about";
-import { useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
 import {
   useSettings,
@@ -65,6 +73,22 @@ import {
 import { PrivacySection } from "./sections/privacy";
 import { ImageStorageSection } from "./sections/images";
 import { BackgroundSection } from "./sections/background";
+import {
+  revealEntry,
+  SettingsSearchField,
+  SettingsSearchIndex,
+  SettingsSearchResults,
+  type SearchablePage,
+} from "./SettingsSearch";
+import {
+  findEntryElement,
+  matchEntries,
+  type SearchEntry,
+  type SearchMatch,
+} from "./settings-search";
+import { comboFromEvent } from "../utils/shortcuts";
+import { useWindowEvent } from "../utils/hooks/useWindowEvent";
+import { TOGGLE_FIND_REPLACE_EVENT } from "../utils/events";
 import "./SettingsPanel.css";
 import { useModalDialog } from "../ui/useModalDialog";
 import { usePresenceProps } from "../ui/usePresence";
@@ -115,6 +139,28 @@ const SUBPAGE_PARENT: Partial<Record<Subpage, Subpage>> = {
   gallery: "themes",
 };
 
+/** The subpages the search reads, by the category each is in. Not Browse
+ *  themes: its rows are the gallery's themes, fetched only when it opens. */
+const SEARCHED_SUBPAGES: [Subpage, Category][] = [
+  ["about", "general"],
+  ["themes", "editor"],
+];
+
+/** A searchable page's key (SearchEntry.page): "editor", "editor/themes". */
+const pageKey = (category: Category, subpage: Subpage | null) =>
+  subpage ? `${category}/${subpage}` : category;
+
+function pageOfKey(key: string): {
+  category: Category;
+  subpage: Subpage | null;
+} {
+  const [category, subpage] = key.split("/");
+  return {
+    category: category as Category,
+    subpage: (subpage as Subpage | undefined) ?? null,
+  };
+}
+
 function SettingsGroup({
   title,
   children,
@@ -152,6 +198,18 @@ export function SettingsPanel({
   // and the phone alike: General › About Textus, Editor & Appearance ›
   // More themes (› Browse themes).
   const [subpage, setSubpage] = useState<Subpage | null>(null);
+  // The search box (SettingsSearch.tsx): while it holds a query, its
+  // results stand in for the page, and picking one opens the row's page
+  // and goes to the row.
+  const [query, setQuery] = useState("");
+  const searching = query.trim() !== "";
+  const deferredQuery = useDeferredValue(query);
+  const [entries, setEntries] = useState<SearchEntry[]>([]);
+  const [active, setActive] = useState(0);
+  const [jump, setJump] = useState<SearchEntry | null>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  const listId = useId();
   // Closing Settings on a phone leaves the keyboard down: the user is
   // going back to the page, not necessarily to typing.
   const modal = useModalDialog(onClose, true, undefined, false);
@@ -699,6 +757,98 @@ export function SettingsPanel({
     </>
   );
 
+  const renderSubpage = (s: Subpage) =>
+    s === "about" ? (
+      <AboutSection t={t} lang={settings.language} />
+    ) : (
+      <>
+        <h1 className="settings-category-title">{subpageTitles[s]}</h1>
+        {s === "themes" ? (
+          <MoreThemesSection t={t} onBrowse={() => setSubpage("gallery")} />
+        ) : (
+          <ThemeGallerySection t={t} />
+        )}
+      </>
+    );
+
+  // Each category, with the subpages it holds after it - the order the
+  // results are listed in.
+  const searchPages: SearchablePage[] = categories.flatMap((c) => [
+    { key: c.id, name: c.label, render: () => renderCategory(c.id) },
+    ...SEARCHED_SUBPAGES.filter(([, under]) => under === c.id).map(([s]) => ({
+      key: pageKey(c.id, s),
+      name: `${c.label} › ${subpageTitles[s]}`,
+      render: () => renderSubpage(s),
+    })),
+  ]);
+  const matches = useMemo(
+    () => matchEntries(entries, deferredQuery),
+    [entries, deferredQuery],
+  );
+  const resultGroups = searchPages
+    .map((page) => ({
+      key: page.key,
+      name: page.name,
+      matches: matches.filter((m) => m.entry.page === page.key),
+    }))
+    .filter((group) => group.matches.length > 0);
+  const flatMatches = resultGroups.flatMap((group) => group.matches);
+  const activeIndex = Math.min(active, Math.max(flatMatches.length - 1, 0));
+  const optionId = (index: number) => `${listId}-option-${index}`;
+
+  const pick = (match: SearchMatch | undefined) => {
+    if (!match) return;
+    const page = pageOfKey(match.entry.page);
+    setQuery("");
+    setCategory(page.category);
+    setSubpage(page.subpage);
+    setJump(match.entry);
+  };
+
+  // Once the row's page is on screen, go to the row. A row that waits on
+  // the backend (a status, a list) can come a few frames late.
+  useEffect(() => {
+    if (!jump) return;
+    let frame = 0;
+    let tries = 0;
+    const go = () => {
+      const el = content.current && findEntryElement(content.current, jump);
+      if (el) revealEntry(el);
+      else if (++tries < 30) {
+        frame = requestAnimationFrame(go);
+        return;
+      }
+      setJump(null);
+    };
+    go();
+    return () => cancelAnimationFrame(frame);
+  }, [jump]);
+
+  const focusSearch = useCallback(() => {
+    searchInput.current?.focus();
+    searchInput.current?.select();
+  }, []);
+  // Ctrl/⌘+F finds in Settings while it is open, not in the document
+  // behind it - from the keyboard here, or from Edit › Find on a Mac,
+  // whose menu takes the keys before the page sees them.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (comboFromEvent(e) !== "mod+f") return;
+      // A shortcut being recorded takes the keys as they are.
+      if (
+        e.target instanceof Element &&
+        e.target.closest(".shortcut-capture-active")
+      )
+        return;
+      e.preventDefault();
+      e.stopPropagation();
+      focusSearch();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [focusSearch]);
+  useWindowEvent(TOGGLE_FIND_REPLACE_EVENT, focusSearch);
+
   return (
     <div {...presence} className="settings-backdrop" onClick={onClose}>
       <div
@@ -731,32 +881,73 @@ export function SettingsPanel({
         </div>
 
         <div className="settings-layout">
-          <nav className="settings-nav">
-            {categories.map((c) => (
-              <button
-                key={c.id}
-                aria-current={category === c.id ? "page" : undefined}
-                data-label={c.label}
-                className={`settings-nav-item ${category === c.id ? "settings-nav-item-active" : ""}`}
-                onClick={(e) => {
-                  setCategory(c.id);
-                  setSubpage(null);
-                  // On a phone the tabs are one row that scrolls sideways;
-                  // in a long language the chosen one can be half out of
-                  // view.
-                  e.currentTarget.scrollIntoView?.({
-                    block: "nearest",
-                    inline: "nearest",
-                  });
-                }}
-              >
-                {c.label}
-              </button>
-            ))}
-          </nav>
+          <div className="settings-sidebar">
+            <SettingsSearchField
+              t={t}
+              inputRef={searchInput}
+              query={query}
+              listId={listId}
+              activeId={flatMatches.length ? optionId(activeIndex) : undefined}
+              onQueryChange={(next) => {
+                setQuery(next);
+                setActive(0);
+              }}
+              onMove={(step) =>
+                flatMatches.length &&
+                setActive(
+                  (activeIndex + step + flatMatches.length) %
+                    flatMatches.length,
+                )
+              }
+              onPick={() => pick(flatMatches[activeIndex])}
+            />
+            <nav className="settings-nav">
+              {categories.map((c) => (
+                <button
+                  key={c.id}
+                  aria-current={
+                    !searching && category === c.id ? "page" : undefined
+                  }
+                  data-label={c.label}
+                  className={`settings-nav-item ${!searching && category === c.id ? "settings-nav-item-active" : ""}`}
+                  onClick={(e) => {
+                    setQuery("");
+                    setCategory(c.id);
+                    setSubpage(null);
+                    // On a phone the tabs are one row that scrolls sideways;
+                    // in a long language the chosen one can be half out of
+                    // view.
+                    e.currentTarget.scrollIntoView?.({
+                      block: "nearest",
+                      inline: "nearest",
+                    });
+                  }}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </nav>
+          </div>
 
-          {subpage ? (
+          {searching ? (
             <div
+              className="settings-content"
+              key="search"
+              role="region"
+              aria-label={t.settingsSearchResults}
+            >
+              <SettingsSearchResults
+                t={t}
+                groups={resultGroups}
+                listId={listId}
+                optionId={optionId}
+                active={activeIndex}
+                onPick={pick}
+              />
+            </div>
+          ) : subpage ? (
+            <div
+              ref={content}
               className="settings-content"
               key={subpage}
               role="region"
@@ -772,26 +963,11 @@ export function SettingsPanel({
                   ? subpageTitles[SUBPAGE_PARENT[subpage]]
                   : categories.find((c) => c.id === category)?.label}
               </button>
-              {subpage === "about" ? (
-                <AboutSection t={t} lang={settings.language} />
-              ) : (
-                <>
-                  <h1 className="settings-category-title">
-                    {subpageTitles[subpage]}
-                  </h1>
-                  {subpage === "themes" ? (
-                    <MoreThemesSection
-                      t={t}
-                      onBrowse={() => setSubpage("gallery")}
-                    />
-                  ) : (
-                    <ThemeGallerySection t={t} />
-                  )}
-                </>
-              )}
+              {renderSubpage(subpage)}
             </div>
           ) : (
             <div
+              ref={content}
               className="settings-content"
               key={category}
               role="region"
@@ -802,6 +978,9 @@ export function SettingsPanel({
               </h1>
               {renderCategory(category)}
             </div>
+          )}
+          {searching && (
+            <SettingsSearchIndex pages={searchPages} onEntries={setEntries} />
           )}
         </div>
       </div>

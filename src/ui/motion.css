@@ -18,6 +18,9 @@
   --dur-slow: 320ms;
   /* Phone sheets and full-screen pages on a spring; slow fades. */
   --dur-sheet: 450ms;
+  /* A tint that marks where something was found, fading as it is read
+     (Settings' search). Colour only, so reduced motion keeps it. */
+  --dur-linger: 1600ms;
   /* The exits of the last two. */
   --dur-slow-exit: calc(var(--dur-slow) * 0.7);
   --dur-sheet-exit: calc(var(--dur-sheet) * 0.7);

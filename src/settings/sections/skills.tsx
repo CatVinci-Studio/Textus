@@ -232,7 +232,7 @@ export function BuiltinSkillsSection({
         <span className="settings-builtin-skills-title">
           {t.agentSkillsBuiltin}
         </span>
-        <span className="settings-builtin-skills-count">
+        <span className="settings-builtin-skills-count" data-search-ignore>
           {t.agentSkillsOnCount
             .replace("{n}", String(onCount))
             .replace("{total}", String(BUILTIN_SKILLS.length))}
@@ -274,14 +274,20 @@ export function BuiltinSkillsSection({
                       <div className="settings-row-label">
                         {text.label}
                         {(customized || own) && (
-                          <span className="settings-skill-tag">
+                          <span
+                            className="settings-skill-tag"
+                            data-search-ignore
+                          >
                             {customized
                               ? t.agentSkillsCustomized
                               : t.agentSkillsShadows}
                           </span>
                         )}
                         {outdated && (
-                          <span className="settings-skill-tag settings-skill-tag-notice">
+                          <span
+                            className="settings-skill-tag settings-skill-tag-notice"
+                            data-search-ignore
+                          >
                             {t.agentSkillsBuiltinUpdated}
                           </span>
                         )}
