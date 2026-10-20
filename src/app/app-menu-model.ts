@@ -123,7 +123,6 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
   return {
     "toggle-sidebar": !!checks.sidebar,
     "toggle-agent-panel": !!checks.agentPanel,
-    "toggle-textus-ai": checks.textusAi !== false,
     "toggle-source-mode": !!checks.sourceMode,
     "toggle-split-view": !!checks.splitView,
     "toggle-typewriter-mode": !!checks.typewriter,
@@ -319,12 +318,6 @@ export function buildAppMenu(
           action: { native: "toggle-agent-panel" },
           checked: !!checks.agentPanel,
           disabled: checks.textusAi === false,
-        },
-        {
-          label: t.menuTextusAi,
-          accel: shortcuts.toggleTextusAi || undefined,
-          action: { native: "toggle-textus-ai" },
-          checked: checks.textusAi !== false,
         },
         "separator",
         {

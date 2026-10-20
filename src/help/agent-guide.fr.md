@@ -276,7 +276,7 @@ Il n'existe ni profil de style ni bibliothèque globaux : ils décrivent un ens
 
 ## Désactiver Textus AI
 
-Un clic droit sur le bouton **Textus AI**, au bout droit de la barre de la fenêtre, met Textus AI en pause pendant une heure ou la désactive. Tant qu'elle est désactivée, la plume est barrée, et un clic dessus propose de la réactiver ; une pause se termine d'elle-même au bout de l'heure. **Présentation > Textus AI**, **Réglages > Textus AI > Activer Textus AI** et un raccourci que vous pouvez définir dans **Réglages > Raccourcis** l'activent ou la désactivent aussi ; sur iPhone, c'est dans le menu.
+Un clic droit sur le bouton **Textus AI**, au bout droit de la barre de la fenêtre, met Textus AI en pause pendant une heure ou la désactive. Tant qu'elle est désactivée, la plume est barrée, et un clic dessus propose de la réactiver ; une pause se termine d'elle-même au bout de l'heure. **Réglages > Textus AI > Activer Textus AI** et un raccourci que vous pouvez définir dans **Réglages > Raccourcis** l'activent ou la désactivent aussi ; sur iPhone, c'est dans le menu.
 
 Tant qu'elle est désactivée, rien n'est envoyé à aucun service d'IA, dès l'ouverture de Textus : ni complétion, ni vérification grammaticale, ni conversation, ni mémoire. Le panneau IA, la question rapide et les entrées IA du menu contextuel disparaissent, et une réponse en cours de rédaction s'arrête. Les modifications déjà proposées dans le document restent, pour que vous les acceptiez ou les refusiez. Chaque fonction garde son propre réglage, et toutes s'appliquent de nouveau dès que Textus AI est réactivée.
 

@@ -276,7 +276,7 @@ Não existe perfil de estilo nem biblioteca global: eles descrevem uma obra espe
 
 ## Desativar a Textus AI
 
-Clique com o botão direito no botão **Textus AI**, na ponta direita da barra da janela, para pausar a Textus AI por uma hora ou desativá-la. Enquanto está desativada, a pena aparece riscada, e um clique nele oferece ativá-la de novo; uma pausa termina sozinha depois da hora. **Visualizar > Textus AI**, **Ajustes > Textus AI > Ativar Textus AI** e um atalho que você pode definir em **Ajustes > Atalhos** também a ativam ou desativam; no iPhone, fica no menu.
+Clique com o botão direito no botão **Textus AI**, na ponta direita da barra da janela, para pausar a Textus AI por uma hora ou desativá-la. Enquanto está desativada, a pena aparece riscada, e um clique nele oferece ativá-la de novo; uma pausa termina sozinha depois da hora. **Ajustes > Textus AI > Ativar Textus AI** e um atalho que você pode definir em **Ajustes > Atalhos** também a ativam ou desativam; no iPhone, fica no menu.
 
 Enquanto está desativada, nada é enviado a nenhum serviço de IA desde que o Textus abre: nem complementação, nem verificação gramatical, nem conversa, nada é lembrado. O painel de IA, a pergunta rápida e os itens de IA do menu de contexto somem, e uma resposta que ainda estava sendo escrita para. As edições já propostas no documento continuam, para você aceitar ou rejeitar. Cada recurso mantém a própria configuração, e todos voltam a valer assim que a Textus AI é ativada de novo.
 

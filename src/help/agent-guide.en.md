@@ -276,7 +276,7 @@ There is no global style profile or library: those describe one body of work, so
 
 ## Turning Textus AI off
 
-Right-click the **Textus AI** button at the right end of the window bar to pause Textus AI for an hour or to turn it off. While it is off, the quill is struck through, and a click on it offers to turn Textus AI back on; a pause ends by itself after the hour. **View > Textus AI**, **Settings > Textus AI > Enable Textus AI** and a shortcut you can set under **Settings > Shortcuts** turn it on or off too; on an iPhone it is in the menu.
+Right-click the **Textus AI** button at the right end of the window bar to pause Textus AI for an hour or to turn it off. While it is off, the quill is struck through, and a click on it offers to turn Textus AI back on; a pause ends by itself after the hour. **Settings > Textus AI > Enable Textus AI** and a shortcut you can set under **Settings > Shortcuts** turn it on or off too; on an iPhone it is in the menu.
 
 While it is off, nothing is sent to any AI service, from the moment Textus opens: no completion, no grammar check, no conversation, nothing remembered. The AI panel, Quick Ask and the AI items of the right-click menu go away, and a reply still being written stops. Edits already proposed in the document stay, for you to accept or reject. Each feature keeps its own setting, and they all apply again once Textus AI is back on.
 

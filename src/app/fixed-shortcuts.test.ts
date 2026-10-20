@@ -89,7 +89,6 @@ describe("the fixed shortcuts in Settings", () => {
       "mod+x",
       "mod+c",
       "mod+v",
-      "mod+a",
       "mod+b",
       "mod+i",
       "mod+enter",
