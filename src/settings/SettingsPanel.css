@@ -451,7 +451,7 @@ button.settings-danger-button {
   width: var(--switch-thumb);
   height: var(--switch-thumb);
   border-radius: 50%;
-  background: #fff;
+  background: var(--on-fill);
   box-shadow: var(--shadow-thumb);
   transform-origin: left center;
   transition: transform calc(var(--dur-medium) * var(--motion-travel))

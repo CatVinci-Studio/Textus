@@ -38,6 +38,7 @@ const WEBKIT_SPECS = [
   "sidebar-resize.spec.ts",
   "keyboard.spec.ts",
   "file-tree.spec.ts",
+  "user-css.spec.ts",
 ];
 
 export default defineConfig({

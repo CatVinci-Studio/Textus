@@ -31,7 +31,7 @@
     position: fixed;
     inset: 0;
     z-index: 46;
-    background: rgb(0 0 0 / 0.25);
+    background: var(--overlay-bg);
     animation: motion-fade-in var(--dur-slow) var(--ease-standard);
   }
 

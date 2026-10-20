@@ -168,7 +168,7 @@
   border: 1px solid var(--editor-border, var(--border-color));
   border-radius: var(--radius-surface);
   background: var(--editor-bg, var(--bg));
-  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+  box-shadow: var(--shadow-raised);
   transition:
     border-color var(--dur-fast) var(--ease-standard),
     box-shadow var(--dur-fast) var(--ease-standard);
@@ -1385,7 +1385,7 @@
   margin-top: 1px;
   border-radius: 50%;
   background: var(--success-color);
-  color: #fff;
+  color: var(--on-fill);
   font-size: calc(10.5px * var(--ui-text-scale, 1));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -1452,7 +1452,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   height: calc(18px * var(--ui-text-scale, 1));
   border-radius: 50%;
   background: var(--review-note-line);
-  color: #fff;
+  color: var(--on-fill);
   font: 700 calc(10.5px * var(--ui-text-scale, 1)) / 1
     var(--font-ui, sans-serif);
 }

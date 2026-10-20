@@ -164,7 +164,7 @@
   background: var(--editor-bg, var(--bg));
   box-shadow:
     0 0 0 0.5px color-mix(in srgb, var(--chrome-text, #000) 18%, transparent),
-    0 1px 4px rgb(0 0 0 / 0.08);
+    var(--shadow-tile);
 }
 
 .document-page-text {
@@ -317,5 +317,5 @@
 .document-list-grid .document-item-active .document-page {
   box-shadow:
     0 0 0 2px var(--chrome-accent),
-    0 1px 4px rgb(0 0 0 / 0.08);
+    var(--shadow-tile);
 }
