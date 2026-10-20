@@ -880,8 +880,13 @@ function edgeCharacter(node: Phrasing, end: "first" | "last"): string {
     return (end === "first" ? chars[0] : chars.at(-1)) ?? "";
   }
   if (!ATTENTION.has(node.type)) return node.type === "break" ? "" : ".";
-  if (!node.children?.length) return "";
-  const child = node.children[end === "first" ? 0 : node.children.length - 1];
+  return innerEdgeCharacter(node, end);
+}
+
+/** The first or last character of a span's text, inside its delimiters. */
+function innerEdgeCharacter(span: Phrasing, end: "first" | "last"): string {
+  if (!span.children?.length) return "";
+  const child = span.children[end === "first" ? 0 : span.children.length - 1];
   // A span inside written with other delimiters doesn't join this one's.
   return ATTENTION.has(child.type) && child.marker === "_"
     ? "_"
@@ -889,6 +894,9 @@ function edgeCharacter(node: Phrasing, end: "first" | "last"): string {
 }
 
 const ATTENTION = new Set(["strong", "emphasis"]);
+/** Spans whose delimiters open and close by the same rule as bold's:
+ *  GFM's strikethrough and the highlight (highlight-syntax.ts). */
+const FLANKED = new Set([...ATTENTION, "delete", "mark"]);
 const PUNCTUATION = /^[\p{P}\p{S}]$/u;
 // CJK text is read by remark-cjk-friendly, which lets bold stand against it.
 const WORD =
@@ -916,7 +924,9 @@ function referenced(text: Phrasing, end: "first" | "last"): Phrasing[] {
  * back as text with asterisks in it - text typed or pasted straight after
  * a bold sentence. The word's letter beside it is written as a character
  * reference, `**per file.**&#x50;asted`, which reads as the letter, as
- * remark itself does; CJK text is left alone.
+ * remark itself does; CJK text is left alone. The same for strikethrough
+ * and highlight: `~~`code`~~` lost its line once a word was typed against
+ * it.
  */
 function encodeAroundAttention(node: Phrasing): void {
   if (!node.children) return;
@@ -924,18 +934,18 @@ function encodeAroundAttention(node: Phrasing): void {
   const children = node.children;
   for (let i = 0; i < children.length; i++) {
     const span = children[i];
-    if (!ATTENTION.has(span.type)) continue;
+    if (!FLANKED.has(span.type)) continue;
     const before = children[i - 1];
     const after = children[i + 1];
     if (
       after?.type === "text" &&
-      PUNCTUATION.test(edgeCharacter(span, "last")) &&
+      PUNCTUATION.test(innerEdgeCharacter(span, "last")) &&
       WORD.test(edgeCharacter(after, "first"))
     )
       children.splice(i + 1, 1, ...referenced(after, "first"));
     if (
       before?.type === "text" &&
-      PUNCTUATION.test(edgeCharacter(span, "first")) &&
+      PUNCTUATION.test(innerEdgeCharacter(span, "first")) &&
       WORD.test(edgeCharacter(before, "last"))
     ) {
       const parts = referenced(before, "last");

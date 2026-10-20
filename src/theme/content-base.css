@@ -281,18 +281,27 @@
   }
 
   /* Not `thead th`: Milkdown keeps the header row in <tbody> (see
-     theme/typora-compat.ts). Headers don't wrap, and body cells keep a
-     small floor: with content-sized columns, CJK text - which may break
-     between any two characters - otherwise let the browser squeeze a short
-     column down to one character ("序/号"), wrapping every two-character
-     word (#15). */
+     theme/typora-compat.ts). Every cell keeps a small floor: with
+     content-sized columns, CJK text - which may break between any two
+     characters - otherwise let the browser squeeze a short column down to
+     one character ("序/号"), wrapping every two-character word (#15). The
+     floor holds such a word with the padding and the border (box-sizing)
+     around it: at 3.5em alone it was a pixel too narrow, and "序号" broke.
+     Headers wrap like the cells under them: kept on one line, a long one
+     held its column at its whole width - the table scrolled sideways for
+     it, and in a resized table, a print or an export it ran over the next
+     column instead. A header breaks between words and after punctuation,
+     though, not inside a CJK word: a short label ("负责人") stays whole in
+     a narrow column, as it did on one line. A run too long for its
+     column still breaks once the widths are set, and in print. */
   .milkdown th {
     text-align: left;
-    white-space: nowrap;
+    word-break: keep-all;
   }
 
+  .milkdown th,
   .milkdown td {
-    min-width: 3.5em;
+    min-width: calc(3.5em + 2px);
   }
 
   /* Cells in a cell selection (Select Row/Column, dragging across cells).

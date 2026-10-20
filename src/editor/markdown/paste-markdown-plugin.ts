@@ -1,5 +1,6 @@
-import { Plugin } from "@milkdown/kit/prose/state";
+import { Plugin, type Selection } from "@milkdown/kit/prose/state";
 import { Slice } from "@milkdown/kit/prose/model";
+import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { parseMarkdownSource } from "./parse-markdown-source";
 
@@ -15,6 +16,7 @@ import { parseMarkdownSource } from "./parse-markdown-source";
  * HTML (links, tables, real formatting) still goes through the HTML path
  * untouched. Must be registered BEFORE the clipboard plugin - handlePaste
  * props run in registration order and the first to return true wins.
+ * Every paste also keeps the spans at its ends (keepPastedSpans below).
  */
 
 const RICH_HTML_SELECTOR = [
@@ -64,28 +66,65 @@ function htmlIsStyledPlainText(html: string): boolean {
   return !template.content.querySelector(RICH_HTML_SELECTOR);
 }
 
+/**
+ * How deep a pasted slice stays open at one end: through its blocks, which
+ * join the paragraph pasted into, but through bold, italic, code or maths
+ * only where the paste lands inside a span just like it. An open span's
+ * content is poured into the node at the caret, so `**bold** text` pasted
+ * into a paragraph came in as plain "bold text": every paste - Markdown
+ * text, a web page's <strong> - lost the span it started with.
+ */
+function openDepth(slice: Slice, $pos: ResolvedPos, end: "start" | "end") {
+  const open = end === "start" ? slice.openStart : slice.openEnd;
+  const spans: ProseNode[] = [];
+  for (let depth = 1; depth <= $pos.depth; depth++)
+    if ($pos.node(depth).isInline) spans.push($pos.node(depth));
+  let depth = 0;
+  let node =
+    end === "start" ? slice.content.firstChild : slice.content.lastChild;
+  while (node && depth < open) {
+    if (node.isInline && !spans.shift()?.sameMarkup(node)) break;
+    depth++;
+    node = end === "start" ? node.firstChild : node.lastChild;
+  }
+  return depth;
+}
+
+/** `slice` closed where it would lose a span when pasted at `selection`. */
+export function keepPastedSpans(slice: Slice, selection: Selection): Slice {
+  const openStart = openDepth(slice, selection.$from, "start");
+  const openEnd = openDepth(slice, selection.$to, "end");
+  return openStart === slice.openStart && openEnd === slice.openEnd
+    ? slice
+    : new Slice(slice.content, openStart, openEnd);
+}
+
 export const pasteMarkdownSourcePlugin = $prose(
   (ctx) =>
     new Plugin({
       props: {
+        // Pasted HTML, Textus's own copies and drags: ProseMirror's slice,
+        // which the clipboard plugin pastes as it is.
+        transformPasted: (slice, view) =>
+          keepPastedSpans(slice, view.state.selection),
         handlePaste(view, event) {
           const data = event.clipboardData;
           if (!data) return false;
           if (view.state.selection.$from.node().type.spec.code) return false; // inside code: paste stays literal
           if (data.getData("vscode-editor-data")) return false; // clipboard plugin turns these into a code block
           const html = data.getData("text/html");
-          if (!html) return false; // the clipboard plugin's own branch already markdown-parses this case
           const text = data.getData("text/plain");
-          if (!text || !htmlIsStyledPlainText(html)) return false;
+          if (!text || (html && !htmlIsStyledPlainText(html))) return false;
 
           const doc = parseMarkdownSource(ctx, text);
           if (!doc || typeof doc === "string" || doc.content.size === 0)
             return false;
-          view.dispatch(
-            view.state.tr
-              .replaceSelection(Slice.maxOpen(doc.content))
-              .scrollIntoView(),
-          );
+          const parsed = Slice.maxOpen(doc.content);
+          const slice = keepPastedSpans(parsed, view.state.selection);
+          // Text alone the clipboard plugin's own branch markdown-parses
+          // too, but into a slice open through the spans at its ends.
+          if (!html && slice === parsed) return false;
+          view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
           return true;
         },
       },

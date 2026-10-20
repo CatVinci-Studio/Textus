@@ -78,6 +78,18 @@ function isOurNode(name: string): boolean {
   return name === "md_span" || name === "md_code_span";
 }
 
+/**
+ * Whether `spec`'s delimiter typed in `parent` may make a node: in a
+ * paragraph or heading, and code in bold, italic, strikethrough or
+ * highlight too - `**a `b` c**`, which the file reads as. Never inside code
+ * or maths, whose text is verbatim, and no span in a span of another kind.
+ */
+function pairsIn(parent: ProseNode, spec: SpanSpec): boolean {
+  if (parent.type.name === "md_span") return spec.nodeType === "md_code_span";
+  if (isOurNode(parent.type.name)) return false;
+  return parent.isTextblock && !parent.type.spec.code;
+}
+
 /** The node `spec` makes at `rung` (a code span has no rungs), holding
  *  `text` if given, empty otherwise. */
 function spanNode(
@@ -91,6 +103,29 @@ function spanNode(
     ? schema.nodes.md_span.create({ delim: spec.char, rung }, content)
     : schema.nodes.md_code_span.create({}, content);
 }
+
+/** The node `spec` makes at `rung` around what stands from `from` to `to`
+ *  in one parent: a span keeps the code, maths and links in it (see
+ *  literalTextBefore's `withAtoms`); code takes it as text. */
+function spanAround(
+  state: EditorState,
+  spec: SpanSpec,
+  rung: number,
+  from: number,
+  to: number,
+): ProseNode {
+  if (spec.nodeType !== "md_span")
+    return spanNode(state.schema, spec, rung, state.doc.textBetween(from, to));
+  const $from = state.doc.resolve(from);
+  const content = $from.parent.content.cut(
+    $from.parentOffset,
+    $from.parentOffset + to - from,
+  );
+  return state.schema.nodes.md_span.create({ delim: spec.char, rung }, content);
+}
+
+/** Whether `spec`'s runs are read across code and maths. */
+const runsHoldAtoms = (spec: SpanSpec) => spec.nodeType === "md_span";
 
 /**
  * Closes an opening run left in the literal text before the caret
@@ -111,7 +146,14 @@ function closeOpenRun(
     const open = findRunOpen(textBefore, spec.char, rung);
     if (!open) continue;
     const absOpen = runStart + open.openIdx;
-    const node = spanNode(state.schema, spec, rung, open.value);
+    const valueStart = absOpen + rung;
+    const node = spanAround(
+      state,
+      spec,
+      rung,
+      valueStart,
+      valueStart + open.value.length,
+    );
     const tr = state.tr.replaceWith(absOpen, to, node);
     view.dispatch(caretAt(tr, absOpen + node.nodeSize));
     return true;
@@ -191,14 +233,13 @@ export function convertRunClosedBeforeCaret(
   const sel = state.selection;
   if (!sel.empty) return false;
   const $pos = sel.$from;
-  const parent = $pos.parent;
-  if (isOurNode(parent.type.name)) return false;
-  if (!parent.isTextblock || parent.type.spec.code) return false;
-  const { text: textBefore, from: runStart } = literalTextBefore($pos);
-  const spec = SPECS.find(
-    (s) => committed.endsWith(s.char) && textBefore.endsWith(s.char),
+  const spec = SPECS.find((s) => committed.endsWith(s.char));
+  if (!spec || !pairsIn($pos.parent, spec)) return false;
+  const { text: textBefore, from: runStart } = literalTextBefore(
+    $pos,
+    runsHoldAtoms(spec),
   );
-  if (!spec) return false;
+  if (!textBefore.endsWith(spec.char)) return false;
   // The caret sits inside a longer delimiter run - not a finished closer.
   if (literalTextAfter($pos).text.startsWith(spec.char)) return false;
   // findRunOpen expects the last closing character as "the one being typed".
@@ -303,11 +344,13 @@ export const createMdSpanAutopairPlugin = (options: {
               return true;
             }
 
-            if (isOurNode(parent.type.name)) return false; // inside a different one of our nodes (e.g. code) - never nest into it
-            if (!parent.isTextblock || parent.type.spec.code) return false;
+            if (!pairsIn(parent, spec)) return false;
 
-            const { text: textBefore, from: runStart } =
-              literalTextBefore($pos);
+            const withAtoms = runsHoldAtoms(spec);
+            const { text: textBefore, from: runStart } = literalTextBefore(
+              $pos,
+              withAtoms,
+            );
 
             if (closeOpenRun(view, spec, textBefore, runStart, to)) return true;
 
@@ -338,7 +381,7 @@ export const createMdSpanAutopairPlugin = (options: {
             )
               typedRun++;
             if (typedRun >= spec.minRung && typedRun <= spec.maxRung) {
-              const { text: textAfter } = literalTextAfter($pos);
+              const { text: textAfter } = literalTextAfter($pos, withAtoms);
               const close = findRunClose(
                 textBefore,
                 textAfter,
@@ -347,8 +390,13 @@ export const createMdSpanAutopairPlugin = (options: {
               );
               if (close) {
                 const openStart = from - (typedRun - 1);
-                const value = textAfter.slice(0, close.valueLen);
-                const node = spanNode(state.schema, spec, typedRun, value);
+                const node = spanAround(
+                  state,
+                  spec,
+                  typedRun,
+                  to,
+                  to + close.valueLen,
+                );
                 const tr = state.tr.replaceWith(
                   openStart,
                   to + close.valueLen + typedRun,

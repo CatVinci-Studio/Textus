@@ -1,4 +1,5 @@
 import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import {
   caretAt,
@@ -19,6 +20,10 @@ const SHORTCUTS: Record<string, FormatSpec> = {
   i: { delim: "*", rung: 1 },
 };
 
+/** Inline nodes besides text a selection may hold to be made bold or
+ *  italic: verbatim ones, with no formatting of their own to clash. */
+const WRAPPABLE = new Set(["md_code_span", "math_inline"]);
+
 /**
  * Cmd/Ctrl+B and Cmd/Ctrl+I, built on the same md_span nodes as typing the
  * delimiters (there are no strong/em marks in this schema - see
@@ -27,9 +32,10 @@ const SHORTCUTS: Record<string, FormatSpec> = {
  * - With no selection: open an empty shell, cursor inside, exactly like
  *   typing "**" - and pressing the shortcut again while that shell is still
  *   empty removes it, so an accidental press undoes itself.
- * - With a plain-text selection inside one textblock: wrap the selected
- *   text in the shell (whitespace at the edges stays outside - delimiters
- *   hugging spaces wouldn't serialize to valid markdown).
+ * - With a selection of text (code and maths in it too) inside one
+ *   textblock: wrap it in the shell (whitespace at the edges stays
+ *   outside - delimiters hugging spaces wouldn't serialize to valid
+ *   markdown).
  * - Inside code/math or an existing shell: do nothing, matching the
  *   autopair plugins' no-nesting rule.
  */
@@ -94,20 +100,28 @@ export const formatShortcutPlugin = $prose(
           )
             return false;
 
-          // Keep edge whitespace outside the shell.
-          const selected = state.doc.textBetween($from.pos, $to.pos);
-          const from = $from.pos + (/^\s*/.exec(selected)?.[0].length ?? 0);
-          const to = $to.pos - (/\s*$/.exec(selected)?.[0].length ?? 0);
+          // Keep edge whitespace outside the shell - only a text node's:
+          // spaces inside code at an edge belong to the code.
+          const selected = parent.content.cut(
+            $from.parentOffset,
+            $to.parentOffset,
+          );
+          const edgeSpaces = (node: ProseNode | null, pattern: RegExp) =>
+            node?.isText ? pattern.exec(node.text!)![0].length : 0;
+          const from = $from.pos + edgeSpaces(selected.firstChild, /^\s*/);
+          const to = $to.pos - edgeSpaces(selected.lastChild, /\s*$/);
           if (from >= to) return false;
 
-          // Only plain text may move inside - a fragment containing another
-          // enclosure (or any other inline node) is left alone.
+          // Text, code and maths may move inside: `**a `b` c**` is bold
+          // around code. A span already in the selection is left alone -
+          // bold in bold, or italic split by the new bold's edges.
           const fragment = parent.content.cut(
             from - $from.start(),
             to - $from.start(),
           );
           for (let i = 0; i < fragment.childCount; i++) {
-            if (!fragment.child(i).isText) return false;
+            const child = fragment.child(i);
+            if (!child.isText && !WRAPPABLE.has(child.type.name)) return false;
           }
 
           const node = mdSpan.create(

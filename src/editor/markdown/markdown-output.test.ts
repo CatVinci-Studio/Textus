@@ -116,6 +116,17 @@ describe("saved markdown stays as written", () => {
     expect(await throughClipboard(markdown)).toBe(markdown);
   });
 
+  it.each([
+    ["bold around code", "**a `b` c** and **`d`**\n"],
+    ["italic and bold+italic around code", "*a `b`* and ***`c` d***\n"],
+    ["strikethrough and highlight around code", "~~a `b` c~~ ==`d`==\n"],
+    ["CJK bold around code", "中文**`代码`**中文\n"],
+    ["a link in bold around code", "**[a `b` c](u)**\n"],
+  ])("keeps %s, opened and pasted", async (_name, markdown) => {
+    expect(await roundTrip(markdown)).toBe(markdown);
+    expect(await throughClipboard(markdown)).toBe(markdown);
+  });
+
   it("pastes an older Textus's sized image as <img width>", async () => {
     expect(
       await throughClipboard('![x](a.png "Cap {textus-width=30%}")\n'),
@@ -508,6 +519,36 @@ describe("an edited block is saved so it reads back the same", () => {
     expect(await savedAfter("**「加粗」** 中文\n", joining("中文"))).toBe(
       "**「加粗」**中文\n",
     );
+  });
+
+  it("keeps a span around code when a word is typed against it", async () => {
+    const gluing = (word: string) => (view: EditorView) => {
+      const at = find(view.state.doc, word);
+      const space = word.startsWith(" ") ? at : at + word.length - 1;
+      view.dispatch(view.state.tr.delete(space, space + 1));
+    };
+    // The space between the span and the word deleted.
+    expect(await savedAfter("x **`b`** y\n", gluing(" y"))).toBe(
+      "x **`b`**&#x79;\n",
+    );
+    expect(await savedAfter("x ~~`b`~~ y\n", gluing(" y"))).toBe(
+      "x ~~`b`~~&#x79;\n",
+    );
+    expect(await savedAfter("x ~~(b)~~ y\n", gluing("x "))).toBe(
+      "&#x78;~~(b)~~ y\n",
+    );
+    expect(await savedAfter("x ==`b`== y\n", gluing(" y"))).toBe(
+      "x ==`b`==&#x79;\n",
+    );
+    expect(await savedAfter("x ~`b`~ y\n", gluing("x "))).toBe(
+      "&#x78;~`b`~ y\n",
+    );
+    // CJK text is read by remark-cjk-friendly as it stands.
+    expect(await savedAfter("中文 ~~`代码`~~ 中文\n", gluing(" 中文"))).toBe(
+      "中文 ~~`代码`~~中文\n",
+    );
+    for (const saved of ["x ~~`b`~~&#x79;\n", "&#x78;~~(b)~~ y\n"])
+      expect(await roundTrip(saved)).toBe(saved);
   });
 
   it("closes a span nested in one of its kind before text glued to it", async () => {
