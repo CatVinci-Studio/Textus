@@ -1,6 +1,6 @@
 use crate::agent::{
     mark_cited_spans, tool_images_note, AgentTurn, CitedSpan, EventSink, ImageAttachment,
-    ProviderEvent, StepCitations, StepResult, ToolSpec,
+    ProviderEvent, StepCitations, StepResult, StepUsage, ToolSpec,
 };
 use crate::capabilities::Thinking;
 use serde::{Deserialize, Serialize};
@@ -603,6 +603,8 @@ struct ChatStreamAccumulator {
     calls: Vec<StreamToolCall>,
     error: Option<String>,
     search: SearchReport,
+    /// From the chunk that carries it - the last, with `include_usage`.
+    usage: Option<StepUsage>,
 }
 
 impl ChatStreamAccumulator {
@@ -618,6 +620,9 @@ impl ChatStreamAccumulator {
         if let Some(error) = chunk.get("error") {
             self.error = Some(format!("Custom endpoint request failed: {error}"));
             return;
+        }
+        if let Some(usage) = chunk.get("usage").and_then(StepUsage::from_openai) {
+            self.usage = Some(usage);
         }
         let Some(delta) = chunk
             .get("choices")
@@ -735,8 +740,9 @@ pub async fn agent_step_streaming(
     web_search: Option<NativeWebSearch>,
     vendor: Vendor,
     thinking: &Thinking,
+    stream_usage: bool,
     on_event: EventSink<'_>,
-) -> Result<StepResult, String> {
+) -> Result<(StepResult, Option<StepUsage>), String> {
     let mut body = agent_request_body(
         model,
         instructions,
@@ -747,6 +753,12 @@ pub async fn agent_step_streaming(
         thinking,
     );
     body["stream"] = json!(true);
+    // The usage (with what was read from the server's prompt cache) comes
+    // in a last chunk only when asked for, where the server takes the ask
+    // (capabilities::ProviderCaps::stream_usage).
+    if stream_usage {
+        body["stream_options"] = json!({"include_usage": true});
+    }
 
     let client = crate::http::streaming_client();
     let mut req = client.post(chat_completions_url(base_url)).json(&body);
@@ -760,7 +772,8 @@ pub async fn agent_step_streaming(
     if let Some(error) = acc.error {
         return Err(error);
     }
-    Ok(acc.into_step_result(on_event))
+    let usage = acc.usage;
+    Ok((acc.into_step_result(on_event), usage))
 }
 
 /// Runs one round-trip against a Chat Completions-compatible endpoint with
@@ -777,7 +790,7 @@ pub async fn agent_step(
     vendor: Vendor,
     thinking: &Thinking,
     on_event: EventSink<'_>,
-) -> Result<StepResult, String> {
+) -> Result<(StepResult, Option<StepUsage>), String> {
     let body = agent_request_body(
         model,
         instructions,
@@ -810,7 +823,8 @@ pub async fn agent_step(
         .unwrap_or(Value::Null);
     let mut report = SearchReport::default();
     report.take(&message, &parsed);
-    Ok(parse_agent_response(&message, &report, on_event))
+    let usage = parsed.get("usage").and_then(StepUsage::from_openai);
+    Ok((parse_agent_response(&message, &report, on_event), usage))
 }
 
 #[cfg(test)]
@@ -1072,6 +1086,26 @@ mod tests {
             }
             StepResult::Done(_) => panic!("expected tool calls"),
         }
+    }
+
+    /// With `include_usage`, the usage comes in a last chunk with no
+    /// choices; what the server read from its prompt cache is in it.
+    #[test]
+    fn chat_stream_reads_the_usage_chunk() {
+        let (acc, _) = run_stream(&[
+            r#"{"choices":[{"delta":{"content":"Hi"}}],"usage":null}"#,
+            r#"{"choices":[],"usage":{"prompt_tokens":6461,"completion_tokens":2,"prompt_tokens_details":{"cached_tokens":5944}}}"#,
+            "[DONE]",
+        ]);
+        let usage = acc.usage.expect("the usage chunk was read");
+        assert_eq!(
+            (
+                usage.input_tokens,
+                usage.cache_read_input_tokens,
+                usage.output_tokens
+            ),
+            (517, 5944, 2)
+        );
     }
 
     #[test]

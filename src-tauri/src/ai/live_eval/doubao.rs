@@ -82,10 +82,19 @@ fn thinking_step(
             None,
             chat_vendor(ark.base_url),
             thinking,
+            true,
             &sink,
         ))
     })
     .unwrap_or_else(|e| panic!("Ark agent step failed: {e}"));
+    // The usage the app reads from every OpenAI-style dialect, with what
+    // Ark served from its prompt cache.
+    let (result, usage) = result;
+    let usage = usage.expect("Ark reports the step's usage (stream_options.include_usage)");
+    eprintln!(
+        "doubao usage: input {}, cache read {}, output {}",
+        usage.input_tokens, usage.cache_read_input_tokens, usage.output_tokens
+    );
     (
         result,
         streamed.into_inner().unwrap(),

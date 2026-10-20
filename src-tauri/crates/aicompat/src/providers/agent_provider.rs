@@ -5,9 +5,9 @@
 //! on in the shape that dialect takes - so the main crate's agent has a
 //! single path from "the user's provider" to `run_agent_loop`'s `step`.
 
-use crate::agent::{AgentTurn, EventSink, StepResult, ToolSpec};
+use crate::agent::{AgentTurn, EventSink, StepResult, StepUsage, ToolSpec};
 use crate::capabilities::{self, NativeSearch, Thinking, ThinkingLevel};
-use crate::providers::anthropic::{self, AnthropicAuth, StepUsage};
+use crate::providers::anthropic::{self, AnthropicAuth};
 use crate::providers::{custom, openai_api_key, openai_codex, openai_responses_compatible};
 
 /// Where an agent step goes, with the credentials it needs.
@@ -30,6 +30,8 @@ pub enum Endpoint {
         base_url: String,
         api_key: Option<String>,
         vendor: custom::Vendor,
+        /// See `ProviderCaps::stream_usage`.
+        stream_usage: bool,
     },
 }
 
@@ -60,8 +62,8 @@ impl AgentProvider {
     }
 
     /// One round trip: the model's answer to `history`, streamed through
-    /// `on_event`, and the step's token usage where the provider reports it
-    /// (Claude). Thinking parameters the provider refuses are dropped and
+    /// `on_event`, and the step's token usage, where the provider reports it
+    /// (Claude always; the OpenAI-style APIs in their `usage`). Thinking parameters the provider refuses are dropped and
     /// the step sent again (capabilities::with_fallback).
     pub async fn step(
         &self,
@@ -125,7 +127,7 @@ impl AgentProvider {
                 .await
             }
             Endpoint::Anthropic { auth } => {
-                return anthropic::agent_step_with_usage(
+                return anthropic::agent_step(
                     auth,
                     instructions,
                     history,
@@ -142,6 +144,7 @@ impl AgentProvider {
                 base_url,
                 api_key,
                 vendor,
+                stream_usage,
             } => {
                 let api_key = api_key.as_deref();
                 // xAI searches only on its /responses endpoint.
@@ -181,6 +184,7 @@ impl AgentProvider {
                         native,
                         *vendor,
                         thinking,
+                        *stream_usage,
                         on_event,
                     )
                     .await
@@ -206,7 +210,7 @@ impl AgentProvider {
                 }
             }
         };
-        step.map(|step| (step, None))
+        step
     }
 }
 
@@ -231,6 +235,7 @@ mod tests {
             base_url: "http://localhost:11434/v1".into(),
             api_key: None,
             vendor: custom::Vendor::Generic,
+            stream_usage: false,
         })
         .falls_back_to_plain_chat());
         assert!(!on(Endpoint::Anthropic {

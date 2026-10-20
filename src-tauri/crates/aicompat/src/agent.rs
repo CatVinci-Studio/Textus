@@ -149,6 +149,53 @@ impl From<String> for ToolOutput {
     }
 }
 
+/// Token accounting for one agent step, the same for every dialect: input
+/// not read from the cache, input written to it (Claude only - the others
+/// cache by themselves), input read from it, and output. Claude reports it
+/// in its stream's message_start / message_delta events, the OpenAI-style
+/// APIs in `usage` ([`StepUsage::from_openai`]).
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct StepUsage {
+    pub input_tokens: u64,
+    pub cache_creation_input_tokens: u64,
+    pub cache_read_input_tokens: u64,
+    pub output_tokens: u64,
+}
+
+impl StepUsage {
+    pub fn add(&mut self, other: StepUsage) {
+        self.input_tokens += other.input_tokens;
+        self.cache_creation_input_tokens += other.cache_creation_input_tokens;
+        self.cache_read_input_tokens += other.cache_read_input_tokens;
+        self.output_tokens += other.output_tokens;
+    }
+
+    /// An OpenAI-style `usage` object: Chat Completions' `prompt_tokens`
+    /// and `completion_tokens`, or the Responses API's `input_tokens` and
+    /// `output_tokens`. Both count cached input inside the input total; the
+    /// cached part is `*_tokens_details.cached_tokens` (OpenAI, Gemini, Qwen,
+    /// Doubao), `prompt_cache_hit_tokens` (DeepSeek) or `cached_tokens`
+    /// (Kimi). None when there is no usage to read.
+    pub fn from_openai(usage: &Value) -> Option<StepUsage> {
+        let n = |path: &str| usage.pointer(path).and_then(Value::as_u64);
+        let input = n("/prompt_tokens").or_else(|| n("/input_tokens"))?;
+        let cached = n("/prompt_tokens_details/cached_tokens")
+            .or_else(|| n("/input_tokens_details/cached_tokens"))
+            .or_else(|| n("/prompt_cache_hit_tokens"))
+            .or_else(|| n("/cached_tokens"))
+            .unwrap_or(0)
+            .min(input);
+        Some(StepUsage {
+            input_tokens: input - cached,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: cached,
+            output_tokens: n("/completion_tokens")
+                .or_else(|| n("/output_tokens"))
+                .unwrap_or(0),
+        })
+    }
+}
+
 /// One call [`run_agent_loop`] hands its `execute_tool`.
 #[derive(Clone, Debug, Default)]
 pub struct ToolCall {
@@ -993,6 +1040,47 @@ mod tests {
         let reported = reported.into_inner();
         assert_eq!(reported.len(), 2, "the call, then its result");
         assert!(reported[0].contains("ToolCall") && reported[0].contains(r#"\"id\":\"x\""#));
+    }
+
+    #[test]
+    fn openai_style_usage_reads_the_cached_part_out_of_the_input() {
+        let chat = serde_json::json!({
+            "prompt_tokens": 6461,
+            "completion_tokens": 40,
+            "prompt_tokens_details": {"cached_tokens": 5944}
+        });
+        assert_eq!(
+            StepUsage::from_openai(&chat),
+            Some(StepUsage {
+                input_tokens: 517,
+                cache_creation_input_tokens: 0,
+                cache_read_input_tokens: 5944,
+                output_tokens: 40,
+            })
+        );
+        let responses = serde_json::json!({
+            "input_tokens": 1200,
+            "input_tokens_details": {"cached_tokens": 1024},
+            "output_tokens": 9
+        });
+        assert_eq!(
+            StepUsage::from_openai(&responses).map(|u| (u.input_tokens, u.cache_read_input_tokens)),
+            Some((176, 1024))
+        );
+        let deepseek = serde_json::json!({
+            "prompt_tokens": 100, "completion_tokens": 5, "prompt_cache_hit_tokens": 64
+        });
+        assert_eq!(
+            StepUsage::from_openai(&deepseek).map(|u| u.cache_read_input_tokens),
+            Some(64)
+        );
+        let kimi =
+            serde_json::json!({"prompt_tokens": 100, "completion_tokens": 5, "cached_tokens": 80});
+        assert_eq!(
+            StepUsage::from_openai(&kimi).map(|u| u.input_tokens),
+            Some(20)
+        );
+        assert_eq!(StepUsage::from_openai(&serde_json::Value::Null), None);
     }
 
     #[test]

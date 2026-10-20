@@ -140,6 +140,7 @@ pub async fn agent_provider(
                     base_url,
                     api_key,
                     vendor,
+                    stream_usage: aicompat::capabilities::provider(entry.id).stream_usage,
                 },
             )
         }

@@ -1,3 +1,4 @@
+pub use crate::agent::StepUsage;
 use crate::agent::{
     AgentTurn, EventSink, ImageAttachment, ProviderEvent, StepCitations, StepResult, ToolSpec,
 };
@@ -708,26 +709,6 @@ struct StreamAccumulator {
     usage: StepUsage,
 }
 
-/// Token accounting for one agent step, as Claude reports it in the
-/// stream's message_start / message_delta events. Cache reads are what
-/// prompt caching saves - the live eval checks they actually happen.
-#[derive(Default, Debug, Clone, Copy)]
-pub struct StepUsage {
-    pub input_tokens: u64,
-    pub cache_creation_input_tokens: u64,
-    pub cache_read_input_tokens: u64,
-    pub output_tokens: u64,
-}
-
-impl StepUsage {
-    fn add(&mut self, other: StepUsage) {
-        self.input_tokens += other.input_tokens;
-        self.cache_creation_input_tokens += other.cache_creation_input_tokens;
-        self.cache_read_input_tokens += other.cache_read_input_tokens;
-        self.output_tokens += other.output_tokens;
-    }
-}
-
 impl StreamAccumulator {
     fn block_at(&mut self, index: usize) -> &mut StreamBlock {
         while self.blocks.len() <= index {
@@ -922,42 +903,16 @@ const DEEP_MAX_TOKENS: u32 = 32768;
 const MAX_PAUSE_CONTINUATIONS: usize = 3;
 
 /// Runs one round-trip against Claude with the full turn history and tool
-/// definitions - the Anthropic twin of `openai_codex::agent_step`. Streams
-/// (`stream: true`) so text and tool-call fragments surface through
-/// `on_event` as they're generated.
-#[allow(clippy::too_many_arguments)]
-pub async fn agent_step(
-    auth: &AnthropicAuth,
-    instructions: &str,
-    history: &[AgentTurn],
-    tools: &[ToolSpec],
-    web_search: bool,
-    thinking: &Thinking,
-    model: &str,
-    on_event: EventSink<'_>,
-) -> Result<StepResult, String> {
-    agent_step_with_usage(
-        auth,
-        instructions,
-        history,
-        tools,
-        web_search,
-        thinking,
-        model,
-        on_event,
-    )
-    .await
-    .map(|(step, _)| step)
-}
-
-/// [`agent_step`] plus the step's token usage.
+/// definitions - the Anthropic twin of `openai_codex::agent_step` - and
+/// returns the step's token usage with it. Streams (`stream: true`) so text
+/// and tool-call fragments surface through `on_event` as they're generated.
 ///
 /// A turn with server searches in it can stop at `pause_turn`, part-way:
 /// taken as the answer, that left a reply that ended mid-research. It is
 /// continued the way the API asks - the same request with what Claude sent
 /// so far as the last, assistant message - and the parts make the step.
 #[allow(clippy::too_many_arguments)]
-pub async fn agent_step_with_usage(
+pub async fn agent_step(
     auth: &AnthropicAuth,
     instructions: &str,
     history: &[AgentTurn],

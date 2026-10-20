@@ -1,6 +1,6 @@
-use crate::agent::{AgentTurn, EventSink, StepResult, ToolSpec};
+use crate::agent::{AgentTurn, EventSink, StepResult, StepUsage, ToolSpec};
 use crate::capabilities::Thinking;
-use crate::responses_api::{self, extract_response_text, read_streamed_output, ResponsesRequest};
+use crate::responses_api::{self, extract_response_text, ResponsesRequest};
 
 const PUBLIC_RESPONSES_URL: &str = "https://api.openai.com/v1/responses";
 /// Low-cost default for completion and grammar requests. Agent chat chooses
@@ -46,7 +46,7 @@ pub async fn agent_step(
     thinking: &Thinking,
     model: &str,
     on_event: EventSink<'_>,
-) -> Result<StepResult, String> {
+) -> Result<(StepResult, Option<StepUsage>), String> {
     let body = responses_api::agent_request_body(
         model,
         instructions,
@@ -66,6 +66,6 @@ pub async fn agent_step(
         .await
         .map_err(|e| e.to_string())?;
 
-    let output = read_streamed_output(res, "OpenAI", on_event).await?;
-    Ok(responses_api::parse_agent_output(&output, on_event))
+    let (output, usage) = responses_api::read_streamed_response(res, "OpenAI", on_event).await?;
+    Ok((responses_api::parse_agent_output(&output, on_event), usage))
 }
