@@ -20,6 +20,7 @@ import {
   htmlAttr,
   remarkInlineLinkPlugin,
   remarkPreserveEmptyLinePlugin,
+  syncHeadingIdPlugin,
   syncListOrderPlugin,
 } from "@milkdown/kit/preset/commonmark";
 import {
@@ -72,6 +73,10 @@ import { isLinuxPlatform } from "../../platform/os";
 // does anything here: numbering is a CSS counter on the parent <ol> (see
 // milkdown-theme.css) and list_item's toMarkdown never reads them.
 //
+// syncHeadingIdPlugin is excluded because it walked the whole document
+// after every edit; heading-id-plugin.ts gives the same ids, worked out
+// only after an edit to a heading.
+//
 // remarkInlineLinkPlugin is excluded because it rewrote every reference
 // link, `[text][ref]`, as an inline one and deleted the `[ref]: url`
 // definitions: the first save of an edit dropped them from the file.
@@ -103,6 +108,7 @@ const excludedCommonmarkPieces = [
   htmlAttr,
   remarkPreserveEmptyLinePlugin,
   syncListOrderPlugin,
+  syncHeadingIdPlugin,
   remarkInlineLinkPlugin,
 ].flat();
 

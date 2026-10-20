@@ -1,6 +1,7 @@
 import { PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import type { Mapping } from "@milkdown/kit/prose/transform";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import {
@@ -23,6 +24,8 @@ export type OpenStates = Map<number, boolean>;
 export interface RawHtmlPreviewState {
   reveal: RevealState;
   open: OpenStates;
+  /** The document's <details> around markdown (findDetailsSpans). */
+  spans: DetailsSpan[];
 }
 
 export const rawHtmlPreviewKey = new PluginKey<RawHtmlPreviewState>(
@@ -76,7 +79,7 @@ function loneHtml(node: ProseNode, pos: number): HtmlChild | null {
   };
 }
 
-interface DetailsSpan {
+export interface DetailsSpan {
   /** The paragraph holding "<details><summary>…</summary>". */
   headPos: number;
   head: HtmlChild;
@@ -93,7 +96,7 @@ interface DetailsSpan {
  * of its own. Markdown makes those separate paragraphs, so the pair is
  * found at the top level of the document (nested pairs included).
  */
-function findDetailsSpans(doc: ProseNode): DetailsSpan[] {
+export function findDetailsSpans(doc: ProseNode): DetailsSpan[] {
   const spans: DetailsSpan[] = [];
   const stack: { pos: number; size: number; head: HtmlChild }[] = [];
   doc.forEach((node, pos) => {
@@ -116,6 +119,47 @@ function findDetailsSpans(doc: ProseNode): DetailsSpan[] {
     }
   });
   return spans;
+}
+
+/** `spans` through an edit that left them as they were (detailsTouched
+ *  false). */
+export function mapSpans(
+  spans: DetailsSpan[],
+  mapping: Mapping,
+): DetailsSpan[] {
+  if (spans.length === 0) return spans;
+  const html = (h: HtmlChild): HtmlChild => ({
+    from: mapping.map(h.from),
+    to: mapping.map(h.to),
+    text: h.text,
+  });
+  return spans.map((span) => ({
+    headPos: mapping.map(span.headPos),
+    head: html(span.head),
+    bodyFrom: mapping.map(span.bodyFrom),
+    endPos: mapping.map(span.endPos),
+    end: html(span.end),
+    endSize: span.endSize,
+  }));
+}
+
+/** Whether drawing the top-level block [from, to] again could change a
+ *  fold: it is in one (head, body or end, `spans` mapped to the new
+ *  document), or it is a "<details>" or "</details>" line that may start or
+ *  close one. Then the folds are drawn again, all of them. */
+export function detailsTouched(
+  doc: ProseNode,
+  spans: DetailsSpan[],
+  from: number,
+  to: number,
+): boolean {
+  if (spans.some((s) => from <= s.endPos + s.endSize && to >= s.headPos))
+    return true;
+  const node = doc.nodeAt(from);
+  const html = node && loneHtml(node, from);
+  if (!html) return false;
+  const text = html.text.trim();
+  return DETAILS_OPEN_RE.test(text) || DETAILS_CLOSE_RE.test(text);
 }
 
 /** Open as the reader left it, or else as written (`<details open>`). */
@@ -183,9 +227,9 @@ export function unfoldRange(
   from: number,
   to: number = from,
 ): boolean {
-  const open = rawHtmlPreviewKey.getState(view.state)?.open;
-  if (!open) return false;
-  const heads = foldsHiding(findDetailsSpans(view.state.doc), open, from, to);
+  const plugin = rawHtmlPreviewKey.getState(view.state);
+  if (!plugin) return false;
+  const heads = foldsHiding(plugin.spans, plugin.open, from, to);
   if (heads.length === 0) return false;
   view.dispatch(view.state.tr.setMeta(UNFOLD_META, { from, to }));
   return true;
@@ -221,10 +265,9 @@ export function unfoldFor(
   oldState: EditorState,
   newState: EditorState,
 ): FoldMeta | null {
-  const open = rawHtmlPreviewKey.getState(newState)?.open;
-  if (!open) return null;
-  const spans = findDetailsSpans(newState.doc);
-  if (spans.length === 0) return null;
+  const plugin = rawHtmlPreviewKey.getState(newState);
+  if (!plugin || plugin.spans.length === 0) return null;
+  const { open, spans } = plugin;
   const ranges: [number, number][] = [];
   if (trs.some((tr) => tr.selectionSet || tr.docChanged))
     ranges.push([newState.selection.from, newState.selection.to]);
@@ -314,13 +357,14 @@ function detailsHeadWidget(html: string, open: boolean, headPos: number) {
  *  to `handled` so the inline pass leaves them alone. */
 export function decorateDetails(
   state: EditorState,
+  spans: DetailsSpan[],
   open: OpenStates,
   touches: Touches,
   decorations: Decoration[],
   handled: Set<number>,
 ) {
   // A folded outer one hides every block inside, inner heads included.
-  for (const span of findDetailsSpans(state.doc)) {
+  for (const span of spans) {
     handled.add(span.head.from);
     handled.add(span.end.from);
     const onHead = touches(span.head.from, span.head.to);

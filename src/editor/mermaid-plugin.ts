@@ -1,13 +1,14 @@
 import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import type { EditorState } from "@milkdown/kit/prose/state";
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import {
   applyReveal,
-  buildReveal,
-  emptyReveal,
+  revealAll,
+  type Reveal,
   type RevealState,
+  type Touches,
 } from "./reveal-state";
 import { isLargeDoc } from "./large-doc";
 import { appearanceIsDark, diagramRenderer } from "./diagram-engine";
@@ -55,10 +56,14 @@ interface MermaidBlock {
   code: string;
 }
 
-function collectMermaidBlocks(doc: EditorState["doc"]): MermaidBlock[] {
+const isCodeBlock = (node: ProseNode) => node.type.name === "code_block";
+const isMermaid = (node: ProseNode) =>
+  isCodeBlock(node) && node.attrs.language === "mermaid";
+
+function collectMermaidBlocks(doc: ProseNode): MermaidBlock[] {
   const blocks: MermaidBlock[] = [];
   doc.descendants((node, pos) => {
-    if (node.type.name === "code_block" && node.attrs.language === "mermaid") {
+    if (isMermaid(node)) {
       blocks.push({
         from: pos,
         to: pos + node.nodeSize,
@@ -102,82 +107,73 @@ export function createMermaidPreviewPlugin(options: {
     // every diagram again (view.update below).
     let drawnFor = options.engine();
 
-    function buildDecorations(state: EditorState): RevealState {
-      if (!options.enabled()) return emptyReveal;
-      return buildReveal(state, (touches) =>
-        collectDecorations(state, touches),
-      );
-    }
-
-    function collectDecorations(
-      state: EditorState,
-      touches: (from: number, to: number) => boolean,
+    function decorate(
+      node: ProseNode,
+      from: number,
+      touches: Touches,
     ): Decoration[] {
-      const decorations: Decoration[] = [];
-      const seen = new Map<string, number>();
-      for (const { from, to, code } of collectMermaidBlocks(state.doc)) {
-        const nth = seen.get(code) ?? 0;
-        seen.set(code, nth + 1);
-        const drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
-        if (!drawn) continue;
-        const { svg } = drawn;
-        if (touches(from, to)) continue; // editing it - keep source visible
-
-        decorations.push(
-          Decoration.node(from, to, { class: "mermaid-source-hidden" }),
-        );
-        decorations.push(
-          Decoration.widget(
-            to,
-            (view: EditorView, getPos: () => number | undefined) => {
-              const container = document.createElement("div");
-              container.className = "mermaid-preview";
-              container.innerHTML = svg;
-              container.addEventListener("mousedown", (event) => {
-                event.preventDefault();
-                // The widget's DOM outlives edits above it (its key leaves
-                // the position out), so where its block starts is asked now:
-                // the `from` of the pass that built it can be another block.
-                const end = getPos();
-                if (end === undefined) return;
-                const block = view.state.doc.resolve(end).nodeBefore;
-                if (block?.type.name !== "code_block") return;
-                const tr = view.state.tr.setSelection(
-                  TextSelection.create(
-                    view.state.doc,
-                    end - block.nodeSize + 1,
-                  ),
-                );
-                view.dispatch(tr);
-                view.focus();
-              });
-              return container;
-            },
-            // ProseMirror reuses a widget's DOM while its key is unchanged, so
-            // a position-only key kept showing the OLD diagram after its
-            // source was edited in place: the source is part of the key. The
-            // position is not - typing above a diagram moves it, and a key
-            // that moved with it rebuilt the SVG on every keystroke. Which
-            // repeat of an identical source it is tells copies apart.
-            {
-              side: 1,
-              key: `mermaid-${hashCode(code)}-${nth}-${drawn.id}`,
-            },
-          ),
-        );
-      }
-      return decorations;
+      if (!options.enabled() || !isMermaid(node)) return [];
+      const code = node.textContent;
+      const to = from + node.nodeSize;
+      const drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
+      if (!drawn) return [];
+      const { svg } = drawn;
+      if (touches(from, to)) return []; // editing it - keep source visible
+      return [
+        Decoration.node(from, to, { class: "mermaid-source-hidden" }),
+        Decoration.widget(
+          to,
+          (view: EditorView, getPos: () => number | undefined) => {
+            const container = document.createElement("div");
+            container.className = "mermaid-preview";
+            container.innerHTML = svg;
+            container.addEventListener("mousedown", (event) => {
+              event.preventDefault();
+              // The widget's DOM outlives edits above it (its key leaves
+              // the position out), so where its block starts is asked now:
+              // the `from` of the pass that built it can be another block.
+              const end = getPos();
+              if (end === undefined) return;
+              const block = view.state.doc.resolve(end).nodeBefore;
+              if (block?.type.name !== "code_block") return;
+              const tr = view.state.tr.setSelection(
+                TextSelection.create(view.state.doc, end - block.nodeSize + 1),
+              );
+              view.dispatch(tr);
+              view.focus();
+            });
+            return container;
+          },
+          // ProseMirror reuses a widget's DOM while its key is unchanged, so
+          // a position-only key kept showing the OLD diagram after its
+          // source was edited in place: the source is part of the key. The
+          // position is not - typing above a diagram moves it, and a key
+          // that moved with it rebuilt the SVG on every keystroke. Two
+          // copies of one source share a key, and a drawing: either
+          // widget's DOM shows the other just as well.
+          {
+            side: 1,
+            key: `mermaid-${hashCode(code)}-${drawn.id}`,
+          },
+        ),
+      ];
     }
+
+    const reveal: Reveal = {
+      match: isCodeBlock,
+      decorate,
+      config: options.enabled,
+    };
 
     return new Plugin<RevealState>({
       key: mermaidKey,
       state: {
-        init: (_config, state) => buildDecorations(state),
+        init: (_config, state) => revealAll(state, reveal),
         apply(tr, prev, oldState, newState) {
           // A finished render has new SVG to show whatever the caret did.
           if (tr.getMeta(mermaidKey) === "rerender")
-            return buildDecorations(newState);
-          return applyReveal(tr, prev, oldState, newState, buildDecorations);
+            return revealAll(newState, reveal);
+          return applyReveal(tr, prev, oldState, newState, reveal);
         },
       },
       props: {

@@ -1,9 +1,15 @@
 import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import type { EditorState } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { applyReveal, buildReveal, type RevealState } from "../reveal-state";
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import {
+  applyReveal,
+  revealAll,
+  type Reveal,
+  type RevealState,
+  type Touches,
+} from "../reveal-state";
 
 const githubAlertKey = new PluginKey("github-alert");
 
@@ -29,6 +35,8 @@ const ALERT_TYPES: Record<AlertType, { icon: string }> = {
     icon: "M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25a.749.749 0 0 1-.53.22H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z",
   },
 };
+
+const ALERT_NAMES = Object.keys(ALERT_TYPES) as AlertType[];
 
 // Any case, as GitHub and Obsidian read it, and with Obsidian's "-" / "+"
 // (folded / unfolded) after it.
@@ -66,78 +74,84 @@ function escapeHtml(text: string): string {
   return text.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
-function buildDecorations(
-  state: EditorState,
+/** What one blockquote draws when it is an alert. */
+function decorateAlert(
+  node: ProseNode,
+  pos: number,
+  touches: Touches,
   labelOf: AlertLabel,
-): RevealState {
-  return buildReveal(state, (touches) =>
-    collectDecorations(state, touches, labelOf),
+  decorations: Decoration[],
+) {
+  // GitHub's syntax: the marker must be the blockquote's very first line,
+  // alone. In ProseMirror terms: the first child is a textblock whose
+  // first text node starts with the marker, with nothing but whitespace
+  // (or a line break) after it in that text node.
+  const para = node.firstChild;
+  if (!para || !para.isTextblock) return;
+  const firstText = para.firstChild;
+  if (!firstText || !firstText.isText || !firstText.text) return;
+  const match = MARKER_RE.exec(firstText.text);
+  if (!match) return;
+  const rest = firstText.text.slice(match[0].length);
+  if (!/^[ \t]*(\n|$)/.test(rest)) return;
+  const type = match[1].toUpperCase() as AlertType;
+  const info = ALERT_TYPES[type];
+  const label = labelOf(type);
+
+  decorations.push(
+    Decoration.node(pos, pos + node.nodeSize, {
+      class: `md-alert md-alert-${type.toLowerCase()}`,
+    }),
+  );
+
+  // The colored border/title stay on even while editing; only the raw
+  // [!TYPE] marker toggles between hidden (badge shown in its place) and
+  // visible (cursor touching it).
+  const markerFrom = pos + 2; // +1 into the blockquote, +1 into its first paragraph
+  const hideLen = match[0].length + (/^[ \t]*\n?/.exec(rest)?.[0].length ?? 0);
+  // The marker line's soft break, when it is a node of its own (an
+  // inline hardbreak, drawn as a space): hidden with the marker, it
+  // started the body one space in from the lines under it.
+  const next = para.childCount > 1 ? para.child(1) : null;
+  const breakAfter =
+    hideLen === firstText.text.length && next?.type.name === "hardbreak"
+      ? next.nodeSize
+      : 0;
+  const markerTo = markerFrom + hideLen + breakAfter;
+  if (touches(markerFrom, markerFrom + match[0].length)) return;
+
+  decorations.push(
+    Decoration.inline(markerFrom, markerTo, {
+      class: "md-alert-marker-hidden",
+    }),
+  );
+  decorations.push(
+    Decoration.widget(
+      markerFrom,
+      (view, getPos) => buildTitle(info, label, view, getPos),
+      { side: -1 },
+    ),
   );
 }
 
-function collectDecorations(
-  state: EditorState,
-  touches: (from: number, to: number) => boolean,
-  labelOf: AlertLabel,
-): Decoration[] {
-  const decorations: Decoration[] = [];
+const isBlockquote = (node: ProseNode) => node.type.name === "blockquote";
 
-  state.doc.descendants((node, pos) => {
-    if (node.type.name !== "blockquote") return;
-    // GitHub's syntax: the marker must be the blockquote's very first line,
-    // alone. In ProseMirror terms: the first child is a textblock whose
-    // first text node starts with the marker, with nothing but whitespace
-    // (or a line break) after it in that text node.
-    const para = node.firstChild;
-    if (!para || !para.isTextblock) return;
-    const firstText = para.firstChild;
-    if (!firstText || !firstText.isText || !firstText.text) return;
-    const match = MARKER_RE.exec(firstText.text);
-    if (!match) return;
-    const rest = firstText.text.slice(match[0].length);
-    if (!/^[ \t]*(\n|$)/.test(rest)) return;
-    const type = match[1].toUpperCase() as AlertType;
-    const info = ALERT_TYPES[type];
-    const label = labelOf(type);
-
-    decorations.push(
-      Decoration.node(pos, pos + node.nodeSize, {
-        class: `md-alert md-alert-${type.toLowerCase()}`,
-      }),
-    );
-
-    // The colored border/title stay on even while editing; only the raw
-    // [!TYPE] marker toggles between hidden (badge shown in its place) and
-    // visible (cursor touching it).
-    const markerFrom = pos + 2; // +1 into the blockquote, +1 into its first paragraph
-    const hideLen =
-      match[0].length + (/^[ \t]*\n?/.exec(rest)?.[0].length ?? 0);
-    // The marker line's soft break, when it is a node of its own (an
-    // inline hardbreak, drawn as a space): hidden with the marker, it
-    // started the body one space in from the lines under it.
-    const next = para.childCount > 1 ? para.child(1) : null;
-    const breakAfter =
-      hideLen === firstText.text.length && next?.type.name === "hardbreak"
-        ? next.nodeSize
-        : 0;
-    const markerTo = markerFrom + hideLen + breakAfter;
-    if (touches(markerFrom, markerFrom + match[0].length)) return;
-
-    decorations.push(
-      Decoration.inline(markerFrom, markerTo, {
-        class: "md-alert-marker-hidden",
-      }),
-    );
-    decorations.push(
-      Decoration.widget(
-        markerFrom,
-        (view, getPos) => buildTitle(info, label, view, getPos),
-        { side: -1 },
-      ),
-    );
-  });
-
-  return decorations;
+/** Alerts drawn per outermost blockquote, the ones quoted inside it too. */
+function alertReveal(labelOf: AlertLabel): Reveal {
+  return {
+    match: isBlockquote,
+    decorate(node, pos, touches) {
+      const decorations: Decoration[] = [];
+      decorateAlert(node, pos, touches, labelOf, decorations);
+      node.descendants((child, offset) => {
+        if (isBlockquote(child))
+          decorateAlert(child, pos + 1 + offset, touches, labelOf, decorations);
+      });
+      return decorations;
+    },
+    // The badges' words: the UI's language.
+    config: () => ALERT_NAMES.map(labelOf).join("\n"),
+  };
 }
 
 /**
@@ -148,16 +162,15 @@ function collectDecorations(
  * the badge, or moving the cursor onto it, reveals it for editing.
  */
 export function createGithubAlertPlugin(labelOf: AlertLabel) {
+  const reveal = alertReveal(labelOf);
   return $prose(
     () =>
       new Plugin<RevealState>({
         key: githubAlertKey,
         state: {
-          init: (_config, state) => buildDecorations(state, labelOf),
+          init: (_config, state) => revealAll(state, reveal),
           apply: (tr, prev, oldState, newState) =>
-            applyReveal(tr, prev, oldState, newState, (state) =>
-              buildDecorations(state, labelOf),
-            ),
+            applyReveal(tr, prev, oldState, newState, reveal),
         },
         props: {
           decorations(state) {

@@ -48,6 +48,7 @@ import {
 } from "./image-html";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
 import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
+import { decorateAll, redecorateChanged } from "../changed-ranges";
 
 /**
  * Image support, Typora-style, in two halves:
@@ -461,22 +462,12 @@ function isImageParagraph(node: ProseNode): boolean {
   return images > 0;
 }
 
-function imageParagraphDecorations(doc: ProseNode): DecorationSet {
-  const decorations: Decoration[] = [];
-  doc.descendants((node, pos) => {
-    if (node.isTextblock) {
-      if (isImageParagraph(node))
-        decorations.push(
-          Decoration.node(pos, pos + node.nodeSize, {
-            class: "image-paragraph",
-          }),
-        );
-      return false;
-    }
-    return true;
-  });
-  return DecorationSet.create(doc, decorations);
-}
+const isTextblock = (node: ProseNode) => node.isTextblock;
+
+const imageParagraph = (node: ProseNode, pos: number) =>
+  isImageParagraph(node)
+    ? [Decoration.node(pos, pos + node.nodeSize, { class: "image-paragraph" })]
+    : [];
 
 const imageParagraphKey = new PluginKey<DecorationSet>("image-paragraph");
 
@@ -638,9 +629,10 @@ export function createImagePlugin(options: ImageStore) {
     return new Plugin<DecorationSet>({
       key: imageParagraphKey,
       state: {
-        init: (_config, state) => imageParagraphDecorations(state.doc),
+        init: (_config, state) =>
+          decorateAll(state.doc, isTextblock, imageParagraph),
         apply: (tr, previous) =>
-          tr.docChanged ? imageParagraphDecorations(tr.doc) : previous,
+          redecorateChanged(previous, tr, isTextblock, imageParagraph),
       },
       appendTransaction: (trs, _old, state) =>
         trs.some((tr) => tr.docChanged)

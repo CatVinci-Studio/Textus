@@ -75,3 +75,37 @@ describe("redecorateChanged", () => {
     expect(ranges(next)).toEqual(ranges(set));
   });
 });
+
+describe("redecorateChanged, blocks side by side", () => {
+  const two = () => {
+    const doc = schema.node("doc", null, [
+      schema.node("code_block", null, [schema.text("a")]),
+      schema.node("code_block", null, [schema.text("b")]),
+    ]);
+    return {
+      state: EditorState.create({ doc }),
+      set: decorateAll(doc, isCode, mark),
+    };
+  };
+
+  it("keeps the next block's decoration when one block is edited", () => {
+    const { state, set } = two();
+    const tr = state.tr.insertText("!", 2);
+    expect(ranges(redecorateChanged(set, tr, isCode, mark))).toEqual([
+      [0, 4],
+      [4, 7],
+    ]);
+  });
+
+  it("drops what a block drew inside it once it no longer matches", () => {
+    const { state } = two();
+    const tokens = (node: ProseNode, pos: number) => [
+      Decoration.inline(pos + 1, pos + node.nodeSize - 1, { class: "t" }),
+    ];
+    const set = decorateAll(state.doc, isCode, tokens);
+    const tr = state.tr.setBlockType(1, 1, schema.nodes.paragraph);
+    expect(ranges(redecorateChanged(set, tr, isCode, tokens))).toEqual([
+      [4, 5],
+    ]);
+  });
+});
