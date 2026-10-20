@@ -184,7 +184,7 @@ Yes: plain .md files, with tables, task lists, footnotes, math and Mermaid. You 
 1. Launch Textus. It opens on a blank draft; you only need a file when you save.
 2. Open **Settings → Textus AI**, choose a provider, and sign in or paste a key under **Login & credentials**.
 3. Start typing. A continuation appears in grey when you pause; Tab accepts it.
-4. Open the AI panel with the **Textus AI** button (the robot) in the window bar. **Help → AI Features Guide** covers the rest.
+4. Open the AI panel with the **Textus AI** button (the speech bubble) in the window bar. **Help → AI Features Guide** covers the rest.
 
 Every shortcut is listed, and can be changed, in **Settings → Shortcuts**.
 

@@ -286,6 +286,11 @@ export interface Settings {
    *  again once it is back on (textus-ai.ts). Rust reads it too, as
    *  TEXTUS_AI_SETTING in src-tauri/src/ai/mod.rs. On by default. */
   textusAi: boolean;
+  /** When a pause from the window bar's AI button ends (ms since the
+   *  epoch): Textus AI is off until then and comes back on by itself
+   *  (ai/TextusAiSwitch.tsx). Null while it is on, or off until turned
+   *  back on. */
+  textusAiResumeAt: number | null;
   enableCompletion: boolean;
   enableGrammarCheck: boolean;
   /// How aggressive the grammar check is - from confident typos only up to
@@ -473,6 +478,7 @@ const DEFAULT_SETTINGS: Settings = {
   levisImportOffered: false,
   theme: "system",
   textusAi: true,
+  textusAiResumeAt: null,
   enableCompletion: true,
   enableGrammarCheck: true,
   grammarStrictness: "standard",
@@ -673,6 +679,10 @@ export function normaliseSettings(parsed: Raw | null): Settings {
           : DEFAULT_SETTINGS.imageHost,
       // Any profile string is kept - a newer build's may not be in this
       // build's list - but it has to be one.
+      textusAiResumeAt:
+        typeof parsed.textusAiResumeAt === "number"
+          ? parsed.textusAiResumeAt
+          : null,
       writingConventions:
         typeof parsed.writingConventions === "string" &&
         parsed.writingConventions

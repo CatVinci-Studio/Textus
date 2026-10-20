@@ -10,7 +10,10 @@ export default {
   agentPanelTitle: AI_NAME,
   textusAiToggleLabel: `Activer ${AI_NAME}`,
   textusAiOffHint: "Désactivée : rien n'est envoyé à aucun service d'IA.",
-  textusAiOnTooltip: `${AI_NAME} est activée · Cliquer pour désactiver`,
+  textusAiMenuHint: "Clic droit pour mettre en pause ou désactiver",
+  textusAiPause: "Mettre en pause une heure",
+  textusAiTurnOff: `Désactiver ${AI_NAME}`,
+  textusAiPausedTooltip: `${AI_NAME} est en pause jusqu’à {time} · Cliquer pour activer`,
   textusAiOffTooltip: `${AI_NAME} est désactivée · Cliquer pour activer`,
   textusAiOff: `${AI_NAME} est désactivée`,
   textusAiTurnOn: `Activer ${AI_NAME}`,
@@ -951,9 +954,9 @@ utiliser une.
   tutorialWriteTitle: "Écrire avec l'IA",
   tutorialWriteBody: `En mode Écrire, ${AI_NAME} ne fait qu'ajouter du texte, en vert tant que vous ne l'avez pas accepté.`,
   tutorialWriteOpen:
-    "Ouvrez le panneau IA : l'icône du robot, en haut à droite ({shortcut})",
+    "Ouvrez le panneau IA : l'icône de la bulle, en haut à droite ({shortcut})",
   tutorialWriteOpenPhone:
-    "Ouvrez le panneau IA : touchez l'icône du robot, en haut",
+    "Ouvrez le panneau IA : touchez l'icône de la bulle, en haut",
   tutorialWriteSend:
     "Envoyez `Ajoute un paragraphe à mes notes`, puis cliquez sur Accepter",
   tutorialReviewTitle: "Relecture",

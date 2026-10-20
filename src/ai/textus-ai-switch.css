@@ -1,37 +1,3 @@
-/* Textus AI's switch (TextusAiSwitch.tsx). The button itself is the bar's
-   (window-bar.css) or the header's (inline-chat.css); this is the glyph's
-   two states. Off it is the dim outline of a switch; on, the track fills
-   in the accent and the knob slides to its right end. */
-.textus-ai-switch {
-  opacity: 0.6;
-}
-
-.textus-ai-switch:hover {
-  opacity: 1;
-}
-
-.textus-ai-switch .switch-icon-track {
-  transition: fill var(--dur-fast) var(--ease-standard);
-}
-
-.textus-ai-switch .switch-icon-knob {
-  transition: transform var(--dur-fast) var(--ease-standard);
-}
-
-.textus-ai-switch.textus-ai-switch-on {
-  color: var(--chrome-accent);
-  opacity: 1;
-}
-
-.textus-ai-switch-on .switch-icon-track {
-  fill: currentColor;
-}
-
-.textus-ai-switch-on .switch-icon-knob {
-  fill: var(--bg);
-  transform: translateX(6px);
-}
-
 /* The note in an AI surface's place while it is off. */
 .textus-ai-off {
   display: flex;

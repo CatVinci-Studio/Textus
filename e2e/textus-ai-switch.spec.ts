@@ -2,8 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { PHONE, openApp, openPhone, pasteMarkdown } from "./helpers";
 
 /**
- * Textus AI's switch (#196): the window bar's switch, lit while it is on,
- * turns it off in one click and back on in another. Off, nothing of it
+ * Textus AI's switch (#196): right-click the window bar's AI button to
+ * pause it for an hour or turn it off; off, the button's bubble is struck
+ * through and a click offers to turn it back on. Off, nothing of it
  * runs - no completion, no grammar check, no conversation - and not one
  * request reaches an AI service, from the moment the app starts; each
  * feature's own setting is kept and applies again once it is back on.
@@ -30,10 +31,29 @@ const providerRequests = (page: Page) =>
     PROVIDER_COMMANDS,
   );
 
-const aiSwitch = (page: Page) =>
-  page.locator(".window-bar").getByRole("button", { name: "开启 Textus AI" });
+/** The window bar's one AI button: the panel while on, struck through
+ *  (`.textus-ai-button-off`) while off. */
+const aiButton = (page: Page) => page.locator(".window-bar .window-bar-toggle");
 const panelButton = (page: Page) =>
   page.locator('.window-bar-toggle[aria-label="Textus AI"]');
+
+async function turnOff(page: Page) {
+  await aiButton(page).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "关闭 Textus AI" }).click();
+  await expect(aiButton(page)).toHaveClass(/textus-ai-button-off/);
+}
+
+async function turnOn(page: Page) {
+  await aiButton(page).click();
+  await page.getByRole("menuitem", { name: "开启 Textus AI" }).click();
+  await expect(aiButton(page)).not.toHaveClass(/textus-ai-button-off/);
+}
+
+const savedSetting = (page: Page, key: string) =>
+  page.evaluate(
+    (k) => JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}")[k],
+    key,
+  );
 
 async function typeAtEnd(page: Page, text: string, typed: string) {
   await pasteMarkdown(page, text);
@@ -42,33 +62,61 @@ async function typeAtEnd(page: Page, text: string, typed: string) {
   await page.keyboard.type(typed);
 }
 
-test("the window bar's switch turns Textus AI off and on, and says which", async ({
+test("the AI button turns Textus AI off and on from its right-click menu", async ({
   page,
 }) => {
   await openApp(page);
-  const toggle = aiSwitch(page);
-  await expect(toggle).toHaveAttribute("aria-pressed", "true");
-  await expect(toggle).toHaveAccessibleDescription(
-    "Textus AI 已开启 · 点击关闭",
+  const button = aiButton(page);
+  await expect(button).toHaveAccessibleDescription(
+    /^Textus AI \(.+L\) · 右键可暂停或关闭$/,
   );
-  await expect(panelButton(page)).toBeVisible();
+  await expect(button.locator("svg path")).toHaveCount(1);
 
-  await toggle.click();
-  await expect(toggle).toHaveAttribute("aria-pressed", "false");
-  await expect(toggle).toHaveAccessibleDescription(
+  await turnOff(page);
+  // Struck through, named for what it is now, and no panel to open.
+  await expect(button).toHaveAccessibleName("Textus AI 已关闭");
+  await expect(button.locator("svg path")).toHaveCount(3);
+  await expect(button).toHaveAccessibleDescription(
     "Textus AI 已关闭 · 点击开启",
   );
-  // No conversation to open while it is off.
-  await expect(panelButton(page)).toHaveCount(0);
-  expect(
-    await page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}").textusAi,
-    ),
-  ).toBe(false);
+  await expect(page.locator(".agent-panel-view")).toHaveCount(0);
+  expect(await savedSetting(page, "textusAi")).toBe(false);
+  expect(await savedSetting(page, "textusAiResumeAt")).toBe(null);
 
-  await toggle.click();
-  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await turnOn(page);
+  await expect(panelButton(page)).toBeVisible();
+  await panelButton(page).click();
+  await expect(page.locator(".agent-panel-view")).toBeVisible();
+});
+
+test("a pause turns Textus AI off for an hour, and it comes back by itself", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await openApp(page);
+  await aiButton(page).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "暂停 1 小时" }).click();
+  await expect(aiButton(page)).toHaveClass(/textus-ai-button-off/);
+  await expect(aiButton(page)).toHaveAccessibleDescription(
+    /^Textus AI 已暂停，.+ 自动开启 · 点击开启$/,
+  );
+  expect(await savedSetting(page, "textusAiResumeAt")).toEqual(
+    expect.any(Number),
+  );
+
+  await page.clock.runFor(60 * 60 * 1000);
+  await expect(aiButton(page)).not.toHaveClass(/textus-ai-button-off/);
+  expect(await savedSetting(page, "textusAi")).toBe(true);
+  expect(await savedSetting(page, "textusAiResumeAt")).toBe(null);
+});
+
+test("a pause that ran out while Textus was closed is over at launch", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { textusAi: false, textusAiResumeAt: Date.now() - 1000 },
+  });
+  await expect(aiButton(page)).not.toHaveClass(/textus-ai-button-off/);
   await expect(panelButton(page)).toBeVisible();
 });
 
@@ -80,7 +128,7 @@ test("while Textus AI is off, no request reaches an AI service, from launch on",
   await openApp(page, {
     settings: { textusAi: false, enableGrammarCheck: false },
   });
-  await expect(aiSwitch(page)).toHaveAttribute("aria-pressed", "false");
+  await expect(aiButton(page)).toHaveClass(/textus-ai-button-off/);
 
   // Typing, which would ask for a completion and a grammar check.
   await typeAtEnd(page, "The keeper woke before dawn", " and the sea");
@@ -125,7 +173,7 @@ test("while Textus AI is off, no request reaches an AI service, from launch on",
 
   // Back on: completion works again, and the grammar check keeps its own
   // "off".
-  await aiSwitch(page).click();
+  await turnOn(page);
   await page.locator(".milkdown p", { hasText: "The keeper" }).click();
   await page.keyboard.press("End");
   await page.keyboard.type(" was calm");
@@ -179,7 +227,7 @@ test("turning Textus AI off clears what it showed and stops a running reply", as
   await typeAtEnd(page, "The plan", " works");
   await expect(page.locator(".ghost-text")).toBeVisible();
 
-  await aiSwitch(page).click();
+  await turnOff(page);
   await expect
     .poll(() =>
       page.evaluate(
@@ -191,7 +239,7 @@ test("turning Textus AI off clears what it showed and stops a running reply", as
   await expect(page.locator(".agent-panel-view")).toHaveCount(0);
 
   // On again, the conversation is where it stopped, as Stop leaves it.
-  await aiSwitch(page).click();
+  await turnOn(page);
   await panelButton(page).click();
   await expect(page.locator(".agent-panel-view")).toContainText(
     "Tighten the opening.",
@@ -210,14 +258,14 @@ test("the menu and the shortcut turn it off and on too", async ({ page }) => {
   });
   await page.locator(".milkdown").click();
   await page.keyboard.press("ControlOrMeta+Alt+A");
-  await expect(aiSwitch(page)).toHaveAttribute("aria-pressed", "false");
+  await expect(aiButton(page)).toHaveClass(/textus-ai-button-off/);
   // View › Textus AI, as menu.rs's dispatch sends it.
   await page.evaluate(() =>
     (
       window as unknown as { __devEmitTauriEvent: (e: string) => void }
     ).__devEmitTauriEvent("menu-toggle-textus-ai"),
   );
-  await expect(aiSwitch(page)).toHaveAttribute("aria-pressed", "true");
+  await expect(aiButton(page)).not.toHaveClass(/textus-ai-button-off/);
 });
 
 test("the popped-out AI window says it is off and turns it back on", async ({
@@ -250,35 +298,29 @@ test("the popped-out AI window says it is off and turns it back on", async ({
   await expect(chat.locator(".chat-window-body textarea")).toBeVisible();
 
   // Turned off in the main window: the chat window follows.
-  await aiSwitch(page).click();
+  await turnOff(page);
   await expect(chat.locator(".chat-window-ai-off")).toContainText(
     "Textus AI 已关闭",
   );
   await expect(chat.locator(".chat-window-body")).toHaveCount(0);
-  const windowSwitch = chat
-    .locator(".chat-window-header")
-    .getByRole("button", { name: "开启 Textus AI" });
-  await expect(windowSwitch).toHaveAttribute("aria-pressed", "false");
 
   await chat.locator(".chat-window-ai-off button").click();
   await expect(chat.locator(".chat-window-body textarea")).toBeVisible();
-  await expect(aiSwitch(page)).toHaveAttribute("aria-pressed", "true");
+  await expect(aiButton(page)).not.toHaveClass(/textus-ai-button-off/);
 });
 
 test.describe("on a phone", () => {
   test.use(PHONE);
 
-  test("the title row carries the switch, and off takes the AI buttons away", async ({
+  test("off, the title row's AI button is struck through and a tap turns it back on", async ({
     page,
   }) => {
-    await openPhone(page);
-    const toggle = page
-      .locator(".window-bar")
-      .getByRole("button", { name: "Enable Textus AI" });
-    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await openPhone(page, { settings: { textusAi: false } });
+    const button = aiButton(page);
+    await expect(button).toHaveClass(/textus-ai-button-off/);
+    await button.tap();
+    await page.getByRole("menuitem", { name: "Turn on Textus AI" }).tap();
+    await expect(button).not.toHaveClass(/textus-ai-button-off/);
     await expect(panelButton(page)).toBeVisible();
-    await toggle.tap();
-    await expect(toggle).toHaveAttribute("aria-pressed", "false");
-    await expect(panelButton(page)).toHaveCount(0);
   });
 });

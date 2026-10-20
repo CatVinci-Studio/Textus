@@ -33,7 +33,7 @@ Los posibles problemas aparecen subrayados. Pasa el puntero sobre uno, o coloca 
 
 ### 3. El panel de IA
 
-La conversación completa está en un panel a la derecha del editor. Ábrelo o ciérralo con el botón **Textus AI** (el robot) del extremo derecho de la barra de la ventana o con <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+La conversación completa está en un panel a la derecha del editor. Ábrelo o ciérralo con el botón **Textus AI** (el bocadillo) del extremo derecho de la barra de la ventana o con <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **Una conversación por documento**: cada pestaña tiene su propia conversación, y al cambiar de pestaña el panel cambia con ella. **Nueva conversación**, en la cabecera del panel, empieza de cero (si quedan cambios por revisar, pregunta antes).
 - **Modos**: el cuadro de texto ofrece tres. **Escribir** redacta texto nuevo en el documento (una continuación, un párrafo o una sección nuevos) y solo añade: con texto seleccionado, escribe a continuación de la selección. **Revisar** responde, comenta y deja comentarios sin cambiar nada. **Editar** cambia el texto que ya está. Cada cambio de Escribir o Editar es una propuesta que aceptas o rechazas. El panel empieza en el modo elegido en **Ajustes > Textus AI > Chat de Textus AI > Modo predeterminado**.
@@ -276,7 +276,7 @@ No hay perfil de estilo ni biblioteca globales: describen una obra concreta, as�
 
 ## Desactivar Textus AI
 
-El interruptor del extremo derecho de la barra de la ventana, junto al robot, desactiva todo Textus AI con un clic: está iluminado mientras Textus AI está activada y atenuado mientras está desactivada, y otro clic la vuelve a activar. **Visualización > Textus AI**, **Ajustes > Textus AI > Activar Textus AI** y un atajo que puedes asignar en **Ajustes > Atajos de teclado** hacen lo mismo. La ventana de IA separada tiene el interruptor en su cabecera; en un iPhone está en la fila del título y en el menú.
+Haz clic derecho en el botón **Textus AI** del extremo derecho de la barra de la ventana para pausar Textus AI una hora o desactivarla. Mientras está desactivada, el bocadillo aparece tachado, y un clic en él ofrece volver a activarla; una pausa termina sola al cabo de la hora. **Visualización > Textus AI**, **Ajustes > Textus AI > Activar Textus AI** y un atajo que puedes asignar en **Ajustes > Atajos de teclado** también la activan o desactivan; en el iPhone está en el menú.
 
 Mientras está desactivada, no se envía nada a ningún servicio de IA desde que se abre Textus: ni completado, ni revisión gramatical, ni conversación, ni nada que recordar. El panel de IA, la pregunta rápida y las opciones de IA del menú contextual desaparecen, y una respuesta que se estaba escribiendo se detiene. Las ediciones ya propuestas en el documento se quedan para que las aceptes o rechaces. Cada función conserva su propio ajuste, y todas vuelven a aplicarse en cuanto Textus AI está activada de nuevo.
 

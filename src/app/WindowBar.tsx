@@ -1,10 +1,9 @@
 import { useSettings } from "../settings/SettingsContext";
-import { AssistantIcon } from "../ui/icons";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./app-menu-model";
 import { AppMenuButton } from "./WindowControls";
 import { Tooltip } from "../ui/Tooltip";
-import { TextusAiSwitch } from "../ai/TextusAiSwitch";
+import { TextusAiButton } from "../ai/TextusAiSwitch";
 
 /**
  * The window's one top strip: traffic-light room, which document this
@@ -71,22 +70,15 @@ export function WindowBar({
         <span className="word-count">
           {words > 0 && `${words} ${t.wordsUnit}`}
         </span>
-        {/* Textus AI's switch, lit while it is on (#196), then the robot
-          for its panel, which goes while there is no chat to open. */}
-        <TextusAiSwitch className="window-bar-ai-switch" />
-        {showAgentToggle && (
-          <Tooltip text={`${t.agentPanelTitle} (${agentShortcut})`}>
-            <button
-              type="button"
-              className={`window-bar-toggle${agentOpen ? " window-bar-toggle-on" : ""}`}
-              aria-pressed={agentOpen}
-              aria-label={t.agentPanelTitle}
-              onClick={onToggleAgent}
-            >
-              <AssistantIcon />
-            </button>
-          </Tooltip>
-        )}
+        {/* Textus AI's one button: the AI panel, struck through while
+          Textus AI is off; right-click pauses or turns it off (#196). */}
+        <TextusAiButton
+          className="window-bar-toggle"
+          panelOpen={agentOpen}
+          showPanel={showAgentToggle}
+          shortcut={agentShortcut}
+          onTogglePanel={onToggleAgent}
+        />
       </div>
       <WindowCaptionButtons />
     </header>

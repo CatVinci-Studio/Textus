@@ -10,7 +10,10 @@ const en = {
   agentPanelTitle: AI_NAME,
   textusAiToggleLabel: `Enable ${AI_NAME}`,
   textusAiOffHint: "Off: nothing is sent to any AI service.",
-  textusAiOnTooltip: `${AI_NAME} is on · Click to turn off`,
+  textusAiMenuHint: "Right-click to pause or turn off",
+  textusAiPause: "Pause for an hour",
+  textusAiTurnOff: `Turn off ${AI_NAME}`,
+  textusAiPausedTooltip: `${AI_NAME} is paused until {time} · Click to turn on`,
   textusAiOffTooltip: `${AI_NAME} is off · Click to turn on`,
   textusAiOff: `${AI_NAME} is off`,
   textusAiTurnOn: `Turn on ${AI_NAME}`,
@@ -913,8 +916,9 @@ type /name in a conversation to use one.
   tutorialWriteTitle: "AI writing",
   tutorialWriteBody: `In Write mode, ${AI_NAME} only adds text, shown in green until you accept it.`,
   tutorialWriteOpen:
-    "Open the AI panel: the robot icon at the top right ({shortcut})",
-  tutorialWriteOpenPhone: "Open the AI panel: tap the robot icon at the top",
+    "Open the AI panel: the speech bubble icon at the top right ({shortcut})",
+  tutorialWriteOpenPhone:
+    "Open the AI panel: tap the speech bubble icon at the top",
   tutorialWriteSend:
     "Send `Continue my notes with one more paragraph`, then click Accept",
   tutorialReviewTitle: "Review",

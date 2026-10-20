@@ -108,11 +108,8 @@
   pointer-events: none;
 }
 
-/* The AI panel's toggle and Textus AI's switch in the status group. A
-   class each: several e2e flows click `.window-bar-toggle` and mean the
-   AI panel's exactly. */
-.window-bar-toggle,
-.window-bar-ai-switch {
+/* The one control in the status group: opens the docked Agent panel. */
+.window-bar-toggle {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
@@ -129,22 +126,19 @@
 }
 
 .window-bar-toggle:hover,
-.window-bar-toggle-on,
-.window-bar-ai-switch:hover {
+.window-bar-toggle-on {
   opacity: 1;
   background: var(--sidebar-hover);
 }
 
 /* Hover arrives in 80ms; turning on or off changes in 120ms. */
-.window-bar-toggle,
-.window-bar-ai-switch {
+.window-bar-toggle {
   transition:
     background-color var(--dur-fast) var(--ease-standard),
     opacity var(--dur-fast) var(--ease-standard);
 }
 
-.window-bar-toggle:hover,
-.window-bar-ai-switch:hover {
+.window-bar-toggle:hover {
   transition-duration: var(--dur-instant);
 }
 

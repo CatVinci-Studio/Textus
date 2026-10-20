@@ -754,7 +754,7 @@ test.describe("on a phone", () => {
     await connect.getByRole("button", { name: "Skip for now" }).tap();
 
     const write = lesson(page, "AI writing");
-    await expect(write).toContainText("tap the robot icon at the top");
+    await expect(write).toContainText("tap the speech bubble icon at the top");
     for (const title of ["AI writing", "Review", "Revision"])
       await lesson(page, title).getByRole("button", { name: "Continue" }).tap();
     await expect(lesson(page, "Grammar check")).toContainText(
