@@ -1,6 +1,6 @@
 use crate::ai::cancel;
 use crate::ai::catalog;
-use crate::ai::route::{self, OpenaiAuth, NOT_CONFIGURED};
+use crate::ai::route;
 use crate::ai::rules::Conventions;
 use crate::ai::tools::{self, ToolContext};
 use crate::ai::ui_language::{UiLanguage, UiNames};
@@ -9,10 +9,7 @@ use crate::ai::workspace::{self, AgentWorkspace};
 use aicompat::agent::{
     run_agent_loop, AgentTurn, ImageAttachment, LoopEvent, ProviderEvent, StepResult, ToolOutput,
 };
-use aicompat::capabilities::{self, NativeSearch, ThinkingLevel};
-use aicompat::providers::{
-    anthropic, custom, openai_api_key, openai_codex, openai_responses_compatible,
-};
+use aicompat::capabilities::ThinkingLevel;
 use serde::{Deserialize, Serialize};
 use std::future::Future;
 use std::path::Path;
@@ -807,8 +804,8 @@ pub(crate) fn compact_history(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
 /// new turns produced (the user's own turn, any tool calls/results, and the
 /// final assistant reply) for the frontend to append to its history.
 ///
-/// Tool calling runs for every dialect with an `agent_step` implemented in
-/// `aicompat::providers`: openai-responses, anthropic-messages, and
+/// Tool calling runs for every dialect `aicompat::providers::AgentProvider`
+/// has a step for: openai-responses, anthropic-messages, and
 /// openai-chat-completions (the generic dialect most self-hosted/proxy
 /// servers speak - OpenRouter, Groq, Ollama, and friends, plus "custom").
 /// The chat-completions dialect additionally falls back to
@@ -817,10 +814,10 @@ pub(crate) fn compact_history(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
 /// at all falls straight to `flattened_chat_turn`, a single non-agentic
 /// completion (with the writing instructions still in the system prompt;
 /// skills reach them via the frontend's /name injection instead of
-/// use_skill). The orchestration loop (`run_agent_loop`) and the tool
-/// implementations (`crate::ai::tools`) don't know which dialect is in play -
-/// adding tool-calling support for another provider is just wiring up its
-/// own `step` closure in the matching dialect arm below.
+/// use_skill). The orchestration loop (`run_agent_loop`), the tool
+/// implementations (`crate::ai::tools`) and the one path below that
+/// prepares them don't know which dialect is in play - tool-calling support
+/// for another provider is an `Endpoint` and its arm in `AgentProvider`.
 /// `model` is the user's Settings choice, or None for the provider default.
 // Each parameter is a distinct invoke() payload key - bundling them into a
 // struct would only move the width into the frontend call site.
@@ -828,7 +825,7 @@ pub(crate) fn compact_history(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
 /// cancellation signal (the chat "stop" button - see `ai::cancel`).
 /// `request_id` is frontend-generated and only meaningful for the duration
 /// of this one call, so it's registered and torn down here rather than
-/// threaded into the dialect-specific logic below.
+/// threaded into the request logic below.
 #[allow(clippy::too_many_arguments)]
 #[tauri::command]
 pub async fn ai_agent_message(
@@ -983,8 +980,9 @@ async fn ai_agent_message_inner(
     // TODO(agent-async): see images::with_images.
     let image_run = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), mode);
 
-    let result = match entry.dialect {
-        "openai-responses" => {
+    let agent = route::agent_provider(&app, entry, model.clone(), thinking, web.native).await?;
+    let result = match agent {
+        Some(agent) => {
             let instructions = with_web_section(
                 build_instructions(&workspace, &document, true, mode, &focus, &ui_language),
                 web,
@@ -1010,345 +1008,25 @@ async fn ai_agent_message_inner(
                 proposed: Default::default(),
                 checks: Default::default(),
             };
-
-            match route::resolve_openai_auth(&app).await? {
-                OpenaiAuth::Codex {
-                    access_token,
-                    account_id,
-                } => {
-                    // Clamped, not just defaulted: a model saved while the
-                    // API-key auth method was active is a hard 400 here.
-                    let agent_model = openai_codex::usable_model(
-                        model.as_deref(),
-                        entry
-                            .agent_default_model
-                            .unwrap_or(openai_codex::COMPLETION_MODEL),
-                    )
-                    .to_string();
-                    let step = |turns: Vec<AgentTurn>| {
-                        let instructions = instructions.clone();
-                        let tool_specs = tool_specs.clone();
-                        let access_token = access_token.clone();
-                        let account_id = account_id.clone();
-                        let agent_model = agent_model.clone();
-                        let channel = on_event.clone();
-                        let plan = capabilities::plan(&provider, &agent_model, thinking);
-                        let provider = provider.clone();
-                        async move {
-                            let sink = move |e: ProviderEvent<'_>| forward(&channel, web, e);
-                            capabilities::with_fallback(&provider, &agent_model, &plan, |plan| {
-                                let (instructions, turns, tool_specs, sink) =
-                                    (&instructions, &turns, &tool_specs, &sink);
-                                let (access_token, account_id, agent_model) =
-                                    (&access_token, &account_id, &agent_model);
-                                async move {
-                                    openai_codex::agent_step(
-                                        access_token,
-                                        account_id,
-                                        crate::app_identity::ORIGINATOR,
-                                        instructions,
-                                        turns,
-                                        tool_specs,
-                                        web.native.is_some(),
-                                        &plan,
-                                        agent_model,
-                                        sink,
-                                    )
-                                    .await
-                                }
-                            })
-                            .await
-                        }
-                    };
-                    let step = crate::ai::images::with_images(
-                        with_postfix(step, &document, &conventions, web),
-                        image_run.as_ref(),
-                        &document,
-                        &on_event,
-                    );
-                    run_agent_loop(
-                        history,
-                        user_turn,
-                        MAX_STEPS,
-                        step,
-                        |name, arguments| run_tool(&tools, &tool_ctx, web, &focus, name, arguments),
-                        report(&on_event),
-                    )
-                    .await
-                }
-                OpenaiAuth::ApiKey(api_key) => {
-                    let agent_model = model.unwrap_or_else(|| {
-                        entry
-                            .agent_default_model
-                            .unwrap_or(openai_api_key::PUBLIC_API_MODEL)
-                            .to_string()
-                    });
-                    let step = |turns: Vec<AgentTurn>| {
-                        let instructions = instructions.clone();
-                        let tool_specs = tool_specs.clone();
-                        let api_key = api_key.clone();
-                        let agent_model = agent_model.clone();
-                        let channel = on_event.clone();
-                        let plan = capabilities::plan(&provider, &agent_model, thinking);
-                        let provider = provider.clone();
-                        async move {
-                            let sink = move |e: ProviderEvent<'_>| forward(&channel, web, e);
-                            capabilities::with_fallback(&provider, &agent_model, &plan, |plan| {
-                                let (instructions, turns, tool_specs, sink) =
-                                    (&instructions, &turns, &tool_specs, &sink);
-                                let (api_key, agent_model) = (&api_key, &agent_model);
-                                async move {
-                                    openai_api_key::agent_step(
-                                        api_key,
-                                        instructions,
-                                        turns,
-                                        tool_specs,
-                                        web.native.is_some(),
-                                        &plan,
-                                        agent_model,
-                                        sink,
-                                    )
-                                    .await
-                                }
-                            })
-                            .await
-                        }
-                    };
-                    let step = crate::ai::images::with_images(
-                        with_postfix(step, &document, &conventions, web),
-                        image_run.as_ref(),
-                        &document,
-                        &on_event,
-                    );
-                    run_agent_loop(
-                        history,
-                        user_turn,
-                        MAX_STEPS,
-                        step,
-                        |name, arguments| run_tool(&tools, &tool_ctx, web, &focus, name, arguments),
-                        report(&on_event),
-                    )
-                    .await
-                }
-            }
-        }
-        "anthropic-messages" => {
-            let instructions = with_web_section(
-                build_instructions(&workspace, &document, true, mode, &focus, &ui_language),
-                web,
-            );
-            let auth = route::resolve_anthropic_auth(&app).await?;
-            let mut tools = tools::builtin_tools(
-                workspace.has_usable_skills(),
-                workspace.root.is_some(),
-                mode,
-                workspace.remember,
-                entry.supports_vision,
-            );
-            tools.extend(image_run.as_ref().map(|_| crate::ai::images::tool()));
-            let tool_specs = [tools::tool_specs(&tools), web.tool_specs()].concat();
-            let tool_ctx = ToolContext {
-                document: &document,
-                skills: &workspace.skills,
-                ui_language: &ui_language,
-                root: workspace.root.as_deref().map(Path::new),
-                sees_images: entry.supports_vision,
-                conventions: &conventions,
-                library: &library,
-                memory: memory.as_ref(),
-                proposed: Default::default(),
-                checks: Default::default(),
-            };
-
-            let agent_model = model.unwrap_or_else(|| {
-                entry
-                    .agent_default_model
-                    .unwrap_or(anthropic::COMPLETION_MODEL)
-                    .to_string()
-            });
             let step = |turns: Vec<AgentTurn>| {
-                let instructions = instructions.clone();
-                let tool_specs = tool_specs.clone();
-                let auth = auth.clone();
-                let agent_model = agent_model.clone();
+                let (agent, instructions, tool_specs) = (&agent, &instructions, &tool_specs);
                 let channel = on_event.clone();
-                let plan = capabilities::plan(&provider, &agent_model, thinking);
-                let provider = provider.clone();
                 async move {
                     let sink = move |e: ProviderEvent<'_>| forward(&channel, web, e);
-                    capabilities::with_fallback(&provider, &agent_model, &plan, |plan| {
-                        let (instructions, turns, tool_specs, sink) =
-                            (&instructions, &turns, &tool_specs, &sink);
-                        let (auth, agent_model) = (&auth, &agent_model);
-                        async move {
-                            anthropic::agent_step(
-                                auth,
-                                instructions,
-                                turns,
-                                tool_specs,
-                                web.native.is_some(),
-                                &plan,
-                                agent_model,
-                                sink,
-                            )
-                            .await
-                        }
-                    })
-                    .await
+                    agent
+                        .step(instructions, &turns, tool_specs, &sink)
+                        .await
+                        .map(|(step, _)| step)
                 }
             };
-
             let step = crate::ai::images::with_images(
                 with_postfix(step, &document, &conventions, web),
                 image_run.as_ref(),
                 &document,
                 &on_event,
             );
-            run_agent_loop(
-                history,
-                user_turn,
-                MAX_STEPS,
-                step,
-                |name, arguments| run_tool(&tools, &tool_ctx, web, &focus, name, arguments),
-                report(&on_event),
-            )
-            .await
-        }
-        "openai-chat-completions" => {
-            let (base_url, api_key, default_model) =
-                route::resolve_chat_completions(&app, entry).await?;
-            let endpoint_model = model
-                .or_else(|| entry.agent_default_model.map(str::to_string))
-                .or(default_model)
-                .ok_or_else(|| NOT_CONFIGURED.to_string())?;
-            let mut tools = tools::builtin_tools(
-                workspace.has_usable_skills(),
-                workspace.root.is_some(),
-                mode,
-                workspace.remember,
-                entry.supports_vision,
-            );
-            tools.extend(image_run.as_ref().map(|_| crate::ai::images::tool()));
-            let tool_specs = [tools::tool_specs(&tools), web.tool_specs()].concat();
-            let tool_ctx = ToolContext {
-                document: &document,
-                skills: &workspace.skills,
-                ui_language: &ui_language,
-                root: workspace.root.as_deref().map(Path::new),
-                sees_images: entry.supports_vision,
-                conventions: &conventions,
-                library: &library,
-                memory: memory.as_ref(),
-                proposed: Default::default(),
-                checks: Default::default(),
-            };
-            let instructions_with_tools = with_web_section(
-                build_instructions(&workspace, &document, true, mode, &focus, &ui_language),
-                web,
-            );
-
-            // How the provider's own search is switched on (the capability
-            // table, as ai::web read it); without one, the model has
-            // Textus's web tools.
-            let search = web.native.unwrap_or(NativeSearch::None);
-            let native_web_search = match search {
-                NativeSearch::ChatCompletions(switch) => Some(switch),
-                _ => None,
-            };
-            let use_responses_web_search = search == NativeSearch::CompatibleResponses;
-            let vendor = route::chat_vendor(&base_url);
-
-            let step = |turns: Vec<AgentTurn>| {
-                let base_url = base_url.clone();
-                let api_key = api_key.clone();
-                let endpoint_model = endpoint_model.clone();
-                let instructions = instructions_with_tools.clone();
-                let tool_specs = tool_specs.clone();
-                let channel = on_event.clone();
-                let plan = capabilities::plan(&provider, &endpoint_model, thinking);
-                let provider = provider.clone();
-                async move {
-                    let sink = move |e: ProviderEvent<'_>| forward(&channel, web, e);
-                    capabilities::with_fallback(&provider, &endpoint_model, &plan, |plan| {
-                        let (base_url, api_key, endpoint_model) =
-                            (&base_url, api_key.as_deref(), &endpoint_model);
-                        let (instructions, turns, tool_specs, sink) =
-                            (&instructions, &turns, &tool_specs, &sink);
-                        async move {
-                            if use_responses_web_search {
-                                return openai_responses_compatible::agent_step(
-                                    base_url,
-                                    api_key,
-                                    endpoint_model,
-                                    instructions,
-                                    turns,
-                                    tool_specs,
-                                    true,
-                                    &plan,
-                                    sink,
-                                )
-                                .await;
-                            }
-                            // `stream` support varies across OpenAI-compatible
-                            // servers even more than `tools` does, so a failed
-                            // streamed step is retried once without streaming
-                            // (and without thinking parameters, which some
-                            // servers take only when streaming) before the
-                            // outer flattened fallback gets a say. A genuine
-                            // model/auth error just fails twice cheaply and
-                            // surfaces the second (identical) error.
-                            match custom::agent_step_streaming(
-                                base_url,
-                                api_key,
-                                endpoint_model,
-                                instructions,
-                                turns,
-                                tool_specs,
-                                native_web_search,
-                                vendor,
-                                &plan,
-                                sink,
-                            )
-                            .await
-                            {
-                                Ok(result) => Ok(result),
-                                Err(error) if capabilities::is_thinking_refusal(&error) => {
-                                    Err(error)
-                                }
-                                Err(_) => {
-                                    custom::agent_step(
-                                        base_url,
-                                        api_key,
-                                        endpoint_model,
-                                        instructions,
-                                        turns,
-                                        tool_specs,
-                                        native_web_search,
-                                        vendor,
-                                        &plan.without_parameters(),
-                                        sink,
-                                    )
-                                    .await
-                                }
-                            }
-                        }
-                    })
-                    .await
-                }
-            };
-
-            // Not every OpenAI-compatible server implements `tools`
-            // correctly (some 400 on it, some silently ignore it and never
-            // call one) - a hard failure on the first step falls back to a
-            // single tool-less completion instead of failing the request
-            // outright. `history`/`message` are cloned so the fallback still
-            // has them; `run_agent_loop` would otherwise have consumed them.
-            let step = crate::ai::images::with_images(
-                with_postfix(step, &document, &conventions, web),
-                image_run.as_ref(),
-                &document,
-                &on_event,
-            );
+            // `history` is cloned so the plain-chat fallback below still has
+            // it; `run_agent_loop` would otherwise have consumed it.
             match run_agent_loop(
                 history.clone(),
                 user_turn,
@@ -1359,8 +1037,10 @@ async fn ai_agent_message_inner(
             )
             .await
             {
-                Ok(turns) => Ok(turns),
-                Err(_) => {
+                // A server that doesn't implement `tools` properly
+                // (AgentProvider::falls_back_to_plain_chat) gets a single
+                // tool-less completion instead of failing the request.
+                Err(_) if agent.falls_back_to_plain_chat() => {
                     let instructions = build_instructions(
                         &workspace,
                         &document,
@@ -1381,13 +1061,14 @@ async fn ai_agent_message_inner(
                         &instructions,
                         history,
                         message,
-                        Some(&endpoint_model),
+                        Some(&agent.model),
                     )
                     .await
                 }
+                result => result,
             }
         }
-        _ => {
+        None => {
             let instructions =
                 build_instructions(&workspace, &document, false, mode, &focus, &ui_language);
             flattened_chat_turn(
