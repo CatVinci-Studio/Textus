@@ -202,7 +202,7 @@ Style: avoid the tics that make text read as machine-written unless the author's
 
 /// Only appended for providers that actually run the tool loop; telling a
 /// tool-less provider to call tools would just confuse it.
-const AGENT_TOOL_INSTRUCTIONS: &str = "Use search_document to locate something specific in a long document, and read_document to see a whole section before you revise it - never guess at text you haven't seen. Read first, propose after: never send a propose_edit in the same step as the read it depends on. If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (once per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. Pick the action that matches the intent: replace to swap existing text, replace_selection to swap the user's selected text (when their message carries a <selected-text> block and asks to rewrite/modify it - no anchor needed), insert_before/insert_after to add text next to existing text, insert_at_cursor to add text where the user's cursor is (when their message carries a <cursor> block marking it - for \"write a transition here\"), delete to remove text, append to add text at the end of the document. To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal must target its own passage - for several changes inside one passage, send a single replace covering it, since overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE, and both fields work in that same markdown. `anchor` must be copied verbatim out of it - including any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This` - and must occur exactly once. When the text you need to target appears MORE than once in the document, keep `anchor` as the exact text being edited and additionally pass `context`: a longer quote copied verbatim from the document that contains the anchor and itself occurs exactly once - the edit lands on the anchor inside that context. `text` replaces it and must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. Get the text right before you call propose_edit: a second proposal for the same passage in one reply overlaps the first and can't be applied. The user reviews and applies each proposal themselves, so your reply only says, in a sentence or two, what you proposed and why. Write that reply in the same message as your proposals (and comments), before their calls, and send every proposal for the request in that one message: when they are all valid the request ends there, with that text as your reply - so write it as done (\"Cut the repeated point about cost\"), not as a plan (\"I'll tighten it\"). If one is refused, its result says why: fix it, and reply again with the fix. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. Proposing new edits automatically replaces any still-undecided proposals in the editor, so never re-propose or try to retract an undecided one yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin each point to its passage with add_comment and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose. When the user asks for a picture and you have no generate_image tool, say that Textus AI can make one once an image model is chosen in Settings > Textus AI > Image model.";
+const AGENT_TOOL_INSTRUCTIONS: &str = "Use search_document to locate something specific in a long document, and read_document to see a whole section before you revise it - never guess at text you haven't seen. Read first, propose after: never send a propose_edit in the same step as the read it depends on. If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (once per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. Pick the action that matches the intent (propose_edit's description lists them). To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal must target its own passage - for several changes inside one passage, send a single replace covering it, since overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE, and both fields work in that same markdown: `anchor` quotes any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This`. `text` must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. The user reviews and applies each proposal themselves, so your reply only says, in a sentence or two, what you proposed and why. Write that reply in the same message as your proposals (and comments), before their calls, and send every proposal for the request in that one message: when they are all valid the request ends there, with that text as your reply - so write it as done (\"Cut the repeated point about cost\"), not as a plan (\"I'll tighten it\"). If one is refused, its result says why: fix it, and reply again with the fix. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. Proposing new edits automatically replaces any still-undecided proposals in the editor, so never re-propose or try to retract an undecided one yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin each point to its passage with add_comment and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose. When the user asks for a picture and you have no generate_image tool, say that Textus AI can make one once an image model is chosen in Settings > Textus AI > Image model.";
 
 /// The rules engine's two tools, in every mode (tools.rs).
 const RULES_TOOL_INSTRUCTIONS: &str = "check_conventions checks text against the document's writing conventions (punctuation, spacing, numbers, spelling lists, consistency with the rest of the document) with a deterministic rules engine: when you proofread or fix conventions, ground your changes in what it reports instead of guessing, change only what it flags or what you are certain of, and check a draft with its `text` argument before proposing it. Its \"check\" findings only point at something to look at. measure_text counts text exactly (characters, words, X and Bluesky limits, WeChat titles...): whenever a length limit matters, measure the exact text instead of estimating, and give the count in your reply. A length the user asks for (\"800 字\", \"about 500 words\") is a target, not a platform's limit: check_conventions, and measure_text without a platform's metric, answer only a few calls per request, so check or measure a draft once, fix what it shows, then propose it - never draft after draft.";
@@ -272,15 +272,35 @@ fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -> String {
                 english, native, ..
             } = ui.language;
             format!(
-                "\nThe same names in the {english} UI the user sees - use these when you reply in {english}, and never add a name from another language, in parentheses or otherwise (not \"style profile ({})\", not \"{} (library)\"); Settings paths keep their \" > \" and {AI_NAME}:\nEnglish | {native}\n{rows}",
+                "The app's names for things in the {english} UI the user sees, beside the English ones - use these when you reply in {english}, and never add a name from another language, in parentheses or otherwise (not \"style profile ({})\", not \"{} (library)\"); Settings paths keep their \" > \" and {AI_NAME}:\nEnglish | {native}\n{rows}",
                 ui.of_english("style profile"),
                 ui.of_english("library"),
             )
         }
         None => String::new(),
     };
+    // The app guide is loaded on demand where use_skill can load it: it was
+    // ~900 tokens of every request, for the few that ask about the app.
+    let guide = if workspace.has_usable_skills() {
+        format!("{APP_GUIDE_POINTER}\n")
+    } else {
+        format!("{}\n", app_guide())
+    };
+    format!("---project---\n{folder}\n{guide}{names}")
+}
+
+/// What `use_skill` loads as `app-guide`: what the app calls the things
+/// that shape the agent's work, where they are, and how to answer a how-to
+/// question (docs/design/ai-concepts.md).
+pub(crate) const APP_GUIDE: &str = "app-guide";
+
+/// What the system prompt says in place of the app guide.
+const APP_GUIDE_POINTER: &str = "Textus's own features - the project folder and its .textus/ folder, the writing instructions (agent.md), skills, the library, the style profile, writing conventions, completion, what you remember and the panel's modes - are described in the app guide. Before you answer a question about using Textus or tell the user where one of them is or what it does, load it with use_skill app-guide and answer from it.";
+
+/// The app guide (see APP_GUIDE).
+pub(crate) fn app_guide() -> String {
     format!(
-        "---project---\n{folder}\nWhat the app calls the things that shape your work, in its English UI: the project folder, whose .textus/ folder holds the project's own settings. The writing instructions: agent.md files in the global config folder and in .textus/, shown to you under ---user instructions--- headings and used only in conversations; the global ones open from Settings > {AI_NAME} > Writing Instructions (agent.md) > Edit agent.md, the project's from Edit project writing instructions in the project menu. Skills: reusable instructions the user calls with /name, or that you load when a request matches one, each one Markdown file - a name and a one-line description at the top, then the instructions. The app ships built-in skills, listed in Settings > {AI_NAME} > Built-in skills, where each has a switch to turn it off and Customize…, which copies it into the global config folder's skills/ and opens the copy to edit (Reset deletes the copy and brings the built-in back); the user's own skills go in .textus/skills/ or in the global config folder's skills/ (Settings > {AI_NAME} > Skills > Import Skill… copies a file there), and one with a built-in skill's name replaces it. The library: one file per person, place or term in .textus/library, an entry sent to you whenever its name or an alias appears in the user's message or the open document (aliases go on an `aliases:` line at the top of the entry); New library entry… in the project menu starts one. The style profile: .textus/style.md, sent to you as ---the author's style profile---; Learn my style from samples… in the project menu drafts it from the user's own writing (\"Learn my style\"), Create style profile starts an empty one, and once it exists Open style profile in the menu, or the Style chip next to the folder name, opens it. Writing conventions (Settings > {AI_NAME}, under Writing Assistance) picks the punctuation, spacing and number norms you, the grammar check and check_conventions follow - Automatic, or one profile such as en-GB/govuk for documents in that language; a `conventions:` line in the style profile's front matter overrides it for the project. The style profile and the library also shape completion, the grey suggestions as the user types; Enable AI completion in Settings > {AI_NAME}, under Writing Assistance, turns completion on or off, and Completion tone there sets its register. What you remember: what you keep with the remember tool, one small file each - the user's personal memories in the global config folder's memory/, the project's in .textus/memory/, facts about the work as library entries - shown with Undo under your reply and listed in the AI panel's Memory tab, where the user can edit, delete or move each one; Remember automatically in Settings > {AI_NAME} turns it on or off. The panel's modes are Write, which drafts new text into the document, Review, which only reads and comments, and Revise, which proposes changes to the text already there; the user applies a proposal with Accept or drops it with Reject.{names}\nAsked how to do something in the app, answer in two to four plain sentences: what to use, where it is and what it does - for a skill, first a built-in skill that already does it (named as their UI names it) and Customize… to adapt it, before writing one from scratch - no headings or code blocks, no tips they didn't ask for, and no remarks about their document or their files."
+        "What the app calls the things that shape your work, in its English UI: the project folder, whose .textus/ folder holds the project's own settings. The writing instructions: agent.md files in the global config folder and in .textus/, shown to you under ---user instructions--- headings and used only in conversations; the global ones open from Settings > {AI_NAME} > Writing Instructions (agent.md) > Edit agent.md, the project's from Edit project writing instructions in the project menu. Skills: reusable instructions the user calls with /name, or that you load when a request matches one, each one Markdown file - a name and a one-line description at the top, then the instructions. The app ships built-in skills, listed in Settings > {AI_NAME} > Built-in skills, where each has a switch to turn it off and Customize…, which copies it into the global config folder's skills/ and opens the copy to edit (Reset deletes the copy and brings the built-in back); the user's own skills go in .textus/skills/ or in the global config folder's skills/ (Settings > {AI_NAME} > Skills > Import Skill… copies a file there), and one with a built-in skill's name replaces it. The library: one file per person, place or term in .textus/library, an entry sent to you whenever its name or an alias appears in the user's message or the open document (aliases go on an `aliases:` line at the top of the entry); New library entry… in the project menu starts one. The style profile: .textus/style.md, sent to you as ---the author's style profile---; Learn my style from samples… in the project menu drafts it from the user's own writing (\"Learn my style\"), Create style profile starts an empty one, and once it exists Open style profile in the menu, or the Style chip next to the folder name, opens it. Writing conventions (Settings > {AI_NAME}, under Writing Assistance) picks the punctuation, spacing and number norms you, the grammar check and check_conventions follow - Automatic, or one profile such as en-GB/govuk for documents in that language; a `conventions:` line in the style profile's front matter overrides it for the project. The style profile and the library also shape completion, the grey suggestions as the user types; Enable AI completion in Settings > {AI_NAME}, under Writing Assistance, turns completion on or off, and Completion tone there sets its register. What you remember: what you keep with the remember tool, one small file each - the user's personal memories in the global config folder's memory/, the project's in .textus/memory/, facts about the work as library entries - shown with Undo under your reply and listed in the AI panel's Memory tab, where the user can edit, delete or move each one; Remember automatically in Settings > {AI_NAME} turns it on or off. The panel's modes are Write, which drafts new text into the document, Review, which only reads and comments, and Revise, which proposes changes to the text already there; the user applies a proposal with Accept or drops it with Reject.\nAsked how to do something in the app, answer in two to four plain sentences: what to use, where it is and what it does - for a skill, first a built-in skill that already does it (named as their UI names it) and Customize… to adapt it, before writing one from scratch - no headings or code blocks, no tips they didn't ask for, and no remarks about their document or their files."
     )
 }
 
@@ -532,6 +552,42 @@ pub(crate) fn request_preamble(
     sections.join("\n\n")
 }
 
+/// What the index says of a built-in skill: when to use it - its
+/// description's "Use when ..." part, without the request words in eight
+/// languages in parentheses, which the model doesn't need to route a
+/// request in any of them (agent-builtin's route cases) and which were half
+/// the index. What the skill does is in its instructions, loaded with it.
+fn index_line(description: &str) -> String {
+    let from = description.find("Use when").unwrap_or(0);
+    let mut line = String::with_capacity(description.len() - from);
+    let mut depth = 0usize;
+    let mut group = String::new();
+    for c in description[from..].chars() {
+        match c {
+            '(' => {
+                depth += 1;
+                group.push(c);
+            }
+            ')' if depth > 0 => {
+                depth -= 1;
+                group.push(c);
+                if depth == 0 {
+                    if group.is_ascii() {
+                        line.push_str(&group);
+                    } else if line.ends_with(' ') {
+                        line.pop();
+                    }
+                    group.clear();
+                }
+            }
+            _ if depth > 0 => group.push(c),
+            _ => line.push(c),
+        }
+    }
+    line.push_str(&group);
+    line.trim().to_string()
+}
+
 /// Longest description the skill index shows; a longer one (a user's
 /// skill) is cut with "…".
 const INDEX_DESCRIPTION_CHARS: usize = 500;
@@ -590,16 +646,20 @@ pub(crate) fn skill_index(workspace: &AgentWorkspace, ui_language: &str) -> Stri
                     _ => String::new(),
                 },
             };
-            let description = if s.description.chars().count() > INDEX_DESCRIPTION_CHARS {
+            let description = match s.source {
+                SkillSource::Builtin => index_line(&s.description),
+                _ => s.description.clone(),
+            };
+            let description = if description.chars().count() > INDEX_DESCRIPTION_CHARS {
                 format!(
                     "{}…",
-                    s.description
+                    description
                         .chars()
                         .take(INDEX_DESCRIPTION_CHARS - 1)
                         .collect::<String>()
                 )
             } else {
-                s.description.clone()
+                description
             };
             format!("- {}{mark}: {description}", s.name)
         })
@@ -1628,6 +1688,29 @@ mod tests {
     }
 
     #[test]
+    fn a_built_in_skill_is_indexed_by_when_to_use_it() {
+        assert_eq!(
+            index_line("Fixes typos. Use when asked to proofread (校对, relire) or check (by hand) errors."),
+            "Use when asked to proofread or check (by hand) errors."
+        );
+        assert_eq!(index_line("No trigger clause."), "No trigger clause.");
+    }
+
+    /// Without use_skill the guide stays in the prompt; with it, the prompt
+    /// points at it and use_skill loads it.
+    #[test]
+    fn the_app_guide_is_loaded_on_demand_where_skills_can_be() {
+        let plain = AgentWorkspace::default();
+        assert!(workspace_section(&plain, "en").contains("What the app calls the things"));
+        let with_skills = crate::ai::workspace::load_layers(None, None, None, &[]);
+        assert!(with_skills.has_usable_skills());
+        let section = workspace_section(&with_skills, "en");
+        assert!(!section.contains("What the app calls the things"));
+        assert!(section.contains("use_skill app-guide"));
+        assert!(app_guide().contains("Learn my style"));
+    }
+
+    #[test]
     fn the_skill_index_offers_model_skills_and_prefers_the_users() {
         use crate::ai::workspace::{AgentSkill, SkillSource};
         let mut ws = crate::ai::workspace::load_layers(None, None, None, &["describe".to_string()]);
@@ -1650,14 +1733,11 @@ mod tests {
         assert!(lines[0].starts_with("- house-headline (project): "));
         assert!(lines[1].starts_with("- my-tone (yours): ") && lines[1].ends_with('…'));
         assert!(lines[1].chars().count() < 540, "a long description is cut");
+        // A built-in says when to use it, without the request words in
+        // eight languages; the user's own keep their description.
         assert_eq!(
             lines[2],
-            format!(
-                "- continue-story: {}",
-                crate::ai::builtin::find("continue-story")
-                    .unwrap()
-                    .description
-            )
+            "- continue-story: Use when asked to continue the story, write the next part or chapter, or what happens next. Not for non-fiction drafts or for questions about inline completion."
         );
         // In another UI a built-in carries that UI's name for it.
         let zh = skill_index(&ws, "zh");

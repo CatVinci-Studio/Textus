@@ -961,7 +961,7 @@ fn route_cases() -> Vec<AgentCase> {
 
     // Requests that should load no skill.
     c.push(AgentCase::new("route/none/zh/question", Lang::ZhHans, Lang::ZhHans, WEEKLY_ZH, "这周订单量比上周多了多少？", no_edit().check("no skill", loads_none).reply(&["180"]), "A question about the document: answered in the reply (3,150 vs 2,970, 180 more), no skill, no edit.").disk(plain("route-none-question", WEEKLY_ZH)));
-    c.push(AgentCase::new("route/none/zh/completion-setting", Lang::ZhHans, Lang::ZhHans, NOVEL_ZH, "怎么开启续写？", no_edit().check("no skill", loads_none).reply(&["设置"]), "A question about the inline-completion setting (设置 > 开启续写), answered from the UI names - not a request to run continue-story.").disk(plain("route-none-completion", NOVEL_ZH)));
+    c.push(AgentCase::new("route/none/zh/completion-setting", Lang::ZhHans, Lang::ZhHans, NOVEL_ZH, "怎么开启续写？", no_edit().check("no skill but the app guide", loads_at_most(crate::ai::agent::APP_GUIDE)).reply(&["设置"]), "A question about the inline-completion setting (设置 > 开启续写), answered from the UI names or the app guide - not a request to run continue-story.").disk(plain("route-none-completion", NOVEL_ZH)));
     c.push(AgentCase::new("route/none/en/shorter", Lang::En, Lang::En, LANG_EN, "Make the second paragraph shorter.", edit_anywhere().check("no skill", loads_none), "tighten is /-only: the base agent shortens the paragraph itself with no use_skill round trip.").disk(plain("route-none-shorter", LANG_EN)));
     let (msg, caret) = with_selection(
         ACADEMIC_EN,
