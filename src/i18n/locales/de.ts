@@ -382,7 +382,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   levisImportFailed: "Einige Dateien ließen sich nicht kopieren:",
   levisImportRow: "Aus Levis übernehmen",
   levisImportButton: "Übernehmen…",
-  levisImportNone: "Auf diesem Computer gibt es keine Daten aus Levis.",
   levisItemSettings: "Einstellungen",
   levisItemChatHistory: "KI-Unterhaltungen",
   levisItemClipboardHistory: "Zwischenablage-Verlauf",

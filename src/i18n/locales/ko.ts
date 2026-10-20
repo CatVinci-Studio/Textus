@@ -360,7 +360,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   levisImportFailed: "복사하지 못한 파일이 있습니다:",
   levisImportRow: "Levis에서 가져오기",
   levisImportButton: "가져오기…",
-  levisImportNone: "이 컴퓨터에 Levis 데이터가 없습니다.",
   levisItemSettings: "설정",
   levisItemChatHistory: "AI 대화",
   levisItemClipboardHistory: "클립보드 기록",

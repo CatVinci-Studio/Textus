@@ -340,7 +340,6 @@ export default {
   levisImportFailed: "有些文件没能复制：",
   levisImportRow: "从 Levis 导入",
   levisImportButton: "导入…",
-  levisImportNone: "这台电脑上没有 Levis 的数据。",
   levisItemSettings: "设置",
   levisItemChatHistory: "AI 对话",
   levisItemClipboardHistory: "剪贴板历史",

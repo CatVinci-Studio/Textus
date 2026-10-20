@@ -400,7 +400,6 @@ utiliser une.
   levisImportFailed: "Certains fichiers n’ont pas pu être copiés :",
   levisImportRow: "Importer depuis Levis",
   levisImportButton: "Importer…",
-  levisImportNone: "Aucune donnée de Levis sur cet ordinateur.",
   levisItemSettings: "réglages",
   levisItemChatHistory: "conversations avec l’IA",
   levisItemClipboardHistory: "historique du presse-papiers",

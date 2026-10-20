@@ -856,13 +856,6 @@ button.settings-inline-button {
 
 /* Vertical variant of .settings-field: label + hint stacked over a full-
    width control (the completion custom prompt textarea). */
-.settings-field-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 0 14px;
-}
-
 /* Proxy setting: type select + host + port on one line. */
 .settings-proxy-row {
   display: flex;
@@ -1004,12 +997,6 @@ button.settings-skill-action:focus-visible {
 /* The skills list continues its header row - no hairline between them. */
 .settings-group-body > .settings-skill-list {
   border-top: none;
-}
-
-.settings-textarea {
-  resize: vertical;
-  font: inherit;
-  font-size: var(--text-md);
 }
 
 /* The agent-workspace explainer needs room to wrap - it's a paragraph, not

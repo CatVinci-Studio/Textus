@@ -526,7 +526,7 @@ const NATIVE_MODIFIERS: Record<string, string> = {
 
 /** "mod+shift+1" -> "CmdOrCtrl+Shift+1". muda reads key names in any case;
  *  one it can't read leaves the item without a key (menu.rs). */
-export function nativeAccelerator(combo: string): string {
+function nativeAccelerator(combo: string): string {
   return combo
     .split("+")
     .map((part) => NATIVE_MODIFIERS[part] ?? part)

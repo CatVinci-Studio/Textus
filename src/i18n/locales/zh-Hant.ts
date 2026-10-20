@@ -340,7 +340,6 @@ export default {
   levisImportFailed: "有些檔案沒能複製：",
   levisImportRow: "從 Levis 匯入",
   levisImportButton: "匯入…",
-  levisImportNone: "這台電腦上沒有 Levis 的資料。",
   levisItemSettings: "設定",
   levisItemChatHistory: "AI 對話",
   levisItemClipboardHistory: "剪貼簿歷史",

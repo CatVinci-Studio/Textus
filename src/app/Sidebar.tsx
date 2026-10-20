@@ -15,6 +15,7 @@ import type { PanelMode } from "./useSidePanels";
 import type { useSidebarWidth } from "./sidebar-width";
 import type { OpenFolder } from "./useOpenFolder";
 import { Tooltip } from "../ui/Tooltip";
+import { PHONE_QUERY } from "../ui/usePhoneLayout";
 
 /** The left sidebar (file tree, outline, clipboard history) and, on
  *  iPhone, the scrim behind its drawer. Its open state lives in
@@ -127,10 +128,7 @@ export function Sidebar({
                     onFileSelect={(path) => {
                       // On a phone the drawer covers the page it just
                       // opened (mobile/styles); a docked one stays.
-                      if (
-                        isIOSApp &&
-                        window.matchMedia("(max-width: 760px)").matches
-                      )
+                      if (isIOSApp && window.matchMedia(PHONE_QUERY).matches)
                         onClose();
                       onOpenFile(path);
                     }}
