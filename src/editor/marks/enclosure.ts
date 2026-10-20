@@ -280,10 +280,10 @@ export function hasPendingRunOpen(
 }
 
 /** Inline nodes kept as their source text (markdown/wikilink.ts,
- *  images/obsidian-embed.ts): no delimiters, but text typed right after
- *  one lands in it the same way - "[[Note]] and" typed by hand linked to
- *  "Note]] and". */
-const SOURCE_INLINE_NODES = new Set(["wikilink", "obsidian_embed"]);
+ *  images/obsidian-embed.ts, html/raw-html-schema.ts): no delimiters, but
+ *  text typed right after one lands in it the same way - "[[Note]] and"
+ *  typed by hand linked to "Note]] and", and "<b>x" went into the tag. */
+const SOURCE_INLINE_NODES = new Set(["wikilink", "obsidian_embed", "html"]);
 
 /**
  * WKWebView (the Tauri webview) normalizes a caret sitting just outside an
@@ -350,17 +350,26 @@ function buildDecorations(state: EditorState): DecorationSet {
   const decorations: Decoration[] = [];
 
   // Only enclosures the cursor touches are decorated - inside, or adjacent
-  // on either side - so only the selection, widened by one position each
+  // on either side - so only the selection, widened a position or two each
   // way for adjacency, needs walking. This runs on every keystroke and
   // every arrow press; it used to walk the whole document each time.
   const { selection, doc } = state;
-  const scanFrom = Math.max(0, selection.from - 1);
-  const scanTo = Math.min(doc.content.size, selection.to + 1);
-  doc.nodesBetween(scanFrom, scanTo, (node, pos) => {
+  // Two for a span nested whole, touched through its outer one.
+  const scanFrom = Math.max(0, selection.from - 2);
+  const scanTo = Math.min(doc.content.size, selection.to + 2);
+  doc.nodesBetween(scanFrom, scanTo, (node, pos, parent) => {
     if (!isEnclosure(node)) return;
     const from = pos;
     const to = pos + node.nodeSize;
-    if (!cursorTouches(state.selection, from, to)) return;
+    // A span that is all of another's (bold-italic, `***x***`, is italic
+    // around bold) shows its delimiters with the outer one's: one `***`
+    // pair, not `*` first and `**` a press later.
+    const whole = !!parent && isSoleEnclosureChild(parent);
+    if (
+      !cursorTouches(state.selection, from, to) &&
+      !(whole && cursorTouches(state.selection, from - 1, to + 1))
+    )
+      return;
 
     // Real widget elements, not CSS ::before/::after pseudo-content:
     // WKWebView draws the caret on the wrong visual side of generated
@@ -430,6 +439,34 @@ function buildDecorations(state: EditorState): DecorationSet {
 
 export interface ArrowMove {
   pos: number;
+}
+
+/** An enclosure holding nothing but one other enclosure. */
+function isSoleEnclosureChild(node: ProseNode): boolean {
+  return (
+    isEnclosure(node) &&
+    !node.isBlock &&
+    node.childCount === 1 &&
+    isEnclosure(node.firstChild!)
+  );
+}
+
+/**
+ * Where an arrow step lands, past the spot between the delimiters of two
+ * enclosures nested whole (bold-italic is italic around bold): that spot
+ * shows the same as the inner span's edge, so stopping there took a press
+ * that moved nothing.
+ */
+function pastNestedEdge(state: EditorState, move: ArrowMove, step: 1 | -1) {
+  let pos = move.pos;
+  for (;;) {
+    const $pos = state.doc.resolve(pos);
+    const parent = $pos.parent;
+    if (!isSoleEnclosureChild(parent)) return { pos };
+    const offset = $pos.parentOffset;
+    if (offset !== 0 && offset !== parent.content.size) return { pos };
+    pos += step;
+  }
 }
 
 /**
@@ -1000,7 +1037,7 @@ export const enclosurePlugin = $prose(() => {
           const move = computeArrowRight(state);
           if (!move) return false;
           event.preventDefault();
-          setCaret(view, move.pos);
+          setCaret(view, pastNestedEdge(state, move, 1).pos);
           return true;
         }
 
@@ -1008,7 +1045,7 @@ export const enclosurePlugin = $prose(() => {
           const move = computeArrowLeft(state);
           if (!move) return false;
           event.preventDefault();
-          setCaret(view, move.pos);
+          setCaret(view, pastNestedEdge(state, move, -1).pos);
           return true;
         }
 

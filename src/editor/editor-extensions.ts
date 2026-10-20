@@ -16,6 +16,8 @@ import {
   commonmarkWithoutMarks,
   gfmWithoutStrikethrough,
   headingInputRule,
+  orderedListInputRule,
+  ruleInputRule,
 } from "./markdown/reduced-presets";
 import {
   remarkFrontmatterPlugin,
@@ -83,7 +85,7 @@ import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
 import { tableColumnResizing, tableHoverView } from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
-import { tabExtendPlugin } from "./keys/tab-extend-plugin";
+import { tabExtendPlugin, tabStaysPlugin } from "./keys/tab-extend-plugin";
 import {
   escapeTrailingBlockPlugin,
   tableEdgeArrowPlugin,
@@ -93,6 +95,10 @@ import { pasteMarkdownSourcePlugin } from "./markdown/paste-markdown-plugin";
 import { imageInputRule, linkInputRule } from "./markdown/link-input-rule";
 import { remarkLinkSourcePlugin } from "./markdown/link-source";
 import { linkRevealPlugin, linkSourceSchema } from "./markdown/link-reveal";
+import {
+  footnoteInputRule,
+  htmlTagInputRule,
+} from "./markdown/source-input-rules";
 import { pasteUrlPlugin } from "./markdown/paste-url";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
@@ -197,6 +203,8 @@ export function withEditorCore(
       // stripped - those are node-based below.
       .use(commonmarkWithoutMarks)
       .use(headingInputRule)
+      .use(ruleInputRule)
+      .use(orderedListInputRule)
       .use(headingIdsOnParse)
       .use(headingIdPlugin)
       // Ahead of gfm's table keys (escape-trailing-block-plugin.ts).
@@ -355,6 +363,8 @@ export function withEditorCore(
       .use(linkInputRule)
       .use(linkRevealPlugin)
       .use(imageInputRule)
+      .use(htmlTagInputRule)
+      .use(footnoteInputRule)
       .use(pasteUrlPlugin)
       .use(pasteMarkdownSourcePlugin)
       .use(plainTextCopyPlugin)
@@ -368,6 +378,7 @@ export function withEditorCore(
       // other key handlers and the preset keymaps.
       .use(blockKeysPlugin)
       .use(tabExtendPlugin)
+      .use(tabStaysPlugin)
       .use(escapeTrailingBlockPlugin)
       .use(codeBlockIndentPlugin)
       .use(findReplacePlugin)

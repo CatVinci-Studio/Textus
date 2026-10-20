@@ -2,6 +2,8 @@ import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import type { EditorState } from "@milkdown/kit/prose/state";
+import { stateWithLiveSelection } from "../marks/enclosure";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   applyReveal,
@@ -74,6 +76,87 @@ function escapeHtml(text: string): string {
   return text.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
+/** A blockquote's alert marker: its type, the marker's length, and how
+ *  much of the first paragraph is hidden behind the badge - the marker,
+ *  the spaces after it and the line break ending its line. Null when the
+ *  quote isn't an alert. */
+function alertMarker(
+  quote: ProseNode,
+): { type: AlertType; length: number; hidden: number } | null {
+  // GitHub's syntax: the marker must be the blockquote's very first line,
+  // alone. In ProseMirror terms: the first child is a textblock whose
+  // first text node starts with the marker, with nothing but whitespace
+  // (or a line break) after it in that text node.
+  const para = quote.firstChild;
+  if (!para || !para.isTextblock) return null;
+  const firstText = para.firstChild;
+  if (!firstText || !firstText.isText || !firstText.text) return null;
+  const match = MARKER_RE.exec(firstText.text);
+  if (!match) return null;
+  const rest = firstText.text.slice(match[0].length);
+  if (!/^[ \t]*(\n|$)/.test(rest)) return null;
+  const hideLen = match[0].length + (/^[ \t]*\n?/.exec(rest)?.[0].length ?? 0);
+  // The marker line's soft break, when it is a node of its own (an
+  // inline hardbreak, drawn as a space): hidden with the marker, it
+  // started the body one space in from the lines under it.
+  const next = para.childCount > 1 ? para.child(1) : null;
+  const breakAfter =
+    hideLen === firstText.text.length && next?.type.name === "hardbreak"
+      ? next.nodeSize
+      : 0;
+  return {
+    type: match[1].toUpperCase() as AlertType,
+    length: match[0].length,
+    hidden: hideLen + breakAfter,
+  };
+}
+
+/**
+ * Backspace at the start of an alert's first line of text. Joined to the
+ * line before like any other, that line is the hidden marker: the badge
+ * went and "[!NOTE]body" showed in a plain quote. The first press leaves
+ * the alert as it is; a second one, right after, takes the marker out and
+ * leaves a plain quote. Returns the range to delete on that second press,
+ * or false when the caret isn't there.
+ */
+function markerBeforeCaret(
+  state: EditorState,
+): { from: number; to: number } | false {
+  const { $from, empty } = state.selection;
+  if (!empty) return false;
+  for (let d = $from.depth - 1; d > 0; d--) {
+    const quote = $from.node(d);
+    if (!isBlockquote(quote)) continue;
+    const marker = alertMarker(quote);
+    if (!marker) return false;
+    const quotePos = $from.before(d);
+    const first = quote.firstChild!;
+    const markerFrom = quotePos + 2;
+    // The body on the marker's own paragraph, after its line break - or
+    // anywhere in the hidden marker, where Home puts the caret when the
+    // body shares the marker's text (Chromium before it, WebKit before
+    // the line end).
+    const markerTo = markerFrom + marker.hidden;
+    if (
+      $from.depth === d + 1 &&
+      $from.index(d) === 0 &&
+      $from.pos >= markerFrom &&
+      $from.pos <= markerTo
+    )
+      return { from: markerFrom, to: markerTo };
+    // The body in a paragraph of its own under a marker alone on its line.
+    const secondStart = quotePos + 1 + first.nodeSize + 1;
+    if (
+      marker.hidden === first.content.size &&
+      $from.index(d) === 1 &&
+      $from.pos === secondStart
+    )
+      return { from: quotePos + 1, to: quotePos + 1 + first.nodeSize };
+    return false;
+  }
+  return false;
+}
+
 /** What one blockquote draws when it is an alert. */
 function decorateAlert(
   node: ProseNode,
@@ -86,15 +169,9 @@ function decorateAlert(
   // alone. In ProseMirror terms: the first child is a textblock whose
   // first text node starts with the marker, with nothing but whitespace
   // (or a line break) after it in that text node.
-  const para = node.firstChild;
-  if (!para || !para.isTextblock) return;
-  const firstText = para.firstChild;
-  if (!firstText || !firstText.isText || !firstText.text) return;
-  const match = MARKER_RE.exec(firstText.text);
-  if (!match) return;
-  const rest = firstText.text.slice(match[0].length);
-  if (!/^[ \t]*(\n|$)/.test(rest)) return;
-  const type = match[1].toUpperCase() as AlertType;
+  const marker = alertMarker(node);
+  if (!marker) return;
+  const { type, length, hidden } = marker;
   const info = ALERT_TYPES[type];
   const label = labelOf(type);
 
@@ -108,17 +185,8 @@ function decorateAlert(
   // [!TYPE] marker toggles between hidden (badge shown in its place) and
   // visible (cursor touching it).
   const markerFrom = pos + 2; // +1 into the blockquote, +1 into its first paragraph
-  const hideLen = match[0].length + (/^[ \t]*\n?/.exec(rest)?.[0].length ?? 0);
-  // The marker line's soft break, when it is a node of its own (an
-  // inline hardbreak, drawn as a space): hidden with the marker, it
-  // started the body one space in from the lines under it.
-  const next = para.childCount > 1 ? para.child(1) : null;
-  const breakAfter =
-    hideLen === firstText.text.length && next?.type.name === "hardbreak"
-      ? next.nodeSize
-      : 0;
-  const markerTo = markerFrom + hideLen + breakAfter;
-  if (touches(markerFrom, markerFrom + match[0].length)) return;
+  const markerTo = markerFrom + hidden;
+  if (touches(markerFrom, markerFrom + length)) return;
 
   decorations.push(
     Decoration.inline(markerFrom, markerTo, {
@@ -161,6 +229,11 @@ function alertReveal(labelOf: AlertLabel): Reveal {
  * marker is real text (round-trips through markdown untouched); clicking
  * the badge, or moving the cursor onto it, reveals it for editing.
  */
+/** The document a Backspace at an alert's first line was pressed on and
+ *  left alone (markerBeforeCaret): the next press on it removes the
+ *  marker. */
+const firstPress = new WeakMap<EditorView, ProseNode>();
+
 export function createGithubAlertPlugin(labelOf: AlertLabel) {
   const reveal = alertReveal(labelOf);
   return $prose(
@@ -175,6 +248,25 @@ export function createGithubAlertPlugin(labelOf: AlertLabel) {
         props: {
           decorations(state) {
             return githubAlertKey.getState(state)?.set;
+          },
+          handleKeyDown(view, event) {
+            if (event.key !== "Backspace" || view.composing) return false;
+            if (event.metaKey || event.ctrlKey || event.altKey) return false;
+            // The caret a click or Home has just put there.
+            const state = stateWithLiveSelection(view);
+            const marker = markerBeforeCaret(state);
+            if (!marker) {
+              firstPress.delete(view);
+              return false;
+            }
+            event.preventDefault();
+            if (firstPress.get(view) !== state.doc) {
+              firstPress.set(view, state.doc);
+              return true;
+            }
+            firstPress.delete(view);
+            view.dispatch(state.tr.delete(marker.from, marker.to));
+            return true;
           },
         },
       }),

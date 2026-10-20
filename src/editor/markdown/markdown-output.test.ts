@@ -451,6 +451,17 @@ describe("an edited block is saved so it reads back the same", () => {
     );
   });
 
+  it("moves the space out of bold-italic, past both its marks", async () => {
+    // Italic around bold: the space was written inside the italic,
+    // `***`e`** *`, which reads back as `*e *`.
+    expect(await savedAfter("***`e` f***\n", deleting("f"))).toBe(
+      "***`e`*** \n",
+    );
+    expect(await savedAfter("a ***e f*** b\n", deleting("f"))).toBe(
+      "a ***e***  b\n",
+    );
+  });
+
   it("joins spans and code side by side, and parts formulas", async () => {
     expect(await savedAfter("foo**bar**\n", boldening("foo"))).toBe(
       "**foobar**\n",
@@ -609,13 +620,44 @@ describe("an edited block is saved so it reads back the same", () => {
     expect(await savedAfter("aaa\\\nbbb\n", deleting("bbb"))).toBe("aaa\n");
   });
 
-  it("writes a <br> at the end of a line as one break", async () => {
+  it("writes a pasted <br> at the end of a line as one break", async () => {
     const saved = await savedAfter("a\nb\n", (view) => {
+      const { schema } = view.state;
+      const br = schema.nodes.html.create(null, schema.text("<br>"));
+      view.dispatch(
+        view.state.tr
+          .insert(find(view.state.doc, "a") + 1, br)
+          .setMeta("uiEvent", "paste"),
+      );
+    });
+    expect(saved).toBe("a\\\nb\n");
+  });
+
+  it("keeps a <br> typed by hand as written", async () => {
+    const saved = await savedAfter("ab\n", (view) => {
       const { schema } = view.state;
       const br = schema.nodes.html.create(null, schema.text("<br>"));
       view.dispatch(view.state.tr.insert(find(view.state.doc, "a") + 1, br));
     });
-    expect(saved).toBe("a\\\nb\n");
+    expect(saved).toBe("a<br>b\n");
+  });
+
+  it("writes hard breaks the way the document does", async () => {
+    expect(await savedAfter("one  \ntwo\n\nx\n", typingAfter("two", "!"))).toBe(
+      "one  \ntwo!\n\nx\n",
+    );
+    expect(await savedAfter("one\\\ntwo\n", typingAfter("two", "!"))).toBe(
+      "one\\\ntwo!\n",
+    );
+  });
+
+  it("pads table columns by their width on screen, CJK counted double", async () => {
+    expect(
+      await savedAfter(
+        "| 名称 | b |\n| - | - |\n| x | y |\n",
+        typingAfter("y", "!"),
+      ),
+    ).toBe("| 名称 | b  |\n| ---- | -- |\n| x    | y! |\n");
   });
 
   it("starts an item whose first line was emptied with its next block", async () => {

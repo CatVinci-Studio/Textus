@@ -3,6 +3,7 @@ import {
   Selection,
   TextSelection,
   type Command,
+  type EditorState,
   type Transaction,
 } from "@milkdown/kit/prose/state";
 import type { Node } from "@milkdown/kit/prose/model";
@@ -269,12 +270,15 @@ export const shiftEnterWithoutBreak: Command = (state, dispatch) => {
 /** Enter in inline code (or a wikilink or embed, kept as source text):
  *  a new line, as in bold, where the span splits in two - not a newline
  *  inside the span, which ProseMirror gives anything marked as code and
- *  which reads back as a space. Inline math has its own Enter. */
+ *  which reads back as a space. */
 export const splitInlineCode: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
   const parent = $from.parent;
   if (!empty || !parent.isInline || !parent.type.spec.code) return false;
-  if (parent.type.name === "math_inline") return false;
+  // Inline math and a link's source have their own Enter (math-autopair-
+  // plugin.ts, link-reveal.ts).
+  if (parent.type.name === "math_inline" || parent.type.name === "link_source")
+    return false;
   return splitBlock(state, dispatch);
 };
 
@@ -294,7 +298,44 @@ export const lineBreakInTableCell: Command = (state, dispatch) => {
   return true;
 };
 
+/** Enter on "---" typed as the document's first line: a front matter
+ *  block, the caret in it, as in Typora. The line stays text until then
+ *  (ruleInputRule in reduced-presets.ts). */
+export const frontMatterFromFirstLine: Command = (state, dispatch) => {
+  const { $from, empty } = state.selection;
+  const frontmatter = state.schema.nodes.frontmatter;
+  if (!empty || !frontmatter || $from.depth !== 1 || $from.index(0) !== 0)
+    return false;
+  const line = $from.parent;
+  if (line.type.name !== "paragraph" || line.textContent !== "---")
+    return false;
+  if (line.childCount !== 1 || $from.parentOffset !== line.content.size)
+    return false;
+  if (dispatch) {
+    const tr = state.tr.replaceWith(0, line.nodeSize, frontmatter.create());
+    dispatch(tr.setSelection(TextSelection.create(tr.doc, 1)).scrollIntoView());
+  }
+  return true;
+};
+
+/**
+ * The spaces right after the caret, taken out before Enter splits the line
+ * there: the new line would start with them, and a line's leading space is
+ * nothing in Markdown - saved as `&#x20;here`, an entity the file never
+ * had. Null when there are none, or in code, where spaces are text.
+ */
+export function spacesAfterCaret(state: EditorState): Transaction | null {
+  const { $from, empty } = state.selection;
+  if (!empty || !$from.parent.isTextblock || $from.parent.type.spec.code)
+    return null;
+  const after = $from.nodeAfter;
+  const spaces = after?.isText ? /^[ \t]+/.exec(after.text!)?.[0] : undefined;
+  if (!spaces) return null;
+  return state.tr.delete($from.pos, $from.pos + spaces.length);
+}
+
 const onEnter: Command[] = [
+  frontMatterFromFirstLine,
   splitInlineCode,
   enterInTable,
   pipeRowToTable,
@@ -350,7 +391,14 @@ export const blockKeysPlugin = $prose(() => {
             ? onModEnter
             : onEnter;
         const state = stateWithLiveSelection(view);
-        return commands.some((command) => command(state, view.dispatch, view));
+        if (commands.some((command) => command(state, view.dispatch, view)))
+          return true;
+        if (commands === onEnter) {
+          const trimmed = spacesAfterCaret(state);
+          // Enter itself is still the keymaps' (lists, quotes, headings).
+          if (trimmed) view.dispatch(trimmed);
+        }
+        return false;
       },
     },
   });

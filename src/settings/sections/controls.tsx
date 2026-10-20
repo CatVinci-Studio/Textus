@@ -262,15 +262,27 @@ export function ShortcutRow({
   shortcuts,
   setSettings,
   t,
+  fixed = [],
 }: {
   label: string;
   action: ShortcutAction;
   shortcuts: Shortcuts;
   setSettings: (patch: { shortcuts: Shortcuts }) => void;
   t: Strings;
+  /** The shortcuts that can't be changed (app/fixed-shortcuts.ts): a key
+   *  one of them owns can't be bound here, as it would never fire - Ctrl+0
+   *  for Paragraph is Actual Size. */
+  fixed?: FixedShortcutGroup[];
 }) {
   const [recording, setRecording] = useState(false);
   const combo = shortcuts[action];
+  /** The fixed shortcut that has `next` already, by its label. */
+  const fixedOwner = (next: string) =>
+    fixed
+      .flatMap((group) => group.items)
+      .find((item) => item.combos.includes(next))?.label;
+  // A key bound before it was checked (or before it became fixed).
+  const taken = combo ? fixedOwner(combo) : undefined;
   /** The combo a new installation has here, which Reset puts back. */
   const fallback = defaultShortcuts()[action];
   const [error, setError] = useState("");
@@ -307,6 +319,12 @@ export function ShortcutRow({
       }
       const captured = comboFromEvent(e);
       if (!captured || !isBindableCombo(captured)) return;
+      // Named where a fixed shortcut owns the key, as for another action.
+      const owner = fixedOwner(captured);
+      if (owner) {
+        setError(t.shortcutConflict.replace("{action}", owner));
+        return;
+      }
       if (isReservedCombo(captured)) {
         setError(t.shortcutReserved);
         return;
@@ -327,6 +345,7 @@ export function ShortcutRow({
       setError(t.shortcutConflict.replace("{action}", actionLabels[conflict]));
       return false;
     }
+
     setError("");
     setSettings({ shortcuts: { ...shortcuts, [action]: next } });
     return true;
@@ -379,9 +398,9 @@ export function ShortcutRow({
           )}
         </div>
       </div>
-      {error && (
+      {(error || taken) && (
         <div className="settings-error" role="alert">
-          {error}
+          {error || t.shortcutConflict.replace("{action}", taken!)}
         </div>
       )}
     </div>

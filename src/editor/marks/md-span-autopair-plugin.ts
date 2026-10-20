@@ -215,13 +215,35 @@ function upgradeRung(
 }
 
 /**
+ * A third "~" or "=" typed into the empty shell the first two opened: no
+ * strikethrough or highlight takes three, so the three stay as typed -
+ * "===" was a highlight of "=", and "~~~", a code fence, a strikethrough
+ * of "~". Null for the other delimiters.
+ */
+function threeLiteral(
+  state: EditorState,
+  nodeStart: number,
+  shell: ProseNode,
+  spec: SpanSpec,
+): Transaction | null {
+  if (spec.nodeType !== "md_span" || spec.minRung !== 2) return null;
+  const tr = state.tr.replaceWith(
+    nodeStart,
+    nodeStart + shell.nodeSize,
+    state.schema.text(spec.char.repeat(3)),
+  );
+  return caretAt(tr, nodeStart + 3);
+}
+
+/**
  * Whether a paragraph is a "```" (or "```lang") code-fence line, returning
  * the language ("" for none) or null if it isn't one. Typing three backticks
  * doesn't leave literal "```" text - the autopair turns the first two into a
  * code span holding one literal backtick and the third closes it - so the
  * fence shape to recognize at Enter time is that node, optionally followed
  * by a language word. A literal "```lang" run (left by a paste or by
- * deleting a delimiter) counts too.
+ * deleting a delimiter) counts too, and "~~~lang", which stays literal
+ * (threeLiteral).
  */
 function codeFenceLanguage(paragraph: ProseNode): string | null {
   if (paragraph.childCount === 0 || paragraph.childCount > 2) return null;
@@ -236,7 +258,7 @@ function codeFenceLanguage(paragraph: ProseNode): string | null {
       rest = "";
     }
   } else if (paragraph.childCount === 1 && first.isText) {
-    const match = /^```(.*)$/.exec(first.text ?? "");
+    const match = /^(?:```|~~~)(.*)$/.exec(first.text ?? "");
     if (!match) return null;
     rest = match[1];
   } else {
@@ -439,8 +461,13 @@ export const createMdSpanAutopairPlugin = (options: {
                 const tr =
                   spec.nodeType === "md_span" &&
                   upgradeRung(state, nodeStart, parent, spec);
-                if (!tr) return false; // already at max rung (or a code span) - literal char as content
-                view.dispatch(tr);
+                if (tr) {
+                  view.dispatch(tr);
+                  return true;
+                }
+                const run = threeLiteral(state, nodeStart, parent, spec);
+                if (!run) return false; // a code span, or "****" - literal char as content
+                view.dispatch(run);
                 return true;
               }
 
@@ -476,8 +503,13 @@ export const createMdSpanAutopairPlugin = (options: {
               const nodeStart = from - before.nodeSize;
               if (spec.nodeType === "md_span") {
                 const tr = upgradeRung(state, nodeStart, before, spec);
-                if (!tr) return false;
-                view.dispatch(caretAt(tr, nodeStart + 1));
+                if (tr) {
+                  view.dispatch(caretAt(tr, nodeStart + 1));
+                  return true;
+                }
+                const run = threeLiteral(state, nodeStart, before, spec);
+                if (!run) return false;
+                view.dispatch(run);
                 return true;
               }
               // Code span: the second "`" becomes the shell's literal content

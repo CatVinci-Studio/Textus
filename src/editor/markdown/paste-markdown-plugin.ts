@@ -4,6 +4,7 @@ import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { parseMarkdownSource } from "./parse-markdown-source";
 import { joinLinesForTableCell } from "./paste-slice";
+import { wordListsToHtml } from "./word-lists";
 
 /**
  * Milkdown's clipboard plugin only parses pasted text as markdown when the
@@ -101,6 +102,28 @@ export function keepPastedSpans(slice: Slice, selection: Selection): Slice {
     : new Slice(slice.content, openStart, openEnd);
 }
 
+/**
+ * Whether the parsed paste is one line of a block other than a paragraph -
+ * `# T`, `- x`, `> q` - landing in a line that has text: its text joins
+ * that line and the block is gone, so "# T" pasted mid-sentence came in
+ * as "T". It is pasted as the text it is instead.
+ */
+function mergesAway(doc: ProseNode, $pos: ResolvedPos): boolean {
+  if (doc.childCount !== 1 || !$pos.parent.isTextblock) return false;
+  if ($pos.parent.content.size === 0) return false;
+  const block = doc.firstChild!;
+  if (block.type.name === "paragraph" || block.type.spec.code) return false;
+  let lines = 0;
+  let table = false;
+  block.descendants((node) => {
+    if (node.type.spec.tableRole) table = true;
+    if (node.isTextblock) lines++;
+    return !node.isTextblock;
+  });
+  if (block.isTextblock) lines = 1;
+  return !table && lines === 1;
+}
+
 export const pasteMarkdownSourcePlugin = $prose(
   (ctx) =>
     new Plugin({
@@ -112,18 +135,28 @@ export const pasteMarkdownSourcePlugin = $prose(
             keepPastedSpans(slice, view.state.selection),
             view.state.selection.$from,
           ),
+        transformPastedHTML: (html) => wordListsToHtml(html),
         handlePaste(view, event) {
           const data = event.clipboardData;
           if (!data) return false;
           if (view.state.selection.$from.node().type.spec.code) return false; // inside code: paste stays literal
           if (data.getData("vscode-editor-data")) return false; // clipboard plugin turns these into a code block
-          const html = data.getData("text/html");
+          const html = wordListsToHtml(data.getData("text/html"));
           const text = data.getData("text/plain");
           if (!text || (html && !htmlIsStyledPlainText(html))) return false;
 
           const doc = parseMarkdownSource(ctx, text);
           if (!doc || typeof doc === "string" || doc.content.size === 0)
             return false;
+          if (mergesAway(doc, view.state.selection.$from)) {
+            view.dispatch(
+              view.state.tr
+                .insertText(text.replace(/[\r\n]+$/, ""))
+                .setMeta("uiEvent", "paste")
+                .scrollIntoView(),
+            );
+            return true;
+          }
           const parsed = Slice.maxOpen(doc.content);
           const slice = joinLinesForTableCell(
             keepPastedSpans(parsed, view.state.selection),
@@ -133,7 +166,13 @@ export const pasteMarkdownSourcePlugin = $prose(
           // too, but into a slice open through the spans at its ends (and
           // lines it would spread over a table's cells).
           if (!html && slice === parsed) return false;
-          view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
+          view.dispatch(
+            view.state.tr
+              .replaceSelection(slice)
+              // As ProseMirror marks its own pastes (br-hardbreak-plugin.ts).
+              .setMeta("uiEvent", "paste")
+              .scrollIntoView(),
+          );
           return true;
         },
       },

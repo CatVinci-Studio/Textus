@@ -1,8 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import {
-  wrapInBulletListCommand,
-  wrapInOrderedListCommand,
   wrapInBlockquoteCommand,
   createCodeBlockCommand,
 } from "@milkdown/kit/preset/commonmark";
@@ -11,6 +9,7 @@ import type { EditorRunner } from "../editor/useEditorRunner";
 import {
   deleteImage,
   insertHeading,
+  insertList,
   runCommand,
   runTableAction,
   selectedImagePos,
@@ -161,10 +160,10 @@ export function useEditorWindowEvents({
     }
     switch (kind) {
       case "bullet-list":
-        runCommand(run, wrapInBulletListCommand.key);
+        insertList(run, "bullet_list");
         break;
       case "ordered-list":
-        runCommand(run, wrapInOrderedListCommand.key);
+        insertList(run, "ordered_list");
         break;
       case "blockquote":
         runCommand(run, wrapInBlockquoteCommand.key);

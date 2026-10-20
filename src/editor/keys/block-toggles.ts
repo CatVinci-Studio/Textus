@@ -76,3 +76,30 @@ export function toggleBlockquote(view: EditorView): boolean {
   }
   return wrapIn(quote)(view.state, view.dispatch);
 }
+
+/** The Format menu's list items in a list of the other kind: the list
+ *  becomes that kind, every item and its nesting kept. Milkdown's wrap
+ *  command did nothing there. False outside a list, or in one of that
+ *  kind already, for the caller to wrap the block as before. */
+export function convertList(
+  view: EditorView,
+  kind: "bullet_list" | "ordered_list",
+): boolean {
+  const { state } = view;
+  const target = state.schema.nodes[kind];
+  const item = state.schema.nodes.list_item;
+  if (!target || !item) return false;
+  const { $from } = state.selection;
+  for (let d = $from.depth; d > 1; d--) {
+    if ($from.node(d).type !== item) continue;
+    const list = $from.node(d - 1);
+    if (list.type === target) return false;
+    view.dispatch(
+      state.tr.setNodeMarkup($from.before(d - 1), target, {
+        spread: list.attrs.spread,
+      }),
+    );
+    return true;
+  }
+  return false;
+}

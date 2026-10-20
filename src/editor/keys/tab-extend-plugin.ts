@@ -116,3 +116,30 @@ export const tabExtendPlugin = $prose(
       },
     }),
 );
+
+/**
+ * Tab and Shift+Tab never take the focus out of the text: where nothing
+ * else uses them - a paragraph, a list's first item, which can't go in -
+ * they do nothing, as in Typora, instead of moving the focus to the next
+ * button. F6 is the way out of the editor (app/regions.ts). A listener of
+ * its own, added after ProseMirror's, so every key handler - lists,
+ * tables, accepting a completion - has had its turn and marked the event
+ * when it used it.
+ */
+export const tabStaysPlugin = $prose(
+  () =>
+    new Plugin({
+      view(view) {
+        const keepFocus = (event: KeyboardEvent) => {
+          if (event.key !== "Tab" || event.defaultPrevented) return;
+          if (event.ctrlKey || event.metaKey || event.altKey) return;
+          if (event.isComposing) return;
+          event.preventDefault();
+        };
+        view.dom.addEventListener("keydown", keepFocus);
+        return {
+          destroy: () => view.dom.removeEventListener("keydown", keepFocus),
+        };
+      },
+    }),
+);

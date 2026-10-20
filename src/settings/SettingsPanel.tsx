@@ -761,6 +761,7 @@ export function SettingsPanel({
                   shortcuts={settings.shortcuts}
                   setSettings={setSettings}
                   t={t}
+                  fixed={fixedShortcuts}
                 />
               ))}
             </SettingsGroup>
@@ -774,6 +775,7 @@ export function SettingsPanel({
                 shortcuts={settings.shortcuts}
                 setSettings={setSettings}
                 t={t}
+                fixed={fixedShortcuts}
               />
             ))}
           </SettingsGroup>

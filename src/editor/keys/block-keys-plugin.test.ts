@@ -12,7 +12,9 @@ import {
   leaveTextBlockOnEmptyLastLine,
   parsePipeRow,
   pipeRowToTable,
+  frontMatterFromFirstLine,
   shiftEnterWithoutBreak,
+  spacesAfterCaret,
   splitInlineCode,
 } from "./block-keys-plugin";
 
@@ -34,6 +36,7 @@ const schema = new Schema({
     },
     blockquote: { group: "block", content: "block+" },
     code_block: { group: "block", content: "text*", code: true },
+    frontmatter: { group: "block", content: "text*", code: true },
     text: { group: "inline" },
     md_code_span: {
       group: "inline",
@@ -315,5 +318,50 @@ describe("splitInlineCode", () => {
   it("does nothing outside an inline code node", () => {
     expect(run(splitInlineCode, stateAt(docOf(p("x")), "x"))).toBeNull();
     expect(run(splitInlineCode, stateAt(docOf(code("x")), "x"))).toBeNull();
+  });
+});
+
+describe("frontMatterFromFirstLine", () => {
+  it("makes --- on the first line front matter, the caret in it", () => {
+    const next = run(
+      frontMatterFromFirstLine,
+      stateAt(docOf(p("---")), "---"),
+    )!;
+    expect(next.doc.firstChild!.type.name).toBe("frontmatter");
+    expect(next.selection.$from.parent).toBe(next.doc.firstChild);
+  });
+
+  it("leaves --- anywhere else to Enter", () => {
+    expect(
+      run(frontMatterFromFirstLine, stateAt(docOf(p("x"), p("---")), "---")),
+    ).toBeNull();
+    expect(
+      run(frontMatterFromFirstLine, stateAt(docOf(p("--- x")), "--- x")),
+    ).toBeNull();
+  });
+});
+
+describe("spacesAfterCaret", () => {
+  /** The paragraph "one two" with the caret after "one". */
+  const beforeSpace = () => {
+    const state = stateAt(docOf(p("one two")), "one two");
+    return state.apply(
+      state.tr.setSelection(TextSelection.create(state.doc, 4)),
+    );
+  };
+
+  it("takes out the spaces the new line would start with", () => {
+    const state = beforeSpace();
+    expect(state.apply(spacesAfterCaret(state)!).doc.textContent).toBe(
+      "onetwo",
+    );
+  });
+
+  it("keeps a code block's spaces", () => {
+    const state = stateAt(docOf(code("a  b")), "a  b");
+    const at = state.apply(
+      state.tr.setSelection(TextSelection.create(state.doc, 2)),
+    );
+    expect(spacesAfterCaret(at)).toBeNull();
   });
 });

@@ -357,3 +357,30 @@ test("lines pasted into a table cell stay in that cell", async ({ page }) => {
   await pasteHere(page, "one\n\ntwo");
   await expect(page.locator(`${editor} td`)).toHaveText(["cone two", "d"]);
 });
+
+test("Word's list paragraphs paste as a list, nested by level", async ({
+  page,
+}) => {
+  const item = (level: number, list: string, bullet: string, text: string) =>
+    `<p class=MsoListParagraph style='mso-list:${list} level${level} lfo1'><![if !supportLists]><span style='mso-list:Ignore'>${bullet}<span>&nbsp;&nbsp; </span></span><![endif]>${text}<o:p></o:p></p>`;
+  await paste(page, {
+    "text/html":
+      "<html xmlns:o='urn:schemas-microsoft-com:office:office'><body>" +
+      item(1, "l0", "·", "one") +
+      item(2, "l0", "o", "nested") +
+      item(1, "l0", "·", "two") +
+      item(1, "l1", "1.", "first") +
+      "</body></html>",
+    "text/plain": "·   one\no   nested\n·   two\n1.  first",
+  });
+  expect(await sourceOf(page)).toBe("* one\n  * nested\n* two\n\n1. first");
+});
+
+test("a heading pasted into the middle of a line keeps its #", async ({
+  page,
+}) => {
+  await pasteMarkdown(page, "Before after.");
+  await caretAt(page, 7);
+  await pasteHere(page, "# Title ");
+  expect(await sourceOf(page)).toBe("Before # Title after.");
+});

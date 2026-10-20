@@ -294,36 +294,56 @@ function withoutEdgeSpaces(content: Fragment): {
   content.forEach((node) => {
     if (!isEmptySpan(node)) nodes.push(node);
   });
-  /** The white space at one end, taken off `nodes`. */
-  const take = (atStart: boolean) => {
-    let taken = "";
-    while (nodes.length) {
-      const index = atStart ? 0 : nodes.length - 1;
-      const node = nodes[index];
-      // A line end inside a paragraph (Milkdown's inline hardbreak).
-      if (node.type.name === "hardbreak" && node.attrs.isInline) {
-        nodes.splice(index, 1);
-        taken = atStart ? taken + "\n" : "\n" + taken;
-        continue;
-      }
-      if (!node.isText) break;
-      const text = node.text!;
-      const spaces = (atStart ? /^[ \t]*/ : /[ \t]*$/).exec(text)![0];
-      const rest = atStart
-        ? text.slice(spaces.length)
-        : text.slice(0, text.length - spaces.length);
-      taken = atStart ? taken + spaces : spaces + taken;
-      if (rest) {
-        nodes[index] = node.type.schema.text(rest, node.marks);
+  const before = takeEdgeSpaces(nodes, true);
+  const after = takeEdgeSpaces(nodes, false);
+  return { inner: Fragment.from(nodes), before, after };
+}
+
+/** The white space at one end of `nodes`, taken off them. A span there
+ *  gives up its own: bold-italic is italic around bold, and the space
+ *  left at the end of the bold when its last word went was written inside
+ *  the italic, `***e** *`, which reads back as `*e *`. */
+function takeEdgeSpaces(nodes: ProseNode[], atStart: boolean): string {
+  let taken = "";
+  const add = (spaces: string) => {
+    taken = atStart ? taken + spaces : spaces + taken;
+  };
+  while (nodes.length) {
+    const index = atStart ? 0 : nodes.length - 1;
+    const node = nodes[index];
+    // A line end inside a paragraph (Milkdown's inline hardbreak).
+    if (node.type.name === "hardbreak" && node.attrs.isInline) {
+      nodes.splice(index, 1);
+      add("\n");
+      continue;
+    }
+    if (node.type.name === "md_span") {
+      const inner: ProseNode[] = [];
+      node.content.forEach((child) => {
+        if (!isEmptySpan(child)) inner.push(child);
+      });
+      add(takeEdgeSpaces(inner, atStart));
+      if (inner.length) {
+        nodes[index] = node.copy(Fragment.from(inner));
         break;
       }
       nodes.splice(index, 1);
+      continue;
     }
-    return taken;
-  };
-  const before = take(true);
-  const after = take(false);
-  return { inner: Fragment.from(nodes), before, after };
+    if (!node.isText) break;
+    const text = node.text!;
+    const spaces = (atStart ? /^[ \t]*/ : /[ \t]*$/).exec(text)![0];
+    const rest = atStart
+      ? text.slice(spaces.length)
+      : text.slice(0, text.length - spaces.length);
+    add(spaces);
+    if (rest) {
+      nodes[index] = node.type.schema.text(rest, node.marks);
+      break;
+    }
+    nodes.splice(index, 1);
+  }
+  return taken;
 }
 
 /**
