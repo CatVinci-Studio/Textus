@@ -18,7 +18,7 @@ const NOT_CONTENT: &str = "script, style, noscript, template, svg, iframe, canva
 const MIN_MAIN_CHARS: usize = 200;
 
 /// The page's title and its content as Markdown, its links made absolute.
-pub(crate) fn html_to_markdown(html: &str, url: &str) -> (String, String) {
+pub(crate) fn page_markdown(html: &str, url: &str) -> (String, String) {
     let doc = Document::from(html);
     let title = page_title(&doc);
     doc.select(NOT_CONTENT).remove();
@@ -57,7 +57,7 @@ pub(crate) fn html_to_markdown(html: &str, url: &str) -> (String, String) {
     } else {
         doc.select("body").html()
     };
-    (title, crate::extract::html::html_to_markdown(&content))
+    (title, crate::extract::html_to_markdown(&content))
 }
 
 fn page_title(doc: &Document) -> String {
@@ -90,7 +90,7 @@ mod tests {
               <!-- a comment <p>not text</p> -->
             </article></main>
             <footer>© Sea Notes</footer><script>if (a < b) track()</script></body></html>"#;
-        let (title, text) = html_to_markdown(html, "https://sea.example/tides");
+        let (title, text) = page_markdown(html, "https://sea.example/tides");
         assert_eq!(title, "On tides | Sea Notes");
         assert!(text.starts_with("# On tides"), "{text}");
         assert!(text.contains("## Spring tides"), "{text}");
@@ -114,7 +114,7 @@ mod tests {
     #[test]
     fn a_page_without_main_content_gives_its_body() {
         let html = "<html><head><title>Links</title></head><body><ul><li>One</li><li>Two &#x4e2d;&#25991;</li></ul><script>x()</script></body></html>";
-        let (title, text) = html_to_markdown(html, "https://example.com/");
+        let (title, text) = page_markdown(html, "https://example.com/");
         assert_eq!(title, "Links");
         assert!(text.contains("One") && text.contains("Two 中文"), "{text}");
         assert!(!text.contains("x()"), "{text}");

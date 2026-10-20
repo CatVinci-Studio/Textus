@@ -261,7 +261,7 @@ struct Located {
 
 /// What a remember call did - the tool's result, which the chat's chip
 /// reads to show it and to undo it (`RememberResult` in
-/// src/ai/chat/memory-chip.ts). `previous` is the file as it was before an
+/// src/ai/chat/MemoryChip.tsx). `previous` is the file as it was before an
 /// update, for Undo to put back.
 #[derive(Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]

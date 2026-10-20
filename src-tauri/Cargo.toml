@@ -61,8 +61,8 @@ tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-# rt-multi-thread (in the tree through tauri): the web tools' bridge from the
-# synchronous agent loop, block_in_place (ai/agent.rs, run_tool).
+# rt-multi-thread (in the tree through tauri): the multi-threaded runtime
+# some tests run on (commands/fs.rs).
 tokio = { version = "1", features = ["fs", "sync", "macros", "rt", "rt-multi-thread", "net"] }
 base64 = "0.22"
 reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }

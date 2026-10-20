@@ -18,7 +18,7 @@ static PENDING: Mutex<Option<HashMap<String, oneshot::Sender<()>>>> = Mutex::new
 
 /// Registers `request_id` as cancellable and returns the receiver side to
 /// race against the actual request future (see ai_agent_message).
-pub fn register(request_id: String) -> oneshot::Receiver<()> {
+fn register(request_id: String) -> oneshot::Receiver<()> {
     let (tx, rx) = oneshot::channel();
     PENDING
         .lock()
@@ -48,7 +48,7 @@ pub async fn cancellable<T>(
 /// Drops the registration whether the request finished, failed, or was
 /// itself the one that got cancelled - a stale entry would otherwise leak
 /// for the lifetime of the app and let a reused id "cancel" a later request.
-pub fn unregister(request_id: &str) {
+fn unregister(request_id: &str) {
     if let Some(map) = PENDING.lock().unwrap().as_mut() {
         map.remove(request_id);
     }

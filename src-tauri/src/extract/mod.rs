@@ -1,10 +1,11 @@
 //! Markdown out of the formats a writer keeps next to their drafts that
 //! aren't text files: PDF, Word, PowerPoint, spreadsheets, EPUB, RTF and
-//! HTML. Two callers, one extraction: chat attachments
-//! (commands/attachment.rs, the composer's "+") and Textus AI's project tools
-//! (ai/project.rs), so a file reads the same whether it was attached or found
-//! in the project folder. A Word file is also opened as a document of its
-//! own (commands/word_import.rs), through docx.rs's document mode.
+//! HTML. One extraction for chat attachments (commands/attachment.rs, the
+//! composer's "+") and Textus AI's project tools (ai/project.rs), so a file
+//! reads the same whether it was attached or found in the project folder;
+//! web_fetch (ai/web/) reads a fetched page or PDF through it too. A Word
+//! file is also opened as a document of its own (commands/word_import.rs),
+//! through docx.rs's document mode.
 //!
 //! Markdown rather than flat text because structure is what a model reads a
 //! document by: which line is a heading, which lines are one list, which
@@ -19,7 +20,7 @@
 
 mod docx;
 mod epub;
-pub(crate) mod html;
+mod html;
 mod markdown;
 mod pptx;
 mod rtf;
