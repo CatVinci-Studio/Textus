@@ -58,31 +58,16 @@
   user-select: none;
 }
 
-.chat-window-pin {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: none;
-  background: none;
-  color: var(--editor-muted);
-  cursor: pointer;
-  border-radius: var(--radius-control);
-  /* Off reads as "available but not doing anything"; on has to be obvious at
-     a glance, since the whole point is that the window then behaves
-     differently. Colour carries that, so the icon itself never changes. */
-  opacity: 0.5;
-}
+/* The header's buttons are the AI panel's own (.inline-chat-header-button,
+   ui/design-system.css), so a popped-out panel looks like the docked one.
+   A 20px box of its own here kept the browser's button padding, which
+   squeezed each 13px icon to a sliver (8px wide in Chromium) and drew it
+   at half opacity.
 
-.chat-window-pin:hover {
-  opacity: 0.9;
-  background: var(--sidebar-hover);
-}
-
-.chat-window-pin-on {
-  opacity: 1;
+   Pinned has to be obvious at a glance, since the window then behaves
+   differently: colour carries that, so the icon itself never changes. */
+.chat-window-pin-on,
+.chat-window-pin-on:not(:disabled):hover {
   color: var(--editor-accent);
 }
 
