@@ -205,7 +205,7 @@ describe("the lessons' copy", () => {
     render(<Harness />);
     expect(
       screen.getByText(
-        "Open the AI panel: the speech bubble icon at the top right (Ctrl+Shift+L)",
+        "Open the AI panel: the quill icon at the top right (Ctrl+Shift+L)",
       ),
     ).toBeVisible();
   });

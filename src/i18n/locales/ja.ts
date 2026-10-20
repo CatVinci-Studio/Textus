@@ -900,8 +900,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialWriteTitle: "AI で執筆",
   tutorialWriteBody:
     "執筆モードの AI は文章を足すだけで、適用するまで緑色で表示されます。",
-  tutorialWriteOpen: "右上の吹き出しのアイコン（{shortcut}）で AIパネルを開く",
-  tutorialWriteOpenPhone: "上部の吹き出しのアイコンをタップして AIパネルを開く",
+  tutorialWriteOpen: "右上の羽ペンのアイコン（{shortcut}）で AIパネルを開く",
+  tutorialWriteOpenPhone: "上部の羽ペンのアイコンをタップして AIパネルを開く",
   tutorialWriteSend: "`ノートの続きを一段落書いて` と送り、「適用」をクリック",
   tutorialReviewTitle: "レビュー",
   tutorialReviewBody:

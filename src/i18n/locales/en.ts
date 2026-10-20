@@ -927,9 +927,8 @@ type /name in a conversation to use one.
   tutorialWriteTitle: "AI writing",
   tutorialWriteBody: `In Write mode, ${AI_NAME} only adds text, shown in green until you accept it.`,
   tutorialWriteOpen:
-    "Open the AI panel: the speech bubble icon at the top right ({shortcut})",
-  tutorialWriteOpenPhone:
-    "Open the AI panel: tap the speech bubble icon at the top",
+    "Open the AI panel: the quill icon at the top right ({shortcut})",
+  tutorialWriteOpenPhone: "Open the AI panel: tap the quill icon at the top",
   tutorialWriteSend:
     "Send `Continue my notes with one more paragraph`, then click Accept",
   tutorialReviewTitle: "Review",
