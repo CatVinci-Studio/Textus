@@ -52,7 +52,6 @@ import type { TourAi } from "../utils/events";
 import { useTourSignals } from "./useTourSignals";
 import { Milkdown } from "@milkdown/react";
 import "@milkdown/kit/prose/view/style/prosemirror.css";
-import "katex/dist/katex.min.css";
 import "../theme/content-base.css";
 import "../editor/milkdown-theme.css";
 import "../theme/content-themes.css";

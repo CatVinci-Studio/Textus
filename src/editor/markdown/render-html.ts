@@ -1,11 +1,15 @@
 import { Marked, Renderer, type TokenizerAndRendererExtension } from "marked";
-import katex from "katex";
 import DOMPurify from "dompurify";
 import { normalizeMathDelimiters } from "../../utils/markdown-math";
 import { sanitizeNodes } from "../html/html-policy";
 import { readImagePresentation } from "../images/image-html";
+import { katexNow, mathSourceHtml } from "../math/katex-loader";
 
 function renderMath(source: string, displayMode: boolean): string {
+  const katex = katexNow();
+  // Before KaTeX has loaded, the source - drawn again once it is here
+  // (callers wait on onKatexReady / useKatexReady).
+  if (!katex) return mathSourceHtml(source.trim());
   return katex.renderToString(source.trim(), {
     displayMode,
     // A half-typed or invalid formula renders as its source in red rather

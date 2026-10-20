@@ -1,4 +1,4 @@
-import { type RefObject, useEffect, useRef } from "react";
+import { type RefObject, Suspense, useEffect, useRef } from "react";
 import { Editor, editorViewCtx } from "@milkdown/kit/core";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { listenerCtx } from "@milkdown/kit/plugin/listener";
@@ -10,12 +10,12 @@ import {
 } from "../editor/editor-extensions";
 import { useEditorRunner } from "../editor/useEditorRunner";
 import { useModeSwitchCaret } from "../editor/modes/useModeSwitchCaret";
+import { KatexFirst } from "../editor/math/KatexFirst";
 import type { Settings } from "../settings/SettingsContext";
 import { useLatest } from "../utils/hooks/useLatest";
 import { normalizeMathDelimiters } from "../utils/markdown-math";
 import { createImageNoticePlugin } from "./image-notice-plugin";
 import "@milkdown/kit/prose/view/style/prosemirror.css";
-import "katex/dist/katex.min.css";
 import "../theme/content-base.css";
 import "../editor/milkdown-theme.css";
 import "../theme/content-themes.css";
@@ -111,9 +111,13 @@ export function PlaygroundEditor(props: Props) {
   return (
     <div className="editor-scroll">
       <div className="editor-content">
-        <MilkdownProvider>
-          <MarkdownEditor {...props} />
-        </MilkdownProvider>
+        <Suspense fallback={null}>
+          <KatexFirst markdown={props.initialValue}>
+            <MilkdownProvider>
+              <MarkdownEditor {...props} />
+            </MilkdownProvider>
+          </KatexFirst>
+        </Suspense>
       </div>
     </div>
   );

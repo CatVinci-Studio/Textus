@@ -9,6 +9,7 @@ import {
   isDrivePath,
 } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
+import { katexLoaded, loadKatex } from "../editor/math/katex-loader";
 import { tabTitle, type DocTab } from "../document/doc-tabs";
 import { exportDoc, fs } from "../platform/ipc";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
@@ -420,10 +421,29 @@ function showPdfOverlay(t: Strings): HTMLElement {
   return el;
 }
 
+// KaTeX loads on a document's first formula (katex-loader.ts); one still
+// waiting for it would export as its source, and without KaTeX's
+// stylesheet among the rules collectInlinedCss copies. Drawn first.
+async function drawMath(editor: Element): Promise<void> {
+  if (katexLoaded()) return;
+  if (
+    !editor.querySelector('[data-type="math_inline"], [data-type="math_block"]')
+  )
+    return;
+  try {
+    await loadKatex();
+  } catch {
+    return; // Exported as source rather than not at all.
+  }
+  await nextFrame();
+}
+
 // Lets web fonts (theme fonts like Parchment's script face) and images settle
 // before serializing, so the offscreen render doesn't miss them. Diagrams and
-// math are already inline SVG/HTML in the DOM, so no extra pass is needed.
+// math are already inline SVG/HTML in the DOM (drawMath), so no extra pass
+// is needed.
 async function settleRender(editor: Element): Promise<void> {
+  await drawMath(editor);
   try {
     await document.fonts.ready;
   } catch {
@@ -526,6 +546,7 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
     "html",
   );
   if (!picked) return;
+  await drawMath(editor);
   const besideDocument = !!tab.path && dirname(tab.path) === dirname(picked);
   const content = besideDocument
     ? cloneEditorContent(editor)
