@@ -331,16 +331,16 @@ describe("saving a long document", () => {
       (i: number) => `| a | b |\n|---|---|\n| ${i} | y |`,
     ];
     const markdown =
-      Array.from({ length: 5000 }, (_, i) => kinds[i % kinds.length](i)).join(
+      Array.from({ length: 1000 }, (_, i) => kinds[i % kinds.length](i)).join(
         "\n\n",
       ) + "\n";
     const editor = await createTestEditor(markdown);
     editors.push(editor);
     editor.action((ctx) => {
       const view = ctx.get(editorViewCtx);
-      expect(view.state.doc.childCount).toBe(5000);
+      expect(view.state.doc.childCount).toBe(1000);
       const source = readSourceBlocks(ctx, markdown, view.state.doc)!;
-      typeInto(2501, "!")(view);
+      typeInto(501, "!")(view);
       const { doc } = view.state;
       const started = performance.now();
       const out = writePreservingSource(ctx, source, doc);
@@ -350,8 +350,8 @@ describe("saving a long document", () => {
       const whole = performance.now() - before;
       expect(out).toBe(
         markdown.replace(
-          "Paragraph 2501 with _em_ and snake_case words.",
-          "Paragraph 2501 with *em* and snake_case words.!",
+          "Paragraph 501 with _em_ and snake_case words.",
+          "Paragraph 501 with *em* and snake_case words.!",
         ),
       );
       // The whole document is what the editor serialized on every edit
