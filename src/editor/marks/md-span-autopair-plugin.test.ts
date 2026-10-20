@@ -172,6 +172,13 @@ describe("Close formatting marks automatically (#136)", () => {
     expect(save()).toBe("**加粗文本**\n");
   });
 
+  it("off, still turns hand-typed bold around code into bold", async () => {
+    const { view, save } = await openView("", { autoCloseMarks: false });
+    caretToEndOfFirstBlock(view);
+    type(view, "**a `b` c** and *`d`*");
+    expect(save()).toBe("**a `b` c** and *`d`*\n");
+  });
+
   it("off, still turns ``` and Enter into a code block", async () => {
     const { view, save } = await openView("", { autoCloseMarks: false });
     caretToEndOfFirstBlock(view);
@@ -181,5 +188,94 @@ describe("Close formatting marks automatically (#136)", () => {
     );
     expect(view.state.doc.firstChild?.type.name).toBe("code_block");
     expect(save()).toBe("```\n```\n");
+  });
+});
+
+describe("code inside bold, italic, strikethrough and highlight", () => {
+  it.each([
+    "**a `b` c**",
+    "*a `b` c*",
+    "***a `b` c***",
+    "~~a `b` c~~",
+    "==a `b` c==",
+    "**`b`**",
+    "**中文`代码`**后",
+  ])("types %s with code in it", async (typed) => {
+    const { view, save } = await openView();
+    caretToEndOfFirstBlock(view);
+    type(view, typed);
+    expect(save()).toBe(`${typed}\n`);
+  });
+
+  it.each([
+    ["**a `b`**", "**"],
+    ["**`b`**", "**"],
+    ["*a $x$*", "*"],
+    ["~~a `b`~~", "~~"],
+  ])(
+    "brings %s back when its deleted closer is retyped",
+    async (markdown, closer) => {
+      const { view, save } = await openView(`${markdown}\n`);
+      caretToEndOfFirstBlock(view);
+      view.someProp("handleKeyDown", (f) =>
+        f(view, new KeyboardEvent("keydown", { key: "Backspace" })),
+      );
+      expect(save()).not.toBe(`${markdown}\n`);
+      type(view, closer);
+      expect(save()).toBe(`${markdown}\n`);
+    },
+  );
+
+  it("turns ** typed in front of text and code with ** after it into bold", async () => {
+    const { view, save } = await openView("x a `b`** y\n");
+    view.dispatch(
+      view.state.tr.setSelection(TextSelection.create(view.state.doc, 3)),
+    );
+    type(view, "**");
+    expect(save()).toBe("x **a `b`** y\n");
+  });
+
+  it("converts bold around code committed by an IME", async () => {
+    const { view, save } = await openView("**加粗`代码`\n");
+    caretToEndOfFirstBlock(view);
+    for (const piece of ["*", "*"]) {
+      commit(view, piece);
+      convertRunClosedBeforeCaret(view, piece);
+    }
+    expect(save()).toBe("**加粗`代码`**\n");
+  });
+
+  it("moves IME text pulled into the code beside the caret back out into the bold", async () => {
+    // WebKit can draw the caret after the code as inside it, and the
+    // composition lands in the code (enclosure.ts, relocateComposedText).
+    const { view, save } = await openView("**a `b`**\n");
+    const afterCode = 7; // in the bold, after "a " and the code
+    view.dispatch(
+      view.state.tr.setSelection(
+        TextSelection.create(view.state.doc, afterCode),
+      ),
+    );
+    vi.useFakeTimers();
+    try {
+      view.dom.dispatchEvent(new CompositionEvent("compositionstart"));
+      const tr = view.state.tr.insertText("代码", afterCode - 1);
+      view.dispatch(
+        tr.setSelection(TextSelection.create(tr.doc, afterCode + 1)),
+      );
+      view.dom.dispatchEvent(
+        new CompositionEvent("compositionend", { data: "代码" }),
+      );
+      vi.advanceTimersByTime(COMPOSE_RELOCATE_DELAY_MS + 20);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(save()).toBe("**a `b`代码**\n");
+  });
+
+  it("keeps the code's text and the link on it in the new bold", async () => {
+    const { view, save } = await openView("**see [it `x`](u)\n");
+    caretToEndOfFirstBlock(view);
+    type(view, "**");
+    expect(save()).toBe("**see [it `x`](u)**\n");
   });
 });

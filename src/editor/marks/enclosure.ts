@@ -112,14 +112,39 @@ export function cursorTouches(
 }
 
 /**
- * The contiguous run of plain text directly before $pos within its parent,
- * stopping at any non-text inline node. Backward-pairing must only ever
- * look at this run: parent.textContent-based slicing counts characters
- * while document positions count node boundaries too, so the two drift
- * apart as soon as the paragraph contains any enclosure node - and pairing
- * across an existing node would be wrong anyway.
+ * Inline nodes a bold, italic, strikethrough or highlight run can hold
+ * whole, as `**a `b` c**` holds its code. Left out of the run, the literal
+ * "**a " before a code span never paired with a "**" typed after it: bold
+ * whose closer was deleted and retyped, or typed with Settings > Close
+ * formatting marks automatically off, stayed text with asterisks in it.
  */
-export function literalTextBefore($pos: ResolvedPos): {
+const RUN_ATOMS = new Set(["md_code_span", "math_inline"]);
+
+/** A RUN_ATOMS node in a run: one character per position it takes up, so
+ *  offsets into the text stay offsets into the document. Neither a
+ *  delimiter nor a space, so it can't open, close or edge a run. */
+const ATOM_CHAR = "￼";
+
+function runText(node: ProseNode, withAtoms: boolean): string | null {
+  if (node.isText) return node.text ?? "";
+  if (withAtoms && RUN_ATOMS.has(node.type.name))
+    return ATOM_CHAR.repeat(node.nodeSize);
+  return null;
+}
+
+/**
+ * The contiguous run of plain text directly before $pos within its parent,
+ * stopping at any non-text inline node - but code and maths, `withAtoms`
+ * (see RUN_ATOMS). Backward-pairing must only ever look at this run:
+ * parent.textContent-based slicing counts characters while document
+ * positions count node boundaries too, so the two drift apart as soon as
+ * the paragraph contains any enclosure node - and pairing across an
+ * existing span would be wrong anyway.
+ */
+export function literalTextBefore(
+  $pos: ResolvedPos,
+  withAtoms = false,
+): {
   text: string;
   from: number;
 } {
@@ -128,8 +153,9 @@ export function literalTextBefore($pos: ResolvedPos): {
   let text = "";
   while (offset > 0) {
     const child = parent.childBefore(offset);
-    if (!child.node || !child.node.isText) break;
-    text = (child.node.text ?? "").slice(0, offset - child.offset) + text;
+    const childText = child.node && runText(child.node, withAtoms);
+    if (childText == null) break;
+    text = childText.slice(0, offset - child.offset) + text;
     offset = child.offset;
   }
   return { text, from: $pos.start() + offset };
@@ -137,15 +163,19 @@ export function literalTextBefore($pos: ResolvedPos): {
 
 /** Mirror of literalTextBefore: the contiguous run of plain text directly
  *  after $pos, stopping at any non-text inline node. */
-export function literalTextAfter($pos: ResolvedPos): { text: string } {
+export function literalTextAfter(
+  $pos: ResolvedPos,
+  withAtoms = false,
+): { text: string } {
   const parent = $pos.parent;
   let offset = $pos.parentOffset;
   let text = "";
   while (offset < parent.content.size) {
     const child = parent.childAfter(offset);
-    if (!child.node || !child.node.isText) break;
-    text += (child.node.text ?? "").slice(offset - child.offset);
-    offset = child.offset + child.node.nodeSize;
+    const childText = child.node && runText(child.node, withAtoms);
+    if (childText == null) break;
+    text += childText.slice(offset - child.offset);
+    offset = child.offset + child.node!.nodeSize;
   }
   return { text };
 }
@@ -792,7 +822,11 @@ function snapshotAdjacentEnclosures(state: EditorState): CompositionAnchor[] {
   const sel = state.selection;
   if (!sel.empty) return [];
   const $pos = sel.$from;
-  if (isEnclosureName($pos.parent.type.name)) return []; // genuinely composing inside - leave it there
+  // Composing inside code or maths stays there. Inside bold, text pulled
+  // into the code beside the caret goes back out, as in a paragraph:
+  // `**a `b`|**`.
+  const { name } = $pos.parent.type;
+  if (isEnclosureName(name) && name !== "md_span") return [];
   const anchors: CompositionAnchor[] = [];
   const before = $pos.nodeBefore;
   if (before && isEnclosure(before) && !before.isBlock) {

@@ -25,6 +25,8 @@ export const CONSTRUCTS: readonly string[] = [
   "Inline `code`, ``code with ` tick``, and `a` `b` side by side.",
   "Text with `code`then text, and **bold**`code` right after.",
   "**bold**s and *em*ph glued to words.",
+  "Code in spans: **a `b` c**, *`d`*, ***`e` f***, ~~`g`~~ and ==h `i`==.",
+  "中文**加粗`代码`加粗**，**`代码`**紧贴中文。",
   "中文段落，包含**加粗**和*斜体*，以及`代码`。",
   "日本語の文章と**太字**、そして English words.",
   "Emoji 🎉 and an accented café, naïve façade.",
