@@ -606,20 +606,11 @@ export const createMdSpanAutopairPlugin = (options: {
               return true;
             }
 
-            // minRung > 1 ("~", "="): only open once this many consecutive
-            // matching chars have just been typed literally; otherwise let this
-            // one insert as plain text and check again next keystroke. The
-            // check runs against the contiguous literal run only - a doc-wide
-            // position range could reach across a node boundary.
-            const need = spec.minRung - 1;
-            if (!textBefore.endsWith(spec.char.repeat(need))) return false;
-            const precedingStart = from - need;
-
-            const node = spanNode(state.schema, spec, spec.minRung);
-            const tr = state.tr.delete(precedingStart, from);
-            tr.replaceWith(precedingStart, precedingStart, node);
-            view.dispatch(caretAt(tr, precedingStart + 1));
-            return true;
+            // "~~" and "==" stay text as typed: an empty strikethrough shown
+            // as "~~|~~" read as four tildes from two keys. They become a
+            // strikethrough or a highlight once their closing pair is typed
+            // (closeOpenRun above), as in Typora.
+            return false;
           },
           handleDOMEvents: {
             compositionend(view, event) {

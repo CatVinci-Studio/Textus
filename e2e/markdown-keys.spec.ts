@@ -289,3 +289,17 @@ test("Mod+B and Mod+I pressed again at the end of what was typed end it, and the
   await page.keyboard.press("ControlOrMeta+b");
   expect(await sourceOf(page)).toBe("bold and *it* after");
 });
+
+test("~~ and == stay as typed until their closing pair makes a strikethrough or a highlight", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("~~", { delay: 20 });
+  // Two tildes, not an empty strikethrough drawn as four.
+  await expect(page.locator(editor)).toHaveText("~~");
+  await expect(page.locator(`${editor} del`)).toHaveCount(0);
+  await page.keyboard.type("gone~~ and ==kept== ok", { delay: 20 });
+  await expect(page.locator(`${editor} del`)).toHaveText("gone");
+  await expect(page.locator(`${editor} mark`)).toHaveText("kept");
+  expect(await sourceOf(page)).toBe("~~gone~~ and ==kept== ok");
+});
