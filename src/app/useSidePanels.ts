@@ -14,6 +14,7 @@ import { useAgentPanelState } from "../ai/chat/panel/agent-panel";
 import { getUiState, setUiState } from "../storage/ui-state";
 import { setDockedPanelWidth } from "../utils/hooks/useDockedPanelWidth";
 import { useSidebarWidth } from "./sidebar-width";
+import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
 
 export type PanelMode = "tree" | "outline" | "clipboard";
 
@@ -123,7 +124,15 @@ export function useSidePanels() {
   }, [agentClosing]);
   // iPhone: whether the AI bottom sheet is pulled up to full height.
   const [sheetFull, setSheetFull] = useState(false);
-  const [panelMode, setPanelMode] = useState<PanelMode>("tree");
+  // Remembered on the desktop as the open state is (#196): people who live
+  // in the Outline switched to it on every launch. On iOS, where the
+  // drawer starts closed, it starts on Files too.
+  const [panelMode, setPanelMode] = useState<PanelMode>(() =>
+    isIOSApp ? "tree" : storedSidebarTab(),
+  );
+  useEffect(() => {
+    if (!isIOSApp) storeSidebarTab(panelMode);
+  }, [panelMode]);
 
   return {
     panelOpen,
