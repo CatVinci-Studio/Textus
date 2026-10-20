@@ -146,12 +146,19 @@ what it does helps: `fix/pdf-margins`, `feat/sidebar-width`.
 
 A few things make a pull request easy for us to say yes to:
 
-- It does one thing. Two fixes are two pull requests.
+- It does one thing, from one branch. Two fixes are two pull requests.
 - The description says why. What was broken, or what you wanted to do; the
   commits can carry the details.
 - If it changes something you can see, a before and after screenshot.
-- If it touches windows, drafts or anything that could lose someone's
-  writing, a line on what you tried by hand.
+- If it touches the window (title bar, traffic lights, dragging, full
+  screen), the sidebar or AI panel's layout or animation, or keyboard
+  shortcuts, a short screen recording of the built app doing it on a Mac -
+  windowed and full screen - and on Windows or Linux if it changes there.
+  The automated tests run in a browser and can't see any of this.
+- If it touches drafts or anything that could lose someone's writing, a
+  line on what you tried by hand.
+- It leaves CI and the test setup alone. If a check looks wrong, open a
+  separate pull request about the check.
 
 CI has to pass before we can merge, and a maintainer reviews
 every pull request. We try to answer within a few days. If we haven't, a

@@ -41,13 +41,30 @@ If another copy of the e2e suite may be running (another worktree), set
 ## How to work
 
 - Branch from `origin/main` (`feat/…`, `fix/…`, `docs/…`, `chore/…`), open a
-  pull request to `main`, and don't merge it yourself unless asked.
+  pull request to `main`, and don't merge it yourself unless asked. One
+  feature or fix per branch and pull request; the steps of that one change
+  are commits in it.
 - Don't stack pull requests by default: each one starts from `main`, so any
   of them can merge in any order. When a change depends on another that
   hasn't merged, wait for it, or put the dependent steps in one pull request
   as separate commits. Stack only when one PR would be too large to review;
   a stack is then merged bottom-up with a merge commit, not squashed, so the
   next PR in it still applies cleanly.
+- Reproduce a bug before fixing it, and show the fix in the engine where it
+  was seen: the e2e flows run Chromium, and WebKit only for the specs in
+  `playwright.config.ts`'s `WEBKIT_SPECS` (`E2E_WEBKIT=1`). macOS and iOS
+  draw the app with WebKit; add a spec there for editor, sidebar or layout
+  work.
+- The window bar, title bar and traffic lights, drag regions, full screen,
+  the side panels' layout and motion, and `Cmd` shortcuts that also have a
+  menu item can't be judged in a browser: check them in the built app
+  (`npm run tauri build -- --debug`) on a real Mac, and on Windows or Linux
+  when they change there. Say in the pull request what you ran, and attach
+  a short screen recording; a change there without one isn't merged.
+- Don't change CI (`.github/`), the test setup (`playwright.config.ts`,
+  `vite.config.ts`'s `test`, `e2e/helpers.ts`, `scripts/check-*.mjs`) or a
+  test's expectation to make a check pass. Fix the code; if a check is truly
+  wrong, change it in a pull request of its own that says why.
 - Make the smallest change that fixes the cause. Match the surrounding code:
   naming, structure, comment density. Comments say why, not what.
 - Add or update tests with the change: unit tests next to the code
