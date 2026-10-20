@@ -227,7 +227,7 @@ test.describe("the AI's project folder", () => {
 
 test.describe("file name search", () => {
   const search = (page: Page) =>
-    page.getByRole("searchbox", { name: "Search file names" });
+    page.getByRole("combobox", { name: "Search file names" });
   const results = (page: Page) =>
     page.locator(".file-search-results [role=option]");
 

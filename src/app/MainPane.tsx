@@ -45,7 +45,7 @@ export function MainPane({
   t: Strings;
 }) {
   return (
-    <div className="main-pane">
+    <main className="main-pane">
       {showTabBar && (
         <TabBar
           tabs={tabs.map((tab) => ({
@@ -63,7 +63,11 @@ export function MainPane({
           onDetach={canDragTabsBetweenWindows ? onDetach : undefined}
           onReorder={onReorder}
           previewTab={previewTab}
-          labels={{ close: t.menuCloseTab, add: t.menuNewFile }}
+          labels={{
+            close: t.menuCloseTab,
+            add: t.menuNewFile,
+            unsaved: t.unsavedIndicator,
+          }}
         />
       )}
 
@@ -105,6 +109,6 @@ export function MainPane({
           )}
         </div>
       ))}
-    </div>
+    </main>
   );
 }

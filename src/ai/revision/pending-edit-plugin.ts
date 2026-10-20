@@ -659,6 +659,8 @@ function textWidget(
       // can show instead. New text alone (Write) has none, and stays in
       // the text, green, in every view but "final".
       span.className = `pending-insert pending-whole${replaces ? " pending-replaces" : ""}`;
+      // Read as an insertion, not as text of the document.
+      span.setAttribute("role", "insertion");
       span.contentEditable = "false";
       span.dataset.call = p.callId;
       span.dataset.index = "-1";
@@ -835,6 +837,7 @@ function changeDecorations(
         () => {
           const span = document.createElement("span");
           span.className = `pending-insert pending-sentence-new pending-sentence-${state}${focus}`;
+          if (state !== "kept") span.setAttribute("role", "insertion");
           span.contentEditable = "false";
           span.dataset.call = callId;
           span.dataset.index = String(index);
@@ -933,6 +936,9 @@ function sentenceStrike(
     range.to,
     {
       class: `pending-delete pending-sentence pending-sentence-${state}${focus}${streamed}`,
+      // What a screen reader announces as deleted; a sentence kept as
+      // written is the document's text again.
+      ...(state === "kept" ? {} : { role: "deletion" }),
       style: stagger,
       "data-call": callId,
       "data-index": String(index),
@@ -1205,6 +1211,7 @@ function decorationsFor(
         strike.to,
         {
           class: `pending-delete pending-whole${isFocused ? " pending-sentence-focus" : ""}`,
+          role: "deletion",
           "data-call": p.callId,
           "data-index": "-1",
         },

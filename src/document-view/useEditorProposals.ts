@@ -31,6 +31,8 @@ import { showMessage } from "../ui/app-dialog";
 import { errorText } from "../utils/error-text";
 import { resolveStrings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
+import { announce } from "../ui/announce";
+import { plural } from "../i18n/plural";
 
 /** The editor's side of AI edits: the pending previews (usePendingEdits),
  *  the two conversations that propose them (the panel's and Quick Ask's),
@@ -87,6 +89,20 @@ export function useEditorProposals({
       });
     },
     citationStyle,
+    // What a decision did, said to a screen reader in the interface
+    // language.
+    onAnnounce: (kind, count) => {
+      const t = resolveStrings(settingsRef.current.language);
+      announce(
+        plural(
+          kind === "accepted"
+            ? t.announceChangesAccepted
+            : t.announceChangesRejected,
+          count,
+          settingsRef.current.language,
+        ),
+      );
+    },
   });
   useEffect(() => {
     pendingEditActionsRef.current = {

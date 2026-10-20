@@ -45,6 +45,17 @@ An imported theme also sets the global interface colors. `src/theme/theme-chrome
 
 The theme's original CSS is kept. A theme with only one color scheme keeps that scheme. It is not forced into dark. Remote `@import`, image backgrounds, layouts that depend on a specific Typora DOM, and arbitrary global CSS are not part of the full compatibility promise. Check them against each real theme.
 
+## Accessibility
+
+Textus is used with a screen reader, with the keyboard alone and with the system's high-contrast settings. `e2e/a11y.spec.ts` runs axe-core over the main screens in light and dark and fails on a serious or critical violation; `A11Y_REPORT=1 npx playwright test e2e/a11y.spec.ts` lists every violation, the moderate ones too.
+
+- Every control has a name in the interface language. A button drawn only as an icon takes `aria-label` (and `title`, for the pointer); a visible label is the name, not repeated in `aria-label` with other punctuation.
+- The window has landmarks: the window bar is the `header`, the document column the `main`, the sidebar and the AI panel are labelled `aside`s. The editor is a `textbox` named **Document**.
+- Status that appears without the focus moving there - Textus AI writing, a rewrite's changes, an Accept or a Reject, the review bar's position - goes through `announce()` (`src/ui/announce.ts`), one polite live region. Don't add live regions of your own; a message is a short sentence ending with a full stop.
+- A proposed change is `role="deletion"` and `role="insertion"` in the text; its margin card is a group that says what is replaced by what. Colour is never the only sign: the original is struck through.
+- Text, secondary text included, keeps a contrast of 4.5:1 against its background in the default light and dark appearance (3:1 for text of 18 px and larger). Lower the contrast of a part with a darker or lighter colour, not with `opacity` on text.
+- A hover-only affordance whose action the keyboard reaches elsewhere (a table's **+** buttons, which the context menu repeats) is `tabindex="-1"` and `aria-hidden`.
+
 ## Acceptance checks
 
 - Visually check light and dark body text in all five built-in themes: Chinese, English and Japanese text, emphasis, links, quotes, lists, code and tables.

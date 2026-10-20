@@ -113,7 +113,7 @@
   );
   --revision-delete-bg: var(--diff-delete-bg);
   --revision-delete-strike: var(--diff-delete-line);
-  --revision-delete-text: color-mix(in srgb, currentColor 55%, transparent);
+  --revision-delete-text: color-mix(in srgb, currentColor 70%, transparent);
   --revision-delete-hover-bg: color-mix(
     in srgb,
     var(--danger) 28%,
@@ -128,7 +128,7 @@
     --success-color: #79cba1;
     --warning-color: #e3b35f;
     --danger: #f18b99;
-    --danger-fill: #d0465a;
+    --danger-fill: #c43d51;
     --overlay-bg: rgb(0 0 0 / 48%);
     --shadow-popover: 0 4px 16px rgb(0 0 0 / 24%);
     --shadow-dialog: 0 16px 48px rgb(0 0 0 / 32%);
@@ -143,7 +143,7 @@
   --success-color: #79cba1;
   --warning-color: #e3b35f;
   --danger: #f18b99;
-  --danger-fill: #d0465a;
+  --danger-fill: #c43d51;
   --overlay-bg: rgb(0 0 0 / 48%);
   --shadow-popover: 0 4px 16px rgb(0 0 0 / 24%);
   --shadow-dialog: 0 16px 48px rgb(0 0 0 / 32%);
@@ -191,6 +191,20 @@
 :where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--chrome-accent);
   outline-offset: 3px;
+}
+
+/* Read by a screen reader, not drawn: ui/announce.ts's live region, and
+   names that only make sense to the ear. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* A dialog opened by a click or a shortcut starts on its button without a

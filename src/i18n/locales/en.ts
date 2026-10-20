@@ -100,6 +100,23 @@ type /name in a conversation to use one.
   chatHistoryUnsaved: "Unsaved documents",
   proposalAcceptSome: "Accept {k} of {n}",
   proposalChangeCount: "{n} changes",
+  editorLabel: "Document",
+  codeBlockLanguage: "Code language",
+  announceAiWriting: `${AI_NAME} is writing…`,
+  announceAiDone: `${AI_NAME} is done.`,
+  announceChangesProposed: {
+    one: "{n} change proposed.",
+    other: "{n} changes proposed.",
+  },
+  announceChangesAccepted: {
+    one: "{n} change accepted.",
+    other: "{n} changes accepted.",
+  },
+  announceChangesRejected: {
+    one: "{n} change rejected.",
+    other: "{n} changes rejected.",
+  },
+  announceChangePosition: "Change {i} of {n}.",
   proposalTakeSentence: "Take this sentence",
   proposalKeepSentence: "Keep the original",
   proposalShowInText: "Show in text",

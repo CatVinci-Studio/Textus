@@ -12,6 +12,7 @@ import {
   type MarkdownMatch,
 } from "../doc-markdown";
 import { applyEditRange } from "./apply-edit";
+import { useLatest } from "../../utils/hooks/useLatest";
 import {
   citationsAsFootnotes,
   footnoteLabels,
@@ -353,6 +354,10 @@ export interface PendingEditOptions {
   /** How an accepted proposal's web citations are written, asked when it
    *  is accepted. Left out: they are left out. */
   citationStyle?: () => CitationStyle;
+  /** What a decision did, said to a screen reader (useEditorProposals):
+   *  how many changes the writer accepted or rejected, wherever it was
+   *  decided - the review bar, a ✓ / ✕, a card, Ctrl/⌘ + Enter. */
+  onAnnounce?: (kind: "accepted" | "rejected", count: number) => void;
 }
 
 export function usePendingEdits(
@@ -511,6 +516,8 @@ export function usePendingEdits(
     }
     return { taken, total };
   }, [reviewed]);
+  // For rejectAll, which stays stable (see there).
+  const reviewTotalRef = useLatest(reviewCount.total);
 
   /** Wired (via a ref-indirected callback, see MilkdownEditor) to the
    *  plugin's onPreviewsChange - the only path React learns about a preview
@@ -731,7 +738,10 @@ export function usePendingEdits(
     [],
   );
 
-  const accept = useCallback(
+  // Applies without announcing: the callers below say what was decided -
+  // a sentence's ✓ that completes its proposal was the one decision, an
+  // Accept of everything one decision of many changes.
+  const applyAccept = useCallback(
     (
       callId: string,
       /** Partial acceptance: the proposal's text with only some of its
@@ -941,7 +951,16 @@ export function usePendingEdits(
     },
     [run, decided, acceptImage],
   );
-  acceptRef.current = accept;
+  acceptRef.current = applyAccept;
+
+  const accept = useCallback(
+    (callId: string, textOverride?: string): boolean => {
+      const ok = applyAccept(callId, textOverride);
+      if (ok) optionsRef.current.onAnnounce?.("accepted", 1);
+      return ok;
+    },
+    [applyAccept],
+  );
 
   /** Takes a proposal off the document as rejected. `learn`: the writer
    *  rejected it (Reject, ✕) - not a new request superseding it, the
@@ -967,7 +986,10 @@ export function usePendingEdits(
     [run, decided],
   );
   const reject = useCallback(
-    (callId: string) => remove(callId, true),
+    (callId: string) => {
+      remove(callId, true);
+      optionsRef.current.onAnnounce?.("rejected", 1);
+    },
     [remove],
   );
   const discard = useCallback(
@@ -990,6 +1012,8 @@ export function usePendingEdits(
         else if (take === false) reject(callId);
         return;
       }
+      if (take !== null)
+        optionsRef.current.onAnnounce?.(take ? "accepted" : "rejected", 1);
       let complete = false;
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
@@ -1009,9 +1033,9 @@ export function usePendingEdits(
           !preview.streaming &&
           preview.sentences.changes.every((c) => c.take !== null);
       });
-      if (complete) accept(callId);
+      if (complete) applyAccept(callId);
     },
-    [run, accept, reject],
+    [run, accept, applyAccept, reject],
   );
 
   // Reads the ids from the plugin's own state rather than the `previews`
@@ -1038,15 +1062,22 @@ export function usePendingEdits(
     },
     [run, decided],
   );
-  const rejectAll = useCallback(() => clearAll(true), [clearAll]);
+  const rejectAll = useCallback(() => {
+    const count = reviewTotalRef.current;
+    clearAll(true);
+    if (count > 0) optionsRef.current.onAnnounce?.("rejected", count);
+  }, [clearAll, reviewTotalRef]);
   const discardAll = useCallback(() => clearAll(false), [clearAll]);
 
   /** Accepts every currently pending preview, one transaction each (so a
    *  mid-batch failure - text one of them depended on changed - doesn't
    *  undo the ones that already landed). */
   const acceptAll = useCallback(() => {
-    for (const p of previews) accept(p.callId);
-  }, [previews, accept]);
+    const taken = reviewCount.taken;
+    let ok = false;
+    for (const p of previews) if (applyAccept(p.callId)) ok = true;
+    if (ok) optionsRef.current.onAnnounce?.("accepted", taken);
+  }, [previews, applyAccept, reviewCount.taken]);
 
   /** Moves the review pointer by `delta` (wrapping; a fresh pointer starts
    *  at the first preview either way) and returns what it now points at, or

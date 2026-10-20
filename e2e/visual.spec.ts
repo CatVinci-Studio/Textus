@@ -486,7 +486,7 @@ test("an open guide switches language with the UI", async ({ page }) => {
       }
     ).__devEmitTauriEvent("menu-open-settings"),
   );
-  await page.getByRole("combobox", { name: "语言" }).click();
+  await page.getByRole("combobox", { name: "语言", exact: true }).click();
   await page.getByRole("option", { name: "English" }).click();
   await expect(page.locator(".milkdown h1").first()).not.toHaveText(zhTitle);
   await expect(page.locator(".milkdown h1").first()).toContainText("Guide");
@@ -503,7 +503,7 @@ test("the empty-document hint follows the language picked at first run", async (
     "data-placeholder",
     "Start writing in Markdown…",
   );
-  await page.getByRole("combobox", { name: "Language" }).click();
+  await page.getByRole("combobox", { name: "Language", exact: true }).click();
   await page.getByRole("option", { name: "简体中文" }).click();
   await page.locator(".language-welcome-continue").click();
   await expect(hint).toHaveAttribute("data-placeholder", "开始输入 Markdown…");

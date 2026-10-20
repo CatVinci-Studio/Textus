@@ -503,6 +503,8 @@ const RevisionCard = memo(
       <div
         ref={ref}
         className={`review-note revision-note revision-note-${state}${hot ? " review-note-hot" : ""}${focused ? " revision-note-focus" : ""}${item.streaming ? " revision-note-streaming" : ""}`}
+        role="group"
+        aria-label={`${labels.reviewBarLabel} ${item.num}`}
         style={{ top, left, width: CARD_WIDTH }}
         onMouseEnter={() => onHot(item.key, true)}
         onMouseLeave={() => onHot(item.key, false)}
@@ -558,6 +560,14 @@ const RevisionCard = memo(
           </div>
         ) : (
           <div className="revision-note-text">
+            {/* The text shows the original; read out here too, so the
+              card says what is replaced by what. */}
+            {item.before.trim() && (
+              <span className="visually-hidden">
+                {labels.proposalDeletedSentence}:{" "}
+                <del>{item.before.trim()}</del>
+              </span>
+            )}
             {item.after.trim() || (
               <span className="revision-note-delete">
                 {labels.proposalDeleteSentence}

@@ -83,7 +83,14 @@ export function WindowBar({
         title does - in the status group it sat on top of a long title
         on a narrow window. */}
       <span className="window-bar-title">
-        {dirty && <span className="unsaved-dot" title={t.unsavedIndicator} />}
+        {dirty && (
+          <span
+            className="unsaved-dot"
+            role="img"
+            aria-label={t.unsavedIndicator}
+            title={t.unsavedIndicator}
+          />
+        )}
         <span className="window-bar-title-text">{title}</span>
       </span>
       <div className="window-bar-status">

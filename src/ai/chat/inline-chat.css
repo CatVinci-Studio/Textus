@@ -858,10 +858,6 @@
   color: var(--editor-accent);
 }
 
-.agent-proposal-status-rejected {
-  opacity: 0.7;
-}
-
 .agent-proposal-status-invalid {
   color: var(--danger);
 }
