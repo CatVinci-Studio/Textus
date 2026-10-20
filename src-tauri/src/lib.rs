@@ -736,6 +736,7 @@ pub fn run() {
             crate::ai::images::list_image_providers,
             crate::ai::images::ai_generated_image,
             crate::ai::images::ai_discard_generated_image,
+            crate::ai::web::web_search_status,
             crate::ai::workspace::load_agent_workspace,
             crate::ai::conventions::writing_conventions_options,
             crate::ai::conventions::writing_conventions_effective,

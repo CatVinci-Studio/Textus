@@ -18,7 +18,7 @@
 
 mod docx;
 mod epub;
-mod html;
+pub(crate) mod html;
 mod markdown;
 mod pptx;
 mod rtf;
@@ -102,8 +102,19 @@ pub(crate) fn document_text(path: &Path, ext: &str) -> Option<Result<String, Str
 /// MarkItDown's pdfminer path doesn't either) would turn every large
 /// pull quote into a heading.
 fn pdf_text(path: &Path) -> Result<String, String> {
+    pdf_text_with(|| pdf_extract::extract_text(path))
+}
+
+/// The text of a PDF held in memory - one web_fetch downloaded (ai/web).
+pub(crate) fn pdf_text_from_bytes(bytes: &[u8]) -> Result<String, String> {
+    pdf_text_with(|| pdf_extract::extract_text_from_mem(bytes))
+}
+
+fn pdf_text_with(
+    extract: impl FnOnce() -> Result<String, pdf_extract::OutputError> + std::panic::UnwindSafe,
+) -> Result<String, String> {
     let unreadable = || "This PDF can't be read.".to_string();
-    let text = std::panic::catch_unwind(|| pdf_extract::extract_text(path))
+    let text = std::panic::catch_unwind(extract)
         .map_err(|_| unreadable())?
         .map_err(|_| unreadable())?;
     if text.trim().is_empty() {

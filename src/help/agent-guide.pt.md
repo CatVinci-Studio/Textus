@@ -39,7 +39,7 @@ A conversa completa fica em um painel no lado direito do editor. Abra ou feche o
 - **Modos**: o campo de mensagem tem três. **Escrever** redige texto novo no documento (uma continuação, um parágrafo ou uma seção nova) e só acrescenta: com texto selecionado, escreve depois da seleção. **Revisar** responde, conversa e deixa comentários sem mudar nada. **Editar** altera o texto que já existe. Cada mudança de Escrever ou Editar é uma proposta que você aceita ou rejeita. O painel começa no modo definido em **Ajustes > Textus AI > Chat da Textus AI > Modo padrão**.
 - **Menções com @**: digite `@` no campo para escolher um arquivo de texto da pasta do projeto; ele é anexado à mensagem.
 - **Anexar arquivos**: o botão **+** à esquerda do campo anexa à mensagem um PDF, um documento do Word, uma apresentação do PowerPoint, uma planilha, um livro EPUB, um arquivo RTF ou HTML, uma imagem ou um arquivo de texto simples. Tudo, menos as imagens, é convertido em texto no seu computador e vai dentro da mensagem; as imagens são enviadas como imagens de verdade aos provedores que conseguem vê-las (os que não conseguem avisam na hora, em vez de descartá-las sem dizer nada). Um arquivo longo é enviado só em parte, e o anexo mostra “(parcial)” quando isso acontece.
-- **Busca na web**: depois de ativada em **Ajustes > Textus AI > Chat da Textus AI** (nos provedores que oferecem o recurso), a Textus AI pode buscar na web por conta própria quando um pedido precisar.
+- **Busca na web**: o botão da lupa ao lado do campo de texto deixa a Textus AI buscar na web quando um pedido precisar; veja **7. Busca na web** abaixo.
 - **Raciocínio profundo**: o botão ao lado da busca na web (a lâmpada) pede ao modelo que pense bem na resposta antes de responder — mais lento e mais caro, para perguntas difíceis e reescritas maiores. Ele fica ligado, também em outros documentos, até você tocar nele de novo. Enquanto o modelo pensa, o painel mostra "Pensando · 8 segundos" e depois "Pensou por 12 segundos", que você pode clicar para ler o raciocínio quando o provedor o compartilha. O botão só aparece para modelos que conseguem pensar mais a fundo; a Pergunta rápida sempre pede uma resposta rápida.
 - **Histórico**: o botão **Histórico** (o relógio), no topo do painel de IA, lista as conversas anteriores agrupadas por pasta. Clique em uma para reabri-la com o documento dela e continuar.
 - **Erros**: quando uma solicitação falha, o chat diz que tipo de problema houve e o que fazer (verificar a chave, esperar um pouco, escolher outro modelo), acima da mensagem do próprio provedor.
@@ -70,6 +70,15 @@ A Textus AI pode criar uma imagem para o seu documento assim que você escolher 
 - Peça no modo Escrever ou Editar ("adicione uma imagem do porto depois do primeiro parágrafo"), ou clique com o botão direito num parágrafo e escolha **Ilustrar este parágrafo**.
 - A imagem chega como uma proposta no lugar, como qualquer inserção. Nada é salvo até você aceitar: aí ela é salva como **Ajustes > Imagens** diz para uma imagem colada e inserida como imagem Markdown. Rejeitar não deixa nada.
 - Se o serviço recusar a descrição, o painel mostra o motivo que ele deu. Cada pedido cria no máximo duas imagens.
+
+### 7. Busca na web
+
+Ative o botão **Busca na web** ao lado do campo de texto (ou **Ajustes > Textus AI > Chat da Textus AI > Busca na web** para que comece ativado) e a Textus AI pesquisa na web quando um pedido precisa de fatos atuais ou de que ela não tem certeza. Ela também pode ler uma página cujo endereço você colar.
+
+- **Quem busca**: os modelos que buscam sozinhos — OpenAI, Claude, Grok, OpenRouter, Groq, Qwen e Zhipu GLM — usam a própria busca. Com qualquer outro modelo (DeepSeek, Gemini, Mistral, Kimi, modelos locais, endpoints personalizados), quem busca é a Textus, com o **Serviço de busca** escolhido em Busca na web nos Ajustes: **Automático** usa uma chave da DeepSeek, Zhipu ou Kimi que você já salvou para o chat; ou escolha Bocha, Tavily, Brave Search ou Exa e cole a chave dele, ou SearXNG e informe o endereço do seu próprio servidor. A linha mostra para onde vão as suas buscas. Sem nada com que buscar, o botão mostra um ponto vermelho.
+- **Fontes**: a resposta cita o que encontrou como [1], [2] e lista essas páginas embaixo; clique em uma para abri-la no navegador. Os números continuam os mesmos durante toda a conversa.
+- **Fontes como notas de rodapé**: quando uma proposta se baseia na web, o cartão dela mostra **Adicionar as fontes como notas de rodapé**. Marcado, aceitar adiciona notas de rodapé em Markdown com as fontes no fim do documento; desmarcado, o texto entra sem elas. O cartão lembra a sua última escolha.
+- **Páginas são lidas, não obedecidas**: o que uma página diz nunca é uma instrução para a Textus AI, que continua só propondo edições. A Textus lê apenas páginas da web pública, nunca do seu computador ou da sua rede local.
 
 ## Personalize a Textus AI
 
@@ -267,4 +276,4 @@ Não existe perfil de estilo nem biblioteca global: eles descrevem uma obra espe
 
 ## Uma observação sobre privacidade
 
-O seu documento, os arquivos anexados ou mencionados com @, as suas instruções de escrita, o perfil de estilo, as entradas da biblioteca mencionadas e os arquivos do projeto que a Textus AI lê são enviados, em cada solicitação, ao provedor que você escolheu; **Aprender meu estilo** envia as amostras que você escolher. A busca na web acontece nos servidores desse provedor. Desative nos Ajustes qualquer recurso que você não queira usar dessa forma.
+O seu documento, os arquivos anexados ou mencionados com @, as suas instruções de escrita, o perfil de estilo, as entradas da biblioteca mencionadas e os arquivos do projeto que a Textus AI lê são enviados, em cada solicitação, ao provedor que você escolheu; **Aprender meu estilo** envia as amostras que você escolher. Com a busca na web ativada, as buscas vão para o seu provedor ou para o serviço de busca mostrado nos Ajustes, e as páginas que a Textus AI lê são baixadas deste computador. Desative nos Ajustes qualquer recurso que você não queira usar dessa forma.

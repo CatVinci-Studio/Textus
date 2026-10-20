@@ -111,11 +111,19 @@ export interface ImageAttachment {
  *  src-tauri/crates/aicompat/src/capabilities.rs. */
 export type ThinkingLevel = "fast" | "auto" | "deep";
 
+/** A web page a reply cites as [n], numbered once per conversation.
+ *  Mirrors `Source` in src-tauri/crates/aicompat/src/agent.rs. */
+export interface WebSource {
+  n: number;
+  url: string;
+  title: string;
+}
+
 /** Mirrors AgentTurn in src-tauri/crates/aicompat/src/agent.rs. Its
  *  ToolResult also carries the images view_image showed the model, but
  *  agent.rs's for_history drops them before a turn reaches the frontend. */
 export type AgentTurn =
   | { kind: "User"; text: string; images?: ImageAttachment[] }
-  | { kind: "Assistant"; text: string }
+  | { kind: "Assistant"; text: string; sources?: WebSource[] }
   | { kind: "ToolCall"; call_id: string; name: string; arguments: string }
   | { kind: "ToolResult"; call_id: string; output: string };

@@ -14,4 +14,5 @@ pub mod route;
 pub mod rules;
 pub mod tools;
 pub(crate) mod ui_language;
+pub mod web;
 pub mod workspace;

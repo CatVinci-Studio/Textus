@@ -11,6 +11,7 @@ vi.mock("../platform/capabilities", async (importOriginal) => ({
 }));
 vi.mock("../ai/provider-catalog", () => ({
   useActiveProvider: () => ({ supportsVision: true }),
+  useWebSearchStatus: () => null,
 }));
 vi.mock("../ai/chat/deep-thinking", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -54,6 +55,7 @@ const labels = {
   modeLabel: "Mode",
   webSearch: "Web search",
   deepThinking: "Deep thinking",
+  webSearchNeedsService: "Choose a search service",
 };
 
 function renderComposer(

@@ -5,6 +5,7 @@ import type { PendingEditCallbacks } from "./editor-extensions";
 import { useAgentConversation } from "../ai/chat/useAgentConversation";
 import {
   usePendingEdits,
+  type CitationStyle,
   type DecidedChange,
   type SelectionTarget,
 } from "../ai/revision/usePendingEdits";
@@ -54,6 +55,11 @@ export function useEditorProposals({
    *  says to ask. */
   requestImageName: (stem: string, extension: string) => Promise<string | null>;
 }) {
+  // How accepting writes a proposal's web citations: the setting the
+  // proposal card sets, and the sources of the conversations here (kept
+  // current below, once they exist).
+  const citations = useRef<CitationStyle>({ asFootnotes: false, sources: [] });
+  const citationStyle = useCallback(() => citations.current, []);
   const filePathRef = useLatest(filePath);
   // An accepted picture is stored as a pasted one is (Settings › Images):
   // into the image folder, or up to the image host.
@@ -80,6 +86,7 @@ export function useEditorProposals({
         tone: "error",
       });
     },
+    citationStyle,
   });
   useEffect(() => {
     pendingEditActionsRef.current = {
@@ -288,6 +295,18 @@ export function useEditorProposals({
     pendingEdits.allStatuses,
     false,
   );
+  useEffect(() => {
+    citations.current = {
+      asFootnotes: settings.sourcesAsFootnotes,
+      sources: [...conversation.history, ...quickConversation.history].flatMap(
+        (turn) => (turn.kind === "Assistant" ? (turn.sources ?? []) : []),
+      ),
+    };
+  }, [
+    settings.sourcesAsFootnotes,
+    conversation.history,
+    quickConversation.history,
+  ]);
   // Exchange boundaries. Start (busy rising): arm the supersede flag so this
   // exchange's first proposal clears the undecided leftovers of the previous
   // one. End with drafts still open: a user stop keeps what was already

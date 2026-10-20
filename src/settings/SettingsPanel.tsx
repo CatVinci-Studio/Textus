@@ -50,6 +50,7 @@ import { ProviderListPanel } from "./sections/providers";
 import { ImageModelSection } from "./sections/image-model";
 import {
   AgentModelSection,
+  SearchServiceSection,
   ModelListRow,
   WritingModelSection,
   AgentWorkspaceRootSection,
@@ -552,6 +553,7 @@ export function SettingsPanel({
                   onChange={(v) => setSettings({ enableWebSearch: v })}
                 />
                 <ImageModelSection t={t} />
+                <SearchServiceSection t={t} />
               </>
             )}
           </SettingsGroup>

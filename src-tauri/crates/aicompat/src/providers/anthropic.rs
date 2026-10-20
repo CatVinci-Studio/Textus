@@ -1,4 +1,6 @@
-use crate::agent::{AgentTurn, EventSink, ImageAttachment, ProviderEvent, StepResult, ToolSpec};
+use crate::agent::{
+    AgentTurn, EventSink, ImageAttachment, ProviderEvent, StepCitations, StepResult, ToolSpec,
+};
 use crate::capabilities::{Thinking, THINKING_BINDING_BETA};
 use crate::pkce::{generate_pkce, now_ms};
 use serde::{Deserialize, Serialize};
@@ -406,7 +408,7 @@ fn turns_to_messages(history: &[AgentTurn]) -> Vec<Value> {
                 }
                 i += 1;
             }
-            AgentTurn::Assistant { text } => {
+            AgentTurn::Assistant { text, .. } => {
                 // Claude can end a turn with no text (right after tool
                 // results, say), but rejects an empty assistant message on
                 // replay - and that 400 would then fail every later send in
@@ -557,9 +559,12 @@ fn agent_request_body(
         last["cache_control"] = json!({"type": EPHEMERAL});
     }
     let mut tool_schemas = tools.iter().map(tool_to_schema).collect::<Vec<_>>();
-    // Claude executes this server tool inside the Messages request. Its
-    // server_tool_use/result blocks are intentionally ignored by
-    // parse_agent_response; the final cited text blocks are still retained.
+    // Claude executes this server tool inside the Messages request: its
+    // server_tool_use and result blocks are replayed only to continue a
+    // paused turn (agent_step_with_usage), and the citations on the text
+    // blocks become the reply's sources (parse_agent_response). The 2026
+    // versions route the search through code execution by default; this
+    // one searches directly, on every model.
     if web_search {
         tool_schemas.push(json!({
             "type": "web_search_20250305",
@@ -585,11 +590,18 @@ fn agent_request_body(
 
 /// Parses a Messages API `content` block array into a [`StepResult`]: any
 /// `tool_use` blocks become tool calls the caller must execute, otherwise
-/// the `text` blocks are the model's final answer. A tool step's thinking
-/// blocks ride on its first call, verbatim, to be sent back with it.
-fn parse_agent_response(content: &[Value]) -> StepResult {
+/// the `text` blocks are the model's final answer - joined as they stand:
+/// a reply that cites the web comes as many short text blocks, a cited
+/// phrase each, and a newline between them broke sentences in two. Text
+/// after a search (a server block) starts a new paragraph. Each page a
+/// block cites is reported through `on_event` and marked at its end. A tool
+/// step's thinking blocks ride on its first call, verbatim, to be sent back
+/// with it.
+fn parse_agent_response(content: &[Value], on_event: EventSink<'_>) -> StepResult {
     let mut tool_calls = Vec::new();
-    let mut text_parts = Vec::new();
+    let mut text = String::new();
+    let mut after_other_block = false;
+    let mut citations = StepCitations::default();
     let mut thinking = Vec::new();
 
     for block in content {
@@ -614,11 +626,28 @@ fn parse_agent_response(content: &[Value]) -> StepResult {
             }
             Some("thinking" | "redacted_thinking") => thinking.push(block.clone()),
             Some("text") => {
-                if let Some(text) = block.get("text").and_then(|t| t.as_str()) {
-                    text_parts.push(text.to_string());
+                if after_other_block && !text.trim().is_empty() {
+                    text.push_str("\n\n");
+                }
+                after_other_block = false;
+                text.push_str(block.get("text").and_then(|t| t.as_str()).unwrap_or(""));
+                for citation in block
+                    .get("citations")
+                    .and_then(|c| c.as_array())
+                    .into_iter()
+                    .flatten()
+                {
+                    let Some(url) = citation.get("url").and_then(|u| u.as_str()) else {
+                        continue;
+                    };
+                    let title = citation.get("title").and_then(|t| t.as_str()).unwrap_or("");
+                    let marker = citations.cite(url, title, on_event);
+                    if !text.ends_with(&marker) {
+                        text.push_str(&marker);
+                    }
                 }
             }
-            _ => {}
+            _ => after_other_block = true,
         }
     }
 
@@ -630,16 +659,18 @@ fn parse_agent_response(content: &[Value]) -> StepResult {
         }
         StepResult::ToolCalls(tool_calls)
     } else {
-        StepResult::Done(text_parts.join("\n"))
+        StepResult::Done(text)
     }
 }
 
 /// One in-flight content block while a streamed Messages response is being
-/// read. Only the kinds parse_agent_response cares about get accumulated;
-/// everything else (server_tool_use, web_search results) stays Ignored,
-/// exactly as the non-streaming path ignores those block types.
+/// read.
 enum StreamBlock {
-    Text(String),
+    Text {
+        text: String,
+        /// Where a web search result backs the text (citations_delta).
+        citations: Vec<Value>,
+    },
     /// Readable (or, by default, empty) thinking and the signature that
     /// lets it be sent back.
     Thinking {
@@ -652,6 +683,14 @@ enum StreamBlock {
         id: String,
         name: String,
         /// input_json_delta fragments, concatenated - parsed once at the end.
+        args: String,
+    },
+    /// Any other block - a server_tool_use (web search) and its result -
+    /// kept whole, as the API sent it: parse_agent_response doesn't read
+    /// them, but a paused turn is continued by sending them back unchanged.
+    Other {
+        block: Value,
+        /// A server_tool_use's input, as input_json_delta fragments.
         args: String,
     },
     Ignored,
@@ -680,6 +719,15 @@ pub struct StepUsage {
     pub output_tokens: u64,
 }
 
+impl StepUsage {
+    fn add(&mut self, other: StepUsage) {
+        self.input_tokens += other.input_tokens;
+        self.cache_creation_input_tokens += other.cache_creation_input_tokens;
+        self.cache_read_input_tokens += other.cache_read_input_tokens;
+        self.output_tokens += other.output_tokens;
+    }
+}
+
 impl StreamAccumulator {
     fn block_at(&mut self, index: usize) -> &mut StreamBlock {
         while self.blocks.len() <= index {
@@ -703,7 +751,12 @@ impl StreamAccumulator {
                     return;
                 };
                 match block.get("type").and_then(|t| t.as_str()) {
-                    Some("text") => *self.block_at(index) = StreamBlock::Text(String::new()),
+                    Some("text") => {
+                        *self.block_at(index) = StreamBlock::Text {
+                            text: String::new(),
+                            citations: Vec::new(),
+                        }
+                    }
                     Some("thinking") => {
                         on_event(ProviderEvent::Thinking(""));
                         let field = |k: &str| {
@@ -735,7 +788,12 @@ impl StreamAccumulator {
                             args: String::new(),
                         };
                     }
-                    _ => *self.block_at(index) = StreamBlock::Ignored,
+                    _ => {
+                        *self.block_at(index) = StreamBlock::Other {
+                            block: block.clone(),
+                            args: String::new(),
+                        }
+                    }
                 }
             }
             Some("content_block_delta") => {
@@ -747,9 +805,16 @@ impl StreamAccumulator {
                         let Some(text) = delta.get("text").and_then(|t| t.as_str()) else {
                             return;
                         };
-                        if let StreamBlock::Text(buf) = self.block_at(index) {
+                        if let StreamBlock::Text { text: buf, .. } = self.block_at(index) {
                             buf.push_str(text);
                             on_event(ProviderEvent::Text(text));
+                        }
+                    }
+                    Some("citations_delta") => {
+                        if let (Some(citation), StreamBlock::Text { citations, .. }) =
+                            (delta.get("citation"), self.block_at(index))
+                        {
+                            citations.push(citation.clone());
                         }
                     }
                     Some("thinking_delta") => {
@@ -773,13 +838,17 @@ impl StreamAccumulator {
                         let Some(part) = delta.get("partial_json").and_then(|t| t.as_str()) else {
                             return;
                         };
-                        if let StreamBlock::ToolUse { id, args, .. } = self.block_at(index) {
-                            args.push_str(part);
-                            let call_id = id.clone();
-                            on_event(ProviderEvent::ToolArgs {
-                                call_id: &call_id,
-                                delta: part,
-                            });
+                        match self.block_at(index) {
+                            StreamBlock::ToolUse { id, args, .. } => {
+                                args.push_str(part);
+                                let call_id = id.clone();
+                                on_event(ProviderEvent::ToolArgs {
+                                    call_id: &call_id,
+                                    delta: part,
+                                });
+                            }
+                            StreamBlock::Other { args, .. } => args.push_str(part),
+                            _ => {}
                         }
                     }
                     _ => {}
@@ -812,11 +881,18 @@ impl StreamAccumulator {
         }
     }
 
+    /// The response's content blocks, as the API would have sent them
+    /// whole.
     fn into_content(self) -> Vec<Value> {
         self.blocks
             .into_iter()
             .filter_map(|block| match block {
-                StreamBlock::Text(text) => Some(json!({"type": "text", "text": text})),
+                StreamBlock::Text { text, citations } if citations.is_empty() => {
+                    Some(json!({"type": "text", "text": text}))
+                }
+                StreamBlock::Text { text, citations } => {
+                    Some(json!({"type": "text", "text": text, "citations": citations}))
+                }
                 StreamBlock::Thinking { text, signature } => Some(json!({
                     "type": "thinking",
                     "thinking": text,
@@ -827,6 +903,12 @@ impl StreamAccumulator {
                     let input: Value = serde_json::from_str(&args).unwrap_or_else(|_| json!({}));
                     Some(json!({"type": "tool_use", "id": id, "name": name, "input": input}))
                 }
+                StreamBlock::Other { mut block, args } => {
+                    if !args.is_empty() {
+                        block["input"] = serde_json::from_str(&args).unwrap_or_else(|_| json!({}));
+                    }
+                    Some(block)
+                }
                 StreamBlock::Ignored => None,
             })
             .collect()
@@ -835,6 +917,9 @@ impl StreamAccumulator {
 
 const AGENT_MAX_TOKENS: u32 = 16384;
 const DEEP_MAX_TOKENS: u32 = 32768;
+/// How many times a turn Claude paused (`pause_turn`: a long run of server
+/// searches) is continued before what it has so far is taken as the step.
+const MAX_PAUSE_CONTINUATIONS: usize = 3;
 
 /// Runs one round-trip against Claude with the full turn history and tool
 /// definitions - the Anthropic twin of `openai_codex::agent_step`. Streams
@@ -866,6 +951,11 @@ pub async fn agent_step(
 }
 
 /// [`agent_step`] plus the step's token usage.
+///
+/// A turn with server searches in it can stop at `pause_turn`, part-way:
+/// taken as the answer, that left a reply that ended mid-research. It is
+/// continued the way the API asks - the same request with what Claude sent
+/// so far as the last, assistant message - and the parts make the step.
 #[allow(clippy::too_many_arguments)]
 pub async fn agent_step_with_usage(
     auth: &AnthropicAuth,
@@ -877,44 +967,58 @@ pub async fn agent_step_with_usage(
     model: &str,
     on_event: EventSink<'_>,
 ) -> Result<(StepResult, StepUsage), String> {
-    let (body, binding_beta) = agent_request_body(
-        auth,
-        instructions,
-        history,
-        tools,
-        web_search,
-        thinking,
-        model,
-    );
-    let max_tokens = body["max_tokens"].as_u64().unwrap_or_default();
+    let mut content: Vec<Value> = Vec::new();
+    let mut usage = StepUsage::default();
+    for round in 0..=MAX_PAUSE_CONTINUATIONS {
+        let (mut body, binding_beta) = agent_request_body(
+            auth,
+            instructions,
+            history,
+            tools,
+            web_search,
+            thinking,
+            model,
+        );
+        if !content.is_empty() {
+            if let Some(messages) = body["messages"].as_array_mut() {
+                messages.push(json!({"role": "assistant", "content": content.clone()}));
+            }
+        }
+        let max_tokens = body["max_tokens"].as_u64().unwrap_or_default();
 
-    let client = crate::http::streaming_client();
-    let mut req = apply_auth(client.post(MESSAGES_URL), auth);
-    if binding_beta {
-        // OAuth requests already carry an anthropic-beta list; a second
-        // header of the same name is joined to it.
-        req = req.header("anthropic-beta", THINKING_BINDING_BETA);
-    }
-    let res = req.json(&body).send().await.map_err(|e| e.to_string())?;
+        let client = crate::http::streaming_client();
+        let mut req = apply_auth(client.post(MESSAGES_URL), auth);
+        if binding_beta {
+            // OAuth requests already carry an anthropic-beta list; a second
+            // header of the same name is joined to it.
+            req = req.header("anthropic-beta", THINKING_BINDING_BETA);
+        }
+        let res = req.json(&body).send().await.map_err(|e| e.to_string())?;
 
-    let mut acc = StreamAccumulator::default();
-    crate::http::read_sse(res, "Claude", |data| acc.apply(data, on_event)).await?;
-    if let Some(error) = acc.error {
-        return Err(error);
+        let mut acc = StreamAccumulator::default();
+        crate::http::read_sse(res, "Claude", |data| acc.apply(data, on_event)).await?;
+        if let Some(error) = acc.error {
+            return Err(error);
+        }
+        // Cut off by the output limit inside a tool call: its arguments are
+        // half a JSON object, which would reach the tool as `{}` and send the
+        // model round in circles retrying the same oversized call.
+        if acc.stop_reason.as_deref() == Some("max_tokens")
+            && matches!(acc.blocks.last(), Some(StreamBlock::ToolUse { .. }))
+        {
+            return Err(format!(
+                "Claude hit the {max_tokens}-token output limit in the middle of an edit. \
+                 Try asking for a smaller change at a time."
+            ));
+        }
+        usage.add(acc.usage);
+        let paused = acc.stop_reason.as_deref() == Some("pause_turn");
+        content.extend(acc.into_content());
+        if !paused || round == MAX_PAUSE_CONTINUATIONS {
+            break;
+        }
     }
-    // Cut off by the output limit inside a tool call: its arguments are
-    // half a JSON object, which would reach the tool as `{}` and send the
-    // model round in circles retrying the same oversized call.
-    if acc.stop_reason.as_deref() == Some("max_tokens")
-        && matches!(acc.blocks.last(), Some(StreamBlock::ToolUse { .. }))
-    {
-        return Err(format!(
-            "Claude hit the {max_tokens}-token output limit in the middle of an edit. \
-             Try asking for a smaller change at a time."
-        ));
-    }
-    let usage = acc.usage;
-    Ok((parse_agent_response(&acc.into_content()), usage))
+    Ok((parse_agent_response(&content, on_event), usage))
 }
 
 #[cfg(test)]
@@ -929,9 +1033,7 @@ mod tests {
                 text: "hi".to_string(),
                 images: Vec::new(),
             },
-            AgentTurn::Assistant {
-                text: "hello".to_string(),
-            },
+            AgentTurn::assistant("hello".to_string()),
         ];
         let messages = turns_to_messages(&history);
         assert_eq!(messages.len(), 2);
@@ -948,9 +1050,7 @@ mod tests {
                 text: "hi".to_string(),
                 images: Vec::new(),
             },
-            AgentTurn::Assistant {
-                text: " ".to_string(),
-            },
+            AgentTurn::assistant(" ".to_string()),
             AgentTurn::User {
                 text: "again".to_string(),
                 images: Vec::new(),
@@ -1017,9 +1117,7 @@ mod tests {
     }
 
     fn assistant(text: &str) -> AgentTurn {
-        AgentTurn::Assistant {
-            text: text.to_string(),
-        }
+        AgentTurn::assistant(text.to_string())
     }
 
     /// Messages takes image blocks inside a tool_result, so a tool's
@@ -1289,7 +1387,7 @@ mod tests {
             json!({"type": "tool_use", "id": "c1", "name": "propose_edit", "input": {"action": "append", "text": "hi"}}),
             json!({"type": "text", "text": "ignored while a tool call is pending"}),
         ];
-        match parse_agent_response(&content) {
+        match parse_agent_response(&content, &|_| {}) {
             StepResult::ToolCalls(calls) => {
                 assert_eq!(calls.len(), 1);
                 let AgentTurn::ToolCall {
@@ -1320,6 +1418,7 @@ mod tests {
                 ProviderEvent::ToolStart { call_id, name } => format!("S:{call_id}:{name}"),
                 ProviderEvent::ToolArgs { call_id, delta } => format!("A:{call_id}:{delta}"),
                 ProviderEvent::Thinking(t) => format!("R:{t}"),
+                ProviderEvent::Citation { url, .. } => format!("C:{url}"),
             });
         };
         let mut acc = StreamAccumulator::default();
@@ -1363,7 +1462,7 @@ mod tests {
         assert_eq!(content[1]["type"], "tool_use");
         assert_eq!(content[1]["input"]["action"], "append");
         // The rebuilt content parses exactly like a non-streamed response.
-        match parse_agent_response(&content) {
+        match parse_agent_response(&content, &|_| {}) {
             StepResult::ToolCalls(calls) => assert_eq!(calls.len(), 1),
             StepResult::Done(_) => panic!("expected tool calls"),
         }
@@ -1407,7 +1506,8 @@ mod tests {
                 "A:tu:{}"
             ]
         );
-        let StepResult::ToolCalls(calls) = parse_agent_response(&acc.into_content()) else {
+        let StepResult::ToolCalls(calls) = parse_agent_response(&acc.into_content(), &|_| {})
+        else {
             panic!("expected tool calls");
         };
         let AgentTurn::ToolCall {
@@ -1501,15 +1601,60 @@ mod tests {
         }
     }
 
+    /// A cited reply comes as a text block per cited phrase: they join into
+    /// one sentence, each phrase marked with its page, and the text after a
+    /// search starts a paragraph of its own.
     #[test]
-    fn parse_agent_response_joins_text_blocks_when_no_tool_use() {
+    fn cited_text_blocks_join_into_sentences_with_their_pages_marked() {
+        let cite = |url: &str| json!([{"type": "web_search_result_location", "url": url, "title": "T", "cited_text": "…", "encrypted_index": "x"}]);
         let content = vec![
-            json!({"type": "text", "text": "part one"}),
-            json!({"type": "text", "text": "part two"}),
+            json!({"type": "text", "text": "Let me look that up."}),
+            json!({"type": "server_tool_use", "id": "s1", "name": "web_search", "input": {"query": "tides"}}),
+            json!({"type": "web_search_tool_result", "tool_use_id": "s1", "content": []}),
+            json!({"type": "text", "text": "Spring tides are "}),
+            json!({"type": "text", "text": "highest at full moon", "citations": cite("https://a.example/")}),
+            json!({"type": "text", "text": " and new moon", "citations": cite("https://b.example/")}),
+            json!({"type": "text", "text": "."}),
         ];
-        match parse_agent_response(&content) {
-            StepResult::Done(text) => assert_eq!(text, "part one\npart two"),
-            StepResult::ToolCalls(_) => panic!("expected a final answer"),
-        }
+        let cited = std::sync::Mutex::new(Vec::new());
+        let sink = |e: ProviderEvent<'_>| {
+            if let ProviderEvent::Citation { url, .. } = e {
+                cited.lock().unwrap().push(url.to_string());
+            }
+        };
+        let StepResult::Done(text) = parse_agent_response(&content, &sink) else {
+            panic!("expected a final answer");
+        };
+        let shown = crate::agent::replace_citation_markers(&text, |k| Some(format!("[{k}]")));
+        assert_eq!(
+            shown,
+            "Let me look that up.\n\nSpring tides are highest at full moon[1] and new moon[2]."
+        );
+        assert_eq!(
+            cited.into_inner().unwrap(),
+            ["https://a.example/", "https://b.example/"]
+        );
+    }
+
+    /// What a paused turn is continued with: every block as the API sent
+    /// it - the search, its result, the text and its citations.
+    #[test]
+    fn the_stream_keeps_server_blocks_and_citations_for_a_paused_turn() {
+        let (acc, _) = run_stream(&[
+            json!({"type": "content_block_start", "index": 0, "content_block": {"type": "server_tool_use", "id": "srvtoolu_1", "name": "web_search", "input": {}}}),
+            json!({"type": "content_block_delta", "index": 0, "delta": {"type": "input_json_delta", "partial_json": "{\"query\":\"tides\"}"}}),
+            json!({"type": "content_block_start", "index": 1, "content_block": {"type": "web_search_tool_result", "tool_use_id": "srvtoolu_1", "content": [{"type": "web_search_result", "url": "https://a.example/", "title": "A", "encrypted_content": "e"}]}}),
+            json!({"type": "content_block_start", "index": 2, "content_block": {"type": "text", "text": ""}}),
+            json!({"type": "content_block_delta", "index": 2, "delta": {"type": "text_delta", "text": "Twice a day"}}),
+            json!({"type": "content_block_delta", "index": 2, "delta": {"type": "citations_delta", "citation": {"type": "web_search_result_location", "url": "https://a.example/", "title": "A", "cited_text": "twice", "encrypted_index": "i"}}}),
+            json!({"type": "message_delta", "delta": {"stop_reason": "pause_turn"}}),
+        ]);
+        assert_eq!(acc.stop_reason.as_deref(), Some("pause_turn"));
+        let content = acc.into_content();
+        assert_eq!(content[0]["type"], "server_tool_use");
+        assert_eq!(content[0]["input"]["query"], "tides");
+        assert_eq!(content[1]["content"][0]["encrypted_content"], "e");
+        assert_eq!(content[2]["text"], "Twice a day");
+        assert_eq!(content[2]["citations"][0]["url"], "https://a.example/");
     }
 }

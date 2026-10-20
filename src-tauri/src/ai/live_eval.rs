@@ -52,6 +52,7 @@ mod grammar_matrix;
 mod harness;
 mod images;
 mod tokens;
+mod web_search;
 
 use crate::ai::agent::AgentMode;
 use harness::{auth, finish, par_map, Record};

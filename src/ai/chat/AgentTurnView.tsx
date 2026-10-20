@@ -1,5 +1,6 @@
 import { useState } from "react";
-import type { AgentTurn, ImageAttachment } from "../types";
+import type { AgentTurn, ImageAttachment, WebSource } from "../types";
+import { links } from "../../platform/ipc";
 import { MarkdownText } from "../MarkdownText";
 import { parseUserMessage } from "./user-message";
 import { ReplyThemes, type ReplyThemeLabels } from "./ReplyThemes";
@@ -13,6 +14,17 @@ export interface AgentTurnLabels extends ReplyThemeLabels {
    *  argument (query, heading, path, skill); "*" covers any other tool. */
   toolActivity: Record<string, string>;
   toolResult: string;
+  /** The heading of the list of web pages under a reply. */
+  sources: string;
+}
+
+/** A web address's site, as a person names it: "nature.com". */
+export function siteOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
 }
 
 /** A tool call as one readable line: "Reading the section “Methods”"
@@ -28,8 +40,16 @@ export function toolActivityText(
   } catch {
     // Partial or malformed arguments: describe the tool without them.
   }
+  // web_search takes a list of queries, web_fetch an address - shown by
+  // its site, which is what says where the request went.
+  const queries = Array.isArray(args.queries)
+    ? args.queries
+        .filter((q): q is string => typeof q === "string")
+        .join("”, “")
+    : undefined;
+  const site = typeof args.url === "string" ? siteOf(args.url) : undefined;
   const arg =
-    [args.query, args.heading, args.path, args.name].find(
+    [args.query, queries, site, args.heading, args.path, args.name].find(
       (v): v is string => typeof v === "string" && v.length > 0,
     ) ??
     (typeof args.start_line === "number"
@@ -65,6 +85,9 @@ export function AgentTurnView({
       return (
         <div className="agent-message agent-message-assistant">
           <MarkdownText text={turn.text} />
+          {turn.sources && turn.sources.length > 0 && (
+            <SourceList sources={turn.sources} label={labels.sources} />
+          )}
           <ReplyThemes text={turn.text} labels={labels} />
         </div>
       );
@@ -144,6 +167,44 @@ function UserMessage({
         <pre className="agent-message-selection">{selection}</pre>
       )}
       {body && <div className="agent-message-body">{body}</div>}
+    </div>
+  );
+}
+
+/**
+ * The web pages a reply cites, by the numbers its text gives them: one
+ * chip each - number, site, title - that opens the page in the system
+ * browser. The same list whether the provider searched or Textus did
+ * (src-tauri ai/web).
+ */
+export function SourceList({
+  sources,
+  label,
+}: {
+  sources: WebSource[];
+  label: string;
+}) {
+  return (
+    <div className="agent-sources" role="group" aria-label={label}>
+      <span className="agent-sources-label">{label}</span>
+      {sources.map((source) => {
+        const site = siteOf(source.url);
+        return (
+          <button
+            key={source.n}
+            type="button"
+            className="agent-source"
+            title={source.url}
+            onClick={() => void links.openWebLink(source.url).catch(() => {})}
+          >
+            <span className="agent-source-num">{source.n}</span>
+            <span className="agent-source-site">{site}</span>
+            {source.title && source.title !== site && (
+              <span className="agent-source-title">{source.title}</span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }

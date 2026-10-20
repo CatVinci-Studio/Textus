@@ -610,6 +610,15 @@ export interface GeneratedImageData {
   dataBase64: string;
 }
 
+/** Mirrors `WebSearchStatus` in src-tauri/src/ai/web/mod.rs. */
+export interface WebSearchStatus {
+  /** The provider searches by itself. */
+  native: boolean;
+  /** Otherwise, the search service Textus's web_search uses; null when
+   *  none is set up. */
+  service: string | null;
+}
+
 /** One live fragment of an in-flight ai_agent_message, delivered over a
  *  Tauri channel while the agent loop runs. Purely additive display data -
  *  the command still resolves with the complete turn list, which stays the
@@ -1017,6 +1026,10 @@ export const ai = {
     webSearch: boolean;
     /** How hard the model thinks; left out, the provider's default. */
     thinking?: ThinkingLevel;
+    /** Settings > Search service and the SearXNG address: what web_search
+     *  uses when the model can't search by itself (ai/web/mod.rs). */
+    searchService?: string;
+    searxngUrl?: string;
     mode: AgentMode;
     model: string | null;
     requestId: string;
@@ -1042,6 +1055,21 @@ export const ai = {
       onEvent: channel,
     });
   },
+  /** What the Web search button can do with this provider and model: its
+   *  own search, or the search service Textus would use instead (none: it
+   *  needs one set up). */
+  webSearchStatus: (
+    provider: string,
+    model: string | null,
+    searchService: string,
+    searxngUrl: string,
+  ) =>
+    call<WebSearchStatus>("web_search_status", {
+      provider,
+      model,
+      searchService,
+      searxngUrl,
+    }),
   cancelAgentMessage: (requestId: string) =>
     call<void>("ai_cancel", { requestId }),
 

@@ -126,6 +126,10 @@ export function useAgentConversation(
   const uiLanguage = useLatest(settings.language);
   // generate_image is offered only with an image model.
   const imageModel = useLatest(imageModelOf(settings));
+  const search = useLatest({
+    service: settings.searchService,
+    searxngUrl: settings.searxngUrl,
+  });
   const [error, setError] = useState<string | null>(null);
   const [retryable, setRetryable] = useState<RetryableSend | null>(null);
   // The in-flight request's id, for stop() to cancel by - null when nothing
@@ -197,6 +201,8 @@ export function useAgentConversation(
         images,
         webSearch: options.webSearch,
         thinking: options.thinking,
+        searchService: search.current.service,
+        searxngUrl: search.current.searxngUrl,
         mode: options.mode,
         focusHeading: options.focusHeading ?? null,
         uiLanguage: uiLanguage.current,

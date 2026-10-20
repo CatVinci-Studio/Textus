@@ -236,7 +236,7 @@ pub async fn agent_step(
         .map_err(|e| e.to_string())?;
 
     let output = read_streamed_output(res, "Codex", on_event).await?;
-    Ok(responses_api::parse_agent_output(&output))
+    Ok(responses_api::parse_agent_output(&output, on_event))
 }
 
 #[cfg(test)]
