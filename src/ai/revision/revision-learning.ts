@@ -83,10 +83,24 @@ export function choicesFor(
   );
 }
 
+/** Adds choices in place of any their proposals made before: a proposal
+ *  accepted, brought back by an undo and decided again counts once. */
 export function record(log: ChoiceLog, choices: Choice[]): ChoiceLog {
+  const decided = new Set(choices.map((c) => c.proposal));
   return {
     ...log,
-    choices: [...log.choices, ...choices].slice(-MAX_CHOICES),
+    choices: [
+      ...log.choices.filter((c) => !decided.has(c.proposal)),
+      ...choices,
+    ].slice(-MAX_CHOICES),
+  };
+}
+
+/** Drops what a proposal decided: an undo brought it back undecided. */
+export function forget(log: ChoiceLog, proposal: string): ChoiceLog {
+  return {
+    ...log,
+    choices: log.choices.filter((c) => c.proposal !== proposal),
   };
 }
 

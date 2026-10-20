@@ -8,6 +8,7 @@ import {
   choicesFor,
   describeKind,
   emptyLog,
+  forget,
   parseLog,
   record,
   suggestion,
@@ -133,6 +134,23 @@ describe("the log", () => {
       ]);
     expect(log.choices).toHaveLength(MAX_CHOICES);
     expect(log.choices[0].proposal).toBe("50");
+  });
+
+  it("counts a proposal decided again after an undo once, and an undo takes its decision back", () => {
+    const pick = (proposal: string, taken: boolean) => ({
+      kind: QUOTES,
+      taken,
+      proposal,
+      at: 0,
+    });
+    let log = record(emptyLog(), [pick("a", false), pick("b", true)]);
+    // b accepted, undone, then rejected: one decision, the rejection.
+    log = record(forget(log, "b"), [pick("b", false)]);
+    log = record(log, [pick("b", false)]);
+    expect(log.choices.filter((c) => c.proposal === "b")).toEqual([
+      pick("b", false),
+    ]);
+    expect(forget(log, "b").choices).toEqual([pick("a", false)]);
   });
 
   it("reads anything that isn't a log as an empty one", () => {

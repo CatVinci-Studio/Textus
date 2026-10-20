@@ -6,6 +6,7 @@ import {
   answer,
   choicesFor,
   describeKind,
+  forget,
   parseLog,
   record,
   suggestion,
@@ -57,6 +58,11 @@ export function useRevisionLearning({
 
   const recordChoices = useCallback(
     (callId: string, changes: DecidedChange[]) => {
+      // No changes: an undo took the decision back.
+      if (changes.length === 0) {
+        void update((log) => forget(log, callId));
+        return;
+      }
       const choices = choicesFor(callId, changes, Date.now());
       if (choices.length === 0) return;
       void update((log) => record(log, choices)).then((log) => {

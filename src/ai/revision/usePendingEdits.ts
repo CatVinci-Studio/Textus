@@ -313,16 +313,24 @@ function decidedChanges(
 export function usePendingEdits(
   run: EditorRunner,
   /** The writer accepted or rejected a proposal (not one superseded,
-   *  refused or stopped): what it decided, change by change. */
+   *  refused or stopped): what it decided, change by change - in place of
+   *  what it decided about it before. No changes: an undo brought an
+   *  accepted proposal back, undecided again. */
   onDecided?: (callId: string, changes: DecidedChange[]) => void,
 ) {
   const [previews, setPreviews] = useState<PendingPreview[]>([]);
   const onDecidedRef = useRef(onDecided);
   onDecidedRef.current = onDecided;
+  // Accepted proposals whose decision was reported: an undo can bring
+  // them back (syncFromPlugin), and then that decision no longer stands.
+  const reportedAccepts = useRef(new Set<string>());
   const decided = useCallback(
     (preview: PendingPreview, take: (i: number) => boolean) => {
       const changes = decidedChanges(preview, take);
-      if (changes.length > 0) onDecidedRef.current?.(preview.callId, changes);
+      if (changes.length === 0) return;
+      if (changes.some((c) => c.taken))
+        reportedAccepts.current.add(preview.callId);
+      onDecidedRef.current?.(preview.callId, changes);
     },
     [],
   );
@@ -469,6 +477,8 @@ export function usePendingEdits(
       const dropped = [...knownIds.current].filter((id) => !nextIds.has(id));
       knownIds.current = nextIds;
       setPreviews(next);
+      for (const id of nextIds)
+        if (reportedAccepts.current.delete(id)) onDecidedRef.current?.(id, []);
       setStatuses((prev) => {
         let copy: Record<string, PendingStatus> | null = null;
         const set = (id: string, status: PendingStatus | null) => {
