@@ -15,6 +15,7 @@ import {
 } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { ParserState, type MarkdownNode } from "@milkdown/kit/transformer";
+import { blockMarkdown } from "./block-markdown";
 
 /**
  * Saving a document writes back, byte for byte, every top-level block the
@@ -147,23 +148,6 @@ export const openedParseRecorder: MilkdownPlugin = (ctx) => {
     };
   };
 };
-
-/** Each editor's serializations of single blocks, which a block keeps for
- *  as long as it is the same node. */
-const blockMarkdowns = new WeakMap<Ctx, WeakMap<ProseNode, string>>();
-
-/** What the serializer writes for one top-level block. */
-function blockMarkdown(ctx: Ctx, node: ProseNode): string {
-  let known = blockMarkdowns.get(ctx);
-  if (!known) blockMarkdowns.set(ctx, (known = new WeakMap()));
-  let markdown = known.get(node);
-  if (markdown === undefined) {
-    const doc = ctx.get(schemaCtx).topNodeType.create(null, node);
-    markdown = ctx.get(serializerCtx)(doc);
-    known.set(node, markdown);
-  }
-  return markdown;
-}
 
 /** The same block, or one that serializes to the same Markdown: a plugin
  *  that touched an attr on load, or text deleted and typed again. */
