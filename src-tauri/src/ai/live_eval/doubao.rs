@@ -101,8 +101,8 @@ fn thinking_step(
 fn live_doubao_thinking_levels() {
     let Some(ark) = ark() else { return };
     let tools = [ToolSpec {
-        name: "search_document",
-        description: "Search the user's document for a phrase.",
+        name: "search_document".into(),
+        description: "Search the user's document for a phrase.".into(),
         parameters: json!({
             "type": "object",
             "properties": {"query": {"type": "string"}},
@@ -170,8 +170,8 @@ fn live_doubao_writing_call_answers_without_thinking() {
 fn live_doubao_calls_a_tool_through_the_streamed_step() {
     let Some(ark) = ark() else { return };
     let tools = [ToolSpec {
-        name: "search_document",
-        description: "Search the user's document for a phrase.",
+        name: "search_document".into(),
+        description: "Search the user's document for a phrase.".into(),
         parameters: json!({
             "type": "object",
             "properties": {"query": {"type": "string"}},

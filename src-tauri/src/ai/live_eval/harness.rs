@@ -514,8 +514,8 @@ pub fn run_conversation(
     let tool_set =
         // No remember tool: an eval run writes no memories. Images as the
         // app offers them to the provider the eval runs on (Anthropic).
-        tools::builtin_tools(ws.has_usable_skills(), root.is_some(), setup.mode, false, sees_images());
-    let specs = tools::tool_specs(&tool_set);
+        tools::ToolRegistry::builtin(ws.has_usable_skills(), root.is_some(), setup.mode, false, sees_images());
+    let specs = tool_set.specs();
     let mut history: Vec<AgentTurn> = Vec::new();
     let mut doc = document.to_string();
     let mut outcomes = Vec::new();
@@ -628,10 +628,8 @@ pub fn run_conversation(
                     Ok(step)
                 }
             },
-            |call: ToolCall| {
-                std::future::ready(tools::execute(&tool_set, &ctx, &call.name, &call.arguments))
-            },
-            tools::how_to_run,
+            |call: ToolCall| tool_set.execute(&ctx, call),
+            |name| tool_set.how_to_run(name),
             |_| {},
         ));
         let latency_ms = started.elapsed().as_millis();
