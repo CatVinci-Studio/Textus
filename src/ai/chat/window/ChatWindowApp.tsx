@@ -314,13 +314,13 @@ export function ChatWindowApp() {
         {context?.docTitle ?? ""}
       </span>
       <ChatHistoryMenu
-        buttonClassName="chat-window-pin"
+        buttonClassName="inline-chat-header-button"
         disabled={conversation.busy || !context}
         onReopen={(entry) => void reopenConversation(entry, t, reopenTarget)}
       />
       <button
         type="button"
-        className="chat-window-pin"
+        className="inline-chat-header-button"
         aria-label={t.chatNewConversation}
         title={t.chatNewConversation}
         disabled={conversation.busy}
@@ -333,7 +333,7 @@ export function ChatWindowApp() {
       </button>
       <button
         type="button"
-        className={`chat-window-pin ${pinned ? "chat-window-pin-on" : ""}`}
+        className={`inline-chat-header-button ${pinned ? "chat-window-pin-on" : ""}`}
         aria-pressed={pinned}
         aria-label={t.chatWindowPin}
         title={pinned ? t.chatWindowUnpinHint : t.chatWindowPinHint}
