@@ -1,5 +1,6 @@
+import { isIOSApp } from "../platform/capabilities";
 import { useSettings } from "../settings/SettingsContext";
-import { AssistantIcon } from "../ui/icons";
+import { AssistantIcon, SidebarToggleIcon } from "../ui/icons";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./app-menu-model";
 import { AppMenuButton } from "./WindowControls";
@@ -13,6 +14,12 @@ import { AppMenuButton } from "./WindowControls";
  * sat on top of the text. It is also the drag region (both for moving
  * the window and for the drag-to-merge gesture in useTabDragMerge).
  *
+ * On the desktop the sidebar reaches the window's top edge and lies over
+ * this row's left end, its tabs in the strip (sidebar-frame.css). The
+ * row's own controls - the sidebar's toggle, then the app menu - ride
+ * just past its edge while it is open, and the title centres over what
+ * is left (window-bar.css).
+ *
  * Where the OS supplies no frame at all (Windows), this same row is
  * ALSO the caption and the way into the app menu - the two components
  * below render nothing anywhere else, so this stays one strip on
@@ -24,6 +31,9 @@ export function WindowBar({
   dirty,
   largeDoc,
   words,
+  sidebarOpen,
+  sidebarShortcut,
+  onToggleSidebar,
   showAgentToggle,
   agentOpen,
   agentShortcut,
@@ -34,6 +44,10 @@ export function WindowBar({
   dirty: boolean;
   largeDoc: boolean;
   words: number;
+  sidebarOpen: boolean;
+  /** The sidebar's shortcut, as shown in the button's tooltip. */
+  sidebarShortcut: string;
+  onToggleSidebar: () => void;
   showAgentToggle: boolean;
   agentOpen: boolean;
   /** The AI panel's shortcut, as shown in the button's tooltip. */
@@ -42,8 +56,28 @@ export function WindowBar({
 }) {
   const { t } = useSettings();
   return (
-    <header className="window-bar" data-tauri-drag-region>
-      <AppMenuButton checks={menuChecks} />
+    <header
+      className={`window-bar${sidebarOpen ? " window-bar-sidebar-open" : ""}`}
+      data-tauri-drag-region
+    >
+      {/* A drag region of its own: Tauri asks only the event's target, and
+        a press between the two buttons should still move the window. */}
+      <div className="window-bar-left" data-tauri-drag-region>
+        {/* The phone and the iPad open the sidebar from the menu. */}
+        {!isIOSApp && (
+          <button
+            type="button"
+            className={`window-bar-sidebar-toggle${sidebarOpen ? " window-bar-sidebar-toggle-on" : ""}`}
+            aria-pressed={sidebarOpen}
+            aria-label={t.menuToggleSidebar}
+            title={`${t.menuToggleSidebar} (${sidebarShortcut})`}
+            onClick={onToggleSidebar}
+          >
+            <SidebarToggleIcon />
+          </button>
+        )}
+        <AppMenuButton checks={menuChecks} />
+      </div>
       {/* The unsaved dot leads the title, as a native edited-document
         title does - in the status group it sat on top of a long title
         on a narrow window. */}

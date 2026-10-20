@@ -406,6 +406,9 @@ function App() {
           dirty={activeDirty}
           largeDoc={isLargeDoc}
           words={wordCount.words}
+          sidebarOpen={panelOpen}
+          sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
+          onToggleSidebar={toggleSidebar}
           showAgentToggle={settings.enableAskAi || tutorial.active}
           agentOpen={agentPanel.open}
           agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}
