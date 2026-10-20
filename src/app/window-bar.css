@@ -174,15 +174,12 @@
   transition: none;
 }
 
-/* The AI panel's toggle and Textus AI's switch in the status group, the
-   sidebar's toggle at the row's start and the app menu's button beside it:
-   one size and one hover for every control in the strip, so none reads as
-   a different kind of thing from its neighbours. A class each: several e2e
+/* The AI panel's toggle and Textus AI's switch in the status group, and
+   the sidebar's toggle at the row's start. A class each: several e2e
    flows click `.window-bar-toggle` and mean the AI panel's exactly. */
 .window-bar-toggle,
 .window-bar-ai-switch,
-.window-bar-sidebar-toggle,
-.window-menu-button {
+.window-bar-sidebar-toggle {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
@@ -202,8 +199,7 @@
 .window-bar-toggle-on,
 .window-bar-ai-switch:hover,
 .window-bar-sidebar-toggle:hover,
-.window-bar-sidebar-toggle-on,
-.window-menu-button:hover {
+.window-bar-sidebar-toggle-on {
   opacity: 1;
   background: var(--sidebar-hover);
 }
@@ -211,8 +207,7 @@
 /* Hover arrives in 80ms; turning on or off changes in 120ms. */
 .window-bar-toggle,
 .window-bar-ai-switch,
-.window-bar-sidebar-toggle,
-.window-menu-button {
+.window-bar-sidebar-toggle {
   transition:
     background-color var(--dur-fast) var(--ease-standard),
     opacity var(--dur-fast) var(--ease-standard);
@@ -220,8 +215,7 @@
 
 .window-bar-toggle:hover,
 .window-bar-ai-switch:hover,
-.window-bar-sidebar-toggle:hover,
-.window-menu-button:hover {
+.window-bar-sidebar-toggle:hover {
   transition-duration: var(--dur-instant);
 }
 

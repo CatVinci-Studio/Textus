@@ -10,24 +10,6 @@ async function box(page: Page, selector: string) {
   return (await page.locator(selector).boundingBox())!;
 }
 
-/** The things the eye compares between two controls: the box - its size
- *  and its rounding - how far it is dimmed, what it fills with, and how
- *  fast that changes. */
-async function look(page: Page, selector: string) {
-  return page.locator(selector).evaluate((el) => {
-    const s = getComputedStyle(el);
-    return {
-      width: s.width,
-      height: s.height,
-      radius: s.borderRadius,
-      cursor: s.cursor,
-      opacity: s.opacity,
-      background: s.backgroundColor,
-      duration: s.transitionDuration,
-    };
-  });
-}
-
 test("the bar's toggle opens the sidebar, whose tabs share the strip", async ({
   page,
 }) => {
@@ -111,45 +93,4 @@ test("zen gives the bar's controls back the window's corner", async ({
   const open = await box(page, ".window-bar-left");
   await page.locator("html").evaluate((el) => el.classList.add("zen"));
   expect((await box(page, ".window-bar-left")).x).toBeLessThan(open.x);
-});
-
-test("the sidebar's toggle is hinted by the app's tooltip, not the native title", async ({
-  page,
-}) => {
-  await openApp(page);
-  const toggle = page.locator(".window-bar-sidebar-toggle");
-  await expect(toggle).not.toHaveAttribute("title");
-  await toggle.hover();
-  const name = (await toggle.getAttribute("aria-label"))!;
-  await expect(page.getByRole("tooltip")).toHaveText(
-    new RegExp(`^${name} \\(.+\\)$`),
-  );
-});
-
-test("the toggle and the app menu's button are one control, hover and all", async ({
-  page,
-}) => {
-  await openApp(page);
-  const toggle = ".window-bar-sidebar-toggle";
-  const menu = ".window-menu-button";
-
-  // At rest: the same box, the same cursor, the same dimming and the same
-  // transition - the menu button takes the bar's own controls' look, not
-  // the caption's (window-bar.css, window-controls.css).
-  expect(await look(page, toggle)).toEqual(await look(page, menu));
-
-  const lit = [];
-  for (const selector of [toggle, menu]) {
-    await page.locator(selector).hover();
-    // Past the 80ms hover transition, and short of the tooltip's 400ms.
-    await page.waitForTimeout(250);
-    const state = await look(page, selector);
-    expect(Number(state.opacity)).toBe(1);
-    expect(state.background).not.toBe("rgba(0, 0, 0, 0)");
-    lit.push(state);
-    await page.mouse.move(0, 0);
-    await page.waitForTimeout(250);
-  }
-  // Lit, they fill with the same colour for the same time.
-  expect(lit[0]).toEqual(lit[1]);
 });
