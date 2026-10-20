@@ -27,7 +27,7 @@ GitHub-style alerts:
 
 Links look like this: [the Textus repository](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+click one to follow it: a web link opens in your browser, a link to another Markdown file opens it in a tab, and a link to `#a-heading` scrolls there. Inline HTML renders too, e.g. keyboard keys <kbd>Cmd</kbd> + <kbd>S</kbd>. So do `<details>` folds, HTML tables, a few inline styles (colour, background, size, weight, alignment, underline and strikethrough) and inline `<svg>`, which shows as a picture. Scripts and other HTML stay as source. A link to a heading in another file, such as `[see](notes.md#a-heading)`, opens that file at the heading. Obsidian wikilinks (`[[Note]]`, `[[Note|text]]` and `[[Note#Heading]]`) open the same way, from the document's folder or anywhere in its vault; they and `#tags` at the start of a line are saved exactly as written.
 
-With **Settings → Editor & Appearance → Show a swatch before colour codes** on, a colour code shows a small square of its colour before it: one written in the text, such as #ff8800 or rgb(0 128 255), and inline code that is a colour, such as `#0af`. Tags like #cafe, issue numbers like #234, links and code blocks stay as they are.
+With **Settings → Editor & Appearance → Show a swatch before colour codes** on, a colour code shows a small square of its colour before it: one written in the text with six or eight digits, such as #ff8800, or as a colour function, such as rgb(0 128 255), and inline code that is a colour, short ones like `#0af` included. Short codes in the text, tags like #cafe, issue numbers like #234, links and code blocks stay as they are.
 
 Inline math: mass–energy equivalence $E = mc^2$, Euler's identity $e^{i\pi} + 1 = 0$.
 

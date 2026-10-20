@@ -125,7 +125,7 @@ const RICH = [
   "",
   "Orange #ff8800 and rgb(0 128 255), tagged #add #cafe, issue #234, [#00ff00](https://x.org) and https://x.org/#a1b2c3.",
   "",
-  "- A list item #f00",
+  "- A list item #ff0000, but not the short #f00",
   "",
   "> A quote hsl(120 50% 50%)",
   "",
@@ -133,7 +133,7 @@ const RICH = [
   "| --- | --- |",
   "| Teal | #008080 |",
   "",
-  "Inline `#ff00ff` and `red`.",
+  "Inline `#ff00ff`, short `#f0f` and `red`.",
   "",
   "```css",
   "a { color: #ff8800; }",
@@ -165,12 +165,13 @@ test("a colour code in a heading, paragraph, list, quote or table gets a swatch;
     ["H1", "#1e90ff", "#"],
     ["P", "#ff8800", "#"],
     ["P", "rgb(0 128 255)", "r"],
-    ["LI", "#f00", "#"],
+    ["LI", "#ff0000", "#"],
     ["BLOCKQUOTE", "hsl(120 50% 50%)", "h"],
     ["TD", "#008080", "#"],
   ]);
-  // Inline code keeps its own swatch; the fenced block has none.
-  await expect(page.locator(swatch)).toHaveCount(1);
+  // Inline code keeps its own swatch, short hex too; the fenced block has
+  // none.
+  await expect(page.locator(swatch)).toHaveCount(2);
   await expect(page.locator(`${editor} pre .color-swatch-text`)).toHaveCount(0);
   // The swatch is drawn before the code without adding any text.
   const before = await page
@@ -183,6 +184,58 @@ test("a colour code in a heading, paragraph, list, quote or table gets a swatch;
   expect(before.width).toBeGreaterThan(5);
   expect(before.content).toBe('""');
   await expect(page.locator(`${editor} h1`)).toHaveText("Brand #1e90ff");
+});
+
+test("every swatch is painted, in its colour, at a size that shows", async ({
+  page,
+}) => {
+  await open(page, true, RICH);
+  await expect(page.locator(`${editor} table`)).toBeVisible();
+  // In the DOM is not enough: each swatch's box (inline code's element,
+  // plain text's ::before) must have a size and paint its colour.
+  const painted = await page.evaluate((selector) => {
+    const probe = document.createElement("span");
+    document.body.appendChild(probe);
+    const rgb = (value: string) => {
+      probe.style.color = value;
+      return getComputedStyle(probe).color;
+    };
+    const result = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        `${selector} .color-swatch, ${selector} .color-swatch-text`,
+      ),
+    ).map((el) => {
+      const inCode = el.classList.contains("color-swatch");
+      const style = getComputedStyle(el, inCode ? null : "::before");
+      const box = inCode
+        ? el.getBoundingClientRect()
+        : { width: parseFloat(style.width), height: parseFloat(style.height) };
+      const colour = el.style.getPropertyValue("--color-swatch");
+      return {
+        colour,
+        shows:
+          style.display !== "none" &&
+          style.visibility !== "hidden" &&
+          box.width > 5 &&
+          box.height > 5,
+        paints: style.backgroundImage.includes(rgb(colour)),
+      };
+    });
+    probe.remove();
+    return result;
+  }, editor);
+  expect(painted.map((p) => p.colour)).toEqual([
+    "#1e90ff",
+    "#ff8800",
+    "rgb(0 128 255)",
+    "#ff0000",
+    "hsl(120 50% 50%)",
+    "#008080",
+    "#ff00ff",
+    "#f0f",
+  ]);
+  for (const p of painted)
+    expect(p, p.colour).toMatchObject({ shows: true, paints: true });
 });
 
 test("there are no plain-text swatches with the setting off", async ({

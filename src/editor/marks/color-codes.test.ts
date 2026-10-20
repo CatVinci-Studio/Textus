@@ -55,15 +55,14 @@ const codes = (text: string) =>
   findColorCodes(text).map(({ from, to }) => text.slice(from, to));
 
 describe("findColorCodes", () => {
-  it("finds hex codes standing as tokens of their own", () => {
+  it("finds six- and eight-digit hex codes standing as tokens of their own", () => {
     expect(codes("Orange #ff8800 and #FF880080.")).toEqual([
       "#ff8800",
       "#FF880080",
     ]);
-    expect(codes("#f00")).toEqual(["#f00"]);
-    expect(codes("(#0af), [#09c] and '#1e1e1e'")).toEqual([
-      "#0af",
-      "#09c",
+    expect(codes("(#00aaff), [#0099cc] and '#1e1e1e'")).toEqual([
+      "#00aaff",
+      "#0099cc",
       "#1e1e1e",
     ]);
     expect(codes("a #ffffff, b #abcdef; c #c0ffee!")).toEqual([
@@ -76,7 +75,10 @@ describe("findColorCodes", () => {
   });
 
   it("finds a hex code right beside CJK text, which has no spaces", () => {
-    expect(codes("主色是#ff8800，辅色#0af。")).toEqual(["#ff8800", "#0af"]);
+    expect(codes("主色是#ff8800，辅色#00aaff。")).toEqual([
+      "#ff8800",
+      "#00aaff",
+    ]);
     expect(codes("「#1e90ff」の色")).toEqual(["#1e90ff"]);
   });
 
@@ -95,6 +97,11 @@ describe("findColorCodes", () => {
       "#fff",
       "#FFFF",
     ])
+      expect(codes(text), text).toEqual([]);
+  });
+
+  it("leaves three- and four-digit hex alone, which inline code still takes", () => {
+    for (const text of ["#f00", "#0af", "#09c", "#f00d", "#1a2b", "主色#0af。"])
       expect(codes(text), text).toEqual([]);
   });
 

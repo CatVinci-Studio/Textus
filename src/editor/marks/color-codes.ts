@@ -63,7 +63,9 @@ export interface ColorCode {
   color: string;
 }
 
-const HEX_RE = /#([0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})/gi;
+// Six or eight digits only: in prose a short one is as often a tag
+// (#add, #cafe) or an issue (#234) as a colour.
+const HEX_RE = /#([0-9a-f]{8}|[0-9a-f]{6})/gi;
 const FUNCTION_RE = new RegExp(`(?:${FUNCTION_FORMS.join("|")})`, "gi");
 
 // Scripts written without spaces between words, where a colour code can
@@ -80,7 +82,7 @@ const isWordlike = (ch: string | undefined) =>
   ch !== undefined && WORDLIKE.test(ch) && !CJK.test(ch);
 
 // English words spelled in hex digits, six or eight long: tags, not
-// colours.
+// colours (#facade).
 const HEX_WORDS = new Set([
   "accede",
   "beaded",
@@ -91,14 +93,6 @@ const HEX_WORDS = new Set([
   "efface",
   "facade",
 ]);
-
-/** Whether a hex code reads as a colour rather than a tag or a number:
- *  six or eight digits always do (bar a few English words); three or four
- *  need a digit (#add, #cafe are words) and a letter (#123 is an issue). */
-function isHexColor(digits: string): boolean {
-  if (digits.length >= 6) return !HEX_WORDS.has(digits.toLowerCase());
-  return /\d/.test(digits) && /[a-f]/i.test(digits);
-}
 
 /** The whitespace-delimited stretch of `text` around [from, to). */
 function tokenAround(text: string, from: number, to: number): string {
@@ -114,8 +108,9 @@ const inUrl = (token: string) => /:\/\/|www\./i.test(token);
 /**
  * The colour codes written in a block's text, in order. A hex code counts
  * only as a token of its own - not inside a word, a URL or a path - and
- * only when it reads as a colour (see isHexColor), so Obsidian tags
- * (#add, #cafe) and issue numbers (#234) stay plain. Colour functions
+ * only with six or eight digits that don't spell a word, so Obsidian tags
+ * (#add, #cafe, #facade) and issue numbers (#234) stay plain; inline code
+ * takes the short forms (colorOfCode). Colour functions
  * count wherever their syntax is whole. Colour names never do.
  */
 export function findColorCodes(text: string): ColorCode[] {
@@ -123,7 +118,7 @@ export function findColorCodes(text: string): ColorCode[] {
   for (const match of text.matchAll(HEX_RE)) {
     const from = match.index;
     const to = from + match[0].length;
-    if (!isHexColor(match[1])) continue;
+    if (HEX_WORDS.has(match[1].toLowerCase())) continue;
     if (isWordlike(text[from - 1]) || isWordlike(text[to])) continue;
     // "#fff.png", "#fff:hover": a file name or a selector, not a colour.
     if (/[.:,;]/.test(text[to] ?? "") && /\w/.test(text[to + 1] ?? ""))
