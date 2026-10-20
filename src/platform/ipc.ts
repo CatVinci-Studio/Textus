@@ -611,6 +611,13 @@ export interface CompletionHints {
   block: string;
   /** "short" for the as-you-type nudge, "long" for an explicit request. */
   length: "short" | "long";
+  /** How many alternatives to write (the manual trigger asks for three). */
+  candidates?: number;
+  /** The context's prose - its text without code blocks, diagram and math
+   *  source - which the backend reads the language from. */
+  prose?: string;
+  /** The app's language, for when the prose is too short to tell. */
+  uiLanguage?: string | null;
 }
 
 /** A project library entry (`.textus/library/*.md`, ai::project). */

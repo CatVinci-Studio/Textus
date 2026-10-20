@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { Schema } from "@milkdown/kit/prose/model";
+import { Schema, type Node as ProseNode } from "@milkdown/kit/prose/model";
+import { EditorState, TextSelection } from "@milkdown/kit/prose/state";
 import {
+  completionContext,
+  hasProse,
   isOneLineBlock,
   nextWordChunk,
+  proseText,
   splitCandidates,
   stripEcho,
   tidySuggestion,
+  typedThrough,
 } from "./ghost-text-plugin";
 
 describe("stripEcho", () => {
@@ -91,6 +96,103 @@ describe("one-line blocks", () => {
     );
     expect(tidySuggestion("Act", " walks.\n\nThen leaves.")).toBe(
       " walks.\n\nThen leaves.",
+    );
+  });
+});
+
+describe("the prose a completion reads its language from", () => {
+  const schema = new Schema({
+    nodes: {
+      doc: { content: "block+" },
+      paragraph: { group: "block", content: "inline*" },
+      code_block: { group: "block", content: "text*", code: true },
+      math_inline: {
+        group: "inline",
+        inline: true,
+        atom: true,
+        leafText: () => "x^2",
+      },
+      text: { group: "inline" },
+    },
+  });
+  const p = (...content: ProseNode[]) =>
+    schema.node("paragraph", null, content);
+  const code = (t: string) => schema.node("code_block", null, schema.text(t));
+
+  it("leaves out a diagram's source", () => {
+    const doc = schema.node("doc", null, [
+      code("graph TD\n  A[Start] --> B[End]"),
+      p(),
+    ]);
+    const { before, prose } = completionContext(doc, doc.content.size - 1);
+    expect(before).toContain("graph TD");
+    expect(prose).toBe("");
+    expect(hasProse(prose)).toBe(false);
+  });
+
+  it("keeps the paragraphs around it, without inline math", () => {
+    const doc = schema.node("doc", null, [
+      p(schema.text("流程如下")),
+      code("graph TD\n  A --> B"),
+      p(schema.text("面积 "), schema.node("math_inline"), schema.text(" 不变")),
+    ]);
+    const { prose } = completionContext(doc, doc.content.size - 1);
+    expect(prose).toBe("流程如下\n\n面积  不变");
+    expect(hasProse(prose)).toBe(true);
+    expect(proseText(doc, 0, 3)).toBe("流程");
+  });
+
+  it("counts letters, not digits and punctuation, as prose", () => {
+    expect(hasProse("1. -- 2026")).toBe(false);
+    expect(hasProse("图")).toBe(true);
+  });
+});
+
+describe("typing over a suggestion", () => {
+  const schema = new Schema({
+    nodes: {
+      doc: { content: "paragraph+" },
+      paragraph: { content: "text*" },
+      text: {},
+    },
+  });
+  const doc = schema.node("doc", null, [
+    schema.node("paragraph", null, schema.text("The plan")),
+  ]);
+  const end = doc.content.size - 1;
+  // The caret at the suggestion, where typing puts its text.
+  const state = EditorState.create({
+    doc,
+    selection: TextSelection.create(doc, end),
+  });
+  const ghost = {
+    suggestion: " works well",
+    candidates: [" works well", " fails", " worked"],
+    index: 0,
+    from: end,
+  };
+
+  it("narrows it while the typed text is its beginning", () => {
+    const next = typedThrough(state.tr.insertText(" wo", end), ghost);
+    expect(next?.suggestion).toBe("rks well");
+    expect(next?.candidates).toEqual(["rks well", "rked"]);
+    expect(next?.from).toBe(end + 3);
+  });
+
+  it("ends it on anything else", () => {
+    // Other text, or the whole suggestion typed out.
+    expect(typedThrough(state.tr.insertText(" x", end), ghost)).toBeNull();
+    expect(
+      typedThrough(state.tr.insertText(" works well", end), ghost),
+    ).toBeNull();
+    // Text going in elsewhere, or a deletion.
+    expect(typedThrough(state.tr.insertText(" w", 1), ghost)).toBeNull();
+    expect(typedThrough(state.tr.delete(end - 1, end), ghost)).toBeNull();
+    // An IME's preedit isn't the suggestion's text; its commit can be.
+    const zh = { ...ghost, suggestion: "很好", candidates: ["很好"] };
+    expect(typedThrough(state.tr.insertText("hen", end), zh)).toBeNull();
+    expect(typedThrough(state.tr.insertText("很", end), zh)?.suggestion).toBe(
+      "好",
     );
   });
 });

@@ -480,6 +480,7 @@ pub fn request_for(case: &CompletionCase) -> (String, String, Option<&'static st
         block: Some(case.block.to_string()),
         length: Some(if case.long { "long" } else { "short" }.to_string()),
         candidates: case.candidates,
+        ..Default::default()
     };
     let style = TONES
         .iter()
