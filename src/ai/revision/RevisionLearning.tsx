@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ai } from "../../platform/ipc";
+import { announce } from "../../ui/announce";
 import { usePresenceProps } from "../../ui/usePresence";
 import { parseKindKey } from "./change-kind";
 import {
@@ -147,14 +148,23 @@ export function RevisionLearningBar({
     const timer = setTimeout(clearSaved, 4000);
     return () => clearTimeout(timer);
   }, [saved, clearSaved]);
+  // The line that stands alone once the suggestion is answered, said to a
+  // screen reader as it appears (ui/announce.ts).
+  const savedLine =
+    !parsed && saved
+      ? saved === "saved"
+        ? labels.learnSaved
+        : labels.memoryActionFailed
+      : null;
+  useEffect(() => {
+    if (savedLine) announce(savedLine);
+  }, [savedLine]);
   const className = `review-bar learn-bar${phone ? " review-bar-phone" : ""}`;
   if (!parsed) {
-    if (!saved) return null;
+    if (!savedLine) return null;
     return (
-      <div {...presence} className={className} role="status">
-        <span className="learn-bar-text">
-          {saved === "saved" ? labels.learnSaved : labels.memoryActionFailed}
-        </span>
+      <div {...presence} className={className}>
+        <span className="learn-bar-text">{savedLine}</span>
       </div>
     );
   }

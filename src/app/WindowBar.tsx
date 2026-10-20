@@ -68,16 +68,17 @@ export function WindowBar({
       <div className="window-bar-left" data-tauri-drag-region>
         {/* The phone and the iPad open the sidebar from the menu. */}
         {!isIOSApp && (
-          <button
-            type="button"
-            className={`window-bar-sidebar-toggle${sidebarOpen ? " window-bar-sidebar-toggle-on" : ""}`}
-            aria-pressed={sidebarOpen}
-            aria-label={t.menuToggleSidebar}
-            title={`${t.menuToggleSidebar} (${sidebarShortcut})`}
-            onClick={onToggleSidebar}
-          >
-            <SidebarToggleIcon />
-          </button>
+          <Tooltip text={`${t.menuToggleSidebar} (${sidebarShortcut})`}>
+            <button
+              type="button"
+              className={`window-bar-sidebar-toggle${sidebarOpen ? " window-bar-sidebar-toggle-on" : ""}`}
+              aria-pressed={sidebarOpen}
+              aria-label={t.menuToggleSidebar}
+              onClick={onToggleSidebar}
+            >
+              <SidebarToggleIcon />
+            </button>
+          </Tooltip>
         )}
         <AppMenuButton checks={menuChecks} />
       </div>
@@ -86,12 +87,13 @@ export function WindowBar({
         on a narrow window. */}
       <span className="window-bar-title">
         {dirty && (
-          <span
-            className="unsaved-dot"
-            role="img"
-            aria-label={t.unsavedIndicator}
-            title={t.unsavedIndicator}
-          />
+          <Tooltip text={t.unsavedIndicator}>
+            <span
+              className="unsaved-dot"
+              role="img"
+              aria-label={t.unsavedIndicator}
+            />
+          </Tooltip>
         )}
         <span className="window-bar-title-text">{title}</span>
       </span>

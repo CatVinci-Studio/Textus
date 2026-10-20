@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { isIOSApp } from "../platform/capabilities";
+import { announce } from "../ui/announce";
 import { Presence, PresenceDiv } from "../ui/usePresence";
 import { basename } from "../utils/path";
 import type { Strings } from "../i18n/strings";
@@ -60,6 +61,10 @@ export function WordImportNotice({
   onDismiss: () => void;
   t: Strings;
 }) {
+  const notice = path && t.wordImportNotice.replace("{name}", basename(path));
+  useEffect(() => {
+    if (notice) announce(notice);
+  }, [notice]);
   useEffect(() => {
     if (!path) return;
     const timer = window.setTimeout(onDismiss, WORD_NOTICE_MS);
@@ -68,8 +73,8 @@ export function WordImportNotice({
   return (
     <Presence show={path !== null} exitMs={120}>
       {path !== null && (
-        <PresenceDiv className="draft-restored-toast" role="status">
-          <span>{t.wordImportNotice.replace("{name}", basename(path))}</span>
+        <PresenceDiv className="draft-restored-toast">
+          <span>{notice}</span>
           <button className="update-toast-secondary" onClick={onDismiss}>
             {t.wordImportDismiss}
           </button>

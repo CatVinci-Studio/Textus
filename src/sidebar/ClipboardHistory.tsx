@@ -6,6 +6,7 @@ import {
   recordClipboardEntry,
 } from "../clipboard/history";
 import { INSERT_CLIPBOARD_TEXT_EVENT } from "../utils/events";
+import { Tooltip } from "../ui/Tooltip";
 
 const PREVIEW_MAX_CHARS = 120;
 
@@ -51,17 +52,19 @@ export function ClipboardHistory() {
           }
         >
           <span className="clipboard-entry-text">{preview(entry.text)}</span>
-          <button
-            className="clipboard-entry-copy"
-            title={t.clipboardCopy}
-            onClick={(e) => {
-              e.stopPropagation();
-              void navigator.clipboard.writeText(entry.text);
-              recordClipboardEntry(entry.text);
-            }}
-          >
-            <CopyIcon />
-          </button>
+          <Tooltip text={t.clipboardCopy}>
+            <button
+              className="clipboard-entry-copy"
+              aria-label={t.clipboardCopy}
+              onClick={(e) => {
+                e.stopPropagation();
+                void navigator.clipboard.writeText(entry.text);
+                recordClipboardEntry(entry.text);
+              }}
+            >
+              <CopyIcon />
+            </button>
+          </Tooltip>
         </div>
       ))}
     </div>

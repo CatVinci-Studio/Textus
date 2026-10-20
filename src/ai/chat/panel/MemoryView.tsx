@@ -10,6 +10,7 @@ import type {
 import { localeOf, type Lang, type Strings } from "../../../i18n/strings";
 import { basename } from "../../../utils/path";
 import { listFromWorkspace, pickerSkills } from "../skill-picker";
+import { Tooltip } from "../../../ui/Tooltip";
 import "./MemoryView.css";
 
 /**
@@ -161,15 +162,16 @@ export function MemorySections({
                       </span>
                     )}
                   </button>
-                  <button
-                    type="button"
-                    className="memory-entry-delete"
-                    aria-label={`${t.memoryDelete} ${entry.name}`}
-                    title={t.memoryDelete}
-                    onClick={() => onDeleteEntry(entry)}
-                  >
-                    ×
-                  </button>
+                  <Tooltip text={t.memoryDelete}>
+                    <button
+                      type="button"
+                      className="memory-entry-delete"
+                      aria-label={`${t.memoryDelete} ${entry.name}`}
+                      onClick={() => onDeleteEntry(entry)}
+                    >
+                      ×
+                    </button>
+                  </Tooltip>
                 </div>
               );
             })}

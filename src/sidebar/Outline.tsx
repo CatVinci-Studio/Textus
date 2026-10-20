@@ -5,6 +5,7 @@ import { useSettings } from "../settings/SettingsContext";
 import { scrollBehavior } from "../ui/motion";
 import { unfoldElement } from "../editor/html/details-fold";
 import { useTreeKeys } from "../ui/useTreeKeys";
+import { Tooltip } from "../ui/Tooltip";
 import "./FileTree.css";
 
 interface OutlineProps {
@@ -149,20 +150,21 @@ export function Outline({ content }: OutlineProps) {
             onClick={() => scrollToHeading(h.index)}
           >
             {h.hasChildren ? (
-              <span
-                className="outline-toggle"
-                data-tree-toggle
-                aria-hidden="true"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggle(h.id);
-                }}
-                title={isCollapsed ? t.outlineExpand : t.outlineCollapse}
-              >
-                <ChevronIcon
-                  className={`chevron ${isCollapsed ? "" : "chevron-open"}`}
-                />
-              </span>
+              <Tooltip text={isCollapsed ? t.outlineExpand : t.outlineCollapse}>
+                <span
+                  className="outline-toggle"
+                  data-tree-toggle
+                  aria-hidden="true"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggle(h.id);
+                  }}
+                >
+                  <ChevronIcon
+                    className={`chevron ${isCollapsed ? "" : "chevron-open"}`}
+                  />
+                </span>
+              </Tooltip>
             ) : (
               <span className="outline-toggle-spacer" />
             )}

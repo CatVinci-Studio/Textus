@@ -131,17 +131,18 @@ function ChatHistoryList({
                   {entry.docPath ? ` · ${basename(entry.docPath)}` : ""}
                 </span>
               </div>
-              <button
-                className="chat-history-entry-delete"
-                title={t.chatHistoryDelete}
-                aria-label={t.chatHistoryDelete}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteConversation(entry.id);
-                }}
-              >
-                <CloseIcon />
-              </button>
+              <Tooltip text={t.chatHistoryDelete}>
+                <button
+                  className="chat-history-entry-delete"
+                  aria-label={t.chatHistoryDelete}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteConversation(entry.id);
+                  }}
+                >
+                  <CloseIcon />
+                </button>
+              </Tooltip>
             </div>
           ))}
         </section>

@@ -8,41 +8,9 @@
 
 use super::sniff::MAX_IMAGE_BYTES;
 use super::ImageError;
+use crate::public_address::{all_public, is_local_name, is_public};
 use std::net::{IpAddr, SocketAddr};
 use std::sync::Arc;
-
-/// Whether an address is on the public internet. Conservative: anything
-/// reserved, private, shared, link-local, documentation, benchmarking or
-/// multicast is not.
-pub(crate) fn is_public(ip: IpAddr) -> bool {
-    match ip {
-        IpAddr::V4(ip) => {
-            let [a, b, c, _] = ip.octets();
-            !(a == 0
-                || a == 10
-                || a == 127
-                || a >= 224
-                || (a == 100 && (64..=127).contains(&b))
-                || (a == 169 && b == 254)
-                || (a == 172 && (16..=31).contains(&b))
-                || (a == 192
-                    && (b == 168 || (b == 0 && (c == 0 || c == 2)) || (b == 88 && c == 99)))
-                || (a == 198 && (b == 18 || b == 19 || (b == 51 && c == 100)))
-                || (a == 203 && b == 0 && c == 113))
-        }
-        IpAddr::V6(ip) => match ip.to_ipv4_mapped() {
-            Some(v4) => is_public(IpAddr::V4(v4)),
-            None => {
-                let s = ip.segments();
-                // Global unicast (2000::/3), less 6to4, documentation and
-                // the special-purpose 2001::/23.
-                (s[0] & 0xe000) == 0x2000
-                    && s[0] != 0x2002
-                    && !(s[0] == 0x2001 && (s[1] < 0x0200 || s[1] == 0x0db8))
-            }
-        },
-    }
-}
 
 /// A test fixture serves its pictures from 127.0.0.1 over plain HTTP; no
 /// build outside the tests accepts that.
@@ -73,7 +41,7 @@ pub(crate) fn check_url(url: &reqwest::Url) -> Result<(), String> {
         return Err("it carries a user name or password".into());
     }
     match url.host() {
-        Some(url::Host::Domain(_)) => Ok(()),
+        Some(url::Host::Domain(name)) if !is_local_name(name) => Ok(()),
         Some(url::Host::Ipv4(ip)) if is_public(IpAddr::V4(ip)) => Ok(()),
         Some(url::Host::Ipv6(ip)) if is_public(IpAddr::V6(ip)) => Ok(()),
         _ => Err("it isn't a public address".into()),
@@ -81,7 +49,7 @@ pub(crate) fn check_url(url: &reqwest::Url) -> Result<(), String> {
 }
 
 /// Resolves names as usual, and refuses a name that resolves to an address
-/// [`is_public`] turns down - what keeps a public-looking host from
+/// [`is_public`] turns down (any of them: [`all_public`]) - what keeps a public-looking host from
 /// pointing a download into the user's own network.
 struct PublicOnly;
 
@@ -91,7 +59,7 @@ impl reqwest::dns::Resolve for PublicOnly {
             let host = name.as_str().to_string();
             let found: Vec<SocketAddr> =
                 tokio::net::lookup_host((host.as_str(), 0)).await?.collect();
-            if found.is_empty() || found.iter().any(|a| !is_public(a.ip())) {
+            if !all_public(found.iter().map(SocketAddr::ip)) {
                 return Err(format!("{host} doesn't resolve to a public address").into());
             }
             Ok(Box::new(found.into_iter()) as reqwest::dns::Addrs)
@@ -174,31 +142,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn private_and_special_addresses_are_not_public() {
-        for address in [
-            "127.0.0.1",
-            "10.2.3.4",
-            "172.16.0.1",
-            "192.168.1.1",
-            "169.254.169.254",
-            "0.0.0.0",
-            "100.64.0.1",
-            "198.18.0.1",
-            "224.0.0.1",
-            "::1",
-            "::ffff:127.0.0.1",
-            "::ffff:10.0.0.1",
-            "fc00::1",
-            "fe80::1",
-            "2001:db8::1",
-        ] {
-            assert!(!is_public(address.parse().unwrap()), "{address}");
-        }
-        assert!(is_public("8.8.8.8".parse().unwrap()));
-        assert!(is_public("2606:4700:4700::1111".parse().unwrap()));
-    }
-
-    #[test]
     fn only_public_https_addresses_are_downloaded() {
         let check = |u: &str| check_url(&reqwest::Url::parse(u).unwrap());
         assert!(check("https://cdn.example.com/a.png").is_ok());
@@ -206,8 +149,22 @@ mod tests {
         assert!(check("https://user:pw@cdn.example.com/a.png").is_err());
         assert!(check("https://10.0.0.8/a.png").is_err());
         assert!(check("https://[::1]/a.png").is_err());
+        assert!(check("https://[::ffff:192.168.0.1]/a.png").is_err());
+        assert!(check("https://169.254.169.254/latest/meta-data/").is_err());
+        assert!(check("https://localhost/a.png").is_err());
+        assert!(check("https://printer.local/a.png").is_err());
         assert!(check("ftp://cdn.example.com/a.png").is_err());
         assert!(check("file:///etc/passwd").is_err());
+    }
+
+    /// DNS rebinding: a name is checked by what it resolves to, and the
+    /// connection uses those same addresses.
+    #[test]
+    fn a_name_resolving_to_a_private_address_is_refused() {
+        use reqwest::dns::Resolve;
+        let name: reqwest::dns::Name = "localhost".parse().unwrap();
+        let resolved = tauri::async_runtime::block_on(PublicOnly.resolve(name));
+        assert!(resolved.is_err());
     }
 
     #[test]
