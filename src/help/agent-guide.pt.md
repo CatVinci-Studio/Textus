@@ -13,6 +13,8 @@ O login acontece no seu navegador. O suporte a imagens, busca na web e edições
 
 A lista de modelos integrada traz só os modelos padrão de cada provedor (na Anthropic: Claude Sonnet 5.5 para o chat e Claude Haiku 5.5 para o autocompletar e a verificação gramatical). Clique em **Buscar Modelos** na linha Lista de modelos, em **Conexão**, para carregar a lista atual do provedor e escolher qualquer modelo dela.
 
+Para o **Doubao (Volcengine)**, crie a chave de API no [console do Volcengine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey) e, nesse mesmo console, ative os modelos que quer usar: o Ark recusa pedidos a um modelo que sua conta não ativou.
+
 Os atalhos abaixo usam a notação do macOS; no Windows e no Linux, leia Cmd como Ctrl e Option como Alt. Se você mudou um atalho, **Ajustes > Atalhos** mostra o atual.
 
 ## Os recursos de IA

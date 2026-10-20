@@ -4,6 +4,7 @@
 
 use crate::ai::catalog::ProviderCatalogEntry;
 use aicompat::providers::anthropic::AnthropicAuth;
+use aicompat::providers::custom;
 use tauri::AppHandle;
 
 pub(crate) const NOT_CONFIGURED: &str =
@@ -69,4 +70,36 @@ pub async fn resolve_chat_completions(
         return Err(NOT_CONFIGURED.to_string());
     }
     Ok((base_url, key, entry.default_model.map(str::to_string)))
+}
+
+/// Which server a chat-completions base URL points at, for the request
+/// fields only it needs. By host rather than catalog id, so a custom
+/// endpoint set up with an Ark URL gets them too.
+pub fn chat_vendor(base_url: &str) -> custom::Vendor {
+    if base_url.contains(".volces.com") {
+        custom::Vendor::Ark
+    } else {
+        custom::Vendor::Generic
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ark_is_recognized_by_host_for_doubao_and_custom_endpoints() {
+        let doubao = crate::ai::catalog::find("doubao")
+            .and_then(|e| e.base_url)
+            .unwrap();
+        assert_eq!(chat_vendor(doubao), custom::Vendor::Ark);
+        assert_eq!(
+            chat_vendor("https://ark.cn-shanghai.volces.com/api/v3/"),
+            custom::Vendor::Ark
+        );
+        assert_eq!(
+            chat_vendor("https://api.deepseek.com/v1"),
+            custom::Vendor::Generic
+        );
+    }
 }

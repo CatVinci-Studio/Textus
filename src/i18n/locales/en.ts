@@ -450,6 +450,7 @@ type /name in a conversation to use one.
   apiKeyConfigured: "Configured",
   providerNotConfigured: "Not configured",
   providerCustom: "Custom Endpoint",
+  providerDoubao: "Doubao (Volcengine)",
   agentModelLabel: "Chat model",
   agentDefaultModeLabel: "Default mode",
   agentModeWrite: "Write",

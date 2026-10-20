@@ -13,6 +13,8 @@ Textus 提供续写、语法检查，以及围绕文档的对话和修改。本�
 
 内置的模型列表只包含各服务商的默认模型（Anthropic：对话用 Claude Sonnet 5.5，续写和语法检查用 Claude Haiku 5.5）。点**连接**里模型列表一行的 **获取模型列表**，即可载入该服务商当前的全部模型并从中选择。
 
+使用**豆包（火山引擎）**时，在[火山方舟控制台](https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey)创建 API Key，并在同一控制台的**开通管理**里开通要用的模型：未开通的模型，方舟会拒绝请求。
+
 以下快捷键按 macOS 标注；Windows 和 Linux 将 Cmd 换成 Ctrl、Option 换成 Alt。修改过快捷键时，以 **设置 > 快捷键** 中的配置为准。
 
 ## AI 功能

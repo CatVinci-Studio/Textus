@@ -467,6 +467,7 @@ para usar una.
   apiKeyConfigured: "Configurado",
   providerNotConfigured: "Sin configurar",
   providerCustom: "Endpoint personalizado",
+  providerDoubao: "Doubao (Volcengine)",
   agentModelLabel: "Modelo de chat",
   agentDefaultModeLabel: "Modo predeterminado",
   agentModeWrite: "Escribir",

@@ -173,6 +173,11 @@ real money - filter with `TEXTUS_EVAL_FILTER` and skip the judge with
 `TEXTUS_EVAL_JUDGE=0` while iterating. The checking code itself is
 unit-tested and runs with the normal `cargo test`.
 
+`live_eval::doubao` is separate: three requests against Volcengine Ark (a
+writing call, a tool call, an image) that check Textus's request shapes for
+the Doubao provider, keyed by `$VOLCENGINE_ARK_API_KEY` and skipped without
+it.
+
 ## What is deliberately not covered
 
 - **WebKitGTK and WebView2 rendering.** The visual suite runs Chromium; the

@@ -5,8 +5,8 @@
 //!
 //! Mirrored on the TS side by `src/ai/provider-catalog.ts` (kept in sync by
 //! hand - comments on both sides point here). Labels are brand names, shared
-//! across languages, so they live here rather than in i18n - the one
-//! exception is "custom", whose label the frontend localizes.
+//! across languages, so they live here rather than in i18n - the exceptions
+//! are "custom" and "doubao", whose labels the frontend localizes.
 
 use serde::Serialize;
 
@@ -212,6 +212,31 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         supports_vision: true,
         models_listable: true,
         known_models: &["qwen3.7-plus", "qwen3.8-flash"],
+    },
+    ProviderCatalogEntry {
+        id: "doubao",
+        // "豆包（火山引擎）" in Chinese - the frontend localizes it.
+        label: "Doubao (Volcengine)",
+        dialect: "openai-chat-completions",
+        auth: &["api_key"],
+        // Volcengine Ark. With an API key, `model` takes the Model ID
+        // itself, so no inference endpoint (ep-...) has to be created first.
+        base_url: Some("https://ark.cn-beijing.volces.com/api/v3"),
+        // Turbo is Ark's low-latency tier; aicompat turns its thinking off
+        // for writing (see custom::Vendor::Ark).
+        default_model: Some("doubao-seed-2-1-turbo-260628"),
+        agent_default_model: Some("doubao-seed-2-1-pro-260628"),
+        key_optional: false,
+        // Every current Seed model reads images.
+        supports_vision: true,
+        models_listable: true,
+        // Plus Ark's rolling id, which always serves the newest Seed model
+        // without a date-suffixed name to chase.
+        known_models: &[
+            "doubao-seed-2-1-pro-260628",
+            "doubao-seed-2-1-turbo-260628",
+            "doubao-seed-evolving",
+        ],
     },
     ProviderCatalogEntry {
         id: "ollama",

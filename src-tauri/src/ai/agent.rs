@@ -1116,6 +1116,7 @@ async fn ai_agent_message_inner(
             let use_responses_web_search = web_search
                 && (provider == "xai"
                     || (provider == "qwen" && qwen_uses_responses_search(&endpoint_model)));
+            let vendor = route::chat_vendor(&base_url);
 
             let step = |turns: Vec<AgentTurn>| {
                 let base_url = base_url.clone();
@@ -1152,6 +1153,7 @@ async fn ai_agent_message_inner(
                         &turns,
                         &tool_specs,
                         native_web_search,
+                        vendor,
                         &sink,
                     )
                     .await
@@ -1166,6 +1168,7 @@ async fn ai_agent_message_inner(
                                 &turns,
                                 &tool_specs,
                                 native_web_search,
+                                vendor,
                             )
                             .await
                         }

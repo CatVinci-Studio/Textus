@@ -468,6 +468,7 @@ utiliser une.
   apiKeyConfigured: "Configuré",
   providerNotConfigured: "Non configuré",
   providerCustom: "Serveur personnalisé",
+  providerDoubao: "Doubao (Volcengine)",
   agentModelLabel: "Modèle de discussion",
   agentDefaultModeLabel: "Mode par défaut",
   agentModeWrite: "Écrire",

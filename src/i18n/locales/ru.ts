@@ -456,6 +456,7 @@ export default {
   apiKeyConfigured: "Настроен",
   providerNotConfigured: "Не настроен",
   providerCustom: "Свой сервер",
+  providerDoubao: "Doubao (Volcengine)",
   agentModelLabel: "Модель чата",
   agentDefaultModeLabel: "Режим по умолчанию",
   agentModeWrite: "Написание",

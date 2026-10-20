@@ -127,7 +127,7 @@ iPhone 与 iPad 版即将推出。[在 GitHub 查看所有版本](https://github
 
 Textus 支持超过 20 种不同的 LLM，以及任何提供 OpenAI 兼容接口的 LLM。
 
-OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Ollama · 任何兼容 OpenAI 接口的服务
+OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · 豆包 · Ollama · 任何兼容 OpenAI 接口的服务
 
 <p align="center">
   <img src="docs/images/readme/zh/settings.png" alt="不同 LLM，随你喜欢" width="860" />

@@ -13,6 +13,8 @@ Textus에는 글쓰기를 위해 만든 AI인 Textus AI가 들어 있습니다. 
 
 기본 제공 모델 목록에는 제공업체마다 기본 모델만 들어 있습니다(Anthropic은 채팅에 Claude Sonnet 5.5, 이어 쓰기와 문법 검사에 Claude Haiku 5.5). **연결** 아래 모델 목록 행에서 **모델 가져오기**를 누르면 제공업체의 현재 목록을 불러와 그중 어떤 모델이든 고를 수 있습니다.
 
+**Doubao (Volcengine)** 사용 시에는 [Volcengine Ark 콘솔](https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey)에서 API 키를 만들고, 같은 콘솔에서 쓸 모델을 활성화하세요. 활성화하지 않은 모델에 대한 요청은 Ark가 거부합니다.
+
 아래 단축키는 macOS 표기입니다. Windows와 Linux에서는 Cmd를 Ctrl로, Option을 Alt로 바꿔 읽으세요. 단축키를 바꿨다면 **설정 > 단축키**에서 현재 단축키를 확인할 수 있습니다.
 
 ## AI 기능

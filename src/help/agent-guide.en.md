@@ -13,6 +13,8 @@ Signing in happens in your browser. Whether images, web search and document edit
 
 The built-in model list only holds each provider's defaults (for Anthropic: Claude Sonnet 5.5 for chat, Claude Haiku 5.5 for completion and grammar). Press **Fetch Models** on the Model list row under **Connection** to load the provider's current list and choose any model from it.
 
+For **Doubao (Volcengine)**, create the API key in the [Volcengine Ark console](https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey) and, in the same console, enable the models you want to use: Ark turns down a request for a model your account hasn't enabled.
+
 Shortcuts below use macOS notation; on Windows and Linux, read Cmd as Ctrl and Option as Alt. If you have changed a shortcut, **Settings > Shortcuts** has the current one.
 
 ## The AI features

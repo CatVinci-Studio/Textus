@@ -49,6 +49,7 @@ const PROVIDERS = {
   moonshot: "moonshotai-cn",
   zhipu: "zhipuai",
   qwen: "alibaba-cn",
+  doubao: "volcengine",
 };
 const UNMAPPED = ["openrouter", "ollama", "custom"];
 

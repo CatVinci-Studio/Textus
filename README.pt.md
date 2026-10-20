@@ -126,7 +126,7 @@ Aprende o seu estilo, lembra seus personagens e lugares e segue suas instruçõe
 
 O Textus funciona com mais de 20 LLMs e com qualquer LLM que ofereça uma API compatível com a OpenAI.
 
-OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Ollama · Qualquer endpoint compatível com OpenAI
+OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Doubao · Ollama · Qualquer endpoint compatível com OpenAI
 
 <p align="center">
   <img src="docs/images/readme/pt/settings.png" alt="O LLM que você preferir." width="860" />

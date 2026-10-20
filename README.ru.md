@@ -126,7 +126,7 @@ Markdown оформляется прямо при наборе. Наведите
 
 Textus работает более чем с 20 LLM и с любой LLM, у которой есть API, совместимый с OpenAI.
 
-OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Ollama · Любой сервис, совместимый с OpenAI
+OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Doubao · Ollama · Любой сервис, совместимый с OpenAI
 
 <p align="center">
   <img src="docs/images/readme/ru/settings.png" alt="Любая LLM на ваш выбор." width="860" />

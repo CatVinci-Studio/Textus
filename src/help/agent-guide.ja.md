@@ -13,6 +13,8 @@ Textusには執筆専用のAI「Textus AI」が内蔵されています。続き
 
 内蔵のモデル一覧には各プロバイダーの既定モデルだけが入っています(Anthropicの場合、チャットはClaude Sonnet 5.5、補完と文法チェックはClaude Haiku 5.5)。**接続** のモデル一覧の行にある **モデル一覧を取得** を押すと、そのプロバイダーの現在のモデル一覧を読み込んで、その中から選べます。
 
+**Doubao（Volcengine）** を使うときは、[Volcengine Ark のコンソール](https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey)で API キーを作成し、同じコンソールで使いたいモデルを有効にしてください。有効にしていないモデルへのリクエストは Ark に拒否されます。
+
 以下のショートカットはmacOSの表記です。WindowsとLinuxではCmdをCtrl、OptionをAltに読み替えてください。ショートカットを変更した場合は、**設定 > ショートカット** の設定が優先されます。
 
 ## AI機能

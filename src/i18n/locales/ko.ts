@@ -444,6 +444,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   apiKeyConfigured: "설정됨",
   providerNotConfigured: "설정 안 됨",
   providerCustom: "사용자 지정 엔드포인트",
+  providerDoubao: "Doubao (Volcengine)",
   agentModelLabel: "채팅 모델",
   agentDefaultModeLabel: "기본 모드",
   agentModeWrite: "쓰기",

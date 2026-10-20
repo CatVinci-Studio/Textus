@@ -25,6 +25,9 @@
 //!   TEXTUS_EVAL_SPEND_FILE     a {"spent_usd", "runs"} ledger each suite adds to
 //!
 //! Without a key, every test prints a notice and passes vacuously.
+//!
+//! doubao.rs is the one suite on another provider: a few request-shape
+//! checks against Volcengine Ark, keyed by VOLCENGINE_ARK_API_KEY.
 
 mod agent_builtin;
 mod agent_everyday;
@@ -36,6 +39,7 @@ mod completion_cases;
 mod completion_matrix;
 mod conventions;
 mod docs;
+mod doubao;
 mod grammar_cases;
 mod grammar_matrix;
 mod harness;
