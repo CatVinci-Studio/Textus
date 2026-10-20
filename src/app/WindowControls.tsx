@@ -60,7 +60,7 @@ export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
       <Tooltip text={t.appMenu}>
         <button
           type="button"
-          className="window-caption-button window-menu-button"
+          className="window-menu-button"
           aria-label={t.appMenu}
           aria-haspopup="menu"
           aria-expanded={anchor !== null}
