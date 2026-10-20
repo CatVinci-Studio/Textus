@@ -495,7 +495,7 @@ pub(crate) fn build_instructions(
         // (builtin::expand_message); loading it again cost a round trip of
         // 12-16 s in the live eval.
         sections.push(format!(
-            "---available skills---\n{index}\nWhen a request matches a skill's description, load it with use_skill and follow it. When a skill marked (project) or (yours) and an unmarked built-in skill both match a request, use the marked one. A <skill name=\"...\"> block in the user's message is that skill already loaded - follow it without calling use_skill for it; its own rules for the result (length, form, what to say) override the general ones above.\nReference packs, loaded only when a skill asks for them: {}. Add #section to load one section, e.g. standards-fr#dialogue.",
+            "---available skills---\n{index}\nWhen a request matches a skill's description, in whatever language it is written, load it with use_skill and follow it, before you answer or ask for missing details. When a skill marked (project) or (yours) and an unmarked built-in skill both match a request, use the marked one. A <skill name=\"...\"> block in the user's message is that skill already loaded - follow it without calling use_skill for it; its own rules for the result (length, form, what to say) override the general ones above.\nReference packs, loaded only when a skill asks for them: {}. Add #section to load one section, e.g. standards-fr#dialogue.",
             crate::ai::builtin::reference_pack_names().join(", ")
         ));
     }
