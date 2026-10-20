@@ -332,106 +332,184 @@ pub async fn save_pasted_image(
         .duration_since(std::time::UNIX_EPOCH)
         .map_err(|e| e.to_string())?
         .as_millis();
-    let mut name = format!("image-{stamp}.{ext}");
-    let mut n = 1;
-    while dir.join(&name).exists() {
-        name = format!("image-{stamp}-{n}.{ext}");
-        n += 1;
-    }
-    let full = dir.join(&name);
-    // Through a temp file: a crash mid-write must not leave a truncated
-    // image that the document already links to.
-    crate::atomic::write(&full, bytes)
+    let name = write_new_file(&dir, &format!("image-{stamp}.{ext}"), &bytes, false)
         .await
         .map_err(|e| e.to_string())?;
 
     let src = match folder {
         Some(folder) => folder.src(&name),
-        None => full.to_string_lossy().to_string(),
+        None => dir.join(&name).to_string_lossy().to_string(),
     };
     Ok(SavedImage { src })
+}
+
+/// `name` with "-n" before its extension: "a.png", "a-1.png", "a-2.png"...
+fn numbered_name(name: &str, n: usize) -> String {
+    if n == 0 {
+        return name.to_string();
+    }
+    match name.rsplit_once('.') {
+        Some((stem, ext)) if !stem.is_empty() => format!("{stem}-{n}.{ext}"),
+        _ => format!("{name}-{n}"),
+    }
+}
+
+/// Writes `bytes` into `dir` as `name`, or the first free `numbered_name`,
+/// and returns the name used. The name is claimed with create_new before
+/// anything is written: checking that a name was free and then writing it
+/// let two saves at once (pastes in two windows within the same
+/// millisecond) take the same name, and the second overwrote the first's
+/// image. With `reuse`, a file that already holds exactly these bytes is
+/// taken as the copy instead of adding another one beside it.
+async fn write_new_file(
+    dir: &Path,
+    name: &str,
+    bytes: &[u8],
+    reuse: bool,
+) -> std::io::Result<String> {
+    for n in 0..10_000 {
+        let candidate = numbered_name(name, n);
+        let path = dir.join(&candidate);
+        match fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)
+            .await
+        {
+            Ok(claimed) => {
+                drop(claimed);
+                // Through a temp file: a crash mid-write must not leave a
+                // truncated image that the document already links to.
+                if let Err(e) = crate::atomic::write(&path, bytes).await {
+                    let _ = fs::remove_file(&path).await;
+                    return Err(e);
+                }
+                return Ok(candidate);
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+                if reuse && fs::read(&path).await.is_ok_and(|held| held == bytes) {
+                    return Ok(candidate);
+                }
+            }
+            Err(e) => return Err(e),
+        }
+    }
+    Err(std::io::Error::other(format!("no free name for {name}")))
 }
 
 #[derive(Serialize)]
 pub struct ImageMigration {
     old: String,
-    /// New src (relative to the document) on success; None
-    /// if this one image failed to move - it's left at its old absolute
-    /// path, so nothing is lost, just not tidied up.
+    /// New src (relative to the document) on success; None if this one
+    /// image failed to move or copy - it's left at its old path, so nothing
+    /// is lost, just not tidied up.
     new: Option<String>,
 }
 
-async fn move_file(from: &Path, to: &Path) -> std::io::Result<()> {
-    if fs::rename(from, to).await.is_ok() {
-        return Ok(());
-    }
-    // rename fails across filesystems/volumes (app data dir and the
-    // document's folder aren't guaranteed to share one) - copy then remove
-    // the original as a fallback "move".
-    fs::copy(from, to).await?;
-    fs::remove_file(from).await
+/// The picture formats Save As carries along with a document - the
+/// editor's (src/editor/images/pasted-files.ts). A relative link to any
+/// other kind of file is left as written, never copied.
+fn is_image_file(path: &Path) -> bool {
+    let ext = path
+        .extension()
+        .map(|e| e.to_string_lossy().to_ascii_lowercase())
+        .unwrap_or_default();
+    matches!(
+        ext.as_str(),
+        "png" | "jpg" | "jpeg" | "gif" | "webp" | "bmp" | "svg" | "tif" | "tiff"
+    )
 }
 
-/// Moves a first-saved draft's pasted images from the app's data dir into
-/// the now-real document's image folder (`folder`, see ImageFolder),
-/// rewriting each markdown `src` to the new relative path. Only touches
-/// paths that are actually under the app data dir's `assets/` folder -
-/// anything else (http(s), data:, or already-relative) is left alone,
-/// matching the frontend's job of only offering draft-image candidates here.
+/// Copies `from` into `dest_dir` under its own name (numbered when another
+/// picture has it) and returns the name used.
+async fn copy_image(from: &Path, dest_dir: &Path) -> Option<String> {
+    let name = from.file_name()?.to_string_lossy().to_string();
+    let bytes = fs::read(from).await.ok()?;
+    fs::create_dir_all(dest_dir).await.ok()?;
+    write_new_file(dest_dir, &name, &bytes, true).await.ok()
+}
+
+/// Brings a document's images into the image folder (`folder`, see
+/// ImageFolder) of the file it was just saved as, rewriting each markdown
+/// `src` to the new relative path. Two kinds of src are taken:
+/// - a draft's pasted image, an absolute path in the app data dir's
+///   `assets/` folder (save_pasted_image): moved, the draft is gone;
+/// - with `source_doc_path` (Save As of a document that had a file), a
+///   path relative to that document: copied, since the old file still
+///   links to it. Such an image used to stay behind, and the new file's
+///   link pointed at nothing.
+///
+/// Anything else - another absolute path, a relative one naming no
+/// picture, every relative one when the folder didn't change - is left
+/// alone, matching the frontend's job of only offering candidates here.
 #[tauri::command]
 pub async fn migrate_draft_images(
     app: tauri::AppHandle,
     doc_path: String,
     srcs: Vec<String>,
     folder: String,
+    source_doc_path: Option<String>,
 ) -> Result<Vec<ImageMigration>, String> {
     use tauri::Manager;
 
     require_non_empty(&doc_path)?;
-    let folder = ImageFolder::resolve(Path::new(&doc_path), &folder)?;
     let draft_assets_dir = app
         .path()
         .app_data_dir()
         .map_err(|e| e.to_string())?
         .join("assets");
-    let dest_dir = &folder.dir;
+    migrate_images(
+        Path::new(&doc_path),
+        srcs,
+        &folder,
+        source_doc_path.as_deref().map(Path::new),
+        &draft_assets_dir,
+    )
+    .await
+}
+
+async fn migrate_images(
+    doc_path: &Path,
+    srcs: Vec<String>,
+    folder: &str,
+    source_doc_path: Option<&Path>,
+    draft_assets_dir: &Path,
+) -> Result<Vec<ImageMigration>, String> {
+    let folder = ImageFolder::resolve(doc_path, folder)?;
+    // Saved into the folder it was in: its relative links all still hold.
+    let source_dir = source_doc_path
+        .and_then(Path::parent)
+        .filter(|dir| Some(*dir) != doc_path.parent());
 
     let mut results = Vec::with_capacity(srcs.len());
     for old in srcs {
         let path = Path::new(&old);
-        // Not a draft-origin image (e.g. some other absolute path the user
-        // inserted directly) - silently skipped, not a migration failure:
-        // `new: None` below is reserved for a draft image that WAS found
-        // here but failed to move, which is the only case worth a toast.
-        if path.parent() != Some(draft_assets_dir.as_path()) {
-            continue;
-        }
-        let Some(name) = path.file_name() else {
-            results.push(ImageMigration { old, new: None });
-            continue;
-        };
-
-        let new = async {
-            fs::create_dir_all(dest_dir).await.ok()?;
-            let mut dest_name = name.to_string_lossy().to_string();
-            let mut n = 1;
-            while dest_dir.join(&dest_name).exists() {
-                let stem = Path::new(name).file_stem()?.to_string_lossy();
-                let ext = Path::new(name)
-                    .extension()
-                    .map(|e| e.to_string_lossy().to_string());
-                dest_name = match &ext {
-                    Some(ext) => format!("{stem}-{n}.{ext}"),
-                    None => format!("{stem}-{n}"),
-                };
-                n += 1;
+        let new = if path.is_absolute() || path.has_root() {
+            // Not a draft-origin image (e.g. some other absolute path the
+            // user inserted directly) - silently skipped, not a failure:
+            // `new: None` is reserved for an image that WAS found here but
+            // failed to move, the only case worth a toast.
+            if path.parent() != Some(draft_assets_dir) {
+                continue;
             }
-            move_file(path, &dest_dir.join(&dest_name)).await.ok()?;
-            Some(folder.src(&dest_name))
-        }
-        .await;
-
-        results.push(ImageMigration { old, new });
+            let moved = copy_image(path, &folder.dir).await;
+            if moved.is_some() {
+                let _ = fs::remove_file(path).await;
+            }
+            moved
+        } else {
+            let Some(from) = source_dir.map(|dir| dir.join(path)) else {
+                continue;
+            };
+            if !is_image_file(&from) || !fs::metadata(&from).await.is_ok_and(|m| m.is_file()) {
+                continue;
+            }
+            copy_image(&from, &folder.dir).await
+        };
+        results.push(ImageMigration {
+            old,
+            new: new.map(|name| folder.src(&name)),
+        });
     }
     Ok(results)
 }
@@ -530,5 +608,94 @@ mod tests {
         for setting in ["C:\\img", "C:img", "C:/img"] {
             assert!(ImageFolder::resolve(&doc(), setting).is_err());
         }
+    }
+    #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+    async fn images_written_at_once_never_overwrite_each_other() {
+        let dir = tempfile::tempdir().unwrap();
+        let writes: Vec<_> = (0..16u8)
+            .map(|i| {
+                let dir = dir.path().to_path_buf();
+                tokio::spawn(async move {
+                    let name = write_new_file(&dir, "image-1.png", &[i; 64], false).await;
+                    (i, name.unwrap())
+                })
+            })
+            .collect();
+        let mut names = std::collections::HashSet::new();
+        for write in writes {
+            let (i, name) = write.await.unwrap();
+            let held = fs::read(dir.path().join(&name)).await.unwrap();
+            assert_eq!(held, [i; 64], "{name} was overwritten");
+            names.insert(name);
+        }
+        assert_eq!(names.len(), 16);
+    }
+
+    #[tokio::test]
+    async fn a_taken_name_is_numbered_unless_it_holds_the_same_picture() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("a.png"), b"one").unwrap();
+        let name = write_new_file(dir.path(), "a.png", b"two", true).await;
+        assert_eq!(name.unwrap(), "a-1.png");
+        let name = write_new_file(dir.path(), "a.png", b"one", true).await;
+        assert_eq!(name.unwrap(), "a.png");
+        assert_eq!(std::fs::read(dir.path().join("a.png")).unwrap(), b"one");
+    }
+
+    /// Two folders under one root, a document "A/a.md" and its picture.
+    fn two_folders() -> (tempfile::TempDir, PathBuf, PathBuf) {
+        let root = tempfile::tempdir().unwrap();
+        let a = root.path().join("A");
+        let b = root.path().join("B");
+        std::fs::create_dir_all(a.join("pics")).unwrap();
+        std::fs::create_dir_all(&b).unwrap();
+        std::fs::write(a.join("pics").join("p.png"), b"picture").unwrap();
+        (root, a.join("a.md"), b.join("b.md"))
+    }
+
+    #[tokio::test]
+    async fn save_as_elsewhere_copies_relative_images_into_the_image_folder() {
+        let (root, old, new) = two_folders();
+        let srcs = vec!["pics/p.png".to_string(), "notes.txt".to_string()];
+        let drafts = root.path().join("drafts");
+        let moved = migrate_images(&new, srcs, "assets", Some(&old), &drafts)
+            .await
+            .unwrap();
+        assert_eq!(moved.len(), 1);
+        assert_eq!(moved[0].old, "pics/p.png");
+        assert_eq!(moved[0].new.as_deref(), Some("assets/p.png"));
+        let b = new.parent().unwrap();
+        assert_eq!(std::fs::read(b.join("assets/p.png")).unwrap(), b"picture");
+        // The old document still links to its copy.
+        assert!(old.parent().unwrap().join("pics/p.png").is_file());
+    }
+
+    #[tokio::test]
+    async fn save_as_in_the_same_folder_leaves_relative_images_alone() {
+        let (root, old, _) = two_folders();
+        let renamed = old.with_file_name("renamed.md");
+        let drafts = root.path().join("drafts");
+        let srcs = vec!["pics/p.png".to_string()];
+        let moved = migrate_images(&renamed, srcs, "assets", Some(&old), &drafts)
+            .await
+            .unwrap();
+        assert!(moved.is_empty());
+    }
+
+    #[tokio::test]
+    async fn a_drafts_pasted_image_moves_into_the_image_folder() {
+        let (root, _, new) = two_folders();
+        let drafts = root.path().join("drafts");
+        std::fs::create_dir_all(&drafts).unwrap();
+        let pasted = drafts.join("image-1.png");
+        std::fs::write(&pasted, b"pasted").unwrap();
+        let srcs = vec![pasted.to_string_lossy().to_string()];
+        let moved = migrate_images(&new, srcs, "./", None, &drafts)
+            .await
+            .unwrap();
+        assert_eq!(moved[0].new.as_deref(), Some("image-1.png"));
+        assert!(!pasted.exists());
+        let b = new.parent().unwrap();
+        assert_eq!(std::fs::read(b.join("image-1.png")).unwrap(), b"pasted");
     }
 }

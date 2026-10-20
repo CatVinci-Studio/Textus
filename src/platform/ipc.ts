@@ -198,8 +198,20 @@ export const fs = {
    *  (commands/vault.rs's resolve_vault_note); null when there is none. */
   resolveVaultNote: (docPath: string, link: string) =>
     call<string | null>("resolve_vault_note", { docPath, link }),
-  migrateDraftImages: (docPath: string, srcs: string[], folder: string) =>
-    call<ImageMigration[]>("migrate_draft_images", { docPath, srcs, folder }),
+  /** `sourceDocPath`: the file a Save As started from, whose relative
+   *  images are copied along (commands/fs.rs's migrate_draft_images). */
+  migrateDraftImages: (
+    docPath: string,
+    srcs: string[],
+    folder: string,
+    sourceDocPath: string | null,
+  ) =>
+    call<ImageMigration[]>("migrate_draft_images", {
+      docPath,
+      srcs,
+      folder,
+      sourceDocPath,
+    }),
   writeTextFile: (path: string, contents: string): Promise<void> =>
     isScopedUrl(path)
       ? iosFiles.writeText(path, contents)
