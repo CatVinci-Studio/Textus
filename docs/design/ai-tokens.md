@@ -253,3 +253,14 @@ with the live eval (Sonnet 5.5, `TEXTUS_EVAL_JUDGE=0`) on the same cases.
   Doubao, `live_doubao_prefix_cache` now shows it through the app's own
   step: 2,872 of 6,373 tokens read from Ark's cache on the first request
   of one run. The app has no usage view yet; the eval and that test read it.
+- **Item 2, the reply with the proposals.** The dialects keep the text a
+  model writes with its tool calls, and a tool output says when its call
+  is settled (a valid proposal or comment). A step whose calls are all
+  settled and that came with text ends the exchange with that text as the
+  reply; a refused proposal still goes back to the model. The prompt asks
+  for the reply before the calls, written as done. `live_token_usage`: 18
+  requests to 14, $0.181 to $0.165, cache reads 170k to 127k tokens.
+  Quality, Sonnet 5.5 with the Opus judge on 10 edit cases: 9/10 checks
+  and judge mean 4.62 before, 10/10 and 4.56 after. The 30-case probe on
+  Doubao (`TEXTUS_EVAL_PROVIDER=doubao`): 27/30 before and after (different
+  cases failing), 72 requests to 58.

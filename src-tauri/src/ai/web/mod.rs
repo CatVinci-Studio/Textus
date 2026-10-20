@@ -208,14 +208,25 @@ impl WebPlan {
         self.state.lock().unwrap().book.cite_native(url, title);
     }
 
-    /// A step as the loop keeps it: its citation markers numbered.
+    /// A step as the loop keeps it: its citation markers numbered - in its
+    /// text, or in the text that came with its calls, which may be the reply.
     pub(crate) fn finish_step(&self, result: StepResult) -> StepResult {
         let mut state = self.state.lock().unwrap();
         match result {
             StepResult::Done(text) => StepResult::Done(state.book.resolve_step(&text)),
-            calls => {
+            StepResult::ToolCalls(turns) => {
+                let turns = turns
+                    .into_iter()
+                    .map(|turn| match turn {
+                        AgentTurn::Assistant { text, sources } => AgentTurn::Assistant {
+                            text: state.book.resolve_step(&text),
+                            sources,
+                        },
+                        turn => turn,
+                    })
+                    .collect();
                 state.book.end_step();
-                calls
+                StepResult::ToolCalls(turns)
             }
         }
     }

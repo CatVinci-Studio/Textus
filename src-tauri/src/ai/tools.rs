@@ -297,6 +297,9 @@ fn read_document(ctx: &ToolContext, arguments: &str) -> String {
 }
 
 pub(crate) const PROPOSE_EDIT_TOOL_NAME: &str = "propose_edit";
+/// How a valid proposal's result starts - and a valid comment's below:
+/// such a call needs nothing more from the model (ToolOutput::settled).
+const EDIT_PROPOSED: &str = "Edit proposed";
 
 /// The edit operations the frontend knows how to apply. Kept in sync with
 /// `EditAction` in src/ai/types.ts - adding one here without teaching
@@ -420,7 +423,7 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     // shorter proposal for the same passage to meet a skill's 70% - two
     // overlapping previews, of which only one can be applied (round-2
     // integration, skill/zh/slash).
-    format!("Edit proposed - the user now sees it with an Apply button.{size} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
+    format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{size} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
 }
 
 /// Write mode's propose_edit. Its schema offers only INSERT_ACTIONS, but a
@@ -565,6 +568,7 @@ fn anchor_match_count(document: &str, anchor: &str) -> usize {
 }
 
 const ADD_COMMENT_TOOL_NAME: &str = "add_comment";
+const COMMENT_ADDED: &str = "Comment added";
 
 /// Feedback pinned to a passage instead of an edit to it - for "what's weak
 /// here", "review this draft". Changes nothing; the anchor is validated
@@ -580,7 +584,7 @@ fn add_comment(ctx: &ToolContext, arguments: &str) -> String {
         return "`anchor` is required - the exact document text the comment is about.".to_string();
     }
     match check_anchor(ctx.document, &parsed, anchor) {
-        Ok(()) => "Comment added - the user sees it with a button that jumps to the passage. Don't repeat it in your reply.".to_string(),
+        Ok(()) => format!("{COMMENT_ADDED} - the user sees it with a button that jumps to the passage. Don't repeat it in your reply."),
         Err(problem) => problem,
     }
 }
@@ -1378,6 +1382,16 @@ fn spend_check(ctx: &ToolContext, name: &str, arguments: &str) -> Option<String>
     })
 }
 
+/// Whether `result` is a valid proposal or comment: the user's to decide
+/// now, with nothing in it the model has to answer.
+fn settles(name: &str, result: &str) -> bool {
+    match name {
+        PROPOSE_EDIT_TOOL_NAME => result.starts_with(EDIT_PROPOSED),
+        ADD_COMMENT_TOOL_NAME => result.starts_with(COMMENT_ADDED),
+        _ => false,
+    }
+}
+
 /// The tools one request offers, assembled for its mode: the built-ins
 /// that have something to work on ([`builtin_tools`]), then what the
 /// request adds - the web tools, generate_image, and later plugin and MCP
@@ -1439,7 +1453,14 @@ impl<'a> ToolRegistry<'a> {
             return refusal.into();
         }
         match self.find(&call.name).map(|t| &t.run) {
-            Some(Run::Text(run)) => run(ctx, &call.arguments).into(),
+            Some(Run::Text(run)) => {
+                let text = run(ctx, &call.arguments);
+                ToolOutput {
+                    settled: settles(&call.name, &text),
+                    text,
+                    ..ToolOutput::default()
+                }
+            }
             Some(Run::Seeing(run)) => run(ctx, &call.arguments),
             Some(Run::Async(run)) => run(call).await,
             None => format!("Unknown tool: {}", call.name).into(),
@@ -1495,6 +1516,28 @@ mod tests {
             execute(&tools, &ctx("Doc."), "no_such_tool", "{}").text,
             "Unknown tool: no_such_tool"
         );
+    }
+
+    /// Only a valid proposal or comment ends the exchange early (the loop's
+    /// ToolOutput::settled): a refused one needs the model again.
+    #[test]
+    fn valid_proposals_and_comments_are_settled_and_refusals_are_not() {
+        let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+        let ctx = ctx("The cat sat on the mat.");
+        let settled = |name: &str, args: &str| execute(&tools, &ctx, name, args).settled;
+        assert!(settled(
+            PROPOSE_EDIT_TOOL_NAME,
+            r#"{"action":"append","text":"The dog ran."}"#
+        ));
+        assert!(!settled(
+            PROPOSE_EDIT_TOOL_NAME,
+            r#"{"action":"replace","anchor":"not in the document","text":"x"}"#
+        ));
+        assert!(settled(
+            ADD_COMMENT_TOOL_NAME,
+            r#"{"anchor":"The cat sat","comment":"Name the cat."}"#
+        ));
+        assert!(!settled(READ_DOCUMENT_TOOL_NAME, "{}"));
     }
 
     #[test]

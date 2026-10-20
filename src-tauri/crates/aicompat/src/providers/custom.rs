@@ -549,14 +549,14 @@ fn parse_agent_response(
         })
         .collect();
 
-    if !calls.is_empty() {
-        attach_reasoning(&mut calls, reasoning_of(message).unwrap_or_default());
-        return StepResult::ToolCalls(calls);
-    }
     let text = message
         .get("content")
         .and_then(|c| c.as_str())
         .unwrap_or_default();
+    if !calls.is_empty() {
+        attach_reasoning(&mut calls, reasoning_of(message).unwrap_or_default());
+        return StepResult::calls_with_text(calls, report.cite(text, on_event));
+    }
     StepResult::Done(report.cite(text, on_event))
 }
 
@@ -717,7 +717,7 @@ impl ChatStreamAccumulator {
             .collect();
         if !calls.is_empty() {
             attach_reasoning(&mut calls, &self.reasoning);
-            StepResult::ToolCalls(calls)
+            StepResult::calls_with_text(calls, self.search.cite(&self.text, on_event))
         } else {
             StepResult::Done(self.search.cite(&self.text, on_event))
         }

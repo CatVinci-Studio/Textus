@@ -658,7 +658,7 @@ fn parse_agent_response(content: &[Value], on_event: EventSink<'_>) -> StepResul
         {
             *reasoning = Some(Value::Array(thinking));
         }
-        StepResult::ToolCalls(tool_calls)
+        StepResult::calls_with_text(tool_calls, text)
     } else {
         StepResult::Done(text)
     }
@@ -1337,14 +1337,17 @@ mod tests {
     }
 
     #[test]
-    fn parse_agent_response_prefers_tool_use_over_text() {
+    fn parse_agent_response_keeps_the_text_after_the_tool_calls() {
         let content = vec![
             json!({"type": "tool_use", "id": "c1", "name": "propose_edit", "input": {"action": "append", "text": "hi"}}),
-            json!({"type": "text", "text": "ignored while a tool call is pending"}),
+            json!({"type": "text", "text": "Added a greeting."}),
         ];
         match parse_agent_response(&content, &|_| {}) {
             StepResult::ToolCalls(calls) => {
-                assert_eq!(calls.len(), 1);
+                assert_eq!(calls.len(), 2);
+                assert!(
+                    matches!(&calls[1], AgentTurn::Assistant { text, .. } if text == "Added a greeting.")
+                );
                 let AgentTurn::ToolCall {
                     call_id,
                     name,
@@ -1418,7 +1421,7 @@ mod tests {
         assert_eq!(content[1]["input"]["action"], "append");
         // The rebuilt content parses exactly like a non-streamed response.
         match parse_agent_response(&content, &|_| {}) {
-            StepResult::ToolCalls(calls) => assert_eq!(calls.len(), 1),
+            StepResult::ToolCalls(calls) => assert_eq!(calls.len(), 2, "the call, then its text"),
             StepResult::Done(_) => panic!("expected tool calls"),
         }
     }
