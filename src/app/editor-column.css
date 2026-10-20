@@ -47,15 +47,6 @@
   padding: 3rem 1.5rem 6rem;
 }
 
-/* On a Mac the page gives with a swipe at either end, as a document there
-   does, short or empty ones too: WebKit bounces only a box that scrolls,
-   so the column is a pixel taller than the view. The window around it
-   stays still (document-view/ai-notice.css). */
-:root[data-platform="macos"] .editor-scroll > .editor-content {
-  box-sizing: border-box;
-  min-height: calc(100% + 1px);
-}
-
 /* An engine whose containers trap position: fixed (ui/engine-quirks.ts)
    gets no container here, or the editor's menus and dialogs were placed
    against the column. The document's type then keeps the standard
