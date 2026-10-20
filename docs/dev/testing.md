@@ -57,7 +57,7 @@ Chinese and English, 1k to 20k top-level blocks with formulas, diagrams,
 code, images, tables and HTML, plus 200k characters of plain text) in
 Chromium and measures opening, typing in the middle (input to next frame,
 p50/p95, with each plugin's share), IME commits, scrolling end to end, a
-jump to the last heading and a save. It asserts nothing and is not part of
+jump to the last heading, a save and a tab switch. It asserts nothing and is not part of
 `test:e2e` or CI. Results print to the console and land in
 `test-results/perf/`; the documents are written to `e2e/perf/fixtures/` for
 opening by hand in the real app, where WebKitGTK, WKWebView and WebView2

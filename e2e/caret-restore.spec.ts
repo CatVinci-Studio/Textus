@@ -51,7 +51,18 @@ const scrollTop = (page: Page) =>
   page.locator(scroller).evaluate((el) => el.scrollTop);
 
 async function leaveCaretAt(page: Page, text: string) {
-  await page.locator(`${editor} p`, { hasText: text }).click();
+  const line = page.locator(`${editor} p`, { hasText: text });
+  // A large document's blocks off screen are drawn only once they come
+  // into view (editor/content-visibility.ts): a click sent in the same
+  // frame as the scroll would land before the line is.
+  await line.scrollIntoViewIfNeeded();
+  await page.evaluate(
+    () =>
+      new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      ),
+  );
+  await line.click();
   await expect.poll(() => caretParagraph(page)).toBe(text);
 }
 
