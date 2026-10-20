@@ -1,22 +1,24 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
-// #146: inline code that is a colour gets a small swatch of it, with
-// Settings › Editor & Appearance › Show a swatch before colour codes on (off
-// by default). The code itself is unchanged, and so is the way the caret
-// moves through it.
+// #146: a colour code gets a small swatch of its colour before it - inline
+// code that is a colour, and a hex code or colour function written in the
+// text of a paragraph, heading, list, quote or table - with Settings ›
+// Editor & Appearance › Show a swatch before colour codes on (off by
+// default). The text itself is unchanged, and so is the way the caret moves
+// through it, what find finds and what is saved.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const swatch = `${editor} .color-swatch`;
 
 const DOC = "White `#fff`, blue `rgb(0 128 255)` and plain `red`.";
 
-async function open(page: Page, on: boolean) {
+async function open(page: Page, on: boolean, doc = DOC) {
   await openApp(page, {
     settings: { language: "en", inlineColorSwatches: on },
   });
-  await pasteMarkdown(page, DOC);
-  await expect(page.locator(`${editor} code`)).toHaveCount(3);
+  await pasteMarkdown(page, doc);
+  if (doc === DOC) await expect(page.locator(`${editor} code`)).toHaveCount(3);
 }
 
 test("there are no swatches by default", async ({ page }) => {
@@ -79,10 +81,11 @@ async function keys(page: Page, ...presses: string[]) {
 async function sameWithAndWithout(
   page: Page,
   run: (page: Page) => Promise<void>,
+  doc = DOC,
 ) {
   const results: string[] = [];
   for (const on of [false, true]) {
-    await open(page, on);
+    await open(page, on, doc);
     await page.locator(`${editor} p`).click();
     await run(page);
     results.push(await paragraph(page));
@@ -115,4 +118,211 @@ test("the caret steps out of a colour code to the left as it does without the sw
   });
   expect(result.content[0].text).toBe("White Y");
   expect(result.content[1].content?.[0].text).toBe("#fff");
+});
+
+const RICH = [
+  "# Brand #1e90ff",
+  "",
+  "Orange #ff8800 and rgb(0 128 255), tagged #add #cafe, issue #234, [#00ff00](https://x.org) and https://x.org/#a1b2c3.",
+  "",
+  "- A list item #f00",
+  "",
+  "> A quote hsl(120 50% 50%)",
+  "",
+  "| Name | Code |",
+  "| --- | --- |",
+  "| Teal | #008080 |",
+  "",
+  "Inline `#ff00ff` and `red`.",
+  "",
+  "```css",
+  "a { color: #ff8800; }",
+  "```",
+  "",
+].join("\n");
+
+const textSwatch = `${editor} .color-swatch-text`;
+
+/** Each plain-text swatch: the block it is in, its colour, and the code's
+ *  first character it is drawn before. */
+const textSwatches = (page: Page) =>
+  page
+    .locator(textSwatch)
+    .evaluateAll((els) =>
+      els.map((el) => [
+        (el.closest("h1, li, blockquote, td") ?? el.closest("p"))?.tagName,
+        (el as HTMLElement).style.getPropertyValue("--color-swatch"),
+        el.textContent,
+      ]),
+    );
+
+test("a colour code in a heading, paragraph, list, quote or table gets a swatch; tags, issues, links and fenced code don't", async ({
+  page,
+}) => {
+  await open(page, true, RICH);
+  await expect(page.locator(`${editor} table`)).toBeVisible();
+  expect(await textSwatches(page)).toEqual([
+    ["H1", "#1e90ff", "#"],
+    ["P", "#ff8800", "#"],
+    ["P", "rgb(0 128 255)", "r"],
+    ["LI", "#f00", "#"],
+    ["BLOCKQUOTE", "hsl(120 50% 50%)", "h"],
+    ["TD", "#008080", "#"],
+  ]);
+  // Inline code keeps its own swatch; the fenced block has none.
+  await expect(page.locator(swatch)).toHaveCount(1);
+  await expect(page.locator(`${editor} pre .color-swatch-text`)).toHaveCount(0);
+  // The swatch is drawn before the code without adding any text.
+  const before = await page
+    .locator(textSwatch)
+    .first()
+    .evaluate((el) => {
+      const style = getComputedStyle(el, "::before");
+      return { width: parseFloat(style.width), content: style.content };
+    });
+  expect(before.width).toBeGreaterThan(5);
+  expect(before.content).toBe('""');
+  await expect(page.locator(`${editor} h1`)).toHaveText("Brand #1e90ff");
+});
+
+test("there are no plain-text swatches with the setting off", async ({
+  page,
+}) => {
+  await open(page, false, RICH);
+  await expect(page.locator(`${editor} table`)).toBeVisible();
+  await expect(page.locator(textSwatch)).toHaveCount(0);
+});
+
+test("a plain-text swatch stays out of a printout", async ({ page }) => {
+  await open(page, true, RICH);
+  await page.emulateMedia({ media: "print" });
+  const display = await page
+    .locator(textSwatch)
+    .first()
+    .evaluate((el) => getComputedStyle(el, "::before").display);
+  expect(display).toBe("none");
+});
+
+test("a swatch follows a colour code as it is typed and unmade", async ({
+  page,
+}) => {
+  await open(page, true, "Accent here.");
+  await page.locator(`${editor} p`).click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" #ff880");
+  await expect(page.locator(textSwatch)).toHaveCount(0);
+  await page.keyboard.type("0");
+  await expect(page.locator(textSwatch)).toHaveCount(1);
+  await page.keyboard.type("x");
+  await expect(page.locator(textSwatch)).toHaveCount(0);
+  await page.keyboard.press("Backspace");
+  await expect(page.locator(textSwatch)).toHaveCount(1);
+  await expect(page.locator(`${editor} p`)).toHaveText("Accent here. #ff8800");
+});
+
+test("the caret crosses a plain-text colour code as it does without the swatch", async ({
+  page,
+}) => {
+  const doc = "Orange #ff8800 here.";
+  const into = await sameWithAndWithout(
+    page,
+    async (p) => {
+      // "Orange " and the "#": eight steps.
+      await keys(p, "Home", ...Array(8).fill("ArrowRight"));
+      await p.keyboard.type("X");
+    },
+    doc,
+  );
+  expect(into.content[0].text).toBe("Orange #Xff8800 here.");
+  const before = await sameWithAndWithout(
+    page,
+    async (p) => {
+      // From the end, back over " here." and the code to just before it.
+      await keys(p, "End", ...Array(13).fill("ArrowLeft"));
+      await p.keyboard.type("Y");
+    },
+    doc,
+  );
+  expect(before.content[0].text).toBe("Orange Y#ff8800 here.");
+});
+
+function emit(page: Page, name: string) {
+  return page.evaluate(
+    (n) =>
+      (
+        window as unknown as { __devEmitTauriEvent: (name: string) => void }
+      ).__devEmitTauriEvent(n),
+    name,
+  );
+}
+
+test("find matches inside a colour code, which keeps one swatch", async ({
+  page,
+}) => {
+  await open(page, true, "Orange #ff8800 and #ff8800aa.");
+  await expect(page.locator(textSwatch)).toHaveCount(2);
+  await emit(page, "menu-find-replace");
+  await page.locator(".find-replace-input").first().fill("#ff88");
+  await expect(page.locator(".find-replace-count")).toContainText("2");
+  // A match's highlight runs on across the swatch's character.
+  await expect
+    .poll(() =>
+      page
+        .locator(`${editor} .find-match`)
+        .evaluateAll((els) => els.map((el) => el.textContent).join("")),
+    )
+    .toBe("#ff88#ff88");
+  await expect(page.locator(textSwatch)).toHaveCount(2);
+});
+
+const PATH = "/home/me/colours.md";
+
+test("swatches never reach the saved file", async ({ page }) => {
+  await openApp(page, {
+    settings: { language: "en", autosave: true, inlineColorSwatches: true },
+  });
+  // A stand-in for commands/fs.rs, as in autosave.spec.ts.
+  await page.evaluate(
+    ({ path, text }) => {
+      const w = window as unknown as Record<string, unknown> & {
+        __TAURI_INTERNALS__: {
+          invoke: (cmd: string, args?: Record<string, unknown>) => unknown;
+        };
+        __devEmitTauriEvent: (name: string, payload: unknown) => void;
+      };
+      const writes: string[] = [];
+      w.__writes = writes;
+      const original = w.__TAURI_INTERNALS__.invoke;
+      w.__TAURI_INTERNALS__.invoke = (cmd, args = {}) => {
+        if (args.path === path) {
+          if (cmd === "read_text_file") return Promise.resolve(text);
+          if (cmd === "file_mtime_ms") return Promise.resolve(writes.length);
+          if (cmd === "write_text_file") {
+            writes.push(String(args.contents));
+            return Promise.resolve(null);
+          }
+        }
+        return original(cmd, args);
+      };
+      w.__devEmitTauriEvent("tauri://drag-drop", {
+        paths: [path],
+        position: { x: 0, y: 0 },
+      });
+    },
+    { path: PATH, text: RICH },
+  );
+  await expect(page.locator(textSwatch)).toHaveCount(6);
+  await page.locator(`${editor} h1`).click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" and #00ff00");
+  await expect(page.locator(textSwatch)).toHaveCount(7);
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () => (window as unknown as { __writes: string[] }).__writes,
+        ),
+      { timeout: 6000 },
+    )
+    .toEqual([RICH.replace("# Brand #1e90ff", "# Brand #1e90ff and #00ff00")]);
 });

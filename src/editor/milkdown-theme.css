@@ -1018,12 +1018,15 @@ br:is(.pending-delete, .pending-sentence-hot) {
   user-select: none;
 }
 
-/* A colour code's swatch (marks/color-swatch-plugin.ts), at the start of
-   its inline code. The colour is painted over a checkerboard, so a
+/* A colour code's swatch (marks/color-swatch-plugin.ts): an element at the
+   start of inline code, or drawn before the first character of a code in
+   plain text - no element there, so nothing for the caret to step over or
+   for a copy to take. The colour is painted over a checkerboard, so a
    translucent one reads as translucent; the hairline keeps white on a
    white page and black on a dark one visible. Not a place for the caret:
    a click on it lands in the code. */
-.color-swatch {
+.color-swatch,
+.color-swatch-text::before {
   display: inline-block;
   width: 0.8em;
   height: 0.8em;
@@ -1039,9 +1042,15 @@ br:is(.pending-delete, .pending-sentence-hot) {
   pointer-events: none;
 }
 
+.color-swatch-text::before {
+  content: "";
+}
+
 /* A colour code is short: kept on one line, it never leaves its swatch at
-   the end of the line above. */
-.md-code-span:has(> .color-swatch) {
+   the end of the line above. In plain text the swatch stays with the
+   character it is drawn before. */
+.md-code-span:has(> .color-swatch),
+.color-swatch-text {
   white-space: nowrap;
 }
 

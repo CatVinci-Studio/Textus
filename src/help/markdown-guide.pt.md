@@ -27,7 +27,7 @@ Alertas no estilo do GitHub:
 
 Links ficam assim: [o repositório do Textus](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+clique segue um link: um link da web abre no navegador, um link para outro arquivo Markdown o abre em uma aba e um link para `#um-titulo` rola até ele. HTML no meio do texto também é renderizado, por exemplo as teclas <kbd>Cmd</kbd> + <kbd>S</kbd>. Também funcionam blocos recolhíveis `<details>`, tabelas HTML, alguns estilos inline (cor, fundo, tamanho, peso, alinhamento, sublinhado e tachado) e `<svg>` no meio do texto, que aparece como imagem. Scripts e o resto do HTML ficam como código-fonte. Um link para um título em outro arquivo, como `[veja](notas.md#um-titulo)`, abre esse arquivo nesse título. Os wikilinks do Obsidian (`[[Nota]]`, `[[Nota|texto]]` e `[[Nota#Título]]`) abrem do mesmo jeito, a partir da pasta do documento ou de qualquer lugar do cofre; eles e as `#tags` no início de uma linha são salvos exatamente como foram escritos.
 
-Com **Ajustes → Editor e aparência → Mostrar uma amostra antes dos códigos de cor** ligado, o código em linha que é uma cor, como `#ff8800` ou `rgb(0 128 255)`, mostra antes um quadradinho dessa cor.
+Com **Ajustes → Editor e aparência → Mostrar uma amostra antes dos códigos de cor** ligado, um código de cor mostra antes um quadradinho dessa cor: tanto o escrito no texto, como #ff8800 ou rgb(0 128 255), quanto o código em linha que é uma cor, como `#0af`. Etiquetas como #cafe, números como #234, links e blocos de código ficam como estão.
 
 Fórmulas no texto: a equivalência massa-energia $E = mc^2$ e a identidade de Euler $e^{i\pi} + 1 = 0$.
 

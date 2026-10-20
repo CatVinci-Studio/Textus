@@ -39,6 +39,7 @@
   .code-block-header,
   .code-line-gutter,
   .color-swatch,
+  .color-swatch-text::before,
   .table-add-row-btn,
   .table-add-col-btn,
   .ghost-text,
