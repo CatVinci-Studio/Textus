@@ -3,7 +3,8 @@
 //! chat window, per-window session restore, window-mode prefs) or the desktop
 //! shell (the `textus` terminal command, the default Markdown editor, the
 //! update check); `documents` (rename and delete for the iPhone's document
-//! list) is `#[cfg(mobile)]`. See docs/dev/ios-code-map.md.
+//! list) is `#[cfg(mobile)]`, and the sidebar tree's new / move (`tree_ops`)
+//! `#[cfg(desktop)]`. See docs/dev/ios-code-map.md.
 
 pub mod attachment;
 #[cfg(desktop)]
@@ -29,6 +30,8 @@ pub mod recents;
 pub mod session;
 pub mod theme_gallery;
 pub mod themes;
+#[cfg(desktop)]
+pub mod tree_ops;
 #[cfg(desktop)]
 pub mod update;
 pub mod vault;

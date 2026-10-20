@@ -7,6 +7,9 @@ pub struct DirEntryInfo {
     name: String,
     path: String,
     is_dir: bool,
+    /// Last modified, in ms since the epoch, for the tree's sort by date;
+    /// None where the system doesn't say.
+    modified_ms: Option<f64>,
 }
 
 /// A native file dialog owned by the window that asked for it. Unowned, a
@@ -189,10 +192,18 @@ pub async fn list_dir(path: String) -> Result<Vec<DirEntryInfo>, String> {
         if name.starts_with('.') {
             continue;
         }
+        let modified_ms = entry
+            .metadata()
+            .await
+            .ok()
+            .and_then(|m| m.modified().ok())
+            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+            .map(|d| d.as_millis() as f64);
         items.push(DirEntryInfo {
             name,
             path: entry.path().to_string_lossy().to_string(),
             is_dir: file_type.is_dir(),
+            modified_ms,
         });
     }
 
