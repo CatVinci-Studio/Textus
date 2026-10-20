@@ -144,23 +144,31 @@
   padding: 4px 4px 0;
 }
 
-/* The row a result led to, tinted for a moment and fading back. A change
-   of colour, no movement, so reduced motion keeps it. */
+/* The row a result led to, tinted for a moment and fading back: a tint
+   laid over the row, a little wider than its text, whose opacity fades -
+   no movement, so reduced motion keeps it. */
 .settings-search-hit {
+  position: relative;
+}
+
+.settings-search-hit::after {
+  content: "";
+  position: absolute;
+  inset: 0 -8px;
   border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--chrome-accent) 14%, transparent);
+  pointer-events: none;
+  opacity: 0;
   animation: settings-search-hit var(--dur-linger) var(--ease-standard);
 }
 
 @keyframes settings-search-hit {
   from,
   40% {
-    background: color-mix(in srgb, var(--chrome-accent) 14%, transparent);
-    box-shadow: 0 0 0 8px
-      color-mix(in srgb, var(--chrome-accent) 14%, transparent);
+    opacity: 1;
   }
   to {
-    background: transparent;
-    box-shadow: 0 0 0 8px transparent;
+    opacity: 0;
   }
 }
 
