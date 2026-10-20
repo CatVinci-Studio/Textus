@@ -15,6 +15,7 @@ pub mod oauth_page;
 pub mod oauth_server;
 pub mod pkce;
 pub mod providers;
+pub mod public_address;
 pub mod responses_api;
 
 pub use oauth_login::{run_pkce_login, PkceLoginRequest};

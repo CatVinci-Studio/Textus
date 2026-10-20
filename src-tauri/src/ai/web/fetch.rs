@@ -11,7 +11,8 @@
 //! Harness does). No cookies are kept or sent, and every request has a time
 //! and size limit.
 
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use aicompat::public_address::{all_public, is_local_name, is_public};
+use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 
 /// Most of a page's text handed to the model. A writing request needs the
@@ -43,77 +44,6 @@ pub(crate) enum Fetched {
     Moved {
         to: String,
     },
-}
-
-/// Whether `ip` is an address on the public internet - not loopback,
-/// private, link-local, carrier-grade NAT, multicast, documentation,
-/// benchmarking or reserved, and for IPv6 not one of those either as an
-/// IPv4 address carried inside it (mapped, NAT64/DNS64, 6to4).
-pub(crate) fn is_public(ip: IpAddr) -> bool {
-    match ip {
-        IpAddr::V4(v4) => is_public_v4(v4),
-        IpAddr::V6(v6) => is_public_v6(v6),
-    }
-}
-
-fn is_public_v4(ip: Ipv4Addr) -> bool {
-    let [a, b, c, _] = ip.octets();
-    !(ip.is_unspecified()
-        || ip.is_loopback()
-        || ip.is_private()
-        || ip.is_link_local()
-        || ip.is_broadcast()
-        || ip.is_multicast()
-        || ip.is_documentation()
-        || a == 0
-        // Carrier-grade NAT, 100.64.0.0/10.
-        || (a == 100 && (b & 0xc0) == 64)
-        // IETF protocol assignments, 192.0.0.0/24.
-        || (a == 192 && b == 0 && c == 0)
-        // Benchmarking, 198.18.0.0/15.
-        || (a == 198 && (b & 0xfe) == 18)
-        // Reserved, 240.0.0.0/4.
-        || a >= 240)
-}
-
-fn is_public_v6(ip: Ipv6Addr) -> bool {
-    if let Some(v4) = ip.to_ipv4_mapped() {
-        return is_public_v4(v4);
-    }
-    let s = ip.segments();
-    let embedded_v4 = |hi: u16, lo: u16| Ipv4Addr::from(((hi as u32) << 16) | lo as u32);
-    // NAT64 / DNS64 (64:ff9b::/96): the IPv4 address it reaches.
-    if s[0] == 0x64 && s[1] == 0xff9b && s[2..6] == [0, 0, 0, 0] {
-        return is_public_v4(embedded_v4(s[6], s[7]));
-    }
-    // 6to4 (2002::/16): the IPv4 address in the next 32 bits.
-    if s[0] == 0x2002 {
-        return is_public_v4(embedded_v4(s[1], s[2]));
-    }
-    !(ip.is_unspecified()
-        || ip.is_loopback()
-        || ip.is_multicast()
-        // Unique local, fc00::/7.
-        || (s[0] & 0xfe00) == 0xfc00
-        // Link-local fe80::/10, and the old site-local fec0::/10.
-        || (s[0] & 0xffc0) == 0xfe80
-        || (s[0] & 0xffc0) == 0xfec0
-        // Documentation, 2001:db8::/32; Teredo, 2001::/32, which tunnels
-        // to an IPv4 address it doesn't show.
-        || (s[0] == 0x2001 && (s[1] == 0x0db8 || s[1] == 0))
-        // The old IPv4-compatible form, ::a.b.c.d.
-        || s[..6] == [0, 0, 0, 0, 0, 0])
-}
-
-/// Names that mean this machine or the local network, refused before any
-/// lookup (a resolver may answer them from /etc/hosts or mDNS).
-fn is_local_name(host: &str) -> bool {
-    let host = host.trim_end_matches('.').to_ascii_lowercase();
-    host == "localhost"
-        || host.ends_with(".localhost")
-        || host.ends_with(".local")
-        || host.ends_with(".internal")
-        || host.ends_with(".home.arpa")
 }
 
 /// What a fetch may reach. Only the tests loosen it, to fetch from a
@@ -186,10 +116,7 @@ async fn client_for(url: &reqwest::Url, reach: Reach) -> Result<reqwest::Client,
     if addrs.is_empty() {
         return Err(format!("Couldn't find the site {host}."));
     }
-    // Every answer, not just the first: a name that resolves to one public
-    // and one private address would otherwise reach the private one on a
-    // retry.
-    if !reach.allow_local && addrs.iter().any(|a| !is_public(a.ip())) {
+    if !reach.allow_local && !all_public(addrs.iter().map(SocketAddr::ip)) {
         return Err(REFUSED.to_string());
     }
     builder
@@ -349,45 +276,6 @@ mod tests {
     use std::io::{Read, Write};
 
     #[test]
-    fn private_and_special_addresses_are_not_public() {
-        for ip in [
-            "127.0.0.1",
-            "10.1.2.3",
-            "172.16.0.1",
-            "192.168.1.1",
-            "169.254.169.254",
-            "100.64.0.1",
-            "0.0.0.0",
-            "255.255.255.255",
-            "224.0.0.1",
-            "192.0.2.1",
-            "198.18.0.1",
-            "240.0.0.1",
-            "::1",
-            "::",
-            "fd00::1",
-            "fe80::1",
-            "::ffff:127.0.0.1",
-            "::ffff:10.0.0.1",
-            "64:ff9b::a9fe:a9fe",
-            "2002:c0a8:0101::1",
-            "2001:db8::1",
-            "::7f00:1",
-        ] {
-            assert!(!is_public(ip.parse().unwrap()), "{ip} counted as public");
-        }
-        for ip in [
-            "93.184.215.14",
-            "1.1.1.1",
-            "2606:4700:4700::1111",
-            "::ffff:8.8.8.8",
-            "64:ff9b::808:808",
-        ] {
-            assert!(is_public(ip.parse().unwrap()), "{ip} counted as private");
-        }
-    }
-
-    #[test]
     fn only_web_addresses_are_fetched_and_http_becomes_https() {
         let strict = Reach::default();
         assert_eq!(
@@ -409,6 +297,10 @@ mod tests {
             "https://169.254.169.254/latest/meta-data/",
             "https://printer.local/",
             "https://10.0.0.1/admin",
+            "https://[::ffff:127.0.0.1]/",
+            "https://[64:ff9b::a9fe:a9fe]/",
+            "https://[2002:c0a8:0101::1]/",
+            "https://100.64.0.1/",
         ] {
             let err = fetch(url, Reach::default()).await.unwrap_err();
             assert_eq!(err, REFUSED, "{url}");
