@@ -64,15 +64,3 @@ export function isDrivePath(path: string): boolean {
 export function hasUrlScheme(src: string): boolean {
   return /^[a-z][a-z0-9+.-]*:/i.test(src);
 }
-
-/** Whether two paths name the same file, written either way: Rust joins a
- *  Windows path with "\" while a path typed into a setting may say "/",
- *  and a drive letter (and NTFS) ignores case. Elsewhere only the
- *  separators are folded - other file systems may well tell case apart. */
-export function samePath(a: string, b: string): boolean {
-  const fold = (p: string) => {
-    const slashes = p.replace(/\\/g, "/").replace(/\/+$/, "");
-    return isDrivePath(p) ? slashes.toLowerCase() : slashes;
-  };
-  return fold(a) === fold(b);
-}

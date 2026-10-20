@@ -343,7 +343,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   updateChannelLabel: "Update-Kanal",
   updateChannelStable: "Stabil",
   updateChannelBeta: "Beta",
-  updateChannelHint: "Beta erhält Release-Kandidaten vor allen anderen.",
   aiCompletionLabel: "KI-Vervollständigung aktivieren",
   completionToneLabel: "Tonfall der Vervollständigung",
   completionTone_default: "Passend zum Dokument",
@@ -352,20 +351,15 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   completionTone_academic: "Wissenschaftlich",
   completionTone_concise: "Knapp",
   webSearchLabel: "Websuche",
-  webSearchHint: "Muss vom Anbieter unterstützt werden",
   editAnimationLabel: "Änderungsvorschau animieren",
   agentWorkspaceLabel: "Globaler Konfigurationsordner",
   agentWorkspaceOpenButton: "Anzeigen",
   agentWorkspaceRootLabel: "Projektordner",
-  agentWorkspaceRootHelp: `${AI_NAME} kann nur diesen Ordner lesen.`,
   agentWorkspaceRootDefault: "Ordner des aktuellen Dokuments",
   agentWorkspaceRootPick: "Auswählen…",
   agentSystemPromptLabel: "Schreibanweisungen (agent.md)",
-  agentSystemPromptHint:
-    "Wird mit jeder Unterhaltung gesendet, für alle Dokumente",
   agentSystemPromptEdit: "agent.md bearbeiten",
   agentSkillsLabel: "Skills",
-  agentSkillsHint: "Mit /name in einer Unterhaltung aufrufen",
   agentSkillsImport: "Skill importieren…",
   skillGroupRecent: "Zuletzt verwendet",
   skillGroupProject: "Dieses Projekt",
@@ -995,63 +989,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   playgroundImageNotice: `Bilder brauchen die Desktop-App von ${APP_NAME}.`,
   playgroundImportUnsupported:
     "Nur .md-, .markdown- und .txt-Dateien lassen sich importieren.",
-  // Quick Notes (src/quick-note/, Settings › General › Quick Notes).
-  menuNewQuickNote: "Neue Schnellnotiz",
-  menuOpenQuickNotesFolder: "Schnellnotiz-Ordner öffnen",
-  quickNotesGroup: "Schnellnotizen",
-  quickNoteShortcutToggle: "Mit globalem Tastenkürzel öffnen",
-  quickNoteShortcutHint:
-    "Textus hört nur auf diese eine Tastenkombination, nicht auf das, was du sonst tippst.",
-  quickNoteShortcutLabel: "Tastenkürzel",
-  quickNoteShortcutDefault: "Standard",
-  quickNoteShortcutInApp:
-    "Diese Kombination verwendet Textus selbst. Wähle eine andere.",
-  quickNoteShortcutTooFew:
-    "Verwende mindestens zwei Sondertasten oder eine zusammen mit einer Funktionstaste.",
-  quickNoteStatusOn: "Aktiv: Drücke {combo} in einer beliebigen App.",
-  quickNoteStatusInUse:
-    "{combo} wird bereits von einer anderen App verwendet. Wähle eine andere Kombination.",
-  quickNoteStatusWayland:
-    "Unter Wayland dürfen Apps keine Tastenkürzel abfangen. Lege in den Tastatureinstellungen deines Desktops ein Kürzel an, das den Befehl unten ausführt.",
-  quickNoteStatusReserved:
-    "Diese Kombination verwendet das System. Wähle eine andere.",
-  quickNoteStatusAltGr:
-    "Unter Windows ist Strg+Alt gleich AltGr und tippt auf vielen Tastaturbelegungen Buchstaben. Wähle eine Kombination mit Win oder einer Funktionstaste.",
-  quickNoteFolderLabel: "Ordner",
-  quickNoteFolderChange: "Ändern…",
-  quickNoteFolderShow: "Anzeigen",
-  quickNotePerDayLabel: "Notizen eines Tages in einer Datei sammeln",
-  quickNoteContinueLabel: "Beim erneuten Öffnen letzte Notiz fortsetzen",
-  quickNoteContinueNever: "Nie",
-  quickNoteContinueMinutes: {
-    one: "Innerhalb von {n} Minute",
-    other: "Innerhalb von {n} Minuten",
-  },
-  quickNoteCommandLabel: "Befehl zum Öffnen einer Schnellnotiz",
-  quickNoteCommandHint: `Öffnet eine Schnellnotiz, auch wenn ${APP_NAME} nicht läuft. Weise ihn in den Systemeinstellungen einer Taste zu.`,
-  quickNoteCommandCopy: "Kopieren",
-  quickNoteCommandCopied: "Kopiert",
-  quickNoteTitle: "Schnellnotiz",
-  quickNoteHeader: "Schnellnotiz → {name}",
-  quickNoteKeysHint: "Esc speichert und schließt",
-  quickNoteDraftRestored:
-    "Die nicht gespeicherte Notiz wurde wiederhergestellt.",
-  quickNoteContinuing: "Du setzt deine letzte Notiz fort.",
-  quickNoteDiscard: "Verwerfen",
-  quickNoteDiscardConfirm: "Diese Notiz verwerfen? Sie wird nicht gespeichert.",
-  quickNoteOpenInTextus: `In ${APP_NAME} öffnen`,
-  quickNoteSaveFailed: "Die Notiz konnte nicht gespeichert werden:",
-  quickNoteNoImages: `In eine Schnellnotiz lassen sich keine Bilder einfügen. Öffne sie in ${APP_NAME}, um eines hinzuzufügen.`,
-  quickNoteConflictMessage:
-    "Während du ungespeicherte Änderungen hattest, wurde eine Schnellnotiz in diese Datei gespeichert: „{note}“. Speicherst du jetzt, wird die Datei überschrieben und die Notiz gelöscht.",
-  backgroundGroup: "Hintergrund",
   backgroundToggle: "Im Hintergrund weiterlaufen",
-  backgroundHintMac: `Zeigt ${APP_NAME} in der Menüleiste: für eine Schnellnotiz, deine Dokumente oder Beenden, jederzeit.`,
-  backgroundHintWindows: `Nach dem Schließen des letzten Fensters läuft ${APP_NAME} weiter, mit einem Symbol im Infobereich: Ein Klick darauf öffnet eine Schnellnotiz. Um ${APP_NAME} ganz zu beenden, wähle „${APP_NAME} beenden“ im Menü des Symbols.`,
-  backgroundHintLinux: `Nach dem Schließen des letzten Fensters läuft ${APP_NAME} weiter, mit einem Symbol im System-Tray. Um ${APP_NAME} ganz zu beenden, wähle „${APP_NAME} beenden“ im Menü des Symbols. GNOME zeigt Tray-Symbole nur mit der AppIndicator-Erweiterung.`,
-  backgroundTrayUnavailable: `Diese Arbeitsumgebung hat keinen Tray: libayatana-appindicator ist nicht installiert. ${APP_NAME} läuft trotzdem im Hintergrund weiter; öffne es über den Starter oder das Schnellnotiz-Tastenkürzel.`,
-  openAtLoginToggle: "Bei der Anmeldung im Hintergrund starten",
-  openAtLoginFailed:
-    "Der Start bei der Anmeldung ließ sich nicht ändern: {error}",
+  backgroundTrayUnavailable: `Diese Arbeitsumgebung hat keinen Tray: libayatana-appindicator ist nicht installiert. ${APP_NAME} läuft trotzdem im Hintergrund weiter; öffne es erneut über den Starter.`,
   trayOpenTextus: `${APP_NAME} öffnen`,
 } satisfies Translation;

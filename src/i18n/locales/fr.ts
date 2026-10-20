@@ -355,7 +355,6 @@ utiliser une.
   updateChannelLabel: "Canal de mise à jour",
   updateChannelStable: "Stable",
   updateChannelBeta: "Bêta",
-  updateChannelHint: "Bêta reçoit les versions candidates avant tout le monde.",
   aiCompletionLabel: "Activer la complétion IA",
   completionToneLabel: "Ton de la complétion",
   completionTone_default: "Adapté au document",
@@ -364,20 +363,15 @@ utiliser une.
   completionTone_academic: "Académique",
   completionTone_concise: "Concis",
   webSearchLabel: "Recherche web",
-  webSearchHint: "Le fournisseur actuel doit la prendre en charge",
   editAnimationLabel: "Animer l'aperçu des modifications",
   agentWorkspaceLabel: "Dossier de configuration globale",
   agentWorkspaceOpenButton: "Afficher",
   agentWorkspaceRootLabel: "Dossier du projet",
-  agentWorkspaceRootHelp: `${AI_NAME} ne peut lire que ce dossier.`,
   agentWorkspaceRootDefault: "Le dossier du document actuel",
   agentWorkspaceRootPick: "Choisir…",
   agentSystemPromptLabel: "Instructions d'écriture (agent.md)",
-  agentSystemPromptHint:
-    "Envoyées avec chaque conversation, pour tous les documents",
   agentSystemPromptEdit: "Modifier agent.md",
   agentSkillsLabel: "Compétences",
-  agentSkillsHint: "Tapez /nom dans une conversation pour en utiliser une",
   agentSkillsImport: "Importer une compétence…",
   skillGroupRecent: "Récentes",
   skillGroupProject: "Ce projet",
@@ -1015,65 +1009,7 @@ utiliser une.
   playgroundImageNotice: `Les images nécessitent l’app de bureau ${APP_NAME}.`,
   playgroundImportUnsupported:
     "Seuls les fichiers .md, .markdown et .txt peuvent être importés.",
-  // Quick Notes (src/quick-note/, Settings › General › Quick Notes).
-  menuNewQuickNote: "Nouvelle note rapide",
-  menuOpenQuickNotesFolder: "Ouvrir le dossier des notes rapides",
-  quickNotesGroup: "Notes rapides",
-  quickNoteShortcutToggle: "Ouvrir avec un raccourci global",
-  quickNoteShortcutHint:
-    "Textus n’écoute que cette combinaison de touches, rien d’autre de ce que vous tapez.",
-  quickNoteShortcutLabel: "Raccourci",
-  quickNoteShortcutDefault: "Par défaut",
-  quickNoteShortcutInApp:
-    "Textus utilise déjà cette combinaison. Choisissez-en une autre.",
-  quickNoteShortcutTooFew:
-    "Utilisez au moins deux touches de modification, ou une avec une touche de fonction.",
-  quickNoteStatusOn:
-    "Activé\u00a0: appuyez sur {combo} dans n’importe quelle app.",
-  quickNoteStatusInUse:
-    "{combo} est déjà utilisé par une autre app. Choisissez une autre combinaison.",
-  quickNoteStatusWayland:
-    "Wayland ne permet pas aux apps d’écouter un raccourci. Ajoutez-en un dans les réglages clavier de votre bureau qui lance la commande ci-dessous.",
-  quickNoteStatusReserved:
-    "Le système utilise cette combinaison. Choisissez-en une autre.",
-  quickNoteStatusAltGr:
-    "Sous Windows, Ctrl+Alt équivaut à AltGr, qui tape des lettres sur de nombreuses dispositions de clavier. Choisissez une combinaison avec Win ou une touche de fonction.",
-  quickNoteFolderLabel: "Dossier",
-  quickNoteFolderChange: "Modifier…",
-  quickNoteFolderShow: "Afficher",
-  quickNotePerDayLabel: "Regrouper les notes de chaque jour dans un fichier",
-  quickNoteContinueLabel: "Reprendre la dernière note à la réouverture",
-  quickNoteContinueNever: "Jamais",
-  quickNoteContinueMinutes: {
-    one: "Moins de {n} minute",
-    many: "Moins de {n} de minutes",
-    other: "Moins de {n} minutes",
-  },
-  quickNoteCommandLabel: "Commande pour ouvrir une note rapide",
-  quickNoteCommandHint: `Ouvre une note rapide, même quand ${APP_NAME} n’est pas lancé. Associez-la à une touche dans les réglages du système.`,
-  quickNoteCommandCopy: "Copier",
-  quickNoteCommandCopied: "Copié",
-  quickNoteTitle: "Note rapide",
-  quickNoteHeader: "Note rapide → {name}",
-  quickNoteKeysHint: "Échap enregistre et ferme",
-  quickNoteDraftRestored: "La note non enregistrée a été restaurée.",
-  quickNoteContinuing: "Vous reprenez votre dernière note.",
-  quickNoteDiscard: "Supprimer",
-  quickNoteDiscardConfirm:
-    "Supprimer cette note\u202f? Elle ne sera pas enregistrée.",
-  quickNoteOpenInTextus: `Ouvrir dans ${APP_NAME}`,
-  quickNoteSaveFailed: "Impossible d’enregistrer la note\u00a0:",
-  quickNoteNoImages: `Impossible de coller une image dans une note rapide. Ouvrez-la dans ${APP_NAME} pour en ajouter.`,
-  quickNoteConflictMessage:
-    "Une note rapide a été enregistrée dans ce fichier pendant que vous aviez des modifications non enregistrées\u00a0: «\u00a0{note}\u00a0». Enregistrer maintenant écrase le fichier et supprime cette note.",
-  backgroundGroup: "Arrière-plan",
   backgroundToggle: "Rester ouvert en arrière-plan",
-  backgroundHintMac: `Affiche ${APP_NAME} dans la barre des menus : une note rapide, vos documents ou Quitter, à tout moment.`,
-  backgroundHintWindows: `Fermer la dernière fenêtre laisse ${APP_NAME} ouvert, avec une icône dans la zone de notification : cliquez dessus pour prendre une note rapide. Pour fermer ${APP_NAME} complètement, choisissez Quitter dans le menu de l’icône.`,
-  backgroundHintLinux: `Fermer la dernière fenêtre laisse ${APP_NAME} ouvert, avec une icône dans la zone de notification du système. Pour fermer ${APP_NAME} complètement, choisissez Quitter dans le menu de l’icône. GNOME n’affiche ces icônes qu’avec l’extension AppIndicator.`,
-  backgroundTrayUnavailable: `Ce bureau n’a pas de zone de notification : libayatana-appindicator n’est pas installé. ${APP_NAME} reste ouvert en arrière-plan ; ouvrez-le depuis votre lanceur ou avec le raccourci des notes rapides.`,
-  openAtLoginToggle: "Démarrer en arrière-plan à l’ouverture de session",
-  openAtLoginFailed:
-    "Impossible de modifier le lancement à l’ouverture de session : {error}",
+  backgroundTrayUnavailable: `Ce bureau n’a pas de zone de notification : libayatana-appindicator n’est pas installé. ${APP_NAME} reste ouvert en arrière-plan ; rouvrez-le depuis votre lanceur.`,
   trayOpenTextus: `Ouvrir ${APP_NAME}`,
 } satisfies Translation;

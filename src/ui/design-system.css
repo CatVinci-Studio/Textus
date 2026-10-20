@@ -275,7 +275,6 @@
   .inline-chat-action,
   .update-toast button,
   .draft-restored-toast button,
-  .quick-note-actions button,
   .project-bar-naming button,
   .missing-image-actions button,
   .inline-chat-send
@@ -302,7 +301,6 @@
   .inline-chat-action,
   .update-toast button,
   .draft-restored-toast button,
-  .quick-note-actions button,
   .project-bar-naming button,
   .missing-image-actions button,
   .inline-chat-send
@@ -322,7 +320,6 @@
     .inline-chat-action,
     .update-toast button,
     .draft-restored-toast button,
-    .quick-note-actions button,
     .project-bar-naming button,
     .missing-image-actions button
   ):not(:disabled):hover {
@@ -390,7 +387,6 @@
     .inline-chat-action,
     .update-toast button,
     .draft-restored-toast button,
-    .quick-note-actions button,
     .project-bar-naming button,
     .missing-image-actions button
   ):not(:disabled):active {

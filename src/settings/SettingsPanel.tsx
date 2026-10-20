@@ -62,7 +62,6 @@ import {
 } from "./sections/skills";
 import { PrivacySection } from "./sections/privacy";
 import { ImageStorageSection } from "./sections/images";
-import { QuickNotesSection } from "./sections/quick-notes";
 import { BackgroundSection } from "./sections/background";
 import "./SettingsPanel.css";
 import { useModalDialog } from "../ui/useModalDialog";
@@ -231,19 +230,9 @@ export function SettingsPanel({
             />
           </SettingsGroup>
 
-          {/* A desktop's: the phone has no global shortcut or windows. */}
-          {canUseWindows && (
-            <SettingsGroup title={t.quickNotesGroup}>
-              <QuickNotesSection t={t} />
-            </SettingsGroup>
-          )}
-          {canUseWindows && (
-            <SettingsGroup title={t.backgroundGroup}>
-              <BackgroundSection t={t} />
-            </SettingsGroup>
-          )}
-
           <SettingsGroup title={t.generalSystemLabel}>
+            {/* A desktop's: the phone has no windows to close. */}
+            {canUseWindows && <BackgroundSection t={t} />}
             {canSetDefaultEditor && <DefaultEditorSection t={t} />}
             {canInstallCliCommand && <CliCommandSection t={t} />}
             <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
@@ -558,7 +547,6 @@ export function SettingsPanel({
                 </SettingRow>
                 <ToggleRow
                   label={t.webSearchLabel}
-                  help={t.webSearchHint}
                   checked={settings.enableWebSearch}
                   onChange={(v) => setSettings({ enableWebSearch: v })}
                 />
@@ -628,9 +616,7 @@ export function SettingsPanel({
         <>
           {/* Most used first: finding - in the document, then among the
               folder's file names - and moving between tabs, then the
-              panels and modes of the window, then the AI's keys. The
-              Quick Notes shortcut is system-wide and lives with the rest
-              of Quick Notes, in General. */}
+              panels and modes of the window, then the AI's keys. */}
           {(
             [
               [

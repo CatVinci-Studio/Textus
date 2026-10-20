@@ -40,11 +40,6 @@ vi.mock("../platform/ipc", () => ({
   },
 }));
 
-// No Quick Note shortcut registered: New Quick Note shows none.
-vi.mock("../platform/useQuickNoteShortcut", () => ({
-  useQuickNoteShortcut: () => null,
-}));
-
 vi.mock("@tauri-apps/api/window", () => ({
   getCurrentWindow: () => ({
     minimize,

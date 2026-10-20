@@ -19,13 +19,9 @@ TestFlight for a while and is about to go to review.
 
 ## In the next release (1.2.0)
 
-- **Quick notes from anywhere.** A small Markdown window that opens from the
-  File menu, the tray or a global shortcut you turn on: jot a few lines, press
-  `Esc`, and they are saved as a Markdown file, one per note or one per day.
-  [#193](https://github.com/CatVinci-Studio/Textus/issues/193)
 - **Textus in the background**, if you turn it on: it keeps running after you
   close its last window, with an icon in the notification area, the system
-  tray or the menu bar, and can start at login.
+  tray or the menu bar.
   [#244](https://github.com/CatVinci-Studio/Textus/pull/244)
 - **Open a whole folder** in the sidebar and search its file names with
   `Ctrl/⌘ + Shift + O`.
@@ -104,7 +100,10 @@ only fix things.
   folder.
 - **Plugins, and a plugin gallery.** Plugins run sandboxed with only the
   permissions you grant, and nothing runs unless you install it; Textus AI
-  can write one for you. A few basic plugins come with the launch.
+  can write one for you. A few basic plugins come with the launch, among
+  them **quick notes from anywhere**: a small Markdown window that opens
+  from a global shortcut, saved as a Markdown file when you close it.
+  [#193](https://github.com/CatVinci-Studio/Textus/issues/193)
 
 ## Later: Textus 1.4.0, steady and polished
 

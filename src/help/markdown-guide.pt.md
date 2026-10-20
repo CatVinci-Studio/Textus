@@ -152,13 +152,9 @@ Os três também estão no menu **Visualizar**.
 
 **Arquivo → Abrir Pasta…** abre uma pasta inteira na barra lateral: a árvore de arquivos fica nela enquanto você abre documentos lá dentro, a pasta volta com a sua sessão e **Arquivo → Fechar Pasta** faz a árvore voltar a acompanhar o documento. A caixa no topo da aba **Arquivos** da barra lateral busca nomes de arquivo na pasta inteira; `Cmd+Shift+O` leva direto a ela. Digite para filtrar, use `↑`/`↓` para se mover, `Enter` para abrir e `Esc` para limpar. Os dois recursos são só do desktop.
 
-## Notas rápidas
+## Continuar em segundo plano
 
-**Arquivo → Nova nota rápida** abre uma janela pequena para anotar algo na hora. Pressione `Esc` (ou `Cmd+Enter`, `Cmd+S`, `Cmd+W`) e a nota é salva e a janela fecha; uma nota vazia simplesmente fecha. **Abrir no Textus** salva a nota e a abre numa aba.
-
-As notas vão para `Textus/Notas rápidas` na sua pasta Documentos, um arquivo por nota, com o nome da primeira linha. Em **Ajustes → Geral → Notas rápidas** você pode escolher outra pasta, usar **um arquivo por dia** e ativar um **atalho global** que abre uma nota rápida em qualquer app: `Control+Option+N` no Mac, `Ctrl+Alt+N` no Linux, `Win+Alt+N` no Windows. Abrir outra poucos minutos depois continua a última nota. No Wayland, associe o comando `textus --quick-note` mostrado ali a uma tecla nas configurações do seu desktop.
-
-Para ter o Textus à mão mesmo sem janelas abertas, ative **Ajustes → Geral → Segundo plano → Continuar em segundo plano**: ao fechar a última janela, o Textus continua aberto, com um ícone na área de notificação (Windows), na bandeja do sistema (Linux) ou na barra de menus (Mac). O menu do ícone abre uma nova nota rápida, seus documentos, a pasta de notas rápidas e os ajustes; **Encerrar Textus** ali encerra o Textus de vez. **Iniciar em segundo plano ao iniciar sessão** o inicia assim ao iniciar sessão. O GNOME só mostra o ícone de bandeja com a extensão AppIndicator.
+Ative **Ajustes → Geral → Aplicativo → Continuar em segundo plano** e, ao fechar a última janela, o Textus continua aberto, com o ícone na área de notificação (Windows), na bandeja do sistema (Linux) ou na barra de menus (Mac). **Abrir o Textus** no menu do ícone traz seus documentos de volta; **Encerrar Textus** ali encerra o Textus de vez. O GNOME só mostra o ícone de bandeja com a extensão AppIndicator.
 
 ## Notas de rodapé e linhas horizontais
 

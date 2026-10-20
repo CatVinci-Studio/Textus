@@ -3,7 +3,7 @@
   "identifier": "desktop",
   "description": "Desktop only: the app-drawn window chrome, zen/fullscreen, the always-on-top chat window, and the updater/process plugins (not built for iOS - see Cargo.toml).",
   "platforms": ["linux", "macOS", "windows"],
-  "windows": ["main", "window-*", "chat-*", "quick-note"],
+  "windows": ["main", "window-*", "chat-*"],
   "permissions": [
     "core:window:allow-destroy",
     "core:window:allow-close",

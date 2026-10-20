@@ -334,12 +334,10 @@ export function AgentWorkspaceRootSection({ t }: { t: Strings }) {
     }
   }
 
-  // Which folder is in use is a value, so it shows under the label; that
-  // the AI reads nothing outside it is the "?".
+  // Which folder is in use is a value, so it shows under the label.
   return (
     <SettingRow
       label={t.agentWorkspaceRootLabel}
-      help={t.agentWorkspaceRootHelp}
       hint={root || t.agentWorkspaceRootDefault}
       error={error}
     >
@@ -392,11 +390,7 @@ export function AgentSystemPromptSection({
   }
 
   return (
-    <SettingRow
-      label={t.agentSystemPromptLabel}
-      help={t.agentSystemPromptHint}
-      error={error}
-    >
+    <SettingRow label={t.agentSystemPromptLabel} error={error}>
       <button
         className="text-button settings-inline-button"
         onClick={editAgentMd}

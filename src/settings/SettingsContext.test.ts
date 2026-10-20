@@ -59,6 +59,31 @@ describe("newcomer guide eligibility", () => {
   });
 });
 
+describe("settings from a build with features since taken out", () => {
+  beforeAll(installTestLocalStorage);
+  beforeEach(() => localStorage.clear());
+
+  it("load as before, the old fields doing nothing", () => {
+    // 1.2.0-rc.1's Quick Notes and open-at-login fields.
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({
+        language: "zh",
+        runInBackground: true,
+        openAtLogin: true,
+        quickNoteShortcutEnabled: true,
+        quickNoteShortcut: "Control+Alt+N",
+        quickNoteFolder: "/home/me/Documents/Textus/速记",
+        quickNotePerDay: true,
+        quickNoteContinueMinutes: 5,
+      }),
+    );
+    const settings = loadSettings();
+    expect(settings.language).toBe("zh");
+    expect(settings.runInBackground).toBe(true);
+  });
+});
+
 describe("Agent mode migration", () => {
   beforeAll(installTestLocalStorage);
   beforeEach(() => localStorage.clear());

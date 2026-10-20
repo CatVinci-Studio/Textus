@@ -1126,124 +1126,16 @@ export const cli = {
 };
 
 // ---------------------------------------------------------------------------
-// Quick Notes (src-tauri/src/commands/quick_note/) - desktop only
-// ---------------------------------------------------------------------------
-
-/** The local date and time a note is saved at ("2026-10-19", "14:32").
- *  Mirrors `Stamp` in quick_note/naming.rs. */
-export interface QuickNoteStamp {
-  date: string;
-  time: string;
-}
-
-/** An existing note a quick note continues. Mirrors `Target` in
- *  quick_note/mod.rs. */
-export interface QuickNoteTarget {
-  path: string;
-  /** A day's entry: its "## 14:32" heading; null for a note of its own. */
-  heading: string | null;
-  /** The text it started from, which has to be there still. */
-  base: string;
-}
-
-/** Mirrors `Draft` in quick_note/mod.rs. */
-export interface QuickNoteDraft {
-  text: string;
-  target: QuickNoteTarget | null;
-}
-
-/** The last note saved. Mirrors `Last` in quick_note/mod.rs. */
-export interface QuickNoteLast {
-  path: string;
-  heading: string | null;
-  text: string;
-  savedAtMs: number;
-}
-
-/** Mirrors `Session` in quick_note/mod.rs. */
-export interface QuickNoteSession {
-  draft: QuickNoteDraft | null;
-  last: QuickNoteLast | null;
-}
-
-/** Rust -> editor windows: a quick note was written. `entry` is the block
- *  a day's file gained at its end, when that is all that changed. Mirrors
- *  `Written` in quick_note/mod.rs. */
-export const QUICK_NOTE_WRITTEN = "quick-note-written";
-export interface QuickNoteWritten {
-  path: string;
-  before: string | null;
-  after: string;
-  entry: string | null;
-}
-
-/** Rust -> every window: the shortcut's state. Mirrors STATUS_EVENT and
- *  `Status` in quick_note/shortcut.rs. */
-export const QUICK_NOTE_SHORTCUT_STATUS = "quick-note-shortcut-status";
-export interface QuickNoteShortcutStatus {
-  state: "off" | "on" | "inUse" | "wayland" | "invalid";
-  accelerator: string;
-  reason: "unparsable" | "tooFewModifiers" | "reserved" | "altGr" | null;
-}
-
-export const quickNote = {
-  session: () =>
-    desktopQuery<QuickNoteSession>("quick_note_session", {
-      draft: null,
-      last: null,
-    }),
-  saveDraft: (text: string, target: QuickNoteTarget | null) =>
-    desktopQuery<void>("quick_note_save_draft", undefined, { text, target }),
-  discardDraft: () => desktopQuery<void>("quick_note_discard_draft", undefined),
-  /** Saves the note; resolves to its file, or null for an empty one. */
-  commit: (
-    text: string,
-    target: QuickNoteTarget | null,
-    stamp: QuickNoteStamp,
-  ) =>
-    desktopAction<string | null>("quick_note_commit", { text, target, stamp }),
-  previewName: (
-    text: string,
-    target: QuickNoteTarget | null,
-    stamp: QuickNoteStamp,
-  ) =>
-    desktopQuery<string | null>("quick_note_preview_name", null, {
-      text,
-      target,
-      stamp,
-    }),
-  /** Closes the Quick Note window; `back` returns to the app it was
-   *  opened over (macOS). */
-  finish: (back: boolean) =>
-    desktopQuery<void>("quick_note_finish", undefined, { back }),
-  openInEditor: (path: string | null) =>
-    desktopQuery<void>("quick_note_open_in_editor", undefined, { path }),
-  ready: () => desktopQuery<number | null>("quick_note_ready", null),
-  folder: () =>
-    desktopQuery<{ path: string } | null>("quick_note_folder", null),
-  pickFolder: () => desktopQuery<string | null>("quick_note_pick_folder", null),
-  openFolder: () => desktopAction<void>("quick_note_open_folder"),
-  cliCommand: () => desktopQuery<string>("quick_note_cli_command", ""),
-  shortcutStatus: () =>
-    desktopQuery<QuickNoteShortcutStatus | null>(
-      "quick_note_shortcut_status",
-      null,
-    ),
-};
-
-// ---------------------------------------------------------------------------
 // background mode (src-tauri/src/background/) - desktop only
 // ---------------------------------------------------------------------------
 
-/** Rust -> every window: the tray and the login item changed. Mirrors
- *  STATUS_EVENT and `Status` in background/mod.rs - change both. */
+/** Rust -> every window: the tray changed. Mirrors STATUS_EVENT and
+ *  `Status` in background/mod.rs - change both. */
 export const BACKGROUND_STATUS = "background-status";
 export interface BackgroundStatus {
   /** "unavailable": Linux without libayatana-appindicator (or
    *  libappindicator); the process still stays in the background. */
   tray: "off" | "on" | "unavailable";
-  login: "off" | "on" | "failed";
-  loginError: string | null;
 }
 
 export const background = {

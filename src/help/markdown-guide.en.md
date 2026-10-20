@@ -152,13 +152,9 @@ All three are also in the **View** menu.
 
 **File → Open Folder…** opens a whole folder in the sidebar: the file tree stays there while you open documents inside it, the folder comes back with your session, and **File → Close Folder** lets the tree follow the document again. The box at the top of the sidebar's **Files** tab searches file names across the folder; `Cmd+Shift+O` jumps to it. Type to filter, `↑`/`↓` to move, `Enter` to open, `Esc` to clear. Both are on the desktop only.
 
-## Quick Notes
+## Keep running in the background
 
-**File → New Quick Note** opens a small window for jotting something down. Press `Esc` (or `Cmd+Enter`, `Cmd+S`, `Cmd+W`) and the note is saved and the window closes; an empty note is simply closed. **Open in Textus** saves it and opens it as a tab.
-
-Notes go to `Textus/Quick Notes` in your Documents folder, one file each, named after the first line. In **Settings → General → Quick Notes** you can choose another folder, keep **one file per day** instead, and turn on a **global shortcut** that opens a quick note from any app: `Control+Option+N` on a Mac, `Ctrl+Alt+N` on Linux, `Win+Alt+N` on Windows. Opening one again within a few minutes continues the last note. On Wayland, bind the `textus --quick-note` command shown there to a key in your desktop's settings.
-
-To keep Textus within reach when no window is open, turn on **Settings → General → Background → Keep running in the background**: closing the last window then leaves Textus running, with an icon in the notification area (Windows), the system tray (Linux) or the menu bar (Mac). Its menu opens a new quick note, your documents, the Quick Notes folder and Settings; **Quit Textus** there quits for real. **Start in the background at login** starts Textus that way when you log in. GNOME shows the tray icon only with the AppIndicator extension.
+Turn on **Settings → General → Application → Keep running in the background** and closing the last window leaves Textus running, with its icon in the notification area (Windows), the system tray (Linux) or the menu bar (Mac). **Open Textus** in the icon's menu brings your documents back; **Quit Textus** there quits for real. GNOME shows the tray icon only with the AppIndicator extension.
 
 ## Footnotes and rules
 

@@ -152,13 +152,9 @@ Alle drei findest du auch im Menü **Ansicht**.
 
 **Datei → Ordner öffnen…** öffnet einen ganzen Ordner in der Seitenleiste: Der Dateibaum bleibt dort, während du Dokumente darin öffnest, der Ordner kommt mit deiner Sitzung zurück, und **Datei → Ordner schließen** lässt den Baum wieder dem Dokument folgen. Das Feld oben im Tab **Dateien** der Seitenleiste sucht Dateinamen im ganzen Ordner; `Cmd+Shift+O` springt dorthin. Tippe zum Filtern, `↑`/`↓` zum Bewegen, `Enter` zum Öffnen, `Esc` zum Leeren. Beides gibt es nur auf dem Desktop.
 
-## Schnellnotizen
+## Im Hintergrund weiterlaufen
 
-**Datei → Neue Schnellnotiz** öffnet ein kleines Fenster, um schnell etwas festzuhalten. Mit `Esc` (oder `Cmd+Enter`, `Cmd+S`, `Cmd+W`) wird die Notiz gespeichert und das Fenster geschlossen; eine leere Notiz wird einfach geschlossen. **In Textus öffnen** speichert sie und öffnet sie als Tab.
-
-Notizen landen in `Textus/Schnellnotizen` in deinem Dokumente-Ordner, eine Datei pro Notiz, benannt nach der ersten Zeile. Unter **Einstellungen → Allgemein → Schnellnotizen** kannst du einen anderen Ordner wählen, stattdessen **eine Datei pro Tag** führen und ein **globales Tastenkürzel** einschalten, das aus jeder App eine Schnellnotiz öffnet: `Control+Option+N` auf dem Mac, `Strg+Alt+N` unter Linux, `Win+Alt+N` unter Windows. Öffnest du innerhalb weniger Minuten wieder eine, setzt du die letzte Notiz fort. Unter Wayland legst du den dort angezeigten Befehl `textus --quick-note` in den Einstellungen deines Desktops auf eine Taste.
-
-Damit Textus auch ohne offenes Fenster griffbereit bleibt, schalte **Einstellungen → Allgemein → Hintergrund → Im Hintergrund weiterlaufen** ein: Nach dem Schließen des letzten Fensters läuft Textus dann weiter, mit einem Symbol im Infobereich (Windows), im System-Tray (Linux) oder in der Menüleiste (Mac). Sein Menü öffnet eine neue Schnellnotiz, deine Dokumente, den Schnellnotiz-Ordner und die Einstellungen; **Textus beenden** dort beendet Textus wirklich. **Bei der Anmeldung im Hintergrund starten** startet Textus so bei der Anmeldung. GNOME zeigt das Tray-Symbol nur mit der AppIndicator-Erweiterung.
+Schalte **Einstellungen → Allgemein → Anwendung → Im Hintergrund weiterlaufen** ein, dann läuft Textus nach dem Schließen des letzten Fensters weiter, mit seinem Symbol im Infobereich (Windows), im System-Tray (Linux) oder in der Menüleiste (Mac). **Textus öffnen** im Menü des Symbols bringt deine Dokumente zurück; **Textus beenden** dort beendet Textus wirklich. GNOME zeigt das Tray-Symbol nur mit der AppIndicator-Erweiterung.
 
 ## Fußnoten und Trennlinien
 

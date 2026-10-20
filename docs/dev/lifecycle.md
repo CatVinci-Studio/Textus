@@ -1,29 +1,22 @@
 # Launching, closing and quitting
 
 How a Textus process starts, what keeps it running, and how it ends:
-background mode and its tray icon, the login entry, and updates. The code
-is `src-tauri/src/lib.rs` (setup and the run loop),
-`src-tauri/src/background/` and `src-tauri/src/menu.rs` (`quit`). The
-desktop app only; iOS has one window that the system manages.
+background mode and its tray icon, and updates. The code is
+`src-tauri/src/lib.rs` (setup and the run loop), `src-tauri/src/background/`
+and `src-tauri/src/menu.rs` (`quit`). The desktop app only; iOS has one
+window that the system manages.
 
 ## Launching
 
-What a launch opens depends on its arguments (`background::launch`, tested
-there):
-
-| Command line               | Opens                                                                                                    |
-| -------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `textus`, `textus file.md` | The main window, with the files named or else the last session's documents (when Settings restores them) |
-| `textus --quick-note`      | The Quick Note window alone. No session restore                                                          |
-| `textus --background`      | No window at all, with background mode on: what the login entry runs. No session restore                 |
-| `textus --background`, off | Nothing: the process removes the stale login entry and exits, since nothing would show that it is there  |
+A launch opens the main window, with the files named on the command line
+(`textus file.md`) or else the last session's documents, when Settings
+restores them.
 
 On Windows and Linux (release builds) a second launch hands its arguments to
 the running process through `tauri-plugin-single-instance` and exits. The
-running process then opens a quick note (`--quick-note`), does nothing
-(`--background`), opens the files, or - with no file - restores the session
-when no editor window is open (as a first launch would) and opens a new
-window otherwise. On macOS, Finder and `open` reach the running app
+running process then opens the files, or - with no file - restores the
+session when no editor window is open (as a first launch would) and opens a
+new window otherwise. On macOS, Finder and `open` reach the running app
 themselves; the Dock icon clicked with no window open restores the session
 the same way (`reopen_without_windows`).
 
@@ -37,11 +30,11 @@ Tauri asks to exit when its last window is destroyed. `keeps_running` in
 | macOS          | Keeps running (Dock) | Keeps running (Dock, menu bar) |
 | Windows, Linux | Exits                | Keeps running (tray)           |
 
-Every window is destroyed when it closes, the Quick Note window included;
-nothing is kept hidden for later. On Linux each window's web process is
-also ended with the window (`end_web_process_with_window` in `lib.rs`):
-WebKitGTK kept a closed window's page running otherwise, which nobody saw
-while the process exited with its last window.
+Every window is destroyed when it closes; nothing is kept hidden for later.
+On Linux each window's web process is also ended with the window
+(`end_web_process_with_window` in `lib.rs`): WebKitGTK kept a closed
+window's page running otherwise, which nobody saw while the process exited
+with its last window.
 
 ## Quitting
 
@@ -53,22 +46,21 @@ held back, in background mode or not. With no window open it exits at once.
 
 ## Background mode
 
-**Settings › General › Background › Keep running in the background**
+**Settings › General › Application › Keep running in the background**
 (`runInBackground`, off by default). Turning it on builds the tray icon
 (`background/tray.rs`); turning it off removes the icon at once and, on
 Windows and Linux with no window open, ends the process.
 
 | Platform | Where the icon is   | Left click     | Menu        |
 | -------- | ------------------- | -------------- | ----------- |
-| Windows  | Notification area   | New quick note | Right click |
+| Windows  | Notification area   | Opens Textus   | Right click |
 | macOS    | Menu bar (template) | Opens the menu | Left click  |
 | Linux    | StatusNotifier tray | Opens the menu | Any click   |
 
-The menu: **New Quick Note**, **Open Textus** (`reopen_without_windows`),
-**Open Quick Notes Folder**, **Settings…**, **Quit Textus**. Its labels are
-Rust's own table, in the UI language, because the tray can be up at login
-before any window has sent labels; a test holds them to the locale files.
-Tray clicks reach the app's menu handler as `tray:<item>` ids.
+The menu: **Open Textus** (`reopen_without_windows`) and **Quit Textus**.
+Its labels are Rust's own table, in the UI language, because the tray can
+be up before any window has sent labels; a test holds them to the locale
+files. Tray clicks reach the app's menu handler as `tray:<item>` ids.
 
 The icons are `src-tauri/icons/tray/`, made from the app icon by
 `scripts/make-tray-icons.sh`: a 36 px template image for the macOS menu bar
@@ -85,25 +77,7 @@ Packaging: the `.deb` depends on `libayatana-appindicator3-1` (the tauri CLI
 adds it, from the `-dev` package CI installs), the AppImage carries the
 library, the `.rpm` recommends it, and the Arch package lists it as an
 optional dependency. GNOME shows no tray icons without the AppIndicator
-extension; Settings' hint says so.
-
-## Open at login
-
-**Settings › General › Background › Start in the background at login** (`openAtLogin`, off by
-default, shown only with background mode on). With both on,
-`background/login.rs` writes an entry that runs `textus --background`:
-
-- Windows: the `Textus` value of
-  `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, the program path
-  quoted. The uninstaller removes the same value; an update keeps it.
-- macOS: a launch agent, `~/Library/LaunchAgents/com.catvinci.textus.plist`,
-  run once at login (no `KeepAlive`, so quitting Textus ends it).
-- Linux: `~/.config/autostart/textus.desktop`, with the AppImage's own path
-  for an AppImage.
-
-The entry is written when either setting changes and again at each startup
-while both are on (an AppImage that moved keeps working), and removed when
-either is turned off. Nothing about it runs otherwise.
+extension.
 
 ## Updates
 
@@ -133,16 +107,14 @@ all its children's PSS and CPU time:
 
 | State                                       | Processes             | PSS    | Of it private | CPU, idle 60 s |
 | ------------------------------------------- | --------------------- | ------ | ------------- | -------------- |
-| `--background`, never a window              | 1                     | 44 MB  | 14 MB         | 0              |
 | One editor window open, idle                | 3 (app, web, network) | 365 MB | -             | 10 ms          |
 | Its window closed, with the web process fix | 2 (app, network)      | 179 MB | 51 MB (app)   | 0              |
 | Its window closed, before the fix           | 3 (app, web, network) | 313 MB | -             | 20 ms          |
 
-Most of a windowless process's PSS is shared library pages (WebKitGTK, GTK,
-and after a first window the GL drivers), clean and given back under
-memory pressure. WebKit's network process stays once a window has been
-open; it has no API to end it. The tray, its menu and the login entry add
-no thread, timer or wakeup.
+Most of a windowless process's PSS is shared library pages (WebKitGTK, GTK
+and the GL drivers), clean and given back under memory pressure. WebKit's
+network process stays once a window has been open; it has no API to end
+it. The tray and its menu add no thread, timer or wakeup.
 
 On macOS, expect the same shape: after the last window closes, the "Textus
 Web Content" process should end (check in Activity Monitor), leaving the

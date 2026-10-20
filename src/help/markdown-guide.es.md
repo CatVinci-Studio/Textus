@@ -152,13 +152,9 @@ Los tres están también en el menú **Visualización**.
 
 **Archivo → Abrir carpeta…** abre una carpeta entera en la barra lateral: el árbol de archivos se queda en ella mientras abres los documentos que contiene, la carpeta vuelve con tu sesión y **Archivo → Cerrar carpeta** hace que el árbol vuelva a seguir al documento. El cuadro de la parte superior de la pestaña **Archivos** de la barra lateral busca nombres de archivo en toda la carpeta; `Cmd+Shift+O` salta a él. Escribe para filtrar, usa `↑`/`↓` para moverte, `Enter` para abrir y `Esc` para borrar. Ambas funciones son solo de escritorio.
 
-## Notas rápidas
+## Seguir abierto en segundo plano
 
-**Archivo → Nueva nota rápida** abre una ventana pequeña para apuntar algo al vuelo. Pulsa `Esc` (o `Cmd+Enter`, `Cmd+S`, `Cmd+W`) y la nota se guarda y la ventana se cierra; una nota vacía simplemente se cierra. **Abrir en Textus** la guarda y la abre en una pestaña.
-
-Las notas van a `Textus/Notas rápidas` dentro de tu carpeta Documentos, un archivo por nota, con el nombre de su primera línea. En **Ajustes → General → Notas rápidas** puedes elegir otra carpeta, usar **un archivo por día** y activar un **atajo global** que abre una nota rápida desde cualquier app: `Control+Opción+N` en un Mac, `Ctrl+Alt+N` en Linux, `Win+Alt+N` en Windows. Si vuelves a abrir una a los pocos minutos, continúas la última nota. En Wayland, asigna una tecla al comando `textus --quick-note` que aparece allí, en los ajustes de tu escritorio.
-
-Para tener Textus a mano aunque no haya ninguna ventana abierta, activa **Ajustes → General → Segundo plano → Seguir abierto en segundo plano**: al cerrar la última ventana, Textus sigue abierto, con un icono en el área de notificación (Windows), la bandeja del sistema (Linux) o la barra de menús (Mac). Su menú abre una nota rápida nueva, tus documentos, la carpeta de notas rápidas y los ajustes; **Salir de Textus** en ese menú cierra Textus del todo. **Iniciar en segundo plano al iniciar sesión** lo inicia así al iniciar sesión. GNOME solo muestra el icono de bandeja con la extensión AppIndicator.
+Activa **Ajustes → General → Aplicación → Seguir abierto en segundo plano** y, al cerrar la última ventana, Textus sigue abierto, con su icono en el área de notificación (Windows), la bandeja del sistema (Linux) o la barra de menús (Mac). **Abrir Textus** en el menú del icono te devuelve a tus documentos; **Salir de Textus** ahí cierra Textus del todo. GNOME solo muestra el icono de bandeja con la extensión AppIndicator.
 
 ## Notas al pie y líneas horizontales
 

@@ -45,11 +45,6 @@ export interface DocTab {
   // "Untitled", and deduped per doc so Help focuses the existing tab rather
   // than opening another copy.
   helpDoc?: HelpDoc;
-  /** A quick note was saved into this file while the tab had unsaved
-   *  edits it couldn't be merged into (useQuickNoteWrites.ts): its first
-   *  words, which the save-time "changed on disk" prompt names - saving
-   *  over the file would delete the note. */
-  quickNoteConflict?: string;
 }
 
 // The document part of a tab in flight between windows - what

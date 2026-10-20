@@ -124,11 +124,7 @@ export function useSaveTabs(opts: {
   // render, and the old mtime would make our own write look external.
   const commitSaved = useCallback(
     async (tabId: string, path: string, content: string) => {
-      const patch = {
-        savedContent: content,
-        diskMtime: await statMtime(path),
-        quickNoteConflict: undefined,
-      };
+      const patch = { savedContent: content, diskMtime: await statMtime(path) };
       tabsRef.current = tabsRef.current.map((tb) =>
         tb.id === tabId && tb.path === path ? { ...tb, ...patch } : tb,
       );
@@ -151,15 +147,7 @@ export function useSaveTabs(opts: {
       if (tab.diskMtime !== null) {
         const current = await statMtime(tab.path);
         if (current !== null && current !== tab.diskMtime) {
-          // A quick note went into this file meanwhile: say so, since
-          // saving over the file deletes it (useQuickNoteWrites.ts).
-          const message = tab.quickNoteConflict
-            ? t.quickNoteConflictMessage.replace(
-                "{note}",
-                tab.quickNoteConflict,
-              )
-            : t.fileChangedOnDiskMessage;
-          const overwrite = await showConfirm(message, {
+          const overwrite = await showConfirm(t.fileChangedOnDiskMessage, {
             title: t.fileChangedOnDiskTitle,
             okLabel: t.fileChangedOnDiskOverwrite,
             cancelLabel: t.closePromptCancel,

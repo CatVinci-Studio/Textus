@@ -66,16 +66,6 @@ function accelOf(label: string): string | undefined {
 }
 
 describe("the Windows app menu", () => {
-  it("hints the Quick Note shortcut only while it is registered", () => {
-    const quick = (combo?: string) =>
-      flatten(buildAppMenu(t, shortcuts, NO_RECENTS, {}, combo)).find(
-        (entry) => entry.label === t.menuNewQuickNote,
-      );
-    expect(quick()?.accel).toBeUndefined();
-    expect(quick("meta+alt+n")?.accel).toBe("meta+alt+n");
-    expect(accelOf(t.menuOpenQuickNotesFolder)).toBeUndefined();
-  });
-
   it("offers Alt+F4 for Exit, not Ctrl+Q", () => {
     // Ctrl+Q closes nothing on Windows, and menu.rs no longer registers it
     // there - advertising it would be a hint for a dead combo.
@@ -232,13 +222,6 @@ describe("the macOS menu bar's labels", () => {
     );
     expect(labels["menu:edit"]).toBe(zh.menuEdit);
     expect(labels["predefined:copy"]).toBe(zh.copy);
-  });
-
-  it("show the Quick Note shortcut in its label, never as an accelerator", () => {
-    expect(nativeMenuLabels(t)["new-quick-note"]).toBe("New Quick Note");
-    expect(nativeMenuLabels(t, "⌃⌥N")["new-quick-note"]).toBe(
-      "New Quick Note (⌃⌥N)",
-    );
   });
 
   it("name the app where macOS does", () => {

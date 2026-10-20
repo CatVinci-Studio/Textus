@@ -5,24 +5,7 @@ import {
   isDrivePath,
   isInside,
   parentDir,
-  samePath,
 } from "./path";
-
-describe("samePath", () => {
-  it("matches a Windows path whatever its separators and case", () => {
-    expect(
-      samePath(
-        "C:\\Users\\me\\Documents\\Textus\\Quick Notes\\Idea.md",
-        "c:/Users/me/Documents/Textus/Quick Notes/Idea.md",
-      ),
-    ).toBe(true);
-    expect(samePath("C:\\notes\\a.md", "C:\\notes\\b.md")).toBe(false);
-  });
-  it("keeps case apart elsewhere", () => {
-    expect(samePath("/home/me/a.md", "/home/me/a.md")).toBe(true);
-    expect(samePath("/home/me/A.md", "/home/me/a.md")).toBe(false);
-  });
-});
 
 describe("parentDir", () => {
   it("steps up on POSIX and Windows paths", () => {

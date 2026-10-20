@@ -1,7 +1,7 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import type { Slice } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
-import { imageFilesFromClipboard } from "./pasted-files";
+import { imageFilesFromClipboard } from "../editor/images/pasted-files";
 
 /** Whether a paste carries an image the desktop app would have stored: an
  *  image file or bitmap, image files copied in a file manager, or a bitmap
@@ -32,12 +32,10 @@ export function pastesImage(
 }
 
 /**
- * Stands in for the image store (editor/images/image-plugin.ts) where a
- * pasted image has nowhere to go: the browser playground, which has no
- * disk, and the Quick Note window, whose note has no folder for images
- * until it is saved. The paste inserts nothing and `onImage` says why.
- * Image files dropped on the playground never reach the editor - it takes
- * every file drop itself.
+ * Stands in for the image store (editor/images/image-plugin.ts) in the
+ * browser playground, which has nowhere to keep a pasted image: the paste
+ * inserts nothing and `onImage` says why. Image files dropped on the page
+ * never reach the editor - the playground takes every file drop itself.
  */
 export function createImageNoticePlugin(onImage: () => void) {
   return $prose(

@@ -967,7 +967,7 @@ function escapingBeforeSpaces(text: Handle): Handle {
       return state.safe(body, { ...info, after: spaces, encode: [] }) + spaces;
     // Spaces alone, at the start of a line with more after them, are
     // encoded: a tab there opens indented code. A line of spaces only
-    // stays as it is (an empty Quick Note is still empty).
+    // stays as it is.
     const lineStart = !info.before || /[\r\n]$/.test(info.before);
     const more = info.after !== undefined && !/^[\r\n]?$/.test(info.after);
     return lineStart && more && !/[\r\n]/.test(spaces)
