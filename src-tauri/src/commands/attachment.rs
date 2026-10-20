@@ -92,9 +92,9 @@ fn file_name_of(path: &Path) -> String {
 const SUPPORTED_EXTENSIONS: &[&str] = &[
     // Extracted to text
     "md", "markdown", "txt", "csv", "tsv", "json", "yaml", "yml",
-    // Parsed to text (crate::extract)
-    "pdf", "docx", "pptx", "xlsx", "xlsm", "xlsb", "xls", "ods",
-    // Sent as image parts (crate::extract::image_mime)
+    // Converted to Markdown (crate::extract)
+    "pdf", "docx", "pptx", "xlsx", "xlsm", "xlsb", "xls", "ods", "epub", "rtf", "html", "htm",
+    "xhtml", // Sent as image parts (crate::extract::image_mime)
     "png", "jpg", "jpeg", "gif", "webp",
 ];
 

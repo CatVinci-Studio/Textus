@@ -396,7 +396,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   conventionsNewMedia: "소셜 미디어",
   conventionsEu: "EU 기관",
   agentAttachFile:
-    "파일 첨부: PDF, Word, PowerPoint, 스프레드시트, 이미지 또는 일반 텍스트",
+    "파일 첨부: PDF, Word, PowerPoint, 스프레드시트, EPUB, RTF, HTML, 이미지 또는 일반 텍스트",
   chatAttachmentTruncated: "(일부 생략)",
   chatAttachmentNoVision: `이 제공업체는 이미지를 읽을 수 없습니다. 설정 > ${AI_NAME}에서 제공업체를 바꾸거나 문서를 첨부하세요.`,
   aiGrammarLabel: "문법 검사 사용",

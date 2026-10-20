@@ -379,7 +379,8 @@ export default {
   conventionsNews: "新聞",
   conventionsNewMedia: "社群媒體",
   conventionsEu: "歐盟機構",
-  agentAttachFile: "附加檔案：PDF、Word、PowerPoint、試算表、圖片或純文字",
+  agentAttachFile:
+    "附加檔案：PDF、Word、PowerPoint、試算表、EPUB、RTF、HTML、圖片或純文字",
   chatAttachmentTruncated: "（已截斷）",
   chatAttachmentNoVision: `這個服務供應商無法讀取圖片。在「設定 > ${AI_NAME}」中更換服務供應商，或改為附加文件。`,
   aiGrammarLabel: "啟用文法檢查",

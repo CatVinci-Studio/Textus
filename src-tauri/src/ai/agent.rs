@@ -228,15 +228,15 @@ fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -> String {
     let file_tools = "To find a file by name, use find_files - whenever you know or can guess part of the name; search_files finds words inside files, list_files lists every file (only to see what there is), and read_file reads one - a long one in parts, by line range, starting from where search_files found what you need; view_image, when you have it, shows you an image.";
     let folder = match (&workspace.root, workspace.root_source) {
         (Some(root), RootSource::Chosen) => format!(
-            "Project folder: {root} - chosen by the user, in {}. You can read its text files and its PDF, Word, PowerPoint and spreadsheet files, and nothing outside it. Use the document's folder, in the same menu or Settings row, goes back to the open document's own folder. {file_tools} {one_folder}",
+            "Project folder: {root} - chosen by the user, in {}. You can read its text files and its PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files, and nothing outside it. Use the document's folder, in the same menu or Settings row, goes back to the open document's own folder. {file_tools} {one_folder}",
             where_to_choose_the_project_folder(true)
         ),
         (Some(root), RootSource::EnclosingProject) => format!(
-            "Project folder: {root} - the nearest folder above the open document that has a .textus/ folder. You can read its text files and its PDF, Word, PowerPoint and spreadsheet files, and nothing outside it; the user can choose another one in {}. {file_tools} {one_folder}",
+            "Project folder: {root} - the nearest folder above the open document that has a .textus/ folder. You can read its text files and its PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files, and nothing outside it; the user can choose another one in {}. {file_tools} {one_folder}",
             where_to_choose_the_project_folder(true)
         ),
         (Some(root), _) => format!(
-            "Project folder: {root} - the open document's own folder, the default. You can read its text files and its PDF, Word, PowerPoint and spreadsheet files, and nothing outside it; the user can choose another one in {}. {file_tools} {one_folder}",
+            "Project folder: {root} - the open document's own folder, the default. You can read its text files and its PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files, and nothing outside it; the user can choose another one in {}. {file_tools} {one_folder}",
             where_to_choose_the_project_folder(true)
         ),
         (None, RootSource::TooBroad) => format!("Project folder: none - the document's folder is the user's home folder or a whole drive, which is too broad to open to you, so you can't read any files, and there is no project menu. If the user refers to a file, say so, ask them to paste what you need, and tell them they can choose a narrower project folder in {}.", where_to_choose_the_project_folder(false)),

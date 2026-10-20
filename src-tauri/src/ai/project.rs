@@ -107,8 +107,9 @@ fn is_text_file(path: &Path) -> bool {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum FileKind {
     Text,
-    /// PDF, Word, PowerPoint or a spreadsheet: read as its extracted text
-    /// (crate::extract). Not what the sidebar calls a document
+    /// PDF, Word, PowerPoint, a spreadsheet, EPUB or RTF: read as the
+    /// Markdown crate::extract makes of it. (An .html file is Text, checked
+    /// first: here it is source to read as written.) Not what the sidebar calls a document
     /// (DOCUMENT_EXTENSIONS), which is a text file.
     Document,
     /// PNG, JPEG, GIF or WebP: shown to a model that can see (view_image).
@@ -1216,24 +1217,24 @@ mod tests {
         assert_eq!(walk_text_files(root).files, ["notes.md"]);
         assert_eq!(
             read_part(root, "research/interview.docx", LineRange::default(), false).unwrap(),
-            "Maria Lopez, 12 March\nShe takes the 6:40 bus."
+            "Maria Lopez, 12 March\n\nShe takes the 6:40 bus."
         );
         assert_eq!(
             read_part(
                 root,
                 "research/interview.docx",
                 LineRange {
-                    start: Some(2),
+                    start: Some(3),
                     end: None
                 },
                 false
             )
             .unwrap(),
-            "`research/interview.docx`, lines 2-2 of 2:\nShe takes the 6:40 bus."
+            "`research/interview.docx`, lines 3-3 of 3:\nShe takes the 6:40 bus."
         );
         assert_eq!(
             search(root, "6:40"),
-            "research/interview.docx:2: She takes the 6:40 bus."
+            "research/interview.docx:3: She takes the 6:40 bus."
         );
         assert_eq!(
             read_part(root, "broken.pdf", LineRange::default(), false).unwrap_err(),
@@ -1291,7 +1292,7 @@ mod tests {
         let once = document_text(&path).unwrap();
         assert!(Arc::ptr_eq(&once, &document_text(&path).unwrap()));
         std::fs::write(&path, crate::extract::test_docx(&["second", "version"])).unwrap();
-        assert_eq!(document_text(&path).unwrap().as_str(), "second\nversion");
+        assert_eq!(document_text(&path).unwrap().as_str(), "second\n\nversion");
     }
 
     #[test]
