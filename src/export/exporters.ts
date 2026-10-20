@@ -1,7 +1,14 @@
 import { errorText } from "../utils/error-text";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import type { Strings } from "../i18n/strings";
-import { basename, dirname } from "../utils/path";
+import {
+  basename,
+  decodeUrlPath,
+  dirname,
+  hasUrlScheme,
+  isDrivePath,
+} from "../utils/path";
+import { imageMimeForPath } from "../editor/images/pasted-files";
 import { tabTitle, type DocTab } from "../document/doc-tabs";
 import { exportDoc, fs } from "../platform/ipc";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
@@ -182,7 +189,8 @@ function gatherDetails(root: HTMLElement): void {
 // Local images render through asset: URLs (image-plugin.ts), which resolve
 // only inside this app. A file exported next to the document wants the
 // markdown's own paths back ("document"); a self-contained render wants the
-// pixels themselves ("inline", see inlineImages).
+// pixels themselves ("inline", see inlineImages, which reads each from the
+// file data-doc-src names - left on the image for it).
 export type ExportImages = "document" | "inline";
 
 // Clones the editor subtree, stripping contenteditable so the export is inert.
@@ -208,11 +216,23 @@ export function cloneEditorContent(
   clone
     .querySelectorAll<HTMLImageElement>("img[data-doc-src]")
     .forEach((img) => {
-      if (images === "document")
-        img.setAttribute("src", img.dataset.docSrc ?? "");
+      if (images === "inline") return;
+      img.setAttribute("src", img.dataset.docSrc ?? "");
       img.removeAttribute("data-doc-src");
     });
   return clone.outerHTML;
+}
+
+// The file a document image's src names, decoded as the editor reads it
+// (image-plugin.ts's resolveImageSrc); null for a URL, or a relative src
+// with no folder on disk to resolve it in.
+function localImagePath(src: string, docPath: string | null): string | null {
+  if (isDrivePath(src)) return decodeUrlPath(src);
+  if (!src || hasUrlScheme(src)) return null;
+  if (src.startsWith("/")) return decodeUrlPath(src);
+  // An iOS document picked in Files is a file: URL, its images no plain path.
+  if (!docPath || hasUrlScheme(docPath)) return null;
+  return `${dirname(docPath)}/${decodeUrlPath(src)}`;
 }
 
 function blobToDataUrl(blob: Blob): Promise<string> {
@@ -224,17 +244,37 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-// Replaces every asset: image in `html` with a data URL, so a render in a
-// webview that has no asset protocol (the macOS PDF path) still shows it.
-// An image that can't be read is left as-is rather than failing the export.
-async function inlineImages(html: string): Promise<string> {
+// Replaces every local image in `html` with a data URL, so a render in a
+// webview that has no asset protocol (the macOS PDF path), or a page opened
+// away from the document's folder, still shows it. Each is read from its
+// file on disk (data-doc-src, against `docPath`) rather than fetched back
+// through the webview, where a fetch the asset protocol didn't answer left
+// the picture an unloadable link, blank in the PDF. The fetch stays for an
+// image with no file to read (an iOS document's). An image that can't be
+// read is left as-is rather than failing the export.
+async function inlineImages(
+  html: string,
+  docPath: string | null,
+): Promise<string> {
   const template = document.createElement("template");
   template.innerHTML = html;
-  const local = Array.from(
+  const images = Array.from(
     template.content.querySelectorAll<HTMLImageElement>("img[src]"),
-  ).filter((img) => /^(asset|https?:\/\/asset\.localhost)/i.test(img.src));
+  );
   await Promise.all(
-    local.map(async (img) => {
+    images.map(async (img) => {
+      const path = localImagePath(img.dataset.docSrc ?? "", docPath);
+      img.removeAttribute("data-doc-src");
+      const mime = path && imageMimeForPath(path);
+      if (path && mime) {
+        try {
+          img.src = `data:${mime};base64,${await fs.readBinaryFileBase64(path)}`;
+          return;
+        } catch {
+          // Not readable from disk - try the webview's copy below.
+        }
+      }
+      if (!/^(asset|https?:\/\/asset\.localhost)/i.test(img.src)) return;
       try {
         const response = await fetch(img.src);
         if (response.ok) img.src = await blobToDataUrl(await response.blob());
@@ -425,7 +465,10 @@ export async function exportPdf(
     // Paper is white: macOS keeps the theme's page colour, the others print
     // on white in the theme's light form (#68).
     const whitePage = !isMac;
-    let content = await inlineImages(cloneEditorContent(editor, "inline"));
+    let content = await inlineImages(
+      cloneEditorContent(editor, "inline"),
+      tab.path,
+    );
     if (whitePage && appearanceIsDark()) {
       const style = getComputedStyle(editor);
       content = await lightDiagrams(
@@ -466,8 +509,10 @@ export async function exportPdf(
 }
 
 // Serializes the tab's live editor DOM into a self-contained HTML file.
-// Relative image paths (assets/...) are kept as-is, like Typora's HTML export
-// next to the document.
+// Saved next to the document, relative image paths (assets/...) are kept
+// as-is, like Typora's HTML export. Anywhere else they would point at
+// nothing - nor would a draft's, in the app's own folder - so the pictures
+// go inside the page.
 export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
   const editor = document.querySelector('[data-active-tab="true"] .milkdown');
   if (!editor) {
@@ -481,11 +526,11 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
     "html",
   );
   if (!picked) return;
-  const html = buildStandaloneHtml(
-    base,
-    cloneEditorContent(editor),
-    HTML_LAYOUT_CSS,
-  );
+  const besideDocument = !!tab.path && dirname(tab.path) === dirname(picked);
+  const content = besideDocument
+    ? cloneEditorContent(editor)
+    : await inlineImages(cloneEditorContent(editor, "inline"), tab.path);
+  const html = buildStandaloneHtml(base, content, HTML_LAYOUT_CSS);
   await fs.writeTextFile(picked, html);
   void exportDoc.revealInDir(picked);
 }
