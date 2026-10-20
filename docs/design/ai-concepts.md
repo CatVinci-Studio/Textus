@@ -50,9 +50,10 @@ there, and the project's own settings live in its `.textus/` folder.**
   default back. A folder chosen for the AI is never replaced by the
   sidebar's (`sidebar/tree-root.ts`'s `agentRootOnOpen`).
 - **Textus AI uses it:** conversations find, list, read and search its
-  text files and the text of its PDF, Word, PowerPoint and spreadsheet
-  files (`find_files`, `list_files`, `read_file`, `search_files`;
-  `src-tauri/src/extract.rs` extracts the text, as for chat attachments),
+  text files and the text of its PDF, Word, PowerPoint, spreadsheet, EPUB
+  and RTF files (`find_files`, `list_files`, `read_file`, `search_files`;
+  `src-tauri/src/extract/` turns them into Markdown - headings, lists,
+  tables, slides and their notes, footnotes - as for chat attachments),
   and look at its images with `view_image` when the provider takes images;
   `@` in the composer attaches a text file. They walk it as the sidebar's
   file search does (`src-tauri/src/walk.rs`): hidden entries, what

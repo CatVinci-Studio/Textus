@@ -66,21 +66,34 @@ base64 = "0.22"
 reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
 aicompat = { path = "crates/aicompat" }
 
-# Text extraction (src/extract.rs), for chat attachments (commands/
+# Markdown extraction (src/extract/), for chat attachments (commands/
 # attachment.rs) and Textus AI's project tools (ai/project.rs). Everything
 # the "+" button accepts has to become either text in the prompt or a base64
 # image part, so each format needs a reader:
 #   pdf-extract  PDF text layer (scanned/image-only PDFs have none, and are
 #                reported as such rather than silently attaching nothing)
 #   calamine     xlsx/xls/xlsb/ods, rendered as one markdown table per sheet
-#   zip + quick-xml  docx and pptx are OOXML: a zip of XML parts, and pulling
-#                the text runs out of them is a few dozen lines - far less
-#                risk than a do-everything crate (dotext, last released 2019)
-#                that would tie three formats to one unmaintained dependency.
+#   zip + quick-xml  docx, pptx and EPUB are zips of XML parts, and walking
+#                them into Markdown is a few hundred lines - far less risk
+#                than a do-everything crate (dotext, last released 2019) that
+#                would tie three formats to one unmaintained dependency.
+#   dom_query    HTML (and EPUB chapters) to Markdown: html5ever, the
+#                browsers' parser, so tag soup reads as a browser shows it.
+#                The same version tauri-utils builds with, so no new crates
+#                are downloaded, but it is new code in the binary: this
+#                Markdown extraction as a whole took the Linux x86_64 release
+#                from 15.31 to 16.24 MB (+0.9 MB), nearly all of it
+#                html5ever and its entity table. Shared with any later
+#                web page reader (html_to_markdown).
+#   encoding_rs + codepage  RTF's `\'hh` bytes in the code page the file
+#                declares; both already in the tree via calamine.
 pdf-extract = "0.12"
 calamine = "0.36"
 zip = { version = "4", default-features = false, features = ["deflate"] }
 quick-xml = "0.41"
+dom_query = { version = "0.28", default-features = false }
+encoding_rs = "0.8"
+codepage = "0.1"
 # PDF export's page numbers (commands/pdf_page_numbers.rs): the finished
 # file is opened and each page's number drawn in its bottom margin. Already
 # in the tree via pdf-extract, at the same version and features, so it adds
