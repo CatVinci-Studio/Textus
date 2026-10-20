@@ -30,8 +30,9 @@
 //!
 //! Without a key, every test prints a notice and passes vacuously.
 //!
-//! doubao.rs is the one suite on another provider: a few request-shape
-//! checks against Volcengine Ark, keyed by VOLCENGINE_ARK_API_KEY.
+//! doubao.rs and deepseek.rs run on other providers: a few request-shape
+//! checks against Volcengine Ark (VOLCENGINE_ARK_API_KEY) and DeepSeek
+//! (DEEPSEEK_API_KEY).
 //!
 //! tokens.rs measures what each kind of request sends and caches
 //! (docs/design/ai-tokens.md) rather than how good the answers are.
@@ -45,6 +46,7 @@ mod checks_builtin;
 mod completion_cases;
 mod completion_matrix;
 mod conventions;
+mod deepseek;
 mod docs;
 mod doubao;
 mod grammar_cases;
