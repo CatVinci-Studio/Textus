@@ -219,9 +219,11 @@ test("a URL pasted inside a link's text joins it instead of splitting it", async
   page,
 }) => {
   await pasteMarkdown(page, "Before [Textus](https://t.example) after.");
-  // "Before Tex|tus"
-  await caretAt(page, 10);
+  // "Before [Tex|tus" - the caret on the link shows its Markdown
+  // (link-reveal.ts), and the URL goes into it as text.
+  await caretAt(page, 11);
   await pasteHere(page, "https://inner.example");
+  await page.keyboard.press("End");
   await expect(page.locator(`${editor} a`)).toHaveCount(1);
   expect(await sourceOf(page)).toBe(
     "Before [Texhttps://inner.exampletus](https://t.example) after.",
@@ -238,12 +240,14 @@ test("a URL pasted over selected words links them", async ({ page }) => {
   );
 });
 
-test("a URL pasted over a link's whole text only changes where it points", async ({
+test("a URL pasted over a link's URL only changes where it points", async ({
   page,
 }) => {
   await pasteMarkdown(page, "Before [Textus](https://old.example) after.");
-  await caretAt(page, 7, 6);
+  // "Before [Textus](|https://old.example|)", in the link's Markdown.
+  await caretAt(page, 16, 19);
   await pasteHere(page, "https://new.example");
+  await page.keyboard.press("End");
   await expect(page.locator(`${editor} a`)).toHaveCount(1);
   expect(await sourceOf(page)).toBe(
     "Before [Textus](https://new.example) after.",

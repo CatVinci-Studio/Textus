@@ -25,6 +25,7 @@ import {
   type Unsafe,
 } from "mdast-util-to-markdown";
 import { referenceFor, type LinkReference } from "./reference-links";
+import { phrasingKey, readLinkSource } from "./link-source";
 import {
   imageMarkdownHtml,
   imageWidthOf,
@@ -224,6 +225,8 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
         syntax: { default: "resource", validate: "string" },
         // How a reference link was written (reference-links.ts).
         reference: { default: "", validate: "string" },
+        // The Markdown it was written as (link-source.ts).
+        source: { default: "", validate: "string" },
       },
       parseDOM: [
         {
@@ -251,6 +254,7 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
         const { syntax } = mark.attrs;
         delete attrs.syntax;
         delete attrs.reference;
+        delete attrs.source;
         const [tag, domAttrs] = schema.toDOM!(
           { ...mark, attrs } as typeof mark,
           inline,
@@ -275,6 +279,8 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
             title: node.title as string,
             syntax,
             reference: reference ? JSON.stringify(reference) : "",
+            source:
+              (node.data as { source?: string } | undefined)?.source ?? "",
           };
           if (syntax === "empty") {
             if (!attrs.href) return; // `[]()` has nothing to show
@@ -308,7 +314,10 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
             state.withMark(mark, "link", undefined, {
               title,
               url: href,
-              data: { linkSyntax: mark.attrs.syntax },
+              data: {
+                linkSyntax: mark.attrs.syntax,
+                source: mark.attrs.source,
+              },
             });
         },
       },
@@ -317,7 +326,7 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
 }
 
 /** Whether `link` is on `node`, or on everything inside it. */
-function linked(node: ProseNode, link: Mark): boolean {
+export function linked(node: ProseNode, link: Mark): boolean {
   if (link.isInSet(node.marks)) return true;
   if (node.isLeaf) return false;
   // An emptied span inside holds nothing to be outside the link.
@@ -329,7 +338,7 @@ function linked(node: ProseNode, link: Mark): boolean {
 }
 
 /** The link on the first text in `node`, nested spans and all. */
-function firstLink(node: ProseNode): Mark | undefined {
+export function firstLink(node: ProseNode): Mark | undefined {
   let found: Mark | undefined;
   node.descendants((child) => {
     found ??= child.marks.find((mark) => mark.type.name === "link");
@@ -353,7 +362,7 @@ function withoutMark(content: Fragment, link: Mark): Fragment {
 
 /** Inline content with the link moved onto each bold or italic span that
  *  stands inside it; null when there is none. */
-function linksOnSpansIn(content: Fragment): Fragment | null {
+export function linksOnSpansIn(content: Fragment): Fragment | null {
   let changed = false;
   const nodes: ProseNode[] = [];
   content.forEach((node, _offset, index) => {
@@ -658,9 +667,38 @@ function textAfter(node: Link, parent: Parents | undefined): string {
  *  punctuation the text would write escaped. */
 const endsAddress = (rest: string) => /^[.,:;!?"')]*(?:\s|$)/u.test(rest);
 
-/** Writes a link in the syntax it was read in (LinkSyntax above). */
+/**
+ * The link's own Markdown (link-source.ts), when it can be written as it
+ * was: the link still says what that text says, and the text reads back
+ * the same here - not across lines, whose indent a list or a quote sets,
+ * nor with a `|` in a table cell, which would end the cell. A bare URL is
+ * left to `bareWww` and remark's `<...>`, which every Markdown tool reads
+ * as a link: a bare one is GFM's alone.
+ */
+function linkAsTyped(node: Link, state: State): string | null {
+  const typed = readLinkSource(
+    (node.data as { source?: unknown } | undefined)?.source,
+  );
+  if (
+    !typed ||
+    typed.url !== node.url ||
+    typed.title !== (node.title ?? "") ||
+    typed.key !== phrasingKey(node.children as never)
+  )
+    return null;
+  const { source } = typed;
+  if (!/^[[<]/.test(source) || /[\r\n]/.test(source)) return null;
+  if (state.stack.includes("tableCell") && /(?<!\\)\|/.test(source))
+    return null;
+  return source;
+}
+
+/** Writes a link as it was typed, or else in the syntax it was read in
+ *  (LinkSyntax above). */
 const link = Object.assign(
   ((node, parent, state, info) => {
+    const typed = linkAsTyped(node, state);
+    if (typed !== null) return typed;
     const www = bareWww(node, parent);
     if (www) return www;
     const empty =
@@ -676,6 +714,7 @@ const link = Object.assign(
   {
     // containerPhrasing asks `peek` which character the link starts with.
     peek: ((node, parent, state, info) =>
+      linkAsTyped(node, state)?.charAt(0) ??
       bareWww(node, parent)?.charAt(0) ??
       asWritten(node, state, () =>
         defaultLink.peek(node, parent, state, info),

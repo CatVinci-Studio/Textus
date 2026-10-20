@@ -34,6 +34,7 @@ const WEBKIT_SPECS = [
   "tab-scroll.spec.ts",
   "markdown-keys.spec.ts",
   "autopair.spec.ts",
+  "link-reveal.spec.ts",
 ];
 
 export default defineConfig({

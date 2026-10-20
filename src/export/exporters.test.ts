@@ -71,6 +71,21 @@ describe("cloneEditorContent", () => {
     expect(html).toContain("<pre><code>x</code></pre>");
   });
 
+  it("writes the link the caret shows as its Markdown as the link", async () => {
+    const { renderMarkdownInlineHtml } =
+      await import("../editor/markdown/render-html");
+    const html = cloneEditorContent(
+      editor(
+        '<p>see <span data-type="link_source" class="link-source">' +
+          '<span class="link-source-syntax">[</span>a<span class="link-source-syntax">](https://x.org)</span>' +
+          "</span> end</p>",
+      ),
+      "document",
+      renderMarkdownInlineHtml,
+    );
+    expect(html).toContain('<p>see <a href="https://x.org">a</a> end</p>');
+  });
+
   it("drops a colour code's swatch, keeping the code", () => {
     const html = cloneEditorContent(
       editor(

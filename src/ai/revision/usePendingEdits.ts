@@ -1,6 +1,7 @@
 import { closeHistory } from "@milkdown/kit/prose/history";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
+import { visibleTextBetween } from "../../editor/markdown/link-reveal";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import {
   composeMarkdownEdit,
@@ -663,7 +664,12 @@ export function usePendingEdits(
             proposal,
             from: range.from,
             to: range.to,
-            expectedText: state.doc.textBetween(range.from, range.to, " "),
+            expectedText: visibleTextBetween(
+              state.doc,
+              range.from,
+              range.to,
+              " ",
+            ),
             replacement,
             streaming,
             strikeFrom: strikeRange?.from,
@@ -783,7 +789,7 @@ export function usePendingEdits(
         // not expected to fire (the plugin already drops previews whose
         // mapped text changed), but a silent no-op here would be worse.
         if (
-          state.doc.textBetween(preview.from, preview.to, " ") !==
+          visibleTextBetween(state.doc, preview.from, preview.to, " ") !==
           preview.expectedText
         )
           return;
@@ -909,7 +915,7 @@ export function usePendingEdits(
               ...p,
               from: range.from,
               to: range.to,
-              expectedText: doc.textBetween(range.from, range.to, " "),
+              expectedText: visibleTextBetween(doc, range.from, range.to, " "),
               replacement: text,
               strikeFrom: strikeRange?.from,
               strikeTo: strikeRange?.to,

@@ -683,6 +683,17 @@ br:is(.pending-delete, .pending-sentence-hot) {
   font-size: 0.85em;
 }
 
+/* A link shown as its Markdown while the caret is on it
+   (markdown/link-reveal.ts): the text in the link colour, the brackets and
+   what follows the text quiet. */
+.link-source {
+  color: var(--editor-accent);
+}
+
+.link-source-syntax {
+  color: var(--editor-muted);
+}
+
 /* An Obsidian wikilink, `[[Note]]` (markdown/wikilink.ts): its source in
    the link colour; Ctrl/Cmd+click opens the note. */
 .wikilink {

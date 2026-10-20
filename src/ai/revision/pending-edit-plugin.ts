@@ -5,6 +5,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
+import { visibleTextBetween } from "../../editor/markdown/link-reveal";
 import { renderMarkdownInlineHtml } from "../../editor/markdown/render-html";
 import { onKatexReady } from "../../editor/math/katex-loader";
 import {
@@ -66,8 +67,10 @@ export interface PendingPreview {
   proposal: EditProposal;
   from: number;
   to: number;
-  /** `doc.textBetween(from, to, " ")` at resolution time - the ground truth
-   *  a later docChanged re-checks before letting the preview survive. */
+  /** The range's text (`visibleTextBetween`, link-reveal.ts: a link shown
+   *  as its source reads as its text) at resolution time - the ground
+   *  truth a later docChanged re-checks before letting the preview
+   *  survive. */
   expectedText: string;
   /** Markdown `[from, to)` becomes on accept, composed in markdown space. */
   replacement: string;
@@ -1497,7 +1500,10 @@ function mapPreviews(
   for (const p of previews) {
     const from = tr.mapping.map(p.from, -1);
     const to = tr.mapping.map(p.to, 1);
-    if (from > to || tr.doc.textBetween(from, to, " ") !== p.expectedText) {
+    if (
+      from > to ||
+      visibleTextBetween(tr.doc, from, to, " ") !== p.expectedText
+    ) {
       changed = true;
       continue;
     }
