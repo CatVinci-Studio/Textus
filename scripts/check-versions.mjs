@@ -9,13 +9,17 @@
 //
 //   node scripts/check-versions.mjs                 (exit 1 on a mismatch)
 //   node scripts/check-versions.mjs --tag v1.2.3    (also: the tag, minus
-//                                                    "v" or "ios-v", matches)
+//                                                    "v" or "ios-v", matches;
+//                                                    for a stable vX.Y.Z, no
+//                                                    release-note fragments
+//                                                    are left unassembled)
 //   node scripts/check-versions.mjs --print         (print the version)
 //   node scripts/check-versions.mjs --root DIR      (check another checkout,
 //                                                    e.g. an old tag's)
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { unreleasedProblems } from "./release-notes.mjs";
 
 const ownRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const reader = (root) => (file) => readFileSync(join(root, file), "utf8");
@@ -78,7 +82,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     return args[at + 1];
   };
   const tag = option("--tag");
-  const versions = collectVersions(reader(option("--root") ?? ownRoot));
+  const root = option("--root") ?? ownRoot;
+  const versions = collectVersions(reader(root));
   const problems = versionProblems(versions, tag);
   if (problems.length > 0) {
     console.error("Version mismatch:");
@@ -86,6 +91,15 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error(
       "Bump every file listed above together (CONTRIBUTING.md, Releases).",
     );
+    process.exit(1);
+  }
+  // A stable desktop tag also needs its release notes assembled from the
+  // fragments (scripts/release-notes.mjs).
+  const notesProblems =
+    tag && /^v[^-]+$/.test(tag) ? unreleasedProblems(root, tag.slice(1)) : [];
+  if (notesProblems.length > 0) {
+    console.error("Release notes not ready:");
+    for (const p of notesProblems) console.error(`  ${p}`);
     process.exit(1);
   }
   if (args.includes("--print")) console.log(versions["package.json"]);

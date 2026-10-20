@@ -62,8 +62,9 @@ If another copy of the e2e suite may be running (another worktree), set
   `Co-authored-by` except to credit an outside contributor whose work the
   commit ports.
 - Documentation and release notes are English and follow the format in
-  CONTRIBUTING.md › Writing; release notes start from
-  `docs/releases/TEMPLATE.md`.
+  CONTRIBUTING.md › Writing. A release note goes in a new file of its own
+  under `docs/releases/next/` (see its README), never into
+  `docs/releases/X.Y.Z.md`.
 
 ## Safety
 

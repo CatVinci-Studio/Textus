@@ -33,9 +33,10 @@ where the project is heading.
 
 ## Other
 
-- [releases/](releases/) - release notes, one file per version; new ones start
-  from [releases/TEMPLATE.md](releases/TEMPLATE.md). The release workflow uses
-  them as the GitHub release's text.
+- [releases/](releases/) - release notes, one file per version, in the
+  outline of [releases/TEMPLATE.md](releases/TEMPLATE.md). The release workflow uses
+  them as the GitHub release's text. Unreleased notes are fragments in
+  [releases/next/](releases/next/README.md), one per pull request.
 - [images/](images/) - README and App Store screenshots
   (`npm run screenshots:readme` regenerates the README's).
 - [archive/](archive/) - records that are no longer updated (some in Chinese).
