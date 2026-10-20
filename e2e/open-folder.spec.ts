@@ -176,6 +176,29 @@ test("an empty window offers Open Folder in the sidebar", async ({ page }) => {
   await expect(page.locator(rootLabel)).toHaveText("notes");
 });
 
+test("the empty window's Open Folder stays clear of the sidebar's border", async ({
+  page,
+}) => {
+  // The narrowest sidebar, the largest interface text and a long label.
+  await open(page, {
+    settings: { language: "fr", uiTextScale: 1.25 },
+    storage: { "textus-sidebar-width": "180" },
+  });
+  await emit(page, "menu-toggle-sidebar");
+  const button = page
+    .locator(".sidebar-body")
+    .getByRole("button", { name: "Ouvrir un dossier…" });
+  await expect(button).toBeVisible();
+  const box = (await button.boundingBox())!;
+  const sidebar = (await page.locator(".sidebar").boundingBox())!;
+  expect(box.x + box.width).toBeLessThanOrEqual(sidebar.x + sidebar.width - 12);
+  expect(
+    await page
+      .locator(".sidebar-body")
+      .evaluate((el) => el.scrollWidth <= el.clientWidth),
+  ).toBe(true);
+});
+
 test.describe("the AI's project folder", () => {
   const agentRoot = (page: Page) =>
     page.evaluate(

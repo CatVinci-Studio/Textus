@@ -169,8 +169,26 @@
   user-select: text;
 }
 
-.tree-empty-open {
-  margin: 0 12px;
+/* Under the empty Files tab's note, lined up with its text. Only as wide
+   as its label - a full-width .text-button plus this margin ran past the
+   sidebar's border - and compact like the search box above a tree
+   (design-system.css). A label too long for a narrow sidebar at a large
+   text size wraps rather than being cut short. */
+.text-button.tree-empty-open {
+  width: auto;
+  max-width: calc(100% - 2 * var(--space-3));
+  margin: 0 var(--space-3);
+  padding-block: 3px;
+  text-align: start;
+}
+
+.tree-empty-open svg {
+  flex-shrink: 0;
+}
+
+.tree-empty-open-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* Outline: the disclosure triangle sits in its own gutter so headings

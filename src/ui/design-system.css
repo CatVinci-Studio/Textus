@@ -303,7 +303,8 @@
   .draft-restored-toast button,
   .project-bar-naming button,
   .missing-image-actions button,
-  .inline-chat-send
+  .inline-chat-send,
+  .tree-empty-open
 ) {
   min-height: var(--control-height-sm);
   padding: 0 10px;
