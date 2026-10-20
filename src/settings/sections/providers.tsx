@@ -17,8 +17,13 @@ import { RowHelp, VERBATIM_INPUT } from "./controls";
 // General > AI Login Settings: two compact disclosure rows (provider, then
 // credentials) plus the per-provider account/API-key/custom panels.
 
+// The catalog's labels are brand names, the same in every language - except
+// these two: "custom" is a description, and Doubao is known in Chinese by
+// its Chinese name.
 function localizedLabel(entry: ProviderCatalogEntry, t: Strings): string {
-  return entry.id === "custom" ? t.providerCustom : entry.label;
+  if (entry.id === "custom") return t.providerCustom;
+  if (entry.id === "doubao") return t.providerDoubao;
+  return entry.label;
 }
 
 /// Each provider's "is it connected" check speaks a different shape

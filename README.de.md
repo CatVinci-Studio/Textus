@@ -126,7 +126,7 @@ Textus AI erfasst deinen Stil, merkt sich deine Figuren und Orte und folgt deine
 
 Textus unterstützt mehr als 20 LLMs und jedes LLM mit OpenAI-kompatibler API.
 
-OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Ollama · Jeder OpenAI-kompatible Dienst
+OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Doubao · Ollama · Jeder OpenAI-kompatible Dienst
 
 <p align="center">
   <img src="docs/images/readme/de/settings.png" alt="Das LLM deiner Wahl." width="860" />

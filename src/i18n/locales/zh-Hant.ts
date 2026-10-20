@@ -426,6 +426,7 @@ export default {
   apiKeyConfigured: "已設定",
   providerNotConfigured: "未設定",
   providerCustom: "自訂端點",
+  providerDoubao: "豆包（火山引擎）",
   agentModelLabel: "對話模型",
   agentDefaultModeLabel: "預設模式",
   agentModeWrite: "寫作",

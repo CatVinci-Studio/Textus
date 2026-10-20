@@ -13,6 +13,8 @@ Textus 內建一個專為寫作打造的 AI：Textus AI。它提供續寫、文�
 
 內建的模型清單只列出各服務供應商的預設模型（以 Anthropic 為例：對話用 Claude Sonnet 5.5，續寫和文法檢查用 Claude Haiku 5.5）。在**連線**下的「模型清單」那一列按**取得模型清單**，即可載入該服務供應商目前提供的完整清單，並從中任選模型。
 
+使用**豆包（火山引擎）**時，在[火山方舟主控台](https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey)建立 API Key，並在同一主控台的**開通管理**裡開通要用的模型：未開通的模型，方舟會拒絕請求。
+
 以下的快速鍵以 macOS 標示；在 Windows 和 Linux 上，Cmd 換成 Ctrl、Option 換成 Alt。如果改過快速鍵，以**設定 > 快速鍵**中的設定為準。
 
 ## AI 功能

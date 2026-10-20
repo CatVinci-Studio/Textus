@@ -126,7 +126,7 @@ PDF, Word, HTML 등으로 내보낼 수 있습니다.
 
 Textus는 20개가 넘는 LLM을 지원하며, OpenAI 호환 API를 제공하는 LLM이라면 무엇이든 쓸 수 있습니다.
 
-OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Ollama · OpenAI 호환 엔드포인트
+OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Doubao · Ollama · OpenAI 호환 엔드포인트
 
 <p align="center">
   <img src="docs/images/readme/ko/settings.png" alt="원하는 LLM으로" width="860" />

@@ -13,6 +13,8 @@ Die Anmeldung läuft in deinem Browser. Ob Bilder, Websuche und Änderungen am D
 
 Die eingebaute Modellliste enthält nur die Standardmodelle jedes Anbieters (bei Anthropic: Claude Sonnet 5.5 für den Chat, Claude Haiku 5.5 für Vervollständigung und Grammatik). Klicke in der Zeile **Modellliste** unter **Verbindung** auf **Modelle abrufen**, um die aktuelle Liste des Anbieters zu laden und daraus ein beliebiges Modell zu wählen.
 
+Für **Doubao (Volcengine)** erstellst du den API-Schlüssel in der [Volcengine-Ark-Konsole](https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey) und aktivierst dort auch die Modelle, die du nutzen willst: Anfragen an ein Modell, das dein Konto nicht aktiviert hat, lehnt Ark ab.
+
 Die Tastenkürzel unten sind in macOS-Schreibweise angegeben; unter Windows und Linux drückst du Ctrl (Strg) statt Cmd und Alt statt Option. Wenn du ein Tastenkürzel geändert hast, findest du das aktuelle unter **Einstellungen > Tastenkürzel**.
 
 ## Die KI-Funktionen

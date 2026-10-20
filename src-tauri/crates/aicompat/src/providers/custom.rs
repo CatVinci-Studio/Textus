@@ -22,7 +22,32 @@ struct ChatMessage {
 struct ChatRequest {
     model: String,
     messages: Vec<ChatMessage>,
+    /// Ark's switch for its thinking models - see [`Vendor::Ark`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reasoning_effort: Option<&'static str>,
 }
+
+/// Which server is behind the generic dialect, where one's defaults differ
+/// from OpenAI's enough to matter.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum Vendor {
+    #[default]
+    Generic,
+    /// Volcengine Ark (Doubao). Its Seed models think by default, which
+    /// turns a completion or grammar check into a wait of many seconds, so
+    /// writing calls ask for `reasoning_effort: "minimal"` - "no thinking"
+    /// on Seed, and mapped to the lowest effort, not rejected, on the Ark
+    /// models that can't stop thinking (GLM 5.3 Flash), which
+    /// `thinking: {"type": "disabled"}` would be. And Ark caps the answer
+    /// at 4096 tokens unless `max_tokens` says otherwise - short enough to
+    /// cut a long edit's tool arguments off mid-JSON. On Seed the cap
+    /// leaves the reasoning out.
+    Ark,
+}
+
+/// Ark's answer cap for agent steps - the budget the Anthropic dialect
+/// gives an edit.
+const ARK_AGENT_MAX_TOKENS: u32 = 16384;
 
 #[derive(Deserialize, Default)]
 struct ChatChoiceMessage {
@@ -42,17 +67,13 @@ struct ChatResponse {
     choices: Vec<ChatChoice>,
 }
 
-/// Custom endpoints (self-hosted, local models, third-party OpenAI-compatible
-/// servers) most reliably support the older `/chat/completions` shape rather
-/// than the newer Responses API, which fewer non-OpenAI servers implement.
-pub async fn call_completion(
-    base_url: &str,
-    api_key: Option<&str>,
+fn completion_request(
     model: &str,
     instructions: String,
     user_text: String,
-) -> Result<String, String> {
-    let body = ChatRequest {
+    vendor: Vendor,
+) -> ChatRequest {
+    ChatRequest {
         model: model.to_string(),
         messages: vec![
             ChatMessage {
@@ -64,7 +85,22 @@ pub async fn call_completion(
                 content: user_text,
             },
         ],
-    };
+        reasoning_effort: (vendor == Vendor::Ark).then_some("minimal"),
+    }
+}
+
+/// Custom endpoints (self-hosted, local models, third-party OpenAI-compatible
+/// servers) most reliably support the older `/chat/completions` shape rather
+/// than the newer Responses API, which fewer non-OpenAI servers implement.
+pub async fn call_completion(
+    base_url: &str,
+    api_key: Option<&str>,
+    model: &str,
+    instructions: String,
+    user_text: String,
+    vendor: Vendor,
+) -> Result<String, String> {
+    let body = completion_request(model, instructions, user_text, vendor);
 
     let client = crate::http::client();
     let mut req = client.post(chat_completions_url(base_url)).json(&body);
@@ -163,6 +199,7 @@ fn agent_request_body(
     history: &[AgentTurn],
     tools: &[ToolSpec],
     web_search: Option<NativeWebSearch>,
+    vendor: Vendor,
 ) -> Value {
     let mut tool_schemas = tools.iter().map(tool_to_schema).collect::<Vec<_>>();
     match web_search {
@@ -189,6 +226,9 @@ fn agent_request_body(
     });
     if web_search == Some(NativeWebSearch::Qwen) {
         body["enable_search"] = json!(true);
+    }
+    if vendor == Vendor::Ark {
+        body["max_tokens"] = json!(ARK_AGENT_MAX_TOKENS);
     }
     body
 }
@@ -471,9 +511,10 @@ pub async fn agent_step_streaming(
     history: &[AgentTurn],
     tools: &[ToolSpec],
     web_search: Option<NativeWebSearch>,
+    vendor: Vendor,
     on_event: EventSink<'_>,
 ) -> Result<StepResult, String> {
-    let mut body = agent_request_body(model, instructions, history, tools, web_search);
+    let mut body = agent_request_body(model, instructions, history, tools, web_search, vendor);
     body["stream"] = json!(true);
 
     let client = crate::http::streaming_client();
@@ -493,6 +534,7 @@ pub async fn agent_step_streaming(
 
 /// Runs one round-trip against a Chat Completions-compatible endpoint with
 /// tool definitions - the generic-dialect twin of `openai_codex::agent_step`.
+#[allow(clippy::too_many_arguments)]
 pub async fn agent_step(
     base_url: &str,
     api_key: Option<&str>,
@@ -501,8 +543,9 @@ pub async fn agent_step(
     history: &[AgentTurn],
     tools: &[ToolSpec],
     web_search: Option<NativeWebSearch>,
+    vendor: Vendor,
 ) -> Result<StepResult, String> {
-    let body = agent_request_body(model, instructions, history, tools, web_search);
+    let body = agent_request_body(model, instructions, history, tools, web_search, vendor);
 
     let client = crate::http::client();
     let mut req = client.post(chat_completions_url(base_url)).json(&body);
@@ -803,6 +846,7 @@ mod tests {
             &[],
             &[],
             Some(NativeWebSearch::OpenRouter),
+            Vendor::Generic,
         );
         assert_eq!(openrouter["tools"][0]["type"], "openrouter:web_search");
 
@@ -812,14 +856,94 @@ mod tests {
             &[],
             &[],
             Some(NativeWebSearch::Groq),
+            Vendor::Generic,
         );
         assert_eq!(groq["tools"][0]["type"], "browser_search");
 
-        let qwen = agent_request_body("qwen-plus", "help", &[], &[], Some(NativeWebSearch::Qwen));
+        let qwen = agent_request_body(
+            "qwen-plus",
+            "help",
+            &[],
+            &[],
+            Some(NativeWebSearch::Qwen),
+            Vendor::Generic,
+        );
         assert_eq!(qwen["enable_search"], true);
 
-        let zhipu = agent_request_body("glm-5.2", "help", &[], &[], Some(NativeWebSearch::Zhipu));
+        let zhipu = agent_request_body(
+            "glm-5.2",
+            "help",
+            &[],
+            &[],
+            Some(NativeWebSearch::Zhipu),
+            Vendor::Generic,
+        );
         assert_eq!(zhipu["tools"][0]["type"], "web_search");
         assert_eq!(zhipu["tools"][0]["web_search"]["enable"], true);
+    }
+
+    #[test]
+    fn ark_agent_steps_lift_the_4096_token_answer_cap_and_keep_thinking() {
+        let tools = [ToolSpec {
+            name: "propose_edit",
+            description: "edit",
+            parameters: json!({"type": "object"}),
+        }];
+        let ark = agent_request_body(
+            "doubao-seed-2-1-pro-260628",
+            "help",
+            &[],
+            &tools,
+            None,
+            Vendor::Ark,
+        );
+        assert_eq!(ark["max_tokens"], ARK_AGENT_MAX_TOKENS);
+        assert_eq!(ark["tools"][0]["function"]["name"], "propose_edit");
+        assert!(ark.get("reasoning_effort").is_none());
+        assert!(ark.get("thinking").is_none());
+
+        let generic = agent_request_body("m", "help", &[], &tools, None, Vendor::Generic);
+        assert!(generic.get("max_tokens").is_none());
+    }
+
+    #[test]
+    fn ark_writing_calls_turn_thinking_down_and_others_send_no_such_field() {
+        let ark = serde_json::to_value(completion_request(
+            "doubao-seed-2-1-turbo-260628",
+            "rules".to_string(),
+            "text".to_string(),
+            Vendor::Ark,
+        ))
+        .unwrap();
+        assert_eq!(ark["reasoning_effort"], "minimal");
+        assert_eq!(ark["messages"][1]["content"], "text");
+
+        let generic = serde_json::to_value(completion_request(
+            "m",
+            "rules".to_string(),
+            "text".to_string(),
+            Vendor::Generic,
+        ))
+        .unwrap();
+        assert!(generic.get("reasoning_effort").is_none());
+    }
+
+    /// Ark (like DeepSeek) streams a thinking model's reasoning as
+    /// `reasoning_content` before the answer, then an `encrypted_content`
+    /// chunk with both empty - none of it is the reply.
+    #[test]
+    fn chat_stream_leaves_reasoning_out_of_the_reply() {
+        let (acc, events) = run_stream(&[
+            r#"{"choices":[{"delta":{"role":"assistant","content":"","reasoning_content":"The user wants"}}]}"#,
+            r#"{"choices":[{"delta":{"content":"","reasoning_content":" a title."}}]}"#,
+            r#"{"choices":[{"delta":{"content":"","reasoning_content":"","encrypted_content":"djF+abc"}}]}"#,
+            r#"{"choices":[{"delta":{"content":"Field notes"}}]}"#,
+            "[DONE]",
+        ]);
+        assert_eq!(events, vec!["T:Field notes"]);
+        match acc.into_step_result() {
+            StepResult::Done(text) => assert_eq!(text, "Field notes"),
+            StepResult::ToolCalls(_) => panic!("expected a final answer"),
+        }
     }
 }

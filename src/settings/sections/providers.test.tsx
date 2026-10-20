@@ -33,6 +33,18 @@ const providerMocks = vi.hoisted(() => ({
       modelsListable: true,
       knownModels: ["gemini-3.5-flash"],
     },
+    {
+      id: "doubao",
+      label: "Doubao (Volcengine)",
+      dialect: "openai-chat-completions",
+      auth: ["api_key"],
+      baseUrl: "https://ark.cn-beijing.volces.com/api/v3",
+      defaultModel: "doubao-seed-2-1-turbo-260628",
+      agentDefaultModel: "doubao-seed-2-1-pro-260628",
+      keyOptional: false,
+      modelsListable: true,
+      knownModels: ["doubao-seed-2-1-pro-260628"],
+    },
   ],
 }));
 
@@ -121,6 +133,23 @@ describe("ProviderAuthPanel", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "false");
     expect(trigger).toHaveFocus();
     expect(parentKey).not.toHaveBeenCalled();
+  });
+
+  it("names Doubao by its Chinese name in Chinese, and finds it by that name", () => {
+    render(<ProviderListPanel t={resolveStrings("zh")} />);
+    fireEvent.click(screen.getByRole("button", { name: /Google Gemini/ }));
+    fireEvent.change(
+      screen.getByRole("textbox", {
+        name: resolveStrings("zh").providerSearchPlaceholder,
+      }),
+      { target: { value: "豆包" } },
+    );
+    expect(
+      screen.getByRole("button", { name: "豆包（火山引擎）" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Google Gemini" }),
+    ).not.toBeInTheDocument();
   });
 });
 

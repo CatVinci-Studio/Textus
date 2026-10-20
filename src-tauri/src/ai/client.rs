@@ -53,6 +53,7 @@ pub(crate) async fn call(
                 &model,
                 instructions,
                 user_text,
+                route::chat_vendor(&base_url),
             )
             .await
         }

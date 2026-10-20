@@ -126,7 +126,7 @@ PDF、Word、HTMLなどに書き出せます。
 
 Textus は20種類以上のLLMに対応し、OpenAI互換のAPIを備えたLLMならどれでも使えます。
 
-OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Ollama · OpenAI互換のあらゆるエンドポイント
+OpenAI · Anthropic · Google Gemini · DeepSeek · xAI · Mistral · Groq · OpenRouter · Kimi · GLM · Qwen · Doubao · Ollama · OpenAI互換のあらゆるエンドポイント
 
 <p align="center">
   <img src="docs/images/readme/ja/settings.png" alt="LLMは、お好きなものを" width="860" />

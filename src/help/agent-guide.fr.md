@@ -13,6 +13,8 @@ La connexion à un compte se fait dans votre navigateur. La prise en charge des 
 
 La liste de modèles intégrée ne contient que les modèles par défaut de chaque fournisseur (pour Anthropic : Claude Sonnet 5.5 pour la discussion, Claude Haiku 5.5 pour la complétion et la grammaire). Appuyez sur **Récupérer les modèles**, sur la ligne Liste des modèles de **Connexion**, pour charger la liste actuelle du fournisseur et y choisir n'importe quel modèle.
 
+Pour **Doubao (Volcengine)**, créez la clé d'API dans la [console Volcengine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey) et, dans cette même console, activez les modèles que vous voulez utiliser : Ark refuse les requêtes vers un modèle que votre compte n'a pas activé.
+
 Les raccourcis ci-dessous suivent la notation de macOS ; sous Windows et Linux, remplacez Cmd par Ctrl et Option par Alt. Si vous avez modifié un raccourci, **Réglages > Raccourcis** indique celui qui est en vigueur.
 
 ## Les fonctions IA

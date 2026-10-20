@@ -454,6 +454,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   apiKeyConfigured: "Eingerichtet",
   providerNotConfigured: "Nicht eingerichtet",
   providerCustom: "Eigener Endpunkt",
+  providerDoubao: "Doubao (Volcengine)",
   agentModelLabel: "Chat-Modell",
   agentDefaultModeLabel: "Standardmodus",
   agentModeWrite: "Schreiben",
