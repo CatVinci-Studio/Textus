@@ -1,7 +1,7 @@
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import type { EditorState } from "@milkdown/kit/prose/state";
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { closeHistory } from "@milkdown/kit/prose/history";
 import { resolveStrings } from "../../i18n/strings";
@@ -18,8 +18,9 @@ import { basename, dirname, isInside } from "../../utils/path";
 import { localPath } from "../markdown/link-target";
 import {
   applyReveal,
-  buildReveal,
   caretToSourceOnClick,
+  revealAll,
+  type Reveal,
   type RevealState,
 } from "../reveal-state";
 import { copyToImageFolder, pickImageFile, showDocImage } from "./image-plugin";
@@ -186,22 +187,20 @@ interface EmbedPreviewOptions {
   settings: () => Settings;
 }
 
-function buildDecorations(
-  state: EditorState,
-  options: EmbedPreviewOptions,
-): RevealState {
-  const docPath = options.docPath();
-  return buildReveal(state, (touches) => {
-    const decorations: Decoration[] = [];
-    // An unsaved document has no vault; one picked in the iOS Files app is
-    // read through the system, which a vault search can't walk.
-    if (!docPath || isScopedUrl(docPath)) return decorations;
-    state.doc.descendants((node, pos) => {
-      if (node.type.name !== "obsidian_embed") return;
+const isEmbed = (node: ProseNode) => node.type.name === "obsidian_embed";
+
+function embedReveal(options: EmbedPreviewOptions): Reveal {
+  return {
+    match: isEmbed,
+    decorate(node, pos, touches) {
+      const docPath = options.docPath();
+      // An unsaved document has no vault; one picked in the iOS Files app
+      // is read through the system, which a vault search can't walk.
+      if (!docPath || isScopedUrl(docPath)) return [];
       const embed = parseEmbed(node.textContent);
       const to = pos + node.nodeSize;
-      if (!embed?.isImage || touches(pos, to)) return;
-      decorations.push(
+      if (!embed?.isImage || touches(pos, to)) return [];
+      return [
         Decoration.inline(pos + 1, to - 1, {
           class: "obsidian-embed-source-hidden",
         }),
@@ -211,10 +210,11 @@ function buildDecorations(
           // The card's buttons are the card's; the editor leaves them be.
           stopEvent: isMissingCardAction,
         }),
-      );
-    });
-    return decorations;
-  });
+      ];
+    },
+    // Saved under a new name, the pictures are looked for from there.
+    config: options.docPath,
+  };
 }
 
 /**
@@ -223,16 +223,15 @@ function buildDecorations(
  * source hides behind the picture; on it, the source is back to edit.
  */
 export function createObsidianEmbedPreviewPlugin(options: EmbedPreviewOptions) {
+  const reveal = embedReveal(options);
   return $prose(
     () =>
       new Plugin<RevealState>({
         key: embedPreviewKey,
         state: {
-          init: (_config, state) => buildDecorations(state, options),
+          init: (_config, state) => revealAll(state, reveal),
           apply: (tr, prev, oldState, newState) =>
-            applyReveal(tr, prev, oldState, newState, (state) =>
-              buildDecorations(state, options),
-            ),
+            applyReveal(tr, prev, oldState, newState, reveal),
         },
         props: {
           decorations: (state) => embedPreviewKey.getState(state)?.set,

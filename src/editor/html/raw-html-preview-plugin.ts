@@ -6,10 +6,11 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import {
-  applyReveal,
-  buildReveal,
   caretToSourceOnClick,
-  type RevealState,
+  redrawReveal,
+  revealAll,
+  revealChanges,
+  type Reveal,
   type Touches,
 } from "../reveal-state";
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
@@ -17,6 +18,9 @@ import { sanitizeStyle } from "./html-policy";
 import {
   arrowIntoHtmlBlock,
   decorateDetails,
+  detailsTouched,
+  findDetailsSpans,
+  mapSpans,
   inSummary,
   mapOpen,
   rawHtmlPreviewKey,
@@ -174,7 +178,7 @@ function decorateTextblock(
   touches: Touches,
   decorations: Decoration[],
   docPath: () => string | null,
-  handled: Set<number>,
+  handled: ReadonlySet<number>,
 ) {
   const all: HtmlChild[] = [];
   block.forEach((child, offset) => {
@@ -315,24 +319,41 @@ function decorateTextblock(
   }
 }
 
-function buildDecorations(
+const isTextblock = (node: ProseNode) => node.isTextblock;
+
+/** Raw HTML drawn per textblock; `handled` holds the HTML nodes a
+ *  <details> fold draws instead. */
+function textblockReveal(
+  docPath: () => string | null,
+  handled: ReadonlySet<number> = new Set(),
+): Reveal {
+  return {
+    match: isTextblock,
+    decorate(node, pos, touches) {
+      const decorations: Decoration[] = [];
+      decorateTextblock(node, pos, touches, decorations, docPath, handled);
+      return decorations;
+    },
+    // Part of the widgets' keys, and where a relative <img> is found.
+    config: docPath,
+  };
+}
+
+/** Everything drawn: the folds, then each textblock. */
+function drawAll(
   state: EditorState,
   docPath: () => string | null,
   open: OpenStates,
-): RevealState {
-  return buildReveal(state, (touches) => {
-    const decorations: Decoration[] = [];
-    const handled = new Set<number>();
-    decorateDetails(state, open, touches, decorations, handled);
-    state.doc.descendants((node, pos) => {
-      if (node.isTextblock) {
-        decorateTextblock(node, pos, touches, decorations, docPath, handled);
-        return false; // textblocks don't nest
-      }
-      return undefined;
-    });
-    return decorations;
-  });
+): RawHtmlPreviewState {
+  const spans = findDetailsSpans(state.doc);
+  const handled = new Set<number>();
+  const reveal = revealAll(
+    state,
+    textblockReveal(docPath, handled),
+    (touches, decorations) =>
+      decorateDetails(state, spans, open, touches, decorations, handled),
+  );
+  return { reveal, open, spans };
 }
 
 /**
@@ -350,15 +371,15 @@ export function createRawHtmlPreviewPlugin(
   } = {},
 ) {
   const docPath = options.docPath ?? (() => null);
+  // Drawn again block by block, no textblock there is a fold's: an edit or
+  // a caret move that could change a fold draws everything again.
+  const blockReveal = textblockReveal(docPath);
   return $prose(
     () =>
       new Plugin<RawHtmlPreviewState>({
         key: rawHtmlPreviewKey,
         state: {
-          init: (_config, state) => {
-            const open: OpenStates = new Map();
-            return { reveal: buildDecorations(state, docPath, open), open };
-          },
+          init: (_config, state) => drawAll(state, docPath, new Map()),
           apply: (tr, prev, oldState, newState) => {
             let open = mapOpen(prev.open, tr);
             const toggle = tr.getMeta(rawHtmlPreviewKey) as
@@ -367,12 +388,28 @@ export function createRawHtmlPreviewPlugin(
               open = new Map(open);
               for (const [pos, value] of toggle.set) open.set(pos, value);
             }
-            const build = (s: EditorState) =>
-              buildDecorations(s, docPath, open);
-            const reveal = toggle
-              ? build(newState)
-              : applyReveal(tr, prev.reveal, oldState, newState, build);
-            return { reveal, open };
+            if (toggle || docPath() !== prev.reveal.config)
+              return drawAll(newState, docPath, open);
+            if (!tr.docChanged && !tr.selectionSet) return prev;
+            const { mapped, blocks } = revealChanges(
+              tr,
+              prev.reveal,
+              oldState,
+              newState,
+            );
+            const spans = tr.docChanged
+              ? mapSpans(prev.spans, tr.mapping)
+              : prev.spans;
+            if (
+              blocks.some(([from, to]) =>
+                detailsTouched(newState.doc, spans, from, to),
+              )
+            )
+              return drawAll(newState, docPath, open);
+            const reveal = redrawReveal(mapped, newState, blocks, blockReveal);
+            return reveal === prev.reveal && open === prev.open
+              ? prev
+              : { reveal, open, spans };
           },
         },
         appendTransaction: (trs, oldState, newState) => {

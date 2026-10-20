@@ -1,25 +1,27 @@
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { duration, motionAllowed } from "../../ui/motion";
 import {
   applyReveal,
-  buildReveal,
   caretToSourceOnClick,
-  emptyReveal,
+  revealAll,
+  type Reveal,
   type RevealState,
+  type Touches,
 } from "../reveal-state";
 import { katexNow, mathSourceHtml, onKatexReady } from "./katex-loader";
 
 const mathPreviewKey = new PluginKey("math-preview");
 const KATEX_READY = "katex-ready";
 
-// Decorations are rebuilt on every transaction - each keystroke and each
-// arrow press - and used to re-run KaTeX on every formula in the document
-// each time. Renders are pure in (source, mode), so they are cached; the
-// cap only bounds a session that types through thousands of formulas.
+// A formula is drawn again whenever the caret enters or leaves it, or the
+// block holding it is edited, and KaTeX is the expensive part. Renders are
+// pure in (source, mode), so they are cached; the cap only bounds a
+// session that types through thousands of formulas.
 const RENDER_CACHE_LIMIT = 1000;
 const renderCache = new Map<string, string>();
 
@@ -59,74 +61,70 @@ function blockRoom(): HTMLElement {
   return el;
 }
 
-function buildDecorations(state: EditorState, enabled: boolean): RevealState {
-  if (!enabled) return emptyReveal;
-  return buildReveal(state, (touches) => collectDecorations(state, touches));
-}
+const isMath = (node: ProseNode) =>
+  node.type.name === "math_inline" || node.type.name === "math_block";
 
-function collectDecorations(
-  state: EditorState,
-  touches: (from: number, to: number) => boolean,
+function decorateMath(
+  node: ProseNode,
+  pos: number,
+  touches: Touches,
 ): Decoration[] {
-  const decorations: Decoration[] = [];
-
-  state.doc.descendants((node, pos) => {
-    if (node.type.name !== "math_inline" && node.type.name !== "math_block")
-      return;
-
-    const from = pos;
-    const to = pos + node.nodeSize;
-    // While the cursor touches the node (inside or adjacent), enclosure.ts
-    // reveals the raw source with its synthesized $ / $$ delimiters - the
-    // KaTeX swap below must stay out of the way for exactly that range, so
-    // both sides share the same predicate.
-    if (touches(from, to)) {
-      // A block's live preview room (see place()): there whenever the
-      // source is revealed, not only while the caret is inside it, because
-      // this set is only rebuilt when cursorTouches flips.
-      if (node.type.name === "math_block")
-        decorations.push(
+  const from = pos;
+  const to = pos + node.nodeSize;
+  // While the cursor touches the node (inside or adjacent), enclosure.ts
+  // reveals the raw source with its synthesized $ / $$ delimiters - the
+  // KaTeX swap below must stay out of the way for exactly that range, so
+  // both sides share the same predicate.
+  if (touches(from, to)) {
+    // A block's live preview room (see place()): there whenever the
+    // source is revealed, not only while the caret is inside it, because
+    // this set is only redrawn when cursorTouches flips.
+    return node.type.name === "math_block"
+      ? [
           Decoration.widget(to, blockRoom, {
             side: 1,
             key: "math-room",
             ignoreSelection: true,
           }),
-        );
-      return;
-    }
+        ]
+      : [];
+  }
 
-    const displayMode = node.type.name === "math_block";
-    const html = renderKatex(node.textContent, displayMode);
-    // KaTeX still loading: the source stays in view until it is drawn.
-    if (html === null) return;
+  const displayMode = node.type.name === "math_block";
+  const html = renderKatex(node.textContent, displayMode);
+  // KaTeX still loading: the source stays in view until it is drawn.
+  if (html === null) return [];
+  return [
+    Decoration.inline(from + 1, to - 1, { class: "math-source-hidden" }),
+    Decoration.widget(
+      to,
+      (view: EditorView, getPos: () => number | undefined) => {
+        const el = document.createElement(displayMode ? "div" : "span");
+        el.className = displayMode
+          ? "math-block-rendered"
+          : "math-inline-rendered";
+        el.innerHTML = html;
+        caretToSourceOnClick(el, view, getPos);
+        return el;
+      },
+      // Keyed by the source, so ProseMirror keeps the rendered element
+      // across transactions instead of rebuilding every formula's DOM on
+      // every keystroke - and still replaces it when the source changes.
+      {
+        side: -1,
+        key: `math:${displayMode ? "B" : "I"}:${node.textContent}`,
+      },
+    ),
+  ];
+}
 
-    decorations.push(
-      Decoration.inline(from + 1, to - 1, { class: "math-source-hidden" }),
-    );
-    decorations.push(
-      Decoration.widget(
-        to,
-        (view: EditorView, getPos: () => number | undefined) => {
-          const el = document.createElement(displayMode ? "div" : "span");
-          el.className = displayMode
-            ? "math-block-rendered"
-            : "math-inline-rendered";
-          el.innerHTML = html;
-          caretToSourceOnClick(el, view, getPos);
-          return el;
-        },
-        // Keyed by the source, so ProseMirror keeps the rendered element
-        // across transactions instead of rebuilding every formula's DOM on
-        // every keystroke - and still replaces it when the source changes.
-        {
-          side: -1,
-          key: `math:${displayMode ? "B" : "I"}:${node.textContent}`,
-        },
-      ),
-    );
-  });
-
-  return decorations;
+function mathReveal(enabled: () => boolean): Reveal {
+  return {
+    match: isMath,
+    decorate: (node, pos, touches) =>
+      enabled() ? decorateMath(node, pos, touches) : [],
+    config: enabled,
+  };
 }
 
 function findMathNodeAtSelection(state: EditorState): {
@@ -165,19 +163,18 @@ function findMathNodeAtSelection(state: EditorState): {
  * while typing it.
  */
 export function createMathPreviewPlugin(options: { enabled: () => boolean }) {
+  const reveal = mathReveal(options.enabled);
   return $prose(
     () =>
       new Plugin<RevealState>({
         key: mathPreviewKey,
         state: {
-          init: (_config, state) => buildDecorations(state, options.enabled()),
+          init: (_config, state) => revealAll(state, reveal),
           apply: (tr, prev, oldState, newState) =>
             // KaTeX has loaded: every formula left as source is drawn now.
             tr.getMeta(mathPreviewKey) === KATEX_READY
-              ? buildDecorations(newState, options.enabled())
-              : applyReveal(tr, prev, oldState, newState, (state) =>
-                  buildDecorations(state, options.enabled()),
-                ),
+              ? revealAll(newState, reveal)
+              : applyReveal(tr, prev, oldState, newState, reveal),
         },
         props: {
           decorations(state) {

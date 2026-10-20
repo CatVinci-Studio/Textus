@@ -21,6 +21,7 @@ import {
   frontmatterSchema,
 } from "./markdown/frontmatter-schema";
 import { createGithubAlertPlugin } from "./markdown/github-alert-plugin";
+import { headingIdPlugin } from "./markdown/heading-id-plugin";
 import { rawHtmlSchema } from "./html/raw-html-schema";
 import { remarkHtmlImages } from "./images/image-html";
 import { createRawHtmlPreviewPlugin } from "./html/raw-html-preview-plugin";
@@ -171,6 +172,7 @@ export function withEditorCore(
       // Markdown baseline: commonmark/GFM with bold/italic/strike marks
       // stripped - those are node-based below.
       .use(commonmarkWithoutMarks)
+      .use(headingIdPlugin)
       .use(gfmWithoutStrikethrough)
 
       // Leading "---\n...\n---" block, parsed before anything else gets a
