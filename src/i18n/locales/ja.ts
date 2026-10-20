@@ -644,7 +644,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   diagramEngineHint:
     "Pele は描画が速い一方、レイアウトは GitHub や Mermaid と異なり、ラベル内の HTML など一部の機能に対応していません。Pele で描けない図は Mermaid が描きます。",
   codeLineNumbersLabel: "コードブロックに行番号を表示",
-  inlineColorSwatchesLabel: "カラーコードの前に色見本を表示",
+  colorSwatchesLabel: "カラーコードの前の色見本",
+  colorSwatchesOff: "オフ",
+  colorSwatchesCode: "コード内のみ",
+  colorSwatchesEverywhere: "すべて",
   codeBlockCopy: "コピー",
   codeBlockCopied: "コピーしました",
   autoCloseMarksLabel: "書式記号を自動で閉じる",

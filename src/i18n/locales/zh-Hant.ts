@@ -609,7 +609,10 @@ export default {
   diagramEngineHint:
     "Pele 繪圖更快，但版面配置與 GitHub、Mermaid 不盡相同，也不支援標籤中的 HTML 等少數功能；Pele 畫不了的圖會自動改由 Mermaid 繪製。",
   codeLineNumbersLabel: "程式碼區塊顯示行號",
-  inlineColorSwatchesLabel: "在顏色代碼前顯示色塊",
+  colorSwatchesLabel: "顏色代碼前的色塊",
+  colorSwatchesOff: "關閉",
+  colorSwatchesCode: "僅在程式碼中",
+  colorSwatchesEverywhere: "全文",
   codeBlockCopy: "複製",
   codeBlockCopied: "已複製",
   autoCloseMarksLabel: "自動補上格式符號",

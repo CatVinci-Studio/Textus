@@ -652,7 +652,10 @@ type /name in a conversation to use one.
   diagramEngineHint:
     "Pele is faster, but lays diagrams out differently from GitHub and Mermaid and skips a few features, such as HTML in labels; Mermaid draws whatever Pele can't.",
   codeLineNumbersLabel: "Line numbers in code blocks",
-  inlineColorSwatchesLabel: "Show a swatch before colour codes",
+  colorSwatchesLabel: "Swatches before colour codes",
+  colorSwatchesOff: "Off",
+  colorSwatchesCode: "In code only",
+  colorSwatchesEverywhere: "Everywhere",
   codeBlockCopy: "Copy",
   codeBlockCopied: "Copied",
   autoCloseMarksLabel: "Close formatting marks automatically",

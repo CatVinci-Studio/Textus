@@ -254,7 +254,7 @@ export function withEditorCore(
       .use(enclosurePlugin)
       .use(
         createColorSwatchPlugin({
-          enabled: () => settings.current.inlineColorSwatches,
+          mode: () => settings.current.colorSwatches,
         }),
       )
 

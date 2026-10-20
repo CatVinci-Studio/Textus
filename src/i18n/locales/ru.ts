@@ -666,7 +666,10 @@ export default {
   diagramEngineHint:
     "Pele рисует быстрее, но располагает элементы иначе, чем GitHub и Mermaid, и не поддерживает некоторые возможности, например HTML в подписях; то, что Pele нарисовать не может, рисует Mermaid.",
   codeLineNumbersLabel: "Номера строк в блоках кода",
-  inlineColorSwatchesLabel: "Показывать образец перед кодом цвета",
+  colorSwatchesLabel: "Образцы перед кодами цвета",
+  colorSwatchesOff: "Выкл.",
+  colorSwatchesCode: "Только в коде",
+  colorSwatchesEverywhere: "Везде",
   codeBlockCopy: "Копировать",
   codeBlockCopied: "Скопировано",
   autoCloseMarksLabel: "Автоматически закрывать знаки форматирования",

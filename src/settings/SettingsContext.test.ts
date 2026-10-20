@@ -84,6 +84,33 @@ describe("settings from a build with features since taken out", () => {
   });
 });
 
+describe("colour swatches", () => {
+  beforeAll(installTestLocalStorage);
+  beforeEach(() => localStorage.clear());
+
+  const load = (stored: Record<string, unknown>) => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(stored));
+    return loadSettings().colorSwatches;
+  };
+
+  it("are off by default", () => {
+    expect(load({ language: "en" })).toBe("off");
+  });
+
+  it("carry over the old switch: on meant inline code", () => {
+    expect(load({ inlineColorSwatches: true })).toBe("code");
+    expect(load({ inlineColorSwatches: false })).toBe("off");
+  });
+
+  it("keep a choice, and drop one they don't know", () => {
+    expect(load({ colorSwatches: "everywhere" })).toBe("everywhere");
+    expect(load({ colorSwatches: "code", inlineColorSwatches: false })).toBe(
+      "code",
+    );
+    expect(load({ colorSwatches: "sometimes" })).toBe("off");
+  });
+});
+
 describe("Agent mode migration", () => {
   beforeAll(installTestLocalStorage);
   beforeEach(() => localStorage.clear());

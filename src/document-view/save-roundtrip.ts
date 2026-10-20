@@ -414,7 +414,7 @@ async function open(raw: string): Promise<Opened> {
   const text = toEditorText(raw);
   // Swatches on: drawn on load and redrawn around each edit, they must
   // never reach the saved text.
-  const editor = await createTestEditor(text, { inlineColorSwatches: true });
+  const editor = await createTestEditor(text, { colorSwatches: "everywhere" });
   return editor.action((ctx) => {
     const mountDoc = ctx.get(editorViewCtx).state.doc;
     return {
