@@ -169,7 +169,7 @@ export function MilkdownEditor({
   }, [
     settings.language,
     settings.codeLineNumbers,
-    settings.inlineColorSwatches,
+    settings.colorSwatches,
     settings.diagramEngine,
     run,
   ]);

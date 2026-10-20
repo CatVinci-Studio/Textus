@@ -63,9 +63,11 @@ export interface ColorCode {
   color: string;
 }
 
-// Six or eight digits only: in prose a short one is as often a tag
-// (#add, #cafe) or an issue (#234) as a colour.
+// Six or eight digits only in prose, where a short one is as often a tag
+// (#add, #cafe) or an issue (#234) as a colour; code takes the short ones
+// too (`color: #fff`).
 const HEX_RE = /#([0-9a-f]{8}|[0-9a-f]{6})/gi;
+const CODE_HEX_RE = /#([0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})/gi;
 const FUNCTION_RE = new RegExp(`(?:${FUNCTION_FORMS.join("|")})`, "gi");
 
 // Scripts written without spaces between words, where a colour code can
@@ -109,13 +111,14 @@ const inUrl = (token: string) => /:\/\/|www\./i.test(token);
  * The colour codes written in a block's text, in order. A hex code counts
  * only as a token of its own - not inside a word, a URL or a path - and
  * only with six or eight digits that don't spell a word, so Obsidian tags
- * (#add, #cafe, #facade) and issue numbers (#234) stay plain; inline code
- * takes the short forms (colorOfCode). Colour functions
- * count wherever their syntax is whole. Colour names never do.
+ * (#add, #cafe, #facade) and issue numbers (#234) stay plain. In a code
+ * block (`inCode`) three and four digits count too, as CSS writes them,
+ * but not a CSS id selector (`#fed {`). Colour functions count wherever
+ * their syntax is whole. Colour names never do.
  */
-export function findColorCodes(text: string): ColorCode[] {
+export function findColorCodes(text: string, inCode = false): ColorCode[] {
   const found: ColorCode[] = [];
-  for (const match of text.matchAll(HEX_RE)) {
+  for (const match of text.matchAll(inCode ? CODE_HEX_RE : HEX_RE)) {
     const from = match.index;
     const to = from + match[0].length;
     if (HEX_WORDS.has(match[1].toLowerCase())) continue;
@@ -123,6 +126,7 @@ export function findColorCodes(text: string): ColorCode[] {
     // "#fff.png", "#fff:hover": a file name or a selector, not a colour.
     if (/[.:,;]/.test(text[to] ?? "") && /\w/.test(text[to + 1] ?? ""))
       continue;
+    if (inCode && /^[ \t]*\{/.test(text.slice(to, to + 20))) continue;
     if (inUrl(tokenAround(text, from, to))) continue;
     if (browserTakes(match[0])) found.push({ from, to, color: match[0] });
   }

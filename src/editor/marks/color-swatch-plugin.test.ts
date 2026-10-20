@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Schema, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import { EditorState } from "@milkdown/kit/prose/state";
 import type { DecorationSet } from "@milkdown/kit/prose/view";
+import type { ColorSwatchMode } from "../../settings/SettingsContext";
 import { colorSwatchPlugin } from "./color-swatch-plugin";
 
 const schema = new Schema({
@@ -21,10 +22,10 @@ const schema = new Schema({
 
 const text = (value: string) => schema.text(value);
 
-function stateOf(blocks: ProseNode[], enabled: { on: boolean }) {
+function stateOf(blocks: ProseNode[], enabled: { mode: ColorSwatchMode }) {
   return EditorState.create({
     doc: schema.node("doc", null, blocks),
-    plugins: [colorSwatchPlugin(() => enabled.on)],
+    plugins: [colorSwatchPlugin(() => enabled.mode)],
   });
 }
 
@@ -33,7 +34,7 @@ const para = (...content: ProseNode[]) =>
 const code = (value: string) =>
   schema.node("md_code_span", null, value ? [text(value)] : []);
 
-function stateWith(codes: string[], enabled: { on: boolean }) {
+function stateWith(codes: string[], enabled: { mode: ColorSwatchMode }) {
   return stateOf(
     [para(...codes.flatMap((value) => [text("x "), code(value)]))],
     enabled,
@@ -53,23 +54,25 @@ const plainSwatches = (state: EditorState) =>
 
 describe("colorSwatchPlugin", () => {
   it("draws nothing while off, the default", () => {
-    expect(swatches(stateWith(["#fff"], { on: false }))).toEqual([]);
-    expect(swatches(stateOf([para(text("a #ff8800"))], { on: false }))).toEqual(
-      [],
-    );
+    expect(swatches(stateWith(["#fff"], { mode: "off" }))).toEqual([]);
+    expect(
+      swatches(stateOf([para(text("a #ff8800"))], { mode: "off" })),
+    ).toEqual([]);
   });
 
   it("puts a swatch at the start of each colour code's text", () => {
     // "x " 1-3, the first span 3-9 ("#fff" at 4), "x " 9-11, "red" 11-16,
     // "x " 16-18, the last span from 18 (text at 19).
-    const state = stateWith(["#fff", "red", "rgb(1 2 3)"], { on: true });
+    const state = stateWith(["#fff", "red", "rgb(1 2 3)"], {
+      mode: "everywhere",
+    });
     expect(swatches(state)).toEqual([4, 19]);
   });
 
   it("follows the setting and the code as it is typed", () => {
-    const enabled = { on: false };
+    const enabled: { mode: ColorSwatchMode } = { mode: "off" };
     let state = stateWith(["#ff"], enabled);
-    enabled.on = true;
+    enabled.mode = "everywhere";
     state = state.apply(state.tr);
     expect(swatches(state)).toEqual([]);
     // "#ff" -> "#fff"
@@ -78,7 +81,7 @@ describe("colorSwatchPlugin", () => {
     // Typing before the span moves the swatch with it.
     state = state.apply(state.tr.insertText("yy", 1));
     expect(swatches(state)).toEqual([6]);
-    enabled.on = false;
+    enabled.mode = "off";
     state = state.apply(state.tr);
     expect(swatches(state)).toEqual([]);
   });
@@ -89,7 +92,7 @@ describe("colorSwatchPlugin", () => {
         para(text("Orange #ff8800 and rgb(0 128 255).")),
         schema.node("heading", null, [text("Brand #1e90ff")]),
       ],
-      { on: true },
+      { mode: "everywhere" },
     );
     expect(plainSwatches(state)).toEqual([
       "#ff8800",
@@ -105,12 +108,12 @@ describe("colorSwatchPlugin", () => {
     const bold = (value: string) => schema.node("md_span", null, [text(value)]);
     const state = stateOf(
       [para(text("a "), bold("#ff8800")), para(text("x"), bold("#00ff00"))],
-      { on: true },
+      { mode: "everywhere" },
     );
     expect(plainSwatches(state)).toEqual(["#ff8800"]);
   });
 
-  it("leaves link text, wikilinks, fenced code and hashtags alone", () => {
+  it("leaves link text, wikilinks, hashtags and short hex in text alone", () => {
     const state = stateOf(
       [
         para(
@@ -118,24 +121,63 @@ describe("colorSwatchPlugin", () => {
           text(" "),
           schema.node("wikilink", null, [text("[[#ff8800]]")]),
         ),
-        schema.node("code_block", null, [text("color: #ff8800;")]),
-        para(text("#add #cafe #234 https://x.com/#ff8800")),
+        para(text("#add #cafe #234 #f00 https://x.com/#ff8800")),
       ],
-      { on: true },
+      { mode: "everywhere" },
     );
     expect(swatches(state)).toEqual([]);
+  });
+
+  it("draws in code only, or everywhere, as the setting says", () => {
+    const blocks = () => [
+      para(text("Text #ff8800 and "), code("#f0f")),
+      schema.node("code_block", null, [
+        text(".a { color: #fff; background: rgb(0 0 0 / 50%); }\n#fed {}"),
+      ]),
+    ];
+    const mode: { mode: ColorSwatchMode } = { mode: "code" };
+    let state = stateOf(blocks(), mode);
+    // The inline code's widget, then the code block's two literals - not
+    // its id selector, nor the paragraph's text.
+    expect(
+      decorations(state).map((d) =>
+        d.to > d.from ? (d.spec as { color: string }).color : "widget",
+      ),
+    ).toEqual(["widget", "#fff", "rgb(0 0 0 / 50%)"]);
+    mode.mode = "everywhere";
+    state = state.apply(state.tr);
+    expect(plainSwatches(state)).toEqual([
+      "#ff8800",
+      "#fff",
+      "rgb(0 0 0 / 50%)",
+    ]);
+    mode.mode = "off";
+    state = state.apply(state.tr);
+    expect(decorations(state)).toEqual([]);
+  });
+
+  it("redraws a code block's swatches as it is edited", () => {
+    let state = stateOf(
+      [schema.node("code_block", null, [text("color: #ff880;")])],
+      { mode: "code" },
+    );
+    expect(plainSwatches(state)).toEqual([]);
+    // "#ff880" -> "#ff8800", at 13 inside the block.
+    state = state.apply(state.tr.insertText("0", 13));
+    expect(plainSwatches(state)).toEqual(["#ff8800"]);
+    expect(decorations(state)[0].from).toBe(8);
   });
 
   it("takes a hard break as a line's end", () => {
     const state = stateOf(
       [para(text("#ff8800"), schema.node("hardbreak"), text("#00ff00"))],
-      { on: true },
+      { mode: "everywhere" },
     );
     expect(plainSwatches(state)).toEqual(["#ff8800", "#00ff00"]);
   });
 
   it("redraws a plain-text code as it is typed, and holds still while an IME composes", () => {
-    let state = stateOf([para(text("a #ff880 b"))], { on: true });
+    let state = stateOf([para(text("a #ff880 b"))], { mode: "everywhere" });
     expect(plainSwatches(state)).toEqual([]);
     // "#ff880" -> "#ff8800", mid-composition: drawn only once it ends.
     state = state.apply(state.tr.insertText("0", 9).setMeta("composition", 1));

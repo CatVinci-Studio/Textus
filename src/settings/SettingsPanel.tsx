@@ -24,6 +24,7 @@ import {
   type ShortcutAction,
   UI_TEXT_SCALES,
   type UiTextScale,
+  type ColorSwatchMode,
   type DiagramEngine,
 } from "./SettingsContext";
 import {
@@ -431,11 +432,22 @@ export function SettingsPanel({
               checked={settings.codeLineNumbers}
               onChange={(v) => setSettings({ codeLineNumbers: v })}
             />
-            <ToggleRow
-              label={t.inlineColorSwatchesLabel}
-              checked={settings.inlineColorSwatches}
-              onChange={(v) => setSettings({ inlineColorSwatches: v })}
-            />
+            <SettingRow label={t.colorSwatchesLabel}>
+              <Select
+                className="settings-select"
+                aria-label={t.colorSwatchesLabel}
+                value={settings.colorSwatches}
+                onChange={(e) =>
+                  setSettings({
+                    colorSwatches: e.target.value as ColorSwatchMode,
+                  })
+                }
+              >
+                <option value="off">{t.colorSwatchesOff}</option>
+                <option value="code">{t.colorSwatchesCode}</option>
+                <option value="everywhere">{t.colorSwatchesEverywhere}</option>
+              </Select>
+            </SettingRow>
             <ToggleRow
               label={t.autoCloseMarksLabel}
               checked={settings.autoCloseMarks}

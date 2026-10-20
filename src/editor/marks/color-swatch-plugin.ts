@@ -7,18 +7,20 @@ import {
   decorateAll,
   redecorateChanged,
 } from "../changed-ranges";
+import type { ColorSwatchMode } from "../../settings/SettingsContext";
 import { colorOfCode, findColorCodes, OPAQUE } from "./color-codes";
 import { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure";
 
 /** The swatch's element in inline code, editor chrome the export and print
  *  drop. */
 export const COLOR_SWATCH_CLASS = "color-swatch";
-/** The first character of a colour code in plain text, which draws the
- *  swatch before itself (::before); the export unwraps it. */
+/** The first character of a colour code in plain text or a code block,
+ *  which draws the swatch before itself (::before); the export unwraps
+ *  it. */
 export const COLOR_SWATCH_TEXT_CLASS = "color-swatch-text";
 
 interface SwatchState {
-  enabled: boolean;
+  mode: ColorSwatchMode;
   set: DecorationSet;
   /** What an IME composition changed, drawn once it ends. */
   pending: [number, number][];
@@ -26,10 +28,10 @@ interface SwatchState {
 
 const key = new PluginKey<SwatchState>("color-swatch");
 
-/** A block whose text can hold colour codes: not a code block, front
- *  matter or block math. */
-const isTextBlock = (node: ProseNode) =>
-  node.isTextblock && !node.type.spec.code;
+/** A block whose text can hold colour codes: a code block, or one that
+ *  isn't code at all - not front matter or block math. */
+const isSwatchBlock = (node: ProseNode) =>
+  node.isTextblock && (!node.type.spec.code || node.type.name === "code_block");
 
 function codeSwatch(color: string, pos: number): Decoration {
   // Inside the span, before its text: the caret's way across a span is
@@ -51,6 +53,16 @@ function codeSwatch(color: string, pos: number): Decoration {
   );
 }
 
+// One character, which no other decoration (a find match, a syntax
+// token) can split into pieces that each draw a swatch.
+const textSwatch = (from: number, color: string) =>
+  Decoration.inline(
+    from,
+    from + 1,
+    { class: COLOR_SWATCH_TEXT_CLASS, style: `--color-swatch: ${color}` },
+    { color },
+  );
+
 /** A stretch of the block's own text: at `pos` in the document, at
  *  `start` in the string findColorCodes reads. */
 interface Run {
@@ -60,14 +72,24 @@ interface Run {
 }
 
 /**
- * The block's swatches. Its text is read as one string, so whether a code
- * stands as a token of its own is judged by what really stands beside it,
- * across bold or italic. Only the block's own text can hold a code: a
- * link's text (an autolinked URL among them) is read but never matched,
- * and inline code, wikilinks, math, images and raw HTML read as OPAQUE.
- * Inline code gets its own swatch, as before, when all of it is a colour.
+ * A block's swatches, for a mode that isn't "off". A code block's colour
+ * literals, short hex included. Inline code that is all one colour.
+ * With "everywhere", also the colour codes in the block's text, read as
+ * one string, so whether a code stands as a token of its own is judged by
+ * what really stands beside it, across bold or italic. Only the block's
+ * own text can hold one: a link's text (an autolinked URL among them) is
+ * read but never matched, and inline code, wikilinks, math, images and
+ * raw HTML read as OPAQUE.
  */
-function swatches(block: ProseNode, blockPos: number): Decoration[] {
+function swatches(
+  mode: ColorSwatchMode,
+  block: ProseNode,
+  blockPos: number,
+): Decoration[] {
+  if (block.type.name === "code_block")
+    return findColorCodes(block.textContent, true).map((code) =>
+      textSwatch(blockPos + 1 + code.from, code.color),
+    );
   const decorations: Decoration[] = [];
   const runs: Run[] = [];
   let text = "";
@@ -90,42 +112,34 @@ function swatches(block: ProseNode, blockPos: number): Decoration[] {
       }
     });
   read(block, blockPos + 1);
+  if (mode !== "everywhere") return decorations;
   for (const code of findColorCodes(text)) {
     const run = runs.find(
       (r) => r.start <= code.from && code.to <= r.start + r.length,
     );
-    if (!run) continue;
-    const from = run.pos + code.from - run.start;
-    // One character, which no other decoration (a find match) can split
-    // into pieces that each draw a swatch.
-    decorations.push(
-      Decoration.inline(
-        from,
-        from + 1,
-        {
-          class: COLOR_SWATCH_TEXT_CLASS,
-          style: `--color-swatch: ${code.color}`,
-        },
-        { color: code.color },
-      ),
-    );
+    if (run)
+      decorations.push(textSwatch(run.pos + code.from - run.start, code.color));
   }
   return decorations;
 }
 
-function build(doc: ProseNode, enabled: boolean): SwatchState {
+function build(doc: ProseNode, mode: ColorSwatchMode): SwatchState {
   return {
-    enabled,
-    set: enabled
-      ? decorateAll(doc, isTextBlock, swatches)
-      : DecorationSet.empty,
+    mode,
+    set:
+      mode === "off"
+        ? DecorationSet.empty
+        : decorateAll(doc, isSwatchBlock, (node, pos) =>
+            swatches(mode, node, pos),
+          ),
     pending: [],
   };
 }
 
-/** `set` with the text blocks around `ranges` - what an IME composition
+/** `set` with the blocks around `ranges` - what an IME composition
  *  changed - drawn again, once it has ended. */
 function redrawAround(
+  mode: ColorSwatchMode,
   set: DecorationSet,
   doc: ProseNode,
   ranges: [number, number][],
@@ -139,11 +153,11 @@ function redrawAround(
       Math.max(0, from - 1),
       Math.min(size, to + 1),
       (node, pos) => {
-        if (!isTextBlock(node)) return true;
+        if (!isSwatchBlock(node)) return true;
         if (!drawn.has(pos)) {
           drawn.add(pos);
           stale.push(...set.find(pos, pos + node.nodeSize));
-          fresh.push(...swatches(node, pos));
+          fresh.push(...swatches(mode, node, pos));
         }
         return false;
       },
@@ -152,15 +166,15 @@ function redrawAround(
 }
 
 /** The plugin itself, for tests; the editor uses createColorSwatchPlugin. */
-export function colorSwatchPlugin(enabled: () => boolean): Plugin {
+export function colorSwatchPlugin(mode: () => ColorSwatchMode): Plugin {
   return new Plugin<SwatchState>({
     key,
     state: {
-      init: (_config, state) => build(state.doc, enabled()),
+      init: (_config, state) => build(state.doc, mode()),
       apply(tr, prev, _oldState, state) {
-        const on = enabled();
-        if (on !== prev.enabled) return build(state.doc, on);
-        if (!on) return prev;
+        const now = mode();
+        if (now !== prev.mode) return build(state.doc, now);
+        if (now === "off") return prev;
         const pending = prev.pending.map(([from, to]): [number, number] => [
           tr.mapping.map(from, -1),
           tr.mapping.map(to, 1),
@@ -172,15 +186,17 @@ export function colorSwatchPlugin(enabled: () => boolean): Plugin {
         if (tr.getMeta("composition"))
           return tr.docChanged
             ? {
-                enabled: on,
+                mode: now,
                 set: prev.set.map(tr.mapping, tr.doc),
                 pending: [...pending, ...changedRanges(tr)],
               }
             : prev;
         if (!tr.docChanged && !pending.length) return prev;
-        let set = redecorateChanged(prev.set, tr, isTextBlock, swatches);
-        if (pending.length) set = redrawAround(set, tr.doc, pending);
-        return { enabled: on, set, pending: [] };
+        let set = redecorateChanged(prev.set, tr, isSwatchBlock, (node, pos) =>
+          swatches(now, node, pos),
+        );
+        if (pending.length) set = redrawAround(now, set, tr.doc, pending);
+        return { mode: now, set, pending: [] };
       },
     },
     props: {
@@ -201,14 +217,17 @@ export function colorSwatchPlugin(enabled: () => boolean): Plugin {
 }
 
 /**
- * Settings › Editor & Appearance › Colour swatches (#146), off by default:
- * a small square of the colour before a colour code - `#ff8800` or
+ * Settings › Editor & Appearance › Swatches before colour codes (#146),
+ * off by default: a small square of the colour before a colour code. "In
+ * code only" draws it in inline code that is one colour and before the
+ * colour literals of code blocks; "Everywhere" also before `#ff8800` or
  * `rgb(0 128 255)` written in a paragraph, heading, list item or table
- * cell, or inline code that is one colour. Fenced code stays as written.
- * Decorations only, never text: nothing of them is saved, copied or
+ * cell. Decorations only, never text: nothing of them is saved, copied or
  * exported. Redrawn per block around what an edit touched; MilkdownEditor
  * sends an empty transaction when the setting changes.
  */
-export function createColorSwatchPlugin(options: { enabled: () => boolean }) {
-  return $prose(() => colorSwatchPlugin(options.enabled));
+export function createColorSwatchPlugin(options: {
+  mode: () => ColorSwatchMode;
+}) {
+  return $prose(() => colorSwatchPlugin(options.mode));
 }

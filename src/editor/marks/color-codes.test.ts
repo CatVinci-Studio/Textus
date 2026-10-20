@@ -195,6 +195,27 @@ describe("findColorCodes", () => {
     expect(codes("red, blue, rebeccapurple and transparent")).toEqual([]);
   });
 
+  it("takes short hex in code, but not a CSS id selector or a word", () => {
+    const inCode = (text: string) =>
+      findColorCodes(text, true).map(({ from, to }) => text.slice(from, to));
+    expect(
+      inCode(".a { color: #fff; border: 1px solid #0af8; fill:#333 }"),
+    ).toEqual(["#fff", "#0af8", "#333"]);
+    expect(inCode("const c = '#ff8800', d = rgb(1 2 3);")).toEqual([
+      "#ff8800",
+      "rgb(1 2 3)",
+    ]);
+    for (const text of [
+      "#fed { color: red }",
+      "#cafe{}",
+      "x#fff",
+      "#fff-dark",
+      "url(a/#fff)",
+      "#facade",
+    ])
+      expect(inCode(text), text).toEqual([]);
+  });
+
   it("gives the colour each code names", () => {
     expect(findColorCodes("a #ff8800 b")).toEqual([
       { from: 2, to: 9, color: "#ff8800" },

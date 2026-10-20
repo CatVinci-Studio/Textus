@@ -124,6 +124,12 @@ export type UiTextScale = (typeof UI_TEXT_SCALES)[number];
 export const DIAGRAM_ENGINES = ["mermaid", "pele"] as const;
 export type DiagramEngine = (typeof DIAGRAM_ENGINES)[number];
 
+/// Settings.colorSwatches' values (editor/marks/color-swatch-plugin.ts):
+/// none; in code - inline code that is a colour and colour literals in
+/// code blocks; everywhere - that and colour codes in the text itself.
+export const COLOR_SWATCH_MODES = ["off", "code", "everywhere"] as const;
+export type ColorSwatchMode = (typeof COLOR_SWATCH_MODES)[number];
+
 /// Settings.revisionDisplay's values.
 export const REVISION_DISPLAYS = [
   "inline",
@@ -241,10 +247,10 @@ export interface Settings {
    *  gutter of line numbers beside each code block, whose lines then
    *  scroll sideways instead of wrapping. Off by default. */
   codeLineNumbers: boolean;
-  /** Settings › Editor & Appearance › Colour swatches (#146): a small
-   *  square of the colour before inline code that is one (`#ff8800`,
-   *  `rgb(0 128 255)`). Off by default. */
-  inlineColorSwatches: boolean;
+  /** Settings › Editor & Appearance › Colour swatches (#146): where a
+   *  small square of the colour shows before a colour code. Off by
+   *  default. */
+  colorSwatches: ColorSwatchMode;
   /** Where newly pasted images go. Existing markdown image references are
    *  never migrated when this changes. */
   imageStorageMode: ImageStorageMode;
@@ -414,7 +420,7 @@ const DEFAULT_SETTINGS: Settings = {
   enableMermaid: true,
   diagramEngine: "mermaid",
   codeLineNumbers: false,
-  inlineColorSwatches: false,
+  colorSwatches: "off",
   imageStorageMode: "local",
   imageFolder: DEFAULT_IMAGE_SUBFOLDER,
   imageHost: "picgo",
@@ -568,6 +574,15 @@ export function normaliseSettings(parsed: Raw | null): Settings {
       )
         ? (parsed.diagramEngine as DiagramEngine)
         : DEFAULT_SETTINGS.diagramEngine,
+      // 1.2.0's betas had an on/off switch, which drew swatches in inline
+      // code only.
+      colorSwatches: COLOR_SWATCH_MODES.includes(
+        parsed.colorSwatches as ColorSwatchMode,
+      )
+        ? (parsed.colorSwatches as ColorSwatchMode)
+        : parsed.inlineColorSwatches === true
+          ? "code"
+          : DEFAULT_SETTINGS.colorSwatches,
       uiTextScale: UI_TEXT_SCALES.includes(parsed.uiTextScale as UiTextScale)
         ? (parsed.uiTextScale as UiTextScale)
         : DEFAULT_SETTINGS.uiTextScale,

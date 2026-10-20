@@ -1,35 +1,38 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, pasteMarkdown } from "./helpers";
 
-// #146: a colour code gets a small swatch of its colour before it - inline
-// code that is a colour, and a hex code or colour function written in the
-// text of a paragraph, heading, list, quote or table - with Settings ›
-// Editor & Appearance › Show a swatch before colour codes on (off by
-// default). The text itself is unchanged, and so is the way the caret moves
+// #146: a colour code gets a small swatch of its colour before it, as
+// Settings › Editor & Appearance › Swatches before colour codes says: off
+// (the default); in code only - inline code that is a colour and colour
+// literals in code blocks; or everywhere - also a hex code or colour
+// function written in the text of a paragraph, heading, list, quote or
+// table. The text itself is unchanged, and so is the way the caret moves
 // through it, what find finds and what is saved.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
+/** Settings.colorSwatches. */
+type ColorSwatchMode = "off" | "code" | "everywhere";
 const swatch = `${editor} .color-swatch`;
 
 const DOC = "White `#fff`, blue `rgb(0 128 255)` and plain `red`.";
 
-async function open(page: Page, on: boolean, doc = DOC) {
+async function open(page: Page, mode: ColorSwatchMode, doc = DOC) {
   await openApp(page, {
-    settings: { language: "en", inlineColorSwatches: on },
+    settings: { language: "en", colorSwatches: mode },
   });
   await pasteMarkdown(page, doc);
   if (doc === DOC) await expect(page.locator(`${editor} code`)).toHaveCount(3);
 }
 
 test("there are no swatches by default", async ({ page }) => {
-  await open(page, false);
+  await open(page, "off");
   await expect(page.locator(swatch)).toHaveCount(0);
 });
 
 test("a hex or rgb() code gets a swatch of its colour, a colour name doesn't", async ({
   page,
 }) => {
-  await open(page, true);
+  await open(page, "everywhere");
   await expect(page.locator(swatch)).toHaveCount(2);
   const colours = await page
     .locator(swatch)
@@ -52,7 +55,7 @@ test("a hex or rgb() code gets a swatch of its colour, a colour name doesn't", a
 });
 
 test("swatches stay out of a printout", async ({ page }) => {
-  await open(page, true);
+  await open(page, "everywhere");
   await page.emulateMedia({ media: "print" });
   await expect(page.locator(swatch).first()).toBeHidden();
 });
@@ -84,8 +87,8 @@ async function sameWithAndWithout(
   doc = DOC,
 ) {
   const results: string[] = [];
-  for (const on of [false, true]) {
-    await open(page, on, doc);
+  for (const mode of ["off", "everywhere"] as const) {
+    await open(page, mode, doc);
     await page.locator(`${editor} p`).click();
     await run(page);
     results.push(await paragraph(page));
@@ -136,7 +139,8 @@ const RICH = [
   "Inline `#ff00ff`, short `#f0f` and `red`.",
   "",
   "```css",
-  "a { color: #ff8800; }",
+  "a { color: #ff8800; border-color: #fff; }",
+  "#fed { }",
   "```",
   "",
 ].join("\n");
@@ -150,16 +154,16 @@ const textSwatches = (page: Page) =>
     .locator(textSwatch)
     .evaluateAll((els) =>
       els.map((el) => [
-        (el.closest("h1, li, blockquote, td") ?? el.closest("p"))?.tagName,
+        (el.closest("h1, li, blockquote, td, pre") ?? el.closest("p"))?.tagName,
         (el as HTMLElement).style.getPropertyValue("--color-swatch"),
         el.textContent,
       ]),
     );
 
-test("a colour code in a heading, paragraph, list, quote or table gets a swatch; tags, issues, links and fenced code don't", async ({
+test("everywhere: a colour code in a heading, paragraph, list, quote, table or code block gets a swatch; tags, issues and links don't", async ({
   page,
 }) => {
-  await open(page, true, RICH);
+  await open(page, "everywhere", RICH);
   await expect(page.locator(`${editor} table`)).toBeVisible();
   expect(await textSwatches(page)).toEqual([
     ["H1", "#1e90ff", "#"],
@@ -168,11 +172,12 @@ test("a colour code in a heading, paragraph, list, quote or table gets a swatch;
     ["LI", "#ff0000", "#"],
     ["BLOCKQUOTE", "hsl(120 50% 50%)", "h"],
     ["TD", "#008080", "#"],
+    // Short hex counts in code, an id selector doesn't.
+    ["PRE", "#ff8800", "#"],
+    ["PRE", "#fff", "#"],
   ]);
-  // Inline code keeps its own swatch, short hex too; the fenced block has
-  // none.
+  // Inline code keeps its own swatch, short hex too.
   await expect(page.locator(swatch)).toHaveCount(2);
-  await expect(page.locator(`${editor} pre .color-swatch-text`)).toHaveCount(0);
   // The swatch is drawn before the code without adding any text.
   const before = await page
     .locator(textSwatch)
@@ -189,7 +194,7 @@ test("a colour code in a heading, paragraph, list, quote or table gets a swatch;
 test("every swatch is painted, in its colour, at a size that shows", async ({
   page,
 }) => {
-  await open(page, true, RICH);
+  await open(page, "everywhere", RICH);
   await expect(page.locator(`${editor} table`)).toBeVisible();
   // In the DOM is not enough: each swatch's box (inline code's element,
   // plain text's ::before) must have a size and paint its colour.
@@ -233,21 +238,38 @@ test("every swatch is painted, in its colour, at a size that shows", async ({
     "#008080",
     "#ff00ff",
     "#f0f",
+    "#ff8800",
+    "#fff",
   ]);
   for (const p of painted)
     expect(p, p.colour).toMatchObject({ shows: true, paints: true });
 });
 
-test("there are no plain-text swatches with the setting off", async ({
+test("in code only: inline code and code blocks get swatches, the text doesn't", async ({
   page,
 }) => {
-  await open(page, false, RICH);
+  await open(page, "code", RICH);
+  await expect(page.locator(`${editor} table`)).toBeVisible();
+  expect(await textSwatches(page)).toEqual([
+    ["PRE", "#ff8800", "#"],
+    ["PRE", "#fff", "#"],
+  ]);
+  await expect(page.locator(swatch)).toHaveCount(2);
+  // The code block keeps its text and its highlighting.
+  const pre = page.locator(`${editor} pre`);
+  await expect(pre).toContainText("a { color: #ff8800; border-color: #fff; }");
+  await expect(pre.locator(".token").first()).toBeVisible();
+});
+
+test("there are no swatches with the setting off", async ({ page }) => {
+  await open(page, "off", RICH);
   await expect(page.locator(`${editor} table`)).toBeVisible();
   await expect(page.locator(textSwatch)).toHaveCount(0);
+  await expect(page.locator(swatch)).toHaveCount(0);
 });
 
 test("a plain-text swatch stays out of a printout", async ({ page }) => {
-  await open(page, true, RICH);
+  await open(page, "everywhere", RICH);
   await page.emulateMedia({ media: "print" });
   const display = await page
     .locator(textSwatch)
@@ -259,7 +281,7 @@ test("a plain-text swatch stays out of a printout", async ({ page }) => {
 test("a swatch follows a colour code as it is typed and unmade", async ({
   page,
 }) => {
-  await open(page, true, "Accent here.");
+  await open(page, "everywhere", "Accent here.");
   await page.locator(`${editor} p`).click();
   await page.keyboard.press("End");
   await page.keyboard.type(" #ff880");
@@ -312,7 +334,7 @@ function emit(page: Page, name: string) {
 test("find matches inside a colour code, which keeps one swatch", async ({
   page,
 }) => {
-  await open(page, true, "Orange #ff8800 and #ff8800aa.");
+  await open(page, "everywhere", "Orange #ff8800 and #ff8800aa.");
   await expect(page.locator(textSwatch)).toHaveCount(2);
   await emit(page, "menu-find-replace");
   await page.locator(".find-replace-input").first().fill("#ff88");
@@ -332,7 +354,7 @@ const PATH = "/home/me/colours.md";
 
 test("swatches never reach the saved file", async ({ page }) => {
   await openApp(page, {
-    settings: { language: "en", autosave: true, inlineColorSwatches: true },
+    settings: { language: "en", autosave: true, colorSwatches: "everywhere" },
   });
   // A stand-in for commands/fs.rs, as in autosave.spec.ts.
   await page.evaluate(
@@ -364,11 +386,11 @@ test("swatches never reach the saved file", async ({ page }) => {
     },
     { path: PATH, text: RICH },
   );
-  await expect(page.locator(textSwatch)).toHaveCount(6);
+  await expect(page.locator(textSwatch)).toHaveCount(8);
   await page.locator(`${editor} h1`).click();
   await page.keyboard.press("End");
   await page.keyboard.type(" and #00ff00");
-  await expect(page.locator(textSwatch)).toHaveCount(7);
+  await expect(page.locator(textSwatch)).toHaveCount(9);
   await expect
     .poll(
       () =>
@@ -378,4 +400,36 @@ test("swatches never reach the saved file", async ({ page }) => {
       { timeout: 6000 },
     )
     .toEqual([RICH.replace("# Brand #1e90ff", "# Brand #1e90ff and #00ff00")]);
+});
+
+test("the old switch, on, opens as In code only, and each choice in Settings applies at once", async ({
+  page,
+}) => {
+  // 1.2.0's betas stored a switch that drew swatches in inline code only.
+  await openApp(page, {
+    settings: { language: "en", inlineColorSwatches: true },
+  });
+  await pasteMarkdown(page, RICH);
+  await expect(page.locator(swatch)).toHaveCount(2);
+  await expect(page.locator(textSwatch)).toHaveCount(2);
+
+  await emit(page, "menu-open-settings");
+  const panel = page.getByRole("dialog", { name: "Settings" });
+  await panel.getByRole("button", { name: "Editor & Appearance" }).click();
+  const select = panel.getByRole("combobox", {
+    name: "Swatches before colour codes",
+  });
+  await expect(select).toContainText("In code only");
+  const choose = async (name: string) => {
+    await select.click();
+    await page.getByRole("option", { name }).click();
+  };
+  await choose("Everywhere");
+  await expect(page.locator(textSwatch)).toHaveCount(8);
+  await choose("Off");
+  await expect(page.locator(textSwatch)).toHaveCount(0);
+  await expect(page.locator(swatch)).toHaveCount(0);
+  await choose("In code only");
+  await expect(page.locator(swatch)).toHaveCount(2);
+  await expect(page.locator(textSwatch)).toHaveCount(2);
 });

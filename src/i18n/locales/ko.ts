@@ -634,7 +634,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   diagramEngineHint:
     "Pele는 더 빠르게 그리지만 배치가 GitHub·Mermaid와 다르고, 레이블 속 HTML 등 일부 기능은 지원하지 않습니다. Pele가 그리지 못하는 다이어그램은 Mermaid가 그립니다.",
   codeLineNumbersLabel: "코드 블록에 줄 번호 표시",
-  inlineColorSwatchesLabel: "색상 코드 앞에 색상 견본 표시",
+  colorSwatchesLabel: "색상 코드 앞 색상 견본",
+  colorSwatchesOff: "끄기",
+  colorSwatchesCode: "코드에서만",
+  colorSwatchesEverywhere: "모든 곳",
   codeBlockCopy: "복사",
   codeBlockCopied: "복사됨",
   autoCloseMarksLabel: "서식 기호 자동으로 닫기",
