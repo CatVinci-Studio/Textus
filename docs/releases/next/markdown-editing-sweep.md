@@ -1,3 +1,0 @@
-### Fixed
-
-- Makes typing Markdown behave as it reads: `* ` starts a bullet list and `***` a rule, as `- ` and `---` do; `####### ` stays text; Shift+Enter in a heading starts a new line instead of turning it into an underlined heading on save, and adds a line in a code block; Enter inside inline code splits the line; Tab and Shift+Tab indent and outdent the selected lines of a code block instead of replacing them or leaving the editor; text typed after a wikilink stays out of it; the arrows leave a table at the top or end of the document from any cell; and lines pasted into a table cell stay in that cell instead of overwriting the cells beside it. (#320)

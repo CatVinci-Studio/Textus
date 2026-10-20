@@ -1,3 +1,0 @@
-### New
-
-- Adds a switch for all of Textus AI at the right end of the window bar, beside the robot: lit while Textus AI is on, dim while it is off, and one click turns it the other way. **View › Textus AI**, **Settings › Textus AI › Enable Textus AI** (on by default), a shortcut you can set in **Settings › Shortcuts**, the header of the separate AI window and the iPhone's menu do the same. While it is off, nothing is sent to any AI service, from the moment Textus opens: no completion, grammar check, conversation or memory; the AI panel, Quick Ask and the AI items of the right-click menu go away, and a reply still being written stops. Edits already proposed stay to accept or reject, and each feature keeps its own setting for when Textus AI is back on. (#196)
