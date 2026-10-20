@@ -1,4 +1,12 @@
-import { lazy, memo, Suspense, useCallback } from "react";
+import {
+  lazy,
+  memo,
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+} from "react";
 import { MilkdownProvider } from "@milkdown/react";
 import { useSettings, type AgentMode } from "../settings/SettingsContext";
 import { KatexFirst } from "../editor/math/KatexFirst";
@@ -42,6 +50,34 @@ function sameProps(prev: EditorPaneProps, next: EditorPaneProps): boolean {
   );
 }
 
+/**
+ * Where the tab's scroller was while it was in front, put back when it
+ * comes to the front again. A tab in the back is display: none
+ * (MainPane.tsx); Chromium keeps a hidden scroller's position, WebKit
+ * (WebKitGTK, WKWebView) sets it back to the top, and a tab switched
+ * away from and back to opened at its first line.
+ */
+function useKeptScroll(isActive: boolean | undefined) {
+  const el = useRef<HTMLDivElement | null>(null);
+  const kept = useRef(0);
+  useEffect(() => {
+    const scroller = el.current;
+    if (!scroller) return;
+    // Only while it is shown: a hidden one has nothing to say.
+    const keep = () => {
+      if (scroller.clientHeight > 0) kept.current = scroller.scrollTop;
+    };
+    scroller.addEventListener("scroll", keep, { passive: true });
+    return () => scroller.removeEventListener("scroll", keep);
+  }, []);
+  useLayoutEffect(() => {
+    const scroller = el.current;
+    if (isActive && scroller && scroller.scrollTop !== kept.current)
+      scroller.scrollTop = kept.current;
+  }, [isActive]);
+  return el;
+}
+
 export const EditorPane = memo(function EditorPane({
   tabId,
   filePath,
@@ -63,9 +99,10 @@ export const EditorPane = memo(function EditorPane({
     (markdown: string) => onChange(tabId, markdown),
     [onChange, tabId],
   );
+  const scrollRef = useKeptScroll(isActive);
 
   return (
-    <div className="editor-scroll">
+    <div className="editor-scroll" ref={scrollRef}>
       <div
         className={`editor-content ${settings.typewriterMode ? "typewriter-active" : ""}`}
       >

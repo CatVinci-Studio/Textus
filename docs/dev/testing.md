@@ -25,7 +25,9 @@ need a display, a desktop session or an API key, and are run by hand before
 a release. The e2e flows need Chromium once: `npm run setup:e2e`.
 `npm run test:visual` adds the screenshot comparison of `e2e/visual.spec.ts`
 against Linux baselines (they depend on the fonts of the machine that took
-them).
+them). `E2E_WEBKIT=1 npm run test:e2e` adds a WebKit project for the few
+flows that broke in WebKit only (`WEBKIT_SPECS` in `playwright.config.ts`);
+it needs `npx playwright install webkit` once, and CI doesn't run it.
 
 `npm run bench:motion` is a measurement, not a test: it plays every
 animated surface (the side panels and their resize, Settings, tabs, menus,
