@@ -76,7 +76,6 @@ import { createCodeBlockView } from "./code/code-block-language-view";
 import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
 import { tableColumnResizing, tableHoverView } from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
-import { contentVisibilityPlugin } from "./content-visibility";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
 import { tabExtendPlugin } from "./keys/tab-extend-plugin";
 import { escapeTrailingBlockPlugin } from "./markdown/escape-trailing-block-plugin";
@@ -307,7 +306,6 @@ export function withEditorCore(
       )
       .use(tableHoverView)
       .use(tableColumnResizing)
-      .use(contentVisibilityPlugin)
       .use(
         createMermaidPreviewPlugin({
           enabled: () => settings.current.enableMermaid,

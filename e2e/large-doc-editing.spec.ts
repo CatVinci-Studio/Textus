@@ -1,11 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// A large document's blocks off screen skip layout and paint
-// (editor/content-visibility.ts). Everything still has to work across the
-// skipped blocks: selecting and copying all of it, finding text at its
-// end, an outline jump that lands and stays, equation numbers counted
-// across the document, an export with every page, typing and Enter.
+// Editing across a large document (over editor/large-doc.ts's threshold,
+// where formulas off screen are drawn only as they come near): selecting
+// and copying all of it, finding text at its end, an outline jump that
+// lands and stays, typing and Enter in the middle, and a tab switched
+// away from and back to.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const scroller = '[data-active-tab="true"] > .editor-scroll';
@@ -46,21 +46,6 @@ test.beforeEach(async ({ page }) => {
     });
   }, DOC);
   await expect(page.locator(editor)).toContainText("zebracorn");
-});
-
-test("the blocks of a large document off screen skip layout", async ({
-  page,
-}) => {
-  await expect(page.locator(editor)).toHaveClass(/\bskip-offscreen\b/);
-  const last = page.locator(`${editor} > p`).last();
-  expect(
-    await last.evaluate((el) => getComputedStyle(el).contentVisibility),
-  ).toBe("auto");
-  // Headings and display formulas count across the document: never.
-  const heading = page.locator(`${editor} > h2`).first();
-  expect(
-    await heading.evaluate((el) => getComputedStyle(el).contentVisibility),
-  ).toBe("visible");
 });
 
 test("select all copies every block, the ones off screen too", async ({
@@ -111,24 +96,6 @@ test("an outline jump to the last heading lands and stays", async ({
   await page.waitForTimeout(300);
   expect(Math.abs((await top()) - first)).toBeLessThan(2);
   await expect(target).toBeInViewport();
-});
-
-// A contained block would count its equations from (1) again; CSS gives
-// no way to read the number drawn, so what is checked is that no block
-// holding one is contained (e2e/math-numbers.spec.ts checks the numbers).
-test("no block holding a display formula is contained", async ({ page }) => {
-  const contained = await page
-    .locator(editor)
-    .evaluate(
-      (pm) =>
-        Array.from(pm.children).filter((el) =>
-          el.querySelector('[data-type="math_block"]') ||
-          el.matches('[data-type="math_block"]')
-            ? getComputedStyle(el).contentVisibility !== "visible"
-            : false,
-        ).length,
-    );
-  expect(contained).toBe(0);
 });
 
 test("typing and Enter in the middle work as anywhere", async ({ page }) => {
