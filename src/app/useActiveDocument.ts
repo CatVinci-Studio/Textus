@@ -2,7 +2,7 @@ import { useDeferredValue, useEffect, useMemo } from "react";
 import { useIOSDocumentsFolder } from "../platform/ios-files";
 import { rememberIOSDocument } from "../document/ios-recents";
 import { countWords } from "../utils/word-count";
-import { LARGE_DOC_THRESHOLD } from "../editor/large-doc";
+import { PAUSE_FEATURES_THRESHOLD } from "../editor/large-doc";
 import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 
@@ -31,10 +31,10 @@ export function useActiveDocument(
     () => countWords(deferredContent),
     [deferredContent],
   );
-  // A markdown-string-length proxy for the same threshold the editor
-  // plugins check against the live ProseMirror doc size (see
-  // editor/large-doc.ts) - close enough for a status indicator.
-  const isLargeDoc = activeTab.content.length > LARGE_DOC_THRESHOLD;
+  // The window bar's "Large document": the features it names pause past
+  // this (editor/large-doc.ts). A markdown-string-length proxy for the doc
+  // size the plugins check - close enough for a status indicator.
+  const isLargeDoc = activeTab.content.length > PAUSE_FEATURES_THRESHOLD;
   const activeDirty = tabIsDirty(activeTab);
   const activeTitle = tabTitle(activeTab, t);
 
