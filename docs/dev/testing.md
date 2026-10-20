@@ -30,6 +30,24 @@ CI also builds the iOS app for the simulator, unsigned, on macOS (the `ios`
 job) - proof that the desktop/iOS split in `docs/dev/ios-code-map.md` still
 compiles. Running it on a device is a manual step on a Mac.
 
+## Large-document benchmark
+
+```sh
+npm run bench:large-doc                       # every document, a few minutes
+PERF_DOCS=zh-5k PERF_LABEL=after npm run bench:large-doc
+```
+
+`e2e/perf/large-doc.perf.ts` opens generated documents (`e2e/perf/large-docs.ts`:
+Chinese and English, 1k to 20k top-level blocks with formulas, diagrams,
+code, images, tables and HTML, plus 200k characters of plain text) in
+Chromium and measures opening, typing in the middle (input to next frame,
+p50/p95, with each plugin's share), IME commits, scrolling end to end, a
+jump to the last heading and a save. It asserts nothing and is not part of
+`test:e2e` or CI. Results print to the console and land in
+`test-results/perf/`; the documents are written to `e2e/perf/fixtures/` for
+opening by hand in the real app, where WebKitGTK, WKWebView and WebView2
+can only be timed by eye. Compare runs on the same machine only.
+
 ## Flaky tests
 
 On CI, a Playwright test that fails is run once more. If the second run

@@ -22,6 +22,7 @@
     "test:roundtrip": "node scripts/roundtrip-corpus/run.mjs",
     "test:e2e": "playwright test --ignore-snapshots",
     "test:visual": "playwright test",
+    "bench:large-doc": "playwright test -c playwright.perf.config.ts",
     "setup:e2e": "playwright install chromium",
     "check": "npm run typecheck && npm run lint && npm run test && npm run format:check && node scripts/check-readmes.mjs && node scripts/check-versions.mjs && node scripts/check-nsis-template.mjs && node scripts/updater-manifest.mjs check",
     "check:native": "node scripts/check-native.mjs",
