@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { katexWoff2Only } from "./vite.katex-fonts";
+import { colorMixFallback } from "./vite.color-mix-fallback";
 
 /**
  * The browser playground (src/playground/): the editor alone, served from
@@ -36,6 +37,7 @@ function servedAsIndex(): Plugin {
 
 export default defineConfig({
   plugins: [react(), katexWoff2Only(), servedAsIndex()],
+  css: { postcss: { plugins: [colorMixFallback()] } },
   base: "/playground/",
   // public/ holds the app's files.
   publicDir: false,

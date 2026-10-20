@@ -90,7 +90,9 @@ If another copy of the e2e suite may be running (another worktree), set
 ## Platform notes
 
 - Linux uses WebKitGTK, Windows WebView2, macOS and iOS WKWebView; the e2e
-  flows run in Chromium. Anything about windows, file dialogs, drag and drop,
+  flows run in a current Chromium, but WebView2 can be as old as Chromium
+  105: keep newer CSS behind `@supports`
+  ([docs/dev/webview-support.md](docs/dev/webview-support.md)). Anything about windows, file dialogs, drag and drop,
   input methods or printing has to be checked in the real app on that
   platform.
 - Chinese/Japanese input (IME) on WebKitGTK commits a composition as

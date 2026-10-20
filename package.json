@@ -76,6 +76,7 @@
     "jsdom": "^29.1.1",
     "mdast-util-from-markdown": "^2.1.0",
     "micromark-util-types": "^2.0.3",
+    "postcss": "^8.5.31",
     "prettier": "^3.9.10",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.71.2",

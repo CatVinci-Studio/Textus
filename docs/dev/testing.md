@@ -28,6 +28,10 @@ against Linux baselines (they depend on the fonts of the machine that took
 them). `E2E_WEBKIT=1 npm run test:e2e` adds a WebKit project for the few
 flows that broke in WebKit only (`WEBKIT_SPECS` in `playwright.config.ts`);
 it needs `npx playwright install webkit` once, and CI doesn't run it.
+`playwright.webview.config.ts` runs the flows in an old Chromium you point
+it at, the oldest WebView2 Textus supports
+([webview-support.md](webview-support.md#testing)); CI doesn't run it
+either.
 
 `npm run bench:motion` is a measurement, not a test: it plays every
 animated surface (the side panels and their resize, Settings, tabs, menus,

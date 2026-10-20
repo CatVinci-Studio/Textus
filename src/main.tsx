@@ -4,15 +4,18 @@ import App from "./app/App";
 import { ChatWindowApp } from "./ai/chat/window/ChatWindowApp";
 import { SettingsProvider } from "./settings/SettingsContext";
 import { installDevTauriShim } from "./dev/tauri-shim";
+import { installPolyfills } from "./utils/polyfills";
 import { publishWindowChrome } from "./platform/window-chrome";
 import { WindowEdges } from "./app/WindowEdges";
 import { installWebviewGuards } from "./ui/webview-guards";
 import { installScrollReveal } from "./ui/scroll-reveal";
 import { restoreFolderAccess } from "./platform/ios-files";
 import { installMobileViewport } from "./platform/mobile-viewport";
+import { markEngineQuirks } from "./ui/engine-quirks";
 import { flushWhenHidden } from "./storage/pending-writes";
 import "./mobile/styles/index.css";
 
+installPolyfills();
 installDevTauriShim();
 installWebviewGuards();
 installScrollReveal();
@@ -27,6 +30,7 @@ void restoreFolderAccess().catch(() => {});
 // traffic-light inset for a frame on every Windows launch.
 publishWindowChrome();
 installMobileViewport();
+markEngineQuirks();
 
 // Which view this window is. One bundle serves both: a second HTML entry
 // point would mean a second build target and a second copy of the shared
