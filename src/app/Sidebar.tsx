@@ -1,7 +1,12 @@
 import { FileTree } from "../sidebar/FileTree";
 import { Outline } from "../sidebar/Outline";
 import { ClipboardHistory } from "../sidebar/ClipboardHistory";
-import { TreeTabIcon, OutlineTabIcon, ClipboardTabIcon } from "../ui/icons";
+import {
+  TreeTabIcon,
+  OutlineTabIcon,
+  ClipboardTabIcon,
+  OpenFolderIcon,
+} from "../ui/icons";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { Presence, PresenceDiv, type PresenceHandle } from "../ui/usePresence";
 import { ResizeHandle } from "../ui/ResizeHandle";
@@ -134,7 +139,10 @@ export function Sidebar({
                         className="text-button tree-empty-open"
                         onClick={openFolder.openFolderDialog}
                       >
-                        {t.menuOpenFolder}
+                        <OpenFolderIcon />
+                        <span className="tree-empty-open-label">
+                          {t.menuOpenFolder}
+                        </span>
                       </button>
                     )}
                   </>
