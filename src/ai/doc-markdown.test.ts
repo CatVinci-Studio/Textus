@@ -161,6 +161,18 @@ describe("composeMarkdownEdit", () => {
     );
   });
 
+  it("puts a picture after a paragraph's last sentence in a block of its own", () => {
+    const para = findMarkdownMatch(
+      blocks("Attendance grew. The Sunday session is cut short."),
+      "The Sunday session is cut short.",
+    )!;
+    expect(
+      composeMarkdownEdit(para, "insert_after", "![A hall](assets/hall.png)"),
+    ).toBe(
+      "Attendance grew. The Sunday session is cut short.\n\n![A hall](assets/hall.png)",
+    );
+  });
+
   it("continues the paragraph after its last sentence", () => {
     // Only the whole paragraph as anchor means "a new paragraph after it";
     // its last sentence means "carry the paragraph on".

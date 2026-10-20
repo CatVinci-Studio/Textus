@@ -166,13 +166,13 @@ export function imageStemForMode(
 
 /** An image to store. Its bytes are read only once it is known to be
  *  wanted, since a file-manager copy only names a file on disk. */
-interface PastedImage {
+export interface PastedImage {
   name: string;
   type: string;
   base64: () => Promise<string>;
 }
 
-interface ImageStore {
+export interface ImageStore {
   docPath: () => string | null;
   settings: () => Settings;
   requestName: (stem: string, extension: string) => Promise<string | null>;
@@ -182,7 +182,7 @@ interface ImageStore {
 /** Saves one image the way Settings > Images says - into the document's
  *  image folder, or up to the image host - and returns the src to
  *  write; null when it can't be stored or the user cancelled naming it. */
-async function storeImage(
+export async function storeImage(
   image: PastedImage,
   store: ImageStore,
 ): Promise<string | null> {

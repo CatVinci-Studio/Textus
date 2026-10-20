@@ -1295,6 +1295,15 @@
   font-size: 1.08em;
 }
 
+/* A proposed picture on its card (generate_image), small: the document
+   shows it full size. */
+.agent-proposal-picture {
+  display: block;
+  max-width: 100%;
+  max-height: 120px;
+  border-radius: var(--radius-small);
+}
+
 /* Proposal card: the model's one-line reason, and the per-sentence choice
    list (ChatMessages' ProposalCard). */
 .agent-proposal-reason {

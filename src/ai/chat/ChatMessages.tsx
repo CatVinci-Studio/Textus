@@ -12,13 +12,17 @@ import type { PendingStatus } from "../revision/usePendingEdits";
 import type { StreamingState } from "./useAgentConversation";
 import type { Thought } from "./thought";
 import { ThoughtRow, type ThoughtRowLabels } from "./ThoughtRow";
-import { parseProposal } from "./proposal";
+import { isProposalTool, parseToolProposal } from "./proposal";
 import { parseUserMessage } from "./user-message";
 import { refusedProposalIds } from "../revision/proposal-status";
 import { classifyAiError, type AiErrorKind } from "../error-messages";
 import { diffLines } from "./line-diff";
 import type { PendingSentence } from "../revision/pending-edit-plugin";
 import { FlipOnChange } from "../../ui/flip";
+import {
+  loadGeneratedImage,
+  generatedImageData,
+} from "../revision/generated-images";
 import {
   MemoryChip,
   parseRememberResult,
@@ -83,6 +87,12 @@ export interface ChatMessagesLabels
   commentLocate: string;
   /** Plain-language help per kind of provider failure (ErrorRow). */
   aiErrors: Record<AiErrorKind, string>;
+  /** A generate_image card's kind, and the line for a picture that wasn't
+   *  made ("{reason}": the service's words). */
+  proposalImage: string;
+  imageNotGenerated: string;
+  /** In place of "Thinking…" while a picture is being made. */
+  generatingImage: string;
 }
 
 export interface ChatMessagesProps {
@@ -209,9 +219,9 @@ export function ChatMessages({
     for (const turn of shown) {
       if (turn.kind === "User")
         sentSelection = parseUserMessage(turn.text).selection;
-      else if (turn.kind === "ToolCall" && turn.name === "propose_edit")
+      else if (turn.kind === "ToolCall" && isProposalTool(turn.name))
         map.set(turn.call_id, {
-          proposal: parseProposal(turn.arguments),
+          proposal: parseToolProposal(turn.name, turn.arguments),
           sentSelection,
         });
     }
@@ -238,6 +248,17 @@ export function ChatMessages({
   // A call the backend refused (tools.rs) was never a proposal: the model
   // was told and resends it, so it gets no card - nor its result.
   const refused = useMemo(() => refusedProposalIds(shown), [shown]);
+  const imageCalls = useMemo(
+    () =>
+      new Set(
+        shown.flatMap((turn) =>
+          turn.kind === "ToolCall" && turn.name === "generate_image"
+            ? [turn.call_id]
+            : [],
+        ),
+      ),
+    [shown],
+  );
 
   // A decided card shrinks to its status line; whatever is under it moves
   // up to meet it rather than jumping (FlipOnChange). Only decisions count:
@@ -246,7 +267,7 @@ export function ChatMessages({
   // their text and buttons while they fade in.
   const decisions = shown
     .flatMap((turn) => {
-      if (turn.kind !== "ToolCall" || turn.name !== "propose_edit") return [];
+      if (turn.kind !== "ToolCall" || !isProposalTool(turn.name)) return [];
       const status = proposalStatus(turn.call_id);
       return DECIDED.has(status) ? [`${turn.call_id}:${status}`] : [];
     })
@@ -272,12 +293,31 @@ export function ChatMessages({
               "--reveal-delay": `${Math.min(i - revealFrom.current, 3) * 40}ms`,
             } as CSSProperties)
           : undefined;
+        // A picture that wasn't made: the reason, plainly, in the service's
+        // own words where it gave any.
+        if (
+          turn.kind === "ToolResult" &&
+          refused.has(turn.call_id) &&
+          imageCalls.has(turn.call_id)
+        )
+          return (
+            <div
+              key={i}
+              className={`agent-tool-line agent-image-failed${reveal ? " turn-reveal" : ""}`}
+              style={style}
+            >
+              {labels.imageNotGenerated.replace(
+                "{reason}",
+                notGeneratedReason(turn.output),
+              )}
+            </div>
+          );
         if (
           (turn.kind === "ToolCall" || turn.kind === "ToolResult") &&
           refused.has(turn.call_id)
         )
           return null;
-        if (turn.kind === "ToolCall" && turn.name === "propose_edit") {
+        if (turn.kind === "ToolCall" && isProposalTool(turn.name)) {
           const parsed = parsedProposals.get(turn.call_id);
           const proposal = parsed?.proposal;
           if (!parsed || !proposal)
@@ -409,7 +449,13 @@ export function ChatMessages({
       )}
       {/* While the thinking row counts the seconds, it says it all. */}
       {busy && !streaming?.text && streaming?.thought?.since == null && (
-        <ThinkingIndicator label={labels.thinking} />
+        <ThinkingIndicator
+          label={
+            streaming?.tool === "generate_image"
+              ? labels.generatingImage
+              : labels.thinking
+          }
+        />
       )}
       {error && (
         <ErrorRow
@@ -436,6 +482,38 @@ export function ThinkingIndicator({ label }: { label: string }) {
       </span>
     </div>
   );
+}
+
+/** What a generate_image result says stopped it (ai/images.rs's
+ *  `outcome`), without what it tells the model to do about it. */
+export function notGeneratedReason(output: string): string {
+  return output
+    .replace(/^Not generated:\s*/, "")
+    .replace(/\s*Tell the user in plain words;[\s\S]*$/, "")
+    .trim();
+}
+
+/** A proposed picture on its card, small, once the preview has it. */
+function ProposedPicture({ id, alt }: { id: string; alt: string }) {
+  const [url, setUrl] = useState(() => imageUrl(id));
+  useEffect(() => {
+    let live = true;
+    if (!url)
+      void loadGeneratedImage(id).then(() => {
+        if (live) setUrl(imageUrl(id));
+      });
+    return () => {
+      live = false;
+    };
+  }, [id, url]);
+  return url ? (
+    <img className="agent-proposal-picture" src={url} alt={alt} />
+  ) : null;
+}
+
+function imageUrl(id: string): string | null {
+  const data = generatedImageData(id);
+  return data ? `data:${data.mime};base64,${data.dataBase64}` : null;
 }
 
 /** The error row, with a retry button when the failed send is resendable
@@ -577,17 +655,19 @@ function ProposalCard({
           {labels.proposalTitle}
           <span className="agent-proposal-kind">
             {" · "}
-            {sentences && sentences.length > 1
-              ? labels.proposalChangeCount.replace(
-                  "{n}",
-                  String(sentences.length),
-                )
-              : labels.actionNames[proposal.action]}
+            {proposal.image
+              ? labels.proposalImage
+              : sentences && sentences.length > 1
+                ? labels.proposalChangeCount.replace(
+                    "{n}",
+                    String(sentences.length),
+                  )
+                : labels.actionNames[proposal.action]}
           </span>
         </span>
         {/* Listed sentence by sentence below, the size chips (the full
             diff's toggle) only crowd the head - kept for the rest. */}
-        {!(sentences && sentences.length > 1) && (
+        {!(sentences && sentences.length > 1) && !proposal.image && (
           <button
             type="button"
             className="agent-diff-summary"
@@ -619,6 +699,9 @@ function ProposalCard({
       </div>
       {proposal.reason && (
         <div className="agent-proposal-reason">{proposal.reason}</div>
+      )}
+      {proposal.image && status !== "rejected" && (
+        <ProposedPicture id={proposal.image.id} alt={proposal.image.alt} />
       )}
       {diffOpen && (
         <div className="agent-proposal-diff">
@@ -715,12 +798,16 @@ function ProposalCard({
           <div className="agent-proposal-status agent-proposal-status-invalid">
             {labels.proposalStatus.invalid}
           </div>
-          <button
-            className="inline-chat-action"
-            onClick={() => onRelocate(proposal)}
-          >
-            {labels.proposalRelocate}
-          </button>
+          {/* A picture's place can't be asked for again: its text is the
+              picture's placeholder, not words the model wrote. */}
+          {!proposal.image && (
+            <button
+              className="inline-chat-action"
+              onClick={() => onRelocate(proposal)}
+            >
+              {labels.proposalRelocate}
+            </button>
+          )}
         </>
       ) : (
         <div

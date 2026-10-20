@@ -8,6 +8,7 @@ import type {
 import type { DetachedTabDoc, HelpDoc } from "../document/doc-tabs";
 import type { DirEntryInfo } from "./fs-types";
 import type { ProviderCatalogEntry } from "../ai/provider-catalog";
+import type { ImageModel, ImageProviderEntry } from "../ai/image-models";
 import type {
   AgentSkill,
   AgentTurn,
@@ -601,6 +602,14 @@ export const imageHostAuth = {
 /// real failure, so callers should treat it differently from other errors.
 export const AI_CANCELLED = "cancelled";
 
+/** A picture waiting for a decision. Mirrors `GeneratedImageData` in
+ *  src-tauri/src/ai/images.rs. */
+export interface GeneratedImageData {
+  mime: string;
+  ext: string;
+  dataBase64: string;
+}
+
 /** One live fragment of an in-flight ai_agent_message, delivered over a
  *  Tauri channel while the agent loop runs. Purely additive display data -
  *  the command still resolves with the complete turn list, which stays the
@@ -930,6 +939,14 @@ export const ai = {
    *  src-tauri/src/ai/catalog.rs. */
   canThinkDeeper: (provider: string, model: string | null) =>
     call<boolean>("ai_can_think_deeper", { provider, model }),
+  /** The services Settings › Textus AI › Image model offers (ai/images.rs). */
+  listImageProviders: () => call<ImageProviderEntry[]>("list_image_providers"),
+  /** A picture generate_image made, waiting for Accept or Reject. */
+  generatedImage: (id: string) =>
+    call<GeneratedImageData>("ai_generated_image", { id }),
+  /** Lets a waiting picture go: rejected, or saved. */
+  discardGeneratedImage: (id: string) =>
+    call<void>("ai_discard_generated_image", { id }),
   fetchAgentModels: (provider: string) =>
     call<string[]>("fetch_agent_models", { provider }),
   setAiProxy: (proxy: string | null) => call<void>("set_ai_proxy", { proxy }),
@@ -1012,6 +1029,9 @@ export const ai = {
     /** The conversation, recorded with what Textus AI remembers in it
      *  (`Source` in ai/memory.rs). */
     conversation?: { id: string; title: string };
+    /** The image model, or null for none: generate_image is offered
+     *  only with one (ai/images.rs). */
+    imageModel?: ImageModel | null;
     /** Live fragments while the request runs - see StreamEvent. */
     onEvent?: (event: StreamEvent) => void;
   }) => {

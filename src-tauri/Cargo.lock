@@ -51,6 +51,7 @@ dependencies = [
  "tauri",
  "tauri-plugin-oauth",
  "tauri-plugin-opener",
+ "tokio",
  "url",
 ]
 

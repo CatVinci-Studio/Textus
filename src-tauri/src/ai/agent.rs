@@ -136,7 +136,8 @@ pub(crate) fn postfix_step(
     (StepResult::ToolCalls(calls), applied)
 }
 
-type StepFuture<'a> = Pin<Box<dyn Future<Output = Result<StepResult, String>> + Send + 'a>>;
+pub(crate) type StepFuture<'a> =
+    Pin<Box<dyn Future<Output = Result<StepResult, String>> + Send + 'a>>;
 
 /// A provider step with [`postfix_step`] applied to what it returns.
 fn with_postfix<'a, S, F>(
@@ -184,7 +185,7 @@ Style: avoid the tics that make text read as machine-written unless the author's
 
 /// Only appended for providers that actually run the tool loop; telling a
 /// tool-less provider to call tools would just confuse it.
-const AGENT_TOOL_INSTRUCTIONS: &str = "Use search_document to locate something specific in a long document, and read_document to see a whole section before you revise it - never guess at text you haven't seen. Read first, propose after: never send a propose_edit in the same step as the read it depends on. If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (once per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. Pick the action that matches the intent: replace to swap existing text, replace_selection to swap the user's selected text (when their message carries a <selected-text> block and asks to rewrite/modify it - no anchor needed), insert_before/insert_after to add text next to existing text, insert_at_cursor to add text where the user's cursor is (when their message carries a <cursor> block marking it - for \"write a transition here\"), delete to remove text, append to add text at the end of the document. To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal must target its own passage - for several changes inside one passage, send a single replace covering it, since overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE, and both fields work in that same markdown. `anchor` must be copied verbatim out of it - including any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This` - and must occur exactly once. When the text you need to target appears MORE than once in the document, keep `anchor` as the exact text being edited and additionally pass `context`: a longer quote copied verbatim from the document that contains the anchor and itself occurs exactly once - the edit lands on the anchor inside that context. `text` replaces it and must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. Get the text right before you call propose_edit: a second proposal for the same passage in one reply overlaps the first and can't be applied. The user reviews and applies each proposal themselves, so your reply only says, in a sentence or two, what you proposed and why. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. Proposing new edits automatically replaces any still-undecided proposals in the editor, so never re-propose or try to retract an undecided one yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin each point to its passage with add_comment and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose.";
+const AGENT_TOOL_INSTRUCTIONS: &str = "Use search_document to locate something specific in a long document, and read_document to see a whole section before you revise it - never guess at text you haven't seen. Read first, propose after: never send a propose_edit in the same step as the read it depends on. If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (once per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. Pick the action that matches the intent: replace to swap existing text, replace_selection to swap the user's selected text (when their message carries a <selected-text> block and asks to rewrite/modify it - no anchor needed), insert_before/insert_after to add text next to existing text, insert_at_cursor to add text where the user's cursor is (when their message carries a <cursor> block marking it - for \"write a transition here\"), delete to remove text, append to add text at the end of the document. To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal must target its own passage - for several changes inside one passage, send a single replace covering it, since overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE, and both fields work in that same markdown. `anchor` must be copied verbatim out of it - including any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This` - and must occur exactly once. When the text you need to target appears MORE than once in the document, keep `anchor` as the exact text being edited and additionally pass `context`: a longer quote copied verbatim from the document that contains the anchor and itself occurs exactly once - the edit lands on the anchor inside that context. `text` replaces it and must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. Get the text right before you call propose_edit: a second proposal for the same passage in one reply overlaps the first and can't be applied. The user reviews and applies each proposal themselves, so your reply only says, in a sentence or two, what you proposed and why. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. Proposing new edits automatically replaces any still-undecided proposals in the editor, so never re-propose or try to retract an undecided one yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin each point to its passage with add_comment and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose. When the user asks for a picture and you have no generate_image tool, say that Textus AI can make one once an image model is chosen in Settings > Textus AI > Image model.";
 
 /// The rules engine's two tools, in every mode (tools.rs).
 const RULES_TOOL_INSTRUCTIONS: &str = "check_conventions checks text against the document's writing conventions (punctuation, spacing, numbers, spelling lists, consistency with the rest of the document) with a deterministic rules engine: when you proofread or fix conventions, ground your changes in what it reports instead of guessing, change only what it flags or what you are certain of, and check a draft with its `text` argument before proposing it. Its \"check\" findings only point at something to look at. measure_text counts text exactly (characters, words, X and Bluesky limits, WeChat titles...): whenever a length limit matters, measure the exact text instead of estimating, and give the count in your reply. A length the user asks for (\"800 字\", \"about 500 words\") is a target, not a platform's limit: check_conventions, and measure_text without a platform's metric, answer only a few calls per request, so check or measure a draft once, fix what it shows, then propose it - never draft after draft.";
@@ -816,6 +817,9 @@ pub async fn ai_agent_message(
     // The conversation (`{id, title}`), recorded with what Textus AI
     // remembers in it (ai::memory). None from an older frontend.
     conversation: Option<crate::ai::memory::Source>,
+    // The image model (Settings › Textus AI › Image model); None for none,
+    // and from an older frontend. See ai::images.
+    image_model: Option<crate::ai::images::ImageModel>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
     let cancel_rx = cancel::register(request_id.clone());
@@ -825,7 +829,7 @@ pub async fn ai_agent_message(
         ..conversation.unwrap_or_default()
     };
     let result = tokio::select! {
-        result = ai_agent_message_inner(app, provider, document, doc_path, workspace_root, history, message, images, web_search, thinking.unwrap_or_default(), mode, model, focus_heading, ui_language, source, on_event) => result,
+        result = ai_agent_message_inner(app, provider, document, doc_path, workspace_root, history, message, images, web_search, thinking.unwrap_or_default(), mode, model, focus_heading, ui_language, source, image_model, on_event) => result,
         _ = cancel_rx => Err(cancel::CANCELLED.to_string()),
     };
     cancel::unregister(&request_id);
@@ -851,6 +855,7 @@ async fn ai_agent_message_inner(
     focus_heading: Option<String>,
     ui_language: String,
     source: crate::ai::memory::Source,
+    image_model: Option<crate::ai::images::ImageModel>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
     let history = compact_history(history);
@@ -906,18 +911,22 @@ async fn ai_agent_message_inner(
         images,
     };
     let plain_message = message.clone();
+    // generate_image, while an image model is set (not in Review mode).
+    // TODO(agent-async): see images::with_images.
+    let image_run = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), mode);
 
     let result = match entry.dialect {
         "openai-responses" => {
             let instructions =
                 build_instructions(&workspace, &document, true, mode, &focus, &ui_language);
-            let tools = tools::builtin_tools(
+            let mut tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 mode,
                 workspace.remember,
                 entry.supports_vision,
             );
+            tools.extend(image_run.as_ref().map(|_| crate::ai::images::tool()));
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
                 document: &document,
@@ -981,7 +990,12 @@ async fn ai_agent_message_inner(
                             .await
                         }
                     };
-                    let step = with_postfix(step, &document, &conventions);
+                    let step = crate::ai::images::with_images(
+                        with_postfix(step, &document, &conventions),
+                        image_run.as_ref(),
+                        &document,
+                        &on_event,
+                    );
                     run_agent_loop(
                         history,
                         user_turn,
@@ -1030,7 +1044,12 @@ async fn ai_agent_message_inner(
                             .await
                         }
                     };
-                    let step = with_postfix(step, &document, &conventions);
+                    let step = crate::ai::images::with_images(
+                        with_postfix(step, &document, &conventions),
+                        image_run.as_ref(),
+                        &document,
+                        &on_event,
+                    );
                     run_agent_loop(
                         history,
                         user_turn,
@@ -1047,13 +1066,14 @@ async fn ai_agent_message_inner(
             let instructions =
                 build_instructions(&workspace, &document, true, mode, &focus, &ui_language);
             let auth = route::resolve_anthropic_auth(&app).await?;
-            let tools = tools::builtin_tools(
+            let mut tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 mode,
                 workspace.remember,
                 entry.supports_vision,
             );
+            tools.extend(image_run.as_ref().map(|_| crate::ai::images::tool()));
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
                 document: &document,
@@ -1106,7 +1126,12 @@ async fn ai_agent_message_inner(
                 }
             };
 
-            let step = with_postfix(step, &document, &conventions);
+            let step = crate::ai::images::with_images(
+                with_postfix(step, &document, &conventions),
+                image_run.as_ref(),
+                &document,
+                &on_event,
+            );
             run_agent_loop(
                 history,
                 user_turn,
@@ -1124,13 +1149,14 @@ async fn ai_agent_message_inner(
                 .or_else(|| entry.agent_default_model.map(str::to_string))
                 .or(default_model)
                 .ok_or_else(|| NOT_CONFIGURED.to_string())?;
-            let tools = tools::builtin_tools(
+            let mut tools = tools::builtin_tools(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 mode,
                 workspace.remember,
                 entry.supports_vision,
             );
+            tools.extend(image_run.as_ref().map(|_| crate::ai::images::tool()));
             let tool_specs = tools::tool_specs(&tools);
             let tool_ctx = ToolContext {
                 document: &document,
@@ -1244,7 +1270,12 @@ async fn ai_agent_message_inner(
             // single tool-less completion instead of failing the request
             // outright. `history`/`message` are cloned so the fallback still
             // has them; `run_agent_loop` would otherwise have consumed them.
-            let step = with_postfix(step, &document, &conventions);
+            let step = crate::ai::images::with_images(
+                with_postfix(step, &document, &conventions),
+                image_run.as_ref(),
+                &document,
+                &on_event,
+            );
             match run_agent_loop(
                 history.clone(),
                 user_turn,

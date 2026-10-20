@@ -1,6 +1,7 @@
 import { normalizeMathDelimiters } from "../../utils/markdown-math";
 import { skillBlock } from "./user-message";
 import { SKILL_COMMAND } from "./skill-picker";
+import { parseImageProposal } from "../revision/generated-images";
 import {
   EDIT_ACTIONS,
   type AgentSkill,
@@ -49,6 +50,22 @@ export function parseProposal(argumentsJson: string): EditProposal | null {
   } catch {
     return null;
   }
+}
+
+/** The tools whose calls are proposals: propose_edit, and generate_image,
+ *  whose picture is proposed like an insertion. */
+export function isProposalTool(name: string): boolean {
+  return name === "propose_edit" || name === "generate_image";
+}
+
+/** A proposal tool call's arguments as an EditProposal, or null. */
+export function parseToolProposal(
+  name: string,
+  argumentsJson: string,
+): EditProposal | null {
+  if (name === "propose_edit") return parseProposal(argumentsJson);
+  if (name === "generate_image") return parseImageProposal(argumentsJson);
+  return null;
 }
 
 /**

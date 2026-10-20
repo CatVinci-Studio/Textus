@@ -47,6 +47,7 @@ mod doubao;
 mod grammar_cases;
 mod grammar_matrix;
 mod harness;
+mod images;
 
 use crate::ai::agent::AgentMode;
 use harness::{auth, finish, par_map, Record};

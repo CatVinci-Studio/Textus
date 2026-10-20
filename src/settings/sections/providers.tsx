@@ -431,7 +431,7 @@ function OauthPanel({
   );
 }
 
-function ApiKeyProviderPanel({
+export function ApiKeyProviderPanel({
   t,
   providerId,
   label,

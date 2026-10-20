@@ -63,6 +63,14 @@ The chat never writes to your document directly. When you ask a tool-calling pro
 - **At the cursor**: with nothing selected, Textus AI knows where your cursor is, so "write a transition here" inserts exactly there.
 - **Comments instead of edits**: ask for a review ("what's weak here?") and Textus AI pins comments to passages without changing them. Each comment card has **Show in document**, which selects the passage it is about.
 
+### 6. Pictures
+
+Textus AI can make a picture for your document once you choose an **Image model** in **Settings > Textus AI**. It is **None** until you do, because each picture costs a little at the service. Pick a service and model - OpenAI, Google Gemini, Doubao (Volcengine), Alibaba Qwen, Zhipu GLM, SiliconFlow, or any OpenAI-compatible endpoint. If you already use that service for chat, its key is reused; otherwise Settings asks for one.
+
+- Ask in Write or Revise mode ("add a picture of the harbour after the first paragraph"), or right-click a paragraph and choose **Illustrate this paragraph**.
+- The picture arrives as a proposal in place, like any other insertion. Nothing is saved until you accept: then it is stored the way **Settings > Images** says for a pasted image and inserted as a Markdown image. Reject leaves nothing behind.
+- If the service turns the description down, the panel shows the reason it gave. A request makes at most two pictures.
+
 ## Make Textus AI yours
 
 Textus AI learns about you and your work from a few plain Markdown files, not from hidden settings. Each has one job:

@@ -17,6 +17,7 @@ import { usePopupDismiss } from "./usePopupDismiss";
 import { useEditorWindowEvents } from "./useEditorWindowEvents";
 import { useEditorPane, useReviewBar } from "./useReviewBar";
 import { EditorContextMenu, type EditorMenuState } from "./EditorContextMenu";
+import { useIllustrateParagraph } from "./useIllustrateParagraph";
 import { EditorAgentPanel } from "./EditorAgentPanel";
 import { GrammarSuggestion } from "../ai/writing/GrammarSuggestion";
 import { InlineChat } from "../ai/chat/quick-ask/InlineChat";
@@ -184,6 +185,7 @@ export function MilkdownEditor({
     settings,
     filePath,
     onDecided: learning.record,
+    requestImageName,
   });
   const { pendingEdits, conversation, quickConversation, showProposals } =
     proposals;
@@ -393,6 +395,13 @@ export function MilkdownEditor({
     conversations: [conversation, quickConversation],
   });
 
+  const illustrateParagraph = useIllustrateParagraph({
+    run,
+    proposals,
+    agentPanel,
+    t,
+  });
+
   function popOutPanel() {
     handleDetachChat();
     agentPanel.setOpen(false);
@@ -516,6 +525,7 @@ export function MilkdownEditor({
         settings={settings}
         inTour={tour !== null}
         openAgentConversation={openAgentConversation}
+        illustrateParagraph={illustrateParagraph}
         triggerCompletion={triggerCompletion}
         triggerGrammarCheck={triggerGrammarCheck}
         copyOrCut={copyOrCut}

@@ -29,6 +29,15 @@ import { findInOrder, locateHunks } from "./sentence-locate";
 import { nextFocusAfterChange, orderForReview } from "./pending-edit-focus";
 import { locatePlainText } from "./text-locate";
 import type { EditProposal } from "../types";
+import {
+  discardGeneratedImage,
+  generatedImageData,
+  loadGeneratedImage,
+  rememberSaved,
+  savedSrc,
+  withSavedSrc,
+} from "./generated-images";
+import type { GeneratedImageData } from "../../platform/ipc";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
@@ -310,14 +319,30 @@ function decidedChanges(
  * preview. The full proposal lifecycle - streaming, stop/failure endings,
  * what a consecutive prompt supersedes - is laid out in docs/design/ai-proposals.md.
  */
-export function usePendingEdits(
-  run: EditorRunner,
+export interface PendingEditOptions {
   /** The writer accepted or rejected a proposal (not one superseded,
    *  refused or stopped): what it decided, change by change - in place of
    *  what it decided about it before. No changes: an undo brought an
    *  accepted proposal back, undecided again. */
-  onDecided?: (callId: string, changes: DecidedChange[]) => void,
+  onDecided?: (callId: string, changes: DecidedChange[]) => void;
+  /** Saves an accepted picture the way Settings › Images says and returns
+   *  the src to write - null when the user cancelled (naming it). Throws
+   *  when it can't be saved. */
+  storeImage?: (
+    image: GeneratedImageData,
+    alt: string,
+  ) => Promise<string | null>;
+  /** Tells the user an accepted picture couldn't be saved. */
+  onImageError?: (err: unknown) => void;
+}
+
+export function usePendingEdits(
+  run: EditorRunner,
+  options: PendingEditOptions = {},
 ) {
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+  const onDecided = options.onDecided;
   const [previews, setPreviews] = useState<PendingPreview[]>([]);
   const onDecidedRef = useRef(onDecided);
   onDecidedRef.current = onDecided;
@@ -644,6 +669,49 @@ export function usePendingEdits(
     [run],
   );
 
+  // Accepted pictures being saved, by call id: a second Accept while the
+  // first is still saving must not save a second copy.
+  const savingImages = useRef(new Set<string>());
+  const acceptRef = useRef<(callId: string, text?: string) => boolean>(
+    () => false,
+  );
+
+  /** A picture's Accept: saved first (Settings › Images), then written
+   *  with its src like any insertion. Saved once - an undo that brings the
+   *  proposal back, accepted again, writes the same file. */
+  const acceptImage = useCallback(
+    (callId: string, proposal: EditProposal): boolean => {
+      const image = proposal.image!;
+      const text = proposal.text ?? "";
+      const src = savedSrc(image.id);
+      if (src)
+        return acceptRef.current(callId, withSavedSrc(text, image.id, src));
+      const { storeImage, onImageError } = optionsRef.current;
+      if (!storeImage || savingImages.current.has(callId)) return false;
+      savingImages.current.add(callId);
+      void (async () => {
+        try {
+          const data =
+            generatedImageData(image.id) ??
+            ((await loadGeneratedImage(image.id))
+              ? generatedImageData(image.id)
+              : null);
+          if (!data) throw new Error("the picture is no longer available");
+          const stored = await storeImage(data, image.alt);
+          if (stored === null) return;
+          rememberSaved(image.id, stored);
+          acceptRef.current(callId, withSavedSrc(text, image.id, stored));
+        } catch (err) {
+          onImageError?.(err);
+        } finally {
+          savingImages.current.delete(callId);
+        }
+      })();
+      return true;
+    },
+    [],
+  );
+
   const accept = useCallback(
     (
       callId: string,
@@ -652,6 +720,18 @@ export function usePendingEdits(
        *  against the same target the preview resolved. */
       textOverride?: string,
     ): boolean => {
+      if (textOverride === undefined) {
+        let picture: EditProposal | null = null;
+        run((ctx) => {
+          const view = ctx.get(editorViewCtx);
+          const preview = pendingEditKey
+            .getState(view.state)
+            ?.previews.find((p) => p.callId === callId);
+          if (preview?.proposal.image && !preview.streaming)
+            picture = preview.proposal;
+        });
+        if (picture) return acceptImage(callId, picture);
+      }
       let ok = false;
       let stillStreaming = false;
       let rejectedAll = false;
@@ -820,8 +900,9 @@ export function usePendingEdits(
       }));
       return ok;
     },
-    [run, decided],
+    [run, decided, acceptImage],
   );
+  acceptRef.current = accept;
 
   /** Takes a proposal off the document as rejected. `learn`: the writer
    *  rejected it (Reject, ✕) - not a new request superseding it, the
@@ -834,6 +915,9 @@ export function usePendingEdits(
         const preview = (
           pendingEditKey.getState(view.state)?.previews ?? []
         ).find((p) => p.callId === callId);
+        // A rejected picture leaves nothing behind.
+        if (preview?.proposal.image)
+          discardGeneratedImage(preview.proposal.image.id);
         view.dispatch(
           view.state.tr.setMeta(pendingEditKey, { type: "remove", callId }),
         );
@@ -902,6 +986,8 @@ export function usePendingEdits(
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
         const previews = pendingEditKey.getState(view.state)?.previews ?? [];
+        for (const p of previews)
+          if (p.proposal.image) discardGeneratedImage(p.proposal.image.id);
         view.dispatch(view.state.tr.setMeta(pendingEditKey, { type: "clear" }));
         if (learn) for (const p of previews) decided(p, () => false);
         setStatuses((prev) => {

@@ -18,6 +18,7 @@ import {
 } from "../../ui/motion";
 import type { FoldAttention } from "../../editor/html/details-fold";
 import type { EditProposal } from "../types";
+import { showGeneratedImages } from "./generated-images";
 import {
   pairedPrefix,
   splitSentences,
@@ -388,7 +389,10 @@ function awaitKatex(span: HTMLElement, markdown: string) {
   waitingForKatex.set(span, markdown);
 }
 
-function fillPendingHtml(span: HTMLElement, markdown: string) {
+function fillPendingHtml(span: HTMLElement, source: string) {
+  // A proposed picture (generate_image) is drawn from its bytes, which
+  // only the preview holds.
+  const markdown = showGeneratedImages(source);
   const parts = splitMermaidFences(markdown);
   let nodes: Node[];
   if (!parts) {
@@ -659,7 +663,9 @@ function textWidget(
       span.dataset.call = p.callId;
       span.dataset.index = "-1";
       const text = p.proposal.text ?? "";
-      if (!animate || prefersReducedMotion()) {
+      // A picture comes in whole: typed out, its Markdown would show
+      // character by character first.
+      if (!animate || prefersReducedMotion() || p.proposal.image) {
         renderPendingHtml(span, text);
         return span;
       }

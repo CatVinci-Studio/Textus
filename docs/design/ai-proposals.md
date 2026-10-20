@@ -53,6 +53,24 @@ A Write proposal is the same green pending block as any insertion: shown,
 not applied, until Accept. With a selection, Write inserts after it
 (`insert_after`), never over it.
 
+### Pictures: `generate_image`
+
+With an image model set (Settings › Textus AI › Image model; none by
+default), Write and Revise also get `generate_image`, whose call is a
+proposal too: an insertion of one Markdown image. The backend makes the
+picture inside the step that returned the call (`ai/images.rs`'s
+`with_images`), keeps it in memory, and records its id in the call's
+arguments, as `postfix_step` fixes a proposal's text - so the call turn the
+frontend receives is already the proposal (`parseImageProposal`). Its text
+names the picture by a placeholder src; only the preview swaps in the bytes
+(`generated-images.ts`), and it comes in whole, never typed out. Accept
+saves the picture the way Settings › Images says for a pasted one, then
+writes the image with the saved src through the same `applyEditRange`;
+undo brings the proposal back, and accepting it again reuses that file.
+Reject lets the picture go in the backend too. A call that made no picture
+(refused by the service, out of quota, at most two per send) is a refusal
+like any other: no preview, and its card is the service's reason.
+
 ## Writing phase: the `ProposalStream` machine
 
 `ai/revision/proposal-stream.ts` - plain logic, no ProseMirror dependency. Every

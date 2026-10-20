@@ -63,6 +63,14 @@ La discussion n'écrit jamais directement dans votre document. Quand vous demand
 - **Au curseur** : si rien n'est sélectionné, Textus AI sait où se trouve votre curseur ; « écris une transition ici » l'insère exactement à cet endroit.
 - **Des commentaires plutôt que des modifications** : demandez une relecture (« quels sont les points faibles ? ») et Textus AI épingle des commentaires à des passages sans les modifier. Chaque carte de commentaire propose **Afficher dans le document**, qui sélectionne le passage concerné.
 
+### 6. Images
+
+Textus AI peut créer une image pour votre document dès que vous choisissez un **Modèle d'image** dans **Réglages > Textus AI**. C'est **Aucun** jusque-là, car chaque image coûte un peu auprès du service. Choisissez un service et un modèle : OpenAI, Google Gemini, Doubao (Volcengine), Alibaba Qwen, Zhipu GLM, SiliconFlow ou tout point d'accès compatible OpenAI. Si vous utilisez déjà ce service pour la conversation, sa clé est reprise ; sinon, les Réglages vous en demandent une.
+
+- Demandez-la en mode Écrire ou Réviser (« ajoute une image du port après le premier paragraphe »), ou faites un clic droit sur un paragraphe et choisissez **Illustrer ce paragraphe**.
+- L'image arrive comme une proposition à sa place, comme toute insertion. Rien n'est enregistré avant que vous acceptiez : elle est alors enregistrée comme **Réglages > Images** le prévoit pour une image collée, et insérée comme image Markdown. Refuser ne laisse rien.
+- Si le service refuse la description, le panneau affiche la raison qu'il a donnée. Une demande crée au plus deux images.
+
 ## Personnaliser Textus AI
 
 Textus AI apprend à vous connaître, vous et votre travail, à partir de quelques fichiers Markdown ordinaires, et non de réglages cachés. Chacun a un seul rôle :

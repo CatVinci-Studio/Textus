@@ -8,6 +8,7 @@
 pub mod agent;
 pub mod capabilities;
 pub mod http;
+pub mod images;
 pub mod models;
 pub mod oauth_login;
 pub mod oauth_page;

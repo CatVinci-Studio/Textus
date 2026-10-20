@@ -30,6 +30,7 @@ export function EditorContextMenu({
   settings,
   inTour,
   openAgentConversation,
+  illustrateParagraph,
   triggerCompletion,
   triggerGrammarCheck,
   copyOrCut,
@@ -47,6 +48,8 @@ export function EditorContextMenu({
   /** This is the tour's practice tab. */
   inTour: boolean;
   openAgentConversation: () => void;
+  /** Asks Textus AI for a picture for the paragraph (useIllustrateParagraph). */
+  illustrateParagraph: (at: { x: number; y: number }) => void;
   triggerCompletion: () => void;
   triggerGrammarCheck: () => void;
   copyOrCut: (cut: boolean) => void;
@@ -77,6 +80,16 @@ export function EditorContextMenu({
               aiItems: [
                 ...((settings.enableAskAi || inTour) && !menu.phone
                   ? [{ label: t.askAi, onSelect: openAgentConversation }]
+                  : []),
+                // A picture costs money: offered once an image model is
+                // chosen (Settings › Textus AI › Image model).
+                ...(settings.enableAskAi && settings.imageModelProvider
+                  ? [
+                      {
+                        label: t.illustrateParagraph,
+                        onSelect: () => illustrateParagraph(menu),
+                      },
+                    ]
                   : []),
                 ...(settings.enableCompletion
                   ? [

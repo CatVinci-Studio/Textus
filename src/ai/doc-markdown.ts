@@ -356,13 +356,15 @@ export function findMarkdownMatch(
   };
 }
 
-/** Whether `text` is block content of its own - several paragraphs, or a
- *  heading/list/quote/fence/table line - rather than words for a sentence. */
+/** Whether `text` is block content of its own - several paragraphs, a
+ *  heading/list/quote/fence/table line, or an image alone (a figure, such
+ *  as generate_image proposes) - rather than words for a sentence. */
 function isBlockText(text: string): boolean {
   const trimmed = text.trim();
   return (
     /\n\s*\n/.test(trimmed) ||
-    /^(#{1,6}\s|[-*+]\s|\d+[.)]\s|>|```|~~~|\|)/.test(trimmed)
+    /^(#{1,6}\s|[-*+]\s|\d+[.)]\s|>|```|~~~|\|)/.test(trimmed) ||
+    /^!\[[^\]\n]*\]\([^)\n]*\)$/.test(trimmed)
   );
 }
 

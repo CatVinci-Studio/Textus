@@ -179,7 +179,12 @@ unit-tested and runs with the normal `cargo test`.
 `live_eval::doubao` is separate: three requests against Volcengine Ark (a
 writing call, a tool call, an image) that check Textus's request shapes for
 the Doubao provider, keyed by `$VOLCENGINE_ARK_API_KEY` and skipped without
-it.
+it. `live_eval::images` makes one picture at each image service whose key is
+set (`OPENAI_API_KEY`, `GEMINI_API_KEY`, `VOLCENGINE_ARK_API_KEY`,
+`DASHSCOPE_API_KEY`, `ZHIPU_API_KEY`, `SILICONFLOW_API_KEY`), with the
+cheapest model and smallest size the image catalog offers there - about one
+to three US cents each; the request and reply shapes themselves are tested
+against local HTTP fixtures in `aicompat::images`.
 
 ## What is deliberately not covered
 

@@ -63,6 +63,14 @@ El chat nunca escribe directamente en tu documento. Si usas un proveedor que adm
 - **En el cursor**: sin nada seleccionado, Textus AI sabe dónde está tu cursor, así que «escribe aquí una transición» inserta el texto justo ahí.
 - **Comentarios en lugar de cambios**: pide una revisión («¿qué flojea aquí?») y Textus AI fija comentarios a los fragmentos sin cambiarlos. Cada tarjeta de comentario tiene **Mostrar en el documento**, que selecciona el fragmento al que se refiere.
 
+### 6. Imágenes
+
+Textus AI puede crear una imagen para tu documento cuando eliges un **Modelo de imagen** en **Ajustes > Textus AI**. Hasta entonces es **Ninguno**, porque cada imagen cuesta un poco en el servicio. Elige un servicio y un modelo: OpenAI, Google Gemini, Doubao (Volcengine), Alibaba Qwen, Zhipu GLM, SiliconFlow o cualquier endpoint compatible con OpenAI. Si ya usas ese servicio para el chat, se usa su clave; si no, Ajustes te pide una.
+
+- Pídelo en el modo Escribir o Editar («añade una imagen del puerto después del primer párrafo»), o haz clic derecho en un párrafo y elige **Ilustrar este párrafo**.
+- La imagen llega como una propuesta en su sitio, como cualquier inserción. No se guarda nada hasta que aceptas: entonces se guarda como dice **Ajustes > Imágenes** para una imagen pegada y se inserta como imagen de Markdown. Rechazar no deja nada.
+- Si el servicio rechaza la descripción, el panel muestra el motivo que dio. Cada petición crea como mucho dos imágenes.
+
 ## Personaliza Textus AI
 
 Textus AI aprende sobre ti y tu trabajo a partir de unos pocos archivos Markdown normales, no de ajustes ocultos. Cada uno tiene una sola función:
