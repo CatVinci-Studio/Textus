@@ -93,6 +93,7 @@ npm run check          # types, lint, unit tests, formatting, README/version/upd
 npm run test:e2e       # the Playwright flows (first time: npm run setup:e2e)
 npm run check:native   # rustfmt, clippy, Rust tests in src-tauri/ (builds dist/ if missing)
 npm run check:all      # all three, in that order
+npm run check:quick    # while you work: `check` for the files you changed only
 ```
 
 `npm run format` and `cargo fmt --all` (in `src-tauri/`) fix formatting in

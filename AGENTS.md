@@ -28,13 +28,15 @@ Same on Linux, macOS and Windows:
 npm install
 npm run tauri dev      # run the app
 npm run check          # types, lint, unit tests, formatting, README/version checks
+npm run check:quick    # the same for only the files you changed - while you work
 npm run test:e2e       # Playwright flows (first time: npm run setup:e2e)
 npm run check:native   # rustfmt, clippy, Rust tests
 npm run check:all      # all three - run before you open a pull request
 ```
 
 If another copy of the e2e suite may be running (another worktree), set
-`PLAYWRIGHT_PORT` to a free port.
+`PLAYWRIGHT_PORT` to a free port. Building in many worktrees:
+[docs/dev/local-builds.md](docs/dev/local-builds.md).
 
 ## How to work
 
