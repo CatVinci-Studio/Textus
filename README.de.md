@@ -180,7 +180,7 @@ Ja: ganz normale .md-Dateien, mit Tabellen, Aufgabenlisten, Fußnoten, Formeln u
 1. Starte Textus. Es öffnet einen leeren Entwurf; eine Datei brauchst du erst beim Speichern.
 2. Öffne **Einstellungen → Textus AI**, wähle einen Anbieter und melde dich unter **Anmeldung & Zugangsdaten** an oder füge einen Schlüssel ein.
 3. Schreib los. Hältst du inne, erscheint die Fortsetzung in Grau; Tab übernimmt sie.
-4. Öffne den KI-Bereich mit dem Knopf **Textus AI** (der Sprechblase) in der Fensterleiste. **Hilfe → Anleitung zu KI-Funktionen** erklärt den Rest.
+4. Öffne den KI-Bereich mit dem Knopf **Textus AI** (der Feder) in der Fensterleiste. **Hilfe → Anleitung zu KI-Funktionen** erklärt den Rest.
 
 Alle Tastenkürzel stehen unter **Einstellungen → Tastenkürzel** und lassen sich dort ändern.
 

@@ -954,9 +954,9 @@ utiliser une.
   tutorialWriteTitle: "Écrire avec l'IA",
   tutorialWriteBody: `En mode Écrire, ${AI_NAME} ne fait qu'ajouter du texte, en vert tant que vous ne l'avez pas accepté.`,
   tutorialWriteOpen:
-    "Ouvrez le panneau IA : l'icône de la bulle, en haut à droite ({shortcut})",
+    "Ouvrez le panneau IA : l'icône de la plume, en haut à droite ({shortcut})",
   tutorialWriteOpenPhone:
-    "Ouvrez le panneau IA : touchez l'icône de la bulle, en haut",
+    "Ouvrez le panneau IA : touchez l'icône de la plume, en haut",
   tutorialWriteSend:
     "Envoyez `Ajoute un paragraphe à mes notes`, puis cliquez sur Accepter",
   tutorialReviewTitle: "Relecture",

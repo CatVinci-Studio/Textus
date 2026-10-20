@@ -926,9 +926,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialWriteTitle: "Mit KI schreiben",
   tutorialWriteBody: `Im Modus Schreiben fügt ${AI_NAME} nur Text hinzu, grün, bis du ihn annimmst.`,
   tutorialWriteOpen:
-    "Öffne den KI-Bereich: das Sprechblasensymbol oben rechts ({shortcut})",
+    "Öffne den KI-Bereich: das Federsymbol oben rechts ({shortcut})",
   tutorialWriteOpenPhone:
-    "Öffne den KI-Bereich: Tippe oben auf das Sprechblasensymbol",
+    "Öffne den KI-Bereich: Tippe oben auf das Federsymbol",
   tutorialWriteSend:
     "Sende `Schreib meine Notizen um einen Absatz weiter` und klick auf Annehmen",
   tutorialReviewTitle: "Lektorat",

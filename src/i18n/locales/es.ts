@@ -942,9 +942,9 @@ para usar una.
   tutorialWriteTitle: "Escribir con IA",
   tutorialWriteBody: `En el modo Escribir, ${AI_NAME} solo añade texto, en verde hasta que lo aceptes.`,
   tutorialWriteOpen:
-    "Abre el panel de IA: el icono del bocadillo, arriba a la derecha ({shortcut})",
+    "Abre el panel de IA: el icono de la pluma, arriba a la derecha ({shortcut})",
   tutorialWriteOpenPhone:
-    "Abre el panel de IA: toca el icono del bocadillo, arriba",
+    "Abre el panel de IA: toca el icono de la pluma, arriba",
   tutorialWriteSend:
     "Envía `Continúa mis notas con un párrafo más` y haz clic en Aceptar",
   tutorialReviewTitle: "Comentarios",

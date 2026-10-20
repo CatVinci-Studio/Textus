@@ -880,8 +880,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialWriteTitle: "AI 쓰기",
   tutorialWriteBody:
     "쓰기 모드의 AI는 글을 더하기만 하며, 수락하기 전까지 초록색으로 보입니다.",
-  tutorialWriteOpen: "오른쪽 위 말풍선 아이콘({shortcut})으로 AI 패널 열기",
-  tutorialWriteOpenPhone: "위쪽 말풍선 아이콘을 탭해 AI 패널 열기",
+  tutorialWriteOpen: "오른쪽 위 깃펜 아이콘({shortcut})으로 AI 패널 열기",
+  tutorialWriteOpenPhone: "위쪽 깃펜 아이콘을 탭해 AI 패널 열기",
   tutorialWriteSend: "`내 노트를 한 문단 더 이어 써 줘`를 보내고 ‘수락’ 클릭",
   tutorialReviewTitle: "검토",
   tutorialReviewBody:

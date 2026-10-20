@@ -934,8 +934,8 @@ export default {
   tutorialWriteTitle: "Написание с ИИ",
   tutorialWriteBody: `В режиме «Написание» ${AI_NAME} только добавляет текст, зелёным, пока вы его не примете.`,
   tutorialWriteOpen:
-    "Откройте панель ИИ: значок облачка справа вверху ({shortcut})",
-  tutorialWriteOpenPhone: "Откройте панель ИИ: нажмите значок облачка вверху",
+    "Откройте панель ИИ: значок пера справа вверху ({shortcut})",
+  tutorialWriteOpenPhone: "Откройте панель ИИ: нажмите значок пера вверху",
   tutorialWriteSend:
     "Отправьте `Продолжи мои заметки ещё одним абзацем` и нажмите «Принять»",
   tutorialReviewTitle: "Рецензия",

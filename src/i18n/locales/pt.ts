@@ -926,9 +926,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialWriteTitle: "Escrever com IA",
   tutorialWriteBody: `No modo Escrever, o ${AI_NAME} só acrescenta texto, em verde até você aceitar.`,
   tutorialWriteOpen:
-    "Abra o painel de IA: o ícone de balão de fala no canto superior direito ({shortcut})",
-  tutorialWriteOpenPhone:
-    "Abra o painel de IA: toque no ícone de balão de fala no topo",
+    "Abra o painel de IA: o ícone da pena no canto superior direito ({shortcut})",
+  tutorialWriteOpenPhone: "Abra o painel de IA: toque no ícone da pena no topo",
   tutorialWriteSend:
     "Envie `Continue minhas notas com mais um parágrafo` e clique em Aceitar",
   tutorialReviewTitle: "Comentários",
