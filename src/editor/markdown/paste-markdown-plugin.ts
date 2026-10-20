@@ -3,6 +3,7 @@ import { Slice } from "@milkdown/kit/prose/model";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { parseMarkdownSource } from "./parse-markdown-source";
+import { joinLinesForTableCell } from "./paste-slice";
 
 /**
  * Milkdown's clipboard plugin only parses pasted text as markdown when the
@@ -16,7 +17,8 @@ import { parseMarkdownSource } from "./parse-markdown-source";
  * HTML (links, tables, real formatting) still goes through the HTML path
  * untouched. Must be registered BEFORE the clipboard plugin - handlePaste
  * props run in registration order and the first to return true wins.
- * Every paste also keeps the spans at its ends (keepPastedSpans below).
+ * Every paste also keeps the spans at its ends (keepPastedSpans below),
+ * and lines pasted into a table cell stay in it (paste-slice.ts).
  */
 
 const RICH_HTML_SELECTOR = [
@@ -106,7 +108,10 @@ export const pasteMarkdownSourcePlugin = $prose(
         // Pasted HTML, Textus's own copies and drags: ProseMirror's slice,
         // which the clipboard plugin pastes as it is.
         transformPasted: (slice, view) =>
-          keepPastedSpans(slice, view.state.selection),
+          joinLinesForTableCell(
+            keepPastedSpans(slice, view.state.selection),
+            view.state.selection.$from,
+          ),
         handlePaste(view, event) {
           const data = event.clipboardData;
           if (!data) return false;
@@ -120,9 +125,13 @@ export const pasteMarkdownSourcePlugin = $prose(
           if (!doc || typeof doc === "string" || doc.content.size === 0)
             return false;
           const parsed = Slice.maxOpen(doc.content);
-          const slice = keepPastedSpans(parsed, view.state.selection);
+          const slice = joinLinesForTableCell(
+            keepPastedSpans(parsed, view.state.selection),
+            view.state.selection.$from,
+          );
           // Text alone the clipboard plugin's own branch markdown-parses
-          // too, but into a slice open through the spans at its ends.
+          // too, but into a slice open through the spans at its ends (and
+          // lines it would spread over a table's cells).
           if (!html && slice === parsed) return false;
           view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
           return true;
