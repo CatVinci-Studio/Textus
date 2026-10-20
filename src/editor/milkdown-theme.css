@@ -41,7 +41,33 @@
   min-height: calc((100vh - 9rem) / var(--content-zoom, 1));
 }
 
+/* A large document's blocks off screen skip layout and paint
+   (content-visibility.ts says why): each remembers the height it was laid
+   out at, and once the document has been laid out whole, those off screen
+   stand in at that height. Containment scopes CSS counters to each block,
+   so blocks that count across the document stay out: headings (a theme's
+   section numbers) and any block holding a display formula (equation
+   numbers, see the counter-reset on .milkdown). Never in print - an export
+   lays out every page. */
+@supports (content-visibility: auto) {
+  .milkdown
+    .ProseMirror.large-doc
+    > :not(h1, h2, h3, h4, h5, h6):not(:has([data-type="math_block"])) {
+    contain-intrinsic-size: auto 4em;
+  }
+
+  .milkdown
+    .ProseMirror.large-doc.skip-offscreen
+    > :not(h1, h2, h3, h4, h5, h6):not(:has([data-type="math_block"])) {
+    content-visibility: auto;
+  }
+}
+
 @media print {
+  .milkdown .ProseMirror > * {
+    content-visibility: visible !important;
+  }
+
   /* Otherwise every printout gets a near-full blank page after the content. */
   .milkdown .ProseMirror {
     min-height: 0;

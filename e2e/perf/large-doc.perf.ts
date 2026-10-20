@@ -8,7 +8,7 @@ import { mixedDoc, plainDoc, type LargeDoc } from "./large-docs";
 // The large-document benchmark (design §6.4): opens each generated
 // document the way a file drop does, then measures opening, typing in the
 // middle, Enter, scrolling end to end, an outline-style jump to the last
-// heading and a save. Not a test - it asserts nothing about the numbers - and not
+// heading, a save and switching to its tab from another. Not a test - it asserts nothing about the numbers - and not
 // in `npm run test:e2e`: `npm run bench:large-doc` (playwright.perf.config.ts).
 //
 //   PERF_DOCS=zh-5k,en-5k   only these documents
@@ -414,6 +414,57 @@ async function jumpToEnd(page: Page) {
   });
 }
 
+/** A second, small document opened beside it, then Ctrl+Tab back and
+ *  forth: the time from the key to the frame after the
+ *  large document is in front again. A tab in the back is display: none,
+ *  so coming to the front lays it out again. */
+async function switchTabs(page: Page, count: number) {
+  await page.evaluate(() => {
+    const w = window as unknown as Record<string, unknown> & {
+      __devEmitTauriEvent: (name: string, payload: unknown) => void;
+    };
+    (w.__devFiles as Record<string, string>)["/bench/small.md"] =
+      "# Small\n\nA short note.\n";
+    w.__devEmitTauriEvent("tauri://drag-drop", {
+      paths: ["/bench/small.md"],
+      position: { x: 0, y: 0 },
+    });
+  });
+  await expect(page.locator(editor)).toContainText("A short note.");
+  const times: number[] = [];
+  for (let i = 0; i < count * 2; i++) {
+    const toLarge = i % 2 === 0;
+    // Ctrl+Tab sent from the page (no round trip in the time), as many
+    // times as it takes; the last one is timed.
+    const ms = await page.evaluate(async (toLarge) => {
+      const front = () =>
+        document.querySelector('[data-active-tab="true"] .ProseMirror')
+          ?.textContent ?? "";
+      const there = () => front().includes("A short note.") !== toLarge;
+      for (let tries = 0; tries < 4; tries++) {
+        const start = performance.now();
+        window.dispatchEvent(
+          new KeyboardEvent("keydown", {
+            key: "Tab",
+            code: "Tab",
+            ctrlKey: true,
+            bubbles: true,
+          }),
+        );
+        while (!there() && performance.now() - start < 2000)
+          await new Promise((r) => requestAnimationFrame(r));
+        if (!there()) continue;
+        await new Promise((r) => requestAnimationFrame(() => setTimeout(r)));
+        return performance.now() - start;
+      }
+      throw new Error("Ctrl+Tab never brought the tab to the front");
+    }, toLarge);
+    if (toLarge) times.push(ms);
+    await page.waitForTimeout(300);
+  }
+  return times;
+}
+
 /** One character typed, then at once File > Save, to the write reaching
  *  "disk": the save serializes what the debounced report hasn't yet. */
 async function saveAfterEdit(page: Page, path: string) {
@@ -464,25 +515,33 @@ test.beforeAll(() => {
 });
 
 for (const doc of docs) {
-  test(`large document: ${doc.name}`, async ({ page }) => {
+  test(`large document: ${doc.name}`, async ({ page, browserName }) => {
     test.setTimeout(15 * 60_000);
     await page.route("http://asset.localhost/**", (route) =>
       route.fulfill({ contentType: "image/png", body: PNG }),
     );
     await page.addInitScript(installProbes);
-    await openApp(page, { settings: { language: "en" } });
+    // Tabs, not windows: the tab switch below needs two in one window.
+    await openApp(page, {
+      settings: { language: "en", newDocumentMode: "tab" },
+    });
     const path = `/bench/${doc.name}.md`;
 
     const open = await openDoc(page, doc, path);
     await expect(page.locator(editor)).toContainText(doc.lastHeading);
 
     const typing = await typeInMiddle(page, doc);
-    const ime = doc.name.startsWith("zh") ? await typeWithIme(page, 50) : [];
+    // Chromium only: the composition is sent through its DevTools protocol.
+    const ime =
+      browserName === "chromium" && doc.name.startsWith("zh")
+        ? await typeWithIme(page, 50)
+        : [];
     const enter = await pressEnter(page, 20);
     const frames = await scrollThrough(page);
     const jump = await jumpToEnd(page);
     await caretToMiddle(page);
     const save = await saveAfterEdit(page, path);
+    const tabs = await switchTabs(page, 5);
 
     // The costliest plugin hooks while typing: ms per call.
     const topPlugins = Object.fromEntries(
@@ -517,6 +576,8 @@ for (const doc of docs) {
       jumpMs: Math.round(jump.ms),
       saveP50: r1(pct(save, 0.5)),
       saveMax: r1(Math.max(...save)),
+      tabSwitchP50: Math.round(pct(tabs, 0.5)),
+      tabSwitchMax: Math.round(Math.max(...tabs)),
       topPlugins,
     };
     console.log(JSON.stringify(result, null, 1));
