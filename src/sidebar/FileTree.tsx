@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DirEntryInfo } from "../platform/fs-types";
 import {
   ArrowUpIcon,
@@ -18,6 +18,7 @@ import { iosFiles } from "../platform/ios-files";
 import { ContextMenu } from "../editor/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import { useLongPress } from "../utils/hooks/useLongPress";
+import { useTreeKeys } from "../ui/useTreeKeys";
 import { FileSearch } from "./FileSearch";
 import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
@@ -64,6 +65,8 @@ export function FileTree({
   // opened folder either: that is the edge of what the user opened.
   const parent = isIOSApp || root === folder ? null : parentDir(root);
   const searching = query.trim() !== "";
+  const treeRef = useRef<HTMLDivElement>(null);
+  const treeKeys = useTreeKeys(treeRef);
 
   return (
     <div className="file-tree">
@@ -131,14 +134,21 @@ export function FileTree({
             </button>
           </Tooltip>
         </div>
-        <DirNode
-          key={`${root}\n${generation}`}
-          path={root}
-          depth={0}
-          activePath={activePath}
-          onFileSelect={onFileSelect}
-          onEnter={onRootChange}
-        />
+        <div
+          ref={treeRef}
+          role="tree"
+          aria-label={t.treeTab}
+          onKeyDown={treeKeys}
+        >
+          <DirNode
+            key={`${root}\n${generation}`}
+            path={root}
+            depth={0}
+            activePath={activePath}
+            onFileSelect={onFileSelect}
+            onEnter={onRootChange}
+          />
+        </div>
       </div>
     </div>
   );
@@ -197,8 +207,11 @@ function DirNode({
   return (
     <div className="dir-node">
       {depth > 0 && (
-        <button
+        <div
           className="tree-row"
+          role="treeitem"
+          aria-level={depth}
+          aria-expanded={open}
           style={{ paddingLeft: depth * 14 }}
           onClick={() => setOpen(!open)}
           onDoubleClick={() => onEnter(path)}
@@ -210,10 +223,10 @@ function DirNode({
             <FolderIcon className="tree-icon" />
           )}
           <span className="tree-label">{basename(path)}</span>
-        </button>
+        </div>
       )}
       {open && sorted && (
-        <div className="dir-children">
+        <div className="dir-children" role={depth > 0 ? "group" : "none"}>
           {sorted.map((entry) =>
             entry.is_dir ? (
               <DirNode
@@ -256,8 +269,11 @@ function FileNode({
   const press = useLongPress();
   return (
     <>
-      <button
+      <div
         className={`tree-row ${active ? "tree-row-active" : ""}`}
+        role="treeitem"
+        aria-level={depth}
+        aria-selected={active}
         style={{ paddingLeft: depth * 14 + 12 }}
         onClick={() => {
           if (!press.consumeClick()) onSelect(entry.path);
@@ -266,7 +282,7 @@ function FileNode({
       >
         <Icon className="tree-icon" />
         <span className="tree-label">{entry.name}</span>
-      </button>
+      </div>
       <Presence show={!!press.at} exitMs={250}>
         {press.at && (
           <ContextMenu

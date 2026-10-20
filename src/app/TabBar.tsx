@@ -36,7 +36,7 @@ interface TabBarProps {
   // release it becomes the real tab in that same slot.
   previewTab: { title: string; dirty: boolean; x: number } | null;
   /** What the icon-only buttons' tooltips and a screen reader say. */
-  labels: { close: string; add: string; unsaved: string };
+  labels: { tabs: string; close: string; add: string; unsaved: string };
 }
 
 // How far a tab must be dragged vertically, away from the bar, before it
@@ -239,8 +239,41 @@ export function TabBar({
     prev.tabIds = tabs.map((tab) => tab.id);
   }, [previewTab, tabs]);
 
+  // A tab list: ← / → (and Home / End) move between the tabs, Enter or
+  // Space shows the one with the focus, Delete closes it. Only the tab in
+  // front is in the tab order.
+  function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const pills = Array.from(
+      barRef.current?.querySelectorAll<HTMLElement>('[role="tab"]') ?? [],
+    );
+    const at = pills.indexOf(e.target as HTMLElement);
+    if (at === -1 || e.altKey || e.ctrlKey || e.metaKey) return;
+    const id = pills[at].dataset.flipId!;
+    let next: HTMLElement | undefined;
+    if (e.key === "ArrowRight") next = pills[(at + 1) % pills.length];
+    else if (e.key === "ArrowLeft")
+      next = pills[(at - 1 + pills.length) % pills.length];
+    else if (e.key === "Home") next = pills[0];
+    else if (e.key === "End") next = pills[pills.length - 1];
+    else if (e.key === "Enter" || e.key === " ") onActivate(id);
+    else if (e.key === "Delete") {
+      // The focus stays in the strip, on the neighbour that takes the
+      // closed tab's place.
+      (pills[at + 1] ?? pills[at - 1])?.focus();
+      onClose(id);
+    } else return;
+    e.preventDefault();
+    next?.focus();
+  }
+
   return (
-    <div className="tab-bar" ref={barRef}>
+    <div
+      className="tab-bar"
+      ref={barRef}
+      role="tablist"
+      aria-label={labels.tabs}
+      onKeyDown={onKeyDown}
+    >
       {/* Pills glide aside for a new tab and close up behind a closed
           one, which shrinks away in its old place; a new one pops in. */}
       <ListMotion
@@ -273,8 +306,16 @@ export function TabBar({
           <span className="tab-pill-title">{previewTab.title}</span>
         </div>
       )}
-      <Tooltip text={labels.add}>
-        <button className="tab-bar-add" data-flip-id="__add__" onClick={onAdd}>
+      {/* The pointer's File › New File (Ctrl/⌘ + N, the keyboard's): a tab
+        list holds only tabs, so it stays out of the list's tree. */}
+      <Tooltip text={labels.add} description={null}>
+        <button
+          className="tab-bar-add"
+          data-flip-id="__add__"
+          tabIndex={-1}
+          aria-hidden="true"
+          onClick={onAdd}
+        >
           +
         </button>
       </Tooltip>
@@ -451,6 +492,9 @@ function TabPill({
       ref={elRef}
       data-flip-id={tab.id}
       className={`tab-pill ${isActive ? "tab-pill-active" : ""}`}
+      role="tab"
+      aria-selected={isActive}
+      tabIndex={isActive ? 0 : -1}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -473,10 +517,12 @@ function TabPill({
         />
       )}
       <span className="tab-pill-title">{title}</span>
-      <Tooltip text={labels.close}>
-        <button
+      {/* The pointer's close; the keyboard's is Delete on the tab (or
+        Ctrl/⌘ + W). Not a button: a tab holds no control of its own. */}
+      <Tooltip text={labels.close} description={null}>
+        <span
           className="tab-pill-close"
-          aria-label={labels.close}
+          aria-hidden="true"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
@@ -484,7 +530,7 @@ function TabPill({
           }}
         >
           <CloseIcon />
-        </button>
+        </span>
       </Tooltip>
     </div>
   );

@@ -165,6 +165,14 @@ and the green vanish under the pointer and fade back. The review bar's
 sets on its widgets (no widget is keyed by it), and the paragraph's flash
 (`editor/reveal-position.ts`) is a Web Animation, not a class.
 
+**From the keyboard.** `F7` and `Shift + F7` move the same pointer from
+anywhere in the window (`document-view/useReviewBar.ts`) and put the caret
+at the change. With the pointer on a sentence, `Ctrl/⌘ + Enter` takes it
+and `Ctrl/⌘ + Backspace` (the caret in the proposal) keeps its original,
+as its ✓ / ✕ do; with no pointer they accept or reject the whole proposal,
+as before. A screen reader hears each step and each decision
+(`useRevisionAnnouncements`, `usePendingEdits`' `onDecided`).
+
 **The tint is the text's.** New text over several lines - hard breaks
 (`\`, two trailing spaces, `<br>`) or two paragraphs - is tinted line by
 line (`renderPendingHtml`'s `.pending-line`), with the breaks between the

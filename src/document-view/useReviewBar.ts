@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
+import { TextSelection } from "@milkdown/kit/prose/state";
+import { useLatest } from "../utils/hooks/useLatest";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import { revealPosition } from "../editor/reveal-position";
 import type { PendingEdits } from "./useEditorProposals";
@@ -74,10 +76,42 @@ export function useReviewBar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingEdits.decidable.length]);
 
-  function stepReview(delta: 1 | -1) {
+  /** ‹ / › in the review bar; F7 / Shift+F7 (`caret`) also put the caret
+   *  at the change, in the text, where Ctrl/⌘ + Enter and Ctrl/⌘ +
+   *  Backspace decide it. */
+  function stepReview(delta: 1 | -1, { caret = false } = {}) {
     const stop = pendingEdits.stepReview(delta);
-    if (stop) run((ctx) => revealPosition(ctx.get(editorViewCtx), stop.from));
+    if (!stop) return;
+    run((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      if (caret) {
+        const at = Math.min(stop.from, view.state.doc.content.size);
+        view.dispatch(
+          view.state.tr.setSelection(
+            TextSelection.near(view.state.doc.resolve(at)),
+          ),
+        );
+        view.focus();
+      }
+      revealPosition(view, stop.from);
+    });
   }
+
+  // F7 and Shift+F7 step through the changes from anywhere in the window,
+  // as in a word processor's review: the way to them without a mouse.
+  const stepRef = useLatest(stepReview);
+  const stops = pendingEdits.reviewStops.length;
+  useEffect(() => {
+    if (!isActive || stops === 0) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "F7" || e.altKey || e.ctrlKey || e.metaKey) return;
+      if ((e.target as Element).closest?.('[aria-modal="true"]')) return;
+      e.preventDefault();
+      stepRef.current(e.shiftKey ? -1 : 1, { caret: true });
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [isActive, stops, stepRef]);
 
   // A card's sentence or "Show in text": point the review bar there and
   // bring it into view.

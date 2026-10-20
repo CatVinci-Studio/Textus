@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { parseHeadings } from "./outline-parse";
 import { ChevronIcon } from "../ui/icons";
 import { useSettings } from "../settings/SettingsContext";
 import { scrollBehavior } from "../ui/motion";
 import { unfoldElement } from "../editor/html/details-fold";
+import { useTreeKeys } from "../ui/useTreeKeys";
 import "./FileTree.css";
 
 interface OutlineProps {
@@ -79,6 +80,8 @@ export function Outline({ content }: OutlineProps) {
     });
   }, [content]);
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const treeRef = useRef<HTMLDivElement>(null);
+  const treeKeys = useTreeKeys(treeRef);
   // The section being read is marked, following the scroll (any scroller:
   // the event doesn't bubble, so it is caught on its way down).
   const [current, setCurrent] = useState(-1);
@@ -121,38 +124,53 @@ export function Outline({ content }: OutlineProps) {
       return next;
     });
 
+  // A tree: each row a heading, the arrow keys fold and walk it
+  // (ui/useTreeKeys.ts), Enter goes to the heading. The chevron is the
+  // pointer's way to fold; the keyboard's is ← / →.
   return (
-    <div className="file-tree">
+    <div
+      className="file-tree"
+      ref={treeRef}
+      role="tree"
+      aria-label={t.outlineTab}
+      onKeyDown={treeKeys}
+    >
       {visible.map((h) => {
         const isCollapsed = collapsed.has(h.id);
         return (
           <div
             key={h.id}
             className="outline-row"
+            role="treeitem"
+            aria-level={h.level}
+            aria-expanded={h.hasChildren ? !isCollapsed : undefined}
+            aria-current={h.index === current ? "location" : undefined}
             style={{ paddingLeft: (h.level - 1) * 14 }}
+            onClick={() => scrollToHeading(h.index)}
           >
             {h.hasChildren ? (
-              <button
+              <span
                 className="outline-toggle"
-                onClick={() => toggle(h.id)}
+                data-tree-toggle
+                aria-hidden="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggle(h.id);
+                }}
                 title={isCollapsed ? t.outlineExpand : t.outlineCollapse}
-                aria-label={isCollapsed ? t.outlineExpand : t.outlineCollapse}
-                aria-expanded={!isCollapsed}
               >
                 <ChevronIcon
                   className={`chevron ${isCollapsed ? "" : "chevron-open"}`}
                 />
-              </button>
+              </span>
             ) : (
               <span className="outline-toggle-spacer" />
             )}
-            <button
+            <span
               className={`tree-row${h.index === current ? " tree-row-active" : ""}`}
-              aria-current={h.index === current ? "location" : undefined}
-              onClick={() => scrollToHeading(h.index)}
             >
               <span className="tree-label">{headingLabel(h.text)}</span>
-            </button>
+            </span>
           </div>
         );
       })}

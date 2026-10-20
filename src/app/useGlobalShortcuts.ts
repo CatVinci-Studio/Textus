@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { cycleRegion, trackRegionFocus } from "./regions";
 import { useSettings, type HeadingAction } from "../settings/SettingsContext";
 import { adjacentTabId, type DocTab } from "../document/doc-tabs";
 import { modIsMeta } from "../platform/os";
@@ -144,6 +145,16 @@ export function useGlobalShortcuts(opts: {
         return;
       }
 
+      // F6 / Shift+F6: the next or previous region (app/regions.ts) - the
+      // keyboard's way out of the editor, where Tab indents. Not in a
+      // dialog, which keeps the focus (the check above).
+      if (combo === "f6" || combo === "shift+f6") {
+        e.preventDefault();
+        e.stopPropagation();
+        cycleRegion(combo === "f6" ? 1 : -1);
+        return;
+      }
+
       // F11 is THE fullscreen key on Windows, and the only way to reach
       // fullscreen where the app draws its own frame: macOS has the native
       // View > Enter Full Screen item (Ctrl+Cmd+F), but muda's predefined
@@ -221,7 +232,11 @@ export function useGlobalShortcuts(opts: {
     // Capture before the editor's keymaps: shortcuts such as Ctrl+F must not
     // disappear merely because an editor plugin stops the bubbling event.
     window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
+    const untrack = trackRegionFocus();
+    return () => {
+      window.removeEventListener("keydown", onKeyDown, true);
+      untrack();
+    };
   }, [
     saveTab,
     requestCloseTab,

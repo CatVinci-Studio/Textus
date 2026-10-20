@@ -64,6 +64,7 @@ export function MainPane({
           onReorder={onReorder}
           previewTab={previewTab}
           labels={{
+            tabs: t.menuDocuments,
             close: t.menuCloseTab,
             add: t.menuNewFile,
             unsaved: t.unsavedIndicator,

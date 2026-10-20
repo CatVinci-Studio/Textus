@@ -34,6 +34,7 @@ test("Settings › Shortcuts lists the fixed shortcuts, read-only, by menu", asy
     "Edit",
     "View",
     "Format",
+    "Keyboard Navigation",
   ]);
   const row = (label: string) =>
     fixed.locator(".shortcut-fixed-row", {

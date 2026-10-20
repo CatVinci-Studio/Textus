@@ -651,6 +651,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   shortcutParagraph: "Absatz",
   shortcutFixedGroupLabel: "Feste Tastenkürzel",
   shortcutLeaveBlock: "Codeblock, Tabelle oder Zitat verlassen",
+  shortcutKeyboardGroupLabel: "Tastaturnavigation",
+  shortcutCycleRegions: "Zwischen den Bereichen des Fensters wechseln",
+  shortcutTakeChange:
+    "Die Änderung übernehmen, auf die die Überprüfungsleiste zeigt",
+  shortcutKeepOriginal: "Das Original dieser Änderung behalten",
   contentThemeLabel: "Editor-Design",
   themeDeleteButton: "Design löschen",
   themeImportLabel: "Design aus einer CSS-Datei hinzufügen",

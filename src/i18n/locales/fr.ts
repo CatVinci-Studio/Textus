@@ -675,6 +675,11 @@ utiliser une.
   shortcutFixedGroupLabel: "Raccourcis fixes",
   shortcutLeaveBlock:
     "Sortir d'un bloc de code, d'un tableau ou d'une citation",
+  shortcutKeyboardGroupLabel: "Navigation au clavier",
+  shortcutCycleRegions: "Passer d’une zone de la fenêtre à l’autre",
+  shortcutTakeChange:
+    "Accepter la modification que désigne la barre de révision",
+  shortcutKeepOriginal: "Garder l’original de cette modification",
   contentThemeLabel: "Thème de l'éditeur",
   themeDeleteButton: "Supprimer le thème",
   themeImportLabel: "Ajouter un thème depuis un fichier CSS",

@@ -96,11 +96,18 @@ const RESERVED_COMBOS = new Set([
   // Fixed AI keys: accept a pending edit, apply a grammar fix, cycle
   // completion candidates (pending-edit, grammar-check, ghost-text plugins).
   "mod+enter",
+  // Reject a pending edit, or keep the original of the sentence pointed at.
+  "mod+backspace",
   "alt+enter",
   "alt+[",
   "alt+]",
   // Fullscreen by convention (and the app's own handler on Windows).
   "f11",
+  // Round the window's regions, and through Textus AI's changes.
+  "f6",
+  "shift+f6",
+  "f7",
+  "shift+f7",
 ]);
 // macOS's fixed Next/Previous Tab, Cmd+Shift+] and [ (app/fixed-shortcuts.ts),
 // as a US keyboard records them with Shift held, and as written.
