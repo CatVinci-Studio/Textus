@@ -83,7 +83,8 @@
 }
 
 .review-note-hot {
-  transform: translateX(-3px);
+  /* Still under reduced motion: the darker tint says it alone. */
+  transform: translateX(calc(var(--motion-distance-sm) * -0.75));
 }
 
 .review-note-hot::after {
@@ -93,7 +94,7 @@
 @keyframes review-note-in {
   from {
     opacity: 0;
-    transform: translateX(14px);
+    transform: translateX(calc(var(--motion-distance-md) * 1.75));
   }
 }
 

@@ -171,6 +171,21 @@
   transition: background var(--dur-instant) var(--ease-standard);
 }
 
+/* With more contrast asked for, or the system drawing the colours, new
+   text is underlined as well as tinted - the tint may be faint or gone -
+   and the original's strike is thicker. */
+@media (prefers-contrast: more), (forced-colors: active) {
+  .pending-insert {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+
+  .pending-delete {
+    text-decoration-thickness: 2px;
+  }
+}
+
 /* New text over several lines (pending-edit-plugin's renderPendingHtml):
    the tint is on each line's span, the line breaks between them get none -
    one box over all of them painted its padding at every line end and a
