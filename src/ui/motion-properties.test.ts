@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 // docs/design/design-language.md › Motion: only opacity and transform
@@ -9,7 +10,7 @@ import { describe, expect, it } from "vitest";
 // src/ is read here, its transitions and keyframes listed, and anything
 // else named below with the reason it may.
 
-const SRC = new URL("..", import.meta.url).pathname;
+const SRC = fileURLToPath(new URL("..", import.meta.url));
 
 /** What may move or change, on its own. */
 const ALLOWED = new Set([
@@ -126,7 +127,8 @@ describe("motion animates only opacity and transform", () => {
   });
 
   for (const file of files) {
-    const name = relative(SRC, file);
+    // Forward slashes on every platform, as EXCEPTIONS names them.
+    const name = relative(SRC, file).split(sep).join("/");
     it(name, () => {
       const offending = animatedProperties(readFileSync(file, "utf8")).filter(
         (entry) => {
