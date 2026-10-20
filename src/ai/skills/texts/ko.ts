@@ -74,8 +74,8 @@ export default {
   },
   "academic-polish": {
     label: "논문 다듬기",
-    hint: "격식 있고 신중한 학술 표현으로 다듬고, 인용은 건드리지 않습니다",
-    aliases: ["논문", "학술"],
+    hint: "논문과 연구계획서를 상투적 표현 없이 정확하고 절제된 학술 문체로 다듬고, 수치와 인용은 그대로 둡니다",
+    aliases: ["논문", "학술", "연구계획서"],
   },
   "social-post": {
     label: "SNS 게시물",

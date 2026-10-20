@@ -75,8 +75,8 @@ export default {
   },
   "academic-polish": {
     label: "學術潤飾",
-    hint: "改成正式、分寸得宜的學術用語，引文不動",
-    aliases: ["論文潤飾"],
+    hint: "論文與計畫書：正式、分寸得當，刪去套話，數字和引用不動",
+    aliases: ["論文潤飾", "計畫書", "研究計畫書"],
   },
   "social-post": {
     label: "社群貼文",

@@ -1160,6 +1160,7 @@ mod tests {
             ),
             ("clreq", "Requirements for Chinese Text Layout"),
             ("JLReq", "Requirements for Japanese Text Layout"),
+            ("academic-humanizer", "Copyright (c) 2026 AIScientists-Dev"),
         ];
         for (source, line) in needs {
             if sources.contains(source) {
@@ -1470,6 +1471,45 @@ mod tests {
         let message = expand_message("/theme a calm dark page", &skills, "", "en");
         assert!(message.starts_with("<skill name=\"theme\">\n"));
         assert!(message.contains("`--editor-bg`") && message.ends_with("a calm dark page"));
+    }
+
+    #[test]
+    fn academic_polish_covers_grants_with_its_notice_kept_out_of_the_prompt() {
+        let skill = find("academic-polish").expect("academic-polish is built in");
+        assert_eq!(skill.category.as_deref(), Some("format"));
+        assert_eq!(skill.invocation, Invocation::Both, "offered to the model");
+        assert!(skill.packs.contains(&"standards#ai-tells".to_string()));
+        // The MIT notice travels with the file (and a Customize… copy) as
+        // YAML comments, which cost the model nothing.
+        let raw = raw("academic-polish").unwrap();
+        assert!(raw.contains("# Copyright (c) 2026 AIScientists-Dev"));
+        assert!(raw.contains("# Permission is hereby granted"));
+        assert!(!skill.prompt.contains("AIScientists") && !skill.description.contains('#'));
+        // Its rules on what never changes, and that it isn't for hiding
+        // AI use, reach the model.
+        for rule in [
+            "cite key",
+            "Grant proposals",
+            "国自然申请书",
+            "English only: no em dashes",
+            "never change, drop, merge or reorder",
+            "AI-use disclosure",
+        ] {
+            assert!(skill.prompt.contains(rule), "{rule}");
+        }
+        let skills: Vec<AgentSkill> = skills().to_vec();
+        for typed in [
+            "/academic-polish",
+            "/学术润色",
+            "/基金申请书",
+            "/förderantrag",
+        ] {
+            let message = expand_message(&format!("{typed} 立项依据"), &skills, "", "zh");
+            assert!(
+                message.starts_with("<skill name=\"academic-polish\">\n"),
+                "{typed}"
+            );
+        }
     }
 
     #[test]

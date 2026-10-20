@@ -75,8 +75,8 @@ export default {
   },
   "academic-polish": {
     label: "Revisão acadêmica",
-    hint: "Linguagem acadêmica formal e cuidadosa, sem mexer nas citações",
-    aliases: ["acadêmico", "academico"],
+    hint: "Redação acadêmica formal e comedida para artigos e propostas, sem fórmulas vazias; citações intactas",
+    aliases: ["acadêmico", "academico", "proposta"],
   },
   "social-post": {
     label: "Post para redes sociais",

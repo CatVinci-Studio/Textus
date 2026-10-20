@@ -140,9 +140,9 @@ characters of plain text either side, blocks separated by a newline.
 The built-in writing skills (the 18 skills of the built-in skills
 catalogue, `src-tauri/src/ai/skills/`) have their own suite,
 `live_eval/agent_builtin.rs`, run as `agent-builtin` so the `agent`
-matrix's numbers stay comparable with earlier rounds. It has 76 cases:
+matrix's numbers stay comparable with earlier rounds. It has 79 cases:
 
-- **56 skill cases**, `builtin/<skill>/<lang>/<case>`, two to four per
+- **58 skill cases**, `builtin/<skill>/<lang>/<case>`, two to four per
   skill: `continue-story` (zh with library and fiction profile, en matched
   by description, ja dialogue marks, zh options only), `describe`,
   `dialogue` (zh punctuation only, en tags, es raya, de §79 commas),
@@ -153,12 +153,15 @@ matrix's numbers stay comparable with earlier rounds. It has 76 cases:
   guard), `translate` (en->zh, zh->ja, Simplified->Taiwan), `proofread`
   (seeded errors in zh, en, fr and ko), `continuity` (library and earlier
   chapters), `email`, `notice` (zh 请示, ko 공문서, en notice, zh-Hant 函),
-  `minutes`, `academic-polish`, `social-post` (X, 小红书, the advertising
+  `minutes`, `academic-polish` (claims, a literature review, an English
+  introduction with over-claims and a citation list, a Chinese 国自然
+  立项依据: every number and citation kept), `social-post` (X, 小红书, the advertising
   law), `headline` (options, a 公众号 title, a project skill that shadows
   the built-in) and `summarize`.
-- **20 routing cases**, no `/`: 14 `route/<skill>/<lang>` requests whose
+- **21 routing cases**, no `/`: 15 `route/<skill>/<lang>` requests whose
   wording should load that skill by its description (one per model-invoked
-  skill, across all ten languages), and 6 `route/none/<lang>/<case>`
+  skill, across all ten languages, and a 基金申请书 request for
+  `academic-polish`), and 6 `route/none/<lang>/<case>`
   requests that should load none - a question about the document, "怎么开启续写？"
   (the completion setting, not `continue-story`), "Make the second
   paragraph shorter." (`tighten` is `/`-only), a question about a selected
@@ -219,7 +222,7 @@ TEXTUS_EVAL_JUDGE=0 TEXTUS_EVAL_BUDGET_USD=4 TEXTUS_EVAL_SPEND_FILE=~/textus-eva
 ```
 
 The whole suite is about $2 at list prices with `TEXTUS_EVAL_JUDGE=0`
-(76 cases); `TEXTUS_EVAL_FILTER=builtin/` or `route/` runs one half. The
+(79 cases); `TEXTUS_EVAL_FILTER=builtin/` or `route/` runs one half. The
 judge (`TEXTUS_EVAL_JUDGE` unset) roughly doubles the cost; the cheaper
 way is to judge the `agent-builtin.jsonl` rows afterwards with subagents,
 each row carrying its rubric and the judge's material. Pass bar: every automatic check;

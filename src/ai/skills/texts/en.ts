@@ -74,8 +74,8 @@ export default {
   },
   "academic-polish": {
     label: "Academic polish",
-    hint: "Formal, measured academic wording, citations untouched",
-    aliases: ["academic", "paper"],
+    hint: "Formal, measured wording for papers and grants; citations untouched",
+    aliases: ["academic", "paper", "grant", "proposal"],
   },
   "social-post": {
     label: "Social post",
