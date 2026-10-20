@@ -512,6 +512,38 @@ describe("an edited block is saved so it reads back the same", () => {
     expect(await roundTrip("www.example.org. end\n")).toBe(
       "www.example.org. end\n",
     );
+    // Punctuation and then text is still part of the address.
+    const punctuated = (view: EditorView) => {
+      const { tr, schema, doc } = view.state;
+      view.dispatch(tr.insert(find(doc, " end"), schema.text(".Next")));
+    };
+    expect(await savedAfter("www.example.org end\n", punctuated)).toBe(
+      "[www.example.org](http://www.example.org).Next end\n",
+    );
+  });
+
+  it("keeps a nested list whose first item was emptied a list", async () => {
+    const saved = await savedAfter(
+      "* JavaScript\n  * Angular\n  * Vue\n* PHP\n",
+      deleting("Angular"),
+    );
+    expect(saved).toBe("* JavaScript\n  * &#x20;\n  * Vue\n* PHP\n");
+    const editor = await createTestEditor(saved);
+    editors.push(editor);
+    const nested = editor.action(
+      (ctx) =>
+        ctx.get(editorViewCtx).state.doc.firstChild!.firstChild!.lastChild!,
+    );
+    expect(nested.type.name).toBe("bullet_list");
+    expect(nested.childCount).toBe(2);
+  });
+
+  it("doesn't escape a bracket into a formula written in LaTeX's delimiters", async () => {
+    const saved = await savedAfter(
+      "[key] then \\[x\\] here\n",
+      typingAfter("here", "!"),
+    );
+    expect(saved).toBe("&#91;key] then \\[x\\] here!\n");
   });
 
   it("keeps a heading's closing hashes in its text", async () => {

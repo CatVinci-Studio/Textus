@@ -175,7 +175,8 @@ no way to write what the editor holds, or a reading the parser makes:
   after it is read as part of it.
 - `* 2. foo` as the first line of a new item is read as text: micromark
   doesn't let a list that starts at 2 begin there.
-- Emphasis directly inside emphasis of its kind, `*(*foo*)*` once edited:
+- Emphasis directly inside emphasis of its kind, `*(*foo*)*` once edited,
+  or bold ending in italic, `**a *b***`, with text pasted right after it:
   the serializer writes the same delimiters, which then don't open or
   close. (Bold that starts or ends with punctuation right against a word,
   `foo**(bar)**`, is written with that word's letter as a character

@@ -17,7 +17,7 @@ import type {
   Node as ProseNode,
 } from "@milkdown/kit/prose/model";
 import type { MarkdownNode } from "@milkdown/kit/transformer";
-import type { Link, ListItem } from "mdast";
+import type { Link, List, ListItem } from "mdast";
 import {
   defaultHandlers,
   type Handle,
@@ -92,12 +92,41 @@ function withoutEmptyLead(item: ListItem): void {
     item.children = rest;
 }
 
+/**
+ * An empty item can't interrupt a paragraph, so a nested list that opens
+ * with one - its text deleted - right under its parent item's line read as
+ * that line going on, `* JavaScript\n  *`, and the rest of the list moved.
+ * The item gets a space, written as a reference, which reads as an item
+ * with nothing to see in it.
+ */
+function withoutEmptyFirstItem(node: List, parent: unknown): void {
+  const siblings = ((parent as { children?: unknown[] })?.children ?? []) as {
+    type: string;
+  }[];
+  const before = siblings[siblings.indexOf(node) - 1];
+  if (
+    (parent as { type?: string })?.type !== "listItem" ||
+    before?.type !== "paragraph"
+  )
+    return;
+  const [first] = node.children;
+  const [lead] = first?.children ?? [];
+  if (
+    typeof first?.checked !== "boolean" &&
+    first?.children.length === 1 &&
+    lead.type === "paragraph" &&
+    !(lead.children as unknown[] | undefined)?.length
+  )
+    lead.children = [{ type: "html", value: "&#x20;" }];
+}
+
 const list: Handle = (node, parent, state, info) => {
   node.spread = toBoolean(node.spread);
   for (const item of node.children) {
     item.spread = toBoolean(item.spread);
     withoutEmptyLead(item);
   }
+  withoutEmptyFirstItem(node, parent);
   const listItem = state.handlers.listItem;
   state.handlers.listItem = withEmptyTasks(listItem);
   try {
@@ -602,18 +631,29 @@ function bareWww(node: Link, after = ""): string | null {
   const syntax = (node.data as { linkSyntax?: LinkSyntax } | undefined)
     ?.linkSyntax;
   const text = textOf(node);
+  // GFM ends a bare link at a space or `<`; punctuation at its end is left
+  // out only when nothing but a space (or the end) follows it.
   return syntax === "autolink" &&
     /^www\./i.test(text) &&
     node.url === `http://${text}` &&
-    !/^[^\s<?!.,:*_~)]/.test(after)
+    /^(?:[?!.,:*_~)]*(?:[\s<]|$))/.test(after)
     ? text
     : null;
+}
+
+/** The text right after `node` among its siblings, up to a line end. */
+function textAfter(node: unknown, parent: unknown): string {
+  const siblings = ((parent as { children?: unknown[] })?.children ??
+    []) as Phrasing[];
+  const next = siblings[siblings.indexOf(node as Phrasing) + 1];
+  if (!next) return "";
+  return next.type === "text" ? (next.value ?? "") : "x";
 }
 
 /** Writes a link in the syntax it was read in (LinkSyntax above). */
 const link = Object.assign(
   ((node, parent, state, info) => {
-    const www = bareWww(node, info.after);
+    const www = bareWww(node, textAfter(node, parent));
     if (www) return www;
     const empty =
       (node.data as { linkSyntax?: LinkSyntax } | undefined)?.linkSyntax ===
@@ -898,6 +938,7 @@ function encodeAroundAttention(node: Phrasing): void {
 const root: Handle = (node, parent, state, info) => {
   joinAdjacent(node as Phrasing);
   encodeAroundAttention(node as Phrasing);
+  if (hasLatexMath(node as Phrasing)) withLatexMath.add(state);
   state.unsafe = state.unsafe
     .filter((pattern) => !isAutolinkLiteralGuard(pattern))
     .map((pattern) => (isHeadingGuard(pattern) ? headingGuard : pattern))
@@ -996,13 +1037,31 @@ function withoutLatexPairs(text: Handle): Handle {
     let open = openEscapes.get(state);
     if (!open) openEscapes.set(state, (open = new Set()));
     const opened = open;
+    const latex = withLatexMath.has(state);
     return out.replace(/\\([\s\S])/g, (escape, char: string) => {
-      if (char === "[" || char === "(") opened.add(char);
-      else if (OPENERS[char] && opened.has(OPENERS[char]))
+      if (char === "[" || char === "(") {
+        // A formula written `\\[...\\]` later in the document closes an
+        // escaped opener written as text before it: then the opener is a
+        // reference too.
+        if (latex) return char === "[" ? "&#91;" : "&#40;";
+        opened.add(char);
+      } else if (OPENERS[char] && opened.has(OPENERS[char]))
         return REFERENCES[char];
       return escape;
     });
   };
+}
+
+/** Serializations whose document has maths in LaTeX's delimiters. */
+const withLatexMath = new WeakSet<State>();
+
+function hasLatexMath(node: Phrasing): boolean {
+  if (
+    (node.type === "inlineMath" || node.type === "math") &&
+    (node.data as MathData)?.mathDelimiter?.startsWith("\\")
+  )
+    return true;
+  return node.children?.some(hasLatexMath) ?? false;
 }
 
 /**
