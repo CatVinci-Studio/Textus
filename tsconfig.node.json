@@ -16,6 +16,7 @@
     "playwright.config.ts",
     "e2e",
     "playwright.shots.config.ts",
-    "playwright.perf.config.ts"
+    "playwright.perf.config.ts",
+    "playwright.bench.config.ts"
   ]
 }
