@@ -7,7 +7,8 @@ use crate::ai::ui_language::{UiLanguage, UiNames};
 use crate::ai::web::{self, WebPlan};
 use crate::ai::workspace::{self, AgentWorkspace};
 use aicompat::agent::{
-    run_agent_loop, AgentTurn, ImageAttachment, LoopEvent, ProviderEvent, StepResult, ToolOutput,
+    run_agent_loop, AgentTurn, ImageAttachment, LoopEvent, ProviderEvent, StepResult, ToolCall,
+    ToolOutput,
 };
 use aicompat::capabilities::ThinkingLevel;
 use serde::{Deserialize, Serialize};
@@ -164,28 +165,31 @@ where
     }
 }
 
-/// Runs one tool call: the web tools through ai::web's async core, the rest
-/// as before (tools.rs). `question` is the user's message, which a search
-/// service may rank by.
-fn run_tool(
+/// Runs one tool call: the web tools through ai::web, generate_image
+/// through the request's image model, the rest in tools.rs. `question` is
+/// the user's message, which a search service may rank by. Awaited by the
+/// loop, so Stop drops a search, page read or picture in flight.
+async fn run_tool(
     tools: &[tools::Tool],
-    ctx: &ToolContext,
+    ctx: &ToolContext<'_>,
     web: &WebPlan,
+    images: Option<&crate::ai::images::ImageRun>,
+    channel: &Channel<StreamEvent>,
     question: &str,
-    name: &str,
-    arguments: &str,
+    call: ToolCall,
 ) -> ToolOutput {
-    if web.handles(name) {
-        // TODO(agent-async): the agent loop runs tools synchronously, so a
-        // web tool holds this worker thread until it returns (ai::web bounds
-        // each request in time), and Stop lands after it. Await it directly
-        // once tool execution is async.
-        return tokio::task::block_in_place(|| {
-            tokio::runtime::Handle::current().block_on(web.execute(name, arguments, question))
-        })
-        .into();
+    if web.handles(&call.name) {
+        return web
+            .execute(&call.name, &call.arguments, question)
+            .await
+            .into();
     }
-    tools::execute(tools, ctx, name, arguments)
+    if let Some(images) =
+        images.filter(|_| call.name == crate::ai::images::GENERATE_IMAGE_TOOL_NAME)
+    {
+        return images.execute(&call, ctx.document, channel).await;
+    }
+    tools::execute(tools, ctx, &call.name, &call.arguments)
 }
 
 /// The system prompt with what it says about the web, when search is on.
@@ -868,7 +872,6 @@ pub async fn ai_agent_message(
     image_model: Option<crate::ai::images::ImageModel>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
-    let cancel_rx = cancel::register(request_id.clone());
     let web_service = web_search
         .then(|| web::resolve_service(&app, search_service.as_deref(), searxng_url.as_deref()))
         .flatten();
@@ -877,12 +880,30 @@ pub async fn ai_agent_message(
         document: doc_path.clone(),
         ..conversation.unwrap_or_default()
     };
-    let result = tokio::select! {
-        result = ai_agent_message_inner(app, provider, document, doc_path, workspace_root, history, message, images, web_search, web_service, thinking.unwrap_or_default(), mode, model, focus_heading, ui_language, source, image_model, on_event) => result,
-        _ = cancel_rx => Err(cancel::CANCELLED.to_string()),
-    };
-    cancel::unregister(&request_id);
-    result
+    cancel::cancellable(
+        request_id,
+        ai_agent_message_inner(
+            app,
+            provider,
+            document,
+            doc_path,
+            workspace_root,
+            history,
+            message,
+            images,
+            web_search,
+            web_service,
+            thinking.unwrap_or_default(),
+            mode,
+            model,
+            focus_heading,
+            ui_language,
+            source,
+            image_model,
+            on_event,
+        ),
+    )
+    .await
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -977,7 +998,6 @@ async fn ai_agent_message_inner(
     };
     let plain_message = message.clone();
     // generate_image, while an image model is set (not in Review mode).
-    // TODO(agent-async): see images::with_images.
     let image_run = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), mode);
 
     let agent = route::agent_provider(&app, entry, model.clone(), thinking, web.native).await?;
@@ -1019,12 +1039,7 @@ async fn ai_agent_message_inner(
                         .map(|(step, _)| step)
                 }
             };
-            let step = crate::ai::images::with_images(
-                with_postfix(step, &document, &conventions, web),
-                image_run.as_ref(),
-                &document,
-                &on_event,
-            );
+            let step = with_postfix(step, &document, &conventions, web);
             // `history` is cloned so the plain-chat fallback below still has
             // it; `run_agent_loop` would otherwise have consumed it.
             match run_agent_loop(
@@ -1032,7 +1047,11 @@ async fn ai_agent_message_inner(
                 user_turn,
                 MAX_STEPS,
                 step,
-                |name, arguments| run_tool(&tools, &tool_ctx, web, &focus, name, arguments),
+                |call| {
+                    let image_run = image_run.as_ref();
+                    run_tool(&tools, &tool_ctx, web, image_run, &on_event, &focus, call)
+                },
+                tools::how_to_run,
                 report(&on_event),
             )
             .await
@@ -1232,7 +1251,10 @@ mod tests {
                 let next = script.borrow_mut().pop_front().unwrap();
                 async move { Ok(next) }
             },
-            |name, args| tools::execute(&tools, &ctx, name, args),
+            |call: aicompat::agent::ToolCall| {
+                std::future::ready(tools::execute(&tools, &ctx, &call.name, &call.arguments))
+            },
+            tools::how_to_run,
             |_| {},
         ))
         .unwrap();

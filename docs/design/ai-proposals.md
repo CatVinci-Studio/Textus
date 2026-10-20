@@ -57,11 +57,11 @@ not applied, until Accept. With a selection, Write inserts after it
 
 With an image model set (Settings › Textus AI › Image model; none by
 default), Write and Revise also get `generate_image`, whose call is a
-proposal too: an insertion of one Markdown image. The backend makes the
-picture inside the step that returned the call (`ai/images.rs`'s
-`with_images`), keeps it in memory, and records its id in the call's
-arguments, as `postfix_step` fixes a proposal's text - so the call turn the
-frontend receives is already the proposal (`parseImageProposal`). Its text
+proposal too: an insertion of one Markdown image. The tool makes the
+picture (`ai/images.rs`'s `ImageRun::execute`), keeps it in memory, and
+records its id in the call's arguments; the loop reports a step with such
+a call only once it has run (aicompat's `ToolRun::Amending`) - so the call
+turn the frontend receives is already the proposal (`parseImageProposal`). Its text
 names the picture by a placeholder src; only the preview swaps in the bytes
 (`generated-images.ts`), and it comes in whole, never typed out. Accept
 saves the picture the way Settings › Images says for a pasted one, then
