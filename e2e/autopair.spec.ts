@@ -143,7 +143,7 @@ test("the setting is in Editor & Appearance, on by default", async ({
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.getByRole("button", { name: "Editor & Appearance" }).click();
   const toggle = panel.getByRole("checkbox", {
-    name: "Auto-close brackets and quotes",
+    name: "Close (), [] and “”",
   });
   await expect(toggle).toBeChecked();
   await toggle.click();

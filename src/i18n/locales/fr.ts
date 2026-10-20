@@ -737,9 +737,8 @@ utiliser une.
   colorSwatchesEverywhere: "Partout",
   codeBlockCopy: "Copier",
   codeBlockCopied: "Copié",
-  autoCloseMarksLabel: "Fermer automatiquement les marques de mise en forme",
-  autoCloseBracketsLabel:
-    "Fermer automatiquement les parenthèses et les guillemets",
+  autoCloseMarksLabel: "Fermer ** et `",
+  autoCloseBracketsLabel: "Fermer (), [] et « »",
   pdfPageNumbersLabel: "Afficher les numéros de page à l’export",
   infoTipLabel: "En savoir plus sur « {label} »",
   infoTipLabelPlain: "En savoir plus",

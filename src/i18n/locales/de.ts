@@ -713,9 +713,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   colorSwatchesEverywhere: "Überall",
   codeBlockCopy: "Kopieren",
   codeBlockCopied: "Kopiert",
-  autoCloseMarksLabel: "Formatierungszeichen automatisch schließen",
-  autoCloseBracketsLabel:
-    "Klammern und Anführungszeichen automatisch schließen",
+  autoCloseMarksLabel: "** und ` schließen",
+  autoCloseBracketsLabel: "(), [] und „“ schließen",
   pdfPageNumbersLabel: "Seitenzahlen beim Exportieren anzeigen",
   infoTipLabel: "Mehr zu „{label}“",
   infoTipLabelPlain: "Mehr erfahren",

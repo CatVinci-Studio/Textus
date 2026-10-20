@@ -386,7 +386,7 @@ export function convertRunClosedBeforeCaret(
  * Cursor movement, delimiter reveal, and delimiter deletion all live in
  * enclosure.ts; content editing is fully unintercepted.
  *
- * `autoClose` is Settings > Close formatting marks automatically (#136).
+ * `autoClose` is Settings > Close ** and ` (#136).
  * Off, a delimiter never opens an empty shell - the only step that puts a
  * closing mark in before the user types it - so "*" and "**" stay literal
  * until the user types the closing run, which then converts the pair
