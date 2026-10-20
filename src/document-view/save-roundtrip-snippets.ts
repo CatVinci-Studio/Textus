@@ -43,6 +43,9 @@ export const CONSTRUCTS: readonly string[] = [
   // Obsidian
   "See [[Note]], [[Note|shown]] and [[Note#Heading]].",
   "#tag at the start, and #another in a line.",
+  // Colour codes, drawn with swatches (marks/color-swatch-plugin.ts)
+  "Orange #ff8800, **bold #00ff00**, `#123456`, rgb(0 128 255) and #add.",
+  "| Colour | Code |\n| --- | --- |\n| Blue | hsl(210 100% 50%) |\n| Red | #f00 |",
   "![[embedded.png]]",
   // Lists
   "- one\n- two\n- three",

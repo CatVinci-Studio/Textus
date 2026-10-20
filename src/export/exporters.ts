@@ -30,7 +30,10 @@ import {
   MISSING_IMAGE_CLASS,
 } from "../editor/images/missing-image";
 import { CODE_LINE_NUMBERS_CLASS } from "../editor/code/code-line-numbers-plugin";
-import { COLOR_SWATCH_CLASS } from "../editor/marks/color-swatch-plugin";
+import {
+  COLOR_SWATCH_CLASS,
+  COLOR_SWATCH_TEXT_CLASS,
+} from "../editor/marks/color-swatch-plugin";
 import {
   MAC_PAGE,
   WINDOWS_PAGE,
@@ -212,6 +215,11 @@ export function cloneEditorContent(
   clone
     .querySelectorAll(`.${CODE_LINE_NUMBERS_CLASS}`)
     .forEach((el) => el.classList.remove(CODE_LINE_NUMBERS_CLASS));
+  // A colour code in plain text draws its swatch before its first
+  // character; the character goes back into the text around it.
+  clone
+    .querySelectorAll(`.${COLOR_SWATCH_TEXT_CLASS}`)
+    .forEach((el) => el.replaceWith(...el.childNodes));
   gatherDetails(clone);
   fitTablesToWidth(clone);
   clone
