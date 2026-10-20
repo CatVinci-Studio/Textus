@@ -406,7 +406,7 @@ function App() {
       setTab={agentPanel.setTab}
     >
       <FlipOnChange
-        watch={`${panelOpen} ${zenMode}`}
+        watch={`${panelOpen} ${agentPresence.mounted} ${zenMode}`}
         targets={() =>
           document.querySelectorAll(
             '[data-active-tab="true"] > .editor-scroll > .editor-content, [data-active-tab="true"] > .source-view, .tab-bar > [data-flip-id]',

@@ -98,12 +98,7 @@ export function useSidePanels(aiOn: boolean) {
   // (App.tsx's FlipOnChange) rather than reflowing on every frame.
   const sidebarPresence = usePresence(panelOpen, { exitMs: 250 });
   const sidebarClosing = sidebarPresence.state === "closing";
-  // On the desktop the AI panel comes and goes at once: its slide, with
-  // the editor gliding aside, squeezed the page and pushed it back on a
-  // Mac. The phone's sheet still slides (mobile/styles/ai-sheet.css).
-  const agentPresence = usePresence(agentPanel.open, {
-    exitMs: isIOSApp ? 250 : 0,
-  });
+  const agentPresence = usePresence(agentPanel.open, { exitMs: 250 });
   const agentClosing = agentPresence.state === "closing";
   // What the find bar and the tutorial card keep clear of on the right.
   const dockedWidth = agentPresence.mounted && !isIOSApp ? agentPanel.width : 0;
