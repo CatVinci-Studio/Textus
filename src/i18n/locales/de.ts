@@ -615,6 +615,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   shortcutLeaveBlock: "Codeblock, Tabelle oder Zitat verlassen",
   contentThemeLabel: "Editor-Design",
   themeDeleteButton: "Design löschen",
+  themeImportLabel: "Design aus einer CSS-Datei hinzufügen",
+  themeMoreLabel: "Weitere Designs",
   themeImportButton: "CSS importieren…",
   themeGalleryBrowse: "Themes durchsuchen",
   themeGalleryLoading: "Themes werden geladen…",

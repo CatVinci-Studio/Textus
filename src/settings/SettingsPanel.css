@@ -141,8 +141,7 @@
   overflow: hidden;
 }
 
-/* The triangle is drawn, as for Custom CSS below: the native marker is a
-   glyph that iOS's font stack lacks, which showed as a missing-character
+/* The triangle is drawn: the native marker is a glyph that iOS's font stack lacks, which showed as a missing-character
    box. */
 .settings-advanced > summary {
   display: flex;
@@ -1144,48 +1143,6 @@ button.settings-skill-action:focus-visible {
   justify-content: flex-end;
 }
 
-/* A setting folded behind its name (custom CSS). */
-.settings-disclosure {
-  padding: 12px 0;
-  border-top: 1px solid var(--border-color);
-}
-
-.settings-disclosure-summary {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--text-md);
-  color: var(--editor-text);
-  cursor: pointer;
-  list-style: none;
-}
-
-.settings-disclosure-summary::-webkit-details-marker {
-  display: none;
-}
-
-.settings-disclosure-summary::before {
-  content: "";
-  width: 0;
-  height: 0;
-  border-left: 4px solid currentColor;
-  border-top: 3.5px solid transparent;
-  border-bottom: 3.5px solid transparent;
-  opacity: 0.6;
-  transition: transform var(--dur-fast) var(--ease-standard);
-}
-
-.settings-disclosure[open] > .settings-disclosure-summary::before {
-  transform: rotate(90deg);
-}
-
-.settings-disclosure-body {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 10px;
-}
-
 /* Settings › About (sections/about.tsx): the app on its own, centred. */
 .settings-about {
   display: flex;
@@ -1245,9 +1202,9 @@ button.settings-skill-action:focus-visible {
   color: var(--chrome-muted);
 }
 
-/* The Browse themes row sits between other rows; a link row's
+/* The More themes row sits between other rows; a link row's
    `border: none` would drop the card's hairline above it. */
-.settings-group-body > * + button.theme-gallery-entry {
+.settings-group-body > * + button.theme-more-entry {
   border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
 }
 

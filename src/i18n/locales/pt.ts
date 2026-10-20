@@ -614,6 +614,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   shortcutLeaveBlock: "Sair de um bloco de código, tabela ou citação",
   contentThemeLabel: "Tema do editor",
   themeDeleteButton: "Apagar Tema",
+  themeImportLabel: "Adicionar um tema de um arquivo CSS",
+  themeMoreLabel: "Mais temas",
   themeImportButton: "Importar CSS…",
   themeGalleryBrowse: "Explorar temas",
   themeGalleryLoading: "Carregando temas…",

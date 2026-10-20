@@ -44,7 +44,7 @@ import type { FixedShortcutGroup } from "../app/fixed-shortcuts";
 import { ChevronIcon, CloseIcon } from "../ui/icons";
 import { CliCommandSection, DefaultEditorSection } from "./sections/general";
 import { links } from "../platform/ipc";
-import { ThemeSection } from "./sections/theme";
+import { MoreThemesSection, ThemeSection } from "./sections/theme";
 import { ThemeGallerySection } from "./sections/theme-gallery";
 import { ProviderListPanel } from "./sections/providers";
 import { ImageModelSection } from "./sections/image-model";
@@ -107,7 +107,12 @@ interface SettingsPanelProps {
 
 export type Category = "general" | "editor" | "ai" | "shortcuts" | "privacy";
 
-type Subpage = "about" | "themes";
+type Subpage = "about" | "themes" | "gallery";
+
+/** The page a subpage's back button returns to; none is the category. */
+const SUBPAGE_PARENT: Partial<Record<Subpage, Subpage>> = {
+  gallery: "themes",
+};
 
 function SettingsGroup({
   title,
@@ -144,7 +149,7 @@ export function SettingsPanel({
   const [category, setCategory] = useState<Category>("general");
   // A page of its own inside a category, with a way back, on the desktop
   // and the phone alike: General › About Textus, Editor & Appearance ›
-  // Browse themes.
+  // More themes (› Browse themes).
   const [subpage, setSubpage] = useState<Subpage | null>(null);
   // Closing Settings on a phone leaves the keyboard down: the user is
   // going back to the page, not necessarily to typing.
@@ -166,6 +171,12 @@ export function SettingsPanel({
     ...(isIOSApp ? [] : [{ id: "shortcuts" as const, label: t.navShortcuts }]),
     { id: "privacy", label: t.navPrivacy },
   ];
+
+  const subpageTitles: Record<Subpage, string> = {
+    about: t.navAbout,
+    themes: t.themeMoreLabel,
+    gallery: t.themeGalleryBrowse,
+  };
 
   const renderCategory = (c: Category) => (
     <>
@@ -263,7 +274,7 @@ export function SettingsPanel({
       {c === "editor" && (
         <>
           <SettingsGroup title={t.navTheme}>
-            <ThemeSection t={t} onBrowse={() => setSubpage("themes")} />
+            <ThemeSection t={t} onMore={() => setSubpage("themes")} />
           </SettingsGroup>
           {/* How the window lays out - the text's width and the interface's
               size - then the window's view modes, beside the one that is a
@@ -747,26 +758,33 @@ export function SettingsPanel({
               className="settings-content"
               key={subpage}
               role="region"
-              aria-label={
-                subpage === "about" ? t.navAbout : t.themeGalleryBrowse
-              }
+              aria-label={subpageTitles[subpage]}
             >
               <button
                 type="button"
                 className="text-button settings-back-button"
-                onClick={() => setSubpage(null)}
+                onClick={() => setSubpage(SUBPAGE_PARENT[subpage] ?? null)}
               >
                 <ChevronIcon className="settings-back-chevron" />
-                {categories.find((c) => c.id === category)?.label}
+                {SUBPAGE_PARENT[subpage]
+                  ? subpageTitles[SUBPAGE_PARENT[subpage]]
+                  : categories.find((c) => c.id === category)?.label}
               </button>
               {subpage === "about" ? (
                 <AboutSection t={t} lang={settings.language} />
               ) : (
                 <>
                   <h1 className="settings-category-title">
-                    {t.themeGalleryBrowse}
+                    {subpageTitles[subpage]}
                   </h1>
-                  <ThemeGallerySection t={t} />
+                  {subpage === "themes" ? (
+                    <MoreThemesSection
+                      t={t}
+                      onBrowse={() => setSubpage("gallery")}
+                    />
+                  ) : (
+                    <ThemeGallerySection t={t} />
+                  )}
                 </>
               )}
             </div>

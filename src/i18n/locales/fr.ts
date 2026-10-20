@@ -636,6 +636,8 @@ utiliser une.
     "Sortir d'un bloc de code, d'un tableau ou d'une citation",
   contentThemeLabel: "Thème de l'éditeur",
   themeDeleteButton: "Supprimer le thème",
+  themeImportLabel: "Ajouter un thème depuis un fichier CSS",
+  themeMoreLabel: "Plus de thèmes",
   themeImportButton: "Importer du CSS…",
   themeGalleryBrowse: "Parcourir les thèmes",
   themeGalleryLoading: "Chargement des thèmes…",

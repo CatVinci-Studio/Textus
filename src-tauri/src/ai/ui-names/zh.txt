@@ -35,5 +35,6 @@ Revise = 修订
 Accept = 采纳
 Reject = 拒绝
 Editor & Appearance (Settings page) = 编辑与外观
-Import CSS… (Settings, under Theme) = 导入 CSS…
+More themes (Settings row, under Theme) = 更多主题
+Import CSS… (Settings, under More themes) = 导入 CSS…
 Use this theme (under a theme in a reply) = 使用此主题

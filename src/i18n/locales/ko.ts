@@ -589,6 +589,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   shortcutLeaveBlock: "코드 블록, 표, 인용에서 나가기",
   contentThemeLabel: "편집기 테마",
   themeDeleteButton: "테마 삭제",
+  themeImportLabel: "CSS 파일에서 테마 추가",
+  themeMoreLabel: "테마 더 보기",
   themeImportButton: "CSS 가져오기…",
   themeGalleryBrowse: "테마 둘러보기",
   themeGalleryLoading: "테마를 불러오는 중…",

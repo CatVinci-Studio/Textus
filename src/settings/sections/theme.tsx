@@ -49,7 +49,7 @@ const THEME_VARIABLES = [
  * font variables as they resolve right now, Textus's heading/quote/table
  * ornaments (#29), the user's own CSS, and a few commented hooks for the
  * usual adjustments. Importing the edited file
- * (Import Theme) makes it a theme of its own.
+ * (Import CSS…) makes it a theme of its own.
  */
 async function exportThemeCss(t: Strings, customCss: string): Promise<void> {
   const style = getComputedStyle(document.documentElement);
@@ -87,8 +87,8 @@ async function exportThemeCss(t: Strings, customCss: string): Promise<void> {
   ]
     .filter(Boolean)
     .join("\n");
-  const css = `/* Textus theme - exported from Settings > Theme.
-   Edit it, then bring it back with Import Theme.
+  const css = `/* Textus theme - exported from Settings > More themes.
+   Edit it, then bring it back with Import CSS… there.
    #write is the document; .milkdown wraps it. */
 
 :root {
@@ -128,46 +128,19 @@ ${customCss.trim() ? `\n/* Custom CSS */\n${customCss}\n` : ""}`;
   }
 }
 
-/** `onBrowse` opens Browse themes, a page the panel shows in place of the
- *  category (as it does About Textus). */
-export function ThemeSection({
-  t,
-  onBrowse,
-}: {
-  t: Strings;
-  onBrowse: () => void;
-}) {
-  const { settings, setSettings } = useSettings();
-  const appearanceId = useId();
+/** Runs one theme-file action at a time, with its error shown above the
+ *  rows; `busy` disables the controls while one is in flight. */
+function useThemeAction() {
   const working = useRef(false);
-  const latest = useLatest(settings);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Open when there is CSS to show, judged once: following the text would
-  // fold the box (and take the focus out of it) the moment it is emptied.
-  const [customCssOpen, setCustomCssOpen] = useState(
-    () => !!settings.customCss?.trim(),
-  );
-
-  // One step: pick a CSS file and it's imported and selected right away,
-  // named after the file. (A dark variant can still exist in the data model
-  // for themes that shipped one; imports are single-file.)
-  async function importTheme() {
+  async function run(action: () => Promise<void>) {
     if (working.current) return;
     working.current = true;
     setBusy(true);
     setError(null);
     try {
-      const picked = await fs.openCssFileDialog();
-      if (!picked) return;
-      const css = await importThemeCss(picked);
-      const meta = await saveUserTheme(css, {
-        name: basename(picked).replace(/\.css$/i, ""),
-      });
-      setSettings({
-        userThemes: withUserTheme(latest.current.userThemes, meta),
-        themeId: meta.id,
-      });
+      await action();
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -175,17 +148,31 @@ export function ThemeSection({
       setBusy(false);
     }
   }
+  return { busy, error, run };
+}
 
-  async function deleteCurrentTheme() {
-    const current = settings.userThemes.find(
-      (th) => th.id === settings.themeId,
-    );
-    if (!current) return;
-    if (working.current) return;
-    working.current = true;
-    setBusy(true);
-    setError(null);
-    try {
+/** Settings › Editor & Appearance › Theme: which form (light, dark) and
+ *  which theme - a choice and nothing else. Getting themes and changing
+ *  them is on the More themes page `onMore` opens (MoreThemesSection). */
+export function ThemeSection({
+  t,
+  onMore,
+}: {
+  t: Strings;
+  onMore: () => void;
+}) {
+  const { settings, setSettings } = useSettings();
+  const appearanceId = useId();
+  const latest = useLatest(settings);
+  const { busy, error, run } = useThemeAction();
+
+  // Beside the picker, as it removes the theme picked there.
+  const deleteCurrentTheme = () =>
+    run(async () => {
+      const current = latest.current.userThemes.find(
+        (th) => th.id === latest.current.themeId,
+      );
+      if (!current) return;
       await themes.deleteTheme(current.id);
       setSettings({
         userThemes: latest.current.userThemes.filter(
@@ -195,13 +182,7 @@ export function ThemeSection({
           ? { themeId: "default" }
           : {}),
       });
-    } catch (err) {
-      setError(errorText(err));
-    } finally {
-      working.current = false;
-      setBusy(false);
-    }
-  }
+    });
 
   const isUserThemeSelected = settings.userThemes.some(
     (th) => th.id === settings.themeId,
@@ -267,56 +248,108 @@ export function ThemeSection({
           <button
             className="text-button settings-inline-button"
             disabled={busy}
-            onClick={deleteCurrentTheme}
+            onClick={() => void deleteCurrentTheme()}
           >
             {t.themeDeleteButton}
           </button>
         )}
-        <button
-          className="text-button settings-inline-button"
-          onClick={importTheme}
-          disabled={busy}
-        >
-          {t.themeImportButton}
-        </button>
       </SettingRow>
 
       <LinkRow
-        label={t.themeGalleryBrowse}
-        onOpen={onBrowse}
-        className="theme-gallery-entry"
+        label={t.themeMoreLabel}
+        onOpen={onMore}
+        className="theme-more-entry"
       />
+    </>
+  );
+}
 
-      {/* A tweak on top of the theme, folded away until wanted. */}
-      <details
-        className="settings-disclosure"
-        open={customCssOpen}
-        onToggle={(e) => setCustomCssOpen(e.currentTarget.open)}
-      >
-        <summary className="settings-disclosure-summary">
-          <span>{t.customCssLabel}</span>
-          <RowHelp label={t.customCssLabel}>{t.customCssHint}</RowHelp>
-        </summary>
-        <div className="settings-disclosure-body">
-          <textarea
-            className="settings-code-input"
-            aria-label={t.customCssLabel}
-            spellCheck={false}
-            rows={5}
-            placeholder={CUSTOM_CSS_PLACEHOLDER}
-            value={settings.customCss}
-            onChange={(e) => setSettings({ customCss: e.target.value })}
-          />
-          <div className="shortcut-row-controls">
+/**
+ * Settings › Editor & Appearance › More themes: where themes come from -
+ * the gallery (`onBrowse` opens it, a page of its own) and a CSS file -
+ * then the user's own CSS on top of whichever is picked. Each action is
+ * here once; the theme picker itself stays on the page before.
+ */
+export function MoreThemesSection({
+  t,
+  onBrowse,
+}: {
+  t: Strings;
+  onBrowse: () => void;
+}) {
+  const { settings, setSettings } = useSettings();
+  const latest = useLatest(settings);
+  const { busy, error, run } = useThemeAction();
+  const customCssLabelId = useId();
+
+  // One step: pick a CSS file and it's imported and selected right away,
+  // named after the file. (A dark variant can still exist in the data model
+  // for themes that shipped one; imports are single-file.)
+  const importTheme = () =>
+    run(async () => {
+      const picked = await fs.openCssFileDialog();
+      if (!picked) return;
+      const css = await importThemeCss(picked);
+      const meta = await saveUserTheme(css, {
+        name: basename(picked).replace(/\.css$/i, ""),
+      });
+      setSettings({
+        userThemes: withUserTheme(latest.current.userThemes, meta),
+        themeId: meta.id,
+      });
+    });
+
+  return (
+    <>
+      {error && (
+        <div className="settings-error" role="alert">
+          {error}
+        </div>
+      )}
+      <section className="settings-group">
+        <div className="settings-group-body">
+          <LinkRow label={t.themeGalleryBrowse} onOpen={onBrowse} />
+          <SettingRow label={t.themeImportLabel}>
             <button
               className="text-button settings-inline-button"
-              onClick={() => void exportThemeCss(t, settings.customCss)}
+              onClick={() => void importTheme()}
+              disabled={busy}
             >
-              {t.themeExportButton}
+              {t.themeImportButton}
             </button>
+          </SettingRow>
+        </div>
+      </section>
+
+      {/* A tweak on top of the theme. On a page of its own, so shown open:
+          nothing else here competes with it for room. */}
+      <section className="settings-group">
+        <div className="settings-group-body">
+          <div className="settings-row settings-row-stacked">
+            <div className="settings-row-label">
+              <span id={customCssLabelId}>{t.customCssLabel}</span>
+              <RowHelp label={t.customCssLabel}>{t.customCssHint}</RowHelp>
+            </div>
+            <textarea
+              className="settings-code-input"
+              aria-labelledby={customCssLabelId}
+              spellCheck={false}
+              rows={5}
+              placeholder={CUSTOM_CSS_PLACEHOLDER}
+              value={settings.customCss}
+              onChange={(e) => setSettings({ customCss: e.target.value })}
+            />
+            <div className="shortcut-row-controls">
+              <button
+                className="text-button settings-inline-button"
+                onClick={() => void exportThemeCss(t, settings.customCss)}
+              >
+                {t.themeExportButton}
+              </button>
+            </div>
           </div>
         </div>
-      </details>
+      </section>
     </>
   );
 }

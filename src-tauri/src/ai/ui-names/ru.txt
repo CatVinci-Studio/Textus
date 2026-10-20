@@ -35,5 +35,6 @@ Revise = Правка
 Accept = Принять
 Reject = Отклонить
 Editor & Appearance (Settings page) = Редактор и оформление
-Import CSS… (Settings, under Theme) = Импортировать CSS…
+More themes (Settings row, under Theme) = Другие темы
+Import CSS… (Settings, under More themes) = Импортировать CSS…
 Use this theme (under a theme in a reply) = Использовать эту тему

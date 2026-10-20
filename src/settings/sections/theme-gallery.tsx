@@ -15,7 +15,8 @@ import { useSettings } from "../SettingsContext";
 import { SettingRow } from "./controls";
 
 /**
- * Settings › Editor & Appearance › Browse themes: the public theme gallery.
+ * Settings › Editor & Appearance › More themes › Browse themes: the public
+ * theme gallery.
  * The catalog is fetched when this page opens and at no other time - the
  * app makes no gallery requests in the background. Installing a theme makes
  * it a user theme, as Import CSS… does, and selects it; an update replaces
