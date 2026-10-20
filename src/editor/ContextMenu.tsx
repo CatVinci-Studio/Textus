@@ -10,12 +10,16 @@ import { useViewportClamp } from "../utils/hooks/useViewportClamp";
 import { ActionSheet } from "../ui/ActionSheet";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { usePresenceProps, usePresenceState } from "../ui/usePresence";
+import { CheckIcon } from "../ui/icons";
 import "./ContextMenu.css";
 
 export interface ContextMenuItem {
   label: string;
   onSelect: () => void;
   danger?: boolean;
+  /** One choice of several (the file tree's sort): marked with a check
+   *  while it is the one in force. */
+  checked?: boolean;
 }
 
 interface ContextMenuProps {
@@ -78,7 +82,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
   }, [opener, ref]);
   useEffect(() => {
     if (!opener) return;
-    ref.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    ref.current?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
     return giveBack;
   }, [opener, ref, giveBack]);
   useEffect(() => {
@@ -87,7 +91,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const rows = Array.from(
-      ref.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [],
+      ref.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? [],
     );
     const at = rows.indexOf(document.activeElement as HTMLElement);
     let next: HTMLElement | undefined;
@@ -132,7 +136,8 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
         ) : (
           <button
             key={i}
-            role="menuitem"
+            role={item.checked === undefined ? "menuitem" : "menuitemradio"}
+            aria-checked={item.checked}
             tabIndex={-1}
             className={`context-menu-item ${item.danger ? "context-menu-item-danger" : ""}`}
             onClick={() => {
@@ -140,6 +145,11 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
               onClose();
             }}
           >
+            {item.checked !== undefined && (
+              <CheckIcon
+                className={`context-menu-check${item.checked ? "" : " context-menu-check-off"}`}
+              />
+            )}
             {item.label}
           </button>
         ),

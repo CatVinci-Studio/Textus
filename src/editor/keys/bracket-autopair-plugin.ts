@@ -220,7 +220,7 @@ export function pairAfterComposition(
  * composition, which nothing may disturb while it runs, so those are
  * paired once it has ended, the same way.
  *
- * `enabled` is Settings > Auto-close brackets and quotes.
+ * `enabled` is Settings > Close (), [] and “”.
  */
 export const createBracketAutopairPlugin = (options: {
   enabled: () => boolean;

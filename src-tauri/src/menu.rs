@@ -52,8 +52,10 @@ const TOGGLE_SOURCE_MODE_ID: &str = "toggle-source-mode";
 const TOGGLE_TYPEWRITER_MODE_ID: &str = "toggle-typewriter-mode";
 const TOGGLE_SIDEBAR_ID: &str = "toggle-sidebar";
 const TOGGLE_AGENT_PANEL_ID: &str = "toggle-agent-panel";
-/// View > Textus AI: the master switch (`textusAi` in settings.json),
-/// flipped by the focused window, which owns the setting and says so aloud.
+/// Textus AI's master switch (`textusAi` in settings.json), flipped by the
+/// focused window, which owns the setting and says so aloud. Not in the
+/// View menu - the window bar's button and Settings carry it - but the
+/// iPhone's app-drawn menu runs it through here (run_menu_item).
 const TOGGLE_TEXTUS_AI_ID: &str = "toggle-textus-ai";
 const TOGGLE_SPLIT_VIEW_ID: &str = "toggle-split-view";
 const TOGGLE_ZEN_MODE_ID: &str = "toggle-zen-mode";
@@ -65,6 +67,12 @@ const FIND_REPLACE_ID: &str = "find-replace";
 /// gives plain-text apps the words as they read
 /// (src/editor/useEditorClipboard.ts).
 const COPY_AS_MARKDOWN_ID: &str = "copy-as-markdown";
+/// Edit > Select All on macOS, in place of the predefined item: that one
+/// sends WebKit's own selectAll:, which with the caret in no text field
+/// selected the whole window - the sidebar's notes, the empty document's
+/// box. The focused window picks what to select (app/app-menu-actions.ts).
+#[cfg(target_os = "macos")]
+const SELECT_ALL_ID: &str = "select-all";
 const NEW_WINDOW_ID: &str = "new-window";
 /// Help menu ids carry the bundled doc they open: "help-doc:<doc>", where
 /// <doc> is the frontend's HelpDoc id ("markdown" | "agent" | "welcome").
@@ -616,11 +624,16 @@ fn build(
         .cut_with_text(l("predefined:cut", "Cut"))
         .copy_with_text(l("predefined:copy", "Copy"))
         .item(&copy_as_markdown_item)
-        .paste_with_text(l("predefined:paste", "Paste"))
-        .select_all_with_text(l("predefined:select-all", "Select All"))
-        .separator()
-        .item(&find_replace_item)
-        .build()?;
+        .paste_with_text(l("predefined:paste", "Paste"));
+    #[cfg(target_os = "macos")]
+    let edit_menu = edit_menu.item(
+        &MenuItemBuilder::with_id(SELECT_ALL_ID, l("predefined:select-all", "Select All"))
+            .accelerator("CmdOrCtrl+A")
+            .build(app)?,
+    );
+    #[cfg(not(target_os = "macos"))]
+    let edit_menu = edit_menu.select_all_with_text(l("predefined:select-all", "Select All"));
+    let edit_menu = edit_menu.separator().item(&find_replace_item).build()?;
 
     let mut format_menu_builder = SubmenuBuilder::new(app, l("menu:format", "Format"));
     for (kind, label) in [
@@ -671,7 +684,6 @@ fn build(
     let toggle_typewriter_mode_item = check(TOGGLE_TYPEWRITER_MODE_ID, "Typewriter Mode")?;
     let toggle_sidebar_item = check(TOGGLE_SIDEBAR_ID, "Sidebar")?;
     let toggle_agent_panel_item = check(TOGGLE_AGENT_PANEL_ID, "AI Panel")?;
-    let toggle_textus_ai_item = check(TOGGLE_TEXTUS_AI_ID, "Textus AI")?;
     let toggle_split_view_item = check(TOGGLE_SPLIT_VIEW_ID, "Split View")?;
     let toggle_zen_mode_item = check(TOGGLE_ZEN_MODE_ID, "Zen Mode")?;
 
@@ -694,7 +706,6 @@ fn build(
             // Panels, then ways of viewing the text, then size.
             .item(&toggle_sidebar_item)
             .item(&toggle_agent_panel_item)
-            .item(&toggle_textus_ai_item)
             .separator()
             .item(&toggle_source_mode_item)
             .item(&toggle_split_view_item)
@@ -780,7 +791,6 @@ fn build(
     let check_items = vec![
         toggle_sidebar_item,
         toggle_agent_panel_item,
-        toggle_textus_ai_item,
         toggle_source_mode_item,
         toggle_split_view_item,
         toggle_typewriter_mode_item,
@@ -902,6 +912,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-toggle-zen-mode");
     } else if id == COPY_AS_MARKDOWN_ID {
         emit_to_focused(app_handle, "menu-copy-as-markdown");
+    } else if cfg!(target_os = "macos") && id == "select-all" {
+        emit_to_focused(app_handle, "menu-select-all");
     } else if id == FIND_REPLACE_ID {
         emit_to_focused(app_handle, "menu-find-replace");
     } else if id == ZOOM_IN_ID {

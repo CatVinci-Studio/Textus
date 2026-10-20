@@ -180,7 +180,7 @@ Sim: arquivos .md comuns, com tabelas, listas de tarefas, notas de rodapé, fór
 1. Abra o Textus. Ele começa com um rascunho em branco; você só precisa de um arquivo ao salvar.
 2. Abra **Ajustes → Textus AI**, escolha um provedor e faça login ou cole uma chave em **Login e credenciais**.
 3. Comece a escrever. Quando você para, a continuação aparece em cinza; Tab aceita.
-4. Abra o Painel de IA pelo botão **Textus AI** (o balão de fala) na barra da janela. **Ajuda → Guia dos Recursos de IA** explica o resto.
+4. Abra o Painel de IA pelo botão **Textus AI** (a pena) na barra da janela. **Ajuda → Guia dos Recursos de IA** explica o resto.
 
 Todos os atalhos podem ser vistos e alterados em **Ajustes → Atalhos**.
 

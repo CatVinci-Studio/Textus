@@ -1,4 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { selectAllInFocus } from "../ui/select-all";
 import { EDIT_ACTION_EVENT } from "../utils/events";
 import type { LocalMenuAction } from "./app-menu-model";
 import { canToggleFullscreen } from "../platform/capabilities";
@@ -15,6 +16,10 @@ import { canToggleFullscreen } from "../platform/capabilities";
  * MilkdownEditor.tsx), and fullscreen is a window API call.
  */
 export function runLocalMenuAction(action: LocalMenuAction): void {
+  if (action === "select-all") {
+    selectAllInFocus();
+    return;
+  }
   if (action === "fullscreen") {
     if (!canToggleFullscreen) return;
     void (async () => {

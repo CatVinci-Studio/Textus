@@ -238,6 +238,32 @@ function DrawnSelect({
     });
   }, [open]);
 
+  // Then kept inside the window across: the list is often wider than its
+  // trigger (Settings' image models, "OpenAI · gpt-image-…" beside a "None"
+  // button), and placed by the trigger's width alone it ran past the
+  // window's right edge. One that doesn't fit lines up with the trigger's
+  // right edge instead, and never leaves the window. Layout width, not the
+  // box: the entrance scales it from 96%.
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    const rect = placedAt.current;
+    const placed = place.left;
+    if (!open || !list || !rect || typeof placed !== "number") return;
+    const width = list.offsetWidth;
+    const room = window.innerWidth - 8;
+    if (placed + width <= room) return;
+    const left = Math.max(8, Math.min(rect.right, room) - width);
+    setPlace(
+      (p) =>
+        ({
+          ...p,
+          left,
+          maxWidth: room - 8,
+          "--transform-origin": `${p.bottom !== undefined ? "bottom" : "top"} right`,
+        }) as CSSProperties,
+    );
+  }, [open, place.left]);
+
   // While open: focus the list, close on any outside press, and close when
   // the page moves under it (the list is placed once, from the trigger).
   useEffect(() => {

@@ -566,6 +566,10 @@ export function installDevTauriShim(): void {
     switch (cmd) {
       case "read_text_file":
         return path in files ? Promise.resolve(files[path]) : null;
+      // A save into the folder lands in it, so a test reads it back there.
+      case "write_text_file":
+        files[path] = String(args.contents);
+        return Promise.resolve(null);
       case "file_mtime_ms":
         return Promise.resolve(path in files ? 1 : null);
       case "list_dir": {
@@ -581,6 +585,10 @@ export function installDevTauriShim(): void {
               name,
               path: `${path}/${name}`,
               is_dir: isDir,
+              modified_ms:
+                (w.__devMtimes as Record<string, number> | undefined)?.[
+                  `${path}/${name}`
+                ] ?? null,
             }))
             .sort((a, b) =>
               a.is_dir !== b.is_dir
@@ -590,6 +598,44 @@ export function installDevTauriShim(): void {
                 : a.name.localeCompare(b.name),
             ),
         );
+      }
+      // commands/tree_ops.rs. A folder is the files under it; an empty one
+      // holds a hidden ".keep", which list_dir leaves out as the backend
+      // leaves out dot files.
+      case "tree_create_document":
+      case "tree_create_folder": {
+        const name = String(args.name).trim();
+        if (!name || name.includes("/")) return Promise.reject("Invalid name");
+        const doc = cmd === "tree_create_document";
+        const target = `${String(args.dir)}/${doc && !/\.(md|markdown)$/i.test(name) ? `${name}.md` : name}`;
+        if (
+          Object.keys(files).some(
+            (f) => f === target || f.startsWith(`${target}/`),
+          )
+        )
+          return Promise.reject("Already exists");
+        files[doc ? target : `${target}/.keep`] = "";
+        return Promise.resolve(target);
+      }
+      case "tree_move_entry": {
+        const into = String(args.into);
+        const target = `${into}/${path.split("/").pop()}`;
+        if (into === path.slice(0, path.lastIndexOf("/")))
+          return Promise.reject("Already there");
+        if (into === path || into.startsWith(`${path}/`))
+          return Promise.reject("A folder can't move into itself");
+        if (
+          Object.keys(files).some(
+            (f) => f === target || f.startsWith(`${target}/`),
+          )
+        )
+          return Promise.reject("Already exists");
+        for (const file of Object.keys(files)) {
+          if (file !== path && !file.startsWith(`${path}/`)) continue;
+          files[target + file.slice(path.length)] = files[file];
+          delete files[file];
+        }
+        return Promise.resolve(target);
       }
       case "index_folder": {
         // commands/folder.rs refuses these; the shim's "home" is /home/me.

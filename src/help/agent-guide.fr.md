@@ -33,7 +33,7 @@ Les problèmes possibles sont soulignés. Survolez-en un, ou placez le curseur d
 
 ### 3. Le panneau IA
 
-La conversation complète se trouve dans un panneau à droite de l'éditeur. Ouvrez-le ou fermez-le avec le bouton **Textus AI** (la bulle) à l'extrémité droite de la barre de la fenêtre, ou avec <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
+La conversation complète se trouve dans un panneau à droite de l'éditeur. Ouvrez-le ou fermez-le avec le bouton **Textus AI** (la plume) à l'extrémité droite de la barre de la fenêtre, ou avec <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
 
 - **Une conversation par document** : chaque onglet a sa propre conversation, et changer d'onglet change aussi celle du panneau. **Nouvelle conversation**, dans l'en-tête du panneau, repart de zéro (s'il reste des modifications en attente, une confirmation est d'abord demandée).
 - **Modes** : la zone de saisie en propose trois. **Écrire** rédige du texte nouveau dans le document (une suite, un paragraphe ou une section) et ne fait qu'ajouter : avec du texte sélectionné, il écrit après la sélection. **Relire** répond, discute et laisse des commentaires sans rien modifier. **Réviser** modifie le texte existant. Chaque changement d'Écrire ou de Réviser est une proposition que vous acceptez ou refusez. Le panneau s'ouvre dans le mode choisi sous **Réglages > Textus AI > Discussion avec Textus AI > Mode par défaut**.
@@ -276,7 +276,7 @@ Il n'existe ni profil de style ni bibliothèque globaux : ils décrivent un ens
 
 ## Désactiver Textus AI
 
-Un clic droit sur le bouton **Textus AI**, au bout droit de la barre de la fenêtre, met Textus AI en pause pendant une heure ou la désactive. Tant qu'elle est désactivée, la bulle est barrée, et un clic dessus propose de la réactiver ; une pause se termine d'elle-même au bout de l'heure. **Présentation > Textus AI**, **Réglages > Textus AI > Activer Textus AI** et un raccourci que vous pouvez définir dans **Réglages > Raccourcis** l'activent ou la désactivent aussi ; sur iPhone, c'est dans le menu.
+Un clic droit sur le bouton **Textus AI**, au bout droit de la barre de la fenêtre, met Textus AI en pause pendant une heure ou la désactive. Tant qu'elle est désactivée, la plume est barrée, et un clic dessus propose de la réactiver ; une pause se termine d'elle-même au bout de l'heure. **Réglages > Textus AI > Activer Textus AI** et un raccourci que vous pouvez définir dans **Réglages > Raccourcis** l'activent ou la désactivent aussi ; sur iPhone, c'est dans le menu.
 
 Tant qu'elle est désactivée, rien n'est envoyé à aucun service d'IA, dès l'ouverture de Textus : ni complétion, ni vérification grammaticale, ni conversation, ni mémoire. Le panneau IA, la question rapide et les entrées IA du menu contextuel disparaissent, et une réponse en cours de rédaction s'arrête. Les modifications déjà proposées dans le document restent, pour que vous les acceptiez ou les refusiez. Chaque fonction garde son propre réglage, et toutes s'appliquent de nouveau dès que Textus AI est réactivée.
 

@@ -13,9 +13,21 @@
   background: var(--editor-bg, var(--bg));
   border-left: 1px solid var(--border-color);
   color: var(--editor-text);
-  /* No slide: it takes its width at once, and the editor its new room
-     (useSidePanels). On a Mac the slide, with the editor gliding aside,
-     squeezed the page and pushed it back, and flashed as it ended. */
+  /* It takes its full width at once - the editor glides aside (App.tsx's
+     FlipOnChange) - and slides into it from just beside it. Never a width
+     animation: that reflowed the whole document on every frame. The slide
+     starts past the window's right edge; .app-shell is overflow: clip, so
+     the composer taking the focus can't scroll the window to it - in
+     1.2.0-rc.4 that shifted the sidebar and the text aside and snapped them
+     back as the slide ended. */
+  animation: motion-nudge-in-end var(--dur-slow) var(--ease-out);
+}
+
+/* It leaves the way it came, in its own place; the editor takes the room
+   back once it has gone, rather than sliding in under it while it still
+   shows. */
+.agent-panel[data-state="closing"] {
+  animation: motion-nudge-out-end var(--dur-base) var(--ease-in) forwards;
 }
 
 .agent-panel-mount {

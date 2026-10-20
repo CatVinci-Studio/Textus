@@ -25,7 +25,7 @@ GitHub-style alerts:
 
 **Bold** (`**text**`), *italic* (`*text*`), ***bold italic***, ~~strikethrough~~ (`~~text~~`), ==highlight== (`==text==`), and `inline code`.
 
-Typing `(`, `[`, `{`, a quote, or a bracket from a Chinese or Japanese input method such as `（`, `【` or `「` puts its closing partner in after the caret: typing the closer steps over it, Backspace right after the opener takes both, and with text selected the pair goes around it. **Settings → Editor & Appearance → Auto-close brackets and quotes** turns this off.
+Typing `(`, `[`, `{`, a quote, or a bracket from a Chinese or Japanese input method such as `（`, `【` or `「` puts its closing partner in after the caret: typing the closer steps over it, Backspace right after the opener takes both, and with text selected the pair goes around it. **Settings → Editor & Appearance → Close (), [] and “”** turns this off.
 
 Links look like this: [the Textus repository](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+click one to follow it: a web link opens in your browser, a link to another Markdown file opens it in a tab, and a link to `#a-heading` scrolls there. A plain click puts the caret in a link and shows its Markdown, `[text](url)`, to edit in place; move the caret away and it is a link again. Inline HTML renders too, e.g. keyboard keys <kbd>Cmd</kbd> + <kbd>S</kbd>. So do `<details>` folds, HTML tables, a few inline styles (colour, background, size, weight, alignment, underline and strikethrough) and inline `<svg>`, which shows as a picture. Scripts and other HTML stay as source. A link to a heading in another file, such as `[see](notes.md#a-heading)`, opens that file at the heading. Obsidian wikilinks (`[[Note]]`, `[[Note|text]]` and `[[Note#Heading]]`) open the same way, from the document's folder or anywhere in its vault; they and `#tags` at the start of a line are saved exactly as written.
 
@@ -153,6 +153,8 @@ All three are also in the **View** menu.
 ## Folders and file search
 
 **File → Open Folder…** opens a whole folder in the sidebar: the file tree stays there while you open documents inside it, the folder comes back with your session, and **File → Close Folder** lets the tree follow the document again. The box at the top of the sidebar's **Files** tab searches file names across the folder; `Cmd+Shift+O` jumps to it. Type to filter, `↑`/`↓` to move, `Enter` to open, `Esc` to clear. Both are on the desktop only.
+
+The tree is a small file manager too. The parent folder's name above it takes you up a level. **Sort** orders it by name or by date modified, and the filter beside the search box, **All files** or **Documents only**, applies to the tree as well as to the search. Right-click a folder, a file or the empty space below to make a **New Document** or a **New Folder** there, and drag a file or folder onto another folder to move it; an open document follows it to its new place. Nothing is ever replaced: a name already taken is refused.
 
 **File → Open…** also opens a Word document (`.docx`), and so does dropping one on the window: it becomes a new Markdown document of the same name, not yet saved, with its headings, lists, tables, links, footnotes and pictures. The pictures go where **Settings → Editor & Appearance → Images** puts pasted ones once you save it, and **Save** suggests a `.md` file next to the Word file. Some formatting may look different; the Word file itself is never changed. On the desktop only.
 

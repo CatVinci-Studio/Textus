@@ -299,9 +299,12 @@ export function ClipboardTabIcon({ className }: IconProps) {
 }
 
 /** Textus AI's own button - the window bar's toggle for the AI panel, and
- *  the review bar's way back to it on a phone: a speech bubble, struck
- *  through while Textus AI is off (`off`, ai/TextusAiSwitch.tsx). The
- *  stroke is cut out of the bubble, so it reads on any background. */
+ *  the review bar's way back to it on a phone: the app icon's quill as a
+ *  silhouette, the tray's (scripts/make-tray-icons.sh) traced with potrace,
+ *  struck through while Textus AI is off (`off`, ai/TextusAiSwitch.tsx).
+ *  Filled, where the rest of the set is stroked, and a pixel larger: it is
+ *  the product's mark, not one more tool, and a slim diagonal at 15 px. The strike is cut out of the quill, so it reads on
+ *  any background. */
 export function AssistantIcon({
   className,
   off = false,
@@ -310,8 +313,8 @@ export function AssistantIcon({
   return (
     <svg
       className={className}
-      width="15"
-      height="15"
+      width="16"
+      height="16"
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -326,12 +329,13 @@ export function AssistantIcon({
           />
         </mask>
       )}
-      <path
-        d="M2 3.8C2 3.02 2.63 2.4 3.4 2.4H12.6C13.37 2.4 14 3.02 14 3.8V9.4C14 10.17 13.37 10.8 12.6 10.8H6.4L3.6 13.2V10.8H3.4C2.63 10.8 2 10.17 2 9.4V3.8Z"
-        stroke="currentColor"
-        strokeWidth="1.1"
-        mask={off ? `url(#${cut})` : undefined}
-      />
+      <g mask={off ? `url(#${cut})` : undefined}>
+        <path
+          d={QUILL}
+          fill="currentColor"
+          transform="translate(0 16) scale(0.0028571 -0.0028571)"
+        />
+      </g>
       {off && (
         <path
           d={STRIKE}
@@ -344,7 +348,11 @@ export function AssistantIcon({
   );
 }
 
-/** AssistantIcon's line through the bubble while Textus AI is off. */
+/** The quill, in potrace's units: 5600 to the icon's 16, y upwards. */
+const QUILL =
+  "M4187 4823 c-3 -5 -4 -38 -4 -75 2 -151 -125 -305 -353 -431 -25 -13 -99 -52 -165 -86 -66 -34 -127 -68 -135 -75 -8 -8 -29 -21 -47 -30 -17 -8 -69 -51 -115 -95 -62 -58 -90 -79 -104 -75 -43 11 -316 -159 -470 -293 -79 -69 -224 -228 -233 -256 -2 -7 -17 -31 -33 -55 -16 -23 -34 -56 -40 -72 -8 -24 -14 -29 -31 -25 -38 10 -258 -188 -366 -329 -48 -62 -121 -198 -121 -225 0 -10 -4 -21 -9 -26 -38 -39 -38 -343 0 -437 19 -46 6 -69 -15 -28 -25 48 -76 100 -98 100 -31 0 -31 -27 0 -82 88 -154 61 -446 -49 -549 -20 -18 -29 -37 -29 -57 0 -17 -6 -37 -12 -44 -7 -7 -26 -33 -43 -57 -16 -24 -69 -81 -118 -127 -89 -83 -89 -83 -97 -146 -12 -99 -45 -235 -80 -333 -44 -126 -44 -123 -30 -140 21 -25 32 -18 105 67 105 124 164 178 313 292 58 44 63 51 58 78 -16 82 39 262 98 321 18 18 26 37 26 60 0 28 13 47 77 116 141 152 243 207 458 245 189 34 354 119 438 225 43 54 -9 84 -63 36 -14 -12 -75 -33 -160 -55 -19 -5 -78 -12 -130 -15 -52 -3 -104 -8 -115 -11 -15 -4 -14 -1 5 10 42 26 209 75 320 95 181 32 253 57 409 142 110 60 253 232 362 437 42 79 43 83 26 97 -11 7 -24 12 -30 9 -11 -4 -66 -75 -77 -99 -20 -44 -241 -258 -320 -310 -136 -90 -232 -130 -505 -211 -88 -26 -235 -82 -245 -93 -9 -11 -68 -41 -80 -41 -34 0 112 160 208 226 28 20 52 43 52 51 0 20 -25 26 -50 13 -53 -29 -25 13 86 124 39 39 82 79 95 88 13 10 35 26 49 36 113 85 279 145 540 197 139 27 262 60 310 81 251 113 375 239 445 456 31 95 30 142 -2 146 -18 3 -27 -8 -53 -64 -81 -176 -320 -367 -530 -425 -25 -7 -49 -16 -55 -20 -5 -4 -48 -15 -94 -24 -47 -9 -92 -21 -100 -25 -9 -5 -50 -16 -91 -26 -41 -9 -79 -20 -85 -24 -5 -4 -28 -13 -50 -20 -51 -16 -216 -102 -264 -137 -34 -26 -83 -65 -126 -101 -57 -49 -53 -39 18 38 142 155 488 459 524 460 6 0 13 4 15 9 5 14 206 126 288 160 41 18 93 40 115 50 22 11 58 24 80 31 258 81 469 258 564 476 48 112 83 317 61 359 -7 13 -10 38 -7 57 3 18 9 52 12 76 7 41 3 71 -31 239 -19 92 -48 153 -74 153 -10 0 -21 -3 -23 -7z m-1803 -2413 c-9 -16 -20 -30 -25 -30 -5 0 -9 -5 -9 -11 0 -6 -15 -32 -33 -58 -19 -25 -37 -53 -41 -61 -3 -8 -31 -53 -61 -100 -30 -47 -64 -103 -76 -125 -12 -22 -25 -42 -28 -45 -4 -3 -12 -16 -19 -30 -6 -14 -28 -52 -47 -85 -20 -33 -46 -82 -59 -110 -33 -69 -48 -86 -64 -76 -16 10 -3 37 85 178 18 29 33 55 33 58 0 2 39 64 87 137 48 73 95 148 105 166 10 18 38 57 61 87 23 29 54 72 69 94 33 48 43 53 22 11z";
+
+/** AssistantIcon's line through the quill while Textus AI is off. */
 const STRIKE = "M2.2 1.4L13.8 13.6";
 
 /** Past conversations (the AI panel's header): a clock turned back. */
@@ -656,6 +664,27 @@ export function ArrowUpIcon({ className }: IconProps) {
 }
 
 /** Re-read a listing from disk (the file tree). */
+/** The file tree's sort (sidebar/FileTree.tsx): three lines, shorter
+ *  each, the way a list is ordered. */
+export function SortIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M3 4.5H13M3 8H10M3 11.5H7"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function RefreshIcon({ className }: IconProps) {
   return (
     <svg

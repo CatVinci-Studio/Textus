@@ -36,6 +36,8 @@ const WEBKIT_SPECS = [
   "autopair.spec.ts",
   "link-reveal.spec.ts",
   "sidebar-resize.spec.ts",
+  "keyboard.spec.ts",
+  "file-tree.spec.ts",
 ];
 
 export default defineConfig({

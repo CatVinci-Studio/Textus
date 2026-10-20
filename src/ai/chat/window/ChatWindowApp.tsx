@@ -24,6 +24,7 @@ import { PinIcon, PlusIcon } from "../../../ui/icons";
 import { AppDialogHost } from "../../../ui/app-dialog";
 import { WindowCaptionButtons } from "../../../ui/WindowCaptionButtons";
 import { listenToThisWindow, unlistenAll } from "../../../utils/tauri-events";
+import { selectAllInFocus } from "../../../ui/select-all";
 import { useLatest } from "../../../utils/hooks/useLatest";
 // Every theme custom property (--editor-bg, --editor-text, --editor-border,
 // ...) is declared on :root in ui/base.css. This window doesn't render App,
@@ -143,6 +144,13 @@ export function ChatWindowApp() {
       }),
     );
   }, [claimHandoff]);
+
+  // Edit › Select All in this window too: macOS's menu sends it to the
+  // focused window, the composer's text here (app/app-menu-actions.ts).
+  useEffect(
+    () => unlistenAll(listenToThisWindow("menu-select-all", selectAllInFocus)),
+    [],
+  );
 
   // A send parked waiting for a fresh context (see refreshContext below).
   // At most one: `send` refuses to start while another is in flight.

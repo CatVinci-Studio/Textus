@@ -122,9 +122,9 @@ describe("the View menu's on/off items", () => {
         view === undefined || view === "separator" ? [] : (view.submenu ?? []),
       );
       const onOff = items.filter((item) => item.checked !== undefined);
-      // Sidebar, AI Panel, Textus AI, Source Code Mode, Split View,
-      // Typewriter Mode, Zen Mode, Full Screen.
-      expect(onOff).toHaveLength(8);
+      // Sidebar, AI Panel, Source Code Mode, Split View, Typewriter Mode,
+      // Zen Mode, Full Screen.
+      expect(onOff).toHaveLength(7);
       for (const item of items) expect(item.label).not.toMatch(TOGGLE_WORDS);
       const phone = flatten(buildMobileMenu(strings));
       for (const item of phone) expect(item.label).not.toMatch(TOGGLE_WORDS);
@@ -151,20 +151,18 @@ describe("the View menu's on/off items", () => {
     ]);
   });
 
-  it("show Textus AI on unless it is turned off, and the AI panel out of reach then", () => {
+  it("keep Textus AI out of View, the AI panel out of reach while it is off, and the switch in the phone's menu", () => {
     const items = (checks: { textusAi?: boolean }) =>
       flatten(buildAppMenu(t, shortcuts, NO_RECENTS, checks));
-    const textusAi = (checks: { textusAi?: boolean }) =>
-      items(checks).find((item) => item.label === t.menuTextusAi);
     const panel = (checks: { textusAi?: boolean }) =>
       items(checks).find((item) => item.label === t.menuToggleAgentPanel);
-    expect(textusAi({})?.checked).toBe(true);
-    expect(panel({})?.disabled).toBe(false);
-    expect(textusAi({ textusAi: false })?.checked).toBe(false);
-    expect(panel({ textusAi: false })?.disabled).toBe(true);
-    expect(nativeMenuChecks({ textusAi: false })["toggle-textus-ai"]).toBe(
-      false,
+    // The window bar's button and Settings carry the switch on a desktop.
+    expect(items({}).find((item) => item.label === t.menuTextusAi)).toBe(
+      undefined,
     );
+    expect(nativeMenuChecks({})).not.toHaveProperty("toggle-textus-ai");
+    expect(panel({})?.disabled).toBe(false);
+    expect(panel({ textusAi: false })?.disabled).toBe(true);
     const phone = flatten(buildMobileMenu(t, { textusAi: false }));
     expect(phone.find((item) => item.label === t.menuTextusAi)?.checked).toBe(
       false,

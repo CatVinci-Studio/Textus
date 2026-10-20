@@ -259,7 +259,7 @@ test("the menu and the shortcut turn it off and on too", async ({ page }) => {
   await page.locator(".milkdown").click();
   await page.keyboard.press("ControlOrMeta+Alt+A");
   await expect(aiButton(page)).toHaveClass(/textus-ai-button-off/);
-  // View › Textus AI, as menu.rs's dispatch sends it.
+  // The iPhone's menu, as menu.rs's dispatch sends it.
   await page.evaluate(() =>
     (
       window as unknown as { __devEmitTauriEvent: (e: string) => void }

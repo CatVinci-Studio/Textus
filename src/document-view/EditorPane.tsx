@@ -10,6 +10,9 @@ import {
 import { MilkdownProvider } from "@milkdown/react";
 import { useSettings, type AgentMode } from "../settings/SettingsContext";
 import { KatexFirst } from "../editor/math/KatexFirst";
+import { isIOSApp } from "../platform/capabilities";
+import { isMacPlatform } from "../platform/os";
+import { elasticOverscroll } from "./elastic-overscroll";
 import type { TourAi } from "../utils/events";
 
 const MilkdownEditor = lazy(() =>
@@ -75,6 +78,15 @@ function useKeptScroll(isActive: boolean | undefined) {
     if (isActive && scroller && scroller.scrollTop !== kept.current)
       scroller.scrollTop = kept.current;
   }, [isActive]);
+  // A Mac's page gives at either end, short documents too
+  // (elastic-overscroll.ts). The iPhone's web view stretches by itself.
+  useEffect(() => {
+    const scroller = el.current;
+    const content = scroller?.firstElementChild;
+    if (!scroller || !(content instanceof HTMLElement)) return;
+    if (!isMacPlatform() || isIOSApp) return;
+    return elasticOverscroll(scroller, content);
+  }, []);
   return el;
 }
 

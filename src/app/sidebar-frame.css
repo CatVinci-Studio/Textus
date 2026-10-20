@@ -25,6 +25,10 @@
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
+  /* Its labels and notes are the app's, not text to copy: a drag across
+     them, or WebKit's Select All, selected them along with the page. */
+  user-select: none;
+  -webkit-user-select: none;
   transition:
     transform var(--dur-slow) var(--ease-spring),
     opacity var(--dur-slow) var(--ease-out),

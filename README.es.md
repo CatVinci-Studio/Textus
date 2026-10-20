@@ -180,7 +180,7 @@ Sí: archivos .md normales, con tablas, listas de tareas, notas al pie, fórmula
 1. Abre Textus. Empieza con un borrador en blanco; solo necesitas un archivo al guardar.
 2. Abre **Ajustes → Textus AI**, elige un proveedor e inicia sesión o pega una clave en **Acceso y credenciales**.
 3. Empieza a escribir. Cuando haces una pausa, la continuación aparece en gris; Tab la acepta.
-4. Abre el Panel de IA con el botón **Textus AI** (el bocadillo) de la barra de la ventana. **Ayuda → Guía de funciones de IA** explica el resto.
+4. Abre el Panel de IA con el botón **Textus AI** (la pluma) de la barra de la ventana. **Ayuda → Guía de funciones de IA** explica el resto.
 
 Todos los atajos se pueden ver y cambiar en **Ajustes → Atajos de teclado**.
 
