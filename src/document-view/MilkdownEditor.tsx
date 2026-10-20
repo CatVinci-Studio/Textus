@@ -1,4 +1,10 @@
-import { type MouseEvent, useEffect, useRef, useState } from "react";
+import {
+  type KeyboardEvent,
+  type MouseEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { contextMenuTarget, insertTable } from "../editor/editor-menu";
@@ -422,30 +428,46 @@ export function MilkdownEditor({
     agentPanel.setOpen(false);
   }
 
-  function onContextMenu(e: MouseEvent) {
-    // Portals (Quick Ask, the find bar) bubble React events through here:
-    // their text fields keep the native Cut/Copy/Paste menu instead of the
-    // editor's, whose Paste would have gone into the document.
-    if (
-      (e.target as HTMLElement).closest?.(
-        ".inline-chat, .find-replace-bar, input, textarea",
-      )
-    )
-      return;
+  /** Portals (Quick Ask, the find bar) bubble React events through here:
+   *  their text fields keep the native Cut/Copy/Paste menu instead of the
+   *  editor's, whose Paste would have gone into the document. */
+  const ownsMenu = (target: EventTarget | null) =>
+    !(target as HTMLElement | null)?.closest?.(
+      ".inline-chat, .find-replace-bar, input, textarea",
+    );
+
+  /** The menu at the caret, with the focus in it: Shift+F10 or the Menu
+   *  key. */
+  function openMenuAtCaret(target: EventTarget | null) {
+    const at = run((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      return view.coordsAtPos(view.state.selection.head);
+    });
+    setMenu({
+      x: at?.left ?? 0,
+      y: at?.bottom ?? 0,
+      keyboard: true,
+      ...contextMenuTarget(run, { target }, filePath),
+    });
+  }
+
+  // Shift+F10 and the Menu key are taken here rather than left to the
+  // browser: Chromium turns them into a contextmenu event, but WebKit -
+  // every Mac, and WebKitGTK on Linux - never does, so the keyboard's way
+  // to the menu did nothing there.
+  function onKeyDown(e: KeyboardEvent) {
+    if (!((e.key === "F10" && e.shiftKey) || e.key === "ContextMenu")) return;
+    if (e.altKey || e.ctrlKey || e.metaKey || !ownsMenu(e.target)) return;
     e.preventDefault();
-    // Shift+F10 or the Menu key (no mouse button): the menu opens at the
-    // caret, with the focus in it.
+    openMenuAtCaret(e.target);
+  }
+
+  function onContextMenu(e: MouseEvent) {
+    if (!ownsMenu(e.target)) return;
+    e.preventDefault();
+    // A key that still arrives as a contextmenu event (no mouse button).
     if (e.button !== 2) {
-      const at = run((ctx) => {
-        const view = ctx.get(editorViewCtx);
-        return view.coordsAtPos(view.state.selection.head);
-      });
-      setMenu({
-        x: at?.left ?? 0,
-        y: at?.bottom ?? 0,
-        keyboard: true,
-        ...contextMenuTarget(run, { target: e.target }, filePath),
-      });
+      openMenuAtCaret(e.target);
       return;
     }
     setMenu({
@@ -459,6 +481,7 @@ export function MilkdownEditor({
     <div
       ref={rootRef}
       onContextMenu={onContextMenu}
+      onKeyDown={onKeyDown}
       // iOS fires mouseover on a tap; there the caret opens the suggestion.
       onMouseOver={
         phone
