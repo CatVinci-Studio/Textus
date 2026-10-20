@@ -1,7 +1,9 @@
 .language-welcome-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 500;
+  /* A modal like Settings: below the unsaved-changes prompt, which a close
+     during the first launch still has to show (ui/app-dialog.css). */
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
