@@ -19,7 +19,6 @@ import {
   OPEN_FILE_IN_TAB_EVENT,
   type OpenFileInTab,
 } from "../utils/events";
-import { samePath } from "../utils/path";
 import { setTabJump, type TabJump } from "../editor/tab-jump";
 import { lastCaret } from "../document/last-carets";
 import { isIOSApp } from "../platform/capabilities";
@@ -79,11 +78,7 @@ export function useFileOpening(opts: {
 
   const openPathInTab = useCallback(
     async (path: string, open: OpenOptions = {}) => {
-      // The same file however its path is written (a quick note's path
-      // comes from Rust, a tab's from a dialog: utils/path.ts's samePath).
-      const existing = tabsRef.current.find(
-        (tab) => !!tab.path && samePath(tab.path, path),
-      );
+      const existing = tabsRef.current.find((tab) => tab.path === path);
       if (existing) {
         // Source Mode has no headings to scroll to: the tab just comes up.
         if (open.anchor && !existing.sourceMode)

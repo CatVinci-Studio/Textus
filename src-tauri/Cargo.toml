@@ -124,16 +124,6 @@ tauri-plugin-process = "2.4"
 # The update check's version comparison (commands/update.rs); the updater
 # hands its versions over as semver 1.
 semver = "1"
-# Quick Notes' global shortcut (commands/quick_note/shortcut.rs). Rust-only:
-# no npm package and no JS permission, and the plugin is added to the app
-# only once the user turns the shortcut on, so it costs nothing at startup
-# for everyone else.
-tauri-plugin-global-shortcut = "2"
-# A second launch hands its arguments to the running app (lib.rs). On
-# macOS that only happens when the binary is run directly - Finder and
-# `open` reuse the app by themselves - which is what `textus --quick-note`
-# from a script or a launcher does.
-tauri-plugin-single-instance = "2"
 
 # macOS-native PDF export (commands/export.rs): the themed document is
 # rendered in an offscreen WKWebView with createPDF and cut into A4 sheets
@@ -209,4 +199,7 @@ gtk = "0.18"
 # use and panics when neither is installed. Already in the tree through
 # libappindicator-sys, at this version.
 libloading = "0.7"
+
+[target.'cfg(any(windows, target_os = "linux"))'.dependencies]
+tauri-plugin-single-instance = "2"
 

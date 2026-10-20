@@ -152,13 +152,9 @@ Les trois se trouvent aussi dans le menu **Présentation**.
 
 **Fichier → Ouvrir un dossier…** ouvre tout un dossier dans la barre latérale : l'arborescence y reste pendant que vous ouvrez les documents qu'il contient, le dossier revient avec votre session, et **Fichier → Fermer le dossier** laisse de nouveau l'arborescence suivre le document. La zone en haut de l'onglet **Fichiers** de la barre latérale cherche des noms de fichier dans tout le dossier ; `Cmd+Shift+O` y mène directement. Tapez pour filtrer, `↑`/`↓` pour vous déplacer, `Entrée` pour ouvrir, `Échap` pour effacer. Les deux ne sont disponibles que sur ordinateur.
 
-## Notes rapides
+## Rester ouvert en arrière-plan
 
-**Fichier → Nouvelle note rapide** ouvre une petite fenêtre pour noter quelque chose au vol. Appuyez sur `Échap` (ou `Cmd+Entrée`, `Cmd+S`, `Cmd+W`) : la note est enregistrée et la fenêtre se ferme ; une note vide est simplement fermée. **Ouvrir dans Textus** l’enregistre et l’ouvre dans un onglet.
-
-Les notes vont dans `Textus/Notes rapides`, dans votre dossier Documents, un fichier par note, nommé d’après sa première ligne. Dans **Réglages → Général → Notes rapides**, vous pouvez choisir un autre dossier, passer à **un fichier par jour** et activer un **raccourci global** qui ouvre une note rapide depuis n’importe quelle app : `Contrôle+Option+N` sur Mac, `Ctrl+Alt+N` sous Linux, `Win+Alt+N` sous Windows. En rouvrir une dans les minutes qui suivent reprend la dernière note. Sous Wayland, associez la commande `textus --quick-note` affichée là à une touche dans les réglages de votre bureau.
-
-Pour garder Textus à portée de main sans fenêtre ouverte, activez **Réglages → Général → Arrière-plan → Rester ouvert en arrière-plan** : fermer la dernière fenêtre laisse alors Textus ouvert, avec une icône dans la zone de notification (Windows), la zone de notification du système (Linux) ou la barre des menus (Mac). Son menu ouvre une nouvelle note rapide, vos documents, le dossier des notes rapides et les réglages ; **Quitter Textus** dans ce menu quitte vraiment. **Démarrer en arrière-plan à l’ouverture de session** le lance ainsi à l’ouverture de session. GNOME n’affiche l’icône qu’avec l’extension AppIndicator.
+Activez **Réglages → Général → Application → Rester ouvert en arrière-plan** : fermer la dernière fenêtre laisse alors Textus ouvert, avec son icône dans la zone de notification (Windows), la zone de notification du système (Linux) ou la barre des menus (Mac). **Ouvrir Textus** dans le menu de l’icône vous ramène à vos documents ; **Quitter Textus** dans ce menu quitte vraiment. GNOME n’affiche l’icône qu’avec l’extension AppIndicator.
 
 ## Notes de bas de page et filets
 

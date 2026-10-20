@@ -13,8 +13,7 @@
 
 ## 下一个版本（1.2.0）
 
-- **随时速记。** 从文件菜单、托盘图标，或者你打开的全局快捷键弹出一个小小的 Markdown 窗口，写几句，按 `Esc` 就存成 Markdown 文件，可以每条一个文件，也可以每天一个文件。[#193](https://github.com/CatVinci-Studio/Textus/issues/193)
-- **在后台保持运行**（需要手动打开）：关掉最后一个窗口后 Textus 继续运行，在通知区域、系统托盘或菜单栏显示图标，还可以登录时自动启动。[#244](https://github.com/CatVinci-Studio/Textus/pull/244)
+- **在后台保持运行**（需要手动打开）：关掉最后一个窗口后 Textus 继续运行，在通知区域、系统托盘或菜单栏显示图标。[#244](https://github.com/CatVinci-Studio/Textus/pull/244)
 - **在侧边栏打开整个文件夹**，并用 `Ctrl/⌘ + Shift + O` 搜索里面的文件名。[#152](https://github.com/CatVinci-Studio/Textus/issues/152)、[#79](https://github.com/CatVinci-Studio/Textus/issues/79)
 - **保存时只改你编辑过的地方。** 没动过的段落按原样写回，和 Git 一起用时改动一目了然。双链（`[[笔记]]`、`[[笔记#标题]]`）可以点开，双链和 `#标签` 都原样保存。[#234](https://github.com/CatVinci-Studio/Textus/pull/234)
 - **修订边生成边逐句出现。** 每一句改动直接出现在原句旁边，不再先把整段划掉。[#243](https://github.com/CatVinci-Studio/Textus/pull/243)
@@ -41,7 +40,7 @@
 - **简单地选择 AI 思考的深度**：自动、快速或深入。
 - **Textus AI 生成图片**，像其他提议一样由你确认，支持国内外主流的图片服务。[#194](https://github.com/CatVinci-Studio/Textus/issues/194)
 - **Textus AI 能读项目文件夹里的 Word、PDF、幻灯片和表格。**
-- **插件和插件分享平台。** 插件在沙盒里运行，只拿到你允许的权限，不装就不会运行；Textus AI 也能帮你写一个。上线时附带几款基础插件。
+- **插件和插件分享平台。** 插件在沙盒里运行，只拿到你允许的权限，不装就不会运行；Textus AI 也能帮你写一个。上线时附带几款基础插件，其中包括**随时速记**：用全局快捷键弹出一个小小的 Markdown 窗口，关掉时存成 Markdown 文件。[#193](https://github.com/CatVinci-Studio/Textus/issues/193)
 
 ## 以后：Textus 1.4.0，稳定打磨
 

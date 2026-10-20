@@ -3,10 +3,10 @@
 //! when the setting turns on, dropped when it turns off; never there
 //! otherwise.
 //!
-//! Its menu: New Quick Note, Open Textus, Open Quick Notes Folder,
-//! Settings…, Quit Textus. A left click opens a quick note on Windows; on
-//! macOS it opens the menu, as menu bar items do, and on Linux the
-//! AppIndicator protocol has no click of its own, so it opens the menu too.
+//! Its menu: Open Textus and Quit Textus. A left click opens Textus on
+//! Windows; on macOS it opens the menu, as menu bar items do, and on Linux
+//! the AppIndicator protocol has no click of its own, so it opens the menu
+//! too.
 //!
 //! The icons are src-tauri/icons/tray/, made from the app icon by
 //! scripts/make-tray-icons.sh.
@@ -14,7 +14,7 @@
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
-use tauri::{AppHandle, Manager, Wry};
+use tauri::{AppHandle, Wry};
 
 /// The tray's id. There is only ever one.
 pub const ID: &str = "textus";
@@ -23,103 +23,31 @@ pub const ID: &str = "textus";
 /// bar's do (Tauri sends tray menu clicks to the app's menu handler), which
 /// hands them to `on_menu`.
 pub const MENU_PREFIX: &str = "tray:";
-const NEW_QUICK_NOTE: &str = "new-quick-note";
 const OPEN_APP: &str = "open";
-const OPEN_FOLDER: &str = "open-quick-notes-folder";
-const SETTINGS: &str = "settings";
 const QUIT: &str = "quit";
 
 /// The menu's labels in one language. Rust's own, not sent by a window:
-/// the tray is up at login before any window has been. Each is the same
-/// string as in src/i18n/locales/ (a test holds them to it).
+/// the tray can be up before any window has been. Each is the same string
+/// as in src/i18n/locales/ (a test holds them to it).
 struct Labels {
-    new_quick_note: &'static str,
     open_app: &'static str,
-    open_folder: &'static str,
-    settings: &'static str,
     quit: &'static str,
 }
 
 fn labels(language: &str) -> Labels {
-    let (new_quick_note, open_app, open_folder, settings, quit) = match language {
-        "zh" => (
-            "新建速记",
-            "打开 Textus",
-            "打开速记文件夹",
-            "设置…",
-            "退出 Textus",
-        ),
-        "zh-Hant" => (
-            "新增速記",
-            "打開 Textus",
-            "打開速記檔案夾",
-            "設定…",
-            "結束 Textus",
-        ),
-        "ja" => (
-            "新規クイックメモ",
-            "Textus を開く",
-            "クイックメモのフォルダを開く",
-            "設定…",
-            "Textusを終了",
-        ),
-        "ko" => (
-            "새 빠른 메모",
-            "Textus 열기",
-            "빠른 메모 폴더 열기",
-            "설정…",
-            "Textus 종료",
-        ),
-        "es" => (
-            "Nueva nota rápida",
-            "Abrir Textus",
-            "Abrir carpeta de notas rápidas",
-            "Ajustes…",
-            "Salir de Textus",
-        ),
-        "fr" => (
-            "Nouvelle note rapide",
-            "Ouvrir Textus",
-            "Ouvrir le dossier des notes rapides",
-            "Réglages…",
-            "Quitter Textus",
-        ),
-        "de" => (
-            "Neue Schnellnotiz",
-            "Textus öffnen",
-            "Schnellnotiz-Ordner öffnen",
-            "Einstellungen…",
-            "Textus beenden",
-        ),
-        "ru" => (
-            "Новая быстрая заметка",
-            "Открыть Textus",
-            "Открыть папку быстрых заметок",
-            "Настройки…",
-            "Завершить Textus",
-        ),
-        "pt" => (
-            "Nova nota rápida",
-            "Abrir o Textus",
-            "Abrir pasta de notas rápidas",
-            "Ajustes…",
-            "Encerrar Textus",
-        ),
-        _ => (
-            "New Quick Note",
-            "Open Textus",
-            "Open Quick Notes Folder",
-            "Settings…",
-            "Quit Textus",
-        ),
+    let (open_app, quit) = match language {
+        "zh" => ("打开 Textus", "退出 Textus"),
+        "zh-Hant" => ("打開 Textus", "結束 Textus"),
+        "ja" => ("Textus を開く", "Textusを終了"),
+        "ko" => ("Textus 열기", "Textus 종료"),
+        "es" => ("Abrir Textus", "Salir de Textus"),
+        "fr" => ("Ouvrir Textus", "Quitter Textus"),
+        "de" => ("Textus öffnen", "Textus beenden"),
+        "ru" => ("Открыть Textus", "Завершить Textus"),
+        "pt" => ("Abrir o Textus", "Encerrar Textus"),
+        _ => ("Open Textus", "Quit Textus"),
     };
-    Labels {
-        new_quick_note,
-        open_app,
-        open_folder,
-        settings,
-        quit,
-    }
+    Labels { open_app, quit }
 }
 
 fn menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
@@ -132,11 +60,7 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         MenuItemBuilder::with_id(format!("{MENU_PREFIX}{id}"), text.replace('&', "&&")).build(app)
     };
     MenuBuilder::new(app)
-        .item(&item(NEW_QUICK_NOTE, l.new_quick_note)?)
         .item(&item(OPEN_APP, l.open_app)?)
-        .item(&item(OPEN_FOLDER, l.open_folder)?)
-        .separator()
-        .item(&item(SETTINGS, l.settings)?)
         .separator()
         .item(&item(QUIT, l.quit)?)
         .build()
@@ -145,33 +69,9 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
 /// A tray menu click, from menu.rs's dispatch (`item` without the prefix).
 pub fn on_menu(app: &AppHandle, item: &str) {
     match item {
-        NEW_QUICK_NOTE => crate::commands::quick_note::window::open_soon(app),
         OPEN_APP => crate::reopen_without_windows(app),
-        // Both open in the front editor window (or a new one), as the File
-        // and app menus' items do.
-        OPEN_FOLDER => {
-            bring_editor_forward(app);
-            crate::menu::open_quick_notes_folder(app);
-        }
-        SETTINGS => {
-            bring_editor_forward(app);
-            crate::menu::open_settings(app);
-        }
         QUIT => crate::menu::quit(app),
         _ => {}
-    }
-}
-
-/// The editor window a tray command lands in, brought forward: it may be
-/// behind other apps' windows or minimised, since the tray is clicked from
-/// anywhere.
-fn bring_editor_forward(app: &AppHandle) {
-    if let Some(window) =
-        crate::menu::focused_editor_window(app).and_then(|label| app.get_webview_window(&label))
-    {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
     }
 }
 
@@ -275,7 +175,7 @@ fn build(app: &AppHandle) -> tauri::Result<()> {
     // or dark.
     #[cfg(target_os = "macos")]
     let builder = builder.icon_as_template(true);
-    // Windows: a left click is a quick note, the right click the menu. On
+    // Windows: a left click opens Textus, the right click the menu. On
     // Linux this does nothing (the indicator only has its menu).
     #[cfg(not(target_os = "macos"))]
     let builder = builder
@@ -288,7 +188,7 @@ fn build(app: &AppHandle) -> tauri::Result<()> {
                 ..
             } = event
             {
-                crate::commands::quick_note::window::open_soon(tray.app_handle());
+                crate::reopen_without_windows(tray.app_handle());
             }
         });
     builder.build(app)?;
@@ -332,13 +232,7 @@ mod tests {
         ];
         for (language, source) in locales {
             let l = labels(language);
-            for (label, key) in [
-                (l.new_quick_note, "menuNewQuickNote"),
-                (l.open_app, "trayOpenTextus"),
-                (l.open_folder, "menuOpenQuickNotesFolder"),
-                (l.settings, "menuSettings"),
-                (l.quit, "menuQuit"),
-            ] {
+            for (label, key) in [(l.open_app, "trayOpenTextus"), (l.quit, "menuQuit")] {
                 assert_eq!(label, locale_string(source, key), "{language} {key}");
             }
         }

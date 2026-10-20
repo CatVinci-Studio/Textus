@@ -7,8 +7,6 @@ import {
   type MenuChecks,
 } from "./app-menu-model";
 import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
-import { formatAccelerator } from "../utils/accelerator";
-import { useQuickNoteShortcut } from "../platform/useQuickNoteShortcut";
 import { exportHtml, exportPdf, exportViaPandoc } from "../export/exporters";
 import {
   EDIT_ACTION_EVENT,
@@ -173,16 +171,11 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
 
   // The macOS menu bar is native and built in English: it takes the UI's
   // language from these labels, sent by each window as it opens and again
-  // when the language changes (Rust rebuilds only on a change). New Quick
-  // Note's label carries the global shortcut while it is registered.
+  // when the language changes (Rust rebuilds only on a change).
   const { t } = handlers;
-  const quickNote = useQuickNoteShortcut();
-  const quickNoteHint =
-    quickNote?.state === "on" ? formatAccelerator(quickNote.accelerator) : "";
   useEffect(() => {
-    if (hasNativeMenuBar)
-      void menuIpc.setMenuLabels(nativeMenuLabels(t, quickNoteHint));
-  }, [t, quickNoteHint]);
+    if (hasNativeMenuBar) void menuIpc.setMenuLabels(nativeMenuLabels(t));
+  }, [t]);
 
   // Settings… or Open… chosen from the macOS menu bar while no window was
   // open: Rust opened this window to carry it out (menu.rs's

@@ -102,11 +102,7 @@ export function AgentSkillsSection({ t }: { t: Strings }) {
 
   return (
     <>
-      <SettingRow
-        label={t.agentSkillsLabel}
-        help={t.agentSkillsHint}
-        error={error}
-      >
+      <SettingRow label={t.agentSkillsLabel} error={error}>
         <button
           className="text-button settings-inline-button"
           onClick={importSkill}

@@ -471,9 +471,6 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(commands::chat_window::OpenChatWindows(Mutex::new(
             Vec::new(),
         )))
-        .manage(commands::quick_note::shortcut::ShortcutStatus(Mutex::new(
-            None,
-        )))
         .manage(background::BackgroundStatus::default())
         .on_window_event(|window, event| {
             let app = window.app_handle();
@@ -513,11 +510,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
 /// The desktop half of startup, run from the shared setup in `run` once the
 /// main window exists.
 #[cfg(desktop)]
-fn desktop_setup(
-    app: &mut tauri::App,
-    launch: background::Launch,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let quick_note_only = launch == background::Launch::QuickNote;
+fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_os = "linux")]
     detect_wayland();
     // Windows/Linux hand an associated file over as a plain argv
@@ -534,12 +527,7 @@ fn desktop_setup(
     );
     #[cfg(target_os = "macos")]
     arg_paths.extend(LAUNCH_OPENED.lock().unwrap().take().unwrap_or_default());
-    let startup_paths = if launch != background::Launch::Editor {
-        // Last session's documents wait for the next real launch (or Open
-        // Textus in the tray): restored now, they would open a window
-        // nobody asked for.
-        Vec::new()
-    } else if !arg_paths.is_empty() {
+    let startup_paths = if !arg_paths.is_empty() {
         arg_paths
     } else if commands::prefs::read_restore_session_on_startup(app.handle()) {
         commands::session::read_session_paths(app.handle())
@@ -562,13 +550,8 @@ fn desktop_setup(
         hide_native_menu_bar(&window);
     }
 
-    // The Quick Note shortcut costs nothing until it is turned on: off, this
-    // only notes that it is.
-    commands::quick_note::shortcut::apply(app.handle());
-    if quick_note_only {
-        commands::quick_note::window::open_soon(app.handle());
-    }
-    // Background mode, likewise: off, this is one settings read.
+    // Background mode costs nothing until it is turned on: off, this is
+    // one settings read.
     if background::enabled(app.handle()) {
         background::apply(app.handle(), background::Change::Startup);
     }
@@ -649,23 +632,11 @@ pub fn run() {
     // so "open in a tab" couldn't work and two processes wrote the same
     // session. Must be the first plugin: a second launch hands its argv to
     // the running instance here and exits before setting anything else up.
-    // (macOS routes Finder's and `open`'s later opens to the running app
-    // itself, see RunEvent::Opened below; there this only catches the binary
-    // run directly, as `textus --quick-note` from a launcher is.) Release
-    // builds only, so a dev build can run next to an installed Textus
-    // instead of forwarding to it.
-    #[cfg(all(desktop, not(debug_assertions)))]
+    // (macOS routes later opens to the running app itself; see
+    // RunEvent::Opened below.) Release builds only, so a dev build can run
+    // next to an installed Textus instead of forwarding to it.
+    #[cfg(all(any(windows, target_os = "linux"), not(debug_assertions)))]
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
-        match background::launch(&argv, true) {
-            background::Launch::QuickNote => {
-                commands::quick_note::window::open_soon(app);
-                return;
-            }
-            // The login entry's launch, with Textus already running: it is
-            // already where that launch would have put it.
-            background::Launch::Background => return,
-            _ => {}
-        }
         let paths = paths_from_argv(argv, std::path::Path::new(&cwd));
         let editor_open = app
             .webview_windows()
@@ -696,34 +667,9 @@ pub fn run() {
         .setup(|app| {
             // Before any window: every window's boot script is made from it.
             settings::init(app.handle());
-            // `textus --quick-note` launches into the Quick Note window
-            // alone, and `textus --background` (the login entry) into no
-            // window at all; the editor opens when the user asks for it.
+            build_main_window(app)?;
             #[cfg(desktop)]
-            let launch = background::launch(
-                &std::env::args().collect::<Vec<_>>(),
-                background::enabled(app.handle()),
-            );
-            #[cfg(desktop)]
-            if launch == background::Launch::Exit {
-                // Background mode was turned off since the login entry was
-                // written: take the entry away, and with it this launch.
-                let _ = background::login::set(app.handle(), false);
-                std::process::exit(0);
-            }
-            #[cfg(desktop)]
-            let main_window = launch == background::Launch::Editor;
-            #[cfg(not(desktop))]
-            let main_window = true;
-            if main_window {
-                build_main_window(app)?;
-            } else {
-                // No initial window will drain the open queue: anything
-                // opened from here on needs a window of its own.
-                UI_READY.store(true, Ordering::Relaxed);
-            }
-            #[cfg(desktop)]
-            desktop_setup(app, launch)?;
+            desktop_setup(app)?;
             Ok(())
         })
         // One handler list for both targets. Desktop-only commands carry
@@ -870,32 +816,6 @@ pub fn run() {
             #[cfg(desktop)]
             commands::chat_window::current_chat_window,
             #[cfg(desktop)]
-            commands::quick_note::quick_note_session,
-            #[cfg(desktop)]
-            commands::quick_note::quick_note_save_draft,
-            #[cfg(desktop)]
-            commands::quick_note::quick_note_discard_draft,
-            #[cfg(desktop)]
-            commands::quick_note::quick_note_commit,
-            #[cfg(desktop)]
-            commands::quick_note::quick_note_preview_name,
-            #[cfg(desktop)]
-            commands::quick_note::quick_note_finish,
-            #[cfg(desktop)]
-            commands::quick_note::quick_note_open_in_editor,
-            #[cfg(desktop)]
-            commands::quick_note::quick_note_ready,
-            #[cfg(desktop)]
-            commands::quick_note::quick_note_folder,
-            #[cfg(desktop)]
-            commands::quick_note::quick_note_pick_folder,
-            #[cfg(desktop)]
-            commands::quick_note::quick_note_open_folder,
-            #[cfg(desktop)]
-            commands::quick_note::quick_note_cli_command,
-            #[cfg(desktop)]
-            commands::quick_note::shortcut::quick_note_shortcut_status,
-            #[cfg(desktop)]
             background::background_status,
             #[cfg(desktop)]
             update_session_paths,
@@ -950,7 +870,7 @@ pub fn run() {
             if let tauri::RunEvent::ExitRequested { code, api, .. } = &event {
                 if background::keeps_running(
                     *code,
-                    commands::quick_note::shortcut::Os::current(),
+                    background::Os::current(),
                     background::enabled(app_handle),
                 ) {
                     api.prevent_exit();

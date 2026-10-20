@@ -67,39 +67,17 @@ pub fn read_restore_session_on_startup(app: &AppHandle) -> bool {
 /// per label: labels after "main" are minted fresh each run (window-N), so
 /// a per-label store would never be read back.
 pub fn read_editor_window_size(app: &AppHandle) -> Option<(f64, f64)> {
-    read_window_size(app, EDITOR_WINDOW_SIZE, (320.0, 240.0))
-}
-
-/// Records `window`'s size for read_editor_window_size.
-pub fn remember_editor_window_size(app: &AppHandle, window: &tauri::Window) {
-    remember_window_size(app, EDITOR_WINDOW_SIZE, window);
-}
-
-/// The Quick Note window's own remembered size (commands/quick_note): a
-/// note pad and a document window are not the same shape.
-pub fn read_quick_note_window_size(app: &AppHandle) -> Option<(f64, f64)> {
-    read_window_size(app, QUICK_NOTE_WINDOW_SIZE, (200.0, 140.0))
-}
-
-pub fn remember_quick_note_window_size(app: &AppHandle, window: &tauri::Window) {
-    remember_window_size(app, QUICK_NOTE_WINDOW_SIZE, window);
-}
-
-const EDITOR_WINDOW_SIZE: &str = "editor_window_size";
-const QUICK_NOTE_WINDOW_SIZE: &str = "quick_note_window_size";
-
-fn read_window_size(app: &AppHandle, key: &str, min: (f64, f64)) -> Option<(f64, f64)> {
-    let size = read_prefs(app).get(key)?.clone();
+    let size = read_prefs(app).get("editor_window_size")?.clone();
     let width = size.get(0)?.as_f64()?;
     let height = size.get(1)?.as_f64()?;
     // A corrupt or hand-edited value must not open an unusable window.
-    (width >= min.0 && height >= min.1).then_some((width, height))
+    (width >= 320.0 && height >= 240.0).then_some((width, height))
 }
 
-/// Records `window`'s size under `key`, unless it is maximized, fullscreen
-/// or minimized - restoring that size would open a plain window filling the
-/// screen, or a degenerate one.
-fn remember_window_size(app: &AppHandle, key: &str, window: &tauri::Window) {
+/// Records `window`'s size for read_editor_window_size, unless it is
+/// maximized, fullscreen or minimized - restoring that size would open a
+/// plain window filling the screen, or a degenerate one.
+pub fn remember_editor_window_size(app: &AppHandle, window: &tauri::Window) {
     let unsized_state = window.is_maximized().unwrap_or(true)
         || window.is_fullscreen().unwrap_or(true)
         || window.is_minimized().unwrap_or(true);
@@ -112,7 +90,7 @@ fn remember_window_size(app: &AppHandle, key: &str, window: &tauri::Window) {
     let size = size.to_logical::<f64>(scale);
     let _ = write_pref(
         app,
-        key,
+        "editor_window_size",
         serde_json::json!([size.width.round(), size.height.round()]),
     );
 }

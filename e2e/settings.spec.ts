@@ -18,8 +18,6 @@ const t = {
   navPrivacy: "Privacy",
   generalBasicsLabel: "Basics",
   settingsFilesGroup: "Files",
-  quickNotesGroup: "Quick Notes",
-  backgroundGroup: "Background",
   generalSystemLabel: "Application",
   settingsHelpGroup: "Help",
   autosaveLabel: "Save automatically",
@@ -41,7 +39,6 @@ const t = {
   aiAskToggleLabel: `Enable ${AI_NAME} chat`,
   agentModelLabel: "Chat model",
   webSearchLabel: "Web search",
-  webSearchHint: "Needs support from the current provider",
   diagramEngineLabel: "Diagram engine",
   diagramEngineHint:
     "Pele is faster, but lays diagrams out differently from GitHub and Mermaid and skips a few features, such as HTML in labels; Mermaid draws whatever Pele can't.",
@@ -59,7 +56,6 @@ const t = {
   updateChannel: "Update channel",
   updateChannelStable: "Stable",
   updateChannelBeta: "Beta",
-  updateChannelHint: "Beta gets release candidates before everyone else.",
   defaultEditorLabel: "Default Markdown editor",
   defaultEditorIsDefault: "Textus is the default",
   defaultEditorNotDefault: "Textus is not the default",
@@ -144,17 +140,13 @@ test.describe("desktop", () => {
     await expect(
       group(t.aiAskLabel).getByText(t.agentModelLabel),
     ).toBeVisible();
-    // Web search's caveat is behind its "?", not under the row.
-    await expect(group(t.aiAskLabel).getByText(t.webSearchHint)).toBeHidden();
-    await group(t.aiAskLabel)
-      .getByRole("button", { name: more(t.webSearchLabel) })
-      .click();
-    await expect(page.getByRole("tooltip")).toHaveText(t.webSearchHint);
+    // Web search's label says enough: no "?" beside it.
+    await expect(
+      group(t.aiAskLabel).getByRole("button", { name: more(t.webSearchLabel) }),
+    ).toHaveCount(0);
     await expect(
       panel.getByRole("checkbox", { name: t.webSearchLabel, exact: true }),
     ).not.toBeChecked();
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("tooltip")).toHaveCount(0);
     // The UI never says "Agent" any more.
     await expect(panel).not.toContainText(/\bAgent\b/);
 
@@ -313,10 +305,10 @@ test.describe("desktop", () => {
     ).toBeVisible();
     const channel = panel.getByRole("combobox", { name: t.updateChannel });
     await expect(channel).toHaveText(t.updateChannelStable);
-    await expect(panel.getByText(t.updateChannelHint)).toBeHidden();
+    // Stable and Beta say what they are: no "?".
     await expect(
       panel.getByRole("button", { name: more(t.updateChannel) }),
-    ).toHaveAccessibleDescription(t.updateChannelHint);
+    ).toHaveCount(0);
 
     await channel.click();
     await page.getByRole("option", { name: t.updateChannelBeta }).click();
@@ -498,8 +490,6 @@ test.describe("desktop", () => {
     await expect(titles).toHaveText([
       t.generalBasicsLabel,
       t.settingsFilesGroup,
-      t.quickNotesGroup,
-      t.backgroundGroup,
       t.generalSystemLabel,
       t.settingsHelpGroup,
     ]);
@@ -602,15 +592,13 @@ test.describe("phone", () => {
   }) => {
     await openPhone(page, { settings: { language: "en" } });
     const panel = await openSettings(page);
-    await panel.getByRole("button", { name: t.navAi, exact: true }).tap();
-    const help = panel.getByRole("button", { name: more(t.webSearchLabel) });
+    await panel.getByRole("button", { name: t.navEditor, exact: true }).tap();
+    const help = panel.getByRole("button", {
+      name: more(t.diagramEngineLabel),
+    });
     await help.scrollIntoViewIfNeeded();
     await help.tap();
-    await expect(page.getByRole("tooltip")).toHaveText(t.webSearchHint);
-    // The switch beside it stayed as it was.
-    await expect(
-      panel.getByRole("checkbox", { name: t.webSearchLabel, exact: true }),
-    ).not.toBeChecked();
+    await expect(page.getByRole("tooltip")).toHaveText(t.diagramEngineHint);
     await panel.locator(".settings-group-title").first().tap();
     await expect(page.getByRole("tooltip")).toHaveCount(0);
   });

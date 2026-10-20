@@ -1026,21 +1026,10 @@ pub fn settings_patch(
     if patch.contains_key("theme") {
         theme_changed(&app);
     }
-    // The Quick Note shortcut is registered in Rust: turned on, off or
-    // changed in Settings, it is registered again (on this, the main
-    // thread, as the hotkey manager wants).
+    // Background mode's tray, built or dropped as the setting changes; its
+    // menu follows the UI language.
     #[cfg(desktop)]
-    if patch.contains_key(crate::commands::quick_note::shortcut::ENABLED_SETTING)
-        || patch.contains_key(crate::commands::quick_note::shortcut::ACCELERATOR_SETTING)
-    {
-        crate::commands::quick_note::shortcut::apply(&app);
-    }
-    // Background mode's tray and login entry, likewise; the tray's menu
-    // follows the UI language.
-    #[cfg(desktop)]
-    if patch.contains_key(crate::background::ENABLED_SETTING)
-        || patch.contains_key(crate::background::LOGIN_SETTING)
-    {
+    if patch.contains_key(crate::background::ENABLED_SETTING) {
         crate::background::apply(&app, crate::background::Change::Settings);
     } else if patch.contains_key("language") {
         crate::background::apply(&app, crate::background::Change::Language);
