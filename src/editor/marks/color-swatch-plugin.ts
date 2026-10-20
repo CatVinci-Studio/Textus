@@ -8,6 +8,7 @@ import {
   redecorateChanged,
 } from "../changed-ranges";
 import type { ColorSwatchMode } from "../../settings/SettingsContext";
+import { commentRanges } from "../code/code-comments";
 import { colorOfCode, findColorCodes, OPAQUE } from "./color-codes";
 import { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure";
 
@@ -73,7 +74,8 @@ interface Run {
 
 /**
  * A block's swatches, for a mode that isn't "off". A code block's colour
- * literals, short hex included. Inline code that is all one colour.
+ * literals outside its comments, short hex included. Inline code that is
+ * all one colour.
  * With "everywhere", also the colour codes in the block's text, read as
  * one string, so whether a code stands as a token of its own is judged by
  * what really stands beside it, across bold or italic. Only the block's
@@ -86,10 +88,16 @@ function swatches(
   block: ProseNode,
   blockPos: number,
 ): Decoration[] {
-  if (block.type.name === "code_block")
-    return findColorCodes(block.textContent, true).map((code) =>
-      textSwatch(blockPos + 1 + code.from, code.color),
+  if (block.type.name === "code_block") {
+    // Not in comments, where `see #234` is an issue, not a grey.
+    const comments = commentRanges(
+      block.textContent,
+      block.attrs.language as string | null,
     );
+    return findColorCodes(block.textContent, true)
+      .filter(({ from }) => !comments.some(([a, b]) => a <= from && from < b))
+      .map((code) => textSwatch(blockPos + 1 + code.from, code.color));
+  }
   const decorations: Decoration[] = [];
   const runs: Run[] = [];
   let text = "";

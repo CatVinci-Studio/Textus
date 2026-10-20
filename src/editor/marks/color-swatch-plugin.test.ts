@@ -10,7 +10,12 @@ const schema = new Schema({
     doc: { content: "block+" },
     paragraph: { content: "inline*", group: "block" },
     heading: { content: "inline*", group: "block" },
-    code_block: { content: "text*", group: "block", code: true },
+    code_block: {
+      content: "text*",
+      group: "block",
+      code: true,
+      attrs: { language: { default: null } },
+    },
     md_code_span: { content: "text*", group: "inline", inline: true },
     md_span: { content: "inline*", group: "inline", inline: true },
     wikilink: { content: "text*", group: "inline", inline: true, code: true },
@@ -154,6 +159,20 @@ describe("colorSwatchPlugin", () => {
     mode.mode = "off";
     state = state.apply(state.tr);
     expect(decorations(state)).toEqual([]);
+  });
+
+  it("leaves a code block's comments alone, its strings and code not", () => {
+    const block = (language: string | null, value: string) =>
+      schema.node("code_block", { language }, [text(value)]);
+    const state = stateOf(
+      [
+        block("css", "a { color: #333; } /* see #234 */"),
+        block("javascript", 'const c = "#444"; // see #235'),
+        block(null, "fill #555 # see #236"),
+      ],
+      { mode: "code" },
+    );
+    expect(plainSwatches(state)).toEqual(["#333", "#444", "#555"]);
   });
 
   it("redraws a code block's swatches as it is edited", () => {

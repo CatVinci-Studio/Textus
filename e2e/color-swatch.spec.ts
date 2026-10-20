@@ -139,7 +139,7 @@ const RICH = [
   "Inline `#ff00ff`, short `#f0f` and `red`.",
   "",
   "```css",
-  "a { color: #ff8800; border-color: #fff; }",
+  "a { color: #ff8800; border-color: #fff; } /* see #234 */",
   "#fed { }",
   "```",
   "",
