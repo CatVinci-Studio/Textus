@@ -28,10 +28,10 @@ const KATEX_READY = "katex-ready";
 const RENDER_CACHE_LIMIT = 1000;
 const renderCache = new Map<string, string>();
 
-/** The formula drawn, or null until KaTeX has loaded (katex-loader.ts). */
 const cacheKeyOf = (value: string, displayMode: boolean) =>
   `${displayMode ? "B" : "I"}${value}`;
 
+/** The formula drawn, or null until KaTeX has loaded (katex-loader.ts). */
 function renderKatex(value: string, displayMode: boolean): string | null {
   const cacheKey = cacheKeyOf(value, displayMode);
   const cached = renderCache.get(cacheKey);

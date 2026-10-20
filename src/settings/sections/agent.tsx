@@ -24,7 +24,7 @@ import {
 } from "../../ai/provider-catalog";
 import { ai, auth } from "../../platform/ipc";
 import { Select } from "../../ui/Select";
-import { SettingRow, VERBATIM_INPUT } from "./controls";
+import { SecretInput, SettingRow, VERBATIM_INPUT } from "./controls";
 
 // The AI category's model pickers, and the rows for the concepts in
 // docs/design/ai-concepts.md: the project folder, the global writing instructions
@@ -424,7 +424,7 @@ const SEARCH_KEY_IDS: Partial<Record<SearchService, string>> = {
 
 /** A search service's name as the UI shows it - brand names, but for the
  *  ones with a name of their own in Chinese, and Automatic. */
-export function searchServiceName(t: Strings, id: string): string {
+function searchServiceName(t: Strings, id: string): string {
   switch (id) {
     case "auto":
       return t.searchServiceAuto;
@@ -553,31 +553,15 @@ function SearchKeyRow({
   }
   return (
     <SettingRow label={label}>
-      {saved ? (
-        <div className="api-key-configured">
-          <span className="settings-row-hint">{t.apiKeyConfigured}</span>
-          <button
-            className="text-button settings-inline-button"
-            onClick={clear}
-          >
-            {t.apiKeyClear}
-          </button>
-        </div>
-      ) : (
-        <div className="api-key-input-row">
-          <input
-            type="password"
-            className="settings-text-input api-key-input"
-            aria-label={label}
-            placeholder={t.apiKeyPlaceholder}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
-          <button className="text-button settings-inline-button" onClick={save}>
-            {t.apiKeySave}
-          </button>
-        </div>
-      )}
+      <SecretInput
+        t={t}
+        label={label}
+        saved={saved}
+        value={input}
+        onChange={setInput}
+        onSave={save}
+        onClear={clear}
+      />
     </SettingRow>
   );
 }

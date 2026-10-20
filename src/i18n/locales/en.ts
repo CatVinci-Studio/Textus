@@ -379,7 +379,6 @@ type /name in a conversation to use one.
   levisImportFailed: "Some files couldn’t be copied:",
   levisImportRow: "Import from Levis",
   levisImportButton: "Import…",
-  levisImportNone: "No Levis data on this computer.",
   levisItemSettings: "settings",
   levisItemChatHistory: "AI conversations",
   levisItemClipboardHistory: "clipboard history",

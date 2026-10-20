@@ -15,7 +15,7 @@ import {
   isImageSubfolder,
 } from "../image-folder";
 import { Select } from "../../ui/Select";
-import { RowHelp, SettingRow, VERBATIM_INPUT } from "./controls";
+import { RowHelp, SecretInput, SettingRow, VERBATIM_INPUT } from "./controls";
 
 /** Settings > Images: one choice - this computer or an image host - and
  *  then only what that choice needs. */
@@ -284,35 +284,17 @@ function ImageHostTokenRow({ host, t }: { host: ImageHost; t: Strings }) {
 
   return (
     <SettingRow label={label} help={help} error={error}>
-      {tokenConfigured ? (
-        <div className="api-key-configured">
-          <span className="settings-row-hint">{t.apiKeyConfigured}</span>
-          <button
-            className="text-button settings-inline-button"
-            onClick={clearToken}
-          >
-            {t.apiKeyClear}
-          </button>
-        </div>
-      ) : (
-        <div className="api-key-input-row">
-          <input
-            type="password"
-            className="settings-text-input api-key-input"
-            aria-label={label}
-            placeholder={optional ? t.imageUploadTokenPlaceholder : ""}
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-          />
-          <button
-            className="text-button settings-inline-button"
-            onClick={saveToken}
-            disabled={!token.trim()}
-          >
-            {t.apiKeySave}
-          </button>
-        </div>
-      )}
+      <SecretInput
+        t={t}
+        label={label}
+        saved={tokenConfigured}
+        value={token}
+        onChange={setToken}
+        onSave={saveToken}
+        onClear={clearToken}
+        placeholder={optional ? t.imageUploadTokenPlaceholder : ""}
+        saveDisabled={!token.trim()}
+      />
     </SettingRow>
   );
 }

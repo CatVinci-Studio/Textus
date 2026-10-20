@@ -397,7 +397,6 @@ para usar una.
   levisImportFailed: "Algunos archivos no se pudieron copiar:",
   levisImportRow: "Importar de Levis",
   levisImportButton: "Importar…",
-  levisImportNone: "No hay datos de Levis en este equipo.",
   levisItemSettings: "ajustes",
   levisItemChatHistory: "conversaciones con la IA",
   levisItemClipboardHistory: "historial del portapapeles",

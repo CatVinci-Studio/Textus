@@ -163,9 +163,3 @@
   font-size: var(--text-lg);
   font-weight: 600;
 }
-
-.pdf-export-hint {
-  font-size: var(--text-sm);
-  color: var(--editor-muted);
-  max-width: 22ch;
-}

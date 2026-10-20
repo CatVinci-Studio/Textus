@@ -38,8 +38,8 @@ export interface ChoiceLog {
 export const MAX_CHOICES = 200;
 const MAX_ANSWERS = 100;
 /** Rejections of one kind in a row, across at least this many proposals. */
-export const REJECTIONS = 3;
-export const PROPOSALS = 2;
+const REJECTIONS = 3;
+const PROPOSALS = 2;
 /** At most one suggestion a day. */
 export const COOLDOWN_MS = 24 * 60 * 60 * 1000;
 

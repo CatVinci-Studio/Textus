@@ -384,7 +384,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   levisImportFailed: "Alguns arquivos não puderam ser copiados:",
   levisImportRow: "Importar do Levis",
   levisImportButton: "Importar…",
-  levisImportNone: "Não há dados do Levis neste computador.",
   levisItemSettings: "configurações",
   levisItemChatHistory: "conversas com a IA",
   levisItemClipboardHistory: "histórico da área de transferência",

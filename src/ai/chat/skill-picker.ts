@@ -10,6 +10,7 @@ import {
 } from "../skills/builtin";
 import type { AgentSkill } from "../types";
 import { getUiState, setUiState } from "../../storage/ui-state";
+import { CJK_SCRIPT } from "../../utils/cjk";
 
 /**
  * The composer's two pickers, as plain functions: when they open, what they
@@ -58,9 +59,6 @@ export interface PickerSkill {
 export function fold(text: string): string {
   return text.normalize("NFKC").toLowerCase();
 }
-
-const CJK =
-  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
 
 const ORDER = new Map<string, number>(
   BUILTIN_SKILLS.map((skill, index) => [skill.name, index]),
@@ -161,7 +159,7 @@ function score(skill: PickerSkill, query: string): number {
   )
     return 2;
   // CJK labels have no spaces to start a word at: 写 should find 接着写.
-  if (CJK.test(query) && terms.some((t) => t.includes(query))) return 3;
+  if (CJK_SCRIPT.test(query) && terms.some((t) => t.includes(query))) return 3;
   // Another language's word - a bilingual user typing /続き in English.
   if (skill.allTerms.some((t) => fold(t).startsWith(query))) return 4;
   return -1;

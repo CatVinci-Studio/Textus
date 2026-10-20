@@ -12,7 +12,7 @@ import { ChevronIcon } from "../../ui/icons";
 import { auth, type CustomEndpointConfig } from "../../platform/ipc";
 import { Select } from "../../ui/Select";
 import { isIOSApp } from "../../platform/capabilities";
-import { RowHelp, VERBATIM_INPUT } from "./controls";
+import { RowHelp, SecretInput, VERBATIM_INPUT } from "./controls";
 
 // General > AI Login Settings: two compact disclosure rows (provider, then
 // credentials) plus the per-provider account/API-key/custom panels.
@@ -480,33 +480,15 @@ export function ApiKeyProviderPanel({
             )}
           </div>
         </div>
-        {configured ? (
-          <div className="api-key-configured">
-            <span className="settings-row-hint">{t.apiKeyConfigured}</span>
-            <button
-              className="text-button settings-inline-button"
-              onClick={clear}
-            >
-              {t.apiKeyClear}
-            </button>
-          </div>
-        ) : (
-          <div className="api-key-input-row">
-            <input
-              type="password"
-              className="settings-text-input api-key-input"
-              placeholder={t.apiKeyPlaceholder}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
-            <button
-              className="text-button settings-inline-button"
-              onClick={save}
-            >
-              {t.apiKeySave}
-            </button>
-          </div>
-        )}
+        <SecretInput
+          t={t}
+          label={t.apiKeyLabelTemplate.replace("{name}", label)}
+          saved={configured}
+          value={input}
+          onChange={setInput}
+          onSave={save}
+          onClear={clear}
+        />
       </div>
     </div>
   );

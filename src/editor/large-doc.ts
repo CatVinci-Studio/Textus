@@ -5,12 +5,13 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 // the large-document benchmark (npm run bench:large-doc, docs/dev/testing.md).
 
 /**
- * Above this size the editor draws lazily: a formula, a diagram or a
- * picture off screen waits until it comes near (draw-when-visible.ts), and
+ * Above this size the editor draws lazily: a formula (draw-when-visible.ts),
+ * a diagram (mermaid-plugin.ts) or a picture (loading="lazy") off screen
+ * waits until it comes near, and
  * a tab's caret is kept as a document position rather than written out as
  * a Markdown offset. Below it, everything is drawn as it always was.
  */
-export const LARGE_DOC_THRESHOLD = 100_000;
+const LARGE_DOC_THRESHOLD = 100_000;
 
 export function isLargeDoc(doc: ProseNode): boolean {
   return doc.content.size > LARGE_DOC_THRESHOLD;

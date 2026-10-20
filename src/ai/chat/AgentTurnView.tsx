@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { AgentTurn, ImageAttachment, WebSource } from "../types";
 import { links } from "../../platform/ipc";
 import { MarkdownText } from "../MarkdownText";
+import { siteOf } from "../citations";
 import { parseUserMessage } from "./user-message";
 import { ReplyThemes, type ReplyThemeLabels } from "./ReplyThemes";
 import { ChevronIcon, PaperclipIcon, SearchIcon } from "../../ui/icons";
@@ -16,15 +17,6 @@ export interface AgentTurnLabels extends ReplyThemeLabels {
   toolResult: string;
   /** The heading of the list of web pages under a reply. */
   sources: string;
-}
-
-/** A web address's site, as a person names it: "nature.com". */
-export function siteOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
 }
 
 /** A tool call as one readable line: "Reading the section “Methods”"
@@ -177,7 +169,7 @@ function UserMessage({
  * browser. The same list whether the provider searched or Textus did
  * (src-tauri ai/web).
  */
-export function SourceList({
+function SourceList({
   sources,
   label,
 }: {

@@ -315,7 +315,6 @@
 :is(
   .settings-select,
   .settings-text-input,
-  .settings-button,
   .image-name-input-row input,
   .insert-table-fields input
 ) {

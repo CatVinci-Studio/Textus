@@ -377,7 +377,7 @@ export function createMermaidPreviewPlugin(options: {
               return;
             }
             if (view.state.doc.eq(prevState.doc)) return;
-            // Large-doc mode (4.1): existing diagrams stay pinned (their
+            // Past PAUSE_FEATURES_THRESHOLD (large-doc.ts): existing diagrams stay pinned (their
             // cached SVG is keyed by source text, untouched here) - only new
             // re-render passes, the expensive part, stop scheduling.
             if (pausesFeatures(view.state.doc)) return;

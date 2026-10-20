@@ -6,6 +6,8 @@ import {
   changedRanges,
   decorateAll,
   redecorateChanged,
+  redrawBlocks,
+  touchedBlocks,
 } from "../changed-ranges";
 import type { ColorSwatchMode } from "../../settings/SettingsContext";
 import { commentRanges } from "../code/code-comments";
@@ -148,25 +150,13 @@ function redrawAround(
   doc: ProseNode,
   ranges: [number, number][],
 ): DecorationSet {
-  const drawn = new Set<number>();
-  const stale: Decoration[] = [];
-  const fresh: Decoration[] = [];
-  const size = doc.content.size;
-  for (const [from, to] of ranges)
-    doc.nodesBetween(
-      Math.max(0, from - 1),
-      Math.min(size, to + 1),
-      (node, pos) => {
-        if (!isSwatchBlock(node)) return true;
-        if (!drawn.has(pos)) {
-          drawn.add(pos);
-          stale.push(...set.find(pos, pos + node.nodeSize));
-          fresh.push(...swatches(mode, node, pos));
-        }
-        return false;
-      },
-    );
-  return set.remove(stale).add(doc, fresh);
+  return redrawBlocks(
+    set,
+    doc,
+    touchedBlocks(doc, ranges),
+    isSwatchBlock,
+    (n, p) => swatches(mode, n, p),
+  );
 }
 
 /** The plugin itself, for tests; the editor uses createColorSwatchPlugin. */

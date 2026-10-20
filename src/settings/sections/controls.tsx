@@ -157,6 +157,61 @@ export function ToggleRow({
   );
 }
 
+/**
+ * A key or token kept in the system keychain: a password field and Save
+ * until one is stored, then "Configured" and Clear - the stored value is
+ * never read back into the page. The caller stores and clears it.
+ */
+export function SecretInput({
+  t,
+  label,
+  saved,
+  value,
+  onChange,
+  onSave,
+  onClear,
+  placeholder = t.apiKeyPlaceholder,
+  saveDisabled,
+}: {
+  t: Strings;
+  /** The field's accessible name. */
+  label: string;
+  saved: boolean;
+  value: string;
+  onChange: (value: string) => void;
+  onSave: () => void;
+  onClear: () => void;
+  placeholder?: string;
+  saveDisabled?: boolean;
+}) {
+  return saved ? (
+    <div className="api-key-configured">
+      <span className="settings-row-hint">{t.apiKeyConfigured}</span>
+      <button className="text-button settings-inline-button" onClick={onClear}>
+        {t.apiKeyClear}
+      </button>
+    </div>
+  ) : (
+    <div className="api-key-input-row">
+      <input
+        type="password"
+        className="settings-text-input api-key-input"
+        aria-label={label}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <button
+        className="text-button settings-inline-button"
+        onClick={onSave}
+        disabled={saveDisabled}
+      >
+        {t.apiKeySave}
+      </button>
+    </div>
+  );
+}
+
 /** The heading shortcuts' names: the Format menu's own, and Paragraph. */
 export function headingLabels(t: Strings): Record<HeadingAction, string> {
   const level = (n: number) => t.menuHeadingTemplate.replace("{n}", String(n));

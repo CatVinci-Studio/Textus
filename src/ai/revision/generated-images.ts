@@ -93,6 +93,11 @@ export function generatedImageData(id: string): GeneratedImageData | null {
   return loaded.get(id) ?? null;
 }
 
+/** A loaded picture as a data: URL, or null until it has loaded. */
+export function generatedImageUrl(id: string): string | null {
+  return loaded.get(id)?.url ?? null;
+}
+
 /** Markdown for the preview: each waiting picture's placeholder src as
  *  its data: URL. One not loaded keeps the placeholder (and shows as a
  *  missing image). */

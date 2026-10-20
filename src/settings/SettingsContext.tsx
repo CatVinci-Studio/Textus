@@ -138,7 +138,7 @@ const HEADING_LEVELS: ShortcutAction[] = [
  * default is only taken while no stored action has that combo already: two
  * actions on one key would leave one of them dead.
  */
-export function migrateShortcuts(
+function migrateShortcuts(
   stored: unknown,
   revision: number,
   defaults: Shortcuts = DEFAULT_SHORTCUTS,

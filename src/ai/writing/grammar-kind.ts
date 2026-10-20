@@ -1,3 +1,5 @@
+import { CJK_SCRIPT } from "../../utils/cjk";
+
 /**
  * What kind of slip a grammar suggestion fixes, for the label on its card:
  * a writing-rules finding, punctuation only, a misspelling or wrong
@@ -8,8 +10,6 @@
 export type GrammarKind = "rules" | "punctuation" | "spelling" | "grammar";
 
 const PUNCT = /[\p{P}\p{S}\s]/gu;
-const CJK =
-  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
 
 export function grammarKind(
   original: string | undefined,
@@ -23,7 +23,7 @@ export function grammarKind(
   const a = [...before.trim()];
   const b = [...suggestion.trim()];
   if (a.length === 0 || b.length === 0) return "grammar";
-  if (CJK.test(before)) {
+  if (CJK_SCRIPT.test(before)) {
     // A wrong character: as long as before, one or two characters swapped.
     if (a.length !== b.length || a.length > 6) return "grammar";
     const swaps = a.flatMap((ch, i) => (ch !== b[i] ? [ch + b[i]] : []));

@@ -8,6 +8,11 @@ const CJK_LETTER = new RegExp(`[${CJK_LETTERS}]`);
 const CJK_ANY = new RegExp(`[${CJK_LETTERS}${CJK_PUNCTUATION}]`);
 const CJK_CHUNK = new RegExp(`^[${CJK_LETTERS}]{1,2}[${CJK_PUNCTUATION}]*`);
 
+/** Han, kana or Hangul: the scripts of Chinese, Japanese and Korean,
+ *  punctuation not included. */
+export const CJK_SCRIPT =
+  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+
 /** A kana or ideograph character. */
 export function isCjkLetter(ch: string): boolean {
   return CJK_LETTER.test(ch);

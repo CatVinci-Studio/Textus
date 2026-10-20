@@ -781,10 +781,6 @@
   min-width: 0;
 }
 
-.agent-diff-context {
-  color: var(--editor-muted);
-}
-
 .agent-diff-remove {
   background: var(--diff-delete-bg);
   color: var(--editor-text);

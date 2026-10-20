@@ -390,7 +390,6 @@ export default {
   levisImportFailed: "Некоторые файлы скопировать не удалось:",
   levisImportRow: "Перенести из Levis",
   levisImportButton: "Перенести…",
-  levisImportNone: "На этом компьютере нет данных Levis.",
   levisItemSettings: "настройки",
   levisItemChatHistory: "разговоры с ИИ",
   levisItemClipboardHistory: "история буфера обмена",

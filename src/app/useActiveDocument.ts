@@ -34,7 +34,7 @@ export function useActiveDocument(
   // The window bar's "Large document": the features it names pause past
   // this (editor/large-doc.ts). A markdown-string-length proxy for the doc
   // size the plugins check - close enough for a status indicator.
-  const isLargeDoc = activeTab.content.length > PAUSE_FEATURES_THRESHOLD;
+  const featuresPaused = activeTab.content.length > PAUSE_FEATURES_THRESHOLD;
   const activeDirty = tabIsDirty(activeTab);
   const activeTitle = tabTitle(activeTab, t);
 
@@ -42,7 +42,7 @@ export function useActiveDocument(
     activeTab,
     documentsFolder,
     wordCount,
-    isLargeDoc,
+    featuresPaused,
     activeDirty,
     activeTitle,
   };

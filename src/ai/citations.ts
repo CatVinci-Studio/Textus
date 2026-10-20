@@ -26,7 +26,8 @@ function samePage(url: string): string {
   return url.split("#")[0].replace(/\/+$/, "");
 }
 
-function siteOf(url: string): string {
+/** A web address's site, as a person names it: "nature.com". */
+export function siteOf(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
   } catch {

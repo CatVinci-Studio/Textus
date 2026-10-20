@@ -365,7 +365,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   levisImportFailed: "コピーできなかったファイルがあります：",
   levisImportRow: "Levis から引き継ぐ",
   levisImportButton: "引き継ぐ…",
-  levisImportNone: "このコンピュータに Levis のデータはありません。",
   levisItemSettings: "設定",
   levisItemChatHistory: "AI との会話",
   levisItemClipboardHistory: "クリップボード履歴",
