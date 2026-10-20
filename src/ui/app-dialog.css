@@ -1,9 +1,12 @@
 /* Save/Don't Save/Cancel prompt shown instead of closing a window whose
-   document has unsaved changes. */
+   document has unsaved changes. Above every other layer the window draws,
+   the first-run language welcome included: the window stays open until it
+   is answered, so a prompt drawn behind something left a close from the
+   title bar, Alt+F4 or the window manager looking ignored. */
 .close-prompt-overlay {
   position: fixed;
   inset: 0;
-  z-index: 400;
+  z-index: var(--z-alert);
   display: flex;
   align-items: center;
   justify-content: center;
