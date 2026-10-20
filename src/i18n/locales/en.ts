@@ -402,7 +402,7 @@ type /name in a conversation to use one.
   conventionsNewMedia: "Social media",
   conventionsEu: "EU institutions",
   agentAttachFile:
-    "Attach a file: PDF, Word, PowerPoint, spreadsheet, image or plain text",
+    "Attach a file: PDF, Word, PowerPoint, spreadsheet, EPUB, RTF, HTML, image or plain text",
   chatAttachmentTruncated: "(shortened)",
   chatAttachmentNoVision: `This provider can't read images. Switch provider in Settings > ${AI_NAME}, or attach a document instead.`,
   aiGrammarLabel: "Enable grammar check",

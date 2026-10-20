@@ -404,7 +404,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   conventionsNewMedia: "SNS・ウェブ",
   conventionsEu: "EU 機関",
   agentAttachFile:
-    "ファイルを添付：PDF、Word、PowerPoint、表計算、画像、テキスト",
+    "ファイルを添付：PDF、Word、PowerPoint、表計算、EPUB、RTF、HTML、画像、テキスト",
   chatAttachmentTruncated: "（一部のみ）",
   chatAttachmentNoVision: `このプロバイダーは画像を読めません。「設定 > ${AI_NAME}」でプロバイダーを変更するか、文書を添付してください。`,
   aiGrammarLabel: "文法チェックを有効にする",
