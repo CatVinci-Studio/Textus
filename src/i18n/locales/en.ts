@@ -691,6 +691,7 @@ type /name in a conversation to use one.
   codeBlockCopy: "Copy",
   codeBlockCopied: "Copied",
   autoCloseMarksLabel: "Close formatting marks automatically",
+  autoCloseBracketsLabel: "Auto-close brackets and quotes",
   pdfPageNumbersLabel: "Show page numbers in exports",
   infoTipLabel: "More about {label}",
   infoTipLabelPlain: "More information",

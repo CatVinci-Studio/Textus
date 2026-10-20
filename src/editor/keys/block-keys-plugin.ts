@@ -35,7 +35,9 @@ import { modIsMeta } from "../../platform/os";
  * second one right after a break becomes a new paragraph), except where
  * its rule misfires - see shiftEnterWithTrailingBreak - and where a line
  * break can't go: a heading, which can't hold one, splits as with Enter,
- * and a code block takes a newline (Milkdown's filter dropped the key).
+ * and a code block takes a newline (Milkdown's filter dropped the key, as
+ * it did in a table, where the break is now saved as `<br>`:
+ * lineBreakInTableCell).
  *
  * Registered before every other key handler in editor-extensions.ts, and
  * $prose plugins run ahead of the preset keymaps, so these win over gfm's
@@ -276,6 +278,22 @@ export const splitInlineCode: Command = (state, dispatch) => {
   return splitBlock(state, dispatch);
 };
 
+/** Shift+Enter in a table cell: a line break in the cell, saved as `<br>`
+ *  (markdown-output.ts), as a GFM table row can't hold a line end.
+ *  Milkdown's own command is filtered out in tables, so it did nothing. */
+export const lineBreakInTableCell: Command = (state, dispatch) => {
+  const { selection } = state;
+  const hardbreak = state.schema.nodes.hardbreak;
+  if (!hardbreak || !(selection instanceof TextSelection) || !isInTable(state))
+    return false;
+  if (!selection.$from.sameParent(selection.$to)) return false;
+  if (dispatch)
+    dispatch(
+      state.tr.replaceSelectionWith(hardbreak.create()).scrollIntoView(),
+    );
+  return true;
+};
+
 const onEnter: Command[] = [
   splitInlineCode,
   enterInTable,
@@ -285,6 +303,7 @@ const onEnter: Command[] = [
 const onModEnter: Command[] = [leaveBlockquote];
 const onShiftEnter: Command[] = [
   shiftEnterWithoutBreak,
+  lineBreakInTableCell,
   shiftEnterWithTrailingBreak,
 ];
 

@@ -279,3 +279,74 @@ describe("code inside bold, italic, strikethrough and highlight", () => {
     expect(save()).toBe("**see [it `x`](u)**\n");
   });
 });
+
+describe("italic typed with underscores", () => {
+  it("turns _italic_ into italic, saved with its underscores", async () => {
+    const { view, save } = await openView();
+    caretToEndOfFirstBlock(view);
+    type(view, "an _italic_ word");
+    const span = view.state.doc.firstChild!.child(1);
+    expect(span.type.name).toBe("md_span");
+    expect(span.attrs).toEqual({ delim: "_", rung: 1 });
+    expect(save()).toBe("an _italic_ word\n");
+  });
+
+  it.each(["snake_case_name", "file_name_v2 and a_b_", "_ spaced _", "__"])(
+    "leaves %s as text",
+    async (typed) => {
+      const { view } = await openView();
+      caretToEndOfFirstBlock(view);
+      type(view, typed);
+      const paragraph = view.state.doc.firstChild!;
+      expect(paragraph.childCount).toBe(1);
+      expect(paragraph.firstChild!.text).toBe(typed);
+    },
+  );
+
+  it("saves snake_case without escapes", async () => {
+    const { view, save } = await openView();
+    caretToEndOfFirstBlock(view);
+    type(view, "snake_case and file_name_v2");
+    expect(save()).toBe("snake_case and file_name_v2\n");
+  });
+
+  it("doesn't close right before a letter", async () => {
+    const { view } = await openView("_ab\n");
+    view.dispatch(
+      view.state.tr.setSelection(TextSelection.create(view.state.doc, 3)),
+    );
+    type(view, "_");
+    expect(view.state.doc.firstChild!.childCount).toBe(1);
+    expect(view.state.doc.firstChild!.textContent).toBe("_a_b");
+  });
+
+  it("saves with asterisks once a word is typed against it", async () => {
+    const { view, save } = await openView();
+    caretToEndOfFirstBlock(view);
+    type(view, "_it_s");
+    expect(save()).toBe("*it*s\n");
+  });
+
+  it("is read back as underscores, and kept when its paragraph is edited", async () => {
+    const { view, save } = await openView("an _old_ one\n");
+    expect(view.state.doc.firstChild!.child(1).attrs.delim).toBe("_");
+    caretToEndOfFirstBlock(view);
+    type(view, " more");
+    expect(save()).toBe("an _old_ one more\n");
+  });
+
+  it("converts one committed by an IME", async () => {
+    const { view, save } = await openView("前");
+    caretToEndOfFirstBlock(view);
+    commit(view, " _斜体_");
+    expect(convertRunClosedBeforeCaret(view, "_斜体_")).toBe(true);
+    expect(save()).toBe("前 _斜体_\n");
+  });
+
+  it("works with Close formatting marks automatically off", async () => {
+    const { view, save } = await openView("", { autoCloseMarks: false });
+    caretToEndOfFirstBlock(view);
+    type(view, "_it_");
+    expect(save()).toBe("_it_\n");
+  });
+});

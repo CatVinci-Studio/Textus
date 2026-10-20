@@ -121,6 +121,7 @@ export const REGRESSIONS: readonly string[] = [
   "梯度$\\mathbf{g}_t$的平方$\\mathbf{s}_t$",
   "- [The `match` Control Flow Construct](ch06-02-match.md)",
   "aaa\n             bbb\n                                       ccc",
+  "| breaks | ends |\n| --- | --- |\n| a<br/>b<br />c | d<br> |\n| _i_ x<br><br>y | e<br><br> |",
 ];
 
 /**

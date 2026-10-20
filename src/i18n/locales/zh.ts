@@ -638,6 +638,7 @@ export default {
   codeBlockCopy: "复制",
   codeBlockCopied: "已复制",
   autoCloseMarksLabel: "自动补全格式符号",
+  autoCloseBracketsLabel: "自动补全括号和引号",
   pdfPageNumbersLabel: "导出时显示页码",
   infoTipLabel: "关于“{label}”的说明",
   infoTipLabelPlain: "说明",

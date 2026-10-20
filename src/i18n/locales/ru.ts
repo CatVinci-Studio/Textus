@@ -711,6 +711,7 @@ export default {
   codeBlockCopy: "Копировать",
   codeBlockCopied: "Скопировано",
   autoCloseMarksLabel: "Автоматически закрывать знаки форматирования",
+  autoCloseBracketsLabel: "Автоматически закрывать скобки и кавычки",
   pdfPageNumbersLabel: "Показывать номера страниц при экспорте",
   infoTipLabel: "Подробнее о «{label}»",
   infoTipLabelPlain: "Подробнее",

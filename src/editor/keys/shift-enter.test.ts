@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
-import { editorViewCtx } from "@milkdown/kit/core";
+import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { createTestEditor } from "../../document-view/editor-test-harness";
@@ -71,6 +71,85 @@ describe("Shift+Enter", () => {
     );
     expect(view.state.selection.$from.parent.firstChild?.text).toBe("二三");
     expect(view.state.selection.$from.parentOffset).toBe(0);
+  });
+});
+
+describe("Shift+Enter in a table cell", () => {
+  async function openTable(markdown: string) {
+    const editor = await createTestEditor(markdown);
+    editors.push(editor);
+    return editor.action((ctx) => ({
+      view: ctx.get(editorViewCtx),
+      save: () => ctx.get(serializerCtx)(ctx.get(editorViewCtx).state.doc),
+    }));
+  }
+  /** Document position at the end of the cell reading `text`. */
+  const endOfCell = (view: EditorView, text: string) => {
+    let end = -1;
+    view.state.doc.descendants((node, pos) => {
+      if (
+        end < 0 &&
+        node.type.name === "paragraph" &&
+        node.textContent === text
+      )
+        end = pos + node.nodeSize - 1;
+    });
+    return end;
+  };
+  const TABLE = "| a | b |\n| --- | --- |\n| one | two |\n";
+
+  it("breaks the line in the cell, saved as <br>", async () => {
+    const { view, save } = await openTable(TABLE);
+    shiftEnterAt(view, endOfCell(view, "one") - 1);
+    expect(view.state.selection.$from.parent.toString()).toBe(
+      'paragraph("on", hardbreak, "e")',
+    );
+    expect(view.state.doc.firstChild!.childCount).toBe(2);
+    expect(save()).toMatch(/\| on<br>e +\| two \|/);
+  });
+
+  it("adds a second break after a first, rather than a paragraph", async () => {
+    const { view, save } = await openTable(TABLE);
+    const end = endOfCell(view, "two");
+    shiftEnterAt(view, end - 1);
+    shiftEnterAt(view, end);
+    expect(view.state.selection.$from.parent.toString()).toBe(
+      'paragraph("tw", hardbreak, hardbreak, "o")',
+    );
+    expect(save()).toMatch(/\| tw<br><br>o \|/);
+  });
+
+  it("keeps a <br> that ends a cell when the table is saved again", async () => {
+    const { view, save } = await openTable(
+      "| a | b |\n| --- | --- |\n| x<br> | y |\n",
+    );
+    shiftEnterAt(view, endOfCell(view, "y") - 1);
+    expect(save()).toMatch(/\| x<br> \| <br>y \|/);
+  });
+
+  it("reads a saved <br> back as a break, and writes it as it was", async () => {
+    const saved = "| a | b |\n| --- | --- |\n| x<br>y | z<br/>w |\n";
+    const { view, save } = await openTable(saved);
+    const cells: string[] = [];
+    view.state.doc.descendants((node) => {
+      if (node.type.name === "paragraph") cells.push(node.toString());
+    });
+    expect(cells.slice(2)).toEqual([
+      'paragraph("x", hardbreak, "y")',
+      'paragraph("z", hardbreak, "w")',
+    ]);
+    expect(save()).toMatch(/\| x<br>y +\| z<br>w \|/);
+  });
+
+  it("leaves a <br> with attributes as HTML", async () => {
+    const { view } = await openTable(
+      '| a |\n| --- |\n| x<br clear="all">y |\n',
+    );
+    let html = false;
+    view.state.doc.descendants((node) => {
+      html ||= node.type.name === "html";
+    });
+    expect(html).toBe(true);
   });
 });
 

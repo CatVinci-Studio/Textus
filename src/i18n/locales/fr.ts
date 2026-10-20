@@ -725,6 +725,8 @@ utiliser une.
   codeBlockCopy: "Copier",
   codeBlockCopied: "Copié",
   autoCloseMarksLabel: "Fermer automatiquement les marques de mise en forme",
+  autoCloseBracketsLabel:
+    "Fermer automatiquement les parenthèses et les guillemets",
   pdfPageNumbersLabel: "Afficher les numéros de page à l’export",
   infoTipLabel: "En savoir plus sur « {label} »",
   infoTipLabelPlain: "En savoir plus",

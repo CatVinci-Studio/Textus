@@ -674,6 +674,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   codeBlockCopy: "コピー",
   codeBlockCopied: "コピーしました",
   autoCloseMarksLabel: "書式記号を自動で閉じる",
+  autoCloseBracketsLabel: "括弧と引用符を自動で閉じる",
   pdfPageNumbersLabel: "書き出し時にページ番号を表示",
   infoTipLabel: "「{label}」について",
   infoTipLabelPlain: "詳細",

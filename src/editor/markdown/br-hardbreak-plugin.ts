@@ -1,6 +1,6 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, PluginKey, type Transaction } from "@milkdown/kit/prose/state";
-import { $prose } from "@milkdown/kit/utils";
+import { $prose, $remark } from "@milkdown/kit/utils";
 
 // Attributes included (e.g. Word/Notion/Google Docs paste tends to emit
 // `<br clear="all">`) - a bare `<br>`/`<br/>` with no attributes never even
@@ -9,13 +9,53 @@ import { $prose } from "@milkdown/kit/utils";
 // tree unconditionally; only the attributed form survives as a real node.
 const BR_RE = /^<br(\s[^<>]*)?\/?>$/i;
 
-// GFM tables can't hold a real hardbreak - Milkdown's own
-// hardbreakFilterPlugin blocks Shift-Enter inside "table"/"code_block", and
-// mdast-util-to-markdown's hardBreak serializer degrades to a single space
-// there anyway - so `<br>` is the only way to represent a line break inside
-// a table cell. Leave those alone; only paragraphs (typed or pasted <br>)
-// get normalized.
+// GFM tables can't hold a real hardbreak, so `<br>` is the only way to
+// write a line break inside a table cell: see the cell rules below.
 const TABLE_CELL_TYPES = new Set(["table_cell", "table_header"]);
+
+/** `<br>`, `<br/>` or `<br />`, with no attributes. */
+const PLAIN_BR_RE = /^<br\s*\/?>$/i;
+
+/**
+ * Which of a table cell's inline pieces (`isBr` tells a plain `<br>`) are
+ * line breaks: every plain `<br>` with something after it in the cell.
+ * Not the ones that end it: Milkdown writes a cell without its last break,
+ * and the `<br>` would be gone from the file on the next save.
+ */
+function cellBreaks<T>(pieces: readonly T[], isBr: (piece: T) => boolean) {
+  let lastContent = pieces.length - 1;
+  while (lastContent >= 0 && isBr(pieces[lastContent])) lastContent--;
+  return pieces.map((piece, i) => i < lastContent && isBr(piece));
+}
+
+interface MdastNode {
+  type: string;
+  value?: string;
+  children?: MdastNode[];
+}
+
+const isMdastBr = (node: MdastNode) =>
+  node.type === "html" && PLAIN_BR_RE.test(node.value ?? "");
+
+/**
+ * A `<br>` in a table cell, the line break Shift+Enter makes there
+ * (block-keys-plugin.ts), is read as a break (cellBreaks): shown as a new
+ * line in the cell, not as the tag, and written back as `<br>`
+ * (markdown-output.ts).
+ */
+export const remarkTableCellBreaks = $remark(
+  "remark-table-cell-breaks",
+  () => () => (tree: unknown) => {
+    const walk = (node: MdastNode) => {
+      if (node.type !== "tableCell") return node.children?.forEach(walk);
+      const children = node.children ?? [];
+      cellBreaks(children, isMdastBr).forEach((isBreak, i) => {
+        if (isBreak) children[i] = { type: "break" };
+      });
+    };
+    walk(tree as MdastNode);
+  },
+);
 
 /**
  * A lone `<br>`/`<br/>`/`<br />` raw-HTML node (see raw-html-schema.ts) sitting
@@ -36,6 +76,9 @@ const TABLE_CELL_TYPES = new Set(["table_cell", "table_header"]);
  * break and the line end together, `a<br>\nb`: it becomes one break, not a
  * break and then a line end, which wrote a blank line and split the
  * paragraph.
+ *
+ * In an edited table cell, the `<br>`s the file would read back as breaks
+ * (cellBreaks): one that ended the cell does once text is typed after it.
  */
 export const brToHardbreakPlugin = $prose(() => {
   return new Plugin({
@@ -47,6 +90,25 @@ export const brToHardbreakPlugin = $prose(() => {
 
       const targets: { from: number; to: number }[] = [];
       const visit = (node: ProseNode, pos: number) => {
+        if (
+          node.isTextblock &&
+          TABLE_CELL_TYPES.has(newState.doc.resolve(pos).parent.type.name)
+        ) {
+          // An edited cell, as it would read back from the file.
+          const pieces: { node: ProseNode; pos: number }[] = [];
+          node.forEach((child, offset) =>
+            pieces.push({ node: child, pos: pos + 1 + offset }),
+          );
+          const isBr = ({ node: child }: (typeof pieces)[number]) =>
+            child.type.name === "html" &&
+            PLAIN_BR_RE.test(child.textContent.trim());
+          cellBreaks(pieces, isBr).forEach((isBreak, i) => {
+            const { node: child, pos: at } = pieces[i];
+            if (isBreak && !targets.some((t) => t.from === at))
+              targets.push({ from: at, to: at + child.nodeSize });
+          });
+          return false;
+        }
         if (node.type.name !== "html" || !BR_RE.test(node.textContent.trim()))
           return true;
         const $pos = newState.doc.resolve(pos);

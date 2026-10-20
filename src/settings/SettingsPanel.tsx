@@ -453,6 +453,11 @@ export function SettingsPanel({
               checked={settings.autoCloseMarks}
               onChange={(v) => setSettings({ autoCloseMarks: v })}
             />
+            <ToggleRow
+              label={t.autoCloseBracketsLabel}
+              checked={settings.autoCloseBrackets}
+              onChange={(v) => setSettings({ autoCloseBrackets: v })}
+            />
           </SettingsGroup>
           <SettingsGroup title={t.imageStorageGroupLabel}>
             <ImageStorageSection t={t} />
