@@ -366,10 +366,7 @@ export function usePendingEdits(
 ) {
   const optionsRef = useRef(options);
   optionsRef.current = options;
-  const onDecided = options.onDecided;
   const [previews, setPreviews] = useState<PendingPreview[]>([]);
-  const onDecidedRef = useRef(onDecided);
-  onDecidedRef.current = onDecided;
   // Accepted proposals whose decision was reported: an undo can bring
   // them back (syncFromPlugin), and then that decision no longer stands.
   const reportedAccepts = useRef(new Set<string>());
@@ -379,7 +376,7 @@ export function usePendingEdits(
       if (changes.length === 0) return;
       if (changes.some((c) => c.taken))
         reportedAccepts.current.add(preview.callId);
-      onDecidedRef.current?.(preview.callId, changes);
+      optionsRef.current.onDecided?.(preview.callId, changes);
     },
     [],
   );
@@ -529,7 +526,8 @@ export function usePendingEdits(
       knownIds.current = nextIds;
       setPreviews(next);
       for (const id of nextIds)
-        if (reportedAccepts.current.delete(id)) onDecidedRef.current?.(id, []);
+        if (reportedAccepts.current.delete(id))
+          optionsRef.current.onDecided?.(id, []);
       setStatuses((prev) => {
         let copy: Record<string, PendingStatus> | null = null;
         const set = (id: string, status: PendingStatus | null) => {

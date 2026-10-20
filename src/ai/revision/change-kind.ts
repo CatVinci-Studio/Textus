@@ -1,3 +1,5 @@
+import { CJK_SCRIPT } from "../../utils/cjk";
+
 /**
  * What kind of change a revision makes, read off its before and after
  * alone - no model, no request: the evidence revision-learning.ts counts
@@ -135,10 +137,7 @@ const CONTRACTION =
   /\b(?:don|doesn|didn|can|won|isn|aren|wasn|weren|haven|hasn|hadn|wouldn|couldn|shouldn|it|that|there|what|let|i|you|we|they)'(?:t|s|m|re|ve|ll|d)\b/g;
 
 const isWordChar = (c: string) => /[\p{L}\p{N}]/u.test(c);
-const isCjk = (c: string) =>
-  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(
-    c,
-  );
+const isCjkScript = (c: string) => CJK_SCRIPT.test(c);
 /** The letters and digits, which a punctuation-only change leaves alone. */
 const wordsOf = (text: string) => [...text].filter(isWordChar).join("");
 /** The marks, in order: what is neither a letter, a digit nor a space. */
@@ -250,7 +249,10 @@ function wordSwap(a: string, b: string): ChangeKind | null {
     end++;
   // Out to whole words: "use" against "utilize" shares a "u".
   const wordAt = (chars: string[], i: number) =>
-    i >= 0 && i < chars.length && isWordChar(chars[i]) && !isCjk(chars[i]);
+    i >= 0 &&
+    i < chars.length &&
+    isWordChar(chars[i]) &&
+    !isCjkScript(chars[i]);
   while (start > 0 && (wordAt(ca, start - 1) || wordAt(cb, start - 1))) start--;
   while (
     end > 0 &&
@@ -269,11 +271,11 @@ function wordSwap(a: string, b: string): ChangeKind | null {
     s.length > 0 && wordsOf(s).length > 0 && !/[\t\n。！？!?.;；]/.test(s);
   if (!plain(from) || !plain(to)) return null;
   const short = (s: string) =>
-    [...s].some(isCjk)
+    [...s].some(isCjkScript)
       ? [...s].length <= 4
       : s.split(/\s+/).length <= 2 && s.length <= 24;
   if (!short(from) || !short(to)) return null;
-  const latin = ![...from, ...to].some(isCjk);
+  const latin = ![...from, ...to].some(isCjkScript);
   return {
     type: "swap",
     from: latin ? from.toLowerCase() : from,

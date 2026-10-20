@@ -23,7 +23,7 @@ import type { PendingSentence } from "../revision/pending-edit-plugin";
 import { FlipOnChange } from "../../ui/flip";
 import {
   loadGeneratedImage,
-  generatedImageData,
+  generatedImageUrl,
 } from "../revision/generated-images";
 import {
   MemoryChip,
@@ -490,7 +490,7 @@ export function ThinkingIndicator({ label }: { label: string }) {
 
 /** What a generate_image result says stopped it (ai/images.rs's
  *  `outcome`), without what it tells the model to do about it. */
-export function notGeneratedReason(output: string): string {
+function notGeneratedReason(output: string): string {
   return output
     .replace(/^Not generated:\s*/, "")
     .replace(/\s*Tell the user in plain words;[\s\S]*$/, "")
@@ -499,12 +499,12 @@ export function notGeneratedReason(output: string): string {
 
 /** A proposed picture on its card, small, once the preview has it. */
 function ProposedPicture({ id, alt }: { id: string; alt: string }) {
-  const [url, setUrl] = useState(() => imageUrl(id));
+  const [url, setUrl] = useState(() => generatedImageUrl(id));
   useEffect(() => {
     let live = true;
     if (!url)
       void loadGeneratedImage(id).then(() => {
-        if (live) setUrl(imageUrl(id));
+        if (live) setUrl(generatedImageUrl(id));
       });
     return () => {
       live = false;
@@ -513,11 +513,6 @@ function ProposedPicture({ id, alt }: { id: string; alt: string }) {
   return url ? (
     <img className="agent-proposal-picture" src={url} alt={alt} />
   ) : null;
-}
-
-function imageUrl(id: string): string | null {
-  const data = generatedImageData(id);
-  return data ? `data:${data.mime};base64,${data.dataBase64}` : null;
 }
 
 /** The error row, with a retry button when the failed send is resendable
