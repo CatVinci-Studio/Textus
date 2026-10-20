@@ -1,5 +1,13 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { useModalDialog } from "../ui/useModalDialog";
+import { useDockedPanelWidth } from "../utils/hooks/useDockedPanelWidth";
 import { useCardPlacement } from "./card-placement";
 import type { TutorialStepId } from "./tutorial-steps";
 import "./TutorialOverlay.css";
@@ -161,6 +169,7 @@ export function TutorialOverlay({
   const contentId = useId();
   const primaryRef = useRef<HTMLButtonElement>(null);
   const modal = useModalDialog(onSkip, layout === "overlay");
+  const dockedWidth = useDockedPanelWidth();
   // A lesson card keeps clear of the proposal, the notes and the review
   // bar it is about; with no room anywhere it folds to its header until
   // there is - unless the learner opened or folded it on this lesson.
@@ -188,7 +197,12 @@ export function TutorialOverlay({
     <div
       {...modal}
       className={`tutorial-surface tutorial-${layout} tutorial-step-${stepId} floating-surface`}
-      style={placement.style}
+      style={
+        {
+          ...placement.style,
+          "--docked-panel-width": `${dockedWidth}px`,
+        } as CSSProperties
+      }
       data-place={placement.place ?? undefined}
       role="dialog"
       aria-modal={layout === "overlay"}

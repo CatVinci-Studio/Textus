@@ -1413,6 +1413,9 @@ function syncStreaming(view: EditorView, previews: PendingPreview[]) {
  * Animation, never a class: the span is ProseMirror's.
  */
 function drawStrikesIn(view: EditorView, callId: string, s: StreamState) {
+  // Every colour is read before any animation starts: an animation started
+  // makes the next read recalculate the page's style, once per sentence.
+  const strikes: { el: HTMLElement; from: Keyframe; to: Keyframe }[] = [];
   for (const el of view.dom.querySelectorAll<HTMLElement>(
     `.pending-streamed[data-call="${CSS.escape(callId)}"]`,
   )) {
@@ -1423,23 +1426,25 @@ function drawStrikesIn(view: EditorView, callId: string, s: StreamState) {
     const plain = el.parentElement
       ? getComputedStyle(el.parentElement).color
       : end.color;
-    animateElement(
+    strikes.push({
       el,
-      [
-        {
-          color: plain,
-          backgroundColor: "transparent",
-          textDecorationColor: "transparent",
-        },
-        {
-          color: end.color,
-          backgroundColor: end.backgroundColor,
-          textDecorationColor: end.textDecorationColor,
-        },
-      ],
-      { duration: "--dur-base", easing: "--ease-out" },
-    );
+      from: {
+        color: plain,
+        backgroundColor: "transparent",
+        textDecorationColor: "transparent",
+      },
+      to: {
+        color: end.color,
+        backgroundColor: end.backgroundColor,
+        textDecorationColor: end.textDecorationColor,
+      },
+    });
   }
+  for (const { el, from, to } of strikes)
+    animateElement(el, [from, to], {
+      duration: "--dur-base",
+      easing: "--ease-out",
+    });
 }
 
 /** The widget side of `hotDecorations`, and of the review bar's pointer

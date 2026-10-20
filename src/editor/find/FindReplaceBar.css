@@ -1,6 +1,7 @@
 /* Under the 28px window bar (not over the title and word count), and left
    of a docked Textus AI panel rather than over its header and close button -
-   App.tsx sets --docked-panel-width while one is docked. */
+   the bar has --docked-panel-width while one is docked
+   (utils/hooks/useDockedPanelWidth.ts). */
 .find-replace-bar {
   position: fixed;
   top: 40px;

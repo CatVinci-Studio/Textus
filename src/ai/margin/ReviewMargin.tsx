@@ -1,9 +1,18 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  memo,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { ReviewNote } from "./review-notes-plugin";
 import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
 import { useLatest } from "../../utils/hooks/useLatest";
+import { flip } from "../../ui/flip";
+import { animate } from "../../ui/motion";
 import { CARD_WIDTH, GAP, marginRoom } from "./margin-room";
 import "./ReviewMargin.css";
 
@@ -71,6 +80,44 @@ function measureRoom(
   );
 }
 
+/** Puts the text column's left edge at `marginLeft` ("" for its own,
+ *  centred) at once, and glides it there on its transform (ui/flip.ts): a
+ *  margin-left transition laid the whole document out again on every
+ *  frame. */
+function placeColumn(contentEl: HTMLElement, marginLeft: string) {
+  if (contentEl.style.marginLeft === marginLeft) return;
+  flip(
+    [contentEl],
+    () => {
+      contentEl.style.marginLeft = marginLeft;
+    },
+    { duration: "--dur-slow", easing: "--ease-spring" },
+  );
+}
+
+type Layout = { left: number; placed: Placed[] };
+
+/** Whether a measure found everything where it already was: the cards
+ *  aren't drawn again then. A streaming rewrite re-measures on every frame
+ *  it changes the text, and drew every card again each time. */
+function sameLayout(a: Layout | null, b: Layout): boolean {
+  return (
+    a !== null &&
+    a.left === b.left &&
+    a.placed.length === b.placed.length &&
+    a.placed.every((p, i) => {
+      const q = b.placed[i];
+      return (
+        p.item === q.item &&
+        p.top === q.top &&
+        p.drift === q.drift &&
+        p.ax === q.ax &&
+        p.ay === q.ay
+      );
+    })
+  );
+}
+
 /** The marked text an item is about, in the document. */
 function anchorSelector(item: MarginItem): string {
   return item.kind === "note"
@@ -93,7 +140,7 @@ function anchorSelector(item: MarginItem): string {
  * both.
  *
  * The margin is made, not assumed: when the space right of the text is too
- * narrow the text column moves left to open it (animated, via its margin),
+ * narrow the text column moves left to open it (gliding there, placeColumn),
  * and when even that isn't enough - a narrow window, a phone - `onNoMargin`
  * hands everything back to the text: notes behind numbered badges, a
  * rewrite's sentences inline with their ✓ / ✕. Whether one is available
@@ -132,10 +179,7 @@ export function ReviewMargin({
   onDecide: (callId: string, index: number, take: boolean | null) => void;
   onNoMargin: (noMargin: boolean) => void;
 }) {
-  const [layout, setLayout] = useState<{
-    left: number;
-    placed: Placed[];
-  } | null>(null);
+  const [layout, setLayout] = useState<Layout | null>(null);
   const heights = useRef(new Map<string, number>());
   const [tick, setTick] = useState(0);
   const [noMargin, setNoMargin] = useState(false);
@@ -165,7 +209,7 @@ export function ReviewMargin({
   // stack the cards.
   useLayoutEffect(() => {
     if (!view || noMargin || items.length === 0) {
-      contentEl.style.marginLeft = "";
+      placeColumn(contentEl, "");
       scrollEl.classList.remove("review-notes-on");
       setLayout(null);
       return;
@@ -178,12 +222,12 @@ export function ReviewMargin({
         view,
       );
       scrollEl.classList.add("review-notes-on");
-      contentEl.style.marginLeft = shift > 0 ? `${natural - shift}px` : "";
+      placeColumn(contentEl, shift > 0 ? `${natural - shift}px` : "");
       const left = textRight - shift + GAP;
       const box = scrollEl.getBoundingClientRect();
       const top0 = box.top - scrollEl.scrollTop;
-      // Horizontal positions are taken from the column, wherever its
-      // margin transition has it right now, and placed where it is going.
+      // Horizontal positions are taken from the column, wherever its glide
+      // has it right now, and placed where it is going.
       const column = contentEl.getBoundingClientRect();
       const columnLeft = natural - shift;
       const textEdge =
@@ -225,12 +269,13 @@ export function ReviewMargin({
         p.top += p.drift;
         floor = p.top + (heights.current.get(p.item.key) ?? 64) + STACK_GAP;
       }
-      setLayout({ left, placed });
+      const next = { left, placed };
+      setLayout((was) => (sameLayout(was, next) ? was : next));
     };
     measure();
     // Anything that can move a passage - typing, widgets drawn or typed
-    // in, an image loading, the window resized, the column settling after
-    // it moved over - re-measures, at most once a frame.
+    // in, an image loading, the window resized - re-measures, at most once
+    // a frame.
     let frame = 0;
     const soon = () => {
       if (frame) return;
@@ -250,11 +295,9 @@ export function ReviewMargin({
       attributes: true,
       attributeFilter: ["class"],
     });
-    contentEl.addEventListener("transitionend", soon);
     return () => {
       ro.disconnect();
       mo.disconnect();
-      contentEl.removeEventListener("transitionend", soon);
       cancelAnimationFrame(frame);
     };
     // `tick`: a card's measured height changed, restack.
@@ -269,13 +312,34 @@ export function ReviewMargin({
     [contentEl, scrollEl],
   );
 
-  if (!layout) return null;
-  const onHeight = (key: string) => (h: number) => {
+  // The cards' callbacks, the same from one render to the next, so a card
+  // whose own props didn't change isn't drawn again (they are memo'd).
+  const actions = useLatest({ onHot, onDone, onAsk, onDecide });
+  const cardHot = useCallback(
+    (key: string, on: boolean) => actions.current.onHot(on ? key : null),
+    [actions],
+  );
+  const cardDone = useCallback(
+    (id: string) => actions.current.onDone(id),
+    [actions],
+  );
+  const cardAsk = useCallback(
+    (note: ReviewNote) => actions.current.onAsk(note),
+    [actions],
+  );
+  const cardDecide = useCallback(
+    (callId: string, index: number, take: boolean | null) =>
+      actions.current.onDecide(callId, index, take),
+    [actions],
+  );
+  const onHeight = useCallback((key: string, h: number) => {
     if (heights.current.get(key) !== h) {
       heights.current.set(key, h);
       setTick((t) => t + 1);
     }
-  };
+  }, []);
+
+  if (!layout) return null;
   return createPortal(
     <div className="review-margin">
       <svg className="review-links" aria-hidden="true">
@@ -299,19 +363,20 @@ export function ReviewMargin({
         })}
       </svg>
       {layout.placed.map((p) => {
-        const style = { top: p.top, left: layout.left, width: CARD_WIDTH };
         const item = p.item;
         return item.kind === "note" ? (
           <NoteCard
             key={item.key}
+            itemKey={item.key}
             note={item.note}
             hot={hot === item.key}
             labels={labels}
-            style={style}
-            onHot={(on) => onHot(on ? item.key : null)}
-            onDone={onDone}
-            onAsk={onAsk}
-            onHeight={onHeight(item.key)}
+            top={p.top}
+            left={layout.left}
+            onHot={cardHot}
+            onDone={cardDone}
+            onAsk={cardAsk}
+            onHeight={onHeight}
           />
         ) : (
           <RevisionCard
@@ -320,10 +385,11 @@ export function ReviewMargin({
             hot={hot === item.key}
             focused={focused === item.key}
             labels={labels}
-            style={style}
-            onHot={(on) => onHot(on ? item.key : null)}
-            onDecide={onDecide}
-            onHeight={onHeight(item.key)}
+            top={p.top}
+            left={layout.left}
+            onHot={cardHot}
+            onDecide={cardDecide}
+            onHeight={onHeight}
           />
         );
       })}
@@ -343,142 +409,214 @@ const CROSS = (
   </svg>
 );
 
-/** A changed sentence in the margin: what replaces it, and ✓ / ✕ - the same
- *  decision as the AI card's. A kept one dims, its replacement struck. */
-function RevisionCard({
-  item,
-  hot,
-  focused,
-  labels,
-  style,
-  onHot,
-  onDecide,
-  onHeight,
-}: {
-  item: Extract<MarginItem, { kind: "revision" }>;
+/** What a card is told by the margin: where it sits, and the margin's
+ *  callbacks, which keep their identity across renders. */
+interface CardPlace {
   hot: boolean;
-  focused: boolean;
   labels: ReviewMarginLabels;
-  style: CSSProperties;
-  onHot: (on: boolean) => void;
-  onDecide: (callId: string, index: number, take: boolean | null) => void;
-  onHeight: (height: number) => void;
-}) {
-  const ref = useCardHeight(onHeight);
-  const state =
-    item.take === false ? "kept" : item.take === true ? "taken" : "open";
-  return (
-    <div
-      ref={ref}
-      className={`review-note revision-note revision-note-${state}${hot ? " review-note-hot" : ""}${focused ? " revision-note-focus" : ""}${item.streaming ? " revision-note-streaming" : ""}`}
-      style={style}
-      onMouseEnter={() => onHot(true)}
-      onMouseLeave={() => onHot(false)}
-    >
-      <div className="review-note-by">
-        <span className="revision-note-num" aria-hidden="true">
-          {item.num}
-        </span>
-        {labels.reviewBarLabel}
-        <span className="agent-proposal-pick revision-note-pick">
-          <button
-            type="button"
-            className="pending-pick-take"
-            aria-pressed={item.take === true}
-            disabled={item.streaming}
-            aria-label={labels.proposalTakeSentence}
-            title={labels.proposalTakeSentence}
-            onClick={() =>
-              onDecide(
-                item.callId,
-                item.index,
-                item.take === true ? null : true,
-              )
-            }
-          >
-            {CHECK}
-          </button>
-          <button
-            type="button"
-            className="pending-pick-keep"
-            aria-pressed={item.take === false}
-            disabled={item.streaming}
-            aria-label={labels.proposalKeepSentence}
-            title={labels.proposalKeepSentence}
-            onClick={() =>
-              onDecide(
-                item.callId,
-                item.index,
-                item.take === false ? null : false,
-              )
-            }
-          >
-            {CROSS}
-          </button>
-        </span>
-      </div>
-      {item.shows === "new" ? (
-        <div className="revision-note-text revision-note-original">
-          <span className="revision-note-was">
-            {labels.proposalDeletedSentence}
-          </span>
-          <s>{item.before.trim() || "\u2014"}</s>
-        </div>
-      ) : (
-        <div className="revision-note-text">
-          {item.after.trim() || (
-            <span className="revision-note-delete">
-              {labels.proposalDeleteSentence}
-            </span>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  top: number;
+  left: number;
+  onHot: (key: string, on: boolean) => void;
+  onHeight: (key: string, height: number) => void;
 }
 
-function useCardHeight(onHeight?: (height: number) => void) {
+/**
+ * A card's box: its height, reported for the stack, and the glide when
+ * the stack moves it. Its place changes at once and the card slides there
+ * from where it was, on `translate` - its `transform` is the hover nudge
+ * and the entrance - so the margin is laid out once, not on every frame
+ * of a `top` transition. Moved again mid-glide, it goes on from where it
+ * shows.
+ */
+function useCardBox(
+  key: string,
+  top: number,
+  onHeight: CardPlace["onHeight"],
+): RefObject<HTMLDivElement | null> {
   const ref = useRef<HTMLDivElement>(null);
   const latest = useRef(onHeight);
   latest.current = onHeight;
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => latest.current?.(el.offsetHeight));
+    const ro = new ResizeObserver(() => latest.current(key, el.offsetHeight));
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [key]);
+  const glide = useRef<{
+    top: number;
+    from: number;
+    animation: Animation | null;
+  } | null>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const last = glide.current;
+    if (!el || !last) {
+      glide.current = { top, from: 0, animation: null };
+      return;
+    }
+    if (last.top === top) return;
+    let from = last.top - top;
+    const running = last.animation;
+    if (running?.playState === "running") {
+      const progress = running.effect?.getComputedTiming().progress ?? 1;
+      from += last.from * (1 - progress);
+      running.cancel();
+    }
+    glide.current = {
+      top,
+      from,
+      animation: animate(
+        el,
+        [{ translate: `0 ${from}px` }, { translate: "0 0" }],
+        { duration: "--dur-slow", easing: "--ease-spring" },
+      ),
+    };
+  }, [top]);
   return ref;
 }
 
-function NoteCard({
+type RevisionItem = Extract<MarginItem, { kind: "revision" }>;
+
+/** A changed sentence in the margin: what replaces it, and ✓ / ✕ - the same
+ *  decision as the AI card's. A kept one dims, its replacement struck. */
+const RevisionCard = memo(
+  function RevisionCard({
+    item,
+    hot,
+    focused,
+    labels,
+    top,
+    left,
+    onHot,
+    onDecide,
+    onHeight,
+  }: CardPlace & {
+    item: RevisionItem;
+    focused: boolean;
+    onDecide: (callId: string, index: number, take: boolean | null) => void;
+  }) {
+    const ref = useCardBox(item.key, top, onHeight);
+    const state =
+      item.take === false ? "kept" : item.take === true ? "taken" : "open";
+    return (
+      <div
+        ref={ref}
+        className={`review-note revision-note revision-note-${state}${hot ? " review-note-hot" : ""}${focused ? " revision-note-focus" : ""}${item.streaming ? " revision-note-streaming" : ""}`}
+        style={{ top, left, width: CARD_WIDTH }}
+        onMouseEnter={() => onHot(item.key, true)}
+        onMouseLeave={() => onHot(item.key, false)}
+      >
+        <div className="review-note-by">
+          <span className="revision-note-num" aria-hidden="true">
+            {item.num}
+          </span>
+          {labels.reviewBarLabel}
+          <span className="agent-proposal-pick revision-note-pick">
+            <button
+              type="button"
+              className="pending-pick-take"
+              aria-pressed={item.take === true}
+              disabled={item.streaming}
+              aria-label={labels.proposalTakeSentence}
+              title={labels.proposalTakeSentence}
+              onClick={() =>
+                onDecide(
+                  item.callId,
+                  item.index,
+                  item.take === true ? null : true,
+                )
+              }
+            >
+              {CHECK}
+            </button>
+            <button
+              type="button"
+              className="pending-pick-keep"
+              aria-pressed={item.take === false}
+              disabled={item.streaming}
+              aria-label={labels.proposalKeepSentence}
+              title={labels.proposalKeepSentence}
+              onClick={() =>
+                onDecide(
+                  item.callId,
+                  item.index,
+                  item.take === false ? null : false,
+                )
+              }
+            >
+              {CROSS}
+            </button>
+          </span>
+        </div>
+        {item.shows === "new" ? (
+          <div className="revision-note-text revision-note-original">
+            <span className="revision-note-was">
+              {labels.proposalDeletedSentence}
+            </span>
+            <s>{item.before.trim() || "—"}</s>
+          </div>
+        ) : (
+          <div className="revision-note-text">
+            {item.after.trim() || (
+              <span className="revision-note-delete">
+                {labels.proposalDeleteSentence}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  },
+  // The items are made afresh whenever a pending edit changes, and their
+  // positions in the text (from, to) move as it is typed in: what the card
+  // shows is what counts.
+  (a, b) =>
+    a.hot === b.hot &&
+    a.focused === b.focused &&
+    a.labels === b.labels &&
+    a.top === b.top &&
+    a.left === b.left &&
+    a.onHot === b.onHot &&
+    a.onDecide === b.onDecide &&
+    a.onHeight === b.onHeight &&
+    a.item.key === b.item.key &&
+    a.item.callId === b.item.callId &&
+    a.item.index === b.item.index &&
+    a.item.num === b.item.num &&
+    a.item.after === b.item.after &&
+    a.item.before === b.item.before &&
+    a.item.shows === b.item.shows &&
+    a.item.take === b.item.take &&
+    a.item.streaming === b.item.streaming,
+);
+
+const NoteCard = memo(function NoteCard({
+  itemKey,
   note,
   hot,
   labels,
-  style,
+  top,
+  left,
   onHot,
   onDone,
   onAsk,
   onHeight,
-}: {
+}: CardPlace & {
+  itemKey: string;
   note: ReviewNote;
-  hot: boolean;
-  labels: ReviewMarginLabels;
-  style: CSSProperties;
-  onHot: (on: boolean) => void;
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
-  onHeight?: (height: number) => void;
 }) {
-  const ref = useCardHeight(onHeight);
+  const ref = useCardBox(itemKey, top, onHeight);
   return (
     <div
       ref={ref}
       className={`review-note${hot ? " review-note-hot" : ""}`}
-      style={style}
+      style={{ top, left, width: CARD_WIDTH }}
       data-note={note.id}
-      onMouseEnter={() => onHot(true)}
-      onMouseLeave={() => onHot(false)}
+      onMouseEnter={() => onHot(itemKey, true)}
+      onMouseLeave={() => onHot(itemKey, false)}
     >
       <div className="review-note-by">
         <span className="review-note-mark" aria-hidden="true">
@@ -497,7 +635,7 @@ function NoteCard({
       </div>
     </div>
   );
-}
+});
 
 /** Compact mode: a note opened from its badge, as a small floating card
  *  under it. */

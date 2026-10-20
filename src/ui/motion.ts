@@ -60,14 +60,45 @@ export function prefersReducedMotion(): boolean {
 
 let probe: HTMLElement | null = null;
 
+/**
+ * What the stylesheets say - the tokens, and whether animation is off -
+ * read once and kept until it may have changed: a stylesheet added,
+ * removed or rewritten in the document's head (the e2e helpers', a theme,
+ * Vite's hot reload) or the reduced-motion setting switched. Each read is
+ * a getComputedStyle, which brings the page's style up to date first: read
+ * afresh for every animation started, it forced a style recalculation in
+ * the middle of every frame of a streaming rewrite.
+ */
+let sheet: { disabled: boolean; tokens: Map<string, string> } | null = null;
+let watching = false;
+
+function readSheet() {
+  if (sheet) return sheet;
+  if (!watching && typeof MutationObserver === "function") {
+    watching = true;
+    const forget = () => {
+      sheet = null;
+    };
+    new MutationObserver(forget).observe(document.head, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+    });
+    if (typeof window.matchMedia === "function")
+      window.matchMedia(REDUCE_QUERY).addEventListener?.("change", forget);
+  }
+  sheet = { disabled: probeDisabled(), tokens: new Map() };
+  return sheet;
+}
+
 /** True where a stylesheet has switched CSS animation off wholesale - the
  *  e2e helpers' `animation: none !important` - read through an element
  *  whose own rule (motion.css) gives it an animation. Movement driven from
  *  script stands still there too, so a test sees the same final states the
  *  stylesheet shows it. An engine that computes no animation at all (jsdom)
  *  counts as off. */
-function stylesheetDisablesAnimation(): boolean {
-  if (typeof document === "undefined" || !document.body) return true;
+function probeDisabled(): boolean {
   if (!probe || !probe.isConnected) {
     probe = document.createElement("div");
     probe.className = "motion-probe";
@@ -76,6 +107,11 @@ function stylesheetDisablesAnimation(): boolean {
   }
   const name = getComputedStyle(probe).animationName;
   return !name || name === "none";
+}
+
+function stylesheetDisablesAnimation(): boolean {
+  if (typeof document === "undefined" || !document.body) return true;
+  return readSheet().disabled;
 }
 
 let allowed: boolean | null = null;
@@ -93,10 +129,16 @@ export function motionAllowed(): boolean {
 }
 
 function readToken(name: string): string {
-  if (typeof document === "undefined") return "";
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
+  if (typeof document === "undefined" || !document.body) return "";
+  const { tokens } = readSheet();
+  let value = tokens.get(name);
+  if (value === undefined) {
+    value = getComputedStyle(document.documentElement)
+      .getPropertyValue(name)
+      .trim();
+    tokens.set(name, value);
+  }
+  return value;
 }
 
 /** A duration token in milliseconds, as the stylesheet currently has it

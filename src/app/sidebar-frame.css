@@ -8,6 +8,21 @@
    Its width is the one dragged on its edge (--sidebar-width, set on
    .app-shell from app/sidebar-width.ts); the main pane makes room for the
    same. */
+/* Not inherited: set on .app-shell on every frame of a drag, an inherited
+   custom property recalculated the style of every element in the window.
+   Only the two that use it take it from there. An engine without
+   @property inherits it as before. */
+@property --sidebar-width {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 240px;
+}
+
+.sidebar,
+.main-pane {
+  --sidebar-width: inherit;
+}
+
 .sidebar {
   position: absolute;
   top: 0;

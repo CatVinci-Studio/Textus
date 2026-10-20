@@ -392,10 +392,6 @@ function App() {
         className="app-shell"
         style={
           {
-            "--docked-panel-width":
-              agentPresence.mounted && !agentOverlays && !isIOSApp
-                ? `${agentPanel.width}px`
-                : "0px",
             // The sidebar's dragged width (sidebar-frame.css); an iPad
             // keeps the stylesheet's, its sidebar has no handle.
             ...(!isIOSApp && {

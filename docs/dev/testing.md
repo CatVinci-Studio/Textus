@@ -9,6 +9,7 @@ npm run test:e2e                       # Playwright flows in Chromium, desktop a
 scripts/smoke-linux.sh --build         # the built Linux app and its .deb
 npm run screenshots:readme             # regenerate the README screenshots (e2e/shots/readme/)
 npm run screenshots:website            # the website's app screenshots (e2e/shots/website/)
+npm run bench:motion                   # frame timing of every animation and scroll (e2e/bench/)
 cd src-tauri && cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
                                        # real Anthropic API (costs money - docs/design/ai-eval.md)
 ```
@@ -25,6 +26,20 @@ a release. The e2e flows need Chromium once: `npm run setup:e2e`.
 `npm run test:visual` adds the screenshot comparison of `e2e/visual.spec.ts`
 against Linux baselines (they depend on the fonts of the machine that took
 them).
+
+`npm run bench:motion` is a measurement, not a test: it plays every
+animated surface (the side panels and their resize, Settings, tabs, menus,
+the revision stream and its margin cards, a diagram building up, scrolling)
+with the animations on, in Chromium slowed four times - about the speed of
+WebKitGTK on a laptop - and prints each one's dropped frames, long tasks,
+forced layouts and style and layout time. Run it on `main` and on your
+branch, on a quiet machine (other builds or test runs skew it), and
+compare. `BENCH_CPU=1` runs it at full speed, `BENCH_TRACE=1` also saves a
+Chromium trace of each scenario; the header of `e2e/bench/motion.bench.ts`
+has the rest. Animations only move `opacity` and `transform`
+([design-language.md](../design/design-language.md#motion)); the unit test
+`src/ui/motion-properties.test.ts` reads every stylesheet and fails on
+anything else.
 
 CI also builds the iOS app for the simulator, unsigned, on macOS (the `ios`
 job) - proof that the desktop/iOS split in `docs/dev/ios-code-map.md` still

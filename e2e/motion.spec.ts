@@ -1,5 +1,12 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { PHONE, openApp, openPhone } from "./helpers";
+import {
+  PHONE,
+  mockInvoke,
+  openApp,
+  openPhone,
+  pasteMarkdown,
+} from "./helpers";
+import { STORY, STORY_CLASSICAL } from "./revise-mock";
 
 // Motion with the animations ON (every other spec turns them off): menus,
 // dialogs, Settings and the AI panel still open and close, nothing stays
@@ -205,6 +212,74 @@ test("reopened during its exit, the find bar takes the focus again", async ({
     "open",
   );
   await expect(input).toBeFocused();
+});
+
+test("the text column glides aside for the margin, on its transform", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openApp(page, {
+    animations: true,
+    settings: { language: "en", revisionDisplay: "new" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(page, STORY);
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "go" },
+      {
+        kind: "ToolCall",
+        call_id: "c1",
+        name: "propose_edit",
+        arguments: JSON.stringify({
+          action: "replace",
+          anchor: STORY,
+          text: STORY_CLASSICAL,
+        }),
+      },
+      { kind: "ToolResult", call_id: "c1", output: "Edit proposed" },
+      { kind: "Assistant", text: "Done." },
+    ],
+  });
+  const column = '[data-active-tab="true"] > .editor-scroll > .editor-content';
+  const sampling = sampleTransforms(page, column, 900);
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Classical Chinese, please");
+  await composer.press("Enter");
+  const frames = await sampling;
+  // The beside-the-panel window has to make room: the column moved over
+  // at once and slid there, rather than laying the text out again on
+  // every frame of a margin transition.
+  await expect(page.locator(".revision-note").first()).toBeVisible();
+  expect(
+    await page
+      .locator(column)
+      .evaluate((el) => (el as HTMLElement).style.marginLeft),
+  ).not.toBe("");
+  expect(frames.some((t) => !IDENTITY.has(t))).toBe(true);
+  expect(IDENTITY.has(frames.at(-1)!)).toBe(true);
+});
+
+test("the find bar keeps clear of the docked AI panel", async ({ page }) => {
+  await openApp(page, { animations: true });
+  await page.locator(".window-bar-toggle").click();
+  const panel = page.locator(".agent-panel");
+  await settled(panel);
+  await emit(page, "menu-find-replace");
+  const bar = page.locator(".find-replace-bar");
+  await settled(bar);
+  const panelBox = (await panel.boundingBox())!;
+  const barBox = (await bar.boundingBox())!;
+  expect(Math.round(panelBox.x - (barBox.x + barBox.width))).toBe(24);
+  // Told to the bar itself: on the app's shell, the whole window
+  // inherited it and restyled every element whenever it changed.
+  expect(
+    await page
+      .locator(".app-shell")
+      .evaluate((el) =>
+        (el as HTMLElement).style.getPropertyValue("--docked-panel-width"),
+      ),
+  ).toBe("");
 });
 
 test.describe("reduced motion", () => {
