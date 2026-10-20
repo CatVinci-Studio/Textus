@@ -35,7 +35,7 @@ import { CODE_LINE_NUMBERS_CLASS } from "../editor/code/code-line-numbers-plugin
 import {
   COLOR_SWATCH_CLASS,
   COLOR_SWATCH_TEXT_CLASS,
-} from "../editor/marks/color-swatch-plugin";
+} from "../editor/marks/color-swatch-classes";
 import {
   MAC_PAGE,
   WINDOWS_PAGE,

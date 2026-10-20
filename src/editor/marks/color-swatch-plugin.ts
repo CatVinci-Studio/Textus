@@ -10,15 +10,11 @@ import {
 import type { ColorSwatchMode } from "../../settings/SettingsContext";
 import { commentRanges } from "../code/code-comments";
 import { colorOfCode, findColorCodes, OPAQUE } from "./color-codes";
+import {
+  COLOR_SWATCH_CLASS,
+  COLOR_SWATCH_TEXT_CLASS,
+} from "./color-swatch-classes";
 import { COMPOSE_RELOCATE_DELAY_MS } from "./enclosure";
-
-/** The swatch's element in inline code, editor chrome the export and print
- *  drop. */
-export const COLOR_SWATCH_CLASS = "color-swatch";
-/** The first character of a colour code in plain text or a code block,
- *  which draws the swatch before itself (::before); the export unwraps
- *  it. */
-export const COLOR_SWATCH_TEXT_CLASS = "color-swatch-text";
 
 interface SwatchState {
   mode: ColorSwatchMode;
