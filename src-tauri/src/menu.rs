@@ -633,10 +633,7 @@ fn build(
     );
     #[cfg(not(target_os = "macos"))]
     let edit_menu = edit_menu.select_all_with_text(l("predefined:select-all", "Select All"));
-    let edit_menu = edit_menu
-        .separator()
-        .item(&find_replace_item)
-        .build()?;
+    let edit_menu = edit_menu.separator().item(&find_replace_item).build()?;
 
     let mut format_menu_builder = SubmenuBuilder::new(app, l("menu:format", "Format"));
     for (kind, label) in [
