@@ -36,6 +36,8 @@ packaging/arch/*.pkg.tar.zst
 
 # Playwright output (npm run test:e2e, test:visual, screenshots:*)
 test-results/
+# The large-document benchmark's generated documents (e2e/perf/large-docs.ts)
+e2e/perf/fixtures/
 playwright-report/
 *.tsbuildinfo
 
