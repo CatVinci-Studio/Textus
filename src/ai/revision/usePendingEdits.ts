@@ -266,6 +266,36 @@ const isAnchored = (proposal: EditProposal) =>
   proposal.action !== "insert_at_cursor" &&
   proposal.action !== "replace_selection";
 
+/** A change the writer decided, for learning from it (revision-learning). */
+export interface DecidedChange {
+  before: string;
+  after: string;
+  taken: boolean;
+}
+
+/** What deciding `preview` decided: each of its sentences, `take(i)`, or
+ *  a rewrite shown whole, `take(-1)`. New text alone (Write) has no
+ *  before to compare and decides nothing to learn from. */
+function decidedChanges(
+  preview: PendingPreview,
+  take: (index: number) => boolean,
+): DecidedChange[] {
+  if (preview.streaming) return [];
+  if (preview.sentences)
+    return preview.sentences.changes.map((c, i) => ({
+      before: c.before,
+      after: c.after,
+      taken: take(i),
+    }));
+  const { action, anchor, text } = preview.proposal;
+  if (text === undefined) return [];
+  if (action === "replace" && anchor)
+    return [{ before: anchor, after: text, taken: take(-1) }];
+  if (action === "replace_selection")
+    return [{ before: preview.expectedText, after: text, taken: take(-1) }];
+  return [];
+}
+
 /**
  * Resolves propose_edit proposals to live document ranges and shows them as
  * in-document decorations (pending-edit-plugin.ts). Accept/reject lives in
@@ -280,8 +310,30 @@ const isAnchored = (proposal: EditProposal) =>
  * preview. The full proposal lifecycle - streaming, stop/failure endings,
  * what a consecutive prompt supersedes - is laid out in docs/design/ai-proposals.md.
  */
-export function usePendingEdits(run: EditorRunner) {
+export function usePendingEdits(
+  run: EditorRunner,
+  /** The writer accepted or rejected a proposal (not one superseded,
+   *  refused or stopped): what it decided, change by change - in place of
+   *  what it decided about it before. No changes: an undo brought an
+   *  accepted proposal back, undecided again. */
+  onDecided?: (callId: string, changes: DecidedChange[]) => void,
+) {
   const [previews, setPreviews] = useState<PendingPreview[]>([]);
+  const onDecidedRef = useRef(onDecided);
+  onDecidedRef.current = onDecided;
+  // Accepted proposals whose decision was reported: an undo can bring
+  // them back (syncFromPlugin), and then that decision no longer stands.
+  const reportedAccepts = useRef(new Set<string>());
+  const decided = useCallback(
+    (preview: PendingPreview, take: (i: number) => boolean) => {
+      const changes = decidedChanges(preview, take);
+      if (changes.length === 0) return;
+      if (changes.some((c) => c.taken))
+        reportedAccepts.current.add(preview.callId);
+      onDecidedRef.current?.(preview.callId, changes);
+    },
+    [],
+  );
   // callId -> terminal status, kept even after the preview leaves `previews`
   // (accept/reject/an invalidating edit all remove it) so a chat card can
   // still show "Applied"/"Rejected"/"Couldn't locate" instead of reverting
@@ -425,6 +477,8 @@ export function usePendingEdits(run: EditorRunner) {
       const dropped = [...knownIds.current].filter((id) => !nextIds.has(id));
       knownIds.current = nextIds;
       setPreviews(next);
+      for (const id of nextIds)
+        if (reportedAccepts.current.delete(id)) onDecidedRef.current?.(id, []);
       setStatuses((prev) => {
         let copy: Record<string, PendingStatus> | null = null;
         const set = (id: string, status: PendingStatus | null) => {
@@ -601,6 +655,9 @@ export function usePendingEdits(run: EditorRunner) {
       let ok = false;
       let stillStreaming = false;
       let rejectedAll = false;
+      // A text of the caller's own says nothing about which changes it took.
+      const learn = textOverride === undefined;
+      const settled: { preview?: PendingPreview } = {};
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
         const { state } = view;
@@ -624,6 +681,7 @@ export function usePendingEdits(run: EditorRunner) {
         )
           return;
 
+        settled.preview = preview;
         let replacement = preview.replacement;
         // Decided sentence by sentence (the ✓ / ✕ in the text or the
         // card): Accept writes the original with only the taken changes.
@@ -748,8 +806,13 @@ export function usePendingEdits(run: EditorRunner) {
       });
       if (stillStreaming) return false;
       if (rejectedAll) {
+        if (settled.preview) decided(settled.preview, () => false);
         setStatuses((prev) => ({ ...prev, [callId]: "rejected" }));
         return true;
+      }
+      if (ok && learn && settled.preview) {
+        const take = sentenceTake(settled.preview);
+        decided(settled.preview, (i) => (i < 0 || !take ? true : take[i]));
       }
       setStatuses((prev) => ({
         ...prev,
@@ -757,20 +820,36 @@ export function usePendingEdits(run: EditorRunner) {
       }));
       return ok;
     },
-    [run],
+    [run, decided],
   );
 
-  const reject = useCallback(
-    (callId: string) => {
+  /** Takes a proposal off the document as rejected. `learn`: the writer
+   *  rejected it (Reject, ✕) - not a new request superseding it, the
+   *  backend refusing it or a stop leaving nothing of it, which `discard`
+   *  is for. */
+  const remove = useCallback(
+    (callId: string, learn: boolean) => {
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
+        const preview = (
+          pendingEditKey.getState(view.state)?.previews ?? []
+        ).find((p) => p.callId === callId);
         view.dispatch(
           view.state.tr.setMeta(pendingEditKey, { type: "remove", callId }),
         );
+        if (learn && preview) decided(preview, () => false);
       });
       setStatuses((prev) => ({ ...prev, [callId]: "rejected" }));
     },
-    [run],
+    [run, decided],
+  );
+  const reject = useCallback(
+    (callId: string) => remove(callId, true),
+    [remove],
+  );
+  const discard = useCallback(
+    (callId: string) => remove(callId, false),
+    [remove],
   );
 
   /**
@@ -817,20 +896,25 @@ export function usePendingEdits(run: EditorRunner) {
   // ProposalStream machine closes over it, and a rejectAll that changed
   // identity on every preview change would rebuild the machine mid-stream,
   // dropping its accumulated drafts.
-  const rejectAll = useCallback(() => {
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      const ids = (pendingEditKey.getState(view.state)?.previews ?? []).map(
-        (p) => p.callId,
-      );
-      view.dispatch(view.state.tr.setMeta(pendingEditKey, { type: "clear" }));
-      setStatuses((prev) => {
-        const copy = { ...prev };
-        for (const id of ids) copy[id] = "rejected";
-        return copy;
+  // `learn` as in `remove`: false when a new request supersedes them.
+  const clearAll = useCallback(
+    (learn: boolean) => {
+      run((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const previews = pendingEditKey.getState(view.state)?.previews ?? [];
+        view.dispatch(view.state.tr.setMeta(pendingEditKey, { type: "clear" }));
+        if (learn) for (const p of previews) decided(p, () => false);
+        setStatuses((prev) => {
+          const copy = { ...prev };
+          for (const p of previews) copy[p.callId] = "rejected";
+          return copy;
+        });
       });
-    });
-  }, [run]);
+    },
+    [run, decided],
+  );
+  const rejectAll = useCallback(() => clearAll(true), [clearAll]);
+  const discardAll = useCallback(() => clearAll(false), [clearAll]);
 
   /** Accepts every currently pending preview, one transaction each (so a
    *  mid-batch failure - text one of them depended on changed - doesn't
@@ -921,8 +1005,10 @@ export function usePendingEdits(run: EditorRunner) {
     pointReview,
     reviewCount,
     reject,
+    discard,
     acceptAll,
     rejectAll,
+    discardAll,
     status,
     syncFromPlugin,
     decidable,

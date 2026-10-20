@@ -178,6 +178,8 @@ Schreibanweisungen gelten nur für Unterhaltungen. Die Vervollständigung liest 
 
 Der Tab **Gedächtnis** im KI-Bereich listet alles unter **Von der KI gemerkt** auf, jeweils mit Zeitpunkt und Unterhaltung: **Bearbeiten** öffnet einen Eintrag, **Löschen** entfernt ihn. Bei einem Widerspruch gelten deine eigenen Schreibanweisungen, und Textus AI ändert nie deine `agent.md` oder dein Stilprofil. Gibt es zu viele Erinnerungen zum Senden, bleiben die ältesten außen vor, und der Tab Gedächtnis weist darauf hin. **Einstellungen > Textus AI > Automatisch merken** schaltet die Funktion aus.
 
+**Es lernt auch aus deinen Überarbeitungsentscheidungen.** Wenn du dieselbe Art von Änderung mehrmals ablehnst – 「」 zu “” gemacht, ein Wort gegen ein anderes getauscht, Sätze geteilt, ein Oxford-Komma eingefügt –, bietet Textus AI nach der Durchsicht an, sie als Vorgabe zu merken: **Merken** speichert sie unter **Von der KI gemerkt**, **Jetzt nicht** wartet auf mehr, und **Nicht mehr fragen** fragt nach dieser Art nicht mehr. Es fragt höchstens einmal am Tag, und gespeichert wird nur auf deinen Klick, auch wenn Automatisch merken aus ist. Gezählt wird nur eine kurze Notiz, welche Arten von Änderungen du angenommen oder abgelehnt hast – auf diesem Computer neben deinen Erinnerungen gespeichert und nie gesendet.
+
 ### Skills (/name)
 
 **Ein Skill ist eine wiederverwendbare Sammlung von Anweisungen mit einem Namen** – „straffen“, „gliedern“, „Quellenangaben prüfen“ –, gespeichert in einer Markdown-Datei: oben ein Name und eine einzeilige Beschreibung, darunter die vollständigen Anweisungen.

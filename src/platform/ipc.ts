@@ -667,7 +667,7 @@ export interface Remembered {
 export interface Memory {
   id: string;
   scope: MemoryScope;
-  kind: "requirement" | "preference" | "style";
+  kind: MemoryKind;
   text: string;
   /** Absolute path, for Edit. */
   file: string;
@@ -677,6 +677,8 @@ export interface Memory {
 }
 
 export type MemoryScope = "project" | "personal";
+/** `MemoryKind` in ai/memory.rs. */
+export type MemoryKind = "requirement" | "preference" | "style";
 
 /** Every memory for a document, personal first - `Memories` in
  *  ai/memory.rs. `chars` of the included ones, of `cap`. */
@@ -1098,6 +1100,29 @@ export const ai = {
     workspaceRoot: string | null,
     id: string,
   ) => call<void>("memory_delete", { docPath, workspaceRoot, id }),
+  /** Saves one memory the user asked for with a click (a suggestion
+   *  learned from revision choices); returns its id. Fails with plain
+   *  words, as the remember tool does, on a duplicate. */
+  memoryRemember: (
+    docPath: string | null,
+    workspaceRoot: string | null,
+    kind: MemoryKind,
+    scope: MemoryScope,
+    text: string,
+  ) =>
+    call<{ remembered: string; scope: MemoryScope }>("memory_remember", {
+      docPath,
+      workspaceRoot,
+      kind,
+      scope,
+      text,
+    }),
+  /** The revision choices log (ai/revision/revision-learning.ts), kept
+   *  beside the personal memories and never sent anywhere; null when
+   *  there is none yet. */
+  revisionChoicesRead: () => call<unknown>("revision_choices_read"),
+  revisionChoicesWrite: (log: object) =>
+    call<void>("revision_choices_write", { log }),
   /** The library entries the last request for the document carried. */
   libraryUse: (
     docPath: string | null,

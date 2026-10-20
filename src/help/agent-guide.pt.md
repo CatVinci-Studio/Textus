@@ -178,6 +178,8 @@ As instruções de escrita valem só para as conversas. O autocompletar não as 
 
 A aba **Memória** do painel de IA lista tudo em **O que a IA lembrou**, com quando e em qual conversa cada item foi lembrado: **Editar** abre, **Apagar** remove. As suas próprias instruções de escrita vencem quando as duas discordam, e a Textus AI nunca altera o seu `agent.md` nem o seu perfil de estilo. Quando há memórias demais para enviar, as mais antigas ficam de fora e a aba Memória avisa. **Ajustes > Textus AI > Lembrar automaticamente** desativa o recurso.
 
+**Também aprende com as suas escolhas de revisão.** Quando você recusa várias vezes o mesmo tipo de alteração — 「」 trocadas por “”, uma palavra trocada por outra, frases divididas, uma vírgula de Oxford acrescentada —, a Textus AI oferece, ao fim da revisão, lembrar isso como requisito: **Lembrar** guarda em **O que a IA lembrou**, **Agora não** espera por mais casos e **Não perguntar mais** deixa de perguntar sobre esse tipo. Pergunta no máximo uma vez por dia, e nada é guardado sem o seu clique, também com Lembrar automaticamente desligado. O que conta é só uma nota curta dos tipos de alteração que você aceitou ou recusou, guardada neste computador junto às suas memórias e nunca enviada.
+
 ### Habilidades (/nome)
 
 **Uma habilidade é um conjunto de instruções reutilizável, com um nome** (“polir”, “esboço”, “conferir as citações”), guardado em um arquivo Markdown: um nome e uma descrição de uma linha no topo e, abaixo, as instruções completas.

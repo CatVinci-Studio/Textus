@@ -373,6 +373,68 @@ pub fn cases() -> Vec<AgentCase> {
     c.extend(agentmd_library_skill_cases());
     c.extend(style_cases());
     c.extend(concept_cases());
+    c.extend(learned_cases());
+    c
+}
+
+/// A requirement remembered from revision choices
+/// (src/ai/revision/revision-learning.ts): the Remember button writes it
+/// to the global config folder's memory/ in these words, and the next
+/// request must follow it. The documents are the writer's own notes.
+fn learned_cases() -> Vec<AgentCase> {
+    let mut c = Vec::new();
+    let memory = |text: &str| {
+        format!("---\nkind: requirement\nremembered-by: textus-ai\ncreated: 2026-10-19T09:30:00Z\nupdated: 2026-10-19T09:30:00Z\n---\n{text}\n")
+    };
+
+    const NOTE_ZH: &str = "周三的读书会来了十二个人。小周说「这本书前半部分有点慢」，大家都笑了。老陈接着说「慢一点也好，可以多想想」。最后我们定下来，下个月读一本短一些的书，每个人都要带一个问题来。";
+    let base = scratch("learned-zh-quotes");
+    put(
+        &base,
+        "global/memory/keep-quotes.md",
+        &memory("保留「」，不要改成“”。"),
+    );
+    let ws = DiskWorkspace {
+        global: Some(base.join("global")),
+        doc_path: Some(put(&base, "notes/读书会.md", NOTE_ZH)),
+        show: vec![base.clone()],
+        ..DiskWorkspace::default()
+    };
+    c.push(AgentCase::new("learned/zh/keep-corner-quotes", Lang::ZhHans, Lang::ZhHans, NOTE_ZH, "把整段改写得更通顺，两句引语也一起润色。", edit_anywhere().check("keeps 「」", |o| {
+        // The document after the edit: an edit may leave the quotations alone.
+        let t = &o.doc_after;
+        if t.contains('“') || t.contains('”') {
+            return Err("“” quotes".into());
+        }
+        (t.matches('「').count() == 2)
+            .then_some(())
+            .ok_or_else(|| "a 「」 quotation is gone".into())
+    }), "A remembered requirement (learned from the writer turning down 「」 -> “” edits): keep 「」, don't change them to “”. Expect the note polished with both quotations still in 「」 and no “” anywhere.").disk(ws));
+
+    const NOTE_EN: &str = "At the club fair we handed out flyers, stickers and pens. Most visitors asked about meeting times, costs or whether beginners could join. Next year we want a bigger table, a banner and two more volunteers.";
+    let base = scratch("learned-en-oxford");
+    put(
+        &base,
+        "global/memory/no-oxford-comma.md",
+        &memory("Don't add the Oxford comma (the comma before and/or in a list)."),
+    );
+    let ws = DiskWorkspace {
+        global: Some(base.join("global")),
+        doc_path: Some(put(&base, "notes/fair.md", NOTE_EN)),
+        show: vec![base.clone()],
+        ..DiskWorkspace::default()
+    };
+    c.push(AgentCase::new("learned/en/no-oxford-comma", Lang::En, Lang::En, NOTE_EN, "Polish this paragraph.", edit_anywhere().check("no Oxford comma", |o| {
+        let t = proposed_text(o);
+        // A comma before and/or with another comma earlier in its clause.
+        let serial = [", and ", ", or "].iter().any(|mark| {
+            t.match_indices(mark).any(|(at, _)| {
+                let clause = t[..at].rsplit(['.', ';', ':', '!', '?']).next().unwrap_or("");
+                clause.contains(',')
+            })
+        });
+        (!serial).then_some(()).ok_or_else(|| "added an Oxford comma".into())
+    }), "A remembered requirement (learned from the writer turning down Oxford commas): don't add the Oxford comma. Expect the paragraph polished with its three lists still written 'a, b and c' / 'a, b or c'.").disk(ws));
     c
 }
 

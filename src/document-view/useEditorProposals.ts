@@ -5,6 +5,7 @@ import type { PendingEditCallbacks } from "./editor-extensions";
 import { useAgentConversation } from "../ai/chat/useAgentConversation";
 import {
   usePendingEdits,
+  type DecidedChange,
   type SelectionTarget,
 } from "../ai/revision/usePendingEdits";
 import {
@@ -29,14 +30,17 @@ export function useEditorProposals({
   settingsRef,
   settings,
   filePath,
+  onDecided,
 }: {
   run: EditorRunner;
   pendingEditActionsRef: { current: PendingEditCallbacks };
   settingsRef: { readonly current: Settings };
   settings: Settings;
   filePath: string | null;
+  /** The writer decided a proposal (useRevisionLearning). */
+  onDecided?: (callId: string, changes: DecidedChange[]) => void;
 }) {
-  const pendingEdits = usePendingEdits(run);
+  const pendingEdits = usePendingEdits(run, onDecided);
   useEffect(() => {
     pendingEditActionsRef.current = {
       onAccept: pendingEdits.accept,
@@ -104,7 +108,7 @@ export function useEditorProposals({
     ) => {
       if (supersedePending.current) {
         supersedePending.current = false;
-        pendingEdits.rejectAll();
+        pendingEdits.discardAll();
       }
       // A rewrite stopped while it streamed in sentence by sentence offers
       // what it reads as on screen (stopRewrite) - also when the stopped
@@ -114,7 +118,7 @@ export function useEditorProposals({
         const kept = p.streaming ? undefined : stoppedRewrite(p.callId);
         if (kept === undefined) return [p];
         if (kept === null) {
-          pendingEdits.reject(p.callId);
+          pendingEdits.discard(p.callId);
           return [];
         }
         return [{ ...p, proposal: { ...p.proposal, text: kept } }];
@@ -125,7 +129,7 @@ export function useEditorProposals({
     // depending on the whole `pendingEdits` object (fresh every render)
     // would destabilize the ProposalStream memo below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pendingEdits.rejectAll, pendingEdits.showPreviews, pendingEdits.reject],
+    [pendingEdits.discardAll, pendingEdits.showPreviews, pendingEdits.discard],
   );
   // A streaming propose_edit grows its green preview in the document while
   // the model is still writing it. All lifecycle decisions - when a draft is
@@ -134,10 +138,10 @@ export function useEditorProposals({
   // effects to the editor. Gated on the animation setting: off means
   // previews appear complete, at once.
   // propose_edit call ids awaiting their tool result, and what a refused
-  // one does: the preview goes (reject is stable per editor; the model
+  // one does: the preview goes (discard is stable per editor; the model
   // never hears this status - annotateProposalStatuses skips refusals).
   const proposalCallIds = useRef(new Set<string>());
-  const discardRefused = pendingEdits.reject;
+  const discardRefused = pendingEdits.discard;
   const proposalStream = useMemo(
     () =>
       new ProposalStream({
@@ -152,11 +156,11 @@ export function useEditorProposals({
           if (kept) streamPendingInsertText(callId, kept, true);
           addPreviews([{ callId, proposal }], requestTargetRef.current);
         },
-        discard: pendingEdits.reject,
+        discard: pendingEdits.discard,
       }),
-    // requestTargetRef is a stable ref; addPreviews/reject are stable per
+    // requestTargetRef is a stable ref; addPreviews/discard are stable per
     // editor (useCallback on `run`).
-    [addPreviews, pendingEdits.reject],
+    [addPreviews, pendingEdits.discard],
   );
   const handleStreamEvent = useCallback(
     (event: StreamEvent) => {
