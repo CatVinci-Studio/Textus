@@ -13,7 +13,8 @@ mod fetch;
 pub(crate) mod search;
 mod sources;
 
-use aicompat::agent::{AgentTurn, StepResult, ToolSpec};
+use crate::ai::tools::{Access, Run, Tool, EVERY_MODE};
+use aicompat::agent::{AgentTurn, StepResult, ToolCall, ToolSpec};
 use aicompat::capabilities::{self, NativeSearch};
 use search::{Backend, Hit, Service};
 use serde::Serialize;
@@ -117,16 +118,35 @@ impl WebPlan {
         }
     }
 
-    /// The tools this request offers the model.
-    pub(crate) fn tool_specs(&self) -> Vec<ToolSpec> {
+    /// The tools this request offers the model, in every mode. `question`
+    /// is the user's message, which a search service may rank by.
+    pub(crate) fn tools<'a>(&'a self, question: &'a str) -> Vec<Tool<'a>> {
+        self.tool_specs()
+            .into_iter()
+            .map(|spec| Tool {
+                spec,
+                access: Access::ReadOnly,
+                modes: EVERY_MODE,
+                run: Run::Async(Box::new(move |call: ToolCall| {
+                    Box::pin(async move {
+                        self.execute(&call.name, &call.arguments, question)
+                            .await
+                            .into()
+                    })
+                })),
+            })
+            .collect()
+    }
+
+    fn tool_specs(&self) -> Vec<ToolSpec> {
         let mut specs = Vec::new();
         if !self.on {
             return specs;
         }
         if self.service.is_some() {
             specs.push(ToolSpec {
-                name: WEB_SEARCH_TOOL,
-                description: "Search the web. Pass 1-3 short, specific queries, in the language the pages you want are written in. Results come back numbered, [1], [2], with a snippet each; cite what you use by its number. Read a result in full with web_fetch before relying on details a snippet doesn't show.",
+                name: WEB_SEARCH_TOOL.into(),
+                description: "Search the web. Pass 1-3 short, specific queries, in the language the pages you want are written in. Results come back numbered, [1], [2], with a snippet each; cite what you use by its number. Read a result in full with web_fetch before relying on details a snippet doesn't show.".into(),
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -143,8 +163,8 @@ impl WebPlan {
             });
         }
         specs.push(ToolSpec {
-            name: WEB_FETCH_TOOL,
-            description: "Read one web page (or PDF) in full, as text: a search result, or an address the user gave. Returns its number, title and main content, cut at 30,000 characters.",
+            name: WEB_FETCH_TOOL.into(),
+            description: "Read one web page (or PDF) in full, as text: a search result, or an address the user gave. Returns its number, title and main content, cut at 30,000 characters.".into(),
             parameters: json!({
                 "type": "object",
                 "properties": {
@@ -157,10 +177,6 @@ impl WebPlan {
             }),
         });
         specs
-    }
-
-    pub(crate) fn handles(&self, tool: &str) -> bool {
-        self.on && (tool == WEB_FETCH_TOOL || (tool == WEB_SEARCH_TOOL && self.service.is_some()))
     }
 
     /// What the system prompt says about the web, when search is on.
@@ -507,12 +523,19 @@ mod tests {
             service.clone(),
             &[],
         );
-        let names: Vec<_> = native.tool_specs().iter().map(|s| s.name).collect();
+        let names: Vec<_> = native
+            .tool_specs()
+            .iter()
+            .map(|s| s.name.to_string())
+            .collect();
         assert_eq!(names, vec![WEB_FETCH_TOOL]);
-        assert!(!native.handles(WEB_SEARCH_TOOL));
 
         let own = plan(service.clone());
-        let names: Vec<_> = own.tool_specs().iter().map(|s| s.name).collect();
+        let names: Vec<_> = own
+            .tool_specs()
+            .iter()
+            .map(|s| s.name.to_string())
+            .collect();
         assert_eq!(names, vec![WEB_SEARCH_TOOL, WEB_FETCH_TOOL]);
 
         let off = WebPlan::new(false, Some(NativeSearch::AnthropicTool), service, &[]);

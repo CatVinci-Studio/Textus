@@ -2,13 +2,12 @@ use crate::ai::cancel;
 use crate::ai::catalog;
 use crate::ai::route;
 use crate::ai::rules::Conventions;
-use crate::ai::tools::{self, ToolContext};
+use crate::ai::tools::{self, ToolContext, ToolRegistry};
 use crate::ai::ui_language::{UiLanguage, UiNames};
 use crate::ai::web::{self, WebPlan};
 use crate::ai::workspace::{self, AgentWorkspace};
 use aicompat::agent::{
-    run_agent_loop, AgentTurn, ImageAttachment, LoopEvent, ProviderEvent, StepResult, ToolCall,
-    ToolOutput,
+    run_agent_loop, AgentTurn, ImageAttachment, LoopEvent, ProviderEvent, StepResult,
 };
 use aicompat::capabilities::ThinkingLevel;
 use serde::{Deserialize, Serialize};
@@ -163,33 +162,6 @@ where
                 .map(|r| postfix_step(web.finish_step(r), document, conventions).0)
         })
     }
-}
-
-/// Runs one tool call: the web tools through ai::web, generate_image
-/// through the request's image model, the rest in tools.rs. `question` is
-/// the user's message, which a search service may rank by. Awaited by the
-/// loop, so Stop drops a search, page read or picture in flight.
-async fn run_tool(
-    tools: &[tools::Tool],
-    ctx: &ToolContext<'_>,
-    web: &WebPlan,
-    images: Option<&crate::ai::images::ImageRun>,
-    channel: &Channel<StreamEvent>,
-    question: &str,
-    call: ToolCall,
-) -> ToolOutput {
-    if web.handles(&call.name) {
-        return web
-            .execute(&call.name, &call.arguments, question)
-            .await
-            .into();
-    }
-    if let Some(images) =
-        images.filter(|_| call.name == crate::ai::images::GENERATE_IMAGE_TOOL_NAME)
-    {
-        return images.execute(&call, ctx.document, channel).await;
-    }
-    tools::execute(tools, ctx, &call.name, &call.arguments)
 }
 
 /// The system prompt with what it says about the web, when search is on.
@@ -997,8 +969,8 @@ async fn ai_agent_message_inner(
         images,
     };
     let plain_message = message.clone();
-    // generate_image, while an image model is set (not in Review mode).
-    let image_run = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), mode);
+    // generate_image, while an image model is set.
+    let image_run = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref());
 
     let agent = route::agent_provider(&app, entry, model.clone(), thinking, web.native).await?;
     let result = match agent {
@@ -1007,15 +979,20 @@ async fn ai_agent_message_inner(
                 build_instructions(&workspace, &document, true, mode, &focus, &ui_language),
                 web,
             );
-            let mut tools = tools::builtin_tools(
+            let mut tools = ToolRegistry::builtin(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 mode,
                 workspace.remember,
                 entry.supports_vision,
             );
-            tools.extend(image_run.as_ref().map(|_| crate::ai::images::tool()));
-            let tool_specs = [tools::tool_specs(&tools), web.tool_specs()].concat();
+            if let Some(image_run) = &image_run {
+                tools.add(image_run.tool(&document, &on_event));
+            }
+            for tool in web.tools(&focus) {
+                tools.add(tool);
+            }
+            let tool_specs = tools.specs();
             let tool_ctx = ToolContext {
                 document: &document,
                 skills: &workspace.skills,
@@ -1047,11 +1024,8 @@ async fn ai_agent_message_inner(
                 user_turn,
                 MAX_STEPS,
                 step,
-                |call| {
-                    let image_run = image_run.as_ref();
-                    run_tool(&tools, &tool_ctx, web, image_run, &on_event, &focus, call)
-                },
-                tools::how_to_run,
+                |call| tools.execute(&tool_ctx, call),
+                |name| tools.how_to_run(name),
                 report(&on_event),
             )
             .await
@@ -1206,7 +1180,7 @@ mod tests {
         use std::collections::VecDeque;
 
         let document = "# Notes\n\n## Methods\n\nWe sampled ten sites.\n\n## Results\n\nAll good.";
-        let tools = tools::builtin_tools(false, false, AgentMode::Revise, false, false);
+        let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
         let conventions = crate::ai::rules::Conventions::default();
         let ctx = ToolContext {
             document,
@@ -1251,10 +1225,8 @@ mod tests {
                 let next = script.borrow_mut().pop_front().unwrap();
                 async move { Ok(next) }
             },
-            |call: aicompat::agent::ToolCall| {
-                std::future::ready(tools::execute(&tools, &ctx, &call.name, &call.arguments))
-            },
-            tools::how_to_run,
+            |call| tools.execute(&ctx, call),
+            |name| tools.how_to_run(name),
             |_| {},
         ))
         .unwrap();

@@ -1292,8 +1292,8 @@ mod tests {
     #[test]
     fn ark_agent_steps_lift_the_4096_token_answer_cap_and_keep_thinking() {
         let tools = [ToolSpec {
-            name: "propose_edit",
-            description: "edit",
+            name: "propose_edit".into(),
+            description: "edit".into(),
             parameters: json!({"type": "object"}),
         }];
         let ark = agent_request_body(

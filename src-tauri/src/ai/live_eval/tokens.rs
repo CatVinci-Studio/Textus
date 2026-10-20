@@ -163,13 +163,14 @@ fn live_token_breakdown() {
     ] {
         let remember = label.contains("remember");
         let system = build_instructions(ws, "", true, mode, "", ui);
-        let specs = tools::tool_specs(&tools::builtin_tools(
+        let specs = tools::ToolRegistry::builtin(
             ws.has_usable_skills(),
             ws.root.is_some(),
             mode,
             remember,
             true,
-        ));
+        )
+        .specs();
         let tool_values: Vec<Value> = specs.iter().map(tool_json).collect();
         let bare = count(key, AGENT_MODEL, None, &[], "x");
         let with_system = count(key, AGENT_MODEL, Some(&system), &[], "x");
@@ -201,13 +202,7 @@ fn live_token_breakdown() {
     );
 
     println!("\n## Each tool's marginal cost (project, Revise, images)\n");
-    let specs = tools::tool_specs(&tools::builtin_tools(
-        true,
-        true,
-        AgentMode::Revise,
-        true,
-        true,
-    ));
+    let specs = tools::ToolRegistry::builtin(true, true, AgentMode::Revise, true, true).specs();
     let all: Vec<Value> = specs.iter().map(tool_json).collect();
     let none = count(key, AGENT_MODEL, None, &[], "x");
     let with_all = count(key, AGENT_MODEL, None, &all, "x");
@@ -232,13 +227,8 @@ fn live_token_breakdown() {
         (with_all - none).saturating_sub(marginal_sum),
         with_all - none
     );
-    let write_specs = tools::tool_specs(&tools::builtin_tools(
-        true,
-        true,
-        AgentMode::Write,
-        true,
-        true,
-    ));
+    let write_specs =
+        tools::ToolRegistry::builtin(true, true, AgentMode::Write, true, true).specs();
     let insertion = write_specs
         .iter()
         .find(|s| s.name == "propose_edit")
@@ -511,13 +501,13 @@ fn live_doubao_prefix_cache() {
     let en = lang_doc(super::checks::Lang::En);
     let ws = draft_workspace();
     let system = build_instructions(&ws, "", true, AgentMode::Review, "", "en");
-    let tool_values: Vec<Value> = tools::tool_specs(&tools::builtin_tools(
+    let tool_values: Vec<Value> = tools::ToolRegistry::builtin(
         true,
         false,
         AgentMode::Review,
         false,
         true,
-    ))
+    ).specs()
     .iter()
     .map(|t| json!({"type": "function", "function": {"name": t.name, "description": t.description, "parameters": t.parameters}}))
     .collect();

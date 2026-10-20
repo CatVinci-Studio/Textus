@@ -7,6 +7,8 @@
 //!   cargo test --lib live_eval::web_search -- --ignored --nocapture
 
 use super::harness::secret;
+use crate::ai::agent::AgentMode;
+use crate::ai::tools::ToolRegistry;
 use crate::ai::web::search::{Backend, Service};
 use crate::ai::web::{WebPlan, WEB_FETCH_TOOL};
 use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, ToolCall};
@@ -91,7 +93,11 @@ fn ask_claude(web: &WebPlan, question: &str) -> Option<Vec<AgentTurn>> {
         "You are a research assistant. Answer in two sentences.\n\n{}",
         web.prompt_section().unwrap()
     );
-    let tools = web.tool_specs();
+    let mut registry = ToolRegistry::new(AgentMode::Review);
+    for tool in web.tools("") {
+        registry.add(tool);
+    }
+    let tools = registry.specs();
     let agent = AgentProvider {
         id: "anthropic".to_string(),
         model: anthropic::COMPLETION_MODEL.to_string(),
@@ -122,7 +128,7 @@ fn ask_claude(web: &WebPlan, question: &str) -> Option<Vec<AgentTurn>> {
             }
         },
         |call: ToolCall| async move { web.execute(&call.name, &call.arguments, "").await },
-        crate::ai::tools::how_to_run,
+        |name| registry.how_to_run(name),
         |_| {},
     ))
     .unwrap();

@@ -509,8 +509,8 @@ mod tests {
             },
         ];
         let tools = [ToolSpec {
-            name: "search_document",
-            description: "search",
+            name: "search_document".into(),
+            description: "search".into(),
             parameters: json!({"type": "object"}),
         }];
 

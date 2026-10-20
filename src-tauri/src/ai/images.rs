@@ -13,9 +13,8 @@
 //! Zhuohang Jiang: the per-send cap, the checked download, refusals told
 //! apart from failures.
 
-use crate::ai::agent::AgentMode;
 use crate::ai::agent::StreamEvent;
-use crate::ai::tools::{self, Run, Tool, ToolContext};
+use crate::ai::tools::{self, Access, Run, Tool, EDITING_MODES};
 use aicompat::agent::{ToolCall, ToolOutput, ToolSpec};
 use aicompat::images::{self as gen, Aspect, GeneratedImage, ImageApi, ImageTarget};
 use serde::{Deserialize, Serialize};
@@ -152,12 +151,10 @@ pub struct ImageRun {
 }
 
 impl ImageRun {
-    /// None - and no generate_image tool - in Review mode, which changes
-    /// nothing, without an image model, or without the key it needs.
-    pub fn resolve(app: &AppHandle, choice: Option<&ImageModel>, mode: AgentMode) -> Option<Self> {
-        if mode == AgentMode::Review {
-            return None;
-        }
+    /// None - and no generate_image tool - without an image model, or
+    /// without the key it needs. (Review mode, which changes nothing, never
+    /// offers it: ToolRegistry::add.)
+    pub fn resolve(app: &AppHandle, choice: Option<&ImageModel>) -> Option<Self> {
         let choice = choice?;
         let entry = find(&choice.provider)?;
         let model = Some(choice.model.trim())
@@ -272,13 +269,25 @@ impl ImageRun {
 }
 
 impl ImageRun {
+    /// generate_image for this request, offered in Write and Revise.
+    pub fn tool<'a>(&'a self, document: &'a str, channel: &'a Channel<StreamEvent>) -> Tool<'a> {
+        Tool {
+            spec: spec(),
+            access: Access::ProposesInItsCall,
+            modes: EDITING_MODES,
+            run: Run::Async(Box::new(move |call| {
+                Box::pin(self.execute(call, document, channel))
+            })),
+        }
+    }
+
     /// Runs one generate_image call: the picture is made (or why not is
     /// said) and recorded in the call's arguments, which is where the
     /// frontend shows the proposal from (ToolRun::Amending). Async like any
     /// tool, so the chat's Stop drops a picture being made.
-    pub async fn execute(
+    async fn execute(
         &self,
-        call: &ToolCall,
+        call: ToolCall,
         document: &str,
         channel: &Channel<StreamEvent>,
     ) -> ToolOutput {
@@ -301,56 +310,48 @@ impl ImageRun {
 
 const GENERATE_IMAGE_DESCRIPTION: &str = "Make a picture with the user's image model and propose it for the document, placed like an insertion: the user sees it in place with Accept and Reject, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked. Each picture costs the user money: make one per request unless they ask for more (at most 2). If the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.";
 
-/// The tool, offered while an image model is set (see ImageRun::resolve).
-pub fn tool() -> Tool {
-    Tool {
-        spec: ToolSpec {
-            name: GENERATE_IMAGE_TOOL_NAME,
-            description: GENERATE_IMAGE_DESCRIPTION,
-            parameters: json!({
-                "type": "object",
-                "properties": {
-                    "prompt": {
-                        "type": "string",
-                        "description": "What the picture shows, in English, in detail."
-                    },
-                    "alt": {
-                        "type": "string",
-                        "description": "A short description of the picture for its alt text, in the document's language."
-                    },
-                    "aspect": {
-                        "type": "string",
-                        "enum": Aspect::ALL,
-                        "description": "Width to height. Default 1:1."
-                    },
-                    "action": {
-                        "type": "string",
-                        "enum": tools::INSERT_ACTIONS,
-                        "description": "Where it goes, as propose_edit's insertions: insert_after a paragraph (the usual place for an illustration), insert_before one, insert_at_cursor, or append."
-                    },
-                    "anchor": {
-                        "type": "string",
-                        "description": "For insert_after and insert_before: the paragraph or heading the picture goes next to, quoted verbatim - the whole of it if it is short, else its last sentence."
-                    },
-                    "context": {
-                        "type": "string",
-                        "description": "Only when `anchor` occurs more than once: a longer verbatim quote containing it that occurs once."
-                    }
+/// What the model is told about generate_image.
+fn spec() -> ToolSpec {
+    ToolSpec {
+        name: GENERATE_IMAGE_TOOL_NAME.into(),
+        description: GENERATE_IMAGE_DESCRIPTION.into(),
+        parameters: json!({
+            "type": "object",
+            "properties": {
+                "prompt": {
+                    "type": "string",
+                    "description": "What the picture shows, in English, in detail."
                 },
-                "required": ["prompt", "alt", "action"],
-            }),
-        },
-        run: Run::Text(generate_image),
+                "alt": {
+                    "type": "string",
+                    "description": "A short description of the picture for its alt text, in the document's language."
+                },
+                "aspect": {
+                    "type": "string",
+                    "enum": Aspect::ALL,
+                    "description": "Width to height. Default 1:1."
+                },
+                "action": {
+                    "type": "string",
+                    "enum": tools::INSERT_ACTIONS,
+                    "description": "Where it goes, as propose_edit's insertions: insert_after a paragraph (the usual place for an illustration), insert_before one, insert_at_cursor, or append."
+                },
+                "anchor": {
+                    "type": "string",
+                    "description": "For insert_after and insert_before: the paragraph or heading the picture goes next to, quoted verbatim - the whole of it if it is short, else its last sentence."
+                },
+                "context": {
+                    "type": "string",
+                    "description": "Only when `anchor` occurs more than once: a longer verbatim quote containing it that occurs once."
+                }
+            },
+            "required": ["prompt", "alt", "action"],
+        }),
     }
 }
 
 /// What the model is told came of its call - read off what
-/// ImageRun::execute recorded in the arguments; without an image model
-/// (no ImageRun), that there is none.
-fn generate_image(_ctx: &ToolContext, arguments: &str) -> String {
-    outcome(arguments)
-}
-
+/// ImageRun::execute recorded in the arguments.
 fn outcome(arguments: &str) -> String {
     let args: Value = serde_json::from_str(arguments).unwrap_or_default();
     if let Some(image) = args.get("image") {
@@ -552,7 +553,7 @@ mod tests {
 
     #[test]
     fn the_tool_offers_only_insertions_and_the_five_aspects() {
-        let spec = tool().spec;
+        let spec = spec();
         assert_eq!(
             spec.parameters["properties"]["action"]["enum"],
             json!(tools::INSERT_ACTIONS)

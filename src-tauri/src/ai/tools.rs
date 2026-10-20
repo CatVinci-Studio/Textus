@@ -1,9 +1,11 @@
 use crate::ai::agent::AgentMode;
 use crate::ai::builtin;
 use crate::ai::workspace::{AgentSkill, Invocation};
-use aicompat::agent::{ToolOutput, ToolRun, ToolSpec};
+use aicompat::agent::{ToolCall, ToolOutput, ToolRun, ToolSpec};
 use serde_json::json;
+use std::future::Future;
 use std::path::Path;
+use std::pin::Pin;
 
 /// Everything a tool implementation needs to actually do its work. Grows as
 /// more tools need more context (e.g. an MCP client handle) without changing
@@ -98,21 +100,51 @@ impl ProposedPassage {
     }
 }
 
-/// A tool the agent can call, paired with its local implementation. Built-in
-/// tools (like `search_document` below) implement `run` directly; a future
-/// MCP integration would instead build this list by asking a connected MCP
-/// server for its tool specs and forwarding `run` to an MCP `tools/call`
-/// request - the registry and dispatch below don't need to change either way.
-pub struct Tool {
+/// A tool the agent can call: what the model is told (name, description,
+/// JSON schema), what calling it does, the modes it is offered in, and its
+/// implementation. Built-in tools (like `search_document` below) run here;
+/// the web tools and generate_image are added per request
+/// ([`ToolRegistry::add`]), and a plugin's or an MCP server's tools will be
+/// too - a spec from the plugin or server, and an [`Run::Async`] that
+/// forwards the call.
+pub struct Tool<'a> {
     pub spec: ToolSpec,
-    pub run: Run,
+    pub access: Access,
+    pub modes: &'static [AgentMode],
+    pub run: Run<'a>,
 }
 
+/// What calling a tool does, which decides how its calls run
+/// ([`ToolRegistry::how_to_run`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Access {
+    /// Only reads (the document, the project, the web): a step's reads run
+    /// together.
+    ReadOnly,
+    /// Proposes a change the user reviews, or changes something of
+    /// Textus AI's own (a memory): one call at a time, in call order.
+    Proposes,
+    /// Proposes, and records what it made in its own call (generate_image's
+    /// picture), which is where the frontend reads the proposal from.
+    ProposesInItsCall,
+}
+
+/// The modes a tool is offered in.
+pub const EVERY_MODE: &[AgentMode] = &[AgentMode::Review, AgentMode::Revise, AgentMode::Write];
+/// Write and Revise: the modes that change the document.
+pub const EDITING_MODES: &[AgentMode] = &[AgentMode::Revise, AgentMode::Write];
+
+pub type ToolFuture<'a> = Pin<Box<dyn Future<Output = ToolOutput> + Send + 'a>>;
+
 /// A tool's implementation, by what it answers with.
-pub enum Run {
+pub enum Run<'a> {
     Text(fn(&ToolContext, &str) -> String),
     /// Text and images for the model to look at (view_image).
     Seeing(fn(&ToolContext, &str) -> ToolOutput),
+    /// Awaited, with what it needs captured: a search, a page read, a
+    /// picture being made - work that waits on the network, which Stop
+    /// drops in flight.
+    Async(Box<dyn Fn(ToolCall) -> ToolFuture<'a> + Send + Sync + 'a>),
 }
 
 const SEARCH_TOOL_NAME: &str = "search_document";
@@ -940,17 +972,17 @@ const LIST_FILES_DESCRIPTION_WITH_IMAGES: &str = "List the files in the project 
 /// here (or extend to merge in MCP-provided tools) as the toolset grows.
 /// `can_remember`: Settings > Textus AI > Remember automatically is on.
 /// `sees_images`: the provider takes images (ToolContext::sees_images).
-pub fn builtin_tools(
+pub fn builtin_tools<'a>(
     has_skills: bool,
     has_root: bool,
     mode: AgentMode,
     can_remember: bool,
     sees_images: bool,
-) -> Vec<Tool> {
+) -> Vec<Tool<'a>> {
     let mut tools = vec![Tool {
             spec: ToolSpec {
-                name: SEARCH_TOOL_NAME,
-                description: "Search the current document for a query string (case-insensitive). Returns matching lines with their line numbers.",
+                name: SEARCH_TOOL_NAME.into(),
+                description: "Search the current document for a query string (case-insensitive). Returns matching lines with their line numbers.".into(),
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -962,11 +994,13 @@ pub fn builtin_tools(
                     "required": ["query"],
                 }),
             },
+            access: Access::ReadOnly,
+            modes: EVERY_MODE,
             run: Run::Text(search_document),
         }, Tool {
             spec: ToolSpec {
-                name: READ_DOCUMENT_TOOL_NAME,
-                description: "Read part of the current document verbatim: a whole section by its heading (subsections included), or a range of lines. Use it before revising a passage you can't fully see, and to copy exact anchors. The text comes back without line-number prefixes, ready to quote.",
+                name: READ_DOCUMENT_TOOL_NAME.into(),
+                description: "Read part of the current document verbatim: a whole section by its heading (subsections included), or a range of lines. Use it before revising a passage you can't fully see, and to copy exact anchors. The text comes back without line-number prefixes, ready to quote.".into(),
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -985,14 +1019,16 @@ pub fn builtin_tools(
                     },
                 }),
             },
+            access: Access::ReadOnly,
+            modes: EVERY_MODE,
             run: Run::Text(read_document),
         }];
 
     // The rules engine's read-only tools: every mode has them.
     tools.push(Tool {
         spec: ToolSpec {
-            name: CHECK_CONVENTIONS_TOOL_NAME,
-            description: "Check text against the document's writing conventions with a deterministic rules engine: punctuation and spacing (full-width marks in Chinese and Japanese, French no-break spaces, quotes, dashes, ellipses), numbers and dates, spelling lists, and consistency with the rest of the document, under the conventions profile in force (shown in the result). Pass `heading` or a line range for part of the document (default: all of it), or `text` to check a draft before you propose it. Returns findings grouped by rule with line numbers, the text, the fix and why. Use it to ground proofreading and convention fixes instead of guessing; it changes nothing.",
+            name: CHECK_CONVENTIONS_TOOL_NAME.into(),
+            description: "Check text against the document's writing conventions with a deterministic rules engine: punctuation and spacing (full-width marks in Chinese and Japanese, French no-break spaces, quotes, dashes, ellipses), numbers and dates, spelling lists, and consistency with the rest of the document, under the conventions profile in force (shown in the result). Pass `heading` or a line range for part of the document (default: all of it), or `text` to check a draft before you propose it. Returns findings grouped by rule with line numbers, the text, the fix and why. Use it to ground proofreading and convention fixes instead of guessing; it changes nothing.".into(),
             parameters: json!({
                 "type": "object",
                 "properties": {
@@ -1019,12 +1055,14 @@ pub fn builtin_tools(
                 },
             }),
         },
+        access: Access::ReadOnly,
+        modes: EVERY_MODE,
         run: Run::Text(check_conventions),
     });
     tools.push(Tool {
         spec: ToolSpec {
-            name: MEASURE_TEXT_TOOL_NAME,
-            description: "Count text exactly for a length limit - never estimate a count yourself. Metrics: x_weighted (X, limit 280: URLs count 23, CJK characters and emoji 2), bluesky (300 graphemes and 3,000 bytes), threads (500), instagram (2,200, at most 5 hashtags), mastodon (500 by default), linkedin (3,000, fold near 140), wechat_title (32), wechat_digest (120), wechat_content, xhs_title (20), xhs_body (1,000), weibo, govuk_title (65), govuk_summary (160), zh_academic_title (25 字), and plain chars, words, cjk_chars, utf8_bytes. Without `metric` it returns the basic counts. Use it on the exact text before proposing anything that must fit a limit, and give the count in your reply.",
+            name: MEASURE_TEXT_TOOL_NAME.into(),
+            description: "Count text exactly for a length limit - never estimate a count yourself. Metrics: x_weighted (X, limit 280: URLs count 23, CJK characters and emoji 2), bluesky (300 graphemes and 3,000 bytes), threads (500), instagram (2,200, at most 5 hashtags), mastodon (500 by default), linkedin (3,000, fold near 140), wechat_title (32), wechat_digest (120), wechat_content, xhs_title (20), xhs_body (1,000), weibo, govuk_title (65), govuk_summary (160), zh_academic_title (25 字), and plain chars, words, cjk_chars, utf8_bytes. Without `metric` it returns the basic counts. Use it on the exact text before proposing anything that must fit a limit, and give the count in your reply.".into(),
             parameters: json!({
                 "type": "object",
                 "properties": {
@@ -1041,6 +1079,8 @@ pub fn builtin_tools(
                 "required": ["text"],
             }),
         },
+        access: Access::ReadOnly,
+        modes: EVERY_MODE,
         run: Run::Text(measure_text),
     });
 
@@ -1048,8 +1088,8 @@ pub fn builtin_tools(
     // often asked for in Review mode.
     tools.push(Tool {
         spec: ToolSpec {
-            name: ADD_COMMENT_TOOL_NAME,
-            description: "Pin a piece of feedback to a passage without changing it - for reviews and critique (\"what's weak here\", \"check this draft\"). One call per point; quote the passage verbatim as `anchor` (unique in the document, or add `context`). The user sees each comment as a card that jumps to its passage, so keep your reply to a short overall summary.",
+            name: ADD_COMMENT_TOOL_NAME.into(),
+            description: "Pin a piece of feedback to a passage without changing it - for reviews and critique (\"what's weak here\", \"check this draft\"). One call per point; quote the passage verbatim as `anchor` (unique in the document, or add `context`). The user sees each comment as a card that jumps to its passage, so keep your reply to a short overall summary.".into(),
             parameters: json!({
                 "type": "object",
                 "properties": {
@@ -1069,6 +1109,8 @@ pub fn builtin_tools(
                 "required": ["anchor", "comment"],
             }),
         },
+        access: Access::Proposes,
+        modes: EVERY_MODE,
         run: Run::Text(add_comment),
     });
 
@@ -1076,8 +1118,8 @@ pub fn builtin_tools(
     if can_remember {
         tools.push(Tool {
             spec: ToolSpec {
-                name: REMEMBER_TOOL_NAME,
-                description: "Remember something for later conversations: a requirement, preference or trait of the user's style that should hold beyond this request, or a fact about their work (a person, place or term). It is saved as a small file the user can see, undo, edit or delete; it never changes the document. To change something already remembered, pass its id as `replaces`.",
+                name: REMEMBER_TOOL_NAME.into(),
+                description: "Remember something for later conversations: a requirement, preference or trait of the user's style that should hold beyond this request, or a fact about their work (a person, place or term). It is saved as a small file the user can see, undo, edit or delete; it never changes the document. To change something already remembered, pass its id as `replaces`.".into(),
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -1112,6 +1154,8 @@ pub fn builtin_tools(
                     "required": ["kind", "text"],
                 }),
             },
+            access: Access::Proposes,
+            modes: EVERY_MODE,
             run: Run::Text(remember),
         });
     }
@@ -1120,24 +1164,24 @@ pub fn builtin_tools(
     // tool, so a provider cannot accidentally ignore a prompt-only mode
     // instruction and create a proposal anyway. Write receives it with the
     // insertion actions only, and propose_insertion refuses any other.
-    let edit_tool = match mode {
-        AgentMode::Review => None,
-        AgentMode::Revise => Some((
+    for (description, actions, run, modes) in [
+        (
             PROPOSE_EDIT_DESCRIPTION,
             &EDIT_ACTIONS[..],
             propose_edit as fn(&ToolContext, &str) -> String,
-        )),
-        AgentMode::Write => Some((
+            &[AgentMode::Revise][..],
+        ),
+        (
             PROPOSE_INSERTION_DESCRIPTION,
             &INSERT_ACTIONS[..],
             propose_insertion as _,
-        )),
-    };
-    if let Some((description, actions, run)) = edit_tool {
+            &[AgentMode::Write][..],
+        ),
+    ] {
         tools.push(Tool {
             spec: ToolSpec {
-                name: PROPOSE_EDIT_TOOL_NAME,
-                description,
+                name: PROPOSE_EDIT_TOOL_NAME.into(),
+                description: description.into(),
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -1166,6 +1210,8 @@ pub fn builtin_tools(
                     "required": ["action"],
                 }),
             },
+            access: Access::Proposes,
+            modes,
             run: Run::Text(run),
         });
     }
@@ -1173,8 +1219,8 @@ pub fn builtin_tools(
     if has_skills {
         tools.push(Tool {
             spec: ToolSpec {
-                name: USE_SKILL_TOOL_NAME,
-                description: "Load the full instructions of one of the available skills (listed in the system prompt), or a reference pack a skill names. Call this before following a skill whenever the user's request matches its description, or when the user invokes it by name.",
+                name: USE_SKILL_TOOL_NAME.into(),
+                description: "Load the full instructions of one of the available skills (listed in the system prompt), or a reference pack a skill names. Call this before following a skill whenever the user's request matches its description, or when the user invokes it by name.".into(),
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -1186,6 +1232,8 @@ pub fn builtin_tools(
                     "required": ["name"],
                 }),
             },
+            access: Access::ReadOnly,
+            modes: EVERY_MODE,
             run: Run::Text(use_skill),
         });
     }
@@ -1193,11 +1241,11 @@ pub fn builtin_tools(
     if has_root {
         tools.push(Tool {
             spec: ToolSpec {
-                name: FIND_FILES_TOOL_NAME,
+                name: FIND_FILES_TOOL_NAME.into(),
                 description: if sees_images {
-                    FIND_FILES_DESCRIPTION_WITH_IMAGES
+                    FIND_FILES_DESCRIPTION_WITH_IMAGES.into()
                 } else {
-                    FIND_FILES_DESCRIPTION
+                    FIND_FILES_DESCRIPTION.into()
                 },
                 parameters: json!({
                     "type": "object",
@@ -1210,12 +1258,14 @@ pub fn builtin_tools(
                     "required": ["name"],
                 }),
             },
+            access: Access::ReadOnly,
+            modes: EVERY_MODE,
             run: Run::Text(find_files),
         });
         tools.push(Tool {
             spec: ToolSpec {
-                name: SEARCH_FILES_TOOL_NAME,
-                description: "Search every text file and document (PDF, Word, PowerPoint, spreadsheet, EPUB, RTF) in the project folder for a word or phrase (case-insensitive), however long the file. Returns `path:line: text` matches - use it to find where a character, term or fact appears across chapters and notes, then read_file with start_line and end_line around the match for its context.",
+                name: SEARCH_FILES_TOOL_NAME.into(),
+                description: "Search every text file and document (PDF, Word, PowerPoint, spreadsheet, EPUB, RTF) in the project folder for a word or phrase (case-insensitive), however long the file. Returns `path:line: text` matches - use it to find where a character, term or fact appears across chapters and notes, then read_file with start_line and end_line around the match for its context.".into(),
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -1227,24 +1277,28 @@ pub fn builtin_tools(
                     "required": ["query"],
                 }),
             },
+            access: Access::ReadOnly,
+            modes: EVERY_MODE,
             run: Run::Text(search_files),
         });
         tools.push(Tool {
             spec: ToolSpec {
-                name: LIST_FILES_TOOL_NAME,
+                name: LIST_FILES_TOOL_NAME.into(),
                 description: if sees_images {
-                    LIST_FILES_DESCRIPTION_WITH_IMAGES
+                    LIST_FILES_DESCRIPTION_WITH_IMAGES.into()
                 } else {
-                    LIST_FILES_DESCRIPTION
+                    LIST_FILES_DESCRIPTION.into()
                 },
                 parameters: json!({"type": "object", "properties": {}}),
             },
+            access: Access::ReadOnly,
+            modes: EVERY_MODE,
             run: Run::Text(list_files),
         });
         tools.push(Tool {
             spec: ToolSpec {
-                name: READ_FILE_TOOL_NAME,
-                description: "Read a text file, or the text of a PDF, Word, PowerPoint, spreadsheet, EPUB or RTF file (as Markdown), from the project folder. Use the relative path as shown by find_files, search_files or list_files. A long file comes back in parts: the answer says which lines of how many it shows and where to read on; pass start_line and end_line to read a part - say, a few dozen lines around a line search_files found.",
+                name: READ_FILE_TOOL_NAME.into(),
+                description: "Read a text file, or the text of a PDF, Word, PowerPoint, spreadsheet, EPUB or RTF file (as Markdown), from the project folder. Use the relative path as shown by find_files, search_files or list_files. A long file comes back in parts: the answer says which lines of how many it shows and where to read on; pass start_line and end_line to read a part - say, a few dozen lines around a line search_files found.".into(),
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -1264,13 +1318,15 @@ pub fn builtin_tools(
                     "required": ["path"],
                 }),
             },
+            access: Access::ReadOnly,
+            modes: EVERY_MODE,
             run: Run::Text(read_file),
         });
         if sees_images {
             tools.push(Tool {
                 spec: ToolSpec {
-                    name: VIEW_IMAGE_TOOL_NAME,
-                    description: "Look at an image in the project folder (PNG, JPEG, GIF or WebP, up to 6 MB) - a map, a photo, a chart, a scanned page. Use the relative path as list_files or find_files show it.",
+                    name: VIEW_IMAGE_TOOL_NAME.into(),
+                    description: "Look at an image in the project folder (PNG, JPEG, GIF or WebP, up to 6 MB) - a map, a photo, a chart, a scanned page. Use the relative path as list_files or find_files show it.".into(),
                     parameters: json!({
                         "type": "object",
                         "properties": {
@@ -1282,40 +1338,15 @@ pub fn builtin_tools(
                         "required": ["path"],
                     }),
                 },
+                access: Access::ReadOnly,
+                modes: EVERY_MODE,
                 run: Run::Seeing(view_image),
             });
         }
     }
 
+    tools.retain(|tool| tool.modes.contains(&mode));
     tools
-}
-
-/// How the agent loop runs a tool's calls (aicompat's ToolRun): the ones
-/// that only read run together, and the rest one at a time in call order -
-/// proposals, comments and memories land in the order the model sent them,
-/// and generate_image records the picture it made in its call.
-pub fn how_to_run(name: &str) -> ToolRun {
-    match name {
-        PROPOSE_EDIT_TOOL_NAME | ADD_COMMENT_TOOL_NAME | REMEMBER_TOOL_NAME => ToolRun::InOrder,
-        crate::ai::images::GENERATE_IMAGE_TOOL_NAME => ToolRun::Amending,
-        SEARCH_TOOL_NAME
-        | READ_DOCUMENT_TOOL_NAME
-        | CHECK_CONVENTIONS_TOOL_NAME
-        | MEASURE_TEXT_TOOL_NAME
-        | USE_SKILL_TOOL_NAME
-        | LIST_FILES_TOOL_NAME
-        | READ_FILE_TOOL_NAME
-        | VIEW_IMAGE_TOOL_NAME
-        | SEARCH_FILES_TOOL_NAME
-        | FIND_FILES_TOOL_NAME
-        | crate::ai::web::WEB_SEARCH_TOOL
-        | crate::ai::web::WEB_FETCH_TOOL => ToolRun::Concurrent,
-        _ => ToolRun::InOrder,
-    }
-}
-
-pub fn tool_specs(tools: &[Tool]) -> Vec<ToolSpec> {
-    tools.iter().map(|t| t.spec.clone()).collect()
 }
 
 /// How often one request may call each check tool before it stops
@@ -1354,20 +1385,155 @@ fn spend_check(ctx: &ToolContext, name: &str, arguments: &str) -> Option<String>
     })
 }
 
-pub fn execute(tools: &[Tool], ctx: &ToolContext, name: &str, arguments: &str) -> ToolOutput {
-    if let Some(refusal) = spend_check(ctx, name, arguments) {
-        return refusal.into();
+/// The tools one request offers, assembled for its mode: the built-ins
+/// that have something to work on ([`builtin_tools`]), then what the
+/// request adds - the web tools, generate_image, and later plugin and MCP
+/// tools. The one place a tool is looked up by name.
+pub struct ToolRegistry<'a> {
+    mode: AgentMode,
+    tools: Vec<Tool<'a>>,
+}
+
+impl<'a> ToolRegistry<'a> {
+    /// No tools yet: what `mode` offers is added to it.
+    pub fn new(mode: AgentMode) -> Self {
+        Self {
+            mode,
+            tools: Vec::new(),
+        }
     }
-    match tools.iter().find(|t| t.spec.name == name).map(|t| &t.run) {
-        Some(Run::Text(run)) => run(ctx, arguments).into(),
-        Some(Run::Seeing(run)) => run(ctx, arguments),
-        None => format!("Unknown tool: {name}").into(),
+
+    /// The built-in tools for `mode` (see [`builtin_tools`] for the rest).
+    pub fn builtin(
+        has_skills: bool,
+        has_root: bool,
+        mode: AgentMode,
+        can_remember: bool,
+        sees_images: bool,
+    ) -> Self {
+        let mut registry = Self::new(mode);
+        registry.tools = builtin_tools(has_skills, has_root, mode, can_remember, sees_images);
+        registry
+    }
+
+    /// Adds `tool` if this request's mode offers it.
+    pub fn add(&mut self, tool: Tool<'a>) {
+        if tool.modes.contains(&self.mode) {
+            self.tools.push(tool);
+        }
+    }
+
+    pub fn specs(&self) -> Vec<ToolSpec> {
+        self.tools.iter().map(|t| t.spec.clone()).collect()
+    }
+
+    fn find(&self, name: &str) -> Option<&Tool<'a>> {
+        self.tools.iter().find(|t| t.spec.name == name)
+    }
+
+    /// How the agent loop runs `name`'s calls (aicompat's ToolRun). A name
+    /// the model made up runs on its own, and is told it doesn't exist.
+    pub fn how_to_run(&self, name: &str) -> ToolRun {
+        match self.find(name).map(|t| t.access) {
+            Some(Access::ReadOnly) => ToolRun::Concurrent,
+            Some(Access::ProposesInItsCall) => ToolRun::Amending,
+            Some(Access::Proposes) | None => ToolRun::InOrder,
+        }
+    }
+
+    pub async fn execute(&self, ctx: &ToolContext<'_>, call: ToolCall) -> ToolOutput {
+        if let Some(refusal) = spend_check(ctx, &call.name, &call.arguments) {
+            return refusal.into();
+        }
+        match self.find(&call.name).map(|t| &t.run) {
+            Some(Run::Text(run)) => run(ctx, &call.arguments).into(),
+            Some(Run::Seeing(run)) => run(ctx, &call.arguments),
+            Some(Run::Async(run)) => run(call).await,
+            None => format!("Unknown tool: {}", call.name).into(),
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// One call through the registry, as the agent loop makes it.
+    fn execute(tools: &ToolRegistry, ctx: &ToolContext, name: &str, arguments: &str) -> ToolOutput {
+        tauri::async_runtime::block_on(tools.execute(
+            ctx,
+            ToolCall {
+                call_id: String::new(),
+                name: name.into(),
+                arguments: arguments.into(),
+            },
+        ))
+    }
+
+    fn names(tools: &[Tool]) -> Vec<String> {
+        tools.iter().map(|t| t.spec.name.to_string()).collect()
+    }
+
+    /// A tool that arrives at run time, as a plugin's or an MCP server's
+    /// will: an owned name and schema, and an async run.
+    fn runtime_tool<'a>(name: &str, access: Access, modes: &'static [AgentMode]) -> Tool<'a> {
+        Tool {
+            spec: ToolSpec {
+                name: name.to_string().into(),
+                description: format!("{name}, from a plugin").into(),
+                parameters: json!({"type": "object", "properties": {}}),
+            },
+            access,
+            modes,
+            run: Run::Async(Box::new(|call: ToolCall| {
+                Box::pin(async move { format!("{} ran with {}", call.name, call.arguments).into() })
+            })),
+        }
+    }
+
+    #[test]
+    fn a_runtime_tool_is_offered_and_run_through_the_registry() {
+        let mut tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+        tools.add(runtime_tool("zotero_search", Access::ReadOnly, EVERY_MODE));
+        assert!(tools.specs().iter().any(|s| s.name == "zotero_search"));
+        let out = execute(&tools, &ctx("Doc."), "zotero_search", r#"{"q":"x"}"#);
+        assert_eq!(out.text, r#"zotero_search ran with {"q":"x"}"#);
+        assert_eq!(
+            execute(&tools, &ctx("Doc."), "no_such_tool", "{}").text,
+            "Unknown tool: no_such_tool"
+        );
+    }
+
+    #[test]
+    fn a_tool_is_offered_only_in_the_modes_it_names() {
+        for (mode, offered) in [
+            (AgentMode::Review, false),
+            (AgentMode::Revise, true),
+            (AgentMode::Write, true),
+        ] {
+            let mut tools = ToolRegistry::new(mode);
+            tools.add(runtime_tool("make_figure", Access::Proposes, EDITING_MODES));
+            assert_eq!(tools.specs().len() == 1, offered, "{mode}");
+        }
+    }
+
+    #[test]
+    fn reads_run_together_and_proposals_in_order() {
+        let mut tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+        tools.add(runtime_tool(
+            "make_figure",
+            Access::ProposesInItsCall,
+            EDITING_MODES,
+        ));
+        assert_eq!(
+            tools.how_to_run(READ_DOCUMENT_TOOL_NAME),
+            ToolRun::Concurrent
+        );
+        assert_eq!(tools.how_to_run(PROPOSE_EDIT_TOOL_NAME), ToolRun::InOrder);
+        assert_eq!(tools.how_to_run(ADD_COMMENT_TOOL_NAME), ToolRun::InOrder);
+        assert_eq!(tools.how_to_run("make_figure"), ToolRun::Amending);
+        assert_eq!(tools.how_to_run("no_such_tool"), ToolRun::InOrder);
+    }
 
     #[test]
     fn anchors_match_through_typography_and_folded_whitespace() {
@@ -1459,7 +1625,7 @@ mod tests {
 
     #[test]
     fn check_tools_stop_answering_once_their_budget_is_spent() {
-        let tools = builtin_tools(false, false, AgentMode::Revise, false, false);
+        let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
         let context = ctx("草稿");
         let run = |name: &str, args: &str| execute(&tools, &context, name, args).text;
         let measure = |metric: &str| {
@@ -1548,12 +1714,10 @@ mod tests {
     #[test]
     fn the_rules_tools_are_in_every_mode() {
         for mode in [AgentMode::Review, AgentMode::Revise, AgentMode::Write] {
-            let names: Vec<&str> = builtin_tools(false, false, mode, false, false)
-                .iter()
-                .map(|t| t.spec.name)
-                .collect();
+            let names = names(&builtin_tools(false, false, mode, false, false));
             assert!(
-                names.contains(&"check_conventions") && names.contains(&"measure_text"),
+                names.iter().any(|n| n == "check_conventions")
+                    && names.iter().any(|n| n == "measure_text"),
                 "{names:?}"
             );
         }
@@ -1561,12 +1725,17 @@ mod tests {
 
     #[test]
     fn the_project_file_tools_are_offered_only_with_a_project_folder() {
-        let names = |has_root: bool| -> Vec<&str> {
-            builtin_tools(false, has_root, AgentMode::Revise, false, false)
-                .iter()
-                .map(|t| t.spec.name)
-                .filter(|n| n.ends_with("_files") || *n == READ_FILE_TOOL_NAME)
-                .collect()
+        let names = |has_root: bool| -> Vec<String> {
+            names(&builtin_tools(
+                false,
+                has_root,
+                AgentMode::Revise,
+                false,
+                false,
+            ))
+            .into_iter()
+            .filter(|n| n.ends_with("_files") || n == READ_FILE_TOOL_NAME)
+            .collect()
         };
         assert_eq!(
             names(true),
@@ -1592,7 +1761,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(dir.path().join("map.png"), [0x89, b'P', b'N', b'G']).unwrap();
         std::fs::write(dir.path().join("notes.md"), "").unwrap();
-        let tools = builtin_tools(false, true, AgentMode::Review, false, true);
+        let tools = ToolRegistry::builtin(false, true, AgentMode::Review, false, true);
         let seeing = ToolContext {
             root: Some(dir.path()),
             sees_images: true,
@@ -1650,7 +1819,7 @@ mod tests {
         std::fs::create_dir_all(dir.path().join("notes")).unwrap();
         std::fs::write(dir.path().join("notes/Lin Wan.md"), "").unwrap();
         std::fs::write(dir.path().join("chapter-1.md"), "").unwrap();
-        let tools = builtin_tools(false, true, AgentMode::Revise, false, false);
+        let tools = ToolRegistry::builtin(false, true, AgentMode::Revise, false, false);
         let in_project = ToolContext {
             root: Some(dir.path()),
             ..ctx("")
@@ -1711,7 +1880,7 @@ mod tests {
     #[test]
     fn write_mode_refuses_an_edit_that_changes_existing_text() {
         let doc = "The cat sat on the mat.";
-        let tools = builtin_tools(false, false, AgentMode::Write, false, false);
+        let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false, false);
         let ctx = ctx(doc);
         let run = |args: &str| execute(&tools, &ctx, PROPOSE_EDIT_TOOL_NAME, args).text;
         for args in [
@@ -1734,7 +1903,7 @@ mod tests {
             assert!(run(args).starts_with("Edit proposed"), "{args}");
         }
         // Revise keeps every action.
-        let revise = builtin_tools(false, false, AgentMode::Revise, false, false);
+        let revise = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
         assert!(execute(
             &revise,
             &ctx,

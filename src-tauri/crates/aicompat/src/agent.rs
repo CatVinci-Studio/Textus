@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::borrow::Cow;
 
 /// An image riding along with a user turn.
 ///
@@ -186,11 +187,13 @@ pub fn tool_images_note(images: &[ImageAttachment]) -> String {
     )
 }
 
-/// A tool the model may call. `parameters` is a JSON schema object.
-#[derive(Clone)]
+/// A tool the model may call. `parameters` is a JSON schema object. Name
+/// and description are owned or borrowed: the built-in tools' are
+/// constants, a plugin's or an MCP server's arrive at run time.
+#[derive(Clone, Debug)]
 pub struct ToolSpec {
-    pub name: &'static str,
-    pub description: &'static str,
+    pub name: Cow<'static, str>,
+    pub description: Cow<'static, str>,
     pub parameters: Value,
 }
 
