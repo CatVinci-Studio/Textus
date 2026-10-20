@@ -15,6 +15,7 @@ vi.mock("../platform/ipc", () => ({
     readTextFile: vi.fn(),
     writeTextFile: vi.fn(),
     saveFileDialog: vi.fn(),
+    migrateDraftImages: vi.fn(),
   },
   session: { addRecentFile: vi.fn() },
 }));
@@ -134,5 +135,35 @@ describe("autosaveTab", () => {
       expect(await result.current.autosaveTab("a")).toBe("saved");
     });
     expect(showConfirm).not.toHaveBeenCalled();
+  });
+});
+
+describe("saveTabAs", () => {
+  it("brings a document's images to the file it is saved as", async () => {
+    vi.mocked(fs.fileMtimeMs).mockResolvedValue(3);
+    vi.mocked(fs.saveFileDialog).mockResolvedValue("/elsewhere/b.md");
+    vi.mocked(fs.readTextFile).mockRejectedValue("not found");
+    vi.mocked(fs.migrateDraftImages).mockResolvedValue([
+      { old: "pics/p.png", new: "assets/p.png" },
+    ]);
+    const result = setup({ ...doc, content: "![](pics/p.png)\n" });
+    await act(async () => {
+      expect(await result.current.saveTabAs("a")).toBe(true);
+    });
+    expect(fs.migrateDraftImages).toHaveBeenCalledWith(
+      "/elsewhere/b.md",
+      ["pics/p.png"],
+      "assets",
+      "/notes/a.md",
+    );
+    expect(fs.writeTextFile).toHaveBeenLastCalledWith(
+      "/elsewhere/b.md",
+      "![](assets/p.png)\n",
+    );
+    expect(result.current.tabState.tabs[0]).toMatchObject({
+      path: "/elsewhere/b.md",
+      content: "![](assets/p.png)\n",
+      reloadKey: 1,
+    });
   });
 });

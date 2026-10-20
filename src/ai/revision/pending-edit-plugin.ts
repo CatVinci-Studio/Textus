@@ -6,6 +6,7 @@ import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { renderMarkdownInlineHtml } from "../../editor/markdown/render-html";
+import { onKatexReady } from "../../editor/math/katex-loader";
 import {
   pendingDiagram,
   splitMermaidFences,
@@ -366,6 +367,28 @@ function renderAnimation(anim: InsertAnimation) {
  * ```mermaid fence stands between the lines too, as its diagram.
  */
 function renderPendingHtml(span: HTMLElement, markdown: string) {
+  fillPendingHtml(span, markdown);
+  if (span.querySelector(".math-pending")) awaitKatex(span, markdown);
+  else waitingForKatex.delete(span);
+}
+
+// The widgets showing a formula's source while KaTeX loads (katex-loader.ts),
+// with the markdown each shows. A widget is kept by its key across
+// transactions, so nothing else would draw it again once KaTeX is here: it
+// would show the source until the proposal next changed.
+const waitingForKatex = new Map<HTMLElement, string>();
+
+function awaitKatex(span: HTMLElement, markdown: string) {
+  if (waitingForKatex.size === 0)
+    onKatexReady(() => {
+      for (const [waiting, text] of waitingForKatex)
+        if (waiting.isConnected) fillPendingHtml(waiting, text);
+      waitingForKatex.clear();
+    });
+  waitingForKatex.set(span, markdown);
+}
+
+function fillPendingHtml(span: HTMLElement, markdown: string) {
   const parts = splitMermaidFences(markdown);
   let nodes: Node[];
   if (!parts) {

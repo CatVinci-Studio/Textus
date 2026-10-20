@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { renderDocumentHtml, renderMarkdownHtml } from "./render-html";
+import { loadKatex } from "../math/katex-loader";
+
+// The app loads KaTeX on the first formula (katex-loader.test.ts); these
+// render with it there.
+beforeAll(() => loadKatex());
 
 describe("renderMarkdownHtml", () => {
   it("renders inline and display math with KaTeX", () => {

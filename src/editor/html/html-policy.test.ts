@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { sanitizeNodes, sanitizeStyle, svgDataUrl } from "./html-policy";
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
 import { renderDocumentHtml } from "../markdown/render-html";
+import { loadKatex } from "../math/katex-loader";
+
+beforeAll(() => loadKatex());
 
 /** `html` through the policy, as markup. */
 function clean(html: string): string {

@@ -1,5 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useRef } from "react";
 import { renderDocumentHtml } from "../markdown/render-html";
+import { useKatexReady } from "../math/katex-loader";
 import { resolveImageSrc } from "../images/image-plugin";
 import { diagramRenderer } from "../diagram-engine";
 import { useSettings } from "../../settings/SettingsContext";
@@ -33,7 +34,13 @@ export function SplitView({
   // Typing stays responsive on long documents: the preview renders the
   // deferred value and catches up a beat later.
   const deferred = useDeferredValue(content);
-  const html = useMemo(() => renderDocumentHtml(deferred), [deferred]);
+  // A first formula loads KaTeX; the preview renders again once it is here.
+  const katexReady = useKatexReady();
+  const html = useMemo(
+    () => renderDocumentHtml(deferred),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- a render key
+    [deferred, katexReady],
+  );
   const { diagramEngine } = useSettings().settings;
 
   // Relative image paths resolve against the document's folder, as in the

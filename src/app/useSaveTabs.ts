@@ -76,14 +76,16 @@ export function useSaveTabs(opts: {
       // First save of a draft: any pasted images it holds live in the app's
       // data dir with an absolute src (fs.rs's save_pasted_image) - now that
       // the document has a real home, move them into its image folder and
-      // rewrite the markdown to relative paths (4.2). A no-op for documents
-      // with no draft-origin images.
+      // rewrite the markdown to relative paths (4.2). Saved as a file in
+      // another folder, its relative images are copied along the same way.
+      // A no-op for documents with neither.
       let { content } = tab;
       try {
         const migration = await migrateDraftImages(
           picked,
           tab.content,
           imageFolder,
+          tab.path,
         );
         if (migration.migrated) {
           content = migration.content;

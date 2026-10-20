@@ -8,9 +8,14 @@ const mocks = vi.hoisted(() => ({
     revealInDir: vi.fn(),
   },
   showMessage: vi.fn(),
+  fs: { readBinaryFileBase64: vi.fn(), writeTextFile: vi.fn() },
 }));
 
-vi.mock("../platform/ipc", () => ({ exportDoc: mocks.exportDoc, fs: {} }));
+vi.mock("../platform/ipc", () => ({
+  exportDoc: mocks.exportDoc,
+  fs: mocks.fs,
+}));
+
 vi.mock("../platform/capabilities", () => ({
   canExportPdf: true,
   canExportWithPandoc: true,
@@ -25,6 +30,7 @@ import type { DocTab } from "../document/doc-tabs";
 import {
   buildStandaloneHtml,
   cloneEditorContent,
+  exportHtml,
   exportPdf,
   pdfLayoutCss,
 } from "./exporters";
@@ -266,5 +272,60 @@ describe("exportPdf", () => {
     expect(calls.map(([args]) => args.pageNumbers)).toEqual([false, true]);
     // The page itself is rendered the same either way.
     expect(calls[0][0].html).toBe(calls[1][0].html);
+  });
+
+  it("embeds a local image read from the document's folder", async () => {
+    document.body.innerHTML = activeEditorWithImage;
+    mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/a.pdf");
+    mocks.exportDoc.exportPdfNative.mockReset().mockResolvedValue(undefined);
+    mocks.fs.readBinaryFileBase64.mockReset().mockResolvedValue("QUJD");
+    // Loaded, as far as settleRender asks (jsdom loads no images).
+    const img = document.querySelector("img")!;
+    Object.defineProperty(img, "complete", { value: true });
+    Object.defineProperty(img, "naturalWidth", { value: 10 });
+
+    await exportPdf(tab, t);
+
+    expect(mocks.fs.readBinaryFileBase64).toHaveBeenCalledWith(
+      "/docs/assets/my pic.png",
+    );
+    const { html } = mocks.exportDoc.exportPdfNative.mock.calls[0][0];
+    expect(html).toContain('src="data:image/png;base64,QUJD"');
+    expect(html).not.toContain("asset://");
+    expect(html).not.toContain("data-doc-src");
+  });
+});
+
+// The editor's image as image-plugin.ts shows it: an asset: URL, with the
+// src the markdown has kept beside it.
+const activeEditorWithImage =
+  '<div data-active-tab="true"><div class="milkdown"><p>' +
+  '<img src="asset://localhost/%2Fdocs%2Fassets%2Fmy%20pic.png" data-doc-src="assets/my%20pic.png">' +
+  "</p></div></div>";
+
+describe("exportHtml", () => {
+  const t = { exportFailedTitle: "Export failed" } as Strings;
+  const tab = { id: "1", path: "/docs/a.md" } as DocTab;
+
+  async function exported(picked: string): Promise<string> {
+    document.body.innerHTML = activeEditorWithImage;
+    mocks.exportDoc.exportSaveDialog.mockResolvedValue(picked);
+    mocks.fs.writeTextFile.mockReset().mockResolvedValue(undefined);
+    mocks.fs.readBinaryFileBase64.mockReset().mockResolvedValue("QUJD");
+    await exportHtml(tab, t);
+    return mocks.fs.writeTextFile.mock.calls[0][1] as string;
+  }
+
+  it("keeps the document's image paths in a page saved beside it", async () => {
+    const html = await exported("/docs/a.html");
+    expect(html).toContain('src="assets/my%20pic.png"');
+    expect(mocks.fs.readBinaryFileBase64).not.toHaveBeenCalled();
+  });
+
+  it("embeds the images of a page saved in another folder", async () => {
+    // Its relative paths would point at nothing there.
+    const html = await exported("/elsewhere/a.html");
+    expect(html).toContain('src="data:image/png;base64,QUJD"');
+    expect(html).not.toContain("assets/my");
   });
 });

@@ -1,4 +1,3 @@
-import katex from "katex";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
@@ -12,8 +11,10 @@ import {
   emptyReveal,
   type RevealState,
 } from "../reveal-state";
+import { katexNow, mathSourceHtml, onKatexReady } from "./katex-loader";
 
 const mathPreviewKey = new PluginKey("math-preview");
+const KATEX_READY = "katex-ready";
 
 // Decorations are rebuilt on every transaction - each keystroke and each
 // arrow press - and used to re-run KaTeX on every formula in the document
@@ -22,10 +23,13 @@ const mathPreviewKey = new PluginKey("math-preview");
 const RENDER_CACHE_LIMIT = 1000;
 const renderCache = new Map<string, string>();
 
-function renderKatex(value: string, displayMode: boolean): string {
+/** The formula drawn, or null until KaTeX has loaded (katex-loader.ts). */
+function renderKatex(value: string, displayMode: boolean): string | null {
   const cacheKey = `${displayMode ? "B" : "I"}${value}`;
   const cached = renderCache.get(cacheKey);
   if (cached !== undefined) return cached;
+  const katex = katexNow();
+  if (!katex) return null;
   let html: string;
   try {
     html = katex.renderToString(value || "\\,", {
@@ -93,6 +97,8 @@ function collectDecorations(
 
     const displayMode = node.type.name === "math_block";
     const html = renderKatex(node.textContent, displayMode);
+    // KaTeX still loading: the source stays in view until it is drawn.
+    if (html === null) return;
 
     decorations.push(
       Decoration.inline(from + 1, to - 1, { class: "math-source-hidden" }),
@@ -166,9 +172,12 @@ export function createMathPreviewPlugin(options: { enabled: () => boolean }) {
         state: {
           init: (_config, state) => buildDecorations(state, options.enabled()),
           apply: (tr, prev, oldState, newState) =>
-            applyReveal(tr, prev, oldState, newState, (state) =>
-              buildDecorations(state, options.enabled()),
-            ),
+            // KaTeX has loaded: every formula left as source is drawn now.
+            tr.getMeta(mathPreviewKey) === KATEX_READY
+              ? buildDecorations(newState, options.enabled())
+              : applyReveal(tr, prev, oldState, newState, (state) =>
+                  buildDecorations(state, options.enabled()),
+                ),
         },
         props: {
           decorations(state) {
@@ -176,6 +185,14 @@ export function createMathPreviewPlugin(options: { enabled: () => boolean }) {
           },
         },
         view(editorView) {
+          const stopWaiting = onKatexReady(() => {
+            if (editorView.isDestroyed) return;
+            editorView.dispatch(
+              editorView.state.tr
+                .setMeta(mathPreviewKey, KATEX_READY)
+                .setMeta("addToHistory", false),
+            );
+          });
           const floatEl = document.createElement("div");
           floatEl.className = "math-float-preview";
           floatEl.style.display = "none";
@@ -258,10 +275,9 @@ export function createMathPreviewPlugin(options: { enabled: () => boolean }) {
             }
 
             const displayMode = found.node.type.name === "math_block";
-            floatEl.innerHTML = renderKatex(
-              found.node.textContent,
-              displayMode,
-            );
+            floatEl.innerHTML =
+              renderKatex(found.node.textContent, displayMode) ??
+              mathSourceHtml(found.node.textContent);
             floatEl.style.display = "block";
             // Brought into view as it opens and as typing grows it; a
             // scroll or a column move (follow) only re-places it, or it
@@ -385,6 +401,7 @@ export function createMathPreviewPlugin(options: { enabled: () => boolean }) {
             // prevState, which must not land in updateFloat's fromTimer.
             update: (view) => updateFloat(view),
             destroy() {
+              stopWaiting();
               cancelShow();
               cancelHide();
               cancelAnimationFrame(frame);

@@ -1,6 +1,7 @@
 import { lazy, memo, Suspense, useCallback } from "react";
 import { MilkdownProvider } from "@milkdown/react";
 import { useSettings, type AgentMode } from "../settings/SettingsContext";
+import { KatexFirst } from "../editor/math/KatexFirst";
 import type { TourAi } from "../utils/events";
 
 const MilkdownEditor = lazy(() =>
@@ -69,18 +70,20 @@ export const EditorPane = memo(function EditorPane({
         className={`editor-content ${settings.typewriterMode ? "typewriter-active" : ""}`}
       >
         <Suspense fallback={null}>
-          <MilkdownProvider>
-            <MilkdownEditor
-              tabId={tabId}
-              filePath={filePath}
-              docTitle={docTitle}
-              initialValue={initialValue}
-              onChange={handleChange}
-              isActive={isActive}
-              tour={tour}
-              tourMode={tourMode}
-            />
-          </MilkdownProvider>
+          <KatexFirst markdown={initialValue}>
+            <MilkdownProvider>
+              <MilkdownEditor
+                tabId={tabId}
+                filePath={filePath}
+                docTitle={docTitle}
+                initialValue={initialValue}
+                onChange={handleChange}
+                isActive={isActive}
+                tour={tour}
+                tourMode={tourMode}
+              />
+            </MilkdownProvider>
+          </KatexFirst>
         </Suspense>
       </div>
     </div>
