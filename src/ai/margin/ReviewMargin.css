@@ -32,7 +32,7 @@
   stroke: var(--review-note-line);
   stroke-width: 1.2;
   opacity: 0.7;
-  stroke-dasharray: 600;
+  stroke-dasharray: 1;
   animation: review-link-draw 600ms var(--ease-out) both;
   animation-delay: 160ms;
   transition:
@@ -47,7 +47,7 @@
 
 @keyframes review-link-draw {
   from {
-    stroke-dashoffset: 600;
+    stroke-dashoffset: 1;
   }
   to {
     stroke-dashoffset: 0;
@@ -295,6 +295,13 @@
 
 .revision-note-pick {
   margin-left: auto;
+  transition: opacity var(--dur-base) var(--ease-standard);
+}
+
+/* Its rewrite still streaming in: the ✓ / ✕ wait faint, as they do in the
+   text (.pending-pick.pending-streaming). */
+.revision-note-streaming .revision-note-pick {
+  opacity: 0.35;
 }
 
 .revision-note-text {

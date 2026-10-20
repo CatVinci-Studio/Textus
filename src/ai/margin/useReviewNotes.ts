@@ -21,6 +21,7 @@ import {
 } from "../revision/usePendingEdits";
 import {
   pendingEditKey,
+  reviewChanges,
   type HotSentence,
   type PendingPreview,
   type PendingSentence,
@@ -301,14 +302,14 @@ export function useReviewNotes({
     const display = revisionDisplay;
     pendingEdits.reviewStops.forEach((stop, i) => {
       if (display !== "original" && display !== "new") return;
-      const preview = pendingEdits.decidable.find(
+      const preview = pendingEdits.reviewed.find(
         (p) => p.callId === stop.callId,
       );
       if (!preview) return;
       const c =
         stop.index < 0
           ? wholeChange(preview)
-          : preview.sentences?.changes[stop.index];
+          : reviewChanges(preview)?.[stop.index];
       if (!c) return;
       items.push({
         kind: "revision",
@@ -322,15 +323,11 @@ export function useReviewNotes({
         before: c.before,
         shows: display,
         take: c.take,
+        streaming: !!preview.streaming,
       });
     });
     return items;
-  }, [
-    notes,
-    pendingEdits.reviewStops,
-    pendingEdits.decidable,
-    revisionDisplay,
-  ]);
+  }, [notes, pendingEdits.reviewStops, pendingEdits.reviewed, revisionDisplay]);
 
   // The margin card of the sentence the review bar points at.
   const { focusedStop } = pendingEdits;

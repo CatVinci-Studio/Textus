@@ -479,6 +479,7 @@ export function MilkdownEditor({
                 newText={pendingEdits.decidable.some((p) =>
                   addsTextOnly(p.proposal),
                 )}
+                streaming={pendingEdits.reviewStreaming}
               />
             )}
           </Presence>,

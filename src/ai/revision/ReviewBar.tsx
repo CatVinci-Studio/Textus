@@ -55,7 +55,12 @@ export function ReviewBar({
   displayName,
   onDisplay,
   newText,
+  streaming,
 }: {
+  /** A rewrite is still streaming in: its changes are counted and can be
+   *  stepped through as they come, and Accept / Reject wait until it is
+   *  all in, as its ✓ / ✕ do - the AI panel's Stop ends it early. */
+  streaming: boolean;
   /** Some pending proposal is new text alone (Write): it has no original
    *  for a margin view to show, so it stays in the text - the menu says
    *  so beside those views. */
@@ -182,12 +187,18 @@ export function ReviewBar({
           .replace("{k}", String(taken))
           .replace("{n}", String(total))
       : labels.proposalAccept;
-  const nav = stops > 1 && (
+  // The count shows from the start of a stream, and stays once shown: a
+  // rewrite that ends with one change keeps it rather than lose it at the
+  // end.
+  const [counted, setCounted] = useState(false);
+  if (!counted && (stops > 1 || streaming)) setCounted(true);
+  const nav = (counted || stops > 1 || streaming) && (
     <span className="review-bar-nav">
       <button
         type="button"
         aria-label={labels.quickAskPrevEdit}
         title={labels.quickAskPrevEdit}
+        disabled={stops < 2}
         onClick={onPrevious}
       >
         <ChevronIcon className="review-bar-prev" />
@@ -203,6 +214,7 @@ export function ReviewBar({
         type="button"
         aria-label={labels.quickAskNextEdit}
         title={labels.quickAskNextEdit}
+        disabled={stops < 2}
         onClick={onNext}
       >
         <ChevronIcon className="review-bar-next" />
@@ -237,11 +249,17 @@ export function ReviewBar({
         <button
           type="button"
           className="review-bar-button review-bar-accept"
+          disabled={streaming}
           onClick={onAccept}
         >
           {accept}
         </button>
-        <button type="button" className="review-bar-button" onClick={onReject}>
+        <button
+          type="button"
+          className="review-bar-button"
+          disabled={streaming}
+          onClick={onReject}
+        >
           {labels.proposalReject}
         </button>
       </div>
