@@ -367,6 +367,17 @@ export async function triggerGhostTextNow(
   );
 }
 
+/** Takes back the suggestion on offer, if any - Textus AI was turned off
+ *  while it showed. */
+export function dismissGhostText(view: EditorView): void {
+  if (!ghostTextKey.getState(view.state)?.suggestion) return;
+  view.dispatch(
+    view.state.tr
+      .setMeta(ghostTextKey, { type: "clear" } satisfies GhostMeta)
+      .setMeta("addToHistory", false),
+  );
+}
+
 /** Tagged union (like pending-edit-plugin's PendingMeta) so the "set" arm
  *  carries its payload as required fields - no assertions at the read site. */
 type GhostMeta =
@@ -684,6 +695,8 @@ export function createGhostTextPlugin(options: {
               if (!$pos.parent.type.spec.code && !hasProse(prose)) return;
 
               debounced.schedule(async (isCurrent) => {
+                // Turned off while the request waited out the debounce.
+                if (!options.enabled()) return;
                 let suggestion: string;
                 try {
                   suggestion = await ai.complete(
@@ -707,6 +720,7 @@ export function createGhostTextPlugin(options: {
                   return;
                 }
                 if (!isCurrent()) return; // superseded by a newer trigger
+                if (!options.enabled()) return;
                 suggestion = tidySuggestion(
                   before,
                   stripEcho(before, suggestion),

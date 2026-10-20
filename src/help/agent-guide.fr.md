@@ -274,6 +274,12 @@ Il n'existe ni profil de style ni bibliothèque globaux : ils décrivent un ens
 - Une tâche que vous demandez encore et encore → une **compétence**.
 - Notes, recherches, chapitres précédents → des fichiers ordinaires dans le **dossier du projet** ; Textus AI les lit quand une demande le nécessite.
 
+## Désactiver Textus AI
+
+L'interrupteur au bout droit de la barre de la fenêtre, à côté du robot, désactive tout Textus AI d'un clic : il est allumé tant que Textus AI est activée, atténué quand elle est désactivée, et un second clic la réactive. **Présentation > Textus AI**, **Réglages > Textus AI > Activer Textus AI** et un raccourci que vous pouvez définir dans **Réglages > Raccourcis** font de même. La fenêtre d'IA séparée a l'interrupteur dans son en-tête ; sur iPhone, il est dans la ligne du titre et dans le menu.
+
+Tant qu'elle est désactivée, rien n'est envoyé à aucun service d'IA, dès l'ouverture de Textus : ni complétion, ni vérification grammaticale, ni conversation, ni mémoire. Le panneau IA, la question rapide et les entrées IA du menu contextuel disparaissent, et une réponse en cours de rédaction s'arrête. Les modifications déjà proposées dans le document restent, pour que vous les acceptiez ou les refusiez. Chaque fonction garde son propre réglage, et toutes s'appliquent de nouveau dès que Textus AI est réactivée.
+
 ## À propos de la confidentialité
 
 Votre document, les fichiers joints ou mentionnés avec @, vos instructions d'écriture, le profil de style, les fiches de la bibliothèque mentionnées et les fichiers du projet que Textus AI lit sont envoyés au fournisseur choisi avec chaque requête ; **Apprendre mon style** envoie les exemples que vous choisissez. Avec la recherche web activée, les recherches partent vers votre fournisseur ou vers le service de recherche affiché dans les réglages, et les pages que lit Textus AI sont téléchargées depuis cet ordinateur. Désactivez une fonction dans les réglages si vous ne voulez pas de cet envoi.

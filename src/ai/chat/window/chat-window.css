@@ -113,3 +113,10 @@
   color: var(--editor-muted);
   background: var(--editor-bg);
 }
+
+/* Textus AI turned off: its note in the same place (TextusAiOffNote). */
+.chat-window-ai-off {
+  flex: 1;
+  min-height: 0;
+  background: var(--editor-bg);
+}

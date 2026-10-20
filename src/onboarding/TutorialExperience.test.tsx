@@ -47,7 +47,12 @@ const providerMocks = vi.hoisted(() => ({
 vi.mock("../settings/SettingsContext", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../settings/SettingsContext")>()),
   useSettings: () => ({
-    settings: { aiProvider: "openai", themeId: "default", userThemes: [] },
+    settings: {
+      textusAi: true,
+      aiProvider: "openai",
+      themeId: "default",
+      userThemes: [],
+    },
     setSettings: vi.fn(),
   }),
 }));

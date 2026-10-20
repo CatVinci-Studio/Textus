@@ -174,10 +174,11 @@
   transition: none;
 }
 
-/* The AI panel's toggle in the status group, and the sidebar's at the
-   row's start. Two classes: several e2e flows click `.window-bar-toggle`
-   and mean the AI one exactly. */
+/* The AI panel's toggle and Textus AI's switch in the status group, and
+   the sidebar's toggle at the row's start. A class each: several e2e
+   flows click `.window-bar-toggle` and mean the AI panel's exactly. */
 .window-bar-toggle,
+.window-bar-ai-switch,
 .window-bar-sidebar-toggle {
   pointer-events: auto;
   display: inline-flex;
@@ -196,6 +197,7 @@
 
 .window-bar-toggle:hover,
 .window-bar-toggle-on,
+.window-bar-ai-switch:hover,
 .window-bar-sidebar-toggle:hover,
 .window-bar-sidebar-toggle-on {
   opacity: 1;
@@ -204,6 +206,7 @@
 
 /* Hover arrives in 80ms; turning on or off changes in 120ms. */
 .window-bar-toggle,
+.window-bar-ai-switch,
 .window-bar-sidebar-toggle {
   transition:
     background-color var(--dur-fast) var(--ease-standard),
@@ -211,6 +214,7 @@
 }
 
 .window-bar-toggle:hover,
+.window-bar-ai-switch:hover,
 .window-bar-sidebar-toggle:hover {
   transition-duration: var(--dur-instant);
 }

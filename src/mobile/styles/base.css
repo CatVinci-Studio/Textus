@@ -64,6 +64,7 @@
 }
 
 :root[data-window-chrome="mobile"] .window-menu-button,
+:root[data-window-chrome="mobile"] .window-bar-ai-switch,
 :root[data-window-chrome="mobile"] .window-bar-toggle {
   width: 44px;
   height: 44px;
@@ -71,7 +72,8 @@
 }
 
 /* A touch leaves :hover stuck on the last thing tapped. */
-:root[data-window-chrome="mobile"] .window-menu-button:hover {
+:root[data-window-chrome="mobile"] .window-menu-button:hover,
+:root[data-window-chrome="mobile"] .window-bar-ai-switch:hover {
   background: none;
 }
 
@@ -103,6 +105,7 @@
   :is(
     .window-menu-button,
     .window-bar-toggle,
+    .window-bar-ai-switch,
     .agent-panel-actions .inline-chat-header-button
   )
   svg {

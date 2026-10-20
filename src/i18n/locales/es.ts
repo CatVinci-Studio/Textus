@@ -6,6 +6,16 @@ export const complete = true;
 
 export default {
   agentPanelTitle: AI_NAME,
+  textusAiToggleLabel: `Activar ${AI_NAME}`,
+  textusAiOffHint: "Desactivada: no se envía nada a ningún servicio de IA.",
+  textusAiOnTooltip: `${AI_NAME} está activada · Haz clic para desactivarla`,
+  textusAiOffTooltip: `${AI_NAME} está desactivada · Haz clic para activarla`,
+  textusAiOff: `${AI_NAME} está desactivada`,
+  textusAiTurnOn: `Activar ${AI_NAME}`,
+  announceTextusAiOn: `${AI_NAME} activada.`,
+  announceTextusAiOff: `${AI_NAME} desactivada.`,
+  shortcutToggleTextusAi: `Activar o desactivar ${AI_NAME}`,
+  menuTextusAi: AI_NAME,
   agentPanelPopOut: "Abrir en una ventana aparte",
   agentPanelResize: "Cambiar el tamaño del panel de IA",
   sidebarResize: "Cambiar el tamaño de la barra lateral",

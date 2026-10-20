@@ -330,6 +330,40 @@ export function AssistantIcon({ className }: IconProps) {
   );
 }
 
+/** Textus AI's own switch (ai/TextusAiSwitch.tsx): a small toggle switch,
+ *  so it reads as on/off rather than as one more panel. Its stylesheet
+ *  fills the track and slides the knob over (`.switch-icon-knob`) when
+ *  it is on. */
+export function SwitchIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="15"
+      height="15"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <rect
+        className="switch-icon-track"
+        x="1.2"
+        y="4.2"
+        width="13.6"
+        height="7.6"
+        rx="3.8"
+        stroke="currentColor"
+        strokeWidth="1.1"
+      />
+      <circle
+        className="switch-icon-knob"
+        cx="5"
+        cy="8"
+        r="2.1"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 /** The window bar's toggle for the sidebar: a window with its left pane
  *  drawn - what pressing it brings back or takes away. */
 export function SidebarToggleIcon({ className }: IconProps) {

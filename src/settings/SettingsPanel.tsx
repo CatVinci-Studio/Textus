@@ -471,10 +471,22 @@ export function SettingsPanel({
         </>
       )}
 
-      {/* One page for the AI, connect first and then the features, each
-          model beside the feature it drives. The model list is fetched
-          once, under Connection, for both pickers. */}
+      {/* One page for the AI: its own switch, then connect first and then
+          the features, each model beside the feature it drives. The model
+          list is fetched once, under Connection, for both pickers. With
+          Textus AI off, every other row is hidden: none of them does
+          anything then, and none may reach a provider (#196). */}
       {c === "ai" && (
+        <SettingsGroup title={t.menuTextusAi}>
+          <ToggleRow
+            label={t.textusAiToggleLabel}
+            hint={settings.textusAi ? undefined : t.textusAiOffHint}
+            checked={settings.textusAi}
+            onChange={(v) => setSettings({ textusAi: v })}
+          />
+        </SettingsGroup>
+      )}
+      {c === "ai" && settings.textusAi && (
         <>
           <SettingsGroup title={t.aiAccountLabel}>
             <ProviderListPanel t={t} />
@@ -727,6 +739,7 @@ export function SettingsPanel({
               [
                 t.shortcutAiGroupLabel,
                 [
+                  ["toggleTextusAi", t.shortcutToggleTextusAi],
                   ["triggerCompletion", t.shortcutTriggerCompletion],
                   ["triggerGrammarCheck", t.shortcutTriggerGrammarCheck],
                   ["toggleFloatingChat", t.shortcutToggleFloatingChat],

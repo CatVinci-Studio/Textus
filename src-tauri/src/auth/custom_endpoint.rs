@@ -117,6 +117,7 @@ pub async fn fetch_custom_models(
     base_url: String,
     api_key: Option<String>,
 ) -> Result<Vec<String>, String> {
+    crate::ai::ensure_on(&app)?;
     let api_key = key_for(&app, &base_url, api_key);
     custom::list_models(&base_url, api_key.as_deref()).await
 }
@@ -127,6 +128,7 @@ pub async fn test_custom_endpoint(
     base_url: String,
     api_key: Option<String>,
 ) -> Result<(), String> {
+    crate::ai::ensure_on(&app)?;
     let api_key = key_for(&app, &base_url, api_key);
     custom::list_models(&base_url, api_key.as_deref())
         .await

@@ -29,6 +29,7 @@ import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
 import { claimChatRestore } from "../ai/chat/chat-restore";
 import { useLatest } from "../utils/hooks/useLatest";
 import type { Settings } from "../settings/SettingsContext";
+import { aiFeatures } from "../settings/textus-ai";
 import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import {
   TRIGGER_COMPLETION_EVENT,
@@ -102,16 +103,17 @@ export function useEditorWindowEvents({
   );
 
   // Shortcuts respect the same feature toggles as the context menu items -
-  // a feature turned off in Settings is off through every entry point.
-  // The two typing-assistance triggers are also ignored while the tour
-  // mutes the AI; the chat stays available, as the tour's AI panel lesson
-  // opens it whether or not an AI is connected.
+  // a feature turned off in Settings, or Textus AI itself, is off through
+  // every entry point. The two typing-assistance triggers are also ignored
+  // while the tour mutes the AI; the chat stays available, as the tour's AI
+  // panel lesson opens it whether or not an AI is connected.
+  const features = aiFeatures(settings, tour !== null);
   useWindowEvent(
     TRIGGER_COMPLETION_EVENT,
     () =>
       isOnScreen() &&
       tour !== "muted" &&
-      settings.enableCompletion &&
+      features.completion &&
       triggerCompletion(),
   );
   useWindowEvent(
@@ -119,15 +121,12 @@ export function useEditorWindowEvents({
     () =>
       isOnScreen() &&
       tour !== "muted" &&
-      settings.enableGrammarCheck &&
+      features.grammar &&
       triggerGrammarCheck(),
   );
   useWindowEvent(
     TOGGLE_FLOATING_CHAT_EVENT,
-    () =>
-      isOnScreen() &&
-      (settings.enableAskAi || tour !== null) &&
-      toggleAgentConversation(),
+    () => isOnScreen() && features.chat && toggleAgentConversation(),
   );
   useWindowEvent(
     TOGGLE_FIND_REPLACE_EVENT,

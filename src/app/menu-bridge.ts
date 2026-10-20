@@ -32,6 +32,7 @@ export interface MenuBridgeHandlers {
   onToggleTypewriter: () => void;
   onToggleSidebar: () => void;
   onToggleAgentPanel: () => void;
+  onToggleTextusAi: () => void;
   onToggleSplitView: () => void;
   onToggleZenMode: () => void;
   addBlankTab: () => void;
@@ -134,6 +135,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-toggle-agent-panel", () =>
         h().onToggleAgentPanel(),
       ),
+      listenToThisWindow("menu-toggle-textus-ai", () => h().onToggleTextusAi()),
       // These two were never subscribed: View > Split View and View > Zen
       // Mode (and their menu accelerators) did nothing.
       listenToThisWindow("menu-toggle-split-view", () =>

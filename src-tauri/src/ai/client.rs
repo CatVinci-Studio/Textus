@@ -66,6 +66,7 @@ pub(crate) async fn call(
 /// frontend try before saving a config.
 #[tauri::command]
 pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<String>, String> {
+    crate::ai::ensure_on(&app)?;
     let entry = catalog::find(&provider).ok_or_else(|| format!("unknown provider: {provider}"))?;
     if !entry.models_listable {
         return Err(format!(
@@ -280,6 +281,7 @@ pub async fn ai_complete(
     doc_path: Option<String>,
     workspace_root: Option<String>,
 ) -> Result<String, String> {
+    crate::ai::ensure_on(&app)?;
     let hints = hints.unwrap_or_default();
     let in_code = hints.block.as_deref() == Some(CODE_BLOCK_HINT);
     let (mut instructions, user_text) =
@@ -1071,6 +1073,7 @@ pub async fn ai_grammar_check(
     // The app's language, for the explanations (grammar_instructions).
     ui_language: Option<String>,
 ) -> Result<Vec<GrammarIssue>, String> {
+    crate::ai::ensure_on(&app)?;
     let workspace = cached_workspace(&app, doc_path, workspace_root);
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
     let library = crate::ai::conventions::library_names(&workspace);

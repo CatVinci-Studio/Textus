@@ -125,11 +125,14 @@ export function LinkRow({
 export function ToggleRow({
   label,
   help,
+  hint,
   checked,
   onChange,
 }: {
   label: string;
   help?: ReactNode;
+  /** What is live under the label - a status, as SettingRow's. */
+  hint?: ReactNode;
   checked: boolean;
   onChange: (checked: boolean) => void;
 }) {
@@ -141,6 +144,7 @@ export function ToggleRow({
           <span id={`${id}-label`}>{label}</span>
           {help && <RowHelp label={label}>{help}</RowHelp>}
         </div>
+        {hint && <div className="settings-row-hint">{hint}</div>}
       </div>
       <input
         id={id}
@@ -220,6 +224,7 @@ export function ShortcutRow({
       triggerCompletion: t.shortcutTriggerCompletion,
       triggerGrammarCheck: t.shortcutTriggerGrammarCheck,
       toggleFloatingChat: t.shortcutToggleFloatingChat,
+      toggleTextusAi: t.shortcutToggleTextusAi,
       findReplace: t.shortcutFindReplace,
       toggleSidebar: t.shortcutToggleSidebar,
       toggleAgentPanel: t.shortcutToggleAgentPanel,

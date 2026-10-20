@@ -78,7 +78,10 @@ function loadProgress(): TutorialProgress {
  * (app/onboarding-wiring.ts), and the AI's results in the practice tab,
  * which arrive here as tour signals (utils/events.ts).
  */
-export function useTutorial() {
+export function useTutorial(
+  /** Textus AI's switch (Settings.textusAi). */
+  aiOn = true,
+) {
   const [progress, setProgress] = useState<TutorialProgress>(loadProgress);
   // Each lesson keeps its completion while moving Back/Continue, so
   // learners can revisit cards without redoing them. Session-only.
@@ -159,9 +162,11 @@ export function useTutorial() {
   }, []);
 
   /** The practice tab's AI: live from the first AI lesson on for a learner
-   *  who connected one, muted everywhere else in the tour. */
+   *  who connected one, muted everywhere else in the tour - and while
+   *  Textus AI is turned off, when its lessons are watched instead. */
+  const live = aiMode === "live" && aiOn;
   const practiceAi: TourAi =
-    aiMode === "live" && progress.stepIndex >= FIRST_AI ? "live" : "muted";
+    live && progress.stepIndex >= FIRST_AI ? "live" : "muted";
 
   return {
     active,
@@ -174,7 +179,7 @@ export function useTutorial() {
     /** The AI panel's mode this lesson sets, when it needs one. */
     agentMode: active ? (step.agentMode ?? null) : null,
     /** This AI lesson is watched (no AI connected), not done. */
-    watching: !!step.ai && aiMode !== "live",
+    watching: !!step.ai && !live,
     phase,
     setPhase,
     start,

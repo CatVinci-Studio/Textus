@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { useSettings } from "../settings/SettingsContext";
+import { aiFeatures } from "../settings/textus-ai";
 import type { TableAction } from "../editor/editor-menu";
 import {
   BulletListIcon,
@@ -342,7 +343,7 @@ export function KeyboardToolbar() {
       >
         <MoreIcon />
       </button>
-      {settings.enableAskAi && (
+      {aiFeatures(settings).chat && (
         <button
           type="button"
           className="keyboard-toolbar-button keyboard-toolbar-ai"

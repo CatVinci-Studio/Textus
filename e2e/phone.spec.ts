@@ -41,6 +41,7 @@ test("the phone menu is short; the view modes are switched in Settings", async (
     "Share…",
     "Find & Replace…",
     "Sidebar",
+    "Textus AI",
     "Settings…",
   ]);
   await page.getByRole("menuitem", { name: "Settings…" }).tap();

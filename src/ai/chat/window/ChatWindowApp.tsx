@@ -34,6 +34,7 @@ import "../../../ui/app-dialog.css";
 import "../AgentTurnView.css";
 import "../inline-chat.css";
 import { Tooltip } from "../../../ui/Tooltip";
+import { TextusAiOffNote, TextusAiSwitch } from "../../TextusAiSwitch";
 import "./chat-window.css";
 
 /** How long a send waits for the editor to answer a context request before
@@ -344,6 +345,7 @@ export function ChatWindowApp() {
           <PinIcon />
         </button>
       </Tooltip>
+      <TextusAiSwitch className="inline-chat-header-button" />
       <WindowCaptionButtons />
     </div>
   );
@@ -351,6 +353,16 @@ export function ChatWindowApp() {
   // The history list's "document not found" question (app-dialog.tsx).
   const dialogs = <AppDialogHost okLabel={t.dialogOk} />;
 
+  // Turned off - here or in any window - the conversation waits behind the
+  // note, and comes back as it was once Textus AI is on again.
+  if (!settings.textusAi)
+    return (
+      <div className="chat-window">
+        {header}
+        <TextusAiOffNote className="chat-window-ai-off" />
+        {dialogs}
+      </div>
+    );
   if (lost)
     return (
       <div className="chat-window">

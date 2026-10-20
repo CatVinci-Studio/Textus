@@ -45,6 +45,7 @@ export type NativeMenuId =
   | "toggle-typewriter-mode"
   | "toggle-sidebar"
   | "toggle-agent-panel"
+  | "toggle-textus-ai"
   | "toggle-split-view"
   | "toggle-zen-mode"
   | "zoom-in"
@@ -97,6 +98,9 @@ export interface MenuEntry {
 export interface MenuChecks {
   sidebar?: boolean;
   agentPanel?: boolean;
+  /** Textus AI's master switch (Settings.textusAi). Off, it also leaves
+   *  the AI panel nothing to open; unset counts as on. */
+  textusAi?: boolean;
   sourceMode?: boolean;
   splitView?: boolean;
   typewriter?: boolean;
@@ -119,6 +123,7 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
   return {
     "toggle-sidebar": !!checks.sidebar,
     "toggle-agent-panel": !!checks.agentPanel,
+    "toggle-textus-ai": checks.textusAi !== false,
     "toggle-source-mode": !!checks.sourceMode,
     "toggle-split-view": !!checks.splitView,
     "toggle-typewriter-mode": !!checks.typewriter,
@@ -313,6 +318,13 @@ export function buildAppMenu(
           accel: shortcuts.toggleAgentPanel,
           action: { native: "toggle-agent-panel" },
           checked: !!checks.agentPanel,
+          disabled: checks.textusAi === false,
+        },
+        {
+          label: t.menuTextusAi,
+          accel: shortcuts.toggleTextusAi || undefined,
+          action: { native: "toggle-textus-ai" },
+          checked: checks.textusAi !== false,
         },
         "separator",
         {
@@ -422,6 +434,11 @@ export function buildMobileMenu(
       label: t.menuViewSidebar,
       action: { native: "toggle-sidebar" },
       checked: !!checks.sidebar,
+    },
+    {
+      label: t.menuTextusAi,
+      action: { native: "toggle-textus-ai" },
+      checked: checks.textusAi !== false,
     },
     "separator",
     { label: t.menuSettings, action: { native: "settings" } },

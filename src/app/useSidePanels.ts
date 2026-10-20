@@ -32,8 +32,11 @@ function subscribeWindowResize(onChange: () => void) {
  * on the left (open, width, which tab it shows) and the docked Agent panel on the
  * right (open, width, whether it lies over the page, the phone's bottom
  * sheet). Pulled out of App.tsx, which renders both frames.
+ *
+ * `aiOn` is Textus AI's switch: turned off, the AI panel closes, and its
+ * toggles (the shortcut, View › AI Panel) do nothing until it is back on.
  */
-export function useSidePanels() {
+export function useSidePanels(aiOn: boolean) {
   // Remembered on the desktop, where people who use the sidebar expect it
   // back (#152, #79). On iOS it is a drawer over the page and starts closed.
   const [panelOpen, setPanelOpen] = useState(
@@ -73,7 +76,12 @@ export function useSidePanels() {
   // in a web view still growing back to full height under it, the sheet's
   // top jumped and its composer arrived late from below.
   const pendingAgentOpen = useRef<(() => void) | null>(null);
+  const setAgentOpen = agentPanel.setOpen;
+  useEffect(() => {
+    if (!aiOn) setAgentOpen(false);
+  }, [aiOn, setAgentOpen]);
   const toggleAgentPanel = useCallback(() => {
+    if (!aiOn) return;
     if (pendingAgentOpen.current) {
       // A second tap while it waits: it stays closed.
       pendingAgentOpen.current();
@@ -92,7 +100,7 @@ export function useSidePanels() {
       }
     }
     agentPanel.toggle();
-  }, [agentPanel]);
+  }, [aiOn, agentPanel]);
   // Both side panels play their way out before their contents go: the
   // sidebar slides back over the editor, the AI panel fades off its edge.
   // The editor makes its room (or takes it back) at once, gliding there

@@ -15,6 +15,7 @@ import {
 import { resolveStrings } from "../i18n/strings";
 import { sendTourSignal, type TourAi } from "../utils/events";
 import type { RevisionDisplay, Settings } from "../settings/SettingsContext";
+import { aiFeatures } from "../settings/textus-ai";
 
 export interface PendingEditCallbacks {
   onAccept: (callId: string) => void;
@@ -34,7 +35,8 @@ export interface PendingEditCallbacks {
 /**
  * The AI features that live in the text: completion, grammar marks, a
  * rewrite's sentences, the Quick Ask selection and widget, review notes.
- * Each is independently switched in Settings. They go on after the editor
+ * Each is independently switched in Settings, all of them under Textus
+ * AI's own switch (settings/textus-ai.ts). They go on after the editor
  * core (editor/editor-extensions.ts), as the last plugins in the chain.
  *
  * The callbacks are stable, ref-indirected wrappers (see MilkdownEditor):
@@ -66,7 +68,7 @@ export function withAiPlugins(
     .use(
       createGhostTextPlugin({
         enabled: () =>
-          settings.current.enableCompletion && tour.current !== "muted",
+          aiFeatures(settings.current).completion && tour.current !== "muted",
         provider: () => settings.current.aiProvider,
         model: () =>
           settings.current.writingModels[settings.current.aiProvider] || null,
@@ -84,7 +86,7 @@ export function withAiPlugins(
     .use(
       createGrammarCheckPlugin({
         enabled: () =>
-          settings.current.enableGrammarCheck && tour.current !== "muted",
+          aiFeatures(settings.current).grammar && tour.current !== "muted",
         provider: () => settings.current.aiProvider,
         model: () =>
           settings.current.writingModels[settings.current.aiProvider] || null,

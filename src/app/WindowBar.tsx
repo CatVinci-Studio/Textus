@@ -5,6 +5,7 @@ import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./app-menu-model";
 import { AppMenuButton } from "./WindowControls";
 import { Tooltip } from "../ui/Tooltip";
+import { TextusAiSwitch } from "../ai/TextusAiSwitch";
 
 /**
  * The window's one top strip: traffic-light room, which document this
@@ -49,6 +50,7 @@ export function WindowBar({
   /** The sidebar's shortcut, as shown in the button's tooltip. */
   sidebarShortcut: string;
   onToggleSidebar: () => void;
+  /** The AI panel can be opened: Textus AI is on, and so is its chat. */
   showAgentToggle: boolean;
   agentOpen: boolean;
   /** The AI panel's shortcut, as shown in the button's tooltip. */
@@ -102,6 +104,9 @@ export function WindowBar({
         <span className="word-count">
           {words > 0 && `${words} ${t.wordsUnit}`}
         </span>
+        {/* Textus AI's switch, lit while it is on (#196), then the robot
+          for its panel, which goes while there is no chat to open. */}
+        <TextusAiSwitch className="window-bar-ai-switch" />
         {showAgentToggle && (
           <Tooltip text={`${t.agentPanelTitle} (${agentShortcut})`}>
             <button
