@@ -183,6 +183,7 @@ type /name in a conversation to use one.
   toolReadDocument: "Reading “{arg}”",
   toolReadWholeDocument: "Reading the document",
   toolSearchFiles: "Searching the project for “{arg}”",
+  toolFindFiles: "Finding files named “{arg}”",
   toolListFiles: "Looking at the project's files",
   toolReadFile: "Reading {arg}",
   toolUseSkill: "Using the skill {arg}",

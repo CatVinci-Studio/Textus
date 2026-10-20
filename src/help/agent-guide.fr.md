@@ -97,7 +97,7 @@ Le menu du projet crée `.textus/` et ses fichiers pour vous la première fois q
 
 **Le dossier du projet est le dossier dans lequel Textus AI travaille.** Par défaut, c'est le dossier du document que vous modifiez (ou le dossier le plus proche au-dessus qui contient un dossier `.textus/`, si bien qu'un chapitre dans `novel/part-1/` appartient à `novel/`) : enregistrez un document, et son dossier devient le dossier du projet.
 
-- Textus AI peut lister, lire et fouiller les fichiers texte qu'il contient (Markdown, texte brut et formats similaires) pour retrouver les scènes précédentes d'un personnage, un terme ou vos notes. Les fichiers et dossiers cachés, les dossiers de compilation et de dépendances (comme `node_modules`) et les fichiers de plus de 100 Ko sont ignorés.
+- Textus AI peut lister, trouver par leur nom, lire et fouiller les fichiers texte qu'il contient (Markdown, texte brut et formats similaires) pour retrouver les scènes précédentes d'un personnage, un terme ou vos notes. Les fichiers et dossiers cachés, ce qu'un fichier `.gitignore` ou `.ignore` exclut (comme dans la recherche de fichiers de la barre latérale), les dossiers de compilation et de dépendances (comme `node_modules`) et les fichiers de plus de 100 Ko sont ignorés.
 - Taper `@` dans la zone de saisie de la discussion joint l'un de ses fichiers à votre message.
 - Son dossier `.textus/` contient le profil de style, la bibliothèque, les instructions d'écriture et les compétences du projet.
 

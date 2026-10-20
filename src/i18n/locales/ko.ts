@@ -179,6 +179,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   toolReadDocument: "“{arg}” 읽는 중",
   toolReadWholeDocument: "문서 전체 읽는 중",
   toolSearchFiles: "프로젝트에서 “{arg}” 검색 중",
+  toolFindFiles: "이름에 “{arg}”이(가) 들어간 파일 찾는 중",
   toolListFiles: "프로젝트 파일 살펴보는 중",
   toolReadFile: "{arg} 읽는 중",
   toolUseSkill: "{arg} 스킬 사용 중",

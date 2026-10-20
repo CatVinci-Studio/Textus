@@ -171,6 +171,7 @@ export default {
   toolReadDocument: "阅读「{arg}」",
   toolReadWholeDocument: "阅读全文",
   toolSearchFiles: "在项目中搜索「{arg}」",
+  toolFindFiles: "查找名称含「{arg}」的文件",
   toolListFiles: "查看项目文件",
   toolReadFile: "读取 {arg}",
   toolUseSkill: "使用技能 {arg}",

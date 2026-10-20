@@ -97,7 +97,7 @@ The project menu creates `.textus/` and its files for you the first time you ask
 
 **The project folder is the folder Textus AI works in.** By default it is the folder of the document you are editing — or the nearest folder above it that has a `.textus/` folder, so a chapter in `novel/part-1/` belongs to `novel/`: save a document, and its folder becomes the project folder.
 
-- Textus AI can list, read and search the text files in it (Markdown, plain text and similar formats) to find a character's earlier scenes, a term, or your notes. Hidden files and folders, build and dependency folders (such as `node_modules`) and files over 100 KB are left out.
+- Textus AI can list, find by name, read and search the text files in it (Markdown, plain text and similar formats) to find a character's earlier scenes, a term, or your notes. Hidden files and folders, what a `.gitignore` or `.ignore` file leaves out (as in the sidebar's file search), build and dependency folders (such as `node_modules`) and files over 100 KB are left out.
 - Typing `@` in the chat input attaches one of its files to your message.
 - Its `.textus/` folder holds the project's style profile, library, writing instructions and skills.
 

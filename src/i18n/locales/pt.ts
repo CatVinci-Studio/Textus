@@ -183,6 +183,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   toolReadDocument: "Lendo “{arg}”",
   toolReadWholeDocument: "Lendo o documento",
   toolSearchFiles: "Buscando “{arg}” no projeto",
+  toolFindFiles: "Buscando arquivos chamados “{arg}”",
   toolListFiles: "Consultando os arquivos do projeto",
   toolReadFile: "Lendo {arg}",
   toolUseSkill: "Usando a habilidade {arg}",

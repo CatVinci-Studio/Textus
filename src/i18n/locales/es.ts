@@ -193,6 +193,7 @@ para usar una.
   toolReadDocument: "Leyendo «{arg}»",
   toolReadWholeDocument: "Leyendo el documento",
   toolSearchFiles: "Buscando «{arg}» en el proyecto",
+  toolFindFiles: "Buscando archivos llamados «{arg}»",
   toolListFiles: "Revisando los archivos del proyecto",
   toolReadFile: "Leyendo {arg}",
   toolUseSkill: "Usando la habilidad {arg}",

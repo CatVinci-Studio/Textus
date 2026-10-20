@@ -49,10 +49,12 @@ there, and the project's own settings live in its `.textus/` folder.**
   the one an earlier Open Folder set); **Close Folder** then puts the
   default back. A folder chosen for the AI is never replaced by the
   sidebar's (`sidebar/tree-root.ts`'s `agentRootOnOpen`).
-- **Textus AI uses it:** conversations list, read and search its text files
-  (`list_files`, `read_file`, `search_files`), and `@` in the composer
-  attaches one. Hidden entries, build and dependency folders and files over
-  100 KB are skipped, and nothing outside it can be read.
+- **Textus AI uses it:** conversations find, list, read and search its
+  text files (`find_files`, `list_files`, `read_file`, `search_files`), and
+  `@` in the composer attaches one. They walk it as the sidebar's file
+  search does (`src-tauri/src/walk.rs`): hidden entries, what `.gitignore`
+  and `.ignore` leave out, and build and dependency folders are skipped,
+  files over 100 KB aren't read, and nothing outside it can be read.
 - In code it is the _workspace root_ (`settings.agentWorkspaceRoot`,
   `workspace::project_root`). Settings called it "Workspace Folder" up to
   0.9.6.

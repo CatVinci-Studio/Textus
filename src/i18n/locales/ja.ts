@@ -184,6 +184,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   toolReadDocument: "「{arg}」を読む",
   toolReadWholeDocument: "文書全体を読む",
   toolSearchFiles: "プロジェクト内を「{arg}」で検索",
+  toolFindFiles: "名前に「{arg}」を含むファイルを検索",
   toolListFiles: "プロジェクトのファイルを確認",
   toolReadFile: "{arg} を読む",
   toolUseSkill: "スキル {arg} を使用",

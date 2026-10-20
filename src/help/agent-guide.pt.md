@@ -97,7 +97,7 @@ O menu do projeto cria a pasta `.textus/` e os arquivos dela na primeira vez que
 
 **A pasta do projeto é a pasta em que a Textus AI trabalha.** Por padrão, é a pasta do documento que você está editando (ou a pasta mais próxima acima dela que tenha uma pasta `.textus/`, de modo que um capítulo em `novel/part-1/` pertence a `novel/`): salve um documento e a pasta dele se torna a pasta do projeto.
 
-- A Textus AI pode listar, ler e buscar os arquivos de texto dessa pasta (Markdown, texto simples e formatos parecidos) para encontrar as cenas anteriores de um personagem, um termo ou as suas notas. Arquivos e pastas ocultos, pastas de build e de dependências (como `node_modules`) e arquivos com mais de 100 KB ficam de fora.
+- A Textus AI pode listar, encontrar pelo nome, ler e buscar os arquivos de texto dessa pasta (Markdown, texto simples e formatos parecidos) para encontrar as cenas anteriores de um personagem, um termo ou as suas notas. Arquivos e pastas ocultos, o que um arquivo `.gitignore` ou `.ignore` exclui (como na busca de arquivos da barra lateral), pastas de build e de dependências (como `node_modules`) e arquivos com mais de 100 KB ficam de fora.
 - Digitar `@` no campo do chat anexa um dos arquivos dela à sua mensagem.
 - A pasta `.textus/` dela guarda o perfil de estilo, a biblioteca, as instruções de escrita e as habilidades do projeto.
 

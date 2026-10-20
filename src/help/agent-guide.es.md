@@ -97,7 +97,7 @@ El menú del proyecto crea `.textus/` y sus archivos la primera vez que los pide
 
 **La carpeta del proyecto es la carpeta en la que trabaja Textus AI.** De forma predeterminada es la carpeta del documento que estás editando (o la carpeta más cercana por encima de ella que tenga una carpeta `.textus/`, de modo que un capítulo en `novel/part-1/` pertenece a `novel/`): guarda un documento y su carpeta pasa a ser la carpeta del proyecto.
 
-- Textus AI puede listar, leer y buscar en sus archivos de texto (Markdown, texto sin formato y formatos similares) para encontrar las escenas anteriores de un personaje, un término o tus notas. Se omiten los archivos y las carpetas ocultos, las carpetas de compilación y de dependencias (como `node_modules`) y los archivos de más de 100 KB.
+- Textus AI puede listar, encontrar por nombre, leer y buscar en sus archivos de texto (Markdown, texto sin formato y formatos similares) para encontrar las escenas anteriores de un personaje, un término o tus notas. Se omiten los archivos y las carpetas ocultos, lo que excluye un archivo `.gitignore` o `.ignore` (como en la búsqueda de archivos de la barra lateral), las carpetas de compilación y de dependencias (como `node_modules`) y los archivos de más de 100 KB.
 - Escribir `@` en el cuadro de texto del chat adjunta uno de sus archivos a tu mensaje.
 - Su carpeta `.textus/` guarda el perfil de estilo, la biblioteca, las instrucciones de escritura y las habilidades del proyecto.
 

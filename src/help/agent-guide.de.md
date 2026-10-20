@@ -97,7 +97,7 @@ Das Projektmenü legt `.textus/` und die Dateien darin an, sobald du sie zum ers
 
 **Der Projektordner ist der Ordner, in dem Textus AI arbeitet.** Standardmäßig ist das der Ordner des Dokuments, das du bearbeitest – oder der nächste Ordner darüber, der einen `.textus/`-Ordner enthält, sodass ein Kapitel in `novel/part-1/` zu `novel/` gehört: Speichere ein Dokument, und sein Ordner wird zum Projektordner.
 
-- Textus AI kann die Textdateien darin auflisten, lesen und durchsuchen (Markdown, reiner Text und ähnliche Formate), um frühere Szenen einer Figur, einen Begriff oder deine Notizen zu finden. Versteckte Dateien und Ordner, Build- und Abhängigkeitsordner (etwa `node_modules`) und Dateien über 100 KB bleiben außen vor.
+- Textus AI kann die Textdateien darin auflisten, nach Namen finden, lesen und durchsuchen (Markdown, reiner Text und ähnliche Formate), um frühere Szenen einer Figur, einen Begriff oder deine Notizen zu finden. Versteckte Dateien und Ordner, was eine `.gitignore`- oder `.ignore`-Datei ausschließt (wie bei der Dateisuche in der Seitenleiste), Build- und Abhängigkeitsordner (etwa `node_modules`) und Dateien über 100 KB bleiben außen vor.
 - Tippst du `@` ins Eingabefeld des Chats, hängst du eine seiner Dateien an deine Nachricht an.
 - Sein Ordner `.textus/` enthält Stilprofil, Lexikon, Schreibanweisungen und Skills des Projekts.
 
