@@ -252,6 +252,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   zenExitButton: "젠 모드 종료",
   openDialogText: "텍스트 파일",
   openDialogAll: "모든 파일",
+  openDialogWord: "Word 문서",
   agentPanelSourceMode: `${AI_NAME}는 편집기 보기에서 작동합니다. 대화를 이어 가려면 편집기 보기로 돌아가세요.`,
   agentPanelBackToEditor: "편집기로 돌아가기",
   modelTagVision: "이미지",
@@ -882,6 +883,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   cancel: "취소",
   draftRestoredMessage: "지난 세션에서 저장하지 않은 내용을 복구했습니다.",
   draftRestoredDismiss: "확인",
+  wordImportNotice:
+    "{name}을(를) 새 Markdown 문서로 열었습니다. 일부 서식은 Word와 다르게 보일 수 있으며, 원본 Word 파일은 바뀌지 않습니다.",
+  wordImportDismiss: "확인",
+  wordImportFailed: "{name}을(를) 열 수 없습니다.",
+  wordSaveRefused:
+    "Markdown 문서는 Word 문서에 덮어써서 저장할 수 없습니다. .md로 끝나는 이름을 고르세요.",
   fileChangedOnDiskTitle: "디스크에서 파일이 변경됨",
   fileChangedOnDiskMessage:
     "다른 프로그램이 디스크에 있는 이 파일을 변경했습니다. 저장하면 그 변경 내용을 덮어씁니다.",

@@ -259,6 +259,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   zenExitButton: "禅モードを終了",
   openDialogText: "テキストファイル",
   openDialogAll: "すべてのファイル",
+  openDialogWord: "Word 文書",
   agentPanelSourceMode: `${AI_NAME} はエディター表示で使えます。戻ると会話を続けられます。`,
   agentPanelBackToEditor: "エディター表示に戻る",
   modelTagVision: "画像",
@@ -891,6 +892,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   cancel: "キャンセル",
   draftRestoredMessage: "前回のセッションの未保存の内容を復元しました。",
   draftRestoredDismiss: "OK",
+  wordImportNotice:
+    "{name} を新しい Markdown 文書として開きました。一部の書式は Word と異なって見える場合があります。元の Word ファイルは変更されません。",
+  wordImportDismiss: "OK",
+  wordImportFailed: "{name} を開けませんでした。",
+  wordSaveRefused:
+    "Markdown 文書を Word 文書に上書き保存することはできません。.md で終わる名前を選んでください。",
   fileChangedOnDiskTitle: "ファイルがディスク上で変更されました",
   fileChangedOnDiskMessage:
     "このファイルは他のプログラムによって変更されています。保存するとその変更が上書きされます。",

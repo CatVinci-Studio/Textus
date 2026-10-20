@@ -261,6 +261,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   zenExitButton: "Sair do Modo Zen",
   openDialogText: "Arquivos de texto",
   openDialogAll: "Todos os arquivos",
+  openDialogWord: "Documentos do Word",
   agentPanelSourceMode: `A ${AI_NAME} funciona na visualização do editor. Volte a ela para continuar a conversa.`,
   agentPanelBackToEditor: "Voltar ao editor",
   modelTagVision: "visão",
@@ -923,6 +924,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   cancel: "Cancelar",
   draftRestoredMessage: "O conteúdo não salvo da última sessão foi recuperado.",
   draftRestoredDismiss: "Entendi",
+  wordImportNotice:
+    "{name} foi aberto como um novo documento Markdown. Parte da formatação pode ficar diferente do Word; o próprio arquivo do Word não é alterado.",
+  wordImportDismiss: "Entendi",
+  wordImportFailed: "Não foi possível abrir {name}.",
+  wordSaveRefused:
+    "Um documento Markdown não pode ser salvo por cima de um documento do Word. Escolha um nome terminado em .md.",
   fileChangedOnDiskTitle: "Arquivo alterado no disco",
   fileChangedOnDiskMessage:
     "Outro programa alterou este arquivo no disco. Se você salvar, essas alterações serão substituídas.",

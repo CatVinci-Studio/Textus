@@ -36,6 +36,14 @@ pub struct DetachedTab {
     /// window it lands in.
     #[serde(rename = "helpDoc", default, skip_serializing_if = "Option::is_none")]
     help_doc: Option<String>,
+    /// The Word document an unsaved tab was opened from - its title, and
+    /// where its first save is suggested (src/document/word-import.ts).
+    #[serde(
+        rename = "importedFrom",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    imported_from: Option<String>,
 }
 pub struct PendingDetachedTabs(pub Mutex<HashMap<String, DetachedTab>>);
 

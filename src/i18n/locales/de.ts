@@ -265,6 +265,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   zenExitButton: "Zen-Modus beenden",
   openDialogText: "Textdateien",
   openDialogAll: "Alle Dateien",
+  openDialogWord: "Word-Dokumente",
   agentPanelSourceMode: `${AI_NAME} arbeitet in der Editoransicht. Wechsle zurück, um die Unterhaltung fortzusetzen.`,
   agentPanelBackToEditor: "Zurück zum Editor",
   modelTagVision: "Bilder",
@@ -927,6 +928,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   draftRestoredMessage:
     "Nicht gespeicherte Inhalte der letzten Sitzung wurden wiederhergestellt.",
   draftRestoredDismiss: "Verstanden",
+  wordImportNotice:
+    "{name} wurde als neues Markdown-Dokument geöffnet. Manche Formatierung kann anders aussehen als in Word; die Word-Datei selbst bleibt unverändert.",
+  wordImportDismiss: "Verstanden",
+  wordImportFailed: "{name} konnte nicht geöffnet werden.",
+  wordSaveRefused:
+    "Ein Markdown-Dokument kann nicht über ein Word-Dokument gespeichert werden. Wähle einen Namen, der auf .md endet.",
   fileChangedOnDiskTitle: "Datei wurde extern geändert",
   fileChangedOnDiskMessage:
     "Diese Datei wurde von einem anderen Programm geändert. Beim Speichern werden diese Änderungen überschrieben.",

@@ -705,6 +705,7 @@ pub fn run() {
             list_dir,
             commands::folder::index_folder,
             read_text_file,
+            commands::word_import::open_word_document,
             file_mtime_ms,
             read_binary_file_base64,
             write_text_file,

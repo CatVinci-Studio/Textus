@@ -272,6 +272,7 @@ para usar una.
   zenExitButton: "Salir del modo zen",
   openDialogText: "Archivos de texto",
   openDialogAll: "Todos los archivos",
+  openDialogWord: "Documentos de Word",
   agentPanelSourceMode: `${AI_NAME} funciona en la vista del editor. Vuelve a ella para seguir con la conversación.`,
   agentPanelBackToEditor: "Volver al editor",
   modelTagVision: "visión",
@@ -939,6 +940,12 @@ para usar una.
   draftRestoredMessage:
     "Se recuperó contenido sin guardar de la sesión anterior.",
   draftRestoredDismiss: "Entendido",
+  wordImportNotice:
+    "{name} se abrió como un documento Markdown nuevo. Parte del formato puede verse distinto que en Word; el archivo de Word no cambia.",
+  wordImportDismiss: "Entendido",
+  wordImportFailed: "No se pudo abrir {name}.",
+  wordSaveRefused:
+    "Un documento Markdown no se puede guardar sobre un documento de Word. Elige un nombre que termine en .md.",
   fileChangedOnDiskTitle: "El archivo cambió en el disco",
   fileChangedOnDiskMessage:
     "Otro programa modificó este archivo en el disco. Si guardas, se sobrescribirán esos cambios.",

@@ -77,6 +77,7 @@ async function restore(
   let tabs: DocTab[] = [{ ...INITIAL }];
   const openPathInTab = vi.fn(async () => {});
   const openFile = vi.fn(async () => {});
+  const replaceTabWithFile = vi.fn(async () => {});
   renderHook(() =>
     useStartupRestore({
       activeTabId: INITIAL.id,
@@ -91,6 +92,7 @@ async function restore(
       markOnboardingShown: vi.fn(),
       openPathInTab,
       openFile,
+      replaceTabWithFile,
       restoreCarets,
       startTutorial: vi.fn(),
       stopTutorial: vi.fn(),
@@ -98,7 +100,13 @@ async function restore(
   );
   // The module instances the hook used (vi.resetModules above).
   const { takeTabJump } = await import("../editor/tab-jump");
-  return { tabs: () => tabs, openPathInTab, openFile, takeTabJump };
+  return {
+    tabs: () => tabs,
+    openPathInTab,
+    openFile,
+    replaceTabWithFile,
+    takeTabJump,
+  };
 }
 
 beforeEach(() => {
@@ -139,6 +147,19 @@ describe("startup restore into the initial tab", () => {
         reloadKey: 1,
       }),
     ]);
+  });
+
+  it("converts a Word document handed over at launch into the initial tab", async () => {
+    ipc.takePendingOpenPaths.mockResolvedValue(["/docs/Report.docx"]);
+    const { tabs, replaceTabWithFile, openPathInTab } = await restore("tab");
+    await waitFor(() =>
+      expect(replaceTabWithFile).toHaveBeenCalledWith(
+        "initial",
+        "/docs/Report.docx",
+      ),
+    );
+    expect(openPathInTab).not.toHaveBeenCalled();
+    expect(tabs()[0].path).toBeNull();
   });
 
   it("does the same for a tab dragged in from another window", async () => {

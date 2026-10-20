@@ -45,6 +45,10 @@ export interface DocTab {
   // "Untitled", and deduped per doc so Help focuses the existing tab rather
   // than opening another copy.
   helpDoc?: HelpDoc;
+  /** The Word document this one was made from (document/word-import.ts),
+   *  until it is first saved: a pathless draft named after the Word file,
+   *  whose Save As starts beside it. The Word file is never written. */
+  importedFrom?: string;
 }
 
 // The document part of a tab in flight between windows - what
@@ -56,6 +60,7 @@ export interface DetachedTabDoc {
   savedContent: string;
   diskMtime: number | null;
   helpDoc?: HelpDoc;
+  importedFrom?: string;
 }
 
 export function helpDocContent(doc: HelpDoc, lang: string): string {
@@ -71,6 +76,8 @@ export function tabTitle(tab: DocTab, t: Strings): string {
   if (tab.path) return basename(tab.path);
   if (tab.helpDoc === "markdown") return t.markdownGuideTab;
   if (tab.helpDoc === "agent") return t.agentGuideTab;
+  if (tab.importedFrom)
+    return basename(tab.importedFrom).replace(/\.docx$/i, "");
   return t.untitledTab;
 }
 
@@ -131,6 +138,7 @@ export function floatingDragArgs(
       savedContent: tab.savedContent,
       diskMtime: tab.diskMtime,
       helpDoc: tab.helpDoc ?? null,
+      importedFrom: tab.importedFrom ?? null,
     },
     title: tabTitle(tab, t),
     dirty: tabIsDirty(tab),

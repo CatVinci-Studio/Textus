@@ -240,6 +240,7 @@ export default {
   zenExitButton: "退出禅模式",
   openDialogText: "文本文件",
   openDialogAll: "所有文件",
+  openDialogWord: "Word 文档",
   agentPanelSourceMode: `${AI_NAME} 需要在编辑视图中使用，切换回去即可继续对话。`,
   agentPanelBackToEditor: "返回编辑视图",
   modelTagVision: "看图",
@@ -846,6 +847,12 @@ export default {
   cancel: "取消",
   draftRestoredMessage: "已恢复上次会话中未保存的内容。",
   draftRestoredDismiss: "知道了",
+  wordImportNotice:
+    "已将 {name} 转换为新的 Markdown 文档。部分格式可能与 Word 中不同，原 Word 文件不会被改动。",
+  wordImportDismiss: "知道了",
+  wordImportFailed: "无法打开 {name}。",
+  wordSaveRefused:
+    "Markdown 文档不能保存到 Word 文档上。请选择以 .md 结尾的文件名。",
   fileChangedOnDiskTitle: "文件已在磁盘上被修改",
   fileChangedOnDiskMessage: "该文件已被其他程序修改。保存将覆盖磁盘上的更改。",
   fileChangedOnDiskOverwrite: "覆盖",

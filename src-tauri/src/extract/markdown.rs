@@ -163,14 +163,16 @@ impl Blocks {
         self.last_item = None;
     }
 
-    /// A list item at nesting `level` (0 = top), marked `-` or `1.`.
+    /// A list item at nesting `level` (0 = top), marked `-` or a number
+    /// (`1.`, `3.`).
     ///
     /// Nested items are indented four spaces a level, which CommonMark reads
     /// as nesting under either marker. A level is never more than one deeper
     /// than the item before it: Word happily numbers a first item at level 2,
     /// and eight spaces with no parent item is a code block. A numbered list
     /// right after a bulleted one (or the other way round) is another list,
-    /// and gets the blank line between them.
+    /// and gets the blank line between them; the numbers themselves don't
+    /// part lists, as in CommonMark.
     pub fn push_item(&mut self, level: usize, marker: &str, text: &str) {
         let text = text.trim();
         if text.is_empty() {
@@ -179,7 +181,11 @@ impl Blocks {
         let (level, same_list) = match &self.last_item {
             Some((previous, last_marker)) => {
                 let level = level.min(previous + 1);
-                (level, level != *previous || last_marker == marker)
+                let ordered = |m: &str| m.ends_with('.');
+                (
+                    level,
+                    level != *previous || ordered(last_marker) == ordered(marker),
+                )
             }
             None => (0, false),
         };
@@ -206,6 +212,94 @@ impl Blocks {
     pub fn finish(self) -> String {
         self.out
     }
+}
+
+/// `text` with every character that would mean Markdown in a line of
+/// running text backslash-escaped, so it reads back as the same words: a
+/// document opened from Word (docx.rs) is the user's text, and `*`, `$5`
+/// or `[draft]` in it must stay characters, not turn into emphasis, maths
+/// or a link. Line starts are `escape_line_starts`. The AI reads the text
+/// unescaped, as it was written.
+///
+/// `=` only beside another (`==highlight==`, editor/marks), and `&` only
+/// where it would start an entity (`&amp;`): both are common in prose. `]`
+/// only in a link's text (`in_link`), which it would end: elsewhere an
+/// escaped `[` already keeps it from closing anything, and `\[draft\]` is
+/// the editor's LaTeX display maths (editor/math/latex-math-syntax.ts) -
+/// the escapes mdast-util-to-markdown, the editor's own writer, makes.
+pub(super) fn escape_text(text: &str, in_link: bool) -> String {
+    let chars: Vec<char> = text.chars().collect();
+    let mut out = String::with_capacity(text.len());
+    for (i, &c) in chars.iter().enumerate() {
+        let escape = match c {
+            '\\' | '*' | '_' | '`' | '[' | '<' | '~' | '$' => true,
+            ']' => in_link,
+            '=' => (i > 0 && chars[i - 1] == '=') || chars.get(i + 1) == Some(&'='),
+            '&' => starts_entity(&chars[i + 1..]),
+            _ => false,
+        };
+        if escape {
+            out.push('\\');
+        }
+        out.push(c);
+    }
+    out
+}
+
+/// `amp;`, `#8217;`, `#x2019;`: what after a `&` reads as a character
+/// reference.
+fn starts_entity(rest: &[char]) -> bool {
+    let name = rest
+        .iter()
+        .take_while(|c| c.is_ascii_alphanumeric() || **c == '#');
+    let len = name.count();
+    len > 0 && rest.get(len) == Some(&';')
+}
+
+/// Escapes what would start a block at the beginning of a line of escaped
+/// text (`escape_text`): a heading `#`, a quote `>`, a list marker `-` `+`
+/// or `1.`, a setext or thematic-break line of `=` or `-`, a table row `|`.
+/// Every line, since a heading, a quote or a list can interrupt a paragraph
+/// after a line break.
+pub(super) fn escape_line_starts(text: &str) -> String {
+    let mut out = String::with_capacity(text.len() + 4);
+    for (i, line) in text.split('\n').enumerate() {
+        if i > 0 {
+            out.push('\n');
+        }
+        let body = line.trim_start();
+        let (indent, body) = line.split_at(line.len() - body.len());
+        out.push_str(indent);
+        if body.starts_with(['#', '>', '-', '+', '=', '|']) {
+            out.push('\\');
+        } else {
+            // "1." and "1)" followed by a space or nothing: an ordered item.
+            let digits = body.len() - body.trim_start_matches(|c: char| c.is_ascii_digit()).len();
+            let after = &body[digits..];
+            if (1..=9).contains(&digits)
+                && after.starts_with(['.', ')'])
+                && after[1..].chars().next().is_none_or(char::is_whitespace)
+            {
+                out.push_str(&body[..digits]);
+                out.push('\\');
+                out.push_str(after);
+                continue;
+            }
+        }
+        out.push_str(body);
+    }
+    out
+}
+
+/// A heading's escaped text with a `#` run at its end kept as text: after a
+/// space (or as the whole heading) the run would be read as the heading's
+/// optional closing hashes and dropped - "Notes #" would read "Notes".
+pub(super) fn escape_closing_hashes(text: &str) -> String {
+    let body = text.trim_end_matches('#');
+    if body.len() == text.len() || !(body.is_empty() || body.ends_with([' ', '\t'])) {
+        return text.to_string();
+    }
+    format!("{body}\\{}", &text[body.len()..])
 }
 
 /// A pipe table; the first row is the header, as Markdown requires one.

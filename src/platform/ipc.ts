@@ -112,6 +112,11 @@ export interface FolderIndex {
   truncated: boolean;
 }
 
+/** WordDocument in src-tauri/src/commands/word_import.rs; change both. */
+export interface WordDocument {
+  markdown: string;
+}
+
 export interface ImageMigration {
   old: string;
   /** New "assets/<name>" relative src on success; null if this one image
@@ -127,6 +132,7 @@ export const fs = {
    *  the UI language (commands/fs.rs). */
   openFileDialog: (filters?: {
     textFilter: string;
+    wordFilter: string;
     allFilter: string;
   }): Promise<string | null> =>
     isIOSApp
@@ -139,14 +145,19 @@ export const fs = {
    *  desktop only (capabilities.ts's canPickImageFile). */
   openImageFileDialog: (filterName: string, extensions: readonly string[]) =>
     call<string | null>("open_image_file_dialog", { filterName, extensions }),
-  saveFileDialog: (defaultName: string): Promise<string | null> =>
+  /** `defaultDir`: the folder the dialog starts in, when there is one to
+   *  suggest - beside the Word file a document was opened from. */
+  saveFileDialog: (
+    defaultName: string,
+    defaultDir: string | null = null,
+  ): Promise<string | null> =>
     isIOSApp
       ? newDocumentPath(
           defaultName,
           async (path) =>
             (await call<number | null>("file_mtime_ms", { path })) !== null,
         )
-      : call<string | null>("save_file_dialog", { defaultName }),
+      : call<string | null>("save_file_dialog", { defaultName, defaultDir }),
   listDir: (path: string): Promise<DirEntryInfo[]> =>
     isScopedUrl(path)
       ? iosFiles.listFolder(path)
@@ -167,6 +178,10 @@ export const fs = {
     isScopedUrl(path)
       ? iosFiles.readText(path)
       : call<string>("read_text_file", { path }),
+  /** A Word document as the Markdown of a new document, its pictures
+   *  saved with the drafts' (commands/word_import.rs). Desktop only. */
+  openWordDocument: (path: string) =>
+    call<WordDocument>("open_word_document", { path }),
   readBinaryFileBase64: (path: string) =>
     call<string>("read_binary_file_base64", { path }),
   savePastedImage: (

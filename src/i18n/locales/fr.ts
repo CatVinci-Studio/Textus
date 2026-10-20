@@ -275,6 +275,7 @@ utiliser une.
   zenExitButton: "Quitter le mode zen",
   openDialogText: "Fichiers texte",
   openDialogAll: "Tous les fichiers",
+  openDialogWord: "Documents Word",
   agentPanelSourceMode: `${AI_NAME} fonctionne dans la vue éditeur. Revenez-y pour poursuivre la conversation.`,
   agentPanelBackToEditor: "Revenir à l'éditeur",
   modelTagVision: "vision",
@@ -952,6 +953,12 @@ utiliser une.
   draftRestoredMessage:
     "Le contenu non enregistré de la dernière session a été récupéré.",
   draftRestoredDismiss: "OK",
+  wordImportNotice:
+    "{name} a été ouvert comme un nouveau document Markdown. Une partie de la mise en forme peut différer de Word ; le fichier Word lui-même reste inchangé.",
+  wordImportDismiss: "OK",
+  wordImportFailed: "Impossible d'ouvrir {name}.",
+  wordSaveRefused:
+    "Un document Markdown ne peut pas être enregistré à la place d'un document Word. Choisissez un nom qui se termine par .md.",
   fileChangedOnDiskTitle: "Fichier modifié sur le disque",
   fileChangedOnDiskMessage:
     "Ce fichier a été modifié sur le disque par une autre application. L'enregistrer écrasera ces modifications.",

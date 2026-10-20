@@ -263,6 +263,7 @@ type /name in a conversation to use one.
   /** File > Open's file-type choices besides Markdown. */
   openDialogText: "Text files",
   openDialogAll: "All files",
+  openDialogWord: "Word documents",
   agentPanelSourceMode: `${AI_NAME} works in the editor view. Switch back to keep the conversation going.`,
   agentPanelBackToEditor: "Back to the editor",
   modelTagVision: "vision",
@@ -914,6 +915,14 @@ type /name in a conversation to use one.
   cancel: "Cancel",
   draftRestoredMessage: "Recovered unsaved content from the last session.",
   draftRestoredDismiss: "Got it",
+  /** A Word document was opened as a new Markdown one
+   *  (document/word-import.ts). */
+  wordImportNotice:
+    "Opened {name} as a new Markdown document. Some formatting may look different than in Word; the Word file itself is unchanged.",
+  wordImportDismiss: "Got it",
+  wordImportFailed: "{name} couldn't be opened.",
+  wordSaveRefused:
+    "A Markdown document can't be saved over a Word document. Choose a name ending in .md.",
   fileChangedOnDiskTitle: "File Changed on Disk",
   fileChangedOnDiskMessage:
     "This file has been changed on disk by another program. Saving will overwrite those changes.",

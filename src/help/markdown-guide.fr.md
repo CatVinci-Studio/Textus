@@ -152,6 +152,8 @@ Les trois se trouvent aussi dans le menu **Présentation**.
 
 **Fichier → Ouvrir un dossier…** ouvre tout un dossier dans la barre latérale : l'arborescence y reste pendant que vous ouvrez les documents qu'il contient, le dossier revient avec votre session, et **Fichier → Fermer le dossier** laisse de nouveau l'arborescence suivre le document. La zone en haut de l'onglet **Fichiers** de la barre latérale cherche des noms de fichier dans tout le dossier ; `Cmd+Shift+O` y mène directement. Tapez pour filtrer, `↑`/`↓` pour vous déplacer, `Entrée` pour ouvrir, `Échap` pour effacer. Les deux ne sont disponibles que sur ordinateur.
 
+**Fichier → Ouvrir…** ouvre aussi un document Word (`.docx`), tout comme le déposer sur la fenêtre : il devient un nouveau document Markdown du même nom, pas encore enregistré, avec ses titres, listes, tableaux, liens, notes de bas de page et images. Les images vont, à l'enregistrement, là où **Réglages → Éditeur et apparence → Images** place les images collées, et **Enregistrer** propose un fichier `.md` à côté du fichier Word. Une partie de la mise en forme peut différer ; le fichier Word lui-même n'est jamais modifié. Sur ordinateur uniquement.
+
 ## Rester ouvert en arrière-plan
 
 Activez **Réglages → Général → Application → Rester ouvert en arrière-plan** : fermer la dernière fenêtre laisse alors Textus ouvert, avec son icône dans la zone de notification (Windows), la zone de notification du système (Linux) ou la barre des menus (Mac). **Ouvrir Textus** dans le menu de l’icône vous ramène à vos documents ; **Quitter Textus** dans ce menu quitte vraiment. GNOME n’affiche l’icône qu’avec l’extension AppIndicator.

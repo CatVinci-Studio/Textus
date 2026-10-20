@@ -59,7 +59,12 @@ import { Sidebar } from "./Sidebar";
 import { MainPane } from "./MainPane";
 import { AgentPanelDock } from "./AgentPanelDock";
 import { ClosePrompt } from "./ClosePrompt";
-import { DraftRestoredToast, UpdateToast, ZenHint } from "./AppNotices";
+import {
+  DraftRestoredToast,
+  UpdateToast,
+  WordImportNotice,
+  ZenHint,
+} from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
 import "./App.css";
 
@@ -117,6 +122,9 @@ function App() {
     settings.enableDraftRecovery,
   );
   const [draftsRestoredCount, setDraftsRestoredCount] = useState(0);
+  // The Word document last opened as a new one, for its notice.
+  const [wordImported, setWordImported] = useState<string | null>(null);
+  const dismissWordImported = useCallback(() => setWordImported(null), []);
 
   const {
     activeTab,
@@ -154,7 +162,11 @@ function App() {
   useSessionPaths(tabs);
 
   const dialogFilters = useMemo(
-    () => ({ textFilter: t.openDialogText, allFilter: t.openDialogAll }),
+    () => ({
+      textFilter: t.openDialogText,
+      wordFilter: t.openDialogWord,
+      allFilter: t.openDialogAll,
+    }),
     [t],
   );
   const {
@@ -169,6 +181,8 @@ function App() {
     setPendingClose,
     dialogFilters,
     restoreCarets: settings.restoreSessionOnStartup,
+    t,
+    onWordDocumentOpened: setWordImported,
   });
   useLastCarets(tabs, activeTabId, settings.restoreSessionOnStartup);
 
@@ -272,6 +286,7 @@ function App() {
     markOnboardingShown: () => setSettings({ onboardingShown: true }),
     openPathInTab,
     openFile,
+    replaceTabWithFile,
     restoreCarets: settings.restoreSessionOnStartup,
     startTutorial,
     stopTutorial,
@@ -524,6 +539,12 @@ function App() {
         <DraftRestoredToast
           count={draftsRestoredCount}
           onDismiss={() => setDraftsRestoredCount(0)}
+          t={t}
+        />
+
+        <WordImportNotice
+          path={wordImported}
+          onDismiss={dismissWordImported}
           t={t}
         />
 

@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { isIOSApp } from "../platform/capabilities";
 import { Presence, PresenceDiv } from "../ui/usePresence";
+import { basename } from "../utils/path";
 import type { Strings } from "../i18n/strings";
 import type { useAppUpdate } from "./useAppUpdate";
 
@@ -36,6 +38,40 @@ export function DraftRestoredToast({
           <span>{t.draftRestoredMessage}</span>
           <button className="update-toast-secondary" onClick={onDismiss}>
             {t.draftRestoredDismiss}
+          </button>
+        </PresenceDiv>
+      )}
+    </Presence>
+  );
+}
+
+/** How long the Word notice stays unless dismissed: it reports, it asks
+ *  nothing. */
+const WORD_NOTICE_MS = 12_000;
+
+/** Says that the Word document at `path` was opened as a new Markdown one
+ *  and may look different (document/word-import.ts). */
+export function WordImportNotice({
+  path,
+  onDismiss,
+  t,
+}: {
+  path: string | null;
+  onDismiss: () => void;
+  t: Strings;
+}) {
+  useEffect(() => {
+    if (!path) return;
+    const timer = window.setTimeout(onDismiss, WORD_NOTICE_MS);
+    return () => window.clearTimeout(timer);
+  }, [path, onDismiss]);
+  return (
+    <Presence show={path !== null} exitMs={120}>
+      {path !== null && (
+        <PresenceDiv className="draft-restored-toast" role="status">
+          <span>{t.wordImportNotice.replace("{name}", basename(path))}</span>
+          <button className="update-toast-secondary" onClick={onDismiss}>
+            {t.wordImportDismiss}
           </button>
         </PresenceDiv>
       )}

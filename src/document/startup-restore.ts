@@ -12,6 +12,7 @@ import {
 import type { NewDocumentMode } from "../settings/SettingsContext";
 import { setTabJump } from "../editor/tab-jump";
 import { lastCaret } from "./last-carets";
+import { isWordDocument } from "./word-import";
 
 // Module-scoped, NOT a ref: React StrictMode (dev builds) runs mount effects
 // twice on the same component, and this drain is a destructive pull from
@@ -36,6 +37,9 @@ export interface StartupRestoreOptions {
     open?: { restoreCaret?: boolean },
   ) => Promise<void>;
   openFile: (path: string, open?: { restoreCaret?: boolean }) => Promise<void>;
+  /** Opens `path` in tab `tabId`, in place of what it holds
+   *  (app/useFileOpening.ts). */
+  replaceTabWithFile: (tabId: string, path: string) => Promise<void>;
   /** Settings › General › Restore previous session on startup: reopened
    *  documents come back at the caret they were left at. */
   restoreCarets: boolean;
@@ -185,6 +189,9 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
           const recovered = recoveredFor(first);
           if (recovered) {
             loadRecoveredIntoInitialTab(recovered);
+          } else if (isWordDocument(first)) {
+            // Converted into the initial tab (word-import.ts).
+            await opts.replaceTabWithFile(opts.activeTabId, first);
           } else {
             const { content: text, diskMtime } = await readDocFromDisk(first);
             restoreCaret(first, diskMtime);
