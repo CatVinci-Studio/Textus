@@ -18,8 +18,15 @@
   color: var(--editor-text);
   width: calc(100% - 32px);
   max-width: 840px;
-  height: min(82dvh, 720px);
-  max-height: calc(100dvh - 32px);
+  /* In vh and in the backdrop's own height, not dvh: a WebView2 older than
+     Chromium 108 (a Windows 10 machine that isn't updated) doesn't know
+     dvh and dropped both lines, so the panel grew to its content's height,
+     centred past both window edges with nothing to scroll (#260). The
+     backdrop starts under the window bar, so a percentage also keeps
+     the header clear of it. The other dialogs are sized the same way
+     (ui/dialog-sizing.test.ts). */
+  height: min(82vh, 720px);
+  max-height: calc(100% - 32px);
   display: flex;
   flex-direction: column;
   background: var(--bg);
