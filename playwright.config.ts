@@ -35,6 +35,7 @@ const WEBKIT_SPECS = [
   "markdown-keys.spec.ts",
   "autopair.spec.ts",
   "link-reveal.spec.ts",
+  "sidebar-resize.spec.ts",
 ];
 
 export default defineConfig({

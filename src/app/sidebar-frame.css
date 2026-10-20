@@ -8,16 +8,11 @@
    Its width is the one dragged on its edge (--sidebar-width, set on
    .app-shell from app/sidebar-width.ts); the main pane makes room for the
    same. */
-/* Not inherited: set on .app-shell on every frame of a drag, an inherited
-   custom property recalculated the style of every element in the window.
-   Only the two that use it take it from there. Registered from
-   ui/engine-quirks.ts, where the engine restyles them when it changes; an
-   engine that doesn't, or has no @property, inherits it as before. */
-.sidebar,
-.main-pane {
-  --sidebar-width: inherit;
-}
-
+/* An ordinary inherited custom property. 1.2.0-rc.3 registered it as not
+   inherited, taken with `inherit` by the sidebar and the main pane, to
+   spare a restyle of the window on every frame of a drag - but WebKit
+   (WKWebView, so every Mac) then never restyled the sidebar as .app-shell's
+   value changed, and its edge could not be dragged. */
 .sidebar {
   position: absolute;
   top: 0;
