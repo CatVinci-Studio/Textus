@@ -1,18 +1,16 @@
 /* The menu button sits at the LEFT end of the same row, after the
    sidebar's toggle (window-bar.css's .window-bar-left), where the traffic
    lights would be on macOS - so the inset that row reserves for them is
-   not wasted, it just holds something else. Narrower than a caption
-   button: it is one of ours, not one of the system's. */
-.window-menu-button {
-  width: 34px;
-  color: var(--editor-muted);
-  pointer-events: auto;
-}
+   not wasted, it just holds something else. It is one of ours, not one of
+   the system's: window-bar.css's list gives it the same effect and the
+   same size as the toggle it sits beside, rather than window-caption.css's
+   full-height caption box. */
 
 /* Wraps the menu button together with its open menu, so a click on the
    button counts as inside the popover (AppMenuButton explains why that
-   matters). `contents` because the button has to stay a direct flex item of
-   the row's leading controls - a real box here would break its stretch. */
+   matters). `contents` so the wrapper takes no box of its own: the button
+   stays a direct flex item of the row's leading controls, and the row's
+   gap and its hover effect land on the button itself. */
 .window-menu-anchor {
   display: contents;
 }
