@@ -40,6 +40,12 @@ If another copy of the e2e suite may be running (another worktree), set
 
 - Branch from `origin/main` (`feat/…`, `fix/…`, `docs/…`, `chore/…`), open a
   pull request to `main`, and don't merge it yourself unless asked.
+- Don't stack pull requests by default: each one starts from `main`, so any
+  of them can merge in any order. When a change depends on another that
+  hasn't merged, wait for it, or put the dependent steps in one pull request
+  as separate commits. Stack only when one PR would be too large to review;
+  a stack is then merged bottom-up with a merge commit, not squashed, so the
+  next PR in it still applies cleanly.
 - Make the smallest change that fixes the cause. Match the surrounding code:
   naming, structure, comment density. Comments say why, not what.
 - Add or update tests with the change: unit tests next to the code
@@ -52,8 +58,9 @@ If another copy of the e2e suite may be running (another worktree), set
 - Interface work follows [docs/design/design-language.md](docs/design/design-language.md)
   (radii, type sizes, buttons, menus, motion tokens in `src/ui/motion.css`).
 - Commits: Conventional Commits in English (`fix(export): …`); the body says
-  why the old behaviour was wrong. No `Co-authored-by` or "generated with"
-  trailers.
+  why the old behaviour was wrong. No "generated with" trailers, and no
+  `Co-authored-by` except to credit an outside contributor whose work the
+  commit ports.
 - Documentation and release notes are English and follow the format in
   CONTRIBUTING.md › Writing; release notes start from
   `docs/releases/TEMPLATE.md`.
