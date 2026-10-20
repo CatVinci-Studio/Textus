@@ -21,7 +21,7 @@ The interface uses neutral backgrounds, light borders and a single accent color.
 ## Motion
 
 - Durations, easing curves, offsets and scales come only from the variables in `src/ui/motion.css`. Do not write raw values.
-  - Durations: `--dur-instant` 80 ms (press, hover color change), `--dur-fast` 120 ms (small popover exit, arrow rotation, fades), `--dur-base` 200 ms (menu, popover, notice bar and dialog entry), `--dur-slow` 320 ms (sidebar, AI panel, Settings, Zen mode), `--dur-sheet` 450 ms (phone bottom sheets and full pages).
+  - Durations: `--dur-instant` 80 ms (press, hover color change), `--dur-fast` 120 ms (small popover exit, arrow rotation, fades), `--dur-base` 200 ms (menu, popover, notice bar and dialog entry), `--dur-slow` 320 ms (sidebar, AI panel, Settings, Zen mode), `--dur-sheet` 450 ms (phone bottom sheets and full pages), `--dur-linger` 1600 ms (the tint on a row Settings' search led to, fading out).
   - Curves: `--ease-standard` for changes in place, `--ease-out` for entry, `--ease-in` for exit, `--ease-in-out` for movement within the screen. The spring is `--ease-spring` (engines without `linear()` fall back to a cubic Bézier). `--ease-spring-bouncy`, with about 3% overshoot, is only for a finger release (panel snapping, a tab dropping into place, a switch).
 - Motion only tells the user three things: where something comes from, where it goes, and that a state changed. There are no looping decorations, except for "working" indicators (thinking dots, the export spinner, the cursor while text is generated).
 - Interface responses take 100–250 ms. Large panels take at most about 450 ms. An exit takes about 70% of the entry time.

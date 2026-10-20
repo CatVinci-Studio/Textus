@@ -57,16 +57,119 @@
 /* As wide as the longest category name needs, within bounds: a German or
    Russian "Editor & Appearance" gets room for one line, and a name longer
    still wraps (hyphenated where the language allows) inside the cap. */
-.settings-nav {
+.settings-sidebar {
   min-width: 176px;
   max-width: 232px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 14px 10px;
+  min-height: 0;
   background: var(--sidebar-bg);
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px 14px;
   overflow-y: auto;
+}
+
+/* The search box above the categories, drawn as the sidebar's file search
+   is (sidebar/FileTree.css). */
+.settings-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 10px 0;
+  height: var(--control-height-sm);
+  padding: 0 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  color: var(--editor-muted);
+}
+
+.settings-search:focus-within {
+  border-color: var(--chrome-accent);
+  box-shadow: inset 0 0 0 1px var(--chrome-accent);
+}
+
+.settings-search-icon {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.settings-search-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.settings-search-input:focus,
+.settings-search-input:focus-visible {
+  outline: none;
+}
+
+.settings-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* A result is a row like the one it finds: its name, and under it the
+   group it is in or the "?" text that matched. */
+.settings-search-result {
+  cursor: pointer;
+}
+
+.settings-search-result.is-active {
+  background: var(--sidebar-hover);
+  box-shadow: 0 0 0 8px var(--sidebar-hover);
+  border-radius: var(--radius-control);
+}
+
+.settings-search-context {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.settings-search-empty {
+  padding: 4px 4px 0;
+}
+
+/* The row a result led to, tinted for a moment and fading back: a tint
+   laid over the row, a little wider than its text, whose opacity fades -
+   no movement, so reduced motion keeps it. */
+.settings-search-hit {
+  position: relative;
+}
+
+.settings-search-hit::after {
+  content: "";
+  position: absolute;
+  inset: 0 -8px;
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--chrome-accent) 14%, transparent);
+  pointer-events: none;
+  opacity: 0;
+  animation: settings-search-hit var(--dur-linger) var(--ease-standard);
+}
+
+@keyframes settings-search-hit {
+  from,
+  40% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 .settings-nav-item {
@@ -932,12 +1035,20 @@ button.settings-skill-action:focus-visible {
     flex-direction: column;
   }
 
-  /* One row of tabs that scrolls sideways, rather than wrapping onto a
-     second line when the labels don't fit (narrow windows, the iPhone). */
-  .settings-nav {
+  /* The search box across the top, the tabs under it. */
+  .settings-sidebar {
     width: auto;
     min-width: 0;
     max-width: none;
+  }
+
+  .settings-search {
+    margin: 8px 8px 0;
+  }
+
+  /* One row of tabs that scrolls sideways, rather than wrapping onto a
+     second line when the labels don't fit (narrow windows, the iPhone). */
+  .settings-nav {
     flex-direction: row;
     flex-wrap: nowrap;
     overflow-x: auto;

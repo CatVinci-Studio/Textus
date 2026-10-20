@@ -167,6 +167,10 @@
     font-size: var(--ios-subhead);
   }
 
+  :root[data-window-chrome="mobile"] .settings-search {
+    height: 36px;
+  }
+
   /* UIKit's switch. */
   :root[data-window-chrome="mobile"] .settings-row input[type="checkbox"] {
     --switch-thumb: 27px;
@@ -194,7 +198,7 @@
     --grouped-card: #1c1c1e;
   }
 
-  :root[data-window-chrome="mobile"] .settings-nav {
+  :root[data-window-chrome="mobile"] .settings-sidebar {
     background: var(--grouped-page);
   }
 
