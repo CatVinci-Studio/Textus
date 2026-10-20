@@ -8,6 +8,7 @@ use crate::ai::workspace::{self, AgentWorkspace};
 use aicompat::agent::{
     run_agent_loop, AgentTurn, ImageAttachment, LoopEvent, ProviderEvent, StepResult,
 };
+use aicompat::capabilities::{self, NativeSearch, ThinkingLevel};
 use aicompat::providers::{
     anthropic, custom, openai_api_key, openai_codex, openai_responses_compatible,
 };
@@ -43,6 +44,9 @@ pub enum StreamEvent {
     /// (aicompat's run_agent_loop): drop what it streamed - its prose and
     /// its proposal drafts - and show the new attempt instead.
     Retry,
+    /// The model is thinking: a fragment of its reasoning, or "" when the
+    /// provider only says that it is. Shown above the reply, never kept.
+    Thinking { text: String },
 }
 
 /// Forwards a provider-level fragment onto the frontend channel. Send
@@ -60,6 +64,9 @@ fn forward(channel: &Channel<StreamEvent>, event: ProviderEvent<'_>) {
         ProviderEvent::ToolArgs { call_id, delta } => StreamEvent::ToolArgsDelta {
             call_id: call_id.to_string(),
             delta: delta.to_string(),
+        },
+        ProviderEvent::Thinking(text) => StreamEvent::Thinking {
+            text: text.to_string(),
         },
     };
     let _ = channel.send(event);
@@ -103,6 +110,7 @@ pub(crate) fn postfix_step(
                 call_id,
                 name,
                 arguments,
+                reasoning,
             } if name == tools::PROPOSE_EDIT_TOOL_NAME => {
                 let arguments = match crate::ai::rules::postfix::proposal_arguments(
                     &arguments,
@@ -119,6 +127,7 @@ pub(crate) fn postfix_step(
                     call_id,
                     name,
                     arguments,
+                    reasoning,
                 }
             }
             other => other,
@@ -148,15 +157,6 @@ where
 /// Skill loads, file reads, and web searches all consume steps, so a
 /// research-y request needs more headroom than the old chat-only loop did.
 pub(crate) const MAX_STEPS: usize = 12;
-
-/// Alibaba exposes web search for newer Qwen generations through its
-/// OpenAI-compatible Responses API; older qwen-plus/flash models keep the
-/// Chat Completions `enable_search` switch.
-fn qwen_uses_responses_search(model: &str) -> bool {
-    ["qwen3.8-", "qwen3.7-", "qwen3.6-", "qwen3.5-", "qwen3-max"]
-        .iter()
-        .any(|prefix| model.starts_with(prefix))
-}
 
 /// The writing assistant's standing rules, one paragraph per concern. From
 /// the live eval (docs/design/ai-eval.md): round 1 found replies in the document's
@@ -801,6 +801,10 @@ pub async fn ai_agent_message(
     // `message` by the frontend; only images travel as their own parts.
     images: Vec<ImageAttachment>,
     web_search: bool,
+    // How hard the model thinks (capabilities::ThinkingLevel): Deep when
+    // the composer's Deep thinking is on, Fast from Quick Ask. None - an
+    // older frontend - is Auto, the provider's default.
+    thinking: Option<ThinkingLevel>,
     mode: AgentMode,
     model: Option<String>,
     request_id: String,
@@ -821,7 +825,7 @@ pub async fn ai_agent_message(
         ..conversation.unwrap_or_default()
     };
     let result = tokio::select! {
-        result = ai_agent_message_inner(app, provider, document, doc_path, workspace_root, history, message, images, web_search, mode, model, focus_heading, ui_language, source, on_event) => result,
+        result = ai_agent_message_inner(app, provider, document, doc_path, workspace_root, history, message, images, web_search, thinking.unwrap_or_default(), mode, model, focus_heading, ui_language, source, on_event) => result,
         _ = cancel_rx => Err(cancel::CANCELLED.to_string()),
     };
     cancel::unregister(&request_id);
@@ -841,6 +845,7 @@ async fn ai_agent_message_inner(
     message: String,
     images: Vec<ImageAttachment>,
     web_search: bool,
+    thinking: ThinkingLevel,
     mode: AgentMode,
     model: Option<String>,
     focus_heading: Option<String>,
@@ -948,19 +953,31 @@ async fn ai_agent_message_inner(
                         let account_id = account_id.clone();
                         let agent_model = agent_model.clone();
                         let channel = on_event.clone();
+                        let plan = capabilities::plan(&provider, &agent_model, thinking);
+                        let provider = provider.clone();
                         async move {
                             let sink = move |e: ProviderEvent<'_>| forward(&channel, e);
-                            openai_codex::agent_step(
-                                &access_token,
-                                &account_id,
-                                crate::app_identity::ORIGINATOR,
-                                &instructions,
-                                &turns,
-                                &tool_specs,
-                                web_search,
-                                &agent_model,
-                                &sink,
-                            )
+                            capabilities::with_fallback(&provider, &agent_model, &plan, |plan| {
+                                let (instructions, turns, tool_specs, sink) =
+                                    (&instructions, &turns, &tool_specs, &sink);
+                                let (access_token, account_id, agent_model) =
+                                    (&access_token, &account_id, &agent_model);
+                                async move {
+                                    openai_codex::agent_step(
+                                        access_token,
+                                        account_id,
+                                        crate::app_identity::ORIGINATOR,
+                                        instructions,
+                                        turns,
+                                        tool_specs,
+                                        web_search,
+                                        &plan,
+                                        agent_model,
+                                        sink,
+                                    )
+                                    .await
+                                }
+                            })
                             .await
                         }
                     };
@@ -988,17 +1005,28 @@ async fn ai_agent_message_inner(
                         let api_key = api_key.clone();
                         let agent_model = agent_model.clone();
                         let channel = on_event.clone();
+                        let plan = capabilities::plan(&provider, &agent_model, thinking);
+                        let provider = provider.clone();
                         async move {
                             let sink = move |e: ProviderEvent<'_>| forward(&channel, e);
-                            openai_api_key::agent_step(
-                                &api_key,
-                                &instructions,
-                                &turns,
-                                &tool_specs,
-                                web_search,
-                                &agent_model,
-                                &sink,
-                            )
+                            capabilities::with_fallback(&provider, &agent_model, &plan, |plan| {
+                                let (instructions, turns, tool_specs, sink) =
+                                    (&instructions, &turns, &tool_specs, &sink);
+                                let (api_key, agent_model) = (&api_key, &agent_model);
+                                async move {
+                                    openai_api_key::agent_step(
+                                        api_key,
+                                        instructions,
+                                        turns,
+                                        tool_specs,
+                                        web_search,
+                                        &plan,
+                                        agent_model,
+                                        sink,
+                                    )
+                                    .await
+                                }
+                            })
                             .await
                         }
                     };
@@ -1052,17 +1080,28 @@ async fn ai_agent_message_inner(
                 let auth = auth.clone();
                 let agent_model = agent_model.clone();
                 let channel = on_event.clone();
+                let plan = capabilities::plan(&provider, &agent_model, thinking);
+                let provider = provider.clone();
                 async move {
                     let sink = move |e: ProviderEvent<'_>| forward(&channel, e);
-                    anthropic::agent_step(
-                        &auth,
-                        &instructions,
-                        &turns,
-                        &tool_specs,
-                        web_search,
-                        &agent_model,
-                        &sink,
-                    )
+                    capabilities::with_fallback(&provider, &agent_model, &plan, |plan| {
+                        let (instructions, turns, tool_specs, sink) =
+                            (&instructions, &turns, &tool_specs, &sink);
+                        let (auth, agent_model) = (&auth, &agent_model);
+                        async move {
+                            anthropic::agent_step(
+                                auth,
+                                instructions,
+                                turns,
+                                tool_specs,
+                                web_search,
+                                &plan,
+                                agent_model,
+                                sink,
+                            )
+                            .await
+                        }
+                    })
                     .await
                 }
             };
@@ -1108,25 +1147,18 @@ async fn ai_agent_message_inner(
             let instructions_with_tools =
                 build_instructions(&workspace, &document, true, mode, &focus, &ui_language);
 
-            // These providers expose server-side search through their
-            // current Chat Completions compatibility layer. Other providers
-            // simply receive the normal local function tools.
-            let native_web_search = if web_search {
-                match provider.as_str() {
-                    "groq" => Some(custom::NativeWebSearch::Groq),
-                    "openrouter" => Some(custom::NativeWebSearch::OpenRouter),
-                    "qwen" if !qwen_uses_responses_search(&endpoint_model) => {
-                        Some(custom::NativeWebSearch::Qwen)
-                    }
-                    "zhipu" => Some(custom::NativeWebSearch::Zhipu),
-                    _ => None,
-                }
+            // How the provider's own search is switched on (the capability
+            // table); without one, the model just has the local tools.
+            let search = if web_search {
+                capabilities::search_route(&provider, &endpoint_model)
             } else {
-                None
+                NativeSearch::None
             };
-            let use_responses_web_search = web_search
-                && (provider == "xai"
-                    || (provider == "qwen" && qwen_uses_responses_search(&endpoint_model)));
+            let native_web_search = match search {
+                NativeSearch::ChatCompletions(switch) => Some(switch),
+                _ => None,
+            };
+            let use_responses_web_search = search == NativeSearch::CompatibleResponses;
             let vendor = route::chat_vendor(&base_url);
 
             let step = |turns: Vec<AgentTurn>| {
@@ -1136,54 +1168,73 @@ async fn ai_agent_message_inner(
                 let instructions = instructions_with_tools.clone();
                 let tool_specs = tool_specs.clone();
                 let channel = on_event.clone();
+                let plan = capabilities::plan(&provider, &endpoint_model, thinking);
+                let provider = provider.clone();
                 async move {
-                    if use_responses_web_search {
-                        return openai_responses_compatible::agent_step(
-                            &base_url,
-                            api_key.as_deref(),
-                            &endpoint_model,
-                            &instructions,
-                            &turns,
-                            &tool_specs,
-                            true,
-                        )
-                        .await;
-                    }
-                    // `stream` support varies across OpenAI-compatible
-                    // servers even more than `tools` does, so a failed
-                    // streamed step is retried once without streaming
-                    // before the outer flattened fallback gets a say. A
-                    // genuine model/auth error just fails twice cheaply and
-                    // surfaces the second (identical) error.
                     let sink = move |e: ProviderEvent<'_>| forward(&channel, e);
-                    match custom::agent_step_streaming(
-                        &base_url,
-                        api_key.as_deref(),
-                        &endpoint_model,
-                        &instructions,
-                        &turns,
-                        &tool_specs,
-                        native_web_search,
-                        vendor,
-                        &sink,
-                    )
-                    .await
-                    {
-                        Ok(result) => Ok(result),
-                        Err(_) => {
-                            custom::agent_step(
-                                &base_url,
-                                api_key.as_deref(),
-                                &endpoint_model,
-                                &instructions,
-                                &turns,
-                                &tool_specs,
+                    capabilities::with_fallback(&provider, &endpoint_model, &plan, |plan| {
+                        let (base_url, api_key, endpoint_model) =
+                            (&base_url, api_key.as_deref(), &endpoint_model);
+                        let (instructions, turns, tool_specs, sink) =
+                            (&instructions, &turns, &tool_specs, &sink);
+                        async move {
+                            if use_responses_web_search {
+                                return openai_responses_compatible::agent_step(
+                                    base_url,
+                                    api_key,
+                                    endpoint_model,
+                                    instructions,
+                                    turns,
+                                    tool_specs,
+                                    true,
+                                    &plan,
+                                )
+                                .await;
+                            }
+                            // `stream` support varies across OpenAI-compatible
+                            // servers even more than `tools` does, so a failed
+                            // streamed step is retried once without streaming
+                            // (and without thinking parameters, which some
+                            // servers take only when streaming) before the
+                            // outer flattened fallback gets a say. A genuine
+                            // model/auth error just fails twice cheaply and
+                            // surfaces the second (identical) error.
+                            match custom::agent_step_streaming(
+                                base_url,
+                                api_key,
+                                endpoint_model,
+                                instructions,
+                                turns,
+                                tool_specs,
                                 native_web_search,
                                 vendor,
+                                &plan,
+                                sink,
                             )
                             .await
+                            {
+                                Ok(result) => Ok(result),
+                                Err(error) if capabilities::is_thinking_refusal(&error) => {
+                                    Err(error)
+                                }
+                                Err(_) => {
+                                    custom::agent_step(
+                                        base_url,
+                                        api_key,
+                                        endpoint_model,
+                                        instructions,
+                                        turns,
+                                        tool_specs,
+                                        native_web_search,
+                                        vendor,
+                                        &plan.without_parameters(),
+                                    )
+                                    .await
+                                }
+                            }
                         }
-                    }
+                    })
+                    .await
                 }
             };
 
@@ -1259,6 +1310,19 @@ async fn ai_agent_message_inner(
 /// says so, so a later request that needs the picture opens it again.
 fn for_history(turn: AgentTurn) -> AgentTurn {
     match turn {
+        // The step's reasoning was for this exchange's own requests: no
+        // provider wants it back in a later one, and it never shows.
+        AgentTurn::ToolCall {
+            call_id,
+            name,
+            arguments,
+            reasoning: Some(_),
+        } => AgentTurn::ToolCall {
+            call_id,
+            name,
+            arguments,
+            reasoning: None,
+        },
         AgentTurn::ToolResult {
             call_id,
             output,
@@ -1349,6 +1413,7 @@ mod tests {
             call_id: id.into(),
             name: name.into(),
             arguments: args.into(),
+            reasoning: None,
         };
         let script = RefCell::new(VecDeque::from(vec![
             StepResult::ToolCalls(vec![call("r", "read_document", r#"{"heading":"Methods"}"#)]),
@@ -1446,6 +1511,7 @@ mod tests {
                 call_id: "r".into(),
                 name: "read_file".into(),
                 arguments: "{}".into(),
+                reasoning: None,
             },
             AgentTurn::ToolResult {
                 call_id: "r".into(),
@@ -1456,6 +1522,7 @@ mod tests {
                 call_id: "e".into(),
                 name: "propose_edit".into(),
                 arguments: "{}".into(),
+                reasoning: None,
             },
             AgentTurn::ToolResult {
                 call_id: "e".into(),
@@ -1505,6 +1572,7 @@ mod tests {
                 call_id: format!("r{n}"),
                 name: "read_file".into(),
                 arguments: "{}".into(),
+                reasoning: None,
             },
             AgentTurn::ToolResult {
                 call_id: format!("r{n}"),
@@ -1591,13 +1659,23 @@ mod tests {
         assert!(debug(&out).contains("attached-file"));
     }
 
+    /// A step's reasoning is replayed within its exchange only: the turn
+    /// the frontend keeps, and sends back next time, has none.
     #[test]
-    fn qwen_search_endpoint_tracks_model_generation() {
-        assert!(qwen_uses_responses_search("qwen3.7-plus"));
-        assert!(qwen_uses_responses_search("qwen3.5-flash"));
-        assert!(qwen_uses_responses_search("qwen3-max"));
-        assert!(!qwen_uses_responses_search("qwen-plus"));
-        assert!(!qwen_uses_responses_search("qwen-flash"));
+    fn history_keeps_no_reasoning() {
+        let call = AgentTurn::ToolCall {
+            call_id: "c".into(),
+            name: "read_document".into(),
+            arguments: "{}".into(),
+            reasoning: Some(serde_json::json!("thought")),
+        };
+        assert!(matches!(
+            for_history(call),
+            AgentTurn::ToolCall {
+                reasoning: None,
+                ..
+            }
+        ));
     }
 
     #[test]

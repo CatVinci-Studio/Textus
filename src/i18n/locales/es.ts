@@ -500,6 +500,17 @@ para usar una.
   agentStop: "Detener",
   agentRetry: "Reintentar",
   agentThinking: "Pensando…",
+  agentDeepThinking: "Pensamiento profundo",
+  agentThinkingFor: {
+    one: "Pensando · {n} segundo",
+    many: "Pensando · {n} de segundos",
+    other: "Pensando · {n} segundos",
+  },
+  agentThoughtFor: {
+    one: "Pensó durante {n} segundo",
+    many: "Pensó durante {n} de segundos",
+    other: "Pensó durante {n} segundos",
+  },
   chatHistoryOpen: "Historial",
   chatHistoryEmpty: "No hay conversaciones anteriores.",
   chatHistoryRestoreHint: "Reabrir esta conversación con su documento",

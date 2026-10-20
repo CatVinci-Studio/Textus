@@ -488,6 +488,15 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentStop: "Stoppen",
   agentRetry: "Erneut versuchen",
   agentThinking: "Denkt nach…",
+  agentDeepThinking: "Gründlich nachdenken",
+  agentThinkingFor: {
+    one: "Denkt nach · {n} Sekunde",
+    other: "Denkt nach · {n} Sekunden",
+  },
+  agentThoughtFor: {
+    one: "{n} Sekunde nachgedacht",
+    other: "{n} Sekunden nachgedacht",
+  },
   chatHistoryOpen: "Verlauf",
   chatHistoryEmpty: "Keine früheren Unterhaltungen.",
   chatHistoryRestoreHint: "Diese Unterhaltung mit ihrem Dokument wieder öffnen",

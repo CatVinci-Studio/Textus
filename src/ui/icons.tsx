@@ -548,6 +548,32 @@ export function SearchIcon({ className }: IconProps) {
   );
 }
 
+/** The composer's Deep thinking toggle. */
+export function LightbulbIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="13"
+      height="13"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M8 2.2a4 4 0 0 0-2.4 7.2c.5.4.9 1 .9 1.6v.5h3v-.5c0-.6.4-1.2.9-1.6A4 4 0 0 0 8 2.2Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6.6 13.8h2.8"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 /** A file the agent read, or one attached to a message. */
 export function PaperclipIcon({ className }: IconProps) {
   return (

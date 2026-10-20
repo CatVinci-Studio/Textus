@@ -1,4 +1,5 @@
 use crate::agent::{AgentTurn, StepResult, ToolSpec};
+use crate::capabilities::Thinking;
 use crate::responses_api;
 
 fn responses_url(base_url: &str) -> String {
@@ -9,6 +10,7 @@ fn responses_url(base_url: &str) -> String {
 /// xAI uses this path because its native web search is available on
 /// `/responses`, while its `/chat/completions` endpoint does not expose the
 /// same server-side tool.
+#[allow(clippy::too_many_arguments)]
 pub async fn agent_step(
     base_url: &str,
     api_key: Option<&str>,
@@ -17,9 +19,17 @@ pub async fn agent_step(
     history: &[AgentTurn],
     tools: &[ToolSpec],
     web_search: bool,
+    thinking: &Thinking,
 ) -> Result<StepResult, String> {
-    let body =
-        responses_api::agent_request_body(model, instructions, history, tools, web_search, false);
+    let body = responses_api::agent_request_body(
+        model,
+        instructions,
+        history,
+        tools,
+        web_search,
+        thinking,
+        false,
+    );
 
     let client = crate::http::client();
     let mut req = client.post(responses_url(base_url)).json(&body);

@@ -205,6 +205,7 @@ fn live_agent_caches_across_steps() {
         workspace: &ws,
         focus_heading: None,
         ui_language: "en",
+        thinking: aicompat::capabilities::ThinkingLevel::Auto,
     };
     let conv = harness::run_conversation(
         &auth,
@@ -265,6 +266,90 @@ fn live_agent_caches_across_steps() {
         opening(2).cache_read_input_tokens,
         opening(1).cache_read_input_tokens
     );
+}
+
+/// Thinking levels (capabilities::plan) on the two shipped Claude models:
+/// each level's request is accepted, a tool step after a thinking step
+/// replays its thinking blocks without tripping the preserved-thinking
+/// check (the harness opts every request into it), the next message - with
+/// the earlier thinking dropped - is accepted too, and Deep shows readable
+/// thinking. Prints each run's steps, thinking, latency and cost.
+#[test]
+#[ignore = "live API - see module docs"]
+fn live_thinking_levels() {
+    use aicompat::capabilities::ThinkingLevel;
+    let Some(auth) = auth() else { return };
+    let ws = crate::ai::workspace::AgentWorkspace::default();
+    let models = ["claude-sonnet-5-5", "claude-haiku-5-5"];
+    let levels = [
+        ThinkingLevel::Fast,
+        ThinkingLevel::Auto,
+        ThinkingLevel::Deep,
+    ];
+    let jobs: Vec<(&str, ThinkingLevel)> = models
+        .iter()
+        .flat_map(|m| levels.iter().map(move |l| (*m, *l)))
+        .collect();
+    let results = par_map(&jobs, |(model, level)| {
+        let setup = harness::AgentSetup {
+            model,
+            mode: AgentMode::Revise,
+            workspace: &ws,
+            focus_heading: None,
+            ui_language: "en",
+            thinking: *level,
+        };
+        let conv = harness::run_conversation(
+            &auth,
+            &setup,
+            &long_doc(),
+            &[
+                harness::UserTurn::new(
+                    "Tighten the first paragraph of the 'Coding' section: same facts, fewer words.",
+                ),
+                harness::UserTurn::new("Now do the same for the second paragraph of that section."),
+            ],
+        );
+        (*model, *level, conv)
+    });
+    let mut failures = Vec::new();
+    let mut total = harness::Usage::default();
+    for (model, level, conv) in &results {
+        let label = format!("{model} {level:?}");
+        if let Some(e) = &conv.error {
+            failures.push(format!("{label}: {e}"));
+            continue;
+        }
+        for (t, outcome) in conv.outcomes.iter().enumerate() {
+            let mut usage = harness::Usage::default();
+            for step in &outcome.usage {
+                usage.add(model, step);
+            }
+            println!(
+                "[thinking] {label} turn {}: {} steps, {} thinking events / {} chars, {} ms, {} output tokens, ${:.4}",
+                t + 1,
+                outcome.usage.len(),
+                outcome.thinking_events,
+                outcome.thinking_chars,
+                outcome.latency_ms,
+                usage.output,
+                usage.cost_usd
+            );
+            total.merge(&usage);
+            if outcome.proposals.is_empty() {
+                failures.push(format!("{label} turn {}: no proposal", t + 1));
+            }
+        }
+        let first = &conv.outcomes[0];
+        if first.usage.len() < 2 {
+            failures.push(format!("{label}: no tool step after the first"));
+        }
+        if *level == ThinkingLevel::Deep && first.thinking_chars == 0 {
+            failures.push(format!("{label}: Deep showed no thinking"));
+        }
+    }
+    println!("[thinking] total ${:.4}", total.cost_usd);
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
 /// Free, no key needed: prints every case id per suite (after

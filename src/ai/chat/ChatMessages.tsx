@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useMemo,
   useRef,
@@ -9,6 +10,8 @@ import { AgentTurnView, type AgentTurnLabels } from "./AgentTurnView";
 import type { AgentTurn, EditAction, EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import type { StreamingState } from "./useAgentConversation";
+import type { Thought } from "./thought";
+import { ThoughtRow, type ThoughtRowLabels } from "./ThoughtRow";
 import { parseProposal } from "./proposal";
 import { parseUserMessage } from "./user-message";
 import { refusedProposalIds } from "../revision/proposal-status";
@@ -48,7 +51,8 @@ function parseComment(
   }
 }
 
-export interface ChatMessagesLabels extends AgentTurnLabels, MemoryChipLabels {
+export interface ChatMessagesLabels
+  extends AgentTurnLabels, MemoryChipLabels, ThoughtRowLabels {
   thinking: string;
   proposalTitle: string;
   proposalStatus: Record<Exclude<PendingStatus, "pending">, string>;
@@ -87,6 +91,9 @@ export interface ChatMessagesProps {
    *  prose being generated). Null when idle - and on providers without
    *  streaming, where the reply still arrives all at once via `history`. */
   streaming: StreamingState | null;
+  /** Finished exchanges' thinking, by their user turn's index in
+   *  `history` (useAgentConversation's `thoughts`). */
+  thoughts?: Record<number, Thought>;
   busy: boolean;
   error: string | null;
   selectedText: string | null;
@@ -146,6 +153,7 @@ export interface ChatMessagesProps {
 export function ChatMessages({
   history,
   streaming,
+  thoughts,
   busy,
   error,
   selectedText,
@@ -374,14 +382,21 @@ export function ChatMessages({
               />
             </div>
           );
+        // An exchange's thinking sits under its question, above
+        // everything the model did in answer.
+        const thought =
+          turn.kind !== "User"
+            ? null
+            : i === history.length
+              ? (streaming?.thought ?? null)
+              : (thoughts?.[i] ?? null);
         return (
-          <div
-            key={i}
-            className={reveal ? "turn-reveal" : undefined}
-            style={style}
-          >
-            <AgentTurnView turn={turn} labels={labels} />
-          </div>
+          <Fragment key={i}>
+            <div className={reveal ? "turn-reveal" : undefined} style={style}>
+              <AgentTurnView turn={turn} labels={labels} />
+            </div>
+            {thought && <ThoughtRow thought={thought} labels={labels} />}
+          </Fragment>
         );
       })}
       {streaming && streaming.text.length > 0 && (
@@ -392,7 +407,8 @@ export function ChatMessages({
           />
         </div>
       )}
-      {busy && !streaming?.text && (
+      {/* While the thinking row counts the seconds, it says it all. */}
+      {busy && !streaming?.text && streaming?.thought?.since == null && (
         <ThinkingIndicator label={labels.thinking} />
       )}
       {error && (

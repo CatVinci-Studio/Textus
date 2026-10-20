@@ -10,7 +10,8 @@ use crate::ai::agent::{
 };
 use crate::ai::tools::{self, ToolContext};
 use crate::ai::workspace::AgentWorkspace;
-use aicompat::agent::{run_agent_loop, AgentTurn, StepResult};
+use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, StepResult};
+use aicompat::capabilities::{self, ThinkingLevel};
 use aicompat::providers::anthropic::{self, AnthropicAuth, StepUsage};
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -352,6 +353,10 @@ pub struct TurnOutcome {
     pub apply_error: Option<String>,
     pub latency_ms: u128,
     pub usage: Vec<StepUsage>,
+    /// Thinking the stream reported: events (Claude sends one per thinking
+    /// block even when it shows no text) and characters of readable text.
+    pub thinking_events: usize,
+    pub thinking_chars: usize,
     /// Rules the proposal post-processing applied to this turn's
     /// propose_edit texts (rules::postfix) - a prompt regression shows here
     /// instead of being silently repaired.
@@ -469,6 +474,11 @@ pub struct AgentSetup<'a> {
     pub focus_heading: Option<&'a str>,
     /// The app's UI language (src/i18n/langs.ts), as the frontend sends it.
     pub ui_language: &'a str,
+    /// What the composer asks for (Auto unless Deep thinking is on). Every
+    /// request also opts into Claude's preserved-thinking check, so a
+    /// thinking block replayed after an edit to the history fails the case
+    /// instead of passing on an account the check isn't enforced for.
+    pub thinking: ThinkingLevel,
 }
 
 /// Mirrors src/ai/revision/proposal-status.ts's notes for the two decided states.
@@ -561,6 +571,18 @@ pub fn run_conversation(
         };
         let usage = RefCell::new(Vec::new());
         let postfix = RefCell::new(Vec::new());
+        let thinking_events = AtomicUsize::new(0);
+        let thinking_chars = AtomicUsize::new(0);
+        let thinking = capabilities::Thinking {
+            enforce_binding: true,
+            ..capabilities::plan("anthropic", setup.model, setup.thinking)
+        };
+        let sink = |event: ProviderEvent<'_>| {
+            if let ProviderEvent::Thinking(text) = event {
+                thinking_events.fetch_add(1, Ordering::Relaxed);
+                thinking_chars.fetch_add(text.chars().count(), Ordering::Relaxed);
+            }
+        };
         let started = Instant::now();
         let result = block_on(run_agent_loop(
             compact_history(history.clone()),
@@ -575,6 +597,7 @@ pub fn run_conversation(
             |h: Vec<AgentTurn>| {
                 let (instructions, specs, usage, postfix) =
                     (&instructions, &specs, &usage, &postfix);
+                let (thinking, sink) = (&thinking, &sink);
                 let (doc, conventions) = (&doc, &conventions);
                 async move {
                     // with_retry's loop, inline: this already runs inside
@@ -587,8 +610,9 @@ pub fn run_conversation(
                             &h,
                             specs,
                             false,
+                            thinking,
                             setup.model,
-                            &|_| {},
+                            sink,
                         )
                         .await
                         {
@@ -621,9 +645,15 @@ pub fn run_conversation(
             }
         };
 
-        // What history keeps is the plain message (ai_agent_message_inner).
+        // What history keeps is the plain message (ai_agent_message_inner),
+        // and no step's reasoning (agent::for_history).
         if let Some(AgentTurn::User { text, .. }) = turns.first_mut() {
             *text = message_sent.clone();
+        }
+        for turn in &mut turns {
+            if let AgentTurn::ToolCall { reasoning, .. } = turn {
+                *reasoning = None;
+            }
         }
 
         let mut outcome = TurnOutcome {
@@ -634,6 +664,8 @@ pub fn run_conversation(
             doc_before: doc.clone(),
             latency_ms,
             usage: usage.into_inner(),
+            thinking_events: thinking_events.into_inner(),
+            thinking_chars: thinking_chars.into_inner(),
             postfix: postfix.into_inner(),
             ..TurnOutcome::default()
         };
@@ -644,6 +676,7 @@ pub fn run_conversation(
                     call_id,
                     name,
                     arguments,
+                    ..
                 } => {
                     outcome.tools.push(name.clone());
                     // A step's results follow all of its calls.

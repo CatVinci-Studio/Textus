@@ -509,6 +509,7 @@ export function ChatBody({
                     proposalActions={false}
                     history={history}
                     streaming={streaming}
+                    thoughts={conversation.thoughts}
                     busy={busy}
                     error={error}
                     selectedText={selectedText}
@@ -545,6 +546,7 @@ export function ChatBody({
               <ChatMessages
                 history={history}
                 streaming={streaming}
+                thoughts={conversation.thoughts}
                 busy={busy}
                 error={error}
                 selectedText={selectedText}

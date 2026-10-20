@@ -6,6 +6,7 @@
 //! `#[tauri::command]`s and decides where credentials get persisted.
 
 pub mod agent;
+pub mod capabilities;
 pub mod http;
 pub mod models;
 pub mod oauth_login;

@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { keepCancelledTurns } from "./cancelled-turns";
 import { conversationTitle, saveConversation } from "./chat-history";
 import { annotateProposalStatuses } from "../revision/proposal-status";
-import type { AgentTurn, ImageAttachment } from "../types";
+import type { AgentTurn, ImageAttachment, ThinkingLevel } from "../types";
+import { thinkingDone, thinkingEvent, type Thought } from "./thought";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import {
   ai,
@@ -17,6 +18,8 @@ import { useSettings, type AgentMode } from "../../settings/SettingsContext";
 export interface AgentRequestOptions {
   mode: AgentMode;
   webSearch: boolean;
+  /** Left out: the provider's default (Auto). */
+  thinking?: ThinkingLevel;
   /** See ai.agentMessage's focusHeading. */
   focusHeading?: string | null;
 }
@@ -29,6 +32,8 @@ export interface AgentRequestOptions {
 export interface StreamingState {
   turns: AgentTurn[];
   text: string;
+  /** The exchange's thinking so far, once the model has thought. */
+  thought: Thought | null;
 }
 
 /** The (document, message) pair behind the last failed send - lets the
@@ -80,6 +85,10 @@ export function useAgentConversation(
     crypto.randomUUID(),
   );
   const [history, setHistory] = useState<AgentTurn[]>([]);
+  // Each finished exchange's thinking, by the index of its user turn in
+  // `history` - shown above its reply for the rest of the session, but not
+  // saved with the conversation.
+  const [thoughts, setThoughts] = useState<Record<number, Thought>>({});
   const [streaming, setStreamingState] = useState<StreamingState | null>(null);
   // Mirror of `streaming`, readable synchronously inside `send`'s catch:
   // a stop must fold what already streamed into history, and the state
@@ -156,7 +165,17 @@ export function useAgentConversation(
     setStreaming({
       turns: [{ kind: "User", text: trimmed, images }],
       text: "",
+      thought: null,
     });
+    // Where this exchange's user turn lands in `history`.
+    const at = history.length;
+    const keepThought = () => {
+      const thought = thinkingDone(
+        streamingRef.current?.thought ?? null,
+        Date.now(),
+      );
+      if (thought) setThoughts((prev) => ({ ...prev, [at]: thought }));
+    };
     const requestId = crypto.randomUUID();
     const generation = generationRef.current;
     requestIdRef.current = requestId;
@@ -170,6 +189,7 @@ export function useAgentConversation(
         message: trimmed,
         images,
         webSearch: options.webSearch,
+        thinking: options.thinking,
         mode: options.mode,
         focusHeading: options.focusHeading ?? null,
         uiLanguage: uiLanguage.current,
@@ -186,33 +206,53 @@ export function useAgentConversation(
         onEvent: (event) => {
           if (generation !== generationRef.current) return;
           onStreamEventRef.current?.(event);
+          const prev = streamingRef.current;
+          if (event.type === "thinking") {
+            setStreaming(
+              {
+                turns: prev?.turns ?? [],
+                text: prev?.text ?? "",
+                thought: thinkingEvent(
+                  prev?.thought ?? null,
+                  event.text,
+                  Date.now(),
+                ),
+              },
+              { textOnly: true },
+            );
+            return;
+          }
+          // Anything else means the model has stopped thinking for now.
+          const thought = thinkingDone(prev?.thought ?? null, Date.now());
           if (event.type === "delta") {
-            const prev = streamingRef.current;
             setStreaming(
               {
                 turns: prev?.turns ?? [],
                 text: (prev?.text ?? "") + event.text,
+                thought,
               },
               { textOnly: true },
             );
           } else if (event.type === "retry") {
             // The attempt that streamed this prose came back garbled and
             // is being sent again; the new attempt streams in its place.
-            const prev = streamingRef.current;
-            setStreaming({ turns: prev?.turns ?? [], text: "" });
+            setStreaming({ turns: prev?.turns ?? [], text: "", thought });
           } else if (event.type === "turn") {
             // Interim prose that streamed before a tool call is dropped,
             // mirroring how the backend's step parsers prefer tool calls
             // over accompanying text - it never enters history either.
-            const prev = streamingRef.current;
             setStreaming({
               turns: [...(prev?.turns ?? []), event.turn],
               text: "",
+              thought,
             });
+          } else if (thought !== prev?.thought && prev) {
+            setStreaming({ ...prev, thought });
           }
         },
       });
       if (generation !== generationRef.current) return undefined;
+      keepThought();
       setHistory((prev) => [...prev, ...newTurns]);
       return newTurns;
     } catch (err) {
@@ -229,6 +269,7 @@ export function useAgentConversation(
           partial?.text ?? "",
         );
         if (kept.length === 0) return undefined;
+        keepThought();
         setHistory((prev) => [...prev, ...kept]);
         return kept;
       }
@@ -281,6 +322,7 @@ export function useAgentConversation(
     requestIdRef.current = null;
     setConversationId(id);
     setHistory(turns);
+    setThoughts({});
     setStreaming(null);
     setBusy(false);
     setError(null);
@@ -309,6 +351,7 @@ export function useAgentConversation(
     // exchange scattered across several history entries.
     conversationId,
     history,
+    thoughts,
     streaming,
     busy,
     error,

@@ -732,6 +732,7 @@ pub fn run() {
             fetch_agent_models,
             set_ai_proxy,
             crate::ai::catalog::list_providers,
+            crate::ai::catalog::ai_can_think_deeper,
             crate::ai::workspace::load_agent_workspace,
             crate::ai::conventions::writing_conventions_options,
             crate::ai::conventions::writing_conventions_effective,

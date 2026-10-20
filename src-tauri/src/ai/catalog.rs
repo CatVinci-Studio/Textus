@@ -278,6 +278,23 @@ pub fn list_providers() -> Vec<ProviderCatalogEntry> {
     PROVIDER_CATALOG.to_vec()
 }
 
+/// Whether the chat composer offers Deep thinking for this provider and
+/// Agent model (None: the provider's agent default) - aicompat's capability
+/// table decides (`capabilities::can_think_deeper`). Mirrored by
+/// `ai.canThinkDeeper` in platform/ipc.ts.
+#[tauri::command]
+pub fn ai_can_think_deeper(provider: String, model: Option<String>) -> bool {
+    let Some(model) = model
+        .filter(|m| !m.is_empty())
+        .or_else(|| find(&provider)?.agent_default_model.map(str::to_string))
+    else {
+        // No model to look up (a custom endpoint's comes from its own
+        // config): the table's answer for one it doesn't know.
+        return aicompat::capabilities::can_think_deeper(&provider, "");
+    };
+    aicompat::capabilities::can_think_deeper(&provider, &model)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -285,6 +302,32 @@ mod tests {
     /// scripts/sync-models.mjs's reviewed copy of what each provider serves,
     /// per models.dev. Test-only - nothing in the app reads it.
     const SNAPSHOT: &str = include_str!("../../../src/ai/models-snapshot.json");
+
+    /// aicompat's capability table needs a row for every provider here: how
+    /// it takes thinking parameters and switches on its own search. A
+    /// missing row silently falls back to plain OpenAI-compatible Chat
+    /// Completions, which is wrong for most named providers.
+    #[test]
+    fn every_provider_has_a_capability_row() {
+        for entry in PROVIDER_CATALOG {
+            assert!(
+                aicompat::capabilities::has_row(entry.id),
+                "`{}` has no row in aicompat/src/capabilities.rs",
+                entry.id
+            );
+        }
+    }
+
+    #[test]
+    fn deep_thinking_follows_the_default_agent_model() {
+        assert!(ai_can_think_deeper("anthropic".into(), None));
+        assert!(ai_can_think_deeper(
+            "anthropic".into(),
+            Some("claude-haiku-5-5".into())
+        ));
+        assert!(!ai_can_think_deeper("mistral".into(), None));
+        assert!(!ai_can_think_deeper("openai".into(), Some("gpt-4o".into())));
+    }
 
     /// Every model the catalog pins must still exist upstream and not be
     /// deprecated - the check that would have caught Groq's and Kimi's

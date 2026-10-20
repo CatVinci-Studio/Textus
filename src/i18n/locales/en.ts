@@ -483,6 +483,15 @@ type /name in a conversation to use one.
   agentStop: "Stop",
   agentRetry: "Retry",
   agentThinking: "Thinking…",
+  agentDeepThinking: "Deep thinking",
+  agentThinkingFor: {
+    one: "Thinking · {n} second",
+    other: "Thinking · {n} seconds",
+  },
+  agentThoughtFor: {
+    one: "Thought for {n} second",
+    other: "Thought for {n} seconds",
+  },
   chatHistoryOpen: "History",
   chatHistoryEmpty: "No past conversations.",
   chatHistoryRestoreHint: "Reopen this conversation with its document",

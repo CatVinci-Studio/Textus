@@ -1,6 +1,7 @@
 name: Sync model list
 
-# Weekly refresh of src/ai/models-snapshot.json from models.dev. Opens (or
+# Weekly refresh of src/ai/models-snapshot.json and the aicompat crate's
+# data/model-capabilities.json from models.dev. Opens (or
 # updates) one PR on the chore/sync-models branch; the report in its body says
 # what changed upstream and whether any pinned model needs re-picking. Nothing
 # merges on its own - which models the app offers stays a reviewed decision.
@@ -49,7 +50,8 @@ jobs:
           # 2 = models.dev unreachable or unreadable: fail the run, no PR.
           if [ "$status" -ge 2 ]; then exit "$status"; fi
           echo "pins_ok=$([ "$status" -eq 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-          if git diff --quiet -- src/ai/models-snapshot.json; then
+          if git diff --quiet -- src/ai/models-snapshot.json \
+            src-tauri/crates/aicompat/data/model-capabilities.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -85,7 +87,8 @@ jobs:
           fi
 
           git switch -C "$BRANCH"
-          git add src/ai/models-snapshot.json
+          git add src/ai/models-snapshot.json \
+            src-tauri/crates/aicompat/data/model-capabilities.json
           git commit -m "$title"
           git push --force origin "$BRANCH"
 

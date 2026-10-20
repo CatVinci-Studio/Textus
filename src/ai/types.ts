@@ -101,6 +101,12 @@ export interface ImageAttachment {
   dataBase64: string;
 }
 
+/** How hard the model is asked to think: Fast from Quick Ask, Deep while
+ *  the composer's Deep thinking is on, Auto (the provider's default)
+ *  otherwise. Mirrors ThinkingLevel in
+ *  src-tauri/crates/aicompat/src/capabilities.rs. */
+export type ThinkingLevel = "fast" | "auto" | "deep";
+
 /** Mirrors AgentTurn in src-tauri/crates/aicompat/src/agent.rs. Its
  *  ToolResult also carries the images view_image showed the model, but
  *  agent.rs's for_history drops them before a turn reaches the frontend. */

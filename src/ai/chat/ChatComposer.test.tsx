@@ -8,7 +8,16 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import { installTestLocalStorage } from "../../dev/test-local-storage";
 import type { ChatAttachment } from "../types";
 
 const pickAttachmentFile = vi.fn();
@@ -20,6 +29,14 @@ let supportsVision = true;
 // caller can forget to pass it), which is what this stands in for.
 vi.mock("../provider-catalog", () => ({
   useActiveProvider: () => ({ supportsVision }),
+}));
+
+// Whether the provider's model can think deeper is the capability table's
+// answer (deep-thinking.ts); the storage half stays real.
+let canThinkDeeper = true;
+vi.mock("./deep-thinking", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  useCanThinkDeeper: (enabled: boolean) => enabled && canThinkDeeper,
 }));
 
 vi.mock("../../platform/ipc", async () => {
@@ -60,6 +77,7 @@ const labels = {
   modeRevise: "Revise",
   modeLabel: "Mode",
   webSearch: "Web search",
+  deepThinking: "Deep thinking",
 };
 
 type ComposerOptions = {
@@ -100,11 +118,14 @@ const imageAttachment: ChatAttachment = {
   dataBase64: "AAAA",
 };
 
+beforeAll(installTestLocalStorage);
 beforeEach(() => {
   pickAttachmentFile.mockReset();
   listSkills.mockReset().mockResolvedValue(null);
   listProjectFiles.mockReset().mockResolvedValue([]);
   supportsVision = true;
+  canThinkDeeper = true;
+  localStorage.clear();
 });
 
 // No vitest globals config, so RTL's auto-cleanup never registers - without
@@ -184,6 +205,7 @@ describe("ChatComposer selection chip", () => {
     expect(onSend).toHaveBeenCalledWith("tighten this", [], true, {
       mode: "review",
       webSearch: false,
+      thinking: "auto",
     });
   });
 
@@ -236,6 +258,83 @@ describe("ChatComposer selection chip", () => {
     expect(onSend).toHaveBeenCalledWith("research this", [], true, {
       mode: "write",
       webSearch: true,
+      thinking: "auto",
+    });
+  });
+});
+
+describe("ChatComposer Deep thinking", () => {
+  function send(text: string) {
+    fireEvent.change(screen.getByPlaceholderText("Ask anything"), {
+      target: { value: text },
+    });
+    fireEvent.click(screen.getByText("Send"));
+  }
+
+  it("asks for deep thinking while pressed, and stays pressed", () => {
+    const { onSend, unmount } = renderComposer();
+    const button = screen.getByRole("button", { name: "Deep thinking" });
+    expect(button).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(button);
+    send("think hard");
+    expect(onSend).toHaveBeenLastCalledWith("think hard", [], true, {
+      mode: "review",
+      webSearch: false,
+      thinking: "deep",
+    });
+    // A new conversation, another document, the detached window: still on.
+    unmount();
+    const next = renderComposer();
+    expect(
+      screen.getByRole("button", { name: "Deep thinking" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Deep thinking" }));
+    send("quick one");
+    expect(next.onSend).toHaveBeenLastCalledWith("quick one", [], true, {
+      mode: "review",
+      webSearch: false,
+      thinking: "auto",
+    });
+  });
+
+  it("has no button, and no Deep, for a model that can't think deeper", () => {
+    localStorage.setItem("textus-agent-deep-thinking", "1");
+    canThinkDeeper = false;
+    const { onSend } = renderComposer();
+    expect(screen.queryByRole("button", { name: "Deep thinking" })).toBeNull();
+    send("hi");
+    expect(onSend).toHaveBeenLastCalledWith("hi", [], true, {
+      mode: "review",
+      webSearch: false,
+      thinking: "auto",
+    });
+  });
+
+  it("asks Quick Ask's model for a fast answer, with no button", () => {
+    localStorage.setItem("textus-agent-deep-thinking", "1");
+    const onSend = vi.fn();
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText={null}
+        busy={false}
+        labels={labels}
+        defaultMode="revise"
+        modes={["revise", "review"]}
+        compact
+        defaultWebSearch={false}
+        onSend={onSend}
+        onStop={() => {}}
+        onEscape={() => {}}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Deep thinking" })).toBeNull();
+    send("shorten");
+    expect(onSend).toHaveBeenLastCalledWith("shorten", [], true, {
+      mode: "revise",
+      webSearch: false,
+      thinking: "fast",
     });
   });
 });
@@ -306,7 +405,7 @@ describe("ChatComposer attachments", () => {
       "what is this?",
       [imageAttachment],
       true,
-      { mode: "review", webSearch: false },
+      { mode: "review", webSearch: false, thinking: "auto" },
     );
     await waitFor(() =>
       expect(screen.queryByText("chart.png")).not.toBeInTheDocument(),
@@ -411,7 +510,7 @@ describe("ChatComposer pickers", () => {
       '<skill name="continue-story" typed="/续写"></skill>\n\n林晚走进书店',
       [],
       true,
-      { mode: "review", webSearch: false },
+      { mode: "review", webSearch: false, thinking: "auto" },
     );
   });
 
