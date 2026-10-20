@@ -199,6 +199,15 @@ pub fn long_doc_zh() -> String {
     doc.trim_end().to_string()
 }
 
+/// The first eight chapters of long_doc_zh: about 28,000 characters, which
+/// used to be embedded whole and is now past the full-document limit in
+/// token-like units (agent::FULL_DOCUMENT_LIMIT).
+pub fn mid_doc_zh() -> String {
+    let doc = long_doc_zh();
+    let end = doc.find("## 第九章").expect("chapter 9");
+    doc[..end].trim_end().to_string()
+}
+
 /// Chapter 7's second paragraph in long_doc_zh: wordy, with the figures an
 /// edit must keep.
 pub const LONG_ZH_TARGET: &str = "在整个试点推进的过程当中，我们的工作人员前前后后一共走访了青石巷街道的 214 户居民，花了差不多整整三个月的时间，一家一家地上门去听取大家对改造方案的意见和建议，最后发现大家普遍反映最集中、最关心的问题，其实主要还是集中在改造期间的临时安置和改造完成之后房租会不会上涨这两个方面。";

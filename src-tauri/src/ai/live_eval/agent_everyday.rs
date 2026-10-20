@@ -10,7 +10,7 @@ use super::agent_matrix::{
     edit_anywhere, edit_in, either, inserted, no_edit, proposed_text, with_cursor, AgentCase,
     Expect,
 };
-use super::checks::{self, Lang, StructureExpect};
+use super::checks::{self, Caret, Lang, StructureExpect};
 use super::docs::*;
 use super::harness::TurnOutcome;
 use crate::ai::agent::AgentMode;
@@ -276,6 +276,20 @@ fn zh_cases() -> Vec<AgentCase> {
     c.push(AgentCase::new("long/zh/question-middle", Lang::ZhHans, Lang::ZhHans, &long, "第七章里，试点一共走访了多少户居民？", no_edit().reply(&["214"]).check("read the section", |o| {
         o.tools.iter().any(|t| t == "read_document" || t == "search_document").then_some(()).ok_or_else(|| "answered without reading".into())
     }), "Expect the agent to read/search chapter 7 and answer: 214 households in 青石巷 (over about three months), in Chinese, no edit."));
+
+    // A 28k-character document: whole until the limit counted Chinese as
+    // three, now the outline and the section the cursor is in - nothing it
+    // needs may go missing. The cursor is in chapter 7, as when the user
+    // works there.
+    let mid = mid_doc_zh();
+    let ch7 = mid.find("## 第七章").expect("chapter 7") + 3;
+    let at_ch7 = Caret {
+        cursor: Some(ch7),
+        selection: None,
+    };
+    c.push(AgentCase::new("long/zh/mid-edit", Lang::ZhHans, Lang::ZhHans, &mid, "把第七章第二段改得简洁一些，数字别丢。", edit_in(LONG_ZH_TARGET, StructureExpect::Same).shorter().has(&["214", "青石巷"]).tools(&[]), "A 28k-character Chinese report, cursor in chapter 7: one edit to chapter 7's second paragraph (214 households in 青石巷 over three months, the two concerns: temporary housing and rent after renovation), clearly shorter, nothing else touched.").caret(at_ch7));
+    c.push(AgentCase::new("long/zh/mid-question", Lang::ZhHans, Lang::ZhHans, &mid, "第七章里，试点一共走访了多少户居民？", no_edit().reply(&["214"]), "Expect the answer from chapter 7: 214 households in 青石巷 (over about three months), in Chinese, no edit."));
+    c.push(AgentCase::new("long/zh/mid-question-elsewhere", Lang::ZhHans, Lang::ZhHans, &mid, "第七章第二段提到的两个主要问题是什么？", no_edit().reply(&["安置", "房租"]), "The cursor isn't in chapter 7 (the section shown is the document's start): expect the agent to read or search chapter 7 and name the two concerns - temporary housing during renovation and rent rising afterwards - in Chinese, no edit."));
 
     // Quick Ask on a selection (the inline widget).
     c.push(AgentCase::new("quick/zh/selection-shorten", Lang::ZhHans, Lang::ZhHans, ESSAY_ZH, "缩短一点", edit_anywhere().shorter().check("edit inside the selection", in_selection), "Quick Ask on the selected second paragraph: expect one replace_selection (or an equivalent replace) shortening exactly the selection, the voice kept, nothing outside it touched.").quick(p2));

@@ -304,12 +304,17 @@ pub(crate) fn app_guide() -> String {
     )
 }
 
-/// Up to this many characters the document is embedded in full; past it,
-/// the prompt gets a line-numbered outline plus a head/tail excerpt, and the
-/// model reads what it needs through read_document / search_document
-/// (tools.rs), which always work on the full text. Raised from 16k: that
-/// cut ordinary chapters down to 3k characters of visible text, and the
-/// Anthropic path now caches the prompt across tool steps.
+/// Up to this much the document is embedded in full; past it, the prompt
+/// gets a line-numbered outline plus a head/tail excerpt (and the section
+/// the user is working in), and the model reads what it needs through
+/// read_document / search_document (tools.rs), which always work on the
+/// full text. Raised from 16k: that cut ordinary chapters down to 3k
+/// characters of visible text, and the Anthropic path now caches the
+/// prompt across tool steps. Counted in characters with Chinese, Japanese
+/// and Korean ones as 3 (project::char_units, as read_file counts) where
+/// the model can read on: by characters, a Chinese chapter of 39,000 was
+/// sent whole, about 40,000 tokens in every message (docs/design/ai-tokens.md,
+/// item 3). Without tools there is no reading on, so characters it stays.
 const FULL_DOCUMENT_LIMIT: usize = 40_000;
 const EXCERPT_CHARS: usize = 2_000;
 const MAX_OUTLINE_HEADINGS: usize = 120;
@@ -363,7 +368,12 @@ pub(crate) fn document_section(
     focus_heading: Option<&str>,
 ) -> String {
     let len = document.chars().count();
-    if len <= FULL_DOCUMENT_LIMIT {
+    let size = if with_tools {
+        document.chars().map(crate::ai::project::char_units).sum()
+    } else {
+        len
+    };
+    if size <= FULL_DOCUMENT_LIMIT {
         return format!("---document---\n{document}");
     }
     let focus = focus_heading
@@ -1637,6 +1647,31 @@ mod tests {
         let doc = "中".repeat(FULL_DOCUMENT_LIMIT + 500);
         let section = document_section(&doc, true, None);
         assert!(section.contains('中'));
+    }
+
+    /// A Chinese document is about a token a character: past a third of the
+    /// limit it is outlined, with the section being edited, where the
+    /// model can read on - and sent whole where it can't.
+    #[test]
+    fn a_long_cjk_document_is_outlined_by_its_token_weight() {
+        let mut doc = String::from("# 报告\n\n");
+        for i in 0..20 {
+            doc.push_str(&format!("## 第{i}节\n\n{}\n\n", "调研数据。".repeat(150)));
+        }
+        doc.push_str("## 目标\n\n用户正在改的段落。");
+        let chars = doc.chars().count();
+        assert!(chars > FULL_DOCUMENT_LIMIT / 3 && chars < FULL_DOCUMENT_LIMIT);
+        let with_tools = document_section(&doc, true, Some("目标"));
+        assert!(with_tools.contains("truncated"));
+        assert!(with_tools.contains("用户正在改的段落。"));
+        assert!(with_tools.chars().count() < chars / 2);
+        assert_eq!(
+            document_section(&doc, false, None),
+            format!("---document---\n{doc}")
+        );
+        // The same length of English is still sent whole.
+        let english = "x".repeat(chars);
+        assert!(!document_section(&english, true, None).contains("truncated"));
     }
 
     #[test]

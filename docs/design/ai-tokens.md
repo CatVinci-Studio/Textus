@@ -272,3 +272,12 @@ with the live eval (Sonnet 5.5, `TEXTUS_EVAL_JUDGE=0`) on the same cases.
   `count_tokens` unavailable, measured on Doubao's tokenizer: the same
   Review request went from 6,418 to 4,558 prompt tokens. On Doubao, concept
   and routing cases: 7/8 and 15/20 before, 8/8 and 17/20 after.
+- **Item 3, long CJK documents by token weight.** Where the model can read
+  on, the full-document limit counts Chinese, Japanese and Korean
+  characters as 3 (as read_file does), so a CJK document past about 13,000
+  characters gets the outline, the start and end and the section the user
+  is in. On a 28,000-character Chinese report (new cases
+  `long/zh/mid-edit`, `mid-question`, `mid-question-elsewhere`), Doubao:
+  5/5 long/zh cases before and after; a message's uncached input fell from
+  about 23,100 tokens (sent whole) to about 5,500-6,100 (outline, then
+  read_document), and its cost by about half, at one more request.

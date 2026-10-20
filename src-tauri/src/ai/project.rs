@@ -325,7 +325,7 @@ fn document_text(path: &Path) -> Result<Arc<String>, String> {
 /// A character's weight in MAX_READ_UNITS: Chinese, Japanese and Korean
 /// characters are about a token each where English takes about four
 /// letters to one, so they count 3.
-fn char_units(c: char) -> usize {
+pub(crate) fn char_units(c: char) -> usize {
     match c {
         '\u{1100}'..='\u{11ff}'
         | '\u{2e80}'..='\u{9fff}'
