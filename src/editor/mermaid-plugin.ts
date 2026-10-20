@@ -10,7 +10,7 @@ import {
   type RevealState,
   type Touches,
 } from "./reveal-state";
-import { isLargeDoc } from "./large-doc";
+import { isLargeDoc, pausesFeatures } from "./large-doc";
 import { registerDrawAll } from "./draw-when-visible";
 import { appearanceIsDark, diagramRenderer } from "./diagram-engine";
 import {
@@ -380,7 +380,7 @@ export function createMermaidPreviewPlugin(options: {
             // Large-doc mode (4.1): existing diagrams stay pinned (their
             // cached SVG is keyed by source text, untouched here) - only new
             // re-render passes, the expensive part, stop scheduling.
-            if (isLargeDoc(view.state.doc)) return;
+            if (pausesFeatures(view.state.doc)) return;
             if (debounceTimer) clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => void renderAll(), DEBOUNCE_MS);
           },

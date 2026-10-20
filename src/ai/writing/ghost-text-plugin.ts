@@ -4,7 +4,7 @@ import { ReplaceStep } from "@milkdown/kit/prose/transform";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent } from "../../editor/marks/enclosure";
-import { isLargeDoc } from "../../editor/large-doc";
+import { pausesFeatures } from "../../editor/large-doc";
 import { createDebouncedTask } from "./debounced-task";
 import { hasPendingEdits } from "../revision/pending-edit-plugin";
 import { ai, type CompletionHints } from "../../platform/ipc";
@@ -635,7 +635,7 @@ export function createGhostTextPlugin(options: {
               // A suggestion is still on offer right here (say, the rest
               // after accepting one word): asking again would replace it.
               if (pinned) return;
-              if (isLargeDoc(view.state.doc)) return;
+              if (pausesFeatures(view.state.doc)) return;
               if (
                 view.state.doc.eq(prevState.doc) &&
                 view.state.selection.eq(prevState.selection)
