@@ -144,7 +144,7 @@ Outre l'éditeur WYSIWYG et le mode source (`Cmd+/`), Textus offre trois façons
 
 - **Vue partagée** (`Cmd+Shift+E`) : la source Markdown à gauche, l'aperçu mis en forme à droite, qui défilent ensemble.
 - **Mode machine à écrire** (Réglages → Éditeur et apparence → Affichage) : la ligne que vous tapez reste au milieu de la fenêtre, dans l'éditeur, en mode source comme en vue partagée.
-- **Mode zen** (`Cmd+Shift+J`) : masque tout sauf le texte, passe en plein écran et atténue tous les paragraphes sauf celui que vous écrivez. Appuyez sur `Esc` pour en sortir.
+- **Mode zen** (`Cmd+Shift+J`) : masque tout sauf le texte et atténue tous les paragraphes sauf celui que vous écrivez. Appuyez sur `Esc` pour en sortir.
 
 Les trois se trouvent aussi dans le menu **Présentation**.
 

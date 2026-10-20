@@ -144,7 +144,7 @@ Además del editor WYSIWYG y del modo código fuente (`Cmd+/`), Textus ofrece tr
 
 - **Vista dividida** (`Cmd+Shift+E`): el código Markdown a la izquierda y la vista previa a la derecha, con el desplazamiento sincronizado.
 - **Modo máquina de escribir** (Ajustes → Editor y aspecto → Visualización): la línea que escribes se queda en el centro de la ventana, en el editor, en el modo código fuente y en la vista dividida.
-- **Modo zen** (`Cmd+Shift+J`): oculta todo menos el texto, pasa a pantalla completa y atenúa todos los párrafos salvo el que estás escribiendo. Pulsa `Esc` para salir.
+- **Modo zen** (`Cmd+Shift+J`): oculta todo menos el texto y atenúa todos los párrafos salvo el que estás escribiendo. Pulsa `Esc` para salir.
 
 Los tres están también en el menú **Visualización**.
 

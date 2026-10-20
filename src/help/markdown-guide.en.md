@@ -144,7 +144,7 @@ Besides the WYSIWYG editor and source mode (`Cmd+/`), Textus has three ways to w
 
 - **Split view** (`Cmd+Shift+E`): the Markdown source on the left, the rendered preview on the right, scrolling together.
 - **Typewriter mode** (Settings → Editor & Appearance → Theme): the line you are typing stays in the middle of the window — in the editor, source mode and split view.
-- **Zen mode** (`Cmd+Shift+J`): hides everything but the text, goes fullscreen and dims every paragraph except the one you are writing. Press `Esc` to leave.
+- **Zen mode** (`Cmd+Shift+J`): hides everything but the text and dims every paragraph except the one you are writing. Press `Esc` to leave.
 
 All three are also in the **View** menu.
 

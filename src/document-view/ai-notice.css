@@ -27,9 +27,19 @@ body {
   background: var(--bg);
 }
 
+/* The window never scrolls as a whole. `clip`, not `hidden`: a hidden box
+   still scrolls when something in it is focused or scrolled into view past
+   its edge, which shifted the whole window sideways. And no rubber band:
+   a swipe that reached the end of the sidebar's list bounced the whole
+   page on a Mac. */
+html,
+body {
+  overscroll-behavior: none;
+}
+
 .app-shell {
   position: relative;
   display: flex;
   height: 100vh;
-  overflow: hidden;
+  overflow: clip;
 }

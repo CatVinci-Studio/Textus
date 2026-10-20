@@ -13,17 +13,9 @@
   background: var(--editor-bg, var(--bg));
   border-left: 1px solid var(--border-color);
   color: var(--editor-text);
-  /* It takes its full width at once - the editor glides aside (App.tsx's
-     FlipOnChange) - and slides into it from just beside it. Never a width
-     animation: that reflowed the whole document on every frame. */
-  animation: motion-nudge-in-end var(--dur-slow) var(--ease-out);
-}
-
-/* It leaves the way it came, in its own place; the editor takes the room
-   back once it has gone, rather than sliding in under it while it still
-   shows. */
-.agent-panel[data-state="closing"] {
-  animation: motion-nudge-out-end var(--dur-base) var(--ease-in) forwards;
+  /* No slide: it takes its width at once, and the editor its new room
+     (useSidePanels). On a Mac the slide, with the editor gliding aside,
+     squeezed the page and pushed it back, and flashed as it ended. */
 }
 
 .agent-panel-mount {
@@ -242,25 +234,8 @@
   }
 }
 
-/* Narrow windows - or a small one with the sidebar open too
-   (useSidePanels.ts's agentOverlays): the editor keeps priority; the panel
-   overlays it instead of squeezing the text column to nothing - in from
-   the window's edge on a spring, and back out. */
-.agent-panel.agent-panel-overlay {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 40;
-  max-width: 92vw;
-  box-shadow: -8px 0 24px rgb(0 0 0 / 0.18);
-  animation: motion-edge-in-end var(--dur-slow) var(--ease-spring);
-}
-
-.agent-panel.agent-panel-overlay[data-state="closing"] {
-  animation: motion-edge-out-end var(--dur-base) var(--ease-in) forwards;
-}
-
+/* Narrow windows: the panel lies over the page instead of squeezing the
+   text column to nothing. */
 @media (max-width: 760px) {
   .agent-panel {
     position: absolute;
