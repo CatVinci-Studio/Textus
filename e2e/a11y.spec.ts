@@ -365,6 +365,89 @@ test.describe("axe, newer surfaces", () => {
   });
 });
 
+test.describe("the system's contrast settings", () => {
+  test("more contrast: secondary text as the text, new text underlined", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ contrast: "more" });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await open(page, "light", true);
+    const vars = await page.evaluate(() => {
+      const style = getComputedStyle(document.documentElement);
+      const read = (name: string) => style.getPropertyValue(name).trim();
+      return {
+        muted: read("--editor-muted"),
+        text: read("--editor-text"),
+        chromeMuted: read("--chrome-muted"),
+        chromeText: read("--chrome-text"),
+      };
+    });
+    expect(vars.muted).toBe(vars.text);
+    expect(vars.chromeMuted).toBe(vars.chromeText);
+    await propose(page);
+    await expect(page.locator(`${editor} .pending-insert`).first()).toHaveCSS(
+      "text-decoration-line",
+      "underline",
+    );
+    await scan(page, "proposal, more contrast");
+  });
+
+  test("forced colours: the edges stay where shadows and tints were", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ forcedColors: "active" });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await open(page, "dark", true);
+    await propose(page);
+    await expect(page.locator(".review-bar")).toHaveCSS(
+      "border-top-style",
+      "solid",
+    );
+    await expect(page.locator(`${editor} .pending-insert`).first()).toHaveCSS(
+      "text-decoration-line",
+      "underline",
+    );
+    await expect(page.locator(`${editor} .pending-delete`).first()).toHaveCSS(
+      "text-decoration-line",
+      "line-through",
+    );
+  });
+});
+
+test("reduced motion: the review bar fades in, without travel or scale", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript((files) => {
+    (window as unknown as { __devFs: unknown }).__devFs = files;
+  }, FILES);
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "levis-agent-panel-open": "1" },
+    animations: true,
+  });
+  // Every transform the bar shows as it comes in, one per frame.
+  await page.evaluate(() => {
+    const seen: string[] = [];
+    (window as unknown as { __seen: string[] }).__seen = seen;
+    const frame = () => {
+      const bar = document.querySelector(".review-bar");
+      if (bar) seen.push(getComputedStyle(bar).transform);
+      if (seen.length < 30) requestAnimationFrame(frame);
+    };
+    frame();
+  });
+  await propose(page);
+  const seen = await page.evaluate(
+    () => (window as unknown as { __seen: string[] }).__seen,
+  );
+  expect(seen.length).toBeGreaterThan(0);
+  // translateX(-50%) alone: a scale of 1 and no vertical travel.
+  for (const transform of Array.from(new Set(seen)))
+    expect(transform).toMatch(/^matrix\(1, 0, 0, 1, -?[\d.]+, 0\)$/);
+});
+
 test("the editor is a labelled, multi-line text box", async ({ page }) => {
   await open(page);
   const box = page.getByRole("textbox", { name: "Document" });

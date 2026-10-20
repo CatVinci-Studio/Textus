@@ -230,8 +230,56 @@
     outline-width: 3px !important;
   }
 
+  /* Secondary text as dark (or light) as the text itself, and revisions
+     marked by line as well as by tint: the system asked for contrast,
+     and following it is the high-contrast variant - no setting of our
+     own. */
   :root:root:root {
     --border-color: var(--chrome-muted);
+    --chrome-muted: var(--chrome-text);
+    --editor-muted: var(--editor-text);
+    --sidebar-text: var(--chrome-text);
+    --revision-delete-text: currentColor;
+  }
+}
+
+/* Windows High Contrast and other forced colours: the system draws every
+   colour, backgrounds and shadows go. What a shadow or a tint showed, a
+   border or a line shows instead - the edge of a card or a bar, the row
+   or tab that is chosen. The revisions' own lines are in
+   milkdown-theme.css. */
+@media (forced-colors: active) {
+  :where(
+    .review-bar,
+    .review-note,
+    .close-prompt,
+    .bottom-card,
+    .settings-panel,
+    .agent-panel,
+    .tab-pill-active,
+    .tree-row-active,
+    .sidebar-tab-active,
+    .settings-nav-item-active
+  ) {
+    border: 1px solid CanvasText;
+  }
+
+  :where(.tree-row-active, .tab-pill-active, [aria-selected="true"]) {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  :where(
+    button,
+    a,
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex]
+  ):focus-visible {
+    outline-color: Highlight;
   }
 }
 
