@@ -166,8 +166,9 @@
     var(--ease-spring);
 }
 
-/* A dragged edge is followed at once, not caught up with. */
-:root:has(.sidebar-resizer.resize-handle-active)
+/* A dragged edge is followed at once, not caught up with
+   (ResizeHandle.tsx marks the root). */
+:root[data-resizing~="sidebar-resizer"]
   .window-bar
   :is(.window-bar-left, .window-bar-title) {
   transition: none;

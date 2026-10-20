@@ -135,8 +135,11 @@
 }
 
 /* ...except right below the header, where a rule would just box in two
-   small buttons for no information. */
-.inline-chat-header + * {
+   small buttons for no information. Said from the shell: a bare
+   ".inline-chat-header + *" made Chromium restyle every following sibling
+   of an element added anywhere - Enter in a 5k-block document recalculated
+   the style of all its blocks. */
+.inline-chat-shell > .inline-chat-header + * {
   border-top: none;
 }
 

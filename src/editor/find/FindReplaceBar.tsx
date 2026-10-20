@@ -169,6 +169,7 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
           <div className="find-replace-nav">
             <button
               type="button"
+              className="find-replace-text"
               onClick={findReplace.replaceOne}
               disabled={status.matchCount === 0}
             >
@@ -176,6 +177,7 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
             </button>
             <button
               type="button"
+              className="find-replace-text"
               onClick={findReplace.replaceAll}
               disabled={status.matchCount === 0}
             >
