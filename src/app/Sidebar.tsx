@@ -68,6 +68,7 @@ export function Sidebar({
       </Presence>
       <aside
         ref={presence.ref}
+        aria-label={t.menuToggleSidebar}
         className={`sidebar ${open ? "" : "sidebar-collapsed"} ${spotlight ? "tutorial-spotlight" : ""}`}
       >
         {/* Contents only render while open (and inert while the sidebar

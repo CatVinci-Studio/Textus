@@ -2,6 +2,7 @@ import {
   useCallback,
   useDeferredValue,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -154,6 +155,7 @@ export function FileSearch({
     [index, deferredQuery, scope],
   );
   const active = Math.min(selected, Math.max(matches.length - 1, 0));
+  const listId = useId();
 
   const open = (entry: SearchEntry | undefined) => {
     if (entry) onOpen(entry.path);
@@ -190,7 +192,17 @@ export function FileSearch({
             value={query}
             placeholder={t.treeSearchPlaceholder}
             aria-label={t.treeSearchPlaceholder}
-            aria-controls="file-search-results"
+            // A combobox: the focus stays in the box while ↑/↓ move
+            // through the results, which a screen reader follows here.
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={searching}
+            aria-controls={searching ? listId : undefined}
+            aria-activedescendant={
+              searching && matches.length > 0
+                ? `${listId}-${active}`
+                : undefined
+            }
             spellCheck={false}
             autoComplete="off"
             onFocus={ensure}
@@ -219,7 +231,7 @@ export function FileSearch({
       </div>
       {searching && (
         <div
-          id="file-search-results"
+          id={listId}
           className="file-search-results"
           role="listbox"
           aria-label={t.treeSearchPlaceholder}
@@ -229,8 +241,10 @@ export function FileSearch({
             return (
               <button
                 key={entry.path}
+                id={`${listId}-${i}`}
                 role="option"
                 aria-selected={i === active}
+                tabIndex={-1}
                 className={`tree-row file-search-row ${i === active ? "tree-row-active" : ""}`}
                 title={entry.rel}
                 // Keeps the keyboard in the box, so ↑/↓ and Enter go on

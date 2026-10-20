@@ -90,6 +90,12 @@ function makeInsertButton(className: string): HTMLButtonElement {
   button.className = className;
   button.contentEditable = "false";
   button.innerHTML = PLUS_ICON_HTML;
+  // A pointer's shortcut only, pressed on mousedown: the keyboard and a
+  // screen reader add rows and columns from the context menu (Shift+F10),
+  // which has the same commands, so these stay out of the tab order and
+  // out of the accessibility tree.
+  button.tabIndex = -1;
+  button.setAttribute("aria-hidden", "true");
   return button;
 }
 

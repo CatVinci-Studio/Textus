@@ -86,7 +86,12 @@ export function useTextusEditor({
     (root) =>
       withEditorExtensions(
         Editor.make().config((ctx) => {
-          configureEditorRoot(ctx, root, initialValue);
+          configureEditorRoot(
+            ctx,
+            root,
+            initialValue,
+            () => tRef.current.editorLabel,
+          );
           ctx
             .get(listenerCtx)
             .mounted((ctx) => {

@@ -157,11 +157,10 @@ export function ProviderListPanel({
           aria-expanded={open}
           aria-controls={open ? popoverId : undefined}
           onClick={() => setOpen((v) => !v)}
-          aria-label={`${t.providerDropdownLabel}: ${active ? localizedLabel(active, t) : settings.aiProvider}`}
         >
           <span className="provider-disclosure-label">
             {t.providerDropdownLabel}
-          </span>
+          </span>{" "}
           <span className="combobox-trigger-label">
             {active ? localizedLabel(active, t) : settings.aiProvider}
           </span>
@@ -215,11 +214,10 @@ export function ProviderListPanel({
             className="provider-auth-trigger"
             onClick={() => setAuthOpen((v) => !v)}
             aria-expanded={authOpen}
-            aria-label={`${t.authDropdownLabel}: ${statusLabel}`}
           >
             <span className="provider-disclosure-label">
               {t.authDropdownLabel}
-            </span>
+            </span>{" "}
             <span
               className={`status-pill${isConnected ? " status-pill-connected" : ""}`}
             >

@@ -39,6 +39,7 @@ import { useEditorClipboard } from "../editor/useEditorClipboard";
 import { useAiActions } from "../ai/writing/useAiActions";
 import { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
 import { ReviewBar } from "../ai/revision/ReviewBar";
+import { useRevisionAnnouncements } from "../ai/revision/useRevisionAnnouncements";
 import {
   RevisionLearningBar,
   useRevisionLearning,
@@ -372,6 +373,15 @@ export function MilkdownEditor({
     quickAskVisible: inlineChat.visible,
     panelContainer,
     agentPanel,
+  });
+
+  useRevisionAnnouncements({
+    active: isActive,
+    stops: pendingEdits.reviewStops.length,
+    streaming: pendingEdits.reviewStreaming,
+    position: pendingEdits.stopIndex,
+    t,
+    lang: settings.language,
   });
 
   const notes = useReviewNotes({

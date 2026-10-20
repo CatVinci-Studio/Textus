@@ -101,6 +101,23 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatHistoryUnsaved: "Nicht gespeicherte Dokumente",
   proposalAcceptSome: "{k} von {n} annehmen",
   proposalChangeCount: "{n} Änderungen",
+  editorLabel: "Dokument",
+  codeBlockLanguage: "Sprache des Codes",
+  announceAiWriting: `${AI_NAME} schreibt…`,
+  announceAiDone: `${AI_NAME} ist fertig.`,
+  announceChangesProposed: {
+    one: "{n} Änderung vorgeschlagen.",
+    other: "{n} Änderungen vorgeschlagen.",
+  },
+  announceChangesAccepted: {
+    one: "{n} Änderung angenommen.",
+    other: "{n} Änderungen angenommen.",
+  },
+  announceChangesRejected: {
+    one: "{n} Änderung abgelehnt.",
+    other: "{n} Änderungen abgelehnt.",
+  },
+  announceChangePosition: "Änderung {i} von {n}.",
   proposalTakeSentence: "Diesen Satz annehmen",
   proposalKeepSentence: "Original behalten",
   proposalShowInText: "Im Text zeigen",

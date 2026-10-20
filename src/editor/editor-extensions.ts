@@ -100,18 +100,28 @@ import type { Settings } from "../settings/SettingsContext";
 
 /** Where the editor mounts and what it opens with, plus the two DOM details
  *  the stylesheets rely on - shared by the app's editor and the browser
- *  playground's. Called from `Editor.make().config(...)`. */
+ *  playground's. Called from `Editor.make().config(...)`. `label` names
+ *  the text box for a screen reader in the interface language; it is read
+ *  on every update, so a language switch reaches it. */
 export function configureEditorRoot(
   ctx: Ctx,
   root: HTMLElement,
   initialValue: string,
+  label: () => string,
 ): void {
   ctx.set(rootCtx, root);
   ctx.set(defaultValueCtx, initialValue);
   // Typora-compatible themes style their content under `#write` - aliasing
   // it here lets most community Typora themes' CSS apply directly to our
   // content with no rewriting.
-  ctx.set(editorViewOptionsCtx, { attributes: { id: "write" } });
+  ctx.set(editorViewOptionsCtx, {
+    attributes: () => ({
+      id: "write",
+      role: "textbox",
+      "aria-multiline": "true",
+      "aria-label": label(),
+    }),
+  });
   // A list starting somewhere other than 1 ("3. ") is the one thing the DOM
   // structure alone doesn't tell the counter that numbers ordered lists
   // (see .milkdown ol in milkdown-theme.css), so the node's `order` rides
@@ -278,7 +288,11 @@ export function withEditorCore(
       .use(
         createCodeBlockView(() => {
           const t = resolveStrings(settings.current.language);
-          return { copy: t.codeBlockCopy, copied: t.codeBlockCopied };
+          return {
+            copy: t.codeBlockCopy,
+            copied: t.codeBlockCopied,
+            language: t.codeBlockLanguage,
+          };
         }),
       )
       .use(

@@ -103,10 +103,10 @@ describe("ProviderAuthPanel", () => {
     render(<ProviderListPanel t={resolveStrings("en")} />);
 
     expect(
-      screen.getByRole("button", { name: /Provider: Google Gemini/i }),
+      screen.getByRole("button", { name: /Provider Google Gemini/i }),
     ).toBeInTheDocument();
     const credentials = screen.getByRole("button", {
-      name: /Login & credentials: Not configured/i,
+      name: /Login & credentials Not configured/i,
     });
     expect(screen.queryByPlaceholderText("sk-…")).not.toBeInTheDocument();
 
@@ -121,7 +121,7 @@ describe("ProviderAuthPanel", () => {
       </div>,
     );
     const trigger = screen.getByRole("button", {
-      name: /Provider: Google Gemini/i,
+      name: /Provider Google Gemini/i,
     });
     fireEvent.click(trigger);
     fireEvent.keyDown(

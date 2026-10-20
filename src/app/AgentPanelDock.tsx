@@ -45,6 +45,7 @@ export function AgentPanelDock({
   return (
     <aside
       ref={presence.ref}
+      aria-label={t.agentPanelTitle}
       data-state={presence.state}
       inert={closing || undefined}
       className={`agent-panel${sheetFull ? " agent-panel-sheet-full" : ""}${overlays ? " agent-panel-overlay" : ""}`}

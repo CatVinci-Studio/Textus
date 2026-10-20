@@ -62,7 +62,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 600;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .tree-tool {
@@ -159,7 +159,7 @@
      ("…/chapters/part-2"). The <bdi> inside keeps its text in order. */
   direction: rtl;
   font-size: var(--text-xs);
-  opacity: 0.6;
+  opacity: 0.9;
 }
 
 .file-search-note {

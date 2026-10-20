@@ -1322,11 +1322,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 /* Syntax highlighting tokens (via refractor/Prism token classes) */
 :root {
-  --token-string: #5f8b4c;
-  --token-number: #b0742d;
-  --token-keyword: #a15bbf;
-  --token-function: #3a6bd6;
-  --token-tag: #c1495a;
+  --token-string: #457236;
+  --token-number: #8f5a1c;
+  --token-keyword: #8a46a8;
+  --token-function: #3462cc;
+  --token-tag: #a83a4b;
 }
 
 .milkdown .token.comment,
@@ -1399,11 +1399,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
    (SettingsContext sets data-light-page): the dark tokens above would be
    pale on that white page. */
 :root[data-light-page] {
-  --token-string: #5f8b4c;
-  --token-number: #b0742d;
-  --token-keyword: #a15bbf;
-  --token-function: #3a6bd6;
-  --token-tag: #c1495a;
+  --token-string: #457236;
+  --token-number: #8f5a1c;
+  --token-keyword: #8a46a8;
+  --token-function: #3462cc;
+  --token-tag: #a83a4b;
 }
 
 :root[data-light-page] .milkdown {

@@ -125,7 +125,7 @@ describe("the connect lesson", () => {
     ).toBeInTheDocument();
     // The Settings controls, credentials already open.
     expect(
-      screen.getByRole("button", { name: /Provider: OpenAI/ }),
+      screen.getByRole("button", { name: /Provider OpenAI/ }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Sign in with OpenAI" }),

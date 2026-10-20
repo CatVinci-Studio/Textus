@@ -35,8 +35,8 @@ interface TabBarProps {
   // tabs sliding out of its way, exactly like a within-bar reorder. On
   // release it becomes the real tab in that same slot.
   previewTab: { title: string; dirty: boolean; x: number } | null;
-  /** What the icon-only buttons' tooltips say. */
-  labels: { close: string; add: string };
+  /** What the icon-only buttons' tooltips and a screen reader say. */
+  labels: { close: string; add: string; unsaved: string };
 }
 
 // How far a tab must be dragged vertically, away from the bar, before it
@@ -465,7 +465,13 @@ function TabPill({
         if (e.target === e.currentTarget) e.currentTarget.dataset.entered = "";
       }}
     >
-      {tab.dirty && <span className="tab-pill-dirty-dot" />}
+      {tab.dirty && (
+        <span
+          className="tab-pill-dirty-dot"
+          role="img"
+          aria-label={labels.unsaved}
+        />
+      )}
       <span className="tab-pill-title">{title}</span>
       <Tooltip text={labels.close}>
         <button

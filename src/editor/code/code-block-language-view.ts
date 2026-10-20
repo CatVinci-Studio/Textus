@@ -64,6 +64,7 @@ export function createCodeBlockView(
   labels: () => {
     copy: string;
     copied: string;
+    language: string;
   },
 ) {
   return $view(
@@ -112,6 +113,7 @@ export function createCodeBlockView(
 
       const select = document.createElement("select");
       select.className = "code-block-language-select";
+      select.setAttribute("aria-label", labels().language);
       for (const lang of LANGUAGES) {
         const opt = document.createElement("option");
         opt.value = lang;

@@ -13,6 +13,7 @@ import {
   type StreamEvent,
 } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
+import { announce } from "../../ui/announce";
 import { useSettings, type AgentMode } from "../../settings/SettingsContext";
 import { imageModelOf } from "../image-models";
 
@@ -121,7 +122,7 @@ export function useAgentConversation(
   };
   const [busy, setBusy] = useState(false);
   const onStreamEventRef = useLatest(onStreamEvent);
-  const { settings } = useSettings();
+  const { settings, t } = useSettings();
   // The agent is told the UI's names for things in this language.
   const uiLanguage = useLatest(settings.language);
   // generate_image is offered only with an image model.
@@ -131,6 +132,14 @@ export function useAgentConversation(
     searxngUrl: settings.searxngUrl,
   });
   const [error, setError] = useState<string | null>(null);
+  // A screen reader hears that Textus AI started and finished, or why it
+  // stopped; the reply itself is read in the conversation.
+  const wasBusy = useRef(false);
+  useEffect(() => {
+    if (busy) announce(t.announceAiWriting);
+    else if (wasBusy.current) announce(error ?? t.announceAiDone);
+    wasBusy.current = busy;
+  }, [busy, error, t]);
   const [retryable, setRetryable] = useState<RetryableSend | null>(null);
   // The in-flight request's id, for stop() to cancel by - null when nothing
   // is running.

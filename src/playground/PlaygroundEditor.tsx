@@ -11,6 +11,7 @@ import {
 import { useEditorRunner } from "../editor/useEditorRunner";
 import { useModeSwitchCaret } from "../editor/modes/useModeSwitchCaret";
 import { KatexFirst } from "../editor/math/KatexFirst";
+import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../settings/SettingsContext";
 import { useLatest } from "../utils/hooks/useLatest";
 import { normalizeMathDelimiters } from "../utils/markdown-math";
@@ -64,7 +65,12 @@ function MarkdownEditor({
     (root) =>
       withEditorCore(
         Editor.make().config((ctx) => {
-          configureEditorRoot(ctx, root, initialValue);
+          configureEditorRoot(
+            ctx,
+            root,
+            initialValue,
+            () => resolveStrings(settingsRef.current.language).editorLabel,
+          );
           ctx
             .get(listenerCtx)
             .mounted((ctx) => {
