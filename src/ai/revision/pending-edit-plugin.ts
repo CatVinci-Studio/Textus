@@ -6,6 +6,10 @@ import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { renderMarkdownInlineHtml } from "../../editor/markdown/render-html";
+import {
+  pendingDiagram,
+  splitMermaidFences,
+} from "../../editor/pending-diagram";
 import { StreamReveal } from "../stream-reveal";
 import {
   animate as animateElement,
@@ -341,19 +345,39 @@ function renderAnimation(anim: InsertAnimation) {
  * into a span of its own that carries the tint (`pending-insert-lines`),
  * and the breaks stand between them untinted: one inline box over several
  * lines painted its padding at every line end and a stub of colour on an
- * empty line, and the darker hover tint, a box per line, more so.
+ * empty line, and the darker hover tint, a box per line, more so. A
+ * ```mermaid fence stands between the lines too, as its diagram.
  */
 function renderPendingHtml(span: HTMLElement, markdown: string) {
-  span.innerHTML = renderMarkdownInlineHtml(markdown);
-  const nodes = [...span.childNodes];
-  const lines = nodes.some((n) => n.nodeName === "BR");
+  const parts = splitMermaidFences(markdown);
+  let nodes: Node[];
+  if (!parts) {
+    span.innerHTML = renderMarkdownInlineHtml(markdown);
+    nodes = [...span.childNodes];
+  } else {
+    // A ```mermaid fence is drawn as its diagram, in a box of its own
+    // between the lines (pending-diagram.ts). The same fence keeps its
+    // element across the typewriter's frames, and with it its drawing.
+    const previous = span.querySelectorAll<HTMLElement>(".pending-diagram");
+    let diagrams = 0;
+    nodes = parts.flatMap((part) => {
+      if (part.kind === "diagram")
+        return [pendingDiagram(part, previous[diagrams++])];
+      const html = document.createElement("template");
+      html.innerHTML = renderMarkdownInlineHtml(part.text);
+      return [...html.content.childNodes];
+    });
+  }
+  const lines = !!parts || nodes.some((n) => n.nodeName === "BR");
   span.classList.toggle("pending-insert-lines", lines);
   if (!lines) return;
   span.textContent = "";
   let line: HTMLElement | null = null;
   for (const node of nodes) {
     const blank = node.nodeType === Node.TEXT_NODE && !node.textContent?.trim();
-    if (node.nodeName === "BR" || (blank && !line)) {
+    const diagram =
+      node instanceof HTMLElement && node.classList.contains("pending-diagram");
+    if (node.nodeName === "BR" || diagram || (blank && !line)) {
       span.append(node);
       line = null;
       continue;

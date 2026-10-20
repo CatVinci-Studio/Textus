@@ -11,10 +11,17 @@ import {
 } from "./reveal-state";
 import { isLargeDoc } from "./large-doc";
 import { appearanceIsDark, diagramRenderer } from "./diagram-engine";
+import {
+  redrawPendingDiagrams,
+  registerPendingDrawer,
+} from "./pending-diagram";
 import type { DiagramEngine } from "../settings/SettingsContext";
 
 const mermaidKey = new PluginKey("mermaid-preview");
 const DEBOUNCE_MS = 500;
+/** Drawings of diagrams not in the document (pending-diagram.ts) kept for
+ *  when one is accepted - every streamed step of one lands here too. */
+const PENDING_KEPT = 30;
 // Render ids are unique across every editor, not per editor: two tabs
 // rendering at startup both used "mermaid-preview-1-0", and the first one
 // to finish removed the other's measuring node mid-render (renderMermaid's
@@ -87,6 +94,10 @@ export function createMermaidPreviewPlugin(options: {
     // source back until the next debounced render, even though the diagram
     // itself never changed.
     let lastRenders = new Map<string, Drawn>();
+    // What Textus AI's proposals drew (pending-diagram.ts), by source: an
+    // accepted diagram shows at once instead of as source until the next
+    // pass, which takes the drawing over instead of drawing it again.
+    const pendingDrawn = new Map<string, Drawn>();
     // The engine the last pass was started for: a change in Settings draws
     // every diagram again (view.update below).
     let drawnFor = options.engine();
@@ -107,7 +118,7 @@ export function createMermaidPreviewPlugin(options: {
       for (const { from, to, code } of collectMermaidBlocks(state.doc)) {
         const nth = seen.get(code) ?? 0;
         seen.set(code, nth + 1);
-        const drawn = lastRenders.get(code);
+        const drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
         if (!drawn) continue;
         const { svg } = drawn;
         if (touches(from, to)) continue; // editing it - keep source visible
@@ -175,6 +186,48 @@ export function createMermaidPreviewPlugin(options: {
         },
       },
       view(editorView) {
+        /** How a pass draws now, and what a drawing then depends on. */
+        function drawing() {
+          // The preview box's inner width: the column less its padding.
+          const width = editorView.dom.clientWidth - 40;
+          const fontFamily = getComputedStyle(editorView.dom).fontFamily;
+          const engine = options.engine();
+          const dark = appearanceIsDark();
+          // What a drawing depends on. A Pele one takes its colours from CSS
+          // variables (milkdown-theme.css), so a switch of appearance keeps
+          // it; a Mermaid one has its palette baked in and is drawn again.
+          const layout = `${width}|${fontFamily}|${engine}`;
+          const styleOf = (by: DiagramEngine) =>
+            by === "pele" ? layout : `${layout}|${dark}`;
+          // Mermaid and Pele are the editor's largest optional dependencies.
+          // One is fetched only when a real diagram has to be drawn, so
+          // ordinary Markdown documents never pay for either.
+          const draw = diagramRenderer(engine, { width, fontFamily, dark });
+          return { draw, styleOf };
+        }
+
+        // A proposal's diagram (pending-diagram.ts), drawn as the
+        // document's are.
+        registerPendingDrawer(editorView.dom, async (code) => {
+          if (!options.enabled() || editorView.dom.clientWidth === 0)
+            throw new Error("diagrams are not drawn here");
+          const { draw, styleOf } = drawing();
+          let drawn = pendingDrawn.get(code) ?? lastRenders.get(code);
+          if (!drawn || drawn.style !== styleOf(drawn.engine)) {
+            const id = ++renderIdCounter;
+            const { svg, engine: by } = await draw(
+              code,
+              `mermaid-preview-${id}`,
+            );
+            drawn = { svg, engine: by, style: styleOf(by), id };
+          }
+          pendingDrawn.delete(code);
+          pendingDrawn.set(code, drawn);
+          if (pendingDrawn.size > PENDING_KEPT)
+            pendingDrawn.delete(pendingDrawn.keys().next().value as string);
+          return { svg: drawn.svg, idPrefix: `mermaid-preview-${drawn.id}` };
+        });
+
         async function renderAll() {
           if (!options.enabled()) {
             lastRenders = new Map();
@@ -203,21 +256,7 @@ export function createMermaidPreviewPlugin(options: {
             return;
           }
 
-          // The preview box's inner width: the column less its padding.
-          const width = editorView.dom.clientWidth - 40;
-          const fontFamily = getComputedStyle(editorView.dom).fontFamily;
-          const engine = options.engine();
-          const dark = appearanceIsDark();
-          // What a drawing depends on. A Pele one takes its colours from CSS
-          // variables (milkdown-theme.css), so a switch of appearance keeps
-          // it; a Mermaid one has its palette baked in and is drawn again.
-          const layout = `${width}|${fontFamily}|${engine}`;
-          const styleOf = (by: DiagramEngine) =>
-            by === "pele" ? layout : `${layout}|${dark}`;
-          // Mermaid and Pele are the editor's largest optional dependencies.
-          // One is fetched only when a real diagram has to be drawn, so
-          // ordinary Markdown documents never pay for either.
-          const draw = diagramRenderer(engine, { width, fontFamily, dark });
+          const { draw, styleOf } = drawing();
 
           const rendered = new Map<string, Drawn>();
           for (const { code } of blocks) {
@@ -225,7 +264,7 @@ export function createMermaidPreviewPlugin(options: {
             // Drawn for the same width, face and engine: a pass only draws
             // sources it hasn't seen, instead of every diagram again 500ms
             // after each keystroke anywhere in the document.
-            const cached = lastRenders.get(code);
+            const cached = lastRenders.get(code) ?? pendingDrawn.get(code);
             if (cached && cached.style === styleOf(cached.engine)) {
               rendered.set(code, cached);
               continue;
@@ -269,6 +308,7 @@ export function createMermaidPreviewPlugin(options: {
         shown?.observe(editorView.dom);
         // An appearance switch redraws the diagrams in the new colours.
         const restyle = () => {
+          redrawPendingDiagrams(editorView.dom);
           if (collectMermaidBlocks(editorView.state.doc).length > 0)
             void renderAll();
         };
@@ -293,6 +333,7 @@ export function createMermaidPreviewPlugin(options: {
             if (options.engine() !== drawnFor) {
               drawnFor = options.engine();
               if (debounceTimer) clearTimeout(debounceTimer);
+              redrawPendingDiagrams(view.dom);
               void renderAll();
               return;
             }
@@ -306,6 +347,7 @@ export function createMermaidPreviewPlugin(options: {
           },
           destroy() {
             if (debounceTimer) clearTimeout(debounceTimer);
+            registerPendingDrawer(editorView.dom, null);
             shown?.disconnect();
             appearance.disconnect();
             systemDark?.removeEventListener("change", restyle);
