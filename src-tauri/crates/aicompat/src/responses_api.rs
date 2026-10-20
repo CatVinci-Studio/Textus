@@ -495,7 +495,7 @@ pub fn parse_agent_output(output: &[Value], on_event: EventSink<'_>) -> StepResu
     }
 
     if !tool_calls.is_empty() {
-        StepResult::ToolCalls(tool_calls)
+        StepResult::calls_with_text(tool_calls, text_parts.join("\n"))
     } else {
         StepResult::Done(text_parts.join("\n"))
     }
@@ -729,14 +729,17 @@ mod tests {
     }
 
     #[test]
-    fn parse_agent_output_prefers_tool_calls_over_text() {
+    fn parse_agent_output_keeps_the_text_after_the_tool_calls() {
         let output = vec![
             json!({"type": "function_call", "call_id": "c1", "name": "propose_edit", "arguments": "{\"action\":\"append\"}"}),
-            json!({"type": "message", "content": [{"text": "ignored while a tool call is pending"}]}),
+            json!({"type": "message", "content": [{"text": "Added a line."}]}),
         ];
         match parse_agent_output(&output, &|_| {}) {
             StepResult::ToolCalls(calls) => {
-                assert_eq!(calls.len(), 1);
+                assert_eq!(calls.len(), 2);
+                assert!(
+                    matches!(&calls[1], AgentTurn::Assistant { text, .. } if text == "Added a line.")
+                );
                 let AgentTurn::ToolCall { call_id, name, .. } = &calls[0] else {
                     panic!("expected a ToolCall turn");
                 };

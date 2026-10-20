@@ -138,6 +138,11 @@ pub struct ToolOutput {
     /// [`ToolRun::Amending`] tool: generate_image's call carries the picture
     /// it made, which is what the frontend shows the proposal from.
     pub call_arguments: Option<String>,
+    /// The call did what it was for and needs nothing more from the model:
+    /// a valid proposal or comment, now the user's to decide. When every
+    /// call of a step is settled and the model wrote its reply with them,
+    /// the loop ends there instead of asking for the reply again.
+    pub settled: bool,
 }
 
 impl From<String> for ToolOutput {
@@ -246,9 +251,22 @@ pub struct ToolSpec {
 
 /// What a single model turn produced: either it's done talking (with
 /// optional text), or it wants to call one or more tools before continuing.
+/// A step's calls may end with an Assistant turn: the prose the model wrote
+/// with them ([`StepResult::calls_with_text`]), which becomes the reply when
+/// every call is settled ([`ToolOutput::settled`]).
 pub enum StepResult {
     Done(String),
     ToolCalls(Vec<AgentTurn>),
+}
+
+impl StepResult {
+    /// A step's tool calls and the text the model wrote with them, if any.
+    pub fn calls_with_text(mut calls: Vec<AgentTurn>, text: String) -> StepResult {
+        if !text.trim().is_empty() {
+            calls.push(AgentTurn::assistant(text));
+        }
+        StepResult::ToolCalls(calls)
+    }
 }
 
 /// A live fragment surfaced while a provider's `agent_step` is still
@@ -391,6 +409,11 @@ pub type EventSink<'a> = &'a (dyn Fn(ProviderEvent<'_>) + Send + Sync);
 /// already streamed out as ProviderEvent::Text, and the returned turn list
 /// is the authoritative ending either way.
 ///
+/// A step whose calls are all settled ([`ToolOutput::settled`]) and that
+/// came with text ends the exchange, the text as the reply: asking again
+/// only for the closing sentence was one request of every two or three an
+/// edit took.
+///
 /// Near the end of `max_steps` the model is told how many steps it has
 /// left, in what it is shown but not in what is recorded (`budget_note`).
 ///
@@ -454,6 +477,12 @@ where
                 return Ok(new_turns);
             }
             StepResult::ToolCalls(calls) => {
+                let reply = calls.iter().find_map(|turn| match turn {
+                    AgentTurn::Assistant { text, .. } if !text.trim().is_empty() => {
+                        Some(text.clone())
+                    }
+                    _ => None,
+                });
                 let mut calls: Vec<AgentTurn> = calls
                     .into_iter()
                     .filter(|call| matches!(call, AgentTurn::ToolCall { .. }))
@@ -483,6 +512,7 @@ where
                 }
                 let remaining = max_steps - step_index - 1;
                 let count = calls.len();
+                let settled = count > 0 && outputs.iter().all(|output| output.settled);
                 for (index, (call, output)) in calls.iter().zip(outputs).enumerate() {
                     let AgentTurn::ToolCall { call_id, .. } = call else {
                         continue;
@@ -498,6 +528,10 @@ where
                         Some(note) if index + 1 == count => with_note(result_turn, &note),
                         _ => result_turn,
                     });
+                }
+                if let Some(reply) = reply.filter(|_| settled) {
+                    new_turns.push(AgentTurn::assistant(reply));
+                    return Ok(new_turns);
                 }
             }
         }
@@ -586,9 +620,11 @@ fn garbled(result: &StepResult) -> bool {
     let broken = |s: &str| s.contains('\u{FFFD}') || s.contains("\\ufffd") || s.contains("\\uFFFD");
     match result {
         StepResult::Done(text) => broken(text),
-        StepResult::ToolCalls(calls) => calls
-            .iter()
-            .any(|call| matches!(call, AgentTurn::ToolCall { arguments, .. } if broken(arguments))),
+        StepResult::ToolCalls(calls) => calls.iter().any(|call| match call {
+            AgentTurn::ToolCall { arguments, .. } => broken(arguments),
+            AgentTurn::Assistant { text, .. } => broken(text),
+            _ => false,
+        }),
     }
 }
 
@@ -999,6 +1035,63 @@ mod tests {
         ))
         .unwrap();
         assert_eq!(results(&turns)[1].1, "proposed after the read");
+    }
+
+    /// Runs a step of one propose_edit call, with `text` beside it, whose
+    /// output is `settled` or not, then (if asked) a closing reply.
+    fn propose_then(text: &str, settled: bool) -> (Vec<AgentTurn>, usize) {
+        let steps = RefCell::new(0);
+        let script = RefCell::new(VecDeque::from(vec![
+            StepResult::calls_with_text(vec![call("p", "propose_edit", "{}")], text.to_string()),
+            StepResult::Done("asked again".into()),
+        ]));
+        let turns = tauri::async_runtime::block_on(run_agent_loop(
+            vec![],
+            user("go"),
+            12,
+            |_| {
+                *steps.borrow_mut() += 1;
+                let next = script.borrow_mut().pop_front();
+                async move { next.ok_or_else(|| "script ran out".to_string()) }
+            },
+            |_| {
+                std::future::ready(ToolOutput {
+                    text: "Edit proposed".into(),
+                    settled,
+                    ..ToolOutput::default()
+                })
+            },
+            |_| ToolRun::InOrder,
+            |_| {},
+        ))
+        .unwrap();
+        (turns, steps.into_inner())
+    }
+
+    fn reply_of(turns: &[AgentTurn]) -> &str {
+        match turns.last() {
+            Some(AgentTurn::Assistant { text, .. }) => text,
+            other => panic!("no reply: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_settled_proposal_with_its_reply_ends_the_exchange() {
+        let (turns, steps) = propose_then("Tightened the opening.", true);
+        assert_eq!(steps, 1, "no request just for the closing sentence");
+        assert_eq!(reply_of(&turns), "Tightened the opening.");
+        // user, call, result, reply - the reply after the result, as before.
+        assert!(matches!(turns[2], AgentTurn::ToolResult { .. }));
+    }
+
+    #[test]
+    fn without_a_reply_or_a_settled_call_the_model_is_asked_again() {
+        let (turns, steps) = propose_then("", true);
+        assert_eq!((steps, reply_of(&turns)), (2, "asked again"));
+        // A refused proposal: the model must see why, so the text it wrote
+        // before knowing is dropped.
+        let (turns, steps) = propose_then("Tightened the opening.", false);
+        assert_eq!((steps, reply_of(&turns)), (2, "asked again"));
     }
 
     /// generate_image's call is recorded, and reported, with the picture
