@@ -31,6 +31,7 @@ import {
   type MemoryChipLabels,
   type RememberResult,
 } from "./MemoryChip";
+import { Tooltip } from "../../ui/Tooltip";
 
 /** The statuses a card reaches by being decided, which collapse it. */
 const DECIDED: ReadonlySet<PendingStatus> = new Set([
@@ -675,24 +676,25 @@ function ProposalCard({
         {/* Listed sentence by sentence below, the size chips (the full
             diff's toggle) only crowd the head - kept for the rest. */}
         {!(sentences && sentences.length > 1) && !proposal.image && (
-          <button
-            type="button"
-            className="agent-diff-summary"
-            aria-expanded={diffOpen}
-            title={diffOpen ? labels.diffCollapse : labels.diffShow}
-            onClick={() => setDiffOpen(!diffOpen)}
-          >
-            {added > 0 && (
-              <span className="agent-diff-chip agent-diff-add">+{added}</span>
-            )}
-            {removed > 0 && (
-              <span className="agent-diff-chip agent-diff-remove">
-                {"\u2212"}
-                {removed}
-              </span>
-            )}
-            <span className="agent-diff-caret" aria-hidden="true" />
-          </button>
+          <Tooltip text={diffOpen ? labels.diffCollapse : labels.diffShow}>
+            <button
+              type="button"
+              className="agent-diff-summary"
+              aria-expanded={diffOpen}
+              onClick={() => setDiffOpen(!diffOpen)}
+            >
+              {added > 0 && (
+                <span className="agent-diff-chip agent-diff-add">+{added}</span>
+              )}
+              {removed > 0 && (
+                <span className="agent-diff-chip agent-diff-remove">
+                  {"\u2212"}
+                  {removed}
+                </span>
+              )}
+              <span className="agent-diff-caret" aria-hidden="true" />
+            </button>
+          </Tooltip>
         )}
         {status === "pending" && onReveal && (
           <button
@@ -742,30 +744,32 @@ function ProposalCard({
                 </button>
                 {actions && onDecide && (
                   <span className="agent-proposal-pick">
-                    <button
-                      type="button"
-                      className="pending-pick-take"
-                      aria-pressed={s.take === true}
-                      aria-label={labels.proposalTakeSentence}
-                      title={labels.proposalTakeSentence}
-                      onClick={() =>
-                        onDecide(callId, k, s.take === true ? null : true)
-                      }
-                    >
-                      {CHECK}
-                    </button>
-                    <button
-                      type="button"
-                      className="pending-pick-keep"
-                      aria-pressed={s.take === false}
-                      aria-label={labels.proposalKeepSentence}
-                      title={labels.proposalKeepSentence}
-                      onClick={() =>
-                        onDecide(callId, k, s.take === false ? null : false)
-                      }
-                    >
-                      {CROSS}
-                    </button>
+                    <Tooltip text={labels.proposalTakeSentence}>
+                      <button
+                        type="button"
+                        className="pending-pick-take"
+                        aria-pressed={s.take === true}
+                        aria-label={labels.proposalTakeSentence}
+                        onClick={() =>
+                          onDecide(callId, k, s.take === true ? null : true)
+                        }
+                      >
+                        {CHECK}
+                      </button>
+                    </Tooltip>
+                    <Tooltip text={labels.proposalKeepSentence}>
+                      <button
+                        type="button"
+                        className="pending-pick-keep"
+                        aria-pressed={s.take === false}
+                        aria-label={labels.proposalKeepSentence}
+                        onClick={() =>
+                          onDecide(callId, k, s.take === false ? null : false)
+                        }
+                      >
+                        {CROSS}
+                      </button>
+                    </Tooltip>
                   </span>
                 )}
               </li>

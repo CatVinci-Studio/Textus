@@ -93,7 +93,13 @@ test.describe("in English", () => {
     const dialog = await openSettings(page);
     const box = dialog.getByRole("combobox", { name: "Search settings" });
     await box.fill("nothing like this");
-    await expect(dialog.getByRole("status")).toHaveText("No settings match.");
+    await expect(dialog.locator(".settings-search-empty")).toHaveText(
+      "No settings match.",
+    );
+    // Said through the window's one live region (ui/announce.ts).
+    await expect(page.locator('[role="status"][aria-live]')).toContainText(
+      "No settings match.",
+    );
     await box.press("Escape");
     await expect(box).toHaveValue("");
     await expect(dialog.getByRole("region", { name: "General" })).toBeVisible();
@@ -150,7 +156,9 @@ test.describe("in Chinese", () => {
     await dialog
       .getByRole("combobox", { name: "搜索设置" })
       .fill("不存在的设置");
-    await expect(dialog.getByRole("status")).toHaveText("没有匹配的设置。");
+    await expect(dialog.locator(".settings-search-empty")).toHaveText(
+      "没有匹配的设置。",
+    );
   });
 });
 

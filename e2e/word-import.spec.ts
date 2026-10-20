@@ -57,7 +57,10 @@ test("File > Open of a Word document opens a new Markdown document", async ({
   // In place of the empty Untitled the window started with, named after
   // the Word file.
   await expect(page.locator(".window-bar-title-text")).toHaveText("Report");
-  await expect(page.getByRole("status")).toContainText(
+  await expect(page.locator(".draft-restored-toast")).toContainText(
+    "Opened Report.docx as a new Markdown document",
+  );
+  await expect(page.locator('[role="status"][aria-live]')).toContainText(
     "Opened Report.docx as a new Markdown document",
   );
 

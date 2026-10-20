@@ -14,6 +14,7 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { flip } from "../../ui/flip";
 import { animate } from "../../ui/motion";
 import { CARD_WIDTH, GAP, marginRoom } from "./margin-room";
+import { Tooltip } from "../../ui/Tooltip";
 import "./ReviewMargin.css";
 
 export interface ReviewMarginLabels {
@@ -515,40 +516,42 @@ const RevisionCard = memo(
           </span>
           {labels.reviewBarLabel}
           <span className="agent-proposal-pick revision-note-pick">
-            <button
-              type="button"
-              className="pending-pick-take"
-              aria-pressed={item.take === true}
-              disabled={item.streaming}
-              aria-label={labels.proposalTakeSentence}
-              title={labels.proposalTakeSentence}
-              onClick={() =>
-                onDecide(
-                  item.callId,
-                  item.index,
-                  item.take === true ? null : true,
-                )
-              }
-            >
-              {CHECK}
-            </button>
-            <button
-              type="button"
-              className="pending-pick-keep"
-              aria-pressed={item.take === false}
-              disabled={item.streaming}
-              aria-label={labels.proposalKeepSentence}
-              title={labels.proposalKeepSentence}
-              onClick={() =>
-                onDecide(
-                  item.callId,
-                  item.index,
-                  item.take === false ? null : false,
-                )
-              }
-            >
-              {CROSS}
-            </button>
+            <Tooltip text={labels.proposalTakeSentence}>
+              <button
+                type="button"
+                className="pending-pick-take"
+                aria-pressed={item.take === true}
+                disabled={item.streaming}
+                aria-label={labels.proposalTakeSentence}
+                onClick={() =>
+                  onDecide(
+                    item.callId,
+                    item.index,
+                    item.take === true ? null : true,
+                  )
+                }
+              >
+                {CHECK}
+              </button>
+            </Tooltip>
+            <Tooltip text={labels.proposalKeepSentence}>
+              <button
+                type="button"
+                className="pending-pick-keep"
+                aria-pressed={item.take === false}
+                disabled={item.streaming}
+                aria-label={labels.proposalKeepSentence}
+                onClick={() =>
+                  onDecide(
+                    item.callId,
+                    item.index,
+                    item.take === false ? null : false,
+                  )
+                }
+              >
+                {CROSS}
+              </button>
+            </Tooltip>
           </span>
         </div>
         {item.shows === "new" ? (

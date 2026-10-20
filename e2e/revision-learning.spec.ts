@@ -112,6 +112,9 @@ test("rejecting 「」 made “” three times offers to remember it, and Rememb
   await expect(learn).toHaveText(
     "Remembered. See or delete it in the Memory tab.",
   );
+  await expect(page.locator('[role="status"][aria-live]')).toContainText(
+    "Remembered. See or delete it in the Memory tab.",
+  );
   expect(await calls(page, "memory_remember")).toEqual([
     expect.objectContaining({
       kind: "requirement",

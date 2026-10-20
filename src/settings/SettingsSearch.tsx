@@ -1,5 +1,12 @@
-import { useLayoutEffect, useRef, type ReactNode, type Ref } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type ReactNode,
+  type Ref,
+} from "react";
 import type { Strings } from "../i18n/strings";
+import { announce } from "../ui/announce";
 import { SearchIcon } from "../ui/icons";
 import { scrollBehavior } from "../ui/motion";
 import { useLatest } from "../utils/hooks/useLatest";
@@ -162,12 +169,16 @@ export function SettingsSearchResults({
   active: number;
   onPick: (match: SearchMatch) => void;
 }) {
+  const empty = groups.length === 0;
+  useEffect(() => {
+    if (empty) announce(t.settingsSearchNoMatches);
+  }, [empty, t.settingsSearchNoMatches]);
   let index = 0;
   return (
     <>
       <h1 className="settings-category-title">{t.settingsSearchResults}</h1>
-      {groups.length === 0 ? (
-        <div className="settings-row-hint settings-search-empty" role="status">
+      {empty ? (
+        <div className="settings-row-hint settings-search-empty">
           {t.settingsSearchNoMatches}
         </div>
       ) : (

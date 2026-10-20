@@ -92,7 +92,7 @@ describe("the sidebar's toggle in the window bar", () => {
 
     const button = screen.getByRole("button", { name: "Sidebar" });
     expect(button).toHaveAttribute("aria-pressed", "false");
-    expect(button).toHaveAttribute("title", `Sidebar (${shortcut})`);
+    expect(button).toHaveAccessibleDescription(`Sidebar (${shortcut})`);
 
     fireEvent.click(button);
     expect(onToggleSidebar).toHaveBeenCalledOnce();

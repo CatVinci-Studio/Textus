@@ -3,6 +3,7 @@ import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
 import { usePresenceProps } from "../../ui/usePresence";
 import { ChevronIcon } from "../../ui/icons";
 import type { GrammarKind } from "./grammar-kind";
+import { Tooltip } from "../../ui/Tooltip";
 import "./GrammarPopover.css";
 
 export interface GrammarPopoverInfo {
@@ -102,25 +103,27 @@ export function GrammarPopover({
         </span>
         {info.count > 1 && (
           <span className="grammar-popover-nav">
-            <button
-              type="button"
-              aria-label={labels.grammarPrevious}
-              title={labels.grammarPrevious}
-              onClick={() => onStep(-1)}
-            >
-              <ChevronIcon className="grammar-popover-prev" />
-            </button>
+            <Tooltip text={labels.grammarPrevious}>
+              <button
+                type="button"
+                aria-label={labels.grammarPrevious}
+                onClick={() => onStep(-1)}
+              >
+                <ChevronIcon className="grammar-popover-prev" />
+              </button>
+            </Tooltip>
             <span>
               {info.index + 1}/{info.count}
             </span>
-            <button
-              type="button"
-              aria-label={labels.grammarNext}
-              title={labels.grammarNext}
-              onClick={() => onStep(1)}
-            >
-              <ChevronIcon />
-            </button>
+            <Tooltip text={labels.grammarNext}>
+              <button
+                type="button"
+                aria-label={labels.grammarNext}
+                onClick={() => onStep(1)}
+              >
+                <ChevronIcon />
+              </button>
+            </Tooltip>
           </span>
         )}
       </div>
