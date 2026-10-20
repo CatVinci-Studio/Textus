@@ -91,6 +91,8 @@ import {
 import { codeBlockIndentPlugin } from "./code/code-block-indent-plugin";
 import { pasteMarkdownSourcePlugin } from "./markdown/paste-markdown-plugin";
 import { imageInputRule, linkInputRule } from "./markdown/link-input-rule";
+import { remarkLinkSourcePlugin } from "./markdown/link-source";
+import { linkRevealPlugin, linkSourceSchema } from "./markdown/link-reveal";
 import { pasteUrlPlugin } from "./markdown/paste-url";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
@@ -220,6 +222,10 @@ export function withEditorCore(
       // read as links, written back as references.
       .use(remarkReferenceLinksPlugin)
       .use(linkDefinitionSchema)
+      // Each link's Markdown as written, shown and edited while the caret
+      // is on the link (link-reveal.ts).
+      .use(remarkLinkSourcePlugin)
+      .use(linkSourceSchema)
 
       // Obsidian's ![[file]] embeds: kept as written, an image one shown as
       // the picture from the document's vault.
@@ -347,6 +353,7 @@ export function withEditorCore(
             }),
       )
       .use(linkInputRule)
+      .use(linkRevealPlugin)
       .use(imageInputRule)
       .use(pasteUrlPlugin)
       .use(pasteMarkdownSourcePlugin)

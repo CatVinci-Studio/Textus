@@ -198,10 +198,25 @@ function gatherDetails(root: HTMLElement): void {
 // file data-doc-src names - left on the image for it).
 export type ExportImages = "document" | "inline";
 
+// A link shown as its Markdown while the caret is on it
+// (editor/markdown/link-reveal.ts).
+const LINK_SOURCE_SELECTOR = '[data-type="link_source"]';
+
+// What draws a link shown as its Markdown, when the editor has one: the
+// renderer stays out of the entry chunk otherwise (see color-swatch-classes.ts).
+async function linkRenderer(
+  editor: Element,
+): Promise<((markdown: string) => string) | undefined> {
+  if (!editor.querySelector(LINK_SOURCE_SELECTOR)) return undefined;
+  return (await import("../editor/markdown/render-html"))
+    .renderMarkdownInlineHtml;
+}
+
 // Clones the editor subtree, stripping contenteditable so the export is inert.
 export function cloneEditorContent(
   editor: Element,
   images: ExportImages = "document",
+  renderLink?: (markdown: string) => string,
 ): string {
   const clone = editor.cloneNode(true) as HTMLElement;
   clone
@@ -216,6 +231,14 @@ export function cloneEditorContent(
   clone
     .querySelectorAll(`.${CODE_LINE_NUMBERS_CLASS}`)
     .forEach((el) => el.classList.remove(CODE_LINE_NUMBERS_CLASS));
+  // The link the caret is on shows as its Markdown; the page has the link.
+  clone.querySelectorAll(LINK_SOURCE_SELECTOR).forEach((el) => {
+    const link = document.createElement("span");
+    link.innerHTML = renderLink?.(el.textContent ?? "") ?? "";
+    el.replaceWith(
+      ...(link.childNodes.length ? link.childNodes : [el.textContent ?? ""]),
+    );
+  });
   // A colour code in plain text draws its swatch before its first
   // character; the character goes back into the text around it.
   clone
@@ -503,7 +526,7 @@ export async function exportPdf(
     // on white in the theme's light form (#68).
     const whitePage = !isMac;
     let content = await inlineImages(
-      cloneEditorContent(editor, "inline"),
+      cloneEditorContent(editor, "inline", await linkRenderer(editor)),
       tab.path,
     );
     if (whitePage && appearanceIsDark()) {
@@ -565,9 +588,13 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
   if (!picked) return;
   await drawPending(editor);
   const besideDocument = !!tab.path && dirname(tab.path) === dirname(picked);
+  const renderLink = await linkRenderer(editor);
   const content = besideDocument
-    ? cloneEditorContent(editor)
-    : await inlineImages(cloneEditorContent(editor, "inline"), tab.path);
+    ? cloneEditorContent(editor, "document", renderLink)
+    : await inlineImages(
+        cloneEditorContent(editor, "inline", renderLink),
+        tab.path,
+      );
   const html = buildStandaloneHtml(base, content, HTML_LAYOUT_CSS);
   await fs.writeTextFile(picked, html);
   void exportDoc.revealInDir(picked);

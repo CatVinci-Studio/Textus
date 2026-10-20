@@ -6,6 +6,7 @@ import { isScopedUrl } from "../../platform/ios-files";
 import { modIsMeta } from "../../platform/os";
 import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import { revealHeading } from "./heading-jump";
+import { revealedLinkHref } from "./link-reveal";
 import { linkTarget, type LinkTarget } from "./link-target";
 import { parseWikilink } from "./wikilink";
 
@@ -74,12 +75,21 @@ async function followWikilink(
     );
 }
 
+/** The URL of the link under a mouse event: a link, or one the caret
+ *  shows as its source (link-reveal.ts). */
+function hrefAt(view: EditorView, event: MouseEvent): string | null {
+  const link = linkAt(view, event);
+  if (link) return link.getAttribute("href") ?? "";
+  return revealedLinkHref(view, event.target);
+}
+
 /**
  * Following links: Ctrl/Cmd+click opens a web link in the browser, a
  * Markdown file in a tab (scrolled to its `#heading`, if the link names
  * one), any other file in the file manager, and scrolls to a `#heading` of
  * this document; on a wikilink it opens the note. A plain click only
- * places the caret.
+ * places the caret - and shows the link as its source to edit. A link
+ * shown that way still opens on Ctrl/Cmd+click.
  *
  * The webview must never follow a link itself: WebView2 opened a
  * Ctrl+clicked relative link in the browser as http://tauri.localhost/...
@@ -97,7 +107,7 @@ export function createLinkClickPlugin(docPath: () => string | null) {
             // Ctrl/Cmd held select the whole block, before the click.
             mousedown(view, event) {
               if (!isFollowClick(event)) return false;
-              if (!linkAt(view, event) && !wikilinkAt(view, event))
+              if (hrefAt(view, event) === null && !wikilinkAt(view, event))
                 return false;
               event.preventDefault();
               return true;
@@ -115,13 +125,12 @@ export function createLinkClickPlugin(docPath: () => string | null) {
                 return true;
               }
               const link = linkAt(view, event);
-              if (!link) return false;
-              event.preventDefault();
+              if (link) event.preventDefault();
               if (!isFollowClick(event)) return false;
-              const target = linkTarget(
-                link.getAttribute("href") ?? "",
-                folder,
-              );
+              const href = hrefAt(view, event);
+              if (href === null) return false;
+              event.preventDefault();
+              const target = linkTarget(href, folder);
               if (target) void follow(view, target).catch(() => {});
               return true;
             },
