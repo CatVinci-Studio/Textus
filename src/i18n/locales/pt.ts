@@ -164,6 +164,43 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   memoryMakeProject: "Passar para o projeto",
   memoryChipUndone: "Desfeito. Não é mais lembrado.",
   memoryActionFailed: "Não deu certo. Tente de novo na aba Memória.",
+  learnSuggestion: "Você recusou várias vezes {what}. Lembrar disto? {rule}",
+  learnQuoted: "“{text}”",
+  learnSwap: "trocar {from} por {to}",
+  learnSwapRule: "Manter {from}; não trocar por {to}.",
+  learnWidthHalf: "passar a pontuação de largura total para meia largura",
+  learnWidthHalfRule:
+    "Manter a pontuação de largura total; não passar para meia largura.",
+  learnWidthFull: "passar a pontuação de meia largura para largura total",
+  learnWidthFullRule:
+    "Manter a pontuação de meia largura; não passar para largura total.",
+  learnOxfordAdd: "acrescentar a vírgula de Oxford",
+  learnOxfordAddRule:
+    "Não acrescentar a vírgula de Oxford (a vírgula antes de and/or numa enumeração em inglês).",
+  learnOxfordRemove: "tirar a vírgula de Oxford",
+  learnOxfordRemoveRule:
+    "Manter a vírgula de Oxford (a vírgula antes de and/or numa enumeração em inglês).",
+  learnContractionsExpand: "desfazer as contrações do inglês (como don't)",
+  learnContractionsExpandRule:
+    "Manter as contrações do inglês, como don't e it's; não desfazê-las.",
+  learnContractionsAdd: "usar contrações do inglês (como don't)",
+  learnContractionsAddRule:
+    "Não usar contrações do inglês, como don't; escrever as palavras por extenso.",
+  learnSplit: "dividir frases",
+  learnSplitRule: "Não dividir as minhas frases em frases mais curtas.",
+  learnMerge: "juntar frases",
+  learnMergeRule: "Não juntar as minhas frases em frases mais longas.",
+  learnShorter: "encurtar muito o texto",
+  learnShorterRule:
+    "Ao revisar, manter mais ou menos o tamanho original; não cortar muito.",
+  learnLonger: "alongar muito o texto",
+  learnLongerRule:
+    "Ao revisar, manter mais ou menos o tamanho original; não acrescentar muito.",
+  learnRemember: "Lembrar",
+  learnNotNow: "Agora não",
+  learnNever: "Não perguntar mais",
+  learnSaved: "Lembrado. Veja ou apague na aba Memória.",
+  learnLabel: "Aprendido com as suas escolhas de revisão",
   levisProjectTitle: "Dados de projeto do Levis",
   levisProjectText:
     "Este projeto tem dados do Levis (estilo, biblioteca, instruções de escrita, habilidades). Converter para o formato do Textus?",

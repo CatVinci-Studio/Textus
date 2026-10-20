@@ -164,6 +164,19 @@ Textus AI never changes them.
   remembered** lists them all, personal then the project's, with the date
   and the conversation each came from, and **Edit** (opens the file),
   **Make personal / Make project** (moves the file) and **Delete**.
+- **Learned from revision choices:** each accepted or rejected change whose
+  kind can be named from its before and after alone (change-kind.ts: a
+  quote style, mark or word swapped, full/half-width punctuation, the
+  Oxford comma, contractions, sentences split or joined, much shorter or
+  longer) is noted in `memory/.revision-choices.json` in the global config
+  folder - the kind only, the last 200, never sent. A kind rejected 3 times
+  in a row across 2 proposals is offered once the review is done, where the
+  review bar was: **Remember** writes a personal `requirement` memory
+  (`memory_remember`, also with Remember automatically off - it is the
+  user's click), **Not now** waits for new rejections, **Never ask for
+  this** is kept; one suggestion a day at most. Proposals a new request
+  supersedes, the backend refuses or a stop leaves empty teach nothing.
+  Accepting a kind only ends its run - nothing is offered for it.
 - **Scope:** about this work - project; the user's general habits -
   personal; with no project folder (an unsaved draft) everything is
   personal and no fact is kept. Rust writes only inside the two `memory/`
@@ -398,13 +411,13 @@ part of the project.
 Some identifiers predate these names. They stay; their comments use the
 names above.
 
-| User-facing name     | In code                                                                                                                                                           |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Project folder       | workspace root: `settings.agentWorkspaceRoot` (`""` = the document's folder), `workspace::project_root`, `AgentWorkspace.root`                                    |
-| `.textus/` folder    | `WORKSPACE_DIR_NAME`                                                                                                                                              |
-| Style profile        | `AgentWorkspace.style`, `project::read_style`, `learn_style`                                                                                                      |
-| Library              | `AgentWorkspace.library`, `project::read_library`, `project::relevant_library`                                                                                    |
-| Writing instructions | `AgentWorkspace.instructions` (global) and `AgentWorkspace.project_instructions`; `agentSystemPrompt*` strings                                                    |
-| AI remembered        | `ai::memory`, `AgentWorkspace.memories`, the `remember` tool, `memory_undo`, `memory_move`, `memory_delete`, `settings.rememberAutomatically`, `MemoryChip`       |
-| Skills               | `AgentWorkspace.skills`, the `use_skill` tool, `import_agent_skill`, `ai::builtin`, `customize_builtin_skill`, `reset_builtin_skill`, `set_builtin_skill_enabled` |
-| Global config folder | `global_agent_dir`, `agentWorkspaceLabel`                                                                                                                         |
+| User-facing name     | In code                                                                                                                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Project folder       | workspace root: `settings.agentWorkspaceRoot` (`""` = the document's folder), `workspace::project_root`, `AgentWorkspace.root`                                                                         |
+| `.textus/` folder    | `WORKSPACE_DIR_NAME`                                                                                                                                                                                   |
+| Style profile        | `AgentWorkspace.style`, `project::read_style`, `learn_style`                                                                                                                                           |
+| Library              | `AgentWorkspace.library`, `project::read_library`, `project::relevant_library`                                                                                                                         |
+| Writing instructions | `AgentWorkspace.instructions` (global) and `AgentWorkspace.project_instructions`; `agentSystemPrompt*` strings                                                                                         |
+| AI remembered        | `ai::memory`, `AgentWorkspace.memories`, the `remember` tool, `memory_undo`, `memory_move`, `memory_delete`, `memory_remember`, `settings.rememberAutomatically`, `MemoryChip`, `revision-learning.ts` |
+| Skills               | `AgentWorkspace.skills`, the `use_skill` tool, `import_agent_skill`, `ai::builtin`, `customize_builtin_skill`, `reset_builtin_skill`, `set_builtin_skill_enabled`                                      |
+| Global config folder | `global_agent_dir`, `agentWorkspaceLabel`                                                                                                                                                              |

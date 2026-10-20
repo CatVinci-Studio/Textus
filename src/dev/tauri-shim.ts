@@ -170,6 +170,8 @@ export function installDevTauriShim(): void {
       apiKey: string | null;
       model: string;
     } | null,
+    // .revision-choices.json (ai/memory.rs), for learning from revisions.
+    revisionChoices: null as unknown,
   };
   w.__devStorage = store;
   // Bounded: a long smoke-testing session in the browser invokes a lot.
@@ -342,6 +344,12 @@ export function installDevTauriShim(): void {
       case "clear_custom_endpoint":
         store.customEndpoint = null;
         return Promise.resolve(null);
+      // ai/memory.rs's revision choices log, kept as given.
+      case "revision_choices_read":
+        return Promise.resolve(store.revisionChoices);
+      case "revision_choices_write":
+        store.revisionChoices = args.log ?? null;
+        return answer(cmd, null);
     }
     return null;
   }

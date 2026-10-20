@@ -39,6 +39,10 @@ import { useAiActions } from "../ai/writing/useAiActions";
 import { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
 import { ReviewBar } from "../ai/revision/ReviewBar";
 import {
+  RevisionLearningBar,
+  useRevisionLearning,
+} from "../ai/revision/RevisionLearning";
+import {
   addsTextOnly,
   revisionDisplayName,
 } from "../ai/revision/revision-display";
@@ -170,12 +174,17 @@ export function MilkdownEditor({
     run,
   ]);
 
+  const learning = useRevisionLearning({
+    docPath: filePath,
+    workspaceRoot: settings.agentWorkspaceRoot || null,
+  });
   const proposals = useEditorProposals({
     run,
     pendingEditActionsRef,
     settingsRef,
     settings,
     filePath,
+    onDecided: learning.record,
   });
   const { pendingEdits, conversation, quickConversation, showProposals } =
     proposals;
@@ -483,6 +492,17 @@ export function MilkdownEditor({
               />
             )}
           </Presence>,
+          paneEl,
+        )}
+      {/* What revision choices taught, once the review is done. */}
+      {paneEl &&
+        isActive &&
+        !reviewBarShown &&
+        pendingEdits.reviewed.length === 0 &&
+        !inlineChat.visible &&
+        !(phone && panelContainer) &&
+        createPortal(
+          <RevisionLearningBar learning={learning} labels={t} phone={phone} />,
           paneEl,
         )}
       <Presence show={findReplace.open} exitMs={120}>

@@ -177,6 +177,8 @@ Writing instructions apply to conversations only. Completion doesn't read them; 
 
 The AI panel's **Memory** tab lists it all under **AI remembered**, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and the Memory tab says so. **Settings > Textus AI > Remember automatically** turns it off.
 
+**It also learns from your revision choices.** When you turn down the same kind of change several times — 「」 made “”, one word swapped for another, sentences split, an Oxford comma added — Textus AI offers, once the review is done, to remember it as a requirement: **Remember** saves it under **AI remembered**, **Not now** waits for more, and **Never ask for this** stops asking about that kind. It asks at most once a day, and only your click saves anything, also with Remember automatically off. What it counts is a short note of the kinds of change you accepted or rejected, kept on this computer beside your memories and never sent.
+
 ### Skills (/name)
 
 **A skill is a reusable set of instructions with a name** — "polish", "outline", "check the citations" — kept in one Markdown file: a name and a one-line description at the top, the full instructions below.

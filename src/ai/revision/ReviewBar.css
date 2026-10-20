@@ -342,3 +342,36 @@
     display: none;
   }
 }
+
+/* A suggestion learned from revision choices (RevisionLearning.tsx), in
+   the bar's place once a review is done: the same pill, its sentence
+   allowed to wrap. */
+.learn-bar {
+  width: max-content;
+  max-width: min(620px, calc(100% - 32px));
+  padding-block: 7px;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+.learn-bar .review-bar-actions {
+  flex: none;
+}
+
+.learn-bar-never {
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  opacity: 0.72;
+}
+
+.learn-bar-never:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.review-bar-phone.learn-bar {
+  width: auto;
+  max-width: none;
+}

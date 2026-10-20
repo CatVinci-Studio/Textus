@@ -174,6 +174,44 @@ para usar una.
   memoryChipUndone: "Deshecho. Ya no se recuerda.",
   memoryActionFailed:
     "No ha funcionado. Vuelve a intentarlo en la pestaña Memoria.",
+  learnSuggestion: "Has rechazado varias veces {what}. ¿Recordar esto? {rule}",
+  learnQuoted: "«{text}»",
+  learnSwap: "cambiar {from} por {to}",
+  learnSwapRule: "Mantén {from}; no lo cambies por {to}.",
+  learnWidthHalf: "pasar la puntuación de ancho completo a medio ancho",
+  learnWidthHalfRule:
+    "Mantén la puntuación de ancho completo; no la pases a medio ancho.",
+  learnWidthFull: "pasar la puntuación de medio ancho a ancho completo",
+  learnWidthFullRule:
+    "Mantén la puntuación de medio ancho; no la pases a ancho completo.",
+  learnOxfordAdd: "añadir la coma de Oxford",
+  learnOxfordAddRule:
+    "No añadas la coma de Oxford (la coma antes de and/or en una enumeración en inglés).",
+  learnOxfordRemove: "quitar la coma de Oxford",
+  learnOxfordRemoveRule:
+    "Mantén la coma de Oxford (la coma antes de and/or en una enumeración en inglés).",
+  learnContractionsExpand:
+    "desarrollar las contracciones inglesas (como don't)",
+  learnContractionsExpandRule:
+    "Mantén las contracciones inglesas como don't o it's; no las desarrolles.",
+  learnContractionsAdd: "usar contracciones inglesas (como don't)",
+  learnContractionsAddRule:
+    "No uses contracciones inglesas como don't; escribe las palabras completas.",
+  learnSplit: "dividir frases",
+  learnSplitRule: "No dividas mis frases en otras más cortas.",
+  learnMerge: "unir frases",
+  learnMergeRule: "No unas mis frases en otras más largas.",
+  learnShorter: "acortar mucho el texto",
+  learnShorterRule:
+    "Al revisar, mantén más o menos la extensión original; no recortes mucho.",
+  learnLonger: "alargar mucho el texto",
+  learnLongerRule:
+    "Al revisar, mantén más o menos la extensión original; no añadas mucho.",
+  learnRemember: "Recordar",
+  learnNotNow: "Ahora no",
+  learnNever: "No volver a preguntar",
+  learnSaved: "Recordado. Puedes verlo o eliminarlo en la pestaña Memoria.",
+  learnLabel: "Aprendido de tus decisiones de revisión",
   levisProjectTitle: "Datos de proyecto de Levis",
   levisProjectText:
     "Este proyecto tiene datos de Levis (estilo, biblioteca, instrucciones de escritura, habilidades). ¿Convertirlos al formato de Textus?",

@@ -164,6 +164,44 @@ type /name in a conversation to use one.
   memoryMakeProject: "Make project",
   memoryChipUndone: "Undone. No longer remembered.",
   memoryActionFailed: "That didn't work. Try again in the Memory tab.",
+  learnSuggestion:
+    "You turned down {what} several times. Remember this? {rule}",
+  learnQuoted: "“{text}”",
+  learnSwap: "changing {from} to {to}",
+  learnSwapRule: "Keep {from}; don't change it to {to}.",
+  learnWidthHalf: "changing full-width punctuation to half-width",
+  learnWidthHalfRule:
+    "Keep full-width punctuation; don't change it to half-width.",
+  learnWidthFull: "changing half-width punctuation to full-width",
+  learnWidthFullRule:
+    "Keep half-width punctuation; don't change it to full-width.",
+  learnOxfordAdd: "adding the Oxford comma",
+  learnOxfordAddRule:
+    "Don't add the Oxford comma (the comma before and/or in a list).",
+  learnOxfordRemove: "removing the Oxford comma",
+  learnOxfordRemoveRule:
+    "Keep the Oxford comma (the comma before and/or in a list).",
+  learnContractionsExpand: "spelling out contractions",
+  learnContractionsExpandRule:
+    "Keep contractions such as don't and it's; don't spell them out.",
+  learnContractionsAdd: "adding contractions",
+  learnContractionsAddRule:
+    "Don't use contractions such as don't; write the words out.",
+  learnSplit: "splitting sentences",
+  learnSplitRule: "Don't split my sentences into shorter ones.",
+  learnMerge: "joining sentences",
+  learnMergeRule: "Don't join my sentences into longer ones.",
+  learnShorter: "edits that cut the text a lot",
+  learnShorterRule:
+    "When revising, keep about the original length; don't cut much.",
+  learnLonger: "edits that lengthen the text a lot",
+  learnLongerRule:
+    "When revising, keep about the original length; don't add much.",
+  learnRemember: "Remember",
+  learnNotNow: "Not now",
+  learnNever: "Never ask for this",
+  learnSaved: "Remembered. See or delete it in the Memory tab.",
+  learnLabel: "Learned from your revision choices",
   levisProjectTitle: "Levis project data",
   levisProjectText:
     "This project has Levis data (style, library, writing instructions, skills). Convert it to Textus's format?",

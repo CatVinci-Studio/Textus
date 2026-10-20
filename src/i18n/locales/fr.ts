@@ -174,6 +174,46 @@ utiliser une.
   memoryMakeProject: "Passer au projet",
   memoryChipUndone: "Annulé. Ce n'est plus retenu.",
   memoryActionFailed: "Cela n'a pas marché. Réessayez dans l'onglet Mémoire.",
+  learnSuggestion:
+    "Vous avez refusé plusieurs fois {what}. Retenir ceci\u00a0? {rule}",
+  learnQuoted: "«\u00a0{text}\u00a0»",
+  learnSwap: "de remplacer {from} par {to}",
+  learnSwapRule: "Garder {from}\u00a0; ne pas le remplacer par {to}.",
+  learnWidthHalf: "de passer la ponctuation pleine chasse en demi-chasse",
+  learnWidthHalfRule:
+    "Garder la ponctuation pleine chasse\u00a0; ne pas la passer en demi-chasse.",
+  learnWidthFull: "de passer la ponctuation demi-chasse en pleine chasse",
+  learnWidthFullRule:
+    "Garder la ponctuation demi-chasse\u00a0; ne pas la passer en pleine chasse.",
+  learnOxfordAdd: "d'ajouter la virgule d'Oxford",
+  learnOxfordAddRule:
+    "Ne pas ajouter la virgule d'Oxford (la virgule avant and/or dans une énumération en anglais).",
+  learnOxfordRemove: "de supprimer la virgule d'Oxford",
+  learnOxfordRemoveRule:
+    "Garder la virgule d'Oxford (la virgule avant and/or dans une énumération en anglais).",
+  learnContractionsExpand:
+    "de développer les contractions anglaises (comme don't)",
+  learnContractionsExpandRule:
+    "Garder les contractions anglaises comme don't ou it's\u00a0; ne pas les développer.",
+  learnContractionsAdd: "d'utiliser des contractions anglaises (comme don't)",
+  learnContractionsAddRule:
+    "Ne pas utiliser de contractions anglaises comme don't\u00a0; écrire les mots en entier.",
+  learnSplit: "de couper les phrases",
+  learnSplitRule: "Ne pas couper mes phrases en phrases plus courtes.",
+  learnMerge: "de fusionner les phrases",
+  learnMergeRule: "Ne pas fusionner mes phrases en phrases plus longues.",
+  learnShorter: "de beaucoup raccourcir le texte",
+  learnShorterRule:
+    "En révisant, garder à peu près la longueur d'origine\u00a0; ne pas trop couper.",
+  learnLonger: "de beaucoup allonger le texte",
+  learnLongerRule:
+    "En révisant, garder à peu près la longueur d'origine\u00a0; ne pas trop ajouter.",
+  learnRemember: "Retenir",
+  learnNotNow: "Pas maintenant",
+  learnNever: "Ne plus demander",
+  learnSaved:
+    "Retenu. Vous pouvez le voir ou le supprimer dans l'onglet Mémoire.",
+  learnLabel: "Appris de vos choix de révision",
   levisProjectTitle: "Données de projet Levis",
   levisProjectText:
     "Ce projet contient des données Levis (style, bibliothèque, instructions d'écriture, compétences). Les convertir au format de Textus\u00a0?",

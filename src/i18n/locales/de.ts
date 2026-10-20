@@ -168,6 +168,43 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   memoryChipUndone: "Rückgängig gemacht. Nicht mehr gemerkt.",
   memoryActionFailed:
     "Das hat nicht geklappt. Versuch es im Tab Gedächtnis noch einmal.",
+  learnSuggestion: "Du hast {what} mehrmals abgelehnt. Merken? {rule}",
+  learnQuoted: "„{text}“",
+  learnSwap: "das Ändern von {from} in {to}",
+  learnSwapRule: "{from} beibehalten, nicht in {to} ändern.",
+  learnWidthHalf: "das Umstellen vollbreiter Satzzeichen auf halbbreite",
+  learnWidthHalfRule:
+    "Vollbreite Satzzeichen beibehalten, nicht auf halbbreite umstellen.",
+  learnWidthFull: "das Umstellen halbbreiter Satzzeichen auf vollbreite",
+  learnWidthFullRule:
+    "Halbbreite Satzzeichen beibehalten, nicht auf vollbreite umstellen.",
+  learnOxfordAdd: "das Einfügen des Oxford-Kommas",
+  learnOxfordAddRule:
+    "Kein Oxford-Komma einfügen (das Komma vor and/or in einer englischen Aufzählung).",
+  learnOxfordRemove: "das Entfernen des Oxford-Kommas",
+  learnOxfordRemoveRule:
+    "Das Oxford-Komma beibehalten (das Komma vor and/or in einer englischen Aufzählung).",
+  learnContractionsExpand: "das Ausschreiben englischer Kurzformen (wie don't)",
+  learnContractionsExpandRule:
+    "Englische Kurzformen wie don't oder it's beibehalten, nicht ausschreiben.",
+  learnContractionsAdd: "das Einführen englischer Kurzformen (wie don't)",
+  learnContractionsAddRule:
+    "Im Englischen keine Kurzformen wie don't verwenden, die Wörter ausschreiben.",
+  learnSplit: "das Teilen von Sätzen",
+  learnSplitRule: "Meine Sätze nicht in kürzere teilen.",
+  learnMerge: "das Zusammenfügen von Sätzen",
+  learnMergeRule: "Meine Sätze nicht zu längeren zusammenfügen.",
+  learnShorter: "starkes Kürzen des Textes",
+  learnShorterRule:
+    "Beim Überarbeiten etwa die ursprüngliche Länge halten, nicht stark kürzen.",
+  learnLonger: "starkes Verlängern des Textes",
+  learnLongerRule:
+    "Beim Überarbeiten etwa die ursprüngliche Länge halten, nicht viel hinzufügen.",
+  learnRemember: "Merken",
+  learnNotNow: "Jetzt nicht",
+  learnNever: "Nicht mehr fragen",
+  learnSaved: "Gemerkt. Im Tab Gedächtnis kannst du es ansehen oder löschen.",
+  learnLabel: "Aus deinen Überarbeitungen gelernt",
   levisProjectTitle: "Levis-Projektdaten",
   levisProjectText:
     "Dieses Projekt hat Levis-Daten (Stil, Lexikon, Schreibanweisungen, Skills). In das Format von Textus umwandeln?",

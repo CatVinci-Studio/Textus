@@ -165,6 +165,40 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   memoryChipUndone: "元に戻しました。もう覚えていません。",
   memoryActionFailed:
     "うまくいきませんでした。「記憶」タブでもう一度お試しください。",
+  learnSuggestion:
+    "{what}という修正を何度も却下しました。覚えておきますか：{rule}",
+  learnQuoted: "「{text}」",
+  learnSwap: "{from}を{to}に変える",
+  learnSwapRule: "{from}のままにし、{to}に変えない。",
+  learnWidthHalf: "全角の句読点を半角にする",
+  learnWidthHalfRule: "全角の句読点を保ち、半角にしない。",
+  learnWidthFull: "半角の句読点を全角にする",
+  learnWidthFullRule: "半角の句読点を保ち、全角にしない。",
+  learnOxfordAdd: "オックスフォード・コンマを加える",
+  learnOxfordAddRule:
+    "英語の列挙で and/or の前にコンマ（オックスフォード・コンマ）を付けない。",
+  learnOxfordRemove: "オックスフォード・コンマを削る",
+  learnOxfordRemoveRule:
+    "英語の列挙で and/or の前のコンマ（オックスフォード・コンマ）を残す。",
+  learnContractionsExpand: "英語の短縮形（don't など）を展開する",
+  learnContractionsExpandRule:
+    "英語の短縮形（don't、it's など）はそのまま残し、展開しない。",
+  learnContractionsAdd: "英語を短縮形（don't など）にする",
+  learnContractionsAddRule:
+    "英語では短縮形（don't など）を使わず、省略せずに書く。",
+  learnSplit: "文を分割する",
+  learnSplitRule: "私の文を短い文に分割しない。",
+  learnMerge: "文をつなげる",
+  learnMergeRule: "私の文をつなげて長い文にしない。",
+  learnShorter: "文章を大きく削る",
+  learnShorterRule: "修正では元の長さを保ち、大きく削らない。",
+  learnLonger: "文章を大きく書き足す",
+  learnLongerRule: "修正では元の長さを保ち、大きく書き足さない。",
+  learnRemember: "覚えておく",
+  learnNotNow: "今はしない",
+  learnNever: "今後たずねない",
+  learnSaved: "覚えました。「記憶」タブで確認・削除できます。",
+  learnLabel: "修正の採否から学んだこと",
   levisProjectTitle: "Levisのプロジェクトデータ",
   levisProjectText:
     "このプロジェクトにはLevisのデータ（文体、ライブラリ、執筆の指示、スキル）があります。Textusの形式に変換しますか？",

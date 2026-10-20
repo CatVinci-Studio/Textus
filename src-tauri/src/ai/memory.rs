@@ -914,6 +914,105 @@ pub async fn memory_delete(
     .map_err(|e| e.to_string())?
 }
 
+/// "Remember" on a suggestion learned from revision choices
+/// (src/ai/revision/RevisionLearning.tsx): one memory the user asked for
+/// with a click, written as the remember tool writes it - so it is listed,
+/// moved and deleted in the Memory tab like any other. A click, not the
+/// model: it saves whether or not Remember automatically is on.
+#[tauri::command]
+pub async fn memory_remember(
+    app: tauri::AppHandle,
+    doc_path: Option<String>,
+    workspace_root: Option<String>,
+    kind: String,
+    scope: String,
+    text: String,
+) -> Result<Remembering, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let dirs = MemoryDirs::for_document(&app, doc_path.as_deref(), workspace_root.as_deref());
+        let source = Source {
+            document: doc_path,
+            ..Source::default()
+        };
+        dirs.remember(
+            RememberArgs {
+                kind,
+                scope: Some(scope),
+                text,
+                ..RememberArgs::default()
+            },
+            &source,
+            &now(),
+        )
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+// --------------------------------------------------------- revision choices
+
+/// The log of accepted and rejected kinds of revision that suggestions are
+/// learned from (`ChoiceLog` in src/ai/revision/revision-learning.ts,
+/// which owns its shape and keeps it bounded). One hidden file beside the
+/// personal memories - not a memory, so the Memory tab and the prompt never
+/// list it, and it is never sent anywhere.
+const CHOICES_FILE: &str = ".revision-choices.json";
+
+/// A few hundred short entries fit many times over; past this a write is
+/// refused rather than let the file grow.
+const MAX_CHOICES_BYTES: usize = 64 * 1024;
+
+impl MemoryDirs {
+    fn choices_file(&self) -> Option<PathBuf> {
+        self.folder(Scope::Personal, MEMORY_FOLDER)
+            .map(|dir| dir.join(CHOICES_FILE))
+    }
+
+    /// The log, or None when there is none yet or it can't be read.
+    fn read_choices(&self) -> Option<serde_json::Value> {
+        let text = std::fs::read_to_string(self.choices_file()?).ok()?;
+        serde_json::from_str::<serde_json::Value>(&text)
+            .ok()
+            .filter(serde_json::Value::is_object)
+    }
+
+    fn write_choices(&self, log: &serde_json::Value) -> Result<(), String> {
+        if !log.is_object() {
+            return Err("Not a revision choices log.".into());
+        }
+        let text = serde_json::to_string(log).map_err(|e| e.to_string())?;
+        if text.len() > MAX_CHOICES_BYTES {
+            return Err("The revision choices log is too large.".into());
+        }
+        let path = self
+            .choices_file()
+            .ok_or("Nowhere to keep it: the app's config folder isn't available.")?;
+        write(&path, &text)
+    }
+}
+
+#[tauri::command]
+pub async fn revision_choices_read(app: tauri::AppHandle) -> Option<serde_json::Value> {
+    tauri::async_runtime::spawn_blocking(move || {
+        MemoryDirs::for_document(&app, None, None).read_choices()
+    })
+    .await
+    .ok()
+    .flatten()
+}
+
+#[tauri::command]
+pub async fn revision_choices_write(
+    app: tauri::AppHandle,
+    log: serde_json::Value,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        MemoryDirs::for_document(&app, None, None).write_choices(&log)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1266,6 +1365,25 @@ mod tests {
         assert!(v["previous"].is_null());
         assert!(run_tool(&ctx, "{}").contains("`text` is required"));
         assert!(run_tool(&ctx, r#"{"kind":"mood","text":"x"}"#).contains("`kind` must be"));
+        std::fs::remove_dir_all(&base).ok();
+    }
+
+    #[test]
+    fn the_revision_choices_log_sits_beside_the_personal_memories_unlisted() {
+        let base = scratch("choices");
+        let dirs = dirs(&base);
+        assert!(dirs.read_choices().is_none());
+        let log =
+            serde_json::json!({ "choices": [{ "kind": "sentences\tsplit", "taken": false }] });
+        dirs.write_choices(&log).unwrap();
+        assert_eq!(dirs.read_choices(), Some(log));
+        assert!(base.join("agent/memory/.revision-choices.json").is_file());
+        // Not a memory: nothing to list, send, or reach by id.
+        assert!(dirs.load().items.is_empty());
+        assert!(dirs.locate("personal/memory/.revision-choices").is_err());
+        assert!(dirs.write_choices(&serde_json::json!([1, 2])).is_err());
+        let huge = serde_json::json!({ "x": "a".repeat(MAX_CHOICES_BYTES) });
+        assert!(dirs.write_choices(&huge).is_err());
         std::fs::remove_dir_all(&base).ok();
     }
 
