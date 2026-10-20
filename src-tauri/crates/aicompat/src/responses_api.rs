@@ -1,6 +1,6 @@
 use crate::agent::{
     mark_cited_spans, tool_images_note, AgentTurn, CitedSpan, EventSink, ProviderEvent,
-    StepCitations, StepResult, ToolSpec,
+    StepCitations, StepResult, StepUsage, ToolSpec,
 };
 use crate::capabilities::Thinking;
 use serde::{Deserialize, Serialize};
@@ -161,7 +161,20 @@ pub async fn read_streamed_output(
     provider_label: &str,
     on_event: EventSink<'_>,
 ) -> Result<Vec<Value>, String> {
+    read_streamed_response(res, provider_label, on_event)
+        .await
+        .map(|(output, _)| output)
+}
+
+/// [`read_streamed_output`], and the token usage `response.completed`
+/// reports.
+pub async fn read_streamed_response(
+    res: reqwest::Response,
+    provider_label: &str,
+    on_event: EventSink<'_>,
+) -> Result<(Vec<Value>, Option<StepUsage>), String> {
     let mut output = Vec::new();
+    let mut usage = None;
     // A remote failure arrives as an event, not a transport error - noted
     // here and surfaced after the read loop (read_sse's callback can't
     // return early).
@@ -232,6 +245,11 @@ pub async fn read_streamed_output(
                     output.push(item.clone());
                 }
             }
+            Some("response.completed") => {
+                usage = event
+                    .pointer("/response/usage")
+                    .and_then(StepUsage::from_openai);
+            }
             Some("response.failed") => {
                 let error = event
                     .get("response")
@@ -248,7 +266,7 @@ pub async fn read_streamed_output(
     if let Some(failure) = failure {
         return Err(failure);
     }
-    Ok(output)
+    Ok((output, usage))
 }
 
 /// Extracts the assistant's text from a streamed output item list (see

@@ -1,4 +1,4 @@
-use crate::agent::{AgentTurn, EventSink, StepResult, ToolSpec};
+use crate::agent::{AgentTurn, EventSink, StepResult, StepUsage, ToolSpec};
 use crate::capabilities::Thinking;
 use crate::responses_api;
 
@@ -22,7 +22,7 @@ pub async fn agent_step(
     web_search: bool,
     thinking: &Thinking,
     on_event: EventSink<'_>,
-) -> Result<StepResult, String> {
+) -> Result<(StepResult, Option<StepUsage>), String> {
     let body = responses_api::agent_request_body(
         model,
         instructions,
@@ -51,7 +51,8 @@ pub async fn agent_step(
         .and_then(|o| o.as_array())
         .cloned()
         .unwrap_or_default();
-    Ok(responses_api::parse_agent_output(&output, on_event))
+    let usage = parsed.get("usage").and_then(StepUsage::from_openai);
+    Ok((responses_api::parse_agent_output(&output, on_event), usage))
 }
 
 #[cfg(test)]

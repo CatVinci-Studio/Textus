@@ -101,6 +101,12 @@ pub struct ProviderCaps {
     /// How the same key asks for a picture, where the provider makes them
     /// (aicompat::images; the image model in Settings, ai/images.rs).
     pub image: Option<ImageApi>,
+    /// Chat Completions only: a streamed request may ask for its token usage
+    /// (`stream_options.include_usage`). Off where a server rejects unknown
+    /// fields (Mistral), doesn't document it (Zhipu) or isn't known (a
+    /// custom endpoint): their usage is still read when they send it
+    /// unasked.
+    pub stream_usage: bool,
 }
 
 /// A provider id the table doesn't list - a newly added catalog entry, or
@@ -110,6 +116,7 @@ const DEFAULT_CAPS: ProviderCaps = ProviderCaps {
     native_search: NativeSearch::None,
     replay_reasoning: false,
     image: None,
+    stream_usage: false,
 };
 
 const PROVIDERS: &[(&str, ProviderCaps)] = &[
@@ -119,6 +126,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::ResponsesTool,
             replay_reasoning: false,
+            stream_usage: true,
             image: Some(ImageApi::OpenAi),
         },
     ),
@@ -128,6 +136,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::Anthropic,
             native_search: NativeSearch::AnthropicTool,
             replay_reasoning: false,
+            stream_usage: true,
             image: None,
         },
     ),
@@ -137,6 +146,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
         "google",
         ProviderCaps {
             image: Some(ImageApi::Gemini),
+            stream_usage: true,
             ..DEFAULT_CAPS
         },
     ),
@@ -146,6 +156,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
             replay_reasoning: true,
+            stream_usage: true,
             image: None,
         },
     ),
@@ -155,6 +166,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::CompatibleResponses,
             replay_reasoning: false,
+            stream_usage: true,
             image: None,
         },
     ),
@@ -165,6 +177,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::None,
             native_search: NativeSearch::None,
             replay_reasoning: false,
+            stream_usage: false,
             image: None,
         },
     ),
@@ -174,6 +187,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::ChatCompletions(NativeWebSearch::Groq),
             replay_reasoning: false,
+            stream_usage: true,
             image: None,
         },
     ),
@@ -183,6 +197,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::OpenRouter,
             native_search: NativeSearch::ChatCompletions(NativeWebSearch::OpenRouter),
             replay_reasoning: false,
+            stream_usage: true,
             image: None,
         },
     ),
@@ -192,6 +207,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
             replay_reasoning: true,
+            stream_usage: true,
             image: None,
         },
     ),
@@ -201,6 +217,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::ChatCompletions(NativeWebSearch::Zhipu),
             replay_reasoning: true,
+            stream_usage: false,
             image: Some(ImageApi::Zhipu),
         },
     ),
@@ -210,6 +227,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::Qwen,
             native_search: NativeSearch::Qwen,
             replay_reasoning: false,
+            stream_usage: true,
             image: Some(ImageApi::DashScope),
         },
     ),
@@ -222,12 +240,19 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::None,
             replay_reasoning: true,
+            stream_usage: true,
             image: Some(ImageApi::Seedream),
         },
     ),
     // Ollama's /v1 endpoint takes `reasoning_effort` and maps it onto its
     // own `think`.
-    ("ollama", DEFAULT_CAPS),
+    (
+        "ollama",
+        ProviderCaps {
+            stream_usage: true,
+            ..DEFAULT_CAPS
+        },
+    ),
     ("custom", DEFAULT_CAPS),
 ];
 
@@ -700,6 +725,13 @@ mod tests {
         assert!(can_think_deeper("ollama", "qwen3:8b"));
         assert!(!can_think_deeper("mistral", "mistral-large-latest"));
         assert!(!can_think_deeper("openai", "gpt-4o"));
+    }
+
+    #[test]
+    fn streamed_usage_is_asked_for_only_where_the_server_takes_it() {
+        assert!(provider("deepseek").stream_usage && provider("doubao").stream_usage);
+        assert!(!provider("mistral").stream_usage, "rejects unknown fields");
+        assert!(!provider("custom").stream_usage && !provider("new-entry").stream_usage);
     }
 
     #[test]

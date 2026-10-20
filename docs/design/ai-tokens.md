@@ -176,8 +176,8 @@ Completion and grammar, before this change: every request was uncached
   `previous_response_id`. Nothing to change.
 - **DeepSeek, Qwen, Kimi, Gemini and other chat-completions servers.**
   Automatic or implicit prefix caching on the server's side, which the same
-  stable order serves. `custom.rs` doesn't read `usage`, so their cache
-  hits are not visible to the app or the eval.
+  stable order serves. Their `usage` is read (item 10, below), so their
+  cache hits show in each step's usage.
 - **Doubao (Volcengine Ark).** Chat completions cached a prefix only now and
   then: 2 of 6 requests read 5,944 of 6,452-6,461 tokens, and an identical
   repeat read nothing in one of the two runs. Ark's own cache
@@ -242,3 +242,14 @@ with the live eval (Sonnet 5.5, `TEXTUS_EVAL_JUDGE=0`) on the same cases.
   prefix itself is 10,482 tokens (was 10,555). Live eval: the 30-case agent
   probe 30/30 before and after, six more Write, Review, memory and
   multi-turn cases 6/6 before and after; no Write proposal was refused.
+- **Item 10, usage from every dialect.** `AgentProvider::step` returns a
+  `StepUsage` for each dialect, not just Claude's: Chat Completions read
+  `usage` (streamed requests ask for it with
+  `stream_options.include_usage` where the provider takes it,
+  `ProviderCaps::stream_usage`), the Responses API reads it from
+  `response.completed`, and the cached part comes from
+  `prompt_tokens_details.cached_tokens` (OpenAI, Gemini, Qwen, Doubao),
+  `prompt_cache_hit_tokens` (DeepSeek) or `cached_tokens` (Kimi). On
+  Doubao, `live_doubao_prefix_cache` now shows it through the app's own
+  step: 2,872 of 6,373 tokens read from Ark's cache on the first request
+  of one run. The app has no usage view yet; the eval and that test read it.

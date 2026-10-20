@@ -575,4 +575,32 @@ fn live_doubao_prefix_cache() {
         }
         std::thread::sleep(std::time::Duration::from_secs(2));
     }
+    // The same messages through the app's own step (AgentProvider), whose
+    // usage now carries what Ark read from its cache, as Claude's does.
+    let agent = aicompat::providers::AgentProvider {
+        id: "doubao".into(),
+        model: model.into(),
+        endpoint: aicompat::providers::Endpoint::ChatCompletions {
+            base_url: base.into(),
+            api_key: Some(key.clone()),
+            vendor: crate::ai::route::chat_vendor(base),
+            stream_usage: true,
+        },
+        thinking: ThinkingLevel::Fast,
+        native_search: None,
+        enforce_binding: false,
+    };
+    let specs = tools::ToolRegistry::builtin(true, false, AgentMode::Review, false, true).specs();
+    for (n, message) in messages.iter().enumerate() {
+        let turn = aicompat::agent::AgentTurn::User {
+            text: request_user_text(&context, message),
+            images: Vec::new(),
+        };
+        let usage = with_retry(|| {
+            block_on(agent.step(&system, std::slice::from_ref(&turn), &specs, &|_| {}))
+        })
+        .map(|(_, usage)| usage);
+        println!("[doubao] app step {}: {usage:?}", n + 1);
+        std::thread::sleep(std::time::Duration::from_secs(2));
+    }
 }
