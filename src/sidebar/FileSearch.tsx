@@ -11,7 +11,6 @@ import { fs } from "../platform/ipc";
 import { useSettings } from "../settings/SettingsContext";
 import { SearchIcon, fileIconFor } from "../ui/icons";
 import { Select } from "../ui/Select";
-import { getUiState, setUiState } from "../storage/ui-state";
 import { localeOf } from "../i18n/langs";
 import { nameCollator } from "../utils/name-order";
 import {
@@ -93,11 +92,6 @@ function focusEditor() {
     ?.focus();
 }
 
-/** The filter as last left, every file by default. */
-function savedScope(): SearchScope {
-  return getUiState("fileSearchScope") === "documents" ? "documents" : "all";
-}
-
 /**
  * The search box at the top of the Files tab: file names anywhere under
  * the folder, matched as you type - documents first, then other files,
@@ -111,6 +105,8 @@ export function FileSearch({
   refreshKey,
   query,
   onQueryChange,
+  scope,
+  onScopeChange,
   onOpen,
   focusRequest,
   onFocusHandled,
@@ -119,6 +115,9 @@ export function FileSearch({
   refreshKey: number;
   query: string;
   onQueryChange: (query: string) => void;
+  /** Every file or documents only - the tree's filter too (FileTree). */
+  scope: SearchScope;
+  onScopeChange: (scope: SearchScope) => void;
   onOpen: (path: string) => void;
   /** Set by the search shortcut: take the keyboard once mounted. */
   focusRequest: boolean;
@@ -129,7 +128,6 @@ export function FileSearch({
   const input = useRef<HTMLInputElement>(null);
   const { index, ensure } = useFolderIndex(root, refreshKey, collator);
   const [selected, setSelected] = useState(0);
-  const [scope, setScope] = useState<SearchScope>(savedScope);
 
   // The folder changed (or Refresh) while the box has the keyboard: there
   // is no focus event to come, so index the new one now.
@@ -219,10 +217,8 @@ export function FileSearch({
           aria-label={t.treeSearchScope}
           title={t.treeSearchScope}
           onChange={(e) => {
-            const next = e.target.value === "documents" ? "documents" : "all";
-            setScope(next);
+            onScopeChange(e.target.value === "documents" ? "documents" : "all");
             setSelected(0);
-            setUiState("fileSearchScope", next);
           }}
         >
           <option value="all">{t.treeSearchScopeAll}</option>

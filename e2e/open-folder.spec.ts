@@ -102,9 +102,7 @@ test("Open Folder pins the tree's root and lists the folder as recent", async ({
   await expect(page.locator(`${editor} h1`)).toContainText("Elsewhere");
   await expect(page.locator(rootLabel)).toHaveText("notes");
   // Up stops at the folder: it is the edge of what was opened.
-  await expect(
-    page.getByRole("button", { name: "Parent folder" }),
-  ).toBeDisabled();
+  await expect(page.locator(".sidebar .tree-crumb")).toHaveCount(0);
   expect(
     await page.evaluate(() => localStorage.getItem("textus-open-folder")),
   ).toBe(JSON.stringify("/work/notes"));
@@ -162,41 +160,15 @@ test("the home folder is refused with a reason", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("an empty window offers Open Folder in the sidebar", async ({ page }) => {
-  await open(page);
-  await emit(page, "menu-toggle-sidebar");
-  await page.evaluate(() => {
-    (window as unknown as { __devPickFolder: string }).__devPickFolder =
-      "/work/notes";
-  });
-  await page
-    .locator(".sidebar-body")
-    .getByRole("button", { name: "Open Folder…" })
-    .click();
-  await expect(page.locator(rootLabel)).toHaveText("notes");
-});
-
-test("the empty window's Open Folder stays clear of the sidebar's border", async ({
+test("an empty window's Files tab explains itself, without a button", async ({
   page,
 }) => {
-  // The narrowest sidebar, the largest interface text and a long label.
-  await open(page, {
-    settings: { language: "fr", uiTextScale: 1.25 },
-    storage: { "textus-sidebar-width": "180" },
-  });
+  await open(page);
   await emit(page, "menu-toggle-sidebar");
-  const button = page
-    .locator(".sidebar-body")
-    .getByRole("button", { name: "Ouvrir un dossier…" });
-  await expect(button).toBeVisible();
-  const box = (await button.boundingBox())!;
-  const sidebar = (await page.locator(".sidebar").boundingBox())!;
-  expect(box.x + box.width).toBeLessThanOrEqual(sidebar.x + sidebar.width - 12);
-  expect(
-    await page
-      .locator(".sidebar-body")
-      .evaluate((el) => el.scrollWidth <= el.clientWidth),
-  ).toBe(true);
+  await expect(page.locator(".sidebar-body")).toContainText(
+    "Save this document and its folder shows up here.",
+  );
+  await expect(page.locator(".sidebar-body button")).toHaveCount(0);
 });
 
 test.describe("the AI's project folder", () => {

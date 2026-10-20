@@ -314,6 +314,7 @@ function App() {
     setDocumentsOpen,
     openFromDocuments,
     documentRenamed,
+    entryMoved,
     documentDeleted,
     skillFilesDeleted,
     shareActiveTab,
@@ -452,6 +453,7 @@ function App() {
           onToggle={toggleSidebar}
           onClose={() => setPanelOpen(false)}
           onOpenFile={(path) => void openFile(path)}
+          onEntryMoved={entryMoved}
           searchFocusRequest={searchFocusRequest}
           onSearchFocusHandled={clearSearchFocusRequest}
           t={t}

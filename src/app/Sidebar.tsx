@@ -1,12 +1,7 @@
 import { FileTree } from "../sidebar/FileTree";
 import { Outline } from "../sidebar/Outline";
 import { ClipboardHistory } from "../sidebar/ClipboardHistory";
-import {
-  TreeTabIcon,
-  OutlineTabIcon,
-  ClipboardTabIcon,
-  OpenFolderIcon,
-} from "../ui/icons";
+import { TreeTabIcon, OutlineTabIcon, ClipboardTabIcon } from "../ui/icons";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { Presence, PresenceDiv, type PresenceHandle } from "../ui/usePresence";
 import { ResizeHandle } from "../ui/ResizeHandle";
@@ -34,6 +29,7 @@ export function Sidebar({
   onToggle,
   onClose,
   onOpenFile,
+  onEntryMoved,
   searchFocusRequest,
   onSearchFocusHandled,
   t,
@@ -53,6 +49,8 @@ export function Sidebar({
   onToggle: () => void;
   onClose: () => void;
   onOpenFile: (path: string) => void;
+  /** A file or folder was dragged into another folder in the tree. */
+  onEntryMoved: (from: string, to: string) => void;
   /** The search shortcut asked for the Files tab's search box. */
   searchFocusRequest: boolean;
   onSearchFocusHandled: () => void;
@@ -129,26 +127,15 @@ export function Sidebar({
                       canOpenFolder ? openFolder.openFolderDialog : undefined
                     }
                     onCloseFolder={openFolder.closeFolder}
+                    onEntryMoved={onEntryMoved}
                     searchFocusRequest={searchFocusRequest}
                     onSearchFocusHandled={onSearchFocusHandled}
                   />
                 ) : (
                   // An unsaved draft has no folder - an empty panel read
-                  // as broken.
-                  <>
-                    <div className="clipboard-empty">{t.treeEmptyDraft}</div>
-                    {canOpenFolder && (
-                      <button
-                        className="text-button tree-empty-open"
-                        onClick={openFolder.openFolderDialog}
-                      >
-                        <OpenFolderIcon />
-                        <span className="tree-empty-open-label">
-                          {t.menuOpenFolder}
-                        </span>
-                      </button>
-                    )}
-                  </>
+                  // as broken. File > Open Folder… is the way to one; a
+                  // button for it here sat oddly under the note.
+                  <div className="clipboard-empty">{t.treeEmptyDraft}</div>
                 ))}
               {mode === "outline" && <Outline content={activeContent} />}
               {mode === "clipboard" && <ClipboardHistory />}
