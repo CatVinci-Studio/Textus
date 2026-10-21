@@ -47,6 +47,11 @@ export interface EditProposal {
     /** Still being made: the document shows its frame until it comes. */
     pending?: boolean;
   };
+  /** A picture asked for before its text (generate_image's `in_text`):
+   *  its frame stands where the text is going from the moment it is asked
+   *  for, until the text that carries it arrives and takes it in. Not a
+   *  proposal of its own - nothing to accept. */
+  slot?: boolean;
 }
 
 /**

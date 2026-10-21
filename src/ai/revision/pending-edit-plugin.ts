@@ -666,7 +666,7 @@ export function hasPendingEdits(state: EditorState): boolean {
 function textWidget(
   p: PendingPreview,
   pos: number,
-  side: -1 | 1,
+  side: -1 | 1 | 2,
   animate: boolean,
   replaces: boolean,
 ) {
@@ -1263,7 +1263,15 @@ function decorationsFor(
         ? strikeTo
         : p.to;
     decos.push(
-      textWidget(p, insertPos, atStart ? -1 : 1, animate, removesText),
+      // A picture's slot stays after text streaming in at the same place:
+      // the text grows above it, as it will stand once the text has it.
+      textWidget(
+        p,
+        insertPos,
+        p.proposal.slot ? 2 : atStart ? -1 : 1,
+        animate,
+        removesText,
+      ),
     );
   }
   return decos;
