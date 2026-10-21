@@ -44,6 +44,12 @@ If another copy of the e2e suite may be running (another worktree), set
   pull request to `main`, and don't merge it yourself unless asked. One
   feature or fix per branch and pull request; the steps of that one change
   are commits in it.
+- `main` is the next minor version; the stable version is maintained on
+  `release/X.Y.x`, fixes only (docs/dev/releasing.md#branches). When asked
+  to fix a bug the released version has, branch from `origin/release/X.Y.x`
+  and open the pull request there; the line is merged back into `main`
+  after its release. Never put a new feature on a release line, and never
+  push to `main` or a release line directly.
 - Don't stack pull requests by default: each one starts from `main`, so any
   of them can merge in any order. When a change depends on another that
   hasn't merged, wait for it, or put the dependent steps in one pull request
