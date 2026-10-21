@@ -3,13 +3,13 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { katexWoff2Only } from "./vite.katex-fonts";
 import { colorMixFallback } from "./vite.color-mix-fallback";
-import { officialPluginLibs } from "./vite.plugin-libs";
+import { devPlugins } from "./vite.dev-plugins";
 
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react(), katexWoff2Only(), officialPluginLibs()],
+  plugins: [react(), katexWoff2Only(), devPlugins()],
   css: { postcss: { plugins: [colorMixFallback()] } },
   // The oldest engines Textus runs in: WebView2 on Chromium 105 (Windows
   // 10 without updates) and WKWebView on iOS 16. Syntax newer than these
@@ -26,6 +26,7 @@ export default defineConfig(async () => ({
       "src-tauri/**",
       ".claude/**",
       ".cache/**",
+      "textus-plugins/**",
     ],
   },
 

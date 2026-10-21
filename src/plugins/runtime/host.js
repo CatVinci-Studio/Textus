@@ -210,6 +210,20 @@
           title: options && options.title,
         });
       },
+      setStatusItem: function (id, item) {
+        item = item || {};
+        call("window.setStatusItem", {
+          id: String(id),
+          text: String(item.text || ""),
+          tooltip: item.tooltip,
+          command: item.command,
+        }).catch(function () {});
+        return disposable(function () {
+          call("window.removeStatusItem", { id: String(id) }).catch(
+            function () {},
+          );
+        });
+      },
       openExternal: function (url) {
         return call("window.openExternal", { url: String(url) });
       },
@@ -248,6 +262,9 @@
       getSelection: function () {
         return call("document.getSelection");
       },
+      getOutline: function () {
+        return call("document.getOutline");
+      },
       proposeEdit: function (edit) {
         return call("document.proposeEdit", edit);
       },
@@ -284,6 +301,15 @@
           path: String(path),
           data: bytesOf(data),
         });
+      },
+      rename: function (from, to) {
+        return call("workspace.rename", { from: String(from), to: String(to) });
+      },
+      trash: function (path) {
+        return call("workspace.trash", { path: String(path) });
+      },
+      createFolder: function (path) {
+        return call("workspace.createFolder", { path: String(path) });
       },
       onDidSaveDocument: function (callback) {
         return on("didSave", callback);

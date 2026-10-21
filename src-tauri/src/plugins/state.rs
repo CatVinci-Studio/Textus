@@ -49,6 +49,10 @@ pub struct PluginEntry {
     /// A plugin loaded from a folder in developer mode: that folder.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dev_path: Option<String>,
+    /// Installed from the catalog as CatVinci's own (catalog.rs): Settings
+    /// marks it Official. Never set by the window.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub official: bool,
 }
 
 impl PluginsState {
@@ -134,6 +138,7 @@ mod tests {
                 enabled,
                 granted: granted.iter().map(|g| g.to_string()).collect(),
                 dev_path: None,
+                official: false,
             },
         );
         PluginsState { all_on, plugins }

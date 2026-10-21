@@ -661,16 +661,59 @@ export function installDevTauriShim(): void {
   // a PDF given to a custom editor - from `__devFiles`). Installed plugins
   // are `window.__devPlugins`: [{ id, dir, manifest, dev, files: {rel:
   // text} }]. The network has nothing to answer: a test cans plugin_http.
-  // `window.__devPluginState` starts it with plugins already on.
+  // `window.__devPluginState` starts it with plugins already on. The
+  // catalog is the textus-plugins checkout the dev server serves at
+  // /dev-plugins/ (vite.dev-plugins.ts); installing from it lists the
+  // plugin with its files read from there, and `window.__devCatalogInstalled`
+  // ([ids]) has some installed from the start.
+  type DevPluginEntry = {
+    enabled: boolean;
+    granted: string[];
+    official?: boolean;
+  };
   const pluginState = (w.__devPluginState as
-    | {
-        allOn: boolean;
-        plugins: Record<string, { enabled: boolean; granted: string[] }>;
-      }
+    | { allOn: boolean; plugins: Record<string, DevPluginEntry> }
     | undefined) ?? {
     allOn: true,
-    plugins: {} as Record<string, { enabled: boolean; granted: string[] }>,
+    plugins: {} as Record<string, DevPluginEntry>,
   };
+  type CatalogEntry = { id: string; official: boolean; manifest: unknown };
+  let catalogEntries: Promise<CatalogEntry[]> | null = null;
+  const devCatalog = () =>
+    (catalogEntries ??= fetch("/dev-plugins/index.json").then((r) =>
+      r.ok
+        ? (r.json() as Promise<{ plugins: CatalogEntry[] }>).then(
+            (c) => c.plugins,
+          )
+        : Promise.reject(new Error("No textus-plugins checkout to list.")),
+    ));
+  const installFromDevCatalog = async (id: string) => {
+    const entry = (await devCatalog()).find((e) => e.id === id);
+    if (!entry) throw new Error(`${id} isn't in the plugin catalog.`);
+    const list = ((w.__devPlugins ??= []) as Record<string, unknown>[]).filter(
+      (p) => p.id !== id,
+    );
+    const installed = {
+      id,
+      dir: `/dev-plugins/${id}`,
+      manifest: JSON.stringify(entry.manifest),
+      dev: false,
+      catalog: true,
+    };
+    w.__devPlugins = [...list, installed];
+    pluginState.plugins[id] = {
+      ...(pluginState.plugins[id] ?? { enabled: false, granted: [] }),
+      official: entry.official,
+    };
+    return installed;
+  };
+  let preinstalled: Promise<unknown> | null = null;
+  const preinstall = () =>
+    (preinstalled ??= Promise.all(
+      ((w.__devCatalogInstalled ?? []) as string[]).map((id) =>
+        installFromDevCatalog(id),
+      ),
+    ));
   const pluginStorage = new Map<string, Record<string, unknown>>();
   const encoded = (text: string) => new TextEncoder().encode(text).buffer;
   function pluginCommand(
@@ -685,6 +728,7 @@ export function installDevTauriShim(): void {
     const installed = (w.__devPlugins ?? []) as {
       id: string;
       files?: Record<string, string>;
+      catalog?: boolean;
     }[];
     const path = String(args.path ?? "");
     const fileText = (p: string) =>
@@ -710,17 +754,27 @@ export function installDevTauriShim(): void {
         };
         return Promise.resolve(null);
       case "plugins_installed":
-        return Promise.resolve(
-          installed.map((plugin) => {
+        return preinstall().then(() =>
+          ((w.__devPlugins ?? []) as typeof installed).map((plugin) => {
             const listed: Record<string, unknown> = { ...plugin };
             delete listed.files;
+            delete listed.catalog;
             return listed;
           }),
         );
+      case "plugin_catalog":
+        return devCatalog();
+      case "plugin_install_catalog":
+        return installFromDevCatalog(id);
       case "plugin_file": {
-        const text = installed.find((p) => p.id === id)?.files?.[
-          String(args.rel)
-        ];
+        const plugin = installed.find((p) => p.id === id);
+        if (plugin?.catalog)
+          return fetch(`/dev-plugins/${id}/${String(args.rel)}`).then((r) =>
+            r.ok
+              ? r.arrayBuffer()
+              : Promise.reject(`${String(args.rel)}: No such file`),
+          );
+        const text = plugin?.files?.[String(args.rel)];
         return text === undefined
           ? Promise.reject(`${String(args.rel)}: No such file`)
           : Promise.resolve(encoded(text));
@@ -762,13 +816,24 @@ export function installDevTauriShim(): void {
         pluginStorage.set(id, store);
         return Promise.resolve(null);
       }
+      case "plugin_uninstall":
+        w.__devPlugins = installed.filter((p) => p.id !== id);
+        delete pluginState.plugins[id];
+        return Promise.resolve(null);
       case "plugin_install":
       case "plugin_load_dev":
-      case "plugin_uninstall":
-        return Promise.reject("The dev shim installs no plugins.");
+        return Promise.reject("The dev shim installs no plugin from a file.");
       case "plugin_pick_package":
       case "set_plugin_menu":
+      case "set_tray_plugin_items":
         return Promise.resolve(null);
+      // `window.__devPendingPluginCommand`: one picked in the tray with no
+      // window open, for this window to run.
+      case "take_pending_plugin_command": {
+        const command = (w.__devPendingPluginCommand as string) ?? null;
+        w.__devPendingPluginCommand = null;
+        return Promise.resolve(command);
+      }
     }
     return null;
   }

@@ -27,6 +27,16 @@ exports.activate = function () {
         }
         if (message === "propose")
           await textus.document.proposeEdit({ action: "append", text: "Added by Hello." });
+        if (message === "outline") {
+          const outline = await textus.document.getOutline();
+          webview.postMessage(outline.map((h) => h.level + ":" + h.text).join("|"));
+        }
+        if (message === "status")
+          textus.window.setStatusItem("count", {
+            text: "Hello here",
+            tooltip: "Greet",
+            command: "test.hello.greet",
+          });
         if (message === "folder") {
           try {
             await textus.workspace.list("");
@@ -39,10 +49,12 @@ exports.activate = function () {
         "<button id=ping>Ping</button>",
         "<button id=propose>Propose</button>",
         "<button id=folder>Folder</button>",
+        "<button id=outline>Outline</button>",
+        "<button id=status>Status</button>",
         "<p id=out></p>",
         "<script>",
         "const api = acquireTextusApi();",
-        "for (const id of ['ping', 'propose', 'folder'])",
+        "for (const id of ['ping', 'propose', 'folder', 'outline', 'status'])",
         "  document.getElementById(id).onclick = () => api.postMessage(id);",
         "api.onMessage((m) => (document.getElementById('out').textContent = m));",
         "let storage = 'open';",
@@ -115,7 +127,7 @@ async function openPluginsPage(page: Page) {
 
 async function turnOn(page: Page) {
   await openPluginsPage(page);
-  const row = page.locator('.plugin-row[data-plugin="test.hello"]');
+  const row = page.locator('.plugin-card[data-plugin="test.hello"]');
   await expect(row).toContainText("Says hello.");
   await row.getByRole("checkbox", { name: "Turn on Hello" }).click();
   const dialog = page.locator(".app-dialog");
@@ -189,7 +201,7 @@ test("a plugin's command runs from the editor's menu and keeps what it stored", 
 test("refusing its permissions leaves a plugin off", async ({ page }) => {
   await open(page);
   await openPluginsPage(page);
-  const row = page.locator('.plugin-row[data-plugin="test.hello"]');
+  const row = page.locator('.plugin-card[data-plugin="test.hello"]');
   await row.getByRole("checkbox", { name: "Turn on Hello" }).click();
   await page
     .locator(".app-dialog")
@@ -215,4 +227,25 @@ test("turning every plugin off takes its tab away", async ({ page }) => {
   await page.getByRole("checkbox", { name: "Plugins" }).uncheck();
   await page.keyboard.press("Escape");
   await expect(tab).toHaveCount(0);
+});
+
+test("a plugin reads the document's outline, and puts a status in the window bar that runs its command", async ({
+  page,
+}) => {
+  await open(page);
+  await turnOn(page);
+  await pasteMarkdown(
+    page,
+    "# Harbour\n\nText.\n\n```\n# not a heading\n```\n\n## Boats",
+  );
+  const panel = await openPanel(page);
+  await panel.locator("#outline").click();
+  await expect(panel.locator("#out")).toHaveText("1:Harbour|2:Boats");
+  await panel.locator("#status").click();
+  const status = page.locator(".window-bar .plugin-status-item", {
+    hasText: "Hello here",
+  });
+  await expect(status).toBeVisible();
+  await status.click();
+  await expect(page.locator(".app-dialog")).toContainText("Hello 1");
 });

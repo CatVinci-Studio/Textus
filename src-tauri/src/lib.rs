@@ -524,6 +524,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
             Vec::new(),
         )))
         .manage(background::BackgroundStatus::default())
+        .manage(background::tray::TrayPlugins::default())
         .on_window_event(|window, event| {
             let app = window.app_handle();
             if matches!(event, tauri::WindowEvent::Destroyed) {
@@ -835,6 +836,15 @@ pub fn run() {
             plugins::state::plugin_set,
             plugins::install::plugins_installed,
             plugins::install::plugin_install,
+            plugins::catalog::plugin_catalog,
+            plugins::access::plugin_fs_rename,
+            plugins::access::plugin_fs_trash,
+            plugins::access::plugin_fs_mkdir,
+            #[cfg(desktop)]
+            background::tray::set_tray_plugin_items,
+            #[cfg(desktop)]
+            background::tray::take_pending_plugin_command,
+            plugins::catalog::plugin_install_catalog,
             plugins::install::plugin_load_dev,
             plugins::install::plugin_uninstall,
             plugins::access::plugin_file,

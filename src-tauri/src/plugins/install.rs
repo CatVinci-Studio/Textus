@@ -105,7 +105,7 @@ pub async fn plugin_install(
         .map_err(|e| e.to_string())?
 }
 
-fn install_sync(app: &tauri::AppHandle, source: &Path) -> Result<InstalledPlugin, String> {
+pub(super) fn install_sync(app: &tauri::AppHandle, source: &Path) -> Result<InstalledPlugin, String> {
     let root = plugins_root(app)?;
     std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
     // Unpacked beside where it goes, then renamed into place: a failed
@@ -131,10 +131,12 @@ fn install_sync(app: &tauri::AppHandle, source: &Path) -> Result<InstalledPlugin
             std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
         }
         std::fs::rename(&dir, &target).map_err(|e| e.to_string())?;
-        // Installed now, so no longer loaded from a developer folder.
+        // Installed now, so no longer loaded from a developer folder - and,
+        // until the catalog says so (catalog.rs), not marked Official.
         state::update(app, |state| {
             if let Some(entry) = state.plugins.get_mut(&head.id) {
                 entry.dev_path = None;
+                entry.official = false;
             }
         })?;
         Ok(installed(head.id, &target, text, false))

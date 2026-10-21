@@ -40,12 +40,15 @@ export async function openWithPlugins(
   await page.addInitScript((o) => {
     if (window.top !== window) return;
     const w = window as unknown as Record<string, unknown>;
+    // Installed from the catalog (the textus-plugins checkout the dev
+    // server serves), on, with these grants.
+    w.__devCatalogInstalled = Object.keys(o.plugins);
     w.__devPluginState = {
       allOn: true,
       plugins: Object.fromEntries(
         Object.entries(o.plugins).map(([id, granted]) => [
           id,
-          { enabled: true, granted },
+          { enabled: true, granted, official: true },
         ]),
       ),
     };

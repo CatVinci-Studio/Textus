@@ -10,7 +10,7 @@ import { showConfirm, showMessage } from "../ui/app-dialog";
 import { basename } from "../utils/path";
 import type { Strings } from "../i18n/strings";
 import { PluginHost } from "./broker";
-import { readPluginFile, dataUrl, type PluginOrigin } from "./files";
+import { type PluginOrigin } from "./files";
 import {
   engineSatisfied,
   localize,
@@ -29,9 +29,9 @@ import {
 } from "./webviews";
 
 /**
- * Every plugin the app knows of - the official ones shipped with it
- * (public/plugins/official/), the installed ones and a developer's loaded
- * folder - with its switch, its grants and what it adds while on
+ * Every plugin installed - from the catalog (catalog.ts) or a file - and
+ * a developer's loaded folder, with its switch, its grants and what it
+ * adds while on
  * (docs/design/plugins.md §5-6).
  *
  * A plugin's contributions (commands, sidebar tabs, menu items, file
@@ -61,8 +61,9 @@ export interface PluginRecord {
   problem?: string;
   /** Where its files are, for one on disk. */
   dir?: string;
-  /** The icon, as a data URL, once read. */
-  icon?: string;
+  /** Installed from the catalog as CatVinci's own (Rust decides it,
+   *  plugins/catalog.rs): Settings marks it Official. */
+  official: boolean;
 }
 
 export interface PluginsSnapshot {
@@ -129,7 +130,10 @@ export function pluginName(
     : record.id;
 }
 
-export function pluginText(record: PluginRecord, value: string): string {
+export function pluginText(
+  record: Pick<PluginRecord, "manifest">,
+  value: string,
+): string {
   return record.manifest
     ? localize(record.manifest, value, windowInfo.language())
     : value;
@@ -145,26 +149,6 @@ function platform(): string {
 // ---------------------------------------------------------------------------
 // Loading
 // ---------------------------------------------------------------------------
-
-async function officialManifests(): Promise<{ id: string; text: string }[]> {
-  try {
-    const index = await fetch(
-      new URL("plugins/official/index.json", document.baseURI),
-    );
-    if (!index.ok) return [];
-    const ids = (await index.json()) as string[];
-    return await Promise.all(
-      ids.map(async (id) => ({
-        id,
-        text: new TextDecoder().decode(
-          await readPluginFile(id, "official", "textus-plugin.json"),
-        ),
-      })),
-    );
-  } catch {
-    return [];
-  }
-}
 
 function makeRecord(
   id: string,
@@ -186,6 +170,7 @@ function makeRecord(
       manifest,
       dir,
       granted,
+      official: !!entry?.official,
       status: !compatible ? "incompatible" : entry?.enabled ? "on" : "off",
       problem: compatible ? undefined : manifest.engine,
     };
@@ -196,6 +181,7 @@ function makeRecord(
       manifest: null,
       dir,
       granted,
+      official: !!entry?.official,
       status: "broken",
       problem: String((err as Error)?.message ?? err),
     };
@@ -211,41 +197,24 @@ export function loadPlugins(reload = false): Promise<void> {
   if (isIOSApp) return Promise.resolve();
   if (loading && !reload) return loading;
   loading = (async () => {
-    const [state, installed, official] = await Promise.all([
+    const [state, installed] = await Promise.all([
       pluginsIpc
         .state()
         .catch(() => ({ allOn: true, plugins: {} }) as PluginsState),
       pluginsIpc.installed().catch(() => []),
-      officialManifests(),
     ]);
     const records: PluginRecord[] = [];
     for (const p of installed)
       records.push(
         makeRecord(p.id, p.dev ? "dev" : "installed", p.manifest, state, p.dir),
       );
-    for (const p of official)
-      if (!records.some((r) => r.id === p.id))
-        records.push(makeRecord(p.id, "official", p.text, state));
     records.sort((a, b) => pluginName(a).localeCompare(pluginName(b)));
     for (const id of [...contributions.keys()]) withdraw(id);
     publish({ loaded: true, allOn: state.allOn, records });
-    for (const record of records) void loadIcon(record);
     if (state.allOn)
       for (const record of records) if (record.status === "on") apply(record);
   })();
   return loading;
-}
-
-async function loadIcon(record: PluginRecord) {
-  const icon = record.manifest?.icon;
-  if (!icon) return;
-  try {
-    update(record.id, {
-      icon: dataUrl(icon, await readPluginFile(record.id, record.origin, icon)),
-    });
-  } catch {
-    // No icon is shown; the plugin works without.
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -638,12 +607,13 @@ export async function uninstallPlugin(id: string): Promise<void> {
  *  (contributes.menus["app/plugins"]), in the plugins' order. */
 export function pluginMenuEntries(
   from: PluginsSnapshot = snapshot,
+  menu: "app/plugins" | "app/tray" = "app/plugins",
 ): { command: string; label: string }[] {
   if (!from.allOn) return [];
   return from.records.flatMap((record) => {
     const manifest = record.manifest;
     if (record.status !== "on" || !manifest) return [];
-    return (manifest.contributes.menus["app/plugins"] ?? []).map((item) => {
+    return (manifest.contributes.menus[menu] ?? []).map((item) => {
       const command = manifest.contributes.commands.find(
         (c) => c.command === item.command,
       );

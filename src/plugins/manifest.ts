@@ -45,10 +45,29 @@ export interface KeybindingContribution {
   key: string;
 }
 
-/** Where a command is listed: the editor's right-click menu, and the
- *  Plugins menu (the menu bar's on macOS, the app menu's elsewhere). */
-export type MenuId = "editor/context" | "app/plugins";
-export const MENU_IDS: readonly MenuId[] = ["editor/context", "app/plugins"];
+/** Where a command is listed: the editor's right-click menu, the Plugins
+ *  menu (the menu bar's on macOS, the app menu's elsewhere), and the menu
+ *  of background mode's icon in the tray or menu bar - there with no
+ *  window open, which it opens first. */
+export type MenuId = "editor/context" | "app/plugins" | "app/tray";
+export const MENU_IDS: readonly MenuId[] = [
+  "editor/context",
+  "app/plugins",
+  "app/tray",
+];
+
+/** A Textus setting a plugin needs on to do all it does. Settings › Plugins
+ *  says which, and offers to turn it on (requirements.ts). */
+export type RequiredSetting = "runInBackground";
+export const REQUIRED_SETTINGS: readonly RequiredSetting[] = [
+  "runInBackground",
+];
+
+export interface Requirement {
+  setting: RequiredSetting;
+  /** Why, in the plugin's words: "%needsBackground%". */
+  reason?: string;
+}
 
 export interface MenuContribution {
   command: string;
@@ -119,6 +138,9 @@ export interface PluginManifest {
   name: string;
   version: string;
   publisher: string;
+  /** Who made it, as a name to show ("CatVinci Studio"); the publisher
+   *  id where there is none. */
+  author?: string;
   description: string;
   icon?: string;
   license?: string;
@@ -130,6 +152,7 @@ export interface PluginManifest {
   main?: string[];
   activationEvents: string[];
   permissions: Permission[];
+  requires: Requirement[];
   contributes: Contributes;
   /** `%key%` strings, by language. */
   l10n: Record<string, Record<string, string>>;
@@ -376,6 +399,7 @@ export function parseManifest(raw: string | unknown): PluginManifest {
     name: text(m.name, "name"),
     version,
     publisher: text(m.publisher, "publisher"),
+    author: text(m.author, "author", true) || undefined,
     description: text(m.description, "description", true),
     icon: text(m.icon, "icon", true) || undefined,
     license: text(m.license, "license", true) || undefined,
@@ -386,6 +410,18 @@ export function parseManifest(raw: string | unknown): PluginManifest {
       text(e, `activationEvents[${i}]`),
     ),
     permissions,
+    requires: list(m.requires, "requires").map((r, i) => {
+      const need = object(r, `requires[${i}]`);
+      const setting = text(need.setting, `requires[${i}].setting`);
+      if (!(REQUIRED_SETTINGS as readonly string[]).includes(setting))
+        throw new ManifestError(
+          `requires[${i}].setting "${setting}" is not one of ${REQUIRED_SETTINGS.join(", ")}.`,
+        );
+      return {
+        setting: setting as RequiredSetting,
+        reason: text(need.reason, `requires[${i}].reason`, true) || undefined,
+      };
+    }),
     contributes: parseContributes(m.contributes, id),
     l10n,
   };

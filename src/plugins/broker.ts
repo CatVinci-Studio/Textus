@@ -1,3 +1,4 @@
+import { outlineOf, removeStatusItem, setStatusItem } from "./status-items";
 import { fs, links, plugins as pluginsIpc } from "../platform/ipc";
 import { showMessage, showPrompt } from "../ui/app-dialog";
 import { dirname } from "../utils/path";
@@ -193,6 +194,7 @@ export class PluginHost {
     endpoint?.call("$deactivate").catch(() => {});
     for (const stop of this.subscriptions.values()) stop();
     this.subscriptions.clear();
+    removeStatusItem(this.id);
     setTimeout(() => {
       this.disconnect?.();
       this.frame?.remove();
@@ -333,6 +335,22 @@ export class PluginHost {
         command: string;
         args: unknown[];
       }) => this.deps.runCommand(command, args ?? []),
+      "window.setStatusItem": ({
+        id,
+        text,
+        tooltip,
+        command,
+      }: {
+        id: string;
+        text: string;
+        tooltip?: string;
+        command?: string;
+      }) => {
+        setStatusItem(this.id, String(id), { text, tooltip, command });
+      },
+      "window.removeStatusItem": ({ id }: { id: string }) => {
+        removeStatusItem(this.id, String(id));
+      },
       "window.showMessage": ({ text, tone }: { text: string; tone?: string }) =>
         showMessage(text, {
           title: this.name,
@@ -473,6 +491,11 @@ export class PluginHost {
         this.need("document.read");
         return getActiveDocument()?.selection() ?? null;
       },
+      "document.getOutline": () => {
+        this.need("document.read");
+        const text = getActiveDocument()?.text();
+        return text === undefined ? null : outlineOf(text);
+      },
       "document.proposeEdit": (edit: Partial<EditProposal>) => {
         this.need("document.propose");
         const action = (edit.action ?? "insert_at_cursor") as EditAction;
@@ -541,6 +564,21 @@ export class PluginHost {
           path,
           pluginsIpc.fsWrite(this.id, this.root(), path, text),
         );
+      },
+      "workspace.rename": ({ from, to }: { from: string; to: string }) => {
+        this.need("workspace.write");
+        return written(
+          to,
+          pluginsIpc.fsRename(this.id, this.root(), from, to),
+        ).then(() => written(from, Promise.resolve()));
+      },
+      "workspace.trash": ({ path }: { path: string }) => {
+        this.need("workspace.write");
+        return written(path, pluginsIpc.fsTrash(this.id, this.root(), path));
+      },
+      "workspace.createFolder": ({ path }: { path: string }) => {
+        this.need("workspace.write");
+        return pluginsIpc.fsMkdir(this.id, this.root(), path);
       },
       "workspace.writeFile": ({
         path,

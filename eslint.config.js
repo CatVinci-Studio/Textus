@@ -43,6 +43,8 @@ export default tseslint.config(
       "dist-playground/**",
       "node_modules/**",
       "src-tauri/target/**",
+      // The official plugins checked out for the plugin flows.
+      "textus-plugins/**",
       // Local git worktrees (.claude/worktrees) are other checkouts.
       ".claude/**",
       // The save round-trip corpus: downloaded third-party files.

@@ -475,6 +475,14 @@ export const menuIpc = {
    *  there (menu.rs's set_plugin_menu). */
   setPluginMenu: (items: { command: string; label: string }[]) =>
     desktopQuery<void>("set_plugin_menu", undefined, { items }),
+  /** The plugin commands background mode's tray or menu-bar icon lists
+   *  (background/tray.rs). */
+  setTrayPluginItems: (items: { command: string; label: string }[]) =>
+    desktopQuery<void>("set_tray_plugin_items", undefined, { items }),
+  /** A plugin command picked in the tray while no window was open, for
+   *  the window opened for it to run - once. */
+  takePendingPluginCommand: () =>
+    desktopQuery<string | null>("take_pending_plugin_command", null),
 };
 
 // ---------------------------------------------------------------------------
@@ -1384,8 +1392,26 @@ export interface PluginsState {
   allOn: boolean;
   plugins: Record<
     string,
-    { enabled: boolean; granted: string[]; devPath?: string }
+    {
+      enabled: boolean;
+      granted: string[];
+      devPath?: string;
+      /** Installed from the catalog as CatVinci's own: Official. */
+      official?: boolean;
+    }
   >;
+}
+
+/** CatalogEntry in src-tauri/src/plugins/catalog.rs; change both. */
+export interface PluginCatalogEntry {
+  id: string;
+  version: string;
+  official: boolean;
+  /** Its textus-plugin.json. */
+  manifest: unknown;
+  url: string;
+  sha256: string;
+  size: number;
 }
 
 /** InstalledPlugin in src-tauri/src/plugins/install.rs; change both. */
@@ -1427,6 +1453,11 @@ export const plugins = {
   install: (path: string) => call<InstalledPlugin>("plugin_install", { path }),
   loadDev: (path: string) => call<InstalledPlugin>("plugin_load_dev", { path }),
   uninstall: (id: string) => call<void>("plugin_uninstall", { id }),
+  /** The plugins Textus offers (textus-plugins' catalog), fetched now. */
+  catalog: () => call<PluginCatalogEntry[]>("plugin_catalog"),
+  /** Downloads one from the catalog, checks it and installs it. */
+  installFromCatalog: (id: string) =>
+    call<InstalledPlugin>("plugin_install_catalog", { id }),
   /** Install from file… (`folder` false) and Load a plugin folder…'s
    *  picker. Desktop only. */
   pickPackage: (folder: boolean, filterName: string) =>
@@ -1439,6 +1470,13 @@ export const plugins = {
     bytes(call<ArrayBuffer>("plugin_fs_read", { id, root, path })),
   fsList: (id: string, root: string, path: string) =>
     call<PluginFsEntry[]>("plugin_fs_list", { id, root, path }),
+  fsRename: (id: string, root: string, from: string, to: string) =>
+    call<void>("plugin_fs_rename", { id, root, from, to }),
+  /** To the system Trash: nothing a plugin removes is gone for good. */
+  fsTrash: (id: string, root: string, path: string) =>
+    call<void>("plugin_fs_trash", { id, root, path }),
+  fsMkdir: (id: string, root: string, path: string) =>
+    call<void>("plugin_fs_mkdir", { id, root, path }),
   fsWrite: (
     id: string,
     root: string,

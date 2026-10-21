@@ -65,6 +65,7 @@ serde_json = "1"
 # some tests run on (commands/fs.rs).
 tokio = { version = "1", features = ["fs", "sync", "macros", "rt", "rt-multi-thread", "net"] }
 base64 = "0.22"
+sha2 = "0.10"
 reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
 aicompat = { path = "crates/aicompat" }
 

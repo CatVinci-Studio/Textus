@@ -7,8 +7,9 @@ import { plugins as pluginsIpc } from "../platform/ipc";
  * the `textus-resource:` the plugin wrote (webview.asWebviewUri).
  */
 
-/** Where a plugin's files are: shipped with the app, or on disk. */
-export type PluginOrigin = "official" | "installed" | "dev";
+/** Where a plugin's files are: installed (from the catalog or a file),
+ *  or a developer's folder. None comes with the app. */
+export type PluginOrigin = "installed" | "dev";
 
 /** A relative path inside the plugin, or an error: no `..`, no root. */
 export function pluginPath(rel: string): string {
@@ -25,22 +26,12 @@ export function pluginPath(rel: string): string {
   return parts.join("/");
 }
 
-/** The URL an official plugin's file is served at, beside the app. */
-export function officialUrl(id: string, rel: string): string {
-  return new URL(`plugins/official/${id}/${pluginPath(rel)}`, document.baseURI)
-    .href;
-}
-
 export async function readPluginFile(
   id: string,
-  origin: PluginOrigin,
+  // Both are on disk; kept for the callers, which say where it is from.
+  _origin: PluginOrigin,
   rel: string,
 ): Promise<Uint8Array> {
-  if (origin === "official") {
-    const response = await fetch(officialUrl(id, rel));
-    if (!response.ok) throw new Error(`${rel}: ${response.status}`);
-    return new Uint8Array(await response.arrayBuffer());
-  }
   return pluginsIpc.file(id, pluginPath(rel));
 }
 

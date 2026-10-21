@@ -237,6 +237,77 @@ pub async fn plugin_fs_write(
         .map_err(|e| e.to_string())
 }
 
+/// Renames or moves a file or folder within the folder. Refuses to put it
+/// over something that is there.
+#[tauri::command]
+pub async fn plugin_fs_rename(
+    app: tauri::AppHandle,
+    id: String,
+    root: String,
+    from: String,
+    to: String,
+) -> Result<(), String> {
+    if !state::read(&app).allows(&id, "workspace.write") {
+        return Err(refused(&id, "workspace.write"));
+    }
+    let root = Path::new(&root);
+    let from = inside(root, Path::new(&from))?;
+    let to = inside(root, Path::new(&to))?;
+    require_not_app_data(&app, &from)?;
+    require_not_app_data(&app, &to)?;
+    if to.exists() {
+        return Err(format!("{} is already there.", to.display()));
+    }
+    if let Some(parent) = to.parent() {
+        tokio::fs::create_dir_all(parent)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
+    tokio::fs::rename(&from, &to)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Moves a file or folder in the folder to the system Trash - never a
+/// delete the user can't undo.
+#[tauri::command]
+pub async fn plugin_fs_trash(
+    app: tauri::AppHandle,
+    id: String,
+    root: String,
+    path: String,
+) -> Result<(), String> {
+    if !state::read(&app).allows(&id, "workspace.write") {
+        return Err(refused(&id, "workspace.write"));
+    }
+    let path = inside(Path::new(&root), Path::new(&path))?;
+    require_not_app_data(&app, &path)?;
+    if std::fs::canonicalize(&root).is_ok_and(|r| r == path) {
+        return Err("The folder itself can't be moved to the Trash.".into());
+    }
+    tauri::async_runtime::spawn_blocking(move || trash::delete(&path).map_err(|e| e.to_string()))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+/// Makes a folder (and the folders it is in) in the folder.
+#[tauri::command]
+pub async fn plugin_fs_mkdir(
+    app: tauri::AppHandle,
+    id: String,
+    root: String,
+    path: String,
+) -> Result<(), String> {
+    if !state::read(&app).allows(&id, "workspace.write") {
+        return Err(refused(&id, "workspace.write"));
+    }
+    let path = inside(Path::new(&root), Path::new(&path))?;
+    require_not_app_data(&app, &path)?;
+    tokio::fs::create_dir_all(&path)
+        .await
+        .map_err(|e| e.to_string())
+}
+
 /// Whether a `network:` grant covers `host` (and `port`): the host itself,
 /// `host:port`, `*.domain` for its subdomains, or `*` for any.
 fn host_allowed(granted: &[String], host: &str, port: Option<u16>) -> bool {

@@ -23,3 +23,4 @@ src-tauri/src/ai/skills/**/*.md
 src-tauri/crates/aicompat/data/model-capabilities.json
 # Golden output of the Word import (extract/docx.rs tests); its bytes are the test.
 src-tauri/src/extract/testdata/*.md
+textus-plugins/
