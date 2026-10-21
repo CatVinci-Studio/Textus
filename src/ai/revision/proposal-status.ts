@@ -50,10 +50,10 @@ export function refusedProposalIds(turns: AgentTurn[]): Set<string> {
 
 const STATUS_NOTES: Record<PendingStatus, string> = {
   pending:
-    "Status: the user has NOT yet accepted or rejected this proposed edit. It is still shown to them as a preview and is NOT part of the document text in this request - do not assume it was applied, and do not anchor new edits to its text.",
+    "Status: the user has NOT yet accepted or rejected this proposed edit. It is shown to them as a preview and is NOT in the document text in this request - do not assume it was applied. To change it or go on from it, anchor in its text: the edit goes into this proposal.",
   // Still revealing/arguments still arriving - same consequence as pending.
   streaming:
-    "Status: the user has NOT yet accepted or rejected this proposed edit. It is still shown to them as a preview and is NOT part of the document text in this request - do not assume it was applied, and do not anchor new edits to its text.",
+    "Status: the user has NOT yet accepted or rejected this proposed edit. It is shown to them as a preview and is NOT in the document text in this request - do not assume it was applied. To change it or go on from it, anchor in its text: the edit goes into this proposal.",
   accepted:
     "Status: the user accepted this proposed edit - the document text in this request includes it.",
   rejected:

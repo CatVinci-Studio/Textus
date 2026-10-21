@@ -1,3 +1,4 @@
+import { editedText, reanchoredPicture } from "./joined-edit";
 import { closeHistory } from "@milkdown/kit/prose/history";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
@@ -969,11 +970,27 @@ export function usePendingEdits(
           const blocks = serializeBlocks(ctx, doc);
           const found: PendingPreview[] = [];
           for (const p of lost) {
-            const resolved = resolveAnchored(ctx, doc, blocks, p.proposal);
+            let proposal = p.proposal;
+            let resolved = resolveAnchored(ctx, doc, blocks, proposal);
+            // A picture after a paragraph this rewrite replaced, and left
+            // out: by the new text's paragraph in the same place.
+            const moved =
+              !resolved && proposal.image
+                ? reanchoredPicture(
+                    proposal,
+                    preview.proposal.anchor ?? "",
+                    textOverride ?? preview.proposal.text ?? "",
+                  )
+                : null;
+            if (moved) {
+              proposal = moved;
+              resolved = resolveAnchored(ctx, doc, blocks, proposal);
+            }
             if (!resolved) continue;
             const { range, replacement: text, strikeRange } = resolved;
             found.push({
               ...p,
+              proposal,
               from: range.from,
               to: range.to,
               expectedText: visibleTextBetween(doc, range.from, range.to, " "),
@@ -1068,15 +1085,15 @@ export function usePendingEdits(
    *  own, so the two are one proposal accepted or rejected together,
    *  rather than one that can't be placed. False when no such proposal
    *  is pending: the picture is shown as its own. */
-  const joinPicture = useCallback(
-    (callId: string, picture: EditProposal): boolean => {
-      const { anchor, action } = picture;
-      if (
-        !picture.image ||
-        !anchor ||
-        (action !== "insert_after" && action !== "insert_before")
-      )
-        return false;
+  /** `callId`'s edit made in a proposal not decided yet whose text holds
+   *  `anchor` (which the document doesn't): `rewrite` gives that text with
+   *  the edit in it, or null for a proposal it doesn't fit. */
+  const joinInto = useCallback(
+    (
+      callId: string,
+      anchor: string,
+      rewrite: (text: string) => string | null,
+    ): boolean => {
       let joined = false;
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
@@ -1085,9 +1102,10 @@ export function usePendingEdits(
           return;
         const previews = pendingEditKey.getState(state)?.previews ?? [];
         for (const host of previews) {
-          if (host.streaming || host.proposal.image) continue;
+          if (host.streaming || host.proposal.image || host.callId === callId)
+            continue;
           const old = host.proposal.text ?? "";
-          const text = joinedText(old, anchor, action, picture.text ?? "");
+          const text = rewrite(old);
           if (text === null || !host.replacement.includes(old)) continue;
           view.dispatch(
             state.tr.setMeta(pendingEditKey, {
@@ -1110,6 +1128,66 @@ export function usePendingEdits(
       return joined;
     },
     [run],
+  );
+
+  const joinPicture = useCallback(
+    (callId: string, picture: EditProposal): boolean => {
+      const { anchor, action } = picture;
+      if (
+        !picture.image ||
+        !anchor ||
+        (action !== "insert_after" && action !== "insert_before")
+      )
+        return false;
+      return joinInto(callId, anchor, (text) =>
+        joinedText(text, anchor, action, picture.text ?? ""),
+      );
+    },
+    [joinInto],
+  );
+
+  /** The pictures text proposals now carry, standing as proposals of
+   *  their own too: a rewrite of the paragraph a picture not accepted yet
+   *  stands by, which put the picture into its new text. The picture's own
+   *  proposal gives way (joined), the picture goes on in the text. */
+  const withdrawPictures = useCallback(
+    (ids: Set<string>, carriers: Set<string>) => {
+      const gone: string[] = [];
+      run((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const previews = pendingEditKey.getState(view.state)?.previews ?? [];
+        for (const p of previews)
+          if (
+            p.proposal.image &&
+            ids.has(p.proposal.image.id) &&
+            !carriers.has(p.callId)
+          )
+            gone.push(p.callId);
+        let tr = view.state.tr;
+        for (const callId of gone)
+          tr = tr.setMeta(pendingEditKey, { type: "remove", callId });
+        if (gone.length > 0) view.dispatch(tr);
+      });
+      if (gone.length > 0)
+        setStatuses((prev) => {
+          const next = { ...prev };
+          for (const callId of gone) next[callId] = "joined";
+          return next;
+        });
+    },
+    [run],
+  );
+
+  /** A text edit quoted from a proposal not decided yet - a request after
+   *  it changing what it proposed, or going on from it (src-tauri
+   *  tools.rs): made in that proposal, which now reads with it, rather
+   *  than shown as an edit with nowhere to go. */
+  const joinEdit = useCallback(
+    (callId: string, edit: EditProposal): boolean => {
+      if (edit.image || !edit.anchor) return false;
+      return joinInto(callId, edit.anchor, (text) => editedText(text, edit));
+    },
+    [joinInto],
   );
 
   /**
@@ -1282,6 +1360,8 @@ export function usePendingEdits(
     rejectAll,
     discardAll,
     joinPicture,
+    joinEdit,
+    withdrawPictures,
     status,
     syncFromPlugin,
     decidable,

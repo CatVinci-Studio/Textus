@@ -938,3 +938,92 @@ test("a revision card shows a redone picture's pictures, not their Markdown", as
     /^blob:/,
   );
 });
+
+/** A rewrite of the paragraph an undecided picture stands after, as a
+ *  second request sends it: `text` with the picture or without. */
+function rewrite(text: string) {
+  return [
+    { kind: "User", text: "Rewrite the first paragraph" },
+    {
+      kind: "ToolCall",
+      call_id: "r1",
+      name: "propose_edit",
+      arguments: JSON.stringify({ action: "replace", anchor: FIRST, text }),
+    },
+    { kind: "ToolResult", call_id: "r1", output: "Edit proposed" },
+    { kind: "Assistant", text: "A quieter first paragraph." },
+  ];
+}
+
+/** The document's blocks in order, a picture as "picture". */
+const blocks = (page: Page) =>
+  page
+    .locator(`${editor} > *`)
+    .evaluateAll((els) =>
+      els
+        .map((el) =>
+          el.querySelector("img") ? "picture" : (el.textContent ?? "").trim(),
+        )
+        .filter(Boolean),
+    );
+
+async function pictureThenRewrite(page: Page, rewritten: string) {
+  await open(page);
+  await mockInvoke(page, {
+    ai_agent_message: exchange(
+      made,
+      "Image proposed - the user now sees the picture.",
+    ),
+    ai_generated_image: { mime: "image/png", ext: "png", dataBase64: PNG },
+    save_pasted_image: { src: "assets/harbour.png" },
+  });
+  await send(page);
+  await expect(page.locator(pending)).toHaveCount(1);
+  await mockInvoke(page, {
+    ai_agent_message: rewrite(rewritten),
+    ai_generated_image: { mime: "image/png", ext: "png", dataBase64: PNG },
+    save_pasted_image: { src: "assets/harbour.png" },
+  });
+  await send(page, "Rewrite the first paragraph");
+  await expect(
+    page.locator(`${editor} .pending-insert`, { hasText: "lay still" }),
+  ).toBeVisible();
+}
+
+test("a picture not accepted yet stays after its paragraph when the rewrite leaves it out", async ({
+  page,
+}) => {
+  await pictureThenRewrite(page, "The harbour lay still before dawn.");
+  // The rewrite first, from its own card; the picture's stays.
+  const card = (text: string) =>
+    page
+      .locator(".agent-proposal", { hasText: text })
+      .locator(".agent-proposal-actions .inline-chat-action-primary");
+  await card("Replace").click();
+  await expect(page.locator(pending)).toHaveCount(1);
+  await card("Picture").click();
+  await expect(page.locator(written)).toHaveCount(1, { timeout: 10_000 });
+  expect(await blocks(page)).toEqual([
+    "The harbour lay still before dawn.",
+    "picture",
+    "The second paragraph.",
+  ]);
+});
+
+test("a rewrite that carries the picture not accepted yet takes it in: one proposal", async ({
+  page,
+}) => {
+  await pictureThenRewrite(
+    page,
+    "The harbour lay still before dawn.\n\n![A quiet harbour](textus-generated:abc123)",
+  );
+  // The picture's own proposal gave way to the text that carries it.
+  await expect(page.locator(pending)).toHaveCount(1);
+  await page.locator(".review-bar-accept").click();
+  await expect(page.locator(written)).toHaveCount(1, { timeout: 10_000 });
+  expect(await blocks(page)).toEqual([
+    "The harbour lay still before dawn.",
+    "picture",
+    "The second paragraph.",
+  ]);
+});

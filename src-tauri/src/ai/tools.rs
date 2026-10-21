@@ -11,6 +11,11 @@ use std::pin::Pin;
 /// more tools need more context (e.g. an MCP client handle) without changing
 /// each tool's call signature.
 pub struct ToolContext<'a> {
+    /// The new text of proposals from earlier requests the user hasn't
+    /// accepted or rejected (images::undecided_texts): part of the
+    /// document as they see it, so an edit may change it - the frontend
+    /// puts that edit into the proposal (usePendingEdits's joinEdit).
+    pub undecided: &'a [String],
     pub document: &'a str,
     /// The merged skills: built-in, global config folder, project .textus/.
     pub skills: &'a [AgentSkill],
@@ -62,6 +67,15 @@ pub struct ProposalLedger {
 }
 
 impl ProposalLedger {
+    /// A ledger that knows these pictures already: earlier requests',
+    /// not decided yet, which this request's text may carry.
+    pub fn with_pictures(pictures: Vec<String>) -> Self {
+        Self {
+            pictures,
+            ..Self::default()
+        }
+    }
+
     /// A picture written into text this request proposes.
     pub fn add_picture(&mut self, id: String) {
         self.pictures.push(id);
@@ -445,6 +459,7 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     if needs_text(action) && !has_text {
         return format!("`{action}` requires `text` - the new content.");
     }
+    let mut joins = false;
     if needs_anchor(action) {
         if anchor.is_empty() {
             return format!(
@@ -452,7 +467,12 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
             );
         }
         if let Err(problem) = check_anchor(ctx.document, &parsed, anchor) {
-            return problem;
+            // In text proposed and not decided yet - this request's or an
+            // earlier one's - the edit goes into that proposal.
+            if !quotes_undecided(ctx, anchor) {
+                return problem;
+            }
+            joins = true;
         }
     }
 
@@ -477,7 +497,7 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     // previews overlap and only one can ever be applied. Sonnet sent the
     // same French proofreading twice in one step (round 4); the first
     // stands, the copy is refused (and never shown - see proposal-status.ts).
-    if matches!(action, "replace" | "delete" | "replace_selection") {
+    if !joins && matches!(action, "replace" | "delete" | "replace_selection") {
         let context = parsed.get("context").and_then(|v| v.as_str());
         let passage = match action {
             "replace_selection" => ProposedPassage::selection(),
@@ -518,7 +538,25 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         ledger.texts.push(text.to_string());
         unmade = ledger.take_unmade().unwrap_or_default();
     }
-    format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{size}{unmade} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
+    let into = if joins {
+        " It changes text you proposed that the user hasn't decided on yet: it goes into that proposal, which now reads with it."
+    } else {
+        ""
+    };
+    format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{into}{size}{unmade} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
+}
+
+/// Whether `anchor` is quoted from exactly one place in text proposed and
+/// not decided yet: this request's proposals and earlier ones'.
+fn quotes_undecided(ctx: &ToolContext, anchor: &str) -> bool {
+    let ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
+    let found: usize = ledger
+        .texts
+        .iter()
+        .chain(ctx.undecided)
+        .map(|text| text.matches(anchor).count())
+        .sum();
+    found == 1
 }
 
 /// Write mode's propose_edit. Its schema offers only INSERT_ACTIONS, but a
@@ -529,7 +567,15 @@ fn propose_insertion(ctx: &ToolContext, arguments: &str) -> String {
         .ok()
         .and_then(|v| v.get("action")?.as_str().map(str::to_string))
         .unwrap_or_default();
-    if !INSERT_ACTIONS.contains(&action.as_str()) {
+    // Text it proposed and the user hasn't decided on isn't theirs yet:
+    // that it may change.
+    let own = serde_json::from_str::<serde_json::Value>(arguments)
+        .ok()
+        .and_then(|v| v.get("anchor")?.as_str().map(str::to_string))
+        .is_some_and(|anchor| {
+            !anchor.is_empty() && !ctx.document.contains(&anchor) && quotes_undecided(ctx, &anchor)
+        });
+    if !INSERT_ACTIONS.contains(&action.as_str()) && !own {
         return format!(
             "Not proposed: Write mode only adds text, with {} - `{action}` would change or remove text that is already there. Add the new text instead, or tell the user that changing existing text needs Revise mode.",
             INSERT_ACTIONS.join(", ")
@@ -1747,6 +1793,7 @@ mod tests {
         let ws = crate::ai::workspace::load_layers(None, None, None, &["describe".to_string()]);
         let doc = "雨はまだ降っていた。美咲は改札の前で、何度も時計を見た。";
         let ctx = ToolContext {
+            undecided: &[],
             document: doc,
             skills: &ws.skills,
             ui_language: "en",
@@ -1781,6 +1828,7 @@ mod tests {
 
     fn ctx(document: &str) -> ToolContext<'_> {
         ToolContext {
+            undecided: &[],
             document,
             skills: &[],
             ui_language: "en",
@@ -2072,6 +2120,45 @@ mod tests {
         // prefix); Write's run refuses what changes existing text (below).
         let spec = |mode| format!("{:?}", edit_tool(mode).unwrap().spec);
         assert_eq!(spec(AgentMode::Write), spec(AgentMode::Revise));
+    }
+
+    #[test]
+    fn an_edit_may_change_text_proposed_and_not_decided_yet() {
+        let doc = "The cat sat on the mat.";
+        let undecided = vec!["It purred all night. Then it slept.".to_string()];
+        for mode in [AgentMode::Write, AgentMode::Revise] {
+            let tools = ToolRegistry::builtin(false, false, mode, false, false);
+            let context = ToolContext {
+                undecided: &undecided,
+                ..ctx(doc)
+            };
+            let run = |args: &str| execute(&tools, &context, PROPOSE_EDIT_TOOL_NAME, args).text;
+            for args in [
+                r#"{"action":"replace","anchor":"It purred all night.","text":"It purred."}"#,
+                r#"{"action":"delete","anchor":"Then it slept."}"#,
+                r#"{"action":"insert_after","anchor":"Then it slept.","text":"At dawn it woke."}"#,
+            ] {
+                let out = run(args);
+                assert!(out.starts_with("Edit proposed"), "{mode:?} {args}: {out}");
+                assert!(out.contains("goes into that proposal"), "{out}");
+            }
+            // Text in neither is still refused.
+            assert!(
+                !run(r#"{"action":"replace","anchor":"A dog barked.","text":"x"}"#)
+                    .starts_with("Edit proposed")
+            );
+        }
+        // This request's own proposals count too.
+        let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+        let context = ctx(doc);
+        let run = |args: &str| execute(&tools, &context, PROPOSE_EDIT_TOOL_NAME, args).text;
+        assert!(
+            run(r#"{"action":"append","text":"A new line here."}"#).starts_with("Edit proposed")
+        );
+        assert!(
+            run(r#"{"action":"replace","anchor":"A new line here.","text":"A newer line."}"#)
+                .contains("goes into that proposal")
+        );
     }
 
     #[test]
