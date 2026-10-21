@@ -163,6 +163,10 @@ objc2-foundation = { version = "0.3", features = [
     "NSData",
     "NSDictionary",
     "NSValue",
+    # The full-screen notifications (window_fullscreen in lib.rs).
+    "NSNotification",
+    "NSOperation",
+    "block2",
 ] }
 # CFString: the LaunchServices calls of commands/default_editor.rs.
 objc2-core-foundation = { version = "0.3", default-features = false, features = [
