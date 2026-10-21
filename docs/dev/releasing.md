@@ -1,7 +1,7 @@
 # Releasing
 
-Maintainers only. Releases are tags on `main`: there is no release branch to
-merge first. The desktop app ships from a `vX.Y.Z` tag through
+Maintainers only. Releases are tags: the next minor version's on `main`,
+the current stable version's fixes on its `release/X.Y.x` line. The desktop app ships from a `vX.Y.Z` tag through
 `.github/workflows/release.yml`; the iOS app ships from an `ios-vX.Y.Z` tag
 through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md)).
 The browser playground isn't released: it deploys from `main` on every
@@ -9,19 +9,47 @@ change ([infrastructure.md](infrastructure.md#playground)).
 
 ## Branches
 
-- `main` is the only working branch. Every change is a short-lived branch
-  (`feat/…`, `fix/…`, `docs/…`, `chore/…`) and a pull request to `main`.
-  Branch protection requires the `check`, `e2e` and `native` CI jobs. It
-  doesn't require the branch to be up to date with `main`: a pull request
-  that passed is merged as it is, and the CI run on `main` after the merge
-  catches the rare case where two changes only break together.
-- Small, unrelated fixes for a patch release can share one branch and one
-  pull request, one commit per fix, so CI runs once.
+Two lines, each with its own tags:
+
+| Branch          | What it is                                                     | Tagged there                                  |
+| --------------- | -------------------------------------------------------------- | --------------------------------------------- |
+| `main`          | The next minor version: new features land here                 | `vX.Y.0-rc.N`, `vX.Y.0` until its line is cut |
+| `release/X.Y.x` | The current stable version: fixes only                         | `vX.Y.Z`, `vX.Y.Z-rc.N`                       |
+| `archive/*`     | A line no longer maintained, and `archive/levis` (Levis 0.9.8) | -                                             |
+
+- Every change is a short-lived branch (`feat/…`, `fix/…`, `docs/…`,
+  `chore/…`) and a pull request. Branch protection on `main` and
+  `release/**` requires the `check`, `e2e` and `native` CI jobs (and
+  `ci-config`, which only a fork's pull request runs). It doesn't require
+  the branch to be up to date: a pull request that passed is merged as it
+  is, and the CI run after the merge catches the rare case where two changes
+  only break together.
+- **The line is cut when a minor version's features are frozen**: the last
+  release candidate's changes land on `main`, `release/X.Y.x` is branched
+  from that commit, and its later candidates and the stable release are
+  tagged there. From then on `main` is the next minor version.
+- **A fix goes where the bug is.** One the stable version has is a pull
+  request to `release/X.Y.x`; one only `main` has goes to `main`. New
+  features never go to a release line.
+- **After every release from a line, merge the line back into `main`**
+  (a merge commit, not a cherry-pick), in a pull request of its own:
+  keep `main`'s side of the version lines; where `main` has restructured
+  the code a fix touches, carry the fix over by hand. Done release by
+  release, each merge holds a fix or two.
+- **One line at a time.** When `X.(Y+1).0` ships, `release/X.Y.x` stops:
+  it is renamed `archive/X.Y.x` and nothing more is released from it.
+- Small, unrelated fixes can share one branch and one pull request, one
+  commit per fix, so CI runs once.
 - Large features that are not ready stay on their own branch until they are.
-- `release/X.Y.x` exists only when a fix must ship while `main` holds
-  unreleased work: branch it from the last tag, fix, tag, then merge it back
-  into `main` and delete it.
-- `archive/levis` holds the last Levis code (v0.9.8).
+
+Both lines can release in the same week. A stable tag becomes GitHub's
+"Latest" release - the one the updater, the website's downloads, Homebrew,
+the mirror and the Arch repository follow - only when it is the highest
+stable version (release.yml's "Is this the newest stable tag?"), and a
+release candidate never does. The beta channel's manifest only moves
+forward (`scripts/updater-manifest.mjs beta`): a `1.2.2` released after
+`1.3.0-rc.1` leaves beta users on the release candidate, and reaches them
+in the next one, through the merge back.
 
 ## Desktop release
 
@@ -129,6 +157,34 @@ x86_64-only `archlinux` container, and `[catvinci]` has no aarch64
 repository. `scripts/updater-manifest.mjs` (`platformKeys`) and
 `scripts/mirror-keys.mjs` map the file names to the keys; their tests
 list every name above.
+
+## A patch release from a release line
+
+The same steps as [Desktop release](#desktop-release), on `release/X.Y.x`
+instead of `main`:
+
+1. Each fix is a `fix/…` branch from `origin/release/X.Y.x` and a pull
+   request to `release/X.Y.x`, with its release-note fragment. A fix sent
+   to `main` that the stable version also needs is carried over in a
+   branch of its own, its author credited (`Co-authored-by:`).
+2. The version bump (`X.Y.Z`, its notes built from the fragments) is a pull
+   request to `release/X.Y.x`.
+3. Tag the merged line, after the same check:
+
+   ```sh
+   git fetch origin
+   node scripts/check-versions.mjs --tag vX.Y.Z   # on a checkout of origin/release/X.Y.x
+   git tag -a vX.Y.Z origin/release/X.Y.x -m "Textus X.Y.Z"
+   git push origin vX.Y.Z
+   ```
+
+   A risky fix (saving, the window, anything that can lose writing) goes
+   out as `vX.Y.Z-rc.1` first, from the same line.
+
+4. Verify it as any release.
+5. Merge `release/X.Y.x` into `main` in a pull request
+   (`chore: merge release/X.Y.x after vX.Y.Z`), keeping `main`'s version
+   lines; the notes file `docs/releases/X.Y.Z.md` comes along.
 
 ## Pre-releases
 
