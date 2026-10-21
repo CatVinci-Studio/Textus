@@ -1,4 +1,9 @@
 import { pictureSrc } from "../revision/generated-images";
+import {
+  MessageQueue,
+  type MessageQueueLabels,
+  type QueuedMessage,
+} from "./MessageQueue";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   AgentConversation,
@@ -21,6 +26,7 @@ import {
 } from "./ChatMessages";
 import {
   ChatComposer,
+  type ChatComposerHandle,
   type ChatComposerLabels,
   type SelectionChipHandlers,
 } from "./ChatComposer";
@@ -45,7 +51,11 @@ import {
 } from "./user-message";
 
 export interface ChatBodyLabels
-  extends ChatMessagesLabels, ChatComposerLabels, QuickAskPendingBarLabels {
+  extends
+    ChatMessagesLabels,
+    ChatComposerLabels,
+    QuickAskPendingBarLabels,
+    MessageQueueLabels {
   /** Sent as the user's message when relocating a stale proposal. */
   relocateRequest: string;
   /** Pinned pending-edits bar (full/window variant only); "{n}" is how many
@@ -374,47 +384,120 @@ export function ChatBody({
     })();
   }
 
+  // Messages sent while a reply is coming (MessageQueue): composed as they
+  // are sent, and sent in turn once the replies before them have finished
+  // - against the document as it reads then. A failed reply pauses them
+  // until Continue; Stop gives them back to the composer.
+  const [queue, setQueue] = useState<QueuedMessage[]>([]);
+  const [queuePaused, setQueuePaused] = useState(false);
+  const nextQueued = useRef(0);
+  const sendingQueued = useRef(false);
+  const composer = useRef<ChatComposerHandle>(null);
+
   function handleSend(
     message: string,
     attachments: ChatAttachment[],
     includeSelection: boolean,
     options: AgentRequestOptions,
+    typed: string = message,
   ) {
-    dispatchSend(({ selectionMarkdown: selection, cursor }) => {
-      // Rewrites of the selection come back as replace_selection tool calls
-      // (see AGENT_TOOL_INSTRUCTIONS in src-tauri/src/ai/agent.rs); the tag
-      // carries the selection's MARKDOWN so formatting survives the trip.
-      // With nothing selected, the cursor's surroundings say where "here"
-      // is (and where insert_at_cursor writes).
-      const tagged =
-        selection && includeSelection
-          ? `${selectedTextBlock(selection)}\n\n${message}`
-          : cursor
-            ? `${cursorBlock(cursor.before, cursor.after)}\n\n${message}`
-            : message;
-      // Text-shaped attachments were already extracted in Rust (PDF, Word,
-      // spreadsheets and plain files all arrive as text) and ride inside the
-      // prompt. Images have nothing to extract and go as provider image
-      // parts instead - see commands/attachment.rs.
-      const attachmentBlocks = attachments
-        .filter((f) => f.kind === "text")
-        .map((f) => attachedFileBlock(f.name, f.content))
-        .join("\n\n");
-      return {
-        message: attachmentBlocks ? `${attachmentBlocks}\n\n${tagged}` : tagged,
-        // Not filtered on vision here: the composer refuses to stage an image
-        // for a provider that can't read one, and the backend refuses the
-        // whole message if one gets through anyway. Silently dropping it
-        // would be a third policy contradicting both.
-        images: attachments
-          .filter((f) => f.kind === "image")
-          .map((f) => ({
-            name: f.name,
-            mime: f.mime,
-            dataBase64: f.dataBase64,
-          })),
-      };
-    }, options);
+    const compose = (state: {
+      selectionMarkdown: string | null;
+      cursor?: { before: string; after: string } | null;
+    }) => composeMessage(state, message, attachments, includeSelection);
+    if (!busy && queue.length === 0 && !sendingQueued.current) {
+      dispatchSend(compose, options);
+      return;
+    }
+    void (async () => {
+      const latest = refreshContext ? await refreshContext() : null;
+      const composed = compose(latest ?? { selectionMarkdown });
+      const id = nextQueued.current++;
+      setQueue((now) => [...now, { id, typed, ...composed, options }]);
+    })();
+  }
+
+  // The next queued message goes once nothing is in flight.
+  useEffect(() => {
+    if (busy || queuePaused || sendingQueued.current || queue.length === 0)
+      return;
+    const [next] = queue;
+    sendingQueued.current = true;
+    void (async () => {
+      setQueue((now) => now.filter((q) => q.id !== next.id));
+      try {
+        const latest = refreshContext ? await refreshContext() : null;
+        const turns = await send(
+          latest?.document ?? document,
+          next.message,
+          next.images,
+          { ...next.options, focusHeading: latest?.focusHeading ?? null },
+        );
+        afterSend(turns);
+        if (!turns) setQueuePaused(true);
+      } finally {
+        sendingQueued.current = false;
+      }
+    })();
+    // send, refreshContext and afterSend are this render's; the queue and
+    // busy say when to look again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busy, queue, queuePaused]);
+
+  /** Stop drops the queue too: what was waiting goes back in the box. */
+  function stopAll() {
+    if (queue.length > 0)
+      composer.current?.restore(queue.map((q) => q.typed).join("\n\n"));
+    setQueue([]);
+    setQueuePaused(false);
+    stop();
+  }
+
+  function composeMessage(
+    {
+      selectionMarkdown: selection,
+      cursor,
+    }: {
+      selectionMarkdown: string | null;
+      cursor?: { before: string; after: string } | null;
+    },
+    message: string,
+    attachments: ChatAttachment[],
+    includeSelection: boolean,
+  ): { message: string; images?: ImageAttachment[] } {
+    // Rewrites of the selection come back as replace_selection tool calls
+    // (see AGENT_TOOL_INSTRUCTIONS in src-tauri/src/ai/agent.rs); the tag
+    // carries the selection's MARKDOWN so formatting survives the trip.
+    // With nothing selected, the cursor's surroundings say where "here"
+    // is (and where insert_at_cursor writes).
+    const tagged =
+      selection && includeSelection
+        ? `${selectedTextBlock(selection)}\n\n${message}`
+        : cursor
+          ? `${cursorBlock(cursor.before, cursor.after)}\n\n${message}`
+          : message;
+    // Text-shaped attachments were already extracted in Rust (PDF, Word,
+    // spreadsheets and plain files all arrive as text) and ride inside the
+    // prompt. Images have nothing to extract and go as provider image
+    // parts instead - see commands/attachment.rs.
+    const attachmentBlocks = attachments
+      .filter((f) => f.kind === "text")
+      .map((f) => attachedFileBlock(f.name, f.content))
+      .join("\n\n");
+    return {
+      message: attachmentBlocks ? `${attachmentBlocks}\n\n${tagged}` : tagged,
+      // Not filtered on vision here: the composer refuses to stage an image
+      // for a provider that can't read one, and the backend refuses the
+      // whole message if one gets through anyway. Silently dropping it
+      // would be a third policy contradicting both.
+      images: attachments
+        .filter((f) => f.kind === "image")
+        .map((f) => ({
+          name: f.name,
+          mime: f.mime,
+          dataBase64: f.dataBase64,
+        })),
+    };
   }
 
   /** An anchor that no longer resolves: ask the model to re-issue the edit
@@ -633,7 +716,20 @@ export function ChatBody({
           )}
         </Presence>
       )}
+      <MessageQueue
+        queue={queue}
+        paused={queuePaused}
+        labels={labels}
+        onEdit={(id) => {
+          const item = queue.find((q) => q.id === id);
+          setQueue((now) => now.filter((q) => q.id !== id));
+          if (item) composer.current?.restore(item.typed);
+        }}
+        onRemove={(id) => setQueue((now) => now.filter((q) => q.id !== id))}
+        onContinue={() => setQueuePaused(false)}
+      />
       <ChatComposer
+        handle={composer}
         docPath={docPath}
         workspaceRoot={workspaceRoot}
         selectedText={selectedPictureText ?? selectedText}
@@ -652,7 +748,7 @@ export function ChatBody({
         defaultWebSearch={defaultWebSearch}
         onSend={handleSend}
         onSkillUsed={onSkillUsed}
-        onStop={stop}
+        onStop={stopAll}
         onEscape={onEscape ?? (() => {})}
         onModeChange={onModeChange}
       />
