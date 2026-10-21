@@ -59,7 +59,7 @@ export interface BrokerDeps {
   platform: string;
   dark(): boolean;
   /** A setting's value: the user's, or the manifest's default. */
-  setting(id: string, key: string): unknown;
+  setting(id: string, key: string): Promise<unknown>;
   /** Runs any command - the app's, or a plugin's. */
   runCommand(command: string, args: unknown[]): Promise<unknown>;
   /** A command the plugin registered beyond its manifest's. */

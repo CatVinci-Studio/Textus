@@ -31,10 +31,35 @@ export function keyName(event: KeyboardEvent): string {
   const printable = event.key.length === 1;
   if (event.shiftKey && !printable) mods.push("shift");
   const key =
-    printable && (event.ctrlKey || event.altKey)
-      ? event.key.toLowerCase()
-      : event.key;
+    printable && event.altKey
+      ? altKey(event)
+      : printable && event.ctrlKey
+        ? event.key.toLowerCase()
+        : event.key;
   return [...mods, key].join("+");
+}
+
+/** The key under an Option (Alt) chord by where it is on the keyboard: on
+ *  a Mac, Option+F types "ƒ", but Emacs's M-f means the F key. Keys
+ *  outside the letters, digits and these marks keep what they typed. */
+const ALT_MARKS: Record<string, [string, string]> = {
+  Comma: [",", "<"],
+  Period: [".", ">"],
+  BracketLeft: ["[", "{"],
+  BracketRight: ["]", "}"],
+  Slash: ["/", "?"],
+  Minus: ["-", "_"],
+  Semicolon: [";", ":"],
+  Space: [" ", " "],
+};
+function altKey(event: KeyboardEvent): string {
+  const letter = /^Key([A-Z])$/.exec(event.code);
+  if (letter) return letter[1].toLowerCase();
+  const digit = /^Digit([0-9])$/.exec(event.code);
+  if (digit) return digit[1];
+  const mark = ALT_MARKS[event.code];
+  if (mark) return mark[event.shiftKey ? 1 : 0];
+  return event.key.toLowerCase();
 }
 
 export interface KeyCapture {
@@ -108,6 +133,15 @@ function captures(event: KeyboardEvent, capture: KeyCapture): string | null {
   const mod = isMacPlatform() ? event.metaKey : event.ctrlKey || event.metaKey;
   if (mod && !capture.keys.includes(name)) return null;
   return name;
+}
+
+/** Whether a plugin holds this key in the editor that has focus: the
+ *  window's own shortcuts, which hear keys first, leave it alone - Emacs's
+ *  C-/ is undo, not Toggle Source Mode. */
+export function heldByPlugin(event: KeyboardEvent): boolean {
+  const view = lastView;
+  if (!owner || !view || view.isDestroyed || !view.hasFocus()) return false;
+  return captures(event, owner.capture) !== null;
 }
 
 // ---------------------------------------------------------------------------
@@ -334,6 +368,12 @@ function motion(
       const end = lineEndIndex(t, i);
       return i < end ? i + 1 : i;
     }
+    // A character on, or back, across the end of a line too (Emacs's C-f
+    // and C-b).
+    case "charForward":
+      return Math.min(i + 1, t.length);
+    case "charBack":
+      return Math.max(i - 1, 0);
     case "wordStart": {
       let j = i;
       const c = charClass(t[j]);

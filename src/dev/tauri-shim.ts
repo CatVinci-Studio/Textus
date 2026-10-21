@@ -714,7 +714,13 @@ export function installDevTauriShim(): void {
         installFromDevCatalog(id),
       ),
     ));
-  const pluginStorage = new Map<string, Record<string, unknown>>();
+  // `window.__devPluginStorage = { id: { key: value } }`: what plugins
+  // have stored, their settings under `$settings`.
+  const pluginStorage = new Map<string, Record<string, unknown>>(
+    Object.entries(
+      (w.__devPluginStorage ?? {}) as Record<string, Record<string, unknown>>,
+    ),
+  );
   const encoded = (text: string) => new TextEncoder().encode(text).buffer;
   function pluginCommand(
     cmd: string,

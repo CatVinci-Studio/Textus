@@ -207,6 +207,7 @@ function App() {
     activePath: activeTab.path,
     tabState,
     openPathInTab,
+    saveActiveTab: () => void saveTab(activeTab.id),
   });
 
   const { openHelpTab } = useHelpTabs({

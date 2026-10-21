@@ -97,6 +97,7 @@ turning it on, or leaves it off, and can take each back later.
 | `workspace.read`   | list, find and read files in the open folder                                    |
 | `workspace.write`  | create and change files in the open folder                                      |
 | `clipboard`        | read and write the clipboard                                                    |
+| `editor.input`     | take the editor's keys and move, select and edit with them (Vim, Emacs)         |
 | `network:<host>`   | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for any)     |
 
 A plugin never writes a document by itself: an edit is a proposal. Files
@@ -122,7 +123,7 @@ Every call returns a promise. By namespace:
 - `textus.commands` - `registerCommand(id, run)`, `executeCommand(id, ...args)`
   (any command: the app's, or another plugin's). Textus's
   `textus.openAsDocument(path)` opens a file as a document even where a
-  plugin opens that type.
+  plugin opens that type; `textus.save` is File › Save.
 - `textus.window` -
   - `showMessage(text, { tone })`, `showInput({ prompt, value })` (the
     text, or null), `showQuickPick(items, { placeholder })` (the chosen
@@ -143,6 +144,25 @@ markdown }`), `getOutline()` (its headings: `[{ level, text, line }]`),
   `proposeEdit({ action, text, anchor?, reason? })`
   (actions: `insert_at_cursor`, `replace_selection`, `append`, `replace`,
   `insert_before`, `insert_after`, `delete`), `onDidChangeActive(fn)`.
+- `textus.editor` (`editor.input`) - `captureKeys({ mode, keys })`: the
+  editor's keys come to the plugin instead of typing. `mode: "all"` takes
+  every key but the app's shortcuts (⌘ on a Mac, Ctrl elsewhere) unless
+  `keys` names them; `mode: "some"` takes only `keys`, and typing stays
+  the editor's. Keys are named as `ctrl+f`, `alt+<`, `shift+Tab`,
+  `Escape`, `j` (an Option chord by the key pressed: `alt+f`, not `ƒ`);
+  `captureKeys(null)` gives them back. `onKey(fn)` hears each one, and
+  `exec(op)` acts on the document - only within a few seconds of a key,
+  so a plugin can't edit behind the user's back. Ops: `move` (`unit`:
+  `left`, `right`, `charForward`, `charBack`, `up`, `down`, `wordStart`,
+  `wordEnd`, `wordBack`, `lineStart`, `lineFirstChar`, `lineEnd`,
+  `lineEndInsert`, `paragraphNext`, `paragraphPrev`, `docStart`,
+  `docEnd`, `findChar`; `count`, `select`), `visualStart`, `selectLines`,
+  `delete`, `deleteLines`, `copy`, `copyLines`, `deleteChars`,
+  `insertText`, `pasteLines`, `openLine`, `replaceChar`, `collapse`,
+  `undo`, `redo`, `cursor` (`bar` or `block`), and `flash`, `flashJump`,
+  `flashClear` (labels on screen to jump to). Each change is its own undo
+  step; a delete or copy answers with the `text` it took. The Vim and
+  Emacs plugins in textus-plugins use all of it.
 - `textus.workspace` - `rootPath()`, `list(path)`, `findDocuments()`,
   `readFile(path)` (bytes), `readText(path)`, `writeText(path, text)`,
   `writeFile(path, bytes)`, `rename(from, to)`, `trash(path)` (to the

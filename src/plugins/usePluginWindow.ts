@@ -33,6 +33,7 @@ export function usePluginWindow({
   activePath,
   tabState,
   openPathInTab,
+  saveActiveTab,
 }: {
   t: Strings;
   language: string;
@@ -40,11 +41,14 @@ export function usePluginWindow({
   activePath: string | null;
   tabState: TabState;
   openPathInTab: (path: string, open?: OpenOptions) => Promise<void>;
+  /** File › Save, for the active tab. */
+  saveActiveTab: () => void;
 }): PluginsSnapshot {
   const tRef = useLatest(t);
   const languageRef = useLatest(language);
   const rootRef = useLatest(rootPath);
   const openRef = useLatest(openPathInTab);
+  const saveRef = useLatest(saveActiveTab);
   const { tabsRef, setTabs, setActiveTabId } = tabState;
 
   useEffect(() => {
@@ -95,6 +99,17 @@ export function usePluginWindow({
         },
       }),
     [openRef],
+  );
+  // File › Save, for a plugin that has its own key for it (Emacs's C-x
+  // C-s).
+  useEffect(
+    () =>
+      registerCommand({
+        id: "textus.save",
+        title: (t) => t.menuSave,
+        run: () => saveRef.current(),
+      }),
+    [saveRef],
   );
 
   useEffect(() => emitPluginEvent("root", { path: rootPath }), [rootPath]);

@@ -6,7 +6,8 @@
 - A plugin runs sealed off from Textus and your files: it can do only what you allowed, and an edit it makes to a document is a suggestion you accept or reject, like Textus AI's. A plugin that stops answering or keeps failing is turned off, and Textus says which and why.
 - Plugins can add commands with their own shortcuts, items in the editor's right-click menu, in a new Plugins menu and in background mode's tray or menu-bar menu (there with every window closed), sidebar tabs, settings, a status in the window bar, and tabs of their own - a file type they open, or a view.
 - Install a plugin from a file (.textusplugin), or load a plugin folder you are writing; Reload picks up your changes. docs/dev/writing-plugins.md is the guide.
-- Eleven official plugins to install:
+- A plugin can take the editor's keys, with your permission, and move, select and edit with them, each change its own undo step.
+- Thirteen official plugins to install:
   - PDF Viewer: PDFs in a tab, pages drawn as you reach them, text to select and copy.
   - Word Reader: Word documents as Word lays them out; Edit as Markdown turns one into a document of yours.
   - Image Viewer: pictures and SVG files in a tab, with zoom and an SVG's source.
@@ -18,3 +19,5 @@
   - Version History: each save kept as a version, compared with the text now and brought back as a suggestion.
   - Zotero: cite from your Zotero library as you write (⌘⌥C / Ctrl+Alt+C).
   - Graph View: your notes and the links between them as a graph, for the whole folder or around the document in front.
+  - Vim: normal, insert and visual mode, motions, operators, counts, a register and dot repeat, and flash - s and two letters, then a label, to jump anywhere on screen. Its mode shows in the window bar.
+  - Emacs: C-f C-b C-n C-p, C-a C-e, M-f M-b, M-< M->, the mark and the region, C-k and C-w into a kill ring, C-y and M-y, C-/ and C-x prefixes. On Windows and Linux its Ctrl keys are yours to give it in its settings, since copy, paste and the app's shortcuts use them.

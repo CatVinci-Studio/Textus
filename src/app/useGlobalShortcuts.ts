@@ -1,3 +1,4 @@
+import { heldByPlugin } from "../plugins/editor-input";
 import { useEffect } from "react";
 import { cycleRegion, trackRegionFocus } from "./regions";
 import { useSettings, type HeadingAction } from "../settings/SettingsContext";
@@ -100,6 +101,7 @@ export function useGlobalShortcuts(opts: {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.defaultPrevented || e.isComposing || e.keyCode === 229) return;
+      if (heldByPlugin(e)) return;
       const combo = comboFromEvent(e);
       if (!combo) return;
       const { shortcuts } = settings;

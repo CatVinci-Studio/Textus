@@ -35,6 +35,8 @@ export async function openWithPlugins(
     folder?: Record<string, string>;
     files?: Record<string, string>;
     language?: string;
+    /** A plugin's settings, by plugin id. */
+    settings?: Record<string, Record<string, unknown>>;
   },
 ) {
   await page.addInitScript((o) => {
@@ -53,6 +55,12 @@ export async function openWithPlugins(
       ),
     };
     w.__devBinaryFiles = o.binary ?? {};
+    w.__devPluginStorage = Object.fromEntries(
+      Object.entries(o.settings ?? {}).map(([id, values]) => [
+        id,
+        { $settings: values },
+      ]),
+    );
     if (o.folder) w.__devFs = o.folder;
     if (o.files) w.__devFiles = o.files;
   }, options);

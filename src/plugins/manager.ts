@@ -236,7 +236,13 @@ function host(record: PluginRecord): PluginHost {
         dark: () => windowInfo.dark(),
         appVersion: APP_VERSION,
         platform: platform(),
-        setting: pluginSetting,
+        // What the user set is read from the plugin's storage the first
+        // time: a plugin asks for its settings as it starts, long before
+        // anyone opens its page in Settings.
+        setting: async (id, key) => {
+          await loadPluginSettings(id);
+          return pluginSetting(id, key);
+        },
         runCommand: async (command, args) => {
           const owner = snapshot.records.find(
             (r) => r.status === "on" && command.startsWith(`${r.id}.`),
