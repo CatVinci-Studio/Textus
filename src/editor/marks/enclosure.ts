@@ -765,7 +765,10 @@ export function liveCaretPos(view: EditorView): number | null {
   )
     return null;
   try {
-    return view.posAtDOM(domSel.anchorNode, domSel.anchorOffset);
+    // -1 for a caret in DOM the document doesn't own (a revision's
+    // widget): resolving it threw in link-reveal's liveSelection.
+    const pos = view.posAtDOM(domSel.anchorNode, domSel.anchorOffset);
+    return pos >= 0 && pos <= view.state.doc.content.size ? pos : null;
   } catch {
     return null;
   }

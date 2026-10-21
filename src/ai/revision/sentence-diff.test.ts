@@ -116,22 +116,31 @@ describe("aligning a rewritten run", () => {
 });
 
 describe("a change over several paragraphs", () => {
-  it("is one change for each paragraph of the original", () => {
-    // Two paragraphs merged into one: a card for each original paragraph.
+  it("is one change for each paragraph, when the paragraphs stay as many", () => {
+    // Sentences too unalike to pair: one run across both paragraphs.
     const hunks = diffSentences(
-      "The tide went out. Boats lay on the mud.\n\nAt dusk the boats came back.",
-      "When the tide went out the boats lay on the mud, and at dusk they came back.",
+      "Rain fell.\n\nWind rose.",
+      "The sea was flat and grey.\n\nNothing moved on the quay.",
     );
-    const changes = hunks.filter((h) => h.kind === "change");
-    expect(changes.length).toBeGreaterThanOrEqual(2);
-    // Nothing lost: the pieces still make the two texts.
-    const join = (side: "before" | "after") =>
-      hunks.map((h) => (h.kind === "same" ? h.text : h[side])).join("");
-    expect(join("before")).toBe(
-      "The tide went out. Boats lay on the mud.\n\nAt dusk the boats came back.",
+    expect(hunks).toEqual([
+      {
+        kind: "change",
+        before: "Rain fell.\n\n",
+        after: "The sea was flat and grey.\n\n",
+      },
+      {
+        kind: "change",
+        before: "Wind rose.",
+        after: "Nothing moved on the quay.",
+      },
+    ]);
+  });
+
+  it("stays one change where paragraphs are joined", () => {
+    const hunks = diffSentences(
+      "Rain fell.\n\nWind rose.",
+      "The sea was flat and grey, and nothing moved on the quay.",
     );
-    expect(join("after")).toBe(
-      "When the tide went out the boats lay on the mud, and at dusk they came back.",
-    );
+    expect(hunks.filter((h) => h.kind === "change")).toHaveLength(1);
   });
 });

@@ -119,25 +119,23 @@ function paragraphsOf(text: string): string[] {
 }
 
 /**
- * A change over several of the original's paragraphs, one for each of them:
- * a rewrite that merged or rearranged paragraphs came out as one change from
- * the first to the last, its card at the top of the margin beside nothing
- * in particular. Each original paragraph's change now has a card beside it -
- * its new paragraph in step, the last taking whatever new text is over, a
- * paragraph the new text has none for removed.
+ * A change over several of the original's paragraphs, rewritten paragraph by
+ * paragraph - as many new ones as old - one for each of them: a whole-text
+ * rewrite whose changed sentences ran together came out as one change from
+ * the first paragraph to the last, its card at the top of the margin beside
+ * nothing in particular. A rewrite that joins or splits paragraphs stays one
+ * change: the joined paragraph is shown struck in place (pending-edit-
+ * plugin's struck blocks).
  */
 function byParagraph(hunk: SentenceHunk): SentenceHunk[] {
   if (hunk.kind !== "change") return [hunk];
   const before = paragraphsOf(hunk.before);
-  if (before.length < 2) return [hunk];
   const after = paragraphsOf(hunk.after);
+  if (before.length < 2 || after.length !== before.length) return [hunk];
   return before.map((text, i) => ({
     kind: "change" as const,
     before: text,
-    after:
-      i < before.length - 1
-        ? (after[i] ?? "")
-        : after.slice(before.length - 1).join(""),
+    after: after[i],
   }));
 }
 

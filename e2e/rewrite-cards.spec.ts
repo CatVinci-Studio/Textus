@@ -64,18 +64,47 @@ test("a rewrite of the whole text has a card for each change, beside its passage
   expect(tops[5] - tops[0]).toBeGreaterThan(60);
 });
 
-test("a rewrite that merges paragraphs has a card beside each one it changed", async ({
+test("a rewrite whose changes run across paragraphs has a card beside each paragraph", async ({
   page,
 }) => {
+  // Each sentence too unlike its new one to pair: one run of changes.
   await proposeRewrite(
     page,
     BEFORE.join("\n\n"),
-    "Before dawn the tide drew back, and the boats rested on the mud while gulls squabbled over scraps; at dusk they returned and voices filled the harbour.",
+    [
+      "Nothing stirred in the grey before morning.",
+      "Above the water a few birds circled.",
+      "Lamps came on along the quay at evening.",
+    ].join("\n\n"),
   );
-  await expect
-    .poll(() => page.locator(".revision-note").count())
-    .toBeGreaterThanOrEqual(3);
+  await expect(page.locator(".revision-note")).toHaveCount(3);
   const tops = await cardTops(page);
-  // Spread down the page beside the three paragraphs, not one at the top.
-  expect(tops[tops.length - 1] - tops[0]).toBeGreaterThan(60);
+  expect(tops[2] - tops[0]).toBeGreaterThan(60);
 });
+
+// A table or a code block the rewrite leaves alone: its Markdown is no
+// text the document has, and finding it used to fail - the whole rewrite
+// one card at the top. The table as the document writes it out, which is
+// what the model has to quote.
+for (const [what, between] of [
+  ["table", "| Boat | Catch |\n| :--- | :---- |\n| Mary | Cod   |"],
+  ["code block", "```\nls -la\n```"],
+]) {
+  test(`a rewrite around a ${what} has a card for each change`, async ({
+    page,
+  }) => {
+    // The caret in a revision's widget once threw (liveCaretPos's -1).
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    await proposeRewrite(
+      page,
+      ["We counted the boats.", between, "The end of the day."].join("\n\n"),
+      ["We tallied the boats.", between, "Day's end."].join("\n\n"),
+    );
+    await expect(page.locator(".review-bar-pos")).toContainText("2");
+    await expect(page.locator(".revision-note")).toHaveCount(2);
+    const tops = await cardTops(page);
+    expect(tops[1] - tops[0]).toBeGreaterThan(40);
+    expect(errors).toEqual([]);
+  });
+}
