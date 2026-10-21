@@ -11,11 +11,12 @@ use std::pin::Pin;
 /// more tools need more context (e.g. an MCP client handle) without changing
 /// each tool's call signature.
 pub struct ToolContext<'a> {
-    /// The new text of proposals from earlier requests the user hasn't
-    /// accepted or rejected (images::undecided_texts): part of the
-    /// document as they see it, so an edit may change it - the frontend
-    /// puts that edit into the proposal (usePendingEdits's joinEdit).
-    pub undecided: &'a [String],
+    /// Proposals from earlier requests the user hasn't accepted or
+    /// rejected (images::undecided_edits): their text is part of the
+    /// document as the user sees it, in place of what a rewrite replaces,
+    /// so an edit may change it - the frontend puts that edit into the
+    /// proposal (usePendingEdits's joinEdit).
+    pub undecided: &'a [crate::ai::images::UndecidedEdit],
     pub document: &'a str,
     /// The merged skills: built-in, global config folder, project .textus/.
     pub skills: &'a [AgentSkill],
@@ -464,6 +465,20 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
                 return problem;
             }
             joins = true;
+        } else if let Some(rewrite) = ctx
+            .undecided
+            .iter()
+            .find(|edit| !edit.replaced.is_empty() && edit.replaced.contains(anchor))
+        {
+            // Document text an undecided rewrite replaces: the user sees the
+            // rewrite there, and an edit of the old text would overlap it
+            // (Sonnet anchored a word of the original after a rewrite of
+            // the paragraph, live_eval::continuing). Where the rewrite still
+            // has those words the edit goes into it.
+            if rewrite.text.matches(anchor).count() != 1 || !quotes_undecided(ctx, anchor) {
+                return "Not proposed: that passage is one you rewrote earlier and the user hasn't decided on yet - they see your rewrite in its place, and an edit of the old text can't be applied beside it. Anchor in the rewrite's text instead (quote it as you proposed it): the edit goes into that proposal.".to_string();
+            }
+            joins = true;
         }
     }
 
@@ -544,7 +559,7 @@ fn quotes_undecided(ctx: &ToolContext, anchor: &str) -> bool {
     let found: usize = ledger
         .texts
         .iter()
-        .chain(ctx.undecided)
+        .chain(ctx.undecided.iter().map(|edit| &edit.text))
         .map(|text| text.matches(anchor).count())
         .sum();
     found == 1
@@ -2114,9 +2129,38 @@ mod tests {
     }
 
     #[test]
+    fn an_edit_of_text_an_undecided_rewrite_replaces_goes_into_the_rewrite() {
+        let doc = "The lighthouse stood on the rock. Waves broke below.";
+        let undecided = vec![crate::ai::images::UndecidedEdit {
+            replaced: "The lighthouse stood on the rock.".into(),
+            text: "The old lighthouse stood alone on its rock.".into(),
+        }];
+        let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+        let context = ToolContext {
+            undecided: &undecided,
+            ..ctx(doc)
+        };
+        let run = |args: &str| execute(&tools, &context, PROPOSE_EDIT_TOOL_NAME, args).text;
+        // Words the rewrite kept: the edit goes into it.
+        let out = run(r#"{"action":"replace","anchor":"lighthouse","text":"beacon"}"#);
+        assert!(out.contains("goes into that proposal"), "{out}");
+        // Words it no longer has: refused, pointed at the rewrite.
+        let out = run(r#"{"action":"replace","anchor":"stood on the rock","text":"rose from the rock"}"#);
+        assert!(out.starts_with("Not proposed"), "{out}");
+        assert!(out.contains("Anchor in the rewrite's text"), "{out}");
+        // Text beside it is the document's, as before.
+        let out = run(r#"{"action":"replace","anchor":"Waves broke below.","text":"Waves crashed below."}"#);
+        assert!(out.starts_with("Edit proposed"), "{out}");
+        assert!(!out.contains("goes into that proposal"), "{out}");
+    }
+
+    #[test]
     fn an_edit_may_change_text_proposed_and_not_decided_yet() {
         let doc = "The cat sat on the mat.";
-        let undecided = vec!["It purred all night. Then it slept.".to_string()];
+        let undecided = vec![crate::ai::images::UndecidedEdit {
+            replaced: String::new(),
+            text: "It purred all night. Then it slept.".to_string(),
+        }];
         for mode in [AgentMode::Write, AgentMode::Revise] {
             let tools = ToolRegistry::builtin(false, false, mode, false, false);
             let context = ToolContext {

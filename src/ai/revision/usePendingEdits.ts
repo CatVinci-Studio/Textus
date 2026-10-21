@@ -1082,12 +1082,19 @@ export function usePendingEdits(
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
         const { state } = view;
-        if (documentMarkdown(serializeBlocks(ctx, state.doc)).includes(anchor))
-          return;
+        const inDocument = documentMarkdown(
+          serializeBlocks(ctx, state.doc),
+        ).includes(anchor);
         const previews = pendingEditKey.getState(state)?.previews ?? [];
         for (const host of previews) {
           if (host.streaming || host.proposal.image || host.callId === callId)
             continue;
+          // Document text this rewrite replaces is its text now, as the
+          // user sees it (src-tauri tools.rs's propose_edit).
+          const replaces =
+            host.proposal.action === "replace" &&
+            (host.proposal.anchor ?? "").includes(anchor);
+          if (inDocument && !replaces) continue;
           const old = host.proposal.text ?? "";
           const text = rewrite(old);
           if (text === null || !host.replacement.includes(old)) continue;

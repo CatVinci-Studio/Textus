@@ -208,7 +208,7 @@ fn placeholder_src(id: &str) -> String {
 /// frontend puts the picture into that proposal.
 pub struct ProposedText<'a> {
     pub this_request: &'a std::sync::Mutex<ProposalLedger>,
-    pub undecided: &'a [String],
+    pub undecided: &'a [UndecidedEdit],
 }
 
 impl ProposedText<'_> {
@@ -218,17 +218,26 @@ impl ProposedText<'_> {
         let found: Vec<&String> = ledger
             .texts()
             .iter()
-            .chain(self.undecided)
+            .chain(self.undecided.iter().map(|edit| &edit.text))
             .filter(|text| text.contains(anchor))
             .collect();
         found.len() == 1 && found[0].matches(anchor).count() == 1
     }
 }
 
-/// The new text of each propose_edit in `history` the user hasn't decided
-/// on yet, as its result's status note says (src/ai/revision/
-/// proposal-status.ts).
-pub fn undecided_texts(history: &[AgentTurn]) -> Vec<String> {
+/// A propose_edit from an earlier request the user hasn't decided on yet.
+#[derive(Debug, Clone, PartialEq)]
+pub struct UndecidedEdit {
+    /// The document text a replace rewrites, which the user now sees as
+    /// `text`; empty for any other action.
+    pub replaced: String,
+    /// Its new text.
+    pub text: String,
+}
+
+/// Each propose_edit in `history` the user hasn't decided on yet, as its
+/// result's status note says (src/ai/revision/proposal-status.ts).
+pub fn undecided_edits(history: &[AgentTurn]) -> Vec<UndecidedEdit> {
     const UNDECIDED: &str = "has NOT yet accepted or rejected this proposed edit";
     history
         .iter()
@@ -245,7 +254,14 @@ pub fn undecided_texts(history: &[AgentTurn]) -> Vec<String> {
                 });
                 let args: Value = serde_json::from_str(arguments).ok()?;
                 let text = args.get("text")?.as_str()?;
-                (open && !text.is_empty()).then(|| text.to_string())
+                let replaced = match args.get("action").and_then(Value::as_str) {
+                    Some("replace") => args.get("anchor").and_then(Value::as_str),
+                    _ => None,
+                };
+                (open && !text.is_empty()).then(|| UndecidedEdit {
+                    replaced: replaced.unwrap_or_default().to_string(),
+                    text: text.to_string(),
+                })
             }
             _ => None,
         })
@@ -866,7 +882,7 @@ mod tests {
         args: Value,
         document: &str,
         this_request: &[&str],
-        undecided: &[String],
+        undecided: &[UndecidedEdit],
     ) -> (Value, bool) {
         let this_request = std::sync::Mutex::new(ProposalLedger::with_texts(this_request));
         let proposed = ProposedText {
@@ -957,7 +973,10 @@ mod tests {
             at("The tide went out before dawn."),
             DOC,
             &[],
-            &[new.to_string()],
+            &[UndecidedEdit {
+                replaced: String::new(),
+                text: new.to_string(),
+            }],
         );
         assert!(args.get("image").is_some(), "{args}");
         // Text found nowhere is still refused, and spends nothing.
@@ -970,7 +989,7 @@ mod tests {
     }
 
     #[test]
-    fn undecided_texts_are_read_off_the_status_notes() {
+    fn undecided_edits_are_read_off_the_status_notes() {
         let call = |id: &str, text: &str| AgentTurn::ToolCall {
             call_id: id.into(),
             name: "propose_edit".into(),
@@ -988,7 +1007,13 @@ mod tests {
             call("b", "Open."),
             result("b", "Status: the user has NOT yet accepted or rejected this proposed edit. It is still shown to them as a preview."),
         ];
-        assert_eq!(undecided_texts(&history), vec!["Open.".to_string()]);
+        assert_eq!(
+            undecided_edits(&history),
+            vec![UndecidedEdit {
+                replaced: String::new(),
+                text: "Open.".into()
+            }]
+        );
     }
 
     #[test]

@@ -589,7 +589,7 @@ pub fn run_conversation(
             project: ws.conventions.clone(),
         };
         let library = crate::ai::conventions::library_names(ws);
-        let undecided = crate::ai::images::undecided_texts(&history);
+        let undecided = crate::ai::images::undecided_edits(&history);
         let ctx = ToolContext {
             document: &doc,
             undecided: &undecided,
