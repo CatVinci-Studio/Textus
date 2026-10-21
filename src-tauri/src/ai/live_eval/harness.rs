@@ -589,8 +589,10 @@ pub fn run_conversation(
             project: ws.conventions.clone(),
         };
         let library = crate::ai::conventions::library_names(ws);
+        let undecided = crate::ai::images::undecided_texts(&history);
         let ctx = ToolContext {
             document: &doc,
+            undecided: &undecided,
             skills: &ws.skills,
             ui_language: setup.ui_language,
             root,
@@ -605,7 +607,6 @@ pub fn run_conversation(
         // app offers them to the provider the eval runs on (Anthropic), and
         // generate_image when the case gives it one, on this turn's
         // document as the app does per request.
-        let undecided = crate::ai::images::undecided_texts(&history);
         let mut tool_set = tools::ToolRegistry::builtin(
             ws.has_usable_skills(),
             root.is_some(),

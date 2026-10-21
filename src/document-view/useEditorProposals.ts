@@ -213,7 +213,14 @@ export function useEditorProposals({
       });
       // The text first, then each picture: one next to text proposed and
       // not decided yet - this batch's or an earlier one's - goes into it.
-      const text = shown.filter((p) => !p.proposal.image);
+      // An edit of text proposed and not decided yet goes into that
+      // proposal (joinEdit) - once it is whole: a streaming one has its
+      // own preview until then.
+      const text = shown.filter(
+        (p) =>
+          !p.proposal.image &&
+          (p.streaming || !pendingEdits.joinEdit(p.callId, p.proposal)),
+      );
       if (text.length > 0) pendingEdits.showPreviews(text, target);
       const pictures = shown.filter(
         (p) =>
@@ -236,6 +243,7 @@ export function useEditorProposals({
       pendingEdits.showPreviews,
       pendingEdits.discard,
       pendingEdits.joinPicture,
+      pendingEdits.joinEdit,
       run,
     ],
   );
