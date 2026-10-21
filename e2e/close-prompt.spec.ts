@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 // A window's close request - its own close button, Alt+F4, ⌘W, or the
 // window manager's close (niri's close-window, a taskbar's Close) - reaches
@@ -65,4 +65,27 @@ test("the unsaved-changes prompt stays in front of Settings", async ({
   await emit(page, "tauri://close-requested", null);
   await expect(page.locator(".close-prompt")).toBeVisible();
   expect(await onTop(page, ".close-prompt-primary")).toBe(true);
+});
+
+test("File › Close Window in the app-drawn menu closes this window (#345)", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await mockInvoke(page, {
+    "plugin:window|close": null,
+    trigger_menu_item: null,
+  });
+  await page.locator(".window-menu-button").click();
+  await page.getByRole("menuitem", { name: "File" }).hover();
+  await page.getByRole("menuitem", { name: "Close Window" }).click();
+  const asked = await page.evaluate(() =>
+    (
+      (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
+        .__devInvokeCalls ?? []
+    ).map((c) => c.cmd),
+  );
+  // This window closes itself, as its close button does - not through the
+  // backend, which may find no window focused (Windows, Linux).
+  expect(asked).toContain("plugin:window|close");
+  expect(asked).not.toContain("trigger_menu_item");
 });

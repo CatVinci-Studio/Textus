@@ -12,6 +12,7 @@ import { runLocalMenuAction } from "./app-menu-actions";
 import { canOpenFolder } from "../platform/capabilities";
 import { comboFromEvent } from "../utils/shortcuts";
 import { menuIpc } from "../platform/ipc";
+import { runMenuItemHere } from "../platform/menu-events";
 import { commandForCombo } from "./commands";
 import {
   TRIGGER_COMPLETION_EVENT,
@@ -147,7 +148,7 @@ export function useGlobalShortcuts(opts: {
         const menuId = LINUX_MENU_ACCELERATORS[combo];
         if (menuId) {
           e.preventDefault();
-          void menuIpc.triggerMenuItem(menuId);
+          void runMenuItemHere(menuId);
           return;
         }
       }
