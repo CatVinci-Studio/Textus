@@ -104,3 +104,9 @@ export interface OpenFileInTab {
 /** Zen mode turned on/off (detail: boolean) - editors refresh their
  *  focus dimming (zen-focus-plugin). Fired by App. */
 export const ZEN_MODE_EVENT = "textus:zen-mode";
+
+/** A file on disk was written from inside the window, not by a save of
+ *  its tab (detail: its path) - a plugin ticking a task. Open tabs of it
+ *  check the disk as on refocus (useExternalChangeReload). Fired by the
+ *  plugin broker. */
+export const FILE_WRITTEN_EVENT = "textus:file-written";

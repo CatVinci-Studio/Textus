@@ -1,0 +1,81 @@
+{
+  "id": "catvinci.daily-notes",
+  "name": "%name%",
+  "version": "1.0.0",
+  "publisher": "catvinci",
+  "description": "%description%",
+  "icon": "icon.svg",
+  "license": "MIT",
+  "repository": "https://github.com/CatVinci-Studio/Textus",
+  "engines": { "textus": "^1.3.0" },
+  "main": "host.js",
+  "permissions": ["workspace.read", "workspace.write"],
+  "contributes": {
+    "commands": [
+      { "command": "catvinci.daily-notes.today", "title": "%today%" }
+    ],
+    "keybindings": [
+      { "command": "catvinci.daily-notes.today", "key": "mod+alt+d" }
+    ],
+    "menus": {
+      "app/plugins": [{ "command": "catvinci.daily-notes.today" }]
+    },
+    "sidebarTabs": [
+      { "id": "catvinci.daily-notes.calendar", "title": "%calendar%", "icon": "tab.svg" }
+    ],
+    "settings": [
+      {
+        "key": "folder",
+        "type": "string",
+        "default": "Daily",
+        "title": "%folder%",
+        "description": "%folderHelp%"
+      },
+      {
+        "key": "template",
+        "type": "string",
+        "default": "# {{date}}\\n\\n",
+        "title": "%template%",
+        "description": "%templateHelp%"
+      },
+      {
+        "key": "weekStart",
+        "type": "enum",
+        "default": "monday",
+        "title": "%weekStart%",
+        "options": [
+          { "value": "monday", "label": "%monday%" },
+          { "value": "sunday", "label": "%sunday%" }
+        ]
+      }
+    ]
+  },
+  "l10n": {
+    "en": {
+      "name": "Calendar & Daily Notes",
+      "description": "A calendar in the sidebar and a note for each day, kept in a folder of the open folder.",
+      "today": "Open Today's Note",
+      "calendar": "Calendar",
+      "folder": "Daily notes folder",
+      "folderHelp": "Inside the open folder.",
+      "template": "A new day's note",
+      "templateHelp": "{{date}} becomes the day's date; \\n starts a new line.",
+      "weekStart": "Weeks start on",
+      "monday": "Monday",
+      "sunday": "Sunday"
+    },
+    "zh": {
+      "name": "日历与每日笔记",
+      "description": "侧边栏里的日历，每天一篇笔记，存在打开的文件夹中的一个文件夹里。",
+      "today": "打开今天的笔记",
+      "calendar": "日历",
+      "folder": "每日笔记文件夹",
+      "folderHelp": "在打开的文件夹里面。",
+      "template": "新一天笔记的开头",
+      "templateHelp": "{{date}} 会换成当天日期；\\n 表示换行。",
+      "weekStart": "每周从哪天开始",
+      "monday": "星期一",
+      "sunday": "星期日"
+    }
+  }
+}

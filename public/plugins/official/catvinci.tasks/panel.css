@@ -1,0 +1,51 @@
+body {
+  background: var(--sidebar-bg);
+}
+.toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+}
+.file {
+  padding: var(--space-2) var(--space-2) 0;
+}
+.file h3 {
+  margin: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--chrome-muted);
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.task {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-small);
+  color: var(--sidebar-text);
+  font-size: var(--text-sm);
+}
+.task:hover {
+  background: var(--sidebar-hover);
+}
+.task input {
+  margin-top: 3px;
+}
+.task .text {
+  flex: 1;
+  cursor: pointer;
+  word-break: break-word;
+}
+.task.done .text {
+  text-decoration: line-through;
+  color: var(--chrome-muted);
+}
+.task .where {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--chrome-muted);
+}

@@ -1,0 +1,39 @@
+{
+  "id": "catvinci.quick-notes",
+  "name": "%name%",
+  "version": "1.0.0",
+  "publisher": "catvinci",
+  "description": "%description%",
+  "icon": "icon.svg",
+  "license": "MIT",
+  "repository": "https://github.com/CatVinci-Studio/Textus",
+  "engines": { "textus": "^1.3.0" },
+  "main": "host.js",
+  "permissions": ["document.propose"],
+  "contributes": {
+    "commands": [
+      { "command": "catvinci.quick-notes.capture", "title": "%capture%" }
+    ],
+    "keybindings": [
+      { "command": "catvinci.quick-notes.capture", "key": "mod+alt+n" }
+    ],
+    "menus": {
+      "app/plugins": [{ "command": "catvinci.quick-notes.capture" }]
+    },
+    "sidebarTabs": [
+      { "id": "catvinci.quick-notes.panel", "title": "%name%", "icon": "tab.svg" }
+    ]
+  },
+  "l10n": {
+    "en": {
+      "name": "Quick Notes",
+      "description": "Jot something down without leaving the document: notes in the sidebar, to insert later or open as a document.",
+      "capture": "New Quick Note…"
+    },
+    "zh": {
+      "name": "快速笔记",
+      "description": "不离开当前文档就能随手记下想法：笔记放在侧边栏，之后可以插入文档或单独打开。",
+      "capture": "新建快速笔记…"
+    }
+  }
+}

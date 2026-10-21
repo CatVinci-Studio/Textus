@@ -2,5 +2,10 @@
   "catvinci.image-viewer",
   "catvinci.pdf-viewer",
   "catvinci.word-reader",
-  "catvinci.web-view"
+  "catvinci.web-view",
+  "catvinci.quick-notes",
+  "catvinci.daily-notes",
+  "catvinci.tasks",
+  "catvinci.kanban",
+  "catvinci.version-history"
 ]

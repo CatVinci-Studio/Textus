@@ -68,6 +68,18 @@ export const openPath = (page: Page, path: string) =>
     path,
   );
 
+/** Opens the sidebar on the tab called `name`; its plugin's frame. */
+export async function openSidebarTab(page: Page, name: string) {
+  if (await page.locator(".sidebar.sidebar-collapsed").count())
+    await page.evaluate(() =>
+      (
+        window as unknown as { __devEmitTauriEvent: (n: string) => void }
+      ).__devEmitTauriEvent("menu-toggle-sidebar"),
+    );
+  await page.locator(".sidebar-tabs").getByRole("button", { name }).click();
+  return page.frameLocator(".sidebar .plugin-webview-frame");
+}
+
 /** The frame of the plugin's tab in front. */
 export const tabFrame = (page: Page) =>
   page.frameLocator('[data-active-tab="true"] .plugin-webview-frame');

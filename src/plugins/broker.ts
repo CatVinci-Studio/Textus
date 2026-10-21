@@ -1,6 +1,7 @@
 import { fs, links, plugins as pluginsIpc } from "../platform/ipc";
 import { showMessage, showPrompt } from "../ui/app-dialog";
 import { dirname } from "../utils/path";
+import { FILE_WRITTEN_EVENT } from "../utils/events";
 import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../ai/types";
 import type { Strings } from "../i18n/strings";
 import {
@@ -107,6 +108,13 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
 };
 
 let proposalCounter = 0;
+
+/** A plugin's write, and the window told once it is on disk: a tab of
+ *  that file picks it up (useExternalChangeReload). */
+async function written(path: string, write: Promise<void>): Promise<void> {
+  await write;
+  window.dispatchEvent(new CustomEvent(FILE_WRITTEN_EVENT, { detail: path }));
+}
 
 export class PluginHost {
   private frame: HTMLIFrameElement | null = null;
@@ -395,7 +403,10 @@ export class PluginHost {
         this.need("workspace.write");
         const record = this.ownWebview(id);
         if (!record.resource) throw new Error("This view shows no file.");
-        return pluginsIpc.fsWrite(this.id, dirname(record.resource), record.resource, text);
+        return written(
+          record.resource,
+          pluginsIpc.fsWrite(this.id, dirname(record.resource), record.resource, text),
+        );
       },
       "plugin.readFile": ({ path }: { path: string }) => this.readOwnFile(path),
       "workspace.rootPath": () => {
@@ -414,11 +425,14 @@ export class PluginHost {
         pluginsIpc.fsRead(this.id, this.root(), path),
       "workspace.writeText": ({ path, text }: { path: string; text: string }) => {
         this.need("workspace.write");
-        return pluginsIpc.fsWrite(this.id, this.root(), path, text);
+        return written(path, pluginsIpc.fsWrite(this.id, this.root(), path, text));
       },
       "workspace.writeFile": ({ path, data }: { path: string; data: Uint8Array }) => {
         this.need("workspace.write");
-        return pluginsIpc.fsWrite(this.id, this.root(), path, toBase64(data), true);
+        return written(
+          path,
+          pluginsIpc.fsWrite(this.id, this.root(), path, toBase64(data), true),
+        );
       },
       "net.fetch": async (r: {
         url: string;

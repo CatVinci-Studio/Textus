@@ -1,0 +1,42 @@
+body {
+  background: var(--sidebar-bg);
+}
+#notes {
+  padding: var(--space-2);
+}
+#notes > li {
+  display: block;
+  margin-bottom: var(--space-2);
+  padding: var(--space-2);
+  background: var(--bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-block);
+}
+textarea {
+  display: block;
+  width: 100%;
+  min-height: 3.6em;
+  resize: vertical;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  line-height: 1.5;
+}
+textarea:focus {
+  outline: none;
+}
+.note-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+.note-actions .when {
+  flex: 1;
+  font-size: var(--text-xs);
+}
+.note-actions button {
+  min-height: 0;
+  padding: 2px var(--space-2);
+  font-size: var(--text-xs);
+}

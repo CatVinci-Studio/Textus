@@ -1,0 +1,50 @@
+body {
+  background: var(--sidebar-bg);
+}
+#month {
+  min-width: 7em;
+  text-align: center;
+  font-size: var(--text-md);
+}
+#grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding: var(--space-3);
+}
+.weekday {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--chrome-muted);
+  padding-bottom: var(--space-1);
+}
+.day {
+  position: relative;
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--sidebar-text);
+  font-size: var(--text-sm);
+}
+.day.outside {
+  color: var(--chrome-muted);
+  opacity: 0.55;
+}
+.day.today {
+  color: var(--chrome-accent);
+  font-weight: 600;
+}
+.day.has-note::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--chrome-accent);
+}
