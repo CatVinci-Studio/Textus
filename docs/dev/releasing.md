@@ -11,11 +11,11 @@ change ([infrastructure.md](infrastructure.md#playground)).
 
 Two lines, each with its own tags:
 
-| Branch          | What it is                                                     | Tagged there                                  |
-| --------------- | -------------------------------------------------------------- | --------------------------------------------- |
-| `main`          | The next minor version: new features land here                 | `vX.Y.0-rc.N`, `vX.Y.0` until its line is cut |
-| `release/X.Y.x` | The current stable version: fixes only                         | `vX.Y.Z`, `vX.Y.Z-rc.N`                       |
-| `archive/*`     | A line no longer maintained, and `archive/levis` (Levis 0.9.8) | -                                             |
+| Branch          | What it is                                                     | Tagged there                   |
+| --------------- | -------------------------------------------------------------- | ------------------------------ |
+| `main`          | The next minor version: new features land here                 | `vX.Y.0-beta.N`, then `vX.Y.0` |
+| `release/X.Y.x` | The current stable version: fixes only                         | `vX.Y.1`, `vX.Y.2`…            |
+| `archive/*`     | A line no longer maintained, and `archive/levis` (Levis 0.9.8) | -                              |
 
 - Every change is a short-lived branch (`feat/…`, `fix/…`, `docs/…`,
   `chore/…`) and a pull request. Branch protection on `main` and
@@ -24,10 +24,17 @@ Two lines, each with its own tags:
   the branch to be up to date: a pull request that passed is merged as it
   is, and the CI run after the merge catches the rare case where two changes
   only break together.
-- **The line is cut when a minor version's features are frozen**: the last
-  release candidate's changes land on `main`, `release/X.Y.x` is branched
-  from that commit, and its later candidates and the stable release are
-  tagged there. From then on `main` is the next minor version.
+- **The line is cut at the minor version's release**: `vX.Y.0` is tagged
+  on `main`, and `release/X.Y.x` is branched from that tag. From then on
+  `main` is the next minor version. (1.2 is the exception: its line was cut
+  at its last release candidate, 1.2.0-rc.6, so `main` could start on 1.3.)
+- **Betas, then the release.** From 1.3 a minor version is tried out as
+  `vX.Y.0-beta.N`, tagged on `main` while its features land, and released
+  as `vX.Y.0` when they hold up. 1.2 was the last to use release
+  candidates (`-rc.N`); they come back only if a release ever needs a
+  frozen candidate stage of its own.
+- **Fixes are patch releases**: `vX.Y.1`, `vX.Y.2`… from `release/X.Y.x`,
+  released as they are, with no beta first.
 - **A fix goes where the bug is.** One the stable version has is a pull
   request to `release/X.Y.x`; one only `main` has goes to `main`. New
   features never go to a release line.
@@ -46,9 +53,9 @@ Both lines can release in the same week. A stable tag becomes GitHub's
 "Latest" release - the one the updater, the website's downloads, Homebrew,
 the mirror and the Arch repository follow - only when it is the highest
 stable version (release.yml's "Is this the newest stable tag?"), and a
-release candidate never does. The beta channel's manifest only moves
+pre-release never does. The beta channel's manifest only moves
 forward (`scripts/updater-manifest.mjs beta`): a `1.2.2` released after
-`1.3.0-rc.1` leaves beta users on the release candidate, and reaches them
+`1.3.0-beta.1` leaves beta users on the beta, and reaches them
 in the next one, through the merge back.
 
 ## Desktop release
@@ -132,7 +139,7 @@ Each release carries these, named by tauri-bundler (`X.Y.Z` is the
 version). The files with updater keys have a `.sig` beside them, and the
 updater manifest (`textus-latest.json`) points those keys at them; the
 download mirror's `manifest.json` gives the website one file per mirror
-key. A release candidate has no `.rpm`, and so no `…-rpm` keys.
+key. A pre-release has no `.rpm`, and so no `…-rpm` keys.
 
 | Platform          | File                                    | Built on           | Updater keys                  | Mirror key      |
 | ----------------- | --------------------------------------- | ------------------ | ----------------------------- | --------------- |
@@ -178,9 +185,6 @@ instead of `main`:
    git push origin vX.Y.Z
    ```
 
-   A risky fix (saving, the window, anything that can lose writing) goes
-   out as `vX.Y.Z-rc.1` first, from the same line.
-
 4. Verify it as any release.
 5. Merge `release/X.Y.x` into `main` in a pull request
    (`chore: merge release/X.Y.x after vX.Y.Z`), keeping `main`'s version
@@ -188,17 +192,18 @@ instead of `main`:
 
 ## Pre-releases
 
-A tag with a semver pre-release suffix (`v1.1.0-rc.1`) is published as a
-GitHub pre-release. The version files carry the same suffix (`1.1.0-rc.1`):
+A tag with a semver pre-release suffix (`v1.3.0-beta.1`; up to 1.2,
+`v1.2.0-rc.1`) is published as a GitHub pre-release. The version files
+carry the same suffix (`1.3.0-beta.1`):
 the tag check compares the whole version, and release notes are only
 required for stable tags. Linux (x64 and ARM64) gets the `.deb` and AppImage but no `.rpm`
 (RPM versions can't contain `-`).
 
-A release candidate reaches only the users who chose **Settings › General ›
+A pre-release reaches only the users who chose **Settings › General ›
 About Textus › Update channel › Beta**. It skips the download mirror and
 the `[catvinci]` pacman repository, and the stable channel never sees it: that channel reads
 `releases/latest/download/textus-latest.json`, and `releases/latest`
-excludes pre-releases. To check a release candidate before tagging the
+excludes pre-releases. To check a pre-release before tagging the
 stable release, switch a test install to Beta and use **Check for Updates**.
 
 ## Update channels
@@ -212,20 +217,20 @@ The app has two (`src-tauri/src/commands/update.rs`):
   to the stable endpoint when that fails. GitHub has no fixed URL for the
   newest pre-release, so the beta manifest lives on our own bucket.
 
-After every published tag, release candidates included, the
+After every published tag, pre-releases included, the
 `update-beta-manifest` job (`update-beta-manifest.yml`,
 `scripts/update-beta-manifest.sh`) copies that release's
 `textus-latest.json` to `textus-beta.json` in the `textus-downloads` R2
 bucket - unless the bucket already holds a newer version, so rebuilding an
 old tag never moves beta backwards. Beta therefore always offers the newest
-of the latest release candidate and the latest stable release: on
+of the latest pre-release and the latest stable release: on
 `1.1.0-rc.2`, the stable `1.1.0` arrives as an update. Its download URLs are
-the GitHub release's assets; release candidates are not mirrored. It needs
+the GitHub release's assets; pre-releases are not mirrored. It needs
 the `CLOUDFLARE_API_TOKEN` secret that the download mirror uses.
 
 The app never installs an older version than it runs, so a user who goes
-back from Beta to Stable keeps the release candidate until a newer stable
-version is out. An install from the `.rpm` skips release candidates, which
+back from Beta to Stable keeps the pre-release until a newer stable
+version is out. An install from the `.rpm` skips pre-releases, which
 have no `.rpm`, and waits for the stable release. Builds that don't install
 their own updates (the Arch package, iOS) have no channel setting and check
 the stable channel.

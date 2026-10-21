@@ -20,7 +20,7 @@ TestFlight for a while and is about to go to review.
 ## In the next release (1.2.0)
 
 Textus AI that can do more, an editor that feels better, and a lot of fixes.
-It is in release candidates now, on the beta channel.
+It is in release candidates now, on the beta channel - the last version to use them: from 1.3, new versions are tried out as betas.
 
 - **Open a whole folder** in the sidebar and search its file names with
   `Ctrl/⌘ + Shift + O`.
