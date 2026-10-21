@@ -931,3 +931,29 @@ test("a picture's frame whose text never came goes when the reply ends", async (
     .poll(() => calls(page, "ai_discard_generated_image"))
     .toHaveLength(1);
 });
+
+test("a selected picture says so in the message box, and in the message once sent", async ({
+  page,
+}) => {
+  await openSaved(page);
+  await page.locator(`${editor} img[data-doc-src="assets/boats.png"]`).click();
+  const chip = page.locator(".inline-chat-chip-label");
+  await expect(chip).toHaveText("Picture selected");
+  await mockInvoke(page, {
+    ai_agent_message: [
+      {
+        kind: "User",
+        text: `<selected-text>\n${OLD}\n</selected-text>\n\nWhat is in it?`,
+      },
+      { kind: "Assistant", text: "Boats." },
+    ],
+  });
+  await send(page, "What is in it?");
+  await expect(
+    page.locator(".agent-message-user .agent-context-chip"),
+  ).toHaveText("Picture selected");
+  const sent = (await calls(page, "ai_agent_message")) as unknown as {
+    message: string;
+  }[];
+  expect(sent.at(-1)!.message).toContain(OLD);
+});
