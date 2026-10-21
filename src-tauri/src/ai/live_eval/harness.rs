@@ -638,7 +638,12 @@ pub fn run_conversation(
             native_search: None,
             enforce_binding: true,
         };
+        // Pictures written into the text, begun as the app begins them.
+        let inline = setup.pictures.map(|p| p.inline(&ctx.proposed));
         let sink = |event: ProviderEvent<'_>| {
+            if let Some(inline) = &inline {
+                inline.observe(&event);
+            }
             if let ProviderEvent::Thinking(text) = event {
                 thinking_events.fetch_add(1, Ordering::Relaxed);
                 thinking_chars.fetch_add(text.chars().count(), Ordering::Relaxed);
@@ -662,7 +667,7 @@ pub fn run_conversation(
                 let (instructions, specs, usage, postfix) =
                     (&instructions, &specs, &usage, &postfix);
                 let (agent, sink) = (&agent, &sink);
-                let (doc, conventions) = (&doc, &conventions);
+                let (doc, conventions, inline) = (&doc, &conventions, &inline);
                 async move {
                     // with_retry's loop, inline: this already runs inside
                     // block_on, which can't be nested.
@@ -680,6 +685,10 @@ pub fn run_conversation(
                     charge(setup.model, &used);
                     usage.borrow_mut().push(used);
                     let (step, applied) = crate::ai::agent::postfix_step(step, doc, conventions);
+                    let step = match inline {
+                        Some(inline) => inline.place(step),
+                        None => step,
+                    };
                     postfix
                         .borrow_mut()
                         .extend(applied.into_iter().map(str::to_string));

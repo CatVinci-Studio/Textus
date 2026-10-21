@@ -6,7 +6,7 @@ import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../types";
  * picture waits in the backend, in memory, until Accept saves it the way
  * Settings › Images says; until then the proposal's Markdown names it by a
  * placeholder src, and only the preview in the document - never the
- * conversation, which is saved - holds its bytes, as a data: URL.
+ * conversation, which is saved - holds its bytes, as a blob: URL.
  */
 
 const PREFIX = "textus-generated:";
@@ -48,8 +48,8 @@ export function parseImageProposal(argumentsJson: string): EditProposal | null {
     const parsed = JSON.parse(argumentsJson);
     const image = parsed.image;
     if (!image || typeof image.id !== "string") return null;
-    // Its frame's shape, wherever it is drawn - in a text that carries it
-    // (`in_text`) as much as on its own.
+    // Its frame's shape, wherever it is drawn - in a text it joins as
+    // much as on its own.
     sizes.set(image.id, {
       width: Number(image.width) || 0,
       height: Number(image.height) || 0,
@@ -286,29 +286,59 @@ export function joinedText(
   return `${text.slice(0, start)}\n\n${picture}${text.slice(start)}`;
 }
 
-/** A generate_image call's `in_text` picture as its slot (EditProposal.
- *  slot): where the text it is for is going - at the caret, or the end of
- *  the document - until that text takes it in; null for any other call. */
-export function pictureSlot(
-  argumentsJson: string,
-  cursor: number | null,
-): EditProposal | null {
-  try {
-    const parsed = JSON.parse(argumentsJson);
-    const image = parsed.image;
-    if (parsed.action !== "in_text" || !image || typeof image.id !== "string")
-      return null;
-    const width = Number(image.width) || 0;
-    const height = Number(image.height) || 0;
-    sizes.set(image.id, { width, height });
-    const alt = cleanAlt(typeof parsed.alt === "string" ? parsed.alt : "");
-    return {
-      action: cursor === null ? "append" : "insert_at_cursor",
-      text: `![${alt}](${generatedImageSrc(image.id)})`,
-      image: { id: image.id, alt, width, height, pending: true },
-      slot: true,
-    };
-  } catch {
-    return null;
+/** The src of a picture the model writes into new text, on a line of its
+ *  own, `![alt](textus-picture:16:9 what it shows)` - begun the moment the
+ *  line has streamed in. Mirrors PICTURE_SCHEME in src-tauri
+ *  ai/images/inline.rs. */
+const PICTURE_LINE = "textus-picture:";
+
+/** The picture begun for each picture line, by call: the backend says so
+ *  (the `picture` stream event) before the line itself arrives. Only the
+ *  latest calls are kept - a completed call's text names its pictures. */
+const begun = new Map<string, Map<string, string>>();
+const BEGUN_CALLS = 32;
+
+/** A picture line of a streaming propose_edit stands for picture `id`. */
+export function noteBegunPicture(
+  callId: string,
+  line: string,
+  id: string,
+  size: { width: number; height: number },
+): void {
+  sizes.set(id, size);
+  let lines = begun.get(callId);
+  if (!lines) {
+    lines = new Map();
+    begun.set(callId, lines);
+    for (const old of begun.keys()) {
+      if (begun.size <= BEGUN_CALLS) break;
+      begun.delete(old);
+    }
   }
+  lines.set(line, id);
+}
+
+/** A streaming propose_edit's text as far as it has come, each picture
+ *  line as its picture - a frame until it comes. A line no picture was
+ *  begun for, or one still being written, is left out: never shown as
+ *  text. */
+export function withBegunPictures(callId: string, text: string): string {
+  if (!text.includes("!")) return text;
+  const ids = begun.get(callId);
+  const lines = text.split("\n");
+  return lines
+    .flatMap((line, i) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("![") && trimmed.includes(`](${PICTURE_LINE}`)) {
+        const id = ids?.get(trimmed);
+        if (!id) return [];
+        const alt = cleanAlt(trimmed.slice(2, trimmed.indexOf("](")));
+        return [`![${alt}](${generatedImageSrc(id)})`];
+      }
+      // The last line may be a picture line still being written.
+      const last = i === lines.length - 1;
+      if (last && trimmed.startsWith("!") && !trimmed.endsWith(")")) return [];
+      return [line];
+    })
+    .join("\n");
 }

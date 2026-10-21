@@ -19,10 +19,6 @@ import type { PendingStatus } from "./usePendingEdits";
 const PROPOSED_PREFIX = "Edit proposed";
 /** The same for generate_image (ai/images.rs): a picture was made. */
 const IMAGE_PROPOSED_PREFIX = "Image proposed";
-/** generate_image's `in_text`: a picture being made for text the model
- *  proposes next, which carries it - not a proposal of its own, and not
- *  refused. */
-const PICTURE_SLOT_PREFIX = "Picture being made";
 
 /** A propose_edit (or generate_image) result that refused the proposal. Results replaced by a
  *  stop (cancelled-turns.ts) aren't refusals: what streamed is kept. */
@@ -30,7 +26,6 @@ export function isRefusal(output: string): boolean {
   return (
     !output.startsWith(PROPOSED_PREFIX) &&
     !output.startsWith(IMAGE_PROPOSED_PREFIX) &&
-    !output.startsWith(PICTURE_SLOT_PREFIX) &&
     output !== STOPPED_TOOL_RESULT
   );
 }

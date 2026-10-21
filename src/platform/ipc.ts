@@ -675,6 +675,14 @@ export type StreamEvent =
   | { type: "delta"; text: string }
   | { type: "toolStart"; callId: string; name: string }
   | { type: "toolArgsDelta"; callId: string; delta: string }
+  | {
+      type: "picture";
+      callId: string;
+      line: string;
+      id: string;
+      width: number;
+      height: number;
+    }
   | { type: "turn"; turn: AgentTurn }
   /** The step being streamed came back garbled and is asked for again:
    *  drop what it streamed. */

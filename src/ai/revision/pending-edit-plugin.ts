@@ -1263,15 +1263,7 @@ function decorationsFor(
         ? strikeTo
         : p.to;
     decos.push(
-      // A picture's slot stays after text streaming in at the same place:
-      // the text grows above it, as it will stand once the text has it.
-      textWidget(
-        p,
-        insertPos,
-        p.proposal.slot ? 2 : atStart ? -1 : 1,
-        animate,
-        removesText,
-      ),
+      textWidget(p, insertPos, atStart ? -1 : 1, animate, removesText),
     );
   }
   return decos;

@@ -87,10 +87,7 @@ test("a proposed picture shows in place, and only Accept saves it", async ({
 }) => {
   await open(page);
   await propose(page);
-  await expect(page.locator(pending)).toHaveAttribute(
-    "src",
-    /^blob:/,
-  );
+  await expect(page.locator(pending)).toHaveAttribute("src", /^blob:/);
   await expect(page.locator(".agent-proposal-picture")).toHaveCount(1);
   expect(await calls(page, "save_pasted_image")).toHaveLength(0);
 
@@ -286,11 +283,9 @@ test("text and a picture come together: the text at once, the picture's frame un
   const box = (await frame.boundingBox())!;
   expect(box.width / box.height).toBeCloseTo(1536 / 1024, 1);
   // The picture takes its place once it comes.
-  await expect(page.locator(pending)).toHaveAttribute(
-    "src",
-    /^blob:/,
-    { timeout: 10_000 },
-  );
+  await expect(page.locator(pending)).toHaveAttribute("src", /^blob:/, {
+    timeout: 10_000,
+  });
   await expect(frame).toHaveCount(0);
 });
 
@@ -316,9 +311,9 @@ test("Accept waits for a picture being made, and saves it once it has come", asy
   expect(await calls(page, "save_pasted_image")).toHaveLength(1);
 });
 
-/** A reply that asks for a picture first (generate_image's `in_text`)
- *  and then writes the text with the picture in it, the picture taking
- *  `ms` to come (or failing then with `refusal`). */
+/** A reply that writes text with a picture in it (ai/images/inline.rs
+ *  placed its line), the picture taking `ms` to come (or failing then
+ *  with `refusal`). */
 async function writeWithPictureInside(
   page: Page,
   ms: number,
@@ -327,22 +322,6 @@ async function writeWithPictureInside(
   await mockInvoke(page, {
     ai_agent_message: [
       { kind: "User", text: "Write about the harbour, with a picture" },
-      {
-        kind: "ToolCall",
-        call_id: "g1",
-        name: "generate_image",
-        arguments: JSON.stringify({
-          prompt: "A harbour at dusk",
-          alt: "A harbour at dusk",
-          action: "in_text",
-          image: { id: "abc123", width: 1536, height: 1024, pending: true },
-        }),
-      },
-      {
-        kind: "ToolResult",
-        call_id: "g1",
-        output: "Picture being made (1536 x 1024 pixels).",
-      },
       {
         kind: "ToolCall",
         call_id: "w1",
@@ -367,7 +346,7 @@ async function writeWithPictureInside(
   await send(page, "Write about the harbour, with a picture");
 }
 
-test("a picture asked for before its text is in that text: one proposal, its frame until the picture comes", async ({
+test("a picture written into its text is one proposal with it, its frame until the picture comes", async ({
   page,
 }) => {
   await openApp(page, {
@@ -377,27 +356,17 @@ test("a picture asked for before its text is in that text: one proposal, its fra
   await writeWithPictureInside(page, 1500);
   const proposal = page.locator(`${editor} .pending-insert`);
   await expect(proposal).toHaveCount(1);
-  // The frame between the two paragraphs, in the shape asked for.
-  const frame = proposal.locator(".pending-picture");
-  await expect(frame).toBeVisible();
-  // Polled: a widget drawn again draws a new frame.
-  await expect
-    .poll(async () => {
-      const box = await frame.boundingBox();
-      return box ? Math.round((box.width / box.height) * 10) / 10 : 0;
-    })
-    .toBeCloseTo(1536 / 1024, 1);
+  // The frame between the two paragraphs.
+  await expect(proposal.locator(".pending-picture")).toBeVisible();
   await expect(page.locator(".agent-proposal")).toHaveCount(1);
   const accept = page.locator(
     ".agent-proposal-actions .inline-chat-action-primary",
   );
   await expect(accept).toBeDisabled();
   // The picture comes in place, and only then can the text be accepted.
-  await expect(proposal.locator("img")).toHaveAttribute(
-    "src",
-    /^blob:/,
-    { timeout: 10_000 },
-  );
+  await expect(proposal.locator("img")).toHaveAttribute("src", /^blob:/, {
+    timeout: 10_000,
+  });
   await expect(accept).toBeEnabled();
   await accept.click();
   await expect(page.locator(written)).toHaveCount(1, { timeout: 10_000 });
@@ -753,10 +722,11 @@ test("pictures per request is a setting, sent with each request", async ({
     .toBe(4);
 });
 
-/** A reply as a model streams it: a picture asked for first (in_text),
- *  then the text that carries it a line at a time, the next line when the
- *  test calls `__nextLine()` - and, with `lines` empty, no text at all. */
-async function streamSlotThenText(page: Page, lines: string[]) {
+/** A reply as a model streams it: text with a picture line in it, a
+ *  line at a time - the next when the test calls `__nextLine()` - and the
+ *  backend saying the picture is begun (the `picture` event) once its
+ *  line is complete, as ai/images/inline.rs does. */
+async function streamTextWithPicture(page: Page, lines: string[]) {
   await page.evaluate((lines) => {
     type Send = (event: unknown) => void;
     const w = window as unknown as {
@@ -773,74 +743,81 @@ async function streamSlotThenText(page: Page, lines: string[]) {
         onEvent?: { onmessage?: Send };
       };
       const send: Send = (event) => onEvent?.onmessage?.(event);
-      const slot = {
-        kind: "ToolCall",
-        call_id: "g1",
-        name: "generate_image",
-        arguments: JSON.stringify({
-          prompt: "A harbour at dusk",
-          alt: "A harbour",
-          action: "in_text",
-          image: { id: "slot1", width: 1536, height: 1024, pending: true },
-        }),
-      };
-      const slotResult = {
-        kind: "ToolResult",
-        call_id: "g1",
-        output: "Picture being made (1536 x 1024 pixels).",
-      };
-      send({ type: "toolStart", callId: "g1", name: "generate_image" });
-      send({ type: "turn", turn: slot });
-      send({ type: "turn", turn: slotResult });
-      const text = lines.join("");
-      const json = JSON.stringify({ action: "append", text });
-      const cuts: number[] = [];
+      const streamed = JSON.stringify({
+        action: "append",
+        text: lines.join(""),
+      });
+      // What the backend placed: the line as its picture's Markdown.
+      const placed = JSON.stringify({
+        action: "append",
+        text: lines
+          .join("")
+          .replace(
+            /!\[(.*?)\]\(textus-picture:[^\n]*\)/,
+            "![$1](textus-generated:pic1)",
+          ),
+      });
+      let at = streamed.indexOf('"text":"') + '"text":"'.length;
       let sent = 0;
-      for (const line of lines) {
-        sent += line.length;
-        cuts.push(JSON.stringify(text.slice(0, sent)).length - 1);
-      }
-      const head = json.indexOf('"text":"') + '"text":"'.length;
-      let from = 0;
+      send({ type: "toolStart", callId: "s1", name: "propose_edit" });
+      send({
+        type: "toolArgsDelta",
+        callId: "s1",
+        delta: streamed.slice(0, at),
+      });
       return new Promise((resolve) => {
         w.__nextLine = () => {
-          if (lines.length === 0) {
-            const reply = { kind: "Assistant", text: "Stopped." };
-            send({ type: "turn", turn: reply });
-            resolve([{ kind: "User", text: message }, slot, slotResult, reply]);
+          const line = lines[sent++];
+          if (line === undefined) {
+            send({
+              type: "toolArgsDelta",
+              callId: "s1",
+              delta: streamed.slice(at),
+            });
+            const turns = [
+              {
+                kind: "ToolCall",
+                call_id: "s1",
+                name: "propose_edit",
+                arguments: placed,
+              },
+              { kind: "ToolResult", call_id: "s1", output: "Edit proposed" },
+              {
+                kind: "Assistant",
+                text: "Two paragraphs, a harbour between them.",
+              },
+            ];
+            for (const turn of turns) send({ type: "turn", turn });
+            resolve([{ kind: "User", text: message }, ...turns]);
             return;
           }
-          if (from === 0)
-            send({ type: "toolStart", callId: "s1", name: "propose_edit" });
-          const cut = cuts.shift();
-          const to = cut === undefined ? json.length : head + cut - 1;
-          send({
-            type: "toolArgsDelta",
-            callId: "s1",
-            delta: json.slice(from, to),
-          });
-          from = to;
-          if (cut !== undefined) return;
-          const turns = [
-            {
-              kind: "ToolCall",
-              call_id: "s1",
-              name: "propose_edit",
-              arguments: json,
-            },
-            { kind: "ToolResult", call_id: "s1", output: "Edit proposed" },
-            {
-              kind: "Assistant",
-              text: "Two paragraphs, a harbour between them.",
-            },
-          ];
-          for (const turn of turns) send({ type: "turn", turn });
-          resolve([
-            { kind: "User", text: message },
-            slot,
-            slotResult,
-            ...turns,
-          ]);
+          const encoded = JSON.stringify(line).slice(1, -1);
+          const picture = line.match(/^(!\[.*?\]\(textus-picture:.*\))\n/);
+          if (picture) {
+            // Most of the line, then the event, then its end.
+            const cut = encoded.length - 4;
+            send({
+              type: "toolArgsDelta",
+              callId: "s1",
+              delta: encoded.slice(0, cut),
+            });
+            send({
+              type: "picture",
+              callId: "s1",
+              line: picture[1],
+              id: "pic1",
+              width: 1536,
+              height: 1024,
+            });
+            send({
+              type: "toolArgsDelta",
+              callId: "s1",
+              delta: encoded.slice(cut),
+            });
+          } else {
+            send({ type: "toolArgsDelta", callId: "s1", delta: encoded });
+          }
+          at += encoded.length;
         };
       });
     };
@@ -852,7 +829,7 @@ const nextLine = (page: Page) =>
     (window as unknown as { __nextLine: () => void }).__nextLine(),
   );
 
-test("a picture's frame is in the document as soon as it is asked for, and the text takes it in", async ({
+test("a picture written into streaming text shows as its frame from the moment its line is written, never as the line", async ({
   page,
 }) => {
   await openApp(page, {
@@ -868,68 +845,41 @@ test("a picture's frame is in the document as soon as it is asked for, and the t
     ai_discard_generated_image: null,
     save_pasted_image: { src: "assets/harbour.png" },
   });
-  await streamSlotThenText(page, [
+  await streamTextWithPicture(page, [
     "The tide went out before dawn.\n\n",
-    "![A harbour](textus-generated:slot1)\n\n",
+    "![A harbour](textus-picture:16:9 A harbour at dusk, boats coming in)\n\n",
     "The boats came back at dusk.",
   ]);
   await send(page, "Write about the harbour, with a picture");
+  const insert = page.locator(`${editor} .pending-insert`);
   const frames = page.locator(`${editor} .pending-picture`);
-  // Before any text: the frame, where the text is going.
+  await nextLine(page);
+  await expect(insert).toContainText("The tide went out before dawn.");
+  await expect(frames).toHaveCount(0);
+  // The picture's line: its frame, in the shape asked for - the line
+  // itself never shows.
+  await nextLine(page);
   await expect(frames).toHaveCount(1);
-  await expect(page.locator(`${editor} .pending-insert`)).toHaveCount(1);
-  // The first paragraph streams in above it.
+  await expect
+    .poll(async () => {
+      const box = await frames.first().boundingBox();
+      return box ? Math.round((box.width / box.height) * 10) / 10 : 0;
+    })
+    .toBeCloseTo(1536 / 1024, 1);
+  await expect(page.locator(editor)).not.toContainText("textus-picture");
   await nextLine(page);
-  await expect(
-    page.locator(`${editor} .pending-insert`, {
-      hasText: "The tide went out before dawn.",
-    }),
-  ).toBeVisible();
+  await nextLine(page);
+  await expect(insert).toContainText("The boats came back at dusk.");
   await expect(frames).toHaveCount(1);
-  const text = await page
-    .locator(`${editor} .pending-insert`)
-    .evaluateAll((els) => els.map((el) => el.textContent ?? ""));
-  expect(text[0]).toContain("The tide went out before dawn.");
-  // The text reaches the picture: one frame still, now the text's.
-  await nextLine(page);
-  await nextLine(page);
-  await nextLine(page);
-  await expect(page.locator(`${editor} .pending-insert`)).toHaveCount(1);
-  await expect(frames).toHaveCount(1);
-  await expect(
-    page.locator(`${editor} .pending-insert .pending-picture`),
-  ).toHaveCount(1);
+  await expect(page.locator(editor)).not.toContainText("](");
   // Once the picture has come, the text and the picture are accepted.
   const accept = page.locator(
     ".agent-proposal-actions .inline-chat-action-primary",
   );
+  await expect(accept).toBeDisabled();
   await expect(accept).toBeEnabled({ timeout: 10_000 });
   await accept.click();
   await expect(page.locator(written)).toHaveCount(1, { timeout: 10_000 });
-});
-
-test("a picture's frame whose text never came goes when the reply ends", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: { language: "en", imageModelProvider: "openai" },
-    storage: { "levis-agent-panel-open": "1" },
-  });
-  await mockInvoke(page, {
-    ai_generated_image: {
-      __delay: 4000,
-      value: { mime: "image/png", ext: "png", dataBase64: PNG },
-    },
-    ai_discard_generated_image: null,
-  });
-  await streamSlotThenText(page, []);
-  await send(page, "Write about the harbour, with a picture");
-  await expect(page.locator(`${editor} .pending-picture`)).toHaveCount(1);
-  await nextLine(page);
-  await expect(page.locator(`${editor} .pending-picture`)).toHaveCount(0);
-  await expect
-    .poll(() => calls(page, "ai_discard_generated_image"))
-    .toHaveLength(1);
 });
 
 test("a selected picture says so in the message box, and in the message once sent", async ({
@@ -983,9 +933,6 @@ test("a revision card shows a redone picture's pictures, not their Markdown", as
     timeout: 10_000,
   });
   await expect(card).not.toContainText("](");
-  await card.screenshot({
-    path: "/home/chengao/.claude/jobs/2045e913/tmp/card.png",
-  });
   await expect(card.locator("> img.revision-note-picture")).toHaveAttribute(
     "src",
     /^blob:/,
