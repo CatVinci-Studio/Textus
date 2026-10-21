@@ -38,7 +38,7 @@ async function noteDates() {
       .map((e) => /^(\d{4}-\d{2}-\d{2})\.md$/.exec(e.name))
       .filter(Boolean)
       .map((m) => m[1]);
-  } catch (err) {
+  } catch {
     // No folder yet: no notes yet.
     return [];
   }
