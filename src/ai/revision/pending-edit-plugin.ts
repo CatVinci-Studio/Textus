@@ -19,7 +19,11 @@ import {
 } from "../../ui/motion";
 import type { FoldAttention } from "../../editor/html/details-fold";
 import type { EditProposal } from "../types";
-import { showGeneratedImages } from "./generated-images";
+import {
+  onPictureSettled,
+  pictureState,
+  showGeneratedImages,
+} from "./generated-images";
 import { framePendingPictures } from "./pending-picture";
 import {
   pairedPrefix,
@@ -1213,6 +1217,18 @@ function decorationsFor(
     return sentenceDecorations(p, p.sentences.changes, hooks);
   const stream = p.streamSource && streamFor(p, animate);
   if (stream) return streamDecorations(p, p.streamSource!, stream, hooks);
+  // A picture being redone: the old one stays as it is, veiled, until the
+  // new one has come - only then the two, the old struck, to decide on.
+  const redraw = redrawing(p);
+  if (redraw)
+    return [
+      Decoration.inline(
+        redraw.from,
+        redraw.to,
+        { class: "pending-redraw", "data-call": p.callId, "aria-busy": "true" },
+        { part: "redraw" },
+      ),
+    ];
   const decos: Decoration[] = [];
   const removesText = removesTextOf(p);
   const strikeTo = p.strikeTo ?? p.to;
@@ -1251,6 +1267,16 @@ function decorationsFor(
     );
   }
   return decos;
+}
+
+/** The old picture's node, while the picture that redoes it (a picture
+ *  proposal's `replace`, ai/images.rs) is still being made. */
+function redrawing(p: PendingPreview): { from: number; to: number } | null {
+  const { image, action } = p.proposal;
+  if (!image || action !== "replace" || pictureState(image.id) !== "painting")
+    return null;
+  const strike = wholeStrike(p);
+  return strike && strike.from < strike.to ? strike : null;
 }
 
 function buildDecorations(
@@ -1897,7 +1923,22 @@ export function createPendingEditPlugin(options: {
           let lastHot: HotSentence | null = null;
           const display = () => options.revisionDisplay?.() ?? "inline";
           syncDisplay(editorView, display());
+          // A redone picture that has come (or failed) is drawn anew: the
+          // veil gives way to the old struck and the new beside it.
+          const stopPictures = onPictureSettled(() => {
+            const previews =
+              pendingEditKey.getState(editorView.state)?.previews ?? [];
+            if (previews.some((p) => p.proposal.image))
+              editorView.dispatch(
+                editorView.state.tr.setMeta(pendingEditKey, {
+                  type: "refocus",
+                }),
+              );
+          });
           return {
+            destroy() {
+              stopPictures();
+            },
             update(view) {
               syncDisplay(view, display());
               const state = pendingEditKey.getState(view.state);

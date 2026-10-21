@@ -616,6 +616,49 @@ test("a redone picture takes the old one's place, and the old file goes to the T
     ]);
 });
 
+test("a picture being redone keeps the old one, veiled, until the new one comes", async ({
+  page,
+}) => {
+  await openSaved(page);
+  await mockInvoke(page, {
+    ai_agent_message: exchange(
+      {
+        prompt: "The same harbour at dawn",
+        alt: "The harbour at dawn",
+        action: "replace",
+        anchor: OLD,
+        image: { id: "abc10", width: 1024, height: 1024, pending: true },
+      },
+      "Image proposed and being made (1024 x 1024 pixels).",
+    ),
+    ai_generated_image: {
+      __delay: 1500,
+      value: { mime: "image/png", ext: "png", dataBase64: PNG },
+    },
+    ai_discard_generated_image: null,
+  });
+  await send(page, "Make the picture dawn instead");
+  // The old picture, as it was, under the veil: nothing struck, nothing
+  // new beside it, nothing to accept yet.
+  const veiled = page.locator(`${editor} .pending-redraw`);
+  await expect(veiled).toHaveCount(1);
+  await expect(
+    veiled.locator('img[data-doc-src="assets/boats.png"]'),
+  ).toHaveCount(1);
+  await expect(page.locator(`${editor} .pending-delete`)).toHaveCount(0);
+  await expect(page.locator(pending)).toHaveCount(0);
+  await expect(
+    page.locator(".agent-proposal-actions .inline-chat-action-primary"),
+  ).toBeDisabled();
+  // The new one has come: the old struck, the new beside it, to decide on.
+  await expect(page.locator(pending)).toHaveCount(1, { timeout: 10_000 });
+  await expect(veiled).toHaveCount(0);
+  await expect(page.locator(`${editor} .pending-delete`)).toHaveCount(1);
+  await expect(
+    page.locator(".agent-proposal-actions .inline-chat-action-primary"),
+  ).toBeEnabled();
+});
+
 test("kept, the old picture's file stays where it is", async ({ page }) => {
   await openSaved(page);
   await redo(page);

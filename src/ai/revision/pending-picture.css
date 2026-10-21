@@ -122,9 +122,39 @@
   color: var(--editor-muted);
 }
 
+/* A picture being redone (pending-edit-plugin's redrawing): the old one
+   stays where it is, dimmed under the same passing sheen, until the new
+   one has come. Clipped to it, so the sheen stays on the picture. */
+.pending-redraw {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  border-radius: var(--radius-small);
+}
+
+.pending-redraw img {
+  opacity: 0.55;
+}
+
+.pending-redraw::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    color-mix(in srgb, var(--editor-bg, var(--bg)) 55%, transparent) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  animation: pending-picture-sheen 2.4s var(--ease-in-out) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pending-picture-blob,
-  .pending-picture::after {
+  .pending-picture::after,
+  .pending-redraw::after {
     animation: none;
   }
 }
