@@ -104,7 +104,10 @@ test.beforeEach(async ({ page }) => {
 for (const [way, write] of ways) {
   test(`a link and an image ${way} work and save without backslashes`, async ({
     page,
+    browserName,
   }) => {
+    // The input method is driven over CDP, which only Chromium has.
+    test.skip(way.includes("input method") && browserName !== "chromium");
     await write(page, LINK);
     await page.keyboard.press("Enter");
     await write(page, IMAGE);
@@ -126,4 +129,78 @@ test("an image typed mid-sentence goes in where it was typed", async ({
     1,
   );
   expect(await sourceOf(page)).toBe("See ![](assets/a.png) here");
+});
+
+/** Presses `key` `times` times, a frame apart, as a writer does: pressed
+ *  back to back, the editor's selection sometimes trails the browser's. */
+async function press(page: Page, key: string, times = 1) {
+  for (let i = 0; i < times; i++) {
+    await page.keyboard.press(key);
+    await page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    );
+  }
+}
+
+const LINKED = `${editor} a[href="https://a.org"]`;
+
+test("words typed after a pasted link are not part of it", async ({ page }) => {
+  await page.keyboard.type("See ");
+  await paste(page, "[Textus](https://a.org)");
+  await page.keyboard.type(" now");
+  await expect(page.locator(LINKED)).toHaveText("Textus");
+  await press(page, "Enter");
+  expect(await sourceOf(page)).toBe("See [Textus](https://a.org) now");
+});
+
+test("a URL pasted between the parentheses autopair put in makes the link", async ({
+  page,
+}) => {
+  await page.keyboard.type("See [Textus](");
+  await paste(page, "https://a.org");
+  // Past the ")" the autopair put in, rather than typing it.
+  await press(page, "ArrowRight");
+  await page.keyboard.type(" now");
+  await expect(page.locator(LINKED)).toHaveText("Textus");
+  await press(page, "Enter");
+  expect(await sourceOf(page)).toBe("See [Textus](https://a.org) now");
+});
+
+test("a link written as []() first, then filled in, is one once the caret leaves", async ({
+  page,
+}) => {
+  await page.keyboard.type("See []() now");
+  await press(page, "ArrowLeft", 7);
+  await page.keyboard.type("Textus");
+  await press(page, "ArrowRight", 2);
+  await paste(page, "https://a.org");
+  // Still inside its parentheses: still being written.
+  await expect(page.locator(LINKED)).toHaveText("https://a.org");
+  await press(page, "End");
+  await expect(page.locator(LINKED)).toHaveText("Textus");
+  // An undo takes the link back to its text, which then stays text.
+  await press(page, "ControlOrMeta+z");
+  await expect(page.locator(LINKED)).toHaveText("https://a.org");
+  await press(page, "Home");
+  await expect(page.locator(LINKED)).toHaveText("https://a.org");
+  await press(page, "ControlOrMeta+Shift+z");
+  await press(page, "End");
+  await press(page, "Enter");
+  expect(await sourceOf(page)).toBe("See [Textus](https://a.org) now");
+});
+
+test("escaped brackets read from a file stay text when the paragraph is edited", async ({
+  page,
+}) => {
+  await paste(page, "Write \\[a](b) literally.");
+  await expect(page.locator(`${editor} p`).first()).toHaveText(
+    "Write [a](b) literally.",
+  );
+  await press(page, "End");
+  await page.keyboard.type(" Done");
+  await press(page, "Home");
+  await expect(page.locator(`${editor} a`)).toHaveCount(0);
 });

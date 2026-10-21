@@ -93,6 +93,7 @@ import {
 import { codeBlockIndentPlugin } from "./code/code-block-indent-plugin";
 import { pasteMarkdownSourcePlugin } from "./markdown/paste-markdown-plugin";
 import { imageInputRule, linkInputRule } from "./markdown/link-input-rule";
+import { linkSettlePlugin } from "./markdown/link-settle";
 import { remarkLinkSourcePlugin } from "./markdown/link-source";
 import { linkRevealPlugin, linkSourceSchema } from "./markdown/link-reveal";
 import {
@@ -363,6 +364,7 @@ export function withEditorCore(
       .use(linkInputRule)
       .use(linkRevealPlugin)
       .use(imageInputRule)
+      .use(linkSettlePlugin)
       .use(htmlTagInputRule)
       .use(footnoteInputRule)
       .use(pasteUrlPlugin)
