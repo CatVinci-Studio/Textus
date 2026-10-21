@@ -292,6 +292,7 @@ type /name in a conversation to use one.
   toolCheckConventions: "Checking the writing conventions",
   toolMeasureText: "Counting the words",
   toolWorking: "Working",
+  toolMcp: "Using {arg}",
   toolWebSearch: "Searching the web for “{arg}”",
   toolWebFetch: "Reading {arg}",
   webSources: "Sources",

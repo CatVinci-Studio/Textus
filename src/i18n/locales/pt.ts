@@ -295,6 +295,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   toolCheckConventions: "Verificando as convenções de escrita",
   toolMeasureText: "Contando as palavras",
   toolWorking: "Processando",
+  toolMcp: "Usando {arg}",
   toolWebSearch: "Buscando “{arg}” na web",
   toolWebFetch: "Lendo {arg}",
   webSources: "Fontes",

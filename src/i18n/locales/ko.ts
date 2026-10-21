@@ -273,6 +273,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   toolCheckConventions: "작성 규칙 확인 중",
   toolMeasureText: "글자 수 세는 중",
   toolWorking: "처리 중",
+  toolMcp: "{arg} 사용 중",
   toolWebSearch: "웹에서 “{arg}” 검색 중",
   toolWebFetch: "{arg} 읽는 중",
   webSources: "출처",

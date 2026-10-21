@@ -297,6 +297,7 @@ export default {
   toolCheckConventions: "Проверка правил оформления",
   toolMeasureText: "Подсчёт слов",
   toolWorking: "Обработка",
+  toolMcp: "Использую {arg}",
   toolWebSearch: "Поиск в интернете: «{arg}»",
   toolWebFetch: "Чтение {arg}",
   webSources: "Источники",

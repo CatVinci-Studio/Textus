@@ -308,6 +308,7 @@ utiliser une.
   toolCheckConventions: "Vérification des conventions d'écriture",
   toolMeasureText: "Comptage des mots",
   toolWorking: "Traitement en cours",
+  toolMcp: "Utilisation de {arg}",
   toolWebSearch: "Recherche de « {arg} » sur le web",
   toolWebFetch: "Lecture de {arg}",
   webSources: "Sources",

@@ -260,6 +260,7 @@ export default {
   toolCheckConventions: "检查写作规范",
   toolMeasureText: "统计字数",
   toolWorking: "处理中",
+  toolMcp: "正在使用 {arg}",
   toolWebSearch: "在网上搜索「{arg}」",
   toolWebFetch: "读取 {arg}",
   webSources: "来源",

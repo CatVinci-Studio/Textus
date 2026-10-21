@@ -280,6 +280,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   toolCheckConventions: "表記ルールを確認",
   toolMeasureText: "文字数を数える",
   toolWorking: "処理中",
+  toolMcp: "{arg} を使用中",
   toolWebSearch: "ウェブで「{arg}」を検索",
   toolWebFetch: "{arg} を読む",
   webSources: "出典",

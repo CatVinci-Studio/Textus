@@ -305,6 +305,7 @@ para usar una.
   toolCheckConventions: "Comprobando las convenciones de escritura",
   toolMeasureText: "Contando las palabras",
   toolWorking: "Trabajando",
+  toolMcp: "Usando {arg}",
   toolWebSearch: "Buscando «{arg}» en la web",
   toolWebFetch: "Leyendo {arg}",
   webSources: "Fuentes",

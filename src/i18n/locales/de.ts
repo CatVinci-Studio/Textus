@@ -296,6 +296,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolCheckConventions: "Prüft die Schreibkonventionen",
   toolMeasureText: "Zählt die Wörter",
   toolWorking: "Arbeitet",
+  toolMcp: "Nutzt {arg}",
   toolWebSearch: "Sucht im Web nach „{arg}“",
   toolWebFetch: "Liest {arg}",
   webSources: "Quellen",
