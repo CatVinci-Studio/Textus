@@ -13,6 +13,7 @@ import { restoreFolderAccess } from "./platform/ios-files";
 import { installMobileViewport } from "./platform/mobile-viewport";
 import { markEngineQuirks } from "./ui/engine-quirks";
 import { flushWhenHidden } from "./storage/pending-writes";
+import { exposePluginApiForDevelopment } from "./plugin-api";
 import "./mobile/styles/index.css";
 
 installPolyfills();
@@ -31,6 +32,8 @@ void restoreFolderAccess().catch(() => {});
 publishWindowChrome();
 installMobileViewport();
 markEngineQuirks();
+// The plugin API draft, on the window in a development build (plugin-api.ts).
+exposePluginApiForDevelopment();
 
 // Which view this window is. One bundle serves both: a second HTML entry
 // point would mean a second build target and a second copy of the shared

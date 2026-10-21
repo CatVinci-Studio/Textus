@@ -12,6 +12,7 @@ import { runLocalMenuAction } from "./app-menu-actions";
 import { canOpenFolder } from "../platform/capabilities";
 import { comboFromEvent } from "../utils/shortcuts";
 import { menuIpc } from "../platform/ipc";
+import { commandForCombo } from "./commands";
 import {
   TRIGGER_COMPLETION_EVENT,
   TRIGGER_GRAMMAR_CHECK_EVENT,
@@ -241,6 +242,14 @@ export function useGlobalShortcuts(opts: {
       } else if (combo === shortcuts.toggleTypewriterMode) {
         e.preventDefault();
         setSettings({ typewriterMode: !settings.typewriterMode });
+      } else {
+        // A command added from outside (commands.ts), on a combo none of
+        // the app's own has taken.
+        const command = commandForCombo(combo);
+        if (command) {
+          e.preventDefault();
+          command.run();
+        }
       }
     }
     // Capture before the editor's keymaps: shortcuts such as Ctrl+F must not
