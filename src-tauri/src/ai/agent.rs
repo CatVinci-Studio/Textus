@@ -766,8 +766,30 @@ pub(crate) fn request_message(
     context: &str,
     message: &str,
 ) -> String {
-    let preamble = request_preamble(workspace, mode, ui_language);
+    let mut preamble = request_preamble(workspace, mode, ui_language);
+    if mode != AgentMode::Review && asks_for_a_length(message) {
+        preamble.push_str("\n\n");
+        preamble.push_str(LENGTH_TARGET_NOTE);
+    }
     request_user_text(&format!("{preamble}\n\n{context}"), message)
+}
+
+/// Said with a request that asks for a length. Told only in the system
+/// prompt, Doubao still wrote a 1200-character piece out in measure_text,
+/// unseen, before proposing it - the user waited minutes for the first
+/// word; said next to the request, it proposes straight away.
+const LENGTH_TARGET_NOTE: &str = "This request asks for a length: write the text straight into propose_edit, where the user watches it come in - don't write it out first in measure_text or check_conventions. propose_edit's result says how long it came out; if that misses the length, say so in your reply.";
+
+/// Whether the user's own words ask for a length: a number and a unit of
+/// text ("1200 字", "500 words", "三千字", "2,000 characters").
+fn asks_for_a_length(message: &str) -> bool {
+    static LENGTH: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
+        regex::Regex::new(
+            r"(?i)([0-9][0-9,]*|[一二两三四五六七八九十百千万]+)\s*(?:个)?\s*(?:字|词|words?\b|characters?\b|chars?\b|文字|語|단어|자\b|mots?\b|palabras?\b|wörter\b|слов)",
+        )
+        .expect("a valid pattern")
+    });
+    LENGTH.is_match(message)
 }
 
 /// The language of what the user typed, in English ("Chinese"), or None
@@ -1361,6 +1383,22 @@ fn selected_picture(message: &str, doc_path: Option<&str>) -> Option<ImageAttach
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_length_the_user_asks_for_is_noticed() {
+        for asked in [
+            "写一篇 1200 字左右的文章",
+            "写三千字",
+            "Write about 500 words on tides",
+            "2,000 characters, please",
+            "800字以内",
+        ] {
+            assert!(asks_for_a_length(asked), "{asked}");
+        }
+        for other in ["写一篇文章，配两张图", "Fix the 3 typos", "第2段"] {
+            assert!(!asks_for_a_length(other), "{other}");
+        }
+    }
+
     use super::*;
     use crate::ai::ui_language::{entries, UI_LANGUAGES};
 
