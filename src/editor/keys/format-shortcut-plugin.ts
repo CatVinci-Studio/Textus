@@ -49,12 +49,10 @@ function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
         rung: 3 - spec.rung,
       });
     const tr = state.tr.replaceWith(start, start + node.nodeSize, node.content);
+    // What was selected stays selected: the span's opening is gone from
+    // before it.
     return tr.setSelection(
-      TextSelection.create(
-        tr.doc,
-        from - shift,
-        Math.max(from, to - 1) - shift,
-      ),
+      TextSelection.create(tr.doc, from - shift, Math.max(from, to) - shift),
     );
   };
   for (let d = $from.depth; d > 0; d--) {
@@ -78,6 +76,27 @@ function toggleOff(state: EditorState, spec: FormatSpec): Transaction | null {
       return tr.setSelection(TextSelection.create(tr.doc, from, to - 2));
     }
   }
+  return null;
+}
+
+/** The `*` span the selection covers all of - its text from end to end,
+ *  or the span itself from just before to just after it - with its
+ *  position; null otherwise. */
+function wholeSpan(
+  state: EditorState,
+): { node: ProseNode; pos: number } | null {
+  const { $from, $to, from, to, empty } = state.selection;
+  if (empty || !$from.sameParent($to)) return null;
+  const parent = $from.parent;
+  if (
+    parent.type.name === "md_span" &&
+    $from.parentOffset === 0 &&
+    $to.parentOffset === parent.content.size
+  )
+    return { node: parent, pos: $from.before() };
+  const node = state.doc.nodeAt(from);
+  if (node?.type.name === "md_span" && from + node.nodeSize === to)
+    return { node, pos: from };
   return null;
 }
 
@@ -144,6 +163,24 @@ export const formatShortcutPlugin = $prose(
           // Selection: wrap plain text within a single textblock.
           if (!(state.selection instanceof TextSelection)) return false;
           if (!$from.sameParent($to)) return false;
+
+          // All of a bold span selected, Mod+I makes it bold-italic (one
+          // `***` span), and the other way round; the selection stays.
+          const whole = wholeSpan(state);
+          if (
+            whole &&
+            whole.node.attrs.delim === spec.delim &&
+            whole.node.attrs.rung === 3 - spec.rung
+          ) {
+            view.dispatch(
+              state.tr.setNodeMarkup(whole.pos, undefined, {
+                ...whole.node.attrs,
+                rung: 3,
+              }),
+            );
+            event.preventDefault();
+            return true;
+          }
           if (
             !parent.isTextblock ||
             parent.type.spec.code ||
@@ -179,8 +216,13 @@ export const formatShortcutPlugin = $prose(
             { delim: spec.delim, rung: spec.rung },
             fragment,
           );
+          // The text stays selected, as in Typora: Mod+I next makes it
+          // bold-italic, Mod+B again takes the bold off.
           const tr = state.tr.replaceWith(from, to, node);
-          view.dispatch(caretAt(tr, from + node.nodeSize));
+          tr.setSelection(
+            TextSelection.create(tr.doc, from + 1, from + 1 + fragment.size),
+          );
+          view.dispatch(tr);
           event.preventDefault();
           return true;
         },
