@@ -161,7 +161,7 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
         // specifically to show a guide must not restore that overlay on top
         // of the guide (nor treat the guide's bundled text as practice).
         opts.stopTutorial();
-        const content = helpDocContent(helpDoc as HelpDoc, opts.language);
+        const content = await helpDocContent(helpDoc as HelpDoc, opts.language);
         loadIntoInitialTab({
           content,
           savedContent: content,

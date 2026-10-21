@@ -1,17 +1,25 @@
 import type { Strings } from "../i18n/strings";
 import { basename } from "../utils/path";
+import { lazyModule } from "../lazy/lazy-module";
 import { fs } from "../platform/ipc";
 import { detectFormat, toEditorText, toFileText } from "./file-format";
 import type { PluginTabView } from "../plugins/app-bridge";
 
 // Every bundled guide, by file name: "src/help/<doc>-guide.<lang>.md". A
 // language without its own copy of a guide gets the English one, so a
-// translated guide is a new file there and no change here.
-const HELP_GUIDES = import.meta.glob<string>("../help/*-guide.*.md", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-});
+// translated guide is a new file there and no change here. Each loads when
+// it is first opened (lazy-module.ts).
+const HELP_GUIDES = new Map(
+  Object.entries(
+    import.meta.glob<string>("../help/*-guide.*.md", {
+      query: "?raw",
+      import: "default",
+    }),
+  ).map(([path, load]) => [
+    path,
+    lazyModule(`help:${path.slice("../help/".length, -".md".length)}`, load),
+  ]),
+);
 
 // The document-tab data model shared by app/useTabState.ts (tab state) and
 // useTabDragMerge.ts (tabs in flight between windows).
@@ -68,11 +76,12 @@ export interface DetachedTabDoc {
   importedFrom?: string;
 }
 
-export function helpDocContent(doc: HelpDoc, lang: string): string {
+/** A bundled guide's text in `lang`, or in English without a copy in it. */
+export function helpDocContent(doc: HelpDoc, lang: string): Promise<string> {
   return (
-    HELP_GUIDES[`../help/${doc}-guide.${lang}.md`] ??
-    HELP_GUIDES[`../help/${doc}-guide.en.md`]
-  );
+    HELP_GUIDES.get(`../help/${doc}-guide.${lang}.md`) ??
+    HELP_GUIDES.get(`../help/${doc}-guide.en.md`)!
+  ).load();
 }
 
 // A tab's display name everywhere one is shown (tab pill, title strip,

@@ -30,6 +30,7 @@ import { localize, type Permission, type PluginManifest } from "./manifest";
 import { showQuickPick, type QuickPickItem } from "./quick-pick";
 import { webPageUrl } from "./WebPagePane";
 import type { Endpoint } from "./rpc";
+import { lazyModule, type LazyModule } from "../lazy/lazy-module";
 import {
   postToWebview,
   setWebviewHtml,
@@ -135,7 +136,7 @@ async function written(path: string, write: Promise<void>): Promise<void> {
 export class PluginHost {
   private frame: HTMLIFrameElement | null = null;
   private endpoint: Endpoint | null = null;
-  private starting: Promise<void> | null = null;
+  private code: LazyModule<void> | null = null;
   private disconnect: (() => void) | null = null;
   private pinger: ReturnType<typeof setInterval> | null = null;
   private subscriptions = new Map<string, () => void>();
@@ -160,15 +161,17 @@ export class PluginHost {
     );
   }
 
-  /** Starts the host and activates the plugin, once. */
+  /** Starts the host and activates the plugin, once: its code loads on
+   *  first use, as the app's own heavy parts do (lazy-module.ts). A failed
+   *  start turns the plugin off, which stops this broker. */
   start(): Promise<void> {
-    if (!this.starting) {
-      this.starting = this.load().catch((err) => {
+    this.code ??= lazyModule(`plugin:${this.id}`, () =>
+      this.load().catch((err) => {
         this.deps.failed(this.id, String((err as Error)?.message ?? err));
         throw err;
-      });
-    }
-    return this.starting;
+      }),
+    );
+    return this.code.load();
   }
 
   /** A call to the plugin's code, starting it first. */
@@ -196,6 +199,7 @@ export class PluginHost {
   stop(): void {
     if (this.stopped) return;
     this.stopped = true;
+    this.code?.drop();
     if (this.pinger) clearInterval(this.pinger);
     const endpoint = this.endpoint;
     // Asked to tidy up, without waiting for it.

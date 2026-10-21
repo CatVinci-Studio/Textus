@@ -10,6 +10,7 @@ import {
 } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
 import { katexLoaded, loadKatex } from "../editor/math/katex-loader";
+import { lazyModule } from "../lazy/lazy-module";
 import { drawEverything } from "../editor/draw-when-visible";
 import { tabTitle, type DocTab } from "../document/doc-tabs";
 import { exportDoc, fs } from "../platform/ipc";
@@ -204,12 +205,16 @@ const LINK_SOURCE_SELECTOR = '[data-type="link_source"]';
 
 // What draws a link shown as its Markdown, when the editor has one: the
 // renderer stays out of the entry chunk otherwise (see color-swatch-classes.ts).
+const renderHtml = lazyModule(
+  "render-html",
+  () => import("../editor/markdown/render-html"),
+);
+
 async function linkRenderer(
   editor: Element,
 ): Promise<((markdown: string) => string) | undefined> {
   if (!editor.querySelector(LINK_SOURCE_SELECTOR)) return undefined;
-  return (await import("../editor/markdown/render-html"))
-    .renderMarkdownInlineHtml;
+  return (await renderHtml.load()).renderMarkdownInlineHtml;
 }
 
 // Clones the editor subtree, stripping contenteditable so the export is inert.

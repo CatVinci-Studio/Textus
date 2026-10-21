@@ -1,10 +1,11 @@
-import { openExtensionsTab } from "../settings/pages/ExtensionsPage";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { openExtensionsTab } from "../settings/pages/extensions-tab";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
 import { installClipboardCapture } from "../clipboard/history";
 import { isIOSApp } from "../platform/capabilities";
-import { SettingsPanel } from "../settings/SettingsPanel";
+import { lazyModule } from "../lazy/lazy-module";
+import { lazyComponent } from "../lazy/lazy-component";
 import { DocumentList } from "../mobile/DocumentList";
 import { KeyboardToolbar } from "../mobile/KeyboardToolbar";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
@@ -80,6 +81,15 @@ import "../plugins/plugins.css";
 import { tabIsUntouchedDraft } from "../document/doc-tabs";
 import { useLatest } from "../utils/hooks/useLatest";
 import "./App.css";
+
+// Settings loads on first open - warm, so by then it usually has, once the
+// window was idle (lazy-module.ts).
+const SettingsPanel = lazyComponent(
+  lazyModule("settings", () => import("../settings/SettingsPanel"), {
+    warm: true,
+  }),
+  (m) => m.SettingsPanel,
+);
 
 /**
  * One window: its tabs, the panels around them, and the prompts and
@@ -539,17 +549,19 @@ function App() {
         {/* The longest exit is the phone's: the page going back down. */}
         <Presence show={settingsOpen} exitMs={320}>
           {settingsOpen && (
-            <SettingsPanel
-              onClose={() => setSettingsOpen(false)}
-              initialCategory={settingsStart}
-              onOpenFile={(path) => void openFile(path)}
-              onFilesDeleted={skillFilesDeleted}
-              viewChecks={{
-                sourceMode: !!activeTab.sourceMode && !activeTab.splitView,
-                zen: zenMode,
-              }}
-              fixedShortcuts={fixedShortcutGroups(t, platformName())}
-            />
+            <Suspense fallback={null}>
+              <SettingsPanel
+                onClose={() => setSettingsOpen(false)}
+                initialCategory={settingsStart}
+                onOpenFile={(path) => void openFile(path)}
+                onFilesDeleted={skillFilesDeleted}
+                viewChecks={{
+                  sourceMode: !!activeTab.sourceMode && !activeTab.splitView,
+                  zen: zenMode,
+                }}
+                fixedShortcuts={fixedShortcutGroups(t, platformName())}
+              />
+            </Suspense>
           )}
         </Presence>
 

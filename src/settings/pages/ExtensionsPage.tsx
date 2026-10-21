@@ -7,19 +7,13 @@ import { ThemeGallerySection } from "../sections/theme-gallery";
 import { AgentSkillsSection, BuiltinSkillsSection } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
 
-export type ExtensionsTab = "plugins" | "themes" | "skills" | "mcp";
+import {
+  extensionsStartTab,
+  openExtensionsTab,
+  type ExtensionsTab,
+} from "./extensions-tab";
 
 const TABS: ExtensionsTab[] = ["plugins", "themes", "skills", "mcp"];
-
-/** The tab Extensions opens on: the last one shown, or the one another
- *  page sent the user to (openExtensionsTab). */
-let lastTab: ExtensionsTab = "plugins";
-
-/** Makes the next Extensions page open on `tab` (Textus AI's Skills row
- *  goes to Skills). */
-export function openExtensionsTab(tab: ExtensionsTab): void {
-  lastTab = tab;
-}
 
 /**
  * Settings › Extensions: everything added to Textus, one tab each, every
@@ -29,7 +23,7 @@ export function openExtensionsTab(tab: ExtensionsTab): void {
  */
 export function ExtensionsPage(props: SettingsPageProps) {
   const { t, setSubpage, onOpenFile, onFilesDeleted, onClose } = props;
-  const [tab, setTabState] = useState<ExtensionsTab>(lastTab);
+  const [tab, setTabState] = useState<ExtensionsTab>(extensionsStartTab);
   const setTab = (next: ExtensionsTab) => {
     openExtensionsTab(next);
     setTabState(next);

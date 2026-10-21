@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { detectLang, localeOf } from "../i18n/strings";
+import { detectLang, loadLocale, localeOf } from "../i18n/strings";
 import { normaliseSettings } from "../settings/SettingsContext";
 import { installScrollReveal } from "../ui/scroll-reveal";
 import { installPolyfills } from "../utils/polyfills";
@@ -21,8 +21,13 @@ const language = detectLang(navigator.language);
 const settings = { ...normaliseSettings(null), language };
 document.documentElement.lang = localeOf(language);
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <Playground settings={settings} />
-  </React.StrictMode>,
-);
+// Its strings load first (i18n/strings.ts), as in the app.
+void loadLocale(language)
+  .catch(() => {})
+  .then(() =>
+    ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+      <React.StrictMode>
+        <Playground settings={settings} />
+      </React.StrictMode>,
+    ),
+  );

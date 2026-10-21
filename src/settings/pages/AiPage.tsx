@@ -38,7 +38,7 @@ import {
   canRevealInFileManager,
   isIOSApp,
 } from "../../platform/capabilities";
-import { openExtensionsTab } from "./ExtensionsPage";
+import { openExtensionsTab } from "./extensions-tab";
 
 /** Textus AI: its own switch, then the account and each feature beside the model it drives. */
 /* One page for the AI: its own switch, then connect first and then

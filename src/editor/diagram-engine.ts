@@ -3,13 +3,16 @@
 // Mermaid, or by Pele when the user picked it, with Mermaid behind it.
 
 import type { DiagramEngine } from "../settings/SettingsContext";
+import { lazyModule } from "../lazy/lazy-module";
 
 export type MermaidApi = (typeof import("mermaid"))["default"];
-let mermaidPromise: Promise<MermaidApi> | null = null;
+const mermaidModule = lazyModule("mermaid", () =>
+  import("mermaid").then(({ default: mermaid }) => mermaid),
+);
 
+/** Mermaid, loaded the first time a diagram is drawn (lazy-module.ts). */
 export function loadMermaid(): Promise<MermaidApi> {
-  mermaidPromise ??= import("mermaid").then(({ default: mermaid }) => mermaid);
-  return mermaidPromise;
+  return mermaidModule.load();
 }
 
 // Re-applied before every render pass because the diagram width follows the
@@ -80,13 +83,12 @@ export async function renderMermaid(
 }
 
 type PeleApi = typeof import("pele/lazy");
-let pelePromise: Promise<PeleApi> | null = null;
+const peleModule = lazyModule("pele", () => import("pele/lazy"));
 
 /** Pele's lazy entry: its core here, each diagram type a chunk of its own
  *  fetched the first time a diagram of that type is drawn. */
 export function loadPele(): Promise<PeleApi> {
-  pelePromise ??= import("pele/lazy");
-  return pelePromise;
+  return peleModule.load();
 }
 
 // Sources Pele threw on or drew nothing for. They go straight to Mermaid
