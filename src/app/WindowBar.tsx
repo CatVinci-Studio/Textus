@@ -67,7 +67,7 @@ export function WindowBar({
         <Tooltip text={`${t.menuToggleSidebar} (${sidebarShortcut})`}>
           <button
             type="button"
-            className="window-bar-toggle window-bar-sidebar-toggle"
+            className="window-bar-sidebar-toggle"
             aria-pressed={sidebarOpen}
             aria-label={t.menuToggleSidebar}
             onClick={onToggleSidebar}
