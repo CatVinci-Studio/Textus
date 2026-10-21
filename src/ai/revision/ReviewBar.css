@@ -18,7 +18,7 @@
   font-size: var(--text-sm);
   line-height: 1;
   white-space: nowrap;
-  box-shadow: 0 14px 30px -14px rgb(0 0 0 / 50%);
+  box-shadow: var(--shadow-bar);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   transform: translateX(-50%);

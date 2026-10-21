@@ -83,8 +83,11 @@ Everything here is scoped to the writing area.
 `--bg`, `--sidebar-bg`, `--sidebar-text`, `--sidebar-hover`,
 `--sidebar-active`, `--sidebar-active-text`, `--border-color`, `--danger`,
 `--font-sans`. These are the window frame. `content-themes.css` deliberately
-never touches them: picking a theme reskins the writing area, not the whole
-app. Only `App.css` sets these, in its `:root` / dark pair.
+never touches them: picking a built-in theme reskins the writing area, not the
+whole app. `ui/base.css` and `ui/design-system.css` set them, in their
+`:root` / dark pair. An imported theme is the exception: `theme/theme-chrome.ts`
+derives them from its page, and its own `:root` may set any of them (see
+"Interface colours" in `docs/design/design-language.md`).
 
 ### Two more families, in `milkdown-theme.css`
 

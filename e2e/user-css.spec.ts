@@ -259,6 +259,39 @@ for (const [name, theme] of Object.entries(THEMES)) {
   });
 }
 
+test("an imported theme's own interface variables win over the derived ones", async ({
+  page,
+}) => {
+  // A theme author sets the sidebar, a fill's label, Find's highlight and a
+  // card's shadow; the window takes them in light and in dark instead of
+  // the colours Textus derives from the page.
+  const OWN = {
+    "--sidebar-bg": "rgb(10, 20, 30)",
+    "--on-fill": "rgb(1, 1, 1)",
+    "--find-match-bg": "rgb(4, 5, 6)",
+    "--shadow-card": "none",
+  };
+  const css = `${fixture("latex-like.css")}
+:root { ${Object.entries(OWN)
+    .map(([k, v]) => `${k}: ${v};`)
+    .join(" ")} }`;
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, DOC);
+  const path = "/themes/own-variables.css";
+  await installThemeBackend(page, { [path]: css });
+  await importTheme(page, path);
+  for (const mode of ["Light", "Dark"] as const) {
+    await setAppearance(page, mode);
+    const got = await page.evaluate((keys) => {
+      const root = getComputedStyle(document.documentElement);
+      return Object.fromEntries(
+        keys.map((k) => [k, root.getPropertyValue(k).trim()]),
+      );
+    }, Object.keys(OWN));
+    expect(got, mode).toEqual(OWN);
+  }
+});
+
 const CUSTOM_CSS = `body { font-family: "Custom Probe Face", serif; }
 strong { font-weight: 800; }
 em { font-style: normal; }

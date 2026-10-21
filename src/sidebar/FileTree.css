@@ -108,7 +108,7 @@
   border: none;
   border-radius: var(--radius-control);
   background: none;
-  color: var(--sidebar-muted, inherit);
+  color: var(--chrome-muted);
   font: inherit;
   cursor: pointer;
   opacity: 0.8;
