@@ -26,6 +26,16 @@ const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 /// generous enough for a model thinking between tokens, short enough that
 /// a dead proxy doesn't hold a request forever.
 const STREAM_READ_TIMEOUT: Duration = Duration::from_secs(120);
+/// Max time a stream may go without a single event: bytes alone - an SSE
+/// comment, a keep-alive ping - don't count, so a provider that keeps the
+/// connection warm while the model has stopped can't hold a request
+/// forever, as it did with the ChatGPT model (1.2.0-rc.5). Well past the
+/// longest thinking a reply needs.
+const STREAM_EVENT_TIMEOUT: Duration = if cfg!(test) {
+    Duration::from_secs(1)
+} else {
+    Duration::from_secs(300)
+};
 
 /// Sets (or clears, with None/empty) the proxy all provider requests route
 /// through. Accepts whatever `reqwest::Proxy::all` does - http://, https://,
@@ -117,17 +127,45 @@ struct SseLineBuffer {
 }
 
 impl SseLineBuffer {
-    fn push(&mut self, chunk: &[u8], mut on_data: impl FnMut(&str)) {
+    /// Calls `on_data` with each complete payload; true once one of them
+    /// ended the stream (see [`ends_stream`]).
+    fn push(&mut self, chunk: &[u8], mut on_data: impl FnMut(&str)) -> bool {
         self.buf.extend_from_slice(chunk);
         while let Some(newline) = self.buf.iter().position(|&b| b == b'\n') {
             let line: Vec<u8> = self.buf.drain(..=newline).collect();
             let line = String::from_utf8_lossy(&line);
             let line = line.trim_end_matches(['\n', '\r']);
             if let Some(data) = line.strip_prefix("data:") {
-                on_data(data.strip_prefix(' ').unwrap_or(data));
+                let data = data.strip_prefix(' ').unwrap_or(data);
+                on_data(data);
+                if ends_stream(data) {
+                    return true;
+                }
             }
         }
+        false
     }
+}
+
+/// Whether `data` is the payload that ends a stream in one of the
+/// dialects: Chat Completions' `[DONE]`, Anthropic's `message_stop`, the
+/// Responses API's `response.completed`/`failed`/`incomplete`. Nothing
+/// that matters comes after it, and a server that kept the connection open
+/// past it held the request until the read timed out.
+fn ends_stream(data: &str) -> bool {
+    if data.trim() == "[DONE]" {
+        return true;
+    }
+    // Cheap test before a parse: only these events end a stream.
+    if !data.contains("message_stop") && !data.contains("\"response.") {
+        return false;
+    }
+    serde_json::from_str::<serde_json::Value>(data).is_ok_and(|event| {
+        matches!(
+            event.get("type").and_then(|t| t.as_str()),
+            Some("message_stop" | "response.completed" | "response.failed" | "response.incomplete")
+        )
+    })
 }
 
 /// Incrementally consumes an SSE response body, calling `on_data` with each
@@ -151,11 +189,31 @@ pub(crate) async fn read_sse(
 
     let mut stream = res.bytes_stream();
     let mut lines = SseLineBuffer::default();
-    while let Some(chunk) = stream.next().await {
+    let mut last_event = std::time::Instant::now();
+    loop {
+        let left = STREAM_EVENT_TIMEOUT.saturating_sub(last_event.elapsed());
+        let Ok(next) = tokio::time::timeout(left, stream.next()).await else {
+            return Err(format!(
+                "{provider_label} stopped responding: nothing came for {} minutes",
+                STREAM_EVENT_TIMEOUT.as_secs() / 60
+            ));
+        };
+        let Some(chunk) = next else {
+            return Ok(());
+        };
         let chunk = chunk.map_err(|e| format!("{provider_label} stream failed: {e}"))?;
-        lines.push(&chunk, &mut on_data);
+        let mut events = false;
+        let ended = lines.push(&chunk, |data| {
+            events = true;
+            on_data(data);
+        });
+        if events {
+            last_event = std::time::Instant::now();
+        }
+        if ended {
+            return Ok(());
+        }
     }
-    Ok(())
 }
 
 #[cfg(test)]
@@ -166,6 +224,73 @@ mod tests {
         let mut out = Vec::new();
         buffer.push(chunk, |data| out.push(data.to_string()));
         out
+    }
+
+    #[test]
+    fn the_events_that_end_a_stream_are_known() {
+        assert!(ends_stream("[DONE]"));
+        assert!(ends_stream(r#"{"type":"message_stop"}"#));
+        assert!(ends_stream(
+            r#"{"type":"response.completed","response":{}}"#
+        ));
+        assert!(ends_stream(r#"{"type":"response.incomplete"}"#));
+        assert!(!ends_stream(
+            r#"{"type":"response.output_text.delta","delta":"message_stop"}"#
+        ));
+        assert!(!ends_stream(r#"{"type":"content_block_delta"}"#));
+    }
+
+    /// A server that writes `body` and then keeps the connection open,
+    /// sending only keep-alive comments: what a stream that has ended, or
+    /// a model that has stopped, looks like from here.
+    fn lingering_server(body: &'static str) -> String {
+        use std::io::{Read, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap();
+        std::thread::spawn(move || {
+            let (mut socket, _) = listener.accept().unwrap();
+            let mut request = [0u8; 4096];
+            let _ = socket.read(&mut request);
+            let head = "HTTP/1.1 200 OK\r\ncontent-type: text/event-stream\r\n\r\n";
+            let _ = socket.write_all(format!("{head}{body}").as_bytes());
+            for _ in 0..50 {
+                std::thread::sleep(Duration::from_millis(100));
+                if socket.write_all(b": keep-alive\n\n").is_err() {
+                    break;
+                }
+            }
+        });
+        format!("http://{addr}/")
+    }
+
+    #[test]
+    fn a_stream_ends_at_its_last_event_though_the_connection_stays_open() {
+        let url = lingering_server(
+            "data: {\"type\":\"response.output_text.delta\",\"delta\":\"Hi\"}\n\ndata: {\"type\":\"response.completed\",\"response\":{}}\n\n",
+        );
+        let started = std::time::Instant::now();
+        let mut seen = Vec::new();
+        let result = tauri::async_runtime::block_on(async {
+            let res = reqwest::get(&url).await.unwrap();
+            read_sse(res, "Test", |data| seen.push(data.to_string())).await
+        });
+        assert!(result.is_ok(), "{result:?}");
+        assert_eq!(seen.len(), 2);
+        assert!(
+            started.elapsed() < Duration::from_secs(2),
+            "{:?}",
+            started.elapsed()
+        );
+    }
+
+    #[test]
+    fn a_stream_that_sends_only_keep_alives_gives_up() {
+        let url = lingering_server("data: {\"type\":\"response.created\"}\n\n");
+        let result = tauri::async_runtime::block_on(async {
+            let res = reqwest::get(&url).await.unwrap();
+            read_sse(res, "Test", |_| {}).await
+        });
+        assert!(result.unwrap_err().contains("stopped responding"));
     }
 
     #[test]
