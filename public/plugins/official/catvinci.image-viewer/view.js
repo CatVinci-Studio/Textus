@@ -4,7 +4,12 @@
   const t =
     api.language === "zh"
       ? { fit: "适应窗口", actual: "原始大小", source: "源码", picture: "图片" }
-      : { fit: "Fit", actual: "Actual size", source: "Source", picture: "Picture" };
+      : {
+          fit: "Fit",
+          actual: "Actual size",
+          source: "Source",
+          picture: "Picture",
+        };
   const $ = (id) => document.getElementById(id);
   const stage = $("stage");
   const image = $("image");

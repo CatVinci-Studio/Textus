@@ -75,7 +75,9 @@ test("a selected link opens in a web page tab of its own", async ({ page }) => {
   await editor.click();
   await page.keyboard.press("ControlOrMeta+a");
   await editor.click({ button: "right" });
-  await page.getByRole("menuitem", { name: "Open the Selected Link in a Tab" }).click();
+  await page
+    .getByRole("menuitem", { name: "Open the Selected Link in a Tab" })
+    .click();
   const web = page.frameLocator('[data-active-tab="true"] .web-page-frame');
   await expect(web.locator("h1")).toHaveText("Example page");
   await expect(page.getByRole("textbox", { name: "Web address" })).toHaveValue(
@@ -99,7 +101,7 @@ test("a Word document reads as laid out, and Edit as Markdown converts it", asyn
     open_word_document: { markdown: "Dear reader, as Markdown" },
   });
   await frame.getByRole("button", { name: "Edit as Markdown" }).click();
-  await expect(page.locator('[data-active-tab="true"] .ProseMirror')).toContainText(
-    "Dear reader, as Markdown",
-  );
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("Dear reader, as Markdown");
 });

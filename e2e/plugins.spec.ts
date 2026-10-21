@@ -108,10 +108,9 @@ const emit = (page: Page, event: string) =>
 
 async function openPluginsPage(page: Page) {
   await emit(page, "menu-manage-plugins");
-  await expect(page.locator(".settings-nav-item", { hasText: "Plugins" })).toHaveAttribute(
-    "aria-current",
-    /page|true/,
-  );
+  await expect(
+    page.locator(".settings-nav-item", { hasText: "Plugins" }),
+  ).toHaveAttribute("aria-current", /page|true/);
 }
 
 async function turnOn(page: Page) {
@@ -121,7 +120,9 @@ async function turnOn(page: Page) {
   await row.getByRole("checkbox", { name: "Turn on Hello" }).click();
   const dialog = page.locator(".app-dialog");
   await expect(dialog).toContainText("Hello asks to:");
-  await expect(dialog).toContainText("Read the document in front and its selection");
+  await expect(dialog).toContainText(
+    "Read the document in front and its selection",
+  );
   await expect(dialog).toContainText("Suggest edits to the document");
   await dialog.getByRole("button", { name: "Allow" }).click();
   await expect(row.getByRole("checkbox")).toBeChecked();
@@ -130,7 +131,10 @@ async function turnOn(page: Page) {
 
 async function openPanel(page: Page) {
   await emit(page, "menu-toggle-sidebar");
-  await page.locator(".sidebar-tabs").getByRole("button", { name: "Hello" }).click();
+  await page
+    .locator(".sidebar-tabs")
+    .getByRole("button", { name: "Hello" })
+    .click();
   return page.frameLocator(".plugin-webview-frame");
 }
 
@@ -144,12 +148,17 @@ test("a plugin turned on shows its panel, sandboxed, talking to its code", async
   await panel.locator("#ping").click();
   await expect(panel.locator("#out")).toHaveText("pong Some words");
   // The frame reaches none of the window: no storage, no DOM, no Tauri.
-  await expect(panel.locator("body")).toHaveAttribute("data-storage", "blocked");
+  await expect(panel.locator("body")).toHaveAttribute(
+    "data-storage",
+    "blocked",
+  );
   await expect(panel.locator("body")).toHaveAttribute("data-app", "blocked");
   await expect(panel.locator("body")).toHaveAttribute("data-tauri", "false");
   // And a call it wasn't granted is refused.
   await panel.locator("#folder").click();
-  await expect(panel.locator("#out")).toContainText("refused: test.hello was not granted workspace.read");
+  await expect(panel.locator("#out")).toContainText(
+    "refused: test.hello was not granted workspace.read",
+  );
 });
 
 test("a plugin's edit is a proposal in the document", async ({ page }) => {
@@ -158,7 +167,9 @@ test("a plugin's edit is a proposal in the document", async ({ page }) => {
   await turnOn(page);
   const panel = await openPanel(page);
   await panel.locator("#propose").click();
-  await expect(page.locator(`${editor} .pending-insert`)).toContainText("Added by Hello.");
+  await expect(page.locator(`${editor} .pending-insert`)).toContainText(
+    "Added by Hello.",
+  );
 });
 
 test("a plugin's command runs from the editor's menu and keeps what it stored", async ({
@@ -180,7 +191,10 @@ test("refusing its permissions leaves a plugin off", async ({ page }) => {
   await openPluginsPage(page);
   const row = page.locator('.plugin-row[data-plugin="test.hello"]');
   await row.getByRole("checkbox", { name: "Turn on Hello" }).click();
-  await page.locator(".app-dialog").getByRole("button", { name: "Cancel" }).click();
+  await page
+    .locator(".app-dialog")
+    .getByRole("button", { name: "Cancel" })
+    .click();
   await expect(row.getByRole("checkbox")).not.toBeChecked();
   await page.keyboard.press("Escape");
   await emit(page, "menu-toggle-sidebar");
@@ -193,7 +207,9 @@ test("turning every plugin off takes its tab away", async ({ page }) => {
   await open(page);
   await turnOn(page);
   await emit(page, "menu-toggle-sidebar");
-  const tab = page.locator(".sidebar-tabs").getByRole("button", { name: "Hello" });
+  const tab = page
+    .locator(".sidebar-tabs")
+    .getByRole("button", { name: "Hello" });
   await expect(tab).toHaveCount(1);
   await openPluginsPage(page);
   await page.getByRole("checkbox", { name: "Plugins" }).uncheck();

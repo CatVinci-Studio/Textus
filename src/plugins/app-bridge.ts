@@ -81,7 +81,9 @@ export interface PluginEventMap {
   settings: { key: string; value: unknown };
 }
 
-type Listener<K extends keyof PluginEventMap> = (data: PluginEventMap[K]) => void;
+type Listener<K extends keyof PluginEventMap> = (
+  data: PluginEventMap[K],
+) => void;
 const listeners = new Map<keyof PluginEventMap, Set<Listener<never>>>();
 
 /** The window tells plugins something happened. */

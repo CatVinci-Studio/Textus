@@ -42,9 +42,12 @@ exports.activate = function () {
         if (panel === webview) panel = null;
       });
       webview.onDidReceiveMessage(async function (message) {
-        if (message.type === "ready" || message.type === "refresh") await show();
+        if (message.type === "ready" || message.type === "refresh")
+          await show();
         const path = await textus.document.getPath();
-        const version = (await versionsOf(path)).find((v) => v.at === message.at);
+        const version = (await versionsOf(path)).find(
+          (v) => v.at === message.at,
+        );
         if (!version) return;
         if (message.type === "restore") {
           const current = await textus.document.getText();
@@ -55,7 +58,8 @@ exports.activate = function () {
             reason: zh ? "恢复到这个版本" : "Restore this version",
           });
         }
-        if (message.type === "open") await textus.window.openUntitled(version.text);
+        if (message.type === "open")
+          await textus.window.openUntitled(version.text);
       });
       const html = await textus.plugin.readText("panel.html");
       webview.html = html.replace("{{lang}}", textus.env.language);

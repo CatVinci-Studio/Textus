@@ -89,7 +89,11 @@ export function createEndpoint(
       .then(() => handler(m.params))
       .then(
         (result) =>
-          send({ jsonrpc: "2.0", id, result: result === undefined ? null : result }),
+          send({
+            jsonrpc: "2.0",
+            id,
+            result: result === undefined ? null : result,
+          }),
         (err) => fail(id, err),
       );
   };

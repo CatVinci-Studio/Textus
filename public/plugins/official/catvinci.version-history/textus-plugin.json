@@ -13,7 +13,11 @@
   "permissions": ["workspace.read", "document.read", "document.propose"],
   "contributes": {
     "sidebarTabs": [
-      { "id": "catvinci.version-history.panel", "title": "%history%", "icon": "tab.svg" }
+      {
+        "id": "catvinci.version-history.panel",
+        "title": "%history%",
+        "icon": "tab.svg"
+      }
     ],
     "settings": [
       {

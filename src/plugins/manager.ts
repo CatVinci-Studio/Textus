@@ -21,7 +21,12 @@ import {
 } from "./manifest";
 import { permissionLabel } from "./permissions";
 import { PluginTabIcon, PluginWebviewPanel } from "./PluginWebview";
-import { removeWebview, webview, webviewState, type WebviewRecord } from "./webviews";
+import {
+  removeWebview,
+  webview,
+  webviewState,
+  type WebviewRecord,
+} from "./webviews";
 
 /**
  * Every plugin the app knows of - the official ones shipped with it
@@ -73,7 +78,11 @@ const contributions = new Map<string, (() => void)[]>();
 const settingsCache = new Map<string, Record<string, unknown>>();
 
 /** What the window tells the manager about itself (usePluginManager). */
-let windowInfo: { strings: () => Strings; language: () => string; dark: () => boolean } = {
+let windowInfo: {
+  strings: () => Strings;
+  language: () => string;
+  dark: () => boolean;
+} = {
   strings: () => {
     throw new Error("Plugins are not set up yet.");
   },
@@ -92,7 +101,9 @@ function publish(next: Partial<PluginsSnapshot>) {
 
 function update(id: string, change: Partial<PluginRecord>) {
   publish({
-    records: snapshot.records.map((r) => (r.id === id ? { ...r, ...change } : r)),
+    records: snapshot.records.map((r) =>
+      r.id === id ? { ...r, ...change } : r,
+    ),
   });
 }
 
@@ -110,14 +121,18 @@ export function pluginRecord(id: string): PluginRecord | undefined {
 }
 
 /** A plugin's name in the UI language. */
-export function pluginName(record: Pick<PluginRecord, "id" | "manifest">): string {
+export function pluginName(
+  record: Pick<PluginRecord, "id" | "manifest">,
+): string {
   return record.manifest
     ? localize(record.manifest, record.manifest.name, windowInfo.language())
     : record.id;
 }
 
 export function pluginText(record: PluginRecord, value: string): string {
-  return record.manifest ? localize(record.manifest, value, windowInfo.language()) : value;
+  return record.manifest
+    ? localize(record.manifest, value, windowInfo.language())
+    : value;
 }
 
 function platform(): string {
@@ -133,7 +148,9 @@ function platform(): string {
 
 async function officialManifests(): Promise<{ id: string; text: string }[]> {
   try {
-    const index = await fetch(new URL("plugins/official/index.json", document.baseURI));
+    const index = await fetch(
+      new URL("plugins/official/index.json", document.baseURI),
+    );
     if (!index.ok) return [];
     const ids = (await index.json()) as string[];
     return await Promise.all(
@@ -160,7 +177,8 @@ function makeRecord(
   const granted = (entry?.granted ?? []) as Permission[];
   try {
     const manifest = parseManifest(text);
-    if (manifest.id !== id) throw new Error(`id "${manifest.id}" is not its folder's, "${id}".`);
+    if (manifest.id !== id)
+      throw new Error(`id "${manifest.id}" is not its folder's, "${id}".`);
     const compatible = engineSatisfied(manifest.engine, APP_VERSION);
     return {
       id,
@@ -192,13 +210,17 @@ export function loadPlugins(reload = false): Promise<void> {
   if (loading && !reload) return loading;
   loading = (async () => {
     const [state, installed, official] = await Promise.all([
-      pluginsIpc.state().catch(() => ({ allOn: true, plugins: {} }) as PluginsState),
+      pluginsIpc
+        .state()
+        .catch(() => ({ allOn: true, plugins: {} }) as PluginsState),
       pluginsIpc.installed().catch(() => []),
       officialManifests(),
     ]);
     const records: PluginRecord[] = [];
     for (const p of installed)
-      records.push(makeRecord(p.id, p.dev ? "dev" : "installed", p.manifest, state, p.dir));
+      records.push(
+        makeRecord(p.id, p.dev ? "dev" : "installed", p.manifest, state, p.dir),
+      );
     for (const p of official)
       if (!records.some((r) => r.id === p.id))
         records.push(makeRecord(p.id, "official", p.text, state));
@@ -206,7 +228,8 @@ export function loadPlugins(reload = false): Promise<void> {
     for (const id of [...contributions.keys()]) withdraw(id);
     publish({ loaded: true, allOn: state.allOn, records });
     for (const record of records) void loadIcon(record);
-    if (state.allOn) for (const record of records) if (record.status === "on") apply(record);
+    if (state.allOn)
+      for (const record of records) if (record.status === "on") apply(record);
   })();
   return loading;
 }
@@ -215,7 +238,9 @@ async function loadIcon(record: PluginRecord) {
   const icon = record.manifest?.icon;
   if (!icon) return;
   try {
-    update(record.id, { icon: dataUrl(icon, await readPluginFile(record.id, record.origin, icon)) });
+    update(record.id, {
+      icon: dataUrl(icon, await readPluginFile(record.id, record.origin, icon)),
+    });
   } catch {
     // No icon is shown; the plugin works without.
   }
@@ -229,7 +254,11 @@ function host(record: PluginRecord): PluginHost {
   let running = hosts.get(record.id);
   if (!running && record.manifest) {
     running = new PluginHost(
-      { manifest: record.manifest, origin: record.origin, granted: record.granted },
+      {
+        manifest: record.manifest,
+        origin: record.origin,
+        granted: record.granted,
+      },
       {
         strings: () => windowInfo.strings(),
         language: () => windowInfo.language(),
@@ -242,7 +271,8 @@ function host(record: PluginRecord): PluginHost {
             (r) => r.status === "on" && command.startsWith(`${r.id}.`),
           );
           if (owner) return runPluginCommand(owner.id, command, args);
-          if (!runCommand(command, args)) throw new Error(`No command ${command}.`);
+          if (!runCommand(command, args))
+            throw new Error(`No command ${command}.`);
           return null;
         },
         addCommand: (id, command) => {
@@ -288,10 +318,15 @@ async function pluginFailed(id: string, reason: string) {
   update(id, { status: "failed", problem: reason });
   await pluginsIpc.set(id, false, record.granted).catch(() => {});
   const t = windowInfo.strings();
-  void showMessage(t.pluginFailedNotice.replace("{name}", pluginName(record)).replace("{reason}", reason), {
-    title: t.pluginsTitle,
-    tone: "warning",
-  });
+  void showMessage(
+    t.pluginFailedNotice
+      .replace("{name}", pluginName(record))
+      .replace("{reason}", reason),
+    {
+      title: t.pluginsTitle,
+      tone: "warning",
+    },
+  );
 }
 
 /** Runs one of a plugin's commands in its code, starting it first. */
@@ -313,7 +348,8 @@ export async function resolveWebview(
   target: { view?: string; viewType?: string; state?: unknown },
 ): Promise<void> {
   const plugin = pluginRecord(record.plugin);
-  if (!plugin || plugin.status !== "on") throw new Error(`${record.plugin} is turned off.`);
+  if (!plugin || plugin.status !== "on")
+    throw new Error(`${record.plugin} is turned off.`);
   const running = host(plugin);
   if (record.kind === "editor")
     await running.request("$resolveCustomEditor", {
@@ -357,7 +393,8 @@ function apply(record: PluginRecord) {
   const manifest = record.manifest;
   if (!manifest || contributions.has(record.id)) return;
   const id = record.id;
-  const text = (value: string) => localize(manifest, value, windowInfo.language());
+  const text = (value: string) =>
+    localize(manifest, value, windowInfo.language());
   const undo: (() => void)[] = [];
   const { commands, keybindings, menus, sidebarTabs } = manifest.contributes;
   for (const command of commands)
@@ -395,14 +432,28 @@ function apply(record: PluginRecord) {
       registerSidebarTab({
         id: tab.id,
         label: () => text(tab.title),
-        Icon: () => createElement(PluginTabIcon, { plugin: id, origin: record.origin, icon: tab.icon }),
+        Icon: () =>
+          createElement(PluginTabIcon, {
+            plugin: id,
+            origin: record.origin,
+            icon: tab.icon,
+          }),
         Panel: () =>
-          createElement(PluginWebviewPanel, { plugin: id, view: tab.id, kind: "sidebar" }),
+          createElement(PluginWebviewPanel, {
+            plugin: id,
+            view: tab.id,
+            kind: "sidebar",
+          }),
       }),
     );
   contributions.set(id, undo);
-  if (manifest.activationEvents.includes("onStartupFinished") || manifest.activationEvents.includes("*"))
-    void host(record).start().catch(() => {});
+  if (
+    manifest.activationEvents.includes("onStartupFinished") ||
+    manifest.activationEvents.includes("*")
+  )
+    void host(record)
+      .start()
+      .catch(() => {});
 }
 
 /** Takes back what a plugin added. */
@@ -438,19 +489,33 @@ export function customEditorFor(
 export function pluginSetting(id: string, key: string): unknown {
   const stored = settingsCache.get(id)?.[key];
   if (stored !== undefined) return stored;
-  return pluginRecord(id)?.manifest?.contributes.settings.find((s) => s.key === key)?.default ?? null;
+  return (
+    pluginRecord(id)?.manifest?.contributes.settings.find((s) => s.key === key)
+      ?.default ?? null
+  );
 }
 
 /** Reads a plugin's settings from its storage (once). */
 export async function loadPluginSettings(id: string): Promise<void> {
   if (settingsCache.has(id)) return;
-  const stored = await pluginsIpc.storageGet(id).catch(() => ({}) as Record<string, unknown>);
+  const stored = await pluginsIpc
+    .storageGet(id)
+    .catch(() => ({}) as Record<string, unknown>);
   const values = stored.$settings;
-  settingsCache.set(id, values && typeof values === "object" ? (values as Record<string, unknown>) : {});
+  settingsCache.set(
+    id,
+    values && typeof values === "object"
+      ? (values as Record<string, unknown>)
+      : {},
+  );
   update(id, {});
 }
 
-export async function setPluginSetting(id: string, key: string, value: unknown): Promise<void> {
+export async function setPluginSetting(
+  id: string,
+  key: string,
+  value: unknown,
+): Promise<void> {
   const values = { ...(settingsCache.get(id) ?? {}), [key]: value };
   settingsCache.set(id, values);
   update(id, {});
@@ -464,7 +529,9 @@ export async function setPluginSetting(id: string, key: string, value: unknown):
 
 /** Asks the user for what the plugin asks that it hasn't been granted;
  *  the full list when granted, null when refused. */
-async function askPermissions(record: PluginRecord): Promise<Permission[] | null> {
+async function askPermissions(
+  record: PluginRecord,
+): Promise<Permission[] | null> {
   const wanted = record.manifest?.permissions ?? [];
   const missing = wanted.filter((p) => !record.granted.includes(p));
   if (!missing.length) return wanted;
@@ -472,7 +539,11 @@ async function askPermissions(record: PluginRecord): Promise<Permission[] | null
   const list = missing.map((p) => `• ${permissionLabel(p, t)}`).join("\n");
   const ok = await showConfirm(
     `${t.pluginPermissionsAsk.replace("{name}", pluginName(record))}\n\n${list}`,
-    { title: t.pluginsTitle, okLabel: t.pluginAllow, cancelLabel: t.pluginCancel },
+    {
+      title: t.pluginsTitle,
+      okLabel: t.pluginAllow,
+      cancelLabel: t.pluginCancel,
+    },
   );
   return ok ? wanted : null;
 }
@@ -493,13 +564,21 @@ export async function setPluginEnabled(id: string, on: boolean): Promise<void> {
   const granted = await askPermissions(record);
   if (!granted) return;
   await pluginsIpc.set(id, true, granted);
-  const next = { ...record, granted, status: "on" as const, problem: undefined };
+  const next = {
+    ...record,
+    granted,
+    status: "on" as const,
+    problem: undefined,
+  };
   update(id, next);
   if (snapshot.allOn) apply(next);
 }
 
 /** Takes back one permission; the plugin restarts without it. */
-export async function revokePermission(id: string, permission: Permission): Promise<void> {
+export async function revokePermission(
+  id: string,
+  permission: Permission,
+): Promise<void> {
   const record = pluginRecord(id);
   if (!record) return;
   const granted = record.granted.filter((p) => p !== permission);
@@ -507,7 +586,10 @@ export async function revokePermission(id: string, permission: Permission): Prom
   withdraw(id);
   // Without a permission it asks for, it can't run: off until granted.
   await pluginsIpc.set(id, false, granted);
-  update(id, { granted, status: record.status === "on" ? "off" : record.status });
+  update(id, {
+    granted,
+    status: record.status === "on" ? "off" : record.status,
+  });
 }
 
 /** Settings › Plugins › Plugins: every plugin at once. */
@@ -516,7 +598,9 @@ export async function setAllPlugins(on: boolean): Promise<void> {
   if (!on) for (const id of [...hosts.keys()]) stopHost(id);
   if (!on) for (const id of [...contributions.keys()]) withdraw(id);
   publish({ allOn: on });
-  if (on) for (const record of snapshot.records) if (record.status === "on") apply(record);
+  if (on)
+    for (const record of snapshot.records)
+      if (record.status === "on") apply(record);
 }
 
 /** A developer's folder changed: its code and manifest read again. */
@@ -558,10 +642,16 @@ export function pluginMenuEntries(
     const manifest = record.manifest;
     if (record.status !== "on" || !manifest) return [];
     return (manifest.contributes.menus["app/plugins"] ?? []).map((item) => {
-      const command = manifest.contributes.commands.find((c) => c.command === item.command);
+      const command = manifest.contributes.commands.find(
+        (c) => c.command === item.command,
+      );
       return {
         command: item.command,
-        label: localize(manifest, command?.title ?? item.command, windowInfo.language()),
+        label: localize(
+          manifest,
+          command?.title ?? item.command,
+          windowInfo.language(),
+        ),
       };
     });
   });

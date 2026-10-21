@@ -39,7 +39,9 @@ export function hostDocument(pluginCode: string): string {
  *  the HTTPS hosts in `frameHosts` (a plugin granted those hosts). */
 export function webviewCsp(frameHosts: readonly string[]): string {
   const frames = frameHosts.length
-    ? frameHosts.map((host) => (host === "*" ? "https:" : `https://${host}`)).join(" ")
+    ? frameHosts
+        .map((host) => (host === "*" ? "https:" : `https://${host}`))
+        .join(" ")
     : "'none'";
   return [
     "default-src 'none'",
@@ -72,15 +74,22 @@ export function webviewDocument(
   // come after ours; else ahead of everything.
   const at = /<head(\s[^>]*)?>/i.exec(html);
   const page = at
-    ? html.slice(0, at.index + at[0].length) + head + html.slice(at.index + at[0].length)
+    ? html.slice(0, at.index + at[0].length) +
+      head +
+      html.slice(at.index + at[0].length)
     : `<!doctype html><html><head>${head}</head><body>${html}</body></html>`;
   return page.replace(/<html(\s[^>]*)?>/i, (tag) =>
-    /data-theme=/i.test(tag) ? tag : tag.replace(/>$/, ` data-theme="${theme}">`),
+    /data-theme=/i.test(tag)
+      ? tag
+      : tag.replace(/>$/, ` data-theme="${theme}">`),
   );
 }
 
 /** A sandboxed frame, not yet in the page. */
-export function sandboxedFrame(srcdoc: string, title: string): HTMLIFrameElement {
+export function sandboxedFrame(
+  srcdoc: string,
+  title: string,
+): HTMLIFrameElement {
   const frame = document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-scripts");
   frame.setAttribute("title", title);

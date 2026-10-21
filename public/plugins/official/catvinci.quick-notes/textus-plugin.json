@@ -21,7 +21,11 @@
       "app/plugins": [{ "command": "catvinci.quick-notes.capture" }]
     },
     "sidebarTabs": [
-      { "id": "catvinci.quick-notes.panel", "title": "%name%", "icon": "tab.svg" }
+      {
+        "id": "catvinci.quick-notes.panel",
+        "title": "%name%",
+        "icon": "tab.svg"
+      }
     ]
   },
   "l10n": {

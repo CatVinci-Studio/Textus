@@ -4,10 +4,12 @@
 function address(text) {
   const trimmed = String(text || "").trim();
   if (!trimmed) return null;
-  return /^https?:\/\//i.test(trimmed) ? trimmed.replace(/^http:/i, "https:") : "https://" + trimmed;
+  return /^https?:\/\//i.test(trimmed)
+    ? trimmed.replace(/^http:/i, "https:")
+    : "https://" + trimmed;
 }
 
-function open(url) {
+function openPage(url) {
   const page = address(url);
   if (page) return textus.window.openWebPage(page);
 }
@@ -19,16 +21,20 @@ exports.activate = function () {
       prompt: zh ? "网址" : "Web address",
       value: "https://",
     });
-    if (typed) await open(typed);
+    if (typed) await openPage(typed);
   });
-  textus.commands.registerCommand("catvinci.web-view.openSelection", async function () {
-    const selection = await textus.document.getSelection();
-    const text = selection && selection.text;
-    // The link itself, or a Markdown link's target.
-    const target = text && (/\((https?:\/\/[^)\s]+)\)/.exec(text) || [null, text])[1];
-    if (target) await open(target);
-  });
+  textus.commands.registerCommand(
+    "catvinci.web-view.openSelection",
+    async function () {
+      const selection = await textus.document.getSelection();
+      const text = selection && selection.text;
+      // The link itself, or a Markdown link's target.
+      const target =
+        text && (/\((https?:\/\/[^)\s]+)\)/.exec(text) || [null, text])[1];
+      if (target) await openPage(target);
+    },
+  );
   textus.commands.registerCommand("catvinci.web-view.home", async function () {
-    await open(await textus.settings.get("home"));
+    await openPage(await textus.settings.get("home"));
   });
 };

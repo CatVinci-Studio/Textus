@@ -4,7 +4,11 @@
   const t =
     api.language === "zh"
       ? { fit: "适应宽度", loading: "正在打开…", failed: "无法打开这个 PDF：" }
-      : { fit: "Fit width", loading: "Opening…", failed: "This PDF can't be opened: " };
+      : {
+          fit: "Fit width",
+          loading: "Opening…",
+          failed: "This PDF can't be opened: ",
+        };
   const $ = (id) => document.getElementById(id);
   const viewer = $("viewer");
   const status = $("status");
@@ -74,7 +78,8 @@
     pages = [];
     observer = new IntersectionObserver(
       (entries) => {
-        for (const entry of entries) if (entry.isIntersecting) void draw(entry.target);
+        for (const entry of entries)
+          if (entry.isIntersecting) void draw(entry.target);
         updatePage();
       },
       { root: viewer, rootMargin: "300px 0px" },
@@ -100,7 +105,8 @@
     return page ? Number(page.dataset.page) : 1;
   }
   function updatePage() {
-    if (document.activeElement !== $("page")) $("page").value = String(currentPage());
+    if (document.activeElement !== $("page"))
+      $("page").value = String(currentPage());
   }
   function goTo(n) {
     const page = pages[Math.min(pages.length, Math.max(1, n)) - 1];

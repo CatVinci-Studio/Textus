@@ -81,7 +81,11 @@ export function watchTheme(onChange: () => void): () => void {
     attributeFilter: ["data-theme", "style", "class", "lang"],
   });
   const head = new MutationObserver(changed);
-  head.observe(document.head, { childList: true, subtree: true, characterData: true });
+  head.observe(document.head, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  });
   const dark = window.matchMedia?.("(prefers-color-scheme: dark)");
   dark?.addEventListener("change", changed);
   return () => {

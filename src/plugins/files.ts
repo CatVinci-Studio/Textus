@@ -12,8 +12,15 @@ export type PluginOrigin = "official" | "installed" | "dev";
 
 /** A relative path inside the plugin, or an error: no `..`, no root. */
 export function pluginPath(rel: string): string {
-  const parts = rel.replace(/\\/g, "/").replace(/^\.?\//, "").split("/");
-  if (!rel || parts.some((p) => p === ".." || p === "") || /^[a-z]+:/i.test(rel))
+  const parts = rel
+    .replace(/\\/g, "/")
+    .replace(/^\.?\//, "")
+    .split("/");
+  if (
+    !rel ||
+    parts.some((p) => p === ".." || p === "") ||
+    /^[a-z]+:/i.test(rel)
+  )
     throw new Error(`"${rel}" is not a file of the plugin.`);
   return parts.join("/");
 }

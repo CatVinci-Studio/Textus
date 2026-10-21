@@ -103,9 +103,7 @@ export function minimalPdf(text: string): string {
   });
   const xref = pdf.length;
   pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (const at of offsets)
-    pdf += `${String(at).padStart(10, "0")} 00000 n \n`;
+  for (const at of offsets) pdf += `${String(at).padStart(10, "0")} 00000 n \n`;
   pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
   return Buffer.from(pdf, "latin1").toString("base64");
 }
-

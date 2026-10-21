@@ -67,11 +67,7 @@ export function QuickPickHost({ emptyLabel }: { emptyLabel: string }) {
   const current = pending[0];
   if (!current) return null;
   return (
-    <QuickPick
-      key={current.id}
-      request={current}
-      emptyLabel={emptyLabel}
-    />
+    <QuickPick key={current.id} request={current} emptyLabel={emptyLabel} />
   );
 }
 
@@ -95,7 +91,8 @@ function QuickPick({
     ".quick-pick-input",
   );
   const choose = (item: QuickPickItem | undefined) => {
-    if (item) answer(request, item.value === undefined ? item.label : item.value);
+    if (item)
+      answer(request, item.value === undefined ? item.label : item.value);
   };
   useEffect(() => {
     listRef.current
@@ -123,7 +120,9 @@ function QuickPick({
           role="combobox"
           aria-expanded="true"
           aria-controls="quick-pick-list"
-          aria-activedescendant={shown.length ? `quick-pick-${index}` : undefined}
+          aria-activedescendant={
+            shown.length ? `quick-pick-${index}` : undefined
+          }
           onChange={(e) => {
             setQuery(e.target.value);
             setIndex(0);
@@ -142,8 +141,15 @@ function QuickPick({
             }
           }}
         />
-        <ul className="quick-pick-list" id="quick-pick-list" role="listbox" ref={listRef}>
-          {shown.length === 0 && <li className="quick-pick-empty">{emptyLabel}</li>}
+        <ul
+          className="quick-pick-list"
+          id="quick-pick-list"
+          role="listbox"
+          ref={listRef}
+        >
+          {shown.length === 0 && (
+            <li className="quick-pick-empty">{emptyLabel}</li>
+          )}
           {shown.map((item, i) => (
             <li
               key={`${i}-${item.label}`}
@@ -158,7 +164,9 @@ function QuickPick({
             >
               <span className="quick-pick-label">{item.label}</span>
               {item.description && (
-                <span className="quick-pick-description">{item.description}</span>
+                <span className="quick-pick-description">
+                  {item.description}
+                </span>
               )}
             </li>
           ))}

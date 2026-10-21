@@ -21,7 +21,11 @@
       "app/plugins": [{ "command": "catvinci.daily-notes.today" }]
     },
     "sidebarTabs": [
-      { "id": "catvinci.daily-notes.calendar", "title": "%calendar%", "icon": "tab.svg" }
+      {
+        "id": "catvinci.daily-notes.calendar",
+        "title": "%calendar%",
+        "icon": "tab.svg"
+      }
     ],
     "settings": [
       {

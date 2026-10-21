@@ -14,17 +14,27 @@ async function save(list) {
 
 async function add(text) {
   const list = await notes();
-  const note = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: text, at: Date.now() };
+  const note = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    text: text,
+    at: Date.now(),
+  };
   await save([note].concat(list));
   return note;
 }
 
 exports.activate = function () {
   const zh = textus.env.language === "zh";
-  textus.commands.registerCommand("catvinci.quick-notes.capture", async function () {
-    const text = await textus.window.showInput({ prompt: zh ? "记下点什么" : "Note something down", value: "" });
-    if (text && text.trim()) await add(text.trim());
-  });
+  textus.commands.registerCommand(
+    "catvinci.quick-notes.capture",
+    async function () {
+      const text = await textus.window.showInput({
+        prompt: zh ? "记下点什么" : "Note something down",
+        value: "",
+      });
+      if (text && text.trim()) await add(text.trim());
+    },
+  );
 
   textus.window.registerWebviewViewProvider("catvinci.quick-notes.panel", {
     resolveWebviewView: async function (webview) {
@@ -34,14 +44,22 @@ exports.activate = function () {
       });
       webview.onDidReceiveMessage(async function (message) {
         const list = await notes();
-        if (message.type === "ready") webview.postMessage({ type: "notes", notes: list });
+        if (message.type === "ready")
+          webview.postMessage({ type: "notes", notes: list });
         if (message.type === "new") {
           const note = await add("");
           webview.postMessage({ type: "focus", id: note.id });
         }
         if (message.type === "edit")
-          await save(list.map((n) => (n.id === message.id ? Object.assign({}, n, { text: message.text }) : n)));
-        if (message.type === "delete") await save(list.filter((n) => n.id !== message.id));
+          await save(
+            list.map((n) =>
+              n.id === message.id
+                ? Object.assign({}, n, { text: message.text })
+                : n,
+            ),
+          );
+        if (message.type === "delete")
+          await save(list.filter((n) => n.id !== message.id));
         const note = list.find((n) => n.id === message.id);
         if (message.type === "insert" && note)
           await textus.document.proposeEdit({
@@ -49,7 +67,8 @@ exports.activate = function () {
             text: note.text,
             reason: zh ? "插入快速笔记" : "Insert a quick note",
           });
-        if (message.type === "open" && note) await textus.window.openUntitled(note.text);
+        if (message.type === "open" && note)
+          await textus.window.openUntitled(note.text);
       });
       const html = await textus.plugin.readText("panel.html");
       webview.html = html.replace("{{lang}}", textus.env.language);

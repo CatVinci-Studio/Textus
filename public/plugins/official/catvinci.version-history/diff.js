@@ -8,7 +8,8 @@
     const b = after.split("\n");
     // Common head and tail first: most saves change a little in the middle.
     let start = 0;
-    while (start < a.length && start < b.length && a[start] === b[start]) start++;
+    while (start < a.length && start < b.length && a[start] === b[start])
+      start++;
     let endA = a.length;
     let endB = b.length;
     while (endA > start && endB > start && a[endA - 1] === b[endB - 1]) {
@@ -23,7 +24,10 @@
     const lcs = Array.from({ length: n + 1 }, () => new Uint32Array(m + 1));
     for (let i = n - 1; i >= 0; i--)
       for (let j = m - 1; j >= 0; j--)
-        lcs[i][j] = midA[i] === midB[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+        lcs[i][j] =
+          midA[i] === midB[j]
+            ? lcs[i + 1][j + 1] + 1
+            : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
     const out = a.slice(0, start).map((line) => ({ kind: "same", line: line }));
     let i = 0;
     let j = 0;
@@ -37,7 +41,9 @@
         out.push({ kind: "removed", line: midA[i++] });
       }
     }
-    return out.concat(a.slice(endA).map((line) => ({ kind: "same", line: line })));
+    return out.concat(
+      a.slice(endA).map((line) => ({ kind: "same", line: line })),
+    );
   }
   root.lineDiff = lineDiff;
 })(typeof window !== "undefined" ? window : globalThis);

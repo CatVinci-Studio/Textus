@@ -1,0 +1,25 @@
+html,
+body {
+  height: 100%;
+}
+body {
+  display: flex;
+  flex-direction: column;
+}
+canvas {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+#search {
+  width: 14em;
+}
+#stats {
+  font-size: var(--text-xs);
+}
+#status:empty {
+  display: none;
+}

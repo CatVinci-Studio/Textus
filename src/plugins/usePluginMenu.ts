@@ -2,7 +2,11 @@ import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { menuIpc } from "../platform/ipc";
 import { hasNativeMenuBar } from "../platform/capabilities";
 import type { PluginMenuEntry } from "../app/app-menu-model";
-import { pluginMenuEntries, pluginsSnapshot, subscribePlugins } from "./manager";
+import {
+  pluginMenuEntries,
+  pluginsSnapshot,
+  subscribePlugins,
+} from "./manager";
 
 /** What the Plugins menu lists now - the app-drawn menu's (AppMenu.tsx). */
 export function usePluginMenuEntries(language: string): PluginMenuEntry[] {

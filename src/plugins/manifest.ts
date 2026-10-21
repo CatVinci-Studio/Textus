@@ -127,7 +127,7 @@ export interface PluginManifest {
   engine: string;
   /** Its code, run in the plugin host; none for a plugin that only adds
    *  themes. */
-  main?: string;
+  main?: string[];
   activationEvents: string[];
   permissions: Permission[];
   contributes: Contributes;
@@ -174,11 +174,26 @@ function ownId(value: unknown, pluginId: string, what: string): string {
   return id;
 }
 
+/** `main`: one file, or several run in order (a plugin's shared code
+ *  first) - the host takes no imports. */
+function parseMain(value: unknown): string[] | undefined {
+  if (value === undefined) return undefined;
+  const files = typeof value === "string" ? [value] : list(value, "main");
+  return files.map((f, i) => text(f, `main[${i}]`));
+}
+
 function parseSetting(raw: unknown, at: string): SettingContribution {
   const s = object(raw, at);
   const type = s.type;
-  if (type !== "boolean" && type !== "string" && type !== "number" && type !== "enum")
-    throw new ManifestError(`${at}.type must be boolean, string, number or enum.`);
+  if (
+    type !== "boolean" &&
+    type !== "string" &&
+    type !== "number" &&
+    type !== "enum"
+  )
+    throw new ManifestError(
+      `${at}.type must be boolean, string, number or enum.`,
+    );
   const options =
     type === "enum"
       ? list(s.options, `${at}.options`).map((o, i) => {
@@ -218,20 +233,26 @@ function parseContributes(raw: unknown, id: string): Contributes {
   const declaredCommand = (value: unknown, what: string) => {
     const command = text(value, what);
     if (!declared.has(command))
-      throw new ManifestError(`${what} "${command}" is not in contributes.commands.`);
+      throw new ManifestError(
+        `${what} "${command}" is not in contributes.commands.`,
+      );
     return command;
   };
   const keybindings = list(c.keybindings, "contributes.keybindings").map(
     (x, i) => {
       const o = object(x, `contributes.keybindings[${i}]`);
       return {
-        command: declaredCommand(o.command, `contributes.keybindings[${i}].command`),
+        command: declaredCommand(
+          o.command,
+          `contributes.keybindings[${i}].command`,
+        ),
         key: text(o.key, `contributes.keybindings[${i}].key`).toLowerCase(),
       };
     },
   );
   const menus: Contributes["menus"] = {};
-  const rawMenus = c.menus === undefined ? {} : object(c.menus, "contributes.menus");
+  const rawMenus =
+    c.menus === undefined ? {} : object(c.menus, "contributes.menus");
   for (const [where, items] of Object.entries(rawMenus)) {
     if (!(MENU_IDS as readonly string[]).includes(where))
       throw new ManifestError(`contributes.menus: no menu "${where}".`);
@@ -239,8 +260,13 @@ function parseContributes(raw: unknown, id: string): Contributes {
       (x, i) => {
         const o = object(x, `contributes.menus.${where}[${i}]`);
         return {
-          command: declaredCommand(o.command, `contributes.menus.${where}[${i}].command`),
-          when: text(o.when, `contributes.menus.${where}[${i}].when`, true) || undefined,
+          command: declaredCommand(
+            o.command,
+            `contributes.menus.${where}[${i}].command`,
+          ),
+          when:
+            text(o.when, `contributes.menus.${where}[${i}].when`, true) ||
+            undefined,
         };
       },
     );
@@ -251,7 +277,8 @@ function parseContributes(raw: unknown, id: string): Contributes {
       return {
         id: ownId(o.id, id, `contributes.sidebarTabs[${i}].id`),
         title: text(o.title, `contributes.sidebarTabs[${i}].title`),
-        icon: text(o.icon, `contributes.sidebarTabs[${i}].icon`, true) || undefined,
+        icon:
+          text(o.icon, `contributes.sidebarTabs[${i}].icon`, true) || undefined,
       };
     },
   );
@@ -275,7 +302,8 @@ function parseContributes(raw: unknown, id: string): Contributes {
         viewType: ownId(o.viewType, id, `${at}.viewType`),
         displayName: text(o.displayName, `${at}.displayName`),
         filenamePatterns: patterns,
-        priority: o.priority === "option" ? ("option" as const) : ("default" as const),
+        priority:
+          o.priority === "option" ? ("option" as const) : ("default" as const),
       };
     },
   );
@@ -283,7 +311,9 @@ function parseContributes(raw: unknown, id: string): Contributes {
     parseSetting(x, `contributes.settings[${i}]`),
   );
   const page =
-    c.settingsPage === undefined ? null : object(c.settingsPage, "contributes.settingsPage");
+    c.settingsPage === undefined
+      ? null
+      : object(c.settingsPage, "contributes.settingsPage");
   const themes = list(c.themes, "contributes.themes").map((x, i) => {
     const o = object(x, `contributes.themes[${i}]`);
     return {
@@ -300,7 +330,9 @@ function parseContributes(raw: unknown, id: string): Contributes {
     views,
     customEditors,
     settings,
-    settingsPage: page && { title: text(page.title, "contributes.settingsPage.title") },
+    settingsPage: page && {
+      title: text(page.title, "contributes.settingsPage.title"),
+    },
     themes,
   };
 }
@@ -325,7 +357,8 @@ export function parseManifest(raw: string | unknown): PluginManifest {
     throw new ManifestError(`version "${version}" must be like 1.0.0.`);
   const engines = object(m.engines ?? {}, "engines");
   const permissions = list(m.permissions, "permissions").map((p) => {
-    if (!isPermission(p)) throw new ManifestError(`No permission "${String(p)}".`);
+    if (!isPermission(p))
+      throw new ManifestError(`No permission "${String(p)}".`);
     return p;
   });
   const l10n: PluginManifest["l10n"] = {};
@@ -348,7 +381,7 @@ export function parseManifest(raw: string | unknown): PluginManifest {
     license: text(m.license, "license", true) || undefined,
     repository: text(m.repository, "repository", true) || undefined,
     engine: text(engines.textus, "engines.textus"),
-    main: text(m.main, "main", true) || undefined,
+    main: parseMain(m.main),
     activationEvents: list(m.activationEvents, "activationEvents").map((e, i) =>
       text(e, `activationEvents[${i}]`),
     ),
@@ -403,13 +436,13 @@ export function engineSatisfied(range: string, version: string): boolean {
   const release = version.split("-")[0];
   const r = range.trim();
   if (r === "*") return true;
-  if (r.startsWith(">=")) return compareVersions(release, r.slice(2).trim()) >= 0;
+  if (r.startsWith(">="))
+    return compareVersions(release, r.slice(2).trim()) >= 0;
   if (r.startsWith("^")) {
     const base = r.slice(1).trim();
     const [major] = versionParts(base);
     return (
-      compareVersions(release, base) >= 0 &&
-      versionParts(release)[0] === major
+      compareVersions(release, base) >= 0 && versionParts(release)[0] === major
     );
   }
   const wild = /^(\d+)\.(\d+)\.x$/.exec(r);

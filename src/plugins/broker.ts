@@ -81,9 +81,16 @@ function hostsContainer(): HTMLElement {
   return box;
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number, what: string): Promise<T> {
+function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  what: string,
+): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(`${what} took too long`)), ms);
+    const timer = setTimeout(
+      () => reject(new Error(`${what} took too long`)),
+      ms,
+    );
     promise.then(
       (value) => {
         clearTimeout(timer);
@@ -137,7 +144,11 @@ export class PluginHost {
   }
 
   private get name(): string {
-    return localize(this.info.manifest, this.info.manifest.name, this.deps.language());
+    return localize(
+      this.info.manifest,
+      this.info.manifest.name,
+      this.deps.language(),
+    );
   }
 
   /** Starts the host and activates the plugin, once. */
@@ -159,7 +170,10 @@ export class PluginHost {
   }
 
   /** Tells the plugin something, if it is running and listening. */
-  event<K extends keyof PluginEventMap>(name: K, data: PluginEventMap[K]): void {
+  event<K extends keyof PluginEventMap>(
+    name: K,
+    data: PluginEventMap[K],
+  ): void {
     if (this.subscriptions.has(name))
       this.endpoint?.notify("$event", { name, data });
   }
@@ -189,9 +203,14 @@ export class PluginHost {
 
   private async load(): Promise<void> {
     const { manifest, origin } = this.info;
-    const code = manifest.main
-      ? new TextDecoder().decode(await readPluginFile(manifest.id, origin, manifest.main))
-      : "";
+    const files = await Promise.all(
+      (manifest.main ?? []).map((file) =>
+        readPluginFile(manifest.id, origin, file),
+      ),
+    );
+    const code = files
+      .map((bytes) => new TextDecoder().decode(bytes))
+      .join("\n;\n");
     if (this.stopped) throw new Error("Stopped");
     const frame = sandboxedFrame(hostDocument(code), manifest.id);
     this.frame = frame;
@@ -213,15 +232,27 @@ export class PluginHost {
       );
     });
     hostsContainer().append(frame);
-    this.endpoint = await withTimeout(connected, START_MS, `Starting ${this.name}`);
-    await withTimeout(this.endpoint.call("$activate"), START_MS, `Activating ${this.name}`);
+    this.endpoint = await withTimeout(
+      connected,
+      START_MS,
+      `Starting ${this.name}`,
+    );
+    await withTimeout(
+      this.endpoint.call("$activate"),
+      START_MS,
+      `Activating ${this.name}`,
+    );
     let missed = 0;
     this.pinger = setInterval(() => {
       if (!this.endpoint) return;
       withTimeout(this.endpoint.call("$ping"), PING_MS, "ping").then(
         () => (missed = 0),
         () => {
-          if (++missed >= 2) this.deps.failed(this.id, this.deps.strings().pluginStoppedAnswering);
+          if (++missed >= 2)
+            this.deps.failed(
+              this.id,
+              this.deps.strings().pluginStoppedAnswering,
+            );
         },
       );
     }, PING_EVERY_MS);
@@ -241,7 +272,8 @@ export class PluginHost {
 
   private ownWebview(id: string) {
     const record = webview(id);
-    if (!record || record.plugin !== this.id) throw new Error(`No webview ${id}.`);
+    if (!record || record.plugin !== this.id)
+      throw new Error(`No webview ${id}.`);
     return record;
   }
 
@@ -279,27 +311,47 @@ export class PluginHost {
       "commands.register": ({ command }: { command: string }) => {
         if (!command.startsWith(`${this.id}.`))
           throw new Error(`A command must start with "${this.id}.".`);
-        if (!this.info.manifest.contributes.commands.some((c) => c.command === command))
+        if (
+          !this.info.manifest.contributes.commands.some(
+            (c) => c.command === command,
+          )
+        )
           this.deps.addCommand(this.id, command);
       },
       "commands.unregister": ({ command }: { command: string }) => {
-        if (!this.info.manifest.contributes.commands.some((c) => c.command === command))
+        if (
+          !this.info.manifest.contributes.commands.some(
+            (c) => c.command === command,
+          )
+        )
           this.deps.removeCommand(command);
       },
-      "commands.execute": ({ command, args }: { command: string; args: unknown[] }) =>
-        this.deps.runCommand(command, args ?? []),
+      "commands.execute": ({
+        command,
+        args,
+      }: {
+        command: string;
+        args: unknown[];
+      }) => this.deps.runCommand(command, args ?? []),
       "window.showMessage": ({ text, tone }: { text: string; tone?: string }) =>
         showMessage(text, {
           title: this.name,
           tone: tone === "warning" || tone === "error" ? tone : "info",
         }),
-      "window.showInput": (o: { prompt?: string; title?: string; value?: string }) =>
+      "window.showInput": (o: {
+        prompt?: string;
+        title?: string;
+        value?: string;
+      }) =>
         showPrompt(o.prompt ?? o.title ?? "", o.value ?? "", {
           title: this.name,
           okLabel: t().pluginOk,
           cancelLabel: t().pluginCancel,
         }),
-      "window.showQuickPick": (o: { items: QuickPickItem[]; placeholder?: string }) =>
+      "window.showQuickPick": (o: {
+        items: QuickPickItem[];
+        placeholder?: string;
+      }) =>
         showQuickPick(
           (o.items ?? []).map((item) =>
             typeof item === "string" ? { label: item, value: item } : item,
@@ -313,17 +365,27 @@ export class PluginHost {
         view: string;
         options?: { title?: string; state?: unknown };
       }) => {
-        const declared = this.info.manifest.contributes.views.find((v) => v.id === view);
+        const declared = this.info.manifest.contributes.views.find(
+          (v) => v.id === view,
+        );
         if (!declared) throw new Error(`No view ${view} in the manifest.`);
         getWindowAccess()?.openPluginTab({
           plugin: this.id,
           view,
           kind: "view",
-          title: options?.title ?? localize(this.info.manifest, declared.title, this.deps.language()),
+          title:
+            options?.title ??
+            localize(this.info.manifest, declared.title, this.deps.language()),
           state: options?.state,
         });
       },
-      "window.openWebPage": ({ url, title }: { url: string; title?: string }) => {
+      "window.openWebPage": ({
+        url,
+        title,
+      }: {
+        url: string;
+        title?: string;
+      }) => {
         const address = webPageUrl(String(url));
         if (!address) throw new Error("Only an https:// page opens in a tab.");
         const host = new URL(address).hostname;
@@ -332,7 +394,9 @@ export class PluginHost {
           !granted.includes("network:*") &&
           !granted.includes(`network:${host}`) &&
           !granted.some(
-            (p) => p.startsWith("network:*.") && host.endsWith(p.slice("network:*".length)),
+            (p) =>
+              p.startsWith("network:*.") &&
+              host.endsWith(p.slice("network:*".length)),
           )
         )
           throw new Error(`${this.id} was not granted network:${host}.`);
@@ -345,25 +409,55 @@ export class PluginHost {
         });
       },
       "window.openExternal": ({ url }: { url: string }) => {
-        if (!/^https?:\/\//i.test(url)) throw new Error("Only web links open in the browser.");
+        if (!/^https?:\/\//i.test(url))
+          throw new Error("Only web links open in the browser.");
         return links.openWebLink(url);
       },
-      "window.openFile": ({ path, heading }: { path: string; heading?: string }) => {
+      "window.openFile": ({
+        path,
+        heading,
+      }: {
+        path: string;
+        heading?: string;
+      }) => {
         this.need("workspace.read");
         getWindowAccess()?.openFile(path, heading);
       },
-      "window.openUntitled": ({ content, title }: { content: string; title?: string }) =>
-        getWindowAccess()?.openUntitled(content, title),
-      "webview.setHtml": async ({ webview: id, html }: { webview: string; html: string }) => {
+      "window.openUntitled": ({
+        content,
+        title,
+      }: {
+        content: string;
+        title?: string;
+      }) => getWindowAccess()?.openUntitled(content, title),
+      "webview.setHtml": async ({
+        webview: id,
+        html,
+      }: {
+        webview: string;
+        html: string;
+      }) => {
         this.ownWebview(id);
         setWebviewHtml(id, await withResources(html, this.readOwnFile));
       },
-      "webview.postMessage": ({ webview: id, message }: { webview: string; message: unknown }) => {
+      "webview.postMessage": ({
+        webview: id,
+        message,
+      }: {
+        webview: string;
+        message: unknown;
+      }) => {
         this.ownWebview(id);
         postToWebview(id, message);
         return true;
       },
-      "webview.setTitle": ({ webview: id, title }: { webview: string; title: string }) => {
+      "webview.setTitle": ({
+        webview: id,
+        title,
+      }: {
+        webview: string;
+        title: string;
+      }) => {
         this.ownWebview(id);
         setWebviewTitle(id, title);
       },
@@ -382,7 +476,8 @@ export class PluginHost {
       "document.proposeEdit": (edit: Partial<EditProposal>) => {
         this.need("document.propose");
         const action = (edit.action ?? "insert_at_cursor") as EditAction;
-        if (!EDIT_ACTIONS.includes(action)) throw new Error(`No edit action ${action}.`);
+        if (!EDIT_ACTIONS.includes(action))
+          throw new Error(`No edit action ${action}.`);
         const doc = getActiveDocument();
         if (!doc) throw new Error("No document is open.");
         const proposal: EditProposal = {
@@ -399,13 +494,24 @@ export class PluginHost {
         if (!record.resource) throw new Error("This view shows no file.");
         return pluginsIpc.readResource(this.id, record.resource);
       },
-      "document.writeResource": ({ webview: id, text }: { webview: string; text: string }) => {
+      "document.writeResource": ({
+        webview: id,
+        text,
+      }: {
+        webview: string;
+        text: string;
+      }) => {
         this.need("workspace.write");
         const record = this.ownWebview(id);
         if (!record.resource) throw new Error("This view shows no file.");
         return written(
           record.resource,
-          pluginsIpc.fsWrite(this.id, dirname(record.resource), record.resource, text),
+          pluginsIpc.fsWrite(
+            this.id,
+            dirname(record.resource),
+            record.resource,
+            text,
+          ),
         );
       },
       "plugin.readFile": ({ path }: { path: string }) => this.readOwnFile(path),
@@ -423,11 +529,26 @@ export class PluginHost {
       },
       "workspace.readFile": ({ path }: { path: string }) =>
         pluginsIpc.fsRead(this.id, this.root(), path),
-      "workspace.writeText": ({ path, text }: { path: string; text: string }) => {
+      "workspace.writeText": ({
+        path,
+        text,
+      }: {
+        path: string;
+        text: string;
+      }) => {
         this.need("workspace.write");
-        return written(path, pluginsIpc.fsWrite(this.id, this.root(), path, text));
+        return written(
+          path,
+          pluginsIpc.fsWrite(this.id, this.root(), path, text),
+        );
       },
-      "workspace.writeFile": ({ path, data }: { path: string; data: Uint8Array }) => {
+      "workspace.writeFile": ({
+        path,
+        data,
+      }: {
+        path: string;
+        data: Uint8Array;
+      }) => {
         this.need("workspace.write");
         return written(
           path,
@@ -451,13 +572,20 @@ export class PluginHost {
       },
       "storage.get": async ({ key }: { key: string }) =>
         (await this.loadStorage())[key] ?? null,
-      "storage.set": async ({ key, value }: { key: string; value: unknown }) => {
+      "storage.set": async ({
+        key,
+        value,
+      }: {
+        key: string;
+        value: unknown;
+      }) => {
         await pluginsIpc.storageSet(this.id, key, value);
         const store = await this.loadStorage();
         if (value === null) delete store[key];
         else store[key] = value;
       },
-      "settings.get": ({ key }: { key: string }) => this.deps.setting(this.id, key),
+      "settings.get": ({ key }: { key: string }) =>
+        this.deps.setting(this.id, key),
       "clipboard.readText": () => {
         this.need("clipboard");
         return navigator.clipboard.readText();

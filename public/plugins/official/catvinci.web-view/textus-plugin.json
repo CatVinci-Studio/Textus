@@ -13,7 +13,10 @@
   "contributes": {
     "commands": [
       { "command": "catvinci.web-view.open", "title": "%open%" },
-      { "command": "catvinci.web-view.openSelection", "title": "%openSelection%" },
+      {
+        "command": "catvinci.web-view.openSelection",
+        "title": "%openSelection%"
+      },
       { "command": "catvinci.web-view.home", "title": "%home%" }
     ],
     "menus": {
@@ -22,7 +25,10 @@
         { "command": "catvinci.web-view.home" }
       ],
       "editor/context": [
-        { "command": "catvinci.web-view.openSelection", "when": "editorHasSelection" }
+        {
+          "command": "catvinci.web-view.openSelection",
+          "when": "editorHasSelection"
+        }
       ]
     },
     "settings": [

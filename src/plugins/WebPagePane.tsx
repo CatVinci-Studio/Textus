@@ -29,7 +29,9 @@ export function WebPagePane({ url, t }: { url: string; t: Strings }) {
   const [typed, setTyped] = useState(url);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const go = (address: string) => {
-    const next = webPageUrl(/^[a-z]+:\/\//i.test(address) ? address : `https://${address}`);
+    const next = webPageUrl(
+      /^[a-z]+:\/\//i.test(address) ? address : `https://${address}`,
+    );
     if (!next) return;
     setTyped(next);
     setShown(next);

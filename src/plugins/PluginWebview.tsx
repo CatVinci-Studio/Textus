@@ -27,7 +27,13 @@ import {
  * (frames.ts), rebuilt whenever the plugin sets new HTML, kept in the
  * window's theme, its messages passed to the plugin's code and back.
  */
-export function PluginWebview({ id, className }: { id: string; className?: string }) {
+export function PluginWebview({
+  id,
+  className,
+}: {
+  id: string;
+  className?: string;
+}) {
   useSyncExternalStore(subscribeWebviews, webviewsVersion);
   const record = webview(id);
   const html = record?.html ?? null;
@@ -51,8 +57,10 @@ export function PluginWebview({ id, className }: { id: string; className?: strin
     const disconnect = connectFrame(
       frame,
       {
-        message: ({ message }: { message: unknown }) => webviewMessage(id, message),
-        state: ({ state }: { state: unknown }) => setWebviewState(current.key, state),
+        message: ({ message }: { message: unknown }) =>
+          webviewMessage(id, message),
+        state: ({ state }: { state: unknown }) =>
+          setWebviewState(current.key, state),
       },
       () => ({
         state: webviewState(current.key) ?? null,
@@ -64,7 +72,10 @@ export function PluginWebview({ id, className }: { id: string; className?: strin
       },
     );
     const stopTheme = watchTheme(() =>
-      endpoint?.notify("theme", { css: webviewThemeCss(), dark: windowIsDark() }),
+      endpoint?.notify("theme", {
+        css: webviewThemeCss(),
+        dark: windowIsDark(),
+      }),
     );
     box.replaceChildren(frame);
     return () => {
@@ -98,8 +109,8 @@ function useResolvedWebview(
     const made = createWebview(plugin, kind, key, resource);
     setRecord(made);
     setError(null);
-    resolveWebview(made, { view, viewType, state: initialState.current }).catch((err) =>
-      setError(String((err as Error)?.message ?? err)),
+    resolveWebview(made, { view, viewType, state: initialState.current }).catch(
+      (err) => setError(String((err as Error)?.message ?? err)),
     );
     return () => disposeWebview(made.id);
   }, [plugin, kind, key, view, viewType, resource]);
@@ -130,16 +141,36 @@ export function PluginWebviewPanel({
   view: string;
   kind: "sidebar" | "view";
 }) {
-  const { record, error } = useResolvedWebview(plugin, kind, `${plugin}:${view}`, { view });
-  return <WebviewOrProblem record={record} error={error} className="plugin-webview-panel" />;
+  const { record, error } = useResolvedWebview(
+    plugin,
+    kind,
+    `${plugin}:${view}`,
+    { view },
+  );
+  return (
+    <WebviewOrProblem
+      record={record}
+      error={error}
+      className="plugin-webview-panel"
+    />
+  );
 }
 
 /** A plugin's own settings page (contributes.settingsPage), under its
  *  settings in Settings › Plugins. */
 export function PluginSettingsWebview({ plugin }: { plugin: string }) {
-  const { record, error } = useResolvedWebview(plugin, "settings", `${plugin}:settings`, {});
+  const { record, error } = useResolvedWebview(
+    plugin,
+    "settings",
+    `${plugin}:settings`,
+    {},
+  );
   return (
-    <WebviewOrProblem record={record} error={error} className="plugin-webview-settings" />
+    <WebviewOrProblem
+      record={record}
+      error={error}
+      className="plugin-webview-settings"
+    />
   );
 }
 
@@ -168,7 +199,11 @@ export function PluginTabPane({
   );
   return (
     <div className="plugin-tab-pane">
-      <WebviewOrProblem record={record} error={error} className="plugin-webview-tab" />
+      <WebviewOrProblem
+        record={record}
+        error={error}
+        className="plugin-webview-tab"
+      />
     </div>
   );
 }
@@ -198,7 +233,11 @@ export function PluginTabIcon({
     <span
       className="plugin-tab-icon"
       aria-hidden="true"
-      style={url ? { maskImage: `url("${url}")`, WebkitMaskImage: `url("${url}")` } : undefined}
+      style={
+        url
+          ? { maskImage: `url("${url}")`, WebkitMaskImage: `url("${url}")` }
+          : undefined
+      }
     />
   );
 }

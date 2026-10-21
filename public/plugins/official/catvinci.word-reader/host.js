@@ -13,7 +13,10 @@ exports.activate = function () {
             bytes: await document.readBytes(),
           });
         if (message.type === "edit")
-          await textus.commands.executeCommand("textus.openAsDocument", document.path);
+          await textus.commands.executeCommand(
+            "textus.openAsDocument",
+            document.path,
+          );
       });
       const html = await textus.plugin.readText("view.html");
       webview.html = html.replace("{{lang}}", textus.env.language);

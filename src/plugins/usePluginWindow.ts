@@ -5,7 +5,11 @@ import { useLatest } from "../utils/hooks/useLatest";
 import { registerCommand } from "../app/commands";
 import type { TabState } from "../app/useTabState";
 import type { OpenOptions } from "../app/useFileOpening";
-import { emitPluginEvent, setWindowAccess, type PluginTabView } from "./app-bridge";
+import {
+  emitPluginEvent,
+  setWindowAccess,
+  type PluginTabView,
+} from "./app-bridge";
 import {
   configurePlugins,
   loadPlugins,

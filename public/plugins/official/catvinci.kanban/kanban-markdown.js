@@ -59,10 +59,16 @@
       const cards = list.cards.map(function (card) {
         const [first, ...rest] = card.text.split("\n");
         return (
-          "- [" + (card.done ? "x" : " ") + "] " + first + rest.map((l) => "\n    " + l).join("")
+          "- [" +
+          (card.done ? "x" : " ") +
+          "] " +
+          first +
+          rest.map((l) => "\n    " + l).join("")
         );
       });
-      parts.push("## " + list.title + (cards.length ? "\n\n" + cards.join("\n") : ""));
+      parts.push(
+        "## " + list.title + (cards.length ? "\n\n" + cards.join("\n") : ""),
+      );
     }
     return parts.join("\n\n") + "\n";
   }

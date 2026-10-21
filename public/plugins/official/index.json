@@ -7,5 +7,7 @@
   "catvinci.daily-notes",
   "catvinci.tasks",
   "catvinci.kanban",
-  "catvinci.version-history"
+  "catvinci.version-history",
+  "catvinci.zotero",
+  "catvinci.graph"
 ]

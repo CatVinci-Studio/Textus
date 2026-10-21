@@ -30,7 +30,12 @@
   let data = { path: null, current: null, versions: [] };
 
   const when = (at) =>
-    new Date(at).toLocaleString(api.language, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    new Date(at).toLocaleString(api.language, {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
   function diffNode(version) {
     const box = document.createElement("div");
@@ -64,7 +69,9 @@
       skipped = false;
       const row = document.createElement("div");
       row.className = l.kind;
-      row.textContent = (l.kind === "added" ? "+ " : l.kind === "removed" ? "− " : "  ") + l.line;
+      row.textContent =
+        (l.kind === "added" ? "+ " : l.kind === "removed" ? "− " : "  ") +
+        l.line;
       box.append(row);
     });
     return box;

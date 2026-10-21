@@ -6,7 +6,9 @@ let panel = null;
 
 const pad = (n) => String(n).padStart(2, "0");
 function dateOf(day) {
-  return day.getFullYear() + "-" + pad(day.getMonth() + 1) + "-" + pad(day.getDate());
+  return (
+    day.getFullYear() + "-" + pad(day.getMonth() + 1) + "-" + pad(day.getDate())
+  );
 }
 
 /** `root` and `parts` joined with the root's own separator. */
@@ -19,7 +21,10 @@ function join(root) {
 async function folder() {
   const root = await textus.workspace.rootPath();
   if (!root) return null;
-  const name = String((await textus.settings.get("folder")) || "Daily").replace(/^[\\/]+|[\\/]+$/g, "");
+  const name = String((await textus.settings.get("folder")) || "Daily").replace(
+    /^[\\/]+|[\\/]+$/g,
+    "",
+  );
   return { root: root, dir: join(root, name) };
 }
 
@@ -52,15 +57,22 @@ async function openDay(date) {
   const where = await folder();
   if (!where) {
     await textus.window.showMessage(
-      textus.env.language === "zh" ? "先打开一个文件夹，每日笔记会放在里面。" : "Open a folder first: daily notes are kept in it.",
+      textus.env.language === "zh"
+        ? "先打开一个文件夹，每日笔记会放在里面。"
+        : "Open a folder first: daily notes are kept in it.",
     );
     return;
   }
   const path = join(where.dir, date + ".md");
   const dates = (await noteDates()) || [];
   if (!dates.includes(date)) {
-    const template = String((await textus.settings.get("template")) || "# {{date}}\\n\\n");
-    await textus.workspace.writeText(path, template.replace(/\{\{date\}\}/g, date).replace(/\\n/g, "\n"));
+    const template = String(
+      (await textus.settings.get("template")) || "# {{date}}\\n\\n",
+    );
+    await textus.workspace.writeText(
+      path,
+      template.replace(/\{\{date\}\}/g, date).replace(/\\n/g, "\n"),
+    );
   }
   await textus.window.openFile(path);
   await refresh();

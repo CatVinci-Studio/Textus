@@ -18,7 +18,13 @@ function tasksIn(text) {
     const h = HEADING.exec(line);
     if (h) heading = h[1];
     const m = TASK.exec(line);
-    if (m) out.push({ line: index, done: m[2] !== " ", text: m[4].trim(), heading: heading });
+    if (m)
+      out.push({
+        line: index,
+        done: m[2] !== " ",
+        text: m[4].trim(),
+        heading: heading,
+      });
   });
   return out;
 }
@@ -32,8 +38,9 @@ async function scan() {
     if (!/\.(md|markdown)$/i.test(doc.path)) continue;
     try {
       const tasks = tasksIn(await textus.workspace.readText(doc.path));
-      if (tasks.length) files.push({ path: doc.path, rel: doc.rel, tasks: tasks });
-    } catch (err) {
+      if (tasks.length)
+        files.push({ path: doc.path, rel: doc.rel, tasks: tasks });
+    } catch {
       // Unreadable: left out.
     }
   }
@@ -48,7 +55,11 @@ async function refresh() {
   scanning = (async function () {
     const files = await scan();
     if (panel)
-      panel.postMessage({ type: "tasks", files: files, showDone: await textus.settings.get("showDone") });
+      panel.postMessage({
+        type: "tasks",
+        files: files,
+        showDone: await textus.settings.get("showDone"),
+      });
   })();
   try {
     await scanning;
@@ -80,10 +91,14 @@ exports.activate = function () {
         if (panel === webview) panel = null;
       });
       webview.onDidReceiveMessage(async function (message) {
-        if (message.type === "ready" || message.type === "refresh") await refresh();
+        if (message.type === "ready" || message.type === "refresh")
+          await refresh();
         if (message.type === "toggle") await toggle(message);
         if (message.type === "open")
-          await textus.window.openFile(message.path, message.heading ? { heading: message.heading } : undefined);
+          await textus.window.openFile(
+            message.path,
+            message.heading ? { heading: message.heading } : undefined,
+          );
       });
       const html = await textus.plugin.readText("panel.html");
       webview.html = html.replace("{{lang}}", textus.env.language);

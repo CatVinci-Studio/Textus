@@ -13,7 +13,8 @@
         done: "Done",
         open: (n) => n + (n === 1 ? " open task" : " open tasks"),
         none: "No open tasks in the folder.",
-        nofolder: "Open a folder, and the tasks of all its documents are listed here.",
+        nofolder:
+          "Open a folder, and the tasks of all its documents are listed here.",
       };
   const $ = (id) => document.getElementById(id);
   $("done-label").textContent = t.done;
@@ -56,7 +57,12 @@
         box.checked = task.done;
         box.setAttribute("aria-label", task.text);
         box.onchange = () =>
-          api.postMessage({ type: "toggle", path: file.path, line: task.line, text: task.text });
+          api.postMessage({
+            type: "toggle",
+            path: file.path,
+            line: task.line,
+            text: task.text,
+          });
         const text = document.createElement("span");
         text.className = "text";
         text.textContent = task.text;
@@ -66,7 +72,12 @@
           where.textContent = task.heading;
           text.append(where);
         }
-        text.onclick = () => api.postMessage({ type: "open", path: file.path, heading: task.heading });
+        text.onclick = () =>
+          api.postMessage({
+            type: "open",
+            path: file.path,
+            heading: task.heading,
+          });
         row.append(box, text);
         section.append(row);
       }

@@ -193,7 +193,10 @@
         });
       },
       openView: function (viewId, options) {
-        return call("window.openView", { view: viewId, options: options || {} });
+        return call("window.openView", {
+          view: viewId,
+          options: options || {},
+        });
       },
       openFile: function (path, options) {
         return call("window.openFile", {
@@ -309,7 +312,9 @@
               return Promise.resolve(new TextDecoder().decode(r.body));
             },
             json: function () {
-              return Promise.resolve(JSON.parse(new TextDecoder().decode(r.body)));
+              return Promise.resolve(
+                JSON.parse(new TextDecoder().decode(r.body)),
+              );
             },
           };
         });

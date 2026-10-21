@@ -26,7 +26,9 @@ describe("a plugin's manifest", () => {
       permissions: ["workspace.read", "network:api.zotero.org"],
       contributes: {
         commands: [{ command: "catvinci.example.hello", title: "%hello%" }],
-        keybindings: [{ command: "catvinci.example.hello", key: "Mod+Shift+H" }],
+        keybindings: [
+          { command: "catvinci.example.hello", key: "Mod+Shift+H" },
+        ],
         menus: { "editor/context": [{ command: "catvinci.example.hello" }] },
         customEditors: [
           {
@@ -68,11 +70,15 @@ describe("a plugin's manifest", () => {
     expect(bad({ version: "1" })).toThrow(/version/);
     expect(bad({ permissions: ["root"] })).toThrow(/permission/);
     expect(
-      bad({ contributes: { commands: [{ command: "other.cmd", title: "x" }] } }),
+      bad({
+        contributes: { commands: [{ command: "other.cmd", title: "x" }] },
+      }),
     ).toThrow(/must start with "catvinci.example."/);
     expect(
       bad({
-        contributes: { keybindings: [{ command: "catvinci.example.x", key: "a" }] },
+        contributes: {
+          keybindings: [{ command: "catvinci.example.x", key: "a" }],
+        },
       }),
     ).toThrow(/not in contributes.commands/);
     expect(bad({ contributes: { menus: { "window/title": [] } } })).toThrow(

@@ -3,8 +3,24 @@
   const api = acquireTextusApi();
   const zh = api.language === "zh";
   const t = zh
-    ? { addList: "添加列表", addCard: "+ 添加卡片", markdown: "作为 Markdown 编辑", newList: "新列表", saved: "已保存", saving: "正在保存…", remove: "删除" }
-    : { addList: "Add list", addCard: "+ Add a card", markdown: "Edit as Markdown", newList: "New list", saved: "Saved", saving: "Saving…", remove: "Remove" };
+    ? {
+        addList: "添加列表",
+        addCard: "+ 添加卡片",
+        markdown: "作为 Markdown 编辑",
+        newList: "新列表",
+        saved: "已保存",
+        saving: "正在保存…",
+        remove: "删除",
+      }
+    : {
+        addList: "Add list",
+        addCard: "+ Add a card",
+        markdown: "Edit as Markdown",
+        newList: "New list",
+        saved: "Saved",
+        saving: "Saving…",
+        remove: "Remove",
+      };
   const $ = (id) => document.getElementById(id);
   const md = window.kanbanMarkdown;
   $("add-list").textContent = t.addList;
@@ -18,7 +34,10 @@
   function save() {
     $("state").textContent = t.saving;
     clearTimeout(timer);
-    timer = setTimeout(() => api.postMessage({ type: "save", text: md.serialize(board) }), 300);
+    timer = setTimeout(
+      () => api.postMessage({ type: "save", text: md.serialize(board) }),
+      300,
+    );
   }
   function changed() {
     render();
@@ -133,7 +152,9 @@
       e.preventDefault();
       cards.classList.add("drop-target");
     });
-    cards.addEventListener("dragleave", () => cards.classList.remove("drop-target"));
+    cards.addEventListener("dragleave", () =>
+      cards.classList.remove("drop-target"),
+    );
     cards.addEventListener("drop", (e) => {
       e.preventDefault();
       cards.classList.remove("drop-target");
@@ -146,7 +167,8 @@
       });
       from.list.cards.splice(from.list.cards.indexOf(from.card), 1);
       let at = before < 0 ? list.cards.length : before;
-      if (from.list === list && before > from.list.cards.length) at = list.cards.length;
+      if (from.list === list && before > from.list.cards.length)
+        at = list.cards.length;
       list.cards.splice(Math.min(at, list.cards.length), 0, from.card);
       changed();
     });
@@ -158,7 +180,9 @@
       list.cards.push(card);
       render();
       const nodes = document.querySelectorAll(".list");
-      const node = nodes[board.lists.indexOf(list)].querySelector(".card:last-child .card-text");
+      const node = nodes[board.lists.indexOf(list)].querySelector(
+        ".card:last-child .card-text",
+      );
       editInPlace(node, "", true, (value) => {
         card.text = value;
         changed();
