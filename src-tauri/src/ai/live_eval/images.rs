@@ -119,6 +119,7 @@ fn write_with_picture(message: &str, ui_language: &str) -> Vec<serde_json::Value
         ui_language,
         thinking: aicompat::capabilities::ThinkingLevel::Auto,
         pictures: Some(&pictures),
+        memory: None,
     };
     let conv = harness::run_conversation(&auth, &setup, "", &[UserTurn::new(message)]);
     assert!(conv.error.is_none(), "{:?}", conv.error);

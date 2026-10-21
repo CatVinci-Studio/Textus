@@ -39,6 +39,7 @@ fn run_with(
         ui_language: ui,
         thinking: aicompat::capabilities::ThinkingLevel::Auto,
         pictures,
+        memory: None,
     };
     let conv = harness::run_conversation(&auth, &setup, doc, script);
     assert!(conv.error.is_none(), "{:?}", conv.error);

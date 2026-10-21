@@ -1431,6 +1431,7 @@ pub fn run_case(auth: &AnthropicAuth, case: &AgentCase, model: &str) -> Record {
             ui_language: case.lang.ui_code(),
             thinking: aicompat::capabilities::ThinkingLevel::Auto,
             pictures: None,
+            memory: None,
         };
         let conv = run_conversation(auth, &setup, &case.doc, &script);
         if let Some(e) = &conv.error {
