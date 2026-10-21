@@ -23,11 +23,9 @@ import type { StreamEvent } from "../platform/ipc";
 import type { Settings } from "../settings/SettingsContext";
 import { prefersReducedMotion } from "../ui/motion";
 import { storeImage } from "../editor/images/image-plugin";
-import {
-  generatedImageData,
-  loadGeneratedImage,
-} from "../ai/revision/generated-images";
 import { showMessage } from "../ui/app-dialog";
+import { cachedDocumentMarkdown } from "../ai/doc-markdown";
+import { offerOldPictureTrash } from "../ai/revision/old-picture";
 import { errorText } from "../utils/error-text";
 import { resolveStrings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
@@ -88,6 +86,16 @@ export function useEditorProposals({
         tone: "error",
       });
     },
+    onPictureReplaced: (oldSrc) =>
+      void offerOldPictureTrash(
+        oldSrc,
+        filePathRef.current,
+        resolveStrings(settingsRef.current.language),
+        () =>
+          run((ctx) =>
+            cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc),
+          ) ?? "",
+      ),
     citationStyle,
     // What a decision did, said to a screen reader in the interface
     // language.
@@ -168,20 +176,10 @@ export function useEditorProposals({
         streaming?: boolean;
       }[],
       target: SelectionTarget | null,
-      fetched = false,
     ) => {
-      // A picture is shown once its bytes are here: drawn at once, never
-      // a broken image that fills in later. One the backend no longer has
-      // is shown anyway - its Accept then says so.
-      const waiting = proposals.filter(
-        (p) => p.proposal.image && !generatedImageData(p.proposal.image.id),
-      );
-      if (waiting.length > 0 && !fetched) {
-        void Promise.all(
-          waiting.map((p) => loadGeneratedImage(p.proposal.image!.id)),
-        ).then(() => addPreviews(proposals, target, true));
-        return;
-      }
+      // Shown at once, pictures too: one still painting, or not loaded
+      // yet, is its frame in place (pending-picture.ts) until it comes -
+      // the text around it doesn't wait for it.
       if (supersedePending.current) {
         supersedePending.current = false;
         pendingEdits.discardAll();

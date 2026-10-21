@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  generatedImageId,
+  generatedImageSize,
   generatedImageSrc,
   hasGeneratedImage,
   parseImageProposal,
@@ -25,7 +27,29 @@ describe("parseImageProposal", () => {
       anchor: "The boats came in.",
       context: undefined,
       text: `![A quiet harbour](${generatedImageSrc("abc1")})`,
-      image: { id: "abc1", alt: "A quiet harbour", width: 1024, height: 768 },
+      image: {
+        id: "abc1",
+        alt: "A quiet harbour",
+        width: 1024,
+        height: 768,
+        pending: false,
+      },
+    });
+  });
+
+  it("marks a picture still being made, and keeps its size for its frame", () => {
+    const proposal = parseImageProposal(
+      call({
+        prompt: "A harbour at dusk",
+        alt: "Harbour",
+        action: "append",
+        image: { id: "abc2", width: 1536, height: 1024, pending: true },
+      }),
+    );
+    expect(proposal?.image?.pending).toBe(true);
+    expect(generatedImageSize("abc2")).toMatchObject({
+      width: 1536,
+      height: 1024,
     });
   });
 
@@ -55,9 +79,15 @@ describe("the placeholder src", () => {
     );
   });
 
-  it("stays as it is in the preview until the picture is loaded", () => {
+  it("is a stand-in the preview keeps until the picture is loaded", () => {
     const text = `![Boats](${generatedImageSrc("ab3")})`;
-    expect(showGeneratedImages(text)).toBe(text);
+    const shown = showGeneratedImages(text);
+    // A data: src the renderer keeps, its id still readable for the frame.
+    const src = /\]\((.+)\)$/.exec(shown)![1];
+    expect(src).toMatch(/^data:image\/gif;/);
+    expect(generatedImageId(src)).toBe("ab3");
+    expect(generatedImageId(generatedImageSrc("ab3"))).toBe("ab3");
+    expect(generatedImageId("assets/boats.png")).toBeNull();
     expect(showGeneratedImages("no picture")).toBe("no picture");
   });
 });

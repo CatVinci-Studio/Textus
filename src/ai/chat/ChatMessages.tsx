@@ -22,9 +22,11 @@ import { diffLines } from "./line-diff";
 import type { PendingSentence } from "../revision/pending-edit-plugin";
 import { FlipOnChange } from "../../ui/flip";
 import {
+  generatedImageFailure,
   loadGeneratedImage,
   generatedImageUrl,
 } from "../revision/generated-images";
+import "../revision/pending-picture.css";
 import {
   MemoryChip,
   parseRememberResult,
@@ -498,22 +500,39 @@ function notGeneratedReason(output: string): string {
     .trim();
 }
 
-/** A proposed picture on its card, small, once the preview has it. */
+/** A proposed picture on its card, small: its frame while it is made,
+ *  then the picture, or why it wasn't made. */
 function ProposedPicture({ id, alt }: { id: string; alt: string }) {
   const [url, setUrl] = useState(() => generatedImageUrl(id));
+  const [failure, setFailure] = useState(() => generatedImageFailure(id));
   useEffect(() => {
     let live = true;
-    if (!url)
+    if (!url && !failure)
       void loadGeneratedImage(id).then(() => {
-        if (live) setUrl(generatedImageUrl(id));
+        if (!live) return;
+        setUrl(generatedImageUrl(id));
+        setFailure(generatedImageFailure(id));
       });
     return () => {
       live = false;
     };
-  }, [id, url]);
-  return url ? (
-    <img className="agent-proposal-picture" src={url} alt={alt} />
-  ) : null;
+  }, [id, url, failure]);
+  if (url)
+    return <img className="agent-proposal-picture" src={url} alt={alt} />;
+  if (failure)
+    return <span className="agent-proposal-picture-failed">{failure}</span>;
+  return (
+    <span
+      className="pending-picture agent-proposal-picture-frame"
+      role="img"
+      aria-busy="true"
+      aria-label={alt}
+    >
+      <span className="pending-picture-blob" />
+      <span className="pending-picture-blob" />
+      <span className="pending-picture-blob" />
+    </span>
+  );
 }
 
 /** The error row, with a retry button when the failed send is resendable

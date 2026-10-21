@@ -1,10 +1,14 @@
 use crate::agent::{AgentTurn, EventSink, StepResult, StepUsage, ToolSpec};
 use crate::capabilities::Thinking;
+use crate::images::{
+    checked_image, decode_base64, gpt_image_size, Aspect, GeneratedImage, ImageError,
+};
 use crate::pkce::{decode_base64url, generate_pkce, generate_state, now_ms};
 use crate::responses_api::{
     self, read_streamed_output, text_from_streamed_output, ResponsesRequest,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 const CLIENT_ID: &str = "app_EMoamEEZ73f0CkXaXp7hrann";
 const AUTHORIZE_URL: &str = "https://auth.openai.com/oauth/authorize";
@@ -239,9 +243,157 @@ pub async fn agent_step(
     Ok((responses_api::parse_agent_output(&output, on_event), usage))
 }
 
+/// The request for one picture through the ChatGPT sign-in: the Responses
+/// API's image_generation tool, made the only thing the model may do.
+fn image_request_body(prompt: &str, aspect: Aspect) -> Value {
+    json!({
+        "model": COMPLETION_MODEL,
+        "store": false,
+        // The ChatGPT backend only serves SSE.
+        "stream": true,
+        "instructions": "Draw the picture the user describes with the image_generation tool, exactly as described. Say nothing.",
+        "input": [{
+            "role": "user",
+            "content": [{"type": "input_text", "text": prompt}],
+        }],
+        "tools": [{
+            "type": "image_generation",
+            "size": gpt_image_size(aspect),
+            // As the API-key route asks (images/openai.rs): plenty for a
+            // page, and the plan's image allowance goes further.
+            "quality": "medium",
+            "output_format": "jpeg",
+        }],
+        "tool_choice": {"type": "image_generation"},
+    })
+}
+
+/// The picture in a finished response's output: an image_generation_call
+/// item's base64 `result`.
+fn image_from_output(output: &[Value]) -> Result<Vec<u8>, ImageError> {
+    let call = output
+        .iter()
+        .find(|item| item.get("type").and_then(Value::as_str) == Some("image_generation_call"))
+        .ok_or_else(|| {
+            ImageError::Failed(
+                "ChatGPT answered without making a picture - the sign-in's plan may not include image generation."
+                    .into(),
+            )
+        })?;
+    let result = call.get("result").and_then(Value::as_str).unwrap_or("");
+    if result.trim().is_empty() {
+        let status = call
+            .get("status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown");
+        return Err(ImageError::Failed(format!(
+            "ChatGPT's picture didn't finish (status: {status})."
+        )));
+    }
+    decode_base64(result)
+}
+
+/// A failed request's words, as one of the three kinds the user can act on.
+fn image_failure(message: String) -> ImageError {
+    let lower = message.to_lowercase();
+    if lower.contains("moderation") || lower.contains("safety") || lower.contains("content policy")
+    {
+        ImageError::Refused(message)
+    } else if lower.contains("429")
+        || lower.contains("usage limit")
+        || lower.contains("rate limit")
+        || lower.contains("quota")
+    {
+        ImageError::Quota(message)
+    } else {
+        ImageError::Failed(message)
+    }
+}
+
+/// One picture through the ChatGPT sign-in, counted against the plan's own
+/// image allowance rather than API credit. This is the backend ChatGPT's
+/// apps use, not a published API - it has changed without notice before,
+/// so Settings calls it experimental and the API-key route stays.
+pub async fn generate_image(
+    access_token: &str,
+    account_id: &str,
+    originator: &str,
+    prompt: &str,
+    aspect: Aspect,
+) -> Result<GeneratedImage, ImageError> {
+    let prompt = prompt.trim();
+    if prompt.is_empty() {
+        return Err(ImageError::Failed(
+            "There is no description to draw.".into(),
+        ));
+    }
+    let res = crate::http::streaming_client()
+        .post(CODEX_RESPONSES_URL)
+        .bearer_auth(access_token)
+        .header("chatgpt-account-id", account_id)
+        .header("originator", originator)
+        .header("OpenAI-Beta", "responses=experimental")
+        .json(&image_request_body(prompt, aspect))
+        .send()
+        .await
+        .map_err(|e| ImageError::Failed(format!("Couldn't reach ChatGPT: {e}")))?;
+    let output = read_streamed_output(res, "ChatGPT", &|_| {})
+        .await
+        .map_err(image_failure)?;
+    checked_image(image_from_output(&output)?)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_picture_request_offers_only_the_image_tool_at_the_aspects_size() {
+        let body = image_request_body("A harbour at dusk", Aspect::Wide);
+        assert_eq!(body["tools"][0]["type"], "image_generation");
+        assert_eq!(body["tools"][0]["size"], "1536x1024");
+        assert_eq!(body["tool_choice"]["type"], "image_generation");
+        assert_eq!(body["stream"], true);
+        assert_eq!(body["store"], false);
+        assert_eq!(body["input"][0]["content"][0]["text"], "A harbour at dusk");
+    }
+
+    #[test]
+    fn the_picture_is_read_from_the_image_generation_call() {
+        // "hi" in base64, beside a message item.
+        let output = vec![
+            json!({"type": "message", "content": []}),
+            json!({"type": "image_generation_call", "status": "completed", "result": "aGk="}),
+        ];
+        assert_eq!(image_from_output(&output).unwrap(), b"hi");
+    }
+
+    #[test]
+    fn no_picture_says_why() {
+        let none = image_from_output(&[json!({"type": "message"})]).unwrap_err();
+        assert!(matches!(none, ImageError::Failed(why) if why.contains("plan")));
+        let unfinished = image_from_output(&[
+            json!({"type": "image_generation_call", "status": "failed", "result": ""}),
+        ])
+        .unwrap_err();
+        assert!(matches!(unfinished, ImageError::Failed(why) if why.contains("failed")));
+    }
+
+    #[test]
+    fn failures_are_told_apart() {
+        assert!(matches!(
+            image_failure("ChatGPT request failed: moderation_blocked".into()),
+            ImageError::Refused(_)
+        ));
+        assert!(matches!(
+            image_failure("ChatGPT request failed (429): usage limit reached".into()),
+            ImageError::Quota(_)
+        ));
+        assert!(matches!(
+            image_failure("ChatGPT request failed (500)".into()),
+            ImageError::Failed(_)
+        ));
+    }
 
     /// The exact failure this guard exists for: a model saved while the
     /// API-key auth method was active (or migrated forward from an older

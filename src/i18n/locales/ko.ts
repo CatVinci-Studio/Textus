@@ -230,6 +230,24 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   proposalImage: "그림",
   imageNotGenerated: "그림을 만들지 못했습니다: {reason}",
   imageSaveFailed: "그림을 저장하지 못했습니다.",
+  imageServiceLabel: "이미지 서비스",
+  imageServiceFollowChat: "채팅과 같게 ({name})",
+  imageServiceFollowChatBare: "채팅과 같게",
+  imageServiceFollowNoPictures:
+    "채팅 서비스는 이미지를 만들지 않습니다. 이미지용 서비스를 고르세요.",
+  imageProviderChatGpt: "OpenAI · ChatGPT 로그인 (실험적)",
+  imageChatGptSignInHint: "먼저 위의 채팅 서비스에서 ChatGPT로 로그인하세요.",
+  imageChatGptHelp:
+    "이미지는 API 크레딧이 아니라 ChatGPT 요금제의 이미지 생성 한도에서 나갑니다. ChatGPT 앱이 쓰는 서비스를 거치며 공개 API가 아니므로 예고 없이 작동을 멈출 수 있습니다. OpenAI API 키는 그와 상관없이 작동합니다.",
+  imagesPerRequestLabel: "요청당 이미지 수",
+  imagesPerRequestHelp:
+    "Textus AI가 한 번의 요청으로 만드는 이미지의 최대 개수입니다. API 키로는 한 장마다 비용이 들고, 요금제로는 이미지 생성 한도를 씁니다. 개수를 말하면 이 한도까지 그만큼 만듭니다.",
+  changePictureWithAi: "Textus AI로 이 이미지 바꾸기…",
+  oldPictureTrashQuestion:
+    "새 이미지를 넣었습니다. 이전 이미지 “{name}”을(를) 휴지통으로 옮길까요?",
+  oldPictureTrashOk: "휴지통으로 옮기기",
+  oldPictureKeep: "그대로 두기",
+  oldPictureTrashFailed: "이전 이미지를 휴지통으로 옮기지 못했습니다.",
   imageModelLabel: "이미지 모델",
   imageModelNone: "없음",
   imageProviderCustom: "OpenAI 호환 엔드포인트",

@@ -39,7 +39,14 @@ export interface EditProposal {
   /** A generate_image proposal's picture, waiting in the backend
    *  (ai/images.rs) until Accept saves it; `text` then names it by
    *  generatedImageSrc(id) until it has a file. */
-  image?: { id: string; alt: string; width: number; height: number };
+  image?: {
+    id: string;
+    alt: string;
+    width: number;
+    height: number;
+    /** Still being made: the document shows its frame until it comes. */
+    pending?: boolean;
+  };
 }
 
 /**

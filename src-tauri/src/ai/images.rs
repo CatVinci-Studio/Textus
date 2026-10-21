@@ -48,6 +48,19 @@ pub struct ImageProviderEntry {
 
 pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
     ImageProviderEntry {
+        // The ChatGPT sign-in's own pictures, on the plan's allowance:
+        // experimental, since it is the backend ChatGPT's apps use, not a
+        // published API (aicompat openai_codex::generate_image).
+        id: "openai-chatgpt",
+        label: "OpenAI (ChatGPT sign-in)",
+        api: ImageApi::ChatGpt,
+        base_url: None,
+        // No key: the sign-in's credential, which Settings › Textus AI
+        // keeps under the chat provider.
+        key_id: "",
+        models: &["gpt-image"],
+    },
+    ImageProviderEntry {
         id: "openai",
         label: "OpenAI",
         api: ImageApi::OpenAi,
@@ -114,6 +127,23 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
     },
 ];
 
+/// The image model setting that follows the chat provider (the default).
+pub const FOLLOW_CHAT: &str = "chat";
+
+/// The image service that goes with a chat provider: OpenAI's through the
+/// ChatGPT sign-in while there is one (as chat prefers it, route.rs), else
+/// the provider's own pictures with the same key; None for a chat provider
+/// that makes none, and so no generate_image.
+pub fn following_chat(chat_provider: &str, chatgpt_signed_in: bool) -> Option<&'static str> {
+    if chat_provider == "openai" && chatgpt_signed_in {
+        return Some("openai-chatgpt");
+    }
+    IMAGE_PROVIDERS
+        .iter()
+        .find(|e| e.key_id == chat_provider && e.id == chat_provider)
+        .map(|e| e.id)
+}
+
 pub fn find(id: &str) -> Option<&'static ImageProviderEntry> {
     IMAGE_PROVIDERS.iter().find(|e| e.id == id)
 }
@@ -134,31 +164,105 @@ pub struct ImageModel {
     /// The compatible endpoint's address.
     #[serde(default)]
     pub base_url: String,
+    /// At most this many pictures per send (Settings › Textus AI ›
+    /// Pictures per request); `PER_SEND` when unset.
+    #[serde(default)]
+    pub limit: Option<usize>,
 }
 
-/// At most this many pictures per send, a retry of a refused one included:
-/// each costs money, and a reply that wants more is asked to say so.
+/// At most this many pictures per send by default, a retry of a refused one
+/// included: each costs money, and a reply that wants more is asked to say
+/// so. The setting may raise it to `MAX_PER_SEND`.
 const PER_SEND: usize = 2;
+const MAX_PER_SEND: usize = 8;
 
-/// One request's image model, resolved to an address and a key, and how
-/// many pictures it has made so far.
-pub struct ImageRun {
+/// The per-send limit a setting asks for, kept within 1..=MAX_PER_SEND.
+fn per_send(limit: Option<usize>) -> usize {
+    limit.unwrap_or(PER_SEND).clamp(1, MAX_PER_SEND)
+}
+
+/// generate_image's actions: the insertions, and `replace` - a picture
+/// already in the document, for one that redoes it.
+const IMAGE_ACTIONS: [&str; 5] = [
+    "insert_after",
+    "insert_before",
+    "insert_at_cursor",
+    "append",
+    "replace",
+];
+
+/// Whether `anchor` is the whole Markdown of one picture, `![alt](src)` -
+/// the only thing a picture may replace.
+fn is_picture_markdown(anchor: &str) -> bool {
+    let Some(rest) = anchor.trim().strip_prefix("![") else {
+        return false;
+    };
+    let Some((alt, after)) = rest.split_once("](") else {
+        return false;
+    };
+    !alt.contains(']') && after.ends_with(')') && !after[..after.len() - 1].contains(')')
+}
+
+/// Where a picture is asked for: the image model resolved to an address and
+/// a key - or, for the ChatGPT sign-in, to the app that holds its
+/// credential. Owned, so a picture can be made after the call that asked
+/// for it has returned.
+#[derive(Clone)]
+struct ImageJob {
+    /// For the ChatGPT sign-in, whose credential is fetched (and refreshed)
+    /// per picture.
+    app: Option<AppHandle>,
     api: ImageApi,
     base_url: String,
     api_key: String,
     model: String,
+}
+
+/// One request's image model, and how many pictures it has asked for, of
+/// how many it may.
+pub struct ImageRun {
+    job: ImageJob,
     made: AtomicUsize,
+    limit: usize,
 }
 
 impl ImageRun {
     /// None - and no generate_image tool - without an image model, or
     /// without the key it needs. (Review mode, which changes nothing, never
     /// offers it: ToolRegistry::add.)
-    pub fn resolve(app: &AppHandle, choice: Option<&ImageModel>) -> Option<Self> {
+    pub fn resolve(
+        app: &AppHandle,
+        choice: Option<&ImageModel>,
+        chat_provider: &str,
+    ) -> Option<Self> {
         let choice = choice?;
-        let entry = find(&choice.provider)?;
+        let entry = if choice.provider == FOLLOW_CHAT {
+            find(following_chat(
+                chat_provider,
+                crate::auth::openai_codex::signed_in(app),
+            )?)?
+        } else {
+            find(&choice.provider)?
+        };
+        if entry.api == ImageApi::ChatGpt {
+            // Signed in with ChatGPT, or no generate_image at all.
+            return crate::auth::openai_codex::signed_in(app).then(|| Self {
+                job: ImageJob {
+                    app: Some(app.clone()),
+                    api: entry.api,
+                    base_url: String::new(),
+                    api_key: String::new(),
+                    model: entry.models[0].to_string(),
+                },
+                made: AtomicUsize::new(0),
+                limit: per_send(choice.limit),
+            });
+        }
         let model = Some(choice.model.trim())
-            .filter(|m| !m.is_empty())
+            // One of this service's own (a model kept from another service, as
+            // following the chat provider can leave, is not), or any typed for
+            // the compatible endpoint.
+            .filter(|m| !m.is_empty() && (entry.models.is_empty() || entry.models.contains(m)))
             .or_else(|| entry.models.first().copied())?
             .to_string();
         let base_url = entry
@@ -177,12 +281,44 @@ impl ImageRun {
             return None;
         }
         Some(Self {
-            api: entry.api,
-            base_url,
-            api_key,
-            model,
+            job: ImageJob {
+                app: None,
+                api: entry.api,
+                base_url,
+                api_key,
+                model,
+            },
             made: AtomicUsize::new(0),
+            limit: per_send(choice.limit),
         })
+    }
+}
+
+impl ImageJob {
+    /// One picture from the chosen service.
+    async fn generate(
+        &self,
+        prompt: &str,
+        aspect: Aspect,
+    ) -> Result<GeneratedImage, gen::ImageError> {
+        let Some(app) = self.app.as_ref().filter(|_| self.api == ImageApi::ChatGpt) else {
+            return gen::generate(&self.target(), prompt, aspect).await;
+        };
+        let (access_token, account_id) = crate::auth::openai_codex::get_valid_credential(app)
+            .await
+            .map_err(|e| {
+                gen::ImageError::Failed(format!(
+                    "The ChatGPT sign-in isn't usable - sign in again in Settings › Textus AI: {e}"
+                ))
+            })?;
+        aicompat::providers::openai_codex::generate_image(
+            &access_token,
+            &account_id,
+            crate::app_identity::ORIGINATOR,
+            prompt,
+            aspect,
+        )
+        .await
     }
 
     fn target(&self) -> ImageTarget<'_> {
@@ -193,10 +329,19 @@ impl ImageRun {
             model: &self.model,
         }
     }
+}
 
+impl ImageRun {
     /// One generate_image call's arguments, with what came of it recorded
-    /// in them: `image` (the picture's id and size) or `not_generated` (why
-    /// not). What the model may have put under those names is dropped.
+    /// in them: `image` - the picture's id and its size as asked, while it
+    /// is made in the background - or `not_generated` (why not). What the
+    /// model may have put under those names is dropped.
+    ///
+    /// The call returns at once and the reply goes on - its text, and more
+    /// pictures - while the picture is made: one took the whole reply's
+    /// half a minute to a minute before. The document shows the picture's
+    /// frame in place until it comes (ai_generated_image waits for it), or
+    /// why it didn't.
     async fn run_call(&self, arguments: &str, document: &str, announce: impl FnOnce()) -> String {
         let Ok(Value::Object(mut args)) = serde_json::from_str::<Value>(arguments) else {
             return arguments.to_string();
@@ -207,18 +352,14 @@ impl ImageRun {
             Err(why) => Err(why),
             Ok((prompt, aspect)) => {
                 announce();
-                gen::generate(&self.target(), &prompt, aspect)
-                    .await
-                    .map_err(|e| e.to_string())
+                Ok(self.start(prompt, aspect))
             }
         };
         match outcome {
-            Ok(image) => {
-                let (width, height) = (image.width, image.height);
-                let id = keep(image);
+            Ok((id, (width, height))) => {
                 args.insert(
                     "image".into(),
-                    json!({"id": id, "width": width, "height": height}),
+                    json!({"id": id, "width": width, "height": height, "pending": true}),
                 );
             }
             Err(why) => {
@@ -226,6 +367,22 @@ impl ImageRun {
             }
         }
         Value::Object(args).to_string()
+    }
+
+    /// Starts making one picture in the background; its id, and the size
+    /// it is asked for (the frame's shape until it comes).
+    fn start(&self, prompt: String, aspect: Aspect) -> (String, (u32, u32)) {
+        let id = begin();
+        let job = self.job.clone();
+        let made = id.clone();
+        tauri::async_runtime::spawn(async move {
+            let slot = match job.generate(&prompt, aspect).await {
+                Ok(image) => Slot::Ready(image),
+                Err(why) => Slot::Failed(why.to_string()),
+            };
+            finish(&made, slot);
+        });
+        (id, nominal_size(aspect))
     }
 
     /// The call is fit to spend a picture on: a description, a place that
@@ -237,11 +394,18 @@ impl ImageRun {
             return Err("`prompt` is empty - describe the picture.".into());
         }
         let action = text("action");
-        if !tools::INSERT_ACTIONS.contains(&action) {
+        if !IMAGE_ACTIONS.contains(&action) {
             return Err(format!(
                 "Unknown action `{action}`. Use one of: {}.",
-                tools::INSERT_ACTIONS.join(", ")
+                IMAGE_ACTIONS.join(", ")
             ));
+        }
+        if action == "replace" {
+            let anchor = text("anchor");
+            if !is_picture_markdown(anchor) {
+                return Err("`replace` takes `anchor` as a picture's whole Markdown, `![alt](src)`, copied from the document - a picture replaces only a picture; put one next to text with insert_after.".into());
+            }
+            tools::check_anchor(document, args, anchor)?;
         }
         if matches!(action, "insert_after" | "insert_before") {
             let anchor = text("anchor");
@@ -261,8 +425,9 @@ impl ImageRun {
                 )
             })?,
         };
-        if self.made.fetch_add(1, Ordering::SeqCst) >= PER_SEND {
-            return Err(format!("This request has already made {PER_SEND} pictures, the most one request may. Ask the user whether they want more."));
+        let limit = self.limit;
+        if self.made.fetch_add(1, Ordering::SeqCst) >= limit {
+            return Err(format!("This request has already made {limit} pictures, the most one request may (the user's setting). Ask the user whether they want more."));
         }
         Ok((prompt.to_string(), aspect))
     }
@@ -272,7 +437,7 @@ impl ImageRun {
     /// generate_image for this request, offered in Write and Revise.
     pub fn tool<'a>(&'a self, document: &'a str, channel: &'a Channel<StreamEvent>) -> Tool<'a> {
         Tool {
-            spec: spec(),
+            spec: spec(self.limit),
             access: Access::ProposesInItsCall,
             modes: EDITING_MODES,
             run: Run::Async(Box::new(move |call| {
@@ -308,13 +473,16 @@ impl ImageRun {
     }
 }
 
-const GENERATE_IMAGE_DESCRIPTION: &str = "Make a picture with the user's image model and propose it for the document, placed like an insertion: the user sees it in place with Accept and Reject, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked. Each picture costs the user money: make one per request unless they ask for more (at most 2). If the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.";
+/// What the model is told about generate_image, with this request's limit.
+fn description(limit: usize) -> String {
+    format!("Make a picture with the user's image model and propose it for the document: the user sees it in place with Accept and Reject, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked.\n\nHow many: each picture costs the user money, and this request may make at most {limit}. When the user says how many, make that many (up to {limit}); when they don't, make one, or - for a longer piece they asked to illustrate - one for each part that gains from a picture, and say in a sentence which parts before you start. Make them as you write: the call returns at once and the picture is made while you go on.\n\nWhere: insert_after the paragraph it illustrates, between paragraphs - never inside a list, a table, a quote or a heading's line - and not two pictures in a row.\n\nRedoing a picture: to change or replace one already in the document, use `replace` with `anchor` its whole Markdown, `![alt](src)`, copied from the document, and describe the new picture in full in `prompt` (what to keep, what to change). The user decides whether the old file goes once they accept.\n\nIf the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.")
+}
 
 /// What the model is told about generate_image.
-fn spec() -> ToolSpec {
+fn spec(limit: usize) -> ToolSpec {
     ToolSpec {
         name: GENERATE_IMAGE_TOOL_NAME.into(),
-        description: GENERATE_IMAGE_DESCRIPTION.into(),
+        description: description(limit).into(),
         parameters: json!({
             "type": "object",
             "properties": {
@@ -333,12 +501,12 @@ fn spec() -> ToolSpec {
                 },
                 "action": {
                     "type": "string",
-                    "enum": tools::INSERT_ACTIONS,
-                    "description": "Where it goes, as propose_edit's insertions: insert_after a paragraph (the usual place for an illustration), insert_before one, insert_at_cursor, or append."
+                    "enum": IMAGE_ACTIONS,
+                    "description": "Where it goes: insert_after a paragraph (the usual place for an illustration), insert_before one, insert_at_cursor, append - or replace a picture already in the document."
                 },
                 "anchor": {
                     "type": "string",
-                    "description": "For insert_after and insert_before: the paragraph or heading the picture goes next to, quoted verbatim - the whole of it if it is short, else its last sentence."
+                    "description": "For insert_after and insert_before: the paragraph the picture goes next to, quoted verbatim - the whole of it if it is short, else its last sentence. For replace: the picture's whole Markdown, `![alt](src)`."
                 },
                 "context": {
                     "type": "string",
@@ -360,6 +528,9 @@ fn outcome(arguments: &str) -> String {
             image["width"].as_u64().unwrap_or(0),
             image["height"].as_u64().unwrap_or(0)
         );
+        if image["pending"].as_bool() == Some(true) {
+            return format!("Image proposed and being made ({size} pixels) while you go on, and appears in place by itself with Accept and Reject once it is ready (or, if the service turns it down, the user sees why there). It is saved only if they accept. Carry on with the rest of the request now - don't wait for it. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.");
+        }
         return format!("Image proposed - the user now sees the picture ({size} pixels) in the document with Accept and Reject; it is saved only if they accept. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.");
     }
     let why = args
@@ -369,63 +540,132 @@ fn outcome(arguments: &str) -> String {
     format!("Not generated: {why} Tell the user in plain words; don't change the description and call again unless they ask.")
 }
 
+/// A picture asked for: still being made, made, or not made and why.
+enum Slot {
+    Making,
+    Ready(GeneratedImage),
+    Failed(String),
+}
+
+impl Slot {
+    fn bytes(&self) -> usize {
+        match self {
+            Slot::Ready(image) => image.bytes.len(),
+            _ => 0,
+        }
+    }
+}
+
 /// The pictures waiting for a decision, newest last. Bounded: a long
 /// session of undecided pictures must not hold hundreds of megabytes; the
 /// oldest go first (and its proposal can then no longer be accepted - the
 /// frontend says so).
-static PENDING: Mutex<Vec<(String, GeneratedImage)>> = Mutex::new(Vec::new());
+static PENDING: Mutex<Vec<(String, Slot)>> = Mutex::new(Vec::new());
 const PENDING_COUNT: usize = 16;
 const PENDING_BYTES: usize = 128 * 1024 * 1024;
 
-fn keep(image: GeneratedImage) -> String {
+/// How long the frontend waits for a picture still being made: the
+/// slowest services take about two minutes, and give up at three.
+const WAIT_FOR_PICTURE: std::time::Duration = std::time::Duration::from_secs(200);
+
+fn pending() -> std::sync::MutexGuard<'static, Vec<(String, Slot)>> {
+    PENDING.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+/// A new picture's id, its slot marked as being made.
+fn begin() -> String {
     static NEXT: AtomicUsize = AtomicUsize::new(0);
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or_default();
     let id = format!("{nanos:x}{:x}", NEXT.fetch_add(1, Ordering::Relaxed));
-    let mut pending = PENDING.lock().unwrap_or_else(|e| e.into_inner());
-    pending.push((id.clone(), image));
+    let mut pending = pending();
+    pending.push((id.clone(), Slot::Making));
     while pending.len() > PENDING_COUNT
-        || pending.iter().map(|(_, i)| i.bytes.len()).sum::<usize>() > PENDING_BYTES
+        || pending.iter().map(|(_, s)| s.bytes()).sum::<usize>() > PENDING_BYTES
     {
         pending.remove(0);
     }
     id
 }
 
+/// What came of a picture being made. Nothing, if it was let go meanwhile
+/// (its proposal rejected while it was painting).
+fn finish(id: &str, slot: Slot) {
+    let mut pending = pending();
+    if let Some((_, waiting)) = pending.iter_mut().find(|(i, _)| i == id) {
+        *waiting = slot;
+    }
+    while pending.iter().map(|(_, s)| s.bytes()).sum::<usize>() > PENDING_BYTES {
+        pending.remove(0);
+    }
+}
+
+/// The size a picture is asked for at `aspect`, as GPT image makes it: the
+/// frame's shape while it is made (the service rounds to its own).
+fn nominal_size(aspect: Aspect) -> (u32, u32) {
+    let size = gen::gpt_image_size(aspect);
+    let (w, h) = size.split_once('x').unwrap_or(("1024", "1024"));
+    (w.parse().unwrap_or(1024), h.parse().unwrap_or(1024))
+}
+
 /// A pending picture as the frontend takes it. Mirrors `GeneratedImageData`
 /// in src/platform/ipc.ts.
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct GeneratedImageData {
     mime: &'static str,
     ext: &'static str,
     data_base64: String,
+    width: u32,
+    height: u32,
 }
 
-#[tauri::command]
-pub fn ai_generated_image(id: String) -> Result<GeneratedImageData, String> {
+/// What a picture's slot holds now: the picture, why it wasn't made, or
+/// None while it is being made.
+fn look(id: &str) -> Option<Result<GeneratedImageData, String>> {
     use base64::{engine::general_purpose::STANDARD, Engine};
-    let pending = PENDING.lock().unwrap_or_else(|e| e.into_inner());
-    let (_, image) = pending
-        .iter()
-        .find(|(i, _)| *i == id)
-        .ok_or_else(|| "This picture is no longer available - ask for it again.".to_string())?;
-    Ok(GeneratedImageData {
-        mime: image.mime,
-        ext: image.ext,
-        data_base64: STANDARD.encode(&image.bytes),
-    })
+    let pending = pending();
+    let Some((_, slot)) = pending.iter().find(|(i, _)| i == id) else {
+        return Some(Err(
+            "This picture is no longer available - ask for it again.".to_string(),
+        ));
+    };
+    match slot {
+        Slot::Making => None,
+        Slot::Failed(why) => Some(Err(why.clone())),
+        Slot::Ready(image) => Some(Ok(GeneratedImageData {
+            mime: image.mime,
+            ext: image.ext,
+            data_base64: STANDARD.encode(&image.bytes),
+            width: image.width,
+            height: image.height,
+        })),
+    }
 }
 
-/// Lets a picture go: its proposal was rejected, or it was saved.
+/// A picture, once it is made: the frame in the document waits on this.
+/// Its error is why it wasn't made, in the service's words.
+#[tauri::command]
+pub async fn ai_generated_image(id: String) -> Result<GeneratedImageData, String> {
+    let deadline = std::time::Instant::now() + WAIT_FOR_PICTURE;
+    loop {
+        if let Some(found) = look(&id) {
+            return found;
+        }
+        if std::time::Instant::now() >= deadline {
+            return Err("The image service didn't send the picture in time.".to_string());
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+    }
+}
+
+/// Lets a picture go: its proposal was rejected, or it was saved. One
+/// still being made is let go too; what it makes is thrown away.
 #[tauri::command]
 pub fn ai_discard_generated_image(id: String) {
-    PENDING
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-        .retain(|(i, _)| *i != id);
+    pending().retain(|(i, _)| *i != id);
 }
 
 #[cfg(test)]
@@ -434,14 +674,22 @@ mod tests {
 
     fn run() -> ImageRun {
         ImageRun {
-            api: ImageApi::OpenAi,
-            // Nothing listens here: a call that got as far as the request
-            // fails to connect, which these tests never let it.
-            base_url: "https://127.0.0.1:1".into(),
-            api_key: "sk".into(),
-            model: "gpt-image-2".into(),
+            job: ImageJob {
+                app: None,
+                api: ImageApi::OpenAi,
+                // Nothing listens here: a picture asked for fails to
+                // connect.
+                base_url: "https://127.0.0.1:1".into(),
+                api_key: "sk".into(),
+                model: "gpt-image-2".into(),
+            },
             made: AtomicUsize::new(0),
+            limit: PER_SEND,
         }
+    }
+
+    fn picture(id: &str) -> Result<GeneratedImageData, String> {
+        tauri::async_runtime::block_on(ai_generated_image(id.to_string()))
     }
 
     fn call(run: &ImageRun, args: Value, document: &str) -> (Value, bool) {
@@ -474,10 +722,11 @@ mod tests {
             json!({"prompt": "boats", "action": "replace", "anchor": "The boats came in at dusk."}),
             DOC,
         );
+        // `replace` takes a picture, not text.
         assert!(args["not_generated"]
             .as_str()
             .unwrap()
-            .contains("Unknown action `replace`"));
+            .contains("a picture replaces only a picture"));
         let (args, _) = call(&run, json!({"prompt": " ", "action": "append"}), DOC);
         assert!(args["not_generated"]
             .as_str()
@@ -499,7 +748,7 @@ mod tests {
     }
 
     #[test]
-    fn a_failed_request_is_recorded_and_told_to_the_model() {
+    fn a_picture_is_made_while_the_reply_goes_on() {
         let run = run();
         let (args, announced) = call(
             &run,
@@ -507,12 +756,50 @@ mod tests {
             DOC,
         );
         assert!(announced);
-        let text = generate_image_text(&args);
-        assert!(
-            text.starts_with("Not generated: Couldn't reach the image service"),
-            "{text}"
+        // Returned at once, with the frame's shape, before any answer.
+        let image = &args["image"];
+        assert_eq!(image["pending"], true);
+        assert_eq!(
+            (image["width"].as_u64(), image["height"].as_u64()),
+            (Some(1536), Some(1024))
         );
-        assert!(text.contains("don't change the description"));
+        let text = generate_image_text(&args);
+        assert!(text.starts_with("Image proposed and being made"), "{text}");
+        assert!(text.contains("don't wait for it"));
+        // Nothing answers here: the frame learns why.
+        let why = picture(image["id"].as_str().unwrap()).unwrap_err();
+        assert!(why.starts_with("Couldn't reach the image service"), "{why}");
+    }
+
+    #[test]
+    fn the_frame_waits_for_the_picture_and_gets_it() {
+        let id = begin();
+        assert!(look(&id).is_none());
+        let waiting = std::thread::spawn({
+            let id = id.clone();
+            move || picture(&id)
+        });
+        std::thread::sleep(std::time::Duration::from_millis(400));
+        finish(
+            &id,
+            Slot::Ready(GeneratedImage {
+                bytes: vec![1, 2, 3],
+                mime: "image/png",
+                ext: "png",
+                width: 4,
+                height: 3,
+            }),
+        );
+        let data = waiting.join().unwrap().unwrap();
+        assert_eq!((data.data_base64.as_str(), data.width), ("AQID", 4));
+    }
+
+    #[test]
+    fn a_picture_let_go_while_painting_stays_gone() {
+        let id = begin();
+        ai_discard_generated_image(id.clone());
+        finish(&id, Slot::Failed("late".into()));
+        assert!(picture(&id).unwrap_err().contains("no longer available"));
     }
 
     #[test]
@@ -532,14 +819,18 @@ mod tests {
 
     #[test]
     fn a_kept_picture_is_proposed_and_can_be_let_go() {
-        let id = keep(GeneratedImage {
-            bytes: vec![1, 2, 3],
-            mime: "image/png",
-            ext: "png",
-            width: 4,
-            height: 3,
-        });
-        let data = ai_generated_image(id.clone()).unwrap();
+        let id = begin();
+        finish(
+            &id,
+            Slot::Ready(GeneratedImage {
+                bytes: vec![1, 2, 3],
+                mime: "image/png",
+                ext: "png",
+                width: 4,
+                height: 3,
+            }),
+        );
+        let data = picture(&id).unwrap();
         assert_eq!(
             (data.mime, data.data_base64.as_str()),
             ("image/png", "AQID")
@@ -548,15 +839,15 @@ mod tests {
         assert!(text.starts_with("Image proposed"), "{text}");
         assert!(text.contains("4 x 3 pixels"));
         ai_discard_generated_image(id.clone());
-        assert!(ai_generated_image(id).is_err());
+        assert!(picture(&id).is_err());
     }
 
     #[test]
-    fn the_tool_offers_only_insertions_and_the_five_aspects() {
-        let spec = spec();
+    fn the_tool_offers_insertions_replacing_a_picture_and_the_five_aspects() {
+        let spec = spec(PER_SEND);
         assert_eq!(
             spec.parameters["properties"]["action"]["enum"],
-            json!(tools::INSERT_ACTIONS)
+            json!(IMAGE_ACTIONS)
         );
         assert_eq!(
             spec.parameters["properties"]["aspect"]["enum"],
@@ -565,10 +856,77 @@ mod tests {
     }
 
     #[test]
+    fn a_picture_in_the_document_can_be_redone() {
+        let doc = format!("{DOC}\n\n![Boats at dusk](assets/boats.png)");
+        let (args, announced) = call(
+            &run(),
+            json!({"prompt": "the boats at dawn instead", "alt": "Boats at dawn", "action": "replace", "anchor": "![Boats at dusk](assets/boats.png)"}),
+            &doc,
+        );
+        assert!(announced);
+        assert_eq!(args["image"]["pending"], true);
+        // Only one that is there, and only a whole picture.
+        let (args, _) = call(
+            &run(),
+            json!({"prompt": "x", "action": "replace", "anchor": "![Nets](assets/nets.png)"}),
+            &doc,
+        );
+        assert!(args["not_generated"]
+            .as_str()
+            .unwrap()
+            .contains("No exact match"));
+        assert!(is_picture_markdown("![a](b.png)"));
+        assert!(is_picture_markdown("![](<my file.png>)"));
+        assert!(!is_picture_markdown("![a](b.png) and text"));
+        assert!(!is_picture_markdown("The boats came in at dusk."));
+    }
+
+    #[test]
+    fn the_limit_is_the_setting_within_bounds_and_the_model_is_told_it() {
+        assert_eq!(per_send(None), PER_SEND);
+        assert_eq!(per_send(Some(4)), 4);
+        assert_eq!(per_send(Some(0)), 1);
+        assert_eq!(per_send(Some(50)), MAX_PER_SEND);
+        let mut run = run();
+        run.limit = 3;
+        let args = json!({"prompt": "nets", "alt": "Nets", "action": "append"});
+        for _ in 0..3 {
+            assert!(call(&run, args.clone(), DOC).1);
+        }
+        let (fourth, _) = call(&run, args, DOC);
+        assert!(fourth["not_generated"]
+            .as_str()
+            .unwrap()
+            .contains("already made 3 pictures"));
+        assert!(description(3).contains("at most 3"));
+    }
+
+    #[test]
+    fn the_image_model_follows_the_chat_provider() {
+        // OpenAI: the sign-in's pictures while signed in, the key's else.
+        assert_eq!(following_chat("openai", true), Some("openai-chatgpt"));
+        assert_eq!(following_chat("openai", false), Some("openai"));
+        // A provider with pictures of its own, on the same key.
+        assert_eq!(following_chat("google", false), Some("google"));
+        assert_eq!(following_chat("doubao", true), Some("doubao"));
+        // One that makes none, and the compatible endpoint, which is a
+        // different server from chat's: no pictures.
+        assert_eq!(following_chat("anthropic", false), None);
+        assert_eq!(following_chat("deepseek", false), None);
+        assert_eq!(following_chat("custom", false), None);
+    }
+
+    #[test]
     fn every_built_in_image_provider_has_an_https_address_and_a_default_model() {
         for entry in IMAGE_PROVIDERS {
             if entry.id == "custom" {
                 assert!(entry.base_url.is_none() && entry.models.is_empty());
+                continue;
+            }
+            // The sign-in has no address or key, only its one model.
+            if entry.api == ImageApi::ChatGpt {
+                assert!(entry.base_url.is_none() && entry.key_id.is_empty());
+                assert_eq!(entry.models.len(), 1);
                 continue;
             }
             assert!(

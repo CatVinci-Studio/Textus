@@ -261,6 +261,25 @@ para usar una.
   proposalImage: "Imagen",
   imageNotGenerated: "No se creó la imagen: {reason}",
   imageSaveFailed: "No se pudo guardar la imagen.",
+  imageServiceLabel: "Servicio de imágenes",
+  imageServiceFollowChat: "Igual que el chat ({name})",
+  imageServiceFollowChatBare: "Igual que el chat",
+  imageServiceFollowNoPictures:
+    "Tu proveedor de chat no hace imágenes: elige un servicio para ellas.",
+  imageProviderChatGpt: "OpenAI · inicio de sesión de ChatGPT (experimental)",
+  imageChatGptSignInHint:
+    "Primero inicia sesión con ChatGPT en el proveedor de chat de arriba.",
+  imageChatGptHelp:
+    "Las imágenes salen del cupo de imágenes de tu plan de ChatGPT, no del crédito de la API. Pasan por el servicio que usan las propias apps de ChatGPT, que no es una API publicada y puede dejar de funcionar sin aviso; una clave de API de OpenAI sigue funcionando igualmente.",
+  imagesPerRequestLabel: "Imágenes por petición",
+  imagesPerRequestHelp:
+    "Las imágenes que Textus AI hace como máximo en una petición. Con una clave de API cada una cuesta dinero, y con un plan gasta su cupo; dile cuántas y hará esas, hasta este número.",
+  changePictureWithAi: "Cambiar esta imagen con Textus AI…",
+  oldPictureTrashQuestion:
+    "La imagen nueva ya está. ¿Mover la antigua, «{name}», a la papelera?",
+  oldPictureTrashOk: "Mover a la papelera",
+  oldPictureKeep: "Conservarla",
+  oldPictureTrashFailed: "No se pudo mover la imagen antigua a la papelera.",
   imageModelLabel: "Modelo de imagen",
   imageModelNone: "Ninguno",
   imageProviderCustom: "Endpoint compatible con OpenAI",

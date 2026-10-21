@@ -155,6 +155,19 @@ export function selectedImagePos(run: EditorRunner): number | null {
   );
 }
 
+/** Selects the image at `pos` as a whole, for Textus AI to be asked
+ *  about it (the selection is what Quick Ask sends). */
+export function selectImage(run: EditorRunner, pos: number) {
+  run((ctx) => {
+    const view = ctx.get(editorViewCtx);
+    const node = view.state.doc.nodeAt(pos);
+    if (!node || node.type.name !== "image") return;
+    view.dispatch(
+      view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos)),
+    );
+  });
+}
+
 export function deleteImage(run: EditorRunner, pos: number) {
   run((ctx) => {
     const view = ctx.get(editorViewCtx);
@@ -342,6 +355,9 @@ export interface ContextMenuOptions {
   imageLocation?: ImageLocation | null;
   /** Already filtered down to the AI features that are switched on. */
   aiItems: ContextMenuItem[];
+  /** For the image right-clicked: Textus AI's items for it (changing it),
+   *  among the image's own. */
+  pictureAiItems?: ContextMenuItem[];
   copyOrCut: (cut: boolean) => void;
   copyAsMarkdown: () => void;
   paste: () => void;
@@ -358,6 +374,7 @@ export function buildContextMenuItems(
   const imageItems = joinGroups(
     imagePos === null ? [] : imageWidthItems(run, t, imagePos),
     imageFileItems(t, options.imageLocation ?? null),
+    imagePos === null ? [] : (options.pictureAiItems ?? []),
   );
   if (imageItems.length > 0) imageItems.push("separator");
   const clipboardItems: MenuEntry[] = [

@@ -362,6 +362,8 @@ export interface Settings {
   /// uses (ai/image-models.ts, src-tauri ai/images.rs).
   imageModelProvider: string;
   imageModel: string;
+  /** At most this many pictures per request (ai/images.rs per_send). */
+  imagesPerRequest: number;
   imageModelEndpoint: string;
   searchService: SearchService;
   /// The SearXNG server `searchService: "searxng"` sends queries to.
@@ -503,8 +505,9 @@ const DEFAULT_SETTINGS: Settings = {
   completionTone: "default",
   writingConventions: "automatic",
   enableWebSearch: false,
-  imageModelProvider: "",
+  imageModelProvider: "chat",
   imageModel: "",
+  imagesPerRequest: 2,
   imageModelEndpoint: "",
   searchService: "auto",
   searxngUrl: "",

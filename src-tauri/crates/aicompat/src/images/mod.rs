@@ -77,6 +77,11 @@ pub enum ImageApi {
     Zhipu,
     /// SiliconFlow, OpenAI's path with its own fields.
     SiliconFlow,
+    /// The ChatGPT sign-in: the image_generation tool on the backend
+    /// ChatGPT's own apps use (providers::openai_codex::generate_image),
+    /// not an Images API - no address or key, so never through
+    /// [`generate`].
+    ChatGpt,
 }
 
 /// Where one request goes. `base_url` is the service's API root, as the
@@ -166,7 +171,9 @@ fn join(base_url: &str, path: &str) -> String {
 fn request(target: &ImageTarget, prompt: &str, aspect: Aspect) -> Request {
     let base = target.base_url;
     match target.api {
-        ImageApi::OpenAi | ImageApi::Compatible => openai::request(target, prompt, aspect),
+        ImageApi::OpenAi | ImageApi::Compatible | ImageApi::ChatGpt => {
+            openai::request(target, prompt, aspect)
+        }
         ImageApi::Gemini => gemini::request(base, target.model, prompt, aspect),
         ImageApi::Seedream => seedream::request(base, target.model, prompt, aspect),
         ImageApi::DashScope => dashscope::request(base, target.model, prompt, aspect),
@@ -177,7 +184,7 @@ fn request(target: &ImageTarget, prompt: &str, aspect: Aspect) -> Request {
 
 fn read_reply(api: ImageApi, reply: &Value) -> Result<Reply, ImageError> {
     match api {
-        ImageApi::OpenAi | ImageApi::Compatible => openai::reply(reply),
+        ImageApi::OpenAi | ImageApi::Compatible | ImageApi::ChatGpt => openai::reply(reply),
         ImageApi::Gemini => gemini::reply(reply),
         ImageApi::Seedream => seedream::reply(reply),
         ImageApi::DashScope => dashscope::reply(reply),
@@ -190,7 +197,7 @@ fn read_reply(api: ImageApi, reply: &Value) -> Result<Reply, ImageError> {
 fn read_failure(api: ImageApi, status: reqwest::StatusCode, body: &str) -> ImageError {
     let parsed: Value = serde_json::from_str(body).unwrap_or(Value::Null);
     let refused = match api {
-        ImageApi::OpenAi | ImageApi::Compatible => openai::refusal(&parsed),
+        ImageApi::OpenAi | ImageApi::Compatible | ImageApi::ChatGpt => openai::refusal(&parsed),
         ImageApi::Gemini => gemini::refusal(&parsed),
         ImageApi::Seedream => seedream::refusal(&parsed),
         ImageApi::DashScope => dashscope::refusal(&parsed),
@@ -257,6 +264,12 @@ pub async fn generate(
     prompt: &str,
     aspect: Aspect,
 ) -> Result<GeneratedImage, ImageError> {
+    if target.api == ImageApi::ChatGpt {
+        return Err(ImageError::Failed(
+            "A picture through the ChatGPT sign-in is asked for with openai_codex::generate_image."
+                .into(),
+        ));
+    }
     check_endpoint(target.base_url)?;
     let prompt = prompt.trim();
     if prompt.is_empty() {
@@ -293,6 +306,12 @@ pub async fn generate(
         Reply::Bytes(bytes) => bytes,
         Reply::Url(url) => fetch::download(&url).await?,
     };
+    checked_image(bytes)
+}
+
+/// Bytes a service sent, checked to be a picture: its type and size read
+/// from the file itself.
+pub fn checked_image(bytes: Vec<u8>) -> Result<GeneratedImage, ImageError> {
     let found = sniff::sniff(&bytes)
         .ok_or_else(|| malformed("the file it sent isn't a PNG, JPEG or WebP picture"))?;
     Ok(GeneratedImage {
@@ -302,6 +321,16 @@ pub async fn generate(
         width: found.width,
         height: found.height,
     })
+}
+
+/// The size a GPT image model is asked for at `aspect`.
+pub fn gpt_image_size(aspect: Aspect) -> &'static str {
+    openai::size(aspect)
+}
+
+/// Base64 picture data, decoded.
+pub fn decode_base64(encoded: &str) -> Result<Vec<u8>, ImageError> {
+    base64(encoded)
 }
 
 #[cfg(test)]

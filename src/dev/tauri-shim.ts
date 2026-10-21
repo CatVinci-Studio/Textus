@@ -692,7 +692,23 @@ export function installDevTauriShim(): void {
       if (canned && cmd in canned) {
         // And records what it was asked: `window.__devInvokeCalls`.
         ((w.__devInvokeCalls ??= []) as unknown[]).push({ cmd, ...args });
-        const value = canned[cmd] as { __reject?: unknown } | null;
+        const value = canned[cmd] as {
+          __reject?: unknown;
+          __delay?: number;
+          value?: unknown;
+        } | null;
+        // `{ __delay: ms, value }` answers only after a while - a picture
+        // still being made - and `{ __delay: ms, __reject }` fails then.
+        if (value && typeof value === "object" && "__delay" in value)
+          return new Promise((resolve, reject) =>
+            setTimeout(
+              () =>
+                "__reject" in value
+                  ? reject(value.__reject)
+                  : resolve(value.value),
+              value.__delay,
+            ),
+          );
         // `{ __reject: message }` fails the command instead, for error UI.
         return value && typeof value === "object" && "__reject" in value
           ? Promise.reject(value.__reject)

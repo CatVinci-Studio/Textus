@@ -50,12 +50,17 @@ export function parseImageProposal(argumentsJson: string): EditProposal | null {
           ? parsed.context
           : undefined,
       text: `![${alt}](${generatedImageSrc(image.id)})`,
-      image: {
-        id: image.id,
-        alt,
-        width: Number(image.width) || 0,
-        height: Number(image.height) || 0,
-      },
+      image: (() => {
+        const shape = {
+          id: image.id,
+          alt,
+          width: Number(image.width) || 0,
+          height: Number(image.height) || 0,
+          pending: image.pending === true,
+        };
+        sizes.set(shape.id, shape);
+        return shape;
+      })(),
     };
   } catch {
     return null;
@@ -64,12 +69,18 @@ export function parseImageProposal(argumentsJson: string): EditProposal | null {
 
 const loaded = new Map<string, GeneratedImageData & { url: string }>();
 const loading = new Map<string, Promise<boolean>>();
+/** Why a picture wasn't made, in the service's words. */
+const failed = new Map<string, string>();
+/** The size each picture was asked for: its frame's shape meanwhile. */
+const sizes = new Map<string, { width: number; height: number }>();
 
-/** Fetches a waiting picture from the backend once, so the preview can
- *  draw it at once; false when it is gone (the backend keeps the newest
- *  16, and nothing across a restart). */
+/** Fetches a picture from the backend once - which answers when it is
+ *  made, so a picture still painting waits here - for the preview to draw
+ *  it; false when it wasn't made (generatedImageFailure says why) or is
+ *  gone (the backend keeps the newest 16, and nothing across a restart). */
 export function loadGeneratedImage(id: string): Promise<boolean> {
   if (loaded.has(id)) return Promise.resolve(true);
+  if (failed.has(id)) return Promise.resolve(false);
   let pending = loading.get(id);
   if (!pending) {
     pending = ai
@@ -81,11 +92,41 @@ export function loadGeneratedImage(id: string): Promise<boolean> {
         });
         return true;
       })
-      .catch(() => false)
+      .catch((err: unknown) => {
+        failed.set(id, err instanceof Error ? err.message : String(err));
+        return false;
+      })
       .finally(() => loading.delete(id));
     loading.set(id, pending);
   }
   return pending;
+}
+
+/** Why a picture wasn't made, once its load has said so. */
+export function generatedImageFailure(id: string): string | null {
+  return failed.get(id) ?? null;
+}
+
+/** The size a picture was asked for, for its frame. */
+export function generatedImageSize(
+  id: string,
+): { width: number; height: number } | null {
+  return sizes.get(id) ?? null;
+}
+
+/** A transparent pixel standing in for a picture not loaded yet, its id
+ *  carried as a media-type parameter: the preview's Markdown renderer
+ *  keeps a data: src and drops one in our own scheme. */
+const STUB = (id: string) =>
+  `data:image/gif;textus-generated=${id};base64,R0lGODlhAQABAAAAACw=`;
+const STUB_ID = /^data:image\/gif;textus-generated=([0-9a-z]+);/;
+
+/** The id of a picture not loaded yet, from its src in the preview - the
+ *  stand-in showGeneratedImages put there, or the proposal's own
+ *  placeholder - or null. */
+export function generatedImageId(src: string): string | null {
+  if (src.startsWith(PREFIX)) return src.slice(PREFIX.length);
+  return STUB_ID.exec(src)?.[1] ?? null;
 }
 
 /** A loaded picture's bytes, for saving it. */
@@ -99,14 +140,25 @@ export function generatedImageUrl(id: string): string | null {
 }
 
 /** Markdown for the preview: each waiting picture's placeholder src as
- *  its data: URL. One not loaded keeps the placeholder (and shows as a
- *  missing image). */
+ *  its data: URL - or, for one not loaded yet (still being made), a
+ *  stand-in that pending-picture.ts turns into its frame. */
 export function showGeneratedImages(markdown: string): string {
   if (!markdown.includes(PREFIX)) return markdown;
   return markdown.replace(
     PLACEHOLDER,
-    (whole, id: string) => loaded.get(id)?.url ?? whole,
+    (_whole, id: string) => loaded.get(id)?.url ?? STUB(id),
   );
+}
+
+/** The src of `markdown` when it is one picture's whole Markdown,
+ *  `![alt](src)` - `<...>` around it taken off - else null. */
+export function pictureSrc(markdown: string): string | null {
+  const m = /^!\[[^\]]*\]\((<[^>]*>|[^)\s]*)(?:\s+"[^"]*")?\)$/.exec(
+    markdown.trim(),
+  );
+  if (!m) return null;
+  const src = m[1].startsWith("<") ? m[1].slice(1, -1) : m[1];
+  return src || null;
 }
 
 /** Whether `markdown` holds a waiting picture. */
