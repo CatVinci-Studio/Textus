@@ -72,6 +72,8 @@ import {
   ZenHint,
 } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
+import { tabIsUntouchedDraft } from "../document/doc-tabs";
+import { useLatest } from "../utils/hooks/useLatest";
 import "./App.css";
 
 /**
@@ -302,7 +304,12 @@ function App() {
 
   // The same, pushed to an already-running window (useFileOpening.ts).
   useOpenPathsPush(openPathInTab);
-  useFileDrop(openFile, openPathInTab);
+  const activeTabRef = useLatest(activeTab);
+  const activeIsUntouchedDraft = useCallback(
+    () => tabIsUntouchedDraft(activeTabRef.current),
+    [activeTabRef],
+  );
+  useFileDrop(openFile, openPathInTab, activeIsUntouchedDraft);
 
   useWindowCloseGuard(liveTabs, flushAutosave, setPendingClose);
 

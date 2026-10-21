@@ -268,14 +268,16 @@ export function useOpenPathsPush(
 /**
  * Files dropped on this window from a file manager (dropped-files.ts).
  * Strictly this window, like the push above: Tauri addresses the drop to
- * the window it landed on. One document opens the way File > Open does
- * (a tab, or in window mode in place of this one); several each get a tab
- * here, rather than replacing one another in turn. Dropped images go to
- * the editor on screen, at the drop point (images/image-plugin.ts).
+ * the window it landed on. Each document gets a tab of its own - a drop
+ * never puts a document in place of the one being read (in window mode
+ * File > Open does, and a dropped file replaced the document on screen);
+ * only an untouched Untitled tab gives way to it. Dropped images go to the
+ * editor on screen, at the drop point (images/image-plugin.ts).
  */
 export function useFileDrop(
   openFile: (path: string) => Promise<void>,
   openPathInTab: (path: string) => Promise<void>,
+  activeIsUntouchedDraft: () => boolean,
 ): void {
   useEffect(() => {
     if (isIOSApp) return;
@@ -299,9 +301,12 @@ export function useFileDrop(
         );
       // A file that can't be read as text (a folder, a binary) opens
       // nothing, the same as when it is picked in File > Open.
-      const open = documents.length === 1 ? openFile : openPathInTab;
-      for (const path of documents) await open(path).catch(() => undefined);
+      for (const [i, path] of documents.entries()) {
+        const open =
+          i === 0 && activeIsUntouchedDraft() ? openFile : openPathInTab;
+        await open(path).catch(() => undefined);
+      }
     });
     return unlistenAll(unlisten);
-  }, [openFile, openPathInTab]);
+  }, [openFile, openPathInTab, activeIsUntouchedDraft]);
 }
