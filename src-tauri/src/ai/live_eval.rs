@@ -54,6 +54,7 @@ mod grammar_cases;
 mod grammar_matrix;
 mod harness;
 mod images;
+mod memory_eval;
 mod tokens;
 mod web_search;
 
@@ -216,6 +217,7 @@ fn live_agent_caches_across_steps() {
         ui_language: "en",
         thinking: aicompat::capabilities::ThinkingLevel::Auto,
         pictures: None,
+        memory: None,
     };
     let conv = harness::run_conversation(
         &auth,
@@ -309,6 +311,7 @@ fn live_thinking_levels() {
             ui_language: "en",
             thinking: *level,
             pictures: None,
+            memory: None,
         };
         let conv = harness::run_conversation(
             &auth,

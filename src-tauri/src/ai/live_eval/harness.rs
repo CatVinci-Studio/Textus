@@ -530,6 +530,10 @@ pub struct AgentSetup<'a> {
     /// generate_image, for the picture cases: None offers no such tool, as
     /// the app does without an image model.
     pub pictures: Option<&'a crate::ai::images::ImageRun>,
+    /// The remember tool, writing to these folders, and what they hold
+    /// sent with each message, read again every turn - as the app does
+    /// with Remember automatically on. None: no remember tool.
+    pub memory: Option<&'a crate::ai::memory::MemoryDirs>,
 }
 
 /// Mirrors src/ai/revision/proposal-status.ts's note for a proposal not
@@ -584,6 +588,22 @@ pub fn run_conversation(
         .and_then(|t| t.caret.selection);
 
     for user in script {
+        // What is remembered so far, sent with this message.
+        let remembering;
+        let ws = match setup.memory {
+            Some(dirs) => {
+                let mut with = setup.workspace.clone();
+                with.remember = true;
+                with.memories = dirs.load();
+                remembering = with;
+                &remembering
+            }
+            None => setup.workspace,
+        };
+        let memory = setup.memory.map(|dirs| crate::ai::memory::MemoryContext {
+            dirs: dirs.clone(),
+            source: Default::default(),
+        });
         let (message_sent, caret) = match (user.follow_selection, selection) {
             (true, Some((s, e))) => (
                 format!(
@@ -625,11 +645,12 @@ pub fn run_conversation(
             sees_images: sees_images(),
             conventions: &conventions,
             library: &library,
-            memory: None,
+            memory: memory.as_ref(),
             proposed: Default::default(),
             checks: Default::default(),
         };
-        // No remember tool: an eval run writes no memories. Images as the
+        // The remember tool only with memory folders to write to (above).
+        // Images as the
         // app offers them to the provider the eval runs on (Anthropic), and
         // generate_image when the case gives it one, on this turn's
         // document as the app does per request.
@@ -637,7 +658,7 @@ pub fn run_conversation(
             ws.has_usable_skills(),
             root.is_some(),
             setup.mode,
-            false,
+            setup.memory.is_some(),
             sees_images(),
         );
         if let Some(pictures) = setup.pictures {
