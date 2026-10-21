@@ -27,6 +27,8 @@ export interface ImageModel {
   provider: string;
   model: string;
   baseUrl: string;
+  /** At most this many pictures per request. */
+  limit: number;
 }
 
 /** The setting that follows the chat provider, the default. Mirrors
@@ -87,7 +89,10 @@ export function useImageService(
 export function imageModelOf(
   settings: Pick<
     Settings,
-    "imageModelProvider" | "imageModel" | "imageModelEndpoint"
+    | "imageModelProvider"
+    | "imageModel"
+    | "imageModelEndpoint"
+    | "imagesPerRequest"
   >,
 ): ImageModel | null {
   if (!settings.imageModelProvider) return null;
@@ -95,6 +100,7 @@ export function imageModelOf(
     provider: settings.imageModelProvider,
     model: settings.imageModel,
     baseUrl: settings.imageModelEndpoint,
+    limit: settings.imagesPerRequest,
   };
 }
 

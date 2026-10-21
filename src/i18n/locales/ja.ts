@@ -246,6 +246,15 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "まず上のチャットサービスで ChatGPT にサインインしてください。",
   imageChatGptHelp:
     "画像は API のクレジットではなく、ChatGPT プランの画像生成枠を使います。ChatGPT 自身のアプリが使うサービスを経由するため、公開 API ではなく、予告なく使えなくなることがあります。OpenAI の API キーはその場合も使えます。",
+  imagesPerRequestLabel: "1 回のリクエストの画像数",
+  imagesPerRequestHelp:
+    "Textus AI が 1 回のリクエストで作る画像の上限です。API キーでは 1 枚ごとに費用がかかり、プランでは画像生成枠を使います。枚数を指定すればその数だけ、この上限まで作ります。",
+  changePictureWithAi: "Textus AI でこの画像を変更…",
+  oldPictureTrashQuestion:
+    "新しい画像を入れました。古い画像「{name}」をゴミ箱に入れますか？",
+  oldPictureTrashOk: "ゴミ箱に入れる",
+  oldPictureKeep: "残す",
+  oldPictureTrashFailed: "古い画像をゴミ箱に入れられませんでした。",
   imageModelLabel: "画像モデル",
   imageModelNone: "なし",
   imageProviderCustom: "OpenAI 互換エンドポイント",

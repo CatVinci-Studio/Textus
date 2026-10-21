@@ -65,11 +65,13 @@ The chat never writes to your document directly. When you ask a tool-calling pro
 
 ### 6. Pictures
 
-Textus AI can make a picture for your document once you choose an **Image model** in **Settings > Textus AI**. It is **None** until you do, because each picture costs a little at the service. Pick a service and model - OpenAI, Google Gemini, Doubao (Volcengine), Alibaba Qwen, Zhipu GLM, SiliconFlow, or any OpenAI-compatible endpoint. If you already use that service for chat, its key is reused; otherwise Settings asks for one.
+Textus AI can make pictures for your document. **Settings > Textus AI > Image service** follows your chat provider by default: signed in with ChatGPT, pictures come out of your plan's own allowance (marked experimental - it is not a published API); with another provider that makes pictures, its own, with the same key. A provider that makes none offers no pictures until you choose a service - OpenAI, Google Gemini, Doubao (Volcengine), Alibaba Qwen, Zhipu GLM, SiliconFlow, or any OpenAI-compatible endpoint - and then its model.
 
 - Ask in Write or Revise mode ("add a picture of the harbour after the first paragraph"), or right-click a paragraph and choose **Illustrate this paragraph**.
-- The picture arrives as a proposal in place, like any other insertion. Nothing is saved until you accept: then it is stored the way **Settings > Images** says for a pasted image and inserted as a Markdown image. Reject leaves nothing behind.
-- If the service turns the description down, the panel shows the reason it gave. A request makes at most two pictures.
+- Writing and pictures come together: the text appears as it is written, and each picture shows as a softly moving frame in its place until it is ready. You can accept it before it is finished; it is saved when it arrives.
+- Nothing is saved until you accept: then the picture is stored the way **Settings > Images** says for a pasted image and inserted as a Markdown image. Reject leaves nothing behind.
+- To change a picture, right-click it and choose **Change this picture with Textus AI…**, then say how. The new one is proposed in its place; once you accept it, you are asked whether the old file should go to the Trash - it stays unless you say so.
+- Say how many pictures you want and Textus AI makes that many, up to **Pictures per request** (two unless you change it). If the service turns a description down, the picture's place shows the reason it gave.
 
 ### 7. Web search
 

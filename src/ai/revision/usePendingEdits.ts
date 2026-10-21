@@ -43,6 +43,7 @@ import {
   discardGeneratedImage,
   generatedImageData,
   generatedImageFailure,
+  pictureSrc,
   loadGeneratedImage,
   rememberSaved,
   savedSrc,
@@ -353,6 +354,10 @@ export interface PendingEditOptions {
   ) => Promise<string | null>;
   /** Tells the user an accepted picture couldn't be saved. */
   onImageError?: (err: unknown) => void;
+  /** An accepted picture replaced one already in the document (a redone
+   *  picture, generate_image's `replace`): the old one's src, for the
+   *  owner to offer moving its file to the Trash. */
+  onPictureReplaced?: (oldSrc: string) => void;
   /** How an accepted proposal's web citations are written, asked when it
    *  is accepted. Left out: they are left out. */
   citationStyle?: () => CitationStyle;
@@ -735,7 +740,15 @@ export function usePendingEdits(
           const stored = await storeImage(data, image.alt);
           if (stored === null) return;
           rememberSaved(image.id, stored);
-          acceptRef.current(callId, withSavedSrc(text, image.id, stored));
+          const written = acceptRef.current(
+            callId,
+            withSavedSrc(text, image.id, stored),
+          );
+          const old =
+            written && proposal.action === "replace"
+              ? pictureSrc(proposal.anchor ?? "")
+              : null;
+          if (old) optionsRef.current.onPictureReplaced?.(old);
         } catch (err) {
           onImageError?.(err);
         } finally {

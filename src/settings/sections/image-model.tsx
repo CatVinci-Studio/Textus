@@ -28,6 +28,9 @@ function label(entry: ImageProviderEntry, t: Strings): string {
   return entry.label;
 }
 
+/** The choices for pictures per request; the backend holds it to 1-8. */
+const PER_REQUEST = [1, 2, 3, 4, 6, 8];
+
 export function ImageModelSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const providers = useImageProviders();
@@ -109,6 +112,27 @@ export function ImageModelSection({ t }: { t: Strings }) {
             {entry.models.map((m) => (
               <option key={m} value={m}>
                 {m}
+              </option>
+            ))}
+          </Select>
+        </SettingRow>
+      )}
+      {entry && (
+        <SettingRow
+          label={t.imagesPerRequestLabel}
+          help={t.imagesPerRequestHelp}
+        >
+          <Select
+            className="settings-select"
+            aria-label={t.imagesPerRequestLabel}
+            value={String(settings.imagesPerRequest)}
+            onChange={(e) =>
+              setSettings({ imagesPerRequest: Number(e.target.value) })
+            }
+          >
+            {PER_REQUEST.map((n) => (
+              <option key={n} value={String(n)}>
+                {String(n)}
               </option>
             ))}
           </Select>

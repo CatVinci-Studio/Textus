@@ -215,6 +215,10 @@ export const fs = {
     folder: string,
   ) =>
     call<SavedImage>("save_pasted_image", { docPath, dataBase64, ext, folder }),
+  /** A replaced picture's file to the system's Trash - only one in the
+   *  document's folder or the drafts' images. Desktop only. */
+  movePictureToTrash: (docPath: string | null, path: string) =>
+    call<void>("move_picture_to_trash", { docPath, path }),
   uploadImage: (
     host: ImageHost,
     dataBase64: string,

@@ -261,6 +261,16 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Melde dich zuerst oben beim Chat-Anbieter mit ChatGPT an.",
   imageChatGptHelp:
     "Bilder gehen vom Bildkontingent deines ChatGPT-Abos ab, nicht vom API-Guthaben. Sie laufen über den Dienst, den die ChatGPT-Apps selbst nutzen; das ist keine veröffentlichte API und kann ohne Ankündigung aufhören zu funktionieren. Ein OpenAI-API-Schlüssel funktioniert in jedem Fall weiter.",
+  imagesPerRequestLabel: "Bilder pro Anfrage",
+  imagesPerRequestHelp:
+    "Höchstens so viele Bilder erstellt Textus AI für eine Anfrage. Mit einem API-Schlüssel kostet jedes Geld, mit einem Abo geht es vom Kontingent ab; sag, wie viele du willst, dann erstellt es so viele, bis zu dieser Zahl.",
+  changePictureWithAi: "Dieses Bild mit Textus AI ändern…",
+  oldPictureTrashQuestion:
+    "Das neue Bild ist eingefügt. Das alte, „{name}“, in den Papierkorb legen?",
+  oldPictureTrashOk: "In den Papierkorb",
+  oldPictureKeep: "Behalten",
+  oldPictureTrashFailed:
+    "Das alte Bild konnte nicht in den Papierkorb gelegt werden.",
   imageModelLabel: "Bildmodell",
   imageModelNone: "Keins",
   imageProviderCustom: "OpenAI-kompatibler Endpunkt",

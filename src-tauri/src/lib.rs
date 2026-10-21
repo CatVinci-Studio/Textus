@@ -849,6 +849,8 @@ pub fn run() {
             #[cfg(desktop)]
             install_cli_command,
             #[cfg(desktop)]
+            commands::fs::move_picture_to_trash,
+            #[cfg(desktop)]
             commands::default_editor::default_editor_status,
             #[cfg(desktop)]
             commands::default_editor::set_default_editor,

@@ -260,6 +260,16 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Primeiro entre com o ChatGPT no provedor de chat acima.",
   imageChatGptHelp:
     "As imagens saem da cota de imagens do seu plano do ChatGPT, não do crédito da API. Elas passam pelo serviço que os próprios apps do ChatGPT usam, que não é uma API publicada e pode parar de funcionar sem aviso; uma chave de API da OpenAI continua funcionando de qualquer forma.",
+  imagesPerRequestLabel: "Imagens por pedido",
+  imagesPerRequestHelp:
+    "O máximo de imagens que o Textus AI cria num pedido. Com uma chave de API cada uma custa dinheiro; com um plano, usa a cota dele. Diga quantas quer e ele cria essas, até este número.",
+  changePictureWithAi: "Mudar esta imagem com o Textus AI…",
+  oldPictureTrashQuestion:
+    "A imagem nova já está no lugar. Mover a antiga, “{name}”, para a lixeira?",
+  oldPictureTrashOk: "Mover para a lixeira",
+  oldPictureKeep: "Manter",
+  oldPictureTrashFailed:
+    "Não foi possível mover a imagem antiga para a lixeira.",
   imageModelLabel: "Modelo de imagem",
   imageModelNone: "Nenhum",
   imageProviderCustom: "Endpoint compatível com OpenAI",

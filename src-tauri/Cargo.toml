@@ -143,6 +143,9 @@ tauri-plugin-process = "2.4"
 # The update check's version comparison (commands/update.rs); the updater
 # hands its versions over as semver 1.
 semver = "1"
+# A picture an accepted AI picture replaced goes to the system's Trash or
+# Recycle Bin when the user says so (commands/images.rs) - never deleted.
+trash = "5"
 
 # macOS-native PDF export (commands/export.rs): the themed document is
 # rendered in an offscreen WKWebView with createPDF and cut into A4 sheets

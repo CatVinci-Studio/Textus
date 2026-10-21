@@ -570,9 +570,101 @@ pub async fn write_text_file(path: String, contents: String) -> Result<(), Strin
         .map_err(|e| e.to_string())
 }
 
+/// The extensions a picture moved to the Trash may have.
+#[cfg(desktop)]
+const PICTURE_EXTENSIONS: [&str; 8] = ["png", "jpg", "jpeg", "webp", "gif", "svg", "avif", "bmp"];
+
+/// Whether `path`, a picture an accepted AI picture replaced, may go to the
+/// Trash for the document at `doc_path`: a picture file in the document's
+/// own folder (or under it), or among the drafts' images - never anything
+/// else, whatever the document's Markdown said.
+#[cfg(desktop)]
+fn may_trash_picture(
+    app_assets: Option<&Path>,
+    doc_path: Option<&Path>,
+    path: &Path,
+) -> Result<PathBuf, String> {
+    let is_picture = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| PICTURE_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()));
+    if !is_picture {
+        return Err("Only a picture file goes to the Trash this way.".into());
+    }
+    let file =
+        std::fs::canonicalize(path).map_err(|e| format!("The old picture isn't there: {e}"))?;
+    if !file.is_file() {
+        return Err("The old picture isn't a file.".into());
+    }
+    let within = |dir: &Path| {
+        std::fs::canonicalize(dir)
+            .map(|dir| file.starts_with(dir))
+            .unwrap_or(false)
+    };
+    let in_doc_folder = doc_path.and_then(Path::parent).is_some_and(within);
+    let in_drafts = app_assets.is_some_and(within);
+    if !in_doc_folder && !in_drafts {
+        return Err(
+            "The old picture is outside the document's folder; it was left where it is.".into(),
+        );
+    }
+    Ok(file)
+}
+
+/// Moves a picture that an accepted AI picture replaced to the system's
+/// Trash (Recycle Bin), once the user said so - never deletes it; it can
+/// be put back from there.
+#[cfg(desktop)]
+#[tauri::command]
+pub async fn move_picture_to_trash(
+    app: tauri::AppHandle,
+    doc_path: Option<String>,
+    path: String,
+) -> Result<(), String> {
+    let assets = draft_assets_dir(&app).ok();
+    let file = may_trash_picture(
+        assets.as_deref(),
+        doc_path.as_deref().map(Path::new),
+        Path::new(&path),
+    )?;
+    trash::delete(&file).map_err(|e| format!("Couldn't move the old picture to the Trash: {e}"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(desktop)]
+    #[test]
+    fn only_a_picture_in_the_documents_folder_may_go_to_the_trash() {
+        let root = std::env::temp_dir().join(format!("textus-trash-{}", std::process::id()));
+        let notes = root.join("notes");
+        let assets = notes.join("assets");
+        let elsewhere = root.join("elsewhere");
+        std::fs::create_dir_all(&assets).unwrap();
+        std::fs::create_dir_all(&elsewhere).unwrap();
+        let doc = notes.join("harbour.md");
+        std::fs::write(&doc, "# Harbour").unwrap();
+        let picture = assets.join("boats.png");
+        std::fs::write(&picture, [0u8; 4]).unwrap();
+        let outside = elsewhere.join("boats.png");
+        std::fs::write(&outside, [0u8; 4]).unwrap();
+        let text = assets.join("notes.txt");
+        std::fs::write(&text, "x").unwrap();
+
+        assert!(may_trash_picture(None, Some(&doc), &picture).is_ok());
+        // Through .. out of the folder, or a file elsewhere: no.
+        let sneaky = assets.join("../../elsewhere/boats.png");
+        assert!(may_trash_picture(None, Some(&doc), &sneaky).is_err());
+        assert!(may_trash_picture(None, Some(&doc), &outside).is_err());
+        // Not a picture, or not there: no.
+        assert!(may_trash_picture(None, Some(&doc), &text).is_err());
+        assert!(may_trash_picture(None, Some(&doc), &assets.join("gone.png")).is_err());
+        // A draft's picture, among the drafts' images.
+        assert!(may_trash_picture(Some(&elsewhere), None, &outside).is_ok());
+        assert!(may_trash_picture(Some(&elsewhere), None, &picture).is_err());
+        let _ = std::fs::remove_dir_all(&root);
+    }
 
     #[cfg(not(target_os = "macos"))]
     #[test]

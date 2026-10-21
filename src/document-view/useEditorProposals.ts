@@ -24,6 +24,8 @@ import type { Settings } from "../settings/SettingsContext";
 import { prefersReducedMotion } from "../ui/motion";
 import { storeImage } from "../editor/images/image-plugin";
 import { showMessage } from "../ui/app-dialog";
+import { cachedDocumentMarkdown } from "../ai/doc-markdown";
+import { offerOldPictureTrash } from "../ai/revision/old-picture";
 import { errorText } from "../utils/error-text";
 import { resolveStrings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
@@ -84,6 +86,16 @@ export function useEditorProposals({
         tone: "error",
       });
     },
+    onPictureReplaced: (oldSrc) =>
+      void offerOldPictureTrash(
+        oldSrc,
+        filePathRef.current,
+        resolveStrings(settingsRef.current.language),
+        () =>
+          run((ctx) =>
+            cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc),
+          ) ?? "",
+      ),
     citationStyle,
     // What a decision did, said to a screen reader in the interface
     // language.

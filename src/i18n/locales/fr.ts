@@ -273,6 +273,16 @@ utiliser une.
     "Connecte-toi d’abord avec ChatGPT dans le fournisseur de chat ci-dessus.",
   imageChatGptHelp:
     "Les images sont prises sur le quota d’images de ton abonnement ChatGPT, pas sur le crédit de l’API. Elles passent par le service qu’utilisent les applications de ChatGPT, qui n’est pas une API publiée et peut cesser de fonctionner sans prévenir ; une clé d’API OpenAI continue de fonctionner dans tous les cas.",
+  imagesPerRequestLabel: "Images par demande",
+  imagesPerRequestHelp:
+    "Le nombre maximal d’images que Textus AI crée pour une demande. Avec une clé d’API, chacune coûte de l’argent ; avec un abonnement, elle utilise son quota. Indique combien tu en veux, il en crée autant, jusqu’à ce nombre.",
+  changePictureWithAi: "Modifier cette image avec Textus AI…",
+  oldPictureTrashQuestion:
+    "La nouvelle image est en place. Mettre l’ancienne, « {name} », à la corbeille ?",
+  oldPictureTrashOk: "Mettre à la corbeille",
+  oldPictureKeep: "La garder",
+  oldPictureTrashFailed:
+    "Impossible de mettre l’ancienne image à la corbeille.",
   imageModelLabel: "Modèle d'image",
   imageModelNone: "Aucun",
   imageProviderCustom: "Point d'accès compatible OpenAI",

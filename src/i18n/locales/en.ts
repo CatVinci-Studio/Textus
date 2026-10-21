@@ -258,6 +258,15 @@ type /name in a conversation to use one.
     "Sign in with ChatGPT under the chat provider above first.",
   imageChatGptHelp:
     "Pictures come out of your ChatGPT plan's own image allowance, not API credit. This goes through the service ChatGPT's own apps use, which is not a published API and may stop working without notice; an OpenAI API key keeps working either way.",
+  imagesPerRequestLabel: "Pictures per request",
+  imagesPerRequestHelp:
+    "The most pictures Textus AI makes for one request. Each costs money with an API key, or uses your plan's allowance; tell it how many and it makes that many, up to this.",
+  changePictureWithAi: "Change this picture with Textus AI…",
+  oldPictureTrashQuestion:
+    "The new picture is in. Move the old one, “{name}”, to the Trash?",
+  oldPictureTrashOk: "Move to Trash",
+  oldPictureKeep: "Keep it",
+  oldPictureTrashFailed: "Couldn't move the old picture to the Trash.",
   imageModelLabel: "Image model",
   imageModelNone: "None",
   imageProviderCustom: "OpenAI-compatible endpoint",

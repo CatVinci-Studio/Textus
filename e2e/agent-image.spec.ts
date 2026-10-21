@@ -328,3 +328,179 @@ test("a picture that wasn't made says why in its frame", async ({ page }) => {
     }),
   ).toBeVisible();
 });
+
+// A picture already in a saved document, to redo (generate_image's
+// `replace`): it goes where the old one was, and the old file is offered
+// the Trash - never moved unasked.
+const OLD = "![Boats](assets/boats.png)";
+
+async function openSaved(page: Page) {
+  // The old picture is on disk, served as the asset protocol would.
+  await page.route("http://asset.localhost/**", (route) =>
+    route.fulfill({
+      contentType: "image/png",
+      body: Buffer.from(PNG, "base64"),
+    }),
+  );
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  const path = "/notes/harbour.md";
+  await page.evaluate(
+    (files) =>
+      ((window as unknown as Record<string, unknown>).__devFiles = files),
+    { [path]: `${FIRST}\n\n${OLD}\n` },
+  );
+  await page.evaluate(
+    (p) =>
+      (
+        window as unknown as {
+          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
+        }
+      ).__devEmitTauriEvent("tauri://drag-drop", {
+        paths: [p],
+        position: { x: 0, y: 0 },
+      }),
+    path,
+  );
+  await expect(page.locator(`${editor} p`).first()).toHaveText(FIRST);
+}
+
+async function redo(page: Page) {
+  await mockInvoke(page, {
+    ai_agent_message: exchange(
+      {
+        prompt: "The same harbour at dawn",
+        alt: "The harbour at dawn",
+        action: "replace",
+        anchor: OLD,
+        image: { id: "abc9", width: 1, height: 1 },
+      },
+      "Image proposed - the user now sees the picture.",
+    ),
+    ai_generated_image: { mime: "image/png", ext: "png", dataBase64: PNG },
+    ai_discard_generated_image: null,
+    save_pasted_image: { src: "assets/harbour-dawn.png" },
+    move_picture_to_trash: null,
+  });
+  await send(page, "Make the picture dawn instead");
+  await expect(page.locator(pending)).toHaveCount(1, { timeout: 10_000 });
+  await actions(page).filter({ hasText: "Accept" }).click();
+  await expect(
+    page.locator(`${editor} img[data-doc-src="assets/harbour-dawn.png"]`),
+  ).toHaveCount(1);
+  await expect(
+    page.locator(`${editor} img[data-doc-src="assets/boats.png"]`),
+  ).toHaveCount(0);
+}
+
+test("a redone picture takes the old one's place, and the old file goes to the Trash when asked", async ({
+  page,
+}) => {
+  await openSaved(page);
+  await redo(page);
+  const dialog = page.locator(".app-dialog");
+  await expect(dialog).toContainText(
+    "Move the old one, “boats.png”, to the Trash?",
+  );
+  await dialog.getByRole("button", { name: "Move to Trash" }).click();
+  await expect
+    .poll(() => calls(page, "move_picture_to_trash"))
+    .toEqual([
+      {
+        cmd: "move_picture_to_trash",
+        docPath: "/notes/harbour.md",
+        path: "/notes/assets/boats.png",
+      },
+    ]);
+});
+
+test("kept, the old picture's file stays where it is", async ({ page }) => {
+  await openSaved(page);
+  await redo(page);
+  const dialog = page.locator(".app-dialog");
+  await dialog.getByRole("button", { name: "Keep it" }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(await calls(page, "move_picture_to_trash")).toHaveLength(0);
+});
+
+test("a picture's own menu asks Textus AI to change it, about that picture", async ({
+  page,
+}) => {
+  await openSaved(page);
+  await page.locator(`${editor} .image-view img`).click({ button: "right" });
+  await menuItem(page, "Change this picture with Textus AI…").click();
+  // Quick Ask, at the picture, with the picture as what it is about: the
+  // request carries its Markdown, for generate_image's `replace`.
+  const quick = page.locator(".inline-chat");
+  await expect(quick).toBeVisible();
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "make it dawn" },
+      { kind: "Assistant", text: "Done." },
+    ],
+  });
+  await quick.locator("textarea").fill("make it dawn");
+  await quick.locator("textarea").press("Enter");
+  await expect
+    .poll(async () => {
+      const [first] = (await calls(page, "ai_agent_message")) as {
+        message?: string;
+      }[];
+      return first?.message ?? "";
+    })
+    .toContain(OLD);
+});
+
+test("pictures per request is a setting, sent with each request", async ({
+  page,
+}) => {
+  await open(page);
+  // The backend's image catalog (ai/images.rs), which Settings lists.
+  await mockInvoke(page, {
+    list_image_providers: [
+      {
+        id: "openai",
+        label: "OpenAI",
+        api: "open-ai",
+        baseUrl: "https://api.openai.com/v1",
+        keyId: "openai",
+        models: ["gpt-image-2"],
+      },
+    ],
+    provider_api_key_status: true,
+  });
+  await page.evaluate(() =>
+    (
+      window as unknown as {
+        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
+      }
+    ).__devEmitTauriEvent("menu-open-settings"),
+  );
+  const settings = page.getByRole("dialog", { name: "Settings" });
+  await settings
+    .getByRole("button", { name: "Textus AI", exact: true })
+    .click();
+  await settings
+    .getByRole("combobox", { name: "Pictures per request" })
+    .click();
+  await page.getByRole("option", { name: "4" }).click();
+  await settings.getByRole("button", { name: "Close" }).first().click();
+  await mockInvoke(page, {
+    ai_agent_message: exchange(
+      made,
+      "Image proposed - the user now sees the picture.",
+    ),
+    ai_generated_image: { mime: "image/png", ext: "png", dataBase64: PNG },
+  });
+  await send(page);
+  await expect
+    .poll(async () => {
+      const [first] = (await calls(page, "ai_agent_message")) as {
+        imageModel?: { limit?: number };
+      }[];
+      return first?.imageModel?.limit;
+    })
+    .toBe(4);
+});

@@ -227,6 +227,15 @@ export default {
   imageChatGptSignInHint: "請先在上方的聊天服務裡用 ChatGPT 登入。",
   imageChatGptHelp:
     "圖片使用你 ChatGPT 訂閱自帶的畫圖額度，不消耗 API 餘額。它走的是 ChatGPT 自家應用程式使用的介面，不是公開的 API，可能隨時失效；OpenAI API Key 的方式不受影響。",
+  imagesPerRequestLabel: "每次最多產生幾張圖",
+  imagesPerRequestHelp:
+    "Textus AI 一次請求最多產生的圖片數量。用 API Key 時每張都要花錢，用訂閱時會消耗訂閱的畫圖額度；你說要幾張，它就產生幾張，但不超過這個數。",
+  changePictureWithAi: "讓 Textus AI 修改這張圖…",
+  oldPictureTrashQuestion:
+    "新圖片已經放進去了。要把舊圖片「{name}」移到垃圾桶嗎？",
+  oldPictureTrashOk: "移到垃圾桶",
+  oldPictureKeep: "保留",
+  oldPictureTrashFailed: "沒能把舊圖片移到垃圾桶。",
   imageModelLabel: "圖片模型",
   imageModelNone: "無",
   imageProviderCustom: "OpenAI 相容介面",

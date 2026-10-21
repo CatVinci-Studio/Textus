@@ -164,11 +164,44 @@ pub struct ImageModel {
     /// The compatible endpoint's address.
     #[serde(default)]
     pub base_url: String,
+    /// At most this many pictures per send (Settings › Textus AI ›
+    /// Pictures per request); `PER_SEND` when unset.
+    #[serde(default)]
+    pub limit: Option<usize>,
 }
 
-/// At most this many pictures per send, a retry of a refused one included:
-/// each costs money, and a reply that wants more is asked to say so.
+/// At most this many pictures per send by default, a retry of a refused one
+/// included: each costs money, and a reply that wants more is asked to say
+/// so. The setting may raise it to `MAX_PER_SEND`.
 const PER_SEND: usize = 2;
+const MAX_PER_SEND: usize = 8;
+
+/// The per-send limit a setting asks for, kept within 1..=MAX_PER_SEND.
+fn per_send(limit: Option<usize>) -> usize {
+    limit.unwrap_or(PER_SEND).clamp(1, MAX_PER_SEND)
+}
+
+/// generate_image's actions: the insertions, and `replace` - a picture
+/// already in the document, for one that redoes it.
+const IMAGE_ACTIONS: [&str; 5] = [
+    "insert_after",
+    "insert_before",
+    "insert_at_cursor",
+    "append",
+    "replace",
+];
+
+/// Whether `anchor` is the whole Markdown of one picture, `![alt](src)` -
+/// the only thing a picture may replace.
+fn is_picture_markdown(anchor: &str) -> bool {
+    let Some(rest) = anchor.trim().strip_prefix("![") else {
+        return false;
+    };
+    let Some((alt, after)) = rest.split_once("](") else {
+        return false;
+    };
+    !alt.contains(']') && after.ends_with(')') && !after[..after.len() - 1].contains(')')
+}
 
 /// Where a picture is asked for: the image model resolved to an address and
 /// a key - or, for the ChatGPT sign-in, to the app that holds its
@@ -185,10 +218,12 @@ struct ImageJob {
     model: String,
 }
 
-/// One request's image model, and how many pictures it has asked for.
+/// One request's image model, and how many pictures it has asked for, of
+/// how many it may.
 pub struct ImageRun {
     job: ImageJob,
     made: AtomicUsize,
+    limit: usize,
 }
 
 impl ImageRun {
@@ -220,6 +255,7 @@ impl ImageRun {
                     model: entry.models[0].to_string(),
                 },
                 made: AtomicUsize::new(0),
+                limit: per_send(choice.limit),
             });
         }
         let model = Some(choice.model.trim())
@@ -253,6 +289,7 @@ impl ImageRun {
                 model,
             },
             made: AtomicUsize::new(0),
+            limit: per_send(choice.limit),
         })
     }
 }
@@ -357,11 +394,18 @@ impl ImageRun {
             return Err("`prompt` is empty - describe the picture.".into());
         }
         let action = text("action");
-        if !tools::INSERT_ACTIONS.contains(&action) {
+        if !IMAGE_ACTIONS.contains(&action) {
             return Err(format!(
                 "Unknown action `{action}`. Use one of: {}.",
-                tools::INSERT_ACTIONS.join(", ")
+                IMAGE_ACTIONS.join(", ")
             ));
+        }
+        if action == "replace" {
+            let anchor = text("anchor");
+            if !is_picture_markdown(anchor) {
+                return Err("`replace` takes `anchor` as a picture's whole Markdown, `![alt](src)`, copied from the document - a picture replaces only a picture; put one next to text with insert_after.".into());
+            }
+            tools::check_anchor(document, args, anchor)?;
         }
         if matches!(action, "insert_after" | "insert_before") {
             let anchor = text("anchor");
@@ -381,8 +425,9 @@ impl ImageRun {
                 )
             })?,
         };
-        if self.made.fetch_add(1, Ordering::SeqCst) >= PER_SEND {
-            return Err(format!("This request has already made {PER_SEND} pictures, the most one request may. Ask the user whether they want more."));
+        let limit = self.limit;
+        if self.made.fetch_add(1, Ordering::SeqCst) >= limit {
+            return Err(format!("This request has already made {limit} pictures, the most one request may (the user's setting). Ask the user whether they want more."));
         }
         Ok((prompt.to_string(), aspect))
     }
@@ -392,7 +437,7 @@ impl ImageRun {
     /// generate_image for this request, offered in Write and Revise.
     pub fn tool<'a>(&'a self, document: &'a str, channel: &'a Channel<StreamEvent>) -> Tool<'a> {
         Tool {
-            spec: spec(),
+            spec: spec(self.limit),
             access: Access::ProposesInItsCall,
             modes: EDITING_MODES,
             run: Run::Async(Box::new(move |call| {
@@ -428,13 +473,16 @@ impl ImageRun {
     }
 }
 
-const GENERATE_IMAGE_DESCRIPTION: &str = "Make a picture with the user's image model and propose it for the document, placed like an insertion: the user sees it in place with Accept and Reject, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked. Each picture costs the user money: make one per request unless they ask for more (at most 2). If the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.";
+/// What the model is told about generate_image, with this request's limit.
+fn description(limit: usize) -> String {
+    format!("Make a picture with the user's image model and propose it for the document: the user sees it in place with Accept and Reject, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked.\n\nHow many: each picture costs the user money, and this request may make at most {limit}. When the user says how many, make that many (up to {limit}); when they don't, make one, or - for a longer piece they asked to illustrate - one for each part that gains from a picture, and say in a sentence which parts before you start. Make them as you write: the call returns at once and the picture is made while you go on.\n\nWhere: insert_after the paragraph it illustrates, between paragraphs - never inside a list, a table, a quote or a heading's line - and not two pictures in a row.\n\nRedoing a picture: to change or replace one already in the document, use `replace` with `anchor` its whole Markdown, `![alt](src)`, copied from the document, and describe the new picture in full in `prompt` (what to keep, what to change). The user decides whether the old file goes once they accept.\n\nIf the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.")
+}
 
 /// What the model is told about generate_image.
-fn spec() -> ToolSpec {
+fn spec(limit: usize) -> ToolSpec {
     ToolSpec {
         name: GENERATE_IMAGE_TOOL_NAME.into(),
-        description: GENERATE_IMAGE_DESCRIPTION.into(),
+        description: description(limit).into(),
         parameters: json!({
             "type": "object",
             "properties": {
@@ -453,12 +501,12 @@ fn spec() -> ToolSpec {
                 },
                 "action": {
                     "type": "string",
-                    "enum": tools::INSERT_ACTIONS,
-                    "description": "Where it goes, as propose_edit's insertions: insert_after a paragraph (the usual place for an illustration), insert_before one, insert_at_cursor, or append."
+                    "enum": IMAGE_ACTIONS,
+                    "description": "Where it goes: insert_after a paragraph (the usual place for an illustration), insert_before one, insert_at_cursor, append - or replace a picture already in the document."
                 },
                 "anchor": {
                     "type": "string",
-                    "description": "For insert_after and insert_before: the paragraph or heading the picture goes next to, quoted verbatim - the whole of it if it is short, else its last sentence."
+                    "description": "For insert_after and insert_before: the paragraph the picture goes next to, quoted verbatim - the whole of it if it is short, else its last sentence. For replace: the picture's whole Markdown, `![alt](src)`."
                 },
                 "context": {
                     "type": "string",
@@ -636,6 +684,7 @@ mod tests {
                 model: "gpt-image-2".into(),
             },
             made: AtomicUsize::new(0),
+            limit: PER_SEND,
         }
     }
 
@@ -673,10 +722,11 @@ mod tests {
             json!({"prompt": "boats", "action": "replace", "anchor": "The boats came in at dusk."}),
             DOC,
         );
+        // `replace` takes a picture, not text.
         assert!(args["not_generated"]
             .as_str()
             .unwrap()
-            .contains("Unknown action `replace`"));
+            .contains("a picture replaces only a picture"));
         let (args, _) = call(&run, json!({"prompt": " ", "action": "append"}), DOC);
         assert!(args["not_generated"]
             .as_str()
@@ -793,16 +843,62 @@ mod tests {
     }
 
     #[test]
-    fn the_tool_offers_only_insertions_and_the_five_aspects() {
-        let spec = spec();
+    fn the_tool_offers_insertions_replacing_a_picture_and_the_five_aspects() {
+        let spec = spec(PER_SEND);
         assert_eq!(
             spec.parameters["properties"]["action"]["enum"],
-            json!(tools::INSERT_ACTIONS)
+            json!(IMAGE_ACTIONS)
         );
         assert_eq!(
             spec.parameters["properties"]["aspect"]["enum"],
             json!(Aspect::ALL)
         );
+    }
+
+    #[test]
+    fn a_picture_in_the_document_can_be_redone() {
+        let doc = format!("{DOC}\n\n![Boats at dusk](assets/boats.png)");
+        let (args, announced) = call(
+            &run(),
+            json!({"prompt": "the boats at dawn instead", "alt": "Boats at dawn", "action": "replace", "anchor": "![Boats at dusk](assets/boats.png)"}),
+            &doc,
+        );
+        assert!(announced);
+        assert_eq!(args["image"]["pending"], true);
+        // Only one that is there, and only a whole picture.
+        let (args, _) = call(
+            &run(),
+            json!({"prompt": "x", "action": "replace", "anchor": "![Nets](assets/nets.png)"}),
+            &doc,
+        );
+        assert!(args["not_generated"]
+            .as_str()
+            .unwrap()
+            .contains("No exact match"));
+        assert!(is_picture_markdown("![a](b.png)"));
+        assert!(is_picture_markdown("![](<my file.png>)"));
+        assert!(!is_picture_markdown("![a](b.png) and text"));
+        assert!(!is_picture_markdown("The boats came in at dusk."));
+    }
+
+    #[test]
+    fn the_limit_is_the_setting_within_bounds_and_the_model_is_told_it() {
+        assert_eq!(per_send(None), PER_SEND);
+        assert_eq!(per_send(Some(4)), 4);
+        assert_eq!(per_send(Some(0)), 1);
+        assert_eq!(per_send(Some(50)), MAX_PER_SEND);
+        let mut run = run();
+        run.limit = 3;
+        let args = json!({"prompt": "nets", "alt": "Nets", "action": "append"});
+        for _ in 0..3 {
+            assert!(call(&run, args.clone(), DOC).1);
+        }
+        let (fourth, _) = call(&run, args, DOC);
+        assert!(fourth["not_generated"]
+            .as_str()
+            .unwrap()
+            .contains("already made 3 pictures"));
+        assert!(description(3).contains("at most 3"));
     }
 
     #[test]
