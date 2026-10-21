@@ -33,7 +33,11 @@ async function sourceOf(page: Page): Promise<string> {
 /** The app with `markdown` opened from a file (a paste could leave an
  *  empty line around it), or an empty document to type in. */
 async function open(page: Page, markdown = "") {
-  await openApp(page, { settings: { language: "en" } });
+  // No ghost text: a suggestion arriving mid-flow, under load, moves the
+  // caret and the selection these flows read.
+  await openApp(page, {
+    settings: { language: "en", enableCompletion: false },
+  });
   if (!markdown) {
     await page.locator(editor).click();
     return;
@@ -297,20 +301,20 @@ test("Mod+B and Mod+I on a selection keep it selected, so they add up and come o
   await page.keyboard.type("hello world");
   for (let i = 0; i < 5; i++) await page.keyboard.press("Shift+ArrowLeft");
   const selected = () => page.evaluate(() => getSelection()?.toString());
-  expect(await selected()).toBe("world");
+  await expect.poll(selected).toBe("world");
   await page.keyboard.press("ControlOrMeta+b");
-  expect(await selected()).toBe("world");
+  await expect.poll(selected).toBe("world");
   await page.keyboard.press("ControlOrMeta+i");
-  expect(await selected()).toBe("world");
+  await expect.poll(selected).toBe("world");
   expect(await sourceOf(page)).toBe("hello ***world***");
   // Source mode put the caret elsewhere: select the word again, by a
   // double click this time.
   await page.locator(`${editor} em`).dblclick();
-  expect(await selected()).toBe("world");
+  await expect.poll(selected).toBe("world");
   await page.keyboard.press("ControlOrMeta+b");
-  expect(await selected()).toBe("world");
+  await expect.poll(selected).toBe("world");
   await page.keyboard.press("ControlOrMeta+i");
-  expect(await selected()).toBe("world");
+  await expect.poll(selected).toBe("world");
   expect(await sourceOf(page)).toBe("hello world");
 });
 
@@ -322,9 +326,15 @@ test("a double click on a bold or italic word selects that word", async ({
   await open(page, "plain **bold** and *it* here, **粗体文字**");
   const selected = () => page.evaluate(() => getSelection()?.toString());
   await page.locator(`${editor} strong`).first().dblclick();
-  expect(await selected()).toBe("bold");
+  await expect.poll(selected).toBe("bold");
   await page.locator(`${editor} em`).dblclick();
-  expect(await selected()).toBe("it");
+  await expect.poll(selected).toBe("it");
+  // Bold-italic is italic around bold: a double click at the word's edge,
+  // between the two spans, still finds it in the inner one.
+  await open(page, "edge ***world*** here");
+  await page.locator(`${editor} em`).dblclick({ position: { x: 1, y: 8 } });
+  await expect.poll(selected).toBe("world");
+  await open(page, "plain **bold** and *it* here, **粗体文字**");
   // Chinese is cut into words, as a double click on plain text cuts it:
   // the first word, never a delimiter.
   await page

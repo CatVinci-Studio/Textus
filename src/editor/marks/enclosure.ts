@@ -816,11 +816,18 @@ function liveRange(view: EditorView): [number, number] | null {
  */
 export function stateWithLiveSelection(view: EditorView): EditorState {
   const { state } = view;
-  if (!state.selection.empty) return state;
-  // A range the browser has but the state doesn't yet - Shift+Arrow just
-  // before Mod+B: the shortcut wraps what is on screen selected.
+  // A range the browser has but the state doesn't yet, or not all of -
+  // Shift+Arrow just before Mod+B, the last steps still to be read back:
+  // the shortcut wraps what is on screen selected. A node selection (an
+  // image) is the state's own.
   const range = liveRange(view);
-  if (range && range[0] !== range[1]) {
+  const { selection } = state;
+  if (
+    range &&
+    range[0] !== range[1] &&
+    (selection.empty || selection instanceof TextSelection) &&
+    (selection.anchor !== range[0] || selection.head !== range[1])
+  ) {
     const [anchor, head] = range;
     if (Math.max(anchor, head) <= state.doc.content.size)
       return state.apply(
@@ -832,6 +839,7 @@ export function stateWithLiveSelection(view: EditorView): EditorState {
         ),
       );
   }
+  if (!state.selection.empty) return state;
   const pos = liveCaretPos(view);
   if (
     pos === null ||
@@ -1040,6 +1048,13 @@ export function wordInEnclosureAt(
   const $pos = doc.resolve(pos);
   const parent = $pos.parent;
   if (!isEnclosure(parent) || parent.isBlock) return null;
+  // Between one span's edge and another's inside it - bold-italic,
+  // `***x***`, is italic around bold - the word is in the inner one.
+  const inner = [$pos.nodeAfter, $pos.nodeBefore].findIndex(
+    (n) => !!n && isEnclosure(n) && !n.isBlock,
+  );
+  if (inner === 0) return wordInEnclosureAt(doc, pos + 1);
+  if (inner === 1) return wordInEnclosureAt(doc, pos - 1);
   let text = "";
   let plain = true;
   parent.forEach((child) => {
