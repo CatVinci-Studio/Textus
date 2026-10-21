@@ -15,7 +15,9 @@
 //! The agent cases at the end run the agent on Claude (ANTHROPIC_API_KEY)
 //! with generate_image offered and an image model that makes nothing
 //! (ImageRun::offline): what the model does with the tool, for no picture's
-//! cost.
+//! cost. TEXTUS_EVAL_REAL_PICTURES=1 makes the pictures for real, with
+//! Seedream (VOLCENGINE_ARK_API_KEY), and waits for each one the way the
+//! frontend does (ai_generated_image).
 
 use super::harness::{self, auth, block_on, secret, AgentSetup, UserTurn};
 use crate::ai::agent::AgentMode;
@@ -101,7 +103,13 @@ fn write_with_picture(message: &str, ui_language: &str) -> Vec<serde_json::Value
         return Vec::new();
     };
     let ws = workspace::load_layers(None, None, None, &[]);
-    let pictures = ImageRun::offline(2);
+    let real = std::env::var("TEXTUS_EVAL_REAL_PICTURES").as_deref() == Ok("1");
+    let pictures = if real {
+        let key = secret("VOLCENGINE_ARK_API_KEY").expect("VOLCENGINE_ARK_API_KEY");
+        ImageRun::live("doubao", key, 2).expect("doubao in the image catalog")
+    } else {
+        ImageRun::offline(2)
+    };
     let model = harness::agent_model();
     let setup = AgentSetup {
         model: &model,
@@ -124,6 +132,21 @@ fn write_with_picture(message: &str, ui_language: &str) -> Vec<serde_json::Value
         );
     }
     eprintln!("live_eval: reply: {}", outcome.reply);
+    if real {
+        for call in &outcome.calls {
+            let Some(id) = call["args"]["image"]["id"].as_str() else {
+                continue;
+            };
+            let started = std::time::Instant::now();
+            let picture = block_on(crate::ai::images::ai_generated_image(id.to_string()))
+                .unwrap_or_else(|e| panic!("picture {id}: {e}"));
+            eprintln!(
+                "live_eval: picture {id} came {:.1} s after the reply: {} bytes of base64",
+                started.elapsed().as_secs_f64(),
+                picture.data_base64_len()
+            );
+        }
+    }
     outcome.calls.clone()
 }
 

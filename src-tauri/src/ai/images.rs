@@ -372,6 +372,25 @@ impl ImageRun {
             limit,
         }
     }
+
+    /// A request's image model on a real service (`provider` from the
+    /// catalog, its cheapest model) with this key: the live picture cases
+    /// that pay for their pictures.
+    #[cfg(test)]
+    pub(crate) fn live(provider: &str, api_key: String, limit: usize) -> Option<Self> {
+        let entry = find(provider)?;
+        Some(Self {
+            job: ImageJob {
+                app: None,
+                api: entry.api,
+                base_url: entry.base_url?.to_string(),
+                api_key,
+                model: entry.models.last()?.to_string(),
+            },
+            made: AtomicUsize::new(0),
+            limit,
+        })
+    }
 }
 
 impl ImageJob {
@@ -734,6 +753,13 @@ pub struct GeneratedImageData {
     data_base64: String,
     width: u32,
     height: u32,
+}
+
+#[cfg(test)]
+impl GeneratedImageData {
+    pub(crate) fn data_base64_len(&self) -> usize {
+        self.data_base64.len()
+    }
 }
 
 /// What a picture's slot holds now: the picture, why it wasn't made, or
