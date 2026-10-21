@@ -46,7 +46,10 @@ export function AgentPanelView({
   /** Absent where the chat cannot be detached into its own window (iOS):
    *  the button is not drawn. */
   onPopOut?: () => void;
-  onClose: () => void;
+  /** Absent on the desktop, where the window bar's Textus AI button opens
+   *  and closes the panel (and its menu has Close the panel): only the
+   *  iPhone's sheet draws a close button. */
+  onClose?: () => void;
   /** The history button and its list (ChatHistoryMenu). */
   history: ReactNode;
   /** The Memory tab's content, drawn only while it shows. */
@@ -134,16 +137,18 @@ export function AgentPanelView({
               </button>
             </Tooltip>
           )}
-          <Tooltip text={labels.close}>
-            <button
-              type="button"
-              className="inline-chat-header-button"
-              aria-label={labels.close}
-              onClick={onClose}
-            >
-              <CloseIcon />
-            </button>
-          </Tooltip>
+          {onClose && (
+            <Tooltip text={labels.close}>
+              <button
+                type="button"
+                className="inline-chat-header-button"
+                aria-label={labels.close}
+                onClick={onClose}
+              >
+                <CloseIcon />
+              </button>
+            </Tooltip>
+          )}
         </div>
       </header>
       <div

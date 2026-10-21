@@ -14,6 +14,7 @@ import { chatLabels } from "../ai/chat/chat-labels";
 import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { EditProposal } from "../ai/types";
 import { canDetachChat } from "../platform/capabilities";
+import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { useState } from "react";
 import { ModeIcon } from "../ai/chat/mode-icons";
 import type { AgentMode, Settings } from "../settings/SettingsContext";
@@ -75,6 +76,9 @@ export function EditorAgentPanel({
   // What the composer is set to: the empty state says what the AI will do
   // in it.
   const [mode, setMode] = useState<AgentMode>(settings.agentDefaultMode);
+  // The window bar's Textus AI button opens and closes the panel; only
+  // the iPhone's sheet, over the page, keeps a close button of its own.
+  const phone = usePhoneLayout();
   const emptyText = {
     write: t.agentPanelEmptyWrite,
     review: t.agentPanelEmptyReview,
@@ -92,7 +96,7 @@ export function EditorAgentPanel({
       }}
       onNewConversation={onNewConversation}
       onPopOut={canDetachChat ? onPopOut : undefined}
-      onClose={() => agentPanel.setOpen(false)}
+      onClose={phone ? () => agentPanel.setOpen(false) : undefined}
       history={
         <ChatHistoryMenu
           buttonClassName="inline-chat-header-button"

@@ -5,7 +5,7 @@ import { announce } from "../ui/announce";
 import { AssistantIcon } from "../ui/icons";
 import { Tooltip } from "../ui/Tooltip";
 import { Presence } from "../ui/usePresence";
-import { ContextMenu } from "../editor/ContextMenu";
+import { ContextMenu, type ContextMenuItem } from "../editor/ContextMenu";
 import "./textus-ai-switch.css";
 
 /** How long "Pause for an hour" keeps Textus AI off. */
@@ -108,8 +108,16 @@ export function TextusAiButton({
     : until
       ? t.textusAiPausedTooltip.replace("{time}", until)
       : t.textusAiOffTooltip;
-  const items = ai.on
+  const items: (ContextMenuItem | "separator")[] = ai.on
     ? [
+        // The panel has no close button of its own on the desktop: this
+        // button opens and closes it, and its menu says so too.
+        ...(panelOpen
+          ? [
+              { label: t.textusAiClosePanel, onSelect: onTogglePanel },
+              "separator" as const,
+            ]
+          : []),
         { label: t.textusAiPause, onSelect: ai.pause },
         { label: t.textusAiTurnOff, onSelect: () => ai.toggle() },
       ]
