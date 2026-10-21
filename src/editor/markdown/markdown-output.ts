@@ -221,6 +221,10 @@ function keepLinkAcrossInlineNodes(ctx: Ctx): void {
     const schema = prev(innerCtx);
     return {
       ...schema,
+      // Typing at a link's end goes on after it, not into it: pasted, a
+      // link took the words typed after it ("Textus now" all linked). A
+      // link's text is edited as its source (link-reveal.ts).
+      inclusive: false,
       attrs: {
         ...schema.attrs,
         syntax: { default: "resource", validate: "string" },

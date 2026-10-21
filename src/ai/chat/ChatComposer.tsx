@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { ChatAttachment, ThinkingLevel } from "../types";
 import { resolveSkillMessage } from "./proposal";
 import { ai } from "../../platform/ipc";
@@ -52,6 +58,7 @@ import {
 } from "./composer-types";
 
 export type {
+  ChatComposerHandle,
   ChatComposerLabels,
   SelectionChip,
   SelectionChipHandlers,
@@ -85,6 +92,7 @@ export function ChatComposer({
   onStop,
   onEscape,
   onModeChange,
+  handle,
 }: ChatComposerProps) {
   const phone = usePhoneLayout();
   // Derived here rather than passed in: this is the only place an image can
@@ -162,6 +170,16 @@ export function ChatComposer({
     dismissedInput,
     lang: picker.lang,
   });
+  useImperativeHandle(
+    handle,
+    () => ({
+      restore: (text: string) => {
+        setInput((now) => (now.trim() ? `${text}\n\n${now}` : text));
+        inputRef.current?.focus();
+      },
+    }),
+    [],
+  );
 
   // The input grows with its content (Shift+Enter newlines) up to the CSS
   // max-height, then scrolls - a fixed single row just scrolled horizontally
@@ -322,7 +340,8 @@ export function ChatComposer({
   function submit() {
     const typed = input.trim();
     const message = resolveSkillMessage(typed, skills, resolveName);
-    if (!message || busy) return;
+    // While a reply is coming the message joins the queue (ChatBody).
+    if (!message) return;
     if (message !== typed) {
       const token = SKILL_COMMAND.exec(typed)?.[1];
       const name = token
@@ -338,7 +357,13 @@ export function ChatComposer({
     setInput("");
     const staged = attachments;
     setAttachments([]);
-    onSend(message, staged, !selectionDropped, { mode, webSearch, thinking });
+    onSend(
+      message,
+      staged,
+      !selectionDropped,
+      { mode, webSearch, thinking },
+      typed,
+    );
     if (selectionPerMessage && selectedText) setDroppedSelection(selectedText);
     if (message !== typed) onSkillUsed?.();
   }

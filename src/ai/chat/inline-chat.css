@@ -1489,3 +1489,46 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   font-size: var(--text-xs);
   color: var(--editor-muted);
 }
+
+/* Messages sent while a reply is coming (MessageQueue.tsx), over the
+   composer: a line each, the oldest first. */
+.chat-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px 6px 14px;
+  font-size: var(--text-sm);
+  color: var(--editor-text);
+  border-top: 1px solid var(--chat-hairline, var(--editor-border));
+}
+.chat-queue-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--editor-muted);
+  font-size: var(--text-xs);
+}
+.chat-queue-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.chat-queue-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+button.chat-queue-action {
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--editor-muted);
+  font: inherit;
+  cursor: pointer;
+}
+button.chat-queue-action:hover {
+  color: var(--editor-text);
+}

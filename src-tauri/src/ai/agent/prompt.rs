@@ -251,6 +251,12 @@ pub(crate) fn build_instructions(
     sections.join("\n\n")
 }
 
+/// Said in Write and Revise: text proposed and not decided yet is the
+/// document as the user sees it. A second request used to edit the
+/// document as saved under a first one's proposals - continuing before
+/// them, or quoting their text as an anchor the document didn't have.
+const UNDECIDED_TEXT: &str = "Text you proposed earlier that the user hasn't accepted or rejected yet is part of the document as they see it: to go on from it, insert_after its last sentence; to change or remove some of it, replace or delete with `anchor` quoted from it. The edit goes into that proposal.";
+
 /// The `---interaction mode---` section: what the user is in the panel for.
 pub(super) fn mode_section(mode: AgentMode, ui_language: &str) -> String {
     let ui = UiNames::of(ui_language);
@@ -268,8 +274,8 @@ pub(super) fn mode_section(mode: AgentMode, ui_language: &str) -> String {
     };
     match mode {
         AgentMode::Review => format!("---interaction mode: review---\nThe user is in {}: answer, explain, discuss or research, and pin feedback to passages with add_comment; you can't change the document here. When they ask for a change anyway, give the new text in your reply and say that in {} you can propose it for them to apply with one click - or, for new text added to the document, in {}.", named("Review", true), named("Revise", false), named("Write", false)),
-        AgentMode::Revise => format!("---interaction mode: revise---\nThe user is in {}: carry out their request on the document - rewrite, tighten, fix, restructure, delete or add - and submit every document change through propose_edit so they can review it before applying.", named("Revise", true)),
-        AgentMode::Write => format!("---interaction mode: write---\nThe user is in {}: draft new text into the document - continue it, or add a paragraph, section, list, scene or dialogue - through propose_edit, which in this mode only adds text (append, insert_at_cursor, insert_after, insert_before); the user reviews each proposal before it is applied. Where it goes: with a <selected-text> block, right after the selection - insert_after with the selection's last sentence (or the whole selection) as `anchor` - never in place of it; otherwise, with a <cursor> block in a document that has text, insert_at_cursor; in an empty document, append. Questions and feedback still get a plain reply. You can't change or remove text that is already there in this mode: when the user asks for that, say it needs {}, and add nothing in its place.", named("Write", true), named("Revise", false)),
+        AgentMode::Revise => format!("---interaction mode: revise---\nThe user is in {}: carry out their request on the document - rewrite, tighten, fix, restructure, delete or add - and submit every document change through propose_edit so they can review it before applying. {UNDECIDED_TEXT}", named("Revise", true)),
+        AgentMode::Write => format!("---interaction mode: write---\nThe user is in {}: draft new text into the document - continue it, or add a paragraph, section, list, scene or dialogue - through propose_edit, which in this mode only adds text (append, insert_at_cursor, insert_after, insert_before); the user reviews each proposal before it is applied. Where it goes: with a <selected-text> block, right after the selection - insert_after with the selection's last sentence (or the whole selection) as `anchor` - never in place of it; otherwise, with a <cursor> block in a document that has text, insert_at_cursor; in an empty document, append. Questions and feedback still get a plain reply. You can't change or remove text that is already there in this mode: when the user asks for that, say it needs {}, and add nothing in its place. {UNDECIDED_TEXT} That text is the one you may change here.", named("Write", true), named("Revise", false)),
     }
 }
 

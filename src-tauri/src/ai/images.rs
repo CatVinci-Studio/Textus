@@ -208,7 +208,7 @@ fn placeholder_src(id: &str) -> String {
 /// frontend puts the picture into that proposal.
 pub struct ProposedText<'a> {
     pub this_request: &'a std::sync::Mutex<ProposalLedger>,
-    pub undecided: &'a [String],
+    pub undecided: &'a [UndecidedEdit],
 }
 
 impl ProposedText<'_> {
@@ -218,17 +218,112 @@ impl ProposedText<'_> {
         let found: Vec<&String> = ledger
             .texts()
             .iter()
-            .chain(self.undecided)
+            .chain(self.undecided.iter().map(|edit| &edit.text))
             .filter(|text| text.contains(anchor))
             .collect();
         found.len() == 1 && found[0].matches(anchor).count() == 1
     }
 }
 
-/// The new text of each propose_edit in `history` the user hasn't decided
-/// on yet, as its result's status note says (src/ai/revision/
-/// proposal-status.ts).
-pub fn undecided_texts(history: &[AgentTurn]) -> Vec<String> {
+/// A propose_edit from an earlier request the user hasn't decided on yet.
+#[derive(Debug, Clone, PartialEq)]
+pub struct UndecidedEdit {
+    /// The document text a replace rewrites, which the user now sees as
+    /// `text`; empty for any other action.
+    pub replaced: String,
+    /// Its new text.
+    pub text: String,
+}
+
+/// Each propose_edit in `history` the user hasn't decided on yet, as its
+/// result's status note says (src/ai/revision/proposal-status.ts), reading
+/// as the user sees it: a later edit that went into one (the "joined" note)
+/// is made in its text. Without that, a third request quoting the joined
+/// text was checked against the first version (live_eval::continuing).
+pub fn undecided_edits(history: &[AgentTurn]) -> Vec<UndecidedEdit> {
+    const UNDECIDED: &str = "has NOT yet accepted or rejected this proposed edit";
+    const JOINED: &str = "this went into the proposed text it changes";
+    let note = |call_id: &str| {
+        history.iter().find_map(|t| match t {
+            AgentTurn::ToolResult {
+                call_id: id,
+                output,
+                ..
+            } if id == call_id => Some(output.as_str()),
+            _ => None,
+        })
+    };
+    let mut edits: Vec<UndecidedEdit> = Vec::new();
+    for turn in history {
+        let AgentTurn::ToolCall {
+            call_id,
+            name,
+            arguments,
+            ..
+        } = turn
+        else {
+            continue;
+        };
+        if name != "propose_edit" {
+            continue;
+        }
+        let Ok(args) = serde_json::from_str::<Value>(arguments) else {
+            continue;
+        };
+        let field = |key: &str| args.get(key).and_then(Value::as_str).unwrap_or("");
+        let (action, anchor, text) = (field("action"), field("anchor"), field("text"));
+        let note = note(call_id).unwrap_or("");
+        if note.contains(UNDECIDED) && !text.is_empty() {
+            edits.push(UndecidedEdit {
+                replaced: if action == "replace" { anchor } else { "" }.to_string(),
+                text: text.to_string(),
+            });
+        } else if note.contains(JOINED) {
+            if let Some((edit, made)) = edits.iter_mut().find_map(|edit| {
+                edited_text(&edit.text, action, anchor, text).map(|made| (edit, made))
+            }) {
+                edit.text = made;
+            }
+        }
+    }
+    edits
+}
+
+/// `text` with an edit quoted from it made in it - src/ai/revision/
+/// joined-edit.ts's editedText. None when the anchor isn't there exactly
+/// once or the action isn't an anchored edit.
+pub fn edited_text(text: &str, action: &str, anchor: &str, add: &str) -> Option<String> {
+    if anchor.is_empty() || text.matches(anchor).count() != 1 {
+        return None;
+    }
+    let at = text.find(anchor)?;
+    let (before, after) = (&text[..at], &text[at + anchor.len()..]);
+    let paragraph = |t: &str| format!("\n\n{}", t.trim());
+    Some(match action {
+        "replace" => format!("{before}{add}{after}"),
+        "delete" => format!("{before}{after}")
+            .replace("\n\n\n\n", "\n\n")
+            .trim()
+            .to_string(),
+        "insert_after" if add.contains("\n\n") || after.is_empty() || after.starts_with("\n\n") => {
+            let end = after.find("\n\n").unwrap_or(after.len());
+            format!(
+                "{before}{anchor}{}{}{}",
+                &after[..end],
+                paragraph(add),
+                &after[end..]
+            )
+        }
+        "insert_after" => format!("{before}{anchor} {add}{after}"),
+        "insert_before" => format!("{before}{add} {anchor}{after}"),
+        _ => return None,
+    })
+}
+
+/// The pictures earlier requests made that the user hasn't accepted or
+/// rejected yet, by id: a rewrite of the text by one may carry it
+/// (ProposalLedger's known pictures).
+pub fn undecided_pictures(history: &[AgentTurn]) -> Vec<String> {
     const UNDECIDED: &str = "has NOT yet accepted or rejected this proposed edit";
     history
         .iter()
@@ -238,14 +333,14 @@ pub fn undecided_texts(history: &[AgentTurn]) -> Vec<String> {
                 name,
                 arguments,
                 ..
-            } if name == "propose_edit" => {
+            } if name == GENERATE_IMAGE_TOOL_NAME => {
                 let open = history.iter().any(|t| {
                     matches!(t, AgentTurn::ToolResult { call_id: id, output, .. }
                         if id == call_id && output.contains(UNDECIDED))
                 });
                 let args: Value = serde_json::from_str(arguments).ok()?;
-                let text = args.get("text")?.as_str()?;
-                (open && !text.is_empty()).then(|| text.to_string())
+                let id = args.get("image")?.get("id")?.as_str()?;
+                open.then(|| id.to_string())
             }
             _ => None,
         })
@@ -673,10 +768,19 @@ fn outcome(arguments: &str) -> String {
             image["width"].as_u64().unwrap_or(0),
             image["height"].as_u64().unwrap_or(0)
         );
+        // Its Markdown, for a later rewrite of the text it stands by to
+        // carry it before the user decides on it.
+        let alt = args["alt"].as_str().unwrap_or("").replace(['[', ']'], "");
+        let markdown = format!(
+            "![{}]({})",
+            alt.split_whitespace().collect::<Vec<_>>().join(" "),
+            placeholder_src(image["id"].as_str().unwrap_or(""))
+        );
+        let carry = format!(" Until the user decides on it, its Markdown is {markdown}: if you rewrite the paragraph it stands by, put that line in your new text where the picture goes.");
         if image["pending"].as_bool() == Some(true) {
-            return format!("Image proposed and being made ({size} pixels) while you go on, and appears in place by itself with Accept and Reject once it is ready (or, if the service turns it down, the user sees why there). It is saved only if they accept. Carry on with the rest of the request now - don't wait for it. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.");
+            return format!("Image proposed and being made ({size} pixels) while you go on, and appears in place by itself with Accept and Reject once it is ready (or, if the service turns it down, the user sees why there). It is saved only if they accept. Carry on with the rest of the request now - don't wait for it. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.{carry}");
         }
-        return format!("Image proposed - the user now sees the picture ({size} pixels) in the document with Accept and Reject; it is saved only if they accept. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.");
+        return format!("Image proposed - the user now sees the picture ({size} pixels) in the document with Accept and Reject; it is saved only if they accept. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.{carry}");
     }
     let why = args
         .get("not_generated")
@@ -866,7 +970,7 @@ mod tests {
         args: Value,
         document: &str,
         this_request: &[&str],
-        undecided: &[String],
+        undecided: &[UndecidedEdit],
     ) -> (Value, bool) {
         let this_request = std::sync::Mutex::new(ProposalLedger::with_texts(this_request));
         let proposed = ProposedText {
@@ -957,7 +1061,10 @@ mod tests {
             at("The tide went out before dawn."),
             DOC,
             &[],
-            &[new.to_string()],
+            &[UndecidedEdit {
+                replaced: String::new(),
+                text: new.to_string(),
+            }],
         );
         assert!(args.get("image").is_some(), "{args}");
         // Text found nowhere is still refused, and spends nothing.
@@ -970,7 +1077,74 @@ mod tests {
     }
 
     #[test]
-    fn undecided_texts_are_read_off_the_status_notes() {
+    fn a_picture_not_decided_yet_is_known_with_its_markdown() {
+        let call = |id: &str, image: &str| {
+            AgentTurn::ToolCall {
+            call_id: id.into(),
+            name: GENERATE_IMAGE_TOOL_NAME.into(),
+            arguments: json!({"prompt": "p", "alt": "Boats", "action": "insert_after", "anchor": "A.", "image": {"id": image, "width": 1, "height": 1}}).to_string(),
+            reasoning: None,
+        }
+        };
+        let result = |id: &str, note: &str| AgentTurn::ToolResult {
+            call_id: id.into(),
+            output: format!("Image proposed. {note}"),
+            images: Vec::new(),
+        };
+        let history = vec![
+            call("g1", "open1"),
+            result(
+                "g1",
+                "Status: the user has NOT yet accepted or rejected this proposed edit.",
+            ),
+            call("g2", "taken"),
+            result("g2", "Status: the user accepted this proposed edit."),
+        ];
+        assert_eq!(undecided_pictures(&history), vec!["open1".to_string()]);
+        let text = outcome(&json!({"alt": "Boats", "action": "insert_after", "image": {"id": "open1", "width": 1, "height": 1}}).to_string());
+        assert!(text.contains("![Boats](textus-generated:open1)"), "{text}");
+    }
+
+    #[test]
+    fn an_edit_that_went_into_an_undecided_one_is_read_into_it() {
+        let call = |id: &str, args: Value| AgentTurn::ToolCall {
+            call_id: id.into(),
+            name: "propose_edit".into(),
+            arguments: args.to_string(),
+            reasoning: None,
+        };
+        let result = |id: &str, note: &str| AgentTurn::ToolResult {
+            call_id: id.into(),
+            output: format!("Edit proposed.\n\n[{note}]"),
+            images: Vec::new(),
+        };
+        let pending = "Status: the user has NOT yet accepted or rejected this proposed edit.";
+        let joined = "Status: this went into the proposed text it changes or goes next to - that proposal now reads with it, and it is accepted or rejected with that proposal.";
+        let history = vec![
+            call(
+                "a",
+                json!({"action": "replace", "anchor": "The old light.", "text": "The lighthouse shone. Gulls cried."}),
+            ),
+            result("a", pending),
+            call("b", json!({"action": "delete", "anchor": " Gulls cried."})),
+            result("b", joined),
+            call(
+                "c",
+                json!({"action": "replace", "anchor": "lighthouse", "text": "beacon"}),
+            ),
+            result("c", joined),
+        ];
+        assert_eq!(
+            undecided_edits(&history),
+            vec![UndecidedEdit {
+                replaced: "The old light.".into(),
+                text: "The beacon shone.".into(),
+            }]
+        );
+    }
+
+    #[test]
+    fn undecided_edits_are_read_off_the_status_notes() {
         let call = |id: &str, text: &str| AgentTurn::ToolCall {
             call_id: id.into(),
             name: "propose_edit".into(),
@@ -988,7 +1162,13 @@ mod tests {
             call("b", "Open."),
             result("b", "Status: the user has NOT yet accepted or rejected this proposed edit. It is still shown to them as a preview."),
         ];
-        assert_eq!(undecided_texts(&history), vec!["Open.".to_string()]);
+        assert_eq!(
+            undecided_edits(&history),
+            vec![UndecidedEdit {
+                replaced: String::new(),
+                text: "Open.".into()
+            }]
+        );
     }
 
     #[test]

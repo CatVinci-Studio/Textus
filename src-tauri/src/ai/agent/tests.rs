@@ -15,6 +15,7 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
     let conventions = crate::ai::rules::Conventions::default();
     let ctx = ToolContext {
         document,
+        undecided: &[],
         skills: &[],
         ui_language: "en",
         root: None,

@@ -99,6 +99,23 @@ export function locateHunks(
     if (!plain || index === -1 || text.slice(0, index).trim()) return null;
     cursor = index + plain.length;
   }
+  // An unchanged piece whose text can't be matched as it stands - a table
+  // or a code block, whose Markdown (`| --- |`, fences) the text doesn't
+  // have: it is whatever lies before the next piece, found once that one
+  // is (a run of them - a table's rows - the first taking it all). Matched
+  // exactly, it would have made a whole-text rewrite of a document with a
+  // table fall back to one block and one card.
+  let unplaced = -1;
+  const place = (index: number) => {
+    if (unplaced < 0) return;
+    for (let k = unplaced; k < out.length; k++) {
+      out[k] =
+        k === unplaced
+          ? { from: at(cursor), to: at(index) }
+          : { from: at(index), to: at(index) };
+    }
+    unplaced = -1;
+  };
   for (const hunk of hunks) {
     const markdown = hunk.kind === "same" ? hunk.text : hunk.before;
     if (!markdown.trim()) {
@@ -107,16 +124,27 @@ export function locateHunks(
       continue;
     }
     const plain = plainPiece(markdown);
-    if (!plain) return null;
-    const index = text.indexOf(plain, cursor);
+    const index = plain ? text.indexOf(plain, cursor) : -1;
     // Found, and nothing but whitespace skipped on the way - text in
-    // between would belong to no piece.
-    if (index === -1 || text.slice(cursor, index).trim()) return null;
+    // between would belong to no piece, unless an unchanged one before it
+    // is still to be placed.
+    const adjacent = index !== -1 && !text.slice(cursor, index).trim();
+    if (hunk.kind === "same" && !adjacent) {
+      if (unplaced < 0) unplaced = out.length;
+      out.push({ from: at(cursor), to: at(cursor) });
+      continue;
+    }
+    if (!plain || index === -1 || (!adjacent && unplaced < 0)) return null;
+    if (unplaced >= 0) {
+      place(index);
+      cursor = index;
+    }
     out.push({
       from: positions[index],
       to: positions[index + plain.length - 1] + 1,
     });
     cursor = index + plain.length;
   }
+  place(text.length);
   return out;
 }

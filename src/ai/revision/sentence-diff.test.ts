@@ -114,3 +114,33 @@ describe("aligning a rewritten run", () => {
     ).toBe(1);
   });
 });
+
+describe("a change over several paragraphs", () => {
+  it("is one change for each paragraph, when the paragraphs stay as many", () => {
+    // Sentences too unalike to pair: one run across both paragraphs.
+    const hunks = diffSentences(
+      "Rain fell.\n\nWind rose.",
+      "The sea was flat and grey.\n\nNothing moved on the quay.",
+    );
+    expect(hunks).toEqual([
+      {
+        kind: "change",
+        before: "Rain fell.\n\n",
+        after: "The sea was flat and grey.\n\n",
+      },
+      {
+        kind: "change",
+        before: "Wind rose.",
+        after: "Nothing moved on the quay.",
+      },
+    ]);
+  });
+
+  it("stays one change where paragraphs are joined", () => {
+    const hunks = diffSentences(
+      "Rain fell.\n\nWind rose.",
+      "The sea was flat and grey, and nothing moved on the quay.",
+    );
+    expect(hunks.filter((h) => h.kind === "change")).toHaveLength(1);
+  });
+});

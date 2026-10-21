@@ -140,6 +140,7 @@ fn use_skill_expands_skills_and_loads_packs() {
     let ws = crate::ai::workspace::load_layers(None, None, None, &["describe".to_string()]);
     let doc = "雨はまだ降っていた。美咲は改札の前で、何度も時計を見た。";
     let ctx = ToolContext {
+        undecided: &[],
         document: doc,
         skills: &ws.skills,
         ui_language: "en",
@@ -172,6 +173,7 @@ fn use_skill_expands_skills_and_loads_packs() {
 
 fn ctx(document: &str) -> ToolContext<'_> {
     ToolContext {
+        undecided: &[],
         document,
         skills: &[],
         ui_language: "en",
@@ -438,6 +440,82 @@ fn review_mode_does_not_receive_the_edit_tool() {
     // prefix); Write's run refuses what changes existing text (below).
     let spec = |mode| format!("{:?}", edit_tool(mode).unwrap().spec);
     assert_eq!(spec(AgentMode::Write), spec(AgentMode::Revise));
+}
+
+#[test]
+fn an_edit_of_text_an_undecided_rewrite_replaces_goes_into_the_rewrite() {
+    let doc = "The lighthouse stood on the rock. Waves broke below.";
+    let undecided = vec![crate::ai::images::UndecidedEdit {
+        replaced: "The lighthouse stood on the rock.".into(),
+        text: "The old lighthouse stood alone on its rock.".into(),
+    }];
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let context = ToolContext {
+        undecided: &undecided,
+        ..ctx(doc)
+    };
+    let run = |args: &str| execute(&tools, &context, PROPOSE_EDIT_TOOL_NAME, args).text;
+    // Words the rewrite kept: the edit goes into it.
+    let out = run(r#"{"action":"replace","anchor":"lighthouse","text":"beacon"}"#);
+    assert!(out.contains("goes into that proposal"), "{out}");
+    // Words it no longer has: refused, pointed at the rewrite.
+    let out =
+        run(r#"{"action":"replace","anchor":"stood on the rock","text":"rose from the rock"}"#);
+    assert!(out.starts_with("Not proposed"), "{out}");
+    assert!(out.contains("Anchor in the rewrite's text"), "{out}");
+    // A new version of the whole passage takes the rewrite's place.
+    let out = run(
+        r#"{"action":"replace","anchor":"The lighthouse stood on the rock.","text":"The beacon stood alone."}"#,
+    );
+    assert!(
+        out.contains("takes the place of your earlier rewrite"),
+        "{out}"
+    );
+    // Text beside it is the document's, as before.
+    let out =
+        run(r#"{"action":"replace","anchor":"Waves broke below.","text":"Waves crashed below."}"#);
+    assert!(out.starts_with("Edit proposed"), "{out}");
+    assert!(!out.contains("goes into that proposal"), "{out}");
+}
+
+#[test]
+fn an_edit_may_change_text_proposed_and_not_decided_yet() {
+    let doc = "The cat sat on the mat.";
+    let undecided = vec![crate::ai::images::UndecidedEdit {
+        replaced: String::new(),
+        text: "It purred all night. Then it slept.".to_string(),
+    }];
+    for mode in [AgentMode::Write, AgentMode::Revise] {
+        let tools = ToolRegistry::builtin(false, false, mode, false, false);
+        let context = ToolContext {
+            undecided: &undecided,
+            ..ctx(doc)
+        };
+        let run = |args: &str| execute(&tools, &context, PROPOSE_EDIT_TOOL_NAME, args).text;
+        for args in [
+            r#"{"action":"replace","anchor":"It purred all night.","text":"It purred."}"#,
+            r#"{"action":"delete","anchor":"Then it slept."}"#,
+            r#"{"action":"insert_after","anchor":"Then it slept.","text":"At dawn it woke."}"#,
+        ] {
+            let out = run(args);
+            assert!(out.starts_with("Edit proposed"), "{mode:?} {args}: {out}");
+            assert!(out.contains("goes into that proposal"), "{out}");
+        }
+        // Text in neither is still refused.
+        assert!(
+            !run(r#"{"action":"replace","anchor":"A dog barked.","text":"x"}"#)
+                .starts_with("Edit proposed")
+        );
+    }
+    // This request's own proposals count too.
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let context = ctx(doc);
+    let run = |args: &str| execute(&tools, &context, PROPOSE_EDIT_TOOL_NAME, args).text;
+    assert!(run(r#"{"action":"append","text":"A new line here."}"#).starts_with("Edit proposed"));
+    assert!(
+        run(r#"{"action":"replace","anchor":"A new line here.","text":"A newer line."}"#)
+            .contains("goes into that proposal")
+    );
 }
 
 #[test]

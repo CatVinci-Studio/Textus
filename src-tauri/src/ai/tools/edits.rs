@@ -66,6 +66,8 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     if needs_text(action) && !has_text {
         return format!("`{action}` requires `text` - the new content.");
     }
+    let mut joins = false;
+    let mut again = false;
     if needs_anchor(action) {
         if anchor.is_empty() {
             return format!(
@@ -73,7 +75,30 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
             );
         }
         if let Err(problem) = check_anchor(ctx.document, &parsed, anchor) {
-            return problem;
+            // In text proposed and not decided yet - this request's or an
+            // earlier one's - the edit goes into that proposal.
+            if !quotes_undecided(ctx, anchor) {
+                return problem;
+            }
+            joins = true;
+        } else if let Some(rewrite) = ctx
+            .undecided
+            .iter()
+            .find(|edit| !edit.replaced.is_empty() && edit.replaced.contains(anchor))
+        {
+            // Document text an undecided rewrite replaces: the user sees the
+            // rewrite there, and an edit of the old text would overlap it
+            // (Sonnet anchored a word of the original after a rewrite of
+            // the paragraph, live_eval::continuing). Where the rewrite still
+            // has those words the edit goes into it, and a new version of
+            // the whole passage takes its place.
+            again = action == "replace" && anchor == rewrite.replaced;
+            if !again {
+                if rewrite.text.matches(anchor).count() != 1 || !quotes_undecided(ctx, anchor) {
+                    return "Not proposed: that passage is one you rewrote earlier and the user hasn't decided on yet - they see your rewrite in its place, and an edit of the old text can't be applied beside it. Anchor in the rewrite's text instead (quote it as you proposed it): the edit goes into that proposal.".to_string();
+                }
+                joins = true;
+            }
         }
     }
 
@@ -98,7 +123,7 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     // previews overlap and only one can ever be applied. Sonnet sent the
     // same French proofreading twice in one step (round 4); the first
     // stands, the copy is refused (and never shown - see proposal-status.ts).
-    if matches!(action, "replace" | "delete" | "replace_selection") {
+    if !joins && matches!(action, "replace" | "delete" | "replace_selection") {
         let context = parsed.get("context").and_then(|v| v.as_str());
         let passage = match action {
             "replace_selection" => ProposedPassage::selection(),
@@ -139,7 +164,27 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         ledger.texts.push(text.to_string());
         unmade = ledger.take_unmade().unwrap_or_default();
     }
-    format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{size}{unmade} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
+    let into = if joins {
+        " It changes text you proposed that the user hasn't decided on yet: it goes into that proposal, which now reads with it."
+    } else if again {
+        " It takes the place of your earlier rewrite of that passage, which the user hadn't decided on."
+    } else {
+        ""
+    };
+    format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{into}{size}{unmade} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
+}
+
+/// Whether `anchor` is quoted from exactly one place in text proposed and
+/// not decided yet: this request's proposals and earlier ones'.
+fn quotes_undecided(ctx: &ToolContext, anchor: &str) -> bool {
+    let ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
+    let found: usize = ledger
+        .texts
+        .iter()
+        .chain(ctx.undecided.iter().map(|edit| &edit.text))
+        .map(|text| text.matches(anchor).count())
+        .sum();
+    found == 1
 }
 
 /// Write mode's propose_edit. Its schema offers only INSERT_ACTIONS, but a
@@ -150,7 +195,15 @@ pub(super) fn propose_insertion(ctx: &ToolContext, arguments: &str) -> String {
         .ok()
         .and_then(|v| v.get("action")?.as_str().map(str::to_string))
         .unwrap_or_default();
-    if !INSERT_ACTIONS.contains(&action.as_str()) {
+    // Text it proposed and the user hasn't decided on isn't theirs yet:
+    // that it may change.
+    let own = serde_json::from_str::<serde_json::Value>(arguments)
+        .ok()
+        .and_then(|v| v.get("anchor")?.as_str().map(str::to_string))
+        .is_some_and(|anchor| {
+            !anchor.is_empty() && !ctx.document.contains(&anchor) && quotes_undecided(ctx, &anchor)
+        });
+    if !INSERT_ACTIONS.contains(&action.as_str()) && !own {
         return format!(
             "Not proposed: Write mode only adds text, with {} - `{action}` would change or remove text that is already there. Add the new text instead, or tell the user that changing existing text needs Revise mode.",
             INSERT_ACTIONS.join(", ")

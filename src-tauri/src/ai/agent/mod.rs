@@ -419,8 +419,13 @@ async fn ai_agent_message_inner(
                 build_instructions(&workspace, &document, true, mode, &focus, &ui_language),
                 web,
             );
+            // The text of proposals still undecided from earlier requests:
+            // an edit or a picture may go into it (ai::images, tools.rs's
+            // propose_edit).
+            let undecided = crate::ai::images::undecided_edits(&history);
             let tool_ctx = ToolContext {
                 document: &document,
+                undecided: &undecided,
                 skills: &workspace.skills,
                 ui_language: &ui_language,
                 root: workspace.root.as_deref().map(Path::new),
@@ -428,12 +433,13 @@ async fn ai_agent_message_inner(
                 conventions: &conventions,
                 library: &library,
                 memory: memory.as_ref(),
-                proposed: Default::default(),
+                // The pictures not decided yet: this request's text may
+                // carry them, each once.
+                proposed: std::sync::Mutex::new(tools::ProposalLedger::with_pictures(
+                    crate::ai::images::undecided_pictures(&history),
+                )),
                 checks: Default::default(),
             };
-            // The text of proposals still undecided from earlier requests:
-            // a picture may go next to it (ai::images).
-            let undecided = crate::ai::images::undecided_texts(&history);
             let mut tools = ToolRegistry::builtin(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),

@@ -20,6 +20,12 @@ use folder::*;
 /// more tools need more context (e.g. an MCP client handle) without changing
 /// each tool's call signature.
 pub struct ToolContext<'a> {
+    /// Proposals from earlier requests the user hasn't accepted or
+    /// rejected (images::undecided_edits): their text is part of the
+    /// document as the user sees it, in place of what a rewrite replaces,
+    /// so an edit may change it - the frontend puts that edit into the
+    /// proposal (usePendingEdits's joinEdit).
+    pub undecided: &'a [crate::ai::images::UndecidedEdit],
     pub document: &'a str,
     /// The merged skills: built-in, global config folder, project .textus/.
     pub skills: &'a [AgentSkill],
@@ -71,6 +77,15 @@ pub struct ProposalLedger {
 }
 
 impl ProposalLedger {
+    /// A ledger that knows these pictures already: earlier requests',
+    /// not decided yet, which this request's text may carry.
+    pub fn with_pictures(pictures: Vec<String>) -> Self {
+        Self {
+            pictures,
+            ..Self::default()
+        }
+    }
+
     /// A picture written into text this request proposes.
     pub fn add_picture(&mut self, id: String) {
         self.pictures.push(id);

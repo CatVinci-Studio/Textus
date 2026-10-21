@@ -50,10 +50,10 @@ export function refusedProposalIds(turns: AgentTurn[]): Set<string> {
 
 const STATUS_NOTES: Record<PendingStatus, string> = {
   pending:
-    "Status: the user has NOT yet accepted or rejected this proposed edit. It is still shown to them as a preview and is NOT part of the document text in this request - do not assume it was applied, and do not anchor new edits to its text.",
+    "Status: the user has NOT yet accepted or rejected this proposed edit. It is shown to them as a preview and is NOT in the document text in this request - do not assume it was applied. To change it or go on from it, anchor in its text: the edit goes into this proposal.",
   // Still revealing/arguments still arriving - same consequence as pending.
   streaming:
-    "Status: the user has NOT yet accepted or rejected this proposed edit. It is still shown to them as a preview and is NOT part of the document text in this request - do not assume it was applied, and do not anchor new edits to its text.",
+    "Status: the user has NOT yet accepted or rejected this proposed edit. It is shown to them as a preview and is NOT in the document text in this request - do not assume it was applied. To change it or go on from it, anchor in its text: the edit goes into this proposal.",
   accepted:
     "Status: the user accepted this proposed edit - the document text in this request includes it.",
   rejected:
@@ -62,8 +62,10 @@ const STATUS_NOTES: Record<PendingStatus, string> = {
     "Status: this proposed edit could not be applied (the text it targeted changed) and was discarded - it is not part of the document.",
   expired:
     "Status: this proposed edit is from an earlier session and was never applied - it is not part of the document.",
+  // A text edit or a picture made in another proposal (usePendingEdits's
+  // joinInto); images::undecided_edits reads the edit back into it.
   joined:
-    "Status: this picture was put into the proposed text it goes next to, and is accepted or rejected with that proposal.",
+    "Status: this went into the proposed text it changes or goes next to - that proposal now reads with it, and it is accepted or rejected with that proposal.",
 };
 
 /**

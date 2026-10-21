@@ -1,3 +1,4 @@
+import { withoutCitationMarkers } from "../citation-markers";
 import {
   Fragment,
   useEffect,
@@ -441,7 +442,10 @@ export function ChatMessages({
       {streaming && streaming.text.length > 0 && (
         <div className="turn-reveal agent-streaming">
           <AgentTurnView
-            turn={{ kind: "Assistant", text: streaming.text }}
+            turn={{
+              kind: "Assistant",
+              text: withoutCitationMarkers(streaming.text, true),
+            }}
             labels={labels}
           />
         </div>

@@ -104,11 +104,17 @@ describe("the composer on a phone", () => {
       target: { value: "why?" },
     });
     fireEvent.click(screen.getByText("Send"));
-    expect(onSend).toHaveBeenCalledWith("why?", [], true, {
-      mode: "review",
-      webSearch: false,
-      thinking: "auto",
-    });
+    expect(onSend).toHaveBeenCalledWith(
+      "why?",
+      [],
+      true,
+      {
+        mode: "review",
+        webSearch: false,
+        thinking: "auto",
+      },
+      "why?",
+    );
   });
 
   it("docked, quotes the selection and falls back to the cursor", () => {

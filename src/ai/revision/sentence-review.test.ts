@@ -133,8 +133,9 @@ describe("locateHunks", () => {
       );
       return ranges?.map((r) => doc.textBetween(r.from, r.to));
     });
-    // "One." stays; the two changes, too unalike to pair, are one.
-    expect(result).toEqual(["One.", "Two.Three."]);
+    // "One." stays; the two changes, too unalike to pair, are one change
+    // for each paragraph they are in.
+    expect(result).toEqual(["One.", "Two.", "Three."]);
   });
 
   it("gives up when the words before the anchor aren't where it starts", async () => {

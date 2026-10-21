@@ -400,6 +400,105 @@ pub fn agent_request_body(
     body
 }
 
+/// `text` without the citation markers OpenAI's models write in their own
+/// app's format - `\u{e200}cite\u{e202}turn3view0\u{e201}`, or, its private-use
+/// delimiters lost, `citeturn3view0turn8view1` - which nothing here reads:
+/// they reached documents as garbage after the ChatGPT model searched the
+/// web (1.2.0-rc.5). The pages themselves come as annotations and
+/// `web_search_call` sources. A space left before punctuation goes too.
+pub fn strip_citation_markers(text: &str) -> String {
+    if !text.contains('\u{e200}') && !text.contains("citeturn") {
+        return text.to_string();
+    }
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    loop {
+        let delimited = rest.find('\u{e200}');
+        let bare = rest.find("citeturn");
+        let at = match (delimited, bare) {
+            (Some(a), Some(b)) => a.min(b),
+            (Some(a), None) | (None, Some(a)) => a,
+            (None, None) => break,
+        };
+        out.push_str(&rest[..at]);
+        let marker = &rest[at..];
+        let len = if marker.starts_with('\u{e200}') {
+            marker
+                .find('\u{e201}')
+                .map_or(marker.len(), |end| end + '\u{e201}'.len_utf8())
+        } else {
+            bare_marker_len(marker)
+        };
+        rest = &marker[len..];
+        // "found it citeturn1view0." reads "found it."
+        let next = rest.chars().next();
+        if next.is_none_or(|c| c.is_whitespace() || ".,;:!?)，。；：！？）、".contains(c)) {
+            let trimmed = out.trim_end_matches([' ', '\t']).len();
+            out.truncate(trimmed);
+        }
+    }
+    out.push_str(rest);
+    // A private-use delimiter left over on its own.
+    out.retain(|c| !('\u{e200}'..='\u{e2ff}').contains(&c));
+    out
+}
+
+/// The length of a `citeturnNkindM(turnNkindM...)` marker at the start of
+/// `text`.
+fn bare_marker_len(text: &str) -> usize {
+    let mut at = "cite".len();
+    loop {
+        let rest = &text[at..];
+        let Some(after) = rest.strip_prefix("turn") else {
+            break;
+        };
+        let digits = after.chars().take_while(char::is_ascii_digit).count();
+        let kind = after[digits..]
+            .chars()
+            .take_while(char::is_ascii_lowercase)
+            .count();
+        let number = after[digits + kind..]
+            .chars()
+            .take_while(char::is_ascii_digit)
+            .count();
+        if digits == 0 || kind == 0 || number == 0 {
+            break;
+        }
+        at += "turn".len() + digits + kind + number;
+    }
+    at
+}
+
+/// Tool arguments without citation markers in what they write - not in an
+/// `anchor` or `context`, which quote the document: one that already has
+/// such markers (written before this) must still be quotable, to clean up.
+fn strip_markers_in_arguments(arguments: &str) -> String {
+    if !arguments.contains("citeturn")
+        && !arguments.contains('\u{e200}')
+        && !arguments.contains("\\ue200")
+    {
+        return arguments.to_string();
+    }
+    fn walk(value: &mut Value) {
+        match value {
+            Value::String(s) => *s = strip_citation_markers(s),
+            Value::Array(items) => items.iter_mut().for_each(walk),
+            Value::Object(map) => map
+                .iter_mut()
+                .filter(|(key, _)| !matches!(key.as_str(), "anchor" | "context"))
+                .for_each(|(_, v)| walk(v)),
+            _ => {}
+        }
+    }
+    match serde_json::from_str::<Value>(arguments) {
+        Ok(mut value) => {
+            walk(&mut value);
+            value.to_string()
+        }
+        Err(_) => arguments.to_string(),
+    }
+}
+
 /// A message part's text with its `url_citation` annotations marked
 /// ([`mark_cited_spans`]). xAI's annotations carry the citation's number as
 /// their `title`, not the page's: a title that is only digits is no title.
@@ -477,7 +576,7 @@ pub fn parse_agent_output(output: &[Value], on_event: EventSink<'_>) -> StepResu
                 tool_calls.push(AgentTurn::ToolCall {
                     call_id: call_id.to_string(),
                     name: name.to_string(),
-                    arguments: arguments.to_string(),
+                    arguments: strip_markers_in_arguments(arguments),
                     reasoning: None,
                 });
             }
@@ -485,7 +584,8 @@ pub fn parse_agent_output(output: &[Value], on_event: EventSink<'_>) -> StepResu
                 if let Some(content) = item.get("content").and_then(|c| c.as_array()) {
                     for part in content {
                         if part.get("text").and_then(|t| t.as_str()).is_some() {
-                            text_parts.push(cited_part_text(part, &mut citations, on_event));
+                            let text = cited_part_text(part, &mut citations, on_event);
+                            text_parts.push(strip_citation_markers(&text));
                         }
                     }
                 }
@@ -504,6 +604,63 @@ pub fn parse_agent_output(output: &[Value], on_event: EventSink<'_>) -> StepResu
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn citation_markers_are_taken_out_of_text_and_arguments() {
+        // Delimited, as the model writes them.
+        assert_eq!(
+            strip_citation_markers("返回选项及概率。\u{e200}cite\u{e202}turn3view0\u{e201}"),
+            "返回选项及概率。"
+        );
+        // Their delimiters lost, as they reached a document (rc.5).
+        assert_eq!(
+            strip_citation_markers(
+                "中文输入应优先测试多语言版。citeturn2search0turn3view2\n\nNext"
+            ),
+            "中文输入应优先测试多语言版。\n\nNext"
+        );
+        assert_eq!(
+            strip_citation_markers("It was found citeturn1view0. Then"),
+            "It was found. Then"
+        );
+        // Words that only start like one stay.
+        assert_eq!(
+            strip_citation_markers("We cite turnout data."),
+            "We cite turnout data."
+        );
+        let call = parse_agent_output(
+            &[
+                json!({"type": "function_call", "call_id": "c1", "name": "propose_edit",
+                "arguments": json!({"action": "append", "text": "Jev 的接口。citeturn3view0"}).to_string()}),
+            ],
+            &|_| {},
+        );
+        let StepResult::ToolCalls(calls) = call else {
+            panic!("a call");
+        };
+        let AgentTurn::ToolCall { arguments, .. } = &calls[0] else {
+            panic!("a call");
+        };
+        assert!(
+            arguments.contains("Jev 的接口。") && !arguments.contains("cite"),
+            "{arguments}"
+        );
+        // An anchor quotes the document as it is, markers and all.
+        let call = parse_agent_output(
+            &[
+                json!({"type": "function_call", "call_id": "c2", "name": "propose_edit",
+                "arguments": json!({"action": "replace", "anchor": "概率。citeturn3view0", "text": "概率。"}).to_string()}),
+            ],
+            &|_| {},
+        );
+        let StepResult::ToolCalls(calls) = call else {
+            panic!("a call");
+        };
+        let AgentTurn::ToolCall { arguments, .. } = &calls[0] else {
+            panic!("a call");
+        };
+        assert!(arguments.contains("概率。citeturn3view0"), "{arguments}");
+    }
     use crate::agent::ImageAttachment;
 
     #[test]

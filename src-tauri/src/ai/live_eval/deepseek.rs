@@ -85,6 +85,7 @@ fn agent(ds: &DeepSeek, model: &str, thinking: ThinkingLevel) -> AgentProvider {
 /// the proposals it has made are kept there.
 fn context<'a>(document: &'a str, conventions: &'a Conventions) -> ToolContext<'a> {
     ToolContext {
+        undecided: &[],
         document,
         skills: &[],
         ui_language: "en",

@@ -6,7 +6,10 @@ import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { visibleTextBetween } from "../../editor/markdown/link-reveal";
-import { renderMarkdownInlineHtml } from "../../editor/markdown/render-html";
+import {
+  renderDocumentHtml,
+  renderMarkdownInlineHtml,
+} from "../../editor/markdown/render-html";
 import { onKatexReady } from "../../editor/math/katex-loader";
 import {
   pendingDiagram,
@@ -23,6 +26,7 @@ import {
   onPictureSettled,
   pictureState,
   showGeneratedImages,
+  shownGeneratedSrc,
 } from "./generated-images";
 import { framePendingPictures } from "./pending-picture";
 import {
@@ -408,7 +412,49 @@ function fillPendingHtml(span: HTMLElement, source: string) {
   framePendingPictures(span);
 }
 
+/** A waiting picture's placeholder, as an address the document renderer's
+ *  HTML policy keeps (it drops blob: and textus-generated:). */
+const PICTURE_STAND_IN = "https://textus.invalid/generated/";
+
+/**
+ * New text between two blocks, as the blocks it will be: paragraphs,
+ * lists, headings, tables, display math and footnotes rendered as the
+ * document renders them (renderDocumentHtml) - drawn inline, as one
+ * paragraph's run of text, they showed as their Markdown, "- one", "[^2]:
+ * …", with line breaks between (rc.5). A ```mermaid fence is its diagram,
+ * and a waiting picture its frame, as inline.
+ */
+function fillPendingBlocks(el: HTMLElement, source: string) {
+  const parts = splitMermaidFences(source) ?? [
+    { kind: "text" as const, text: source },
+  ];
+  const previous = el.querySelectorAll<HTMLElement>(".pending-diagram");
+  let diagrams = 0;
+  const nodes = parts.flatMap((part) => {
+    if (part.kind === "diagram")
+      return [pendingDiagram(part, previous[diagrams++])];
+    const html = document.createElement("template");
+    html.innerHTML = renderDocumentHtml(
+      part.text.replace(/textus-generated:/g, PICTURE_STAND_IN),
+    );
+    for (const img of html.content.querySelectorAll("img")) {
+      const src = img.getAttribute("src") ?? "";
+      if (src.startsWith(PICTURE_STAND_IN))
+        img.setAttribute(
+          "src",
+          shownGeneratedSrc(src.slice(PICTURE_STAND_IN.length)),
+        );
+    }
+    return [...html.content.childNodes];
+  });
+  el.replaceChildren(...nodes);
+}
+
 function fillPendingContent(span: HTMLElement, source: string) {
+  if (span.dataset.blocks === "true") {
+    fillPendingBlocks(span, source);
+    return;
+  }
   // A proposed picture (generate_image) is drawn from its bytes, which
   // only the preview holds.
   const markdown = showGeneratedImages(source);
@@ -673,11 +719,18 @@ function textWidget(
   return Decoration.widget(
     pos,
     (view) => {
-      const span = document.createElement("span");
+      // Between two blocks (an append, text after a paragraph), the new
+      // text is blocks of its own (fillPendingBlocks); inside a paragraph,
+      // the run of text it goes into.
+      const blocks =
+        view.state.doc.resolve(pos).parent.type ===
+        view.state.schema.topNodeType;
+      const span = document.createElement(blocks ? "div" : "span");
+      if (blocks) span.dataset.blocks = "true";
       // `pending-replaces`: there is an original, which the margin views
       // can show instead. New text alone (Write) has none, and stays in
       // the text, green, in every view but "final".
-      span.className = `pending-insert pending-whole${replaces ? " pending-replaces" : ""}`;
+      span.className = `pending-insert pending-whole${replaces ? " pending-replaces" : ""}${blocks ? " pending-blocks" : ""}`;
       // Read as an insertion, not as text of the document.
       span.setAttribute("role", "insertion");
       span.contentEditable = "false";

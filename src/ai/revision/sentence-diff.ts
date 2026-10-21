@@ -96,7 +96,47 @@ export function diffSentenceLists(
     }
   }
   flush(alignTail);
-  return hunks;
+  return hunks.flatMap(byParagraph);
+}
+
+/** A paragraph's end inside a sentence run: the break a sentence carries. */
+const PARAGRAPH_END = /\n[ \t]*\n\s*/g;
+
+/** `text` cut after each paragraph's end, the breaks kept with the part
+ *  before them - so the parts join back into `text`. */
+function paragraphsOf(text: string): string[] {
+  const parts: string[] = [];
+  let from = 0;
+  for (const m of text.matchAll(PARAGRAPH_END)) {
+    const end = (m.index ?? 0) + m[0].length;
+    if (end < text.length) {
+      parts.push(text.slice(from, end));
+      from = end;
+    }
+  }
+  parts.push(text.slice(from));
+  return parts;
+}
+
+/**
+ * A change over several of the original's paragraphs, rewritten paragraph by
+ * paragraph - as many new ones as old - one for each of them: a whole-text
+ * rewrite whose changed sentences ran together came out as one change from
+ * the first paragraph to the last, its card at the top of the margin beside
+ * nothing in particular. A rewrite that joins or splits paragraphs stays one
+ * change: the joined paragraph is shown struck in place (pending-edit-
+ * plugin's struck blocks).
+ */
+function byParagraph(hunk: SentenceHunk): SentenceHunk[] {
+  if (hunk.kind !== "change") return [hunk];
+  const before = paragraphsOf(hunk.before);
+  const after = paragraphsOf(hunk.after);
+  if (before.length < 2 || after.length !== before.length) return [hunk];
+  return before.map((text, i) => ({
+    kind: "change" as const,
+    before: text,
+    after: after[i],
+  }));
 }
 
 /** Character bigrams (single characters for one-character text), for a

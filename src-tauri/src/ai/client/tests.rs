@@ -91,6 +91,118 @@ fn the_completion_prompt_has_no_example_words_in_cyrillic() {
 }
 
 #[test]
+fn a_chinese_clause_at_the_cursor_is_written_out_and_taken_off() {
+    assert_eq!(
+        clause_at_cursor("告诉自己今天先跑十分"),
+        Some("告诉自己今天先跑十分")
+    );
+    // At most the last ten characters of a long clause.
+    assert_eq!(
+        clause_at_cursor("她每天六点准时出现在操场上的跑道边"),
+        Some("出现在操场上的跑道边")
+    );
+    assert_eq!(clause_at_cursor("好的，"), None);
+    assert_eq!(clause_at_cursor("Rust 重写"), Some("重写"));
+    assert_eq!(clause_at_cursor("the end"), None);
+    let user = completion_user_text("我每天先跑十分", "", &CompletionHints::default());
+    assert!(
+        user.contains("<text-before-cursor></text-before-cursor>"),
+        "{user}"
+    );
+    assert!(
+        user.contains("<clause-at-cursor>我每天先跑十分</clause-at-cursor>"),
+        "{user}"
+    );
+    // Written out again, it is taken off; a whole word comes back whole.
+    assert_eq!(
+        fit_to_cursor("我每天先跑十分", "我每天先跑十分钟就好。"),
+        "钟就好。"
+    );
+    assert_eq!(
+        fit_to_cursor("没", "没想到会坚持这么久。"),
+        "想到会坚持这么久。"
+    );
+}
+
+#[test]
+fn an_as_you_type_suggestion_stops_at_its_first_clause() {
+    let short = CompletionHints {
+        length: Some("short".into()),
+        ..Default::default()
+    };
+    assert_eq!(
+        finish_suggestion(
+            "我每天先跑十分",
+            "",
+            "我每天先跑十分钟就好。后来越跑越远。",
+            &short
+        ),
+        "钟就好。"
+    );
+    assert_eq!(
+        finish_suggestion(
+            "The tide went",
+            "",
+            "went out at dawn. Boats lay still.",
+            &short
+        ),
+        " out at dawn."
+    );
+    assert_eq!(
+        finish_suggestion(
+            "我这边可能",
+            "",
+            "我这边可能需要延期一周，主要是问卷回收比预期慢。",
+            &short
+        ),
+        "需要延期一周，"
+    );
+    assert_eq!(first_clause("跑得不快"), "跑得不快");
+    assert_eq!(
+        first_clause(" and it only drips when the flat above uses water, mostly in the evening"),
+        " and it only drips when the flat above uses water,"
+    );
+    assert_eq!(
+        first_clause(" one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen"),
+        " one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen"
+    );
+    // "3.5" and a closing quote don't end a sentence early.
+    assert_eq!(
+        first_sentence("version 3.5 is out.” Then"),
+        "version 3.5 is out.”"
+    );
+    // An explicit continuation keeps all its sentences.
+    let long = CompletionHints {
+        length: Some("long".into()),
+        ..Default::default()
+    };
+    assert_eq!(
+        finish_suggestion("The tide went", "", "went out. Boats lay still.", &long),
+        " out. Boats lay still."
+    );
+}
+
+#[test]
+fn nothing_doubles_up_at_the_join() {
+    // A clause mark the text already ends with.
+    assert_eq!(
+        fit_to_cursor("只收回了 120 份，", "，离计划还差不少。"),
+        "离计划还差不少。"
+    );
+    assert_eq!(
+        fit_to_cursor("If all goes well,", ", we finish."),
+        " we finish."
+    );
+    // An ellipsis the reply opened with.
+    assert_eq!(
+        fit_to_cursor("请他们在班会上再提醒", "……学生填写。"),
+        "学生填写。"
+    );
+    // A different mark, or one in the middle, stays.
+    assert_eq!(fit_to_cursor("她笑着说，", "“记不清了。”"), "“记不清了。”");
+}
+
+#[test]
 fn completion_user_text_puts_hints_before_the_cursor_split() {
     let hints = CompletionHints {
         title: Some("Field notes".into()),

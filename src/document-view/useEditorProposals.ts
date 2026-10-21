@@ -27,6 +27,7 @@ import { showMessage } from "../ui/app-dialog";
 import { cachedDocumentMarkdown } from "../ai/doc-markdown";
 import { offerOldPictureTrash } from "../ai/revision/old-picture";
 import {
+  generatedIdsIn,
   noteBegunPicture,
   withBegunPictures,
 } from "../ai/revision/generated-images";
@@ -213,7 +214,14 @@ export function useEditorProposals({
       });
       // The text first, then each picture: one next to text proposed and
       // not decided yet - this batch's or an earlier one's - goes into it.
-      const text = shown.filter((p) => !p.proposal.image);
+      // An edit of text proposed and not decided yet goes into that
+      // proposal (joinEdit) - once it is whole: a streaming one has its
+      // own preview until then.
+      const text = shown.filter(
+        (p) =>
+          !p.proposal.image &&
+          (p.streaming || !pendingEdits.joinEdit(p.callId, p.proposal)),
+      );
       if (text.length > 0) pendingEdits.showPreviews(text, target);
       const pictures = shown.filter(
         (p) =>
@@ -221,6 +229,15 @@ export function useEditorProposals({
           (p.streaming || !pendingEdits.joinPicture(p.callId, p.proposal)),
       );
       if (pictures.length > 0) pendingEdits.showPreviews(pictures, target);
+      // A picture text now carries gives way as a proposal of its own.
+      const carried = new Set(
+        text.flatMap((p) => generatedIdsIn(p.proposal.text ?? "")),
+      );
+      if (carried.size > 0)
+        pendingEdits.withdrawPictures(
+          carried,
+          new Set(text.map((p) => p.callId)),
+        );
       // What came before and stands where these now do gives way to them.
       const added = new Set(shown.map((p) => p.callId));
       for (const id of supersededBy(added, earlierPreviews.current)) {
@@ -236,6 +253,8 @@ export function useEditorProposals({
       pendingEdits.showPreviews,
       pendingEdits.discard,
       pendingEdits.joinPicture,
+      pendingEdits.joinEdit,
+      pendingEdits.withdrawPictures,
       run,
     ],
   );

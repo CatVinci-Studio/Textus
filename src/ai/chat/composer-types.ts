@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import type { ChatAttachment, ThinkingLevel } from "../types";
 import { resolveStrings } from "../../i18n/strings";
 import { pickerLabels, type PickerLabels } from "./ComposerPicker";
@@ -7,6 +7,12 @@ import type { AgentMode } from "../../settings/SettingsContext";
 // What ChatComposer.tsx is given: its labels, the selection chip it shows,
 // and its props - apart from the component, so the hooks and windows that
 // only pass these along needn't import it.
+
+/** What ChatBody may do to the composer. */
+export interface ChatComposerHandle {
+  /** Puts `text` in the box, before what is there, and focuses it. */
+  restore: (text: string) => void;
+}
 
 export interface ChatComposerLabels {
   /** Accessible name of the selection chip's remove button. */
@@ -125,7 +131,13 @@ export interface ChatComposerProps {
     /** False once the user has removed the selection chip. */
     includeSelection: boolean,
     options: { mode: AgentMode; webSearch: boolean; thinking: ThinkingLevel },
+    /** What was typed (before a skill expanded it), for the queue's Edit
+     *  to put back. */
+    typed: string,
   ) => void;
+  /** Lets ChatBody put text back in the box: a queued message being
+   *  edited, or the queue a Stop dropped. */
+  handle?: RefObject<ChatComposerHandle | null>;
   /** The message just sent went through a skill (`/name`) - the tour's
    *  skills lesson waits for it. */
   onSkillUsed?: () => void;

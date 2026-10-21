@@ -13,6 +13,11 @@ import { pickerLabels } from "./ComposerPicker";
 export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
   return {
     placeholder: t.agentInputPlaceholder,
+    queued: t.agentQueued,
+    queuedPaused: t.agentQueuedPaused,
+    queueContinue: t.agentQueueContinue,
+    queueEdit: t.agentQueueEdit,
+    queueRemove: t.agentQueueRemove,
     picker: pickerLabels(t, lang),
     send: t.agentSend,
     stop: t.agentStop,

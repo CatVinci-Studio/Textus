@@ -635,6 +635,12 @@ utiliser une.
   proxyHostPlaceholder: "Hôte, p. ex. 127.0.0.1",
   proxyPortPlaceholder: "Port",
   agentInputPlaceholder: "Question ou consigne… (@ fichier, / compétence)",
+  agentQueued: "En attente ({n}) : envoyé après cette réponse",
+  agentQueuedPaused:
+    "En attente ({n}) : en pause, la dernière réponse a échoué",
+  agentQueueContinue: "Continuer",
+  agentQueueEdit: "Modifier",
+  agentQueueRemove: "Retirer",
   agentSend: "Envoyer",
   agentStop: "Arrêter",
   agentRetry: "Réessayer",

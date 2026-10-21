@@ -59,10 +59,32 @@ test("a dropped Markdown file opens like File > Open", async ({ page }) => {
 
 test("several dropped files each open in a tab", async ({ page }) => {
   await mockInvoke(page, { read_text_file: "Some text." });
-  const before = await page.locator(".ProseMirror").count();
+  // A fresh window: its one Untitled tab gives way to the first.
+  await expect(page.locator(".ProseMirror")).toHaveCount(1);
   await drop(page, ["/home/me/a.md", "/home/me/b.txt"]);
-  await expect(page.locator(".ProseMirror")).toHaveCount(before + 2);
+  await expect(page.locator(".tab-pill-title")).toHaveText(["a.md", "b.txt"]);
   await expect(page.locator(editor)).toContainText("Some text.");
+});
+
+test("a dropped document opens beside the one being read, never in its place", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    (window as unknown as { __devFiles: Record<string, string> }).__devFiles = {
+      "/home/me/first.md": "# First\n\nThe first file.",
+      "/home/me/second.md": "# Second\n\nThe second file.",
+    };
+  });
+  await drop(page, ["/home/me/first.md"]);
+  await expect(page.locator(editor)).toContainText("The first file.");
+  // Window mode (the default) puts File > Open in place of the document;
+  // a drop opens beside it.
+  await drop(page, ["/home/me/second.md"]);
+  await expect(page.locator(editor)).toContainText("The second file.");
+  await expect(page.locator(".tab-pill-title")).toHaveText([
+    "first.md",
+    "second.md",
+  ]);
 });
 
 test("a dropped image goes into the document", async ({ page }) => {

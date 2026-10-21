@@ -98,6 +98,54 @@ export function renderMarkdownHtml(markdown: string): string {
   return DOMPurify.sanitize(parsed);
 }
 
+// Footnotes, which marked has no syntax for: a reference `[^2]` as its
+// raised label, as the editor shows it, and a definition `[^2]: …` (its
+// indented lines with it) as a paragraph opening with that label. Without
+// them a preview of AI text with footnotes (pending-edit-plugin's
+// fillPendingBlocks) showed their Markdown.
+const footnotes: TokenizerAndRendererExtension[] = [
+  {
+    name: "footnoteDefinition",
+    level: "block",
+    start: (src) => src.match(/^\[\^[^\]\s]+\]:/m)?.index,
+    tokenizer(src) {
+      const match =
+        /^\[\^([^\]\s]+)\]:[ \t]*([^\n]*(?:\n(?: {2,}|\t)[^\n]*)*)(?:\n+|$)/.exec(
+          src,
+        );
+      if (!match) return undefined;
+      const token = {
+        type: "footnoteDefinition",
+        raw: match[0],
+        label: match[1],
+        text: match[2].replace(/\n(?: {2,}|\t)/g, " "),
+        tokens: [],
+      };
+      this.lexer.inline(token.text, token.tokens);
+      return token;
+    },
+    renderer(token) {
+      const label = escapeLabel(String(token.label));
+      return `<p><sup>${label}</sup> ${this.parser.parseInline(token.tokens ?? [])}</p>\n`;
+    },
+  },
+  {
+    name: "footnoteReference",
+    level: "inline",
+    start: (src) => src.indexOf("[^"),
+    tokenizer(src) {
+      const match = /^\[\^([^\]\s]+)\](?!:)/.exec(src);
+      if (!match) return undefined;
+      return { type: "footnoteReference", raw: match[0], label: match[1] };
+    },
+    renderer: (token) => `<sup>${escapeLabel(String(token.label))}</sup>`,
+  },
+];
+
+function escapeLabel(label: string): string {
+  return label.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
 // The formulas of the document being rendered, in order: the document
 // flavour leaves a placeholder element for each, so the HTML policy (which
 // would strip KaTeX's classes and styles) never sees them.
@@ -109,10 +157,13 @@ const MATH_SLOT_TAG = "textus-math";
 const documentMarked = new Marked({
   gfm: true,
   breaks: false,
-  extensions: mathExtensions((source, display, block) => {
-    mathSlots.push(DOMPurify.sanitize(mathHtml(source, display, block)));
-    return `<${MATH_SLOT_TAG} data-slot="${mathSlots.length - 1}"></${MATH_SLOT_TAG}>`;
-  }),
+  extensions: [
+    ...mathExtensions((source, display, block) => {
+      mathSlots.push(DOMPurify.sanitize(mathHtml(source, display, block)));
+      return `<${MATH_SLOT_TAG} data-slot="${mathSlots.length - 1}"></${MATH_SLOT_TAG}>`;
+    }),
+    ...footnotes,
+  ],
   renderer: {
     // A width an older Textus kept in the title (images/image-html.ts)
     // sizes the picture, as in the editor, instead of being its tooltip.

@@ -347,6 +347,11 @@ pub struct UserTurn {
     /// sendContext + chat-selection-plugin), so "shorter" -> Accept ->
     /// "now more formal" targets the rewritten text.
     pub follow_selection: bool,
+    /// Neither accepts nor rejects: the proposals stay undecided into the
+    /// next message, as when the user types on (or queues a message)
+    /// before deciding. A later edit quoted from them goes into them, as
+    /// the frontend's joinEdit does; a later turn's Accept takes them too.
+    pub leave: bool,
 }
 
 impl UserTurn {
@@ -356,6 +361,15 @@ impl UserTurn {
             caret: Caret::default(),
             accept: true,
             follow_selection: false,
+            leave: false,
+        }
+    }
+
+    /// This message, its proposals left undecided.
+    pub fn leaving(message: impl Into<String>) -> UserTurn {
+        UserTurn {
+            leave: true,
+            ..UserTurn::new(message)
         }
     }
 }
@@ -375,6 +389,8 @@ pub struct TurnOutcome {
     /// each one cost the user a round trip of waiting.
     pub invalid_proposals: usize,
     pub invalid_errors: Vec<String>,
+    /// Proposals that went into an earlier, undecided one (joinEdit).
+    pub joined: usize,
     pub comments: Vec<(String, String)>,
     pub reply: String,
     pub tools: Vec<String>,
@@ -514,7 +530,19 @@ pub struct AgentSetup<'a> {
     /// generate_image, for the picture cases: None offers no such tool, as
     /// the app does without an image model.
     pub pictures: Option<&'a crate::ai::images::ImageRun>,
+    /// The remember tool, writing to these folders, and what they hold
+    /// sent with each message, read again every turn - as the app does
+    /// with Remember automatically on. None: no remember tool.
+    pub memory: Option<&'a crate::ai::memory::MemoryDirs>,
 }
+
+/// Mirrors src/ai/revision/proposal-status.ts's note for a proposal not
+/// decided yet.
+const PENDING_NOTE: &str = "Status: the user has NOT yet accepted or rejected this proposed edit. It is shown to them as a preview and is NOT in the document text in this request - do not assume it was applied. To change it or go on from it, anchor in its text: the edit goes into this proposal.";
+
+/// Mirrors src/ai/revision/proposal-status.ts's note for an edit that went
+/// into another proposal.
+const JOINED_NOTE: &str = "Status: this went into the proposed text it changes or goes next to - that proposal now reads with it, and it is accepted or rejected with that proposal.";
 
 /// Mirrors src/ai/revision/proposal-status.ts's notes for the two decided states.
 const ACCEPTED_NOTE: &str =
@@ -549,6 +577,8 @@ pub fn run_conversation(
     let events = tauri::ipc::Channel::new(|_| Ok(()));
     let mut history: Vec<AgentTurn> = Vec::new();
     let mut doc = document.to_string();
+    // Proposals left undecided, by call id, as they now read.
+    let mut held_back: Vec<(String, Proposal)> = Vec::new();
     let mut outcomes = Vec::new();
     let mut error = None;
     // Quick Ask's captured selection, mapped through accepted edits.
@@ -558,6 +588,22 @@ pub fn run_conversation(
         .and_then(|t| t.caret.selection);
 
     for user in script {
+        // What is remembered so far, sent with this message.
+        let remembering;
+        let ws = match setup.memory {
+            Some(dirs) => {
+                let mut with = setup.workspace.clone();
+                with.remember = true;
+                with.memories = dirs.load();
+                remembering = with;
+                &remembering
+            }
+            None => setup.workspace,
+        };
+        let memory = setup.memory.map(|dirs| crate::ai::memory::MemoryContext {
+            dirs: dirs.clone(),
+            source: Default::default(),
+        });
         let (message_sent, caret) = match (user.follow_selection, selection) {
             (true, Some((s, e))) => (
                 format!(
@@ -589,28 +635,30 @@ pub fn run_conversation(
             project: ws.conventions.clone(),
         };
         let library = crate::ai::conventions::library_names(ws);
+        let undecided = crate::ai::images::undecided_edits(&history);
         let ctx = ToolContext {
             document: &doc,
+            undecided: &undecided,
             skills: &ws.skills,
             ui_language: setup.ui_language,
             root,
             sees_images: sees_images(),
             conventions: &conventions,
             library: &library,
-            memory: None,
+            memory: memory.as_ref(),
             proposed: Default::default(),
             checks: Default::default(),
         };
-        // No remember tool: an eval run writes no memories. Images as the
+        // The remember tool only with memory folders to write to (above).
+        // Images as the
         // app offers them to the provider the eval runs on (Anthropic), and
         // generate_image when the case gives it one, on this turn's
         // document as the app does per request.
-        let undecided = crate::ai::images::undecided_texts(&history);
         let mut tool_set = tools::ToolRegistry::builtin(
             ws.has_usable_skills(),
             root.is_some(),
             setup.mode,
-            false,
+            setup.memory.is_some(),
             sees_images(),
         );
         if let Some(pictures) = setup.pictures {
@@ -781,10 +829,81 @@ pub fn run_conversation(
             }
         }
 
-        if user.accept && !outcome.proposals.is_empty() {
-            match checks::apply_all(&doc, &outcome.proposals, caret) {
-                Ok(next) => doc = next,
-                Err(e) => outcome.apply_error = Some(e),
+        // An edit quoted from an undecided proposal goes into it - also one
+        // of document text a rewrite replaces (joinInto).
+        let mut standing = Vec::new();
+        let mut standing_ids = Vec::new();
+        let mut joined_ids = Vec::new();
+        let ids = std::mem::take(&mut proposal_ids);
+        for (proposal, id) in std::mem::take(&mut outcome.proposals).into_iter().zip(ids) {
+            let anchor = proposal.anchor.as_str();
+            let into = (!anchor.is_empty())
+                .then(|| {
+                    held_back.iter_mut().find_map(|(_, held)| {
+                        let replaces = held.action == "replace" && held.anchor.contains(anchor);
+                        (!doc.contains(anchor) || replaces)
+                            .then(|| {
+                                crate::ai::images::edited_text(
+                                    &held.text,
+                                    &proposal.action,
+                                    anchor,
+                                    &proposal.text,
+                                )
+                            })
+                            .flatten()
+                            .map(|text| (held, text))
+                    })
+                })
+                .flatten();
+            match into {
+                Some((held, text)) => {
+                    held.text = text;
+                    outcome.joined += 1;
+                    joined_ids.push(id);
+                }
+                None => {
+                    standing.push(proposal);
+                    standing_ids.push(id);
+                }
+            }
+        }
+        outcome.proposals = standing;
+        let proposal_ids = standing_ids;
+        // A new version of a passage an undecided rewrite replaces takes its
+        // place: the old one reads as rejected (useEditorProposals's
+        // addPreviews).
+        held_back.retain(|(id, held)| {
+            let superseded = held.action == "replace"
+                && outcome
+                    .proposals
+                    .iter()
+                    .any(|p| p.action == "replace" && p.anchor == held.anchor);
+            if superseded {
+                for turn in history.iter_mut() {
+                    if let AgentTurn::ToolResult {
+                        call_id, output, ..
+                    } = turn
+                    {
+                        if call_id == id {
+                            *output = output.replace(PENDING_NOTE, REJECTED_NOTE);
+                        }
+                    }
+                }
+            }
+            !superseded
+        });
+        let decided = !user.leave;
+        if user.accept && decided {
+            let all: Vec<Proposal> = held_back
+                .iter()
+                .map(|(_, p)| p.clone())
+                .chain(outcome.proposals.iter().cloned())
+                .collect();
+            if !all.is_empty() {
+                match checks::apply_all(&doc, &all, caret) {
+                    Ok(next) => doc = next,
+                    Err(e) => outcome.apply_error = Some(e),
+                }
             }
         }
         outcome.doc_after = doc.clone();
@@ -792,11 +911,37 @@ pub fn run_conversation(
             selection = map_selection(&outcome.doc_before, &doc, sel);
         }
 
-        let note = if user.accept && outcome.apply_error.is_none() {
+        let note = if user.leave {
+            PENDING_NOTE
+        } else if user.accept && outcome.apply_error.is_none() {
             ACCEPTED_NOTE
         } else {
             REJECTED_NOTE
         };
+        if !user.leave {
+            // The ones left before are decided with these: their notes in
+            // the history say so now.
+            for turn in history.iter_mut() {
+                if let AgentTurn::ToolResult {
+                    call_id, output, ..
+                } = turn
+                {
+                    if held_back.iter().any(|(id, _)| id == call_id) {
+                        *output = output.replace(PENDING_NOTE, note);
+                    }
+                }
+            }
+            held_back.clear();
+        } else {
+            let ids: Vec<&String> = proposal_ids.iter().collect();
+            held_back.extend(
+                outcome
+                    .proposals
+                    .iter()
+                    .zip(ids)
+                    .map(|(p, id)| (id.clone(), p.clone())),
+            );
+        }
         for turn in turns.iter_mut() {
             if let AgentTurn::ToolResult {
                 call_id, output, ..
@@ -804,6 +949,8 @@ pub fn run_conversation(
             {
                 if proposal_ids.contains(call_id) {
                     *output = format!("{output}\n\n[{note}]");
+                } else if joined_ids.contains(call_id) {
+                    *output = format!("{output}\n\n[{JOINED_NOTE}]");
                 }
             }
         }

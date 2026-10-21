@@ -548,7 +548,7 @@ impl MemoryDirs {
                     .trim()
                     .to_string()
             })
-            .filter(|a| !a.is_empty() && a.to_lowercase() != name.to_lowercase())
+            .filter(|a| a.to_lowercase() != name.to_lowercase() && !too_short_an_alias(a))
             .collect();
         let library = read_library(root);
         let stem_of = |entry: &LibraryEntry| {
@@ -694,6 +694,18 @@ pub fn run_tool(ctx: &MemoryContext, arguments: &str) -> String {
     }
 }
 
+/// Whether `alias` is too short to stand for a name: one Chinese or
+/// Japanese character (晚 for 林晚, which every 晚上 would match and send
+/// her entry along), or one or two letters. The library sends an entry
+/// whenever an alias appears in the text (project::relevant_library).
+fn too_short_an_alias(alias: &str) -> bool {
+    let chars = alias.chars().count();
+    let unspaced = alias
+        .chars()
+        .any(|c| matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{9fff}'));
+    chars == 0 || (unspaced && chars < 2) || (!unspaced && chars < 3)
+}
+
 /// What a duplicate check compares: the letters and digits, lowercased,
 /// with full-width forms folded - "Keep it short." and "keep it short"
 /// are one memory.
@@ -782,7 +794,7 @@ fn timestamp(secs: u64) -> String {
 // ------------------------------------------------------------------- prompt
 
 /// How Textus AI is told to use the remember tool - only when it has it.
-const REMEMBER_INSTRUCTIONS: &str = "You can remember things for later conversations with the remember tool. Call it when the user states, or clearly shows by correcting you, something that should hold beyond this request: a requirement (\"always…\", \"never…\", \"from now on…\"), a preference about your replies and edits, or a trait of how they write (kind requirement, preference or style); or a fact about their work - a person, place or term and what is true of it (kind fact, with its name and any aliases; it goes into the project's library). Don't remember a one-off request, what the document already says, your own suggestions, or anything private such as passwords, addresses or health details. Scope: something about this work (its characters, its terms, how this piece must be written) is project; the user's general habits and preferences are personal; with no project folder everything is personal. Before remembering, check what you already remember below: to change or correct one, call remember with `replaces` set to its id instead of adding another. Write each memory as one or a few plain sentences in the user's language, as an instruction to yourself (\"Use 「」 for quotations.\"). The ids in brackets are for the tool only - never show them to the user.";
+const REMEMBER_INSTRUCTIONS: &str = "You can remember things for later conversations with the remember tool. Call it when the user states, or clearly shows by correcting you, something that should hold beyond this request: a requirement (\"always…\", \"never…\", \"from now on…\"), a preference about your replies and edits, or a trait of how they write (kind requirement, preference or style); or a fact about their work - a person, place or term and what is true of it (kind fact, with its name and any aliases; it goes into the project's library). A fact counts even when the user tells it to you in passing, as background to a request (\"Lin is the heroine, a lighthouse keeper - write the next scene\"): it holds for the rest of the work, so remember it before you go on. Don't remember a one-off request, what the document already says, your own suggestions, or anything private such as passwords, addresses or health details. Scope: something about this work (its characters, its terms, how this piece must be written) is project; the user's general habits and preferences are personal; with no project folder everything is personal. Before remembering, check what you already remember below: to change or correct one, call remember with `replaces` set to its id instead of adding another. Write each memory as one or a few plain sentences in the user's language, as an instruction to yourself (\"Use 「」 for quotations.\"). The ids in brackets are for the tool only - never show them to the user.";
 
 /// How to use the remember tool, for the system prompt - while it is
 /// offered. What has been remembered goes with each message instead
@@ -795,7 +807,7 @@ pub fn remember_instructions(has_project: bool, remember: bool) -> Option<String
     let mut text = format!("---remembering---\n{REMEMBER_INSTRUCTIONS}");
     if !has_project {
         text.push_str(
-            "\nThere is no project folder now, so use scope personal and don't remember facts.",
+            "\nThere is no project folder now, so nothing can be remembered for this work alone: don't remember its characters, places or terms, or how this piece must be written - a personal memory goes with every document the user writes. Remember only the user's general habits and preferences, as personal; if they ask you to remember something about this work, say in a sentence that it needs a project folder.",
         );
     }
     Some(text)
@@ -1254,6 +1266,14 @@ mod tests {
         let library = read_library(&base.join("novel"));
         assert_eq!(library[0].name, "Lin Wan");
         assert_eq!(library[0].aliases, ["Wan"]);
+        // One character, or two letters, would match far too much.
+        let mut short = args("fact", None, "The heroine, a lighthouse keeper.");
+        short.name = Some("林晚".into());
+        short.aliases = vec!["晚".into(), "LW".into(), "阿晚".into()];
+        dirs.remember(short, &source(), NOW).unwrap();
+        let library = read_library(&base.join("novel"));
+        let heroine = library.iter().find(|e| e.name == "林晚").unwrap();
+        assert_eq!(heroine.aliases, ["阿晚"]);
         assert_eq!(library[0].body, "Teaches Chinese at a secondary school.");
         assert!(library[0].remembered.is_some());
         // The same name (or an alias) again updates the entry it wrote.
