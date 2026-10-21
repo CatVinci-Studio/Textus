@@ -1167,6 +1167,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermWorkspaceRead: "열린 폴더의 파일 읽기",
   pluginPermWorkspaceWrite: "열린 폴더에서 파일 만들기 및 변경",
   pluginPermClipboard: "클립보드 읽기 및 쓰기",
+  pluginPermEditorInput: "편집기에서 누르는 키를 넘겨받아, 누른 대로 편집",
   pluginPermNetwork: "{host}에 연결",
   pluginPermNetworkAny: "모든 웹사이트에 연결",
   menuPlugins: "플러그인",

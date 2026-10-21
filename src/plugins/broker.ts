@@ -1,3 +1,10 @@
+import {
+  releaseKeys,
+  runEditorOp,
+  setKeyCapture,
+  type EditorOp,
+  type KeyCapture,
+} from "./editor-input";
 import { outlineOf, removeStatusItem, setStatusItem } from "./status-items";
 import { fs, links, plugins as pluginsIpc } from "../platform/ipc";
 import { showMessage, showPrompt } from "../ui/app-dialog";
@@ -113,6 +120,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   theme: null,
   language: null,
   settings: null,
+  editorKey: "editor.input",
 };
 
 let proposalCounter = 0;
@@ -195,6 +203,7 @@ export class PluginHost {
     for (const stop of this.subscriptions.values()) stop();
     this.subscriptions.clear();
     removeStatusItem(this.id);
+    releaseKeys(this.id);
     setTimeout(() => {
       this.disconnect?.();
       this.frame?.remove();
@@ -305,7 +314,7 @@ export class PluginHost {
         // A setting's change is told by the manager, to this plugin only.
         this.subscriptions.set(
           name,
-          name === "settings"
+          name === "settings" || name === "editorKey"
             ? () => {}
             : onPluginEvent(name, (data) => this.event(name, data)),
         );
@@ -490,6 +499,21 @@ export class PluginHost {
       "document.getSelection": () => {
         this.need("document.read");
         return getActiveDocument()?.selection() ?? null;
+      },
+      "editor.captureKeys": (capture: KeyCapture | null) => {
+        this.need("editor.input");
+        setKeyCapture(
+          this.id,
+          capture && {
+            mode: capture.mode === "all" ? "all" : "some",
+            keys: Array.isArray(capture.keys) ? capture.keys.map(String) : [],
+          },
+          (key) => this.event("editorKey", key),
+        );
+      },
+      "editor.exec": (op: EditorOp) => {
+        this.need("editor.input");
+        return runEditorOp(this.id, op);
       },
       "document.getOutline": () => {
         this.need("document.read");

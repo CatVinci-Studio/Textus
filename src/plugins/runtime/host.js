@@ -252,6 +252,19 @@
         });
       },
     },
+    editor: {
+      // { mode: "all" | "some", keys: ["Escape", "ctrl+["] }, or null to
+      // give the keyboard back. Needs editor.input.
+      captureKeys: function (capture) {
+        return call("editor.captureKeys", capture || null);
+      },
+      onKey: function (callback) {
+        return on("editorKey", callback);
+      },
+      exec: function (op) {
+        return call("editor.exec", op);
+      },
+    },
     document: {
       getText: function () {
         return call("document.getText");

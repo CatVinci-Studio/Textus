@@ -335,3 +335,33 @@ button.plugin-card-open:hover .plugin-card-name {
   background: var(--sidebar-hover);
   color: var(--editor-text);
 }
+
+/* A plugin holding the keyboard (editor-input.ts): Vim's block cursor in
+   normal mode, the native caret hidden, and flash's jump labels laid over
+   the text without moving it. */
+.ProseMirror.plugin-cursor-block {
+  caret-color: transparent;
+}
+.plugin-block-cursor {
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--editor-text) 72%, transparent);
+  color: var(--editor-bg, var(--bg));
+}
+.plugin-block-cursor-empty {
+  display: inline-block;
+  width: 0.55em;
+}
+.plugin-flash-label {
+  position: absolute;
+  z-index: 2;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  font-weight: 700;
+  line-height: 1.35;
+  pointer-events: none;
+  transform: translateY(-0.1em);
+}

@@ -1213,6 +1213,8 @@ type /name in a conversation to use one.
   pluginPermWorkspaceRead: "Read the files in the open folder",
   pluginPermWorkspaceWrite: "Create and change files in the open folder",
   pluginPermClipboard: "Read and write the clipboard",
+  pluginPermEditorInput:
+    "Take over the keys you type in the editor, and edit as you type",
   pluginPermNetwork: "Connect to {host}",
   pluginPermNetworkAny: "Connect to any website",
   menuPlugins: "Plugins",

@@ -79,6 +79,9 @@ export interface PluginEventMap {
   language: string;
   /** One of the plugin's own settings changed (told to that plugin only). */
   settings: { key: string; value: unknown };
+  /** A key the editor handed the plugin holding the keyboard
+   *  (editor-input.ts), to that plugin only. */
+  editorKey: string;
 }
 
 type Listener<K extends keyof PluginEventMap> = (

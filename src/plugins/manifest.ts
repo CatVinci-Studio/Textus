@@ -17,6 +17,7 @@ export type Permission =
   | "workspace.read"
   | "workspace.write"
   | "clipboard"
+  | "editor.input"
   | `network:${string}`;
 
 const PLAIN_PERMISSIONS = [
@@ -25,6 +26,7 @@ const PLAIN_PERMISSIONS = [
   "workspace.read",
   "workspace.write",
   "clipboard",
+  "editor.input",
 ] as const;
 
 export function isPermission(value: unknown): value is Permission {

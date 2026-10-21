@@ -1229,6 +1229,8 @@ export default {
   pluginPermWorkspaceRead: "Читать файлы в открытой папке",
   pluginPermWorkspaceWrite: "Создавать и изменять файлы в открытой папке",
   pluginPermClipboard: "Читать и записывать буфер обмена",
+  pluginPermEditorInput:
+    "Перехватывать клавиши в редакторе и править текст по ним",
   pluginPermNetwork: "Подключаться к {host}",
   pluginPermNetworkAny: "Подключаться к любым сайтам",
   menuPlugins: "Плагины",

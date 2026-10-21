@@ -1259,6 +1259,8 @@ utiliser une.
   pluginPermWorkspaceWrite:
     "Créer et modifier des fichiers dans le dossier ouvert",
   pluginPermClipboard: "Lire et écrire le presse-papiers",
+  pluginPermEditorInput:
+    "Prendre en charge les touches tapées dans l’éditeur, et modifier au fil de la frappe",
   pluginPermNetwork: "Se connecter à {host}",
   pluginPermNetworkAny: "Se connecter à n’importe quel site web",
   menuPlugins: "Extensions",

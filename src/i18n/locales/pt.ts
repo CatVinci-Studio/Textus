@@ -1221,6 +1221,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermWorkspaceRead: "Ler os arquivos da pasta aberta",
   pluginPermWorkspaceWrite: "Criar e alterar arquivos na pasta aberta",
   pluginPermClipboard: "Ler e escrever na área de transferência",
+  pluginPermEditorInput:
+    "Assumir as teclas que você digita no editor e editar conforme digita",
   pluginPermNetwork: "Conectar-se a {host}",
   pluginPermNetworkAny: "Conectar-se a qualquer site",
   menuPlugins: "Plugins",

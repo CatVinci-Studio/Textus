@@ -1179,6 +1179,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginPermWorkspaceRead: "開いているフォルダのファイルを読む",
   pluginPermWorkspaceWrite: "開いているフォルダでファイルを作成・変更する",
   pluginPermClipboard: "クリップボードを読み書きする",
+  pluginPermEditorInput:
+    "エディタで押すキーを引き受け、そのキーのとおりに編集する",
   pluginPermNetwork: "{host} に接続する",
   pluginPermNetworkAny: "任意のウェブサイトに接続する",
   menuPlugins: "プラグイン",

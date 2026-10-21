@@ -1228,6 +1228,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermWorkspaceRead: "Die Dateien im geöffneten Ordner lesen",
   pluginPermWorkspaceWrite: "Dateien im geöffneten Ordner anlegen und ändern",
   pluginPermClipboard: "Die Zwischenablage lesen und schreiben",
+  pluginPermEditorInput:
+    "Die Tasten im Editor übernehmen und beim Tippen bearbeiten",
   pluginPermNetwork: "Mit {host} verbinden",
   pluginPermNetworkAny: "Mit beliebigen Websites verbinden",
   menuPlugins: "Plugins",

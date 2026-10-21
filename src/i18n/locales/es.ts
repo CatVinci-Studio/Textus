@@ -1237,6 +1237,8 @@ para usar una.
   pluginPermWorkspaceRead: "Leer los archivos de la carpeta abierta",
   pluginPermWorkspaceWrite: "Crear y modificar archivos en la carpeta abierta",
   pluginPermClipboard: "Leer y escribir el portapapeles",
+  pluginPermEditorInput:
+    "Tomar las teclas que pulsas en el editor y editar según las pulsas",
   pluginPermNetwork: "Conectarse a {host}",
   pluginPermNetworkAny: "Conectarse a cualquier sitio web",
   menuPlugins: "Complementos",

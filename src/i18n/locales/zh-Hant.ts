@@ -1123,6 +1123,7 @@ export default {
   pluginPermWorkspaceRead: "讀取開啟的資料夾中的檔案",
   pluginPermWorkspaceWrite: "在開啟的資料夾中建立和修改檔案",
   pluginPermClipboard: "讀取和寫入剪貼簿",
+  pluginPermEditorInput: "接管你在編輯器裡的按鍵，並按你的按鍵直接編輯",
   pluginPermNetwork: "連線至 {host}",
   pluginPermNetworkAny: "連線至任何網站",
   menuPlugins: "外掛程式",

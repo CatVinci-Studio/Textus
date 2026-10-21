@@ -74,6 +74,7 @@ import { mathAutopairPlugin } from "./math/math-autopair-plugin";
 import { createMathPreviewPlugin } from "./math/math-preview-plugin";
 import { headingMarkerPlugin } from "./marks/heading-marker-plugin";
 import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
+import { editorInputPlugin } from "../plugins/editor-input";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,
@@ -196,6 +197,9 @@ export function withEditorCore(
       // the blocks the user didn't touch as they were (source-preserving.ts).
       .use(openedParseRecorder)
       .use(linksOnSpansSerializer)
+      // A plugin holding the keyboard (Vim's normal mode) has its keys
+      // before any of the editor's own handlers.
+      .use(editorInputPlugin)
       .use(macNavigationPlugin)
       .use(linuxImeEnterPlugin)
       .use(compositionPruneGuardPlugin)
