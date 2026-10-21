@@ -347,6 +347,11 @@ pub struct UserTurn {
     /// sendContext + chat-selection-plugin), so "shorter" -> Accept ->
     /// "now more formal" targets the rewritten text.
     pub follow_selection: bool,
+    /// Neither accepts nor rejects: the proposals stay undecided into the
+    /// next message, as when the user types on (or queues a message)
+    /// before deciding. A later edit quoted from them goes into them, as
+    /// the frontend's joinEdit does; a later turn's Accept takes them too.
+    pub leave: bool,
 }
 
 impl UserTurn {
@@ -356,6 +361,15 @@ impl UserTurn {
             caret: Caret::default(),
             accept: true,
             follow_selection: false,
+            leave: false,
+        }
+    }
+
+    /// This message, its proposals left undecided.
+    pub fn leaving(message: impl Into<String>) -> UserTurn {
+        UserTurn {
+            leave: true,
+            ..UserTurn::new(message)
         }
     }
 }
@@ -375,6 +389,8 @@ pub struct TurnOutcome {
     /// each one cost the user a round trip of waiting.
     pub invalid_proposals: usize,
     pub invalid_errors: Vec<String>,
+    /// Proposals that went into an earlier, undecided one (joinEdit).
+    pub joined: usize,
     pub comments: Vec<(String, String)>,
     pub reply: String,
     pub tools: Vec<String>,
@@ -516,6 +532,35 @@ pub struct AgentSetup<'a> {
     pub pictures: Option<&'a crate::ai::images::ImageRun>,
 }
 
+/// Mirrors src/ai/revision/proposal-status.ts's note for a proposal not
+/// decided yet.
+const PENDING_NOTE: &str = "Status: the user has NOT yet accepted or rejected this proposed edit. It is shown to them as a preview and is NOT in the document text in this request - do not assume it was applied. To change it or go on from it, anchor in its text: the edit goes into this proposal.";
+
+/// An edit quoted from an undecided proposal's text, made in that text -
+/// src/ai/revision/joined-edit.ts's editedText. None when it isn't there
+/// exactly once or isn't an anchored edit.
+fn edited_in(text: &str, edit: &Proposal) -> Option<String> {
+    let anchor = edit.anchor.as_str();
+    if anchor.is_empty() || text.matches(anchor).count() != 1 {
+        return None;
+    }
+    let at = text.find(anchor)?;
+    let (before, after) = (&text[..at], &text[at + anchor.len()..]);
+    let add = edit.text.as_str();
+    let paragraph = |t: &str| format!("\n\n{}\n\n", t.trim());
+    Some(match edit.action.as_str() {
+        "replace" => format!("{before}{add}{after}"),
+        "delete" => format!("{before}{after}").replace("\n\n\n\n", "\n\n").trim().to_string(),
+        "insert_after" if add.contains("\n\n") || after.is_empty() || after.starts_with("\n\n") => {
+            let end = after.find("\n\n").unwrap_or(after.len());
+            format!("{before}{anchor}{}{}{}", &after[..end], paragraph(add).trim_end(), &after[end..]).trim_end().to_string()
+        }
+        "insert_after" => format!("{before}{anchor} {add}{after}"),
+        "insert_before" => format!("{before}{add} {anchor}{after}"),
+        _ => return None,
+    })
+}
+
 /// Mirrors src/ai/revision/proposal-status.ts's notes for the two decided states.
 const ACCEPTED_NOTE: &str =
     "Status: the user accepted this proposed edit - the document text in this request includes it.";
@@ -549,6 +594,8 @@ pub fn run_conversation(
     let events = tauri::ipc::Channel::new(|_| Ok(()));
     let mut history: Vec<AgentTurn> = Vec::new();
     let mut doc = document.to_string();
+    // Proposals left undecided, by call id, as they now read.
+    let mut held_back: Vec<(String, Proposal)> = Vec::new();
     let mut outcomes = Vec::new();
     let mut error = None;
     // Quick Ask's captured selection, mapped through accepted edits.
@@ -782,10 +829,37 @@ pub fn run_conversation(
             }
         }
 
-        if user.accept && !outcome.proposals.is_empty() {
-            match checks::apply_all(&doc, &outcome.proposals, caret) {
-                Ok(next) => doc = next,
-                Err(e) => outcome.apply_error = Some(e),
+        // An edit quoted from an undecided proposal goes into it.
+        let mut standing = Vec::new();
+        for proposal in std::mem::take(&mut outcome.proposals) {
+            let into = (!proposal.anchor.is_empty() && !doc.contains(&proposal.anchor))
+                .then(|| {
+                    held_back.iter_mut().find_map(|(_, held)| {
+                        edited_in(&held.text, &proposal).map(|text| (held, text))
+                    })
+                })
+                .flatten();
+            match into {
+                Some((held, text)) => {
+                    held.text = text;
+                    outcome.joined += 1;
+                }
+                None => standing.push(proposal),
+            }
+        }
+        outcome.proposals = standing;
+        let decided = !user.leave;
+        if user.accept && decided {
+            let all: Vec<Proposal> = held_back
+                .iter()
+                .map(|(_, p)| p.clone())
+                .chain(outcome.proposals.iter().cloned())
+                .collect();
+            if !all.is_empty() {
+                match checks::apply_all(&doc, &all, caret) {
+                    Ok(next) => doc = next,
+                    Err(e) => outcome.apply_error = Some(e),
+                }
             }
         }
         outcome.doc_after = doc.clone();
@@ -793,11 +867,34 @@ pub fn run_conversation(
             selection = map_selection(&outcome.doc_before, &doc, sel);
         }
 
-        let note = if user.accept && outcome.apply_error.is_none() {
+        let note = if user.leave {
+            PENDING_NOTE
+        } else if user.accept && outcome.apply_error.is_none() {
             ACCEPTED_NOTE
         } else {
             REJECTED_NOTE
         };
+        if !user.leave {
+            // The ones left before are decided with these: their notes in
+            // the history say so now.
+            for turn in history.iter_mut() {
+                if let AgentTurn::ToolResult { call_id, output, .. } = turn {
+                    if held_back.iter().any(|(id, _)| id == call_id) {
+                        *output = output.replace(PENDING_NOTE, note);
+                    }
+                }
+            }
+            held_back.clear();
+        } else {
+            let ids: Vec<&String> = proposal_ids.iter().collect();
+            held_back.extend(
+                outcome
+                    .proposals
+                    .iter()
+                    .zip(ids)
+                    .map(|(p, id)| (id.clone(), p.clone())),
+            );
+        }
         for turn in turns.iter_mut() {
             if let AgentTurn::ToolResult {
                 call_id, output, ..
