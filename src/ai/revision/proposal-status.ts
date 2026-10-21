@@ -62,8 +62,10 @@ const STATUS_NOTES: Record<PendingStatus, string> = {
     "Status: this proposed edit could not be applied (the text it targeted changed) and was discarded - it is not part of the document.",
   expired:
     "Status: this proposed edit is from an earlier session and was never applied - it is not part of the document.",
+  // A text edit or a picture made in another proposal (usePendingEdits's
+  // joinInto); images::undecided_edits reads the edit back into it.
   joined:
-    "Status: this picture was put into the proposed text it goes next to, and is accepted or rejected with that proposal.",
+    "Status: this went into the proposed text it changes or goes next to - that proposal now reads with it, and it is accepted or rejected with that proposal.",
 };
 
 /**

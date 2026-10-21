@@ -461,6 +461,7 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         return format!("`{action}` requires `text` - the new content.");
     }
     let mut joins = false;
+    let mut again = false;
     if needs_anchor(action) {
         if anchor.is_empty() {
             return format!(
@@ -483,11 +484,15 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
             // rewrite there, and an edit of the old text would overlap it
             // (Sonnet anchored a word of the original after a rewrite of
             // the paragraph, live_eval::continuing). Where the rewrite still
-            // has those words the edit goes into it.
-            if rewrite.text.matches(anchor).count() != 1 || !quotes_undecided(ctx, anchor) {
-                return "Not proposed: that passage is one you rewrote earlier and the user hasn't decided on yet - they see your rewrite in its place, and an edit of the old text can't be applied beside it. Anchor in the rewrite's text instead (quote it as you proposed it): the edit goes into that proposal.".to_string();
+            // has those words the edit goes into it, and a new version of
+            // the whole passage takes its place.
+            again = action == "replace" && anchor == rewrite.replaced;
+            if !again {
+                if rewrite.text.matches(anchor).count() != 1 || !quotes_undecided(ctx, anchor) {
+                    return "Not proposed: that passage is one you rewrote earlier and the user hasn't decided on yet - they see your rewrite in its place, and an edit of the old text can't be applied beside it. Anchor in the rewrite's text instead (quote it as you proposed it): the edit goes into that proposal.".to_string();
+                }
+                joins = true;
             }
-            joins = true;
         }
     }
 
@@ -555,6 +560,8 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     }
     let into = if joins {
         " It changes text you proposed that the user hasn't decided on yet: it goes into that proposal, which now reads with it."
+    } else if again {
+        " It takes the place of your earlier rewrite of that passage, which the user hadn't decided on."
     } else {
         ""
     };
@@ -2154,11 +2161,22 @@ mod tests {
         let out = run(r#"{"action":"replace","anchor":"lighthouse","text":"beacon"}"#);
         assert!(out.contains("goes into that proposal"), "{out}");
         // Words it no longer has: refused, pointed at the rewrite.
-        let out = run(r#"{"action":"replace","anchor":"stood on the rock","text":"rose from the rock"}"#);
+        let out =
+            run(r#"{"action":"replace","anchor":"stood on the rock","text":"rose from the rock"}"#);
         assert!(out.starts_with("Not proposed"), "{out}");
         assert!(out.contains("Anchor in the rewrite's text"), "{out}");
+        // A new version of the whole passage takes the rewrite's place.
+        let out = run(
+            r#"{"action":"replace","anchor":"The lighthouse stood on the rock.","text":"The beacon stood alone."}"#,
+        );
+        assert!(
+            out.contains("takes the place of your earlier rewrite"),
+            "{out}"
+        );
         // Text beside it is the document's, as before.
-        let out = run(r#"{"action":"replace","anchor":"Waves broke below.","text":"Waves crashed below."}"#);
+        let out = run(
+            r#"{"action":"replace","anchor":"Waves broke below.","text":"Waves crashed below."}"#,
+        );
         assert!(out.starts_with("Edit proposed"), "{out}");
         assert!(!out.contains("goes into that proposal"), "{out}");
     }

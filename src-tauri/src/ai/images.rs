@@ -236,36 +236,88 @@ pub struct UndecidedEdit {
 }
 
 /// Each propose_edit in `history` the user hasn't decided on yet, as its
-/// result's status note says (src/ai/revision/proposal-status.ts).
+/// result's status note says (src/ai/revision/proposal-status.ts), reading
+/// as the user sees it: a later edit that went into one (the "joined" note)
+/// is made in its text. Without that, a third request quoting the joined
+/// text was checked against the first version (live_eval::continuing).
 pub fn undecided_edits(history: &[AgentTurn]) -> Vec<UndecidedEdit> {
     const UNDECIDED: &str = "has NOT yet accepted or rejected this proposed edit";
-    history
-        .iter()
-        .filter_map(|turn| match turn {
-            AgentTurn::ToolCall {
-                call_id,
-                name,
-                arguments,
+    const JOINED: &str = "this went into the proposed text it changes";
+    let note = |call_id: &str| {
+        history.iter().find_map(|t| match t {
+            AgentTurn::ToolResult {
+                call_id: id,
+                output,
                 ..
-            } if name == "propose_edit" => {
-                let open = history.iter().any(|t| {
-                    matches!(t, AgentTurn::ToolResult { call_id: id, output, .. }
-                        if id == call_id && output.contains(UNDECIDED))
-                });
-                let args: Value = serde_json::from_str(arguments).ok()?;
-                let text = args.get("text")?.as_str()?;
-                let replaced = match args.get("action").and_then(Value::as_str) {
-                    Some("replace") => args.get("anchor").and_then(Value::as_str),
-                    _ => None,
-                };
-                (open && !text.is_empty()).then(|| UndecidedEdit {
-                    replaced: replaced.unwrap_or_default().to_string(),
-                    text: text.to_string(),
-                })
-            }
+            } if id == call_id => Some(output.as_str()),
             _ => None,
         })
-        .collect()
+    };
+    let mut edits: Vec<UndecidedEdit> = Vec::new();
+    for turn in history {
+        let AgentTurn::ToolCall {
+            call_id,
+            name,
+            arguments,
+            ..
+        } = turn
+        else {
+            continue;
+        };
+        if name != "propose_edit" {
+            continue;
+        }
+        let Ok(args) = serde_json::from_str::<Value>(arguments) else {
+            continue;
+        };
+        let field = |key: &str| args.get(key).and_then(Value::as_str).unwrap_or("");
+        let (action, anchor, text) = (field("action"), field("anchor"), field("text"));
+        let note = note(call_id).unwrap_or("");
+        if note.contains(UNDECIDED) && !text.is_empty() {
+            edits.push(UndecidedEdit {
+                replaced: if action == "replace" { anchor } else { "" }.to_string(),
+                text: text.to_string(),
+            });
+        } else if note.contains(JOINED) {
+            if let Some((edit, made)) = edits.iter_mut().find_map(|edit| {
+                edited_text(&edit.text, action, anchor, text).map(|made| (edit, made))
+            }) {
+                edit.text = made;
+            }
+        }
+    }
+    edits
+}
+
+/// `text` with an edit quoted from it made in it - src/ai/revision/
+/// joined-edit.ts's editedText. None when the anchor isn't there exactly
+/// once or the action isn't an anchored edit.
+pub fn edited_text(text: &str, action: &str, anchor: &str, add: &str) -> Option<String> {
+    if anchor.is_empty() || text.matches(anchor).count() != 1 {
+        return None;
+    }
+    let at = text.find(anchor)?;
+    let (before, after) = (&text[..at], &text[at + anchor.len()..]);
+    let paragraph = |t: &str| format!("\n\n{}", t.trim());
+    Some(match action {
+        "replace" => format!("{before}{add}{after}"),
+        "delete" => format!("{before}{after}")
+            .replace("\n\n\n\n", "\n\n")
+            .trim()
+            .to_string(),
+        "insert_after" if add.contains("\n\n") || after.is_empty() || after.starts_with("\n\n") => {
+            let end = after.find("\n\n").unwrap_or(after.len());
+            format!(
+                "{before}{anchor}{}{}{}",
+                &after[..end],
+                paragraph(add),
+                &after[end..]
+            )
+        }
+        "insert_after" => format!("{before}{anchor} {add}{after}"),
+        "insert_before" => format!("{before}{add} {anchor}{after}"),
+        _ => return None,
+    })
 }
 
 /// The pictures earlier requests made that the user hasn't accepted or
@@ -1051,6 +1103,44 @@ mod tests {
         assert_eq!(undecided_pictures(&history), vec!["open1".to_string()]);
         let text = outcome(&json!({"alt": "Boats", "action": "insert_after", "image": {"id": "open1", "width": 1, "height": 1}}).to_string());
         assert!(text.contains("![Boats](textus-generated:open1)"), "{text}");
+    }
+
+    #[test]
+    fn an_edit_that_went_into_an_undecided_one_is_read_into_it() {
+        let call = |id: &str, args: Value| AgentTurn::ToolCall {
+            call_id: id.into(),
+            name: "propose_edit".into(),
+            arguments: args.to_string(),
+            reasoning: None,
+        };
+        let result = |id: &str, note: &str| AgentTurn::ToolResult {
+            call_id: id.into(),
+            output: format!("Edit proposed.\n\n[{note}]"),
+            images: Vec::new(),
+        };
+        let pending = "Status: the user has NOT yet accepted or rejected this proposed edit.";
+        let joined = "Status: this went into the proposed text it changes or goes next to - that proposal now reads with it, and it is accepted or rejected with that proposal.";
+        let history = vec![
+            call(
+                "a",
+                json!({"action": "replace", "anchor": "The old light.", "text": "The lighthouse shone. Gulls cried."}),
+            ),
+            result("a", pending),
+            call("b", json!({"action": "delete", "anchor": " Gulls cried."})),
+            result("b", joined),
+            call(
+                "c",
+                json!({"action": "replace", "anchor": "lighthouse", "text": "beacon"}),
+            ),
+            result("c", joined),
+        ];
+        assert_eq!(
+            undecided_edits(&history),
+            vec![UndecidedEdit {
+                replaced: "The old light.".into(),
+                text: "The beacon shone.".into(),
+            }]
+        );
     }
 
     #[test]

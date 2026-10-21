@@ -120,3 +120,46 @@ test("an edit of the text a rewrite replaces goes into the rewrite", async ({
     "Waves broke below.",
   ]);
 });
+
+test("a new version of the passage a rewrite replaces takes the rewrite's place", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(
+    page,
+    "The lighthouse stood on the rock.\n\nWaves broke below.",
+  );
+  const passage = "The lighthouse stood on the rock.";
+  await mockInvoke(page, {
+    ai_agent_message: reply(
+      "r1",
+      {
+        action: "replace",
+        anchor: passage,
+        text: "The old lighthouse stood alone on its rock.",
+      },
+      "A little lonelier.",
+    ),
+  });
+  await send(page, "Make the first line lonelier");
+  await expect(page.locator(".review-bar")).toBeVisible();
+  await mockInvoke(page, {
+    ai_agent_message: reply(
+      "r2",
+      { action: "replace", anchor: passage, text: "The beacon stood alone." },
+      "Shorter, with a beacon.",
+    ),
+  });
+  await send(page, "Shorter, and call it a beacon");
+  await expect(page.locator(".agent-panel-view")).toContainText(
+    "Shorter, with a beacon.",
+  );
+  await page.locator(".review-bar-accept").click();
+  await expect(page.locator(written)).toHaveText([
+    "The beacon stood alone.",
+    "Waves broke below.",
+  ]);
+});
