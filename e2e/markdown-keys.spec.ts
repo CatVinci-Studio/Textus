@@ -290,6 +290,52 @@ test("Mod+B and Mod+I pressed again at the end of what was typed end it, and the
   expect(await sourceOf(page)).toBe("bold and *it* after");
 });
 
+test("Mod+B and Mod+I on a selection keep it selected, so they add up and come off again", async ({
+  page,
+}) => {
+  await open(page);
+  await page.keyboard.type("hello world");
+  for (let i = 0; i < 5; i++) await page.keyboard.press("Shift+ArrowLeft");
+  const selected = () => page.evaluate(() => getSelection()?.toString());
+  expect(await selected()).toBe("world");
+  await page.keyboard.press("ControlOrMeta+b");
+  expect(await selected()).toBe("world");
+  await page.keyboard.press("ControlOrMeta+i");
+  expect(await selected()).toBe("world");
+  expect(await sourceOf(page)).toBe("hello ***world***");
+  // Source mode put the caret elsewhere: select the word again, by a
+  // double click this time.
+  await page.locator(`${editor} em`).dblclick();
+  expect(await selected()).toBe("world");
+  await page.keyboard.press("ControlOrMeta+b");
+  expect(await selected()).toBe("world");
+  await page.keyboard.press("ControlOrMeta+i");
+  expect(await selected()).toBe("world");
+  expect(await sourceOf(page)).toBe("hello world");
+});
+
+test("a double click on a bold or italic word selects that word", async ({
+  page,
+}) => {
+  // The first press reveals the span's ** and moves the text along; WebKit
+  // took the second press for a delimiter or the next word.
+  await open(page, "plain **bold** and *it* here, **粗体文字**");
+  const selected = () => page.evaluate(() => getSelection()?.toString());
+  await page.locator(`${editor} strong`).first().dblclick();
+  expect(await selected()).toBe("bold");
+  await page.locator(`${editor} em`).dblclick();
+  expect(await selected()).toBe("it");
+  // Chinese is cut into words, as a double click on plain text cuts it:
+  // the first word, never a delimiter.
+  await page
+    .locator(`${editor} strong`)
+    .nth(1)
+    .dblclick({ position: { x: 4, y: 8 } });
+  const word = await selected();
+  expect(word).toMatch(/^粗/);
+  expect("粗体文字".startsWith(word!)).toBe(true);
+});
+
 test("~~ and == stay as typed until their closing pair makes a strikethrough or a highlight", async ({
   page,
 }) => {

@@ -771,6 +771,33 @@ export function liveCaretPos(view: EditorView): number | null {
   }
 }
 
+/** The browser's selection as document positions, anchor then head: null
+ *  for a caret, no selection, or one outside what the editor knows. */
+function liveRange(view: EditorView): [number, number] | null {
+  const root = view.root as {
+    getSelection?: () => globalThis.Selection | null;
+  };
+  const domSel = root.getSelection ? root.getSelection() : null;
+  if (
+    !domSel ||
+    domSel.rangeCount === 0 ||
+    domSel.isCollapsed ||
+    !domSel.anchorNode ||
+    !domSel.focusNode ||
+    !view.dom.contains(domSel.anchorNode) ||
+    !view.dom.contains(domSel.focusNode)
+  )
+    return null;
+  try {
+    return [
+      view.posAtDOM(domSel.anchorNode, domSel.anchorOffset),
+      view.posAtDOM(domSel.focusNode, domSel.focusOffset),
+    ];
+  } catch {
+    return null;
+  }
+}
+
 /**
  * The editor state's selection can lag behind the real DOM caret: native
  * caret movement (the in-content steps deliberately left to the browser)
@@ -790,6 +817,21 @@ export function liveCaretPos(view: EditorView): number | null {
 export function stateWithLiveSelection(view: EditorView): EditorState {
   const { state } = view;
   if (!state.selection.empty) return state;
+  // A range the browser has but the state doesn't yet - Shift+Arrow just
+  // before Mod+B: the shortcut wraps what is on screen selected.
+  const range = liveRange(view);
+  if (range && range[0] !== range[1]) {
+    const [anchor, head] = range;
+    if (Math.max(anchor, head) <= state.doc.content.size)
+      return state.apply(
+        state.tr.setSelection(
+          TextSelection.between(
+            state.doc.resolve(anchor),
+            state.doc.resolve(head),
+          ),
+        ),
+      );
+  }
   const pos = liveCaretPos(view);
   if (
     pos === null ||
@@ -979,8 +1021,54 @@ function relocateComposedText(
  *  md-span-autopair-plugin.ts waits a little longer, to look after it. */
 export const COMPOSE_RELOCATE_DELAY_MS = 30;
 
+const wordSegmenter: Intl.Segmenter | undefined =
+  typeof Intl !== "undefined" && "Segmenter" in Intl
+    ? new Intl.Segmenter(undefined, { granularity: "word" })
+    : undefined;
+
+/**
+ * The word at `pos` inside a bold or italic span - the span's own text, cut
+ * at word boundaries as a double click would cut it (Intl.Segmenter, so
+ * Chinese too) - as document positions; null outside a span of plain text,
+ * or on a space.
+ */
+export function wordInEnclosureAt(
+  doc: ProseNode,
+  pos: number,
+): { from: number; to: number } | null {
+  if (!wordSegmenter || pos < 0 || pos > doc.content.size) return null;
+  const $pos = doc.resolve(pos);
+  const parent = $pos.parent;
+  if (!isEnclosure(parent) || parent.isBlock) return null;
+  let text = "";
+  let plain = true;
+  parent.forEach((child) => {
+    if (child.isText) text += child.text;
+    else plain = false;
+  });
+  if (!plain || !text) return null;
+  const offset = $pos.parentOffset;
+  for (const seg of wordSegmenter.segment(text)) {
+    const end = seg.index + seg.segment.length;
+    if (offset < seg.index || offset > end) continue;
+    if (!seg.isWordLike) continue;
+    const start = $pos.start();
+    return { from: start + seg.index, to: start + end };
+  }
+  return null;
+}
+
+/** How close in time and place the second press of a double click is to
+ *  the first. */
+const DOUBLE_CLICK_MS = 600;
+const DOUBLE_CLICK_PX = 6;
+
 export const enclosurePlugin = $prose(() => {
   let compositionAnchors: CompositionAnchor[] = [];
+  // Where the first press of a possible double click landed, read before
+  // it put the caret in a span and so revealed its delimiters.
+  let firstPress: { pos: number; x: number; y: number; at: number } | null =
+    null;
   return new Plugin<DecorationSet>({
     key: enclosureKey,
     state: {
@@ -1003,6 +1091,59 @@ export const enclosurePlugin = $prose(() => {
         return enclosureKey.getState(state);
       },
       handleDOMEvents: {
+        // A double click on a bold or italic word selects that word. The
+        // first press puts the caret in the span, which reveals its `**`
+        // around it and moves the text along; WebKit then takes the
+        // second press for wherever the text went, a delimiter or the
+        // next word, and selected nothing or the wrong word. The word is
+        // the one under the first press.
+        mousedown(view, event) {
+          if (
+            event.button !== 0 ||
+            event.shiftKey ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.altKey
+          ) {
+            firstPress = null;
+            return false;
+          }
+          if (event.detail === 1) {
+            const hit = view.posAtCoords({
+              left: event.clientX,
+              top: event.clientY,
+            });
+            firstPress = hit
+              ? {
+                  pos: hit.pos,
+                  x: event.clientX,
+                  y: event.clientY,
+                  at: event.timeStamp,
+                }
+              : null;
+            return false;
+          }
+          const first = firstPress;
+          firstPress = null;
+          if (
+            event.detail !== 2 ||
+            !first ||
+            event.timeStamp - first.at > DOUBLE_CLICK_MS ||
+            Math.abs(event.clientX - first.x) > DOUBLE_CLICK_PX ||
+            Math.abs(event.clientY - first.y) > DOUBLE_CLICK_PX
+          )
+            return false;
+          const word = wordInEnclosureAt(view.state.doc, first.pos);
+          if (!word) return false;
+          event.preventDefault();
+          view.focus();
+          view.dispatch(
+            view.state.tr.setSelection(
+              TextSelection.create(view.state.doc, word.from, word.to),
+            ),
+          );
+          return true;
+        },
         compositionstart(view) {
           compositionAnchors = snapshotAdjacentEnclosures(view.state);
           if (compositionAnchors.length > 0)
