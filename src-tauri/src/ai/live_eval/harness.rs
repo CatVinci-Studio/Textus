@@ -536,30 +536,9 @@ pub struct AgentSetup<'a> {
 /// decided yet.
 const PENDING_NOTE: &str = "Status: the user has NOT yet accepted or rejected this proposed edit. It is shown to them as a preview and is NOT in the document text in this request - do not assume it was applied. To change it or go on from it, anchor in its text: the edit goes into this proposal.";
 
-/// An edit quoted from an undecided proposal's text, made in that text -
-/// src/ai/revision/joined-edit.ts's editedText. None when it isn't there
-/// exactly once or isn't an anchored edit.
-fn edited_in(text: &str, edit: &Proposal) -> Option<String> {
-    let anchor = edit.anchor.as_str();
-    if anchor.is_empty() || text.matches(anchor).count() != 1 {
-        return None;
-    }
-    let at = text.find(anchor)?;
-    let (before, after) = (&text[..at], &text[at + anchor.len()..]);
-    let add = edit.text.as_str();
-    let paragraph = |t: &str| format!("\n\n{}\n\n", t.trim());
-    Some(match edit.action.as_str() {
-        "replace" => format!("{before}{add}{after}"),
-        "delete" => format!("{before}{after}").replace("\n\n\n\n", "\n\n").trim().to_string(),
-        "insert_after" if add.contains("\n\n") || after.is_empty() || after.starts_with("\n\n") => {
-            let end = after.find("\n\n").unwrap_or(after.len());
-            format!("{before}{anchor}{}{}{}", &after[..end], paragraph(add).trim_end(), &after[end..]).trim_end().to_string()
-        }
-        "insert_after" => format!("{before}{anchor} {add}{after}"),
-        "insert_before" => format!("{before}{add} {anchor}{after}"),
-        _ => return None,
-    })
-}
+/// Mirrors src/ai/revision/proposal-status.ts's note for an edit that went
+/// into another proposal.
+const JOINED_NOTE: &str = "Status: this went into the proposed text it changes or goes next to - that proposal now reads with it, and it is accepted or rejected with that proposal.";
 
 /// Mirrors src/ai/revision/proposal-status.ts's notes for the two decided states.
 const ACCEPTED_NOTE: &str =
@@ -829,13 +808,29 @@ pub fn run_conversation(
             }
         }
 
-        // An edit quoted from an undecided proposal goes into it.
+        // An edit quoted from an undecided proposal goes into it - also one
+        // of document text a rewrite replaces (joinInto).
         let mut standing = Vec::new();
-        for proposal in std::mem::take(&mut outcome.proposals) {
-            let into = (!proposal.anchor.is_empty() && !doc.contains(&proposal.anchor))
+        let mut standing_ids = Vec::new();
+        let mut joined_ids = Vec::new();
+        let ids = std::mem::take(&mut proposal_ids);
+        for (proposal, id) in std::mem::take(&mut outcome.proposals).into_iter().zip(ids) {
+            let anchor = proposal.anchor.as_str();
+            let into = (!anchor.is_empty())
                 .then(|| {
                     held_back.iter_mut().find_map(|(_, held)| {
-                        edited_in(&held.text, &proposal).map(|text| (held, text))
+                        let replaces = held.action == "replace" && held.anchor.contains(anchor);
+                        (!doc.contains(anchor) || replaces)
+                            .then(|| {
+                                crate::ai::images::edited_text(
+                                    &held.text,
+                                    &proposal.action,
+                                    anchor,
+                                    &proposal.text,
+                                )
+                            })
+                            .flatten()
+                            .map(|text| (held, text))
                     })
                 })
                 .flatten();
@@ -843,11 +838,39 @@ pub fn run_conversation(
                 Some((held, text)) => {
                     held.text = text;
                     outcome.joined += 1;
+                    joined_ids.push(id);
                 }
-                None => standing.push(proposal),
+                None => {
+                    standing.push(proposal);
+                    standing_ids.push(id);
+                }
             }
         }
         outcome.proposals = standing;
+        let proposal_ids = standing_ids;
+        // A new version of a passage an undecided rewrite replaces takes its
+        // place: the old one reads as rejected (useEditorProposals's
+        // addPreviews).
+        held_back.retain(|(id, held)| {
+            let superseded = held.action == "replace"
+                && outcome
+                    .proposals
+                    .iter()
+                    .any(|p| p.action == "replace" && p.anchor == held.anchor);
+            if superseded {
+                for turn in history.iter_mut() {
+                    if let AgentTurn::ToolResult {
+                        call_id, output, ..
+                    } = turn
+                    {
+                        if call_id == id {
+                            *output = output.replace(PENDING_NOTE, REJECTED_NOTE);
+                        }
+                    }
+                }
+            }
+            !superseded
+        });
         let decided = !user.leave;
         if user.accept && decided {
             let all: Vec<Proposal> = held_back
@@ -878,7 +901,10 @@ pub fn run_conversation(
             // The ones left before are decided with these: their notes in
             // the history say so now.
             for turn in history.iter_mut() {
-                if let AgentTurn::ToolResult { call_id, output, .. } = turn {
+                if let AgentTurn::ToolResult {
+                    call_id, output, ..
+                } = turn
+                {
                     if held_back.iter().any(|(id, _)| id == call_id) {
                         *output = output.replace(PENDING_NOTE, note);
                     }
@@ -902,6 +928,8 @@ pub fn run_conversation(
             {
                 if proposal_ids.contains(call_id) {
                     *output = format!("{output}\n\n[{note}]");
+                } else if joined_ids.contains(call_id) {
+                    *output = format!("{output}\n\n[{JOINED_NOTE}]");
                 }
             }
         }

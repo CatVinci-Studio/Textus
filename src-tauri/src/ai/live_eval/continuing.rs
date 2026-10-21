@@ -52,13 +52,19 @@ fn run_with(
             outcome.invalid_errors,
             harness::clip(&outcome.reply, 200)
         );
+        for call in &outcome.calls {
+            eprintln!("  call: {}", harness::clip(&call.to_string(), 400));
+        }
         if let Some(e) = &outcome.apply_error {
             eprintln!("live_eval: turn {}: apply failed: {e}", i + 1);
         }
     }
     eprintln!(
         "live_eval: final document:\n{}",
-        conv.outcomes.last().map(|o| o.doc_after.as_str()).unwrap_or("")
+        conv.outcomes
+            .last()
+            .map(|o| o.doc_after.as_str())
+            .unwrap_or("")
     );
     Some(conv)
 }
@@ -133,7 +139,11 @@ fn a_change_to_undecided_writing_goes_into_it() {
 #[ignore = "live API - see module docs"]
 fn more_writing_follows_the_undecided_text() {
     for (ui, first, more) in [
-        ("zh", "写一段关于秋天果园的短文。", "再接着写一段，讲傍晚收工。"),
+        (
+            "zh",
+            "写一段关于秋天果园的短文。",
+            "再接着写一段，讲傍晚收工。",
+        ),
         (
             "en",
             "Write a paragraph about an orchard in autumn.",
@@ -155,15 +165,13 @@ fn more_writing_follows_the_undecided_text() {
             .turns
             .iter()
             .find_map(|t| match t {
-                aicompat::agent::AgentTurn::ToolCall { name, arguments, .. }
-                    if name == "propose_edit" =>
-                {
-                    serde_json::from_str::<serde_json::Value>(arguments)
-                        .ok()?
-                        .get("text")?
-                        .as_str()
-                        .map(|s| s.chars().take(12).collect::<String>())
-                }
+                aicompat::agent::AgentTurn::ToolCall {
+                    name, arguments, ..
+                } if name == "propose_edit" => serde_json::from_str::<serde_json::Value>(arguments)
+                    .ok()?
+                    .get("text")?
+                    .as_str()
+                    .map(|s| s.chars().take(12).collect::<String>()),
                 _ => None,
             })
             .unwrap_or_default();
@@ -198,7 +206,10 @@ fn revisions_on_an_undecided_revision_build_on_it() {
     assert!(doc.contains("到了中午"), "the second paragraph went: {doc}");
     let first = doc.split("\n\n").next().unwrap_or("");
     assert!(first.chars().count() < 70, "not shorter: {first}");
-    assert!(!first.contains("灯塔") || first.contains("航标灯"), "{first}");
+    assert!(
+        !first.contains("灯塔") || first.contains("航标灯"),
+        "{first}"
+    );
 }
 
 /// A picture asked for with the writing, both undecided, then the
@@ -225,4 +236,124 @@ fn an_undecided_picture_survives_a_rewrite_of_its_text() {
         1,
         "the picture isn't in once: {doc}"
     );
+}
+
+/// The Revise case in English, two requests: a rewrite of the first
+/// paragraph left undecided, then one word of it changed - quoted from the
+/// original or from the rewrite, it goes into the rewrite.
+#[test]
+#[ignore = "live API - see module docs"]
+fn a_word_changed_in_an_undecided_rewrite_goes_into_it() {
+    let doc = "The harbour was very quiet in the early morning. A few fishing boats were tied up at the quay, rocking gently on the swell, and now and then a gull skimmed the water. Far off, the lighthouse was still lit, its beam blurred in the mist.\n\nBy noon the quay was busy.";
+    let Some(conv) = run(
+        AgentMode::Revise,
+        "en",
+        doc,
+        &[
+            UserTurn::leaving("Make the first paragraph more concise."),
+            UserTurn::new("Change \"lighthouse\" to \"beacon\"."),
+        ],
+    ) else {
+        return;
+    };
+    let doc = settled(&conv);
+    assert!(doc.contains("By noon"), "the second paragraph went: {doc}");
+    let first = doc.split("\n\n").next().unwrap_or("");
+    assert!(
+        first.contains("beacon") && !first.contains("lighthouse"),
+        "{first}"
+    );
+    assert!(first.len() < 250, "not more concise: {first}");
+}
+
+/// Write, then a title asked for before deciding: the title above the
+/// undecided text, the text once.
+#[test]
+#[ignore = "live API - see module docs"]
+fn a_title_asked_for_after_undecided_writing_goes_above_it() {
+    for (ui, first, title) in [
+        ("zh", "写一段关于雨夜的短文。", "给它加一个标题。"),
+        (
+            "en",
+            "Write a short paragraph about a rainy night.",
+            "Add a title above it.",
+        ),
+    ] {
+        let Some(conv) = run(
+            AgentMode::Write,
+            ui,
+            "",
+            &[UserTurn::leaving(first), UserTurn::new(title)],
+        ) else {
+            return;
+        };
+        let doc = settled(&conv);
+        assert!(
+            doc.trim_start().starts_with('#'),
+            "{ui}: no title first: {doc}"
+        );
+        assert_eq!(doc.matches('#').count(), 1, "{ui}: {doc}");
+        // The writing once, below it - however many paragraphs it came as.
+        let start: String = conv.outcomes[0].proposals[0]
+            .text
+            .chars()
+            .take(12)
+            .collect();
+        assert_eq!(doc.matches(&start).count(), 1, "{ui}: {doc}");
+    }
+}
+
+/// Revise one paragraph, then - before deciding - another: the two stand
+/// side by side and one Accept takes both.
+#[test]
+#[ignore = "live API - see module docs"]
+fn a_revision_elsewhere_stands_beside_an_undecided_one() {
+    let doc = "我们今天去了海边，玩得非常非常开心，大家都觉得很好玩。\n\n回来的路上下雨了，我们都淋湿了，但是也没有什么关系。";
+    let Some(conv) = run(
+        AgentMode::Revise,
+        "zh",
+        doc,
+        &[
+            UserTurn::leaving("把第一段改得书面一点。"),
+            UserTurn::new("第二段也改得书面一点。"),
+        ],
+    ) else {
+        return;
+    };
+    let out = settled(&conv);
+    let parts: Vec<&str> = out.split("\n\n").collect();
+    assert_eq!(parts.len(), 2, "{out}");
+    let before: Vec<&str> = doc.split("\n\n").collect();
+    assert_ne!(
+        parts[0], before[0],
+        "the first paragraph wasn't revised: {out}"
+    );
+    assert_ne!(
+        parts[1], before[1],
+        "the second paragraph wasn't revised: {out}"
+    );
+}
+
+/// Write three paragraphs, then - before deciding - drop the last: Write
+/// mode may remove text it proposed that the user hasn't taken yet.
+#[test]
+#[ignore = "live API - see module docs"]
+fn undecided_writing_can_lose_a_paragraph_in_write_mode() {
+    let Some(conv) = run(
+        AgentMode::Write,
+        "zh",
+        "",
+        &[
+            UserTurn::leaving("写三段关于冬天早晨的短文，每段一两句。"),
+            UserTurn::new("删掉最后一段。"),
+        ],
+    ) else {
+        return;
+    };
+    assert!(
+        conv.outcomes[1].joined >= 1,
+        "the removal didn't go into the writing"
+    );
+    let doc = settled(&conv);
+    assert_eq!(paragraphs(doc), 2, "{doc}");
 }
