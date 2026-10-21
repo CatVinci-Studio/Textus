@@ -656,6 +656,7 @@ export function MilkdownEditor({
             conversation={conversation}
             pendingEdits={pendingEdits}
             selectedText={panelSelection?.text ?? null}
+            selectionIsPicture={panelSelection?.picture ?? false}
             selectionChip={panelChipHandlers}
             panelSendContext={panelSendContext}
             showProposals={showProposals}

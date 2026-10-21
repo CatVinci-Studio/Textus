@@ -1,3 +1,4 @@
+import { RevisionNoteText } from "./RevisionNoteText";
 import {
   memo,
   useCallback,
@@ -559,7 +560,13 @@ const RevisionCard = memo(
             <span className="revision-note-was">
               {labels.proposalDeletedSentence}
             </span>
-            <s>{item.before.trim() || "—"}</s>
+            <s>
+              {item.before.trim() ? (
+                <RevisionNoteText text={item.before.trim()} />
+              ) : (
+                "—"
+              )}
+            </s>
           </div>
         ) : (
           <div className="revision-note-text">
@@ -568,10 +575,14 @@ const RevisionCard = memo(
             {item.before.trim() && (
               <span className="visually-hidden">
                 {labels.proposalDeletedSentence}:{" "}
-                <del>{item.before.trim()}</del>
+                <del>
+                  <RevisionNoteText text={item.before.trim()} />
+                </del>
               </span>
             )}
-            {item.after.trim() || (
+            {item.after.trim() ? (
+              <RevisionNoteText text={item.after.trim()} />
+            ) : (
               <span className="revision-note-delete">
                 {labels.proposalDeleteSentence}
               </span>

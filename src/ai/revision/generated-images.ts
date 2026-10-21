@@ -271,3 +271,30 @@ export function joinedText(
   if (start < 0) return `${picture}\n\n${text}`;
   return `${text.slice(0, start)}\n\n${picture}${text.slice(start)}`;
 }
+
+/** A generate_image call's `in_text` picture as its slot (EditProposal.
+ *  slot): where the text it is for is going - at the caret, or the end of
+ *  the document - until that text takes it in; null for any other call. */
+export function pictureSlot(
+  argumentsJson: string,
+  cursor: number | null,
+): EditProposal | null {
+  try {
+    const parsed = JSON.parse(argumentsJson);
+    const image = parsed.image;
+    if (parsed.action !== "in_text" || !image || typeof image.id !== "string")
+      return null;
+    const width = Number(image.width) || 0;
+    const height = Number(image.height) || 0;
+    sizes.set(image.id, { width, height });
+    const alt = cleanAlt(typeof parsed.alt === "string" ? parsed.alt : "");
+    return {
+      action: cursor === null ? "append" : "insert_at_cursor",
+      text: `![${alt}](${generatedImageSrc(image.id)})`,
+      image: { id: image.id, alt, width, height, pending: true },
+      slot: true,
+    };
+  } catch {
+    return null;
+  }
+}
