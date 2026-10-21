@@ -14,8 +14,8 @@
 //! apart from failures.
 
 use crate::ai::agent::StreamEvent;
-use crate::ai::tools::{self, Access, Run, Tool, EDITING_MODES};
-use aicompat::agent::{ToolCall, ToolOutput, ToolSpec};
+use crate::ai::tools::{self, Access, ProposalLedger, Run, Tool, EDITING_MODES};
+use aicompat::agent::{AgentTurn, ToolCall, ToolOutput, ToolSpec};
 use aicompat::images::{self as gen, Aspect, GeneratedImage, ImageApi, ImageTarget};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -181,15 +181,73 @@ fn per_send(limit: Option<usize>) -> usize {
     limit.unwrap_or(PER_SEND).clamp(1, MAX_PER_SEND)
 }
 
-/// generate_image's actions: the insertions, and `replace` - a picture
-/// already in the document, for one that redoes it.
-const IMAGE_ACTIONS: [&str; 5] = [
+/// generate_image's actions: `in_text` - a picture for text not written
+/// yet, whose Markdown the model puts in that text - the insertions, and
+/// `replace` - a picture already in the document, for one that redoes it.
+const IMAGE_ACTIONS: [&str; 6] = [
+    "in_text",
     "insert_after",
     "insert_before",
     "insert_at_cursor",
     "append",
     "replace",
 ];
+
+/// The src a picture being made has in a proposal's Markdown, until it is
+/// saved. Mirrors `generatedImageSrc` in src/ai/revision/generated-images.ts.
+fn placeholder_src(id: &str) -> String {
+    format!("textus-generated:{id}")
+}
+
+/// What a picture may stand next to besides the document: the text of
+/// proposals not decided yet - this request's own (ProposalLedger), and an
+/// earlier request's the user hasn't accepted or rejected - where the
+/// frontend puts the picture into that proposal.
+pub struct ProposedText<'a> {
+    pub this_request: &'a std::sync::Mutex<ProposalLedger>,
+    pub undecided: &'a [String],
+}
+
+impl ProposedText<'_> {
+    /// Whether `anchor` is quoted from exactly one of them.
+    fn quotes(&self, anchor: &str) -> bool {
+        let ledger = self.this_request.lock().unwrap_or_else(|e| e.into_inner());
+        let found: Vec<&String> = ledger
+            .texts()
+            .iter()
+            .chain(self.undecided)
+            .filter(|text| text.contains(anchor))
+            .collect();
+        found.len() == 1 && found[0].matches(anchor).count() == 1
+    }
+}
+
+/// The new text of each propose_edit in `history` the user hasn't decided
+/// on yet, as its result's status note says (src/ai/revision/
+/// proposal-status.ts).
+pub fn undecided_texts(history: &[AgentTurn]) -> Vec<String> {
+    const UNDECIDED: &str = "has NOT yet accepted or rejected this proposed edit";
+    history
+        .iter()
+        .filter_map(|turn| match turn {
+            AgentTurn::ToolCall {
+                call_id,
+                name,
+                arguments,
+                ..
+            } if name == "propose_edit" => {
+                let open = history.iter().any(|t| {
+                    matches!(t, AgentTurn::ToolResult { call_id: id, output, .. }
+                        if id == call_id && output.contains(UNDECIDED))
+                });
+                let args: Value = serde_json::from_str(arguments).ok()?;
+                let text = args.get("text")?.as_str()?;
+                (open && !text.is_empty()).then(|| text.to_string())
+            }
+            _ => None,
+        })
+        .collect()
+}
 
 /// Whether `anchor` is the whole Markdown of one picture, `![alt](src)` -
 /// the only thing a picture may replace.
@@ -294,6 +352,28 @@ impl ImageRun {
     }
 }
 
+impl ImageRun {
+    /// A request's image model that makes no picture: each one asked for
+    /// fails in the background (nothing listens at its address), and
+    /// generate_image answers the model as it would for a real one - for
+    /// the live picture cases (live_eval::images), which spend nothing on
+    /// pictures.
+    #[cfg(test)]
+    pub(crate) fn offline(limit: usize) -> Self {
+        Self {
+            job: ImageJob {
+                app: None,
+                api: ImageApi::OpenAi,
+                base_url: "https://127.0.0.1:1".into(),
+                api_key: "sk".into(),
+                model: "gpt-image-2".into(),
+            },
+            made: AtomicUsize::new(0),
+            limit,
+        }
+    }
+}
+
 impl ImageJob {
     /// One picture from the chosen service.
     async fn generate(
@@ -342,13 +422,19 @@ impl ImageRun {
     /// half a minute to a minute before. The document shows the picture's
     /// frame in place until it comes (ai_generated_image waits for it), or
     /// why it didn't.
-    async fn run_call(&self, arguments: &str, document: &str, announce: impl FnOnce()) -> String {
+    async fn run_call(
+        &self,
+        arguments: &str,
+        document: &str,
+        proposed: &ProposedText<'_>,
+        announce: impl FnOnce(),
+    ) -> String {
         let Ok(Value::Object(mut args)) = serde_json::from_str::<Value>(arguments) else {
             return arguments.to_string();
         };
         args.remove("image");
         args.remove("not_generated");
-        let outcome = match self.check(&Value::Object(args.clone()), document) {
+        let outcome = match self.check(&Value::Object(args.clone()), document, proposed) {
             Err(why) => Err(why),
             Ok((prompt, aspect)) => {
                 announce();
@@ -387,7 +473,12 @@ impl ImageRun {
 
     /// The call is fit to spend a picture on: a description, a place that
     /// exists in the document, and pictures left in this send.
-    fn check(&self, args: &Value, document: &str) -> Result<(String, Aspect), String> {
+    fn check(
+        &self,
+        args: &Value,
+        document: &str,
+        proposed: &ProposedText<'_>,
+    ) -> Result<(String, Aspect), String> {
         let text = |key: &str| args.get(key).and_then(Value::as_str).unwrap_or("").trim();
         let prompt = text("prompt");
         if prompt.is_empty() {
@@ -414,7 +505,11 @@ impl ImageRun {
                     "`{action}` requires `anchor` - the text the picture goes next to."
                 ));
             }
-            tools::check_anchor(document, args, anchor)?;
+            // Next to text proposed and not decided yet, the picture joins
+            // that proposal (useEditorProposals).
+            if !proposed.quotes(anchor) {
+                tools::check_anchor(document, args, anchor)?;
+            }
         }
         let aspect = match text("aspect") {
             "" => Aspect::default(),
@@ -435,13 +530,20 @@ impl ImageRun {
 
 impl ImageRun {
     /// generate_image for this request, offered in Write and Revise.
-    pub fn tool<'a>(&'a self, document: &'a str, channel: &'a Channel<StreamEvent>) -> Tool<'a> {
+    pub fn tool<'a>(
+        &'a self,
+        document: &'a str,
+        proposed: ProposedText<'a>,
+        channel: &'a Channel<StreamEvent>,
+    ) -> Tool<'a> {
+        let proposed = std::sync::Arc::new(proposed);
         Tool {
             spec: spec(self.limit),
             access: Access::ProposesInItsCall,
             modes: EDITING_MODES,
             run: Run::Async(Box::new(move |call| {
-                Box::pin(self.execute(call, document, channel))
+                let proposed = proposed.clone();
+                Box::pin(async move { self.execute(call, document, &proposed, channel).await })
             })),
         }
     }
@@ -454,6 +556,7 @@ impl ImageRun {
         &self,
         call: ToolCall,
         document: &str,
+        proposed: &ProposedText<'_>,
         channel: &Channel<StreamEvent>,
     ) -> ToolOutput {
         // The provider may not have streamed the call's start; the
@@ -464,7 +567,9 @@ impl ImageRun {
                 name: call.name.clone(),
             });
         };
-        let arguments = self.run_call(&call.arguments, document, announce).await;
+        let arguments = self
+            .run_call(&call.arguments, document, proposed, announce)
+            .await;
         ToolOutput {
             text: outcome(&arguments),
             call_arguments: Some(arguments),
@@ -475,7 +580,7 @@ impl ImageRun {
 
 /// What the model is told about generate_image, with this request's limit.
 fn description(limit: usize) -> String {
-    format!("Make a picture with the user's image model and propose it for the document: the user sees it in place with Accept and Reject, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked.\n\nHow many: each picture costs the user money, and this request may make at most {limit}. When the user says how many, make that many (up to {limit}); when they don't, make one, or - for a longer piece they asked to illustrate - one for each part that gains from a picture, and say in a sentence which parts before you start. Make them as you write: the call returns at once and the picture is made while you go on.\n\nWhere: insert_after the paragraph it illustrates, between paragraphs - never inside a list, a table, a quote or a heading's line - and not two pictures in a row.\n\nRedoing a picture: to change or replace one already in the document, use `replace` with `anchor` its whole Markdown, `![alt](src)`, copied from the document, and describe the new picture in full in `prompt` (what to keep, what to change). The user decides whether the old file goes once they accept.\n\nIf the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.")
+    format!("Make a picture with the user's image model and propose it for the document: the user sees it in place, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked.\n\nHow many: each picture costs the user money, and this request may make at most {limit}. When the user says how many, make that many (up to {limit}); when they don't, make one, or - for a longer piece they asked to illustrate - one for each part that gains from a picture.\n\nNew text with pictures (an empty document, a new section, a piece to write and illustrate): call generate_image FIRST, with action `in_text`, one call per picture, before the propose_edit with the text. Each call returns at once with the picture's Markdown, and the picture is made while you write. Then send the text with propose_edit, each picture's Markdown on a line of its own where it goes, between paragraphs: the text and its pictures are one proposal, accepted together.\n\nA picture for text already in the document - or for text you proposed that the user hasn't accepted or rejected yet - goes insert_after the paragraph it illustrates, `anchor` quoted from it. Between paragraphs, never inside a list, a table, a quote or a heading's line, and not two pictures in a row.\n\nRedoing a picture: to change or replace one already in the document, use `replace` with `anchor` its whole Markdown, `![alt](src)`, copied from the document, and describe the new picture in full in `prompt` (what to keep, what to change). The user decides whether the old file goes once they accept.\n\nIf the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.")
 }
 
 /// What the model is told about generate_image.
@@ -502,7 +607,7 @@ fn spec(limit: usize) -> ToolSpec {
                 "action": {
                     "type": "string",
                     "enum": IMAGE_ACTIONS,
-                    "description": "Where it goes: insert_after a paragraph (the usual place for an illustration), insert_before one, insert_at_cursor, append - or replace a picture already in the document."
+                    "description": "Where it goes: in_text - in the text you propose next, its Markdown put there by you - insert_after a paragraph (the usual place for an illustration of existing text), insert_before one, insert_at_cursor, append - or replace a picture already in the document."
                 },
                 "anchor": {
                     "type": "string",
@@ -528,6 +633,15 @@ fn outcome(arguments: &str) -> String {
             image["width"].as_u64().unwrap_or(0),
             image["height"].as_u64().unwrap_or(0)
         );
+        if args["action"] == "in_text" {
+            let alt = args["alt"].as_str().unwrap_or("").replace(['[', ']'], "");
+            let markdown = format!(
+                "![{}]({})",
+                alt.split_whitespace().collect::<Vec<_>>().join(" "),
+                placeholder_src(image["id"].as_str().unwrap_or(""))
+            );
+            return format!("Picture being made ({size} pixels). Put this Markdown, exactly, on a line of its own where the picture goes in the text you now propose with propose_edit: {markdown} - it shows as a frame until the picture comes, and the user accepts the text and its pictures together. Write and propose the text now, in this reply; don't wait for the picture, and don't show this Markdown to the user.");
+        }
         if image["pending"].as_bool() == Some(true) {
             return format!("Image proposed and being made ({size} pixels) while you go on, and appears in place by itself with Accept and Reject once it is ready (or, if the service turns it down, the user sees why there). It is saved only if they accept. Carry on with the rest of the request now - don't wait for it. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.");
         }
@@ -693,10 +807,30 @@ mod tests {
     }
 
     fn call(run: &ImageRun, args: Value, document: &str) -> (Value, bool) {
+        call_with(run, args, document, &[], &[])
+    }
+
+    /// A call with proposals not decided yet: this request's, and earlier
+    /// ones'.
+    fn call_with(
+        run: &ImageRun,
+        args: Value,
+        document: &str,
+        this_request: &[&str],
+        undecided: &[String],
+    ) -> (Value, bool) {
+        let this_request = std::sync::Mutex::new(ProposalLedger::with_texts(this_request));
+        let proposed = ProposedText {
+            this_request: &this_request,
+            undecided,
+        };
         let mut announced = false;
-        let out = tauri::async_runtime::block_on(
-            run.run_call(&args.to_string(), document, || announced = true),
-        );
+        let out = tauri::async_runtime::block_on(run.run_call(
+            &args.to_string(),
+            document,
+            &proposed,
+            || announced = true,
+        ));
         (serde_json::from_str(&out).unwrap(), announced)
     }
 
@@ -745,6 +879,72 @@ mod tests {
         assert!(!announced);
         assert!(args.get("image").is_none());
         assert!(generate_image_text(&args).starts_with("Not generated"));
+    }
+
+    #[test]
+    fn a_picture_for_text_not_written_yet_hands_back_its_markdown() {
+        let run = run();
+        let (args, announced) = call(
+            &run,
+            json!({"prompt": "boats", "alt": "Boats [at] dusk", "action": "in_text", "aspect": "16:9"}),
+            "",
+        );
+        assert!(announced);
+        let id = args["image"]["id"].as_str().unwrap();
+        let text = generate_image_text(&args);
+        assert!(text.starts_with("Picture being made"), "{text}");
+        assert!(
+            text.contains(&format!("![Boats at dusk](textus-generated:{id})")),
+            "{text}"
+        );
+    }
+
+    #[test]
+    fn a_picture_may_stand_next_to_text_proposed_and_not_decided_yet() {
+        let run = run();
+        let new = "The tide went out before dawn.\n\nThe boats came back at dusk.";
+        let at = |anchor: &str| json!({"prompt": "boats", "alt": "Boats", "action": "insert_after", "anchor": anchor});
+        // This request's own proposal, which isn't in the empty document.
+        let (args, _) = call_with(&run, at("The boats came back at dusk."), "", &[new], &[]);
+        assert!(args.get("image").is_some(), "{args}");
+        // An earlier request's, still undecided.
+        let (args, _) = call_with(
+            &run,
+            at("The tide went out before dawn."),
+            DOC,
+            &[],
+            &[new.to_string()],
+        );
+        assert!(args.get("image").is_some(), "{args}");
+        // Text found nowhere is still refused, and spends nothing.
+        let (args, _) = call_with(&run, at("Nowhere at all."), DOC, &[new], &[]);
+        assert!(args["not_generated"]
+            .as_str()
+            .unwrap()
+            .contains("No exact match"));
+        assert_eq!(run.made.load(Ordering::SeqCst), 2);
+    }
+
+    #[test]
+    fn undecided_texts_are_read_off_the_status_notes() {
+        let call = |id: &str, text: &str| AgentTurn::ToolCall {
+            call_id: id.into(),
+            name: "propose_edit".into(),
+            arguments: json!({"action": "append", "text": text}).to_string(),
+            reasoning: None,
+        };
+        let result = |id: &str, note: &str| AgentTurn::ToolResult {
+            call_id: id.into(),
+            output: format!("Edit proposed.\n\n[{note}]"),
+            images: Vec::new(),
+        };
+        let history = vec![
+            call("a", "Kept."),
+            result("a", "Status: the user accepted this proposed edit - the document text in this request includes it."),
+            call("b", "Open."),
+            result("b", "Status: the user has NOT yet accepted or rejected this proposed edit. It is still shown to them as a preview."),
+        ];
+        assert_eq!(undecided_texts(&history), vec!["Open.".to_string()]);
     }
 
     #[test]

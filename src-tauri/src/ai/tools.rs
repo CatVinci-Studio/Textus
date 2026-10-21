@@ -50,6 +50,25 @@ pub struct ProposalLedger {
     /// Replacements refused once as looking cut off (degenerate_replacement),
     /// as `anchor\0text`: the same call sent again is meant, and goes through.
     refused_short: Vec<String>,
+    /// The new text of each proposal made: a picture may go next to a
+    /// paragraph of it (ai::images), though it isn't in the document yet.
+    texts: Vec<String>,
+}
+
+impl ProposalLedger {
+    /// The new text of each proposal this request has made, in order.
+    pub fn texts(&self) -> &[String] {
+        &self.texts
+    }
+
+    /// A ledger whose proposals made these texts.
+    #[cfg(test)]
+    pub fn with_texts(texts: &[&str]) -> Self {
+        Self {
+            texts: texts.iter().map(|t| t.to_string()).collect(),
+            ..Self::default()
+        }
+    }
 }
 
 /// A passage one of this request's proposals replaces or deletes: where it
@@ -423,6 +442,10 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     // shorter proposal for the same passage to meet a skill's 70% - two
     // overlapping previews, of which only one can be applied (round-2
     // integration, skill/zh/slash).
+    if !text.is_empty() {
+        let mut ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
+        ledger.texts.push(text.to_string());
+    }
     format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{size} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
 }
 
