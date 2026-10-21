@@ -126,8 +126,11 @@
   pointer-events: none;
 }
 
-/* The one control in the status group: opens the docked Agent panel. */
-.window-bar-toggle {
+/* The bar's two buttons: the sidebar's at the start, Textus AI's in the status
+   group. The sidebar's has a class of its own, so the AI button is the one
+   .window-bar-toggle. */
+.window-bar-toggle,
+.window-bar-sidebar-toggle {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
@@ -144,19 +147,22 @@
 }
 
 .window-bar-toggle:hover,
+.window-bar-sidebar-toggle:hover,
 .window-bar-toggle-on {
   opacity: 1;
   background: var(--sidebar-hover);
 }
 
 /* Hover arrives in 80ms; turning on or off changes in 120ms. */
-.window-bar-toggle {
+.window-bar-toggle,
+.window-bar-sidebar-toggle {
   transition:
     background-color var(--dur-fast) var(--ease-standard),
     opacity var(--dur-fast) var(--ease-standard);
 }
 
-.window-bar-toggle:hover {
+.window-bar-toggle:hover,
+.window-bar-sidebar-toggle:hover {
   transition-duration: var(--dur-instant);
 }
 
