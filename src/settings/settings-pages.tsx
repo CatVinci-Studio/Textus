@@ -31,7 +31,14 @@ const BUILT_IN: SettingsPageDef[] = [
   { id: "general", label: (t) => t.navGeneral, Page: GeneralPage },
   { id: "editor", label: (t) => t.navEditor, Page: EditorPage },
   { id: "ai", label: (t) => t.navAi, Page: AiPage },
-  { id: "plugins", label: (t) => t.navPlugins, Page: PluginsPage },
+  {
+    id: "plugins",
+    label: (t) => t.navPlugins,
+    // Desktop only for now: a phone has no plugin to install from a file
+    // or a folder, and its Settings tabs have room for four.
+    available: () => !isIOSApp,
+    Page: PluginsPage,
+  },
   {
     id: "shortcuts",
     label: (t) => t.navShortcuts,

@@ -207,6 +207,8 @@ let loading: Promise<void> | null = null;
 /** Reads every plugin and turns on those that are on. Once per window;
  *  `reload` reads them again (after an install). */
 export function loadPlugins(reload = false): Promise<void> {
+  // Desktop only for now (settings-pages.tsx says why).
+  if (isIOSApp) return Promise.resolve();
   if (loading && !reload) return loading;
   loading = (async () => {
     const [state, installed, official] = await Promise.all([

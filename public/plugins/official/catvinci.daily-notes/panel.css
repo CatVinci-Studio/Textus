@@ -1,10 +1,25 @@
 body {
   background: var(--sidebar-bg);
 }
+body {
+  overflow-x: hidden;
+}
+/* Narrow as the sidebar can be: the month takes what is left between the
+   arrows, and Today keeps its place at the end. */
+.toolbar {
+  gap: var(--space-1);
+}
+.toolbar .spacer {
+  display: none;
+}
 #month {
-  min-width: 7em;
+  flex: 1;
+  min-width: 0;
   text-align: center;
   font-size: var(--text-md);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 #grid {
   display: grid;

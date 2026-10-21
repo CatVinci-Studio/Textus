@@ -711,7 +711,11 @@ export function installDevTauriShim(): void {
         return Promise.resolve(null);
       case "plugins_installed":
         return Promise.resolve(
-          installed.map(({ files: _files, ...plugin }) => plugin),
+          installed.map((plugin) => {
+            const listed: Record<string, unknown> = { ...plugin };
+            delete listed.files;
+            return listed;
+          }),
         );
       case "plugin_file": {
         const text = installed.find((p) => p.id === id)?.files?.[String(args.rel)];

@@ -10,6 +10,14 @@
   color-scheme: dark;
 }
 
+/* The page fills its frame: a panel's background reaches the bottom of
+   the sidebar, however little is in it. */
+html {
+  height: 100%;
+}
+body {
+  min-height: 100%;
+}
 html,
 body {
   margin: 0;

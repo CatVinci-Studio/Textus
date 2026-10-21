@@ -14,6 +14,7 @@ const t = {
   navGeneral: "General",
   navEditor: "Editor & Appearance",
   navAi: AI_NAME,
+  navPlugins: "Plugins",
   navShortcuts: "Shortcuts",
   navPrivacy: "Privacy",
   generalBasicsLabel: "Basics",
@@ -107,11 +108,13 @@ test.describe("desktop", () => {
   }) => {
     await openApp(page, { settings: { language: "en" } });
     const panel = await openSettings(page);
-    // Five categories: AI service and Agent are one page now.
+    // Six categories: AI service and Agent are one page now, and plugins
+    // have theirs.
     await expect(panel.locator(".settings-nav-item")).toHaveText([
       t.navGeneral,
       t.navEditor,
       t.navAi,
+      t.navPlugins,
       t.navShortcuts,
       t.navPrivacy,
     ]);
@@ -451,7 +454,7 @@ test.describe("desktop", () => {
     await openSettings(page);
     const panel = page.locator(".settings-panel");
     const items = panel.locator(".settings-nav-item");
-    await expect(items).toHaveCount(5);
+    await expect(items).toHaveCount(6);
     const widths = new Set<number>();
     for (const item of await items.all()) {
       await item.click();
