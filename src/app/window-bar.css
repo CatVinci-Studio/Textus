@@ -55,6 +55,12 @@
   padding-left: 12px;
 }
 
+/* Into and out of that corner it slides with the window settling, rather
+   than jumping once the window has (reduced motion: the tokens are 0). */
+:root[data-window-chrome="native"] .window-bar {
+  transition: padding-left var(--dur-base) var(--ease-out);
+}
+
 /* The row's first control, before the title (WindowBar): the sidebar's
    toggle, a step past the menu button where the app draws that one. */
 .window-bar-sidebar-toggle {

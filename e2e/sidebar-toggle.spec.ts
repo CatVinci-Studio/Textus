@@ -85,4 +85,28 @@ test.describe("on a Mac", () => {
     });
     expect(await left(page, toggle)).toBeLessThan(16);
   });
+
+  test("slides into that corner and back, not in one jump", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" }, animations: true });
+    await page.evaluate(() => {
+      document.documentElement.dataset.windowChrome = "native";
+      document.querySelector(".window-menu-button")?.remove();
+    });
+    const frames = await page.evaluate(async (selector) => {
+      const button = document.querySelector(selector)!;
+      const seen: number[] = [];
+      document.documentElement.dataset.windowFullscreen = "";
+      const until = performance.now() + 400;
+      while (performance.now() < until) {
+        await new Promise(requestAnimationFrame);
+        seen.push(Math.round(button.getBoundingClientRect().left));
+      }
+      return seen;
+    }, toggle);
+    // On its way from past the lights to the corner, through the middle.
+    expect(frames.at(-1)).toBeLessThan(16);
+    expect(frames.some((x) => x > 20 && x < 70)).toBe(true);
+  });
 });
