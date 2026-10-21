@@ -114,3 +114,24 @@ describe("aligning a rewritten run", () => {
     ).toBe(1);
   });
 });
+
+describe("a change over several paragraphs", () => {
+  it("is one change for each paragraph of the original", () => {
+    // Two paragraphs merged into one: a card for each original paragraph.
+    const hunks = diffSentences(
+      "The tide went out. Boats lay on the mud.\n\nAt dusk the boats came back.",
+      "When the tide went out the boats lay on the mud, and at dusk they came back.",
+    );
+    const changes = hunks.filter((h) => h.kind === "change");
+    expect(changes.length).toBeGreaterThanOrEqual(2);
+    // Nothing lost: the pieces still make the two texts.
+    const join = (side: "before" | "after") =>
+      hunks.map((h) => (h.kind === "same" ? h.text : h[side])).join("");
+    expect(join("before")).toBe(
+      "The tide went out. Boats lay on the mud.\n\nAt dusk the boats came back.",
+    );
+    expect(join("after")).toBe(
+      "When the tide went out the boats lay on the mud, and at dusk they came back.",
+    );
+  });
+});
