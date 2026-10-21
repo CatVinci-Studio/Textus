@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { openPath, openWithPlugins, PNG, tabFrame } from "./plugin-helpers";
+import {
+  minimalPdf,
+  openPath,
+  openWithPlugins,
+  PNG,
+  tabFrame,
+} from "./plugin-helpers";
 
 /**
  * The official plugins (public/plugins/official/), each turned on with its
@@ -36,4 +42,21 @@ test("an SVG shows as a picture, its source a click away", async ({ page }) => {
   await frame.locator("#source").click();
   await expect(frame.locator("#code")).toContainText("<rect");
   await expect(frame.locator("#source")).toHaveText("图片");
+});
+
+test("a PDF opens in the PDF Viewer, its words there to select", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: { "catvinci.pdf-viewer": [] },
+    binary: { "/notes/paper.pdf": minimalPdf("Hello PDF") },
+  });
+  await openPath(page, "/notes/paper.pdf");
+  const frame = tabFrame(page);
+  await expect(frame.locator("#count")).toHaveText("/ 1", { timeout: 15_000 });
+  await expect(frame.locator(".page canvas")).toHaveCount(1);
+  await expect(frame.locator(".textLayer")).toContainText("Hello PDF");
+  const before = await frame.locator("#zoom").textContent();
+  await frame.locator("#zoom-in").click();
+  await expect(frame.locator("#zoom")).not.toHaveText(before ?? "");
 });

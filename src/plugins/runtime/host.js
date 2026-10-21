@@ -56,7 +56,11 @@
     },
     set: function (html) {
       this._html = String(html);
-      call("webview.setHtml", { webview: this.id, html: this._html });
+      // A webview closed before its page arrived is no failure of the
+      // plugin's.
+      call("webview.setHtml", { webview: this.id, html: this._html }).catch(
+        function () {},
+      );
     },
   });
   Webview.prototype.postMessage = function (message) {

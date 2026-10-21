@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="{{lang}}">
+  <head>
+    <link rel="stylesheet" href="textus-resource:view.css" />
+  </head>
+  <body>
+    <div class="toolbar">
+      <button class="icon" id="prev" aria-label="‹">‹</button>
+      <input id="page" type="number" min="1" value="1" />
+      <span id="count" class="muted">/ 0</span>
+      <button class="icon" id="next" aria-label="›">›</button>
+      <span class="spacer"></span>
+      <button class="icon" id="zoom-out" aria-label="−">−</button>
+      <span id="zoom" class="muted">100%</span>
+      <button class="icon" id="zoom-in" aria-label="+">+</button>
+      <button id="fit"></button>
+    </div>
+    <main id="viewer"></main>
+    <p id="status" class="empty"></p>
+    <script type="module">
+      // PDF.js's worker runs here rather than in a worker of its own: a
+      // sandboxed frame can't start a module worker. pdf.js finds it on
+      // globalThis.pdfjsWorker and parses on this thread.
+      import * as worker from "textus-resource:lib/pdf.worker.min.mjs";
+      import * as pdfjs from "textus-resource:lib/pdf.min.mjs";
+      globalThis.pdfjsWorker = worker;
+      window.pdfjsLib = pdfjs;
+      window.dispatchEvent(new Event("pdfjs-ready"));
+    </script>
+    <script src="textus-resource:view.js"></script>
+  </body>
+</html>
