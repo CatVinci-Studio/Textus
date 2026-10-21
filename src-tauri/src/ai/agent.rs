@@ -1,5 +1,6 @@
 use crate::ai::cancel;
 use crate::ai::catalog;
+use crate::ai::images::InlinePictures;
 use crate::ai::route;
 use crate::ai::rules::Conventions;
 use crate::ai::tools::{self, ToolContext, ToolRegistry};
@@ -45,6 +46,16 @@ pub enum StreamEvent {
     /// The model is thinking: a fragment of its reasoning, or "" when the
     /// provider only says that it is. Shown above the reply, never kept.
     Thinking { text: String },
+    /// A picture written into a propose_edit's text (images::inline) is
+    /// being made: its `line` there stands for picture `id` from now on.
+    /// Sent before the fragment that completes the line.
+    Picture {
+        call_id: String,
+        line: String,
+        id: String,
+        width: u32,
+        height: u32,
+    },
 }
 
 /// Forwards a provider-level fragment onto the frontend channel. Send
@@ -52,7 +63,15 @@ pub enum StreamEvent {
 /// not fail the agent loop, which still returns turns for the history.
 /// A native search citation goes to the request's sources instead (it is
 /// shown with the finished reply).
-fn forward(channel: &Channel<StreamEvent>, web: &WebPlan, event: ProviderEvent<'_>) {
+fn forward(
+    channel: &Channel<StreamEvent>,
+    web: &WebPlan,
+    pictures: Option<&InlinePictures<'_>>,
+    event: ProviderEvent<'_>,
+) {
+    for picture in pictures.map(|p| p.observe(&event)).unwrap_or_default() {
+        let _ = channel.send(picture);
+    }
     let event = match event {
         ProviderEvent::Citation { url, title } => {
             web.cite(url, title);
@@ -143,13 +162,15 @@ pub(crate) fn postfix_step(
 pub(crate) type StepFuture<'a> =
     Pin<Box<dyn Future<Output = Result<StepResult, String>> + Send + 'a>>;
 
-/// A provider step with [`postfix_step`] applied to what it returns, and
-/// its native search citations numbered (WebPlan::finish_step).
+/// A provider step with [`postfix_step`] applied to what it returns, its
+/// native search citations numbered (WebPlan::finish_step), and the
+/// pictures written into its text placed (InlinePictures::place).
 fn with_postfix<'a, S, F>(
     mut step: S,
     document: &'a str,
     conventions: &'a Conventions,
     web: &'a WebPlan,
+    pictures: Option<&'a InlinePictures<'a>>,
 ) -> impl FnMut(Vec<AgentTurn>) -> StepFuture<'a> + 'a
 where
     S: FnMut(Vec<AgentTurn>) -> F + 'a,
@@ -158,8 +179,13 @@ where
     move |turns| {
         let fut = step(turns);
         Box::pin(async move {
-            fut.await
-                .map(|r| postfix_step(web.finish_step(r), document, conventions).0)
+            fut.await.map(|r| {
+                let r = postfix_step(web.finish_step(r), document, conventions).0;
+                match pictures {
+                    Some(pictures) => pictures.place(r),
+                    None => r,
+                }
+            })
         })
     }
 }
@@ -205,7 +231,7 @@ Style: avoid the tics that make text read as machine-written unless the author's
 const AGENT_TOOL_INSTRUCTIONS: &str = "Use search_document to locate something specific in a long document, and read_document to see a whole section before you revise it - never guess at text you haven't seen. Read first, propose after: never send a propose_edit in the same step as the read it depends on. If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (once per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. Pick the action that matches the intent (propose_edit's description lists them). To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal must target its own passage - for several changes inside one passage, send a single replace covering it, since overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE, and both fields work in that same markdown: `anchor` quotes any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This`. `text` must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. The user reviews and applies each proposal themselves, so your reply only says, in a sentence or two, what you proposed and why. Write that reply in the same message as your proposals (and comments), before their calls, and send every proposal for the request in that one message: when they are all valid the request ends there, with that text as your reply - so write it as done (\"Cut the repeated point about cost\"), not as a plan (\"I'll tighten it\"). If one is refused, its result says why: fix it, and reply again with the fix. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. An undecided proposal stays in the editor next to new ones; a new proposal for the same passage replaces it, so never re-propose an undecided one unchanged or try to retract it yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin each point to its passage with add_comment and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose. When the user asks for a picture and you have no generate_image tool, say that Textus AI can make one once an image model is chosen in Settings > Textus AI > Image model.";
 
 /// The rules engine's two tools, in every mode (tools.rs).
-const RULES_TOOL_INSTRUCTIONS: &str = "check_conventions checks text against the document's writing conventions (punctuation, spacing, numbers, spelling lists, consistency with the rest of the document) with a deterministic rules engine: when you proofread or fix conventions, ground your changes in what it reports instead of guessing, change only what it flags or what you are certain of, and check a draft with its `text` argument before proposing it. Its \"check\" findings only point at something to look at. measure_text counts text exactly (characters, words, X and Bluesky limits, WeChat titles...): whenever a length limit matters, measure the exact text instead of estimating, and give the count in your reply. A length the user asks for (\"800 字\", \"about 500 words\") is a target, not a platform's limit: check_conventions, and measure_text without a platform's metric, answer only a few calls per request, so check or measure a draft once, fix what it shows, then propose it - never draft after draft.";
+const RULES_TOOL_INSTRUCTIONS: &str = "check_conventions checks text against the document's writing conventions (punctuation, spacing, numbers, spelling lists, consistency with the rest of the document) with a deterministic rules engine: when you proofread or fix conventions, ground your changes in what it reports instead of guessing, and change only what it flags or what you are certain of. Its \"check\" findings only point at something to look at. measure_text counts text exactly (characters, words, X and Bluesky limits, WeChat titles...): when a platform's limit matters, measure the exact text before proposing it instead of estimating, and give the count in your reply. A length the user asks for (\"800 字\", \"about 500 words\") is a target, not a platform's limit: write the text straight into propose_edit - the user watches it come in, and its result tells you its size - and never write it out first in measure_text or check_conventions, where the user sees nothing while you draft. Conventions in proposed text are fixed on the way, so new writing needs no check first either.";
 
 const AGENT_READ_ONLY_TOOL_INSTRUCTIONS: &str = "Use search_document to locate specific passages in a long document and read_document to read a section in full, rather than guessing. These tools are for inspection and research only; no document edit tool is available in this mode. For feedback on specific passages, pin each point with add_comment, and write your short summary in the same message, before the add_comment calls: when they are all valid the request ends there, with that text as your reply.";
 
@@ -1142,19 +1168,22 @@ async fn ai_agent_message_inner(
             for tool in web.tools(&focus) {
                 tools.add(tool);
             }
+            // Pictures written into the text, begun as their lines stream in.
+            let inline = image_run.as_ref().map(|run| run.inline(&tool_ctx.proposed));
             let tool_specs = tools.specs();
             let step = |turns: Vec<AgentTurn>| {
                 let (agent, instructions, tool_specs) = (&agent, &instructions, &tool_specs);
                 let channel = on_event.clone();
+                let inline = inline.as_ref();
                 async move {
-                    let sink = move |e: ProviderEvent<'_>| forward(&channel, web, e);
+                    let sink = move |e: ProviderEvent<'_>| forward(&channel, web, inline, e);
                     agent
                         .step(instructions, &turns, tool_specs, &sink)
                         .await
                         .map(|(step, _)| step)
                 }
             };
-            let step = with_postfix(step, &document, &conventions, web);
+            let step = with_postfix(step, &document, &conventions, web, inline.as_ref());
             // `history` is cloned so the plain-chat fallback below still has
             // it; `run_agent_loop` would otherwise have consumed it.
             match run_agent_loop(

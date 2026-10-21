@@ -26,7 +26,10 @@ import { storeImage } from "../editor/images/image-plugin";
 import { showMessage } from "../ui/app-dialog";
 import { cachedDocumentMarkdown } from "../ai/doc-markdown";
 import { offerOldPictureTrash } from "../ai/revision/old-picture";
-import { generatedIdsIn, pictureSlot } from "../ai/revision/generated-images";
+import {
+  noteBegunPicture,
+  withBegunPictures,
+} from "../ai/revision/generated-images";
 import { errorText } from "../utils/error-text";
 import { resolveStrings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
@@ -218,11 +221,6 @@ export function useEditorProposals({
           (p.streaming || !pendingEdits.joinPicture(p.callId, p.proposal)),
       );
       if (pictures.length > 0) pendingEdits.showPreviews(pictures, target);
-      // A picture's slot gives way to the text that carries it.
-      const carried = new Set(
-        text.flatMap((p) => generatedIdsIn(p.proposal.text ?? "")),
-      );
-      if (carried.size > 0) pendingEdits.withdrawSlots(carried);
       // What came before and stands where these now do gives way to them.
       const added = new Set(shown.map((p) => p.callId));
       for (const id of supersededBy(added, earlierPreviews.current)) {
@@ -238,7 +236,6 @@ export function useEditorProposals({
       pendingEdits.showPreviews,
       pendingEdits.discard,
       pendingEdits.joinPicture,
-      pendingEdits.withdrawSlots,
       run,
     ],
   );
@@ -271,16 +268,36 @@ export function useEditorProposals({
   const proposalStream = useMemo(
     () =>
       new ProposalStream({
+        // Pictures written into the text show as their frames, never as
+        // the lines that ask for them (withBegunPictures).
         place: (callId, proposal) =>
           addPreviews(
-            [{ callId, proposal, streaming: true }],
+            [
+              {
+                callId,
+                proposal: {
+                  ...proposal,
+                  text: withBegunPictures(callId, proposal.text ?? ""),
+                },
+                streaming: true,
+              },
+            ],
             requestTargetRef.current,
           ),
-        feed: streamPendingInsertText,
+        feed: (callId, text, done) =>
+          streamPendingInsertText(
+            callId,
+            withBegunPictures(callId, text),
+            done,
+          ),
         finalize: (callId, proposal) => {
-          const kept = stopRewrite(callId, proposal.text ?? "");
+          const text = withBegunPictures(callId, proposal.text ?? "");
+          const kept = stopRewrite(callId, text);
           if (kept) streamPendingInsertText(callId, kept, true);
-          addPreviews([{ callId, proposal }], requestTargetRef.current);
+          addPreviews(
+            [{ callId, proposal: { ...proposal, text } }],
+            requestTargetRef.current,
+          );
         },
         discard: pendingEdits.discard,
       }),
@@ -290,28 +307,14 @@ export function useEditorProposals({
   );
   const handleStreamEvent = useCallback(
     (event: StreamEvent) => {
-      // A picture asked for before its text: its frame goes where the
-      // text is going at once - the end of the document, or the caret -
-      // and the text, when it comes, takes it in (addPreviews).
-      if (
-        event.type === "turn" &&
-        event.turn.kind === "ToolCall" &&
-        event.turn.name === "generate_image"
-      ) {
-        // As Write places new text (agent.rs): at the caret in a document
-        // that has text, else at the end.
-        const empty =
-          run((ctx) => !ctx.get(editorViewCtx).state.doc.textContent.trim()) ??
-          true;
-        const slot = pictureSlot(
-          event.turn.arguments,
-          empty ? null : (requestTargetRef.current?.cursor ?? null),
-        );
-        if (slot)
-          pendingEdits.showPreviews(
-            [{ callId: event.turn.call_id, proposal: slot }],
-            requestTargetRef.current,
-          );
+      // A picture written into a proposal's text is being made: its line
+      // shows as its frame from here (withBegunPictures).
+      if (event.type === "picture") {
+        noteBegunPicture(event.callId, event.line, event.id, {
+          width: event.width,
+          height: event.height,
+        });
+        return;
       }
       // The step came back garbled and is asked for again: the drafts it
       // streamed must go, as when a request fails.
@@ -355,7 +358,7 @@ export function useEditorProposals({
     },
     // settingsRef is a stable ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [proposalStream, discardRefused, pendingEdits.showPreviews, run],
+    [proposalStream, discardRefused],
   );
   // Owned here rather than by the popup so a completed exchange can be saved
   // to history when the popup closes. Every ordinary NEW open resets it;
@@ -408,9 +411,6 @@ export function useEditorProposals({
       return;
     }
     proposalStream.finish(conversation.error ? "failed" : "stopped");
-    pendingEdits.dropSlots();
-    // dropSlots is stable per editor.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation.busy, conversation.error, proposalStream]);
   useEffect(() => {
     if (quickConversation.busy) {
@@ -418,9 +418,6 @@ export function useEditorProposals({
       return;
     }
     proposalStream.finish(quickConversation.error ? "failed" : "stopped");
-    pendingEdits.dropSlots();
-    // dropSlots is stable per editor.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quickConversation.busy, quickConversation.error, proposalStream]);
   // Proposals always resolve HERE, whether the chat that produced them is
   // the embedded popup or a detached window - one implementation of the

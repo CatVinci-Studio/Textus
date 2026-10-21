@@ -133,12 +133,9 @@ fn write_with_picture(message: &str, ui_language: &str) -> Vec<serde_json::Value
     }
     eprintln!("live_eval: reply: {}", outcome.reply);
     if real {
-        for call in &outcome.calls {
-            let Some(id) = call["args"]["image"]["id"].as_str() else {
-                continue;
-            };
+        for id in picture_ids(&outcome.calls) {
             let started = std::time::Instant::now();
-            let picture = block_on(crate::ai::images::ai_generated_image(id.to_string()))
+            let picture = block_on(crate::ai::images::ai_generated_image(id.clone()))
                 .unwrap_or_else(|e| panic!("picture {id}: {e}"));
             eprintln!(
                 "live_eval: picture {id} came {:.1} s after the reply: {} bytes of base64",
@@ -150,9 +147,48 @@ fn write_with_picture(message: &str, ui_language: &str) -> Vec<serde_json::Value
     outcome.calls.clone()
 }
 
+/// The text of each proposal that went through.
+fn proposed_texts(calls: &[serde_json::Value]) -> Vec<&str> {
+    calls
+        .iter()
+        .filter(|c| {
+            c["name"] == "propose_edit"
+                && c["result"]
+                    .as_str()
+                    .is_some_and(|r| r.starts_with("Edit proposed"))
+        })
+        .filter_map(|c| c["args"]["text"].as_str())
+        .collect()
+}
+
+/// The pictures in the proposed text, and those generate_image put next
+/// to text: every picture the request made, by id, as often as it is used.
+fn picture_ids(calls: &[serde_json::Value]) -> Vec<String> {
+    const SRC: &str = "textus-generated:";
+    let mut ids: Vec<String> = proposed_texts(calls)
+        .iter()
+        .flat_map(|text| {
+            text.match_indices(SRC)
+                .map(|(at, _)| &text[at + SRC.len()..])
+        })
+        .map(|rest| {
+            rest.chars()
+                .take_while(|c| c.is_ascii_alphanumeric())
+                .collect()
+        })
+        .collect();
+    ids.extend(
+        calls
+            .iter()
+            .filter(|c| c["name"] == "generate_image")
+            .filter_map(|c| c["args"]["image"]["id"].as_str().map(str::to_string)),
+    );
+    ids
+}
+
 /// A picture asked for in the same breath as the text, on an empty page,
-/// is made - not given up on because the text it goes with isn't in the
-/// document yet.
+/// is written into that text - in one step, with no picture asked for
+/// before it.
 #[test]
 #[ignore = "live API - see module docs"]
 fn an_empty_page_gets_its_text_and_its_picture() {
@@ -167,31 +203,51 @@ fn an_empty_page_gets_its_text_and_its_picture() {
         if calls.is_empty() {
             return;
         }
-        let made = calls.iter().any(|c| {
-            c["name"] == "generate_image"
-                && c["result"].as_str().is_some_and(|r| {
-                    r.starts_with("Image proposed") || r.starts_with("Picture being made")
-                })
-        });
-        assert!(made, "{message}: no picture was made");
-        let texts: Vec<&str> = calls
-            .iter()
-            .filter(|c| c["name"] == "propose_edit")
-            .filter_map(|c| c["args"]["text"].as_str())
-            .collect();
+        let texts = proposed_texts(&calls);
         assert!(!texts.is_empty(), "{message}: no text was proposed");
-        // A picture asked for before the text is in it, where it goes.
-        for slot in calls
-            .iter()
-            .filter(|c| c["name"] == "generate_image" && c["args"]["action"] == "in_text")
-        {
-            let id = slot["args"]["image"]["id"].as_str().unwrap_or("-");
-            assert!(
-                texts
-                    .iter()
-                    .any(|t| t.contains(&format!("(textus-generated:{id})"))),
-                "{message}: picture {id} isn't in the text"
-            );
-        }
+        assert!(
+            texts.iter().any(|t| t.contains("](textus-generated:")),
+            "{message}: no picture in the text"
+        );
+        assert!(
+            !texts.iter().any(|t| t.contains("textus-picture:")),
+            "{message}: a picture line left unplaced"
+        );
     }
+}
+
+/// A long piece with two pictures: both written into the text, each
+/// once, in the same step as the text.
+#[test]
+#[ignore = "live API - see module docs"]
+fn a_long_piece_gets_both_its_pictures_each_once() {
+    let started = std::time::Instant::now();
+    let calls = write_with_picture(
+        "写一篇 1200 字左右的文章，讲一个港口的四季，配两张图。",
+        "zh",
+    );
+    if calls.is_empty() {
+        return;
+    }
+    eprintln!(
+        "live_eval: the request took {:.1} s",
+        started.elapsed().as_secs_f64()
+    );
+    let ids = picture_ids(&calls);
+    assert_eq!(ids.len(), 2, "{ids:?}");
+    assert_ne!(ids[0], ids[1], "one picture used twice");
+    // No hidden draft: the text isn't written out in a check first.
+    let drafts = calls
+        .iter()
+        .filter(|c| {
+            (c["name"] == "measure_text" || c["name"] == "check_conventions")
+                && c["args"]["text"]
+                    .as_str()
+                    .is_some_and(|t| t.chars().count() > 300)
+        })
+        .count();
+    assert_eq!(
+        drafts, 0,
+        "the text was drafted in a check before it was proposed"
+    );
 }

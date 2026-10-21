@@ -24,6 +24,10 @@ use std::sync::Mutex;
 use tauri::ipc::Channel;
 use tauri::AppHandle;
 
+mod inline;
+
+pub use inline::InlinePictures;
+
 pub const GENERATE_IMAGE_TOOL_NAME: &str = "generate_image";
 
 /// One service Settings › Textus AI › Image model offers. Mirrored by
@@ -181,11 +185,10 @@ fn per_send(limit: Option<usize>) -> usize {
     limit.unwrap_or(PER_SEND).clamp(1, MAX_PER_SEND)
 }
 
-/// generate_image's actions: `in_text` - a picture for text not written
-/// yet, whose Markdown the model puts in that text - the insertions, and
-/// `replace` - a picture already in the document, for one that redoes it.
-const IMAGE_ACTIONS: [&str; 6] = [
-    "in_text",
+/// generate_image's actions: the insertions, and `replace` - a picture
+/// already in the document, for one that redoes it. A picture for new text
+/// is written into that text instead (inline).
+const IMAGE_ACTIONS: [&str; 5] = [
     "insert_after",
     "insert_before",
     "insert_at_cursor",
@@ -490,6 +493,26 @@ impl ImageRun {
         (id, nominal_size(aspect))
     }
 
+    /// Starts making a picture written into new text (inline), if this
+    /// send has pictures left; its id and size, or why not.
+    fn begin_picture(
+        &self,
+        prompt: String,
+        aspect: Aspect,
+    ) -> Result<(String, (u32, u32)), String> {
+        self.spend()?;
+        Ok(self.start(prompt, aspect))
+    }
+
+    /// One of this send's pictures, or why there are none left.
+    fn spend(&self) -> Result<(), String> {
+        let limit = self.limit;
+        if self.made.fetch_add(1, Ordering::SeqCst) >= limit {
+            return Err(format!("This request has already made {limit} pictures, the most one request may (the user's setting). Ask the user whether they want more."));
+        }
+        Ok(())
+    }
+
     /// The call is fit to spend a picture on: a description, a place that
     /// exists in the document, and pictures left in this send.
     fn check(
@@ -539,10 +562,7 @@ impl ImageRun {
                 )
             })?,
         };
-        let limit = self.limit;
-        if self.made.fetch_add(1, Ordering::SeqCst) >= limit {
-            return Err(format!("This request has already made {limit} pictures, the most one request may (the user's setting). Ask the user whether they want more."));
-        }
+        self.spend()?;
         Ok((prompt.to_string(), aspect))
     }
 }
@@ -599,7 +619,8 @@ impl ImageRun {
 
 /// What the model is told about generate_image, with this request's limit.
 fn description(limit: usize) -> String {
-    format!("Make a picture with the user's image model and propose it for the document: the user sees it in place, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked.\n\nHow many: each picture costs the user money, and this request may make at most {limit}. When the user says how many, make that many (up to {limit}); when they don't, make one, or - for a longer piece they asked to illustrate - one for each part that gains from a picture.\n\nNew text with pictures (an empty document, a new section, a piece to write and illustrate): call generate_image FIRST, with action `in_text`, one call per picture, before the propose_edit with the text. Each call returns at once with the picture's Markdown, and the picture is made while you write. Then send the text with propose_edit, each picture's Markdown on a line of its own where it goes, between paragraphs: the text and its pictures are one proposal, accepted together.\n\nA picture for text already in the document - or for text you proposed that the user hasn't accepted or rejected yet - goes insert_after the paragraph it illustrates, `anchor` quoted from it. Between paragraphs, never inside a list, a table, a quote or a heading's line, and not two pictures in a row.\n\nRedoing a picture: to change or replace one already in the document, use `replace` with `anchor` its whole Markdown, `![alt](src)`, copied from the document, and describe the new picture in full in `prompt` (what to keep, what to change). The user decides whether the old file goes once they accept.\n\nIf the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.")
+    let (scheme, aspects) = (inline::PICTURE_SCHEME, Aspect::ALL.join(" "));
+    format!("Make a picture with the user's image model and propose it for the document: the user sees it in place, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked.\n\nHow many: each picture costs the user money, and this request may make at most {limit}. When the user says how many, make that many (up to {limit}); when they don't, make one, or - for a longer piece they asked to illustrate - one for each part that gains from a picture.\n\nNew text with pictures (an empty document, a new section, a piece to write and illustrate): don't call generate_image - write each picture into the text you propose with propose_edit, as a line of its own between paragraphs where it goes: `![alt]({scheme}ASPECT description)` - alt a short caption in the document's language, ASPECT one of {aspects}, then the full English description, as for `prompt`. Each picture starts being made the moment its line is written, while you go on writing; the user sees its frame there and accepts the text and its pictures together. These lines count toward the limit, and each describes a different picture.\n\nA picture for text already in the document - or for text you proposed that the user hasn't accepted or rejected yet - goes insert_after the paragraph it illustrates, `anchor` quoted from it. Between paragraphs, never inside a list, a table, a quote or a heading's line, and not two pictures in a row.\n\nRedoing a picture: to change or replace one already in the document, use `replace` with `anchor` its whole Markdown, `![alt](src)`, copied from the document, and describe the new picture in full in `prompt` (what to keep, what to change). The user decides whether the old file goes once they accept.\n\nIf the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.")
 }
 
 /// What the model is told about generate_image.
@@ -626,7 +647,7 @@ fn spec(limit: usize) -> ToolSpec {
                 "action": {
                     "type": "string",
                     "enum": IMAGE_ACTIONS,
-                    "description": "Where it goes: in_text - in the text you propose next, its Markdown put there by you - insert_after a paragraph (the usual place for an illustration of existing text), insert_before one, insert_at_cursor, append - or replace a picture already in the document."
+                    "description": "Where it goes: insert_after a paragraph (the usual place for an illustration of existing text), insert_before one, insert_at_cursor, append - or replace a picture already in the document."
                 },
                 "anchor": {
                     "type": "string",
@@ -652,15 +673,6 @@ fn outcome(arguments: &str) -> String {
             image["width"].as_u64().unwrap_or(0),
             image["height"].as_u64().unwrap_or(0)
         );
-        if args["action"] == "in_text" {
-            let alt = args["alt"].as_str().unwrap_or("").replace(['[', ']'], "");
-            let markdown = format!(
-                "![{}]({})",
-                alt.split_whitespace().collect::<Vec<_>>().join(" "),
-                placeholder_src(image["id"].as_str().unwrap_or(""))
-            );
-            return format!("Picture being made ({size} pixels). Put this Markdown, exactly, on a line of its own where the picture goes in the text you now propose with propose_edit: {markdown} - it shows as a frame until the picture comes, and the user accepts the text and its pictures together. Write and propose the text now, in this reply; don't wait for the picture, and don't show this Markdown to the user.");
-        }
         if image["pending"].as_bool() == Some(true) {
             return format!("Image proposed and being made ({size} pixels) while you go on, and appears in place by itself with Accept and Reject once it is ready (or, if the service turns it down, the user sees why there). It is saved only if they accept. Carry on with the rest of the request now - don't wait for it. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.");
         }
@@ -712,7 +724,18 @@ fn begin() -> String {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or_default();
-    let id = format!("{nanos:x}{:x}", NEXT.fetch_add(1, Ordering::Relaxed));
+    // Short, and unlike the one before: the model copies it into its text,
+    // and two long ids differing in their last digits were copied wrong
+    // (one picture drawn in two places). Six letters and digits from a
+    // mix of the time and a counter.
+    let mut x = (nanos as u64) ^ ((NEXT.fetch_add(1, Ordering::Relaxed) as u64) << 40);
+    x = (x ^ (x >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+    x = (x ^ (x >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
+    x ^= x >> 31;
+    const DIGITS: &[u8] = b"0123456789abcdefghijklmnopqrstuvwxyz";
+    let id: String = (0..6)
+        .map(|i| DIGITS[((x >> (i * 6)) % 36) as usize] as char)
+        .collect();
     let mut pending = pending();
     pending.push((id.clone(), Slot::Making));
     while pending.len() > PENDING_COUNT
@@ -908,21 +931,16 @@ mod tests {
     }
 
     #[test]
-    fn a_picture_for_text_not_written_yet_hands_back_its_markdown() {
+    fn a_picture_for_new_text_is_written_into_it_not_asked_for() {
         let run = run();
         let (args, announced) = call(
             &run,
-            json!({"prompt": "boats", "alt": "Boats [at] dusk", "action": "in_text", "aspect": "16:9"}),
+            json!({"prompt": "boats", "alt": "Boats", "action": "in_text"}),
             "",
         );
-        assert!(announced);
-        let id = args["image"]["id"].as_str().unwrap();
-        let text = generate_image_text(&args);
-        assert!(text.starts_with("Picture being made"), "{text}");
-        assert!(
-            text.contains(&format!("![Boats at dusk](textus-generated:{id})")),
-            "{text}"
-        );
+        assert!(!announced);
+        assert!(generate_image_text(&args).contains("Unknown action `in_text`"));
+        assert!(description(2).contains("![alt](textus-picture:ASPECT description)"));
     }
 
     #[test]
