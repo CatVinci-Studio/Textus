@@ -76,3 +76,47 @@ test("an edit of a proposal not decided yet goes into it, and one Accept takes b
     "At dusk the boats came home, low in the water.",
   ]);
 });
+
+test("an edit of the text a rewrite replaces goes into the rewrite", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(
+    page,
+    "The lighthouse stood on the rock.\n\nWaves broke below.",
+  );
+  await mockInvoke(page, {
+    ai_agent_message: reply(
+      "r1",
+      {
+        action: "replace",
+        anchor: "The lighthouse stood on the rock.",
+        text: "The old lighthouse stood alone on its rock.",
+      },
+      "A little lonelier.",
+    ),
+  });
+  await send(page, "Make the first line lonelier");
+  await expect(page.locator(".review-bar")).toBeVisible();
+  // Not decided: the next request quotes a word of the original, which the
+  // rewrite still has.
+  await mockInvoke(page, {
+    ai_agent_message: reply(
+      "r2",
+      { action: "replace", anchor: "lighthouse", text: "beacon" },
+      "A beacon instead.",
+    ),
+  });
+  await send(page, "Call it a beacon");
+  await expect(page.locator(".agent-panel-view")).toContainText(
+    "A beacon instead.",
+  );
+  await page.locator(".review-bar-accept").click();
+  await expect(page.locator(written)).toHaveText([
+    "The old beacon stood alone on its rock.",
+    "Waves broke below.",
+  ]);
+});

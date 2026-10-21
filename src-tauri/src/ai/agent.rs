@@ -1164,7 +1164,7 @@ async fn ai_agent_message_inner(
             // The text of proposals still undecided from earlier requests:
             // an edit or a picture may go into it (ai::images, tools.rs's
             // propose_edit).
-            let undecided = crate::ai::images::undecided_texts(&history);
+            let undecided = crate::ai::images::undecided_edits(&history);
             let tool_ctx = ToolContext {
                 document: &document,
                 undecided: &undecided,
