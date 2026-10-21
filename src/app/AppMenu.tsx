@@ -5,7 +5,7 @@ import { menuIpc } from "../platform/ipc";
 import { formatCombo } from "../utils/shortcuts";
 import { useViewportClamp } from "../utils/hooks/useViewportClamp";
 import { runLocalMenuAction } from "./app-menu-actions";
-import { emitMenuEvent } from "../platform/menu-events";
+import { emitMenuEvent, runMenuItemHere } from "../platform/menu-events";
 import {
   buildAppMenu,
   buildMobileMenu,
@@ -280,7 +280,7 @@ function MenuRow({
     if ("native" in item.action && !hasAppMenu) {
       emitMenuEvent(item.action.native);
     } else if ("native" in item.action) {
-      void menuIpc.triggerMenuItem(item.action.native).catch(() => {
+      void runMenuItemHere(item.action.native).catch(() => {
         // A failed menu command is the backend's to report; swallowing it
         // here only leaves a dead menu on screen.
       });
