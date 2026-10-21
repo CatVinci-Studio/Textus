@@ -50,17 +50,12 @@
 
 /* In full screen a Mac shows the traffic lights only with the menu bar,
    over the window: their corner is free, and the sidebar's toggle takes it
-   (useFullscreenMark marks the root) - moved there, 12px from the edge
-   instead of the lights' 78px, rather than the row's inset changed, so it
-   slides with the window settling on translate alone (design-language.md
-   › Motion; reduced motion: the tokens are 0). */
-:root[data-window-chrome="native"] .window-bar-sidebar-toggle {
-  transition: translate var(--dur-base) var(--ease-out);
-}
-
-:root[data-window-chrome="native"][data-window-fullscreen]
-  .window-bar-sidebar-toggle {
-  translate: -66px 0;
+   (useFullscreenMark marks the root), 12px from the edge instead of the
+   lights' 78px. It moves there at once, with no slide: the lights don't
+   slide either, and one that followed the window's animation never kept
+   pace with it. */
+:root[data-window-chrome="native"][data-window-fullscreen] .window-bar {
+  padding-left: 12px;
 }
 
 /* The row's first control, before the title (WindowBar): the sidebar's

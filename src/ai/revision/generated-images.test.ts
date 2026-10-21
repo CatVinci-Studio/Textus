@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
+  generatedAlt,
+  generatedIdsIn,
   generatedImageId,
   generatedImageSize,
   generatedImageSrc,
   hasGeneratedImage,
+  joinedText,
   parseImageProposal,
+  picturesState,
   showGeneratedImages,
   withSavedSrc,
+  withoutPicture,
 } from "./generated-images";
 
 const call = (args: object) => JSON.stringify(args);
@@ -89,5 +94,44 @@ describe("the placeholder src", () => {
     expect(generatedImageId(generatedImageSrc("ab3"))).toBe("ab3");
     expect(generatedImageId("assets/boats.png")).toBeNull();
     expect(showGeneratedImages("no picture")).toBe("no picture");
+  });
+});
+
+describe("pictures in a proposal's text", () => {
+  const text = `The tide went out.\n\n![Boats at dusk](${generatedImageSrc("c1")})\n\nThe boats came back.`;
+
+  it("are found, with their alt text", () => {
+    expect(generatedIdsIn(text)).toEqual(["c1"]);
+    expect(generatedAlt(text, "c1")).toBe("Boats at dusk");
+    // Not loaded yet: still being made, which Accept waits for.
+    expect(picturesState(text)).toBe("painting");
+    expect(picturesState("No picture.")).toBe("ready");
+  });
+
+  it("one that wasn't made is left out, with the blank line it stood on", () => {
+    expect(withoutPicture(text, "c1")).toBe(
+      "The tide went out.\n\nThe boats came back.",
+    );
+    expect(withoutPicture(`![x](${generatedImageSrc("c2")})`, "c2")).toBe("");
+  });
+
+  it("a picture joins text next to the paragraph that quotes its anchor", () => {
+    const draft = "One.\n\nTwo, three.\n\nFour.";
+    const picture = "![P](textus-generated:p1)";
+    expect(joinedText(draft, "Two", "insert_after", picture)).toBe(
+      `One.\n\nTwo, three.\n\n${picture}\n\nFour.`,
+    );
+    expect(joinedText(draft, "three.", "insert_before", picture)).toBe(
+      `One.\n\n${picture}\n\nTwo, three.\n\nFour.`,
+    );
+    expect(joinedText(draft, "Four.", "insert_after", picture)).toBe(
+      `${draft}\n\n${picture}`,
+    );
+    expect(joinedText(draft, "One.", "insert_before", picture)).toBe(
+      `${picture}\n\n${draft}`,
+    );
+    // Not there, or there twice: nowhere to put it.
+    expect(joinedText(draft, "Five", "insert_after", picture)).toBeNull();
+    expect(joinedText("A. A.", "A.", "insert_after", picture)).toBeNull();
   });
 });

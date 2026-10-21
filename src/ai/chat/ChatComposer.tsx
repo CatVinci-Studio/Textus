@@ -67,6 +67,7 @@ export function ChatComposer({
   docPath,
   workspaceRoot,
   selectedText,
+  selectionIsPicture = false,
   busy,
   labels,
   defaultMode,
@@ -629,7 +630,9 @@ export function ChatComposer({
                   {...holdFocus}
                   onClick={() => selectionChip?.onReveal()}
                 >
-                  {labels.selectedChars([...selectedText].length)}
+                  {selectionIsPicture
+                    ? labels.selectedPicture
+                    : labels.selectedChars([...selectedText].length)}
                 </button>
                 {dropSelectionButton}
               </span>

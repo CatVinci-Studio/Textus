@@ -294,21 +294,226 @@ test("text and a picture come together: the text at once, the picture's frame un
   await expect(frame).toHaveCount(0);
 });
 
-test("Accept while the picture is painting saves it once it comes", async ({
+test("Accept waits for a picture being made, and saves it once it has come", async ({
   page,
 }) => {
   await open(page);
   await writeAndPaint(page, 2000);
   await expect(page.locator(`${editor} .pending-picture`)).toBeVisible();
   const pictureCard = page.locator(".agent-proposal", {
-    has: page.locator(".agent-proposal-picture-frame"),
+    hasText: "Picture",
   });
-  await pictureCard
-    .locator(".agent-proposal-actions .inline-chat-action")
-    .filter({ hasText: "Accept" })
-    .click();
+  const accept = pictureCard.locator(
+    ".agent-proposal-actions .inline-chat-action-primary",
+  );
+  // Nothing to accept yet: the button says the picture is coming.
+  await expect(accept).toBeDisabled();
+  await expect(accept).toHaveText("Picture coming…");
+  await expect(page.locator(".review-bar-accept")).toBeDisabled();
+  await expect(accept).toHaveText("Accept", { timeout: 10_000 });
+  await accept.click();
   await expect(page.locator(written)).toHaveCount(1, { timeout: 10_000 });
   expect(await calls(page, "save_pasted_image")).toHaveLength(1);
+});
+
+/** A reply that asks for a picture first (generate_image's `in_text`)
+ *  and then writes the text with the picture in it, the picture taking
+ *  `ms` to come (or failing then with `refusal`). */
+async function writeWithPictureInside(
+  page: Page,
+  ms: number,
+  refusal?: string,
+) {
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "Write about the harbour, with a picture" },
+      {
+        kind: "ToolCall",
+        call_id: "g1",
+        name: "generate_image",
+        arguments: JSON.stringify({
+          prompt: "A harbour at dusk",
+          alt: "A harbour at dusk",
+          action: "in_text",
+          image: { id: "abc123", width: 1536, height: 1024, pending: true },
+        }),
+      },
+      {
+        kind: "ToolResult",
+        call_id: "g1",
+        output: "Picture being made (1536 x 1024 pixels).",
+      },
+      {
+        kind: "ToolCall",
+        call_id: "w1",
+        name: "propose_edit",
+        arguments: JSON.stringify({
+          action: "append",
+          text: "The tide went out before dawn.\n\n![A harbour at dusk](textus-generated:abc123)\n\nThe boats came back at dusk.",
+        }),
+      },
+      { kind: "ToolResult", call_id: "w1", output: "Edit proposed" },
+      { kind: "Assistant", text: "Two paragraphs, a harbour between them." },
+    ],
+    ai_generated_image: refusal
+      ? { __delay: ms, __reject: refusal }
+      : {
+          __delay: ms,
+          value: { mime: "image/png", ext: "png", dataBase64: PNG },
+        },
+    ai_discard_generated_image: null,
+    save_pasted_image: { src: "assets/harbour.png" },
+  });
+  await send(page, "Write about the harbour, with a picture");
+}
+
+test("a picture asked for before its text is in that text: one proposal, its frame until the picture comes", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", imageModelProvider: "openai" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await writeWithPictureInside(page, 1500);
+  const proposal = page.locator(`${editor} .pending-insert`);
+  await expect(proposal).toHaveCount(1);
+  // The frame between the two paragraphs, in the shape asked for.
+  const frame = proposal.locator(".pending-picture");
+  await expect(frame).toBeVisible();
+  // Polled: a widget drawn again draws a new frame.
+  await expect
+    .poll(async () => {
+      const box = await frame.boundingBox();
+      return box ? Math.round((box.width / box.height) * 10) / 10 : 0;
+    })
+    .toBeCloseTo(1536 / 1024, 1);
+  await expect(page.locator(".agent-proposal")).toHaveCount(1);
+  const accept = page.locator(
+    ".agent-proposal-actions .inline-chat-action-primary",
+  );
+  await expect(accept).toBeDisabled();
+  // The picture comes in place, and only then can the text be accepted.
+  await expect(proposal.locator("img")).toHaveAttribute(
+    "src",
+    /^data:image\/png/,
+    { timeout: 10_000 },
+  );
+  await expect(accept).toBeEnabled();
+  await accept.click();
+  await expect(page.locator(written)).toHaveCount(1, { timeout: 10_000 });
+  await expect(
+    page.locator(`${editor} p`, { hasText: "The boats came back at dusk." }),
+  ).toBeVisible();
+  expect(await calls(page, "save_pasted_image")).toHaveLength(1);
+});
+
+test("a picture in the text that wasn't made is left out when the text is accepted", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", imageModelProvider: "openai" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await writeWithPictureInside(
+    page,
+    300,
+    "The service refused this description: rejected by the safety system",
+  );
+  const proposal = page.locator(`${editor} .pending-insert`);
+  await expect(proposal.locator(".pending-picture-failed")).toContainText(
+    "rejected by the safety system",
+  );
+  await page
+    .locator(".agent-proposal-actions .inline-chat-action-primary")
+    .click();
+  await expect(
+    page.locator(`${editor} p`, { hasText: "The boats came back at dusk." }),
+  ).toBeVisible();
+  await expect(page.locator(`${editor} img`)).toHaveCount(0);
+  expect(await calls(page, "save_pasted_image")).toHaveLength(0);
+});
+
+test("a picture asked for next to text not accepted yet joins that text, which stays", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", imageModelProvider: "openai" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  const draft =
+    "The tide went out before dawn.\n\nThe boats came back at dusk.";
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "Write about the harbour" },
+      {
+        kind: "ToolCall",
+        call_id: "w1",
+        name: "propose_edit",
+        arguments: JSON.stringify({ action: "append", text: draft }),
+      },
+      { kind: "ToolResult", call_id: "w1", output: "Edit proposed" },
+      { kind: "Assistant", text: "Two paragraphs." },
+    ],
+  });
+  await send(page, "Write about the harbour");
+  await expect(page.locator(`${editor} .pending-insert`)).toHaveCount(1);
+  // Not accepted: a picture is asked for after its first paragraph.
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "Add a picture after the first paragraph" },
+      {
+        kind: "ToolCall",
+        call_id: "g2",
+        name: "generate_image",
+        arguments: JSON.stringify({
+          prompt: "A harbour at dawn",
+          alt: "A harbour at dawn",
+          action: "insert_after",
+          anchor: "The tide went out before dawn.",
+          image: { id: "def456", width: 1024, height: 1024, pending: true },
+        }),
+      },
+      {
+        kind: "ToolResult",
+        call_id: "g2",
+        output: "Image proposed and being made (1024 x 1024 pixels).",
+      },
+      {
+        kind: "Assistant",
+        text: "A harbour at dawn, after the first paragraph.",
+      },
+    ],
+    ai_generated_image: { mime: "image/png", ext: "png", dataBase64: PNG },
+    ai_discard_generated_image: null,
+    save_pasted_image: { src: "assets/dawn.png" },
+  });
+  await send(page, "Add a picture after the first paragraph");
+  // Still one proposal: the text, now with the picture after its first
+  // paragraph - nothing it had was taken away.
+  const proposal = page.locator(`${editor} .pending-insert`);
+  await expect(proposal).toHaveCount(1);
+  await expect(proposal.locator("img")).toHaveCount(1, { timeout: 10_000 });
+  await expect(proposal).toContainText("The boats came back at dusk.");
+  await expect(page.locator(".agent-proposal-status").last()).toHaveText(
+    "In the proposed text above",
+  );
+  await page
+    .locator(".agent-proposal-actions .inline-chat-action-primary")
+    .click();
+  await expect(page.locator(written)).toHaveCount(1, { timeout: 10_000 });
+  const order = await page
+    .locator(`${editor} > *`)
+    .evaluateAll((els) =>
+      els.map(
+        (el) =>
+          el.textContent ||
+          el.querySelector("img")?.getAttribute("alt") ||
+          el.tagName,
+      ),
+    );
+  expect(order.indexOf("The tide went out before dawn.")).toBeLessThan(
+    order.indexOf("The boats came back at dusk."),
+  );
 });
 
 test("a picture that wasn't made says why in its frame", async ({ page }) => {
@@ -414,6 +619,49 @@ test("a redone picture takes the old one's place, and the old file goes to the T
         path: "/notes/assets/boats.png",
       },
     ]);
+});
+
+test("a picture being redone keeps the old one, veiled, until the new one comes", async ({
+  page,
+}) => {
+  await openSaved(page);
+  await mockInvoke(page, {
+    ai_agent_message: exchange(
+      {
+        prompt: "The same harbour at dawn",
+        alt: "The harbour at dawn",
+        action: "replace",
+        anchor: OLD,
+        image: { id: "abc10", width: 1024, height: 1024, pending: true },
+      },
+      "Image proposed and being made (1024 x 1024 pixels).",
+    ),
+    ai_generated_image: {
+      __delay: 1500,
+      value: { mime: "image/png", ext: "png", dataBase64: PNG },
+    },
+    ai_discard_generated_image: null,
+  });
+  await send(page, "Make the picture dawn instead");
+  // The old picture, as it was, under the veil: nothing struck, nothing
+  // new beside it, nothing to accept yet.
+  const veiled = page.locator(`${editor} .pending-redraw`);
+  await expect(veiled).toHaveCount(1);
+  await expect(
+    veiled.locator('img[data-doc-src="assets/boats.png"]'),
+  ).toHaveCount(1);
+  await expect(page.locator(`${editor} .pending-delete`)).toHaveCount(0);
+  await expect(page.locator(pending)).toHaveCount(0);
+  await expect(
+    page.locator(".agent-proposal-actions .inline-chat-action-primary"),
+  ).toBeDisabled();
+  // The new one has come: the old struck, the new beside it, to decide on.
+  await expect(page.locator(pending)).toHaveCount(1, { timeout: 10_000 });
+  await expect(veiled).toHaveCount(0);
+  await expect(page.locator(`${editor} .pending-delete`)).toHaveCount(1);
+  await expect(
+    page.locator(".agent-proposal-actions .inline-chat-action-primary"),
+  ).toBeEnabled();
 });
 
 test("kept, the old picture's file stays where it is", async ({ page }) => {

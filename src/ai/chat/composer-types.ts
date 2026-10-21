@@ -22,6 +22,8 @@ export interface ChatComposerLabels {
   attachFile: string;
   /** The selection chip's text for a selection of `n` characters. */
   selectedChars: (n: number) => string;
+  /** The chip of a selection that is one picture. */
+  selectedPicture: string;
   /** Tooltip of the chip: a click scrolls the passage into view. */
   showSelection: string;
   /** Suffix on an attachment chip whose text was cut at the extraction cap. */
@@ -78,6 +80,9 @@ export interface ChatComposerProps {
    *  come from whichever it resolves to. */
   workspaceRoot: string | null;
   selectedText: string | null;
+  /** The selection is one picture: the chip says so, rather than count
+   *  its alt text's characters. */
+  selectionIsPicture?: boolean;
   busy: boolean;
   labels: ChatComposerLabels;
   defaultMode: AgentMode;

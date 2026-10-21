@@ -866,3 +866,33 @@ fn remembered_memories_follow_the_users_instructions() {
     let flat = build_instructions(&ws, "draft", false, AgentMode::Review, "", "en");
     assert!(flat.contains("Reply briefly.") && !flat.contains("---remembering---"));
 }
+
+#[test]
+fn a_selected_picture_in_the_documents_folder_is_seen() {
+    let dir = std::env::temp_dir().join(format!("textus-selpic-{}", std::process::id()));
+    std::fs::create_dir_all(dir.join("assets")).unwrap();
+    // A 1x1 PNG.
+    let png = base64::Engine::decode(
+        &base64::engine::general_purpose::STANDARD,
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+    )
+    .unwrap();
+    std::fs::write(dir.join("assets/boats.png"), png).unwrap();
+    let doc = dir.join("harbour.md");
+    let doc = doc.to_str();
+    let ask = |selection: &str| {
+        selected_picture(
+            &format!("<selected-text>\n{selection}\n</selected-text>\n\nWhat is in it?"),
+            doc,
+        )
+    };
+    let seen = ask("![Boats](assets/boats.png)").expect("the picture");
+    assert_eq!(seen.mime, "image/png");
+    assert!(ask("![Boats](<assets/boats.png> \"Boats\")").is_some());
+    // More than the picture, a picture on the web, or outside the folder.
+    assert!(ask("Look: ![Boats](assets/boats.png)").is_none());
+    assert!(ask("![Boats](https://example.com/boats.png)").is_none());
+    assert!(ask("![Boats](../boats.png)").is_none());
+    assert!(selected_picture("What is in it?", doc).is_none());
+    let _ = std::fs::remove_dir_all(&dir);
+}

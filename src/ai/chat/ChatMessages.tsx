@@ -57,6 +57,7 @@ export interface ChatMessagesLabels
   proposalTitle: string;
   proposalStatus: Record<Exclude<PendingStatus, "pending">, string>;
   proposalAccept: string;
+  proposalPicturePainting: string;
   proposalReject: string;
   proposalAcceptAll: string;
   proposalRejectAll: string;

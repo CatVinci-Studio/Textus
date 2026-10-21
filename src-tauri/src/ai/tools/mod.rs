@@ -59,6 +59,25 @@ pub struct ProposalLedger {
     /// Replacements refused once as looking cut off (degenerate_replacement),
     /// as `anchor\0text`: the same call sent again is meant, and goes through.
     refused_short: Vec<String>,
+    /// The new text of each proposal made: a picture may go next to a
+    /// paragraph of it (ai::images), though it isn't in the document yet.
+    pub(super) texts: Vec<String>,
+}
+
+impl ProposalLedger {
+    /// The new text of each proposal this request has made, in order.
+    pub fn texts(&self) -> &[String] {
+        &self.texts
+    }
+
+    /// A ledger whose proposals made these texts.
+    #[cfg(test)]
+    pub fn with_texts(texts: &[&str]) -> Self {
+        Self {
+            texts: texts.iter().map(|t| t.to_string()).collect(),
+            ..Self::default()
+        }
+    }
 }
 
 /// A passage one of this request's proposals replaces or deletes: where it

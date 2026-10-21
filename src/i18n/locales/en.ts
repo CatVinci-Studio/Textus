@@ -637,6 +637,7 @@ type /name in a conversation to use one.
   chatHistoryArchived:
     "Older conversations were moved to the archive; the latest 500 are listed.",
   chatSelectedChars: { one: "{n} char selected", other: "{n} chars selected" },
+  chatSelectedPicture: "Picture selected",
   cut: "Cut",
   copy: "Copy",
   copyAsMarkdown: "Copy as Markdown",
@@ -809,6 +810,7 @@ type /name in a conversation to use one.
   chatCloseConfirmReject: "Discard all and close",
   chatCloseConfirmCancel: "Keep chat open",
   proposalAccept: "Accept",
+  proposalPicturePainting: "Picture coming…",
   proposalAcceptAll: "Accept all",
   proposalRejectAll: "Reject all",
   proposalRelocate: "Ask AI to redo this edit",
@@ -834,6 +836,7 @@ type /name in a conversation to use one.
   proposalStatusAccepted: "Applied",
   proposalStatusRejected: "Rejected",
   proposalStatusExpired: "No longer applicable",
+  proposalStatusJoined: "In the proposed text above",
   proposalStatusInvalid: "Couldn't locate that text in the document.",
   agentActionReplace: "Replace",
   agentActionReplaceSelection: "Replace selection",

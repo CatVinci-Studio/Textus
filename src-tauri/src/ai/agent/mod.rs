@@ -352,6 +352,12 @@ async fn ai_agent_message_inner(
     let web = &web_plan;
     let history = compact_history(web::with_sources_in_text(history));
 
+    // A selected picture is shown to a model that can see, not only its
+    // Markdown: "what's in this picture", "redo it brighter".
+    let mut images = images;
+    if entry.supports_vision {
+        images.extend(selected_picture(&focus, doc_path.as_deref()));
+    }
     // Refuse rather than drop. Sending the images to a provider that can't
     // read them would get an answer confidently written about a picture the
     // model never saw - the frontend hides the attach affordance for these
@@ -387,20 +393,6 @@ async fn ai_agent_message_inner(
                 build_instructions(&workspace, &document, true, mode, &focus, &ui_language),
                 web,
             );
-            let mut tools = ToolRegistry::builtin(
-                workspace.has_usable_skills(),
-                workspace.root.is_some(),
-                mode,
-                workspace.remember,
-                entry.supports_vision,
-            );
-            if let Some(image_run) = &image_run {
-                tools.add(image_run.tool(&document, &on_event));
-            }
-            for tool in web.tools(&focus) {
-                tools.add(tool);
-            }
-            let tool_specs = tools.specs();
             let tool_ctx = ToolContext {
                 document: &document,
                 skills: &workspace.skills,
@@ -413,6 +405,30 @@ async fn ai_agent_message_inner(
                 proposed: Default::default(),
                 checks: Default::default(),
             };
+            // The text of proposals still undecided from earlier requests:
+            // a picture may go next to it (ai::images).
+            let undecided = crate::ai::images::undecided_texts(&history);
+            let mut tools = ToolRegistry::builtin(
+                workspace.has_usable_skills(),
+                workspace.root.is_some(),
+                mode,
+                workspace.remember,
+                entry.supports_vision,
+            );
+            if let Some(image_run) = &image_run {
+                tools.add(image_run.tool(
+                    &document,
+                    crate::ai::images::ProposedText {
+                        this_request: &tool_ctx.proposed,
+                        undecided: &undecided,
+                    },
+                    &on_event,
+                ));
+            }
+            for tool in web.tools(&focus) {
+                tools.add(tool);
+            }
+            let tool_specs = tools.specs();
             let step = |turns: Vec<AgentTurn>| {
                 let (agent, instructions, tool_specs) = (&agent, &instructions, &tool_specs);
                 let channel = on_event.clone();
@@ -571,6 +587,33 @@ async fn flattened_chat_turn(
     )
     .await?;
     Ok(vec![user_turn, AgentTurn::assistant(text)])
+}
+
+/// The picture a message's selection is, when it is one picture and
+/// nothing else (`<selected-text>`, src/ai/chat/user-message.ts) whose
+/// file is in the document's folder: PNG, JPEG, GIF or WebP, as view_image
+/// reads them. None for a picture on the web, one outside the folder, or
+/// a selection of anything more.
+pub(super) fn selected_picture(message: &str, doc_path: Option<&str>) -> Option<ImageAttachment> {
+    let inner = message
+        .strip_prefix("<selected-text>")?
+        .split_once("</selected-text>")?
+        .0
+        .trim();
+    let rest = inner.strip_prefix("![")?;
+    let (_, src) = rest.split_once("](")?;
+    let src = src.strip_suffix(')')?;
+    // A title after the src, `![alt](src "title")`, goes.
+    let src = src.split(" \"").next()?.trim();
+    let src = src
+        .strip_prefix('<')
+        .and_then(|s| s.strip_suffix('>'))
+        .unwrap_or(src);
+    if src.is_empty() || src.contains("://") || src.starts_with("data:") {
+        return None;
+    }
+    let folder = Path::new(doc_path?).parent()?;
+    crate::ai::project::read_image(folder, src).ok()
 }
 
 #[cfg(test)]

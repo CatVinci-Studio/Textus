@@ -41,15 +41,22 @@ import { locatePlainText } from "./text-locate";
 import type { EditProposal } from "../types";
 import {
   discardGeneratedImage,
+  generatedAlt,
+  generatedIdsIn,
   generatedImageData,
   generatedImageFailure,
+  hasGeneratedImage,
+  joinedText,
   pictureSrc,
+  pictureState,
   loadGeneratedImage,
   rememberSaved,
   savedSrc,
   withSavedSrc,
+  withoutPicture,
 } from "./generated-images";
 import type { GeneratedImageData } from "../../platform/ipc";
+import { usePicturesState } from "./usePicturesState";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
@@ -58,7 +65,15 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
  *  arguments are still arriving or its text is still typing into the
  *  document (pending-edit-plugin settles it when the reveal completes). */
 export type PendingStatus =
-  "pending" | "streaming" | "accepted" | "rejected" | "invalid" | "expired";
+  | "pending"
+  | "streaming"
+  | "accepted"
+  | "rejected"
+  | "invalid"
+  | "expired"
+  // A picture put into the text proposal it goes with (joinPicture),
+  // decided with it.
+  | "joined";
 
 /**
  * What a `replace_selection` proposal targets: the selection the request was
@@ -339,6 +354,14 @@ function decidedChanges(
  * preview. The full proposal lifecycle - streaming, stop/failure endings,
  * what a consecutive prompt supersedes - is laid out in docs/design/ai-proposals.md.
  */
+/** Whether a proposal carries pictures being made, on their own or in
+ *  its text: its Accept saves them first (acceptPictures). */
+function carriesPictures(preview: PendingPreview): boolean {
+  return (
+    !!preview.proposal.image || hasGeneratedImage(preview.proposal.text ?? "")
+  );
+}
+
 export interface PendingEditOptions {
   /** The writer accepted or rejected a proposal (not one superseded,
    *  refused or stopped): what it decided, change by change - in place of
@@ -430,6 +453,10 @@ export function usePendingEdits(
     [previews],
   );
   const reviewStreaming = reviewed.some((p) => p.streaming);
+  // A picture still being made in a pending proposal: Accept waits for it.
+  const picturesPainting =
+    usePicturesState(previews.map((p) => p.proposal.text ?? "").join("\n")) ===
+    "painting";
 
   // The review bar walks sentence by sentence: every changed sentence of a
   // proposal shown that way, or the proposal itself otherwise, top to
@@ -712,43 +739,59 @@ export function usePendingEdits(
     () => false,
   );
 
-  /** A picture's Accept: saved first (Settings › Images), then written
-   *  with its src like any insertion. Saved once - an undo that brings the
-   *  proposal back, accepted again, writes the same file. */
-  const acceptImage = useCallback(
+  /** The Accept of a proposal that carries pictures - a picture on its
+   *  own, or text with pictures in it (generate_image's `in_text`): each
+   *  saved first (Settings › Images), then the text written with their
+   *  srcs like any insertion. Not while one is still being made - Accept
+   *  waits for it (the card says so) - and a picture that wasn't made is
+   *  left out of the text it came with; a picture on its own that wasn't
+   *  made has nothing to accept. Saved once: an undo that brings the
+   *  proposal back, accepted again, writes the same files. */
+  const acceptPictures = useCallback(
     (callId: string, proposal: EditProposal): boolean => {
-      const image = proposal.image!;
-      const text = proposal.text ?? "";
-      const src = savedSrc(image.id);
-      if (src)
-        return acceptRef.current(callId, withSavedSrc(text, image.id, src));
+      let text = proposal.text ?? "";
+      const ids = generatedIdsIn(text);
+      if (ids.some((id) => pictureState(id) === "painting")) {
+        for (const id of ids) void loadGeneratedImage(id);
+        return false;
+      }
+      for (const id of ids)
+        if (pictureState(id) === "failed") text = withoutPicture(text, id);
+      if (!text.trim()) return false;
       const { storeImage, onImageError } = optionsRef.current;
+      const unsaved = generatedIdsIn(text).filter((id) => !savedSrc(id));
+      const write = (final: string) => {
+        const written = acceptRef.current(callId, final);
+        const old =
+          written && proposal.image && proposal.action === "replace"
+            ? pictureSrc(proposal.anchor ?? "")
+            : null;
+        if (old) optionsRef.current.onPictureReplaced?.(old);
+        return written;
+      };
+      const withSaved = (markdown: string) =>
+        generatedIdsIn(markdown).reduce(
+          (t, id) => withSavedSrc(t, id, savedSrc(id)!),
+          markdown,
+        );
+      if (unsaved.length === 0) return write(withSaved(text));
       if (!storeImage || savingImages.current.has(callId)) return false;
       savingImages.current.add(callId);
       void (async () => {
         try {
-          const data =
-            generatedImageData(image.id) ??
-            ((await loadGeneratedImage(image.id))
-              ? generatedImageData(image.id)
-              : null);
-          if (!data)
-            throw new Error(
-              generatedImageFailure(image.id) ??
-                "the picture is no longer available",
-            );
-          const stored = await storeImage(data, image.alt);
-          if (stored === null) return;
-          rememberSaved(image.id, stored);
-          const written = acceptRef.current(
-            callId,
-            withSavedSrc(text, image.id, stored),
-          );
-          const old =
-            written && proposal.action === "replace"
-              ? pictureSrc(proposal.anchor ?? "")
-              : null;
-          if (old) optionsRef.current.onPictureReplaced?.(old);
+          for (const id of unsaved) {
+            const data = generatedImageData(id);
+            if (!data)
+              throw new Error(
+                generatedImageFailure(id) ??
+                  "the picture is no longer available",
+              );
+            const stored = await storeImage(data, generatedAlt(text, id));
+            // Cancelled (naming it): nothing is written.
+            if (stored === null) return;
+            rememberSaved(id, stored);
+          }
+          write(withSaved(text));
         } catch (err) {
           onImageError?.(err);
         } finally {
@@ -772,16 +815,16 @@ export function usePendingEdits(
       textOverride?: string,
     ): boolean => {
       if (textOverride === undefined) {
-        let picture: EditProposal | null = null;
+        let pictures: EditProposal | null = null;
         run((ctx) => {
           const view = ctx.get(editorViewCtx);
           const preview = pendingEditKey
             .getState(view.state)
             ?.previews.find((p) => p.callId === callId);
-          if (preview?.proposal.image && !preview.streaming)
-            picture = preview.proposal;
+          if (preview && !preview.streaming && carriesPictures(preview))
+            pictures = preview.proposal;
         });
-        if (picture) return acceptImage(callId, picture);
+        if (pictures) return acceptPictures(callId, pictures);
       }
       let ok = false;
       let stillStreaming = false;
@@ -971,7 +1014,7 @@ export function usePendingEdits(
       }));
       return ok;
     },
-    [run, decided, acceptImage],
+    [run, decided, acceptPictures],
   );
   acceptRef.current = applyAccept;
 
@@ -996,8 +1039,8 @@ export function usePendingEdits(
           pendingEditKey.getState(view.state)?.previews ?? []
         ).find((p) => p.callId === callId);
         // A rejected picture leaves nothing behind.
-        if (preview?.proposal.image)
-          discardGeneratedImage(preview.proposal.image.id);
+        for (const id of generatedIdsIn(preview?.proposal.text ?? ""))
+          discardGeneratedImage(id);
         view.dispatch(
           view.state.tr.setMeta(pendingEditKey, { type: "remove", callId }),
         );
@@ -1017,6 +1060,56 @@ export function usePendingEdits(
   const discard = useCallback(
     (callId: string) => remove(callId, false),
     [remove],
+  );
+
+  /** A picture asked for next to text that is proposed and not decided
+   *  yet - its anchor quoted from that text, which isn't in the document
+   *  (ai/images.rs allows it): put into that proposal, on a line of its
+   *  own, so the two are one proposal accepted or rejected together,
+   *  rather than one that can't be placed. False when no such proposal
+   *  is pending: the picture is shown as its own. */
+  const joinPicture = useCallback(
+    (callId: string, picture: EditProposal): boolean => {
+      const { anchor, action } = picture;
+      if (
+        !picture.image ||
+        !anchor ||
+        (action !== "insert_after" && action !== "insert_before")
+      )
+        return false;
+      let joined = false;
+      run((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+        if (documentMarkdown(serializeBlocks(ctx, state.doc)).includes(anchor))
+          return;
+        const previews = pendingEditKey.getState(state)?.previews ?? [];
+        for (const host of previews) {
+          if (host.streaming || host.proposal.image) continue;
+          const old = host.proposal.text ?? "";
+          const text = joinedText(old, anchor, action, picture.text ?? "");
+          if (text === null || !host.replacement.includes(old)) continue;
+          view.dispatch(
+            state.tr.setMeta(pendingEditKey, {
+              type: "add",
+              previews: [
+                {
+                  ...host,
+                  proposal: { ...host.proposal, text },
+                  replacement: host.replacement.replace(old, () => text),
+                  revision: (host.revision ?? 0) + 1,
+                },
+              ],
+            }),
+          );
+          joined = true;
+          return;
+        }
+      });
+      if (joined) setStatuses((prev) => ({ ...prev, [callId]: "joined" }));
+      return joined;
+    },
+    [run],
   );
 
   /**
@@ -1072,7 +1165,8 @@ export function usePendingEdits(
         const view = ctx.get(editorViewCtx);
         const previews = pendingEditKey.getState(view.state)?.previews ?? [];
         for (const p of previews)
-          if (p.proposal.image) discardGeneratedImage(p.proposal.image.id);
+          for (const id of generatedIdsIn(p.proposal.text ?? ""))
+            discardGeneratedImage(id);
         view.dispatch(view.state.tr.setMeta(pendingEditKey, { type: "clear" }));
         if (learn) for (const p of previews) decided(p, () => false);
         setStatuses((prev) => {
@@ -1187,11 +1281,13 @@ export function usePendingEdits(
     acceptAll,
     rejectAll,
     discardAll,
+    joinPicture,
     status,
     syncFromPlugin,
     decidable,
     reviewed,
     reviewStreaming,
+    picturesPainting,
     focusIndex,
     focusedPreview,
     focusNext,

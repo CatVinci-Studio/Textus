@@ -349,6 +349,7 @@ fn live_token_usage() {
             focus_heading: None,
             ui_language: "en",
             thinking,
+            pictures: None,
         };
         harness::run_conversation(&auth, &setup, doc, script)
     };

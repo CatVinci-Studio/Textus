@@ -130,6 +130,10 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     // shorter proposal for the same passage to meet a skill's 70% - two
     // overlapping previews, of which only one can be applied (round-2
     // integration, skill/zh/slash).
+    if !text.is_empty() {
+        let mut ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
+        ledger.texts.push(text.to_string());
+    }
     format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{size} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
 }
 

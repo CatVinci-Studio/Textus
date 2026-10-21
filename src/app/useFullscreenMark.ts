@@ -1,26 +1,17 @@
 import { useEffect } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
-/** Whether the window fills the whole screen, menu bar's strip included:
- *  full screen, as far as a page can tell. A zoomed window stops at the
- *  menu bar. */
-function coversScreen(): boolean {
-  return (
-    window.innerWidth >= window.screen.width &&
-    window.innerHeight >= window.screen.height
-  );
-}
-
 /**
  * Marks <html> with `data-window-fullscreen` while a Mac window is in full
  * screen, where the traffic lights are gone from the window bar's corner
  * and its first control takes their place (window-bar.css). Elsewhere the
  * bar's left end is the same either way, so nothing is asked.
  *
- * The mark follows the window's size at once - the sidebar's button slides
- * over as the window settles, instead of waiting for the backend's answer
- * a moment later and jumping - and the backend's answer, once a resize has
- * settled, has the last word.
+ * AppKit says when (`window-fullscreen`, watch_fullscreen in
+ * src-tauri/src/lib.rs): once the window is in, and as it starts out.
+ * Guessing from the window's size, and asking the backend after a resize,
+ * caught a window still on its way out and left the button under the
+ * lights.
  */
 export function useFullscreenMark(): void {
   useEffect(() => {
@@ -32,28 +23,24 @@ export function useFullscreenMark(): void {
     };
     const win = getCurrentWindow();
     let alive = true;
-    const confirm = () => {
-      void win
-        .isFullscreen()
-        .then((on) => alive && mark(on))
-        .catch(() => {
-          // No backend (the browser build): the size alone decides.
-        });
-    };
-    mark(coversScreen());
-    confirm();
-    let settle: ReturnType<typeof setTimeout> | undefined;
-    const onResize = () => {
-      mark(coversScreen());
-      // A drag-resize fires this every frame; ask once it has stopped.
-      clearTimeout(settle);
-      settle = setTimeout(confirm, 100);
-    };
-    window.addEventListener("resize", onResize);
+    let stop: (() => void) | undefined;
+    // A window opened in full screen (a tab torn off one) starts there.
+    void win
+      .isFullscreen()
+      .then((on) => alive && mark(on))
+      .catch(() => {
+        // No backend (the browser build): never full screen.
+      });
+    void win
+      .listen<boolean>("window-fullscreen", (event) => mark(event.payload))
+      .then((unlisten) => {
+        if (alive) stop = unlisten;
+        else unlisten();
+      })
+      .catch(() => {});
     return () => {
       alive = false;
-      clearTimeout(settle);
-      window.removeEventListener("resize", onResize);
+      stop?.();
       delete root.dataset.windowFullscreen;
     };
   }, []);
