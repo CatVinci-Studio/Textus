@@ -62,9 +62,77 @@ pub struct ProposalLedger {
     /// The new text of each proposal made: a picture may go next to a
     /// paragraph of it (ai::images), though it isn't in the document yet.
     pub(super) texts: Vec<String>,
+    /// The pictures this request wrote into its text (images::inline), by
+    /// id.
+    pictures: Vec<String>,
+    /// Why pictures written into the text were left out of it (the limit
+    /// reached), for propose_edit's result to say.
+    unmade: Vec<String>,
 }
 
 impl ProposalLedger {
+    /// A picture written into text this request proposes.
+    pub fn add_picture(&mut self, id: String) {
+        self.pictures.push(id);
+    }
+
+    /// The pictures written into this request's text, by id.
+    #[cfg(test)]
+    pub fn pictures(&self) -> &[String] {
+        &self.pictures
+    }
+
+    /// A picture written into the text was left out, and why.
+    pub fn note_unmade(&mut self, why: String) {
+        if !self.unmade.contains(&why) {
+            self.unmade.push(why);
+        }
+    }
+
+    /// What the pictures left out of the text since last asked came to.
+    pub fn take_unmade(&mut self) -> Option<String> {
+        (!self.unmade.is_empty()).then(|| {
+            format!(
+                " A picture line was left out of the text: {}",
+                std::mem::take(&mut self.unmade).join(" ")
+            )
+        })
+    }
+
+    /// Why `text`'s pictures can't stand: one put in twice, or one this
+    /// request never asked for - a long id copied wrong drew one picture
+    /// in two places. None when they can, or none were asked for.
+    pub(super) fn pictures_problem(&self, text: &str) -> Option<String> {
+        if self.pictures.is_empty() {
+            return None;
+        }
+        let mut used: Vec<&str> = Vec::new();
+        for (at, _) in text.match_indices("textus-generated:") {
+            let id: String = text[at + "textus-generated:".len()..]
+                .chars()
+                .take_while(|c| c.is_ascii_alphanumeric())
+                .collect();
+            let Some(known) = self.pictures.iter().find(|p| **p == id) else {
+                let missing: Vec<&str> = self.pictures.iter().map(String::as_str).collect();
+                return Some(format!("Not proposed: `textus-generated:{id}` is no picture of this request. Its pictures are: {}.", missing.join(", ")));
+            };
+            if used.contains(&known.as_str()) {
+                let left: Vec<&str> = self
+                    .pictures
+                    .iter()
+                    .map(String::as_str)
+                    .filter(|p| !used.contains(p) && *p != known)
+                    .collect();
+                return Some(format!(
+                    "Not proposed: the picture `{id}` is in the text twice. Each picture goes in once{} - send the text again with each in its place.",
+                    if left.is_empty() { String::new() } else { format!("; not placed yet: {}", left.join(", ")) }
+                ));
+            }
+            used.push(known);
+        }
+        None
+    }
+
     /// The new text of each proposal this request has made, in order.
     pub fn texts(&self) -> &[String] {
         &self.texts
@@ -279,7 +347,7 @@ pub fn builtin_tools<'a>(
     tools.push(Tool {
         spec: ToolSpec {
             name: MEASURE_TEXT_TOOL_NAME.into(),
-            description: "Count text exactly for a length limit - never estimate a count yourself. Metrics: x_weighted (X, limit 280: URLs count 23, CJK characters and emoji 2), bluesky (300 graphemes and 3,000 bytes), threads (500), instagram (2,200, at most 5 hashtags), mastodon (500 by default), linkedin (3,000, fold near 140), wechat_title (32), wechat_digest (120), wechat_content, xhs_title (20), xhs_body (1,000), weibo, govuk_title (65), govuk_summary (160), zh_academic_title (25 字), and plain chars, words, cjk_chars, utf8_bytes. Without `metric` it returns the basic counts. Use it on the exact text before proposing anything that must fit a limit, and give the count in your reply.".into(),
+            description: "Count text exactly for a length limit - never estimate a count yourself. Metrics: x_weighted (X, limit 280: URLs count 23, CJK characters and emoji 2), bluesky (300 graphemes and 3,000 bytes), threads (500), instagram (2,200, at most 5 hashtags), mastodon (500 by default), linkedin (3,000, fold near 140), wechat_title (32), wechat_digest (120), wechat_content, xhs_title (20), xhs_body (1,000), weibo, govuk_title (65), govuk_summary (160), zh_academic_title (25 字), and plain chars, words, cjk_chars, utf8_bytes. Without `metric` it returns the basic counts. Use it on the exact text before proposing anything that must fit a platform's limit, and give the count in your reply. Not for new text with a length the user asked for: propose that directly - propose_edit's result gives its size.".into(),
             parameters: json!({
                 "type": "object",
                 "properties": {
@@ -583,9 +651,38 @@ fn measures_a_limit(arguments: &str) -> bool {
         .is_some_and(|m| m.limit.is_some())
 }
 
+/// How long a `text` not in the document may be before a check of it is a
+/// hidden draft (refuses_a_draft): a sentence or a short paragraph.
+const DRAFT_CHARS: usize = 200;
+
+/// A check of a draft - new text, long, not from the document, and not
+/// measured against a platform's limit - refused. Asked for "1200 字" with
+/// two pictures, a model wrote the whole piece into measure_text three
+/// times before proposing it: over three minutes in which the user saw
+/// nothing. Proposed instead, the text streams in where they watch, and
+/// propose_edit's result gives its size.
+fn refuses_a_draft(ctx: &ToolContext, name: &str, arguments: &str) -> Option<String> {
+    if name != MEASURE_TEXT_TOOL_NAME && name != CHECK_CONVENTIONS_TOOL_NAME {
+        return None;
+    }
+    if name == MEASURE_TEXT_TOOL_NAME && measures_a_limit(arguments) {
+        return None;
+    }
+    let args: serde_json::Value = serde_json::from_str(arguments).ok()?;
+    let text = args.get("text")?.as_str()?.trim();
+    if text.chars().count() <= DRAFT_CHARS || ctx.document.contains(text) {
+        return None;
+    }
+    Some(format!("Not run: {name} doesn't take a draft of new text. Propose the text with propose_edit now - the user sees it come in, its result tells you its size, and conventions are fixed on the way. If it misses a length the user asked for, say so in your reply."))
+}
+
 /// Counts a call to a check tool, and refuses it once the request has used
-/// up that tool's budget. None for every other call, and within budget.
+/// up that tool's budget - or when it checks a hidden draft
+/// (refuses_a_draft). None for every other call, and within budget.
 fn spend_check(ctx: &ToolContext, name: &str, arguments: &str) -> Option<String> {
+    if let Some(refusal) = refuses_a_draft(ctx, name, arguments) {
+        return Some(refusal);
+    }
     let &(name, budget) = CHECK_BUDGETS.iter().find(|(tool, _)| *tool == name)?;
     if name == MEASURE_TEXT_TOOL_NAME && measures_a_limit(arguments) {
         return None;

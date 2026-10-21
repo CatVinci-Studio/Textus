@@ -7,9 +7,11 @@ import {
   generatedImageSrc,
   hasGeneratedImage,
   joinedText,
+  noteBegunPicture,
   parseImageProposal,
   picturesState,
   showGeneratedImages,
+  withBegunPictures,
   withSavedSrc,
   withoutPicture,
 } from "./generated-images";
@@ -133,5 +135,33 @@ describe("pictures in a proposal's text", () => {
     // Not there, or there twice: nowhere to put it.
     expect(joinedText(draft, "Five", "insert_after", picture)).toBeNull();
     expect(joinedText("A. A.", "A.", "insert_after", picture)).toBeNull();
+  });
+});
+
+describe("pictures written into streaming text", () => {
+  const line = "![港口](textus-picture:16:9 A harbour at dawn (mist))";
+
+  it("show as their picture once begun, never as the line", () => {
+    const text = `One.\n\n${line}\n\nTwo.`;
+    expect(withBegunPictures("w1", text)).toBe("One.\n\n\nTwo.");
+    noteBegunPicture("w1", line, "k3f9qz", { width: 1536, height: 1024 });
+    expect(withBegunPictures("w1", text)).toBe(
+      "One.\n\n![港口](textus-generated:k3f9qz)\n\nTwo.",
+    );
+    expect(generatedImageSize("k3f9qz")).toEqual({
+      width: 1536,
+      height: 1024,
+    });
+    // Another call's line isn't this picture.
+    expect(withBegunPictures("w2", text)).toBe("One.\n\n\nTwo.");
+  });
+
+  it("leave out a line still being written", () => {
+    expect(withBegunPictures("w3", "One.\n\n![港")).toBe("One.\n");
+    expect(withBegunPictures("w3", "One.\n\n!")).toBe("One.\n");
+    expect(withBegunPictures("w3", "Wow!")).toBe("Wow!");
+    expect(withBegunPictures("w3", "One.\n\n![a](b.png)")).toBe(
+      "One.\n\n![a](b.png)",
+    );
   });
 });

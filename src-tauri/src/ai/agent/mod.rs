@@ -1,5 +1,6 @@
 use crate::ai::cancel;
 use crate::ai::catalog;
+use crate::ai::images::InlinePictures;
 use crate::ai::route;
 use crate::ai::rules::Conventions;
 use crate::ai::tools::{self, ToolContext, ToolRegistry};
@@ -52,6 +53,16 @@ pub enum StreamEvent {
     /// The model is thinking: a fragment of its reasoning, or "" when the
     /// provider only says that it is. Shown above the reply, never kept.
     Thinking { text: String },
+    /// A picture written into a propose_edit's text (images::inline) is
+    /// being made: its `line` there stands for picture `id` from now on.
+    /// Sent before the fragment that completes the line.
+    Picture {
+        call_id: String,
+        line: String,
+        id: String,
+        width: u32,
+        height: u32,
+    },
 }
 
 /// Forwards a provider-level fragment onto the frontend channel. Send
@@ -59,7 +70,15 @@ pub enum StreamEvent {
 /// not fail the agent loop, which still returns turns for the history.
 /// A native search citation goes to the request's sources instead (it is
 /// shown with the finished reply).
-fn forward(channel: &Channel<StreamEvent>, web: &WebPlan, event: ProviderEvent<'_>) {
+fn forward(
+    channel: &Channel<StreamEvent>,
+    web: &WebPlan,
+    pictures: Option<&InlinePictures<'_>>,
+    event: ProviderEvent<'_>,
+) {
+    for picture in pictures.map(|p| p.observe(&event)).unwrap_or_default() {
+        let _ = channel.send(picture);
+    }
     let event = match event {
         ProviderEvent::Citation { url, title } => {
             web.cite(url, title);
@@ -150,13 +169,15 @@ pub(crate) fn postfix_step(
 pub(crate) type StepFuture<'a> =
     Pin<Box<dyn Future<Output = Result<StepResult, String>> + Send + 'a>>;
 
-/// A provider step with [`postfix_step`] applied to what it returns, and
-/// its native search citations numbered (WebPlan::finish_step).
+/// A provider step with [`postfix_step`] applied to what it returns, its
+/// native search citations numbered (WebPlan::finish_step), and the
+/// pictures written into its text placed (InlinePictures::place).
 fn with_postfix<'a, S, F>(
     mut step: S,
     document: &'a str,
     conventions: &'a Conventions,
     web: &'a WebPlan,
+    pictures: Option<&'a InlinePictures<'a>>,
 ) -> impl FnMut(Vec<AgentTurn>) -> StepFuture<'a> + 'a
 where
     S: FnMut(Vec<AgentTurn>) -> F + 'a,
@@ -165,8 +186,13 @@ where
     move |turns| {
         let fut = step(turns);
         Box::pin(async move {
-            fut.await
-                .map(|r| postfix_step(web.finish_step(r), document, conventions).0)
+            fut.await.map(|r| {
+                let r = postfix_step(web.finish_step(r), document, conventions).0;
+                match pictures {
+                    Some(pictures) => pictures.place(r),
+                    None => r,
+                }
+            })
         })
     }
 }
@@ -433,19 +459,22 @@ async fn ai_agent_message_inner(
             for tool in crate::mcp::tools_for_request(&app).await {
                 tools.add(tool);
             }
+            // Pictures written into the text, begun as their lines stream in.
+            let inline = image_run.as_ref().map(|run| run.inline(&tool_ctx.proposed));
             let tool_specs = tools.specs();
             let step = |turns: Vec<AgentTurn>| {
                 let (agent, instructions, tool_specs) = (&agent, &instructions, &tool_specs);
                 let channel = on_event.clone();
+                let inline = inline.as_ref();
                 async move {
-                    let sink = move |e: ProviderEvent<'_>| forward(&channel, web, e);
+                    let sink = move |e: ProviderEvent<'_>| forward(&channel, web, inline, e);
                     agent
                         .step(instructions, &turns, tool_specs, &sink)
                         .await
                         .map(|(step, _)| step)
                 }
             };
-            let step = with_postfix(step, &document, &conventions, web);
+            let step = with_postfix(step, &document, &conventions, web, inline.as_ref());
             // `history` is cloned so the plain-chat fallback below still has
             // it; `run_agent_loop` would otherwise have consumed it.
             match run_agent_loop(

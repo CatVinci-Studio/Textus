@@ -592,3 +592,46 @@ fn propose_edit_rejects_context_that_repeats_or_misses_the_anchor() {
     );
     assert!(anchor_free.contains("`context`"), "{anchor_free}");
 }
+
+#[test]
+fn a_long_draft_of_new_text_is_proposed_not_checked() {
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false, false);
+    let paragraph = "港口不是海的终点，是陆地和浪涛握手的地方。".repeat(12);
+    let context = ctx(&paragraph);
+    let run = |name: &str, text: &str, metric: &str| {
+        execute(
+            &tools,
+            &context,
+            name,
+            &json!({ "text": text, "metric": metric }).to_string(),
+        )
+        .text
+    };
+    let draft = format!("{paragraph}\n\n{paragraph}");
+    for name in [MEASURE_TEXT_TOOL_NAME, CHECK_CONVENTIONS_TOOL_NAME] {
+        let out = run(name, &draft, "cjk_chars");
+        assert!(out.contains("doesn't take a draft"), "{name}: {out}");
+    }
+    // Text in the document, a short draft, and a platform's limit are
+    // measured.
+    assert!(!run(MEASURE_TEXT_TOOL_NAME, &paragraph, "cjk_chars").starts_with("Not run"));
+    assert!(!run(MEASURE_TEXT_TOOL_NAME, "一句话。", "cjk_chars").starts_with("Not run"));
+    assert!(!run(MEASURE_TEXT_TOOL_NAME, &draft, "weibo").starts_with("Not run"));
+}
+
+#[test]
+fn a_text_puts_each_picture_it_was_given_in_once() {
+    let mut ledger = ProposalLedger::default();
+    assert_eq!(ledger.pictures_problem("![a](textus-generated:zz)"), None);
+    ledger.add_picture("k3f9qz".into());
+    ledger.add_picture("p08mxa".into());
+    let both = "One.\n\n![a](textus-generated:k3f9qz)\n\nTwo.\n\n![b](textus-generated:p08mxa)";
+    assert_eq!(ledger.pictures_problem(both), None);
+    let twice = "![a](textus-generated:k3f9qz)\n\n![b](textus-generated:k3f9qz)";
+    let why = ledger.pictures_problem(twice).unwrap();
+    assert!(why.contains("twice") && why.contains("p08mxa"), "{why}");
+    let wrong = ledger
+        .pictures_problem("![a](textus-generated:k3f9qy)")
+        .unwrap();
+    assert!(wrong.contains("no picture of this request"), "{wrong}");
+}

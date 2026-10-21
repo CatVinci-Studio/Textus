@@ -740,7 +740,7 @@ export function usePendingEdits(
   );
 
   /** The Accept of a proposal that carries pictures - a picture on its
-   *  own, or text with pictures in it (generate_image's `in_text`): each
+   *  own, or text with pictures written into it (ai/images/inline.rs): each
    *  saved first (Settings › Images), then the text written with their
    *  srcs like any insertion. Not while one is still being made - Accept
    *  waits for it (the card says so) - and a picture that wasn't made is
@@ -824,7 +824,6 @@ export function usePendingEdits(
           if (preview && !preview.streaming && carriesPictures(preview))
             pictures = preview.proposal;
         });
-        if ((pictures as EditProposal | null)?.slot) return false;
         if (pictures) return acceptPictures(callId, pictures);
       }
       let ok = false;
@@ -1063,48 +1062,6 @@ export function usePendingEdits(
     [remove],
   );
 
-  /** The slots (EditProposal.slot) of pictures that text has now taken
-   *  in: the frame is the text's from here, the picture goes on. */
-  const withdrawSlots = useCallback(
-    (ids: Set<string>) => {
-      const gone: string[] = [];
-      run((ctx) => {
-        const view = ctx.get(editorViewCtx);
-        const previews = pendingEditKey.getState(view.state)?.previews ?? [];
-        for (const p of previews)
-          if (
-            p.proposal.slot &&
-            p.proposal.image &&
-            ids.has(p.proposal.image.id)
-          )
-            gone.push(p.callId);
-        let tr = view.state.tr;
-        for (const callId of gone)
-          tr = tr.setMeta(pendingEditKey, { type: "remove", callId });
-        if (gone.length > 0) view.dispatch(tr);
-      });
-      if (gone.length > 0)
-        setStatuses((prev) => {
-          const next = { ...prev };
-          for (const callId of gone) next[callId] = "joined";
-          return next;
-        });
-    },
-    [run],
-  );
-
-  /** Slots no text took in (the request ended, or stopped, without it):
-   *  they go, and their pictures with them. */
-  const dropSlots = useCallback(() => {
-    const left =
-      run((ctx) =>
-        (pendingEditKey.getState(ctx.get(editorViewCtx).state)?.previews ?? [])
-          .filter((p) => p.proposal.slot)
-          .map((p) => p.callId),
-      ) ?? [];
-    for (const callId of left) remove(callId, false);
-  }, [run, remove]);
-
   /** A picture asked for next to text that is proposed and not decided
    *  yet - its anchor quoted from that text, which isn't in the document
    *  (ai/images.rs allows it): put into that proposal, on a line of its
@@ -1325,8 +1282,6 @@ export function usePendingEdits(
     rejectAll,
     discardAll,
     joinPicture,
-    withdrawSlots,
-    dropSlots,
     status,
     syncFromPlugin,
     decidable,

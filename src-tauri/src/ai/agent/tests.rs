@@ -896,3 +896,19 @@ fn a_selected_picture_in_the_documents_folder_is_seen() {
     assert!(selected_picture("What is in it?", doc).is_none());
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn a_length_the_user_asks_for_is_noticed() {
+    for asked in [
+        "写一篇 1200 字左右的文章",
+        "写三千字",
+        "Write about 500 words on tides",
+        "2,000 characters, please",
+        "800字以内",
+    ] {
+        assert!(super::context::asks_for_a_length(asked), "{asked}");
+    }
+    for other in ["写一篇文章，配两张图", "Fix the 3 typos", "第2段"] {
+        assert!(!super::context::asks_for_a_length(other), "{other}");
+    }
+}

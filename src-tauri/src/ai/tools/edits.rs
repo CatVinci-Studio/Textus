@@ -130,11 +130,16 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     // shorter proposal for the same passage to meet a skill's 70% - two
     // overlapping previews, of which only one can be applied (round-2
     // integration, skill/zh/slash).
+    let mut unmade = String::new();
     if !text.is_empty() {
         let mut ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(problem) = ledger.pictures_problem(text) {
+            return problem;
+        }
         ledger.texts.push(text.to_string());
+        unmade = ledger.take_unmade().unwrap_or_default();
     }
-    format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{size} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
+    format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{size}{unmade} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
 }
 
 /// Write mode's propose_edit. Its schema offers only INSERT_ACTIONS, but a
@@ -161,6 +166,13 @@ pub(super) fn propose_insertion(ctx: &ToolContext, arguments: &str) -> String {
 /// the user the two counts disagreed and to count again themselves
 /// (round 4, social/zh/shorten-100).
 pub(super) fn text_size(text: &str) -> (usize, &'static str) {
+    // A picture's line is no part of the text's length.
+    let without_pictures: String = text
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("!["))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let text = without_pictures.as_str();
     let cjk = text
         .chars()
         .filter(|c| matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}'))

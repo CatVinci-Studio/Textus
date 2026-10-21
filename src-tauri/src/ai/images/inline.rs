@@ -1,0 +1,447 @@
+//! Pictures written into new text: the model puts each one in the text it
+//! proposes, as a line of its own - `![alt](textus-picture:16:9 what it
+//! shows)` - and the picture starts being made the moment that line has
+//! streamed in, while the rest of the text goes on.
+//!
+//! Before, the model asked for each picture first (generate_image's
+//! `in_text`) and wrote the text in a step of its own after: a whole
+//! extra round trip, read and thought through again, before the first
+//! word showed. Now the text and its pictures come in one step, each
+//! picture begun where it stands.
+//!
+//! [`InlinePictures::observe`] watches propose_edit's arguments as they
+//! stream and starts each picture whose line is complete;
+//! [`InlinePictures::place`] turns each line of the finished step into its
+//! picture's Markdown - starting any the stream didn't show (a provider
+//! that sends arguments whole) - so the history, the tool and the
+//! frontend see `![alt](textus-generated:ID)` as for any other picture.
+
+use super::{placeholder_src, ImageRun};
+use crate::ai::agent::StreamEvent;
+use crate::ai::tools::ProposalLedger;
+use aicompat::agent::{AgentTurn, ProviderEvent, StepResult};
+use aicompat::images::Aspect;
+use serde_json::Value;
+use std::collections::HashMap;
+use std::sync::Mutex;
+
+/// The src of a picture line. Mirrors `PICTURE_LINE` in
+/// src/ai/revision/generated-images.ts.
+pub(super) const PICTURE_SCHEME: &str = "textus-picture:";
+
+/// One picture line read: its alt text, the description it is made from,
+/// and its shape.
+#[derive(Debug, PartialEq)]
+struct PictureLine<'a> {
+    alt: &'a str,
+    prompt: &'a str,
+    aspect: Aspect,
+}
+
+/// `line` as a picture line, if it is one: `![alt](textus-picture:` then
+/// an optional aspect and the description, up to the line's last `)` (a
+/// description may have parentheses of its own).
+fn picture_line(line: &str) -> Option<PictureLine<'_>> {
+    let rest = line.trim().strip_prefix("![")?;
+    let (alt, after) = rest.split_once("](")?;
+    if alt.contains(']') {
+        return None;
+    }
+    let body = after
+        .strip_prefix(PICTURE_SCHEME)?
+        .strip_suffix(')')?
+        .trim();
+    let (aspect, prompt) = match body.split_once(char::is_whitespace) {
+        Some((first, rest)) if Aspect::parse(first).is_some() => {
+            (Aspect::parse(first).unwrap_or_default(), rest.trim())
+        }
+        _ => (Aspect::default(), body),
+    };
+    (!prompt.is_empty()).then_some(PictureLine {
+        alt: alt.trim(),
+        prompt,
+        aspect,
+    })
+}
+
+/// What came of a picture line: the picture being made (its id and the
+/// size it is asked for), or why none is.
+type Started = Result<(String, (u32, u32)), String>;
+
+/// A tool call streaming in: whether it proposes text, its arguments so
+/// far, and the picture lines the frontend has been told of.
+#[derive(Default)]
+struct Streaming {
+    proposes: bool,
+    args: String,
+    told: Vec<String>,
+}
+
+/// One request's pictures written into its text.
+pub struct InlinePictures<'a> {
+    run: &'a ImageRun,
+    ledger: &'a Mutex<ProposalLedger>,
+    streams: Mutex<HashMap<String, Streaming>>,
+    /// Each picture line seen, trimmed, and what came of it: the same line
+    /// again - the finished step, or a step asked for again after a
+    /// garbled one - is the same picture, not a second one paid for.
+    started: Mutex<Vec<(String, Started)>>,
+}
+
+impl ImageRun {
+    /// This request's pictures written into its text, recorded in the
+    /// ledger its propose_edit calls check them against.
+    pub fn inline<'a>(&'a self, ledger: &'a Mutex<ProposalLedger>) -> InlinePictures<'a> {
+        InlinePictures {
+            run: self,
+            ledger,
+            streams: Mutex::default(),
+            started: Mutex::default(),
+        }
+    }
+}
+
+impl InlinePictures<'_> {
+    /// A streamed fragment of the step: each picture line it completes in
+    /// a propose_edit's text starts its picture, and the frontend is told
+    /// (before the fragment itself, so the line never shows as text).
+    pub fn observe(&self, event: &ProviderEvent<'_>) -> Vec<StreamEvent> {
+        let mut streams = self.streams.lock().unwrap_or_else(|e| e.into_inner());
+        let (call_id, delta) = match event {
+            ProviderEvent::ToolStart { call_id, name } => {
+                streams.insert(
+                    call_id.to_string(),
+                    Streaming {
+                        proposes: *name == "propose_edit",
+                        ..Streaming::default()
+                    },
+                );
+                return Vec::new();
+            }
+            ProviderEvent::ToolArgs { call_id, delta } => (call_id, delta),
+            _ => return Vec::new(),
+        };
+        // A provider that didn't say which tool: read it as propose_edit,
+        // the one with a `text`.
+        let stream = streams
+            .entry(call_id.to_string())
+            .or_insert_with(|| Streaming {
+                proposes: true,
+                ..Streaming::default()
+            });
+        if !stream.proposes {
+            return Vec::new();
+        }
+        stream.args.push_str(delta);
+        let Some((text, closed)) = partial_string(&stream.args, "text") else {
+            return Vec::new();
+        };
+        let lines: Vec<&str> = text.split('\n').collect();
+        // The last line is complete only once the text is.
+        let complete = if closed { lines.len() } else { lines.len() - 1 };
+        let mut events = Vec::new();
+        for line in lines[..complete].iter().map(|l| l.trim()) {
+            if stream.told.iter().any(|t| t == line) {
+                continue;
+            }
+            let Some(picture) = picture_line(line) else {
+                continue;
+            };
+            stream.told.push(line.to_string());
+            if let Ok((id, (width, height))) = self.start(line, &picture) {
+                events.push(StreamEvent::Picture {
+                    call_id: call_id.to_string(),
+                    line: line.to_string(),
+                    id,
+                    width,
+                    height,
+                });
+            }
+        }
+        events
+    }
+
+    /// The picture for `line`: the one already begun for it, or one begun
+    /// now.
+    fn start(&self, line: &str, picture: &PictureLine<'_>) -> Started {
+        let mut started = self.started.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some((_, known)) = started.iter().find(|(l, _)| l == line) {
+            return known.clone();
+        }
+        let outcome = self
+            .run
+            .begin_picture(picture.prompt.to_string(), picture.aspect);
+        if let Ok((id, _)) = &outcome {
+            self.ledger
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .add_picture(id.clone());
+        }
+        started.push((line.to_string(), outcome.clone()));
+        outcome
+    }
+
+    /// The step as it came back, each propose_edit's picture lines turned
+    /// into their pictures' Markdown. A line whose picture can't be made
+    /// (the request's limit reached) is left out, and propose_edit's
+    /// result says why.
+    pub fn place(&self, step: StepResult) -> StepResult {
+        self.streams
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clear();
+        let StepResult::ToolCalls(calls) = step else {
+            return step;
+        };
+        let calls = calls
+            .into_iter()
+            .map(|turn| match turn {
+                AgentTurn::ToolCall {
+                    call_id,
+                    name,
+                    arguments,
+                    reasoning,
+                } if name == "propose_edit" => AgentTurn::ToolCall {
+                    arguments: self.place_in(&arguments).unwrap_or(arguments),
+                    call_id,
+                    name,
+                    reasoning,
+                },
+                other => other,
+            })
+            .collect();
+        StepResult::ToolCalls(calls)
+    }
+
+    /// One propose_edit's arguments with its picture lines placed; None
+    /// when it has none.
+    fn place_in(&self, arguments: &str) -> Option<String> {
+        let mut args: Value = serde_json::from_str(arguments).ok()?;
+        let text = args.get("text")?.as_str()?;
+        if !text.contains(PICTURE_SCHEME) {
+            return None;
+        }
+        let mut out: Vec<String> = Vec::new();
+        for line in text.split('\n') {
+            let Some(picture) = picture_line(line) else {
+                out.push(line.to_string());
+                continue;
+            };
+            match self.start(line.trim(), &picture) {
+                Ok((id, _)) => out.push(format!(
+                    "![{}]({})",
+                    picture.alt.replace('[', ""),
+                    placeholder_src(&id)
+                )),
+                Err(why) => {
+                    let mut ledger = self.ledger.lock().unwrap_or_else(|e| e.into_inner());
+                    ledger.note_unmade(why);
+                }
+            }
+        }
+        let mut placed = out.join("\n");
+        // A line left out leaves its blank lines behind.
+        while placed.contains("\n\n\n") {
+            placed = placed.replace("\n\n\n", "\n\n");
+        }
+        args["text"] = Value::String(placed.trim_matches('\n').to_string());
+        Some(args.to_string())
+    }
+}
+
+/// The value of the string field `key` in JSON that is still streaming
+/// in, as far as it has come, and whether it is complete. None until its
+/// opening quote has arrived.
+fn partial_string(json: &str, key: &str) -> Option<(String, bool)> {
+    let quoted = format!("\"{key}\"");
+    let mut from = 0;
+    let start = loop {
+        let at = from + json[from..].find(&quoted)?;
+        // A key, not the same letters inside a string (`\"text\"`).
+        let escaped = json[..at].chars().rev().take_while(|c| *c == '\\').count() % 2 == 1;
+        let after = json[at + quoted.len()..].trim_start();
+        if !escaped {
+            if let Some(value) = after.strip_prefix(':') {
+                if let Some(value) = value.trim_start().strip_prefix('"') {
+                    break json.len() - value.len();
+                }
+            }
+        }
+        from = at + quoted.len();
+    };
+    let mut out = String::new();
+    let mut chars = json[start..].chars();
+    while let Some(c) = chars.next() {
+        match c {
+            '"' => return Some((out, true)),
+            '\\' => match chars.next() {
+                Some('n') => out.push('\n'),
+                Some('t') => out.push('\t'),
+                Some('r') => out.push('\r'),
+                Some('b') => out.push('\u{8}'),
+                Some('f') => out.push('\u{c}'),
+                Some('u') => {
+                    let hex: String = chars.by_ref().take(4).collect();
+                    let unit = (hex.len() == 4)
+                        .then(|| u16::from_str_radix(&hex, 16).ok())
+                        .flatten();
+                    let Some(unit) = unit else {
+                        // Cut off inside the escape: what came before it.
+                        return Some((out, false));
+                    };
+                    if (0xd800..0xdc00).contains(&unit) {
+                        let rest = chars.as_str();
+                        let low = rest
+                            .strip_prefix("\\u")
+                            .and_then(|r| r.get(..4))
+                            .and_then(|h| u16::from_str_radix(h, 16).ok());
+                        let Some(low) = low else {
+                            return Some((out, false));
+                        };
+                        chars = rest[6..].chars();
+                        out.extend(char::decode_utf16([unit, low]).flatten());
+                    } else {
+                        out.extend(char::from_u32(unit.into()));
+                    }
+                }
+                Some(other) => out.push(other),
+                None => return Some((out, false)),
+            },
+            c => out.push(c),
+        }
+    }
+    Some((out, false))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_picture_line_has_an_alt_an_aspect_and_a_description() {
+        assert_eq!(
+            picture_line("![港口](textus-picture:16:9 A harbour at dawn (soft light))"),
+            Some(PictureLine {
+                alt: "港口",
+                prompt: "A harbour at dawn (soft light)",
+                aspect: Aspect::Wide,
+            })
+        );
+        assert_eq!(
+            picture_line("  ![x](textus-picture: Boats)  ").map(|p| p.aspect),
+            Some(Aspect::Square)
+        );
+        assert_eq!(picture_line("![x](textus-picture:)"), None);
+        assert_eq!(picture_line("![x](picture.png)"), None);
+        assert_eq!(picture_line("Text ![x](textus-picture:Boats) more"), None);
+    }
+
+    #[test]
+    fn a_string_streaming_in_is_read_as_far_as_it_has_come() {
+        assert_eq!(partial_string(r#"{"action":"append","te"#, "text"), None);
+        assert_eq!(
+            partial_string(r#"{"anchor":"say \"text\": no","text":"a\nb"#, "text"),
+            Some(("a\nb".into(), false))
+        );
+        assert_eq!(
+            partial_string(r#"{"text":"港😀!"}"#, "text"),
+            Some(("港😀!".into(), true))
+        );
+        assert_eq!(
+            partial_string(r#"{"text":"ab\u6e"#, "text"),
+            Some(("ab".into(), false))
+        );
+    }
+
+    fn streamed(pictures: &InlinePictures<'_>, call_id: &str, json: &str) -> Vec<String> {
+        pictures.observe(&ProviderEvent::ToolStart {
+            call_id,
+            name: "propose_edit",
+        });
+        let mut started = Vec::new();
+        // Three characters at a time, as a provider might send them.
+        let chars: Vec<char> = json.chars().collect();
+        for chunk in chars.chunks(3) {
+            let delta: String = chunk.iter().collect();
+            for event in pictures.observe(&ProviderEvent::ToolArgs {
+                call_id,
+                delta: &delta,
+            }) {
+                if let StreamEvent::Picture { id, line, .. } = event {
+                    started.push(format!("{line} -> {id}"));
+                }
+            }
+        }
+        started
+    }
+
+    #[test]
+    fn each_picture_starts_once_its_line_has_streamed_in() {
+        let run = ImageRun::offline(2);
+        let ledger = Mutex::default();
+        let pictures = run.inline(&ledger);
+        let text =
+            "One.\n\n![港口](textus-picture:16:9 Harbour)\n\nTwo.\n\n![船](textus-picture:Boats)";
+        let json = serde_json::json!({"action": "append", "text": text}).to_string();
+        let started = streamed(&pictures, "c1", &json);
+        assert_eq!(started.len(), 2, "{started:?}");
+        assert!(started[0].starts_with("![港口](textus-picture:16:9 Harbour) -> "));
+        // The finished step: the same two pictures, now in the text.
+        let step = pictures.place(StepResult::ToolCalls(vec![AgentTurn::ToolCall {
+            call_id: "c1".into(),
+            name: "propose_edit".into(),
+            arguments: json,
+            reasoning: None,
+        }]));
+        let StepResult::ToolCalls(calls) = step else {
+            panic!()
+        };
+        let AgentTurn::ToolCall { arguments, .. } = &calls[0] else {
+            panic!()
+        };
+        let placed: Value = serde_json::from_str(arguments).unwrap();
+        let placed = placed["text"].as_str().unwrap();
+        let first = started[0].rsplit(' ').next().unwrap();
+        assert!(
+            placed.contains(&format!("![港口](textus-generated:{first})")),
+            "{placed}"
+        );
+        assert_eq!(placed.matches("textus-generated:").count(), 2);
+        assert!(!placed.contains(PICTURE_SCHEME));
+    }
+
+    #[test]
+    fn a_picture_past_the_limit_is_left_out_and_said_why() {
+        let run = ImageRun::offline(1);
+        let ledger = Mutex::default();
+        let pictures = run.inline(&ledger);
+        let text = "One.\n\n![a](textus-picture:A)\n\nTwo.\n\n![b](textus-picture:B)\n\nThree.";
+        let args = serde_json::json!({"action": "append", "text": text}).to_string();
+        let placed: Value = serde_json::from_str(&pictures.place_in(&args).unwrap()).unwrap();
+        assert_eq!(
+            placed["text"]
+                .as_str()
+                .unwrap()
+                .matches("textus-generated:")
+                .count(),
+            1
+        );
+        assert!(placed["text"].as_str().unwrap().ends_with("Two.\n\nThree."));
+        let note = ledger.lock().unwrap().take_unmade();
+        assert!(note.is_some_and(|n| n.contains("1 pictures")));
+    }
+
+    #[test]
+    fn a_line_asked_for_again_is_the_same_picture() {
+        let run = ImageRun::offline(2);
+        let ledger = Mutex::default();
+        let pictures = run.inline(&ledger);
+        let json = serde_json::json!({"text": "![a](textus-picture:A)\n"}).to_string();
+        let first = streamed(&pictures, "c1", &json);
+        assert_eq!(first.len(), 1);
+        // A retried step writes the line again: the same picture, told
+        // again for the new call, and no second one made.
+        assert_eq!(streamed(&pictures, "c2", &json), first);
+        assert_eq!(ledger.lock().unwrap().pictures().len(), 1);
+    }
+}
