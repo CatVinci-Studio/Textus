@@ -42,6 +42,7 @@ import type { EditProposal } from "../types";
 import {
   discardGeneratedImage,
   generatedImageData,
+  generatedImageFailure,
   loadGeneratedImage,
   rememberSaved,
   savedSrc,
@@ -726,7 +727,11 @@ export function usePendingEdits(
             ((await loadGeneratedImage(image.id))
               ? generatedImageData(image.id)
               : null);
-          if (!data) throw new Error("the picture is no longer available");
+          if (!data)
+            throw new Error(
+              generatedImageFailure(image.id) ??
+                "the picture is no longer available",
+            );
           const stored = await storeImage(data, image.alt);
           if (stored === null) return;
           rememberSaved(image.id, stored);

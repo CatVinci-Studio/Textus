@@ -216,3 +216,115 @@ test("a proposed picture larger than the page keeps within its column", async ({
   expect(Math.abs(box.width - column)).toBeLessThan(6);
   expect(box.height / box.width).toBeCloseTo(900 / 1600, 2);
 });
+
+// generate_image returns while the picture is made (ai/images.rs): the
+// call records it as pending, and ai_generated_image answers once it is.
+const painting = {
+  ...made,
+  image: { id: "abc123", width: 1536, height: 1024, pending: true },
+};
+
+/** A reply that writes a paragraph and asks for a picture, the picture
+ *  taking `ms` to come (or failing then with `refusal`). */
+async function writeAndPaint(page: Page, ms: number, refusal?: string) {
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "Write a paragraph and illustrate it" },
+      {
+        kind: "ToolCall",
+        call_id: "w1",
+        name: "propose_edit",
+        arguments: JSON.stringify({
+          action: "append",
+          text: "The tide went out before dawn.",
+        }),
+      },
+      { kind: "ToolResult", call_id: "w1", output: "Edit proposed" },
+      {
+        kind: "ToolCall",
+        call_id: "g1",
+        name: "generate_image",
+        arguments: JSON.stringify(painting),
+      },
+      {
+        kind: "ToolResult",
+        call_id: "g1",
+        output: "Image proposed and being made (1536 x 1024 pixels).",
+      },
+      { kind: "Assistant", text: "A paragraph, and a harbour at dusk." },
+    ],
+    ai_generated_image: refusal
+      ? { __delay: ms, __reject: refusal }
+      : {
+          __delay: ms,
+          value: { mime: "image/png", ext: "png", dataBase64: PNG },
+        },
+    ai_discard_generated_image: null,
+    save_pasted_image: { src: "assets/harbour.png" },
+  });
+  await send(page, "Write a paragraph and illustrate it");
+}
+
+test("text and a picture come together: the text at once, the picture's frame until it is made", async ({
+  page,
+}) => {
+  await open(page);
+  await writeAndPaint(page, 2500);
+  const frame = page.locator(`${editor} .pending-picture`);
+  // The paragraph and the reply are there while the picture is painting.
+  await expect(
+    page.locator(`${editor} .pending-insert`, {
+      hasText: "The tide went out before dawn.",
+    }),
+  ).toBeVisible();
+  await expect(page.locator(".agent-panel-view")).toContainText(
+    "A paragraph, and a harbour at dusk.",
+  );
+  await expect(frame).toBeVisible();
+  await expect(frame).toHaveAttribute("aria-busy", "true");
+  // In the shape asked for, as wide as the column.
+  const box = (await frame.boundingBox())!;
+  expect(box.width / box.height).toBeCloseTo(1536 / 1024, 1);
+  // The picture takes its place once it comes.
+  await expect(page.locator(pending)).toHaveAttribute(
+    "src",
+    /^data:image\/png/,
+    { timeout: 10_000 },
+  );
+  await expect(frame).toHaveCount(0);
+});
+
+test("Accept while the picture is painting saves it once it comes", async ({
+  page,
+}) => {
+  await open(page);
+  await writeAndPaint(page, 2000);
+  await expect(page.locator(`${editor} .pending-picture`)).toBeVisible();
+  const pictureCard = page.locator(".agent-proposal", {
+    has: page.locator(".agent-proposal-picture-frame"),
+  });
+  await pictureCard
+    .locator(".agent-proposal-actions .inline-chat-action")
+    .filter({ hasText: "Accept" })
+    .click();
+  await expect(page.locator(written)).toHaveCount(1, { timeout: 10_000 });
+  expect(await calls(page, "save_pasted_image")).toHaveLength(1);
+});
+
+test("a picture that wasn't made says why in its frame", async ({ page }) => {
+  await open(page);
+  await writeAndPaint(
+    page,
+    500,
+    "The service refused this description: rejected by the safety system",
+  );
+  const frame = page.locator(`${editor} .pending-picture`);
+  await expect(frame).toHaveClass(/pending-picture-failed/);
+  await expect(frame).toContainText("rejected by the safety system");
+  // The paragraph is unaffected.
+  await expect(
+    page.locator(`${editor} .pending-insert`, {
+      hasText: "The tide went out before dawn.",
+    }),
+  ).toBeVisible();
+});

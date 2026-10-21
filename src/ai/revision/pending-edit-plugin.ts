@@ -20,6 +20,7 @@ import {
 import type { FoldAttention } from "../../editor/html/details-fold";
 import type { EditProposal } from "../types";
 import { showGeneratedImages } from "./generated-images";
+import { framePendingPictures } from "./pending-picture";
 import {
   pairedPrefix,
   splitSentences,
@@ -393,6 +394,13 @@ function awaitKatex(span: HTMLElement, markdown: string) {
 }
 
 function fillPendingHtml(span: HTMLElement, source: string) {
+  fillPendingContent(span, source);
+  // A picture not here yet - still being made - is its frame until it
+  // comes (pending-picture.ts).
+  framePendingPictures(span);
+}
+
+function fillPendingContent(span: HTMLElement, source: string) {
   // A proposed picture (generate_image) is drawn from its bytes, which
   // only the preview holds.
   const markdown = showGeneratedImages(source);

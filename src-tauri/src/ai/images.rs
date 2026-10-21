@@ -170,10 +170,12 @@ pub struct ImageModel {
 /// each costs money, and a reply that wants more is asked to say so.
 const PER_SEND: usize = 2;
 
-/// One request's image model, resolved to an address and a key - or, for
-/// the ChatGPT sign-in, to the app that holds its credential - and how many
-/// pictures it has made so far.
-pub struct ImageRun {
+/// Where a picture is asked for: the image model resolved to an address and
+/// a key - or, for the ChatGPT sign-in, to the app that holds its
+/// credential. Owned, so a picture can be made after the call that asked
+/// for it has returned.
+#[derive(Clone)]
+struct ImageJob {
     /// For the ChatGPT sign-in, whose credential is fetched (and refreshed)
     /// per picture.
     app: Option<AppHandle>,
@@ -181,6 +183,11 @@ pub struct ImageRun {
     base_url: String,
     api_key: String,
     model: String,
+}
+
+/// One request's image model, and how many pictures it has asked for.
+pub struct ImageRun {
+    job: ImageJob,
     made: AtomicUsize,
 }
 
@@ -205,11 +212,13 @@ impl ImageRun {
         if entry.api == ImageApi::ChatGpt {
             // Signed in with ChatGPT, or no generate_image at all.
             return crate::auth::openai_codex::signed_in(app).then(|| Self {
-                app: Some(app.clone()),
-                api: entry.api,
-                base_url: String::new(),
-                api_key: String::new(),
-                model: entry.models[0].to_string(),
+                job: ImageJob {
+                    app: Some(app.clone()),
+                    api: entry.api,
+                    base_url: String::new(),
+                    api_key: String::new(),
+                    model: entry.models[0].to_string(),
+                },
                 made: AtomicUsize::new(0),
             });
         }
@@ -236,15 +245,19 @@ impl ImageRun {
             return None;
         }
         Some(Self {
-            app: None,
-            api: entry.api,
-            base_url,
-            api_key,
-            model,
+            job: ImageJob {
+                app: None,
+                api: entry.api,
+                base_url,
+                api_key,
+                model,
+            },
             made: AtomicUsize::new(0),
         })
     }
+}
 
+impl ImageJob {
     /// One picture from the chosen service.
     async fn generate(
         &self,
@@ -279,10 +292,19 @@ impl ImageRun {
             model: &self.model,
         }
     }
+}
 
+impl ImageRun {
     /// One generate_image call's arguments, with what came of it recorded
-    /// in them: `image` (the picture's id and size) or `not_generated` (why
-    /// not). What the model may have put under those names is dropped.
+    /// in them: `image` - the picture's id and its size as asked, while it
+    /// is made in the background - or `not_generated` (why not). What the
+    /// model may have put under those names is dropped.
+    ///
+    /// The call returns at once and the reply goes on - its text, and more
+    /// pictures - while the picture is made: one took the whole reply's
+    /// half a minute to a minute before. The document shows the picture's
+    /// frame in place until it comes (ai_generated_image waits for it), or
+    /// why it didn't.
     async fn run_call(&self, arguments: &str, document: &str, announce: impl FnOnce()) -> String {
         let Ok(Value::Object(mut args)) = serde_json::from_str::<Value>(arguments) else {
             return arguments.to_string();
@@ -293,18 +315,14 @@ impl ImageRun {
             Err(why) => Err(why),
             Ok((prompt, aspect)) => {
                 announce();
-                self.generate(&prompt, aspect)
-                    .await
-                    .map_err(|e| e.to_string())
+                Ok(self.start(prompt, aspect))
             }
         };
         match outcome {
-            Ok(image) => {
-                let (width, height) = (image.width, image.height);
-                let id = keep(image);
+            Ok((id, (width, height))) => {
                 args.insert(
                     "image".into(),
-                    json!({"id": id, "width": width, "height": height}),
+                    json!({"id": id, "width": width, "height": height, "pending": true}),
                 );
             }
             Err(why) => {
@@ -312,6 +330,22 @@ impl ImageRun {
             }
         }
         Value::Object(args).to_string()
+    }
+
+    /// Starts making one picture in the background; its id, and the size
+    /// it is asked for (the frame's shape until it comes).
+    fn start(&self, prompt: String, aspect: Aspect) -> (String, (u32, u32)) {
+        let id = begin();
+        let job = self.job.clone();
+        let made = id.clone();
+        tauri::async_runtime::spawn(async move {
+            let slot = match job.generate(&prompt, aspect).await {
+                Ok(image) => Slot::Ready(image),
+                Err(why) => Slot::Failed(why.to_string()),
+            };
+            finish(&made, slot);
+        });
+        (id, nominal_size(aspect))
     }
 
     /// The call is fit to spend a picture on: a description, a place that
@@ -446,6 +480,9 @@ fn outcome(arguments: &str) -> String {
             image["width"].as_u64().unwrap_or(0),
             image["height"].as_u64().unwrap_or(0)
         );
+        if image["pending"].as_bool() == Some(true) {
+            return format!("Image proposed and being made ({size} pixels) while you go on, and appears in place by itself with Accept and Reject once it is ready (or, if the service turns it down, the user sees why there). It is saved only if they accept. Carry on with the rest of the request now - don't wait for it. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.");
+        }
         return format!("Image proposed - the user now sees the picture ({size} pixels) in the document with Accept and Reject; it is saved only if they accept. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.");
     }
     let why = args
@@ -455,63 +492,132 @@ fn outcome(arguments: &str) -> String {
     format!("Not generated: {why} Tell the user in plain words; don't change the description and call again unless they ask.")
 }
 
+/// A picture asked for: still being made, made, or not made and why.
+enum Slot {
+    Making,
+    Ready(GeneratedImage),
+    Failed(String),
+}
+
+impl Slot {
+    fn bytes(&self) -> usize {
+        match self {
+            Slot::Ready(image) => image.bytes.len(),
+            _ => 0,
+        }
+    }
+}
+
 /// The pictures waiting for a decision, newest last. Bounded: a long
 /// session of undecided pictures must not hold hundreds of megabytes; the
 /// oldest go first (and its proposal can then no longer be accepted - the
 /// frontend says so).
-static PENDING: Mutex<Vec<(String, GeneratedImage)>> = Mutex::new(Vec::new());
+static PENDING: Mutex<Vec<(String, Slot)>> = Mutex::new(Vec::new());
 const PENDING_COUNT: usize = 16;
 const PENDING_BYTES: usize = 128 * 1024 * 1024;
 
-fn keep(image: GeneratedImage) -> String {
+/// How long the frontend waits for a picture still being made: the
+/// slowest services take about two minutes, and give up at three.
+const WAIT_FOR_PICTURE: std::time::Duration = std::time::Duration::from_secs(200);
+
+fn pending() -> std::sync::MutexGuard<'static, Vec<(String, Slot)>> {
+    PENDING.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+/// A new picture's id, its slot marked as being made.
+fn begin() -> String {
     static NEXT: AtomicUsize = AtomicUsize::new(0);
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or_default();
     let id = format!("{nanos:x}{:x}", NEXT.fetch_add(1, Ordering::Relaxed));
-    let mut pending = PENDING.lock().unwrap_or_else(|e| e.into_inner());
-    pending.push((id.clone(), image));
+    let mut pending = pending();
+    pending.push((id.clone(), Slot::Making));
     while pending.len() > PENDING_COUNT
-        || pending.iter().map(|(_, i)| i.bytes.len()).sum::<usize>() > PENDING_BYTES
+        || pending.iter().map(|(_, s)| s.bytes()).sum::<usize>() > PENDING_BYTES
     {
         pending.remove(0);
     }
     id
 }
 
+/// What came of a picture being made. Nothing, if it was let go meanwhile
+/// (its proposal rejected while it was painting).
+fn finish(id: &str, slot: Slot) {
+    let mut pending = pending();
+    if let Some((_, waiting)) = pending.iter_mut().find(|(i, _)| i == id) {
+        *waiting = slot;
+    }
+    while pending.iter().map(|(_, s)| s.bytes()).sum::<usize>() > PENDING_BYTES {
+        pending.remove(0);
+    }
+}
+
+/// The size a picture is asked for at `aspect`, as GPT image makes it: the
+/// frame's shape while it is made (the service rounds to its own).
+fn nominal_size(aspect: Aspect) -> (u32, u32) {
+    let size = gen::gpt_image_size(aspect);
+    let (w, h) = size.split_once('x').unwrap_or(("1024", "1024"));
+    (w.parse().unwrap_or(1024), h.parse().unwrap_or(1024))
+}
+
 /// A pending picture as the frontend takes it. Mirrors `GeneratedImageData`
 /// in src/platform/ipc.ts.
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct GeneratedImageData {
     mime: &'static str,
     ext: &'static str,
     data_base64: String,
+    width: u32,
+    height: u32,
 }
 
-#[tauri::command]
-pub fn ai_generated_image(id: String) -> Result<GeneratedImageData, String> {
+/// What a picture's slot holds now: the picture, why it wasn't made, or
+/// None while it is being made.
+fn look(id: &str) -> Option<Result<GeneratedImageData, String>> {
     use base64::{engine::general_purpose::STANDARD, Engine};
-    let pending = PENDING.lock().unwrap_or_else(|e| e.into_inner());
-    let (_, image) = pending
-        .iter()
-        .find(|(i, _)| *i == id)
-        .ok_or_else(|| "This picture is no longer available - ask for it again.".to_string())?;
-    Ok(GeneratedImageData {
-        mime: image.mime,
-        ext: image.ext,
-        data_base64: STANDARD.encode(&image.bytes),
-    })
+    let pending = pending();
+    let Some((_, slot)) = pending.iter().find(|(i, _)| i == id) else {
+        return Some(Err(
+            "This picture is no longer available - ask for it again.".to_string(),
+        ));
+    };
+    match slot {
+        Slot::Making => None,
+        Slot::Failed(why) => Some(Err(why.clone())),
+        Slot::Ready(image) => Some(Ok(GeneratedImageData {
+            mime: image.mime,
+            ext: image.ext,
+            data_base64: STANDARD.encode(&image.bytes),
+            width: image.width,
+            height: image.height,
+        })),
+    }
 }
 
-/// Lets a picture go: its proposal was rejected, or it was saved.
+/// A picture, once it is made: the frame in the document waits on this.
+/// Its error is why it wasn't made, in the service's words.
+#[tauri::command]
+pub async fn ai_generated_image(id: String) -> Result<GeneratedImageData, String> {
+    let deadline = std::time::Instant::now() + WAIT_FOR_PICTURE;
+    loop {
+        if let Some(found) = look(&id) {
+            return found;
+        }
+        if std::time::Instant::now() >= deadline {
+            return Err("The image service didn't send the picture in time.".to_string());
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+    }
+}
+
+/// Lets a picture go: its proposal was rejected, or it was saved. One
+/// still being made is let go too; what it makes is thrown away.
 #[tauri::command]
 pub fn ai_discard_generated_image(id: String) {
-    PENDING
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-        .retain(|(i, _)| *i != id);
+    pending().retain(|(i, _)| *i != id);
 }
 
 #[cfg(test)]
@@ -520,15 +626,21 @@ mod tests {
 
     fn run() -> ImageRun {
         ImageRun {
-            app: None,
-            api: ImageApi::OpenAi,
-            // Nothing listens here: a call that got as far as the request
-            // fails to connect, which these tests never let it.
-            base_url: "https://127.0.0.1:1".into(),
-            api_key: "sk".into(),
-            model: "gpt-image-2".into(),
+            job: ImageJob {
+                app: None,
+                api: ImageApi::OpenAi,
+                // Nothing listens here: a picture asked for fails to
+                // connect.
+                base_url: "https://127.0.0.1:1".into(),
+                api_key: "sk".into(),
+                model: "gpt-image-2".into(),
+            },
             made: AtomicUsize::new(0),
         }
+    }
+
+    fn picture(id: &str) -> Result<GeneratedImageData, String> {
+        tauri::async_runtime::block_on(ai_generated_image(id.to_string()))
     }
 
     fn call(run: &ImageRun, args: Value, document: &str) -> (Value, bool) {
@@ -586,7 +698,7 @@ mod tests {
     }
 
     #[test]
-    fn a_failed_request_is_recorded_and_told_to_the_model() {
+    fn a_picture_is_made_while_the_reply_goes_on() {
         let run = run();
         let (args, announced) = call(
             &run,
@@ -594,12 +706,50 @@ mod tests {
             DOC,
         );
         assert!(announced);
-        let text = generate_image_text(&args);
-        assert!(
-            text.starts_with("Not generated: Couldn't reach the image service"),
-            "{text}"
+        // Returned at once, with the frame's shape, before any answer.
+        let image = &args["image"];
+        assert_eq!(image["pending"], true);
+        assert_eq!(
+            (image["width"].as_u64(), image["height"].as_u64()),
+            (Some(1536), Some(1024))
         );
-        assert!(text.contains("don't change the description"));
+        let text = generate_image_text(&args);
+        assert!(text.starts_with("Image proposed and being made"), "{text}");
+        assert!(text.contains("don't wait for it"));
+        // Nothing answers here: the frame learns why.
+        let why = picture(image["id"].as_str().unwrap()).unwrap_err();
+        assert!(why.starts_with("Couldn't reach the image service"), "{why}");
+    }
+
+    #[test]
+    fn the_frame_waits_for_the_picture_and_gets_it() {
+        let id = begin();
+        assert!(look(&id).is_none());
+        let waiting = std::thread::spawn({
+            let id = id.clone();
+            move || picture(&id)
+        });
+        std::thread::sleep(std::time::Duration::from_millis(400));
+        finish(
+            &id,
+            Slot::Ready(GeneratedImage {
+                bytes: vec![1, 2, 3],
+                mime: "image/png",
+                ext: "png",
+                width: 4,
+                height: 3,
+            }),
+        );
+        let data = waiting.join().unwrap().unwrap();
+        assert_eq!((data.data_base64.as_str(), data.width), ("AQID", 4));
+    }
+
+    #[test]
+    fn a_picture_let_go_while_painting_stays_gone() {
+        let id = begin();
+        ai_discard_generated_image(id.clone());
+        finish(&id, Slot::Failed("late".into()));
+        assert!(picture(&id).unwrap_err().contains("no longer available"));
     }
 
     #[test]
@@ -619,14 +769,18 @@ mod tests {
 
     #[test]
     fn a_kept_picture_is_proposed_and_can_be_let_go() {
-        let id = keep(GeneratedImage {
-            bytes: vec![1, 2, 3],
-            mime: "image/png",
-            ext: "png",
-            width: 4,
-            height: 3,
-        });
-        let data = ai_generated_image(id.clone()).unwrap();
+        let id = begin();
+        finish(
+            &id,
+            Slot::Ready(GeneratedImage {
+                bytes: vec![1, 2, 3],
+                mime: "image/png",
+                ext: "png",
+                width: 4,
+                height: 3,
+            }),
+        );
+        let data = picture(&id).unwrap();
         assert_eq!(
             (data.mime, data.data_base64.as_str()),
             ("image/png", "AQID")
@@ -635,7 +789,7 @@ mod tests {
         assert!(text.starts_with("Image proposed"), "{text}");
         assert!(text.contains("4 x 3 pixels"));
         ai_discard_generated_image(id.clone());
-        assert!(ai_generated_image(id).is_err());
+        assert!(picture(&id).is_err());
     }
 
     #[test]

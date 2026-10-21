@@ -1,0 +1,130 @@
+/* A picture still being made (pending-picture.ts): a frame in its shape,
+   three soft colours drifting under a passing sheen, after #221 by
+   Zhuohang Jiang. As wide as the picture will be once accepted
+   (.image-view), so nothing moves when it comes. */
+.pending-picture {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--md-radius);
+  background: color-mix(
+    in srgb,
+    var(--editor-text) 5%,
+    var(--editor-bg, var(--bg))
+  );
+  user-select: none;
+}
+
+.pending-picture-blob {
+  position: absolute;
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  /* Soft edges from the gradient itself: no blur to run every frame. */
+  background: radial-gradient(
+    closest-side,
+    var(--pending-picture-blob, var(--editor-accent, var(--chrome-primary))),
+    transparent
+  );
+  opacity: 0.4;
+  animation: pending-picture-drift 7.2s var(--ease-in-out) infinite alternate;
+  animation-delay: var(--pending-picture-phase, 0ms);
+}
+
+.pending-picture-blob:nth-child(1) {
+  top: -15%;
+  left: -15%;
+}
+
+.pending-picture-blob:nth-child(2) {
+  right: -20%;
+  top: 25%;
+  --pending-picture-blob: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 40%,
+    var(--warning-color)
+  );
+  animation-duration: 8.4s;
+}
+
+.pending-picture-blob:nth-child(3) {
+  left: 10%;
+  bottom: -30%;
+  --pending-picture-blob: color-mix(
+    in srgb,
+    var(--editor-accent, var(--chrome-primary)) 40%,
+    var(--success-color)
+  );
+  animation-duration: 9.6s;
+}
+
+@keyframes pending-picture-drift {
+  to {
+    transform: translate(18%, 14%) scale(1.15);
+  }
+}
+
+.pending-picture::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    color-mix(in srgb, var(--editor-bg, var(--bg)) 55%, transparent) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  animation: pending-picture-sheen 2.4s var(--ease-in-out) infinite;
+  animation-delay: var(--pending-picture-phase, 0ms);
+}
+
+@keyframes pending-picture-sheen {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Not made: the frame holds still and says why. */
+.pending-picture-failed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  border: 1px dashed var(--editor-border);
+  background: none;
+}
+
+.pending-picture-failed::after {
+  content: none;
+}
+
+.pending-picture-why {
+  font-size: var(--text-sm);
+  color: var(--editor-muted);
+  text-align: center;
+}
+
+/* The chat's proposal card shows it small, as .agent-proposal-picture. */
+.agent-proposal-picture-frame {
+  width: 160px;
+  height: 120px;
+  aspect-ratio: auto;
+  border-radius: var(--radius-small);
+}
+
+.agent-proposal-picture-failed {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--editor-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pending-picture-blob,
+  .pending-picture::after {
+    animation: none;
+  }
+}
