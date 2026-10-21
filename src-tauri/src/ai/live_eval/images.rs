@@ -195,3 +195,45 @@ fn an_empty_page_gets_its_text_and_its_picture() {
         }
     }
 }
+
+/** A long piece with two pictures: both asked for, each put in the text
+ *  once, where it goes. */
+#[test]
+#[ignore = "live API - see module docs"]
+fn a_long_piece_gets_both_its_pictures_each_once() {
+    let started = std::time::Instant::now();
+    let calls = write_with_picture(
+        "写一篇 1200 字左右的文章，讲一个港口的四季，配两张图。",
+        "zh",
+    );
+    if calls.is_empty() {
+        return;
+    }
+    eprintln!(
+        "live_eval: the request took {:.1} s",
+        started.elapsed().as_secs_f64()
+    );
+    let ids: Vec<String> = calls
+        .iter()
+        .filter(|c| c["name"] == "generate_image" && c["args"]["action"] == "in_text")
+        .filter_map(|c| c["args"]["image"]["id"].as_str().map(str::to_string))
+        .collect();
+    assert_eq!(ids.len(), 2, "{ids:?}");
+    let text: String = calls
+        .iter()
+        .filter(|c| {
+            c["name"] == "propose_edit"
+                && c["result"]
+                    .as_str()
+                    .is_some_and(|r| r.starts_with("Edit proposed"))
+        })
+        .filter_map(|c| c["args"]["text"].as_str())
+        .collect();
+    for id in &ids {
+        assert_eq!(
+            text.matches(&format!("textus-generated:{id})")).count(),
+            1,
+            "{id} in {text}"
+        );
+    }
+}

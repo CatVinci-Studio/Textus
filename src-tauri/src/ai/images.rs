@@ -457,7 +457,15 @@ impl ImageRun {
             Err(why) => Err(why),
             Ok((prompt, aspect)) => {
                 announce();
-                Ok(self.start(prompt, aspect))
+                let started = self.start(prompt, aspect);
+                if args.get("action").and_then(Value::as_str) == Some("in_text") {
+                    proposed
+                        .this_request
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .add_picture(started.0.clone());
+                }
+                Ok(started)
             }
         };
         match outcome {
@@ -712,7 +720,18 @@ fn begin() -> String {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or_default();
-    let id = format!("{nanos:x}{:x}", NEXT.fetch_add(1, Ordering::Relaxed));
+    // Short, and unlike the one before: the model copies it into its text,
+    // and two long ids differing in their last digits were copied wrong
+    // (one picture drawn in two places). Six letters and digits from a
+    // mix of the time and a counter.
+    let mut x = (nanos as u64) ^ ((NEXT.fetch_add(1, Ordering::Relaxed) as u64) << 40);
+    x = (x ^ (x >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+    x = (x ^ (x >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
+    x ^= x >> 31;
+    const DIGITS: &[u8] = b"0123456789abcdefghijklmnopqrstuvwxyz";
+    let id: String = (0..6)
+        .map(|i| DIGITS[((x >> (i * 6)) % 36) as usize] as char)
+        .collect();
     let mut pending = pending();
     pending.push((id.clone(), Slot::Making));
     while pending.len() > PENDING_COUNT

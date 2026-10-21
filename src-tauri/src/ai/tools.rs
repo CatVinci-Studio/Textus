@@ -53,9 +53,50 @@ pub struct ProposalLedger {
     /// The new text of each proposal made: a picture may go next to a
     /// paragraph of it (ai::images), though it isn't in the document yet.
     texts: Vec<String>,
+    /// The pictures this request asked for to put in its text
+    /// (generate_image's in_text), by id.
+    pictures: Vec<String>,
 }
 
 impl ProposalLedger {
+    /// A picture asked for to go in text this request proposes.
+    pub fn add_picture(&mut self, id: String) {
+        self.pictures.push(id);
+    }
+
+    /// Why `text`'s pictures can't stand: one put in twice, or one this
+    /// request never asked for - a long id copied wrong drew one picture
+    /// in two places. None when they can, or none were asked for.
+    fn pictures_problem(&self, text: &str) -> Option<String> {
+        if self.pictures.is_empty() {
+            return None;
+        }
+        let mut used: Vec<&str> = Vec::new();
+        for (at, _) in text.match_indices("textus-generated:") {
+            let id: String = text[at + "textus-generated:".len()..]
+                .chars()
+                .take_while(|c| c.is_ascii_alphanumeric())
+                .collect();
+            let Some(known) = self.pictures.iter().find(|p| **p == id) else {
+                let missing: Vec<&str> = self.pictures.iter().map(String::as_str).collect();
+                return Some(format!("Not proposed: `textus-generated:{id}` is no picture of this request. Put each picture's Markdown exactly as generate_image gave it: {}.", missing.join(", ")));
+            };
+            if used.contains(&known.as_str()) {
+                let left: Vec<&str> = self
+                    .pictures
+                    .iter()
+                    .map(String::as_str)
+                    .filter(|p| !used.contains(p) && *p != known)
+                    .collect();
+                return Some(format!(
+                    "Not proposed: the picture `{id}` is in the text twice. Each picture goes in once{} - send the text again with each in its place.",
+                    if left.is_empty() { String::new() } else { format!("; not placed yet: {}", left.join(", ")) }
+                ));
+            }
+            used.push(known);
+        }
+        None
+    }
     /// The new text of each proposal this request has made, in order.
     pub fn texts(&self) -> &[String] {
         &self.texts
@@ -444,6 +485,9 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     // integration, skill/zh/slash).
     if !text.is_empty() {
         let mut ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(problem) = ledger.pictures_problem(text) {
+            return problem;
+        }
         ledger.texts.push(text.to_string());
     }
     format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{size} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
@@ -2091,5 +2135,22 @@ mod tests {
             r#"{"action":"replace","anchor":"Textus","text":"It","context":"is fast"}"#,
         );
         assert!(anchor_free.contains("`context`"), "{anchor_free}");
+    }
+
+    #[test]
+    fn a_text_puts_each_picture_it_was_given_in_once() {
+        let mut ledger = ProposalLedger::default();
+        assert_eq!(ledger.pictures_problem("![a](textus-generated:zz)"), None);
+        ledger.add_picture("k3f9qz".into());
+        ledger.add_picture("p08mxa".into());
+        let both = "One.\n\n![a](textus-generated:k3f9qz)\n\nTwo.\n\n![b](textus-generated:p08mxa)";
+        assert_eq!(ledger.pictures_problem(both), None);
+        let twice = "![a](textus-generated:k3f9qz)\n\n![b](textus-generated:k3f9qz)";
+        let why = ledger.pictures_problem(twice).unwrap();
+        assert!(why.contains("twice") && why.contains("p08mxa"), "{why}");
+        let wrong = ledger
+            .pictures_problem("![a](textus-generated:k3f9qy)")
+            .unwrap();
+        assert!(wrong.contains("no picture of this request"), "{wrong}");
     }
 }

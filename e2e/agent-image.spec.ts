@@ -89,7 +89,7 @@ test("a proposed picture shows in place, and only Accept saves it", async ({
   await propose(page);
   await expect(page.locator(pending)).toHaveAttribute(
     "src",
-    /^data:image\/png/,
+    /^blob:/,
   );
   await expect(page.locator(".agent-proposal-picture")).toHaveCount(1);
   expect(await calls(page, "save_pasted_image")).toHaveLength(0);
@@ -288,7 +288,7 @@ test("text and a picture come together: the text at once, the picture's frame un
   // The picture takes its place once it comes.
   await expect(page.locator(pending)).toHaveAttribute(
     "src",
-    /^data:image\/png/,
+    /^blob:/,
     { timeout: 10_000 },
   );
   await expect(frame).toHaveCount(0);
@@ -395,7 +395,7 @@ test("a picture asked for before its text is in that text: one proposal, its fra
   // The picture comes in place, and only then can the text be accepted.
   await expect(proposal.locator("img")).toHaveAttribute(
     "src",
-    /^data:image\/png/,
+    /^blob:/,
     { timeout: 10_000 },
   );
   await expect(accept).toBeEnabled();
@@ -988,6 +988,6 @@ test("a revision card shows a redone picture's pictures, not their Markdown", as
   });
   await expect(card.locator("> img.revision-note-picture")).toHaveAttribute(
     "src",
-    /^data:image\/png/,
+    /^blob:/,
   );
 });

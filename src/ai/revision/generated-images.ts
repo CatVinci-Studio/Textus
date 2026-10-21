@@ -16,7 +16,22 @@ export function generatedImageSrc(id: string): string {
   return `${PREFIX}${id}`;
 }
 
-const PLACEHOLDER = /textus-generated:([0-9a-z]+)/g;
+/** A whole placeholder: its id up to the src's closing parenthesis - not
+ *  the start of one a stream has typed only so far. */
+const PLACEHOLDER = /textus-generated:([0-9a-z]+)(?=[)>\s"])/g;
+
+/** A picture as a blob: URL - a few dozen characters standing for its
+ *  bytes, decoded once - for the preview to draw it by. A data: URL put
+ *  the whole picture, megabytes of base64, into the Markdown each frame
+ *  of the typewriter parsed again and each <img> it made decoded again:
+ *  the window stalled for seconds while a long text with pictures
+ *  streamed in. */
+function blobUrl(data: GeneratedImageData): string {
+  const binary = atob(data.dataBase64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return URL.createObjectURL(new Blob([bytes], { type: data.mime }));
+}
 
 /** An image on its own as alt text, without what would end it early. */
 function cleanAlt(alt: string): string {
@@ -88,10 +103,7 @@ export function loadGeneratedImage(id: string): Promise<boolean> {
     pending = ai
       .generatedImage(id)
       .then((data) => {
-        loaded.set(id, {
-          ...data,
-          url: `data:${data.mime};base64,${data.dataBase64}`,
-        });
+        loaded.set(id, { ...data, url: blobUrl(data) });
         return true;
       })
       .catch((err: unknown) => {
@@ -246,6 +258,8 @@ export function rememberSaved(id: string, src: string): void {
 /** Lets a picture go everywhere: its proposal was rejected. */
 export function discardGeneratedImage(id: string): void {
   if (saved.has(id)) return;
+  const url = loaded.get(id)?.url;
+  if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
   loaded.delete(id);
   void ai.discardGeneratedImage(id).catch(() => {});
 }
