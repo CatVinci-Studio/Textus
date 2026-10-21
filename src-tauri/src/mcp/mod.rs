@@ -428,6 +428,39 @@ rl.on("line", (line) => {
         let _ = std::fs::remove_file(&script);
     }
 
+    /// The official Memory server, fetched by npx: a real server's
+    /// handshake, tool list and a call. Needs the network.
+    ///   cargo test --lib mcp::tests::a_published_server -- --ignored --nocapture
+    #[test]
+    #[ignore = "live: downloads @modelcontextprotocol/server-memory"]
+    fn a_published_server_answers_as_ours_does() {
+        tauri::async_runtime::block_on(async {
+            let connection = Connection::open(&Endpoint::Command {
+                program: "npx".into(),
+                args: vec!["-y".into(), "@modelcontextprotocol/server-memory".into()],
+                env: vec![(
+                    "MEMORY_FILE_PATH".into(),
+                    std::env::temp_dir()
+                        .join(format!("textus-mcp-memory-{}.json", std::process::id()))
+                        .to_string_lossy()
+                        .to_string(),
+                )],
+            })
+            .await
+            .unwrap();
+            let tools = connection.list_tools().await.unwrap();
+            eprintln!(
+                "{}: {:?}",
+                connection.server,
+                tools.iter().map(|t| &t.name).collect::<Vec<_>>()
+            );
+            assert!(tools.iter().any(|t| t.name == "read_graph"));
+            let (text, failed) = connection.call_tool("read_graph", json!({})).await.unwrap();
+            assert!(!failed, "{text}");
+            assert!(text.contains("entities"), "{text}");
+        });
+    }
+
     #[test]
     fn a_command_not_installed_says_so() {
         let failed = tauri::async_runtime::block_on(Connection::open(&Endpoint::Command {
