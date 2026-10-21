@@ -158,7 +158,9 @@ A few things make a pull request easy for us to say yes to:
 - If it touches drafts or anything that could lose someone's writing, a
   line on what you tried by hand.
 - It leaves CI and the test setup alone. If a check looks wrong, open a
-  separate pull request about the check.
+  separate pull request about the check. From a fork, a pull request that
+  changes `.github/` or the test configuration fails the `ci-config` check
+  on purpose, and asks the maintainers for a review: we take it from there.
 
 CI has to pass before we can merge, and a maintainer reviews
 every pull request. We try to answer within a few days. If we haven't, a
