@@ -120,9 +120,7 @@ says how the two lines work.
 - **Plugins**, and Textus AI can write a plugin for you. A plugin can add
   commands and shortcuts, items in the right-click menu, sidebar tabs and
   Settings pages, and open views of its own - a web page, a PDF, a Word or
-  other document. The API's first draft is
-  [docs/dev/plugin-api.md](docs/dev/plugin-api.md). What every plugin has to
-  keep to:
+  other document. What every plugin has to keep to:
   - It runs in a sandbox and gets only the permissions you grant when you
     install it - reading or writing a folder, the network - and asks again
     if an update wants more.
