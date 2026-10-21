@@ -83,6 +83,31 @@ jobs:
             node scripts/ci-changes.mjs --base "$PUSH_BASE" --push >> "$GITHUB_OUTPUT"
           fi
 
+  # A fork's pull request that changes CI or the test configuration fails
+  # here, for a maintainer to read that part first: the base's copy of
+  # scripts/guard-ci-config.mjs, run against the pull request's head, so
+  # the guard itself can't be changed to pass. A required check - taken out
+  # of the workflow, it never reports and the pull request can't merge.
+  # Skipped (and so passed) for branches of this repository.
+  ci-config:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          git fetch --no-tags origin "pull/$NUMBER/head:refs/remotes/pr/head"
+          node scripts/guard-ci-config.mjs --base "$BASE" --head refs/remotes/pr/head
+
   check:
     needs: changes
     runs-on: ubuntu-22.04
