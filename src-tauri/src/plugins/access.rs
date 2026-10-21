@@ -99,7 +99,9 @@ fn plugin_home(app: &tauri::AppHandle, state: &PluginsState, id: &str) -> Result
 }
 
 async fn read_bytes(path: PathBuf) -> Result<Response, String> {
-    let meta = tokio::fs::metadata(&path).await.map_err(|e| e.to_string())?;
+    let meta = tokio::fs::metadata(&path)
+        .await
+        .map_err(|e| e.to_string())?;
     if meta.len() > MAX_READ_BYTES {
         return Err("The file is too big to open here.".to_string());
     }
@@ -110,7 +112,11 @@ async fn read_bytes(path: PathBuf) -> Result<Response, String> {
 /// One of the plugin's own files - its code, a stylesheet, an icon. Read
 /// even while it is off, so Settings can show its icon.
 #[tauri::command]
-pub async fn plugin_file(app: tauri::AppHandle, id: String, rel: String) -> Result<Response, String> {
+pub async fn plugin_file(
+    app: tauri::AppHandle,
+    id: String,
+    rel: String,
+) -> Result<Response, String> {
     let state = state::read(&app);
     let home = plugin_home(&app, &state, &id)?;
     let path = inside(&home, Path::new(&rel))?;
@@ -127,7 +133,10 @@ pub async fn plugin_read_resource(
 ) -> Result<Response, String> {
     running(&state::read(&app), &id)?;
     let path = PathBuf::from(path);
-    require_not_app_data(&app, &std::fs::canonicalize(&path).map_err(|e| e.to_string())?)?;
+    require_not_app_data(
+        &app,
+        &std::fs::canonicalize(&path).map_err(|e| e.to_string())?,
+    )?;
     read_bytes(path).await
 }
 
@@ -192,7 +201,7 @@ pub async fn plugin_fs_list(
                 .map(|d| d.as_millis() as f64),
         });
     }
-    out.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    out.sort_by_key(|e| e.name.to_lowercase());
     Ok(out)
 }
 
@@ -219,32 +228,39 @@ pub async fn plugin_fs_write(
         contents.into_bytes()
     };
     if let Some(parent) = path.parent() {
-        tokio::fs::create_dir_all(parent).await.map_err(|e| e.to_string())?;
+        tokio::fs::create_dir_all(parent)
+            .await
+            .map_err(|e| e.to_string())?;
     }
-    crate::atomic::write(&path, bytes).await.map_err(|e| e.to_string())
+    crate::atomic::write(&path, bytes)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 /// Whether a `network:` grant covers `host` (and `port`): the host itself,
 /// `host:port`, `*.domain` for its subdomains, or `*` for any.
 fn host_allowed(granted: &[String], host: &str, port: Option<u16>) -> bool {
     let host = host.to_ascii_lowercase();
-    granted.iter().filter_map(|g| g.strip_prefix("network:")).any(|rule| {
-        let rule = rule.to_ascii_lowercase();
-        if rule == "*" {
-            return true;
-        }
-        let (rule_host, rule_port) = match rule.rsplit_once(':') {
-            Some((h, p)) => (h.to_string(), p.parse::<u16>().ok()),
-            None => (rule.clone(), None),
-        };
-        if rule_port.is_some() && rule_port != port {
-            return false;
-        }
-        match rule_host.strip_prefix("*.") {
-            Some(domain) => host == domain || host.ends_with(&format!(".{domain}")),
-            None => host == rule_host,
-        }
-    })
+    granted
+        .iter()
+        .filter_map(|g| g.strip_prefix("network:"))
+        .any(|rule| {
+            let rule = rule.to_ascii_lowercase();
+            if rule == "*" {
+                return true;
+            }
+            let (rule_host, rule_port) = match rule.rsplit_once(':') {
+                Some((h, p)) => (h.to_string(), p.parse::<u16>().ok()),
+                None => (rule.clone(), None),
+            };
+            if rule_port.is_some() && rule_port != port {
+                return false;
+            }
+            match rule_host.strip_prefix("*.") {
+                Some(domain) => host == domain || host.ends_with(&format!(".{domain}")),
+                None => host == rule_host,
+            }
+        })
 }
 
 fn is_this_computer(host: &str) -> bool {
@@ -305,7 +321,10 @@ pub async fn plugin_http(
         .unwrap_or_default();
     let url = reqwest::Url::parse(&request.url).map_err(|e| e.to_string())?;
     if !url_allowed(&granted, &url) {
-        return Err(refused(&id, &format!("network:{}", url.host_str().unwrap_or(""))));
+        return Err(refused(
+            &id,
+            &format!("network:{}", url.host_str().unwrap_or("")),
+        ));
     }
     // A redirect must stay within what was granted too.
     let redirect_grants = granted.clone();
@@ -320,7 +339,12 @@ pub async fn plugin_http(
         .build()
         .map_err(|e| e.to_string())?;
     let method = reqwest::Method::from_bytes(
-        request.method.as_deref().unwrap_or("GET").to_ascii_uppercase().as_bytes(),
+        request
+            .method
+            .as_deref()
+            .unwrap_or("GET")
+            .to_ascii_uppercase()
+            .as_bytes(),
     )
     .map_err(|e| e.to_string())?;
     let mut builder = client.request(method, url);
@@ -436,7 +460,11 @@ mod tests {
 
     #[test]
     fn hosts_match_their_grants() {
-        let g = grants(&["network:api.zotero.org", "network:*.wikipedia.org", "network:localhost:23119"]);
+        let g = grants(&[
+            "network:api.zotero.org",
+            "network:*.wikipedia.org",
+            "network:localhost:23119",
+        ]);
         assert!(host_allowed(&g, "api.zotero.org", Some(443)));
         assert!(host_allowed(&g, "en.wikipedia.org", Some(443)));
         assert!(host_allowed(&g, "wikipedia.org", Some(443)));
@@ -444,7 +472,11 @@ mod tests {
         assert!(host_allowed(&g, "localhost", Some(23119)));
         assert!(!host_allowed(&g, "localhost", Some(8080)));
         assert!(!host_allowed(&g, "example.com", Some(443)));
-        assert!(host_allowed(&grants(&["network:*"]), "example.com", Some(443)));
+        assert!(host_allowed(
+            &grants(&["network:*"]),
+            "example.com",
+            Some(443)
+        ));
     }
 
     #[test]

@@ -38,8 +38,7 @@ struct ManifestId {
 fn read_manifest(dir: &Path) -> Result<(ManifestId, String), String> {
     let text = std::fs::read_to_string(dir.join(MANIFEST))
         .map_err(|_| format!("No {MANIFEST} in {}.", dir.display()))?;
-    let head: ManifestId =
-        serde_json::from_str(&text).map_err(|e| format!("{MANIFEST}: {e}"))?;
+    let head: ManifestId = serde_json::from_str(&text).map_err(|e| format!("{MANIFEST}: {e}"))?;
     require_id(&head.id)?;
     if head.version.trim().is_empty() {
         return Err(format!("{MANIFEST}: no version."));
@@ -97,7 +96,10 @@ pub fn plugins_installed(app: tauri::AppHandle) -> Result<Vec<InstalledPlugin>, 
 /// left as they were: a new plugin starts off, and the window asks for the
 /// permissions of one that wants more than it was granted.
 #[tauri::command]
-pub async fn plugin_install(app: tauri::AppHandle, path: String) -> Result<InstalledPlugin, String> {
+pub async fn plugin_install(
+    app: tauri::AppHandle,
+    path: String,
+) -> Result<InstalledPlugin, String> {
     tauri::async_runtime::spawn_blocking(move || install_sync(&app, Path::new(&path)))
         .await
         .map_err(|e| e.to_string())?
@@ -162,7 +164,10 @@ fn plugin_dir_in(dir: &Path) -> Result<PathBuf, String> {
 
 fn copy_dir(from: &Path, to: &Path, total: &mut u64) -> Result<(), String> {
     std::fs::create_dir_all(to).map_err(|e| e.to_string())?;
-    for entry in std::fs::read_dir(from).map_err(|e| e.to_string())?.flatten() {
+    for entry in std::fs::read_dir(from)
+        .map_err(|e| e.to_string())?
+        .flatten()
+    {
         let name = entry.file_name();
         // A developer's checkout: its git folder and installed packages
         // aren't the plugin.
@@ -187,8 +192,8 @@ fn copy_dir(from: &Path, to: &Path, total: &mut u64) -> Result<(), String> {
 
 fn unzip(file: &Path, to: &Path) -> Result<(), String> {
     let reader = std::fs::File::open(file).map_err(|e| e.to_string())?;
-    let mut archive =
-        zip::ZipArchive::new(reader).map_err(|_| "Not a plugin package (.textusplugin).".to_string())?;
+    let mut archive = zip::ZipArchive::new(reader)
+        .map_err(|_| "Not a plugin package (.textusplugin).".to_string())?;
     let mut total = 0u64;
     for i in 0..archive.len() {
         let mut entry = archive.by_index(i).map_err(|e| e.to_string())?;
@@ -313,7 +318,10 @@ mod tests {
         assert_eq!(plugin_dir_in(tmp.path()).unwrap(), tmp.path());
         let outer = tempfile::tempdir().unwrap();
         manifest(&outer.path().join("inner"), "a.b");
-        assert_eq!(plugin_dir_in(outer.path()).unwrap(), outer.path().join("inner"));
+        assert_eq!(
+            plugin_dir_in(outer.path()).unwrap(),
+            outer.path().join("inner")
+        );
         let empty = tempfile::tempdir().unwrap();
         assert!(plugin_dir_in(empty.path()).is_err());
     }
