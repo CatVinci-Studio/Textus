@@ -13,7 +13,7 @@
 
 ## 下一个版本（1.2.0）
 
-Textus AI 能做的更多，编辑器更顺手，也修了很多问题。现在正在 beta 通道发候选版（rc）。
+Textus AI 能做的更多，编辑器更顺手，也修了很多问题。现在正在 beta 通道发候选版（rc）。这是最后一个用 rc 的版本：从 1.3 开始，新版本先以 beta 发布试用。
 
 - **在侧边栏打开整个文件夹**，并用 `Ctrl/⌘ + Shift + O` 搜索里面的文件名。[#152](https://github.com/CatVinci-Studio/Textus/issues/152)、[#79](https://github.com/CatVinci-Studio/Textus/issues/79)
 - **保存时只改你编辑过的地方。** 没动过的段落按原样写回，和 Git 一起用时改动一目了然。双链（`[[笔记]]`、`[[笔记#标题]]`）可以点开，双链和 `#标签` 都原样保存。[#234](https://github.com/CatVinci-Studio/Textus/pull/234)
