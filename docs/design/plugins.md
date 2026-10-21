@@ -1,8 +1,11 @@
 # Plugins and the market (design, 1.3)
 
-Status: built in 1.3.0-beta.1 (the market comes in a later beta). The registries it builds on shipped in 1.2
-([docs/dev/plugin-api.md](../dev/plugin-api.md)); everything else here is
-to be built. The model is VS Code's - a manifest that declares what a
+Status: sections 1-6 are built in 1.3.0-beta.1, on the registries that
+shipped in 1.2 ([docs/dev/plugin-api.md](../dev/plugin-api.md)); a
+plugin's author reads [docs/dev/writing-plugins.md](../dev/writing-plugins.md).
+The market (section 7), `aiTools`, `slashCommands`, `codeBlockRenderers`,
+importers, exporters, templates and plugin themes come in later betas.
+The model is VS Code's - a manifest that declares what a
 plugin adds, code that loads only when it is needed, an extension host apart
 from the window, webviews for anything a plugin draws - adapted to an
 editor that must stay small, fast and safe with a writer's documents.
