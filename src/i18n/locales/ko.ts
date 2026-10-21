@@ -10,6 +10,7 @@ export default {
   textusAiOffHint:
     "꺼져 있는 동안에는 어떤 AI 서비스에도 아무것도 보내지 않습니다.",
   textusAiMenuHint: "오른쪽 클릭으로 일시 중지하거나 끄기",
+  textusAiClosePanel: "패널 닫기",
   textusAiPause: "1시간 일시 중지",
   textusAiTurnOff: `${AI_NAME} 끄기`,
   textusAiPausedTooltip: `${AI_NAME} {time}까지 일시 중지됨 · 클릭하여 켜기`,
