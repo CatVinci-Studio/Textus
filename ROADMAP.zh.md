@@ -13,7 +13,7 @@
 
 ## 下一个版本（1.2.0）
 
-Textus AI 能做的更多，编辑器更顺手，也修了很多问题。
+Textus AI 能做的更多，编辑器更顺手，也修了很多问题。现在正在 beta 通道发候选版（rc）。这是最后一个用 rc 的版本：从 1.3 开始，新版本先以 beta 发布试用。
 
 - **在侧边栏打开整个文件夹**，并用 `Ctrl/⌘ + Shift + O` 搜索里面的文件名。[#152](https://github.com/CatVinci-Studio/Textus/issues/152)、[#79](https://github.com/CatVinci-Studio/Textus/issues/79)
 - **保存时只改你编辑过的地方。** 没动过的段落按原样写回，和 Git 一起用时改动一目了然。双链（`[[笔记]]`、`[[笔记#标题]]`）可以点开，双链和 `#标签` 都原样保存。[#234](https://github.com/CatVinci-Studio/Textus/pull/234)
@@ -31,6 +31,11 @@ Textus AI 能做的更多，编辑器更顺手，也修了很多问题。
 - **在后台保持运行**（需要手动打开），在通知区域、系统托盘或菜单栏显示图标。[#244](https://github.com/CatVinci-Studio/Textus/pull/244)
 - **跳到其他文件里的标题**（[#233](https://github.com/CatVinci-Studio/Textus/pull/233)），重新打开文档时回到上次的位置（[#218](https://github.com/CatVinci-Studio/Textus/issues/218)）。
 - **更多快捷键**、**界面文字大小**、代码块的**复制**按钮和行号、颜色代码前的**色块**，以及可选的**图表引擎**（Mermaid，或更快的 Pele）。[#214](https://github.com/CatVinci-Studio/Textus/issues/214)、[#150](https://github.com/CatVinci-Studio/Textus/issues/150)、[#146](https://github.com/CatVinci-Studio/Textus/issues/146)、[#242](https://github.com/CatVinci-Studio/Textus/pull/242)
+- **侧边栏的文件树变成一个小文件管理器**：新建文档和文件夹、拖动移动、按名称或修改时间排序；窗口栏开头也多了一个侧边栏按钮。
+- **用 ChatGPT 订阅画图**，使用订阅自带的画图额度（实验性），图片服务默认跟随聊天服务；**文字和图片一起生成**，图片生成好之前先显示一个流动的占位框；还能**修改文档里已有的图片**。
+- **导入的主题能覆盖整个窗口**：界面上的每种颜色都来自 Typora 风格主题可以设置的变量。
+
+新功能只在 1.2 这样的小版本里加入，修复版（1.2.x）只修问题。1.2.0 发布后，它的修复以 1.2.x 发出，1.3.0 同时在另一条线上开发，两条线怎么配合见 [docs/dev/releasing.md](docs/dev/releasing.md#branches)。
 
 ## 最近完成
 
@@ -39,15 +44,16 @@ Textus AI 能做的更多，编辑器更顺手，也修了很多问题。
 - **Playground 已上线**：[textus.catvinci.com/playground](https://textus.catvinci.com/playground/)，不用安装就能在浏览器里试试编辑器。[#88](https://github.com/CatVinci-Studio/Textus/issues/88)
 - **主题分享已开放**：在置顶的 issue 里发一条评论，我们看过之后，你的主题就会出现在 [textus.catvinci.com/themes](https://textus.catvinci.com/themes/) 上，大家都能免费下载。[#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
-## 以后：Textus 1.3.0，插件
+## 接下来：Textus 1.3.0，插件
 
-- **插件、插件分享平台和 MCP 分享平台**，Textus AI 也能帮你写插件。每个插件都要遵守这些要求：
+- **插件**，Textus AI 也能帮你写插件。插件可以添加命令和快捷键、右键菜单项、侧边栏标签和设置页，也能打开自己的视图：网页、PDF、Word 等文档。每个插件都要遵守这些要求：
   - 在沙盒里运行，只拿到你安装时允许的权限（读写某个文件夹、联网），更新后要更多权限会重新问你。
   - 不装就不会运行；一个总开关能关掉所有插件，关掉后就和没有插件一样。
   - 装好的插件在你第一次用到时才加载：装多少个，启动都和一个没装时一样快。
   - 出错或拖慢 Textus 的插件会自动停用，并告诉你原因。
   - Textus AI 只有在你允许时才会用插件，而且只能读取或提议：改你的文档仍然是由你确认的提议。
   - 分享平台上的插件和主题一样，由我们看过之后才会上架，发现有害的可以下架。
+- **主题、插件、Skill 和 MCP 的统一市场**，放在一个单独的仓库里，写清楚收录什么、怎么提交、怎么审核。它会取代现在的主题分享页和用来分享主题的置顶 issue。
 - **第一批官方插件**，每一个都和 Textus 本身一样用心做好看：随时速记（[#193](https://github.com/CatVinci-Studio/Textus/issues/193)）、文档的版本历史、SVG 和 PDF 阅读器、图片查看器、日历和每日笔记、任务、看板，以及用于引用文献的 Zotero。
 - **第二版插件接口**，按第一批插件的实际需要来补。
 

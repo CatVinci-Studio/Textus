@@ -5,6 +5,19 @@
 # CI, release and store workflows
 /.github/                          @ChengAoShen @jzzzzh
 
+# What decides what CI runs and passes: the test runners' configs, the
+# change classifier and its guard, the lint and type setup, the Node
+# version (a fork's pull request that changes any of it also fails
+# ci-config - scripts/guard-ci-config.mjs)
+/playwright*.config.ts             @ChengAoShen @jzzzzh
+/vite*.config.ts                   @ChengAoShen @jzzzzh
+/eslint.config.js                  @ChengAoShen @jzzzzh
+/tsconfig*.json                    @ChengAoShen @jzzzzh
+/.nvmrc                            @ChengAoShen @jzzzzh
+/scripts/ci-changes.mjs            @ChengAoShen @jzzzzh
+/scripts/guard-ci-config.mjs       @ChengAoShen @jzzzzh
+/scripts/check-*.mjs               @ChengAoShen @jzzzzh
+
 # Release tooling: versions, the updater manifest, the download mirror
 /scripts/check-versions.mjs        @ChengAoShen @jzzzzh
 /scripts/updater-manifest.mjs      @ChengAoShen @jzzzzh

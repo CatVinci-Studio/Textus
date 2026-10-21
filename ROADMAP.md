@@ -20,6 +20,7 @@ TestFlight for a while and is about to go to review.
 ## In the next release (1.2.0)
 
 Textus AI that can do more, an editor that feels better, and a lot of fixes.
+It is in release candidates now, on the beta channel - the last version to use them: from 1.3, new versions are tried out as betas.
 
 - **Open a whole folder** in the sidebar and search its file names with
   `Ctrl/⌘ + Shift + O`.
@@ -66,9 +67,20 @@ Textus AI that can do more, an editor that feels better, and a lot of fixes.
   [#150](https://github.com/CatVinci-Studio/Textus/issues/150),
   [#146](https://github.com/CatVinci-Studio/Textus/issues/146),
   [#242](https://github.com/CatVinci-Studio/Textus/pull/242)
+- **The sidebar's file tree as a small file manager**: new documents and
+  folders, moving by dragging, sorting by name or date - and a button for
+  the sidebar at the start of the window bar.
+- **Pictures with a ChatGPT plan**, from the plan's own image allowance
+  (experimental), the image service following your chat provider by
+  default; **writing and pictures together**, each picture in a moving frame
+  until it is made; and **changing a picture already in the document**.
+- **Imported themes reach the whole window**: every colour comes from a
+  variable a Typora-style theme can set.
 
 New features come in minor releases like this one; patch releases (1.2.x)
-only fix things.
+only fix things. Once 1.2.0 is out, its fixes ship as 1.2.x while 1.3.0 is
+made beside it - [docs/dev/releasing.md](docs/dev/releasing.md#branches)
+says how the two lines work.
 
 ## Recently done
 
@@ -103,10 +115,12 @@ only fix things.
   [textus.catvinci.com/themes](https://textus.catvinci.com/themes/) for
   everyone, free. [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
-## Later: Textus 1.3.0, plugins
+## Next: Textus 1.3.0, plugins
 
-- **Plugins, a plugin gallery and an MCP gallery**, and Textus AI can write
-  a plugin for you. What every plugin has to keep to:
+- **Plugins**, and Textus AI can write a plugin for you. A plugin can add
+  commands and shortcuts, items in the right-click menu, sidebar tabs and
+  Settings pages, and open views of its own - a web page, a PDF, a Word or
+  other document. What every plugin has to keep to:
   - It runs in a sandbox and gets only the permissions you grant when you
     install it - reading or writing a folder, the network - and asks again
     if an update wants more.
@@ -120,6 +134,10 @@ only fix things.
     propose: a change to your document is a suggestion you accept, as now.
   - Plugins in the gallery are looked over by one of us before they appear,
     like themes, and one that turns out to be harmful can be taken down.
+- **One market for themes, plugins, skills and MCP servers**, in a
+  repository of its own, with written rules for what is accepted, how to
+  send something in and how it is reviewed. It takes over the theme
+  gallery and the pinned issue themes are shared in now.
 - **A first batch of official plugins**, each made with as much care for how
   it looks as Textus itself: quick notes from anywhere
   ([#193](https://github.com/CatVinci-Studio/Textus/issues/193)), version

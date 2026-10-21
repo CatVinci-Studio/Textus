@@ -144,6 +144,13 @@ Fork the repository (or branch from `main` if you have write access), make
 your change, and open a pull request against `main`. A branch name that says
 what it does helps: `fix/pdf-margins`, `feat/sidebar-width`.
 
+`main` is the next version. The version people have installed is
+maintained on its own line, `release/X.Y.x` (`release/1.2.x`), which takes
+fixes only. You don't need to pick: send every pull request to `main`, and
+if it fixes a bug in the released version, say which version in the
+description - we bring the fix to the release line too, with you credited.
+New features ship in the next minor version, never in a patch release.
+
 A few things make a pull request easy for us to say yes to:
 
 - It does one thing, from one branch. Two fixes are two pull requests.
@@ -158,7 +165,9 @@ A few things make a pull request easy for us to say yes to:
 - If it touches drafts or anything that could lose someone's writing, a
   line on what you tried by hand.
 - It leaves CI and the test setup alone. If a check looks wrong, open a
-  separate pull request about the check.
+  separate pull request about the check. From a fork, a pull request that
+  changes `.github/` or the test configuration fails the `ci-config` check
+  on purpose, and asks the maintainers for a review: we take it from there.
 
 CI has to pass before we can merge, and a maintainer reviews
 every pull request. We try to answer within a few days. If we haven't, a
