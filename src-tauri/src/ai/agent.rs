@@ -1066,6 +1066,12 @@ async fn ai_agent_message_inner(
     let web = &web_plan;
     let history = compact_history(web::with_sources_in_text(history));
 
+    // A selected picture is shown to a model that can see, not only its
+    // Markdown: "what's in this picture", "redo it brighter".
+    let mut images = images;
+    if entry.supports_vision {
+        images.extend(selected_picture(&focus, doc_path.as_deref()));
+    }
     // Refuse rather than drop. Sending the images to a provider that can't
     // read them would get an answer confidently written about a picture the
     // model never saw - the frontend hides the attach affordance for these
@@ -1295,6 +1301,33 @@ async fn flattened_chat_turn(
     )
     .await?;
     Ok(vec![user_turn, AgentTurn::assistant(text)])
+}
+
+/// The picture a message's selection is, when it is one picture and
+/// nothing else (`<selected-text>`, src/ai/chat/user-message.ts) whose
+/// file is in the document's folder: PNG, JPEG, GIF or WebP, as view_image
+/// reads them. None for a picture on the web, one outside the folder, or
+/// a selection of anything more.
+fn selected_picture(message: &str, doc_path: Option<&str>) -> Option<ImageAttachment> {
+    let inner = message
+        .strip_prefix("<selected-text>")?
+        .split_once("</selected-text>")?
+        .0
+        .trim();
+    let rest = inner.strip_prefix("![")?;
+    let (_, src) = rest.split_once("](")?;
+    let src = src.strip_suffix(')')?;
+    // A title after the src, `![alt](src "title")`, goes.
+    let src = src.split(" \"").next()?.trim();
+    let src = src
+        .strip_prefix('<')
+        .and_then(|s| s.strip_suffix('>'))
+        .unwrap_or(src);
+    if src.is_empty() || src.contains("://") || src.starts_with("data:") {
+        return None;
+    }
+    let folder = Path::new(doc_path?).parent()?;
+    crate::ai::project::read_image(folder, src).ok()
 }
 
 #[cfg(test)]
@@ -2173,5 +2206,35 @@ mod tests {
         // Without tools there is no remember tool to talk about.
         let flat = build_instructions(&ws, "draft", false, AgentMode::Review, "", "en");
         assert!(flat.contains("Reply briefly.") && !flat.contains("---remembering---"));
+    }
+
+    #[test]
+    fn a_selected_picture_in_the_documents_folder_is_seen() {
+        let dir = std::env::temp_dir().join(format!("textus-selpic-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("assets")).unwrap();
+        // A 1x1 PNG.
+        let png = base64::Engine::decode(
+            &base64::engine::general_purpose::STANDARD,
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+        )
+        .unwrap();
+        std::fs::write(dir.join("assets/boats.png"), png).unwrap();
+        let doc = dir.join("harbour.md");
+        let doc = doc.to_str();
+        let ask = |selection: &str| {
+            selected_picture(
+                &format!("<selected-text>\n{selection}\n</selected-text>\n\nWhat is in it?"),
+                doc,
+            )
+        };
+        let seen = ask("![Boats](assets/boats.png)").expect("the picture");
+        assert_eq!(seen.mime, "image/png");
+        assert!(ask("![Boats](<assets/boats.png> \"Boats\")").is_some());
+        // More than the picture, a picture on the web, or outside the folder.
+        assert!(ask("Look: ![Boats](assets/boats.png)").is_none());
+        assert!(ask("![Boats](https://example.com/boats.png)").is_none());
+        assert!(ask("![Boats](../boats.png)").is_none());
+        assert!(selected_picture("What is in it?", doc).is_none());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

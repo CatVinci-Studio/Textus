@@ -649,6 +649,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     many: "{n} de caracteres selecionados",
     other: "{n} caracteres selecionados",
   },
+  chatSelectedPicture: "Imagem selecionada",
   cut: "Recortar",
   copy: "Copiar",
   copyAsMarkdown: "Copiar como Markdown",

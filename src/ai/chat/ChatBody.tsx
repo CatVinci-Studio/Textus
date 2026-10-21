@@ -1,3 +1,4 @@
+import { pictureSrc } from "../revision/generated-images";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   AgentConversation,
@@ -624,6 +625,7 @@ export function ChatBody({
         docPath={docPath}
         workspaceRoot={workspaceRoot}
         selectedText={selectedText}
+        selectionIsPicture={pictureSrc(selectionMarkdown ?? "") !== null}
         busy={busy}
         labels={labels}
         defaultMode={defaultMode}

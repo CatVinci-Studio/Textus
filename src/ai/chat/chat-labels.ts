@@ -27,6 +27,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     attachmentTruncated: t.chatAttachmentTruncated,
     attachmentNoVision: t.chatAttachmentNoVision,
     selectedChars: (n) => plural(t.chatSelectedChars, n, lang),
+    selectedPicture: t.chatSelectedPicture,
     selectionChip: (n) => plural(t.chatSelectionChip, n, lang),
     proposalTitle: t.agentProposalTitle,
     proposalStatus: {

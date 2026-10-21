@@ -620,6 +620,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   chatHistoryArchived:
     "古い会話はアーカイブに移しました。最新の 500 件を表示しています。",
   chatSelectedChars: { other: "{n} 文字を選択中" },
+  chatSelectedPicture: "画像を選択中",
   cut: "切り取り",
   copy: "コピー",
   copyAsMarkdown: "Markdown としてコピー",

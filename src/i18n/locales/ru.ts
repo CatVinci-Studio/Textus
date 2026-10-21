@@ -655,6 +655,7 @@ export default {
     many: "Выделено {n} символов",
     other: "Выделено {n} символа",
   },
+  chatSelectedPicture: "Выбрана картинка",
   cut: "Вырезать",
   copy: "Скопировать",
   copyAsMarkdown: "Копировать как Markdown",

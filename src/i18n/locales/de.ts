@@ -645,6 +645,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     one: "{n} Zeichen ausgewählt",
     other: "{n} Zeichen ausgewählt",
   },
+  chatSelectedPicture: "Bild ausgewählt",
   cut: "Ausschneiden",
   copy: "Kopieren",
   copyAsMarkdown: "Als Markdown kopieren",

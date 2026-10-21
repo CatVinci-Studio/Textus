@@ -637,6 +637,7 @@ type /name in a conversation to use one.
   chatHistoryArchived:
     "Older conversations were moved to the archive; the latest 500 are listed.",
   chatSelectedChars: { one: "{n} char selected", other: "{n} chars selected" },
+  chatSelectedPicture: "Picture selected",
   cut: "Cut",
   copy: "Copy",
   copyAsMarkdown: "Copy as Markdown",

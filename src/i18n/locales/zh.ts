@@ -584,6 +584,7 @@ export default {
   chatHistoryContinueHere: "在此继续",
   chatHistoryArchived: "更早的对话已移入归档，这里列出最近 500 段。",
   chatSelectedChars: { other: "已选择 {n} 字" },
+  chatSelectedPicture: "已选中图片",
   cut: "剪切",
   copy: "复制",
   copyAsMarkdown: "复制为 Markdown",

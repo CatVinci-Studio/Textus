@@ -663,6 +663,7 @@ para usar una.
     many: "{n} de caracteres seleccionados",
     other: "{n} caracteres seleccionados",
   },
+  chatSelectedPicture: "Imagen seleccionada",
   cut: "Cortar",
   copy: "Copiar",
   copyAsMarkdown: "Copiar como Markdown",

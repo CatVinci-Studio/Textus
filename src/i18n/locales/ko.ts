@@ -610,6 +610,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   chatHistoryArchived:
     "이전 대화는 보관함으로 옮겨졌습니다. 최근 500개만 표시됩니다.",
   chatSelectedChars: { other: "{n}자 선택됨" },
+  chatSelectedPicture: "이미지 선택됨",
   cut: "잘라내기",
   copy: "복사",
   copyAsMarkdown: "Markdown으로 복사",

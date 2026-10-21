@@ -668,6 +668,7 @@ utiliser une.
     many: "{n} de caractères sélectionnés",
     other: "{n} caractères sélectionnés",
   },
+  chatSelectedPicture: "Image sélectionnée",
   cut: "Couper",
   copy: "Copier",
   copyAsMarkdown: "Copier en Markdown",
