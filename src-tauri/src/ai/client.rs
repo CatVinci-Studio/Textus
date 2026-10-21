@@ -112,7 +112,7 @@ pub fn set_ai_proxy(proxy: Option<String>) -> Result<(), String> {
 
 // The completion contract, end to end:
 //   - context: the frontend sends the text around the CURSOR - up to the
-//     last 2000 chars before it and the first 500 after (ghost-text-plugin's
+//     last 1500 chars before it and the first 300 after (ghost-text-plugin's
 //     MAX_CONTEXT_CHARS / MAX_AFTER_CONTEXT_CHARS), and outside code only
 //     when some of it is prose (not after a diagram alone). Cursor-
 //     anchored, not document-anchored: completing mid-document must
@@ -127,11 +127,15 @@ pub fn set_ai_proxy(proxy: Option<String>) -> Result<(), String> {
 //     the model, a document opening with a Mermaid diagram (Latin keywords,
 //     no prose) got continuations in a language nobody wrote (Russian, in
 //     a Chinese app).
-//   - length: one sentence for the as-you-type nudge; two to four sentences
-//     when the writer explicitly triggers a continuation.
+//   - length: as the writer types, only the near-certain next words, cut
+//     at the first clause (finish_suggestion), and asked for mid-clause
+//     only - not right after punctuation or in an empty paragraph, where
+//     what comes next is the writer's own choice (ghost-text-plugin); two
+//     to four sentences when the writer explicitly triggers a continuation.
 //   - the join: a word the cursor is in or right after travels in its own
-//     <word-at-cursor> tag, the model writes it out in full, and
-//     fit_to_cursor cuts the typed letters off again (see there for why).
+//     <word-at-cursor> tag - in Chinese and Japanese the clause typed so
+//     far, <clause-at-cursor> - the model writes it out in full, and
+//     fit_to_cursor cuts the typed part off again (see there for why).
 //
 // The live eval (live_eval/completion_matrix.rs) found the rules below
 // that earlier prompts lacked: models never start a reply with a space, so
@@ -144,12 +148,23 @@ pub fn set_ai_proxy(proxy: Option<String>) -> Result<(), String> {
 // and it skipped the repeat for most words, so a cut-off word was split
 // ("docu ment"). Handing the model the word in a tag of its own leaves it
 // nothing to decide.
+//
+// 1.2.0-rc.6 measured what a writer meets, with a typing replay
+// (live_eval/completion_replay.rs: whole documents typed out, a completion
+// at each pause, judged against what the writer wrote next). Half of the
+// one-sentence suggestions were ignored: past the first clause they made up
+// what only the writer knew. They are now the near-certain next words, cut
+// at the first clause, and asked for mid-clause only, where they were
+// useful seven times in ten (after a full stop, three). A short prompt
+// without these rules, and a ✓/? mark of the model's own confidence, were
+// tried and dropped: the first made Haiku skip the word at the cursor and
+// think out loud about format, and it hardly ever marked a guess.
 const COMPLETION_INSTRUCTIONS: &str = "You are the inline autocomplete of a markdown writing app. When the writer pauses, you propose the words they would most plausibly write next; they see it as grey text and accept it with Tab.
 
-The input marks the insertion point: <text-before-cursor> ends exactly at the cursor and <text-after-cursor> starts exactly there (it may be empty). When the cursor is inside a word or right after one, that word is not in <text-before-cursor> but in <word-at-cursor>, which comes right after it: the letters typed so far, with the cursor at their end. When present, <document-title>, <section> (the headings around the cursor, outermost first) and <block> (what the cursor is in) say where in the document this is. The text is plain text with its formatting removed, and what you write is inserted as plain text.
+The input marks the insertion point: <text-before-cursor> ends exactly at the cursor and <text-after-cursor> starts exactly there (it may be empty). When the cursor is inside a word or right after one, that word is not in <text-before-cursor> but in <word-at-cursor>, which comes right after it: the letters typed so far, with the cursor at their end. In Chinese and Japanese the same goes for <clause-at-cursor>. When present, <document-title>, <section> (the headings around the cursor, outermost first) and <block> (what the cursor is in) say where in the document this is. The text is plain text with its formatting removed, and what you write is inserted as plain text.
 
 Write ONLY the text to insert at the cursor:
-- When there is a <word-at-cursor>, start with that word written out in full - the same letters, finished if they are only its beginning - and go on from there; the letters already typed are removed before the writer sees your text. It may already be a whole word (for, de, the): then write it unchanged and continue with the next words. Finish a cut-off word as the word the sentence needs (\"the extra freight co\" is cost or costs). That word alone is never the answer: always add what comes after it. Otherwise start right at the last character.
+- When there is a <word-at-cursor>, start with that word written out in full - the same letters, finished if they are only its beginning - and go on from there; the letters already typed are removed before the writer sees your text. It may already be a whole word (for, de, the): then write it unchanged and continue with the next words. Finish a cut-off word as the word the sentence needs (\"the extra freight co\" is cost or costs). That word alone is never the answer: always add what comes after it. Otherwise start right at the last character. In Chinese and Japanese, which have no spaces to tell a word by, there is a <clause-at-cursor> instead when the cursor is in running text: the characters typed so far in the current clause, which may stop partway through a word. Start your text with them exactly as written and go on from there, finishing a word they break off (所以想把 -> 所以想把提交时间…, 先跑十分 -> 先跑十分钟…); they are removed before the writer sees your text.
 - Move the text forward with what the text already supports: finish the thought, draw the consequence it sets up, give the next step or point it promises. Never invent facts the writer hasn't given - figures, names, dates, times, findings, causes, quotes, product claims, what a cited study or the writer's own interviews or analysis found or did, function or option names: where the next words would need one, stay general (\"move the meeting to another day\", not \"to next Friday\") or stop. In an empty paragraph after a heading or a finished section, open or connect with what the document already says. Never restate, summarize or paraphrase what is already written. Skip generic filler and stock phrases (pivotal, crucial, delve, \"plays a vital role\", \"not just X but Y\", 至关重要, 不仅……更……) unless the writer already writes that way.
 - Write as this writer writes: same language (including any mixing), register, person, tense, terminology and punctuation style, such as full-width punctuation in Chinese - and from the writer's side: in a letter, what they would say to the recipient, never the recipient's reply. In verse, keep each line about as long as the lines around it and don't repeat their words. After a finished sentence, what you write is a new sentence and starts like one, with a capital letter where the script has them.
 - Stay inside the block: in a list item write only the rest of that one item, in a heading only the heading, in a table cell only the cell, in a code block only code in that language and indentation. Never add a line break (except inside code), a list marker or markdown syntax such as backticks or asterisks - outside code, write plain words.
@@ -157,14 +172,14 @@ Write ONLY the text to insert at the cursor:
 - If nothing worthwhile can be added, return nothing.
 Don't wrap your text in quotation marks or code fences, but do close a quotation the writer opened when its sentence ends. No explanations, notes or comments, and no internal or system XML tags: only the words to insert.";
 
-const COMPLETION_LENGTH_SHORT: &str = "Length: one sentence at most - in prose usually 8 to 25 words, or 10 to 40 characters of CJK text. In a list item, table cell, heading or line of verse, write just enough to finish it, about as long as its neighbours. Finishing the current sentence well beats starting a new one.";
+const COMPLETION_LENGTH_SHORT: &str = "Length: only what the text makes near-certain - usually the rest of the current clause or sentence, about 3 to 12 words, or 5 to 20 CJK characters; in a list item, table cell, heading or line of verse, just enough to finish it, about as long as its neighbours. Stop where the next words would be the writer's own choice.";
 
-const COMPLETION_LENGTH_LONG: &str = "Length: the writer explicitly asked for a continuation, so carry the current paragraph on by two to four sentences - roughly 40 to 90 words, or 60 to 160 characters of CJK text. Stay in this paragraph: no new paragraph, heading or list.";
+const COMPLETION_LENGTH_LONG: &str = "The writer asked for a continuation: carry the current paragraph on by two to four sentences - roughly 40 to 90 words, or 60 to 160 CJK characters - moving it forward with what the text already supports. Stay in this paragraph: no new paragraph, heading or list.";
 
 /// What the frontend knows about the cursor beyond the raw text around it
 /// (ghost-text-plugin.ts's completionHints). Mirrors CompletionHints in
 /// platform/ipc.ts.
-#[derive(Deserialize, Default)]
+#[derive(Deserialize, Default, Clone)]
 pub struct CompletionHints {
     #[serde(default)]
     pub(crate) title: Option<String>,
@@ -259,11 +274,38 @@ fn completion_user_text(before: &str, after: &str, hints: &CompletionHints) -> S
             "<text-before-cursor>{}</text-before-cursor>\n<word-at-cursor>{word}</word-at-cursor>\n<text-after-cursor>{after}</text-after-cursor>",
             &before[..before.len() - word.len()]
         )),
-        None => text.push_str(&format!(
-            "<text-before-cursor>{before}</text-before-cursor>\n<text-after-cursor>{after}</text-after-cursor>"
-        )),
+        None => match clause_at_cursor(before) {
+            Some(clause) => text.push_str(&format!(
+                "<text-before-cursor>{}</text-before-cursor>\n<clause-at-cursor>{clause}</clause-at-cursor>\n<text-after-cursor>{after}</text-after-cursor>",
+                &before[..before.len() - clause.len()]
+            )),
+            None => text.push_str(&format!(
+                "<text-before-cursor>{before}</text-before-cursor>\n<text-after-cursor>{after}</text-after-cursor>"
+            )),
+        },
     }
     text
+}
+
+/// Chinese or Japanese typed so far in the clause the cursor ends, at most
+/// its last ten characters: what word_at_cursor is for spaced languages.
+/// Written out again by the model, a word the cursor breaks off comes back
+/// whole - left to start after it, Haiku doubled its first half
+/// ("十分" + "分钟", "想把" + "把…") or ran past it ("就停" + "，走回家")
+/// in the typing replay (live_eval::completion_replay). None after
+/// punctuation or a space, where the clause hasn't begun.
+pub(crate) fn clause_at_cursor(before: &str) -> Option<&str> {
+    let run = |c: char| is_unspaced_script(c) && c.is_alphanumeric();
+    let mut start = before.len();
+    let mut count = 0;
+    for (at, c) in before.char_indices().rev() {
+        if !run(c) || count == 10 {
+            break;
+        }
+        start = at;
+        count += 1;
+    }
+    (count > 0).then(|| &before[start..])
 }
 
 #[tauri::command]
@@ -283,7 +325,6 @@ pub async fn ai_complete(
 ) -> Result<String, String> {
     crate::ai::ensure_on(&app)?;
     let hints = hints.unwrap_or_default();
-    let in_code = hints.block.as_deref() == Some(CODE_BLOCK_HINT);
     let (mut instructions, user_text) =
         completion_prompt(&before, &after, &hints, style.as_deref());
     // The project's style profile and the library entries the surrounding
@@ -292,7 +333,7 @@ pub async fn ai_complete(
     let workspace = cached_workspace(&app, doc_path, workspace_root);
     add_writing_context(&mut instructions, &workspace, &before, &after);
     let raw = call(&app, &provider, instructions, user_text, model.as_deref()).await?;
-    Ok(finish_completion(&before, &after, &raw, in_code))
+    Ok(finish_suggestion(&before, &after, &raw, &hints))
 }
 
 /// The block hint ghost-text-plugin.ts sends for a code block - the one
@@ -423,6 +464,29 @@ fn echoed_len(before: &str, text: &str) -> usize {
     0
 }
 
+/// The reply without what would double up at the join: a clause mark the
+/// text already ends with ("，" after "，"), or an ellipsis it opened
+/// with - the writer's sentence goes straight on. Haiku wrote both after
+/// Chinese clauses in the typing replay (live_eval::completion_replay),
+/// where they read as "120 份，，" and "再提醒……学生".
+fn drop_doubled_lead<'a>(before: &str, text: &'a str) -> &'a str {
+    let text = text
+        .strip_prefix("……")
+        .or_else(|| text.strip_prefix("..."))
+        .or_else(|| text.strip_prefix('…'))
+        .map(|rest| rest.trim_start_matches([' ', '\t']))
+        .unwrap_or(text);
+    match (
+        before.trim_end_matches(' ').chars().last(),
+        text.chars().next(),
+    ) {
+        (Some(last), Some(first)) if last == first && "，,；;、：:".contains(first) => {
+            text[first.len_utf8()..].trim_start_matches([' ', '\t'])
+        }
+        _ => text,
+    }
+}
+
 /// Joins one continuation onto the text before the cursor. The word the
 /// cursor is in or right after went to the model in a tag of its own
 /// (word_at_cursor), to be written out in full: cutting the typed letters
@@ -439,8 +503,11 @@ pub(crate) fn fit_to_cursor(before: &str, text: &str) -> String {
     let text = if before.ends_with('\n') {
         text
     } else {
-        text.trim_start_matches([' ', '\t'])
+        drop_doubled_lead(before, text.trim_start_matches([' ', '\t']))
     };
+    if let Some(rest) = clause_at_cursor(before).and_then(|clause| text.strip_prefix(clause)) {
+        return rest.to_string();
+    }
     let echoed = echoed_len(before, text);
     if echoed > 0 {
         return text[echoed..].to_string();
@@ -616,6 +683,113 @@ fn unwrap_quotes(text: &str) -> &str {
 /// Newlines a candidate ends with only lead into the next separator, so
 /// outside code the last one keeps none: the as-you-type path shows the
 /// reply as it is, and "率\n" in a table cell would insert the line break.
+/// The reply as the editor gets it, for this request (finish_completion):
+/// as the writer types (`length` short, one candidate), only to the end of
+/// its first clause; an explicit continuation as it came.
+pub(crate) fn finish_suggestion(
+    before: &str,
+    after: &str,
+    raw: &str,
+    hints: &CompletionHints,
+) -> String {
+    let in_code = hints.block.as_deref() == Some(CODE_BLOCK_HINT);
+    let as_you_type =
+        hints.length.as_deref() != Some("long") && hints.candidates.is_none_or(|n| n <= 1);
+    if !as_you_type {
+        return finish_completion(before, after, raw, in_code);
+    }
+    let text = finish_completion(before, after, raw, in_code);
+    if in_code {
+        text
+    } else {
+        first_clause(&first_sentence(&text))
+    }
+}
+
+/// `text` up to the end of its first clause once it has a few words, and
+/// never more than a short line. Asked for 5 to 20 characters, Haiku wrote
+/// 20 to 60 more often than not, and what came after the first clause was
+/// where it went its own way: in the typing replay (completion_replay),
+/// suggestions of up to 16 characters were taken nine times in ten, those
+/// past 30 little more than half.
+fn first_clause(text: &str) -> String {
+    const CJK_MIN: usize = 6;
+    const CJK_MAX: usize = 24;
+    const WORDS_MIN: usize = 3;
+    const WORDS_MAX: usize = 15;
+    let chars: Vec<char> = text.chars().collect();
+    let cjk = chars.iter().filter(|c| is_unspaced_script(**c)).count() * 2 > chars.len();
+    let mut letters = 0;
+    let mut words = 0;
+    let mut in_word = false;
+    for (i, &c) in chars.iter().enumerate() {
+        if cjk {
+            if c.is_alphanumeric() {
+                letters += 1;
+            }
+        } else if c.is_alphanumeric() {
+            if !in_word {
+                words += 1;
+            }
+            in_word = true;
+        } else {
+            in_word = false;
+        }
+        let enough = if cjk {
+            letters >= CJK_MIN
+        } else {
+            words >= WORDS_MIN
+        };
+        if enough && "，,；;：:".contains(c) {
+            // The clause and its mark: the writer goes on from there.
+            return chars[..=i].iter().collect();
+        }
+        let too_long = if cjk {
+            letters > CJK_MAX
+        } else {
+            words > WORDS_MAX
+        };
+        if too_long {
+            let cut: String = chars[..i].iter().collect();
+            // Before the word it was in, for the spaced scripts.
+            return if cjk {
+                cut
+            } else {
+                cut.trim_end_matches(|c: char| c.is_alphanumeric())
+                    .trim_end()
+                    .to_string()
+            };
+        }
+    }
+    text.to_string()
+}
+
+/// `text` up to the end of its first sentence - an as-you-type suggestion
+/// is a few words, and what goes past the sentence the writer is in is
+/// what they would have to supply themselves. A full stop counts before a
+/// space or the end, not inside "3.5" or "e.g"; closing quotes and
+/// brackets right after it stay with it.
+fn first_sentence(text: &str) -> String {
+    const CLOSERS: &str = "”’\"')）」』]";
+    let chars: Vec<char> = text.chars().collect();
+    for (i, &c) in chars.iter().enumerate() {
+        if i == 0 || !"。！？….!?".contains(c) {
+            continue;
+        }
+        let mut end = i + 1;
+        while chars.get(end).is_some_and(|n| CLOSERS.contains(*n)) {
+            end += 1;
+        }
+        // A full stop of the spaced scripts ends a sentence before a space
+        // or the end only: "3.5", "e.g." mid-sentence go on.
+        let spaced = matches!(c, '.' | '!' | '?');
+        if !spaced || chars.get(end).is_none_or(|n| n.is_whitespace()) {
+            return chars[..end].iter().collect();
+        }
+    }
+    text.to_string()
+}
+
 pub(crate) fn finish_completion(before: &str, after: &str, raw: &str, in_code: bool) -> String {
     let parts = raw.split(CANDIDATE_SEPARATOR).count();
     raw.split(CANDIDATE_SEPARATOR)
@@ -1279,6 +1453,120 @@ mod tests {
         assert!(!COMPLETION_INSTRUCTIONS
             .chars()
             .any(|c| ('\u{0400}'..='\u{04ff}').contains(&c)));
+    }
+
+    #[test]
+    fn a_chinese_clause_at_the_cursor_is_written_out_and_taken_off() {
+        assert_eq!(
+            clause_at_cursor("告诉自己今天先跑十分"),
+            Some("告诉自己今天先跑十分")
+        );
+        // At most the last ten characters of a long clause.
+        assert_eq!(
+            clause_at_cursor("她每天六点准时出现在操场上的跑道边"),
+            Some("出现在操场上的跑道边")
+        );
+        assert_eq!(clause_at_cursor("好的，"), None);
+        assert_eq!(clause_at_cursor("Rust 重写"), Some("重写"));
+        assert_eq!(clause_at_cursor("the end"), None);
+        let user = completion_user_text("我每天先跑十分", "", &CompletionHints::default());
+        assert!(
+            user.contains("<text-before-cursor></text-before-cursor>"),
+            "{user}"
+        );
+        assert!(
+            user.contains("<clause-at-cursor>我每天先跑十分</clause-at-cursor>"),
+            "{user}"
+        );
+        // Written out again, it is taken off; a whole word comes back whole.
+        assert_eq!(
+            fit_to_cursor("我每天先跑十分", "我每天先跑十分钟就好。"),
+            "钟就好。"
+        );
+        assert_eq!(
+            fit_to_cursor("没", "没想到会坚持这么久。"),
+            "想到会坚持这么久。"
+        );
+    }
+
+    #[test]
+    fn an_as_you_type_suggestion_stops_at_its_first_clause() {
+        let short = CompletionHints {
+            length: Some("short".into()),
+            ..Default::default()
+        };
+        assert_eq!(
+            finish_suggestion(
+                "我每天先跑十分",
+                "",
+                "我每天先跑十分钟就好。后来越跑越远。",
+                &short
+            ),
+            "钟就好。"
+        );
+        assert_eq!(
+            finish_suggestion(
+                "The tide went",
+                "",
+                "went out at dawn. Boats lay still.",
+                &short
+            ),
+            " out at dawn."
+        );
+        assert_eq!(
+            finish_suggestion(
+                "我这边可能",
+                "",
+                "我这边可能需要延期一周，主要是问卷回收比预期慢。",
+                &short
+            ),
+            "需要延期一周，"
+        );
+        assert_eq!(first_clause("跑得不快"), "跑得不快");
+        assert_eq!(
+            first_clause(
+                " and it only drips when the flat above uses water, mostly in the evening"
+            ),
+            " and it only drips when the flat above uses water,"
+        );
+        assert_eq!(
+            first_clause(" one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen"),
+            " one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen"
+        );
+        // "3.5" and a closing quote don't end a sentence early.
+        assert_eq!(
+            first_sentence("version 3.5 is out.” Then"),
+            "version 3.5 is out.”"
+        );
+        // An explicit continuation keeps all its sentences.
+        let long = CompletionHints {
+            length: Some("long".into()),
+            ..Default::default()
+        };
+        assert_eq!(
+            finish_suggestion("The tide went", "", "went out. Boats lay still.", &long),
+            " out. Boats lay still."
+        );
+    }
+
+    #[test]
+    fn nothing_doubles_up_at_the_join() {
+        // A clause mark the text already ends with.
+        assert_eq!(
+            fit_to_cursor("只收回了 120 份，", "，离计划还差不少。"),
+            "离计划还差不少。"
+        );
+        assert_eq!(
+            fit_to_cursor("If all goes well,", ", we finish."),
+            " we finish."
+        );
+        // An ellipsis the reply opened with.
+        assert_eq!(
+            fit_to_cursor("请他们在班会上再提醒", "……学生填写。"),
+            "学生填写。"
+        );
+        // A different mark, or one in the middle, stays.
+        assert_eq!(fit_to_cursor("她笑着说，", "“记不清了。”"), "“记不清了。”");
     }
 
     #[test]

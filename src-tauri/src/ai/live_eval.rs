@@ -45,6 +45,7 @@ mod checks;
 mod checks_builtin;
 mod completion_cases;
 mod completion_matrix;
+mod completion_replay;
 mod continuing;
 mod conventions;
 mod deepseek;

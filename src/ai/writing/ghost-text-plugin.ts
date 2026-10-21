@@ -13,12 +13,17 @@ import { cjkChunk, isCjk, isCjkLetter } from "../../utils/cjk";
 import { headingTrail } from "../doc-markdown";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 
-const DEBOUNCE_MS = 450;
-const MAX_CONTEXT_CHARS = 2000;
-// Look-ahead after the cursor: enough for the model to splice into what
+// A pause, not a breath between words: at 450 ms a request went out at
+// nearly every word, most of them for suggestions the writer had typed
+// past before they came (1.2.0-rc.6).
+const DEBOUNCE_MS = 800;
+// The section around the caret is what the next words follow from; more
+// before it cost on every request and changed little (completion_replay).
+const MAX_CONTEXT_CHARS = 1500;
+// Look-ahead after the cursor: enough for the model to lead into what
 // follows when completing mid-document, small enough not to dominate the
 // prompt.
-const MAX_AFTER_CONTEXT_CHARS = 500;
+const MAX_AFTER_CONTEXT_CHARS = 300;
 
 const ghostTextKey = new PluginKey("ghost-text");
 
@@ -674,13 +679,24 @@ export function createGhostTextPlugin(options: {
                 doc,
                 cursorPos,
               );
-              // The cursor is at the end of its own paragraph, but the
-              // document keeps going right after it (e.g. editing mid-
-              // document) - a suggestion here would be inserted ahead of
-              // content that already continues the thought, so auto-trigger
-              // stays quiet. Manual trigger (triggerGhostTextNow) still
-              // works - that's an explicit ask, not a typing side-effect.
-              if (after.trim()) return;
+              // An empty new paragraph: what it will be about is the
+              // writer's alone - the typing replay found suggestions there
+              // the least useful of all (completion_replay). "Continue
+              // writing" (triggerGhostTextNow) still asks.
+              if ($pos.parent.content.size === 0) return;
+              // Right after punctuation - a full stop, a comma - the next
+              // words are the writer's own choice: suggestions there were
+              // useful three times in ten, mid-clause seven
+              // (completion_replay). Only a pause after a word asks; code
+              // has no such clauses.
+              if (
+                !$pos.parent.type.spec.code &&
+                !/[\p{L}\p{N}]\s?$/u.test(before)
+              )
+                return;
+              // Mid-document, at the end of a paragraph with more after it,
+              // the suggestion leads into what follows (the after-text goes
+              // along); it used to stay quiet there.
               // No minimum context length: completion is opt-in via the
               // Settings toggle already, and gating on word count made the
               // very first sentence of a fresh document (and the onboarding
