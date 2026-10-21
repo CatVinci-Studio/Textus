@@ -503,8 +503,24 @@ impl Stores {
         };
         if pending {
             stores.seed_from_prefs(config_dir);
+            stores.seed_new_profile();
         }
         stores
+    }
+
+    /// What a profile starts with that a profile from before it was added
+    /// doesn't: only the core built-in skills on (ai::builtin::CORE_SKILLS)
+    /// - the rest are added in Settings › Extensions › Skills. A settings
+    /// file that already exists has no such list, and keeps every skill it
+    /// had. In memory until the first write, like seed_from_prefs.
+    fn seed_new_profile(&self) {
+        let mut inner = self.settings.inner.lock().unwrap();
+        let mut seed = Map::new();
+        seed.insert(
+            crate::ai::workspace::DISABLED_BUILTINS_KEY.into(),
+            json!(crate::ai::builtin::optional_skill_names()),
+        );
+        merge_top_level(&mut inner.payload, &seed);
     }
 
     /// Up to 0.9.6 the frontend mirrored two settings into prefs.json for
@@ -1327,8 +1343,40 @@ mod tests {
         // null removes a field.
         stores.patch_settings(&obj(json!({ "zoom": null })));
         assert_eq!(
-            stores.settings.snapshot().0,
+            without_seed(stores.settings.snapshot().0),
             json!({ "theme": "dark", "shortcuts": { "a": "z" } })
+        );
+    }
+
+    /// Settings without what a new profile is seeded with.
+    fn without_seed(mut settings: Value) -> Value {
+        if let Some(map) = settings.as_object_mut() {
+            map.remove(crate::ai::workspace::DISABLED_BUILTINS_KEY);
+        }
+        settings
+    }
+
+    #[test]
+    fn a_new_profile_starts_with_only_the_core_skills_and_an_old_one_keeps_all() {
+        let dir = temp_dir();
+        let stores = Stores::load(&dir, &dir);
+        let off = &stores.settings.snapshot().0[crate::ai::workspace::DISABLED_BUILTINS_KEY];
+        assert_eq!(off, &json!(crate::ai::builtin::optional_skill_names()));
+        // Written out with the first change, as any setting.
+        stores.patch_settings(&obj(json!({ "theme": "dark" })));
+        stores.flush_all();
+        let file = read_file(&settings_path(&dir));
+        assert!(file["settings"][crate::ai::workspace::DISABLED_BUILTINS_KEY].is_array());
+        // A settings file from before the list: nothing turned off.
+        let old = temp_dir();
+        std::fs::write(
+            settings_path(&old),
+            json!({ "schemaVersion": SCHEMA_VERSION, "settings": { "theme": "dark" } }).to_string(),
+        )
+        .unwrap();
+        let stores = Stores::load(&old, &old);
+        assert!(
+            stores.settings.snapshot().0[crate::ai::workspace::DISABLED_BUILTINS_KEY].is_null()
         );
     }
 
@@ -1347,7 +1395,10 @@ mod tests {
         }
         let file = read_file(&settings_path(&dir));
         assert_eq!(file["schemaVersion"], json!(SCHEMA_VERSION));
-        assert_eq!(file["settings"], json!({ "theme": "dark" }));
+        assert_eq!(
+            without_seed(file["settings"].clone()),
+            json!({ "theme": "dark" })
+        );
 
         // An explicit flush (the exit path) writes immediately.
         stores.patch_settings(&obj(json!({ "theme": "light" })));

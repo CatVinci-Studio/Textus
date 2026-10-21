@@ -102,6 +102,24 @@ pub(crate) fn skills() -> &'static [AgentSkill] {
     })
 }
 
+/// The built-in skills a new profile starts with on; the others are added
+/// in Settings › Extensions › Skills. Mirrors CORE_SKILLS in
+/// src/ai/skills/builtin.ts.
+pub(crate) const CORE_SKILLS: &[&str] =
+    &["proofread", "tighten", "expand", "summarize", "translate"];
+
+/// The built-in skills a new profile starts without (the turned-off list
+/// it is given, settings::Stores::load).
+pub(crate) fn optional_skill_names() -> Vec<&'static str> {
+    let mut names: Vec<&str> = skills()
+        .iter()
+        .map(|s| s.name.as_str())
+        .filter(|name| !CORE_SKILLS.contains(name))
+        .collect();
+    names.sort();
+    names
+}
+
 /// The built-in skill called `name`.
 pub(crate) fn find(name: &str) -> Option<&'static AgentSkill> {
     skills().iter().find(|s| s.name == name)
@@ -892,6 +910,16 @@ mod tests {
         let wide = text.chars().filter(|c| (*c as u32) >= 0x2e80).count();
         let narrow = text.chars().count() - wide;
         wide + narrow / 4
+    }
+
+    #[test]
+    fn the_core_skills_are_built_in_and_the_rest_optional() {
+        for name in CORE_SKILLS {
+            assert!(find(name).is_some(), "{name}");
+        }
+        let optional = optional_skill_names();
+        assert_eq!(optional.len() + CORE_SKILLS.len(), skills().len());
+        assert!(!optional.contains(&"proofread"));
     }
 
     #[test]
