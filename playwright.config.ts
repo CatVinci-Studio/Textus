@@ -32,6 +32,7 @@ const playgroundPort = port + 10;
 /** The specs the opt-in WebKit project runs (projects below). */
 const WEBKIT_SPECS = [
   "api-key-field.spec.ts",
+  "sidebar-toggle.spec.ts",
   "tab-scroll.spec.ts",
   "markdown-keys.spec.ts",
   "autopair.spec.ts",
