@@ -1,4 +1,11 @@
-import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   defaultShortcuts,
   useSettings,
@@ -162,6 +169,93 @@ export function ToggleRow({
  * until one is stored, then "Configured" and Clear - the stored value is
  * never read back into the page. The caller stores and clears it.
  */
+/** How a key reads in its field: its first six and last four characters
+ *  around ***, enough to tell which key was pasted without showing it; a
+ *  short one, still being typed, as dots. */
+export function maskKey(key: string): string {
+  if (key.length <= 12) return "•".repeat(key.length);
+  return `${key.slice(0, 6)}***${key.slice(-4)}`;
+}
+
+/** Whether the field's text is selected from end to end (an empty field
+ *  counts: whatever comes in is the whole key). */
+function wholeSelected(el: HTMLInputElement): boolean {
+  return el.selectionStart === 0 && el.selectionEnd === el.value.length;
+}
+
+/**
+ * A key's field, showing it masked (maskKey). A password field drew a
+ * pasted key as a row of dots as long as the key, and offered to save it
+ * as a password. The field holds the mask, so every edit is taken before
+ * the browser makes it: a paste or typing over the whole field replaces
+ * the key, typing at its end adds to it, a deletion takes the last
+ * character, or all of it when all is selected.
+ */
+export function MaskedKeyInput({
+  label,
+  placeholder,
+  value,
+  onChange,
+  className = "settings-text-input api-key-input",
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const latest = useRef({ value, onChange });
+  latest.current = { value, onChange };
+  // React's onBeforeInput is a keypress, not the beforeinput a deletion
+  // also sends.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onBeforeInput = (e: InputEvent) => {
+      if (e.isComposing || e.inputType === "insertFromPaste") return;
+      e.preventDefault();
+      const { value, onChange } = latest.current;
+      const whole = wholeSelected(el) && el.value !== "";
+      if (e.inputType.startsWith("delete")) {
+        onChange(whole ? "" : value.slice(0, -1));
+      } else if (e.data) {
+        onChange(whole ? e.data : value + e.data);
+      }
+    };
+    el.addEventListener("beforeinput", onBeforeInput);
+    return () => el.removeEventListener("beforeinput", onBeforeInput);
+  }, []);
+  return (
+    <input
+      ref={ref}
+      type="text"
+      className={className}
+      aria-label={label}
+      placeholder={placeholder}
+      autoComplete="off"
+      {...VERBATIM_INPUT}
+      value={maskKey(value)}
+      onPaste={(e) => {
+        e.preventDefault();
+        const text = e.clipboardData.getData("text").trim();
+        onChange(wholeSelected(e.currentTarget) ? text : value + text);
+      }}
+      // An edit the browser made anyway (an input method's): the field's
+      // text is the key unless it still holds the mask.
+      onChange={(e) => {
+        const text = e.target.value;
+        if (!text.includes("***") && !text.includes("•")) onChange(text);
+      }}
+      onCopy={(e) => e.preventDefault()}
+      onCut={(e) => {
+        e.preventDefault();
+        if (wholeSelected(e.currentTarget)) onChange("");
+      }}
+    />
+  );
+}
+
 export function SecretInput({
   t,
   label,
@@ -193,13 +287,11 @@ export function SecretInput({
     </div>
   ) : (
     <div className="api-key-input-row">
-      <input
-        type="password"
-        className="settings-text-input api-key-input"
-        aria-label={label}
+      <MaskedKeyInput
+        label={label}
         placeholder={placeholder}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
       />
       <button
         className="text-button settings-inline-button"

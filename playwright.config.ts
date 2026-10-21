@@ -31,6 +31,7 @@ const port = Number(process.env.PLAYWRIGHT_PORT) || 1430;
 const playgroundPort = port + 10;
 /** The specs the opt-in WebKit project runs (projects below). */
 const WEBKIT_SPECS = [
+  "api-key-field.spec.ts",
   "tab-scroll.spec.ts",
   "markdown-keys.spec.ts",
   "autopair.spec.ts",
