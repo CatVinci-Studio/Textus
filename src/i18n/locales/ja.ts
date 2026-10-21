@@ -9,6 +9,7 @@ export default {
   textusAiToggleLabel: `${AI_NAME} を有効にする`,
   textusAiOffHint: "オフの間は、どの AI サービスにも何も送信しません。",
   textusAiMenuHint: "右クリックで一時停止またはオフ",
+  textusAiClosePanel: "パネルを閉じる",
   textusAiPause: "1 時間停止",
   textusAiTurnOff: `${AI_NAME} をオフにする`,
   textusAiPausedTooltip: `${AI_NAME} は {time} まで停止中 · クリックでオン`,

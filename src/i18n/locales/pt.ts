@@ -9,6 +9,7 @@ export default {
   textusAiToggleLabel: `Ativar ${AI_NAME}`,
   textusAiOffHint: "Desativada: nada é enviado a nenhum serviço de IA.",
   textusAiMenuHint: "Clique com o botão direito para pausar ou desativar",
+  textusAiClosePanel: "Fechar o painel",
   textusAiPause: "Pausar por uma hora",
   textusAiTurnOff: `Desativar ${AI_NAME}`,
   textusAiPausedTooltip: `${AI_NAME} está em pausa até {time} · Clique para ativar`,

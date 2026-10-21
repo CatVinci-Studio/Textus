@@ -298,6 +298,31 @@ export function ClipboardTabIcon({ className }: IconProps) {
   );
 }
 
+/** The window bar's toggle for the sidebar: a window with its left pane
+ *  drawn - what pressing it brings back or takes away. */
+export function SidebarToggleIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="15"
+      height="15"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <rect
+        x="1.8"
+        y="2.8"
+        width="12.4"
+        height="10.4"
+        rx="2.2"
+        stroke="currentColor"
+        strokeWidth="1.1"
+      />
+      <path d="M6.2 3.1v9.8" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  );
+}
+
 /** Textus AI's own button - the window bar's toggle for the AI panel, and
  *  the review bar's way back to it on a phone: the app icon's quill as a
  *  silhouette, the tray's (scripts/make-tray-icons.sh) traced with potrace,

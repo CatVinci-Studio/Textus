@@ -4,6 +4,9 @@ import type { MenuChecks } from "./app-menu-model";
 import { AppMenuButton } from "./WindowControls";
 import { Tooltip } from "../ui/Tooltip";
 import { TextusAiButton } from "../ai/TextusAiSwitch";
+import { isIOSApp } from "../platform/capabilities";
+import { SidebarToggleIcon } from "../ui/icons";
+import { useFullscreenMark } from "./useFullscreenMark";
 
 /**
  * The window's one top strip: traffic-light room, which document this
@@ -18,6 +21,11 @@ import { TextusAiButton } from "../ai/TextusAiSwitch";
  * ALSO the caption and the way into the app menu - the two components
  * below render nothing anywhere else, so this stays one strip on
  * every platform. See platform/window-chrome.ts.
+ *
+ * The sidebar's toggle leads the row: just past the traffic lights on a
+ * Mac, in their corner once they are gone in full screen, beside the menu
+ * button on Windows and Linux. It belongs to the bar, not the sidebar, so
+ * the sidebar's slide never moves it.
  */
 export function WindowBar({
   menuChecks,
@@ -25,6 +33,9 @@ export function WindowBar({
   dirty,
   largeDoc,
   words,
+  sidebarOpen,
+  sidebarShortcut,
+  onToggleSidebar,
   showAgentToggle,
   agentOpen,
   agentShortcut,
@@ -35,6 +46,10 @@ export function WindowBar({
   dirty: boolean;
   largeDoc: boolean;
   words: number;
+  sidebarOpen: boolean;
+  /** The sidebar's shortcut, as shown in the button's tooltip. */
+  sidebarShortcut: string;
+  onToggleSidebar: () => void;
   /** The AI panel can be opened: Textus AI is on, and so is its chat. */
   showAgentToggle: boolean;
   agentOpen: boolean;
@@ -43,9 +58,24 @@ export function WindowBar({
   onToggleAgent: () => void;
 }) {
   const { t } = useSettings();
+  useFullscreenMark();
   return (
     <header className="window-bar" data-tauri-drag-region>
       <AppMenuButton checks={menuChecks} />
+      {/* The iPhone and the iPad open the sidebar from their own bar. */}
+      {!isIOSApp && (
+        <Tooltip text={`${t.menuToggleSidebar} (${sidebarShortcut})`}>
+          <button
+            type="button"
+            className="window-bar-sidebar-toggle"
+            aria-pressed={sidebarOpen}
+            aria-label={t.menuToggleSidebar}
+            onClick={onToggleSidebar}
+          >
+            <SidebarToggleIcon />
+          </button>
+        </Tooltip>
+      )}
       {/* The unsaved dot leads the title, as a native edited-document
         title does - in the status group it sat on top of a long title
         on a narrow window. */}

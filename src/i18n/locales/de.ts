@@ -9,6 +9,7 @@ export default {
   textusAiToggleLabel: `${AI_NAME} aktivieren`,
   textusAiOffHint: "Aus: Es wird nichts an einen KI-Dienst gesendet.",
   textusAiMenuHint: "Rechtsklick zum Pausieren oder Ausschalten",
+  textusAiClosePanel: "Bereich schließen",
   textusAiPause: "Eine Stunde pausieren",
   textusAiTurnOff: `${AI_NAME} ausschalten`,
   textusAiPausedTooltip: `${AI_NAME} pausiert bis {time} · Klicken zum Einschalten`,

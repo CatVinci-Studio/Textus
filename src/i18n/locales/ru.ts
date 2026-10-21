@@ -9,6 +9,7 @@ export default {
   textusAiToggleLabel: `Включить ${AI_NAME}`,
   textusAiOffHint: "Выключен: ничего не отправляется ни в один сервис ИИ.",
   textusAiMenuHint: "Правый щелчок — приостановить или выключить",
+  textusAiClosePanel: "Закрыть панель",
   textusAiPause: "Приостановить на час",
   textusAiTurnOff: `Выключить ${AI_NAME}`,
   textusAiPausedTooltip: `${AI_NAME} приостановлен до {time} · Нажмите, чтобы включить`,

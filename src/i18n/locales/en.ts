@@ -11,6 +11,7 @@ const en = {
   textusAiToggleLabel: `Enable ${AI_NAME}`,
   textusAiOffHint: "Off: nothing is sent to any AI service.",
   textusAiMenuHint: "Right-click to pause or turn off",
+  textusAiClosePanel: "Close the panel",
   textusAiPause: "Pause for an hour",
   textusAiTurnOff: `Turn off ${AI_NAME}`,
   textusAiPausedTooltip: `${AI_NAME} is paused until {time} · Click to turn on`,

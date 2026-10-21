@@ -9,6 +9,7 @@ export default {
   textusAiToggleLabel: `啟用 ${AI_NAME}`,
   textusAiOffHint: "已關閉：不會向任何 AI 服務傳送內容。",
   textusAiMenuHint: "右鍵可暫停或關閉",
+  textusAiClosePanel: "收起面板",
   textusAiPause: "暫停 1 小時",
   textusAiTurnOff: `關閉 ${AI_NAME}`,
   textusAiPausedTooltip: `${AI_NAME} 已暫停，{time} 自動開啟 · 點擊開啟`,
