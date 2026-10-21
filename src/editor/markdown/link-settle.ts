@@ -11,7 +11,9 @@ import { changedRanges } from "../changed-ranges";
 import { typedImage, typedLink } from "./link-input-rule";
 
 /**
- * A link or an image written out of order - `[]()` first, then its text
+ * A bare URL typed out (`https://...`, `www....`) becomes a link once the
+ * caret has gone on past it - as it would on reopening the file, where
+ * GFM reads it as one. And a link or an image written out of order - `[]()` first, then its text
  * and its URL filled in, the URL pasted (a link of its own, paste-url.ts) -
  * becomes one once the caret is no longer inside it. The input rule only
  * sees a `)` being typed, and the bracket autopair only the caret moving
@@ -29,8 +31,41 @@ import { typedImage, typedLink } from "./link-input-rule";
 
 const linkSettleKey = new PluginKey<[number, number][]>("link-settle");
 
-const LINK = /(?<!!)\[([^[\]\n￼]+)\]\(([^()\s￼]+)\)/g;
-const IMAGE = /!\[([^[\]\n￼]*)\]\(([^()\s￼]+)\)/g;
+const LINK = /(?<!!)\[([^[\]\n\ufffc]+)\]\(([^()\s\ufffc]+)\)/g;
+/** A bare URL as GFM reads one: at the start or after a space (or `*`,
+ *  `_`, `~`, `(`), `http(s)://` or `www.`. */
+const BARE_URL = /(?<=^|[\s*_~(])(?:https?:\/\/|www\.)[^\s<>\ufffc]+/gi;
+
+/** A bare URL without the punctuation GFM leaves after it - a full stop
+ *  ending the sentence, a closing bracket the URL didn't open. */
+function trimUrl(url: string): string {
+  let end = url.length;
+  for (;;) {
+    const last = url[end - 1];
+    if (!last) return "";
+    if (".,:;!?\"'".includes(last)) end--;
+    else if (last === ")") {
+      const inside = url.slice(0, end);
+      if (inside.split("(").length < inside.split(")").length) end--;
+      else return inside;
+    } else return url.slice(0, end);
+  }
+}
+
+/** `url` at start..end as a link, the way a bare URL in a file reads: an
+ *  autolink, written back `<...>` (or bare, for `www.`) as the file
+ *  would be after a reopen. */
+function bareLink(state: EditorState, url: string, start: number, end: number) {
+  const link = state.schema.marks.link;
+  if (!link || state.doc.rangeHasMark(start, end, link)) return null;
+  const href = /^www\./i.test(url) ? `http://${url}` : url;
+  return state.tr.addMark(
+    start,
+    end,
+    link.create({ href, syntax: "autolink" }),
+  );
+}
+const IMAGE = /!\[([^[\]\n\ufffc]*)\]\(([^()\s\ufffc]+)\)/g;
 
 /** Typing, as far as it can be told from the steps: each puts in a few
  *  characters at most (a key, an autopair's pair) or takes some out. A
@@ -47,7 +82,7 @@ function typed(tr: Transaction): boolean {
 function blockText(block: ProseNode): string {
   let text = "";
   block.forEach((child) => {
-    text += child.isText ? child.text! : "￼".repeat(child.nodeSize);
+    text += child.isText ? child.text! : "\ufffc".repeat(child.nodeSize);
   });
   return text;
 }
@@ -66,6 +101,8 @@ function settle(state: EditorState, ranges: [number, number][]) {
     if (seen.has(start)) continue;
     seen.add(start);
     const text = blockText(block);
+    const edited = (at: number, end: number) =>
+      ranges.some(([a, b]) => b >= at && a <= end);
     for (const [pattern, make] of [
       [IMAGE, typedImage],
       [LINK, typedLink],
@@ -74,10 +111,23 @@ function settle(state: EditorState, ranges: [number, number][]) {
         const at = start + match.index!;
         const end = at + match[0].length;
         if (selection.from > at && selection.from < end) continue;
-        if (!ranges.some(([a, b]) => b >= at && a <= end)) continue;
+        if (!edited(at, end)) continue;
         const tr = make(state, match, at, end);
         if (tr) return tr;
       }
+    }
+    // A bare URL once the caret has gone on past it (a space typed, Enter)
+    // - not while it may still be being typed: "https://a." is a URL the
+    // writer is still in, though the "." isn't part of it yet.
+    for (const match of text.matchAll(BARE_URL)) {
+      const url = trimUrl(match[0]);
+      const at = start + match.index!;
+      const end = at + url.length;
+      const typing = at + match[0].length;
+      if (!url || (selection.from > at && selection.from <= typing)) continue;
+      if (!edited(at, end)) continue;
+      const tr = bareLink(state, url, at, end);
+      if (tr) return tr;
     }
   }
   return null;

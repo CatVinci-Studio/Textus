@@ -204,3 +204,17 @@ test("escaped brackets read from a file stay text when the paragraph is edited",
   await press(page, "Home");
   await expect(page.locator(`${editor} a`)).toHaveCount(0);
 });
+
+test("a URL typed out is a link once a space follows it", async ({ page }) => {
+  await page.keyboard.type("See https://a.org");
+  // Still being typed: not yet.
+  await expect(page.locator(`${editor} a`)).toHaveCount(0);
+  await page.keyboard.type(" now. Or www.b.org.");
+  await expect(page.locator(LINKED)).toHaveText("https://a.org");
+  // The full stop ending the sentence isn't part of it.
+  await press(page, "Enter");
+  await expect(page.locator(`${editor} a[href="http://www.b.org"]`)).toHaveText(
+    "www.b.org",
+  );
+  expect(await sourceOf(page)).toBe("See <https://a.org> now. Or www.b.org.");
+});
