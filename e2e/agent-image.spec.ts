@@ -539,7 +539,7 @@ test("a picture that wasn't made says why in its frame", async ({ page }) => {
 // the Trash - never moved unasked.
 const OLD = "![Boats](assets/boats.png)";
 
-async function openSaved(page: Page) {
+async function openSaved(page: Page, settings: Record<string, unknown> = {}) {
   // The old picture is on disk, served as the asset protocol would.
   await page.route("http://asset.localhost/**", (route) =>
     route.fulfill({
@@ -548,7 +548,7 @@ async function openSaved(page: Page) {
     }),
   );
   await openApp(page, {
-    settings: { language: "en" },
+    settings: { language: "en", ...settings },
     storage: { "levis-agent-panel-open": "1" },
   });
   const path = "/notes/harbour.md";
@@ -751,4 +751,243 @@ test("pictures per request is a setting, sent with each request", async ({
       return first?.imageModel?.limit;
     })
     .toBe(4);
+});
+
+/** A reply as a model streams it: a picture asked for first (in_text),
+ *  then the text that carries it a line at a time, the next line when the
+ *  test calls `__nextLine()` - and, with `lines` empty, no text at all. */
+async function streamSlotThenText(page: Page, lines: string[]) {
+  await page.evaluate((lines) => {
+    type Send = (event: unknown) => void;
+    const w = window as unknown as {
+      __nextLine?: () => void;
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, args?: unknown) => Promise<unknown>;
+      };
+    };
+    const original = w.__TAURI_INTERNALS__.invoke;
+    w.__TAURI_INTERNALS__.invoke = (cmd, args) => {
+      if (cmd !== "ai_agent_message") return original(cmd, args);
+      const { message, onEvent } = args as {
+        message: string;
+        onEvent?: { onmessage?: Send };
+      };
+      const send: Send = (event) => onEvent?.onmessage?.(event);
+      const slot = {
+        kind: "ToolCall",
+        call_id: "g1",
+        name: "generate_image",
+        arguments: JSON.stringify({
+          prompt: "A harbour at dusk",
+          alt: "A harbour",
+          action: "in_text",
+          image: { id: "slot1", width: 1536, height: 1024, pending: true },
+        }),
+      };
+      const slotResult = {
+        kind: "ToolResult",
+        call_id: "g1",
+        output: "Picture being made (1536 x 1024 pixels).",
+      };
+      send({ type: "toolStart", callId: "g1", name: "generate_image" });
+      send({ type: "turn", turn: slot });
+      send({ type: "turn", turn: slotResult });
+      const text = lines.join("");
+      const json = JSON.stringify({ action: "append", text });
+      const cuts: number[] = [];
+      let sent = 0;
+      for (const line of lines) {
+        sent += line.length;
+        cuts.push(JSON.stringify(text.slice(0, sent)).length - 1);
+      }
+      const head = json.indexOf('"text":"') + '"text":"'.length;
+      let from = 0;
+      return new Promise((resolve) => {
+        w.__nextLine = () => {
+          if (lines.length === 0) {
+            const reply = { kind: "Assistant", text: "Stopped." };
+            send({ type: "turn", turn: reply });
+            resolve([{ kind: "User", text: message }, slot, slotResult, reply]);
+            return;
+          }
+          if (from === 0)
+            send({ type: "toolStart", callId: "s1", name: "propose_edit" });
+          const cut = cuts.shift();
+          const to = cut === undefined ? json.length : head + cut - 1;
+          send({
+            type: "toolArgsDelta",
+            callId: "s1",
+            delta: json.slice(from, to),
+          });
+          from = to;
+          if (cut !== undefined) return;
+          const turns = [
+            {
+              kind: "ToolCall",
+              call_id: "s1",
+              name: "propose_edit",
+              arguments: json,
+            },
+            { kind: "ToolResult", call_id: "s1", output: "Edit proposed" },
+            {
+              kind: "Assistant",
+              text: "Two paragraphs, a harbour between them.",
+            },
+          ];
+          for (const turn of turns) send({ type: "turn", turn });
+          resolve([
+            { kind: "User", text: message },
+            slot,
+            slotResult,
+            ...turns,
+          ]);
+        };
+      });
+    };
+  }, lines);
+}
+
+const nextLine = (page: Page) =>
+  page.evaluate(() =>
+    (window as unknown as { __nextLine: () => void }).__nextLine(),
+  );
+
+test("a picture's frame is in the document as soon as it is asked for, and the text takes it in", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", imageModelProvider: "openai" },
+    storage: { "levis-agent-panel-open": "1" },
+    animations: true,
+  });
+  await mockInvoke(page, {
+    ai_generated_image: {
+      __delay: 4000,
+      value: { mime: "image/png", ext: "png", dataBase64: PNG },
+    },
+    ai_discard_generated_image: null,
+    save_pasted_image: { src: "assets/harbour.png" },
+  });
+  await streamSlotThenText(page, [
+    "The tide went out before dawn.\n\n",
+    "![A harbour](textus-generated:slot1)\n\n",
+    "The boats came back at dusk.",
+  ]);
+  await send(page, "Write about the harbour, with a picture");
+  const frames = page.locator(`${editor} .pending-picture`);
+  // Before any text: the frame, where the text is going.
+  await expect(frames).toHaveCount(1);
+  await expect(page.locator(`${editor} .pending-insert`)).toHaveCount(1);
+  // The first paragraph streams in above it.
+  await nextLine(page);
+  await expect(
+    page.locator(`${editor} .pending-insert`, {
+      hasText: "The tide went out before dawn.",
+    }),
+  ).toBeVisible();
+  await expect(frames).toHaveCount(1);
+  const text = await page
+    .locator(`${editor} .pending-insert`)
+    .evaluateAll((els) => els.map((el) => el.textContent ?? ""));
+  expect(text[0]).toContain("The tide went out before dawn.");
+  // The text reaches the picture: one frame still, now the text's.
+  await nextLine(page);
+  await nextLine(page);
+  await nextLine(page);
+  await expect(page.locator(`${editor} .pending-insert`)).toHaveCount(1);
+  await expect(frames).toHaveCount(1);
+  await expect(
+    page.locator(`${editor} .pending-insert .pending-picture`),
+  ).toHaveCount(1);
+  // Once the picture has come, the text and the picture are accepted.
+  const accept = page.locator(
+    ".agent-proposal-actions .inline-chat-action-primary",
+  );
+  await expect(accept).toBeEnabled({ timeout: 10_000 });
+  await accept.click();
+  await expect(page.locator(written)).toHaveCount(1, { timeout: 10_000 });
+});
+
+test("a picture's frame whose text never came goes when the reply ends", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", imageModelProvider: "openai" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await mockInvoke(page, {
+    ai_generated_image: {
+      __delay: 4000,
+      value: { mime: "image/png", ext: "png", dataBase64: PNG },
+    },
+    ai_discard_generated_image: null,
+  });
+  await streamSlotThenText(page, []);
+  await send(page, "Write about the harbour, with a picture");
+  await expect(page.locator(`${editor} .pending-picture`)).toHaveCount(1);
+  await nextLine(page);
+  await expect(page.locator(`${editor} .pending-picture`)).toHaveCount(0);
+  await expect
+    .poll(() => calls(page, "ai_discard_generated_image"))
+    .toHaveLength(1);
+});
+
+test("a selected picture says so in the message box, and in the message once sent", async ({
+  page,
+}) => {
+  await openSaved(page);
+  await page.locator(`${editor} img[data-doc-src="assets/boats.png"]`).click();
+  const chip = page.locator(".inline-chat-chip-label");
+  await expect(chip).toHaveText("Picture selected");
+  await mockInvoke(page, {
+    ai_agent_message: [
+      {
+        kind: "User",
+        text: `<selected-text>\n${OLD}\n</selected-text>\n\nWhat is in it?`,
+      },
+      { kind: "Assistant", text: "Boats." },
+    ],
+  });
+  await send(page, "What is in it?");
+  await expect(
+    page.locator(".agent-message-user .agent-context-chip"),
+  ).toHaveText("Picture selected");
+  const sent = (await calls(page, "ai_agent_message")) as unknown as {
+    message: string;
+  }[];
+  expect(sent.at(-1)!.message).toContain(OLD);
+});
+
+test("a revision card shows a redone picture's pictures, not their Markdown", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await openSaved(page, { revisionDisplay: "original" });
+  await mockInvoke(page, {
+    ai_agent_message: exchange(
+      {
+        prompt: "The same harbour at dawn",
+        alt: "The harbour at dawn",
+        action: "replace",
+        anchor: OLD,
+        image: { id: "card1", width: 1024, height: 1024 },
+      },
+      "Image proposed - the user now sees the picture.",
+    ),
+    ai_generated_image: { mime: "image/png", ext: "png", dataBase64: PNG },
+    ai_discard_generated_image: null,
+  });
+  await send(page, "Make the picture dawn instead");
+  const card = page.locator(".revision-note-text").first();
+  await expect(card.locator("> img.revision-note-picture")).toHaveCount(1, {
+    timeout: 10_000,
+  });
+  await expect(card).not.toContainText("](");
+  await card.screenshot({
+    path: "/home/chengao/.claude/jobs/2045e913/tmp/card.png",
+  });
+  await expect(card.locator("> img.revision-note-picture")).toHaveAttribute(
+    "src",
+    /^data:image\/png/,
+  );
 });

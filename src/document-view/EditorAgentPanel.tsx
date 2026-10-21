@@ -33,6 +33,7 @@ export function EditorAgentPanel({
   conversation,
   pendingEdits,
   selectedText,
+  selectionIsPicture,
   selectionChip,
   panelSendContext,
   showProposals,
@@ -57,6 +58,8 @@ export function EditorAgentPanel({
   conversation: AgentConversation;
   pendingEdits: PendingEdits;
   selectedText: string | null;
+  /** The selection is one picture (usePanelSelection). */
+  selectionIsPicture: boolean;
   /** The chip's part in keeping the selection highlighted. */
   selectionChip: SelectionChipHandlers;
   panelSendContext: ReturnType<typeof useChatContextBridge>["panelSendContext"];
@@ -128,6 +131,7 @@ export function EditorAgentPanel({
       <ChatBody
         document=""
         selectedText={selectedText}
+        selectionIsPicture={selectionIsPicture}
         selectionChip={selectionChip}
         selectionMarkdown={null}
         docPath={filePath}

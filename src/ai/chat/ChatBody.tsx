@@ -63,6 +63,9 @@ export interface ChatBodyProps {
    *  is actually shown, so formatting survives - see doc-markdown.ts). */
   selectedText: string | null;
   selectionMarkdown: string | null;
+  /** The selection is one picture, said by a caller that has no Markdown
+   *  for it yet (the docked panel serializes at send). */
+  selectionIsPicture?: boolean;
   docPath: string | null;
   /** Explicit agent workspace root, or null for the document's own folder. */
   workspaceRoot: string | null;
@@ -209,6 +212,7 @@ export function quickReplyExpands(history: AgentTurn[]): boolean {
 export function ChatBody({
   document,
   selectedText,
+  selectionIsPicture = false,
   selectionMarkdown,
   docPath,
   workspaceRoot,
@@ -242,6 +246,14 @@ export function ChatBody({
   dockActions,
   selectionChip,
 }: ChatBodyProps) {
+  // A selection that is one picture has no text: the composer would show
+  // no chip at all, and say nothing of what goes with the message. It is
+  // the picture's description (or its Markdown) there, and says so.
+  const pictureMarkdown =
+    pictureSrc(selectionMarkdown ?? "") !== null ? selectionMarkdown : null;
+  const selectedPictureText = pictureMarkdown
+    ? /^!\[([^\]]*)\]/.exec(pictureMarkdown.trim())?.[1] || pictureMarkdown
+    : null;
   const phone = usePhoneLayout();
   const {
     history,
@@ -624,8 +636,8 @@ export function ChatBody({
       <ChatComposer
         docPath={docPath}
         workspaceRoot={workspaceRoot}
-        selectedText={selectedText}
-        selectionIsPicture={pictureSrc(selectionMarkdown ?? "") !== null}
+        selectedText={selectedPictureText ?? selectedText}
+        selectionIsPicture={selectionIsPicture || selectedPictureText !== null}
         busy={busy}
         labels={labels}
         defaultMode={defaultMode}
