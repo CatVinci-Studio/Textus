@@ -5,6 +5,8 @@ import {
   useRef,
   useState,
   type ReactNode,
+  useImperativeHandle,
+  type RefObject,
 } from "react";
 import type { AgentSkill, ChatAttachment, ThinkingLevel } from "../types";
 import { resolveSkillMessage } from "./proposal";
@@ -58,6 +60,12 @@ import { Select } from "../../ui/Select";
 import { Tooltip } from "../../ui/Tooltip";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { useLatest } from "../../utils/hooks/useLatest";
+
+/** What ChatBody may do to the composer. */
+export interface ChatComposerHandle {
+  /** Puts `text` in the box, before what is there, and focuses it. */
+  restore: (text: string) => void;
+}
 
 export interface ChatComposerLabels {
   /** Accessible name of the selection chip's remove button. */
@@ -176,7 +184,13 @@ interface ChatComposerProps {
     /** False once the user has removed the selection chip. */
     includeSelection: boolean,
     options: { mode: AgentMode; webSearch: boolean; thinking: ThinkingLevel },
+    /** What was typed (before a skill expanded it), for the queue's Edit
+     *  to put back. */
+    typed: string,
   ) => void;
+  /** Lets ChatBody put text back in the box: a queued message being
+   *  edited, or the queue a Stop dropped. */
+  handle?: RefObject<ChatComposerHandle | null>;
   /** The message just sent went through a skill (`/name`) - the tour's
    *  skills lesson waits for it. */
   onSkillUsed?: () => void;
@@ -215,6 +229,7 @@ export function ChatComposer({
   onStop,
   onEscape,
   onModeChange,
+  handle,
 }: ChatComposerProps) {
   const phone = usePhoneLayout();
   // Derived here rather than passed in: this is the only place an image can
@@ -281,6 +296,16 @@ export function ChatComposer({
   const selectionDropped =
     droppedSelection !== null && droppedSelection === selectedText;
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  useImperativeHandle(
+    handle,
+    () => ({
+      restore: (text: string) => {
+        setInput((now) => (now.trim() ? `${text}\n\n${now}` : text));
+        inputRef.current?.focus();
+      },
+    }),
+    [],
+  );
 
   // Skills come from the agent workspace on disk (global dir + the workspace
   // root's .textus/skills). Loaded fresh each time the chat opens, so editing
@@ -485,7 +510,8 @@ export function ChatComposer({
   function submit() {
     const typed = input.trim();
     const message = resolveSkillMessage(typed, skills, resolveName);
-    if (!message || busy) return;
+    // While a reply is coming the message joins the queue (ChatBody).
+    if (!message) return;
     if (message !== typed) {
       const token = SKILL_COMMAND.exec(typed)?.[1];
       const name = token
@@ -501,7 +527,13 @@ export function ChatComposer({
     setInput("");
     const staged = attachments;
     setAttachments([]);
-    onSend(message, staged, !selectionDropped, { mode, webSearch, thinking });
+    onSend(
+      message,
+      staged,
+      !selectionDropped,
+      { mode, webSearch, thinking },
+      typed,
+    );
     if (selectionPerMessage && selectedText) setDroppedSelection(selectedText);
     if (message !== typed) onSkillUsed?.();
   }

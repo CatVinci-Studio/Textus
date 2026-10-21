@@ -614,6 +614,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   proxyHostPlaceholder: "Host, z. B. 127.0.0.1",
   proxyPortPlaceholder: "Port",
   agentInputPlaceholder: "Frage oder Anweisung… (@ Datei, / Skill)",
+  agentQueued: "Warteschlange ({n}) – nach dieser Antwort gesendet",
+  agentQueuedPaused:
+    "Warteschlange ({n}) – angehalten, die letzte Antwort schlug fehl",
+  agentQueueContinue: "Weiter",
+  agentQueueEdit: "Bearbeiten",
+  agentQueueRemove: "Entfernen",
   agentSend: "Senden",
   agentStop: "Stoppen",
   agentRetry: "Erneut versuchen",
