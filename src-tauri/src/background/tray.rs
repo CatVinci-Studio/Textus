@@ -88,7 +88,10 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     if !plugins.is_empty() {
         menu = menu.separator();
         for plugin in &plugins {
-            menu = menu.item(&item(&format!("{PLUGIN}{}", plugin.command), &plugin.label)?);
+            menu = menu.item(&item(
+                &format!("{PLUGIN}{}", plugin.command),
+                &plugin.label,
+            )?);
         }
     }
     menu.separator().item(&item(QUIT, l.quit)?).build()

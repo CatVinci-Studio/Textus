@@ -171,7 +171,10 @@ pub async fn plugin_install_catalog(
             .await
             .map_err(|e| format!("Couldn't download {id}: {e}"))?;
         if !response.status().is_success() {
-            return Err(format!("The download of {id} answered {}.", response.status()));
+            return Err(format!(
+                "The download of {id} answered {}.",
+                response.status()
+            ));
         }
         response.bytes().await.map_err(|e| e.to_string())?.to_vec()
     };
@@ -190,7 +193,10 @@ pub async fn plugin_install_catalog(
     let _ = std::fs::remove_file(&package);
     let installed = installed?;
     if installed.id != id {
-        return Err(format!("The package for {id} holds {} instead.", installed.id));
+        return Err(format!(
+            "The package for {id} holds {} instead.",
+            installed.id
+        ));
     }
     state::update(&app, |state| {
         state.plugins.entry(id.clone()).or_default().official = entry.official;
@@ -218,8 +224,36 @@ mod tests {
     fn a_package_must_be_the_one_the_catalog_lists() {
         let good = b"the package";
         assert!(checked(&entry(good), good).is_ok());
-        assert!(checked(&entry(good), b"the packagE").unwrap_err().contains("isn't the package"));
-        assert!(checked(&entry(good), b"short").unwrap_err().contains("bytes"));
+        assert!(checked(&entry(good), b"the packagE")
+            .unwrap_err()
+            .contains("isn't the package"));
+        assert!(checked(&entry(good), b"short")
+            .unwrap_err()
+            .contains("bytes"));
+    }
+
+    /// The published catalog, and one package from it, through the same
+    /// client and checks an install uses. Run with `--ignored`; it needs
+    /// the network.
+    #[test]
+    #[ignore = "network: the published catalog"]
+    fn the_published_catalog_and_its_packages_check_out() {
+        tauri::async_runtime::block_on(async {
+            let entries = plugin_catalog().await.expect("the catalog");
+            assert!(entries.len() >= 11, "{} plugins", entries.len());
+            let tasks = entries.iter().find(|e| e.id == "catvinci.tasks").unwrap();
+            assert!(tasks.official);
+            let bytes = client()
+                .unwrap()
+                .get(&tasks.url)
+                .send()
+                .await
+                .unwrap()
+                .bytes()
+                .await
+                .unwrap();
+            checked(tasks, &bytes).expect("the package the catalog lists");
+        });
     }
 
     #[test]
@@ -239,6 +273,8 @@ mod tests {
         let entries = parse(&text).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].id, "catvinci.tasks");
-        assert!(parse(r#"{"schema": 2, "plugins": []}"#).unwrap_err().contains("newer Textus"));
+        assert!(parse(r#"{"schema": 2, "plugins": []}"#)
+            .unwrap_err()
+            .contains("newer Textus"));
     }
 }

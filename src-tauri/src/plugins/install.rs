@@ -105,7 +105,10 @@ pub async fn plugin_install(
         .map_err(|e| e.to_string())?
 }
 
-pub(super) fn install_sync(app: &tauri::AppHandle, source: &Path) -> Result<InstalledPlugin, String> {
+pub(super) fn install_sync(
+    app: &tauri::AppHandle,
+    source: &Path,
+) -> Result<InstalledPlugin, String> {
     let root = plugins_root(app)?;
     std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
     // Unpacked beside where it goes, then renamed into place: a failed

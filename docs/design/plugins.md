@@ -23,11 +23,15 @@ Principles, from the roadmap:
 
 ## 1. What a plugin is
 
-Official plugins ship inside the app (`plugins/official/`, bundled with the
-frontend) and are installed but switched off until the user turns one on;
-others are installed from the market or a folder into the app's data
-folder, `plugins/<id>/<version>/`. Both are the same kind of plugin, run the
-same way.
+No plugin ships inside the app. The official ones are published from
+CatVinci-Studio/textus-plugins - each version a release with its zip, and a
+catalog (`index.json`) listing them with their SHA-256 - and Settings ›
+Plugins › Get plugins installs one from there: Rust fetches the catalog
+from a fixed address, downloads the package, checks it and installs it
+into the app's data folder, `plugins/<id>/`, marking it Official in
+`state.json` when the catalog says it is CatVinci's (src-tauri/src/plugins/
+catalog.rs). Others install from a file or, in developer mode, a folder.
+All are the same kind of plugin, run the same way.
 
 A folder (or a `.textusplugin` zip of one) with a manifest,
 `textus-plugin.json`, and its built code.

@@ -6,10 +6,12 @@ app or your files except through `textus`, the API below, and every call
 is checked against the permissions the user granted. What a plugin draws
 it draws in webviews, frames of its own HTML, as VS Code's extensions do.
 
-The official plugins in [public/plugins/official/](../../public/plugins/official/)
-are plugins like any other and the best examples: the Image Viewer is the
-smallest custom editor, Quick Notes a sidebar tab, Tasks a plugin that
-reads and writes the folder. The design behind all of this is
+No plugin comes with Textus. The official ones live in their own
+repository, [CatVinci-Studio/textus-plugins](https://github.com/CatVinci-Studio/textus-plugins),
+and Settings › Plugins › **Get plugins** installs them from its catalog.
+They are plugins like any other and the best examples: the Image Viewer
+is the smallest custom editor, Quick Notes a sidebar tab, Tasks a plugin
+that reads and writes the folder. The design behind all of this is
 [docs/design/plugins.md](../design/plugins.md).
 
 ## Trying one
@@ -17,7 +19,8 @@ reads and writes the folder. The design behind all of this is
 1. Make a folder with a `textus-plugin.json` and a `host.js`.
 2. Settings › Plugins › Install a plugin › **Load a plugin folder…**, and
    choose it. It is listed under Installed, marked _development_.
-3. Turn it on. **Details › Reload** reads it again after you change it.
+3. Turn it on. Its card opens its page; **Reload** there reads it again
+   after you change it.
 
 To share it, zip the folder and name the file `<id>.textusplugin`;
 **Install from file…** installs that.
@@ -30,12 +33,16 @@ To share it, zip the folder and name the file `<id>.textusplugin`;
   "name": "Word Count",
   "version": "1.0.0",
   "publisher": "yourname",
+  "author": "Your Name", // shown on its card; the publisher where there is none
   "description": "Counts the words of the selection.",
   "icon": "icon.svg",
   "engines": { "textus": "^1.3.0" },
   "main": "host.js", // or ["shared.js", "host.js"], run in order
   "activationEvents": [], // ["onStartupFinished"] to start with Textus
   "permissions": ["document.read"],
+  // A Textus setting it needs on to do all it does; turning the plugin on
+  // offers to turn it on, and its page says whether it is.
+  "requires": [{ "setting": "runInBackground", "reason": "%whyBackground%" }],
   "contributes": {
     "commands": [
       { "command": "yourname.word-count.count", "title": "Count Words" },
@@ -67,16 +74,16 @@ To share it, zip the folder and name the file `<id>.textusplugin`;
 
 What `contributes` takes:
 
-| Key             | What it adds                                                                                                                         |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `commands`      | Commands: `{ command, title }`.                                                                                                      |
-| `keybindings`   | A shortcut for a command, as Settings writes them (`mod+alt+w`). Textus's own shortcuts win a clash.                                 |
-| `menus`         | `editor/context` (the editor's right-click menu; `when: "editorHasSelection"`) and `app/plugins` (the Plugins menu).                 |
-| `sidebarTabs`   | `{ id, title, icon }`: a sidebar tab whose panel is a webview. The icon is an SVG, drawn in the text colour.                         |
-| `views`         | `{ id, title }`: a view the plugin opens in a tab of its own (`textus.window.openView`).                                             |
-| `customEditors` | `{ viewType, displayName, filenamePatterns: ["*.pdf"] }`: a file type opened in the plugin's tab instead of as a document.           |
-| `settings`      | `{ key, type: boolean \| string \| number \| enum, default, title, description?, options? }`: rows in the plugin's Settings details. |
-| `settingsPage`  | `{ title }`: a page of the plugin's own under its settings, a webview.                                                               |
+| Key             | What it adds                                                                                                                                                                                                                                              |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `commands`      | Commands: `{ command, title }`.                                                                                                                                                                                                                           |
+| `keybindings`   | A shortcut for a command, as Settings writes them (`mod+alt+w`). Textus's own shortcuts win a clash.                                                                                                                                                      |
+| `menus`         | `editor/context` (the editor's right-click menu; `when: "editorHasSelection"`), `app/plugins` (the Plugins menu) and `app/tray` (the menu of background mode's tray or menu-bar icon: there with every window closed, it opens one and runs the command). |
+| `sidebarTabs`   | `{ id, title, icon }`: a sidebar tab whose panel is a webview. The icon is an SVG, drawn in the text colour.                                                                                                                                              |
+| `views`         | `{ id, title }`: a view the plugin opens in a tab of its own (`textus.window.openView`).                                                                                                                                                                  |
+| `customEditors` | `{ viewType, displayName, filenamePatterns: ["*.pdf"] }`: a file type opened in the plugin's tab instead of as a document.                                                                                                                                |
+| `settings`      | `{ key, type: boolean \| string \| number \| enum, default, title, description?, options? }`: rows on the plugin's page in Settings, drawn as Textus's own.                                                                                               |
+| `settingsPage`  | `{ title }`: a page of the plugin's own under its settings, a webview.                                                                                                                                                                                    |
 
 ## Permissions
 
@@ -124,17 +131,23 @@ Every call returns a promise. By namespace:
 { title, state })`, `openWebPage(url)` (a web page in a tab, with its
     own origin and cookies; needs `network:` for its host),
     `openExternal(url)` (the browser);
+  - `setStatusItem(id, { text, tooltip?, command? })`: a short status in
+    the window bar beside the word count, which runs `command` when
+    clicked; its `dispose()`, or the plugin stopping, takes it away;
   - `registerWebviewViewProvider(id, { resolveWebviewView(webview, { state }) })`
     for a sidebar tab or a view, `registerCustomEditorProvider(viewType,
 { resolveCustomEditor(document, webview) })`, `registerSettingsPage({
 resolveSettingsPage(webview) })`.
 - `textus.document` - `getText()`, `getPath()`, `getSelection()` (`{ text,
-markdown }`), `proposeEdit({ action, text, anchor?, reason? })`
+markdown }`), `getOutline()` (its headings: `[{ level, text, line }]`),
+  `proposeEdit({ action, text, anchor?, reason? })`
   (actions: `insert_at_cursor`, `replace_selection`, `append`, `replace`,
   `insert_before`, `insert_after`, `delete`), `onDidChangeActive(fn)`.
 - `textus.workspace` - `rootPath()`, `list(path)`, `findDocuments()`,
   `readFile(path)` (bytes), `readText(path)`, `writeText(path, text)`,
-  `writeFile(path, bytes)`, `onDidSaveDocument(fn)` (`{ path, text }`),
+  `writeFile(path, bytes)`, `rename(from, to)`, `trash(path)` (to the
+  system Trash, never deleted for good), `createFolder(path)`,
+  `onDidSaveDocument(fn)` (`{ path, text }`),
   `onDidChangeRoot(fn)`.
 - `textus.net` - `fetch(url, { method, headers, body })`: a response with
   `status`, `ok`, `headers`, `text()`, `json()`, `bytes()`.
@@ -195,3 +208,14 @@ document, read another plugin's data, run native code, or reach the
 network or files beyond what it was granted. A plugin that stops
 answering, or throws more than ten errors a minute, is turned off and the
 user is told.
+
+## Publishing
+
+To give a plugin to someone, zip its folder; they install it with
+**Install from file…**. The official plugins are published from
+[textus-plugins](https://github.com/CatVinci-Studio/textus-plugins): a
+push to its main branch packages each new version as a release of its
+own and rebuilds the catalog Textus reads, and Textus checks every
+package against the catalog's SHA-256 before it installs it. A plugin
+from the catalog by CatVinci Studio is marked Official. A way to list
+your own plugins there is coming with the plugin market.
