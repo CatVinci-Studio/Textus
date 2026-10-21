@@ -24,9 +24,10 @@ export const TYPED_IMAGE = /!\[([^[\]\n\ufffc]*)\]\(([^()\s\ufffc]+)\)$/;
 
 type Match = RegExpMatchArray | RegExpExecArray;
 
-/** `[text](url)` at start..end as a link: the input rule's change, and the
- *  bracket autopair's when the caret leaves a ")" it put in. */
-function typedLink(
+/** `[text](url)` at start..end as a link: the input rule's change, the
+ *  bracket autopair's when the caret leaves a ")" it put in, and
+ *  link-settle.ts's when the caret leaves one filled in from inside. */
+export function typedLink(
   state: EditorState,
   match: Match,
   start: number,
@@ -50,8 +51,8 @@ function typedLink(
   );
 }
 
-/** `![alt](src)` at start..end as an image, the same two ways. */
-function typedImage(
+/** `![alt](src)` at start..end as an image, the same ways. */
+export function typedImage(
   state: EditorState,
   match: Match,
   start: number,
@@ -82,15 +83,24 @@ function typedImage(
  * the input rules would have made it had the ")" been typed - for the
  * bracket autopair (keys/bracket-autopair-plugin.ts), whose ")" is already
  * there when the caret moves on past it, or Enter is pressed before it.
- * Only the text node ending there is read. Null when there is none.
+ * The text of its block up to `end` is read, across text nodes: a URL
+ * pasted between the parentheses is a link of its own (paste-url.ts), and
+ * reading only the text node before `end` - that URL's - found no link.
+ * An inline node (code, math) reads as the object replacement character,
+ * which neither pattern takes. Null when there is none.
  */
 export function typedLinkEndingAt(
   state: EditorState,
   end: number,
 ): Transaction | null {
-  const before = state.doc.resolve(end).nodeBefore;
-  if (!before?.isText) return null;
-  const text = before.text!;
+  const $end = state.doc.resolve(end);
+  if (!$end.parent.isTextblock || !$end.nodeBefore?.isText) return null;
+  const text = $end.parent.textBetween(
+    0,
+    $end.parentOffset,
+    undefined,
+    "\ufffc",
+  );
   for (const [pattern, make] of [
     [TYPED_IMAGE, typedImage],
     [TYPED_LINK, typedLink],
