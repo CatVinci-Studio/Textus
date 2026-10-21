@@ -21,6 +21,8 @@ mod distribution;
 mod extract;
 mod levis_import;
 #[cfg(desktop)]
+mod mcp;
+#[cfg(desktop)]
 mod menu;
 mod net;
 mod plugins;
@@ -525,6 +527,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         )))
         .manage(background::BackgroundStatus::default())
         .manage(background::tray::TrayPlugins::default())
+        .manage(mcp::McpHub::default())
         .on_window_event(|window, event| {
             let app = window.app_handle();
             if matches!(event, tauri::WindowEvent::Destroyed) {
@@ -844,6 +847,12 @@ pub fn run() {
             background::tray::set_tray_plugin_items,
             #[cfg(desktop)]
             background::tray::take_pending_plugin_command,
+            #[cfg(desktop)]
+            mcp::mcp_status,
+            #[cfg(desktop)]
+            mcp::mcp_restart,
+            #[cfg(desktop)]
+            mcp::mcp_try,
             plugins::catalog::plugin_install_catalog,
             plugins::install::plugin_load_dev,
             plugins::install::plugin_uninstall,

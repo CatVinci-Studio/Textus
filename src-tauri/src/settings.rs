@@ -509,8 +509,8 @@ impl Stores {
     }
 
     /// What a profile starts with that a profile from before it was added
-    /// doesn't: only the core built-in skills on (ai::builtin::CORE_SKILLS)
-    /// - the rest are added in Settings › Extensions › Skills. A settings
+    /// doesn't: only the core built-in skills on (ai::builtin::CORE_SKILLS),
+    /// the rest added in Settings › Extensions › Skills. A settings
     /// file that already exists has no such list, and keeps every skill it
     /// had. In memory until the first write, like seed_from_prefs.
     fn seed_new_profile(&self) {

@@ -428,6 +428,11 @@ async fn ai_agent_message_inner(
             for tool in web.tools(&focus) {
                 tools.add(tool);
             }
+            // The tools of the MCP servers the user turned on.
+            #[cfg(desktop)]
+            for tool in crate::mcp::tools_for_request(&app).await {
+                tools.add(tool);
+            }
             let tool_specs = tools.specs();
             let step = |turns: Vec<AgentTurn>| {
                 let (agent, instructions, tool_specs) = (&agent, &instructions, &tool_specs);
