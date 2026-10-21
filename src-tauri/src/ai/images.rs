@@ -252,6 +252,33 @@ pub fn undecided_texts(history: &[AgentTurn]) -> Vec<String> {
         .collect()
 }
 
+/// The pictures earlier requests made that the user hasn't accepted or
+/// rejected yet, by id: a rewrite of the text by one may carry it
+/// (ProposalLedger's known pictures).
+pub fn undecided_pictures(history: &[AgentTurn]) -> Vec<String> {
+    const UNDECIDED: &str = "has NOT yet accepted or rejected this proposed edit";
+    history
+        .iter()
+        .filter_map(|turn| match turn {
+            AgentTurn::ToolCall {
+                call_id,
+                name,
+                arguments,
+                ..
+            } if name == GENERATE_IMAGE_TOOL_NAME => {
+                let open = history.iter().any(|t| {
+                    matches!(t, AgentTurn::ToolResult { call_id: id, output, .. }
+                        if id == call_id && output.contains(UNDECIDED))
+                });
+                let args: Value = serde_json::from_str(arguments).ok()?;
+                let id = args.get("image")?.get("id")?.as_str()?;
+                open.then(|| id.to_string())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
 /// Whether `anchor` is the whole Markdown of one picture, `![alt](src)` -
 /// the only thing a picture may replace.
 fn is_picture_markdown(anchor: &str) -> bool {
@@ -673,10 +700,19 @@ fn outcome(arguments: &str) -> String {
             image["width"].as_u64().unwrap_or(0),
             image["height"].as_u64().unwrap_or(0)
         );
+        // Its Markdown, for a later rewrite of the text it stands by to
+        // carry it before the user decides on it.
+        let alt = args["alt"].as_str().unwrap_or("").replace(['[', ']'], "");
+        let markdown = format!(
+            "![{}]({})",
+            alt.split_whitespace().collect::<Vec<_>>().join(" "),
+            placeholder_src(image["id"].as_str().unwrap_or(""))
+        );
+        let carry = format!(" Until the user decides on it, its Markdown is {markdown}: if you rewrite the paragraph it stands by, put that line in your new text where the picture goes.");
         if image["pending"].as_bool() == Some(true) {
-            return format!("Image proposed and being made ({size} pixels) while you go on, and appears in place by itself with Accept and Reject once it is ready (or, if the service turns it down, the user sees why there). It is saved only if they accept. Carry on with the rest of the request now - don't wait for it. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.");
+            return format!("Image proposed and being made ({size} pixels) while you go on, and appears in place by itself with Accept and Reject once it is ready (or, if the service turns it down, the user sees why there). It is saved only if they accept. Carry on with the rest of the request now - don't wait for it. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.{carry}");
         }
-        return format!("Image proposed - the user now sees the picture ({size} pixels) in the document with Accept and Reject; it is saved only if they accept. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.");
+        return format!("Image proposed - the user now sees the picture ({size} pixels) in the document with Accept and Reject; it is saved only if they accept. In your reply, say in a sentence what it shows and where it goes; don't repeat the prompt.{carry}");
     }
     let why = args
         .get("not_generated")
@@ -967,6 +1003,35 @@ mod tests {
             .unwrap()
             .contains("No exact match"));
         assert_eq!(run.made.load(Ordering::SeqCst), 2);
+    }
+
+    #[test]
+    fn a_picture_not_decided_yet_is_known_with_its_markdown() {
+        let call = |id: &str, image: &str| {
+            AgentTurn::ToolCall {
+            call_id: id.into(),
+            name: GENERATE_IMAGE_TOOL_NAME.into(),
+            arguments: json!({"prompt": "p", "alt": "Boats", "action": "insert_after", "anchor": "A.", "image": {"id": image, "width": 1, "height": 1}}).to_string(),
+            reasoning: None,
+        }
+        };
+        let result = |id: &str, note: &str| AgentTurn::ToolResult {
+            call_id: id.into(),
+            output: format!("Image proposed. {note}"),
+            images: Vec::new(),
+        };
+        let history = vec![
+            call("g1", "open1"),
+            result(
+                "g1",
+                "Status: the user has NOT yet accepted or rejected this proposed edit.",
+            ),
+            call("g2", "taken"),
+            result("g2", "Status: the user accepted this proposed edit."),
+        ];
+        assert_eq!(undecided_pictures(&history), vec!["open1".to_string()]);
+        let text = outcome(&json!({"alt": "Boats", "action": "insert_after", "image": {"id": "open1", "width": 1, "height": 1}}).to_string());
+        assert!(text.contains("![Boats](textus-generated:open1)"), "{text}");
     }
 
     #[test]

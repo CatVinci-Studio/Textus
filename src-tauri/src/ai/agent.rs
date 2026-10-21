@@ -1175,7 +1175,11 @@ async fn ai_agent_message_inner(
                 conventions: &conventions,
                 library: &library,
                 memory: memory.as_ref(),
-                proposed: Default::default(),
+                // The pictures not decided yet: this request's text may
+                // carry them, each once.
+                proposed: std::sync::Mutex::new(tools::ProposalLedger::with_pictures(
+                    crate::ai::images::undecided_pictures(&history),
+                )),
                 checks: Default::default(),
             };
             let mut tools = ToolRegistry::builtin(

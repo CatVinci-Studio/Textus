@@ -54,3 +54,36 @@ function gap(left: string, right: string): string {
 function tidy(text: string): string {
   return text.replace(/\n{3,}/g, "\n\n").replace(/^\n+|\n+$/g, "");
 }
+
+const PICTURE_LINE = /^!\[[^\]]*\]\([^)]*\)$/;
+
+/**
+ * A picture not accepted yet, standing after (or before) a paragraph that
+ * an accepted rewrite replaced - `oldText` with `newText`, which left the
+ * picture out: put by the paragraph of the new text in the same place, the
+ * nth paragraph for the nth (the last, if the new text has fewer). Null
+ * when the picture's paragraph wasn't in the rewritten text.
+ */
+export function reanchoredPicture(
+  picture: EditProposal,
+  oldText: string,
+  newText: string,
+): EditProposal | null {
+  const anchor = picture.anchor;
+  if (
+    !anchor ||
+    (picture.action !== "insert_after" && picture.action !== "insert_before")
+  )
+    return null;
+  const at = oldText.split(/\n{2,}/).findIndex((p) => p.includes(anchor));
+  if (at < 0) return null;
+  const paragraphs = newText
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter((p) => p && !PICTURE_LINE.test(p));
+  if (paragraphs.length === 0) return null;
+  return {
+    ...picture,
+    anchor: paragraphs[Math.min(at, paragraphs.length - 1)],
+  };
+}

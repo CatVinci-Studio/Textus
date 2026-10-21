@@ -67,6 +67,15 @@ pub struct ProposalLedger {
 }
 
 impl ProposalLedger {
+    /// A ledger that knows these pictures already: earlier requests',
+    /// not decided yet, which this request's text may carry.
+    pub fn with_pictures(pictures: Vec<String>) -> Self {
+        Self {
+            pictures,
+            ..Self::default()
+        }
+    }
+
     /// A picture written into text this request proposes.
     pub fn add_picture(&mut self, id: String) {
         self.pictures.push(id);
