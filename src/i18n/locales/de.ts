@@ -251,6 +251,16 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   proposalImage: "Bild",
   imageNotGenerated: "Kein Bild erstellt: {reason}",
   imageSaveFailed: "Das Bild konnte nicht gespeichert werden.",
+  imageServiceLabel: "Bilddienst",
+  imageServiceFollowChat: "Wie der Chat ({name})",
+  imageServiceFollowChatBare: "Wie der Chat",
+  imageServiceFollowNoPictures:
+    "Dein Chat-Anbieter erstellt keine Bilder – wähle einen Dienst dafür.",
+  imageProviderChatGpt: "OpenAI · ChatGPT-Anmeldung (experimentell)",
+  imageChatGptSignInHint:
+    "Melde dich zuerst oben beim Chat-Anbieter mit ChatGPT an.",
+  imageChatGptHelp:
+    "Bilder gehen vom Bildkontingent deines ChatGPT-Abos ab, nicht vom API-Guthaben. Sie laufen über den Dienst, den die ChatGPT-Apps selbst nutzen; das ist keine veröffentlichte API und kann ohne Ankündigung aufhören zu funktionieren. Ein OpenAI-API-Schlüssel funktioniert in jedem Fall weiter.",
   imageModelLabel: "Bildmodell",
   imageModelNone: "Keins",
   imageProviderCustom: "OpenAI-kompatibler Endpunkt",

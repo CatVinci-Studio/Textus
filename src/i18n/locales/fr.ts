@@ -263,6 +263,16 @@ utiliser une.
   proposalImage: "Image",
   imageNotGenerated: "Aucune image créée : {reason}",
   imageSaveFailed: "Impossible d'enregistrer l'image.",
+  imageServiceLabel: "Service d’images",
+  imageServiceFollowChat: "Comme le chat ({name})",
+  imageServiceFollowChatBare: "Comme le chat",
+  imageServiceFollowNoPictures:
+    "Ton fournisseur de chat ne fait pas d’images : choisis un service pour elles.",
+  imageProviderChatGpt: "OpenAI · connexion ChatGPT (expérimental)",
+  imageChatGptSignInHint:
+    "Connecte-toi d’abord avec ChatGPT dans le fournisseur de chat ci-dessus.",
+  imageChatGptHelp:
+    "Les images sont prises sur le quota d’images de ton abonnement ChatGPT, pas sur le crédit de l’API. Elles passent par le service qu’utilisent les applications de ChatGPT, qui n’est pas une API publiée et peut cesser de fonctionner sans prévenir ; une clé d’API OpenAI continue de fonctionner dans tous les cas.",
   imageModelLabel: "Modèle d'image",
   imageModelNone: "Aucun",
   imageProviderCustom: "Point d'accès compatible OpenAI",

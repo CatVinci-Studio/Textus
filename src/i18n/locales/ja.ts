@@ -236,6 +236,16 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   proposalImage: "画像",
   imageNotGenerated: "画像は生成されませんでした：{reason}",
   imageSaveFailed: "画像を保存できませんでした。",
+  imageServiceLabel: "画像サービス",
+  imageServiceFollowChat: "チャットと同じ（{name}）",
+  imageServiceFollowChatBare: "チャットと同じ",
+  imageServiceFollowNoPictures:
+    "チャットのサービスは画像を作れません。画像用のサービスを選んでください。",
+  imageProviderChatGpt: "OpenAI · ChatGPT サインイン（試験的）",
+  imageChatGptSignInHint:
+    "まず上のチャットサービスで ChatGPT にサインインしてください。",
+  imageChatGptHelp:
+    "画像は API のクレジットではなく、ChatGPT プランの画像生成枠を使います。ChatGPT 自身のアプリが使うサービスを経由するため、公開 API ではなく、予告なく使えなくなることがあります。OpenAI の API キーはその場合も使えます。",
   imageModelLabel: "画像モデル",
   imageModelNone: "なし",
   imageProviderCustom: "OpenAI 互換エンドポイント",

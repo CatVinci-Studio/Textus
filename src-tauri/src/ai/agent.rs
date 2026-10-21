@@ -1092,7 +1092,7 @@ async fn ai_agent_message_inner(
     };
     let plain_message = message.clone();
     // generate_image, while an image model is set.
-    let image_run = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref());
+    let image_run = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), entry.id);
 
     let agent = route::agent_provider(&app, entry, model.clone(), thinking, web.native).await?;
     let result = match agent {

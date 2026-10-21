@@ -100,6 +100,11 @@ pub fn codex_auth_status(app: AppHandle) -> Result<AuthStatus, String> {
     }
 }
 
+/// Whether a ChatGPT sign-in is stored (it may still need refreshing).
+pub fn signed_in(app: &AppHandle) -> bool {
+    matches!(load_credential(app), Ok(Some(_)))
+}
+
 #[tauri::command]
 pub fn codex_logout(app: AppHandle) -> Result<(), String> {
     let path = auth_file_path(&app)?;

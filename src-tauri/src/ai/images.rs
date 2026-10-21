@@ -48,6 +48,19 @@ pub struct ImageProviderEntry {
 
 pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
     ImageProviderEntry {
+        // The ChatGPT sign-in's own pictures, on the plan's allowance:
+        // experimental, since it is the backend ChatGPT's apps use, not a
+        // published API (aicompat openai_codex::generate_image).
+        id: "openai-chatgpt",
+        label: "OpenAI (ChatGPT sign-in)",
+        api: ImageApi::ChatGpt,
+        base_url: None,
+        // No key: the sign-in's credential, which Settings › Textus AI
+        // keeps under the chat provider.
+        key_id: "",
+        models: &["gpt-image"],
+    },
+    ImageProviderEntry {
         id: "openai",
         label: "OpenAI",
         api: ImageApi::OpenAi,
@@ -114,6 +127,23 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
     },
 ];
 
+/// The image model setting that follows the chat provider (the default).
+pub const FOLLOW_CHAT: &str = "chat";
+
+/// The image service that goes with a chat provider: OpenAI's through the
+/// ChatGPT sign-in while there is one (as chat prefers it, route.rs), else
+/// the provider's own pictures with the same key; None for a chat provider
+/// that makes none, and so no generate_image.
+pub fn following_chat(chat_provider: &str, chatgpt_signed_in: bool) -> Option<&'static str> {
+    if chat_provider == "openai" && chatgpt_signed_in {
+        return Some("openai-chatgpt");
+    }
+    IMAGE_PROVIDERS
+        .iter()
+        .find(|e| e.key_id == chat_provider && e.id == chat_provider)
+        .map(|e| e.id)
+}
+
 pub fn find(id: &str) -> Option<&'static ImageProviderEntry> {
     IMAGE_PROVIDERS.iter().find(|e| e.id == id)
 }
@@ -140,9 +170,13 @@ pub struct ImageModel {
 /// each costs money, and a reply that wants more is asked to say so.
 const PER_SEND: usize = 2;
 
-/// One request's image model, resolved to an address and a key, and how
-/// many pictures it has made so far.
+/// One request's image model, resolved to an address and a key - or, for
+/// the ChatGPT sign-in, to the app that holds its credential - and how many
+/// pictures it has made so far.
 pub struct ImageRun {
+    /// For the ChatGPT sign-in, whose credential is fetched (and refreshed)
+    /// per picture.
+    app: Option<AppHandle>,
     api: ImageApi,
     base_url: String,
     api_key: String,
@@ -154,11 +188,36 @@ impl ImageRun {
     /// None - and no generate_image tool - without an image model, or
     /// without the key it needs. (Review mode, which changes nothing, never
     /// offers it: ToolRegistry::add.)
-    pub fn resolve(app: &AppHandle, choice: Option<&ImageModel>) -> Option<Self> {
+    pub fn resolve(
+        app: &AppHandle,
+        choice: Option<&ImageModel>,
+        chat_provider: &str,
+    ) -> Option<Self> {
         let choice = choice?;
-        let entry = find(&choice.provider)?;
+        let entry = if choice.provider == FOLLOW_CHAT {
+            find(following_chat(
+                chat_provider,
+                crate::auth::openai_codex::signed_in(app),
+            )?)?
+        } else {
+            find(&choice.provider)?
+        };
+        if entry.api == ImageApi::ChatGpt {
+            // Signed in with ChatGPT, or no generate_image at all.
+            return crate::auth::openai_codex::signed_in(app).then(|| Self {
+                app: Some(app.clone()),
+                api: entry.api,
+                base_url: String::new(),
+                api_key: String::new(),
+                model: entry.models[0].to_string(),
+                made: AtomicUsize::new(0),
+            });
+        }
         let model = Some(choice.model.trim())
-            .filter(|m| !m.is_empty())
+            // One of this service's own (a model kept from another service, as
+            // following the chat provider can leave, is not), or any typed for
+            // the compatible endpoint.
+            .filter(|m| !m.is_empty() && (entry.models.is_empty() || entry.models.contains(m)))
             .or_else(|| entry.models.first().copied())?
             .to_string();
         let base_url = entry
@@ -177,12 +236,39 @@ impl ImageRun {
             return None;
         }
         Some(Self {
+            app: None,
             api: entry.api,
             base_url,
             api_key,
             model,
             made: AtomicUsize::new(0),
         })
+    }
+
+    /// One picture from the chosen service.
+    async fn generate(
+        &self,
+        prompt: &str,
+        aspect: Aspect,
+    ) -> Result<GeneratedImage, gen::ImageError> {
+        let Some(app) = self.app.as_ref().filter(|_| self.api == ImageApi::ChatGpt) else {
+            return gen::generate(&self.target(), prompt, aspect).await;
+        };
+        let (access_token, account_id) = crate::auth::openai_codex::get_valid_credential(app)
+            .await
+            .map_err(|e| {
+                gen::ImageError::Failed(format!(
+                    "The ChatGPT sign-in isn't usable - sign in again in Settings › Textus AI: {e}"
+                ))
+            })?;
+        aicompat::providers::openai_codex::generate_image(
+            &access_token,
+            &account_id,
+            crate::app_identity::ORIGINATOR,
+            prompt,
+            aspect,
+        )
+        .await
     }
 
     fn target(&self) -> ImageTarget<'_> {
@@ -207,7 +293,7 @@ impl ImageRun {
             Err(why) => Err(why),
             Ok((prompt, aspect)) => {
                 announce();
-                gen::generate(&self.target(), &prompt, aspect)
+                self.generate(&prompt, aspect)
                     .await
                     .map_err(|e| e.to_string())
             }
@@ -434,6 +520,7 @@ mod tests {
 
     fn run() -> ImageRun {
         ImageRun {
+            app: None,
             api: ImageApi::OpenAi,
             // Nothing listens here: a call that got as far as the request
             // fails to connect, which these tests never let it.
@@ -565,10 +652,31 @@ mod tests {
     }
 
     #[test]
+    fn the_image_model_follows_the_chat_provider() {
+        // OpenAI: the sign-in's pictures while signed in, the key's else.
+        assert_eq!(following_chat("openai", true), Some("openai-chatgpt"));
+        assert_eq!(following_chat("openai", false), Some("openai"));
+        // A provider with pictures of its own, on the same key.
+        assert_eq!(following_chat("google", false), Some("google"));
+        assert_eq!(following_chat("doubao", true), Some("doubao"));
+        // One that makes none, and the compatible endpoint, which is a
+        // different server from chat's: no pictures.
+        assert_eq!(following_chat("anthropic", false), None);
+        assert_eq!(following_chat("deepseek", false), None);
+        assert_eq!(following_chat("custom", false), None);
+    }
+
+    #[test]
     fn every_built_in_image_provider_has_an_https_address_and_a_default_model() {
         for entry in IMAGE_PROVIDERS {
             if entry.id == "custom" {
                 assert!(entry.base_url.is_none() && entry.models.is_empty());
+                continue;
+            }
+            // The sign-in has no address or key, only its one model.
+            if entry.api == ImageApi::ChatGpt {
+                assert!(entry.base_url.is_none() && entry.key_id.is_empty());
+                assert_eq!(entry.models.len(), 1);
                 continue;
             }
             assert!(

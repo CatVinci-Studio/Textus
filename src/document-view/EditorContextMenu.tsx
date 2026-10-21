@@ -9,6 +9,7 @@ import type { Settings } from "../settings/SettingsContext";
 import { aiFeatures } from "../settings/textus-ai";
 import type { Strings } from "../i18n/strings";
 import type { ImageLocation } from "../editor/images/missing-image";
+import { useImageService } from "../ai/image-models";
 
 /** Where the editor's menu is open, and on what. */
 export type EditorMenuState = {
@@ -64,6 +65,7 @@ export function EditorContextMenu({
   onClose: () => void;
 }) {
   const ai = aiFeatures(settings);
+  const imageService = useImageService(settings);
   return (
     <Presence show={!!menu} exitMs={250}>
       {menu && (
@@ -87,9 +89,10 @@ export function EditorContextMenu({
                 ...(aiFeatures(settings, inTour).chat && !menu.phone
                   ? [{ label: t.askAi, onSelect: openAgentConversation }]
                   : []),
-                // A picture costs money: offered once an image model is
-                // chosen (Settings › Textus AI › Image model).
-                ...(ai.chat && settings.imageModelProvider
+                // A picture costs money: offered while there is an image
+                // service (Settings › Textus AI › Image model) - the chat
+                // provider's own by default, none for one without.
+                ...(ai.chat && imageService
                   ? [
                       {
                         label: t.illustrateParagraph,

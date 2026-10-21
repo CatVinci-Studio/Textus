@@ -254,6 +254,15 @@ export default {
   proposalImage: "Изображение",
   imageNotGenerated: "Изображение не создано: {reason}",
   imageSaveFailed: "Не удалось сохранить изображение.",
+  imageServiceLabel: "Сервис изображений",
+  imageServiceFollowChat: "Как в чате ({name})",
+  imageServiceFollowChatBare: "Как в чате",
+  imageServiceFollowNoPictures:
+    "Ваш сервис чата не создаёт изображения — выберите для них сервис.",
+  imageProviderChatGpt: "OpenAI · вход через ChatGPT (экспериментально)",
+  imageChatGptSignInHint: "Сначала войдите через ChatGPT в сервисе чата выше.",
+  imageChatGptHelp:
+    "Изображения расходуют лимит изображений вашей подписки ChatGPT, а не баланс API. Они идут через сервис, которым пользуются приложения ChatGPT; это не публичный API, и он может перестать работать без предупреждения. Ключ OpenAI API работает в любом случае.",
   imageModelLabel: "Модель изображений",
   imageModelNone: "Нет",
   imageProviderCustom: "Сервис, совместимый с OpenAI",

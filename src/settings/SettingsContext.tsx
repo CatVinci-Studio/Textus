@@ -503,7 +503,7 @@ const DEFAULT_SETTINGS: Settings = {
   completionTone: "default",
   writingConventions: "automatic",
   enableWebSearch: false,
-  imageModelProvider: "",
+  imageModelProvider: "chat",
   imageModel: "",
   imageModelEndpoint: "",
   searchService: "auto",

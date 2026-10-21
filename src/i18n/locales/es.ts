@@ -261,6 +261,16 @@ para usar una.
   proposalImage: "Imagen",
   imageNotGenerated: "No se creó la imagen: {reason}",
   imageSaveFailed: "No se pudo guardar la imagen.",
+  imageServiceLabel: "Servicio de imágenes",
+  imageServiceFollowChat: "Igual que el chat ({name})",
+  imageServiceFollowChatBare: "Igual que el chat",
+  imageServiceFollowNoPictures:
+    "Tu proveedor de chat no hace imágenes: elige un servicio para ellas.",
+  imageProviderChatGpt: "OpenAI · inicio de sesión de ChatGPT (experimental)",
+  imageChatGptSignInHint:
+    "Primero inicia sesión con ChatGPT en el proveedor de chat de arriba.",
+  imageChatGptHelp:
+    "Las imágenes salen del cupo de imágenes de tu plan de ChatGPT, no del crédito de la API. Pasan por el servicio que usan las propias apps de ChatGPT, que no es una API publicada y puede dejar de funcionar sin aviso; una clave de API de OpenAI sigue funcionando igualmente.",
   imageModelLabel: "Modelo de imagen",
   imageModelNone: "Ninguno",
   imageProviderCustom: "Endpoint compatible con OpenAI",

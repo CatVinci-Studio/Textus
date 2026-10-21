@@ -218,6 +218,15 @@ export default {
   proposalImage: "图片",
   imageNotGenerated: "没有生成图片：{reason}",
   imageSaveFailed: "无法保存图片。",
+  imageServiceLabel: "图片服务",
+  imageServiceFollowChat: "跟随聊天（{name}）",
+  imageServiceFollowChatBare: "跟随聊天",
+  imageServiceFollowNoPictures:
+    "当前的聊天服务不能画图，请为图片另选一个服务。",
+  imageProviderChatGpt: "OpenAI · ChatGPT 订阅（实验性）",
+  imageChatGptSignInHint: "请先在上方的聊天服务里用 ChatGPT 登录。",
+  imageChatGptHelp:
+    "图片使用你 ChatGPT 订阅自带的画图额度，不消耗 API 余额。它走的是 ChatGPT 自家应用使用的接口，不是公开的 API，可能随时失效；OpenAI API Key 的方式不受影响。",
   imageModelLabel: "图片模型",
   imageModelNone: "无",
   imageProviderCustom: "OpenAI 兼容接口",

@@ -250,6 +250,16 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   proposalImage: "Imagem",
   imageNotGenerated: "Nenhuma imagem criada: {reason}",
   imageSaveFailed: "Não foi possível salvar a imagem.",
+  imageServiceLabel: "Serviço de imagens",
+  imageServiceFollowChat: "Igual ao chat ({name})",
+  imageServiceFollowChatBare: "Igual ao chat",
+  imageServiceFollowNoPictures:
+    "Seu provedor de chat não faz imagens: escolha um serviço para elas.",
+  imageProviderChatGpt: "OpenAI · login do ChatGPT (experimental)",
+  imageChatGptSignInHint:
+    "Primeiro entre com o ChatGPT no provedor de chat acima.",
+  imageChatGptHelp:
+    "As imagens saem da cota de imagens do seu plano do ChatGPT, não do crédito da API. Elas passam pelo serviço que os próprios apps do ChatGPT usam, que não é uma API publicada e pode parar de funcionar sem aviso; uma chave de API da OpenAI continua funcionando de qualquer forma.",
   imageModelLabel: "Modelo de imagem",
   imageModelNone: "Nenhum",
   imageProviderCustom: "Endpoint compatível com OpenAI",
