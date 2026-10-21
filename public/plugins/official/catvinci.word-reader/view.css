@@ -1,0 +1,25 @@
+html,
+body {
+  height: 100%;
+}
+body {
+  display: flex;
+  flex-direction: column;
+}
+#pages {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+#status:empty {
+  display: none;
+}
+/* docx-preview's own wrapper: the pages on the sidebar's grey. */
+#pages .docx-wrapper {
+  background: var(--sidebar-bg);
+  padding: var(--space-5);
+}
+#pages .docx-wrapper > section.docx {
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.18);
+  margin-bottom: var(--space-5);
+}

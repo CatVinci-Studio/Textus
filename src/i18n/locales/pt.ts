@@ -1197,4 +1197,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuPlugins: "Plugins",
   menuManagePlugins: "Gerenciar plugins…",
   menuNoPluginCommands: "Nenhum comando de plugin",
+  webPageAddress: "Endereço web",
+  webPageReload: "Recarregar",
+  webPageOpenInBrowser: "Abrir no navegador",
+  webPageHint: "Se a página continuar em branco, o site não permite ser mostrado dentro de outros apps: abra no navegador.",
 } satisfies Translation;

@@ -1144,4 +1144,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuPlugins: "플러그인",
   menuManagePlugins: "플러그인 관리…",
   menuNoPluginCommands: "플러그인 명령 없음",
+  webPageAddress: "웹 주소",
+  webPageReload: "새로고침",
+  webPageOpenInBrowser: "브라우저에서 열기",
+  webPageHint: "페이지가 계속 비어 있다면 그 사이트는 다른 앱 안에서 표시되는 것을 허용하지 않습니다. 브라우저에서 여세요.",
 } satisfies Translation;

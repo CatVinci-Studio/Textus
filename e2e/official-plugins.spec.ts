@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { mockInvoke, pasteMarkdown } from "./helpers";
 import {
+  minimalDocx,
   minimalPdf,
   openPath,
   openWithPlugins,
@@ -56,7 +58,48 @@ test("a PDF opens in the PDF Viewer, its words there to select", async ({
   await expect(frame.locator("#count")).toHaveText("/ 1", { timeout: 15_000 });
   await expect(frame.locator(".page canvas")).toHaveCount(1);
   await expect(frame.locator(".textLayer")).toContainText("Hello PDF");
-  const before = await frame.locator("#zoom").textContent();
+  const before = (await frame.locator("#zoom").textContent()) ?? "";
   await frame.locator("#zoom-in").click();
-  await expect(frame.locator("#zoom")).not.toHaveText(before ?? "");
+  await expect(frame.locator("#zoom")).not.toHaveText(before);
+});
+
+test("a selected link opens in a web page tab of its own", async ({ page }) => {
+  await page.route("https://example.test/**", (route) =>
+    route.fulfill({ contentType: "text/html", body: "<h1>Example page</h1>" }),
+  );
+  await openWithPlugins(page, {
+    plugins: { "catvinci.web-view": ["network:*", "document.read"] },
+  });
+  await pasteMarkdown(page, "https://example.test/page");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await editor.click();
+  await page.keyboard.press("ControlOrMeta+a");
+  await editor.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Open the Selected Link in a Tab" }).click();
+  const web = page.frameLocator('[data-active-tab="true"] .web-page-frame');
+  await expect(web.locator("h1")).toHaveText("Example page");
+  await expect(page.getByRole("textbox", { name: "Web address" })).toHaveValue(
+    "https://example.test/page",
+  );
+});
+
+test("a Word document reads as laid out, and Edit as Markdown converts it", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: { "catvinci.word-reader": [] },
+    binary: { "/notes/letter.docx": await minimalDocx("Dear reader") },
+  });
+  await openPath(page, "/notes/letter.docx");
+  const frame = tabFrame(page);
+  await expect(frame.locator("section.docx")).toContainText("Dear reader", {
+    timeout: 15_000,
+  });
+  await mockInvoke(page, {
+    open_word_document: { markdown: "Dear reader, as Markdown" },
+  });
+  await frame.getByRole("button", { name: "Edit as Markdown" }).click();
+  await expect(page.locator('[data-active-tab="true"] .ProseMirror')).toContainText(
+    "Dear reader, as Markdown",
+  );
 });

@@ -1205,4 +1205,8 @@ export default {
   menuPlugins: "Плагины",
   menuManagePlugins: "Управление плагинами…",
   menuNoPluginCommands: "Нет команд плагинов",
+  webPageAddress: "Адрес",
+  webPageReload: "Обновить",
+  webPageOpenInBrowser: "Открыть в браузере",
+  webPageHint: "Если страница остаётся пустой, сайт не разрешает показывать себя в других приложениях — откройте её в браузере.",
 } satisfies Translation;

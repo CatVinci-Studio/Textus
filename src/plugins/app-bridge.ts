@@ -25,8 +25,8 @@ export interface PluginTabView {
   plugin: string;
   /** A view's id (contributes.views) or a custom editor's viewType. */
   view: string;
-  kind: "view" | "editor";
-  /** The file a custom editor shows. */
+  kind: "view" | "editor" | "web";
+  /** The file a custom editor shows; a web page's address. */
   resource?: string;
   title?: string;
   /** What a view was opened with (window.openView's `state`), until it

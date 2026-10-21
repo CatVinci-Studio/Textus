@@ -19,6 +19,7 @@ import {
 } from "./files";
 import { localize, type Permission, type PluginManifest } from "./manifest";
 import { showQuickPick, type QuickPickItem } from "./quick-pick";
+import { webPageUrl } from "./WebPagePane";
 import type { Endpoint } from "./rpc";
 import {
   postToWebview,
@@ -312,6 +313,27 @@ export class PluginHost {
           kind: "view",
           title: options?.title ?? localize(this.info.manifest, declared.title, this.deps.language()),
           state: options?.state,
+        });
+      },
+      "window.openWebPage": ({ url, title }: { url: string; title?: string }) => {
+        const address = webPageUrl(String(url));
+        if (!address) throw new Error("Only an https:// page opens in a tab.");
+        const host = new URL(address).hostname;
+        const granted = this.info.granted;
+        if (
+          !granted.includes("network:*") &&
+          !granted.includes(`network:${host}`) &&
+          !granted.some(
+            (p) => p.startsWith("network:*.") && host.endsWith(p.slice("network:*".length)),
+          )
+        )
+          throw new Error(`${this.id} was not granted network:${host}.`);
+        getWindowAccess()?.openPluginTab({
+          plugin: this.id,
+          view: "web",
+          kind: "web",
+          resource: address,
+          title: title ?? host,
         });
       },
       "window.openExternal": ({ url }: { url: string }) => {

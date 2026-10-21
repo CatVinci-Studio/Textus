@@ -1213,4 +1213,8 @@ para usar una.
   menuPlugins: "Complementos",
   menuManagePlugins: "Gestionar complementos…",
   menuNoPluginCommands: "No hay comandos de complementos",
+  webPageAddress: "Dirección web",
+  webPageReload: "Recargar",
+  webPageOpenInBrowser: "Abrir en el navegador",
+  webPageHint: "Si la página sigue en blanco, el sitio no permite mostrarse dentro de otras apps: ábrela en tu navegador.",
 } satisfies Translation;

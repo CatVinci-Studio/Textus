@@ -1,1 +1,6 @@
-["catvinci.image-viewer", "catvinci.pdf-viewer"]
+[
+  "catvinci.image-viewer",
+  "catvinci.pdf-viewer",
+  "catvinci.word-reader",
+  "catvinci.web-view"
+]

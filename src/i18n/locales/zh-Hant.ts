@@ -1102,4 +1102,8 @@ export default {
   menuPlugins: "外掛程式",
   menuManagePlugins: "管理外掛程式…",
   menuNoPluginCommands: "沒有外掛程式指令",
+  webPageAddress: "網址",
+  webPageReload: "重新載入",
+  webPageOpenInBrowser: "在瀏覽器中開啟",
+  webPageHint: "如果頁面一直是空白，表示這個網站不允許嵌入其他應用程式，請在瀏覽器中開啟。",
 } satisfies Translation;

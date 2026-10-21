@@ -1232,4 +1232,8 @@ utiliser une.
   menuPlugins: "Extensions",
   menuManagePlugins: "Gérer les extensions…",
   menuNoPluginCommands: "Aucune commande d’extension",
+  webPageAddress: "Adresse web",
+  webPageReload: "Recharger",
+  webPageOpenInBrowser: "Ouvrir dans le navigateur",
+  webPageHint: "Une page qui reste vide refuse de s’afficher dans d’autres apps : ouvrez-la dans votre navigateur.",
 } satisfies Translation;

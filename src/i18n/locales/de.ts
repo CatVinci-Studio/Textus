@@ -1204,4 +1204,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuPlugins: "Plugins",
   menuManagePlugins: "Plugins verwalten…",
   menuNoPluginCommands: "Keine Plugin-Befehle",
+  webPageAddress: "Webadresse",
+  webPageReload: "Neu laden",
+  webPageOpenInBrowser: "Im Browser öffnen",
+  webPageHint: "Bleibt die Seite leer, erlaubt die Website keine Anzeige in anderen Apps – öffne sie im Browser.",
 } satisfies Translation;

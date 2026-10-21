@@ -1155,4 +1155,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuPlugins: "プラグイン",
   menuManagePlugins: "プラグインを管理…",
   menuNoPluginCommands: "プラグインのコマンドはありません",
+  webPageAddress: "アドレス",
+  webPageReload: "再読み込み",
+  webPageOpenInBrowser: "ブラウザで開く",
+  webPageHint: "ページが空白のままなら、そのサイトは他のアプリ内での表示を許可していません。ブラウザで開いてください。",
 } satisfies Translation;

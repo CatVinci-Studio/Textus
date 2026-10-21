@@ -1,0 +1,32 @@
+{
+  "id": "catvinci.word-reader",
+  "name": "%name%",
+  "version": "1.0.0",
+  "publisher": "catvinci",
+  "description": "%description%",
+  "icon": "icon.svg",
+  "license": "MIT",
+  "repository": "https://github.com/CatVinci-Studio/Textus",
+  "engines": { "textus": "^1.3.0" },
+  "main": "host.js",
+  "permissions": [],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "catvinci.word-reader.docx",
+        "displayName": "%name%",
+        "filenamePatterns": ["*.docx"]
+      }
+    ]
+  },
+  "l10n": {
+    "en": {
+      "name": "Word Reader",
+      "description": "Read Word documents as they look in Word, in a tab. Edit as Markdown turns one into a document of yours."
+    },
+    "zh": {
+      "name": "Word 阅读器",
+      "description": "在标签页里按 Word 中的样子阅读 Word 文档。点“作为 Markdown 编辑”可以转成你自己的文档。"
+    }
+  }
+}

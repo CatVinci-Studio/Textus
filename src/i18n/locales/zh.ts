@@ -1097,4 +1097,8 @@ export default {
   menuPlugins: "插件",
   menuManagePlugins: "管理插件…",
   menuNoPluginCommands: "没有插件命令",
+  webPageAddress: "网址",
+  webPageReload: "重新载入",
+  webPageOpenInBrowser: "在浏览器中打开",
+  webPageHint: "如果页面一直是空白，说明这个网站不允许嵌入到其他应用里，请在浏览器中打开。",
 } satisfies Translation;

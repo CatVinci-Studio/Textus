@@ -1189,6 +1189,10 @@ type /name in a conversation to use one.
   menuPlugins: "Plugins",
   menuManagePlugins: "Manage Plugins…",
   menuNoPluginCommands: "No plugin commands",
+  webPageAddress: "Web address",
+  webPageReload: "Reload",
+  webPageOpenInBrowser: "Open in Browser",
+  webPageHint: "A page that stays blank doesn’t allow being shown inside other apps - open it in your browser.",
 } satisfies Record<string, string | Plural>;
 
 export default en;

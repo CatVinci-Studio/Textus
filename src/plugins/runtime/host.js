@@ -201,6 +201,12 @@
           heading: options && options.heading,
         });
       },
+      openWebPage: function (url, options) {
+        return call("window.openWebPage", {
+          url: String(url),
+          title: options && options.title,
+        });
+      },
       openExternal: function (url) {
         return call("window.openExternal", { url: String(url) });
       },
