@@ -23,6 +23,7 @@ mod levis_import;
 #[cfg(desktop)]
 mod menu;
 mod net;
+mod plugins;
 mod settings;
 #[cfg(desktop)]
 mod tab_drag;
@@ -778,6 +779,21 @@ pub fn run() {
             clear_draft_snapshot,
             clear_all_drafts,
             distribution::app_distribution,
+            plugins::state::plugins_state,
+            plugins::state::plugins_set_all,
+            plugins::state::plugin_set,
+            plugins::install::plugins_installed,
+            plugins::install::plugin_install,
+            plugins::install::plugin_load_dev,
+            plugins::install::plugin_uninstall,
+            plugins::access::plugin_file,
+            plugins::access::plugin_read_resource,
+            plugins::access::plugin_fs_read,
+            plugins::access::plugin_fs_list,
+            plugins::access::plugin_fs_write,
+            plugins::access::plugin_http,
+            plugins::access::plugin_storage_get,
+            plugins::access::plugin_storage_set,
             // iOS only: rename and delete in the document list.
             #[cfg(mobile)]
             commands::documents::rename_entry,
@@ -794,6 +810,8 @@ pub fn run() {
             take_pending_open_folder,
             #[cfg(desktop)]
             commands::folder::pick_open_folder,
+            #[cfg(desktop)]
+            plugins::install::plugin_pick_package,
             #[cfg(desktop)]
             commands::tree_ops::tree_create_document,
             #[cfg(desktop)]
