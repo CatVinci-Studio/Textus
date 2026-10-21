@@ -236,6 +236,28 @@ br:is(.pending-delete, .pending-sentence-hot) {
   background: none;
 }
 
+/* New text between two blocks (pending-edit-plugin's fillPendingBlocks):
+   the paragraphs, lists and tables it will be, in one tinted box. */
+.pending-insert.pending-blocks {
+  display: block;
+  /* The tint reaches past the column; the text and a picture keep its
+     width, as they will once accepted. */
+  margin-inline: -6px;
+  padding: 2px 6px;
+}
+
+.pending-blocks > :first-child {
+  margin-top: 0;
+}
+
+.pending-blocks > :last-child {
+  margin-bottom: 0;
+}
+
+.ProseMirror[data-revision-display="final"] .pending-insert.pending-blocks {
+  padding: 0;
+}
+
 .pending-insert code {
   font-family: var(--font-mono);
   font-size: 0.9em;
