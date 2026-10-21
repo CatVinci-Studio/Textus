@@ -1,3 +1,4 @@
+import { withoutCitationMarkers } from "../citation-markers";
 import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../types";
 
 /** A string field scanned out of an incomplete JSON fragment: what has
@@ -132,7 +133,12 @@ export function draftProposal(fragment: string): DraftProposal | null {
     proposal: {
       action: action.value as EditAction,
       anchor: needsAnchor ? anchor?.value : undefined,
-      text: fields.text?.value ?? "",
+      // What it writes, without the citation markers an OpenAI model may
+      // put in (citation-markers.ts) - the anchor quotes the document.
+      text: withoutCitationMarkers(
+        fields.text?.value ?? "",
+        !fields.text?.complete,
+      ),
       // Disambiguates a repeated anchor (findMarkdownMatch) - only once
       // fully quoted; a half-arrived context must not mislocate the draft.
       context: fields.context?.complete ? fields.context.value : undefined,
