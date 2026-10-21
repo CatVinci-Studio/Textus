@@ -813,6 +813,8 @@ pub fn run() {
             #[cfg(desktop)]
             plugins::install::plugin_pick_package,
             #[cfg(desktop)]
+            menu::set_plugin_menu,
+            #[cfg(desktop)]
             commands::tree_ops::tree_create_document,
             #[cfg(desktop)]
             commands::tree_ops::tree_create_folder,

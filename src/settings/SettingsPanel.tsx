@@ -64,6 +64,8 @@ interface SettingsPanelProps {
   /** The shortcuts that can't be changed, listed under the ones that can
    *  (built from the app menu, app/fixed-shortcuts.ts). */
   fixedShortcuts?: FixedShortcutGroup[];
+  /** The page to open at; General when left out. */
+  initialCategory?: string;
 }
 
 /** A Settings page's id (settings-pages.tsx). */
@@ -102,6 +104,7 @@ export function SettingsPanel({
   onFilesDeleted,
   viewChecks = {},
   fixedShortcuts = [],
+  initialCategory = "general",
 }: SettingsPanelProps) {
   const { settings, setSettings, t } = useSettings();
   // As in the review bar: a phone never has a margin, so there is nothing
@@ -113,7 +116,7 @@ export function SettingsPanel({
   const percent = new Intl.NumberFormat(localeOf(settings.language), {
     style: "percent",
   });
-  const [category, setCategory] = useState<Category>("general");
+  const [category, setCategory] = useState<Category>(initialCategory);
   // A page of its own inside a category, with a way back, on the desktop
   // and the phone alike: General › About Textus, Editor & Appearance ›
   // More themes (› Browse themes).

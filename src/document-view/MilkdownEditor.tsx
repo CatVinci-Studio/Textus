@@ -13,6 +13,7 @@ import { useTextusEditor } from "./useTextusEditor";
 import { useAiNotice } from "./useAiNotice";
 import { useQuickAskDecorations } from "./useQuickAskDecorations";
 import { useEditorProposals } from "./useEditorProposals";
+import { usePluginDocumentAccess } from "./usePluginDocumentAccess";
 import { useChatContextBridge } from "./useChatContextBridge";
 import { usePanelSelection } from "./usePanelSelection";
 import { useChatSelectionHighlight } from "./useChatSelectionHighlight";
@@ -197,6 +198,12 @@ export function MilkdownEditor({
   });
   const { pendingEdits, conversation, quickConversation, showProposals } =
     proposals;
+  usePluginDocumentAccess({
+    run,
+    isActive,
+    filePath,
+    addPreviews: proposals.addPreviews,
+  });
   const windowChipRef = useRef<SelectionChipHandlers | null>(null);
 
   const {

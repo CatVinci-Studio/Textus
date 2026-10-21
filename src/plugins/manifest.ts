@@ -45,13 +45,10 @@ export interface KeybindingContribution {
   key: string;
 }
 
-/** Where a command is listed. */
-export type MenuId = "editor/context" | "app/plugins" | "file/explorer";
-export const MENU_IDS: readonly MenuId[] = [
-  "editor/context",
-  "app/plugins",
-  "file/explorer",
-];
+/** Where a command is listed: the editor's right-click menu, and the
+ *  Plugins menu (the menu bar's on macOS, the app menu's elsewhere). */
+export type MenuId = "editor/context" | "app/plugins";
+export const MENU_IDS: readonly MenuId[] = ["editor/context", "app/plugins"];
 
 export interface MenuContribution {
   command: string;

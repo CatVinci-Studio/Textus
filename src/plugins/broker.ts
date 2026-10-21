@@ -1,0 +1,424 @@
+import { fs, plugins as pluginsIpc } from "../platform/ipc";
+import { showMessage, showPrompt } from "../ui/app-dialog";
+import { dirname } from "../utils/path";
+import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../ai/types";
+import type { Strings } from "../i18n/strings";
+import {
+  getActiveDocument,
+  getWindowAccess,
+  onPluginEvent,
+  type PluginEventMap,
+} from "./app-bridge";
+import { connectFrame, hostDocument, sandboxedFrame } from "./frames";
+import {
+  fromBase64,
+  readPluginFile,
+  toBase64,
+  withResources,
+  type PluginOrigin,
+} from "./files";
+import { localize, type Permission, type PluginManifest } from "./manifest";
+import { showQuickPick, type QuickPickItem } from "./quick-pick";
+import type { Endpoint } from "./rpc";
+import {
+  postToWebview,
+  setWebviewHtml,
+  setWebviewTitle,
+  webview,
+} from "./webviews";
+
+/**
+ * The window's side of one running plugin (docs/design/plugins.md §4):
+ * its host frame, and every call its code makes, checked against what the
+ * user granted before anything is done - the privileged ones made in Rust,
+ * which checks them again (src-tauri/src/plugins/).
+ */
+
+/** A running plugin as the broker knows it. */
+export interface PluginRuntimeInfo {
+  manifest: PluginManifest;
+  origin: PluginOrigin;
+  granted: readonly Permission[];
+}
+
+/** What the broker needs of the plugin manager (manager.ts). */
+export interface BrokerDeps {
+  strings(): Strings;
+  language(): string;
+  appVersion: string;
+  platform: string;
+  dark(): boolean;
+  /** A setting's value: the user's, or the manifest's default. */
+  setting(id: string, key: string): unknown;
+  /** Runs any command - the app's, or a plugin's. */
+  runCommand(command: string, args: unknown[]): Promise<unknown>;
+  /** A command the plugin registered beyond its manifest's. */
+  addCommand(id: string, command: string): void;
+  removeCommand(command: string): void;
+  /** The plugin failed: stop it, turn it off, say why. */
+  failed(id: string, reason: string): void;
+}
+
+/** How long a host has to load and to answer a ping. */
+const START_MS = 10_000;
+const PING_MS = 2_000;
+const PING_EVERY_MS = 15_000;
+/** Errors in a minute past which a plugin is turned off. */
+const MAX_ERRORS_PER_MINUTE = 10;
+
+/** Where the hosts' frames live: out of sight, still running. */
+function hostsContainer(): HTMLElement {
+  let box = document.getElementById("plugin-hosts");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "plugin-hosts";
+    box.className = "plugin-hosts";
+    box.setAttribute("aria-hidden", "true");
+    document.body.append(box);
+  }
+  return box;
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, what: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${what} took too long`)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
+/** The events a plugin can listen to, and the permission each needs. */
+const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
+  didSave: "workspace.read",
+  activeDocument: "document.read",
+  root: "workspace.read",
+  theme: null,
+  language: null,
+  settings: null,
+};
+
+let proposalCounter = 0;
+
+export class PluginHost {
+  private frame: HTMLIFrameElement | null = null;
+  private endpoint: Endpoint | null = null;
+  private starting: Promise<void> | null = null;
+  private disconnect: (() => void) | null = null;
+  private pinger: ReturnType<typeof setInterval> | null = null;
+  private subscriptions = new Map<string, () => void>();
+  private storage: Promise<Record<string, unknown>> | null = null;
+  private errors: number[] = [];
+  private stopped = false;
+
+  constructor(
+    readonly info: PluginRuntimeInfo,
+    private readonly deps: BrokerDeps,
+  ) {}
+
+  get id(): string {
+    return this.info.manifest.id;
+  }
+
+  private get name(): string {
+    return localize(this.info.manifest, this.info.manifest.name, this.deps.language());
+  }
+
+  /** Starts the host and activates the plugin, once. */
+  start(): Promise<void> {
+    if (!this.starting) {
+      this.starting = this.load().catch((err) => {
+        this.deps.failed(this.id, String((err as Error)?.message ?? err));
+        throw err;
+      });
+    }
+    return this.starting;
+  }
+
+  /** A call to the plugin's code, starting it first. */
+  async request<T = unknown>(method: string, params?: unknown): Promise<T> {
+    await this.start();
+    if (!this.endpoint) throw new Error(`${this.name} is not running.`);
+    return this.endpoint.call<T>(method, params);
+  }
+
+  /** Tells the plugin something, if it is running and listening. */
+  event<K extends keyof PluginEventMap>(name: K, data: PluginEventMap[K]): void {
+    if (this.subscriptions.has(name))
+      this.endpoint?.notify("$event", { name, data });
+  }
+
+  /** A message to the plugin's code that expects no answer, if it is
+   *  running. */
+  notify(method: string, params?: unknown): void {
+    this.endpoint?.notify(method, params);
+  }
+
+  stop(): void {
+    if (this.stopped) return;
+    this.stopped = true;
+    if (this.pinger) clearInterval(this.pinger);
+    const endpoint = this.endpoint;
+    // Asked to tidy up, without waiting for it.
+    endpoint?.call("$deactivate").catch(() => {});
+    for (const stop of this.subscriptions.values()) stop();
+    this.subscriptions.clear();
+    setTimeout(() => {
+      this.disconnect?.();
+      this.frame?.remove();
+      this.frame = null;
+      this.endpoint = null;
+    }, 100);
+  }
+
+  private async load(): Promise<void> {
+    const { manifest, origin } = this.info;
+    const code = manifest.main
+      ? new TextDecoder().decode(await readPluginFile(manifest.id, origin, manifest.main))
+      : "";
+    if (this.stopped) throw new Error("Stopped");
+    const frame = sandboxedFrame(hostDocument(code), manifest.id);
+    this.frame = frame;
+    const connected = new Promise<Endpoint>((resolve) => {
+      this.disconnect = connectFrame(
+        frame,
+        this.handlers(),
+        () => ({
+          env: {
+            pluginId: manifest.id,
+            pluginVersion: manifest.version,
+            language: this.deps.language(),
+            appVersion: this.deps.appVersion,
+            platform: this.deps.platform,
+            theme: this.deps.dark() ? "dark" : "light",
+          },
+        }),
+        resolve,
+      );
+    });
+    hostsContainer().append(frame);
+    this.endpoint = await withTimeout(connected, START_MS, `Starting ${this.name}`);
+    await withTimeout(this.endpoint.call("$activate"), START_MS, `Activating ${this.name}`);
+    let missed = 0;
+    this.pinger = setInterval(() => {
+      if (!this.endpoint) return;
+      withTimeout(this.endpoint.call("$ping"), PING_MS, "ping").then(
+        () => (missed = 0),
+        () => {
+          if (++missed >= 2) this.deps.failed(this.id, this.deps.strings().pluginStoppedAnswering);
+        },
+      );
+    }, PING_EVERY_MS);
+  }
+
+  private need(permission: Permission): void {
+    if (!this.info.granted.includes(permission))
+      throw new Error(`${this.id} was not granted ${permission}.`);
+  }
+
+  private root(): string {
+    this.need("workspace.read");
+    const root = getWindowAccess()?.rootPath();
+    if (!root) throw new Error("No folder is open.");
+    return root;
+  }
+
+  private ownWebview(id: string) {
+    const record = webview(id);
+    if (!record || record.plugin !== this.id) throw new Error(`No webview ${id}.`);
+    return record;
+  }
+
+  private readOwnFile = (rel: string) =>
+    readPluginFile(this.id, this.info.origin, rel);
+
+  private loadStorage(): Promise<Record<string, unknown>> {
+    this.storage ??= pluginsIpc.storageGet(this.id).catch(() => ({}));
+    return this.storage;
+  }
+
+  /** The methods the plugin's code calls (runtime/host.js's `textus`). */
+  private handlers() {
+    const t = () => this.deps.strings();
+    return {
+      "host.error": () => {
+        const now = Date.now();
+        this.errors = [...this.errors.filter((at) => now - at < 60_000), now];
+        if (this.errors.length > MAX_ERRORS_PER_MINUTE)
+          this.deps.failed(this.id, t().pluginTooManyErrors);
+      },
+      "events.subscribe": ({ name }: { name: keyof PluginEventMap }) => {
+        if (!(name in PLUGIN_EVENT_NEEDS)) throw new Error(`No event ${name}.`);
+        const needs = PLUGIN_EVENT_NEEDS[name];
+        if (needs) this.need(needs);
+        if (this.subscriptions.has(name)) return;
+        // A setting's change is told by the manager, to this plugin only.
+        this.subscriptions.set(
+          name,
+          name === "settings"
+            ? () => {}
+            : onPluginEvent(name, (data) => this.event(name, data)),
+        );
+      },
+      "commands.register": ({ command }: { command: string }) => {
+        if (!command.startsWith(`${this.id}.`))
+          throw new Error(`A command must start with "${this.id}.".`);
+        if (!this.info.manifest.contributes.commands.some((c) => c.command === command))
+          this.deps.addCommand(this.id, command);
+      },
+      "commands.unregister": ({ command }: { command: string }) => {
+        if (!this.info.manifest.contributes.commands.some((c) => c.command === command))
+          this.deps.removeCommand(command);
+      },
+      "commands.execute": ({ command, args }: { command: string; args: unknown[] }) =>
+        this.deps.runCommand(command, args ?? []),
+      "window.showMessage": ({ text, tone }: { text: string; tone?: string }) =>
+        showMessage(text, {
+          title: this.name,
+          tone: tone === "warning" || tone === "error" ? tone : "info",
+        }),
+      "window.showInput": (o: { prompt?: string; title?: string; value?: string }) =>
+        showPrompt(o.prompt ?? o.title ?? "", o.value ?? "", {
+          title: this.name,
+          okLabel: t().pluginOk,
+          cancelLabel: t().pluginCancel,
+        }),
+      "window.showQuickPick": (o: { items: QuickPickItem[]; placeholder?: string }) =>
+        showQuickPick(
+          (o.items ?? []).map((item) =>
+            typeof item === "string" ? { label: item, value: item } : item,
+          ),
+          o.placeholder ?? "",
+        ),
+      "window.openView": ({ view, options }: { view: string; options?: { title?: string } }) => {
+        const declared = this.info.manifest.contributes.views.find((v) => v.id === view);
+        if (!declared) throw new Error(`No view ${view} in the manifest.`);
+        getWindowAccess()?.openPluginTab({
+          plugin: this.id,
+          view,
+          kind: "view",
+          title: options?.title ?? localize(this.info.manifest, declared.title, this.deps.language()),
+        });
+      },
+      "window.openFile": ({ path, heading }: { path: string; heading?: string }) => {
+        this.need("workspace.read");
+        getWindowAccess()?.openFile(path, heading);
+      },
+      "window.openUntitled": ({ content, title }: { content: string; title?: string }) =>
+        getWindowAccess()?.openUntitled(content, title),
+      "webview.setHtml": async ({ webview: id, html }: { webview: string; html: string }) => {
+        this.ownWebview(id);
+        setWebviewHtml(id, await withResources(html, this.readOwnFile));
+      },
+      "webview.postMessage": ({ webview: id, message }: { webview: string; message: unknown }) => {
+        this.ownWebview(id);
+        postToWebview(id, message);
+        return true;
+      },
+      "webview.setTitle": ({ webview: id, title }: { webview: string; title: string }) => {
+        this.ownWebview(id);
+        setWebviewTitle(id, title);
+      },
+      "document.getText": () => {
+        this.need("document.read");
+        return getActiveDocument()?.text() ?? null;
+      },
+      "document.getPath": () => {
+        this.need("document.read");
+        return getActiveDocument()?.path ?? null;
+      },
+      "document.getSelection": () => {
+        this.need("document.read");
+        return getActiveDocument()?.selection() ?? null;
+      },
+      "document.proposeEdit": (edit: Partial<EditProposal>) => {
+        this.need("document.propose");
+        const action = (edit.action ?? "insert_at_cursor") as EditAction;
+        if (!EDIT_ACTIONS.includes(action)) throw new Error(`No edit action ${action}.`);
+        const doc = getActiveDocument();
+        if (!doc) throw new Error("No document is open.");
+        const proposal: EditProposal = {
+          action,
+          text: typeof edit.text === "string" ? edit.text : undefined,
+          anchor: typeof edit.anchor === "string" ? edit.anchor : undefined,
+          context: typeof edit.context === "string" ? edit.context : undefined,
+          reason: `${this.name}${typeof edit.reason === "string" ? `: ${edit.reason}` : ""}`,
+        };
+        return doc.propose(`plugin-${this.id}-${++proposalCounter}`, proposal);
+      },
+      "document.readResource": ({ webview: id }: { webview: string }) => {
+        const record = this.ownWebview(id);
+        if (!record.resource) throw new Error("This view shows no file.");
+        return pluginsIpc.readResource(this.id, record.resource);
+      },
+      "document.writeResource": ({ webview: id, text }: { webview: string; text: string }) => {
+        this.need("workspace.write");
+        const record = this.ownWebview(id);
+        if (!record.resource) throw new Error("This view shows no file.");
+        return pluginsIpc.fsWrite(this.id, dirname(record.resource), record.resource, text);
+      },
+      "plugin.readFile": ({ path }: { path: string }) => this.readOwnFile(path),
+      "workspace.rootPath": () => {
+        this.need("workspace.read");
+        return getWindowAccess()?.rootPath() ?? null;
+      },
+      "workspace.list": ({ path }: { path: string }) => {
+        const root = this.root();
+        return pluginsIpc.fsList(this.id, root, path || root);
+      },
+      "workspace.findDocuments": async () => {
+        const index = await fs.indexFolder(this.root());
+        return index.files;
+      },
+      "workspace.readFile": ({ path }: { path: string }) =>
+        pluginsIpc.fsRead(this.id, this.root(), path),
+      "workspace.writeText": ({ path, text }: { path: string; text: string }) => {
+        this.need("workspace.write");
+        return pluginsIpc.fsWrite(this.id, this.root(), path, text);
+      },
+      "workspace.writeFile": ({ path, data }: { path: string; data: Uint8Array }) => {
+        this.need("workspace.write");
+        return pluginsIpc.fsWrite(this.id, this.root(), path, toBase64(data), true);
+      },
+      "net.fetch": async (r: {
+        url: string;
+        method?: string;
+        headers?: Record<string, string>;
+        body?: Uint8Array;
+      }) => {
+        const response = await pluginsIpc.http(this.id, {
+          url: r.url,
+          method: r.method,
+          headers: r.headers,
+          body: r.body ? toBase64(r.body) : undefined,
+          bodyBase64: !!r.body,
+        });
+        return { ...response, body: fromBase64(response.body) };
+      },
+      "storage.get": async ({ key }: { key: string }) =>
+        (await this.loadStorage())[key] ?? null,
+      "storage.set": async ({ key, value }: { key: string; value: unknown }) => {
+        await pluginsIpc.storageSet(this.id, key, value);
+        const store = await this.loadStorage();
+        if (value === null) delete store[key];
+        else store[key] = value;
+      },
+      "settings.get": ({ key }: { key: string }) => this.deps.setting(this.id, key),
+      "clipboard.readText": () => {
+        this.need("clipboard");
+        return navigator.clipboard.readText();
+      },
+      "clipboard.writeText": ({ text }: { text: string }) => {
+        this.need("clipboard");
+        return navigator.clipboard.writeText(text);
+      },
+    };
+  }
+}

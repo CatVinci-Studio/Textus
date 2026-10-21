@@ -21,6 +21,7 @@ import { CheckIcon, ChevronIcon } from "../ui/icons";
 import { usePresenceProps } from "../ui/usePresence";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import "./app-menu.css";
+import { usePluginMenuEntries } from "../plugins/usePluginMenu";
 
 /**
  * The app-drawn menu, opened from the title row's hamburger.
@@ -51,6 +52,7 @@ interface AppMenuProps {
 
 export function AppMenu({ x, y, onClose, checks }: AppMenuProps) {
   const { t, settings } = useSettings();
+  const pluginEntries = usePluginMenuEntries(settings.language);
   const [recents, setRecents] = useState<RecentLists>(NO_RECENTS);
   const [fullscreen, setFullscreen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -111,10 +113,13 @@ export function AppMenu({ x, y, onClose, checks }: AppMenuProps) {
       <MenuList
         items={
           hasAppMenu
-            ? buildAppMenu(t, settings.shortcuts, recents, {
-                ...checks,
-                fullscreen,
-              })
+            ? buildAppMenu(
+                t,
+                settings.shortcuts,
+                recents,
+                { ...checks, fullscreen },
+                pluginEntries,
+              )
             : buildMobileMenu(t, checks)
         }
         onDismiss={onClose}

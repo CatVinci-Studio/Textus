@@ -471,6 +471,10 @@ export const menuIpc = {
    *  (app/app-menu-model.ts's nativeMenuAccelerators). */
   setMenuAccelerators: (accelerators: Record<string, string>) =>
     desktopQuery<void>("set_menu_accelerators", undefined, { accelerators }),
+  /** Fills the native Plugins menu with what the plugins that are on put
+   *  there (menu.rs's set_plugin_menu). */
+  setPluginMenu: (items: { command: string; label: string }[]) =>
+    desktopQuery<void>("set_plugin_menu", undefined, { items }),
 };
 
 // ---------------------------------------------------------------------------
@@ -1368,4 +1372,92 @@ export const drafts = {
   clearDraftSnapshot: (tabId: string) =>
     call<void>("clear_draft_snapshot", { tabId }),
   clearAllDrafts: () => call<void>("clear_all_drafts"),
+};
+
+// ---------------------------------------------------------------------------
+// plugins (src-tauri/src/plugins/) - what is installed and granted, and the
+// calls a plugin makes through the window (src/plugins/broker.ts).
+// ---------------------------------------------------------------------------
+
+/** PluginsState in src-tauri/src/plugins/state.rs; change both. */
+export interface PluginsState {
+  allOn: boolean;
+  plugins: Record<
+    string,
+    { enabled: boolean; granted: string[]; devPath?: string }
+  >;
+}
+
+/** InstalledPlugin in src-tauri/src/plugins/install.rs; change both. */
+export interface InstalledPlugin {
+  id: string;
+  dir: string;
+  /** textus-plugin.json as written. */
+  manifest: string;
+  dev: boolean;
+}
+
+/** FsEntry in src-tauri/src/plugins/access.rs; change both. */
+export interface PluginFsEntry {
+  name: string;
+  path: string;
+  isDir: boolean;
+  size: number;
+  modifiedMs: number | null;
+}
+
+/** HttpResponse in src-tauri/src/plugins/access.rs; change both. */
+export interface PluginHttpResponse {
+  status: number;
+  headers: Record<string, string>;
+  /** base64 */
+  body: string;
+}
+
+/** A raw IPC response's bytes (tauri::ipc::Response). */
+const bytes = async (pending: Promise<ArrayBuffer>) =>
+  new Uint8Array(await pending);
+
+export const plugins = {
+  state: () => call<PluginsState>("plugins_state"),
+  setAll: (on: boolean) => call<void>("plugins_set_all", { on }),
+  set: (id: string, enabled: boolean, granted: string[]) =>
+    call<void>("plugin_set", { id, enabled, granted }),
+  installed: () => call<InstalledPlugin[]>("plugins_installed"),
+  install: (path: string) => call<InstalledPlugin>("plugin_install", { path }),
+  loadDev: (path: string) => call<InstalledPlugin>("plugin_load_dev", { path }),
+  uninstall: (id: string) => call<void>("plugin_uninstall", { id }),
+  /** Install from file… (`folder` false) and Load a plugin folder…'s
+   *  picker. Desktop only. */
+  pickPackage: (folder: boolean, filterName: string) =>
+    desktopAction<string | null>("plugin_pick_package", { folder, filterName }),
+  file: (id: string, rel: string) =>
+    bytes(call<ArrayBuffer>("plugin_file", { id, rel })),
+  readResource: (id: string, path: string) =>
+    bytes(call<ArrayBuffer>("plugin_read_resource", { id, path })),
+  fsRead: (id: string, root: string, path: string) =>
+    bytes(call<ArrayBuffer>("plugin_fs_read", { id, root, path })),
+  fsList: (id: string, root: string, path: string) =>
+    call<PluginFsEntry[]>("plugin_fs_list", { id, root, path }),
+  fsWrite: (
+    id: string,
+    root: string,
+    path: string,
+    contents: string,
+    base64 = false,
+  ) => call<void>("plugin_fs_write", { id, root, path, contents, base64 }),
+  http: (
+    id: string,
+    request: {
+      url: string;
+      method?: string;
+      headers?: Record<string, string>;
+      body?: string;
+      bodyBase64?: boolean;
+    },
+  ) => call<PluginHttpResponse>("plugin_http", { id, request }),
+  storageGet: (id: string) =>
+    call<Record<string, unknown>>("plugin_storage_get", { id }),
+  storageSet: (id: string, key: string, value: unknown) =>
+    call<void>("plugin_storage_set", { id, key, value }),
 };

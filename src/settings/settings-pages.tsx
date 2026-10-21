@@ -4,6 +4,7 @@ import { isIOSApp } from "../platform/capabilities";
 import { AiPage } from "./pages/AiPage";
 import { EditorPage } from "./pages/EditorPage";
 import { GeneralPage } from "./pages/GeneralPage";
+import { PluginsPage } from "./pages/PluginsPage";
 import { ShortcutsPage } from "./pages/ShortcutsPage";
 import type { SettingsPageProps } from "./pages/types";
 import { PrivacySection } from "./sections/privacy";
@@ -30,6 +31,7 @@ const BUILT_IN: SettingsPageDef[] = [
   { id: "general", label: (t) => t.navGeneral, Page: GeneralPage },
   { id: "editor", label: (t) => t.navEditor, Page: EditorPage },
   { id: "ai", label: (t) => t.navAi, Page: AiPage },
+  { id: "plugins", label: (t) => t.navPlugins, Page: PluginsPage },
   {
     id: "shortcuts",
     label: (t) => t.navShortcuts,

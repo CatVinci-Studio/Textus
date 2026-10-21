@@ -13,6 +13,13 @@ import type { NewDocumentMode } from "../settings/SettingsContext";
 import { setTabJump } from "../editor/tab-jump";
 import { lastCaret } from "./last-carets";
 import { isWordDocument } from "./word-import";
+import { customEditorFor, loadPlugins } from "../plugins/manager";
+
+/** Whether a plugin opens `path` in a tab of its own (a PDF). */
+async function opensInPlugin(path: string): Promise<boolean> {
+  await loadPlugins().catch(() => {});
+  return customEditorFor(path) !== null;
+}
 
 // Module-scoped, NOT a ref: React StrictMode (dev builds) runs mount effects
 // twice on the same component, and this drain is a destructive pull from
@@ -189,8 +196,9 @@ export function useStartupRestore(opts: StartupRestoreOptions): void {
           const recovered = recoveredFor(first);
           if (recovered) {
             loadRecoveredIntoInitialTab(recovered);
-          } else if (isWordDocument(first)) {
-            // Converted into the initial tab (word-import.ts).
+          } else if (isWordDocument(first) || (await opensInPlugin(first))) {
+            // Converted into the initial tab (word-import.ts), or shown
+            // there by the plugin that opens it (plugins/manager.ts).
             await opts.replaceTabWithFile(opts.activeTabId, first);
           } else {
             const { content: text, diskMtime } = await readDocFromDisk(first);

@@ -7,6 +7,7 @@ import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import type { AgentMode } from "../settings/SettingsContext";
+import { PluginTabPane } from "../plugins/PluginWebview";
 import { TabBar } from "./TabBar";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
@@ -82,7 +83,15 @@ export function MainPane({
           data-active-tab={tab.id === activeTabId}
           style={{ display: tab.id === activeTabId ? "contents" : "none" }}
         >
-          {tab.sourceMode && tab.splitView ? (
+          {tab.view ? (
+            <PluginTabPane
+              tabId={tab.id}
+              plugin={tab.view.plugin}
+              view={tab.view.view}
+              kind={tab.view.kind}
+              resource={tab.view.resource}
+            />
+          ) : tab.sourceMode && tab.splitView ? (
             <SplitView
               content={tab.content}
               filePath={tab.path}

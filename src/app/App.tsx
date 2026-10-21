@@ -72,6 +72,10 @@ import {
   ZenHint,
 } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
+import { usePluginWindow } from "../plugins/usePluginWindow";
+import { usePluginMenuSync } from "../plugins/usePluginMenu";
+import { QuickPickHost } from "../plugins/quick-pick";
+import "../plugins/plugins.css";
 import "./App.css";
 
 /**
@@ -115,6 +119,10 @@ function App() {
     setPanelMode,
   } = useSidePanels(textusAi.on);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // The page Settings opens at: General, or Plugins from that menu.
+  const [settingsStart, setSettingsStart] = useState<"general" | "plugins">(
+    "general",
+  );
   const appUpdate = useAppUpdate(settings.updateChannel);
   useZoom(settings.zoom, (zoom) => setSettings({ zoom }));
   const tutorial = useTutorial(textusAi.on);
@@ -192,6 +200,14 @@ function App() {
     onWordDocumentOpened: setWordImported,
   });
   useLastCarets(tabs, activeTabId, settings.restoreSessionOnStartup);
+  usePluginWindow({
+    t,
+    language: settings.language,
+    rootPath: openFolder.folder ?? openFolder.treeRoot,
+    activePath: activeTab.path,
+    tabState,
+    openPathInTab,
+  });
 
   const { openHelpTab } = useHelpTabs({
     tabState,
@@ -333,6 +349,7 @@ function App() {
   };
   useNativeMenuChecks(menuChecks);
   useNativeMenuAccelerators(settings.shortcuts);
+  usePluginMenuSync(settings.language);
 
   // Menu events from Rust (menu.rs's dispatch) - every File/View/Format/Help
   // action the frontend owns arrives here as a window event; see
@@ -343,7 +360,14 @@ function App() {
     t,
     pdfPageNumbers: settings.pdfPageNumbers,
     diagramEngine: settings.diagramEngine,
-    onOpenSettings: () => setSettingsOpen(true),
+    onOpenSettings: () => {
+      setSettingsStart("general");
+      setSettingsOpen(true);
+    },
+    onOpenPluginSettings: () => {
+      setSettingsStart("plugins");
+      setSettingsOpen(true);
+    },
     onToggleTypewriter: () =>
       setSettings({ typewriterMode: !settings.typewriterMode }),
     onToggleSidebar: toggleSidebar,
@@ -507,6 +531,7 @@ function App() {
           {settingsOpen && (
             <SettingsPanel
               onClose={() => setSettingsOpen(false)}
+              initialCategory={settingsStart}
               onOpenFile={(path) => void openFile(path)}
               onFilesDeleted={skillFilesDeleted}
               viewChecks={{
@@ -545,6 +570,7 @@ function App() {
           )}
         </Presence>
         <AppDialogHost okLabel={t.dialogOk} />
+        <QuickPickHost emptyLabel={t.pluginQuickPickEmpty} />
 
         {zenMode && <ZenHint onExit={() => setZenMode(false)} t={t} />}
 

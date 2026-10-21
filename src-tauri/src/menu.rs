@@ -90,6 +90,13 @@ const TUTORIALS_ID: &str = "help-tutorials";
 /// where <kind> is one of h1..h6, bullet-list, ordered-list, blockquote,
 /// code-block, table - matching the frontend's INSERT_BLOCK_EVENT handler.
 const INSERT_BLOCK_PREFIX: &str = "insert-block:";
+/// Plugins menu ids carry the command to run: "plugin-command:<command>",
+/// a command a plugin added to the menu (src/plugins/manager.ts).
+const PLUGIN_COMMAND_PREFIX: &str = "plugin-command:";
+/// Plugins > Manage Plugins…: Settings, at its Plugins page.
+const MANAGE_PLUGINS_ID: &str = "manage-plugins";
+/// The Plugins menu's line while no plugin adds anything to it.
+const NO_PLUGIN_COMMANDS_ID: &str = "plugin-commands-none";
 
 /// Emit a menu event only to the focused window - each window is an
 /// independent document, so broadcast semantics would e.g. save every
@@ -164,6 +171,21 @@ fn emit_or_open_window(app: &tauri::AppHandle, event: &'static str) {
 /// rebuild its entries at runtime without touching the rest of the menu.
 struct RecentMenu(Mutex<Option<Submenu<tauri::Wry>>>);
 
+/// One command in the Plugins menu, as the frontend sends it.
+#[derive(serde::Deserialize, Clone, PartialEq)]
+pub struct PluginMenuItem {
+    command: String,
+    label: String,
+}
+
+/// The Plugins submenu and the commands the frontend last put in it, kept
+/// so a rebuild of the bar (a new language) fills it again.
+#[derive(Default)]
+struct PluginMenu {
+    submenu: Mutex<Option<Submenu<tauri::Wry>>>,
+    items: Mutex<Vec<PluginMenuItem>>,
+}
+
 /// The labels the menu is built with, keyed by menu id - or, for what has
 /// no id of ours, "menu:<name>" for a submenu and "predefined:<name>" for
 /// an item muda makes (the keys `nativeMenuLabels` in
@@ -195,6 +217,7 @@ struct ViewCheckState {
 struct BuiltMenu {
     menu: Menu<Wry>,
     open_recent: Submenu<Wry>,
+    plugins: Submenu<Wry>,
     check_items: Vec<CheckMenuItem<Wry>>,
 }
 
@@ -440,11 +463,86 @@ pub(crate) fn rebuild_recent_menu(app: &tauri::AppHandle) {
     });
 }
 
+/// Refill the Plugins submenu: the commands plugins put there, then Manage
+/// Plugins…. On the main thread, as rebuild_recent_menu.
+fn rebuild_plugin_menu(app: &tauri::AppHandle) {
+    let app = app.clone();
+    let _ = app.clone().run_on_main_thread(move || {
+        let Some(state) = app.try_state::<PluginMenu>() else {
+            return;
+        };
+        let guard = state.submenu.lock().unwrap();
+        let Some(submenu) = guard.as_ref() else {
+            return;
+        };
+        let items = state.items.lock().unwrap().clone();
+        let labels = app
+            .try_state::<MenuLabels>()
+            .map(|state| state.0.lock().unwrap().clone())
+            .unwrap_or_default();
+        if let Ok(old) = submenu.items() {
+            for item in old {
+                let _ = submenu.remove(&item);
+            }
+        }
+        if items.is_empty() {
+            if let Ok(item) = MenuItemBuilder::with_id(
+                NO_PLUGIN_COMMANDS_ID,
+                label(&labels, NO_PLUGIN_COMMANDS_ID, "No Plugin Commands"),
+            )
+            .enabled(false)
+            .build(&app)
+            {
+                let _ = submenu.append(&item);
+            }
+        }
+        for entry in &items {
+            if let Ok(item) = MenuItemBuilder::with_id(
+                format!("{PLUGIN_COMMAND_PREFIX}{}", entry.command),
+                menu_text(&entry.label),
+            )
+            .build(&app)
+            {
+                let _ = submenu.append(&item);
+            }
+        }
+        if let Ok(sep) = PredefinedMenuItem::separator(&app) {
+            let _ = submenu.append(&sep);
+        }
+        if let Ok(item) = MenuItemBuilder::with_id(
+            MANAGE_PLUGINS_ID,
+            label(&labels, MANAGE_PLUGINS_ID, "Manage Plugins…"),
+        )
+        .build(&app)
+        {
+            let _ = submenu.append(&item);
+        }
+    });
+}
+
+/// The commands the plugins that are on put in the Plugins menu (the
+/// frontend's, src/plugins/usePluginMenu.ts), refilled when they change.
+#[tauri::command]
+pub fn set_plugin_menu(app: AppHandle, items: Vec<PluginMenuItem>) {
+    let Some(state) = app.try_state::<PluginMenu>() else {
+        return;
+    };
+    {
+        let mut current = state.items.lock().unwrap();
+        if *current == items {
+            return;
+        }
+        *current = items;
+    }
+    rebuild_plugin_menu(&app);
+}
+
 /// Build and set the whole menu bar, then register the id -> event dispatch.
 /// Called once from setup.
 pub(crate) fn install(app: &tauri::App) -> tauri::Result<()> {
     app.manage(MenuLabels::default());
     app.manage(RecentMenu(Mutex::new(None)));
+    app.manage(PluginMenu::default());
     app.manage(ViewChecks::default());
     app.manage(MenuAccelerators::default());
     set_menu(app.handle(), &HashMap::new())?;
@@ -460,8 +558,10 @@ fn set_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Result<
     let built = build(app, labels, &checked, &accelerators)?;
     app.set_menu(built.menu)?;
     *app.state::<RecentMenu>().0.lock().unwrap() = Some(built.open_recent);
+    *app.state::<PluginMenu>().submenu.lock().unwrap() = Some(built.plugins);
     app.state::<ViewChecks>().0.lock().unwrap().items = built.check_items;
     rebuild_recent_menu(app);
+    rebuild_plugin_menu(app);
     Ok(())
 }
 
@@ -777,6 +877,9 @@ fn build(
         .text(COMMUNITY_ID, l(COMMUNITY_ID, "Join the Community"))
         .build()?;
 
+    // Filled by rebuild_plugin_menu, from what the plugins that are on add.
+    let plugins_menu = SubmenuBuilder::new(app, l("menu:plugins", "Plugins")).build()?;
+
     let menu = MenuBuilder::new(app)
         .items(&[
             &app_menu,
@@ -784,6 +887,7 @@ fn build(
             &edit_menu,
             &format_menu,
             &view_menu,
+            &plugins_menu,
             &window_menu,
             &help_menu,
         ])
@@ -799,6 +903,7 @@ fn build(
     Ok(BuiltMenu {
         menu,
         open_recent: open_recent_menu,
+        plugins: plugins_menu,
         check_items,
     })
 }
@@ -861,6 +966,10 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         } else {
             emit_to_focused(app_handle, "menu-new-file");
         }
+    } else if let Some(command) = id.strip_prefix(PLUGIN_COMMAND_PREFIX) {
+        emit_to_focused_payload(app_handle, "menu-plugin-command", command.to_string());
+    } else if id == MANAGE_PLUGINS_ID {
+        emit_or_open_window(app_handle, "menu-manage-plugins");
     } else if id == OPEN_FILE_ID {
         emit_or_open_window(app_handle, "menu-open-file");
     } else if id == OPEN_FOLDER_ID {

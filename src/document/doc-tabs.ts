@@ -2,6 +2,7 @@ import type { Strings } from "../i18n/strings";
 import { basename } from "../utils/path";
 import { fs } from "../platform/ipc";
 import { detectFormat, toEditorText, toFileText } from "./file-format";
+import type { PluginTabView } from "../plugins/app-bridge";
 
 // Every bundled guide, by file name: "src/help/<doc>-guide.<lang>.md". A
 // language without its own copy of a guide gets the English one, so a
@@ -49,6 +50,10 @@ export interface DocTab {
    *  until it is first saved: a pathless draft named after the Word file,
    *  whose Save As starts beside it. The Word file is never written. */
   importedFrom?: string;
+  /** A plugin's view or custom editor shown in this tab instead of a
+   *  document (src/plugins/): no path, nothing to save - a custom editor's
+   *  file is its `resource`, which the plugin reads and writes itself. */
+  view?: PluginTabView;
 }
 
 // The document part of a tab in flight between windows - what
@@ -74,6 +79,11 @@ export function helpDocContent(doc: HelpDoc, lang: string): string {
 // detached-drag pill, export default filename).
 export function tabTitle(tab: DocTab, t: Strings): string {
   if (tab.path) return basename(tab.path);
+  if (tab.view)
+    return (
+      tab.view.title ??
+      (tab.view.resource ? basename(tab.view.resource) : t.untitledTab)
+    );
   if (tab.helpDoc === "markdown") return t.markdownGuideTab;
   if (tab.helpDoc === "agent") return t.agentGuideTab;
   if (tab.importedFrom)
@@ -100,7 +110,13 @@ export function tabIsDirty(tab: DocTab): boolean {
 /** A new Untitled tab nobody has written in: no file, no Help document,
  *  nothing typed. Something opened here replaces it without losing anything. */
 export function tabIsUntouchedDraft(tab: DocTab): boolean {
-  return !tab.path && !tab.helpDoc && tab.content === "" && !tabIsDirty(tab);
+  return (
+    !tab.path &&
+    !tab.helpDoc &&
+    !tab.view &&
+    tab.content === "" &&
+    !tabIsDirty(tab)
+  );
 }
 
 /** A window holding only untouched drafts - what a fresh window shows. Pass

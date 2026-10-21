@@ -103,6 +103,23 @@ export default tseslint.config(
     rules: above(SHELL),
   },
   {
+    // Plugin code: the runtimes put into a plugin's sandboxed frames
+    // (src/plugins/frames.ts) and the official plugins, plain scripts that
+    // run there - in a browser, with `textus` given to them.
+    files: ["src/plugins/runtime/**/*.js", "public/plugins/**/*.js"],
+    ignores: ["public/plugins/**/lib/**"],
+    languageOptions: {
+      sourceType: "script",
+      globals: {
+        ...globals.browser,
+        textus: "readonly",
+        acquireTextusApi: "readonly",
+        exports: "writable",
+        module: "writable",
+      },
+    },
+  },
+  {
     files: [
       "vite.config.ts",
       "vite.playground.config.ts",

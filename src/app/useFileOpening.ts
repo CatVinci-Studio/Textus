@@ -26,6 +26,7 @@ import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
 import { isWordDocument, wordDocumentTab } from "../document/word-import";
 import { showMessage } from "../ui/app-dialog";
+import { customEditorFor, loadPlugins } from "../plugins/manager";
 import { basename } from "../utils/path";
 import { errorText } from "../utils/error-text";
 import type { Strings } from "../i18n/strings";
@@ -91,11 +92,33 @@ export function useFileOpening(opts: {
   // when that failed, which is said here.
   const readDocument = useCallback(
     async (path: string): Promise<Partial<DocTab> | null> => {
+      // A file type a plugin opens - a PDF, a board - is its tab, not a
+      // document (plugins/manager.ts). The plugins are read first: a file
+      // opened as the app starts may come before them.
+      await loadPlugins().catch(() => {});
+      const editor = customEditorFor(path);
+      if (editor) {
+        void session.addRecentFile(path);
+        return {
+          path: null,
+          content: "",
+          savedContent: "",
+          diskMtime: null,
+          importedFrom: undefined,
+          view: {
+            plugin: editor.plugin,
+            view: editor.viewType,
+            kind: "editor",
+            resource: path,
+            title: editor.title,
+          },
+        };
+      }
       if (isWordDocument(path)) {
         try {
           const doc = await wordDocumentTab(path);
           onWordDocumentOpened(path);
-          return doc;
+          return { ...doc, view: undefined };
         } catch (err) {
           void showMessage(
             `${t.wordImportFailed.replace("{name}", basename(path))}\n${errorText(err)}`,
@@ -112,6 +135,7 @@ export function useFileOpening(opts: {
         savedContent: content,
         diskMtime,
         importedFrom: undefined,
+        view: undefined,
       };
     },
     [t, onWordDocumentOpened],
@@ -120,7 +144,10 @@ export function useFileOpening(opts: {
   const openPathInTab = useCallback(
     async (path: string, open: OpenOptions = {}) => {
       const existing = tabsRef.current.find(
-        (tab) => tab.path === path || tab.importedFrom === path,
+        (tab) =>
+          tab.path === path ||
+          tab.importedFrom === path ||
+          tab.view?.resource === path,
       );
       if (existing) {
         // Source Mode has no headings to scroll to: the tab just comes up.
