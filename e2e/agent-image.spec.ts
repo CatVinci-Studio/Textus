@@ -539,7 +539,7 @@ test("a picture that wasn't made says why in its frame", async ({ page }) => {
 // the Trash - never moved unasked.
 const OLD = "![Boats](assets/boats.png)";
 
-async function openSaved(page: Page) {
+async function openSaved(page: Page, settings: Record<string, unknown> = {}) {
   // The old picture is on disk, served as the asset protocol would.
   await page.route("http://asset.localhost/**", (route) =>
     route.fulfill({
@@ -548,7 +548,7 @@ async function openSaved(page: Page) {
     }),
   );
   await openApp(page, {
-    settings: { language: "en" },
+    settings: { language: "en", ...settings },
     storage: { "levis-agent-panel-open": "1" },
   });
   const path = "/notes/harbour.md";
@@ -956,4 +956,38 @@ test("a selected picture says so in the message box, and in the message once sen
     message: string;
   }[];
   expect(sent.at(-1)!.message).toContain(OLD);
+});
+
+test("a revision card shows a redone picture's pictures, not their Markdown", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await openSaved(page, { revisionDisplay: "original" });
+  await mockInvoke(page, {
+    ai_agent_message: exchange(
+      {
+        prompt: "The same harbour at dawn",
+        alt: "The harbour at dawn",
+        action: "replace",
+        anchor: OLD,
+        image: { id: "card1", width: 1024, height: 1024 },
+      },
+      "Image proposed - the user now sees the picture.",
+    ),
+    ai_generated_image: { mime: "image/png", ext: "png", dataBase64: PNG },
+    ai_discard_generated_image: null,
+  });
+  await send(page, "Make the picture dawn instead");
+  const card = page.locator(".revision-note-text").first();
+  await expect(card.locator("> img.revision-note-picture")).toHaveCount(1, {
+    timeout: 10_000,
+  });
+  await expect(card).not.toContainText("](");
+  await card.screenshot({
+    path: "/home/chengao/.claude/jobs/2045e913/tmp/card.png",
+  });
+  await expect(card.locator("> img.revision-note-picture")).toHaveAttribute(
+    "src",
+    /^data:image\/png/,
+  );
 });

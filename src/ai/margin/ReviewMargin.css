@@ -408,3 +408,33 @@
   border-radius: 1px;
   background: var(--success-color);
 }
+
+/* A picture in a revision card (RevisionNoteText): the picture, small,
+   instead of its Markdown; its frame while it is being made. */
+.revision-note-picture,
+.revision-note-picture-frame {
+  display: block;
+  width: 100%;
+  max-height: 96px;
+  margin: 4px 0;
+  border-radius: var(--radius-small);
+  object-fit: contain;
+  object-position: left center;
+}
+
+.revision-note-picture-frame {
+  height: 72px;
+  aspect-ratio: auto;
+}
+
+/* Struck, the old picture reads as gone. */
+s .revision-note-picture,
+del .revision-note-picture {
+  opacity: 0.5;
+}
+
+.revision-note-picture-why {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--editor-muted);
+}
