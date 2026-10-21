@@ -241,6 +241,16 @@ br:is(.pending-delete, .pending-sentence-hot) {
   font-size: 0.9em;
 }
 
+/* A picture Textus AI proposes (generate_image) at the size it takes once
+   accepted (.image-view): within the column, however large the service
+   made it. */
+.pending-insert img {
+  max-width: 100%;
+  height: auto;
+  vertical-align: bottom;
+  border-radius: var(--md-radius);
+}
+
 /* A rewrite shown sentence by sentence (pending-edit-plugin's
    sentenceDecorations): each changed sentence struck where it stands, its
    replacement right after, then a ✓ / ✕. Undecided and taken read the

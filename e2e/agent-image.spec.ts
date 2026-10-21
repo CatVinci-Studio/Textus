@@ -175,3 +175,44 @@ test("without an image model the menu offers no picture", async ({ page }) => {
   await expect(menuItem(page, "Ask AI…")).toBeVisible();
   await expect(menuItem(page, "Illustrate this paragraph")).toHaveCount(0);
 });
+
+test("a proposed picture larger than the page keeps within its column", async ({
+  page,
+}) => {
+  await open(page);
+  // A picture the size an image service makes, far wider than the column.
+  const big = await page.evaluate(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1600;
+    canvas.height = 900;
+    const g = canvas.getContext("2d")!;
+    g.fillStyle = "#4a7";
+    g.fillRect(0, 0, 1600, 900);
+    return canvas.toDataURL("image/png").split(",")[1];
+  });
+  await mockInvoke(page, {
+    ai_agent_message: exchange(
+      { ...made, image: { id: "abc123", width: 1600, height: 900 } },
+      "Image proposed - the user now sees the picture.",
+    ),
+    ai_generated_image: { mime: "image/png", ext: "png", dataBase64: big },
+    ai_discard_generated_image: null,
+    save_pasted_image: { src: "assets/harbour.png" },
+  });
+  await send(page);
+  const picture = page.locator(pending);
+  await expect(picture).toHaveCount(1, { timeout: 10_000 });
+  await expect(picture).toHaveJSProperty("complete", true);
+  const column = await page
+    .locator(`${editor} > p`)
+    .first()
+    .evaluate((p) => p.getBoundingClientRect().width);
+  const box = await picture.evaluate((img) => {
+    const { width, height } = img.getBoundingClientRect();
+    return { width, height };
+  });
+  // The column's width, the picture's shape (as .image-view draws it once
+  // accepted).
+  expect(Math.abs(box.width - column)).toBeLessThan(6);
+  expect(box.height / box.width).toBeCloseTo(900 / 1600, 2);
+});
