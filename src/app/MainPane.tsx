@@ -90,6 +90,7 @@ export function MainPane({
               view={tab.view.view}
               kind={tab.view.kind}
               resource={tab.view.resource}
+              state={tab.view.state}
             />
           ) : tab.sourceMode && tab.splitView ? (
             <SplitView

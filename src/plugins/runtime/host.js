@@ -197,6 +197,9 @@
           heading: options && options.heading,
         });
       },
+      openExternal: function (url) {
+        return call("window.openExternal", { url: String(url) });
+      },
       openUntitled: function (content, options) {
         return call("window.openUntitled", {
           content: String(content),

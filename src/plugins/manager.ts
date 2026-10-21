@@ -242,7 +242,7 @@ function host(record: PluginRecord): PluginHost {
             (r) => r.status === "on" && command.startsWith(`${r.id}.`),
           );
           if (owner) return runPluginCommand(owner.id, command, args);
-          if (!runCommand(command)) throw new Error(`No command ${command}.`);
+          if (!runCommand(command, args)) throw new Error(`No command ${command}.`);
           return null;
         },
         addCommand: (id, command) => {
@@ -310,7 +310,7 @@ export async function runPluginCommand(
  *  or a view's panel, a custom editor, a settings page. */
 export async function resolveWebview(
   record: WebviewRecord,
-  target: { view?: string; viewType?: string },
+  target: { view?: string; viewType?: string; state?: unknown },
 ): Promise<void> {
   const plugin = pluginRecord(record.plugin);
   if (!plugin || plugin.status !== "on") throw new Error(`${record.plugin} is turned off.`);
@@ -327,7 +327,7 @@ export async function resolveWebview(
     await running.request("$resolveWebviewView", {
       view: target.view,
       webview: record.id,
-      state: webviewState(record.key),
+      state: webviewState(record.key) ?? target.state ?? null,
     });
 }
 
@@ -366,8 +366,8 @@ function apply(record: PluginRecord) {
         id: command.command,
         title: () => text(command.title),
         shortcut: keybindings.find((k) => k.command === command.command)?.key,
-        run: () =>
-          void runPluginCommand(id, command.command, []).catch((err) =>
+        run: (...args) =>
+          void runPluginCommand(id, command.command, args).catch((err) =>
             showMessage(String((err as Error)?.message ?? err), {
               title: text(manifest.name),
               tone: "error",

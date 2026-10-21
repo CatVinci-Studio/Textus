@@ -1,0 +1,42 @@
+{
+  "id": "catvinci.image-viewer",
+  "name": "%name%",
+  "version": "1.0.0",
+  "publisher": "catvinci",
+  "description": "%description%",
+  "icon": "icon.svg",
+  "license": "MIT",
+  "repository": "https://github.com/CatVinci-Studio/Textus",
+  "engines": { "textus": "^1.3.0" },
+  "main": "host.js",
+  "permissions": [],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "catvinci.image-viewer.image",
+        "displayName": "%name%",
+        "filenamePatterns": [
+          "*.png",
+          "*.jpg",
+          "*.jpeg",
+          "*.gif",
+          "*.webp",
+          "*.avif",
+          "*.bmp",
+          "*.ico",
+          "*.svg"
+        ]
+      }
+    ]
+  },
+  "l10n": {
+    "en": {
+      "name": "Image Viewer",
+      "description": "Open pictures and SVG files in a tab: zoom, fit, and an SVG's source."
+    },
+    "zh": {
+      "name": "图片查看器",
+      "description": "在标签页里打开图片和 SVG 文件：缩放、适应窗口，还能查看 SVG 源码。"
+    }
+  }
+}

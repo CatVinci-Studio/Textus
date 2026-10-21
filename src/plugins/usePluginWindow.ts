@@ -2,6 +2,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { makeBlankTab, type DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
+import { registerCommand } from "../app/commands";
 import type { TabState } from "../app/useTabState";
 import type { OpenOptions } from "../app/useFileOpening";
 import { emitPluginEvent, setWindowAccess, type PluginTabView } from "./app-bridge";
@@ -76,6 +77,21 @@ export function usePluginWindow({
     });
     return () => setWindowAccess(null);
   }, [rootRef, openRef, tabsRef, setTabs, setActiveTabId]);
+
+  // A file a plugin shows (a Word file in the Word reader), opened to be
+  // edited as a document of ours instead.
+  useEffect(
+    () =>
+      registerCommand({
+        id: "textus.openAsDocument",
+        title: (t) => t.menuOpenFile,
+        run: (path) => {
+          if (typeof path === "string")
+            void openRef.current(path, { asDocument: true });
+        },
+      }),
+    [openRef],
+  );
 
   useEffect(() => emitPluginEvent("root", { path: rootPath }), [rootPath]);
   useEffect(

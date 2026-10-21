@@ -42,6 +42,9 @@ export interface OpenOptions {
   /** Reopening it (the last session, Open Recent): at the caret it was
    *  left at (document/last-carets.ts). */
   restoreCaret?: boolean;
+  /** As a document of ours even where a plugin opens that file type - a
+   *  Word file the Word reader shows, opened to be edited as Markdown. */
+  asDocument?: boolean;
 }
 
 /** Where a document just read from disk should open, if not at its top. */
@@ -91,12 +94,15 @@ export function useFileOpening(opts: {
   // converted into a new, unsaved document instead (word-import.ts); null
   // when that failed, which is said here.
   const readDocument = useCallback(
-    async (path: string): Promise<Partial<DocTab> | null> => {
+    async (
+      path: string,
+      asDocument = false,
+    ): Promise<Partial<DocTab> | null> => {
       // A file type a plugin opens - a PDF, a board - is its tab, not a
       // document (plugins/manager.ts). The plugins are read first: a file
       // opened as the app starts may come before them.
-      await loadPlugins().catch(() => {});
-      const editor = customEditorFor(path);
+      if (!asDocument) await loadPlugins().catch(() => {});
+      const editor = asDocument ? null : customEditorFor(path);
       if (editor) {
         void session.addRecentFile(path);
         return {
@@ -147,7 +153,7 @@ export function useFileOpening(opts: {
         (tab) =>
           tab.path === path ||
           tab.importedFrom === path ||
-          tab.view?.resource === path,
+          (!open.asDocument && tab.view?.resource === path),
       );
       if (existing) {
         // Source Mode has no headings to scroll to: the tab just comes up.
@@ -160,7 +166,7 @@ export function useFileOpening(opts: {
         setActiveTabId(existing.id);
         return;
       }
-      const doc = await readDocument(path);
+      const doc = await readDocument(path, open.asDocument);
       if (!doc) return;
       const newTab: DocTab = { ...makeBlankTab(), ...doc };
       const jump =
@@ -176,7 +182,7 @@ export function useFileOpening(opts: {
   // path and the save/discard prompt's resolution (2.3: unsaved protection).
   const replaceTabWithFile = useCallback(
     async (tabId: string, path: string, open: OpenOptions = {}) => {
-      const doc = await readDocument(path);
+      const doc = await readDocument(path, open.asDocument);
       if (!doc) return;
       // Taken by the editor the new reloadKey mounts.
       const jump =

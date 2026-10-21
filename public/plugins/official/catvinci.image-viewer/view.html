@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="{{lang}}">
+  <head>
+    <link rel="stylesheet" href="textus-resource:view.css" />
+  </head>
+  <body>
+    <div class="toolbar">
+      <button class="icon" id="zoom-out" aria-label="−">−</button>
+      <span id="zoom" class="muted">100%</span>
+      <button class="icon" id="zoom-in" aria-label="+">+</button>
+      <button id="fit"></button>
+      <button id="actual"></button>
+      <span class="spacer"></span>
+      <span id="info" class="muted"></span>
+      <button id="source" hidden></button>
+    </div>
+    <main id="stage" class="fit"><img id="image" alt="" /></main>
+    <pre id="code" hidden></pre>
+    <script src="textus-resource:view.js"></script>
+  </body>
+</html>

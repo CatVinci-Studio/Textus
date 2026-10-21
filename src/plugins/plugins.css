@@ -40,6 +40,12 @@
   flex: 1;
   min-height: 0;
   min-width: 0;
+  /* Clear of the window bar floating over the top (window-bar.css), as
+     the editor's page is - unless the tab bar is there to do it. */
+  padding-top: 28px;
+}
+.tab-bar ~ * .plugin-tab-pane {
+  padding-top: 0;
 }
 .plugin-webview-tab {
   height: 100%;

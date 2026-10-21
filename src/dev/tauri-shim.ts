@@ -661,7 +661,13 @@ export function installDevTauriShim(): void {
   // a PDF given to a custom editor - from `__devFiles`). Installed plugins
   // are `window.__devPlugins`: [{ id, dir, manifest, dev, files: {rel:
   // text} }]. The network has nothing to answer: a test cans plugin_http.
-  const pluginState = {
+  // `window.__devPluginState` starts it with plugins already on.
+  const pluginState = (w.__devPluginState as
+    | {
+        allOn: boolean;
+        plugins: Record<string, { enabled: boolean; granted: string[] }>;
+      }
+    | undefined) ?? {
     allOn: true,
     plugins: {} as Record<string, { enabled: boolean; granted: string[] }>,
   };

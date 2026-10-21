@@ -29,6 +29,9 @@ export interface PluginTabView {
   /** The file a custom editor shows. */
   resource?: string;
   title?: string;
+  /** What a view was opened with (window.openView's `state`), until it
+   *  keeps state of its own. */
+  state?: unknown;
 }
 
 /** The window's side. */

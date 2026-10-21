@@ -1,4 +1,4 @@
-import { fs, plugins as pluginsIpc } from "../platform/ipc";
+import { fs, links, plugins as pluginsIpc } from "../platform/ipc";
 import { showMessage, showPrompt } from "../ui/app-dialog";
 import { dirname } from "../utils/path";
 import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../ai/types";
@@ -297,7 +297,13 @@ export class PluginHost {
           ),
           o.placeholder ?? "",
         ),
-      "window.openView": ({ view, options }: { view: string; options?: { title?: string } }) => {
+      "window.openView": ({
+        view,
+        options,
+      }: {
+        view: string;
+        options?: { title?: string; state?: unknown };
+      }) => {
         const declared = this.info.manifest.contributes.views.find((v) => v.id === view);
         if (!declared) throw new Error(`No view ${view} in the manifest.`);
         getWindowAccess()?.openPluginTab({
@@ -305,7 +311,12 @@ export class PluginHost {
           view,
           kind: "view",
           title: options?.title ?? localize(this.info.manifest, declared.title, this.deps.language()),
+          state: options?.state,
         });
+      },
+      "window.openExternal": ({ url }: { url: string }) => {
+        if (!/^https?:\/\//i.test(url)) throw new Error("Only web links open in the browser.");
+        return links.openWebLink(url);
       },
       "window.openFile": ({ path, heading }: { path: string; heading?: string }) => {
         this.need("workspace.read");

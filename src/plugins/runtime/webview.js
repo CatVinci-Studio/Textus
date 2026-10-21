@@ -32,6 +32,8 @@
   }
 
   var api = {
+    // The UI's language, as Textus's settings have it ("zh", "en").
+    language: document.documentElement.lang || "en",
     postMessage: function (message) {
       send("message", { message: message });
     },
@@ -61,6 +63,7 @@
     if (!data || data.textus !== "init" || !event.ports[0]) return;
     window.removeEventListener("message", receive);
     state = data.state === undefined ? null : data.state;
+    api.language = data.language || "en";
     app = createEndpoint(
       event.ports[0],
       {

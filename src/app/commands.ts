@@ -15,7 +15,9 @@ export interface CommandDef {
   /** Namespaced by its owner: "example.word-count". */
   id: string;
   title: (t: Strings) => string;
-  run: () => void;
+  /** Run from a shortcut or a menu with no arguments; a plugin's
+   *  executeCommand may pass some. */
+  run: (...args: unknown[]) => void;
   /** A combo as Settings writes them ("mod+shift+k"), or none. */
   shortcut?: string;
   /** Whether it can run now; left out, always. */
@@ -43,10 +45,10 @@ export function commands(): readonly CommandDef[] {
 
 /** Runs the command with this id, if it is there and can run now; whether
  *  it ran. */
-export function runCommand(id: string): boolean {
+export function runCommand(id: string, args: unknown[] = []): boolean {
   const command = registered.find((c) => c.id === id);
   if (!command || command.enabled?.() === false) return false;
-  command.run();
+  command.run(...args);
   return true;
 }
 
