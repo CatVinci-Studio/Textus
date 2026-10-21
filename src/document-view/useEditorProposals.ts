@@ -149,17 +149,20 @@ export function useEditorProposals({
       view.dispatch(view.state.tr.setMeta(pendingEditKey, { type: "refocus" }));
     });
   }, [focusedStopKey, run]);
-  // Re-prompting supersedes: the first proposal a new exchange writes into
-  // the document clears whatever previews the user left undecided - the new
-  // suggestion replaces the old one on screen instead of stacking under it.
-  // Armed when an exchange starts (the busy effects below for the embedded
-  // bar; onContextRequest in useChatContextBridge for detached sends),
-  // consumed by the first preview add that follows - so a question exchange
-  // that proposes nothing leaves existing previews alone, and later
-  // proposals of the SAME exchange coexist as siblings. The superseded
-  // proposals read as "rejected" everywhere downstream (chat cards, next
-  // request's status notes).
+  // Re-prompting supersedes, at the same spot: a new exchange's proposal
+  // takes the place of an undecided one from before that it overlaps - the
+  // new suggestion replaces the old one on screen instead of stacking under
+  // it - and leaves the rest, elsewhere, for the user to decide: a picture
+  // asked for after a paragraph that wasn't accepted yet must not take
+  // that paragraph away (nor text a picture). Armed when an exchange
+  // starts (the busy effects below for the embedded bar; onContextRequest
+  // in useChatContextBridge for detached sends): the first preview add
+  // that follows notes which previews came before it. Proposals of the
+  // SAME exchange coexist as siblings. The superseded proposals read as
+  // "rejected" everywhere downstream (chat cards, next request's status
+  // notes).
   const supersedePending = useRef(false);
+  const earlierPreviews = useRef<Set<string>>(new Set());
   // What a replace_selection proposal from the editor's own conversation
   // targets: recorded by whichever surface SENDS (Quick Ask's captured
   // selection, or the panel's live selection at send time), so a selection
@@ -182,7 +185,14 @@ export function useEditorProposals({
       // the text around it doesn't wait for it.
       if (supersedePending.current) {
         supersedePending.current = false;
-        pendingEdits.discardAll();
+        earlierPreviews.current = new Set(
+          run((ctx) =>
+            (
+              pendingEditKey.getState(ctx.get(editorViewCtx).state)?.previews ??
+              []
+            ).map((p) => p.callId),
+          ) ?? [],
+        );
       }
       // A rewrite stopped while it streamed in sentence by sentence offers
       // what it reads as on screen (stopRewrite) - also when the stopped
@@ -197,13 +207,48 @@ export function useEditorProposals({
         }
         return [{ ...p, proposal: { ...p.proposal, text: kept } }];
       });
-      pendingEdits.showPreviews(shown, target);
+      // The text first, then each picture: one next to text proposed and
+      // not decided yet - this batch's or an earlier one's - goes into it.
+      const text = shown.filter((p) => !p.proposal.image);
+      if (text.length > 0) pendingEdits.showPreviews(text, target);
+      const pictures = shown.filter(
+        (p) =>
+          p.proposal.image &&
+          (p.streaming || !pendingEdits.joinPicture(p.callId, p.proposal)),
+      );
+      if (pictures.length > 0) pendingEdits.showPreviews(pictures, target);
+      // What came before and stands where these now do gives way to them.
+      const added = new Set(shown.map((p) => p.callId));
+      for (const id of supersededBy(added, earlierPreviews.current)) {
+        earlierPreviews.current.delete(id);
+        pendingEdits.discard(id);
+      }
     },
-    // Member functions only - both are stable per editor ([run]), and
+    // Member functions only - all are stable per editor ([run]), and
     // depending on the whole `pendingEdits` object (fresh every render)
     // would destabilize the ProposalStream memo below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pendingEdits.discardAll, pendingEdits.showPreviews, pendingEdits.discard],
+    [
+      pendingEdits.showPreviews,
+      pendingEdits.discard,
+      pendingEdits.joinPicture,
+      run,
+    ],
+  );
+  /** The earlier previews `added` stand on: the same spot, of the same
+   *  kind - text in place of text, a picture of a picture. */
+  const supersededBy = useCallback(
+    (added: Set<string>, earlier: Set<string>): string[] =>
+      run((ctx) => {
+        const previews =
+          pendingEditKey.getState(ctx.get(editorViewCtx).state)?.previews ?? [];
+        const now = previews.filter((p) => added.has(p.callId));
+        return previews
+          .filter((old) => earlier.has(old.callId) && !added.has(old.callId))
+          .filter((old) => now.some((p) => sameSpot(old, p)))
+          .map((old) => old.callId);
+      }) ?? [],
+    [run],
   );
   // A streaming propose_edit grows its green preview in the document while
   // the model is still writing it. All lifecycle decisions - when a draft is
@@ -364,3 +409,18 @@ export function useEditorProposals({
 }
 
 export type PendingEdits = ReturnType<typeof usePendingEdits>;
+
+/** Whether two proposals stand on the same spot, of the same kind (text,
+ *  or a picture): their ranges overlap - an insertion's point inside the
+ *  other's range, or the same point as another insertion's. */
+function sameSpot(
+  a: { from: number; to: number; proposal: EditProposal },
+  b: { from: number; to: number; proposal: EditProposal },
+): boolean {
+  if (!!a.proposal.image !== !!b.proposal.image) return false;
+  const point = (p: { from: number; to: number }) => p.from === p.to;
+  if (point(a) && point(b)) return a.from === b.from;
+  if (point(a)) return b.from < a.from && a.from < b.to;
+  if (point(b)) return a.from < b.from && b.from < a.to;
+  return a.from < b.to && b.from < a.to;
+}

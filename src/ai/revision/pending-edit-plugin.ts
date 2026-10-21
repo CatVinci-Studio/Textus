@@ -66,6 +66,10 @@ export interface PendingSentence {
 export interface PendingPreview {
   callId: string;
   proposal: EditProposal;
+  /** Bumped when a settled proposal's text changes in place (a picture
+   *  joining it, usePendingEdits' joinPicture): its widget is drawn anew
+   *  rather than kept, as its key otherwise keeps it. */
+  revision?: number;
   from: number;
   to: number;
   /** The range's text (`visibleTextBetween`, link-reveal.ts: a link shown
@@ -704,7 +708,7 @@ function textWidget(
       // Decorations are rebuilt wholesale on every docChanged; the key
       // makes ProseMirror keep the DOM node across rebuilds, so the
       // typewriter isn't restarted by unrelated keystrokes.
-      key: `pending-insert-${p.callId}`,
+      key: `pending-insert-${p.callId}-${p.revision ?? 0}`,
       destroy: (node) => {
         const anim = animations.get(p.callId);
         if (anim && anim.span === node) {
@@ -1083,7 +1087,7 @@ function streamDecorations(
         // After the new text of a change ending at the same place.
         side: 3,
         part: "text",
-        key: `pending-insert-${p.callId}`,
+        key: `pending-insert-${p.callId}-${p.revision ?? 0}`,
         destroy: (node) => {
           const anim = animations.get(p.callId);
           if (anim && anim.span === node) anim.span = null;

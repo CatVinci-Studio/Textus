@@ -22,6 +22,7 @@ export interface ReviewBarLabels {
   reviewBarLabel: string;
   reviewBarOpenChat: string;
   proposalAccept: string;
+  proposalPicturePainting: string;
   proposalReject: string;
   proposalAcceptSome: string;
   proposalChangeCount: string;
@@ -57,7 +58,11 @@ export function ReviewBar({
   onDisplay,
   newText,
   streaming,
+  painting,
 }: {
+  /** A picture in a pending proposal is still being made: Accept waits
+   *  for it, and says so. */
+  painting: boolean;
   /** A rewrite is still streaming in: its changes are counted and can be
    *  stepped through as they come, and Accept / Reject wait until it is
    *  all in, as its ✓ / ✕ do - the AI panel's Stop ends it early. */
@@ -257,10 +262,10 @@ export function ReviewBar({
         <button
           type="button"
           className="review-bar-button review-bar-accept"
-          disabled={streaming}
+          disabled={streaming || painting}
           onClick={onAccept}
         >
-          {accept}
+          {painting ? labels.proposalPicturePainting : accept}
         </button>
         <button
           type="button"
