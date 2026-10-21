@@ -12,7 +12,12 @@ import { ChevronIcon } from "../../ui/icons";
 import { auth, type CustomEndpointConfig } from "../../platform/ipc";
 import { Select } from "../../ui/Select";
 import { isIOSApp } from "../../platform/capabilities";
-import { RowHelp, SecretInput, VERBATIM_INPUT } from "./controls";
+import {
+  MaskedKeyInput,
+  RowHelp,
+  SecretInput,
+  VERBATIM_INPUT,
+} from "./controls";
 
 // General > AI Login Settings: two compact disclosure rows (provider, then
 // credentials) plus the per-provider account/API-key/custom panels.
@@ -621,13 +626,12 @@ export function CustomProviderPanel({
       </div>
       <div className="settings-field">
         <label className="settings-field-label">{t.customApiKeyLabel}</label>
-        <input
-          type="password"
+        <MaskedKeyInput
           className="settings-text-input"
-          aria-label={t.customApiKeyLabel}
+          label={t.customApiKeyLabel}
           placeholder={keySaved ? t.customApiKeySaved : t.apiKeyPlaceholder}
           value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
+          onChange={setApiKey}
         />
       </div>
       <div className="settings-field">
