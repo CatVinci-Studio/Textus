@@ -158,18 +158,19 @@ test("Write's new text has no original: a green block in every view but the resu
   await open(page);
   await write(page);
   const block = page.locator(".milkdown .pending-insert");
-  // Fully typed in: the story's two paragraphs are lines by then.
+  // Fully typed in: the story's two paragraphs, as paragraphs.
   await expect(block).not.toHaveClass(/pending-insert-typing/);
-  // The tint is on the text: on each line's span when the new text runs
-  // over several lines (the breaks between them untinted), else on the
-  // block itself.
+  // The tint is on the text: on each line's span when new text in a
+  // paragraph runs over several lines (the breaks between them untinted),
+  // else on the box - new paragraphs of their own are one box.
   const green = () =>
     block.evaluate((el) => {
       const lines = el.classList.contains("pending-insert-lines");
       const tinted = lines ? el.querySelector(".pending-line")! : el;
       return getComputedStyle(tinted).backgroundColor;
     });
-  await expect(block).toHaveClass(/pending-insert-lines/);
+  await expect(block).toHaveClass(/pending-blocks/);
+  await expect(block.locator("p")).toHaveCount(2);
   const tint = await green();
   expect(tint).not.toBe("rgba(0, 0, 0, 0)");
 

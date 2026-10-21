@@ -187,6 +187,12 @@ const STUB = (id: string) =>
   `data:image/gif;textus-generated=${id};base64,R0lGODlhAQABAAAAACw=`;
 const STUB_ID = /^data:image\/gif;textus-generated=([0-9a-z]+);/;
 
+/** The src a waiting picture is drawn by in the preview: its blob: URL
+ *  once loaded, else the stand-in framePendingPictures frames. */
+export function shownGeneratedSrc(id: string): string {
+  return loaded.get(id)?.url ?? STUB(id);
+}
+
 /** The id of a picture not loaded yet, from its src in the preview - the
  *  stand-in showGeneratedImages put there, or the proposal's own
  *  placeholder - or null. */
