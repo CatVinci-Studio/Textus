@@ -380,8 +380,13 @@ test("a picture asked for before its text is in that text: one proposal, its fra
   // The frame between the two paragraphs, in the shape asked for.
   const frame = proposal.locator(".pending-picture");
   await expect(frame).toBeVisible();
-  const box = (await frame.boundingBox())!;
-  expect(box.width / box.height).toBeCloseTo(1536 / 1024, 1);
+  // Polled: a widget drawn again draws a new frame.
+  await expect
+    .poll(async () => {
+      const box = await frame.boundingBox();
+      return box ? Math.round((box.width / box.height) * 10) / 10 : 0;
+    })
+    .toBeCloseTo(1536 / 1024, 1);
   await expect(page.locator(".agent-proposal")).toHaveCount(1);
   const accept = page.locator(
     ".agent-proposal-actions .inline-chat-action-primary",
