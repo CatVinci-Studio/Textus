@@ -1157,9 +1157,11 @@ export default {
   navPlugins: "Плагины",
   pluginsTitle: "Плагины",
   pluginsAllLabel: "Плагины",
-  pluginsAllHelp: "Если выключено, ни один плагин не работает и ничего из добавленного ими не показывается. Плагины и их настройки сохраняются.",
+  pluginsAllHelp:
+    "Если выключено, ни один плагин не работает и ничего из добавленного ими не показывается. Плагины и их настройки сохраняются.",
   pluginsInstallLabel: "Установить плагин",
-  pluginsInstallHelp: "Пакет плагина (.textusplugin) копируется в Textus. Папка плагина загружается на месте — чтобы попробовать плагин, который вы пишете; перезагружается оттуда же.",
+  pluginsInstallHelp:
+    "Пакет плагина (.textusplugin) копируется в Textus. Папка плагина загружается на месте — чтобы попробовать плагин, который вы пишете; перезагружается оттуда же.",
   pluginsInstallFile: "Установить из файла…",
   pluginsLoadFolder: "Загрузить папку плагина…",
   pluginPackageFilter: "Плагин Textus",
@@ -1186,7 +1188,8 @@ export default {
   pluginReload: "Перезагрузить",
   pluginUninstall: "Удалить",
   pluginUnload: "Убрать",
-  pluginUninstallAsk: "Удалить {name}? Его файлы и сохранённые данные будут удалены.",
+  pluginUninstallAsk:
+    "Удалить {name}? Его файлы и сохранённые данные будут удалены.",
   pluginOk: "ОК",
   pluginCancel: "Отмена",
   pluginAllow: "Разрешить",
@@ -1196,7 +1199,8 @@ export default {
   pluginTooManyErrors: "он слишком часто давал сбой",
   pluginQuickPickEmpty: "Ничего не найдено.",
   pluginPermDocumentRead: "Читать открытый документ и выделенный текст",
-  pluginPermDocumentPropose: "Предлагать правки документа, которые вы принимаете или отклоняете",
+  pluginPermDocumentPropose:
+    "Предлагать правки документа, которые вы принимаете или отклоняете",
   pluginPermWorkspaceRead: "Читать файлы в открытой папке",
   pluginPermWorkspaceWrite: "Создавать и изменять файлы в открытой папке",
   pluginPermClipboard: "Читать и записывать буфер обмена",
@@ -1208,5 +1212,6 @@ export default {
   webPageAddress: "Адрес",
   webPageReload: "Обновить",
   webPageOpenInBrowser: "Открыть в браузере",
-  webPageHint: "Если страница остаётся пустой, сайт не разрешает показывать себя в других приложениях — откройте её в браузере.",
+  webPageHint:
+    "Если страница остаётся пустой, сайт не разрешает показывать себя в других приложениях — откройте её в браузере.",
 } satisfies Translation;

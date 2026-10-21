@@ -1054,9 +1054,11 @@ export default {
   navPlugins: "外掛程式",
   pluginsTitle: "外掛程式",
   pluginsAllLabel: "外掛程式",
-  pluginsAllHelp: "關閉後，所有外掛程式都不執行，它們加入的內容也不顯示。已安裝的外掛程式和設定維持不變。",
+  pluginsAllHelp:
+    "關閉後，所有外掛程式都不執行，它們加入的內容也不顯示。已安裝的外掛程式和設定維持不變。",
   pluginsInstallLabel: "安裝外掛程式",
-  pluginsInstallHelp: "外掛程式安裝檔（.textusplugin）會複製到 Textus 中。外掛程式資料夾則在原處載入，方便試用你正在撰寫的外掛程式；之後從原處重新載入。",
+  pluginsInstallHelp:
+    "外掛程式安裝檔（.textusplugin）會複製到 Textus 中。外掛程式資料夾則在原處載入，方便試用你正在撰寫的外掛程式；之後從原處重新載入。",
   pluginsInstallFile: "從檔案安裝…",
   pluginsLoadFolder: "載入外掛程式資料夾…",
   pluginPackageFilter: "Textus 外掛程式",
@@ -1105,5 +1107,6 @@ export default {
   webPageAddress: "網址",
   webPageReload: "重新載入",
   webPageOpenInBrowser: "在瀏覽器中開啟",
-  webPageHint: "如果頁面一直是空白，表示這個網站不允許嵌入其他應用程式，請在瀏覽器中開啟。",
+  webPageHint:
+    "如果頁面一直是空白，表示這個網站不允許嵌入其他應用程式，請在瀏覽器中開啟。",
 } satisfies Translation;

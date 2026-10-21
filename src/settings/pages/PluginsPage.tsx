@@ -45,7 +45,10 @@ export function PluginsPage({ t }: SettingsPageProps) {
     try {
       await work();
     } catch (err) {
-      void showMessage(errorText(err), { title: t.pluginsTitle, tone: "error" });
+      void showMessage(errorText(err), {
+        title: t.pluginsTitle,
+        tone: "error",
+      });
     }
   };
   const install = (folder: boolean) =>
@@ -90,21 +93,36 @@ export function PluginsPage({ t }: SettingsPageProps) {
         )}
       </SettingsGroup>
       <SettingsGroup title={t.pluginsOfficialGroup}>
-        {official.length ? official.map(row) : <p className="plugin-empty">{t.pluginsNone}</p>}
+        {official.length ? (
+          official.map(row)
+        ) : (
+          <p className="plugin-empty">{t.pluginsNone}</p>
+        )}
       </SettingsGroup>
       <SettingsGroup title={t.pluginsInstalledGroup}>
-        {others.length ? others.map(row) : <p className="plugin-empty">{t.pluginsNone}</p>}
+        {others.length ? (
+          others.map(row)
+        ) : (
+          <p className="plugin-empty">{t.pluginsNone}</p>
+        )}
       </SettingsGroup>
     </>
   );
 }
 
-function statusText(record: PluginRecord, allOn: boolean, t: Strings): string | null {
+function statusText(
+  record: PluginRecord,
+  allOn: boolean,
+  t: Strings,
+): string | null {
   switch (record.status) {
     case "broken":
       return t.pluginStatusBroken.replace("{reason}", record.problem ?? "");
     case "incompatible":
-      return t.pluginStatusIncompatible.replace("{range}", record.problem ?? "");
+      return t.pluginStatusIncompatible.replace(
+        "{range}",
+        record.problem ?? "",
+      );
     case "failed":
       return t.pluginStatusFailed.replace("{reason}", record.problem ?? "");
     case "on":
@@ -132,7 +150,10 @@ function PluginRow({
   const name = pluginName(record);
   const manifest = record.manifest;
   const status = statusText(record, allOn, t);
-  const canSwitch = !!manifest && record.status !== "broken" && record.status !== "incompatible";
+  const canSwitch =
+    !!manifest &&
+    record.status !== "broken" &&
+    record.status !== "incompatible";
   return (
     <div className="plugin-row" data-plugin={record.id}>
       <div className="settings-row plugin-row-head">
@@ -152,7 +173,9 @@ function PluginRow({
             )}
           </div>
           {manifest?.description && (
-            <div className="settings-row-hint">{pluginText(record, manifest.description)}</div>
+            <div className="settings-row-hint">
+              {pluginText(record, manifest.description)}
+            </div>
           )}
           {status && <div className="settings-error">{status}</div>}
         </div>
@@ -172,11 +195,15 @@ function PluginRow({
             aria-label={t.pluginEnableLabel.replace("{name}", name)}
             disabled={!canSwitch}
             checked={record.status === "on"}
-            onChange={(e) => void attempt(() => setPluginEnabled(record.id, e.target.checked))}
+            onChange={(e) =>
+              void attempt(() => setPluginEnabled(record.id, e.target.checked))
+            }
           />
         </div>
       </div>
-      {open && manifest && <PluginDetails record={record} t={t} attempt={attempt} />}
+      {open && manifest && (
+        <PluginDetails record={record} t={t} attempt={attempt} />
+      )}
     </div>
   );
 }
@@ -195,10 +222,13 @@ function PluginDetails({
   useEffect(() => {
     if (on) void loadPluginSettings(record.id);
   }, [on, record.id]);
-  const { commands, customEditors, sidebarTabs, settings, settingsPage } = manifest.contributes;
+  const { commands, customEditors, sidebarTabs, settings, settingsPage } =
+    manifest.contributes;
   const adds = [
     ...commands.map((c) => pluginText(record, c.title)),
-    ...sidebarTabs.map((s) => t.pluginAddsSidebarTab.replace("{name}", pluginText(record, s.title))),
+    ...sidebarTabs.map((s) =>
+      t.pluginAddsSidebarTab.replace("{name}", pluginText(record, s.title)),
+    ),
     ...customEditors.map((e) =>
       t.pluginAddsFileType.replace("{types}", e.filenamePatterns.join(", ")),
     ),
@@ -224,7 +254,9 @@ function PluginDetails({
             {granted && (
               <button
                 type="button"
-                onClick={() => void attempt(() => revokePermission(record.id, permission))}
+                onClick={() =>
+                  void attempt(() => revokePermission(record.id, permission))
+                }
               >
                 {t.pluginRevoke}
               </button>
@@ -232,23 +264,36 @@ function PluginDetails({
           </SettingRow>
         );
       })}
-      {on && settings.map((setting) => (
-        <PluginSettingRow key={setting.key} record={record} setting={setting} />
-      ))}
+      {on &&
+        settings.map((setting) => (
+          <PluginSettingRow
+            key={setting.key}
+            record={record}
+            setting={setting}
+          />
+        ))}
       {on && settingsPage && (
         <div className="plugin-settings-page">
-          <h3 className="plugin-settings-page-title">{pluginText(record, settingsPage.title)}</h3>
+          <h3 className="plugin-settings-page-title">
+            {pluginText(record, settingsPage.title)}
+          </h3>
           <PluginSettingsWebview plugin={record.id} />
         </div>
       )}
       <div className="plugin-detail-actions">
         {manifest.repository && (
-          <button type="button" onClick={() => void links.openWebLink(manifest.repository!)}>
+          <button
+            type="button"
+            onClick={() => void links.openWebLink(manifest.repository!)}
+          >
             {t.pluginRepository}
           </button>
         )}
         {record.origin === "dev" && (
-          <button type="button" onClick={() => void attempt(() => reloadPlugin(record.id))}>
+          <button
+            type="button"
+            onClick={() => void attempt(() => reloadPlugin(record.id))}
+          >
             {t.pluginReload}
           </button>
         )}
@@ -258,12 +303,15 @@ function PluginDetails({
             className="danger"
             onClick={() =>
               void attempt(async () => {
-                const ok = await showConfirm(t.pluginUninstallAsk.replace("{name}", name), {
-                  title: t.pluginsTitle,
-                  okLabel: t.pluginUninstall,
-                  cancelLabel: t.pluginCancel,
-                  danger: true,
-                });
+                const ok = await showConfirm(
+                  t.pluginUninstallAsk.replace("{name}", name),
+                  {
+                    title: t.pluginsTitle,
+                    okLabel: t.pluginUninstall,
+                    cancelLabel: t.pluginCancel,
+                    danger: true,
+                  },
+                );
                 if (ok) await uninstallPlugin(record.id);
               })
             }
@@ -286,10 +334,20 @@ function PluginSettingRow({
 }) {
   const value = pluginSetting(record.id, setting.key);
   const label = pluginText(record, setting.title);
-  const help = setting.description ? pluginText(record, setting.description) : undefined;
-  const save = (next: unknown) => void setPluginSetting(record.id, setting.key, next);
+  const help = setting.description
+    ? pluginText(record, setting.description)
+    : undefined;
+  const save = (next: unknown) =>
+    void setPluginSetting(record.id, setting.key, next);
   if (setting.type === "boolean")
-    return <ToggleRow label={label} help={help} checked={value === true} onChange={save} />;
+    return (
+      <ToggleRow
+        label={label}
+        help={help}
+        checked={value === true}
+        onChange={save}
+      />
+    );
   return (
     <SettingRow label={label} help={help}>
       {setting.type === "enum" ? (
@@ -313,7 +371,11 @@ function PluginSettingRow({
           defaultValue={String(value ?? "")}
           {...VERBATIM_INPUT}
           onBlur={(e) =>
-            save(setting.type === "number" ? Number(e.target.value) : e.target.value)
+            save(
+              setting.type === "number"
+                ? Number(e.target.value)
+                : e.target.value,
+            )
           }
         />
       )}

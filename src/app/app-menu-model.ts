@@ -383,12 +383,10 @@ export function buildAppMenu(
       label: t.menuPlugins,
       submenu: [
         ...(plugins.length
-          ? plugins.map(
-              (p): MenuEntry => ({
-                label: p.label,
-                action: { native: `plugin-command:${p.command}` },
-              }),
-            )
+          ? plugins.map((p): MenuEntry => ({
+              label: p.label,
+              action: { native: `plugin-command:${p.command}` },
+            }))
           : [{ label: t.menuNoPluginCommands, disabled: true }]),
         "separator",
         { label: t.menuManagePlugins, action: { native: "manage-plugins" } },

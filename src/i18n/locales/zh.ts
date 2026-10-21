@@ -1049,9 +1049,11 @@ export default {
   navPlugins: "插件",
   pluginsTitle: "插件",
   pluginsAllLabel: "插件",
-  pluginsAllHelp: "关闭后，所有插件都不运行，它们添加的内容也不显示。已装的插件和它们的设置不变。",
+  pluginsAllHelp:
+    "关闭后，所有插件都不运行，它们添加的内容也不显示。已装的插件和它们的设置不变。",
   pluginsInstallLabel: "安装插件",
-  pluginsInstallHelp: "插件安装包（.textusplugin）会复制到 Textus 里。插件文件夹则在原处加载，方便试用你正在写的插件；之后从原处重新加载。",
+  pluginsInstallHelp:
+    "插件安装包（.textusplugin）会复制到 Textus 里。插件文件夹则在原处加载，方便试用你正在写的插件；之后从原处重新加载。",
   pluginsInstallFile: "从文件安装…",
   pluginsLoadFolder: "加载插件文件夹…",
   pluginPackageFilter: "Textus 插件",
@@ -1100,5 +1102,6 @@ export default {
   webPageAddress: "网址",
   webPageReload: "重新载入",
   webPageOpenInBrowser: "在浏览器中打开",
-  webPageHint: "如果页面一直是空白，说明这个网站不允许嵌入到其他应用里，请在浏览器中打开。",
+  webPageHint:
+    "如果页面一直是空白，说明这个网站不允许嵌入到其他应用里，请在浏览器中打开。",
 } satisfies Translation;

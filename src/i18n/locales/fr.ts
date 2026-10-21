@@ -1184,9 +1184,11 @@ utiliser une.
   navPlugins: "Extensions",
   pluginsTitle: "Extensions",
   pluginsAllLabel: "Extensions",
-  pluginsAllHelp: "Désactivées, aucune extension ne s’exécute et rien de ce qu’elles ajoutent ne s’affiche. Vos extensions et leurs réglages sont conservés.",
+  pluginsAllHelp:
+    "Désactivées, aucune extension ne s’exécute et rien de ce qu’elles ajoutent ne s’affiche. Vos extensions et leurs réglages sont conservés.",
   pluginsInstallLabel: "Installer une extension",
-  pluginsInstallHelp: "Un paquet d’extension (.textusplugin) est copié dans Textus. Un dossier d’extension est chargé là où il se trouve, pour essayer celle que vous écrivez ; il est rechargé depuis cet endroit.",
+  pluginsInstallHelp:
+    "Un paquet d’extension (.textusplugin) est copié dans Textus. Un dossier d’extension est chargé là où il se trouve, pour essayer celle que vous écrivez ; il est rechargé depuis cet endroit.",
   pluginsInstallFile: "Installer depuis un fichier…",
   pluginsLoadFolder: "Charger un dossier d’extension…",
   pluginPackageFilter: "Extension Textus",
@@ -1194,7 +1196,8 @@ utiliser une.
   pluginsInstalledGroup: "Installées",
   pluginsNone: "Aucune pour l’instant.",
   pluginStatusBroken: "Illisible : {reason}",
-  pluginStatusIncompatible: "Conçue pour une autre version de Textus ({range}).",
+  pluginStatusIncompatible:
+    "Conçue pour une autre version de Textus ({range}).",
   pluginStatusFailed: "Désactivée : {reason}",
   pluginStatusAllOff: "Les extensions sont désactivées.",
   pluginDevTag: "développement",
@@ -1213,7 +1216,8 @@ utiliser une.
   pluginReload: "Recharger",
   pluginUninstall: "Désinstaller",
   pluginUnload: "Enlever",
-  pluginUninstallAsk: "Désinstaller {name} ? Ses fichiers et ses données seront supprimés.",
+  pluginUninstallAsk:
+    "Désinstaller {name} ? Ses fichiers et ses données seront supprimés.",
   pluginOk: "OK",
   pluginCancel: "Annuler",
   pluginAllow: "Autoriser",
@@ -1223,9 +1227,11 @@ utiliser une.
   pluginTooManyErrors: "elle a échoué trop souvent",
   pluginQuickPickEmpty: "Aucun résultat.",
   pluginPermDocumentRead: "Lire le document affiché et sa sélection",
-  pluginPermDocumentPropose: "Proposer des modifications du document, que vous acceptez ou refusez",
+  pluginPermDocumentPropose:
+    "Proposer des modifications du document, que vous acceptez ou refusez",
   pluginPermWorkspaceRead: "Lire les fichiers du dossier ouvert",
-  pluginPermWorkspaceWrite: "Créer et modifier des fichiers dans le dossier ouvert",
+  pluginPermWorkspaceWrite:
+    "Créer et modifier des fichiers dans le dossier ouvert",
   pluginPermClipboard: "Lire et écrire le presse-papiers",
   pluginPermNetwork: "Se connecter à {host}",
   pluginPermNetworkAny: "Se connecter à n’importe quel site web",
@@ -1235,5 +1241,6 @@ utiliser une.
   webPageAddress: "Adresse web",
   webPageReload: "Recharger",
   webPageOpenInBrowser: "Ouvrir dans le navigateur",
-  webPageHint: "Une page qui reste vide refuse de s’afficher dans d’autres apps : ouvrez-la dans votre navigateur.",
+  webPageHint:
+    "Une page qui reste vide refuse de s’afficher dans d’autres apps : ouvrez-la dans votre navigateur.",
 } satisfies Translation;

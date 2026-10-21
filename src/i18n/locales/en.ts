@@ -1141,9 +1141,11 @@ type /name in a conversation to use one.
   navPlugins: "Plugins",
   pluginsTitle: "Plugins",
   pluginsAllLabel: "Plugins",
-  pluginsAllHelp: "Off, no plugin runs and nothing they add is shown. Your plugins and their settings stay as they are.",
+  pluginsAllHelp:
+    "Off, no plugin runs and nothing they add is shown. Your plugins and their settings stay as they are.",
   pluginsInstallLabel: "Install a plugin",
-  pluginsInstallHelp: "A plugin package (.textusplugin) is copied into Textus. A plugin folder is loaded where it is, for trying out one you are writing; it reloads from there.",
+  pluginsInstallHelp:
+    "A plugin package (.textusplugin) is copied into Textus. A plugin folder is loaded where it is, for trying out one you are writing; it reloads from there.",
   pluginsInstallFile: "Install from file…",
   pluginsLoadFolder: "Load a plugin folder…",
   pluginPackageFilter: "Textus plugin",
@@ -1170,7 +1172,8 @@ type /name in a conversation to use one.
   pluginReload: "Reload",
   pluginUninstall: "Uninstall",
   pluginUnload: "Remove",
-  pluginUninstallAsk: "Uninstall {name}? Its files and what it kept are removed.",
+  pluginUninstallAsk:
+    "Uninstall {name}? Its files and what it kept are removed.",
   pluginOk: "OK",
   pluginCancel: "Cancel",
   pluginAllow: "Allow",
@@ -1180,7 +1183,8 @@ type /name in a conversation to use one.
   pluginTooManyErrors: "it failed too often",
   pluginQuickPickEmpty: "Nothing matches.",
   pluginPermDocumentRead: "Read the document in front and its selection",
-  pluginPermDocumentPropose: "Suggest edits to the document, which you accept or reject",
+  pluginPermDocumentPropose:
+    "Suggest edits to the document, which you accept or reject",
   pluginPermWorkspaceRead: "Read the files in the open folder",
   pluginPermWorkspaceWrite: "Create and change files in the open folder",
   pluginPermClipboard: "Read and write the clipboard",
@@ -1192,7 +1196,8 @@ type /name in a conversation to use one.
   webPageAddress: "Web address",
   webPageReload: "Reload",
   webPageOpenInBrowser: "Open in Browser",
-  webPageHint: "A page that stays blank doesn’t allow being shown inside other apps - open it in your browser.",
+  webPageHint:
+    "A page that stays blank doesn’t allow being shown inside other apps - open it in your browser.",
 } satisfies Record<string, string | Plural>;
 
 export default en;

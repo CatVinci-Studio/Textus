@@ -1165,9 +1165,11 @@ para usar una.
   navPlugins: "Complementos",
   pluginsTitle: "Complementos",
   pluginsAllLabel: "Complementos",
-  pluginsAllHelp: "Desactivados, ningún complemento se ejecuta y no se muestra nada de lo que añaden. Tus complementos y sus ajustes se conservan.",
+  pluginsAllHelp:
+    "Desactivados, ningún complemento se ejecuta y no se muestra nada de lo que añaden. Tus complementos y sus ajustes se conservan.",
   pluginsInstallLabel: "Instalar un complemento",
-  pluginsInstallHelp: "Un paquete de complemento (.textusplugin) se copia en Textus. Una carpeta de complemento se carga donde está, para probar uno que estés escribiendo; se recarga desde allí.",
+  pluginsInstallHelp:
+    "Un paquete de complemento (.textusplugin) se copia en Textus. Una carpeta de complemento se carga donde está, para probar uno que estés escribiendo; se recarga desde allí.",
   pluginsInstallFile: "Instalar desde archivo…",
   pluginsLoadFolder: "Cargar carpeta de complemento…",
   pluginPackageFilter: "Complemento de Textus",
@@ -1194,7 +1196,8 @@ para usar una.
   pluginReload: "Recargar",
   pluginUninstall: "Desinstalar",
   pluginUnload: "Quitar",
-  pluginUninstallAsk: "¿Desinstalar {name}? Se eliminarán sus archivos y lo que guardó.",
+  pluginUninstallAsk:
+    "¿Desinstalar {name}? Se eliminarán sus archivos y lo que guardó.",
   pluginOk: "Aceptar",
   pluginCancel: "Cancelar",
   pluginAllow: "Permitir",
@@ -1204,7 +1207,8 @@ para usar una.
   pluginTooManyErrors: "falló demasiadas veces",
   pluginQuickPickEmpty: "Nada coincide.",
   pluginPermDocumentRead: "Leer el documento abierto y su selección",
-  pluginPermDocumentPropose: "Sugerir cambios al documento, que tú aceptas o rechazas",
+  pluginPermDocumentPropose:
+    "Sugerir cambios al documento, que tú aceptas o rechazas",
   pluginPermWorkspaceRead: "Leer los archivos de la carpeta abierta",
   pluginPermWorkspaceWrite: "Crear y modificar archivos en la carpeta abierta",
   pluginPermClipboard: "Leer y escribir el portapapeles",
@@ -1216,5 +1220,6 @@ para usar una.
   webPageAddress: "Dirección web",
   webPageReload: "Recargar",
   webPageOpenInBrowser: "Abrir en el navegador",
-  webPageHint: "Si la página sigue en blanco, el sitio no permite mostrarse dentro de otras apps: ábrela en tu navegador.",
+  webPageHint:
+    "Si la página sigue en blanco, el sitio no permite mostrarse dentro de otras apps: ábrela en tu navegador.",
 } satisfies Translation;

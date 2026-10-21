@@ -1149,9 +1149,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   navPlugins: "Plugins",
   pluginsTitle: "Plugins",
   pluginsAllLabel: "Plugins",
-  pluginsAllHelp: "Desativados, nenhum plugin é executado e nada do que adicionam é mostrado. Seus plugins e as configurações deles são mantidos.",
+  pluginsAllHelp:
+    "Desativados, nenhum plugin é executado e nada do que adicionam é mostrado. Seus plugins e as configurações deles são mantidos.",
   pluginsInstallLabel: "Instalar um plugin",
-  pluginsInstallHelp: "Um pacote de plugin (.textusplugin) é copiado para o Textus. Uma pasta de plugin é carregada onde está, para testar um que você esteja escrevendo; ele é recarregado de lá.",
+  pluginsInstallHelp:
+    "Um pacote de plugin (.textusplugin) é copiado para o Textus. Uma pasta de plugin é carregada onde está, para testar um que você esteja escrevendo; ele é recarregado de lá.",
   pluginsInstallFile: "Instalar de um arquivo…",
   pluginsLoadFolder: "Carregar pasta de plugin…",
   pluginPackageFilter: "Plugin do Textus",
@@ -1178,7 +1180,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginReload: "Recarregar",
   pluginUninstall: "Desinstalar",
   pluginUnload: "Remover",
-  pluginUninstallAsk: "Desinstalar {name}? Os arquivos e os dados que ele guardou serão apagados.",
+  pluginUninstallAsk:
+    "Desinstalar {name}? Os arquivos e os dados que ele guardou serão apagados.",
   pluginOk: "OK",
   pluginCancel: "Cancelar",
   pluginAllow: "Permitir",
@@ -1188,7 +1191,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginTooManyErrors: "falhou vezes demais",
   pluginQuickPickEmpty: "Nada corresponde.",
   pluginPermDocumentRead: "Ler o documento aberto e a seleção",
-  pluginPermDocumentPropose: "Sugerir alterações no documento, que você aceita ou recusa",
+  pluginPermDocumentPropose:
+    "Sugerir alterações no documento, que você aceita ou recusa",
   pluginPermWorkspaceRead: "Ler os arquivos da pasta aberta",
   pluginPermWorkspaceWrite: "Criar e alterar arquivos na pasta aberta",
   pluginPermClipboard: "Ler e escrever na área de transferência",
@@ -1200,5 +1204,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   webPageAddress: "Endereço web",
   webPageReload: "Recarregar",
   webPageOpenInBrowser: "Abrir no navegador",
-  webPageHint: "Se a página continuar em branco, o site não permite ser mostrado dentro de outros apps: abra no navegador.",
+  webPageHint:
+    "Se a página continuar em branco, o site não permite ser mostrado dentro de outros apps: abra no navegador.",
 } satisfies Translation;

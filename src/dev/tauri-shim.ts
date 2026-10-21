@@ -718,7 +718,9 @@ export function installDevTauriShim(): void {
           }),
         );
       case "plugin_file": {
-        const text = installed.find((p) => p.id === id)?.files?.[String(args.rel)];
+        const text = installed.find((p) => p.id === id)?.files?.[
+          String(args.rel)
+        ];
         return text === undefined
           ? Promise.reject(`${String(args.rel)}: No such file`)
           : Promise.resolve(encoded(text));

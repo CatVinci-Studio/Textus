@@ -1156,9 +1156,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   navPlugins: "Plugins",
   pluginsTitle: "Plugins",
   pluginsAllLabel: "Plugins",
-  pluginsAllHelp: "Aus: Kein Plugin läuft, und nichts, was sie hinzufügen, wird angezeigt. Deine Plugins und ihre Einstellungen bleiben erhalten.",
+  pluginsAllHelp:
+    "Aus: Kein Plugin läuft, und nichts, was sie hinzufügen, wird angezeigt. Deine Plugins und ihre Einstellungen bleiben erhalten.",
   pluginsInstallLabel: "Plugin installieren",
-  pluginsInstallHelp: "Ein Plugin-Paket (.textusplugin) wird in Textus kopiert. Ein Plugin-Ordner wird an Ort und Stelle geladen, um ein Plugin auszuprobieren, an dem du schreibst; es wird von dort neu geladen.",
+  pluginsInstallHelp:
+    "Ein Plugin-Paket (.textusplugin) wird in Textus kopiert. Ein Plugin-Ordner wird an Ort und Stelle geladen, um ein Plugin auszuprobieren, an dem du schreibst; es wird von dort neu geladen.",
   pluginsInstallFile: "Aus Datei installieren…",
   pluginsLoadFolder: "Plugin-Ordner laden…",
   pluginPackageFilter: "Textus-Plugin",
@@ -1185,7 +1187,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginReload: "Neu laden",
   pluginUninstall: "Deinstallieren",
   pluginUnload: "Entfernen",
-  pluginUninstallAsk: "{name} deinstallieren? Seine Dateien und gespeicherten Daten werden gelöscht.",
+  pluginUninstallAsk:
+    "{name} deinstallieren? Seine Dateien und gespeicherten Daten werden gelöscht.",
   pluginOk: "OK",
   pluginCancel: "Abbrechen",
   pluginAllow: "Erlauben",
@@ -1195,7 +1198,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginTooManyErrors: "es ist zu oft fehlgeschlagen",
   pluginQuickPickEmpty: "Keine Treffer.",
   pluginPermDocumentRead: "Das angezeigte Dokument und seine Auswahl lesen",
-  pluginPermDocumentPropose: "Änderungen am Dokument vorschlagen, die du annimmst oder ablehnst",
+  pluginPermDocumentPropose:
+    "Änderungen am Dokument vorschlagen, die du annimmst oder ablehnst",
   pluginPermWorkspaceRead: "Die Dateien im geöffneten Ordner lesen",
   pluginPermWorkspaceWrite: "Dateien im geöffneten Ordner anlegen und ändern",
   pluginPermClipboard: "Die Zwischenablage lesen und schreiben",
@@ -1207,5 +1211,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   webPageAddress: "Webadresse",
   webPageReload: "Neu laden",
   webPageOpenInBrowser: "Im Browser öffnen",
-  webPageHint: "Bleibt die Seite leer, erlaubt die Website keine Anzeige in anderen Apps – öffne sie im Browser.",
+  webPageHint:
+    "Bleibt die Seite leer, erlaubt die Website keine Anzeige in anderen Apps – öffne sie im Browser.",
 } satisfies Translation;

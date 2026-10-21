@@ -6,7 +6,10 @@ import {
   caretContext,
   readSelection,
 } from "../ai/doc-markdown";
-import { setActiveDocument, type ActiveDocumentAccess } from "../plugins/app-bridge";
+import {
+  setActiveDocument,
+  type ActiveDocumentAccess,
+} from "../plugins/app-bridge";
 import type { useEditorProposals } from "./useEditorProposals";
 
 /**
@@ -31,7 +34,9 @@ export function usePluginDocumentAccess({
     const access: ActiveDocumentAccess = {
       path: filePath,
       text: () =>
-        run((ctx) => cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc)) ?? "",
+        run((ctx) =>
+          cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc),
+        ) ?? "",
       selection: () =>
         run((ctx) => {
           const { state } = ctx.get(editorViewCtx);

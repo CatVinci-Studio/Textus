@@ -1096,9 +1096,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   navPlugins: "플러그인",
   pluginsTitle: "플러그인",
   pluginsAllLabel: "플러그인",
-  pluginsAllHelp: "끄면 어떤 플러그인도 실행되지 않고, 플러그인이 추가한 항목도 표시되지 않습니다. 설치한 플러그인과 설정은 그대로 남습니다.",
+  pluginsAllHelp:
+    "끄면 어떤 플러그인도 실행되지 않고, 플러그인이 추가한 항목도 표시되지 않습니다. 설치한 플러그인과 설정은 그대로 남습니다.",
   pluginsInstallLabel: "플러그인 설치",
-  pluginsInstallHelp: "플러그인 패키지(.textusplugin)는 Textus에 복사됩니다. 플러그인 폴더는 그 자리에서 불러오므로 작성 중인 플러그인을 시험해 볼 수 있으며, 다시 불러올 때도 그 자리에서 불러옵니다.",
+  pluginsInstallHelp:
+    "플러그인 패키지(.textusplugin)는 Textus에 복사됩니다. 플러그인 폴더는 그 자리에서 불러오므로 작성 중인 플러그인을 시험해 볼 수 있으며, 다시 불러올 때도 그 자리에서 불러옵니다.",
   pluginsInstallFile: "파일에서 설치…",
   pluginsLoadFolder: "플러그인 폴더 불러오기…",
   pluginPackageFilter: "Textus 플러그인",
@@ -1125,7 +1127,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginReload: "다시 불러오기",
   pluginUninstall: "제거",
   pluginUnload: "빼기",
-  pluginUninstallAsk: "{name}을(를) 제거할까요? 파일과 저장한 데이터가 삭제됩니다.",
+  pluginUninstallAsk:
+    "{name}을(를) 제거할까요? 파일과 저장한 데이터가 삭제됩니다.",
   pluginOk: "확인",
   pluginCancel: "취소",
   pluginAllow: "허용",
@@ -1147,5 +1150,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   webPageAddress: "웹 주소",
   webPageReload: "새로고침",
   webPageOpenInBrowser: "브라우저에서 열기",
-  webPageHint: "페이지가 계속 비어 있다면 그 사이트는 다른 앱 안에서 표시되는 것을 허용하지 않습니다. 브라우저에서 여세요.",
+  webPageHint:
+    "페이지가 계속 비어 있다면 그 사이트는 다른 앱 안에서 표시되는 것을 허용하지 않습니다. 브라우저에서 여세요.",
 } satisfies Translation;

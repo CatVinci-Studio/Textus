@@ -1107,9 +1107,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   navPlugins: "プラグイン",
   pluginsTitle: "プラグイン",
   pluginsAllLabel: "プラグイン",
-  pluginsAllHelp: "オフにすると、プラグインは動作せず、追加した項目も表示されません。プラグインとその設定はそのまま残ります。",
+  pluginsAllHelp:
+    "オフにすると、プラグインは動作せず、追加した項目も表示されません。プラグインとその設定はそのまま残ります。",
   pluginsInstallLabel: "プラグインをインストール",
-  pluginsInstallHelp: "プラグインパッケージ（.textusplugin）は Textus にコピーされます。プラグインフォルダはその場所から読み込まれ、作成中のプラグインを試せます。再読み込みもその場所から行います。",
+  pluginsInstallHelp:
+    "プラグインパッケージ（.textusplugin）は Textus にコピーされます。プラグインフォルダはその場所から読み込まれ、作成中のプラグインを試せます。再読み込みもその場所から行います。",
   pluginsInstallFile: "ファイルからインストール…",
   pluginsLoadFolder: "プラグインフォルダを読み込む…",
   pluginPackageFilter: "Textus プラグイン",
@@ -1136,7 +1138,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginReload: "再読み込み",
   pluginUninstall: "アンインストール",
   pluginUnload: "取り除く",
-  pluginUninstallAsk: "{name} をアンインストールしますか？ファイルと保存したデータは削除されます。",
+  pluginUninstallAsk:
+    "{name} をアンインストールしますか？ファイルと保存したデータは削除されます。",
   pluginOk: "OK",
   pluginCancel: "キャンセル",
   pluginAllow: "許可",
@@ -1146,7 +1149,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginTooManyErrors: "エラーが多すぎました",
   pluginQuickPickEmpty: "一致するものがありません。",
   pluginPermDocumentRead: "表示中の文書と選択範囲を読む",
-  pluginPermDocumentPropose: "文書への編集を提案する（承認するかはあなたが決めます）",
+  pluginPermDocumentPropose:
+    "文書への編集を提案する（承認するかはあなたが決めます）",
   pluginPermWorkspaceRead: "開いているフォルダのファイルを読む",
   pluginPermWorkspaceWrite: "開いているフォルダでファイルを作成・変更する",
   pluginPermClipboard: "クリップボードを読み書きする",
@@ -1158,5 +1162,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   webPageAddress: "アドレス",
   webPageReload: "再読み込み",
   webPageOpenInBrowser: "ブラウザで開く",
-  webPageHint: "ページが空白のままなら、そのサイトは他のアプリ内での表示を許可していません。ブラウザで開いてください。",
+  webPageHint:
+    "ページが空白のままなら、そのサイトは他のアプリ内での表示を許可していません。ブラウザで開いてください。",
 } satisfies Translation;
