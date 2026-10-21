@@ -360,6 +360,55 @@ pub(crate) fn native_titlebar_height() -> Option<f64> {
     Some(*HEIGHT.get_or_init(|| frame.size.height - content.size.height))
 }
 
+/// Tells a window's page when macOS has taken it into full screen and
+/// when it starts taking it out (`window-fullscreen`, true or false), for
+/// the sidebar's button to take the traffic lights' corner while they are
+/// gone (app/useFullscreenMark.ts). AppKit's own notifications: guessing
+/// from the window's size, and asking `is_fullscreen` once a resize had
+/// settled, got the answer of a window still on its way out - the button
+/// stayed in the corner, under the lights. Into full screen once it is
+/// there (the lights are gone by then), out of it as it starts (they come
+/// back at the end), so the two never overlap.
+///
+/// Main thread only (AppKit), once: the observers last as long as the app.
+#[cfg(target_os = "macos")]
+fn watch_fullscreen(app: &tauri::AppHandle) {
+    use objc2_app_kit::{
+        NSWindowDidEnterFullScreenNotification, NSWindowWillExitFullScreenNotification,
+    };
+    use objc2_foundation::{NSNotification, NSNotificationCenter};
+    use std::ptr::NonNull;
+    let center = NSNotificationCenter::defaultCenter();
+    // SAFETY: AppKit's notification names, constant for the process.
+    let names = unsafe {
+        [
+            (NSWindowDidEnterFullScreenNotification, true),
+            (NSWindowWillExitFullScreenNotification, false),
+        ]
+    };
+    for (name, fullscreen) in names {
+        let app = app.clone();
+        let block = block2::RcBlock::new(move |note: NonNull<NSNotification>| {
+            // SAFETY: AppKit hands the block a live notification.
+            let Some(window) = (unsafe { note.as_ref() }).object() else {
+                return;
+            };
+            let window = objc2::rc::Retained::as_ptr(&window) as *mut std::ffi::c_void;
+            for (label, webview) in app.webview_windows() {
+                if webview.ns_window().ok() == Some(window) {
+                    let _ = app.emit_to(label.as_str(), "window-fullscreen", fullscreen);
+                }
+            }
+        });
+        // SAFETY: any window's notification (no object), delivered on the
+        // thread that posts it - AppKit's main thread.
+        let observer = unsafe {
+            center.addObserverForName_object_queue_usingBlock(Some(name), None, None, &block)
+        };
+        std::mem::forget(observer);
+    }
+}
+
 /// Whether this process talks to a Wayland compositor rather than X11 (or
 /// XWayland). Wayland has no client-side window positions and no
 /// always-on-top, which the detached chat relies on elsewhere.
@@ -515,6 +564,8 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
 fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_os = "linux")]
     detect_wayland();
+    #[cfg(target_os = "macos")]
+    watch_fullscreen(app.handle());
     // Windows/Linux hand an associated file over as a plain argv
     // path; macOS hands the files it launched the app with to the Opened
     // run-event, which parks them in LAUNCH_OPENED until now. With no file
