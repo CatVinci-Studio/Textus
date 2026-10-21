@@ -423,7 +423,9 @@ pub fn strip_citation_markers(text: &str) -> String {
         out.push_str(&rest[..at]);
         let marker = &rest[at..];
         let len = if marker.starts_with('\u{e200}') {
-            marker.find('\u{e201}').map_or(marker.len(), |end| end + '\u{e201}'.len_utf8())
+            marker
+                .find('\u{e201}')
+                .map_or(marker.len(), |end| end + '\u{e201}'.len_utf8())
         } else {
             bare_marker_len(marker)
         };
@@ -451,8 +453,14 @@ fn bare_marker_len(text: &str) -> usize {
             break;
         };
         let digits = after.chars().take_while(char::is_ascii_digit).count();
-        let kind = after[digits..].chars().take_while(char::is_ascii_lowercase).count();
-        let number = after[digits + kind..].chars().take_while(char::is_ascii_digit).count();
+        let kind = after[digits..]
+            .chars()
+            .take_while(char::is_ascii_lowercase)
+            .count();
+        let number = after[digits + kind..]
+            .chars()
+            .take_while(char::is_ascii_digit)
+            .count();
         if digits == 0 || kind == 0 || number == 0 {
             break;
         }
@@ -465,7 +473,10 @@ fn bare_marker_len(text: &str) -> usize {
 /// `anchor` or `context`, which quote the document: one that already has
 /// such markers (written before this) must still be quotable, to clean up.
 fn strip_markers_in_arguments(arguments: &str) -> String {
-    if !arguments.contains("citeturn") && !arguments.contains('\u{e200}') && !arguments.contains("\\ue200") {
+    if !arguments.contains("citeturn")
+        && !arguments.contains('\u{e200}')
+        && !arguments.contains("\\ue200")
+    {
         return arguments.to_string();
     }
     fn walk(value: &mut Value) {
@@ -603,7 +614,9 @@ mod tests {
         );
         // Their delimiters lost, as they reached a document (rc.5).
         assert_eq!(
-            strip_citation_markers("中文输入应优先测试多语言版。citeturn2search0turn3view2\n\nNext"),
+            strip_citation_markers(
+                "中文输入应优先测试多语言版。citeturn2search0turn3view2\n\nNext"
+            ),
             "中文输入应优先测试多语言版。\n\nNext"
         );
         assert_eq!(
@@ -611,10 +624,15 @@ mod tests {
             "It was found. Then"
         );
         // Words that only start like one stay.
-        assert_eq!(strip_citation_markers("We cite turnout data."), "We cite turnout data.");
+        assert_eq!(
+            strip_citation_markers("We cite turnout data."),
+            "We cite turnout data."
+        );
         let call = parse_agent_output(
-            &[json!({"type": "function_call", "call_id": "c1", "name": "propose_edit",
-                "arguments": json!({"action": "append", "text": "Jev 的接口。citeturn3view0"}).to_string()})],
+            &[
+                json!({"type": "function_call", "call_id": "c1", "name": "propose_edit",
+                "arguments": json!({"action": "append", "text": "Jev 的接口。citeturn3view0"}).to_string()}),
+            ],
             &|_| {},
         );
         let StepResult::ToolCalls(calls) = call else {
@@ -623,11 +641,16 @@ mod tests {
         let AgentTurn::ToolCall { arguments, .. } = &calls[0] else {
             panic!("a call");
         };
-        assert!(arguments.contains("Jev 的接口。") && !arguments.contains("cite"), "{arguments}");
+        assert!(
+            arguments.contains("Jev 的接口。") && !arguments.contains("cite"),
+            "{arguments}"
+        );
         // An anchor quotes the document as it is, markers and all.
         let call = parse_agent_output(
-            &[json!({"type": "function_call", "call_id": "c2", "name": "propose_edit",
-                "arguments": json!({"action": "replace", "anchor": "概率。citeturn3view0", "text": "概率。"}).to_string()})],
+            &[
+                json!({"type": "function_call", "call_id": "c2", "name": "propose_edit",
+                "arguments": json!({"action": "replace", "anchor": "概率。citeturn3view0", "text": "概率。"}).to_string()}),
+            ],
             &|_| {},
         );
         let StepResult::ToolCalls(calls) = call else {
