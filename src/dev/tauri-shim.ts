@@ -655,6 +655,112 @@ export function installDevTauriShim(): void {
     return null;
   }
 
+  // Plugins (src-tauri/src/plugins/), kept in memory: the switch and the
+  // grants, each plugin's storage, and its folder calls answered from the
+  // same `window.__devFs` the tree reads (a document opened on its own -
+  // a PDF given to a custom editor - from `__devFiles`). Installed plugins
+  // are `window.__devPlugins`: [{ id, dir, manifest, dev, files: {rel:
+  // text} }]. The network has nothing to answer: a test cans plugin_http.
+  const pluginState = {
+    allOn: true,
+    plugins: {} as Record<string, { enabled: boolean; granted: string[] }>,
+  };
+  const pluginStorage = new Map<string, Record<string, unknown>>();
+  const encoded = (text: string) => new TextEncoder().encode(text).buffer;
+  function pluginCommand(
+    cmd: string,
+    args: Record<string, unknown> = {},
+  ): Promise<unknown> | null {
+    const id = String(args.id ?? "");
+    const folder = (w.__devFs ?? {}) as Record<string, string>;
+    const documents = (w.__devFiles ?? {}) as Record<string, string>;
+    // `window.__devBinaryFiles = { path: base64 }`: a PDF, a picture.
+    const binary = (w.__devBinaryFiles ?? {}) as Record<string, string>;
+    const installed = (w.__devPlugins ?? []) as {
+      id: string;
+      files?: Record<string, string>;
+    }[];
+    const path = String(args.path ?? "");
+    const fileText = (p: string) =>
+      p in binary
+        ? Promise.resolve(
+            Uint8Array.from(atob(binary[p]), (c) => c.charCodeAt(0)).buffer,
+          )
+        : p in folder
+          ? Promise.resolve(encoded(folder[p]))
+          : p in documents
+            ? Promise.resolve(encoded(documents[p]))
+            : Promise.reject(`${p}: No such file`);
+    switch (cmd) {
+      case "plugins_state":
+        return Promise.resolve(structuredClone(pluginState));
+      case "plugins_set_all":
+        pluginState.allOn = !!args.on;
+        return Promise.resolve(null);
+      case "plugin_set":
+        pluginState.plugins[id] = {
+          enabled: !!args.enabled,
+          granted: [...((args.granted as string[]) ?? [])],
+        };
+        return Promise.resolve(null);
+      case "plugins_installed":
+        return Promise.resolve(
+          installed.map(({ files: _files, ...plugin }) => plugin),
+        );
+      case "plugin_file": {
+        const text = installed.find((p) => p.id === id)?.files?.[String(args.rel)];
+        return text === undefined
+          ? Promise.reject(`${String(args.rel)}: No such file`)
+          : Promise.resolve(encoded(text));
+      }
+      case "plugin_read_resource":
+      case "plugin_fs_read":
+        return fileText(path);
+      case "plugin_fs_list": {
+        const dir = path.replace(/\/$/, "");
+        const entries = new Map<string, boolean>();
+        for (const file of Object.keys(folder)) {
+          if (!file.startsWith(`${dir}/`)) continue;
+          const [name, ...rest] = file.slice(dir.length + 1).split("/");
+          if (!name.startsWith(".")) entries.set(name, rest.length > 0);
+        }
+        return Promise.resolve(
+          [...entries].map(([name, isDir]) => ({
+            name,
+            path: `${dir}/${name}`,
+            isDir,
+            size: isDir ? 0 : (folder[`${dir}/${name}`] ?? "").length,
+            modifiedMs: 1,
+          })),
+        );
+      }
+      case "plugin_fs_write":
+        ((w.__devFs ??= {}) as Record<string, string>)[path] = args.base64
+          ? atob(String(args.contents))
+          : String(args.contents);
+        return Promise.resolve(null);
+      case "plugin_http":
+        return Promise.reject("The dev shim has no network.");
+      case "plugin_storage_get":
+        return Promise.resolve({ ...(pluginStorage.get(id) ?? {}) });
+      case "plugin_storage_set": {
+        const store = { ...(pluginStorage.get(id) ?? {}) };
+        if (args.value === null) delete store[String(args.key)];
+        else store[String(args.key)] = args.value;
+        pluginStorage.set(id, store);
+        return Promise.resolve(null);
+      }
+      case "plugin_install":
+      case "plugin_load_dev":
+      case "plugin_uninstall":
+        return Promise.reject("The dev shim installs no plugins.");
+      case "plugin_pick_package":
+      case "set_plugin_menu":
+        return Promise.resolve(null);
+    }
+    return null;
+  }
+
   w.__TAURI_INTERNALS__ = {
     metadata: {
       currentWindow: { label: "main" },
@@ -748,6 +854,8 @@ export function installDevTauriShim(): void {
       if (theme) return theme;
       const file = fsCommand(cmd, args as Record<string, unknown>);
       if (file) return file;
+      const plugin = pluginCommand(cmd, args as Record<string, unknown>);
+      if (plugin) return plugin;
       // A canned suggestion instead of null: lets ghost-text rendering (and
       // the tour's completion lesson) be smoke-tested in the browser -
       // null would make the manual trigger path throw an error dialog.

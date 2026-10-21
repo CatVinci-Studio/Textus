@@ -42,6 +42,7 @@ const WEBKIT_SPECS = [
   "keyboard.spec.ts",
   "file-tree.spec.ts",
   "user-css.spec.ts",
+  "plugins.spec.ts",
 ];
 
 export default defineConfig({
