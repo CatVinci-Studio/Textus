@@ -214,6 +214,7 @@ fn live_agent_caches_across_steps() {
         focus_heading: None,
         ui_language: "en",
         thinking: aicompat::capabilities::ThinkingLevel::Auto,
+        pictures: None,
     };
     let conv = harness::run_conversation(
         &auth,
@@ -306,6 +307,7 @@ fn live_thinking_levels() {
             focus_heading: None,
             ui_language: "en",
             thinking: *level,
+            pictures: None,
         };
         let conv = harness::run_conversation(
             &auth,

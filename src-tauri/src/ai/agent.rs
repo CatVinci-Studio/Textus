@@ -202,7 +202,7 @@ Style: avoid the tics that make text read as machine-written unless the author's
 
 /// Only appended for providers that actually run the tool loop; telling a
 /// tool-less provider to call tools would just confuse it.
-const AGENT_TOOL_INSTRUCTIONS: &str = "Use search_document to locate something specific in a long document, and read_document to see a whole section before you revise it - never guess at text you haven't seen. Read first, propose after: never send a propose_edit in the same step as the read it depends on. If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (once per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. Pick the action that matches the intent (propose_edit's description lists them). To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal must target its own passage - for several changes inside one passage, send a single replace covering it, since overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE, and both fields work in that same markdown: `anchor` quotes any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This`. `text` must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. The user reviews and applies each proposal themselves, so your reply only says, in a sentence or two, what you proposed and why. Write that reply in the same message as your proposals (and comments), before their calls, and send every proposal for the request in that one message: when they are all valid the request ends there, with that text as your reply - so write it as done (\"Cut the repeated point about cost\"), not as a plan (\"I'll tighten it\"). If one is refused, its result says why: fix it, and reply again with the fix. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. Proposing new edits automatically replaces any still-undecided proposals in the editor, so never re-propose or try to retract an undecided one yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin each point to its passage with add_comment and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose. When the user asks for a picture and you have no generate_image tool, say that Textus AI can make one once an image model is chosen in Settings > Textus AI > Image model.";
+const AGENT_TOOL_INSTRUCTIONS: &str = "Use search_document to locate something specific in a long document, and read_document to see a whole section before you revise it - never guess at text you haven't seen. Read first, propose after: never send a propose_edit in the same step as the read it depends on. If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (once per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. Pick the action that matches the intent (propose_edit's description lists them). To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal must target its own passage - for several changes inside one passage, send a single replace covering it, since overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE, and both fields work in that same markdown: `anchor` quotes any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This`. `text` must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. The user reviews and applies each proposal themselves, so your reply only says, in a sentence or two, what you proposed and why. Write that reply in the same message as your proposals (and comments), before their calls, and send every proposal for the request in that one message: when they are all valid the request ends there, with that text as your reply - so write it as done (\"Cut the repeated point about cost\"), not as a plan (\"I'll tighten it\"). If one is refused, its result says why: fix it, and reply again with the fix. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. An undecided proposal stays in the editor next to new ones; a new proposal for the same passage replaces it, so never re-propose an undecided one unchanged or try to retract it yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin each point to its passage with add_comment and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose. When the user asks for a picture and you have no generate_image tool, say that Textus AI can make one once an image model is chosen in Settings > Textus AI > Image model.";
 
 /// The rules engine's two tools, in every mode (tools.rs).
 const RULES_TOOL_INSTRUCTIONS: &str = "check_conventions checks text against the document's writing conventions (punctuation, spacing, numbers, spelling lists, consistency with the rest of the document) with a deterministic rules engine: when you proofread or fix conventions, ground your changes in what it reports instead of guessing, change only what it flags or what you are certain of, and check a draft with its `text` argument before proposing it. Its \"check\" findings only point at something to look at. measure_text counts text exactly (characters, words, X and Bluesky limits, WeChat titles...): whenever a length limit matters, measure the exact text instead of estimating, and give the count in your reply. A length the user asks for (\"800 字\", \"about 500 words\") is a target, not a platform's limit: check_conventions, and measure_text without a platform's metric, answer only a few calls per request, so check or measure a draft once, fix what it shows, then propose it - never draft after draft.";
@@ -1066,6 +1066,12 @@ async fn ai_agent_message_inner(
     let web = &web_plan;
     let history = compact_history(web::with_sources_in_text(history));
 
+    // A selected picture is shown to a model that can see, not only its
+    // Markdown: "what's in this picture", "redo it brighter".
+    let mut images = images;
+    if entry.supports_vision {
+        images.extend(selected_picture(&focus, doc_path.as_deref()));
+    }
     // Refuse rather than drop. Sending the images to a provider that can't
     // read them would get an answer confidently written about a picture the
     // model never saw - the frontend hides the attach affordance for these
@@ -1101,20 +1107,6 @@ async fn ai_agent_message_inner(
                 build_instructions(&workspace, &document, true, mode, &focus, &ui_language),
                 web,
             );
-            let mut tools = ToolRegistry::builtin(
-                workspace.has_usable_skills(),
-                workspace.root.is_some(),
-                mode,
-                workspace.remember,
-                entry.supports_vision,
-            );
-            if let Some(image_run) = &image_run {
-                tools.add(image_run.tool(&document, &on_event));
-            }
-            for tool in web.tools(&focus) {
-                tools.add(tool);
-            }
-            let tool_specs = tools.specs();
             let tool_ctx = ToolContext {
                 document: &document,
                 skills: &workspace.skills,
@@ -1127,6 +1119,30 @@ async fn ai_agent_message_inner(
                 proposed: Default::default(),
                 checks: Default::default(),
             };
+            // The text of proposals still undecided from earlier requests:
+            // a picture may go next to it (ai::images).
+            let undecided = crate::ai::images::undecided_texts(&history);
+            let mut tools = ToolRegistry::builtin(
+                workspace.has_usable_skills(),
+                workspace.root.is_some(),
+                mode,
+                workspace.remember,
+                entry.supports_vision,
+            );
+            if let Some(image_run) = &image_run {
+                tools.add(image_run.tool(
+                    &document,
+                    crate::ai::images::ProposedText {
+                        this_request: &tool_ctx.proposed,
+                        undecided: &undecided,
+                    },
+                    &on_event,
+                ));
+            }
+            for tool in web.tools(&focus) {
+                tools.add(tool);
+            }
+            let tool_specs = tools.specs();
             let step = |turns: Vec<AgentTurn>| {
                 let (agent, instructions, tool_specs) = (&agent, &instructions, &tool_specs);
                 let channel = on_event.clone();
@@ -1285,6 +1301,33 @@ async fn flattened_chat_turn(
     )
     .await?;
     Ok(vec![user_turn, AgentTurn::assistant(text)])
+}
+
+/// The picture a message's selection is, when it is one picture and
+/// nothing else (`<selected-text>`, src/ai/chat/user-message.ts) whose
+/// file is in the document's folder: PNG, JPEG, GIF or WebP, as view_image
+/// reads them. None for a picture on the web, one outside the folder, or
+/// a selection of anything more.
+fn selected_picture(message: &str, doc_path: Option<&str>) -> Option<ImageAttachment> {
+    let inner = message
+        .strip_prefix("<selected-text>")?
+        .split_once("</selected-text>")?
+        .0
+        .trim();
+    let rest = inner.strip_prefix("![")?;
+    let (_, src) = rest.split_once("](")?;
+    let src = src.strip_suffix(')')?;
+    // A title after the src, `![alt](src "title")`, goes.
+    let src = src.split(" \"").next()?.trim();
+    let src = src
+        .strip_prefix('<')
+        .and_then(|s| s.strip_suffix('>'))
+        .unwrap_or(src);
+    if src.is_empty() || src.contains("://") || src.starts_with("data:") {
+        return None;
+    }
+    let folder = Path::new(doc_path?).parent()?;
+    crate::ai::project::read_image(folder, src).ok()
 }
 
 #[cfg(test)]
@@ -2163,5 +2206,35 @@ mod tests {
         // Without tools there is no remember tool to talk about.
         let flat = build_instructions(&ws, "draft", false, AgentMode::Review, "", "en");
         assert!(flat.contains("Reply briefly.") && !flat.contains("---remembering---"));
+    }
+
+    #[test]
+    fn a_selected_picture_in_the_documents_folder_is_seen() {
+        let dir = std::env::temp_dir().join(format!("textus-selpic-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("assets")).unwrap();
+        // A 1x1 PNG.
+        let png = base64::Engine::decode(
+            &base64::engine::general_purpose::STANDARD,
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+        )
+        .unwrap();
+        std::fs::write(dir.join("assets/boats.png"), png).unwrap();
+        let doc = dir.join("harbour.md");
+        let doc = doc.to_str();
+        let ask = |selection: &str| {
+            selected_picture(
+                &format!("<selected-text>\n{selection}\n</selected-text>\n\nWhat is in it?"),
+                doc,
+            )
+        };
+        let seen = ask("![Boats](assets/boats.png)").expect("the picture");
+        assert_eq!(seen.mime, "image/png");
+        assert!(ask("![Boats](<assets/boats.png> \"Boats\")").is_some());
+        // More than the picture, a picture on the web, or outside the folder.
+        assert!(ask("Look: ![Boats](assets/boats.png)").is_none());
+        assert!(ask("![Boats](https://example.com/boats.png)").is_none());
+        assert!(ask("![Boats](../boats.png)").is_none());
+        assert!(selected_picture("What is in it?", doc).is_none());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

@@ -620,6 +620,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   chatHistoryArchived:
     "古い会話はアーカイブに移しました。最新の 500 件を表示しています。",
   chatSelectedChars: { other: "{n} 文字を選択中" },
+  chatSelectedPicture: "画像を選択中",
   cut: "切り取り",
   copy: "コピー",
   copyAsMarkdown: "Markdown としてコピー",
@@ -787,6 +788,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   chatCloseConfirmReject: "すべて破棄して閉じる",
   chatCloseConfirmCancel: "チャットを続ける",
   proposalAccept: "適用",
+  proposalPicturePainting: "画像を生成中…",
   proposalAcceptAll: "すべて適用",
   proposalRejectAll: "すべて却下",
   proposalRelocate: "AIに修正をやり直してもらう",
@@ -809,6 +811,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   proposalStatusAccepted: "適用済み",
   proposalStatusRejected: "却下済み",
   proposalStatusExpired: "無効",
+  proposalStatusJoined: "上の提案文に入れました",
   proposalStatusInvalid: "この文書内にそのテキストが見つかりませんでした。",
   agentActionReplace: "置き換え",
   agentActionReplaceSelection: "選択範囲を置き換え",

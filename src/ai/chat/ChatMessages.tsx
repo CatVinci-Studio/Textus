@@ -1,3 +1,4 @@
+import { usePicturesState } from "../revision/usePicturesState";
 import {
   Fragment,
   useEffect,
@@ -66,6 +67,7 @@ export interface ChatMessagesLabels
   proposalTitle: string;
   proposalStatus: Record<Exclude<PendingStatus, "pending">, string>;
   proposalAccept: string;
+  proposalPicturePainting: string;
   proposalReject: string;
   proposalAcceptAll: string;
   proposalRejectAll: string;
@@ -628,6 +630,10 @@ function ProposalCard({
   actions?: boolean;
 }) {
   const [diffOpen, setDiffOpen] = useState(status === "invalid");
+  // Its pictures: Accept waits while one is being made, and a picture on
+  // its own that wasn't made has nothing to accept (usePendingEdits).
+  const pictures = usePicturesState(proposal.text ?? "");
+  const nothingToAccept = !!proposal.image && pictures === "failed";
   // The proposal cites the web: Accept writes the sources as footnotes, or
   // leaves them out (usePendingEdits) - the last card's choice stands.
   const { settings, setSettings } = useSettings();
@@ -807,16 +813,21 @@ function ProposalCard({
       {status === "pending" ? (
         actions && (
           <div className="agent-proposal-actions">
-            <button
-              className="inline-chat-action inline-chat-action-primary"
-              onClick={() => onAccept(callId)}
-            >
-              {partial && sentences
-                ? labels.proposalAcceptSome
-                    .replace("{k}", String(taken))
-                    .replace("{n}", String(sentences.length))
-                : labels.proposalAccept}
-            </button>
+            {!nothingToAccept && (
+              <button
+                className="inline-chat-action inline-chat-action-primary"
+                disabled={pictures === "painting"}
+                onClick={() => onAccept(callId)}
+              >
+                {pictures === "painting"
+                  ? labels.proposalPicturePainting
+                  : partial && sentences
+                    ? labels.proposalAcceptSome
+                        .replace("{k}", String(taken))
+                        .replace("{n}", String(sentences.length))
+                    : labels.proposalAccept}
+              </button>
+            )}
             <button
               className="inline-chat-action"
               onClick={() => onReject(callId)}

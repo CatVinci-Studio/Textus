@@ -550,6 +550,7 @@ export function MilkdownEditor({
                   addsTextOnly(p.proposal),
                 )}
                 streaming={pendingEdits.reviewStreaming}
+                painting={pendingEdits.picturesPainting}
               />
             )}
           </Presence>,

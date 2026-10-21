@@ -511,6 +511,9 @@ pub struct AgentSetup<'a> {
     /// thinking block replayed after an edit to the history fails the case
     /// instead of passing on an account the check isn't enforced for.
     pub thinking: ThinkingLevel,
+    /// generate_image, for the picture cases: None offers no such tool, as
+    /// the app does without an image model.
+    pub pictures: Option<&'a crate::ai::images::ImageRun>,
 }
 
 /// Mirrors src/ai/revision/proposal-status.ts's notes for the two decided states.
@@ -542,11 +545,8 @@ pub fn run_conversation(
 ) -> Conversation {
     let ws = setup.workspace;
     let root = ws.root.as_deref().map(Path::new);
-    let tool_set =
-        // No remember tool: an eval run writes no memories. Images as the
-        // app offers them to the provider the eval runs on (Anthropic).
-        tools::ToolRegistry::builtin(ws.has_usable_skills(), root.is_some(), setup.mode, false, sees_images());
-    let specs = tool_set.specs();
+    // What generate_image streams (its start) goes nowhere here.
+    let events = tauri::ipc::Channel::new(|_| Ok(()));
     let mut history: Vec<AgentTurn> = Vec::new();
     let mut doc = document.to_string();
     let mut outcomes = Vec::new();
@@ -601,6 +601,29 @@ pub fn run_conversation(
             proposed: Default::default(),
             checks: Default::default(),
         };
+        // No remember tool: an eval run writes no memories. Images as the
+        // app offers them to the provider the eval runs on (Anthropic), and
+        // generate_image when the case gives it one, on this turn's
+        // document as the app does per request.
+        let undecided = crate::ai::images::undecided_texts(&history);
+        let mut tool_set = tools::ToolRegistry::builtin(
+            ws.has_usable_skills(),
+            root.is_some(),
+            setup.mode,
+            false,
+            sees_images(),
+        );
+        if let Some(pictures) = setup.pictures {
+            tool_set.add(pictures.tool(
+                &doc,
+                crate::ai::images::ProposedText {
+                    this_request: &ctx.proposed,
+                    undecided: &undecided,
+                },
+                &events,
+            ));
+        }
+        let specs = tool_set.specs();
         let usage = RefCell::new(Vec::new());
         let postfix = RefCell::new(Vec::new());
         let thinking_events = AtomicUsize::new(0);
@@ -668,6 +691,8 @@ pub fn run_conversation(
             |_| {},
         ));
         let latency_ms = started.elapsed().as_millis();
+        // generate_image held this turn's document; the next turn's may differ.
+        drop(tool_set);
         let mut turns = match result {
             Ok(turns) => turns,
             Err(e) => {

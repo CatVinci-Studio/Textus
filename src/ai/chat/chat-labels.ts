@@ -27,6 +27,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     attachmentTruncated: t.chatAttachmentTruncated,
     attachmentNoVision: t.chatAttachmentNoVision,
     selectedChars: (n) => plural(t.chatSelectedChars, n, lang),
+    selectedPicture: t.chatSelectedPicture,
     selectionChip: (n) => plural(t.chatSelectionChip, n, lang),
     proposalTitle: t.agentProposalTitle,
     proposalStatus: {
@@ -35,8 +36,10 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       rejected: t.proposalStatusRejected,
       invalid: t.proposalStatusInvalid,
       expired: t.proposalStatusExpired,
+      joined: t.proposalStatusJoined,
     },
     proposalAccept: t.proposalAccept,
+    proposalPicturePainting: t.proposalPicturePainting,
     proposalReject: t.proposalReject,
     proposalAcceptAll: t.proposalAcceptAll,
     proposalRejectAll: t.proposalRejectAll,

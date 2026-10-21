@@ -610,6 +610,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   chatHistoryArchived:
     "이전 대화는 보관함으로 옮겨졌습니다. 최근 500개만 표시됩니다.",
   chatSelectedChars: { other: "{n}자 선택됨" },
+  chatSelectedPicture: "이미지 선택됨",
   cut: "잘라내기",
   copy: "복사",
   copyAsMarkdown: "Markdown으로 복사",
@@ -779,6 +780,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   chatCloseConfirmReject: "모두 버리고 닫기",
   chatCloseConfirmCancel: "채팅 계속하기",
   proposalAccept: "수락",
+  proposalPicturePainting: "이미지 생성 중…",
   proposalAcceptAll: "모두 수락",
   proposalRejectAll: "모두 거부",
   proposalRelocate: "AI에게 이 수정 다시 요청",
@@ -801,6 +803,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   proposalStatusAccepted: "적용됨",
   proposalStatusRejected: "거부됨",
   proposalStatusExpired: "더 이상 적용할 수 없음",
+  proposalStatusJoined: "위의 제안 글에 넣었습니다",
   proposalStatusInvalid: "문서에서 해당 텍스트를 찾을 수 없습니다.",
   agentActionReplace: "바꾸기",
   agentActionReplaceSelection: "선택 영역 바꾸기",

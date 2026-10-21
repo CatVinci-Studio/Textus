@@ -33,6 +33,12 @@ export function parseImageProposal(argumentsJson: string): EditProposal | null {
     const parsed = JSON.parse(argumentsJson);
     const image = parsed.image;
     if (!image || typeof image.id !== "string") return null;
+    // Its frame's shape, wherever it is drawn - in a text that carries it
+    // (`in_text`) as much as on its own.
+    sizes.set(image.id, {
+      width: Number(image.width) || 0,
+      height: Number(image.height) || 0,
+    });
     const action = parsed.action as EditAction;
     if (!EDIT_ACTIONS.includes(action)) return null;
     const anchor =
@@ -50,17 +56,13 @@ export function parseImageProposal(argumentsJson: string): EditProposal | null {
           ? parsed.context
           : undefined,
       text: `![${alt}](${generatedImageSrc(image.id)})`,
-      image: (() => {
-        const shape = {
-          id: image.id,
-          alt,
-          width: Number(image.width) || 0,
-          height: Number(image.height) || 0,
-          pending: image.pending === true,
-        };
-        sizes.set(shape.id, shape);
-        return shape;
-      })(),
+      image: {
+        id: image.id,
+        alt,
+        width: Number(image.width) || 0,
+        height: Number(image.height) || 0,
+        pending: image.pending === true,
+      },
     };
   } catch {
     return null;
@@ -96,10 +98,62 @@ export function loadGeneratedImage(id: string): Promise<boolean> {
         failed.set(id, err instanceof Error ? err.message : String(err));
         return false;
       })
-      .finally(() => loading.delete(id));
+      .finally(() => {
+        loading.delete(id);
+        for (const listener of listeners) listener();
+      });
     loading.set(id, pending);
   }
   return pending;
+}
+
+/** Told whenever a picture has come, or failed to. */
+const listeners = new Set<() => void>();
+
+export function onPictureSettled(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+/** Where a picture is: still being made, here (or saved by an earlier
+ *  Accept), or not made. */
+export type PictureState = "painting" | "ready" | "failed";
+
+export function pictureState(id: string): PictureState {
+  if (loaded.has(id) || saved.has(id)) return "ready";
+  if (failed.has(id)) return "failed";
+  return "painting";
+}
+
+/** The ids of the waiting pictures in a proposal's Markdown, in order. */
+export function generatedIdsIn(markdown: string): string[] {
+  return [...markdown.matchAll(PLACEHOLDER)].map((m) => m[1]);
+}
+
+/** Where a proposal's waiting pictures are, taken together: any still
+ *  being made, any not made - or "ready" (also with none at all). */
+export function picturesState(markdown: string): PictureState {
+  const states = generatedIdsIn(markdown).map(pictureState);
+  if (states.includes("painting")) return "painting";
+  if (states.includes("failed")) return "failed";
+  return "ready";
+}
+
+/** The alt text picture `id` has in `markdown`. */
+export function generatedAlt(markdown: string, id: string): string {
+  const at = markdown.indexOf(generatedImageSrc(id));
+  const open = at < 0 ? -1 : markdown.lastIndexOf("![", at);
+  if (open < 0) return "";
+  return markdown.slice(open + 2, at).replace(/\]\($/, "");
+}
+
+/** `markdown` without picture `id` - one that wasn't made, left out of
+ *  the text that carried it - and the blank line it stood on. */
+export function withoutPicture(markdown: string, id: string): string {
+  const src = generatedImageSrc(id).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return markdown
+    .replace(new RegExp(`\\n*!\\[[^\\]]*\\]\\(${src}\\)\\n*`), "\n\n")
+    .replace(/^\n+|\n+$/g, "");
 }
 
 /** Why a picture wasn't made, once its load has said so. */
@@ -194,4 +248,26 @@ export function discardGeneratedImage(id: string): void {
   if (saved.has(id)) return;
   loaded.delete(id);
   void ai.discardGeneratedImage(id).catch(() => {});
+}
+
+/** `text` with `picture` (its Markdown) put next to the paragraph that
+ *  quotes `anchor` - after it, or before it - on a line of its own; null
+ *  when `anchor` isn't in `text` exactly once. How a picture asked for
+ *  next to text proposed and not decided yet joins that proposal. */
+export function joinedText(
+  text: string,
+  anchor: string,
+  action: "insert_after" | "insert_before",
+  picture: string,
+): string | null {
+  const at = text.indexOf(anchor);
+  if (at < 0 || text.indexOf(anchor, at + 1) >= 0) return null;
+  if (action === "insert_after") {
+    const end = text.indexOf("\n\n", at + anchor.length);
+    if (end < 0) return `${text}\n\n${picture}`;
+    return `${text.slice(0, end)}\n\n${picture}${text.slice(end)}`;
+  }
+  const start = text.lastIndexOf("\n\n", at);
+  if (start < 0) return `${picture}\n\n${text}`;
+  return `${text.slice(0, start)}\n\n${picture}${text.slice(start)}`;
 }
