@@ -194,7 +194,7 @@ The API, by namespace (first version):
   allows that plugin in the conversation's tools, and only read or propose.
   `ai` lets a plugin ask the user's model; the request is marked as the
   plugin's in the chat history.
-- **The switch.** Settings › Plugins › "Turn off all plugins" stops every
+- **The switch.** Settings › Extensions › Plugins › "Turn off all plugins" stops every
   host and webview at once; a launch with `--no-plugins` (or holding Shift
   on start, desktop) starts without them, for when one goes wrong.
 
@@ -225,93 +225,32 @@ A **Plugins** page in Settings (a built-in page in settings-pages.tsx):
 
 Search in Settings finds plugins' setting rows too.
 
-## 7. The market
+## 7. Extensions: where each kind comes from
 
-One market for **themes, plugins, skills and MCP servers**, in its own
-repository, `CatVinci-Studio/textus-market`, in the way Obsidian's
-community list works: the market holds the index and the review; the code
-lives in each author's repository and is fetched from its tagged releases.
+Settings › Extensions has a tab for each kind of thing added to Textus,
+each one a card with its switch (src/settings/pages/ExtensionsPage.tsx).
+Each kind comes from where it is simplest to keep and to review:
 
-```
-textus-market/
-  themes/<id>/entry.json, theme.css, preview-light.png, preview-dark.png
-  plugins/<id>/entry.json
-  skills/<id>/entry.json, skill.md
-  mcp/<id>/entry.json
-  revoked.json        # taken down: id, versions, reason
-  RULES.md            # what is accepted, and how it is reviewed
-  scripts/, .github/workflows/
-```
+| Kind    | Where it comes from                                                                           | Installed as                                       |
+| ------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Plugins | `CatVinci-Studio/textus-plugins`: its `catalog` release's `index.json`, one release a version | a zip, checked by SHA-256, unpacked by Rust        |
+| Themes  | `CatVinci-Studio/textus-themes` (the website's gallery), sent in as a GitHub comment          | one CSS file, a user theme                         |
+| Skills  | built into the app (src-tauri/src/ai/skills/); the user's own are files                       | a switch: five on in a new profile, the rest added |
+| MCP     | anything with an MCP server; four common ones are ready to add (src/settings/mcp.ts)          | a command or a URL in `mcpServers`                 |
 
-`entry.json` names the id, kind, name, author, description, license, source
-repository, and for each version its release asset's URL and sha256, the
-permissions it asks for and the Textus versions it works with.
-
-### Sending something in
-
-1. **Start** from a template repository - `textus-plugin-template`
-   (`Use this template` on GitHub): the manifest, the API types, a webview
-   example, a build and `npm run package`, which makes the
-   `.textusplugin` zip. A theme needs no template: a CSS file and two
-   screenshots.
-2. **Try it** in Textus: Settings › Plugins › Developer › Load a plugin
-   folder.
-3. **Release** it: tag a version in your own repository, attach the zip.
-4. **Fork `textus-market`** and add your entry - by hand, or with
-   `npx @textus/market add <your repo>`, which fills `entry.json` from your
-   latest release (URL, sha256, permissions from the manifest). Open a pull
-   request.
-5. **Checks** (the market's CI): the schema; the asset downloads and its
-   sha256 matches; the manifest matches the entry; no remote code is loaded
-   (no `eval`, no script from a URL); a permission diff against the last
-   version; a license is named; for themes, Playwright renders the sample
-   document in light and dark and posts the screenshots on the pull request;
-   the theme-reach check (every colour a variable) as a warning.
-6. **Review** by a maintainer, against `RULES.md`. Merged, the entry is
-   live.
-7. **Updates** are a pull request changing the version (the CLI does it).
-   An update that asks for more permissions is reviewed again and, in the
-   app, waits for the user's grant.
-
-### Publishing
-
-On every merge, the market's workflow builds `index.json` (every entry's
-latest compatible versions) and `revoked.json`, signs them, and uploads them
-to the download bucket (`textus.catvinci.com/market/`). The app reads them
-from there - never from GitHub at run time - checks the signature, and
-verifies each download's sha256 before unpacking it into
-`plugins/<id>/<version>/`. It reads `revoked.json` on launch and daily, and
-turns off a revoked plugin with the reason.
-
-### On the website
-
-`textus.catvinci.com/market` replaces `/themes`: built from the same
-`index.json` whenever the market changes (the market's workflow triggers
-the website's build).
-
-- Tabs: Themes, Plugins, Skills, MCP; search; sort by new or popular.
-- A card per entry: preview (themes show light and dark), name, author,
-  one line, its permissions as small badges.
-- An entry's page: its README, screenshots, versions and their notes,
-  permissions in plain words, source, license, and **Open in Textus**
-  (`textus://market/install?id=…`, which opens the install dialog in the
-  app) beside a manual download.
-- Install counts come from anonymous download counts on the bucket, never
-  from the app.
-
-### Themes
-
-The current gallery's themes and the ones shared in the pinned issue move
-into `themes/`, with their screenshots made by the market's CI. Sharing a
-theme becomes the same pull request as any entry, made easy:
-**Editor & Appearance › More themes › Share this theme…** fills an entry
-(the CSS, a name, screenshots taken by Textus) and opens the pull request
-page in the browser. A plugin can carry themes too (`contributes.themes`).
+A plugin or theme someone else wrote is reviewed before it is listed: a
+pull request on textus-plugins, a maintainer's `/approve` on the theme
+issue. Skills stay in the app for now - a few kilobytes of text each -
+and are made optional by their switches; a catalog of skills written by
+others can come later in the same shape as the plugins'. MCP servers are
+the user's own choice of program or service: nothing is listed that the
+user didn't add, and a server's tools reach the model only while its
+switch is on (src-tauri/src/mcp/).
 
 ## 8. Order of work (betas on `main`)
 
 1. **beta.1** - manifest, loader, plugin host and webviews, the broker and
-   JSON-RPC, permissions in Rust, Settings › Plugins, developer mode; the
+   JSON-RPC, permissions in Rust, Settings › Extensions › Plugins, developer mode; the
    PDF viewer and version history as the first official plugins.
 2. **beta.2** - the market repository, its checks and publishing, the
    in-app market and install flow, the website's market; themes moved over.

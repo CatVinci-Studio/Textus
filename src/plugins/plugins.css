@@ -131,7 +131,7 @@
   font-size: var(--text-sm);
 }
 
-/* Settings › Plugins (settings/pages/PluginsPage.tsx): a card per plugin
+/* Settings › Extensions › Plugins (settings/pages/PluginsPage.tsx): a card per plugin
    - its name, what it does, who made it, its switch - opening its own
    page. No icons: a list of names reads at a glance, and a plugin's
    artwork never sat well beside Settings' own rows. */
@@ -364,4 +364,71 @@ button.plugin-card-open:hover .plugin-card-name {
   line-height: 1.35;
   pointer-events: none;
   transform: translateY(-0.1em);
+}
+
+/* Settings › Extensions: its tabs over the page. */
+.extensions-tabs {
+  margin: 0 0 var(--space-3);
+}
+
+/* An MCP server's card: where it runs, how it is doing, its tools. */
+.mcp-endpoint {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  word-break: break-all;
+}
+.mcp-state-failed {
+  color: var(--danger);
+}
+.mcp-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+.mcp-tool {
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--sidebar-bg);
+  color: var(--chrome-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 18px;
+}
+.mcp-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: 4px;
+}
+button.mcp-homepage {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  cursor: pointer;
+}
+button.mcp-homepage:hover {
+  text-decoration: underline;
+}
+.mcp-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+.mcp-form .settings-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mcp-mono {
+  font-family: var(--font-mono);
+}
+.mcp-form-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.mcp-form-spacer {
+  flex: 1;
 }

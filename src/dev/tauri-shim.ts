@@ -221,6 +221,57 @@ export function installDevTauriShim(): void {
     switch (cmd) {
       case "settings_get":
         return Promise.resolve({ value: store.settings, rev: store.rev });
+      // MCP servers (src-tauri mcp/): each one on is ready at once, with
+      // one tool; a command called "missing" isn't installed.
+      case "mcp_status":
+      case "mcp_restart": {
+        // Settings live in localStorage when the page booted without the
+        // file store (SettingsContext's readLocalSettings).
+        let local: Record<string, unknown> = {};
+        try {
+          local = JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}");
+        } catch {
+          // Nothing saved.
+        }
+        const servers = (store.settings.mcpServers ??
+          local.mcpServers ??
+          []) as {
+          id: string;
+          name: string;
+          enabled: boolean;
+          command: string;
+        }[];
+        return Promise.resolve(
+          servers
+            .filter((s) => s.enabled)
+            .map((s) =>
+              s.command === "missing"
+                ? {
+                    id: s.id,
+                    state: "failed",
+                    server: "",
+                    tools: [],
+                    error: "`missing` isn't installed",
+                  }
+                : {
+                    id: s.id,
+                    state: "ready",
+                    server: `${s.name} 1.0`,
+                    tools: [{ name: "echo", description: "Says it back." }],
+                    error: null,
+                  },
+            ),
+        );
+      }
+      case "mcp_try": {
+        const server = args.server as { command: string; name: string };
+        return server.command === "missing"
+          ? Promise.reject("`missing` isn't installed, or isn't on the PATH")
+          : Promise.resolve({
+              server: `${server.name || "Server"} 1.0`,
+              tools: [{ name: "echo", description: "Says it back." }],
+            });
+      }
       case "settings_patch": {
         const patch = args.patch as Record<string, unknown>;
         store.settings = { ...store.settings, ...patch };

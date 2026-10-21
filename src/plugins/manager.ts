@@ -569,7 +569,7 @@ export async function revokePermission(
   });
 }
 
-/** Settings › Plugins › Plugins: every plugin at once. */
+/** Settings › Extensions › Plugins › Plugins: every plugin at once. */
 export async function setAllPlugins(on: boolean): Promise<void> {
   await pluginsIpc.setAll(on);
   if (!on) for (const id of [...hosts.keys()]) stopHost(id);

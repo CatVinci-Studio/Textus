@@ -15,7 +15,7 @@ import {
 } from "./manager";
 
 /**
- * The plugins Textus offers to install (Settings › Plugins › Get plugins):
+ * The plugins Textus offers to install (Settings › Extensions › Plugins › Get plugins):
  * textus-plugins' catalog, fetched by Rust (src-tauri/src/plugins/
  * catalog.rs), which also downloads, checks and installs a package. No
  * plugin comes with Textus.

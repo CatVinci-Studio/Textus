@@ -4,7 +4,7 @@ import { isIOSApp } from "../platform/capabilities";
 import { AiPage } from "./pages/AiPage";
 import { EditorPage } from "./pages/EditorPage";
 import { GeneralPage } from "./pages/GeneralPage";
-import { PluginsPage } from "./pages/PluginsPage";
+import { ExtensionsPage } from "./pages/ExtensionsPage";
 import { ShortcutsPage } from "./pages/ShortcutsPage";
 import type { SettingsPageProps } from "./pages/types";
 import { PrivacySection } from "./sections/privacy";
@@ -32,12 +32,13 @@ const BUILT_IN: SettingsPageDef[] = [
   { id: "editor", label: (t) => t.navEditor, Page: EditorPage },
   { id: "ai", label: (t) => t.navAi, Page: AiPage },
   {
-    id: "plugins",
-    label: (t) => t.navPlugins,
+    id: "extensions",
+    label: (t) => t.navExtensions,
     // Desktop only for now: a phone has no plugin to install from a file
-    // or a folder, and its Settings tabs have room for four.
+    // or a folder, nor a program to start as an MCP server, and its
+    // Settings tabs have room for four (its skills stay in Textus AI).
     available: () => !isIOSApp,
-    Page: PluginsPage,
+    Page: ExtensionsPage,
   },
   {
     id: "shortcuts",

@@ -58,7 +58,7 @@ export const MENU_IDS: readonly MenuId[] = [
   "app/tray",
 ];
 
-/** A Textus setting a plugin needs on to do all it does. Settings › Plugins
+/** A Textus setting a plugin needs on to do all it does. Settings › Extensions › Plugins
  *  says which, and offers to turn it on (requirements.ts). */
 export type RequiredSetting = "runInBackground";
 export const REQUIRED_SETTINGS: readonly RequiredSetting[] = [

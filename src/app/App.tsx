@@ -1,3 +1,4 @@
+import { openExtensionsTab } from "../settings/pages/ExtensionsPage";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
@@ -120,7 +121,7 @@ function App() {
   } = useSidePanels(textusAi.on);
   const [settingsOpen, setSettingsOpen] = useState(false);
   // The page Settings opens at: General, or Plugins from that menu.
-  const [settingsStart, setSettingsStart] = useState<"general" | "plugins">(
+  const [settingsStart, setSettingsStart] = useState<"general" | "extensions">(
     "general",
   );
   const appUpdate = useAppUpdate(settings.updateChannel);
@@ -366,7 +367,8 @@ function App() {
       setSettingsOpen(true);
     },
     onOpenPluginSettings: () => {
-      setSettingsStart("plugins");
+      openExtensionsTab("plugins");
+      setSettingsStart("extensions");
       setSettingsOpen(true);
     },
     onToggleTypewriter: () =>

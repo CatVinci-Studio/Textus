@@ -28,6 +28,7 @@ import { trackWrite } from "../storage/pending-writes";
 import { listenToThisWindow } from "../utils/tauri-events";
 import { SettingsSync, type Raw } from "./settings-sync";
 import { DEFAULT_IMAGE_SUBFOLDER, migrateImageFolder } from "./image-folder";
+import { normaliseMcpServers, type McpServer } from "./mcp";
 import { useApplyAppearance } from "../theme/apply-appearance";
 
 /// Light/dark, orthogonal to which content theme is selected: `themeId`
@@ -432,6 +433,9 @@ export interface Settings {
   /// `UserThemeMeta.id`.
   themeId: string;
   userThemes: UserThemeMeta[];
+  /// The MCP servers Textus AI may use (Settings › Extensions › MCP),
+  /// read by Rust from the settings file (src-tauri mcp/mod.rs).
+  mcpServers: McpServer[];
   /// "window" (default): opening another document spawns a new OS window,
   /// unchanged from the original behavior. "tab": opening another document
   /// opens a tab in the current window instead. Read by Rust straight from
@@ -531,6 +535,7 @@ const DEFAULT_SETTINGS: Settings = {
   shortcutsRevision: SHORTCUTS_REVISION,
   themeId: "default",
   userThemes: [],
+  mcpServers: [],
   newDocumentMode: "window",
   restoreSessionOnStartup: true,
   autoSuggestFilename: true,
@@ -643,6 +648,7 @@ export function normaliseSettings(parsed: Raw | null): Settings {
         : DEFAULT_SETTINGS.revisionDisplay,
       shortcuts: migrateShortcuts(parsed.shortcuts, shortcutsRevision),
       shortcutsRevision,
+      mcpServers: normaliseMcpServers(parsed.mcpServers),
       diagramEngine: DIAGRAM_ENGINES.includes(
         parsed.diagramEngine as DiagramEngine,
       )

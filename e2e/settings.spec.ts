@@ -14,7 +14,7 @@ const t = {
   navGeneral: "General",
   navEditor: "Editor & Appearance",
   navAi: AI_NAME,
-  navPlugins: "Plugins",
+  navExtensions: "Extensions",
   navShortcuts: "Shortcuts",
   navPrivacy: "Privacy",
   generalBasicsLabel: "Basics",
@@ -114,7 +114,7 @@ test.describe("desktop", () => {
       t.navGeneral,
       t.navEditor,
       t.navAi,
-      t.navPlugins,
+      t.navExtensions,
       t.navShortcuts,
       t.navPrivacy,
     ]);

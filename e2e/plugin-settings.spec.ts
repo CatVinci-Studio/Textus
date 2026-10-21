@@ -22,7 +22,7 @@ const emit = (page: Page, event: string) =>
 async function openPluginsPage(page: Page) {
   await emit(page, "menu-manage-plugins");
   await expect(
-    page.locator(".settings-nav-item", { hasText: "Plugins" }),
+    page.locator(".settings-nav-item", { hasText: "Extensions" }),
   ).toHaveAttribute("aria-current", /page|true/);
 }
 

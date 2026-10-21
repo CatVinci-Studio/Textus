@@ -1444,6 +1444,33 @@ export interface PluginHttpResponse {
 const bytes = async (pending: Promise<ArrayBuffer>) =>
   new Uint8Array(await pending);
 
+/** One tool an MCP server offers (src-tauri mcp/client.rs). */
+export interface McpToolInfo {
+  name: string;
+  description: string;
+}
+
+/** A server that is on, as it is now (src-tauri mcp/mod.rs). */
+export interface McpServerStatus {
+  id: string;
+  state: "starting" | "ready" | "failed";
+  /** The name and version it gave. */
+  server: string;
+  tools: McpToolInfo[];
+  error: string | null;
+}
+
+/** The MCP servers Settings › Extensions › MCP lists. Desktop only. */
+export const mcp = {
+  /** Brings the running servers in line with the settings, and says how
+   *  each one that is on is doing. */
+  status: () => call<McpServerStatus[]>("mcp_status"),
+  restart: (id: string) => call<McpServerStatus[]>("mcp_restart", { id }),
+  /** Starts a server not saved yet, asks for its tools and stops it. */
+  try: (server: unknown) =>
+    call<{ server: string; tools: McpToolInfo[] }>("mcp_try", { server }),
+};
+
 export const plugins = {
   state: () => call<PluginsState>("plugins_state"),
   setAll: (on: boolean) => call<void>("plugins_set_all", { on }),

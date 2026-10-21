@@ -50,7 +50,7 @@ import type {
 type Attempt = (work: () => Promise<unknown>) => Promise<void>;
 
 /**
- * Settings › Plugins (docs/design/plugins.md §6). Nothing comes installed:
+ * Settings › Extensions › Plugins (docs/design/plugins.md §6). Nothing comes installed:
  * the installed plugins, each a card - its name, what it does, who made it
  * (Official when it is CatVinci's), its switch - that opens the plugin's
  * own page; then the plugins the catalog offers, to install; then

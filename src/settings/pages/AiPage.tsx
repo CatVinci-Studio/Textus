@@ -36,7 +36,9 @@ import {
   canDetachChat,
   canPickFolder,
   canRevealInFileManager,
+  isIOSApp,
 } from "../../platform/capabilities";
+import { openExtensionsTab } from "./ExtensionsPage";
 
 /** Textus AI: its own switch, then the account and each feature beside the model it drives. */
 /* One page for the AI: its own switch, then connect first and then
@@ -54,6 +56,7 @@ export function AiPage({
   onOpenFile,
   onFilesDeleted,
   onClose,
+  openPage,
 }: SettingsPageProps) {
   return (
     <>
@@ -253,16 +256,38 @@ export function AiPage({
                   onOpenFile={onOpenFile}
                   onClose={onClose}
                 />
-                <AgentSkillsSection t={t} />
+                {isIOSApp ? (
+                  <AgentSkillsSection t={t} />
+                ) : (
+                  // On the desktop skills are extensions, beside plugins,
+                  // themes and MCP servers.
+                  <SettingRow
+                    label={t.agentSkillsLabel}
+                    hint={t.extensionsSkillsMoved}
+                  >
+                    <button
+                      type="button"
+                      className="text-button settings-inline-button"
+                      onClick={() => {
+                        openExtensionsTab("skills");
+                        openPage("extensions");
+                      }}
+                    >
+                      {t.extensionsSkillsOpen}
+                    </button>
+                  </SettingRow>
+                )}
                 {canRevealInFileManager && <AgentWorkspaceSection t={t} />}
               </SettingsGroup>
 
-              <BuiltinSkillsSection
-                t={t}
-                onOpenFile={onOpenFile}
-                onFilesDeleted={onFilesDeleted}
-                onClose={onClose}
-              />
+              {isIOSApp && (
+                <BuiltinSkillsSection
+                  t={t}
+                  onOpenFile={onOpenFile}
+                  onFilesDeleted={onFilesDeleted}
+                  onClose={onClose}
+                />
+              )}
 
               <details className="settings-advanced">
                 <summary>{t.agentAdvancedGroupLabel}</summary>

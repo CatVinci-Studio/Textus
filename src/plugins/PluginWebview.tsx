@@ -157,7 +157,7 @@ export function PluginWebviewPanel({
 }
 
 /** A plugin's own settings page (contributes.settingsPage), under its
- *  settings in Settings › Plugins. */
+ *  settings in Settings › Extensions › Plugins. */
 export function PluginSettingsWebview({ plugin }: { plugin: string }) {
   const { record, error } = useResolvedWebview(
     plugin,

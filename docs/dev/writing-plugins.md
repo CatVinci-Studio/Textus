@@ -8,7 +8,7 @@ it draws in webviews, frames of its own HTML, as VS Code's extensions do.
 
 No plugin comes with Textus. The official ones live in their own
 repository, [CatVinci-Studio/textus-plugins](https://github.com/CatVinci-Studio/textus-plugins),
-and Settings › Plugins › **Get plugins** installs them from its catalog.
+and Settings › Extensions › Plugins › **Get plugins** installs them from its catalog.
 They are plugins like any other and the best examples: the Image Viewer
 is the smallest custom editor, Quick Notes a sidebar tab, Tasks a plugin
 that reads and writes the folder. The design behind all of this is
@@ -17,7 +17,7 @@ that reads and writes the folder. The design behind all of this is
 ## Trying one
 
 1. Make a folder with a `textus-plugin.json` and a `host.js`.
-2. Settings › Plugins › Install a plugin › **Load a plugin folder…**, and
+2. Settings › Extensions › Plugins › Install a plugin › **Load a plugin folder…**, and
    choose it. It is listed under Installed, marked _development_.
 3. Turn it on. Its card opens its page; **Reload** there reads it again
    after you change it.

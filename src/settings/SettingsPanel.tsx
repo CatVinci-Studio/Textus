@@ -166,6 +166,10 @@ export function SettingsPanel({
     marginAvailable,
     noMargin,
     setSubpage,
+    openPage: (id) => {
+      setSubpage(null);
+      setCategory(id);
+    },
     openHelp,
     onOpenFile,
     onFilesDeleted,
