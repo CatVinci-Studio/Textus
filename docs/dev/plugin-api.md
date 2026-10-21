@@ -1,10 +1,12 @@
-# Plugin API (draft)
+# The app's registries
 
-Textus has no plugins yet; they come in 1.3. What it has, from 1.2, are the
-places a plugin will add to the app: four registries, each a plain list the
-app reads instead of a hard-coded set. This page describes them as they
-are, and what 1.3 adds on top. It is a draft: names and shapes may still
-change before 1.3, and nothing here is a promise to third parties yet.
+**Writing a plugin? See [writing-plugins.md](writing-plugins.md)** - this
+page is about the inside of the app.
+
+The places a plugin adds to the app are four registries, each a plain list
+the app reads instead of a hard-coded set; a plugin's manifest is turned
+into entries in them (src/plugins/manager.ts). This page describes them
+for code in the app itself.
 
 All four are gathered in [`src/plugin-api.ts`](../../src/plugin-api.ts). A
 development build (`npm run dev`) puts the same object on

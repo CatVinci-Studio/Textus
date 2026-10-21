@@ -1,6 +1,6 @@
 # Plugins and the market (design, 1.3)
 
-Status: proposal for 1.3.0. The registries it builds on shipped in 1.2
+Status: built in 1.3.0-beta.1 (the market comes in a later beta). The registries it builds on shipped in 1.2
 ([docs/dev/plugin-api.md](../dev/plugin-api.md)); everything else here is
 to be built. The model is VS Code's - a manifest that declares what a
 plugin adds, code that loads only when it is needed, an extension host apart
