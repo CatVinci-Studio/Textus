@@ -144,6 +144,13 @@ Fork the repository (or branch from `main` if you have write access), make
 your change, and open a pull request against `main`. A branch name that says
 what it does helps: `fix/pdf-margins`, `feat/sidebar-width`.
 
+`main` is the next version. The version people have installed is
+maintained on its own line, `release/X.Y.x` (`release/1.2.x`), which takes
+fixes only. You don't need to pick: send every pull request to `main`, and
+if it fixes a bug in the released version, say which version in the
+description - we bring the fix to the release line too, with you credited.
+New features ship in the next minor version, never in a patch release.
+
 A few things make a pull request easy for us to say yes to:
 
 - It does one thing, from one branch. Two fixes are two pull requests.
