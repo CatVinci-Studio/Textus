@@ -627,6 +627,7 @@ export default {
   agentStop: "Остановить",
   agentRetry: "Повторить",
   agentThinking: "Думает…",
+  agentWritingEdit: "Пишу правку…",
   agentDeepThinking: "Глубокое размышление",
   agentDeepThinkingHint: `Глубокое размышление: когда включено, ${AI_NAME} дольше думает, прежде чем ответить`,
   toggleOnHint: "{label} (Включено — нажмите ещё раз, чтобы выключить)",

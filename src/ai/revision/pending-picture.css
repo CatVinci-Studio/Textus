@@ -109,10 +109,19 @@
 }
 
 /* The chat's proposal card shows it small, as .agent-proposal-picture. */
+/* In the picture's own shape (its aspect-ratio set inline), as tall as the
+   picture will be on the card: a fixed 160x120 made every picture 4:3
+   until it came, then it jumped to its shape. */
 .agent-proposal-picture-frame {
-  width: 160px;
+  /* Inline-block: a block's auto width fills the line, and the height
+     would set no width from the ratio. */
+  display: inline-block;
+  vertical-align: top;
+  /* Nor stretched across the card when the card lays it out (flex). */
+  align-self: flex-start;
+  width: auto;
   height: 120px;
-  aspect-ratio: auto;
+  max-width: 100%;
   border-radius: var(--radius-small);
 }
 
