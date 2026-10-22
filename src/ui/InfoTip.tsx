@@ -14,6 +14,7 @@ import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
 import { useViewportClamp } from "../utils/hooks/useViewportClamp";
 import { Presence, usePresenceProps } from "./usePresence";
 import "./InfoTip.css";
+import { useTipTimer } from "./useTipTimer";
 
 /** How long the pointer may be off both the button and the card before a
  *  hover-opened card closes: long enough to cross the gap between them. */
@@ -48,18 +49,18 @@ export function InfoTip({
   // Opened by a click: stays until the next click, Esc or a click outside,
   // not when the pointer wanders off.
   const pinned = useRef(false);
-  const timer = useRef<number | undefined>(undefined);
+  const timerRef = useTipTimer();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const descriptionId = useId();
-  const tipId = useId();
+  const id = useId();
+  const descriptionId = `${id}description`;
+  const tipId = `${id}tip`;
 
-  const clearTimer = () => window.clearTimeout(timer.current);
+  const clearTimer = () => window.clearTimeout(timerRef.current);
   const close = useCallback(() => {
-    window.clearTimeout(timer.current);
+    window.clearTimeout(timerRef.current);
     pinned.current = false;
     setOpen(false);
-  }, []);
-  useEffect(() => clearTimer, []);
+  }, [timerRef]);
   // The card is placed once, under the button: a scroll that moves the
   // button would leave it behind, so it closes instead, as a Select's list
   // does. A scroll event comes a frame late, so one that ended before the
@@ -80,12 +81,12 @@ export function InfoTip({
   const hoverOpen = () => {
     clearTimer();
     if (!open)
-      timer.current = window.setTimeout(() => setOpen(true), HOVER_OPEN_MS);
+      timerRef.current = window.setTimeout(() => setOpen(true), HOVER_OPEN_MS);
   };
   const hoverClose = () => {
     clearTimer();
     if (!pinned.current)
-      timer.current = window.setTimeout(() => setOpen(false), HOVER_CLOSE_MS);
+      timerRef.current = window.setTimeout(() => setOpen(false), HOVER_CLOSE_MS);
   };
 
   return (
