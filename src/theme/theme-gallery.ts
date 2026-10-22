@@ -1,4 +1,5 @@
 import { themeGallery } from "../platform/ipc";
+import type { GalleryTheme_Serialize as GalleryThemeAnswer } from "../platform/bindings/app";
 import type { UserThemeMeta } from "../settings/SettingsContext";
 import { saveUserTheme } from "./theme-import";
 
@@ -7,21 +8,9 @@ import { saveUserTheme } from "./theme-import";
 /// a user theme - the same kind Import CSS… makes, remembering which gallery
 /// theme it came from so a newer version shows as an update.
 
-/** One theme of the gallery's catalog. Mirrors `GalleryTheme` in
- *  src-tauri/src/commands/theme_gallery.rs - change both. */
-export interface GalleryTheme {
-  id: string;
-  name: string;
-  author: string;
-  description: string;
-  license: string;
-  source: string;
-  created: string;
-  updated: string;
-  /** Path in the gallery repository, e.g. `themes/plain/theme.css`. */
-  css: string;
-  previews: string[];
-}
+/** One theme of the gallery's catalog, as theme_gallery_catalog answers -
+ *  generated from `GalleryTheme` in src-tauri/src/commands/theme_gallery.rs. */
+export type GalleryTheme = GalleryThemeAnswer;
 
 export type GalleryStatus = "install" | "installed" | "update";
 

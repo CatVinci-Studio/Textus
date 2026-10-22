@@ -100,11 +100,13 @@ pub fn install() -> Result<(), String> {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn cli_command_status() -> bool {
     is_installed()
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn install_cli_command() -> Result<(), String> {
     install()
 }

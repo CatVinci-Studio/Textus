@@ -20,6 +20,7 @@ const NO_PLUGIN_COMMANDS_ID: &str = "plugin-commands-none";
 
 /// One command in the Plugins menu, as the frontend sends it.
 #[derive(serde::Deserialize, Clone, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct PluginMenuItem {
     command: String,
     label: String,
@@ -93,6 +94,7 @@ pub(crate) fn rebuild_plugin_menu(app: &tauri::AppHandle) {
 /// The commands the plugins that are on put in the Plugins menu (the
 /// frontend's, src/plugins/usePluginMenu.ts), refilled when they change.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn set_plugin_menu(app: AppHandle, items: Vec<PluginMenuItem>) {
     let Some(state) = app.try_state::<PluginMenu>() else {
         return;

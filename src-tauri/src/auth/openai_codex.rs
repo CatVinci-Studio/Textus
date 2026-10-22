@@ -17,6 +17,7 @@ fn expires_soon(expires: i64) -> bool {
 }
 
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct AuthStatus {
     configured: bool,
     account_id: Option<String>,
@@ -54,6 +55,7 @@ fn load_credential(app: &AppHandle) -> Result<Option<CodexCredential>, String> {
 /// several other open-source coding agents use) rather than a standard API
 /// key, per the "sign in with ChatGPT" requirement.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn codex_login(
     app: AppHandle,
     on_url: tauri::ipc::Channel<String>,
@@ -87,6 +89,7 @@ pub async fn codex_login(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn codex_auth_status(app: AppHandle) -> Result<AuthStatus, String> {
     match load_credential(&app)? {
         Some(cred) => Ok(AuthStatus {
@@ -106,6 +109,7 @@ pub fn signed_in(app: &AppHandle) -> bool {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn codex_logout(app: AppHandle) -> Result<(), String> {
     let path = auth_file_path(&app)?;
     if path.exists() {

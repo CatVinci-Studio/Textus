@@ -17,6 +17,7 @@ fn expires_soon(expires: i64) -> bool {
 }
 
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct ClaudeAuthStatus {
     configured: bool,
 }
@@ -49,6 +50,7 @@ fn load_credential(app: &AppHandle) -> Result<Option<ClaudeCredential>, String> 
 /// login but against Anthropic's own OAuth client - see aicompat's
 /// providers::anthropic module for the reference this was verified against.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn claude_login(
     app: AppHandle,
     on_url: tauri::ipc::Channel<String>,
@@ -77,6 +79,7 @@ pub async fn claude_login(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn claude_auth_status(app: AppHandle) -> Result<ClaudeAuthStatus, String> {
     Ok(ClaudeAuthStatus {
         configured: load_credential(&app)?.is_some(),
@@ -84,6 +87,7 @@ pub fn claude_auth_status(app: AppHandle) -> Result<ClaudeAuthStatus, String> {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn claude_logout(app: AppHandle) -> Result<(), String> {
     let path = auth_file_path(&app)?;
     if path.exists() {

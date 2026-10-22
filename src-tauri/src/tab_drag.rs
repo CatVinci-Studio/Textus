@@ -21,6 +21,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 /// new window's label (not a shared queue) since it's a 1:1 handoff to the
 /// one window spawned for it, not a batch any window could claim.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct DetachedTab {
     path: Option<String>,
     content: String,
@@ -57,6 +58,7 @@ pub struct DragTrackers {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn take_detached_tab(
     window: tauri::Window,
     pending: State<PendingDetachedTabs>,
@@ -65,6 +67,7 @@ pub fn take_detached_tab(
 }
 
 #[derive(serde::Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct WindowBounds {
     label: String,
     x: i32,
@@ -75,7 +78,10 @@ pub struct WindowBounds {
     /// "the tab row is the top N logical pixels" constant into physical
     /// pixels for THIS SPECIFIC window (which may sit on a different-DPI
     /// display than the one being dragged from).
+    /// Always a finite ratio: `number`, not specta's `number | null` for
+    /// an f64 (the null a NaN would serialize to).
     #[serde(rename = "scaleFactor")]
+    #[cfg_attr(test, specta(type = specta_typescript::Number))]
     scale_factor: f64,
 }
 
@@ -84,6 +90,7 @@ pub struct WindowBounds {
 /// effect) spot the moment its cursor enters another window's tab row, which
 /// is when it hands itself over to start_floating_tab_drag.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn list_window_bounds(app: tauri::AppHandle) -> Vec<WindowBounds> {
     app.webview_windows()
         .iter()
@@ -267,6 +274,7 @@ static FLOATING_DRAG_ACTIVE: AtomicBool = AtomicBool::new(false);
 /// always used. Nothing polls outside an active drag, and the thread ends
 /// itself on release.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn start_floating_tab_drag(
     window: tauri::WebviewWindow,
     tab: DetachedTab,
@@ -462,6 +470,7 @@ mod mouse {
 /// to track (button already up - e.g. a programmatic setPosition fired
 /// onMoved - or a non-macOS platform).
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn start_window_drag_tracking(
     window: tauri::WebviewWindow,
     trackers: State<DragTrackers>,

@@ -45,6 +45,7 @@ pub(crate) use app::*;
 // ---------------------------------------------------------------------------
 
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct Snapshot {
     value: Value,
     rev: u64,
@@ -59,6 +60,7 @@ struct SettingsChanged {
 
 /// The live settings, for a window to correct its boot snapshot with.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn settings_get(stores: tauri::State<Stores>) -> Snapshot {
     let (value, rev) = stores.settings.snapshot();
     Snapshot { value, rev }
@@ -67,6 +69,7 @@ pub fn settings_get(stores: tauri::State<Stores>) -> Snapshot {
 /// Changes the given top-level settings fields and tells every window
 /// ("settings-changed"; each skips the event its own patch caused).
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn settings_patch(
     app: AppHandle,
     window: tauri::WebviewWindow,
@@ -103,6 +106,7 @@ pub fn settings_patch(
 /// adopts in place of its (empty, possibly stale) boot snapshot. Fields it
 /// added are broadcast like any other change.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn settings_fill_defaults(
     app: AppHandle,
     window: tauri::WebviewWindow,
@@ -125,6 +129,7 @@ pub fn settings_fill_defaults(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn ui_state_get(stores: tauri::State<Stores>) -> Value {
     stores.ui_state.snapshot().0
 }
@@ -133,6 +138,7 @@ pub fn ui_state_get(stores: tauri::State<Stores>) -> Value {
 /// for the next window or launch (panel width, tutorial step, recents),
 /// never pushed into windows already open.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn ui_state_patch(stores: tauri::State<Stores>, patch: Map<String, Value>) {
     stores.ui_state.patch(&patch);
 }
@@ -162,6 +168,7 @@ struct HistoryChanged {
 /// The clipboard entries, or the chat history's index: each conversation's
 /// summary without its turns (`chat_history_get` has those).
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn history_list(stores: tauri::State<Stores>, kind: HistoryKind) -> Value {
     match kind {
         HistoryKind::Chat => stores.chat.list(),
@@ -174,6 +181,7 @@ pub fn history_list(stores: tauri::State<Stores>, kind: HistoryKind) -> Value {
 /// different conversations at once both land. A conversation is announced
 /// to the windows as its summary, the form their lists hold.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn history_upsert(
     app: AppHandle,
     window: tauri::WebviewWindow,
@@ -204,6 +212,7 @@ pub fn history_upsert(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn history_remove(
     app: AppHandle,
     window: tauri::WebviewWindow,
@@ -229,6 +238,7 @@ pub fn history_remove(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn history_clear(
     app: AppHandle,
     window: tauri::WebviewWindow,
@@ -255,12 +265,14 @@ pub fn history_clear(
 /// One saved conversation whole, turns included - what restoring it from
 /// the history list loads. `None` when its file is gone.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn chat_history_get(stores: tauri::State<Stores>, id: String) -> Option<Value> {
     stores.chat.get(&id)
 }
 
 /// How many older conversations sit in the chat history's trash.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn chat_history_archived(stores: tauri::State<Stores>) -> usize {
     stores.chat.archived()
 }
@@ -268,6 +280,7 @@ pub fn chat_history_archived(stores: tauri::State<Stores>) -> usize {
 /// A document Textus saved under a new path (Save As, a rename): its
 /// conversations follow it, and every window lists them again.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn chat_history_move_document(
     app: AppHandle,
     stores: tauri::State<Stores>,

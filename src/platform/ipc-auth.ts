@@ -1,34 +1,34 @@
 import { Channel } from "@tauri-apps/api/core";
 import type { ImageHost } from "../settings/SettingsContext";
-import { aiCall, call } from "./ipc-call";
+import type { CustomEndpointStatus_Serialize } from "./bindings/auth";
+import { aiCommand, command } from "./ipc-call";
 
 /**
  * Backend commands for signing in: AI providers by OAuth or key, custom
  * endpoints, and picture hosts (ipc.ts).
  */
 
+/** What every sign-in's status command answers (more, for some). */
 export interface OauthStatus {
   configured: boolean;
 }
 
-/** What custom_endpoint_status reports (src-tauri/src/auth/custom_endpoint.rs
- *  CustomEndpointStatus). The key itself never comes back to the webview -
- *  `api_key` is always null - only whether one is stored. */
-export interface CustomEndpointConfig {
-  base_url: string;
-  api_key: string | null;
-  /** A key is saved for `base_url`: saving or testing with the key field
-   *  left empty uses it (for that URL only), and Clear removes it. */
-  has_api_key: boolean;
-  model: string;
-}
+/** What custom_endpoint_status reports - generated from
+ *  CustomEndpointStatus in src-tauri/src/auth/custom_endpoint.rs. The key
+ *  itself never comes back to the webview - `api_key` is always null - only
+ *  whether one is stored (`has_api_key`). */
+export type CustomEndpointConfig = CustomEndpointStatus_Serialize;
 
 /** Provider ids with an OAuth flow and their command names - dynamic
  *  dispatch (not a fixed per-provider function) because the picker iterates
  *  the catalog and looks these up by provider id. */
 export const OAUTH_COMMANDS: Record<
   string,
-  { status: string; login: string; logout: string }
+  {
+    status: "codex_auth_status" | "claude_auth_status";
+    login: "codex_login" | "claude_login";
+    logout: "codex_logout" | "claude_logout";
+  }
 > = {
   openai: {
     status: "codex_auth_status",
@@ -43,36 +43,33 @@ export const OAUTH_COMMANDS: Record<
 };
 
 export const auth = {
-  oauthStatus: (providerId: string) =>
-    call<OauthStatus>(OAUTH_COMMANDS[providerId].status),
+  oauthStatus: (providerId: string): Promise<OauthStatus> =>
+    command(OAUTH_COMMANDS[providerId].status),
   /** Signs in through the browser. `onUrl` gets the sign-in page's URL as
    *  the browser is asked to open it, for when it doesn't open. */
   oauthLogin: (providerId: string, onUrl?: (url: string) => void) => {
     const channel = new Channel<string>();
     if (onUrl) channel.onmessage = onUrl;
-    return call<OauthStatus>(OAUTH_COMMANDS[providerId].login, {
-      onUrl: channel,
-    });
+    return command(OAUTH_COMMANDS[providerId].login, channel);
   },
   oauthLogout: (providerId: string) =>
-    call<void>(OAUTH_COMMANDS[providerId].logout),
+    command(OAUTH_COMMANDS[providerId].logout),
 
   providerApiKeyStatus: (provider: string) =>
-    call<boolean>("provider_api_key_status", { provider }),
+    command("provider_api_key_status", provider),
   setProviderApiKey: (provider: string, key: string) =>
-    call<void>("set_provider_api_key", { provider, key }),
+    command("set_provider_api_key", provider, key),
   clearProviderApiKey: (provider: string) =>
-    call<void>("clear_provider_api_key", { provider }),
+    command("clear_provider_api_key", provider),
 
-  customEndpointStatus: () =>
-    call<CustomEndpointConfig | null>("custom_endpoint_status"),
+  customEndpointStatus: () => command("custom_endpoint_status"),
   setCustomEndpoint: (baseUrl: string, apiKey: string | null, model: string) =>
-    call<void>("set_custom_endpoint", { baseUrl, apiKey, model }),
-  clearCustomEndpoint: () => call<void>("clear_custom_endpoint"),
+    command("set_custom_endpoint", baseUrl, apiKey, model),
+  clearCustomEndpoint: () => command("clear_custom_endpoint"),
   fetchCustomModels: (baseUrl: string, apiKey: string | null) =>
-    aiCall<string[]>("fetch_custom_models", { baseUrl, apiKey }),
+    aiCommand("fetch_custom_models", baseUrl, apiKey),
   testCustomEndpoint: (baseUrl: string, apiKey: string | null) =>
-    aiCall<void>("test_custom_endpoint", { baseUrl, apiKey }),
+    aiCommand("test_custom_endpoint", baseUrl, apiKey),
 };
 
 /** Image-host credentials reuse the same private 0600 credential store as

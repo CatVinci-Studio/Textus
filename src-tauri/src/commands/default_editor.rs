@@ -16,9 +16,9 @@
 use serde::Serialize;
 use tauri::AppHandle;
 
-/// What Settings shows for the row. `DefaultEditorStatus` in
-/// src/platform/ipc.ts mirrors it - change both.
+/// What Settings shows for the row - generated into src/platform/bindings/app.ts.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct DefaultEditorStatus {
     /// False where this installation can't be made the default (an AppImage).
@@ -30,11 +30,13 @@ pub struct DefaultEditorStatus {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn default_editor_status(app: AppHandle) -> DefaultEditorStatus {
     platform::status(&app)
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn set_default_editor(app: AppHandle) -> Result<(), String> {
     platform::make_default(&app)
 }

@@ -179,6 +179,7 @@ fn emit_or_open_window(app: &tauri::AppHandle, event: &'static str) {
 /// with the same ids and accelerators as before. `command(async)` and a hop
 /// to the main thread, as menus are only built there.
 #[tauri::command(async)]
+#[cfg_attr(test, specta::specta)]
 pub fn set_menu_labels(app: AppHandle, labels: HashMap<String, String>) {
     #[cfg(target_os = "macos")]
     {
@@ -208,6 +209,7 @@ pub fn set_menu_labels(app: AppHandle, labels: HashMap<String, String>) {
 /// is AppKit's own. Only macOS shows this menu; elsewhere the app-drawn menu
 /// draws the same marks (app/AppMenu.tsx) and this does nothing.
 #[tauri::command(async)]
+#[cfg_attr(test, specta::specta)]
 pub fn set_menu_checks(app: AppHandle, checks: HashMap<String, bool>) {
     #[cfg(target_os = "macos")]
     {
@@ -238,6 +240,7 @@ pub fn set_menu_checks(app: AppHandle, checks: HashMap<String, bool>) {
 /// shows this menu; on Windows a native key would fire twice beside the
 /// frontend's, so elsewhere this does nothing.
 #[tauri::command(async)]
+#[cfg_attr(test, specta::specta)]
 pub fn set_menu_accelerators(app: AppHandle, accelerators: HashMap<String, String>) {
     #[cfg(target_os = "macos")]
     {
@@ -280,6 +283,7 @@ pub fn set_menu_accelerators(app: AppHandle, accelerators: HashMap<String, Strin
 /// `command` runs on the main thread - is the re-entrancy that freezes the
 /// whole app.
 #[tauri::command(async)]
+#[cfg_attr(test, specta::specta)]
 pub fn trigger_menu_item(app: tauri::AppHandle, id: String) {
     dispatch(&app, &id);
 }
@@ -288,12 +292,14 @@ pub fn trigger_menu_item(app: tauri::AppHandle, id: String) {
 /// the native submenu is filled by `rebuild_recent_menu`, which the HTML one
 /// can't read.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn list_recent_files(app: tauri::AppHandle) -> Vec<String> {
     commands::recents::read_recent_files(&app)
 }
 
 /// The recent folders, listed above the files there - same reason.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn list_recent_folders(app: tauri::AppHandle) -> Vec<String> {
     commands::recents::read_recent_folders(&app)
 }

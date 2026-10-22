@@ -31,6 +31,7 @@ const MAX_ERROR_CHARS: usize = 160;
 
 /// Mirrors `ImageHost` in src/settings/SettingsContext.tsx.
 #[derive(Deserialize, Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "lowercase")]
 pub enum ImageHost {
     Picgo,
@@ -131,6 +132,7 @@ impl ImageHost {
 }
 
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct UploadedImage {
     src: String,
 }
@@ -301,6 +303,7 @@ async fn send(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn upload_image(
     app: AppHandle,
     host: ImageHost,

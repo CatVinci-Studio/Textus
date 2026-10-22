@@ -11,6 +11,7 @@ use super::*;
 /// enforced here too because this is the one writer. The chat history is a
 /// folder of its own (settings/chat_history.rs), the clipboard one file.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "lowercase")]
 pub enum HistoryKind {
     Chat,

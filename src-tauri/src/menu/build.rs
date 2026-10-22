@@ -354,7 +354,10 @@ pub(crate) fn build(
     if let Some(plugins) = &plugins_menu {
         items.push(plugins);
     }
-    items.extend([&window_menu as &dyn tauri::menu::IsMenuItem<Wry>, &help_menu]);
+    items.extend([
+        &window_menu as &dyn tauri::menu::IsMenuItem<Wry>,
+        &help_menu,
+    ]);
     let menu = MenuBuilder::new(app).items(&items).build()?;
     let check_items = vec![
         toggle_sidebar_item,

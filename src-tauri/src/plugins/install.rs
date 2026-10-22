@@ -17,6 +17,7 @@ const MAX_PACKAGE_BYTES: u64 = 200 * 1024 * 1024;
 
 /// One installed plugin, as Settings › Plugins lists it.
 #[derive(Serialize, Clone, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct InstalledPlugin {
     pub id: String,
@@ -59,6 +60,7 @@ fn installed(id: String, dir: &Path, manifest: String, dev: bool) -> InstalledPl
 /// folders `state.json` names. One whose manifest can't be read is left
 /// out; a developer folder wins over an installed copy of the same id.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn plugins_installed(app: tauri::AppHandle) -> Result<Vec<InstalledPlugin>, String> {
     let mut out: Vec<InstalledPlugin> = Vec::new();
     for (id, entry) in state::read(&app).plugins {
@@ -96,6 +98,7 @@ pub fn plugins_installed(app: tauri::AppHandle) -> Result<Vec<InstalledPlugin>, 
 /// left as they were: a new plugin starts off, and the window asks for the
 /// permissions of one that wants more than it was granted.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn plugin_install(
     app: tauri::AppHandle,
     path: String,
@@ -232,6 +235,7 @@ fn unzip(file: &Path, to: &Path) -> Result<(), String> {
 /// is, so a change to its files shows on reload. It starts off, like any
 /// new plugin.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn plugin_load_dev(app: tauri::AppHandle, path: String) -> Result<InstalledPlugin, String> {
     let dir = PathBuf::from(&path);
     let (head, text) = read_manifest(&dir)?;
@@ -249,6 +253,7 @@ pub fn plugin_load_dev(app: tauri::AppHandle, path: String) -> Result<InstalledP
 /// Removes a plugin: its entry, its storage and - unless it was loaded from
 /// a developer's folder, which is theirs - its files.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String> {
     require_id(&id)?;
     state::update(&app, |state| {
@@ -269,6 +274,7 @@ pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String>
 /// `folder`, Load a plugin folder….
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn plugin_pick_package(
     window: tauri::WebviewWindow,
     folder: bool,

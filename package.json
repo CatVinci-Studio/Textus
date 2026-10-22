@@ -32,7 +32,8 @@
     "screenshots:website": "playwright test -c playwright.shots.config.ts --project=website",
     "screenshots:review": "playwright test -c playwright.shots.config.ts --project=review",
     "bench:motion": "playwright test -c playwright.bench.config.ts",
-    "sync-models": "node scripts/sync-models.mjs"
+    "sync-models": "node scripts/sync-models.mjs",
+    "bindings": "node scripts/write-bindings.mjs"
   },
   "dependencies": {
     "@milkdown/kit": "^7.22.3",

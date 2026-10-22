@@ -27,6 +27,7 @@ fn drafts_dir(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 #[derive(Serialize, Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct DraftSnapshot {
     #[serde(rename = "tabId")]
     tab_id: String,
@@ -35,6 +36,7 @@ pub struct DraftSnapshot {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn save_draft_snapshot(
     app: AppHandle,
     tab_id: String,
@@ -81,6 +83,7 @@ static DRAFTS_CLAIMED: AtomicBool = AtomicBool::new(false);
 /// mount first, drain a live tab's snapshot, and show that tab beside the file
 /// it was created to open.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn take_draft_snapshots(
     app: AppHandle,
     window: tauri::Window,
@@ -114,6 +117,7 @@ pub async fn take_draft_snapshots(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn clear_draft_snapshot(app: AppHandle, tab_id: String) -> Result<(), String> {
     if !valid_component(&tab_id) {
         return Err("invalid tab id".to_string());
@@ -126,6 +130,7 @@ pub async fn clear_draft_snapshot(app: AppHandle, tab_id: String) -> Result<(), 
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn clear_all_drafts(app: AppHandle) -> Result<(), String> {
     match fs::remove_dir_all(drafts_dir(&app)?).await {
         Ok(()) => Ok(()),

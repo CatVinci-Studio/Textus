@@ -33,6 +33,7 @@ const PLUGIN: &str = "plugin:";
 
 /// One plugin command in the menu, as the window sends it.
 #[derive(serde::Deserialize, Clone, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct TrayPluginItem {
     command: String,
     label: String,
@@ -140,6 +141,7 @@ fn run_plugin_command(app: &AppHandle, command: &str) {
 /// The plugin commands the menu lists (src/plugins/usePluginMenu.ts),
 /// refilled when the plugins that are on change.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn set_tray_plugin_items(app: AppHandle, items: Vec<TrayPluginItem>) {
     let Some(state) = app.try_state::<TrayPlugins>() else {
         return;
@@ -160,6 +162,7 @@ pub fn set_tray_plugin_items(app: AppHandle, items: Vec<TrayPluginItem>) {
 
 /// The tray command waiting for a window to run it, taken.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn take_pending_plugin_command(app: AppHandle) -> Option<String> {
     app.try_state::<TrayPlugins>()?
         .pending

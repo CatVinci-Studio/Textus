@@ -157,6 +157,7 @@ pub async fn plugin_fs_read(
 
 /// One entry of a folder listing.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct FsEntry {
     name: String,
@@ -168,6 +169,7 @@ pub struct FsEntry {
 
 /// A folder's entries, hidden ones left out.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn plugin_fs_list(
     app: tauri::AppHandle,
     id: String,
@@ -208,6 +210,7 @@ pub async fn plugin_fs_list(
 /// Writes a file in the folder, making the folders it is in. `contents` is
 /// text, or base64 with `base64`.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn plugin_fs_write(
     app: tauri::AppHandle,
     id: String,
@@ -240,6 +243,7 @@ pub async fn plugin_fs_write(
 /// Renames or moves a file or folder within the folder. Refuses to put it
 /// over something that is there.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn plugin_fs_rename(
     app: tauri::AppHandle,
     id: String,
@@ -271,6 +275,7 @@ pub async fn plugin_fs_rename(
 /// Moves a file or folder in the folder to the system Trash - never a
 /// delete the user can't undo.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn plugin_fs_trash(
     app: tauri::AppHandle,
     id: String,
@@ -292,6 +297,7 @@ pub async fn plugin_fs_trash(
 
 /// Makes a folder (and the folders it is in) in the folder.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn plugin_fs_mkdir(
     app: tauri::AppHandle,
     id: String,
@@ -353,6 +359,7 @@ fn url_allowed(granted: &[String], url: &reqwest::Url) -> bool {
 }
 
 #[derive(Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct HttpRequest {
     url: String,
@@ -368,6 +375,7 @@ pub struct HttpRequest {
 }
 
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct HttpResponse {
     status: u16,
@@ -377,6 +385,7 @@ pub struct HttpResponse {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn plugin_http(
     app: tauri::AppHandle,
     id: String,
@@ -464,6 +473,7 @@ fn read_storage(path: &Path) -> serde_json::Map<String, serde_json::Value> {
 
 /// Everything the plugin keeps, as one object.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn plugin_storage_get(
     app: tauri::AppHandle,
     id: String,
@@ -474,6 +484,7 @@ pub fn plugin_storage_get(
 
 /// Keeps `value` under `key`; null takes the key away.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn plugin_storage_set(
     app: tauri::AppHandle,
     id: String,

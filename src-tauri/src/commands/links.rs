@@ -102,6 +102,7 @@ fn about_url(page: &str) -> Option<&'static str> {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn open_about_link(app: tauri::AppHandle, page: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
     let url = about_url(&page).ok_or_else(|| format!("no page {page}"))?;
@@ -122,6 +123,7 @@ fn web_link(url: &str) -> Option<String> {
 /// A link Ctrl/Cmd+clicked in a document (src/editor/markdown/
 /// link-click-plugin.ts).
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn open_web_link(app: tauri::AppHandle, url: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
     let url = web_link(&url).ok_or_else(|| "not a web link".to_string())?;
@@ -132,6 +134,7 @@ pub async fn open_web_link(app: tauri::AppHandle, url: String) -> Result<(), Str
 
 /// Help > Join the Community, and its row in Settings.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn open_community_page(
     app: tauri::AppHandle,
     language: Option<String>,
@@ -142,6 +145,7 @@ pub async fn open_community_page(
 /// Help > Video Tutorials, its row in Settings, and the tour's "Watch the
 /// animation" links, which name their `clip`.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn open_tutorials_page(
     app: tauri::AppHandle,
     clip: Option<String>,

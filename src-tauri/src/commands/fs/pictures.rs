@@ -65,6 +65,7 @@ impl ImageFolder {
 }
 
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct SavedImage {
     /// What goes into the markdown: a path relative to the document, or an
     /// absolute path for a draft that has no folder yet.
@@ -151,6 +152,7 @@ pub(crate) fn write_new_file_sync(
 }
 
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct ImageMigration {
     pub(crate) old: String,
     /// New src (relative to the document) on success; None if this one

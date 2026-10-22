@@ -35,6 +35,7 @@ fn pandoc_candidates() -> Vec<PathBuf> {
 /// official installer's /usr/local, ~/.local).
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn detect_pandoc() -> Option<String> {
     tauri::async_runtime::spawn_blocking(|| {
         for candidate in pandoc_candidates() {
@@ -97,6 +98,7 @@ fn pandoc_args(format: &str, title: &str) -> Vec<String> {
 /// embed them (docx, epub, odt).
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn export_via_pandoc(
     pandoc_path: String,
     markdown: String,
@@ -137,6 +139,7 @@ pub async fn export_via_pandoc(
 /// Save dialog for exports - like save_file_dialog but with the target
 /// format's name and extension.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn export_save_dialog(
     window: tauri::WebviewWindow,
     default_name: String,
@@ -158,6 +161,7 @@ pub async fn export_save_dialog(
 
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn open_pandoc_install_page(app: tauri::AppHandle) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
     app.opener()
@@ -169,6 +173,7 @@ pub async fn open_pandoc_install_page(app: tauri::AppHandle) -> Result<(), Strin
 /// feedback beyond the dialog closing.
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn reveal_in_dir(app: tauri::AppHandle, path: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
     app.opener()
@@ -176,22 +181,28 @@ pub async fn reveal_in_dir(app: tauri::AppHandle, path: String) -> Result<(), St
         .map_err(|e| e.to_string())
 }
 
-/// Renders a themed document to a PDF file on macOS. On Windows/Linux the
-/// frontend calls window.print() instead; macOS can't, because wry's
-/// window.print() there drives a broken NSPrintPanel that flashes and
-/// self-dismisses (tauri-apps/wry#713, tauri#6202).
-///
-/// This does not go through NSPrintOperation at all. The print path lays the
-/// page out at a size that depends on the selected printer's imageable area,
-/// and never paints an @page margin - so a themed background either stopped
-/// in white bands at every page edge, or, with zero margins, text ran flush
-/// into each page seam. Instead the frontend lays the document out at A4
-/// width with its own page margins (paginate.ts), this renders it with
-/// WKWebView's createPDF at exactly 1 CSS px = 1 pt, and PDFKit cuts that one
-/// tall page into A4 sheets. WKWebView is main-thread-only, so this
-/// dispatches there and waits for the file to be written.
+// Renders a themed document to a PDF file on macOS. On Windows/Linux the
+// frontend calls window.print() instead; macOS can't, because wry's
+// window.print() there drives a broken NSPrintPanel that flashes and
+// self-dismisses (tauri-apps/wry#713, tauri#6202).
+//
+// This does not go through NSPrintOperation at all. The print path lays the
+// page out at a size that depends on the selected printer's imageable area,
+// and never paints an @page margin - so a themed background either stopped
+// in white bands at every page edge, or, with zero margins, text ran flush
+// into each page seam. Instead the frontend lays the document out at A4
+// width with its own page margins (paginate.ts), this renders it with
+// WKWebView's createPDF at exactly 1 CSS px = 1 pt, and PDFKit cuts that one
+// tall page into A4 sheets. WKWebView is main-thread-only, so this
+// dispatches there and waits for the file to be written.
+/// Writes the themed, already-paginated document to a PDF at `output_path`,
+/// rendered offscreen with no print dialog - each platform's way, in the
+/// notes above. One doc comment for every platform's variant: it is what
+/// the generated TypeScript (src/platform/bindings/app.ts) shows, which
+/// must not depend on the platform it was generated on.
 #[cfg(target_os = "macos")]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn export_pdf_native(
     app: tauri::AppHandle,
     html: String,
@@ -240,17 +251,23 @@ async fn add_page_numbers(output_path: String, page_numbers: bool) -> Result<(),
 #[cfg(desktop)]
 pub const PDF_EXPORT_LABEL_PREFIX: &str = "pdf-export-";
 
-/// Windows and Linux: the same idea as the macOS path - render the themed,
-/// already-paginated document offscreen and write the PDF straight to the
-/// chosen file, with no print dialog and no printer driver involved - with
-/// each platform's own webview API doing the rendering: WebView2's
-/// PrintToPdf (Chromium's PDF backend) on Windows, WebKitGTK's print
-/// operation writing to a file on Linux. The page loads in a hidden window
-/// through the asset protocol, from a temporary file: the document carries
-/// its images inline, which can exceed what a data URL or WebView2's
-/// NavigateToString accepts.
+// Windows and Linux: the same idea as the macOS path - render the themed,
+// already-paginated document offscreen and write the PDF straight to the
+// chosen file, with no print dialog and no printer driver involved - with
+// each platform's own webview API doing the rendering: WebView2's
+// PrintToPdf (Chromium's PDF backend) on Windows, WebKitGTK's print
+// operation writing to a file on Linux. The page loads in a hidden window
+// through the asset protocol, from a temporary file: the document carries
+// its images inline, which can exceed what a data URL or WebView2's
+// NavigateToString accepts.
+/// Writes the themed, already-paginated document to a PDF at `output_path`,
+/// rendered offscreen with no print dialog - each platform's way, in the
+/// notes above. One doc comment for every platform's variant: it is what
+/// the generated TypeScript (src/platform/bindings/app.ts) shows, which
+/// must not depend on the platform it was generated on.
 #[cfg(any(windows, target_os = "linux"))]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn export_pdf_native(
     app: tauri::AppHandle,
     html: String,
@@ -262,8 +279,15 @@ pub async fn export_pdf_native(
     add_page_numbers(output_path, page_numbers).await
 }
 
+// Any other desktop: none.
+/// Writes the themed, already-paginated document to a PDF at `output_path`,
+/// rendered offscreen with no print dialog - each platform's way, in the
+/// notes above. One doc comment for every platform's variant: it is what
+/// the generated TypeScript (src/platform/bindings/app.ts) shows, which
+/// must not depend on the platform it was generated on.
 #[cfg(all(desktop, not(any(target_os = "macos", windows, target_os = "linux"))))]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn export_pdf_native(
     _app: tauri::AppHandle,
     _html: String,

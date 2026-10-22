@@ -15,14 +15,16 @@ use crate::extract::{docx_document, extension_of, MAX_SOURCE_BYTES};
 use serde::Serialize;
 use std::path::Path;
 
-/// What `open_word_document` hands the frontend (src/platform/ipc.ts's
-/// WordDocument).
+/// What `open_word_document` hands the frontend - generated into
+/// src/platform/bindings/files.ts.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct WordDocument {
     markdown: String,
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn open_word_document(
     app: tauri::AppHandle,
     path: String,

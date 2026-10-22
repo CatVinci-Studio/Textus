@@ -137,6 +137,7 @@ pub(crate) static PENDING_SHOW_HELP: Mutex<Option<String>> = Mutex::new(None);
 
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub(crate) fn take_pending_show_help() -> Option<String> {
     PENDING_SHOW_HELP.lock().unwrap().take()
 }
@@ -151,6 +152,7 @@ pub(crate) static PENDING_MENU_EVENT: Mutex<Option<&'static str>> = Mutex::new(N
 
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub(crate) fn take_pending_menu_event() -> Option<&'static str> {
     PENDING_MENU_EVENT.lock().unwrap().take()
 }
@@ -163,6 +165,7 @@ pub(crate) static PENDING_OPEN_FOLDER: Mutex<Option<String>> = Mutex::new(None);
 
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub(crate) fn take_pending_open_folder() -> Option<String> {
     PENDING_OPEN_FOLDER.lock().unwrap().take()
 }
@@ -172,11 +175,13 @@ pub(crate) fn take_pending_open_folder() -> Option<String> {
 /// manager's open does - a window of its own, or a tab per the setting.
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub(crate) fn open_paths(app: tauri::AppHandle, paths: Vec<String>) {
     queue_paths_to_open(&app, paths);
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub(crate) fn take_pending_open_path(pending: State<PendingOpenPaths>) -> Option<String> {
     UI_READY.store(true, Ordering::Relaxed);
     let mut paths = pending.0.lock().unwrap();
@@ -191,6 +196,7 @@ pub(crate) fn take_pending_open_path(pending: State<PendingOpenPaths>) -> Option
 /// once so a single window can open every pending path as its own tab,
 /// instead of one window claiming just the first path off the front.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub(crate) fn take_pending_open_paths(pending: State<PendingOpenPaths>) -> Vec<String> {
     UI_READY.store(true, Ordering::Relaxed);
     let mut paths = pending.0.lock().unwrap();
