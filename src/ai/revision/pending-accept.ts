@@ -4,7 +4,6 @@ import { closeHistory } from "@milkdown/kit/prose/history";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { visibleTextBetween } from "../../editor/markdown/link-reveal";
 import { isAnchored, plainText, resolveAnchored } from "./pending-place";
-
 import {
   composeMarkdownEdit,
   documentMarkdown,
@@ -12,14 +11,12 @@ import {
   serializeBlocks,
 } from "../doc-markdown";
 import { applyEditRange, replaceWithMarkdown } from "./apply-edit";
-
 import {
   citationsAsFootnotes,
   footnoteLabels,
   hasCitations,
   withoutCitations,
 } from "../citations";
-
 import { isIOSApp } from "../../platform/capabilities";
 import {
   pendingEditKey,
@@ -28,7 +25,6 @@ import {
 } from "./pending-edit-plugin";
 import { composeSentences, trimBreaks } from "./sentence-diff";
 import { findInOrder } from "./sentence-locate";
-
 import type { CitationStyle } from "./usePendingEdits";
 
 /** What an Accept did in the document: written, not yet (still

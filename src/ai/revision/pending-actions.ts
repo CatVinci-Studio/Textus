@@ -1,7 +1,5 @@
 import { editedText } from "./joined-edit";
-
 import { editorViewCtx } from "@milkdown/kit/core";
-
 import {
   carriesPictures,
   decidedChanges,
@@ -9,16 +7,13 @@ import {
   type ProposalToPlace,
   type SelectionTarget,
 } from "./pending-place";
-
 import { documentMarkdown, serializeBlocks } from "../doc-markdown";
-
 import {
   pendingEditKey,
   sentenceTake,
   type PendingPreview,
 } from "./pending-edit-plugin";
 import { recordStatuses, type RecordedStatus } from "./proposal-lifecycle";
-
 import type { EditProposal } from "../types";
 import {
   discardGeneratedImage,
@@ -35,9 +30,7 @@ import {
   withSavedSrc,
   withoutPicture,
 } from "./generated-images";
-
 import type { EditorRunner } from "../../editor/useEditorRunner";
-
 import type { Dispatch, SetStateAction } from "react";
 import { writeAccept, type AcceptOutcome } from "./pending-accept";
 import type { PendingEditOptions } from "./usePendingEdits";
