@@ -202,6 +202,13 @@ fn scenarios() -> Vec<Scenario> {
                     let lin: Vec<&String> = e.facts.iter().filter(|f| f.contains("林晚")).collect();
                     lin.len() == 1 && (lin[0].contains("话多") || lin[0].contains("主动") || lin[0].contains("变"))
                 }),
+                ("the change says from where, and what held before stays", |e| {
+                    e.facts.iter().any(|f| {
+                        f.contains("林晚")
+                            && ["第四章", "这章", "从", "起"].iter().any(|w| f.contains(w))
+                            && ["冷", "不爱说话"].iter().any(|w| f.contains(w))
+                    })
+                }),
             ],
         },
         // An office worker: a reply preference said in irritation once,

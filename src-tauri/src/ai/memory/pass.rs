@@ -33,7 +33,7 @@ What not to keep: a request about this text only ("make this more formal", "shor
 
 Where it goes (scope): personal - about the user, for everything they write (how to reply to them, their habits and tastes); project - about this work (its people and terms, its spelling, voice, tense, audience, format). "I don't like…", "reply to me in…", "from now on…" are personal unless they name the work; "in this book…", "our product…", "our style guide…" are project. A fact is always the project's. Without a project folder, keep only what is personal - nothing about this work.
 
-Against what is remembered: what is already there needs nothing. A change to or correction of a memory updates it (its id). When the user takes one back ("forget…", "X is fine again"), forget it (its id). A fact about someone or something already in the library uses that entry's name.
+Against what is remembered: what is already there needs nothing. A change to or correction of a memory updates it (its id). When the user takes one back ("forget…", "X is fine again"), forget it (its id). A fact about someone or something already in the library uses that entry's name. A fact that changes partway through the work - from a chapter, a scene or a date on - says from where, in the text itself ("From chapter 4 on, Lin trusts the stranger."), so it is added to what held before rather than written over it; a correction of what was wrong all along has no "from".
 
 Write each memory as one or a few plain sentences, in the language the user writes to you in, as an instruction to the assistant ("Reply in English.", "Use 你, never 您, in internal documents.").
 
