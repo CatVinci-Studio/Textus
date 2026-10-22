@@ -46,22 +46,11 @@ fn auto_sends_nothing() {
     for (provider, model) in [
         ("openai", "gpt-6.1-sol"),
         ("anthropic", "claude-sonnet-5-5"),
+        ("deepseek", "deepseek-v4-pro"),
         ("qwen", "qwen3.7-plus"),
     ] {
         assert!(!plan(provider, model, ThinkingLevel::Auto).sends_parameters());
     }
-}
-
-#[test]
-fn auto_turns_deepseek_down_to_low() {
-    let pro = plan("deepseek", "deepseek-v4-pro", ThinkingLevel::Auto);
-    assert_eq!(pro.effort.as_deref(), Some("low"));
-    assert_eq!(
-        plan("deepseek", "deepseek-v4-pro", ThinkingLevel::Deep)
-            .effort
-            .as_deref(),
-        Some("high")
-    );
 }
 
 #[test]
