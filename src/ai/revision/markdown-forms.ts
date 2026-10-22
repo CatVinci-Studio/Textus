@@ -1,4 +1,5 @@
 import { isPicture } from "../doc-blocks";
+import { markdownBlockKind } from "./block-reader";
 
 /**
  * The Markdown a revision is compared and found by, in one place: which
@@ -22,9 +23,6 @@ export { isPicture };
 export const PICTURES_IN_TEXT =
   /!\[([^\]]*)\]\((<[^>]*>|[^)\s]*)(?:\s+"[^"]*")?\)/g;
 
-/** A thematic break, written any of the ways Markdown allows. */
-const RULE = /^(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$/;
-
 /** The kinds of block a rewrite changes whole (wholeBlockKind). */
 export type WholeBlockKind =
   | "picture"
@@ -36,29 +34,31 @@ export type WholeBlockKind =
   | "definition"
   | "html";
 
+const WHOLE = new Set<string>([
+  "picture",
+  "rule",
+  "table",
+  "code",
+  "math",
+  "footnote",
+  "definition",
+  "html",
+]);
+
 /**
- * What kind of block `block` (one block, as doc-blocks.ts splits them) is,
- * when it is one a rewrite changes whole rather than by sentence: a
- * picture, a table, a code or maths block, a footnote's or a link's
- * definition, a rule, an HTML block. Null for prose (a paragraph, a
- * heading, a list, a quote).
+ * What kind of block `block` (one block of text) is, when it is one a
+ * rewrite changes whole rather than by sentence: a picture, a table, a
+ * code or maths block, a footnote's or a link's definition, a rule, an
+ * HTML block - as the editor's parser reads it (block-reader.ts), the
+ * reading the document's own blocks have. Null for prose (a paragraph, a
+ * heading, a list, a quote). An `<img>` is a picture given a width.
  */
 export function wholeBlockKind(block: string): WholeBlockKind | null {
   const text = block.trim();
-  if (isPicture(text)) return "picture";
-  if (RULE.test(text)) return "rule";
-  if (/^\|/.test(text) && text.split("\n").every((l) => /^\s*\|/.test(l)))
-    return "table";
-  if (/^(?:```|~~~)/.test(text)) return "code";
-  if (text.startsWith("$$")) return "math";
-  if (/^\[\^[^\]\s]+\]:/.test(text)) return "footnote";
-  if (/^\[[^\]\n]+\]:\s*\S/.test(text)) return "definition";
-  if (
-    /^<[a-zA-Z][^>]*>/.test(text) &&
-    !/^<(?:br|span|a|b|i|em|strong|sub|sup|kbd|mark)\b/i.test(text)
-  )
-    return "html";
-  return null;
+  if (!text) return null;
+  const kind = markdownBlockKind(text);
+  if (kind === "html" && isPicture(text)) return "picture";
+  return kind && WHOLE.has(kind) ? (kind as WholeBlockKind) : null;
 }
 
 /**
@@ -73,11 +73,12 @@ export function wholeBlockKind(block: string): WholeBlockKind | null {
  */
 export function formKey(markdown: string): string {
   const text = markdown.trim();
-  if (RULE.test(text)) return "***";
+  const kind = wholeBlockKind(text);
+  if (kind === "rule") return "***";
   const unwritten = text
     .replace(/<((?:https?|mailto):[^>\s]+)>/g, "$1")
     .replace(/\\([\\`*_{}[\]()#+\-.!~|<>])/g, "$1");
-  if (wholeBlockKind(text) !== "table") return unwritten;
+  if (kind !== "table") return unwritten;
   return unwritten
     .split("\n")
     .map((line) =>

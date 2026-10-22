@@ -1,10 +1,21 @@
-import { describe, expect, it } from "vitest";
+// @vitest-environment jsdom
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { Editor } from "@milkdown/kit/core";
+import { createTestEditor } from "../../document-view/editor-test-harness";
 import {
   blockSummary,
   formKey,
   matchableMarkdown,
   wholeBlockKind,
 } from "./markdown-forms";
+
+// Blocks are read by the editor's parser (block-reader.ts), which an
+// editor registers as it starts.
+let reader: Editor | null = null;
+beforeAll(async () => {
+  reader = await createTestEditor("");
+});
+afterAll(() => reader?.destroy());
 
 const NAMES = {
   picture: "Picture",
