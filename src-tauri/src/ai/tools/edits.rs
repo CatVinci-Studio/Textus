@@ -13,7 +13,7 @@ pub(super) const EDIT_PROPOSED: &str = "Edit proposed";
 /// the frontend (usePendingEdits.ts, which resolves proposals, and
 /// apply-edit.ts, which writes them) about it produces proposals that validate but
 /// can't be applied.
-pub(super) const EDIT_ACTIONS: [&str; 7] = [
+pub(crate) const EDIT_ACTIONS: [&str; 7] = [
     "replace",
     "replace_selection",
     "insert_before",

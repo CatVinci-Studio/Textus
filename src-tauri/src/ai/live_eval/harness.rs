@@ -81,11 +81,24 @@ pub fn block_on<F: std::future::Future>(future: F) -> F::Output {
 /// (how the matrix is re-run against another model).
 pub fn agent_model() -> String {
     std::env::var("TEXTUS_EVAL_AGENT_MODEL").unwrap_or_else(|_| {
-        crate::ai::catalog::find(agent_provider_id())
+        let model = crate::ai::catalog::find(agent_provider_id())
             .and_then(|e| e.agent_default_model)
-            .expect("the eval's provider has an agent default")
-            .to_string()
+            .expect("the eval's provider has an agent default");
+        // Vertex AI names Google's own models by their publisher.
+        if on_vertex() {
+            format!("google/{model}")
+        } else {
+            model.to_string()
+        }
     })
+}
+
+/// TEXTUS_EVAL_PROVIDER=vertex: Gemini on Vertex AI, with the API key
+/// GOOGLE_VERTEX_API_KEY (express mode) and the project
+/// TEXTUS_EVAL_VERTEX_PROJECT - its OpenAI-compatible endpoint on
+/// aiplatform.googleapis.com, never the Gemini Developer API.
+fn on_vertex() -> bool {
+    std::env::var("TEXTUS_EVAL_PROVIDER").is_ok_and(|v| v == "vertex")
 }
 
 /// TEXTUS_EVAL_PROVIDER=doubao: the agent cases run on Volcengine Ark
@@ -108,6 +121,7 @@ pub fn agent_provider_id() -> &'static str {
         Ok("deepseek") => "deepseek",
         Ok("minimax") => "minimax",
         Ok("chatgpt") => "openai",
+        Ok("vertex") => "google",
         _ => "anthropic",
     }
 }
@@ -163,6 +177,18 @@ fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
                 base_url: base_url.to_string(),
                 api_key: Some(secret(key).unwrap_or_else(|| panic!("{key}"))),
                 vendor: crate::ai::route::chat_vendor(base_url),
+                stream_usage: true,
+            }
+        }
+        "google" => {
+            let project = std::env::var("TEXTUS_EVAL_VERTEX_PROJECT")
+                .expect("TEXTUS_EVAL_VERTEX_PROJECT: the Vertex AI project");
+            Endpoint::ChatCompletions {
+                base_url: format!(
+                    "https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/endpoints/openapi"
+                ),
+                api_key: Some(secret("GOOGLE_VERTEX_API_KEY").expect("GOOGLE_VERTEX_API_KEY")),
+                vendor: crate::ai::route::chat_vendor("https://aiplatform.googleapis.com"),
                 stream_usage: true,
             }
         }
@@ -765,6 +791,12 @@ pub fn run_conversation(
         });
         let instructions =
             build_instructions(ws, &doc, true, setup.mode, &message_sent, setup.ui_language);
+        // TEXTUS_EVAL_EDITS=tool: the edit rules as they were for the tool.
+        let instructions = if super::tool_edits::on() {
+            instructions.replace(edit_tags::RULES, super::tool_edits::RULE)
+        } else {
+            instructions
+        };
         // The app's conventions for this workspace (the setting is the
         // default, Automatic): proposals are post-processed as the app does
         // (agent::postfix_step), and what was fixed is recorded.
@@ -809,7 +841,10 @@ pub fn run_conversation(
                 &events,
             ));
         }
-        let specs = tool_set.specs();
+        let mut specs = tool_set.specs();
+        if super::tool_edits::on() {
+            specs.push(super::tool_edits::spec());
+        }
         let usage = RefCell::new(Vec::new());
         let postfix = RefCell::new(Vec::new());
         let thinking_events = AtomicUsize::new(0);
@@ -830,7 +865,7 @@ pub fn run_conversation(
         // Edits as tags, split from the reply as the app splits them
         // (agent::forward_tags): the timeline and the pictures see each
         // tag as the propose_edit call it becomes.
-        let edits = tool_set.edits();
+        let edits = tool_set.edits() && !super::tool_edits::on();
         let steps = AtomicUsize::new(0);
         let tags = std::sync::Mutex::new(edit_tags::StepTags::new(edits, 0));
         let observe = |event: &ProviderEvent<'_>| {

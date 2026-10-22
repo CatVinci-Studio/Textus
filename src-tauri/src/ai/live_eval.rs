@@ -58,6 +58,7 @@ mod images;
 mod latency;
 mod memory_eval;
 mod tokens;
+mod tool_edits;
 mod web_search;
 
 use crate::ai::agent::AgentMode;
