@@ -494,3 +494,20 @@ fn a_redone_picture_is_read_from_the_document_folder() {
     assert_eq!(read("![Rain](../outside.png)"), None);
     assert_eq!(read("Rain on the roof."), None);
 }
+
+#[test]
+fn a_picture_that_was_not_made_is_asked_for_again_by_itself() {
+    // Nothing listens at the offline run's address: each try fails.
+    let run = run();
+    let (failing, _) = run.start("A red boat".into(), Aspect::Square, None);
+    let (other, _) = run.start("A blue boat".into(), Aspect::Square, None);
+    assert!(picture(&failing).is_err());
+    assert!(picture(&other).is_err());
+    ai_retry_generated_image(failing.clone()).expect("asked again");
+    // Being made again: retried twice at once, the second is refused.
+    assert!(ai_retry_generated_image(failing.clone()).is_err());
+    assert!(picture(&failing).is_err());
+    // The other picture was left as it was.
+    assert!(matches!(look(&other), Some(Err(_))));
+    assert!(ai_retry_generated_image("gone00".into()).is_err());
+}

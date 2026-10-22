@@ -246,15 +246,15 @@ impl ImageRun {
         reference: Option<ImageAttachment>,
     ) -> (String, (u32, u32)) {
         let id = begin();
-        let job = self.job.clone();
-        let made = id.clone();
-        tauri::async_runtime::spawn(async move {
-            let slot = match job.generate(&prompt, aspect, reference.as_ref()).await {
-                Ok(image) => Slot::Ready(image),
-                Err(why) => Slot::Failed(why.to_string()),
-            };
-            finish(&made, slot);
-        });
+        make(
+            id.clone(),
+            std::sync::Arc::new(Asked {
+                job: self.job.clone(),
+                prompt,
+                aspect,
+                reference,
+            }),
+        );
         (id, nominal_size(aspect))
     }
 

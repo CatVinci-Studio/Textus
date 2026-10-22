@@ -60,6 +60,14 @@ pub async fn ai_generated_image(id: String) -> Result<GeneratedImageData, String
     }
 }
 
+/// Asks again for a picture that wasn't made - the same description, to
+/// the same service - leaving the others alone; ai_generated_image then
+/// waits for it as for any picture.
+#[tauri::command]
+pub fn ai_retry_generated_image(id: String) -> Result<(), String> {
+    retry(&id)
+}
+
 /// Lets a picture go: its proposal was rejected, or it was saved. One
 /// still being made is let go too; what it makes is thrown away.
 #[tauri::command]

@@ -131,6 +131,9 @@ export const ai = {
   /** A picture generate_image made, waiting for Accept or Reject. */
   generatedImage: (id: string) =>
     call<GeneratedImageData>("ai_generated_image", { id }),
+  /** Asks again for a picture that wasn't made, by itself. */
+  retryGeneratedImage: (id: string) =>
+    call<void>("ai_retry_generated_image", { id }),
   /** Lets a waiting picture go: rejected, or saved. */
   discardGeneratedImage: (id: string) =>
     call<void>("ai_discard_generated_image", { id }),

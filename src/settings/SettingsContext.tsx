@@ -15,6 +15,7 @@ import { useApplyAppearance } from "../theme/apply-appearance";
 import { SHORTCUTS_REVISION } from "./shortcut-defaults";
 import type { Settings } from "./settings-types";
 import { htmlLang } from "./settings-normalise";
+import { setCurrentLanguage } from "../i18n/current";
 import {
   loadSettings,
   persist,
@@ -101,6 +102,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = htmlLang(settings.language);
+    setCurrentLanguage(settings.language);
   }, [settings.language]);
 
   // An unparseable proxy is rejected by the backend (and requests fall back

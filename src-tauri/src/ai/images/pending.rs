@@ -66,6 +66,71 @@ pub(crate) fn begin() -> String {
     id
 }
 
+/// What each pending picture was asked for, so one that wasn't made can be
+/// asked for again by itself (ai_retry_generated_image). Kept for as long
+/// as its slot is.
+pub(crate) struct Asked {
+    pub(crate) job: ImageJob,
+    pub(crate) prompt: String,
+    pub(crate) aspect: Aspect,
+    pub(crate) reference: Option<ImageAttachment>,
+}
+
+pub(crate) static ASKED: Mutex<Vec<(String, std::sync::Arc<Asked>)>> = Mutex::new(Vec::new());
+
+pub(crate) fn asked() -> std::sync::MutexGuard<'static, Vec<(String, std::sync::Arc<Asked>)>> {
+    ASKED.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+/// Makes picture `id` from what was asked, in the background, its slot
+/// filled when it comes.
+pub(crate) fn make(id: String, asked_for: std::sync::Arc<Asked>) {
+    {
+        let mut asked = asked();
+        asked.retain(|(i, _)| *i != id);
+        asked.push((id.clone(), asked_for.clone()));
+        let live: Vec<String> = pending().iter().map(|(i, _)| i.clone()).collect();
+        asked.retain(|(i, _)| live.contains(i));
+    }
+    tauri::async_runtime::spawn(async move {
+        let slot = match asked_for
+            .job
+            .generate(
+                &asked_for.prompt,
+                asked_for.aspect,
+                asked_for.reference.as_ref(),
+            )
+            .await
+        {
+            Ok(image) => Slot::Ready(image),
+            Err(why) => Slot::Failed(why.to_string()),
+        };
+        finish(&id, slot);
+    });
+}
+
+/// Asks again for a picture that wasn't made: its slot goes back to being
+/// made. Err when it is gone, or not one that failed.
+pub(crate) fn retry(id: &str) -> Result<(), String> {
+    let asked_for = asked()
+        .iter()
+        .find(|(i, _)| i == id)
+        .map(|(_, a)| a.clone())
+        .ok_or_else(|| "This picture is no longer available - ask for it again.".to_string())?;
+    {
+        let mut pending = pending();
+        let Some((_, slot)) = pending.iter_mut().find(|(i, _)| i == id) else {
+            return Err("This picture is no longer available - ask for it again.".into());
+        };
+        if !matches!(slot, Slot::Failed(_)) {
+            return Err("This picture was made, or is being made.".into());
+        }
+        *slot = Slot::Making;
+    }
+    make(id.to_string(), asked_for);
+    Ok(())
+}
+
 /// What came of a picture being made. Nothing, if it was let go meanwhile
 /// (its proposal rejected while it was painting).
 pub(crate) fn finish(id: &str, slot: Slot) {

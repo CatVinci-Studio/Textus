@@ -152,6 +152,20 @@ const failed = new Map<string, string>();
 /** The size each picture was asked for: its frame's shape meanwhile. */
 const sizes = new Map<string, { width: number; height: number }>();
 
+/** Asks again for a picture that wasn't made, leaving the proposal's
+ *  others alone; resolves as loadGeneratedImage does for the new try. */
+export async function retryGeneratedImage(id: string): Promise<boolean> {
+  try {
+    await ai.retryGeneratedImage(id);
+  } catch (err) {
+    failed.set(id, err instanceof Error ? err.message : String(err));
+    return false;
+  }
+  failed.delete(id);
+  for (const listener of listeners) listener();
+  return loadGeneratedImage(id);
+}
+
 /** Fetches a picture from the backend once - which answers when it is
  *  made, so a picture still painting waits here - for the preview to draw
  *  it; false when it wasn't made (generatedImageFailure says why) or is
