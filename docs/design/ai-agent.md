@@ -75,7 +75,7 @@ talking to.
 - **Thinking levels**: the user has three - Fast (Quick Ask and the writing
   helpers), Auto (the lightbulb off) and Deep (on). Auto sends nothing,
   except where a provider's default thinks far longer than writing needs
-  (`auto_effort`: Doubao at `low`); Deep asks for `high` where there are
+  (`auto_effort`: Doubao at `minimal`); Deep asks for `high` where there are
   levels, on where it only switches, never `xhigh` or `max`.
 - Vision, pictures (`image`), usage in a stream, and whether a step's
   reasoning goes back with its calls (`replay_reasoning`).

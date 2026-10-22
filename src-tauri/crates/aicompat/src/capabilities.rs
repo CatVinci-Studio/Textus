@@ -126,8 +126,9 @@ pub struct ProviderCaps {
     /// The effort Auto asks for where the provider's own default thinks
     /// far longer than writing needs, on a model that takes that level:
     /// Ark's Seed models thought for two minutes and more on a two-paragraph
-    /// edit at their default, under forty seconds at `low`, as right
-    /// (1.2.0-rc.6 tag eval). None: Auto sends nothing.
+    /// edit at their default, under forty seconds at `low` (1.2.0-rc.6
+    /// eval); Auto asks for `minimal`, writing rather than deliberating.
+    /// None: Auto sends nothing.
     pub auto_effort: Option<&'static str>,
 }
 

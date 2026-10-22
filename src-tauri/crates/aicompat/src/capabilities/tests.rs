@@ -54,9 +54,9 @@ fn auto_sends_nothing() {
 }
 
 #[test]
-fn auto_turns_ark_down_to_low_where_the_model_takes_it() {
+fn auto_turns_ark_down_to_minimal_where_the_model_takes_it() {
     let seed = plan("doubao", "doubao-seed-2-1-pro-260628", ThinkingLevel::Auto);
-    assert_eq!(seed.effort.as_deref(), Some("low"));
+    assert_eq!(seed.effort.as_deref(), Some("minimal"));
     // Deep still asks for more.
     assert_eq!(
         plan("doubao", "doubao-seed-2-1-pro-260628", ThinkingLevel::Deep)

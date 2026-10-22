@@ -167,7 +167,7 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "doubao",
         ProviderCaps {
-            auto_effort: Some("low"),
+            auto_effort: Some("minimal"),
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::None,
             replay_reasoning: true,
