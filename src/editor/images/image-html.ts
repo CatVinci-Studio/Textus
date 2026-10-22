@@ -1,5 +1,6 @@
 import { $remark } from "@milkdown/kit/utils";
 import type { Attrs } from "@milkdown/kit/prose/model";
+import { escapeHtml } from "../../utils/html";
 import { sanitizeDimension, sanitizeStyle } from "../html/html-policy";
 
 /**
@@ -69,12 +70,7 @@ export function parseImageTag(raw: string): Omit<ImageAttrs, "html"> | null {
 /** An attribute value inside double quotes. A newline is written as a
  *  reference: a raw one would cut the tag over two lines. */
 export function escapeAttribute(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\r?\n/g, "&#10;");
+  return escapeHtml(value).replace(/\r?\n/g, "&#10;");
 }
 
 /**

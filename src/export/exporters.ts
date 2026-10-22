@@ -1,3 +1,4 @@
+import { escapeHtml } from "../utils/html";
 import { errorText } from "../utils/error-text";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import type { Strings } from "../i18n/strings";
@@ -21,7 +22,6 @@ import {
 import {
   buildStandaloneHtml,
   cloneEditorContent,
-  escapeHtml,
   inlineImages,
   linkRenderer,
   nextFrame,

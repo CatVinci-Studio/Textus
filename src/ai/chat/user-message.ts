@@ -19,6 +19,8 @@
  * conversation's title.
  */
 
+import { escapeHtml } from "../../utils/html";
+
 /** Wraps the selection the message rode out with. */
 export function selectedTextBlock(markdown: string): string {
   return `<selected-text>\n${markdown}\n</selected-text>`;
@@ -50,18 +52,10 @@ export function skillBlock(
   typed?: string,
 ): string {
   const attr =
-    typed && typed !== `/${name}` ? ` typed="${escapeAttr(typed)}"` : "";
+    typed && typed !== `/${name}` ? ` typed="${escapeHtml(typed)}"` : "";
   return prompt
     ? `<skill name="${name}"${attr}>\n${prompt}\n</skill>`
     : `<skill name="${name}"${attr}></skill>`;
-}
-
-function escapeAttr(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }
 
 function unescapeAttr(text: string): string {
