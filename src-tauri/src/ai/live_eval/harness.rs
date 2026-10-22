@@ -127,7 +127,7 @@ pub fn agent_provider_id() -> &'static str {
 
 /// The app's ChatGPT sign-in (auth/openai_codex.rs's auth-codex.json):
 /// its access token and account.
-fn chatgpt_sign_in() -> (String, String) {
+pub(crate) fn chatgpt_sign_in() -> (String, String) {
     let path = std::env::var_os("HOME")
         .map(PathBuf::from)
         .expect("HOME")

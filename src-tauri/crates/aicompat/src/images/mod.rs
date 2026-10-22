@@ -27,8 +27,9 @@ mod siliconflow;
 mod sniff;
 mod zhipu;
 
+use crate::agent::ImageAttachment;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::time::Duration;
 
 /// The shapes a picture can take. The agent's tool offers these and
@@ -85,6 +86,17 @@ pub enum ImageApi {
     /// not an Images API - no address or key, so never through
     /// [`generate`].
     ChatGpt,
+}
+
+impl ImageApi {
+    /// Whether a picture being redone is sent along with its description,
+    /// for the service to change rather than draw anew: Gemini's image
+    /// models and Seedream take one in the request, the ChatGPT sign-in as
+    /// an input image. OpenAI's Images API edits through a separate
+    /// endpoint, not wired; the others make pictures from text only.
+    pub fn takes_reference(self) -> bool {
+        matches!(self, Self::Gemini | Self::Seedream | Self::ChatGpt)
+    }
 }
 
 /// Where one request goes. `base_url` is the service's API root, as the
@@ -265,11 +277,37 @@ fn malformed(what: &str) -> ImageError {
     ))
 }
 
-/// Generates one picture.
+/// `reference` (the picture being redone) put into a request for a service
+/// that takes one ([`ImageApi::takes_reference`]); left out otherwise.
+fn with_reference(api: ImageApi, body: &mut Value, reference: Option<&ImageAttachment>) {
+    let Some(reference) = reference.filter(|_| api.takes_reference()) else {
+        return;
+    };
+    match api {
+        // Before the description, as Gemini's image editing reads them.
+        ImageApi::Gemini => {
+            if let Some(parts) = body
+                .pointer_mut("/contents/0/parts")
+                .and_then(Value::as_array_mut)
+            {
+                parts.insert(
+                    0,
+                    json!({"inlineData": {"mimeType": reference.mime, "data": reference.data_base64}}),
+                );
+            }
+        }
+        ImageApi::Seedream => body["image"] = json!(reference.data_url()),
+        _ => {}
+    }
+}
+
+/// Generates one picture - from `reference` where one is given and the
+/// service takes it, changed as `prompt` says.
 pub async fn generate(
     target: &ImageTarget<'_>,
     prompt: &str,
     aspect: Aspect,
+    reference: Option<&ImageAttachment>,
 ) -> Result<GeneratedImage, ImageError> {
     if target.api == ImageApi::ChatGpt {
         return Err(ImageError::Failed(
@@ -284,7 +322,8 @@ pub async fn generate(
             "There is no description to draw.".into(),
         ));
     }
-    let Request { url, body } = request(target, prompt, aspect);
+    let Request { url, mut body } = request(target, prompt, aspect);
+    with_reference(target.api, &mut body, reference);
     let mut req = crate::http::long_client(GENERATION_TIMEOUT)
         .post(url)
         .json(&body);

@@ -183,3 +183,34 @@ pub(crate) fn is_picture_markdown(anchor: &str) -> bool {
     };
     !alt.contains(']') && after.ends_with(')') && !after[..after.len() - 1].contains(')')
 }
+
+/// The file a picture's Markdown (`is_picture_markdown`) shows, read from
+/// `folder` - the document's - as read_file reads pictures. None for a
+/// picture on the web or in a data URL, one outside the folder, or
+/// anything else.
+pub(crate) fn local_picture(
+    markdown: &str,
+    folder: &std::path::Path,
+) -> Option<aicompat::agent::ImageAttachment> {
+    let markdown = markdown.trim();
+    if !is_picture_markdown(markdown) {
+        return None;
+    }
+    let src = match markdown.strip_prefix("<img") {
+        Some(tag) => tag.split_once("src=\"")?.1.split_once('"')?.0,
+        None => {
+            let (_, src) = markdown.split_once("](")?;
+            let src = src.strip_suffix(')')?;
+            // A title after the src, `![alt](src "title")`, goes.
+            src.split(" \"").next()?.trim()
+        }
+    };
+    let src = src
+        .strip_prefix('<')
+        .and_then(|s| s.strip_suffix('>'))
+        .unwrap_or(src);
+    if src.is_empty() || src.contains("://") || src.starts_with("data:") {
+        return None;
+    }
+    crate::ai::project::read_image(folder, src).ok()
+}

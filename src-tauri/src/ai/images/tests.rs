@@ -13,6 +13,7 @@ fn run() -> ImageRun {
         },
         made: AtomicUsize::new(0),
         limit: PER_SEND,
+        folder: None,
     }
 }
 
@@ -467,4 +468,29 @@ fn every_built_in_image_provider_has_an_https_address_and_a_default_model() {
 
 fn generate_image_text(args: &Value) -> String {
     outcome(&args.to_string())
+}
+
+#[test]
+fn a_redone_picture_is_read_from_the_document_folder() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::create_dir(dir.path().join("assets")).unwrap();
+    // The smallest PNG: its signature is all read_image looks at.
+    std::fs::write(dir.path().join("assets/rain.png"), b"\x89PNG\r\n\x1a\n").unwrap();
+    let read = |markdown: &str| local_picture(markdown, dir.path()).map(|p| p.mime);
+    assert_eq!(
+        read("![Rain](assets/rain.png)").as_deref(),
+        Some("image/png")
+    );
+    assert_eq!(
+        read("![Rain](<assets/rain.png> \"title\")").as_deref(),
+        Some("image/png")
+    );
+    assert_eq!(
+        read("<img src=\"assets/rain.png\" width=\"320\">").as_deref(),
+        Some("image/png")
+    );
+    // On the web, in the text, or not a picture at all: nothing to send.
+    assert_eq!(read("![Rain](https://example.com/rain.png)"), None);
+    assert_eq!(read("![Rain](../outside.png)"), None);
+    assert_eq!(read("Rain on the roof."), None);
 }

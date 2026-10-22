@@ -46,6 +46,7 @@ fn one_picture(provider: &str, key_var: &str) {
         },
         PROMPT,
         Aspect::Square,
+        None,
     ))
     .unwrap_or_else(|e| panic!("{provider}/{model}: {e}"));
     eprintln!(
@@ -57,6 +58,58 @@ fn one_picture(provider: &str, key_var: &str) {
         started.elapsed().as_secs_f64()
     );
     assert!(image.width >= 512 && image.height >= 512);
+    if entry.api.takes_reference() {
+        redo_with_reference(entry, &key, model, image);
+    }
+}
+
+/// The picture just made, changed through the service's reference input,
+/// both kept in TEXTUS_EVAL_PICTURES_DIR (when set) to look at side by
+/// side: the boat should turn yellow and the rest stay.
+fn redo_with_reference(
+    entry: &crate::ai::images::ImageProviderEntry,
+    key: &str,
+    model: &str,
+    first: aicompat::images::GeneratedImage,
+) {
+    use base64::{engine::general_purpose::STANDARD, Engine};
+    let reference = aicompat::agent::ImageAttachment {
+        name: format!("first.{}", first.ext),
+        mime: first.mime.to_string(),
+        data_base64: STANDARD.encode(&first.bytes),
+    };
+    let started = std::time::Instant::now();
+    let changed = block_on(generate(
+        &ImageTarget {
+            api: entry.api,
+            base_url: entry.base_url.expect("a built-in address"),
+            api_key: key,
+            model,
+        },
+        "The same picture with the paper boat yellow instead of red; keep everything else as it is.",
+        Aspect::Square,
+        Some(&reference),
+    ))
+    .unwrap_or_else(|e| panic!("{model} with a reference: {e}"));
+    eprintln!(
+        "live_eval: {model} changed it with the picture as reference: {} x {} in {:.1} s",
+        changed.width,
+        changed.height,
+        started.elapsed().as_secs_f64()
+    );
+    if let Ok(dir) = std::env::var("TEXTUS_EVAL_PICTURES_DIR") {
+        let dir = std::path::Path::new(&dir);
+        std::fs::write(
+            dir.join(format!("{model}-first.{}", first.ext)),
+            &first.bytes,
+        )
+        .ok();
+        std::fs::write(
+            dir.join(format!("{model}-changed.{}", changed.ext)),
+            &changed.bytes,
+        )
+        .ok();
+    }
 }
 
 #[test]
@@ -69,6 +122,60 @@ fn openai_makes_a_picture() {
 #[ignore = "spends money; needs GEMINI_API_KEY"]
 fn gemini_makes_a_picture() {
     one_picture("google", "GEMINI_API_KEY");
+}
+
+/// The ChatGPT sign-in (its plan's image allowance): a picture, then the
+/// same picture changed through an input image.
+#[test]
+#[ignore = "uses the ChatGPT plan's image allowance; needs the app's sign-in"]
+fn chatgpt_redoes_a_picture_from_it() {
+    use aicompat::providers::openai_codex::generate_image;
+    use base64::{engine::general_purpose::STANDARD, Engine};
+    let (token, account) = harness::chatgpt_sign_in();
+    let origin = crate::app_identity::ORIGINATOR;
+    let first = block_on(generate_image(
+        &token,
+        &account,
+        origin,
+        PROMPT,
+        Aspect::Square,
+        None,
+    ))
+    .expect("a picture");
+    let reference = aicompat::agent::ImageAttachment {
+        name: format!("first.{}", first.ext),
+        mime: first.mime.to_string(),
+        data_base64: STANDARD.encode(&first.bytes),
+    };
+    let started = std::time::Instant::now();
+    let changed = block_on(generate_image(
+        &token,
+        &account,
+        origin,
+        "The same picture with the paper boat yellow instead of red; keep everything else as it is.",
+        Aspect::Square,
+        Some(&reference),
+    ))
+    .expect("the picture changed");
+    eprintln!(
+        "live_eval: ChatGPT changed it with the picture as reference: {} x {} in {:.1} s",
+        changed.width,
+        changed.height,
+        started.elapsed().as_secs_f64()
+    );
+    if let Ok(dir) = std::env::var("TEXTUS_EVAL_PICTURES_DIR") {
+        let dir = std::path::Path::new(&dir);
+        std::fs::write(
+            dir.join(format!("chatgpt-first.{}", first.ext)),
+            &first.bytes,
+        )
+        .ok();
+        std::fs::write(
+            dir.join(format!("chatgpt-changed.{}", changed.ext)),
+            &changed.bytes,
+        )
+        .ok();
+    }
 }
 
 #[test]

@@ -15,7 +15,7 @@
 
 use crate::ai::agent::StreamEvent;
 use crate::ai::tools::{self, Access, ProposalLedger, Run, Tool, EDITING_MODES};
-use aicompat::agent::{AgentTurn, ToolCall, ToolOutput, ToolSpec};
+use aicompat::agent::{AgentTurn, ImageAttachment, ToolCall, ToolOutput, ToolSpec};
 use aicompat::images::{self as gen, Aspect, GeneratedImage, ImageApi, ImageTarget};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};

@@ -24,6 +24,10 @@ pub struct ImageRun {
     pub(crate) job: ImageJob,
     pub(crate) made: AtomicUsize,
     pub(crate) limit: usize,
+    /// The document's folder: a picture being redone is read from there,
+    /// for a service that changes it rather than draws anew
+    /// (ImageApi::takes_reference).
+    pub(crate) folder: Option<std::path::PathBuf>,
 }
 
 impl ImageRun {
@@ -56,6 +60,7 @@ impl ImageRun {
                 },
                 made: AtomicUsize::new(0),
                 limit: per_send(choice.limit),
+                folder: None,
             });
         }
         let model = Some(choice.model.trim())
@@ -90,6 +95,7 @@ impl ImageRun {
             },
             made: AtomicUsize::new(0),
             limit: per_send(choice.limit),
+            folder: None,
         })
     }
 }
@@ -112,6 +118,7 @@ impl ImageRun {
             },
             made: AtomicUsize::new(0),
             limit,
+            folder: None,
         }
     }
 
@@ -131,19 +138,32 @@ impl ImageRun {
             },
             made: AtomicUsize::new(0),
             limit,
+            folder: None,
         })
     }
 }
 
+impl ImageRun {
+    /// Pictures redone in this request are read from `doc_path`'s folder.
+    pub fn in_folder(mut self, doc_path: Option<&str>) -> Self {
+        self.folder = doc_path
+            .and_then(|p| std::path::Path::new(p).parent())
+            .map(std::path::Path::to_path_buf);
+        self
+    }
+}
+
 impl ImageJob {
-    /// One picture from the chosen service.
+    /// One picture from the chosen service - `reference` changed as
+    /// `prompt` says, where the service takes one.
     pub(crate) async fn generate(
         &self,
         prompt: &str,
         aspect: Aspect,
+        reference: Option<&ImageAttachment>,
     ) -> Result<GeneratedImage, gen::ImageError> {
         let Some(app) = self.app.as_ref().filter(|_| self.api == ImageApi::ChatGpt) else {
-            return gen::generate(&self.target(), prompt, aspect).await;
+            return gen::generate(&self.target(), prompt, aspect, reference).await;
         };
         let (access_token, account_id) = crate::auth::openai_codex::get_valid_credential(app)
             .await
@@ -158,6 +178,7 @@ impl ImageJob {
             crate::app_identity::ORIGINATOR,
             prompt,
             aspect,
+            reference,
         )
         .await
     }
@@ -197,9 +218,9 @@ impl ImageRun {
         args.remove("not_generated");
         let outcome = match self.check(&Value::Object(args.clone()), document, proposed) {
             Err(why) => Err(why),
-            Ok((prompt, aspect)) => {
+            Ok((prompt, aspect, reference)) => {
                 announce();
-                Ok(self.start(prompt, aspect))
+                Ok(self.start(prompt, aspect, reference))
             }
         };
         match outcome {
@@ -218,12 +239,17 @@ impl ImageRun {
 
     /// Starts making one picture in the background; its id, and the size
     /// it is asked for (the frame's shape until it comes).
-    pub(crate) fn start(&self, prompt: String, aspect: Aspect) -> (String, (u32, u32)) {
+    pub(crate) fn start(
+        &self,
+        prompt: String,
+        aspect: Aspect,
+        reference: Option<ImageAttachment>,
+    ) -> (String, (u32, u32)) {
         let id = begin();
         let job = self.job.clone();
         let made = id.clone();
         tauri::async_runtime::spawn(async move {
-            let slot = match job.generate(&prompt, aspect).await {
+            let slot = match job.generate(&prompt, aspect, reference.as_ref()).await {
                 Ok(image) => Slot::Ready(image),
                 Err(why) => Slot::Failed(why.to_string()),
             };
@@ -240,7 +266,7 @@ impl ImageRun {
         aspect: Aspect,
     ) -> Result<(String, (u32, u32)), String> {
         self.spend()?;
-        Ok(self.start(prompt, aspect))
+        Ok(self.start(prompt, aspect, None))
     }
 
     /// One of this send's pictures, or why there are none left.
@@ -253,13 +279,15 @@ impl ImageRun {
     }
 
     /// The call is fit to spend a picture on: a description, a place that
-    /// exists in the document, and pictures left in this send.
+    /// exists in the document, and pictures left in this send. With the
+    /// description and aspect, the picture a `replace` redoes, where the
+    /// service takes it.
     pub(crate) fn check(
         &self,
         args: &Value,
         document: &str,
         proposed: &ProposedText<'_>,
-    ) -> Result<(String, Aspect), String> {
+    ) -> Result<(String, Aspect, Option<ImageAttachment>), String> {
         let text = |key: &str| args.get(key).and_then(Value::as_str).unwrap_or("").trim();
         let prompt = text("prompt");
         if prompt.is_empty() {
@@ -277,12 +305,18 @@ impl ImageRun {
                 IMAGE_ACTIONS.join(", ")
             ));
         }
+        let mut reference = None;
         if action == "replace" {
             let anchor = text("anchor");
             if !is_picture_markdown(anchor) {
                 return Err("`replace` takes `block`, the id of a picture's own block - a picture replaces only a picture; put one next to text with insert_after.".into());
             }
             tools::check_anchor(document, args, anchor)?;
+            reference = self
+                .folder
+                .as_deref()
+                .filter(|_| self.job.api.takes_reference())
+                .and_then(|folder| local_picture(anchor, folder));
         }
         if matches!(action, "insert_after" | "insert_before") {
             let anchor = text("anchor");
@@ -307,7 +341,7 @@ impl ImageRun {
             })?,
         };
         self.spend()?;
-        Ok((prompt.to_string(), aspect))
+        Ok((prompt.to_string(), aspect, reference))
     }
 }
 
@@ -364,7 +398,7 @@ impl ImageRun {
 /// What the model is told about generate_image, with this request's limit.
 pub(crate) fn description(limit: usize) -> String {
     let (scheme, aspects) = (inline::PICTURE_SCHEME, Aspect::ALL.join(" "));
-    format!("Make a picture with the user's image model and propose it for the document: the user sees it in place, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked.\n\nHow many: each picture costs the user money, and this request may make at most {limit}. When the user says how many, make that many (up to {limit}); when they don't, make one, or - for a longer piece they asked to illustrate - one for each part that gains from a picture.\n\nNew text with pictures (an empty document, a new section, a piece to write and illustrate): don't call generate_image - write each picture into the text you propose with propose_edit, as a line of its own between paragraphs where it goes: `![alt]({scheme}ASPECT description)` - alt a short caption in the document's language, ASPECT one of {aspects}, then the full English description, as for `prompt`. Each picture starts being made the moment its line is written, while you go on writing; the user sees its frame there and accepts the text and its pictures together. These lines count toward the limit, and each describes a different picture.\n\nA picture for text already in the document goes insert_after the block it illustrates, named by its id as `block`; for text you proposed that the user hasn't accepted or rejected yet, quote `anchor` from that text instead. Between paragraphs, never inside a list, a table, a quote or a heading's line, and not two pictures in a row.\n\nRedoing a picture: to change or replace one already in the document, use `replace` with `block` the picture's id, and describe the new picture in full in `prompt` (what to keep, what to change). The user decides whether the old file goes once they accept. But when this request also rewrites the text the picture stands in - a translation, a rewrite of its section or of the whole document - don't call generate_image: in that rewrite's `text`, put the new picture where the old one stood, as its line `![alt]({scheme}ASPECT description)`. The text and its new picture are then one edit, and it shows as it is written.\n\nIf the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.")
+    format!("Make a picture with the user's image model and propose it for the document: the user sees it in place, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked.\n\nHow many: each picture costs the user money, and this request may make at most {limit}. When the user says how many, make that many (up to {limit}); when they don't, make one, or - for a longer piece they asked to illustrate - one for each part that gains from a picture.\n\nNew text with pictures (an empty document, a new section, a piece to write and illustrate): don't call generate_image - write each picture into the text you propose with propose_edit, as a line of its own between paragraphs where it goes: `![alt]({scheme}ASPECT description)` - alt a short caption in the document's language, ASPECT one of {aspects}, then the full English description, as for `prompt`. Each picture starts being made the moment its line is written, while you go on writing; the user sees its frame there and accepts the text and its pictures together. These lines count toward the limit, and each describes a different picture.\n\nA picture for text already in the document goes insert_after the block it illustrates, named by its id as `block`; for text you proposed that the user hasn't accepted or rejected yet, quote `anchor` from that text instead. Between paragraphs, never inside a list, a table, a quote or a heading's line, and not two pictures in a row.\n\nRedoing a picture: to change or replace one already in the document, use `replace` with `block` the picture's id, and describe the new picture in full in `prompt` (what to keep, what to change); where the image model can, it is given the old picture to change. The user decides whether the old file goes once they accept. But when this request also rewrites the text the picture stands in - a translation, a rewrite of its section or of the whole document - don't call generate_image: in that rewrite's `text`, put the new picture where the old one stood, as its line `![alt]({scheme}ASPECT description)`. The text and its new picture are then one edit, and it shows as it is written.\n\nIf the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.")
 }
 
 /// What the model is told about generate_image.

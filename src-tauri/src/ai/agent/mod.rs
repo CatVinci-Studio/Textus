@@ -223,7 +223,8 @@ async fn ai_agent_message_inner(
     };
     let plain_message = message.clone();
     // generate_image, while an image model is set.
-    let image_run = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), entry.id);
+    let image_run = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), entry.id)
+        .map(|run| run.in_folder(doc_path.as_deref()));
 
     let agent = route::agent_provider(&app, entry, model.clone(), thinking, web.native).await?;
     let result = match agent {
@@ -454,20 +455,10 @@ fn selected_picture(message: &str, doc_path: Option<&str>) -> Option<ImageAttach
         .split_once("</selected-text>")?
         .0
         .trim();
-    let rest = inner.strip_prefix("![")?;
-    let (_, src) = rest.split_once("](")?;
-    let src = src.strip_suffix(')')?;
-    // A title after the src, `![alt](src "title")`, goes.
-    let src = src.split(" \"").next()?.trim();
-    let src = src
-        .strip_prefix('<')
-        .and_then(|s| s.strip_suffix('>'))
-        .unwrap_or(src);
-    if src.is_empty() || src.contains("://") || src.starts_with("data:") {
+    if !inner.starts_with("![") {
         return None;
     }
-    let folder = Path::new(doc_path?).parent()?;
-    crate::ai::project::read_image(folder, src).ok()
+    crate::ai::images::local_picture(inner, Path::new(doc_path?).parent()?)
 }
 
 #[cfg(test)]

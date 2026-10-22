@@ -1,4 +1,4 @@
-use crate::agent::{AgentTurn, EventSink, StepResult, StepUsage, ToolSpec};
+use crate::agent::{AgentTurn, EventSink, ImageAttachment, StepResult, StepUsage, ToolSpec};
 use crate::capabilities::Thinking;
 use crate::images::{
     checked_image, decode_base64, gpt_image_size, Aspect, GeneratedImage, ImageError,
@@ -245,16 +245,23 @@ pub async fn agent_step(
 
 /// The request for one picture through the ChatGPT sign-in: the Responses
 /// API's image_generation tool, made the only thing the model may do.
-fn image_request_body(prompt: &str, aspect: Aspect) -> Value {
+fn image_request_body(prompt: &str, aspect: Aspect, reference: Option<&ImageAttachment>) -> Value {
+    let mut content = vec![json!({"type": "input_text", "text": prompt})];
+    if let Some(reference) = reference {
+        content.insert(
+            0,
+            json!({"type": "input_image", "image_url": reference.data_url()}),
+        );
+    }
     json!({
         "model": COMPLETION_MODEL,
         "store": false,
         // The ChatGPT backend only serves SSE.
         "stream": true,
-        "instructions": "Draw the picture the user describes with the image_generation tool, exactly as described. Say nothing.",
+        "instructions": "Draw the picture the user describes with the image_generation tool, exactly as described - with a picture given, change that picture as described, keeping the rest of it. Say nothing.",
         "input": [{
             "role": "user",
-            "content": [{"type": "input_text", "text": prompt}],
+            "content": content,
         }],
         "tools": [{
             "type": "image_generation",
@@ -320,6 +327,7 @@ pub async fn generate_image(
     originator: &str,
     prompt: &str,
     aspect: Aspect,
+    reference: Option<&ImageAttachment>,
 ) -> Result<GeneratedImage, ImageError> {
     let prompt = prompt.trim();
     if prompt.is_empty() {
@@ -333,7 +341,7 @@ pub async fn generate_image(
         .header("chatgpt-account-id", account_id)
         .header("originator", originator)
         .header("OpenAI-Beta", "responses=experimental")
-        .json(&image_request_body(prompt, aspect))
+        .json(&image_request_body(prompt, aspect, reference))
         .send()
         .await
         .map_err(|e| ImageError::Failed(format!("Couldn't reach ChatGPT: {e}")))?;
