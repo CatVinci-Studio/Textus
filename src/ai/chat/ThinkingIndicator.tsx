@@ -24,19 +24,25 @@ export function ThinkingIndicator({
     <div
       className={`agent-thinking${after ? " agent-thinking-after" : soon ? " agent-thinking-soon" : ""}`}
     >
+      {/* The dots say "still going": the label's own ellipsis would say
+          it twice. */}
       <span className="agent-thinking-label">
-        {waitedFor && seconds >= WAIT_SHOWN
-          ? `${label} · ${waitedFor(seconds)}`
-          : label}
+        {label.replace(TRAILING_DOTS, "")}
       </span>
       <span className="agent-thinking-dots">
         <span />
         <span />
         <span />
       </span>
+      {waitedFor && seconds >= WAIT_SHOWN && (
+        <span className="agent-thinking-waited">{waitedFor(seconds)}</span>
+      )}
     </div>
   );
 }
+
+/** A label's closing ellipsis ("Thinking…", "思考中..."). */
+const TRAILING_DOTS = /\s*(…|\.\.\.)$/;
 
 /** Seconds of stillness after which the indicator counts them. */
 const WAIT_SHOWN = 5;

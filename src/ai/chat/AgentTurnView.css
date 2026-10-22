@@ -341,7 +341,7 @@ button.agent-context-chip:hover {
   align-self: flex-start;
   font-size: var(--text-sm);
   color: var(--editor-muted);
-  font-style: italic;
+  /* Upright: a slanted CJK label is a faked italic, and reads as broken. */
   padding: 4px 6px;
 }
 

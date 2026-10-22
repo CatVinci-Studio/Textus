@@ -848,9 +848,10 @@
 }
 
 /* Not decidable yet - arguments still streaming or the typewriter still
-   revealing the text in the document. */
+   revealing the text in the document. Upright, as the thinking row: a
+   slanted CJK label is a faked italic. */
 .agent-proposal-status-streaming {
-  font-style: italic;
+  opacity: 0.85;
 }
 
 .agent-proposal-status-accepted {
@@ -1140,6 +1141,15 @@
 .agent-thinking-dots {
   display: inline-flex;
   gap: 3px;
+}
+
+/* How long nothing has moved: after the dots, quieter than the label, its
+   digits one width so the count doesn't jiggle as it ticks. */
+.agent-thinking-waited {
+  margin-left: 2px;
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
 }
 
 .agent-thinking-dots span {
