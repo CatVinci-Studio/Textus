@@ -30,7 +30,7 @@ function proposal(args: object) {
 async function open(page: Page, diagramEngine = "mermaid") {
   await openApp(page, {
     settings: { language: "en", diagramEngine },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "The first paragraph.\n\nThe second paragraph.");
 }

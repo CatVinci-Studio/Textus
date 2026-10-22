@@ -26,7 +26,7 @@ async function open(
   await openApp(page, {
     colorScheme,
     settings: { language },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
 }
 

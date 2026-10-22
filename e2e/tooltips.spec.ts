@@ -20,7 +20,7 @@ async function open(page: Page) {
     (window as unknown as { __devInvokeResults: unknown }).__devInvokeResults =
       { ai_can_think_deeper: true };
   });
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await expect(deepThinking(page)).toBeVisible();
 }
 

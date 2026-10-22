@@ -7,7 +7,7 @@ import { stepIndexOf, type TutorialStepId } from "./tutorial-steps";
 import { installTestLocalStorage } from "../dev/test-local-storage";
 import { sendTourSignal } from "../utils/events";
 
-const KEY = "levis-tutorial-progress";
+const KEY = "textus-tutorial-progress";
 const saved = () => JSON.parse(localStorage.getItem(KEY) ?? "null");
 
 function resumeAt(stepId: TutorialStepId, extra: object = {}) {

@@ -183,7 +183,7 @@ test("a reply landing while a Textus AI edit is on show is dropped", async ({
   await page.setViewportSize({ width: 1400, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: "inline" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await holdCompletions(page);
   await pasteMarkdown(page, ORIGINAL);

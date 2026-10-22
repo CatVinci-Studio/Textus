@@ -106,7 +106,7 @@ function Harness({
 
 function resumeAt(stepId: string, extra: object = {}) {
   localStorage.setItem(
-    "levis-tutorial-progress",
+    "textus-tutorial-progress",
     JSON.stringify({ active: true, stepId, tabId: "practice", ...extra }),
   );
 }

@@ -31,7 +31,7 @@ test("a reply that ran out of steps offers Continue, which asks it to go on", as
 }) => {
   await openApp(page, {
     settings: { language: "zh" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "一篇很长的稿子。");
   await mockInvoke(page, {

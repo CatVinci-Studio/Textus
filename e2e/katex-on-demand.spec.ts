@@ -64,7 +64,7 @@ test("a formula in a Textus AI proposal is drawn as soon as KaTeX loads", async 
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "The first paragraph.\n\nThe second paragraph.");
   // KaTeX arrives well after the proposal is shown, as on a slow disk.

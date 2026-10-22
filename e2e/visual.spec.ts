@@ -12,7 +12,7 @@ test("the tutorial's sidebar lesson highlights the sidebar's outline", async ({
 }) => {
   await openApp(page, {
     storage: {
-      "levis-tutorial-progress": JSON.stringify({
+      "textus-tutorial-progress": JSON.stringify({
         active: true,
         stepId: "sidebar-export",
         tabId: null,
@@ -85,7 +85,7 @@ test("an agent reply shows a reasoned edit, a sentence picker and a comment", as
 }) => {
   // Wide enough for the margin, where the sentences and the note go.
   await page.setViewportSize({ width: 1440, height: 900 });
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(page, SAMPLE_DOC);
   const anchor =
     "这项研究在三个街区进行。我们花了整整两个月的时间，和住在这些街区里的居民进行了一对一的、比较深入的访谈。一共访谈了四十六位居民，内容涵盖了很多方面。";
@@ -160,7 +160,7 @@ test("the last sentence decided in the text applies the edit", async ({
 }) => {
   // No room for a margin: the replacements and their ✓ / ✕ are in the text.
   await page.setViewportSize({ width: 900, height: 780 });
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(page, SAMPLE_DOC);
   const anchor =
     "这项研究在三个街区进行。我们花了整整两个月的时间，和住在这些街区里的居民进行了一对一的、比较深入的访谈。一共访谈了四十六位居民，内容涵盖了很多方面。";
@@ -207,7 +207,7 @@ test("the last sentence decided in the text applies the edit", async ({
 test("an accepted new table row and nested item land inside the table and list", async ({
   page,
 }) => {
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(
     page,
     "| Component | Owner |\n| --- | --- |\n| Search | Tom |\n\n- Transport\n  - WebSocket\n\nThe end.",
@@ -270,7 +270,7 @@ test("an accepted new table row and nested item land inside the table and list",
 test("a pending replace keeps its strike on its text while the user types above it", async ({
   page,
 }) => {
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(page, "Alpha one.\n\nBravo two words here.");
   await mockInvoke(page, {
     ai_agent_message: [
@@ -400,7 +400,7 @@ test("Quick Ask has its own conversation and hands it to the panel", async ({
   page,
 }) => {
   // The panel is open: Quick Ask still opens at the caret.
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(page, SAMPLE_DOC);
   await mockInvoke(page, {
     ai_agent_message: [
@@ -712,7 +712,7 @@ test("the review bar switches how revisions show, as Word's markup views", async
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(page, SAMPLE_DOC);
   const anchor =
     "这项研究在三个街区进行。我们花了整整两个月的时间，和住在这些街区里的居民进行了一对一的、比较深入的访谈。一共访谈了四十六位居民，内容涵盖了很多方面。";

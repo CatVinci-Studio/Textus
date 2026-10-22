@@ -34,7 +34,7 @@ test("an edit of a proposal not decided yet goes into it, and one Accept takes b
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "The harbour.");
   await mockInvoke(page, {
@@ -82,7 +82,7 @@ test("an edit of the text a rewrite replaces goes into the rewrite", async ({
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(
     page,
@@ -126,7 +126,7 @@ test("a new version of the passage a rewrite replaces takes the rewrite's place"
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(
     page,

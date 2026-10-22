@@ -12,7 +12,7 @@ const composer = (page: Page) => page.locator(".agent-panel-view textarea");
 async function open(page: Page) {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "A short note.");
   // Each reply takes a moment, long enough to send more meanwhile.

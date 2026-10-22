@@ -126,7 +126,7 @@ test("an AI edit and a review note on folded text open the fold", async ({
   // Wide enough for the margin, where the note goes.
   await page.setViewportSize({ width: 1440, height: 900 });
   const { editor, hidden } = await openFolded(page, {
-    "levis-agent-panel-open": "1",
+    "textus-agent-panel-open": "1",
   });
   await mockInvoke(page, {
     ai_agent_message: [

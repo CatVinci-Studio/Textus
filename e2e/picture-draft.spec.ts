@@ -90,7 +90,7 @@ const RAW = JSON.stringify({
 async function open(page: Page) {
   await openApp(page, {
     settings: { language: "en", imageModelProvider: "openai" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, `${FIRST}\n\nThe second paragraph.`);
   await mockInvoke(page, {
@@ -241,7 +241,7 @@ test("a picture redone in place shows in the document and can be accepted", asyn
   const OLD = "![Old harbour](images/old.png)";
   await openApp(page, {
     settings: { language: "en", imageModelProvider: "openai" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, `${FIRST}\n\n${OLD}\n\nThe second paragraph.`);
   await mockInvoke(page, {

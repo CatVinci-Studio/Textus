@@ -55,7 +55,7 @@ function focusedIn(page: Page, selector: string) {
 test("F6 and Shift+F6 go round the regions and back to the caret", async ({
   page,
 }) => {
-  await open(page, { "levis-agent-panel-open": "1" });
+  await open(page, { "textus-agent-panel-open": "1" });
   await openFolder(page);
   await page.locator(editor).click();
   await page.keyboard.type("Hello");
@@ -204,7 +204,7 @@ test("Textus AI's changes are stepped through and decided from the keyboard", as
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await open(page, { "levis-agent-panel-open": "1" });
+  await open(page, { "textus-agent-panel-open": "1" });
   const original = "One cat sat. Two dogs ran. Three birds sang.";
   await pasteMarkdown(page, original);
   await mockInvoke(page, {

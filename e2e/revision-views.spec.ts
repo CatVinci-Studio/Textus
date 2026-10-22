@@ -62,7 +62,7 @@ async function open(page: Page, animations = false) {
   await page.setViewportSize({ width: 1800, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: "inline" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
     animations,
   });
 }

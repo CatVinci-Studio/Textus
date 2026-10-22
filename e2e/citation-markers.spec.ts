@@ -17,7 +17,7 @@ test("citation markers never show while a proposal streams or once it is taken",
 }) => {
   await openApp(page, {
     settings: { language: "zh" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "开头。");
   await page.evaluate((text) => {

@@ -85,7 +85,7 @@ const NOTES = {
 
 type Lang = keyof typeof UI;
 
-const PROGRESS = "levis-tutorial-progress";
+const PROGRESS = "textus-tutorial-progress";
 
 const at = (stepId: string, extra: Record<string, unknown> = {}) => ({
   [PROGRESS]: JSON.stringify({ active: true, stepId, tabId: null, ...extra }),

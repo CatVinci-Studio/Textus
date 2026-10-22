@@ -19,7 +19,7 @@ test("Use this theme installs the reply's theme and applies it", async ({
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   const message = "/theme a calm dark page for night writing";
   await mockInvoke(page, {

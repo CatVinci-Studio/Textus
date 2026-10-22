@@ -59,7 +59,7 @@ async function scriptAgent(page: Page, ms: number) {
 
 test("Deep thinking is offered, sent, and stays on", async ({ page }) => {
   await canThinkDeeper(page, true);
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await expect(button(page)).toHaveAttribute("aria-pressed", "false");
   await button(page).click();
   await expect(button(page)).toHaveAttribute("aria-pressed", "true");
@@ -88,7 +88,7 @@ test("no Deep thinking button for a model that can't think deeper", async ({
   await canThinkDeeper(page, false);
   await openApp(page, {
     storage: {
-      "levis-agent-panel-open": "1",
+      "textus-agent-panel-open": "1",
       "textus-agent-deep-thinking": "1",
     },
   });
@@ -119,7 +119,7 @@ test("the thinking line counts seconds, shows the reasoning live, then folds", a
   page,
 }) => {
   await canThinkDeeper(page, true);
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(page, "One line.");
   await scriptAgent(page, 2_600);
   await composer(page).fill("Which reading is right?");
@@ -145,7 +145,7 @@ test("closing a live thought keeps the conversation's next ones closed", async (
   page,
 }) => {
   await canThinkDeeper(page, true);
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(page, "One line.");
   await scriptAgent(page, 1_500);
   await composer(page).fill("Which reading is right?");

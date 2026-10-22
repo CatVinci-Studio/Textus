@@ -1026,9 +1026,9 @@ for (const lang of LANGS) {
           library: s.library,
         },
         storage: {
-          "levis-agent-panel-open": "1",
+          "textus-agent-panel-open": "1",
           ...(s.panelWidth
-            ? { "levis-agent-panel-width": String(s.panelWidth) }
+            ? { "textus-agent-panel-width": String(s.panelWidth) }
             : {}),
         },
       });

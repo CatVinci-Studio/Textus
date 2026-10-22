@@ -21,7 +21,7 @@ async function open(page: Page, picture: string) {
   );
   await openApp(page, {
     settings: { language: "en", imageModelProvider: "openai" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   const path = "/notes/rain.md";
   await page.evaluate(

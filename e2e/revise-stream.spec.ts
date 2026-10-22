@@ -118,7 +118,7 @@ async function open(
   await page.setViewportSize({ width: 1400, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: "inline", ...settings },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
     animations,
   });
   await pasteMarkdown(page, ORIGINAL);
@@ -235,7 +235,7 @@ test("a streaming CJK rewrite completes each sentence at 。！？ in place", as
   await page.setViewportSize({ width: 1400, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: "inline" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, zh);
   await streamRevise(
@@ -341,7 +341,7 @@ test("two rewrites in a row each stream in by sentence", async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: "inline" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   const second = "A gull cried. It was far off. The tide was turning.";
   await pasteMarkdown(page, `${ORIGINAL}\n\n${second}`);

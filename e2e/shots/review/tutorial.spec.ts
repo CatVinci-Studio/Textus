@@ -13,7 +13,7 @@ test.skip(!DIR, "set TEXTUS_SHOTS_DIR to take the screenshots");
 test.setTimeout(240_000);
 
 const at = (stepId: string, extra: Record<string, unknown> = {}) => ({
-  "levis-tutorial-progress": JSON.stringify({
+  "textus-tutorial-progress": JSON.stringify({
     active: true,
     stepId,
     tabId: null,

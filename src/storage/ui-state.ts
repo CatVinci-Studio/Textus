@@ -91,17 +91,17 @@ const LEGACY: {
   };
 } = {
   tutorialProgress: {
-    key: "levis-tutorial-progress",
+    key: "textus-tutorial-progress",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },
   agentPanelOpen: {
-    key: "levis-agent-panel-open",
+    key: "textus-agent-panel-open",
     decode: (raw) => raw === "1",
     encode: (value) => (value ? "1" : "0"),
   },
   agentPanelWidth: {
-    key: "levis-agent-panel-width",
+    key: "textus-agent-panel-width",
     decode: (raw) => Number(raw),
     encode: (value) => String(Math.round(value)),
   },
@@ -123,17 +123,17 @@ const LEGACY: {
     encode: (value) => value,
   },
   iosRecentDocuments: {
-    key: "levis-ios-recent-documents",
+    key: "textus-ios-recent-documents",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },
   documentListView: {
-    key: "levis.documentListView",
+    key: "textus.documentListView",
     decode: (raw) => raw,
     encode: (value) => value,
   },
   recentSkills: {
-    key: "levis-recent-skills",
+    key: "textus-recent-skills",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },

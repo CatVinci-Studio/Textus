@@ -121,7 +121,7 @@ for (const scheme of ["light", "dark"] as const) {
   test(`desktop ${scheme}`, async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openApp(page, {
-      storage: { "levis-agent-panel-open": "1" },
+      storage: { "textus-agent-panel-open": "1" },
       colorScheme: scheme,
     });
     await paste(page);
@@ -241,7 +241,7 @@ for (const [themeId, scheme] of [
   test(`theme ${themeId} ${scheme}`, async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openApp(page, {
-      storage: { "levis-agent-panel-open": "1" },
+      storage: { "textus-agent-panel-open": "1" },
       settings: { themeId },
       colorScheme: scheme,
     });
@@ -259,7 +259,7 @@ test("theme imported typora", async ({ page }) => {
     "utf8",
   );
   await page.setViewportSize({ width: 1440, height: 900 });
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   // Apply the theme's derived chrome the way an import does.
   await page.evaluate(async (css) => {
     // The dev server's own module, as the app loads it.
@@ -286,7 +286,7 @@ for (const revisionDisplay of ["inline", "original", "new", "final"]) {
   test(`revision display ${revisionDisplay}`, async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openApp(page, {
-      storage: { "levis-agent-panel-open": "1" },
+      storage: { "textus-agent-panel-open": "1" },
       settings: { revisionDisplay },
     });
     await paste(page);

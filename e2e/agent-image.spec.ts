@@ -44,7 +44,7 @@ const made = {
 async function open(page: Page, imageModelProvider = "openai") {
   await openApp(page, {
     settings: { language: "en", imageModelProvider },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, `${FIRST}\n\nThe second paragraph.`);
 }
@@ -351,7 +351,7 @@ test("a picture written into its text is one proposal with it, its frame until t
 }) => {
   await openApp(page, {
     settings: { language: "en", imageModelProvider: "openai" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await writeWithPictureInside(page, 1500);
   const proposal = page.locator(`${editor} .pending-insert`);
@@ -381,7 +381,7 @@ test("a picture in the text that wasn't made is left out when the text is accept
 }) => {
   await openApp(page, {
     settings: { language: "en", imageModelProvider: "openai" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await writeWithPictureInside(
     page,
@@ -407,7 +407,7 @@ test("a picture asked for next to text not accepted yet joins that text, which s
 }) => {
   await openApp(page, {
     settings: { language: "en", imageModelProvider: "openai" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   const draft =
     "The tide went out before dawn.\n\nThe boats came back at dusk.";
@@ -551,7 +551,7 @@ async function openSaved(page: Page, settings: Record<string, unknown> = {}) {
   );
   await openApp(page, {
     settings: { language: "en", ...settings },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   const path = "/notes/harbour.md";
   await page.evaluate(
@@ -867,7 +867,7 @@ test("a picture written into streaming text shows as its frame from the moment i
 }) => {
   await openApp(page, {
     settings: { language: "en", imageModelProvider: "openai" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
     animations: true,
   });
   await mockInvoke(page, {

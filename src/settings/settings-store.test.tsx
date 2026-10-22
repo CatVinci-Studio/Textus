@@ -225,7 +225,7 @@ describe("file-backed settings", () => {
       JSON.stringify({ theme: "dark", aiProvider: "codex" }),
     );
     localStorage.setItem("levis-chat-history", JSON.stringify([{ id: "c" }]));
-    localStorage.setItem("levis-agent-panel-open", "1");
+    localStorage.setItem("textus-agent-panel-open", "1");
     vi.mocked(storage.settingsImportLegacy).mockResolvedValue({
       accepted: true,
       value: { theme: "dark", aiProvider: "openai", languageChosen: true },

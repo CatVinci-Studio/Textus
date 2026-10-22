@@ -12,7 +12,7 @@ test("a review note's bold term shows bold, without its asterisks", async ({
   await page.setViewportSize({ width: 1800, height: 900 });
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "When the relief crew came up, I wrote it down.");
   await mockInvoke(page, {

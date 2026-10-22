@@ -21,7 +21,7 @@ const asked = (page: Page) =>
 async function open(page: Page, suggestNextMessage = true) {
   await openApp(page, {
     settings: { language: "zh", suggestNextMessage },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "第一章写完了。");
   await mockInvoke(page, {

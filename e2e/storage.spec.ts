@@ -237,7 +237,7 @@ test("the first launch after the move hands localStorage over once", async ({
     settings: { theme: "dark", contentWidth: "full" },
     storage: {
       "levis-clipboard-history": JSON.stringify([{ text: "kept", at: 1 }]),
-      "levis-agent-panel-open": "1",
+      "textus-agent-panel-open": "1",
     },
   });
   // Used straight from localStorage while the import is on its way.

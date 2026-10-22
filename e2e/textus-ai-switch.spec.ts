@@ -187,7 +187,7 @@ test("while Textus AI is off, no request reaches an AI service, from launch on",
 test("turning Textus AI off clears what it showed and stops a running reply", async ({
   page,
 }) => {
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   // A reply that starts and then never ends until it is cancelled, as
   // Rust's ai_cancel ends the request.
   await page.evaluate(() => {

@@ -109,7 +109,7 @@ test("a sidebar tab and a Settings page added from outside take their places", a
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-sidebar-open": "1" },
+    storage: { "textus-sidebar-open": "1" },
   });
   await api(page);
   await page.evaluate(() => {

@@ -11,7 +11,7 @@ const AI_NAME = "Textus AI";
 async function openWithPanel(page: Page, language: string) {
   await openApp(page, {
     settings: { language },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   const input = page.locator(".agent-panel .inline-chat-input");
   await expect(input).toBeVisible();

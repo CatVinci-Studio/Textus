@@ -10,7 +10,7 @@ import { openApp, pasteMarkdown } from "./helpers";
 test("a streamed edit whose text starts empty still becomes decidable", async ({
   page,
 }) => {
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(page, "Alpha line one.\n\nBeta line two.\n\nGamma.");
   await page.evaluate(() => {
     type Send = (event: unknown) => void;
@@ -124,7 +124,7 @@ test("a streamed edit whose text starts empty still becomes decidable", async ({
 });
 
 test("an edit the backend refused never stays on screen", async ({ page }) => {
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(page, "Alpha line one.\n\nBeta line two.");
   await page.evaluate(() => {
     type Send = (event: unknown) => void;
@@ -224,7 +224,7 @@ test("a reply that arrives in a few large chunks still flows in, and ends as rec
   // Animations on: the reveal is motion, and the helpers' switch-off
   // stylesheet would show each chunk whole.
   await openApp(page, {
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
     animations: true,
   });
   const reply =
@@ -295,7 +295,7 @@ test("the empty-document hint gives way to text the AI is writing", async ({
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await editor.click();

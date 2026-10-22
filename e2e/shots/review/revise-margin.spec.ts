@@ -31,7 +31,7 @@ async function start(
   await openApp(page, {
     colorScheme,
     settings: { language: "zh", revisionDisplay: display },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, anchor);
   await streamRevise(page, [{ id: "s1", args }], {

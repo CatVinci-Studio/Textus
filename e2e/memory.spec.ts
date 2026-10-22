@@ -36,7 +36,7 @@ test("a new library entry opens in a tab with the panel still on Memory, its tem
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   // What projectLibraryTemplate writes (i18n/locales/en.ts).
   const note =
@@ -131,7 +131,7 @@ test("what Textus AI remembers shows under its reply, and Undo takes it back", a
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   const message = "Always use British spelling";
   await mockInvoke(page, {
@@ -180,7 +180,7 @@ test("with Remember automatically off, nothing is asked after the reply", async 
 }) => {
   await openApp(page, {
     settings: { language: "en", rememberAutomatically: false },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await mockInvoke(page, {
     load_agent_workspace: memoryWorkspace(false),
@@ -204,7 +204,7 @@ test("the Memory tab lists what was remembered, and moves and deletes it", async
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await mockInvoke(page, {
     load_agent_workspace: memoryWorkspace(),
@@ -245,7 +245,7 @@ test("with Remember automatically off, the Memory tab says so", async ({
 }) => {
   await openApp(page, {
     settings: { language: "en", rememberAutomatically: false },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await mockInvoke(page, {
     load_agent_workspace: memoryWorkspace(false),

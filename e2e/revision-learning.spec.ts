@@ -81,7 +81,7 @@ test("rejecting 「」 made “” three times offers to remember it, and Rememb
   // click saves.
   await openApp(page, {
     settings: { language: "en", rememberAutomatically: false },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, NOTE);
 
@@ -166,7 +166,7 @@ test("a rewrite superseded by a new request teaches nothing", async ({
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, NOTE);
   for (const id of ["s1", "s2", "s3"]) {

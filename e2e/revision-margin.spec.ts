@@ -24,7 +24,7 @@ async function open(
   await page.setViewportSize({ width, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: display },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, markdown);
 }

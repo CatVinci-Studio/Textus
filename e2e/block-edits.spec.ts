@@ -98,7 +98,7 @@ test("an edit by block shows while it streams, before the call completes", async
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, DOC);
   const ids = await blockIds(page, DOC);
@@ -136,7 +136,7 @@ test("a few words named inside a block change in it as they stream", async ({
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, DOC);
   const ids = await blockIds(page, DOC);
@@ -177,7 +177,7 @@ for (const [name, setup] of [
     if (!setup) await page.emulateMedia({ reducedMotion: "reduce" });
     await openApp(page, {
       settings: { language: "en", ...setup },
-      storage: { "levis-agent-panel-open": "1" },
+      storage: { "textus-agent-panel-open": "1" },
     });
     await pasteMarkdown(page, DOC);
     const ids = await blockIds(page, DOC);
@@ -222,7 +222,7 @@ test("a light polish shows where it is: the original sentence it has reached is 
     "# Night hours\n\nThe library opened late on Wednesdays. Students came most. Some stayed until ten.";
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, doc);
   const ids = await blockIds(page, doc);

@@ -111,7 +111,7 @@ for (const lang of ["en", "zh"] as const) {
           language: lang,
           theme: theme === "dark" ? "dark" : "light",
         },
-        storage: { "levis-agent-panel-open": "1" },
+        storage: { "textus-agent-panel-open": "1" },
       });
       const library = [
         {

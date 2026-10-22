@@ -29,7 +29,7 @@ test("a note named by its block shows in the margin while the reply is still com
   await page.setViewportSize({ width: 1800, height: 900 });
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, DOC);
   const ids = await blockIds(page, DOC);

@@ -184,7 +184,7 @@ test("a heading key typed in the AI panel leaves the document alone", async ({
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await caretInLine(page);
   const composer = page.locator(".agent-panel-view textarea");

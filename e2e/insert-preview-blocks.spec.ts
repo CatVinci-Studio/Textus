@@ -68,7 +68,7 @@ test("appended text is shown as its blocks while it streams and before it is tak
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "Prior work found this.");
   await streamAppend(page, TEXT);
