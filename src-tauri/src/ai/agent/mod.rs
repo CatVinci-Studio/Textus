@@ -14,11 +14,14 @@ use aicompat::agent::{
 };
 use aicompat::capabilities::ThinkingLevel;
 use serde::{Deserialize, Serialize};
-use std::future::Future;
 use std::path::Path;
-use std::pin::Pin;
 use tauri::ipc::Channel;
 use tauri::AppHandle;
+
+mod events;
+pub(crate) use events::*;
+mod settle;
+pub(crate) use settle::*;
 
 mod context;
 mod history;
@@ -26,223 +29,6 @@ mod prompt;
 pub(crate) use context::*;
 pub(crate) use history::*;
 pub(crate) use prompt::*;
-
-/// One live fragment of an in-flight `ai_agent_message`, pushed to the
-/// invoking window over a Tauri channel while the agent loop runs. Purely
-/// additive display data: the command still resolves with the complete turn
-/// list, which remains the authoritative result the frontend appends to its
-/// history - a dropped or ignored event costs liveness, never correctness.
-/// Mirrored by `StreamEvent` in platform/ipc.ts - the two must stay in sync.
-#[derive(Clone, Serialize)]
-#[serde(
-    tag = "type",
-    rename_all = "camelCase",
-    rename_all_fields = "camelCase"
-)]
-pub enum StreamEvent {
-    /// A chunk of the assistant's prose for the turn being generated.
-    Delta { text: String },
-    /// The model opened a tool call; its arguments follow as ToolArgsDelta.
-    ToolStart { call_id: String, name: String },
-    /// A raw fragment of a tool call's JSON `arguments` string.
-    ToolArgsDelta { call_id: String, delta: String },
-    /// A completed intermediate turn (ToolCall/ToolResult) as it lands.
-    Turn { turn: AgentTurn },
-    /// The step being streamed came back garbled and is asked for again
-    /// (aicompat's run_agent_loop): drop what it streamed - its prose and
-    /// its proposal drafts - and show the new attempt instead.
-    Retry,
-    /// The model is thinking: a fragment of its reasoning, or "" when the
-    /// provider only says that it is. Shown above the reply, never kept.
-    Thinking { text: String },
-    /// A picture written into a propose_edit's text (images::inline) is
-    /// being made: its `line` there stands for picture `id` from now on.
-    /// Sent before the fragment that completes the line.
-    Picture {
-        call_id: String,
-        line: String,
-        id: String,
-        width: u32,
-        height: u32,
-    },
-}
-
-/// Forwards a provider-level fragment onto the frontend channel. Send
-/// failures are ignored deliberately - a closed webview mid-request must
-/// not fail the agent loop, which still returns turns for the history.
-/// A native search citation goes to the request's sources instead (it is
-/// shown with the finished reply).
-fn forward(
-    channel: &Channel<StreamEvent>,
-    web: &WebPlan,
-    pictures: Option<&InlinePictures<'_>>,
-    event: ProviderEvent<'_>,
-) {
-    for picture in pictures.map(|p| p.observe(&event)).unwrap_or_default() {
-        let _ = channel.send(picture);
-    }
-    let event = match event {
-        ProviderEvent::Citation { url, title } => {
-            web.cite(url, title);
-            return;
-        }
-        ProviderEvent::Text(text) => StreamEvent::Delta {
-            text: text.to_string(),
-        },
-        ProviderEvent::ToolStart { call_id, name } => StreamEvent::ToolStart {
-            call_id: call_id.to_string(),
-            name: name.to_string(),
-        },
-        ProviderEvent::ToolArgs { call_id, delta } => StreamEvent::ToolArgsDelta {
-            call_id: call_id.to_string(),
-            delta: delta.to_string(),
-        },
-        ProviderEvent::Thinking(text) => StreamEvent::Thinking {
-            text: text.to_string(),
-        },
-    };
-    let _ = channel.send(event);
-}
-
-/// A reply's text with its edit tags split out (edit_tags::StreamTags),
-/// forwarded as the text and tool-call fragments it stands for - so the
-/// pictures in a tag begin as its lines come in, as in a tool call's.
-fn forward_tags(
-    channel: &Channel<StreamEvent>,
-    web: &WebPlan,
-    pictures: Option<&InlinePictures<'_>>,
-    out: Vec<edit_tags::Outgoing>,
-) {
-    for piece in out {
-        let event = match &piece {
-            edit_tags::Outgoing::Text(text) => ProviderEvent::Text(text),
-            edit_tags::Outgoing::ToolStart { call_id } => ProviderEvent::ToolStart {
-                call_id,
-                name: edit_tags::EDIT_TOOL,
-            },
-            edit_tags::Outgoing::ToolArgs { call_id, delta } => {
-                ProviderEvent::ToolArgs { call_id, delta }
-            }
-        };
-        forward(channel, web, pictures, event);
-    }
-}
-
-/// Forwards what the agent loop reports onto the frontend channel, each
-/// turn as the frontend's history keeps it (see `forward` on send errors).
-fn report(channel: &Channel<StreamEvent>) -> impl FnMut(LoopEvent<'_>) + '_ {
-    move |event| {
-        let event = match event {
-            LoopEvent::Turn(turn) => StreamEvent::Turn {
-                turn: for_history(turn.clone()),
-            },
-            LoopEvent::Retry => StreamEvent::Retry,
-        };
-        let _ = channel.send(event);
-    }
-}
-
-/// Proposal post-processing (rules::postfix, CATALOGUE.md §3.13): the
-/// `text` of each propose_edit call in a step, made to follow the P0
-/// conventions the document already follows (full-width punctuation in a
-/// Chinese document that uses it, attached Korean particles...). Done here,
-/// before the call reaches the tool, the history and the frontend - whose
-/// proposal card takes the completed call's arguments as authoritative -
-/// so the user sees the fixed text. Returns the rules applied (the live
-/// eval records them, so prompt regressions stay visible).
-pub(crate) fn postfix_step(
-    result: StepResult,
-    document: &str,
-    conventions: &Conventions,
-) -> (StepResult, Vec<&'static str>) {
-    let StepResult::ToolCalls(calls) = result else {
-        return (result, Vec::new());
-    };
-    let mut applied = Vec::new();
-    // An edit naming its block (doc_blocks.rs) becomes one quoting it first,
-    // so everything after - the tool, the history, the frontend - sees
-    // anchors as before.
-    let blocks = doc_blocks::split(document);
-    let calls = calls
-        .into_iter()
-        .map(|call| match call {
-            AgentTurn::ToolCall {
-                call_id,
-                name,
-                arguments,
-                reasoning,
-            } if name == tools::PROPOSE_EDIT_TOOL_NAME => {
-                let arguments = doc_blocks::resolve_edit_arguments(document, &blocks, &arguments);
-                let arguments = match crate::ai::rules::postfix::proposal_arguments(
-                    &arguments,
-                    document,
-                    conventions,
-                ) {
-                    Some((fixed, rules)) => {
-                        applied.extend(rules);
-                        fixed
-                    }
-                    None => arguments,
-                };
-                AgentTurn::ToolCall {
-                    call_id,
-                    name,
-                    arguments,
-                    reasoning,
-                }
-            }
-            // A comment or a picture names its block too.
-            AgentTurn::ToolCall {
-                call_id,
-                name,
-                arguments,
-                reasoning,
-            } if name == tools::ADD_COMMENT_TOOL_NAME
-                || name == crate::ai::images::GENERATE_IMAGE_TOOL_NAME =>
-            {
-                AgentTurn::ToolCall {
-                    arguments: doc_blocks::resolve_target_arguments(document, &blocks, &arguments),
-                    call_id,
-                    name,
-                    reasoning,
-                }
-            }
-            other => other,
-        })
-        .collect();
-    (StepResult::ToolCalls(calls), applied)
-}
-
-pub(crate) type StepFuture<'a> =
-    Pin<Box<dyn Future<Output = Result<StepResult, String>> + Send + 'a>>;
-
-/// A provider step with [`postfix_step`] applied to what it returns, its
-/// native search citations numbered (WebPlan::finish_step), and the
-/// pictures written into its text placed (InlinePictures::place).
-fn with_postfix<'a, S, F>(
-    mut step: S,
-    document: &'a str,
-    conventions: &'a Conventions,
-    web: &'a WebPlan,
-    pictures: Option<&'a InlinePictures<'a>>,
-) -> impl FnMut(Vec<AgentTurn>) -> StepFuture<'a> + 'a
-where
-    S: FnMut(Vec<AgentTurn>) -> F + 'a,
-    F: Future<Output = Result<StepResult, String>> + Send + 'a,
-{
-    move |turns| {
-        let fut = step(turns);
-        Box::pin(async move {
-            fut.await.map(|r| {
-                let r = postfix_step(web.finish_step(r), document, conventions).0;
-                match pictures {
-                    Some(pictures) => pictures.place(r),
-                    None => r,
-                }
-            })
-        })
-    }
-}
 
 /// The system prompt with what it says about the web, when search is on.
 fn with_web_section(instructions: String, web: &WebPlan) -> String {
@@ -519,32 +305,30 @@ async fn ai_agent_message_inner(
                 let channel = on_event.clone();
                 let inline = inline.as_ref();
                 let number = steps.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                let (document, conventions) = (&document, &conventions);
                 async move {
-                    let tags =
-                        edits.then(|| std::sync::Mutex::new(edit_tags::StreamTags::new(number)));
-                    let sink = |e: ProviderEvent<'_>| match (&tags, e) {
-                        (Some(tags), ProviderEvent::Text(text)) => {
-                            let out = tags.lock().unwrap_or_else(|e| e.into_inner()).text(text);
-                            forward_tags(&channel, web, inline, out);
+                    let tags = std::sync::Mutex::new(edit_tags::StepTags::new(edits, number));
+                    let lock = || tags.lock().unwrap_or_else(|e| e.into_inner());
+                    let sink = |e: ProviderEvent<'_>| {
+                        let split = match &e {
+                            ProviderEvent::Text(text) => lock().text(text),
+                            _ => None,
+                        };
+                        match split {
+                            Some(out) => forward_tags(&channel, web, inline, out),
+                            None => forward(&channel, web, inline, e),
                         }
-                        (_, e) => forward(&channel, web, inline, e),
                     };
                     let turns = edit_tags::model_view(turns);
                     let result = agent.step(instructions, &turns, tool_specs, &sink).await;
-                    if let Some(tags) = &tags {
-                        let out = tags.lock().unwrap_or_else(|e| e.into_inner()).finish();
-                        forward_tags(&channel, web, inline, out);
-                    }
+                    forward_tags(&channel, web, inline, lock().finish());
+                    // Native search citations numbered (WebPlan::finish_step).
                     result.map(|(step, _)| {
-                        if edits {
-                            edit_tags::with_tag_edits(step, number)
-                        } else {
-                            step
-                        }
+                        let step = web.finish_step(lock().settle(step));
+                        settle_step(step, document, conventions, inline).0
                     })
                 }
             };
-            let step = with_postfix(step, &document, &conventions, web, inline.as_ref());
             // `history` is cloned so the plain-chat fallback below still has
             // it; `run_agent_loop` would otherwise have consumed it.
             match run_agent_loop(

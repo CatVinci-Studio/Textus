@@ -16,7 +16,7 @@ mod splitter;
 #[cfg(test)]
 mod tests;
 
-use aicompat::agent::{AgentTurn, StepResult};
+use aicompat::agent::{AgentTurn, ProviderEvent, StepResult};
 use serde_json::{Map, Value};
 pub use splitter::{Attrs, Piece, TagSplitter};
 
@@ -174,6 +174,58 @@ pub enum Outgoing {
     Text(String),
     ToolStart { call_id: String },
     ToolArgs { call_id: String, delta: String },
+}
+
+impl Outgoing {
+    /// The provider event this piece stands for.
+    pub fn event(&self) -> ProviderEvent<'_> {
+        match self {
+            Outgoing::Text(text) => ProviderEvent::Text(text),
+            Outgoing::ToolStart { call_id } => ProviderEvent::ToolStart {
+                call_id,
+                name: EDIT_TOOL,
+            },
+            Outgoing::ToolArgs { call_id, delta } => ProviderEvent::ToolArgs { call_id, delta },
+        }
+    }
+}
+
+/// One step's edit tags: split from its reply as it streams when the
+/// request takes edits, nothing when it takes none.
+#[derive(Debug)]
+pub struct StepTags {
+    step: usize,
+    open: Option<StreamTags>,
+}
+
+impl StepTags {
+    pub fn new(edits: bool, step: usize) -> Self {
+        Self {
+            step,
+            open: edits.then(|| StreamTags::new(step)),
+        }
+    }
+
+    /// What a text delta becomes, or None when it passes as it is.
+    pub fn text(&mut self, delta: &str) -> Option<Vec<Outgoing>> {
+        self.open.as_mut().map(|open| open.text(delta))
+    }
+
+    /// What was still held when the step ended.
+    pub fn finish(&mut self) -> Vec<Outgoing> {
+        self.open
+            .as_mut()
+            .map(StreamTags::finish)
+            .unwrap_or_default()
+    }
+
+    /// The step's result, its tags turned into propose_edit calls.
+    pub fn settle(&self, result: StepResult) -> StepResult {
+        match self.open {
+            Some(_) => with_tag_edits(result, self.step),
+            None => result,
+        }
+    }
 }
 
 /// One step's reply as it streams.
