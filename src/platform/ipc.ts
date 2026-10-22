@@ -316,6 +316,13 @@ export const ai = {
     conversation: { id: string; title: string };
     exchange: { messages: string[]; reply: string };
   }) => aiCall<RememberedChange[]>("memory_pass", args),
+  /** What the writer will probably say next, after a reply
+   *  (ai/next_message.rs); null when there is no clear next step. */
+  suggestNextMessage: (args: {
+    provider: string;
+    model: string | null;
+    exchange: { messages: string[]; reply: string };
+  }) => aiCall<string | null>("suggest_next_message", args),
   memoryUndo: (
     docPath: string | null,
     workspaceRoot: string | null,

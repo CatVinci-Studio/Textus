@@ -250,6 +250,10 @@ export interface Settings {
   /// conversation (the memory pass, src-tauri ai/memory/pass.rs, which reads
   /// this field from settings.json as REMEMBER_SETTING). On by default.
   rememberAutomatically: boolean;
+  /// Settings > Textus AI > Suggest your next message: after each reply,
+  /// what you will probably say next, grey in the empty message box for
+  /// Tab to take (ai/chat/next-message.ts). On by default.
+  suggestNextMessage: boolean;
   /// Whether an agent edit's green in-document preview streams/types itself
   /// in (pending-edit-plugin's typewriter) or appears complete at once.
   enableEditAnimation: boolean;
@@ -386,6 +390,7 @@ export const DEFAULT_SETTINGS: Settings = {
   searxngUrl: "",
   sourcesAsFootnotes: false,
   rememberAutomatically: true,
+  suggestNextMessage: true,
   enableEditAnimation: true,
   agentExpandToWindow: false,
   pinAgentWindow: false,

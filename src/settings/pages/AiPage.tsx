@@ -248,6 +248,12 @@ export function AiPage({
                   checked={settings.rememberAutomatically}
                   onChange={(v) => setSettings({ rememberAutomatically: v })}
                 />
+                <ToggleRow
+                  label={t.suggestNextMessageLabel}
+                  help={t.suggestNextMessageHint}
+                  checked={settings.suggestNextMessage}
+                  onChange={(v) => setSettings({ suggestNextMessage: v })}
+                />
                 <AgentSystemPromptSection
                   t={t}
                   onOpenFile={onOpenFile}

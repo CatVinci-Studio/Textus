@@ -261,6 +261,10 @@ para usar una.
   levisProjectLater: "Ahora no",
   levisProjectDone:
     "Convertido: {n} archivos copiados en .textus/. La carpeta .levis/ queda como estaba.",
+  suggestNextMessageLabel: "Sugerir el siguiente mensaje",
+  suggestNextMessageHint:
+    "Tras cada respuesta, lo que probablemente dirás después aparece en gris en el cuadro de mensaje; Tab lo usa. Cuesta una petición breve más.",
+  composerSuggestionTab: "Tab",
   rememberAutomaticallyLabel: "Recordar automáticamente",
   rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en la pestaña Memoria. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
   toolRemember: "Recordando esto",

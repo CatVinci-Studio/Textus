@@ -263,6 +263,10 @@ utiliser une.
   levisProjectLater: "Plus tard",
   levisProjectDone:
     "Converti\u00a0: {n} fichiers copiés dans .textus/. Le dossier .levis/ reste tel quel.",
+  suggestNextMessageLabel: "Suggérer le message suivant",
+  suggestNextMessageHint:
+    "Après chaque réponse, ce que vous direz sans doute ensuite s'affiche en gris dans la zone de saisie ; Tab le reprend. Cela coûte une courte requête de plus.",
+  composerSuggestionTab: "Tab",
   rememberAutomaticallyLabel: "Retenir automatiquement",
   rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le dans l'onglet Mémoire. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
   toolRemember: "Mémorisation",

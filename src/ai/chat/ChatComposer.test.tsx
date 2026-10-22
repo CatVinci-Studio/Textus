@@ -68,6 +68,7 @@ const labels = {
   showSelection: "Show in document",
   atCursor: "At the cursor",
   placeholder: "Ask anything",
+  suggestionTab: "Tab",
   send: "Send",
   stop: "Stop",
   attachFile: "Attach a file",
@@ -624,5 +625,54 @@ describe("ChatComposer pickers", () => {
     const option = await screen.findByRole("option");
     expect(option).toHaveTextContent("@plan.md");
     expect(option).toHaveTextContent("notes/");
+  });
+});
+
+describe("ChatComposer suggested next message", () => {
+  it("shows it grey in the empty box and Tab takes it", () => {
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText={null}
+        busy={false}
+        labels={labels}
+        defaultMode="review"
+        defaultWebSearch={false}
+        suggestion="Translate the next chapter too"
+        onSend={() => {}}
+        onStop={() => {}}
+        onEscape={() => {}}
+      />,
+    );
+    const box = screen.getByRole("textbox") as HTMLTextAreaElement;
+    expect(box.placeholder).toBe("Translate the next chapter too  ·  Tab");
+    fireEvent.keyDown(box, { key: "Tab" });
+    expect(box.value).toBe("Translate the next chapter too");
+    // Typed over, the suggestion goes and Tab is Tab again.
+    fireEvent.change(box, { target: { value: "No, " } });
+    expect(box.placeholder).toBe("Ask anything");
+  });
+
+  it("offers nothing while a reply is coming", () => {
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText={null}
+        busy={true}
+        labels={labels}
+        defaultMode="review"
+        defaultWebSearch={false}
+        suggestion="Translate the next chapter too"
+        onSend={() => {}}
+        onStop={() => {}}
+        onEscape={() => {}}
+      />,
+    );
+    const box = screen.getByRole("textbox") as HTMLTextAreaElement;
+    expect(box.placeholder).toBe("Ask anything");
+    fireEvent.keyDown(box, { key: "Tab" });
+    expect(box.value).toBe("");
   });
 });

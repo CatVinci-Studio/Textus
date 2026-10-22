@@ -507,6 +507,7 @@ export function ChatBody({
       />
       <ChatComposer
         handle={composer}
+        suggestion={conversation.suggestion}
         docPath={docPath}
         workspaceRoot={workspaceRoot}
         selectedText={selectedPictureText ?? selectedText}

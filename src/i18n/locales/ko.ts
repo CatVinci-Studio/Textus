@@ -229,6 +229,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   levisProjectLater: "나중에",
   levisProjectDone:
     "변환했습니다: 파일 {n}개를 .textus/에 복사했습니다. .levis/ 폴더는 그대로입니다.",
+  suggestNextMessageLabel: "다음 메시지 예측",
+  suggestNextMessageHint:
+    "답변마다 다음에 보낼 것 같은 말을 입력창에 회색으로 보여 주며, Tab으로 사용합니다. 짧은 요청이 한 번 더 듭니다.",
+  composerSuggestionTab: "Tab으로 사용",
   rememberAutomaticallyLabel: "자동으로 기억",
   rememberAutomaticallyHint: `${AI_NAME}가 요청 사항과 글쓰기 방식을 이후 대화를 위해 기억합니다. ‘기억’ 탭에서 확인, 수정, 취소할 수 있습니다. 답변마다 같은 모델에 짧은 요청을 한 번 더 보내 무엇을 기억할지 정합니다.`,
   toolRemember: "기억하는 중",

@@ -391,6 +391,7 @@ pub fn run() {
             crate::ai::memory::memory_delete,
             crate::ai::memory::memory_remember,
             crate::ai::memory::memory_pass,
+            crate::ai::next_message::suggest_next_message,
             crate::ai::memory::revision_choices_read,
             crate::ai::memory::revision_choices_write,
             crate::ai::levis_project::convert_levis_project,

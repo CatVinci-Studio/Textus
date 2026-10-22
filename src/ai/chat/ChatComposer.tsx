@@ -83,6 +83,7 @@ export function ChatComposer({
   onEscape,
   onModeChange,
   handle,
+  suggestion = null,
 }: ChatComposerProps) {
   const phone = usePhoneLayout();
   const picker = labels.picker ?? defaultPickerLabels();
@@ -289,12 +290,20 @@ export function ChatComposer({
         return;
       }
     }
+    if (e.key === "Tab" && !e.shiftKey && offered) {
+      e.preventDefault();
+      setInput(offered);
+      return;
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       submit();
     }
     if (e.key === "Escape") onEscape();
   }
+
+  // The suggested next message, while the box is empty.
+  const offered = !busy && input === "" ? suggestion : null;
 
   const modeLabels: Record<AgentMode, string> = {
     write: labels.modeWrite,
@@ -393,7 +402,11 @@ export function ChatComposer({
             ref={inputRef}
             className="inline-chat-input"
             rows={1}
-            placeholder={labels.placeholder}
+            placeholder={
+              offered
+                ? `${offered}  ·  ${labels.suggestionTab}`
+                : labels.placeholder
+            }
             value={input}
             onChange={(e) => {
               setInput(e.target.value);

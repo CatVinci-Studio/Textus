@@ -250,6 +250,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   levisProjectLater: "Agora não",
   levisProjectDone:
     "Convertido: {n} arquivos copiados para .textus/. A pasta .levis/ fica como estava.",
+  suggestNextMessageLabel: "Sugerir a próxima mensagem",
+  suggestNextMessageHint:
+    "Depois de cada resposta, o que você provavelmente dirá a seguir aparece em cinza na caixa de mensagem; Tab usa. Custa mais um pedido curto.",
+  composerSuggestionTab: "Tab",
   rememberAutomaticallyLabel: "Lembrar automaticamente",
   rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça na aba Memória. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
   toolRemember: "Lembrando isto",

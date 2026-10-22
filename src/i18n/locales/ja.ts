@@ -235,6 +235,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   levisProjectLater: "今はしない",
   levisProjectDone:
     "変換しました：{n} 個のファイルを .textus/ にコピーしました。.levis/ フォルダーはそのままです。",
+  suggestNextMessageLabel: "次のメッセージを予測",
+  suggestNextMessageHint:
+    "返答のたびに、次に送りそうな言葉を入力欄に灰色で表示し、Tab で使えます。短い依頼が一回増えます。",
+  composerSuggestionTab: "Tab で使う",
   rememberAutomaticallyLabel: "自動で覚える",
   rememberAutomaticallyHint: `${AI_NAME}が、あなたの指示や書き方を今後の会話のために覚えます。「記憶」タブで確認・編集・取り消しができます。返答のたびに、同じモデルへ短い依頼をもう一度送り、何を記録するか決めます。`,
   toolRemember: "覚えています",

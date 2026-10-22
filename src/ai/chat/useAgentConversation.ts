@@ -19,6 +19,7 @@ import { imageModelOf } from "../image-models";
 import { parsePartialToolArgs } from "./partial-tool-args";
 import { resolveBlockTarget } from "../doc-blocks";
 import { insertTurns, memoryTurns, passExchange } from "./memory-pass";
+import { useNextMessage } from "./next-message";
 
 export interface AgentRequestOptions {
   mode: AgentMode;
@@ -161,6 +162,11 @@ export function useAgentConversation(
   /** How the last message was sent - Continue, after an exchange ran out
    *  of steps, sends the same way. */
   const lastOptionsRef = useRef<AgentRequestOptions | null>(null);
+  const next = useNextMessage(
+    provider,
+    model ?? "",
+    settings.suggestNextMessage && settings.textusAi,
+  );
 
   // Every exchange updates the conversation's saved copy, so past chats can
   // be reopened from the History list even across restarts.
@@ -192,6 +198,7 @@ export function useAgentConversation(
     const trimmed = message.trim();
     if (!trimmed || busy || !settings.textusAi) return undefined;
     lastOptionsRef.current = options;
+    next.clear();
     setBusy(true);
     setError(null);
     setRetryable(null);
@@ -357,6 +364,7 @@ export function useAgentConversation(
       keepThought();
       setHistory((prev) => [...prev, ...newTurns]);
       void rememberAfter([...history, ...newTurns], at + newTurns.length);
+      next.suggestAfter([...history, ...newTurns]);
       return newTurns;
     } catch (err) {
       if (generation !== generationRef.current) return undefined;
@@ -467,6 +475,7 @@ export function useAgentConversation(
     setBusy(false);
     setError(null);
     setRetryable(null);
+    next.clear();
   }
 
   // A new, empty conversation: a fresh Quick Ask from the right-click menu
@@ -499,6 +508,8 @@ export function useAgentConversation(
     error,
     retryable,
     lastOptions: () => lastOptionsRef.current,
+    /** What the writer will probably say next (next-message.ts). */
+    suggestion: next.suggestion,
     send,
     stop,
     retry,
