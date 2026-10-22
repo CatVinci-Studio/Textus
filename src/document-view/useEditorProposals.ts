@@ -286,43 +286,49 @@ export function useEditorProposals({
   const discardRefused = pendingEdits.discard;
   const proposalStream = useMemo(
     () =>
-      new ProposalStream({
-        // Pictures written into the text show as their frames, never as
-        // the lines that ask for them (withBegunPictures).
-        place: (callId, proposal) =>
-          addPreviews(
-            [
-              {
-                callId,
-                proposal: {
-                  ...proposal,
-                  text: withBegunPictures(callId, proposal.text ?? ""),
+      new ProposalStream(
+        {
+          // Pictures written into the text show as their frames, never as
+          // the lines that ask for them (withBegunPictures).
+          place: (callId, proposal) =>
+            addPreviews(
+              [
+                {
+                  callId,
+                  proposal: {
+                    ...proposal,
+                    text: withBegunPictures(callId, proposal.text ?? ""),
+                  },
+                  streaming: true,
                 },
-                streaming: true,
-              },
-            ],
-            requestTargetRef.current,
-          ),
-        feed: (callId, text, done) =>
-          streamPendingInsertText(
-            callId,
-            withBegunPictures(callId, text),
-            done,
-          ),
-        finalize: (callId, proposal) => {
-          const text = withBegunPictures(callId, proposal.text ?? "");
-          const kept = stopRewrite(callId, text);
-          if (kept) streamPendingInsertText(callId, kept, true);
-          addPreviews(
-            [{ callId, proposal: { ...proposal, text } }],
-            requestTargetRef.current,
-          );
+              ],
+              requestTargetRef.current,
+            ),
+          feed: (callId, text, done) =>
+            streamPendingInsertText(
+              callId,
+              withBegunPictures(callId, text),
+              done,
+            ),
+          finalize: (callId, proposal) => {
+            const text = withBegunPictures(callId, proposal.text ?? "");
+            const kept = stopRewrite(callId, text);
+            if (kept) streamPendingInsertText(callId, kept, true);
+            addPreviews(
+              [{ callId, proposal: { ...proposal, text } }],
+              requestTargetRef.current,
+            );
+          },
+          discard: pendingEdits.discard,
         },
-        discard: pendingEdits.discard,
-      }),
+        () =>
+          run((ctx) =>
+            cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc),
+          ) ?? "",
+      ),
     // requestTargetRef is a stable ref; addPreviews/discard are stable per
     // editor (useCallback on `run`).
-    [addPreviews, pendingEdits.discard],
+    [addPreviews, pendingEdits.discard, run],
   );
   const handleStreamEvent = useCallback(
     (event: StreamEvent) => {
@@ -371,7 +377,7 @@ export function useEditorProposals({
       else if (
         event.type === "turn" &&
         event.turn.kind === "ToolCall" &&
-        event.turn.name === "propose_edit"
+        isProposalTool(event.turn.name)
       )
         proposalStream.finalCall(event.turn.call_id, event.turn.arguments);
     },

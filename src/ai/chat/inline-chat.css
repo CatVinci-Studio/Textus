@@ -1100,6 +1100,27 @@
   overflow-wrap: anywhere;
 }
 
+/* Under a reply still streaming: it waits, and shows only if the reply
+   pauses (ChatMessages re-keys it on every delta, starting the wait over). */
+.agent-thinking-after {
+  animation: agent-thinking-after 200ms var(--ease-out) 1200ms both;
+}
+
+@keyframes agent-thinking-after {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-thinking-after {
+    animation-duration: 1ms;
+  }
+}
+
 .agent-thinking-dots {
   display: inline-flex;
   gap: 3px;
@@ -1308,10 +1329,16 @@
 
 /* A proposed picture on its card (generate_image), small: the document
    shows it full size. */
+/* Its own shape within the card: as a flex item a picture shrank in width
+   and kept its height - squeezed (rc.6). */
 .agent-proposal-picture {
   display: block;
+  flex: none;
+  width: auto;
+  height: auto;
   max-width: 100%;
   max-height: 120px;
+  object-fit: contain;
   border-radius: var(--radius-small);
 }
 

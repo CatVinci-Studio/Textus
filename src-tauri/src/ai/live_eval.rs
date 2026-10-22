@@ -55,6 +55,7 @@ mod grammar_cases;
 mod grammar_matrix;
 mod harness;
 mod images;
+mod latency;
 mod memory_eval;
 mod tokens;
 mod web_search;

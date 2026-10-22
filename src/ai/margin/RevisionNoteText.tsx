@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import {
   generatedImageFailure,
   generatedImageId,
+  generatedImageRatio,
   generatedImageUrl,
   onPictureSettled,
 } from "../revision/generated-images";
@@ -55,6 +56,7 @@ function NotePicture({ src, alt }: { src: string; alt: string }) {
         role="img"
         aria-busy="true"
         aria-label={alt}
+        style={{ aspectRatio: generatedImageRatio(id) }}
       >
         <span className="pending-picture-blob" />
         <span className="pending-picture-blob" />

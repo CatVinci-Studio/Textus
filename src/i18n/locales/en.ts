@@ -618,6 +618,7 @@ type /name in a conversation to use one.
   agentStop: "Stop",
   agentRetry: "Retry",
   agentThinking: "Thinking…",
+  agentWritingEdit: "Writing the edit…",
   agentDeepThinking: "Deep thinking",
   agentDeepThinkingHint: `Deep thinking: when it's on, ${AI_NAME} thinks longer before it answers`,
   toggleOnHint: "{label} (On - click again to turn it off)",
