@@ -185,6 +185,8 @@ export default {
   memoryShowInFolder: "Показать в папке",
   memoryWrittenByAi: "Записано ИИ",
   memoryFactsInLibrary: "Ещё {n} людей, мест и терминов — в библиотеке ниже.",
+  memoryForgotten: "Недавно забытое",
+  memoryRestore: "Восстановить",
   memoryKindFact: "Факт",
   memoryFrom: "из «{title}»",
   memoryNotSent: "Не отправляется",

@@ -136,6 +136,20 @@ export interface Memories {
   items: Memory[];
   chars: number;
   cap: number;
+  /** What was deleted or forgotten lately, newest first (ai/memory/
+   *  forgotten.rs). */
+  forgotten?: ForgottenMemory[];
+}
+
+/** A deleted or forgotten memory or library entry, kept to restore. */
+export interface ForgottenMemory {
+  id: string;
+  scope: MemoryScope;
+  /** A library entry's name; null for a memory. */
+  name: string | null;
+  text: string;
+  /** When, as `2026-10-18T09:30:00Z`. */
+  forgotten: string;
 }
 
 /** Which library entries reached Textus AI - `LibraryUse` in

@@ -191,6 +191,8 @@ utiliser une.
   memoryWrittenByAi: "Noté par l'IA",
   memoryFactsInLibrary:
     "{n} personnes, lieux et termes notés sont dans la bibliothèque ci-dessous.",
+  memoryForgotten: "Oublié récemment",
+  memoryRestore: "Restaurer",
   memoryKindFact: "Fait",
   memoryFrom: "de «\u00a0{title}\u00a0»",
   memoryNotSent: "Non envoyé",

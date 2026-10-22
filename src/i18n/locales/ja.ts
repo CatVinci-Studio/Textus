@@ -168,6 +168,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   memoryShowInFolder: "フォルダで表示",
   memoryWrittenByAi: "AI が記録",
   memoryFactsInLibrary: "人物・場所・用語 {n} 件は下の資料にあります。",
+  memoryForgotten: "最近忘れたもの",
+  memoryRestore: "元に戻す",
   memoryKindFact: "設定",
   memoryFrom: "「{title}」から",
   memoryNotSent: "送信されません",

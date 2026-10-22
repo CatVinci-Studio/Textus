@@ -166,6 +166,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   memoryShowInFolder: "폴더에서 보기",
   memoryWrittenByAi: "AI가 기록",
   memoryFactsInLibrary: "인물·장소·용어 {n}개는 아래 자료에 있습니다.",
+  memoryForgotten: "최근 잊은 항목",
+  memoryRestore: "복원",
   memoryKindFact: "사실",
   memoryFrom: "‘{title}’에서",
   memoryNotSent: "전송 안 됨",

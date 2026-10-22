@@ -158,6 +158,8 @@ export default {
   memoryShowInFolder: "在資料夾中顯示",
   memoryWrittenByAi: "AI 記下的",
   memoryFactsInLibrary: "另有 {n} 個人物、地點和術語記在下面的資料庫裡。",
+  memoryForgotten: "最近忘記的",
+  memoryRestore: "復原",
   memoryKindFact: "資料",
   memoryFrom: "來自「{title}」",
   memoryNotSent: "未傳送",

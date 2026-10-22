@@ -179,6 +179,8 @@ type /name in a conversation to use one.
   memoryWrittenByAi: "Noted by AI",
   memoryFactsInLibrary:
     "{n} people, places and terms it noted are in the library below.",
+  memoryForgotten: "Recently forgotten",
+  memoryRestore: "Restore",
   memoryKindFact: "Fact",
   memoryFrom: "from “{title}”",
   memoryNotSent: "Not sent",

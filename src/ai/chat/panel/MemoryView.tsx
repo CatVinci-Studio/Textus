@@ -39,6 +39,7 @@ export function MemorySections({
   onOpenGlobalInstructions,
   onOpenFile,
   onRevealFile,
+  onRestoreForgotten,
   onDeleteMemory,
   onMoveMemory,
   onDeleteEntry,
@@ -56,6 +57,7 @@ export function MemorySections({
   onOpenGlobalInstructions: () => void;
   onOpenFile: (path: string) => void;
   onRevealFile: (path: string) => void;
+  onRestoreForgotten: (id: string) => void;
   onDeleteMemory: (memory: Memory) => void;
   onMoveMemory: (memory: Memory, scope: MemoryScope) => void;
   onDeleteEntry: (entry: LibraryEntry) => void;
@@ -102,6 +104,7 @@ export function MemorySections({
         query={query}
         onOpenFile={onOpenFile}
         onRevealFile={onRevealFile}
+        onRestoreForgotten={onRestoreForgotten}
         onDeleteMemory={onDeleteMemory}
         onMoveMemory={onMoveMemory}
       />
@@ -309,6 +312,7 @@ export function RememberedSection({
   query = "",
   onOpenFile,
   onRevealFile,
+  onRestoreForgotten,
   onDeleteMemory,
   onMoveMemory,
 }: {
@@ -319,10 +323,12 @@ export function RememberedSection({
   query?: string;
   onOpenFile: (path: string) => void;
   onRevealFile: (path: string) => void;
+  onRestoreForgotten: (id: string) => void;
   onDeleteMemory: (memory: Memory) => void;
   onMoveMemory: (memory: Memory, scope: MemoryScope) => void;
 }) {
   const { items: all, chars, cap } = info.memories;
+  const forgotten = (info.memories.forgotten ?? []).slice(0, FORGOTTEN_SHOWN);
   const items = all.filter((m) => matches(query, m.text));
   const facts = info.library.filter((entry) => entry.remembered).length;
   const groups: { scope: MemoryScope; title: string; items: Memory[] }[] = [
@@ -416,6 +422,34 @@ export function RememberedSection({
           })}
         </>
       )}
+      {forgotten.length > 0 && (
+        <details className="memory-forgotten">
+          <summary>
+            {t.memoryForgotten}
+            <span className="memory-count">{forgotten.length}</span>
+          </summary>
+          <ul className="memory-card memory-remembered-list">
+            {forgotten.map((f) => (
+              <li key={f.id}>
+                <div className="memory-remembered-text">
+                  {f.name ? `${f.name}: ${firstLine(f.text)}` : f.text}
+                </div>
+                <div className="memory-remembered-meta">
+                  {rememberedDate(f.forgotten, lang)}
+                </div>
+                <div className="memory-remembered-actions">
+                  <button
+                    type="button"
+                    onClick={() => onRestoreForgotten(f.id)}
+                  >
+                    {t.memoryRestore}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       {facts > 0 && (
         <p className="memory-note">
           {t.memoryFactsInLibrary.replace("{n}", number(facts))}
@@ -507,6 +541,9 @@ export function rememberedDate(stamp: string, lang: Lang): string {
 export function libraryEntryId(entry: LibraryEntry): string {
   return `project/library/${basename(entry.file).replace(/\.md$/, "")}`;
 }
+
+/** How many forgotten things the tab lists (the folder keeps 30). */
+const FORGOTTEN_SHOWN = 10;
 
 /** From this many memories and library entries on, the tab has a search. */
 const SEARCH_FROM = 6;

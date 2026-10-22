@@ -71,6 +71,7 @@ function renderTab(info: AgentWorkspaceInfo, libraryUse = null as never) {
     onOpenGlobalInstructions: vi.fn(),
     onOpenFile: vi.fn(),
     onRevealFile: vi.fn(),
+    onRestoreForgotten: vi.fn(),
     onDeleteMemory: vi.fn(),
     onMoveMemory: vi.fn(),
     onDeleteEntry: vi.fn(),
@@ -129,6 +130,44 @@ describe("the Memory tab's AI remembered section", () => {
     expect(text).toContain("from “Tighten the opening”");
     const wu = screen.getByRole("button", { name: /^Wu/ });
     expect(wu.textContent).toContain("Noted by AI · Oct 18, 2026");
+  });
+
+  it("lists what was forgotten lately, each with Restore", () => {
+    const handlers = renderTab(
+      workspace({
+        memories: {
+          items: [memory({ text: "Spell it colour." })],
+          chars: 16,
+          cap: 4000,
+          forgotten: [
+            {
+              id: "forgotten/project/memory/brief",
+              scope: "project",
+              name: null,
+              text: "Reply briefly.",
+              forgotten: "2026-10-21T09:30:00Z",
+            },
+            {
+              id: "forgotten/project/library/wu",
+              scope: "project",
+              name: "Wu",
+              text: "A doctor.",
+              forgotten: "2026-10-20T09:30:00Z",
+            },
+          ],
+        },
+      }),
+    );
+    const list = screen.getByText("Recently forgotten").closest("details")!;
+    expect(list.textContent).toContain("Reply briefly.");
+    expect(list.textContent).toContain("Wu: A doctor.");
+    expect(list.textContent).toContain("Oct 21, 2026");
+    fireEvent.click(
+      within(list).getAllByRole("button", { name: "Restore" })[1],
+    );
+    expect(handlers.onRestoreForgotten).toHaveBeenCalledWith(
+      "forgotten/project/library/wu",
+    );
   });
 
   it("shows where each group's files are, and searches memories and the library", () => {

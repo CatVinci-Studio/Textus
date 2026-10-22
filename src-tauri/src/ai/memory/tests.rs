@@ -429,3 +429,44 @@ fn timestamps_are_utc_dates_and_times() {
     assert_eq!(timestamp(951_782_400), "2000-02-29T00:00:00Z");
     assert_eq!(timestamp(1_792_315_800), "2026-10-18T09:30:00Z");
 }
+
+#[test]
+fn a_deleted_memory_is_set_aside_and_can_be_restored() {
+    let base = scratch("forgotten");
+    let dirs = dirs(&base);
+    let kept = dirs
+        .remember(args("preference", None, "Keep it short."), &source(), NOW)
+        .unwrap();
+    dirs.delete(&kept.remembered).unwrap();
+    let loaded = dirs.load();
+    assert!(loaded.items.is_empty());
+    assert_eq!(loaded.forgotten.len(), 1);
+    assert_eq!(loaded.forgotten[0].text, "Keep it short.");
+    // Restored, it is a memory again and no longer forgotten.
+    let id = dirs.restore(&loaded.forgotten[0].id).unwrap();
+    let loaded = dirs.load();
+    assert_eq!(loaded.items.len(), 1);
+    assert_eq!(loaded.items[0].id, id);
+    assert!(loaded.forgotten.is_empty());
+    // Nothing forgotten by that id any more, and no way out of the folder.
+    assert!(dirs.restore(&format!("forgotten/{id}")).is_err());
+    assert!(dirs.restore("forgotten/project/memory/../x").is_err());
+    std::fs::remove_dir_all(&base).ok();
+}
+
+#[test]
+fn a_forget_undone_leaves_no_forgotten_copy() {
+    let base = scratch("forget-undo");
+    let dirs = dirs(&base);
+    let kept = dirs
+        .remember(args("preference", None, "Keep it short."), &source(), NOW)
+        .unwrap();
+    let forgot = dirs.forget(&kept.remembered).unwrap();
+    assert_eq!(dirs.load().forgotten.len(), 1);
+    dirs.undo(&forgot.remembered, forgot.previous.as_deref())
+        .unwrap();
+    let loaded = dirs.load();
+    assert_eq!(loaded.items.len(), 1);
+    assert!(loaded.forgotten.is_empty());
+    std::fs::remove_dir_all(&base).ok();
+}

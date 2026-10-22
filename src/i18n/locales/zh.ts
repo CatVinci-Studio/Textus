@@ -158,6 +158,8 @@ export default {
   memoryShowInFolder: "在文件夹中显示",
   memoryWrittenByAi: "AI 记下的",
   memoryFactsInLibrary: "另有 {n} 个人物、地点和术语记在下面的资料库里。",
+  memoryForgotten: "最近忘记的",
+  memoryRestore: "恢复",
   memoryKindFact: "资料",
   memoryFrom: "来自“{title}”",
   memoryNotSent: "未发送",

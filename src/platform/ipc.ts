@@ -339,6 +339,12 @@ export const ai = {
     id: string,
     scope: MemoryScope,
   ) => call<string>("memory_move", { docPath, workspaceRoot, id, scope }),
+  /** Puts a forgotten memory or library entry back; its new id. */
+  memoryRestore: (
+    docPath: string | null,
+    workspaceRoot: string | null,
+    id: string,
+  ) => call<string>("memory_restore", { docPath, workspaceRoot, id }),
   /** Deletes a memory or a library entry (`project/library/<stem>`). */
   memoryDelete: (
     docPath: string | null,

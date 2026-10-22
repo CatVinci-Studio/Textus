@@ -302,6 +302,10 @@ export function ProjectBar({
         libraryEntryId(entry),
         t.memoryDeleteEntryConfirm.replace("{name}", entry.name),
       ),
+    onRestoreForgotten: (id: string) =>
+      void run(null, async () => {
+        await ai.memoryRestore(docPath, workspaceRoot, id);
+      }),
     onMoveMemory: (m: Memory, scope: MemoryScope) =>
       void run(null, async () => {
         await ai.memoryMove(docPath, workspaceRoot, m.id, scope);

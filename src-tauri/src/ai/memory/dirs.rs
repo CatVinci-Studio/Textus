@@ -101,6 +101,7 @@ impl MemoryDirs {
             items,
             chars,
             cap: MAX_MEMORY_CHARS,
+            forgotten: self.forgotten(),
         }
     }
 
@@ -391,6 +392,9 @@ impl MemoryDirs {
                 if !ours(previous) {
                     return Err("NOT_REMEMBERED".into());
                 }
+                // A forget undone: the file is back, its forgotten copy
+                // goes.
+                self.drop_forgotten_copy(&loc.path);
                 write(&loc.path, previous)
             }
         }
@@ -414,13 +418,14 @@ impl MemoryDirs {
         Ok(id_of(scope, MEMORY_FOLDER, &target))
     }
 
-    /// Deletes a memory or a library entry (the Memory tab asks first).
+    /// Deletes a memory or a library entry (the Memory tab asks first):
+    /// set aside in its folder's `.forgotten/`, to restore (forgotten.rs).
     pub fn delete(&self, id: &str) -> Result<(), String> {
         let loc = self.locate(id)?;
-        match std::fs::remove_file(&loc.path) {
-            Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.to_string()),
-            _ => Ok(()),
+        if !loc.path.exists() {
+            return Ok(());
         }
+        self.set_aside(&loc.path)
     }
 }
 

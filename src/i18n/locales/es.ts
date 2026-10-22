@@ -190,6 +190,8 @@ para usar una.
   memoryWrittenByAi: "Anotado por la IA",
   memoryFactsInLibrary:
     "{n} personas, lugares y términos anotados están en la biblioteca, abajo.",
+  memoryForgotten: "Olvidado hace poco",
+  memoryRestore: "Restaurar",
   memoryKindFact: "Dato",
   memoryFrom: "de «{title}»",
   memoryNotSent: "No se envía",

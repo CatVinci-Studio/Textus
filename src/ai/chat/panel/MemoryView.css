@@ -325,6 +325,20 @@
   text-decoration: underline;
 }
 
+/* Recently forgotten: closed until opened, Restore on each. */
+.memory-forgotten {
+  margin-top: 8px;
+}
+
+.memory-forgotten summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+  cursor: pointer;
+}
+
 /* The Memory tab's search, once there is enough to search. */
 .memory-search {
   width: 100%;

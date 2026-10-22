@@ -181,6 +181,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   memoryWrittenByAi: "Anotado pela IA",
   memoryFactsInLibrary:
     "{n} pessoas, lugares e termos anotados estão na biblioteca abaixo.",
+  memoryForgotten: "Esquecido recentemente",
+  memoryRestore: "Restaurar",
   memoryKindFact: "Fato",
   memoryFrom: "de “{title}”",
   memoryNotSent: "Não enviado",

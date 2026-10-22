@@ -110,6 +110,7 @@ mod tests {
             )],
             chars: 0,
             cap: 4000,
+            forgotten: Vec::new(),
         };
         memories.select_for("anything");
         assert!(memories.items[0].included);
@@ -145,6 +146,7 @@ mod tests {
             items,
             chars: 0,
             cap: 4000,
+            forgotten: Vec::new(),
         };
         memories.select_for("帮我续写灯塔看守人那一章，林晚开门");
         let included = |text: &str| {

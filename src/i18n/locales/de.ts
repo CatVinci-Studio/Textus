@@ -181,6 +181,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   memoryWrittenByAi: "Von der KI notiert",
   memoryFactsInLibrary:
     "{n} Personen, Orte und Begriffe stehen unten in der Bibliothek.",
+  memoryForgotten: "Kürzlich vergessen",
+  memoryRestore: "Wiederherstellen",
   memoryKindFact: "Fakt",
   memoryFrom: "aus „{title}“",
   memoryNotSent: "Nicht gesendet",

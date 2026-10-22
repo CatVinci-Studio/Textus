@@ -48,6 +48,8 @@ mod files;
 pub(crate) use files::*;
 mod prompt;
 pub(crate) use prompt::*;
+mod forgotten;
+pub use forgotten::Forgotten;
 mod pass;
 mod select;
 pub use pass::*;
@@ -245,6 +247,8 @@ pub struct Memories {
     pub chars: usize,
     /// MAX_MEMORY_CHARS.
     pub cap: usize,
+    /// What was deleted or forgotten lately, newest first, to bring back.
+    pub forgotten: Vec<Forgotten>,
 }
 
 /// Where something is remembered from, for the record: the conversation
@@ -360,6 +364,22 @@ pub async fn memory_pass(
         crate::ai::client::call(&app, &provider, instructions, input, model.as_deref()).await
     })
     .await
+}
+
+/// Restore in the Memory tab's Recently forgotten: puts a forgotten memory
+/// or library entry back. Returns its id.
+#[tauri::command]
+pub async fn memory_restore(
+    app: tauri::AppHandle,
+    doc_path: Option<String>,
+    workspace_root: Option<String>,
+    id: String,
+) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        MemoryDirs::for_document(&app, doc_path.as_deref(), workspace_root.as_deref()).restore(&id)
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 /// The chat chip's Undo: deletes what a remember call created, or writes
