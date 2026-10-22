@@ -46,13 +46,12 @@ export function isImageSubfolder(name: string): boolean {
 }
 
 /**
- * A stored `imageFolder` as one of the two choices Settings has offered
- * since 1.1.0: the document's folder, or one subfolder. Before, it was
- * "assets", "./", Typora's "${filename}.assets" or any relative path. A
- * folder of the user's own is kept when it is a single plain name; a
- * pattern, a path or anything the backend refuses becomes "assets".
+ * A stored `imageFolder` as one of the two choices Settings offers: the
+ * document's folder, or one subfolder. A folder of the user's own is kept
+ * when it is a single plain name; a pattern, a path or anything the
+ * backend refuses (a hand edit) becomes "assets".
  */
-export function migrateImageFolder(stored: unknown): string {
+export function storedImageFolder(stored: unknown): string {
   if (typeof stored !== "string") return DEFAULT_IMAGE_SUBFOLDER;
   const prefix = imageFolderPrefix(stored);
   if (prefix === "") return SAME_FOLDER;

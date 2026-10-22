@@ -131,6 +131,10 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         "settings": settings,
         "rev": rev,
         "uiState": ui_state,
+        // No settings.json at launch: the frontend writes its defaults out
+        // (src/settings/settings-store.ts) - what the core-skills seed
+        // already put in the settings must not pass for a user's choices.
+        "newProfile": stores.settings.missing_at_load(),
         "label": label,
         "titlebarHeight": titlebar_height,
     });

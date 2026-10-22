@@ -58,25 +58,25 @@ export function fileStore(): SettingsSync | null {
   const boot = readBoot();
   if (!boot) return null;
 
-  sync = new SettingsSync(boot.settings, boot.rev);
+  // Nothing stored - a new profile, holding at most what Rust seeds one
+  // with, or a corrupt settings.json moved aside, or one Rust can't read
+  // being left alone: a new installation's defaults (the OS's language
+  // among them), written out now so the next launch reads the same.
+  const fresh = boot.newProfile || Object.keys(boot.settings).length === 0;
+  const defaults = normaliseSettings(null) as unknown as Raw;
+  sync = new SettingsSync(
+    fresh ? { ...defaults, ...boot.settings } : boot.settings,
+    boot.rev,
+  );
   // The snapshot is from when the window was built - a reload replays an
   // old one, and a change made meanwhile by another window was sent
   // before this page could hear it - so the live values replace it.
-  const live =
-    Object.keys(boot.settings).length === 0
-      ? // Nothing stored (a corrupt settings.json was moved aside, or
-        // one Rust can't read is being left alone): write the fresh
-        // defaults out now, as a first launch always has, so the next
-        // launch doesn't read a half-written file as an old install.
-        // Only into fields still missing, though: reloaded later, this
-        // window replays the same empty snapshot, and must not put the
-        // defaults back over everything changed since.
-        trackWrite(
-          storage.settingsFillDefaults(
-            normaliseSettings(null) as unknown as Raw,
-          ),
-        )
-      : storage.settingsGet();
+  const live = fresh
+    ? // Only into fields still missing, though: reloaded later, this
+      // window replays the same snapshot, and must not put the defaults
+      // back over everything changed since.
+      trackWrite(storage.settingsFillDefaults(defaults))
+    : storage.settingsGet();
   live.then((s) => adopt(s.value, s.rev)).catch(() => {});
 
   void listenToThisWindow<SettingsChanged>("settings-changed", (event) => {

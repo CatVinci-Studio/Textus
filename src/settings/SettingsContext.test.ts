@@ -44,9 +44,15 @@ describe("newcomer guide eligibility", () => {
     expect(loadSettings().updateChannel).toBe("stable");
   });
 
-  it("does not surprise installations whose old settings predate the flag", () => {
+  it("keeps the guide and the welcome due while the settings don't say otherwise", () => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ language: "zh" }));
-    expect(loadSettings().onboardingShown).toBe(true);
+    expect(loadSettings().onboardingShown).toBe(false);
+    expect(loadSettings().languageChosen).toBe(false);
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ onboardingShown: "yes", languageChosen: true }),
+    );
+    expect(loadSettings().onboardingShown).toBe(false);
     expect(loadSettings().languageChosen).toBe(true);
   });
 
@@ -97,21 +103,15 @@ describe("colour swatches", () => {
     expect(load({ language: "en" })).toBe("off");
   });
 
-  it("carry over the old switch: on meant inline code", () => {
-    expect(load({ inlineColorSwatches: true })).toBe("code");
-    expect(load({ inlineColorSwatches: false })).toBe("off");
-  });
-
   it("keep a choice, and drop one they don't know", () => {
     expect(load({ colorSwatches: "everywhere" })).toBe("everywhere");
-    expect(load({ colorSwatches: "code", inlineColorSwatches: false })).toBe(
-      "code",
-    );
+    expect(load({ colorSwatches: "code" })).toBe("code");
     expect(load({ colorSwatches: "sometimes" })).toBe("off");
+    expect(load({ colorSwatches: true })).toBe("off");
   });
 });
 
-describe("Agent mode migration", () => {
+describe("the default Agent mode", () => {
   beforeAll(installTestLocalStorage);
   beforeEach(() => localStorage.clear());
 
@@ -119,27 +119,24 @@ describe("Agent mode migration", () => {
     expect(loadSettings().agentDefaultMode).toBe("review");
   });
 
-  it("reads 1.0's mode names as today's, and Plan as Review", () => {
-    for (const [saved, mode] of [
-      ["ask", "review"],
-      ["edit", "revise"],
-      ["plan", "review"],
-      ["write", "write"],
-    ]) {
+  it("keeps a saved mode", () => {
+    for (const mode of ["write", "review", "revise"]) {
       localStorage.setItem(
         SETTINGS_KEY,
-        JSON.stringify({ agentDefaultMode: saved }),
+        JSON.stringify({ agentDefaultMode: mode }),
       );
       expect(loadSettings().agentDefaultMode).toBe(mode);
     }
   });
 
-  it("rejects an unknown saved mode", () => {
-    localStorage.setItem(
-      SETTINGS_KEY,
-      JSON.stringify({ agentDefaultMode: "destroy" }),
-    );
-    expect(loadSettings().agentDefaultMode).toBe("review");
+  it("rejects a mode it doesn't know", () => {
+    for (const saved of ["destroy", "ask", 3]) {
+      localStorage.setItem(
+        SETTINGS_KEY,
+        JSON.stringify({ agentDefaultMode: saved }),
+      );
+      expect(loadSettings().agentDefaultMode).toBe("review");
+    }
   });
 });
 
@@ -164,6 +161,21 @@ describe("separate writing and Agent models", () => {
     const settings = loadSettings();
     expect(settings.writingModels.openai).toBe("gpt-5.4-nano");
     expect(settings.agentModels.openai).toBe("gpt-5.6");
+  });
+
+  it("keeps only the string entries of a stored map", () => {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({
+        writingModels: ["gpt-5.4-nano"],
+        agentModels: { openai: "gpt-5.6", anthropic: 4 },
+        theme: "dark",
+      }),
+    );
+    const settings = loadSettings();
+    expect(settings.writingModels).toEqual({});
+    expect(settings.agentModels).toEqual({ openai: "gpt-5.6" });
+    expect(settings.theme).toBe("dark");
   });
 });
 
@@ -215,7 +227,7 @@ describe("where images go", () => {
     expect(settings.imageHost).toBe("picgo");
   });
 
-  it("moves an image folder from before the two choices onto one of them", () => {
+  it("keeps an image folder that is one of the two choices", () => {
     const folderOf = (imageFolder: string) => {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({ imageFolder }));
       return loadSettings().imageFolder;
@@ -226,14 +238,18 @@ describe("where images go", () => {
     expect(folderOf("../shared/images")).toBe("assets");
   });
 
-  it("keeps an endpoint set up before the presets as the custom host", () => {
+  it("falls back to PicGo for an image host it doesn't know", () => {
     localStorage.setItem(
       SETTINGS_KEY,
       JSON.stringify({
-        imageStorageMode: "image-host",
+        imageHost: "flickr",
         imageUploadEndpoint: "https://images.example.com/upload",
       }),
     );
-    expect(loadSettings().imageHost).toBe("custom");
+    const settings = loadSettings();
+    expect(settings.imageHost).toBe("picgo");
+    expect(settings.imageUploadEndpoint).toBe(
+      "https://images.example.com/upload",
+    );
   });
 });

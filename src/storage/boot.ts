@@ -16,6 +16,9 @@ export interface Boot {
   settings: Record<string, unknown>;
   rev: number;
   uiState: Record<string, unknown>;
+  /** settings.json didn't exist at launch: the settings hold only what Rust
+   *  seeds a new profile with (settings/stores.rs), not a user's choices. */
+  newProfile: boolean;
   /** This window's label, to recognise the events its own changes cause. */
   label: string;
 }
@@ -38,6 +41,7 @@ export function readBoot(): Boot | null {
           settings: raw.settings,
           rev: typeof raw.rev === "number" ? raw.rev : 0,
           uiState: isRecord(raw.uiState) ? raw.uiState : {},
+          newProfile: raw.newProfile === true,
           label: typeof raw.label === "string" ? raw.label : "",
         }
       : null;

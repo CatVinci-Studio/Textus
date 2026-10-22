@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   imageFolderExample,
   isImageSubfolder,
-  migrateImageFolder,
+  storedImageFolder,
 } from "./image-folder";
 
 const example = (folder: string) => imageFolderExample(folder, "photo.png");
@@ -45,25 +45,25 @@ describe("isImageSubfolder", () => {
   });
 });
 
-describe("migrateImageFolder", () => {
+describe("storedImageFolder", () => {
   it("keeps the two choices as they are", () => {
-    expect(migrateImageFolder("assets")).toBe("assets");
-    expect(migrateImageFolder("./")).toBe("./");
-    expect(migrateImageFolder(".")).toBe("./");
+    expect(storedImageFolder("assets")).toBe("assets");
+    expect(storedImageFolder("./")).toBe("./");
+    expect(storedImageFolder(".")).toBe("./");
   });
 
   it("turns the <document>.assets pattern into assets", () => {
-    expect(migrateImageFolder("${filename}.assets")).toBe("assets");
-    expect(migrateImageFolder("img-${filename}")).toBe("assets");
+    expect(storedImageFolder("${filename}.assets")).toBe("assets");
+    expect(storedImageFolder("img-${filename}")).toBe("assets");
   });
 
   it("keeps a folder of the user's own when it is one plain name", () => {
-    expect(migrateImageFolder("img")).toBe("img");
-    expect(migrateImageFolder(" pictures/ ")).toBe("pictures");
+    expect(storedImageFolder("img")).toBe("img");
+    expect(storedImageFolder(" pictures/ ")).toBe("pictures");
   });
 
   it("turns a path, a climb out or a refused folder into assets", () => {
     for (const stored of ["img/shots", "../images", "/tmp/img", "", 3, null])
-      expect(migrateImageFolder(stored)).toBe("assets");
+      expect(storedImageFolder(stored)).toBe("assets");
   });
 });
