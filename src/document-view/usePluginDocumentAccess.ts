@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import {
-  cachedDocumentMarkdown,
+  cachedDocument,
   caretContext,
   readSelection,
 } from "../ai/doc-markdown";
@@ -34,9 +34,14 @@ export function usePluginDocumentAccess({
     const access: ActiveDocumentAccess = {
       path: filePath,
       text: () =>
-        run((ctx) =>
-          cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc),
+        run(
+          (ctx) =>
+            cachedDocument(ctx, ctx.get(editorViewCtx).state.doc).markdown,
         ) ?? "",
+      blocks: () =>
+        run(
+          (ctx) => cachedDocument(ctx, ctx.get(editorViewCtx).state.doc).blocks,
+        ) ?? [],
       selection: () =>
         run((ctx) => {
           const { state } = ctx.get(editorViewCtx);

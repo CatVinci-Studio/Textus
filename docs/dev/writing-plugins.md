@@ -141,9 +141,13 @@ Every call returns a promise. By namespace:
 resolveSettingsPage(webview) })`.
 - `textus.document` - `getText()`, `getPath()`, `getSelection()` (`{ text,
 markdown }`), `getOutline()` (its headings: `[{ level, text, line }]`),
-  `proposeEdit({ action, text, anchor?, reason? })`
-  (actions: `insert_at_cursor`, `replace_selection`, `append`, `replace`,
-  `insert_before`, `insert_after`, `delete`), `onDidChangeActive(fn)`.
+  `getBlocks()` (`[{ id, markdown, kind }]`, the editor's blocks as Textus
+  AI is shown them), `proposeEdit({ action, text, block?, lastBlock?,
+anchor?, reason? })` (actions: `insert_at_cursor`, `replace_selection`,
+  `append`, `replace`, `insert_before`, `insert_after`, `delete`; the four
+  last name the block they change by its `id` - `lastBlock` for a run of
+  them - and `anchor` quotes a few words inside it, left out for the whole
+  block), `onDidChangeActive(fn)`.
 - `textus.editor` (`editor.input`) - `captureKeys({ mode, keys })`: the
   editor's keys come to the plugin instead of typing. `mode: "all"` takes
   every key but the app's shortcuts (⌘ on a Mac, Ctrl elsewhere) unless
