@@ -104,6 +104,101 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
     );
 }
 
+/// The same path with edits written as tags: each becomes a propose_edit
+/// through the real tools; one naming no block is refused, the model is
+/// shown its tags and why in the next step, and sends that one again.
+#[test]
+fn scripted_tags_propose_and_a_wrong_one_is_sent_again() {
+    use aicompat::agent::StepResult;
+    use std::cell::RefCell;
+    use std::collections::VecDeque;
+
+    let document = "# Notes\n\nWe sampled ten sites.\n\nAll good.";
+    let ids: Vec<String> = doc_blocks::split(document)
+        .into_iter()
+        .map(|b| b.id)
+        .collect();
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    assert!(tools.edits());
+    assert!(tools.specs().iter().all(|s| s.name != "propose_edit"));
+    let conventions = crate::ai::rules::Conventions::default();
+    let ctx = ToolContext {
+        document,
+        undecided: &[],
+        skills: &[],
+        ui_language: "en",
+        root: None,
+        sees_images: false,
+        conventions: &conventions,
+        library: &[],
+        memory: None,
+        proposed: Default::default(),
+        checks: Default::default(),
+    };
+    let script = RefCell::new(VecDeque::from(vec![
+        format!(
+            "Named the sites and fixed the close.\n\n<textus-edit block=\"{}\">\nWe sampled ten coastal sites.\n</textus-edit>\n\n<textus-edit block=\"nope\">\nAll fine.\n</textus-edit>",
+            ids[1]
+        ),
+        format!(
+            "Fixed the close.\n\n<textus-edit block=\"{}\">\nAll fine.\n</textus-edit>",
+            ids[2]
+        ),
+    ]));
+    let seen: RefCell<Vec<Vec<AgentTurn>>> = RefCell::default();
+    let steps = std::cell::Cell::new(0);
+    let turns = tauri::async_runtime::block_on(run_agent_loop(
+        vec![],
+        AgentTurn::User {
+            text: "Name the sites, and fix the close".into(),
+            images: Vec::new(),
+        },
+        MAX_STEPS,
+        |turns| {
+            seen.borrow_mut().push(edit_tags::model_view(turns));
+            let number = steps.get();
+            steps.set(number + 1);
+            let reply = script.borrow_mut().pop_front().unwrap();
+            let result = edit_tags::with_tag_edits(StepResult::Done(reply), number);
+            let result = postfix_step(result, document, &conventions).0;
+            async move { Ok(result) }
+        },
+        |call| tools.execute(&ctx, call),
+        |name| tools.how_to_run(name),
+        |_| {},
+    ))
+    .unwrap();
+
+    let result = |id: &str| {
+        turns
+            .iter()
+            .find_map(|t| match t {
+                AgentTurn::ToolResult {
+                    call_id, output, ..
+                } if call_id == id => Some(output.clone()),
+                _ => None,
+            })
+            .unwrap()
+    };
+    assert!(result(&edit_tags::call_id(0, 0)).starts_with("Edit proposed"));
+    assert!(result(&edit_tags::call_id(0, 1)).starts_with("Not proposed"));
+    assert!(result(&edit_tags::call_id(1, 0)).starts_with("Edit proposed"));
+    assert!(
+        matches!(turns.last(), Some(AgentTurn::Assistant { text, .. }) if text == "Fixed the close.")
+    );
+    // The second step saw its first reply's tags and why one was refused.
+    let second = &seen.borrow()[1];
+    assert!(second
+        .iter()
+        .any(|t| matches!(t, AgentTurn::Assistant { text, .. }
+        if text.contains("<textus-edit block=\"nope\">"))));
+    assert!(matches!(second.last(), Some(AgentTurn::User { text, .. })
+        if text.contains("2. Not proposed")));
+    assert!(second
+        .iter()
+        .all(|t| !matches!(t, AgentTurn::ToolCall { .. })));
+}
+
 #[test]
 fn history_keeps_no_tool_images_and_says_so() {
     let shown = AgentTurn::ToolResult {

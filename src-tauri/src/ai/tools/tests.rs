@@ -281,7 +281,7 @@ fn check_conventions_reports_by_rule_with_lines() {
         "{}",
     );
     assert!(out.contains("[narrow no-break space]?"), "{out}");
-    assert!(out.contains("write it as \\u00a0 or \\u202f"), "{out}");
+    assert!(out.contains("write it as &nbsp;"), "{out}");
 }
 
 #[test]

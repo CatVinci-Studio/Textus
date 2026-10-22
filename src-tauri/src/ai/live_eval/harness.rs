@@ -8,6 +8,7 @@ use super::checks::{self, Caret, Proposal};
 use crate::ai::agent::{
     build_instructions, compact_history, request_context, request_message, AgentMode, MAX_STEPS,
 };
+use crate::ai::edit_tags;
 use crate::ai::tools::{self, ToolContext};
 use crate::ai::workspace::AgentWorkspace;
 use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, StepResult, ToolCall};
@@ -826,10 +827,36 @@ pub fn run_conversation(
         // Pictures written into the text, begun as the app begins them.
         let inline = setup.pictures.map(|p| p.inline(&ctx.proposed));
         let timeline = Timeline::from_env();
-        let sink = |event: ProviderEvent<'_>| {
-            timeline.observe(&event);
+        // Edits as tags, split from the reply as the app splits them
+        // (agent::forward_tags): the timeline and the pictures see each
+        // tag as the propose_edit call it becomes.
+        let edits = tool_set.edits();
+        let steps = AtomicUsize::new(0);
+        let tags: std::sync::Mutex<Option<edit_tags::StreamTags>> = Default::default();
+        let observe = |event: &ProviderEvent<'_>| {
+            timeline.observe(event);
             if let Some(inline) = &inline {
-                inline.observe(&event);
+                inline.observe(event);
+            }
+        };
+        let observe_tags = |out: Vec<edit_tags::Outgoing>| {
+            for piece in &out {
+                observe(&match piece {
+                    edit_tags::Outgoing::Text(text) => ProviderEvent::Text(text),
+                    edit_tags::Outgoing::ToolStart { call_id } => ProviderEvent::ToolStart {
+                        call_id,
+                        name: edit_tags::EDIT_TOOL,
+                    },
+                    edit_tags::Outgoing::ToolArgs { call_id, delta } => {
+                        ProviderEvent::ToolArgs { call_id, delta }
+                    }
+                });
+            }
+        };
+        let sink = |event: ProviderEvent<'_>| {
+            match (tags.lock().unwrap().as_mut(), &event) {
+                (Some(tags), ProviderEvent::Text(text)) => observe_tags(tags.text(text)),
+                _ => observe(&event),
             }
             if let ProviderEvent::Thinking(text) = event {
                 thinking_events.fetch_add(1, Ordering::Relaxed);
@@ -855,6 +882,10 @@ pub fn run_conversation(
                     (&instructions, &specs, &usage, &postfix);
                 let (agent, sink) = (&agent, &sink);
                 let (doc, conventions, inline) = (&doc, &conventions, &inline);
+                let number = steps.fetch_add(1, Ordering::Relaxed);
+                *tags.lock().unwrap() = edits.then(|| edit_tags::StreamTags::new(number));
+                let h = edit_tags::model_view(h);
+                let (tags, observe_tags) = (&tags, &observe_tags);
                 async move {
                     // with_retry's loop, inline: this already runs inside
                     // block_on, which can't be nested.
@@ -871,6 +902,14 @@ pub fn run_conversation(
                     };
                     charge(setup.model, &used);
                     usage.borrow_mut().push(used);
+                    if let Some(open) = tags.lock().unwrap().as_mut() {
+                        observe_tags(open.finish());
+                    }
+                    let step = if edits {
+                        edit_tags::with_tag_edits(step, number)
+                    } else {
+                        step
+                    };
                     let (step, applied) = crate::ai::agent::postfix_step(step, doc, conventions);
                     let step = match inline {
                         Some(inline) => inline.place(step),
