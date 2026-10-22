@@ -216,6 +216,45 @@ fn ids_never_reach_outside_the_memory_folders() {
 }
 
 #[test]
+fn a_fact_about_an_entry_is_added_to_it_and_replaces_rewrites_it() {
+    let base = scratch("fact-merge");
+    let dirs = dirs(&base);
+    let mut cold = args("fact", None, "林晚性子冷，开口只有三五个字。");
+    cold.name = Some("林晚".into());
+    let first = dirs.remember(cold, &source(), NOW).unwrap();
+    // Named for the change, with her name as an alias (GPT, 1.2.0-rc.6):
+    // more about her, in her entry, what was true before kept.
+    let mut changed = args("fact", None, "从第四章开始，林晚话多了起来。");
+    changed.name = Some("林晚的性格变化".into());
+    changed.aliases = vec!["林晚".into()];
+    let added = dirs.remember(changed, &source(), NOW).unwrap();
+    assert_eq!(added.remembered, first.remembered);
+    let library = read_library(&base.join("novel"));
+    assert_eq!(library.len(), 1);
+    assert_eq!(library[0].name, "林晚");
+    assert_eq!(
+        library[0].body.trim(),
+        "林晚性子冷，开口只有三五个字。\n从第四章开始，林晚话多了起来。"
+    );
+    assert_eq!(library[0].aliases, ["林晚的性格变化"]);
+    // Said again, nothing changes.
+    let mut again = args("fact", None, "从第四章开始，林晚话多了起来。");
+    again.name = Some("林晚".into());
+    assert!(dirs
+        .remember(again, &source(), NOW)
+        .unwrap_err()
+        .contains("Already remembered"));
+    // With `replaces`, the fact is the entry.
+    let mut rewrite = args("fact", None, "林晚起初寡言，第四章起话多。");
+    rewrite.name = Some("林晚".into());
+    rewrite.replaces = Some(first.remembered.clone());
+    dirs.remember(rewrite, &source(), NOW).unwrap();
+    let library = read_library(&base.join("novel"));
+    assert_eq!(library[0].body.trim(), "林晚起初寡言，第四章起话多。");
+    std::fs::remove_dir_all(&base).ok();
+}
+
+#[test]
 fn facts_go_to_the_library_and_never_change_the_users_entries() {
     let base = scratch("facts");
     let dirs = dirs(&base);

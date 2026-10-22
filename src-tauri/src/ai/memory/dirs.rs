@@ -272,12 +272,12 @@ impl MemoryDirs {
                 .map(|s| s.to_string_lossy().into_owned())
                 .unwrap_or_default()
         };
-        let existing = match args
+        let replaces = args
             .replaces
             .as_deref()
             .map(str::trim)
-            .filter(|id| !id.is_empty())
-        {
+            .filter(|id| !id.is_empty());
+        let existing = match replaces {
             Some(id) => {
                 let loc = self.locate(id)?;
                 let entry = library
@@ -286,21 +286,51 @@ impl MemoryDirs {
                     .ok_or_else(|| format!("No library entry `{id}` to replace."))?;
                 Some(entry)
             }
-            None => library.iter().find(|e| {
-                std::iter::once(&e.name)
-                    .chain(e.aliases.iter())
-                    .any(|n| n.to_lowercase() == name.to_lowercase())
-            }),
+            // The entry the fact is about, by its name or an alias: "林晚的
+            // 性格变化" with the alias 林晚 is more about 林晚, not an entry
+            // of its own beside hers that says the opposite (1.2.0-rc.6).
+            None => {
+                let called = |n: &String| {
+                    let n = n.to_lowercase();
+                    n == name.to_lowercase() || aliases.iter().any(|a| a.to_lowercase() == n)
+                };
+                library
+                    .iter()
+                    .find(|e| std::iter::once(&e.name).chain(e.aliases.iter()).any(called))
+            }
         };
         if let Some(entry) = existing {
             let id = format!("project/{LIBRARY_FOLDER}/{}", stem_of(entry));
             if entry.remembered.is_none() {
                 return Err(format!("The library's entry for {} (`{id}`) is the user's own, and you never change it: tell the user what to add to it instead.", entry.name));
             }
-            if normalized(&entry.body) == normalized(text) && entry.name == name {
+            if normalized(&entry.body).contains(&normalized(text)) {
                 return Err(format!("Already remembered as `{id}` - nothing saved."));
             }
         }
+        // Found without `replaces`, the entry keeps its name and what it
+        // said, and the fact is added to it (what was true before a change
+        // still holds for the chapters before it); with `replaces`, the
+        // fact is the entry rewritten.
+        let (name, aliases, text) = match existing {
+            Some(entry) if replaces.is_none() => {
+                let mut all: Vec<String> = entry.aliases.clone();
+                for a in std::iter::once(&name).chain(aliases.iter()) {
+                    if a.to_lowercase() != entry.name.to_lowercase()
+                        && !all.iter().any(|b| b.to_lowercase() == a.to_lowercase())
+                    {
+                        all.push(a.clone());
+                    }
+                }
+                (
+                    entry.name.clone(),
+                    all,
+                    format!("{}\n{text}", entry.body.trim_end()),
+                )
+            }
+            _ => (name, aliases, text.to_string()),
+        };
+        let text = text.as_str();
         let (path, previous, mut record) = match existing {
             Some(entry) => {
                 let path = dir.join(format!("{}.md", stem_of(entry)));

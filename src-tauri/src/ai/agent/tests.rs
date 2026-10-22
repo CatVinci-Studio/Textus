@@ -330,7 +330,7 @@ fn the_message_header_names_the_language_the_user_typed() {
     }
     let text = request_user_text("doc", "What was the most common complaint?");
     assert!(
-        text.ends_with("---the user's message (written in English: reply in English, unless the user instructions set a reply language)---\nWhat was the most common complaint?"),
+        text.ends_with("---the user's message (written in English: reply in English, unless the user instructions or what you remember set a reply language)---\nWhat was the most common complaint?"),
         "{text}"
     );
     assert!(request_user_text("doc", "ok").ends_with("---the user's message---\nok"));

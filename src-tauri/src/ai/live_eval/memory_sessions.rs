@@ -104,6 +104,9 @@ struct Scenario {
     id: &'static str,
     project: bool,
     ui: &'static str,
+    /// Memories already there, as (kind, scope, text): a user of some
+    /// months, whose one memory that matters is among many.
+    seed: Vec<(&'static str, &'static str, String)>,
     sessions: Vec<Session>,
     checks: Vec<Check>,
 }
@@ -114,6 +117,57 @@ const NOVEL_LATER: &str =
 const EMAIL: &str = "Hi Sam,\n\nThanks for the draft budget. I went through it last night and I think the travel line is too low, given that we now have three site visits instead of two. Could we revisit it before Friday? I also wonder whether the contingency should be a fixed amount rather than ten percent.\n\nBest,\nAlex\n";
 const MEMO: &str = "Q3 update\n\nThe team shipped the new onboarding flow in July. Sign-ups went up, and support tickets about first-run setup went down. We still have open questions about the pricing page.\n";
 const ESSAY: &str = "城市的夜晚\n\n我小时候住在老城区，晚上街道很安静。后来搬到新区，楼更高了，灯更亮了，可我总觉得少了点什么。\n";
+const NOTICE_ZH: &str =
+    "各位同事：\n\n感谢您这周的配合。请您在周四前提交报销单，逾期的话财务那边就要等下个月了。\n";
+const NOTICE_ZH_2: &str = "各位同事：\n\n本周五例会改到下午三点。如您有议题，请您提前发给我。\n";
+const NOVEL_EN: &str = "# Chapter 2\n\nThe rain had not stopped since noon. Mara stood at the vestry door with the keys in her fist, watching the gutter overflow onto the path.\n\nInside, someone had left the lamp burning.\n";
+const GUIDE_EN: &str = "# Getting started\n\nCreate an account on the signup page. We will send you an e-mail with a link to confirm it.\n";
+const PARAGRAPH_ZH: &str = "港口在清晨显得格外安静。几条渔船靠在码头边上，船身随着海浪轻轻晃动，偶尔有一两只海鸥从水面掠过。\n";
+
+/// Thirty memories of a user of some months, none about titles.
+fn many_memories() -> Vec<(&'static str, &'static str, String)> {
+    [
+        "代码块里的注释用英文。",
+        "列表项结尾不加句号。",
+        "数字用阿拉伯数字。",
+        "英文书名用斜体。",
+        "引用别人的话要注明出处。",
+        "回复里不要用表情符号。",
+        "日期写成 2026-10-22 的格式。",
+        "称呼读者用“你”。",
+        "段落不要超过五句话。",
+        "专有名词第一次出现时给出英文原名。",
+        "不要用“首先、其次、最后”。",
+        "表格的表头加粗。",
+        "货币写成 ¥1,200 的格式。",
+        "缩写第一次出现时写出全称。",
+        "不要在句首用“所以”。",
+        "人名用全名。",
+        "举例时用具体的数字。",
+        "长句拆成短句。",
+        "避免被动语态。",
+        "邮件开头不写“您好”，直接写名字。",
+        "技术文档里命令用代码格式。",
+        "百分比用 % 符号。",
+        "不要用感叹号。",
+        "时间用 24 小时制。",
+        "城市名后面不加“市”。",
+        "公司名用简称。",
+        "提到同事用名不用姓。",
+        "不要写“众所周知”。",
+        "引号用中文直角引号「」。",
+        "版本号写成 v1.2.0。",
+    ]
+    .into_iter()
+    .map(|t| ("preference", "personal", t.to_string()))
+    .chain(std::iter::once((
+        "requirement",
+        "personal",
+        "标题结尾不要加句号。".to_string(),
+    )))
+    .collect()
+}
+
 const PRODUCT: &str = "# Release notes\n\nThis release makes exporting faster and fixes the crash when a document had an empty table.\n";
 
 fn scenarios() -> Vec<Scenario> {
@@ -124,6 +178,7 @@ fn scenarios() -> Vec<Scenario> {
             id: "novel/zh/character-and-dashes",
             project: true,
             ui: "zh",
+            seed: Vec::new(),
             sessions: vec![
                 session(AgentMode::Write, NOVEL, &[
                     "接着往下写一段。林晚这个人性子冷，不爱说话，开口也就三五个字。",
@@ -155,6 +210,7 @@ fn scenarios() -> Vec<Scenario> {
             id: "work/en/brief-replies",
             project: false,
             ui: "en",
+            seed: Vec::new(),
             sessions: vec![
                 session(AgentMode::Review, EMAIL, &[
                     "Is this email ok to send? Keep it short, I don't have time to read essays.",
@@ -177,6 +233,7 @@ fn scenarios() -> Vec<Scenario> {
             id: "essay/zh/rejected-drafts",
             project: false,
             ui: "zh",
+            seed: Vec::new(),
             sessions: vec![
                 rejecting(session(AgentMode::Revise, ESSAY, &["把这段改得更有文采一点。"])),
                 session(AgentMode::Revise, ESSAY, &[
@@ -194,6 +251,7 @@ fn scenarios() -> Vec<Scenario> {
             id: "work/zh/nothing-to-keep",
             project: false,
             ui: "zh",
+            seed: Vec::new(),
             sessions: vec![
                 session(AgentMode::Revise, MEMO, &[
                     "这段改正式一点，要发给老板。",
@@ -210,6 +268,7 @@ fn scenarios() -> Vec<Scenario> {
             id: "work/en/forget-a-rule",
             project: false,
             ui: "en",
+            seed: Vec::new(),
             sessions: vec![
                 session(AgentMode::Revise, MEMO, &[
                     "From now on, never use semicolons in anything you write for me. Tighten this.",
@@ -232,6 +291,7 @@ fn scenarios() -> Vec<Scenario> {
             id: "tech/en/product-name",
             project: true,
             ui: "en",
+            seed: Vec::new(),
             sessions: vec![
                 session(AgentMode::Revise, PRODUCT, &[
                     "Add a line saying the app now opens folders. And it's Textus, one word, capital T only - people keep writing TextUs.",
@@ -244,6 +304,119 @@ fn scenarios() -> Vec<Scenario> {
                         || e.in_library(&["Textus"])
                 }),
                 ("the later text spells it right", |e| !e.last_text().contains("TextUs")),
+            ],
+        },
+        // The same correction twice, in two conversations, never said as a
+        // rule: the third conversation writes that way unasked.
+        Scenario {
+            id: "work/zh/same-correction-twice",
+            project: false,
+            ui: "zh",
+            seed: Vec::new(),
+            sessions: vec![
+                session(AgentMode::Revise, NOTICE_ZH, &["把里面的“您”都改成“你”，我们内部发的东西不用“您”。"]),
+                session(AgentMode::Revise, NOTICE_ZH_2, &["这个也是，“您”改成“你”。"]),
+                session(AgentMode::Write, "", &["写一段内部通知：周五下午两点到四点停电，请大家提前保存文件。"]),
+            ],
+            checks: vec![
+                ("the habit is kept once", |e| e.remembered(&["您"]) == 1),
+                ("the third conversation writes 你, not 您", |e| {
+                    let t = e.last_text();
+                    !t.is_empty() && !t.contains('您')
+                }),
+            ],
+        },
+        // A reply language asked for in passing, with another request.
+        Scenario {
+            id: "chat/zh/reply-in-english",
+            project: false,
+            ui: "zh",
+            seed: Vec::new(),
+            sessions: vec![
+                session(AgentMode::Review, ESSAY, &["这段写得怎么样？对了，以后都用英文回我，我在练英文。"]),
+                session(AgentMode::Review, PARAGRAPH_ZH, &["这段有什么可以改进的地方？"]),
+            ],
+            checks: vec![
+                ("the language is kept, as personal", |e| {
+                    e.memories.iter().any(|(s, _, t)| {
+                        *s == Scope::Personal && (t.contains("英文") || t.to_lowercase().contains("english"))
+                    })
+                }),
+                ("the later reply is in English", |e| {
+                    let r = e.last_reply();
+                    let cjk = r.chars().filter(|c| ('\u{4e00}'..='\u{9fff}').contains(c)).count();
+                    !r.is_empty() && cjk * 10 < r.chars().count()
+                }),
+            ],
+        },
+        // A fact about a character, said in the third turn of a working
+        // session full of one-off asks.
+        Scenario {
+            id: "novel/en/buried-fact",
+            project: true,
+            ui: "en",
+            seed: Vec::new(),
+            sessions: vec![
+                session(AgentMode::Write, NOVEL_EN, &[
+                    "Continue the scene, one paragraph.",
+                    "Shorter, please - two or three sentences.",
+                    "Good. By the way, Mara never swears, she's the minister's daughter. Add a line where she finds the lamp and is furious.",
+                    "Now add the sound of the rain on the roof.",
+                ]),
+                session(AgentMode::Write, NOVEL_EN, &["Write the moment Mara finds the vestry window smashed and her notebook gone."]),
+            ],
+            checks: vec![
+                ("the fact is kept for the project", |e| {
+                    e.in_library(&["swear"]) || e.memories.iter().any(|(s, _, t)| *s == Scope::Project && t.contains("swear"))
+                }),
+                ("the one-off asks are not kept", |e| e.remembered(&["shorter", "rain", "two or three"]) == 0),
+                ("Mara still doesn't swear", |e| {
+                    let t = e.last_text().to_lowercase();
+                    // Whole words: "hello" isn't "hell".
+                    let words: Vec<&str> = t.split(|c: char| !c.is_alphabetic()).collect();
+                    !t.is_empty()
+                        && !["damn", "hell", "shit", "fuck", "fucking", "bloody", "christ"]
+                            .iter()
+                            .any(|w| words.contains(w))
+                }),
+            ],
+        },
+        // A house style, given while fixing something else.
+        Scenario {
+            id: "tech/en/house-spelling",
+            project: true,
+            ui: "en",
+            seed: Vec::new(),
+            sessions: vec![
+                session(AgentMode::Revise, GUIDE_EN, &[
+                    "Fix the typos here. Also our style guide says email, never e-mail, and sign-up with a hyphen when it's a noun.",
+                ]),
+                session(AgentMode::Write, GUIDE_EN, &["Add a paragraph saying people can now sign up with their email address alone, on the new sign-up page."]),
+            ],
+            checks: vec![
+                ("the style is kept for the project", |e| {
+                    e.memories.iter().any(|(s, _, t)| *s == Scope::Project && t.to_lowercase().contains("e-mail"))
+                }),
+                ("the later text writes email", |e| {
+                    let t = e.last_text();
+                    !t.is_empty() && !t.contains("e-mail")
+                }),
+            ],
+        },
+        // One memory that matters among thirty that don't.
+        Scenario {
+            id: "scale/zh/one-of-thirty",
+            project: false,
+            ui: "zh",
+            seed: many_memories(),
+            sessions: vec![session(AgentMode::Write, PARAGRAPH_ZH, &["给这段文字起一个标题，加在最前面。"])],
+            checks: vec![
+                ("the title has no full stop", |e| {
+                    let t = e.last_text();
+                    let title = t.lines().find(|l| !l.trim().is_empty()).unwrap_or("").trim().to_string();
+                    !title.is_empty() && !title.ends_with('。') && !title.ends_with('.')
+                }),
+                ("nothing new is kept", |e| e.memories.len() == 31),
             ],
         },
     ]
@@ -322,6 +495,14 @@ fn run_scenario(
         Some(root) => workspace::load_layers(None, None, Some(root.to_str().unwrap()), &[]),
         None => workspace::load_layers(None, None, None, &[]),
     };
+    for (kind, scope, text) in &scenario.seed {
+        let ctx = crate::ai::memory::MemoryContext {
+            dirs: folders.dirs(),
+            source: Default::default(),
+        };
+        let args = json!({"kind": kind, "scope": scope, "text": text});
+        crate::ai::memory::run_tool(&ctx, &args.to_string());
+    }
     let mut conversations = Vec::new();
     let mut log = Vec::new();
     for (n, s) in scenario.sessions.iter().enumerate() {

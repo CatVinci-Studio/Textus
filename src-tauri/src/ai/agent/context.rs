@@ -189,7 +189,7 @@ pub(super) fn request_context_and_library<'a>(
 pub(crate) fn request_user_text(context: &str, message: &str) -> String {
     match message_language(message) {
         Some(language) => format!(
-            "{context}\n\n---the user's message (written in {language}: reply in {language}, unless the user instructions set a reply language)---\n{message}"
+            "{context}\n\n---the user's message (written in {language}: reply in {language}, unless the user instructions or what you remember set a reply language)---\n{message}"
         ),
         None => format!("{context}\n\n---the user's message---\n{message}"),
     }
