@@ -253,7 +253,6 @@ test("the menu and the shortcut turn it off and on too", async ({ page }) => {
   await openApp(page, {
     settings: {
       shortcuts: { toggleTextusAi: "mod+alt+a" },
-      shortcutsRevision: 1,
     },
   });
   await page.locator(".milkdown").click();

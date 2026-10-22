@@ -3,7 +3,6 @@ import type { AgentTurn } from "../types";
 import { userMessageBody } from "./user-message";
 import { loadSettings } from "../../settings/SettingsContext";
 import { createPersistedList } from "../../storage/persisted-list";
-import { CHAT_HISTORY_KEY } from "../../storage/legacy-import";
 import { readBoot } from "../../storage/boot";
 import { trackWrite } from "../../storage/pending-writes";
 import { storage } from "../../platform/ipc";
@@ -45,6 +44,8 @@ export interface ChatHistoryEntry extends ChatSummary {
   turns: AgentTurn[];
 }
 
+/** Where the browser fallback (no Rust) keeps the list. */
+const CHAT_HISTORY_KEY = "textus-chat-history";
 /** chat_history.rs's MAX_CONVERSATIONS. */
 const MAX_ENTRIES = 500;
 const MAX_TITLE_CHARS = 60;

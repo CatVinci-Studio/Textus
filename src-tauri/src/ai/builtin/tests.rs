@@ -140,9 +140,7 @@ fn every_builtin_skill_parses_and_follows_the_format() {
                     .any(|w| w == "MUST"),
                 "{stem}: no MUST"
             );
-            for product in ["Levis", "Textus"] {
-                assert!(!text.contains(product), "{stem}: names no product");
-            }
+            assert!(!text.contains("Textus"), "{stem}: names no product");
         }
         for code in UI_CODES {
             assert!(
@@ -227,10 +225,7 @@ fn every_pack_parses_with_named_sections() {
                 !model.contains("(M)") && !model.contains("(S)"),
                 "{stem}#{name}: bookkeeping stripped"
             );
-            assert!(
-                !text.contains("Levis") && !text.contains("Textus"),
-                "{stem}: names no product"
-            );
+            assert!(!text.contains("Textus"), "{stem}: names no product");
         }
     }
     assert_eq!(pack("contract").unwrap().sections.len(), 1);

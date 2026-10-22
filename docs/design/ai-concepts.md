@@ -63,8 +63,7 @@ there, and the project's own settings live in its `.textus/` folder.**
   long file (up to 16 MB) in parts, by line range; an `@` attachment is
   still a whole file of at most 100 KB, and an image at most 6 MB.
 - In code it is the _workspace root_ (`settings.agentWorkspaceRoot`,
-  `workspace::project_root`). Settings called it "Workspace Folder" up to
-  0.9.6.
+  `workspace::project_root`).
 
 ### `.textus/` folder
 
@@ -72,13 +71,7 @@ there, and the project's own settings live in its `.textus/` folder.**
 that holds the project's style profile, library, writing instructions,
 skills and what Textus AI remembered about the project.**
 
-- **On disk:** `<project folder>/.textus/`. Only this folder counts: a
-  project made with Levis has a `.levis/` folder instead, which Textus does
-  not read. While `.levis/` holds files `.textus/` lacks, the project bar
-  asks once whether to convert it ("Convert" copies them into `.textus/`,
-  never changing `.levis/`; "Not now" is remembered per project in
-  `ui-state.json`, and the Memory tab keeps **Convert Levis data**) -
-  `ai::levis_project`, the one place that knows `.levis/`.
+- **On disk:** `<project folder>/.textus/`. Only this folder counts.
 - **Create / edit:** created on first use by the project bar's menu items,
   or by hand.
 - **Textus AI uses it:** only through the roles below. The file tools never
@@ -247,8 +240,7 @@ remembered).**
   project's `.textus/` is (agent.md, skills/, memory/) -
   `~/.config/com.catvinci.textus/textus/` (Linux),
   `~/Library/Application Support/com.catvinci.textus/textus/` (macOS),
-  `%APPDATA%\com.catvinci.textus\textus\` (Windows). Before 1.2.0 it was
-  `agent/`, which is renamed to `textus/` the first time it is looked for.
+  `%APPDATA%\com.catvinci.textus\textus\` (Windows).
 - **Create / edit:** **Settings > Textus AI > Global config folder > Show**
   (desktop) creates it with a starter `agent.md` and shows it in
   the file manager; **Edit agent.md** and **Import Skill…** write into it.
@@ -313,9 +305,8 @@ comments, Revise (修订) changes the text that is there.**
   after a selection, never over it), refusing the rest. Every proposal is decided by the user either way
   ([ai-proposals.md](ai-proposals.md)).
 - In code: `AgentMode` (`settings/SettingsContext.tsx`,
-  `ai/agent.rs`) with the values `write`, `review` and `revise`. 1.0 called
-  Review "Ask" and Revise "Edit" and had a Plan mode; stored values from
-  then are read as today's (`migrateAgentMode`), Plan as Review.
+  `ai/agent.rs`) with the values `write`, `review` and `revise`; a stored
+  value that is none of them is the default (`storedAgentMode`).
 
 ### Not a file: completion tone
 
@@ -347,8 +338,7 @@ part of the project.
   and the walk up to a `.textus/` never reaches one.
 - **Only the project folder's `.textus/` counts.** When the user chose a
   folder, the `.textus/` next to the document is not read; a nearer
-  `.textus/` wins over one further up; a `.levis/` is never read (the
-  project bar offers to convert it).
+  `.textus/` wins over one further up.
 - **Writing instructions add up.** The global `agent.md` comes first and the
   project's after it. With one layer the section is headed
   `---user instructions---`; when both are present the project's section is
@@ -386,8 +376,7 @@ part of the project.
   "?" on purpose; the guide explains the rest.
 - **The AI panel's project bar**: the folder name (tooltip: "Project folder"
   and the path), the **Style** and **Library N** chips, and the menu that
-  chooses the folder and creates each project-level file; for a project
-  with Levis data, the one-time question whether to convert it.
+  chooses the folder and creates each project-level file.
 - **The AI panel's Memory tab**: AI remembered, the style profile, the
   library (with delete), the writing instructions and the skills - each
   opening its file; the notes when memories near or pass their limit and
@@ -430,4 +419,4 @@ names above.
 | AI remembered          | `ai::memory`, `AgentWorkspace.memories`, the memory pass (`memory_pass`, `memory/pass.rs`), `memory_undo`, `memory_move`, `memory_delete` (into `.forgotten/`), `memory_restore`, `memory_remember`, `Memories::select_for`, `settings.rememberAutomatically`, `MemoryChip`, `revision-learning.ts` |
 | Skills                 | `AgentWorkspace.skills`, the `use_skill` tool, `import_agent_skill`, `ai::builtin`, `customize_builtin_skill`, `reset_builtin_skill`, `set_builtin_skill_enabled`                                                                                                                                   |
 | Suggested next message | `suggest_next_message` (`ai/next_message.rs`), `useNextMessage` (`ai/chat/next-message.ts`), `settings.suggestNextMessage`                                                                                                                                                                          |
-| Global config folder   | `global_dir_in` (`textus/`; `agent/` before 1.2.0), `global_agent_dir`, `agentWorkspaceLabel`                                                                                                                                                                                                       |
+| Global config folder   | `GLOBAL_DIR` (`textus/`), `global_agent_dir`, `agentWorkspaceLabel`                                                                                                                                                                                                                                 |

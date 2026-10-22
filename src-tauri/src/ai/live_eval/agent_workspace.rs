@@ -9,7 +9,7 @@
 //! find_files) and its `.textus/` folder: the library
 //! (`.textus/library/*.md`, entries picked by name or alias), the writing
 //! instructions (`.textus/agent.md`) and skills (`.textus/skills/*.md`); plus
-//! the global config folder (the app config dir's `agent/`), whose writing
+//! the global config folder (the app config dir's `textus/`), whose writing
 //! instructions and skills apply to every document - the project's come
 //! after the global ones and shadow same-named skills. Every case here
 //! builds those folders on disk and loads them through

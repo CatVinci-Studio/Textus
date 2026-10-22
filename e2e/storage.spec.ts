@@ -18,7 +18,6 @@ const BOOT_JS = readFileSync(
 
 interface DevStorage {
   settings: Record<string, unknown>;
-  imports: number;
   patches: Record<string, unknown>[];
   fills: Record<string, unknown>[];
   /** Every command in order, plus "<command>:done" for each storage write
@@ -44,7 +43,6 @@ async function bootLikeRust(
   page: Page,
   boot: {
     settings: Record<string, unknown>;
-    legacyImport?: boolean;
     uiState?: Record<string, unknown>;
   },
   themeCss: { light: string; dark: string | null } | null = null,
@@ -53,7 +51,6 @@ async function bootLikeRust(
     rev: 1,
     label: "main",
     uiState: {},
-    legacyImport: false,
     ...boot,
   };
   await page.addInitScript(
@@ -229,32 +226,6 @@ test("another window's change shows up here, except its zoom", async ({
   expect(zoom.trim() === "" || zoom.trim() === "1").toBe(true);
 });
 
-test("the first launch after the move hands localStorage over once", async ({
-  page,
-}) => {
-  await bootLikeRust(page, { settings: {}, legacyImport: true });
-  await openApp(page, {
-    settings: { theme: "dark", contentWidth: "full" },
-    storage: {
-      "levis-clipboard-history": JSON.stringify([{ text: "kept", at: 1 }]),
-      "textus-agent-panel-open": "1",
-    },
-  });
-  // Used straight from localStorage while the import is on its way.
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.locator(".agent-panel-view")).toBeVisible();
-  await expect.poll(async () => (await devStorage(page)).imports).toBe(1);
-  const stored = await devStorage(page);
-  expect(stored.settings.theme).toBe("dark");
-  expect(stored.settings.contentWidth).toBe("full");
-  expect(stored.uiState.agentPanelOpen).toBe(true);
-  expect(stored.histories.clipboard).toEqual([{ text: "kept", at: 1 }]);
-  // Nothing removed from localStorage.
-  expect(
-    await page.evaluate(() => localStorage.getItem("levis-clipboard-history")),
-  ).toContain("kept");
-});
-
 test("clipboard history is recorded entry by entry in the store", async ({
   page,
 }) => {
@@ -265,7 +236,7 @@ test("clipboard history is recorded entry by entry in the store", async ({
     .poll(async () => (await devStorage(page)).histories.clipboard)
     .toEqual([expect.objectContaining({ text: "pasted words" })]);
   expect(
-    await page.evaluate(() => localStorage.getItem("levis-clipboard-history")),
+    await page.evaluate(() => localStorage.getItem("textus-clipboard-history")),
   ).toBeNull();
 });
 

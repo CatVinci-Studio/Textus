@@ -69,8 +69,8 @@ fn failures_are_told_apart() {
 }
 
 /// The exact failure this guard exists for: a model saved while the
-/// API-key auth method was active (or migrated forward from an older
-/// settings blob) is a hard 400 once the login is a ChatGPT account.
+/// API-key auth method was active is a hard 400 once the login is a
+/// ChatGPT account.
 #[test]
 fn a_model_this_login_cannot_use_falls_back_to_the_default() {
     assert_eq!(usable_model(Some("gpt-5.4"), "gpt-6.1-sol"), "gpt-6.1-sol");

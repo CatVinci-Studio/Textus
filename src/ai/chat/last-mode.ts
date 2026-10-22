@@ -1,5 +1,5 @@
 import {
-  migrateAgentMode,
+  storedAgentMode,
   type AgentMode,
 } from "../../settings/SettingsContext";
 
@@ -36,9 +36,8 @@ export function initialMode(defaultMode: AgentMode): AgentMode {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaultMode;
     const saved = JSON.parse(raw) as { mode?: unknown; under?: unknown };
-    // Kept under 1.0's names ("ask", "edit"), both sides read as today's.
-    const mode = migrateAgentMode(saved.mode);
-    if (mode && migrateAgentMode(saved.under) === defaultMode) return mode;
+    const mode = storedAgentMode(saved.mode);
+    if (mode && storedAgentMode(saved.under) === defaultMode) return mode;
   } catch {
     // Unreadable or blocked storage: the default.
   }

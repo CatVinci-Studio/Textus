@@ -197,35 +197,6 @@ fn write(path: &Path, text: &str) {
 }
 
 #[test]
-fn a_levis_folder_is_never_read() {
-    let root = scratch("legacy-dir");
-    let project = root.join("novel");
-    write(
-        &project.join(".levis/skills/house.md"),
-        "---\nname: house\ndescription: Levis-era skill\n---\nKeep it short.",
-    );
-    write(
-        &project.join(".levis/agent.md"),
-        "Write in British English.",
-    );
-    write(
-        &project.join(".levis/library/lin.md"),
-        "---\nname: Lin\n---\nLevis Lin.",
-    );
-    write(&project.join(".levis/style.md"), "Short sentences.");
-    write(&project.join("chapter.md"), "# One");
-    let doc = project.join("chapter.md");
-    let ws = load_layers(None, doc.to_str(), None, &[]);
-    assert_eq!(ws.root.as_deref(), project.to_str());
-    assert!(ws.project_instructions.is_none());
-    assert!(ws.style.is_none() && ws.library.is_empty());
-    assert!(!ws.skills.iter().any(|s| s.name == "house"));
-    assert_eq!(project_file(&project, "agent.md"), None);
-    assert!(ws.levis_project, "offered for conversion instead");
-    std::fs::remove_dir_all(&root).ok();
-}
-
-#[test]
 fn the_project_is_the_nearest_folder_above_with_a_textus_folder() {
     let root = scratch("walk-up");
     let novel = root.join("novel");
@@ -262,14 +233,15 @@ fn the_walk_up_never_takes_a_folder_too_broad() {
 }
 
 #[test]
-fn textus_metadata_wins_over_the_levis_prefix() {
+fn only_textus_metadata_keys_are_read() {
     let skill = parse_skill_file(
-            "x",
-            "---\nname: x\nmetadata:\n  levis-version: \"1\"\n  textus-version: \"2\"\n  levis-based-on: \"tighten@1\"\n  levis-aliases-en: \"old\"\n  textus-aliases-en: \"new\"\n---\nbody",
-        );
+        "x",
+        "---\nname: x\nmetadata:\n  other-version: \"1\"\n  textus-version: \"2\"\n  other-based-on: \"tighten@1\"\n  other-aliases-en: \"old\"\n  textus-aliases-en: \"new\"\n---\nbody",
+    );
     assert_eq!(skill.version.as_deref(), Some("2"));
-    assert_eq!(skill.based_on.as_deref(), Some("tighten@1"));
+    assert_eq!(skill.based_on, None);
     assert_eq!(skill.aliases["en"], ["new"]);
+    assert_eq!(skill.aliases.len(), 1);
 }
 
 #[test]
@@ -444,35 +416,4 @@ fn the_skill_list_keeps_turned_off_built_ins_and_drops_hidden_ones() {
     assert!(!describe.enabled && describe.source == SkillSource::Builtin);
     let json = serde_json::to_value(&list[0]).unwrap();
     assert!(json.get("overridesBuiltin").is_some() && json.get("invocation").is_some());
-}
-
-#[test]
-fn the_global_folder_from_before_1_2_moves_once_and_is_never_merged() {
-    let config = std::env::temp_dir().join(format!(
-        "textus-global-dir-{}-{}",
-        std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    ));
-    std::fs::create_dir_all(config.join("agent/memory")).unwrap();
-    std::fs::write(config.join("agent/agent.md"), "Mine.").unwrap();
-    // The old folder is renamed, with everything in it.
-    let dir = global_dir_in(&config);
-    assert_eq!(dir, config.join("textus"));
-    assert_eq!(
-        std::fs::read_to_string(dir.join("agent.md")).unwrap(),
-        "Mine."
-    );
-    assert!(dir.join("memory").is_dir() && !config.join("agent").exists());
-    // With both there, the new one is used and the old one left alone.
-    std::fs::create_dir_all(config.join("agent")).unwrap();
-    std::fs::write(config.join("agent/agent.md"), "Old.").unwrap();
-    assert_eq!(global_dir_in(&config), config.join("textus"));
-    assert_eq!(
-        std::fs::read_to_string(config.join("agent/agent.md")).unwrap(),
-        "Old."
-    );
-    std::fs::remove_dir_all(&config).ok();
 }

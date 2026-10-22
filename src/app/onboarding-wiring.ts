@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
 import { makeBlankTab, tabIsUntouchedDraft } from "../document/doc-tabs";
-import { storage } from "../platform/ipc";
-import { useLevisImportOffer } from "../settings/levis-import";
-import type { Settings } from "../settings/SettingsContext";
 import {
   LESSON_DONE,
   MODES_PART,
@@ -11,13 +8,13 @@ import {
 import { practiceNotes, withPracticeNotes } from "../onboarding/practice-notes";
 import { stepIndexOf } from "../onboarding/tutorial-steps";
 import type { Tutorial } from "../onboarding/useTutorial";
-import type { Lang, Strings } from "../i18n/strings";
+import type { Lang } from "../i18n/strings";
 import type { PanelMode } from "./useSidePanels";
 import type { TabState } from "./useTabState";
 
 /**
- * How the first-run surfaces (the Levis import offer, the language
- * welcome, the onboarding tour) hook into this window's tabs and panels.
+ * How the first-run surfaces (the language welcome, the onboarding tour)
+ * hook into this window's tabs and panels.
  * Pulled out of App.tsx, which renders the surfaces themselves.
  */
 
@@ -30,36 +27,6 @@ import type { TabState } from "./useTabState";
 // drain effect - OS-open paths, recovered drafts, etc. - has its own analogous
 // guard; see startup-restore.ts's `drained`.)
 let tutorialTabRecoveryDone = false;
-
-/** A Levis installation on this computer is offered once, before the
- *  language welcome (its import brings the language already chosen). */
-export function useLevisOffer(opts: {
-  t: Strings;
-  settings: Settings;
-  setSettings: (patch: Partial<Settings>) => void;
-  exitTutorial: () => void;
-}): { pending: boolean } {
-  const { t, settings, setSettings, exitTutorial } = opts;
-  const markLevisOffered = useCallback(
-    () => setSettings({ levisImportOffered: true }),
-    [setSettings],
-  );
-  return useLevisImportOffer(
-    t,
-    settings.language,
-    settings.levisImportOffered,
-    markLevisOffered,
-    (items) => {
-      // The first-launch guide started before the offer was answered; a
-      // Levis user who had already been through it there doesn't get it
-      // again (Levis's onboardingShown came over with its settings).
-      if (!items.includes("settings")) return;
-      void storage.settingsGet().then(({ value }) => {
-        if (value.onboardingShown === true) exitTutorial();
-      });
-    },
-  );
-}
 
 /** The tour's practice tab, and starting the tour on it. */
 export function usePracticeTab(

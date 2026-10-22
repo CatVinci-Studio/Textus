@@ -1,17 +1,15 @@
 //! Settings, UI state and the two histories, as plain JSON files owned by
 //! Rust - docs/dev/storage.md lists every file.
 //!
-//! They used to live in each webview's localStorage, which has two problems
-//! this module exists to fix:
+//! They are not kept in each webview's localStorage, for two reasons:
 //!
 //! - localStorage belongs to the webview engine, keyed by app identifier and
 //!   stored in a different format on every platform (SQLite under WebKitGTK
-//!   and WKWebView, LevelDB under WebView2). At 1.0.0 Levis became Textus
-//!   with a new identifier; Textus can import a Levis user's data by copying
-//!   a few files, but not by reaching into another app's browser profile.
-//! - Every window wrote the WHOLE settings object (and whole history arrays)
-//!   back on every change, so two windows changing different things raced
-//!   and the slower one silently undid the other.
+//!   and WKWebView, LevelDB under WebView2): plain files can be backed up,
+//!   read and repaired by hand.
+//! - Every window would write the WHOLE settings object (and whole history
+//!   arrays) back on every change, so two windows changing different things
+//!   race and the slower one silently undoes the other.
 //!
 //! So each file is held here in memory, changed through small commands that
 //! merge one top-level field (settings, UI state) or one entry (histories)
@@ -26,7 +24,6 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -58,13 +55,6 @@ struct SettingsChanged {
     rev: u64,
     patch: Map<String, Value>,
     from: String,
-}
-
-#[derive(Serialize)]
-pub struct ImportResult {
-    accepted: bool,
-    value: Value,
-    rev: u64,
 }
 
 /// The live settings, for a window to correct its boot snapshot with.
@@ -134,52 +124,6 @@ pub fn settings_fill_defaults(
     Snapshot { value, rev }
 }
 
-/// The first window's copy of what localStorage held (see
-/// `Stores::import_legacy`). Every caller gets the resulting settings back,
-/// accepted or not, so all windows end up on the same values.
-#[tauri::command]
-pub fn settings_import_legacy(
-    app: AppHandle,
-    window: tauri::WebviewWindow,
-    stores: tauri::State<Stores>,
-    payload: LegacyPayload,
-) -> ImportResult {
-    let accepted = stores.import_legacy(payload);
-    let (value, rev) = stores.settings.snapshot();
-    if accepted {
-        // The appearance was only in localStorage until now.
-        theme_changed(&app);
-        // Windows that booted with the flag but lost the race adopt the
-        // result from their own call; any other window learns it here.
-        let patch = value.as_object().cloned().unwrap_or_default();
-        emit_to_all(
-            &app,
-            "settings-changed",
-            SettingsChanged {
-                rev,
-                patch,
-                from: window.label().to_string(),
-            },
-        );
-        for kind in [HistoryKind::Chat, HistoryKind::Clipboard] {
-            emit_to_all(
-                &app,
-                "history-changed",
-                HistoryChanged {
-                    kind,
-                    op: HistoryOp::Reload,
-                    from: String::new(),
-                },
-            );
-        }
-    }
-    ImportResult {
-        accepted,
-        value,
-        rev,
-    }
-}
-
 #[tauri::command]
 pub fn ui_state_get(stores: tauri::State<Stores>) -> Value {
     stores.ui_state.snapshot().0
@@ -203,7 +147,8 @@ enum HistoryOp {
         key: String,
     },
     Clear,
-    /// The whole list changed (the legacy import) - fetch it again.
+    /// The whole list changed (a document's conversations moved) - fetch
+    /// it again.
     Reload,
 }
 

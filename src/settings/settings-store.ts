@@ -1,7 +1,6 @@
 import { storage } from "../platform/ipc";
 import { gateAiRequests } from "../platform/ai-gate";
 import { readBoot, readLocalJson } from "../storage/boot";
-import { importLegacyStorage } from "../storage/legacy-import";
 import { trackWrite } from "../storage/pending-writes";
 import { listenToThisWindow } from "../utils/tauri-events";
 import { SettingsSync, isRecord, type Raw } from "./settings-sync";
@@ -16,10 +15,8 @@ import { normaliseSettings } from "./settings-normalise";
 
 export const STORAGE_KEY = "catvinci-settings";
 
-/** The settings blob localStorage held before the move - still the store
- *  without Rust (the browser dev shim, vitest), and what the one-time
- *  import reads. Left in place after the import, so a downgrade to 0.9.6
- *  still finds it. */
+/** The settings blob in localStorage: the store without Rust (the browser
+ *  dev shim, vitest). */
 export function readLocalSettings(): Raw | null {
   const parsed = readLocalJson(STORAGE_KEY);
   return isRecord(parsed) ? parsed : null;
@@ -41,7 +38,7 @@ export function writeLocalSettings(patch: Raw) {
 // live in settings.json, held by Rust: read here from the boot snapshot,
 // changed by sending only the fields that changed, and kept in step with
 // other windows through "settings-changed" (see settings-sync.ts for who
-// wins when). Without it, localStorage, as before the move.
+// wins when). Without it, localStorage.
 // ---------------------------------------------------------------------------
 
 /** Mirrors SettingsChanged in src-tauri/src/settings.rs. */
@@ -61,37 +58,26 @@ export function fileStore(): SettingsSync | null {
   const boot = readBoot();
   if (!boot) return null;
 
-  if (boot.legacyImport) {
-    // First launch since the move: Rust has nothing yet, localStorage has
-    // everything. Use it right away and hand it over; Rust answers with
-    // what it kept (another window may have got there first).
-    const legacy = normaliseSettings(readLocalSettings()) as unknown as Raw;
-    sync = new SettingsSync(legacy, boot.rev);
-    void importLegacyStorage(legacy).then((result) => {
-      if (result) adopt(result.value, result.rev);
-    });
-  } else {
-    sync = new SettingsSync(boot.settings, boot.rev);
-    // The snapshot is from when the window was built - a reload replays an
-    // old one, and a change made meanwhile by another window was sent
-    // before this page could hear it - so the live values replace it.
-    const live =
-      Object.keys(boot.settings).length === 0
-        ? // Nothing stored (a corrupt settings.json was moved aside, or
-          // one Rust can't read is being left alone): write the fresh
-          // defaults out now, as a first launch always has, so the next
-          // launch doesn't read a half-written file as an old install.
-          // Only into fields still missing, though: reloaded later, this
-          // window replays the same empty snapshot, and must not put the
-          // defaults back over everything changed since.
-          trackWrite(
-            storage.settingsFillDefaults(
-              normaliseSettings(null) as unknown as Raw,
-            ),
-          )
-        : storage.settingsGet();
-    live.then((s) => adopt(s.value, s.rev)).catch(() => {});
-  }
+  // Nothing stored - a new profile, holding at most what Rust seeds one
+  // with, or a corrupt settings.json moved aside, or one Rust can't read
+  // being left alone: a new installation's defaults (the OS's language
+  // among them), written out now so the next launch reads the same.
+  const fresh = boot.newProfile || Object.keys(boot.settings).length === 0;
+  const defaults = normaliseSettings(null) as unknown as Raw;
+  sync = new SettingsSync(
+    fresh ? { ...defaults, ...boot.settings } : boot.settings,
+    boot.rev,
+  );
+  // The snapshot is from when the window was built - a reload replays an
+  // old one, and a change made meanwhile by another window was sent
+  // before this page could hear it - so the live values replace it.
+  const live = fresh
+    ? // Only into fields still missing, though: reloaded later, this
+      // window replays the same snapshot, and must not put the defaults
+      // back over everything changed since.
+      trackWrite(storage.settingsFillDefaults(defaults))
+    : storage.settingsGet();
+  live.then((s) => adopt(s.value, s.rev)).catch(() => {});
 
   void listenToThisWindow<SettingsChanged>("settings-changed", (event) => {
     const { rev, patch, from } = event.payload;

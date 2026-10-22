@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Strings } from "../../../i18n/strings";
 import { ai, exportDoc, type AgentWorkspaceInfo } from "../../../platform/ipc";
 import {
   canPickFolder,
@@ -23,7 +22,6 @@ import {
   RememberedSection,
 } from "./MemoryView";
 import { showConfirm } from "../../../ui/app-dialog";
-import { convertLevisProject, offerLevisConversion } from "./levis-project";
 import type {
   LibraryEntry,
   LibraryUse,
@@ -78,12 +76,10 @@ function useProjectMenu() {
  *  first load answers - "no root" means unsaved or too broad, which mustn't
  *  be said before anyone has looked. Loaded again by `reload`, whenever the
  *  window regains focus (files under .textus/ change outside this
- *  component, edited in a tab), and after a Levis project's .levis/ is
- *  converted - asked once. */
+ *  component, edited in a tab). */
 function useProjectWorkspace(
   docPath: string | null,
   workspaceRoot: string | null,
-  t: Strings,
 ) {
   const [info, setInfo] = useState<AgentWorkspaceInfo | null | undefined>(
     undefined,
@@ -94,14 +90,6 @@ function useProjectWorkspace(
       .catch(() => setInfo(null));
   }, [docPath, workspaceRoot]);
   useEffect(reload, [reload]);
-  // A Levis project's .levis/: asked once whether to convert it.
-  const levisRoot = info?.levis_project ? info.root : null;
-  useEffect(() => {
-    if (!levisRoot) return;
-    void offerLevisConversion(t, levisRoot, docPath, workspaceRoot).then(
-      (converted) => converted && reload(),
-    );
-  }, [levisRoot, t, docPath, workspaceRoot, reload]);
   // Files under .textus/ change outside this component (edited in a tab):
   // re-read whenever the window regains focus.
   useEffect(() => {
@@ -165,7 +153,7 @@ export function ProjectBar({
   const provider = useActiveProvider();
   const workspaceRoot = settings.agentWorkspaceRoot || null;
   const { menuOpen, setMenuOpen, closeMenu, menuRef, phone } = useProjectMenu();
-  const { info, reload } = useProjectWorkspace(docPath, workspaceRoot, t);
+  const { info, reload } = useProjectWorkspace(docPath, workspaceRoot);
   const libraryUse = useLibraryUse(
     memory,
     info,
@@ -497,9 +485,6 @@ export function ProjectBar({
           onOpenInstructions={openInstructions}
           onOpenGlobalInstructions={openGlobalInstructions}
           {...memoryActions}
-          onConvertLevis={() =>
-            void convertLevisProject(t, docPath, workspaceRoot).then(reload)
-          }
         />
       )}
     </div>

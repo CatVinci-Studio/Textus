@@ -133,7 +133,6 @@ for (const lang of ["en", "zh"] as const) {
           library,
           memories: { items: copy.memories, chars: 120, cap: 4000 },
           remember: true,
-          levis_project: false,
         },
         library_use: {
           included: [],

@@ -75,7 +75,6 @@ function renderTab(info: AgentWorkspaceInfo, libraryUse = null as never) {
     onDeleteMemory: vi.fn(),
     onMoveMemory: vi.fn(),
     onDeleteEntry: vi.fn(),
-    onConvertLevis: vi.fn(),
   };
   render(
     <MemorySections
@@ -309,11 +308,5 @@ describe("the Memory tab's library", () => {
     );
     expect(on.onDeleteEntry).toHaveBeenCalledWith(lin);
     expect(libraryEntryId(lin)).toBe("project/library/Lin");
-  });
-
-  it("keeps a quiet way to convert a Levis project", () => {
-    const on = renderTab(workspace({ levis_project: true }));
-    fireEvent.click(screen.getByRole("button", { name: t.memoryConvertLevis }));
-    expect(on.onConvertLevis).toHaveBeenCalled();
   });
 });

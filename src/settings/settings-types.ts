@@ -2,11 +2,7 @@ import type { Lang } from "../i18n/strings";
 import type { McpServer } from "./mcp";
 import type { UpdateChannel } from "../platform/update-channel";
 import { DEFAULT_IMAGE_SUBFOLDER } from "./image-folder";
-import {
-  DEFAULT_SHORTCUTS,
-  SHORTCUTS_REVISION,
-  type Shortcuts,
-} from "./shortcut-defaults";
+import { DEFAULT_SHORTCUTS, type Shortcuts } from "./shortcut-defaults";
 
 /**
  * What the settings are: every option's type and choices, and the
@@ -134,23 +130,15 @@ export type ImageNamingMode = "auto" | "original" | "ask";
 export type AgentMode = "write" | "review" | "revise";
 export const AGENT_MODES: readonly AgentMode[] = ["write", "review", "revise"];
 
-/** A stored mode as one of today's: Ask and Edit were renamed Review and
- *  Revise in 1.1, and Plan, removed then, opens in Review. Anything else
- *  is null. */
-export function migrateAgentMode(value: unknown): AgentMode | null {
-  if (value === "ask" || value === "plan") return "review";
-  if (value === "edit") return "revise";
+/** A stored mode, or null for anything that isn't one of today's. */
+export function storedAgentMode(value: unknown): AgentMode | null {
   return AGENT_MODES.includes(value as AgentMode) ? (value as AgentMode) : null;
 }
 
 export interface Settings {
   language: Lang;
-  /** False only on a fresh install, until the language welcome screen is
-   *  confirmed. Existing installations are migrated to true. */
+  /** False until the language welcome screen is confirmed. */
   languageChosen: boolean;
-  /** The first-launch offer to import a Levis installation was answered
-   *  (or the import ran) - settings/levis-import.ts. */
-  levisImportOffered: boolean;
   /// Appearance: follow the OS, or pin light/dark. Independent of `themeId`.
   theme: ThemeMode;
   /** Settings › Textus AI › Enable Textus AI, and the window bar's switch
@@ -305,10 +293,6 @@ export interface Settings {
   /// the document has its own zoom, above.
   uiTextScale: UiTextScale;
   shortcuts: Shortcuts;
-  /// The SHORTCUTS_REVISION `shortcuts` was last saved under, so a later
-  /// build can tell an action left unbound on purpose from one that had no
-  /// default yet (migrateShortcuts). 0 for shortcuts saved before it.
-  shortcutsRevision: number;
   /// Either a built-in theme id (theme/builtin-themes.ts) or a
   /// `UserThemeMeta.id`.
   themeId: string;
@@ -358,7 +342,6 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
   language: "en",
   languageChosen: false,
-  levisImportOffered: false,
   theme: "system",
   textusAi: true,
   textusAiResumeAt: null,
@@ -411,7 +394,6 @@ export const DEFAULT_SETTINGS: Settings = {
   zoom: 1,
   uiTextScale: 1,
   shortcuts: DEFAULT_SHORTCUTS,
-  shortcutsRevision: SHORTCUTS_REVISION,
   themeId: "default",
   userThemes: [],
   newDocumentMode: "window",

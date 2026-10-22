@@ -6,8 +6,7 @@ import { call, desktopAction, desktopQuery } from "./ipc-call";
 
 /**
  * Backend commands for files and what the app keeps on disk: documents,
- * folders, pictures, the session, stored history, drafts, and the Levis
- * import (ipc.ts).
+ * folders, pictures, the session, stored history and drafts (ipc.ts).
  */
 
 export interface SavedImage {
@@ -195,15 +194,6 @@ export interface StoredSnapshot {
 
 export type HistoryKind = "chat" | "clipboard";
 
-/** What one window read from localStorage at the first launch after the
- *  move, handed over once (see settings_import_legacy). */
-export interface LegacyStorage {
-  settings: Record<string, unknown>;
-  uiState: Record<string, unknown>;
-  chatHistory: unknown[] | null;
-  clipboardHistory: unknown[] | null;
-}
-
 export const storage = {
   settingsGet: () => call<StoredSnapshot>("settings_get"),
   /** Top-level fields only; resolves to the new revision. */
@@ -213,10 +203,6 @@ export const storage = {
    *  that is - and resolves to the live settings. */
   settingsFillDefaults: (defaults: Record<string, unknown>) =>
     call<StoredSnapshot>("settings_fill_defaults", { defaults }),
-  settingsImportLegacy: (payload: LegacyStorage) =>
-    call<StoredSnapshot & { accepted: boolean }>("settings_import_legacy", {
-      payload,
-    }),
   uiStateGet: () => call<Record<string, unknown>>("ui_state_get"),
   uiStatePatch: (patch: Record<string, unknown>) =>
     call<void>("ui_state_patch", { patch }),
@@ -235,41 +221,6 @@ export const storage = {
   /** A document saved under a new path takes its conversations along. */
   chatHistoryMoveDocument: (from: string, to: string) =>
     call<void>("chat_history_move_document", { from, to }),
-};
-
-// ---------------------------------------------------------------------------
-// Levis import (src-tauri/src/levis_import.rs)
-// ---------------------------------------------------------------------------
-
-/** What a Levis installation can bring (levis_import.rs `Item`). */
-export type LevisItem =
-  | "settings"
-  | "chatHistory"
-  | "clipboardHistory"
-  | "themes"
-  | "writingInstructions"
-  | "skills"
-  | "recentFiles"
-  | "session"
-  | "drafts"
-  | "credentials";
-
-export interface LevisImportStatus {
-  supported: boolean;
-  levisDir: string | null;
-  items: LevisItem[];
-}
-
-export interface LevisImportReport {
-  imported: LevisItem[];
-  kept: string[];
-  failed: string[];
-}
-
-export const levisImport = {
-  status: () => call<LevisImportStatus>("levis_import_status"),
-  run: (includeCredentials: boolean) =>
-    call<LevisImportReport>("levis_import", { includeCredentials }),
 };
 
 // ---------------------------------------------------------------------------

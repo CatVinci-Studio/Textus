@@ -41,8 +41,8 @@ pub type Check = Arc<dyn Fn(&TurnOutcome) -> Result<(), String> + Send + Sync>;
 pub type ProfileCheck = Arc<dyn Fn(&str, &str) -> Result<(), String> + Send + Sync>;
 
 /// A real workspace on disk, loaded through workspace::load_from exactly
-/// as the app loads it: the global agent folder (the app config dir's
-/// `agent/`), the open document's path, and the panel's workspace override.
+/// as the app loads it: the global config folder (the app config dir's
+/// `textus/`), the open document's path, and the panel's workspace override.
 #[derive(Clone, Default)]
 pub struct DiskWorkspace {
     pub global: Option<PathBuf>,

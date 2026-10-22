@@ -39,10 +39,9 @@ pub const SUPPORTED_MODELS: &[&str] = &["gpt-6-astra", "gpt-6.1-sol", "gpt-6-lun
 ///
 /// The saved model outlives the auth method that was active when it was
 /// picked: sign in with an API key, choose `gpt-5.4`, later switch to "sign
-/// in with ChatGPT", and every request 400s. Worse, the model can arrive from
-/// a settings blob written by an older version and migrated forward
-/// (SettingsContext's migrateAgentModels), so the user never chose it at all
-/// and has no idea why the agent stopped answering.
+/// in with ChatGPT", and every request 400s. A preset this login served
+/// once and no longer does (a retired model) fails the same way, without
+/// the user having changed anything.
 ///
 /// The Settings panel normalizes the stored value too, but only while it is
 /// open - which is not where a request's correctness can live.

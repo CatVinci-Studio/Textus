@@ -73,32 +73,15 @@ export function defaultShortcuts(mac = modIsMeta()): Shortcuts {
 
 export const DEFAULT_SHORTCUTS: Shortcuts = defaultShortcuts();
 
-/** Settings.shortcutsRevision's current value. 1: Heading 1-6 gained
- *  defaults. Before that they were saved as "" whether or not anyone chose
- *  to leave them unbound. */
-export const SHORTCUTS_REVISION = 1;
-
-export const HEADING_LEVELS: ShortcutAction[] = [
-  "setHeading1",
-  "setHeading2",
-  "setHeading3",
-  "setHeading4",
-  "setHeading5",
-  "setHeading6",
-];
-
 /**
  * Stored shortcuts -> the bindings in force. An action stored with a combo,
- * or with "" under the current revision, keeps it: that is the user's own
- * choice. An action not stored at all (saved by a build from before it)
- * takes its default, and so does a heading level stored as "" before
- * revision 1, which can't be told apart from never having been set. A
- * default is only taken while no stored action has that combo already: two
+ * or with "", keeps it: that is the user's own choice. An action not stored
+ * as a string (a binding newer than the file, a hand edit) takes its
+ * default - but only while no stored action has that combo already: two
  * actions on one key would leave one of them dead.
  */
-export function migrateShortcuts(
+export function storedShortcuts(
   stored: unknown,
-  revision: number,
   defaults: Shortcuts = DEFAULT_SHORTCUTS,
 ): Shortcuts {
   const saved = (isRecord(stored) ? stored : {}) as Partial<Shortcuts>;
@@ -106,11 +89,7 @@ export function migrateShortcuts(
   // Spread, to keep the actions of a newer build this one doesn't know.
   const result = { ...defaults, ...saved } as Shortcuts;
   for (const action of Object.keys(defaults) as ShortcutAction[]) {
-    const value = saved[action];
-    const unset =
-      typeof value !== "string" ||
-      (value === "" && revision < 1 && HEADING_LEVELS.includes(action));
-    if (unset)
+    if (typeof saved[action] !== "string")
       result[action] = taken.has(defaults[action]) ? "" : defaults[action];
   }
   return result;

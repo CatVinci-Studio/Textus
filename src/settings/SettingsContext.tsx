@@ -17,7 +17,6 @@ import { ai } from "../platform/ipc";
 import { readBoot } from "../storage/boot";
 import type { Raw } from "./settings-sync";
 import { useApplyAppearance } from "../theme/apply-appearance";
-import { SHORTCUTS_REVISION } from "./shortcut-defaults";
 import type { Settings } from "./settings-types";
 import { htmlLang } from "./settings-normalise";
 import { setCurrentLanguage } from "../i18n/current";
@@ -34,7 +33,6 @@ export {
   type HeadingAction,
   type Shortcuts,
   defaultShortcuts,
-  SHORTCUTS_REVISION,
 } from "./shortcut-defaults";
 export {
   type ThemeMode,
@@ -63,7 +61,7 @@ export {
   type ImageNamingMode,
   type AgentMode,
   AGENT_MODES,
-  migrateAgentMode,
+  storedAgentMode,
   type Settings,
 } from "./settings-types";
 export { htmlLang, normaliseSettings } from "./settings-normalise";
@@ -84,9 +82,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Without Rust, a first launch writes the whole set of defaults out at
-    // once, as it always did: a later partial write must not make the next
-    // launch mistake this for an old installation (see normaliseSettings).
-    // With Rust, the store does the same (fileStore).
+    // once - the OS's language it guessed among them - so the next launch
+    // reads the same, not a partial write's (see normaliseSettings). With
+    // Rust, the store does the same (fileStore).
     if (!readBoot() && readLocalSettings() === null)
       writeLocalSettings(loadSettings() as unknown as Raw);
     // Cross-window sync: another window changed something. `zoom` stays
@@ -107,8 +105,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     };
     const unsubscribe = subscribeRemote(adoptStore);
     // React runs this effect in a later task than the first render, and the
-    // live re-read, the legacy import's answer or another window's change
-    // can land in between - reaching the store while nobody is subscribed.
+    // live re-read or another window's change can land in between - reaching the store while nobody is subscribed.
     // Catch up on those now.
     if (remoteVersion !== renderedVersion.current) adoptStore();
     return unsubscribe;
@@ -137,13 +134,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   function setSettings(patch: Partial<Settings>) {
     const apply = () => {
-      // Shortcuts saved from now on are this build's: a "" in them is the
-      // user's own (see migrateShortcuts).
-      const full = patch.shortcuts
-        ? { ...patch, shortcutsRevision: SHORTCUTS_REVISION }
-        : patch;
-      setSettingsState((prev) => ({ ...prev, ...full }));
-      persist(full);
+      setSettingsState((prev) => ({ ...prev, ...patch }));
+      persist(patch);
     };
     // A language switched to takes effect once its strings have loaded
     // (i18n/strings.ts), so nothing draws in it meanwhile with English.

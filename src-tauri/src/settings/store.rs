@@ -38,8 +38,8 @@ pub struct Store {
     pub(crate) pretty: bool,
     pub(crate) inner: Mutex<Inner>,
     pub(crate) flush_scheduled: AtomicBool,
-    /// Whether the file was absent when loaded - what decides that this is
-    /// the first launch since the move and localStorage should be imported.
+    /// Whether the file was absent when loaded - for settings.json, what
+    /// decides that this is a new profile (`Stores::seed_new_profile`).
     pub(crate) missing_at_load: bool,
     /// The file exists but couldn't be read (permissions, an I/O error): it
     /// probably still holds the user's real data, which the first write
@@ -83,9 +83,9 @@ impl Store {
                 (empty, SCHEMA_VERSION)
             }
             // Unreadable for another reason (permissions, an I/O error):
-            // start empty, but neither treat it as a first launch -
-            // importing would then replace a file that probably still holds
-            // the real data - nor write it at all (see `unreadable`).
+            // start empty, but neither treat it as a new profile nor write
+            // it at all: it probably still holds the real data (see
+            // `unreadable`).
             Err(e) => {
                 eprintln!(
                     "textus: cannot read {}: {e}; using defaults for this session and leaving the file alone",
@@ -96,12 +96,6 @@ impl Store {
             }
         };
         Self::new(path, key, pretty, payload, schema, missing, unreadable)
-    }
-
-    /// A store that holds `payload` in memory and never writes `path` - for
-    /// a file that is there but can't be read, or replaced, this session.
-    pub(crate) fn unwritable(path: PathBuf, key: &'static str, payload: Value) -> Self {
-        Self::new(path, key, false, payload, SCHEMA_VERSION, false, true)
     }
 
     pub(crate) fn new(

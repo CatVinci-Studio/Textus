@@ -20,7 +20,7 @@ provides=('textus')
 # Levis was renamed Textus at 1.0.0. `pacman -Syu` swaps an installed
 # levis-bin for textus-bin; the two ship different files (/usr/bin/levis vs
 # /usr/bin/textus) but are the same app, so they never sit side by side.
-# Levis's data in ~/.config/com.chengaoshen.levis stays for Textus to import.
+# Levis's data in ~/.config/com.chengaoshen.levis is left alone.
 replaces=('levis-bin')
 conflicts=('textus' 'levis-bin' 'levis')
 options=('!strip' '!debug')

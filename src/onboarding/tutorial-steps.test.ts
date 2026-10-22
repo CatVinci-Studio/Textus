@@ -109,9 +109,9 @@ describe("the tour", () => {
 
 describe("resuming saved progress", () => {
   it("resumes this tour's step with its AI mode", () => {
-    expect(
-      resolveSavedProgress({ stepId: "grammar", stepIndex: 1, aiMode: "live" }),
-    ).toEqual({ stepIndex: stepIndexOf("grammar"), aiMode: "live" });
+    expect(resolveSavedProgress({ stepId: "grammar", aiMode: "live" })).toEqual(
+      { stepIndex: stepIndexOf("grammar"), aiMode: "live" },
+    );
     expect(resolveSavedProgress({ stepId: "skills", aiMode: "watch" })).toEqual(
       { stepIndex: stepIndexOf("skills"), aiMode: "watch" },
     );
@@ -129,57 +129,13 @@ describe("resuming saved progress", () => {
       });
   });
 
-  it("takes the second tour's AI panel lesson to AI writing, its memory one to the end", () => {
-    expect(
-      resolveSavedProgress({ stepId: "ai-panel", aiMode: "live" }),
-    ).toEqual({ stepIndex: stepIndexOf("write"), aiMode: "live" });
-    expect(resolveSavedProgress({ stepId: "memory", aiMode: "watch" })).toEqual(
-      { stepIndex: stepIndexOf("done"), aiMode: "watch" },
-    );
-  });
-
-  it.each([
-    ["welcome", "welcome"],
-    ["markdownIntro", "wysiwyg"],
-    ["markdownPractice", "wysiwyg"],
-    ["sidebar", "sidebar-export"],
-    ["aiIntro", "connect"],
-    ["completion", "connect"],
-    // A step of every tour: the first one's had no mode to resume in.
-    ["grammar", "connect"],
-    ["agentChat", "connect"],
-    ["agentEdit", "connect"],
-    ["connectAi", "connect"],
-    ["done", "done"],
-  ])("takes the first tour's %s to %s", (old, now) => {
-    expect(resolveSavedProgress({ stepId: old })).toEqual({
-      stepIndex: stepIndexOf(now as never),
-      aiMode: null,
-    });
-  });
-
-  it("reads the first tour's index-only progress against its own list", () => {
-    // 0 welcome, 2 markdownPractice, 3 sidebar, 6 grammar, 9 done.
-    const at = (stepIndex: number) =>
-      TUTORIAL_STEPS[resolveSavedProgress({ stepIndex }).stepIndex].id;
-    expect(at(0)).toBe("welcome");
-    expect(at(2)).toBe("wysiwyg");
-    expect(at(3)).toBe("sidebar-export");
-    expect(at(6)).toBe("connect");
-    expect(at(9)).toBe("done");
-  });
-
-  it.each([2.5, -1, 999, "invalid", null, undefined])(
-    "lands a malformed index %s on a real step",
-    (stepIndex) => {
-      const { stepIndex: index } = resolveSavedProgress({ stepIndex });
-      expect(TUTORIAL_STEPS[index]).toBeDefined();
+  it.each(["ai-panel", "markdownIntro", "gone", 3, null, undefined])(
+    "starts the tour over for a step it doesn't have (%s)",
+    (stepId) => {
+      expect(resolveSavedProgress({ stepId, aiMode: "live" })).toEqual({
+        stepIndex: stepIndexOf("welcome"),
+        aiMode: "live",
+      });
     },
   );
-
-  it("falls back to the index when the saved id is unknown", () => {
-    expect(
-      resolveSavedProgress({ stepId: "gone", stepIndex: 9 }).stepIndex,
-    ).toBe(stepIndexOf("done"));
-  });
 });

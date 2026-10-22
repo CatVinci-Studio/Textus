@@ -8,27 +8,24 @@ import { usePhoneLayout } from "../ui/usePhoneLayout";
 import type { Strings } from "../i18n/strings";
 
 /** The first-run layers over the window: the onboarding tour, and before
- *  it the language welcome - both held back while the Levis import offer
- *  is still open (onboarding-wiring.ts). */
+ *  it the language welcome. */
 export function OnboardingLayers({
   tutorial,
   settings,
   setSettings,
-  levisPending,
   zen,
   t,
 }: {
   tutorial: Tutorial;
   settings: Settings;
   setSettings: (patch: Partial<Settings>) => void;
-  levisPending: boolean;
   zen: { on: boolean; toggle: () => void };
   t: Strings;
 }) {
   const phone = usePhoneLayout();
   return (
     <>
-      {tutorial.active && settings.languageChosen && !levisPending && (
+      {tutorial.active && settings.languageChosen && (
         <TutorialExperience
           tutorial={tutorial}
           t={t}
@@ -41,8 +38,8 @@ export function OnboardingLayers({
           zen={zen}
         />
       )}
-      <Presence show={!settings.languageChosen && !levisPending} exitMs={200}>
-        {!settings.languageChosen && !levisPending && (
+      <Presence show={!settings.languageChosen} exitMs={200}>
+        {!settings.languageChosen && (
           <LanguageWelcome
             language={settings.language}
             onLanguage={(language) => setSettings({ language })}

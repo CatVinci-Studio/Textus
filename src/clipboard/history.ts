@@ -1,6 +1,5 @@
 import { loadSettings } from "../settings/SettingsContext";
 import { createPersistedList } from "../storage/persisted-list";
-import { CLIPBOARD_HISTORY_KEY } from "../storage/legacy-import";
 
 /**
  * Rolling history of text that moved through the clipboard inside the
@@ -20,6 +19,8 @@ export interface ClipboardEntry {
   at: number;
 }
 
+/** Where the browser fallback (no Rust) keeps the list. */
+const CLIPBOARD_HISTORY_KEY = "textus-clipboard-history";
 const MAX_ENTRIES = 30;
 const MAX_TEXT_LENGTH = 50_000;
 

@@ -15,16 +15,10 @@ use super::*;
 /// `textus-category`, `textus-packs` and `textus-target-packs` (space-separated
 /// pack references), `textus-aliases-<ui language>` (comma-separated),
 /// `textus-based-on` (a Customize… copy) and `textus-sources` (credits, not
-/// read). A skill written for Levis says `levis-` instead (a Customize… copy
-/// brought over by Import from Levis, a converted Levis project's skills);
-/// that prefix is read the same, `textus-` winning where a file has both.
-/// Claude Code's top-level `disable-model-invocation: true` also makes a
+/// read). Claude Code's top-level `disable-model-invocation: true` also makes a
 /// skill /name-only.
 /// The prefix of the app's own keys under a skill's `metadata:`.
 pub(crate) const META_PREFIX: &str = "textus";
-
-/// The same keys as Levis wrote them.
-pub(crate) const LEGACY_META_PREFIX: &str = "levis";
 
 pub(crate) fn parse_skill_file(file_stem: &str, content: &str) -> AgentSkill {
     let (frontmatter, body) = split_frontmatter(content);
@@ -48,13 +42,10 @@ pub(crate) fn parse_skill_file(file_stem: &str, content: &str) -> AgentSkill {
         skill.invocation = Invocation::UserOnly;
     }
     let meta = |key: &str| {
-        let get = |prefix: &str| {
-            fm.metadata
-                .get(&format!("{prefix}-{key}"))
-                .map(|v| v.trim())
-                .filter(|v| !v.is_empty())
-        };
-        get(META_PREFIX).or_else(|| get(LEGACY_META_PREFIX))
+        fm.metadata
+            .get(&format!("{META_PREFIX}-{key}"))
+            .map(|v| v.trim())
+            .filter(|v| !v.is_empty())
     };
     if let Some(invocation) = meta("invocation") {
         skill.invocation = match invocation.to_ascii_lowercase().as_str() {
@@ -72,21 +63,10 @@ pub(crate) fn parse_skill_file(file_stem: &str, content: &str) -> AgentSkill {
     };
     skill.packs = words(meta("packs"));
     skill.target_packs = words(meta("target-packs"));
-    // Legacy keys first, so a `textus-` list for the same language wins.
-    let mut alias_keys: Vec<(&str, &String)> = fm
-        .metadata
-        .iter()
-        .filter_map(|(key, value)| {
-            let lang = key
-                .strip_prefix(LEGACY_META_PREFIX)?
-                .strip_prefix("-aliases-")?;
-            Some((lang, value))
-        })
-        .collect();
-    alias_keys.extend(fm.metadata.iter().filter_map(|(key, value)| {
+    let alias_keys = fm.metadata.iter().filter_map(|(key, value)| {
         let lang = key.strip_prefix(META_PREFIX)?.strip_prefix("-aliases-")?;
         Some((lang, value))
-    }));
+    });
     for (lang, value) in alias_keys {
         let mut list: Vec<String> = Vec::new();
         for alias in value.split([',', '，']).map(str::trim) {

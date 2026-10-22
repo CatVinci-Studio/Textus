@@ -107,34 +107,6 @@ test("Ctrl+2 makes a paragraph a heading 2 out of the box, as the Format menu sa
     ).toContainText(`Ctrl+${level}`);
 });
 
-test("the heading keys a release candidate saved empty get Ctrl+1..6, and Paragraph stays as set", async ({
-  page,
-}) => {
-  // 1.2.0-rc.1 and rc.2 saved every level as "" (no shortcutsRevision).
-  await openApp(page, {
-    settings: {
-      language: "en",
-      shortcuts: {
-        setHeading1: "",
-        setHeading2: "",
-        setHeading3: "",
-        setHeading4: "",
-        setHeading5: "",
-        setHeading6: "",
-        setParagraph: "mod+9",
-      },
-    },
-  });
-  await caretInLine(page);
-  await page.keyboard.press("Control+3");
-  await expect(editor(page).locator("h3")).toContainText("A line of text");
-  await page.keyboard.press("Control+9");
-  await expect(editor(page).locator("h3")).toHaveCount(0);
-  await expect(
-    editor(page).locator("p", { hasText: "A line of text" }),
-  ).toBeVisible();
-});
-
 test("a heading level cleared in Settings stays cleared, and Reset brings it back", async ({
   page,
 }) => {
@@ -148,18 +120,15 @@ test("a heading level cleared in Settings stays cleared, and Reset brings it bac
     panel.getByRole("button", { name: "Heading 2: Not set" }),
   ).toBeVisible();
 
-  // Saved under the current revision, so the next launch reads the ""
-  // as chosen and doesn't put the default back. (A reload would rerun
-  // openApp's stored settings.)
+  // Saved as "", so the next launch reads it as chosen and doesn't put
+  // the default back. (A reload would rerun openApp's stored settings.)
   const saved = await page.evaluate(
     () =>
       JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}") as {
         shortcuts: Record<string, string>;
-        shortcutsRevision: number;
       },
   );
   expect(saved.shortcuts.setHeading2).toBe("");
-  expect(saved.shortcutsRevision).toBe(1);
 
   await page.keyboard.press("Escape");
   await expect(panel).toHaveCount(0);
