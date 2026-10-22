@@ -36,7 +36,7 @@ export function readBoot(): Boot | null {
   const raw =
     typeof window === "undefined"
       ? undefined
-      : (window as unknown as { __BOOT__?: unknown }).__BOOT__;
+      : (window as Window & { __BOOT__?: unknown }).__BOOT__;
   cached =
     isRecord(raw) && isRecord(raw.settings)
       ? {

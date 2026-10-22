@@ -8,6 +8,7 @@ import { splice } from "micromark-util-chunked";
 import { classifyCharacter } from "micromark-util-classify-character";
 import { resolveAll } from "micromark-util-resolve-all";
 import type {
+  Effects,
   Event,
   Extension,
   State,
@@ -171,7 +172,7 @@ export function highlightSyntax(): Extension {
 
   function tokenizeHighlight(
     this: TokenizeContext,
-    effects: any,
+    effects: Effects,
     ok: State,
     nok: State,
   ): ReturnType<Tokenizer> {
@@ -191,7 +192,7 @@ export function highlightSyntax(): Extension {
       return more(code);
     }
 
-    function more(code: number | null): any {
+    function more(code: number | null): State | undefined {
       const before = classifyCharacter(previous);
       if (code === EQUALS) {
         if (size > 1) return nok(code); // more than 2 in a row is not ours

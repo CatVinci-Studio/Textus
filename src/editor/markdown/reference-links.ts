@@ -110,13 +110,17 @@ interface AnyNode {
   [key: string]: unknown;
 }
 
+/** A definition as remark parses one: with its identifier and URL. */
+const isDefinition = (node: AnyNode): node is AnyNode & DefinitionNode =>
+  node.type === "definition";
+
 const remarkReferenceLinks: RemarkPluginRaw<unknown> = () => (tree, file) => {
   const source = String(file.value ?? "");
-  const root = tree as unknown as AnyNode;
+  const root = tree as AnyNode;
   const definitions = new Map<string, DefinitionNode>();
   const collect = (node: AnyNode) => {
-    if (node.type === "definition") {
-      const definition = node as unknown as DefinitionNode;
+    if (isDefinition(node)) {
+      const definition = node;
       // The first definition of a label is the one that counts.
       if (!definitions.has(definition.identifier))
         definitions.set(definition.identifier, definition);
@@ -127,12 +131,9 @@ const remarkReferenceLinks: RemarkPluginRaw<unknown> = () => (tree, file) => {
   collect(root);
   const convert = (node: AnyNode) => {
     node.children?.forEach((child, index, children) => {
-      if (child.type === "definition") {
+      if (isDefinition(child)) {
         // In the paragraph a definition stands for, as its source text.
-        const value = definitionSource(
-          child as unknown as DefinitionNode,
-          source,
-        );
+        const value = definitionSource(child, source);
         children[index] = {
           type: "paragraph",
           children: [{ type: "linkDefinition", value }],

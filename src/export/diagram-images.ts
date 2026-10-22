@@ -64,6 +64,8 @@ export async function replaceMermaidBlocks(
 /** Draws an SVG onto a white canvas at twice its size. Throws when the SVG
  *  can't be drawn (e.g. HTML labels in a foreignObject taint the canvas). */
 async function svgToPng(svg: string): Promise<DiagramImage> {
+  // The DOM types call documentElement an HTMLElement whatever the
+  // document; parsed as SVG, it is the <svg>.
   const root = new DOMParser().parseFromString(svg, "image/svg+xml")
     .documentElement as unknown as SVGSVGElement;
   const box = (root.getAttribute("viewBox") ?? "").split(/[\s,]+/).map(Number);

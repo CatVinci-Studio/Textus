@@ -29,6 +29,6 @@ export type PluginApi = typeof pluginApi;
 /** Puts the API on the window in a development build. */
 export function exposePluginApiForDevelopment(): void {
   if (!import.meta.env.DEV || typeof window === "undefined") return;
-  (window as unknown as { __textusPlugins?: PluginApi }).__textusPlugins =
+  (window as Window & { __textusPlugins?: PluginApi }).__textusPlugins =
     pluginApi;
 }

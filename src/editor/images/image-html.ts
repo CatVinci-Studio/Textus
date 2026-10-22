@@ -199,5 +199,5 @@ function readImageTags(node: MdastNode): void {
 /** Reads each `<img>` tag an image node can carry as one (parseImageTag). */
 export const remarkHtmlImages = $remark(
   "remark-html-images",
-  () => () => (tree) => readImageTags(tree as unknown as MdastNode),
+  () => () => (tree) => readImageTags(tree as MdastNode),
 );

@@ -60,7 +60,7 @@ export function fileStore(): SettingsSync | null {
     // First launch since the move: Rust has nothing yet, localStorage has
     // everything. Use it right away and hand it over; Rust answers with
     // what it kept (another window may have got there first).
-    const legacy = normaliseSettings(readLocalSettings()) as unknown as Raw;
+    const legacy: Raw = { ...normaliseSettings(readLocalSettings()) };
     sync = new SettingsSync(legacy, boot.rev);
     void importLegacyStorage(legacy).then((result) => {
       if (result) adopt(result.value, result.rev);
@@ -80,9 +80,7 @@ export function fileStore(): SettingsSync | null {
           // window replays the same empty snapshot, and must not put the
           // defaults back over everything changed since.
           trackWrite(
-            storage.settingsFillDefaults(
-              normaliseSettings(null) as unknown as Raw,
-            ),
+            storage.settingsFillDefaults({ ...normaliseSettings(null) }),
           )
         : storage.settingsGet();
     live.then((s) => adopt(s.value, s.rev)).catch(() => {});
@@ -147,7 +145,7 @@ export function persist(patch: Partial<Settings>) {
   }
   // A field not stored at all reads as its default, so setting it to the
   // default changes nothing either.
-  const current = loadSettings() as unknown as Raw;
+  const current: Raw = { ...loadSettings() };
   const changed: Raw = {};
   for (const [key, value] of Object.entries(patch)) {
     if (JSON.stringify(current[key]) !== JSON.stringify(value))

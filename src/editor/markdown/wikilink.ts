@@ -136,14 +136,14 @@ const wikilinkToMarkdown: ToMarkdownExtension = {
   handlers: { wikilink: (node: Wikilink) => node.value },
 };
 
-const remarkWikilink: RemarkPluginRaw<unknown> = function (this: {
-  data: () => Record<string, unknown[]>;
-}) {
+const remarkWikilink: RemarkPluginRaw<unknown> = function (
+  this: ThisParameterType<RemarkPluginRaw<unknown>>,
+) {
   const data = this.data();
   (data.micromarkExtensions ??= []).push(wikilinkSyntax());
   (data.fromMarkdownExtensions ??= []).push(wikilinkFromMarkdown);
   (data.toMarkdownExtensions ??= []).push(wikilinkToMarkdown);
-} as unknown as RemarkPluginRaw<unknown>;
+};
 
 export const remarkWikilinkPlugin = $remark(
   "remark-wikilink",
