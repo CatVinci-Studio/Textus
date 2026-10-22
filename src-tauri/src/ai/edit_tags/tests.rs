@@ -211,7 +211,7 @@ fn streamed_arguments_join_into_the_whole_call() {
 }
 
 #[test]
-fn a_step_with_tags_proposes_them_after_its_own_calls() {
+fn a_step_with_tags_proposes_them_after_its_own_calls_and_before_its_comments() {
     let StepResult::ToolCalls(calls) = with_tag_edits(StepResult::Done(REPLY.into()), 4) else {
         panic!("expected calls");
     };
@@ -232,22 +232,26 @@ fn a_step_with_tags_proposes_them_after_its_own_calls() {
     assert!(
         matches!(with_tag_edits(StepResult::Done("Hi.".into()), 1), StepResult::Done(t) if t == "Hi.")
     );
-    // Beside a real call: the reply loses its tags, the calls stay first.
+    // Beside a real call: the reply loses its tags, the calls stay first -
+    // but for comments, which run after the edits (tools::settles).
+    let call = |id: &str, name: &str| AgentTurn::ToolCall {
+        call_id: id.into(),
+        name: name.into(),
+        arguments: "{}".into(),
+        reasoning: None,
+    };
     let step = StepResult::ToolCalls(vec![
         AgentTurn::assistant("Noted and fixed.\n<textus-edit block=\"b1\">A.</textus-edit>"),
-        AgentTurn::ToolCall {
-            call_id: "c1".into(),
-            name: "add_comment".into(),
-            arguments: "{}".into(),
-            reasoning: None,
-        },
+        call("p1", "generate_image"),
+        call("c1", "add_comment"),
     ]);
     let StepResult::ToolCalls(calls) = with_tag_edits(step, 2) else {
         panic!("expected calls");
     };
     assert!(matches!(&calls[0], AgentTurn::Assistant { text, .. } if text == "Noted and fixed."));
-    assert!(matches!(&calls[1], AgentTurn::ToolCall { call_id, .. } if call_id == "c1"));
+    assert!(matches!(&calls[1], AgentTurn::ToolCall { call_id, .. } if call_id == "p1"));
     assert!(matches!(&calls[2], AgentTurn::ToolCall { call_id, .. } if is_virtual(call_id)));
+    assert!(matches!(&calls[3], AgentTurn::ToolCall { call_id, .. } if call_id == "c1"));
 }
 
 #[test]

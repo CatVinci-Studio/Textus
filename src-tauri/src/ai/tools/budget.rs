@@ -69,11 +69,15 @@ pub(crate) fn spend_check(ctx: &ToolContext, name: &str, arguments: &str) -> Opt
 }
 
 /// Whether `result` is a valid proposal or comment: the user's to decide
-/// now, with nothing in it the model has to answer.
-pub(crate) fn settles(name: &str, result: &str) -> bool {
+/// now, with nothing in it the model has to answer. A comment settles only
+/// once the request can't change the document or has proposed a change
+/// (`edited`): where it can, comments and a sentence may be the model about
+/// to write its edits next - in 1.2.0-rc.6's live eval DeepSeek ended two
+/// translations of three that way, the translation never written.
+pub(crate) fn settles(name: &str, result: &str, edited: bool) -> bool {
     match name {
         PROPOSE_EDIT_TOOL_NAME => result.starts_with(EDIT_PROPOSED),
-        ADD_COMMENT_TOOL_NAME => result.starts_with(COMMENT_ADDED),
+        ADD_COMMENT_TOOL_NAME => edited && result.starts_with(COMMENT_ADDED),
         _ => false,
     }
 }

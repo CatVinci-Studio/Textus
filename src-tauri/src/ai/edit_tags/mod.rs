@@ -25,6 +25,9 @@ pub use splitter::{Attrs, Piece, TagSplitter};
 /// rules held for all of them (docs/design/ai-agent.md).
 pub const RULES: &str = "Write each edit in your reply itself, after your sentence, as\n<textus-edit block=\"ID\">\nthe new Markdown, as it should read\n</textus-edit>\nwith ID the block's id as the document shows it (`k3f9` for `[#k3f9]`). `to=\"ID\"` makes it a run of blocks, from `block` through `to`, the tag holding the whole run rewritten. `action=\"after\"` or `action=\"before\"` adds the tag's text as new blocks after or before that block (after the run's last block, with `to`); an empty tag deletes the block or run; `quote=\"the exact words now there\"` changes only those words inside the block, the tag holding just their replacement - with `action=\"after\"` it adds the tag's text right after those words instead. Without a block: `action=\"append\"` adds at the end of the document, `action=\"cursor\"` where the user's cursor is (when their message has a <cursor> block), `action=\"selection\"` in place of the text they selected (when it has a <selected-text> block). Each tag on a line of its own; write the Markdown as it is - no escaping, and no block ids inside. Only text inside the tags reaches the document: an edit written any other way is not applied, and never repeat the new text outside the tags. In your thinking, decide only what to change and where; never write the new text out there or rehearse your reply - write it once, straight into its tag.";
 
+/// The comment tool, whose calls in a step run after its edits.
+const COMMENT_TOOL: &str = "add_comment";
+
 /// The prefix of a virtual call's id.
 const VIRTUAL: &str = "textus-edit-";
 
@@ -357,7 +360,15 @@ pub fn with_tag_edits(result: StepResult, step: usize) -> StepResult {
                     }
                 }
             }
-            calls.extend(virtual_calls(found));
+            // The edits run before the step's comments, so a comment knows
+            // whether the request has proposed a change (tools::settles).
+            let at = calls
+                .iter()
+                .position(
+                    |turn| matches!(turn, AgentTurn::ToolCall { name, .. } if name == COMMENT_TOOL),
+                )
+                .unwrap_or(calls.len());
+            calls.splice(at..at, virtual_calls(found));
             StepResult::ToolCalls(calls)
         }
     }

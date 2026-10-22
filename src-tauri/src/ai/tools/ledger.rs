@@ -108,6 +108,11 @@ impl ProposalLedger {
         }
         None
     }
+    /// Whether this request has proposed any change yet.
+    pub fn proposed_any(&self) -> bool {
+        !self.passages.is_empty() || !self.texts.is_empty()
+    }
+
     /// The new text of each proposal this request has made, in order.
     pub fn texts(&self) -> &[String] {
         &self.texts

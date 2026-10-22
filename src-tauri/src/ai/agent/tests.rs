@@ -1026,3 +1026,125 @@ fn a_selected_picture_in_the_documents_folder_is_seen() {
     assert!(selected_picture("What is in it?", doc).is_none());
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// Runs a scripted Revise request: each step's reply as the provider would
+/// send it - text, or text with comment calls - its tags turned into calls
+/// as the app turns them. Returns the turns and how many steps ran.
+fn scripted_revise(document: &str, script: Vec<StepResultScript>) -> (Vec<AgentTurn>, usize) {
+    use aicompat::agent::StepResult;
+    use std::cell::RefCell;
+    use std::collections::VecDeque;
+
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let conventions = crate::ai::rules::Conventions::default();
+    let ctx = ToolContext {
+        document,
+        undecided: &[],
+        skills: &[],
+        ui_language: "en",
+        root: None,
+        sees_images: false,
+        conventions: &conventions,
+        library: &[],
+        memory: None,
+        proposed: Default::default(),
+        checks: Default::default(),
+    };
+    let script = RefCell::new(VecDeque::from(script));
+    let steps = std::cell::Cell::new(0);
+    let turns = tauri::async_runtime::block_on(run_agent_loop(
+        vec![],
+        AgentTurn::User {
+            text: "Translate it into English".into(),
+            images: Vec::new(),
+        },
+        MAX_STEPS,
+        |_| {
+            let number = steps.get();
+            steps.set(number + 1);
+            let step = match script.borrow_mut().pop_front().unwrap() {
+                StepResultScript::Text(text) => StepResult::Done(text),
+                StepResultScript::Comment { text, anchor } => StepResult::calls_with_text(
+                    vec![AgentTurn::ToolCall {
+                        call_id: format!("c{number}"),
+                        name: tools::ADD_COMMENT_TOOL_NAME.into(),
+                        arguments: serde_json::json!({
+                            "anchor": anchor,
+                            "comment": "The title is a pun; this keeps one half.",
+                        })
+                        .to_string(),
+                        reasoning: None,
+                    }],
+                    text,
+                ),
+            };
+            let result = edit_tags::with_tag_edits(step, number);
+            let result = postfix_step(result, document, &conventions).0;
+            async move { Ok(result) }
+        },
+        |call| tools.execute(&ctx, call),
+        |name| tools.how_to_run(name),
+        |_| {},
+    ))
+    .unwrap();
+    (turns, steps.get())
+}
+
+enum StepResultScript {
+    Text(String),
+    Comment { text: String, anchor: String },
+}
+
+fn proposed_edits(turns: &[AgentTurn]) -> usize {
+    turns
+        .iter()
+        .filter(|t| matches!(t, AgentTurn::ToolResult { output, .. } if output.starts_with("Edit proposed")))
+        .count()
+}
+
+#[test]
+fn a_comment_and_a_sentence_before_any_edit_is_asked_on() {
+    // DeepSeek, 1.2.0-rc.6: "Translated it all" with a comment, and no
+    // tag - the edits it meant to write next were never asked for.
+    let document = "# 借雨\n\n雨夜。";
+    let ids: Vec<String> = doc_blocks::split(document)
+        .into_iter()
+        .map(|b| b.id)
+        .collect();
+    let (turns, steps) = scripted_revise(
+        document,
+        vec![
+            StepResultScript::Comment {
+                text: "Translated it all; one note on the title.".into(),
+                anchor: "借雨".into(),
+            },
+            StepResultScript::Text(format!(
+                "Done.\n\n<textus-edit block=\"{}\" to=\"{}\">\n# Borrowed Rain\n\nA rainy night.\n</textus-edit>",
+                ids[0], ids[1]
+            )),
+        ],
+    );
+    assert_eq!(steps, 2);
+    assert_eq!(proposed_edits(&turns), 1);
+}
+
+#[test]
+fn edits_comments_and_a_sentence_in_one_step_end_the_request() {
+    let document = "# 借雨\n\n雨夜。";
+    let ids: Vec<String> = doc_blocks::split(document)
+        .into_iter()
+        .map(|b| b.id)
+        .collect();
+    let (turns, steps) = scripted_revise(
+        document,
+        vec![StepResultScript::Comment {
+            text: format!(
+                "Translated it; one note on the title.\n\n<textus-edit block=\"{}\" to=\"{}\">\n# Borrowed Rain\n\nA rainy night.\n</textus-edit>",
+                ids[0], ids[1]
+            ),
+            anchor: "借雨".into(),
+        }],
+    );
+    assert_eq!(steps, 1);
+    assert_eq!(proposed_edits(&turns), 1);
+}

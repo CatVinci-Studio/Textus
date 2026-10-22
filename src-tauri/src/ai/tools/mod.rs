@@ -187,8 +187,14 @@ impl<'a> ToolRegistry<'a> {
         match self.find(&call.name).map(|t| &t.run) {
             Some(Run::Text(run)) => {
                 let text = run(ctx, &call.arguments);
+                let edited = !self.edits()
+                    || ctx
+                        .proposed
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .proposed_any();
                 ToolOutput {
-                    settled: settles(&call.name, &text),
+                    settled: settles(&call.name, &text, edited),
                     text,
                     ..ToolOutput::default()
                 }
