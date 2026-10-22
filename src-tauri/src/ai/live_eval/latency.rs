@@ -45,6 +45,14 @@ fn run_on(
     assert!(conv.error.is_none(), "{:?}", conv.error);
     for outcome in &conv.outcomes {
         eprintln!("  tools {:?}", outcome.tools);
+        // Tokens, for the spend on a provider with a budget (Gemini).
+        let (input, output) = outcome.usage.iter().fold((0, 0), |(i, o), u| {
+            (
+                i + u.input_tokens + u.cache_read_input_tokens + u.cache_creation_input_tokens,
+                o + u.output_tokens,
+            )
+        });
+        eprintln!("  tokens in {input} out {output}");
         for call in outcome.calls.iter().filter(|c| c["name"] == "propose_edit") {
             let args = &call["args"];
             eprintln!(
