@@ -187,7 +187,8 @@ function regroup(pairs: Pair[], finished: boolean): Pair[] {
   else {
     const shaped = shapeRun(uneven);
     const tail = shaped[shaped.length - 1];
-    const alone = tail !== undefined && (tail.before === "") !== (tail.after === "");
+    const alone =
+      tail !== undefined && (tail.before === "") !== (tail.after === "");
     out.push(...(alone ? uneven : shaped));
   }
   out.push(...run);
@@ -300,7 +301,11 @@ function alignParagraphs(
   best[0][0] = { cost: 0, di: 0, dj: 0 };
   // A pair, a join or a split of up to MAX_GROUP paragraphs (three lines
   // of dialogue said as one), a paragraph dropped or added.
-  const moves: [number, number][] = [[1, 1], [1, 0], [0, 1]];
+  const moves: [number, number][] = [
+    [1, 1],
+    [1, 0],
+    [0, 1],
+  ];
   for (let k = 2; k <= MAX_GROUP; k++) moves.push([k, 1], [1, k]);
   for (let i = 0; i <= m; i++)
     for (let j = 0; j <= n; j++) {

@@ -254,7 +254,6 @@ export const distribution = {
 // update (src-tauri/src/commands/update.rs) - desktop only
 // ---------------------------------------------------------------------------
 
-
 /** Mirrors UpdateMetadata in src-tauri/src/commands/update.rs, which is the
  *  plugin's own check answer. */
 export type UpdateMetadata = ConstructorParameters<typeof Update>[0];

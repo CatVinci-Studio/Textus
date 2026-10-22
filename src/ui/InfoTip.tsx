@@ -86,7 +86,10 @@ export function InfoTip({
   const hoverClose = () => {
     clearTimer();
     if (!pinned.current)
-      timerRef.current = window.setTimeout(() => setOpen(false), HOVER_CLOSE_MS);
+      timerRef.current = window.setTimeout(
+        () => setOpen(false),
+        HOVER_CLOSE_MS,
+      );
   };
 
   return (

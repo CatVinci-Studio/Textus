@@ -143,7 +143,10 @@ export function Tooltip({
       window.clearTimeout(timerRef.current);
       if (warm()) setOpen(true);
       else
-        timerRef.current = window.setTimeout(() => setOpen(true), TOOLTIP_OPEN_MS);
+        timerRef.current = window.setTimeout(
+          () => setOpen(true),
+          TOOLTIP_OPEN_MS,
+        );
     },
     onPointerLeave: (e) => {
       props.onPointerLeave?.(e);
