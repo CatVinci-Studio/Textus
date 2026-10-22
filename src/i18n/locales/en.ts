@@ -841,6 +841,7 @@ type /name in a conversation to use one.
   proposalStatusStreaming: "Writing…",
   proposalStatusAccepted: "Applied",
   proposalStatusRejected: "Rejected",
+  proposalStatusReplaced: "Replaced by a newer proposal",
   proposalStatusExpired: "No longer applicable",
   proposalStatusJoined: "In the proposed text above",
   proposalStatusInvalid: "Couldn't locate that text in the document.",

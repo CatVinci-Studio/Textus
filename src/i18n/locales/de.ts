@@ -849,6 +849,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   proposalStatusStreaming: "Wird geschrieben…",
   proposalStatusAccepted: "Übernommen",
   proposalStatusRejected: "Abgelehnt",
+  proposalStatusReplaced: "Durch einen neueren Vorschlag ersetzt",
   proposalStatusExpired: "Nicht mehr anwendbar",
   proposalStatusJoined: "Im vorgeschlagenen Text oben",
   proposalStatusInvalid: "Dieser Text wurde im Dokument nicht gefunden.",

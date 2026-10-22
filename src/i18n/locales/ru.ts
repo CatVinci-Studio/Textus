@@ -857,6 +857,7 @@ export default {
   proposalStatusStreaming: "Пишется…",
   proposalStatusAccepted: "Применена",
   proposalStatusRejected: "Отклонена",
+  proposalStatusReplaced: "Заменено более новым предложением",
   proposalStatusExpired: "Уже неактуальна",
   proposalStatusJoined: "В предложенном тексте выше",
   proposalStatusInvalid: "Не удалось найти этот текст в документе.",

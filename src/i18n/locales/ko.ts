@@ -808,6 +808,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   proposalStatusStreaming: "작성 중…",
   proposalStatusAccepted: "적용됨",
   proposalStatusRejected: "거부됨",
+  proposalStatusReplaced: "새 제안으로 바뀌었습니다",
   proposalStatusExpired: "더 이상 적용할 수 없음",
   proposalStatusJoined: "위의 제안 글에 넣었습니다",
   proposalStatusInvalid: "문서에서 해당 텍스트를 찾을 수 없습니다.",

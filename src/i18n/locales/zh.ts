@@ -779,6 +779,7 @@ export default {
   proposalStatusStreaming: "生成中…",
   proposalStatusAccepted: "已采纳",
   proposalStatusRejected: "已拒绝",
+  proposalStatusReplaced: "已替换为新的建议",
   proposalStatusExpired: "已失效",
   proposalStatusJoined: "已放进上面的文字建议",
   proposalStatusInvalid: "在文档中找不到这段文字了。",

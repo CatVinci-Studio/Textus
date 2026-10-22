@@ -874,6 +874,7 @@ utiliser une.
   proposalStatusStreaming: "Rédaction…",
   proposalStatusAccepted: "Appliquée",
   proposalStatusRejected: "Refusée",
+  proposalStatusReplaced: "Remplacée par une proposition plus récente",
   proposalStatusExpired: "Ne s'applique plus",
   proposalStatusJoined: "Dans le texte proposé ci-dessus",
   proposalStatusInvalid: "Impossible de retrouver ce texte dans le document.",
