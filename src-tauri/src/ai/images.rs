@@ -348,9 +348,16 @@ pub fn undecided_pictures(history: &[AgentTurn]) -> Vec<String> {
 }
 
 /// Whether `anchor` is the whole Markdown of one picture, `![alt](src)` -
-/// the only thing a picture may replace.
+/// or `<img ...>`, as a picture given a width is written - the only thing a
+/// picture may replace.
 fn is_picture_markdown(anchor: &str) -> bool {
-    let Some(rest) = anchor.trim().strip_prefix("![") else {
+    let anchor = anchor.trim();
+    if let Some(tag) = anchor.strip_prefix("<img") {
+        return tag.starts_with(char::is_whitespace)
+            && tag.ends_with('>')
+            && !tag[..tag.len() - 1].contains('>');
+    }
+    let Some(rest) = anchor.strip_prefix("![") else {
         return false;
     };
     let Some((alt, after)) = rest.split_once("](") else {
@@ -621,6 +628,11 @@ impl ImageRun {
         if prompt.is_empty() {
             return Err("`prompt` is empty - describe the picture.".into());
         }
+        // Still a `block`: doc_blocks::resolve_target_arguments found no
+        // such block.
+        if let Some(block) = args.get("block").and_then(Value::as_str) {
+            return Err(format!("There is no block `{block}` in the document - name a block by an id shown before it, like `[#k3f9]`."));
+        }
         let action = text("action");
         if !IMAGE_ACTIONS.contains(&action) {
             return Err(format!(
@@ -631,7 +643,7 @@ impl ImageRun {
         if action == "replace" {
             let anchor = text("anchor");
             if !is_picture_markdown(anchor) {
-                return Err("`replace` takes `anchor` as a picture's whole Markdown, `![alt](src)`, copied from the document - a picture replaces only a picture; put one next to text with insert_after.".into());
+                return Err("`replace` takes `block`, the id of a picture's own block - a picture replaces only a picture; put one next to text with insert_after.".into());
             }
             tools::check_anchor(document, args, anchor)?;
         }
@@ -715,7 +727,7 @@ impl ImageRun {
 /// What the model is told about generate_image, with this request's limit.
 fn description(limit: usize) -> String {
     let (scheme, aspects) = (inline::PICTURE_SCHEME, Aspect::ALL.join(" "));
-    format!("Make a picture with the user's image model and propose it for the document: the user sees it in place, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked.\n\nHow many: each picture costs the user money, and this request may make at most {limit}. When the user says how many, make that many (up to {limit}); when they don't, make one, or - for a longer piece they asked to illustrate - one for each part that gains from a picture.\n\nNew text with pictures (an empty document, a new section, a piece to write and illustrate): don't call generate_image - write each picture into the text you propose with propose_edit, as a line of its own between paragraphs where it goes: `![alt]({scheme}ASPECT description)` - alt a short caption in the document's language, ASPECT one of {aspects}, then the full English description, as for `prompt`. Each picture starts being made the moment its line is written, while you go on writing; the user sees its frame there and accepts the text and its pictures together. These lines count toward the limit, and each describes a different picture.\n\nA picture for text already in the document - or for text you proposed that the user hasn't accepted or rejected yet - goes insert_after the paragraph it illustrates, `anchor` quoted from it. Between paragraphs, never inside a list, a table, a quote or a heading's line, and not two pictures in a row.\n\nRedoing a picture: to change or replace one already in the document, use `replace` with `anchor` its whole Markdown, `![alt](src)`, copied from the document, and describe the new picture in full in `prompt` (what to keep, what to change). The user decides whether the old file goes once they accept.\n\nIf the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.")
+    format!("Make a picture with the user's image model and propose it for the document: the user sees it in place, and it is saved only if they accept. Use it when the user asks for a picture, an illustration, a figure or a cover - not for charts or diagrams you can write as Markdown or Mermaid. Write `prompt` as a full visual description in English: subject, setting, composition, style, light and colours, and no text in the picture unless asked.\n\nHow many: each picture costs the user money, and this request may make at most {limit}. When the user says how many, make that many (up to {limit}); when they don't, make one, or - for a longer piece they asked to illustrate - one for each part that gains from a picture.\n\nNew text with pictures (an empty document, a new section, a piece to write and illustrate): don't call generate_image - write each picture into the text you propose with propose_edit, as a line of its own between paragraphs where it goes: `![alt]({scheme}ASPECT description)` - alt a short caption in the document's language, ASPECT one of {aspects}, then the full English description, as for `prompt`. Each picture starts being made the moment its line is written, while you go on writing; the user sees its frame there and accepts the text and its pictures together. These lines count toward the limit, and each describes a different picture.\n\nA picture for text already in the document goes insert_after the block it illustrates, named by its id as `block`; for text you proposed that the user hasn't accepted or rejected yet, quote `anchor` from that text instead. Between paragraphs, never inside a list, a table, a quote or a heading's line, and not two pictures in a row.\n\nRedoing a picture: to change or replace one already in the document, use `replace` with `block` the picture's id, and describe the new picture in full in `prompt` (what to keep, what to change). The user decides whether the old file goes once they accept.\n\nIf the service refuses the description, tell the user what it said in plain words; don't change the description and try again on your own.")
 }
 
 /// What the model is told about generate_image.
@@ -744,9 +756,13 @@ fn spec(limit: usize) -> ToolSpec {
                     "enum": IMAGE_ACTIONS,
                     "description": "Where it goes: insert_after a paragraph (the usual place for an illustration of existing text), insert_before one, insert_at_cursor, append - or replace a picture already in the document."
                 },
+                "block": {
+                    "type": "string",
+                    "description": "For insert_after and insert_before: the id of the block the picture goes next to, like `k3f9` from `[#k3f9]`. For replace: the picture's own block id."
+                },
                 "anchor": {
                     "type": "string",
-                    "description": "For insert_after and insert_before: the paragraph the picture goes next to, quoted verbatim - the whole of it if it is short, else its last sentence. For replace: the picture's whole Markdown, `![alt](src)`."
+                    "description": "Only next to text proposed and not decided yet, which has no id: its last sentence, verbatim."
                 },
                 "context": {
                     "type": "string",
@@ -989,6 +1005,35 @@ mod tests {
 
     const DOC: &str =
         "# Harbour\n\nThe boats came in at dusk.\n\nThe nets were mended by lamplight.";
+
+    #[test]
+    fn a_picture_with_a_width_can_be_redone() {
+        // Written as HTML once it was given a width.
+        let doc = "One.\n\n<img src=\"assets/a.png\" width=\"60%\">\n\nTwo.";
+        let (args, made) = call(
+            &run(),
+            json!({"action": "replace", "anchor": "<img src=\"assets/a.png\" width=\"60%\">", "prompt": "p", "alt": "a"}),
+            doc,
+        );
+        assert!(made, "{args}");
+        assert!(is_picture_markdown("![a](b.png)"));
+        assert!(!is_picture_markdown("<img src=a.png> and words"));
+        assert!(!is_picture_markdown("<imgx>"));
+    }
+
+    #[test]
+    fn a_block_that_isnt_there_is_said_so() {
+        let (args, made) = call(
+            &run(),
+            json!({"action": "insert_after", "block": "zzzz", "prompt": "p", "alt": "a"}),
+            DOC,
+        );
+        assert!(!made);
+        assert!(args["not_generated"]
+            .as_str()
+            .unwrap()
+            .contains("no block `zzzz`"));
+    }
 
     #[test]
     fn a_call_that_cant_be_placed_spends_nothing() {

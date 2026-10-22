@@ -625,6 +625,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentRetry: "Tentar de novo",
   agentThinking: "Pensando…",
   agentWritingEdit: "Escrevendo a alteração…",
+  agentWritingNotes: "Escrevendo notas…",
   agentDeepThinking: "Raciocínio profundo",
   agentDeepThinkingHint: `Raciocínio profundo: quando ativado, ${AI_NAME} pensa por mais tempo antes de responder`,
   toggleOnHint: "{label} (Ativado: clique de novo para desativar)",

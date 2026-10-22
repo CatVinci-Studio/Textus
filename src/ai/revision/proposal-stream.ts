@@ -1,5 +1,7 @@
 import { draftProposal, parsePartialToolArgs } from "../chat/partial-tool-args";
 import { draftPictureProposal } from "./generated-images";
+import { resolveBlockTarget } from "../doc-blocks";
+import type { PartialString } from "../chat/partial-tool-args";
 import { parseProposal } from "../chat/proposal";
 import type { EditProposal } from "../types";
 
@@ -98,7 +100,7 @@ export class ProposalStream {
       if (draft.phase === "revealing") return;
       const proposal = draftPictureProposal(
         callId,
-        parsePartialToolArgs(draft.args),
+        byBlock(parsePartialToolArgs(draft.args), this.documentNow?.()),
       );
       if (!proposal) return;
       draft.phase = "revealing";
@@ -176,4 +178,30 @@ export class ProposalStream {
     }
     this.drafts.clear();
   }
+}
+
+/**
+ * A picture call's fields with the block it names (doc-blocks.ts'
+ * resolveBlockTarget) as its anchor, once that is complete - before, no
+ * anchor, so the frame waits for it. Without a block, as they came.
+ */
+function byBlock(
+  fields: Record<string, PartialString>,
+  document: string | undefined,
+): Record<string, PartialString> {
+  const { block, anchor, ...rest } = fields;
+  if (!block) return fields;
+  if (!block.complete || document === undefined) return rest;
+  const target = resolveBlockTarget(document, {
+    block: block.value,
+    anchor: anchor?.complete ? anchor.value : undefined,
+  });
+  if (!target) return rest;
+  return {
+    ...rest,
+    anchor: { value: target.anchor, complete: true },
+    ...(target.context
+      ? { context: { value: target.context, complete: true } }
+      : {}),
+  };
 }

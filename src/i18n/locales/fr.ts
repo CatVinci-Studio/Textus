@@ -645,6 +645,7 @@ utiliser une.
   agentRetry: "Réessayer",
   agentThinking: "Réflexion…",
   agentWritingEdit: "Rédaction de la modification…",
+  agentWritingNotes: "Rédaction des notes…",
   agentDeepThinking: "Réflexion approfondie",
   agentDeepThinkingHint: `Réflexion approfondie\u00a0: une fois activée, ${AI_NAME} réfléchit plus longtemps avant de répondre`,
   toggleOnHint: "{label} (Activée\u00a0: cliquez à nouveau pour la désactiver)",

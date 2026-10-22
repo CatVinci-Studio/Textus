@@ -159,3 +159,35 @@ export function resolveBlockEdit(
     ...(context ? { context } : {}),
   };
 }
+
+/**
+ * Where an add_comment or generate_image call named by its block points,
+ * as doc_blocks.rs's resolve_target_arguments makes it: a phrase quoted in
+ * `anchor` that the block holds once stays the anchor (pinned by the whole
+ * block where it repeats in the document), else the anchor is the whole
+ * block. Without a block, the anchor as quoted. Null while neither names
+ * anything in `document`.
+ */
+export function resolveBlockTarget(
+  document: string,
+  fields: { block?: string; anchor?: string },
+): { anchor: string; context?: string } | null {
+  if (!fields.block) return fields.anchor ? { anchor: fields.anchor } : null;
+  const blocks = splitBlocks(document);
+  const index = blocks.findIndex(
+    (b) => b.id === fields.block!.replace(/^#/, ""),
+  );
+  if (index === -1) return null;
+  const whole = blocks[index].text;
+  const phrase = fields.anchor;
+  if (phrase && phrase !== whole && whole.split(phrase).length === 2)
+    return document.split(phrase).length > 2
+      ? { anchor: phrase, context: whole }
+      : { anchor: phrase };
+  return document.split(whole).length > 2 && index > 0
+    ? {
+        anchor: whole,
+        context: document.slice(blocks[index - 1].from, blocks[index].to),
+      }
+    : { anchor: whole };
+}

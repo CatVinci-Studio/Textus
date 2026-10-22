@@ -105,6 +105,63 @@ async function send(page: Page) {
   await composer.press("Enter");
 }
 
+test("a picture named by its block shows its frame after that block while it streams", async ({
+  page,
+}) => {
+  await open(page);
+  const ids = await page.evaluate(
+    async ({ doc, path }) => {
+      const mod = (await import(/* @vite-ignore */ path)) as {
+        splitBlocks: (d: string) => { id: string }[];
+      };
+      return mod.splitBlocks(doc).map((b) => b.id);
+    },
+    {
+      doc: `${FIRST}\n\nThe second paragraph.`,
+      path: "/src/ai/doc-blocks.ts",
+    },
+  );
+  const raw = JSON.stringify({
+    action: "insert_after",
+    alt: "A quiet harbour",
+    aspect: "16:9",
+    block: ids[0],
+    prompt: "A quiet harbour at dusk, ".repeat(30),
+  });
+  await streamPicture(
+    page,
+    raw,
+    JSON.stringify({
+      action: "insert_after",
+      alt: "A quiet harbour",
+      anchor: FIRST,
+      aspect: "16:9",
+      prompt: "A quiet harbour at dusk, ".repeat(30),
+      image: { id: "abc124", width: 1600, height: 900, pending: true },
+    }),
+  );
+  await send(page);
+  const frame = page.locator(`${editor} .pending-picture`);
+  await expect(frame).toHaveCount(1);
+  // After the paragraph it names, not elsewhere.
+  expect(
+    await frame.evaluate((el) =>
+      el
+        .closest(".ProseMirror > *")
+        ?.previousElementSibling?.textContent?.includes(
+          "The harbour was quiet",
+        ),
+    ),
+  ).toBe(true);
+  await page.evaluate(() => {
+    (window as { __release?: boolean }).__release = true;
+  });
+  await expect(page.locator(`${editor} .pending-insert img`)).toHaveAttribute(
+    "src",
+    /^blob:/,
+  );
+});
+
 test("a picture's frame shows in its shape while its description streams", async ({
   page,
 }) => {

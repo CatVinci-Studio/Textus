@@ -575,6 +575,7 @@ export default {
   agentRetry: "重試",
   agentThinking: "思考中…",
   agentWritingEdit: "正在寫修改…",
+  agentWritingNotes: "正在寫批註…",
   agentDeepThinking: "深度思考",
   agentDeepThinkingHint: `深度思考：開啟後 ${AI_NAME} 會先想得更久再回答`,
   toggleOnHint: "{label}（已開啟，再按一下關閉）",

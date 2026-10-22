@@ -17,6 +17,7 @@ import { announce } from "../../ui/announce";
 import { useSettings, type AgentMode } from "../../settings/SettingsContext";
 import { imageModelOf } from "../image-models";
 import { parsePartialToolArgs } from "./partial-tool-args";
+import { resolveBlockTarget } from "../doc-blocks";
 
 export interface AgentRequestOptions {
   mode: AgentMode;
@@ -299,23 +300,33 @@ export function useAgentConversation(
           ) {
             const args = (commentArgs.get(event.callId) ?? "") + event.delta;
             commentArgs.set(event.callId, args);
-            const { anchor, comment, context } = parsePartialToolArgs(args);
+            const { anchor, block, comment, context } =
+              parsePartialToolArgs(args);
             const shown = prev?.comments?.some(
               (c) => c.kind === "ToolCall" && c.call_id === event.callId,
             );
             // Once: the passage and the whole note are in (context, after
             // them in the strict schema, may still settle a repeated
-            // passage - the completed turn places it again then).
-            if (!prev || shown || !anchor?.complete || !comment?.complete)
-              return;
+            // passage - the completed turn places it again then). The
+            // passage is the block it names (resolveBlockTarget), or the
+            // words it quotes.
+            if (!prev || shown || !comment?.complete) return;
+            if (block && !block.complete) return;
+            const target = resolveBlockTarget(document, {
+              block: block?.value,
+              anchor: anchor?.complete ? anchor.value : undefined,
+            });
+            if (!target) return;
             const call: AgentTurn = {
               kind: "ToolCall",
               call_id: event.callId,
               name: "add_comment",
               arguments: JSON.stringify({
-                anchor: anchor.value,
+                anchor: target.anchor,
                 comment: comment.value,
-                context: context?.complete ? context.value : undefined,
+                context:
+                  target.context ??
+                  (context?.complete ? context.value : undefined),
               }),
             };
             setStreaming({

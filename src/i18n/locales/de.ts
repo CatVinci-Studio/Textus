@@ -625,6 +625,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentRetry: "Erneut versuchen",
   agentThinking: "Denkt nach…",
   agentWritingEdit: "Änderung wird geschrieben…",
+  agentWritingNotes: "Notizen werden geschrieben…",
   agentDeepThinking: "Gründlich nachdenken",
   agentDeepThinkingHint: `Gründlich nachdenken: Wenn es an ist, denkt ${AI_NAME} länger nach, bevor es antwortet`,
   toggleOnHint: "{label} (An – zum Ausschalten noch einmal klicken)",
