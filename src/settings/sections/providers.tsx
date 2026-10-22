@@ -23,11 +23,13 @@ import {
 // credentials) plus the per-provider account/API-key/custom panels.
 
 // The catalog's labels are brand names, the same in every language - except
-// these two: "custom" is a description, and Doubao is known in Chinese by
-// its Chinese name.
+// these: "custom" is a description, Doubao is known in Chinese by its
+// Chinese name, and MiniMax's two platforms are told apart in words.
 function localizedLabel(entry: ProviderCatalogEntry, t: Strings): string {
   if (entry.id === "custom") return t.providerCustom;
   if (entry.id === "doubao") return t.providerDoubao;
+  if (entry.id === "minimax") return t.providerMiniMax;
+  if (entry.id === "minimax-intl") return t.providerMiniMaxIntl;
   return entry.label;
 }
 

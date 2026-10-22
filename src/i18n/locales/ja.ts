@@ -570,6 +570,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   providerNotConfigured: "未設定",
   providerCustom: "カスタムエンドポイント",
   providerDoubao: "Doubao（Volcengine）",
+  providerMiniMax: "MiniMax（中国版）",
+  providerMiniMaxIntl: "MiniMax（グローバル版）",
   agentModelLabel: "チャットモデル",
   agentDefaultModeLabel: "デフォルトモード",
   agentModeWrite: "執筆",

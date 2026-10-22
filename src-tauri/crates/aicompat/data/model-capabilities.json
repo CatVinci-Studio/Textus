@@ -1845,6 +1845,78 @@
           ]
         }
       }
+    },
+    "minimax": {
+      "MiniMax-M2": {
+        "reasoning": true
+      },
+      "MiniMax-M2.1": {
+        "reasoning": true
+      },
+      "MiniMax-M2.5": {
+        "reasoning": true
+      },
+      "MiniMax-M2.5-highspeed": {
+        "reasoning": true
+      },
+      "MiniMax-M2.7": {
+        "reasoning": true
+      },
+      "MiniMax-M2.7-highspeed": {
+        "reasoning": true
+      },
+      "MiniMax-M3": {
+        "reasoning": {
+          "toggle": true
+        }
+      },
+      "MiniMax-M3.1-Flash": {
+        "reasoning": {
+          "effort": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      }
+    },
+    "minimax-intl": {
+      "MiniMax-M2": {
+        "reasoning": true
+      },
+      "MiniMax-M2.1": {
+        "reasoning": true
+      },
+      "MiniMax-M2.5": {
+        "reasoning": true
+      },
+      "MiniMax-M2.5-highspeed": {
+        "reasoning": true
+      },
+      "MiniMax-M2.7": {
+        "reasoning": true
+      },
+      "MiniMax-M2.7-highspeed": {
+        "reasoning": true
+      },
+      "MiniMax-M3": {
+        "reasoning": {
+          "toggle": true
+        }
+      },
+      "MiniMax-M3.1-Flash": {
+        "reasoning": {
+          "effort": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      }
     }
   }
 }

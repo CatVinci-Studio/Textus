@@ -581,6 +581,8 @@ type /name in a conversation to use one.
   providerNotConfigured: "Not configured",
   providerCustom: "Custom Endpoint",
   providerDoubao: "Doubao (Volcengine)",
+  providerMiniMax: "MiniMax (China)",
+  providerMiniMaxIntl: "MiniMax (Global)",
   agentModelLabel: "Chat model",
   agentDefaultModeLabel: "Default mode",
   agentModeWrite: "Write",

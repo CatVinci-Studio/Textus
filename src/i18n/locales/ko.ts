@@ -560,6 +560,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   providerNotConfigured: "설정 안 됨",
   providerCustom: "사용자 지정 엔드포인트",
   providerDoubao: "Doubao (Volcengine)",
+  providerMiniMax: "MiniMax (중국)",
+  providerMiniMaxIntl: "MiniMax (글로벌)",
   agentModelLabel: "채팅 모델",
   agentDefaultModeLabel: "기본 모드",
   agentModeWrite: "쓰기",

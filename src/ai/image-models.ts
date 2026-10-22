@@ -45,6 +45,8 @@ const SAME_KEY_IMAGES = new Set([
   "doubao",
   "qwen",
   "zhipu",
+  "minimax",
+  "minimax-intl",
   "siliconflow",
 ]);
 

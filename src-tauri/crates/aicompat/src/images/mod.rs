@@ -20,6 +20,7 @@
 mod dashscope;
 mod fetch;
 mod gemini;
+mod minimax;
 mod openai;
 mod seedream;
 mod siliconflow;
@@ -77,6 +78,8 @@ pub enum ImageApi {
     Zhipu,
     /// SiliconFlow, OpenAI's path with its own fields.
     SiliconFlow,
+    /// MiniMax's image-01.
+    MiniMax,
     /// The ChatGPT sign-in: the image_generation tool on the backend
     /// ChatGPT's own apps use (providers::openai_codex::generate_image),
     /// not an Images API - no address or key, so never through
@@ -179,6 +182,7 @@ fn request(target: &ImageTarget, prompt: &str, aspect: Aspect) -> Request {
         ImageApi::DashScope => dashscope::request(base, target.model, prompt, aspect),
         ImageApi::Zhipu => zhipu::request(base, target.model, prompt, aspect),
         ImageApi::SiliconFlow => siliconflow::request(base, target.model, prompt, aspect),
+        ImageApi::MiniMax => minimax::request(base, target.model, prompt, aspect),
     }
 }
 
@@ -190,6 +194,7 @@ fn read_reply(api: ImageApi, reply: &Value) -> Result<Reply, ImageError> {
         ImageApi::DashScope => dashscope::reply(reply),
         ImageApi::Zhipu => zhipu::reply(reply),
         ImageApi::SiliconFlow => siliconflow::reply(reply),
+        ImageApi::MiniMax => minimax::reply(reply),
     }
 }
 
@@ -203,6 +208,7 @@ fn read_failure(api: ImageApi, status: reqwest::StatusCode, body: &str) -> Image
         ImageApi::DashScope => dashscope::refusal(&parsed),
         ImageApi::Zhipu => zhipu::refusal(&parsed),
         ImageApi::SiliconFlow => siliconflow::refusal(&parsed),
+        ImageApi::MiniMax => minimax::refusal(&parsed),
     };
     let message = error_message(&parsed).unwrap_or_else(|| short(body));
     if let Some(reason) = refused {
@@ -212,6 +218,7 @@ fn read_failure(api: ImageApi, status: reqwest::StatusCode, body: &str) -> Image
         ImageApi::Seedream => seedream::quota(&parsed),
         ImageApi::DashScope => dashscope::quota(&parsed),
         ImageApi::Zhipu => zhipu::quota(&parsed),
+        ImageApi::MiniMax => minimax::quota(&parsed),
         _ => false,
     };
     if quota || status == reqwest::StatusCode::PAYMENT_REQUIRED || status.as_u16() == 429 {

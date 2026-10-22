@@ -605,6 +605,8 @@ utiliser une.
   providerNotConfigured: "Non configuré",
   providerCustom: "Serveur personnalisé",
   providerDoubao: "Doubao (Volcengine)",
+  providerMiniMax: "MiniMax (Chine)",
+  providerMiniMaxIntl: "MiniMax (international)",
   agentModelLabel: "Modèle de discussion",
   agentDefaultModeLabel: "Mode par défaut",
   agentModeWrite: "Écrire",

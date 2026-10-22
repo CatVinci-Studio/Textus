@@ -24,6 +24,8 @@ import {
 function label(entry: ImageProviderEntry, t: Strings): string {
   if (entry.id === "custom") return t.imageProviderCustom;
   if (entry.id === "doubao") return t.providerDoubao;
+  if (entry.id === "minimax") return t.providerMiniMax;
+  if (entry.id === "minimax-intl") return t.providerMiniMaxIntl;
   if (entry.id === "openai-chatgpt") return t.imageProviderChatGpt;
   return entry.label;
 }
