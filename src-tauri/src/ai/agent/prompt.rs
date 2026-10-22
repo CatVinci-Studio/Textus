@@ -37,7 +37,7 @@ const RULES_TOOL_INSTRUCTIONS: &str = "When you proofread or fix conventions, gr
 pub(super) const AGENT_READ_ONLY_TOOL_INSTRUCTIONS: &str = "No document edit tool is available in this mode: you can read, research and comment. For feedback on specific passages, pin each point with add_comment, and write your short summary in the same message, before the add_comment calls: when they are all valid the request ends there, with that text as your reply.";
 
 /// What the assistant is called in the UI and what its Settings page is
-/// called: `AI_NAME` in src/i18n/names.ts ("Levis AI" before 1.0). A test keeps the two in step.
+/// called: `AI_NAME` in src/i18n/names.ts. A test keeps the two in step.
 pub(crate) const AI_NAME: &str = "Textus AI";
 
 /// Where the user changes the project folder. The project menu exists only

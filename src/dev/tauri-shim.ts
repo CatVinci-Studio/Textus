@@ -157,7 +157,6 @@ export function installDevTauriShim(): void {
     | {
         settings?: Record<string, unknown>;
         rev?: number;
-        legacyImport?: boolean;
         uiState?: Record<string, unknown>;
       }
     | undefined;
@@ -165,8 +164,6 @@ export function installDevTauriShim(): void {
   const store = {
     settings: { ...(live ?? boot?.settings ?? {}) } as Record<string, unknown>,
     rev: (boot?.rev ?? 1) + (live ? 10 : 0),
-    legacyPending: boot?.legacyImport === true,
-    imports: 0,
     patches: [] as Record<string, unknown>[],
     fills: [] as Record<string, unknown>[],
     log: [] as string[],
@@ -305,30 +302,6 @@ export function installDevTauriShim(): void {
           store.rev += 1;
         }
         return answer(cmd, { value: store.settings, rev: store.rev });
-      }
-      case "settings_import_legacy": {
-        const payload = args.payload as Record<string, unknown>;
-        store.imports += 1;
-        const accepted = store.legacyPending;
-        if (accepted) {
-          store.legacyPending = false;
-          store.settings = {
-            ...(payload.settings as object),
-            ...store.settings,
-          };
-          store.uiState = { ...(payload.uiState as object) };
-          store.histories.chat = (
-            (payload.chatHistory ?? []) as Record<string, unknown>[]
-          ).map(keepConversation);
-          store.histories.clipboard =
-            (payload.clipboardHistory as unknown[]) ?? [];
-          store.rev += 1;
-        }
-        return Promise.resolve({
-          accepted,
-          value: store.settings,
-          rev: store.rev,
-        });
       }
       case "ui_state_get":
         return Promise.resolve(store.uiState);

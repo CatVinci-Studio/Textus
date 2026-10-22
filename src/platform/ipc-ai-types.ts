@@ -185,9 +185,6 @@ export interface AgentWorkspaceInfo {
   memories: Memories;
   /** Settings > Textus AI > Remember automatically. */
   remember: boolean;
-  /** The project has a Levis project's `.levis/` with files `.textus/`
-   *  lacks - offered for conversion (ai::levis_project). */
-  levis_project: boolean;
 }
 
 // ---------------------------------------------------------------------------

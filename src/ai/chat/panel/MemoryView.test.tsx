@@ -57,7 +57,6 @@ const workspace = (over: Partial<AgentWorkspaceInfo>): AgentWorkspaceInfo => ({
   library: [],
   memories: { items: [], chars: 0, cap: 4000 },
   remember: true,
-  levis_project: false,
   ...over,
 });
 
