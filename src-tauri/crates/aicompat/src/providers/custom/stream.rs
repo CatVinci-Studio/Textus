@@ -78,6 +78,8 @@ pub(crate) struct ChatStreamAccumulator {
     /// From the chunk that carries it - the last, with `include_usage`.
     pub(crate) usage: Option<StepUsage>,
     pub(crate) ids: CallIds,
+    /// Gemini, asked for its thoughts: they come in the text, in tags.
+    pub(crate) thought_tags: Option<ThoughtTags>,
 }
 
 impl ChatStreamAccumulator {
@@ -116,9 +118,9 @@ impl ChatStreamAccumulator {
         }
 
         if let Some(text) = delta.get("content").and_then(|c| c.as_str()) {
-            if !text.is_empty() {
-                self.text.push_str(text);
-                on_event(ProviderEvent::Text(text));
+            match self.thought_tags.as_mut().map(|tags| tags.split(text)) {
+                Some((thought, answer)) => self.add(&thought, &answer, on_event),
+                None => self.add("", text, on_event),
             }
         }
 
@@ -178,7 +180,21 @@ impl ChatStreamAccumulator {
         }
     }
 
-    pub(crate) fn into_step_result(self, on_event: EventSink<'_>) -> StepResult {
+    fn add(&mut self, thought: &str, text: &str, on_event: EventSink<'_>) {
+        if !thought.is_empty() {
+            self.reasoning.push_str(thought);
+            on_event(ProviderEvent::Thinking(thought));
+        }
+        if !text.is_empty() {
+            self.text.push_str(text);
+            on_event(ProviderEvent::Text(text));
+        }
+    }
+
+    pub(crate) fn into_step_result(mut self, on_event: EventSink<'_>) -> StepResult {
+        if let Some((thought, answer)) = self.thought_tags.as_mut().map(ThoughtTags::finish) {
+            self.add(&thought, &answer, on_event);
+        }
         let mut calls: Vec<AgentTurn> = self
             .calls
             .into_iter()

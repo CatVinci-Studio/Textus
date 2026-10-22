@@ -37,12 +37,11 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
             image: None,
         },
     ),
-    // Gemini's OpenAI compatibility layer maps `reasoning_effort` onto its
-    // thinkingConfig (thinkingLevel on Gemini 3, a budget on 2.5).
     (
         "google",
         ProviderCaps {
             auto_effort: None,
+            thinking: ThinkingFormat::Gemini,
             image: Some(ImageApi::Gemini),
             stream_usage: true,
             ..DEFAULT_CAPS

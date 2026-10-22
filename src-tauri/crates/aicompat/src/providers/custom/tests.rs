@@ -671,3 +671,57 @@ fn a_calls_extra_content_goes_back_with_it() {
         "sig-2"
     );
 }
+
+#[test]
+fn gemini_asks_for_its_thoughts_in_a_thinking_config() {
+    use crate::capabilities::{plan, ThinkingLevel};
+    let body = |model: &str, level| {
+        agent_request_body(
+            model,
+            "help",
+            &[],
+            &[],
+            None,
+            Vendor::Generic,
+            &plan("google", model, level),
+        )
+    };
+    let config = |body: &Value| body["extra_body"]["google"]["thinking_config"].clone();
+    // It refuses reasoning_effort beside a thinking_config: never both.
+    let auto = body("gemini-3.5-flash", ThinkingLevel::Auto);
+    assert_eq!(config(&auto), json!({"include_thoughts": true}));
+    assert!(auto.get("reasoning_effort").is_none());
+    let deep = body("gemini-3.5-flash", ThinkingLevel::Deep);
+    assert_eq!(
+        config(&deep),
+        json!({"thinking_level": "high", "include_thoughts": true})
+    );
+    let fast = body("gemini-2.5-flash", ThinkingLevel::Fast);
+    assert_eq!(config(&fast), json!({"thinking_budget": 0}));
+}
+
+#[test]
+fn gemini_thoughts_in_the_text_stream_as_thinking() {
+    let reported = std::sync::Mutex::new(Vec::new());
+    let sink = |e: ProviderEvent<'_>| match e {
+        ProviderEvent::Text(t) => reported.lock().unwrap().push(format!("T:{t}")),
+        ProviderEvent::Thinking(t) => reported.lock().unwrap().push(format!("R:{t}")),
+        _ => {}
+    };
+    let mut acc = ChatStreamAccumulator {
+        thought_tags: Some(Default::default()),
+        ..Default::default()
+    };
+    for text in ["<thought>Weigh", " both.</tho", "ught>\nThe second."] {
+        acc.apply(
+            &json!({"choices": [{"delta": {"content": text}}]}).to_string(),
+            &sink,
+        );
+    }
+    let step = acc.into_step_result(&sink);
+    assert_eq!(
+        reported.into_inner().unwrap(),
+        ["R:Weigh", "R: both.", "T:The second."]
+    );
+    assert!(matches!(step, StepResult::Done(text) if text == "The second."));
+}

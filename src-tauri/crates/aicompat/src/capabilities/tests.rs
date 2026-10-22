@@ -140,7 +140,11 @@ fn each_chat_completions_format_has_its_own_fields() {
     assert_eq!(router["reasoning"]["effort"], "high");
 
     let gemini = chat_body(&plan("google", "gemini-3.8-flash", ThinkingLevel::Fast));
-    assert_eq!(gemini["reasoning_effort"], "low");
+    assert_eq!(
+        gemini["extra_body"]["google"]["thinking_config"],
+        json!({"thinking_level": "low", "include_thoughts": true})
+    );
+    assert!(gemini.get("reasoning_effort").is_none());
 
     let mistral = chat_body(&plan(
         "mistral",

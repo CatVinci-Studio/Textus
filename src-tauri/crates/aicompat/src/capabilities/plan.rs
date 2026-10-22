@@ -63,6 +63,27 @@ impl Thinking {
                     }
                 }
             }
+            Some(ThinkingFormat::Gemini) => {
+                let mut config = serde_json::Map::new();
+                match (self.on, &self.effort, self.budget) {
+                    (Some(false), ..) => {
+                        config.insert("thinking_budget".into(), json!(0));
+                    }
+                    (_, Some(effort), _) => {
+                        config.insert("thinking_level".into(), json!(effort));
+                    }
+                    (_, None, Some(budget)) => {
+                        config.insert("thinking_budget".into(), json!(budget));
+                    }
+                    _ => {}
+                }
+                if self.show && self.on != Some(false) {
+                    config.insert("include_thoughts".into(), json!(true));
+                }
+                if !config.is_empty() {
+                    body["extra_body"] = json!({"google": {"thinking_config": config}});
+                }
+            }
             Some(ThinkingFormat::Qwen) => self.apply_qwen(body),
             Some(ThinkingFormat::OpenRouter) => {
                 if self.on == Some(false) {
@@ -148,6 +169,12 @@ impl Thinking {
         }
     }
 
+    /// Whether the reply's text carries the thoughts in tags, to split out
+    /// (ThinkingFormat::Gemini, asked to show them).
+    pub fn thought_tags(&self) -> bool {
+        self.format == Some(ThinkingFormat::Gemini) && self.show && self.on != Some(false)
+    }
+
     /// The effort as an OpenAI-format field: switching off is `none`.
     pub(crate) fn wire_effort(&self) -> Option<&str> {
         match (self.on, &self.effort) {
@@ -181,6 +208,9 @@ pub fn plan(provider_id: &str, model: &str, level: ThinkingLevel) -> Thinking {
     let base = Thinking {
         format: Some(caps.thinking),
         replay: caps.replay_reasoning,
+        // Gemini thinks on every level but says nothing of it unless asked:
+        // its thoughts are what the row shows while the user waits.
+        show: caps.thinking == ThinkingFormat::Gemini,
         ..Thinking::default()
     };
     if caps.thinking == ThinkingFormat::None || refused(provider_id, model) {

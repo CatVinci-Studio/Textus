@@ -60,9 +60,15 @@ pub enum ThinkingFormat {
     None,
     /// OpenAI's: `reasoning_effort` in Chat Completions, `reasoning.effort`
     /// (and `reasoning.summary`) in the Responses API; switched off as the
-    /// effort `none`. Also Gemini's, xAI's, Groq's, Volcengine Ark's and
-    /// Ollama's OpenAI-compatible endpoints, and a custom endpoint's.
+    /// effort `none`. Also xAI's, Groq's, Volcengine Ark's and Ollama's
+    /// OpenAI-compatible endpoints, and a custom endpoint's.
     OpenAi,
+    /// Gemini's OpenAI-compatible layer (Google AI and Vertex AI):
+    /// `extra_body.google.thinking_config` - `thinking_level` (Gemini 3),
+    /// `thinking_budget` (2.5) and `include_thoughts`, whose thoughts come
+    /// back in the reply's text between `<thought>` tags. It refuses
+    /// `reasoning_effort` beside a thinking_config, so takes none.
+    Gemini,
     /// Anthropic Messages: `thinking` (adaptive, disabled, or a budget on
     /// older models) and `output_config.effort`.
     Anthropic,
