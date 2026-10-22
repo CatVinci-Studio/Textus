@@ -1,4 +1,3 @@
-
 use super::pandoc_args;
 
 #[test]
