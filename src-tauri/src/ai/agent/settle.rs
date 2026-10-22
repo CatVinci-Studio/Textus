@@ -83,60 +83,13 @@ pub(crate) fn settle_step(
     document: &str,
     conventions: &Conventions,
     pictures: Option<&InlinePictures<'_>>,
-    ledger: &std::sync::Mutex<tools::ProposalLedger>,
 ) -> (StepResult, Vec<&'static str>) {
     let (result, applied) = postfix_step(edits_before_comments(result), document, conventions);
     let result = match pictures {
         Some(pictures) => pictures.place(result),
         None => result,
     };
-    ledger.lock().unwrap_or_else(|e| e.into_inner()).open_run = open_run(&result, document);
     (result, applied)
-}
-
-/// The step's last edit, when it rewrites tools::EDIT_RUN_CAP blocks or
-/// more and stops short of the document's end: a run rewritten in parts,
-/// whose next part may not have come - its call id and the id of the block
-/// after it. GPT sent the first part of a translation with "translated it
-/// all" and nothing after (1.2.0-rc.6); a step that sends every part ends
-/// with the last one, at the end.
-pub(crate) fn open_run(result: &StepResult, document: &str) -> Option<(String, String)> {
-    let StepResult::ToolCalls(calls) = result else {
-        return None;
-    };
-    let (call_id, arguments) = calls.iter().rev().find_map(|t| match t {
-        AgentTurn::ToolCall {
-            call_id,
-            name,
-            arguments,
-            ..
-        } if name == tools::PROPOSE_EDIT_TOOL_NAME => Some((call_id, arguments)),
-        _ => None,
-    })?;
-    let args: serde_json::Value = serde_json::from_str(arguments).ok()?;
-    if args.get("action").and_then(|a| a.as_str()) != Some("replace") {
-        return None;
-    }
-    let anchor = args
-        .get("anchor")
-        .and_then(|a| a.as_str())
-        .filter(|a| !a.is_empty())?;
-    let within = args
-        .get("context")
-        .and_then(|c| c.as_str())
-        .and_then(|c| document.find(c).map(|at| (at, c)));
-    let start = match within {
-        Some((at, context)) => at + context.find(anchor)?,
-        None => document.find(anchor)?,
-    };
-    let end = start + anchor.len();
-    let blocks = doc_blocks::split(document);
-    let covered = blocks
-        .iter()
-        .filter(|b| b.start < end && b.end > start)
-        .count();
-    let next = blocks.iter().find(|b| b.start >= end)?;
-    (covered >= tools::EDIT_RUN_CAP).then(|| (call_id.clone(), next.id.clone()))
 }
 
 /// A step's edits run before its comments (calls run in order), so a

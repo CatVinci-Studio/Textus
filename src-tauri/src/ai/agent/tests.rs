@@ -978,7 +978,7 @@ fn scripted_revise(document: &str, script: Vec<Vec<AgentTurn>>) -> (Vec<AgentTur
         |_| {
             steps.set(steps.get() + 1);
             let step = StepResult::ToolCalls(script.borrow_mut().pop_front().unwrap());
-            let result = settle_step(step, document, &conventions, None, &ctx.proposed).0;
+            let result = settle_step(step, document, &conventions, None).0;
             async move { Ok(result) }
         },
         |call| tools.execute(&ctx, call),
@@ -1061,53 +1061,27 @@ fn edits_comments_and_a_sentence_in_one_step_end_the_request() {
     assert_eq!(proposed_edits(&turns), 1);
 }
 
-/// Seven paragraphs, and an edit of blocks `from..=to` of them.
-const SEVEN: &str = "一。\n\n二。\n\n三。\n\n四。\n\n五。\n\n六。\n\n七。";
-
-fn run_edit(id: &str, from: usize, to: usize) -> AgentTurn {
-    let ids: Vec<String> = doc_blocks::split(SEVEN).into_iter().map(|b| b.id).collect();
-    let text = (from..=to)
+#[test]
+fn a_whole_document_rewritten_in_one_replace_ends_in_one_step() {
+    // Seven paragraphs translated in one replace: no cap on the run, and
+    // nothing asked for afterwards.
+    let seven = "一。\n\n二。\n\n三。\n\n四。\n\n五。\n\n六。\n\n七。";
+    let ids: Vec<String> = doc_blocks::split(seven).into_iter().map(|b| b.id).collect();
+    let text = (1..=7)
         .map(|n| format!("Part {n}."))
         .collect::<Vec<_>>()
         .join("\n\n");
-    call(
-        id,
-        tools::PROPOSE_EDIT_TOOL_NAME,
-        serde_json::json!({"action": "replace", "block": ids[from], "last_block": ids[to], "text": text}),
-    )
-}
-
-#[test]
-fn a_rewrite_sent_one_part_at_a_time_is_asked_for_the_rest() {
-    // GPT, 1.2.0-rc.6: the first five blocks of a translation, "translated
-    // it all", and nothing after.
     let (turns, steps) = scripted_revise(
-        SEVEN,
-        vec![
-            vec![
-                run_edit("e0", 0, 4),
-                AgentTurn::assistant("Translated it all."),
-            ],
-            vec![
-                run_edit("e1", 5, 6),
-                AgentTurn::assistant("Translated it all."),
-            ],
-        ],
-    );
-    assert_eq!(steps, 2);
-    assert_eq!(proposed_edits(&turns), 2);
-}
-
-#[test]
-fn a_rewrite_sent_in_all_its_parts_ends_in_one_step() {
-    let (turns, steps) = scripted_revise(
-        SEVEN,
+        seven,
         vec![vec![
-            run_edit("e0", 0, 4),
-            run_edit("e1", 5, 6),
+            call(
+                "e0",
+                tools::PROPOSE_EDIT_TOOL_NAME,
+                serde_json::json!({"action": "replace", "block": ids[0], "last_block": ids[6], "text": text}),
+            ),
             AgentTurn::assistant("Translated it all."),
         ]],
     );
     assert_eq!(steps, 1);
-    assert_eq!(proposed_edits(&turns), 2);
+    assert_eq!(proposed_edits(&turns), 1);
 }

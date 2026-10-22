@@ -8,19 +8,6 @@ pub(crate) const PROPOSE_EDIT_TOOL_NAME: &str = "propose_edit";
 /// such a call needs nothing more from the model (ToolOutput::settled).
 pub(super) const EDIT_PROPOSED: &str = "Edit proposed";
 
-/// The most blocks one edit rewrites where the new text follows the old
-/// block by block (agent/prompt.rs says it as 5): a longer rewrite comes as
-/// several edits, each of which the user can follow and decide on.
-pub(crate) const EDIT_RUN_CAP: usize = 5;
-
-/// Added to the result of an edit that stops at EDIT_RUN_CAP blocks short
-/// of the document's end, which then doesn't end the request: the block the
-/// next part starts at, by id - the call is recorded quoting its text, and
-/// asked for "the block after them" GPT sent the same part again.
-pub(super) fn run_goes_on(next: &str) -> String {
-    format!(" It covers 5 blocks, the most one edit takes. If the request goes on past them, send the next part now, from block `{next}` on; if it doesn't, just reply.")
-}
-
 /// The edit operations the frontend knows how to apply. Kept in sync with
 /// `EditAction` in src/ai/types.ts - adding one here without teaching
 /// the frontend (usePendingEdits.ts, which resolves proposals, and

@@ -18,11 +18,6 @@ pub struct ProposalLedger {
     /// Why pictures written into the text were left out of it (the limit
     /// reached), for propose_edit's result to say.
     pub(crate) unmade: Vec<String>,
-    /// A step's last edit when it stops at EDIT_RUN_CAP blocks short of the
-    /// document's end (agent::settle::open_run): its call id, and the id of
-    /// the block after it, which its result asks the rest to start at. It
-    /// doesn't settle the request.
-    pub(crate) open_run: Option<(String, String)>,
 }
 
 impl ProposalLedger {

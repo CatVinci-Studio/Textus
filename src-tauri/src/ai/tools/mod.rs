@@ -177,28 +177,15 @@ impl<'a> ToolRegistry<'a> {
         }
         match self.find(&call.name).map(|t| &t.run) {
             Some(Run::Text(run)) => {
-                let mut text = run(ctx, &call.arguments);
-                let ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
-                let edited = !self.edits() || ledger.proposed_any();
-                // A run rewritten in parts whose next part may not have
-                // come (agent::settle::open_run).
-                let next = match &ledger.open_run {
-                    Some((id, next))
-                        if *id == call.call_id
-                            && call.name == PROPOSE_EDIT_TOOL_NAME
-                            && text.starts_with(EDIT_PROPOSED) =>
-                    {
-                        Some(next.clone())
-                    }
-                    _ => None,
-                };
-                drop(ledger);
-                let open = next.is_some();
-                if let Some(next) = next {
-                    text.push_str(&run_goes_on(&next));
-                }
+                let text = run(ctx, &call.arguments);
+                let edited = !self.edits()
+                    || ctx
+                        .proposed
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .proposed_any();
                 ToolOutput {
-                    settled: !open && settles(&call.name, &text, edited),
+                    settled: settles(&call.name, &text, edited),
                     text,
                     ..ToolOutput::default()
                 }
