@@ -1,6 +1,6 @@
 import { editedText, reanchoredPicture } from "./joined-edit";
 import { closeHistory } from "@milkdown/kit/prose/history";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { visibleTextBetween } from "../../editor/markdown/link-reveal";
 import {
@@ -16,6 +16,8 @@ import {
 } from "./pending-place";
 
 export { locateAnchor } from "./pending-place";
+export type { ReviewStop } from "./pending-review";
+import { useReviewNavigation } from "./pending-review";
 export type { SelectionTarget } from "./pending-place";
 export type { DecidedChange } from "./pending-place";
 
@@ -37,7 +39,6 @@ import type { WebSource } from "../types";
 import { isIOSApp } from "../../platform/capabilities";
 import {
   pendingEditKey,
-  reviewChanges,
   sentenceTake,
   type PendingPreview,
 } from "./pending-edit-plugin";
@@ -48,7 +49,6 @@ import {
 } from "./proposal-lifecycle";
 import { composeSentences, trimBreaks } from "./sentence-diff";
 import { findInOrder } from "./sentence-locate";
-import { nextFocusAfterChange, orderForReview } from "./pending-edit-focus";
 
 import type { EditProposal } from "../types";
 import {
@@ -93,14 +93,6 @@ export interface CitationStyle {
   asFootnotes: boolean;
   /** The conversation's sources, which title the footnotes. */
   sources: WebSource[];
-}
-
-/** One stop of the review bar: a changed sentence, or a whole proposal
- *  that isn't shown sentence by sentence (`index` -1). */
-export interface ReviewStop {
-  callId: string;
-  index: number;
-  from: number;
 }
 
 /**
@@ -174,136 +166,29 @@ export function usePendingEdits(
   const [statuses, setStatuses] = useState<Record<string, RecordedStatus>>({});
   const knownIds = useRef<Set<string>>(new Set());
 
-  // "Review one at a time" state for Quick Ask (MilkdownEditor's nav bar) -
-  // ordered by document position, not arrival order, so Next reads top to
-  // bottom the way scrolling through the document would.
-  const [focusedCallId, setFocusedCallId] = useState<string | null>(null);
-  const decidable = useMemo(() => orderForReview(previews), [previews]);
-  const focusIndex = focusedCallId
-    ? decidable.findIndex((p) => p.callId === focusedCallId)
-    : -1;
-  const focusedPreview = focusIndex >= 0 ? decidable[focusIndex] : null;
-
-  // Re-points the focus whenever the navigable set changes (a preview
-  // settled into it, or left it via accept/reject/invalidation) - keeping
-  // the pointer's POSITION (see nextFocusAfterChange) rather than resetting
-  // to the start every time.
-  const lastOrderRef = useRef<string[]>([]);
-  useEffect(() => {
-    const newOrder = decidable.map((p) => p.callId);
-    setFocusedCallId((prev) =>
-      nextFocusAfterChange(lastOrderRef.current, prev, newOrder),
-    );
-    lastOrderRef.current = newOrder;
-  }, [decidable]);
-
-  // What the review bar and the margin go through: the decidable
-  // previews, and the rewrites still streaming in sentence by sentence,
-  // whose completed changes are counted and shown as each one comes
-  // (PendingPreview.streamChanges) - they can be looked at, not decided
-  // yet.
-  const reviewed = useMemo(
-    () =>
-      previews
-        .filter((p) => !p.streaming || p.streamChanges)
-        .sort((a, b) => a.from - b.from),
-    [previews],
-  );
-  const reviewStreaming = reviewed.some((p) => p.streaming);
+  // Going through them one by one: the review bar's stops and count,
+  // Quick Ask's pointer (pending-review.ts).
+  const nav = useReviewNavigation(previews);
+  const {
+    decidable,
+    reviewed,
+    reviewStreaming,
+    reviewStops,
+    reviewCount,
+    stopIndex,
+    focusedStop,
+    stepReview,
+    pointReview,
+    focusIndex,
+    focusedPreview,
+    focusedCallId,
+    step,
+  } = nav;
   // A picture still being made in a pending proposal: Accept waits for it.
   const picturesPainting =
     usePicturesState(previews.map((p) => p.proposal.text ?? "").join("\n")) ===
     "painting";
 
-  // The review bar walks sentence by sentence: every changed sentence of a
-  // proposal shown that way, or the proposal itself otherwise, top to
-  // bottom. The pointer is kept by identity, falling back to the stop now
-  // at its old place when its own went (decided, applied).
-  const reviewStops = useMemo<ReviewStop[]>(
-    () =>
-      reviewed
-        .flatMap((p) => {
-          const changes = reviewChanges(p);
-          return changes
-            ? changes.map((c, index) => ({
-                callId: p.callId,
-                index,
-                from: c.from,
-              }))
-            : [{ callId: p.callId, index: -1, from: p.from }];
-        })
-        .sort((a, b) => a.from - b.from),
-    [reviewed],
-  );
-  const [stopKey, setStopKey] = useState<string | null>(null);
-  const stopIndex = stopKey
-    ? reviewStops.findIndex((s) => `${s.callId}:${s.index}` === stopKey)
-    : -1;
-  const focusedStop = stopIndex >= 0 ? reviewStops[stopIndex] : null;
-  const lastStopsRef = useRef<string[]>([]);
-  useEffect(() => {
-    const keys = reviewStops.map((s) => `${s.callId}:${s.index}`);
-    setStopKey((prev) => {
-      if (prev === null) return null;
-      return nextFocusAfterChange(lastStopsRef.current, prev, keys);
-    });
-    lastStopsRef.current = keys;
-  }, [reviewStops]);
-
-  /** Moves the review bar's pointer and returns where it now is. */
-  const stepReview = useCallback(
-    (delta: 1 | -1): ReviewStop | null => {
-      if (reviewStops.length === 0) return null;
-      const next =
-        stopIndex === -1
-          ? delta === 1
-            ? 0
-            : reviewStops.length - 1
-          : (stopIndex + delta + reviewStops.length) % reviewStops.length;
-      const stop = reviewStops[next];
-      setStopKey(`${stop.callId}:${stop.index}`);
-      setFocusedCallId(stop.callId);
-      return stop;
-    },
-    [reviewStops, stopIndex],
-  );
-
-  /** Points the review bar at a sentence (index -1: the proposal's first
-   *  stop) - a card's sentence or "Show in text" was clicked. */
-  const pointReview = useCallback(
-    (callId: string, index: number): ReviewStop | null => {
-      const stop =
-        reviewStops.find(
-          (s) => s.callId === callId && (index < 0 || s.index === index),
-        ) ?? null;
-      if (stop) {
-        setStopKey(`${stop.callId}:${stop.index}`);
-        setFocusedCallId(stop.callId);
-      }
-      return stop;
-    },
-    [reviewStops],
-  );
-
-  /** How much an Accept-everything would take: changed sentences (a whole
-   *  proposal counting as one) taken of all of them. */
-  const reviewCount = useMemo(() => {
-    let taken = 0;
-    let total = 0;
-    for (const p of reviewed) {
-      const take = p.streaming
-        ? (p.streamChanges ?? []).map(() => true)
-        : sentenceTake(p);
-      if (take) {
-        total += take.length;
-        taken += take.filter(Boolean).length;
-      } else {
-        total += 1;
-        taken += 1;
-      }
-    }
-    return { taken, total };
-  }, [reviewed]);
   // For rejectAll, which stays stable (see there).
   const reviewTotalRef = useLatest(reviewCount.total);
 
@@ -984,25 +869,6 @@ export function usePendingEdits(
     if (ok) optionsRef.current.onAnnounce?.("accepted", taken);
   }, [previews, applyAccept, reviewCount.taken]);
 
-  /** Moves the review pointer by `delta` (wrapping; a fresh pointer starts
-   *  at the first preview either way) and returns what it now points at, or
-   *  null if there's nothing to navigate - the caller (MilkdownEditor)
-   *  reveals that preview immediately, synchronously, rather than waiting
-   *  on an effect: unlike accept/reject, moving the pointer doesn't change
-   *  the navigable set, so there's nothing to wait for. */
-  const step = useCallback(
-    (delta: 1 | -1): PendingPreview | null => {
-      if (decidable.length === 0) return null;
-      const next =
-        focusIndex === -1
-          ? 0
-          : (focusIndex + delta + decidable.length) % decidable.length;
-      const preview = decidable[next];
-      setFocusedCallId(preview.callId);
-      return preview;
-    },
-    [decidable, focusIndex],
-  );
   const focusNext = useCallback(() => step(1), [step]);
   const focusPrevious = useCallback(() => step(-1), [step]);
 
