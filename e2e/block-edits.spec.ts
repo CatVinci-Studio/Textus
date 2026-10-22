@@ -214,3 +214,38 @@ for (const [name, setup] of [
     await expect(page.locator(editor)).toContainText(text);
     await expect(page.locator(editor)).not.toContainText("opened late");
   });
+
+test("a light polish shows where it is: the original sentence it has reached is marked as it goes", async ({
+  page,
+}) => {
+  const doc =
+    "# Night hours\n\nThe library opened late on Wednesdays. Students came most. Some stayed until ten.";
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(page, doc);
+  const ids = await blockIds(page, doc);
+  const before =
+    "The library opened late on Wednesdays. Students came most. Some stayed until ten.";
+  const text =
+    "The library opened late on Wednesdays. Pupils came most. Some stayed until ten.";
+  await streamEdit(
+    page,
+    JSON.stringify({ action: "replace", block: ids[1], text }),
+    JSON.stringify({ action: "replace", anchor: before, text }),
+  );
+  await ask(page);
+  // Held on its last sentence, which repeats the original word for word:
+  // nothing new shows for it, but the cursor stands on it.
+  const reading = page.locator(`${editor} .pending-reading`);
+  await expect(reading).toHaveText("Some stayed until ten.");
+  await expect(page.locator(editor)).toContainText("Pupils");
+  await page.evaluate(() => {
+    (window as { __release?: boolean }).__release = true;
+  });
+  await expect(page.locator(".agent-panel-view")).toContainText(
+    "Tightened it.",
+  );
+  await expect(reading).toHaveCount(0);
+});

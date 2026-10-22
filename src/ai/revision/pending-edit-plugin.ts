@@ -231,9 +231,10 @@ function layoutSignature(layout: StreamLayout): string {
         : `c${p.start}-${p.end}:${textKey(p.after)}`,
     )
     .join(",");
+  // Without a partial sentence the progress cursor stands on `reached`.
   const partial = layout.partial
     ? `${layout.partial.rewrites ?? "i"}@${layout.partial.at}`
-    : "-";
+    : `-${layout.reached}`;
   return `${pieces}|${partial}`;
 }
 
@@ -1117,6 +1118,8 @@ function streamDecorations(
   const { partial } = s.layout;
   s.partialIndex = partial ? index : null;
   s.drawn = layoutSignature(s.layout);
+  const reading = readingDecoration(p.callId, ranges, s.layout);
+  if (reading) decos.push(reading);
   if (!partial) return decos;
   const rewrites = partial.rewrites === null ? null : ranges[partial.rewrites];
   if (rewrites)
@@ -1153,6 +1156,31 @@ function streamDecorations(
     ),
   );
   return decos;
+}
+
+/**
+ * The progress cursor: the original sentence a streaming rewrite is at.
+ * While the sentence being written repeats an original word for word (or
+ * is too short yet to tell which one it rewrites) nothing else shows - a
+ * light polish kept the screen still for seconds, then a sentence popped
+ * up (rc.6) - so the sentence it has reached is tinted, the tint moving on
+ * as it goes. One being rewritten is struck open instead, with the new
+ * text typing beside it; past the last original there is nothing to mark.
+ */
+function readingDecoration(
+  callId: string,
+  ranges: { from: number; to: number }[],
+  layout: StreamLayout,
+): Decoration | null {
+  if (layout.partial) return null;
+  const range = ranges[layout.reached];
+  if (!range || range.from >= range.to) return null;
+  return Decoration.inline(
+    range.from,
+    range.to,
+    { class: "pending-reading", "data-call": callId },
+    { part: "reading" },
+  );
 }
 
 interface SentenceHooks {

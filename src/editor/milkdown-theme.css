@@ -609,6 +609,42 @@ br:is(.pending-delete, .pending-sentence-hot) {
   }
 }
 
+/* The progress cursor (pending-edit-plugin's readingDecoration): the
+   original sentence a streaming rewrite is at, a tint sweeping across it -
+   also over a sentence it keeps word for word, which shows nothing else,
+   so a light polish moves through the text rather than standing still.
+   Reduced motion: the tint, still. */
+.pending-reading {
+  border-radius: var(--md-radius-sm);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    var(--revision-reading-bg) 40%,
+    var(--revision-reading-bg) 60%,
+    transparent
+  );
+  background-size: 300% 100%;
+  animation: pending-reading-sweep 1.4s linear infinite;
+}
+
+@keyframes pending-reading-sweep {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pending-reading {
+    background: var(--revision-reading-bg);
+    animation: none;
+  }
+}
+
 /* While the typewriter is still revealing text (pending-edit-plugin's
    animation queue), a blinking caret marks the growth point - same
    blink cadence as the ghost-text caret above. */
