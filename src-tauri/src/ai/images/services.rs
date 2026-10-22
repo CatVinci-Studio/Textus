@@ -22,6 +22,9 @@ pub struct ImageProviderEntry {
     /// The models offered, the default first; the compatible endpoint's is
     /// typed in.
     pub models: &'static [&'static str],
+    /// The chat provider whose sign-in brings this service, which then
+    /// follows that chat rather than the provider's own pictures on its key.
+    pub sign_in_for: Option<&'static str>,
 }
 
 pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
@@ -37,6 +40,7 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
         // keeps under the chat provider.
         key_id: "",
         models: &["gpt-image"],
+        sign_in_for: Some("openai"),
     },
     ImageProviderEntry {
         id: "openai",
@@ -47,6 +51,7 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
         key_id: "openai",
         // About $0.05 and $0.01 a picture at medium quality (2026-10).
         models: &["gpt-image-2", "gpt-image-1-mini"],
+        sign_in_for: None,
     },
     ImageProviderEntry {
         id: "google",
@@ -55,6 +60,7 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
         base_url: Some("https://generativelanguage.googleapis.com/v1beta"),
         key_id: "google",
         models: &["gemini-nano-banana-2.1", "gemini-3.1-flash-lite-image"],
+        sign_in_for: None,
     },
     ImageProviderEntry {
         id: "doubao",
@@ -66,6 +72,7 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
             "doubao-seedream-5-0-pro-260628",
             "doubao-seedream-5-0-flash-260915",
         ],
+        sign_in_for: None,
     },
     ImageProviderEntry {
         id: "qwen",
@@ -76,6 +83,7 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
         base_url: Some("https://dashscope.aliyuncs.com/api/v1"),
         key_id: "qwen",
         models: &["qwen-image-3.0-pro", "qwen-image-3.0"],
+        sign_in_for: None,
     },
     ImageProviderEntry {
         id: "zhipu",
@@ -84,6 +92,7 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
         base_url: Some("https://open.bigmodel.cn/api/paas/v4"),
         key_id: "zhipu",
         models: &["glm-image", "cogview-4-250304", "cogview-3-flash"],
+        sign_in_for: None,
     },
     ImageProviderEntry {
         id: "minimax",
@@ -92,6 +101,7 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
         base_url: Some("https://api.minimaxi.com/v1"),
         key_id: "minimax",
         models: &["image-01"],
+        sign_in_for: None,
     },
     ImageProviderEntry {
         id: "minimax-intl",
@@ -100,6 +110,7 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
         base_url: Some("https://api.minimax.io/v1"),
         key_id: "minimax-intl",
         models: &["image-01"],
+        sign_in_for: None,
     },
     ImageProviderEntry {
         id: "siliconflow",
@@ -108,6 +119,7 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
         base_url: Some("https://api.siliconflow.cn/v1"),
         key_id: "siliconflow",
         models: &["Qwen/Qwen-Image", "Kwai-Kolors/Kolors"],
+        sign_in_for: None,
     },
     ImageProviderEntry {
         id: "custom",
@@ -118,6 +130,7 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
         // more often than not.
         key_id: "__image_model_custom",
         models: &[],
+        sign_in_for: None,
     },
 ];
 
@@ -129,8 +142,13 @@ pub const FOLLOW_CHAT: &str = "chat";
 /// the provider's own pictures with the same key; None for a chat provider
 /// that makes none, and so no generate_image.
 pub fn following_chat(chat_provider: &str, chatgpt_signed_in: bool) -> Option<&'static str> {
-    if chat_provider == "openai" && chatgpt_signed_in {
-        return Some("openai-chatgpt");
+    if chatgpt_signed_in {
+        if let Some(entry) = IMAGE_PROVIDERS
+            .iter()
+            .find(|e| e.sign_in_for == Some(chat_provider))
+        {
+            return Some(entry.id);
+        }
     }
     IMAGE_PROVIDERS
         .iter()

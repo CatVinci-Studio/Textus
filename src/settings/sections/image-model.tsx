@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSettings } from "../SettingsContext";
-import type { Strings } from "../../i18n/strings";
+import type { Strings, TextKey } from "../../i18n/strings";
 import { auth } from "../../platform/ipc";
 import { Select } from "../../ui/Select";
 import { SettingRow, VERBATIM_INPUT } from "./controls";
@@ -21,13 +21,19 @@ import {
 // model - rather than every service's every model in one list. A key is
 // asked for only when the service doesn't already have one from chat.
 
+// Brand names, but for the ones named in words (as for chat,
+// provider-connection.ts).
+const LOCALIZED_LABELS: Partial<Record<string, TextKey>> = {
+  custom: "imageProviderCustom",
+  doubao: "providerDoubao",
+  minimax: "providerMiniMax",
+  "minimax-intl": "providerMiniMaxIntl",
+  "openai-chatgpt": "imageProviderChatGpt",
+};
+
 function label(entry: ImageProviderEntry, t: Strings): string {
-  if (entry.id === "custom") return t.imageProviderCustom;
-  if (entry.id === "doubao") return t.providerDoubao;
-  if (entry.id === "minimax") return t.providerMiniMax;
-  if (entry.id === "minimax-intl") return t.providerMiniMaxIntl;
-  if (entry.id === "openai-chatgpt") return t.imageProviderChatGpt;
-  return entry.label;
+  const key = LOCALIZED_LABELS[entry.id];
+  return key ? t[key] : entry.label;
 }
 
 /** The choices for pictures per request; the backend holds it to 1-8. */

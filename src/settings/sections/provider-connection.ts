@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Strings } from "../../i18n/strings";
+import type { Strings, TextKey } from "../../i18n/strings";
 import type { ProviderCatalogEntry } from "../../ai/provider-catalog";
 import { auth } from "../../platform/ipc";
 import type { AiProvider } from "../SettingsContext";
@@ -12,15 +12,19 @@ import type { AiProvider } from "../SettingsContext";
 // The catalog's labels are brand names, the same in every language - except
 // these: "custom" is a description, Doubao is known in Chinese by its
 // Chinese name, and MiniMax's two platforms are told apart in words.
+const LOCALIZED_LABELS: Partial<Record<string, TextKey>> = {
+  custom: "providerCustom",
+  doubao: "providerDoubao",
+  minimax: "providerMiniMax",
+  "minimax-intl": "providerMiniMaxIntl",
+};
+
 export function localizedLabel(
   entry: ProviderCatalogEntry,
   t: Strings,
 ): string {
-  if (entry.id === "custom") return t.providerCustom;
-  if (entry.id === "doubao") return t.providerDoubao;
-  if (entry.id === "minimax") return t.providerMiniMax;
-  if (entry.id === "minimax-intl") return t.providerMiniMaxIntl;
-  return entry.label;
+  const key = LOCALIZED_LABELS[entry.id];
+  return key ? t[key] : entry.label;
 }
 
 /// Each provider's "is it connected" check speaks a different shape
