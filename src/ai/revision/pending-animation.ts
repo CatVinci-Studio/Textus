@@ -11,7 +11,7 @@ import {
 import { StreamReveal } from "../stream-reveal";
 import { showGeneratedImages, shownGeneratedSrc } from "./generated-images";
 import { framePendingPictures } from "./pending-picture";
-import { splitSentences, trimBreaks } from "./sentence-diff";
+import { inlineSentence, splitSentences } from "./sentence-diff";
 import {
   alignCompleted,
   partialFor,
@@ -249,7 +249,7 @@ export function renderAnimation(anim: InsertAnimation) {
   renderPendingHtml(
     anim.span,
     anim.stream
-      ? trimBreaks(anim.stream.layout.partial?.text ?? "")
+      ? inlineSentence(anim.stream.layout.partial?.text ?? "")
       : anim.reveal.text,
   );
   anim.span.classList.toggle(

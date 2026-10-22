@@ -3,7 +3,7 @@ import {
   animate as animateElement,
   prefersReducedMotion,
 } from "../../ui/motion";
-import { pairedPrefix, trimBreaks } from "./sentence-diff";
+import { inlineSentence, pairedPrefix } from "./sentence-diff";
 import { type StreamLayout } from "./sentence-stream";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
 import {
@@ -218,7 +218,7 @@ export function changeDecorations(
   // to the margin ("original").
   if (c.from === c.to) decos.push(mark("insert"));
   // The line break a sentence ends with stays the original's, in the text.
-  const after = trimBreaks(c.after);
+  const after = inlineSentence(c.after);
   if (after) {
     const key = `pending-new-${callId}-${index}-${state}-${textKey(after)}`;
     decos.push(

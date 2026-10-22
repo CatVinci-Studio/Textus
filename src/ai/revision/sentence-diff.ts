@@ -39,6 +39,13 @@ export function trimBreaks(sentence: string): string {
     .trim();
 }
 
+/** A sentence as it is drawn in its place in the text: trimBreaks, and
+ *  without a heading's `#`s - the heading it stands in already is one, and
+ *  inline its marker showed as text ("# The moon can hear"). */
+export function inlineSentence(sentence: string): string {
+  return trimBreaks(sentence).replace(/^#{1,6}[ \t]+/, "");
+}
+
 /** LCS over sentences, then runs of non-matching sentences become change
  *  hunks (see flush). */
 export function diffSentences(before: string, after: string): SentenceHunk[] {

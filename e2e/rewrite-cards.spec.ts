@@ -165,3 +165,19 @@ test("a rewrite that joins paragraphs has a card for each new paragraph, beside 
   const paragraphs = page.locator('[data-active-tab="true"] .ProseMirror p');
   await expect(paragraphs).toHaveText([after[0], before[2], before[3]]);
 });
+
+test("a translated heading shows its new text without the Markdown #", async ({
+  page,
+}) => {
+  // rc.6, in a real window: "# The moon can hear" beside the struck
+  // heading, its # as text.
+  await proposeRewrite(
+    page,
+    "# 月亮听得见\n\n月球最后一座声音站即将关闭。",
+    "# The moon can hear\n\nThe last sound station on the Moon was about to close.",
+  );
+  const heading = page.locator(".milkdown .ProseMirror h1");
+  await expect(heading.locator(".pending-sentence-new")).toHaveText(
+    "The moon can hear",
+  );
+});
