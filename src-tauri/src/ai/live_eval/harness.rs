@@ -92,7 +92,8 @@ pub fn agent_model() -> String {
 /// AgentProvider path - to compare a change on a second provider, or when
 /// the Claude key can't be used. The judge stays Claude.
 ///
-/// TEXTUS_EVAL_PROVIDER=deepseek: on DeepSeek (DEEPSEEK_API_KEY), the
+/// TEXTUS_EVAL_PROVIDER=deepseek or minimax: on DeepSeek
+/// (DEEPSEEK_API_KEY) or MiniMax's China platform (MINIMAX_API_KEY), the
 /// same way.
 ///
 /// TEXTUS_EVAL_PROVIDER=chatgpt: on a ChatGPT subscription, as Textus on
@@ -104,6 +105,7 @@ pub fn agent_provider_id() -> &'static str {
     match std::env::var("TEXTUS_EVAL_PROVIDER").as_deref() {
         Ok("doubao") => "doubao",
         Ok("deepseek") => "deepseek",
+        Ok("minimax") => "minimax",
         Ok("chatgpt") => "openai",
         _ => "anthropic",
     }
@@ -147,14 +149,14 @@ fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
                 originator: crate::app_identity::ORIGINATOR.to_string(),
             }
         }
-        id @ ("doubao" | "deepseek") => {
+        id @ ("doubao" | "deepseek" | "minimax") => {
             let base_url = crate::ai::catalog::find(id)
                 .and_then(|e| e.base_url)
                 .expect("the provider has a base_url");
-            let key = if id == "doubao" {
-                "VOLCENGINE_ARK_API_KEY"
-            } else {
-                "DEEPSEEK_API_KEY"
+            let key = match id {
+                "doubao" => "VOLCENGINE_ARK_API_KEY",
+                "deepseek" => "DEEPSEEK_API_KEY",
+                _ => "MINIMAX_API_KEY",
             };
             Endpoint::ChatCompletions {
                 base_url: base_url.to_string(),
