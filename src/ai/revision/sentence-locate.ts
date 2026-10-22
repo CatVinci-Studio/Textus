@@ -127,6 +127,13 @@ export function locateHunks(
   for (const hunk of hunks) {
     const markdown = hunk.kind === "same" ? hunk.text : hunk.before;
     if (!markdown.trim()) {
+      // A whole block added goes between blocks: after the one the pieces
+      // so far end in.
+      if (hunk.kind === "change" && wholeBlockKind(hunk.after) !== null) {
+        const p = blockBoundaryAfter(doc, pos);
+        out.push({ from: p, to: p, block: true });
+        continue;
+      }
       const p = at(cursor);
       out.push({ from: p, to: p });
       continue;
@@ -134,8 +141,12 @@ export function locateHunks(
     // A block changed whole (wholeBlockKind: a picture, a table…) is the
     // next such block of the document: its Markdown isn't the text it
     // shows, and it may have none.
-    if (wholeBlockKind(markdown) !== null) {
-      const node = wholes.find((n) => n.from >= pos);
+    const kind = wholeBlockKind(markdown);
+    if (kind !== null) {
+      // The next block node of its kind; the next of any, when the editor
+      // reads it as a kind of its own (frontmatter, an embed).
+      const ahead = wholes.filter((n) => n.from >= pos);
+      const node = ahead.find((n) => fits(kind, n.kind)) ?? ahead[0];
       if (!node) return null;
       place(node.from);
       out.push({ ...node, block: true });
@@ -190,24 +201,64 @@ const PROSE = new Set([
 /** The blocks in [from, to) a whole-block hunk can be - each node that
  *  isn't prose (a table, a code block, a footnote's definition) or is a
  *  paragraph of nothing but a picture - in order, outermost first. */
-function wholeNodes(
-  doc: ProseNode,
-  from: number,
-  to: number,
-): { from: number; to: number }[] {
-  const out: { from: number; to: number }[] = [];
+function wholeNodes(doc: ProseNode, from: number, to: number): WholeNode[] {
+  const out: WholeNode[] = [];
   doc.nodesBetween(from, to, (node, pos) => {
     if (!node.isBlock || pos < from || pos + node.nodeSize > to) return true;
-    // A paragraph of a picture or of raw HTML (an HTML block parses into
-    // `paragraph > html`) has no text of its own.
-    let ownText = false;
-    node.forEach((child) => (ownText ||= child.isText));
-    const whole = PROSE.has(node.type.name)
-      ? node.type.name === "paragraph" && node.childCount > 0 && !ownText
-      : true;
-    if (!whole) return true;
-    out.push({ from: pos, to: pos + node.nodeSize });
+    const kind = nodeKind(node);
+    if (kind === null) return true;
+    out.push({ from: pos, to: pos + node.nodeSize, kind });
     return false;
   });
   return out;
+}
+
+interface WholeNode {
+  from: number;
+  to: number;
+  /** As wholeBlockKind names it, or the node's own type for one it
+   *  doesn't know. */
+  kind: string;
+}
+
+/** What `node` is as a whole block, by the editor's own reading of it:
+ *  null for prose. A paragraph with no text of its own is a picture's, an
+ *  HTML block's (`paragraph > html`) or a link's definition. */
+function nodeKind(node: ProseNode): string | null {
+  const name = node.type.name;
+  const kinds: Record<string, string> = {
+    table: "table",
+    code_block: "code",
+    math_block: "math",
+    footnote_definition: "footnote",
+    hr: "rule",
+  };
+  if (kinds[name]) return kinds[name];
+  if (!PROSE.has(name)) return name;
+  if (name !== "paragraph" || node.childCount === 0) return null;
+  const children = new Set<string>();
+  let ownText = false;
+  node.forEach((child) => {
+    ownText ||= child.isText;
+    children.add(child.type.name);
+  });
+  if (ownText) return null;
+  if (children.has("link_definition")) return "definition";
+  if (children.has("html")) return "html";
+  return "picture";
+}
+
+/** Whether a node read as `node` can be a block written as `markdown`
+ *  (wholeBlockKind): an `<img>` is a picture written as HTML. */
+function fits(markdown: string, node: string): boolean {
+  return node === markdown || (markdown === "picture" && node === "html");
+}
+
+/** The position after the textblock `pos` is in (or `pos`, between
+ *  blocks already). */
+function blockBoundaryAfter(doc: ProseNode, pos: number): number {
+  const $pos = doc.resolve(pos);
+  for (let d = $pos.depth; d > 0; d--)
+    if ($pos.node(d).isTextblock) return $pos.after(d);
+  return pos;
 }

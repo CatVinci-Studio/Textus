@@ -296,3 +296,40 @@ describe("diffSentences over whole blocks", () => {
     expect(hunks[1].kind).toBe("same");
   });
 });
+
+describe("diffSentences when the rewrite adds or drops a block", () => {
+  const kinds = (hunks: ReturnType<typeof diffSentences>) =>
+    hunks.map((h) =>
+      h.kind === "same"
+        ? "same"
+        : !h.after
+          ? "drop"
+          : !h.before
+            ? "add"
+            : "change",
+    );
+  const table = "| a | b |\n| - | - |\n| 1 | 2 |";
+
+  it("drops a table as a change of its own, the paragraphs by themselves", () => {
+    expect(
+      kinds(diffSentences(`一。\n\n${table}\n\n二。`, "One.\n\nTwo.")),
+    ).toEqual(["change", "drop", "change"]);
+  });
+
+  it("adds a code block as a change of its own", () => {
+    expect(
+      kinds(diffSentences("一。\n\n二。", "One.\n\n```js\nx\n```\n\nTwo.")),
+    ).toEqual(["change", "add", "change"]);
+  });
+
+  it("keeps the blocks both sides have, next to one they don't", () => {
+    expect(
+      kinds(
+        diffSentences(
+          `一。\n\n![a](a.png)\n\n${table}\n\n二。`,
+          "One.\n\n![a](a.png)\n\nTwo.",
+        ),
+      ),
+    ).toEqual(["change", "same", "drop", "change"]);
+  });
+});

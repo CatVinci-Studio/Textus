@@ -194,8 +194,10 @@ export function changeDecorations(
   // struck.
   // A whole block's original is struck as the blocks it is: a picture or a
   // table has no words to draw a line through.
-  if (c.block) decos.push(blockStrike(callId, index, c, state, focus));
-  else if (c.from < c.to)
+  if (c.block) {
+    // An added block has no original to strike.
+    if (c.from < c.to) decos.push(blockStrike(callId, index, c, state, focus));
+  } else if (c.from < c.to)
     for (const part of strikeParts(c))
       decos.push(sentenceStrike(callId, index, part, state, focus, stagger));
   // The new text and its ✓ / ✕: after the sentences it replaces.

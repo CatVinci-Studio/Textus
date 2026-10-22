@@ -208,5 +208,23 @@
     "block": "![伞](assets/a.png)\n\n| 名字 | 数量 |\n| --- | --- |\n| 伞 | 1 |",
     "rewritten": "![Umbrella](assets/b.png)\n\n| Name | Count |\n| --- | --- |\n| Umbrella | 1 |",
     "changes": 4
+  },
+  {
+    "name": "a table the rewrite dropped",
+    "block": "| 名字 | 数量 |\n| --- | --- |\n| 伞 | 1 |",
+    "rewritten": "",
+    "changes": 3
+  },
+  {
+    "name": "a code block the rewrite added",
+    "block": "",
+    "rewritten": "```js\nconst rain = 1;\n```",
+    "changes": 3
+  },
+  {
+    "name": "a table dropped next to a picture kept",
+    "block": "![伞](assets/a.png)\n\n| 名字 | 数量 |\n| --- | --- |\n| 伞 | 1 |",
+    "rewritten": "![伞](assets/a.png)",
+    "changes": 3
   }
 ]

@@ -107,7 +107,7 @@ describe("keepPictures", () => {
       expect(
         keepPictures(splitBlocks(c.document), c.text, c.complete),
         c.name,
-      ).toBe(c.expected);
+      ).toEqual({ text: c.expected, swapped: c.swapped ?? 0 });
   });
 
   it("is what a streaming rewrite of a run is drawn with", () => {

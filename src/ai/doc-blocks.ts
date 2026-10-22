@@ -157,7 +157,7 @@ export function resolveBlockEdit(
     anchor: runText,
     text:
       fields.action === "replace" && last > first
-        ? keepPictures(blocks.slice(first, last + 1), fields.text, false)
+        ? keepPictures(blocks.slice(first, last + 1), fields.text, false).text
         : fields.text,
     ...(context ? { context } : {}),
   };
@@ -171,19 +171,30 @@ export function isPicture(block: string): boolean {
 }
 
 /**
- * `text`, a rewrite of the run `run`, with the run's pictures it left out
- * put back, each after as many of the new text's blocks as there were
- * text blocks before it in the run - doc_blocks.rs's keep_pictures, which
- * the finished call goes through (a dropped picture was deleted with
- * nothing said). `complete`: all of `text` is there; while it streams in,
- * a picture whose place it hasn't reached is left out for now.
+ * `text`, a rewrite of the run `run`, with the run's pictures as they were
+ * - doc_blocks.rs's keep_pictures, which the finished call goes through: a
+ * new picture written where one was is taken out, and each picture left
+ * out goes back by the paragraph it stood by. `complete`: all of `text` is
+ * there; while it streams in, a picture whose place it hasn't reached is
+ * left out for now. With how many swapped pictures were taken out.
  */
 export function keepPictures(
   run: DocBlock[],
   text: string,
   complete: boolean,
-): string {
-  let out = text;
+): { text: string; swapped: number } {
+  const originals = run.map((b) => b.text.trim()).filter(isPicture);
+  const missing = originals.filter((p) => !text.includes(p)).length;
+  let swapped = 0;
+  const kept = splitBlocks(text).filter((b) => {
+    const isNew = isPicture(b.text) && !originals.includes(b.text.trim());
+    if (isNew && swapped < missing) {
+      swapped++;
+      return false;
+    }
+    return true;
+  });
+  let out = swapped ? kept.map((b) => b.text).join("\n\n") : text;
   let wordsBefore = 0;
   // Pictures in the new text so far: each moves the later places on by one.
   let put = 0;
@@ -209,7 +220,7 @@ export function keepPictures(
     else continue;
     put++;
   }
-  return out;
+  return { text: out, swapped };
 }
 
 /**

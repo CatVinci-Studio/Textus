@@ -61,5 +61,28 @@
     "text": "Uno.\n\nDos.",
     "complete": true,
     "expected": "Uno.\n\nDos."
+  },
+  {
+    "name": "a picture swapped for a new one is kept, the new one taken out",
+    "document": "One.\n\n![a](a.png)\n\nTwo.",
+    "text": "Uno.\n\n![b](b.png)\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\nDos.",
+    "swapped": 1
+  },
+  {
+    "name": "of two pictures, the one swapped is kept and the other stays",
+    "document": "One.\n\n![a](a.png)\n\nTwo.\n\n![b](b.png)\n\nThree.",
+    "text": "Uno.\n\n![a](a.png)\n\nDos.\n\n![c](c.png)\n\nTres.",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\nDos.\n\n![b](b.png)\n\nTres.",
+    "swapped": 1
+  },
+  {
+    "name": "a new picture added with every original kept stays",
+    "document": "One.\n\n![a](a.png)\n\nTwo.",
+    "text": "Uno.\n\n![a](a.png)\n\nDos.\n\n![n](n.png)",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\nDos.\n\n![n](n.png)"
   }
 ]

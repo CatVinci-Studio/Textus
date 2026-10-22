@@ -8,6 +8,10 @@ pub(crate) const PROPOSE_EDIT_TOOL_NAME: &str = "propose_edit";
 /// such a call needs nothing more from the model (ToolOutput::settled).
 pub(super) const EDIT_PROPOSED: &str = "Edit proposed";
 
+/// Told after a rewrite whose text swapped a document's picture for a new
+/// one: the original stays in it, and the new one is the picture tool's.
+const PICTURE_KEPT_NOTE: &str = " A picture of the document you rewrote is kept as it was in it: text edits never change a picture. To change that picture, call generate_image with its block, in this reply.";
+
 /// The edit operations the frontend knows how to apply. Kept in sync with
 /// `EditAction` in src/ai/types.ts - adding one here without teaching
 /// the frontend (usePendingEdits.ts, which resolves proposals, and
@@ -174,6 +178,11 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         ledger.texts.push(text.to_string());
         unmade = ledger.take_unmade().unwrap_or_default();
         unmade.push_str(&ledger.pictures_placed(text));
+    }
+    // A rewrite that swapped a picture keeps the original
+    // (doc_blocks::keep_pictures): the swap is generate_image's.
+    if parsed.get(crate::ai::doc_blocks::PICTURES_KEPT_KEY).is_some() {
+        unmade.push_str(PICTURE_KEPT_NOTE);
     }
     let into = if joins {
         " It changes text you proposed that the user hasn't decided on yet: it goes into that proposal, which now reads with it."

@@ -18,7 +18,12 @@
 //! the rest - validation, joins into undecided proposals, the frontend's
 //! placing and applying, saved conversations - works as it did.
 
-use serde_json::{Map, Value};
+use serde_json::{json, Map, Value};
+
+/// An argument resolve_edit_arguments adds to a run's rewrite that tried
+/// to swap a picture: how many it took out (tools/edits.rs tells the model
+/// so). Not the model's to write.
+pub const PICTURES_KEPT_KEY: &str = "pictures_kept";
 
 /// One block: its id and where its markdown is, in bytes.
 #[derive(Debug, Clone, PartialEq)]
@@ -263,8 +268,12 @@ pub fn resolve_edit_arguments(document: &str, blocks: &[Block], arguments: &str)
     args.remove("block");
     if action == "replace" && last > index {
         if let Some(Value::String(text)) = args.get("text") {
-            let kept = keep_pictures(document, &blocks[index..=last], text, true);
+            let (kept, swapped) = keep_pictures(document, &blocks[index..=last], text, true);
             args.insert("text".into(), Value::String(kept));
+            // For the tool's result: the model is told to use generate_image.
+            if swapped > 0 {
+                args.insert(PICTURES_KEPT_KEY.into(), json!(swapped));
+            }
         }
     }
     args.insert("anchor".into(), Value::String(whole.to_string()));
@@ -363,17 +372,50 @@ fn is_picture(block: &str) -> bool {
         .is_some_and(|attrs| attrs.starts_with(char::is_whitespace) && !attrs.contains('>'))
 }
 
-/// `text`, a rewrite of the run `run`, with the run's pictures it left out
-/// put back: each after as many of the new text's blocks as there were
-/// text blocks before it in the run - by the paragraph it stood by, as the
-/// card pairs them. A rewrite of a section or the whole document rewrites
-/// its words; a picture dropped from it was deleted with nothing said, and
-/// the card had nothing to pair paragraph by paragraph (rc.6). A picture
-/// the model means to remove it deletes by its block. `complete`: all of
-/// `text` is there; while it streams in, a picture whose place it hasn't
-/// reached is left out for now (keepPictures in src/ai/doc-blocks.ts).
-fn keep_pictures(document: &str, run: &[Block], text: &str, complete: bool) -> String {
-    let mut out = text.to_string();
+/// `text`, a rewrite of the run `run`, with the run's pictures as they
+/// were: a text edit never changes a picture - generate_image does. A
+/// picture the rewrite left out goes back, after as many of the new text's
+/// blocks as there were text blocks before it in the run - by the
+/// paragraph it stood by, as the card pairs them. A new picture the
+/// rewrite wrote where one was is taken out first, the original going back
+/// in its place: the swap is the picture tool's to propose, on a card of
+/// its own. Before, a picture dropped from a rewrite was deleted with
+/// nothing said, a swapped one went with the words, and either way the
+/// card had nothing to pair paragraph by paragraph (rc.6). New pictures
+/// with every original kept stay. `complete`: all of `text` is there;
+/// while it streams in, a picture whose place it hasn't reached is left
+/// out for now (keepPictures in src/ai/doc-blocks.ts, held to the same
+/// cases by keep-pictures-cases.json). Returns the text and how many
+/// swapped pictures were taken out.
+fn keep_pictures(document: &str, run: &[Block], text: &str, complete: bool) -> (String, usize) {
+    let originals: Vec<&str> = run
+        .iter()
+        .map(|b| document[b.start..b.end].trim())
+        .filter(|t| is_picture(t))
+        .collect();
+    let missing = originals.iter().filter(|p| !text.contains(**p)).count();
+    let mut swapped = 0;
+    let mut out = if missing == 0 {
+        text.to_string()
+    } else {
+        let kept: Vec<&str> = split(text)
+            .iter()
+            .map(|b| &text[b.start..b.end])
+            .filter(|t| {
+                let new = is_picture(t) && !originals.contains(&t.trim());
+                if new && swapped < missing {
+                    swapped += 1;
+                    return false;
+                }
+                true
+            })
+            .collect();
+        if swapped == 0 {
+            text.to_string()
+        } else {
+            kept.join("\n\n")
+        }
+    };
     let mut words_before = 0;
     // Pictures in the new text so far: each moves the later places on by one.
     let mut put = 0;
@@ -402,7 +444,7 @@ fn keep_pictures(document: &str, run: &[Block], text: &str, complete: bool) -> S
         };
         put += 1;
     }
-    out
+    (out, swapped)
 }
 
 /// Keys in the order the model writes them, so the call reads as before.
