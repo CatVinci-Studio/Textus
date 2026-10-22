@@ -285,6 +285,10 @@ pub struct Remembering {
     pub created: bool,
     pub text: String,
     pub previous: Option<String>,
+    /// For a library entry: whom or what it is about, which `text` (its
+    /// body) doesn't say.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
     /// What was remembered was taken back (memory::pass): `text` is what
     /// it said, `previous` the file Undo puts back.
     #[serde(skip_serializing_if = "std::ops::Not::not")]

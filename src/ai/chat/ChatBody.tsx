@@ -8,7 +8,8 @@ import type {
   EditProposal,
   ImageAttachment,
 } from "../types";
-import { ChatMessages, ErrorRow, ThinkingIndicator } from "./ChatMessages";
+import { ChatMessages, ErrorRow } from "./ChatMessages";
+import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
 import { MarkdownText } from "../MarkdownText";
 import { QuickAskPendingBar } from "./quick-ask/QuickAskPendingBar";

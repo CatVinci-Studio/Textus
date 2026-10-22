@@ -4,7 +4,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
   type CSSProperties,
 } from "react";
 import { AgentTurnView, type AgentTurnLabels } from "./AgentTurnView";
@@ -27,6 +26,8 @@ import {
   type RememberResult,
 } from "./MemoryChip";
 import { ProposalCard, notGeneratedReason } from "./ProposalCard";
+import { ThinkingIndicator } from "./ThinkingIndicator";
+import { memoryRunsOf } from "./memory-pass";
 
 /** The statuses a card reaches by being decided, which collapse it. */
 const DECIDED: ReadonlySet<PendingStatus> = new Set([
@@ -242,8 +243,9 @@ export function ChatMessages({
     return map;
   }, [shown]);
   // What each remember call saved, parsed once per turn-list change like
-  // the proposals.
-  const rememberResults = useMemo(() => {
+  // the proposals - and the changes of one exchange together, shown as one
+  // list under its first (the others render nothing).
+  const { rememberResults, memoryRuns } = useMemo(() => {
     const remembers = new Set(
       shown.flatMap((turn) =>
         turn.kind === "ToolCall" && turn.name === "remember"
@@ -251,13 +253,16 @@ export function ChatMessages({
           : [],
       ),
     );
-    const map = new Map<string, RememberResult>();
+    const results = new Map<string, RememberResult>();
     for (const turn of shown) {
       if (turn.kind !== "ToolResult" || !remembers.has(turn.call_id)) continue;
       const result = parseRememberResult(turn.output);
-      if (result) map.set(turn.call_id, result);
+      if (result) results.set(turn.call_id, result);
     }
-    return map;
+    return {
+      rememberResults: results,
+      memoryRuns: memoryRunsOf(shown, results),
+    };
   }, [shown]);
   // A call the backend refused (tools.rs) was never a proposal: the model
   // was told and resends it, so it gets no card - nor its result.
@@ -422,20 +427,26 @@ export function ChatMessages({
         if (turn.kind === "ToolCall" && turn.name === "remember") return null;
         const remembered =
           turn.kind === "ToolResult" && rememberResults.get(turn.call_id);
-        if (remembered)
+        if (remembered) {
+          const run = memoryRuns.get(turn.call_id);
+          if (!run) return null;
           return (
             <div
               key={i}
-              className={reveal ? "turn-reveal" : undefined}
+              className={`agent-memory-group${reveal ? " turn-reveal" : ""}`}
               style={style}
             >
-              <MemoryChip
-                result={remembered}
-                docPath={docPath}
-                labels={labels}
-              />
+              {run.map((id) => (
+                <MemoryChip
+                  key={id}
+                  result={rememberResults.get(id)!}
+                  docPath={docPath}
+                  labels={labels}
+                />
+              ))}
             </div>
           );
+        }
         // An exchange's thinking sits under its question, above
         // everything the model did in answer.
         const thought =
@@ -503,59 +514,6 @@ export function ChatMessages({
       )}
     </>
   );
-}
-
-/** The three-dot "thinking" row. Shared with ChatBody's quick variant so the
- *  two chat surfaces can't drift on this markup. */
-export function ThinkingIndicator({
-  label,
-  after = false,
-  soon = false,
-  waitedFor,
-}: {
-  label: string;
-  /** Under a streaming reply: shows only once it has paused a moment. */
-  after?: boolean;
-  /** Before anything has come back: shows after a beat. */
-  soon?: boolean;
-  /** Counts the seconds once nothing has moved for WAIT_SHOWN: a model
-   *  that sends no thinking, or a call whose text comes whole, looked
-   *  stuck with dots alone (rc.6). The row is re-keyed by each piece of
-   *  progress, so it counts from the last one. */
-  waitedFor?: (seconds: number) => string;
-}) {
-  const seconds = useSecondsSince(waitedFor !== undefined);
-  return (
-    <div
-      className={`agent-thinking${after ? " agent-thinking-after" : soon ? " agent-thinking-soon" : ""}`}
-    >
-      <span className="agent-thinking-label">
-        {waitedFor && seconds >= WAIT_SHOWN
-          ? `${label} · ${waitedFor(seconds)}`
-          : label}
-      </span>
-      <span className="agent-thinking-dots">
-        <span />
-        <span />
-        <span />
-      </span>
-    </div>
-  );
-}
-
-/** Seconds of stillness after which the indicator counts them. */
-const WAIT_SHOWN = 5;
-
-/** Whole seconds since mount, ticking each second while `on`. */
-function useSecondsSince(on: boolean): number {
-  const [start] = useState(() => Date.now());
-  const [now, setNow] = useState(start);
-  useEffect(() => {
-    if (!on) return;
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, [on]);
-  return Math.floor((now - start) / 1000);
 }
 
 /** The error row, with a retry button when the failed send is resendable

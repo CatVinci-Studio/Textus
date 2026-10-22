@@ -231,6 +231,7 @@ impl MemoryDirs {
             created: previous.is_none(),
             text: text.to_string(),
             previous,
+            name: None,
             forgot: false,
         })
     }
@@ -366,6 +367,7 @@ impl MemoryDirs {
             created: previous.is_none(),
             text: text.to_string(),
             previous,
+            name: Some(name.clone()),
             forgot: false,
         })
     }

@@ -12,6 +12,8 @@ export interface RememberResult {
   created: boolean;
   text: string;
   previous: string | null;
+  /** A library entry's name (a fact). */
+  name: string | null;
   forgot: boolean;
 }
 
@@ -32,6 +34,7 @@ export function parseRememberResult(output: string): RememberResult | null {
       created: parsed.created === true,
       text: parsed.text,
       previous: typeof parsed.previous === "string" ? parsed.previous : null,
+      name: typeof parsed.name === "string" ? parsed.name : null,
       forgot: parsed.forgot === true,
     };
   } catch {
@@ -123,12 +126,25 @@ export function MemoryChip({
     current.scope === "project"
       ? labels.memoryScopeProject
       : labels.memoryScopePersonal;
+  // A fact is its entry's body: the name says whom it is about.
+  const what = result.name ? `${result.name} · ${result.text}` : result.text;
+  // "Remembered: {text} ({scope})" in pieces, so a long memory is cut
+  // short while where it is kept stays in view.
+  const template = result.forgot ? labels.memoryForgot : labels.memorySaved;
+  const [before, after = ""] = template.split("{text}");
+  const scope = after.replace("{scope}", scopeLabel);
+  const line = before + what + scope;
   return (
-    <div className="agent-memory-chip" role="status">
-      <span className="agent-memory-chip-text">
-        {(result.forgot ? labels.memoryForgot : labels.memorySaved)
-          .replace("{text}", result.text)
-          .replace("{scope}", scopeLabel)}
+    <div
+      className={`agent-memory-chip${result.forgot ? " is-forgot" : ""}`}
+      role="status"
+    >
+      <span className="agent-memory-chip-line" title={line}>
+        <span className="agent-memory-chip-text">
+          {before}
+          {what}
+        </span>
+        <span className="agent-memory-chip-scope">{scope}</span>
       </span>
       <span className="agent-memory-chip-actions">
         <button type="button" disabled={state === "busy"} onClick={undo}>

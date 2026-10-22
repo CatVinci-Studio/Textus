@@ -68,3 +68,21 @@ export function insertTurns(
   const where = Math.min(at, history.length);
   return [...history.slice(0, where), ...turns, ...history.slice(where)];
 }
+
+/** The remember results that come one after another (an exchange's
+ *  changes), by the first's call id: each run is one list of chips. */
+export function memoryRunsOf(
+  turns: AgentTurn[],
+  results: ReadonlyMap<string, unknown>,
+): Map<string, string[]> {
+  const runs = new Map<string, string[]>();
+  let run: string[] | null = null;
+  for (const turn of turns) {
+    if (turn.kind === "ToolCall" && turn.name === "remember") continue;
+    if (turn.kind === "ToolResult" && results.has(turn.call_id)) {
+      if (run) run.push(turn.call_id);
+      else runs.set(turn.call_id, (run = [turn.call_id]));
+    } else run = null;
+  }
+  return runs;
+}

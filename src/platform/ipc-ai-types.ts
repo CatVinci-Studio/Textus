@@ -125,6 +125,8 @@ export interface RememberedChange {
   created: boolean;
   text: string;
   previous: string | null;
+  /** A library entry's name: whom or what `text` is about. */
+  name?: string;
   forgot?: boolean;
 }
 

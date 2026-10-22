@@ -368,6 +368,55 @@ button.agent-context-chip:hover {
    and the way back - "Remembered: … (project) · Undo · Make personal".
    A theme in a reply gets the same chip (ReplyThemes.tsx): its name and
    "Use this theme". */
+/* What one exchange remembered or forgot: one list, a line each. */
+.agent-memory-group {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-surface);
+  background: color-mix(in srgb, var(--editor-accent) 8%, transparent);
+}
+
+.agent-memory-group .agent-memory-chip {
+  align-self: stretch;
+  flex-wrap: nowrap;
+  border-radius: 0;
+  background: none;
+}
+
+.agent-memory-group .agent-memory-chip + .agent-memory-chip {
+  border-top: 1px solid
+    color-mix(in srgb, var(--editor-accent) 12%, transparent);
+}
+
+.agent-memory-chip-line {
+  display: inline-flex;
+  min-width: 0;
+}
+
+.agent-memory-chip-scope {
+  flex: none;
+}
+
+.agent-memory-group .agent-memory-chip-line {
+  flex: 1;
+}
+
+.agent-memory-group .agent-memory-chip-text {
+  min-width: 0;
+  display: block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.agent-memory-group .agent-memory-chip-actions {
+  flex: none;
+}
+
+.agent-memory-chip.is-forgot .agent-memory-chip-text {
+  color: var(--editor-muted);
+}
+
 .agent-memory-chip,
 .agent-theme-chip {
   align-self: flex-start;

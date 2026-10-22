@@ -60,6 +60,7 @@ describe("parseRememberResult", () => {
       created: true,
       text: "引号用「」。",
       previous: null,
+      name: null,
       forgot: false,
     });
   });
@@ -81,7 +82,7 @@ describe("MemoryChip", () => {
         labels={labels}
       />,
     );
-    expect(screen.getByText("已记住：引号用「」。（项目）")).toBeVisible();
+    expect(screen.getByTitle("已记住：引号用「」。（项目）")).toBeVisible();
     expect(screen.getByRole("button", { name: "撤销" })).toBeVisible();
     expect(screen.getByRole("button", { name: "改为个人" })).toBeVisible();
   });
@@ -134,7 +135,7 @@ describe("MemoryChip", () => {
         labels={labels}
       />,
     );
-    expect(screen.getByText("已忘记：引号用「」。（项目）")).toBeVisible();
+    expect(screen.getByTitle("已忘记：引号用「」。（项目）")).toBeVisible();
     // Nowhere to move what is no longer kept.
     expect(screen.queryByRole("button", { name: "改为个人" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "撤销" }));
@@ -155,7 +156,7 @@ describe("MemoryChip", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "改为个人" }));
     await waitFor(() =>
-      expect(screen.getByText("已记住：引号用「」。（个人）")).toBeVisible(),
+      expect(screen.getByTitle("已记住：引号用「」。（个人）")).toBeVisible(),
     );
     expect(memoryMove).toHaveBeenCalledWith(
       "/novel/one.md",

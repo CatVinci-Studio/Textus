@@ -224,7 +224,10 @@ impl MemoryDirs {
         if loc.folder == LIBRARY_FOLDER && Remembered::from_file(&content).is_none() {
             return Err("The user's own library entry.".into());
         }
-        let (_, body) = split_frontmatter(&content);
+        let (front, body) = split_frontmatter(&content);
+        let name = (loc.folder == LIBRARY_FOLDER)
+            .then(|| front.and_then(|f| f.fields.get("name").cloned()))
+            .flatten();
         self.delete(id)?;
         Ok(Remembering {
             remembered: id.to_string(),
@@ -232,6 +235,7 @@ impl MemoryDirs {
             created: false,
             text: body.trim().to_string(),
             previous: Some(content),
+            name,
             forgot: true,
         })
     }
