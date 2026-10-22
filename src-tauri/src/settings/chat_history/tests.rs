@@ -41,86 +41,12 @@ fn names(dir: &Path) -> Vec<String> {
     names
 }
 
-fn write_old(data: &Path, entries: Value) -> PathBuf {
-    let old = data.join(file_name("chat-history"));
-    std::fs::write(
-        &old,
-        json!({ "schemaVersion": 1, "entries": entries }).to_string(),
-    )
-    .unwrap();
-    old
-}
-
 #[test]
-fn the_old_file_is_split_into_one_file_per_conversation_and_kept() {
+fn nothing_is_written_until_a_save() {
     let data = temp_dir();
-    let old = write_old(
-        &data,
-        json!([conversation("b", "/n/b.md", 2), conversation("a", "/n/a.md", 1), { "id": "broken" }]),
-    );
-    let history = ChatHistory::load(&data);
-    assert!(!history.missing_at_load());
-    let dir = data.join(dir_name());
-    assert_eq!(names(&dir), ["a.json", "b.json", "index.json"]);
-    assert_eq!(
-        read(&dir.join("a.json")),
-        json!({ "schemaVersion": 1, "entry": conversation("a", "/n/a.md", 1) })
-    );
-    assert_eq!(
-        read(&dir.join("index.json"))["entries"],
-        json!([
-            { "id": "b", "docPath": "/n/b.md", "title": "b", "updatedAt": 2, "turnCount": 1 },
-            { "id": "a", "docPath": "/n/a.md", "title": "a", "updatedAt": 1, "turnCount": 1 },
-        ])
-    );
-    // Never deleted: renamed, every byte as it was.
-    assert!(!old.exists());
-    let migrated = data.join(format!("{}.migrated", file_name("chat-history")));
-    assert!(read(&migrated)["entries"].as_array().unwrap().len() == 3);
-    assert!(!data.join(format!("{}.migrating", dir_name())).exists());
-    assert_eq!(history.get("a").unwrap()["turns"][0]["text"], "a");
-}
-
-#[test]
-fn migration_happens_once() {
-    let data = temp_dir();
-    write_old(&data, json!([conversation("a", "/a.md", 1)]));
-    let history = ChatHistory::load(&data);
-    history.save(conversation("new", "/b.md", 5));
-    history.flush();
-    // An old file put back (a downgrade wrote one) is left alone: the
-    // folder is what counts from now on.
-    let old = write_old(&data, json!([conversation("old", "/c.md", 9)]));
-    let history = ChatHistory::load(&data);
-    assert_eq!(ids(&history), ["new", "a"]);
-    assert!(old.exists());
-}
-
-#[test]
-fn a_corrupt_old_file_is_moved_aside_and_the_history_starts_empty() {
-    let data = temp_dir();
-    std::fs::write(data.join(file_name("chat-history")), "{ not json").unwrap();
     let history = ChatHistory::load(&data);
     assert_eq!(history.list(), json!([]));
-    let aside: Vec<_> = names(&data)
-        .into_iter()
-        .filter(|n| n.contains(".corrupt-"))
-        .collect();
-    assert_eq!(aside.len(), 1);
-    history.save(conversation("a", "/a.md", 1));
-    history.flush();
-    assert_eq!(ids(&ChatHistory::load(&data)), ["a"]);
-}
-
-#[test]
-fn no_old_file_and_no_folder_is_a_first_launch() {
-    let data = temp_dir();
-    let history = ChatHistory::load(&data);
-    assert!(history.missing_at_load());
-    assert!(
-        !data.join(dir_name()).exists(),
-        "nothing written until a save"
-    );
+    assert!(!data.join(dir_name()).exists());
 }
 
 #[test]
@@ -233,13 +159,10 @@ fn remove_deletes_one_conversation() {
 #[test]
 fn a_moved_document_takes_its_conversations_along() {
     let data = temp_dir();
-    write_old(
-        &data,
-        json!([
-            conversation("a", "/old.md", 1),
-            conversation("b", "/other.md", 2)
-        ]),
-    );
+    let history = ChatHistory::load(&data);
+    history.save(conversation("a", "/old.md", 1));
+    history.save(conversation("b", "/other.md", 2));
+    history.flush();
     let history = ChatHistory::load(&data);
     assert!(history.move_document("/old.md", "/new.md"));
     assert!(!history.move_document("/nowhere.md", "/x.md"));
@@ -259,20 +182,6 @@ fn a_lost_index_is_built_again_from_the_files() {
     history.flush();
     std::fs::write(data.join(dir_name()).join(INDEX), "{ torn").unwrap();
     assert_eq!(ids(&ChatHistory::load(&data)), ["b", "a"]);
-}
-
-#[test]
-fn imports_join_without_replacing() {
-    let data = temp_dir();
-    let history = ChatHistory::load(&data);
-    history.save(json!({ "id": "shared", "updatedAt": 9, "turns": ["textus"] }));
-    history.merge(vec![
-        conversation("shared", "/levis.md", 1),
-        conversation("a", "/a.md", 5),
-        json!({ "id": "../escape", "updatedAt": 1, "turns": [] }),
-    ]);
-    assert_eq!(ids(&history), ["shared", "a"]);
-    assert_eq!(history.get("shared").unwrap()["turns"][0], "textus");
 }
 
 #[test]

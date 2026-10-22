@@ -2,23 +2,16 @@
 //! `<data>/chat-history/`, plus `index.json`, the small list the AI panel's
 //! history shows (docs/dev/storage.md).
 //!
-//! Up to 1.0 they were one `chat-history.json`, rewritten whole on every
-//! saved turn and capped at 60 by silently dropping the oldest. A long
-//! conversation made every save of every other one megabytes of writing, and
-//! the cap lost conversations people still wanted. Now a save rewrites only
-//! that conversation's file and the index, each through the same debounced,
-//! atomic `Store` as the other files, and a conversation beyond the cap is
-//! moved into `.trash/` rather than dropped.
-//!
-//! The old file is split into this layout on the first launch that finds no
-//! folder (`migrate`), and renamed to `chat-history.json.migrated` - never
-//! deleted, so a downgrade or a hand recovery still has it.
+//! One file holding every conversation would be rewritten whole on every
+//! saved turn: a long conversation would make every save of every other one
+//! megabytes of writing. So a save rewrites only that conversation's file
+//! and the index, each through the same debounced, atomic `Store` as the
+//! other files, and a conversation beyond the cap is moved into `.trash/`
+//! rather than dropped.
 
-use super::{
-    file_name, move_aside, parse, read_store_file, write_file, HistoryKind, Store, SCHEMA_VERSION,
-};
+use super::{file_name, read_store_file, HistoryKind, Store};
 use serde_json::{json, Value};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -81,67 +74,19 @@ pub struct ChatHistory {
     /// with its own debounced write. The lock is held through every whole
     /// operation, so a save never interleaves with a trim or a clear.
     files: Mutex<HashMap<String, Arc<Store>>>,
-    /// Nothing may be written this session: the old file was there but
-    /// couldn't be read, or couldn't be split (see `Store::unreadable`).
-    frozen: bool,
-    /// Neither the folder nor the old file existed - a first launch.
-    missing_at_load: bool,
 }
 
 impl ChatHistory {
     pub fn load(data_dir: &Path) -> Self {
         let dir = data_dir.join(dir_name());
-        let index_path = dir.join(INDEX);
-        let mut files = HashMap::new();
-        let mut frozen = false;
-        let mut missing_at_load = false;
-        // The folder, once there, is all that's read from then on.
-        let migration = if dir.exists() {
-            Migration::Done
-        } else {
-            migrate(&data_dir.join(file_name(HistoryKind::Chat.stem())), &dir)
-        };
-        let index = match migration {
-            Migration::Done | Migration::Corrupt => {
-                Store::load(index_path, "entries", json!([]), false)
-            }
-            Migration::NoOldFile => {
-                missing_at_load = true;
-                Store::load(index_path, "entries", json!([]), false)
-            }
-            // Run on what could be read, in memory only: the old file stays
-            // where it is and the split is tried again next launch.
-            Migration::Failed(entries) => {
-                frozen = true;
-                for entry in &entries {
-                    let id = id_str(entry).unwrap_or_default().to_owned();
-                    let path = dir.join(file_of(&id));
-                    let store = Store::unwritable(path, "entry", entry.clone());
-                    files.insert(id, Arc::new(store));
-                }
-                let lines = entries.iter().map(summary).collect();
-                Store::unwritable(index_path, "entries", Value::Array(lines))
-            }
-            Migration::Unreadable => {
-                frozen = true;
-                Store::unwritable(index_path, "entries", json!([]))
-            }
-        };
+        let index = Store::load(dir.join(INDEX), "entries", json!([]), false);
         let history = Self {
             dir,
             index: Arc::new(index),
-            files: Mutex::new(files),
-            frozen,
-            missing_at_load,
+            files: Mutex::new(HashMap::new()),
         };
-        if !frozen {
-            history.rebuild_lost_index();
-        }
+        history.rebuild_lost_index();
         history
-    }
-
-    pub fn missing_at_load(&self) -> bool {
-        self.missing_at_load
     }
 
     /// The index: every conversation's summary, most recent first.
@@ -185,44 +130,6 @@ impl ChatHistory {
         line
     }
 
-    /// Adds the conversations an import brings (the move out of
-    /// localStorage, a Levis installation): ones already here are kept as
-    /// they are, invalid ones skipped.
-    pub fn merge(&self, entries: Vec<Value>) {
-        let mut files = self.files.lock().unwrap();
-        let mut seen: HashSet<String> = self
-            .list()
-            .as_array()
-            .into_iter()
-            .flatten()
-            .filter_map(|e| id_str(e).map(str::to_owned))
-            .collect();
-        let mut lines = Vec::new();
-        for entry in entries {
-            if !HistoryKind::Chat.valid(&entry) {
-                continue;
-            }
-            let id = id_str(&entry).unwrap_or_default().to_owned();
-            if !seen.insert(id.clone()) {
-                continue;
-            }
-            lines.push(summary(&entry));
-            self.file_store(&mut files, &id).update(|p| *p = entry);
-        }
-        if lines.is_empty() {
-            return;
-        }
-        let dropped = self
-            .index
-            .update(|p| {
-                let list = super::as_list(p);
-                list.extend(lines);
-                HistoryKind::Chat.tidy(list)
-            })
-            .0;
-        self.trash(&mut files, &dropped);
-    }
-
     /// Deletes one conversation for good: the user asked for exactly that.
     pub fn remove(&self, id: &str) {
         let mut files = self.files.lock().unwrap();
@@ -233,9 +140,7 @@ impl ChatHistory {
         }
         let store = files.remove(id);
         let _held = store.as_ref().map(|s| s.discard());
-        if !self.frozen {
-            remove_file(&self.dir.join(file_of(id)));
-        }
+        remove_file(&self.dir.join(file_of(id)));
     }
 
     /// Privacy › Clear chat history: every conversation file, in the folder
@@ -245,9 +150,6 @@ impl ChatHistory {
         let stores: Vec<_> = files.drain().map(|(_, store)| store).collect();
         let _held: Vec<_> = stores.iter().map(|s| s.discard()).collect();
         self.index.update(|p| super::as_list(p).clear());
-        if self.frozen {
-            return;
-        }
         let trash = self.dir.join(TRASH);
         for dir in [&self.dir, &trash] {
             for (name, _) in conversation_files(dir) {
@@ -313,20 +215,16 @@ impl ChatHistory {
     /// The store of conversation `id`'s file, loaded once per session.
     fn file_store(&self, files: &mut HashMap<String, Arc<Store>>, id: &str) -> Arc<Store> {
         let path = self.dir.join(file_of(id));
-        let store = files.entry(id.to_owned()).or_insert_with(|| {
-            Arc::new(if self.frozen {
-                Store::unwritable(path, "entry", json!({}))
-            } else {
-                Store::load(path, "entry", json!({}), false)
-            })
-        });
+        let store = files
+            .entry(id.to_owned())
+            .or_insert_with(|| Arc::new(Store::load(path, "entry", json!({}), false)));
         Arc::clone(store)
     }
 
     /// Moves the conversations trimmed off the index into `.trash/`, then
     /// keeps the trash to `MAX_TRASHED`, deleting the oldest.
     fn trash(&self, files: &mut HashMap<String, Arc<Store>>, dropped: &[Value]) {
-        if dropped.is_empty() || self.frozen {
+        if dropped.is_empty() {
             return;
         }
         let trash = self.dir.join(TRASH);
@@ -404,105 +302,6 @@ fn remove_file(path: &Path) {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
         Err(e) => eprintln!("textus: cannot delete {}: {e}", path.display()),
     }
-}
-
-enum Migration {
-    /// Split into the folder; the old file renamed `.migrated`.
-    Done,
-    NoOldFile,
-    /// Moved aside as `.corrupt-<time>`, the way every store treats a file
-    /// it can't parse; the history starts empty.
-    Corrupt,
-    /// There but unreadable (permissions, an I/O error): left alone.
-    Unreadable,
-    /// Read, but the folder couldn't be written: what was read.
-    Failed(Vec<Value>),
-}
-
-/// Splits the old single file into the folder. Everything is written into a
-/// `<folder>.migrating` sibling first and renamed into place in one step, so
-/// a crash halfway leaves no folder and the next launch simply starts over
-/// (reusing what that sibling already holds). Only then is the old file
-/// renamed - a crash between the two leaves both, and the folder wins.
-fn migrate(old: &Path, dir: &Path) -> Migration {
-    let raw = match std::fs::read_to_string(old) {
-        Ok(raw) => raw,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Migration::NoOldFile,
-        Err(e) if e.kind() == std::io::ErrorKind::InvalidData => {
-            move_aside(old);
-            return Migration::Corrupt;
-        }
-        Err(e) => {
-            eprintln!(
-                "textus: cannot read {}: {e}; chat history is not saved this session",
-                old.display()
-            );
-            return Migration::Unreadable;
-        }
-    };
-    let Some((Value::Array(entries), _)) = parse(&raw, "entries", &json!([])) else {
-        move_aside(old);
-        return Migration::Corrupt;
-    };
-    let mut seen = HashSet::new();
-    let mut entries: Vec<Value> = entries
-        .into_iter()
-        .filter(|e| HistoryKind::Chat.valid(e))
-        .filter(|e| seen.insert(id_str(e).unwrap_or_default().to_owned()))
-        .collect();
-    // The old file kept 60; anything past the cap is still in it.
-    HistoryKind::Chat.tidy(&mut entries);
-    match split(&entries, dir) {
-        Ok(()) => {
-            let name = old
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("chat-history.json");
-            if let Err(e) = std::fs::rename(old, old.with_file_name(format!("{name}.migrated"))) {
-                eprintln!(
-                    "textus: cannot rename {} after the split: {e}",
-                    old.display()
-                );
-            }
-            Migration::Done
-        }
-        Err(e) => {
-            eprintln!(
-                "textus: cannot split {} into {}: {e}",
-                old.display(),
-                dir.display()
-            );
-            Migration::Failed(entries)
-        }
-    }
-}
-
-fn split(entries: &[Value], dir: &Path) -> std::io::Result<()> {
-    let name = dir
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("chat-history");
-    let staging = dir.with_file_name(format!("{name}.migrating"));
-    std::fs::create_dir_all(&staging)?;
-    for entry in entries {
-        let id = id_str(entry).unwrap_or_default();
-        write_file(
-            &staging.join(file_of(id)),
-            SCHEMA_VERSION,
-            "entry",
-            entry,
-            false,
-        )?;
-    }
-    let index: Vec<Value> = entries.iter().map(summary).collect();
-    write_file(
-        &staging.join(INDEX),
-        SCHEMA_VERSION,
-        "entries",
-        &Value::Array(index),
-        false,
-    )?;
-    std::fs::rename(&staging, dir)
 }
 
 #[cfg(test)]
