@@ -54,7 +54,7 @@ export type MarginItem =
 
 const STACK_GAP = 8;
 /** How far a card can be pushed down by the ones above it and still draw
- *  its line all the time. */
+ *  its line at full strength. */
 const LINE_DRIFT = 20;
 
 interface Placed {
@@ -135,11 +135,12 @@ function anchorSelector(item: MarginItem): string {
  * never the text - and a thin line runs to the card from the text column's
  * edge, level with that first line - not from the passage's end, which
  * would cross the words after it or, when it wraps, throw the line across
- * the page. A card the stack pushed below its passage draws its line only
- * while it is under the pointer or the review bar's pointer: every such
- * line ran down the narrow gap between text and cards, and a stack of
- * them read as a tangle of stray strokes. Hovering either side lights
- * both.
+ * the page. A card the stack pushed far below its passage draws its line
+ * fainter, at full strength while it is under the pointer or the review
+ * bar's pointer: such lines run down the narrow gap between text and cards,
+ * and a stack of them at full strength read as a tangle - but with none (as
+ * in rc.6 before), the card read as belonging to nothing. Hovering either
+ * side lights both.
  *
  * The margin is made, not assumed: when the space right of the text is too
  * narrow the text column moves left to open it (gliding there, placeColumn),
@@ -347,7 +348,9 @@ export function ReviewMargin({
       <svg className="review-links" aria-hidden="true">
         {layout.placed.map((p) => {
           const lit = hot === p.item.key || focused === p.item.key;
-          if (p.drift > LINE_DRIFT && !lit) return null;
+          // Pushed far below its passage, a card's line is fainter, not
+          // gone: with none, the card read as belonging to nothing.
+          const far = p.drift > LINE_DRIFT;
           const x2 = layout.left;
           const y2 = p.top + 16;
           const dx = Math.max(16, (x2 - p.ax) / 2);
@@ -358,7 +361,7 @@ export function ReviewMargin({
               // dash length left a long line - a card stacked far below
               // its passage - broken into stray pieces.
               pathLength={1}
-              className={`${p.item.kind}${lit ? " hot" : ""}`}
+              className={`${p.item.kind}${lit ? " hot" : far ? " far" : ""}`}
               d={`M${p.ax} ${p.ay} C ${p.ax + dx} ${p.ay}, ${x2 - dx} ${y2}, ${x2} ${y2}`}
             />
           );
