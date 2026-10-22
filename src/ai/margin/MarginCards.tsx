@@ -9,6 +9,19 @@ import { CARD_WIDTH } from "./margin-room";
 import { Tooltip } from "../../ui/Tooltip";
 import "./ReviewMargin.css";
 import type { MarginItem, ReviewMarginLabels } from "./margin-layout";
+import {
+  blockNames,
+  blockSummary,
+  wholeBlockKind,
+} from "../revision/markdown-forms";
+
+/** A change's new text on its card: a whole block other than a picture
+ *  (which the card shows) by what it is (blockSummary). */
+function revisionText(after: string, labels: ReviewMarginLabels): string {
+  const text = after.trim();
+  if (wholeBlockKind(text) === "picture") return text;
+  return blockSummary(text, blockNames(labels)) ?? text;
+}
 
 /**
  * The margin's cards (ReviewMargin.tsx): a revision with its sentences to
@@ -197,7 +210,7 @@ export const RevisionCard = memo(
               </span>
             )}
             {item.after.trim() ? (
-              <RevisionNoteText text={item.after.trim()} />
+              <RevisionNoteText text={revisionText(item.after, labels)} />
             ) : (
               <span className="revision-note-delete">
                 {labels.proposalDeleteSentence}

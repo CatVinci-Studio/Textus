@@ -1,0 +1,212 @@
+[
+  {
+    "name": "picture kept",
+    "block": "![一把旧伞](assets/a.png)",
+    "rewritten": "![一把旧伞](assets/a.png)",
+    "changes": 2
+  },
+  {
+    "name": "picture swapped",
+    "block": "![一把旧伞](assets/a.png)",
+    "rewritten": "![An old umbrella](assets/b.png)",
+    "changes": 3
+  },
+  {
+    "name": "link para kept",
+    "block": "她查了[伞铺地图](https://example.com/map)。",
+    "rewritten": "她查了[伞铺地图](https://example.com/map)。",
+    "changes": 2
+  },
+  {
+    "name": "link para changed",
+    "block": "她查了[伞铺地图](https://example.com/map)。",
+    "rewritten": "She checked the [shop map](https://example.com/map).",
+    "changes": 3
+  },
+  {
+    "name": "bare url changed",
+    "block": "网址是 https://example.com/rain 。",
+    "rewritten": "The address is https://example.com/rain .",
+    "changes": 3
+  },
+  {
+    "name": "bare url kept as written",
+    "block": "网址是 https://example.com/rain 。",
+    "rewritten": "网址是 https://example.com/rain 。",
+    "changes": 2
+  },
+  {
+    "name": "table kept",
+    "block": "| 名字 | 数量 |\n| --- | --- |\n| 伞 | 1 |",
+    "rewritten": "| 名字 | 数量 |\n| --- | --- |\n| 伞 | 1 |",
+    "changes": 2
+  },
+  {
+    "name": "table kept unpadded",
+    "block": "| 名字 | 数量 |\n| --- | --- |\n| 伞 | 1 |",
+    "rewritten": "|名字|数量|\n|---|---|\n|伞|1|",
+    "changes": 2
+  },
+  {
+    "name": "table changed",
+    "block": "| 名字 | 数量 |\n| --- | --- |\n| 伞 | 1 |",
+    "rewritten": "| Name | Count |\n| --- | --- |\n| Umbrella | 1 |",
+    "changes": 3
+  },
+  {
+    "name": "toc changed",
+    "block": "- [第一章](#第一章)\n- [第二章](#第二章)",
+    "rewritten": "- [Chapter one](#chapter-one)\n- [Chapter two](#chapter-two)",
+    "changes": 3
+  },
+  {
+    "name": "footnote kept",
+    "block": "伞是母亲留下的。[^1]\n\n[^1]: 母亲去世三年。",
+    "rewritten": "伞是母亲留下的。[^1]\n\n[^1]: 母亲去世三年。",
+    "changes": 2
+  },
+  {
+    "name": "footnote changed",
+    "block": "伞是母亲留下的。[^1]\n\n[^1]: 母亲去世三年。",
+    "rewritten": "The umbrella was her mother's.[^1]\n\n[^1]: Her mother died three years ago.",
+    "changes": 4
+  },
+  {
+    "name": "code changed",
+    "block": "```js\nconst rain = 1;\n```",
+    "rewritten": "```js\nconst rain = 2;\n```",
+    "changes": 3
+  },
+  {
+    "name": "mermaid kept",
+    "block": "```mermaid\ngraph TD\nA-->B\n```",
+    "rewritten": "```mermaid\ngraph TD\nA-->B\n```",
+    "changes": 2
+  },
+  {
+    "name": "math changed",
+    "block": "$$\na+b\n$$",
+    "rewritten": "$$\na-b\n$$",
+    "changes": 3
+  },
+  {
+    "name": "hr kept",
+    "block": "---",
+    "rewritten": "---",
+    "changes": 2
+  },
+  {
+    "name": "hr written as ---",
+    "block": "***",
+    "rewritten": "---",
+    "changes": 2
+  },
+  {
+    "name": "inline math changed",
+    "block": "面积是 $a^2$ 平方米。",
+    "rewritten": "The area is $a^2$ square metres.",
+    "changes": 3
+  },
+  {
+    "name": "inline code changed",
+    "block": "运行 `rain()` 就好。",
+    "rewritten": "Just run `rain()`.",
+    "changes": 3
+  },
+  {
+    "name": "bold italic changed",
+    "block": "这把伞**很旧**，*也很轻*。",
+    "rewritten": "This umbrella is **old** and *light*.",
+    "changes": 3
+  },
+  {
+    "name": "strike changed",
+    "block": "她~~不~~想修它。",
+    "rewritten": "She ~~didn't~~ want to fix it.",
+    "changes": 3
+  },
+  {
+    "name": "heading changed",
+    "block": "## 第二天",
+    "rewritten": "## The next day",
+    "changes": 3
+  },
+  {
+    "name": "quote changed",
+    "block": "> 伞会说话。",
+    "rewritten": "> The umbrella speaks.",
+    "changes": 3
+  },
+  {
+    "name": "task list changed",
+    "block": "- [ ] 修伞\n- [x] 开店",
+    "rewritten": "- [ ] Fix the umbrella\n- [x] Open the shop",
+    "changes": 3
+  },
+  {
+    "name": "ordered list changed",
+    "block": "1. 第一步\n2. 第二步",
+    "rewritten": "1. Step one\n2. Step two",
+    "changes": 4
+  },
+  {
+    "name": "nested list changed",
+    "block": "- 伞\n  - 伞骨\n  - 伞面",
+    "rewritten": "- Umbrella\n  - Ribs\n  - Canopy",
+    "changes": 3
+  },
+  {
+    "name": "html details changed",
+    "block": "<details><summary>注</summary>伞是旧的。</details>",
+    "rewritten": "<details><summary>Note</summary>The umbrella is old.</details>",
+    "changes": 3
+  },
+  {
+    "name": "img width kept",
+    "block": "<img src=\"assets/a.png\" alt=\"伞\" width=\"200\">",
+    "rewritten": "<img src=\"assets/a.png\" alt=\"伞\" width=\"200\">",
+    "changes": 2
+  },
+  {
+    "name": "hard break changed",
+    "block": "第一行\\\n第二行",
+    "rewritten": "Line one\\\nLine two",
+    "changes": 3
+  },
+  {
+    "name": "wikilink changed",
+    "block": "参见 [[雨伞笔记]]。",
+    "rewritten": "See [[雨伞笔记]].",
+    "changes": 3
+  },
+  {
+    "name": "picture with caption",
+    "block": "![伞](assets/a.png)\n图一：旧伞",
+    "rewritten": "![Umbrella](assets/a.png)\nFigure 1: the old umbrella",
+    "changes": 3
+  },
+  {
+    "name": "link reference",
+    "block": "看[地图][m]。\n\n[m]: https://example.com/map",
+    "rewritten": "See the [map][m].\n\n[m]: https://example.com/map",
+    "changes": 3
+  },
+  {
+    "name": "emoji changed",
+    "block": "下雨了 🌧️。",
+    "rewritten": "It's raining 🌧️.",
+    "changes": 3
+  },
+  {
+    "name": "a picture next to a changed table",
+    "block": "![伞](assets/a.png)\n\n| 名字 | 数量 |\n| --- | --- |\n| 伞 | 1 |",
+    "rewritten": "![伞](assets/a.png)\n\n| Name | Count |\n| --- | --- |\n| Umbrella | 1 |",
+    "changes": 3
+  },
+  {
+    "name": "a swapped picture next to a changed table",
+    "block": "![伞](assets/a.png)\n\n| 名字 | 数量 |\n| --- | --- |\n| 伞 | 1 |",
+    "rewritten": "![Umbrella](assets/b.png)\n\n| Name | Count |\n| --- | --- |\n| Umbrella | 1 |",
+    "changes": 4
+  }
+]

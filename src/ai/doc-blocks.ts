@@ -155,9 +155,61 @@ export function resolveBlockEdit(
   return {
     action: fields.action,
     anchor: runText,
-    text: fields.text,
+    text:
+      fields.action === "replace" && last > first
+        ? keepPictures(blocks.slice(first, last + 1), fields.text, false)
+        : fields.text,
     ...(context ? { context } : {}),
   };
+}
+
+/** Whether `block` is a picture and nothing else: `![alt](path)`, or an
+ *  `<img>` (a picture given a width). doc_blocks.rs's is_picture; the rest
+ *  of the app asks markdown-forms.ts, which has it from here. */
+export function isPicture(block: string): boolean {
+  return /^(?:!\[[^\]\n]*\]\([^)\n]*\)|<img\s[^>\n]*>)$/.test(block.trim());
+}
+
+/**
+ * `text`, a rewrite of the run `run`, with the run's pictures it left out
+ * put back, each after as many of the new text's blocks as there were
+ * text blocks before it in the run - doc_blocks.rs's keep_pictures, which
+ * the finished call goes through (a dropped picture was deleted with
+ * nothing said). `complete`: all of `text` is there; while it streams in,
+ * a picture whose place it hasn't reached is left out for now.
+ */
+export function keepPictures(
+  run: DocBlock[],
+  text: string,
+  complete: boolean,
+): string {
+  let out = text;
+  let wordsBefore = 0;
+  // Pictures in the new text so far: each moves the later places on by one.
+  let put = 0;
+  for (const block of run) {
+    const picture = block.text.trim();
+    if (!isPicture(picture)) {
+      wordsBefore++;
+      continue;
+    }
+    // Kept where the rewrite has it, it takes a place all the same.
+    if (out.includes(picture)) {
+      put++;
+      continue;
+    }
+    const blocks = splitBlocks(out);
+    const at = wordsBefore + put;
+    if (at === 0) out = `${picture}\n\n${out.trimStart()}`;
+    else if (at < blocks.length) {
+      const end = blocks[at - 1].to;
+      out = `${out.slice(0, end)}\n\n${picture}\n\n${out.slice(end).trimStart()}`;
+    } else if (complete && blocks.length > 0)
+      out = `${out.trimEnd()}\n\n${picture}`;
+    else continue;
+    put++;
+  }
+  return out;
 }
 
 /**

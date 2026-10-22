@@ -14,6 +14,9 @@ import {
 } from "../revision/generated-images";
 import { Tooltip } from "../../ui/Tooltip";
 import type { ChatMessagesLabels } from "./ChatMessages";
+import { InlineMarkdownText } from "../MarkdownText";
+import { blockSummary, type BlockNames } from "../revision/markdown-forms";
+import { inlineSentence } from "../revision/sentence-diff";
 
 const CHECK = (
   <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -245,8 +248,13 @@ export function ProposalCard({
                 >
                   <span className="agent-proposal-num">{k + 1}</span>
                   <span className="agent-proposal-sentence-text">
-                    {(state === "kept" ? s.before : s.after).trim() ||
-                      s.before.trim()}
+                    <ChangeText
+                      markdown={
+                        (state === "kept" ? s.before : s.after).trim() ||
+                        s.before
+                      }
+                      names={labels.proposalBlocks}
+                    />
                   </span>
                 </button>
                 {actions && onDecide && (
@@ -353,5 +361,22 @@ export function ProposalCard({
         </div>
       )}
     </div>
+  );
+}
+
+/** One change's text on the card, drawn as the document draws it (bold,
+ *  links, a footnote's mark); a whole block (a table, a picture) by what
+ *  it is (blockSummary). */
+function ChangeText({
+  markdown,
+  names,
+}: {
+  markdown: string;
+  names: BlockNames;
+}) {
+  return (
+    <InlineMarkdownText
+      text={blockSummary(markdown, names) ?? inlineSentence(markdown)}
+    />
   );
 }

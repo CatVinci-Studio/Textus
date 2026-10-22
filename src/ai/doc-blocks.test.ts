@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  keepPictures,
   resolveBlockEdit,
   resolveBlockTarget,
   splitBlocks,
 } from "./doc-blocks";
 import cases from "./doc-blocks-cases.json";
+import keepCases from "./keep-pictures-cases.json";
 
 describe("splitBlocks", () => {
   it("splits as doc_blocks.rs does (the shared cases)", () => {
@@ -96,5 +98,28 @@ describe("resolveBlockTarget", () => {
       anchor: "mat",
     });
     expect(resolveBlockTarget(doc, {})).toBeNull();
+  });
+});
+
+describe("keepPictures", () => {
+  it("puts back the pictures a rewrite left out, as doc_blocks.rs does (the shared cases)", () => {
+    for (const c of keepCases)
+      expect(
+        keepPictures(splitBlocks(c.document), c.text, c.complete),
+        c.name,
+      ).toBe(c.expected);
+  });
+
+  it("is what a streaming rewrite of a run is drawn with", () => {
+    const doc = "One.\n\n![a](a.png)\n\nTwo.";
+    const blocks = splitBlocks(doc);
+    expect(
+      resolveBlockEdit(doc, {
+        action: "replace",
+        block: blocks[0].id,
+        lastBlock: blocks[2].id,
+        text: "Uno.\n\nDos.",
+      })?.text,
+    ).toBe("Uno.\n\n![a](a.png)\n\nDos.");
   });
 });

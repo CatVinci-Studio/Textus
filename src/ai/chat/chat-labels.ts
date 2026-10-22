@@ -1,4 +1,5 @@
 import { plural, type Lang, type Strings } from "../../i18n/strings";
+import { blockNames } from "../revision/markdown-forms";
 import type { InlineChatLabels } from "./quick-ask/InlineChat";
 import { pickerLabels } from "./ComposerPicker";
 
@@ -59,6 +60,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     proposalChangeCount: t.proposalChangeCount,
     proposalTakeSentence: t.proposalTakeSentence,
     proposalKeepSentence: t.proposalKeepSentence,
+    proposalBlocks: blockNames(t),
     proposalShowInText: t.proposalShowInText,
     proposalSourcesAsFootnotes: t.proposalSourcesAsFootnotes,
     proposalAcceptSome: t.proposalAcceptSome,

@@ -177,7 +177,10 @@ export interface ChangeDraw {
 export function changeDecorations(
   callId: string,
   index: number,
-  c: Pick<PendingSentence, "from" | "to" | "after" | "take" | "parts" | "at">,
+  c: Pick<
+    PendingSentence,
+    "from" | "to" | "after" | "take" | "parts" | "at" | "block"
+  >,
   draw: ChangeDraw,
 ): Decoration[] {
   const decos: Decoration[] = [];
@@ -189,7 +192,10 @@ export function changeDecorations(
   // others, which stay as they are - one decoration over all of them was a
   // new one, and the strike drew in again over the sentences already
   // struck.
-  if (c.from < c.to)
+  // A whole block's original is struck as the blocks it is: a picture or a
+  // table has no words to draw a line through.
+  if (c.block) decos.push(blockStrike(callId, index, c, state, focus));
+  else if (c.from < c.to)
     for (const part of strikeParts(c))
       decos.push(sentenceStrike(callId, index, part, state, focus, stagger));
   // The new text and its ✓ / ✕: after the sentences it replaces.
@@ -218,14 +224,16 @@ export function changeDecorations(
   // to the margin ("original").
   if (c.from === c.to) decos.push(mark("insert"));
   // The line break a sentence ends with stays the original's, in the text.
-  const after = inlineSentence(c.after);
+  // A whole block (a table, a picture) is drawn as one, between blocks.
+  const after = c.block ? c.after.trim() : inlineSentence(c.after);
   if (after) {
     const key = `pending-new-${callId}-${index}-${state}-${textKey(after)}`;
     decos.push(
       Decoration.widget(
         at,
         () => {
-          const span = document.createElement("span");
+          const span = document.createElement(c.block ? "div" : "span");
+          if (c.block) span.dataset.blocks = "true";
           span.className = `pending-insert pending-sentence-new pending-sentence-${state}${focus}`;
           if (state !== "kept") span.setAttribute("role", "insertion");
           span.contentEditable = "false";
@@ -337,6 +345,23 @@ export function sentenceStrike(
   );
 }
 
+/** A block of a whole-block change's original, struck as one (the
+ *  struck blocks of a join, `pending-whole`). */
+function blockStrike(
+  callId: string,
+  index: number,
+  range: { from: number; to: number },
+  state: string,
+  focus: string,
+): Decoration {
+  return Decoration.node(range.from, range.to, {
+    class: `pending-delete pending-whole pending-sentence-${state}${focus}`,
+    ...(state === "kept" ? {} : { role: "deletion" }),
+    "data-call": callId,
+    "data-index": String(index),
+  });
+}
+
 /**
  * How a completed sentence's new text comes in while the rewrite streams.
  * The sentence the partial span was just writing is already on screen as it
@@ -378,21 +403,28 @@ export function streamChanges(
 ): PendingSentence[] {
   const { ranges } = source;
   const at = (i: number) => (i > 0 ? ranges[i - 1].to : ranges[0].from);
-  return s.layout.pieces.flatMap((piece) => {
+  return s.layout.pieces.flatMap((piece): PendingSentence[] => {
     if (piece.kind === "same") return [];
     const struck = piece.end > piece.start;
     const from = struck ? ranges[piece.start].from : at(piece.start);
+    const to = struck ? ranges[piece.end - 1].to : from;
+    const base: PendingSentence = {
+      from,
+      to,
+      before: piece.before,
+      after: piece.after,
+      take: null,
+    };
+    // A block changed whole, drawn as the finished rewrite draws it.
+    if (struck && piece.end - piece.start === 1 && ranges[piece.start].block)
+      return [{ ...base, block: true, at: to }];
     const paired = pairedPrefix(
       s.sentences.slice(piece.start, piece.end),
       piece.after,
     );
     return [
       {
-        from,
-        to: struck ? ranges[piece.end - 1].to : from,
-        before: piece.before,
-        after: piece.after,
-        take: null,
+        ...base,
         parts: ranges.slice(piece.start, piece.end),
         at: struck ? ranges[piece.start + paired - 1].to : undefined,
       },

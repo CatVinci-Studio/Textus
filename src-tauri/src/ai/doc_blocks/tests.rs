@@ -197,3 +197,35 @@ fn markers_copied_into_text_come_out() {
     assert_eq!(v["anchor"], "One.");
     assert_eq!(v["text"], "Two. [#] stays");
 }
+
+/// The cases doc-blocks.test.ts checks too: a rewrite of the whole
+/// document, run through keep_pictures, comes out the same both sides.
+#[test]
+fn keeps_pictures_as_the_shared_cases_say() {
+    let raw = include_str!("../../../../src/ai/keep-pictures-cases.json");
+    let cases: Vec<Value> = serde_json::from_str(raw).unwrap();
+    for case in cases {
+        let document = case["document"].as_str().unwrap();
+        let got = keep_pictures(
+            document,
+            &split(document),
+            case["text"].as_str().unwrap(),
+            case["complete"].as_bool().unwrap(),
+        );
+        assert_eq!(got, case["expected"].as_str().unwrap(), "{}", case["name"]);
+    }
+}
+
+#[test]
+fn a_rewrite_of_a_run_keeps_the_pictures_it_left_out() {
+    let doc = "One.\n\n![a](a.png)\n\nTwo.";
+    let blocks = split(doc);
+    let (a, b) = (&blocks[0].id, &blocks[2].id);
+    let out = resolve_edit_arguments(
+        doc,
+        &blocks,
+        &format!(r#"{{"action":"replace","block":"{a}","last_block":"{b}","text":"Uno.\n\nDos."}}"#),
+    );
+    let v: Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["text"], "Uno.\n\n![a](a.png)\n\nDos.");
+}

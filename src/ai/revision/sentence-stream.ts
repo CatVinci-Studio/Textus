@@ -1,10 +1,5 @@
-import {
-  alignRun,
-  diffSentenceLists,
-  MATCH,
-  similarity,
-  splitSentences,
-} from "./sentence-diff";
+import { alignRun, ENDS_PARAGRAPH, MATCH, similarity } from "./sentence-diff";
+import { diffUnits, splitUnits } from "./unit-diff";
 
 /**
  * A rewrite laid out sentence by sentence while it is still streaming in,
@@ -15,7 +10,7 @@ import {
  * re-laid it out into sentences (1.1).
  *
  * The completed sentences of the new text are diffed against the original
- * the way the finished rewrite is (`diffSentenceLists`), except for the
+ * the way the finished rewrite is (`diffUnits`), except for the
  * last run of changes: the originals the new text hasn't reached yet are
  * not deletions, they are still to come. Once the stream is done the
  * layout is exactly `diffSentences`, the one the finished proposal is shown
@@ -116,7 +111,30 @@ export function reachedPrefix(before: string[], after: string[]): number {
     }
   let reached = 0;
   for (let i = 1; i <= m; i++) if (best[i][n] > best[reached][n]) reached = i;
-  return reached;
+  return Math.max(reached, paragraphsReached(before, after));
+}
+
+/**
+ * How many of `before` the paragraphs `after` has finished cover, one for
+ * one, when they read nothing like them - a translation, a rewrite in
+ * other words - and likeness can't tell (reachedPrefix found none of it):
+ * the new paragraphs went into the document ahead of every original until
+ * the rewrite was done (rc.6). Zero while they read like the originals:
+ * likeness places those, and a paragraph split in two would strike one too
+ * many.
+ */
+function paragraphsReached(before: string[], after: string[]): number {
+  const finished = after.filter((s) => ENDS_PARAGRAPH.test(s)).length;
+  if (finished === 0) return 0;
+  let paragraphs = 0;
+  let reach = 0;
+  while (reach < before.length && paragraphs < finished)
+    if (ENDS_PARAGRAPH.test(before[reach++])) paragraphs++;
+  if (paragraphs < finished) return 0;
+  const written = after.join("");
+  return similarity(before.slice(0, reach).join(""), written) < MATCH
+    ? reach
+    : 0;
 }
 
 /**
@@ -132,7 +150,7 @@ export function alignStream(
   done: boolean,
   reachedAtLeast = 0,
 ): StreamLayout {
-  let sentences = splitSentences(text);
+  let sentences = splitUnits(text);
   // Until the stream ends, the last piece may still grow: a closing quote,
   // the space after the stop, or the rest of the sentence.
   let partialText = "";
@@ -162,13 +180,12 @@ export function alignCompleted(
   reachedAtLeast = 0,
 ): Omit<StreamLayout, "partial"> {
   let reached = original.length;
-  const hunks = diffSentenceLists(
+  const hunks = diffUnits(
     original,
     sentences,
     done
-      ? alignRun
-      : (before, after) => {
-          const start = original.length - before.length;
+      ? undefined
+      : (before, after, start) => {
           const take = Math.min(
             before.length,
             Math.max(reachedPrefix(before, after), reachedAtLeast - start),

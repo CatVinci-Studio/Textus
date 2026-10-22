@@ -11,7 +11,8 @@ import {
 import { StreamReveal } from "../stream-reveal";
 import { showGeneratedImages, shownGeneratedSrc } from "./generated-images";
 import { framePendingPictures } from "./pending-picture";
-import { inlineSentence, splitSentences } from "./sentence-diff";
+import { inlineSentence } from "./sentence-diff";
+import { splitUnits } from "./unit-diff";
 import {
   alignCompleted,
   partialFor,
@@ -136,7 +137,7 @@ export function refreshStream(anim: InsertAnimation) {
   const s = anim.stream;
   if (!s) return;
   const done = anim.done && anim.reveal.caughtUp;
-  const pieces = splitSentences(anim.reveal.text);
+  const pieces = splitUnits(anim.reveal.text);
   const completed = done ? pieces : pieces.slice(0, -1);
   const key = `${done ? 1 : 0}${completed.join("")}`;
   let { pieces: aligned, reached } = s.layout;
@@ -470,7 +471,7 @@ export function stoppedRewrite(callId: string): string | null | undefined {
 }
 
 export function keptOnStop(s: StreamState, text: string): string | null {
-  const pieces = splitSentences(text);
+  const pieces = splitUnits(text);
   const last = pieces.at(-1) ?? "";
   // Stopped right after a sentence's stop: that one is complete.
   if (!/[。！？!?.;；][”’"')）」』\]]*\s*$/.test(last)) pieces.pop();

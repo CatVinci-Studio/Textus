@@ -142,6 +142,18 @@ const footnotes: TokenizerAndRendererExtension[] = [
   },
 ];
 
+// The inline flavour (renderMarkdownInlineHtml): the chat's, and a
+// footnote's mark raised as the editor shows it - a rewritten sentence that
+// keeps its `[^1]` showed the Markdown in the text and on its card.
+const inlineMarked = new Marked({
+  gfm: true,
+  breaks: true,
+  extensions: [
+    ...mathExtensions(mathHtml),
+    ...footnotes.filter((f) => f.name === "footnoteReference"),
+  ],
+});
+
 function escapeLabel(label: string): string {
   return label.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 }
@@ -225,7 +237,7 @@ export function renderDocumentHtml(markdown: string): string {
  * the surrounding paragraph's inline content.
  */
 export function renderMarkdownInlineHtml(markdown: string): string {
-  const parsed = chatMarked.parseInline(normalizeMathDelimiters(markdown), {
+  const parsed = inlineMarked.parseInline(normalizeMathDelimiters(markdown), {
     async: false,
   });
   return DOMPurify.sanitize(parsed);

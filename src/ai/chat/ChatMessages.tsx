@@ -1,4 +1,5 @@
 import { withoutCitationMarkers } from "../citation-markers";
+import type { BlockNames } from "../revision/markdown-forms";
 import { OUT_OF_STEPS } from "./out-of-steps";
 import { InlineMarkdownText } from "../MarkdownText";
 import {
@@ -85,6 +86,9 @@ export interface ChatMessagesLabels
   /** The ✓ / ✕ on a sentence (the card's and the text's). */
   proposalTakeSentence: string;
   proposalKeepSentence: string;
+  /** What a change of a whole block (markdown-forms.ts) is called on its
+   *  card, by its kind. */
+  proposalBlocks: BlockNames;
   /** Scrolls the document to the proposal. */
   proposalShowInText: string;
   /** The checkbox on a proposal that cites the web. */

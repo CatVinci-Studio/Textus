@@ -21,6 +21,13 @@ export interface ReviewMarginLabels {
   proposalKeepSentence: string;
   proposalDeleteSentence: string;
   proposalDeletedSentence: string;
+  // What a change of a whole block (a table, a code block) is called on
+  // its card - a picture is shown.
+  proposalBlockPicture: string;
+  proposalBlockTable: string;
+  proposalBlockCode: string;
+  proposalBlockMath: string;
+  proposalBlockOther: string;
 }
 
 /** One thing in the margin: a review note, or one changed sentence of a

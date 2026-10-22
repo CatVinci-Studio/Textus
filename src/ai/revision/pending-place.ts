@@ -18,12 +18,9 @@ import {
   type PendingPreview,
   type PendingSentence,
 } from "./pending-edit-plugin";
-import {
-  diffSentences,
-  pairedPrefix,
-  splitSentences,
-  trimBreaks,
-} from "./sentence-diff";
+import { pairedPrefix, splitSentences, trimBreaks } from "./sentence-diff";
+import { diffSentences, splitUnits } from "./unit-diff";
+import { matchableMarkdown } from "./markdown-forms";
 import { findInOrder, locateHunks } from "./sentence-locate";
 import { locatePlainText } from "./text-locate";
 
@@ -182,7 +179,9 @@ function sentencesFor(
               ranges[i].to,
               " ",
             ),
-            ...changeParts(ctx, doc, ranges[i], h.before, h.after),
+            ...(ranges[i].block
+              ? { block: true, at: ranges[i].to }
+              : changeParts(ctx, doc, ranges[i], h.before, h.after)),
           },
         ]
       : [],
@@ -265,7 +264,7 @@ function streamSourceFor(
   lead = "",
 ): PendingPreview["streamSource"] {
   if (original === null || !range) return undefined;
-  const sentences = splitSentences(original);
+  const sentences = splitUnits(original);
   if (sentences.length === 0) return undefined;
   const ranges = locateHunks(
     doc,
@@ -278,8 +277,10 @@ function streamSourceFor(
   return ranges ? { sentences, ranges } : undefined;
 }
 
+/** `markdown`'s text as the document shows it (matchableMarkdown), for
+ *  finding it there. */
 export function plainText(ctx: Ctx, markdown: string): string | null {
-  const parsed = parseMarkdownSource(ctx, markdown);
+  const parsed = parseMarkdownSource(ctx, matchableMarkdown(markdown));
   return parsed && typeof parsed !== "string" ? parsed.textContent : null;
 }
 

@@ -7,9 +7,7 @@ import {
   onPictureSettled,
 } from "../revision/generated-images";
 import { usePicturesState } from "../revision/usePicturesState";
-
-/** A picture's whole Markdown, `![alt](src)` or `![alt](src "title")`. */
-const PICTURE = /!\[([^\]]*)\]\((<[^>]*>|[^)\s]*)(?:\s+"[^"]*")?\)/g;
+import { PICTURES_IN_TEXT } from "../revision/markdown-forms";
 
 /**
  * A revision card's text (ReviewMargin): its words as they are, and each
@@ -20,7 +18,7 @@ const PICTURE = /!\[([^\]]*)\]\((<[^>]*>|[^)\s]*)(?:\s+"[^"]*")?\)/g;
 export function RevisionNoteText({ text }: { text: string }) {
   const parts: React.ReactNode[] = [];
   let last = 0;
-  for (const match of text.matchAll(PICTURE)) {
+  for (const match of text.matchAll(PICTURES_IN_TEXT)) {
     const at = match.index ?? 0;
     if (at > last) parts.push(text.slice(last, at));
     const src = match[2].startsWith("<") ? match[2].slice(1, -1) : match[2];

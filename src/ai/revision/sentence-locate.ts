@@ -1,4 +1,5 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import { wholeBlockKind } from "./markdown-forms";
 import { trimBreaks, type SentenceHunk } from "./sentence-diff";
 
 /**
@@ -20,6 +21,10 @@ import { trimBreaks, type SentenceHunk } from "./sentence-diff";
  * with words the rewrite doesn't touch. They are skipped as one piece and
  * never searched past: a sentence repeated before the anchor would
  * otherwise be taken for it.
+ *
+ * A block changed whole (markdown-forms.ts's wholeBlockKind: a picture, a
+ * table, a code block) isn't text to find: it is the next such block node,
+ * found by the node it is (wholeNodes).
  *
  * Returns one range per hunk, `same` and `change` alike, in order; an empty
  * `before` (a pure insertion) gets an empty range where it would go.
@@ -81,39 +86,42 @@ export function locateHunks(
   hunks: SentenceHunk[],
   plainOf: (markdown: string) => string | null,
   lead = "",
-): { from: number; to: number }[] | null {
+): LocatedHunk[] | null {
   const { text, positions } = textPositions(doc, from, to);
   if (positions.length === 0) return null;
   const at = (i: number) =>
     i < positions.length ? positions[i] : positions[positions.length - 1] + 1;
+  // The first character of text at or after document position `p`.
+  const indexAt = (p: number) => {
+    const i = positions.findIndex((q) => q >= p);
+    return i === -1 ? text.length : i;
+  };
+  const wholes = wholeNodes(doc, from, to);
 
   // A piece's text as `text` has it: a hard break inside it is a "\n" in
   // the parse and nothing here.
   const plainPiece = (markdown: string) =>
     plainOf(trimBreaks(markdown))?.replace(/\n/g, "").trim();
-  const out: { from: number; to: number }[] = [];
+  const out: LocatedHunk[] = [];
+  // Where the pieces found so far end: in the text, and in the document.
   let cursor = 0;
+  let pos = from;
   if (lead.trim()) {
     const plain = plainPiece(lead);
     const index = plain ? text.indexOf(plain) : -1;
     if (!plain || index === -1 || text.slice(0, index).trim()) return null;
     cursor = index + plain.length;
+    pos = at(cursor - 1) + 1;
   }
-  // An unchanged piece whose text can't be matched as it stands - a table
-  // or a code block, whose Markdown (`| --- |`, fences) the text doesn't
-  // have: it is whatever lies before the next piece, found once that one
-  // is (a run of them - a table's rows - the first taking it all). Matched
-  // exactly, it would have made a whole-text rewrite of a document with a
-  // table fall back to one block and one card.
+  // An unchanged piece whose text can't be matched as it stands, or a
+  // piece with no text (a lone footnote mark): it is whatever lies between
+  // the piece before it and the next one found (a run of them, the first
+  // taking it all).
   let unplaced = -1;
-  const place = (index: number) => {
+  const place = (end: number) => {
     if (unplaced < 0) return;
-    for (let k = unplaced; k < out.length; k++) {
-      out[k] =
-        k === unplaced
-          ? { from: at(cursor), to: at(index) }
-          : { from: at(index), to: at(index) };
-    }
+    for (let k = unplaced; k < out.length; k++)
+      out[k] = k === unplaced ? { from: pos, to: end } : { from: end, to: end };
     unplaced = -1;
   };
   for (const hunk of hunks) {
@@ -123,28 +131,83 @@ export function locateHunks(
       out.push({ from: p, to: p });
       continue;
     }
+    // A block changed whole (wholeBlockKind: a picture, a table…) is the
+    // next such block of the document: its Markdown isn't the text it
+    // shows, and it may have none.
+    if (wholeBlockKind(markdown) !== null) {
+      const node = wholes.find((n) => n.from >= pos);
+      if (!node) return null;
+      place(node.from);
+      out.push({ ...node, block: true });
+      pos = node.to;
+      cursor = indexAt(node.to);
+      continue;
+    }
     const plain = plainPiece(markdown);
     const index = plain ? text.indexOf(plain, cursor) : -1;
     // Found, and nothing but whitespace skipped on the way - text in
     // between would belong to no piece, unless an unchanged one before it
     // is still to be placed.
     const adjacent = index !== -1 && !text.slice(cursor, index).trim();
-    if (hunk.kind === "same" && !adjacent) {
+    if (!plain || (hunk.kind === "same" && !adjacent)) {
       if (unplaced < 0) unplaced = out.length;
-      out.push({ from: at(cursor), to: at(cursor) });
+      out.push({ from: pos, to: pos });
       continue;
     }
-    if (!plain || index === -1 || (!adjacent && unplaced < 0)) return null;
-    if (unplaced >= 0) {
-      place(index);
-      cursor = index;
-    }
-    out.push({
+    if (index === -1 || (!adjacent && unplaced < 0)) return null;
+    place(positions[index]);
+    const found = {
       from: positions[index],
       to: positions[index + plain.length - 1] + 1,
-    });
+    };
+    out.push(found);
     cursor = index + plain.length;
+    pos = found.to;
   }
-  place(text.length);
+  place(to);
+  return out;
+}
+
+/** A hunk's place in the document: its text, or (`block`) the block node
+ *  a whole-block hunk is. */
+export interface LocatedHunk {
+  from: number;
+  to: number;
+  block?: true;
+}
+
+/** The blocks of prose - located by their text, sentence by sentence. A
+ *  paragraph with no text is a picture's. */
+const PROSE = new Set([
+  "paragraph",
+  "heading",
+  "blockquote",
+  "bullet_list",
+  "ordered_list",
+  "list_item",
+]);
+
+/** The blocks in [from, to) a whole-block hunk can be - each node that
+ *  isn't prose (a table, a code block, a footnote's definition) or is a
+ *  paragraph of nothing but a picture - in order, outermost first. */
+function wholeNodes(
+  doc: ProseNode,
+  from: number,
+  to: number,
+): { from: number; to: number }[] {
+  const out: { from: number; to: number }[] = [];
+  doc.nodesBetween(from, to, (node, pos) => {
+    if (!node.isBlock || pos < from || pos + node.nodeSize > to) return true;
+    // A paragraph of a picture or of raw HTML (an HTML block parses into
+    // `paragraph > html`) has no text of its own.
+    let ownText = false;
+    node.forEach((child) => (ownText ||= child.isText));
+    const whole = PROSE.has(node.type.name)
+      ? node.type.name === "paragraph" && node.childCount > 0 && !ownText
+      : true;
+    if (!whole) return true;
+    out.push({ from: pos, to: pos + node.nodeSize });
+    return false;
+  });
   return out;
 }

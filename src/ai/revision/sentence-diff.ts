@@ -10,6 +10,8 @@
  * pieces reproduces the text exactly.
  */
 
+import { formKey } from "./markdown-forms";
+
 export type SentenceHunk =
   | { kind: "same"; text: string }
   | { kind: "change"; before: string; after: string };
@@ -46,27 +48,24 @@ export function inlineSentence(sentence: string): string {
   return trimBreaks(sentence).replace(/^#{1,6}[ \t]+/, "");
 }
 
-/** LCS over sentences, then runs of non-matching sentences become change
- *  hunks (see flush). */
-export function diffSentences(before: string, after: string): SentenceHunk[] {
-  return diffSentenceLists(splitSentences(before), splitSentences(after));
-}
-
 /**
- * `diffSentences` over sentences already split. `alignTail` aligns the last
- * run of changed sentences - the one that reaches the end of `a` - and
- * defaults to `alignRun`; a rewrite still streaming in (sentence-stream.ts)
- * passes its own, which leaves out the originals the new text hasn't
- * reached yet instead of calling them deleted.
+ * Units already split, diffed in one: LCS, then runs of non-matching ones
+ * become change hunks (see flush). `alignTail` aligns the last run of
+ * changes - the one that reaches the end of `a` - when `b` is a stream so
+ * far; without it the rewrite is finished, and every paragraph is
+ * regrouped (regroup).
  */
 export function diffSentenceLists(
   a: string[],
   b: string[],
-  alignTail: typeof alignRun = alignRun,
+  alignTail?: (
+    before: string[],
+    after: string[],
+  ) => { before: string; after: string }[],
 ): SentenceHunk[] {
   // A rewrite still streaming in regroups only the paragraphs it has
   // finished: a paragraph's shape can't be judged half written.
-  return regroup(sentencePairs(a, b, alignTail), alignTail === alignRun).map(
+  return regroup(sentencePairs(a, b, alignTail ?? alignRun), !alignTail).map(
     (p) =>
       p.same
         ? { kind: "same" as const, text: p.after }
@@ -79,15 +78,22 @@ export function diffSentenceLists(
 function sentencePairs(
   a: string[],
   b: string[],
-  alignTail: typeof alignRun = alignRun,
+  alignTail: (
+    before: string[],
+    after: string[],
+  ) => { before: string; after: string }[] = alignRun,
 ): Pair[] {
+  // Compared as written either way (formKey): `<https://…>` the editor
+  // writes and the `https://…` a model writes back are the same sentence.
+  const keyA = a.map(formKey);
+  const keyB = b.map(formKey);
   const lcs: number[][] = Array.from({ length: a.length + 1 }, () =>
     new Array<number>(b.length + 1).fill(0),
   );
   for (let i = a.length - 1; i >= 0; i--)
     for (let j = b.length - 1; j >= 0; j--)
       lcs[i][j] =
-        a[i].trim() === b[j].trim()
+        keyA[i] === keyB[j]
           ? lcs[i + 1][j + 1] + 1
           : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
 
@@ -106,7 +112,7 @@ function sentencePairs(
   let i = 0;
   let j = 0;
   while (i < a.length || j < b.length) {
-    if (i < a.length && j < b.length && a[i].trim() === b[j].trim()) {
+    if (i < a.length && j < b.length && keyA[i] === keyB[j]) {
       flush();
       pairs.push({ same: true, before: a[i], after: b[j] });
       i++;
@@ -140,7 +146,27 @@ interface Pair {
 const DENSE = 0.5;
 const REWRITTEN = 0.55;
 
-const ENDS_PARAGRAPH = /\n[ \t]*\n\s*$/;
+/** A paragraph's end, carried by its last sentence. */
+export const ENDS_PARAGRAPH = /\n[ \t]*\n\s*$/;
+
+/** A paragraph's end inside a text. */
+const PARAGRAPH_END = /\n[ \t]*\n\s*/g;
+
+/** `text` cut after each paragraph's end, the breaks kept with the part
+ *  before them - so the parts join back into `text`. */
+function paragraphsOf(text: string): string[] {
+  const parts: string[] = [];
+  let from = 0;
+  for (const m of text.matchAll(PARAGRAPH_END)) {
+    const end = (m.index ?? 0) + m[0].length;
+    if (end < text.length) {
+      parts.push(text.slice(from, end));
+      from = end;
+    }
+  }
+  parts.push(text.slice(from));
+  return parts;
+}
 
 /**
  * How finely a rewrite is decided, chosen by what it did. Its pairs are cut
@@ -356,25 +382,6 @@ function dense(run: Pair[]): Pair[] {
   const after = run.map((p) => p.after).join("");
   if (similarity(before, after) >= REWRITTEN) return run;
   return [{ same: false, before, after }];
-}
-
-/** A paragraph's end inside a text: the break a sentence carries. */
-const PARAGRAPH_END = /\n[ \t]*\n\s*/g;
-
-/** `text` cut after each paragraph's end, the breaks kept with the part
- *  before them - so the parts join back into `text`. */
-function paragraphsOf(text: string): string[] {
-  const parts: string[] = [];
-  let from = 0;
-  for (const m of text.matchAll(PARAGRAPH_END)) {
-    const end = (m.index ?? 0) + m[0].length;
-    if (end < text.length) {
-      parts.push(text.slice(from, end));
-      from = end;
-    }
-  }
-  parts.push(text.slice(from));
-  return parts;
 }
 
 /** Character bigrams (single characters for one-character text), for a

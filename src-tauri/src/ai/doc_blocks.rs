@@ -261,6 +261,12 @@ pub fn resolve_edit_arguments(document: &str, blocks: &[Block], arguments: &str)
         }
     }
     args.remove("block");
+    if action == "replace" && last > index {
+        if let Some(Value::String(text)) = args.get("text") {
+            let kept = keep_pictures(document, &blocks[index..=last], text, true);
+            args.insert("text".into(), Value::String(kept));
+        }
+    }
     args.insert("anchor".into(), Value::String(whole.to_string()));
     if document.matches(whole).count() > 1 && index > 0 {
         let before = &blocks[index - 1];
@@ -332,6 +338,71 @@ pub fn resolve_target_arguments(document: &str, blocks: &[Block], arguments: &st
         }
     }
     reorder(args).to_string()
+}
+
+/// Whether `block` is a picture and nothing else: `![alt](path)`, or an
+/// `<img>` (a picture given a width). isPicture in src/ai/doc-blocks.ts;
+/// both are held to keep-pictures-cases.json.
+fn is_picture(block: &str) -> bool {
+    let b = block.trim();
+    if b.contains('\n') {
+        return false;
+    }
+    if let Some(rest) = b.strip_prefix("![") {
+        // `![alt](path)`: no `]` in the alt, no `)` in the path.
+        return match rest.find(']') {
+            Some(close) => rest[close + 1..]
+                .strip_prefix('(')
+                .and_then(|r| r.strip_suffix(')'))
+                .is_some_and(|path| !path.contains(')')),
+            None => false,
+        };
+    }
+    b.strip_prefix("<img")
+        .and_then(|r| r.strip_suffix('>'))
+        .is_some_and(|attrs| attrs.starts_with(char::is_whitespace) && !attrs.contains('>'))
+}
+
+/// `text`, a rewrite of the run `run`, with the run's pictures it left out
+/// put back: each after as many of the new text's blocks as there were
+/// text blocks before it in the run - by the paragraph it stood by, as the
+/// card pairs them. A rewrite of a section or the whole document rewrites
+/// its words; a picture dropped from it was deleted with nothing said, and
+/// the card had nothing to pair paragraph by paragraph (rc.6). A picture
+/// the model means to remove it deletes by its block. `complete`: all of
+/// `text` is there; while it streams in, a picture whose place it hasn't
+/// reached is left out for now (keepPictures in src/ai/doc-blocks.ts).
+fn keep_pictures(document: &str, run: &[Block], text: &str, complete: bool) -> String {
+    let mut out = text.to_string();
+    let mut words_before = 0;
+    // Pictures in the new text so far: each moves the later places on by one.
+    let mut put = 0;
+    for block in run {
+        let picture = document[block.start..block.end].trim();
+        if !is_picture(picture) {
+            words_before += 1;
+            continue;
+        }
+        // Kept where the rewrite has it, it takes a place all the same.
+        if out.contains(picture) {
+            put += 1;
+            continue;
+        }
+        let blocks = split(&out);
+        let at = words_before + put;
+        out = if at == 0 {
+            format!("{picture}\n\n{}", out.trim_start())
+        } else if at < blocks.len() {
+            let end = blocks[at - 1].end;
+            format!("{}\n\n{picture}\n\n{}", &out[..end], out[end..].trim_start())
+        } else if complete && !blocks.is_empty() {
+            format!("{}\n\n{picture}", out.trim_end())
+        } else {
+            continue;
+        };
+        put += 1;
+    }
+    out
 }
 
 /// Keys in the order the model writes them, so the call reads as before.

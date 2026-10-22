@@ -132,6 +132,13 @@ type /name in a conversation to use one.
   },
   announceChangePosition: "Change {i} of {n}.",
   proposalTakeSentence: "Take this change",
+  // What a change of a whole block is called on its card (a table or a
+  // picture isn't shown there whole).
+  proposalBlockPicture: "Picture",
+  proposalBlockTable: "Table",
+  proposalBlockCode: "Code block",
+  proposalBlockMath: "Formula",
+  proposalBlockOther: "Block",
   proposalKeepSentence: "Keep the original",
   proposalShowInText: "Show in text",
   proposalDeleteSentence: "Delete this sentence",

@@ -105,7 +105,7 @@ export function mapPreviews(
       },
       streamSource: p.streamSource && {
         sentences: p.streamSource.sentences,
-        ranges: p.streamSource.ranges.map(range),
+        ranges: p.streamSource.ranges.map((r) => ({ ...r, ...range(r) })),
       },
     };
     if (text === p.expectedText) {

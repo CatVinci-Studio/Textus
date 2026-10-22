@@ -1,5 +1,6 @@
 import type { EditProposal } from "../types";
 import { joinedText } from "./generated-images";
+import { isPicture } from "./markdown-forms";
 
 /**
  * An edit whose anchor is in text proposed and not decided yet - text the
@@ -55,8 +56,6 @@ function tidy(text: string): string {
   return text.replace(/\n{3,}/g, "\n\n").replace(/^\n+|\n+$/g, "");
 }
 
-const PICTURE_LINE = /^!\[[^\]]*\]\([^)]*\)$/;
-
 /**
  * A picture not accepted yet, standing after (or before) a paragraph that
  * an accepted rewrite replaced - `oldText` with `newText`, which left the
@@ -80,7 +79,7 @@ export function reanchoredPicture(
   const paragraphs = newText
     .split(/\n{2,}/)
     .map((p) => p.trim())
-    .filter((p) => p && !PICTURE_LINE.test(p));
+    .filter((p) => p && !isPicture(p));
   if (paragraphs.length === 0) return null;
   return {
     ...picture,

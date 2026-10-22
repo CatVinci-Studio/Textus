@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  composeSentences,
-  diffSentences,
-  splitSentences,
-  trimBreaks,
-} from "./sentence-diff";
+import { composeSentences, splitSentences, trimBreaks } from "./sentence-diff";
+import { diffSentences, splitUnits } from "./unit-diff";
 
 describe("splitSentences", () => {
   it("splits CJK and Latin text without losing a character", () => {
@@ -240,5 +236,63 @@ describe("a change over several paragraphs", () => {
       "The sea was flat and grey, and nothing moved on the quay.",
     );
     expect(hunks.filter((h) => h.kind === "change")).toHaveLength(1);
+  });
+});
+
+describe("splitUnits", () => {
+  it("keeps a whole block as one unit and splits prose into sentences", () => {
+    const text = "One. Two.\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\nThree.";
+    const units = splitUnits(text);
+    expect(units.join("")).toBe(text);
+    expect(units).toEqual([
+      "One. ",
+      "Two.\n\n",
+      "| a | b |\n| - | - |\n| 1 | 2 |\n\n",
+      "Three.",
+    ]);
+  });
+
+  it("keeps a fence's blank lines inside its block", () => {
+    const text = "Intro.\n\n```js\nconst a = 1;\n\nconst b = 2;\n```\n\nEnd.";
+    expect(splitUnits(text)[1]).toBe(
+      "```js\nconst a = 1;\n\nconst b = 2;\n```\n\n",
+    );
+  });
+
+  it("leaves a picture under a caption with its sentence", () => {
+    const text = "Figure one.\n![a](a.png)";
+    expect(splitUnits(text)).toEqual([text]);
+  });
+});
+
+describe("diffSentences over whole blocks", () => {
+  const before = "小满撑开伞。\n\n![伞](a.png)\n\n雨停了。";
+  it("diffs the paragraphs on each side of a picture by themselves", () => {
+    const hunks = diffSentences(
+      before,
+      "Xiaoman opened it.\n\n![伞](a.png)\n\nThe rain stopped.",
+    );
+    expect(hunks.map((h) => h.kind)).toEqual(["change", "same", "change"]);
+  });
+
+  it("makes a picture swapped for another one change of its own", () => {
+    const hunks = diffSentences(
+      before,
+      "Xiaoman opened it.\n\n![umbrella](b.png)\n\nThe rain stopped.",
+    );
+    expect(hunks[1]).toEqual({
+      kind: "change",
+      before: "![伞](a.png)\n\n",
+      after: "![umbrella](b.png)\n\n",
+    });
+  });
+
+  it("takes a table written another way for the same table", () => {
+    const table = "| 名字 | 数量 |\n| ---- | ---- |\n| 伞   | 1    |";
+    const hunks = diffSentences(
+      `One.\n\n${table}\n\nTwo.`,
+      "Uno.\n\n|名字|数量|\n|---|---|\n|伞|1|\n\nDos.",
+    );
+    expect(hunks[1].kind).toBe("same");
   });
 });

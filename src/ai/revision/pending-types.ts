@@ -2,6 +2,7 @@ import { DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditProposal } from "../types";
 import { type SentenceHunk } from "./sentence-diff";
+import type { LocatedHunk } from "./sentence-locate";
 import { PluginKey } from "@milkdown/kit/prose/state";
 
 /**
@@ -25,6 +26,11 @@ export interface PendingSentence {
   /** Where its new text goes, when not at `to`: after the sentences it
    *  replaces, before those dropped and joined to it (`pairedPrefix`). */
   at?: number;
+  /** A block changed whole (markdown-forms.ts's wholeBlockKind: a picture,
+   *  a table…): [from, to) is its block node, struck as one, and its new
+   *  block is drawn as one after it - not as words in the next paragraph.
+   *  Never has `parts`. */
+  block?: boolean;
   /** Its original's text (`visibleTextBetween`) when it was found: while
    *  `[from, to)` still reads so, the change stands, whatever the writer
    *  did around it (`rebase`). */
@@ -96,8 +102,10 @@ export interface PendingPreview {
    *  (sentence-stream.ts), so it is already in its final place when it
    *  settles. Absent: it streams in as one block after the struck original. */
   streamSource?: {
+    /** Its units (sentence-diff.ts's splitUnits). */
     sentences: string[];
-    ranges: { from: number; to: number }[];
+    /** Where each is: its text, or the block node a whole block is. */
+    ranges: LocatedHunk[];
   };
   /** The changes of a rewrite streaming in sentence by sentence that are
    *  complete and drawn so far (streamDecorations), numbered as its
