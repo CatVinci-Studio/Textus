@@ -623,8 +623,9 @@ type /name in a conversation to use one.
   agentWritingEdit: "Writing the edit…",
   agentWritingNotes: "Writing notes…",
   agentDeepThinking: "Deep thinking",
-  agentDeepThinkingHint: `Deep thinking: when it's on, ${AI_NAME} thinks longer before it answers`,
+  agentDeepThinkingHint: `Deep thinking: when it's on, ${AI_NAME} thinks longer before it answers; when it's off, the model thinks as much as it does by default`,
   toggleOnHint: "{label} (On - click again to turn it off)",
+  agentWaitedFor: { one: "{n} second", other: "{n} seconds" },
   agentThinkingFor: {
     one: "Thinking · {n} second",
     other: "Thinking · {n} seconds",

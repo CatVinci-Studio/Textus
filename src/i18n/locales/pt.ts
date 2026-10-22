@@ -629,8 +629,13 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentWritingEdit: "Escrevendo a alteração…",
   agentWritingNotes: "Escrevendo notas…",
   agentDeepThinking: "Raciocínio profundo",
-  agentDeepThinkingHint: `Raciocínio profundo: quando ativado, ${AI_NAME} pensa por mais tempo antes de responder`,
+  agentDeepThinkingHint: `Raciocínio profundo: quando ativado, ${AI_NAME} pensa por mais tempo antes de responder; desativado, o modelo pensa o quanto pensa por padrão`,
   toggleOnHint: "{label} (Ativado: clique de novo para desativar)",
+  agentWaitedFor: {
+    one: "{n} segundo",
+    many: "{n} de segundos",
+    other: "{n} segundos",
+  },
   agentThinkingFor: {
     one: "Pensando · {n} segundo",
     many: "Pensando · {n} de segundos",

@@ -629,8 +629,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentWritingEdit: "Änderung wird geschrieben…",
   agentWritingNotes: "Notizen werden geschrieben…",
   agentDeepThinking: "Gründlich nachdenken",
-  agentDeepThinkingHint: `Gründlich nachdenken: Wenn es an ist, denkt ${AI_NAME} länger nach, bevor es antwortet`,
+  agentDeepThinkingHint: `Gründlich nachdenken: Wenn es an ist, denkt ${AI_NAME} länger nach, bevor es antwortet; wenn es aus ist, so viel, wie das Modell von sich aus denkt`,
   toggleOnHint: "{label} (An – zum Ausschalten noch einmal klicken)",
+  agentWaitedFor: { one: "{n} Sekunde", other: "{n} Sekunden" },
   agentThinkingFor: {
     one: "Denkt nach · {n} Sekunde",
     other: "Denkt nach · {n} Sekunden",

@@ -649,8 +649,13 @@ utiliser une.
   agentWritingEdit: "Rédaction de la modification…",
   agentWritingNotes: "Rédaction des notes…",
   agentDeepThinking: "Réflexion approfondie",
-  agentDeepThinkingHint: `Réflexion approfondie\u00a0: une fois activée, ${AI_NAME} réfléchit plus longtemps avant de répondre`,
+  agentDeepThinkingHint: `Réflexion approfondie\u00a0: une fois activée, ${AI_NAME} réfléchit plus longtemps avant de répondre\u00a0; désactivée, le modèle réfléchit autant que par défaut`,
   toggleOnHint: "{label} (Activée\u00a0: cliquez à nouveau pour la désactiver)",
+  agentWaitedFor: {
+    one: "{n} seconde",
+    many: "{n} de secondes",
+    other: "{n} secondes",
+  },
   agentThinkingFor: {
     one: "Réflexion · {n} seconde",
     many: "Réflexion · {n} de secondes",
