@@ -101,6 +101,7 @@ pub fn load_provider_key(app: &AppHandle, provider: &str) -> Result<Option<Strin
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn set_provider_api_key(app: AppHandle, provider: String, key: String) -> Result<(), String> {
     let mut keys = read_keys(&app)?;
     keys.insert(provider, key);
@@ -108,11 +109,13 @@ pub fn set_provider_api_key(app: AppHandle, provider: String, key: String) -> Re
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn provider_api_key_status(app: AppHandle, provider: String) -> Result<bool, String> {
     Ok(read_keys(&app)?.contains_key(&provider))
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn clear_provider_api_key(app: AppHandle, provider: String) -> Result<(), String> {
     let mut keys = read_keys(&app)?;
     if keys.remove(&provider).is_some() {

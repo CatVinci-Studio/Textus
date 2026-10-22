@@ -16,6 +16,10 @@ mod atomic;
 mod auth;
 #[cfg(desktop)]
 mod background;
+// Generates src/platform/bindings/ - desktop builds hold every command it
+// lists.
+#[cfg(all(test, desktop))]
+mod bindings;
 mod commands;
 mod distribution;
 mod extract;

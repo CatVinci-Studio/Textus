@@ -19,6 +19,7 @@ fn on() -> bool {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct PluginsState {
     /// Settings › Plugins › Plugins: off stops every plugin at once.
@@ -38,6 +39,7 @@ impl Default for PluginsState {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct PluginEntry {
     #[serde(default)]
@@ -98,12 +100,14 @@ pub fn update<T>(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn plugins_state(app: tauri::AppHandle) -> PluginsState {
     read(&app)
 }
 
 /// Settings › Plugins › Plugins, the switch for all of them.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn plugins_set_all(app: tauri::AppHandle, on: bool) -> Result<(), String> {
     update(&app, |state| state.all_on = on)
 }
@@ -112,6 +116,7 @@ pub fn plugins_set_all(app: tauri::AppHandle, on: bool) -> Result<(), String> {
 /// Settings' switch and the permission dialog. A developer-mode folder is
 /// kept.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn plugin_set(
     app: tauri::AppHandle,
     id: String,

@@ -67,6 +67,7 @@ fn merge_paths(map: &HashMap<String, Vec<String>>) -> Vec<String> {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn update_session_paths(
     app: AppHandle,
     window: tauri::Window,
@@ -107,6 +108,7 @@ pub fn app_quitting() -> bool {
 /// already closed. Resume ordinary close bookkeeping and persist only the
 /// windows that remain alive.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn cancel_session_quit(app: AppHandle, state: tauri::State<SessionTabsState>) {
     APP_QUITTING.store(false, Ordering::SeqCst);
     let paths = merge_paths(&state.0.lock().unwrap());

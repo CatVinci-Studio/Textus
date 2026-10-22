@@ -51,6 +51,7 @@ pub fn editor_for_chat(label: &str, open: &OpenChatWindows) -> Option<String> {
 /// in TypeScript (src/ai/chat/window/chat-bridge.ts), so the protocol doesn't have
 /// to be kept in sync across two languages for a payload Rust never inspects.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct ChatHandoff {
     /// Window label of the editor this chat belongs to. Only the STARTING
     /// address: once running, the chat re-addresses itself to whichever
@@ -102,6 +103,7 @@ fn chat_serving(editor_label: &str, open: &OpenChatWindows) -> Option<String> {
 /// Nothing in here awaits, so no lock is held across a suspension point.
 #[allow(clippy::too_many_arguments)]
 #[tauri::command(async)]
+#[cfg_attr(test, specta::specta)]
 pub fn detach_chat_window(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
@@ -210,6 +212,7 @@ pub fn detach_chat_window(
 /// or one whose chat was closed from the chat's own window - learns the
 /// current label instead of trusting a cached one.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn current_chat_window(
     window: tauri::WebviewWindow,
     open: State<OpenChatWindows>,
@@ -227,6 +230,7 @@ pub const CHAT_ADOPT_HANDOFF: &str = "chat:adopt-handoff";
 /// Claimed by the chat window's frontend at mount, and again whenever
 /// CHAT_ADOPT_HANDOFF says another one is waiting. Destructive either way.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn take_chat_handoff(
     window: tauri::Window,
     pending: State<PendingChatHandoffs>,
@@ -241,6 +245,7 @@ pub fn take_chat_handoff(
 /// older copy for the window to adopt, overwriting what the user did in it.
 /// Returns whether there was a window to focus.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn focus_chat_window(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
@@ -260,6 +265,7 @@ pub fn focus_chat_window(
 /// Closes the detached chat serving this editor, if one is open - what the
 /// editor calls when the user re-embeds the panel.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn close_chat_window(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,

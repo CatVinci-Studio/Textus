@@ -30,9 +30,10 @@ const DOWNLOAD_HOSTS: [&str; 3] = [
 /// A package this large is not a plugin.
 const MAX_PACKAGE: u64 = 200 * 1024 * 1024;
 
-/// One plugin in the catalog. Mirrors `CatalogEntry` in
-/// src/plugins/catalog.ts.
+/// One plugin in the catalog - generated into
+/// src/platform/bindings/plugins.ts (src/plugins/catalog.ts reads it).
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogEntry {
     pub id: String,
@@ -96,6 +97,7 @@ fn parse(text: &str) -> Result<Vec<CatalogEntry>, String> {
 
 /// The catalog, fetched now.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn plugin_catalog() -> Result<Vec<CatalogEntry>, String> {
     let url = catalog_url();
     let text = if let Some(path) = url.strip_prefix("file://") {
@@ -147,6 +149,7 @@ fn hex(bytes: &[u8]) -> String {
 /// checks it, and installs it as a package from a file is - marked
 /// Official when the catalog says it is CatVinci's.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn plugin_install_catalog(
     app: tauri::AppHandle,
     id: String,

@@ -6,6 +6,7 @@ mod pictures;
 pub(crate) use pictures::*;
 
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct DirEntryInfo {
     name: String,
     path: String,
@@ -63,6 +64,7 @@ fn open_document_filters(
 /// Opens a native file picker for the document to open: a Markdown file by
 /// default, any file once the user switches the type.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn open_file_dialog(
     window: tauri::WebviewWindow,
     text_filter: Option<String>,
@@ -91,6 +93,7 @@ pub async fn open_file_dialog(
 /// Opens a native file picker for a CSS theme file (e.g. a Typora-compatible
 /// community theme).
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn open_css_file_dialog(window: tauri::WebviewWindow) -> Option<String> {
     tauri::async_runtime::spawn_blocking(move || {
         window_file_dialog(&window)
@@ -108,6 +111,7 @@ pub async fn open_css_file_dialog(window: tauri::WebviewWindow) -> Option<String
 /// filter in the UI language and lists the types its image store takes
 /// (IMAGE_FILE_EXTENSIONS in src/editor/images/pasted-files.ts).
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn open_image_file_dialog(
     window: tauri::WebviewWindow,
     filter_name: String,
@@ -129,6 +133,7 @@ pub async fn open_image_file_dialog(
 /// `default_dir` when given: beside the Word file a document was opened
 /// from.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn save_file_dialog(
     window: tauri::WebviewWindow,
     default_name: String,
@@ -184,6 +189,7 @@ pub(crate) fn require_non_empty(path: &str) -> Result<(), String> {
 /// whole tree). Async so a slow/network-mounted directory doesn't stall the
 /// app while it's being read.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn list_dir(path: String) -> Result<Vec<DirEntryInfo>, String> {
     require_non_empty(&path)?;
     let mut reader = fs::read_dir(&path).await.map_err(|e| e.to_string())?;
@@ -224,6 +230,7 @@ pub async fn list_dir(path: String) -> Result<Vec<DirEntryInfo>, String> {
 /// it to detect external modifications (reload on window focus, and the
 /// overwrite-conflict prompt before saving).
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn file_mtime_ms(path: String) -> Result<Option<f64>, String> {
     require_non_empty(&path)?;
     match fs::metadata(&path).await {
@@ -241,6 +248,7 @@ pub async fn file_mtime_ms(path: String) -> Result<Option<f64>, String> {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn read_text_file(path: String) -> Result<String, String> {
     require_non_empty(&path)?;
     fs::read_to_string(&path).await.map_err(|e| e.to_string())
@@ -250,6 +258,7 @@ pub async fn read_text_file(path: String) -> Result<String, String> {
 /// `url(...)` assets as data URIs, since a relative path in a `<style>` tag
 /// injected at runtime has no base to resolve against.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn read_binary_file_base64(path: String) -> Result<String, String> {
     use base64::{engine::general_purpose::STANDARD, Engine};
     require_non_empty(&path)?;
@@ -262,6 +271,7 @@ pub async fn read_binary_file_base64(path: String) -> Result<String, String> {
 /// unsaved drafts fall back to an assets folder in the app's data dir with
 /// an absolute src (still valid after the draft is saved elsewhere).
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn save_pasted_image(
     app: tauri::AppHandle,
     doc_path: Option<String>,
@@ -315,6 +325,7 @@ pub async fn save_pasted_image(
 /// picture, every relative one when the folder didn't change - is left
 /// alone, matching the frontend's job of only offering candidates here.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn migrate_draft_images(
     app: tauri::AppHandle,
     doc_path: String,
@@ -381,6 +392,7 @@ pub(super) async fn migrate_images(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn write_text_file(path: String, contents: String) -> Result<(), String> {
     require_non_empty(&path)?;
     if let Some(parent) = Path::new(&path).parent() {
@@ -400,6 +412,7 @@ pub async fn write_text_file(path: String, contents: String) -> Result<(), Strin
 /// be put back from there.
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn move_picture_to_trash(
     app: tauri::AppHandle,
     doc_path: Option<String>,

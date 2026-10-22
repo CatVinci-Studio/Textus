@@ -181,6 +181,7 @@ fn start(name: &str, endpoint: Endpoint) -> Running {
 
 /// A server's state as Settings shows it.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct ServerStatus {
     id: String,
@@ -210,6 +211,7 @@ fn status_of(id: &str, server: &Running) -> ServerStatus {
 
 /// The servers that are on, each starting, ready or failed.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn mcp_status(app: AppHandle) -> Vec<ServerStatus> {
     let hub = app.state::<McpHub>();
     hub.sync(&app).await;
@@ -220,6 +222,7 @@ pub async fn mcp_status(app: AppHandle) -> Vec<ServerStatus> {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn mcp_restart(app: AppHandle, id: String) -> Vec<ServerStatus> {
     app.state::<McpHub>().restart(&app, &id).await;
     mcp_status(app).await
@@ -228,12 +231,14 @@ pub async fn mcp_restart(app: AppHandle, id: String) -> Vec<ServerStatus> {
 /// What a server offers, tried before it is saved: the name it gives and
 /// its tools, or why it can't be reached.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct Tried {
     server: String,
     tools: Vec<McpTool>,
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn mcp_try(server: Value) -> Result<Tried, String> {
     let config: ServerConfig = serde_json::from_value(server).map_err(|e| e.to_string())?;
     let endpoint = config.endpoint().ok_or("Give a command or a URL.")?;

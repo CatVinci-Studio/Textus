@@ -72,8 +72,9 @@ pub fn enabled(app: &AppHandle) -> bool {
         .unwrap_or(false)
 }
 
-/// The tray, for Settings. Mirrors BackgroundStatus in src/platform/ipc.ts.
+/// The tray, for Settings - generated into src/platform/bindings/app.ts.
 #[derive(Clone, Serialize, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Status {
     /// "off", "on", or "unavailable" (Linux without an AppIndicator
@@ -142,6 +143,7 @@ fn update(app: &AppHandle, change: impl FnOnce(&mut Status)) {
 /// The tray now, for Settings as it opens; the event keeps it current
 /// after that.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn background_status(state: tauri::State<BackgroundStatus>) -> Status {
     state.0.lock().unwrap().clone()
 }

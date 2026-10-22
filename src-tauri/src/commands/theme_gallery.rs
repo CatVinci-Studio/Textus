@@ -29,9 +29,10 @@ const MAX_PREVIEWS: usize = 2;
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 
-/// One theme of the catalog, as the frontend gets it. Mirrors `GalleryTheme`
-/// in src/theme/theme-gallery.ts - change both.
+/// One theme of the catalog, as the frontend gets it - generated into
+/// src/platform/bindings/app.ts.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct GalleryTheme {
     pub id: String,
@@ -233,6 +234,7 @@ async fn fetch(url: &str, limit: usize) -> Result<Vec<u8>, String> {
 
 /// The gallery's catalog (index.json).
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn theme_gallery_catalog() -> Result<Vec<GalleryTheme>, String> {
     let bytes = fetch(&format!("{GALLERY_BASE}{CATALOG_PATH}"), MAX_CATALOG_BYTES).await?;
     parse_catalog(&bytes)
@@ -241,6 +243,7 @@ pub async fn theme_gallery_catalog() -> Result<Vec<GalleryTheme>, String> {
 /// A gallery theme's stylesheet, by its catalog path. The frontend saves it
 /// with save_theme_css (commands/themes.rs), as Import CSS… does a file.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn theme_gallery_css(path: String) -> Result<String, String> {
     let url = css_url(&path).ok_or("not a gallery theme stylesheet")?;
     let bytes = fetch(&url, MAX_CSS_BYTES).await?;
@@ -252,6 +255,7 @@ pub async fn theme_gallery_css(path: String) -> Result<String, String> {
 /// A gallery screenshot, by its catalog path, as a `data:` URL - the page
 /// shows it in an `<img>` and never loads anything from the network itself.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn theme_gallery_preview(path: String) -> Result<String, String> {
     let url = preview_url(&path).ok_or("not a gallery screenshot")?;
     let bytes = fetch(&url, MAX_PREVIEW_BYTES).await?;

@@ -284,6 +284,7 @@ fn cached_index(root: &Path, fresh: bool) -> Arc<Vec<String>> {
 /// asset protocol; None when it isn't an image or isn't in the vault.
 /// Shape shared with fs.resolveVaultImage in src/platform/ipc.ts.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn resolve_vault_image(doc_path: String, link: String) -> Result<Option<String>, String> {
     super::fs::require_non_empty(&doc_path)?;
     tauri::async_runtime::spawn_blocking(move || {
@@ -303,6 +304,7 @@ pub async fn resolve_vault_image(doc_path: String, link: String) -> Result<Optio
 /// an absolute path; None when it isn't in the vault. Shape shared with
 /// fs.resolveVaultNote in src/platform/ipc.ts.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn resolve_vault_note(doc_path: String, link: String) -> Result<Option<String>, String> {
     super::fs::require_non_empty(&doc_path)?;
     tauri::async_runtime::spawn_blocking(move || {

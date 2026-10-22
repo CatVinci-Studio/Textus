@@ -27,6 +27,7 @@ const _: () = {
 };
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn app_distribution() -> &'static str {
     DISTRIBUTION
 }

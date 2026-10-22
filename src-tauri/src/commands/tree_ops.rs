@@ -44,6 +44,7 @@ async fn existing_dir(dir: &str) -> Result<PathBuf, String> {
 
 /// Creates an empty Markdown document in `dir`. Returns its path.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn tree_create_document(dir: String, name: String) -> Result<String, String> {
     let dir = existing_dir(&dir).await?;
     let path = dir.join(document_name(check_name(&name)?));
@@ -61,6 +62,7 @@ pub async fn tree_create_document(dir: String, name: String) -> Result<String, S
 
 /// Creates a folder in `dir`. Returns its path.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn tree_create_folder(dir: String, name: String) -> Result<String, String> {
     let dir = existing_dir(&dir).await?;
     let path = dir.join(check_name(&name)?);
@@ -86,6 +88,7 @@ fn move_target(path: &Path, into: &Path) -> Result<PathBuf, String> {
 
 /// Moves a file or folder into the folder `into`. Returns its new path.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn tree_move_entry(path: String, into: String) -> Result<String, String> {
     let from = PathBuf::from(&path)
         .canonicalize()

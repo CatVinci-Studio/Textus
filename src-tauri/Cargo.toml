@@ -234,3 +234,13 @@ tauri-plugin-single-instance = "2"
 # Throwaway folders for the walker's tests (src/walk.rs), removed when
 # dropped. Already in the tree through tauri-plugin-updater.
 tempfile = "3"
+# The TypeScript side of the commands the frontend calls
+# (src/platform/bindings/), generated from their Rust signatures by a test
+# (src/bindings.rs) so the two cannot drift. Test-only: the attributes are
+# `cfg_attr(test, ...)`, so shipped builds (desktop and iOS) never compile
+# specta. tauri-specta and specta are pre-releases, pinned exactly; they
+# move together.
+tauri = { version = "2.12", features = ["specta"] }
+specta = { version = "=2.0.0-rc.26", features = ["derive", "function", "serde_json"] }
+specta-typescript = "=0.0.13"
+tauri-specta = { version = "=2.0.0-rc.26", features = ["typescript"] }

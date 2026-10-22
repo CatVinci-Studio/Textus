@@ -59,6 +59,7 @@ pub fn read_recent_folders(app: &tauri::AppHandle) -> Vec<String> {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn add_recent_file(app: tauri::AppHandle, path: String) {
     let list = push_front(read_recent_files(&app), path, MAX_RECENT_FILES);
     write_list(&app, FILES_LIST, &list);
@@ -70,6 +71,7 @@ pub fn add_recent_file(app: tauri::AppHandle, path: String) {
 
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn add_recent_folder(app: tauri::AppHandle, path: String) {
     let list = push_front(read_recent_folders(&app), path, MAX_RECENT_FOLDERS);
     write_list(&app, FOLDERS_LIST, &list);

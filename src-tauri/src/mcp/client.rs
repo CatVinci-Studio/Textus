@@ -27,6 +27,7 @@ const STDERR_KEEP: usize = 4_000;
 
 /// One tool a server offers.
 #[derive(Clone, Debug, serde::Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct McpTool {
     pub name: String,
     pub description: String,
