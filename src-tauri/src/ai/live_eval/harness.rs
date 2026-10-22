@@ -8,7 +8,6 @@ use super::checks::{self, Caret, Proposal};
 use crate::ai::agent::{
     build_instructions, compact_history, request_context, request_message, AgentMode, MAX_STEPS,
 };
-use crate::ai::edit_tags;
 use crate::ai::tools::{self, ToolContext};
 use crate::ai::workspace::AgentWorkspace;
 use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, StepResult, ToolCall};
@@ -791,12 +790,6 @@ pub fn run_conversation(
         });
         let instructions =
             build_instructions(ws, &doc, true, setup.mode, &message_sent, setup.ui_language);
-        // TEXTUS_EVAL_EDITS=tool: the edit rules as they were for the tool.
-        let instructions = if super::tool_edits::on() {
-            instructions.replace(edit_tags::RULES, super::tool_edits::RULE)
-        } else {
-            instructions
-        };
         // The app's conventions for this workspace (the setting is the
         // default, Automatic): proposals are post-processed as the app does
         // (agent::postfix_step), and what was fixed is recorded.
@@ -841,10 +834,7 @@ pub fn run_conversation(
                 &events,
             ));
         }
-        let mut specs = tool_set.specs();
-        if super::tool_edits::on() {
-            specs.push(super::tool_edits::spec());
-        }
+        let specs = tool_set.specs();
         let usage = RefCell::new(Vec::new());
         let postfix = RefCell::new(Vec::new());
         let thinking_events = AtomicUsize::new(0);
@@ -862,31 +852,10 @@ pub fn run_conversation(
         // Pictures written into the text, begun as the app begins them.
         let inline = setup.pictures.map(|p| p.inline(&ctx.proposed));
         let timeline = Timeline::from_env();
-        // Edits as tags, split from the reply as the app splits them
-        // (agent::forward_tags): the timeline and the pictures see each
-        // tag as the propose_edit call it becomes.
-        let edits = tool_set.edits() && !super::tool_edits::on();
-        let steps = AtomicUsize::new(0);
-        let tags = std::sync::Mutex::new(edit_tags::StepTags::new(edits, 0));
-        let observe = |event: &ProviderEvent<'_>| {
-            timeline.observe(event);
-            if let Some(inline) = &inline {
-                inline.observe(event);
-            }
-        };
-        let observe_tags = |out: Vec<edit_tags::Outgoing>| {
-            for piece in &out {
-                observe(&piece.event());
-            }
-        };
         let sink = |event: ProviderEvent<'_>| {
-            let split = match &event {
-                ProviderEvent::Text(text) => tags.lock().unwrap().text(text),
-                _ => None,
-            };
-            match split {
-                Some(out) => observe_tags(out),
-                None => observe(&event),
+            timeline.observe(&event);
+            if let Some(inline) = &inline {
+                inline.observe(&event);
             }
             if let ProviderEvent::Thinking(text) = event {
                 thinking_events.fetch_add(1, Ordering::Relaxed);
@@ -912,10 +881,6 @@ pub fn run_conversation(
                     (&instructions, &specs, &usage, &postfix);
                 let (agent, sink) = (&agent, &sink);
                 let (doc, conventions, inline) = (&doc, &conventions, &inline);
-                let number = steps.fetch_add(1, Ordering::Relaxed);
-                *tags.lock().unwrap() = edit_tags::StepTags::new(edits, number);
-                let h = edit_tags::model_view(h);
-                let (tags, observe_tags) = (&tags, &observe_tags);
                 async move {
                     // with_retry's loop, inline: this already runs inside
                     // block_on, which can't be nested.
@@ -932,11 +897,6 @@ pub fn run_conversation(
                     };
                     charge(setup.model, &used);
                     usage.borrow_mut().push(used);
-                    let step = {
-                        let mut tags = tags.lock().unwrap();
-                        observe_tags(tags.finish());
-                        tags.settle(step)
-                    };
                     let (step, applied) =
                         crate::ai::agent::settle_step(step, doc, conventions, inline.as_ref());
                     postfix

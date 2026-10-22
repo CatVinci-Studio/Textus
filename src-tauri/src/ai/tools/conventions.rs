@@ -156,7 +156,7 @@ pub(super) fn check_conventions(ctx: &ToolContext, arguments: &str) -> String {
             .is_some_and(|s| s.contains(['\u{00A0}', '\u{202F}']))
     });
     if invisible {
-        out.push_str("A [no-break space] or [narrow no-break space] in a fix is that character, not an ordinary space: in your edit write it as &nbsp; (no-break) or &#8239; (narrow no-break), which Textus turns into the character (edit_tags::spaces).\n");
+        out.push_str("A [no-break space] or [narrow no-break space] in a fix is that character, not an ordinary space: in propose_edit's JSON write it as \\u00a0 or \\u202f inside the string, and check the draft with `text` before proposing.\n");
     }
     out
 }

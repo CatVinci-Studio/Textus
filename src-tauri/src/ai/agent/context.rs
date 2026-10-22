@@ -209,7 +209,7 @@ pub(crate) fn request_message(
 /// prompt, Doubao still wrote a 1200-character piece out in measure_text,
 /// unseen, before proposing it - the user waited minutes for the first
 /// word; said next to the request, it proposes straight away.
-const LENGTH_TARGET_NOTE: &str = "This request asks for a length: write the text straight into its edit, where the user watches it come in - don't write it out first in measure_text or check_conventions. propose_edit's result says how long it came out; if that misses the length, say so in your reply.";
+const LENGTH_TARGET_NOTE: &str = "This request asks for a length: write the text straight into propose_edit, where the user watches it come in - don't write it out first in measure_text or check_conventions. propose_edit's result says how long it came out; if that misses the length, say so in your reply.";
 
 /// Whether the user's own words ask for a length: a number and a unit of
 /// text ("1200 字", "500 words", "三千字", "2,000 characters").

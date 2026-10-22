@@ -150,18 +150,12 @@ impl<'a> ToolRegistry<'a> {
         }
     }
 
-    /// The tools the model is offered: all but propose_edit, which edits
-    /// written as tags run through (edit_tags) and the model never calls.
     pub fn specs(&self) -> Vec<ToolSpec> {
-        self.tools
-            .iter()
-            .filter(|t| t.spec.name != PROPOSE_EDIT_TOOL_NAME)
-            .map(|t| t.spec.clone())
-            .collect()
+        self.tools.iter().map(|t| t.spec.clone()).collect()
     }
 
     /// Whether this request may change the document: its mode has
-    /// propose_edit, which the tags in its replies run through.
+    /// propose_edit.
     pub fn edits(&self) -> bool {
         self.find(PROPOSE_EDIT_TOOL_NAME).is_some()
     }

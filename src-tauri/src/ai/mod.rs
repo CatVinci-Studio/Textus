@@ -5,7 +5,6 @@ pub mod catalog;
 pub mod client;
 pub mod conventions;
 pub mod doc_blocks;
-pub mod edit_tags;
 pub mod images;
 pub mod levis_project;
 #[cfg(test)]

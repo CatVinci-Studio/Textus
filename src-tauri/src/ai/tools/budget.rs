@@ -46,7 +46,7 @@ pub(crate) fn refuses_a_draft(ctx: &ToolContext, name: &str, arguments: &str) ->
     if text.chars().count() <= DRAFT_CHARS || ctx.document.contains(text) {
         return None;
     }
-    Some(format!("Not run: {name} doesn't take a draft of new text. Write the text as an edit now - the user sees it come in, and conventions are fixed on the way. If it misses a length the user asked for, say so in your reply."))
+    Some(format!("Not run: {name} doesn't take a draft of new text. Propose the text with propose_edit now - the user sees it come in, its result tells you its size, and conventions are fixed on the way. If it misses a length the user asked for, say so in your reply."))
 }
 
 /// Counts a call to a check tool, and refuses it once the request has used
@@ -64,7 +64,7 @@ pub(crate) fn spend_check(ctx: &ToolContext, name: &str, arguments: &str) -> Opt
     let used = checks.entry(name).or_default();
     *used += 1;
     (*used > budget).then(|| {
-        format!("Not run: {name} was already called {budget} times in this request, which is all it gets. Stop checking and finish with what you have: write your latest draft as an edit (when the request changes the document), and reply.")
+        format!("Not run: {name} was already called {budget} times in this request, which is all it gets. Stop checking and finish with what you have: propose your latest draft (when the request changes the document), then reply.")
     })
 }
 

@@ -5,12 +5,6 @@ document, what consecutive prompts do to undecided proposals, and what stop /
 failure / close leave behind. Every rule here is enforced in code; the file
 that owns each one is named so this document can be checked against reality.
 
-Since 1.2.0-rc.6 the model writes its edits as `<textus-edit>` tags in its
-reply; each becomes a `propose_edit` call it never made, with the same
-streamed arguments, before anything here sees it - so "a `propose_edit`
-call" below is either. How tags are read and why:
-[ai-agent.md](ai-agent.md#edits-are-tags-in-the-reply).
-
 ## The surfaces, and the one path into the document
 
 Chat has three surfaces and two conversations, all owned by the editor

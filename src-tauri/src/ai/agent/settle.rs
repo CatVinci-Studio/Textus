@@ -84,10 +84,36 @@ pub(crate) fn settle_step(
     conventions: &Conventions,
     pictures: Option<&InlinePictures<'_>>,
 ) -> (StepResult, Vec<&'static str>) {
-    let (result, applied) = postfix_step(result, document, conventions);
+    let (result, applied) = postfix_step(edits_before_comments(result), document, conventions);
     let result = match pictures {
         Some(pictures) => pictures.place(result),
         None => result,
     };
     (result, applied)
+}
+
+/// A step's edits run before its comments (calls run in order), so a
+/// comment knows whether the request has proposed a change
+/// (tools::settles), and a step of edits, comments and a sentence still ends
+/// in one step. Everything else keeps its place; a step without an edit is
+/// as it came.
+fn edits_before_comments(result: StepResult) -> StepResult {
+    let StepResult::ToolCalls(mut calls) = result else {
+        return result;
+    };
+    let named =
+        |t: &AgentTurn, tool: &str| matches!(t, AgentTurn::ToolCall { name, .. } if name == tool);
+    let Some(last_edit) = calls
+        .iter()
+        .rposition(|t| named(t, tools::PROPOSE_EDIT_TOOL_NAME))
+    else {
+        return StepResult::ToolCalls(calls);
+    };
+    let early: Vec<usize> = (0..last_edit)
+        .filter(|&i| named(&calls[i], tools::ADD_COMMENT_TOOL_NAME))
+        .collect();
+    let moved: Vec<AgentTurn> = early.iter().rev().map(|&i| calls.remove(i)).rev().collect();
+    let at = last_edit + 1 - moved.len();
+    calls.splice(at..at, moved);
+    StepResult::ToolCalls(calls)
 }

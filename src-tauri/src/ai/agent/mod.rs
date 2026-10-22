@@ -1,7 +1,6 @@
 use crate::ai::cancel;
 use crate::ai::catalog;
 use crate::ai::doc_blocks::{self, Block};
-use crate::ai::edit_tags;
 use crate::ai::images::InlinePictures;
 use crate::ai::route;
 use crate::ai::rules::Conventions;
@@ -296,36 +295,17 @@ async fn ai_agent_message_inner(
             // Pictures written into the text, begun as their lines stream in.
             let inline = image_run.as_ref().map(|run| run.inline(&tool_ctx.proposed));
             let tool_specs = tools.specs();
-            // Edits come as tags in the reply (edit_tags): split from it as
-            // it streams, and each step's turned into propose_edit calls.
-            let edits = tools.edits();
-            let steps = std::sync::atomic::AtomicUsize::new(0);
             let step = |turns: Vec<AgentTurn>| {
                 let (agent, instructions, tool_specs) = (&agent, &instructions, &tool_specs);
                 let channel = on_event.clone();
                 let inline = inline.as_ref();
-                let number = steps.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                 let (document, conventions) = (&document, &conventions);
                 async move {
-                    let tags = std::sync::Mutex::new(edit_tags::StepTags::new(edits, number));
-                    let lock = || tags.lock().unwrap_or_else(|e| e.into_inner());
-                    let sink = |e: ProviderEvent<'_>| {
-                        let split = match &e {
-                            ProviderEvent::Text(text) => lock().text(text),
-                            _ => None,
-                        };
-                        match split {
-                            Some(out) => forward_tags(&channel, web, inline, out),
-                            None => forward(&channel, web, inline, e),
-                        }
-                    };
-                    let turns = edit_tags::model_view(turns);
+                    let sink = |e: ProviderEvent<'_>| forward(&channel, web, inline, e);
                     let result = agent.step(instructions, &turns, tool_specs, &sink).await;
-                    forward_tags(&channel, web, inline, lock().finish());
                     // Native search citations numbered (WebPlan::finish_step).
                     result.map(|(step, _)| {
-                        let step = web.finish_step(lock().settle(step));
-                        settle_step(step, document, conventions, inline).0
+                        settle_step(web.finish_step(step), document, conventions, inline).0
                     })
                 }
             };

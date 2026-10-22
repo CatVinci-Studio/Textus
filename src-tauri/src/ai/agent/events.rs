@@ -81,20 +81,6 @@ pub(crate) fn forward(
     let _ = channel.send(event);
 }
 
-/// A reply's text with its edit tags split out (edit_tags::StreamTags),
-/// forwarded as the text and tool-call fragments it stands for - so the
-/// pictures in a tag begin as its lines come in, as in a tool call's.
-pub(crate) fn forward_tags(
-    channel: &Channel<StreamEvent>,
-    web: &WebPlan,
-    pictures: Option<&InlinePictures<'_>>,
-    out: Vec<edit_tags::Outgoing>,
-) {
-    for piece in &out {
-        forward(channel, web, pictures, piece.event());
-    }
-}
-
 /// Forwards what the agent loop reports onto the frontend channel, each
 /// turn as the frontend's history keeps it (see `forward` on send errors).
 pub(crate) fn report(channel: &Channel<StreamEvent>) -> impl FnMut(LoopEvent<'_>) + '_ {
