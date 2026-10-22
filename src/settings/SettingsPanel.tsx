@@ -113,28 +113,16 @@ export function SettingsPanel({
   const percent = new Intl.NumberFormat(localeOf(settings.language), {
     style: "percent",
   });
-  const [category, setCategory] = useState<Category>("general");
-  // A page of its own inside a category, with a way back, on the desktop
-  // and the phone alike: General › About Textus, Editor & Appearance ›
-  // More themes (› Browse themes).
-  const [subpage, setSubpage] = useState<Subpage | null>(null);
-  // The search box (SettingsSearch.tsx): while it holds a query, its
-  // results stand in for the page, and picking one opens the row's page
-  // and goes to the row.
-  const [query, setQuery] = useState("");
-  const searching = query.trim() !== "";
-  const deferredQuery = useDeferredValue(query);
-  const [entries, setEntries] = useState<SearchEntry[]>([]);
-  const [active, setActive] = useState(0);
-  const [jump, setJump] = useState<SearchEntry | null>(null);
-  const searchInput = useRef<HTMLInputElement>(null);
-  const content = useRef<HTMLDivElement>(null);
-  const listId = useId();
   // Closing Settings on a phone leaves the keyboard down: the user is
   // going back to the page, not necessarily to typing.
   const modal = useModalDialog(onClose, true, undefined, false);
   // Rendered inside a Presence (App.tsx): it goes the way it came.
   const presence = usePresenceProps<HTMLDivElement>();
+  const { category, setCategory, subpage, setSubpage, content, setJump } =
+    useSettingsNav();
+  const search = useSettingsSearch();
+  const { query, setQuery, searching, setEntries, active, setActive } = search;
+  const { matches, searchInput, listId } = search;
 
   // The guides open as documents, behind this panel - so it gives way.
   const openHelp = (doc: "markdown" | "agent") => {
@@ -199,10 +187,6 @@ export function SettingsPanel({
       render: () => renderSubpage(s),
     })),
   ]);
-  const matches = useMemo(
-    () => matchEntries(entries, deferredQuery),
-    [entries, deferredQuery],
-  );
   const resultGroups = searchPages
     .map((page) => ({
       key: page.key,
@@ -222,50 +206,6 @@ export function SettingsPanel({
     setSubpage(page.subpage);
     setJump(match.entry);
   };
-
-  // Once the row's page is on screen, go to the row. A row that waits on
-  // the backend (a status, a list) can come a few frames late.
-  useEffect(() => {
-    if (!jump) return;
-    let frame = 0;
-    let tries = 0;
-    const go = () => {
-      const el = content.current && findEntryElement(content.current, jump);
-      if (el) revealEntry(el);
-      else if (++tries < 30) {
-        frame = requestAnimationFrame(go);
-        return;
-      }
-      setJump(null);
-    };
-    go();
-    return () => cancelAnimationFrame(frame);
-  }, [jump]);
-
-  const focusSearch = useCallback(() => {
-    searchInput.current?.focus();
-    searchInput.current?.select();
-  }, []);
-  // Ctrl/⌘+F finds in Settings while it is open, not in the document
-  // behind it - from the keyboard here, or from Edit › Find on a Mac,
-  // whose menu takes the keys before the page sees them.
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (comboFromEvent(e) !== "mod+f") return;
-      // A shortcut being recorded takes the keys as they are.
-      if (
-        e.target instanceof Element &&
-        e.target.closest(".shortcut-capture-active")
-      )
-        return;
-      e.preventDefault();
-      e.stopPropagation();
-      focusSearch();
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [focusSearch]);
-  useWindowEvent(TOGGLE_FIND_REPLACE_EVENT, focusSearch);
 
   return (
     <div {...presence} className="settings-backdrop" onClick={onClose}>
@@ -404,4 +344,91 @@ export function SettingsPanel({
       </div>
     </div>
   );
+}
+
+/** Which page Settings shows: a category, and a page of its own inside it
+ *  with a way back, on the desktop and the phone alike: General › About
+ *  Textus, Editor & Appearance › More themes (› Browse themes). A search
+ *  result picked sets `jump`: once the row's page is on screen, it goes to
+ *  the row. */
+function useSettingsNav() {
+  const [category, setCategory] = useState<Category>("general");
+  const [subpage, setSubpage] = useState<Subpage | null>(null);
+  const [jump, setJump] = useState<SearchEntry | null>(null);
+  const content = useRef<HTMLDivElement>(null);
+
+  // Once the row's page is on screen, go to the row. A row that waits on
+  // the backend (a status, a list) can come a few frames late.
+  useEffect(() => {
+    if (!jump) return;
+    let frame = 0;
+    let tries = 0;
+    const go = () => {
+      const el = content.current && findEntryElement(content.current, jump);
+      if (el) revealEntry(el);
+      else if (++tries < 30) {
+        frame = requestAnimationFrame(go);
+        return;
+      }
+      setJump(null);
+    };
+    go();
+    return () => cancelAnimationFrame(frame);
+  }, [jump]);
+
+  return { category, setCategory, subpage, setSubpage, content, setJump };
+}
+
+/** The search box (SettingsSearch.tsx): while it holds a query, its
+ *  results stand in for the page, and picking one opens the row's page and
+ *  goes to the row. */
+function useSettingsSearch() {
+  const [query, setQuery] = useState("");
+  const searching = query.trim() !== "";
+  const deferredQuery = useDeferredValue(query);
+  const [entries, setEntries] = useState<SearchEntry[]>([]);
+  const [active, setActive] = useState(0);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const listId = useId();
+  const matches = useMemo(
+    () => matchEntries(entries, deferredQuery),
+    [entries, deferredQuery],
+  );
+
+  const focusSearch = useCallback(() => {
+    searchInput.current?.focus();
+    searchInput.current?.select();
+  }, []);
+  // Ctrl/⌘+F finds in Settings while it is open, not in the document
+  // behind it - from the keyboard here, or from Edit › Find on a Mac,
+  // whose menu takes the keys before the page sees them.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (comboFromEvent(e) !== "mod+f") return;
+      // A shortcut being recorded takes the keys as they are.
+      if (
+        e.target instanceof Element &&
+        e.target.closest(".shortcut-capture-active")
+      )
+        return;
+      e.preventDefault();
+      e.stopPropagation();
+      focusSearch();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [focusSearch]);
+  useWindowEvent(TOGGLE_FIND_REPLACE_EVENT, focusSearch);
+
+  return {
+    query,
+    setQuery,
+    searching,
+    setEntries,
+    active,
+    setActive,
+    matches,
+    searchInput,
+    listId,
+  };
 }
