@@ -336,7 +336,7 @@ export const enclosurePlugin = $prose(() => {
       // needing to be poked at from a console, and the EditorView isn't
       // reachable from the DOM otherwise.
       if (import.meta.env.DEV)
-        (window as unknown as { __pmView?: EditorView }).__pmView = editorView;
+        (window as Window & { __pmView?: EditorView }).__pmView = editorView;
       return {};
     },
     props: {

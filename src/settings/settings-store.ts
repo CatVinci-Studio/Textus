@@ -1,6 +1,7 @@
 import { storage } from "../platform/ipc";
 import { gateAiRequests } from "../platform/ai-gate";
-import { readBoot, readLocalJson } from "../storage/boot";
+import { readBoot } from "../storage/boot";
+import { LOCAL_KEYS, readLocalJson, writeLocal } from "../storage/local";
 import { trackWrite } from "../storage/pending-writes";
 import { listenToThisWindow } from "../utils/tauri-events";
 import { SettingsSync, isRecord, type Raw } from "./settings-sync";
@@ -13,7 +14,7 @@ import { normaliseSettings } from "./settings-normalise";
  * make them (SettingsContext.tsx). The side effects of settings.
  */
 
-export const STORAGE_KEY = "catvinci-settings";
+export const STORAGE_KEY = LOCAL_KEYS.settings;
 
 /** The settings blob in localStorage: the store without Rust (the browser
  *  dev shim, vitest). */
@@ -22,15 +23,9 @@ export function readLocalSettings(): Raw | null {
   return isRecord(parsed) ? parsed : null;
 }
 
+/** Storage unavailable, the change holds for this session only. */
 export function writeLocalSettings(patch: Raw) {
-  try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...readLocalSettings(), ...patch }),
-    );
-  } catch {
-    // Storage unavailable: the change holds for this session only.
-  }
+  writeLocal(STORAGE_KEY, JSON.stringify({ ...readLocalSettings(), ...patch }));
 }
 
 // ---------------------------------------------------------------------------
@@ -138,7 +133,7 @@ export function persist(patch: Partial<Settings>) {
   }
   // A field not stored at all reads as its default, so setting it to the
   // default changes nothing either.
-  const current = loadSettings() as unknown as Raw;
+  const current: Raw = { ...loadSettings() };
   const changed: Raw = {};
   for (const [key, value] of Object.entries(patch)) {
     if (JSON.stringify(current[key]) !== JSON.stringify(value))

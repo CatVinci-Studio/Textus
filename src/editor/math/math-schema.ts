@@ -1,5 +1,7 @@
 import { $nodeSchema, $remark, $inputRule } from "@milkdown/kit/utils";
 import { InputRule } from "@milkdown/kit/prose/inputrules";
+import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
+import type { Root } from "mdast";
 import remarkMath from "remark-math";
 import {
   displayLatexBlocks,
@@ -66,14 +68,15 @@ const delimiterOf = (node: { data?: unknown }) =>
   (node.data as { mathDelimiter?: string } | undefined)?.mathDelimiter ?? null;
 
 function remarkMathWithPandocDollars(
-  this: unknown,
+  this: ThisParameterType<RemarkPluginRaw<unknown>>,
   ...args: Parameters<typeof remarkMath>
 ) {
-  (remarkMath as (...a: unknown[]) => void).apply(this, args);
-  const data = (this as { data: () => Record<string, unknown[]> }).data();
+  remarkMath.apply(this, args);
+  const data = this.data();
   (data.micromarkExtensions ??= []).push(latexMathSyntax());
   (data.fromMarkdownExtensions ??= []).push(latexMathFromMarkdown());
-  return (tree: MdastNode, file: { value: unknown }) => {
+  return (root: Root, file: { value: unknown }) => {
+    const tree = root as MdastNode;
     revertCurrencyDollars(tree, String(file.value));
     recordDollarRuns(tree, String(file.value));
     displayLatexBlocks(tree);
@@ -82,7 +85,7 @@ function remarkMathWithPandocDollars(
 
 export const remarkMathPlugin = $remark(
   "remark-math",
-  () => remarkMathWithPandocDollars as unknown as typeof remarkMath,
+  () => remarkMathWithPandocDollars,
 );
 
 export const mathInlineSchema = $nodeSchema("math_inline", () => ({

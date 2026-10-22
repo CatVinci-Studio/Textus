@@ -1,5 +1,6 @@
 import { Marked, Renderer, type TokenizerAndRendererExtension } from "marked";
 import DOMPurify from "dompurify";
+import { escapeHtml } from "../../utils/html";
 import { normalizeMathDelimiters } from "../../utils/markdown-math";
 import { sanitizeNodes } from "../html/html-policy";
 import { readImagePresentation } from "../images/image-html";
@@ -125,7 +126,7 @@ const footnotes: TokenizerAndRendererExtension[] = [
       return token;
     },
     renderer(token) {
-      const label = escapeLabel(String(token.label));
+      const label = escapeHtml(String(token.label));
       return `<p><sup>${label}</sup> ${this.parser.parseInline(token.tokens ?? [])}</p>\n`;
     },
   },
@@ -138,7 +139,7 @@ const footnotes: TokenizerAndRendererExtension[] = [
       if (!match) return undefined;
       return { type: "footnoteReference", raw: match[0], label: match[1] };
     },
-    renderer: (token) => `<sup>${escapeLabel(String(token.label))}</sup>`,
+    renderer: (token) => `<sup>${escapeHtml(String(token.label))}</sup>`,
   },
 ];
 
@@ -153,10 +154,6 @@ const inlineMarked = new Marked({
     ...footnotes.filter((f) => f.name === "footnoteReference"),
   ],
 });
-
-function escapeLabel(label: string): string {
-  return label.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-}
 
 // The formulas of the document being rendered, in order: the document
 // flavour leaves a placeholder element for each, so the HTML policy (which

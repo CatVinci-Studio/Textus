@@ -10,6 +10,7 @@ import {
   type RevealState,
   type Touches,
 } from "./reveal-state";
+import { fnv1a } from "../utils/hash";
 import { isLargeDoc, pausesFeatures } from "./large-doc";
 import { registerDrawAll } from "./draw-when-visible";
 import { appearanceIsDark, diagramRenderer } from "./diagram-engine";
@@ -29,15 +30,6 @@ const PENDING_KEPT = 30;
 // to finish removed the other's measuring node mid-render (renderMermaid's
 // cleanup), so the diagram in the other tab failed and stayed raw source.
 let renderIdCounter = 0;
-
-// Cheap stable hash of a diagram's source, for the widget key below.
-function hashCode(text: string): string {
-  let hash = 0;
-  for (let i = 0; i < text.length; i++) {
-    hash = (Math.imul(31, hash) + text.charCodeAt(i)) | 0;
-  }
-  return (hash >>> 0).toString(36);
-}
 
 /** A diagram as the preview last drew it. */
 interface Drawn {
@@ -154,7 +146,7 @@ export function createMermaidPreviewPlugin(options: {
           // widget's DOM shows the other just as well.
           {
             side: 1,
-            key: `mermaid-${hashCode(code)}-${drawn.id}`,
+            key: `mermaid-${fnv1a(code).toString(36)}-${drawn.id}`,
           },
         ),
       ];

@@ -341,11 +341,11 @@ pub(super) fn validate_issues(issues: Vec<GrammarIssue>, paragraph: &str) -> Vec
     kept
 }
 
-#[tauri::command]
-// Seven optional inputs at the IPC boundary, like ai_complete's.
-#[allow(clippy::too_many_arguments)]
-pub async fn ai_grammar_check(
-    app: AppHandle,
+/// ai_grammar_check's inputs, the keys of `ai.grammarCheck`'s invoke in
+/// platform/ipc.ts.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GrammarRequest {
     provider: String,
     paragraph: String,
     strictness: Option<String>,
@@ -357,7 +357,22 @@ pub async fn ai_grammar_check(
     workspace_root: Option<String>,
     // The app's language, for the explanations (grammar_instructions).
     ui_language: Option<String>,
+}
+
+#[tauri::command]
+pub async fn ai_grammar_check(
+    app: AppHandle,
+    request: Args<GrammarRequest>,
 ) -> Result<Vec<GrammarIssue>, String> {
+    let Args(GrammarRequest {
+        provider,
+        paragraph,
+        strictness,
+        model,
+        doc_path,
+        workspace_root,
+        ui_language,
+    }) = request;
     crate::ai::ensure_on(&app)?;
     let workspace = cached_workspace(&app, doc_path, workspace_root);
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);

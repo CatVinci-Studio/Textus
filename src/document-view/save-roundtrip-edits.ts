@@ -37,14 +37,8 @@ export function random(seed: number): () => number {
   };
 }
 
-export function hashString(text: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < text.length; i++) {
-    h ^= text.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
+/** A file's seed for random(), from its name. */
+export { fnv1a as hashString } from "../utils/hash";
 
 export const pick = <T>(rand: () => number, list: readonly T[]): T =>
   list[Math.floor(rand() * list.length)];

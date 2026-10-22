@@ -178,7 +178,7 @@ export function latexMathFromMarkdown(): FromMarkdownExtension {
       // it as text.
       latexMath(this: CompileContext, token: Token) {
         this.enter(
-          { type: "inlineMath", value: "" } as unknown as Parameters<
+          { type: "inlineMath", value: "" } as Parameters<
             CompileContext["enter"]
           >[0],
           token,

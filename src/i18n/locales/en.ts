@@ -188,7 +188,6 @@ type /name in a conversation to use one.
     "{n} people, places and terms it noted are in the library below.",
   memoryForgotten: "Recently forgotten",
   memoryRestore: "Restore",
-  memoryKindFact: "Fact",
   memoryFrom: "from “{title}”",
   memoryNotSent: "Not sent",
   memoryDelete: "Delete",
@@ -1144,7 +1143,6 @@ type /name in a conversation to use one.
   backgroundTrayUnavailable: `This desktop has no tray: libayatana-appindicator isn’t installed. ${APP_NAME} still keeps running; open it again from your launcher.`,
   trayOpenTextus: `Open ${APP_NAME}`,
   // Plugins (src/plugins/, Settings › Plugins).
-  navPlugins: "Plugins",
   navExtensions: "Extensions",
   extensionsTabPlugins: "Plugins",
   extensionsTabThemes: "Themes",
@@ -1215,7 +1213,6 @@ type /name in a conversation to use one.
   pluginNoSettings: "{name} has no settings.",
   pluginRequiresGroup: "Needs",
   pluginRequiresOn: "On",
-  pluginRequiresOff: "Off",
   pluginRequiresTurnOn: "Turn on",
   pluginRequiresAsk: "{name} needs “{setting}”. {reason}",
   pluginRequiresLater: "Not now",

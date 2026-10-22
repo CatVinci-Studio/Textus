@@ -3,6 +3,7 @@ import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { EditorState } from "@milkdown/kit/prose/state";
+import { escapeHtml } from "../../utils/html";
 import { stateWithLiveSelection } from "../marks/enclosure";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
@@ -70,10 +71,6 @@ function buildTitle(
     view.focus();
   });
   return el;
-}
-
-function escapeHtml(text: string): string {
-  return text.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
 /** A blockquote's alert marker: its type, the marker's length, and how

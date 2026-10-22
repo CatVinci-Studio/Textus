@@ -6,6 +6,7 @@ import {
 } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
 import { fs } from "../platform/ipc";
+import { escapeHtml } from "../utils/html";
 import { lazyModule } from "../lazy/lazy-module";
 import {
   DETAILS_CLASS_PREFIX,
@@ -29,13 +30,6 @@ import {
  * cloned without its chrome, links as written, folded details opened,
  * tables fitted, pictures inlined, and the app's styles carried along.
  */
-
-export function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
 
 export function nextFrame(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));

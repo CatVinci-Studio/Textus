@@ -34,7 +34,7 @@ export function readBoot(): Boot | null {
   const raw =
     typeof window === "undefined"
       ? undefined
-      : (window as unknown as { __BOOT__?: unknown }).__BOOT__;
+      : (window as Window & { __BOOT__?: unknown }).__BOOT__;
   cached =
     isRecord(raw) && isRecord(raw.settings)
       ? {
@@ -51,15 +51,4 @@ export function readBoot(): Boot | null {
 /** Forgets the parsed snapshot, for tests that install a different one. */
 export function resetBootForTests(): void {
   cached = undefined;
-}
-
-/** A localStorage value as JSON, or null when absent or unreadable - for
- *  the fallback stores. */
-export function readLocalJson(key: string): unknown {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
 }

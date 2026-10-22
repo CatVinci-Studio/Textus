@@ -3,8 +3,10 @@ type RGB = readonly [number, number, number];
 const WHITE: RGB = [255, 255, 255];
 const INK: RGB = [24, 28, 36];
 const rgb = (c: RGB) => `rgb(${c.map(Math.round).join(", ")})`;
-const mix = (a: RGB, b: RGB, amount: number): RGB =>
-  a.map((v, i) => v * (1 - amount) + b[i] * amount) as unknown as RGB;
+const mix = (a: RGB, b: RGB, amount: number): RGB => {
+  const at = (i: 0 | 1 | 2) => a[i] * (1 - amount) + b[i] * amount;
+  return [at(0), at(1), at(2)];
+};
 const luminance = (c: RGB) =>
   c.reduce((sum, v, i) => {
     const s = v / 255;

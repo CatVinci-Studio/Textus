@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { lazyModule } from "../../lazy/lazy-module";
+import { escapeHtml } from "../../utils/html";
 
 /**
  * KaTeX - its code, stylesheet and fonts - is loaded the first time a
@@ -87,9 +88,5 @@ export function useKatexReady(): boolean {
 
 /** A formula's source, shown until KaTeX draws it. */
 export function mathSourceHtml(source: string): string {
-  const escaped = source
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  return `<code class="math-pending">${escaped}</code>`;
+  return `<code class="math-pending">${escapeHtml(source)}</code>`;
 }

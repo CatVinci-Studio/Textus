@@ -18,12 +18,6 @@ export const remarkFrontmatterPlugin = $remark(
   "yaml",
 );
 
-/** The part of unified's processor this needs. */
-interface RemarkProcessor {
-  data(): { micromarkExtensions?: unknown[] };
-  parser?: (document: string, file: unknown) => unknown;
-}
-
 /** A file that opens with front matter: a `---` line, and another below. */
 const CLOSED_FRONTMATTER =
   /^---[ \t]*\r?\n(?:[\s\S]*?\r?\n)?---[ \t]*(?:\r?\n|$)/;
@@ -37,10 +31,10 @@ const CLOSED_FRONTMATTER =
  * as a paragraph of text, and was saved escaped as one once edited.
  */
 const remarkClosedFrontmatter: RemarkPluginRaw<string> = function (
-  this: RemarkProcessor,
+  this: ThisParameterType<RemarkPluginRaw<string>>,
   options: string,
 ) {
-  remarkFrontmatter.call(this as never, options as "yaml");
+  remarkFrontmatter.call(this, options as "yaml");
   const extensions = this.data().micromarkExtensions!;
   const syntax = extensions.at(-1)!;
   const parse = this.parser!;
@@ -54,7 +48,7 @@ const remarkClosedFrontmatter: RemarkPluginRaw<string> = function (
       extensions.splice(at, 0, syntax);
     }
   };
-} as unknown as RemarkPluginRaw<string>;
+};
 
 /**
  * Deliberately plain: raw text content, no language selector or collapse

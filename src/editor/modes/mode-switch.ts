@@ -94,11 +94,10 @@ function scrollerOf(el: Element): HTMLElement | null {
 
 /** ProseMirror reads a click's new DOM selection asynchronously: the state
  *  read right after a click (a switch pressed, a page unloading) would
- *  otherwise hold the old caret. */
+ *  otherwise hold the old caret. The observer is prosemirror-view's own,
+ *  untyped. */
 export function flushDomSelection(view: EditorView): void {
-  (
-    view as unknown as { domObserver?: { flush?: () => void } }
-  ).domObserver?.flush?.();
+  (view as { domObserver?: { flush?: () => void } }).domObserver?.flush?.();
 }
 
 /** The WYSIWYG caret as a markdown offset (reporter side). */

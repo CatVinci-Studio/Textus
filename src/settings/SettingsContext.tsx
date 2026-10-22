@@ -15,7 +15,6 @@ import {
 } from "../i18n/strings";
 import { ai } from "../platform/ipc";
 import { readBoot } from "../storage/boot";
-import type { Raw } from "./settings-sync";
 import { useApplyAppearance } from "../theme/apply-appearance";
 import type { Settings } from "./settings-types";
 import { htmlLang } from "./settings-normalise";
@@ -86,7 +85,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     // reads the same, not a partial write's (see normaliseSettings). With
     // Rust, the store does the same (fileStore).
     if (!readBoot() && readLocalSettings() === null)
-      writeLocalSettings(loadSettings() as unknown as Raw);
+      writeLocalSettings({ ...loadSettings() });
     // Cross-window sync: another window changed something. `zoom` stays
     // this window's own (see its field comment) - everything else adopts
     // the incoming value.

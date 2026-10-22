@@ -118,10 +118,11 @@ rewrites only its own conversation and the index:
   built again from the files.
 
 The webview's own storage also lives here (`localstorage/`, `WebKitCache/`
-and so on; `EBWebView\` under `%LOCALAPPDATA%` on Windows). The only key
-the app uses there is `textus-fetched-models:<provider>`, a
-cache of each provider's model list that is simply fetched again when
-missing.
+and so on; `EBWebView\` under `%LOCALAPPDATA%` on Windows). The app
+keeps only small things there that nothing is lost without: each
+provider's fetched model list (fetched again when missing), the composer's
+Deep thinking and last Agent mode. Every key, and every read and write, is
+in `src/storage/local.ts`.
 
 ## How the files are written
 
