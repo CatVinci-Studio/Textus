@@ -58,6 +58,8 @@ const STATUS_NOTES: Record<PendingStatus, string> = {
     "Status: the user accepted this proposed edit - the document text in this request includes it.",
   rejected:
     "Status: the user rejected this proposed edit - it was not applied. Don't propose it again unless asked.",
+  replaced:
+    "Status: a later proposal of yours for the same passage took this one's place before the user decided on it - it was not applied, and the user didn't reject it.",
   invalid:
     "Status: this proposed edit could not be applied (the text it targeted changed) and was discarded - it is not part of the document.",
   expired:

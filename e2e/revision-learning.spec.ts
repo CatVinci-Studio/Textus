@@ -188,4 +188,27 @@ test("a rewrite superseded by a new request teaches nothing", async ({
         .__devStorage.revisionChoices,
   );
   expect(log).toBeNull();
+  // The earlier two read as replaced, not rejected - the writer turned
+  // nothing down - in their cards and to the model on the next request.
+  const panel = page.locator(".agent-panel-view");
+  await expect(panel.getByText("Replaced by a newer proposal")).toHaveCount(2);
+  await expect(panel.getByText("Rejected")).toHaveCount(0);
+  await mockInvoke(page, {
+    load_agent_workspace: workspace([]),
+    ai_agent_message: proposal("s4", "会议记录", "会议纪要"),
+  });
+  await composer(page).fill("Once more");
+  await composer(page).press("Enter");
+  // The shim records each call as `{ cmd, ...args }`.
+  await expect
+    .poll(async () => (await calls(page, "ai_agent_message")).length)
+    .toBe(4);
+  const sent = (await calls(page, "ai_agent_message")).at(-1) as unknown as {
+    history: { kind: string; call_id?: string; output?: string }[];
+  };
+  const result = (id: string) =>
+    sent.history.find((t) => t.kind === "ToolResult" && t.call_id === id)
+      ?.output ?? "";
+  expect(result("s1")).toContain("took this one's place");
+  expect(result("s1")).not.toContain("the user rejected");
 });

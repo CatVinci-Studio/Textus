@@ -272,6 +272,68 @@ pub fn resolve_edit_arguments(document: &str, blocks: &[Block], arguments: &str)
     reorder(args).to_string()
 }
 
+/// An add_comment or generate_image call's arguments with `block` turned
+/// into an anchor, as for an insertion by propose_edit: a phrase quoted in
+/// `anchor` that the block holds once stays the anchor (a comment on a few
+/// words, a picture after a sentence), pinned down by the whole block as
+/// `context` where it repeats in the document; otherwise the anchor is the
+/// whole block - a paragraph a comment is about or a picture goes next to,
+/// or the picture a redo replaces. An id that names no block is left as
+/// `block`, for the tool to say so.
+pub fn resolve_target_arguments(document: &str, blocks: &[Block], arguments: &str) -> String {
+    let Ok(Value::Object(mut args)) = serde_json::from_str::<Value>(arguments) else {
+        return arguments.to_string();
+    };
+    for key in ["anchor", "context"] {
+        if let Some(Value::String(s)) = args.get(key) {
+            if s.contains("[#") {
+                let clean = strip_markers(s);
+                args.insert(key.into(), Value::String(clean));
+            }
+        }
+    }
+    for key in ["anchor", "context", "block"] {
+        if args.get(key).and_then(|v| v.as_str()) == Some("") {
+            args.remove(key);
+        }
+    }
+    let Some(index) = args
+        .get("block")
+        .and_then(|v| v.as_str())
+        .map(|s| s.trim_start_matches('#'))
+        .and_then(|id| blocks.iter().position(|b| b.id == id))
+    else {
+        return Value::Object(args).to_string();
+    };
+    args.remove("block");
+    let block = &blocks[index];
+    let whole = &document[block.start..block.end];
+    let phrase = args
+        .get("anchor")
+        .and_then(|v| v.as_str())
+        .filter(|a| *a != whole && whole.matches(*a).count() == 1)
+        .map(str::to_string);
+    match phrase {
+        Some(phrase) => {
+            if document.matches(phrase.as_str()).count() > 1 {
+                args.insert("context".into(), Value::String(whole.to_string()));
+            }
+        }
+        None => {
+            args.insert("anchor".into(), Value::String(whole.to_string()));
+            args.remove("context");
+            if document.matches(whole).count() > 1 && index > 0 {
+                let before = &blocks[index - 1];
+                args.insert(
+                    "context".into(),
+                    Value::String(document[before.start..block.end].to_string()),
+                );
+            }
+        }
+    }
+    reorder(args).to_string()
+}
+
 /// Keys in the order the model writes them, so the call reads as before.
 fn reorder(mut args: Map<String, Value>) -> Value {
     let mut out = Map::new();
@@ -287,6 +349,7 @@ fn reorder(mut args: Map<String, Value>) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     /// The cases doc-blocks.test.ts checks too, so both split alike.
     fn shared_cases() -> Vec<(String, Vec<String>)> {
@@ -331,6 +394,35 @@ mod tests {
                 blocks[0].id, blocks[1].id, blocks[2].id
             )
         );
+    }
+
+    #[test]
+    fn a_comment_or_picture_by_block_quotes_the_block_or_keeps_its_phrase() {
+        let doc = "# Title\n\nThe cat sat on the mat.\n\n![Cat](cat.png)\n\nThe cat sat.";
+        let blocks = split(doc);
+        let args = |json: Value| {
+            serde_json::from_str::<Value>(&resolve_target_arguments(
+                doc,
+                &blocks,
+                &json.to_string(),
+            ))
+            .unwrap()
+        };
+        // A whole paragraph.
+        let whole = args(json!({"block": blocks[1].id, "comment": "Vague."}));
+        assert_eq!(whole["anchor"], "The cat sat on the mat.");
+        assert!(whole.get("block").is_none());
+        // A few words in it, repeated elsewhere: pinned by the block.
+        let words = args(json!({"anchor": "The cat sat", "block": blocks[1].id, "comment": "x"}));
+        assert_eq!(words["anchor"], "The cat sat");
+        assert_eq!(words["context"], "The cat sat on the mat.");
+        // A picture to redo, by its block; strict-schema empties go.
+        let redo =
+            args(json!({"action": "replace", "anchor": "", "block": blocks[2].id, "prompt": "p"}));
+        assert_eq!(redo["anchor"], "![Cat](cat.png)");
+        // An unknown id stays, for the tool to refuse.
+        let unknown = args(json!({"block": "zzzz", "comment": "x"}));
+        assert_eq!(unknown["block"], "zzzz");
     }
 
     #[test]

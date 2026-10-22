@@ -166,6 +166,22 @@ pub(crate) fn postfix_step(
                     reasoning,
                 }
             }
+            // A comment or a picture names its block too.
+            AgentTurn::ToolCall {
+                call_id,
+                name,
+                arguments,
+                reasoning,
+            } if name == tools::ADD_COMMENT_TOOL_NAME
+                || name == crate::ai::images::GENERATE_IMAGE_TOOL_NAME =>
+            {
+                AgentTurn::ToolCall {
+                    arguments: doc_blocks::resolve_target_arguments(document, &blocks, &arguments),
+                    call_id,
+                    name,
+                    reasoning,
+                }
+            }
             other => other,
         })
         .collect();

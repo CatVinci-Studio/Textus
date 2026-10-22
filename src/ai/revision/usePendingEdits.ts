@@ -13,7 +13,7 @@ import {
   type MarkdownBlock,
   type MarkdownMatch,
 } from "../doc-markdown";
-import { applyEditRange } from "./apply-edit";
+import { applyEditRange, replaceWithMarkdown } from "./apply-edit";
 import { useLatest } from "../../utils/hooks/useLatest";
 import {
   citationsAsFootnotes,
@@ -28,6 +28,7 @@ import {
   reviewChanges,
   sentenceTake,
   type PendingPreview,
+  type PendingSentence,
 } from "./pending-edit-plugin";
 import {
   composeSentences,
@@ -70,6 +71,9 @@ export type PendingStatus =
   | "streaming"
   | "accepted"
   | "rejected"
+  // A later request's proposal at the same spot took its place
+  // (useEditorProposals' supersededBy) - not the user's verdict.
+  | "replaced"
   | "invalid"
   | "expired"
   // A picture put into the text proposal it goes with (joinPicture),
@@ -233,12 +237,54 @@ function sentencesFor(
             before: h.before,
             after: h.after,
             take: null,
+            expected: visibleTextBetween(
+              doc,
+              ranges[i].from,
+              ranges[i].to,
+              " ",
+            ),
             ...changeParts(ctx, doc, ranges[i], h.before, h.after),
           },
         ]
       : [],
   );
   return { hunks, changes };
+}
+
+/**
+ * A rewrite whose original the writer edited while it streamed in, found
+ * again change by change in `range` as the text now reads: each change
+ * whose original sentences are still there, in order, stands; one whose
+ * original they changed is left out. Null when none is left. The changes
+ * are then applied one by one (PendingPreview.rebased), never the range
+ * whole - that would undo what the writer typed.
+ */
+function rebasedSentences(
+  ctx: Ctx,
+  doc: ProseNode,
+  original: string,
+  text: string,
+  range: { from: number; to: number },
+): PendingPreview["sentences"] {
+  const hunks = diffSentences(original, text);
+  const changes: PendingSentence[] = [];
+  let cursor = range.from;
+  for (const h of hunks) {
+    if (h.kind !== "change" || !h.before.trim()) continue;
+    const plain =
+      plainText(ctx, trimBreaks(h.before))?.replace(/\n/g, "").trim() ?? "";
+    const [found] = plain ? findInOrder(doc, cursor, range.to, [plain]) : [];
+    if (!found) continue;
+    cursor = found.to;
+    changes.push({
+      ...found,
+      before: h.before,
+      after: h.after,
+      take: null,
+      expected: visibleTextBetween(doc, found.from, found.to, " "),
+    });
+  }
+  return changes.length > 0 ? { hunks, changes } : undefined;
 }
 
 /** A change over several original sentences: where each stands, and where
@@ -601,7 +647,7 @@ export function usePendingEdits(
         const docSize = state.doc.content.size;
         // One serialization per batch, shared by every proposal in it.
         const blocks = serializeBlocks(ctx, state.doc);
-        const resolved: PendingPreview[] = [];
+        const placed: PendingPreview[] = [];
         const invalidIds: string[] = [];
 
         for (const { callId, proposal, streaming } of proposals) {
@@ -638,6 +684,41 @@ export function usePendingEdits(
             const resolved = resolveAnchored(ctx, state.doc, blocks, proposal);
             if (resolved)
               ({ range, replacement, strikeRange, lead } = resolved);
+            // Not found as quoted: the writer edited its original while it
+            // streamed in. Found again where its draft stands, change by
+            // change, if any change's original is still there.
+            const draft = !resolved
+              ? pendingEditKey
+                  .getState(state)
+                  ?.previews.find((p) => p.callId === callId && p.rebased)
+              : undefined;
+            const sentences =
+              draft && !streaming && proposal.action === "replace"
+                ? rebasedSentences(
+                    ctx,
+                    state.doc,
+                    proposal.anchor ?? "",
+                    proposal.text ?? "",
+                    draft,
+                  )
+                : undefined;
+            if (draft && sentences) {
+              placed.push({
+                ...draft,
+                proposal,
+                expectedText: visibleTextBetween(
+                  state.doc,
+                  draft.from,
+                  draft.to,
+                  " ",
+                ),
+                streaming: undefined,
+                sentences,
+                rebased: true,
+                streamSource: undefined,
+              });
+              continue;
+            }
           }
 
           if (!range) {
@@ -693,7 +774,7 @@ export function usePendingEdits(
                     range,
                   )
                 : undefined;
-          resolved.push({
+          placed.push({
             callId,
             proposal,
             from: range.from,
@@ -713,11 +794,11 @@ export function usePendingEdits(
           });
         }
 
-        if (resolved.length > 0) {
+        if (placed.length > 0) {
           view.dispatch(
             state.tr.setMeta(pendingEditKey, {
               type: "add",
-              previews: resolved,
+              previews: placed,
             }),
           );
         }
@@ -872,6 +953,43 @@ export function usePendingEdits(
           }
           if (!take.every(Boolean))
             textOverride = composeSentences(preview.sentences.hunks, take);
+        }
+        // Edited by the writer since it was proposed: each taken change in
+        // its own place, back to front, and nothing else in the range -
+        // composing the whole range would write their edits over.
+        if (textOverride === undefined && preview.rebased && take) {
+          const taken = preview.sentences!.changes.filter((_, i) => take[i]);
+          let tr = state.tr;
+          for (const c of [...taken].sort((a, b) => b.from - a.from))
+            tr = replaceWithMarkdown(
+              tr,
+              ctx,
+              c.from,
+              c.to,
+              withoutCitations(c.after).replace(/\s+$/, ""),
+            );
+          const landed = findInOrder(
+            tr.doc,
+            tr.mapping.map(preview.from, -1),
+            tr.mapping.map(preview.to, 1),
+            taken.map(
+              ({ after }) =>
+                plainText(ctx, trimBreaks(withoutCitations(after)))
+                  ?.replace(/\n/g, "")
+                  .trim() ?? "",
+            ),
+          );
+          tr.setMeta(pendingEditKey, {
+            type: "remove",
+            callId,
+            applied: true,
+            landed,
+          });
+          closeHistory(tr);
+          view.dispatch(tr.scrollIntoView());
+          if (!isIOSApp) view.focus();
+          ok = true;
+          return;
         }
         if (textOverride !== undefined) {
           const { proposal } = preview;
@@ -1049,7 +1167,11 @@ export function usePendingEdits(
    *  backend refusing it or a stop leaving nothing of it, which `discard`
    *  is for. */
   const remove = useCallback(
-    (callId: string, learn: boolean) => {
+    (
+      callId: string,
+      learn: boolean,
+      status: "rejected" | "replaced" = "rejected",
+    ) => {
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
         const preview = (
@@ -1063,7 +1185,7 @@ export function usePendingEdits(
         );
         if (learn && preview) decided(preview, () => false);
       });
-      setStatuses((prev) => ({ ...prev, [callId]: "rejected" }));
+      setStatuses((prev) => ({ ...prev, [callId]: status }));
     },
     [run, decided],
   );
@@ -1076,6 +1198,12 @@ export function usePendingEdits(
   );
   const discard = useCallback(
     (callId: string) => remove(callId, false),
+    [remove],
+  );
+  /** Takes `callId`'s preview away for a newer proposal at its spot: it
+   *  reads as replaced, not rejected - in its card and to the model. */
+  const replace = useCallback(
+    (callId: string) => remove(callId, false, "replaced"),
     [remove],
   );
 
@@ -1363,6 +1491,7 @@ export function usePendingEdits(
     reviewCount,
     reject,
     discard,
+    replace,
     acceptAll,
     rejectAll,
     discardAll,

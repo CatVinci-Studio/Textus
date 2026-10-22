@@ -352,11 +352,17 @@ pub async fn list_models(auth: &AnthropicAuth) -> Result<Vec<String>, String> {
 // --- Agentic tool-calling support (the anthropic-messages dialect - see
 // `aicompat::agent` for the provider-agnostic loop this feeds).
 
+/// `eager_input_streaming`: the arguments stream as Claude writes them.
+/// Without it the API holds each value back until it is whole, so an
+/// edit's new text arrived in one piece and a rewrite showed paragraph by
+/// paragraph, with nothing between (rc.6). The arguments may then end up
+/// invalid JSON - a call that doesn't parse is refused like any other.
 fn tool_to_schema(tool: &ToolSpec) -> Value {
     json!({
         "name": tool.name,
         "description": tool.description,
         "input_schema": tool.parameters,
+        "eager_input_streaming": true,
     })
 }
 
@@ -1515,6 +1521,32 @@ mod tests {
         let request = body(&history);
         let blocks = request["messages"][1]["content"].as_array().unwrap();
         assert!(blocks[0].get("cache_control").is_none());
+    }
+
+    #[test]
+    fn tool_arguments_stream_as_they_are_written() {
+        let tool = ToolSpec {
+            name: "propose_edit".into(),
+            description: "d".into(),
+            parameters: json!({"type": "object"}),
+        };
+        let (request, _) = agent_request_body(
+            &api_key(),
+            "rules",
+            &[user("q")],
+            &[tool],
+            true,
+            &crate::capabilities::plan(
+                "anthropic",
+                "claude-sonnet-5-5",
+                crate::capabilities::ThinkingLevel::Auto,
+            ),
+            "m",
+        );
+        let tools = request["tools"].as_array().unwrap();
+        assert_eq!(tools[0]["eager_input_streaming"], true);
+        // Not on the server's own web search.
+        assert!(tools[1].get("eager_input_streaming").is_none());
     }
 
     #[test]
