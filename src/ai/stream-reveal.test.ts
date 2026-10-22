@@ -40,17 +40,35 @@ describe("StreamReveal", () => {
     expect(new Set(seen).size).toBeGreaterThan(10);
   });
 
-  it("shows everything received within 350 ms of its arrival, however much", () => {
+  it("shows everything received within 1.5 s of its arrival, however much, at an even pace", () => {
     const reveal = new StreamReveal();
     const text = "长".repeat(5000);
     reveal.update(text, false, 0);
-    frames(reveal, FRAME, 340);
-    expect(reveal.caughtUp).toBe(false);
-    reveal.tick(351);
+    const seen = frames(reveal, FRAME, 1490).map((f) => f.text.length);
+    // Spread over the whole time, not done in its first part.
+    expect(seen[Math.floor(1000 / FRAME)]).toBeLessThan(text.length * 0.8);
+    // No frame shows more than a few times its share of the whole.
+    const share = text.length / (1500 / FRAME);
+    for (let i = 1; i < seen.length; i++)
+      expect(seen[i] - seen[i - 1]).toBeLessThan(share * 3);
+    reveal.tick(1501);
     expect(reveal.text).toBe(text);
   });
 
-  it("follows a bursty stream steadily and never falls more than 350 ms behind", () => {
+  it("types a paragraph that arrives whole over about a second", () => {
+    // MiniMax: a tool call's arguments in one piece.
+    const reveal = new StreamReveal();
+    const text = "雨".repeat(800);
+    reveal.update(text, false, 0);
+    frames(reveal, FRAME, 300);
+    expect(reveal.text.length).toBeLessThan(text.length / 2);
+    frames(reveal, 300 + FRAME, 1000);
+    expect(reveal.text.length).toBeGreaterThan(text.length * 0.8);
+    frames(reveal, 1000 + FRAME, 1500);
+    expect(reveal.caughtUp).toBe(true);
+  });
+
+  it("follows a bursty stream steadily, about 350 ms behind", () => {
     const reveal = new StreamReveal();
     let received = "";
     const arrivedAt: number[] = [];
