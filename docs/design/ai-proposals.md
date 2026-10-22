@@ -82,19 +82,24 @@ frontend (`StreamEvent::Picture`), which draws the line as its frame
 
 ## Where a proposal points: blocks
 
-The model is shown the document with each block's id before it
-(`[#k3f9] `, `ai/doc_blocks.rs`; mirrored in `ai/doc-blocks.ts` for drafts),
-and every call that points into the document names its block instead of
-quoting it - `propose_edit` (`block`, `last_block` for a run), `add_comment`
-and `generate_image` (`block`) - with `anchor` only for a few words inside
-that block. The backend turns the id into an anchor before anything else
-sees the call (`agent.rs`' `postfix_step`: `resolve_edit_arguments`,
-`resolve_target_arguments`), so validation, history and the frontend work
-in anchors as before; a draft still streaming does the same
-(`resolveBlockEdit`, `resolveBlockTarget`). Quoting cost a whole passage of
-output before anything could show, and a quote that didn't match the
-document's own Markdown (a picture given a width, written as `<img>`) found
-nothing. An id names nothing once its block changed: the tool says so.
+The blocks are the editor's own top-level nodes: the request carries them,
+each with its id and kind (`ai/doc-blocks.ts`, made by `doc-markdown.ts`'s
+`serializeBlocks`), and the backend shows the model each after its id
+(`[#k3f9] `, `ai/doc_blocks.rs`) without splitting the document itself - a
+list or a quote is one block, as it is one node. Every call that points
+into the document names its block instead of quoting it - `propose_edit`
+(`block`, `last_block` for a run), `add_comment` and `generate_image`
+(`block`) - with `anchor` only for a few words inside that block, which
+must occur there once. The backend fills in what the ids stand for, keeping
+them (`settle.rs`: `resolve_edit_arguments`, `resolve_target_arguments`),
+and checks them (`check_target`); the frontend places the call by the same
+ids (`matchTarget`), never by searching the document for its text, and a
+draft still streaming is resolved the same way (`resolveBlockEdit`,
+`resolveBlockTarget`). Quoting cost a whole passage of output before
+anything could show, and a quote found by searching could land on another
+copy of the same words. An id names nothing once its block changed: the
+tool says so. Only text proposed and not decided yet, which has no block,
+is quoted without one; the edit goes into that proposal.
 
 ## The lifecycle
 
@@ -132,8 +137,9 @@ Who owns each move:
 
 `toolStart` opens a draft (propose_edit and generate_image; a note is
 drawn from its arguments by the conversation, below). The draft is placed
-the moment its arguments say where it goes - an action and a block, or an
-anchor - and from then on fed the text as it arrives. The same call said
+the moment its arguments say where it goes - an action and a block, or,
+once its text begins, a quote of undecided text - and from then on fed the
+text as it arrives. The same call said
 to start again (the backend announces a picture it runs) is the same
 call: a fresh draft in its place stranded the placed one, and a redone
 picture read "Writing…" for good (`1.2.0-rc.6`).
@@ -172,8 +178,8 @@ A note (`add_comment`) changes nothing, so it has no preview: the
 conversation draws it into `StreamingState.comments` as soon as its
 passage and its text are complete in the streaming arguments
 (`useAgentConversation`), and the margin shows it from there
-(`useReviewNotes`). The completed call places it again, should its
-`context` have settled a repeated passage differently.
+(`useReviewNotes`). The completed call places it again, should its block
+or words have come out differently.
 
 ### Deciding: `PendingStatus`
 
@@ -425,7 +431,7 @@ the answer to a per-window store (`useMarginAvailable`).
 | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `ai/revision/proposal-stream.ts`                                    | Writing-phase machine: place/feed/finalize/discard, a call's result                                  |
 | `ai/revision/proposal-display.ts`                                   | How a draft is shown: typed in, or drawn again as it grows                                           |
-| `ai/doc-blocks.ts`, `src-tauri/src/ai/doc_blocks.rs`                | Block ids, and a call naming its block turned into an anchor                                         |
+| `ai/doc-blocks.ts`, `src-tauri/src/ai/doc_blocks.rs`                | The editor's blocks with their ids and kinds, and what a call naming them stands for                 |
 | `ai/revision/sentence-diff.ts`                                      | A rewrite's changes, and how finely each is decided (`regroup`)                                      |
 | `ai/revision/usePendingEdits.ts`                                    | Anchor resolution, accept/reject/rejectAll, status map, review navigation                            |
 | `ai/revision/pending-edit-plugin.ts`                                | Decorations, hover tint, typewriter + settle, the progress cursor, staleness and `rebase`, shortcuts |
