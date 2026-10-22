@@ -48,10 +48,14 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
             ..DEFAULT_CAPS
         },
     ),
+    // DeepSeek's default effort (`high`) drafted a whole translation in its
+    // thinking at every step - 20,000 characters, again and again - and
+    // wrote no edit in two runs of three (1.2.0-rc.6's live eval). Auto
+    // asks for `low`; Deep asks for `high`, the default.
     (
         "deepseek",
         ProviderCaps {
-            auto_effort: None,
+            auto_effort: Some("low"),
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
             replay_reasoning: true,
