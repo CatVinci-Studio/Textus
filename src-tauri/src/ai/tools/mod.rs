@@ -717,7 +717,7 @@ fn refuses_a_draft(ctx: &ToolContext, name: &str, arguments: &str) -> Option<Str
     if text.chars().count() <= DRAFT_CHARS || ctx.document.contains(text) {
         return None;
     }
-    Some(format!("Not run: {name} doesn't take a draft of new text. Propose the text with propose_edit now - the user sees it come in, its result tells you its size, and conventions are fixed on the way. If it misses a length the user asked for, say so in your reply."))
+    Some(format!("Not run: {name} doesn't take a draft of new text. Write the text as an edit now - the user sees it come in, and conventions are fixed on the way. If it misses a length the user asked for, say so in your reply."))
 }
 
 /// Counts a call to a check tool, and refuses it once the request has used
@@ -735,7 +735,7 @@ fn spend_check(ctx: &ToolContext, name: &str, arguments: &str) -> Option<String>
     let used = checks.entry(name).or_default();
     *used += 1;
     (*used > budget).then(|| {
-        format!("Not run: {name} was already called {budget} times in this request, which is all it gets. Stop checking and finish with what you have: propose your latest draft (when the request changes the document), then reply.")
+        format!("Not run: {name} was already called {budget} times in this request, which is all it gets. Stop checking and finish with what you have: write your latest draft as an edit (when the request changes the document), and reply.")
     })
 }
 
@@ -787,8 +787,20 @@ impl<'a> ToolRegistry<'a> {
         }
     }
 
+    /// The tools the model is offered: all but propose_edit, which edits
+    /// written as tags run through (edit_tags) and the model never calls.
     pub fn specs(&self) -> Vec<ToolSpec> {
-        self.tools.iter().map(|t| t.spec.clone()).collect()
+        self.tools
+            .iter()
+            .filter(|t| t.spec.name != PROPOSE_EDIT_TOOL_NAME)
+            .map(|t| t.spec.clone())
+            .collect()
+    }
+
+    /// Whether this request may change the document: its mode has
+    /// propose_edit, which the tags in its replies run through.
+    pub fn edits(&self) -> bool {
+        self.find(PROPOSE_EDIT_TOOL_NAME).is_some()
     }
 
     fn find(&self, name: &str) -> Option<&Tool<'a>> {
