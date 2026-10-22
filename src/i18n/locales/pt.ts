@@ -850,6 +850,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   proposalStatusStreaming: "Escrevendo…",
   proposalStatusAccepted: "Aplicada",
   proposalStatusRejected: "Rejeitada",
+  proposalStatusReplaced: "Substituída por uma proposta mais recente",
   proposalStatusExpired: "Não se aplica mais",
   proposalStatusJoined: "No texto proposto acima",
   proposalStatusInvalid: "Não foi possível localizar esse texto no documento.",

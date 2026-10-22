@@ -865,6 +865,7 @@ para usar una.
   proposalStatusStreaming: "Escribiendo…",
   proposalStatusAccepted: "Aplicado",
   proposalStatusRejected: "Rechazado",
+  proposalStatusReplaced: "Sustituida por una propuesta más reciente",
   proposalStatusExpired: "Ya no se puede aplicar",
   proposalStatusJoined: "En el texto propuesto arriba",
   proposalStatusInvalid: "No se encontró ese texto en el documento.",

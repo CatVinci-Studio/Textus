@@ -70,6 +70,9 @@ export type PendingStatus =
   | "streaming"
   | "accepted"
   | "rejected"
+  // A later request's proposal at the same spot took its place
+  // (useEditorProposals' supersededBy) - not the user's verdict.
+  | "replaced"
   | "invalid"
   | "expired"
   // A picture put into the text proposal it goes with (joinPicture),
@@ -1049,7 +1052,11 @@ export function usePendingEdits(
    *  backend refusing it or a stop leaving nothing of it, which `discard`
    *  is for. */
   const remove = useCallback(
-    (callId: string, learn: boolean) => {
+    (
+      callId: string,
+      learn: boolean,
+      status: "rejected" | "replaced" = "rejected",
+    ) => {
       run((ctx) => {
         const view = ctx.get(editorViewCtx);
         const preview = (
@@ -1063,7 +1070,7 @@ export function usePendingEdits(
         );
         if (learn && preview) decided(preview, () => false);
       });
-      setStatuses((prev) => ({ ...prev, [callId]: "rejected" }));
+      setStatuses((prev) => ({ ...prev, [callId]: status }));
     },
     [run, decided],
   );
@@ -1076,6 +1083,12 @@ export function usePendingEdits(
   );
   const discard = useCallback(
     (callId: string) => remove(callId, false),
+    [remove],
+  );
+  /** Takes `callId`'s preview away for a newer proposal at its spot: it
+   *  reads as replaced, not rejected - in its card and to the model. */
+  const replace = useCallback(
+    (callId: string) => remove(callId, false, "replaced"),
     [remove],
   );
 
@@ -1363,6 +1376,7 @@ export function usePendingEdits(
     reviewCount,
     reject,
     discard,
+    replace,
     acceptAll,
     rejectAll,
     discardAll,

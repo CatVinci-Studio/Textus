@@ -40,6 +40,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       streaming: t.proposalStatusStreaming,
       accepted: t.proposalStatusAccepted,
       rejected: t.proposalStatusRejected,
+      replaced: t.proposalStatusReplaced,
       invalid: t.proposalStatusInvalid,
       expired: t.proposalStatusExpired,
       joined: t.proposalStatusJoined,

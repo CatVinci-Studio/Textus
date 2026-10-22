@@ -672,6 +672,9 @@ const ACCEPTED_NOTE: &str =
     "Status: the user accepted this proposed edit - the document text in this request includes it.";
 const REJECTED_NOTE: &str =
     "Status: the user rejected this proposed edit - it was not applied. Don't propose it again unless asked.";
+/// Mirrors src/ai/revision/proposal-status.ts's note for a proposal a later
+/// one took the place of.
+const REPLACED_NOTE: &str = "Status: a later proposal of yours for the same passage took this one's place before the user decided on it - it was not applied, and the user didn't reject it.";
 
 /// Longest tool result kept in a case's record (the model saw all of it).
 const RECORDED_RESULT_CHARS: usize = 4_000;
@@ -1010,7 +1013,7 @@ pub fn run_conversation(
                     } = turn
                     {
                         if call_id == id {
-                            *output = output.replace(PENDING_NOTE, REJECTED_NOTE);
+                            *output = output.replace(PENDING_NOTE, REPLACED_NOTE);
                         }
                     }
                 }

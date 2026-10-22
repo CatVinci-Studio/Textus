@@ -816,6 +816,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   proposalStatusStreaming: "生成中…",
   proposalStatusAccepted: "適用済み",
   proposalStatusRejected: "却下済み",
+  proposalStatusReplaced: "新しい提案に置き換えました",
   proposalStatusExpired: "無効",
   proposalStatusJoined: "上の提案文に入れました",
   proposalStatusInvalid: "この文書内にそのテキストが見つかりませんでした。",

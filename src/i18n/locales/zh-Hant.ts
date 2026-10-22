@@ -780,6 +780,7 @@ export default {
   proposalStatusStreaming: "撰寫中…",
   proposalStatusAccepted: "已套用",
   proposalStatusRejected: "已拒絕",
+  proposalStatusReplaced: "已替換為新的建議",
   proposalStatusExpired: "已不適用",
   proposalStatusJoined: "已放進上面的文字建議",
   proposalStatusInvalid: "在文件中找不到這段文字。",

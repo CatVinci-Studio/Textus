@@ -164,8 +164,8 @@ export function useEditorProposals({
   // in useChatContextBridge for detached sends): the first preview add
   // that follows notes which previews came before it. Proposals of the
   // SAME exchange coexist as siblings. The superseded proposals read as
-  // "rejected" everywhere downstream (chat cards, next request's status
-  // notes).
+  // "replaced" downstream (chat cards, next request's status notes): told
+  // "rejected", the model took the user to have turned that version down.
   const supersedePending = useRef(false);
   const earlierPreviews = useRef<Set<string>>(new Set());
   // What a replace_selection proposal from the editor's own conversation
@@ -242,7 +242,7 @@ export function useEditorProposals({
       const added = new Set(shown.map((p) => p.callId));
       for (const id of supersededBy(added, earlierPreviews.current)) {
         earlierPreviews.current.delete(id);
-        pendingEdits.discard(id);
+        pendingEdits.replace(id);
       }
     },
     // Member functions only - all are stable per editor ([run]), and
@@ -252,6 +252,7 @@ export function useEditorProposals({
     [
       pendingEdits.showPreviews,
       pendingEdits.discard,
+      pendingEdits.replace,
       pendingEdits.joinPicture,
       pendingEdits.joinEdit,
       pendingEdits.withdrawPictures,
