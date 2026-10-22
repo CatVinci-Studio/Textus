@@ -175,6 +175,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   memoryKindRequirement: "Requisito",
   memoryKindPreference: "Preferência",
   memoryKindStyle: "Estilo",
+  memorySearch: "Pesquisar memórias e biblioteca",
+  memoryNoMatch: "Nada encontrado.",
+  memoryShowInFolder: "Mostrar na pasta",
+  memoryWrittenByAi: "Anotado pela IA",
+  memoryFactsInLibrary:
+    "{n} pessoas, lugares e termos anotados estão na biblioteca abaixo.",
   memoryKindFact: "Fato",
   memoryFrom: "de “{title}”",
   memoryNotSent: "Não enviado",
@@ -245,7 +251,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   levisProjectDone:
     "Convertido: {n} arquivos copiados para .textus/. A pasta .levis/ fica como estava.",
   rememberAutomaticallyLabel: "Lembrar automaticamente",
-  rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça na aba Memória.`,
+  rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça na aba Memória. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
   toolRemember: "Lembrando isto",
   agentGeneratingImage: "Gerando uma imagem…",
   toolGenerateImage: "Gerando uma imagem",

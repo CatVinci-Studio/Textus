@@ -153,6 +153,12 @@ export default {
   memoryKindRequirement: "要求",
   memoryKindPreference: "偏好",
   memoryKindStyle: "文風",
+  memorySearch: "Search memories and the library",
+  memoryNoMatch: "Nothing matches.",
+  memoryShowInFolder: "Show in folder",
+  memoryWrittenByAi: "Noted by AI",
+  memoryFactsInLibrary:
+    "{n} people, places and terms it noted are in the library below.",
   memoryKindFact: "資料",
   memoryFrom: "來自「{title}」",
   memoryNotSent: "未傳送",
@@ -213,7 +219,7 @@ export default {
   levisProjectDone:
     "已轉換：{n} 個檔案複製到了 .textus/，.levis/ 資料夾保持原樣。",
   rememberAutomaticallyLabel: "自動記住",
-  rememberAutomaticallyHint: `${AI_NAME} 會記下你的要求和寫作習慣，供以後的對話使用；可以在「記憶」裡查看、修改或復原。`,
+  rememberAutomaticallyHint: `${AI_NAME} 會記下你的要求和寫作習慣，供以後的對話使用；可以在「記憶」裡查看、修改或復原。 After each reply it asks the same model once more, briefly, what to keep.`,
   toolRemember: "記下來",
   agentGeneratingImage: "正在產生圖片…",
   toolGenerateImage: "正在產生圖片",

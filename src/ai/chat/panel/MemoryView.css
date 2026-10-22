@@ -300,9 +300,53 @@
 }
 
 .memory-remembered-group h5 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   margin: 0 0 6px;
   font-size: var(--text-xs);
   font-weight: 500;
+  color: var(--editor-muted);
+}
+
+/* Where a group's files are (the file manager opens on them). */
+.memory-reveal {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--editor-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.memory-reveal:hover {
+  color: var(--editor-accent);
+  text-decoration: underline;
+}
+
+/* The Memory tab's search, once there is enough to search. */
+.memory-search {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--editor-border);
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.memory-search:focus {
+  outline: none;
+  border-color: var(--editor-accent);
+}
+
+/* A library entry the AI wrote: who noted it, and when. */
+.memory-by-ai {
+  font-size: var(--text-xs);
   color: var(--editor-muted);
 }
 

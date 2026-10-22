@@ -175,6 +175,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   memoryKindRequirement: "Vorgabe",
   memoryKindPreference: "Vorliebe",
   memoryKindStyle: "Stil",
+  memorySearch: "Erinnerungen und Bibliothek durchsuchen",
+  memoryNoMatch: "Nichts gefunden.",
+  memoryShowInFolder: "Im Ordner zeigen",
+  memoryWrittenByAi: "Von der KI notiert",
+  memoryFactsInLibrary:
+    "{n} Personen, Orte und Begriffe stehen unten in der Bibliothek.",
   memoryKindFact: "Fakt",
   memoryFrom: "aus „{title}“",
   memoryNotSent: "Nicht gesendet",
@@ -246,7 +252,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   levisProjectDone:
     "Umgewandelt: {n} Dateien nach .textus/ kopiert. Der Ordner .levis/ bleibt, wie er war.",
   rememberAutomaticallyLabel: "Automatisch merken",
-  rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Im Tab Gedächtnis kannst du es ansehen, ändern oder rückgängig machen.`,
+  rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Im Tab Gedächtnis kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
   toolRemember: "Merkt sich das",
   agentGeneratingImage: "Bild wird erstellt…",
   toolGenerateImage: "Bild wird erstellt",

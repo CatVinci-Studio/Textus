@@ -38,6 +38,7 @@ export function MemorySections({
   onOpenInstructions,
   onOpenGlobalInstructions,
   onOpenFile,
+  onRevealFile,
   onDeleteMemory,
   onMoveMemory,
   onDeleteEntry,
@@ -54,6 +55,7 @@ export function MemorySections({
   onOpenInstructions: () => void;
   onOpenGlobalInstructions: () => void;
   onOpenFile: (path: string) => void;
+  onRevealFile: (path: string) => void;
   onDeleteMemory: (memory: Memory) => void;
   onMoveMemory: (memory: Memory, scope: MemoryScope) => void;
   onDeleteEntry: (entry: LibraryEntry) => void;
@@ -66,6 +68,7 @@ export function MemorySections({
   );
   const globalRules = info.instructions.flatMap(ruleLines);
   const [allSkills, setAllSkills] = useState(false);
+  const [query, setQuery] = useState("");
   const skills = useMemo(
     () => pickerSkills(listFromWorkspace(info.skills), lang),
     [info.skills, lang],
@@ -74,18 +77,33 @@ export function MemorySections({
   const leftOut = info.library.filter((entry) =>
     libraryUse?.leftOut.includes(entry.file),
   );
+  const library = info.library.filter((entry) =>
+    matches(query, entry.name, ...entry.aliases, entry.body),
+  );
+  const searchable =
+    info.memories.items.length + info.library.length >= SEARCH_FROM;
 
   return (
     <div className="memory-sections">
+      {searchable && (
+        <input
+          type="search"
+          className="memory-search"
+          placeholder={t.memorySearch}
+          aria-label={t.memorySearch}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      )}
       <RememberedSection
         info={info}
         t={t}
         lang={lang}
+        query={query}
         onOpenFile={onOpenFile}
-        onOpenEntry={onOpenEntry}
+        onRevealFile={onRevealFile}
         onDeleteMemory={onDeleteMemory}
         onMoveMemory={onMoveMemory}
-        onDeleteEntry={onDeleteEntry}
       />
 
       <section className="memory-section">
@@ -131,9 +149,13 @@ export function MemorySections({
             {t.memoryNew}
           </button>
         </h4>
-        {info.library.length > 0 ? (
+        {info.library.length > 0 && library.length === 0 ? (
+          <div className="memory-empty">
+            <p>{t.memoryNoMatch}</p>
+          </div>
+        ) : info.library.length > 0 ? (
           <div className="memory-library">
-            {info.library.map((entry) => {
+            {library.map((entry) => {
               const sent = used.has(entry.file);
               return (
                 <div
@@ -154,6 +176,16 @@ export function MemorySections({
                       </span>
                     )}
                     <span className="memory-desc">{firstLine(entry.body)}</span>
+                    {entry.remembered && (
+                      <span className="memory-desc memory-by-ai">
+                        {[
+                          t.memoryWrittenByAi,
+                          rememberedDate(entry.remembered.updated, lang),
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    )}
                     {sent && (
                       <span className="memory-used">
                         {libraryUse?.lastRequest
@@ -264,34 +296,35 @@ const NEAR_CAP = 0.8;
 
 /**
  * "AI remembered": what Textus AI kept after its conversations - personal
- * memories, then the project's, then the library entries it wrote - each
- * with its date and the conversation it came from, and Edit, Move and
- * Delete. Says so when the memories near or pass the prompt's budget,
- * rather than letting the oldest drop out unseen.
+ * memories, then the project's - each with its date and the conversation
+ * it came from, and Edit, Move and Delete, and where each group's files
+ * are. The people, places and terms it wrote are in the library, marked
+ * there, not listed twice. Says so when the memories near or pass the
+ * prompt's budget, rather than letting the oldest drop out unseen.
  */
 export function RememberedSection({
   info,
   t,
   lang,
+  query = "",
   onOpenFile,
-  onOpenEntry,
+  onRevealFile,
   onDeleteMemory,
   onMoveMemory,
-  onDeleteEntry,
 }: {
   info: AgentWorkspaceInfo;
   t: Strings;
   lang: Lang;
+  /** The Memory tab's search: only the memories that contain it. */
+  query?: string;
   onOpenFile: (path: string) => void;
-  onOpenEntry: (entry: LibraryEntry) => void;
+  onRevealFile: (path: string) => void;
   onDeleteMemory: (memory: Memory) => void;
   onMoveMemory: (memory: Memory, scope: MemoryScope) => void;
-  onDeleteEntry: (entry: LibraryEntry) => void;
 }) {
-  const { items, chars, cap } = info.memories;
-  const facts = info.library.flatMap((entry) =>
-    entry.remembered ? [{ entry, remembered: entry.remembered }] : [],
-  );
+  const { items: all, chars, cap } = info.memories;
+  const items = all.filter((m) => matches(query, m.text));
+  const facts = info.library.filter((entry) => entry.remembered).length;
   const groups: { scope: MemoryScope; title: string; items: Memory[] }[] = [
     {
       scope: "personal",
@@ -304,7 +337,7 @@ export function RememberedSection({
       items: items.filter((m) => m.scope === "project"),
     },
   ];
-  const notSent = items.filter((m) => !m.included).length;
+  const notSent = all.filter((m) => !m.included).length;
   const number = (n: number) => n.toLocaleString(localeOf(lang));
   const note =
     notSent > 0
@@ -321,13 +354,15 @@ export function RememberedSection({
     <section className="memory-section memory-remembered">
       <h4>
         {t.memoryRemembered}
-        {items.length + facts.length > 0 && (
-          <span className="memory-count">{items.length + facts.length}</span>
-        )}
+        {all.length > 0 && <span className="memory-count">{all.length}</span>}
       </h4>
-      {items.length + facts.length === 0 ? (
+      {all.length === 0 ? (
         <div className="memory-empty">
           <p>{info.remember ? t.memoryRememberedEmpty : t.memoryRememberOff}</p>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="memory-empty">
+          <p>{t.memoryNoMatch}</p>
         </div>
       ) : (
         <>
@@ -335,11 +370,19 @@ export function RememberedSection({
             <p className="memory-note">{t.memoryRememberOff}</p>
           )}
           {groups.map((group) => {
-            const groupFacts = group.scope === "project" ? facts : [];
-            if (group.items.length + groupFacts.length === 0) return null;
+            if (group.items.length === 0) return null;
             return (
               <div key={group.scope} className="memory-remembered-group">
-                <h5>{group.title}</h5>
+                <h5>
+                  {group.title}
+                  <button
+                    type="button"
+                    className="memory-reveal"
+                    onClick={() => onRevealFile(group.items[0].file)}
+                  >
+                    {t.memoryShowInFolder}
+                  </button>
+                </h5>
                 <ul className="memory-card memory-remembered-list">
                   {group.items.map((memory) => (
                     <RememberedItem
@@ -367,26 +410,16 @@ export function RememberedSection({
                       onDelete={() => onDeleteMemory(memory)}
                     />
                   ))}
-                  {groupFacts.map(({ entry, remembered }) => (
-                    <RememberedItem
-                      key={entry.file}
-                      text={`${entry.name}: ${firstLine(entry.body)}`}
-                      kind={t.memoryKindFact}
-                      remembered={remembered}
-                      notSent={false}
-                      t={t}
-                      lang={lang}
-                      onEdit={() => onOpenEntry(entry)}
-                      moveLabel={null}
-                      onMove={() => {}}
-                      onDelete={() => onDeleteEntry(entry)}
-                    />
-                  ))}
                 </ul>
               </div>
             );
           })}
         </>
+      )}
+      {facts > 0 && (
+        <p className="memory-note">
+          {t.memoryFactsInLibrary.replace("{n}", number(facts))}
+        </p>
       )}
       {note && (
         <p className="memory-note" role="note">
@@ -473,6 +506,16 @@ export function rememberedDate(stamp: string, lang: Lang): string {
  *  `.textus/library/<stem>.md` as `project/library/<stem>`. */
 export function libraryEntryId(entry: LibraryEntry): string {
   return `project/library/${basename(entry.file).replace(/\.md$/, "")}`;
+}
+
+/** From this many memories and library entries on, the tab has a search. */
+const SEARCH_FROM = 6;
+
+/** Whether any of `texts` contains `query`, case aside; everything matches
+ *  an empty query. */
+function matches(query: string, ...texts: string[]): boolean {
+  const q = query.trim().toLocaleLowerCase();
+  return !q || texts.some((text) => text.toLocaleLowerCase().includes(q));
 }
 
 /** Skills shown before "+N" - the slash menu is where they are used. */

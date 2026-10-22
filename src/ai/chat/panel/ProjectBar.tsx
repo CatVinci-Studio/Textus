@@ -290,6 +290,7 @@ export function ProjectBar({
   /** What the Memory tab does with memories and library entries. */
   const memoryActions = {
     onOpenFile: openInTab,
+    onRevealFile: (path: string) => void exportDoc.revealInDir(path),
     onOpenEntry: (entry: LibraryEntry) =>
       root &&
       openInTab(

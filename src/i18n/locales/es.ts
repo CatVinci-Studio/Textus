@@ -184,6 +184,12 @@ para usar una.
   memoryKindRequirement: "Requisito",
   memoryKindPreference: "Preferencia",
   memoryKindStyle: "Estilo",
+  memorySearch: "Buscar en recuerdos y biblioteca",
+  memoryNoMatch: "No hay coincidencias.",
+  memoryShowInFolder: "Mostrar en la carpeta",
+  memoryWrittenByAi: "Anotado por la IA",
+  memoryFactsInLibrary:
+    "{n} personas, lugares y términos anotados están en la biblioteca, abajo.",
   memoryKindFact: "Dato",
   memoryFrom: "de «{title}»",
   memoryNotSent: "No se envía",
@@ -256,7 +262,7 @@ para usar una.
   levisProjectDone:
     "Convertido: {n} archivos copiados en .textus/. La carpeta .levis/ queda como estaba.",
   rememberAutomaticallyLabel: "Recordar automáticamente",
-  rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en la pestaña Memoria.`,
+  rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en la pestaña Memoria. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
   toolRemember: "Recordando esto",
   agentGeneratingImage: "Generando una imagen…",
   toolGenerateImage: "Generando una imagen",

@@ -173,6 +173,12 @@ type /name in a conversation to use one.
   memoryKindRequirement: "Requirement",
   memoryKindPreference: "Preference",
   memoryKindStyle: "Style",
+  memorySearch: "Search memories and the library",
+  memoryNoMatch: "Nothing matches.",
+  memoryShowInFolder: "Show in folder",
+  memoryWrittenByAi: "Noted by AI",
+  memoryFactsInLibrary:
+    "{n} people, places and terms it noted are in the library below.",
   memoryKindFact: "Fact",
   memoryFrom: "from “{title}”",
   memoryNotSent: "Not sent",
@@ -243,7 +249,7 @@ type /name in a conversation to use one.
   levisProjectDone:
     "Converted: {n} files copied into .textus/. The .levis/ folder is left as it was.",
   rememberAutomaticallyLabel: "Remember automatically",
-  rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it in the Memory tab.`,
+  rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it in the Memory tab. After each reply it asks the same model once more, briefly, what to keep.`,
   toolRemember: "Remembering this",
   agentGeneratingImage: "Generating an image…",
   toolGenerateImage: "Generating an image",

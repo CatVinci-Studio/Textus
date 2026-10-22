@@ -185,6 +185,12 @@ utiliser une.
   memoryKindRequirement: "Exigence",
   memoryKindPreference: "Préférence",
   memoryKindStyle: "Style",
+  memorySearch: "Chercher dans la mémoire et la bibliothèque",
+  memoryNoMatch: "Aucun résultat.",
+  memoryShowInFolder: "Afficher dans le dossier",
+  memoryWrittenByAi: "Noté par l'IA",
+  memoryFactsInLibrary:
+    "{n} personnes, lieux et termes notés sont dans la bibliothèque ci-dessous.",
   memoryKindFact: "Fait",
   memoryFrom: "de «\u00a0{title}\u00a0»",
   memoryNotSent: "Non envoyé",
@@ -258,7 +264,7 @@ utiliser une.
   levisProjectDone:
     "Converti\u00a0: {n} fichiers copiés dans .textus/. Le dossier .levis/ reste tel quel.",
   rememberAutomaticallyLabel: "Retenir automatiquement",
-  rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le dans l'onglet Mémoire.`,
+  rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le dans l'onglet Mémoire. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
   toolRemember: "Mémorisation",
   agentGeneratingImage: "Création d'une image…",
   toolGenerateImage: "Création d'une image",
