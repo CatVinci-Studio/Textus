@@ -1,0 +1,42 @@
+[
+  {
+    "document": "# 标题\n\n第一段，有中文。\n\n第二段\n接着一行。",
+    "blocks": [
+      "axap # 标题",
+      "mabm 第一段，有中文。",
+      "yrbz 第二段\n接着一行。"
+    ]
+  },
+  {
+    "document": "Intro.\n\n```js\nconst a = 1;\n\nconst b = 2;\n```\n\nAfter the code.",
+    "blocks": [
+      "d80f Intro.",
+      "wa68 ```js\nconst a = 1;\n\nconst b = 2;\n```",
+      "7xuw After the code."
+    ]
+  },
+  {
+    "document": "$$\nx = 1\n\ny = 2\n$$\n\n$$a+b$$\n\nText.",
+    "blocks": ["zpu3 $$\nx = 1\n\ny = 2\n$$", "9rl1 $$a+b$$", "s506 Text."]
+  },
+  {
+    "document": "- one\n- two\n\n- loose three\n\n| a | b |\n| - | - |\n| 1 | 2 |",
+    "blocks": [
+      "n2ts - one\n- two",
+      "qnc1 - loose three",
+      "ft43 | a | b |\n| - | - |\n| 1 | 2 |"
+    ]
+  },
+  {
+    "document": "First.\n\n---\n\nSecond.\n\n---",
+    "blocks": ["xjxc First.", "y1wp ---", "1m1k Second.", "y1wp-2 ---"]
+  },
+  {
+    "document": "\n\n  \nLead with blanks.\n\n\n\nTrailing.\n\n",
+    "blocks": ["6ema Lead with blanks.", "xkd9 Trailing."]
+  },
+  {
+    "document": "> quote line\n> second\n\n~~~\ncode\n\nmore\n~~~",
+    "blocks": ["boj0 > quote line\n> second", "hc56 ~~~\ncode\n\nmore\n~~~"]
+  }
+]

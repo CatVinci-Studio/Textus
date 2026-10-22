@@ -1,5 +1,6 @@
 use crate::ai::cancel;
 use crate::ai::catalog;
+use crate::ai::doc_blocks::{self, Block};
 use crate::ai::images::InlinePictures;
 use crate::ai::route;
 use crate::ai::rules::Conventions;
@@ -126,6 +127,10 @@ pub(crate) fn postfix_step(
         return (result, Vec::new());
     };
     let mut applied = Vec::new();
+    // An edit naming its block (doc_blocks.rs) becomes one quoting it first,
+    // so everything after - the tool, the history, the frontend - sees
+    // anchors as before.
+    let blocks = doc_blocks::split(document);
     let calls = calls
         .into_iter()
         .map(|call| match call {
@@ -135,6 +140,7 @@ pub(crate) fn postfix_step(
                 arguments,
                 reasoning,
             } if name == tools::PROPOSE_EDIT_TOOL_NAME => {
+                let arguments = doc_blocks::resolve_edit_arguments(document, &blocks, &arguments);
                 let arguments = match crate::ai::rules::postfix::proposal_arguments(
                     &arguments,
                     document,
@@ -228,7 +234,7 @@ Style: avoid the tics that make text read as machine-written unless the author's
 
 /// Only appended for providers that actually run the tool loop; telling a
 /// tool-less provider to call tools would just confuse it.
-const AGENT_TOOL_INSTRUCTIONS: &str = "Use search_document to locate something specific in a long document, and read_document to see a whole section before you revise it - never guess at text you haven't seen. Read first, propose after: never send a propose_edit in the same step as the read it depends on. If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (once per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. Pick the action that matches the intent (propose_edit's description lists them). To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal must target its own passage - for several changes inside one passage, send a single replace covering it, since overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE, and both fields work in that same markdown: `anchor` quotes any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This`. `text` must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. The user reviews and applies each proposal themselves, so your reply only says, in a sentence or two, what you proposed and why. Write that reply in the same message as your proposals (and comments), before their calls, and send every proposal for the request in that one message: when they are all valid the request ends there, with that text as your reply - so write it as done (\"Cut the repeated point about cost\"), not as a plan (\"I'll tighten it\"). If one is refused, its result says why: fix it, and reply again with the fix. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. An undecided proposal stays in the editor next to new ones; a new proposal for the same passage replaces it, so never re-propose an undecided one unchanged or try to retract it yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin each point to its passage with add_comment and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose. When the user asks for a picture and you have no generate_image tool, say that Textus AI can make one once an image model is chosen in Settings > Textus AI > Image model.";
+const AGENT_TOOL_INSTRUCTIONS: &str = "Use search_document to locate something specific in a long document, and read_document to see a whole section before you revise it - never guess at text you haven't seen. Read first, propose after: never send a propose_edit in the same step as the read it depends on. If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (once per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. Pick the action that matches the intent (propose_edit's description lists them). To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal targets one block, by its `block` id: for several changes inside one block - an added list item and the renumbering it needs count as two - send a single replace of that block; for changes across several blocks, send one replace per block you change and leave the others alone - all of them as calls side by side in this one message, since there is no later message to send the rest in - or, when your changes run through most of a run of blocks (a section, the whole document), one replace from its first block (`block`) through its last (`last_block`). The user decides on each paragraph by itself either way, and overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE (each block after its `[#id]`, which is not part of the text), and both fields work in that same markdown: `anchor` quotes any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This`. `text` must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. The user reviews and applies each proposal themselves, so your reply only says, in a sentence or two, what you proposed and why. Write that reply in the same message as your proposals (and comments), before their calls, and send every proposal for the request in that one message: when they are all valid the request ends there, with that text as your reply - so write it as done (\"Cut the repeated point about cost\"), not as a plan (\"I'll tighten it\"). If one is refused, its result says why: fix it, and reply again with the fix. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. An undecided proposal stays in the editor next to new ones; a new proposal for the same passage replaces it, so never re-propose an undecided one unchanged or try to retract it yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin each point to its passage with add_comment and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose. When the user asks for a picture and you have no generate_image tool, say that Textus AI can make one once an image model is chosen in Settings > Textus AI > Image model.";
 
 /// The rules engine's two tools, in every mode (tools.rs).
 const RULES_TOOL_INSTRUCTIONS: &str = "check_conventions checks text against the document's writing conventions (punctuation, spacing, numbers, spelling lists, consistency with the rest of the document) with a deterministic rules engine: when you proofread or fix conventions, ground your changes in what it reports instead of guessing, and change only what it flags or what you are certain of. Its \"check\" findings only point at something to look at. measure_text counts text exactly (characters, words, X and Bluesky limits, WeChat titles...): when a platform's limit matters, measure the exact text before proposing it instead of estimating, and give the count in your reply. A length the user asks for (\"800 字\", \"about 500 words\") is a target, not a platform's limit: write the text straight into propose_edit - the user watches it come in, and its result tells you its size - and never write it out first in measure_text or check_conventions, where the user sees nothing while you draft. Conventions in proposed text are fixed on the way, so new writing needs no check first either.";
@@ -345,15 +351,34 @@ const FULL_DOCUMENT_LIMIT: usize = 40_000;
 const EXCERPT_CHARS: usize = 2_000;
 const MAX_OUTLINE_HEADINGS: usize = 120;
 
-/// The document's headings with the line each starts on (`L12 ## Methods`)
-/// - the map read_document's line ranges and section names refer to.
-fn heading_outline(document: &str) -> Vec<String> {
+/// The document's headings with the line each starts on and its block id
+/// (`L12 [#k3f9] ## Methods`) - the map read_document's line ranges and
+/// section names refer to, and an edit's `block`.
+fn heading_outline(document: &str, blocks: &[Block]) -> Vec<String> {
     let lines: Vec<&str> = document.lines().collect();
+    let mut starts = Vec::with_capacity(lines.len());
+    let mut at = 0;
+    for line in document.split_inclusive('\n') {
+        starts.push(at);
+        at += line.len();
+    }
     crate::ai::tools::heading_lines(&lines)
         .into_iter()
         .take(MAX_OUTLINE_HEADINGS)
-        .map(|(i, _)| format!("L{} {}", i + 1, lines[i].trim()))
+        .map(|(i, _)| {
+            let id = starts
+                .get(i)
+                .and_then(|&s| doc_blocks::id_at(blocks, s))
+                .map(|id| format!("[#{id}] "))
+                .unwrap_or_default();
+            format!("L{} {id}{}", i + 1, lines[i].trim())
+        })
         .collect()
+}
+
+/// The byte where the first `n` chars of `s` end.
+fn char_end(s: &str, n: usize) -> usize {
+    s.char_indices().nth(n).map_or(s.len(), |(i, _)| i)
 }
 
 /// Char-count (not byte) prefix/suffix - document content is arbitrary
@@ -378,21 +403,27 @@ const FOCUS_SECTION_CHARS: usize = 12_000;
 /// The section headed `heading` (to the next heading at its level or above)
 /// and the line it starts on - the part of a long document the user is
 /// working in, which the truncated view would otherwise leave out.
-fn focus_section(document: &str, heading: &str) -> Option<(usize, String)> {
+fn focus_section(document: &str, blocks: &[Block], heading: &str) -> Option<(usize, String)> {
     let lines: Vec<&str> = document.lines().collect();
     let (first, last) = crate::ai::tools::section_range(&lines, heading)?;
+    let from: usize = document
+        .split_inclusive('\n')
+        .take(first)
+        .map(str::len)
+        .sum();
     let text = lines[first..last].join("\n");
-    Some((
-        first + 1,
-        char_prefix(&text, FOCUS_SECTION_CHARS).to_string(),
-    ))
+    let to = from + char_end(&text, FOCUS_SECTION_CHARS);
+    Some((first + 1, doc_blocks::annotate(document, blocks, from, to)))
 }
 
+/// The `---document---` section, each block marked with its id
+/// (doc_blocks.rs).
 pub(crate) fn document_section(
     document: &str,
     with_tools: bool,
     focus_heading: Option<&str>,
 ) -> String {
+    let blocks = doc_blocks::split(document);
     let len = document.chars().count();
     let size = if with_tools {
         document.chars().map(crate::ai::project::char_units).sum()
@@ -400,15 +431,18 @@ pub(crate) fn document_section(
         len
     };
     if size <= FULL_DOCUMENT_LIMIT {
-        return format!("---document---\n{document}");
+        return format!(
+            "---document---\n{}",
+            doc_blocks::annotate(document, &blocks, 0, document.len())
+        );
     }
     let focus = focus_heading
-        .and_then(|h| focus_section(document, h))
+        .and_then(|h| focus_section(document, &blocks, h))
         .map(|(line, text)| {
             format!("\n\n[the section the user is working in, from line {line}]\n{text}")
         })
         .unwrap_or_default();
-    let outline = heading_outline(document);
+    let outline = heading_outline(document, &blocks);
     let outline_block = if outline.is_empty() {
         "(no headings)".to_string()
     } else {
@@ -419,11 +453,13 @@ pub(crate) fn document_section(
     } else {
         "This document is long, so only an outline and the start/end are shown below - some content in the middle isn't visible here."
     };
+    let head = char_prefix(document, EXCERPT_CHARS).len();
+    let tail = document.len() - char_suffix(document, EXCERPT_CHARS).len();
     format!(
         "---document (truncated, {len} chars, {} lines total)---\n{note}\n\n[outline]\n{outline_block}{focus}\n\n[start]\n{}\n\n[end]\n{}",
         document.lines().count(),
-        char_prefix(document, EXCERPT_CHARS),
-        char_suffix(document, EXCERPT_CHARS),
+        doc_blocks::annotate(document, &blocks, 0, head),
+        doc_blocks::annotate(document, &blocks, tail, document.len()),
     )
 }
 
@@ -1739,7 +1775,15 @@ mod tests {
     fn short_document_is_embedded_verbatim() {
         let doc = "# Title\n\nJust a short document.";
         let section = document_section(doc, true, None);
-        assert_eq!(section, format!("---document---\n{doc}"));
+        // Whole, each block marked with its id (doc_blocks.rs).
+        let blocks = doc_blocks::split(doc);
+        assert_eq!(
+            section,
+            format!(
+                "---document---\n[#{}] # Title\n\n[#{}] Just a short document.",
+                blocks[0].id, blocks[1].id
+            )
+        );
     }
 
     #[test]
@@ -1791,7 +1835,10 @@ mod tests {
         assert!(with_tools.chars().count() < chars / 2);
         assert_eq!(
             document_section(&doc, false, None),
-            format!("---document---\n{doc}")
+            format!(
+                "---document---\n{}",
+                doc_blocks::annotate(&doc, &doc_blocks::split(&doc), 0, doc.len())
+            )
         );
         // The same length of English is still sent whole.
         let english = "x".repeat(chars);
@@ -1812,7 +1859,14 @@ mod tests {
         assert!(section.contains("truncated"));
         assert!(section.contains("The paragraph the user is editing."));
         // The section ends where the next heading of its level starts.
-        let (line, focus) = focus_section(&doc, "Target").unwrap();
+        let blocks = doc_blocks::split(&doc);
+        let (line, focus) = focus_section(&doc, &blocks, "Target").unwrap();
+        // Its blocks marked with their ids, as the whole document is.
+        assert!(focus.starts_with("[#"), "{focus}");
+        let focus = doc_blocks::annotate(&focus, &[], 0, focus.len());
+        let focus = focus
+            .split_once("] ")
+            .map_or(focus.as_str(), |(_, rest)| rest);
         assert!(focus.starts_with("## Target"));
         assert!(!focus.contains("## After"));
         assert_eq!(doc.lines().nth(line - 1), Some("## Target"));
