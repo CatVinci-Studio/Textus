@@ -541,7 +541,11 @@ fn parse_agent_response(
         .into_iter()
         .flatten()
         .filter_map(|tc| {
-            let call_id = tc.get("id")?.as_str()?.to_string();
+            let call_id = tc
+                .get("id")
+                .and_then(|v| v.as_str())
+                .unwrap_or_default()
+                .to_string();
             let func = tc.get("function")?;
             let name = func.get("name")?.as_str()?.to_string();
             let arguments = func
@@ -588,12 +592,57 @@ fn attach_reasoning(calls: &mut [AgentTurn], text: &str) {
     }
 }
 
+/// The ids a step's tool calls go by. OpenAI-compatible servers are free in
+/// what they send: local ones (Ollama, LM Studio) number calls from
+/// `call_0` in every reply, and some send no id at all. The app keys a
+/// proposal by its call's id - its preview, its card, its status in later
+/// requests - so a reused id put a new proposal in an old one's place and
+/// both went (a mock server that did, live stress test of a queue of
+/// requests), and a call with none was dropped. Each call keeps the id it
+/// was sent unless the conversation already has it, or it has none.
+#[derive(Default)]
+struct CallIds {
+    taken: std::collections::HashSet<String>,
+}
+
+impl CallIds {
+    fn from_history(history: &[AgentTurn]) -> Self {
+        let taken = history
+            .iter()
+            .filter_map(|turn| match turn {
+                AgentTurn::ToolCall { call_id, .. } => Some(call_id.clone()),
+                _ => None,
+            })
+            .collect();
+        CallIds { taken }
+    }
+
+    /// The id the call at `index` goes by: `sent`, or one made from it.
+    fn claim(&mut self, sent: &str, index: usize) -> String {
+        let base = if sent.is_empty() {
+            format!("call_{index}")
+        } else {
+            sent.to_string()
+        };
+        let mut id = base.clone();
+        let mut n = 2;
+        while self.taken.contains(&id) {
+            id = format!("{base}~{n}");
+            n += 1;
+        }
+        self.taken.insert(id.clone());
+        id
+    }
+}
+
 /// One tool call under construction while a Chat Completions stream is
 /// being read - OpenAI-compatible servers send the id/name in the first
 /// fragment and the JSON arguments in pieces after it, all addressed by
 /// array index rather than id.
 #[derive(Default)]
 struct StreamToolCall {
+    /// The id the server sent, then (once started) the one it goes by
+    /// (CallIds).
     id: String,
     name: String,
     args: String,
@@ -614,6 +663,7 @@ struct ChatStreamAccumulator {
     search: SearchReport,
     /// From the chunk that carries it - the last, with `include_usage`.
     usage: Option<StepUsage>,
+    ids: CallIds,
 }
 
 impl ChatStreamAccumulator {
@@ -674,7 +724,9 @@ impl ChatStreamAccumulator {
             }
             let call = &mut self.calls[index];
             if let Some(id) = tc.get("id").and_then(|v| v.as_str()) {
-                call.id = id.to_string();
+                if !call.started {
+                    call.id = id.to_string();
+                }
             }
             if let Some(name) = tc
                 .get("function")
@@ -683,8 +735,9 @@ impl ChatStreamAccumulator {
             {
                 call.name = name.to_string();
             }
-            if !call.started && !call.id.is_empty() && !call.name.is_empty() {
+            if !call.started && !call.name.is_empty() {
                 call.started = true;
+                call.id = self.ids.claim(&call.id, index);
                 on_event(ProviderEvent::ToolStart {
                     call_id: &call.id,
                     name: &call.name,
@@ -712,7 +765,7 @@ impl ChatStreamAccumulator {
         let mut calls: Vec<AgentTurn> = self
             .calls
             .into_iter()
-            .filter(|c| !c.id.is_empty() && !c.name.is_empty())
+            .filter(|c| c.started)
             .map(|c| AgentTurn::ToolCall {
                 call_id: c.id,
                 name: c.name,
@@ -776,7 +829,10 @@ pub async fn agent_step_streaming(
     }
     let res = req.send().await.map_err(|e| e.to_string())?;
 
-    let mut acc = ChatStreamAccumulator::default();
+    let mut acc = ChatStreamAccumulator {
+        ids: CallIds::from_history(history),
+        ..Default::default()
+    };
     crate::http::read_sse(res, "Custom endpoint", |data| acc.apply(data, on_event)).await?;
     if let Some(error) = acc.error {
         return Err(error);
@@ -833,7 +889,76 @@ pub async fn agent_step(
     let mut report = SearchReport::default();
     report.take(&message, &parsed);
     let usage = parsed.get("usage").and_then(StepUsage::from_openai);
-    Ok((parse_agent_response(&message, &report, on_event), usage))
+    let mut step = parse_agent_response(&message, &report, on_event);
+    if let StepResult::ToolCalls(calls) = &mut step {
+        let mut ids = CallIds::from_history(history);
+        let mut index = 0;
+        for call in calls.iter_mut() {
+            if let AgentTurn::ToolCall { call_id, .. } = call {
+                *call_id = ids.claim(call_id, index);
+                index += 1;
+            }
+        }
+    }
+    Ok((step, usage))
+}
+
+#[cfg(test)]
+mod call_id_tests {
+    use super::*;
+
+    fn chunk(tc: Value) -> String {
+        json!({"choices": [{"delta": {"tool_calls": [tc]}}]}).to_string()
+    }
+
+    #[test]
+    fn a_reused_or_missing_call_id_gets_one_of_its_own() {
+        let history = vec![AgentTurn::ToolCall {
+            call_id: "call_0".into(),
+            name: "propose_edit".into(),
+            arguments: "{}".into(),
+            reasoning: None,
+        }];
+        let seen = std::sync::Mutex::new(Vec::new());
+        let sink = |e: ProviderEvent<'_>| {
+            if let ProviderEvent::ToolStart { call_id, .. }
+            | ProviderEvent::ToolArgs { call_id, .. } = e
+            {
+                seen.lock().unwrap().push(call_id.to_string());
+            }
+        };
+        let mut acc = ChatStreamAccumulator {
+            ids: CallIds::from_history(&history),
+            ..Default::default()
+        };
+        // The id the last reply's call had, then a call with none.
+        acc.apply(&chunk(json!({"index": 0, "id": "call_0", "function": {"name": "propose_edit", "arguments": ""}})), &sink);
+        acc.apply(
+            &chunk(json!({"index": 0, "function": {"arguments": "{}"}})),
+            &sink,
+        );
+        acc.apply(
+            &chunk(json!({"index": 1, "function": {"name": "propose_edit", "arguments": "{}"}})),
+            &sink,
+        );
+        let StepResult::ToolCalls(calls) = acc.into_step_result(&|_| {}) else {
+            panic!("calls");
+        };
+        let ids: Vec<String> = calls
+            .iter()
+            .filter_map(|c| match c {
+                AgentTurn::ToolCall { call_id, .. } => Some(call_id.clone()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(ids, ["call_0~2", "call_1"]);
+        // The stream named them as the result does.
+        let seen = seen.into_inner().unwrap();
+        assert!(
+            seen.iter().all(|id| id == "call_0~2" || id == "call_1"),
+            "{seen:?}"
+        );
+    }
 }
 
 #[cfg(test)]
