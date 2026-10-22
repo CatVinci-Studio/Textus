@@ -1,6 +1,6 @@
 use crate::ai::cancel;
 use crate::ai::catalog;
-use crate::ai::doc_blocks::{self, Block};
+use crate::ai::doc_blocks::{self, Document};
 use crate::ai::images::InlinePictures;
 use crate::ai::route;
 use crate::ai::rules::Conventions;
@@ -72,7 +72,8 @@ pub(crate) const MAX_STEPS: usize = 12;
 pub async fn ai_agent_message(
     app: AppHandle,
     provider: String,
-    document: String,
+    // The document, block by block as the editor has it (doc_blocks.rs).
+    blocks: Vec<doc_blocks::SentBlock>,
     doc_path: Option<String>,
     // `workspace_root`: the chosen project folder. None keeps the default -
     // the document's own folder (see workspace::load).
@@ -116,7 +117,7 @@ pub async fn ai_agent_message(
         ai_agent_message_inner(
             app,
             provider,
-            document,
+            Document::from_blocks(blocks),
             doc_path,
             workspace_root,
             history,
@@ -140,7 +141,7 @@ pub async fn ai_agent_message(
 async fn ai_agent_message_inner(
     app: AppHandle,
     provider: String,
-    document: String,
+    document: Document,
     doc_path: Option<String>,
     // `workspace_root`: the chosen project folder. None keeps the default -
     // the document's own folder (see workspace::load).

@@ -2,11 +2,12 @@ import { useCallback, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
-  cachedDocumentMarkdown,
+  cachedDocument,
   caretContext,
   headingAt,
   readSelection,
   serializeRange,
+  type DocumentSnapshot,
 } from "../../doc-markdown";
 import { chatSelectionRange } from "./chat-selection-plugin";
 import type { EditorRunner } from "../../../editor/useEditorRunner";
@@ -29,7 +30,7 @@ export function blockPositionAfter(doc: ProseNode, pos: number): number {
 export interface InlineChatInfo {
   /** The whole document as MARKDOWN SOURCE - see doc-markdown.ts for why
    *  every AI path works in markdown rather than flattened text. */
-  document: string;
+  document: DocumentSnapshot;
   /** The selection as plain text. Display only (the composer's "{n} chars
    *  selected" chip); never sent to the model, which sees the markdown. */
   selectedText: string | null;
@@ -92,7 +93,7 @@ export function useInlineChat(run: EditorRunner) {
               prev.range?.to === selection.to));
         if (sameTarget) return null;
         const next: InlineChatInfo = {
-          document: cachedDocumentMarkdown(ctx, view.state.doc),
+          document: cachedDocument(ctx, view.state.doc),
           ...readSelection(ctx, view.state),
           anchor: selection.from,
           widgetPos: blockPositionAfter(view.state.doc, selection.to),
@@ -129,7 +130,7 @@ export function useInlineChat(run: EditorRunner) {
       const valid =
         range && range.to <= state.doc.content.size && range.from < range.to;
       return {
-        document: cachedDocumentMarkdown(ctx, state.doc),
+        document: cachedDocument(ctx, state.doc),
         // Opened with no selection: the caret is what "here" means.
         cursor: info.range ? null : caretContext(state),
         focusHeading: headingAt(state.doc, range?.from ?? state.selection.from),

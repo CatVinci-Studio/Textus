@@ -1,3 +1,4 @@
+import type { DocumentSnapshot } from "../../doc-markdown";
 import { useRef } from "react";
 import type { AgentConversation } from "../useAgentConversation";
 import type { PendingStatus } from "../../revision/usePendingEdits";
@@ -24,11 +25,11 @@ export interface InlineChatLabels extends ChatBodyLabels, CloseConfirmLabels {
 }
 
 interface InlineChatProps {
-  document: string;
+  document: DocumentSnapshot;
   /** The document and selection to send against, read at send time (see
    *  ChatBody's `refreshContext`). */
   sendContext: () => Promise<{
-    document: string;
+    document: DocumentSnapshot;
     selectionMarkdown: string | null;
   } | null>;
   selectedText: string | null;

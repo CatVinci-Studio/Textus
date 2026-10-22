@@ -161,7 +161,7 @@ impl std::fmt::Display for AgentMode {
 /// tools.
 pub(crate) fn build_instructions(
     workspace: &AgentWorkspace,
-    document: &str,
+    document: &Document,
     with_tools: bool,
     mode: AgentMode,
     // What the request is about (the user's message) - library entries are

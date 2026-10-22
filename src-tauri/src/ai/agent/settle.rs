@@ -1,4 +1,4 @@
-//! A step's result made ready for the loop: block ids resolved, the
+//! A step's result made ready for the loop: what block ids name filled in, the
 //! document's conventions applied to proposed text, pictures placed.
 
 use super::*;
@@ -13,17 +13,15 @@ use super::*;
 /// eval records them, so prompt regressions stay visible).
 pub(crate) fn postfix_step(
     result: StepResult,
-    document: &str,
+    document: &Document,
     conventions: &Conventions,
 ) -> (StepResult, Vec<&'static str>) {
     let StepResult::ToolCalls(calls) = result else {
         return (result, Vec::new());
     };
     let mut applied = Vec::new();
-    // An edit naming its block (doc_blocks.rs) becomes one quoting it first,
-    // so everything after - the tool, the history, the frontend - sees
-    // anchors as before.
-    let blocks = doc_blocks::split(document);
+    // An edit naming its block (doc_blocks.rs) gets what the block says
+    // filled in, its ids kept for the frontend to place it by.
     let calls = calls
         .into_iter()
         .map(|call| match call {
@@ -33,7 +31,7 @@ pub(crate) fn postfix_step(
                 arguments,
                 reasoning,
             } if name == tools::PROPOSE_EDIT_TOOL_NAME => {
-                let arguments = doc_blocks::resolve_edit_arguments(document, &blocks, &arguments);
+                let arguments = doc_blocks::resolve_edit_arguments(document, &arguments);
                 let arguments = match crate::ai::rules::postfix::proposal_arguments(
                     &arguments,
                     document,
@@ -62,7 +60,7 @@ pub(crate) fn postfix_step(
                 || name == crate::ai::images::GENERATE_IMAGE_TOOL_NAME =>
             {
                 AgentTurn::ToolCall {
-                    arguments: doc_blocks::resolve_target_arguments(document, &blocks, &arguments),
+                    arguments: doc_blocks::resolve_target_arguments(document, &arguments),
                     call_id,
                     name,
                     reasoning,
@@ -80,7 +78,7 @@ pub(crate) fn postfix_step(
 /// step here; the rules applied are returned for the eval to record.
 pub(crate) fn settle_step(
     result: StepResult,
-    document: &str,
+    document: &Document,
     conventions: &Conventions,
     pictures: Option<&InlinePictures<'_>>,
 ) -> (StepResult, Vec<&'static str>) {

@@ -16,7 +16,7 @@ import { blockAt, holdBlock } from "../../ui/hold-line";
 import type { AgentConversation } from "../chat/useAgentConversation";
 import type { AgentPanelFrame } from "../chat/panel/agent-panel";
 import {
-  locateAnchor,
+  locateTarget,
   type usePendingEdits,
 } from "../revision/usePendingEdits";
 import {
@@ -142,7 +142,7 @@ export function useReviewNotes({
       const current = reviewNotesKey.getState(view.state)?.notes ?? [];
       const wanted = comments.filter((c) => !doneNotes.current.has(c.id));
       const from = (c: (typeof wanted)[number]) =>
-        [c.anchor, c.context ?? "", c.comment].join("\0");
+        [c.block ?? "", c.anchor, c.comment].join("\0");
       const keep = current.filter((n) =>
         wanted.some(
           (w) => w.id === n.id && placedFrom.current.get(n.id) === from(w),
@@ -153,7 +153,7 @@ export function useReviewNotes({
         if (keep.some((n) => n.id === c.id) || lostNotes.current.has(from(c)))
           continue;
         placedFrom.current.set(c.id, from(c));
-        const range = locateAnchor(ctx, view.state.doc, c.anchor, c.context);
+        const range = locateTarget(ctx, view.state.doc, c);
         if (!range || range.from >= range.to) {
           lostNotes.current.add(from(c));
           continue;
@@ -286,10 +286,10 @@ export function useReviewNotes({
 
   // A comment card's "Show in document": select the passage and bring it
   // into view, so the feedback can be read against the text it is about.
-  function locateText(anchor: string, context?: string) {
+  function locateText(anchor: string, block?: string) {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      const range = locateAnchor(ctx, view.state.doc, anchor, context);
+      const range = locateTarget(ctx, view.state.doc, { block, anchor });
       if (!range) {
         showAiNotice(t.commentNotFound);
         return;

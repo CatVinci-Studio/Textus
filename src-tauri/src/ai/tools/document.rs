@@ -19,7 +19,7 @@ pub(super) fn search_document(ctx: &ToolContext, arguments: &str) -> String {
     }
 
     let query_lower = query.to_lowercase();
-    let blocks = crate::ai::doc_blocks::split(ctx.document);
+
     let mut at = 0;
     let matches: Vec<String> = ctx
         .document
@@ -30,7 +30,7 @@ pub(super) fn search_document(ctx: &ToolContext, arguments: &str) -> String {
             at += line.len();
             let line = line.trim_end_matches(['\n', '\r']);
             line.to_lowercase().contains(&query_lower).then(|| {
-                match crate::ai::doc_blocks::id_at(&blocks, start) {
+                match crate::ai::doc_blocks::id_at(&ctx.document.blocks, start) {
                     Some(id) => format!("{} [#{id}]: {line}", i + 1),
                     None => format!("{}: {line}", i + 1),
                 }
@@ -173,8 +173,8 @@ pub(super) fn read_document(ctx: &ToolContext, arguments: &str) -> String {
         .copied()
         .unwrap_or(ctx.document.len())
         .min(ctx.document.len());
-    let blocks = crate::ai::doc_blocks::split(ctx.document);
-    let marked = crate::ai::doc_blocks::annotate(ctx.document, &blocks, from, to);
+
+    let marked = crate::ai::doc_blocks::annotate(ctx.document, from, to);
     let out = if marked.ends_with('\n') {
         marked
     } else {

@@ -207,7 +207,7 @@ impl ImageRun {
     pub(crate) async fn run_call(
         &self,
         arguments: &str,
-        document: &str,
+        document: &crate::ai::doc_blocks::Document,
         proposed: &ProposedText<'_>,
         announce: impl FnOnce(),
     ) -> String {
@@ -285,18 +285,13 @@ impl ImageRun {
     pub(crate) fn check(
         &self,
         args: &Value,
-        document: &str,
+        document: &crate::ai::doc_blocks::Document,
         proposed: &ProposedText<'_>,
     ) -> Result<(String, Aspect, Option<ImageAttachment>), String> {
         let text = |key: &str| args.get(key).and_then(Value::as_str).unwrap_or("").trim();
         let prompt = text("prompt");
         if prompt.is_empty() {
             return Err("`prompt` is empty - describe the picture.".into());
-        }
-        // Still a `block`: doc_blocks::resolve_target_arguments found no
-        // such block.
-        if let Some(block) = args.get("block").and_then(Value::as_str) {
-            return Err(format!("There is no block `{block}` in the document - name a block by an id shown before it, like `[#k3f9]`."));
         }
         let action = text("action");
         if !IMAGE_ACTIONS.contains(&action) {
@@ -311,7 +306,7 @@ impl ImageRun {
             if !is_picture_markdown(anchor) {
                 return Err("`replace` takes `block`, the id of a picture's own block - a picture replaces only a picture; put one next to text with insert_after.".into());
             }
-            tools::check_anchor(document, args, anchor)?;
+            crate::ai::doc_blocks::check_target(document, args)?;
             reference = self
                 .folder
                 .as_deref()
@@ -320,15 +315,11 @@ impl ImageRun {
         }
         if matches!(action, "insert_after" | "insert_before") {
             let anchor = text("anchor");
-            if anchor.is_empty() {
-                return Err(format!(
-                    "`{action}` requires `anchor` - the text the picture goes next to."
-                ));
-            }
-            // Next to text proposed and not decided yet, the picture joins
-            // that proposal (useEditorProposals).
-            if !proposed.quotes(anchor) {
-                tools::check_anchor(document, args, anchor)?;
+            // Next to text proposed and not decided yet - which has no
+            // block - the picture joins that proposal (useEditorProposals).
+            let joins = args.get("block").is_none() && proposed.quotes(anchor);
+            if !joins {
+                crate::ai::doc_blocks::check_target(document, args)?;
             }
         }
         let aspect = match text("aspect") {
@@ -349,7 +340,7 @@ impl ImageRun {
     /// generate_image for this request, offered in Write and Revise.
     pub fn tool<'a>(
         &'a self,
-        document: &'a str,
+        document: &'a crate::ai::doc_blocks::Document,
         proposed: ProposedText<'a>,
         channel: &'a Channel<StreamEvent>,
     ) -> Tool<'a> {
@@ -372,7 +363,7 @@ impl ImageRun {
     pub(crate) async fn execute(
         &self,
         call: ToolCall,
-        document: &str,
+        document: &crate::ai::doc_blocks::Document,
         proposed: &ProposedText<'_>,
         channel: &Channel<StreamEvent>,
     ) -> ToolOutput {
@@ -434,10 +425,6 @@ pub(crate) fn spec(limit: usize) -> ToolSpec {
                 "anchor": {
                     "type": "string",
                     "description": "Only next to text proposed and not decided yet, which has no id: its last sentence, verbatim."
-                },
-                "context": {
-                    "type": "string",
-                    "description": "Only when `anchor` occurs more than once: a longer verbatim quote containing it that occurs once."
                 }
             },
             "required": ["prompt", "alt", "action"],

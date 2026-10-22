@@ -34,7 +34,8 @@ pub struct ToolContext<'a> {
     /// so an edit may change it - the frontend puts that edit into the
     /// proposal (usePendingEdits's joinEdit).
     pub undecided: &'a [crate::ai::images::UndecidedEdit],
-    pub document: &'a str,
+    /// The document and its blocks, as the editor sent them.
+    pub document: &'a crate::ai::doc_blocks::Document,
     /// The merged skills: built-in, global config folder, project .textus/.
     pub skills: &'a [AgentSkill],
     /// The UI language (src/i18n/langs.ts) - which language's writing
@@ -56,8 +57,8 @@ pub struct ToolContext<'a> {
     /// Library names and aliases, for the library-name rule.
     pub library: &'a [String],
     /// The passages this request's proposals already replace or delete
-    /// (their `context`, else their anchor; "" for the selection). One
-    /// context serves one request, every step of it.
+    /// (where their blocks put them; "" for the selection). One context
+    /// serves one request, every step of it.
     pub proposed: std::sync::Mutex<ProposalLedger>,
     /// How often this request has called each check tool (CHECK_BUDGETS).
     pub checks: std::sync::Mutex<std::collections::HashMap<&'static str, usize>>,

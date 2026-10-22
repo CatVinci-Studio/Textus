@@ -129,17 +129,18 @@ test("an edit while a rewrite streams in is kept, and the rewrite still lands ar
         invoke: (cmd: string, args?: unknown) => Promise<unknown>;
       };
       const original = internals.invoke;
-      const args = JSON.stringify({
-        action: "replace",
-        anchor: note,
-        text: rewrite,
-      });
       internals.invoke = (cmd, a) => {
         if (cmd !== "ai_agent_message") return original(cmd, a);
-        const { message, onEvent } = a as {
+        const { message, onEvent, blocks } = a as {
           message: string;
           onEvent?: { onmessage?: (event: unknown) => void };
+          blocks: unknown;
         };
+        // By the block it rewrites, as a model names it.
+        const nameCall = w.__devNameCall as (b: unknown, x: object) => object;
+        const args = JSON.stringify(
+          nameCall(blocks, { action: "replace", anchor: note, text: rewrite }),
+        );
         const send = (event: unknown) => onEvent?.onmessage?.(event);
         const turns = [
           {

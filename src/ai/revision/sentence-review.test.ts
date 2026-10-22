@@ -9,6 +9,7 @@ import { usePendingEdits } from "./usePendingEdits";
 import { locateHunks } from "./sentence-locate";
 import { diffSentences } from "./unit-diff";
 import { pendingEditKey } from "./pending-edit-plugin";
+import { serializeBlocks } from "../doc-markdown";
 
 // Two of five sentences changed: decided sentence by sentence (a
 // paragraph most of whose sentences changed is one change).
@@ -40,6 +41,10 @@ async function setup() {
   editor = await createTestEditor(`# 笔记\n\n${NOTE}\n`);
   const e = editor;
   const hook = renderHook(() => usePendingEdits(runner(e)));
+  // The id the model names the paragraph by.
+  const block = e.action(
+    (ctx) => serializeBlocks(ctx, ctx.get(editorViewCtx).state.doc)[1].id,
+  );
   // The plugin reports its previews through the editor's callback, which
   // the harness leaves empty: read them back from the plugin itself.
   const sync = () =>
@@ -57,7 +62,7 @@ async function setup() {
       [
         {
           callId: "c1",
-          proposal: { action: "replace", anchor: NOTE, text: REWRITE },
+          proposal: { action: "replace", block, anchor: NOTE, text: REWRITE },
         },
       ],
       null,

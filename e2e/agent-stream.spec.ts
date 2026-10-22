@@ -14,44 +14,44 @@ test("a streamed edit whose text starts empty still becomes decidable", async ({
   await pasteMarkdown(page, "Alpha line one.\n\nBeta line two.\n\nGamma.");
   await page.evaluate(() => {
     type Send = (event: unknown) => void;
-    const internals = (
-      window as unknown as {
-        __TAURI_INTERNALS__: {
-          invoke: (cmd: string, args?: unknown) => Promise<unknown>;
-        };
-      }
-    ).__TAURI_INTERNALS__;
+    const w = window as unknown as {
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, args?: unknown) => Promise<unknown>;
+      };
+      __devNameCall: (blocks: unknown, args: object) => object;
+    };
+    const internals = w.__TAURI_INTERNALS__;
     const original = internals.invoke;
-    const edit = (anchor: string, text: string) =>
-      JSON.stringify({ action: "replace", anchor, text });
-    // The first call's fragments split right after the opening quote of
-    // `text`: the draft is placed while its text is still "" - what an
-    // Anthropic-style partial-JSON stream can do at any boundary.
-    const calls = [
-      {
-        id: "s1",
-        args: edit("Alpha line one.", "ALPHA LINE ONE (edited)."),
-        cut: [20, 40, 55],
-      },
-      {
-        id: "s2",
-        args: edit("Beta line two.", "BETA LINE TWO (edited)."),
-        cut: [20, 40, 56],
-      },
-      // No text at all, ever: must still become decidable.
-      {
-        id: "s3",
-        args: JSON.stringify({ action: "delete", anchor: "Gamma." }),
-        cut: [20],
-      },
-    ];
     internals.invoke = (cmd, args) => {
       if (cmd !== "ai_agent_message") return original(cmd, args);
-      const { message, onEvent } = args as {
+      const { message, onEvent, blocks } = args as {
         message: string;
         onEvent?: { onmessage?: Send };
+        blocks: unknown;
       };
       const send: Send = (event) => onEvent?.onmessage?.(event);
+      // Each call by the block it names, as a model writes it.
+      const written = (edit: object) =>
+        JSON.stringify(w.__devNameCall(blocks, edit));
+      const edit = (anchor: string, text: string) =>
+        written({ action: "replace", anchor, text });
+      // Right after the opening quote of `text`.
+      const textStart = (json: string) => json.indexOf('"text":"') + 8;
+      // The first call's fragments split right after the opening quote of
+      // `text`: the draft is placed while its text is still "" - what an
+      // Anthropic-style partial-JSON stream can do at any boundary.
+      const s1 = edit("Alpha line one.", "ALPHA LINE ONE (edited).");
+      const s2 = edit("Beta line two.", "BETA LINE TWO (edited).");
+      const calls = [
+        { id: "s1", args: s1, cut: [20, 40, textStart(s1)] },
+        { id: "s2", args: s2, cut: [20, 40, textStart(s2) + 1] },
+        // No text at all, ever: must still become decidable.
+        {
+          id: "s3",
+          args: written({ action: "delete", anchor: "Gamma." }),
+          cut: [20],
+        },
+      ];
       const turns: unknown[] = [];
       const steps: (() => void)[] = [];
       for (const call of calls) {
@@ -128,13 +128,13 @@ test("an edit the backend refused never stays on screen", async ({ page }) => {
   await pasteMarkdown(page, "Alpha line one.\n\nBeta line two.");
   await page.evaluate(() => {
     type Send = (event: unknown) => void;
-    const internals = (
-      window as unknown as {
-        __TAURI_INTERNALS__: {
-          invoke: (cmd: string, args?: unknown) => Promise<unknown>;
-        };
-      }
-    ).__TAURI_INTERNALS__;
+    const w = window as unknown as {
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, args?: unknown) => Promise<unknown>;
+      };
+      __devNameCall: (blocks: unknown, args: object) => object;
+    };
+    const internals = w.__TAURI_INTERNALS__;
     const original = internals.invoke;
     const edit = (anchor: string, text: string) =>
       JSON.stringify({ action: "replace", anchor, text });
@@ -154,13 +154,19 @@ test("an edit the backend refused never stays on screen", async ({ page }) => {
     ];
     internals.invoke = (cmd, args) => {
       if (cmd !== "ai_agent_message") return original(cmd, args);
-      const { message, onEvent } = args as {
+      const { message, onEvent, blocks } = args as {
         message: string;
         onEvent?: { onmessage?: Send };
+        blocks: unknown;
       };
       const send: Send = (event) => onEvent?.onmessage?.(event);
       const turns: unknown[] = [];
       const steps: (() => void)[] = [];
+      // Each call by the block it names, as a model writes it.
+      for (const call of calls)
+        call.args = JSON.stringify(
+          w.__devNameCall(blocks, JSON.parse(call.args)),
+        );
       for (const call of calls) {
         const toolCall = {
           kind: "ToolCall",

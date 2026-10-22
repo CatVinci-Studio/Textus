@@ -9,7 +9,7 @@
     "name": "picture swapped",
     "block": "![一把旧伞](assets/a.png)",
     "rewritten": "![An old umbrella](assets/b.png)",
-    "changes": 3
+    "changes": 2
   },
   {
     "name": "link para kept",
@@ -207,7 +207,7 @@
     "name": "a swapped picture next to a changed table",
     "block": "![伞](assets/a.png)\n\n| 名字 | 数量 |\n| --- | --- |\n| 伞 | 1 |",
     "rewritten": "![Umbrella](assets/b.png)\n\n| Name | Count |\n| --- | --- |\n| Umbrella | 1 |",
-    "changes": 4
+    "changes": 3
   },
   {
     "name": "a table the rewrite dropped",

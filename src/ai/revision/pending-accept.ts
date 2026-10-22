@@ -7,7 +7,7 @@ import { isAnchored, plainText, resolveAnchored } from "./pending-place";
 import {
   composeMarkdownEdit,
   documentMarkdown,
-  findMarkdownMatch,
+  matchTarget,
   serializeBlocks,
 } from "../doc-markdown";
 import { applyEditRange, replaceWithMarkdown } from "./apply-edit";
@@ -147,11 +147,7 @@ export function writeAccept(
     ) {
       replacement = textOverride;
     } else {
-      const match = findMarkdownMatch(
-        serializeBlocks(ctx, state.doc),
-        proposal.anchor ?? "",
-        proposal.context,
-      );
+      const match = matchTarget(serializeBlocks(ctx, state.doc), proposal);
       if (!match) return done();
       replacement = composeMarkdownEdit(match, proposal.action, textOverride);
     }
@@ -238,6 +234,7 @@ export function writeAccept(
               proposal,
               preview.proposal.anchor ?? "",
               textOverride ?? preview.proposal.text ?? "",
+              blocks,
             )
           : null;
       if (moved) {

@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { expect, test } from "@playwright/test";
+import { blockIds, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * A review note shows in the margin as soon as its call has said where it
@@ -10,18 +10,6 @@ import { openApp, pasteMarkdown } from "./helpers";
 const editor = '[data-active-tab="true"] .ProseMirror';
 const DOC =
   "# Night hours\n\nThe library opened late on Wednesdays.\n\nStudents came most.";
-
-async function blockIds(page: Page, doc: string): Promise<string[]> {
-  return page.evaluate(
-    async ({ doc, path }) => {
-      const mod = (await import(/* @vite-ignore */ path)) as {
-        splitBlocks: (d: string) => { id: string }[];
-      };
-      return mod.splitBlocks(doc).map((b) => b.id);
-    },
-    { doc, path: "/src/ai/doc-blocks.ts" },
-  );
-}
 
 test("a note named by its block shows in the margin while the reply is still coming", async ({
   page,
@@ -46,21 +34,24 @@ test("a note named by its block shows in the margin while the reply is still com
       const original = internals.invoke;
       internals.invoke = (cmd, a) => {
         if (cmd !== "ai_agent_message") return original(cmd, a);
-        const { message, onEvent } = a as {
+        const { message, onEvent, blocks } = a as {
           message: string;
           onEvent?: { onmessage?: (event: unknown) => void };
+          blocks: unknown;
         };
         const send = (event: unknown) => onEvent?.onmessage?.(event);
+        const settle = w.__devSettle as (
+          b: unknown,
+          name: string,
+          args: string,
+        ) => string;
         const turns = [
           {
             kind: "ToolCall",
             call_id: "n1",
             name: "add_comment",
-            // As the backend hands it on: by anchor.
-            arguments: JSON.stringify({
-              anchor: "The library opened late on Wednesdays.",
-              comment: "Say which hours.",
-            }),
+            // As the backend hands it on (src/dev/settle-calls.ts).
+            arguments: settle(blocks, "add_comment", raw),
           },
           { kind: "ToolResult", call_id: "n1", output: "Comment added" },
           { kind: "Assistant", text: "One note." },

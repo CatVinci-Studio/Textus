@@ -200,14 +200,12 @@ test("an outline jump lands the heading below the window bar", async ({
   expect(top).toBeLessThan(120);
 });
 
-test("accepting one of two proposals in a paragraph keeps the other", async ({
-  page,
-}) => {
+test("accepting one of two proposals keeps the other", async ({ page }) => {
   await openApp(page, {
     settings: { language: "en" },
     storage: { "textus-agent-panel-open": "1" },
   });
-  await pasteMarkdown(page, "The cat sat on the mat and the dog ran far.");
+  await pasteMarkdown(page, "The cat sat on the mat.\n\nThe dog ran far.");
   await mockInvoke(page, {
     ai_agent_message: [
       { kind: "User", text: "Fix both" },
@@ -249,7 +247,10 @@ test("accepting one of two proposals in a paragraph keeps the other", async ({
   await accept.first().click();
   await expect(accept).toHaveCount(0);
   await expect(page.locator(".milkdown p").first()).toHaveText(
-    "The cat slept on the mat and the dog walked far.",
+    "The cat slept on the mat.",
+  );
+  await expect(page.locator(".milkdown p").nth(1)).toHaveText(
+    "The dog walked far.",
   );
 });
 

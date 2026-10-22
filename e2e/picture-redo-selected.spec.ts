@@ -44,9 +44,10 @@ async function open(page: Page, picture: string) {
   await expect(page.locator(`${editor} .image-view img`)).toHaveCount(1);
 }
 
-/** The model's side: generate_image `replace` with the picture's Markdown
- *  as it appears in the document it was sent, the picture made after
- *  `delay` ms. Records each request's document and message. */
+/** The model's side: generate_image `replace` naming the picture's block
+ *  in the document it was sent, the picture made after `delay` ms, the call
+ *  settled as the backend settles it (src/dev/settle-calls.ts). Records
+ *  each request's blocks and message. */
 async function replyWithRedo(page: Page, delay: number) {
   await page.evaluate(
     ({ png, delay }) => {
@@ -55,7 +56,13 @@ async function replyWithRedo(page: Page, delay: number) {
         invoke: (cmd: string, args?: unknown) => Promise<unknown>;
       };
       const original = internals.invoke;
-      const sent: { document: string; message: string }[] = [];
+      type Block = { id: string; markdown: string; kind: string };
+      const sent: { blocks: Block[]; message: string }[] = [];
+      const settle = w.__devSettle as (
+        b: unknown,
+        name: string,
+        args: string,
+      ) => string;
       w.__sent = sent;
       internals.invoke = (cmd, a) => {
         if (cmd === "ai_generated_image")
@@ -67,11 +74,11 @@ async function replyWithRedo(page: Page, delay: number) {
           );
         if (cmd === "ai_discard_generated_image") return Promise.resolve(null);
         if (cmd !== "ai_agent_message") return original(cmd, a);
-        const { message, document } = a as {
+        const { message, blocks } = a as {
           message: string;
-          document: string;
+          blocks: Block[];
         };
-        sent.push({ document, message });
+        sent.push({ blocks, message });
         const { onEvent: events } = a as {
           onEvent?: { onmessage?: (e: unknown) => void };
         };
@@ -93,23 +100,26 @@ async function replyWithRedo(page: Page, delay: number) {
           for (const turn of edit) events?.onmessage?.({ type: "turn", turn });
           return Promise.resolve([{ kind: "User", text: message }, ...edit]);
         }
-        const line =
-          document
-            .split("\n")
-            .find((l) => /^(!\[|<img)/.test(l.trim()))
-            ?.trim() ?? "";
+        // The picture's own block: a picture, or one given a width (HTML).
+        const picture =
+          blocks.find((b) => b.kind === "picture" || b.kind === "html")?.id ??
+          "";
         const call = {
           kind: "ToolCall",
           call_id: "g1",
           name: "generate_image",
-          arguments: JSON.stringify({
-            action: "replace",
-            alt: "夏夜",
-            anchor: line,
-            aspect: "16:9",
-            prompt: "The same workshop on a summer night",
-            image: { id: "sum1", width: 1600, height: 900, pending: true },
-          }),
+          arguments: settle(
+            blocks,
+            "generate_image",
+            JSON.stringify({
+              action: "replace",
+              block: picture,
+              alt: "夏夜",
+              aspect: "16:9",
+              prompt: "The same workshop on a summer night",
+              image: { id: "sum1", width: 1600, height: 900, pending: true },
+            }),
+          ),
         };
         const turns = [
           call,
@@ -129,8 +139,8 @@ async function replyWithRedo(page: Page, delay: number) {
         // then the turns.
         const raw = JSON.stringify({
           action: "replace",
+          block: picture,
           alt: "夏夜",
-          anchor: line,
           aspect: "16:9",
           prompt: "The same workshop on a summer night, ".repeat(8),
         });
@@ -183,10 +193,6 @@ for (const [name, picture] of [
     // Selected, as the writer did: the message box says a picture is.
     await page.locator(`${editor} .image-view img`).click();
     await ask(page, "这个图片换一个夏天的感觉");
-    const sent = await page.evaluate(
-      () => (window as unknown as { __sent: { document: string }[] }).__sent,
-    );
-    console.log(JSON.stringify(sent[0].document));
     // Made: the new picture stands in the text, to decide on.
     await expect(page.locator(`${editor} .pending-insert img`)).toHaveCount(1, {
       timeout: 10_000,

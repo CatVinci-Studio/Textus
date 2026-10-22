@@ -1,6 +1,6 @@
 import { draftProposal, parsePartialToolArgs } from "../chat/partial-tool-args";
 import { draftPictureProposal } from "./generated-images";
-import { resolveBlockTarget } from "../doc-blocks";
+import { resolveBlockTarget, type SentBlock } from "../doc-blocks";
 import type { PartialString } from "../chat/partial-tool-args";
 import { parseProposal } from "../chat/proposal";
 import type { EditProposal } from "../types";
@@ -70,9 +70,9 @@ export class ProposalStream {
 
   constructor(
     private effects: ProposalStreamEffects,
-    /** The document's markdown now, for a draft that names its block
+    /** The document's blocks now, for a draft that names its block
      *  (doc-blocks.ts): it is placed as soon as the block is named. */
-    private documentNow?: () => string,
+    private documentNow?: () => SentBlock[],
   ) {}
 
   /** A tool call opened - propose_edit and generate_image enter the
@@ -182,26 +182,24 @@ export class ProposalStream {
 
 /**
  * A picture call's fields with the block it names (doc-blocks.ts'
- * resolveBlockTarget) as its anchor, once that is complete - before, no
+ * resolveBlockTarget) and its anchor, once that is complete - before, no
  * anchor, so the frame waits for it. Without a block, as they came.
  */
 function byBlock(
   fields: Record<string, PartialString>,
-  document: string | undefined,
+  blocks: SentBlock[] | undefined,
 ): Record<string, PartialString> {
   const { block, anchor, ...rest } = fields;
   if (!block) return fields;
-  if (!block.complete || document === undefined) return rest;
-  const target = resolveBlockTarget(document, {
+  if (!block.complete || blocks === undefined) return rest;
+  const target = resolveBlockTarget(blocks, {
     block: block.value,
     anchor: anchor?.complete ? anchor.value : undefined,
   });
-  if (!target) return rest;
+  if (!target?.block) return rest;
   return {
     ...rest,
+    block: { value: target.block, complete: true },
     anchor: { value: target.anchor, complete: true },
-    ...(target.context
-      ? { context: { value: target.context, complete: true } }
-      : {}),
   };
 }

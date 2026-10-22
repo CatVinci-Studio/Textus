@@ -784,8 +784,16 @@ pub fn run_conversation(
                 .or(caret.cursor)
                 .and_then(|at| heading_at(&doc, at))
         });
-        let instructions =
-            build_instructions(ws, &doc, true, setup.mode, &message_sent, setup.ui_language);
+        // The document as the editor sends it: block by block.
+        let document = crate::ai::doc_blocks::Document::from_markdown(&doc);
+        let instructions = build_instructions(
+            ws,
+            &document,
+            true,
+            setup.mode,
+            &message_sent,
+            setup.ui_language,
+        );
         // The app's conventions for this workspace (the setting is the
         // default, Automatic): proposals are post-processed as the app does
         // (agent::postfix_step), and what was fixed is recorded.
@@ -796,7 +804,7 @@ pub fn run_conversation(
         let library = crate::ai::conventions::library_names(ws);
         let undecided = crate::ai::images::undecided_edits(&history);
         let ctx = ToolContext {
-            document: &doc,
+            document: &document,
             undecided: &undecided,
             skills: &ws.skills,
             ui_language: setup.ui_language,
@@ -819,7 +827,7 @@ pub fn run_conversation(
         );
         if let Some(pictures) = setup.pictures {
             tool_set.add(pictures.tool(
-                &doc,
+                &document,
                 crate::ai::images::ProposedText {
                     this_request: &ctx.proposed,
                     undecided: &undecided,
@@ -863,7 +871,7 @@ pub fn run_conversation(
                     ws,
                     setup.mode,
                     setup.ui_language,
-                    &request_context(ws, &doc, true, &message_sent, focus_heading.as_deref()),
+                    &request_context(ws, &document, true, &message_sent, focus_heading.as_deref()),
                     &message_sent,
                 ),
                 images: Vec::new(),
@@ -873,7 +881,7 @@ pub fn run_conversation(
                 let (instructions, specs, usage, postfix) =
                     (&instructions, &specs, &usage, &postfix);
                 let (agent, sink) = (&agent, &sink);
-                let (doc, conventions, inline) = (&doc, &conventions, &inline);
+                let (document, conventions, inline) = (&document, &conventions, &inline);
                 async move {
                     // with_retry's loop, inline: this already runs inside
                     // block_on, which can't be nested.
@@ -891,7 +899,7 @@ pub fn run_conversation(
                     charge(setup.model, &used);
                     usage.borrow_mut().push(used);
                     let (step, applied) =
-                        crate::ai::agent::settle_step(step, doc, conventions, inline.as_ref());
+                        crate::ai::agent::settle_step(step, document, conventions, inline.as_ref());
                     postfix
                         .borrow_mut()
                         .extend(applied.into_iter().map(str::to_string));

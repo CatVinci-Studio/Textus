@@ -21,7 +21,7 @@ const requests: [string, () => Promise<unknown>][] = [
     () =>
       ai.agentMessage({
         provider: "openai",
-        document: "",
+        blocks: [],
         docPath: null,
         workspaceRoot: null,
         history: [],

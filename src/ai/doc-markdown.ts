@@ -3,9 +3,15 @@ import { isCjk } from "../utils/cjk";
 import { serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { Selection, type EditorState } from "@milkdown/kit/prose/state";
-import { escapeRegExp } from "../utils/regexp";
 import { blockMarkdown } from "../editor/markdown/block-markdown";
 import type { EditAction } from "./types";
+import {
+  blockIds,
+  blockKind,
+  runOf,
+  type BlockKind,
+  type SentBlock,
+} from "./doc-blocks";
 
 /**
  * The document as MARKDOWN SOURCE, which is the representation every AI edit
@@ -18,10 +24,12 @@ import type { EditAction } from "./types";
  * and its reply was then parsed BACK as markdown. Three different
  * representations, none of them equal.
  *
- * Everything here keeps a single one: what the model reads, what an anchor is
- * matched against, and what gets parsed on accept are all the same markdown
- * string. Block boundaries carry the ProseMirror positions alongside, so a
- * markdown-space match still resolves to a real document range without
+ * Everything here keeps a single one: what the model reads, what an edit's
+ * words are found in, and what gets parsed on accept are all the same
+ * markdown. The model reads it block by block - the editor's top-level
+ * nodes, each with its id (doc-blocks.ts) - and names the blocks an edit
+ * changes; each block carries its ProseMirror positions alongside, so a
+ * markdown-space target still resolves to a real document range without
  * needing a markdown-offset -> ProseMirror-position sourcemap (Milkdown
  * offers none, and maintaining one would be its own moving part).
  */
@@ -39,6 +47,9 @@ export interface MarkdownBlock {
   markdown: string;
   /** Where this block's markdown starts inside documentMarkdown()'s output. */
   offset: number;
+  /** Its id, as the model is shown it (doc-blocks.ts's blockIds). */
+  id: string;
+  kind: BlockKind;
 }
 
 /** The current selection, in the three forms every AI surface needs it in.
@@ -175,21 +186,33 @@ export function serializeRange(
  * what lets a markdown-space match land back on a real document position.
  */
 export function serializeBlocks(ctx: Ctx, doc: ProseNode): MarkdownBlock[] {
-  const blocks: MarkdownBlock[] = [];
+  const blocks: Omit<MarkdownBlock, "id">[] = [];
   let offset = 0;
   doc.forEach((node, pos) => {
     // Cached per block (block-markdown.ts): after an edit only the blocks
     // it touched are serialized again, not all of a long document's.
     const markdown = blockMarkdown(ctx, node).trimEnd();
-    blocks.push({ from: pos, to: pos + node.nodeSize, markdown, offset });
+    const kind = blockKind(node);
+    blocks.push({ from: pos, to: pos + node.nodeSize, markdown, offset, kind });
     offset += markdown.length + BLOCK_SEPARATOR.length;
   });
-  return blocks;
+  const ids = blockIds(blocks.map((b) => b.markdown));
+  return blocks.map((b, i) => ({ ...b, id: ids[i] }));
 }
 
-/** The whole document as one markdown string - what the model is shown. */
-export function documentMarkdown(blocks: MarkdownBlock[]): string {
+/** The whole document as one markdown string. */
+export function documentMarkdown(
+  blocks: readonly { markdown: string }[],
+): string {
   return blocks.map((block) => block.markdown).join(BLOCK_SEPARATOR);
+}
+
+/** The document as a request carries it: its blocks, each with its id and
+ *  kind, and their markdown joined - the same text, so the model, the
+ *  backend and the editor never split it two ways. */
+export interface DocumentSnapshot {
+  markdown: string;
+  blocks: SentBlock[];
 }
 
 /**
@@ -205,19 +228,29 @@ export function documentMarkdown(blocks: MarkdownBlock[]): string {
  * bar right after a push reuses the identical string. A WeakMap so a
  * superseded doc is collectable the moment nothing else holds it.
  */
-const documentCache = new WeakMap<ProseNode, string>();
+const documentCache = new WeakMap<ProseNode, DocumentSnapshot>();
 
-export function cachedDocumentMarkdown(ctx: Ctx, doc: ProseNode): string {
+export function cachedDocument(ctx: Ctx, doc: ProseNode): DocumentSnapshot {
   const cached = documentCache.get(doc);
   if (cached !== undefined) return cached;
-  const markdown = documentMarkdown(serializeBlocks(ctx, doc));
-  documentCache.set(doc, markdown);
-  return markdown;
+  const blocks = serializeBlocks(ctx, doc);
+  const snapshot = {
+    markdown: documentMarkdown(blocks),
+    blocks: blocks.map(({ id, markdown, kind }) => ({ id, markdown, kind })),
+  };
+  documentCache.set(doc, snapshot);
+  return snapshot;
+}
+
+/** `cachedDocument`'s markdown alone - for what reads the text, not its
+ *  blocks (a plugin, the illustrate flow). */
+export function cachedDocumentMarkdown(ctx: Ctx, doc: ProseNode): string {
+  return cachedDocument(ctx, doc).markdown;
 }
 
 /**
- * A resolved anchor: the ProseMirror range of the WHOLE blocks the snippet
- * touches, plus the markdown on either side of the snippet within them.
+ * A resolved target: the ProseMirror range of the WHOLE blocks it touches,
+ * plus the markdown on either side of the quoted words within them.
  *
  * The range is snapped outward to block boundaries deliberately. A markdown
  * offset inside a block can't be converted to a ProseMirror position, but a
@@ -244,116 +277,58 @@ function blockIndexAt(blocks: MarkdownBlock[], offset: number): number {
   return 0;
 }
 
-/** Byte offset of `needle`'s single occurrence in `doc`, null when absent
- *  or repeated - an ambiguous match can't be trusted to be the one meant. */
-function uniqueIndexOf(doc: string, needle: string): number | null {
-  const first = doc.indexOf(needle);
-  if (first === -1 || doc.indexOf(needle, first + 1) !== -1) return null;
-  return first;
+/** What an edit, a comment or a picture names: its block (and the run's
+ *  last), and, inside them, the words it is about - the whole run when
+ *  `anchor` is left out or is the run's text. */
+export interface BlockTarget {
+  block?: string;
+  lastBlock?: string;
+  anchor?: string;
 }
 
 /**
- * Whitespace-tolerant retry for a snippet with NO verbatim occurrence at
- * all: models routinely fold the blank line between blocks into a single
- * newline (or a space) when quoting. Word-ish runs must still match
- * verbatim and the whole thing must still occur exactly once, so this
- * can't land an edit anywhere an exact quote couldn't have.
+ * Where `target` is in the document now: the blocks its ids name, narrowed
+ * to its words when they are a part of them that occurs there once. Null
+ * when an id names no block of `blocks` (the block changed since the
+ * request, so its id is gone) or the words aren't in the run once - an
+ * ambiguous or missing quote is never guessed at.
  */
-function flexibleRange(
-  doc: string,
-  snippet: string,
-): { start: number; end: number } | null {
-  const tokens = snippet.split(/\s+/).filter(Boolean);
-  if (tokens.length < 2) return null; // single token: flexible == exact
-  const pattern = new RegExp(tokens.map(escapeRegExp).join("\\s+"), "g");
-  const first = pattern.exec(doc);
-  if (!first || pattern.exec(doc)) return null;
-  return { start: first.index, end: first.index + first[0].length };
-}
-
-/** One character's matching form - mirrors tools.rs's normalize_char:
- *  typographic quotes, dash variants, full-width ASCII and non-breaking
- *  spaces fold to plain ASCII. One char in, one char out (all BMP), so an
- *  index into the normalized text is an index into the original. */
-function normalizeForMatch(text: string): string {
-  let out = "";
-  for (const ch of text) {
-    const c = ch.codePointAt(0) ?? 0;
-    if (c === 0x2018 || c === 0x2019 || c === 0x201a || c === 0x2032)
-      out += "'";
-    else if (c === 0x201c || c === 0x201d || c === 0x201e || c === 0x2033)
-      out += '"';
-    else if ((c >= 0x2010 && c <= 0x2015) || c === 0x2212) out += "-";
-    else if (c === 0xa0 || c === 0x2007 || c === 0x202f || c === 0x3000)
-      out += " ";
-    else if (c >= 0xff01 && c <= 0xff5e)
-      out += String.fromCodePoint(c - 0xfee0);
-    else out += ch;
-  }
-  return out;
-}
-
-/**
- * Locates `snippet` in the document's markdown. Null when it's absent or
- * occurs more than once - the same "must be quoted verbatim and occur exactly
- * once" contract the backend states in AGENT_TOOL_INSTRUCTIONS, only now
- * evaluated against the markdown the model was actually shown.
- *
- * Two escape hatches keep honest proposals from dying on that contract
- * (both mirrored in the backend's propose_edit validation, tools.rs):
- * `context` - a longer verbatim quote containing the snippet, itself
- * unique - pins down WHICH occurrence a repeated snippet means, and a
- * whitespace-tolerant retry catches quotes whose only defect is a folded
- * blank line. Anything still unresolved stays null; there is deliberately
- * no fuzzier fallback than whitespace.
- */
-export function findMarkdownMatch(
+export function matchTarget(
   blocks: MarkdownBlock[],
-  snippet: string,
-  context?: string,
+  target: BlockTarget,
 ): MarkdownMatch | null {
-  if (!snippet || blocks.length === 0) return null;
+  if (!target.block) return null;
+  const run = runOf(blocks, target.block, target.lastBlock);
+  if (!run) return null;
   const doc = documentMarkdown(blocks);
-
-  let range: { start: number; end: number } | null = null;
-  const exact = uniqueIndexOf(doc, snippet);
-  if (exact !== null) range = { start: exact, end: exact + snippet.length };
-  if (!range && context && context.length > snippet.length) {
-    const inner = context.indexOf(snippet);
-    const contextStart = inner === -1 ? null : uniqueIndexOf(doc, context);
-    if (contextStart !== null) {
-      const start = contextStart + inner;
-      range = { start, end: start + snippet.length };
-    }
-  }
-  // The same fallback order as tools.rs's anchor_match_count: typography
-  // first, then (also) folded whitespace - but only for a snippet with no
-  // verbatim occurrence at all.
-  if (!range && doc.indexOf(snippet) === -1) {
-    const normDoc = normalizeForMatch(doc);
-    const normSnippet = normalizeForMatch(snippet);
-    const normalized = uniqueIndexOf(normDoc, normSnippet);
-    if (normalized !== null)
-      range = { start: normalized, end: normalized + normSnippet.length };
-    else if (normDoc.indexOf(normSnippet) === -1)
-      range = flexibleRange(normDoc, normSnippet);
-  }
-  if (!range) return null;
-  const { start, end } = range;
-
+  const runStart = blocks[run.first].offset;
+  const runEnd = blocks[run.last].offset + blocks[run.last].markdown.length;
+  const runText = doc.slice(runStart, runEnd);
+  const quote = target.anchor;
+  if (!quote || quote === runText)
+    return {
+      from: blocks[run.first].from,
+      to: blocks[run.last].to,
+      prefix: "",
+      suffix: "",
+      markdown: runText,
+    };
+  const at = runText.indexOf(quote);
+  if (at === -1 || runText.indexOf(quote, at + 1) !== -1) return null;
+  const start = runStart + at;
+  const end = start + quote.length;
   const startIdx = blockIndexAt(blocks, start);
-  // `end` is exclusive, so probe the last character the snippet covers.
+  // `end` is exclusive, so probe the last character the quote covers.
   const endIdx = Math.max(startIdx, blockIndexAt(blocks, end - 1));
   const first = blocks[startIdx];
   const last = blocks[endIdx];
   const spanStart = first.offset;
   const spanEnd = last.offset + last.markdown.length;
-
   return {
     from: first.from,
     to: last.to,
-    prefix: doc.slice(spanStart, Math.max(spanStart, start)),
-    suffix: doc.slice(Math.min(spanEnd, end), spanEnd),
+    prefix: doc.slice(spanStart, start),
+    suffix: doc.slice(end, spanEnd),
     markdown: doc.slice(spanStart, spanEnd),
   };
 }

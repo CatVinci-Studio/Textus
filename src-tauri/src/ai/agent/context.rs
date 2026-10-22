@@ -33,7 +33,7 @@ pub(super) const MAX_OUTLINE_HEADINGS: usize = 120;
 /// The document's headings with the line each starts on and its block id
 /// (`L12 [#k3f9] ## Methods`) - the map read_document's line ranges and
 /// section names refer to, and an edit's `block`.
-fn heading_outline(document: &str, blocks: &[Block]) -> Vec<String> {
+fn heading_outline(document: &Document) -> Vec<String> {
     let lines: Vec<&str> = document.lines().collect();
     let mut starts = Vec::with_capacity(lines.len());
     let mut at = 0;
@@ -47,7 +47,7 @@ fn heading_outline(document: &str, blocks: &[Block]) -> Vec<String> {
         .map(|(i, _)| {
             let id = starts
                 .get(i)
-                .and_then(|&s| doc_blocks::id_at(blocks, s))
+                .and_then(|&s| doc_blocks::id_at(&document.blocks, s))
                 .map(|id| format!("[#{id}] "))
                 .unwrap_or_default();
             format!("L{} {id}{}", i + 1, lines[i].trim())
@@ -82,11 +82,7 @@ pub(super) const FOCUS_SECTION_CHARS: usize = 12_000;
 /// The section headed `heading` (to the next heading at its level or above)
 /// and the line it starts on - the part of a long document the user is
 /// working in, which the truncated view would otherwise leave out.
-pub(super) fn focus_section(
-    document: &str,
-    blocks: &[Block],
-    heading: &str,
-) -> Option<(usize, String)> {
+pub(super) fn focus_section(document: &Document, heading: &str) -> Option<(usize, String)> {
     let lines: Vec<&str> = document.lines().collect();
     let (first, last) = crate::ai::tools::section_range(&lines, heading)?;
     let from: usize = document
@@ -96,31 +92,30 @@ pub(super) fn focus_section(
         .sum();
     let text = lines[first..last].join("\n");
     let to = from + char_end(&text, FOCUS_SECTION_CHARS);
-    Some((first + 1, doc_blocks::annotate(document, blocks, from, to)))
+    Some((first + 1, doc_blocks::annotate(document, from, to)))
 }
 
 /// The `---document---` section, each block marked with its id
 /// (doc_blocks.rs).
 pub(crate) fn document_section(
-    document: &str,
+    document: &Document,
     with_tools: bool,
     focus_heading: Option<&str>,
 ) -> String {
-    let blocks = doc_blocks::split(document);
     let len = document.chars().count();
     if shown_whole(document, with_tools) {
         return format!(
             "---document---\n{}",
-            doc_blocks::annotate(document, &blocks, 0, document.len())
+            doc_blocks::annotate(document, 0, document.len())
         );
     }
     let focus = focus_heading
-        .and_then(|h| focus_section(document, &blocks, h))
+        .and_then(|h| focus_section(document, h))
         .map(|(line, text)| {
             format!("\n\n[the section the user is working in, from line {line}]\n{text}")
         })
         .unwrap_or_default();
-    let outline = heading_outline(document, &blocks);
+    let outline = heading_outline(document);
     let outline_block = if outline.is_empty() {
         "(no headings)".to_string()
     } else {
@@ -136,8 +131,8 @@ pub(crate) fn document_section(
     format!(
         "---document (truncated, {len} chars, {} lines total)---\n{note}\n\n[outline]\n{outline_block}{focus}\n\n[start]\n{}\n\n[end]\n{}",
         document.lines().count(),
-        doc_blocks::annotate(document, &blocks, 0, head),
-        doc_blocks::annotate(document, &blocks, tail, document.len()),
+        doc_blocks::annotate(document, 0, head),
+        doc_blocks::annotate(document, tail, document.len()),
     )
 }
 
@@ -148,7 +143,7 @@ pub(crate) fn document_section(
 /// earlier turns never repeat an old copy of the document.
 pub(crate) fn request_context(
     workspace: &AgentWorkspace,
-    document: &str,
+    document: &Document,
     with_tools: bool,
     focus: &str,
     // The heading of the section the cursor or selection is in, from the
@@ -162,7 +157,7 @@ pub(crate) fn request_context(
 /// - which the Memory tab marks (project::record_library_use).
 pub(super) fn request_context_and_library<'a>(
     workspace: &'a AgentWorkspace,
-    document: &str,
+    document: &Document,
     with_tools: bool,
     focus: &str,
     focus_heading: Option<&str>,

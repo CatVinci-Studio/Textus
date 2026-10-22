@@ -201,12 +201,12 @@ export function commentCalls(
     call_id?: string;
     arguments?: string;
   }[],
-): { id: string; anchor: string; comment: string; context?: string }[] {
+): { id: string; anchor: string; comment: string; block?: string }[] {
   const out: {
     id: string;
     anchor: string;
     comment: string;
-    context?: string;
+    block?: string;
   }[] = [];
   for (const turn of turns) {
     if (
@@ -223,7 +223,7 @@ export function commentCalls(
         id: turn.call_id,
         anchor: args.anchor,
         comment: args.comment,
-        context: typeof args.context === "string" ? args.context : undefined,
+        block: typeof args.block === "string" ? args.block : undefined,
       });
     } catch {
       // Still streaming in: its arguments aren't JSON yet.

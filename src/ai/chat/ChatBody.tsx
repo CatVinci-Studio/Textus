@@ -1,3 +1,4 @@
+import type { DocumentSnapshot } from "../doc-markdown";
 import { pictureSrc } from "../revision/generated-images";
 import { MessageQueue } from "./MessageQueue";
 import { useEffect, useRef } from "react";
@@ -142,7 +143,7 @@ export function ChatBody({
    */
   function dispatchSend(
     buildMessage: (state: {
-      document: string;
+      document: DocumentSnapshot;
       selectionMarkdown: string | null;
       cursor?: { before: string; after: string } | null;
     }) => { message: string; images?: ImageAttachment[] },

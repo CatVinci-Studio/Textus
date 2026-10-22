@@ -37,7 +37,8 @@ const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
 /** The model's side: one replace of the whole document as the request
- *  sent it, with `text`. */
+ *  sent it - its first block to its last - with `text`, settled as the
+ *  backend settles it (src/dev/settle-calls.ts). */
 async function replyWithRewrite(page: Page, text: string) {
   await page.evaluate((text) => {
     const w = window as unknown as Record<string, unknown>;
@@ -47,21 +48,28 @@ async function replyWithRewrite(page: Page, text: string) {
     const original = internals.invoke;
     internals.invoke = (cmd, a) => {
       if (cmd !== "ai_agent_message") return original(cmd, a);
-      const { message, document, onEvent } = a as {
+      const { message, blocks, onEvent } = a as {
         message: string;
-        document: string;
+        blocks: { id: string }[];
         onEvent?: { onmessage?: (event: unknown) => void };
       };
       const send = (event: unknown) => onEvent?.onmessage?.(event);
+      const written = JSON.stringify({
+        action: "replace",
+        block: blocks[0].id,
+        last_block: blocks[blocks.length - 1].id,
+        text,
+      });
+      const settle = w.__devSettle as (
+        blocks: unknown,
+        name: string,
+        args: string,
+      ) => string;
       const call = {
         kind: "ToolCall",
         call_id: "r1",
         name: "propose_edit",
-        arguments: JSON.stringify({
-          action: "replace",
-          anchor: document.trim(),
-          text,
-        }),
+        arguments: settle(blocks, "propose_edit", written),
       };
       const result = {
         kind: "ToolResult",
@@ -72,7 +80,7 @@ async function replyWithRewrite(page: Page, text: string) {
       return new Promise((resolve) =>
         setTimeout(() => {
           send({ type: "toolStart", callId: "r1", name: "propose_edit" });
-          send({ type: "toolArgsDelta", callId: "r1", delta: call.arguments });
+          send({ type: "toolArgsDelta", callId: "r1", delta: written });
           for (const turn of [call, result, reply])
             send({ type: "turn", turn });
           resolve([{ kind: "User", text: message }, call, result, reply]);

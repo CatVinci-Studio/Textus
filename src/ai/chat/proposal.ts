@@ -30,11 +30,9 @@ export function parseProposal(argumentsJson: string): EditProposal | null {
       typeof parsed.text === "string"
         ? normalizeMathDelimiters(withoutCitationMarkers(parsed.text))
         : undefined;
-    // Like the anchor, kept verbatim - it must match the document exactly.
-    const context =
-      typeof parsed.context === "string" && parsed.context
-        ? parsed.context
-        : undefined;
+    const id = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+    const block = id(parsed.block);
+    const lastBlock = id(parsed.last_block);
     if (
       action !== "append" &&
       action !== "replace_selection" &&
@@ -47,7 +45,14 @@ export function parseProposal(argumentsJson: string): EditProposal | null {
       typeof parsed.reason === "string" && parsed.reason.trim()
         ? parsed.reason.trim()
         : undefined;
-    return { action, anchor, text, context, reason };
+    return {
+      action,
+      ...(block ? { block } : {}),
+      ...(lastBlock ? { lastBlock } : {}),
+      anchor,
+      text,
+      reason,
+    };
   } catch {
     return null;
   }

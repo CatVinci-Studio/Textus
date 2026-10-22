@@ -1,3 +1,4 @@
+import type { DocumentSnapshot } from "../doc-markdown";
 import type { MessageQueueLabels } from "./MessageQueue";
 import type { AgentConversation } from "./useAgentConversation";
 import type { AgentMode } from "../../settings/SettingsContext";
@@ -36,7 +37,7 @@ export interface ChatBodyLabels
 
 export interface ChatBodyProps {
   /** Document as markdown source - what the request is sent with. */
-  document: string;
+  document: DocumentSnapshot;
   /** Selection as plain text (composer chip) and as markdown (what the model
    *  is actually shown, so formatting survives - see doc-markdown.ts). */
   selectedText: string | null;
@@ -70,7 +71,7 @@ export interface ChatBodyProps {
    *  docked panel): the bar above the composer is then not drawn. */
   pendingBar?: boolean;
   /** See ChatMessages' onLocateText. */
-  onLocateText?: (anchor: string, context?: string) => void;
+  onLocateText?: (anchor: string, block?: string) => void;
   /** See ChatMessages' noteNumber. */
   noteNumber?: (callId: string) => number | null;
   onRejectProposal: (callId: string) => void;
@@ -104,7 +105,7 @@ export interface ChatBodyProps {
    *  whole document on every keystroke. Resolves null if the editor doesn't
    *  answer, in which case the last pushed context is used. */
   refreshContext?: () => Promise<{
-    document: string;
+    document: DocumentSnapshot;
     selectionMarkdown: string | null;
     /** Text around the caret when nothing is selected (cursorBlock). */
     cursor?: { before: string; after: string } | null;

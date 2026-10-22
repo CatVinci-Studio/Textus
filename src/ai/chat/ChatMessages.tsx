@@ -42,7 +42,7 @@ const DECIDED: ReadonlySet<PendingStatus> = new Set([
 /** An add_comment call's arguments (src-tauri ai/tools.rs). */
 function parseComment(
   argumentsJson: string,
-): { anchor: string; comment: string; context?: string } | null {
+): { anchor: string; comment: string; block?: string } | null {
   try {
     const parsed = JSON.parse(argumentsJson);
     if (typeof parsed.anchor !== "string" || typeof parsed.comment !== "string")
@@ -50,7 +50,7 @@ function parseComment(
     return {
       anchor: parsed.anchor,
       comment: parsed.comment,
-      context: typeof parsed.context === "string" ? parsed.context : undefined,
+      block: typeof parsed.block === "string" ? parsed.block : undefined,
     };
   } catch {
     return null;
@@ -149,7 +149,7 @@ export interface ChatMessagesProps {
   onRevealProposal?: (callId: string, index: number) => void;
   /** Jumps to an add_comment card's passage in the document; absent where
    *  the document isn't reachable (the detached window). */
-  onLocateText?: (anchor: string, context?: string) => void;
+  onLocateText?: (anchor: string, block?: string) => void;
   /** The number on an add_comment note's badge in the text, for its card
    *  to show the same; null while the note has none (a margin has room
    *  for it, or it was never placed). */
@@ -416,7 +416,7 @@ export function ChatMessages({
                       type="button"
                       className="agent-proposal-link agent-proposal-show"
                       onClick={() =>
-                        onLocateText(comment.anchor, comment.context)
+                        onLocateText(comment.anchor, comment.block)
                       }
                     >
                       {labels.commentLocate}

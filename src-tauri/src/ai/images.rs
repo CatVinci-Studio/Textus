@@ -14,7 +14,7 @@
 //! apart from failures.
 
 use crate::ai::agent::StreamEvent;
-use crate::ai::tools::{self, Access, ProposalLedger, Run, Tool, EDITING_MODES};
+use crate::ai::tools::{Access, ProposalLedger, Run, Tool, EDITING_MODES};
 use aicompat::agent::{AgentTurn, ImageAttachment, ToolCall, ToolOutput, ToolSpec};
 use aicompat::images::{self as gen, Aspect, GeneratedImage, ImageApi, ImageTarget};
 use serde::{Deserialize, Serialize};
