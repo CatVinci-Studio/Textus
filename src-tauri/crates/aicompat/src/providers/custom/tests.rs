@@ -615,3 +615,59 @@ fn chat_stream_leaves_reasoning_out_of_the_reply() {
         StepResult::ToolCalls(_) => panic!("expected a final answer"),
     }
 }
+
+/// Gemini 3 sends a thought signature beside each call and refuses the next
+/// request when a call comes back without it: it goes back on its call,
+/// with the step's reasoning still where it was.
+#[test]
+fn a_calls_extra_content_goes_back_with_it() {
+    let (acc, _) = run_stream(&[
+        r#"{"choices":[{"delta":{"reasoning_content":"Load it."}}]}"#,
+        r#"{"choices":[{"delta":{"tool_calls":[{"index":0,"id":"c1","type":"function","function":{"name":"use_skill","arguments":"{}"},"extra_content":{"google":{"thought_signature":"sig-1"}}}]}}]}"#,
+        r#"{"choices":[{"delta":{"tool_calls":[{"index":1,"id":"c2","type":"function","function":{"name":"read_document","arguments":"{}"}}]}}]}"#,
+        "[DONE]",
+    ]);
+    let StepResult::ToolCalls(calls) = acc.into_step_result(&|_| {}) else {
+        panic!("expected tool calls");
+    };
+    let mut history = vec![AgentTurn::User {
+        text: "q".to_string(),
+        images: Vec::new(),
+    }];
+    history.extend(calls);
+    history.push(result("c1", "skill"));
+    history.push(result("c2", "text"));
+    let sent = turns_to_messages("rules", &history, true);
+    let assistant = &sent[2];
+    assert_eq!(assistant["reasoning_content"], "Load it.");
+    assert_eq!(
+        assistant["tool_calls"][0]["extra_content"]["google"]["thought_signature"],
+        "sig-1"
+    );
+    assert!(assistant["tool_calls"][1].get("extra_content").is_none());
+    // Kept without the reasoning where the provider doesn't take it back.
+    let kept = turns_to_messages("rules", &history, false);
+    assert!(kept[2].get("reasoning_content").is_none());
+    assert_eq!(
+        kept[2]["tool_calls"][0]["extra_content"]["google"]["thought_signature"],
+        "sig-1"
+    );
+
+    // The non-streaming answer keeps it the same way.
+    let StepResult::ToolCalls(calls) = parse_agent_response(
+        &json!({
+            "tool_calls": [{"id": "c", "function": {"name": "read_document", "arguments": "{}"},
+                "extra_content": {"google": {"thought_signature": "sig-2"}}}],
+        }),
+        &SearchReport::default(),
+        &|_| {},
+    ) else {
+        panic!("expected tool calls");
+    };
+    let history = vec![calls[0].clone(), result("c", "text")];
+    let sent = turns_to_messages("rules", &history, true);
+    assert_eq!(
+        sent[1]["tool_calls"][0]["extra_content"]["google"]["thought_signature"],
+        "sig-2"
+    );
+}

@@ -59,6 +59,9 @@ pub(crate) struct StreamToolCall {
     pub(crate) args: String,
     /// ToolStart is reported once, when both id and name have arrived.
     pub(crate) started: bool,
+    /// What the server sent beside the call for it to have back
+    /// (`extra_content`: Gemini's thought signature), see [`call_extra`].
+    pub(crate) extra: Option<Value>,
 }
 
 /// Rebuilds the non-streaming `choices[0].message` result from Chat
@@ -134,6 +137,9 @@ impl ChatStreamAccumulator {
                 self.calls.push(StreamToolCall::default());
             }
             let call = &mut self.calls[index];
+            if let Some(extra) = tc.get("extra_content") {
+                call.extra = Some(extra.clone());
+            }
             if let Some(id) = tc.get("id").and_then(|v| v.as_str()) {
                 if !call.started {
                     call.id = id.to_string();
@@ -185,7 +191,7 @@ impl ChatStreamAccumulator {
                 } else {
                     c.args
                 },
-                reasoning: None,
+                reasoning: c.extra.map(call_extra),
             })
             .collect();
         if !calls.is_empty() {

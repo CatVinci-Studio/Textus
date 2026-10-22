@@ -144,14 +144,19 @@ pub(crate) fn turns_to_messages(
                             arguments,
                             reasoning: step_reasoning,
                         } => {
+                            let (text, extra) = kept_parts(step_reasoning.as_ref());
                             if reasoning.is_none() {
-                                reasoning = step_reasoning.as_ref().and_then(|r| r.as_str());
+                                reasoning = text;
                             }
-                            tool_calls.push(json!({
+                            let mut call = json!({
                                 "id": call_id,
                                 "type": "function",
                                 "function": { "name": name, "arguments": arguments },
-                            }));
+                            });
+                            if let Some(extra) = extra {
+                                call[EXTRA_CONTENT] = extra.clone();
+                            }
+                            tool_calls.push(call);
                             i += 1;
                         }
                         AgentTurn::ToolResult {
@@ -222,7 +227,7 @@ pub(crate) fn parse_agent_response(
                 call_id,
                 name,
                 arguments,
-                reasoning: None,
+                reasoning: tc.get("extra_content").cloned().map(call_extra),
             })
         })
         .collect();
@@ -247,12 +252,42 @@ pub(crate) fn reasoning_of(message: &Value) -> Option<&str> {
         .find_map(|key| message.get(*key).and_then(|r| r.as_str()))
 }
 
-/// A step's reasoning rides on its first call (`AgentTurn::ToolCall`).
+/// A step's reasoning rides on its first call (`AgentTurn::ToolCall`): the
+/// `reasoning_content` string, or beside the call's [`call_extra`].
 pub(crate) fn attach_reasoning(calls: &mut [AgentTurn], text: &str) {
     if text.is_empty() {
         return;
     }
     if let Some(AgentTurn::ToolCall { reasoning, .. }) = calls.first_mut() {
-        *reasoning = Some(json!(text));
+        match reasoning {
+            Some(Value::Object(kept)) => {
+                kept.insert(REASONING_CONTENT.into(), json!(text));
+            }
+            _ => *reasoning = Some(json!(text)),
+        }
+    }
+}
+
+const REASONING_CONTENT: &str = "reasoning_content";
+const EXTRA_CONTENT: &str = "extra_content";
+
+/// A call's `extra_content` as its turn keeps it. Gemini 3 sends a thought
+/// signature there and refuses the next request when a call comes back
+/// without it (400 "Function call is missing a thought_signature",
+/// 1.2.0-rc.6); other servers send none, and their turns are as before.
+pub(crate) fn call_extra(extra: Value) -> Value {
+    json!({ EXTRA_CONTENT: extra })
+}
+
+/// A kept call's reasoning text and `extra_content`, from either shape
+/// (`attach_reasoning`, `call_extra`).
+fn kept_parts(kept: Option<&Value>) -> (Option<&str>, Option<&Value>) {
+    match kept {
+        Some(Value::String(text)) => (Some(text), None),
+        Some(Value::Object(parts)) => (
+            parts.get(REASONING_CONTENT).and_then(Value::as_str),
+            parts.get(EXTRA_CONTENT),
+        ),
+        _ => (None, None),
     }
 }

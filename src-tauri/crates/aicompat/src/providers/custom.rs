@@ -15,6 +15,25 @@ pub(crate) use search::*;
 mod stream;
 pub(crate) use stream::*;
 
+/// The key as the server takes it: Google's APIs (Gemini, Vertex AI) in
+/// `x-goog-api-key` - Vertex AI reads a Bearer token as an OAuth one and
+/// refuses a key there (401) - and every other server as a Bearer token.
+pub(crate) fn with_key(
+    req: reqwest::RequestBuilder,
+    base_url: &str,
+    key: &str,
+) -> reqwest::RequestBuilder {
+    let google = reqwest::Url::parse(base_url)
+        .ok()
+        .and_then(|url| url.host_str().map(|h| h.ends_with(".googleapis.com")))
+        .unwrap_or(false);
+    if google {
+        req.header("x-goog-api-key", key)
+    } else {
+        req.bearer_auth(key)
+    }
+}
+
 fn chat_completions_url(base_url: &str) -> String {
     format!("{}/chat/completions", base_url.trim_end_matches('/'))
 }
@@ -96,7 +115,7 @@ pub async fn agent_step_streaming(
     let client = crate::http::streaming_client();
     let mut req = client.post(chat_completions_url(base_url)).json(&body);
     if let Some(key) = api_key {
-        req = req.bearer_auth(key);
+        req = with_key(req, base_url, key);
     }
     let res = req.send().await.map_err(|e| e.to_string())?;
 
@@ -140,7 +159,7 @@ pub async fn agent_step(
     let client = crate::http::client();
     let mut req = client.post(chat_completions_url(base_url)).json(&body);
     if let Some(key) = api_key {
-        req = req.bearer_auth(key);
+        req = with_key(req, base_url, key);
     }
     let res = req.send().await.map_err(|e| e.to_string())?;
     if !res.status().is_success() {

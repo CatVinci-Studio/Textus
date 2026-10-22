@@ -87,7 +87,7 @@ pub async fn call_completion(
     let client = crate::http::client();
     let mut req = client.post(chat_completions_url(base_url)).json(&body);
     if let Some(key) = api_key {
-        req = req.bearer_auth(key);
+        req = with_key(req, base_url, key);
     }
 
     let res = req.send().await.map_err(|e| e.to_string())?;
@@ -126,7 +126,7 @@ pub async fn list_models(base_url: &str, api_key: Option<&str>) -> Result<Vec<St
     let client = crate::http::client();
     let mut req = client.get(models_url(base_url));
     if let Some(key) = api_key {
-        req = req.bearer_auth(key);
+        req = with_key(req, base_url, key);
     }
 
     let res = req.send().await.map_err(|e| e.to_string())?;
