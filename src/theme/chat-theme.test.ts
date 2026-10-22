@@ -96,6 +96,7 @@ describe("the theme skill and its sample", () => {
     "--revision-insert-bg",
     "--revision-insert-text",
     "--revision-insert-hover-bg",
+    "--revision-reading-bg",
     "--revision-delete-bg",
     "--revision-delete-text",
     "--revision-delete-strike",
