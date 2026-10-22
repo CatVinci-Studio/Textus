@@ -1427,6 +1427,11 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   color: var(--editor-muted);
 }
 
+/* A change of whole paragraphs keeps them apart (as its margin card). */
+.agent-proposal-sentence-text {
+  white-space: pre-line;
+}
+
 .agent-proposal-pick {
   flex: none;
   display: inline-flex;

@@ -92,6 +92,9 @@ pub fn agent_model() -> String {
 /// AgentProvider path - to compare a change on a second provider, or when
 /// the Claude key can't be used. The judge stays Claude.
 ///
+/// TEXTUS_EVAL_PROVIDER=deepseek: on DeepSeek (DEEPSEEK_API_KEY), the
+/// same way.
+///
 /// TEXTUS_EVAL_PROVIDER=chatgpt: on a ChatGPT subscription, as Textus on
 /// this machine is signed in (Settings › Textus AI › ChatGPT): its
 /// auth-codex.json, read where it is - never copied, printed or refreshed,
@@ -100,6 +103,7 @@ pub fn agent_model() -> String {
 pub fn agent_provider_id() -> &'static str {
     match std::env::var("TEXTUS_EVAL_PROVIDER").as_deref() {
         Ok("doubao") => "doubao",
+        Ok("deepseek") => "deepseek",
         Ok("chatgpt") => "openai",
         _ => "anthropic",
     }
@@ -143,13 +147,18 @@ fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
                 originator: crate::app_identity::ORIGINATOR.to_string(),
             }
         }
-        "doubao" => {
-            let base_url = crate::ai::catalog::find("doubao")
+        id @ ("doubao" | "deepseek") => {
+            let base_url = crate::ai::catalog::find(id)
                 .and_then(|e| e.base_url)
-                .expect("doubao has a base_url");
+                .expect("the provider has a base_url");
+            let key = if id == "doubao" {
+                "VOLCENGINE_ARK_API_KEY"
+            } else {
+                "DEEPSEEK_API_KEY"
+            };
             Endpoint::ChatCompletions {
                 base_url: base_url.to_string(),
-                api_key: Some(secret("VOLCENGINE_ARK_API_KEY").expect("VOLCENGINE_ARK_API_KEY")),
+                api_key: Some(secret(key).unwrap_or_else(|| panic!("{key}"))),
                 vendor: crate::ai::route::chat_vendor(base_url),
                 stream_usage: true,
             }

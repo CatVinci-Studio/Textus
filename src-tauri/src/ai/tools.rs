@@ -95,6 +95,23 @@ impl ProposalLedger {
         }
     }
 
+    /// What becomes of the picture lines in `text`, for its result: each
+    /// now reads `textus-generated:ID` in the call the model sees again.
+    /// Unexplained, DeepSeek and MiniMax took that for an id they had made
+    /// up, and spent the rest of the request trying to fix it.
+    pub fn pictures_placed(&self, text: &str) -> String {
+        let placed = self
+            .pictures
+            .iter()
+            .filter(|id| text.contains(&format!("textus-generated:{id}")))
+            .count();
+        match placed {
+            0 => String::new(),
+            1 => " Its picture line is being made into its picture: in the text it now reads `textus-generated:` and the picture's id, which Textus wrote - nothing to fix.".to_string(),
+            n => format!(" Its {n} picture lines are being made into their pictures: in the text each now reads `textus-generated:` and its picture's id, which Textus wrote - nothing to fix."),
+        }
+    }
+
     /// What the pictures left out of the text since last asked came to.
     pub fn take_unmade(&mut self) -> Option<String> {
         (!self.unmade.is_empty()).then(|| {
@@ -588,6 +605,7 @@ fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         }
         ledger.texts.push(text.to_string());
         unmade = ledger.take_unmade().unwrap_or_default();
+        unmade.push_str(&ledger.pictures_placed(text));
     }
     let into = if joins {
         " It changes text you proposed that the user hasn't decided on yet: it goes into that proposal, which now reads with it."
@@ -2439,5 +2457,15 @@ mod tests {
             .pictures_problem("![a](textus-generated:k3f9qy)")
             .unwrap();
         assert!(wrong.contains("no picture of this request"), "{wrong}");
+    }
+
+    #[test]
+    fn a_result_says_its_picture_ids_are_textus_own() {
+        let mut ledger = ProposalLedger::default();
+        assert_eq!(ledger.pictures_placed("One."), "");
+        ledger.add_picture("k3f9qz".into());
+        let note = ledger.pictures_placed("One.\n\n![a](textus-generated:k3f9qz)");
+        assert!(note.contains("nothing to fix"), "{note}");
+        assert_eq!(ledger.pictures_placed("One."), "");
     }
 }
