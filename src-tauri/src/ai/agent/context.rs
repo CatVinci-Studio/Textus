@@ -15,6 +15,18 @@ use super::*;
 /// sent whole, about 40,000 tokens in every message (docs/design/ai-tokens.md,
 /// item 3). Without tools there is no reading on, so characters it stays.
 pub(super) const FULL_DOCUMENT_LIMIT: usize = 40_000;
+
+/// Whether a request shows the whole document - else an outline and
+/// excerpts, which the document tools read on from (search_document,
+/// read_document: offered only then).
+pub(super) fn shown_whole(document: &str, with_tools: bool) -> bool {
+    let size = if with_tools {
+        document.chars().map(crate::ai::project::char_units).sum()
+    } else {
+        document.chars().count()
+    };
+    size <= FULL_DOCUMENT_LIMIT
+}
 pub(super) const EXCERPT_CHARS: usize = 2_000;
 pub(super) const MAX_OUTLINE_HEADINGS: usize = 120;
 
@@ -96,12 +108,7 @@ pub(crate) fn document_section(
 ) -> String {
     let blocks = doc_blocks::split(document);
     let len = document.chars().count();
-    let size = if with_tools {
-        document.chars().map(crate::ai::project::char_units).sum()
-    } else {
-        len
-    };
-    if size <= FULL_DOCUMENT_LIMIT {
+    if shown_whole(document, with_tools) {
         return format!(
             "---document---\n{}",
             doc_blocks::annotate(document, &blocks, 0, document.len())
@@ -120,7 +127,7 @@ pub(crate) fn document_section(
         outline.join("\n")
     };
     let note = if with_tools {
-        "This document is long, so only an outline (with line numbers) and the start/end are shown below. Read any section in full with read_document (by heading or line range) before revising or quoting it, and use search_document to find where something is mentioned."
+        "This document is long, so only an outline (with line numbers) and the start/end are shown below. Read any section in full with read_document (by heading or line range) before revising or quoting it - never guess at text you haven't seen, and never propose an edit in the same step as the read it depends on - and use search_document to find where something is mentioned."
     } else {
         "This document is long, so only an outline and the start/end are shown below - some content in the middle isn't visible here."
     };

@@ -60,7 +60,7 @@ pub enum FileKind {
     /// first: here it is source to read as written.) Not what the sidebar calls a document
     /// (SIDEBAR_DOCUMENT_EXTENSIONS), which is a text file.
     Document,
-    /// PNG, JPEG, GIF or WebP: shown to a model that can see (view_image).
+    /// PNG, JPEG, GIF or WebP: shown to a model that can see (read_file).
     Image,
 }
 
@@ -111,8 +111,8 @@ pub fn walk_readable_files(root: &Path, images: bool) -> ProjectFiles {
     })
 }
 
-/// A file as list_files and find_files show it: images are marked, so the
-/// model opens them with view_image rather than read_file.
+/// A file as find_files shows it: images are marked, so the model knows
+/// read_file shows them rather than reads them.
 pub fn listed(rel: &str) -> String {
     if file_kind(Path::new(rel)) == Some(FileKind::Image) {
         format!("{rel} (image)")
@@ -135,7 +135,7 @@ pub(crate) fn resolve(root: &Path, rel: &str) -> Result<(PathBuf, String), Strin
     }
     let (Ok(root_canon), Ok(path)) = (root.canonicalize(), root.join(rel).canonicalize()) else {
         return Err(format!(
-            "`{rel}` doesn't exist. Use find_files or list_files to see what's there."
+            "`{rel}` doesn't exist. Use find_files to see what's there."
         ));
     };
     if !path.starts_with(&root_canon) {
@@ -144,7 +144,7 @@ pub(crate) fn resolve(root: &Path, rel: &str) -> Result<(PathBuf, String), Strin
                 .to_string(),
         );
     }
-    // list_files never shows hidden entries, and nothing a writing task needs
+    // find_files never shows hidden entries, and nothing a writing task needs
     // lives in them - but a project in ~ would otherwise put .ssh, .env or
     // .aws/credentials one guessed path (or one injected instruction) away
     // from being sent to the provider.
@@ -303,16 +303,11 @@ pub struct LineRange {
 /// MAX_READ_UNITS. A file that fits comes back as it is; otherwise the
 /// answer says which lines of how many it holds and how to read on.
 /// Documents are read as their extracted text, numbered the same way
-/// search_files numbers them. Images are view_image's (`images`: whether
-/// it is offered).
-pub fn read_part(root: &Path, rel: &str, range: LineRange, images: bool) -> Result<String, String> {
+/// search_files numbers them. An image is shown by read_file itself, to a
+/// model that sees images; here it is one the model can't see.
+pub fn read_part(root: &Path, rel: &str, range: LineRange) -> Result<String, String> {
     let (path, rel) = resolve(root, rel)?;
     let text = match file_kind(&path) {
-        Some(FileKind::Image) if images => {
-            return Err(format!(
-                "`{rel}` is an image - use view_image to look at it."
-            ))
-        }
         Some(FileKind::Image) => {
             return Err(format!(
                 "`{rel}` is an image, and the model in use can't see images - ask the user to describe it, or to switch to a provider that can."
@@ -401,7 +396,7 @@ pub(crate) fn excerpt(rel: &str, text: &str, range: LineRange) -> String {
     reply.trim_end().to_string()
 }
 
-/// view_image: the image at `rel`, for the model to look at, within the
+/// read_file of an image: the image at `rel`, for the model to look at, within the
 /// size every provider accepts (crate::extract::MAX_IMAGE_BYTES). Textus
 /// has no way to shrink an image, so a larger one is refused with why.
 pub fn read_image(root: &Path, rel: &str) -> Result<aicompat::agent::ImageAttachment, String> {

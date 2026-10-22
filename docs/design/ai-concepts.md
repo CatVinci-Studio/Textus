@@ -51,10 +51,11 @@ there, and the project's own settings live in its `.textus/` folder.**
   sidebar's (`sidebar/tree-root.ts`'s `agentRootOnOpen`).
 - **Textus AI uses it:** conversations find, list, read and search its
   text files and the text of its PDF, Word, PowerPoint, spreadsheet, EPUB
-  and RTF files (`find_files`, `list_files`, `read_file`, `search_files`;
+  and RTF files (`find_files`, which lists them all without a name,
+  `read_file`, `search_files`;
   `src-tauri/src/extract/` turns them into Markdown - headings, lists,
   tables, slides and their notes, footnotes - as for chat attachments),
-  and look at its images with `view_image` when the provider takes images;
+  and look at its images with `read_file` when the provider takes images;
   `@` in the composer attaches a text file. They walk it as the sidebar's
   file search does (`src-tauri/src/walk.rs`): hidden entries, what
   `.gitignore` and `.ignore` leave out, and build and dependency folders

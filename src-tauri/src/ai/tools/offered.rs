@@ -5,15 +5,15 @@
 use super::*;
 
 /// propose_edit as Revise mode offers it: every action.
-pub(crate) const PROPOSE_EDIT_DESCRIPTION: &str = "Propose one edit to the document. Nothing is modified directly: the user reviews the proposal and applies it with one click. Call once per distinct edit. Pick the action that matches the intent: `replace` swaps `anchor` for `text`; `replace_selection` swaps the user's currently selected text (the <selected-text> block in their message; no `anchor` needed) for `text`; `insert_before`/`insert_after` add `text` around an untouched `anchor` - inside the paragraph when the anchor is a phrase or sentence within it (write `text` as words that read on from it - after a paragraph's last sentence, this continues the paragraph), as a new paragraph when the anchor is a whole block or `text` is block content (a heading, list, several paragraphs), and as a new line of the same table or list when the anchor is a whole row or list item line and `text` is another one; `delete` removes `anchor`; `append` adds `text` at the end of the document; `insert_at_cursor` adds `text` exactly where the user's cursor is (only when their message carries a <cursor> block showing it; no `anchor` needed). Name the target by its block: every block of the document (paragraph, heading, list item, table, code block) starts with its id, like `[#k3f9]`, and `block` takes that id - write it first, before anything else, so the user sees where the edit goes at once. With `block` alone, `replace` swaps the whole block for `text`, `delete` removes it, and `insert_before`/`insert_after` add `text` as a new block next to it. To change a few words inside a block, give `block` and, as `anchor`, just those words quoted from it - not the whole block; to add text inside a block (after a sentence, or a list item of a list), give `block` and, as `anchor`, the words or the item line it goes next to. To rewrite up to 5 consecutive blocks in one replace, give the first as `block` and the last as `last_block`, and the run rewritten as `text`; a longer rewrite (a section, the whole document) is several such replaces in order. The user still decides on each paragraph by itself. The ids aren't part of the text: never write them in `text` or `anchor`. Without `block` (text you proposed earlier and the user hasn't decided on, which has no id), `anchor` must be copied verbatim and occur exactly once - if it appears more than once, also pass `context`. `text` must be valid markdown: `-` or `1.` for lists (never `•` or other bullet symbols), `#` for headings.";
+pub(crate) const PROPOSE_EDIT_DESCRIPTION: &str = "Propose one edit to the document. Nothing is modified directly: the user reviews the proposal and applies it with one click. Call once per distinct edit. Pick the action that matches the intent: `replace` swaps `anchor` for `text`; `replace_selection` swaps the user's currently selected text (the <selected-text> block in their message; no `anchor` needed) for `text`; `insert_before`/`insert_after` add `text` around an untouched `anchor` - inside the paragraph when the anchor is a phrase or sentence within it (write `text` as words that read on from it - after a paragraph's last sentence, this continues the paragraph), as a new paragraph when the anchor is a whole block or `text` is block content (a heading, list, several paragraphs), and as a new line of the same table or list when the anchor is a whole row or list item line and `text` is another one; `delete` removes `anchor`; `append` adds `text` at the end of the document; `insert_at_cursor` adds `text` exactly where the user's cursor is (only when their message carries a <cursor> block showing it; no `anchor` needed). Name the target by its block: every block of the document (paragraph, heading, list item, table, code block) starts with its id, like `[#k3f9]`, and `block` takes that id - write it first, before anything else, so the user sees where the edit goes at once. With `block` alone, `replace` swaps the whole block for `text`, `delete` removes it, and `insert_before`/`insert_after` add `text` as a new block next to it. To change a few words inside a block, give `block` and, as `anchor`, just those words quoted from it - not the whole block; to add text inside a block (after a sentence, or a list item of a list), give `block` and, as `anchor`, the words or the item line it goes next to. To rewrite up to 5 consecutive blocks in one replace, give the first as `block` and the last as `last_block`, and the run rewritten as `text`; a longer rewrite (a section, the whole document) is several such replaces in order. The user still decides on each paragraph by itself. The ids aren't part of the text: never write them in `text` or `anchor`. Without `block` (text you proposed earlier and the user hasn't decided on, which has no id), `anchor` must be copied verbatim and occur exactly once - if it appears more than once, also pass `context`.";
 
-pub(crate) const FIND_FILES_DESCRIPTION: &str = "Find files in the project folder by name - text files, and PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files (case-insensitive; every word must appear in the path, so \"chapter 3\" finds drafts/chapter-3.md). Markdown and plain-text documents come first. Use it whenever you know or can guess part of a file's name - a chapter, a character's notes, an outline - instead of listing every file; then read_file.";
+pub(crate) const FIND_FILES_DESCRIPTION: &str = "Find files in the project folder by name - text files, and PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files (case-insensitive; every word must appear in the path, so \"chapter 3\" finds drafts/chapter-3.md). Markdown and plain-text documents come first. Leave `name` out to list every file, to see what reference material there is; then read_file.";
 
-pub(crate) const FIND_FILES_DESCRIPTION_WITH_IMAGES: &str = "Find files in the project folder by name - text files, PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files, and images, marked \"(image)\" (case-insensitive; every word must appear in the path, so \"chapter 3\" finds drafts/chapter-3.md). Markdown and plain-text documents come first. Use it whenever you know or can guess part of a file's name - a chapter, a character's notes, an outline, a map - instead of listing every file; then read_file, or view_image for an image.";
+pub(crate) const FIND_FILES_DESCRIPTION_WITH_IMAGES: &str = "Find files in the project folder by name - text files, PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files, and images, marked \"(image)\" (case-insensitive; every word must appear in the path, so \"chapter 3\" finds drafts/chapter-3.md). Markdown and plain-text documents come first. Leave `name` out to list every file, to see what reference material there is - notes, other chapters, pictures; then read_file.";
 
-pub(crate) const LIST_FILES_DESCRIPTION: &str = "List the files in the project folder you can read - text files, and PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files (recursively, paths relative to it). Use it to see what reference material there is - notes, other chapters, data - when you have no name to look for; to find a file by name, use find_files instead.";
+pub(crate) const READ_FILE_DESCRIPTION: &str = "Read a text file, or the text of a PDF, Word, PowerPoint, spreadsheet, EPUB or RTF file (as Markdown), from the project folder, by the relative path find_files or search_files shows. A long file comes back in parts: the answer says which lines of how many it shows and where to read on; pass start_line and end_line to read a part - say, a few dozen lines around a line search_files found.";
 
-pub(crate) const LIST_FILES_DESCRIPTION_WITH_IMAGES: &str = "List the files in the project folder you can read - text files, PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files, and images, marked \"(image)\" (recursively, paths relative to it). Use it to see what reference material there is - notes, other chapters, data, pictures - when you have no name to look for; to find a file by name, use find_files instead.";
+pub(crate) const READ_FILE_DESCRIPTION_WITH_IMAGES: &str = "Read a text file, or the text of a PDF, Word, PowerPoint, spreadsheet, EPUB or RTF file (as Markdown), from the project folder, by the relative path find_files or search_files shows - or look at an image there (PNG, JPEG, GIF or WebP, up to 6 MB: a map, a photo, a chart, a scanned page). A long file comes back in parts: the answer says which lines of how many it shows and where to read on; pass start_line and end_line to read a part - say, a few dozen lines around a line search_files found.";
 
 /// The tools available to an agent conversation. Skill and file tools are
 /// only offered when there's something for them to work on - a tool that can
@@ -31,7 +31,7 @@ pub fn builtin_tools<'a>(
     let mut tools = vec![Tool {
             spec: ToolSpec {
                 name: SEARCH_TOOL_NAME.into(),
-                description: "Search the current document for a query string (case-insensitive). Returns matching lines with their line numbers.".into(),
+                description: "Search the document for a word or phrase (case-insensitive). Returns each matching line with its line number and its block's id, for an edit to name.".into(),
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -49,7 +49,7 @@ pub fn builtin_tools<'a>(
         }, Tool {
             spec: ToolSpec {
                 name: READ_DOCUMENT_TOOL_NAME.into(),
-                description: "Read part of the current document verbatim: a whole section by its heading (subsections included), or a range of lines. Use it before revising a passage you can't fully see, and to copy exact anchors. The text comes back without line-number prefixes, ready to quote.".into(),
+                description: "Read part of the document verbatim: a whole section by its heading (subsections included), or a range of lines from the outline. Use it before revising a passage you can't see in full. Each block comes back after its `[#id]`, as in the document section.".into(),
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -309,10 +309,9 @@ pub fn builtin_tools<'a>(
                     "properties": {
                         "name": {
                             "type": "string",
-                            "description": "Part of the file's name or path"
+                            "description": "Part of the file's name or path; left out, every file"
                         }
                     },
-                    "required": ["name"],
                 }),
             },
             access: Access::ReadOnly,
@@ -340,22 +339,12 @@ pub fn builtin_tools<'a>(
         });
         tools.push(Tool {
             spec: ToolSpec {
-                name: LIST_FILES_TOOL_NAME.into(),
-                description: if sees_images {
-                    LIST_FILES_DESCRIPTION_WITH_IMAGES.into()
-                } else {
-                    LIST_FILES_DESCRIPTION.into()
-                },
-                parameters: json!({"type": "object", "properties": {}}),
-            },
-            access: Access::ReadOnly,
-            modes: EVERY_MODE,
-            run: Run::Text(list_files),
-        });
-        tools.push(Tool {
-            spec: ToolSpec {
                 name: READ_FILE_TOOL_NAME.into(),
-                description: "Read a text file, or the text of a PDF, Word, PowerPoint, spreadsheet, EPUB or RTF file (as Markdown), from the project folder. Use the relative path as shown by find_files, search_files or list_files. A long file comes back in parts: the answer says which lines of how many it shows and where to read on; pass start_line and end_line to read a part - say, a few dozen lines around a line search_files found.".into(),
+                description: if sees_images {
+                    READ_FILE_DESCRIPTION_WITH_IMAGES.into()
+                } else {
+                    READ_FILE_DESCRIPTION.into()
+                },
                 parameters: json!({
                     "type": "object",
                     "properties": {
@@ -377,29 +366,8 @@ pub fn builtin_tools<'a>(
             },
             access: Access::ReadOnly,
             modes: EVERY_MODE,
-            run: Run::Text(read_file),
+            run: Run::Seeing(read_file),
         });
-        if sees_images {
-            tools.push(Tool {
-                spec: ToolSpec {
-                    name: VIEW_IMAGE_TOOL_NAME.into(),
-                    description: "Look at an image in the project folder (PNG, JPEG, GIF or WebP, up to 6 MB) - a map, a photo, a chart, a scanned page. Use the relative path as list_files or find_files show it.".into(),
-                    parameters: json!({
-                        "type": "object",
-                        "properties": {
-                            "path": {
-                                "type": "string",
-                                "description": "Path relative to the project folder"
-                            }
-                        },
-                        "required": ["path"],
-                    }),
-                },
-                access: Access::ReadOnly,
-                modes: EVERY_MODE,
-                run: Run::Seeing(view_image),
-            });
-        }
     }
 
     tools.retain(|tool| tool.modes.contains(&mode));

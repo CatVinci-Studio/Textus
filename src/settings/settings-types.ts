@@ -264,7 +264,7 @@ export interface Settings {
   /// the default: the folder of the document being edited. One setting for
   /// every document. It is the folder whose `.textus/` (style profile,
   /// library, agent.md, skills) is read AND the sandbox boundary of the
-  /// agent's list_files/read_file tools, so setting it is what lets the
+  /// agent's find_files/read_file tools, so setting it is what lets the
   /// agent reach reference material that doesn't live next to the draft.
   /// See docs/design/ai-concepts.md.
   agentWorkspaceRoot: string;

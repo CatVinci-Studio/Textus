@@ -120,7 +120,7 @@ fn history_keeps_no_tool_images_and_says_so() {
     };
     assert!(images.is_empty());
     assert!(
-        output.ends_with("call view_image again to look at it.]"),
+        output.ends_with("call read_file again to look at it.]"),
         "{output}"
     );
     let plain = AgentTurn::ToolResult {
@@ -364,6 +364,17 @@ fn long_document_is_truncated_with_outline_and_excerpts() {
     assert!(section.contains("last-marker"));
     // The bulk of the middle shouldn't appear - only outline + excerpts.
     assert!(section.len() < doc.len() / 2);
+}
+
+#[test]
+fn the_document_tools_are_for_a_document_shown_in_part() {
+    // agent::run_agent takes search_document and read_document out when
+    // the whole document is in the message.
+    assert!(context::shown_whole("# Title\n\nOne paragraph.", true));
+    assert!(!context::shown_whole(
+        &"x".repeat(FULL_DOCUMENT_LIMIT + 1),
+        true
+    ));
 }
 
 #[test]
@@ -774,7 +785,7 @@ fn interaction_mode_is_explicit_in_every_message() {
     assert!(review.contains("interaction mode: review"));
     assert!(
         build_instructions(&workspace, "draft", true, AgentMode::Review, "", "en")
-            .contains("no document edit tool is available")
+            .contains("No document edit tool is available")
     );
 
     assert!(message(AgentMode::Revise).contains("interaction mode: revise"));

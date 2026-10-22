@@ -171,16 +171,12 @@ fn search_skips_files_too_large_or_not_text() {
     )
     .unwrap();
     assert_eq!(search(dir.path(), "beta"), "small.md:1: beta");
-    assert!(
-        read_part(dir.path(), "huge.md", LineRange::default(), false)
-            .unwrap_err()
-            .contains("too large to read (16.0 MB; the limit is 16.0 MB)")
-    );
-    assert!(
-        read_part(dir.path(), "nul.txt", LineRange::default(), false)
-            .unwrap_err()
-            .contains("isn't a readable text file")
-    );
+    assert!(read_part(dir.path(), "huge.md", LineRange::default())
+        .unwrap_err()
+        .contains("too large to read (16.0 MB; the limit is 16.0 MB)"));
+    assert!(read_part(dir.path(), "nul.txt", LineRange::default())
+        .unwrap_err()
+        .contains("isn't a readable text file"));
 }
 
 /// A book in one file: past MAX_FILE_BYTES, which an @-mention still
@@ -205,7 +201,7 @@ fn a_big_file_reads_in_parts_and_search_points_into_it() {
         "an @-mention still can't"
     );
 
-    let first = read_part(root, "book.md", LineRange::default(), false).unwrap();
+    let first = read_part(root, "book.md", LineRange::default()).unwrap();
     let header = first.lines().next().unwrap();
     assert!(header.starts_with("`book.md`, lines 1-"), "{header}");
     assert!(header.ends_with("of 6000:"), "{header}");
@@ -229,7 +225,6 @@ fn a_big_file_reads_in_parts_and_search_points_into_it() {
             start: Some(shown + 1),
             end: None,
         },
-        false,
     )
     .unwrap();
     assert!(next.starts_with(&format!("`book.md`, lines {}-", shown + 1)));
@@ -246,7 +241,6 @@ fn a_big_file_reads_in_parts_and_search_points_into_it() {
             start: Some(4_320),
             end: Some(4_322),
         },
-        false,
     )
     .unwrap();
     assert_eq!(
@@ -260,7 +254,7 @@ fn a_read_counts_chinese_characters_by_weight() {
     let line = "灯塔看守人的名字叫阿贝尔，他每天傍晚都会爬上那段螺旋楼梯。".repeat(4);
     let text = format!("{line}\n").repeat(400);
     let dir = project(&[("书.md", &text)]);
-    let out = read_part(dir.path(), "书.md", LineRange::default(), false).unwrap();
+    let out = read_part(dir.path(), "书.md", LineRange::default()).unwrap();
     let cjk = out.chars().filter(|&c| char_units(c) == 3).count();
     assert!((12_000..=MAX_READ_UNITS / 3).contains(&cjk), "{cjk}");
     assert!(out.contains("more lines not shown"));
@@ -269,7 +263,7 @@ fn a_read_counts_chinese_characters_by_weight() {
 #[test]
 fn a_line_longer_than_a_read_shows_its_beginning() {
     let dir = project(&[("one-line.txt", &"word ".repeat(20_000))]);
-    let out = read_part(dir.path(), "one-line.txt", LineRange::default(), false).unwrap();
+    let out = read_part(dir.path(), "one-line.txt", LineRange::default()).unwrap();
     assert!(out.starts_with("`one-line.txt`, lines 1-1 of 1:\nword word"));
     assert!(out.ends_with("[... line 1 is longer than one read can show; this is its beginning]"));
     assert!(out.len() < MAX_READ_UNITS + 200);
@@ -278,21 +272,21 @@ fn a_line_longer_than_a_read_shows_its_beginning() {
 #[test]
 fn a_small_file_reads_whole_and_a_range_says_where_it_is() {
     let dir = project(&[("a.md", "one\ntwo\nthree\n"), ("empty.md", "")]);
-    let whole = read_part(dir.path(), "@a.md", LineRange::default(), false).unwrap();
+    let whole = read_part(dir.path(), "@a.md", LineRange::default()).unwrap();
     assert_eq!(whole, "one\ntwo\nthree\n");
     let range = LineRange {
         start: Some(2),
         end: Some(9),
     };
     assert_eq!(
-        read_part(dir.path(), "a.md", range, false).unwrap(),
+        read_part(dir.path(), "a.md", range).unwrap(),
         "`a.md`, lines 2-3 of 3:\ntwo\nthree"
     );
     assert_eq!(
-        read_part(dir.path(), "empty.md", range, false).unwrap(),
+        read_part(dir.path(), "empty.md", range).unwrap(),
         "`empty.md` is empty."
     );
-    assert!(read_part(dir.path(), ".", range, false)
+    assert!(read_part(dir.path(), ".", range)
         .unwrap_err()
         .contains("is a folder"));
 }
@@ -317,7 +311,7 @@ fn documents_are_listed_read_and_searched_as_their_text() {
     );
     assert_eq!(walk_text_files(root).files, ["notes.md"]);
     assert_eq!(
-        read_part(root, "research/interview.docx", LineRange::default(), false).unwrap(),
+        read_part(root, "research/interview.docx", LineRange::default()).unwrap(),
         "Maria Lopez, 12 March\n\nShe takes the 6:40 bus."
     );
     assert_eq!(
@@ -328,7 +322,6 @@ fn documents_are_listed_read_and_searched_as_their_text() {
                 start: Some(3),
                 end: None
             },
-            false
         )
         .unwrap(),
         "`research/interview.docx`, lines 3-3 of 3:\nShe takes the 6:40 bus."
@@ -338,7 +331,7 @@ fn documents_are_listed_read_and_searched_as_their_text() {
         "research/interview.docx:3: She takes the 6:40 bus."
     );
     assert_eq!(
-        read_part(root, "broken.pdf", LineRange::default(), false).unwrap_err(),
+        read_part(root, "broken.pdf", LineRange::default()).unwrap_err(),
         "`broken.pdf` can't be read: This PDF can't be read."
     );
     assert_eq!(find(root, "interview", false), "research/interview.docx");
@@ -376,11 +369,7 @@ fn images_are_listed_and_shown_only_to_a_model_that_can_see() {
         .unwrap_err()
         .starts_with("`notes.md` isn't an image"));
     assert!(read_image(root, "../map.png").is_err());
-    assert_eq!(
-        read_part(root, "map.png", LineRange::default(), true).unwrap_err(),
-        "`map.png` is an image - use view_image to look at it."
-    );
-    assert!(read_part(root, "map.png", LineRange::default(), false)
+    assert!(read_part(root, "map.png", LineRange::default())
         .unwrap_err()
         .contains("can't see images"));
 }

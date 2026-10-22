@@ -279,6 +279,13 @@ async fn ai_agent_message_inner(
                 workspace.remember,
                 entry.supports_vision,
             );
+            // A document shown whole needs no tools to read it: offered,
+            // they were read again and again instead of edited (DeepSeek,
+            // 1.2.0-rc.6).
+            if context::shown_whole(&document, true) {
+                tools.remove(tools::SEARCH_TOOL_NAME);
+                tools.remove(tools::READ_DOCUMENT_TOOL_NAME);
+            }
             if let Some(image_run) = &image_run {
                 tools.add(image_run.tool(
                     &document,
@@ -407,7 +414,7 @@ fn for_history(turn: AgentTurn) -> AgentTurn {
         } if !images.is_empty() => AgentTurn::ToolResult {
             call_id,
             output: format!(
-                "{output}\n[The image was shown for that request only - call view_image again to look at it.]"
+                "{output}\n[The image was shown for that request only - call read_file again to look at it.]"
             ),
             images: Vec::new(),
         },
@@ -459,7 +466,7 @@ async fn flattened_chat_turn(
 
 /// The picture a message's selection is, when it is one picture and
 /// nothing else (`<selected-text>`, src/ai/chat/user-message.ts) whose
-/// file is in the document's folder: PNG, JPEG, GIF or WebP, as view_image
+/// file is in the document's folder: PNG, JPEG, GIF or WebP, as read_file
 /// reads them. None for a picture on the web, one outside the folder, or
 /// a selection of anything more.
 fn selected_picture(message: &str, doc_path: Option<&str>) -> Option<ImageAttachment> {

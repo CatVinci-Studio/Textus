@@ -191,7 +191,7 @@ export const ai = {
     docPath: string | null;
     /** The chosen project folder (Settings > Textus AI > Project Folder, or
      *  the project bar); null keeps the default, the document's own folder.
-     *  Decides where .textus/ is read from and how far list_files/read_file
+     *  Decides where .textus/ is read from and how far find_files/read_file
      *  may reach. */
     workspaceRoot: string | null;
     history: AgentTurn[];

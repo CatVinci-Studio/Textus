@@ -95,9 +95,7 @@ pub(super) fn remember(ctx: &ToolContext, arguments: &str) -> String {
     }
 }
 
-pub(super) const LIST_FILES_TOOL_NAME: &str = "list_files";
 pub(super) const READ_FILE_TOOL_NAME: &str = "read_file";
-pub(super) const VIEW_IMAGE_TOOL_NAME: &str = "view_image";
 
 /// How much of the project the listing shows: enough for reference
 /// material next to the document, small enough that a huge folder can't
@@ -107,13 +105,9 @@ pub(super) const SEARCH_FILES_TOOL_NAME: &str = "search_files";
 pub(super) const FIND_FILES_TOOL_NAME: &str = "find_files";
 
 /// The project folder's files the tools can read (paths relative to it),
-/// images marked. Hidden entries and build/dependency folders are skipped -
-/// see ai::project.
-pub(super) fn list_files(ctx: &ToolContext, _arguments: &str) -> String {
-    let Some(root) = ctx.root else {
-        return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to list."
-            .to_string();
-    };
+/// images marked - find_files with no name. Hidden entries and
+/// build/dependency folders are skipped - see ai::project.
+fn list_files(ctx: &ToolContext, root: &std::path::Path) -> String {
     let walked = crate::ai::project::walk_readable_files(root, ctx.sees_images);
     let files = walked.files;
     if files.is_empty() {
@@ -147,38 +141,36 @@ pub(super) fn path_argument(arguments: &str, key: &str) -> String {
 
 /// Reads a text file or a document from inside the project folder, whole
 /// or a line range of it - containment, hidden files and size are enforced
-/// by ai::project::read_part.
-pub(super) fn read_file(ctx: &ToolContext, arguments: &str) -> String {
+/// by ai::project::read_part - or shows an image to a model that sees
+/// them.
+pub(super) fn read_file(ctx: &ToolContext, arguments: &str) -> ToolOutput {
     let Some(root) = ctx.root else {
         return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to read."
-            .to_string();
+            .to_string()
+            .into();
     };
+    // find_files marks images "(image)"; a model may copy it.
+    let path = path_argument(arguments, "path");
+    let path = path.trim().trim_end_matches("(image)").trim_end();
+    let is_image = crate::ai::project::file_kind(std::path::Path::new(path))
+        == Some(crate::ai::project::FileKind::Image);
+    if is_image && ctx.sees_images {
+        return view_image(root, path);
+    }
     let args: serde_json::Value = serde_json::from_str(arguments).unwrap_or_default();
     let line = |key: &str| args.get(key).and_then(|v| v.as_u64()).map(|n| n as usize);
     let range = crate::ai::project::LineRange {
         start: line("start_line"),
         end: line("end_line"),
     };
-    crate::ai::project::read_part(
-        root,
-        &path_argument(arguments, "path"),
-        range,
-        ctx.sees_images,
-    )
-    .unwrap_or_else(|err| err)
+    crate::ai::project::read_part(root, path, range)
+        .unwrap_or_else(|err| err)
+        .into()
 }
 
-/// Shows the model an image from the project folder - offered only when the
-/// provider takes images (ToolContext::sees_images).
-pub(super) fn view_image(ctx: &ToolContext, arguments: &str) -> ToolOutput {
-    let Some(root) = ctx.root else {
-        return "There is no project folder for this document, so there are no images to look at."
-            .to_string()
-            .into();
-    };
-    // list_files and find_files mark images "(image)"; a model may copy it.
-    let path = path_argument(arguments, "path");
-    let path = path.trim().trim_end_matches("(image)").trim_end();
+/// An image from the project folder, for a model that sees images
+/// (ToolContext::sees_images).
+fn view_image(root: &std::path::Path, path: &str) -> ToolOutput {
     match crate::ai::project::read_image(root, path) {
         Ok(image) => ToolOutput {
             text: format!("Here is `{}` ({}).", image.name, image.mime),
@@ -200,11 +192,16 @@ pub(super) fn search_files(ctx: &ToolContext, arguments: &str) -> String {
 }
 
 /// Finds project files by name - what the sidebar's file search does for
-/// the writer, and cheaper for the model than listing everything.
+/// the writer, and cheaper for the model than listing everything - or,
+/// with no name, lists them.
 pub(super) fn find_files(ctx: &ToolContext, arguments: &str) -> String {
     let Some(root) = ctx.root else {
         return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to find."
             .to_string();
     };
-    crate::ai::project::find(root, &path_argument(arguments, "name"), ctx.sees_images)
+    let name = path_argument(arguments, "name");
+    if name.trim().is_empty() {
+        return list_files(ctx, root);
+    }
+    crate::ai::project::find(root, &name, ctx.sees_images)
 }

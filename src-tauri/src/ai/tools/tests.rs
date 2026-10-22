@@ -328,27 +328,12 @@ fn the_project_file_tools_are_offered_only_with_a_project_folder() {
         .filter(|n| n.ends_with("_files") || n == READ_FILE_TOOL_NAME)
         .collect()
     };
-    assert_eq!(
-        names(true),
-        ["find_files", "search_files", "list_files", "read_file"]
-    );
+    assert_eq!(names(true), ["find_files", "search_files", "read_file"]);
     assert!(names(false).is_empty());
 }
 
 #[test]
-fn view_image_is_offered_only_to_a_model_that_can_see() {
-    let offered = |has_root: bool, sees_images: bool| {
-        builtin_tools(false, has_root, AgentMode::Review, false, sees_images)
-            .iter()
-            .any(|t| t.spec.name == VIEW_IMAGE_TOOL_NAME)
-    };
-    assert!(offered(true, true));
-    assert!(!offered(true, false));
-    assert!(!offered(false, true));
-}
-
-#[test]
-fn view_image_shows_the_image_and_the_listing_marks_it() {
+fn read_file_shows_an_image_to_a_model_that_sees_and_find_files_lists() {
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(dir.path().join("map.png"), [0x89, b'P', b'N', b'G']).unwrap();
     std::fs::write(dir.path().join("notes.md"), "").unwrap();
@@ -358,29 +343,31 @@ fn view_image_shows_the_image_and_the_listing_marks_it() {
         sees_images: true,
         ..ctx("")
     };
-    assert_eq!(list_files(&seeing, "{}"), "map.png (image)\nnotes.md");
+    let run = |ctx: &ToolContext, name: &str, args: &str| execute(&tools, ctx, name, args);
+    // No name: every file, images marked.
+    assert_eq!(
+        run(&seeing, FIND_FILES_TOOL_NAME, "{}").text,
+        "map.png (image)\nnotes.md"
+    );
     // The path as the listing shows it works too.
-    let out = execute(
-        &tools,
+    let out = run(
         &seeing,
-        VIEW_IMAGE_TOOL_NAME,
+        READ_FILE_TOOL_NAME,
         r#"{"path":"map.png (image)"}"#,
     );
     assert_eq!(out.text, "Here is `map.png` (image/png).");
     assert_eq!(out.images.len(), 1);
-    let out = execute(
-        &tools,
-        &seeing,
-        VIEW_IMAGE_TOOL_NAME,
-        r#"{"path":"notes.md"}"#,
-    );
-    assert!(out.text.starts_with("`notes.md` isn't an image"));
-    assert!(out.images.is_empty());
     let blind = ToolContext {
         root: Some(dir.path()),
         ..ctx("")
     };
-    assert_eq!(list_files(&blind, "{}"), "notes.md");
+    assert_eq!(
+        run(&blind, FIND_FILES_TOOL_NAME, r#"{"name":""}"#).text,
+        "notes.md"
+    );
+    let out = run(&blind, READ_FILE_TOOL_NAME, r#"{"path":"map.png"}"#);
+    assert!(out.text.contains("can't see images"), "{}", out.text);
+    assert!(out.images.is_empty());
 }
 
 #[test]
@@ -395,11 +382,12 @@ fn read_file_takes_a_line_range() {
         read_file(
             &in_project,
             r#"{"path":"a.md","start_line":2,"end_line":2}"#
-        ),
+        )
+        .text,
         "`a.md`, lines 2-2 of 3:\ntwo"
     );
     assert_eq!(
-        read_file(&in_project, r#"{"path":"a.md"}"#),
+        read_file(&in_project, r#"{"path":"a.md"}"#).text,
         "one\ntwo\nthree\n"
     );
 }
@@ -419,7 +407,7 @@ fn find_files_finds_project_files_by_name() {
     assert_eq!(run(r#"{"name":"lin_wan"}"#), "notes/Lin Wan.md");
     assert!(run(r#"{"name":"zebra"}"#).starts_with("No file in the project folder"));
     assert!(find_files(&ctx(""), r#"{"name":"lin"}"#).starts_with("There is no project folder"));
-    assert!(list_files(&in_project, "{}").starts_with("notes/Lin Wan.md\nchapter-1.md"));
+    assert!(run("{}").starts_with("notes/Lin Wan.md\nchapter-1.md"));
 }
 
 #[test]

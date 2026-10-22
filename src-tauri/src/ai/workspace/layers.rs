@@ -12,7 +12,7 @@ pub(crate) fn global_agent_dir(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 /// Resolves the workspace root - the project folder: the folder `.textus/`
-/// is read from and the sandbox boundary the `list_files`/`read_file` tools
+/// is read from and the sandbox boundary the `find_files`/`read_file` tools
 /// may not escape.
 ///
 /// `root_override` is the chosen project folder ("Choose project folder…"

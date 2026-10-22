@@ -127,7 +127,7 @@ export interface WebSource {
 }
 
 /** Mirrors AgentTurn in src-tauri/crates/aicompat/src/agent.rs. Its
- *  ToolResult also carries the images view_image showed the model, but
+ *  ToolResult also carries the images read_file showed the model, but
  *  agent.rs's for_history drops them before a turn reaches the frontend. */
 export type AgentTurn =
   | { kind: "User"; text: string; images?: ImageAttachment[] }

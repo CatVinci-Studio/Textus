@@ -48,7 +48,7 @@ pub struct ToolContext<'a> {
     pub root: Option<&'a Path>,
     /// The provider takes images (catalog's `supports_vision`, the gate on
     /// the chat's image attachments): the file tools then list images and
-    /// view_image shows them.
+    /// read_file shows them.
     pub sees_images: bool,
     /// The writing conventions (setting and style-profile front matter)
     /// check_conventions checks against.
@@ -104,7 +104,7 @@ pub type ToolFuture<'a> = Pin<Box<dyn Future<Output = ToolOutput> + Send + 'a>>;
 /// A tool's implementation, by what it answers with.
 pub enum Run<'a> {
     Text(fn(&ToolContext, &str) -> String),
-    /// Text and images for the model to look at (view_image).
+    /// Text and images for the model to look at (read_file).
     Seeing(fn(&ToolContext, &str) -> ToolOutput),
     /// Awaited, with what it needs captured: a search, a page read, a
     /// picture being made - work that waits on the network, which Stop
@@ -141,6 +141,11 @@ impl<'a> ToolRegistry<'a> {
         let mut registry = Self::new(mode);
         registry.tools = builtin_tools(has_skills, has_root, mode, can_remember, sees_images);
         registry
+    }
+
+    /// Takes the tool named `name` out, if it is offered.
+    pub fn remove(&mut self, name: &str) {
+        self.tools.retain(|t| t.spec.name != name);
     }
 
     /// Adds `tool` if this request's mode offers it.

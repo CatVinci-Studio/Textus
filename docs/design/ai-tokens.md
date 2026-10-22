@@ -71,10 +71,13 @@ Each tool's marginal cost (description plus schema):
 | find_files              |                                              236 |
 | search_files            |                                              179 |
 | use_skill               |                                              170 |
-| list_files              |                                              152 |
-| view_image              |                                              146 |
 | search_document         |                                              105 |
 | Fixed tool-use overhead |                                              286 |
+
+Since 1.2.0-rc.6 `find_files` lists every file when given no name and
+`read_file` shows images, in place of `list_files` and `view_image`; and
+`search_document` and `read_document` are offered only with a document
+too long to send whole. Not measured again since.
 
 ### The message being sent
 

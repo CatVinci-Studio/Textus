@@ -91,6 +91,8 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       "read_document:whole": t.toolReadWholeDocument,
       search_files: t.toolSearchFiles,
       find_files: t.toolFindFiles,
+      // No name: every file (list_files before 1.2.0-rc.6, in old chats).
+      "find_files:whole": t.toolListFiles,
       list_files: t.toolListFiles,
       read_file: t.toolReadFile,
       use_skill: t.toolUseSkill,

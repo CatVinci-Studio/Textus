@@ -313,7 +313,7 @@ export function AgentWorkspaceSection({ t }: { t: Strings }) {
 /// The default - the folder of the document being edited - is right until
 /// the user's sources and their draft don't live together, and then there is
 /// no way out of it: `.textus/` is looked for there, and the agent's
-/// list_files/read_file are sandboxed to it (ai/workspace.rs), so material
+/// find_files/read_file are sandboxed to it (ai/workspace.rs), so material
 /// one folder over is simply unreachable. This makes the root explicit while
 /// keeping the default for everyone it already suits. The project bar's
 /// menu offers the same choice, with the same labels.
