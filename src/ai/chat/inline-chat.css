@@ -1098,12 +1098,27 @@
   line-height: 1.55;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  /* A long thought opened in full scrolls in its own box. */
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+/* The live tail (thoughtTail): a few lines, the oldest fading out. */
+.agent-thought-text.is-tail {
+  max-height: none;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 35%), #000 1.6em);
 }
 
 /* Under a reply still streaming: it waits, and shows only if the reply
    pauses (ChatMessages re-keys it on every delta, starting the wait over). */
 .agent-thinking-after {
-  animation: agent-thinking-after 200ms var(--ease-out) 1200ms both;
+  animation: agent-thinking-after 200ms var(--ease-out) 1500ms both;
+}
+
+/* Before anything has come back: a quick answer never flashes the dots. */
+.agent-thinking-soon {
+  animation: agent-thinking-after 200ms var(--ease-out) 400ms both;
 }
 
 @keyframes agent-thinking-after {
@@ -1116,7 +1131,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .agent-thinking-after {
+  .agent-thinking-after,
+  .agent-thinking-soon {
     animation-duration: 1ms;
   }
 }

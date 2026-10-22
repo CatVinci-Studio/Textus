@@ -112,6 +112,10 @@ export interface ChatMessagesProps {
   /** Finished exchanges' thinking, by their user turn's index in
    *  `history` (useAgentConversation's `thoughts`). */
   thoughts?: Record<number, Thought>;
+  /** Whether a live thought opens on its last lines, and the user's say
+   *  on it (useAgentConversation's `followThinking`). */
+  followThinking?: boolean;
+  onFollowThinking?: (follow: boolean) => void;
   busy: boolean;
   error: string | null;
   selectedText: string | null;
@@ -172,6 +176,8 @@ export function ChatMessages({
   history,
   streaming,
   thoughts,
+  followThinking,
+  onFollowThinking,
   busy,
   error,
   selectedText,
@@ -443,7 +449,14 @@ export function ChatMessages({
             <div className={reveal ? "turn-reveal" : undefined} style={style}>
               <AgentTurnView turn={turn} labels={labels} />
             </div>
-            {thought && <ThoughtRow thought={thought} labels={labels} />}
+            {thought && (
+              <ThoughtRow
+                thought={thought}
+                labels={labels}
+                follow={followThinking}
+                onFollow={onFollowThinking}
+              />
+            )}
           </Fragment>
         );
       })}
@@ -467,6 +480,7 @@ export function ChatMessages({
         <ThinkingIndicator
           key={streaming?.tool ? streaming.tool : (streaming?.text.length ?? 0)}
           after={!!streaming?.text && !streaming?.tool}
+          soon={!streaming?.text && !streaming?.tool && !streaming?.thought}
           waitedFor={labels.waitedFor}
           label={
             streaming?.tool === "generate_image"
@@ -496,11 +510,14 @@ export function ChatMessages({
 export function ThinkingIndicator({
   label,
   after = false,
+  soon = false,
   waitedFor,
 }: {
   label: string;
   /** Under a streaming reply: shows only once it has paused a moment. */
   after?: boolean;
+  /** Before anything has come back: shows after a beat. */
+  soon?: boolean;
   /** Counts the seconds once nothing has moved for WAIT_SHOWN: a model
    *  that sends no thinking, or a call whose text comes whole, looked
    *  stuck with dots alone (rc.6). The row is re-keyed by each piece of
@@ -509,7 +526,9 @@ export function ThinkingIndicator({
 }) {
   const seconds = useSecondsSince(waitedFor !== undefined);
   return (
-    <div className={`agent-thinking${after ? " agent-thinking-after" : ""}`}>
+    <div
+      className={`agent-thinking${after ? " agent-thinking-after" : soon ? " agent-thinking-soon" : ""}`}
+    >
       <span className="agent-thinking-label">
         {waitedFor && seconds >= WAIT_SHOWN
           ? `${label} · ${waitedFor(seconds)}`

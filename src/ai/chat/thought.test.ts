@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { thinkingDone, thinkingEvent, thoughtSeconds } from "./thought";
+import {
+  thinkingDone,
+  thinkingEvent,
+  thoughtSeconds,
+  thoughtTail,
+} from "./thought";
 
 describe("thought", () => {
   it("adds up the phases an exchange thinks in", () => {
@@ -20,5 +25,14 @@ describe("thought", () => {
 
   it("leaves an exchange that never thought alone", () => {
     expect(thinkingDone(null, 5)).toBeNull();
+  });
+
+  it("shows the last few lines of a long think", () => {
+    expect(thoughtTail("one\n\ntwo\nthree\nfour\nfive\n")).toBe(
+      "two\nthree\nfour\nfive",
+    );
+    const tail = thoughtTail("word ".repeat(200), 4, 50);
+    expect(tail.startsWith("…word")).toBe(true);
+    expect(tail.length).toBeLessThanOrEqual(51);
   });
 });
