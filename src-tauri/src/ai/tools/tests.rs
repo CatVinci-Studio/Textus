@@ -698,3 +698,31 @@ fn a_result_says_its_picture_ids_are_textus_own() {
     assert!(note.contains("nothing to fix"), "{note}");
     assert_eq!(ledger.pictures_placed("One."), "");
 }
+
+#[test]
+fn words_of_an_undecided_rewrite_quoted_by_its_block_go_into_the_rewrite() {
+    // Haiku named the block it had rewritten and quoted its own rewrite.
+    let doc = "The lighthouse stood on the rock.\n\nWaves broke below.";
+    let undecided = vec![crate::ai::images::UndecidedEdit {
+        replaced: "The lighthouse stood on the rock.".into(),
+        text: "The old lighthouse stood alone on its rock.".into(),
+    }];
+    let context = ToolContext {
+        undecided: &undecided,
+        ..ctx(doc)
+    };
+    let block = context.document.blocks[0].id.clone();
+    let out = propose_edit(
+        &context,
+        &json!({"action": "replace", "block": block, "anchor": "stood alone", "text": "stood tall"})
+            .to_string(),
+    );
+    assert!(out.contains("goes into that proposal"), "{out}");
+    // Words in neither are still refused, by the block.
+    let out = propose_edit(
+        &context,
+        &json!({"action": "replace", "block": block, "anchor": "a dragon", "text": "x"})
+            .to_string(),
+    );
+    assert!(out.contains("exactly once"), "{out}");
+}

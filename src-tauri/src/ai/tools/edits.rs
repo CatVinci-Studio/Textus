@@ -74,10 +74,21 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     };
     // A block it names that isn't there (from before a change, mistyped):
     // said as that, before anything the missing target would make it
-    // look like.
+    // look like. Words its block doesn't hold that text proposed and not
+    // decided yet does - a rewrite of that very block, quoted as written -
+    // go into that proposal, as words quoted without a block do (Haiku
+    // named the block of the paragraph it had rewritten, live_eval::
+    // continuing).
+    let mut quote_joins = false;
     if needs_anchor(action) && parsed.get("block").is_some() {
         if let Err(problem) = crate::ai::doc_blocks::check_target(ctx.document, &parsed) {
-            return problem;
+            let block = parsed.get("block").and_then(|v| v.as_str()).unwrap_or("");
+            let last = parsed.get("last_block").and_then(|v| v.as_str());
+            let in_run = ctx.document.run(block, last).is_some();
+            if !(in_run && !anchor.is_empty() && quotes_undecided(ctx, anchor)) {
+                return problem;
+            }
+            quote_joins = true;
         }
     }
     let has_text = parsed.get("text").and_then(|v| v.as_str()).is_some();
@@ -92,7 +103,7 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
                 "`{action}` requires `anchor` - the exact document text the edit targets."
             );
         }
-        let named = parsed.get("block").is_some();
+        let named = parsed.get("block").is_some() && !quote_joins;
         if !named {
             // Text proposed and not decided yet - this request's or an
             // earlier one's - has no block: the edit quotes it, and goes
