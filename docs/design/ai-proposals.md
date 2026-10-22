@@ -447,4 +447,4 @@ the answer to a per-window store (`useMarginAvailable`).
 | `ai/revision/revision-display.ts`                                   | The view drawn without a margin; which margin views can't be picked                                  |
 | `document-view/useEditorProposals.ts`                               | Wiring: the machine and its displays, supersede flag, exchange boundaries                            |
 | `draft-autosave.ts`, `startup-restore.ts`, `App.tsx`                | Draft snapshots, startup restore, close-time cleanup                                                 |
-| `src-tauri/src/ai/tools/`, `agent/`                               | `propose_edit` validation, system prompt, the status-note contract                                   |
+| `src-tauri/src/ai/tools/`, `agent/`                                 | `propose_edit` validation, system prompt, the status-note contract                                   |
