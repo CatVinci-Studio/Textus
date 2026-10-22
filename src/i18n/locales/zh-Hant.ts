@@ -173,6 +173,8 @@ export default {
   memoryMakePersonal: "改為個人",
   memoryMakeProject: "改為專案",
   memoryChipUndone: "已復原，不再記住。",
+  memoryChipForgot: "已忘記：{text}（{scope}）",
+  memoryChipRestored: "已復原，重新記住。",
   memoryActionFailed: "沒有成功，可以在「記憶」裡再試一次。",
   learnSuggestion: "你多次拒絕了{what}的修改。要記住嗎：{rule}",
   learnQuoted: "「{text}」",

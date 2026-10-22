@@ -197,6 +197,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   memoryMakePersonal: "Tornar pessoal",
   memoryMakeProject: "Passar para o projeto",
   memoryChipUndone: "Desfeito. Não é mais lembrado.",
+  memoryChipForgot: "Esquecido: {text} ({scope})",
+  memoryChipRestored: "Desfeito. Lembrado de novo.",
   memoryActionFailed: "Não deu certo. Tente de novo na aba Memória.",
   learnSuggestion: "Você recusou várias vezes {what}. Lembrar disto? {rule}",
   learnQuoted: "“{text}”",

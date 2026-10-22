@@ -690,9 +690,9 @@ pub struct AgentSetup<'a> {
     /// generate_image, for the picture cases: None offers no such tool, as
     /// the app does without an image model.
     pub pictures: Option<&'a crate::ai::images::ImageRun>,
-    /// The remember tool, writing to these folders, and what they hold
+    /// The memory pass after each exchange, writing to these folders, and what they hold
     /// sent with each message, read again every turn - as the app does
-    /// with Remember automatically on. None: no remember tool.
+    /// with Remember automatically on. None: nothing is remembered.
     pub memory: Option<&'a crate::ai::memory::MemoryDirs>,
 }
 
@@ -763,10 +763,6 @@ pub fn run_conversation(
             }
             None => setup.workspace,
         };
-        let memory = setup.memory.map(|dirs| crate::ai::memory::MemoryContext {
-            dirs: dirs.clone(),
-            source: Default::default(),
-        });
         let (message_sent, caret) = match (user.follow_selection, selection) {
             (true, Some((s, e))) => (
                 format!(
@@ -808,11 +804,9 @@ pub fn run_conversation(
             sees_images: sees_images(),
             conventions: &conventions,
             library: &library,
-            memory: memory.as_ref(),
             proposed: Default::default(),
             checks: Default::default(),
         };
-        // The remember tool only with memory folders to write to (above).
         // Images as the
         // app offers them to the provider the eval runs on (Anthropic), and
         // generate_image when the case gives it one, on this turn's
@@ -821,7 +815,6 @@ pub fn run_conversation(
             ws.has_usable_skills(),
             root.is_some(),
             setup.mode,
-            setup.memory.is_some(),
             sees_images(),
         );
         if let Some(pictures) = setup.pictures {
@@ -1120,6 +1113,54 @@ pub fn run_conversation(
                 } else if joined_ids.contains(call_id) {
                     *output = format!("{output}\n\n[{JOINED_NOTE}]");
                 }
+            }
+        }
+        // What to remember, decided after the exchange (memory::pass) by
+        // the conversation's model, as the app does; each change recorded
+        // as a remember call, as the chips show it.
+        if let Some(dirs) = setup.memory {
+            let exchange = crate::ai::memory::Exchange {
+                messages: outcomes
+                    .iter()
+                    .map(|o: &TurnOutcome| o.message.clone())
+                    .chain(std::iter::once(outcome.message.clone()))
+                    .collect(),
+                reply: outcome.reply.clone(),
+            };
+            let agent = &agent;
+            // The model's answer too, for the report.
+            let said = RefCell::new(String::new());
+            let answer = &said;
+            let kept = block_on(crate::ai::memory::run_pass(
+                dirs,
+                &exchange,
+                &Default::default(),
+                |instructions, input| async move {
+                    let turn = [AgentTurn::User {
+                        text: input,
+                        images: Vec::new(),
+                    }];
+                    let (step, used) = agent.step(&instructions, &turn, &[], &|_| {}).await?;
+                    charge(setup.model, &used.unwrap_or_default());
+                    let text = match step {
+                        StepResult::Done(text) => text,
+                        _ => String::new(),
+                    };
+                    answer.replace(text.clone());
+                    Ok(text)
+                },
+            ));
+            match kept {
+                Ok(kept) => {
+                    outcome.calls.push(
+                        serde_json::json!({"name": "memory_pass", "result": said.into_inner()}),
+                    );
+                    outcome.calls.extend(
+                        kept.iter()
+                            .map(|r| serde_json::json!({"name": "remember", "args": r})),
+                    );
+                }
+                Err(e) => eprintln!("live_eval: memory pass failed: {e}"),
             }
         }
         history.extend(turns.iter().cloned());

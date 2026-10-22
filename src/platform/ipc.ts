@@ -22,6 +22,7 @@ import type {
   LibraryUse,
   MemoryKind,
   MemoryScope,
+  RememberedChange,
   SkillListItem,
   StreamEvent,
   TextMeasure,
@@ -101,6 +102,7 @@ export {
   type ConventionsReport,
   type TextMeasure,
   type SkillListItem,
+  type RememberedChange,
 } from "./ipc-ai-types";
 
 /**
@@ -215,9 +217,6 @@ export const ai = {
     /** The UI language: the agent is given that UI's names for the app's
      *  concepts and controls (agent.rs, UiNames). */
     uiLanguage?: string;
-    /** The conversation, recorded with what Textus AI remembers in it
-     *  (`Source` in ai/memory.rs). */
-    conversation?: { id: string; title: string };
     /** The image model, or null for none: generate_image is offered
      *  only with one (ai/images.rs). */
     imageModel?: ImageModel | null;
@@ -305,6 +304,18 @@ export const ai = {
   pickTextFiles: () => call<string[]>("pick_text_files"),
   /** Undoes a remember call (ai::memory): deletes what it created, or
    *  writes back `previous`, the file before it updated it. */
+  /** After an exchange: what to remember, update or forget, decided by
+   *  the conversation's model and made (ai/memory/pass.rs). Nothing while
+   *  Remember automatically is off. */
+  memoryPass: (args: {
+    provider: string;
+    model: string | null;
+    docPath: string | null;
+    workspaceRoot: string | null;
+    /** Recorded with what is remembered (`Source` in ai/memory.rs). */
+    conversation: { id: string; title: string };
+    exchange: { messages: string[]; reply: string };
+  }) => aiCall<RememberedChange[]>("memory_pass", args),
   memoryUndo: (
     docPath: string | null,
     workspaceRoot: string | null,
@@ -326,7 +337,7 @@ export const ai = {
   ) => call<void>("memory_delete", { docPath, workspaceRoot, id }),
   /** Saves one memory the user asked for with a click (a suggestion
    *  learned from revision choices); returns its id. Fails with plain
-   *  words, as the remember tool does, on a duplicate. */
+   *  words on a duplicate. */
   memoryRemember: (
     docPath: string | null,
     workspaceRoot: string | null,

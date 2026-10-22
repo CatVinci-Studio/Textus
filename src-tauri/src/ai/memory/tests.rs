@@ -338,7 +338,7 @@ fn the_prompt_budget_counts_characters_and_keeps_the_project_first() {
         [Scope::Project, Scope::Project],
         "the project's win the budget"
     );
-    let sections = memory_sections(&memories, &[], false);
+    let sections = memory_sections(&memories);
     assert!(sections
         .iter()
         .any(|s| s.contains("1 older memories don't fit")));
@@ -346,7 +346,7 @@ fn the_prompt_budget_counts_characters_and_keeps_the_project_first() {
 }
 
 #[test]
-fn the_prompt_lists_personal_then_project_and_ids_only_for_the_tool() {
+fn the_prompt_lists_personal_then_project_without_ids() {
     let base = scratch("prompt");
     let dirs = dirs(&base);
     dirs.remember(
@@ -362,40 +362,39 @@ fn the_prompt_lists_personal_then_project_and_ids_only_for_the_tool() {
     )
     .unwrap();
     let memories = dirs.load();
-    let with_tool = memory_sections(&memories, &[], true).join("\n\n");
-    let personal = with_tool.find("Reply briefly.").unwrap();
-    let project = with_tool.find("Spell it colour.").unwrap();
+    let sections = memory_sections(&memories).join("\n\n");
+    let personal = sections.find("Reply briefly.").unwrap();
+    let project = sections.find("Spell it colour.").unwrap();
     assert!(personal < project);
     assert!(
-        with_tool.contains("where these conflict with the personal memories above, follow these")
+        sections.contains("where these conflict with the personal memories above, follow these")
     );
-    assert!(with_tool.contains("- [personal/memory/Reply-briefly] (preference) Reply briefly."));
-    assert!(remember_instructions(true, true).is_some_and(|s| s.contains("---remembering---")));
-    assert!(remember_instructions(true, false).is_none());
-    let without = memory_sections(&memories, &[], false).join("\n\n");
-    assert!(without.contains("- (requirement) Spell it colour."));
-    assert!(!without.contains("[project/"));
+    assert!(sections.contains("- (requirement) Spell it colour."));
+    assert!(!sections.contains("[project/") && !sections.contains("[personal/"));
     std::fs::remove_dir_all(&base).ok();
 }
 
 #[test]
-fn the_tool_reports_what_it_saved_as_json() {
-    let base = scratch("tool");
-    let ctx = MemoryContext {
-        dirs: dirs(&base),
-        source: source(),
-    };
-    let out = run_tool(
-        &ctx,
-        r#"{"kind":"preference","scope":"personal","text":"No emoji."}"#,
-    );
-    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+fn keep_reports_what_it_saved_as_json() {
+    let base = scratch("keep");
+    let dirs = dirs(&base);
+    let done = dirs
+        .keep("preference", "personal", "No emoji.", &source())
+        .unwrap();
+    let v = serde_json::to_value(&done).unwrap();
     assert_eq!(v["remembered"], "personal/memory/No-emoji");
     assert_eq!(v["scope"], "personal");
     assert_eq!(v["created"], true);
     assert!(v["previous"].is_null());
-    assert!(run_tool(&ctx, "{}").contains("`text` is required"));
-    assert!(run_tool(&ctx, r#"{"kind":"mood","text":"x"}"#).contains("`kind` must be"));
+    assert!(v.get("forgot").is_none());
+    assert!(dirs
+        .keep("preference", "personal", " ", &source())
+        .unwrap_err()
+        .contains("`text` is required"));
+    assert!(dirs
+        .keep("mood", "personal", "x", &source())
+        .unwrap_err()
+        .contains("`kind` must be"));
     std::fs::remove_dir_all(&base).ok();
 }
 

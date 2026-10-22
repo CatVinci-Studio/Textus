@@ -48,6 +48,8 @@ mod files;
 pub(crate) use files::*;
 mod prompt;
 pub(crate) use prompt::*;
+mod pass;
+pub use pass::*;
 
 /// Most memory text sent with one request, in characters (not bytes, so
 /// Chinese and Japanese get as much as English): about 40 memories of a
@@ -264,12 +266,6 @@ pub struct MemoryDirs {
     project: Option<PathBuf>,
 }
 
-/// Everything the remember tool needs for one request.
-pub struct MemoryContext {
-    pub dirs: MemoryDirs,
-    pub source: Source,
-}
-
 /// A memory's file, found from its id.
 pub(crate) struct Located {
     scope: Scope,
@@ -289,12 +285,15 @@ pub struct Remembering {
     pub created: bool,
     pub text: String,
     pub previous: Option<String>,
-    /// For the model.
-    pub note: &'static str,
+    /// What was remembered was taken back (memory::pass): `text` is what
+    /// it said, `previous` the file Undo puts back.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub forgot: bool,
 }
 
-/// The remember tool's arguments (tools.rs has the schema).
-#[derive(Deserialize, Default)]
+/// What to remember: a change memory::pass asked for, or one the user
+/// asked for with a click.
+#[derive(Deserialize, Default, Clone)]
 pub(crate) struct RememberArgs {
     #[serde(default)]
     kind: String,
@@ -307,24 +306,56 @@ pub(crate) struct RememberArgs {
     replaces: Option<String>,
 }
 
-/// Told to the model with every saved memory.
-const SAVED_NOTE: &str =
-    "Saved. The user sees it under your reply with Undo; mention it in a few words at most.";
-
-/// The remember tool (tools.rs): the model's JSON arguments in, the
-/// Remembering as JSON (or what went wrong, in words) out.
-pub fn run_tool(ctx: &MemoryContext, arguments: &str) -> String {
-    let args: RememberArgs = match serde_json::from_str(arguments) {
-        Ok(args) => args,
-        Err(_) => return "Invalid arguments - expected JSON with `kind` and `text`.".to_string(),
-    };
-    match ctx.dirs.remember(args, &ctx.source, &now()) {
-        Ok(done) => serde_json::to_string(&done).unwrap_or_default(),
-        Err(problem) => problem,
+impl MemoryDirs {
+    /// One memory kept as it was asked for - a suggestion's Remember
+    /// (memory_remember), a live eval's memories from before.
+    pub fn keep(
+        &self,
+        kind: &str,
+        scope: &str,
+        text: &str,
+        source: &Source,
+    ) -> Result<Remembering, String> {
+        let args = RememberArgs {
+            kind: kind.into(),
+            scope: Some(scope.into()),
+            text: text.into(),
+            ..RememberArgs::default()
+        };
+        self.remember(args, source, &now())
     }
 }
 
 // ----------------------------------------------------------------- commands
+
+/// After each exchange (memory::pass): what to remember, update or forget,
+/// decided by the conversation's own model and made - each change for a
+/// chip under the reply. Nothing while Remember automatically is off.
+#[tauri::command]
+#[allow(clippy::too_many_arguments)]
+pub async fn memory_pass(
+    app: tauri::AppHandle,
+    provider: String,
+    model: Option<String>,
+    doc_path: Option<String>,
+    workspace_root: Option<String>,
+    conversation: Option<Source>,
+    exchange: Exchange,
+) -> Result<Vec<Remembering>, String> {
+    crate::ai::ensure_on(&app)?;
+    if !remember_enabled(&app) {
+        return Ok(Vec::new());
+    }
+    let dirs = MemoryDirs::for_document(&app, doc_path.as_deref(), workspace_root.as_deref());
+    let source = Source {
+        document: doc_path,
+        ..conversation.unwrap_or_default()
+    };
+    run_pass(&dirs, &exchange, &source, |instructions, input| async {
+        crate::ai::client::call(&app, &provider, instructions, input, model.as_deref()).await
+    })
+    .await
+}
 
 /// The chat chip's Undo: deletes what a remember call created, or writes
 /// back `previous`, the file before it was updated.
@@ -380,7 +411,7 @@ pub async fn memory_delete(
 
 /// "Remember" on a suggestion learned from revision choices
 /// (src/ai/revision/RevisionLearning.tsx): one memory the user asked for
-/// with a click, written as the remember tool writes it - so it is listed,
+/// with a click, written as memory::pass writes one - so it is listed,
 /// moved and deleted in the Memory tab like any other. A click, not the
 /// model: it saves whether or not Remember automatically is on.
 #[tauri::command]
@@ -398,16 +429,7 @@ pub async fn memory_remember(
             document: doc_path,
             ..Source::default()
         };
-        dirs.remember(
-            RememberArgs {
-                kind,
-                scope: Some(scope),
-                text,
-                ..RememberArgs::default()
-            },
-            &source,
-            &now(),
-        )
+        dirs.keep(&kind, &scope, &text, &source)
     })
     .await
     .map_err(|e| e.to_string())?

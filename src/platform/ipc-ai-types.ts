@@ -116,6 +116,18 @@ export type MemoryScope = "project" | "personal";
 /** `MemoryKind` in ai/memory.rs. */
 export type MemoryKind = "requirement" | "preference" | "style";
 
+/** One change the memory pass made - `Remembering` in ai/memory.rs: what
+ *  is remembered now (or, `forgot`, what was taken back), and `previous`,
+ *  the file before, for Undo to put back. */
+export interface RememberedChange {
+  remembered: string;
+  scope: MemoryScope;
+  created: boolean;
+  text: string;
+  previous: string | null;
+  forgot?: boolean;
+}
+
 /** Every memory for a document, personal first - `Memories` in
  *  ai/memory.rs. `chars` of the included ones, of `cap`. */
 export interface Memories {

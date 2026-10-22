@@ -206,6 +206,8 @@ para usar una.
   memoryMakePersonal: "Hacer personal",
   memoryMakeProject: "Pasar al proyecto",
   memoryChipUndone: "Deshecho. Ya no se recuerda.",
+  memoryChipForgot: "Olvidado: {text} ({scope})",
+  memoryChipRestored: "Deshecho. Se vuelve a recordar.",
   memoryActionFailed:
     "No ha funcionado. Vuelve a intentarlo en la pestaña Memoria.",
   learnSuggestion: "Has rechazado varias veces {what}. ¿Recordar esto? {rule}",

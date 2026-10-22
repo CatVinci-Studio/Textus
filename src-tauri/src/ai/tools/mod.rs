@@ -55,8 +55,6 @@ pub struct ToolContext<'a> {
     pub conventions: &'a crate::ai::rules::Conventions,
     /// Library names and aliases, for the library-name rule.
     pub library: &'a [String],
-    /// Where the remember tool writes; None when it isn't offered.
-    pub memory: Option<&'a crate::ai::memory::MemoryContext>,
     /// The passages this request's proposals already replace or delete
     /// (their `context`, else their anchor; "" for the selection). One
     /// context serves one request, every step of it.
@@ -131,15 +129,9 @@ impl<'a> ToolRegistry<'a> {
     }
 
     /// The built-in tools for `mode` (see [`builtin_tools`] for the rest).
-    pub fn builtin(
-        has_skills: bool,
-        has_root: bool,
-        mode: AgentMode,
-        can_remember: bool,
-        sees_images: bool,
-    ) -> Self {
+    pub fn builtin(has_skills: bool, has_root: bool, mode: AgentMode, sees_images: bool) -> Self {
         let mut registry = Self::new(mode);
-        registry.tools = builtin_tools(has_skills, has_root, mode, can_remember, sees_images);
+        registry.tools = builtin_tools(has_skills, has_root, mode, sees_images);
         registry
     }
 

@@ -182,6 +182,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   memoryMakePersonal: "개인으로 옮기기",
   memoryMakeProject: "프로젝트로 옮기기",
   memoryChipUndone: "취소했습니다. 더 이상 기억하지 않습니다.",
+  memoryChipForgot: "잊었습니다: {text} ({scope})",
+  memoryChipRestored: "취소했습니다. 다시 기억합니다.",
   memoryActionFailed: "실패했습니다. ‘기억’ 탭에서 다시 시도하세요.",
   learnSuggestion: "{what}을 여러 번 거절하셨습니다. 이것을 기억할까요? {rule}",
   learnQuoted: "‘{text}’",

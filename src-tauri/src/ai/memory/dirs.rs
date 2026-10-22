@@ -146,7 +146,7 @@ impl MemoryDirs {
         items
     }
 
-    /// The remember tool: validates, refuses a duplicate, and writes one
+    /// One memory kept (memory::pass, MemoryDirs::keep): validates, refuses a duplicate, and writes one
     /// memory (or library entry) through the atomic writer. The error is
     /// what the model is told instead.
     pub(crate) fn remember(
@@ -231,7 +231,7 @@ impl MemoryDirs {
             created: previous.is_none(),
             text: text.to_string(),
             previous,
-            note: SAVED_NOTE,
+            forgot: false,
         })
     }
 
@@ -366,7 +366,7 @@ impl MemoryDirs {
             created: previous.is_none(),
             text: text.to_string(),
             previous,
-            note: SAVED_NOTE,
+            forgot: false,
         })
     }
 

@@ -194,6 +194,8 @@ type /name in a conversation to use one.
   memoryMakePersonal: "Make personal",
   memoryMakeProject: "Make project",
   memoryChipUndone: "Undone. No longer remembered.",
+  memoryChipForgot: "Forgot: {text} ({scope})",
+  memoryChipRestored: "Undone. Remembered again.",
   memoryActionFailed: "That didn't work. Try again in the Memory tab.",
   learnSuggestion:
     "You turned down {what} several times. Remember this? {rule}",

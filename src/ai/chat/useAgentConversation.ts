@@ -18,6 +18,7 @@ import { useSettings, type AgentMode } from "../../settings/SettingsContext";
 import { imageModelOf } from "../image-models";
 import { parsePartialToolArgs } from "./partial-tool-args";
 import { resolveBlockTarget } from "../doc-blocks";
+import { insertTurns, memoryTurns, passExchange } from "./memory-pass";
 
 export interface AgentRequestOptions {
   mode: AgentMode;
@@ -228,14 +229,6 @@ export function useAgentConversation(
         mode: options.mode,
         focusHeading: options.focusHeading ?? null,
         uiLanguage: uiLanguage.current,
-        // Recorded with what Textus AI remembers in this exchange.
-        conversation: {
-          id: conversationId,
-          title: conversationTitle([
-            ...history,
-            { kind: "User", text: trimmed },
-          ]),
-        },
         model: model || null,
         imageModel: imageModel.current,
         requestId,
@@ -359,6 +352,7 @@ export function useAgentConversation(
       if (generation !== generationRef.current) return undefined;
       keepThought();
       setHistory((prev) => [...prev, ...newTurns]);
+      void rememberAfter([...history, ...newTurns], at + newTurns.length);
       return newTurns;
     } catch (err) {
       if (generation !== generationRef.current) return undefined;
@@ -387,6 +381,33 @@ export function useAgentConversation(
         setStreaming(null);
         requestIdRef.current = null;
       }
+    }
+  }
+
+  /** After an exchange, what is remembered is brought up to date
+   *  (ai/memory/pass.rs) - apart from the reply, which is already shown -
+   *  and each change goes in as a chip right after the exchange (`at`).
+   *  A failure only means nothing was remembered this time. */
+  async function rememberAfter(conversation: AgentTurn[], at: number) {
+    if (!settings.rememberAutomatically) return;
+    const generation = generationRef.current;
+    try {
+      const changes = await ai.memoryPass({
+        provider,
+        model: model || null,
+        docPath,
+        workspaceRoot,
+        conversation: {
+          id: conversationId,
+          title: conversationTitle(conversation),
+        },
+        exchange: passExchange(conversation),
+      });
+      if (changes.length === 0 || generation !== generationRef.current) return;
+      const turns = memoryTurns(changes, () => crypto.randomUUID());
+      setHistory((prev) => insertTurns(prev, at, turns));
+    } catch {
+      // Nothing remembered; the exchange itself is unaffected.
     }
   }
 

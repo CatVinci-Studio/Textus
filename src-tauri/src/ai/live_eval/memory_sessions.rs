@@ -496,12 +496,10 @@ fn run_scenario(
         None => workspace::load_layers(None, None, None, &[]),
     };
     for (kind, scope, text) in &scenario.seed {
-        let ctx = crate::ai::memory::MemoryContext {
-            dirs: folders.dirs(),
-            source: Default::default(),
-        };
-        let args = json!({"kind": kind, "scope": scope, "text": text});
-        crate::ai::memory::run_tool(&ctx, &args.to_string());
+        folders
+            .dirs()
+            .keep(kind, scope, text, &Default::default())
+            .expect("a memory kept");
     }
     let mut conversations = Vec::new();
     let mut log = Vec::new();
@@ -524,6 +522,7 @@ fn run_scenario(
             "turns": conv.outcomes.iter().map(|o| json!({
                 "user": o.message,
                 "remember_calls": o.calls.iter().filter(|c| c["name"] == "remember").map(|c| c["args"].clone()).collect::<Vec<_>>(),
+                "pass_answer": o.calls.iter().find(|c| c["name"] == "memory_pass").map(|c| c["result"].clone()),
                 "proposed": o.proposals.iter().map(|p| p.text.clone()).collect::<Vec<_>>(),
                 "reply": o.reply,
             })).collect::<Vec<_>>(),

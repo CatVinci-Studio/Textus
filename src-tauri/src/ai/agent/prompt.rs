@@ -127,7 +127,7 @@ pub(super) const APP_GUIDE_POINTER: &str = "Textus's own features - the project 
 /// The app guide (see APP_GUIDE).
 pub(crate) fn app_guide() -> String {
     format!(
-        "What the app calls the things that shape your work, in its English UI: the project folder, whose .textus/ folder holds the project's own settings. The writing instructions: agent.md files in the global config folder and in .textus/, shown to you under ---user instructions--- headings and used only in conversations; the global ones open from Settings > {AI_NAME} > Writing Instructions (agent.md) > Edit agent.md, the project's from Edit project writing instructions in the project menu. Skills: reusable instructions the user calls with /name, or that you load when a request matches one, each one Markdown file - a name and a one-line description at the top, then the instructions. The app ships built-in skills, listed in Settings > {AI_NAME} > Built-in skills, where each has a switch to turn it off and Customize…, which copies it into the global config folder's skills/ and opens the copy to edit (Reset deletes the copy and brings the built-in back); the user's own skills go in .textus/skills/ or in the global config folder's skills/ (Settings > {AI_NAME} > Skills > Import Skill… copies a file there), and one with a built-in skill's name replaces it. The library: one file per person, place or term in .textus/library, an entry sent to you whenever its name or an alias appears in the user's message or the open document (aliases go on an `aliases:` line at the top of the entry); New library entry… in the project menu starts one. The style profile: .textus/style.md, sent to you as ---the author's style profile---; Learn my style from samples… in the project menu drafts it from the user's own writing (\"Learn my style\"), Create style profile starts an empty one, and once it exists Open style profile in the menu, or the Style chip next to the folder name, opens it. Writing conventions (Settings > {AI_NAME}, under Writing Assistance) picks the punctuation, spacing and number norms you, the grammar check and check_conventions follow - Automatic, or one profile such as en-GB/govuk for documents in that language; a `conventions:` line in the style profile's front matter overrides it for the project. The style profile and the library also shape completion, the grey suggestions as the user types; Enable AI completion in Settings > {AI_NAME}, under Writing Assistance, turns completion on or off, and Completion tone there sets its register. What you remember: what you keep with the remember tool, one small file each - the user's personal memories in the global config folder's memory/, the project's in .textus/memory/, facts about the work as library entries - shown with Undo under your reply and listed in the AI panel's Memory tab, where the user can edit, delete or move each one; Remember automatically in Settings > {AI_NAME} turns it on or off. The panel's modes are Write, which drafts new text into the document, Review, which only reads and comments, and Revise, which proposes changes to the text already there; the user applies a proposal with Accept or drops it with Reject.\nAsked how to do something in the app, answer in two to four plain sentences: what to use, where it is and what it does - for a skill, first a built-in skill that already does it (named as their UI names it) and Customize… to adapt it, before writing one from scratch - no headings or code blocks, no tips they didn't ask for, and no remarks about their document or their files."
+        "What the app calls the things that shape your work, in its English UI: the project folder, whose .textus/ folder holds the project's own settings. The writing instructions: agent.md files in the global config folder and in .textus/, shown to you under ---user instructions--- headings and used only in conversations; the global ones open from Settings > {AI_NAME} > Writing Instructions (agent.md) > Edit agent.md, the project's from Edit project writing instructions in the project menu. Skills: reusable instructions the user calls with /name, or that you load when a request matches one, each one Markdown file - a name and a one-line description at the top, then the instructions. The app ships built-in skills, listed in Settings > {AI_NAME} > Built-in skills, where each has a switch to turn it off and Customize…, which copies it into the global config folder's skills/ and opens the copy to edit (Reset deletes the copy and brings the built-in back); the user's own skills go in .textus/skills/ or in the global config folder's skills/ (Settings > {AI_NAME} > Skills > Import Skill… copies a file there), and one with a built-in skill's name replaces it. The library: one file per person, place or term in .textus/library, an entry sent to you whenever its name or an alias appears in the user's message or the open document (aliases go on an `aliases:` line at the top of the entry); New library entry… in the project menu starts one. The style profile: .textus/style.md, sent to you as ---the author's style profile---; Learn my style from samples… in the project menu drafts it from the user's own writing (\"Learn my style\"), Create style profile starts an empty one, and once it exists Open style profile in the menu, or the Style chip next to the folder name, opens it. Writing conventions (Settings > {AI_NAME}, under Writing Assistance) picks the punctuation, spacing and number norms you, the grammar check and check_conventions follow - Automatic, or one profile such as en-GB/govuk for documents in that language; a `conventions:` line in the style profile's front matter overrides it for the project. The style profile and the library also shape completion, the grey suggestions as the user types; Enable AI completion in Settings > {AI_NAME}, under Writing Assistance, turns completion on or off, and Completion tone there sets its register. What you remember: what Textus AI keeps after each conversation, one small file each - the user's personal memories in the global config folder's memory/, the project's in .textus/memory/, facts about the work as library entries - shown with Undo under your reply and listed in the AI panel's Memory tab, where the user can edit, delete or move each one; Remember automatically in Settings > {AI_NAME} turns it on or off. The panel's modes are Write, which drafts new text into the document, Review, which only reads and comments, and Revise, which proposes changes to the text already there; the user applies a proposal with Accept or drops it with Reject.\nAsked how to do something in the app, answer in two to four plain sentences: what to use, where it is and what it does - for a skill, first a built-in skill that already does it (named as their UI names it) and Customize… to adapt it, before writing one from scratch - no headings or code blocks, no tips they didn't ask for, and no remarks about their document or their files."
     )
 }
 
@@ -209,21 +209,13 @@ pub(crate) fn build_instructions(
         });
     }
 
-    // What Textus AI remembered by itself (ai::memory): personal, then the
-    // project's, after the user's own instructions, which win over both -
-    // here only without tools; with them, how to remember stays here and
-    // what is remembered comes with the message (request_preamble).
-    if with_tools {
-        sections.extend(crate::ai::memory::remember_instructions(
-            workspace.root.is_some(),
-            workspace.remember,
-        ));
-    } else {
-        sections.extend(crate::ai::memory::memory_sections(
-            &workspace.memories,
-            &workspace.library,
-            false,
-        ));
+    // What Textus AI remembered (ai::memory, kept after each exchange by
+    // memory::pass): personal, then the project's, after the user's own
+    // instructions, which win over both - here only without tools; with
+    // them it comes with the message (request_message), so a new memory
+    // doesn't change the system prompt and its cache.
+    if !with_tools {
+        sections.extend(crate::ai::memory::memory_sections(&workspace.memories));
     }
 
     // The skill index: names + descriptions only. Bodies load on demand via
@@ -290,11 +282,7 @@ pub(crate) fn request_preamble(
     ui_language: &str,
 ) -> String {
     let mut sections = vec![mode_section(mode, ui_language)];
-    sections.extend(crate::ai::memory::memory_sections(
-        &workspace.memories,
-        &workspace.library,
-        workspace.remember,
-    ));
+    sections.extend(crate::ai::memory::memory_sections(&workspace.memories));
     sections.join("\n\n")
 }
 

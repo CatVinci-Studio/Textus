@@ -247,7 +247,7 @@ export interface Settings {
   sourcesAsFootnotes: boolean;
   /// Settings > Textus AI > Remember automatically: Textus AI may keep
   /// requirements, preferences, style and facts it learns in a
-  /// conversation (the remember tool, src-tauri ai/memory.rs, which reads
+  /// conversation (the memory pass, src-tauri ai/memory/pass.rs, which reads
   /// this field from settings.json as REMEMBER_SETTING). On by default.
   rememberAutomatically: boolean;
   /// Whether an agent edit's green in-document preview streams/types itself

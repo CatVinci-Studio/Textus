@@ -161,16 +161,10 @@ fn live_token_breakdown() {
             "en",
         ),
     ] {
-        let remember = label.contains("remember");
         let system = build_instructions(ws, "", true, mode, "", ui);
-        let specs = tools::ToolRegistry::builtin(
-            ws.has_usable_skills(),
-            ws.root.is_some(),
-            mode,
-            remember,
-            true,
-        )
-        .specs();
+        let specs =
+            tools::ToolRegistry::builtin(ws.has_usable_skills(), ws.root.is_some(), mode, true)
+                .specs();
         let tool_values: Vec<Value> = specs.iter().map(tool_json).collect();
         let bare = count(key, AGENT_MODEL, None, &[], "x");
         let with_system = count(key, AGENT_MODEL, Some(&system), &[], "x");
@@ -202,7 +196,7 @@ fn live_token_breakdown() {
     );
 
     println!("\n## Each tool's marginal cost (project, Revise, images)\n");
-    let specs = tools::ToolRegistry::builtin(true, true, AgentMode::Revise, true, true).specs();
+    let specs = tools::ToolRegistry::builtin(true, true, AgentMode::Revise, true).specs();
     let all: Vec<Value> = specs.iter().map(tool_json).collect();
     let none = count(key, AGENT_MODEL, None, &[], "x");
     let with_all = count(key, AGENT_MODEL, None, &all, "x");
@@ -227,8 +221,7 @@ fn live_token_breakdown() {
         (with_all - none).saturating_sub(marginal_sum),
         with_all - none
     );
-    let write_specs =
-        tools::ToolRegistry::builtin(true, true, AgentMode::Write, true, true).specs();
+    let write_specs = tools::ToolRegistry::builtin(true, true, AgentMode::Write, true).specs();
     let insertion = write_specs
         .iter()
         .find(|s| s.name == "propose_edit")
@@ -507,7 +500,6 @@ fn live_doubao_prefix_cache() {
         true,
         false,
         AgentMode::Review,
-        false,
         true,
     ).specs()
     .iter()
@@ -592,7 +584,7 @@ fn live_doubao_prefix_cache() {
         native_search: None,
         enforce_binding: false,
     };
-    let specs = tools::ToolRegistry::builtin(true, false, AgentMode::Review, false, true).specs();
+    let specs = tools::ToolRegistry::builtin(true, false, AgentMode::Review, true).specs();
     for (n, message) in messages.iter().enumerate() {
         let turn = aicompat::agent::AgentTurn::User {
             text: request_user_text(&context, message),

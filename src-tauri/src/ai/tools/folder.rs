@@ -85,16 +85,6 @@ pub(super) fn use_skill(ctx: &ToolContext, arguments: &str) -> String {
     }
 }
 
-pub(super) const REMEMBER_TOOL_NAME: &str = "remember";
-
-/// Keeps a memory for later conversations - ai::memory does the work.
-pub(super) fn remember(ctx: &ToolContext, arguments: &str) -> String {
-    match ctx.memory {
-        Some(memory) => crate::ai::memory::run_tool(memory, arguments),
-        None => "Remembering is turned off.".to_string(),
-    }
-}
-
 pub(super) const READ_FILE_TOOL_NAME: &str = "read_file";
 
 /// How much of the project the listing shows: enough for reference

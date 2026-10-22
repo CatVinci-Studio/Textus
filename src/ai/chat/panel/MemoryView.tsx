@@ -263,7 +263,7 @@ export function MemorySections({
 const NEAR_CAP = 0.8;
 
 /**
- * "AI remembered": what Textus AI kept with its remember tool - personal
+ * "AI remembered": what Textus AI kept after its conversations - personal
  * memories, then the project's, then the library entries it wrote - each
  * with its date and the conversation it came from, and Edit, Move and
  * Delete. Says so when the memories near or pass the prompt's budget,

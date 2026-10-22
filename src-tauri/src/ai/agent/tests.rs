@@ -27,7 +27,7 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
     use std::collections::VecDeque;
 
     let document = "# Notes\n\n## Methods\n\nWe sampled ten sites.\n\n## Results\n\nAll good.";
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     let conventions = crate::ai::rules::Conventions::default();
     let ctx = ToolContext {
         document,
@@ -38,7 +38,6 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
         sees_images: false,
         conventions: &conventions,
         library: &[],
-        memory: None,
         proposed: Default::default(),
         checks: Default::default(),
     };
@@ -816,7 +815,7 @@ fn the_cached_prefix_survives_a_mode_switch_and_a_new_memory() {
         ..AgentWorkspace::default()
     };
     let prefix = |ws: &AgentWorkspace, mode| {
-        let tools = ToolRegistry::builtin(false, false, mode, true, false);
+        let tools = ToolRegistry::builtin(false, false, mode, false);
         let specs: Vec<String> = tools
             .specs()
             .iter()
@@ -901,16 +900,18 @@ fn remembered_memories_follow_the_users_instructions() {
         ..AgentWorkspace::default()
     };
     let prompt = build_instructions(&ws, "draft", true, AgentMode::Review, "", "en");
-    assert!(prompt.contains("---remembering---"), "every mode");
+    // What to remember is decided after the exchange (memory::pass): the
+    // request has no remember tool to be told about.
+    assert!(!prompt.contains("remember tool"));
     // What is remembered comes with the message, after the user's own
     // instructions (in the system prompt).
     let message = request_message(&ws, AgentMode::Review, "en", "", "Go.");
     let personal = message.find("Reply briefly.").unwrap();
     let project = message.find("Spell it colour.").unwrap();
     assert!(prompt.contains("Global rule.") && personal < project);
-    // Without tools there is no remember tool to talk about.
+    // Without tools it is in the system prompt.
     let flat = build_instructions(&ws, "draft", false, AgentMode::Review, "", "en");
-    assert!(flat.contains("Reply briefly.") && !flat.contains("---remembering---"));
+    assert!(flat.contains("Reply briefly."));
 }
 
 #[test]
@@ -951,7 +952,7 @@ fn scripted_revise(document: &str, script: Vec<Vec<AgentTurn>>) -> (Vec<AgentTur
     use std::cell::RefCell;
     use std::collections::VecDeque;
 
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     let conventions = crate::ai::rules::Conventions::default();
     let ctx = ToolContext {
         document,
@@ -962,7 +963,6 @@ fn scripted_revise(document: &str, script: Vec<Vec<AgentTurn>>) -> (Vec<AgentTur
         sees_images: false,
         conventions: &conventions,
         library: &[],
-        memory: None,
         proposed: Default::default(),
         checks: Default::default(),
     };

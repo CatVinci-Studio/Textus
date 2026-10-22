@@ -44,7 +44,6 @@ const saved = (over: Record<string, unknown> = {}) =>
     created: true,
     text: "引号用「」。",
     previous: null,
-    note: "Saved.",
     ...over,
   });
 
@@ -54,13 +53,14 @@ afterEach(() => {
 });
 
 describe("parseRememberResult", () => {
-  it("reads what the remember tool saved", () => {
+  it("reads what was remembered", () => {
     expect(parseRememberResult(saved())).toEqual({
       remembered: "project/memory/Use-quotes",
       scope: "project",
       created: true,
       text: "引号用「」。",
       previous: null,
+      forgot: false,
     });
   });
 
@@ -120,6 +120,27 @@ describe("MemoryChip", () => {
     fireEvent.click(screen.getByRole("button", { name: "撤销" }));
     await waitFor(() => expect(memoryUndo).toHaveBeenCalled());
     expect(memoryUndo.mock.calls[0][3]).toBe(previous);
+  });
+
+  it("says what was forgotten, and undo remembers it again", async () => {
+    memoryUndo.mockResolvedValue(undefined);
+    const previous = "---\nkind: style\n---\n引号用「」。\n";
+    render(
+      <MemoryChip
+        result={parseRememberResult(
+          saved({ created: false, previous, forgot: true }),
+        )!}
+        docPath="/novel/one.md"
+        labels={labels}
+      />,
+    );
+    expect(screen.getByText("已忘记：引号用「」。（项目）")).toBeVisible();
+    // Nowhere to move what is no longer kept.
+    expect(screen.queryByRole("button", { name: "改为个人" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "撤销" }));
+    await waitFor(() => expect(memoryUndo).toHaveBeenCalled());
+    expect(memoryUndo.mock.calls[0][3]).toBe(previous);
+    expect(await screen.findByText("已撤销，重新记住。")).toBeVisible();
   });
 
   it("moves a memory to the other scope, and undo follows it there", async () => {

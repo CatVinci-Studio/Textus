@@ -19,13 +19,11 @@ pub(crate) const READ_FILE_DESCRIPTION_WITH_IMAGES: &str = "Read a text file, or
 /// only offered when there's something for them to work on - a tool that can
 /// only report "nothing there" would just waste the model's steps. Append
 /// here (or extend to merge in MCP-provided tools) as the toolset grows.
-/// `can_remember`: Settings > Textus AI > Remember automatically is on.
 /// `sees_images`: the provider takes images (ToolContext::sees_images).
 pub fn builtin_tools<'a>(
     has_skills: bool,
     has_root: bool,
     mode: AgentMode,
-    can_remember: bool,
     sees_images: bool,
 ) -> Vec<Tool<'a>> {
     let mut tools = vec![Tool {
@@ -166,52 +164,6 @@ pub fn builtin_tools<'a>(
         modes: EVERY_MODE,
         run: Run::Text(add_comment),
     });
-
-    // Remembering writes memory, never the document, so every mode has it.
-    if can_remember {
-        tools.push(Tool {
-            spec: ToolSpec {
-                name: REMEMBER_TOOL_NAME.into(),
-                description: "Remember something for later conversations: a requirement, preference or trait of the user's style that should hold beyond this request, or a fact about their work (a person, place or term). It is saved as a small file the user can see, undo, edit or delete; it never changes the document. To change something already remembered, pass its id as `replaces`.".into(),
-                parameters: json!({
-                    "type": "object",
-                    "properties": {
-                        "kind": {
-                            "type": "string",
-                            "enum": ["requirement", "preference", "style", "fact"],
-                            "description": "requirement: something always or never to do; preference: what they like in replies and edits; style: how they write; fact: what is true of a person, place or term in their work (needs `name`)"
-                        },
-                        "scope": {
-                            "type": "string",
-                            "enum": ["project", "personal"],
-                            "description": "project: about this work; personal: the user's general habits. Ignored for a fact (always project) and with `replaces`."
-                        },
-                        "text": {
-                            "type": "string",
-                            "description": "The memory: one or a few plain sentences in the user's language, as an instruction to yourself; for a fact, what is true of it"
-                        },
-                        "name": {
-                            "type": "string",
-                            "description": "For a fact: the person, place or term"
-                        },
-                        "aliases": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                            "description": "For a fact: other names it goes by"
-                        },
-                        "replaces": {
-                            "type": "string",
-                            "description": "The id of a memory to update instead of adding one, as listed in brackets"
-                        }
-                    },
-                    "required": ["kind", "text"],
-                }),
-            },
-            access: Access::Proposes,
-            modes: EVERY_MODE,
-            run: Run::Text(remember),
-        });
-    }
 
     // Review is structurally read-only: the model never receives the edit
     // tool, so a provider cannot accidentally ignore a prompt-only mode

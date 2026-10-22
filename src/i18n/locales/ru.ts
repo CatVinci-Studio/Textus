@@ -201,6 +201,8 @@ export default {
   memoryMakePersonal: "Сделать личным",
   memoryMakeProject: "Перенести в проект",
   memoryChipUndone: "Отменено. Больше не запомнено.",
+  memoryChipForgot: "Забыто: {text} ({scope})",
+  memoryChipRestored: "Отменено. Снова запомнено.",
   memoryActionFailed: "Не получилось. Попробуйте ещё раз во вкладке «Память».",
   learnSuggestion: "Вы несколько раз отклонили {what}. Запомнить? {rule}",
   learnQuoted: "«{text}»",

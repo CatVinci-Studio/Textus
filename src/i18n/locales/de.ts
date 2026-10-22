@@ -197,6 +197,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   memoryMakePersonal: "Persönlich machen",
   memoryMakeProject: "Ins Projekt",
   memoryChipUndone: "Rückgängig gemacht. Nicht mehr gemerkt.",
+  memoryChipForgot: "Vergessen: {text} ({scope})",
+  memoryChipRestored: "Rückgängig gemacht. Wieder gemerkt.",
   memoryActionFailed:
     "Das hat nicht geklappt. Versuch es im Tab Gedächtnis noch einmal.",
   learnSuggestion: "Du hast {what} mehrmals abgelehnt. Merken? {rule}",

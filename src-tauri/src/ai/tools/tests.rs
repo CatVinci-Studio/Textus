@@ -35,7 +35,7 @@ fn runtime_tool<'a>(name: &str, access: Access, modes: &'static [AgentMode]) -> 
 
 #[test]
 fn a_runtime_tool_is_offered_and_run_through_the_registry() {
-    let mut tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let mut tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     tools.add(runtime_tool("zotero_search", Access::ReadOnly, EVERY_MODE));
     assert!(tools.specs().iter().any(|s| s.name == "zotero_search"));
     let out = execute(&tools, &ctx("Doc."), "zotero_search", r#"{"q":"x"}"#);
@@ -50,7 +50,7 @@ fn a_runtime_tool_is_offered_and_run_through_the_registry() {
 /// ToolOutput::settled): a refused one needs the model again.
 #[test]
 fn valid_proposals_and_comments_are_settled_and_refusals_are_not() {
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     let ctx = ctx("The cat sat on the mat.");
     let settled = |name: &str, args: &str| execute(&tools, &ctx, name, args).settled;
     assert!(settled(
@@ -83,7 +83,7 @@ fn a_tool_is_offered_only_in_the_modes_it_names() {
 
 #[test]
 fn reads_run_together_and_proposals_in_order() {
-    let mut tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let mut tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     tools.add(runtime_tool(
         "make_figure",
         Access::ProposesInItsCall,
@@ -148,7 +148,6 @@ fn use_skill_expands_skills_and_loads_packs() {
         sees_images: false,
         conventions: &NO_CONVENTIONS,
         library: &[],
-        memory: None,
         proposed: Default::default(),
         checks: Default::default(),
     };
@@ -181,7 +180,6 @@ fn ctx(document: &str) -> ToolContext<'_> {
         sees_images: false,
         conventions: &NO_CONVENTIONS,
         library: &[],
-        memory: None,
         proposed: Default::default(),
         checks: Default::default(),
     }
@@ -189,7 +187,7 @@ fn ctx(document: &str) -> ToolContext<'_> {
 
 #[test]
 fn check_tools_stop_answering_once_their_budget_is_spent() {
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     let context = ctx("草稿");
     let run = |name: &str, args: &str| execute(&tools, &context, name, args).text;
     let measure = |metric: &str| {
@@ -223,7 +221,7 @@ fn check_tools_stop_answering_once_their_budget_is_spent() {
 
 #[test]
 fn a_long_draft_of_new_text_is_proposed_not_checked() {
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
     let paragraph = "港口不是海的终点，是陆地和浪涛握手的地方。".repeat(12);
     let context = ctx(&paragraph);
     let run = |name: &str, text: &str, metric: &str| {
@@ -305,7 +303,7 @@ fn measure_text_counts_exactly() {
 #[test]
 fn the_rules_tools_are_in_every_mode() {
     for mode in [AgentMode::Review, AgentMode::Revise, AgentMode::Write] {
-        let names = names(&builtin_tools(false, false, mode, false, false));
+        let names = names(&builtin_tools(false, false, mode, false));
         assert!(
             names.iter().any(|n| n == "check_conventions")
                 && names.iter().any(|n| n == "measure_text"),
@@ -317,16 +315,10 @@ fn the_rules_tools_are_in_every_mode() {
 #[test]
 fn the_project_file_tools_are_offered_only_with_a_project_folder() {
     let names = |has_root: bool| -> Vec<String> {
-        names(&builtin_tools(
-            false,
-            has_root,
-            AgentMode::Revise,
-            false,
-            false,
-        ))
-        .into_iter()
-        .filter(|n| n.ends_with("_files") || n == READ_FILE_TOOL_NAME)
-        .collect()
+        names(&builtin_tools(false, has_root, AgentMode::Revise, false))
+            .into_iter()
+            .filter(|n| n.ends_with("_files") || n == READ_FILE_TOOL_NAME)
+            .collect()
     };
     assert_eq!(names(true), ["find_files", "search_files", "read_file"]);
     assert!(names(false).is_empty());
@@ -337,7 +329,7 @@ fn read_file_shows_an_image_to_a_model_that_sees_and_find_files_lists() {
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(dir.path().join("map.png"), [0x89, b'P', b'N', b'G']).unwrap();
     std::fs::write(dir.path().join("notes.md"), "").unwrap();
-    let tools = ToolRegistry::builtin(false, true, AgentMode::Review, false, true);
+    let tools = ToolRegistry::builtin(false, true, AgentMode::Review, true);
     let seeing = ToolContext {
         root: Some(dir.path()),
         sees_images: true,
@@ -398,7 +390,7 @@ fn find_files_finds_project_files_by_name() {
     std::fs::create_dir_all(dir.path().join("notes")).unwrap();
     std::fs::write(dir.path().join("notes/Lin Wan.md"), "").unwrap();
     std::fs::write(dir.path().join("chapter-1.md"), "").unwrap();
-    let tools = ToolRegistry::builtin(false, true, AgentMode::Revise, false, false);
+    let tools = ToolRegistry::builtin(false, true, AgentMode::Revise, false);
     let in_project = ToolContext {
         root: Some(dir.path()),
         ..ctx("")
@@ -408,23 +400,6 @@ fn find_files_finds_project_files_by_name() {
     assert!(run(r#"{"name":"zebra"}"#).starts_with("No file in the project folder"));
     assert!(find_files(&ctx(""), r#"{"name":"lin"}"#).starts_with("There is no project folder"));
     assert!(run("{}").starts_with("notes/Lin Wan.md\nchapter-1.md"));
-}
-
-#[test]
-fn remember_is_offered_in_every_mode_only_while_the_setting_is_on() {
-    let has = |mode: AgentMode, remember: bool| {
-        builtin_tools(true, true, mode, remember, false)
-            .iter()
-            .any(|t| t.spec.name == REMEMBER_TOOL_NAME)
-    };
-    // It writes memory, not the document: Write and Review have it too.
-    for mode in [AgentMode::Write, AgentMode::Review, AgentMode::Revise] {
-        assert!(has(mode, true) && !has(mode, false), "{mode}");
-    }
-    assert_eq!(
-        remember(&ctx(""), r#"{"kind":"style","text":"x"}"#),
-        "Remembering is turned off."
-    );
 }
 
 #[test]
@@ -445,7 +420,7 @@ fn read_document_reads_an_inclusive_line_range() {
 #[test]
 fn review_mode_does_not_receive_the_edit_tool() {
     let edit_tool = |mode| {
-        builtin_tools(true, true, mode, false, false)
+        builtin_tools(true, true, mode, false)
             .into_iter()
             .find(|tool| tool.spec.name == PROPOSE_EDIT_TOOL_NAME)
     };
@@ -463,7 +438,7 @@ fn an_edit_of_text_an_undecided_rewrite_replaces_goes_into_the_rewrite() {
         replaced: "The lighthouse stood on the rock.".into(),
         text: "The old lighthouse stood alone on its rock.".into(),
     }];
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     let context = ToolContext {
         undecided: &undecided,
         ..ctx(doc)
@@ -500,7 +475,7 @@ fn an_edit_may_change_text_proposed_and_not_decided_yet() {
         text: "It purred all night. Then it slept.".to_string(),
     }];
     for mode in [AgentMode::Write, AgentMode::Revise] {
-        let tools = ToolRegistry::builtin(false, false, mode, false, false);
+        let tools = ToolRegistry::builtin(false, false, mode, false);
         let context = ToolContext {
             undecided: &undecided,
             ..ctx(doc)
@@ -522,7 +497,7 @@ fn an_edit_may_change_text_proposed_and_not_decided_yet() {
         );
     }
     // This request's own proposals count too.
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     let context = ctx(doc);
     let run = |args: &str| execute(&tools, &context, PROPOSE_EDIT_TOOL_NAME, args).text;
     assert!(run(r#"{"action":"append","text":"A new line here."}"#).starts_with("Edit proposed"));
@@ -535,7 +510,7 @@ fn an_edit_may_change_text_proposed_and_not_decided_yet() {
 #[test]
 fn write_mode_refuses_an_edit_that_changes_existing_text() {
     let doc = "The cat sat on the mat.";
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
     let ctx = ctx(doc);
     let run = |args: &str| execute(&tools, &ctx, PROPOSE_EDIT_TOOL_NAME, args).text;
     for args in [
@@ -558,7 +533,7 @@ fn write_mode_refuses_an_edit_that_changes_existing_text() {
         assert!(run(args).starts_with("Edit proposed"), "{args}");
     }
     // Revise keeps every action.
-    let revise = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let revise = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     assert!(execute(
         &revise,
         &ctx,

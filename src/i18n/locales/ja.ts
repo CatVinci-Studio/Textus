@@ -185,6 +185,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   memoryMakePersonal: "個人に移す",
   memoryMakeProject: "プロジェクトに移す",
   memoryChipUndone: "元に戻しました。もう覚えていません。",
+  memoryChipForgot: "忘れました：{text}（{scope}）",
+  memoryChipRestored: "元に戻しました。もう一度覚えています。",
   memoryActionFailed:
     "うまくいきませんでした。「記憶」タブでもう一度お試しください。",
   learnSuggestion:

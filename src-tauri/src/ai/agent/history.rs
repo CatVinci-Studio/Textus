@@ -30,6 +30,34 @@ pub(super) fn turn_chars(turn: &AgentTurn) -> usize {
     }
 }
 
+/// What was remembered, as the chat records it for its chips (a remember
+/// call and its result - memory::pass's, or the remember tool's before
+/// 1.2.0-rc.6), isn't sent: the model has no remember tool to have called,
+/// and what is remembered comes with every message.
+pub(crate) fn without_memory_turns(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
+    let memory: std::collections::HashSet<String> = history
+        .iter()
+        .filter_map(|turn| match turn {
+            AgentTurn::ToolCall { call_id, name, .. } if name == MEMORY_TURN => {
+                Some(call_id.clone())
+            }
+            _ => None,
+        })
+        .collect();
+    history
+        .into_iter()
+        .filter(|turn| match turn {
+            AgentTurn::ToolCall { call_id, .. } | AgentTurn::ToolResult { call_id, .. } => {
+                !memory.contains(call_id)
+            }
+            _ => true,
+        })
+        .collect()
+}
+
+/// The name a memory chip's turns go by (src/ai/chat/memory-pass.ts).
+pub(crate) const MEMORY_TURN: &str = "remember";
+
 /// Shrinks the replayed conversation (everything before the message being
 /// sent) to what a writing agent still needs from it. propose_edit results
 /// are never cut - they carry the accepted/rejected status notes the model
@@ -43,6 +71,7 @@ pub(super) fn turn_chars(turn: &AgentTurn) -> usize {
 /// the whole history (see anthropic.rs's cache breakpoints) - the only bytes
 /// that change are the current message's, which carries the document.
 pub(crate) fn compact_history(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
+    let history = without_memory_turns(history);
     let tool_names: std::collections::HashMap<String, String> = history
         .iter()
         .filter_map(|turn| match turn {

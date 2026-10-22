@@ -24,7 +24,7 @@ pub struct LibraryEntry {
     /// Path relative to the project root, for "open this entry".
     pub file: String,
     pub body: String,
-    /// Set on an entry Textus AI wrote with the remember tool (ai::memory),
+    /// Set on an entry Textus AI wrote (ai::memory),
     /// which the Memory tab also lists under "AI remembered".
     pub remembered: Option<Remembered>,
 }

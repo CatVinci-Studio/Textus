@@ -112,8 +112,9 @@ consistent, one entry per file.**
   facts. An entry Textus AI wrote (see AI remembered) also has
   `remembered-by: textus-ai` and the `created`/`updated`/`source-*` record.
 - **Create / edit:** **New library entry…** in the project bar's menu asks
-  for the name and opens the new file; or by hand; or Textus AI, with the
-  `remember` tool, for a fact about the work. The **Library N** chip shows
+  for the name and opens the new file; or by hand; or Textus AI, after a
+  conversation, for a fact about the work - added to the entry it is about
+  when there is one (by name or alias). The **Library N** chip shows
   how many entries there are; the Memory tab opens or deletes each.
 - **Textus AI uses it:** an entry goes with a request when it is `always`,
   or `detected` and its name or an alias (two characters or longer) appears
@@ -158,11 +159,13 @@ Textus AI never changes them.
   is a library entry instead, marked `remembered-by` (see Library). Each is
   named by an id, `<scope>/<folder>/<file stem>`
   (`personal/memory/no-semicolons`, `project/library/lin-wan`).
-- **Create / edit:** Textus AI, with the `remember` tool, in any mode -
-  it writes memory, never the document - while **Settings > Textus AI >
-  Remember automatically** is on (the default). Its result shows under the
-  reply as "Remembered: … (project) · Undo · Make personal"; Undo deletes a
-  new memory or puts back what an update replaced. The Memory tab's **AI
+- **Create / edit:** Textus AI, after each exchange in any mode (a separate
+  small request, memory::pass - it writes memory, never the document) while
+  **Settings > Textus AI > Remember automatically** is on (the default). It
+  adds, updates or forgets ("forget the no-semicolons rule"); each change
+  shows under the reply as "Remembered: … (project) · Undo · Make personal"
+  or "Forgot: … · Undo"; Undo deletes a new memory, or puts back what an
+  update replaced or a forget took away. The Memory tab's **AI
   remembered** lists them all, personal then the project's, with the date
   and the conversation each came from, and **Edit** (opens the file),
   **Make personal / Make project** (moves the file) and **Delete**.
@@ -356,8 +359,9 @@ part of the project.
 - **What Textus AI remembered follows the writing instructions.** The
   system prompt carries, in this order: the global `agent.md`, the
   project's, the personal memories, the project's memories (which win over
-  the personal ones), then - when the `remember` tool is offered - how to
-  use it. The user's own instructions win over anything remembered.
+  the personal ones). The user's own instructions win over anything
+  remembered; a reply language that is remembered wins over the language
+  of the message.
 - **Skills merge by name.** A project skill replaces a global skill with the
   same `name`, and either replaces a built-in one; all other skills from
   the three levels are available.
@@ -386,8 +390,9 @@ part of the project.
   library (with delete), the writing instructions and the skills - each
   opening its file; the notes when memories near or pass their limit and
   when mentioned library entries didn't fit.
-- **Under Textus AI's reply**: a chip for each thing it remembered, with
-  Undo and the move to the other scope.
+- **Under Textus AI's reply**: a chip for each thing it remembered or
+  forgot, with Undo and (for a memory) the move to the other scope - a
+  moment after the reply, which the memory pass doesn't hold up.
 - **Help > AI Features Guide**, section "Make Textus AI yours": an overview
   table, one subsection with a small example per concept, "Which applies
   when" and "Which file for what".

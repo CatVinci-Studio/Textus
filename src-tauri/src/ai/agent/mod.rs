@@ -101,9 +101,6 @@ pub async fn ai_agent_message(
     // The UI language (src/i18n/langs.ts), for the names the agent is told
     // the app uses (UiNames). None - an older frontend - is English.
     ui_language: Option<String>,
-    // The conversation (`{id, title}`), recorded with what Textus AI
-    // remembers in it (ai::memory). None from an older frontend.
-    conversation: Option<crate::ai::memory::Source>,
     // The image model (Settings › Textus AI › Image model); None for none,
     // and from an older frontend. See ai::images.
     image_model: Option<crate::ai::images::ImageModel>,
@@ -114,10 +111,6 @@ pub async fn ai_agent_message(
         .then(|| web::resolve_service(&app, search_service.as_deref(), searxng_url.as_deref()))
         .flatten();
     let ui_language = ui_language.unwrap_or_else(|| "en".to_string());
-    let source = crate::ai::memory::Source {
-        document: doc_path.clone(),
-        ..conversation.unwrap_or_default()
-    };
     cancel::cancellable(
         request_id,
         ai_agent_message_inner(
@@ -136,7 +129,6 @@ pub async fn ai_agent_message(
             model,
             focus_heading,
             ui_language,
-            source,
             image_model,
             on_event,
         ),
@@ -163,23 +155,12 @@ async fn ai_agent_message_inner(
     model: Option<String>,
     focus_heading: Option<String>,
     ui_language: String,
-    source: crate::ai::memory::Source,
     image_model: Option<crate::ai::images::ImageModel>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
     let workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
     let library = crate::ai::conventions::library_names(&workspace);
-    // Where the remember tool writes, while Remember automatically is on.
-    let memory = workspace
-        .remember
-        .then(|| crate::ai::memory::MemoryContext {
-            dirs: crate::ai::memory::MemoryDirs::new(
-                workspace::global_agent_dir(&app).ok().as_deref(),
-                workspace.root.as_deref().map(Path::new),
-            ),
-            source,
-        });
     // What the request is about, for picking library entries: the message
     // as the user's side sent it, before the reference packs go in.
     let focus = message.clone();
@@ -264,7 +245,6 @@ async fn ai_agent_message_inner(
                 sees_images: entry.supports_vision,
                 conventions: &conventions,
                 library: &library,
-                memory: memory.as_ref(),
                 // The pictures not decided yet: this request's text may
                 // carry them, each once.
                 proposed: std::sync::Mutex::new(tools::ProposalLedger::with_pictures(
@@ -276,7 +256,6 @@ async fn ai_agent_message_inner(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 mode,
-                workspace.remember,
                 entry.supports_vision,
             );
             // A document shown whole needs no tools to read it: offered,

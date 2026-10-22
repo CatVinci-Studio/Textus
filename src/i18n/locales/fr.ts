@@ -207,6 +207,8 @@ utiliser une.
   memoryMakePersonal: "Rendre personnel",
   memoryMakeProject: "Passer au projet",
   memoryChipUndone: "Annulé. Ce n'est plus retenu.",
+  memoryChipForgot: "Oublié : {text} ({scope})",
+  memoryChipRestored: "Annulé. De nouveau mémorisé.",
   memoryActionFailed: "Cela n'a pas marché. Réessayez dans l'onglet Mémoire.",
   learnSuggestion:
     "Vous avez refusé plusieurs fois {what}. Retenir ceci\u00a0? {rule}",

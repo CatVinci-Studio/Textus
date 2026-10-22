@@ -68,6 +68,8 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     memoryMakePersonal: t.memoryMakePersonal,
     memoryMakeProject: t.memoryMakeProject,
     memoryUndone: t.memoryChipUndone,
+    memoryForgot: t.memoryChipForgot,
+    memoryRestored: t.memoryChipRestored,
     memoryActionFailed: t.memoryActionFailed,
     toolResult: t.toolResult,
     sources: t.webSources,

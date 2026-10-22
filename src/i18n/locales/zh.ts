@@ -173,6 +173,8 @@ export default {
   memoryMakePersonal: "改为个人",
   memoryMakeProject: "改为项目",
   memoryChipUndone: "已撤销，不再记住。",
+  memoryChipForgot: "已忘记：{text}（{scope}）",
+  memoryChipRestored: "已撤销，重新记住。",
   memoryActionFailed: "没有成功，可以在“记忆”里再试一次。",
   learnSuggestion: "你多次拒绝了{what}的修改。要记住吗：{rule}",
   learnQuoted: "“{text}”",

@@ -89,7 +89,17 @@ edit eval (`live_eval::latency`) runs on every provider in the catalog.
   for it (`use_skill`); what it says applies to that request. Precedence
   against the writing instructions and the style profile:
   [ai-concepts.md](ai-concepts.md#precedence).
-- **Memory** is offered as the `remember` tool in every mode.
+- **Memory** is decided after each exchange, apart from it
+  (`ai/memory/pass.rs`, the way mem0 keeps a chat's memory): one small
+  request to the conversation's model sees the user's messages, the reply
+  and what is already remembered, and answers with changes - add, update,
+  forget - written by the same code as before. The request itself has no
+  remember tool; what is remembered comes with every message, and the
+  chips' records never go back to the model. In the request, a remember
+  tool depended on the model thinking of it mid-edit: over several
+  conversations GPT kept 23 of 24 things and DeepSeek 20, and models
+  promised "from now on" without keeping anything
+  (`live_eval::memory_sessions`).
 - **MCP** tools (1.3) are tools like any other: their results are
   information for the model, never instructions to follow, and they never
   change the document - a change to it is always a `propose_edit` the
