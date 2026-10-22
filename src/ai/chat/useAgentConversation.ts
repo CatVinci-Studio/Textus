@@ -158,6 +158,9 @@ export function useAgentConversation(
   // Incremented whenever a fresh popup replaces the current conversation.
   // A late response from the old popup must never leak into the new chat.
   const generationRef = useRef(0);
+  /** How the last message was sent - Continue, after an exchange ran out
+   *  of steps, sends the same way. */
+  const lastOptionsRef = useRef<AgentRequestOptions | null>(null);
 
   // Every exchange updates the conversation's saved copy, so past chats can
   // be reopened from the History list even across restarts.
@@ -188,6 +191,7 @@ export function useAgentConversation(
   ): Promise<AgentTurn[] | undefined> {
     const trimmed = message.trim();
     if (!trimmed || busy || !settings.textusAi) return undefined;
+    lastOptionsRef.current = options;
     setBusy(true);
     setError(null);
     setRetryable(null);
@@ -494,6 +498,7 @@ export function useAgentConversation(
     busy,
     error,
     retryable,
+    lastOptions: () => lastOptionsRef.current,
     send,
     stop,
     retry,

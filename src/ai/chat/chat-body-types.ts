@@ -23,6 +23,9 @@ export interface ChatBodyLabels
     MessageQueueLabels {
   /** Sent as the user's message when relocating a stale proposal. */
   relocateRequest: string;
+  /** Sent as the user's message by Continue, after an exchange ran out of
+   *  steps. */
+  continueRequest: string;
   /** Pinned pending-edits bar (full/window variant only); "{n}" is how many
    *  are undecided. */
   pendingSummary: string;

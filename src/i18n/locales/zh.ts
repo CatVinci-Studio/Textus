@@ -778,6 +778,9 @@ export default {
   quickAskRejectAllCount: "全部拒绝（{n}）",
   chatDropSelection: "不发送选中内容",
   quickAskAtCursor: "在光标处",
+  chatStoppedAtLimit: "还没做完就停了：这次请求的步数用完了。",
+  chatContinueAfterLimit: "继续",
+  chatContinueRequest: "从刚才停下的地方继续。",
   proposalRelocateRequest:
     "这处修改已经和文档对不上了。请按文档现在的内容重新给出这个修改。",
   chatSelectionChip: { other: "选中内容({n} 字)" },

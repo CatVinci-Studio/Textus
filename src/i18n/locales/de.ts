@@ -845,6 +845,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   quickAskRejectAllCount: "Alle ablehnen ({n})",
   chatDropSelection: "Auswahl nicht mitsenden",
   quickAskAtCursor: "Am Cursor",
+  chatStoppedAtLimit:
+    "Vor dem Ende angehalten: Diese Anfrage hat alle Schritte verbraucht.",
+  chatContinueAfterLimit: "Weiter",
+  chatContinueRequest: "Mach dort weiter, wo du aufgehört hast.",
   proposalRelocateRequest:
     "Diese Änderung passt nicht mehr zum Dokument. Sieh dir das Dokument in seiner jetzigen Fassung an und schlage die Änderung erneut vor.",
   chatSelectionChip: {

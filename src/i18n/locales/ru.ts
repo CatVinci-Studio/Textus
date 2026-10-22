@@ -856,6 +856,9 @@ export default {
   quickAskRejectAllCount: "Отклонить все ({n})",
   chatDropSelection: "Не отправлять выделенное",
   quickAskAtCursor: "У курсора",
+  chatStoppedAtLimit: "Остановлено до конца: запрос израсходовал все шаги.",
+  chatContinueAfterLimit: "Продолжить",
+  chatContinueRequest: "Продолжи с того места, где остановился.",
   proposalRelocateRequest:
     "Эта правка больше не совпадает с документом. Посмотри на документ в его нынешнем виде и предложи изменение заново.",
   chatSelectionChip: {

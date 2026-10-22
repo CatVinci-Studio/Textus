@@ -159,7 +159,13 @@ fn running_out_of_steps_still_ends_with_a_reply() {
     let AgentTurn::Assistant { text, .. } = turns.last().unwrap() else {
         panic!("the exchange must end with an assistant turn");
     };
-    assert!(text.contains("Stopped after 3 tool steps"));
+    assert_eq!(text, OUT_OF_STEPS);
+}
+
+#[test]
+fn the_chat_knows_the_out_of_steps_reply() {
+    let ts = include_str!("../../../../../src/ai/chat/out-of-steps.ts");
+    assert!(ts.contains(&format!("\"{OUT_OF_STEPS}\"")));
 }
 
 #[test]

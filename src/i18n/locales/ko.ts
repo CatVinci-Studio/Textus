@@ -807,6 +807,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   quickAskRejectAllCount: "모두 거부({n})",
   chatDropSelection: "선택 영역 보내지 않기",
   quickAskAtCursor: "커서 위치",
+  chatStoppedAtLimit:
+    "끝나기 전에 멈췄습니다: 이번 요청의 단계를 모두 썼습니다.",
+  chatContinueAfterLimit: "계속",
+  chatContinueRequest: "멈춘 곳부터 계속해 주세요.",
   proposalRelocateRequest:
     "그 수정은 이제 문서와 맞지 않습니다. 지금의 문서 내용을 확인하고 수정을 다시 제안해 주세요.",
   chatSelectionChip: { other: "선택한 텍스트({n}자)" },

@@ -154,11 +154,16 @@ where
     // Out of steps while the model still wanted tools. Ending on a bare
     // ToolResult left the exchange with no reply at all - the UI then showed
     // the PREVIOUS exchange's answer as this one's - so say what happened.
-    new_turns.push(AgentTurn::assistant(format!(
-        "(Stopped after {max_steps} tool steps without finishing. Ask me to continue, or narrow the request.)"
-    )));
+    new_turns.push(AgentTurn::assistant(OUT_OF_STEPS));
     Ok(new_turns)
 }
+
+/// The reply of an exchange that ran out of steps. The chat shows it in the
+/// user's language with a Continue button (OUT_OF_STEPS in
+/// src/ai/chat/out-of-steps.ts, which must match), and the model reads it
+/// in the history when asked to go on.
+pub const OUT_OF_STEPS: &str =
+    "(Stopped at the step limit before finishing. Ask me to continue, or narrow the request.)";
 
 pub(crate) fn call_name(call: &AgentTurn) -> &str {
     match call {
@@ -252,7 +257,7 @@ pub(crate) fn budget_note(remaining: usize) -> Option<String> {
         _ => return None,
     };
     Some(format!(
-        "[Only {steps} left in this request: stop gathering or checking and deliver your result now - send any edit proposals, then give your final reply.]"
+        "[Only {steps} left in this request: stop gathering or checking and deliver your result now - send any edit proposals, then give your final reply, saying what is done and what is left if you didn't get through it all.]"
     ))
 }
 

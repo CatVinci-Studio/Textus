@@ -364,6 +364,22 @@ button.agent-context-chip:hover {
   word-break: break-word;
 }
 
+/* An exchange that ran out of steps (OUT_OF_STEPS): not an error - the
+   work so far stands - with Continue under the last one. */
+.agent-stopped {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 6px 0;
+  padding: 8px 10px;
+  border: 1px solid var(--editor-border);
+  border-radius: var(--radius-surface);
+  font-size: var(--text-md);
+  line-height: 1.5;
+  color: var(--editor-muted);
+}
+
 /* A remember call's chip (MemoryChip.tsx): what was remembered, where,
    and the way back - "Remembered: … (project) · Undo · Make personal".
    A theme in a reply gets the same chip (ReplyThemes.tsx): its name and

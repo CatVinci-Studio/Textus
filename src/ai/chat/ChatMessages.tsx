@@ -1,4 +1,5 @@
 import { withoutCitationMarkers } from "../citation-markers";
+import { OUT_OF_STEPS } from "./out-of-steps";
 import {
   Fragment,
   useEffect,
@@ -102,6 +103,10 @@ export interface ChatMessagesLabels
   writingEdit: string;
   /** In place of "Thinking…" while a review note's call streams in. */
   writingNotes: string;
+  /** The reply of an exchange that ran out of steps (OUT_OF_STEPS), and
+   *  the button that asks it to go on. */
+  stoppedAtLimit: string;
+  continueAfterLimit: string;
 }
 
 export interface ChatMessagesProps {
@@ -155,6 +160,9 @@ export interface ChatMessagesProps {
    *  is still available to resend - not every error is retryable this way. */
   canRetry: boolean;
   onRetry: () => void;
+  /** Asks the model to go on after an exchange ran out of steps; absent
+   *  where nothing can be sent from here. */
+  onContinue?: () => void;
   /** The conversation's document, whose project a remembered project
    *  memory belongs to (MemoryChip). */
   docPath?: string | null;
@@ -195,6 +203,7 @@ export function ChatMessages({
   noteNumber,
   canRetry,
   onRetry,
+  onContinue,
   docPath = null,
 }: ChatMessagesProps) {
   const revealFrom = useRef(0);
@@ -447,6 +456,25 @@ export function ChatMessages({
             </div>
           );
         }
+        if (turn.kind === "Assistant" && turn.text === OUT_OF_STEPS)
+          return (
+            <div
+              key={i}
+              className={`agent-stopped${reveal ? " turn-reveal" : ""}`}
+              style={style}
+            >
+              <span>{labels.stoppedAtLimit}</span>
+              {onContinue && !busy && i === history.length - 1 && (
+                <button
+                  type="button"
+                  className="inline-chat-action agent-stopped-continue"
+                  onClick={onContinue}
+                >
+                  {labels.continueAfterLimit}
+                </button>
+              )}
+            </div>
+          );
         // An exchange's thinking sits under its question, above
         // everything the model did in answer.
         const thought =

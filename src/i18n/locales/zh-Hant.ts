@@ -779,6 +779,10 @@ export default {
   quickAskRejectAllCount: "全部拒絕（{n}）",
   chatDropSelection: "不傳送選取的內容",
   quickAskAtCursor: "在游標處",
+  chatStoppedAtLimit:
+    "Stopped before finishing: this request used all its steps.",
+  chatContinueAfterLimit: "Continue",
+  chatContinueRequest: "Continue where you stopped.",
   proposalRelocateRequest:
     "這項修改已經和文件對不上了。請依照文件目前的內容，重新提出這項修改。",
   chatSelectionChip: { other: "選取的文字（{n} 字）" },

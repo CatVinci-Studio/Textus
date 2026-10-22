@@ -849,6 +849,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   quickAskRejectAllCount: "Rejeitar todas ({n})",
   chatDropSelection: "Não enviar a seleção",
   quickAskAtCursor: "No cursor",
+  chatStoppedAtLimit:
+    "Parou antes de terminar: este pedido usou todos os passos.",
+  chatContinueAfterLimit: "Continuar",
+  chatContinueRequest: "Continue de onde parou.",
   proposalRelocateRequest:
     "Essa edição não corresponde mais ao documento. Veja o documento como ele está agora e proponha a alteração de novo.",
   chatSelectionChip: {

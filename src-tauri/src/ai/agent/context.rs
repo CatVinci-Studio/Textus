@@ -127,7 +127,7 @@ pub(crate) fn document_section(
         outline.join("\n")
     };
     let note = if with_tools {
-        "This document is long, so only an outline (with line numbers) and the start/end are shown below. Read any section in full with read_document (by heading or line range) before revising or quoting it - never guess at text you haven't seen, and never propose an edit in the same step as the read it depends on - and use search_document to find where something is mentioned."
+        "This document is long, so only an outline (with line numbers) and the start/end are shown below. Read any section in full with read_document (by heading or line range) before revising or quoting it - never guess at text you haven't seen, and never propose an edit in the same step as the read it depends on - and use search_document to find where something is mentioned. Read the sections a change needs side by side in one step (several read_document calls), then propose their edits together in the next; a change through the whole document goes a few sections per step, each step's edits sent with the next step's reads."
     } else {
         "This document is long, so only an outline and the start/end are shown below - some content in the middle isn't visible here."
     };

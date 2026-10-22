@@ -815,6 +815,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   quickAskRejectAllCount: "すべて却下（{n}）",
   chatDropSelection: "選択範囲を送らない",
   quickAskAtCursor: "カーソル位置",
+  chatStoppedAtLimit:
+    "途中で止まりました：このリクエストのステップを使い切りました。",
+  chatContinueAfterLimit: "続ける",
+  chatContinueRequest: "止まったところから続けてください。",
   proposalRelocateRequest:
     "この編集は現在の文書と一致しません。今の文書の内容に基づいて、もう一度提案してください。",
   chatSelectionChip: { other: "選択範囲（{n}文字）" },

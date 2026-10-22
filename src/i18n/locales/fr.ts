@@ -873,6 +873,10 @@ utiliser une.
   quickAskRejectAllCount: "Tout refuser ({n})",
   chatDropSelection: "Ne pas envoyer la sélection",
   quickAskAtCursor: "Au curseur",
+  chatStoppedAtLimit:
+    "Arrêté avant la fin : cette demande a utilisé toutes ses étapes.",
+  chatContinueAfterLimit: "Continuer",
+  chatContinueRequest: "Reprends là où tu t'es arrêté.",
   proposalRelocateRequest:
     "Cette modification ne correspond plus au document. Relis le document tel qu'il est maintenant et propose à nouveau la modification.",
   chatSelectionChip: {

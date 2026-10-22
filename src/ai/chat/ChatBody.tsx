@@ -271,6 +271,15 @@ export function ChatBody({
     );
   }
 
+  /** Continue, after an exchange ran out of steps: asks it to go on, the
+   *  way the last message was sent. */
+  function handleContinue() {
+    dispatchSend(
+      () => ({ message: labels.continueRequest }),
+      conversation.lastOptions() ?? { mode: "revise", webSearch: false },
+    );
+  }
+
   function handleRetry() {
     void (async () => {
       afterSend(await retry());
@@ -385,6 +394,7 @@ export function ChatBody({
                     onRelocateProposal={handleRelocate}
                     canRetry={!!retryable}
                     onRetry={handleRetry}
+                    onContinue={handleContinue}
                     docPath={docPath}
                   />
                 </div>
@@ -424,6 +434,7 @@ export function ChatBody({
                 onRelocateProposal={handleRelocate}
                 canRetry={!!retryable}
                 onRetry={handleRetry}
+                onContinue={handleContinue}
                 docPath={docPath}
               />
             </div>

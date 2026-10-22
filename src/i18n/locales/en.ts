@@ -837,6 +837,10 @@ type /name in a conversation to use one.
   quickAskRejectAllCount: "Reject all ({n})",
   chatDropSelection: "Don't send the selection",
   quickAskAtCursor: "At the cursor",
+  chatStoppedAtLimit:
+    "Stopped before finishing: this request used all its steps.",
+  chatContinueAfterLimit: "Continue",
+  chatContinueRequest: "Continue where you stopped.",
   proposalRelocateRequest:
     "That edit no longer matches the document. Please look at the document as it reads now and propose the change again.",
   chatSelectionChip: {
