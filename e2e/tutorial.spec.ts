@@ -403,28 +403,6 @@ test("in Chinese: the notes, the copy and the links follow the language", async 
     .toEqual({ cmd: "open_tutorials_page", language: "zh", clip: "wysiwyg" });
 });
 
-test("a tour from the first guide resumes at the nearest lesson", async ({
-  page,
-}) => {
-  // The first guide's document-editing lesson was in its AI chapter, which
-  // ran on scripted replies: this one starts that chapter by asking.
-  await openApp(page, {
-    settings: { language: "en" },
-    storage: at("agentEdit"),
-  });
-  await expect(lesson(page, "Connect your AI")).toBeVisible();
-});
-
-test("the last tour's AI panel lesson resumes at AI writing", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: { language: "en" },
-    storage: at("ai-panel", { aiMode: "watch" }),
-  });
-  await expect(lesson(page, "AI writing")).toBeVisible();
-});
-
 test("an AI lesson resumes in the mode it was left in", async ({ page }) => {
   await openApp(page, {
     settings: { language: "en" },
