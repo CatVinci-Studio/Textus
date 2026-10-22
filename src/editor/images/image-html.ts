@@ -103,9 +103,8 @@ export function imageMarkdownHtml(attrs: ImageAttrs): string | null {
 }
 
 /** `{textus-width=N%}` at the end of the title: where Textus 1.1.0 and
- *  older kept an image's width; documents written by Levis say
- *  `levis-width`. Read the same, for good. */
-const IMAGE_WIDTH_METADATA = /\s*\{(?:textus|levis)-width=(\d{1,3})%\}\s*$/;
+ *  older kept an image's width. A document's own text, so read for good. */
+const IMAGE_WIDTH_METADATA = /\s*\{textus-width=(\d{1,3})%\}\s*$/;
 
 /** An image title split into the caption it shows and the width an older
  *  Textus kept at its end. */

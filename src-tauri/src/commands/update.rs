@@ -163,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn beta_never_names_levis_manifest() {
+    fn beta_never_names_the_old_apps_manifest() {
         for url in endpoints_for("beta", &stable()) {
             assert_ne!(
                 url.path_segments().unwrap().next_back(),

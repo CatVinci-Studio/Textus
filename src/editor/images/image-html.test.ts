@@ -126,10 +126,6 @@ describe("a width an older Textus kept in the title", () => {
       title: "Product shot",
       widthPercent: 70,
     });
-    expect(readImagePresentation("Shot {levis-width=40%}")).toEqual({
-      title: "Shot",
-      widthPercent: 40,
-    });
     expect(imageWidthOf(image({ title: "{textus-width=30%}" }))).toBe("30%");
   });
 

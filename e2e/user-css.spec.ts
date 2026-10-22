@@ -430,17 +430,14 @@ test("the document's look sits in the one textus-content layer", async ({
   expect(report.unlayered).toEqual([]);
 });
 
-// Levis called the layer levis-content. CSS written for it still works: a
-// rule in `@layer levis-content` now lands in a layer declared after the
+// A rule in a layer of the CSS's own lands in a layer declared after the
 // app's, so it overrides the built-in look (unlayered CSS still wins over
 // both).
-test("CSS written for Levis's levis-content layer still overrides the look", async ({
-  page,
-}) => {
+test("CSS in a layer of its own still overrides the look", async ({ page }) => {
   await openApp(page, {
     settings: {
       language: "en",
-      customCss: "@layer levis-content { h2 { color: rgb(9, 8, 7); } }",
+      customCss: "@layer mine { h2 { color: rgb(9, 8, 7); } }",
     },
   });
   await pasteMarkdown(page, DOC);

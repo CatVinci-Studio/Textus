@@ -14,7 +14,7 @@ export type UpdateStatus = "idle" | "available" | "downloading" | "error";
  * update channel changes, and drives the update banner: available -> user
  * confirms -> download + install -> relaunch. The stable channel reads the
  * latest GitHub release's textus-latest.json (never latest.json, which is
- * what Levis installs read; see scripts/updater-manifest.mjs), the beta
+ * the old app's manifest; see scripts/updater-manifest.mjs), the beta
  * channel textus-beta.json on our download bucket
  * (src-tauri/src/commands/update.rs). Checking is silent on
  * failure - offline, rate-limited, or running in a plain browser during

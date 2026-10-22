@@ -12,7 +12,7 @@ where the project is heading.
 | [architecture.md](dev/architecture.md)              | The folders in `src/` and `src-tauri/`, their layers and import direction (ESLint checks it), CSS |
 | [testing.md](dev/testing.md)                        | Each test suite: what it covers, how to run it, and what is deliberately not covered              |
 | [local-builds.md](dev/local-builds.md)              | Faster builds across many worktrees (a shared Cargo build directory) and `npm run check:quick`    |
-| [storage.md](dev/storage.md)                        | Every file the app writes (settings, UI state, history), per platform, and the Levis import       |
+| [storage.md](dev/storage.md)                        | Every file the app writes (settings, UI state, history), per platform                             |
 | [lifecycle.md](dev/lifecycle.md)                    | Launching, closing and quitting, background mode and its tray, updates, and what a windowless process costs |
 | [saving.md](dev/saving.md)                          | What a save writes to a Markdown file: unedited blocks as written, edited ones serialized         |
 | [translating.md](dev/translating.md)                | The ten UI languages: which files a translation fills, tone, and how it is checked                |

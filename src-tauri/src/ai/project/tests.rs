@@ -430,8 +430,8 @@ fn the_library_and_style_are_read_from_textus_only() {
     let dir = std::env::temp_dir().join(format!("textus-lib-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     for (path, body) in [
-        (".levis/library/wu.md", "---\nname: Wu\n---\nLevis Wu."),
-        (".levis/style.md", "Short sentences."),
+        (".other/library/wu.md", "---\nname: Wu\n---\nOther Wu."),
+        (".other/style.md", "Short sentences."),
         (".textus/library/lin.md", "---\nname: Lin\n---\nTextus Lin."),
         (
             ".textus/library/new.md",
