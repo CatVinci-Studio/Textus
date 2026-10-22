@@ -31,6 +31,11 @@ import {
   type PendingSentence,
 } from "./pending-edit-plugin";
 import {
+  liveStatus,
+  recordStatuses,
+  type RecordedStatus,
+} from "./proposal-lifecycle";
+import {
   composeSentences,
   diffSentences,
   pairedPrefix,
@@ -461,7 +466,9 @@ export function usePendingEdits(
   // (accept/reject/an invalidating edit all remove it) so a chat card can
   // still show "Applied"/"Rejected"/"Couldn't locate" instead of reverting
   // to a plain, misleading "Pending".
-  const [statuses, setStatuses] = useState<Record<string, PendingStatus>>({});
+  // Recorded statuses only (proposal-lifecycle.ts): a preview in the
+  // document reads its own.
+  const [statuses, setStatuses] = useState<Record<string, RecordedStatus>>({});
   const knownIds = useRef<Set<string>>(new Set());
 
   // "Review one at a time" state for Quick Ask (MilkdownEditor's nav bar) -
@@ -610,20 +617,25 @@ export function usePendingEdits(
         if (reportedAccepts.current.delete(id))
           optionsRef.current.onDecided?.(id, []);
       setStatuses((prev) => {
-        let copy: Record<string, PendingStatus> | null = null;
-        const set = (id: string, status: PendingStatus | null) => {
-          copy ??= { ...prev };
-          if (status) copy[id] = status;
-          else delete copy[id];
-        };
-        for (const id of dropped)
-          if (!prev[id]) set(id, applied.includes(id) ? "accepted" : "invalid");
+        const written = new Set(applied);
+        let next = recordStatuses(
+          prev,
+          dropped.filter((id) => !written.has(id)),
+          { type: "dropped", applied: false },
+        );
+        next = recordStatuses(
+          next,
+          dropped.filter((id) => written.has(id)),
+          { type: "dropped", applied: true },
+        );
         // An undo put an accepted proposal back on offer, a redo applied
         // it again: its card follows (pending-edit-plugin's `applied`).
-        for (const id of nextIds) if (prev[id] === "accepted") set(id, null);
-        for (const id of applied)
-          if (prev[id] !== "accepted" && !nextIds.has(id)) set(id, "accepted");
-        return copy ?? prev;
+        next = recordStatuses(next, nextIds, { type: "back" });
+        return recordStatuses(
+          next,
+          applied.filter((id) => !nextIds.has(id)),
+          { type: "applied" },
+        );
       });
     },
     [],
@@ -803,11 +815,12 @@ export function usePendingEdits(
           );
         }
         if (invalidIds.length > 0) {
-          setStatuses((prev) => {
-            const copy = { ...prev };
-            for (const id of invalidIds) copy[id] = "invalid";
-            return copy;
-          });
+          setStatuses((prev) =>
+            recordStatuses(prev, invalidIds, {
+              type: "decided",
+              outcome: "invalid",
+            }),
+          );
         }
       });
     },
@@ -1136,17 +1149,24 @@ export function usePendingEdits(
       if (stillStreaming) return false;
       if (rejectedAll) {
         if (settled.preview) decided(settled.preview, () => false);
-        setStatuses((prev) => ({ ...prev, [callId]: "rejected" }));
+        setStatuses((prev) =>
+          recordStatuses(prev, [callId], {
+            type: "decided",
+            outcome: "rejected",
+          }),
+        );
         return true;
       }
       if (ok && learn && settled.preview) {
         const take = sentenceTake(settled.preview);
         decided(settled.preview, (i) => (i < 0 || !take ? true : take[i]));
       }
-      setStatuses((prev) => ({
-        ...prev,
-        [callId]: ok ? "accepted" : "invalid",
-      }));
+      setStatuses((prev) =>
+        recordStatuses(prev, [callId], {
+          type: "decided",
+          outcome: ok ? "accepted" : "invalid",
+        }),
+      );
       return ok;
     },
     [run, decided, acceptPictures],
@@ -1185,7 +1205,9 @@ export function usePendingEdits(
         );
         if (learn && preview) decided(preview, () => false);
       });
-      setStatuses((prev) => ({ ...prev, [callId]: status }));
+      setStatuses((prev) =>
+        recordStatuses(prev, [callId], { type: "decided", outcome: status }),
+      );
     },
     [run, decided],
   );
@@ -1259,7 +1281,13 @@ export function usePendingEdits(
           return;
         }
       });
-      if (joined) setStatuses((prev) => ({ ...prev, [callId]: "joined" }));
+      if (joined)
+        setStatuses((prev) =>
+          recordStatuses(prev, [callId], {
+            type: "decided",
+            outcome: "joined",
+          }),
+        );
       return joined;
     },
     [run],
@@ -1304,11 +1332,9 @@ export function usePendingEdits(
         if (gone.length > 0) view.dispatch(tr);
       });
       if (gone.length > 0)
-        setStatuses((prev) => {
-          const next = { ...prev };
-          for (const callId of gone) next[callId] = "joined";
-          return next;
-        });
+        setStatuses((prev) =>
+          recordStatuses(prev, gone, { type: "decided", outcome: "joined" }),
+        );
     },
     [run],
   );
@@ -1382,11 +1408,13 @@ export function usePendingEdits(
             discardGeneratedImage(id);
         view.dispatch(view.state.tr.setMeta(pendingEditKey, { type: "clear" }));
         if (learn) for (const p of previews) decided(p, () => false);
-        setStatuses((prev) => {
-          const copy = { ...prev };
-          for (const p of previews) copy[p.callId] = "rejected";
-          return copy;
-        });
+        setStatuses((prev) =>
+          recordStatuses(
+            prev,
+            previews.map((p) => p.callId),
+            { type: "decided", outcome: "rejected" },
+          ),
+        );
       });
     },
     [run, decided],
@@ -1451,7 +1479,7 @@ export function usePendingEdits(
   const allStatuses = useMemo(() => {
     const merged: Record<string, PendingStatus> = { ...statuses };
     for (const preview of previews)
-      merged[preview.callId] = preview.streaming ? "streaming" : "pending";
+      merged[preview.callId] = liveStatus(preview);
     return merged;
   }, [previews, statuses]);
 
