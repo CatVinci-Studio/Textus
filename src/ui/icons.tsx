@@ -401,33 +401,6 @@ export function HistoryIcon({ className }: IconProps) {
   );
 }
 
-/** Textus AI itself: a four-pointed spark, with a small one beside it (the
- *  AI panel's empty state). */
-export function SparkleIcon({ className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      width="15"
-      height="15"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <path
-        d="M7 2.5C7.35 5.1 8.4 6.15 11 6.5C8.4 6.85 7.35 7.9 7 10.5C6.65 7.9 5.6 6.85 3 6.5C5.6 6.15 6.65 5.1 7 2.5Z"
-        stroke="currentColor"
-        strokeWidth="1.1"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M11.75 10C11.9 11.1 12.4 11.6 13.5 11.75C12.4 11.9 11.9 12.4 11.75 13.5C11.6 12.4 11.1 11.9 10 11.75C11.1 11.6 11.6 11.1 11.75 10Z"
-        stroke="currentColor"
-        strokeWidth="1"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 /** "More actions" on a row (the iPhone document list). */
 export function MoreIcon({ className }: IconProps) {
   return (
@@ -866,40 +839,6 @@ export function UndoIcon({ className }: IconProps) {
       />
       <path
         d="M2.5 6.5H9.75C11.82 6.5 13.5 8.18 13.5 10.25C13.5 12.32 11.82 14 9.75 14H7"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-/** Paste: a clipboard with a sheet on it. */
-export function PasteIcon({ className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <path
-        d="M10.5 2.8H12C12.72 2.8 13.3 3.38 13.3 4.1V13.2C13.3 13.92 12.72 14.5 12 14.5H4C3.28 14.5 2.7 13.92 2.7 13.2V4.1C2.7 3.38 3.28 2.8 4 2.8H5.5"
-        stroke="currentColor"
-        strokeWidth="1.2"
-      />
-      <rect
-        x="5.5"
-        y="1.5"
-        width="5"
-        height="2.6"
-        rx="0.8"
-        stroke="currentColor"
-        strokeWidth="1.2"
-      />
-      <path
-        d="M5.5 8H10.5M5.5 11H9"
         stroke="currentColor"
         strokeWidth="1.2"
         strokeLinecap="round"

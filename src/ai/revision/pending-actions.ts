@@ -534,5 +534,3 @@ export function makePendingActions(env: PendingEnv) {
     rejectFocused,
   };
 }
-
-export type PendingActions = ReturnType<typeof makePendingActions>;
