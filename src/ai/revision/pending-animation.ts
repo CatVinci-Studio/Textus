@@ -17,8 +17,7 @@ import {
   partialFor,
   type StreamLayout,
 } from "./sentence-stream";
-import { type PendingSentence } from "./pending-types";
-import { pendingEditKey } from "./pending-edit-plugin";
+import { pendingEditKey, type PendingSentence } from "./pending-types";
 
 /**
  * New text typing into the document: one reveal per proposal (StreamReveal)

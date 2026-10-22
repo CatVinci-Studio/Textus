@@ -2,6 +2,7 @@ import { DecorationSet } from "@milkdown/kit/prose/view";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditProposal } from "../types";
 import { type SentenceHunk } from "./sentence-diff";
+import { PluginKey } from "@milkdown/kit/prose/state";
 
 /**
  * What a proposal in the document is: its preview, its sentences and the
@@ -187,3 +188,7 @@ export interface AppliedEdit {
   /** Undone: the preview is on offer again. */
   undone: boolean;
 }
+
+/** The pending-edit plugin's key (pending-edit-plugin.ts): its state is
+ *  every proposal shown in the document. */
+export const pendingEditKey = new PluginKey<PendingState>("pending-edit");

@@ -1,5 +1,5 @@
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
-import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
+import { Plugin } from "@milkdown/kit/prose/state";
 import { DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { FoldAttention } from "../../editor/html/details-fold";
@@ -12,6 +12,8 @@ import type {
   PendingPreview,
   PendingState,
 } from "./pending-types";
+import { pendingEditKey } from "./pending-types";
+export { pendingEditKey } from "./pending-types";
 import { dropAnimation, stillRevealing } from "./pending-animation";
 import type { SentencePickLabels } from "./pending-widgets";
 import {
@@ -51,8 +53,6 @@ export function appliedCallIds(state: EditorState): string[] {
     .filter((entry) => !entry.undone)
     .map((entry) => entry.preview.callId);
 }
-
-export const pendingEditKey = new PluginKey<PendingState>("pending-edit");
 
 export function hasPendingEdits(state: EditorState): boolean {
   return (pendingEditKey.getState(state)?.previews.length ?? 0) > 0;
