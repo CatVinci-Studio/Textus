@@ -881,6 +881,7 @@ pub fn run_conversation(
                     (&instructions, &specs, &usage, &postfix);
                 let (agent, sink) = (&agent, &sink);
                 let (doc, conventions, inline) = (&doc, &conventions, &inline);
+                let ledger = &ctx.proposed;
                 async move {
                     // with_retry's loop, inline: this already runs inside
                     // block_on, which can't be nested.
@@ -897,8 +898,13 @@ pub fn run_conversation(
                     };
                     charge(setup.model, &used);
                     usage.borrow_mut().push(used);
-                    let (step, applied) =
-                        crate::ai::agent::settle_step(step, doc, conventions, inline.as_ref());
+                    let (step, applied) = crate::ai::agent::settle_step(
+                        step,
+                        doc,
+                        conventions,
+                        inline.as_ref(),
+                        ledger,
+                    );
                     postfix
                         .borrow_mut()
                         .extend(applied.into_iter().map(str::to_string));

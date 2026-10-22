@@ -307,12 +307,13 @@ async fn ai_agent_message_inner(
                 let channel = on_event.clone();
                 let inline = inline.as_ref();
                 let (document, conventions) = (&document, &conventions);
+                let ledger = &tool_ctx.proposed;
                 async move {
                     let sink = |e: ProviderEvent<'_>| forward(&channel, web, inline, e);
                     let result = agent.step(instructions, &turns, tool_specs, &sink).await;
                     // Native search citations numbered (WebPlan::finish_step).
                     result.map(|(step, _)| {
-                        settle_step(web.finish_step(step), document, conventions, inline).0
+                        settle_step(web.finish_step(step), document, conventions, inline, ledger).0
                     })
                 }
             };
