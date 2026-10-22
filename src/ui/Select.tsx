@@ -2,12 +2,8 @@ import {
   Children,
   Fragment,
   isValidElement,
-  useEffect,
   useId,
-  useLayoutEffect,
-  useRef,
   useState,
-  type CSSProperties,
   type KeyboardEvent,
   type ReactElement,
   type ReactNode,
@@ -15,6 +11,7 @@ import {
 import { createPortal } from "react-dom";
 import { isIOSApp } from "../platform/capabilities";
 import { useMergedRef, usePresence } from "./usePresence";
+import { useFloatingList } from "./useFloatingList";
 import "./Select.css";
 
 /**
@@ -105,8 +102,6 @@ function runs(options: OptionItem[]) {
   return out;
 }
 
-const MENU_MAX_HEIGHT = 280;
-
 /** An option label as plain text, for the native list (which shows text
  *  only) and type-ahead. */
 function textOf(node: ReactNode): string {
@@ -186,11 +181,9 @@ function DrawnSelect({
   const selectedIndex = options.findIndex((o) => o.value === value);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
-  const [place, setPlace] = useState<CSSProperties>({});
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
-  // Where the trigger was when the list was placed beside it.
-  const placedAt = useRef<DOMRect | null>(null);
+  const { triggerRef, listRef, place } = useFloatingList(open, active, () =>
+    setOpen(false),
+  );
   const listId = useId();
   // The list stays a moment after it closes, shrinking back into the
   // trigger; the choice has already gone through by then.
@@ -214,113 +207,6 @@ function DrawnSelect({
     close();
     if (option.value !== value) onChange({ target: { value: option.value } });
   }
-
-  // Below the trigger, or above when the window has no room under it.
-  useLayoutEffect(() => {
-    if (!open) return;
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    placedAt.current = rect;
-    const below = window.innerHeight - rect.bottom - 8;
-    const above = rect.top - 8;
-    const up = below < Math.min(MENU_MAX_HEIGHT, 160) && above > below;
-    setPlace({
-      left: Math.min(rect.left, window.innerWidth - rect.width - 8),
-      minWidth: rect.width,
-      maxHeight: Math.min(MENU_MAX_HEIGHT, up ? above : below),
-      ...(up
-        ? { bottom: window.innerHeight - rect.top + 4 }
-        : { top: rect.bottom + 4 }),
-      // It grows out of the edge that touches the trigger.
-      ...({
-        "--transform-origin": up ? "bottom left" : "top left",
-      } as CSSProperties),
-    });
-  }, [open]);
-
-  // Then kept inside the window across: the list is often wider than its
-  // trigger (Settings' image models, "OpenAI · gpt-image-…" beside a "None"
-  // button), and placed by the trigger's width alone it ran past the
-  // window's right edge. One that doesn't fit lines up with the trigger's
-  // right edge instead, and never leaves the window. Layout width, not the
-  // box: the entrance scales it from 96%.
-  useLayoutEffect(() => {
-    const list = listRef.current;
-    const rect = placedAt.current;
-    const placed = place.left;
-    if (!open || !list || !rect || typeof placed !== "number") return;
-    const width = list.offsetWidth;
-    const room = window.innerWidth - 8;
-    if (placed + width <= room) return;
-    const left = Math.max(8, Math.min(rect.right, room) - width);
-    setPlace(
-      (p) =>
-        ({
-          ...p,
-          left,
-          maxWidth: room - 8,
-          "--transform-origin": `${p.bottom !== undefined ? "bottom" : "top"} right`,
-        }) as CSSProperties,
-    );
-  }, [open, place.left]);
-
-  // While open: focus the list, close on any outside press, and close when
-  // the page moves under it (the list is placed once, from the trigger).
-  useEffect(() => {
-    if (!open) return;
-    // Without preventScroll the browser may scroll the page's own scroll
-    // areas to bring the list into view before it is placed (a Settings
-    // page still settling in moved, and the scroll closed the list).
-    listRef.current?.focus({ preventScroll: true });
-    const onPointer = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (
-        triggerRef.current?.contains(target) ||
-        listRef.current?.contains(target)
-      )
-        return;
-      close(false);
-    };
-    const onMove = (e: Event) => {
-      if (listRef.current?.contains(e.target as Node)) return;
-      close(false);
-    };
-    // A scroll event arrives a frame after the scroll itself, so one made
-    // just before the list opened (the trigger scrolled into view, a wheel
-    // still settling) lands after the list was placed where the trigger
-    // already is. Only a scroll that moved the trigger leaves it behind.
-    const onScroll = (e: Event) => {
-      const now = triggerRef.current?.getBoundingClientRect();
-      const then = placedAt.current;
-      if (now && then && now.top === then.top && now.left === then.left) return;
-      onMove(e);
-    };
-    document.addEventListener("mousedown", onPointer, true);
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onMove);
-    window.addEventListener("blur", onMove);
-    return () => {
-      document.removeEventListener("mousedown", onPointer, true);
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onMove);
-      window.removeEventListener("blur", onMove);
-    };
-  }, [open]);
-
-  // The highlighted option stays in view by scrolling the list alone:
-  // scrollIntoView would scroll every area around it too.
-  useEffect(() => {
-    const list = listRef.current;
-    if (!open || !list) return;
-    const item = list.querySelector<HTMLElement>(`[data-index="${active}"]`);
-    if (!item) return;
-    if (item.offsetTop < list.scrollTop) list.scrollTop = item.offsetTop;
-    else if (
-      item.offsetTop + item.offsetHeight >
-      list.scrollTop + list.clientHeight
-    )
-      list.scrollTop = item.offsetTop + item.offsetHeight - list.clientHeight;
-  }, [open, active]);
 
   function step(from: number, delta: number) {
     for (let i = 1; i <= options.length; i++) {
