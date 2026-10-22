@@ -3,6 +3,7 @@ import {
   memo,
   useCallback,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type RefObject,
@@ -185,28 +186,7 @@ export function ReviewMargin({
   const [layout, setLayout] = useState<Layout | null>(null);
   const heights = useRef(new Map<string, number>());
   const [tick, setTick] = useState(0);
-  const [noMargin, setNoMargin] = useState(false);
-  const onNoMarginRef = useLatest(onNoMargin);
-
-  // Whether a margin is available, cards or no cards: the window, the side
-  // panels, the zoom and the text width all change it.
-  useLayoutEffect(() => {
-    if (!view) return;
-    let last: boolean | null = null;
-    const check = () => {
-      const next = !measureRoom(scrollEl, contentEl, view).available;
-      if (next === last) return;
-      last = next;
-      setNoMargin(next);
-      onNoMarginRef.current(next);
-    };
-    check();
-    const ro = new ResizeObserver(check);
-    ro.observe(scrollEl);
-    ro.observe(contentEl);
-    ro.observe(view.dom);
-    return () => ro.disconnect();
-  }, [view, scrollEl, contentEl, onNoMarginRef]);
+  const noMargin = useMarginRoom(view, scrollEl, contentEl, onNoMargin);
 
   // Measure: where the text ends, where each item's passage is - then
   // stack the cards.
@@ -315,26 +295,12 @@ export function ReviewMargin({
     [contentEl, scrollEl],
   );
 
-  // The cards' callbacks, the same from one render to the next, so a card
-  // whose own props didn't change isn't drawn again (they are memo'd).
-  const actions = useLatest({ onHot, onDone, onAsk, onDecide });
-  const cardHot = useCallback(
-    (key: string, on: boolean) => actions.current.onHot(on ? key : null),
-    [actions],
-  );
-  const cardDone = useCallback(
-    (id: string) => actions.current.onDone(id),
-    [actions],
-  );
-  const cardAsk = useCallback(
-    (note: ReviewNote) => actions.current.onAsk(note),
-    [actions],
-  );
-  const cardDecide = useCallback(
-    (callId: string, index: number, take: boolean | null) =>
-      actions.current.onDecide(callId, index, take),
-    [actions],
-  );
+  const { cardHot, cardDone, cardAsk, cardDecide } = useCardActions({
+    onHot,
+    onDone,
+    onAsk,
+    onDecide,
+  });
   const onHeight = useCallback((key: string, h: number) => {
     if (heights.current.get(key) !== h) {
       heights.current.set(key, h);
@@ -400,6 +366,61 @@ export function ReviewMargin({
       })}
     </div>,
     scrollEl,
+  );
+}
+
+/** Whether the window has room for a margin beside the text, cards or no
+ *  cards - reported to `onNoMargin` as it changes. */
+function useMarginRoom(
+  view: EditorView | null,
+  scrollEl: HTMLElement,
+  contentEl: HTMLElement,
+  onNoMargin: (noMargin: boolean) => void,
+) {
+  const [noMargin, setNoMargin] = useState(false);
+  const onNoMarginRef = useLatest(onNoMargin);
+
+  // Whether a margin is available, cards or no cards: the window, the side
+  // panels, the zoom and the text width all change it.
+  useLayoutEffect(() => {
+    if (!view) return;
+    let last: boolean | null = null;
+    const check = () => {
+      const next = !measureRoom(scrollEl, contentEl, view).available;
+      if (next === last) return;
+      last = next;
+      setNoMargin(next);
+      onNoMarginRef.current(next);
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(scrollEl);
+    ro.observe(contentEl);
+    ro.observe(view.dom);
+    return () => ro.disconnect();
+  }, [view, scrollEl, contentEl, onNoMarginRef]);
+  return noMargin;
+}
+
+/** The cards' callbacks, the same from one render to the next, so a card
+ *  whose own props didn't change isn't drawn again (they are memo'd). */
+function useCardActions(handlers: {
+  onHot: (key: string | null) => void;
+  onDone: (id: string) => void;
+  onAsk: (note: ReviewNote) => void;
+  onDecide: (callId: string, index: number, take: boolean | null) => void;
+}) {
+  const actions = useLatest(handlers);
+  return useMemo(
+    () => ({
+      cardHot: (key: string, on: boolean) =>
+        actions.current.onHot(on ? key : null),
+      cardDone: (id: string) => actions.current.onDone(id),
+      cardAsk: (note: ReviewNote) => actions.current.onAsk(note),
+      cardDecide: (callId: string, index: number, take: boolean | null) =>
+        actions.current.onDecide(callId, index, take),
+    }),
+    [actions],
   );
 }
 
