@@ -151,8 +151,24 @@ const ENDS_PARAGRAPH = /\n[ \t]*\n\s*$/;
 function regroup(pairs: Pair[], finished: boolean): Pair[] {
   const out: Pair[] = [];
   let run: Pair[] = [];
+  // Runs next to each other that both joined or split paragraphs are
+  // shaped as one: sentences paired across a paragraph break (a line of
+  // dialogue dropped into the narration before it) cut a join of three
+  // lines in two, and alignParagraphs struck one of them on its own.
+  let uneven: Pair[] = [];
+  const flush = () => {
+    if (uneven.length > 0) out.push(...shapeRun(uneven));
+    uneven = [];
+  };
   const close = () => {
-    if (run.length > 0) out.push(...shapeRun(run));
+    if (run.length === 0) return;
+    const before = run.map((p) => p.before).join("");
+    const after = run.map((p) => p.after).join("");
+    if (paragraphCount(before) !== paragraphCount(after)) uneven.push(...run);
+    else {
+      flush();
+      out.push(...shapeRun(run));
+    }
     run = [];
   };
   for (let k = 0; k < pairs.length; k++) {
@@ -163,16 +179,31 @@ function regroup(pairs: Pair[], finished: boolean): Pair[] {
     const ends = (text: string) => !text || ENDS_PARAGRAPH.test(text);
     if (last ? finished : ends(before) && ends(after)) close();
   }
+  // Still streaming, a join just before the text being written may go on
+  // into it: shaped already unless that leaves a paragraph struck on its
+  // own at its end (the rest of the join not written yet), so its card
+  // stands where it will once the stream ends.
+  if (finished || run.length === 0) flush();
+  else {
+    const shaped = shapeRun(uneven);
+    const tail = shaped[shaped.length - 1];
+    const alone = tail !== undefined && (tail.before === "") !== (tail.after === "");
+    out.push(...(alone ? uneven : shaped));
+  }
   out.push(...run);
   return out;
+}
+
+/** How many paragraphs with text `text` holds. */
+function paragraphCount(text: string): number {
+  return paragraphsOf(text).filter((t) => t.trim()).length;
 }
 
 /** One run of `regroup`, shaped. */
 function shapeRun(run: Pair[]): Pair[] {
   const before = run.map((p) => p.before).join("");
   const after = run.map((p) => p.after).join("");
-  const count = (text: string) =>
-    paragraphsOf(text).filter((t) => t.trim()).length;
+  const count = paragraphCount;
   // Joined paragraphs are a change even with every sentence as it was:
   // taken as "same", accepting joined them unseen. Each new paragraph is set
   // against the ones it came from (alignParagraphs) - a translation, which
@@ -227,6 +258,9 @@ function paragraphKind(text: string): string {
 /** A paragraph left out or added on its own costs this much. */
 const LONE_PARAGRAPH = 1.5;
 
+/** The most paragraphs one paragraph is joined from or split into. */
+const MAX_GROUP = 4;
+
 /**
  * Pairs the paragraphs of a rewrite that has a different number of them:
  * each original with the one it became, or two joined into one, one split
@@ -264,13 +298,10 @@ function alignParagraphs(
     () => new Array(n + 1).fill({ cost: Infinity, di: 0, dj: 0 }),
   );
   best[0][0] = { cost: 0, di: 0, dj: 0 };
-  const moves: [number, number][] = [
-    [1, 1],
-    [2, 1],
-    [1, 2],
-    [1, 0],
-    [0, 1],
-  ];
+  // A pair, a join or a split of up to MAX_GROUP paragraphs (three lines
+  // of dialogue said as one), a paragraph dropped or added.
+  const moves: [number, number][] = [[1, 1], [1, 0], [0, 1]];
+  for (let k = 2; k <= MAX_GROUP; k++) moves.push([k, 1], [1, k]);
   for (let i = 0; i <= m; i++)
     for (let j = 0; j <= n; j++) {
       const here = best[i][j].cost;

@@ -220,6 +220,20 @@ describe("a change over several paragraphs", () => {
     });
   });
 
+  it("joins three lines of dialogue as one change, none struck alone", () => {
+    // Every paragraph rewritten: the sentence pairing put the first line
+    // with the narration before it, which cut the join in two.
+    const changes = diffSentences(
+      "她没有回头，只是用手按住了螺丝刀。\n\n“别打开后盖。”\n\n“里面全是灰。”\n\n“小心会触电的。”\n\n儿子说完这些，又觉得自己说多了，就回房间去了。",
+      "妇不回头，以手按其螺丝刀。\n\n“勿开后盖，里面全是灰，小心触电。”\n\n儿子说完，自觉说多，遂回房间。",
+    ).filter((h) => h.kind === "change");
+    expect(changes.map((c) => (c.kind === "change" ? c.before : ""))).toEqual([
+      "她没有回头，只是用手按住了螺丝刀。\n\n",
+      "“别打开后盖。”\n\n“里面全是灰。”\n\n“小心会触电的。”\n\n",
+      "儿子说完这些，又觉得自己说多了，就回房间去了。",
+    ]);
+  });
+
   it("stays one change where paragraphs are joined", () => {
     const hunks = diffSentences(
       "Rain fell.\n\nWind rose.",
