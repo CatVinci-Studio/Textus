@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn registry(entries: Vec<(&str, &str)>) -> OpenChatWindows {

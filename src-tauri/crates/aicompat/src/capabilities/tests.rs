@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn efforts(values: &[&str]) -> Vec<String> {

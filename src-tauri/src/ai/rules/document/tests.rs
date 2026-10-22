@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn rules(report: &DocReport) -> Vec<(&'static str, usize, String)> {

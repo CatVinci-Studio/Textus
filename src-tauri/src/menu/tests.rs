@@ -1,4 +1,3 @@
-
 #[test]
 fn a_recent_folder_ends_in_a_separator_to_set_it_apart_from_files() {
     assert_eq!(super::folder_menu_text("/srv/notes"), "/srv/notes/");
