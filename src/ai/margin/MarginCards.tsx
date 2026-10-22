@@ -1,4 +1,5 @@
 import { RevisionNoteText } from "./RevisionNoteText";
+import { InlineMarkdownText } from "../MarkdownText";
 import { memo, useLayoutEffect, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import type { ReviewNote } from "./review-notes-plugin";
@@ -263,7 +264,9 @@ export const NoteCard = memo(function NoteCard({
         </span>
         {labels.reviewNoteBy}
       </div>
-      <div className="review-note-text">{note.comment}</div>
+      <div className="review-note-text">
+        <InlineMarkdownText text={note.comment} />
+      </div>
       <div className="review-note-actions">
         <button type="button" onClick={() => onAsk(note)}>
           {labels.reviewNoteAsk}
@@ -333,7 +336,9 @@ export function NotePopover({
         </span>
         {labels.reviewNoteBy}
       </div>
-      <div className="review-note-text">{note.comment}</div>
+      <div className="review-note-text">
+        <InlineMarkdownText text={note.comment} />
+      </div>
       <div className="review-note-actions">
         <button type="button" onClick={() => onAsk(note)}>
           {labels.reviewNoteAsk}

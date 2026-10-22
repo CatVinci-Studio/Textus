@@ -1,5 +1,6 @@
 import { withoutCitationMarkers } from "../citation-markers";
 import { OUT_OF_STEPS } from "./out-of-steps";
+import { InlineMarkdownText } from "../MarkdownText";
 import {
   Fragment,
   useEffect,
@@ -421,7 +422,9 @@ export function ChatMessages({
                 <blockquote className="agent-comment-quote">
                   {comment.anchor}
                 </blockquote>
-                <div className="agent-comment-text">{comment.comment}</div>
+                <div className="agent-comment-text">
+                  <InlineMarkdownText text={comment.comment} />
+                </div>
               </div>
             );
           }
