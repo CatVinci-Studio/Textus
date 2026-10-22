@@ -275,6 +275,9 @@
       getSelection: function () {
         return call("document.getSelection");
       },
+      getBlocks: function () {
+        return call("document.getBlocks");
+      },
       getOutline: function () {
         return call("document.getOutline");
       },

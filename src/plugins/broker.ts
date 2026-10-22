@@ -1,3 +1,4 @@
+import { resolveBlockEdit } from "../ai/doc-blocks";
 import {
   releaseKeys,
   runEditorOp,
@@ -517,6 +518,10 @@ export class PluginHost {
         this.need("editor.input");
         return runEditorOp(this.id, op);
       },
+      "document.getBlocks": () => {
+        this.need("document.read");
+        return getActiveDocument()?.blocks() ?? null;
+      },
       "document.getOutline": () => {
         this.need("document.read");
         const text = getActiveDocument()?.text();
@@ -529,11 +534,36 @@ export class PluginHost {
           throw new Error(`No edit action ${action}.`);
         const doc = getActiveDocument();
         if (!doc) throw new Error("No document is open.");
+        const text = typeof edit.text === "string" ? edit.text : undefined;
+        const anchor =
+          typeof edit.anchor === "string" ? edit.anchor : undefined;
+        // Named by its blocks (document.getBlocks), as Textus AI names
+        // them: filled in as the backend fills in the model's.
+        const target =
+          typeof edit.block === "string"
+            ? resolveBlockEdit(
+                doc.blocks(),
+                {
+                  action,
+                  block: edit.block,
+                  lastBlock:
+                    typeof edit.lastBlock === "string"
+                      ? edit.lastBlock
+                      : undefined,
+                  anchor,
+                  text: text ?? "",
+                },
+                true,
+              )
+            : null;
+        if (typeof edit.block === "string" && !target)
+          throw new Error(
+            `No block ${edit.block} in the document now, or its words aren't in it once.`,
+          );
         const proposal: EditProposal = {
           action,
-          text: typeof edit.text === "string" ? edit.text : undefined,
-          anchor: typeof edit.anchor === "string" ? edit.anchor : undefined,
-          context: typeof edit.context === "string" ? edit.context : undefined,
+          text,
+          ...(target ? { ...target, action: target.action as EditAction } : {}),
           reason: `${this.name}${typeof edit.reason === "string" ? `: ${edit.reason}` : ""}`,
         };
         return doc.propose(`plugin-${this.id}-${++proposalCounter}`, proposal);

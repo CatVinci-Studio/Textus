@@ -7,6 +7,7 @@ import {
   type PendingPreview,
 } from "./revision/pending-edit-plugin";
 import { chatSelectionPlugin } from "./chat/quick-ask/chat-selection-plugin";
+import { blockReader } from "./revision/block-reader";
 import { createQuickAskWidgetPlugin } from "./chat/quick-ask/quick-ask-widget-plugin";
 import {
   createReviewNotesPlugin,
@@ -65,6 +66,7 @@ export function withAiPlugins(
   const { settings, docPath, pendingEdits, quickAskWidget, tour, reviewNotes } =
     options;
   return editor
+    .use(blockReader)
     .use(
       createGhostTextPlugin({
         enabled: () =>

@@ -4,7 +4,7 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { useEditorProposals } from "./useEditorProposals";
 import {
-  cachedDocumentMarkdown,
+  cachedDocument,
   caretContext,
   headingAt,
   readSelection,
@@ -86,7 +86,7 @@ export function useChatContextBridge({
           cursor: caret?.pos ?? null,
         };
         return {
-          document: cachedDocumentMarkdown(ctx, state.doc),
+          document: cachedDocument(ctx, state.doc),
           selectionMarkdown: selection.selectionMarkdown,
           cursor: caret,
           focusHeading: headingAt(state.doc, state.selection.from),

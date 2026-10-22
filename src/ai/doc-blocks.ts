@@ -1,19 +1,74 @@
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+
 /**
- * The document's blocks and their ids, split exactly as the backend splits
- * them for the model (src-tauri/src/ai/doc_blocks.rs - the two are held to
- * the same cases by doc-blocks-cases.json). The model names the block an
- * edit changes (`block`, and `last_block` for a run of them) instead of
- * quoting it; the backend turns that into an anchor before the call reaches
- * the history, so only a streaming draft needs it here - to show the edit
- * the moment its block is named, rather than when the call is complete.
+ * The document's blocks as the model sees them: the editor's own top-level
+ * nodes, each with an id and a kind. The request carries this list
+ * (doc-markdown.ts's serializeBlocks makes it); the backend shows each
+ * block after its `[#k3f9]` and never splits the document itself, so the
+ * blocks the model names are the nodes the editor has - a loose list or a
+ * quote of several paragraphs is one block, as it is one node.
+ *
+ * An edit names its block (`block`, and `last_block` for a run of them)
+ * instead of quoting it, and keeps the ids: the proposal is placed by them
+ * (doc-markdown.ts's matchTarget), not by searching the document for its
+ * text. An id is a hash of the block's markdown, so a block keeps its id
+ * while it is unchanged, and an id from before a change names nothing
+ * rather than the wrong block.
  */
 
-/** One block: its id, its markdown and where that is in the document. */
-export interface DocBlock {
+/** What a block is, read from its node. */
+export type BlockKind =
+  | "paragraph"
+  | "heading"
+  | "list"
+  | "quote"
+  | "code"
+  | "math"
+  | "table"
+  | "rule"
+  | "picture"
+  | "html"
+  | "footnote"
+  | "definition"
+  | "other";
+
+/** One block as the request carries it - `DocBlock` in doc_blocks.rs. */
+export interface SentBlock {
   id: string;
-  text: string;
-  from: number;
-  to: number;
+  markdown: string;
+  kind: BlockKind;
+}
+
+const NODE_KINDS: Record<string, BlockKind> = {
+  paragraph: "paragraph",
+  heading: "heading",
+  bullet_list: "list",
+  ordered_list: "list",
+  blockquote: "quote",
+  code_block: "code",
+  math_block: "math",
+  table: "table",
+  hr: "rule",
+  html: "html",
+  footnote_definition: "footnote",
+};
+
+/** What `node`, a top-level node, is. A paragraph with no text of its own
+ *  is a picture's, an HTML block's (`paragraph > html`) or a link's
+ *  definition (`paragraph > link_definition`). */
+export function blockKind(node: ProseNode): BlockKind {
+  const kind = NODE_KINDS[node.type.name] ?? "other";
+  if (kind !== "paragraph" || node.childCount === 0) return kind;
+  const children = new Set<string>();
+  let ownText = false;
+  node.forEach((child) => {
+    ownText ||= child.isText;
+    children.add(child.type.name);
+  });
+  if (ownText) return "paragraph";
+  if (children.has("link_definition")) return "definition";
+  if (children.has("html")) return "html";
+  return "picture";
 }
 
 /** FNV-1a over the block's UTF-8 bytes, as four base-36 digits. */
@@ -32,6 +87,116 @@ function hashId(text: string): string {
   return out;
 }
 
+/** Each block's id, in order: its hash, `-2`, `-3`… after it where the
+ *  same markdown came before. */
+export function blockIds(markdowns: readonly string[]): string[] {
+  const seen = new Map<string, number>();
+  return markdowns.map((markdown) => {
+    const base = hashId(markdown);
+    const n = (seen.get(base) ?? 0) + 1;
+    seen.set(base, n);
+    return n === 1 ? base : `${base}-${n}`;
+  });
+}
+
+/** An id as the model may write it: `#k3f9` or `k3f9`. */
+export function cleanId(id: string): string {
+  return id.trim().replace(/^#/, "");
+}
+
+/** Where `block` (and `lastBlock`) are among `blocks`: the run's first and
+ *  last index, or null when an id names none of them or the run is
+ *  backwards. */
+export function runOf(
+  blocks: readonly { id: string }[],
+  block: string,
+  lastBlock?: string,
+): { first: number; last: number } | null {
+  const first = blocks.findIndex((b) => b.id === cleanId(block));
+  if (first === -1) return null;
+  if (!lastBlock) return { first, last: first };
+  const last = blocks.findIndex((b) => b.id === cleanId(lastBlock));
+  return last < first ? null : { first, last };
+}
+
+/** Edit fields as a call has them (streaming, or complete). */
+export interface BlockEditFields {
+  action: string;
+  block: string;
+  lastBlock?: string;
+  /** Words quoted inside the block, when the edit is about those. */
+  anchor?: string;
+  text: string;
+}
+
+/**
+ * An edit named by its block as it is applied - what the backend's
+ * resolve_edit_arguments writes into the call, done here for a call still
+ * streaming in: the run's text is the anchor; a few words quoted inside it
+ * that a `replace` or `delete` changes are changed in the whole run (one
+ * edit per block, as the card shows it); an insertion next to quoted words
+ * keeps them as its anchor. A run's rewrite keeps the run's pictures
+ * (keepPictures). Null when the ids name no run of `blocks` (the document
+ * changed since the request) or the quote isn't in the run once.
+ */
+export function resolveBlockEdit(
+  blocks: readonly SentBlock[],
+  fields: BlockEditFields,
+  complete = false,
+): {
+  action: string;
+  block: string;
+  lastBlock?: string;
+  anchor: string;
+  text: string;
+} | null {
+  const run = runOf(blocks, fields.block, fields.lastBlock);
+  if (!run) return null;
+  const runBlocks = blocks.slice(run.first, run.last + 1);
+  const runText = runBlocks.map((b) => b.markdown).join("\n\n");
+  const ids = {
+    block: runBlocks[0].id,
+    ...(run.last > run.first ? { lastBlock: runBlocks.at(-1)!.id } : {}),
+  };
+  const quote = fields.anchor;
+  if (quote && quote !== runText) {
+    if (runText.split(quote).length !== 2) return null;
+    if (fields.action === "insert_after" || fields.action === "insert_before")
+      return {
+        ...ids,
+        action: fields.action,
+        anchor: quote,
+        text: fields.text,
+      };
+    if (fields.action === "replace" || fields.action === "delete") {
+      const with_ = fields.action === "delete" ? "" : fields.text;
+      return {
+        ...ids,
+        action: "replace",
+        anchor: runText,
+        text: runText.replace(quote, () => with_),
+      };
+    }
+  }
+  return {
+    ...ids,
+    action: fields.action,
+    anchor: runText,
+    text:
+      fields.action === "replace" && run.last > run.first
+        ? keepPictures(runBlocks, fields.text, complete).text
+        : fields.text,
+  };
+}
+
+/** Whether `block` is a picture and nothing else: `![alt](path)`, or an
+ *  `<img>` (a picture given a width) - for text the model wrote, which has
+ *  no node to ask. doc_blocks.rs's is_picture; both are held to
+ *  keep-pictures-cases.json. */
+export function isPicture(block: string): boolean {
+  return /^(?:!\[[^\]\n]*\]\([^)\n]*\)|<img\s[^>\n]*>)$/.test(block.trim());
+}
+
 /** The marker a fenced block opens with: ``` or ~~~ code, $$ maths. */
 function fenceOpening(line: string): string | null {
   const t = line.trimStart();
@@ -40,15 +205,18 @@ function fenceOpening(line: string): string | null {
   return null;
 }
 
-/** The document's blocks: runs of lines between blank lines, a fenced code
- *  or maths block whole. */
-export function splitBlocks(document: string): DocBlock[] {
+/** Text the model wrote, in its paragraphs: runs of lines between blank
+ *  lines, a fenced code or maths block whole, with where each is. Only for
+ *  the model's text - the document's blocks are the editor's nodes. */
+export function textParagraphs(
+  text: string,
+): { text: string; from: number; to: number }[] {
   const spans: [number, number][] = [];
   let start: number | null = null;
   let end = 0;
   let fence: string | null = null;
   let offset = 0;
-  for (const raw of document.split(/(?<=\n)/)) {
+  for (const raw of text.split(/(?<=\n)/)) {
     const line = raw.replace(/\r?\n$/, "");
     const lineEnd = offset + line.length;
     if (fence) {
@@ -71,103 +239,7 @@ export function splitBlocks(document: string): DocBlock[] {
     offset += raw.length;
   }
   if (start !== null) spans.push([start, end]);
-  const seen = new Map<string, number>();
-  return spans.map(([from, to]) => {
-    const text = document.slice(from, to);
-    const base = hashId(text);
-    const n = (seen.get(base) ?? 0) + 1;
-    seen.set(base, n);
-    return { id: n === 1 ? base : `${base}-${n}`, text, from, to };
-  });
-}
-
-/** Edit fields as a streaming call has them so far. */
-export interface BlockEditFields {
-  action: string;
-  block?: string;
-  lastBlock?: string;
-  anchor?: string;
-  text: string;
-}
-
-/**
- * The anchor and text an edit by block comes to - what the backend's
- * resolve_edit_arguments makes of it: the block's (or the run's) whole
- * text as the anchor, and a few words quoted inside it changed in it.
- * Null when the ids name no block of `document` as it is now (it changed
- * since the request): the draft waits for the completed call then.
- */
-export function resolveBlockEdit(
-  document: string,
-  fields: BlockEditFields,
-): { anchor: string; text: string; action: string; context?: string } | null {
-  if (!fields.block) return null;
-  const blocks = splitBlocks(document);
-  const first = blocks.findIndex(
-    (b) => b.id === fields.block!.replace(/^#/, ""),
-  );
-  if (first === -1) return null;
-  let last = first;
-  if (fields.lastBlock) {
-    last = blocks.findIndex(
-      (b) => b.id === fields.lastBlock!.replace(/^#/, ""),
-    );
-    if (last < first) return null;
-  }
-  // A run is the document's own text from its first block to its last.
-  const runText = document.slice(blocks[first].from, blocks[last].to);
-  // A run repeated word for word is told apart by the block before it.
-  const context =
-    document.split(runText).length > 2 && first > 0
-      ? document.slice(blocks[first - 1].from, blocks[last].to)
-      : undefined;
-  const part = fields.anchor;
-  // Inserting next to words inside the block stays next to them, the
-  // block telling which of them is meant.
-  if (
-    part &&
-    part !== runText &&
-    (fields.action === "insert_after" || fields.action === "insert_before")
-  ) {
-    const inBlock = runText.split(part).length === 2;
-    const repeated = document.split(part).length > 2;
-    return {
-      action: fields.action,
-      anchor: part,
-      text: fields.text,
-      ...(inBlock && repeated ? { context: runText } : {}),
-    };
-  }
-  if (
-    part &&
-    part !== runText &&
-    (fields.action === "replace" || fields.action === "delete")
-  ) {
-    if (runText.split(part).length !== 2) return null;
-    const with_ = fields.action === "delete" ? "" : fields.text;
-    return {
-      action: "replace",
-      anchor: runText,
-      text: runText.replace(part, () => with_),
-      ...(context ? { context } : {}),
-    };
-  }
-  return {
-    action: fields.action,
-    anchor: runText,
-    text:
-      fields.action === "replace" && last > first
-        ? keepPictures(blocks.slice(first, last + 1), fields.text, false).text
-        : fields.text,
-    ...(context ? { context } : {}),
-  };
-}
-
-/** Whether `block` is a picture and nothing else: `![alt](path)`, or an
- *  `<img>` (a picture given a width). doc_blocks.rs's is_picture; the rest
- *  of the app asks markdown-forms.ts, which has it from here. */
-export function isPicture(block: string): boolean {
-  return /^(?:!\[[^\]\n]*\]\([^)\n]*\)|<img\s[^>\n]*>)$/.test(block.trim());
+  return spans.map(([from, to]) => ({ text: text.slice(from, to), from, to }));
 }
 
 /**
@@ -179,14 +251,14 @@ export function isPicture(block: string): boolean {
  * left out for now. With how many swapped pictures were taken out.
  */
 export function keepPictures(
-  run: DocBlock[],
+  run: readonly { markdown: string }[],
   text: string,
   complete: boolean,
 ): { text: string; swapped: number } {
-  const originals = run.map((b) => b.text.trim()).filter(isPicture);
+  const originals = run.map((b) => b.markdown.trim()).filter(isPicture);
   const missing = originals.filter((p) => !text.includes(p)).length;
   let swapped = 0;
-  const kept = splitBlocks(text).filter((b) => {
+  const kept = textParagraphs(text).filter((b) => {
     const isNew = isPicture(b.text) && !originals.includes(b.text.trim());
     if (isNew && swapped < missing) {
       swapped++;
@@ -199,7 +271,7 @@ export function keepPictures(
   // Pictures in the new text so far: each moves the later places on by one.
   let put = 0;
   for (const block of run) {
-    const picture = block.text.trim();
+    const picture = block.markdown.trim();
     if (!isPicture(picture)) {
       wordsBefore++;
       continue;
@@ -209,13 +281,13 @@ export function keepPictures(
       put++;
       continue;
     }
-    const blocks = splitBlocks(out);
+    const paragraphs = textParagraphs(out);
     const at = wordsBefore + put;
     if (at === 0) out = `${picture}\n\n${out.trimStart()}`;
-    else if (at < blocks.length) {
-      const end = blocks[at - 1].to;
+    else if (at < paragraphs.length) {
+      const end = paragraphs[at - 1].to;
       out = `${out.slice(0, end)}\n\n${picture}\n\n${out.slice(end).trimStart()}`;
-    } else if (complete && blocks.length > 0)
+    } else if (complete && paragraphs.length > 0)
       out = `${out.trimEnd()}\n\n${picture}`;
     else continue;
     put++;
@@ -226,31 +298,20 @@ export function keepPictures(
 /**
  * Where an add_comment or generate_image call named by its block points,
  * as doc_blocks.rs's resolve_target_arguments makes it: a phrase quoted in
- * `anchor` that the block holds once stays the anchor (pinned by the whole
- * block where it repeats in the document), else the anchor is the whole
- * block. Without a block, the anchor as quoted. Null while neither names
- * anything in `document`.
+ * `anchor` that the block holds once stays the anchor, else the anchor is
+ * the whole block. Without a block, the anchor as quoted. Null while
+ * neither names anything in `blocks`.
  */
 export function resolveBlockTarget(
-  document: string,
+  blocks: readonly SentBlock[],
   fields: { block?: string; anchor?: string },
-): { anchor: string; context?: string } | null {
+): { block?: string; anchor: string } | null {
   if (!fields.block) return fields.anchor ? { anchor: fields.anchor } : null;
-  const blocks = splitBlocks(document);
-  const index = blocks.findIndex(
-    (b) => b.id === fields.block!.replace(/^#/, ""),
-  );
-  if (index === -1) return null;
-  const whole = blocks[index].text;
+  const run = runOf(blocks, fields.block);
+  if (!run) return null;
+  const { id, markdown } = blocks[run.first];
   const phrase = fields.anchor;
-  if (phrase && phrase !== whole && whole.split(phrase).length === 2)
-    return document.split(phrase).length > 2
-      ? { anchor: phrase, context: whole }
-      : { anchor: phrase };
-  return document.split(whole).length > 2 && index > 0
-    ? {
-        anchor: whole,
-        context: document.slice(blocks[index - 1].from, blocks[index].to),
-      }
-    : { anchor: whole };
+  return phrase && phrase !== markdown && markdown.split(phrase).length === 2
+    ? { block: id, anchor: phrase }
+    : { block: id, anchor: markdown };
 }

@@ -1,6 +1,6 @@
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../../editor/useEditorRunner";
-import { cachedDocumentMarkdown, readSelection } from "../doc-markdown";
+import { cachedDocument, readSelection } from "../doc-markdown";
 import type { SelectionTarget } from "../revision/usePendingEdits";
 import type { ChatContext } from "./window/chat-bridge";
 
@@ -47,7 +47,7 @@ export function readChatContext(
       );
       return {
         context: {
-          document: cachedDocumentMarkdown(ctx, state.doc),
+          document: cachedDocument(ctx, state.doc),
           selectedText,
           selectionMarkdown,
           docPath: filePath,

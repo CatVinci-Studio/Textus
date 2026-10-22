@@ -3,7 +3,7 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { useEditorProposals } from "./useEditorProposals";
 import {
-  cachedDocumentMarkdown,
+  cachedDocument,
   readSelection,
   serializeRange,
 } from "../ai/doc-markdown";
@@ -58,7 +58,7 @@ export function useIllustrateParagraph({
           selectionMarkdown: markdown,
           cursor: null,
         };
-        return { document: cachedDocumentMarkdown(ctx, state.doc), markdown };
+        return { document: cachedDocument(ctx, state.doc), markdown };
       });
       if (!request) return;
       agentPanel.setOpen(true);

@@ -25,15 +25,17 @@ export const EDIT_ACTIONS: readonly EditAction[] = [
 /** A validated propose_edit payload: what to do, where, and with what text. */
 export interface EditProposal {
   action: EditAction;
-  /** Exact document text the edit targets; absent for `append` and
-   *  `replace_selection` (the latter targets the captured selection). */
+  /** The id of the block the edit is in (doc-blocks.ts) - where it is
+   *  placed - and of the run's last block, for a run. Absent for `append`,
+   *  `replace_selection`, `insert_at_cursor`, and an edit of text proposed
+   *  and not decided yet (which has no id: `anchor` quotes it). */
+  block?: string;
+  lastBlock?: string;
+  /** The text the edit is about, as the document had it: the run's text,
+   *  or the words inside it an insertion goes next to. */
   anchor?: string;
   /** New markdown content; absent only for `delete`. */
   text?: string;
-  /** A longer verbatim quote containing `anchor`, itself unique in the
-   *  document - disambiguates which occurrence a repeated anchor means
-   *  (see findMarkdownMatch). Mirrors the `context` field tools.rs offers. */
-  context?: string;
   /** One sentence on why, shown on the proposal card (optional). */
   reason?: string;
   /** A generate_image proposal's picture, waiting in the backend

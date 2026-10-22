@@ -28,7 +28,7 @@ import type { Settings } from "../settings/SettingsContext";
 import { prefersReducedMotion } from "../ui/motion";
 import { storeImage } from "../editor/images/image-plugin";
 import { showMessage } from "../ui/app-dialog";
-import { cachedDocumentMarkdown } from "../ai/doc-markdown";
+import { cachedDocument, cachedDocumentMarkdown } from "../ai/doc-markdown";
 import { offerOldPictureTrash } from "../ai/revision/old-picture";
 import {
   generatedIdsIn,
@@ -322,9 +322,9 @@ export function useEditorProposals({
         animated,
       ),
       () =>
-        run((ctx) =>
-          cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc),
-        ) ?? "",
+        run(
+          (ctx) => cachedDocument(ctx, ctx.get(editorViewCtx).state.doc).blocks,
+        ) ?? [],
     );
     // requestTargetRef is a stable ref; addPreviews and discard are stable
     // per editor (useCallback on `run`).

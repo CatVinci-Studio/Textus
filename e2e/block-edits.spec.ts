@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { blockIds, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * An edit that names its block (src/ai/doc-blocks.ts) instead of quoting
@@ -13,26 +13,12 @@ const editor = '[data-active-tab="true"] .ProseMirror';
 const DOC =
   "# Night hours\n\nThe library opened late on Wednesdays.\n\nStudents came most.\n\nThe end.";
 
-/** The blocks' ids, as the app splits them - its own module, from the dev
- *  server (the e2e project can't import src/). */
-async function blockIds(page: Page, doc: string): Promise<string[]> {
-  return page.evaluate(
-    async ({ doc, path }) => {
-      const mod = (await import(/* @vite-ignore */ path)) as {
-        splitBlocks: (d: string) => { id: string }[];
-      };
-      return mod.splitBlocks(doc).map((b) => b.id);
-    },
-    { doc, path: "/src/ai/doc-blocks.ts" },
-  );
-}
-
 /** A reply that streams `raw` (the model's arguments, by block) and then,
- *  once window.__release is set, completes with `resolved` (the backend's:
- *  by anchor, doc_blocks::resolve_edit_arguments). */
-async function streamEdit(page: Page, raw: string, resolved: string) {
+ *  once window.__release is set, completes with them settled as the
+ *  backend settles them (src/dev/settle-calls.ts). */
+async function streamEdit(page: Page, raw: string) {
   await page.evaluate(
-    ({ raw, resolved }) => {
+    ({ raw }) => {
       const w = window as unknown as Record<string, unknown>;
       const internals = w.__TAURI_INTERNALS__ as {
         invoke: (cmd: string, args?: unknown) => Promise<unknown>;
@@ -40,17 +26,23 @@ async function streamEdit(page: Page, raw: string, resolved: string) {
       const original = internals.invoke;
       internals.invoke = (cmd, a) => {
         if (cmd !== "ai_agent_message") return original(cmd, a);
-        const { message, onEvent } = a as {
+        const { message, onEvent, blocks } = a as {
           message: string;
           onEvent?: { onmessage?: (event: unknown) => void };
+          blocks: unknown;
         };
         const send = (event: unknown) => onEvent?.onmessage?.(event);
         send({ type: "toolStart", callId: "b1", name: "propose_edit" });
+        const settle = w.__devSettle as (
+          blocks: unknown,
+          name: string,
+          args: string,
+        ) => string;
         const call = {
           kind: "ToolCall",
           call_id: "b1",
           name: "propose_edit",
-          arguments: resolved,
+          arguments: settle(blocks, "propose_edit", raw),
         };
         const result = {
           kind: "ToolResult",
@@ -83,7 +75,7 @@ async function streamEdit(page: Page, raw: string, resolved: string) {
         });
       };
     },
-    { raw, resolved },
+    { raw },
   );
 }
 
@@ -106,11 +98,6 @@ test("an edit by block shows while it streams, before the call completes", async
   await streamEdit(
     page,
     JSON.stringify({ action: "replace", block: ids[1], text }),
-    JSON.stringify({
-      action: "replace",
-      anchor: "The library opened late on Wednesdays.",
-      text,
-    }),
   );
   await ask(page);
   // Not complete yet (held), and already in the document - and the panel
@@ -148,11 +135,6 @@ test("a few words named inside a block change in it as they stream", async ({
       block: ids[2],
       text: "Pupils",
     }),
-    JSON.stringify({
-      action: "replace",
-      anchor: "Students came most.",
-      text: "Pupils came most.",
-    }),
   );
   await ask(page);
   await expect(page.locator(editor)).toContainText("Pupils");
@@ -185,11 +167,6 @@ for (const [name, setup] of [
     await streamEdit(
       page,
       JSON.stringify({ action: "replace", block: ids[1], text }),
-      JSON.stringify({
-        action: "replace",
-        anchor: "The library opened late on Wednesdays.",
-        text,
-      }),
     );
     await ask(page);
     // Held: the call hasn't completed, and the whole new text is there.
@@ -226,14 +203,11 @@ test("a light polish shows where it is: the original sentence it has reached is 
   });
   await pasteMarkdown(page, doc);
   const ids = await blockIds(page, doc);
-  const before =
-    "The library opened late on Wednesdays. Students came most. Some stayed until ten.";
   const text =
     "The library opened late on Wednesdays. Pupils came most. Some stayed until ten.";
   await streamEdit(
     page,
     JSON.stringify({ action: "replace", block: ids[1], text }),
-    JSON.stringify({ action: "replace", anchor: before, text }),
   );
   await ask(page);
   // Held on its last sentence, which repeats the original word for word:

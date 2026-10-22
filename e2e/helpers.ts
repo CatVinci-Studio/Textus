@@ -89,6 +89,21 @@ export async function pasteMarkdown(page: Page, markdown: string) {
   await page.waitForTimeout(300);
 }
 
+/** The ids of a document's blocks, as the app makes them - its own module,
+ *  from the dev server (the e2e project can't import src/). For documents
+ *  whose every paragraph the editor writes back as it was pasted. */
+export async function blockIds(page: Page, doc: string): Promise<string[]> {
+  return page.evaluate(
+    async ({ doc, path }) => {
+      const mod = (await import(/* @vite-ignore */ path)) as {
+        blockIds: (markdowns: string[]) => string[];
+      };
+      return mod.blockIds(doc.split("\n\n"));
+    },
+    { doc, path: "/src/ai/doc-blocks.ts" },
+  );
+}
+
 /** Answers a backend command with a canned value (dev-tauri-shim). */
 export async function mockInvoke(page: Page, results: Record<string, unknown>) {
   await page.evaluate((r) => {

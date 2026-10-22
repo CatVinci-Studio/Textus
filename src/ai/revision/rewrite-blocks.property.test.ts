@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
-import { cachedDocumentMarkdown } from "../doc-markdown";
+import { cachedDocument } from "../doc-markdown";
 import { placeProposals } from "./pending-place";
 import { diffSentences, splitUnits } from "./unit-diff";
 import { formKey, wholeBlockKind } from "./markdown-forms";
@@ -142,8 +142,11 @@ describe("whole rewrites of documents put together at random", () => {
       editors.push(editor);
       editor.action((ctx) => {
         const view = ctx.get(editorViewCtx);
-        // The document as the model is shown it.
-        const anchor = cachedDocumentMarkdown(ctx, view.state.doc).trim();
+        // The document as the model is shown it, rewritten whole: its
+        // first block to its last.
+        const { markdown, blocks } = cachedDocument(ctx, view.state.doc);
+        const anchor = markdown.trim();
+        const run = { block: blocks[0].id, lastBlock: blocks.at(-1)!.id };
         const label = `seed ${seed}:\n${anchor}\n---\n${text}`;
 
         expect(splitUnits(anchor).join(""), label).toBe(anchor);
@@ -174,7 +177,7 @@ describe("whole rewrites of documents put together at random", () => {
           [
             {
               callId: `c${seed}`,
-              proposal: { action: "replace", anchor, text },
+              proposal: { action: "replace", ...run, anchor, text },
             },
           ],
           null,

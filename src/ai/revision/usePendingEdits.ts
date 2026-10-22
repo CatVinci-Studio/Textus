@@ -9,7 +9,7 @@ import type { DecidedChange } from "./pending-place";
 import { useReviewNavigation } from "./pending-review";
 import { liveStatus, type RecordedStatus } from "./proposal-lifecycle";
 import { usePicturesState } from "./usePicturesState";
-export { locateAnchor } from "./pending-place";
+export { locateTarget } from "./pending-place";
 export type { DecidedChange, SelectionTarget } from "./pending-place";
 export type { ReviewStop } from "./pending-review";
 

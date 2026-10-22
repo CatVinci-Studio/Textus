@@ -20,6 +20,8 @@ import type {
   FsEntry_Serialize,
   PluginsState_Serialize,
 } from "../platform/bindings/plugins";
+import type { SentBlock } from "../ai/doc-blocks";
+import { namedCall, settledArguments, settledTurns } from "./settle-calls";
 
 /** The built-in skills as `list_skills` reports them: name, `/` menu group,
  *  invocation and the description written for the model (abridged). */
@@ -948,11 +950,21 @@ export function installDevTauriShim(): void {
       if (canned && cmd in canned) {
         // And records what it was asked: `window.__devInvokeCalls`.
         ((w.__devInvokeCalls ??= []) as unknown[]).push({ cmd, ...args });
-        const value = canned[cmd] as {
+        let value = canned[cmd] as {
           __reject?: unknown;
           __delay?: number;
           value?: unknown;
         } | null;
+        // A canned reply's calls, settled against the request's blocks as
+        // the backend settles a model's (settle-calls.ts).
+        if (cmd === "ai_agent_message") {
+          const blocks = ((args as { blocks?: SentBlock[] } | undefined)
+            ?.blocks ?? []) as SentBlock[];
+          value =
+            value && typeof value === "object" && "__delay" in value
+              ? { ...value, value: settledTurns(blocks, value.value) }
+              : (settledTurns(blocks, value) as typeof value);
+        }
         // `{ __delay: ms, value }` answers only after a while - a picture
         // still being made - and `{ __delay: ms, __reject }` fails then.
         if (value && typeof value === "object" && "__delay" in value)
@@ -1102,6 +1114,10 @@ export function installDevTauriShim(): void {
       );
     },
   };
+  // For an e2e mock that plays the model itself: its calls named and
+  // settled as the backend would (settle-calls.ts).
+  w.__devNameCall = namedCall;
+  w.__devSettle = settledArguments;
   w.__devEmitTauriEvent = (event: string, payload?: unknown) => {
     for (const id of listeners.get(event) ?? []) {
       (w[`_${id}`] as ((e: unknown) => void) | undefined)?.({

@@ -1,4 +1,4 @@
-import { splitBlocks } from "../doc-blocks";
+import { textParagraphs } from "../doc-blocks";
 import { formKey, wholeBlockKind } from "./markdown-forms";
 import {
   diffSentenceLists,
@@ -23,13 +23,13 @@ import {
  * rewrite of a whole document with one in it became one block and one
  * card (rc.6).
  *
- * The blocks are doc-blocks.ts's, the split the model is shown. A unit is
+ * The blocks are doc-blocks.ts's textParagraphs. A unit is
  * whole exactly when wholeBlockKind says so: a line of a paragraph that
  * reads like one (a picture on its own line under a caption) stays with
  * the sentence before it.
  */
 export function splitUnits(text: string): string[] {
-  const blocks = splitBlocks(text);
+  const blocks = textParagraphs(text);
   if (blocks.length === 0) return text ? [text] : [];
   const units: string[] = [];
   let prose = "";

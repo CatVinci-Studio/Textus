@@ -60,13 +60,15 @@ function tidy(text: string): string {
  * A picture not accepted yet, standing after (or before) a paragraph that
  * an accepted rewrite replaced - `oldText` with `newText`, which left the
  * picture out: put by the paragraph of the new text in the same place, the
- * nth paragraph for the nth (the last, if the new text has fewer). Null
- * when the picture's paragraph wasn't in the rewritten text.
+ * nth paragraph for the nth (the last, if the new text has fewer), named
+ * by that paragraph's block among `blocks` (the document now). Null when
+ * the picture's paragraph wasn't in the rewritten text, or isn't a block.
  */
 export function reanchoredPicture(
   picture: EditProposal,
   oldText: string,
   newText: string,
+  blocks: readonly { id: string; markdown: string }[],
 ): EditProposal | null {
   const anchor = picture.anchor;
   if (
@@ -81,8 +83,15 @@ export function reanchoredPicture(
     .map((p) => p.trim())
     .filter((p) => p && !isPicture(p));
   if (paragraphs.length === 0) return null;
+  const paragraph = paragraphs[Math.min(at, paragraphs.length - 1)];
+  const block =
+    blocks.find((b) => b.markdown.trim() === paragraph) ??
+    blocks.find((b) => b.markdown.includes(paragraph));
+  if (!block) return null;
   return {
     ...picture,
-    anchor: paragraphs[Math.min(at, paragraphs.length - 1)],
+    block: block.id,
+    lastBlock: undefined,
+    anchor: block.markdown,
   };
 }

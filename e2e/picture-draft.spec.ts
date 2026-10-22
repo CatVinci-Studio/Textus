@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { blockIds, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * A generate_image call shows its frame - in its place, in its shape - the
@@ -14,8 +14,10 @@ const FIRST = "The harbour was quiet before the boats came in.";
 const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
-/** Streams `raw` as generate_image's arguments, then waits for
- *  window.__release before the call completes with `final`. */
+/** Streams `raw` as generate_image's arguments - by the block its
+ *  `anchor` is in, as a model names it - then waits for window.__release
+ *  before the call completes with `final`, settled as the backend settles
+ *  it (src/dev/settle-calls.ts). */
 async function streamPicture(page: Page, raw: string, final: string | null) {
   await page.evaluate(
     ({ raw, final }) => {
@@ -29,18 +31,26 @@ async function streamPicture(page: Page, raw: string, final: string | null) {
         if (cmd === "ai_generated_image" && w.__holdPicture)
           return new Promise(() => {});
         if (cmd !== "ai_agent_message") return original(cmd, a);
-        const { message, onEvent } = a as {
+        const { message, onEvent, blocks } = a as {
           message: string;
           onEvent?: { onmessage?: (event: unknown) => void };
+          blocks: unknown;
         };
         const send = (event: unknown) => onEvent?.onmessage?.(event);
+        const nameCall = w.__devNameCall as (b: unknown, x: object) => object;
+        const settle = w.__devSettle as (
+          b: unknown,
+          name: string,
+          args: string,
+        ) => string;
+        const written = JSON.stringify(nameCall(blocks, JSON.parse(raw)));
         send({ type: "toolStart", callId: "g1", name: "generate_image" });
         const turns = [
           {
             kind: "ToolCall",
             call_id: "g1",
             name: "generate_image",
-            arguments: final ?? raw,
+            arguments: settle(blocks, "generate_image", final ?? raw),
           },
           {
             kind: "ToolResult",
@@ -54,11 +64,11 @@ async function streamPicture(page: Page, raw: string, final: string | null) {
         return new Promise((resolve) => {
           let i = 0;
           const tick = () => {
-            if (i < raw.length) {
+            if (i < written.length) {
               send({
                 type: "toolArgsDelta",
                 callId: "g1",
-                delta: raw.slice(i, i + 10),
+                delta: written.slice(i, i + 10),
               });
               i += 10;
               setTimeout(tick, 15);
@@ -109,18 +119,7 @@ test("a picture named by its block shows its frame after that block while it str
   page,
 }) => {
   await open(page);
-  const ids = await page.evaluate(
-    async ({ doc, path }) => {
-      const mod = (await import(/* @vite-ignore */ path)) as {
-        splitBlocks: (d: string) => { id: string }[];
-      };
-      return mod.splitBlocks(doc).map((b) => b.id);
-    },
-    {
-      doc: `${FIRST}\n\nThe second paragraph.`,
-      path: "/src/ai/doc-blocks.ts",
-    },
-  );
+  const ids = await blockIds(page, `${FIRST}\n\nThe second paragraph.`);
   const raw = JSON.stringify({
     action: "insert_after",
     alt: "A quiet harbour",

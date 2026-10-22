@@ -101,12 +101,12 @@ test("an edit of the text a rewrite replaces goes into the rewrite", async ({
   });
   await send(page, "Make the first line lonelier");
   await expect(page.locator(".review-bar")).toBeVisible();
-  // Not decided: the next request quotes a word of the original, which the
-  // rewrite still has.
+  // Not decided: the next request quotes a word of the rewrite, which has
+  // no block - so no `block`.
   await mockInvoke(page, {
     ai_agent_message: reply(
       "r2",
-      { action: "replace", anchor: "lighthouse", text: "beacon" },
+      { action: "replace", block: null, anchor: "lighthouse", text: "beacon" },
       "A beacon instead.",
     ),
   });

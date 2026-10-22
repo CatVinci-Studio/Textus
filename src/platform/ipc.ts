@@ -1,6 +1,7 @@
 import { Channel } from "@tauri-apps/api/core";
 import type { ProviderCatalogEntry } from "../ai/provider-catalog";
 import type { ImageModel, ImageProviderEntry } from "../ai/image-models";
+import type { SentBlock } from "../ai/doc-blocks";
 import type {
   AgentSkill,
   AgentTurn,
@@ -188,7 +189,9 @@ export const ai = {
     ...args
   }: {
     provider: string;
-    document: string;
+    /** The document, block by block as the editor has it (doc-blocks.ts):
+     *  the model sees each after its id, and edits name them. */
+    blocks: SentBlock[];
     docPath: string | null;
     /** The chosen project folder (Settings > Textus AI > Project Folder, or
      *  the project bar); null keeps the default, the document's own folder.

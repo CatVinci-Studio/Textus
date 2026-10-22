@@ -18,6 +18,7 @@ import { useSettings, type AgentMode } from "../../settings/SettingsContext";
 import { imageModelOf } from "../image-models";
 import { parsePartialToolArgs } from "./partial-tool-args";
 import { resolveBlockTarget } from "../doc-blocks";
+import type { DocumentSnapshot } from "../doc-markdown";
 import { insertTurns, memoryTurns, passExchange } from "./memory-pass";
 import { useNextMessage } from "./next-message";
 
@@ -53,7 +54,7 @@ export interface StreamingState {
 /** The (document, message) pair behind the last failed send - lets the
  *  caller offer a "retry" that resends without the user retyping. */
 export interface RetryableSend {
-  document: string;
+  document: DocumentSnapshot;
   message: string;
   /** Resent as-is: a retry that dropped the attached images would answer a
    *  question about a picture the model can no longer see. */
@@ -187,7 +188,7 @@ export function useAgentConversation(
    *  completed proposals still get their afterSend re-show); undefined means
    *  the send was skipped, failed, or was stopped before anything streamed. */
   async function send(
-    document: string,
+    document: DocumentSnapshot,
     message: string,
     /** Attached images. Text-shaped attachments (PDF, Word, spreadsheets)
      *  were extracted and inlined into `message` by the caller; images have
@@ -227,7 +228,7 @@ export function useAgentConversation(
     try {
       const newTurns = await ai.agentMessage({
         provider,
-        document,
+        blocks: document.blocks,
         docPath,
         workspaceRoot,
         history: annotateProposalStatuses(history, proposalStatuses ?? {}),
@@ -307,19 +308,16 @@ export function useAgentConversation(
           ) {
             const args = (commentArgs.get(event.callId) ?? "") + event.delta;
             commentArgs.set(event.callId, args);
-            const { anchor, block, comment, context } =
-              parsePartialToolArgs(args);
+            const { anchor, block, comment } = parsePartialToolArgs(args);
             const shown = prev?.comments?.some(
               (c) => c.kind === "ToolCall" && c.call_id === event.callId,
             );
-            // Once: the passage and the whole note are in (context, after
-            // them in the strict schema, may still settle a repeated
-            // passage - the completed turn places it again then). The
-            // passage is the block it names (resolveBlockTarget), or the
-            // words it quotes.
+            // Once: the passage and the whole note are in. The passage is
+            // the block it names (resolveBlockTarget), and the words in it
+            // it quotes.
             if (!prev || shown || !comment?.complete) return;
             if (block && !block.complete) return;
-            const target = resolveBlockTarget(document, {
+            const target = resolveBlockTarget(document.blocks, {
               block: block?.value,
               anchor: anchor?.complete ? anchor.value : undefined,
             });
@@ -329,11 +327,9 @@ export function useAgentConversation(
               call_id: event.callId,
               name: "add_comment",
               arguments: JSON.stringify({
+                block: target.block,
                 anchor: target.anchor,
                 comment: comment.value,
-                context:
-                  target.context ??
-                  (context?.complete ? context.value : undefined),
               }),
             };
             setStreaming({

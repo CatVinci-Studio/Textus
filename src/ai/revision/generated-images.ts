@@ -65,11 +65,10 @@ export function parseImageProposal(argumentsJson: string): EditProposal | null {
     const alt = cleanAlt(typeof parsed.alt === "string" ? parsed.alt : "");
     return {
       action,
+      ...(typeof parsed.block === "string" && parsed.block
+        ? { block: parsed.block }
+        : {}),
       anchor,
-      context:
-        typeof parsed.context === "string" && parsed.context
-          ? parsed.context
-          : undefined,
       text: `![${alt}](${generatedImageSrc(image.id)})`,
       image: {
         id: image.id,
@@ -127,7 +126,7 @@ export function draftPictureProposal(
   if (anchored && !(anchor?.complete && anchor.value)) return null;
   // Its shape: given, or past - the default, square.
   const aspect = fields.aspect;
-  const shapeKnown = aspect?.complete || !!fields.context || !!fields.prompt;
+  const shapeKnown = aspect?.complete || !!fields.prompt;
   if (!shapeKnown) return null;
   const id = draftPictureId(callId);
   const size = (aspect?.complete && aspectSize(aspect.value)) || {
@@ -138,8 +137,8 @@ export function draftPictureProposal(
   const alt = cleanAlt(fields.alt?.complete ? fields.alt.value : "");
   return {
     action: action.value as EditAction,
+    ...(fields.block?.complete ? { block: fields.block.value } : {}),
     anchor: anchored ? anchor!.value : undefined,
-    context: fields.context?.complete ? fields.context.value : undefined,
     text: `![${alt}](${generatedImageSrc(id)})`,
     image: { id, alt, ...size, pending: true },
   };

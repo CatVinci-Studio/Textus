@@ -214,7 +214,7 @@ test("an accepted new table row and nested item land inside the table and list",
   );
   // What the model sends for "add a row" / "add a sub-item": insert_after
   // the last row / item line, quoted from the serialized markdown (which
-  // writes bullets as `*`). These used to land after a blank line - the
+  // pads a table's cells and writes bullets as `*`). These used to land after a blank line - the
   // row as a stray paragraph of pipes, the item un-nested.
   await mockInvoke(page, {
     ai_agent_message: [
@@ -225,7 +225,7 @@ test("an accepted new table row and nested item land inside the table and list",
         name: "propose_edit",
         arguments: JSON.stringify({
           action: "insert_after",
-          anchor: "| Search | Tom |",
+          anchor: "| Search    | Tom   |",
           text: "| Export | Li |",
         }),
       },
@@ -292,14 +292,15 @@ test("a pending replace keeps its strike on its text while the user types above 
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("Use a digit");
   await composer.press("Enter");
+  // Its block's sentence, changed whole: one edit per block.
   const strike = page.locator(".pending-delete");
-  await expect(strike).toHaveText("two words");
+  await expect(strike).toHaveText("Bravo two words here.");
   await page.locator(".milkdown p", { hasText: "Alpha" }).click();
   await page.keyboard.press("End");
   await page.keyboard.type("XYZ");
   // The strike range is mapped with the preview, not left three characters
-  // behind ("vo two wo").
-  await expect(strike).toHaveText("two words");
+  // behind.
+  await expect(strike).toHaveText("Bravo two words here.");
   await page
     .locator(".agent-proposal-actions .inline-chat-action-primary")
     .click();

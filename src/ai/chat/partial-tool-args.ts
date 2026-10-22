@@ -1,5 +1,5 @@
 import { withoutCitationMarkers } from "../citation-markers";
-import { resolveBlockEdit } from "../doc-blocks";
+import { resolveBlockEdit, type SentBlock } from "../doc-blocks";
 import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../types";
 
 /** A string field scanned out of an incomplete JSON fragment: what has
@@ -122,9 +122,9 @@ export interface DraftProposal {
  */
 export function draftProposal(
   fragment: string,
-  /** The document as it is now, for an edit that names its block
-   *  (doc-blocks.ts) rather than quoting it. */
-  document?: string,
+  /** The document's blocks as they are now, for an edit that names its
+   *  block (doc-blocks.ts). */
+  blocks?: SentBlock[],
 ): DraftProposal | null {
   const fields = parsePartialToolArgs(fragment);
   const action = fields.action;
@@ -136,7 +136,7 @@ export function draftProposal(
   // Named by its block: placed once the run's end is known too - its own
   // `last_block`, or a field written after it (schema order: block,
   // context, last_block, reason, text).
-  if (fields.block?.value && document !== undefined) {
+  if (fields.block?.value && blocks !== undefined) {
     if (!fields.block.complete) return null;
     const runKnown =
       fields.last_block?.complete || !!fields.reason || !!fields.text;
@@ -145,7 +145,7 @@ export function draftProposal(
       fields.text?.value ?? "",
       !fields.text?.complete,
     );
-    const resolved = resolveBlockEdit(document, {
+    const resolved = resolveBlockEdit(blocks, {
       action: action.value,
       block: fields.block.value,
       lastBlock: fields.last_block?.value || undefined,
@@ -154,16 +154,16 @@ export function draftProposal(
     });
     if (!resolved) return null;
     return {
-      proposal: {
-        action: resolved.action as EditAction,
-        anchor: resolved.anchor,
-        text: resolved.text,
-        context: resolved.context,
-      },
+      proposal: { ...resolved, action: resolved.action as EditAction },
       textComplete: fields.text?.complete ?? false,
     };
   }
   if (needsAnchor && !anchor?.complete) return null;
+  // Quoted without a block - text proposed and not decided yet - only
+  // once the text begins: a `block` the model writes after its quote
+  // comes before that, and the draft would otherwise be placed by the
+  // quote alone, nowhere.
+  if (needsAnchor && action.value !== "delete" && !fields.text) return null;
 
   return {
     proposal: {
@@ -175,9 +175,6 @@ export function draftProposal(
         fields.text?.value ?? "",
         !fields.text?.complete,
       ),
-      // Disambiguates a repeated anchor (findMarkdownMatch) - only once
-      // fully quoted; a half-arrived context must not mislocate the draft.
-      context: fields.context?.complete ? fields.context.value : undefined,
     },
     textComplete: fields.text?.complete ?? false,
   };

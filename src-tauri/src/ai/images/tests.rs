@@ -40,13 +40,29 @@ fn call_with(
         undecided,
     };
     let mut announced = false;
-    let out = tauri::async_runtime::block_on(run.run_call(
-        &args.to_string(),
-        document,
-        &proposed,
-        || announced = true,
-    ));
+    let document = crate::ai::doc_blocks::Document::from_markdown(document);
+    let args = named(&document, args);
+    let out = tauri::async_runtime::block_on(
+        run.run_call(&args, &document, &proposed, || announced = true),
+    );
     (serde_json::from_str(&out).unwrap(), announced)
+}
+
+/// A call as the model sends it: naming the block its `anchor` is in (the
+/// one block that holds it), resolved as agent::settle does. Words in no
+/// block stay a quote.
+fn named(document: &crate::ai::doc_blocks::Document, mut args: Value) -> String {
+    if let Some(anchor) = args.get("anchor").and_then(|a| a.as_str()) {
+        let holding: Vec<_> = document
+            .blocks
+            .iter()
+            .filter(|b| document.block_text(b).contains(anchor))
+            .collect();
+        if args.get("block").is_none() && holding.len() == 1 {
+            args["block"] = json!(holding[0].id);
+        }
+    }
+    crate::ai::doc_blocks::resolve_target_arguments(document, &args.to_string())
 }
 
 const DOC: &str = "# Harbour\n\nThe boats came in at dusk.\n\nThe nets were mended by lamplight.";
@@ -77,7 +93,7 @@ fn a_block_that_isnt_there_is_said_so() {
     assert!(args["not_generated"]
         .as_str()
         .unwrap()
-        .contains("no block `zzzz`"));
+        .contains("no block has the id `zzzz`"));
 }
 
 #[test]
@@ -92,7 +108,7 @@ fn a_call_that_cant_be_placed_spends_nothing() {
     assert!(args["not_generated"]
         .as_str()
         .unwrap()
-        .contains("No exact match"));
+        .contains("name the passage by its block"));
     assert!(args.get("image").is_none());
     let (args, _) = call(
         &run,
@@ -162,7 +178,7 @@ fn a_picture_may_stand_next_to_text_proposed_and_not_decided_yet() {
     assert!(args["not_generated"]
         .as_str()
         .unwrap()
-        .contains("No exact match"));
+        .contains("name the passage by its block"));
     assert_eq!(run.made.load(Ordering::SeqCst), 2);
 }
 
@@ -388,7 +404,7 @@ fn a_picture_in_the_document_can_be_redone() {
     assert!(args["not_generated"]
         .as_str()
         .unwrap()
-        .contains("No exact match"));
+        .contains("name the passage by its block"));
     assert!(is_picture_markdown("![a](b.png)"));
     assert!(is_picture_markdown("![](<my file.png>)"));
     assert!(!is_picture_markdown("![a](b.png) and text"));

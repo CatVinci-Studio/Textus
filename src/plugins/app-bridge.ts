@@ -1,3 +1,4 @@
+import type { SentBlock } from "../ai/doc-blocks";
 import type { EditProposal } from "../ai/types";
 
 /**
@@ -13,6 +14,9 @@ export interface ActiveDocumentAccess {
   path: string | null;
   /** Its Markdown. */
   text(): string;
+  /** Its blocks, as Textus AI is shown them (doc-blocks.ts): what an
+   *  edit names by `block`. */
+  blocks(): SentBlock[];
   /** The selection: its plain text, and as Markdown (null when empty). */
   selection(): { text: string; markdown: string | null };
   /** Shows an edit as a proposal the user accepts or rejects, as Textus

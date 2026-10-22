@@ -149,20 +149,11 @@ impl ProposedPassage {
         Self::default()
     }
 
-    pub(crate) fn locate(document: &str, anchor: &str, context: Option<&str>) -> Self {
-        let context = context.filter(|c| c.len() > anchor.len() && c.contains(anchor));
-        let span = match context {
-            Some(c) if document.matches(c).count() == 1 => document
-                .find(c)
-                .zip(c.find(anchor))
-                .map(|(at, offset)| at + offset),
-            _ if document.matches(anchor).count() == 1 => document.find(anchor),
-            _ => None,
-        }
-        .map(|start| (start, start + anchor.len()));
+    /// The passage at `span` (doc_blocks' target_span), which reads `quote`.
+    pub(crate) fn at(span: Option<(usize, usize)>, quote: &str) -> Self {
         Self {
             span,
-            quote: context.unwrap_or(anchor).to_string(),
+            quote: quote.to_string(),
         }
     }
 

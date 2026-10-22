@@ -4,10 +4,11 @@ import {
   textRange,
   composeMarkdownEdit,
   documentMarkdown,
-  findMarkdownMatch,
+  matchTarget,
   joinInline,
   type MarkdownBlock,
 } from "./doc-markdown";
+import { blockIds } from "./doc-blocks";
 
 describe("joinInline", () => {
   it("adds a space between Latin words, none before punctuation, CJK or a footnote ref", () => {
@@ -26,11 +27,36 @@ describe("joinInline", () => {
 function blocks(...markdown: string[]): MarkdownBlock[] {
   let offset = 0;
   let pos = 0;
-  return markdown.map((md) => {
-    const block = { from: pos, to: pos + md.length + 2, markdown: md, offset };
+  const ids = blockIds(markdown);
+  return markdown.map((md, i) => {
+    const block: MarkdownBlock = {
+      from: pos,
+      to: pos + md.length + 2,
+      markdown: md,
+      offset,
+      id: ids[i],
+      kind: "paragraph",
+    };
     offset += md.length + 2;
     pos = block.to;
     return block;
+  });
+}
+
+/** Where `quote` is, named as a model names it: by the blocks it is in -
+ *  the one block that holds it, or the run it crosses - and its words. */
+function findQuote(doc: MarkdownBlock[], quote: string) {
+  const text = documentMarkdown(doc);
+  const at = text.indexOf(quote);
+  if (at === -1) return null;
+  const inBlock = (offset: number) =>
+    doc.length - 1 - [...doc].reverse().findIndex((b) => b.offset <= offset);
+  const first = inBlock(at);
+  const last = inBlock(at + quote.length - 1);
+  return matchTarget(doc, {
+    block: doc[first].id,
+    lastBlock: last > first ? doc[last].id : undefined,
+    anchor: quote,
   });
 }
 
@@ -42,91 +68,69 @@ describe("documentMarkdown", () => {
   });
 });
 
-describe("findMarkdownMatch", () => {
-  it("matches a snippet carrying markdown syntax", () => {
+describe("matchTarget", () => {
+  it("is the block an id names, narrowed to words quoted in it", () => {
     const doc = blocks("This is **important** content");
-    const match = findMarkdownMatch(doc, "**important**");
-    expect(match).not.toBeNull();
+    const match = matchTarget(doc, {
+      block: doc[0].id,
+      anchor: "**important**",
+    });
     expect(match!.prefix).toBe("This is ");
     expect(match!.suffix).toBe(" content");
+    const whole = matchTarget(doc, { block: doc[0].id });
+    expect(whole).toEqual({
+      from: doc[0].from,
+      to: doc[0].to,
+      prefix: "",
+      suffix: "",
+      markdown: "This is **important** content",
+    });
   });
 
   it("snaps the range outward to whole blocks", () => {
     const doc = blocks("First para", "Second para");
-    const match = findMarkdownMatch(doc, "Second");
-    // Range covers block 2 entirely, not just the word.
+    const match = matchTarget(doc, { block: doc[1].id, anchor: "Second" });
     expect(match!.from).toBe(doc[1].from);
     expect(match!.to).toBe(doc[1].to);
     expect(match!.markdown).toBe("Second para");
   });
 
-  it("spans consecutive blocks when the snippet crosses them", () => {
+  it("spans a run of blocks from its first id to its last", () => {
     const doc = blocks("## Heading", "Body", "Tail");
-    const match = findMarkdownMatch(doc, "## Heading\n\nBody");
+    const match = matchTarget(doc, { block: doc[0].id, lastBlock: doc[1].id });
     expect(match!.from).toBe(doc[0].from);
     expect(match!.to).toBe(doc[1].to);
-    expect(match!.prefix).toBe("");
-    expect(match!.suffix).toBe("");
-  });
-
-  it("rejects an ambiguous snippet", () => {
-    expect(findMarkdownMatch(blocks("same", "same"), "same")).toBeNull();
-  });
-
-  it("rejects a snippet that isn't there", () => {
-    expect(findMarkdownMatch(blocks("hello"), "goodbye")).toBeNull();
-  });
-
-  it("rejects an empty snippet rather than matching everywhere", () => {
-    expect(findMarkdownMatch(blocks("hello"), "")).toBeNull();
+    expect(match!.markdown).toBe("## Heading\n\nBody");
   });
 
   // The shape that produced strings of "Couldn't locate that text": prose
-  // where the natural anchor ("GPT 5.6 sol", "Textus") repeats across
-  // paragraphs, so every plain anchor died as ambiguous.
-  it("disambiguates a repeated anchor through a unique context", () => {
+  // where the words an edit is about ("GPT 5.6 sol") repeat across
+  // paragraphs. The block says which is meant.
+  it("tells words that repeat in the document apart by their block", () => {
     const doc = blocks(
       "I used GPT 5.6 sol to build Textus.",
       "Textus brings the **latest LLMs, including GPT 5.6 sol**, to markdown.",
     );
-    expect(findMarkdownMatch(doc, "GPT 5.6 sol")).toBeNull();
-    const match = findMarkdownMatch(
-      doc,
-      "GPT 5.6 sol",
-      "including GPT 5.6 sol**, to markdown",
-    );
-    expect(match).not.toBeNull();
+    const match = matchTarget(doc, { block: doc[1].id, anchor: "GPT 5.6 sol" });
     expect(match!.from).toBe(doc[1].from);
     expect(match!.prefix.endsWith("including ")).toBe(true);
   });
 
-  it("rejects a context that is itself absent, repeated, or anchor-free", () => {
-    const doc = blocks("a same b", "c same d");
-    expect(findMarkdownMatch(doc, "same", "not in the document")).toBeNull();
-    expect(findMarkdownMatch(doc, "same", "same")).toBeNull();
-    const repeated = blocks("x same y", "x same y");
-    expect(findMarkdownMatch(repeated, "same", "x same y")).toBeNull();
-  });
-
-  it("tolerates a quote that folded the blank line between blocks", () => {
-    const doc = blocks("## Heading", "Body text");
-    const match = findMarkdownMatch(doc, "## Heading\nBody text");
-    expect(match).not.toBeNull();
-    expect(match!.from).toBe(doc[0].from);
-    expect(match!.to).toBe(doc[1].to);
-  });
-
-  it("keeps the whitespace-tolerant retry unique and word-exact", () => {
+  it("is nothing for an id that is gone, or words not in the block once", () => {
+    const doc = blocks("a same b same", "c");
+    expect(matchTarget(doc, { block: "zzzz" })).toBeNull();
+    expect(matchTarget(doc, { block: doc[0].id, anchor: "same" })).toBeNull();
+    expect(matchTarget(doc, { block: doc[1].id, anchor: "a" })).toBeNull();
+    expect(matchTarget(doc, { anchor: "c" })).toBeNull();
     expect(
-      findMarkdownMatch(blocks("one two", "one two"), "one\ntwo"),
+      matchTarget(doc, { block: doc[1].id, lastBlock: doc[0].id }),
     ).toBeNull();
-    expect(findMarkdownMatch(blocks("onetwo"), "one\ntwo")).toBeNull();
   });
 });
 
 describe("composeMarkdownEdit", () => {
   const doc = blocks("This is **important** content");
-  const match = findMarkdownMatch(doc, "**important**")!;
+  const match = findQuote(doc, "**important**")!;
 
   it("preserves surrounding markdown on replace", () => {
     expect(composeMarkdownEdit(match, "replace", "**vital**")).toBe(
@@ -145,7 +149,7 @@ describe("composeMarkdownEdit", () => {
     expect(composeMarkdownEdit(match, "insert_after", "NEW")).toBe(
       "This is **important** NEW content",
     );
-    const zh = findMarkdownMatch(blocks("这项研究很重要"), "研究")!;
+    const zh = findQuote(blocks("这项研究很重要"), "研究")!;
     expect(composeMarkdownEdit(zh, "insert_after", "（2024 年）")).toBe(
       "这项研究（2024 年）很重要",
     );
@@ -155,14 +159,14 @@ describe("composeMarkdownEdit", () => {
     expect(composeMarkdownEdit(match, "insert_after", "- item")).toBe(
       "This is **important**\n\n- item content",
     );
-    const para = findMarkdownMatch(blocks("First para"), "First para")!;
+    const para = findQuote(blocks("First para"), "First para")!;
     expect(composeMarkdownEdit(para, "insert_after", "Second para")).toBe(
       "First para\n\nSecond para",
     );
   });
 
   it("puts a picture after a paragraph's last sentence in a block of its own", () => {
-    const para = findMarkdownMatch(
+    const para = findQuote(
       blocks("Attendance grew. The Sunday session is cut short."),
       "The Sunday session is cut short.",
     )!;
@@ -176,7 +180,7 @@ describe("composeMarkdownEdit", () => {
   it("continues the paragraph after its last sentence", () => {
     // Only the whole paragraph as anchor means "a new paragraph after it";
     // its last sentence means "carry the paragraph on".
-    const para = findMarkdownMatch(
+    const para = findQuote(
       blocks("Attendance grew. The Sunday session is cut short."),
       "The Sunday session is cut short.",
     )!;
@@ -202,7 +206,7 @@ describe("composeMarkdownEdit", () => {
       anchor: string,
       action: "insert_before" | "insert_after",
       text: string,
-    ) => composeMarkdownEdit(findMarkdownMatch(doc, anchor)!, action, text);
+    ) => composeMarkdownEdit(findQuote(doc, anchor)!, action, text);
     expect(edit("| 1 | 2 |", "insert_after", "Figures are rough.")).toBe(
       `${table}\n\nFigures are rough.`,
     );
@@ -222,11 +226,11 @@ describe("composeMarkdownEdit", () => {
   it("adds a table row inside the table, not after a blank line", () => {
     const table = "| a | b |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |";
     const doc = blocks("Intro", table, "Outro");
-    const last = findMarkdownMatch(doc, "| 3 | 4 |")!;
+    const last = findQuote(doc, "| 3 | 4 |")!;
     expect(composeMarkdownEdit(last, "insert_after", "| 5 | 6 |")).toBe(
       `${table}\n| 5 | 6 |`,
     );
-    const middle = findMarkdownMatch(doc, "| 1 | 2 |")!;
+    const middle = findQuote(doc, "| 1 | 2 |")!;
     expect(composeMarkdownEdit(middle, "insert_after", "| 5 | 6 |\n")).toBe(
       "| a | b |\n| --- | --- |\n| 1 | 2 |\n| 5 | 6 |\n| 3 | 4 |",
     );
@@ -238,12 +242,12 @@ describe("composeMarkdownEdit", () => {
   it("adds a nested list item at its parent's depth", () => {
     const list = "- Storage\n  - Snapshots\n- Transport\n  - WebSocket";
     const doc = blocks(list, "After");
-    const m = findMarkdownMatch(doc, "  - WebSocket")!;
+    const m = findQuote(doc, "  - WebSocket")!;
     expect(composeMarkdownEdit(m, "insert_after", "  - Long polling")).toBe(
       `${list}\n  - Long polling`,
     );
     // Anchored on the item's text alone, the whole line still decides.
-    const text = findMarkdownMatch(doc, "WebSocket")!;
+    const text = findQuote(doc, "WebSocket")!;
     expect(composeMarkdownEdit(text, "insert_after", "  - Long polling")).toBe(
       `${list}\n  - Long polling`,
     );
@@ -251,7 +255,7 @@ describe("composeMarkdownEdit", () => {
 
   it("round-trips a heading without losing its level", () => {
     const headings = blocks("## Project Background", "Body");
-    const m = findMarkdownMatch(headings, "## Project Background")!;
+    const m = findQuote(headings, "## Project Background")!;
     expect(composeMarkdownEdit(m, "replace", "## Background")).toBe(
       "## Background",
     );
@@ -261,20 +265,10 @@ describe("composeMarkdownEdit", () => {
     // The model quoted "## Heading\nBody" for a doc reading
     // "## Heading\n\nBody" - inserting after it must keep the blank line.
     const doc = blocks("## Heading", "Body");
-    const m = findMarkdownMatch(doc, "## Heading\nBody")!;
+    const m = findQuote(doc, "## Heading\n\nBody")!;
     expect(composeMarkdownEdit(m, "insert_after", "NEW")).toBe(
       "## Heading\n\nBody\n\nNEW",
     );
-  });
-});
-
-describe("findMarkdownMatch typography fallback", () => {
-  it("matches a quote whose punctuation differs only typographically", () => {
-    const doc = blocks("He said “hello” — twice.", "Then left；quietly.");
-    const m = findMarkdownMatch(doc, 'He said "hello" - twice.')!;
-    expect(m).not.toBeNull();
-    expect(composeMarkdownEdit(m, "replace", "He waved.")).toBe("He waved.");
-    expect(findMarkdownMatch(doc, "Then left;quietly.")).not.toBeNull();
   });
 });
 

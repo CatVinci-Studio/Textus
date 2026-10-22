@@ -7,24 +7,15 @@ pub(crate) const ADD_COMMENT_TOOL_NAME: &str = "add_comment";
 pub(super) const COMMENT_ADDED: &str = "Comment added";
 
 /// Feedback pinned to a passage instead of an edit to it - for "what's weak
-/// here", "review this draft". Changes nothing; the anchor is validated
-/// like propose_edit's so the card's "locate" button lands on it.
+/// here", "review this draft". Changes nothing; its block is checked like
+/// propose_edit's so the card's "locate" button lands on it.
 pub(super) fn add_comment(ctx: &ToolContext, arguments: &str) -> String {
     let parsed: serde_json::Value = serde_json::from_str(arguments).unwrap_or_default();
-    let anchor = parsed.get("anchor").and_then(|v| v.as_str()).unwrap_or("");
     let comment = parsed.get("comment").and_then(|v| v.as_str()).unwrap_or("");
-    // Still a `block`: doc_blocks::resolve_target_arguments found no such
-    // block.
-    if let Some(block) = parsed.get("block").and_then(|v| v.as_str()) {
-        return format!("There is no block `{block}` in the document - name a block by an id shown before it, like `[#k3f9]`.");
-    }
     if comment.trim().is_empty() {
         return "`comment` is required - the feedback itself.".to_string();
     }
-    if anchor.is_empty() {
-        return "`anchor` is required - the exact document text the comment is about.".to_string();
-    }
-    match check_anchor(ctx.document, &parsed, anchor) {
+    match crate::ai::doc_blocks::check_target(ctx.document, &parsed) {
         Ok(()) => format!("{COMMENT_ADDED} - the user sees it with a button that jumps to the passage. Don't repeat it in your reply."),
         Err(problem) => problem,
     }

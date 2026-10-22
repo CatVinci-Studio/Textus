@@ -1,6 +1,17 @@
-import { describe, expect, it } from "vitest";
+// @vitest-environment jsdom
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { Editor } from "@milkdown/kit/core";
+import { createTestEditor } from "../../document-view/editor-test-harness";
 import { composeSentences, splitSentences, trimBreaks } from "./sentence-diff";
 import { diffSentences, splitUnits } from "./unit-diff";
+
+// Blocks are read by the editor's parser (block-reader.ts), which an
+// editor registers as it starts.
+let reader: Editor | null = null;
+beforeAll(async () => {
+  reader = await createTestEditor("");
+});
+afterAll(() => reader?.destroy());
 
 describe("splitSentences", () => {
   it("splits CJK and Latin text without losing a character", () => {

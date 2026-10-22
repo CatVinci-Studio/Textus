@@ -1,5 +1,5 @@
-//! propose_edit: an edit the writer accepts or rejects, its anchor checked
-//! against the document before it is offered.
+//! propose_edit: an edit the writer accepts or rejects, the blocks it
+//! names checked against the document before it is offered.
 
 use super::*;
 
@@ -50,8 +50,9 @@ pub(super) fn needs_text(action: &str) -> bool {
 /// Doesn't modify anything itself - the document only ever changes through
 /// the user clicking Apply in the frontend. This validates the proposal
 /// against the same rules the frontend applies with (known action, required
-/// fields present, `anchor` matching the document exactly once) so the model
-/// gets immediate feedback instead of the user getting a dead Apply button.
+/// fields present, the blocks it names there - doc_blocks::check_target) so
+/// the model gets immediate feedback instead of the user getting a dead
+/// Apply button.
 pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     let parsed: serde_json::Value = match serde_json::from_str(arguments) {
         Ok(v) => v,
@@ -65,17 +66,12 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         );
     }
 
-    // A `block` still here named no block (doc_blocks::resolve_edit_arguments
-    // turns every one it finds into an anchor): from an earlier request,
-    // before the block changed, or made up.
-    if let Some(block) = parsed.get("block").and_then(|v| v.as_str()) {
-        let through = parsed.get("last_block").and_then(|v| v.as_str());
-        return match through {
-            Some(last) => format!("Not proposed: `{block}` to `{last}` isn't a run of blocks the document has now - an id is from before a change or mistyped, or `last_block` comes before `block`. Use ids the document shows now, the first as `block`."),
-            None => format!("Not proposed: no block has the id `{block}` - the document has changed since you saw it, or the id is mistyped. Use an id the document shows now, before the block (`[#k3f9]`)."),
-        };
-    }
-    let anchor = parsed.get("anchor").and_then(|v| v.as_str()).unwrap_or("");
+    // What the edit is about: what its blocks name (agent::settle has
+    // filled that in for a call from the model), else the words it quotes.
+    let anchor = match ctx.document.target_span(&parsed) {
+        Some((from, to)) => &ctx.document.text[from..to],
+        None => parsed.get("anchor").and_then(|v| v.as_str()).unwrap_or(""),
+    };
     let has_text = parsed.get("text").and_then(|v| v.as_str()).is_some();
     if needs_text(action) && !has_text {
         return format!("`{action}` requires `text` - the new content.");
@@ -88,13 +84,17 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
                 "`{action}` requires `anchor` - the exact document text the edit targets."
             );
         }
-        if let Err(problem) = check_anchor(ctx.document, &parsed, anchor) {
-            // In text proposed and not decided yet - this request's or an
-            // earlier one's - the edit goes into that proposal.
+        let named = parsed.get("block").is_some();
+        if !named {
+            // Text proposed and not decided yet - this request's or an
+            // earlier one's - has no block: the edit quotes it, and goes
+            // into that proposal.
             if !quotes_undecided(ctx, anchor) {
-                return problem;
+                return crate::ai::doc_blocks::NO_BLOCK.to_string();
             }
             joins = true;
+        } else if let Err(problem) = crate::ai::doc_blocks::check_target(ctx.document, &parsed) {
+            return problem;
         } else if let Some(rewrite) = ctx
             .undecided
             .iter()
@@ -138,10 +138,9 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     // same French proofreading twice in one step (round 4); the first
     // stands, the copy is refused (and never shown - see proposal-status.ts).
     if !joins && matches!(action, "replace" | "delete" | "replace_selection") {
-        let context = parsed.get("context").and_then(|v| v.as_str());
         let passage = match action {
             "replace_selection" => ProposedPassage::selection(),
-            _ => ProposedPassage::locate(ctx.document, anchor, context),
+            _ => ProposedPassage::at(ctx.document.target_span(&parsed), anchor),
         };
         let mut ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
         if ledger.passages.iter().any(|p| p.overlaps(&passage)) {
@@ -181,7 +180,10 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     }
     // A rewrite that swapped a picture keeps the original
     // (doc_blocks::keep_pictures): the swap is generate_image's.
-    if parsed.get(crate::ai::doc_blocks::PICTURES_KEPT_KEY).is_some() {
+    if parsed
+        .get(crate::ai::doc_blocks::PICTURES_KEPT_KEY)
+        .is_some()
+    {
         unmade.push_str(PICTURE_KEPT_NOTE);
     }
     let into = if joins {
@@ -292,11 +294,11 @@ pub(super) fn degenerate_replacement(action: &str, anchor: &str, text: &str) -> 
     })
 }
 
-/// One character's matching form: typographic quotes, dash variants,
+/// One character's plain form: typographic quotes, dash variants,
 /// full-width ASCII and non-breaking spaces fold to their plain ASCII
-/// equivalents - the usual differences between a model's quote and the
-/// author's text. One char in, one char out, so positions stay aligned
-/// (src/ai/doc-markdown.ts's normalizeForMatch mirrors this exactly).
+/// equivalents - the usual differences between two writings of the same
+/// text (the grammar check's, a memory file's name). One char in, one char
+/// out, so positions stay aligned.
 pub(crate) fn normalize_char(c: char) -> char {
     match c {
         '\u{2018}' | '\u{2019}' | '\u{201A}' | '\u{2032}' => '\'',
@@ -306,59 +308,4 @@ pub(crate) fn normalize_char(c: char) -> char {
         '\u{FF01}'..='\u{FF5E}' => char::from_u32(c as u32 - 0xFEE0).unwrap_or(c),
         _ => c,
     }
-}
-
-pub(super) fn normalize_for_match(text: &str) -> String {
-    text.chars().map(normalize_char).collect()
-}
-
-pub(super) fn collapse_whitespace(text: &str) -> String {
-    text.split_whitespace().collect::<Vec<_>>().join(" ")
-}
-
-/// How many places `anchor` matches, with the same fallbacks the frontend
-/// resolves proposals with (findMarkdownMatch): exact first; only when that
-/// finds nothing, typographic normalization; then, also folding whitespace
-/// runs (a quote that turned a blank line into one newline). Agreeing here
-/// matters: when only the frontend tolerated a folded blank line, the model
-/// was told "no match", retried, and the user got the edit twice.
-/// Whether `anchor` picks out one place in the document - directly, or, when
-/// it repeats, through `context` (a longer verbatim quote containing it that
-/// occurs once; the frontend resolves it the same way). The error is the
-/// tool result that tells the model how to fix its quote.
-pub(crate) fn check_anchor(
-    document: &str,
-    args: &serde_json::Value,
-    anchor: &str,
-) -> Result<(), String> {
-    match anchor_match_count(document, anchor) {
-        0 => Err("No exact match for `anchor` in the document. Quote it exactly as it appears, including punctuation and whitespace.".to_string()),
-        1 => Ok(()),
-        n => {
-            let context = args.get("context").and_then(|v| v.as_str()).unwrap_or("");
-            if context.contains(anchor)
-                && context.len() > anchor.len()
-                && anchor_match_count(document, context) == 1
-            {
-                Ok(())
-            } else {
-                Err(format!("`anchor` appears {n} times in the document. Add `context`: a longer quote copied verbatim from the document that contains this anchor and itself occurs exactly once (or extend the anchor)."))
-            }
-        }
-    }
-}
-
-pub(super) fn anchor_match_count(document: &str, anchor: &str) -> usize {
-    let exact = document.matches(anchor).count();
-    if exact > 0 {
-        return exact;
-    }
-    let (doc, needle) = (normalize_for_match(document), normalize_for_match(anchor));
-    let normalized = doc.matches(needle.as_str()).count();
-    if normalized > 0 || needle.split_whitespace().count() < 2 {
-        return normalized;
-    }
-    collapse_whitespace(&doc)
-        .matches(collapse_whitespace(&needle).as_str())
-        .count()
 }

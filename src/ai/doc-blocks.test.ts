@@ -1,49 +1,76 @@
 import { describe, expect, it } from "vitest";
 import {
+  blockIds,
   keepPictures,
   resolveBlockEdit,
   resolveBlockTarget,
-  splitBlocks,
+  runOf,
+  textParagraphs,
+  type BlockKind,
+  type SentBlock,
 } from "./doc-blocks";
-import cases from "./doc-blocks-cases.json";
 import keepCases from "./keep-pictures-cases.json";
 
-describe("splitBlocks", () => {
-  it("splits as doc_blocks.rs does (the shared cases)", () => {
-    for (const { document, blocks } of cases)
-      expect(
-        splitBlocks(document).map((b) => `${b.id} ${b.text}`),
-        document,
-      ).toEqual(blocks);
+/** Blocks as serializeBlocks sends them: `[kind, markdown]` each. */
+function sent(...blocks: [BlockKind, string][]): SentBlock[] {
+  const ids = blockIds(blocks.map(([, markdown]) => markdown));
+  return blocks.map(([kind, markdown], i) => ({ id: ids[i], markdown, kind }));
+}
+
+describe("blockIds", () => {
+  it("are a block's hash, numbered on where the same markdown came before", () => {
+    const [a, b, c] = blockIds(["---", "One.", "---"]);
+    expect(a).toMatch(/^[0-9a-z]{4}$/);
+    expect(b).not.toBe(a);
+    expect(c).toBe(`${a}-2`);
+    // The same markdown has the same id from one request to the next.
+    expect(blockIds(["One."])[0]).toBe(b);
+  });
+});
+
+describe("runOf", () => {
+  const blocks = sent(["paragraph", "A."], ["paragraph", "B."]);
+  it("finds a run by its ids, written with or without #", () => {
+    expect(runOf(blocks, `#${blocks[0].id}`, blocks[1].id)).toEqual({
+      first: 0,
+      last: 1,
+    });
+    expect(runOf(blocks, blocks[1].id, blocks[0].id)).toBeNull();
+    expect(runOf(blocks, "zzzz")).toBeNull();
   });
 });
 
 describe("resolveBlockEdit", () => {
-  const doc = "# T\n\nThe cat sat on the mat.\n\nTwo.\n\n---\n\nThree.\n\n---";
-  const blocks = splitBlocks(doc);
+  const blocks = sent(
+    ["heading", "# T"],
+    ["paragraph", "The cat sat on the mat."],
+    ["list", "- one\n\n- two"],
+  );
   const id = (i: number) => blocks[i].id;
 
-  it("makes a block its whole text, and a run its text first to last", () => {
+  it("makes a block its whole text, and a run its text first to last, keeping the ids", () => {
     expect(
-      resolveBlockEdit(doc, { action: "replace", block: id(1), text: "A." }),
+      resolveBlockEdit(blocks, { action: "replace", block: id(1), text: "A." }),
     ).toEqual({
       action: "replace",
+      block: id(1),
       anchor: "The cat sat on the mat.",
       text: "A.",
     });
-    expect(
-      resolveBlockEdit(doc, {
-        action: "replace",
-        block: `#${id(1)}`,
-        lastBlock: id(2),
-        text: "x",
-      })?.anchor,
-    ).toBe("The cat sat on the mat.\n\nTwo.");
+    const run = resolveBlockEdit(blocks, {
+      action: "replace",
+      block: `#${id(1)}`,
+      lastBlock: id(2),
+      text: "x",
+    });
+    // A loose list is one block, its blank line inside it.
+    expect(run?.anchor).toBe("The cat sat on the mat.\n\n- one\n\n- two");
+    expect(run?.lastBlock).toBe(id(2));
   });
 
   it("changes a few words quoted inside a block in the whole block", () => {
     expect(
-      resolveBlockEdit(doc, {
+      resolveBlockEdit(blocks, {
         action: "replace",
         block: id(1),
         anchor: "cat",
@@ -51,70 +78,90 @@ describe("resolveBlockEdit", () => {
       }),
     ).toEqual({
       action: "replace",
+      block: id(1),
       anchor: "The cat sat on the mat.",
       text: "The do sat on the mat.",
     });
   });
 
-  it("tells a repeated block apart by the one before, and knows no stale id", () => {
+  it("knows no stale id, a backwards run, or words not in the block once", () => {
     expect(
-      resolveBlockEdit(doc, { action: "delete", block: id(5), text: "" })
-        ?.context,
-    ).toBe("Three.\n\n---");
-    expect(
-      resolveBlockEdit(doc, { action: "delete", block: "zzzz", text: "" }),
+      resolveBlockEdit(blocks, { action: "delete", block: "zzzz", text: "" }),
     ).toBeNull();
     expect(
-      resolveBlockEdit(doc, {
+      resolveBlockEdit(blocks, {
         action: "replace",
         block: id(2),
         lastBlock: id(1),
         text: "",
       }),
     ).toBeNull();
+    expect(
+      resolveBlockEdit(blocks, {
+        action: "replace",
+        block: id(1),
+        anchor: "dog",
+        text: "x",
+      }),
+    ).toBeNull();
   });
 });
 
 describe("resolveBlockTarget", () => {
-  const doc =
-    "# Title\n\nThe cat sat on the mat.\n\n![Cat](cat.png)\n\nThe cat sat.";
-  const ids = splitBlocks(doc).map((b) => b.id);
+  const blocks = sent(
+    ["heading", "# Title"],
+    ["paragraph", "The cat sat on the mat."],
+    ["picture", "![Cat](cat.png)"],
+    ["paragraph", "The cat sat."],
+  );
 
-  it("is the whole block, or a phrase in it pinned by the block", () => {
-    expect(resolveBlockTarget(doc, { block: ids[1] })).toEqual({
+  it("is the whole block, or a phrase in it - the block saying which", () => {
+    expect(resolveBlockTarget(blocks, { block: blocks[1].id })).toEqual({
+      block: blocks[1].id,
       anchor: "The cat sat on the mat.",
     });
     expect(
-      resolveBlockTarget(doc, { block: ids[1], anchor: "The cat sat" }),
-    ).toEqual({ anchor: "The cat sat", context: "The cat sat on the mat." });
-    expect(resolveBlockTarget(doc, { block: `#${ids[2]}` })).toEqual({
+      resolveBlockTarget(blocks, {
+        block: blocks[1].id,
+        anchor: "The cat sat",
+      }),
+    ).toEqual({ block: blocks[1].id, anchor: "The cat sat" });
+    expect(resolveBlockTarget(blocks, { block: `#${blocks[2].id}` })).toEqual({
+      block: blocks[2].id,
       anchor: "![Cat](cat.png)",
     });
   });
 
   it("is nothing for a block that isn't there, and the quote without one", () => {
-    expect(resolveBlockTarget(doc, { block: "zzzz" })).toBeNull();
-    expect(resolveBlockTarget(doc, { anchor: "mat" })).toEqual({
+    expect(resolveBlockTarget(blocks, { block: "zzzz" })).toBeNull();
+    expect(resolveBlockTarget(blocks, { anchor: "mat" })).toEqual({
       anchor: "mat",
     });
-    expect(resolveBlockTarget(doc, {})).toBeNull();
+    expect(resolveBlockTarget(blocks, {})).toBeNull();
   });
 });
 
 describe("keepPictures", () => {
   it("puts back the pictures a rewrite left out, as doc_blocks.rs does (the shared cases)", () => {
-    for (const c of keepCases)
-      expect(
-        keepPictures(splitBlocks(c.document), c.text, c.complete),
-        c.name,
-      ).toEqual({ text: c.expected, swapped: c.swapped ?? 0 });
+    for (const c of keepCases) {
+      const run = textParagraphs(c.document).map((p) => ({
+        markdown: p.text,
+      }));
+      expect(keepPictures(run, c.text, c.complete), c.name).toEqual({
+        text: c.expected,
+        swapped: c.swapped ?? 0,
+      });
+    }
   });
 
   it("is what a streaming rewrite of a run is drawn with", () => {
-    const doc = "One.\n\n![a](a.png)\n\nTwo.";
-    const blocks = splitBlocks(doc);
+    const blocks = sent(
+      ["paragraph", "One."],
+      ["picture", "![a](a.png)"],
+      ["paragraph", "Two."],
+    );
     expect(
-      resolveBlockEdit(doc, {
+      resolveBlockEdit(blocks, {
         action: "replace",
         block: blocks[0].id,
         lastBlock: blocks[2].id,

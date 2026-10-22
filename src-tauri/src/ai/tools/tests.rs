@@ -1,4 +1,5 @@
 use super::*;
+use crate::ai::doc_blocks::Document;
 
 /// One call through the registry, as the agent loop makes it.
 fn execute(tools: &ToolRegistry, ctx: &ToolContext, name: &str, arguments: &str) -> ToolOutput {
@@ -52,7 +53,8 @@ fn a_runtime_tool_is_offered_and_run_through_the_registry() {
 fn valid_proposals_and_comments_are_settled_and_refusals_are_not() {
     let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     let ctx = ctx("The cat sat on the mat.");
-    let settled = |name: &str, args: &str| execute(&tools, &ctx, name, args).settled;
+    let settled =
+        |name: &str, args: &str| execute(&tools, &ctx, name, &named(ctx.document, args)).settled;
     assert!(settled(
         PROPOSE_EDIT_TOOL_NAME,
         r#"{"action":"append","text":"The dog ran."}"#
@@ -100,15 +102,6 @@ fn reads_run_together_and_proposals_in_order() {
 }
 
 #[test]
-fn anchors_match_through_typography_and_folded_whitespace() {
-    let doc = "He said “hello” — twice.\n\nThen left；quietly.";
-    assert_eq!(anchor_match_count(doc, "He said \"hello\" - twice."), 1);
-    assert_eq!(anchor_match_count(doc, "Then left;quietly."), 1);
-    assert_eq!(anchor_match_count(doc, "twice.\nThen left"), 1);
-    assert_eq!(anchor_match_count(doc, "not here"), 0);
-}
-
-#[test]
 fn a_section_runs_to_the_next_heading_at_its_level() {
     let doc = "# Intro\na\n## Intro details\nb\n# Methods\nc\n```sh\n# not a heading\n```";
     let lines: Vec<&str> = doc.lines().collect();
@@ -121,18 +114,6 @@ fn a_section_runs_to_the_next_heading_at_its_level() {
     assert_eq!(section_range(&lines, "  "), None);
 }
 
-#[test]
-fn a_repeated_anchor_needs_a_longer_unique_context() {
-    let doc = "the cat sat. the dog sat.";
-    let args = |context: &str| serde_json::json!({ "context": context });
-    assert!(check_anchor(doc, &args(""), "the cat").is_ok());
-    assert!(check_anchor(doc, &args(""), "sat.").is_err());
-    assert!(check_anchor(doc, &args("dog sat."), "sat.").is_ok());
-    // The context must be longer than the anchor and occur once.
-    assert!(check_anchor(doc, &args("sat."), "sat.").is_err());
-    assert!(check_anchor(doc, &args("missing sat."), "sat.").is_err());
-}
-
 static NO_CONVENTIONS: std::sync::LazyLock<crate::ai::rules::Conventions> =
     std::sync::LazyLock::new(crate::ai::rules::Conventions::default);
 #[test]
@@ -141,7 +122,7 @@ fn use_skill_expands_skills_and_loads_packs() {
     let doc = "雨はまだ降っていた。美咲は改札の前で、何度も時計を見た。";
     let ctx = ToolContext {
         undecided: &[],
-        document: doc,
+        document: md(doc),
         skills: &ws.skills,
         ui_language: "en",
         root: None,
@@ -170,10 +151,40 @@ fn use_skill_expands_skills_and_loads_packs() {
     );
 }
 
-fn ctx(document: &str) -> ToolContext<'_> {
+/// A document as the editor would send it, in its paragraphs - kept for
+/// the test's life.
+fn md(text: &str) -> &'static Document {
+    Box::leak(Box::new(Document::from_markdown(text)))
+}
+
+/// A call as the model sends it, naming the block its `anchor` is in (the
+/// one block that holds it), resolved as agent::settle does before the
+/// tool sees it. Words in no block - text proposed and not decided yet -
+/// stay a quote.
+fn named(document: &Document, args: &str) -> String {
+    let mut v: serde_json::Value = serde_json::from_str(args).unwrap();
+    if let Some(anchor) = v.get("anchor").and_then(|a| a.as_str()) {
+        let holding: Vec<&crate::ai::doc_blocks::Block> = document
+            .blocks
+            .iter()
+            .filter(|b| document.block_text(b).contains(anchor))
+            .collect();
+        if v.get("block").is_none() && holding.len() == 1 {
+            v["block"] = json!(holding[0].id);
+        }
+    }
+    crate::ai::doc_blocks::resolve_edit_arguments(document, &v.to_string())
+}
+
+/// propose_edit, for a call as the model sends it (`named`).
+fn edit(ctx: &ToolContext, args: &str) -> String {
+    propose_edit(ctx, &named(ctx.document, args))
+}
+
+fn ctx(document: &str) -> ToolContext<'static> {
     ToolContext {
         undecided: &[],
-        document,
+        document: md(document),
         skills: &[],
         ui_language: "en",
         root: None,
@@ -433,7 +444,7 @@ fn review_mode_does_not_receive_the_edit_tool() {
 
 #[test]
 fn an_edit_of_text_an_undecided_rewrite_replaces_goes_into_the_rewrite() {
-    let doc = "The lighthouse stood on the rock. Waves broke below.";
+    let doc = "The lighthouse stood on the rock.\n\nWaves broke below.";
     let undecided = vec![crate::ai::images::UndecidedEdit {
         replaced: "The lighthouse stood on the rock.".into(),
         text: "The old lighthouse stood alone on its rock.".into(),
@@ -443,19 +454,21 @@ fn an_edit_of_text_an_undecided_rewrite_replaces_goes_into_the_rewrite() {
         undecided: &undecided,
         ..ctx(doc)
     };
-    let run = |args: &str| execute(&tools, &context, PROPOSE_EDIT_TOOL_NAME, args).text;
-    // Words the rewrite kept: the edit goes into it.
-    let out = run(r#"{"action":"replace","anchor":"lighthouse","text":"beacon"}"#);
+    let run = |args: &str| {
+        execute(
+            &tools,
+            &context,
+            PROPOSE_EDIT_TOOL_NAME,
+            &named(context.document, args),
+        )
+        .text
+    };
+    // Words of the rewrite, which has no block: the edit goes into it.
+    let out = run(r#"{"action":"replace","anchor":"stood alone","text":"stood tall"}"#);
     assert!(out.contains("goes into that proposal"), "{out}");
-    // Words it no longer has: refused, pointed at the rewrite.
-    let out =
-        run(r#"{"action":"replace","anchor":"stood on the rock","text":"rose from the rock"}"#);
-    assert!(out.starts_with("Not proposed"), "{out}");
-    assert!(out.contains("Anchor in the rewrite's text"), "{out}");
-    // A new version of the whole passage takes the rewrite's place.
-    let out = run(
-        r#"{"action":"replace","anchor":"The lighthouse stood on the rock.","text":"The beacon stood alone."}"#,
-    );
+    // Words of the old text, by its block: the edit is of the whole block
+    // (one edit per block), a new version that takes the rewrite's place.
+    let out = run(r#"{"action":"replace","anchor":"lighthouse","text":"beacon"}"#);
     assert!(
         out.contains("takes the place of your earlier rewrite"),
         "{out}"
@@ -480,7 +493,15 @@ fn an_edit_may_change_text_proposed_and_not_decided_yet() {
             undecided: &undecided,
             ..ctx(doc)
         };
-        let run = |args: &str| execute(&tools, &context, PROPOSE_EDIT_TOOL_NAME, args).text;
+        let run = |args: &str| {
+            execute(
+                &tools,
+                &context,
+                PROPOSE_EDIT_TOOL_NAME,
+                &named(context.document, args),
+            )
+            .text
+        };
         for args in [
             r#"{"action":"replace","anchor":"It purred all night.","text":"It purred."}"#,
             r#"{"action":"delete","anchor":"Then it slept."}"#,
@@ -499,7 +520,15 @@ fn an_edit_may_change_text_proposed_and_not_decided_yet() {
     // This request's own proposals count too.
     let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     let context = ctx(doc);
-    let run = |args: &str| execute(&tools, &context, PROPOSE_EDIT_TOOL_NAME, args).text;
+    let run = |args: &str| {
+        execute(
+            &tools,
+            &context,
+            PROPOSE_EDIT_TOOL_NAME,
+            &named(context.document, args),
+        )
+        .text
+    };
     assert!(run(r#"{"action":"append","text":"A new line here."}"#).starts_with("Edit proposed"));
     assert!(
         run(r#"{"action":"replace","anchor":"A new line here.","text":"A newer line."}"#)
@@ -512,7 +541,15 @@ fn write_mode_refuses_an_edit_that_changes_existing_text() {
     let doc = "The cat sat on the mat.";
     let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
     let ctx = ctx(doc);
-    let run = |args: &str| execute(&tools, &ctx, PROPOSE_EDIT_TOOL_NAME, args).text;
+    let run = |args: &str| {
+        execute(
+            &tools,
+            &ctx,
+            PROPOSE_EDIT_TOOL_NAME,
+            &named(ctx.document, args),
+        )
+        .text
+    };
     for args in [
         r#"{"action":"replace","anchor":"The cat sat on the mat.","text":"A dog."}"#,
         r#"{"action":"replace_selection","text":"A dog."}"#,
@@ -538,7 +575,10 @@ fn write_mode_refuses_an_edit_that_changes_existing_text() {
         &revise,
         &ctx,
         PROPOSE_EDIT_TOOL_NAME,
-        r#"{"action":"delete","anchor":"The cat sat on the mat."}"#
+        &named(
+            ctx.document,
+            r#"{"action":"delete","anchor":"The cat sat on the mat."}"#
+        )
     )
     .text
     .starts_with("Edit proposed"));
@@ -546,17 +586,17 @@ fn write_mode_refuses_an_edit_that_changes_existing_text() {
 
 #[test]
 fn propose_edit_refuses_a_clause_replaced_by_one_latin_token() {
-    let doc = "会议照常。给您添麻烦了，如果周五上午不方便，请告诉我们您方便的时间。此致";
+    let doc = "会议照常。\n\n给您添麻烦了，如果周五上午不方便，请告诉我们您方便的时间。\n\n此致";
     let anchor = "给您添麻烦了，如果周五上午不方便，请告诉我们您方便的时间。";
     let args = |text: &str| {
         serde_json::json!({"action": "replace", "anchor": anchor, "text": text}).to_string()
     };
     let one = ctx(doc);
-    let out = propose_edit(&one, &args("due"));
+    let out = edit(&one, &args("due"));
     assert!(out.starts_with("Not proposed"), "{out}");
     // Sent again unchanged, it is what the user asked for ("replace the
     // sentence with TBD") and stands.
-    let out = propose_edit(&one, &args("due"));
+    let out = edit(&one, &args("due"));
     assert!(out.starts_with("Edit proposed"), "{out}");
     // A real translation and a short Chinese rewrite stand, and so does
     // a Latin name for a short Chinese one.
@@ -564,10 +604,10 @@ fn propose_edit_refuses_a_clause_replaced_by_one_latin_token() {
         "Sorry for the trouble - if Friday morning doesn't suit you, tell us what does.",
         "抱歉。",
     ] {
-        let out = propose_edit(&ctx(doc), &args(text));
+        let out = edit(&ctx(doc), &args(text));
         assert!(out.starts_with("Edit proposed"), "{text}: {out}");
     }
-    let out = propose_edit(
+    let out = edit(
         &ctx("名称：乐维斯"),
         r#"{"action":"replace","anchor":"乐维斯","text":"Textus"}"#,
     );
@@ -576,49 +616,30 @@ fn propose_edit_refuses_a_clause_replaced_by_one_latin_token() {
 
 #[test]
 fn a_second_proposal_for_the_same_passage_is_refused() {
-    let doc = ctx("Textus is great. Textus is fast. It ships soon.");
+    let doc = ctx("Textus is great.\n\nTextus is fast.\n\nIt ships soon.");
     let ctx2 = ctx("Textus is great.");
     let ctx = doc;
     let first = r#"{"action":"replace","anchor":"Textus is great.","text":"Textus is good."}"#;
-    assert!(propose_edit(&ctx, first).starts_with("Edit proposed"));
-    assert!(propose_edit(&ctx, first).starts_with("Not proposed"));
-    // Inside the first passage, too.
-    let inner = r#"{"action":"delete","anchor":"great"}"#;
-    assert!(propose_edit(&ctx, inner).starts_with("Not proposed"));
-    // Another passage, an insertion beside the first, and the same
-    // word picked out elsewhere by its context all stand.
+    assert!(edit(&ctx, first).starts_with("Edit proposed"));
+    assert!(edit(&ctx, first).starts_with("Not proposed"));
+    // Inside the first passage, too: the block it is in.
+    let inner = json!({"action": "delete", "block": ctx.document.blocks[0].id, "anchor": "great"});
+    assert!(edit(&ctx, &inner.to_string()).starts_with("Not proposed"));
+    // Another passage and an insertion beside the first stand.
     for args in [
         r#"{"action":"replace","anchor":"It ships soon.","text":"It ships in May."}"#,
         r#"{"action":"insert_after","anchor":"Textus is great.","text":" Really."}"#,
-        r#"{"action":"replace","anchor":"Textus","context":"Textus is fast","text":"It"}"#,
     ] {
-        assert!(
-            propose_edit(&ctx, args).starts_with("Edit proposed"),
-            "{args}"
-        );
+        assert!(edit(&ctx, args).starts_with("Edit proposed"), "{args}");
     }
-    // Two fixes of a repeated word, pinned by overlapping contexts, are
-    // two passages; the same occurrence pinned twice is one.
-    let typos = super::tests::ctx("I think its fine and its late, its true.");
-    for args in [
-        r#"{"action":"replace","anchor":"its","context":"think its fine and its","text":"it's"}"#,
-        r#"{"action":"replace","anchor":"its","context":"and its late, its true","text":"it's"}"#,
-    ] {
-        assert!(
-            propose_edit(&typos, args).starts_with("Edit proposed"),
-            "{args}"
-        );
-    }
-    let again = r#"{"action":"replace","anchor":"its","context":"its late","text":"it is"}"#;
-    assert!(propose_edit(&typos, again).starts_with("Not proposed"));
-    // A refused call (no match) doesn't count as proposed.
+    // A refused call (words in no block) doesn't count as proposed.
     let missing = r#"{"action":"replace","anchor":"Textus is slow.","text":"x"}"#;
-    assert!(propose_edit(&ctx2, missing).starts_with("No exact match"));
+    assert!(edit(&ctx2, missing).starts_with("Not proposed"));
 }
 
 #[test]
 fn the_size_note_counts_like_measure_text() {
-    let out = propose_edit(
+    let out = edit(
         &ctx("周末带爸妈去了千岛湖，人很多。"),
         r#"{"action":"replace","anchor":"周末带爸妈去了千岛湖，人很多。","text":"周末去了千岛湖。"}"#,
     );
@@ -627,37 +648,28 @@ fn the_size_note_counts_like_measure_text() {
 }
 
 #[test]
-fn propose_edit_rejects_repeated_anchor_without_context() {
+fn a_repeated_word_is_told_apart_by_its_block() {
+    let doc = ctx("Textus is great.\n\nTextus is fast.");
+    let fast = doc.document.blocks[1].id.clone();
     let out = propose_edit(
-        &ctx("Textus is great. Textus is fast."),
-        r#"{"action":"replace","anchor":"Textus","text":"It"}"#,
-    );
-    assert!(out.contains("appears 2 times"), "{out}");
-    assert!(out.contains("`context`"), "{out}");
-}
-
-#[test]
-fn propose_edit_accepts_repeated_anchor_with_unique_context() {
-    let out = propose_edit(
-        &ctx("Textus is great. Textus is fast."),
-        r#"{"action":"replace","anchor":"Textus","text":"It","context":"Textus is fast"}"#,
+        &doc,
+        &json!({"action": "replace", "block": fast, "anchor": "Textus", "text": "It"}).to_string(),
     );
     assert!(out.starts_with("Edit proposed"), "{out}");
-}
-
-#[test]
-fn propose_edit_rejects_context_that_repeats_or_misses_the_anchor() {
-    let doc = "Textus is great. Textus is great.";
-    let repeated = propose_edit(
-        &ctx(doc),
-        r#"{"action":"replace","anchor":"Textus","text":"It","context":"Textus is great"}"#,
+    // Twice in its block, it needs more words.
+    let twice = ctx("Textus is great, Textus is fast.");
+    let id = twice.document.blocks[0].id.clone();
+    let out = propose_edit(
+        &twice,
+        &json!({"action": "replace", "block": id, "anchor": "Textus", "text": "It"}).to_string(),
     );
-    assert!(repeated.contains("`context`"), "{repeated}");
-    let anchor_free = propose_edit(
-        &ctx("Textus is great. Textus is fast."),
-        r#"{"action":"replace","anchor":"Textus","text":"It","context":"is fast"}"#,
+    assert!(out.contains("exactly once"), "{out}");
+    // Without a block, document text isn't edited.
+    let out = propose_edit(
+        &twice,
+        r#"{"action":"replace","anchor":"great","text":"good"}"#,
     );
-    assert!(anchor_free.contains("`context`"), "{anchor_free}");
+    assert_eq!(out, crate::ai::doc_blocks::NO_BLOCK);
 }
 
 #[test]

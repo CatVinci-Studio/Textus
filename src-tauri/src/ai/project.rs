@@ -115,6 +115,7 @@ pub async fn library_use(
             return LibraryUse::default();
         };
         let library = read_library(&root);
+        let document = crate::ai::doc_blocks::Document::from_markdown(&document);
         let context = crate::ai::agent::document_section(&document, true, None);
         LibraryUse::of(&pick_library(&library, &context), false)
     })

@@ -161,7 +161,7 @@ fn live_token_breakdown() {
             "en",
         ),
     ] {
-        let system = build_instructions(ws, "", true, mode, "", ui);
+        let system = build_instructions(ws, &Default::default(), true, mode, "", ui);
         let specs =
             tools::ToolRegistry::builtin(ws.has_usable_skills(), ws.root.is_some(), mode, true)
                 .specs();
@@ -180,7 +180,14 @@ fn live_token_breakdown() {
     }
 
     println!("\n## System prompt by section (project, Revise, en)\n");
-    let system = build_instructions(&project, "", true, AgentMode::Revise, "", "en");
+    let system = build_instructions(
+        &project,
+        &Default::default(),
+        true,
+        AgentMode::Revise,
+        "",
+        "en",
+    );
     for (name, text) in system_parts(&system) {
         println!(
             "- {name}: {} tokens, {} chars",
@@ -246,7 +253,13 @@ fn live_token_breakdown() {
             zh_long.chars().take(20_000).collect(),
         ),
     ] {
-        let context = request_context(&draft, &doc, true, "", None);
+        let context = request_context(
+            &draft,
+            &crate::ai::doc_blocks::Document::from_markdown(&doc),
+            true,
+            "",
+            None,
+        );
         let user = request_user_text(&context, "Tighten the second paragraph.");
         println!(
             "- {label}: document {} chars -> message {} tokens ({} chars)",
@@ -495,7 +508,7 @@ fn live_doubao_prefix_cache() {
     let model = entry.agent_default_model.expect("agent model");
     let en = lang_doc(super::checks::Lang::En);
     let ws = draft_workspace();
-    let system = build_instructions(&ws, "", true, AgentMode::Review, "", "en");
+    let system = build_instructions(&ws, &Default::default(), true, AgentMode::Review, "", "en");
     let tool_values: Vec<Value> = tools::ToolRegistry::builtin(
         true,
         false,
@@ -505,7 +518,13 @@ fn live_doubao_prefix_cache() {
     .iter()
     .map(|t| json!({"type": "function", "function": {"name": t.name, "description": t.description, "parameters": t.parameters}}))
     .collect();
-    let context = request_context(&ws, en.doc, true, "", None);
+    let context = request_context(
+        &ws,
+        &crate::ai::doc_blocks::Document::from_markdown(en.doc),
+        true,
+        "",
+        None,
+    );
     let messages = [en.question, en.question, "Who is the document written for?"];
     // Chat Completions as the app sends them, then the Responses API with
     // Ark's own `caching` switch, which the app doesn't use.

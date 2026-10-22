@@ -5,8 +5,9 @@ import { visibleTextBetween } from "../../editor/markdown/link-reveal";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import {
   composeMarkdownEdit,
-  findMarkdownMatch,
+  matchTarget,
   serializeBlocks,
+  type BlockTarget,
   serializeRange,
   type MarkdownBlock,
   type MarkdownMatch,
@@ -25,10 +26,10 @@ import { findInOrder, locateHunks } from "./sentence-locate";
 import { locatePlainText } from "./text-locate";
 
 /**
- * Where a proposal goes in the document: its anchor found in the markdown
- * the model was shown, the sentences it changes found in the text, and
- * what deciding it decided. Pure - each reads the editor's state and
- * writes nothing (usePendingEdits dispatches).
+ * Where a proposal goes in the document: the blocks it names, the
+ * sentences it changes found in the text, and what deciding it decided.
+ * Pure - each reads the editor's state and writes nothing (usePendingEdits
+ * dispatches).
  */
 
 /**
@@ -81,17 +82,16 @@ function computeStrikeRange(
   return locatePlainText(doc, match.from, match.to, parsedText);
 }
 
-/** Where an agent's quoted passage is in the document now - narrowed to the
- *  quoted text when it sits inside one block, else the touched blocks. For
- *  a comment card's "locate". */
-export function locateAnchor(
+/** Where a passage a comment or a picture names is in the document now -
+ *  narrowed to its quoted words when they sit inside one block, else the
+ *  blocks. For a comment card's "locate". */
+export function locateTarget(
   ctx: Ctx,
   doc: ProseNode,
-  anchor: string,
-  context?: string,
+  target: BlockTarget,
 ): { from: number; to: number } | null {
   const blocks = serializeBlocks(ctx, doc);
-  const match = findMarkdownMatch(blocks, anchor, context);
+  const match = matchTarget(blocks, target);
   if (!match) return null;
   return (
     computeStrikeRange(ctx, doc, blocks, match) ?? {
@@ -101,9 +101,9 @@ export function locateAnchor(
   );
 }
 
-/** Where an anchored proposal (replace/delete/insert_before/after) lands
- *  in `doc` now, and what it would write there. Null when its anchor no
- *  longer resolves. */
+/** Where a proposal named by its blocks (replace/delete/insert_before/
+ *  after) lands in `doc` now, and what it would write there. Null when its
+ *  blocks are gone (changed since the request). */
 export function resolveAnchored(
   ctx: Ctx,
   doc: ProseNode,
@@ -116,11 +116,7 @@ export function resolveAnchored(
   /** The markdown in `range` before the anchor (MarkdownMatch.prefix). */
   lead: string;
 } | null {
-  const match = findMarkdownMatch(
-    blocks,
-    proposal.anchor ?? "",
-    proposal.context,
-  );
+  const match = matchTarget(blocks, proposal);
   if (!match) return null;
   return {
     range: { from: match.from, to: match.to },

@@ -1,6 +1,11 @@
 use super::*;
 use crate::ai::ui_language::{entries, UI_LANGUAGES};
 
+/// A document as the editor would send it, in its paragraphs.
+fn md(text: &str) -> doc_blocks::Document {
+    doc_blocks::Document::from_markdown(text)
+}
+
 #[test]
 fn a_length_the_user_asks_for_is_noticed() {
     for asked in [
@@ -26,7 +31,7 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
     use std::cell::RefCell;
     use std::collections::VecDeque;
 
-    let document = "# Notes\n\n## Methods\n\nWe sampled ten sites.\n\n## Results\n\nAll good.";
+    let document = &md("# Notes\n\n## Methods\n\nWe sampled ten sites.\n\n## Results\n\nAll good.");
     let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     let conventions = crate::ai::rules::Conventions::default();
     let ctx = ToolContext {
@@ -47,18 +52,14 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
         arguments: args.into(),
         reasoning: None,
     };
+    // The block "We sampled ten sites." is.
+    let methods = document.blocks[2].id.clone();
+    let bad = serde_json::json!({"action": "replace", "block": methods, "anchor": "We sampled 10 sites.", "text": "x"});
+    let ok = serde_json::json!({"action": "replace", "block": methods, "text": "We sampled ten coastal sites."});
     let script = RefCell::new(VecDeque::from(vec![
         StepResult::ToolCalls(vec![call("r", "read_document", r#"{"heading":"Methods"}"#)]),
-        StepResult::ToolCalls(vec![call(
-            "bad",
-            "propose_edit",
-            r#"{"action":"replace","anchor":"We sampled 10 sites.","text":"x"}"#,
-        )]),
-        StepResult::ToolCalls(vec![call(
-            "ok",
-            "propose_edit",
-            r#"{"action":"replace","anchor":"We sampled ten sites.","text":"We sampled ten coastal sites."}"#,
-        )]),
+        StepResult::ToolCalls(vec![call("bad", "propose_edit", &bad.to_string())]),
+        StepResult::ToolCalls(vec![call("ok", "propose_edit", &ok.to_string())]),
         StepResult::Done("Named the site type.".into()),
     ]));
     let turns = tauri::async_runtime::block_on(run_agent_loop(
@@ -91,11 +92,7 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
     };
     assert!(result("r").contains("We sampled ten sites."));
     assert!(!result("r").contains("All good."));
-    assert!(
-        result("bad").starts_with("No exact match"),
-        "{}",
-        result("bad")
-    );
+    assert!(result("bad").contains("exactly once"), "{}", result("bad"));
     assert!(
         result("ok").starts_with("Edit proposed"),
         "{}",
@@ -338,9 +335,9 @@ fn the_message_header_names_the_language_the_user_typed() {
 #[test]
 fn short_document_is_embedded_verbatim() {
     let doc = "# Title\n\nJust a short document.";
-    let section = document_section(doc, true, None);
+    let section = document_section(&md(doc), true, None);
     // Whole, each block marked with its id (doc_blocks.rs).
-    let blocks = doc_blocks::split(doc);
+    let blocks = md(doc).blocks;
     assert_eq!(
         section,
         format!(
@@ -354,7 +351,7 @@ fn short_document_is_embedded_verbatim() {
 fn long_document_is_truncated_with_outline_and_excerpts() {
     let middle = "x".repeat(FULL_DOCUMENT_LIMIT + 1000);
     let doc = format!("# Start\n\nfirst-marker {middle} last-marker\n\n## End");
-    let section = document_section(&doc, true, None);
+    let section = document_section(&md(&doc), true, None);
     assert!(section.contains("truncated"));
     assert!(section.contains("# Start"));
     assert!(section.contains("## End"));
@@ -379,7 +376,7 @@ fn the_document_tools_are_for_a_document_shown_in_part() {
 #[test]
 fn truncation_note_omits_tool_mention_without_tools() {
     let doc = "x".repeat(FULL_DOCUMENT_LIMIT + 1);
-    let section = document_section(&doc, false, None);
+    let section = document_section(&md(&doc), false, None);
     assert!(!section.contains("search_document"));
 }
 
@@ -388,7 +385,7 @@ fn excerpts_are_char_boundary_safe_for_cjk() {
     // Every char here is multi-byte - a byte-index slice at a fixed
     // offset would panic mid-character.
     let doc = "中".repeat(FULL_DOCUMENT_LIMIT + 500);
-    let section = document_section(&doc, true, None);
+    let section = document_section(&md(&doc), true, None);
     assert!(section.contains('中'));
 }
 
@@ -404,20 +401,20 @@ fn a_long_cjk_document_is_outlined_by_its_token_weight() {
     doc.push_str("## 目标\n\n用户正在改的段落。");
     let chars = doc.chars().count();
     assert!(chars > FULL_DOCUMENT_LIMIT / 3 && chars < FULL_DOCUMENT_LIMIT);
-    let with_tools = document_section(&doc, true, Some("目标"));
+    let with_tools = document_section(&md(&doc), true, Some("目标"));
     assert!(with_tools.contains("truncated"));
     assert!(with_tools.contains("用户正在改的段落。"));
     assert!(with_tools.chars().count() < chars / 2);
     assert_eq!(
-        document_section(&doc, false, None),
+        document_section(&md(&doc), false, None),
         format!(
             "---document---\n{}",
-            doc_blocks::annotate(&doc, &doc_blocks::split(&doc), 0, doc.len())
+            doc_blocks::annotate(&md(&doc), 0, doc.len())
         )
     );
     // The same length of English is still sent whole.
     let english = "x".repeat(chars);
-    assert!(!document_section(&english, true, None).contains("truncated"));
+    assert!(!document_section(&md(&english), true, None).contains("truncated"));
 }
 
 #[test]
@@ -430,22 +427,28 @@ fn a_long_document_still_carries_the_section_being_worked_on() {
         ));
     }
     doc.push_str("## Target\n\nThe paragraph the user is editing.\n\n## After\n\nmore");
-    let section = document_section(&doc, true, Some("Target"));
+    let section = document_section(&md(&doc), true, Some("Target"));
     assert!(section.contains("truncated"));
     assert!(section.contains("The paragraph the user is editing."));
     // The section ends where the next heading of its level starts.
-    let blocks = doc_blocks::split(&doc);
-    let (line, focus) = focus_section(&doc, &blocks, "Target").unwrap();
+    let (line, focus) = focus_section(&md(&doc), "Target").unwrap();
     // Its blocks marked with their ids, as the whole document is.
     assert!(focus.starts_with("[#"), "{focus}");
-    let focus = doc_blocks::annotate(&focus, &[], 0, focus.len());
+    let focus = doc_blocks::annotate(
+        &doc_blocks::Document {
+            text: focus.clone(),
+            blocks: Vec::new(),
+        },
+        0,
+        focus.len(),
+    );
     let focus = focus
         .split_once("] ")
         .map_or(focus.as_str(), |(_, rest)| rest);
     assert!(focus.starts_with("## Target"));
     assert!(!focus.contains("## After"));
     assert_eq!(doc.lines().nth(line - 1), Some("## Target"));
-    assert!(!document_section(&doc, true, None).contains("the section the user is working in"));
+    assert!(!document_section(&md(&doc), true, None).contains("the section the user is working in"));
 }
 
 #[test]
@@ -462,7 +465,7 @@ fn style_and_mentioned_library_entries_reach_the_prompt() {
         ],
         ..AgentWorkspace::default()
     };
-    let prompt = request_context(&workspace, "晚晚推开门。", true, "改写这句", None);
+    let prompt = request_context(&workspace, &md("晚晚推开门。"), true, "改写这句", None);
     assert!(prompt.contains("Short sentences. No adverbs."));
     assert!(
         prompt.contains("中学语文老师"),
@@ -546,10 +549,10 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     );
     // The system prompt carries it, the preference rule and the packs,
     // the same whatever the document.
-    let a = build_instructions(&ws, "# One", true, AgentMode::Revise, "hi", "en");
+    let a = build_instructions(&ws, &md("# One"), true, AgentMode::Revise, "hi", "en");
     let b = build_instructions(
         &ws,
-        "# Two\n\nOther text.",
+        &md("# Two\n\nOther text."),
         true,
         AgentMode::Revise,
         "other",
@@ -562,7 +565,7 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     let mut none = ws.clone();
     none.skills.iter_mut().for_each(|s| s.enabled = false);
     assert!(
-        !build_instructions(&none, "", true, AgentMode::Revise, "", "en")
+        !build_instructions(&none, &md(""), true, AgentMode::Revise, "", "en")
             .contains("---available skills---")
     );
 }
@@ -622,7 +625,7 @@ fn the_workspace_section_says_which_folder_and_why() {
     // ones alone, and one the backend doesn't know of the same.
     assert_eq!(workspace_section(&too_broad, "xx"), text);
     // The tool-less fallback doesn't hear about file tools.
-    let prompt = build_instructions(&unsaved, "draft", false, AgentMode::Revise, "", "en");
+    let prompt = build_instructions(&unsaved, &md("draft"), false, AgentMode::Revise, "", "en");
     assert!(!prompt.contains("---project---"));
     let review = request_preamble(&doc_folder, AgentMode::Review, "en");
     assert!(review.contains("Review mode:") && review.contains("Revise mode you"));
@@ -708,7 +711,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
             english,
             "ui-names/{code}.txt names every line of en.txt, in its order"
         );
-        let prompt = build_instructions(&chosen, "draft", true, AgentMode::Review, "", code);
+        let prompt = build_instructions(&chosen, &md("draft"), true, AgentMode::Review, "", code);
         assert!(prompt.contains(&format!("\nEnglish | {}\n", language.native)));
         for (en, name) in &pairs {
             assert!(
@@ -724,7 +727,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
 
     // The labels the English description quotes, and those too short
     // to look up on their own, are exactly the strings' entries.
-    let prompt = build_instructions(&chosen, "draft", true, AgentMode::Review, "", "en");
+    let prompt = build_instructions(&chosen, &md("draft"), true, AgentMode::Review, "", "en");
     let en_ts = read("src/i18n/locales/en.ts");
     for label in [
         "Choose project folder…",
@@ -783,7 +786,7 @@ fn interaction_mode_is_explicit_in_every_message() {
     let review = message(AgentMode::Review);
     assert!(review.contains("interaction mode: review"));
     assert!(
-        build_instructions(&workspace, "draft", true, AgentMode::Review, "", "en")
+        build_instructions(&workspace, &md("draft"), true, AgentMode::Review, "", "en")
             .contains("No document edit tool is available")
     );
 
@@ -799,7 +802,7 @@ fn interaction_mode_is_explicit_in_every_message() {
     assert!(write.find("interaction mode").unwrap() < write.find("---document---").unwrap());
     // Tool-less, it stays in the system prompt with everything else.
     assert!(
-        build_instructions(&workspace, "draft", false, AgentMode::Write, "", "en")
+        build_instructions(&workspace, &md("draft"), false, AgentMode::Write, "", "en")
             .contains("interaction mode: write")
     );
 }
@@ -821,7 +824,10 @@ fn the_cached_prefix_survives_a_mode_switch_and_a_new_memory() {
             .iter()
             .map(|s| format!("{}{}{}", s.name, s.description, s.parameters))
             .collect();
-        (build_instructions(ws, "draft", true, mode, "", "en"), specs)
+        (
+            build_instructions(ws, &md("draft"), true, mode, "", "en"),
+            specs,
+        )
     };
     let revise = prefix(&ws, AgentMode::Revise);
     assert_eq!(prefix(&ws, AgentMode::Write), revise);
@@ -850,7 +856,7 @@ fn project_writing_instructions_follow_and_override_the_global_ones() {
         project_instructions: Some(project.into()),
         ..AgentWorkspace::default()
     };
-    let prompt = build_instructions(&both, "draft", true, AgentMode::Revise, "", "en");
+    let prompt = build_instructions(&both, &md("draft"), true, AgentMode::Revise, "", "en");
     let global_at = prompt.find(global).unwrap();
     let project_at = prompt.find(project).unwrap();
     assert!(global_at < project_at, "global first, project after");
@@ -869,7 +875,7 @@ fn project_writing_instructions_follow_and_override_the_global_ones() {
             ..AgentWorkspace::default()
         },
     ] {
-        let prompt = build_instructions(&alone, "draft", true, AgentMode::Revise, "", "en");
+        let prompt = build_instructions(&alone, &md("draft"), true, AgentMode::Revise, "", "en");
         assert!(prompt.contains("---user instructions---\nAlways reply in English."));
         assert!(!prompt.contains("---user instructions for this project"));
     }
@@ -899,7 +905,7 @@ fn remembered_memories_follow_the_users_instructions() {
         remember: true,
         ..AgentWorkspace::default()
     };
-    let prompt = build_instructions(&ws, "draft", true, AgentMode::Review, "", "en");
+    let prompt = build_instructions(&ws, &md("draft"), true, AgentMode::Review, "", "en");
     // What to remember is decided after the exchange (memory::pass): the
     // request has no remember tool to be told about.
     assert!(!prompt.contains("remember tool"));
@@ -910,7 +916,7 @@ fn remembered_memories_follow_the_users_instructions() {
     let project = message.find("Spell it colour.").unwrap();
     assert!(prompt.contains("Global rule.") && personal < project);
     // Without tools it is in the system prompt.
-    let flat = build_instructions(&ws, "draft", false, AgentMode::Review, "", "en");
+    let flat = build_instructions(&ws, &md("draft"), false, AgentMode::Review, "", "en");
     assert!(flat.contains("Reply briefly."));
 }
 
@@ -952,6 +958,7 @@ fn scripted_revise(document: &str, script: Vec<Vec<AgentTurn>>) -> (Vec<AgentTur
     use std::cell::RefCell;
     use std::collections::VecDeque;
 
+    let document = &md(document);
     let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     let conventions = crate::ai::rules::Conventions::default();
     let ctx = ToolContext {
@@ -998,19 +1005,23 @@ fn call(id: &str, name: &str, arguments: serde_json::Value) -> AgentTurn {
     }
 }
 
-fn comment(id: &str, anchor: &str) -> AgentTurn {
+/// A comment on `anchor`, by the block of `document` it is in.
+fn comment(id: &str, document: &str, anchor: &str) -> AgentTurn {
+    let doc = md(document);
+    let block = doc
+        .blocks
+        .iter()
+        .find(|b| doc.block_text(b).contains(anchor))
+        .map(|b| b.id.clone());
     call(
         id,
         tools::ADD_COMMENT_TOOL_NAME,
-        serde_json::json!({"anchor": anchor, "comment": "The title is a pun; this keeps one half."}),
+        serde_json::json!({"block": block, "anchor": anchor, "comment": "The title is a pun; this keeps one half."}),
     )
 }
 
 fn translation(id: &str, document: &str) -> AgentTurn {
-    let ids: Vec<String> = doc_blocks::split(document)
-        .into_iter()
-        .map(|b| b.id)
-        .collect();
+    let ids: Vec<String> = md(document).blocks.into_iter().map(|b| b.id).collect();
     call(
         id,
         tools::PROPOSE_EDIT_TOOL_NAME,
@@ -1035,7 +1046,7 @@ fn a_comment_and_a_sentence_before_any_edit_is_asked_on() {
         document,
         vec![
             vec![
-                comment("c0", "借雨"),
+                comment("c0", document, "借雨"),
                 AgentTurn::assistant("Translated it all; one note on the title."),
             ],
             vec![translation("e1", document), AgentTurn::assistant("Done.")],
@@ -1052,7 +1063,7 @@ fn edits_comments_and_a_sentence_in_one_step_end_the_request() {
     let (turns, steps) = scripted_revise(
         document,
         vec![vec![
-            comment("c0", "借雨"),
+            comment("c0", document, "借雨"),
             translation("e0", document),
             AgentTurn::assistant("Translated it; one note on the title."),
         ]],
@@ -1066,7 +1077,7 @@ fn a_whole_document_rewritten_in_one_replace_ends_in_one_step() {
     // Seven paragraphs translated in one replace: no cap on the run, and
     // nothing asked for afterwards.
     let seven = "一。\n\n二。\n\n三。\n\n四。\n\n五。\n\n六。\n\n七。";
-    let ids: Vec<String> = doc_blocks::split(seven).into_iter().map(|b| b.id).collect();
+    let ids: Vec<String> = md(seven).blocks.into_iter().map(|b| b.id).collect();
     let text = (1..=7)
         .map(|n| format!("Part {n}."))
         .collect::<Vec<_>>()
