@@ -44,6 +44,23 @@ describe("ProposalStream", () => {
     });
   });
 
+  it("takes a call said to start again as the same call", () => {
+    const { stream, calls } = machine();
+    stream.toolStart("g1", "generate_image");
+    stream.argsDelta(
+      "g1",
+      '{"action":"replace","alt":"","anchor":"![](a.png)","aspect":"16:9","prompt":"x',
+    );
+    expect(calls[0]).toMatchObject({ effect: "place", callId: "g1" });
+    // The backend announces the picture it runs (images.rs' execute).
+    stream.toolStart("g1", "generate_image");
+    stream.finalCall("g1", "{}");
+    expect(calls[calls.length - 1]).toEqual({
+      effect: "discard",
+      callId: "g1",
+    });
+  });
+
   it("ignores tools other than propose_edit", () => {
     const { stream, calls } = machine();
     stream.toolStart("c1", "search_document");

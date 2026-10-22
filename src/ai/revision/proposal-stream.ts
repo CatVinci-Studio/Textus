@@ -74,6 +74,11 @@ export class ProposalStream {
   /** A tool call opened - propose_edit and generate_image enter the
    *  machine. */
   toolStart(callId: string, toolName: string): void {
+    // Said again for a call already here - images.rs' execute announces
+    // the picture it runs - it is the same call: a fresh draft in its
+    // place left the frame placed from the stream un-discardable, and the
+    // picture's proposal "Writing…" for good, never in the text (rc.6).
+    if (this.drafts.has(callId)) return;
     if (toolName === "propose_edit")
       this.drafts.set(callId, { phase: "drafting", args: "" });
     else if (toolName === "generate_image")
