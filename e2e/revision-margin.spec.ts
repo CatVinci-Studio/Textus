@@ -136,26 +136,28 @@ test("with many revisions the cards stack and move, the text doesn't", async ({
   expect(await blocks(page)).toEqual(withCards);
 });
 
-test("a card pushed below its passage draws its line only while pointed at", async ({
+test("every card draws its line; one pushed below its passage, fainter until pointed at", async ({
   page,
 }) => {
   await open(page, LONG, "new", 1100);
   await propose(page, LONG, LONG_CLASSICAL);
   await expect(page.locator(".revision-note")).toHaveCount(24);
-  const lines = page.locator(".review-links path");
-  // The first card sits level with its passage; most below are pushed down.
-  const drawn = await lines.count();
-  expect(drawn).toBeGreaterThan(0);
-  expect(drawn).toBeLessThan(8);
+  // A line for every card from the start, not only once pointed at.
+  await expect(page.locator(".review-links path")).toHaveCount(24);
+  // The first card sits level with its passage; most below are pushed
+  // down, and their lines are fainter.
+  const far = page.locator(".review-links path.far");
+  const faint = await far.count();
+  expect(faint).toBeGreaterThan(16);
   await page.locator(".revision-note").nth(5).hover();
-  await expect(lines).toHaveCount(drawn + 1);
   await expect(page.locator(".review-links path.hot")).toHaveCount(1);
-  // The review bar's pointer draws it too.
+  await expect(far).toHaveCount(faint - 1);
+  // The review bar's pointer lights it too.
   await page.mouse.move(10, 10);
-  await expect(lines).toHaveCount(drawn);
+  await expect(far).toHaveCount(faint);
   await page.getByRole("button", { name: "Previous edit" }).click();
   await expect(page.locator(".revision-note-focus")).toContainText("24");
-  await expect(lines).toHaveCount(drawn + 1);
+  await expect(page.locator(".review-links path.hot")).toHaveCount(1);
 });
 
 type Sample = {

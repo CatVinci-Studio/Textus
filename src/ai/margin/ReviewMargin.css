@@ -42,6 +42,12 @@
   stroke-width: 1.7;
 }
 
+/* A card stacked far below its passage: its line is there, fainter. */
+.review-links path.far {
+  opacity: 0.35;
+  stroke-width: 1;
+}
+
 @keyframes review-link-draw {
   from {
     stroke-dashoffset: 1;
