@@ -11,7 +11,7 @@ fn every_label_key_is_one_the_frontend_sends() {
     // Submenus and muda's own items have no menu id to key a label by;
     // their keys are made up on both sides, so a typo on either would
     // leave that one label English with nothing to say so.
-    let source = include_str!("../menu.rs");
+    let source = include_str!("build.rs");
     let frontend = include_str!("../../../src/app/app-menu-model.ts");
     let keys: Vec<&str> = source
         .split('"')
