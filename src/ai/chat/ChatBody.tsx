@@ -219,6 +219,120 @@ export function quickReplyExpands(history: AgentTurn[]): boolean {
   return answered && proposalsFromTurns(turns).length === 0;
 }
 
+/** The in-flight exchange as drawn: its prose paced onto the screen
+ *  (useRevealedText). The conversation keeps the text as received. */
+function useRevealedStream(
+  received: ChatBodyProps["conversation"]["streaming"],
+) {
+  const revealedText = useRevealedText(received?.text ?? "", !!received);
+  return useMemo(
+    () => received && { ...received, text: revealedText },
+    [received, revealedText],
+  );
+}
+
+/** Whether Quick Ask's answer shows whole. Collapsing by hand is a choice
+ *  for the rest of this conversation: later answers in it arrive compact
+ *  too. A new or restored conversation starts over. */
+function useQuickExpanded(
+  variant: ChatBodyProps["variant"],
+  busy: boolean,
+  history: AgentTurn[],
+  conversationId: ChatBodyProps["conversation"]["conversationId"],
+) {
+  const [quickExpanded, setQuickExpanded] = useState(
+    () => variant === "quick" && quickReplyExpands(history),
+  );
+  const collapsedByUser = useRef(false);
+  const shownConversation = useRef(conversationId);
+  const awaitingReply = useRef(false);
+  useEffect(() => {
+    if (variant !== "quick") return;
+    if (shownConversation.current !== conversationId) {
+      shownConversation.current = conversationId;
+      collapsedByUser.current = false;
+      setQuickExpanded(quickReplyExpands(history));
+      return;
+    }
+    if (busy) {
+      awaitingReply.current = true;
+      return;
+    }
+    if (!awaitingReply.current) return;
+    awaitingReply.current = false;
+    if (!collapsedByUser.current) setQuickExpanded(quickReplyExpands(history));
+  }, [variant, busy, history, conversationId]);
+
+  function toggleQuickExpanded() {
+    collapsedByUser.current = quickExpanded;
+    setQuickExpanded(!quickExpanded);
+  }
+  return { quickExpanded, toggleQuickExpanded };
+}
+
+/** Streamed turns become pending previews the moment they land, not when
+ *  the whole exchange resolves - a propose_edit shows up in the document
+ *  while the agent loop is still running. afterSend re-extracts the same
+ *  proposals afterwards; showPreviews adds are idempotent per callId, so
+ *  the second pass is a no-op for anything already shown here. */
+function useStreamedProposals(
+  streaming: { turns: AgentTurn[] } | null | undefined,
+  onProposals: ChatBodyProps["onProposals"],
+) {
+  const streamedTurnCount = useRef(0);
+  useEffect(() => {
+    if (!streaming) {
+      streamedTurnCount.current = 0;
+      return;
+    }
+    const fresh = streaming.turns.slice(streamedTurnCount.current);
+    streamedTurnCount.current = streaming.turns.length;
+    const proposals = proposalsFromTurns(fresh);
+    if (proposals.length > 0) onProposals(proposals);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streaming?.turns]);
+}
+
+/** Messages sent while a reply is coming (MessageQueue), sent in turn by
+ *  `sendNext` once nothing is in flight. A failed reply (no turns) pauses
+ *  them until Continue. */
+function useMessageQueue(
+  busy: boolean,
+  sendNext: (next: QueuedMessage) => Promise<AgentTurn[] | undefined>,
+) {
+  const [queue, setQueue] = useState<QueuedMessage[]>([]);
+  const [queuePaused, setQueuePaused] = useState(false);
+  const nextQueued = useRef(0);
+  const sendingQueued = useRef(false);
+
+  useEffect(() => {
+    if (busy || queuePaused || sendingQueued.current || queue.length === 0)
+      return;
+    const [next] = queue;
+    sendingQueued.current = true;
+    void (async () => {
+      setQueue((now) => now.filter((q) => q.id !== next.id));
+      try {
+        const turns = await sendNext(next);
+        if (!turns) setQueuePaused(true);
+      } finally {
+        sendingQueued.current = false;
+      }
+    })();
+    // sendNext is this render's; the queue and busy say when to look again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busy, queue, queuePaused]);
+
+  return {
+    queue,
+    setQueue,
+    queuePaused,
+    setQueuePaused,
+    nextQueued,
+    sendingQueued,
+  };
+}
+
 export function ChatBody({
   document,
   selectedText,
@@ -275,62 +389,16 @@ export function ChatBody({
     stop,
     retry,
   } = conversation;
-  // The in-flight exchange as drawn: its prose paced onto the screen
-  // (useRevealedText). The conversation keeps the text as received.
-  const revealedText = useRevealedText(received?.text ?? "", !!received);
-  const streaming = useMemo(
-    () => received && { ...received, text: revealedText },
-    [received, revealedText],
-  );
+  const streaming = useRevealedStream(received);
   const listRef = useRef<HTMLDivElement>(null);
-  const [quickExpanded, setQuickExpanded] = useState(
-    () => variant === "quick" && quickReplyExpands(history),
+  const { quickExpanded, toggleQuickExpanded } = useQuickExpanded(
+    variant,
+    busy,
+    history,
+    conversation.conversationId,
   );
-  // Collapsing by hand is a choice for the rest of this conversation: later
-  // answers in it arrive compact too. A new or restored conversation starts
-  // over.
-  const collapsedByUser = useRef(false);
-  const shownConversation = useRef(conversation.conversationId);
-  const awaitingReply = useRef(false);
-  useEffect(() => {
-    if (variant !== "quick") return;
-    if (shownConversation.current !== conversation.conversationId) {
-      shownConversation.current = conversation.conversationId;
-      collapsedByUser.current = false;
-      setQuickExpanded(quickReplyExpands(history));
-      return;
-    }
-    if (busy) {
-      awaitingReply.current = true;
-      return;
-    }
-    if (!awaitingReply.current) return;
-    awaitingReply.current = false;
-    if (!collapsedByUser.current) setQuickExpanded(quickReplyExpands(history));
-  }, [variant, busy, history, conversation.conversationId]);
 
-  function toggleQuickExpanded() {
-    collapsedByUser.current = quickExpanded;
-    setQuickExpanded(!quickExpanded);
-  }
-
-  // Streamed turns become pending previews the moment they land, not when
-  // the whole exchange resolves - a propose_edit shows up in the document
-  // while the agent loop is still running. afterSend re-extracts the same
-  // proposals afterwards; showPreviews adds are idempotent per callId, so
-  // the second pass is a no-op for anything already shown here.
-  const streamedTurnCount = useRef(0);
-  useEffect(() => {
-    if (!streaming) {
-      streamedTurnCount.current = 0;
-      return;
-    }
-    const fresh = streaming.turns.slice(streamedTurnCount.current);
-    streamedTurnCount.current = streaming.turns.length;
-    const proposals = proposalsFromTurns(fresh);
-    if (proposals.length > 0) onProposals(proposals);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [streaming?.turns]);
+  useStreamedProposals(streaming, onProposals);
 
   // Keep the newest streamed content in view while it grows.
   useEffect(() => {
@@ -388,10 +456,19 @@ export function ChatBody({
   // are sent, and sent in turn once the replies before them have finished
   // - against the document as it reads then. A failed reply pauses them
   // until Continue; Stop gives them back to the composer.
-  const [queue, setQueue] = useState<QueuedMessage[]>([]);
-  const [queuePaused, setQueuePaused] = useState(false);
-  const nextQueued = useRef(0);
-  const sendingQueued = useRef(false);
+  const queueState = useMessageQueue(busy, async (next) => {
+    const latest = refreshContext ? await refreshContext() : null;
+    const turns = await send(
+      latest?.document ?? document,
+      next.message,
+      next.images,
+      { ...next.options, focusHeading: latest?.focusHeading ?? null },
+    );
+    afterSend(turns);
+    return turns;
+  });
+  const { queue, setQueue, queuePaused, setQueuePaused } = queueState;
+  const { nextQueued, sendingQueued } = queueState;
   const composer = useRef<ChatComposerHandle>(null);
 
   function handleSend(
@@ -416,33 +493,6 @@ export function ChatBody({
       setQueue((now) => [...now, { id, typed, ...composed, options }]);
     })();
   }
-
-  // The next queued message goes once nothing is in flight.
-  useEffect(() => {
-    if (busy || queuePaused || sendingQueued.current || queue.length === 0)
-      return;
-    const [next] = queue;
-    sendingQueued.current = true;
-    void (async () => {
-      setQueue((now) => now.filter((q) => q.id !== next.id));
-      try {
-        const latest = refreshContext ? await refreshContext() : null;
-        const turns = await send(
-          latest?.document ?? document,
-          next.message,
-          next.images,
-          { ...next.options, focusHeading: latest?.focusHeading ?? null },
-        );
-        afterSend(turns);
-        if (!turns) setQueuePaused(true);
-      } finally {
-        sendingQueued.current = false;
-      }
-    })();
-    // send, refreshContext and afterSend are this render's; the queue and
-    // busy say when to look again.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busy, queue, queuePaused]);
 
   /** Stop drops the queue too: what was waiting goes back in the box. */
   function stopAll() {
