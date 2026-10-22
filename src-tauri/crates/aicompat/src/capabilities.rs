@@ -66,7 +66,7 @@ pub enum ThinkingFormat {
     /// Gemini's OpenAI-compatible layer (Google AI and Vertex AI):
     /// `extra_body.google.thinking_config` - `thinking_level` (Gemini 3),
     /// `thinking_budget` (2.5) and `include_thoughts`, whose thoughts come
-    /// back in the reply's text between `<thought>` tags. It refuses
+    /// back as marked text (providers::custom::gemini_thoughts). It refuses
     /// `reasoning_effort` beside a thinking_config, so takes none.
     Gemini,
     /// Anthropic Messages: `thinking` (adaptive, disabled, or a budget on

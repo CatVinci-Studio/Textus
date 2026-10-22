@@ -169,9 +169,9 @@ impl Thinking {
         }
     }
 
-    /// Whether the reply's text carries the thoughts in tags, to split out
+    /// Whether a whole reply's text opens with its thoughts, to split out
     /// (ThinkingFormat::Gemini, asked to show them).
-    pub fn thought_tags(&self) -> bool {
+    pub fn thoughts_in_text(&self) -> bool {
         self.format == Some(ThinkingFormat::Gemini) && self.show && self.on != Some(false)
     }
 

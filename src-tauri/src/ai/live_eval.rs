@@ -51,6 +51,7 @@ mod conventions;
 mod deepseek;
 mod docs;
 mod doubao;
+mod gemini;
 mod grammar_cases;
 mod grammar_matrix;
 mod harness;

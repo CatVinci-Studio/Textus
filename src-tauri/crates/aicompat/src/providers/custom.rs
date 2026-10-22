@@ -12,10 +12,9 @@ mod messages;
 pub use messages::*;
 mod search;
 pub(crate) use search::*;
+mod gemini_thoughts;
 mod stream;
-mod thought_tags;
 pub(crate) use stream::*;
-use thought_tags::ThoughtTags;
 
 /// The key as the server takes it: Google's APIs (Gemini, Vertex AI) in
 /// `x-goog-api-key` - Vertex AI reads a Bearer token as an OAuth one and
@@ -123,7 +122,6 @@ pub async fn agent_step_streaming(
 
     let mut acc = ChatStreamAccumulator {
         ids: CallIds::from_history(history),
-        thought_tags: thinking.thought_tags().then(ThoughtTags::default),
         ..Default::default()
     };
     crate::http::read_sse(res, "Custom endpoint", |data| acc.apply(data, on_event)).await?;
@@ -179,9 +177,9 @@ pub async fn agent_step(
         .and_then(|c| c.get("message"))
         .cloned()
         .unwrap_or(Value::Null);
-    if thinking.thought_tags() {
+    if thinking.thoughts_in_text() {
         if let Some(text) = message.get("content").and_then(|c| c.as_str()) {
-            let (thought, answer) = thought_tags::split_whole(text);
+            let (thought, answer) = gemini_thoughts::split_whole(text);
             message["content"] = json!(answer);
             if !thought.is_empty() {
                 message["reasoning_content"] = json!(thought);

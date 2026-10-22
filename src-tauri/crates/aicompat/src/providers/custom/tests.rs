@@ -708,20 +708,19 @@ fn gemini_thoughts_in_the_text_stream_as_thinking() {
         ProviderEvent::Thinking(t) => reported.lock().unwrap().push(format!("R:{t}")),
         _ => {}
     };
-    let mut acc = ChatStreamAccumulator {
-        thought_tags: Some(Default::default()),
-        ..Default::default()
-    };
-    for text in ["<thought>Weigh", " both.</tho", "ught>\nThe second."] {
-        acc.apply(
-            &json!({"choices": [{"delta": {"content": text}}]}).to_string(),
-            &sink,
-        );
+    let mut acc = ChatStreamAccumulator::default();
+    // As Vertex AI streams them (gemini-3.8-flash, 2026-10-22).
+    for delta in [
+        json!({"content": "**Weighing**\n\nBoth readings.", "extra_content": {"google": {"thought": true}}}),
+        json!({"content": "The second."}),
+        json!({"content": "", "extra_content": {"google": {"thought_signature": "s"}}}),
+    ] {
+        acc.apply(&json!({"choices": [{"delta": delta}]}).to_string(), &sink);
     }
     let step = acc.into_step_result(&sink);
     assert_eq!(
         reported.into_inner().unwrap(),
-        ["R:Weigh", "R: both.", "T:The second."]
+        ["R:**Weighing**\n\nBoth readings.", "T:The second."]
     );
     assert!(matches!(step, StepResult::Done(text) if text == "The second."));
 }
