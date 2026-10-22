@@ -265,7 +265,8 @@ pub fn import(
     // The global writing instructions. Textus's own agent.md may be just the
     // starter template (HTML comments only); that one gives way.
     let agent_from = levis.config.join("agent/agent.md");
-    let agent_to = config.join("agent/agent.md");
+    let global = crate::ai::workspace::global_dir_in(config);
+    let agent_to = global.join("agent.md");
     if available.contains(&Item::WritingInstructions) {
         let textus_has_some = std::fs::read_to_string(&agent_to).is_ok_and(|t| {
             !crate::ai::workspace::strip_html_comments(&t)
@@ -273,20 +274,20 @@ pub fn import(
                 .is_empty()
         });
         if textus_has_some {
-            report.kept.push("agent/agent.md".into());
+            report.kept.push("agent.md".into());
         } else {
-            let result = std::fs::create_dir_all(config.join("agent"))
+            let result = std::fs::create_dir_all(&global)
                 .and_then(|()| std::fs::copy(&agent_from, &agent_to).map(|_| ()));
             match result {
                 Ok(()) => report.imported.push(Item::WritingInstructions),
-                Err(e) => report.failed.push(format!("agent/agent.md: {e}")),
+                Err(e) => report.failed.push(format!("agent.md: {e}")),
             }
         }
     }
     if copy_tree(
         &levis.config.join("agent/skills"),
-        &config.join("agent/skills"),
-        "agent/skills",
+        &global.join("skills"),
+        "skills",
         &mut report,
     ) {
         report.imported.push(Item::Skills);

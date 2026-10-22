@@ -187,10 +187,10 @@ fn imports_a_levis_installation_by_copying_and_never_touches_it() {
     let read = |p: &Path| std::fs::read_to_string(p).unwrap();
     assert_eq!(read(&config.join("themes/ink/light.css")), "body{}");
     assert_eq!(
-        read(&config.join("agent/agent.md")),
+        read(&config.join("textus/agent.md")),
         "Write in British English."
     );
-    assert!(config.join("agent/skills/house.md").is_file());
+    assert!(config.join("textus/skills/house.md").is_file());
     assert_eq!(
         read_json(&config.join("recent_files.json")).unwrap(),
         json!(["/docs/both.md", "/docs/textus.md", "/docs/levis.md"])

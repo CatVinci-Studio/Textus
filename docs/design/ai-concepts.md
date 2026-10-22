@@ -243,10 +243,12 @@ description.**
 writing instructions, the global skills and the personal memories (see AI
 remembered).**
 
-- **On disk:** `agent/` in the app config directory -
-  `~/.config/com.catvinci.textus/agent/` (Linux),
-  `~/Library/Application Support/com.catvinci.textus/agent/` (macOS),
-  `%APPDATA%\com.catvinci.textus\agent\` (Windows).
+- **On disk:** `textus/` in the app config directory, laid out as a
+  project's `.textus/` is (agent.md, skills/, memory/) -
+  `~/.config/com.catvinci.textus/textus/` (Linux),
+  `~/Library/Application Support/com.catvinci.textus/textus/` (macOS),
+  `%APPDATA%\com.catvinci.textus\textus\` (Windows). Before 1.2.0 it was
+  `agent/`, which is renamed to `textus/` the first time it is looked for.
 - **Create / edit:** **Settings > Textus AI > Global config folder > Show**
   (desktop) creates it with a starter `agent.md` and shows it in
   the file manager; **Edit agent.md** and **Import Skill…** write into it.

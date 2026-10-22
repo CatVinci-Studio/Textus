@@ -445,3 +445,34 @@ fn the_skill_list_keeps_turned_off_built_ins_and_drops_hidden_ones() {
     let json = serde_json::to_value(&list[0]).unwrap();
     assert!(json.get("overridesBuiltin").is_some() && json.get("invocation").is_some());
 }
+
+#[test]
+fn the_global_folder_from_before_1_2_moves_once_and_is_never_merged() {
+    let config = std::env::temp_dir().join(format!(
+        "textus-global-dir-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    std::fs::create_dir_all(config.join("agent/memory")).unwrap();
+    std::fs::write(config.join("agent/agent.md"), "Mine.").unwrap();
+    // The old folder is renamed, with everything in it.
+    let dir = global_dir_in(&config);
+    assert_eq!(dir, config.join("textus"));
+    assert_eq!(
+        std::fs::read_to_string(dir.join("agent.md")).unwrap(),
+        "Mine."
+    );
+    assert!(dir.join("memory").is_dir() && !config.join("agent").exists());
+    // With both there, the new one is used and the old one left alone.
+    std::fs::create_dir_all(config.join("agent")).unwrap();
+    std::fs::write(config.join("agent/agent.md"), "Old.").unwrap();
+    assert_eq!(global_dir_in(&config), config.join("textus"));
+    assert_eq!(
+        std::fs::read_to_string(config.join("agent/agent.md")).unwrap(),
+        "Old."
+    );
+    std::fs::remove_dir_all(&config).ok();
+}

@@ -8,7 +8,27 @@ pub(crate) fn global_agent_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
         .app_config_dir()
         .map_err(|e| e.to_string())
-        .map(|p| p.join("agent"))
+        .map(|config| global_dir_in(&config))
+}
+
+/// The global layer's folder in the app's config folder: `textus/`, laid out
+/// as a project's `.textus/` is (agent.md, skills/, memory/).
+pub(crate) const GLOBAL_DIR: &str = "textus";
+
+/// What it was called before 1.2.0.
+const OLD_GLOBAL_DIR: &str = "agent";
+
+/// The global layer's folder in `config`. One from before 1.2.0 (`agent/`)
+/// moves here the first time it is looked for - renamed, never copied or
+/// deleted; with both there, the new one is used and the old one left as
+/// it is.
+pub(crate) fn global_dir_in(config: &Path) -> PathBuf {
+    let dir = config.join(GLOBAL_DIR);
+    let old = config.join(OLD_GLOBAL_DIR);
+    if !dir.exists() && old.is_dir() {
+        let _ = std::fs::rename(&old, &dir);
+    }
+    dir
 }
 
 /// Resolves the workspace root - the project folder: the folder `.textus/`
