@@ -27,6 +27,7 @@ import {
   webviewState,
   type WebviewRecord,
 } from "./webviews";
+import { canRun, canSwitch, nextStatus, type PluginStatus } from "./lifecycle";
 
 /**
  * Every plugin installed - from the catalog (catalog.ts) or a file - and
@@ -40,17 +41,7 @@ import {
  * asks (`onStartupFinished`).
  */
 
-export type PluginStatus =
-  /** Switched off. */
-  | "off"
-  /** On, and running or ready to. */
-  | "on"
-  /** Its manifest couldn't be read; `problem` says why. */
-  | "broken"
-  /** Made for another version of Textus. */
-  | "incompatible"
-  /** Turned off because it failed; `problem` says why. */
-  | "failed";
+export type { PluginStatus } from "./lifecycle";
 
 export interface PluginRecord {
   id: string;
@@ -171,7 +162,11 @@ function makeRecord(
       dir,
       granted,
       official: !!entry?.official,
-      status: !compatible ? "incompatible" : entry?.enabled ? "on" : "off",
+      status: nextStatus(null, {
+        type: "read",
+        manifest: compatible ? "ok" : "incompatible",
+        enabled: !!entry?.enabled,
+      }),
       problem: compatible ? undefined : manifest.engine,
     };
   } catch (err) {
@@ -182,7 +177,11 @@ function makeRecord(
       dir,
       granted,
       official: !!entry?.official,
-      status: "broken",
+      status: nextStatus(null, {
+        type: "read",
+        manifest: "broken",
+        enabled: false,
+      }),
       problem: String((err as Error)?.message ?? err),
     };
   }
@@ -211,8 +210,8 @@ export function loadPlugins(reload = false): Promise<void> {
     records.sort((a, b) => pluginName(a).localeCompare(pluginName(b)));
     for (const id of [...contributions.keys()]) withdraw(id);
     publish({ loaded: true, allOn: state.allOn, records });
-    if (state.allOn)
-      for (const record of records) if (record.status === "on") apply(record);
+    for (const record of records)
+      if (canRun(record.status, state.allOn)) apply(record);
   })();
   return loading;
 }
@@ -292,7 +291,10 @@ async function pluginFailed(id: string, reason: string) {
   if (!record || record.status !== "on") return;
   stopHost(id);
   withdraw(id);
-  update(id, { status: "failed", problem: reason });
+  update(id, {
+    status: nextStatus(record.status, { type: "fail" }),
+    problem: reason,
+  });
   await pluginsIpc.set(id, false, record.granted).catch(() => {});
   const t = windowInfo.strings();
   void showMessage(
@@ -313,7 +315,7 @@ export async function runPluginCommand(
   args: unknown[],
 ): Promise<unknown> {
   const record = pluginRecord(id);
-  if (!record || record.status !== "on" || !snapshot.allOn)
+  if (!record || !canRun(record.status, snapshot.allOn))
     throw new Error(`${id} is turned off.`);
   return host(record).request("$executeCommand", { command, args });
 }
@@ -530,25 +532,28 @@ async function askPermissions(
 export async function setPluginEnabled(id: string, on: boolean): Promise<void> {
   const record = pluginRecord(id);
   if (!record || !record.manifest) return;
+  if (!canSwitch(record.status)) return;
   if (!on) {
     stopHost(id);
     withdraw(id);
     await pluginsIpc.set(id, false, record.granted);
-    update(id, { status: "off", problem: undefined });
+    update(id, {
+      status: nextStatus(record.status, { type: "disable" }),
+      problem: undefined,
+    });
     return;
   }
-  if (record.status === "incompatible") return;
   const granted = await askPermissions(record);
   if (!granted) return;
   await pluginsIpc.set(id, true, granted);
   const next = {
     ...record,
     granted,
-    status: "on" as const,
+    status: nextStatus(record.status, { type: "enable" }),
     problem: undefined,
   };
   update(id, next);
-  if (snapshot.allOn) apply(next);
+  if (canRun(next.status, snapshot.allOn)) apply(next);
 }
 
 /** Takes back one permission; the plugin restarts without it. */
@@ -565,7 +570,7 @@ export async function revokePermission(
   await pluginsIpc.set(id, false, granted);
   update(id, {
     granted,
-    status: record.status === "on" ? "off" : record.status,
+    status: nextStatus(record.status, { type: "revoke" }),
   });
 }
 
@@ -575,9 +580,8 @@ export async function setAllPlugins(on: boolean): Promise<void> {
   if (!on) for (const id of [...hosts.keys()]) stopHost(id);
   if (!on) for (const id of [...contributions.keys()]) withdraw(id);
   publish({ allOn: on });
-  if (on)
-    for (const record of snapshot.records)
-      if (record.status === "on") apply(record);
+  for (const record of snapshot.records)
+    if (canRun(record.status, on)) apply(record);
 }
 
 /** A developer's folder changed: its code and manifest read again. */

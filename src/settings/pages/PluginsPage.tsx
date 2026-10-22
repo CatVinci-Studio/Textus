@@ -41,6 +41,7 @@ import {
   turnOnRequirement,
 } from "../../plugins/requirements";
 import { permissionLabel } from "../../plugins/permissions";
+import { canSwitch } from "../../plugins/lifecycle";
 import { PluginSettingsWebview } from "../../plugins/PluginWebview";
 import type {
   PluginManifest,
@@ -298,10 +299,7 @@ function PluginCard({
   const name = pluginName(record);
   const manifest = record.manifest;
   const status = statusText(record, allOn, t);
-  const canSwitch =
-    !!manifest &&
-    record.status !== "broken" &&
-    record.status !== "incompatible";
+  const switchable = !!manifest && canSwitch(record.status);
   return (
     <div className="settings-row plugin-card" data-plugin={record.id}>
       <button
@@ -334,7 +332,7 @@ function PluginCard({
       <input
         type="checkbox"
         aria-label={t.pluginEnableLabel.replace("{name}", name)}
-        disabled={!canSwitch}
+        disabled={!switchable}
         checked={record.status === "on"}
         onChange={(e) => onEnable(e.target.checked)}
       />
@@ -411,10 +409,7 @@ function PluginPage({
     if (on) void loadPluginSettings(record.id);
   }, [on, record.id]);
   const status = statusText(record, allOn, t);
-  const canSwitch =
-    !!manifest &&
-    record.status !== "broken" &&
-    record.status !== "incompatible";
+  const switchable = !!manifest && canSwitch(record.status);
   return (
     <div className="plugin-page" data-plugin-page={record.id}>
       <button type="button" className="plugin-back" onClick={onBack}>
@@ -442,7 +437,7 @@ function PluginPage({
           <input
             type="checkbox"
             aria-label={t.pluginEnableLabel.replace("{name}", name)}
-            disabled={!canSwitch}
+            disabled={!switchable}
             checked={on}
             onChange={(e) => onEnable(e.target.checked)}
           />

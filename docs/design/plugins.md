@@ -1,9 +1,9 @@
 # Plugins and the market (design, 1.3)
 
-Status: sections 1-6 are built in 1.3.0-beta.1, on the registries that
+Status: sections 1-7 are built in 1.3.0-beta.1, on the registries that
 shipped in 1.2 ([docs/dev/plugin-api.md](../dev/plugin-api.md)); a
 plugin's author reads [docs/dev/writing-plugins.md](../dev/writing-plugins.md).
-The market (section 7), `aiTools`, `slashCommands`, `codeBlockRenderers`,
+The market (section 8), `aiTools`, `slashCommands`, `codeBlockRenderers`,
 importers, exporters, templates and plugin themes come in later betas.
 The model is VS Code's - a manifest that declares what a
 plugin adds, code that loads only when it is needed, an extension host apart
@@ -47,7 +47,7 @@ A folder (or a `.textusplugin` zip of one) with a manifest,
   "license": "MIT",
   "repository": "https://github.com/catvinci-studio/textus-pdf-viewer",
   "engines": { "textus": "^1.3.0" },
-  "main": "dist/host.js", // runs in the plugin host (section 3)
+  "main": "dist/host.js", // runs in the plugin host (section 4)
   "activationEvents": [
     "onCustomEditor:catvinci.pdf",
     "onCommand:catvinci.pdf.open",
@@ -89,7 +89,43 @@ let a plugin break the editor.
 Not offered, on purpose: changing the editor's schema or keymaps, reading
 other plugins' data, running native code, drawing over the document.
 
-## 3. Sandbox
+## 3. Lifecycle
+
+A plugin has a status - what Settings shows, decided in one table
+(src/plugins/lifecycle.ts) - and, while it may run, a host:
+
+```mermaid
+flowchart LR
+    F([its files read]) -- "manifest can't be read" --> B[broken]
+    F -- "made for another Textus" --> C[incompatible]
+    F -- "switch saved off" --> OFF[off]
+    F -- "switch saved on" --> ON[on]
+    OFF -- "switched on,<br/>permissions granted" --> ON
+    ON -- "switched off,<br/>or a permission revoked" --> OFF
+    ON -- "the watchdog stops it" --> FAIL[failed]
+    FAIL -- "Turn back on" --> ON
+    FAIL -- "switched off" --> OFF
+```
+
+- **Its files read** - on start, after an install, a reload or an uninstall
+  (src/plugins/manager.ts' `loadPlugins`): its status starts again from
+  its manifest and its switch, saved in Rust (`plugins/state.json`). A
+  failure isn't saved as such: the switch is saved off, and the next start
+  reads it as off.
+- **Switched on** asks for whatever permission it wants and hasn't been
+  granted (an update that asks for more comes in switched off); refused, it
+  stays as it was.
+- **Broken and incompatible** plugins can't be switched (`canSwitch`):
+  only reading them again - an update, a reload - moves them.
+- **It runs** (`canRun`) while it is on and every plugin is switched on.
+  Its host isn't started until its first activation event - a command, a
+  view, a custom editor, its settings page, `onStartupFinished` - so fifty
+  installed start like none; it is stopped when the plugin leaves `on`,
+  when every plugin is switched off, and before a reload or an uninstall.
+  What it adds to the app (commands, menus, tabs, views, editors) is
+  registered while it may run and withdrawn with its host.
+
+## 4. Sandbox
 
 Three kinds of place a plugin's code runs, none of which can reach the app:
 
@@ -101,7 +137,7 @@ Three kinds of place a plugin's code runs, none of which can reach the app:
    the API's runtime and the plugin's `main`, read from its folder by the
    broker - under a Content Security Policy of its own, `default-src 'none';
 script-src 'unsafe-inline'`: no network, no other script. Everything goes
-   through the API (section 4). (A Worker made from a blob would share the
+   through the API (section 5). (A Worker made from a blob would share the
    app's origin; the sandboxed frame doesn't.)
 2. **Webviews** - what a plugin draws (a sidebar panel, a view, a custom
    editor, a settings page). The same kind of sandboxed frame, its HTML the
@@ -119,7 +155,7 @@ script-src 'unsafe-inline'`: no network, no other script. Everything goes
    SVG or HTML that Textus sanitizes (the same sanitizer as raw HTML in
    documents) before it goes into the page.
 
-Watchdog, in the app (the broker, section 4):
+Watchdog, in the app (the broker, section 5):
 
 - every host answers a ping within 2 s; one that doesn't, or throws on
   activation, or errs more than 10 times a minute, is stopped, disabled, and
@@ -128,7 +164,7 @@ Watchdog, in the app (the broker, section 4):
 - a plugin's storage has a quota (50 MB), and its webviews are destroyed
   when their slot closes.
 
-## 4. Communication
+## 5. Communication
 
 JSON-RPC 2.0 over `MessageChannel`, one channel per host and per webview,
 the app at the centre as the **broker**:
@@ -141,7 +177,7 @@ webview  ⇄  broker (app window)  ⇄  plugin host (worker)
 
 - The broker owns every channel. It checks each call against the plugin's
   granted permissions before doing anything, and hands privileged work to
-  Rust through plugin-scoped commands (section 5).
+  Rust through plugin-scoped commands (section 6).
 - Messages are structured-clone data only, typed by the
   `@textus/plugin-api` package: a `.d.ts` of the whole API and a small
   runtime that turns `textus.workspace.readFile(...)` into an RPC call.
@@ -169,7 +205,7 @@ The API, by namespace (first version):
 | `ai`        | ask Textus AI with the user's model                          | `ai`               |
 | `editor`    | registerCodeBlockRenderer, registerSlashCommand              | -                  |
 
-## 5. Permissions in the backend
+## 6. Permissions in the backend
 
 - **Granting.** On install the manifest's `permissions` are shown in plain
   words; the user grants all or cancels, and can revoke one later in the
@@ -198,16 +234,17 @@ The API, by namespace (first version):
   host and webview at once; a launch with `--no-plugins` (or holding Shift
   on start, desktop) starts without them, for when one goes wrong.
 
-## 6. In Settings
+## 7. In Settings
 
 A **Plugins** page in Settings (a built-in page in settings-pages.tsx):
 
 - At the top: **Plugins** on/off (the switch above), and **Browse the
-  market…** (opens the market, section 7).
+  market…** (opens the market, section 8).
 - **Installed**: one row per plugin - icon, name, publisher, version, a
-  switch, and its state (off, needs permission, turned off because it
-  failed: "PDF Viewer stopped answering - Turn back on"). Clicking a row
-  opens its page.
+  switch, and why it isn't running when it isn't (its manifest can't be
+  read, it is made for another Textus, or it was turned off because it
+  failed: "PDF Viewer stopped answering - Turn back on"; section 3).
+  Clicking a row opens its page.
 - **A plugin's page** (a subpage, as More themes is):
   - what it adds (commands, views, file types), its permissions with
     Revoke beside each, the folders it may read;
@@ -225,7 +262,7 @@ A **Plugins** page in Settings (a built-in page in settings-pages.tsx):
 
 Search in Settings finds plugins' setting rows too.
 
-## 7. Extensions: where each kind comes from
+## 8. Extensions: where each kind comes from
 
 Settings › Extensions has a tab for each kind of thing added to Textus,
 each one a card with its switch (src/settings/pages/ExtensionsPage.tsx).
@@ -247,7 +284,7 @@ the user's own choice of program or service: nothing is listed that the
 user didn't add, and a server's tools reach the model only while its
 switch is on (src-tauri/src/mcp/).
 
-## 8. Order of work (betas on `main`)
+## 9. Order of work (betas on `main`)
 
 1. **beta.1** - manifest, loader, plugin host and webviews, the broker and
    JSON-RPC, permissions in Rust, Settings › Extensions › Plugins, developer mode; the
