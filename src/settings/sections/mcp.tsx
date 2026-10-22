@@ -309,6 +309,33 @@ function PresetCard({
 
 /** Adding or changing a server: by a command or a URL, tried before it is
  *  saved if the user wants. */
+/** Try: start a server as the form has it and list its tools, or say why
+ *  it didn't start. */
+function useMcpTry(t: Strings) {
+  const [tried, setTried] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [trying, setTrying] = useState(false);
+  const tryServer = async (server: McpServer) => {
+    setTrying(true);
+    setTried(null);
+    setError(null);
+    try {
+      const result = await mcp.try(server);
+      setTried(
+        t.mcpTried
+          .replace("{server}", result.server)
+          .replace("{count}", String(result.tools.length))
+          .replace("{names}", result.tools.map((x) => x.name).join(", ")),
+      );
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setTrying(false);
+    }
+  };
+  return { tried, error, setError, trying, tryServer };
+}
+
 function McpForm({
   t,
   server,
@@ -333,9 +360,7 @@ function McpForm({
   const [env, setEnv] = useState(formatPairs(server.env));
   const [url, setUrl] = useState(server.url);
   const [headers, setHeaders] = useState(formatPairs(server.headers, ": "));
-  const [tried, setTried] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [trying, setTrying] = useState(false);
+  const { tried, error, setError, trying, tryServer } = useMcpTry(t);
 
   const built = (): McpServer => {
     const [command = "", ...args] =
@@ -351,25 +376,6 @@ function McpForm({
     };
   };
   const ready = kind === "command" ? !!commandLine.trim() : !!url.trim();
-
-  const tryIt = async () => {
-    setTrying(true);
-    setTried(null);
-    setError(null);
-    try {
-      const result = await mcp.try(built());
-      setTried(
-        t.mcpTried
-          .replace("{server}", result.server)
-          .replace("{count}", String(result.tools.length))
-          .replace("{names}", result.tools.map((x) => x.name).join(", ")),
-      );
-    } catch (err) {
-      setError(errorText(err));
-    } finally {
-      setTrying(false);
-    }
-  };
 
   const chooseFolder = async () => {
     try {
@@ -495,7 +501,7 @@ function McpForm({
             type="button"
             className="text-button settings-inline-button"
             disabled={!ready || trying}
-            onClick={() => void tryIt()}
+            onClick={() => void tryServer(built())}
           >
             {trying ? t.mcpFormTrying : t.mcpFormTry}
           </button>

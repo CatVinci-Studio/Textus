@@ -1,11 +1,9 @@
-import { openExtensionsTab } from "../settings/pages/extensions-tab";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
 import { installClipboardCapture } from "../clipboard/history";
 import { isIOSApp } from "../platform/capabilities";
-import { lazyModule } from "../lazy/lazy-module";
-import { lazyComponent } from "../lazy/lazy-component";
+import { SettingsLayer, useSettingsOpening } from "./SettingsLayer";
 import { DocumentList } from "../mobile/DocumentList";
 import { KeyboardToolbar } from "../mobile/KeyboardToolbar";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
@@ -72,24 +70,15 @@ import {
   UpdateToast,
   WordImportNotice,
   ZenHint,
+  useWordImported,
 } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
 import { usePluginWindow } from "../plugins/usePluginWindow";
-import { usePluginMenuSync } from "../plugins/usePluginMenu";
 import { QuickPickHost } from "../plugins/quick-pick";
 import "../plugins/plugins.css";
 import { tabIsUntouchedDraft } from "../document/doc-tabs";
 import { useLatest } from "../utils/hooks/useLatest";
 import "./App.css";
-
-// Settings loads on first open - warm, so by then it usually has, once the
-// window was idle (lazy-module.ts).
-const SettingsPanel = lazyComponent(
-  lazyModule("settings", () => import("../settings/SettingsPanel"), {
-    warm: true,
-  }),
-  (m) => m.SettingsPanel,
-);
 
 /**
  * One window: its tabs, the panels around them, and the prompts and
@@ -131,11 +120,7 @@ function App() {
     panelMode,
     setPanelMode,
   } = useSidePanels(textusAi.on);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  // The page Settings opens at: General, or Plugins from that menu.
-  const [settingsStart, setSettingsStart] = useState<"general" | "extensions">(
-    "general",
-  );
+  const settingsOpening = useSettingsOpening();
   const appUpdate = useAppUpdate(settings.updateChannel);
   useZoom(settings.zoom, (zoom) => setSettings({ zoom }));
   const tutorial = useTutorial(textusAi.on);
@@ -150,9 +135,7 @@ function App() {
     settings.enableDraftRecovery,
   );
   const [draftsRestoredCount, setDraftsRestoredCount] = useState(0);
-  // The Word document last opened as a new one, for its notice.
-  const [wordImported, setWordImported] = useState<string | null>(null);
-  const dismissWordImported = useCallback(() => setWordImported(null), []);
+  const wordImported = useWordImported();
 
   const {
     activeTab,
@@ -210,7 +193,7 @@ function App() {
     dialogFilters,
     restoreCarets: settings.restoreSessionOnStartup,
     t,
-    onWordDocumentOpened: setWordImported,
+    onWordDocumentOpened: wordImported.opened,
   });
   useLastCarets(tabs, activeTabId, settings.restoreSessionOnStartup);
   usePluginWindow({
@@ -368,7 +351,6 @@ function App() {
   };
   useNativeMenuChecks(menuChecks);
   useNativeMenuAccelerators(settings.shortcuts);
-  usePluginMenuSync(settings.language);
 
   // Menu events from Rust (menu.rs's dispatch) - every File/View/Format/Help
   // action the frontend owns arrives here as a window event; see
@@ -379,15 +361,8 @@ function App() {
     t,
     pdfPageNumbers: settings.pdfPageNumbers,
     diagramEngine: settings.diagramEngine,
-    onOpenSettings: () => {
-      setSettingsStart("general");
-      setSettingsOpen(true);
-    },
-    onOpenPluginSettings: () => {
-      openExtensionsTab("plugins");
-      setSettingsStart("extensions");
-      setSettingsOpen(true);
-    },
+    onOpenSettings: settingsOpening.openSettings,
+    onOpenPluginSettings: settingsOpening.openPluginSettings,
     onToggleTypewriter: () =>
       setSettings({ typewriterMode: !settings.typewriterMode }),
     onToggleSidebar: toggleSidebar,
@@ -546,24 +521,16 @@ function App() {
           />
         )}
 
-        {/* The longest exit is the phone's: the page going back down. */}
-        <Presence show={settingsOpen} exitMs={320}>
-          {settingsOpen && (
-            <Suspense fallback={null}>
-              <SettingsPanel
-                onClose={() => setSettingsOpen(false)}
-                initialCategory={settingsStart}
-                onOpenFile={(path) => void openFile(path)}
-                onFilesDeleted={skillFilesDeleted}
-                viewChecks={{
-                  sourceMode: !!activeTab.sourceMode && !activeTab.splitView,
-                  zen: zenMode,
-                }}
-                fixedShortcuts={fixedShortcutGroups(t, platformName())}
-              />
-            </Suspense>
-          )}
-        </Presence>
+        <SettingsLayer
+          opening={settingsOpening}
+          onOpenFile={(path) => void openFile(path)}
+          onFilesDeleted={skillFilesDeleted}
+          viewChecks={{
+            sourceMode: !!activeTab.sourceMode && !activeTab.splitView,
+            zen: zenMode,
+          }}
+          fixedShortcuts={fixedShortcutGroups(t, platformName())}
+        />
 
         <ClosePrompt
           open={!!pendingClose}
@@ -603,8 +570,8 @@ function App() {
         />
 
         <WordImportNotice
-          path={wordImported}
-          onDismiss={dismissWordImported}
+          path={wordImported.path}
+          onDismiss={wordImported.dismiss}
           t={t}
         />
 

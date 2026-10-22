@@ -6,10 +6,8 @@ import {
   type KeyCapture,
 } from "./editor-input";
 import { outlineOf, removeStatusItem, setStatusItem } from "./status-items";
-import { fs, links, plugins as pluginsIpc } from "../platform/ipc";
+import { links, plugins as pluginsIpc } from "../platform/ipc";
 import { showMessage, showPrompt } from "../ui/app-dialog";
-import { dirname } from "../utils/path";
-import { FILE_WRITTEN_EVENT } from "../utils/events";
 import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../ai/types";
 import type { Strings } from "../i18n/strings";
 import {
@@ -19,16 +17,11 @@ import {
   type PluginEventMap,
 } from "./app-bridge";
 import { connectFrame, hostDocument, sandboxedFrame } from "./frames";
-import {
-  fromBase64,
-  readPluginFile,
-  toBase64,
-  withResources,
-  type PluginOrigin,
-} from "./files";
+import { readPluginFile, withResources, type PluginOrigin } from "./files";
 import { localize, type Permission, type PluginManifest } from "./manifest";
 import { showQuickPick, type QuickPickItem } from "./quick-pick";
 import { webPageUrl } from "./WebPagePane";
+import { workspaceHandlers, type PluginScope } from "./broker-workspace";
 import type { Endpoint } from "./rpc";
 import { lazyModule, type LazyModule } from "../lazy/lazy-module";
 import {
@@ -125,13 +118,6 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
 };
 
 let proposalCounter = 0;
-
-/** A plugin's write, and the window told once it is on disk: a tab of
- *  that file picks it up (useExternalChangeReload). */
-async function written(path: string, write: Promise<void>): Promise<void> {
-  await write;
-  window.dispatchEvent(new CustomEvent(FILE_WRITTEN_EVENT, { detail: path }));
-}
 
 export class PluginHost {
   private frame: HTMLIFrameElement | null = null;
@@ -298,6 +284,18 @@ export class PluginHost {
   private loadStorage(): Promise<Record<string, unknown>> {
     this.storage ??= pluginsIpc.storageGet(this.id).catch(() => ({}));
     return this.storage;
+  }
+
+  /** What the workspace, network, storage and clipboard calls
+   *  (broker-workspace.ts) need of this plugin. */
+  private scope(): PluginScope {
+    return {
+      id: this.id,
+      need: (permission) => this.need(permission),
+      root: () => this.root(),
+      ownWebview: (id) => this.ownWebview(id),
+      loadStorage: () => this.loadStorage(),
+    };
   }
 
   /** The methods the plugin's code calls (runtime/host.js's `textus`). */
@@ -540,126 +538,10 @@ export class PluginHost {
         };
         return doc.propose(`plugin-${this.id}-${++proposalCounter}`, proposal);
       },
-      "document.readResource": ({ webview: id }: { webview: string }) => {
-        const record = this.ownWebview(id);
-        if (!record.resource) throw new Error("This view shows no file.");
-        return pluginsIpc.readResource(this.id, record.resource);
-      },
-      "document.writeResource": ({
-        webview: id,
-        text,
-      }: {
-        webview: string;
-        text: string;
-      }) => {
-        this.need("workspace.write");
-        const record = this.ownWebview(id);
-        if (!record.resource) throw new Error("This view shows no file.");
-        return written(
-          record.resource,
-          pluginsIpc.fsWrite(
-            this.id,
-            dirname(record.resource),
-            record.resource,
-            text,
-          ),
-        );
-      },
       "plugin.readFile": ({ path }: { path: string }) => this.readOwnFile(path),
-      "workspace.rootPath": () => {
-        this.need("workspace.read");
-        return getWindowAccess()?.rootPath() ?? null;
-      },
-      "workspace.list": ({ path }: { path: string }) => {
-        const root = this.root();
-        return pluginsIpc.fsList(this.id, root, path || root);
-      },
-      "workspace.findDocuments": async () => {
-        const index = await fs.indexFolder(this.root());
-        return index.files;
-      },
-      "workspace.readFile": ({ path }: { path: string }) =>
-        pluginsIpc.fsRead(this.id, this.root(), path),
-      "workspace.writeText": ({
-        path,
-        text,
-      }: {
-        path: string;
-        text: string;
-      }) => {
-        this.need("workspace.write");
-        return written(
-          path,
-          pluginsIpc.fsWrite(this.id, this.root(), path, text),
-        );
-      },
-      "workspace.rename": ({ from, to }: { from: string; to: string }) => {
-        this.need("workspace.write");
-        return written(
-          to,
-          pluginsIpc.fsRename(this.id, this.root(), from, to),
-        ).then(() => written(from, Promise.resolve()));
-      },
-      "workspace.trash": ({ path }: { path: string }) => {
-        this.need("workspace.write");
-        return written(path, pluginsIpc.fsTrash(this.id, this.root(), path));
-      },
-      "workspace.createFolder": ({ path }: { path: string }) => {
-        this.need("workspace.write");
-        return pluginsIpc.fsMkdir(this.id, this.root(), path);
-      },
-      "workspace.writeFile": ({
-        path,
-        data,
-      }: {
-        path: string;
-        data: Uint8Array;
-      }) => {
-        this.need("workspace.write");
-        return written(
-          path,
-          pluginsIpc.fsWrite(this.id, this.root(), path, toBase64(data), true),
-        );
-      },
-      "net.fetch": async (r: {
-        url: string;
-        method?: string;
-        headers?: Record<string, string>;
-        body?: Uint8Array;
-      }) => {
-        const response = await pluginsIpc.http(this.id, {
-          url: r.url,
-          method: r.method,
-          headers: r.headers,
-          body: r.body ? toBase64(r.body) : undefined,
-          bodyBase64: !!r.body,
-        });
-        return { ...response, body: fromBase64(response.body) };
-      },
-      "storage.get": async ({ key }: { key: string }) =>
-        (await this.loadStorage())[key] ?? null,
-      "storage.set": async ({
-        key,
-        value,
-      }: {
-        key: string;
-        value: unknown;
-      }) => {
-        await pluginsIpc.storageSet(this.id, key, value);
-        const store = await this.loadStorage();
-        if (value === null) delete store[key];
-        else store[key] = value;
-      },
       "settings.get": ({ key }: { key: string }) =>
         this.deps.setting(this.id, key),
-      "clipboard.readText": () => {
-        this.need("clipboard");
-        return navigator.clipboard.readText();
-      },
-      "clipboard.writeText": ({ text }: { text: string }) => {
-        this.need("clipboard");
-        return navigator.clipboard.writeText(text);
-      },
+      ...workspaceHandlers(this.scope()),
     };
   }
 }

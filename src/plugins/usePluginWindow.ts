@@ -18,11 +18,13 @@ import {
   type PluginsSnapshot,
 } from "./manager";
 import { watchTheme, windowIsDark } from "./theme-vars";
+import { usePluginMenuSync } from "./usePluginMenu";
 
 /**
  * A window's side of the plugins: what it tells the manager (its strings,
  * language, theme), what plugins may ask of it (open a file, a tab of
- * theirs, the folder in the sidebar), and the events they may listen to.
+ * theirs, the folder in the sidebar), the events they may listen to, and
+ * the native menus they add to.
  * Returns the plugins' current state, so the window draws again when one
  * is turned on or off - its sidebar tabs and menu items come and go.
  */
@@ -126,6 +128,7 @@ export function usePluginWindow({
       emitPluginEvent("theme", dark ? "dark" : "light");
     });
   }, []);
+  usePluginMenuSync(language);
 
   return useSyncExternalStore(subscribePlugins, pluginsSnapshot);
 }

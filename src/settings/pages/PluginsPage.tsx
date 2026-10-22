@@ -1,10 +1,10 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
-import { SettingRow, ToggleRow, VERBATIM_INPUT } from "../sections/controls";
-import { Select } from "../../ui/Select";
+import { Byline, PluginPage, statusText, type Attempt } from "./PluginPage";
+import { SettingRow, ToggleRow } from "../sections/controls";
 import { showConfirm, showMessage } from "../../ui/app-dialog";
-import { links, plugins as pluginsIpc } from "../../platform/ipc";
+import { plugins as pluginsIpc } from "../../platform/ipc";
 import { isDesktopApp } from "../../platform/capabilities";
 import { useSettings } from "../SettingsContext";
 import { errorText } from "../../utils/error-text";
@@ -12,18 +12,12 @@ import type { Strings } from "../../i18n/strings";
 import {
   installPlugin,
   loadDevPlugin,
-  loadPluginSettings,
   pluginName,
-  pluginSetting,
   pluginText,
   pluginsSnapshot,
-  reloadPlugin,
-  revokePermission,
   setAllPlugins,
   setPluginEnabled,
-  setPluginSetting,
   subscribePlugins,
-  uninstallPlugin,
   type PluginRecord,
 } from "../../plugins/manager";
 import {
@@ -40,15 +34,7 @@ import {
   requirementMet,
   turnOnRequirement,
 } from "../../plugins/requirements";
-import { permissionLabel } from "../../plugins/permissions";
 import { canSwitch } from "../../plugins/lifecycle";
-import { PluginSettingsWebview } from "../../plugins/PluginWebview";
-import type {
-  PluginManifest,
-  SettingContribution,
-} from "../../plugins/manifest";
-
-type Attempt = (work: () => Promise<unknown>) => Promise<void>;
 
 /**
  * Settings › Extensions › Plugins (docs/design/plugins.md §6). Nothing comes installed:
@@ -232,54 +218,6 @@ async function askForRequirements(
   }
 }
 
-function statusText(
-  record: PluginRecord,
-  allOn: boolean,
-  t: Strings,
-): string | null {
-  switch (record.status) {
-    case "broken":
-      return t.pluginStatusBroken.replace("{reason}", record.problem ?? "");
-    case "incompatible":
-      return t.pluginStatusIncompatible.replace(
-        "{range}",
-        record.problem ?? "",
-      );
-    case "failed":
-      return t.pluginStatusFailed.replace("{reason}", record.problem ?? "");
-    case "on":
-      return allOn ? null : t.pluginStatusAllOff;
-    default:
-      return null;
-  }
-}
-
-/** Who made it, and whether it is CatVinci's own. */
-function Byline({
-  manifest,
-  official,
-  dev,
-  t,
-}: {
-  manifest: PluginManifest;
-  official: boolean;
-  dev?: boolean;
-  t: Strings;
-}) {
-  return (
-    <div className="plugin-byline">
-      {official && <span className="plugin-official">{t.pluginOfficial}</span>}
-      <span>
-        {t.pluginBy.replace("{author}", manifest.author || manifest.publisher)}
-      </span>
-      <span className="plugin-version" data-search-ignore>
-        {manifest.version}
-        {dev ? ` · ${t.pluginDevTag}` : ""}
-      </span>
-    </div>
-  );
-}
-
 /** An installed plugin: opens its page; the switch turns it on or off. */
 function PluginCard({
   record,
@@ -375,296 +313,5 @@ function CatalogCard({
         </button>
       </div>
     </div>
-  );
-}
-
-/** One plugin's own page: about it, what it needs, its settings, what it
- *  adds, its permissions, and removing it. */
-function PluginPage({
-  record,
-  t,
-  allOn,
-  update,
-  installing,
-  onBack,
-  onEnable,
-  onUpdate,
-  attempt,
-}: {
-  record: PluginRecord;
-  t: Strings;
-  allOn: boolean;
-  update: string | null;
-  installing: boolean;
-  onBack: () => void;
-  onEnable: (on: boolean) => void;
-  onUpdate: () => void;
-  attempt: Attempt;
-}) {
-  const { settings, setSettings } = useSettings();
-  const manifest = record.manifest;
-  const name = pluginName(record);
-  const on = record.status === "on";
-  useEffect(() => {
-    if (on) void loadPluginSettings(record.id);
-  }, [on, record.id]);
-  const status = statusText(record, allOn, t);
-  const switchable = !!manifest && canSwitch(record.status);
-  return (
-    <div className="plugin-page" data-plugin-page={record.id}>
-      <button type="button" className="plugin-back" onClick={onBack}>
-        ‹ {t.pluginBackToList}
-      </button>
-      <div className="settings-group-body plugin-page-head">
-        <label className="settings-row plugin-page-title-row">
-          <div className="settings-row-text">
-            <h2 className="plugin-page-title">{name}</h2>
-            {manifest?.description && (
-              <div className="settings-row-hint">
-                {pluginText(record, manifest.description)}
-              </div>
-            )}
-            {manifest && (
-              <Byline
-                manifest={manifest}
-                official={record.official}
-                dev={record.origin === "dev"}
-                t={t}
-              />
-            )}
-            {status && <div className="settings-error">{status}</div>}
-          </div>
-          <input
-            type="checkbox"
-            aria-label={t.pluginEnableLabel.replace("{name}", name)}
-            disabled={!switchable}
-            checked={on}
-            onChange={(e) => onEnable(e.target.checked)}
-          />
-        </label>
-      </div>
-      {manifest && manifest.requires.length > 0 && (
-        <SettingsGroup title={t.pluginRequiresGroup}>
-          {manifest.requires.map((need) => {
-            const met = requirementMet(need, settings);
-            return (
-              <SettingRow
-                key={need.setting}
-                label={requirementLabel(need, t)}
-                hint={need.reason ? pluginText(record, need.reason) : undefined}
-              >
-                {met ? (
-                  <span className="plugin-requirement-met">
-                    {t.pluginRequiresOn}
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setSettings(turnOnRequirement(need))}
-                  >
-                    {t.pluginRequiresTurnOn}
-                  </button>
-                )}
-              </SettingRow>
-            );
-          })}
-        </SettingsGroup>
-      )}
-      {manifest && (
-        <SettingsGroup title={t.pluginSettingsGroup}>
-          {!on ? (
-            <p className="plugin-empty">
-              {t.pluginSettingsOff.replace("{name}", name)}
-            </p>
-          ) : manifest.contributes.settings.length === 0 &&
-            !manifest.contributes.settingsPage ? (
-            <p className="plugin-empty">
-              {t.pluginNoSettings.replace("{name}", name)}
-            </p>
-          ) : (
-            <>
-              {manifest.contributes.settings.map((setting) => (
-                <PluginSettingRow
-                  key={setting.key}
-                  record={record}
-                  setting={setting}
-                />
-              ))}
-              {manifest.contributes.settingsPage && (
-                <div className="plugin-settings-page">
-                  <PluginSettingsWebview plugin={record.id} />
-                </div>
-              )}
-            </>
-          )}
-        </SettingsGroup>
-      )}
-      {manifest && <PluginAbout record={record} t={t} attempt={attempt} />}
-      <div className="plugin-detail-actions">
-        {update && (
-          <button type="button" disabled={installing} onClick={onUpdate}>
-            {installing
-              ? t.pluginInstalling
-              : t.pluginUpdate.replace("{version}", update)}
-          </button>
-        )}
-        {manifest?.repository && (
-          <button
-            type="button"
-            onClick={() => void links.openWebLink(manifest.repository!)}
-          >
-            {t.pluginRepository}
-          </button>
-        )}
-        {record.origin === "dev" && (
-          <button
-            type="button"
-            onClick={() => void attempt(() => reloadPlugin(record.id))}
-          >
-            {t.pluginReload}
-          </button>
-        )}
-        <button
-          type="button"
-          className="danger"
-          onClick={() =>
-            void attempt(async () => {
-              const ok = await showConfirm(
-                t.pluginUninstallAsk.replace("{name}", name),
-                {
-                  title: t.pluginsTitle,
-                  okLabel: t.pluginUninstall,
-                  cancelLabel: t.pluginCancel,
-                  danger: true,
-                },
-              );
-              if (!ok) return;
-              await uninstallPlugin(record.id);
-              onBack();
-            })
-          }
-        >
-          {record.origin === "dev" ? t.pluginUnload : t.pluginUninstall}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/** What the plugin adds, and the permissions it has (each revocable). */
-function PluginAbout({
-  record,
-  t,
-  attempt,
-}: {
-  record: PluginRecord;
-  t: Strings;
-  attempt: Attempt;
-}) {
-  const manifest = record.manifest!;
-  const { commands, customEditors, sidebarTabs } = manifest.contributes;
-  const adds = [
-    ...commands.map((c) => pluginText(record, c.title)),
-    ...sidebarTabs.map((s) =>
-      t.pluginAddsSidebarTab.replace("{name}", pluginText(record, s.title)),
-    ),
-    ...customEditors.map((e) =>
-      t.pluginAddsFileType.replace("{types}", e.filenamePatterns.join(", ")),
-    ),
-  ];
-  return (
-    <SettingsGroup title={t.pluginAboutGroup}>
-      {adds.length > 0 && (
-        <SettingRow label={t.pluginAddsLabel} hint={adds.join(" · ")} />
-      )}
-      <SettingRow
-        label={t.pluginPermissionsLabel}
-        hint={manifest.permissions.length ? undefined : t.pluginNoPermissions}
-      />
-      {manifest.permissions.map((permission) => {
-        const granted = record.granted.includes(permission);
-        return (
-          <SettingRow
-            key={permission}
-            label={permissionLabel(permission, t)}
-            hint={granted ? t.pluginGranted : t.pluginNotGranted}
-          >
-            {granted && (
-              <button
-                type="button"
-                onClick={() =>
-                  void attempt(() => revokePermission(record.id, permission))
-                }
-              >
-                {t.pluginRevoke}
-              </button>
-            )}
-          </SettingRow>
-        );
-      })}
-      <SettingRow
-        label={t.pluginVersionLabel.replace("{version}", manifest.version)}
-        hint={manifest.license}
-      />
-    </SettingsGroup>
-  );
-}
-
-/** One of a plugin's settings, drawn from its schema like Textus's own. */
-function PluginSettingRow({
-  record,
-  setting,
-}: {
-  record: PluginRecord;
-  setting: SettingContribution;
-}) {
-  const value = pluginSetting(record.id, setting.key);
-  const label = pluginText(record, setting.title);
-  const help = setting.description
-    ? pluginText(record, setting.description)
-    : undefined;
-  const save = (next: unknown) =>
-    void setPluginSetting(record.id, setting.key, next);
-  if (setting.type === "boolean")
-    return (
-      <ToggleRow
-        label={label}
-        help={help}
-        checked={value === true}
-        onChange={save}
-      />
-    );
-  return (
-    <SettingRow label={label} help={help}>
-      {setting.type === "enum" ? (
-        <Select
-          className="settings-select"
-          aria-label={label}
-          value={String(value)}
-          onChange={(e) => save(e.target.value)}
-        >
-          {setting.options?.map((option) => (
-            <option key={option.value} value={option.value}>
-              {pluginText(record, option.label)}
-            </option>
-          ))}
-        </Select>
-      ) : (
-        <input
-          className="settings-text-input plugin-setting-input"
-          aria-label={label}
-          type={setting.type === "number" ? "number" : "text"}
-          defaultValue={String(value ?? "")}
-          {...VERBATIM_INPUT}
-          onBlur={(e) =>
-            save(
-              setting.type === "number"
-                ? Number(e.target.value)
-                : e.target.value,
-            )
-          }
-        />
-      )}
-    </SettingRow>
   );
 }

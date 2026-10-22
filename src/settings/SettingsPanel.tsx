@@ -52,7 +52,7 @@ import { isIOSApp } from "../platform/capabilities";
 // tabs along the top (mobile/styles/settings.css) - layout only, no second
 // set of pages to keep in step.
 
-interface SettingsPanelProps {
+export interface SettingsPanelProps {
   onClose: () => void;
   /** Opens a document in the editor - the agent.md "edit" button uses it. */
   onOpenFile: (path: string) => void;

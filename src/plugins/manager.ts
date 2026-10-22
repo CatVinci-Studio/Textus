@@ -8,7 +8,6 @@ import { registerSidebarTab } from "../app/sidebar-tabs";
 import { registerEditorMenuItems } from "../editor/editor-menu";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import { basename } from "../utils/path";
-import type { Strings } from "../i18n/strings";
 import { PluginHost } from "./broker";
 import { type PluginOrigin } from "./files";
 import {
@@ -17,7 +16,6 @@ import {
   matchesFilename,
   parseManifest,
   type Permission,
-  type PluginManifest,
 } from "./manifest";
 import { permissionLabel } from "./permissions";
 import { PluginTabIcon, PluginWebviewPanel } from "./PluginWebview";
@@ -27,7 +25,17 @@ import {
   webviewState,
   type WebviewRecord,
 } from "./webviews";
-import { canRun, canSwitch, nextStatus, type PluginStatus } from "./lifecycle";
+import { canRun, canSwitch, nextStatus } from "./lifecycle";
+import {
+  pluginName,
+  pluginRecord,
+  pluginsSnapshot,
+  publish,
+  update,
+  windowInfo,
+  type PluginRecord,
+  type PluginsSnapshot,
+} from "./plugin-records";
 
 /**
  * Every plugin installed - from the catalog (catalog.ts) or a file - and
@@ -42,93 +50,20 @@ import { canRun, canSwitch, nextStatus, type PluginStatus } from "./lifecycle";
  */
 
 export type { PluginStatus } from "./lifecycle";
+export {
+  configurePlugins,
+  pluginName,
+  pluginRecord,
+  pluginsSnapshot,
+  pluginText,
+  subscribePlugins,
+  type PluginRecord,
+  type PluginsSnapshot,
+} from "./plugin-records";
 
-export interface PluginRecord {
-  id: string;
-  origin: PluginOrigin;
-  manifest: PluginManifest | null;
-  status: PluginStatus;
-  granted: Permission[];
-  problem?: string;
-  /** Where its files are, for one on disk. */
-  dir?: string;
-  /** Installed from the catalog as CatVinci's own (Rust decides it,
-   *  plugins/catalog.rs): Settings marks it Official. */
-  official: boolean;
-}
-
-export interface PluginsSnapshot {
-  loaded: boolean;
-  allOn: boolean;
-  records: PluginRecord[];
-}
-
-let snapshot: PluginsSnapshot = { loaded: false, allOn: true, records: [] };
-const listeners = new Set<() => void>();
 const hosts = new Map<string, PluginHost>();
 const contributions = new Map<string, (() => void)[]>();
 const settingsCache = new Map<string, Record<string, unknown>>();
-
-/** What the window tells the manager about itself (usePluginManager). */
-let windowInfo: {
-  strings: () => Strings;
-  language: () => string;
-  dark: () => boolean;
-} = {
-  strings: () => {
-    throw new Error("Plugins are not set up yet.");
-  },
-  language: () => "en",
-  dark: () => false,
-};
-
-export function configurePlugins(info: typeof windowInfo): void {
-  windowInfo = info;
-}
-
-function publish(next: Partial<PluginsSnapshot>) {
-  snapshot = { ...snapshot, ...next };
-  for (const listener of listeners) listener();
-}
-
-function update(id: string, change: Partial<PluginRecord>) {
-  publish({
-    records: snapshot.records.map((r) =>
-      r.id === id ? { ...r, ...change } : r,
-    ),
-  });
-}
-
-export function subscribePlugins(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-export function pluginsSnapshot(): PluginsSnapshot {
-  return snapshot;
-}
-
-export function pluginRecord(id: string): PluginRecord | undefined {
-  return snapshot.records.find((r) => r.id === id);
-}
-
-/** A plugin's name in the UI language. */
-export function pluginName(
-  record: Pick<PluginRecord, "id" | "manifest">,
-): string {
-  return record.manifest
-    ? localize(record.manifest, record.manifest.name, windowInfo.language())
-    : record.id;
-}
-
-export function pluginText(
-  record: Pick<PluginRecord, "manifest">,
-  value: string,
-): string {
-  return record.manifest
-    ? localize(record.manifest, value, windowInfo.language())
-    : value;
-}
 
 function platform(): string {
   if (isIOSApp) return "ios";
@@ -230,9 +165,9 @@ function host(record: PluginRecord): PluginHost {
         granted: record.granted,
       },
       {
-        strings: () => windowInfo.strings(),
-        language: () => windowInfo.language(),
-        dark: () => windowInfo.dark(),
+        strings: () => windowInfo().strings(),
+        language: () => windowInfo().language(),
+        dark: () => windowInfo().dark(),
         appVersion: APP_VERSION,
         platform: platform(),
         // What the user set is read from the plugin's storage the first
@@ -243,7 +178,7 @@ function host(record: PluginRecord): PluginHost {
           return pluginSetting(id, key);
         },
         runCommand: async (command, args) => {
-          const owner = snapshot.records.find(
+          const owner = pluginsSnapshot().records.find(
             (r) => r.status === "on" && command.startsWith(`${r.id}.`),
           );
           if (owner) return runPluginCommand(owner.id, command, args);
@@ -296,7 +231,7 @@ async function pluginFailed(id: string, reason: string) {
     problem: reason,
   });
   await pluginsIpc.set(id, false, record.granted).catch(() => {});
-  const t = windowInfo.strings();
+  const t = windowInfo().strings();
   void showMessage(
     t.pluginFailedNotice
       .replace("{name}", pluginName(record))
@@ -315,7 +250,7 @@ export async function runPluginCommand(
   args: unknown[],
 ): Promise<unknown> {
   const record = pluginRecord(id);
-  if (!record || !canRun(record.status, snapshot.allOn))
+  if (!record || !canRun(record.status, pluginsSnapshot().allOn))
     throw new Error(`${id} is turned off.`);
   return host(record).request("$executeCommand", { command, args });
 }
@@ -373,7 +308,7 @@ function apply(record: PluginRecord) {
   if (!manifest || contributions.has(record.id)) return;
   const id = record.id;
   const text = (value: string) =>
-    localize(manifest, value, windowInfo.language());
+    localize(manifest, value, windowInfo().language());
   const undo: (() => void)[] = [];
   const { commands, keybindings, menus, sidebarTabs } = manifest.contributes;
   for (const command of commands)
@@ -446,9 +381,9 @@ function withdraw(id: string) {
 export function customEditorFor(
   path: string,
 ): { plugin: string; viewType: string; title: string } | null {
-  if (!snapshot.allOn) return null;
+  if (!pluginsSnapshot().allOn) return null;
   const name = basename(path);
-  for (const record of snapshot.records) {
+  for (const record of pluginsSnapshot().records) {
     if (record.status !== "on" || !record.manifest) continue;
     for (const editor of record.manifest.contributes.customEditors)
       if (
@@ -514,7 +449,7 @@ async function askPermissions(
   const wanted = record.manifest?.permissions ?? [];
   const missing = wanted.filter((p) => !record.granted.includes(p));
   if (!missing.length) return wanted;
-  const t = windowInfo.strings();
+  const t = windowInfo().strings();
   const list = missing.map((p) => `• ${permissionLabel(p, t)}`).join("\n");
   const ok = await showConfirm(
     `${t.pluginPermissionsAsk.replace("{name}", pluginName(record))}\n\n${list}`,
@@ -553,7 +488,7 @@ export async function setPluginEnabled(id: string, on: boolean): Promise<void> {
     problem: undefined,
   };
   update(id, next);
-  if (canRun(next.status, snapshot.allOn)) apply(next);
+  if (canRun(next.status, pluginsSnapshot().allOn)) apply(next);
 }
 
 /** Takes back one permission; the plugin restarts without it. */
@@ -580,7 +515,7 @@ export async function setAllPlugins(on: boolean): Promise<void> {
   if (!on) for (const id of [...hosts.keys()]) stopHost(id);
   if (!on) for (const id of [...contributions.keys()]) withdraw(id);
   publish({ allOn: on });
-  for (const record of snapshot.records)
+  for (const record of pluginsSnapshot().records)
     if (canRun(record.status, on)) apply(record);
 }
 
@@ -616,7 +551,7 @@ export async function uninstallPlugin(id: string): Promise<void> {
 /** The commands the plugins that are on put in the Plugins menu
  *  (contributes.menus["app/plugins"]), in the plugins' order. */
 export function pluginMenuEntries(
-  from: PluginsSnapshot = snapshot,
+  from: PluginsSnapshot = pluginsSnapshot(),
   menu: "app/plugins" | "app/tray" = "app/plugins",
 ): { command: string; label: string }[] {
   if (!from.allOn) return [];
@@ -632,7 +567,7 @@ export function pluginMenuEntries(
         label: localize(
           manifest,
           command?.title ?? item.command,
-          windowInfo.language(),
+          windowInfo().language(),
         ),
       };
     });
