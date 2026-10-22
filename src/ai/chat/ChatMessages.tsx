@@ -93,6 +93,8 @@ export interface ChatMessagesLabels
   imageNotGenerated: string;
   /** In place of "Thinking…" while a picture is being made. */
   generatingImage: string;
+  /** In place of "Thinking…" while an edit's call streams in. */
+  writingEdit: string;
 }
 
 export interface ChatMessagesProps {
@@ -450,13 +452,21 @@ export function ChatMessages({
           />
         </div>
       )}
-      {/* While the thinking row counts the seconds, it says it all. */}
-      {busy && !streaming?.text && streaming?.thought?.since == null && (
+      {/* While the thinking row counts the seconds, it says it all. Under
+          a reply, it shows once the reply has stopped coming for a moment
+          (re-keyed by each delta, it waits again): an edit's call, a
+          picture's description or the next step can take seconds with
+          nothing else moving, and the panel read as stuck (rc.6). */}
+      {busy && streaming?.thought?.since == null && (
         <ThinkingIndicator
+          key={streaming?.tool ? streaming.tool : (streaming?.text.length ?? 0)}
+          after={!!streaming?.text && !streaming?.tool}
           label={
             streaming?.tool === "generate_image"
               ? labels.generatingImage
-              : labels.thinking
+              : streaming?.tool === "propose_edit"
+                ? labels.writingEdit
+                : labels.thinking
           }
         />
       )}
@@ -474,9 +484,16 @@ export function ChatMessages({
 
 /** The three-dot "thinking" row. Shared with ChatBody's quick variant so the
  *  two chat surfaces can't drift on this markup. */
-export function ThinkingIndicator({ label }: { label: string }) {
+export function ThinkingIndicator({
+  label,
+  after = false,
+}: {
+  label: string;
+  /** Under a streaming reply: shows only once it has paused a moment. */
+  after?: boolean;
+}) {
   return (
-    <div className="agent-thinking">
+    <div className={`agent-thinking${after ? " agent-thinking-after" : ""}`}>
       <span className="agent-thinking-label">{label}</span>
       <span className="agent-thinking-dots">
         <span />

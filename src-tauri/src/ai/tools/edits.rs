@@ -61,6 +61,16 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         );
     }
 
+    // A `block` still here named no block (doc_blocks::resolve_edit_arguments
+    // turns every one it finds into an anchor): from an earlier request,
+    // before the block changed, or made up.
+    if let Some(block) = parsed.get("block").and_then(|v| v.as_str()) {
+        let through = parsed.get("last_block").and_then(|v| v.as_str());
+        return match through {
+            Some(last) => format!("Not proposed: `{block}` to `{last}` isn't a run of blocks the document has now - an id is from before a change or mistyped, or `last_block` comes before `block`. Use ids the document shows now, the first as `block`."),
+            None => format!("Not proposed: no block has the id `{block}` - the document has changed since you saw it, or the id is mistyped. Use an id the document shows now, before the block (`[#k3f9]`)."),
+        };
+    }
     let anchor = parsed.get("anchor").and_then(|v| v.as_str()).unwrap_or("");
     let has_text = parsed.get("text").and_then(|v| v.as_str()).is_some();
     if needs_text(action) && !has_text {

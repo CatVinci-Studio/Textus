@@ -1,4 +1,5 @@
 import { withoutCitationMarkers } from "../citation-markers";
+import { resolveBlockEdit } from "../doc-blocks";
 import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../types";
 
 /** A string field scanned out of an incomplete JSON fragment: what has
@@ -119,7 +120,12 @@ export interface DraftProposal {
  * text - so this is typically reached while the text is still streaming).
  * Returns null until then; the caller keeps feeding it grown fragments.
  */
-export function draftProposal(fragment: string): DraftProposal | null {
+export function draftProposal(
+  fragment: string,
+  /** The document as it is now, for an edit that names its block
+   *  (doc-blocks.ts) rather than quoting it. */
+  document?: string,
+): DraftProposal | null {
   const fields = parsePartialToolArgs(fragment);
   const action = fields.action;
   if (!action?.complete) return null;
@@ -127,6 +133,36 @@ export function draftProposal(fragment: string): DraftProposal | null {
   const needsAnchor =
     action.value !== "append" && action.value !== "replace_selection";
   const anchor = fields.anchor;
+  // Named by its block: placed once the run's end is known too - its own
+  // `last_block`, or a field written after it (schema order: block,
+  // context, last_block, reason, text).
+  if (fields.block?.value && document !== undefined) {
+    if (!fields.block.complete) return null;
+    const runKnown =
+      fields.last_block?.complete || !!fields.reason || !!fields.text;
+    if (!runKnown) return null;
+    const text = withoutCitationMarkers(
+      fields.text?.value ?? "",
+      !fields.text?.complete,
+    );
+    const resolved = resolveBlockEdit(document, {
+      action: action.value,
+      block: fields.block.value,
+      lastBlock: fields.last_block?.value || undefined,
+      anchor: anchor?.complete && anchor.value ? anchor.value : undefined,
+      text,
+    });
+    if (!resolved) return null;
+    return {
+      proposal: {
+        action: resolved.action as EditAction,
+        anchor: resolved.anchor,
+        text: resolved.text,
+        context: resolved.context,
+      },
+      textComplete: fields.text?.complete ?? false,
+    };
+  }
   if (needsAnchor && !anchor?.complete) return null;
 
   return {

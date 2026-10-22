@@ -84,6 +84,67 @@ export function parseImageProposal(argumentsJson: string): EditProposal | null {
   }
 }
 
+/** The width and height `aspect` ("16:9") asks for, or null. */
+function aspectSize(aspect: string): { width: number; height: number } | null {
+  const m = /^(\d+):(\d+)$/.exec(aspect.trim());
+  return m ? { width: Number(m[1]) * 100, height: Number(m[2]) * 100 } : null;
+}
+
+/** The stand-in id of a picture its call is still asking for. */
+export function draftPictureId(callId: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < callId.length; i++) {
+    h ^= callId.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return `draft${h.toString(36)}`;
+}
+
+function isDraftPicture(id: string): boolean {
+  return id.startsWith("draft");
+}
+
+/**
+ * A generate_image call still streaming, as a proposal - its frame in its
+ * place and shape the moment the call says where it goes and how wide it
+ * is (fields in schema order: action, alt, anchor, aspect, context,
+ * prompt), rather than once the whole description has come and the
+ * picture is asked for (live_eval::latency, redo_a_picture: three seconds
+ * of nothing on a ChatGPT subscription, more on Claude). The completed
+ * call's proposal, with the picture's own id, takes its place.
+ */
+export function draftPictureProposal(
+  callId: string,
+  fields: Record<string, { value: string; complete: boolean }>,
+): EditProposal | null {
+  const action = fields.action;
+  if (!action?.complete) return null;
+  if (!EDIT_ACTIONS.includes(action.value as EditAction)) return null;
+  const anchored = ["insert_after", "insert_before", "replace"].includes(
+    action.value,
+  );
+  const anchor = fields.anchor;
+  if (anchored && !(anchor?.complete && anchor.value)) return null;
+  // Its shape: given, or past - the default, square.
+  const aspect = fields.aspect;
+  const shapeKnown = aspect?.complete || !!fields.context || !!fields.prompt;
+  if (!shapeKnown) return null;
+  const id = draftPictureId(callId);
+  const size = (aspect?.complete && aspectSize(aspect.value)) || {
+    width: 1000,
+    height: 1000,
+  };
+  sizes.set(id, size);
+  const alt = cleanAlt(fields.alt?.complete ? fields.alt.value : "");
+  return {
+    action: action.value as EditAction,
+    anchor: anchored ? anchor!.value : undefined,
+    context: fields.context?.complete ? fields.context.value : undefined,
+    text: `![${alt}](${generatedImageSrc(id)})`,
+    image: { id, alt, ...size, pending: true },
+  };
+}
+
 const loaded = new Map<string, GeneratedImageData & { url: string }>();
 const loading = new Map<string, Promise<boolean>>();
 /** Why a picture wasn't made, in the service's words. */
@@ -96,6 +157,9 @@ const sizes = new Map<string, { width: number; height: number }>();
  *  it; false when it wasn't made (generatedImageFailure says why) or is
  *  gone (the backend keeps the newest 16, and nothing across a restart). */
 export function loadGeneratedImage(id: string): Promise<boolean> {
+  // A streaming call's stand-in (draftPictureProposal): nothing to fetch,
+  // it paints until the call's own picture takes its place.
+  if (isDraftPicture(id)) return new Promise<boolean>(() => {});
   if (loaded.has(id)) return Promise.resolve(true);
   if (failed.has(id)) return Promise.resolve(false);
   let pending = loading.get(id);
@@ -171,6 +235,15 @@ export function withoutPicture(markdown: string, id: string): string {
 /** Why a picture wasn't made, once its load has said so. */
 export function generatedImageFailure(id: string): string | null {
   return failed.get(id) ?? null;
+}
+
+/** A picture's shape as CSS aspect-ratio ("16 / 9"), for a frame drawn
+ *  before it comes - in the card and the margin as in the document. */
+export function generatedImageRatio(id: string): string | undefined {
+  const size = sizes.get(id);
+  return size && size.width > 0 && size.height > 0
+    ? `${size.width} / ${size.height}`
+    : undefined;
 }
 
 /** The size a picture was asked for, for its frame. */

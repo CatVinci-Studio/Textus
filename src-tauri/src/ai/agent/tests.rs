@@ -324,7 +324,15 @@ fn the_message_header_names_the_language_the_user_typed() {
 fn short_document_is_embedded_verbatim() {
     let doc = "# Title\n\nJust a short document.";
     let section = document_section(doc, true, None);
-    assert_eq!(section, format!("---document---\n{doc}"));
+    // Whole, each block marked with its id (doc_blocks.rs).
+    let blocks = doc_blocks::split(doc);
+    assert_eq!(
+        section,
+        format!(
+            "---document---\n[#{}] # Title\n\n[#{}] Just a short document.",
+            blocks[0].id, blocks[1].id
+        )
+    );
 }
 
 #[test]
@@ -376,7 +384,10 @@ fn a_long_cjk_document_is_outlined_by_its_token_weight() {
     assert!(with_tools.chars().count() < chars / 2);
     assert_eq!(
         document_section(&doc, false, None),
-        format!("---document---\n{doc}")
+        format!(
+            "---document---\n{}",
+            doc_blocks::annotate(&doc, &doc_blocks::split(&doc), 0, doc.len())
+        )
     );
     // The same length of English is still sent whole.
     let english = "x".repeat(chars);
@@ -397,7 +408,14 @@ fn a_long_document_still_carries_the_section_being_worked_on() {
     assert!(section.contains("truncated"));
     assert!(section.contains("The paragraph the user is editing."));
     // The section ends where the next heading of its level starts.
-    let (line, focus) = focus_section(&doc, "Target").unwrap();
+    let blocks = doc_blocks::split(&doc);
+    let (line, focus) = focus_section(&doc, &blocks, "Target").unwrap();
+    // Its blocks marked with their ids, as the whole document is.
+    assert!(focus.starts_with("[#"), "{focus}");
+    let focus = doc_blocks::annotate(&focus, &[], 0, focus.len());
+    let focus = focus
+        .split_once("] ")
+        .map_or(focus.as_str(), |(_, rest)| rest);
     assert!(focus.starts_with("## Target"));
     assert!(!focus.contains("## After"));
     assert_eq!(doc.lines().nth(line - 1), Some("## Target"));

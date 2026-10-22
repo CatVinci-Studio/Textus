@@ -9,6 +9,7 @@ import type { PendingSentence } from "../revision/pending-edit-plugin";
 import {
   generatedImageFailure,
   loadGeneratedImage,
+  generatedImageRatio,
   generatedImageUrl,
 } from "../revision/generated-images";
 import { Tooltip } from "../../ui/Tooltip";
@@ -61,6 +62,7 @@ export function ProposedPicture({ id, alt }: { id: string; alt: string }) {
       role="img"
       aria-busy="true"
       aria-label={alt}
+      style={{ aspectRatio: generatedImageRatio(id) }}
     >
       <span className="pending-picture-blob" />
       <span className="pending-picture-blob" />

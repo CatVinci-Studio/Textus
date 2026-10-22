@@ -36,8 +36,9 @@ export interface StreamingState {
   text: string;
   /** The exchange's thinking so far, once the model has thought. */
   thought: Thought | null;
-  /** A tool that works for a while before its call lands - generate_image,
-   *  for "Generating an image…" in place of "Thinking…". */
+  /** A tool whose call is coming in - generate_image ("Generating an
+   *  image…") or propose_edit ("Writing the edit…") - for the row under
+   *  the reply in place of "Thinking…". */
   tool?: string;
 }
 
@@ -267,6 +268,17 @@ export function useAgentConversation(
             setStreaming({
               turns: prev?.turns ?? [],
               text: "",
+              thought,
+              tool: event.name,
+            });
+          } else if (
+            event.type === "toolStart" &&
+            event.name === "propose_edit"
+          ) {
+            // The reply stays; the row under it says an edit is coming.
+            setStreaming({
+              turns: prev?.turns ?? [],
+              text: prev?.text ?? "",
               thought,
               tool: event.name,
             });

@@ -42,6 +42,12 @@
   stroke-width: 1.7;
 }
 
+/* A card stacked far below its passage: its line is there, fainter. */
+.review-links path.far {
+  opacity: 0.35;
+  stroke-width: 1;
+}
+
 @keyframes review-link-draw {
   from {
     stroke-dashoffset: 1;
@@ -411,10 +417,16 @@
 
 /* A picture in a revision card (RevisionNoteText): the picture, small,
    instead of its Markdown; its frame while it is being made. */
+/* A picture on a margin card keeps its shape: at most the card's width and
+   96px tall, its frame meanwhile the same shape (aspect-ratio set inline) -
+   a frame the card's whole width and 72px tall read as squeezed (rc.6). */
 .revision-note-picture,
 .revision-note-picture-frame {
   display: block;
-  width: 100%;
+  flex: none;
+  width: auto;
+  height: auto;
+  max-width: 100%;
   max-height: 96px;
   margin: 4px 0;
   border-radius: var(--radius-small);
@@ -423,8 +435,11 @@
 }
 
 .revision-note-picture-frame {
+  /* Inline-block, its width from its height and shape (a block's would
+     fill the card), and not stretched across a flex card either. */
+  display: inline-block;
+  align-self: flex-start;
   height: 72px;
-  aspect-ratio: auto;
 }
 
 /* Struck, the old picture reads as gone. */

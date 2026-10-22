@@ -148,5 +148,26 @@ pub(super) fn read_document(ctx: &ToolContext, arguments: &str) -> String {
             shown_end + 1
         ));
     }
+    // The blocks in it marked with their ids, as the document section is
+    // (doc_blocks.rs), for an edit to name.
+    let line_starts: Vec<usize> = std::iter::once(0)
+        .chain(ctx.document.split_inclusive('\n').scan(0, |at, line| {
+            *at += line.len();
+            Some(*at)
+        }))
+        .collect();
+    let from = line_starts[start];
+    let to = line_starts
+        .get(shown_end)
+        .copied()
+        .unwrap_or(ctx.document.len())
+        .min(ctx.document.len());
+    let blocks = crate::ai::doc_blocks::split(ctx.document);
+    let marked = crate::ai::doc_blocks::annotate(ctx.document, &blocks, from, to);
+    let out = if marked.ends_with('\n') {
+        marked
+    } else {
+        format!("{marked}\n")
+    };
     format!("{header}\n{out}")
 }

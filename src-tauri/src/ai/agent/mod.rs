@@ -1,5 +1,6 @@
 use crate::ai::cancel;
 use crate::ai::catalog;
+use crate::ai::doc_blocks::{self, Block};
 use crate::ai::images::InlinePictures;
 use crate::ai::route;
 use crate::ai::rules::Conventions;
@@ -133,6 +134,10 @@ pub(crate) fn postfix_step(
         return (result, Vec::new());
     };
     let mut applied = Vec::new();
+    // An edit naming its block (doc_blocks.rs) becomes one quoting it first,
+    // so everything after - the tool, the history, the frontend - sees
+    // anchors as before.
+    let blocks = doc_blocks::split(document);
     let calls = calls
         .into_iter()
         .map(|call| match call {
@@ -142,6 +147,7 @@ pub(crate) fn postfix_step(
                 arguments,
                 reasoning,
             } if name == tools::PROPOSE_EDIT_TOOL_NAME => {
+                let arguments = doc_blocks::resolve_edit_arguments(document, &blocks, &arguments);
                 let arguments = match crate::ai::rules::postfix::proposal_arguments(
                     &arguments,
                     document,

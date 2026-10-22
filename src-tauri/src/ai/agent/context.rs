@@ -20,13 +20,31 @@ pub(super) const MAX_OUTLINE_HEADINGS: usize = 120;
 
 /// The document's headings with the line each starts on (`L12 ## Methods`)
 /// - the map read_document's line ranges and section names refer to.
-pub(super) fn heading_outline(document: &str) -> Vec<String> {
+pub(super) fn heading_outline(document: &str, blocks: &[Block]) -> Vec<String> {
     let lines: Vec<&str> = document.lines().collect();
+    let mut starts = Vec::with_capacity(lines.len());
+    let mut at = 0;
+    for line in document.split_inclusive('\n') {
+        starts.push(at);
+        at += line.len();
+    }
     crate::ai::tools::heading_lines(&lines)
         .into_iter()
         .take(MAX_OUTLINE_HEADINGS)
-        .map(|(i, _)| format!("L{} {}", i + 1, lines[i].trim()))
+        .map(|(i, _)| {
+            let id = starts
+                .get(i)
+                .and_then(|&s| doc_blocks::id_at(blocks, s))
+                .map(|id| format!("[#{id}] "))
+                .unwrap_or_default();
+            format!("L{} {id}{}", i + 1, lines[i].trim())
+        })
         .collect()
+}
+
+/// The byte where the first `n` chars of `s` end.
+fn char_end(s: &str, n: usize) -> usize {
+    s.char_indices().nth(n).map_or(s.len(), |(i, _)| i)
 }
 
 /// Char-count (not byte) prefix/suffix - document content is arbitrary
@@ -51,21 +69,31 @@ pub(super) const FOCUS_SECTION_CHARS: usize = 12_000;
 /// The section headed `heading` (to the next heading at its level or above)
 /// and the line it starts on - the part of a long document the user is
 /// working in, which the truncated view would otherwise leave out.
-pub(super) fn focus_section(document: &str, heading: &str) -> Option<(usize, String)> {
+pub(super) fn focus_section(
+    document: &str,
+    blocks: &[Block],
+    heading: &str,
+) -> Option<(usize, String)> {
     let lines: Vec<&str> = document.lines().collect();
     let (first, last) = crate::ai::tools::section_range(&lines, heading)?;
+    let from: usize = document
+        .split_inclusive('\n')
+        .take(first)
+        .map(str::len)
+        .sum();
     let text = lines[first..last].join("\n");
-    Some((
-        first + 1,
-        char_prefix(&text, FOCUS_SECTION_CHARS).to_string(),
-    ))
+    let to = from + char_end(&text, FOCUS_SECTION_CHARS);
+    Some((first + 1, doc_blocks::annotate(document, blocks, from, to)))
 }
 
+/// The `---document---` section, each block marked with its id
+/// (doc_blocks.rs).
 pub(crate) fn document_section(
     document: &str,
     with_tools: bool,
     focus_heading: Option<&str>,
 ) -> String {
+    let blocks = doc_blocks::split(document);
     let len = document.chars().count();
     let size = if with_tools {
         document.chars().map(crate::ai::project::char_units).sum()
@@ -73,15 +101,18 @@ pub(crate) fn document_section(
         len
     };
     if size <= FULL_DOCUMENT_LIMIT {
-        return format!("---document---\n{document}");
+        return format!(
+            "---document---\n{}",
+            doc_blocks::annotate(document, &blocks, 0, document.len())
+        );
     }
     let focus = focus_heading
-        .and_then(|h| focus_section(document, h))
+        .and_then(|h| focus_section(document, &blocks, h))
         .map(|(line, text)| {
             format!("\n\n[the section the user is working in, from line {line}]\n{text}")
         })
         .unwrap_or_default();
-    let outline = heading_outline(document);
+    let outline = heading_outline(document, &blocks);
     let outline_block = if outline.is_empty() {
         "(no headings)".to_string()
     } else {
@@ -92,11 +123,13 @@ pub(crate) fn document_section(
     } else {
         "This document is long, so only an outline and the start/end are shown below - some content in the middle isn't visible here."
     };
+    let head = char_prefix(document, EXCERPT_CHARS).len();
+    let tail = document.len() - char_suffix(document, EXCERPT_CHARS).len();
     format!(
         "---document (truncated, {len} chars, {} lines total)---\n{note}\n\n[outline]\n{outline_block}{focus}\n\n[start]\n{}\n\n[end]\n{}",
         document.lines().count(),
-        char_prefix(document, EXCERPT_CHARS),
-        char_suffix(document, EXCERPT_CHARS),
+        doc_blocks::annotate(document, &blocks, 0, head),
+        doc_blocks::annotate(document, &blocks, tail, document.len()),
     )
 }
 

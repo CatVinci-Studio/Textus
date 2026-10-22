@@ -157,6 +157,8 @@ test("a full-screen page covers the find bar but not its own alerts", async ({
   await openPhone(page);
   await menuItem(page, "Find & Replace…");
   await menuItem(page, "Settings…");
+  // Settings loads on first use (lazy-module.ts): here before it's checked.
+  await expect(page.locator(".settings-panel")).toBeVisible();
   const hitAt = (x: number, y: number) =>
     page.evaluate(
       ({ x, y }) =>

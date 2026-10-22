@@ -639,6 +639,7 @@ para usar una.
   agentStop: "Detener",
   agentRetry: "Reintentar",
   agentThinking: "Pensando…",
+  agentWritingEdit: "Escribiendo el cambio…",
   agentDeepThinking: "Pensamiento profundo",
   agentDeepThinkingHint: `Pensamiento profundo: si está activado, ${AI_NAME} piensa más antes de responder`,
   toggleOnHint: "{label} (Activado: haz clic otra vez para desactivar)",

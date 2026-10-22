@@ -608,6 +608,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentStop: "停止",
   agentRetry: "再試行",
   agentThinking: "考え中…",
+  agentWritingEdit: "修正を書いています…",
   agentDeepThinking: "じっくり考える",
   agentDeepThinkingHint: `じっくり考える：オンにすると、${AI_NAME} は時間をかけて考えてから答えます`,
   toggleOnHint: "{label}（オン・もう一度クリックでオフ）",
