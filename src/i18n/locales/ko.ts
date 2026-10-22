@@ -119,7 +119,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   announceChangesAccepted: { other: "{n}곳 수정을 수락했습니다." },
   announceChangesRejected: { other: "{n}곳 수정을 거절했습니다." },
   announceChangePosition: "{n}곳 중 {i}번째.",
-  proposalTakeSentence: "이 문장 수락",
+  proposalTakeSentence: "이 변경 수락",
   proposalKeepSentence: "원문 유지",
   proposalShowInText: "본문에서 보기",
   proposalDeleteSentence: "이 문장 삭제",

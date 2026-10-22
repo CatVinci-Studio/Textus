@@ -131,7 +131,7 @@ type /name in a conversation to use one.
     other: "{n} changes rejected.",
   },
   announceChangePosition: "Change {i} of {n}.",
-  proposalTakeSentence: "Take this sentence",
+  proposalTakeSentence: "Take this change",
   proposalKeepSentence: "Keep the original",
   proposalShowInText: "Show in text",
   proposalDeleteSentence: "Delete this sentence",

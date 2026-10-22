@@ -56,6 +56,23 @@ export function diffSentenceLists(
   b: string[],
   alignTail: typeof alignRun = alignRun,
 ): SentenceHunk[] {
+  // A rewrite still streaming in regroups only the paragraphs it has
+  // finished: a paragraph's shape can't be judged half written.
+  return regroup(sentencePairs(a, b, alignTail), alignTail === alignRun).map(
+    (p) =>
+      p.same
+        ? { kind: "same" as const, text: p.after }
+        : { kind: "change" as const, before: p.before, after: p.after },
+  );
+}
+
+/** The sentences of `a` and `b` paired: the same ones (LCS), and each run
+ *  of changed ones aligned by what they say. */
+function sentencePairs(
+  a: string[],
+  b: string[],
+  alignTail: typeof alignRun = alignRun,
+): Pair[] {
   const lcs: number[][] = Array.from({ length: a.length + 1 }, () =>
     new Array<number>(b.length + 1).fill(0),
   );
@@ -66,7 +83,7 @@ export function diffSentenceLists(
           ? lcs[i + 1][j + 1] + 1
           : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
 
-  const hunks: SentenceHunk[] = [];
+  const pairs: Pair[] = [];
   let pendingBefore: string[] = [];
   let pendingAfter: string[] = [];
   // A run of changed sentences is aligned sentence to sentence by what
@@ -74,7 +91,7 @@ export function diffSentenceLists(
   // rewrite split one sentence in two or joined two into one.
   const flush = (align = alignRun) => {
     for (const group of align(pendingBefore, pendingAfter))
-      hunks.push({ kind: "change", ...group });
+      pairs.push({ same: false, ...group });
     pendingBefore = [];
     pendingAfter = [];
   };
@@ -83,7 +100,7 @@ export function diffSentenceLists(
   while (i < a.length || j < b.length) {
     if (i < a.length && j < b.length && a[i].trim() === b[j].trim()) {
       flush();
-      hunks.push({ kind: "same", text: b[j] });
+      pairs.push({ same: true, before: a[i], after: b[j] });
       i++;
       j++;
     } else if (
@@ -96,10 +113,104 @@ export function diffSentenceLists(
     }
   }
   flush(alignTail);
-  return hunks.flatMap(byParagraph);
+  return pairs;
 }
 
-/** A paragraph's end inside a sentence run: the break a sentence carries. */
+/** A hunk with both sides kept: a "same" sentence may differ in the
+ *  paragraph break it carries (two paragraphs joined into one). */
+interface Pair {
+  same: boolean;
+  before: string;
+  after: string;
+}
+
+/** A paragraph more of whose sentences than this changed, and which
+ *  reads less like its original than REWRITTEN (`similarity`), was
+ *  rewritten: it is one change, struck whole with the new paragraph after
+ *  it - by sentence it read as red and green confetti. A polish that
+ *  touched a few words in every sentence stays sentence by sentence. */
+const DENSE = 0.5;
+const REWRITTEN = 0.55;
+
+const ENDS_PARAGRAPH = /\n[ \t]*\n\s*$/;
+
+/**
+ * How finely a rewrite is decided, chosen by what it did. Its pairs are cut
+ * into the smallest runs both sides of which end a paragraph together;
+ * then each run:
+ *
+ * - kept its paragraphs (as many new as old): paragraph by paragraph, each
+ *   one sentence by sentence - or whole when most of it changed (DENSE);
+ * - joined, split or regrouped paragraphs: one change, its paragraphs from
+ *   the original against the new ones they became (the joined paragraphs
+ *   struck in place: pending-edit-plugin's struck blocks).
+ *
+ * `finished` false: the last run, which may still grow, stays as it is.
+ */
+function regroup(pairs: Pair[], finished: boolean): Pair[] {
+  const out: Pair[] = [];
+  let run: Pair[] = [];
+  const close = () => {
+    if (run.length > 0) out.push(...shapeRun(run));
+    run = [];
+  };
+  for (let k = 0; k < pairs.length; k++) {
+    run.push(pairs[k]);
+    const last = k === pairs.length - 1;
+    const before = run.map((p) => p.before).join("");
+    const after = run.map((p) => p.after).join("");
+    const ends = (text: string) => !text || ENDS_PARAGRAPH.test(text);
+    if (last ? finished : ends(before) && ends(after)) close();
+  }
+  out.push(...run);
+  return out;
+}
+
+/** One run of `regroup`, shaped. */
+function shapeRun(run: Pair[]): Pair[] {
+  const before = run.map((p) => p.before).join("");
+  const after = run.map((p) => p.after).join("");
+  const count = (text: string) =>
+    paragraphsOf(text).filter((t) => t.trim()).length;
+  // Joined paragraphs are a change even with every sentence as it was:
+  // taken as "same", accepting joined them unseen.
+  if (count(before) !== count(after)) return [{ same: false, before, after }];
+  if (run.every((p) => p.same)) return run;
+  if (count(before) > 1) {
+    // As many paragraphs, broken differently than sentence by sentence
+    // (the run didn't end at each): paired paragraph by paragraph, each
+    // compared again by its sentences.
+    const olds = paragraphsOf(before);
+    const news = paragraphsOf(after);
+    if (olds.length === news.length)
+      return olds.flatMap((text, i) =>
+        dense(sentencePairs(splitSentences(text), splitSentences(news[i]))),
+      );
+    return [{ same: false, before, after }];
+  }
+  return dense(run);
+}
+
+/** One paragraph's pairs, whole when it was rewritten (DENSE). */
+function dense(run: Pair[]): Pair[] {
+  const sentences = run.reduce(
+    (n, p) => n + splitSentences(p.before).filter((s) => s.trim()).length,
+    0,
+  );
+  const changed = run
+    .filter((p) => !p.same)
+    .reduce(
+      (n, p) => n + splitSentences(p.before).filter((s) => s.trim()).length,
+      0,
+    );
+  if (sentences < 2 || changed / sentences <= DENSE) return run;
+  const before = run.map((p) => p.before).join("");
+  const after = run.map((p) => p.after).join("");
+  if (similarity(before, after) >= REWRITTEN) return run;
+  return [{ same: false, before, after }];
+}
+
+/** A paragraph's end inside a text: the break a sentence carries. */
 const PARAGRAPH_END = /\n[ \t]*\n\s*/g;
 
 /** `text` cut after each paragraph's end, the breaks kept with the part
@@ -116,27 +227,6 @@ function paragraphsOf(text: string): string[] {
   }
   parts.push(text.slice(from));
   return parts;
-}
-
-/**
- * A change over several of the original's paragraphs, rewritten paragraph by
- * paragraph - as many new ones as old - one for each of them: a whole-text
- * rewrite whose changed sentences ran together came out as one change from
- * the first paragraph to the last, its card at the top of the margin beside
- * nothing in particular. A rewrite that joins or splits paragraphs stays one
- * change: the joined paragraph is shown struck in place (pending-edit-
- * plugin's struck blocks).
- */
-function byParagraph(hunk: SentenceHunk): SentenceHunk[] {
-  if (hunk.kind !== "change") return [hunk];
-  const before = paragraphsOf(hunk.before);
-  const after = paragraphsOf(hunk.after);
-  if (before.length < 2 || after.length !== before.length) return [hunk];
-  return before.map((text, i) => ({
-    kind: "change" as const,
-    before: text,
-    after: after[i],
-  }));
 }
 
 /** Character bigrams (single characters for one-character text), for a

@@ -132,7 +132,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     other: "{n} Änderungen abgelehnt.",
   },
   announceChangePosition: "Änderung {i} von {n}.",
-  proposalTakeSentence: "Diesen Satz annehmen",
+  proposalTakeSentence: "Diese Änderung annehmen",
   proposalKeepSentence: "Original behalten",
   proposalShowInText: "Im Text zeigen",
   proposalDeleteSentence: "Diesen Satz streichen",

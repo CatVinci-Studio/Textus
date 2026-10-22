@@ -111,7 +111,7 @@ export default {
   announceChangesAccepted: { other: "已接受 {n} 處修改。" },
   announceChangesRejected: { other: "已拒絕 {n} 處修改。" },
   announceChangePosition: "第 {i} 處，共 {n} 處。",
-  proposalTakeSentence: "接受這一句",
+  proposalTakeSentence: "採納這處修改",
   proposalKeepSentence: "保留原文",
   proposalShowInText: "在正文中查看",
   proposalDeleteSentence: "刪去這一句",

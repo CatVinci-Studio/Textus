@@ -120,7 +120,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   announceChangesAccepted: { other: "{n} か所の変更を承認しました。" },
   announceChangesRejected: { other: "{n} か所の変更を却下しました。" },
   announceChangePosition: "{n} か所中 {i} か所目。",
-  proposalTakeSentence: "この文を適用",
+  proposalTakeSentence: "この変更を適用",
   proposalKeepSentence: "元のまま",
   proposalShowInText: "本文で表示",
   proposalDeleteSentence: "この文を削除",

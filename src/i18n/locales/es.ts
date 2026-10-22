@@ -141,7 +141,7 @@ para usar una.
     other: "{n} cambios rechazados.",
   },
   announceChangePosition: "Cambio {i} de {n}.",
-  proposalTakeSentence: "Aceptar esta frase",
+  proposalTakeSentence: "Aceptar este cambio",
   proposalKeepSentence: "Conservar el original",
   proposalShowInText: "Ver en el texto",
   proposalDeleteSentence: "Eliminar esta frase",

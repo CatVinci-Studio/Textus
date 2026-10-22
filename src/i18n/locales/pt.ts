@@ -133,7 +133,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     other: "{n} alterações rejeitadas.",
   },
   announceChangePosition: "Alteração {i} de {n}.",
-  proposalTakeSentence: "Aceitar esta frase",
+  proposalTakeSentence: "Aceitar esta alteração",
   proposalKeepSentence: "Manter o original",
   proposalShowInText: "Ver no texto",
   proposalDeleteSentence: "Apagar esta frase",

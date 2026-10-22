@@ -137,7 +137,7 @@ export default {
     other: "Отклонено {n} правки.",
   },
   announceChangePosition: "Правка {i} из {n}.",
-  proposalTakeSentence: "Принять это предложение",
+  proposalTakeSentence: "Принять это изменение",
   proposalKeepSentence: "Оставить как было",
   proposalShowInText: "Показать в тексте",
   proposalDeleteSentence: "Удалить это предложение",
