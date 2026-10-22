@@ -38,6 +38,7 @@ use crate::ai::workspace::{
     global_agent_dir, project_dir, project_root, safe_file_stem, split_frontmatter,
     strip_html_comments,
 };
+use crate::commands::args::Args;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -337,20 +338,35 @@ impl MemoryDirs {
 
 // ----------------------------------------------------------------- commands
 
-/// After each exchange (memory::pass): what to remember, update or forget,
-/// decided by the conversation's own model and made - each change for a
-/// chip under the reply. Nothing while Remember automatically is off.
-#[tauri::command]
-#[allow(clippy::too_many_arguments)]
-pub async fn memory_pass(
-    app: tauri::AppHandle,
+/// memory_pass's inputs, the keys of `ai.memoryPass`'s invoke in
+/// platform/ipc.ts.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PassRequest {
     provider: String,
     model: Option<String>,
     doc_path: Option<String>,
     workspace_root: Option<String>,
     conversation: Option<Source>,
     exchange: Exchange,
+}
+
+/// After each exchange (memory::pass): what to remember, update or forget,
+/// decided by the conversation's own model and made - each change for a
+/// chip under the reply. Nothing while Remember automatically is off.
+#[tauri::command]
+pub async fn memory_pass(
+    app: tauri::AppHandle,
+    request: Args<PassRequest>,
 ) -> Result<Vec<Remembering>, String> {
+    let Args(PassRequest {
+        provider,
+        model,
+        doc_path,
+        workspace_root,
+        conversation,
+        exchange,
+    }) = request;
     crate::ai::ensure_on(&app)?;
     if !remember_enabled(&app) {
         return Ok(Vec::new());

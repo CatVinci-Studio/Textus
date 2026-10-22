@@ -1,3 +1,4 @@
+use super::args::Args;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
@@ -79,6 +80,16 @@ fn chat_serving(editor_label: &str, open: &OpenChatWindows) -> Option<String> {
         .map(|entry| entry.label.clone())
 }
 
+/// detach_chat_window's inputs, the keys of `detachChatWindow`'s invoke in
+/// platform/ipc-app.ts. `state` is the handoff's opaque JSON (ChatHandoff).
+#[derive(serde::Deserialize)]
+pub struct DetachRequest {
+    state: serde_json::Value,
+    position: Option<(f64, f64)>,
+    title: String,
+    pinned: bool,
+}
+
 /// Pops this chat out of the editor into a real OS window.
 ///
 /// A native window, not a webview-drawn panel, is the whole point: the user
@@ -100,18 +111,20 @@ fn chat_serving(editor_label: &str, open: &OpenChatWindows) -> Option<String> {
 /// `async` on a non-async fn runs the body on the async runtime instead, so
 /// window creation reaches the main thread as an ordinary event-loop message.
 /// Nothing in here awaits, so no lock is held across a suspension point.
-#[allow(clippy::too_many_arguments)]
 #[tauri::command(async)]
 pub fn detach_chat_window(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
-    state: serde_json::Value,
-    position: Option<(f64, f64)>,
-    title: String,
-    pinned: bool,
+    request: Args<DetachRequest>,
     pending: State<PendingChatHandoffs>,
     open: State<OpenChatWindows>,
 ) -> Result<String, String> {
+    let Args(DetachRequest {
+        state,
+        position,
+        title,
+        pinned,
+    }) = request;
     let editor_label = window.label().to_string();
 
     // Already open for this editor: focus what's there rather than spawning

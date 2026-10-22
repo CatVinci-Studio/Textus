@@ -6,6 +6,7 @@
 //! list) is `#[cfg(mobile)]`, and the sidebar tree's new / move (`tree_ops`)
 //! `#[cfg(desktop)]`. See docs/dev/ios-code-map.md.
 
+pub mod args;
 pub mod attachment;
 #[cfg(desktop)]
 pub mod chat_window;

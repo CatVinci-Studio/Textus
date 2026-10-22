@@ -185,12 +185,11 @@ pub(super) fn completion_user_text(before: &str, after: &str, hints: &Completion
     text
 }
 
-#[tauri::command]
-// Nine arguments at the IPC boundary, each a separate optional input from
-// the frontend; bundling them would only move the same list into a struct.
-#[allow(clippy::too_many_arguments)]
-pub async fn ai_complete(
-    app: AppHandle,
+/// ai_complete's inputs, the keys of `ai.complete`'s invoke in
+/// platform/ipc.ts.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CompletionRequest {
     provider: String,
     before: String,
     after: String,
@@ -199,7 +198,23 @@ pub async fn ai_complete(
     hints: Option<CompletionHints>,
     doc_path: Option<String>,
     workspace_root: Option<String>,
+}
+
+#[tauri::command]
+pub async fn ai_complete(
+    app: AppHandle,
+    request: Args<CompletionRequest>,
 ) -> Result<String, String> {
+    let Args(CompletionRequest {
+        provider,
+        before,
+        after,
+        style,
+        model,
+        hints,
+        doc_path,
+        workspace_root,
+    }) = request;
     crate::ai::ensure_on(&app)?;
     let hints = hints.unwrap_or_default();
     let (mut instructions, user_text) =
