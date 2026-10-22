@@ -120,13 +120,13 @@ flowchart LR
 
 Who owns each move:
 
-| Move                                                                      | Owner                                                                                                                                     |
-| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| drafting → streaming, its text growing, stop / failure endings, a refusal | `ai/revision/proposal-stream.ts` (`ProposalStream`): pure, no editor                                                                      |
-| how a draft is shown - typed in, or drawn again as it grows               | `ai/revision/proposal-display.ts` (`typewriter`, `drawn`, chosen per call)                                                                |
-| streaming → pending                                                       | the completed call's add (`ChatBody`'s completed turns) and, for a typed-in draft, the reveal settling (`pending-edit-plugin`'s `settle`) |
-| pending → accepted / rejected / replaced / invalid, undo                  | `ai/revision/usePendingEdits.ts` + `pending-edit-plugin.ts`                                                                               |
-| what the model is told of each, next request                              | `ai/revision/proposal-status.ts`                                                                                                          |
+| Move                                                                      | Owner                                                                                                                                           |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| drafting → streaming, its text growing, stop / failure endings, a refusal | `ai/revision/proposal-stream.ts` (`ProposalStream`): pure, no editor                                                                            |
+| how a draft is shown - typed in, or drawn again as it grows               | `ai/revision/proposal-display.ts` (`typewriter`, `drawn`, chosen per call)                                                                      |
+| streaming → pending                                                       | the completed call's add (`ChatBody`'s completed turns) and, for a typed-in draft, the reveal settling (`pending-edit-plugin`'s `settle`)       |
+| pending → accepted / rejected / replaced / joined / invalid, undo         | the table in `ai/revision/proposal-lifecycle.ts` (`recordStatus`); `usePendingEdits.ts` + `pending-edit-plugin.ts` run what goes with each move |
+| what the model is told of each, next request                              | `ai/revision/proposal-status.ts`                                                                                                                |
 
 ### Writing: `ProposalStream`
 
