@@ -135,9 +135,10 @@ same way.
 
 The webview's own storage also lives here (`localstorage/`, `WebKitCache/`
 and so on; `EBWebView\` under `%LOCALAPPDATA%` on Windows). Since 0.9.7 the
-only key the app still uses there is `textus-fetched-models:<provider>`, a
-cache of each provider's model list that is simply fetched again when
-missing.
+app keeps only small things there that nothing is lost without: each
+provider's fetched model list (fetched again when missing), the composer's
+Deep thinking and last Agent mode. Every key, and every read and write, is
+in `src/storage/local.ts`.
 
 ## How the files are written
 

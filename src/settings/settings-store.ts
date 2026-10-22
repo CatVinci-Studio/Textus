@@ -1,6 +1,7 @@
 import { storage } from "../platform/ipc";
 import { gateAiRequests } from "../platform/ai-gate";
-import { readBoot, readLocalJson } from "../storage/boot";
+import { readBoot } from "../storage/boot";
+import { LOCAL_KEYS, readLocalJson, writeLocal } from "../storage/local";
 import { importLegacyStorage } from "../storage/legacy-import";
 import { trackWrite } from "../storage/pending-writes";
 import { listenToThisWindow } from "../utils/tauri-events";
@@ -14,7 +15,7 @@ import { normaliseSettings } from "./settings-normalise";
  * make them (SettingsContext.tsx). The side effects of settings.
  */
 
-export const STORAGE_KEY = "catvinci-settings";
+export const STORAGE_KEY = LOCAL_KEYS.settings;
 
 /** The settings blob localStorage held before the move - still the store
  *  without Rust (the browser dev shim, vitest), and what the one-time
@@ -25,15 +26,9 @@ export function readLocalSettings(): Raw | null {
   return isRecord(parsed) ? parsed : null;
 }
 
+/** Storage unavailable, the change holds for this session only. */
 export function writeLocalSettings(patch: Raw) {
-  try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...readLocalSettings(), ...patch }),
-    );
-  } catch {
-    // Storage unavailable: the change holds for this session only.
-  }
+  writeLocal(STORAGE_KEY, JSON.stringify({ ...readLocalSettings(), ...patch }));
 }
 
 // ---------------------------------------------------------------------------

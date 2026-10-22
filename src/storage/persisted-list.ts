@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { storage, type HistoryKind } from "../platform/ipc";
-import { legacyImportSettled, readBoot, readLocalJson } from "./boot";
+import { legacyImportSettled, readBoot } from "./boot";
+import { readLocalJson } from "./local";
 import { trackWrite } from "./pending-writes";
 import { listenToThisWindow } from "../utils/tauri-events";
 

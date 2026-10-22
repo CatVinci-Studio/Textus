@@ -1,5 +1,6 @@
 import { storage, type StoredSnapshot } from "../platform/ipc";
-import { markLegacyImportSettled, readLocalJson } from "./boot";
+import { markLegacyImportSettled } from "./boot";
+import { readLocalJson } from "./local";
 import { trackWrite } from "./pending-writes";
 import { readLegacyUiState } from "./ui-state";
 

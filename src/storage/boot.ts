@@ -56,17 +56,6 @@ export function resetBootForTests(): void {
   settled = null;
 }
 
-/** A localStorage value as JSON, or null when absent or unreadable - for
- *  the fallback stores and the one-time import. */
-export function readLocalJson(key: string): unknown {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
 let settled: { promise: Promise<void>; resolve: () => void } | null = null;
 
 function settledHandle() {

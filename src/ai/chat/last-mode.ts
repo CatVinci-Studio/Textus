@@ -2,8 +2,7 @@ import {
   migrateAgentMode,
   type AgentMode,
 } from "../../settings/SettingsContext";
-
-const KEY = "textus-agent-last-mode";
+import { LOCAL_KEYS, readLocalJson, writeLocal } from "../../storage/local";
 
 /**
  * The modes each composer offers, in order. Quick Ask is for a quick change
@@ -32,23 +31,18 @@ export function fitMode(
  * localStorage, which the detached window sees too.
  */
 export function initialMode(defaultMode: AgentMode): AgentMode {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return defaultMode;
-    const saved = JSON.parse(raw) as { mode?: unknown; under?: unknown };
-    // Kept under 1.0's names ("ask", "edit"), both sides read as today's.
-    const mode = migrateAgentMode(saved.mode);
-    if (mode && migrateAgentMode(saved.under) === defaultMode) return mode;
-  } catch {
-    // Unreadable or blocked storage: the default.
-  }
+  // Unreadable or blocked storage reads as nothing kept: the default.
+  const saved = readLocalJson(LOCAL_KEYS.lastMode);
+  if (typeof saved !== "object" || saved === null) return defaultMode;
+  const { mode: kept, under } = saved as { mode?: unknown; under?: unknown };
+  // Kept under 1.0's names ("ask", "edit"), both sides read as today's.
+  const mode = migrateAgentMode(kept);
+  if (mode && migrateAgentMode(under) === defaultMode) return mode;
   return defaultMode;
 }
 
+/** Not kept when storage refuses it: the next conversation starts at the
+ *  default. */
 export function rememberMode(mode: AgentMode, defaultMode: AgentMode): void {
-  try {
-    localStorage.setItem(KEY, JSON.stringify({ mode, under: defaultMode }));
-  } catch {
-    // Not kept; the next conversation starts at the default.
-  }
+  writeLocal(LOCAL_KEYS.lastMode, JSON.stringify({ mode, under: defaultMode }));
 }

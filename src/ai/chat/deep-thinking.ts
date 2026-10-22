@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { ai } from "../../platform/ipc";
 import { useSettings } from "../../settings/SettingsContext";
-
-const KEY = "textus-agent-deep-thinking";
+import {
+  LOCAL_KEYS,
+  readLocal,
+  removeLocal,
+  writeLocal,
+} from "../../storage/local";
 
 /**
  * Deep thinking stays on once pressed - across messages, conversations and
@@ -11,20 +15,13 @@ const KEY = "textus-agent-deep-thinking";
  * one message. Not a setting; the composer's button is the only control.
  */
 export function deepThinkingOn(): boolean {
-  try {
-    return localStorage.getItem(KEY) === "1";
-  } catch {
-    return false;
-  }
+  return readLocal(LOCAL_KEYS.deepThinking) === "1";
 }
 
+/** Not kept when storage refuses it: the next composer starts with it off. */
 export function rememberDeepThinking(on: boolean): void {
-  try {
-    if (on) localStorage.setItem(KEY, "1");
-    else localStorage.removeItem(KEY);
-  } catch {
-    // Not kept; the next composer starts with it off.
-  }
+  if (on) writeLocal(LOCAL_KEYS.deepThinking, "1");
+  else removeLocal(LOCAL_KEYS.deepThinking);
 }
 
 /**
