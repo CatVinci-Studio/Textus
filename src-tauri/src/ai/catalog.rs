@@ -6,7 +6,8 @@
 //! Mirrored on the TS side by `src/ai/provider-catalog.ts` (kept in sync by
 //! hand - comments on both sides point here). Labels are brand names, shared
 //! across languages, so they live here rather than in i18n - the exceptions
-//! are "custom" and "doubao", whose labels the frontend localizes.
+//! are "custom", "doubao" and the two MiniMax platforms, whose labels the
+//! frontend localizes.
 
 use serde::Serialize;
 
@@ -237,6 +238,35 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
             "doubao-seed-2-1-turbo-260628",
             "doubao-seed-evolving",
         ],
+    },
+    ProviderCatalogEntry {
+        id: "minimax",
+        // The China platform (minimaxi.com); its keys don't work on the
+        // global one below, nor the other way round.
+        label: "MiniMax (China)",
+        dialect: "openai-chat-completions",
+        auth: &["api_key"],
+        base_url: Some("https://api.minimaxi.com/v1"),
+        default_model: Some("MiniMax-M3.1-Flash"),
+        agent_default_model: Some("MiniMax-M3"),
+        key_optional: false,
+        // Its Chat Completions takes text only.
+        supports_vision: false,
+        models_listable: true,
+        known_models: &["MiniMax-M3", "MiniMax-M3.1-Flash"],
+    },
+    ProviderCatalogEntry {
+        id: "minimax-intl",
+        label: "MiniMax (Global)",
+        dialect: "openai-chat-completions",
+        auth: &["api_key"],
+        base_url: Some("https://api.minimax.io/v1"),
+        default_model: Some("MiniMax-M3.1-Flash"),
+        agent_default_model: Some("MiniMax-M3"),
+        key_optional: false,
+        supports_vision: false,
+        models_listable: true,
+        known_models: &["MiniMax-M3", "MiniMax-M3.1-Flash"],
     },
     ProviderCatalogEntry {
         id: "ollama",

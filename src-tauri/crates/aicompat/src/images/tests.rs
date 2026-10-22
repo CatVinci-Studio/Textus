@@ -364,6 +364,37 @@ fn siliconflow_sends_image_size_and_reads_images() {
 }
 
 #[test]
+fn minimax_sends_the_aspect_and_reads_its_codes_from_a_200() {
+    let (base, seen) = serve(vec![
+        json_reply(
+            200,
+            json!({"data": {"image_base64": [b64()]}, "base_resp": {"status_code": 0, "status_msg": "success"}}),
+        ),
+        json_reply(
+            200,
+            json!({"data": {}, "base_resp": {"status_code": 1026, "status_msg": "input new_sensitive"}}),
+        ),
+        json_reply(
+            200,
+            json!({"base_resp": {"status_code": 1008, "status_msg": "insufficient balance"}}),
+        ),
+    ]);
+    run(ImageApi::MiniMax, &base, "image-01", Aspect::Landscape).unwrap();
+    let req = seen.recv().unwrap();
+    assert_eq!(req.line, "POST /image_generation HTTP/1.1");
+    assert_eq!(req.body["aspect_ratio"], "4:3");
+    assert_eq!(req.body["response_format"], "base64");
+    assert_eq!(
+        run(ImageApi::MiniMax, &base, "image-01", Aspect::Square).unwrap_err(),
+        ImageError::Refused("input new_sensitive".into())
+    );
+    assert_eq!(
+        run(ImageApi::MiniMax, &base, "image-01", Aspect::Square).unwrap_err(),
+        ImageError::Quota("insufficient balance".into())
+    );
+}
+
+#[test]
 fn an_endpoint_must_be_https_unless_it_is_this_computer() {
     let err = run(
         ImageApi::Compatible,

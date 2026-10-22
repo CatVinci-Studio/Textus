@@ -587,6 +587,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   providerNotConfigured: "Não configurado",
   providerCustom: "Endpoint personalizado",
   providerDoubao: "Doubao (Volcengine)",
+  providerMiniMax: "MiniMax (China)",
+  providerMiniMaxIntl: "MiniMax (global)",
   agentModelLabel: "Modelo do chat",
   agentDefaultModeLabel: "Modo padrão",
   agentModeWrite: "Escrever",

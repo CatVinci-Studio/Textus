@@ -601,6 +601,8 @@ para usar una.
   providerNotConfigured: "Sin configurar",
   providerCustom: "Endpoint personalizado",
   providerDoubao: "Doubao (Volcengine)",
+  providerMiniMax: "MiniMax (China)",
+  providerMiniMaxIntl: "MiniMax (global)",
   agentModelLabel: "Modelo de chat",
   agentDefaultModeLabel: "Modo predeterminado",
   agentModeWrite: "Escribir",

@@ -36,7 +36,8 @@ pub const GENERATE_IMAGE_TOOL_NAME: &str = "generate_image";
 #[serde(rename_all = "camelCase")]
 pub struct ImageProviderEntry {
     pub id: &'static str,
-    /// A brand name; "custom" and "doubao" are localized by the frontend.
+    /// A brand name; "custom", "doubao" and MiniMax's two are localized by
+    /// the frontend.
     pub label: &'static str,
     pub api: ImageApi,
     /// None for the compatible endpoint, whose address the user gives.
@@ -110,6 +111,22 @@ pub const IMAGE_PROVIDERS: &[ImageProviderEntry] = &[
         base_url: Some("https://open.bigmodel.cn/api/paas/v4"),
         key_id: "zhipu",
         models: &["glm-image", "cogview-4-250304", "cogview-3-flash"],
+    },
+    ImageProviderEntry {
+        id: "minimax",
+        label: "MiniMax (China)",
+        api: ImageApi::MiniMax,
+        base_url: Some("https://api.minimaxi.com/v1"),
+        key_id: "minimax",
+        models: &["image-01"],
+    },
+    ImageProviderEntry {
+        id: "minimax-intl",
+        label: "MiniMax (Global)",
+        api: ImageApi::MiniMax,
+        base_url: Some("https://api.minimax.io/v1"),
+        key_id: "minimax-intl",
+        models: &["image-01"],
     },
     ImageProviderEntry {
         id: "siliconflow",

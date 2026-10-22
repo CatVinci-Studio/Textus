@@ -164,6 +164,8 @@ pub fn chat_vendor(base_url: &str) -> custom::Vendor {
         custom::Vendor::Ark
     } else if base_url.contains("api.deepseek.com") {
         custom::Vendor::DeepSeek
+    } else if base_url.contains("api.minimaxi.com") || base_url.contains("api.minimax.io") {
+        custom::Vendor::MiniMax
     } else {
         custom::Vendor::Generic
     }
@@ -187,6 +189,12 @@ mod tests {
             chat_vendor("https://api.deepseek.com/v1"),
             custom::Vendor::DeepSeek
         );
+        for id in ["minimax", "minimax-intl"] {
+            let base_url = crate::ai::catalog::find(id)
+                .and_then(|e| e.base_url)
+                .unwrap();
+            assert_eq!(chat_vendor(base_url), custom::Vendor::MiniMax);
+        }
         assert_eq!(
             chat_vendor("https://api.moonshot.cn/v1"),
             custom::Vendor::Generic

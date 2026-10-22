@@ -585,6 +585,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   providerNotConfigured: "Nicht eingerichtet",
   providerCustom: "Eigener Endpunkt",
   providerDoubao: "Doubao (Volcengine)",
+  providerMiniMax: "MiniMax (China)",
+  providerMiniMaxIntl: "MiniMax (Global)",
   agentModelLabel: "Chat-Modell",
   agentDefaultModeLabel: "Standardmodus",
   agentModeWrite: "Schreiben",

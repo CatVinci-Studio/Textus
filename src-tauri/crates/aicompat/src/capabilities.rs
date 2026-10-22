@@ -58,7 +58,8 @@ pub enum ThinkingFormat {
     /// older models) and `output_config.effort`.
     Anthropic,
     /// `thinking: {type: "enabled" | "disabled"}`, plus `reasoning_effort`
-    /// where the model has levels: DeepSeek, Zhipu GLM, Moonshot Kimi.
+    /// where the model has levels: DeepSeek, Zhipu GLM, Moonshot Kimi,
+    /// MiniMax.
     ThinkingType,
     /// Alibaba DashScope: `enable_thinking` and `thinking_budget`.
     Qwen,
@@ -229,6 +230,29 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
             replay_reasoning: false,
             stream_usage: true,
             image: Some(ImageApi::DashScope),
+        },
+    ),
+    // MiniMax: M3 switches thinking on and off, M3.1 Flash only takes an
+    // effort (model-capabilities.json); custom::Vendor::MiniMax keeps the
+    // thinking out of the answer.
+    (
+        "minimax",
+        ProviderCaps {
+            thinking: ThinkingFormat::ThinkingType,
+            native_search: NativeSearch::None,
+            replay_reasoning: false,
+            stream_usage: true,
+            image: Some(ImageApi::MiniMax),
+        },
+    ),
+    (
+        "minimax-intl",
+        ProviderCaps {
+            thinking: ThinkingFormat::ThinkingType,
+            native_search: NativeSearch::None,
+            replay_reasoning: false,
+            stream_usage: true,
+            image: Some(ImageApi::MiniMax),
         },
     ),
     // Ark takes `reasoning_effort` (`none` to `max` on Seed) and maps it

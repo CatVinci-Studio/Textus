@@ -536,6 +536,8 @@ export default {
   providerNotConfigured: "未配置",
   providerCustom: "自定义接口",
   providerDoubao: "豆包（火山引擎）",
+  providerMiniMax: "MiniMax（国内版）",
+  providerMiniMaxIntl: "MiniMax（国际版）",
   agentModelLabel: "对话模型",
   agentDefaultModeLabel: "默认模式",
   agentModeWrite: "写作",

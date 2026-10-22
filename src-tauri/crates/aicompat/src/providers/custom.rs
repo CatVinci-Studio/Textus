@@ -24,12 +24,16 @@ struct ChatMessage {
 struct ChatRequest {
     model: String,
     messages: Vec<ChatMessage>,
-    /// Ark's switch for its thinking models - see [`Vendor::Ark`].
+    /// Ark's and MiniMax's switch for their thinking models - see
+    /// [`Vendor::Ark`] and [`Vendor::MiniMax`].
     #[serde(skip_serializing_if = "Option::is_none")]
     reasoning_effort: Option<&'static str>,
     /// DeepSeek's switch - see [`Vendor::DeepSeek`].
     #[serde(skip_serializing_if = "Option::is_none")]
     thinking: Option<Value>,
+    /// MiniMax's - see [`Vendor::MiniMax`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reasoning_split: Option<bool>,
 }
 
 /// Which server is behind the generic dialect, where one's defaults differ
@@ -53,6 +57,13 @@ pub enum Vendor {
     /// half again the time on one paragraph. Writing calls switch it off
     /// with `thinking: {"type": "disabled"}`, which both models take.
     DeepSeek,
+    /// MiniMax. Unasked, its models write their thinking into the answer
+    /// itself between `<think>` tags; `reasoning_split: true` moves it to
+    /// `reasoning_content`, where the other thinking models put theirs.
+    /// M3.1 Flash can't stop thinking (`thinking: disabled` is a 400) and
+    /// at its default effort once thought for four minutes before a story,
+    /// so writing calls ask both models for `reasoning_effort: "low"`.
+    MiniMax,
 }
 
 /// Ark's answer cap for agent steps - the budget the Anthropic dialect
@@ -95,8 +106,13 @@ fn completion_request(
                 content: user_text,
             },
         ],
-        reasoning_effort: (vendor == Vendor::Ark).then_some("minimal"),
+        reasoning_effort: match vendor {
+            Vendor::Ark => Some("minimal"),
+            Vendor::MiniMax => Some("low"),
+            _ => None,
+        },
         thinking: (vendor == Vendor::DeepSeek).then(|| json!({"type": "disabled"})),
+        reasoning_split: (vendor == Vendor::MiniMax).then_some(true),
     }
 }
 
@@ -241,6 +257,9 @@ fn agent_request_body(
     }
     if vendor == Vendor::Ark {
         body["max_tokens"] = json!(ARK_AGENT_MAX_TOKENS);
+    }
+    if vendor == Vendor::MiniMax {
+        body["reasoning_split"] = json!(true);
     }
     thinking.apply_chat_completions(&mut body);
     body
@@ -1524,6 +1543,38 @@ mod tests {
         .unwrap();
         assert_eq!(deepseek["thinking"], json!({"type": "disabled"}));
         assert!(deepseek.get("reasoning_effort").is_none());
+    }
+
+    /// Without it, MiniMax's thinking would land in the reply as `<think>`.
+    #[test]
+    fn minimax_keeps_its_thinking_out_of_the_answer() {
+        let writing = serde_json::to_value(completion_request(
+            "MiniMax-M3.1-Flash",
+            "rules".to_string(),
+            "text".to_string(),
+            Vendor::MiniMax,
+        ))
+        .unwrap();
+        assert_eq!(writing["reasoning_split"], true);
+        assert_eq!(writing["reasoning_effort"], "low");
+        let agent = agent_request_body(
+            "MiniMax-M3",
+            "help",
+            &[],
+            &[],
+            None,
+            Vendor::MiniMax,
+            &Thinking::default(),
+        );
+        assert_eq!(agent["reasoning_split"], true);
+        let generic = serde_json::to_value(completion_request(
+            "m",
+            "rules".to_string(),
+            "text".to_string(),
+            Vendor::Generic,
+        ))
+        .unwrap();
+        assert!(generic.get("reasoning_split").is_none());
     }
 
     /// Ark (like DeepSeek) streams a thinking model's reasoning as
