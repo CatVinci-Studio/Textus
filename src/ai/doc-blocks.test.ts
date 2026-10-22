@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { resolveBlockEdit, splitBlocks } from "./doc-blocks";
+import {
+  resolveBlockEdit,
+  resolveBlockTarget,
+  splitBlocks,
+} from "./doc-blocks";
 import cases from "./doc-blocks-cases.json";
 
 describe("splitBlocks", () => {
@@ -66,5 +70,31 @@ describe("resolveBlockEdit", () => {
         text: "",
       }),
     ).toBeNull();
+  });
+});
+
+describe("resolveBlockTarget", () => {
+  const doc =
+    "# Title\n\nThe cat sat on the mat.\n\n![Cat](cat.png)\n\nThe cat sat.";
+  const ids = splitBlocks(doc).map((b) => b.id);
+
+  it("is the whole block, or a phrase in it pinned by the block", () => {
+    expect(resolveBlockTarget(doc, { block: ids[1] })).toEqual({
+      anchor: "The cat sat on the mat.",
+    });
+    expect(
+      resolveBlockTarget(doc, { block: ids[1], anchor: "The cat sat" }),
+    ).toEqual({ anchor: "The cat sat", context: "The cat sat on the mat." });
+    expect(resolveBlockTarget(doc, { block: `#${ids[2]}` })).toEqual({
+      anchor: "![Cat](cat.png)",
+    });
+  });
+
+  it("is nothing for a block that isn't there, and the quote without one", () => {
+    expect(resolveBlockTarget(doc, { block: "zzzz" })).toBeNull();
+    expect(resolveBlockTarget(doc, { anchor: "mat" })).toEqual({
+      anchor: "mat",
+    });
+    expect(resolveBlockTarget(doc, {})).toBeNull();
   });
 });

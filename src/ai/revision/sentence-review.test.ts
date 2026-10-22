@@ -10,10 +10,15 @@ import { locateHunks } from "./sentence-locate";
 import { diffSentences } from "./sentence-diff";
 import { pendingEditKey } from "./pending-edit-plugin";
 
+// Two of five sentences changed: decided sentence by sentence (a
+// paragraph most of whose sentences changed is one change).
+const KEPT = "黛玉也不说破。二人从此相识。";
 const NOTE =
-  "这一句其实是在呼应第一回，可以说是一个起点。宝玉初见黛玉便觉似曾相识。贾母一句胡说，轻轻带过。";
+  "这一句其实是在呼应第一回，可以说是一个起点。宝玉初见黛玉便觉似曾相识。贾母一句胡说，轻轻带过。" +
+  KEPT;
 const REWRITE =
-  "这一句呼应第一回，是一个起点。宝玉初见黛玉便觉眼熟。贾母一句胡说，轻轻带过。";
+  "这一句呼应第一回，是一个起点。宝玉初见黛玉便觉眼熟。贾母一句胡说，轻轻带过。" +
+  KEPT;
 
 let editor: Editor | null = null;
 afterEach(() => {
@@ -88,7 +93,8 @@ describe("a rewrite decided sentence by sentence", () => {
     act(() => hook.result.current.decide("c1", 1, true));
     sync();
     expect(markdown(e)).toContain(
-      "这一句其实是在呼应第一回，可以说是一个起点。宝玉初见黛玉便觉眼熟。贾母一句胡说，轻轻带过。",
+      "这一句其实是在呼应第一回，可以说是一个起点。宝玉初见黛玉便觉眼熟。贾母一句胡说，轻轻带过。" +
+        KEPT,
     );
     expect(hook.result.current.status("c1")).toBe("accepted");
   });
@@ -101,7 +107,8 @@ describe("a rewrite decided sentence by sentence", () => {
       hook.result.current.accept("c1");
     });
     expect(markdown(e)).toContain(
-      "这一句呼应第一回，是一个起点。宝玉初见黛玉便觉似曾相识。贾母一句胡说，轻轻带过。",
+      "这一句呼应第一回，是一个起点。宝玉初见黛玉便觉似曾相识。贾母一句胡说，轻轻带过。" +
+        KEPT,
     );
   });
 

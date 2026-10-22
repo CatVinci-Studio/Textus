@@ -106,6 +106,8 @@ export interface ChatMessagesLabels
   generatingImage: string;
   /** In place of "Thinking…" while an edit's call streams in. */
   writingEdit: string;
+  /** In place of "Thinking…" while a review note's call streams in. */
+  writingNotes: string;
 }
 
 export interface ChatMessagesProps {
@@ -477,7 +479,9 @@ export function ChatMessages({
               ? labels.generatingImage
               : streaming?.tool === "propose_edit"
                 ? labels.writingEdit
-                : labels.thinking
+                : streaming?.tool === "add_comment"
+                  ? labels.writingNotes
+                  : labels.thinking
           }
         />
       )}

@@ -59,139 +59,151 @@ not applied, until Accept. With a selection, Write inserts after it
 
 With an image model set (Settings › Textus AI › Image model; none by
 default), Write and Revise also get `generate_image`, whose call is a
-proposal too: an insertion of one Markdown image. The tool makes the
-picture (`ai/images.rs`'s `ImageRun::execute`), keeps it in memory, and
-records its id in the call's arguments; the loop reports a step with such
-a call only once it has run (aicompat's `ToolRun::Amending`) - so the call
-turn the frontend receives is already the proposal (`parseImageProposal`). Its text
-names the picture by a placeholder src; only the preview swaps in the bytes
-(`generated-images.ts`), and it comes in whole, never typed out. Accept
-saves the picture the way Settings › Images says for a pasted one, then
+proposal too: an insertion of one Markdown image, or the `replace` of a
+picture already in the document. The tool starts the picture in the
+background (`ai/images.rs`'s `ImageRun::run_call`) and returns at once with
+its id recorded in the call's arguments, so the reply goes on while the
+picture is made; the frontend waits for it (`ai_generated_image`, up to 200
+seconds) and shows the picture's frame in its place and shape meanwhile.
+Its text names the picture by a placeholder src; only the preview swaps in
+the bytes (`generated-images.ts`). Accept waits for a picture still being
+made, then saves it the way Settings › Images says for a pasted one and
 writes the image with the saved src through the same `applyEditRange`;
 undo brings the proposal back, and accepting it again reuses that file.
 Reject lets the picture go in the backend too. A call that made no picture
-(refused by the service, out of quota, at most two per send) is a refusal
-like any other: no preview, and its card is the service's reason.
+(refused by the service, out of quota, past the per-send limit) is a
+refusal like any other: no preview, and its card is the service's reason.
 
-## Writing phase: the `ProposalStream` machine
+New text with pictures writes each one into its text as a line of its own
+(`![alt](textus-picture:16:9 description)`); the backend starts the picture
+the moment that line has streamed in (`images/inline.rs`) and tells the
+frontend (`StreamEvent::Picture`), which draws the line as its frame
+(`withBegunPictures`). The text and its pictures are one proposal.
 
-`ai/revision/proposal-stream.ts` - plain logic, no ProseMirror dependency. Every
-lifecycle decision for a streamed proposal lives here; `MilkdownEditor` only
-wires the machine's effects to the editor (place → streaming preview, feed →
-typewriter, finalize → decidable re-show, discard → reject).
+## Where a proposal points: blocks
 
-```mermaid
-flowchart LR
-    TS([toolStart<br/>propose_edit]) --> D[drafting<br/>args accumulating,<br/>nothing on screen]
-    D -- "argsDelta: action complete,<br/>anchor locatable" --> R[revealing<br/>placed as streaming preview,<br/>feed per delta]
-    D -- "finish(any)" --> F0([forgotten -<br/>never shown])
-    R -- "finalCall, valid args<br/>feed(done)" --> OK([hands off to<br/>deciding phase])
-    R -- "finalCall, invalid args" --> X1([discard])
-    R -- "finish(stopped)<br/>feed(done) + finalize(partial)" --> OK
-    R -- "finish(failed)" --> X2([discard])
-```
+The model is shown the document with each block's id before it
+(`[#k3f9] `, `ai/doc_blocks.rs`; mirrored in `ai/doc-blocks.ts` for drafts),
+and every call that points into the document names its block instead of
+quoting it - `propose_edit` (`block`, `last_block` for a run), `add_comment`
+and `generate_image` (`block`) - with `anchor` only for a few words inside
+that block. The backend turns the id into an anchor before anything else
+sees the call (`agent.rs`' `postfix_step`: `resolve_edit_arguments`,
+`resolve_target_arguments`), so validation, history and the frontend work
+in anchors as before; a draft still streaming does the same
+(`resolveBlockEdit`, `resolveBlockTarget`). Quoting cost a whole passage of
+output before anything could show, and a quote that didn't match the
+document's own Markdown (a picture given a width, written as `<img>`) found
+nothing. An id names nothing once its block changed: the tool says so.
 
-`finish` fires when the exchange ends: a user stop is `"stopped"`, a request
-failure is `"failed"`. A normal completion delivered a `finalCall` for every
-draft, so the machine is already empty and `finish` is a no-op.
+## The lifecycle
 
-The two endings that matter:
-
-- **Stop keeps.** A user stop freezes a revealing draft at the text streamed
-  so far and re-shows it as an ordinary decidable preview. The user watched
-  that content arrive; stopping means "that's enough", not "throw it away".
-  A rewrite streaming in sentence by sentence (below) keeps what it reads
-  as on screen: the sentences it completed, then the original's sentences
-  it hadn't reached, which were still plain text - not struck, as the
-  streamed text alone would have them. A sentence cut off halfway goes and
-  its original stays; with no sentence completed, nothing is kept
-  (`pending-edit-plugin`'s `stopRewrite`, applied by
-  `useEditorProposals`' `addPreviews` to the re-shown proposal).
-- **Failure discards.** The error path offers Retry, and a kept preview
-  would duplicate the retried proposal.
-
-Smaller rules the machine also owns:
-
-- A textless proposal (`delete`) still gets its `feed(done)` - without it
-  the typewriter entry stays "more may come" forever and the preview never
-  becomes decidable.
-- Final arguments that don't validate (e.g. `replace` without an anchor)
-  discard the placed preview: such a proposal can never be applied, and
-  leaving it would strand an un-decidable preview.
-- With edit animation off (or reduced motion) the machine is bypassed
-  entirely; proposals appear complete, at once, via `ChatBody`'s
-  completed-turn batches.
-
-## Deciding phase: `PendingStatus`
-
-`ai/revision/usePendingEdits.ts` + `ai/revision/pending-edit-plugin.ts`.
+Every proposal - an edit, a picture, a review note - goes through one
+lifecycle. Its states and what moves it on:
 
 ```mermaid
 flowchart LR
-    S[streaming] -- "settle: reveal finished<br/>and args final" --> P[pending]
-    P -- "Accept / Cmd-Enter" --> A([accepted])
-    P -- "Reject / Cmd-Backspace /<br/>superseded by a new exchange" --> J([rejected])
-    P -- "doc changed under it" --> I([invalid])
-    S -- "doc changed under it" --> I
+    S([toolStart]) --> D[drafting]
+    D -- "arguments say where<br/>(argsDelta)" --> R[streaming<br/>placed, text growing]
+    R -- "completed call<br/>(finalCall)" --> P[pending<br/>decidable]
+    D -- "completed call" --> P
+    R -- "result: refused" --> X([discarded])
+    P -- "result: refused" --> X
+    R -- "Stop" --> P
+    R -- "failure / retry" --> X
+    P -- "Accept" --> A([accepted])
+    P -- "Reject" --> J([rejected])
+    P -- "a later request's proposal<br/>at the same spot" --> RP([replaced])
+    P -- "its text gone" --> I([invalid])
+    A -- "Undo" --> P
 ```
 
-| Status      | Meaning                                      | Behavior                                                                                                   |
-| ----------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `streaming` | Args still arriving, or typewriter playing   | Accept refuses (not a failure - works once settled)                                                        |
-| `pending`   | Decidable                                    | Strike (red) + new text (green); Quick Ask nav bar walks previews in **document order**, not arrival order |
-| `accepted`  | Applied                                      | Decoration removed in the same transaction as the write - no orphan frame                                  |
-| `rejected`  | Declined, or superseded                      | Preview removed; chat card shows Rejected                                                                  |
-| `invalid`   | Target text changed / anchor no longer found | Preview dropped; chat card offers relocation (asks the model to re-issue against the current document)     |
+Who owns each move:
 
-**Hover only points.** A rewrite decided sentence by sentence pairs each
-struck original with its replacement. With the pointer on either side, on
-the ✓ / ✕ after them, or on the pair's card in the margin, that pair's
-tints turn a shade darker - a darker green for the new text, a darker red
-for the original - the way a review note's passage darkens under the
-pointer, and its margin card's text darkens with it. The pair the review
-bar points at looks the same, card included. There is no outline. The
-tints are theme variables (`--revision-*-hover-bg`,
-[design-language.md](design-language.md#theme-rules)). That is all hover does, in
-every revision view: nothing is hidden, faded or previewed, and the pair
-looks as before once the pointer leaves (or leaves the editor). To read
-the result without the markup, pick **Result only, no markup** in the
-review bar's view menu.
+| Move                                                                      | Owner                                                                                                                                     |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| drafting → streaming, its text growing, stop / failure endings, a refusal | `ai/revision/proposal-stream.ts` (`ProposalStream`): pure, no editor                                                                      |
+| how a draft is shown - typed in, or drawn again as it grows               | `ai/revision/proposal-display.ts` (`typewriter`, `drawn`, chosen per call)                                                                |
+| streaming → pending                                                       | the completed call's add (`ChatBody`'s completed turns) and, for a typed-in draft, the reveal settling (`pending-edit-plugin`'s `settle`) |
+| pending → accepted / rejected / replaced / invalid, undo                  | `ai/revision/usePendingEdits.ts` + `pending-edit-plugin.ts`                                                                               |
+| what the model is told of each, next request                              | `ai/revision/proposal-status.ts`                                                                                                          |
 
-The hover class goes through the plugins, never onto the text's DOM
-(`ai/margin/useReviewNotes.ts` → a `hot` meta → `pending-edit-plugin`'s
-`hotDecorations`). ProseMirror reads a class written onto a decorated span
-as an edit of its own and redraws the paragraph, and every strike and
-replacement in it replays its entrance - in `1.1.0-rc.4` that made the red
-and the green vanish under the pointer and fade back. The review bar's
-**‹ / ›** follow the same rule: the pointer they move is a class the plugin
-sets on its widgets (no widget is keyed by it), and the paragraph's flash
-(`editor/reveal-position.ts`) is a Web Animation, not a class.
+### Writing: `ProposalStream`
 
-**From the keyboard.** `F7` and `Shift + F7` move the same pointer from
-anywhere in the window (`document-view/useReviewBar.ts`) and put the caret
-at the change. With the pointer on a sentence, `Ctrl/⌘ + Enter` takes it
-and `Ctrl/⌘ + Backspace` (the caret in the proposal) keeps its original,
-as its ✓ / ✕ do; with no pointer they accept or reject the whole proposal,
-as before. A screen reader hears each step and each decision
-(`useRevisionAnnouncements`, `usePendingEdits`' `onDecided`).
+`toolStart` opens a draft (propose_edit and generate_image; a note is
+drawn from its arguments by the conversation, below). The draft is placed
+the moment its arguments say where it goes - an action and a block, or an
+anchor - and from then on fed the text as it arrives. The same call said
+to start again (the backend announces a picture it runs) is the same
+call: a fresh draft in its place stranded the placed one, and a redone
+picture read "Writing…" for good (`1.2.0-rc.6`).
 
-**The tint is the text's.** New text over several lines - hard breaks
-(`\`, two trailing spaces, `<br>`) or two paragraphs - is tinted line by
-line (`renderPendingHtml`'s `.pending-line`), with the breaks between the
-lines untinted; one box over all of them painted its padding at every line
-end and a stub on the empty line between paragraphs, the darker hover tint
-more so. The hover tint over a struck original covers its text runs only
-(`textRuns`), never a hard break.
+Endings:
 
-**Motion.** One timing throughout, from `ui/motion.css`: whatever comes in -
-a strike, new text, the ✓ / ✕, a sentence a stream completes or moves, what
-a view switch brings in - enters over `--dur-base` with `--ease-out`,
-opacity only (the ✓ / ✕ also grow from `--scale-enter`); a settled
-proposal's sentences follow each other a `--dur-instant` apart, at most
-eight steps; tints change over `--dur-instant` (hover) and a decision over
-`--dur-fast`. Accepted text fades from green where it now stands over
-`--dur-slow` (`.pending-landed`). Reduced motion keeps the fades and drops
-the stagger and the growth.
+- **The completed call** (`finalCall`) closes the reveal; the call's own
+  add makes the proposal decidable. A picture's frame goes and the
+  picture's proposal takes its place.
+- **Its result** (`result`): one the backend refused goes, streamed or
+  placed; the model sends it again, fixed.
+- **Stop keeps** what the user watched arrive: a draft is frozen as a
+  decidable proposal - a rewrite with the sentences it completed, the
+  originals it hadn't reached left plain (`stopRewrite`); none completed,
+  nothing.
+- **Failure discards** (and a step asked for again after a garbled one):
+  Retry would otherwise duplicate it.
+
+### Showing a draft: `proposal-display.ts`
+
+With edit animation on, a draft is placed once and typed in
+(`streamPendingInsertText`); a rewrite is laid out sentence by sentence as
+it goes (below, "Streaming in place"). With edit animation off, or the
+system's Reduce motion, there is no typewriter, but the draft still shows
+as it is written: drawn again with what has arrived, at most every 150 ms.
+Until `1.2.0-rc.6` it showed nothing then, and every edit appeared at once
+when the reply was done. Each call keeps the display it started with.
+
+The status line under the reply says what is coming whenever nothing else
+moves: "Writing the edit…", "Writing notes…", "Generating an image…", or
+"Thinking…" (`ChatMessages`' `ThinkingIndicator`).
+
+### Notes
+
+A note (`add_comment`) changes nothing, so it has no preview: the
+conversation draws it into `StreamingState.comments` as soon as its
+passage and its text are complete in the streaming arguments
+(`useAgentConversation`), and the margin shows it from there
+(`useReviewNotes`). The completed call places it again, should its
+`context` have settled a repeated passage differently.
+
+### Deciding: `PendingStatus`
+
+| Status      | Meaning                                                        | Behavior                                                                                                          |
+| ----------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `streaming` | Arguments still arriving, or the typewriter still revealing    | Accept waits (not a failure - it works once settled)                                                              |
+| `pending`   | Decidable                                                      | Strike (red) + new text (green), ✓ / ✕ per change; the review bar walks changes in document order                 |
+| `accepted`  | Applied                                                        | Decoration removed in the same transaction as the write; Undo brings it back                                      |
+| `rejected`  | The user turned it down                                        | Preview removed; the card says Rejected                                                                           |
+| `replaced`  | A later request's proposal at the same spot took its place     | Preview removed; the card says "Replaced by a newer proposal", and the model is told it wasn't the user's verdict |
+| `invalid`   | Its text is gone                                               | Preview dropped; the card offers to ask for it again                                                              |
+| `joined`    | A picture or an edit that went into a proposal not decided yet | Decided with that proposal                                                                                        |
+
+**The writer's edits stand.** Every `docChanged` maps each preview through
+the transaction and re-reads its text. Unchanged, nothing is redrawn.
+Changed (`pending-edit-plugin`'s `rebase`):
+
+- a proposal decided change by change keeps each change whose original
+  still reads as it did (`PendingSentence.expected`); one whose original
+  the writer changed is set aside (`parked`), not shown or applied, and
+  back if it reads so again; none left, it goes (`invalid`);
+- a rewrite still streaming in keeps streaming, its original's ranges
+  following the edit; its completed call is found again change by change
+  against the text as it then is (`usePendingEdits`' `rebasedSentences`);
+- a proposal shown and decided whole goes, as before - its Accept would
+  write the whole range, the edit with it.
+
+A proposal that went through an edit is `rebased`: Accept writes its taken
+changes one by one, back to front, and nothing else, so what the writer
+typed in between stays.
 
 ## Revision views
 
@@ -205,11 +217,24 @@ revisions are drawn, as Word's markup views:
 | **Changes in the text, original in margin** | margin card | green                       |
 | **Result only, no markup** (`final`)        | hidden      | unmarked, faint dotted line |
 
-A rewrite is shown sentence by sentence when its sentences can be found
-in the text - also when its anchor spans several paragraphs, which resolve
-to their whole blocks (`sentence-locate.ts` skips the text before the
-anchor). One that can't be (a heading or list turned into something else)
-is shown whole, and the views apply to it as one change with one card.
+How finely a rewrite is decided follows what it did (`sentence-diff.ts`'
+`regroup`). It is cut into the smallest runs both sides of which end a
+paragraph together, and each run:
+
+- kept its paragraphs: decided sentence by sentence - or as one change,
+  struck whole with the new paragraph after it, where the paragraph was
+  rewritten (more than half its sentences changed and it reads unlike its
+  original); a polish that touched every sentence stays sentence by
+  sentence;
+- joined, split or regrouped paragraphs: one change for the new
+  paragraph(s), set against the paragraphs they came from - also when every
+  sentence was kept, since accepting joins them.
+
+A rewrite is shown this way when its pieces can be found in the text -
+also when its anchor spans several paragraphs, which resolve to their whole
+blocks (`sentence-locate.ts` skips the text before the anchor). One that
+can't be (a heading or list turned into something else) is shown whole,
+and the views apply to it as one change with one card.
 
 **The text reads as the result.** Where a view takes the originals out of
 the text ("Changes in the text", "Result only"), a block whose text is
@@ -231,8 +256,11 @@ way the finished rewrite is (`diffSentenceLists`), except for the last run
 of changes, where an original the stream hasn't reached is still to come,
 not deleted. So:
 
-- a kept sentence shows nothing; a changed one is struck where it stands
-  with its new text beside it the moment it completes, in every view;
+- a changed sentence is struck where it stands with its new text beside it
+  the moment it completes, in every view; a kept one shows nothing of its
+  own, but the progress cursor (`readingDecoration`, a tint in
+  `--revision-reading-bg`) stands on the original the stream has reached,
+  so a light polish moves through the text rather than standing still;
 - the sentence being written types in beside the original it rewrites,
   which is struck while it is written - or, a sentence of its own, where it
   goes. While it still repeats an original word for word, or is too short
@@ -255,9 +283,9 @@ not deleted. So:
 When the stream ends, the layout is exactly the one the finished proposal
 has, on the same elements: nothing is redrawn, nothing moves. The alignment
 runs once per completed sentence, on an animation frame; the sentence being
-written is placed every frame. A rewrite whose sentences can't be found,
-Write's new text and anything with edit animation off stream in as before:
-one block, after the struck original.
+written is placed every frame. A rewrite whose sentences can't be found
+and Write's new text stream in as one block, after the struck original;
+with edit animation off, drawn again as it grows.
 
 New text alone - what Write proposes - has no original, so the margin views
 have nothing to set beside it: it stays a green block in the text there,
@@ -273,29 +301,32 @@ text came back from nothing. An original the view takes out of the text is
 hidden in the flow (`font-size: 0`), not `display: none`, which would start
 its entrance over when it came back.
 
-Staleness mirrors the grammar checker: every `docChanged` maps each preview's
-range through the transaction and re-checks its text - a mismatch drops the
-preview rather than risk applying to the wrong text. Accept re-checks once
-more, defensively. Terminal statuses are remembered even after the preview
-leaves the document, so a chat card never regresses to a misleading
-"Pending".
+Staleness is the lifecycle's ("The writer's edits stand", above). Accept
+re-checks once more, defensively. Terminal statuses are remembered even
+after the preview leaves the document, so a chat card never regresses to a
+misleading "Pending".
 
 ## Exchange boundaries: consecutive prompts
 
-Four rules, one implementation point (`MilkdownEditor`'s `addPreviews`
-wrapper plus a `supersedePending` flag):
+Messages sent while a reply is coming wait in a queue and go one at a
+time, each against the document as it then is (`MessageQueue`). Between
+exchanges, one implementation point (`useEditorProposals`' `addPreviews`
+plus a `supersedePending` flag):
 
-1. **A new prompt supersedes.** The FIRST proposal a new exchange writes into
-   the document first rejects every preview the user left undecided, then
-   places itself. Old and new suggestions never stack.
-2. **Question turns don't clear.** The flag is armed when an exchange starts
-   and consumed by the first preview add - an exchange that proposes nothing
-   leaves existing previews alone.
-3. **Same-exchange proposals coexist.** The flag is consumed once; a second
-   proposal in the same exchange lands beside the first.
+1. **A new proposal takes the place of an undecided one at its spot.** The
+   first proposal a new exchange writes notes which previews came before
+   it; any of those it stands on - the same spot, of the same kind (text
+   for text, a picture for a picture) - is `replaced`. The rest, elsewhere,
+   stay for the user to decide: a picture asked for after a paragraph that
+   wasn't accepted yet doesn't take that paragraph away.
+2. **An edit of text proposed and not decided yet goes into that
+   proposal** (`joinEdit`), and a picture next to it joins it
+   (`joinPicture`): the user decides on them together.
+3. **Question turns don't clear.** The flag is armed when an exchange
+   starts and consumed by the first preview add.
 4. **The model is told the truth.** Each send annotates every past
-   `propose_edit` tool result in the history with its current status - see
-   the next section.
+   proposal's tool result with its current status - undecided, accepted,
+   rejected, replaced, invalid - see the next section.
 
 Arming differs per surface: the panel and Quick Ask use their
 conversation's `busy` rising edge (each conversation arms on its own); a
@@ -390,21 +421,24 @@ the answer to a per-window store (`useMarginAvailable`).
 
 ## File index
 
-| File                                                                | Owns                                                                       |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `ai/revision/proposal-stream.ts`                                    | Writing-phase machine: place/feed/finalize/discard                         |
-| `ai/revision/usePendingEdits.ts`                                    | Anchor resolution, accept/reject/rejectAll, status map, review navigation  |
-| `ai/revision/pending-edit-plugin.ts`                                | Decorations, hover tint, typewriter + settle, staleness, shortcuts         |
-| `ai/revision/sentence-stream.ts`                                    | A rewrite's sentence layout while it streams in                            |
-| `ai/revision/proposal-status.ts`                                    | Status notes annotated onto history at send time                           |
-| `ai/chat/cancelled-turns.ts`                                        | What a stop keeps; dangling tool-call closure                              |
-| `ai/chat/useAgentConversation.ts`                                   | Conversation state: send/stop/retry/restore, history persistence           |
-| `ai/stream-reveal.ts`                                               | The pace streamed text is revealed at: the typewriter and chat replies     |
-| `ai/chat/useRevealedText.ts`                                        | A chat reply as drawn while it streams, paced by `StreamReveal`            |
-| `ai/chat/ChatBody.tsx`                                              | Shared conversation UI; streamed-turn → proposal, idempotent afterSend     |
-| `ai/chat/window/ChatWindowApp.tsx`, `ai/chat/window/chat-bridge.ts` | Detached window and its bridge: context/status pushes, proposal forwarding |
-| `ai/margin/margin-room.ts`                                          | Whether there is room for a margin; the per-window store both menus read   |
-| `ai/revision/revision-display.ts`                                   | The view drawn without a margin; which margin views can't be picked        |
-| `document-view/MilkdownEditor.tsx`                                  | Wiring: machine effects, supersede flag, exchange-boundary effect          |
-| `draft-autosave.ts`, `startup-restore.ts`, `App.tsx`                | Draft snapshots, startup restore, close-time cleanup                       |
-| `src-tauri/src/ai/tools.rs`, `agent.rs`                             | `propose_edit` validation, system prompt, the status-note contract         |
+| File                                                                | Owns                                                                                                 |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `ai/revision/proposal-stream.ts`                                    | Writing-phase machine: place/feed/finalize/discard, a call's result                                  |
+| `ai/revision/proposal-display.ts`                                   | How a draft is shown: typed in, or drawn again as it grows                                           |
+| `ai/doc-blocks.ts`, `src-tauri/src/ai/doc_blocks.rs`                | Block ids, and a call naming its block turned into an anchor                                         |
+| `ai/revision/sentence-diff.ts`                                      | A rewrite's changes, and how finely each is decided (`regroup`)                                      |
+| `ai/revision/usePendingEdits.ts`                                    | Anchor resolution, accept/reject/rejectAll, status map, review navigation                            |
+| `ai/revision/pending-edit-plugin.ts`                                | Decorations, hover tint, typewriter + settle, the progress cursor, staleness and `rebase`, shortcuts |
+| `ai/revision/sentence-stream.ts`                                    | A rewrite's sentence layout while it streams in                                                      |
+| `ai/revision/proposal-status.ts`                                    | Status notes annotated onto history at send time                                                     |
+| `ai/chat/cancelled-turns.ts`                                        | What a stop keeps; dangling tool-call closure                                                        |
+| `ai/chat/useAgentConversation.ts`                                   | Conversation state: send/stop/retry/restore, history persistence                                     |
+| `ai/stream-reveal.ts`                                               | The pace streamed text is revealed at: the typewriter and chat replies                               |
+| `ai/chat/useRevealedText.ts`                                        | A chat reply as drawn while it streams, paced by `StreamReveal`                                      |
+| `ai/chat/ChatBody.tsx`                                              | Shared conversation UI; streamed-turn → proposal, idempotent afterSend                               |
+| `ai/chat/window/ChatWindowApp.tsx`, `ai/chat/window/chat-bridge.ts` | Detached window and its bridge: context/status pushes, proposal forwarding                           |
+| `ai/margin/margin-room.ts`                                          | Whether there is room for a margin; the per-window store both menus read                             |
+| `ai/revision/revision-display.ts`                                   | The view drawn without a margin; which margin views can't be picked                                  |
+| `document-view/useEditorProposals.ts`                               | Wiring: the machine and its displays, supersede flag, exchange boundaries                            |
+| `draft-autosave.ts`, `startup-restore.ts`, `App.tsx`                | Draft snapshots, startup restore, close-time cleanup                                                 |
+| `src-tauri/src/ai/tools.rs`, `agent.rs`                             | `propose_edit` validation, system prompt, the status-note contract                                   |

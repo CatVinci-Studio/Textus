@@ -125,6 +125,13 @@
      darker green for new text, a darker red for the original - as a
      review note's passage darkens under the pointer. */
   --revision-insert-bg: var(--diff-insert-bg);
+  /* The original sentence a rewrite is at while it streams in - the
+     progress cursor, also over sentences it keeps as they were. */
+  --revision-reading-bg: color-mix(
+    in srgb,
+    var(--success-color) 14%,
+    transparent
+  );
   --revision-insert-text: currentColor;
   --revision-insert-hover-bg: color-mix(
     in srgb,

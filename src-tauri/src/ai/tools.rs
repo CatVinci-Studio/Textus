@@ -768,7 +768,7 @@ fn anchor_match_count(document: &str, anchor: &str) -> usize {
         .count()
 }
 
-const ADD_COMMENT_TOOL_NAME: &str = "add_comment";
+pub(crate) const ADD_COMMENT_TOOL_NAME: &str = "add_comment";
 const COMMENT_ADDED: &str = "Comment added";
 
 /// Feedback pinned to a passage instead of an edit to it - for "what's weak
@@ -778,6 +778,11 @@ fn add_comment(ctx: &ToolContext, arguments: &str) -> String {
     let parsed: serde_json::Value = serde_json::from_str(arguments).unwrap_or_default();
     let anchor = parsed.get("anchor").and_then(|v| v.as_str()).unwrap_or("");
     let comment = parsed.get("comment").and_then(|v| v.as_str()).unwrap_or("");
+    // Still a `block`: doc_blocks::resolve_target_arguments found no such
+    // block.
+    if let Some(block) = parsed.get("block").and_then(|v| v.as_str()) {
+        return format!("There is no block `{block}` in the document - name a block by an id shown before it, like `[#k3f9]`.");
+    }
     if comment.trim().is_empty() {
         return "`comment` is required - the feedback itself.".to_string();
     }
@@ -1295,13 +1300,17 @@ pub fn builtin_tools<'a>(
     tools.push(Tool {
         spec: ToolSpec {
             name: ADD_COMMENT_TOOL_NAME.into(),
-            description: "Pin a piece of feedback to a passage without changing it - for reviews and critique (\"what's weak here\", \"check this draft\"). One call per point; quote the passage verbatim as `anchor` (unique in the document, or add `context`). The user sees each comment as a card that jumps to its passage, so keep your reply to a short overall summary.".into(),
+            description: "Pin a piece of feedback to a passage without changing it - for reviews and critique (\"what's weak here\", \"check this draft\"). One call per point; name the block it is about by its id as `block`, and quote `anchor` only for a few words inside that block it is about. The user sees each comment as a card that jumps to its passage, so keep your reply to a short overall summary.".into(),
             parameters: json!({
                 "type": "object",
                 "properties": {
+                    "block": {
+                        "type": "string",
+                        "description": "The id shown before the block the comment is about, like `k3f9` from `[#k3f9]`"
+                    },
                     "anchor": {
                         "type": "string",
-                        "description": "Exact document text the comment is about"
+                        "description": "Only for a few words inside that block: those words, verbatim. Left out, the comment is about the whole block."
                     },
                     "comment": {
                         "type": "string",
@@ -1312,7 +1321,7 @@ pub fn builtin_tools<'a>(
                         "description": "Only when `anchor` repeats: a longer verbatim quote containing it that occurs once"
                     }
                 },
-                "required": ["anchor", "comment"],
+                "required": ["block", "comment"],
             }),
         },
         access: Access::Proposes,

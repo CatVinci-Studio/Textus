@@ -16,6 +16,8 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { announce } from "../../ui/announce";
 import { useSettings, type AgentMode } from "../../settings/SettingsContext";
 import { imageModelOf } from "../image-models";
+import { parsePartialToolArgs } from "./partial-tool-args";
+import { resolveBlockTarget } from "../doc-blocks";
 
 export interface AgentRequestOptions {
   mode: AgentMode;
@@ -40,6 +42,10 @@ export interface StreamingState {
    *  image…") or propose_edit ("Writing the edit…") - for the row under
    *  the reply in place of "Thinking…". */
   tool?: string;
+  /** add_comment calls whose passage and note have streamed in, before
+   *  their ToolCall turn lands - the margin shows each as it is written,
+   *  not all of them once the step completes. */
+  comments?: AgentTurn[];
 }
 
 /** The (document, message) pair behind the last failed send - lets the
@@ -200,6 +206,9 @@ export function useAgentConversation(
     const requestId = crypto.randomUUID();
     const generation = generationRef.current;
     requestIdRef.current = requestId;
+    // add_comment arguments streaming in, by call id (StreamingState's
+    // comments).
+    const commentArgs = new Map<string, string>();
     try {
       const newTurns = await ai.agentMessage({
         provider,
@@ -273,23 +282,71 @@ export function useAgentConversation(
             });
           } else if (
             event.type === "toolStart" &&
-            event.name === "propose_edit"
+            (event.name === "propose_edit" || event.name === "add_comment")
           ) {
-            // The reply stays; the row under it says an edit is coming.
+            // The reply stays; the row under it says an edit (or a note)
+            // is coming.
+            if (event.name === "add_comment") commentArgs.set(event.callId, "");
             setStreaming({
               turns: prev?.turns ?? [],
               text: prev?.text ?? "",
               thought,
               tool: event.name,
+              comments: prev?.comments,
+            });
+          } else if (
+            event.type === "toolArgsDelta" &&
+            commentArgs.has(event.callId)
+          ) {
+            const args = (commentArgs.get(event.callId) ?? "") + event.delta;
+            commentArgs.set(event.callId, args);
+            const { anchor, block, comment, context } =
+              parsePartialToolArgs(args);
+            const shown = prev?.comments?.some(
+              (c) => c.kind === "ToolCall" && c.call_id === event.callId,
+            );
+            // Once: the passage and the whole note are in (context, after
+            // them in the strict schema, may still settle a repeated
+            // passage - the completed turn places it again then). The
+            // passage is the block it names (resolveBlockTarget), or the
+            // words it quotes.
+            if (!prev || shown || !comment?.complete) return;
+            if (block && !block.complete) return;
+            const target = resolveBlockTarget(document, {
+              block: block?.value,
+              anchor: anchor?.complete ? anchor.value : undefined,
+            });
+            if (!target) return;
+            const call: AgentTurn = {
+              kind: "ToolCall",
+              call_id: event.callId,
+              name: "add_comment",
+              arguments: JSON.stringify({
+                anchor: target.anchor,
+                comment: comment.value,
+                context:
+                  target.context ??
+                  (context?.complete ? context.value : undefined),
+              }),
+            };
+            setStreaming({
+              ...prev,
+              thought,
+              comments: [...(prev.comments ?? []), call],
             });
           } else if (event.type === "turn") {
             // Interim prose that streamed before a tool call is dropped,
             // mirroring how the backend's step parsers prefer tool calls
             // over accompanying text - it never enters history either.
+            const landed =
+              event.turn.kind === "ToolCall" ? event.turn.call_id : null;
             setStreaming({
               turns: [...(prev?.turns ?? []), event.turn],
               text: "",
               thought,
+              comments: prev?.comments?.filter(
+                (c) => c.kind !== "ToolCall" || c.call_id !== landed,
+              ),
             });
           } else if (thought !== prev?.thought && prev) {
             setStreaming({ ...prev, thought });

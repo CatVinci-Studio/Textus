@@ -27,6 +27,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     thoughtFor: (n) => plural(t.agentThoughtFor, n, lang),
     generatingImage: t.agentGeneratingImage,
     writingEdit: t.agentWritingEdit,
+    writingNotes: t.agentWritingNotes,
     proposalImage: t.proposalImage,
     imageNotGenerated: t.imageNotGenerated,
     attachFile: t.agentAttachFile,

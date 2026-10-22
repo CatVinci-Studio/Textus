@@ -96,6 +96,7 @@ export function useReviewNotes({
     y: number;
   } | null>(null);
   const doneNotes = useRef(new Set<string>());
+  // Notes whose passage wasn't found, by what they were placed from.
   const lostNotes = useRef(new Set<string>());
   const [editorView, setEditorView] = useState<EditorView | null>(null);
   useEffect(() => {
@@ -109,30 +110,52 @@ export function useReviewNotes({
   }, [reviewNotesRef]);
   const panelTurns = conversation.streaming?.turns;
   const quickTurns = quickConversation.streaming?.turns;
+  // Each note still streaming in, once its passage and text are whole.
+  const panelDrafts = conversation.streaming?.comments;
+  const quickDrafts = quickConversation.streaming?.comments;
   const comments = useMemo(
     () =>
       commentCalls([
         ...conversation.history,
         ...(panelTurns ?? []),
+        ...(panelDrafts ?? []),
         ...quickConversation.history,
         ...(quickTurns ?? []),
+        ...(quickDrafts ?? []),
       ]),
-    [conversation.history, panelTurns, quickConversation.history, quickTurns],
+    [
+      conversation.history,
+      panelTurns,
+      panelDrafts,
+      quickConversation.history,
+      quickTurns,
+      quickDrafts,
+    ],
   );
+  // What each note was placed from: a draft placed before its context
+  // came is placed again from the completed call when that differs.
+  const placedFrom = useRef(new Map<string, string>());
   useEffect(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       setEditorView(view);
       const current = reviewNotesKey.getState(view.state)?.notes ?? [];
       const wanted = comments.filter((c) => !doneNotes.current.has(c.id));
-      const keep = current.filter((n) => wanted.some((w) => w.id === n.id));
+      const from = (c: (typeof wanted)[number]) =>
+        [c.anchor, c.context ?? "", c.comment].join("\0");
+      const keep = current.filter((n) =>
+        wanted.some(
+          (w) => w.id === n.id && placedFrom.current.get(n.id) === from(w),
+        ),
+      );
       const added: Omit<ReviewNote, "num">[] = [];
       for (const c of wanted) {
-        if (keep.some((n) => n.id === c.id) || lostNotes.current.has(c.id))
+        if (keep.some((n) => n.id === c.id) || lostNotes.current.has(from(c)))
           continue;
+        placedFrom.current.set(c.id, from(c));
         const range = locateAnchor(ctx, view.state.doc, c.anchor, c.context);
         if (!range || range.from >= range.to) {
-          lostNotes.current.add(c.id);
+          lostNotes.current.add(from(c));
           continue;
         }
         added.push({ id: c.id, ...range, comment: c.comment });

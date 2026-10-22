@@ -108,3 +108,32 @@ for (const [what, between] of [
     expect(errors).toEqual([]);
   });
 }
+
+test("a rewrite that joins paragraphs has a card for each new paragraph, beside the ones it came from", async ({
+  page,
+}) => {
+  // Four short paragraphs made two (rc.6: "make it fewer paragraphs" came
+  // out as one card for everything).
+  const before = [
+    "夜里，小满拆开伞顶。",
+    "她在夹层里找到一枚白色纽扣。",
+    "剪刀从她手里滑了下去。",
+    "母亲去世三年了。",
+  ];
+  const after = [
+    "夜里，小满拆开伞顶。她在夹层里找到一枚白色纽扣。",
+    "剪刀从她手里滑了下去。母亲去世三年了。",
+  ];
+  await proposeRewrite(page, before.join("\n\n"), after.join("\n\n"));
+  await expect(page.locator(".review-bar-pos")).toContainText("2");
+  await expect(page.locator(".revision-note")).toHaveCount(2);
+  const tops = await cardTops(page);
+  expect(tops[1] - tops[0]).toBeGreaterThan(40);
+  // Taking the first and keeping the second's originals joins those two
+  // paragraphs only.
+  const notes = page.locator(".revision-note");
+  await notes.first().getByRole("button", { name: "Take this change" }).click();
+  await notes.last().getByRole("button", { name: "Keep the original" }).click();
+  const paragraphs = page.locator('[data-active-tab="true"] .ProseMirror p');
+  await expect(paragraphs).toHaveText([after[0], before[2], before[3]]);
+});

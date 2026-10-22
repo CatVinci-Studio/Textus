@@ -57,6 +57,10 @@ export interface PendingSentence {
   /** Where its new text goes, when not at `to`: after the sentences it
    *  replaces, before those dropped and joined to it (`pairedPrefix`). */
   at?: number;
+  /** Its original's text (`visibleTextBetween`) when it was found: while
+   *  `[from, to)` still reads so, the change stands, whatever the writer
+   *  did around it (`rebase`). */
+  expected?: string;
 }
 
 /**
@@ -106,7 +110,18 @@ export interface PendingPreview {
    *  sentence diff (what Accept composes from) and, per change, its range
    *  and decision. Drawn once the preview settles - while it streams, the
    *  layout comes from `streamSource`. Absent: shown and decided whole. */
-  sentences?: { hunks: SentenceHunk[]; changes: PendingSentence[] };
+  sentences?: {
+    hunks: SentenceHunk[];
+    changes: PendingSentence[];
+    /** Changes whose original the writer has since changed: set aside,
+     *  not shown or applied - and back among `changes` if the original
+     *  reads as it did again (an undo). */
+    parked?: PendingSentence[];
+  };
+  /** The writer edited the text since this was proposed (`rebase`):
+   *  Accept writes its changes one by one, leaving everything else in
+   *  `[from, to)` - their edits - as it now is. */
+  rebased?: boolean;
   /** A rewrite whose original could be found sentence by sentence: those
    *  sentences (markdown) and where each stands. While it streams, its new
    *  text is laid out against them a sentence at a time
@@ -231,9 +246,10 @@ function layoutSignature(layout: StreamLayout): string {
         : `c${p.start}-${p.end}:${textKey(p.after)}`,
     )
     .join(",");
+  // Without a partial sentence the progress cursor stands on `reached`.
   const partial = layout.partial
     ? `${layout.partial.rewrites ?? "i"}@${layout.partial.at}`
-    : "-";
+    : `-${layout.reached}`;
   return `${pieces}|${partial}`;
 }
 
@@ -1117,6 +1133,8 @@ function streamDecorations(
   const { partial } = s.layout;
   s.partialIndex = partial ? index : null;
   s.drawn = layoutSignature(s.layout);
+  const reading = readingDecoration(p.callId, ranges, s.layout);
+  if (reading) decos.push(reading);
   if (!partial) return decos;
   const rewrites = partial.rewrites === null ? null : ranges[partial.rewrites];
   if (rewrites)
@@ -1153,6 +1171,31 @@ function streamDecorations(
     ),
   );
   return decos;
+}
+
+/**
+ * The progress cursor: the original sentence a streaming rewrite is at.
+ * While the sentence being written repeats an original word for word (or
+ * is too short yet to tell which one it rewrites) nothing else shows - a
+ * light polish kept the screen still for seconds, then a sentence popped
+ * up (rc.6) - so the sentence it has reached is tinted, the tint moving on
+ * as it goes. One being rewritten is struck open instead, with the new
+ * text typing beside it; past the last original there is nothing to mark.
+ */
+function readingDecoration(
+  callId: string,
+  ranges: { from: number; to: number }[],
+  layout: StreamLayout,
+): Decoration | null {
+  if (layout.partial) return null;
+  const range = ranges[layout.reached];
+  if (!range || range.from >= range.to) return null;
+  return Decoration.inline(
+    range.from,
+    range.to,
+    { class: "pending-reading", "data-call": callId },
+    { part: "reading" },
+  );
 }
 
 interface SentenceHooks {
@@ -1588,22 +1631,31 @@ function mapPreviews(
 ): { survivors: PendingPreview[]; changed: boolean } {
   let changed = false;
   const survivors: PendingPreview[] = [];
+  const range = (r: { from: number; to: number }) => ({
+    from: tr.mapping.map(r.from, -1),
+    to: tr.mapping.map(r.to, 1),
+  });
+  const mapChange = (c: PendingSentence): PendingSentence => ({
+    ...c,
+    ...range(c),
+    parts: c.parts?.map(range),
+    at: c.at === undefined ? undefined : tr.mapping.map(c.at, -1),
+  });
   for (const p of previews) {
     const from = tr.mapping.map(p.from, -1);
     const to = tr.mapping.map(p.to, 1);
-    if (
-      from > to ||
-      visibleTextBetween(tr.doc, from, to, " ") !== p.expectedText
-    ) {
+    if (from > to) {
       changed = true;
       continue;
     }
-    if (from === p.from && to === p.to) {
+    const text = visibleTextBetween(tr.doc, from, to, " ");
+    // Typing elsewhere: the same preview, so nothing is redrawn.
+    if (text === p.expectedText && from === p.from && to === p.to) {
       survivors.push(p);
       continue;
     }
     changed = true;
-    survivors.push({
+    const mapped: PendingPreview = {
       ...p,
       from,
       to,
@@ -1615,27 +1667,70 @@ function mapPreviews(
         p.strikeTo === undefined ? undefined : tr.mapping.map(p.strikeTo, 1),
       sentences: p.sentences && {
         hunks: p.sentences.hunks,
-        changes: p.sentences.changes.map((c) => ({
-          ...c,
-          from: tr.mapping.map(c.from, -1),
-          to: tr.mapping.map(c.to, 1),
-          parts: c.parts?.map((r) => ({
-            from: tr.mapping.map(r.from, -1),
-            to: tr.mapping.map(r.to, 1),
-          })),
-          at: c.at === undefined ? undefined : tr.mapping.map(c.at, -1),
-        })),
+        changes: p.sentences.changes.map(mapChange),
+        parked: p.sentences.parked?.map(mapChange),
       },
       streamSource: p.streamSource && {
         sentences: p.streamSource.sentences,
-        ranges: p.streamSource.ranges.map((r) => ({
-          from: tr.mapping.map(r.from, -1),
-          to: tr.mapping.map(r.to, 1),
-        })),
+        ranges: p.streamSource.ranges.map(range),
       },
-    });
+    };
+    if (text === p.expectedText) {
+      survivors.push(mapped);
+      continue;
+    }
+    const kept = rebase(mapped, tr.doc, text);
+    if (kept) survivors.push(kept);
   }
   return { survivors, changed };
+}
+
+/**
+ * A preview whose text the writer changed (`text`, as it now reads),
+ * carried on rather than dropped where that can be done without touching
+ * what they wrote - null where it can't:
+ *
+ * - decided sentence by sentence: each change stands while its own
+ *   original reads as it did; one whose original they changed is set aside
+ *   (`parked`), and back if it reads so again (an undo); none left, it goes;
+ * - still streaming in, a rewrite: its original's ranges follow the edit,
+ *   and the completed call is found again sentence by sentence against the
+ *   text as it then is (usePendingEdits' `rebasedSentences`).
+ *
+ * Anything else - shown and decided whole - goes, as before: its Accept
+ * writes the whole range, the writer's edit with it.
+ */
+function rebase(
+  p: PendingPreview,
+  doc: ProseNode,
+  text: string,
+): PendingPreview | null {
+  if (p.proposal.action !== "replace") return null;
+  if (p.streaming) {
+    if (!p.streamSource) return null;
+    return { ...p, expectedText: text, rebased: true };
+  }
+  const s = p.sentences;
+  if (!s || !s.changes.every((c) => c.expected !== undefined)) return null;
+  const stands = (c: PendingSentence) =>
+    c.from <= c.to &&
+    c.to <= doc.content.size &&
+    visibleTextBetween(doc, c.from, c.to, " ") === c.expected;
+  const all = [...s.changes, ...(s.parked ?? [])].sort(
+    (a, b) => a.from - b.from,
+  );
+  const changes = all.filter(stands);
+  if (changes.length === 0) return null;
+  return {
+    ...p,
+    expectedText: text,
+    rebased: true,
+    sentences: {
+      hunks: s.hunks,
+      changes,
+      parked: all.filter((c) => !changes.includes(c)),
+    },
+  };
 }
 
 /** The previews with each streaming rewrite's completed changes as last
@@ -1746,11 +1841,24 @@ export function createPendingEditPlugin(options: {
       // not the add, is what makes the preview decidable.
       const previews = [
         ...keep,
-        ...meta.previews.map((p) =>
-          p.streaming || stillRevealing(p.callId)
-            ? { ...p, streaming: true }
-            : p,
-        ),
+        ...meta.previews.map((p) => {
+          // Found again around the writer's edit (usePendingEdits'
+          // rebasedSentences): drawn as its settled changes, with nothing
+          // left to type out - its stream's reveal would hold it
+          // undecidable for good.
+          if (p.rebased && !p.streaming) dropAnimation(p.callId);
+          const revealing = stillRevealing(p.callId);
+          // The same proposal with new text and no typewriter to grow it
+          // (a draft streamed without the animation, its final add) is
+          // drawn anew: its widget's key would otherwise keep the old one.
+          const old = prev.previews.find((o) => o.callId === p.callId);
+          const revision =
+            old && !revealing && old.replacement !== p.replacement
+              ? Math.max(p.revision ?? 0, (old.revision ?? 0) + 1)
+              : (p.revision ?? old?.revision);
+          const next = revision === undefined ? p : { ...p, revision };
+          return p.streaming || revealing ? { ...next, streaming: true } : next;
+        }),
       ];
       return {
         previews,

@@ -52,8 +52,11 @@ describe("trimBreaks", () => {
 });
 
 describe("diffSentences + composeSentences", () => {
-  const before = "我们花了整整两个月。访谈了四十六位居民。内容涵盖很多方面。";
-  const after = "历时两个月。访谈了四十六位居民。内容涉及看法与担忧。";
+  // Two of four sentences changed: decided sentence by sentence.
+  const before =
+    "我们花了整整两个月。访谈了四十六位居民。内容涵盖很多方面。报告下周发布。";
+  const after =
+    "历时两个月。访谈了四十六位居民。内容涉及看法与担忧。报告下周发布。";
   const hunks = diffSentences(before, after);
 
   it("finds the changed sentences around the unchanged one", () => {
@@ -65,17 +68,24 @@ describe("diffSentences + composeSentences", () => {
     expect(composeSentences(hunks, [true, true])).toBe(after);
     expect(composeSentences(hunks, [false, false])).toBe(before);
     expect(composeSentences(hunks, [true, false])).toBe(
-      "历时两个月。访谈了四十六位居民。内容涵盖很多方面。",
+      "历时两个月。访谈了四十六位居民。内容涵盖很多方面。报告下周发布。",
     );
   });
 });
 
 describe("aligning a rewritten run", () => {
+  // Sentences kept as they were, so the changes stay the fewer and are
+  // decided one by one.
+  const TAIL = "其余各回也多有照应。此处不赘。全书由此展开。";
+  const KEPT = " Most were retired. Some had children. All lived nearby.";
+
   it("keeps sentence decisions when a rewrite splits a sentence in two", () => {
     const before =
-      "这一句其实是在呼应第一回的前世姻缘，可以说是全书爱情线的一个起点。宝玉初见黛玉便觉似曾相识，作者就某种意义而言是借这句话点明了木石前盟。贾母一句“胡说”，却把这层深意轻轻带过。";
+      "这一句其实是在呼应第一回的前世姻缘，可以说是全书爱情线的一个起点。宝玉初见黛玉便觉似曾相识，作者就某种意义而言是借这句话点明了木石前盟。贾母一句“胡说”，却把这层深意轻轻带过。" +
+      TAIL;
     const after =
-      "这一句呼应第一回的前世姻缘，是全书爱情线的起点。宝玉初见黛玉，便觉似曾相识。作者借这句话点明木石前盟。贾母一句“胡说”，把这层深意轻轻带过。";
+      "这一句呼应第一回的前世姻缘，是全书爱情线的起点。宝玉初见黛玉，便觉似曾相识。作者借这句话点明木石前盟。贾母一句“胡说”，把这层深意轻轻带过。" +
+      TAIL;
     const changes = diffSentences(before, after).filter(
       (h) => h.kind === "change",
     );
@@ -90,18 +100,21 @@ describe("aligning a rewritten run", () => {
     expect(
       composeSentences(diffSentences(before, after), [false, true, false]),
     ).toBe(
-      "这一句其实是在呼应第一回的前世姻缘，可以说是全书爱情线的一个起点。宝玉初见黛玉，便觉似曾相识。作者借这句话点明木石前盟。贾母一句“胡说”，却把这层深意轻轻带过。",
+      "这一句其实是在呼应第一回的前世姻缘，可以说是全书爱情线的一个起点。宝玉初见黛玉，便觉似曾相识。作者借这句话点明木石前盟。贾母一句“胡说”，却把这层深意轻轻带过。" +
+        TAIL,
     );
   });
 
   it("pairs English sentences joined into one", () => {
     const changes = diffSentences(
-      "The study ran in three towns. It took two months. We met forty residents.",
-      "The study ran in three towns over two months. We spoke with forty residents.",
+      "The study ran in three towns. It took two months. We met forty residents." +
+        KEPT,
+      "The study ran in three towns over two months. We spoke with forty residents." +
+        KEPT,
     ).filter((h) => h.kind === "change");
     expect(changes.map((c) => c.kind === "change" && c.before)).toEqual([
       "The study ran in three towns. It took two months. ",
-      "We met forty residents.",
+      "We met forty residents. ",
     ]);
   });
 
@@ -133,6 +146,46 @@ describe("a change over several paragraphs", () => {
         before: "Wind rose.",
         after: "Nothing moved on the quay.",
       },
+    ]);
+  });
+
+  it("is one change for a paragraph that was rewritten", () => {
+    const hunks = diffSentences(
+      "Rain fell all night. The wind rose before dawn. Boats came in.",
+      "A storm broke over the harbour. Every mooring strained. Boats came in.",
+    );
+    expect(hunks).toEqual([
+      {
+        kind: "change",
+        before:
+          "Rain fell all night. The wind rose before dawn. Boats came in.",
+        after:
+          "A storm broke over the harbour. Every mooring strained. Boats came in.",
+      },
+    ]);
+  });
+
+  it("stays sentence by sentence for a polish that touched every sentence", () => {
+    const hunks = diffSentences(
+      "Rain fell all night long. The wind rose before the dawn. Boats came in slowly.",
+      "Rain fell all night. The wind rose before dawn. Boats came in slowly.",
+    );
+    expect(hunks.filter((h) => h.kind === "change")).toHaveLength(2);
+  });
+
+  it("sets joined paragraphs against the paragraphs they came from, the rest as it was", () => {
+    const hunks = diffSentences(
+      "A one. A two.\n\nB one. B two.\n\nC one. C two.",
+      "A one. A two. B one. B two.\n\nC one. C two.",
+    );
+    expect(hunks).toEqual([
+      {
+        kind: "change",
+        before: "A one. A two.\n\nB one. B two.\n\n",
+        after: "A one. A two. B one. B two.\n\n",
+      },
+      { kind: "same", text: "C one. " },
+      { kind: "same", text: "C two." },
     ]);
   });
 

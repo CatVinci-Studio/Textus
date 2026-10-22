@@ -105,6 +105,63 @@ async function send(page: Page) {
   await composer.press("Enter");
 }
 
+test("a picture named by its block shows its frame after that block while it streams", async ({
+  page,
+}) => {
+  await open(page);
+  const ids = await page.evaluate(
+    async ({ doc, path }) => {
+      const mod = (await import(/* @vite-ignore */ path)) as {
+        splitBlocks: (d: string) => { id: string }[];
+      };
+      return mod.splitBlocks(doc).map((b) => b.id);
+    },
+    {
+      doc: `${FIRST}\n\nThe second paragraph.`,
+      path: "/src/ai/doc-blocks.ts",
+    },
+  );
+  const raw = JSON.stringify({
+    action: "insert_after",
+    alt: "A quiet harbour",
+    aspect: "16:9",
+    block: ids[0],
+    prompt: "A quiet harbour at dusk, ".repeat(30),
+  });
+  await streamPicture(
+    page,
+    raw,
+    JSON.stringify({
+      action: "insert_after",
+      alt: "A quiet harbour",
+      anchor: FIRST,
+      aspect: "16:9",
+      prompt: "A quiet harbour at dusk, ".repeat(30),
+      image: { id: "abc124", width: 1600, height: 900, pending: true },
+    }),
+  );
+  await send(page);
+  const frame = page.locator(`${editor} .pending-picture`);
+  await expect(frame).toHaveCount(1);
+  // After the paragraph it names, not elsewhere.
+  expect(
+    await frame.evaluate((el) =>
+      el
+        .closest(".ProseMirror > *")
+        ?.previousElementSibling?.textContent?.includes(
+          "The harbour was quiet",
+        ),
+    ),
+  ).toBe(true);
+  await page.evaluate(() => {
+    (window as { __release?: boolean }).__release = true;
+  });
+  await expect(page.locator(`${editor} .pending-insert img`)).toHaveAttribute(
+    "src",
+    /^blob:/,
+  );
+});
+
 test("a picture's frame shows in its shape while its description streams", async ({
   page,
 }) => {
@@ -176,4 +233,47 @@ test("while a picture is made, its frame on the chat's card has its shape", asyn
   const small = (await card.boundingBox())!;
   expect(small.width / small.height).toBeCloseTo(16 / 9, 1);
   expect(small.height).toBeCloseTo(120, 0);
+});
+
+test("a picture redone in place shows in the document and can be accepted", async ({
+  page,
+}) => {
+  const OLD = "![Old harbour](images/old.png)";
+  await openApp(page, {
+    settings: { language: "en", imageModelProvider: "openai" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(page, `${FIRST}\n\n${OLD}\n\nThe second paragraph.`);
+  await mockInvoke(page, {
+    ai_generated_image: { mime: "image/png", ext: "png", dataBase64: PNG },
+    ai_discard_generated_image: null,
+  });
+  await page.evaluate(() => {
+    (window as { __release?: boolean }).__release = true;
+  });
+  const raw = JSON.stringify({
+    action: "replace",
+    alt: "Summer harbour",
+    anchor: OLD,
+    aspect: "16:9",
+    prompt: "The harbour on a summer night, ".repeat(20),
+  });
+  await streamPicture(
+    page,
+    raw,
+    JSON.stringify({
+      ...JSON.parse(raw),
+      image: { id: "def456", width: 1600, height: 900, pending: true },
+    }),
+  );
+  await send(page);
+  await expect(page.locator(".agent-panel-view")).toContainText(
+    "A harbour at dusk.",
+  );
+  await expect(page.locator(`${editor} .pending-insert img`)).toHaveAttribute(
+    "src",
+    /^blob:/,
+  );
+  const card = page.locator(".agent-panel-view .agent-proposal").last();
+  await expect(card.getByRole("button", { name: "Accept" })).toBeVisible();
 });
