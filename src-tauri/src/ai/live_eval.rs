@@ -58,6 +58,7 @@ mod harness;
 mod images;
 mod latency;
 mod memory_eval;
+mod memory_sessions;
 mod tokens;
 mod web_search;
 
