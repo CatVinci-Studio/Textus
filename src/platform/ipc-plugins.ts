@@ -1,4 +1,5 @@
-import { call, desktopAction } from "./ipc-call";
+import type * as Generated from "./bindings/plugins";
+import { call, command, desktopActionCommand } from "./ipc-call";
 
 /**
  * Plugins (src-tauri/src/plugins/) and MCP servers (src-tauri/src/mcp/):
@@ -11,108 +12,59 @@ import { call, desktopAction } from "./ipc-call";
 // calls a plugin makes through the window (src/plugins/broker.ts).
 // ---------------------------------------------------------------------------
 
-/** PluginsState in src-tauri/src/plugins/state.rs; change both. */
-export interface PluginsState {
-  allOn: boolean;
-  plugins: Record<
-    string,
-    {
-      enabled: boolean;
-      granted: string[];
-      devPath?: string;
-      /** Installed from the catalog as CatVinci's own: Official. */
-      official?: boolean;
-    }
-  >;
-}
+// Generated from the Rust commands (src/platform/bindings/plugins.ts):
+// PluginsState in plugins/state.rs, CatalogEntry in plugins/catalog.rs,
+// InstalledPlugin in plugins/install.rs, FsEntry and HttpResponse in
+// plugins/access.rs.
+export type PluginsState = Generated.PluginsState_Serialize;
+export type PluginCatalogEntry = Generated.CatalogEntry_Serialize;
+export type { InstalledPlugin } from "./bindings/plugins";
+export type PluginFsEntry = Generated.FsEntry_Serialize;
+export type PluginHttpResponse = Generated.HttpResponse;
 
-/** CatalogEntry in src-tauri/src/plugins/catalog.rs; change both. */
-export interface PluginCatalogEntry {
-  id: string;
-  version: string;
-  official: boolean;
-  /** Its textus-plugin.json. */
-  manifest: unknown;
-  url: string;
-  sha256: string;
-  size: number;
-}
-
-/** InstalledPlugin in src-tauri/src/plugins/install.rs; change both. */
-export interface InstalledPlugin {
-  id: string;
-  dir: string;
-  /** textus-plugin.json as written. */
-  manifest: string;
-  dev: boolean;
-}
-
-/** FsEntry in src-tauri/src/plugins/access.rs; change both. */
-export interface PluginFsEntry {
-  name: string;
-  path: string;
-  isDir: boolean;
-  size: number;
-  modifiedMs: number | null;
-}
-
-/** HttpResponse in src-tauri/src/plugins/access.rs; change both. */
-export interface PluginHttpResponse {
-  status: number;
-  headers: Record<string, string>;
-  /** base64 */
-  body: string;
-}
-
-/** A raw IPC response's bytes (tauri::ipc::Response). */
+/** A raw IPC response's bytes (tauri::ipc::Response) - which specta has no
+ *  type for, so the commands answering one go through `call`. */
 const bytes = async (pending: Promise<ArrayBuffer>) =>
   new Uint8Array(await pending);
 
-/** One tool an MCP server offers (src-tauri mcp/client.rs). */
-export interface McpToolInfo {
-  name: string;
-  description: string;
-}
+/** One tool an MCP server offers (McpTool in src-tauri mcp/client.rs). */
+export type McpToolInfo = Generated.McpTool;
 
-/** A server that is on, as it is now (src-tauri mcp/mod.rs). */
-export interface McpServerStatus {
-  id: string;
+/** A server that is on, as it is now (ServerStatus in src-tauri
+ *  mcp/mod.rs, which sends its state as a string). */
+export interface McpServerStatus extends Generated.ServerStatus_Serialize {
   state: "starting" | "ready" | "failed";
-  /** The name and version it gave. */
-  server: string;
-  tools: McpToolInfo[];
-  error: string | null;
 }
 
 /** The MCP servers Settings › Extensions › MCP lists. Desktop only. */
 export const mcp = {
   /** Brings the running servers in line with the settings, and says how
    *  each one that is on is doing. */
-  status: () => call<McpServerStatus[]>("mcp_status"),
-  restart: (id: string) => call<McpServerStatus[]>("mcp_restart", { id }),
-  /** Starts a server not saved yet, asks for its tools and stops it. */
-  try: (server: unknown) =>
-    call<{ server: string; tools: McpToolInfo[] }>("mcp_try", { server }),
+  status: () => command("mcp_status") as Promise<McpServerStatus[]>,
+  restart: (id: string) =>
+    command("mcp_restart", id) as Promise<McpServerStatus[]>,
+  /** Starts a server not saved yet, asks for its tools and stops it. The
+   *  server is a settings entry, opaque JSON to Rust. */
+  try: (server: unknown) => command("mcp_try", server as Generated.Value),
 };
 
 export const plugins = {
-  state: () => call<PluginsState>("plugins_state"),
-  setAll: (on: boolean) => call<void>("plugins_set_all", { on }),
+  state: () => command("plugins_state"),
+  setAll: (on: boolean) => command("plugins_set_all", on),
   set: (id: string, enabled: boolean, granted: string[]) =>
-    call<void>("plugin_set", { id, enabled, granted }),
-  installed: () => call<InstalledPlugin[]>("plugins_installed"),
-  install: (path: string) => call<InstalledPlugin>("plugin_install", { path }),
-  loadDev: (path: string) => call<InstalledPlugin>("plugin_load_dev", { path }),
-  uninstall: (id: string) => call<void>("plugin_uninstall", { id }),
+    command("plugin_set", id, enabled, granted),
+  installed: () => command("plugins_installed"),
+  install: (path: string) => command("plugin_install", path),
+  loadDev: (path: string) => command("plugin_load_dev", path),
+  uninstall: (id: string) => command("plugin_uninstall", id),
   /** The plugins Textus offers (textus-plugins' catalog), fetched now. */
-  catalog: () => call<PluginCatalogEntry[]>("plugin_catalog"),
+  catalog: () => command("plugin_catalog"),
   /** Downloads one from the catalog, checks it and installs it. */
-  installFromCatalog: (id: string) =>
-    call<InstalledPlugin>("plugin_install_catalog", { id }),
+  installFromCatalog: (id: string) => command("plugin_install_catalog", id),
   /** Install from file… (`folder` false) and Load a plugin folder…'s
    *  picker. Desktop only. */
   pickPackage: (folder: boolean, filterName: string) =>
-    desktopAction<string | null>("plugin_pick_package", { folder, filterName }),
+    desktopActionCommand("plugin_pick_package", folder, filterName),
   file: (id: string, rel: string) =>
     bytes(call<ArrayBuffer>("plugin_file", { id, rel })),
   readResource: (id: string, path: string) =>
@@ -120,21 +72,21 @@ export const plugins = {
   fsRead: (id: string, root: string, path: string) =>
     bytes(call<ArrayBuffer>("plugin_fs_read", { id, root, path })),
   fsList: (id: string, root: string, path: string) =>
-    call<PluginFsEntry[]>("plugin_fs_list", { id, root, path }),
+    command("plugin_fs_list", id, root, path),
   fsRename: (id: string, root: string, from: string, to: string) =>
-    call<void>("plugin_fs_rename", { id, root, from, to }),
+    command("plugin_fs_rename", id, root, from, to),
   /** To the system Trash: nothing a plugin removes is gone for good. */
   fsTrash: (id: string, root: string, path: string) =>
-    call<void>("plugin_fs_trash", { id, root, path }),
+    command("plugin_fs_trash", id, root, path),
   fsMkdir: (id: string, root: string, path: string) =>
-    call<void>("plugin_fs_mkdir", { id, root, path }),
+    command("plugin_fs_mkdir", id, root, path),
   fsWrite: (
     id: string,
     root: string,
     path: string,
     contents: string,
     base64 = false,
-  ) => call<void>("plugin_fs_write", { id, root, path, contents, base64 }),
+  ) => command("plugin_fs_write", id, root, path, contents, base64),
   http: (
     id: string,
     request: {
@@ -144,9 +96,10 @@ export const plugins = {
       body?: string;
       bodyBase64?: boolean;
     },
-  ) => call<PluginHttpResponse>("plugin_http", { id, request }),
+  ) => command("plugin_http", id, request),
+  /** A plugin's storage is its own JSON, opaque to Rust. */
   storageGet: (id: string) =>
-    call<Record<string, unknown>>("plugin_storage_get", { id }),
+    command("plugin_storage_get", id) as Promise<Record<string, unknown>>,
   storageSet: (id: string, key: string, value: unknown) =>
-    call<void>("plugin_storage_set", { id, key, value }),
+    command("plugin_storage_set", id, key, value as Generated.Value),
 };

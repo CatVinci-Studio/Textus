@@ -1,6 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isDesktopApp } from "./capabilities";
 import { AI_OFF, aiRequestsAllowed } from "./ai-gate";
+import { commands as appCommands } from "./bindings/app";
+import { commands as authCommands } from "./bindings/auth";
+import { commands as fileCommands } from "./bindings/files";
+import { commands as pluginCommands } from "./bindings/plugins";
 
 /**
  * How every backend command is called: errors as IpcError, AI commands
@@ -21,6 +25,74 @@ export class IpcError extends Error {
     this.command = command;
     this.cause = cause;
   }
+}
+
+// The commands whose types are generated from Rust (src-tauri/src/bindings.rs).
+const commands = {
+  ...appCommands,
+  ...authCommands,
+  ...fileCommands,
+  ...pluginCommands,
+};
+type Commands = typeof commands;
+/** A backend command with generated types: its name, as Rust registers it. */
+export type Command = keyof Commands;
+type Args<K extends Command> = Parameters<Commands[K]>;
+// A command answering `Result<(), _>` is generated as answering `null`,
+// one answering `()` as `void`; both are nothing to the caller.
+type Answer<K extends Command> = [Awaited<ReturnType<Commands[K]>>] extends [
+  null,
+]
+  ? void
+  : Awaited<ReturnType<Commands[K]>>;
+
+/**
+ * Calls a generated command: tsc checks its name, its arguments (in the
+ * Rust function's order) and its answer against the Rust signature. The
+ * commands not generated yet - the AI ones, raw bytes, iOS-only - still go
+ * through `call`.
+ */
+export async function command<K extends Command>(
+  name: K,
+  ...args: Args<K>
+): Promise<Answer<K>> {
+  const run = commands[name] as (...args: Args<K>) => Promise<Answer<K>>;
+  try {
+    return await run(...args);
+  } catch (err) {
+    throw new IpcError(name, err);
+  }
+}
+
+/** `aiCall` for a generated command. */
+export function aiCommand<K extends Command>(
+  name: K,
+  ...args: Args<K>
+): Promise<Answer<K>> {
+  return aiRequestsAllowed()
+    ? command(name, ...args)
+    : Promise.reject(new IpcError(name, AI_OFF));
+}
+
+/** `desktopQuery` for a generated command. */
+export function desktopQueryCommand<K extends Command, F>(
+  name: K,
+  fallback: F,
+  ...args: Args<K>
+): Promise<Answer<K> | F> {
+  return isDesktopApp ? command(name, ...args) : Promise.resolve(fallback);
+}
+
+/** `desktopAction` for a generated command. */
+export function desktopActionCommand<K extends Command>(
+  name: K,
+  ...args: Args<K>
+): Promise<Answer<K>> {
+  return isDesktopApp
+    ? command(name, ...args)
+    : Promise.reject(
+        new IpcError(name, new Error("not available on this platform")),
+      );
 }
 
 export async function call<T>(command: string, args?: object): Promise<T> {

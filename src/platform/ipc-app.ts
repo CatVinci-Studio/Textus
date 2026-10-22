@@ -6,8 +6,8 @@ import type {
 } from "../ai/chat/window/chat-bridge";
 import type { DetachedTabDoc, HelpDoc } from "../document/doc-tabs";
 import type { Lang } from "../i18n/langs";
-import type { GalleryTheme } from "../theme/theme-gallery";
-import { call, desktopAction, desktopQuery } from "./ipc-call";
+import type * as Generated from "./bindings/app";
+import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
 
 /**
  * Backend commands for the app around the document: windows, the menu
@@ -16,75 +16,87 @@ import { call, desktopAction, desktopQuery } from "./ipc-call";
  */
 
 export interface FloatingDragArgs {
-  tab: {
-    path: string | null;
-    content: string;
-    savedContent: string;
-    diskMtime: number | null;
-    helpDoc: HelpDoc | null;
-  };
+  tab: Generated.DetachedTab_Deserialize & { helpDoc: HelpDoc | null };
   title: string;
   dirty: boolean;
   destroySource: boolean;
 }
 
-export interface WindowBounds {
-  label: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  scaleFactor: number;
-}
+export type { WindowBounds } from "./bindings/app";
 
 export const windowIpc = {
+  // Rust carries a tab's help guide as a string; it is one of the
+  // frontend's HelpDoc ids, which is what went in.
   takeDetachedTab: () =>
-    desktopQuery<DetachedTabDoc | null>("take_detached_tab", null),
-  listWindowBounds: () =>
-    desktopQuery<WindowBounds[]>("list_window_bounds", []),
-  startFloatingTabDrag: (args: FloatingDragArgs) =>
-    desktopAction<void>("start_floating_tab_drag", args),
+    desktopQueryCommand(
+      "take_detached_tab",
+      null,
+    ) as Promise<DetachedTabDoc | null>,
+  listWindowBounds: () => desktopQueryCommand("list_window_bounds", []),
+  startFloatingTabDrag: ({
+    tab,
+    title,
+    dirty,
+    destroySource,
+  }: FloatingDragArgs) =>
+    desktopActionCommand(
+      "start_floating_tab_drag",
+      tab,
+      title,
+      dirty,
+      destroySource,
+    ),
   startWindowDragTracking: () =>
-    desktopQuery<boolean>("start_window_drag_tracking", false),
+    desktopQueryCommand("start_window_drag_tracking", false),
   takePendingShowHelp: () =>
-    desktopQuery<string | null>("take_pending_show_help", null),
+    desktopQueryCommand("take_pending_show_help", null),
   /** The menu event this window was opened to carry out (Settings… or
    *  Open… chosen from the macOS menu bar with no window open), if any;
    *  asks once - the answer is taken. */
   takePendingMenuEvent: () =>
-    desktopQuery<string | null>("take_pending_menu_event", null),
+    desktopQueryCommand("take_pending_menu_event", null),
   /** The recent folder this window was opened to show (File > Open Recent
    *  with no window open), if any; asks once. */
   takePendingOpenFolder: () =>
-    desktopQuery<string | null>("take_pending_open_folder", null),
+    desktopQueryCommand("take_pending_open_folder", null),
   /** Opens files the way a file manager's open does: a window each, or
    *  tabs in the focused window in tab mode (lib.rs's open_paths). */
-  openPaths: (paths: string[]) => desktopAction<void>("open_paths", { paths }),
-  takePendingOpenPath: () => call<string | null>("take_pending_open_path"),
-  takePendingOpenPaths: () => call<string[]>("take_pending_open_paths"),
+  openPaths: (paths: string[]) => desktopActionCommand("open_paths", paths),
+  takePendingOpenPath: () => command("take_pending_open_path"),
+  takePendingOpenPaths: () => command("take_pending_open_paths"),
   /** Pops the chat panel out into its own OS window; resolves to its label,
    *  which is the address every later message to it is sent to. One chat
    *  window per editor window, shared by its tabs. If one already serves
    *  this window, it is focused and its label returned - and
    *  `state` is parked for it to claim (CHAT_ADOPT_HANDOFF), so a second
    *  detach hands over its conversation and pending edits just like the
-   *  first one did. */
+   *  first one did. The state is the chat window's own, opaque JSON to
+   *  Rust. */
   detachChatWindow: (args: {
     state: ChatHandoffState;
     position: [number, number] | null;
     title: string;
     pinned: boolean;
-  }) => desktopAction<string>("detach_chat_window", args),
+  }) =>
+    desktopActionCommand(
+      "detach_chat_window",
+      args.state as unknown as Generated.Value,
+      args.position,
+      args.title,
+      args.pinned,
+    ),
   takeChatHandoff: () =>
-    desktopQuery<ChatHandoff | null>("take_chat_handoff", null),
-  closeChatWindow: () => desktopQuery<void>("close_chat_window", undefined),
+    desktopQueryCommand(
+      "take_chat_handoff",
+      null,
+    ) as Promise<ChatHandoff | null>,
+  closeChatWindow: () => desktopQueryCommand("close_chat_window", undefined),
   /** Brings the chat window serving this editor to the front, handing it
    *  nothing; false when there is none. */
-  focusChatWindow: () => desktopQuery<boolean>("focus_chat_window", false),
+  focusChatWindow: () => desktopQueryCommand("focus_chat_window", false),
   /** The chat window serving THIS editor window, if any - re-read after a
    *  reload, or when Rust announces a chat window opened or closed. */
-  currentChatWindow: () =>
-    desktopQuery<string | null>("current_chat_window", null),
+  currentChatWindow: () => desktopQueryCommand("current_chat_window", null),
 };
 
 // ---------------------------------------------------------------------------
@@ -96,36 +108,36 @@ export const menuIpc = {
   /** Runs a menu id exactly as clicking its native twin would. The ids come
    *  from app/app-menu-model.ts and are defined in src-tauri/src/menu.rs. */
   triggerMenuItem: (id: string) =>
-    desktopQuery<void>("trigger_menu_item", undefined, { id }),
+    desktopQueryCommand("trigger_menu_item", undefined, id),
   /** Backs File > Open Recent, whose native submenu the app-drawn menu
    *  cannot read. */
-  listRecentFiles: () => desktopQuery<string[]>("list_recent_files", []),
+  listRecentFiles: () => desktopQueryCommand("list_recent_files", []),
   /** The folders listed above the files there. */
-  listRecentFolders: () => desktopQuery<string[]>("list_recent_folders", []),
+  listRecentFolders: () => desktopQueryCommand("list_recent_folders", []),
   /** Rebuilds the native (macOS) menu bar with these labels, keyed as
    *  app/app-menu-model.ts's nativeMenuLabels keys them. */
   setMenuLabels: (labels: Record<string, string>) =>
-    desktopQuery<void>("set_menu_labels", undefined, { labels }),
+    desktopQueryCommand("set_menu_labels", undefined, labels),
   /** Sets the native (macOS) View items' check marks, keyed by menu id
    *  (app/app-menu-model.ts's nativeMenuChecks). */
   setMenuChecks: (checks: Record<string, boolean>) =>
-    desktopQuery<void>("set_menu_checks", undefined, { checks }),
+    desktopQueryCommand("set_menu_checks", undefined, checks),
   /** Sets the native (macOS) Format items' keys, keyed by menu id
    *  (app/app-menu-model.ts's nativeMenuAccelerators). */
   setMenuAccelerators: (accelerators: Record<string, string>) =>
-    desktopQuery<void>("set_menu_accelerators", undefined, { accelerators }),
+    desktopQueryCommand("set_menu_accelerators", undefined, accelerators),
   /** Fills the native Plugins menu with what the plugins that are on put
    *  there (menu.rs's set_plugin_menu). */
   setPluginMenu: (items: { command: string; label: string }[]) =>
-    desktopQuery<void>("set_plugin_menu", undefined, { items }),
+    desktopQueryCommand("set_plugin_menu", undefined, items),
   /** The plugin commands background mode's tray or menu-bar icon lists
    *  (background/tray.rs). */
   setTrayPluginItems: (items: { command: string; label: string }[]) =>
-    desktopQuery<void>("set_tray_plugin_items", undefined, { items }),
+    desktopQueryCommand("set_tray_plugin_items", undefined, items),
   /** A plugin command picked in the tray while no window was open, for
    *  the window opened for it to run - once. */
   takePendingPluginCommand: () =>
-    desktopQuery<string | null>("take_pending_plugin_command", null),
+    desktopQueryCommand("take_pending_plugin_command", null),
 };
 
 // ---------------------------------------------------------------------------
@@ -138,25 +150,25 @@ export const menuIpc = {
 export const links = {
   /** The website's community page, in the UI's language. */
   openCommunityPage: (language: Lang) =>
-    call<void>("open_community_page", { language }),
+    command("open_community_page", language),
   /** The website's video tutorials in the UI's language, at one lesson's
    *  clip (a TUTORIAL_CLIPS id, onboarding/tutorial-steps.ts) or, without
    *  one, from the top. */
   openTutorialsPage: (language: Lang, clip?: string) =>
-    call<void>("open_tutorials_page", { language, clip: clip ?? null }),
+    command("open_tutorials_page", clip ?? null, language),
   /** Settings › General › About Textus's links, and the theme gallery's
    *  website (Browse themes, when it can't be reached), by name. */
   openAboutLink: (page: "github" | "discord" | "qq" | "themes") =>
-    call<void>("open_about_link", { page }),
+    command("open_about_link", page),
   /** A web or mail link Ctrl/Cmd+clicked in a document
    *  (editor/markdown/link-click-plugin.ts). */
-  openWebLink: (url: string) => call<void>("open_web_link", { url }),
+  openWebLink: (url: string) => command("open_web_link", url),
 };
 
 export const exportDoc = {
   exportSaveDialog: (defaultName: string, filterName: string, ext: string) =>
-    call<string | null>("export_save_dialog", { defaultName, filterName, ext }),
-  detectPandoc: () => desktopQuery<string | null>("detect_pandoc", null),
+    command("export_save_dialog", defaultName, filterName, ext),
+  detectPandoc: () => desktopQueryCommand("detect_pandoc", null),
   exportViaPandoc: (args: {
     pandocPath: string;
     markdown: string;
@@ -164,12 +176,21 @@ export const exportDoc = {
     format: string;
     resourceDir: string | null;
     title: string;
-  }) => desktopAction<void>("export_via_pandoc", args),
+  }) =>
+    desktopActionCommand(
+      "export_via_pandoc",
+      args.pandocPath,
+      args.markdown,
+      args.outputPath,
+      args.format,
+      args.resourceDir,
+      args.title,
+    ),
   openPandocInstallPage: () =>
-    desktopQuery<void>("open_pandoc_install_page", undefined),
+    desktopQueryCommand("open_pandoc_install_page", undefined),
   /** Nothing to show the file in on iOS - resolves without doing anything. */
   revealInDir: (path: string) =>
-    desktopQuery<void>("reveal_in_dir", undefined, { path }),
+    desktopQueryCommand("reveal_in_dir", undefined, path),
   // Renders the self-contained, already-paginated themed HTML offscreen and
   // writes the PDF straight to `path` - no print dialog on any platform
   // (WKWebView createPDF / WebView2 PrintToPdf / WebKitGTK print-to-file;
@@ -180,7 +201,14 @@ export const exportDoc = {
     baseDir: string | null;
     outputPath: string;
     pageNumbers: boolean;
-  }) => desktopAction<void>("export_pdf_native", args),
+  }) =>
+    desktopActionCommand(
+      "export_pdf_native",
+      args.html,
+      args.baseDir,
+      args.outputPath,
+      args.pageNumbers,
+    ),
 };
 
 // ---------------------------------------------------------------------------
@@ -189,19 +217,19 @@ export const exportDoc = {
 
 export const themes = {
   saveThemeCss: (id: string, variant: "light" | "dark", css: string) =>
-    call<void>("save_theme_css", { id, variant, css }),
+    command("save_theme_css", id, variant, css),
   loadThemeCss: (id: string, variant: "light" | "dark") =>
-    call<string | null>("load_theme_css", { id, variant }),
-  deleteTheme: (id: string) => call<void>("delete_theme", { id }),
+    command("load_theme_css", id, variant),
+  deleteTheme: (id: string) => command("delete_theme", id),
 };
 
 /** The public theme gallery (src-tauri/src/commands/theme_gallery.rs). A
  *  file is named by its path in the gallery repository, never by URL. */
 export const themeGallery = {
-  catalog: () => call<GalleryTheme[]>("theme_gallery_catalog"),
-  css: (path: string) => call<string>("theme_gallery_css", { path }),
+  catalog: () => command("theme_gallery_catalog"),
+  css: (path: string) => command("theme_gallery_css", path),
   /** A screenshot, as a `data:` URL. */
-  preview: (path: string) => call<string>("theme_gallery_preview", { path }),
+  preview: (path: string) => command("theme_gallery_preview", path),
 };
 
 // ---------------------------------------------------------------------------
@@ -209,8 +237,8 @@ export const themeGallery = {
 // ---------------------------------------------------------------------------
 
 export const cli = {
-  cliCommandStatus: () => desktopQuery<boolean>("cli_command_status", false),
-  installCliCommand: () => desktopAction<void>("install_cli_command"),
+  cliCommandStatus: () => desktopQueryCommand("cli_command_status", false),
+  installCliCommand: () => desktopActionCommand("install_cli_command"),
 };
 
 // ---------------------------------------------------------------------------
@@ -220,65 +248,61 @@ export const cli = {
 /** Rust -> every window: the tray changed. Mirrors STATUS_EVENT and
  *  `Status` in background/mod.rs - change both. */
 export const BACKGROUND_STATUS = "background-status";
-export interface BackgroundStatus {
+export interface BackgroundStatus extends Generated.Status {
   /** "unavailable": Linux without libayatana-appindicator (or
-   *  libappindicator); the process still stays in the background. */
+   *  libappindicator); the process still stays in the background. Rust
+   *  sends it as a string. */
   tray: "off" | "on" | "unavailable";
 }
 
 export const background = {
   status: () =>
-    desktopQuery<BackgroundStatus | null>("background_status", null),
+    desktopQueryCommand(
+      "background_status",
+      null,
+    ) as Promise<BackgroundStatus | null>,
 };
 
 // ---------------------------------------------------------------------------
 // default editor (src-tauri/src/commands/default_editor.rs) - desktop only
 // ---------------------------------------------------------------------------
 
-/** Mirrors `DefaultEditorStatus` in default_editor.rs - change both. */
-export interface DefaultEditorStatus {
-  /** False where this installation can't be the default (an AppImage). */
-  supported: boolean;
-  isDefault: boolean;
-  /** The choice is the user's, made in the system's settings, which
-   *  `set` opens (Windows). */
-  chooseInSettings: boolean;
-}
+export type { DefaultEditorStatus } from "./bindings/app";
 
 export const defaultEditor = {
-  status: () =>
-    desktopQuery<DefaultEditorStatus | null>("default_editor_status", null),
-  set: () => desktopAction<void>("set_default_editor"),
+  status: () => desktopQueryCommand("default_editor_status", null),
+  set: () => desktopActionCommand("set_default_editor"),
 };
 
 // ---------------------------------------------------------------------------
 // distribution (src-tauri/src/distribution.rs)
 // ---------------------------------------------------------------------------
 
-/** The channel this build was installed through - see distribution.rs. */
+/** The channel this build was installed through - see distribution.rs,
+ *  which sends it as a string. */
 export type Distribution = "direct" | "homebrew" | "aur";
 
 export const distribution = {
-  appDistribution: () => call<Distribution>("app_distribution"),
+  appDistribution: () => command("app_distribution") as Promise<Distribution>,
 };
 
 // ---------------------------------------------------------------------------
 // update (src-tauri/src/commands/update.rs) - desktop only
 // ---------------------------------------------------------------------------
 
-/** Mirrors UpdateMetadata in src-tauri/src/commands/update.rs, which is the
- *  plugin's own check answer. */
+/** What the updater plugin's `Update` is made from: UpdateMetadata in
+ *  src-tauri/src/commands/update.rs, the plugin's own check answer. */
 export type UpdateMetadata = ConstructorParameters<typeof Update>[0];
 
 export const updater = {
   /** The plugin's `check()` on `channel`'s endpoints; the `Update` it
    *  answers downloads and installs through the plugin as usual. */
   check: async (channel: UpdateChannel): Promise<Update | null> => {
-    const metadata = await desktopQuery<UpdateMetadata | null>(
+    const metadata = (await desktopQueryCommand(
       "check_for_update",
       null,
-      { channel },
-    );
+      channel,
+    )) as UpdateMetadata | null;
     return metadata ? new Update(metadata) : null;
   },
 };
