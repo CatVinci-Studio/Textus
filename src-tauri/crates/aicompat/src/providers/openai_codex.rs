@@ -246,7 +246,14 @@ pub async fn agent_step(
 /// The request for one picture through the ChatGPT sign-in: the Responses
 /// API's image_generation tool, made the only thing the model may do.
 fn image_request_body(prompt: &str, aspect: Aspect, reference: Option<&ImageAttachment>) -> Value {
-    let mut content = vec![json!({"type": "input_text", "text": prompt})];
+    // The tool's `size` alone was not kept to (a square asked for came
+    // back 1536 x 1024): the shape is said in the request too.
+    let size = gpt_image_size(aspect);
+    let text = format!(
+        "{prompt}\n\nAspect ratio {}, {size} pixels.",
+        aspect.ratio()
+    );
+    let mut content = vec![json!({"type": "input_text", "text": text})];
     if let Some(reference) = reference {
         content.insert(
             0,
@@ -265,7 +272,7 @@ fn image_request_body(prompt: &str, aspect: Aspect, reference: Option<&ImageAtta
         }],
         "tools": [{
             "type": "image_generation",
-            "size": gpt_image_size(aspect),
+            "size": size,
             // As the API-key route asks (images/openai.rs): plenty for a
             // page, and the plan's image allowance goes further.
             "quality": "medium",

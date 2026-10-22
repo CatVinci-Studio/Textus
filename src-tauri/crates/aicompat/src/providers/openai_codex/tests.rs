@@ -8,7 +8,10 @@ fn a_picture_request_offers_only_the_image_tool_at_the_aspects_size() {
     assert_eq!(body["tool_choice"]["type"], "image_generation");
     assert_eq!(body["stream"], true);
     assert_eq!(body["store"], false);
-    assert_eq!(body["input"][0]["content"][0]["text"], "A harbour at dusk");
+    assert_eq!(
+        body["input"][0]["content"][0]["text"],
+        "A harbour at dusk\n\nAspect ratio 16:9, 1536x1024 pixels."
+    );
 }
 
 #[test]
@@ -22,7 +25,10 @@ fn a_picture_being_redone_goes_in_as_an_input_image() {
     let content = &body["input"][0]["content"];
     assert_eq!(content[0]["type"], "input_image");
     assert_eq!(content[0]["image_url"], "data:image/jpeg;base64,aGk=");
-    assert_eq!(content[1]["text"], "Make her hair red");
+    assert!(content[1]["text"]
+        .as_str()
+        .unwrap()
+        .starts_with("Make her hair red"));
 }
 
 #[test]
