@@ -6,7 +6,7 @@
 
 use crate::ai::memory::Exchange;
 
-const INSTRUCTIONS: &str = "You predict the next message a writer will send to their writing assistant, from the conversation so far. Write that one message as they would type it: short (at most 15 words, or 30 characters in Chinese or Japanese), in the language they write their messages in, plain text with no quotes. Make it the natural next step - go on with the next part, change something in what was just done, or a follow-up question - never a thank-you or a goodbye. If there is no clear next step, answer NONE.";
+const INSTRUCTIONS: &str = "You predict the next message a writer will send to their writing assistant, from the conversation so far. Write that one message as they would type it: short (at most 15 words, or 30 characters in Chinese or Japanese), in the language they write their messages in, plain text with no quotes. Make it the natural next step - go on with the next part, change something in what was just done, or a follow-up question - never a thank-you or a goodbye, and never asking again for what the assistant just did: what it wrote or changed is already in the document. If there is no clear next step, answer NONE.";
 
 /// The last few messages are enough to see where the conversation goes.
 const MESSAGES_SENT: usize = 4;
@@ -21,7 +21,7 @@ fn input(exchange: &Exchange) -> String {
         text.push_str(&format!("- {}\n", clip(message, 600)));
     }
     text.push_str(&format!(
-        "\nThe assistant's reply to the last one:\n{}\n\nTheir next message:",
+        "\nThe assistant's reply to the last one (what it wrote or changed is already in the document):\n{}\n\nTheir next message:",
         clip(&exchange.reply, 1500)
     ));
     text
