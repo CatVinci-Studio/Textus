@@ -99,9 +99,15 @@ export function blockIds(markdowns: readonly string[]): string[] {
   });
 }
 
-/** An id as the model may write it: `#k3f9` or `k3f9`. */
+/** An id as the model may write it - `k3f9`, `#k3f9`, or the whole
+ *  marker `[#k3f9]` it was shown - as the id. clean_id in doc_blocks.rs. */
 export function cleanId(id: string): string {
-  return id.trim().replace(/^#/, "");
+  return id
+    .trim()
+    .replace(/^\[/, "")
+    .replace(/\]$/, "")
+    .replace(/^#/, "")
+    .trim();
 }
 
 /** Where `block` (and `lastBlock`) are among `blocks`: the run's first and

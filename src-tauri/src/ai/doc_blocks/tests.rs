@@ -242,3 +242,16 @@ fn a_rewrite_of_a_run_that_swaps_a_picture_keeps_it_and_says_so() {
     assert_eq!(v["text"], "Uno.\n\n![a](a.png)\n\nDos.");
     assert_eq!(v[PICTURES_KEPT_KEY], 1);
 }
+
+#[test]
+fn an_id_written_as_its_whole_marker_still_names_its_block() {
+    let doc = Document::from_markdown("One.\n\nTwo.");
+    let id = doc.blocks[1].id.clone();
+    let v = resolved(
+        &doc,
+        json!({"action": "replace", "block": format!("[#{id}]"), "text": "2."}),
+    );
+    assert_eq!(v["block"], id);
+    assert_eq!(v["anchor"], "Two.");
+    assert!(check_target(&doc, &v).is_ok());
+}

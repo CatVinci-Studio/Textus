@@ -72,6 +72,14 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         Some((from, to)) => &ctx.document.text[from..to],
         None => parsed.get("anchor").and_then(|v| v.as_str()).unwrap_or(""),
     };
+    // A block it names that isn't there (from before a change, mistyped):
+    // said as that, before anything the missing target would make it
+    // look like.
+    if needs_anchor(action) && parsed.get("block").is_some() {
+        if let Err(problem) = crate::ai::doc_blocks::check_target(ctx.document, &parsed) {
+            return problem;
+        }
+    }
     let has_text = parsed.get("text").and_then(|v| v.as_str()).is_some();
     if needs_text(action) && !has_text {
         return format!("`{action}` requires `text` - the new content.");

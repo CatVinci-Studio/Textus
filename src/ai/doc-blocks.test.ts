@@ -37,6 +37,8 @@ describe("runOf", () => {
     });
     expect(runOf(blocks, blocks[1].id, blocks[0].id)).toBeNull();
     expect(runOf(blocks, "zzzz")).toBeNull();
+    // The whole marker the model was shown names its block too.
+    expect(runOf(blocks, `[#${blocks[1].id}]`)).toEqual({ first: 1, last: 1 });
   });
 });
 

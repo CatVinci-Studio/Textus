@@ -110,7 +110,7 @@ impl Document {
     /// None when an id names no block, or the run is backwards.
     pub fn run(&self, block: &str, last_block: Option<&str>) -> Option<(usize, usize)> {
         let find = |id: &str| {
-            let id = id.trim().trim_start_matches('#');
+            let id = clean_id(id);
             self.blocks.iter().position(|b| b.id == id)
         };
         let first = find(block)?;
@@ -168,6 +168,16 @@ pub fn check_target(document: &Document, args: &Value) -> Result<(), String> {
 
 /// Told when a call names no block for document text.
 pub const NO_BLOCK: &str = "Not proposed: name the passage by its block - `block` takes the id shown before it, like `k3f9` from `[#k3f9]` - and, for a few words inside it, quote them in `anchor`.";
+
+/// An id as a model may write it - `k3f9`, `#k3f9`, or the whole marker
+/// `[#k3f9]` it was shown - as the id. cleanId in doc-blocks.ts.
+pub fn clean_id(id: &str) -> &str {
+    id.trim()
+        .trim_start_matches('[')
+        .trim_end_matches(']')
+        .trim_start_matches('#')
+        .trim()
+}
 
 impl std::ops::Deref for Document {
     type Target = str;
