@@ -77,7 +77,7 @@ const MANIFEST = {
   version: "1.0.0",
   publisher: "test",
   description: "Says hello.",
-  engines: { textus: "^1.3.0" },
+  engines: { textus: "^1.2.0" },
   main: "host.js",
   permissions: ["document.read", "document.propose"],
   contributes: {

@@ -147,7 +147,7 @@ export interface PluginManifest {
   icon?: string;
   license?: string;
   repository?: string;
-  /** The Textus versions it works with: "^1.3.0", ">=1.3.0". */
+  /** The Textus versions it works with: "^1.2.0", ">=1.2.0". */
   engine: string;
   /** Its code, run in the plugin host; none for a plugin that only adds
    *  themes. */

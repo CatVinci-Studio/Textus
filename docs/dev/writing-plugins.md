@@ -36,7 +36,7 @@ To share it, zip the folder and name the file `<id>.textusplugin`;
   "author": "Your Name", // shown on its card; the publisher where there is none
   "description": "Counts the words of the selection.",
   "icon": "icon.svg",
-  "engines": { "textus": "^1.3.0" },
+  "engines": { "textus": "^1.2.0" },
   "main": "host.js", // or ["shared.js", "host.js"], run in order
   "activationEvents": [], // ["onStartupFinished"] to start with Textus
   "permissions": ["document.read"],

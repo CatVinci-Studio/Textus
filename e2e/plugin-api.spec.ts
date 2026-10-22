@@ -107,10 +107,7 @@ test("an item added to the editor's menu is offered with the selection", async (
 test("a sidebar tab and a Settings page added from outside take their places", async ({
   page,
 }) => {
-  await openApp(page, {
-    settings: { language: "en" },
-    storage: { "textus-sidebar-open": "1" },
-  });
+  await openApp(page, { settings: { language: "en" } });
   await api(page);
   await page.evaluate(() => {
     const plugins = (window as unknown as { __textusPlugins: Api })

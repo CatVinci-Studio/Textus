@@ -1,7 +1,9 @@
 # Plugins and the market (design, 1.3)
 
-Status: sections 1-7 are built in 1.3.0-beta.1, on the registries that
-shipped in 1.2 ([docs/dev/plugin-api.md](../dev/plugin-api.md)); a
+Status: sections 1-7 are built, on the registries
+([docs/dev/plugin-api.md](../dev/plugin-api.md)), and ship in 1.2.0 with
+their entry points hidden in release builds until there are plugins to
+install (`PLUGINS_SHOWN`, src/plugins/availability.ts); a
 plugin's author reads [docs/dev/writing-plugins.md](../dev/writing-plugins.md).
 The market (section 8), `aiTools`, `slashCommands`, `codeBlockRenderers`,
 importers, exporters, templates and plugin themes come in later betas.
@@ -46,7 +48,7 @@ A folder (or a `.textusplugin` zip of one) with a manifest,
   "icon": "icon.png",
   "license": "MIT",
   "repository": "https://github.com/catvinci-studio/textus-pdf-viewer",
-  "engines": { "textus": "^1.3.0" },
+  "engines": { "textus": "^1.2.0" },
   "main": "dist/host.js", // runs in the plugin host (section 4)
   "activationEvents": [
     "onCustomEditor:catvinci.pdf",
