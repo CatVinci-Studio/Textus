@@ -38,6 +38,7 @@ pub(crate) struct ViewCheckState {
 pub(crate) struct BuiltMenu {
     pub(crate) menu: Menu<Wry>,
     pub(crate) open_recent: Submenu<Wry>,
+    pub(crate) plugins: Submenu<Wry>,
     pub(crate) check_items: Vec<CheckMenuItem<Wry>>,
 }
 

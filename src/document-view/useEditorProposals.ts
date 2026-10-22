@@ -40,6 +40,7 @@ import { resolveStrings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
 import { announce } from "../ui/announce";
 import { plural } from "../i18n/plural";
+import { usePluginDocumentAccess } from "./usePluginDocumentAccess";
 
 /** The editor's side of AI edits: the pending previews (usePendingEdits),
  *  the two conversations that propose them (the panel's and Quick Ask's),
@@ -50,6 +51,7 @@ export function useEditorProposals({
   settingsRef,
   settings,
   filePath,
+  isActive,
   onDecided,
   requestImageName,
 }: {
@@ -58,6 +60,8 @@ export function useEditorProposals({
   settingsRef: { readonly current: Settings };
   settings: Settings;
   filePath: string | null;
+  /** The active tab's editor: the one plugins read and propose edits to. */
+  isActive: boolean;
   /** The writer decided a proposal (useRevisionLearning). */
   onDecided?: (callId: string, changes: DecidedChange[]) => void;
   /** Asks for an accepted picture's file name, when Settings › Images
@@ -424,6 +428,8 @@ export function useEditorProposals({
     },
     [addPreviews],
   );
+  // A plugin's edits are proposals too, shown as Textus AI's are.
+  usePluginDocumentAccess({ run, isActive, filePath, addPreviews });
 
   return {
     pendingEdits,

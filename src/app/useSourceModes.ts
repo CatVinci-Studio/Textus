@@ -38,7 +38,8 @@ export function useSourceModes(tabState: TabState) {
     // Live content: entering source mode unmounts the editor, and with it
     // any edit its debounce still holds.
     const tab = liveTabs().find((tb) => tb.id === activeTabId);
-    if (!tab) return;
+    // A plugin's tab has no Markdown to show as source.
+    if (!tab || tab.view) return;
     if (tab.sourceMode && tab.splitView) {
       // Split view shows Source Mode as off - the menu check and the switch
       // in Settings both say so - so turning it on from there means plain
@@ -58,7 +59,8 @@ export function useSourceModes(tabState: TabState) {
   // just adds the preview.
   const toggleSplitView = useCallback(() => {
     const tab = liveTabs().find((tb) => tb.id === activeTabId);
-    if (!tab) return;
+    // A plugin's tab has no Markdown to show as source.
+    if (!tab || tab.view) return;
     if (tab.sourceMode && tab.splitView) {
       leaveSourceMode(tab);
     } else if (tab.sourceMode) {

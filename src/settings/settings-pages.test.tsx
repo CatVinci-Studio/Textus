@@ -13,6 +13,7 @@ describe("the Settings pages", () => {
       "General",
       "Editor & Appearance",
       "Textus AI",
+      "Extensions",
       "Shortcuts",
       "Privacy",
     ]);

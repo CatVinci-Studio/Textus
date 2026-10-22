@@ -15,6 +15,8 @@
     "vite.katex-fonts.test.ts",
     "vite.color-mix-fallback.ts",
     "vite.color-mix-fallback.test.ts",
+    "vite.dev-plugins.ts",
+    "vite.startup-budget.ts",
     "playwright.webview.config.ts",
     "playwright.config.ts",
     "e2e",

@@ -30,6 +30,7 @@ import type {
   WritingConventionsOptions,
 } from "./ipc-ai-types";
 export { IpcError } from "./ipc-call";
+export * from "./ipc-plugins";
 export type { UpdateChannel } from "./update-channel";
 export {
   type SavedImage,

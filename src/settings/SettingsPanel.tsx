@@ -52,7 +52,7 @@ import { isIOSApp } from "../platform/capabilities";
 // tabs along the top (mobile/styles/settings.css) - layout only, no second
 // set of pages to keep in step.
 
-interface SettingsPanelProps {
+export interface SettingsPanelProps {
   onClose: () => void;
   /** Opens a document in the editor - the agent.md "edit" button uses it. */
   onOpenFile: (path: string) => void;
@@ -64,6 +64,8 @@ interface SettingsPanelProps {
   /** The shortcuts that can't be changed, listed under the ones that can
    *  (built from the app menu, app/fixed-shortcuts.ts). */
   fixedShortcuts?: FixedShortcutGroup[];
+  /** The page to open at; General when left out. */
+  initialCategory?: string;
 }
 
 /** A Settings page's id (settings-pages.tsx). */
@@ -102,6 +104,7 @@ export function SettingsPanel({
   onFilesDeleted,
   viewChecks = {},
   fixedShortcuts = [],
+  initialCategory = "general",
 }: SettingsPanelProps) {
   const { settings, setSettings, t } = useSettings();
   // As in the review bar: a phone never has a margin, so there is nothing
@@ -119,7 +122,7 @@ export function SettingsPanel({
   // Rendered inside a Presence (App.tsx): it goes the way it came.
   const presence = usePresenceProps<HTMLDivElement>();
   const { category, setCategory, subpage, setSubpage, content, setJump } =
-    useSettingsNav();
+    useSettingsNav(initialCategory);
   const search = useSettingsSearch();
   const { query, setQuery, searching, setEntries, active, setActive } = search;
   const { matches, searchInput, listId } = search;
@@ -151,6 +154,10 @@ export function SettingsPanel({
     marginAvailable,
     noMargin,
     setSubpage,
+    openPage: (id) => {
+      setSubpage(null);
+      setCategory(id);
+    },
     openHelp,
     onOpenFile,
     onFilesDeleted,
@@ -351,8 +358,8 @@ export function SettingsPanel({
  *  Textus, Editor & Appearance › More themes (› Browse themes). A search
  *  result picked sets `jump`: once the row's page is on screen, it goes to
  *  the row. */
-function useSettingsNav() {
-  const [category, setCategory] = useState<Category>("general");
+function useSettingsNav(initialCategory: Category) {
+  const [category, setCategory] = useState<Category>(initialCategory);
   const [subpage, setSubpage] = useState<Subpage | null>(null);
   const [jump, setJump] = useState<SearchEntry | null>(null);
   const content = useRef<HTMLDivElement>(null);

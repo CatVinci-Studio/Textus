@@ -43,6 +43,10 @@ export function toolActivityText(
         .join("”, “")
     : undefined;
   const site = typeof args.url === "string" ? siteOf(args.url) : undefined;
+  // An MCP server's tool (src-tauri mcp/): named as the model knows it,
+  // mcp_<server>_<tool>, which says whose tool it is.
+  if (name.startsWith("mcp_") && labels.toolActivity.mcp)
+    return labels.toolActivity.mcp.replace("{arg}", name.slice(4));
   const arg =
     [args.query, queries, site, args.heading, args.path, args.name].find(
       (v): v is string => typeof v === "string" && v.length > 0,

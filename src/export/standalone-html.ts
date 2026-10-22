@@ -6,6 +6,7 @@ import {
 } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
 import { fs } from "../platform/ipc";
+import { lazyModule } from "../lazy/lazy-module";
 import {
   DETAILS_CLASS_PREFIX,
   DETAILS_END_CLASS,
@@ -150,14 +151,18 @@ export type ExportImages = "document" | "inline";
 // (editor/markdown/link-reveal.ts).
 export const LINK_SOURCE_SELECTOR = '[data-type="link_source"]';
 
+const renderHtml = lazyModule(
+  "render-html",
+  () => import("../editor/markdown/render-html"),
+);
+
 // What draws a link shown as its Markdown, when the editor has one: the
 // renderer stays out of the entry chunk otherwise (see color-swatch-classes.ts).
 export async function linkRenderer(
   editor: Element,
 ): Promise<((markdown: string) => string) | undefined> {
   if (!editor.querySelector(LINK_SOURCE_SELECTOR)) return undefined;
-  return (await import("../editor/markdown/render-html"))
-    .renderMarkdownInlineHtml;
+  return (await renderHtml.load()).renderMarkdownInlineHtml;
 }
 
 // Clones the editor subtree, stripping contenteditable so the export is inert.

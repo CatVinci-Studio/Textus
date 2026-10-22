@@ -37,6 +37,16 @@ fn approx_tokens(text: &str) -> usize {
 }
 
 #[test]
+fn the_core_skills_are_built_in_and_the_rest_optional() {
+    for name in CORE_SKILLS {
+        assert!(find(name).is_some(), "{name}");
+    }
+    let optional = optional_skill_names();
+    assert_eq!(optional.len() + CORE_SKILLS.len(), skills().len());
+    assert!(!optional.contains(&"proofread"));
+}
+
+#[test]
 fn every_bundled_file_is_listed() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/ai/skills");
     let stems = |dir: std::path::PathBuf| -> Vec<String> {

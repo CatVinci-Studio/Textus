@@ -4,15 +4,34 @@ import { pluralCategories } from "./plural";
 import {
   LANGS,
   LANG_NAMES,
-  LOCALES,
+  loadLocale,
+  localeLoaded,
   localeOf,
   resolveStrings,
+  type Lang,
   type Plural,
   type StringKey,
+  type Translation,
 } from "./strings";
 
 // Every language's file against English (docs/dev/translating.md): what a
 // translation may and must contain, whoever wrote it.
+
+/** The files as written, read here at once (the app loads them lazily). */
+const LOCALES = Object.fromEntries(
+  Object.entries(
+    import.meta.glob<{ default: Translation; complete?: boolean }>(
+      "./locales/*.ts",
+      { eager: true },
+    ),
+  ).map(([path, file]) => [
+    path.slice("./locales/".length, -".ts".length),
+    {
+      default: file.default,
+      complete: file.complete ?? path.endsWith("/en.ts"),
+    },
+  ]),
+) as Record<Lang, { default: Translation; complete: boolean }>;
 
 const english = LOCALES.en.default as Record<string, string | Plural>;
 
@@ -42,6 +61,15 @@ describe("the languages", () => {
 
   it("fall back to English for an unknown code - a newer build's", () => {
     expect(resolveStrings("xx" as never)).toBe(resolveStrings("en"));
+  });
+
+  it("load on first use, each in its own chunk", async () => {
+    expect(localeLoaded("en")).toBe(true);
+    await loadLocale("ko");
+    expect(localeLoaded("ko")).toBe(true);
+    expect(resolveStrings("ko").textusAiClosePanel).toBe(
+      LOCALES.ko.default.textusAiClosePanel,
+    );
   });
 });
 

@@ -281,6 +281,11 @@ async fn ai_agent_message_inner(
             for tool in web.tools(&focus) {
                 tools.add(tool);
             }
+            // The tools of the MCP servers the user turned on.
+            #[cfg(desktop)]
+            for tool in crate::mcp::tools_for_request(&app).await {
+                tools.add(tool);
+            }
             // Pictures written into the text, begun as their lines stream in.
             let inline = image_run.as_ref().map(|run| run.inline(&tool_ctx.proposed));
             let tool_specs = tools.specs();

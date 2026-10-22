@@ -114,6 +114,18 @@ export const menuIpc = {
    *  (app/app-menu-model.ts's nativeMenuAccelerators). */
   setMenuAccelerators: (accelerators: Record<string, string>) =>
     desktopQuery<void>("set_menu_accelerators", undefined, { accelerators }),
+  /** Fills the native Plugins menu with what the plugins that are on put
+   *  there (menu.rs's set_plugin_menu). */
+  setPluginMenu: (items: { command: string; label: string }[]) =>
+    desktopQuery<void>("set_plugin_menu", undefined, { items }),
+  /** The plugin commands background mode's tray or menu-bar icon lists
+   *  (background/tray.rs). */
+  setTrayPluginItems: (items: { command: string; label: string }[]) =>
+    desktopQuery<void>("set_tray_plugin_items", undefined, { items }),
+  /** A plugin command picked in the tray while no window was open, for
+   *  the window opened for it to run - once. */
+  takePendingPluginCommand: () =>
+    desktopQuery<string | null>("take_pending_plugin_command", null),
 };
 
 // ---------------------------------------------------------------------------

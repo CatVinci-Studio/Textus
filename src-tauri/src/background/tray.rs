@@ -3,7 +3,9 @@
 //! when the setting turns on, dropped when it turns off; never there
 //! otherwise.
 //!
-//! Its menu: Open Textus and Quit Textus. A left click opens Textus on
+//! Its menu: Open Textus, the commands plugins put there (`app/tray`,
+//! src/plugins/manifest.ts) - each opens a window first when none is open,
+//! then runs - and Quit Textus. A left click opens Textus on
 //! Windows; on macOS it opens the menu, as menu bar items do, and on Linux
 //! the AppIndicator protocol has no click of its own, so it opens the menu
 //! too.
@@ -11,10 +13,11 @@
 //! The icons are src-tauri/icons/tray/, made from the app icon by
 //! scripts/make-tray-icons.sh.
 
+use std::sync::Mutex;
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
-use tauri::{AppHandle, Wry};
+use tauri::{AppHandle, Emitter, Manager, Wry};
 
 /// The tray's id. There is only ever one.
 pub const ID: &str = "textus";
@@ -25,6 +28,24 @@ pub const ID: &str = "textus";
 pub const MENU_PREFIX: &str = "tray:";
 const OPEN_APP: &str = "open";
 const QUIT: &str = "quit";
+/// "tray:plugin:<command>": a plugin's command.
+const PLUGIN: &str = "plugin:";
+
+/// One plugin command in the menu, as the window sends it.
+#[derive(serde::Deserialize, Clone, PartialEq)]
+pub struct TrayPluginItem {
+    command: String,
+    label: String,
+}
+
+/// The plugin commands the menu lists, and one asked for while no window
+/// was open - run by the window that opens for it (it asks, once its
+/// plugins are loaded: take_pending_plugin_command).
+#[derive(Default)]
+pub struct TrayPlugins {
+    items: Mutex<Vec<TrayPluginItem>>,
+    pending: Mutex<Option<String>>,
+}
 
 /// The menu's labels in one language. Rust's own, not sent by a window:
 /// the tray can be up before any window has been. Each is the same string
@@ -59,20 +80,92 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         // muda reads a lone `&` as a mnemonic marker (menu.rs's menu_text).
         MenuItemBuilder::with_id(format!("{MENU_PREFIX}{id}"), text.replace('&', "&&")).build(app)
     };
-    MenuBuilder::new(app)
-        .item(&item(OPEN_APP, l.open_app)?)
-        .separator()
-        .item(&item(QUIT, l.quit)?)
-        .build()
+    let plugins = app
+        .try_state::<TrayPlugins>()
+        .map(|s| s.items.lock().unwrap_or_else(|e| e.into_inner()).clone())
+        .unwrap_or_default();
+    let mut menu = MenuBuilder::new(app).item(&item(OPEN_APP, l.open_app)?);
+    if !plugins.is_empty() {
+        menu = menu.separator();
+        for plugin in &plugins {
+            menu = menu.item(&item(
+                &format!("{PLUGIN}{}", plugin.command),
+                &plugin.label,
+            )?);
+        }
+    }
+    menu.separator().item(&item(QUIT, l.quit)?).build()
 }
 
 /// A tray menu click, from menu.rs's dispatch (`item` without the prefix).
 pub fn on_menu(app: &AppHandle, item: &str) {
+    if let Some(command) = item.strip_prefix(PLUGIN) {
+        run_plugin_command(app, command);
+        return;
+    }
     match item {
         OPEN_APP => crate::reopen_without_windows(app),
         QUIT => crate::menu::quit(app),
         _ => {}
     }
+}
+
+/// A plugin command from the tray: run by an editor window, brought
+/// forward - or, with none open, by the one opened for it.
+fn run_plugin_command(app: &AppHandle, command: &str) {
+    let window = app
+        .webview_windows()
+        .into_iter()
+        .find(|(label, _)| crate::commands::chat_window::is_editor_window(label))
+        .map(|(_, window)| window);
+    match window {
+        Some(window) => {
+            crate::reopen_without_windows(app);
+            let _ = window.emit_to(
+                tauri::EventTarget::webview_window(window.label()),
+                "menu-plugin-command",
+                command.to_string(),
+            );
+        }
+        None => {
+            if let Some(state) = app.try_state::<TrayPlugins>() {
+                *state.pending.lock().unwrap_or_else(|e| e.into_inner()) =
+                    Some(command.to_string());
+            }
+            crate::reopen_without_windows(app);
+        }
+    }
+}
+
+/// The plugin commands the menu lists (src/plugins/usePluginMenu.ts),
+/// refilled when the plugins that are on change.
+#[tauri::command]
+pub fn set_tray_plugin_items(app: AppHandle, items: Vec<TrayPluginItem>) {
+    let Some(state) = app.try_state::<TrayPlugins>() else {
+        return;
+    };
+    {
+        let mut current = state.items.lock().unwrap_or_else(|e| e.into_inner());
+        if *current == items {
+            return;
+        }
+        *current = items;
+    }
+    if let Some(tray) = app.tray_by_id(ID) {
+        if let Ok(menu) = menu(&app) {
+            let _ = tray.set_menu(Some(menu));
+        }
+    }
+}
+
+/// The tray command waiting for a window to run it, taken.
+#[tauri::command]
+pub fn take_pending_plugin_command(app: AppHandle) -> Option<String> {
+    app.try_state::<TrayPlugins>()?
+        .pending
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .take()
 }
 
 /// The icon for this platform.

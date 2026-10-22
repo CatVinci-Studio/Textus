@@ -1,0 +1,434 @@
+/* Plugins in the window (src/plugins/): their hidden hosts, the frames
+   their webviews are drawn in, a sidebar tab's icon, the quick pick. */
+
+/* Out of sight, still running: a frame left out of the layout keeps its
+   timers going, which display: none would not promise. */
+.plugin-hosts {
+  position: fixed;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+.plugin-hosts iframe {
+  width: 0;
+  height: 0;
+  border: 0;
+}
+
+.plugin-webview {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+.plugin-webview-frame {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--bg);
+}
+.plugin-webview-panel {
+  height: 100%;
+}
+
+/* A plugin's view or custom editor, where a document's editor would be. */
+.plugin-tab-pane {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  /* Clear of the window bar floating over the top (window-bar.css), as
+     the editor's page is - unless the tab bar is there to do it. */
+  padding-top: 28px;
+}
+.tab-bar ~ * .plugin-tab-pane {
+  padding-top: 0;
+}
+.plugin-webview-tab {
+  height: 100%;
+}
+
+.plugin-webview-problem {
+  padding: var(--space-4);
+  color: var(--danger);
+  font-size: var(--text-sm);
+}
+
+/* The plugin's SVG as a mask, filled with the text colour like the
+   built-in tabs' icons. */
+.plugin-tab-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.quick-pick-overlay {
+  align-items: flex-start;
+  padding-top: 12vh;
+}
+.quick-pick {
+  width: min(520px, calc(100vw - 32px));
+  max-width: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.quick-pick-input {
+  margin: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  font-size: var(--text-md);
+  color: var(--editor-text);
+  background: var(--bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+}
+.quick-pick-input:focus {
+  outline: 2px solid var(--chrome-accent);
+  outline-offset: -1px;
+}
+.quick-pick-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-2) var(--space-2);
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.quick-pick-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-small);
+  font-size: var(--text-md);
+  cursor: pointer;
+}
+.quick-pick-item[aria-selected="true"] {
+  background: var(--sidebar-active);
+  color: var(--sidebar-active-text);
+}
+.quick-pick-description {
+  color: var(--chrome-muted);
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quick-pick-empty {
+  padding: var(--space-3);
+  color: var(--chrome-muted);
+  font-size: var(--text-sm);
+}
+
+/* Settings › Extensions › Plugins (settings/pages/PluginsPage.tsx): a card per plugin
+   - its name, what it does, who made it, its switch - opening its own
+   page. No icons: a list of names reads at a glance, and a plugin's
+   artwork never sat well beside Settings' own rows. */
+.plugin-install-buttons,
+.plugin-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.plugin-card {
+  align-items: center;
+  gap: var(--space-3);
+}
+.plugin-card + .plugin-card {
+  border-top: 1px solid var(--border-color);
+}
+/* The card's text is its button: the whole of it opens the plugin's page,
+   the switch beside it stays a switch. */
+.plugin-card-open {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+button.plugin-card-open {
+  cursor: pointer;
+}
+button.plugin-card-open:hover .plugin-card-name {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.plugin-card-name {
+  font-weight: 600;
+}
+.plugin-card-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.plugin-byline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--chrome-muted);
+  font-size: var(--text-xs);
+}
+.plugin-official {
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--ui-primary) 12%, transparent);
+  color: var(--ui-primary);
+  font-weight: 600;
+  line-height: 18px;
+}
+.plugin-version {
+  font-variant-numeric: tabular-nums;
+}
+.plugin-update-note {
+  color: var(--ui-primary);
+  font-size: var(--text-xs);
+}
+.plugin-group-help {
+  margin: 0;
+  padding: var(--space-2) 0;
+  color: var(--chrome-muted);
+  font-size: var(--text-sm);
+}
+
+/* One plugin's page. */
+.plugin-back {
+  margin: 0 0 var(--space-3);
+  padding: 2px var(--space-2);
+  border: 0;
+  border-radius: var(--radius-small);
+  background: none;
+  color: var(--ui-primary);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.plugin-back:hover {
+  background: var(--sidebar-hover);
+}
+.plugin-page-head {
+  margin-bottom: var(--space-4);
+}
+.plugin-page-title-row {
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.plugin-page-title {
+  margin: 0 0 4px;
+  font-size: var(--text-lg);
+}
+.plugin-page-title-row .plugin-byline {
+  margin-top: var(--space-1);
+}
+.plugin-requirement-met {
+  color: var(--chrome-muted);
+  font-size: var(--text-sm);
+}
+.plugin-detail-actions {
+  padding: var(--space-2) 0;
+}
+.plugin-settings-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 240px;
+  margin: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-block);
+  overflow: hidden;
+}
+.plugin-webview-settings {
+  min-height: 220px;
+}
+.plugin-setting-input {
+  width: 220px;
+}
+.plugin-empty {
+  margin: 0;
+  padding: var(--space-3);
+  color: var(--chrome-muted);
+  font-size: var(--text-sm);
+}
+
+/* A web page in a tab (WebPagePane.tsx). */
+.web-page-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  padding-top: 28px;
+}
+.tab-bar ~ * .web-page-pane {
+  padding-top: 0;
+}
+.web-page-bar {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--sidebar-bg);
+}
+.web-page-address {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: var(--text-sm);
+  padding: var(--space-1) var(--space-2);
+  color: var(--editor-text);
+  background: var(--bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+}
+.web-page-hint {
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  color: var(--chrome-muted);
+  font-size: var(--text-xs);
+}
+.web-page-frame {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: var(--bg);
+}
+
+/* A plugin's status in the window bar (WindowBar's PluginStatusItems):
+   read like the word count beside it, a button only when it runs
+   something. */
+.plugin-status-item {
+  font-size: var(--text-sm);
+  color: var(--editor-muted);
+  white-space: nowrap;
+}
+.plugin-status-button {
+  /* The status group lets clicks through to the drag region; this one
+     takes them. */
+  pointer-events: auto;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--radius-small);
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.plugin-status-button:hover {
+  background: var(--sidebar-hover);
+  color: var(--editor-text);
+}
+
+/* A plugin holding the keyboard (editor-input.ts): Vim's block cursor in
+   normal mode, the native caret hidden, and flash's jump labels laid over
+   the text without moving it. */
+.ProseMirror.plugin-cursor-block {
+  caret-color: transparent;
+}
+.plugin-block-cursor {
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--editor-text) 72%, transparent);
+  color: var(--editor-bg, var(--bg));
+}
+.plugin-block-cursor-empty {
+  display: inline-block;
+  width: 0.55em;
+}
+.plugin-flash-label {
+  position: absolute;
+  z-index: 2;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  font-weight: 700;
+  line-height: 1.35;
+  pointer-events: none;
+  transform: translateY(-0.1em);
+}
+
+/* Settings › Extensions: its tabs over the page. */
+.extensions-tabs {
+  margin: 0 0 var(--space-3);
+}
+
+/* An MCP server's card: where it runs, how it is doing, its tools. */
+.mcp-endpoint {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  word-break: break-all;
+}
+.mcp-state-failed {
+  color: var(--danger);
+}
+.mcp-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+.mcp-tool {
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--sidebar-bg);
+  color: var(--chrome-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 18px;
+}
+.mcp-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: 4px;
+}
+button.mcp-homepage {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  cursor: pointer;
+}
+button.mcp-homepage:hover {
+  text-decoration: underline;
+}
+.mcp-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+.mcp-form .settings-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mcp-mono {
+  font-family: var(--font-mono);
+}
+.mcp-form-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.mcp-form-spacer {
+  flex: 1;
+}

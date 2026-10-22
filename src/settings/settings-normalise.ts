@@ -1,3 +1,4 @@
+import { normaliseMcpServers } from "./mcp";
 import { detectLang, isLang, localeOf, type Lang } from "../i18n/strings";
 import {
   UPDATE_CHANNELS,
@@ -114,6 +115,7 @@ export function normaliseSettings(parsed: Raw | null): Settings {
         ? (parsed.revisionDisplay as RevisionDisplay)
         : DEFAULT_SETTINGS.revisionDisplay,
       shortcuts: migrateShortcuts(parsed.shortcuts, shortcutsRevision),
+      mcpServers: normaliseMcpServers(parsed.mcpServers),
       shortcutsRevision,
       diagramEngine: DIAGRAM_ENGINES.includes(
         parsed.diagramEngine as DiagramEngine,

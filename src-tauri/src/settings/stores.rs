@@ -129,8 +129,24 @@ impl Stores {
         };
         if pending {
             stores.seed_from_prefs(config_dir);
+            stores.seed_new_profile();
         }
         stores
+    }
+
+    /// What a profile starts with that a profile from before it was added
+    /// doesn't: only the core built-in skills on (ai::builtin::CORE_SKILLS);
+    /// the rest are added in Settings › Extensions › Skills. A settings
+    /// file that already exists has no such list, and keeps every skill it
+    /// had. In memory until the first write, like seed_from_prefs.
+    fn seed_new_profile(&self) {
+        let mut inner = self.settings.inner.lock().unwrap();
+        let mut seed = Map::new();
+        seed.insert(
+            crate::ai::workspace::DISABLED_BUILTINS_KEY.into(),
+            json!(crate::ai::builtin::optional_skill_names()),
+        );
+        merge_top_level(&mut inner.payload, &seed);
     }
 
     /// Up to 0.9.6 the frontend mirrored two settings into prefs.json for

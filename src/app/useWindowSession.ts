@@ -23,12 +23,12 @@ export function useWindowTitle(activeTitle: string): void {
  * content edits don't spam the round trip.
  */
 export function useSessionPaths(tabs: DocTab[]): void {
-  const sessionPathsKey = tabs.map((tab) => tab.path ?? "").join("\n");
+  // A plugin's tab of a file (a PDF) reopens through its plugin.
+  const pathOf = (tab: DocTab) => tab.path ?? tab.view?.resource ?? null;
+  const sessionPathsKey = tabs.map((tab) => pathOf(tab) ?? "").join("\n");
   useEffect(() => {
     if (!canUseWindows) return;
-    const paths = tabs
-      .filter((tab) => tab.path)
-      .map((tab) => tab.path as string);
+    const paths = tabs.map(pathOf).filter((path): path is string => !!path);
     void session.updateSessionPaths(paths);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionPathsKey]);

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { isIOSApp } from "../platform/capabilities";
 import { announce } from "../ui/announce";
 import { Presence, PresenceDiv } from "../ui/usePresence";
@@ -44,6 +44,13 @@ export function DraftRestoredToast({
       )}
     </Presence>
   );
+}
+
+/** The Word document last opened as a new one, for its notice. */
+export function useWordImported() {
+  const [path, setPath] = useState<string | null>(null);
+  const dismiss = useCallback(() => setPath(null), []);
+  return { path, opened: setPath, dismiss };
 }
 
 /** How long the Word notice stays unless dismissed: it reports, it asks

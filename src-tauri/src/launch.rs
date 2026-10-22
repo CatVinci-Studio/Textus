@@ -1,5 +1,6 @@
 //! Files the app is asked to open - at launch, from another instance,
-//! from the OS - held until a window is ready for them.
+//! from the OS - held until a window is ready for them - and the other
+//! things a window picks up once it has mounted.
 
 use super::*;
 
@@ -124,4 +125,74 @@ pub(crate) fn paths_from_argv(
         .filter(|a| !a.starts_with('-'))
         .map(|a| cwd.join(&a).to_string_lossy().into_owned())
         .collect()
+}
+
+/// A Help menu doc clicked while no window could receive the event: the
+/// fresh window spawned for it drains this on mount, same queue-then-drain
+/// reasoning as PendingOpenPaths (an emit would fire before the new webview
+/// mounts its listeners). The docs themselves are bundled in the frontend
+/// (src/help/), so the doc id is all Rust needs to carry.
+#[cfg(desktop)]
+pub(crate) static PENDING_SHOW_HELP: Mutex<Option<String>> = Mutex::new(None);
+
+#[cfg(desktop)]
+#[tauri::command]
+pub(crate) fn take_pending_show_help() -> Option<String> {
+    PENDING_SHOW_HELP.lock().unwrap().take()
+}
+
+/// A menu command that needs a window (Settings…, Open…), chosen while none
+/// was open - macOS keeps running after its last window closes: the fresh
+/// window opened for it runs it once mounted. Holds the menu event that
+/// window would otherwise have been sent. Same queue-then-drain as
+/// PENDING_SHOW_HELP.
+#[cfg(desktop)]
+pub(crate) static PENDING_MENU_EVENT: Mutex<Option<&'static str>> = Mutex::new(None);
+
+#[cfg(desktop)]
+#[tauri::command]
+pub(crate) fn take_pending_menu_event() -> Option<&'static str> {
+    PENDING_MENU_EVENT.lock().unwrap().take()
+}
+
+/// A folder from File > Open Recent chosen while no window was open: the
+/// fresh window opened for it takes it into its sidebar once mounted. Same
+/// queue-then-drain as PENDING_MENU_EVENT, with the folder's path.
+#[cfg(desktop)]
+pub(crate) static PENDING_OPEN_FOLDER: Mutex<Option<String>> = Mutex::new(None);
+
+#[cfg(desktop)]
+#[tauri::command]
+pub(crate) fn take_pending_open_folder() -> Option<String> {
+    PENDING_OPEN_FOLDER.lock().unwrap().take()
+}
+
+/// File > Open Recent from a window that keeps what it holds (menu.rs, then
+/// useFileOpening.ts's openRecentFile): the file opens the way a file
+/// manager's open does - a window of its own, or a tab per the setting.
+#[cfg(desktop)]
+#[tauri::command]
+pub(crate) fn open_paths(app: tauri::AppHandle, paths: Vec<String>) {
+    queue_paths_to_open(&app, paths);
+}
+
+#[tauri::command]
+pub(crate) fn take_pending_open_path(pending: State<PendingOpenPaths>) -> Option<String> {
+    UI_READY.store(true, Ordering::Relaxed);
+    let mut paths = pending.0.lock().unwrap();
+    if paths.is_empty() {
+        None
+    } else {
+        Some(paths.remove(0))
+    }
+}
+
+/// Tab-mode counterpart to take_pending_open_path: drains the whole queue at
+/// once so a single window can open every pending path as its own tab,
+/// instead of one window claiming just the first path off the front.
+#[tauri::command]
+pub(crate) fn take_pending_open_paths(pending: State<PendingOpenPaths>) -> Vec<String> {
+    UI_READY.store(true, Ordering::Relaxed);
+    let mut paths = pending.0.lock().unwrap();
+    std::mem::take(&mut *paths)
 }

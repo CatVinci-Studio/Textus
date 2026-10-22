@@ -9,6 +9,7 @@ import {
   type MenuChecks,
 } from "./app-menu-model";
 import { listenToThisWindow, unlistenAll } from "../utils/tauri-events";
+import { runCommand } from "./commands";
 import { exportHtml, exportPdf, exportViaPandoc } from "../export/exporters";
 import {
   EDIT_ACTION_EVENT,
@@ -30,6 +31,8 @@ export interface MenuBridgeHandlers {
   pdfPageNumbers: boolean;
   diagramEngine: DiagramEngine;
   onOpenSettings: () => void;
+  /** Plugins › Manage Plugins…: Settings at its Plugins page. */
+  onOpenPluginSettings: () => void;
   onToggleTypewriter: () => void;
   onToggleSidebar: () => void;
   onToggleAgentPanel: () => void;
@@ -86,6 +89,13 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
     };
     return unlistenAll(
       listenToThisWindow("menu-open-settings", () => h().onOpenSettings()),
+      listenToThisWindow("menu-manage-plugins", () =>
+        h().onOpenPluginSettings(),
+      ),
+      // A command a plugin put in the Plugins menu (plugins/manager.ts).
+      listenToThisWindow<string>("menu-plugin-command", (event) =>
+        runCommand(event.payload),
+      ),
       // Only arrives in tab mode - in window mode the Rust menu handler opens
       // a fresh window itself instead of emitting this.
       listenToThisWindow("menu-new-file", () => h().addBlankTab()),
@@ -191,6 +201,8 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       .takePendingMenuEvent()
       .then((event) => {
         if (event === "menu-open-settings") latest.current.onOpenSettings();
+        else if (event === "menu-manage-plugins")
+          latest.current.onOpenPluginSettings();
         else if (event === "menu-open-file")
           void latest.current.openFileDialog();
         else if (event === "menu-open-folder")

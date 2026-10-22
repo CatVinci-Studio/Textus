@@ -110,6 +110,8 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       generate_image: t.toolGenerateImage,
       web_search: t.toolWebSearch,
       web_fetch: t.toolWebFetch,
+      // Any MCP server's tool (AgentTurnView's toolActivityText).
+      mcp: t.toolMcp,
       // Any tool without its own line: a word, not its internal name.
       "*": t.toolWorking,
       // The edit being written, in words: Quick Ask's status line showed

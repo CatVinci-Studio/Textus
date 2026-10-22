@@ -42,9 +42,39 @@ fn patches_merge_top_level_fields_and_bump_the_revision() {
     // null removes a field.
     stores.patch_settings(&obj(json!({ "zoom": null })));
     assert_eq!(
-        stores.settings.snapshot().0,
+        without_seed(stores.settings.snapshot().0),
         json!({ "theme": "dark", "shortcuts": { "a": "z" } })
     );
+}
+
+/// Settings without what a new profile is seeded with.
+fn without_seed(mut settings: Value) -> Value {
+    if let Some(map) = settings.as_object_mut() {
+        map.remove(crate::ai::workspace::DISABLED_BUILTINS_KEY);
+    }
+    settings
+}
+
+#[test]
+fn a_new_profile_starts_with_only_the_core_skills_and_an_old_one_keeps_all() {
+    let dir = temp_dir();
+    let stores = Stores::load(&dir, &dir);
+    let off = &stores.settings.snapshot().0[crate::ai::workspace::DISABLED_BUILTINS_KEY];
+    assert_eq!(off, &json!(crate::ai::builtin::optional_skill_names()));
+    // Written out with the first change, as any setting.
+    stores.patch_settings(&obj(json!({ "theme": "dark" })));
+    stores.flush_all();
+    let file = read_file(&settings_path(&dir));
+    assert!(file["settings"][crate::ai::workspace::DISABLED_BUILTINS_KEY].is_array());
+    // A settings file from before the list: nothing turned off.
+    let old = temp_dir();
+    std::fs::write(
+        settings_path(&old),
+        json!({ "schemaVersion": SCHEMA_VERSION, "settings": { "theme": "dark" } }).to_string(),
+    )
+    .unwrap();
+    let stores = Stores::load(&old, &old);
+    assert!(stores.settings.snapshot().0[crate::ai::workspace::DISABLED_BUILTINS_KEY].is_null());
 }
 
 #[test]
@@ -62,7 +92,10 @@ fn writes_are_debounced_and_flushed() {
     }
     let file = read_file(&settings_path(&dir));
     assert_eq!(file["schemaVersion"], json!(SCHEMA_VERSION));
-    assert_eq!(file["settings"], json!({ "theme": "dark" }));
+    assert_eq!(
+        without_seed(file["settings"].clone()),
+        json!({ "theme": "dark" })
+    );
 
     // An explicit flush (the exit path) writes immediately.
     stores.patch_settings(&obj(json!({ "theme": "light" })));

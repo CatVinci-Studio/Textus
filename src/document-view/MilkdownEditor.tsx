@@ -13,6 +13,7 @@ import { useTextusEditor } from "./useTextusEditor";
 import { useAiNotice } from "./useAiNotice";
 import { useQuickAskDecorations } from "./useQuickAskDecorations";
 import { useEditorProposals } from "./useEditorProposals";
+import { useSettingsRedraw } from "./useSettingsRedraw";
 import { useChatContextBridge } from "./useChatContextBridge";
 import { usePanelSelection } from "./usePanelSelection";
 import { useChatSelectionHighlight } from "./useChatSelectionHighlight";
@@ -163,24 +164,7 @@ export function MilkdownEditor({
   );
   const inlineChat = useInlineChat(run);
   useQuickAskDecorations(run, inlineChat, phone);
-  // The empty-document placeholder reads the language when it draws, the
-  // code blocks' line numbers, the colour swatches and the diagrams their
-  // settings, and decorations only draw on a transaction (the diagrams
-  // check their engine on one): without one, switching the
-  // language in Settings (or on the first-run picker) left the old text,
-  // and those settings did nothing until the next keystroke.
-  useEffect(() => {
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      view.dispatch(view.state.tr.setMeta("addToHistory", false));
-    });
-  }, [
-    settings.language,
-    settings.codeLineNumbers,
-    settings.colorSwatches,
-    settings.diagramEngine,
-    run,
-  ]);
+  useSettingsRedraw(run, settings);
 
   const learning = useRevisionLearning({
     docPath: filePath,
@@ -192,6 +176,7 @@ export function MilkdownEditor({
     settingsRef,
     settings,
     filePath,
+    isActive,
     onDecided: learning.record,
     requestImageName,
   });

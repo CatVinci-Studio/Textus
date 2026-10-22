@@ -1,5 +1,4 @@
 import {
-  lazy,
   memo,
   Suspense,
   useCallback,
@@ -14,9 +13,14 @@ import { isIOSApp } from "../platform/capabilities";
 import { isMacPlatform } from "../platform/os";
 import { elasticOverscroll } from "./elastic-overscroll";
 import type { TourAi } from "../utils/events";
+import { lazyModule } from "../lazy/lazy-module";
+import { lazyComponent } from "../lazy/lazy-component";
 
-const MilkdownEditor = lazy(() =>
-  import("./MilkdownEditor").then((m) => ({ default: m.MilkdownEditor })),
+// The editor - ProseMirror, the markdown pipeline, the AI panel - loads with
+// the first document shown (lazy-module.ts).
+const MilkdownEditor = lazyComponent(
+  lazyModule("editor", () => import("./MilkdownEditor")),
+  (m) => m.MilkdownEditor,
 );
 
 interface EditorPaneProps {

@@ -1,0 +1,158 @@
+/* @textus/plugin-ui: the base every plugin webview gets (frames.ts) - the
+   page in the theme's colours and type, and the controls Settings uses, so
+   a plugin's panel looks like the rest of Textus without its own CSS. Only
+   the variables of webviewThemeCss (theme-vars.ts) are used here. */
+
+:root {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* The page fills its frame: a panel's background reaches the bottom of
+   the sidebar, however little is in it. */
+html {
+  height: 100%;
+}
+body {
+  min-height: 100%;
+}
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--editor-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--chrome-accent);
+}
+
+.muted {
+  color: var(--chrome-muted);
+}
+
+button,
+.button {
+  font: inherit;
+  font-size: var(--text-sm);
+  min-height: var(--control-height-sm);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  color: var(--chrome-text);
+  cursor: pointer;
+}
+button:hover,
+.button:hover {
+  background: var(--sidebar-hover);
+}
+button.primary {
+  background: var(--chrome-accent);
+  border-color: var(--chrome-accent);
+  color: var(--bg);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+button.icon {
+  border-color: transparent;
+  background: transparent;
+  padding: 0 var(--space-2);
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--editor-text);
+  background: var(--bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-2);
+}
+input:focus,
+select:focus,
+textarea:focus,
+button:focus-visible {
+  outline: 2px solid var(--chrome-accent);
+  outline-offset: -1px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+}
+.toolbar .spacer {
+  flex: 1;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.list > li,
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-small);
+  color: var(--sidebar-text);
+}
+.list > li.clickable:hover,
+.row.clickable:hover {
+  background: var(--sidebar-hover);
+  cursor: pointer;
+}
+.list > li.active {
+  background: var(--sidebar-active);
+  color: var(--sidebar-active-text);
+}
+
+.empty {
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  color: var(--chrome-muted);
+}
+
+h1,
+h2,
+h3 {
+  color: var(--chrome-text);
+  font-weight: 600;
+}
+h2 {
+  font-size: var(--text-lg);
+}
+h3 {
+  font-size: var(--text-md);
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+  background: var(--editor-code-bg);
+  border-radius: var(--radius-small);
+}
+
+.danger {
+  color: var(--danger);
+}

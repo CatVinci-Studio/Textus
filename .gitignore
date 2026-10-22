@@ -47,3 +47,7 @@ playwright-report/
 # The save round-trip corpus (scripts/roundtrip-corpus/fetch.mjs):
 # third-party files, downloaded, never committed
 .cache/
+
+# The official plugins checked out beside the app, for the dev server
+# and the plugin flows (vite.dev-plugins.ts); a repository of its own.
+textus-plugins/

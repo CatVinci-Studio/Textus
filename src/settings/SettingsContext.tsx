@@ -7,7 +7,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { resolveStrings, type Strings } from "../i18n/strings";
+import {
+  loadLocale,
+  localeLoaded,
+  resolveStrings,
+  type Strings,
+} from "../i18n/strings";
 import { ai } from "../platform/ipc";
 import { readBoot } from "../storage/boot";
 import type { Raw } from "./settings-sync";
@@ -87,9 +92,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     // Cross-window sync: another window changed something. `zoom` stays
     // this window's own (see its field comment) - everything else adopts
     // the incoming value.
-    const adoptStore = () => {
+    const adopt = () => {
       const incoming = loadSettings();
       setSettingsState((prev) => ({ ...incoming, zoom: prev.zoom }));
+    };
+    // Another window's language, once its strings are here too.
+    const adoptStore = () => {
+      const { language } = loadSettings();
+      if (localeLoaded(language)) adopt();
+      else
+        void loadLocale(language)
+          .catch(() => {})
+          .then(adopt);
     };
     const unsubscribe = subscribeRemote(adoptStore);
     // React runs this effect in a later task than the first render, and the
@@ -122,13 +136,23 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   useApplyAppearance(settings, setSettings);
 
   function setSettings(patch: Partial<Settings>) {
-    // Shortcuts saved from now on are this build's: a "" in them is the
-    // user's own (see migrateShortcuts).
-    const full = patch.shortcuts
-      ? { ...patch, shortcutsRevision: SHORTCUTS_REVISION }
-      : patch;
-    setSettingsState((prev) => ({ ...prev, ...full }));
-    persist(full);
+    const apply = () => {
+      // Shortcuts saved from now on are this build's: a "" in them is the
+      // user's own (see migrateShortcuts).
+      const full = patch.shortcuts
+        ? { ...patch, shortcutsRevision: SHORTCUTS_REVISION }
+        : patch;
+      setSettingsState((prev) => ({ ...prev, ...full }));
+      persist(full);
+    };
+    // A language switched to takes effect once its strings have loaded
+    // (i18n/strings.ts), so nothing draws in it meanwhile with English.
+    // One that fails to load shows in English.
+    if (patch.language && !localeLoaded(patch.language))
+      void loadLocale(patch.language)
+        .catch(() => {})
+        .then(apply);
+    else apply();
   }
 
   const t = resolveStrings(settings.language);

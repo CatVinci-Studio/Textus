@@ -21,8 +21,11 @@ mod distribution;
 mod extract;
 mod levis_import;
 #[cfg(desktop)]
+mod mcp;
+#[cfg(desktop)]
 mod menu;
 mod net;
+mod plugins;
 mod settings;
 #[cfg(desktop)]
 mod tab_drag;
@@ -77,76 +80,6 @@ pub(crate) use launch::*;
 mod editor_windows;
 pub(crate) use editor_windows::*;
 
-/// A Help menu doc clicked while no window could receive the event: the
-/// fresh window spawned for it drains this on mount, same queue-then-drain
-/// reasoning as PendingOpenPaths (an emit would fire before the new webview
-/// mounts its listeners). The docs themselves are bundled in the frontend
-/// (src/help/), so the doc id is all Rust needs to carry.
-#[cfg(desktop)]
-pub(crate) static PENDING_SHOW_HELP: Mutex<Option<String>> = Mutex::new(None);
-
-#[cfg(desktop)]
-#[tauri::command]
-fn take_pending_show_help() -> Option<String> {
-    PENDING_SHOW_HELP.lock().unwrap().take()
-}
-
-/// A menu command that needs a window (Settings…, Open…), chosen while none
-/// was open - macOS keeps running after its last window closes: the fresh
-/// window opened for it runs it once mounted. Holds the menu event that
-/// window would otherwise have been sent. Same queue-then-drain as
-/// PENDING_SHOW_HELP.
-#[cfg(desktop)]
-pub(crate) static PENDING_MENU_EVENT: Mutex<Option<&'static str>> = Mutex::new(None);
-
-#[cfg(desktop)]
-#[tauri::command]
-fn take_pending_menu_event() -> Option<&'static str> {
-    PENDING_MENU_EVENT.lock().unwrap().take()
-}
-
-/// A folder from File > Open Recent chosen while no window was open: the
-/// fresh window opened for it takes it into its sidebar once mounted. Same
-/// queue-then-drain as PENDING_MENU_EVENT, with the folder's path.
-#[cfg(desktop)]
-pub(crate) static PENDING_OPEN_FOLDER: Mutex<Option<String>> = Mutex::new(None);
-
-#[cfg(desktop)]
-#[tauri::command]
-fn take_pending_open_folder() -> Option<String> {
-    PENDING_OPEN_FOLDER.lock().unwrap().take()
-}
-
-/// File > Open Recent from a window that keeps what it holds (menu.rs, then
-/// useFileOpening.ts's openRecentFile): the file opens the way a file
-/// manager's open does - a window of its own, or a tab per the setting.
-#[cfg(desktop)]
-#[tauri::command]
-fn open_paths(app: tauri::AppHandle, paths: Vec<String>) {
-    queue_paths_to_open(&app, paths);
-}
-
-#[tauri::command]
-fn take_pending_open_path(pending: State<PendingOpenPaths>) -> Option<String> {
-    UI_READY.store(true, Ordering::Relaxed);
-    let mut paths = pending.0.lock().unwrap();
-    if paths.is_empty() {
-        None
-    } else {
-        Some(paths.remove(0))
-    }
-}
-
-/// Tab-mode counterpart to take_pending_open_path: drains the whole queue at
-/// once so a single window can open every pending path as its own tab,
-/// instead of one window claiming just the first path off the front.
-#[tauri::command]
-fn take_pending_open_paths(pending: State<PendingOpenPaths>) -> Vec<String> {
-    UI_READY.store(true, Ordering::Relaxed);
-    let mut paths = pending.0.lock().unwrap();
-    std::mem::take(&mut *paths)
-}
-
 /// Everything the builder needs on desktop only: the updater and process
 /// plugins, the window/tab/session state, window-lifecycle bookkeeping, and
 /// a startup that handles argv, session restore, the CLI shim and the menu
@@ -167,6 +100,8 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
             Vec::new(),
         )))
         .manage(background::BackgroundStatus::default())
+        .manage(background::tray::TrayPlugins::default())
+        .manage(mcp::McpHub::default())
         .on_window_event(|window, event| {
             let app = window.app_handle();
             if matches!(event, tauri::WindowEvent::Destroyed) {
@@ -412,6 +347,36 @@ pub fn run() {
             clear_draft_snapshot,
             clear_all_drafts,
             distribution::app_distribution,
+            plugins::state::plugins_state,
+            plugins::state::plugins_set_all,
+            plugins::state::plugin_set,
+            plugins::install::plugins_installed,
+            plugins::install::plugin_install,
+            plugins::catalog::plugin_catalog,
+            plugins::access::plugin_fs_rename,
+            plugins::access::plugin_fs_trash,
+            plugins::access::plugin_fs_mkdir,
+            #[cfg(desktop)]
+            background::tray::set_tray_plugin_items,
+            #[cfg(desktop)]
+            background::tray::take_pending_plugin_command,
+            #[cfg(desktop)]
+            mcp::mcp_status,
+            #[cfg(desktop)]
+            mcp::mcp_restart,
+            #[cfg(desktop)]
+            mcp::mcp_try,
+            plugins::catalog::plugin_install_catalog,
+            plugins::install::plugin_load_dev,
+            plugins::install::plugin_uninstall,
+            plugins::access::plugin_file,
+            plugins::access::plugin_read_resource,
+            plugins::access::plugin_fs_read,
+            plugins::access::plugin_fs_list,
+            plugins::access::plugin_fs_write,
+            plugins::access::plugin_http,
+            plugins::access::plugin_storage_get,
+            plugins::access::plugin_storage_set,
             // iOS only: rename and delete in the document list.
             #[cfg(mobile)]
             commands::documents::rename_entry,
@@ -428,6 +393,10 @@ pub fn run() {
             take_pending_open_folder,
             #[cfg(desktop)]
             commands::folder::pick_open_folder,
+            #[cfg(desktop)]
+            plugins::install::plugin_pick_package,
+            #[cfg(desktop)]
+            menu::set_plugin_menu,
             #[cfg(desktop)]
             commands::tree_ops::tree_create_document,
             #[cfg(desktop)]

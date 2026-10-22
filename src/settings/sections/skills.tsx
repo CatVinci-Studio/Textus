@@ -142,11 +142,14 @@ const CATEGORY_LABEL: Record<SkillCategory, TextKey> = {
 /// one opens its copy instead, and Reset deletes the copy.
 export function BuiltinSkillsSection({
   t,
+  open = false,
   onOpenFile,
   onFilesDeleted,
   onClose,
 }: {
   t: Strings;
+  /** Shown open (Settings › Extensions › Skills), not behind a disclosure. */
+  open?: boolean;
   onOpenFile: (path: string) => void;
   onFilesDeleted?: (paths: string[]) => void;
   onClose: () => void;
@@ -227,7 +230,10 @@ export function BuiltinSkillsSection({
   }
 
   return (
-    <details className="settings-advanced settings-builtin-skills">
+    <details
+      className="settings-advanced settings-builtin-skills"
+      open={open || undefined}
+    >
       <summary>
         <span className="settings-builtin-skills-title">
           {t.agentSkillsBuiltin}

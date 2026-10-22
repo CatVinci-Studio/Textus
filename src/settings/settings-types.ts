@@ -1,4 +1,5 @@
 import type { Lang } from "../i18n/strings";
+import type { McpServer } from "./mcp";
 import type { UpdateChannel } from "../platform/update-channel";
 import { DEFAULT_IMAGE_SUBFOLDER } from "./image-folder";
 import {
@@ -250,6 +251,9 @@ export interface Settings {
   /// conversation (the memory pass, src-tauri ai/memory/pass.rs, which reads
   /// this field from settings.json as REMEMBER_SETTING). On by default.
   rememberAutomatically: boolean;
+  /// The MCP servers Textus AI may use (Settings › Extensions › MCP),
+  /// read by Rust from the settings file (src-tauri mcp/mod.rs).
+  mcpServers: McpServer[];
   /// Settings > Textus AI > Suggest your next message: after each reply,
   /// what you will probably say next, grey in the empty message box for
   /// Tab to take (ai/chat/next-message.ts). On by default.
@@ -390,6 +394,7 @@ export const DEFAULT_SETTINGS: Settings = {
   searxngUrl: "",
   sourcesAsFootnotes: false,
   rememberAutomatically: true,
+  mcpServers: [],
   suggestNextMessage: true,
   enableEditAnimation: true,
   agentExpandToWindow: false,

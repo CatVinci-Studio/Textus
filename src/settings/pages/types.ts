@@ -26,6 +26,9 @@ export interface SettingsPageProps {
   /** The desktop without that room: the margin's rows say so. */
   noMargin: boolean;
   setSubpage: (subpage: Subpage) => void;
+  /** Goes to another page of Settings (Textus AI's Skills row to
+   *  Extensions). */
+  openPage: (id: string) => void;
   /** Opens a guide as a document, closing Settings first. */
   openHelp: (doc: "markdown" | "agent") => void;
   /** Opens a document in the editor (the agent.md "edit" button). */

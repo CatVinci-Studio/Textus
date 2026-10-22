@@ -221,6 +221,57 @@ export function installDevTauriShim(): void {
     switch (cmd) {
       case "settings_get":
         return Promise.resolve({ value: store.settings, rev: store.rev });
+      // MCP servers (src-tauri mcp/): each one on is ready at once, with
+      // one tool; a command called "missing" isn't installed.
+      case "mcp_status":
+      case "mcp_restart": {
+        // Settings live in localStorage when the page booted without the
+        // file store (SettingsContext's readLocalSettings).
+        let local: Record<string, unknown> = {};
+        try {
+          local = JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}");
+        } catch {
+          // Nothing saved.
+        }
+        const servers = (store.settings.mcpServers ??
+          local.mcpServers ??
+          []) as {
+          id: string;
+          name: string;
+          enabled: boolean;
+          command: string;
+        }[];
+        return Promise.resolve(
+          servers
+            .filter((s) => s.enabled)
+            .map((s) =>
+              s.command === "missing"
+                ? {
+                    id: s.id,
+                    state: "failed",
+                    server: "",
+                    tools: [],
+                    error: "`missing` isn't installed",
+                  }
+                : {
+                    id: s.id,
+                    state: "ready",
+                    server: `${s.name} 1.0`,
+                    tools: [{ name: "echo", description: "Says it back." }],
+                    error: null,
+                  },
+            ),
+        );
+      }
+      case "mcp_try": {
+        const server = args.server as { command: string; name: string };
+        return server.command === "missing"
+          ? Promise.reject("`missing` isn't installed, or isn't on the PATH")
+          : Promise.resolve({
+              server: `${server.name || "Server"} 1.0`,
+              tools: [{ name: "echo", description: "Says it back." }],
+            });
+      }
       case "settings_patch": {
         const patch = args.patch as Record<string, unknown>;
         store.settings = { ...store.settings, ...patch };
@@ -655,6 +706,195 @@ export function installDevTauriShim(): void {
     return null;
   }
 
+  // Plugins (src-tauri/src/plugins/), kept in memory: the switch and the
+  // grants, each plugin's storage, and its folder calls answered from the
+  // same `window.__devFs` the tree reads (a document opened on its own -
+  // a PDF given to a custom editor - from `__devFiles`). Installed plugins
+  // are `window.__devPlugins`: [{ id, dir, manifest, dev, files: {rel:
+  // text} }]. The network has nothing to answer: a test cans plugin_http.
+  // `window.__devPluginState` starts it with plugins already on. The
+  // catalog is the textus-plugins checkout the dev server serves at
+  // /dev-plugins/ (vite.dev-plugins.ts); installing from it lists the
+  // plugin with its files read from there, and `window.__devCatalogInstalled`
+  // ([ids]) has some installed from the start.
+  type DevPluginEntry = {
+    enabled: boolean;
+    granted: string[];
+    official?: boolean;
+  };
+  const pluginState = (w.__devPluginState as
+    | { allOn: boolean; plugins: Record<string, DevPluginEntry> }
+    | undefined) ?? {
+    allOn: true,
+    plugins: {} as Record<string, DevPluginEntry>,
+  };
+  type CatalogEntry = { id: string; official: boolean; manifest: unknown };
+  let catalogEntries: Promise<CatalogEntry[]> | null = null;
+  const devCatalog = () =>
+    (catalogEntries ??= fetch("/dev-plugins/index.json").then((r) =>
+      r.ok
+        ? (r.json() as Promise<{ plugins: CatalogEntry[] }>).then(
+            (c) => c.plugins,
+          )
+        : Promise.reject(new Error("No textus-plugins checkout to list.")),
+    ));
+  const installFromDevCatalog = async (id: string) => {
+    const entry = (await devCatalog()).find((e) => e.id === id);
+    if (!entry) throw new Error(`${id} isn't in the plugin catalog.`);
+    const list = ((w.__devPlugins ??= []) as Record<string, unknown>[]).filter(
+      (p) => p.id !== id,
+    );
+    const installed = {
+      id,
+      dir: `/dev-plugins/${id}`,
+      manifest: JSON.stringify(entry.manifest),
+      dev: false,
+      catalog: true,
+    };
+    w.__devPlugins = [...list, installed];
+    pluginState.plugins[id] = {
+      ...(pluginState.plugins[id] ?? { enabled: false, granted: [] }),
+      official: entry.official,
+    };
+    return installed;
+  };
+  let preinstalled: Promise<unknown> | null = null;
+  const preinstall = () =>
+    (preinstalled ??= Promise.all(
+      ((w.__devCatalogInstalled ?? []) as string[]).map((id) =>
+        installFromDevCatalog(id),
+      ),
+    ));
+  // `window.__devPluginStorage = { id: { key: value } }`: what plugins
+  // have stored, their settings under `$settings`.
+  const pluginStorage = new Map<string, Record<string, unknown>>(
+    Object.entries(
+      (w.__devPluginStorage ?? {}) as Record<string, Record<string, unknown>>,
+    ),
+  );
+  const encoded = (text: string) => new TextEncoder().encode(text).buffer;
+  function pluginCommand(
+    cmd: string,
+    args: Record<string, unknown> = {},
+  ): Promise<unknown> | null {
+    const id = String(args.id ?? "");
+    const folder = (w.__devFs ?? {}) as Record<string, string>;
+    const documents = (w.__devFiles ?? {}) as Record<string, string>;
+    // `window.__devBinaryFiles = { path: base64 }`: a PDF, a picture.
+    const binary = (w.__devBinaryFiles ?? {}) as Record<string, string>;
+    const installed = (w.__devPlugins ?? []) as {
+      id: string;
+      files?: Record<string, string>;
+      catalog?: boolean;
+    }[];
+    const path = String(args.path ?? "");
+    const fileText = (p: string) =>
+      p in binary
+        ? Promise.resolve(
+            Uint8Array.from(atob(binary[p]), (c) => c.charCodeAt(0)).buffer,
+          )
+        : p in folder
+          ? Promise.resolve(encoded(folder[p]))
+          : p in documents
+            ? Promise.resolve(encoded(documents[p]))
+            : Promise.reject(`${p}: No such file`);
+    switch (cmd) {
+      case "plugins_state":
+        return Promise.resolve(structuredClone(pluginState));
+      case "plugins_set_all":
+        pluginState.allOn = !!args.on;
+        return Promise.resolve(null);
+      case "plugin_set":
+        pluginState.plugins[id] = {
+          enabled: !!args.enabled,
+          granted: [...((args.granted as string[]) ?? [])],
+        };
+        return Promise.resolve(null);
+      case "plugins_installed":
+        return preinstall().then(() =>
+          ((w.__devPlugins ?? []) as typeof installed).map((plugin) => {
+            const listed: Record<string, unknown> = { ...plugin };
+            delete listed.files;
+            delete listed.catalog;
+            return listed;
+          }),
+        );
+      case "plugin_catalog":
+        return devCatalog();
+      case "plugin_install_catalog":
+        return installFromDevCatalog(id);
+      case "plugin_file": {
+        const plugin = installed.find((p) => p.id === id);
+        if (plugin?.catalog)
+          return fetch(`/dev-plugins/${id}/${String(args.rel)}`).then((r) =>
+            r.ok
+              ? r.arrayBuffer()
+              : Promise.reject(`${String(args.rel)}: No such file`),
+          );
+        const text = plugin?.files?.[String(args.rel)];
+        return text === undefined
+          ? Promise.reject(`${String(args.rel)}: No such file`)
+          : Promise.resolve(encoded(text));
+      }
+      case "plugin_read_resource":
+      case "plugin_fs_read":
+        return fileText(path);
+      case "plugin_fs_list": {
+        const dir = path.replace(/\/$/, "");
+        const entries = new Map<string, boolean>();
+        for (const file of Object.keys(folder)) {
+          if (!file.startsWith(`${dir}/`)) continue;
+          const [name, ...rest] = file.slice(dir.length + 1).split("/");
+          if (!name.startsWith(".")) entries.set(name, rest.length > 0);
+        }
+        return Promise.resolve(
+          [...entries].map(([name, isDir]) => ({
+            name,
+            path: `${dir}/${name}`,
+            isDir,
+            size: isDir ? 0 : (folder[`${dir}/${name}`] ?? "").length,
+            modifiedMs: 1,
+          })),
+        );
+      }
+      case "plugin_fs_write":
+        ((w.__devFs ??= {}) as Record<string, string>)[path] = args.base64
+          ? atob(String(args.contents))
+          : String(args.contents);
+        return Promise.resolve(null);
+      case "plugin_http":
+        return Promise.reject("The dev shim has no network.");
+      case "plugin_storage_get":
+        return Promise.resolve({ ...(pluginStorage.get(id) ?? {}) });
+      case "plugin_storage_set": {
+        const store = { ...(pluginStorage.get(id) ?? {}) };
+        if (args.value === null) delete store[String(args.key)];
+        else store[String(args.key)] = args.value;
+        pluginStorage.set(id, store);
+        return Promise.resolve(null);
+      }
+      case "plugin_uninstall":
+        w.__devPlugins = installed.filter((p) => p.id !== id);
+        delete pluginState.plugins[id];
+        return Promise.resolve(null);
+      case "plugin_install":
+      case "plugin_load_dev":
+        return Promise.reject("The dev shim installs no plugin from a file.");
+      case "plugin_pick_package":
+      case "set_plugin_menu":
+      case "set_tray_plugin_items":
+        return Promise.resolve(null);
+      // `window.__devPendingPluginCommand`: one picked in the tray with no
+      // window open, for this window to run.
+      case "take_pending_plugin_command": {
+        const command = (w.__devPendingPluginCommand as string) ?? null;
+        w.__devPendingPluginCommand = null;
+        return Promise.resolve(command);
+      }
+    }
+    return null;
+  }
+
   w.__TAURI_INTERNALS__ = {
     metadata: {
       currentWindow: { label: "main" },
@@ -748,6 +988,8 @@ export function installDevTauriShim(): void {
       if (theme) return theme;
       const file = fsCommand(cmd, args as Record<string, unknown>);
       if (file) return file;
+      const plugin = pluginCommand(cmd, args as Record<string, unknown>);
+      if (plugin) return plugin;
       // A canned suggestion instead of null: lets ghost-text rendering (and
       // the tour's completion lesson) be smoke-tested in the browser -
       // null would make the manual trigger path throw an error dialog.

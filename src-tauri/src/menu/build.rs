@@ -9,6 +9,7 @@ pub(crate) fn install(app: &tauri::App) -> tauri::Result<()> {
     app.manage(RecentMenu(Mutex::new(None)));
     app.manage(ViewChecks::default());
     app.manage(MenuAccelerators::default());
+    app.manage(PluginMenu::default());
     set_menu(app.handle(), &HashMap::new())?;
     app.on_menu_event(move |app_handle, event| dispatch(app_handle, event.id().as_ref()));
     Ok(())
@@ -23,7 +24,9 @@ pub(crate) fn set_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tau
     app.set_menu(built.menu)?;
     *app.state::<RecentMenu>().0.lock().unwrap() = Some(built.open_recent);
     app.state::<ViewChecks>().0.lock().unwrap().items = built.check_items;
+    *app.state::<PluginMenu>().submenu.lock().unwrap() = Some(built.plugins);
     rebuild_recent_menu(app);
+    rebuild_plugin_menu(app);
     Ok(())
 }
 
@@ -339,6 +342,9 @@ pub(crate) fn build(
         .text(COMMUNITY_ID, l(COMMUNITY_ID, "Join the Community"))
         .build()?;
 
+    // Filled by rebuild_plugin_menu, from what the plugins that are on add.
+    let plugins_menu = SubmenuBuilder::new(app, l("menu:plugins", "Plugins")).build()?;
+
     let menu = MenuBuilder::new(app)
         .items(&[
             &app_menu,
@@ -346,6 +352,7 @@ pub(crate) fn build(
             &edit_menu,
             &format_menu,
             &view_menu,
+            &plugins_menu,
             &window_menu,
             &help_menu,
         ])
@@ -361,6 +368,7 @@ pub(crate) fn build(
     Ok(BuiltMenu {
         menu,
         open_recent: open_recent_menu,
+        plugins: plugins_menu,
         check_items,
     })
 }

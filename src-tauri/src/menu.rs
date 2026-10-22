@@ -33,6 +33,9 @@ mod recent;
 pub(crate) use recent::*;
 mod build;
 pub(crate) use build::*;
+mod plugins;
+pub use plugins::set_plugin_menu;
+pub(crate) use plugins::*;
 
 const SETTINGS_MENU_ID: &str = "settings";
 const NEW_FILE_ID: &str = "new-file";
@@ -353,6 +356,10 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         } else {
             emit_to_focused(app_handle, "menu-new-file");
         }
+    } else if let Some(command) = id.strip_prefix(PLUGIN_COMMAND_PREFIX) {
+        emit_to_focused_payload(app_handle, "menu-plugin-command", command.to_string());
+    } else if id == MANAGE_PLUGINS_ID {
+        emit_or_open_window(app_handle, "menu-manage-plugins");
     } else if id == OPEN_FILE_ID {
         emit_or_open_window(app_handle, "menu-open-file");
     } else if id == OPEN_FOLDER_ID {

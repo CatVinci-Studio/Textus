@@ -159,6 +159,14 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # The official plugins, which no longer ship with the app: the dev
+      # server serves them from this checkout (vite.dev-plugins.ts), and
+      # the plugin flows install them from it.
+      - uses: actions/checkout@v7
+        with:
+          repository: CatVinci-Studio/textus-plugins
+          path: textus-plugins
+      - run: npm ci --prefix textus-plugins
       # Chromium comes from the cache when this Playwright version's is there;
       # its system libraries are installed either way.
       - id: playwright

@@ -58,6 +58,8 @@ export type NativeMenuId =
   | `help-doc:${string}`
   | "help-community"
   | "help-tutorials"
+  | "manage-plugins"
+  | `plugin-command:${string}`
   // The phone menu's own (buildMobileMenu): emitted by emitMenuEvent, with
   // no menu.rs counterpart.
   | "share"
@@ -128,6 +130,12 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
     "toggle-typewriter-mode": !!checks.typewriter,
     "toggle-zen-mode": !!checks.zen,
   };
+}
+
+/** A command a plugin put in the Plugins menu (plugins/manager.ts). */
+export interface PluginMenuEntry {
+  command: string;
+  label: string;
 }
 
 /** What File > Open Recent lists (menu.rs's recents), most recent first. */
@@ -229,6 +237,7 @@ export function buildAppMenu(
   shortcuts: Shortcuts,
   recents: RecentLists,
   checks: MenuChecks = {},
+  plugins: readonly PluginMenuEntry[] = [],
 ): MenuNode[] {
   return [
     {
@@ -371,6 +380,19 @@ export function buildAppMenu(
       ],
     },
     {
+      label: t.menuPlugins,
+      submenu: [
+        ...(plugins.length
+          ? plugins.map((p): MenuEntry => ({
+              label: p.label,
+              action: { native: `plugin-command:${p.command}` },
+            }))
+          : [{ label: t.menuNoPluginCommands, disabled: true }]),
+        "separator",
+        { label: t.menuManagePlugins, action: { native: "manage-plugins" } },
+      ],
+    },
+    {
       label: t.menuHelp,
       submenu: [
         {
@@ -470,6 +492,8 @@ export function nativeMenuLabels(t: Strings): Record<string, string> {
     "menu:edit": t.menuEdit,
     "menu:format": t.menuFormat,
     "menu:view": t.menuView,
+    "menu:plugins": t.menuPlugins,
+    "plugin-commands-none": t.menuNoPluginCommands,
     "menu:window": t.menuWindow,
     "menu:help": t.menuHelp,
     "predefined:about": named(t.menuAbout),

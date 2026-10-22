@@ -7,6 +7,8 @@ import {
 import type { Lang } from "../i18n/langs";
 import type { TabState } from "./useTabState";
 
+const HELP_DOCS: readonly HelpDoc[] = ["markdown", "agent"];
+
 /**
  * Help menu docs (Markdown Guide / AI Agent Guide): bundled documents (per
  * UI language), opened as clean pathless drafts - play with them freely,
@@ -22,24 +24,37 @@ export function useHelpTabs(opts: {
 
   // A guide follows the UI language: switching it swaps the text of every
   // open guide the user hasn't edited (an edited one is theirs to keep).
+  const guideOpen = tabState.tabs.some((tab) => tab.helpDoc);
   useEffect(() => {
-    setTabs((prev) => {
-      let changed = false;
-      const next = prev.map((tab) => {
-        if (!tab.helpDoc || tab.content !== tab.savedContent) return tab;
-        const content = helpDocContent(tab.helpDoc, language);
-        if (content === tab.content) return tab;
-        changed = true;
-        return {
-          ...tab,
-          content,
-          savedContent: content,
-          reloadKey: tab.reloadKey + 1,
-        };
+    if (!guideOpen) return;
+    let current = true;
+    // Both guides in the new language, loaded first (doc-tabs.ts).
+    void Promise.all(
+      HELP_DOCS.map((doc) => helpDocContent(doc, language)),
+    ).then((texts) => {
+      if (!current) return;
+      const guide = new Map(HELP_DOCS.map((doc, i) => [doc, texts[i]]));
+      setTabs((prev) => {
+        let changed = false;
+        const next = prev.map((tab) => {
+          if (!tab.helpDoc || tab.content !== tab.savedContent) return tab;
+          const content = guide.get(tab.helpDoc)!;
+          if (content === tab.content) return tab;
+          changed = true;
+          return {
+            ...tab,
+            content,
+            savedContent: content,
+            reloadKey: tab.reloadKey + 1,
+          };
+        });
+        return changed ? next : prev;
       });
-      return changed ? next : prev;
     });
-  }, [language, setTabs]);
+    return () => {
+      current = false;
+    };
+  }, [language, guideOpen, setTabs]);
   const openingHelp = useRef(new Set<HelpDoc>());
   const openHelpTab = useCallback(
     (doc: HelpDoc) => {
@@ -47,32 +62,37 @@ export function useHelpTabs(opts: {
       // of an in-progress onboarding run. Without this, a persisted tutorial
       // could remain floating over the Markdown/AI guide after it opens.
       stopTutorial();
-      // Checked against the tab list as it is being updated, not the last
-      // render's: one menu click can reach several listeners in the same
-      // instant (a re-subscribed listener whose predecessor hasn't been
-      // released yet), and each used to see "no guide open" and add one.
-      const content = helpDocContent(doc, language);
-      const fresh = {
-        ...makeBlankTab(),
-        content,
-        savedContent: content,
-        helpDoc: doc,
-      };
-      // A second call before React has applied the first one only needs to
-      // land on the same tab.
+      // A second call before the first one's tab is in only needs to land
+      // on the same tab: one menu click can reach several listeners in the
+      // same instant (a re-subscribed listener whose predecessor hasn't
+      // been released yet), and each used to see "no guide open" and add
+      // one. Held until the guide's text has loaded and the tab is added.
       if (openingHelp.current.has(doc)) return;
       openingHelp.current.add(doc);
-      requestAnimationFrame(() => openingHelp.current.delete(doc));
-      let target = fresh.id;
-      setTabs((prev) => {
-        const existing = prev.find((tab) => tab.helpDoc === doc);
-        if (existing) {
-          target = existing.id;
-          return prev;
-        }
-        return [...prev, fresh];
-      });
-      setActiveTabId(() => target);
+      void helpDocContent(doc, language)
+        .then((content) => {
+          const fresh = {
+            ...makeBlankTab(),
+            content,
+            savedContent: content,
+            helpDoc: doc,
+          };
+          // Checked against the tab list as it is being updated, not the
+          // last render's.
+          let target = fresh.id;
+          setTabs((prev) => {
+            const existing = prev.find((tab) => tab.helpDoc === doc);
+            if (existing) {
+              target = existing.id;
+              return prev;
+            }
+            return [...prev, fresh];
+          });
+          setActiveTabId(() => target);
+        })
+        .finally(() =>
+          requestAnimationFrame(() => openingHelp.current.delete(doc)),
+        );
     },
     [language, stopTutorial, setTabs, setActiveTabId],
   );
