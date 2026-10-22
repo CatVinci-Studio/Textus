@@ -49,6 +49,7 @@ pub(crate) use files::*;
 mod prompt;
 pub(crate) use prompt::*;
 mod pass;
+mod select;
 pub use pass::*;
 
 /// Most memory text sent with one request, in characters (not bytes, so

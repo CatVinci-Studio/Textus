@@ -158,12 +158,14 @@ async fn ai_agent_message_inner(
     image_model: Option<crate::ai::images::ImageModel>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
-    let workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
+    let mut workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
     let library = crate::ai::conventions::library_names(&workspace);
-    // What the request is about, for picking library entries: the message
-    // as the user's side sent it, before the reference packs go in.
+    // What the request is about, for picking library entries and, past the
+    // budget, memories: the message as the user's side sent it, before the
+    // reference packs go in.
     let focus = message.clone();
+    workspace.memories.select_for(&focus);
     // A /name call gets the skill's instructions and reference packs filled
     // in here, and history keeps the expanded message (see expand_message).
     let message = crate::ai::builtin::expand_message_with(
