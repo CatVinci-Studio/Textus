@@ -669,7 +669,7 @@ export interface WebSearchStatus {
 /** One live fragment of an in-flight ai_agent_message, delivered over a
  *  Tauri channel while the agent loop runs. Purely additive display data -
  *  the command still resolves with the complete turn list, which stays the
- *  authoritative result. Mirrors `StreamEvent` in src-tauri/src/ai/agent.rs;
+ *  authoritative result. Mirrors `StreamEvent` in src-tauri/src/ai/agent/events.rs;
  *  the two must stay in sync. */
 export type StreamEvent =
   | { type: "delta"; text: string }
@@ -693,7 +693,7 @@ export type StreamEvent =
 
 /** Where the cursor sits, beyond the raw text around it - what lets a
  *  completion fit the document instead of guessing from 2000 characters.
- *  Mirrors CompletionHints in src-tauri/src/ai/client.rs. */
+ *  Mirrors CompletionHints in src-tauri/src/ai/client/completion.rs. */
 export interface CompletionHints {
   /** The document's first heading, when it has one. */
   title: string | null;

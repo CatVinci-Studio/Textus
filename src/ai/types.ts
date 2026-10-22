@@ -1,6 +1,6 @@
 /**
  * The operations a propose_edit tool call can carry. Mirrors EDIT_ACTIONS in
- * src-tauri/src/ai/tools.rs - the backend validates proposals against the
+ * src-tauri/src/ai/tools/ - the backend validates proposals against the
  * same list, so the two must stay in sync.
  */
 export type EditAction =

@@ -53,9 +53,11 @@ function menuCombos(nodes: MenuNode[]): string[] {
   );
 }
 
-/** menu.rs's accelerators ("CmdOrCtrl+Shift+S"), as stored combos. */
+/** menu.rs's accelerators (with menu/build.rs) ("CmdOrCtrl+Shift+S"), as stored combos. */
 function nativeAccelerators(): string[] {
-  const source = readFileSync("src-tauri/src/menu.rs", "utf8");
+  const source = ["menu.rs", "menu/build.rs"]
+    .map((file) => readFileSync(`src-tauri/src/${file}`, "utf8"))
+    .join("\n");
   const written = [
     ...source.matchAll(/\.accelerator\("([^"]+)"\)/g),
     ...source.matchAll(/const \w+_ACCEL: &str = "([^"]+)"/g),

@@ -466,7 +466,7 @@ export function ChatBody({
     includeSelection: boolean,
   ): { message: string; images?: ImageAttachment[] } {
     // Rewrites of the selection come back as replace_selection tool calls
-    // (see AGENT_TOOL_INSTRUCTIONS in src-tauri/src/ai/agent.rs); the tag
+    // (see AGENT_TOOL_INSTRUCTIONS in src-tauri/src/ai/agent/prompt.rs); the tag
     // carries the selection's MARKDOWN so formatting survives the trip.
     // With nothing selected, the cursor's surroundings say where "here"
     // is (and where insert_at_cursor writes).

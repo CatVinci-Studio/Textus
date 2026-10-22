@@ -10,7 +10,7 @@ Change a concept here first, then everywhere else.
 The AI itself is `AI_NAME` in `src/i18n/names.ts` ("Textus AI"); the help guides spell the name out.
 
 "Conversation" below means the AI panel and Quick Ask, which run the same
-agent (`src-tauri/src/ai/agent.rs`). "Completion" is the grey continuation.
+agent (`src-tauri/src/ai/agent/`). "Completion" is the grey continuation.
 Grammar check uses only the writing conventions and the library's names.
 
 ## Glossary

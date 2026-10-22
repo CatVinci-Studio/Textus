@@ -256,7 +256,7 @@ const IMAGE_HOSTS: ImageHost[] = ["picgo", "smms", "imgur", "custom"];
 export type ImageNamingMode = "auto" | "original" | "ask";
 /** The AI conversation's mode: Write only adds text, Review only reads and
  *  comments, Revise changes the text that is there. Mirrors `AgentMode` in
- *  src-tauri/src/ai/agent.rs. */
+ *  src-tauri/src/ai/agent/prompt.rs. */
 export type AgentMode = "write" | "review" | "revise";
 export const AGENT_MODES: readonly AgentMode[] = ["write", "review", "revise"];
 
