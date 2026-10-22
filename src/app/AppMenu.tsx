@@ -51,13 +51,61 @@ interface AppMenuProps {
 
 export function AppMenu({ x, y, onClose, checks }: AppMenuProps) {
   const { t, settings } = useSettings();
-  const [recents, setRecents] = useState<RecentLists>(NO_RECENTS);
-  const [fullscreen, setFullscreen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const pos = useViewportClamp(ref, x, y);
   const phone = usePhoneLayout();
   // It grows out of the button (top left) and, closed, fades where it is.
   const presence = usePresenceProps(ref);
+
+  const { recents, fullscreen } = useMenuOpening();
+
+  // On <body>, not inside the title row that opens it: the row is a fixed
+  // layer of its own (z-index 45), so a menu inside it could never rise
+  // above the find bar (300) however high its own z-index was set - the
+  // find bar covered its first rows on the phone and on Windows.
+  return createPortal(
+    <div {...presence} className="app-menu" style={pos} data-floating-menu="">
+      <MenuList
+        items={
+          hasAppMenu
+            ? buildAppMenu(t, settings.shortcuts, recents, {
+                ...checks,
+                fullscreen,
+              })
+            : buildMobileMenu(t, checks)
+        }
+        onDismiss={onClose}
+        // The arrow keys need a row to start from; a finger doesn't, and on
+        // a phone the first row would only sit there looking selected.
+        autoFocus={!phone}
+      />
+    </div>,
+    document.body,
+  );
+}
+
+/** For the flyouts' timing, read in event handlers only. */
+const clock = () => performance.now();
+
+/** Focuses the nth enabled item of a list, wrapping at both ends. */
+function focusItem(list: HTMLElement | null, index: number) {
+  if (!list) return;
+  // `:scope >` keeps an open flyout's items out of the parent's arrow-key
+  // walk - they are DOM children of the row they hang off.
+  const rows = Array.from(
+    list.querySelectorAll<HTMLButtonElement>(
+      ":scope > .app-menu-row > .app-menu-item:not(:disabled)",
+    ),
+  );
+  if (rows.length === 0) return;
+  rows[(index + rows.length) % rows.length]?.focus();
+}
+
+/** What the menu reads as it opens: the recent files and folders, and
+ *  whether the window is in full screen. */
+function useMenuOpening() {
+  const [recents, setRecents] = useState<RecentLists>(NO_RECENTS);
+  const [fullscreen, setFullscreen] = useState(false);
 
   // Read once per opening, not per render: Open Recent must show what the
   // list holds NOW (including a file opened since the menu was last up), and
@@ -102,46 +150,7 @@ export function AppMenu({ x, y, onClose, checks }: AppMenuProps) {
     };
   }, []);
 
-  // On <body>, not inside the title row that opens it: the row is a fixed
-  // layer of its own (z-index 45), so a menu inside it could never rise
-  // above the find bar (300) however high its own z-index was set - the
-  // find bar covered its first rows on the phone and on Windows.
-  return createPortal(
-    <div {...presence} className="app-menu" style={pos} data-floating-menu="">
-      <MenuList
-        items={
-          hasAppMenu
-            ? buildAppMenu(t, settings.shortcuts, recents, {
-                ...checks,
-                fullscreen,
-              })
-            : buildMobileMenu(t, checks)
-        }
-        onDismiss={onClose}
-        // The arrow keys need a row to start from; a finger doesn't, and on
-        // a phone the first row would only sit there looking selected.
-        autoFocus={!phone}
-      />
-    </div>,
-    document.body,
-  );
-}
-
-/** For the flyouts' timing, read in event handlers only. */
-const clock = () => performance.now();
-
-/** Focuses the nth enabled item of a list, wrapping at both ends. */
-function focusItem(list: HTMLElement | null, index: number) {
-  if (!list) return;
-  // `:scope >` keeps an open flyout's items out of the parent's arrow-key
-  // walk - they are DOM children of the row they hang off.
-  const rows = Array.from(
-    list.querySelectorAll<HTMLButtonElement>(
-      ":scope > .app-menu-row > .app-menu-item:not(:disabled)",
-    ),
-  );
-  if (rows.length === 0) return;
-  rows[(index + rows.length) % rows.length]?.focus();
+  return { recents, fullscreen };
 }
 
 function MenuList({
