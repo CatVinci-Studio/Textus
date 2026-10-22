@@ -108,11 +108,18 @@ pub struct ProviderCaps {
     /// custom endpoint): their usage is still read when they send it
     /// unasked.
     pub stream_usage: bool,
+    /// The effort Auto asks for where the provider's own default thinks
+    /// far longer than writing needs, on a model that takes that level:
+    /// Ark's Seed models thought for two minutes and more on a two-paragraph
+    /// edit at their default, under forty seconds at `low`, as right
+    /// (1.2.0-rc.6 tag eval). None: Auto sends nothing.
+    pub auto_effort: Option<&'static str>,
 }
 
 /// A provider id the table doesn't list - a newly added catalog entry, or
 /// "custom" - speaks plain OpenAI-compatible Chat Completions.
 const DEFAULT_CAPS: ProviderCaps = ProviderCaps {
+    auto_effort: None,
     thinking: ThinkingFormat::OpenAi,
     native_search: NativeSearch::None,
     replay_reasoning: false,
@@ -124,6 +131,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "openai",
         ProviderCaps {
+            auto_effort: None,
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::ResponsesTool,
             replay_reasoning: false,
@@ -134,6 +142,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "anthropic",
         ProviderCaps {
+            auto_effort: None,
             thinking: ThinkingFormat::Anthropic,
             native_search: NativeSearch::AnthropicTool,
             replay_reasoning: false,
@@ -146,6 +155,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "google",
         ProviderCaps {
+            auto_effort: None,
             image: Some(ImageApi::Gemini),
             stream_usage: true,
             ..DEFAULT_CAPS
@@ -154,6 +164,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "deepseek",
         ProviderCaps {
+            auto_effort: None,
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
             replay_reasoning: true,
@@ -164,6 +175,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "xai",
         ProviderCaps {
+            auto_effort: None,
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::CompatibleResponses,
             replay_reasoning: false,
@@ -175,6 +187,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "mistral",
         ProviderCaps {
+            auto_effort: None,
             thinking: ThinkingFormat::None,
             native_search: NativeSearch::None,
             replay_reasoning: false,
@@ -185,6 +198,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "groq",
         ProviderCaps {
+            auto_effort: None,
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::ChatCompletions(NativeWebSearch::Groq),
             replay_reasoning: false,
@@ -195,6 +209,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "openrouter",
         ProviderCaps {
+            auto_effort: None,
             thinking: ThinkingFormat::OpenRouter,
             native_search: NativeSearch::ChatCompletions(NativeWebSearch::OpenRouter),
             replay_reasoning: false,
@@ -205,6 +220,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "moonshot",
         ProviderCaps {
+            auto_effort: None,
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
             replay_reasoning: true,
@@ -215,6 +231,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "zhipu",
         ProviderCaps {
+            auto_effort: None,
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::ChatCompletions(NativeWebSearch::Zhipu),
             replay_reasoning: true,
@@ -225,6 +242,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "qwen",
         ProviderCaps {
+            auto_effort: None,
             thinking: ThinkingFormat::Qwen,
             native_search: NativeSearch::Qwen,
             replay_reasoning: false,
@@ -238,6 +256,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "minimax",
         ProviderCaps {
+            auto_effort: None,
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
             replay_reasoning: false,
@@ -248,6 +267,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "minimax-intl",
         ProviderCaps {
+            auto_effort: None,
             thinking: ThinkingFormat::ThinkingType,
             native_search: NativeSearch::None,
             replay_reasoning: false,
@@ -261,6 +281,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "doubao",
         ProviderCaps {
+            auto_effort: Some("low"),
             thinking: ThinkingFormat::OpenAi,
             native_search: NativeSearch::None,
             replay_reasoning: true,
@@ -273,6 +294,7 @@ const PROVIDERS: &[(&str, ProviderCaps)] = &[
     (
         "ollama",
         ProviderCaps {
+            auto_effort: None,
             stream_usage: true,
             ..DEFAULT_CAPS
         },
@@ -585,13 +607,23 @@ pub fn plan(provider_id: &str, model: &str, level: ThinkingLevel) -> Thinking {
         replay: caps.replay_reasoning,
         ..Thinking::default()
     };
-    if caps.thinking == ThinkingFormat::None
-        || level == ThinkingLevel::Auto
-        || refused(provider_id, model)
-    {
+    if caps.thinking == ThinkingFormat::None || refused(provider_id, model) {
         return base;
     }
     let reasoning = model_reasoning(provider_id, model);
+    if level == ThinkingLevel::Auto {
+        return match (caps.auto_effort, &reasoning) {
+            (Some(effort), ModelReasoning::Options { efforts, .. })
+                if efforts.iter().any(|e| e == effort) =>
+            {
+                Thinking {
+                    effort: Some(effort.into()),
+                    ..base
+                }
+            }
+            _ => base,
+        };
+    }
     match (level, reasoning) {
         (_, ModelReasoning::No | ModelReasoning::Fixed) => base,
         // Unknown: Fast leaves the provider's default alone; Deep asks the
@@ -768,6 +800,21 @@ mod tests {
         ] {
             assert!(!plan(provider, model, ThinkingLevel::Auto).sends_parameters());
         }
+    }
+
+    #[test]
+    fn auto_turns_ark_down_to_low_where_the_model_takes_it() {
+        let seed = plan("doubao", "doubao-seed-2-1-pro-260628", ThinkingLevel::Auto);
+        assert_eq!(seed.effort.as_deref(), Some("low"));
+        // Deep still asks for more.
+        assert_eq!(
+            plan("doubao", "doubao-seed-2-1-pro-260628", ThinkingLevel::Deep)
+                .effort
+                .as_deref(),
+            Some("high")
+        );
+        // A model the table doesn't know: the provider's default.
+        assert!(!plan("doubao", "doubao-unknown", ThinkingLevel::Auto).sends_parameters());
     }
 
     #[test]

@@ -597,7 +597,10 @@ export function ChatBody({
                 </div>
               )}
               {!quickExpanded && !error && busy && !summaryText && (
-                <ThinkingIndicator label={quickActivity ?? labels.thinking} />
+                <ThinkingIndicator
+                  label={quickActivity ?? labels.thinking}
+                  waitedFor={labels.waitedFor}
+                />
               )}
               {quickExpanded && (
                 <div className="quick-ask-transcript" ref={listRef}>

@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type CSSProperties,
 } from "react";
 import { AgentTurnView, type AgentTurnLabels } from "./AgentTurnView";
@@ -55,6 +56,9 @@ function parseComment(
 export interface ChatMessagesLabels
   extends AgentTurnLabels, MemoryChipLabels, ThoughtRowLabels {
   thinking: string;
+  /** "{n} seconds", after the indicator's label once nothing has moved
+   *  for a while (ThinkingIndicator). */
+  waitedFor: (seconds: number) => string;
   proposalTitle: string;
   proposalStatus: Record<Exclude<PendingStatus, "pending">, string>;
   proposalAccept: string;
@@ -463,6 +467,7 @@ export function ChatMessages({
         <ThinkingIndicator
           key={streaming?.tool ? streaming.tool : (streaming?.text.length ?? 0)}
           after={!!streaming?.text && !streaming?.tool}
+          waitedFor={labels.waitedFor}
           label={
             streaming?.tool === "generate_image"
               ? labels.generatingImage
@@ -491,14 +496,25 @@ export function ChatMessages({
 export function ThinkingIndicator({
   label,
   after = false,
+  waitedFor,
 }: {
   label: string;
   /** Under a streaming reply: shows only once it has paused a moment. */
   after?: boolean;
+  /** Counts the seconds once nothing has moved for WAIT_SHOWN: a model
+   *  that sends no thinking, or a call whose text comes whole, looked
+   *  stuck with dots alone (rc.6). The row is re-keyed by each piece of
+   *  progress, so it counts from the last one. */
+  waitedFor?: (seconds: number) => string;
 }) {
+  const seconds = useSecondsSince(waitedFor !== undefined);
   return (
     <div className={`agent-thinking${after ? " agent-thinking-after" : ""}`}>
-      <span className="agent-thinking-label">{label}</span>
+      <span className="agent-thinking-label">
+        {waitedFor && seconds >= WAIT_SHOWN
+          ? `${label} · ${waitedFor(seconds)}`
+          : label}
+      </span>
       <span className="agent-thinking-dots">
         <span />
         <span />
@@ -506,6 +522,21 @@ export function ThinkingIndicator({
       </span>
     </div>
   );
+}
+
+/** Seconds of stillness after which the indicator counts them. */
+const WAIT_SHOWN = 5;
+
+/** Whole seconds since mount, ticking each second while `on`. */
+function useSecondsSince(on: boolean): number {
+  const [start] = useState(() => Date.now());
+  const [now, setNow] = useState(start);
+  useEffect(() => {
+    if (!on) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [on]);
+  return Math.floor((now - start) / 1000);
 }
 
 /** The error row, with a retry button when the failed send is resendable

@@ -643,8 +643,13 @@ para usar una.
   agentWritingEdit: "Escribiendo el cambio…",
   agentWritingNotes: "Escribiendo notas…",
   agentDeepThinking: "Pensamiento profundo",
-  agentDeepThinkingHint: `Pensamiento profundo: si está activado, ${AI_NAME} piensa más antes de responder`,
+  agentDeepThinkingHint: `Pensamiento profundo: si está activado, ${AI_NAME} piensa más antes de responder; si no, el modelo piensa lo que piensa por defecto`,
   toggleOnHint: "{label} (Activado: haz clic otra vez para desactivar)",
+  agentWaitedFor: {
+    one: "{n} segundo",
+    many: "{n} de segundos",
+    other: "{n} segundos",
+  },
   agentThinkingFor: {
     one: "Pensando · {n} segundo",
     many: "Pensando · {n} de segundos",

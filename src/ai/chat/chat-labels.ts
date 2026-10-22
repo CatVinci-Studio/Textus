@@ -24,6 +24,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     retry: t.agentRetry,
     thinking: t.agentThinking,
     thinkingFor: (n) => plural(t.agentThinkingFor, n, lang),
+    waitedFor: (n) => plural(t.agentWaitedFor, n, lang),
     thoughtFor: (n) => plural(t.agentThoughtFor, n, lang),
     generatingImage: t.agentGeneratingImage,
     writingEdit: t.agentWritingEdit,

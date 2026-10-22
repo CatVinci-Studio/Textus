@@ -632,8 +632,14 @@ export default {
   agentWritingEdit: "Пишу правку…",
   agentWritingNotes: "Пишу заметки…",
   agentDeepThinking: "Глубокое размышление",
-  agentDeepThinkingHint: `Глубокое размышление: когда включено, ${AI_NAME} дольше думает, прежде чем ответить`,
+  agentDeepThinkingHint: `Глубокое размышление: когда включено, ${AI_NAME} дольше думает, прежде чем ответить; когда выключено — столько, сколько модель думает по умолчанию`,
   toggleOnHint: "{label} (Включено — нажмите ещё раз, чтобы выключить)",
+  agentWaitedFor: {
+    one: "{n} секунду",
+    few: "{n} секунды",
+    many: "{n} секунд",
+    other: "{n} секунды",
+  },
   agentThinkingFor: {
     one: "Думает · {n} секунду",
     few: "Думает · {n} секунды",
