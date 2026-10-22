@@ -79,7 +79,7 @@ impl MemoryDirs {
                 ));
             }
         }
-        all.sort_by(|a, b| b.0.cmp(&a.0));
+        all.sort_by_key(|f| std::cmp::Reverse(f.0));
         all.into_iter().map(|(_, f)| f).collect()
     }
 
