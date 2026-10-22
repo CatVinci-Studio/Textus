@@ -58,7 +58,6 @@ beforeAll(() => {
     settings: {},
     rev: 1,
     uiState: {},
-    legacyImport: false,
     label: "main",
   };
 });

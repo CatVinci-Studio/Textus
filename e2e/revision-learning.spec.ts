@@ -35,7 +35,6 @@ const workspace = (items: unknown[]) => ({
   library: [],
   memories: { items, chars: 0, cap: 4000 },
   remember: false,
-  levis_project: false,
 });
 
 /** The calls a canned command answered (window.__devInvokeCalls). */

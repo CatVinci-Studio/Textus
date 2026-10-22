@@ -6,7 +6,6 @@ pub mod client;
 pub mod conventions;
 pub mod doc_blocks;
 pub mod images;
-pub mod levis_project;
 #[cfg(test)]
 mod live_eval;
 pub mod memory;

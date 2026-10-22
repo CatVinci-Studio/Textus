@@ -148,9 +148,6 @@ export interface Settings {
   /** False only on a fresh install, until the language welcome screen is
    *  confirmed. Existing installations are migrated to true. */
   languageChosen: boolean;
-  /** The first-launch offer to import a Levis installation was answered
-   *  (or the import ran) - settings/levis-import.ts. */
-  levisImportOffered: boolean;
   /// Appearance: follow the OS, or pin light/dark. Independent of `themeId`.
   theme: ThemeMode;
   /** Settings › Textus AI › Enable Textus AI, and the window bar's switch
@@ -358,7 +355,6 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
   language: "en",
   languageChosen: false,
-  levisImportOffered: false,
   theme: "system",
   textusAi: true,
   textusAiResumeAt: null,

@@ -188,7 +188,6 @@ for (const scheme of ["light", "dark"] as const) {
         ],
         memories: { items: [], chars: 0, cap: 4000 },
         remember: true,
-        levis_project: false,
       },
     });
     await page.locator("#agent-tab-memory").click();

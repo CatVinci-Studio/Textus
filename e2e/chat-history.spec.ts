@@ -71,7 +71,7 @@ const entry = (page: Page, title: string) =>
 test("a past conversation reopens with its own document", async ({ page }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-chat-history": JSON.stringify(SAVED) },
+    storage: { "textus-chat-history": JSON.stringify(SAVED) },
   });
   await installDisk(page);
   await openHistory(page);
@@ -83,7 +83,7 @@ test("a past conversation reopens with its own document", async ({ page }) => {
   // ...still filed under that document.
   const stored = await page.evaluate(
     () =>
-      JSON.parse(localStorage.getItem("levis-chat-history")!) as {
+      JSON.parse(localStorage.getItem("textus-chat-history")!) as {
         id: string;
         docPath: string | null;
       }[],
@@ -96,7 +96,7 @@ test("a conversation whose document is gone asks before continuing here", async 
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-chat-history": JSON.stringify(SAVED) },
+    storage: { "textus-chat-history": JSON.stringify(SAVED) },
   });
   await installDisk(page);
   await openHistory(page);
@@ -119,7 +119,7 @@ test("a never-saved document's conversation continues in the current one", async
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-chat-history": JSON.stringify(SAVED) },
+    storage: { "textus-chat-history": JSON.stringify(SAVED) },
   });
   await openHistory(page);
   const draft = entry(page, "Brainstorm a title");
@@ -137,7 +137,6 @@ test("with Rust, the list is the index and older conversations are noted as arch
     rev: 1,
     label: "main",
     uiState: {},
-    legacyImport: false,
   };
   await page.addInitScript(
     ({ script, boot, saved }) => {
@@ -191,7 +190,7 @@ test("a conversation deleted from the list is gone for good", async ({
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-chat-history": JSON.stringify(SAVED) },
+    storage: { "textus-chat-history": JSON.stringify(SAVED) },
   });
   await openHistory(page);
   const line = entry(page, "Brainstorm a title");
@@ -202,7 +201,7 @@ test("a conversation deleted from the list is gone for good", async ({
   await expect(page.locator(".chat-history-entry")).toHaveCount(2);
   const stored = await page.evaluate(
     () =>
-      JSON.parse(localStorage.getItem("levis-chat-history")!) as {
+      JSON.parse(localStorage.getItem("textus-chat-history")!) as {
         id: string;
       }[],
   );

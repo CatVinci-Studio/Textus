@@ -325,7 +325,6 @@ test.describe("axe, newer surfaces", () => {
       library: [],
       memories: { items: [], chars: 0, cap: 4000 },
       remember: false,
-      levis_project: false,
     };
     const rounds: [string, string, string, number][] = [
       [

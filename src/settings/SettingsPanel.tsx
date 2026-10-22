@@ -172,7 +172,7 @@ export function SettingsPanel({
 
   const renderSubpage = (s: Subpage) =>
     s === "about" ? (
-      <AboutSection t={t} lang={settings.language} />
+      <AboutSection t={t} />
     ) : (
       <>
         <h1 className="settings-category-title">{subpageTitles[s]}</h1>

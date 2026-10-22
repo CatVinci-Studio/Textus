@@ -44,7 +44,6 @@ vi.mock("../platform/ipc", () => ({
     settingsGet: vi.fn(),
     settingsPatch: vi.fn(),
     settingsFillDefaults: vi.fn(),
-    settingsImportLegacy: vi.fn(),
     uiStateGet: vi.fn().mockResolvedValue({}),
     uiStatePatch: vi.fn().mockResolvedValue(null),
     historyList: vi.fn().mockResolvedValue([]),
@@ -65,7 +64,6 @@ function boot(settings: Record<string, unknown>, extra: object = {}) {
     settings,
     rev: 3,
     uiState: {},
-    legacyImport: false,
     label: "main",
     ...extra,
   };
@@ -217,32 +215,6 @@ describe("file-backed settings", () => {
       </SettingsProvider>,
     );
     expect(screen.getByTestId("probe").textContent).toContain("dark|");
-  });
-
-  it("hands localStorage to Rust on the first launch after the move", async () => {
-    localStorage.setItem(
-      "catvinci-settings",
-      JSON.stringify({ theme: "dark", aiProvider: "codex" }),
-    );
-    localStorage.setItem("levis-chat-history", JSON.stringify([{ id: "c" }]));
-    localStorage.setItem("textus-agent-panel-open", "1");
-    vi.mocked(storage.settingsImportLegacy).mockResolvedValue({
-      accepted: true,
-      value: { theme: "dark", aiProvider: "openai", languageChosen: true },
-      rev: 4,
-    });
-    boot({}, { legacyImport: true, rev: 1 });
-    // Usable at once, from localStorage, before Rust has answered.
-    expect(loadSettings().theme).toBe("dark");
-    await Promise.resolve();
-    const payload = vi.mocked(storage.settingsImportLegacy).mock.calls[0][0];
-    // Normalised on the way: the old provider id is migrated.
-    expect(payload.settings.aiProvider).toBe("openai");
-    expect(payload.chatHistory).toEqual([{ id: "c" }]);
-    expect(payload.uiState).toEqual({ agentPanelOpen: true });
-    expect(storage.settingsGet).not.toHaveBeenCalled();
-    // localStorage is kept as it was, for a downgrade.
-    expect(localStorage.getItem("catvinci-settings")).toContain("codex");
   });
 
   it("writes fresh defaults out when Rust has nothing stored", async () => {

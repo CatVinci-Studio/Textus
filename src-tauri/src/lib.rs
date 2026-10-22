@@ -19,7 +19,6 @@ mod background;
 mod commands;
 mod distribution;
 mod extract;
-mod levis_import;
 #[cfg(desktop)]
 mod mcp;
 #[cfg(desktop)]
@@ -250,9 +249,6 @@ pub fn run() {
             settings::settings_get,
             settings::settings_patch,
             settings::settings_fill_defaults,
-            settings::settings_import_legacy,
-            levis_import::levis_import_status,
-            levis_import::levis_import,
             settings::ui_state_get,
             settings::ui_state_patch,
             settings::history_list,
@@ -331,7 +327,6 @@ pub fn run() {
             crate::ai::next_message::suggest_next_message,
             crate::ai::memory::revision_choices_read,
             crate::ai::memory::revision_choices_write,
-            crate::ai::levis_project::convert_levis_project,
             pick_attachment_file,
             set_provider_api_key,
             provider_api_key_status,

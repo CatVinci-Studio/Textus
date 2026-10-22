@@ -55,7 +55,6 @@ import {
   type PendingClose,
 } from "./close-flow";
 import {
-  useLevisOffer,
   usePracticeTab,
   usePracticeNotes,
   useTutorialTabRecovery,
@@ -88,12 +87,6 @@ import "./App.css";
  */
 function App() {
   const { t, settings, setSettings } = useSettings();
-  const levisOffer = useLevisOffer({
-    t,
-    settings,
-    setSettings,
-    exitTutorial: () => tutorial.exit(),
-  });
   const tabState = useTabState();
   const { tabs, setTabs, activeTabId, setActiveTabId, tabsRef, liveTabs } =
     tabState;
@@ -581,7 +574,6 @@ function App() {
           tutorial={tutorial}
           settings={settings}
           setSettings={setSettings}
-          levisPending={levisOffer.pending}
           zen={{ on: zenMode, toggle: toggleZenMode }}
           t={t}
         />

@@ -104,119 +104,9 @@ fn writes_are_debounced_and_flushed() {
         read_file(&settings_path(&dir))["settings"]["theme"],
         json!("light")
     );
-    // ...and reloading reads back what was written, with no import.
+    // ...and reloading reads back what was written.
     let reloaded = Stores::load(&dir, &dir);
     assert_eq!(reloaded.settings.snapshot().0["theme"], json!("light"));
-    assert!(!reloaded.legacy_import_pending());
-}
-
-#[test]
-fn legacy_import_is_accepted_once_and_keeps_newer_changes() {
-    let dir = temp_dir();
-    let stores = Stores::load(&dir, &dir);
-    assert!(stores.legacy_import_pending());
-    // A change made before the import arrives is newer than it.
-    stores.patch_settings(&obj(json!({ "zoom": 1.5 })));
-    let accepted = stores.import_legacy(LegacyPayload {
-        settings: Some(obj(
-            json!({ "theme": "dark", "zoom": 1.0, "language": "ja" }),
-        )),
-        ..Default::default()
-    });
-    assert!(accepted);
-    assert_eq!(
-        stores.settings.snapshot().0,
-        json!({ "theme": "dark", "zoom": 1.5, "language": "ja" })
-    );
-    // The file exists right away, so the next launch won't import.
-    assert!(settings_path(&dir).exists());
-    // A second window restored at the same launch loses the race.
-    let again = stores.import_legacy(LegacyPayload {
-        settings: Some(obj(json!({ "theme": "light" }))),
-        ..Default::default()
-    });
-    assert!(!again);
-    assert_eq!(stores.settings.snapshot().0["theme"], json!("dark"));
-    assert!(!Stores::load(&dir, &dir).legacy_import_pending());
-}
-
-#[test]
-fn no_import_once_settings_json_exists() {
-    let dir = temp_dir();
-    std::fs::write(
-        settings_path(&dir),
-        r#"{"schemaVersion":1,"settings":{"theme":"dark"}}"#,
-    )
-    .unwrap();
-    let stores = Stores::load(&dir, &dir);
-    assert!(!stores.legacy_import_pending());
-    assert!(!stores.import_legacy(LegacyPayload {
-        settings: Some(obj(json!({ "theme": "light" }))),
-        ..Default::default()
-    }));
-    assert_eq!(stores.settings.snapshot().0["theme"], json!("dark"));
-}
-
-#[test]
-fn import_brings_histories_and_ui_state() {
-    let dir = temp_dir();
-    let stores = Stores::load(&dir, &dir);
-    stores
-        .clipboard
-        .upsert(HistoryKind::Clipboard, json!({ "text": "new", "at": 3 }));
-    stores.import_legacy(LegacyPayload {
-        settings: Some(Map::new()),
-        ui_state: Some(obj(json!({ "agentPanelOpen": true }))),
-        chat_history: Some(vec![
-            json!({ "id": "a", "updatedAt": 1, "turns": [] }),
-            json!({ "id": "b", "updatedAt": 2, "turns": [] }),
-            json!({ "id": "broken" }),
-        ]),
-        clipboard_history: Some(vec![
-            json!({ "text": "new", "at": 1 }),
-            json!({ "text": "old", "at": 1 }),
-        ]),
-    });
-    let ids: Vec<_> = stores
-        .chat
-        .list()
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|e| e["id"].as_str().unwrap().to_owned())
-        .collect();
-    assert_eq!(ids, ["b", "a"]);
-    assert_eq!(
-        stores.clipboard.snapshot().0,
-        json!([{ "text": "new", "at": 3 }, { "text": "old", "at": 1 }])
-    );
-    assert_eq!(
-        stores.ui_state.snapshot().0,
-        json!({ "agentPanelOpen": true })
-    );
-}
-
-#[test]
-fn prefs_json_seeds_the_first_launch() {
-    let dir = temp_dir();
-    std::fs::write(
-            dir.join("prefs.json"),
-            r#"{"new_document_mode":"tab","restore_session_on_startup":false,"editor_window_size":[900,700]}"#,
-        )
-        .unwrap();
-    let stores = Stores::load(&dir, &dir);
-    let settings = stores.settings.snapshot().0;
-    assert_eq!(settings["newDocumentMode"], json!("tab"));
-    assert_eq!(settings["restoreSessionOnStartup"], json!(false));
-    // An import without the fields (a blob from before they existed)
-    // keeps what prefs.json said; one with them wins.
-    stores.import_legacy(LegacyPayload {
-        settings: Some(obj(json!({ "newDocumentMode": "window" }))),
-        ..Default::default()
-    });
-    let settings = stores.settings.snapshot().0;
-    assert_eq!(settings["newDocumentMode"], json!("window"));
-    assert_eq!(settings["restoreSessionOnStartup"], json!(false));
 }
 
 #[test]
@@ -224,9 +114,8 @@ fn corrupt_settings_are_moved_aside_and_defaults_used() {
     let dir = temp_dir();
     std::fs::write(settings_path(&dir), "{ not json").unwrap();
     let stores = Stores::load(&dir, &dir);
+    // Not a new profile either: nothing is seeded over the lost file.
     assert_eq!(stores.settings.snapshot().0, json!({}));
-    // Not a first launch: localStorage is months old by now.
-    assert!(!stores.legacy_import_pending());
     assert!(!settings_path(&dir).exists());
     let aside: Vec<_> = std::fs::read_dir(&dir)
         .unwrap()
@@ -278,9 +167,8 @@ fn an_unreadable_settings_file_is_never_overwritten() {
         return;
     }
     let stores = Stores::load(&dir, &dir);
+    // Not a new profile either: nothing is seeded over the real data.
     assert_eq!(stores.settings.snapshot().0, json!({}));
-    // Not a first launch either: no import over the real data.
-    assert!(!stores.legacy_import_pending());
     // The frontend writes its defaults, the user changes something...
     stores.fill_missing_settings(&obj(json!({ "theme": "system", "zoom": 1 })));
     stores.patch_settings(&obj(json!({ "zoom": 1.5 })));

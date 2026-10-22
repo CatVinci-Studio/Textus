@@ -18,7 +18,6 @@ const workspace = (library: unknown[]) => ({
   library,
   memories: { items: [], chars: 0, cap: 4000 },
   remember: true,
-  levis_project: false,
 });
 
 async function createEntry(page: Page, name: string) {

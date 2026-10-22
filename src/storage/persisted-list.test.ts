@@ -79,7 +79,6 @@ describe("with Rust (file-backed)", () => {
       settings: {},
       rev: 1,
       uiState: {},
-      legacyImport: false,
       label: "main",
     };
   });
@@ -184,7 +183,8 @@ describe("with Rust (file-backed)", () => {
     expect(list.get().map((e) => e.id)).toEqual(["x"]);
     event({ type: "remove", key: "x" });
     expect(list.get()).toEqual([]);
-    // The legacy import replaced the whole list: fetch it again.
+    // The whole list changed (a document's conversations moved): fetch it
+    // again.
     vi.mocked(storage.historyList).mockResolvedValue([
       { id: "imported", at: 1 },
     ]);

@@ -1,39 +1,8 @@
-//! What settings change outside the webview: every window told to
-//! reload, the app and window themes and backgrounds, the boot script a
-//! new window starts with, and the settings the backend reads or sets.
+//! What settings change outside the webview: the app and window themes
+//! and backgrounds, the boot script a new window starts with, and the
+//! settings the backend reads or sets.
 
 use super::*;
-
-/// After an import replaced settings, UI state and histories underneath
-/// every window: each window adopts the whole settings object and reloads
-/// both histories, and the native appearance follows the imported theme.
-pub fn broadcast_reload(app: &AppHandle) {
-    let Some(stores) = app.try_state::<Stores>() else {
-        return;
-    };
-    let (value, rev) = stores.settings.snapshot();
-    theme_changed(app);
-    emit_to_all(
-        app,
-        "settings-changed",
-        SettingsChanged {
-            rev,
-            patch: value.as_object().cloned().unwrap_or_default(),
-            from: String::new(),
-        },
-    );
-    for kind in [HistoryKind::Chat, HistoryKind::Clipboard] {
-        emit_to_all(
-            app,
-            "history-changed",
-            HistoryChanged {
-                kind,
-                op: HistoryOp::Reload,
-                from: String::new(),
-            },
-        );
-    }
-}
 
 /// Loads every store into app state. Called first thing in setup(), before
 /// any window is built - the windows' boot scripts are made from it.
@@ -45,8 +14,7 @@ pub fn init(app: &AppHandle) {
     apply_app_theme(app);
 }
 
-/// The appearance setting changed, or first arrived with the legacy import:
-/// brings the native side in line with it, so what a window shows before
+/// The appearance setting changed: brings the native side in line with it, so what a window shows before
 /// (and around) its page matches the page. macOS sets the app's appearance
 /// (`apply_app_theme`), Linux the open windows' background colour
 /// (`apply_window_backgrounds`); Windows and iOS need nothing.
@@ -163,7 +131,6 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         "settings": settings,
         "rev": rev,
         "uiState": ui_state,
-        "legacyImport": stores.legacy_import_pending(),
         "label": label,
         "titlebarHeight": titlebar_height,
     });
@@ -269,10 +236,10 @@ pub(crate) fn pinned_background(settings: &Value) -> Option<tauri::window::Color
 }
 
 /// Gives every open app window the background `with_boot` would give it now:
-/// after the appearance changes (or first arrives, with the legacy import),
-/// a window keeps showing its native background wherever the page hasn't
-/// painted yet - the edges of a resize - which would otherwise stay the old
-/// appearance's colour until the window is reopened.
+/// after the appearance changes, a window keeps showing its native
+/// background wherever the page hasn't painted yet - the edges of a resize -
+/// which would otherwise stay the old appearance's colour until the window
+/// is reopened.
 #[cfg(target_os = "linux")]
 pub(crate) fn apply_window_backgrounds(app: &AppHandle) {
     let Some(stores) = app.try_state::<Stores>() else {

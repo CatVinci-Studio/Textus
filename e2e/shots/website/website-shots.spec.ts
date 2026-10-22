@@ -785,7 +785,6 @@ async function launch(page: Page, options: Launch) {
       })),
       memories: { items: [], chars: 0, cap: 4000 },
       remember: true,
-      levis_project: false,
     },
   });
   await openApp(page, {

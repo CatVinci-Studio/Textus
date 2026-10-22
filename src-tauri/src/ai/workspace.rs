@@ -48,9 +48,7 @@ pub(crate) use layers::*;
 /// the body is loaded dynamically via the `use_skill` tool.
 pub const WORKSPACE_DIR_NAME: &str = ".textus";
 
-/// Where a project's settings live: `<project folder>/.textus/`. Only this
-/// folder counts - a Levis project's `.levis/` is never read; the project
-/// bar offers to convert it once (ai::levis_project).
+/// Where a project's settings live: `<project folder>/.textus/`.
 pub fn project_dir(root: &Path) -> PathBuf {
     root.join(WORKSPACE_DIR_NAME)
 }
@@ -193,10 +191,6 @@ pub struct AgentWorkspace {
     /// tool is offered only then (Settings > Textus AI > Remember
     /// automatically, settings.json's `rememberAutomatically`).
     pub remember: bool,
-    /// The project folder has a Levis project's `.levis/` with files its
-    /// `.textus/` lacks: the project bar offers to convert it
-    /// (ai::levis_project).
-    pub levis_project: bool,
 }
 
 impl AgentWorkspace {

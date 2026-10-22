@@ -211,7 +211,6 @@ para usar una.
     "Algunos recuerdos antiguos ({n}) no caben en {cap} caracteres y no se envían. Elimina o acorta algunos.",
   memoryLibraryLeftOut:
     "Mencionados pero no enviados, por superar el límite de la biblioteca de {cap} caracteres: {names}.",
-  memoryConvertLevis: "Convertir los datos de Levis",
   memoryChipSaved: "Recordado: {text} ({scope})",
   memoryScopeProject: "proyecto",
   memoryScopePersonal: "personal",
@@ -261,13 +260,6 @@ para usar una.
   learnNever: "No volver a preguntar",
   learnSaved: "Recordado. Puedes verlo o eliminarlo en la pestaña Memoria.",
   learnLabel: "Aprendido de tus decisiones de revisión",
-  levisProjectTitle: "Datos de proyecto de Levis",
-  levisProjectText:
-    "Este proyecto tiene datos de Levis (estilo, biblioteca, instrucciones de escritura, habilidades). ¿Convertirlos al formato de Textus?",
-  levisProjectConvert: "Convertir",
-  levisProjectLater: "Ahora no",
-  levisProjectDone:
-    "Convertido: {n} archivos copiados en .textus/. La carpeta .levis/ queda como estaba.",
   suggestNextMessageLabel: "Sugerir el siguiente mensaje",
   suggestNextMessageHint:
     "Tras cada respuesta, lo que probablemente dirás después aparece en gris en el cuadro de mensaje; Tab lo usa. Cuesta una petición breve más.",
@@ -434,33 +426,6 @@ para usar una.
   outlineCollapse: "Contraer",
   outlineExpand: "Expandir",
   wordsUnit: "palabras",
-  levisImportTitle: "¿Traer tus datos de Levis?",
-  levisImportText:
-    "Textus es la nueva versión de Levis. En este equipo están tus ajustes, instrucciones de escritura e historial de Levis. Importarlos solo los copia; Levis lo conserva todo.",
-  levisImportOk: "Importar",
-  levisImportLater: "Ahora no",
-  levisImportKeysTitle:
-    "¿Copiar también las claves de API y los inicios de sesión?",
-  levisImportKeysText:
-    "También puedes traer tus claves de API de Levis y tus sesiones de ChatGPT o Claude. Los archivos copiados solo los puedes leer tú.",
-  levisImportKeysOk: "Copiarlos",
-  levisImportKeysSkip: "No copiarlos",
-  levisImportDone: "Importado de Levis: {items}.",
-  levisImportNothing:
-    "No hay nada nuevo que importar: Textus ya tiene lo que tiene Levis.",
-  levisImportFailed: "Algunos archivos no se pudieron copiar:",
-  levisImportRow: "Importar de Levis",
-  levisImportButton: "Importar…",
-  levisItemSettings: "ajustes",
-  levisItemChatHistory: "conversaciones con la IA",
-  levisItemClipboardHistory: "historial del portapapeles",
-  levisItemThemes: "temas",
-  levisItemWritingInstructions: "instrucciones de escritura",
-  levisItemSkills: "habilidades",
-  levisItemRecentFiles: "archivos recientes",
-  levisItemSession: "documentos abiertos",
-  levisItemDrafts: "borradores sin guardar",
-  levisItemCredentials: "claves de API e inicios de sesión",
   alertNote: "Nota",
   alertTip: "Consejo",
   alertImportant: "Importante",

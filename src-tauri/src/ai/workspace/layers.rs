@@ -172,7 +172,6 @@ pub(crate) fn load_layers(
         ws.style = crate::ai::project::read_style(root);
         ws.conventions = crate::ai::project::style_conventions(ws.style.as_deref());
         ws.library = crate::ai::project::read_library(root);
-        ws.levis_project = crate::ai::levis_project::unconverted(root);
         let (instructions, skills) = read_layer(&project_dir(root), SkillSource::Project);
         ws.project_instructions = instructions;
         // Project skills shadow same-named global and built-in ones.
