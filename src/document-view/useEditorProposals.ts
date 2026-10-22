@@ -11,11 +11,15 @@ import {
 } from "../ai/revision/usePendingEdits";
 import {
   pendingEditKey,
-  stopRewrite,
   stoppedRewrite,
-  streamPendingInsertText,
 } from "../ai/revision/pending-edit-plugin";
 import { ProposalStream } from "../ai/revision/proposal-stream";
+import {
+  drawn,
+  perCall,
+  typewriter,
+  type ProposalCanvas,
+} from "../ai/revision/proposal-display";
 import { isRefusal } from "../ai/revision/proposal-status";
 import { isProposalTool } from "../ai/chat/proposal";
 import type { EditProposal } from "../ai/types";
@@ -277,193 +281,81 @@ export function useEditorProposals({
   // A streaming propose_edit grows its green preview in the document while
   // the model is still writing it. All lifecycle decisions - when a draft is
   // placed, what a stop keeps, what a failure discards - live in the
-  // ProposalStream machine (proposal-stream.ts); this hook only wires its
-  // effects to the editor. With the animation setting off (or Reduce
-  // motion) the drafts still stream, without the typewriter (staticStream).
-  // propose_edit call ids awaiting their tool result, and what a refused
-  // one does: the preview goes (discard is stable per editor; the model
-  // never hears this status - annotateProposalStatuses skips refusals).
-  const proposalCallIds = useRef(new Set<string>());
+  // ProposalStream machine (proposal-stream.ts); how a draft is shown -
+  // typed in, or drawn again as it grows with the animation off - in
+  // proposal-display.ts. This hook gives them the editor to draw in.
   const discardRefused = pendingEdits.discard;
-  const proposalStream = useMemo(
-    () =>
-      new ProposalStream(
-        {
-          // Pictures written into the text show as their frames, never as
-          // the lines that ask for them (withBegunPictures).
-          place: (callId, proposal) =>
-            addPreviews(
-              [
-                {
-                  callId,
-                  proposal: {
-                    ...proposal,
-                    text: withBegunPictures(callId, proposal.text ?? ""),
-                  },
-                  streaming: true,
-                },
-              ],
-              requestTargetRef.current,
-            ),
-          feed: (callId, text, done) =>
-            streamPendingInsertText(
-              callId,
-              withBegunPictures(callId, text),
-              done,
-            ),
-          finalize: (callId, proposal) => {
-            const text = withBegunPictures(callId, proposal.text ?? "");
-            const kept = stopRewrite(callId, text);
-            if (kept) streamPendingInsertText(callId, kept, true);
-            addPreviews(
-              [{ callId, proposal: { ...proposal, text } }],
-              requestTargetRef.current,
-            );
-          },
-          discard: pendingEdits.discard,
-        },
-        () =>
-          run((ctx) =>
-            cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc),
-          ) ?? "",
-      ),
-    // requestTargetRef is a stable ref; addPreviews/discard are stable per
-    // editor (useCallback on `run`).
-    [addPreviews, pendingEdits.discard, run],
+  // Reduced motion renders widgets instantly: the typewriter's entries
+  // would never be revealed (or settle).
+  const animated = useCallback(
+    () => settingsRef.current.enableEditAnimation && !prefersReducedMotion(),
+    [settingsRef],
   );
-  // The same stream without the typewriter - edit animation off, or the
-  // system's Reduce motion: the draft is placed as early and shows its
-  // text as it comes, drawn again with what has arrived at most every
-  // 150 ms rather than typed in. Streaming used to be skipped then
-  // altogether: "Thinking…" until every edit appeared at once (rc.6).
-  const staticStream = useMemo(() => {
-    const placed = new Map<string, EditProposal>();
-    const waiting = new Map<string, ReturnType<typeof setTimeout>>();
-    const latest = new Map<string, string>();
-    const show = (callId: string) => {
-      waiting.delete(callId);
-      const proposal = placed.get(callId);
-      const text = latest.get(callId);
-      if (!proposal || text === undefined) return;
-      addPreviews(
-        [
-          {
-            callId,
-            proposal: { ...proposal, text: withBegunPictures(callId, text) },
-            streaming: true,
-          },
-        ],
-        requestTargetRef.current,
-      );
-    };
-    const forget = (callId: string) => {
-      clearTimeout(waiting.get(callId));
-      waiting.delete(callId);
-      placed.delete(callId);
-      latest.delete(callId);
+  const proposalStream = useMemo(() => {
+    // Pictures written into the text show as their frames, never as the
+    // lines that ask for them (withBegunPictures).
+    const canvas: ProposalCanvas = {
+      text: withBegunPictures,
+      show: (callId, proposal, streaming) =>
+        addPreviews(
+          [
+            {
+              callId,
+              proposal: {
+                ...proposal,
+                text: withBegunPictures(callId, proposal.text ?? ""),
+              },
+              streaming: streaming || undefined,
+            },
+          ],
+          requestTargetRef.current,
+        ),
+      discard: discardRefused,
     };
     return new ProposalStream(
-      {
-        place: (callId, proposal) => {
-          placed.set(callId, proposal);
-          latest.set(callId, proposal.text ?? "");
-          show(callId);
-        },
-        feed: (callId, text, done) => {
-          // The completed call's own add (ChatBody) takes it from here.
-          if (done) return forget(callId);
-          latest.set(callId, text);
-          if (!waiting.has(callId))
-            waiting.set(
-              callId,
-              setTimeout(() => show(callId), 150),
-            );
-        },
-        finalize: (callId, proposal) => {
-          forget(callId);
-          addPreviews(
-            [
-              {
-                callId,
-                proposal: {
-                  ...proposal,
-                  text: withBegunPictures(callId, proposal.text ?? ""),
-                },
-              },
-            ],
-            requestTargetRef.current,
-          );
-        },
-        discard: (callId) => {
-          forget(callId);
-          discardRefused(callId);
-        },
-      },
+      perCall(
+        { typewriter: typewriter(canvas), drawn: drawn(canvas) },
+        animated,
+      ),
       () =>
         run((ctx) =>
           cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc),
         ) ?? "",
     );
-  }, [addPreviews, discardRefused, run]);
-  const handleStreamEvent = useCallback(
-    (event: StreamEvent) => {
-      // A picture written into a proposal's text is being made: its line
-      // shows as its frame from here (withBegunPictures).
-      if (event.type === "picture") {
-        noteBegunPicture(event.callId, event.line, event.id, {
-          width: event.width,
-          height: event.height,
-        });
-        return;
-      }
-      // The step came back garbled and is asked for again: the drafts it
-      // streamed must go, as when a request fails.
-      if (event.type === "retry") {
-        proposalStream.finish("failed");
-        staticStream.finish("failed");
-        return;
-      }
-      // A propose_edit the backend refused (tools.rs: a cut-off `text`)
-      // may already be on screen - streamed, or placed from its call turn
-      // a moment before this result arrived. The model resends it; this
-      // copy must go, with or without animation.
-      if (
-        event.type === "turn" &&
-        event.turn.kind === "ToolCall" &&
-        isProposalTool(event.turn.name)
-      )
-        proposalCallIds.current.add(event.turn.call_id);
-      if (
-        event.type === "turn" &&
-        event.turn.kind === "ToolResult" &&
-        proposalCallIds.current.has(event.turn.call_id)
-      ) {
-        proposalCallIds.current.delete(event.turn.call_id);
-        if (isRefusal(event.turn.output)) discardRefused(event.turn.call_id);
-        return;
-      }
-      // Reduced motion renders widgets instantly: the typewriter's entries
-      // would never be revealed (or settle), so the draft streams without
-      // it (staticStream).
-      const stream =
-        !settingsRef.current.enableEditAnimation || prefersReducedMotion()
-          ? staticStream
-          : proposalStream;
-      if (event.type === "toolStart")
-        stream.toolStart(event.callId, event.name);
-      else if (event.type === "toolArgsDelta")
-        stream.argsDelta(event.callId, event.delta);
-      else if (
-        event.type === "turn" &&
-        event.turn.kind === "ToolCall" &&
-        isProposalTool(event.turn.name)
-      )
-        stream.finalCall(event.turn.call_id, event.turn.arguments);
-    },
-    // settingsRef is a stable ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [proposalStream, staticStream, discardRefused],
-  );
+    // requestTargetRef is a stable ref; addPreviews and discard are stable
+    // per editor (useCallback on `run`).
+  }, [addPreviews, discardRefused, run, animated]);
+  // Each stream event, into the machine. Not memoized: the conversations
+  // read it through a ref (useAgentConversation's useLatest).
+  const handleStreamEvent = (event: StreamEvent) => {
+    // A picture written into a proposal's text is being made: its line
+    // shows as its frame from here (withBegunPictures).
+    if (event.type === "picture") {
+      noteBegunPicture(event.callId, event.line, event.id, {
+        width: event.width,
+        height: event.height,
+      });
+      return;
+    }
+    // The step came back garbled and is asked for again: the drafts it
+    // streamed must go, as when a request fails.
+    if (event.type === "retry") {
+      proposalStream.finish("failed");
+      return;
+    }
+    if (event.type === "turn" && event.turn.kind === "ToolResult")
+      proposalStream.result(event.turn.call_id, isRefusal(event.turn.output));
+    else if (event.type === "toolStart")
+      proposalStream.toolStart(event.callId, event.name);
+    else if (event.type === "toolArgsDelta")
+      proposalStream.argsDelta(event.callId, event.delta);
+    else if (
+      event.type === "turn" &&
+      event.turn.kind === "ToolCall" &&
+      isProposalTool(event.turn.name)
+    )
+      proposalStream.finalCall(event.turn.call_id, event.turn.arguments);
+  };
   // Owned here rather than by the popup so a completed exchange can be saved
   // to history when the popup closes. Every ordinary NEW open resets it;
   // sidebar history restoration is the one path that deliberately resumes.
@@ -515,21 +407,14 @@ export function useEditorProposals({
       return;
     }
     proposalStream.finish(conversation.error ? "failed" : "stopped");
-    staticStream.finish(conversation.error ? "failed" : "stopped");
-  }, [conversation.busy, conversation.error, proposalStream, staticStream]);
+  }, [conversation.busy, conversation.error, proposalStream]);
   useEffect(() => {
     if (quickConversation.busy) {
       supersedePending.current = true;
       return;
     }
     proposalStream.finish(quickConversation.error ? "failed" : "stopped");
-    staticStream.finish(quickConversation.error ? "failed" : "stopped");
-  }, [
-    quickConversation.busy,
-    quickConversation.error,
-    proposalStream,
-    staticStream,
-  ]);
+  }, [quickConversation.busy, quickConversation.error, proposalStream]);
   // Proposals always resolve HERE, whether the chat that produced them is
   // the embedded popup or a detached window - one implementation of the
   // anchor/apply logic, addressed two ways (see chat-bridge.ts).

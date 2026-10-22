@@ -61,6 +61,21 @@ describe("ProposalStream", () => {
     });
   });
 
+  it("discards a completed call the backend refused, and only that", () => {
+    const { stream, calls } = machine();
+    stream.toolStart("c1", "propose_edit");
+    stream.finalCall("c1", '{"action":"append","text":"x"}');
+    stream.result("c1", true);
+    expect(calls.at(-1)).toEqual({ effect: "discard", callId: "c1" });
+    // A result for a call it never saw, or one accepted: nothing.
+    const before = calls.length;
+    stream.result("other", true);
+    stream.toolStart("c2", "propose_edit");
+    stream.finalCall("c2", '{"action":"append","text":"y"}');
+    stream.result("c2", false);
+    expect(calls.slice(before).some((c) => c.effect === "discard")).toBe(false);
+  });
+
   it("ignores tools other than propose_edit", () => {
     const { stream, calls } = machine();
     stream.toolStart("c1", "search_document");

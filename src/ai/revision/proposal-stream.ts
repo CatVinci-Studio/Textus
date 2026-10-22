@@ -63,6 +63,8 @@ interface Draft {
 
 export class ProposalStream {
   private drafts = new Map<string, Draft>();
+  /** Completed calls waiting for their result (`result`). */
+  private awaiting = new Set<string>();
 
   constructor(
     private effects: ProposalStreamEffects,
@@ -122,6 +124,7 @@ export class ProposalStream {
   finalCall(callId: string, argumentsJson: string): void {
     const draft = this.drafts.get(callId);
     this.drafts.delete(callId);
+    this.awaiting.add(callId);
     if (draft?.picture) {
       // The frame goes; the picture's own proposal (ChatBody's
       // completed-turn path, right after this) is placed in its stead - a
@@ -138,6 +141,15 @@ export class ProposalStream {
       return;
     }
     this.effects.feed(callId, proposal.text ?? "", true);
+  }
+
+  /** A completed call's result came. One the backend refused (tools.rs:
+   *  a cut-off `text`, isRefusal) may already be on screen - streamed, or
+   *  placed from its completed call a moment before - and goes, with or
+   *  without animation; the model sends it again, fixed. */
+  result(callId: string, refused: boolean): void {
+    if (!this.awaiting.delete(callId)) return;
+    if (refused) this.effects.discard(callId);
   }
 
   /** The exchange ended without a finalCall for whatever is still here. A
