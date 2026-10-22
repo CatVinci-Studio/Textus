@@ -1,4 +1,4 @@
-import type { EditorState } from "@milkdown/kit/prose/state";
+import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { Ctx } from "@milkdown/kit/ctx";
 import {
   Fragment,
@@ -59,8 +59,22 @@ export function applyEditRange(
       return tr.insert(tr.doc.content.size, definitions);
     }
   }
+  return replaceWithMarkdown(state.tr, ctx, from, to, text);
+}
+
+/** `[from, to)` of `tr`'s document replaced by `rawText` parsed as
+ *  markdown - one of several writes in one transaction (a rewrite applied
+ *  change by change around the writer's own edits). */
+export function replaceWithMarkdown(
+  tr: Transaction,
+  ctx: Ctx,
+  from: number,
+  to: number,
+  rawText: string,
+): Transaction {
+  const text = normalizeAiMarkdown(rawText);
   const parsed = parseMarkdownSource(ctx, text);
   return parsed
-    ? state.tr.replaceRange(from, to, Slice.maxOpen(parsed.content))
-    : state.tr.insertText(text, from, to);
+    ? tr.replaceRange(from, to, Slice.maxOpen(parsed.content))
+    : tr.insertText(text, from, to);
 }
