@@ -247,8 +247,7 @@ remembered).**
   project's `.textus/` is (agent.md, skills/, memory/) -
   `~/.config/com.catvinci.textus/textus/` (Linux),
   `~/Library/Application Support/com.catvinci.textus/textus/` (macOS),
-  `%APPDATA%\com.catvinci.textus\textus\` (Windows). Before 1.2.0 it was
-  `agent/`, which is renamed to `textus/` the first time it is looked for.
+  `%APPDATA%\com.catvinci.textus\textus\` (Windows).
 - **Create / edit:** **Settings > Textus AI > Global config folder > Show**
   (desktop) creates it with a starter `agent.md` and shows it in
   the file manager; **Edit agent.md** and **Import Skill…** write into it.
@@ -430,4 +429,4 @@ names above.
 | AI remembered          | `ai::memory`, `AgentWorkspace.memories`, the memory pass (`memory_pass`, `memory/pass.rs`), `memory_undo`, `memory_move`, `memory_delete` (into `.forgotten/`), `memory_restore`, `memory_remember`, `Memories::select_for`, `settings.rememberAutomatically`, `MemoryChip`, `revision-learning.ts` |
 | Skills                 | `AgentWorkspace.skills`, the `use_skill` tool, `import_agent_skill`, `ai::builtin`, `customize_builtin_skill`, `reset_builtin_skill`, `set_builtin_skill_enabled`                                                                                                                                   |
 | Suggested next message | `suggest_next_message` (`ai/next_message.rs`), `useNextMessage` (`ai/chat/next-message.ts`), `settings.suggestNextMessage`                                                                                                                                                                          |
-| Global config folder   | `global_dir_in` (`textus/`; `agent/` before 1.2.0), `global_agent_dir`, `agentWorkspaceLabel`                                                                                                                                                                                                       |
+| Global config folder   | `GLOBAL_DIR` (`textus/`), `global_agent_dir`, `agentWorkspaceLabel`                                                                                                                                                                                                                                 |
