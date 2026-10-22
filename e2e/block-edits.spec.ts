@@ -163,3 +163,54 @@ test("a few words named inside a block change in it as they stream", async ({
     "Tightened it.",
   );
 });
+
+// Edit animation off, or the system's Reduce motion: no typewriter, but
+// the edit still shows while it streams - it used to wait for the whole
+// call (rc.6: "Thinking…", then every edit at once).
+for (const [name, setup] of [
+  ["edit animation off", { enableEditAnimation: false }],
+  ["Reduce motion", null],
+] as const)
+  test(`with ${name} an edit still shows while it streams, then can be accepted`, async ({
+    page,
+  }) => {
+    if (!setup) await page.emulateMedia({ reducedMotion: "reduce" });
+    await openApp(page, {
+      settings: { language: "en", ...setup },
+      storage: { "levis-agent-panel-open": "1" },
+    });
+    await pasteMarkdown(page, DOC);
+    const ids = await blockIds(page, DOC);
+    const text = "The library now opens until ten on Wednesdays.";
+    await streamEdit(
+      page,
+      JSON.stringify({ action: "replace", block: ids[1], text }),
+      JSON.stringify({
+        action: "replace",
+        anchor: "The library opened late on Wednesdays.",
+        text,
+      }),
+    );
+    await ask(page);
+    // Held: the call hasn't completed, and the whole new text is there.
+    await expect(page.locator(editor)).toContainText(text);
+    await expect(page.locator(".agent-panel-view .agent-thinking")).toHaveText(
+      /Writing the edit/,
+    );
+    expect(
+      await page.evaluate(() => !(window as { __release?: boolean }).__release),
+    ).toBe(true);
+    await page.evaluate(() => {
+      (window as { __release?: boolean }).__release = true;
+    });
+    await expect(page.locator(".agent-panel-view")).toContainText(
+      "Tightened it.",
+    );
+    await page
+      .locator(".review-bar")
+      .getByRole("button", { name: "Accept" })
+      .click();
+    await expect(page.locator(".milkdown .pending-sentence")).toHaveCount(0);
+    await expect(page.locator(editor)).toContainText(text);
+    await expect(page.locator(editor)).not.toContainText("opened late");
+  });

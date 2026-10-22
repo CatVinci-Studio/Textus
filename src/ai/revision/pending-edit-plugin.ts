@@ -1746,11 +1746,19 @@ export function createPendingEditPlugin(options: {
       // not the add, is what makes the preview decidable.
       const previews = [
         ...keep,
-        ...meta.previews.map((p) =>
-          p.streaming || stillRevealing(p.callId)
-            ? { ...p, streaming: true }
-            : p,
-        ),
+        ...meta.previews.map((p) => {
+          const revealing = stillRevealing(p.callId);
+          // The same proposal with new text and no typewriter to grow it
+          // (a draft streamed without the animation, its final add) is
+          // drawn anew: its widget's key would otherwise keep the old one.
+          const old = prev.previews.find((o) => o.callId === p.callId);
+          const revision =
+            old && !revealing && old.replacement !== p.replacement
+              ? Math.max(p.revision ?? 0, (old.revision ?? 0) + 1)
+              : (p.revision ?? old?.revision);
+          const next = revision === undefined ? p : { ...p, revision };
+          return p.streaming || revealing ? { ...next, streaming: true } : next;
+        }),
       ];
       return {
         previews,

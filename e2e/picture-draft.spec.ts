@@ -177,3 +177,46 @@ test("while a picture is made, its frame on the chat's card has its shape", asyn
   expect(small.width / small.height).toBeCloseTo(16 / 9, 1);
   expect(small.height).toBeCloseTo(120, 0);
 });
+
+test("a picture redone in place shows in the document and can be accepted", async ({
+  page,
+}) => {
+  const OLD = "![Old harbour](images/old.png)";
+  await openApp(page, {
+    settings: { language: "en", imageModelProvider: "openai" },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(page, `${FIRST}\n\n${OLD}\n\nThe second paragraph.`);
+  await mockInvoke(page, {
+    ai_generated_image: { mime: "image/png", ext: "png", dataBase64: PNG },
+    ai_discard_generated_image: null,
+  });
+  await page.evaluate(() => {
+    (window as { __release?: boolean }).__release = true;
+  });
+  const raw = JSON.stringify({
+    action: "replace",
+    alt: "Summer harbour",
+    anchor: OLD,
+    aspect: "16:9",
+    prompt: "The harbour on a summer night, ".repeat(20),
+  });
+  await streamPicture(
+    page,
+    raw,
+    JSON.stringify({
+      ...JSON.parse(raw),
+      image: { id: "def456", width: 1600, height: 900, pending: true },
+    }),
+  );
+  await send(page);
+  await expect(page.locator(".agent-panel-view")).toContainText(
+    "A harbour at dusk.",
+  );
+  await expect(page.locator(`${editor} .pending-insert img`)).toHaveAttribute(
+    "src",
+    /^blob:/,
+  );
+  const card = page.locator(".agent-panel-view .agent-proposal").last();
+  await expect(card.getByRole("button", { name: "Accept" })).toBeVisible();
+});

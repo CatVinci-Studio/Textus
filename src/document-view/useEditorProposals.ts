@@ -278,8 +278,8 @@ export function useEditorProposals({
   // the model is still writing it. All lifecycle decisions - when a draft is
   // placed, what a stop keeps, what a failure discards - live in the
   // ProposalStream machine (proposal-stream.ts); this hook only wires its
-  // effects to the editor. Gated on the animation setting: off means
-  // previews appear complete, at once.
+  // effects to the editor. With the animation setting off (or Reduce
+  // motion) the drafts still stream, without the typewriter (staticStream).
   // propose_edit call ids awaiting their tool result, and what a refused
   // one does: the preview goes (discard is stable per editor; the model
   // never hears this status - annotateProposalStatuses skips refusals).
@@ -331,6 +331,80 @@ export function useEditorProposals({
     // editor (useCallback on `run`).
     [addPreviews, pendingEdits.discard, run],
   );
+  // The same stream without the typewriter - edit animation off, or the
+  // system's Reduce motion: the draft is placed as early and shows its
+  // text as it comes, drawn again with what has arrived at most every
+  // 150 ms rather than typed in. Streaming used to be skipped then
+  // altogether: "Thinking…" until every edit appeared at once (rc.6).
+  const staticStream = useMemo(() => {
+    const placed = new Map<string, EditProposal>();
+    const waiting = new Map<string, ReturnType<typeof setTimeout>>();
+    const latest = new Map<string, string>();
+    const show = (callId: string) => {
+      waiting.delete(callId);
+      const proposal = placed.get(callId);
+      const text = latest.get(callId);
+      if (!proposal || text === undefined) return;
+      addPreviews(
+        [
+          {
+            callId,
+            proposal: { ...proposal, text: withBegunPictures(callId, text) },
+            streaming: true,
+          },
+        ],
+        requestTargetRef.current,
+      );
+    };
+    const forget = (callId: string) => {
+      clearTimeout(waiting.get(callId));
+      waiting.delete(callId);
+      placed.delete(callId);
+      latest.delete(callId);
+    };
+    return new ProposalStream(
+      {
+        place: (callId, proposal) => {
+          placed.set(callId, proposal);
+          latest.set(callId, proposal.text ?? "");
+          show(callId);
+        },
+        feed: (callId, text, done) => {
+          // The completed call's own add (ChatBody) takes it from here.
+          if (done) return forget(callId);
+          latest.set(callId, text);
+          if (!waiting.has(callId))
+            waiting.set(
+              callId,
+              setTimeout(() => show(callId), 150),
+            );
+        },
+        finalize: (callId, proposal) => {
+          forget(callId);
+          addPreviews(
+            [
+              {
+                callId,
+                proposal: {
+                  ...proposal,
+                  text: withBegunPictures(callId, proposal.text ?? ""),
+                },
+              },
+            ],
+            requestTargetRef.current,
+          );
+        },
+        discard: (callId) => {
+          forget(callId);
+          discardRefused(callId);
+        },
+      },
+      () =>
+        run((ctx) =>
+          cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc),
+        ) ?? "",
+    );
+  }, [addPreviews, discardRefused, run]);
   const handleStreamEvent = useCallback(
     (event: StreamEvent) => {
       // A picture written into a proposal's text is being made: its line
@@ -346,6 +420,7 @@ export function useEditorProposals({
       // streamed must go, as when a request fails.
       if (event.type === "retry") {
         proposalStream.finish("failed");
+        staticStream.finish("failed");
         return;
       }
       // A propose_edit the backend refused (tools.rs: a cut-off `text`)
@@ -367,24 +442,27 @@ export function useEditorProposals({
         if (isRefusal(event.turn.output)) discardRefused(event.turn.call_id);
         return;
       }
-      // Reduced motion renders widgets instantly, so streamed drafts would
-      // create animation entries nothing ever reveals (or settles).
-      if (!settingsRef.current.enableEditAnimation || prefersReducedMotion())
-        return;
+      // Reduced motion renders widgets instantly: the typewriter's entries
+      // would never be revealed (or settle), so the draft streams without
+      // it (staticStream).
+      const stream =
+        !settingsRef.current.enableEditAnimation || prefersReducedMotion()
+          ? staticStream
+          : proposalStream;
       if (event.type === "toolStart")
-        proposalStream.toolStart(event.callId, event.name);
+        stream.toolStart(event.callId, event.name);
       else if (event.type === "toolArgsDelta")
-        proposalStream.argsDelta(event.callId, event.delta);
+        stream.argsDelta(event.callId, event.delta);
       else if (
         event.type === "turn" &&
         event.turn.kind === "ToolCall" &&
         isProposalTool(event.turn.name)
       )
-        proposalStream.finalCall(event.turn.call_id, event.turn.arguments);
+        stream.finalCall(event.turn.call_id, event.turn.arguments);
     },
     // settingsRef is a stable ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [proposalStream, discardRefused],
+    [proposalStream, staticStream, discardRefused],
   );
   // Owned here rather than by the popup so a completed exchange can be saved
   // to history when the popup closes. Every ordinary NEW open resets it;
@@ -437,14 +515,21 @@ export function useEditorProposals({
       return;
     }
     proposalStream.finish(conversation.error ? "failed" : "stopped");
-  }, [conversation.busy, conversation.error, proposalStream]);
+    staticStream.finish(conversation.error ? "failed" : "stopped");
+  }, [conversation.busy, conversation.error, proposalStream, staticStream]);
   useEffect(() => {
     if (quickConversation.busy) {
       supersedePending.current = true;
       return;
     }
     proposalStream.finish(quickConversation.error ? "failed" : "stopped");
-  }, [quickConversation.busy, quickConversation.error, proposalStream]);
+    staticStream.finish(quickConversation.error ? "failed" : "stopped");
+  }, [
+    quickConversation.busy,
+    quickConversation.error,
+    proposalStream,
+    staticStream,
+  ]);
   // Proposals always resolve HERE, whether the chat that produced them is
   // the embedded popup or a detached window - one implementation of the
   // anchor/apply logic, addressed two ways (see chat-bridge.ts).
