@@ -9,11 +9,12 @@ import { McpSection } from "../sections/mcp";
 
 import {
   extensionsStartTab,
+  extensionsTabs,
   openExtensionsTab,
   type ExtensionsTab,
 } from "./extensions-tab";
 
-const TABS: ExtensionsTab[] = ["plugins", "themes", "skills", "mcp"];
+const TABS = extensionsTabs();
 
 /**
  * Settings › Extensions: everything added to Textus, one tab each, every

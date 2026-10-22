@@ -1,3 +1,4 @@
+import { PLUGINS_SHOWN } from "../plugins/availability";
 import { APP_NAME, type Strings } from "../i18n/strings";
 import type { HeadingAction, Shortcuts } from "../settings/SettingsContext";
 import { basename } from "../utils/path";
@@ -232,6 +233,31 @@ function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
   ];
 }
 
+/** The Plugins menu: the commands plugins put there, then Manage Plugins…
+ *  - none at all where the app doesn't show plugins
+ *  (plugins/availability.ts). */
+function pluginsMenu(
+  t: Strings,
+  plugins: readonly PluginMenuEntry[],
+): MenuNode[] {
+  if (!PLUGINS_SHOWN) return [];
+  return [
+    {
+      label: t.menuPlugins,
+      submenu: [
+        ...(plugins.length
+          ? plugins.map((p): MenuEntry => ({
+              label: p.label,
+              action: { native: `plugin-command:${p.command}` },
+            }))
+          : [{ label: t.menuNoPluginCommands, disabled: true }]),
+        "separator",
+        { label: t.menuManagePlugins, action: { native: "manage-plugins" } },
+      ],
+    },
+  ];
+}
+
 export function buildAppMenu(
   t: Strings,
   shortcuts: Shortcuts,
@@ -379,19 +405,7 @@ export function buildAppMenu(
         },
       ],
     },
-    {
-      label: t.menuPlugins,
-      submenu: [
-        ...(plugins.length
-          ? plugins.map((p): MenuEntry => ({
-              label: p.label,
-              action: { native: `plugin-command:${p.command}` },
-            }))
-          : [{ label: t.menuNoPluginCommands, disabled: true }]),
-        "separator",
-        { label: t.menuManagePlugins, action: { native: "manage-plugins" } },
-      ],
-    },
+    ...pluginsMenu(t, plugins),
     {
       label: t.menuHelp,
       submenu: [

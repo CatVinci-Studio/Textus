@@ -3,6 +3,13 @@
 
 use super::*;
 
+/// Whether the bar has a Plugins menu: in a development build, and in a
+/// release built with TEXTUS_PLUGINS set - 1.2 ships the plugin system
+/// without plugins to install. src/plugins/availability.ts decides the
+/// frontend's entries (Settings, the in-window menu) the same way.
+pub(crate) const PLUGINS_SHOWN: bool =
+    cfg!(debug_assertions) || option_env!("TEXTUS_PLUGINS").is_some();
+
 /// Plugins menu ids carry the command to run: "plugin-command:<command>",
 /// a command a plugin added to the menu (src/plugins/manager.ts).
 pub(crate) const PLUGIN_COMMAND_PREFIX: &str = "plugin-command:";
