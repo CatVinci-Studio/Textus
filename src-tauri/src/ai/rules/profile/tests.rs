@@ -33,7 +33,7 @@ fn every_offered_profile_parses_to_its_language() {
 
 #[test]
 fn the_frontend_list_mirrors_this_one() {
-    let ipc = include_str!("../../../../../src/platform/ipc.ts");
+    let ipc = include_str!("../../../../../src/platform/ipc-ai-types.ts");
     let start = ipc.find("export const WRITING_CONVENTIONS:").unwrap();
     let block = &ipc[start..start + ipc[start..].find("\n};").unwrap()];
     for (lang, auto, profiles) in LANGUAGE_PROFILES {
@@ -42,7 +42,7 @@ fn the_frontend_list_mirrors_this_one() {
         let at = block
             .find(&format!("{key}:"))
             .or_else(|| block.find(&bare))
-            .unwrap_or_else(|| panic!("{} missing in platform/ipc.ts", lang.code()));
+            .unwrap_or_else(|| panic!("{} missing in platform/ipc-ai-types.ts", lang.code()));
         let entry = &block[at..];
         let entry = &entry[..entry.find("},").map_or(entry.len(), |e| e + 2)];
         match auto {
