@@ -18,10 +18,11 @@ export function splitSentences(text: string): string[] {
   // A full stop ends a sentence before a space, a line break (a Markdown
   // hard break, `\` or `<br>`, too) or the end; elsewhere (3.14, a URL) it
   // is part of the sentence - which used to fail the whole split, and the
-  // rewrite was shown whole. The break after a sentence goes with it.
+  // rewrite was shown whole. A picture's `![` is no exclamation. The break
+  // after a sentence goes with it.
   const parts =
     text.match(
-      /(?:[^。！？!?.;；\n]|\.(?!\s|$|\\\n|<br\s*\/?>))*(?:[。！？!?;；]+|\.|\n+|$)[”’"')）」』\]]*(?:\\\n|<br\s*\/?>|\s)*/g,
+      /(?:[^。！？!?.;；\n]|\.(?!\s|$|\\\n|<br\s*\/?>)|!(?=\[))*(?:[。！？!?;；]+|\.|\n+|$)[”’"')）」』\]]*(?:\\\n|<br\s*\/?>|\s)*/g,
     ) ?? [];
   const out = parts.filter((p) => p.length > 0);
   // Anything the pattern skipped (shouldn't happen) is kept rather than lost.
@@ -173,8 +174,24 @@ function shapeRun(run: Pair[]): Pair[] {
   const count = (text: string) =>
     paragraphsOf(text).filter((t) => t.trim()).length;
   // Joined paragraphs are a change even with every sentence as it was:
-  // taken as "same", accepting joined them unseen.
-  if (count(before) !== count(after)) return [{ same: false, before, after }];
+  // taken as "same", accepting joined them unseen. Each new paragraph is set
+  // against the ones it came from (alignParagraphs) - a translation, which
+  // nothing pairs sentence by sentence, used to be one change for all of it.
+  if (count(before) !== count(after)) {
+    if (count(before) === 0 || count(after) === 0)
+      return [{ same: false, before, after }];
+    return alignParagraphs(paragraphsOf(before), paragraphsOf(after)).flatMap(
+      (g) =>
+        g.olds.length === 1 && g.news.length === 1
+          ? dense(
+              sentencePairs(
+                splitSentences(g.olds[0]),
+                splitSentences(g.news[0]),
+              ),
+            )
+          : [{ same: false, before: g.olds.join(""), after: g.news.join("") }],
+    );
+  }
   if (run.every((p) => p.same)) return run;
   if (count(before) > 1) {
     // As many paragraphs, broken differently than sentence by sentence
@@ -189,6 +206,94 @@ function shapeRun(run: Pair[]): Pair[] {
     return [{ same: false, before, after }];
   }
   return dense(run);
+}
+
+/** What a paragraph is, by how its Markdown starts (or, for speech, by
+ *  its quotes): a heading pairs with a heading, a picture with a picture,
+ *  a line of dialogue with one. */
+function paragraphKind(text: string): string {
+  const t = text.trimStart();
+  if (/^#{1,6}\s/.test(t)) return "heading";
+  if (/^(!\[|<img\b)/.test(t)) return "picture";
+  if (/^([-*+]|\d+[.)])\s/.test(t)) return "list";
+  if (t.startsWith(">")) return "quote";
+  if (/^(```|~~~|\$\$)/.test(t)) return "code";
+  if (t.startsWith("|")) return "table";
+  // Speech, in any script's quotes: a line of dialogue pairs with one.
+  if (/[“”"「」『』«»]/.test(t)) return "speech";
+  return "text";
+}
+
+/** A paragraph left out or added on its own costs this much. */
+const LONE_PARAGRAPH = 1.5;
+
+/**
+ * Pairs the paragraphs of a rewrite that has a different number of them:
+ * each original with the one it became, or two joined into one, one split
+ * in two, one dropped or added - the cheapest alignment in order, by how
+ * long each is against the whole (so a translation, whose words share
+ * nothing with its original, still pairs paragraph by paragraph), by kind,
+ * and by what they share where they are in the same language.
+ */
+function alignParagraphs(
+  olds: string[],
+  news: string[],
+): { olds: string[]; news: string[] }[] {
+  const size = (parts: string[]) =>
+    Math.max(
+      1,
+      parts.reduce((n, t) => n + t.trim().length, 0),
+    );
+  const ratio = size(news) / size(olds);
+  const cost = (a: string[], b: string[]) => {
+    if (a.length === 0 || b.length === 0) return LONE_PARAGRAPH;
+    let c = Math.abs(Math.log(size(b) / (ratio * size(a))));
+    // Every paragraph of a group of the kind it becomes: a line of
+    // dialogue isn't joined to the narration before it.
+    const kind = paragraphKind(b[0]);
+    for (const t of a) if (paragraphKind(t) !== kind) c += 2;
+    c -= similarity(a.join(""), b.join(""));
+    // A join or a split must earn its place over a pair.
+    if (a.length + b.length > 2) c += 0.3;
+    return c;
+  };
+  const m = olds.length;
+  const n = news.length;
+  const best: { cost: number; di: number; dj: number }[][] = Array.from(
+    { length: m + 1 },
+    () => new Array(n + 1).fill({ cost: Infinity, di: 0, dj: 0 }),
+  );
+  best[0][0] = { cost: 0, di: 0, dj: 0 };
+  const moves: [number, number][] = [
+    [1, 1],
+    [2, 1],
+    [1, 2],
+    [1, 0],
+    [0, 1],
+  ];
+  for (let i = 0; i <= m; i++)
+    for (let j = 0; j <= n; j++) {
+      const here = best[i][j].cost;
+      if (here === Infinity) continue;
+      for (const [di, dj] of moves) {
+        const ni = i + di;
+        const nj = j + dj;
+        if (ni > m || nj > n) continue;
+        const c = here + cost(olds.slice(i, ni), news.slice(j, nj));
+        if (c < best[ni][nj].cost) best[ni][nj] = { cost: c, di, dj };
+      }
+    }
+  const groups: { olds: string[]; news: string[] }[] = [];
+  for (let i = m, j = n; i > 0 || j > 0;) {
+    const { di, dj } = best[i][j];
+    groups.unshift({
+      olds: olds.slice(i - di, i),
+      news: news.slice(j - dj, j),
+    });
+    i -= di;
+    j -= dj;
+  }
+  return groups;
 }
 
 /** One paragraph's pairs, whole when it was rewritten (DENSE). */

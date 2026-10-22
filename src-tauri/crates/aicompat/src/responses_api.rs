@@ -183,6 +183,12 @@ pub async fn read_streamed_response(
     // the pipeline keys on - the mapping arrives on output_item.added.
     let mut call_ids: HashMap<String, String> = HashMap::new();
 
+    // TEXTUS_SSE_TRACE=1: each event's type, item and time, on stderr - how
+    // a service paces a step (live_eval::latency). A response with a long
+    // call beside others came with no argument deltas at all, the calls
+    // whole at its end (ChatGPT, 2026-10).
+    let trace_started = std::time::Instant::now();
+    let trace = std::env::var("TEXTUS_SSE_TRACE").is_ok_and(|v| v == "1");
     crate::http::read_sse(res, provider_label, |data| {
         if failure.is_some() {
             return;
@@ -190,6 +196,22 @@ pub async fn read_streamed_response(
         let Ok(event) = serde_json::from_str::<Value>(data) else {
             return;
         };
+        if trace {
+            eprintln!(
+                "[sse] {:6.2}s {} item={} type={}",
+                trace_started.elapsed().as_secs_f64(),
+                event.get("type").and_then(|t| t.as_str()).unwrap_or("?"),
+                event
+                    .get("item_id")
+                    .or_else(|| event.pointer("/item/id"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("-"),
+                event
+                    .pointer("/item/type")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("-"),
+            );
+        }
 
         match event.get("type").and_then(|t| t.as_str()) {
             Some("response.output_item.added") => {

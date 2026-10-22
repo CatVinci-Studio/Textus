@@ -109,6 +109,34 @@ for (const [what, between] of [
   });
 }
 
+test("a translation has a card for each paragraph, its paragraphs apart", async ({
+  page,
+}) => {
+  // rc.6: "translate it into English" came out as two cards for the
+  // whole text, the paragraphs in each run together.
+  const before = [
+    "许小满承母之修伞肆，初至之客，乃一老者。",
+    "曰：“漏乎？”",
+    "曰：“漏声。”",
+    "入夜，小满拆伞顶，于夹层得一白纽。",
+  ];
+  const after = [
+    "Xu Xiaoman had inherited an umbrella repair shop from their mother; the first customer was an old man.",
+    "“Does it leak?” “Sound.”",
+    "That night, Xiaoman took apart the top of the umbrella and found a white button.",
+  ];
+  await proposeRewrite(page, before.join("\n\n"), after.join("\n\n"));
+  const notes = page.locator(".revision-note");
+  await expect(notes).toHaveCount(3);
+  // The dialogue, joined, is one card, beside its own lines.
+  await expect(notes.nth(1)).toContainText("“Does it leak?” “Sound.”");
+  // A card's paragraphs are kept apart.
+  await expect(notes.nth(1).locator(".revision-note-text")).toHaveCSS(
+    "white-space",
+    "pre-line",
+  );
+});
+
 test("a rewrite that joins paragraphs has a card for each new paragraph, beside the ones it came from", async ({
   page,
 }) => {

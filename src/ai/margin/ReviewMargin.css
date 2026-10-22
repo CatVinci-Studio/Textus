@@ -332,6 +332,9 @@
   border-radius: var(--radius-small);
   background: var(--revision-insert-bg);
   overflow-wrap: anywhere;
+  /* A change of whole paragraphs keeps them apart: run together, a
+     translated section read as one block. */
+  white-space: pre-line;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   transition:

@@ -189,6 +189,37 @@ describe("a change over several paragraphs", () => {
     ]);
   });
 
+  it("sets a translation against its original paragraph by paragraph", () => {
+    // Nothing pairs Chinese with English sentence by sentence; two lines of
+    // dialogue became one paragraph, and the picture's alt was translated
+    // (rc.6: two changes for the whole text, split at the picture).
+    const before = [
+      "# 借雨",
+      "许小满承母之修伞肆，初至之客，乃一老者。是日暴雨，老者入门，衣履皆燥。",
+      "曰：“漏乎？”",
+      "曰：“漏声。”",
+      "![雨夜修伞](assets/a.jpg)",
+      "入夜，小满拆伞顶，于夹层得一白纽，缝缀其中。",
+    ].join("\n\n");
+    const after = [
+      "# Borrowing Rain",
+      "Xu Xiaoman had inherited an umbrella repair shop from their mother. The first customer was an old man who came in from a downpour with his clothes dry.",
+      "“Does it leak?” “Sound.”",
+      "![Mending an umbrella on a rainy night](assets/a.jpg)",
+      "That night, Xiaoman took apart the top of the umbrella and found a white button sewn between the layers.",
+    ].join("\n\n");
+    const changes = diffSentences(before, after).filter(
+      (h) => h.kind === "change",
+    );
+    expect(
+      changes.map((c) => (c.kind === "change" ? c.after.trim() : "")),
+    ).toEqual(after.split("\n\n"));
+    // The joined dialogue is one change, against both its lines.
+    expect(changes[2]).toMatchObject({
+      before: "曰：“漏乎？”\n\n曰：“漏声。”\n\n",
+    });
+  });
+
   it("stays one change where paragraphs are joined", () => {
     const hunks = diffSentences(
       "Rain fell.\n\nWind rose.",
