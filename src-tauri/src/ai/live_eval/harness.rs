@@ -91,16 +91,58 @@ pub fn agent_model() -> String {
 /// (VOLCENGINE_ARK_API_KEY) instead of Claude, through the same
 /// AgentProvider path - to compare a change on a second provider, or when
 /// the Claude key can't be used. The judge stays Claude.
+///
+/// TEXTUS_EVAL_PROVIDER=chatgpt: on a ChatGPT subscription, as Textus on
+/// this machine is signed in (Settings › Textus AI › ChatGPT): its
+/// auth-codex.json, read where it is - never copied, printed or refreshed,
+/// so the app's sign-in stays as it was. Sign in again there once its
+/// token has expired.
 pub fn agent_provider_id() -> &'static str {
     match std::env::var("TEXTUS_EVAL_PROVIDER").as_deref() {
         Ok("doubao") => "doubao",
+        Ok("chatgpt") => "openai",
         _ => "anthropic",
     }
+}
+
+/// The app's ChatGPT sign-in (auth/openai_codex.rs's auth-codex.json):
+/// its access token and account.
+fn chatgpt_sign_in() -> (String, String) {
+    let path = std::env::var_os("HOME")
+        .map(PathBuf::from)
+        .expect("HOME")
+        .join(".config/com.catvinci.textus/auth-codex.json");
+    let text = std::fs::read_to_string(&path).expect("Textus signed in to ChatGPT");
+    let auth: Value = serde_json::from_str(&text).expect("auth-codex.json");
+    let expires = auth["expires"].as_i64().unwrap_or(0);
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as i64;
+    assert!(
+        expires > now,
+        "the ChatGPT sign-in has expired: sign in again in Textus"
+    );
+    let field = |name: &str| {
+        auth[name]
+            .as_str()
+            .unwrap_or_else(|| panic!("auth-codex.json has no {name}"))
+            .to_string()
+    };
+    (field("access"), field("account_id"))
 }
 
 /// The endpoint the agent cases run on (see agent_provider_id).
 fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
     match agent_provider_id() {
+        "openai" => {
+            let (access_token, account_id) = chatgpt_sign_in();
+            Endpoint::Codex {
+                access_token,
+                account_id,
+                originator: crate::app_identity::ORIGINATOR.to_string(),
+            }
+        }
         "doubao" => {
             let base_url = crate::ai::catalog::find("doubao")
                 .and_then(|e| e.base_url)
@@ -169,6 +211,87 @@ pub fn par_map<T: Sync, R: Send>(items: &[T], f: impl Fn(&T) -> R + Sync) -> Vec
         .into_iter()
         .map(|r| r.expect("every item ran"))
         .collect()
+}
+
+/// With TEXTUS_EVAL_TIMELINE=1, what the stream sends and when, printed as
+/// it comes: each run of thinking, text or a tool call's arguments with its
+/// start, end and size, and every pause of over a second between events -
+/// to see where a request keeps the user waiting.
+struct Timeline {
+    on: bool,
+    started: Instant,
+    state: Mutex<TimelineState>,
+}
+
+#[derive(Default)]
+struct TimelineState {
+    kind: String,
+    since: f64,
+    last: f64,
+    chars: usize,
+    head: String,
+}
+
+impl Timeline {
+    fn from_env() -> Self {
+        Timeline {
+            on: std::env::var("TEXTUS_EVAL_TIMELINE").is_ok_and(|v| v == "1"),
+            started: Instant::now(),
+            state: Mutex::new(TimelineState::default()),
+        }
+    }
+
+    fn observe(&self, event: &ProviderEvent<'_>) {
+        if !self.on {
+            return;
+        }
+        let (kind, text) = match event {
+            ProviderEvent::Thinking(t) => ("thinking".to_string(), *t),
+            ProviderEvent::Text(t) => ("text".to_string(), *t),
+            ProviderEvent::ToolStart { name, .. } => (format!("start {name}"), ""),
+            ProviderEvent::ToolArgs { delta, .. } => ("tool args".to_string(), *delta),
+            ProviderEvent::Citation { .. } => ("citation".to_string(), ""),
+        };
+        let now = self.started.elapsed().as_secs_f64();
+        let mut s = self.state.lock().unwrap();
+        if now - s.last > 1.0 && !s.kind.is_empty() {
+            Self::flush(&s);
+            eprintln!("  [timeline] {:6.1}s .. {:6.1}s  (nothing)", s.last, now);
+            s.kind.clear();
+        }
+        if s.kind != kind {
+            if !s.kind.is_empty() {
+                Self::flush(&s);
+            }
+            *s = TimelineState {
+                kind,
+                since: now,
+                ..Default::default()
+            };
+        }
+        s.last = now;
+        s.chars += text.chars().count();
+        if s.head.chars().count() < 70 {
+            s.head.push_str(text);
+        }
+    }
+
+    fn flush(s: &TimelineState) {
+        let head: String = s.head.chars().take(70).collect();
+        eprintln!(
+            "  [timeline] {:6.1}s .. {:6.1}s  {} ({} chars) {:?}",
+            s.since, s.last, s.kind, s.chars, head
+        );
+    }
+}
+
+impl Drop for Timeline {
+    fn drop(&mut self) {
+        let s = self.state.lock().unwrap();
+        if self.on && !s.kind.is_empty() {
+            Self::flush(&s);
+        }
+    }
 }
 
 fn transient(err: &str) -> bool {
@@ -688,7 +811,9 @@ pub fn run_conversation(
         };
         // Pictures written into the text, begun as the app begins them.
         let inline = setup.pictures.map(|p| p.inline(&ctx.proposed));
+        let timeline = Timeline::from_env();
         let sink = |event: ProviderEvent<'_>| {
+            timeline.observe(&event);
             if let Some(inline) = &inline {
                 inline.observe(&event);
             }
