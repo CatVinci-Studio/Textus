@@ -1,5 +1,5 @@
-import { usePicturesState } from "../revision/usePicturesState";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { usePicturesState } from "../revision/usePicturesState";
 import type { EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import { hasCitations } from "../citations";

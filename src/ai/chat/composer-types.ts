@@ -14,7 +14,15 @@ export interface ChatComposerHandle {
   restore: (text: string) => void;
 }
 
+/** What ChatBody may do to the composer. */
+export interface ChatComposerHandle {
+  /** Puts `text` in the box, before what is there, and focuses it. */
+  restore: (text: string) => void;
+}
+
 export interface ChatComposerLabels {
+  /** After a suggestion in the empty box: the key that takes it. */
+  suggestionTab: string;
   /** Accessible name of the selection chip's remove button. */
   dropSelection: string;
   /** The docked Quick Ask's context line when nothing is selected. */
@@ -80,6 +88,9 @@ export function defaultPickerLabels(): PickerLabels {
 export const FILE_LIMIT = 30;
 
 export interface ChatComposerProps {
+  /** What the writer will probably say next (next-message.ts): grey in the
+   *  empty box, Tab takes it. */
+  suggestion?: string | null;
   /** Resolves the agent workspace (skills) - re-loaded whenever it changes. */
   docPath: string | null;
   /** Explicit workspace root, or null for the document's own folder. Skills

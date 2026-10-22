@@ -277,7 +277,9 @@ describe("the Format menu's heading keys", () => {
   });
 
   it("match the ids menu.rs builds the heading items with", () => {
-    const source = readFileSync("src-tauri/src/menu.rs", "utf8");
+    const source = ["menu.rs", "menu/build.rs"]
+      .map((file) => readFileSync(`src-tauri/src/${file}`, "utf8"))
+      .join("\n");
     expect(source).toContain('("h2", "Heading 2")');
     expect(source).toContain('INSERT_BLOCK_PREFIX: &str = "insert-block:"');
   });

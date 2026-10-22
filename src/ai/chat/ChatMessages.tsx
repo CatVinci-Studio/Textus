@@ -1,4 +1,6 @@
 import { withoutCitationMarkers } from "../citation-markers";
+import { OUT_OF_STEPS } from "./out-of-steps";
+import { InlineMarkdownText } from "../MarkdownText";
 import {
   Fragment,
   useEffect,
@@ -26,6 +28,8 @@ import {
   type RememberResult,
 } from "./MemoryChip";
 import { ProposalCard, notGeneratedReason } from "./ProposalCard";
+import { ThinkingIndicator } from "./ThinkingIndicator";
+import { memoryRunsOf } from "./memory-pass";
 
 /** The statuses a card reaches by being decided, which collapse it. */
 const DECIDED: ReadonlySet<PendingStatus> = new Set([
@@ -55,6 +59,9 @@ function parseComment(
 export interface ChatMessagesLabels
   extends AgentTurnLabels, MemoryChipLabels, ThoughtRowLabels {
   thinking: string;
+  /** "{n} seconds", after the indicator's label once nothing has moved
+   *  for a while (ThinkingIndicator). */
+  waitedFor: (seconds: number) => string;
   proposalTitle: string;
   proposalStatus: Record<Exclude<PendingStatus, "pending">, string>;
   proposalAccept: string;
@@ -97,6 +104,10 @@ export interface ChatMessagesLabels
   writingEdit: string;
   /** In place of "Thinking…" while a review note's call streams in. */
   writingNotes: string;
+  /** The reply of an exchange that ran out of steps (OUT_OF_STEPS), and
+   *  the button that asks it to go on. */
+  stoppedAtLimit: string;
+  continueAfterLimit: string;
 }
 
 export interface ChatMessagesProps {
@@ -108,6 +119,10 @@ export interface ChatMessagesProps {
   /** Finished exchanges' thinking, by their user turn's index in
    *  `history` (useAgentConversation's `thoughts`). */
   thoughts?: Record<number, Thought>;
+  /** Whether a live thought opens on its last lines, and the user's say
+   *  on it (useAgentConversation's `followThinking`). */
+  followThinking?: boolean;
+  onFollowThinking?: (follow: boolean) => void;
   busy: boolean;
   error: string | null;
   selectedText: string | null;
@@ -146,6 +161,9 @@ export interface ChatMessagesProps {
    *  is still available to resend - not every error is retryable this way. */
   canRetry: boolean;
   onRetry: () => void;
+  /** Asks the model to go on after an exchange ran out of steps; absent
+   *  where nothing can be sent from here. */
+  onContinue?: () => void;
   /** The conversation's document, whose project a remembered project
    *  memory belongs to (MemoryChip). */
   docPath?: string | null;
@@ -168,6 +186,8 @@ export function ChatMessages({
   history,
   streaming,
   thoughts,
+  followThinking,
+  onFollowThinking,
   busy,
   error,
   selectedText,
@@ -184,6 +204,7 @@ export function ChatMessages({
   noteNumber,
   canRetry,
   onRetry,
+  onContinue,
   docPath = null,
 }: ChatMessagesProps) {
   const revealFrom = useRef(0);
@@ -232,8 +253,9 @@ export function ChatMessages({
     return map;
   }, [shown]);
   // What each remember call saved, parsed once per turn-list change like
-  // the proposals.
-  const rememberResults = useMemo(() => {
+  // the proposals - and the changes of one exchange together, shown as one
+  // list under its first (the others render nothing).
+  const { rememberResults, memoryRuns } = useMemo(() => {
     const remembers = new Set(
       shown.flatMap((turn) =>
         turn.kind === "ToolCall" && turn.name === "remember"
@@ -241,13 +263,16 @@ export function ChatMessages({
           : [],
       ),
     );
-    const map = new Map<string, RememberResult>();
+    const results = new Map<string, RememberResult>();
     for (const turn of shown) {
       if (turn.kind !== "ToolResult" || !remembers.has(turn.call_id)) continue;
       const result = parseRememberResult(turn.output);
-      if (result) map.set(turn.call_id, result);
+      if (result) results.set(turn.call_id, result);
     }
-    return map;
+    return {
+      rememberResults: results,
+      memoryRuns: memoryRunsOf(shown, results),
+    };
   }, [shown]);
   // A call the backend refused (tools.rs) was never a proposal: the model
   // was told and resends it, so it gets no card - nor its result.
@@ -397,7 +422,9 @@ export function ChatMessages({
                 <blockquote className="agent-comment-quote">
                   {comment.anchor}
                 </blockquote>
-                <div className="agent-comment-text">{comment.comment}</div>
+                <div className="agent-comment-text">
+                  <InlineMarkdownText text={comment.comment} />
+                </div>
               </div>
             );
           }
@@ -412,18 +439,43 @@ export function ChatMessages({
         if (turn.kind === "ToolCall" && turn.name === "remember") return null;
         const remembered =
           turn.kind === "ToolResult" && rememberResults.get(turn.call_id);
-        if (remembered)
+        if (remembered) {
+          const run = memoryRuns.get(turn.call_id);
+          if (!run) return null;
           return (
             <div
               key={i}
-              className={reveal ? "turn-reveal" : undefined}
+              className={`agent-memory-group${reveal ? " turn-reveal" : ""}`}
               style={style}
             >
-              <MemoryChip
-                result={remembered}
-                docPath={docPath}
-                labels={labels}
-              />
+              {run.map((id) => (
+                <MemoryChip
+                  key={id}
+                  result={rememberResults.get(id)!}
+                  docPath={docPath}
+                  labels={labels}
+                />
+              ))}
+            </div>
+          );
+        }
+        if (turn.kind === "Assistant" && turn.text === OUT_OF_STEPS)
+          return (
+            <div
+              key={i}
+              className={`agent-stopped${reveal ? " turn-reveal" : ""}`}
+              style={style}
+            >
+              <span>{labels.stoppedAtLimit}</span>
+              {onContinue && !busy && i === history.length - 1 && (
+                <button
+                  type="button"
+                  className="inline-chat-action agent-stopped-continue"
+                  onClick={onContinue}
+                >
+                  {labels.continueAfterLimit}
+                </button>
+              )}
             </div>
           );
         // An exchange's thinking sits under its question, above
@@ -439,7 +491,14 @@ export function ChatMessages({
             <div className={reveal ? "turn-reveal" : undefined} style={style}>
               <AgentTurnView turn={turn} labels={labels} />
             </div>
-            {thought && <ThoughtRow thought={thought} labels={labels} />}
+            {thought && (
+              <ThoughtRow
+                thought={thought}
+                labels={labels}
+                follow={followThinking}
+                onFollow={onFollowThinking}
+              />
+            )}
           </Fragment>
         );
       })}
@@ -463,6 +522,8 @@ export function ChatMessages({
         <ThinkingIndicator
           key={streaming?.tool ? streaming.tool : (streaming?.text.length ?? 0)}
           after={!!streaming?.text && !streaming?.tool}
+          soon={!streaming?.text && !streaming?.tool && !streaming?.thought}
+          waitedFor={labels.waitedFor}
           label={
             streaming?.tool === "generate_image"
               ? labels.generatingImage
@@ -483,28 +544,6 @@ export function ChatMessages({
         />
       )}
     </>
-  );
-}
-
-/** The three-dot "thinking" row. Shared with ChatBody's quick variant so the
- *  two chat surfaces can't drift on this markup. */
-export function ThinkingIndicator({
-  label,
-  after = false,
-}: {
-  label: string;
-  /** Under a streaming reply: shows only once it has paused a moment. */
-  after?: boolean;
-}) {
-  return (
-    <div className={`agent-thinking${after ? " agent-thinking-after" : ""}`}>
-      <span className="agent-thinking-label">{label}</span>
-      <span className="agent-thinking-dots">
-        <span />
-        <span />
-        <span />
-      </span>
-    </div>
   );
 }
 

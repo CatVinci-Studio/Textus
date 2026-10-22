@@ -6,7 +6,8 @@
 //! Mirrored on the TS side by `src/ai/provider-catalog.ts` (kept in sync by
 //! hand - comments on both sides point here). Labels are brand names, shared
 //! across languages, so they live here rather than in i18n - the exceptions
-//! are "custom" and "doubao", whose labels the frontend localizes.
+//! are "custom", "doubao" and the two MiniMax platforms, whose labels the
+//! frontend localizes.
 
 use serde::Serialize;
 
@@ -239,6 +240,35 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         ],
     },
     ProviderCatalogEntry {
+        id: "minimax",
+        // The China platform (minimaxi.com); its keys don't work on the
+        // global one below, nor the other way round.
+        label: "MiniMax (China)",
+        dialect: "openai-chat-completions",
+        auth: &["api_key"],
+        base_url: Some("https://api.minimaxi.com/v1"),
+        default_model: Some("MiniMax-M3.1-Flash"),
+        agent_default_model: Some("MiniMax-M3"),
+        key_optional: false,
+        // Its Chat Completions takes text only.
+        supports_vision: false,
+        models_listable: true,
+        known_models: &["MiniMax-M3", "MiniMax-M3.1-Flash"],
+    },
+    ProviderCatalogEntry {
+        id: "minimax-intl",
+        label: "MiniMax (Global)",
+        dialect: "openai-chat-completions",
+        auth: &["api_key"],
+        base_url: Some("https://api.minimax.io/v1"),
+        default_model: Some("MiniMax-M3.1-Flash"),
+        agent_default_model: Some("MiniMax-M3"),
+        key_optional: false,
+        supports_vision: false,
+        models_listable: true,
+        known_models: &["MiniMax-M3", "MiniMax-M3.1-Flash"],
+    },
+    ProviderCatalogEntry {
         id: "ollama",
         label: "Ollama (local)",
         dialect: "openai-chat-completions",
@@ -296,80 +326,4 @@ pub fn ai_can_think_deeper(provider: String, model: Option<String>) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// scripts/sync-models.mjs's reviewed copy of what each provider serves,
-    /// per models.dev. Test-only - nothing in the app reads it.
-    const SNAPSHOT: &str = include_str!("../../../src/ai/models-snapshot.json");
-
-    /// aicompat's capability table needs a row for every provider here: how
-    /// it takes thinking parameters and switches on its own search. A
-    /// missing row silently falls back to plain OpenAI-compatible Chat
-    /// Completions, which is wrong for most named providers.
-    #[test]
-    fn every_provider_has_a_capability_row() {
-        for entry in PROVIDER_CATALOG {
-            assert!(
-                aicompat::capabilities::has_row(entry.id),
-                "`{}` has no row in aicompat/src/capabilities.rs",
-                entry.id
-            );
-        }
-    }
-
-    #[test]
-    fn deep_thinking_follows_the_default_agent_model() {
-        assert!(ai_can_think_deeper("anthropic".into(), None));
-        assert!(ai_can_think_deeper(
-            "anthropic".into(),
-            Some("claude-haiku-5-5".into())
-        ));
-        assert!(!ai_can_think_deeper("mistral".into(), None));
-        assert!(!ai_can_think_deeper("openai".into(), Some("gpt-4o".into())));
-    }
-
-    /// Every model the catalog pins must still exist upstream and not be
-    /// deprecated - the check that would have caught Groq's and Kimi's
-    /// defaults being shut down months before anyone noticed. A failure
-    /// here after a snapshot refresh means: re-pick that provider's models.
-    #[test]
-    fn pinned_models_are_current_per_models_dev() {
-        let snapshot: serde_json::Value = serde_json::from_str(SNAPSHOT).unwrap();
-        let unmapped: Vec<&str> = snapshot["unmapped"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .filter_map(|v| v.as_str())
-            .collect();
-        for entry in PROVIDER_CATALOG {
-            if unmapped.contains(&entry.id) {
-                continue;
-            }
-            let models = &snapshot["providers"][entry.id]["models"];
-            assert!(
-                models.is_object(),
-                "`{}` is in neither `providers` nor `unmapped` of models-snapshot.json - map it in scripts/sync-models.mjs",
-                entry.id
-            );
-            let pinned = entry
-                .default_model
-                .iter()
-                .chain(entry.agent_default_model.iter())
-                .chain(entry.known_models.iter());
-            for model in pinned {
-                let found = &models[*model];
-                assert!(
-                    found.is_object(),
-                    "{}/{model} is no longer listed by models.dev",
-                    entry.id
-                );
-                assert_ne!(
-                    found["status"], "deprecated",
-                    "{}/{model} is deprecated upstream",
-                    entry.id
-                );
-            }
-        }
-    }
-}
+mod tests;

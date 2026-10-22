@@ -1,4 +1,4 @@
-use crate::agent::{AgentTurn, EventSink, StepResult, StepUsage, ToolSpec};
+use crate::agent::{AgentTurn, EventSink, ImageAttachment, StepResult, StepUsage, ToolSpec};
 use crate::capabilities::Thinking;
 use crate::images::{
     checked_image, decode_base64, gpt_image_size, Aspect, GeneratedImage, ImageError,
@@ -245,20 +245,34 @@ pub async fn agent_step(
 
 /// The request for one picture through the ChatGPT sign-in: the Responses
 /// API's image_generation tool, made the only thing the model may do.
-fn image_request_body(prompt: &str, aspect: Aspect) -> Value {
+fn image_request_body(prompt: &str, aspect: Aspect, reference: Option<&ImageAttachment>) -> Value {
+    // The tool's `size` alone was not kept to (a square asked for came
+    // back 1536 x 1024): the shape is said in the request too.
+    let size = gpt_image_size(aspect);
+    let text = format!(
+        "{prompt}\n\nAspect ratio {}, {size} pixels.",
+        aspect.ratio()
+    );
+    let mut content = vec![json!({"type": "input_text", "text": text})];
+    if let Some(reference) = reference {
+        content.insert(
+            0,
+            json!({"type": "input_image", "image_url": reference.data_url()}),
+        );
+    }
     json!({
         "model": COMPLETION_MODEL,
         "store": false,
         // The ChatGPT backend only serves SSE.
         "stream": true,
-        "instructions": "Draw the picture the user describes with the image_generation tool, exactly as described. Say nothing.",
+        "instructions": "Draw the picture the user describes with the image_generation tool, exactly as described - with a picture given, change that picture as described, keeping the rest of it. Say nothing.",
         "input": [{
             "role": "user",
-            "content": [{"type": "input_text", "text": prompt}],
+            "content": content,
         }],
         "tools": [{
             "type": "image_generation",
-            "size": gpt_image_size(aspect),
+            "size": size,
             // As the API-key route asks (images/openai.rs): plenty for a
             // page, and the plan's image allowance goes further.
             "quality": "medium",
@@ -320,6 +334,7 @@ pub async fn generate_image(
     originator: &str,
     prompt: &str,
     aspect: Aspect,
+    reference: Option<&ImageAttachment>,
 ) -> Result<GeneratedImage, ImageError> {
     let prompt = prompt.trim();
     if prompt.is_empty() {
@@ -333,7 +348,7 @@ pub async fn generate_image(
         .header("chatgpt-account-id", account_id)
         .header("originator", originator)
         .header("OpenAI-Beta", "responses=experimental")
-        .json(&image_request_body(prompt, aspect))
+        .json(&image_request_body(prompt, aspect, reference))
         .send()
         .await
         .map_err(|e| ImageError::Failed(format!("Couldn't reach ChatGPT: {e}")))?;
@@ -344,89 +359,4 @@ pub async fn generate_image(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn a_picture_request_offers_only_the_image_tool_at_the_aspects_size() {
-        let body = image_request_body("A harbour at dusk", Aspect::Wide);
-        assert_eq!(body["tools"][0]["type"], "image_generation");
-        assert_eq!(body["tools"][0]["size"], "1536x1024");
-        assert_eq!(body["tool_choice"]["type"], "image_generation");
-        assert_eq!(body["stream"], true);
-        assert_eq!(body["store"], false);
-        assert_eq!(body["input"][0]["content"][0]["text"], "A harbour at dusk");
-    }
-
-    #[test]
-    fn the_picture_is_read_from_the_image_generation_call() {
-        // "hi" in base64, beside a message item.
-        let output = vec![
-            json!({"type": "message", "content": []}),
-            json!({"type": "image_generation_call", "status": "completed", "result": "aGk="}),
-        ];
-        assert_eq!(image_from_output(&output).unwrap(), b"hi");
-    }
-
-    #[test]
-    fn no_picture_says_why() {
-        let none = image_from_output(&[json!({"type": "message"})]).unwrap_err();
-        assert!(matches!(none, ImageError::Failed(why) if why.contains("plan")));
-        let unfinished = image_from_output(&[
-            json!({"type": "image_generation_call", "status": "failed", "result": ""}),
-        ])
-        .unwrap_err();
-        assert!(matches!(unfinished, ImageError::Failed(why) if why.contains("failed")));
-    }
-
-    #[test]
-    fn failures_are_told_apart() {
-        assert!(matches!(
-            image_failure("ChatGPT request failed: moderation_blocked".into()),
-            ImageError::Refused(_)
-        ));
-        assert!(matches!(
-            image_failure("ChatGPT request failed (429): usage limit reached".into()),
-            ImageError::Quota(_)
-        ));
-        assert!(matches!(
-            image_failure("ChatGPT request failed (500)".into()),
-            ImageError::Failed(_)
-        ));
-    }
-
-    /// The exact failure this guard exists for: a model saved while the
-    /// API-key auth method was active (or migrated forward from an older
-    /// settings blob) is a hard 400 once the login is a ChatGPT account.
-    #[test]
-    fn a_model_this_login_cannot_use_falls_back_to_the_default() {
-        assert_eq!(usable_model(Some("gpt-5.4"), "gpt-6.1-sol"), "gpt-6.1-sol");
-        assert_eq!(
-            usable_model(Some("gpt-4o-mini"), "gpt-6.1-sol"),
-            "gpt-6.1-sol"
-        );
-    }
-
-    /// The GPT-5.6 family was the previous preset list; Codex no longer
-    /// serves it, so a choice saved by an older version must not survive.
-    #[test]
-    fn a_retired_preset_falls_back_to_the_default() {
-        assert_eq!(
-            usable_model(Some("gpt-5.6-terra"), "gpt-6.1-sol"),
-            "gpt-6.1-sol"
-        );
-    }
-
-    #[test]
-    fn a_supported_model_is_passed_through() {
-        assert_eq!(
-            usable_model(Some("gpt-6-astra"), "gpt-6.1-sol"),
-            "gpt-6-astra"
-        );
-    }
-
-    #[test]
-    fn no_choice_means_the_default() {
-        assert_eq!(usable_model(None, "gpt-6.1-sol"), "gpt-6.1-sol");
-    }
-}
+mod tests;

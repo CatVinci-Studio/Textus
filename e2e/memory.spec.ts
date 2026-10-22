@@ -139,19 +139,10 @@ test("what Textus AI remembers shows under its reply, and Undo takes it back", a
     library_use: LIBRARY_USE,
     ai_agent_message: [
       { kind: "User", text: message },
-      {
-        kind: "ToolCall",
-        call_id: "r1",
-        name: "remember",
-        arguments: JSON.stringify({
-          kind: "requirement",
-          scope: "project",
-          text: REMEMBERED.text,
-        }),
-      },
-      { kind: "ToolResult", call_id: "r1", output: JSON.stringify(REMEMBERED) },
       { kind: "Assistant", text: "Noted - British spelling from now on." },
     ],
+    // After the reply, apart from it (ai/memory/pass.rs).
+    memory_pass: [REMEMBERED],
     memory_undo: null,
   });
   const composer = page.locator(".agent-panel-view textarea");
@@ -162,15 +153,50 @@ test("what Textus AI remembers shows under its reply, and Undo takes it back", a
   await expect(chip).toContainText(
     "Remembered: Use British spelling. (project)",
   );
-  // The request named its conversation, for the memory's record.
-  const [sent] = await calls(page, "ai_agent_message");
-  expect(sent).toMatchObject({ conversation: { title: message } });
+  // The pass read the exchange, and named its conversation for the
+  // memory's record.
+  const [passed] = await calls(page, "memory_pass");
+  expect(passed).toMatchObject({
+    conversation: { title: message },
+    exchange: {
+      messages: [message],
+      reply: "Noted - British spelling from now on.",
+    },
+  });
+  // The chip sits under the reply it came after.
+  await expect(
+    page.locator(".agent-panel-view").getByText("Noted - British spelling"),
+  ).toBeVisible();
 
   await chip.getByRole("button", { name: "Undo" }).click();
   await expect(chip).toHaveText("Undone. No longer remembered.");
   expect(await calls(page, "memory_undo")).toEqual([
     expect.objectContaining({ id: REMEMBERED.remembered, previous: null }),
   ]);
+});
+
+test("with Remember automatically off, nothing is asked after the reply", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", rememberAutomatically: false },
+    storage: { "levis-agent-panel-open": "1" },
+  });
+  await mockInvoke(page, {
+    load_agent_workspace: memoryWorkspace(false),
+    library_use: LIBRARY_USE,
+    ai_agent_message: [
+      { kind: "User", text: "Always use British spelling" },
+      { kind: "Assistant", text: "Done." },
+    ],
+    memory_pass: [REMEMBERED],
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Always use British spelling");
+  await composer.press("Enter");
+  await expect(page.locator(".agent-panel-view")).toContainText("Done.");
+  expect(await calls(page, "memory_pass")).toEqual([]);
+  await expect(page.locator(".agent-memory-chip")).toHaveCount(0);
 });
 
 test("the Memory tab lists what was remembered, and moves and deletes it", async ({

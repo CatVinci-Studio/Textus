@@ -53,56 +53,13 @@ interface AppMenuProps {
 export function AppMenu({ x, y, onClose, checks }: AppMenuProps) {
   const { t, settings } = useSettings();
   const pluginEntries = usePluginMenuEntries(settings.language);
-  const [recents, setRecents] = useState<RecentLists>(NO_RECENTS);
-  const [fullscreen, setFullscreen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const pos = useViewportClamp(ref, x, y);
   const phone = usePhoneLayout();
   // It grows out of the button (top left) and, closed, fades where it is.
   const presence = usePresenceProps(ref);
 
-  // Read once per opening, not per render: Open Recent must show what the
-  // list holds NOW (including a file opened since the menu was last up), and
-  // nothing about it changes while the menu is on screen.
-  useEffect(() => {
-    if (!hasAppMenu) return;
-    let alive = true;
-    void Promise.all([menuIpc.listRecentFiles(), menuIpc.listRecentFolders()])
-      .then(([files, folders]) => {
-        // The dev shim answers every command with null rather than
-        // rejecting, so this cannot lean on the catch below.
-        if (alive)
-          setRecents({
-            files: Array.isArray(files) ? files : [],
-            folders: Array.isArray(folders) ? folders : [],
-          });
-      })
-      .catch(() => {
-        // No backend at all: Open Recent shows its empty state.
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  // Full Screen is the window's, not the app's: asked as the menu opens.
-  useEffect(() => {
-    if (!hasAppMenu || !canToggleFullscreen) return;
-    let alive = true;
-    try {
-      void getCurrentWindow()
-        .isFullscreen()
-        .then((on) => {
-          if (alive) setFullscreen(on === true);
-        })
-        .catch(() => {});
-    } catch {
-      // No window to ask (a test, the dev shim): Full Screen shows off.
-    }
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const { recents, fullscreen } = useMenuOpening();
 
   // On <body>, not inside the title row that opens it: the row is a fixed
   // layer of its own (z-index 45), so a menu inside it could never rise
@@ -147,6 +104,58 @@ function focusItem(list: HTMLElement | null, index: number) {
   );
   if (rows.length === 0) return;
   rows[(index + rows.length) % rows.length]?.focus();
+}
+
+/** What the menu reads as it opens: the recent files and folders, and
+ *  whether the window is in full screen. */
+function useMenuOpening() {
+  const [recents, setRecents] = useState<RecentLists>(NO_RECENTS);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  // Read once per opening, not per render: Open Recent must show what the
+  // list holds NOW (including a file opened since the menu was last up), and
+  // nothing about it changes while the menu is on screen.
+  useEffect(() => {
+    if (!hasAppMenu) return;
+    let alive = true;
+    void Promise.all([menuIpc.listRecentFiles(), menuIpc.listRecentFolders()])
+      .then(([files, folders]) => {
+        // The dev shim answers every command with null rather than
+        // rejecting, so this cannot lean on the catch below.
+        if (alive)
+          setRecents({
+            files: Array.isArray(files) ? files : [],
+            folders: Array.isArray(folders) ? folders : [],
+          });
+      })
+      .catch(() => {
+        // No backend at all: Open Recent shows its empty state.
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Full Screen is the window's, not the app's: asked as the menu opens.
+  useEffect(() => {
+    if (!hasAppMenu || !canToggleFullscreen) return;
+    let alive = true;
+    try {
+      void getCurrentWindow()
+        .isFullscreen()
+        .then((on) => {
+          if (alive) setFullscreen(on === true);
+        })
+        .catch(() => {});
+    } catch {
+      // No window to ask (a test, the dev shim): Full Screen shows off.
+    }
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return { recents, fullscreen };
 }
 
 function MenuList({

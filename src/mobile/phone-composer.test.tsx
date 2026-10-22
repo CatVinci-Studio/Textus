@@ -43,6 +43,7 @@ const labels = {
   showSelection: "Show in document",
   atCursor: "At the cursor",
   placeholder: "Ask anything",
+  suggestionTab: "Tab",
   send: "Send",
   stop: "Stop",
   attachFile: "Attach a file",

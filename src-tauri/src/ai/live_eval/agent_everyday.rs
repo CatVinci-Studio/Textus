@@ -276,6 +276,15 @@ fn zh_cases() -> Vec<AgentCase> {
     c.push(AgentCase::new("long/zh/question-middle", Lang::ZhHans, Lang::ZhHans, &long, "第七章里，试点一共走访了多少户居民？", no_edit().reply(&["214"]).check("read the section", |o| {
         o.tools.iter().any(|t| t == "read_document" || t == "search_document").then_some(()).ok_or_else(|| "answered without reading".into())
     }), "Expect the agent to read/search chapter 7 and answer: 214 households in 青石巷 (over about three months), in Chinese, no edit."));
+    // Three chapters at once (about 10k characters): read side by side,
+    // then edited, all within the request's steps.
+    c.push(AgentCase::new("long/zh/translate-chapters", Lang::ZhHans, Lang::En, &long, "把第六章到第八章翻译成英文，其他章节不动。", edit_anywhere().has(&["214"]).check("all three chapters, in English", |o| {
+        let text = proposed_text(o);
+        let cjk = super::checks_builtin::cjk_chars(&text);
+        (text.len() > 15_000 && cjk * 50 < text.chars().count()).then_some(()).ok_or_else(|| format!("{} bytes, {cjk} CJK characters", text.len()))
+    }).check("not out of steps", |o| {
+        (o.reply != aicompat::agent::OUT_OF_STEPS).then_some(()).ok_or_else(|| "ran out of steps".into())
+    }), "A 42k-character Chinese report shown as an outline: expect chapters 6, 7 and 8 read (several read_document calls in one step is best) and each replaced by its English translation - every number kept, including chapter 7's 214 households in 青石巷 - with nothing outside them touched."));
 
     // A 28k-character document: whole until the limit counted Chinese as
     // three, now the outline and the section the cursor is in - nothing it

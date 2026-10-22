@@ -102,10 +102,32 @@
   content: none;
 }
 
+.pending-picture-failed {
+  flex-direction: column;
+  gap: 8px;
+}
+
 .pending-picture-why {
   font-size: var(--text-sm);
   color: var(--editor-muted);
   text-align: center;
+}
+
+/* Asks for this picture again, by itself. */
+.pending-picture-retry {
+  padding: 2px 12px;
+  border: 1px solid var(--editor-border);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.pending-picture-retry:hover {
+  border-color: var(--editor-accent);
+  color: var(--editor-accent);
 }
 
 /* The chat's proposal card shows it small, as .agent-proposal-picture. */

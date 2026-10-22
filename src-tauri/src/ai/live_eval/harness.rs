@@ -80,17 +80,34 @@ pub fn block_on<F: std::future::Future>(future: F) -> F::Output {
 /// (how the matrix is re-run against another model).
 pub fn agent_model() -> String {
     std::env::var("TEXTUS_EVAL_AGENT_MODEL").unwrap_or_else(|_| {
-        crate::ai::catalog::find(agent_provider_id())
+        let model = crate::ai::catalog::find(agent_provider_id())
             .and_then(|e| e.agent_default_model)
-            .expect("the eval's provider has an agent default")
-            .to_string()
+            .expect("the eval's provider has an agent default");
+        // Vertex AI names Google's own models by their publisher.
+        if on_vertex() {
+            format!("google/{model}")
+        } else {
+            model.to_string()
+        }
     })
+}
+
+/// TEXTUS_EVAL_PROVIDER=vertex: Gemini on Vertex AI, with the API key
+/// GOOGLE_VERTEX_API_KEY (express mode) and the project
+/// TEXTUS_EVAL_VERTEX_PROJECT - its OpenAI-compatible endpoint on
+/// aiplatform.googleapis.com, never the Gemini Developer API.
+fn on_vertex() -> bool {
+    std::env::var("TEXTUS_EVAL_PROVIDER").is_ok_and(|v| v == "vertex")
 }
 
 /// TEXTUS_EVAL_PROVIDER=doubao: the agent cases run on Volcengine Ark
 /// (VOLCENGINE_ARK_API_KEY) instead of Claude, through the same
 /// AgentProvider path - to compare a change on a second provider, or when
 /// the Claude key can't be used. The judge stays Claude.
+///
+/// TEXTUS_EVAL_PROVIDER=deepseek or minimax: on DeepSeek
+/// (DEEPSEEK_API_KEY) or MiniMax's China platform (MINIMAX_API_KEY), the
+/// same way.
 ///
 /// TEXTUS_EVAL_PROVIDER=chatgpt: on a ChatGPT subscription, as Textus on
 /// this machine is signed in (Settings › Textus AI › ChatGPT): its
@@ -100,14 +117,17 @@ pub fn agent_model() -> String {
 pub fn agent_provider_id() -> &'static str {
     match std::env::var("TEXTUS_EVAL_PROVIDER").as_deref() {
         Ok("doubao") => "doubao",
+        Ok("deepseek") => "deepseek",
+        Ok("minimax") => "minimax",
         Ok("chatgpt") => "openai",
+        Ok("vertex") => "google",
         _ => "anthropic",
     }
 }
 
 /// The app's ChatGPT sign-in (auth/openai_codex.rs's auth-codex.json):
 /// its access token and account.
-fn chatgpt_sign_in() -> (String, String) {
+pub(crate) fn chatgpt_sign_in() -> (String, String) {
     let path = std::env::var_os("HOME")
         .map(PathBuf::from)
         .expect("HOME")
@@ -143,14 +163,31 @@ fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
                 originator: crate::app_identity::ORIGINATOR.to_string(),
             }
         }
-        "doubao" => {
-            let base_url = crate::ai::catalog::find("doubao")
+        id @ ("doubao" | "deepseek" | "minimax") => {
+            let base_url = crate::ai::catalog::find(id)
                 .and_then(|e| e.base_url)
-                .expect("doubao has a base_url");
+                .expect("the provider has a base_url");
+            let key = match id {
+                "doubao" => "VOLCENGINE_ARK_API_KEY",
+                "deepseek" => "DEEPSEEK_API_KEY",
+                _ => "MINIMAX_API_KEY",
+            };
             Endpoint::ChatCompletions {
                 base_url: base_url.to_string(),
-                api_key: Some(secret("VOLCENGINE_ARK_API_KEY").expect("VOLCENGINE_ARK_API_KEY")),
+                api_key: Some(secret(key).unwrap_or_else(|| panic!("{key}"))),
                 vendor: crate::ai::route::chat_vendor(base_url),
+                stream_usage: true,
+            }
+        }
+        "google" => {
+            let project = std::env::var("TEXTUS_EVAL_VERTEX_PROJECT")
+                .expect("TEXTUS_EVAL_VERTEX_PROJECT: the Vertex AI project");
+            Endpoint::ChatCompletions {
+                base_url: format!(
+                    "https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/endpoints/openapi"
+                ),
+                api_key: Some(secret("GOOGLE_VERTEX_API_KEY").expect("GOOGLE_VERTEX_API_KEY")),
+                vendor: crate::ai::route::chat_vendor("https://aiplatform.googleapis.com"),
                 stream_usage: true,
             }
         }
@@ -653,9 +690,9 @@ pub struct AgentSetup<'a> {
     /// generate_image, for the picture cases: None offers no such tool, as
     /// the app does without an image model.
     pub pictures: Option<&'a crate::ai::images::ImageRun>,
-    /// The remember tool, writing to these folders, and what they hold
+    /// The memory pass after each exchange, writing to these folders, and what they hold
     /// sent with each message, read again every turn - as the app does
-    /// with Remember automatically on. None: no remember tool.
+    /// with Remember automatically on. None: nothing is remembered.
     pub memory: Option<&'a crate::ai::memory::MemoryDirs>,
 }
 
@@ -726,10 +763,6 @@ pub fn run_conversation(
             }
             None => setup.workspace,
         };
-        let memory = setup.memory.map(|dirs| crate::ai::memory::MemoryContext {
-            dirs: dirs.clone(),
-            source: Default::default(),
-        });
         let (message_sent, caret) = match (user.follow_selection, selection) {
             (true, Some((s, e))) => (
                 format!(
@@ -771,11 +804,9 @@ pub fn run_conversation(
             sees_images: sees_images(),
             conventions: &conventions,
             library: &library,
-            memory: memory.as_ref(),
             proposed: Default::default(),
             checks: Default::default(),
         };
-        // The remember tool only with memory folders to write to (above).
         // Images as the
         // app offers them to the provider the eval runs on (Anthropic), and
         // generate_image when the case gives it one, on this turn's
@@ -784,7 +815,6 @@ pub fn run_conversation(
             ws.has_usable_skills(),
             root.is_some(),
             setup.mode,
-            setup.memory.is_some(),
             sees_images(),
         );
         if let Some(pictures) = setup.pictures {
@@ -860,11 +890,8 @@ pub fn run_conversation(
                     };
                     charge(setup.model, &used);
                     usage.borrow_mut().push(used);
-                    let (step, applied) = crate::ai::agent::postfix_step(step, doc, conventions);
-                    let step = match inline {
-                        Some(inline) => inline.place(step),
-                        None => step,
-                    };
+                    let (step, applied) =
+                        crate::ai::agent::settle_step(step, doc, conventions, inline.as_ref());
                     postfix
                         .borrow_mut()
                         .extend(applied.into_iter().map(str::to_string));
@@ -1080,6 +1107,54 @@ pub fn run_conversation(
                 } else if joined_ids.contains(call_id) {
                     *output = format!("{output}\n\n[{JOINED_NOTE}]");
                 }
+            }
+        }
+        // What to remember, decided after the exchange (memory::pass) by
+        // the conversation's model, as the app does; each change recorded
+        // as a remember call, as the chips show it.
+        if let Some(dirs) = setup.memory {
+            let exchange = crate::ai::memory::Exchange {
+                messages: outcomes
+                    .iter()
+                    .map(|o: &TurnOutcome| o.message.clone())
+                    .chain(std::iter::once(outcome.message.clone()))
+                    .collect(),
+                reply: outcome.reply.clone(),
+            };
+            let agent = &agent;
+            // The model's answer too, for the report.
+            let said = RefCell::new(String::new());
+            let answer = &said;
+            let kept = block_on(crate::ai::memory::run_pass(
+                dirs,
+                &exchange,
+                &Default::default(),
+                |instructions, input| async move {
+                    let turn = [AgentTurn::User {
+                        text: input,
+                        images: Vec::new(),
+                    }];
+                    let (step, used) = agent.step(&instructions, &turn, &[], &|_| {}).await?;
+                    charge(setup.model, &used.unwrap_or_default());
+                    let text = match step {
+                        StepResult::Done(text) => text,
+                        _ => String::new(),
+                    };
+                    answer.replace(text.clone());
+                    Ok(text)
+                },
+            ));
+            match kept {
+                Ok(kept) => {
+                    outcome.calls.push(
+                        serde_json::json!({"name": "memory_pass", "result": said.into_inner()}),
+                    );
+                    outcome.calls.extend(
+                        kept.iter()
+                            .map(|r| serde_json::json!({"name": "remember", "args": r})),
+                    );
+                }
+                Err(e) => eprintln!("live_eval: memory pass failed: {e}"),
             }
         }
         history.extend(turns.iter().cloned());

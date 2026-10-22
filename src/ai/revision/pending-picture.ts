@@ -4,7 +4,9 @@ import {
   generatedImageSize,
   generatedImageUrl,
   loadGeneratedImage,
+  retryGeneratedImage,
 } from "./generated-images";
+import { currentStrings } from "../../i18n/current";
 import "./pending-picture.css";
 
 /**
@@ -62,7 +64,20 @@ function settle(el: HTMLElement, id: string, alt: string, made: boolean) {
   const why = document.createElement("span");
   why.className = "pending-picture-why";
   why.textContent = generatedImageFailure(id) ?? "";
-  el.append(why);
+  // This picture alone is asked for again; the frame paints meanwhile.
+  const retry = document.createElement("button");
+  retry.type = "button";
+  retry.className = "pending-picture-retry";
+  retry.textContent = currentStrings().agentRetry;
+  retry.addEventListener("mousedown", (e) => e.preventDefault());
+  retry.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const again = frame(id, alt);
+    el.replaceWith(again);
+    void retryGeneratedImage(id).then((made) => settle(again, id, alt, made));
+  });
+  el.append(why, retry);
 }
 
 /**

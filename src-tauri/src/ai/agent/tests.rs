@@ -1,6 +1,22 @@
 use super::*;
 use crate::ai::ui_language::{entries, UI_LANGUAGES};
 
+#[test]
+fn a_length_the_user_asks_for_is_noticed() {
+    for asked in [
+        "写一篇 1200 字左右的文章",
+        "写三千字",
+        "Write about 500 words on tides",
+        "2,000 characters, please",
+        "800字以内",
+    ] {
+        assert!(asks_for_a_length(asked), "{asked}");
+    }
+    for other in ["写一篇文章，配两张图", "Fix the 3 typos", "第2段"] {
+        assert!(!asks_for_a_length(other), "{other}");
+    }
+}
+
 /// The whole tool path a writing request takes, with a scripted model:
 /// read the section it was asked about, propose an edit quoting it,
 /// get told when a quote doesn't match, retry with the right one.
@@ -11,7 +27,7 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
     use std::collections::VecDeque;
 
     let document = "# Notes\n\n## Methods\n\nWe sampled ten sites.\n\n## Results\n\nAll good.";
-    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     let conventions = crate::ai::rules::Conventions::default();
     let ctx = ToolContext {
         document,
@@ -22,7 +38,6 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
         sees_images: false,
         conventions: &conventions,
         library: &[],
-        memory: None,
         proposed: Default::default(),
         checks: Default::default(),
     };
@@ -104,7 +119,7 @@ fn history_keeps_no_tool_images_and_says_so() {
     };
     assert!(images.is_empty());
     assert!(
-        output.ends_with("call view_image again to look at it.]"),
+        output.ends_with("call read_file again to look at it.]"),
         "{output}"
     );
     let plain = AgentTurn::ToolResult {
@@ -314,7 +329,7 @@ fn the_message_header_names_the_language_the_user_typed() {
     }
     let text = request_user_text("doc", "What was the most common complaint?");
     assert!(
-        text.ends_with("---the user's message (written in English: reply in English, unless the user instructions set a reply language)---\nWhat was the most common complaint?"),
+        text.ends_with("---the user's message (written in English: reply in English, unless the user instructions or what you remember set a reply language)---\nWhat was the most common complaint?"),
         "{text}"
     );
     assert!(request_user_text("doc", "ok").ends_with("---the user's message---\nok"));
@@ -348,6 +363,17 @@ fn long_document_is_truncated_with_outline_and_excerpts() {
     assert!(section.contains("last-marker"));
     // The bulk of the middle shouldn't appear - only outline + excerpts.
     assert!(section.len() < doc.len() / 2);
+}
+
+#[test]
+fn the_document_tools_are_for_a_document_shown_in_part() {
+    // agent::run_agent takes search_document and read_document out when
+    // the whole document is in the message.
+    assert!(context::shown_whole("# Title\n\nOne paragraph.", true));
+    assert!(!context::shown_whole(
+        &"x".repeat(FULL_DOCUMENT_LIMIT + 1),
+        true
+    ));
 }
 
 #[test]
@@ -758,7 +784,7 @@ fn interaction_mode_is_explicit_in_every_message() {
     assert!(review.contains("interaction mode: review"));
     assert!(
         build_instructions(&workspace, "draft", true, AgentMode::Review, "", "en")
-            .contains("no document edit tool is available")
+            .contains("No document edit tool is available")
     );
 
     assert!(message(AgentMode::Revise).contains("interaction mode: revise"));
@@ -789,7 +815,7 @@ fn the_cached_prefix_survives_a_mode_switch_and_a_new_memory() {
         ..AgentWorkspace::default()
     };
     let prefix = |ws: &AgentWorkspace, mode| {
-        let tools = ToolRegistry::builtin(false, false, mode, true, false);
+        let tools = ToolRegistry::builtin(false, false, mode, false);
         let specs: Vec<String> = tools
             .specs()
             .iter()
@@ -874,16 +900,18 @@ fn remembered_memories_follow_the_users_instructions() {
         ..AgentWorkspace::default()
     };
     let prompt = build_instructions(&ws, "draft", true, AgentMode::Review, "", "en");
-    assert!(prompt.contains("---remembering---"), "every mode");
+    // What to remember is decided after the exchange (memory::pass): the
+    // request has no remember tool to be told about.
+    assert!(!prompt.contains("remember tool"));
     // What is remembered comes with the message, after the user's own
     // instructions (in the system prompt).
     let message = request_message(&ws, AgentMode::Review, "en", "", "Go.");
     let personal = message.find("Reply briefly.").unwrap();
     let project = message.find("Spell it colour.").unwrap();
     assert!(prompt.contains("Global rule.") && personal < project);
-    // Without tools there is no remember tool to talk about.
+    // Without tools it is in the system prompt.
     let flat = build_instructions(&ws, "draft", false, AgentMode::Review, "", "en");
-    assert!(flat.contains("Reply briefly.") && !flat.contains("---remembering---"));
+    assert!(flat.contains("Reply briefly."));
 }
 
 #[test]
@@ -916,18 +944,144 @@ fn a_selected_picture_in_the_documents_folder_is_seen() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// Runs a scripted Revise request: each step the provider's text and its
+/// calls (comments, edits), through the real tools. Returns the turns and
+/// how many steps ran.
+fn scripted_revise(document: &str, script: Vec<Vec<AgentTurn>>) -> (Vec<AgentTurn>, usize) {
+    use aicompat::agent::StepResult;
+    use std::cell::RefCell;
+    use std::collections::VecDeque;
+
+    let tools = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
+    let conventions = crate::ai::rules::Conventions::default();
+    let ctx = ToolContext {
+        document,
+        undecided: &[],
+        skills: &[],
+        ui_language: "en",
+        root: None,
+        sees_images: false,
+        conventions: &conventions,
+        library: &[],
+        proposed: Default::default(),
+        checks: Default::default(),
+    };
+    let script = RefCell::new(VecDeque::from(script));
+    let steps = std::cell::Cell::new(0);
+    let turns = tauri::async_runtime::block_on(run_agent_loop(
+        vec![],
+        AgentTurn::User {
+            text: "Translate it into English".into(),
+            images: Vec::new(),
+        },
+        MAX_STEPS,
+        |_| {
+            steps.set(steps.get() + 1);
+            let step = StepResult::ToolCalls(script.borrow_mut().pop_front().unwrap());
+            let result = settle_step(step, document, &conventions, None).0;
+            async move { Ok(result) }
+        },
+        |call| tools.execute(&ctx, call),
+        |name| tools.how_to_run(name),
+        |_| {},
+    ))
+    .unwrap();
+    (turns, steps.get())
+}
+
+fn call(id: &str, name: &str, arguments: serde_json::Value) -> AgentTurn {
+    AgentTurn::ToolCall {
+        call_id: id.into(),
+        name: name.into(),
+        arguments: arguments.to_string(),
+        reasoning: None,
+    }
+}
+
+fn comment(id: &str, anchor: &str) -> AgentTurn {
+    call(
+        id,
+        tools::ADD_COMMENT_TOOL_NAME,
+        serde_json::json!({"anchor": anchor, "comment": "The title is a pun; this keeps one half."}),
+    )
+}
+
+fn translation(id: &str, document: &str) -> AgentTurn {
+    let ids: Vec<String> = doc_blocks::split(document)
+        .into_iter()
+        .map(|b| b.id)
+        .collect();
+    call(
+        id,
+        tools::PROPOSE_EDIT_TOOL_NAME,
+        serde_json::json!({"action": "replace", "block": ids[0], "last_block": ids[1],
+            "text": "# Borrowed Rain\n\nA rainy night."}),
+    )
+}
+
+fn proposed_edits(turns: &[AgentTurn]) -> usize {
+    turns
+        .iter()
+        .filter(|t| matches!(t, AgentTurn::ToolResult { output, .. } if output.starts_with("Edit proposed")))
+        .count()
+}
+
 #[test]
-fn a_length_the_user_asks_for_is_noticed() {
-    for asked in [
-        "写一篇 1200 字左右的文章",
-        "写三千字",
-        "Write about 500 words on tides",
-        "2,000 characters, please",
-        "800字以内",
-    ] {
-        assert!(super::context::asks_for_a_length(asked), "{asked}");
-    }
-    for other in ["写一篇文章，配两张图", "Fix the 3 typos", "第2段"] {
-        assert!(!super::context::asks_for_a_length(other), "{other}");
-    }
+fn a_comment_and_a_sentence_before_any_edit_is_asked_on() {
+    // DeepSeek, 1.2.0-rc.6: "Translated it all" with a comment, and no
+    // edit - the edits it meant to send next were never asked for.
+    let document = "# 借雨\n\n雨夜。";
+    let (turns, steps) = scripted_revise(
+        document,
+        vec![
+            vec![
+                comment("c0", "借雨"),
+                AgentTurn::assistant("Translated it all; one note on the title."),
+            ],
+            vec![translation("e1", document), AgentTurn::assistant("Done.")],
+        ],
+    );
+    assert_eq!(steps, 2);
+    assert_eq!(proposed_edits(&turns), 1);
+}
+
+#[test]
+fn edits_comments_and_a_sentence_in_one_step_end_the_request() {
+    // The comment comes first: the step's edits still run before it.
+    let document = "# 借雨\n\n雨夜。";
+    let (turns, steps) = scripted_revise(
+        document,
+        vec![vec![
+            comment("c0", "借雨"),
+            translation("e0", document),
+            AgentTurn::assistant("Translated it; one note on the title."),
+        ]],
+    );
+    assert_eq!(steps, 1);
+    assert_eq!(proposed_edits(&turns), 1);
+}
+
+#[test]
+fn a_whole_document_rewritten_in_one_replace_ends_in_one_step() {
+    // Seven paragraphs translated in one replace: no cap on the run, and
+    // nothing asked for afterwards.
+    let seven = "一。\n\n二。\n\n三。\n\n四。\n\n五。\n\n六。\n\n七。";
+    let ids: Vec<String> = doc_blocks::split(seven).into_iter().map(|b| b.id).collect();
+    let text = (1..=7)
+        .map(|n| format!("Part {n}."))
+        .collect::<Vec<_>>()
+        .join("\n\n");
+    let (turns, steps) = scripted_revise(
+        seven,
+        vec![vec![
+            call(
+                "e0",
+                tools::PROPOSE_EDIT_TOOL_NAME,
+                serde_json::json!({"action": "replace", "block": ids[0], "last_block": ids[6], "text": text}),
+            ),
+            AgentTurn::assistant("Translated it all."),
+        ]],
+    );
+    assert_eq!(steps, 1);
+    assert_eq!(proposed_edits(&turns), 1);
 }

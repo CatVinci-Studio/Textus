@@ -18,6 +18,8 @@ import { useSettings, type AgentMode } from "../../settings/SettingsContext";
 import { imageModelOf } from "../image-models";
 import { parsePartialToolArgs } from "./partial-tool-args";
 import { resolveBlockTarget } from "../doc-blocks";
+import { insertTurns, memoryTurns, passExchange } from "./memory-pass";
+import { useNextMessage } from "./next-message";
 
 export interface AgentRequestOptions {
   mode: AgentMode;
@@ -101,6 +103,9 @@ export function useAgentConversation(
   // `history` - shown above its reply for the rest of the session, but not
   // saved with the conversation.
   const [thoughts, setThoughts] = useState<Record<number, Thought>>({});
+  // Whether a live thought opens on its last lines (ThoughtRow): on until
+  // the user closes one, for the rest of the conversation.
+  const [followThinking, setFollowThinking] = useState(true);
   const [streaming, setStreamingState] = useState<StreamingState | null>(null);
   // Mirror of `streaming`, readable synchronously inside `send`'s catch:
   // a stop must fold what already streamed into history, and the state
@@ -154,6 +159,14 @@ export function useAgentConversation(
   // Incremented whenever a fresh popup replaces the current conversation.
   // A late response from the old popup must never leak into the new chat.
   const generationRef = useRef(0);
+  /** How the last message was sent - Continue, after an exchange ran out
+   *  of steps, sends the same way. */
+  const lastOptionsRef = useRef<AgentRequestOptions | null>(null);
+  const next = useNextMessage(
+    provider,
+    model ?? "",
+    settings.suggestNextMessage && settings.textusAi,
+  );
 
   // Every exchange updates the conversation's saved copy, so past chats can
   // be reopened from the History list even across restarts.
@@ -184,6 +197,8 @@ export function useAgentConversation(
   ): Promise<AgentTurn[] | undefined> {
     const trimmed = message.trim();
     if (!trimmed || busy || !settings.textusAi) return undefined;
+    lastOptionsRef.current = options;
+    next.clear();
     setBusy(true);
     setError(null);
     setRetryable(null);
@@ -225,14 +240,6 @@ export function useAgentConversation(
         mode: options.mode,
         focusHeading: options.focusHeading ?? null,
         uiLanguage: uiLanguage.current,
-        // Recorded with what Textus AI remembers in this exchange.
-        conversation: {
-          id: conversationId,
-          title: conversationTitle([
-            ...history,
-            { kind: "User", text: trimmed },
-          ]),
-        },
         model: model || null,
         imageModel: imageModel.current,
         requestId,
@@ -356,6 +363,8 @@ export function useAgentConversation(
       if (generation !== generationRef.current) return undefined;
       keepThought();
       setHistory((prev) => [...prev, ...newTurns]);
+      void rememberAfter([...history, ...newTurns], at + newTurns.length);
+      next.suggestAfter([...history, ...newTurns]);
       return newTurns;
     } catch (err) {
       if (generation !== generationRef.current) return undefined;
@@ -384,6 +393,33 @@ export function useAgentConversation(
         setStreaming(null);
         requestIdRef.current = null;
       }
+    }
+  }
+
+  /** After an exchange, what is remembered is brought up to date
+   *  (ai/memory/pass.rs) - apart from the reply, which is already shown -
+   *  and each change goes in as a chip right after the exchange (`at`).
+   *  A failure only means nothing was remembered this time. */
+  async function rememberAfter(conversation: AgentTurn[], at: number) {
+    if (!settings.rememberAutomatically) return;
+    const generation = generationRef.current;
+    try {
+      const changes = await ai.memoryPass({
+        provider,
+        model: model || null,
+        docPath,
+        workspaceRoot,
+        conversation: {
+          id: conversationId,
+          title: conversationTitle(conversation),
+        },
+        exchange: passExchange(conversation),
+      });
+      if (changes.length === 0 || generation !== generationRef.current) return;
+      const turns = memoryTurns(changes, () => crypto.randomUUID());
+      setHistory((prev) => insertTurns(prev, at, turns));
+    } catch {
+      // Nothing remembered; the exchange itself is unaffected.
     }
   }
 
@@ -434,10 +470,12 @@ export function useAgentConversation(
     setConversationId(id);
     setHistory(turns);
     setThoughts({});
+    setFollowThinking(true);
     setStreaming(null);
     setBusy(false);
     setError(null);
     setRetryable(null);
+    next.clear();
   }
 
   // A new, empty conversation: a fresh Quick Ask from the right-click menu
@@ -463,10 +501,15 @@ export function useAgentConversation(
     conversationId,
     history,
     thoughts,
+    followThinking,
+    setFollowThinking,
     streaming,
     busy,
     error,
     retryable,
+    lastOptions: () => lastOptionsRef.current,
+    /** What the writer will probably say next (next-message.ts). */
+    suggestion: next.suggestion,
     send,
     stop,
     retry,

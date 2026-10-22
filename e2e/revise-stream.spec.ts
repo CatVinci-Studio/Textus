@@ -420,3 +420,28 @@ test("with motion on, each strike draws in once and each new text comes in once"
   expect(entrances["He climbed the stairs slowly."]).toBe(1);
   expect(entrances["The wind had dropped in the night."]).toBe(1);
 });
+
+test("a rewrite whose arguments arrive in one piece still types in, sentence by sentence", async ({
+  page,
+}) => {
+  // MiniMax sends a tool call's arguments whole: the reveal (stream-reveal)
+  // spreads them out instead of the whole rewrite appearing in one frame.
+  await open(page);
+  await streamRevise(page, [REVISE], { chunk: 100_000 });
+  const stop = await record(page);
+  await send(page);
+  await expect(
+    page.locator(".milkdown .pending-pick:not(.pending-streaming)"),
+  ).toHaveCount(2);
+  const samples = await stop();
+  const streaming = samples.filter((s) => s.live === 0);
+  // The first changed sentence is in while the next is still being written.
+  expect(
+    streaming.some(
+      (s) =>
+        s.fresh.some((f) => f.text === "He climbed the stairs one by one.") &&
+        !s.fresh.some((f) => f.text === "The lamp was warm to the touch."),
+    ),
+  ).toBe(true);
+  expect(streaming.filter((s) => s.partial !== null).length).toBeGreaterThan(5);
+});

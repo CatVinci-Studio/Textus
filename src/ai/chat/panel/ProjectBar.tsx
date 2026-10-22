@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { Strings } from "../../../i18n/strings";
 import { ai, exportDoc, type AgentWorkspaceInfo } from "../../../platform/ipc";
 import {
   canPickFolder,
@@ -57,50 +58,68 @@ export function libraryFileName(name: string): string {
  * docs/design/ai-concepts.md. The folder used to be a setting three screens deep;
  * this is where it actually matters.
  */
-export function ProjectBar({
-  docPath,
-  memory = false,
-  documentText = "",
-}: {
-  docPath: string | null;
-  /** The AI panel's Memory tab: the folder row without its chips, then
-   *  everything the project keeps (MemoryView.tsx). */
-  memory?: boolean;
-  /** The open document's text, to mark the library entries it mentions. */
-  documentText?: string;
-}) {
-  const { t, settings, setSettings } = useSettings();
-  const provider = useActiveProvider();
-  const workspaceRoot = settings.agentWorkspaceRoot || null;
-  // undefined until the first load answers: "no root" means unsaved or too
-  // broad, which mustn't be said before anyone has looked.
-  const [info, setInfo] = useState<AgentWorkspaceInfo | null | undefined>(
-    undefined,
-  );
+/** The folder row's menu, open or not. Not closed by an outside click on a
+ *  phone: the action sheet is portalled outside this row, so a tap on one
+ *  of its items would count as "outside" and close the menu before the
+ *  item's click arrived. The sheet dismisses itself. */
+function useProjectMenu() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [naming, setNaming] = useState(false);
-  const [entryName, setEntryName] = useState("");
-  const [busy, setBusy] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
   const phone = usePhoneLayout();
-  // Not on a phone: the action sheet is portalled outside this row, so a
-  // tap on one of its items would count as "outside" and close the menu
-  // before the item's click arrived. The sheet dismisses itself.
   const menuRef = useCloseOnOutsideClick<HTMLDivElement>(
     closeMenu,
     true,
     menuOpen && !phone,
   );
-  const nameInput = useRef<HTMLInputElement>(null);
+  return { menuOpen, setMenuOpen, closeMenu, menuRef, phone };
+}
 
+/** The project the document belongs to (`info`): undefined until the
+ *  first load answers - "no root" means unsaved or too broad, which mustn't
+ *  be said before anyone has looked. Loaded again by `reload`, whenever the
+ *  window regains focus (files under .textus/ change outside this
+ *  component, edited in a tab), and after a Levis project's .levis/ is
+ *  converted - asked once. */
+function useProjectWorkspace(
+  docPath: string | null,
+  workspaceRoot: string | null,
+  t: Strings,
+) {
+  const [info, setInfo] = useState<AgentWorkspaceInfo | null | undefined>(
+    undefined,
+  );
   const reload = useCallback(() => {
     ai.loadAgentWorkspace(docPath, workspaceRoot)
       .then((ws) => setInfo(ws ?? null))
       .catch(() => setInfo(null));
   }, [docPath, workspaceRoot]);
   useEffect(reload, [reload]);
-  // The Memory tab's "used" marks: which library entries Rust sent.
+  // A Levis project's .levis/: asked once whether to convert it.
+  const levisRoot = info?.levis_project ? info.root : null;
+  useEffect(() => {
+    if (!levisRoot) return;
+    void offerLevisConversion(t, levisRoot, docPath, workspaceRoot).then(
+      (converted) => converted && reload(),
+    );
+  }, [levisRoot, t, docPath, workspaceRoot, reload]);
+  // Files under .textus/ change outside this component (edited in a tab):
+  // re-read whenever the window regains focus.
+  useEffect(() => {
+    window.addEventListener("focus", reload);
+    return () => window.removeEventListener("focus", reload);
+  }, [reload]);
+  return { info, reload };
+}
+
+/** The Memory tab's "used" marks: which library entries Rust sent. Asked
+ *  once typing rests: the text is only the guess before any request. */
+function useLibraryUse(
+  memory: boolean,
+  info: AgentWorkspaceInfo | null | undefined,
+  docPath: string | null,
+  workspaceRoot: string | null,
+  documentText: string,
+) {
   const [libraryUse, setLibraryUse] = useState<LibraryUse | null>(null);
   useEffect(() => {
     if (!memory || !info?.root) return;
@@ -116,23 +135,48 @@ export function ProjectBar({
       clearTimeout(timer);
     };
   }, [memory, info, docPath, workspaceRoot, documentText]);
-  // A Levis project's .levis/: asked once whether to convert it.
-  const levisRoot = info?.levis_project ? info.root : null;
-  useEffect(() => {
-    if (!levisRoot) return;
-    void offerLevisConversion(t, levisRoot, docPath, workspaceRoot).then(
-      (converted) => converted && reload(),
-    );
-  }, [levisRoot, t, docPath, workspaceRoot, reload]);
-  // Files under .textus/ change outside this component (edited in a tab):
-  // re-read whenever the window regains focus.
-  useEffect(() => {
-    window.addEventListener("focus", reload);
-    return () => window.removeEventListener("focus", reload);
-  }, [reload]);
+  return libraryUse;
+}
+
+/** A new library entry being named: the field, focused as it opens. */
+function useEntryNaming() {
+  const [naming, setNaming] = useState(false);
+  const [entryName, setEntryName] = useState("");
+  const nameInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (naming) nameInput.current?.focus();
   }, [naming]);
+  return { naming, setNaming, entryName, setEntryName, nameInput };
+}
+
+export function ProjectBar({
+  docPath,
+  memory = false,
+  documentText = "",
+}: {
+  docPath: string | null;
+  /** The AI panel's Memory tab: the folder row without its chips, then
+   *  everything the project keeps (MemoryView.tsx). */
+  memory?: boolean;
+  /** The open document's text, to mark the library entries it mentions. */
+  documentText?: string;
+}) {
+  const { t, settings, setSettings } = useSettings();
+  const provider = useActiveProvider();
+  const workspaceRoot = settings.agentWorkspaceRoot || null;
+  const { menuOpen, setMenuOpen, closeMenu, menuRef, phone } = useProjectMenu();
+  const { info, reload } = useProjectWorkspace(docPath, workspaceRoot, t);
+  const libraryUse = useLibraryUse(
+    memory,
+    info,
+    docPath,
+    workspaceRoot,
+    documentText,
+  );
+  const { naming, setNaming, entryName, setEntryName, nameInput } =
+    useEntryNaming();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   const root = info?.root ?? null;
 
@@ -246,6 +290,7 @@ export function ProjectBar({
   /** What the Memory tab does with memories and library entries. */
   const memoryActions = {
     onOpenFile: openInTab,
+    onRevealFile: (path: string) => void exportDoc.revealInDir(path),
     onOpenEntry: (entry: LibraryEntry) =>
       root &&
       openInTab(
@@ -257,6 +302,10 @@ export function ProjectBar({
         libraryEntryId(entry),
         t.memoryDeleteEntryConfirm.replace("{name}", entry.name),
       ),
+    onRestoreForgotten: (id: string) =>
+      void run(null, async () => {
+        await ai.memoryRestore(docPath, workspaceRoot, id);
+      }),
     onMoveMemory: (m: Memory, scope: MemoryScope) =>
       void run(null, async () => {
         await ai.memoryMove(docPath, workspaceRoot, m.id, scope);

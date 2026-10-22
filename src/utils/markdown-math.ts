@@ -2,7 +2,7 @@
  * The chat panel's markdown renderer, and the editor before a file is
  * involved, read maths in `$...$` / `$$...$$`; LLMs default to LaTeX's
  * `\(...\)` / `\[...\]` unless told otherwise (the system prompt,
- * AGENT_ROLE in src-tauri/src/ai/agent.rs, asks for `$`/`$$`, but this is a
+ * AGENT_ROLE in src-tauri/src/ai/agent/prompt.rs, asks for `$`/`$$`, but this is a
  * backstop for replies that use the backslash form anyway). AI replies,
  * pastes (src/editor/markdown/parse-markdown-source.ts) and rendered chat
  * and HTML (render-html.ts) run through this first. A file opened in the

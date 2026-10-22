@@ -70,6 +70,8 @@ function renderTab(info: AgentWorkspaceInfo, libraryUse = null as never) {
     onOpenInstructions: vi.fn(),
     onOpenGlobalInstructions: vi.fn(),
     onOpenFile: vi.fn(),
+    onRevealFile: vi.fn(),
+    onRestoreForgotten: vi.fn(),
     onDeleteMemory: vi.fn(),
     onMoveMemory: vi.fn(),
     onDeleteEntry: vi.fn(),
@@ -93,7 +95,7 @@ const section = () =>
 afterEach(cleanup);
 
 describe("the Memory tab's AI remembered section", () => {
-  it("lists personal memories, then the project's and the facts it wrote", () => {
+  it("lists personal memories, then the project's; the facts it wrote stay in the library", () => {
     renderTab(
       workspace({
         memories: {
@@ -118,11 +120,84 @@ describe("the Memory tab's AI remembered section", () => {
     expect(text.indexOf("Reply briefly.")).toBeLessThan(
       text.indexOf("Spell it colour."),
     );
-    expect(text).toContain("Wu: A doctor.");
-    // The user's own library entry is not something the AI remembered.
+    // Not listed twice: the library has it, marked as the AI's.
+    expect(text).not.toContain("A doctor.");
+    expect(text).toContain(
+      "1 people, places and terms it noted are in the library",
+    );
     expect(text).not.toContain("Teaches Chinese.");
     expect(text).toContain("Requirement · Oct 18, 2026");
     expect(text).toContain("from “Tighten the opening”");
+    const wu = screen.getByRole("button", { name: /^Wu/ });
+    expect(wu.textContent).toContain("Noted by AI · Oct 18, 2026");
+  });
+
+  it("lists what was forgotten lately, each with Restore", () => {
+    const handlers = renderTab(
+      workspace({
+        memories: {
+          items: [memory({ text: "Spell it colour." })],
+          chars: 16,
+          cap: 4000,
+          forgotten: [
+            {
+              id: "forgotten/project/memory/brief",
+              scope: "project",
+              name: null,
+              text: "Reply briefly.",
+              forgotten: "2026-10-21T09:30:00Z",
+            },
+            {
+              id: "forgotten/project/library/wu",
+              scope: "project",
+              name: "Wu",
+              text: "A doctor.",
+              forgotten: "2026-10-20T09:30:00Z",
+            },
+          ],
+        },
+      }),
+    );
+    const list = screen.getByText("Recently forgotten").closest("details")!;
+    expect(list.textContent).toContain("Reply briefly.");
+    expect(list.textContent).toContain("Wu: A doctor.");
+    expect(list.textContent).toContain("Oct 21, 2026");
+    fireEvent.click(
+      within(list).getAllByRole("button", { name: "Restore" })[1],
+    );
+    expect(handlers.onRestoreForgotten).toHaveBeenCalledWith(
+      "forgotten/project/library/wu",
+    );
+  });
+
+  it("shows where each group's files are, and searches memories and the library", () => {
+    const items = Array.from({ length: 6 }, (_, i) =>
+      memory({
+        id: `project/memory/m${i}`,
+        text: i === 3 ? "Spell it colour." : `Rule ${i}.`,
+      }),
+    );
+    const handlers = renderTab(
+      workspace({
+        memories: { items, chars: 60, cap: 4000 },
+        library: [entry({ name: "Wu", body: "A doctor." }), entry({})],
+      }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Show in folder" }));
+    expect(handlers.onRevealFile).toHaveBeenCalledWith(items[0].file);
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "COLOUR" },
+    });
+    const text = section().textContent ?? "";
+    expect(text).toContain("Spell it colour.");
+    expect(text).not.toContain("Rule 1.");
+    // The library has no match.
+    expect(screen.queryByRole("button", { name: /^Wu/ })).toBeNull();
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "doctor" },
+    });
+    expect(screen.getByRole("button", { name: /^Wu/ })).toBeTruthy();
+    expect(section().textContent).toContain("Nothing matches.");
   });
 
   it("edits, moves and deletes a memory", () => {

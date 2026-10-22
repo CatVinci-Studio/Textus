@@ -184,6 +184,14 @@ para usar una.
   memoryKindRequirement: "Requisito",
   memoryKindPreference: "Preferencia",
   memoryKindStyle: "Estilo",
+  memorySearch: "Buscar en recuerdos y biblioteca",
+  memoryNoMatch: "No hay coincidencias.",
+  memoryShowInFolder: "Mostrar en la carpeta",
+  memoryWrittenByAi: "Anotado por la IA",
+  memoryFactsInLibrary:
+    "{n} personas, lugares y términos anotados están en la biblioteca, abajo.",
+  memoryForgotten: "Olvidado hace poco",
+  memoryRestore: "Restaurar",
   memoryKindFact: "Dato",
   memoryFrom: "de «{title}»",
   memoryNotSent: "No se envía",
@@ -206,6 +214,8 @@ para usar una.
   memoryMakePersonal: "Hacer personal",
   memoryMakeProject: "Pasar al proyecto",
   memoryChipUndone: "Deshecho. Ya no se recuerda.",
+  memoryChipForgot: "Olvidado: {text} ({scope})",
+  memoryChipRestored: "Deshecho. Se vuelve a recordar.",
   memoryActionFailed:
     "No ha funcionado. Vuelve a intentarlo en la pestaña Memoria.",
   learnSuggestion: "Has rechazado varias veces {what}. ¿Recordar esto? {rule}",
@@ -253,8 +263,12 @@ para usar una.
   levisProjectLater: "Ahora no",
   levisProjectDone:
     "Convertido: {n} archivos copiados en .textus/. La carpeta .levis/ queda como estaba.",
+  suggestNextMessageLabel: "Sugerir el siguiente mensaje",
+  suggestNextMessageHint:
+    "Tras cada respuesta, lo que probablemente dirás después aparece en gris en el cuadro de mensaje; Tab lo usa. Cuesta una petición breve más.",
+  composerSuggestionTab: "Tab",
   rememberAutomaticallyLabel: "Recordar automáticamente",
-  rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en la pestaña Memoria.`,
+  rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en la pestaña Memoria. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
   toolRemember: "Recordando esto",
   agentGeneratingImage: "Generando una imagen…",
   toolGenerateImage: "Generando una imagen",
@@ -602,6 +616,8 @@ para usar una.
   providerNotConfigured: "Sin configurar",
   providerCustom: "Endpoint personalizado",
   providerDoubao: "Doubao (Volcengine)",
+  providerMiniMax: "MiniMax (China)",
+  providerMiniMaxIntl: "MiniMax (global)",
   agentModelLabel: "Modelo de chat",
   agentDefaultModeLabel: "Modo predeterminado",
   agentModeWrite: "Escribir",
@@ -642,8 +658,13 @@ para usar una.
   agentWritingEdit: "Escribiendo el cambio…",
   agentWritingNotes: "Escribiendo notas…",
   agentDeepThinking: "Pensamiento profundo",
-  agentDeepThinkingHint: `Pensamiento profundo: si está activado, ${AI_NAME} piensa más antes de responder`,
+  agentDeepThinkingHint: `Pensamiento profundo: si está activado, ${AI_NAME} piensa más antes de responder; si no, el modelo piensa lo que piensa por defecto`,
   toggleOnHint: "{label} (Activado: haz clic otra vez para desactivar)",
+  agentWaitedFor: {
+    one: "{n} segundo",
+    many: "{n} de segundos",
+    other: "{n} segundos",
+  },
   agentThinkingFor: {
     one: "Pensando · {n} segundo",
     many: "Pensando · {n} de segundos",
@@ -856,6 +877,10 @@ para usar una.
   quickAskRejectAllCount: "Rechazar todo ({n})",
   chatDropSelection: "No enviar la selección",
   quickAskAtCursor: "En el cursor",
+  chatStoppedAtLimit:
+    "Se detuvo antes de terminar: esta petición usó todos sus pasos.",
+  chatContinueAfterLimit: "Continuar",
+  chatContinueRequest: "Sigue donde lo dejaste.",
   proposalRelocateRequest:
     "Ese cambio ya no coincide con el documento. Revisa el documento tal como está ahora y vuelve a proponer el cambio.",
   chatSelectionChip: {

@@ -36,15 +36,22 @@ export interface ImageModel {
 export const FOLLOW_CHAT = "chat";
 
 /** The image service that goes with a chat provider, as the backend picks
- *  it (following_chat in ai/images.rs): OpenAI's through the ChatGPT
- *  sign-in while there is one, else the provider's own pictures on the
- *  same key; null for a chat provider that makes none. */
+ *  it (following_chat in ai/images/services.rs): the one its sign-in brings
+ *  while there is one (OpenAI's through the ChatGPT sign-in), else the
+ *  provider's own pictures on the same key; null for a chat provider that
+ *  makes none. */
+const SIGN_IN_IMAGES: Partial<Record<string, string>> = {
+  openai: "openai-chatgpt",
+};
+
 const SAME_KEY_IMAGES = new Set([
   "openai",
   "google",
   "doubao",
   "qwen",
   "zhipu",
+  "minimax",
+  "minimax-intl",
   "siliconflow",
 ]);
 
@@ -52,7 +59,8 @@ export function followingChat(
   chatProvider: string,
   chatGptSignedIn: boolean,
 ): string | null {
-  if (chatProvider === "openai" && chatGptSignedIn) return "openai-chatgpt";
+  const signInImages = SIGN_IN_IMAGES[chatProvider];
+  if (signInImages && chatGptSignedIn) return signInImages;
   return SAME_KEY_IMAGES.has(chatProvider) ? chatProvider : null;
 }
 

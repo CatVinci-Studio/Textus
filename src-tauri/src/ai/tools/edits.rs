@@ -13,7 +13,7 @@ pub(super) const EDIT_PROPOSED: &str = "Edit proposed";
 /// the frontend (usePendingEdits.ts, which resolves proposals, and
 /// apply-edit.ts, which writes them) about it produces proposals that validate but
 /// can't be applied.
-pub(super) const EDIT_ACTIONS: [&str; 7] = [
+pub(crate) const EDIT_ACTIONS: [&str; 7] = [
     "replace",
     "replace_selection",
     "insert_before",
@@ -173,6 +173,7 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
         }
         ledger.texts.push(text.to_string());
         unmade = ledger.take_unmade().unwrap_or_default();
+        unmade.push_str(&ledger.pictures_placed(text));
     }
     let into = if joins {
         " It changes text you proposed that the user hasn't decided on yet: it goes into that proposal, which now reads with it."

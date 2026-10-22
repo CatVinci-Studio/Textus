@@ -6,6 +6,7 @@ import {
   useState,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
+  type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -102,20 +103,10 @@ export function FileTree({
   onSearchFocusHandled,
 }: FileTreeProps) {
   const { t } = useSettings();
-  // Bumped by Refresh: remounts every node so each re-reads its folder, and
-  // the search indexes the folder again.
-  const [generation, setGeneration] = useState(0);
-  const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<TreeSort>(savedSort);
-  const [scope, setScope] = useState<SearchScope>(savedScope);
-  const [versions, setVersions] = useState<Record<string, number>>({});
-  const [menu, setMenu] = useState<{
-    x: number;
-    y: number;
-    items: (ContextMenuItem | "separator")[];
-  } | null>(null);
-  const [drag, setDrag] = useState<Drag | null>(null);
-  const dragClick = useRef(false);
+  const view = useTreeView();
+  const { generation, setGeneration, query, setQuery } = view;
+  const { sort, setSort, scope, setScope, versions, reload } = view;
+  const [menu, setMenu] = useState<TreeMenu>(null);
   // Not on iOS: above Documents is the app's private container, and above
   // a folder picked in Files is outside what the user granted. Not above an
   // opened folder either: that is the edge of what the user opened.
@@ -125,147 +116,13 @@ export function FileTree({
   const treeKeys = useTreeKeys(treeRef);
   const desktop = !isIOSApp && canOpenFolder;
 
-  const reload = useCallback((...dirs: string[]) => {
-    setVersions((prev) => {
-      const next = { ...prev };
-      for (const dir of dirs) next[dir] = (next[dir] ?? 0) + 1;
-      return next;
-    });
-  }, []);
-
-  const create = useCallback(
-    async (dir: string, kind: "document" | "folder") => {
-      const doc = kind === "document";
-      const name = await showPrompt(
-        doc ? t.treeNewDocumentPrompt : t.treeNewFolderPrompt,
-        doc ? t.treeNewDocumentDefault : t.treeNewFolderDefault,
-        { okLabel: t.dialogOk, cancelLabel: t.cancel },
-      );
-      if (!name?.trim()) return;
-      try {
-        const made = doc
-          ? await fs.createDocument(dir, name)
-          : await fs.createFolder(dir, name);
-        reload(dir);
-        if (doc) onFileSelect(made);
-      } catch (err) {
-        await showMessage(failureText(t, err, name.trim()));
-      }
-    },
-    [t, reload, onFileSelect],
+  const onRowMenu = useRowMenu(root, t, reload, onFileSelect, setMenu);
+  const { drag, onRowPointerDown, takeDragClick } = useRowDrag(
+    treeRef,
+    reload,
+    onEntryMoved,
+    t,
   );
-
-  const onRowMenu = useCallback(
-    (e: ReactMouseEvent, path: string, isDir: boolean) => {
-      e.preventDefault();
-      e.stopPropagation();
-      // New things go into the folder clicked, or the one the file is in.
-      const dir = isDir ? path : (parentDir(path) ?? root);
-      const items: (ContextMenuItem | "separator")[] = [];
-      if (path !== root && !isDir)
-        items.push(
-          { label: t.treeOpen, onSelect: () => onFileSelect(path) },
-          "separator",
-        );
-      items.push(
-        {
-          label: t.treeNewDocument,
-          onSelect: () => void create(dir, "document"),
-        },
-        { label: t.treeNewFolder, onSelect: () => void create(dir, "folder") },
-      );
-      setMenu({ x: e.clientX, y: e.clientY, items });
-    },
-    [root, t, create, onFileSelect],
-  );
-
-  // A drag: a press on a row that moves past DRAG_START_PX. Pointer events
-  // rather than HTML drag and drop, which the window's own file drop
-  // (dragging files in from Finder or Explorer) takes over on Windows.
-  const pressed = useRef<{
-    path: string;
-    name: string;
-    isDir: boolean;
-    x: number;
-    y: number;
-  } | null>(null);
-  const onRowPointerDown = useCallback(
-    (e: ReactPointerEvent, path: string, name: string, isDir: boolean) => {
-      if (e.button !== 0 || e.pointerType === "touch") return;
-      pressed.current = { path, name, isDir, x: e.clientX, y: e.clientY };
-    },
-    [],
-  );
-  useEffect(() => {
-    const targetAt = (x: number, y: number, path: string, isDir: boolean) => {
-      const el = document
-        .elementFromPoint(x, y)
-        ?.closest<HTMLElement>("[data-drop-dir]");
-      const into = el?.dataset.dropDir;
-      return into &&
-        treeRef.current?.contains(el) &&
-        canMoveInto(path, isDir, into)
-        ? into
-        : null;
-    };
-    let current: Drag | null = null;
-    const show = (next: Drag | null) => {
-      current = next;
-      setDrag(next);
-    };
-    const onMove = (e: PointerEvent) => {
-      const start = pressed.current;
-      if (!start) return;
-      if (
-        !current &&
-        Math.hypot(e.clientX - start.x, e.clientY - start.y) < DRAG_START_PX
-      )
-        return;
-      show({
-        path: start.path,
-        name: start.name,
-        isDir: start.isDir,
-        x: e.clientX,
-        y: e.clientY,
-        into: targetAt(e.clientX, e.clientY, start.path, start.isDir),
-      });
-    };
-    const end = () => {
-      pressed.current = null;
-      const dropped = current;
-      if (!dropped) return;
-      show(null);
-      dragClick.current = true;
-      // A click may not follow (released outside the row).
-      window.setTimeout(() => (dragClick.current = false), 0);
-      if (dropped.into) void move(dropped.path, dropped.into);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || !pressed.current) return;
-      pressed.current = null;
-      show(null);
-    };
-    const move = async (from: string, into: string) => {
-      try {
-        const to = await fs.moveEntry(from, into);
-        reload(parentDir(from) ?? into, into);
-        onEntryMoved(from, to);
-      } catch (err) {
-        await showMessage(failureText(t, err, basename(from)));
-      }
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", end);
-    window.addEventListener("pointercancel", end);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", end);
-      window.removeEventListener("pointercancel", end);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [reload, onEntryMoved, t]);
-
   const shared = useMemo<TreeShared>(
     () => ({
       sort,
@@ -274,13 +131,18 @@ export function FileTree({
       dropInto: drag?.into ?? null,
       onRowMenu: desktop ? onRowMenu : null,
       onRowPointerDown: desktop ? onRowPointerDown : null,
-      takeDragClick: () => {
-        const taken = dragClick.current;
-        dragClick.current = false;
-        return taken;
-      },
+      takeDragClick,
     }),
-    [sort, scope, versions, drag?.into, desktop, onRowMenu, onRowPointerDown],
+    [
+      sort,
+      scope,
+      versions,
+      drag?.into,
+      desktop,
+      onRowMenu,
+      onRowPointerDown,
+      takeDragClick,
+    ],
   );
 
   const openSortMenu = (e: ReactMouseEvent<HTMLButtonElement>) => {
@@ -450,4 +312,202 @@ export function FileTree({
       </div>
     </TreeContext.Provider>
   );
+}
+
+/** What the tree shows: its sort, the search's query and scope, and
+ *  `generation`, bumped by Refresh - it remounts every node so each re-reads
+ *  its folder, and the search indexes the folder again. `reload` re-reads
+ *  only the folders named (`versions`). */
+function useTreeView() {
+  const [generation, setGeneration] = useState(0);
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<TreeSort>(savedSort);
+  const [scope, setScope] = useState<SearchScope>(savedScope);
+  const [versions, setVersions] = useState<Record<string, number>>({});
+  const reload = useCallback((...dirs: string[]) => {
+    setVersions((prev) => {
+      const next = { ...prev };
+      for (const dir of dirs) next[dir] = (next[dir] ?? 0) + 1;
+      return next;
+    });
+  }, []);
+  return {
+    generation,
+    setGeneration,
+    query,
+    setQuery,
+    sort,
+    setSort,
+    scope,
+    setScope,
+    versions,
+    reload,
+  };
+}
+
+type TreeMenu = {
+  x: number;
+  y: number;
+  items: (ContextMenuItem | "separator")[];
+} | null;
+
+/** A row's context menu: open a file, or make a document or folder in the
+ *  folder clicked (or the one the file is in). */
+function useRowMenu(
+  root: string,
+  t: Strings,
+  reload: (...dirs: string[]) => void,
+  onFileSelect: (path: string) => void,
+  setMenu: (menu: TreeMenu) => void,
+) {
+  const create = useCallback(
+    async (dir: string, kind: "document" | "folder") => {
+      const doc = kind === "document";
+      const name = await showPrompt(
+        doc ? t.treeNewDocumentPrompt : t.treeNewFolderPrompt,
+        doc ? t.treeNewDocumentDefault : t.treeNewFolderDefault,
+        { okLabel: t.dialogOk, cancelLabel: t.cancel },
+      );
+      if (!name?.trim()) return;
+      try {
+        const made = doc
+          ? await fs.createDocument(dir, name)
+          : await fs.createFolder(dir, name);
+        reload(dir);
+        if (doc) onFileSelect(made);
+      } catch (err) {
+        await showMessage(failureText(t, err, name.trim()));
+      }
+    },
+    [t, reload, onFileSelect],
+  );
+
+  return useCallback(
+    (e: ReactMouseEvent, path: string, isDir: boolean) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // New things go into the folder clicked, or the one the file is in.
+      const dir = isDir ? path : (parentDir(path) ?? root);
+      const items: (ContextMenuItem | "separator")[] = [];
+      if (path !== root && !isDir)
+        items.push(
+          { label: t.treeOpen, onSelect: () => onFileSelect(path) },
+          "separator",
+        );
+      items.push(
+        {
+          label: t.treeNewDocument,
+          onSelect: () => void create(dir, "document"),
+        },
+        { label: t.treeNewFolder, onSelect: () => void create(dir, "folder") },
+      );
+      setMenu({ x: e.clientX, y: e.clientY, items });
+    },
+    [root, t, create, onFileSelect, setMenu],
+  );
+}
+
+/** A row dragged onto a folder moves into it. A drag: a press on a row that
+ *  moves past DRAG_START_PX. Pointer events rather than HTML drag and drop,
+ *  which the window's own file drop (dragging files in from Finder or
+ *  Explorer) takes over on Windows. `takeDragClick` reports - once - that
+ *  the click a drag's release sends is the drag's, not a row's. */
+function useRowDrag(
+  treeRef: RefObject<HTMLDivElement | null>,
+  reload: (...dirs: string[]) => void,
+  onEntryMoved: (from: string, to: string) => void,
+  t: Strings,
+) {
+  const [drag, setDrag] = useState<Drag | null>(null);
+  const dragClick = useRef(false);
+  const pressed = useRef<{
+    path: string;
+    name: string;
+    isDir: boolean;
+    x: number;
+    y: number;
+  } | null>(null);
+  const onRowPointerDown = useCallback(
+    (e: ReactPointerEvent, path: string, name: string, isDir: boolean) => {
+      if (e.button !== 0 || e.pointerType === "touch") return;
+      pressed.current = { path, name, isDir, x: e.clientX, y: e.clientY };
+    },
+    [],
+  );
+  useEffect(() => {
+    const targetAt = (x: number, y: number, path: string, isDir: boolean) => {
+      const el = document
+        .elementFromPoint(x, y)
+        ?.closest<HTMLElement>("[data-drop-dir]");
+      const into = el?.dataset.dropDir;
+      return into &&
+        treeRef.current?.contains(el) &&
+        canMoveInto(path, isDir, into)
+        ? into
+        : null;
+    };
+    let current: Drag | null = null;
+    const show = (next: Drag | null) => {
+      current = next;
+      setDrag(next);
+    };
+    const onMove = (e: PointerEvent) => {
+      const start = pressed.current;
+      if (!start) return;
+      if (
+        !current &&
+        Math.hypot(e.clientX - start.x, e.clientY - start.y) < DRAG_START_PX
+      )
+        return;
+      show({
+        path: start.path,
+        name: start.name,
+        isDir: start.isDir,
+        x: e.clientX,
+        y: e.clientY,
+        into: targetAt(e.clientX, e.clientY, start.path, start.isDir),
+      });
+    };
+    const end = () => {
+      pressed.current = null;
+      const dropped = current;
+      if (!dropped) return;
+      show(null);
+      dragClick.current = true;
+      // A click may not follow (released outside the row).
+      window.setTimeout(() => (dragClick.current = false), 0);
+      if (dropped.into) void move(dropped.path, dropped.into);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || !pressed.current) return;
+      pressed.current = null;
+      show(null);
+    };
+    const move = async (from: string, into: string) => {
+      try {
+        const to = await fs.moveEntry(from, into);
+        reload(parentDir(from) ?? into, into);
+        onEntryMoved(from, to);
+      } catch (err) {
+        await showMessage(failureText(t, err, basename(from)));
+      }
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [treeRef, reload, onEntryMoved, t]);
+
+  const takeDragClick = useCallback(() => {
+    const taken = dragClick.current;
+    dragClick.current = false;
+    return taken;
+  }, []);
+  return { drag, onRowPointerDown, takeDragClick };
 }

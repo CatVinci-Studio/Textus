@@ -13,11 +13,14 @@ use aicompat::agent::{
 };
 use aicompat::capabilities::ThinkingLevel;
 use serde::{Deserialize, Serialize};
-use std::future::Future;
 use std::path::Path;
-use std::pin::Pin;
 use tauri::ipc::Channel;
 use tauri::AppHandle;
+
+mod events;
+pub(crate) use events::*;
+mod settle;
+pub(crate) use settle::*;
 
 mod context;
 mod history;
@@ -25,199 +28,6 @@ mod prompt;
 pub(crate) use context::*;
 pub(crate) use history::*;
 pub(crate) use prompt::*;
-
-/// One live fragment of an in-flight `ai_agent_message`, pushed to the
-/// invoking window over a Tauri channel while the agent loop runs. Purely
-/// additive display data: the command still resolves with the complete turn
-/// list, which remains the authoritative result the frontend appends to its
-/// history - a dropped or ignored event costs liveness, never correctness.
-/// Mirrored by `StreamEvent` in platform/ipc.ts - the two must stay in sync.
-#[derive(Clone, Serialize)]
-#[serde(
-    tag = "type",
-    rename_all = "camelCase",
-    rename_all_fields = "camelCase"
-)]
-pub enum StreamEvent {
-    /// A chunk of the assistant's prose for the turn being generated.
-    Delta { text: String },
-    /// The model opened a tool call; its arguments follow as ToolArgsDelta.
-    ToolStart { call_id: String, name: String },
-    /// A raw fragment of a tool call's JSON `arguments` string.
-    ToolArgsDelta { call_id: String, delta: String },
-    /// A completed intermediate turn (ToolCall/ToolResult) as it lands.
-    Turn { turn: AgentTurn },
-    /// The step being streamed came back garbled and is asked for again
-    /// (aicompat's run_agent_loop): drop what it streamed - its prose and
-    /// its proposal drafts - and show the new attempt instead.
-    Retry,
-    /// The model is thinking: a fragment of its reasoning, or "" when the
-    /// provider only says that it is. Shown above the reply, never kept.
-    Thinking { text: String },
-    /// A picture written into a propose_edit's text (images::inline) is
-    /// being made: its `line` there stands for picture `id` from now on.
-    /// Sent before the fragment that completes the line.
-    Picture {
-        call_id: String,
-        line: String,
-        id: String,
-        width: u32,
-        height: u32,
-    },
-}
-
-/// Forwards a provider-level fragment onto the frontend channel. Send
-/// failures are ignored deliberately - a closed webview mid-request must
-/// not fail the agent loop, which still returns turns for the history.
-/// A native search citation goes to the request's sources instead (it is
-/// shown with the finished reply).
-fn forward(
-    channel: &Channel<StreamEvent>,
-    web: &WebPlan,
-    pictures: Option<&InlinePictures<'_>>,
-    event: ProviderEvent<'_>,
-) {
-    for picture in pictures.map(|p| p.observe(&event)).unwrap_or_default() {
-        let _ = channel.send(picture);
-    }
-    let event = match event {
-        ProviderEvent::Citation { url, title } => {
-            web.cite(url, title);
-            return;
-        }
-        ProviderEvent::Text(text) => StreamEvent::Delta {
-            text: text.to_string(),
-        },
-        ProviderEvent::ToolStart { call_id, name } => StreamEvent::ToolStart {
-            call_id: call_id.to_string(),
-            name: name.to_string(),
-        },
-        ProviderEvent::ToolArgs { call_id, delta } => StreamEvent::ToolArgsDelta {
-            call_id: call_id.to_string(),
-            delta: delta.to_string(),
-        },
-        ProviderEvent::Thinking(text) => StreamEvent::Thinking {
-            text: text.to_string(),
-        },
-    };
-    let _ = channel.send(event);
-}
-
-/// Forwards what the agent loop reports onto the frontend channel, each
-/// turn as the frontend's history keeps it (see `forward` on send errors).
-fn report(channel: &Channel<StreamEvent>) -> impl FnMut(LoopEvent<'_>) + '_ {
-    move |event| {
-        let event = match event {
-            LoopEvent::Turn(turn) => StreamEvent::Turn {
-                turn: for_history(turn.clone()),
-            },
-            LoopEvent::Retry => StreamEvent::Retry,
-        };
-        let _ = channel.send(event);
-    }
-}
-
-/// Proposal post-processing (rules::postfix, CATALOGUE.md §3.13): the
-/// `text` of each propose_edit call in a step, made to follow the P0
-/// conventions the document already follows (full-width punctuation in a
-/// Chinese document that uses it, attached Korean particles...). Done here,
-/// before the call reaches the tool, the history and the frontend - whose
-/// proposal card takes the completed call's arguments as authoritative -
-/// so the user sees the fixed text. Returns the rules applied (the live
-/// eval records them, so prompt regressions stay visible).
-pub(crate) fn postfix_step(
-    result: StepResult,
-    document: &str,
-    conventions: &Conventions,
-) -> (StepResult, Vec<&'static str>) {
-    let StepResult::ToolCalls(calls) = result else {
-        return (result, Vec::new());
-    };
-    let mut applied = Vec::new();
-    // An edit naming its block (doc_blocks.rs) becomes one quoting it first,
-    // so everything after - the tool, the history, the frontend - sees
-    // anchors as before.
-    let blocks = doc_blocks::split(document);
-    let calls = calls
-        .into_iter()
-        .map(|call| match call {
-            AgentTurn::ToolCall {
-                call_id,
-                name,
-                arguments,
-                reasoning,
-            } if name == tools::PROPOSE_EDIT_TOOL_NAME => {
-                let arguments = doc_blocks::resolve_edit_arguments(document, &blocks, &arguments);
-                let arguments = match crate::ai::rules::postfix::proposal_arguments(
-                    &arguments,
-                    document,
-                    conventions,
-                ) {
-                    Some((fixed, rules)) => {
-                        applied.extend(rules);
-                        fixed
-                    }
-                    None => arguments,
-                };
-                AgentTurn::ToolCall {
-                    call_id,
-                    name,
-                    arguments,
-                    reasoning,
-                }
-            }
-            // A comment or a picture names its block too.
-            AgentTurn::ToolCall {
-                call_id,
-                name,
-                arguments,
-                reasoning,
-            } if name == tools::ADD_COMMENT_TOOL_NAME
-                || name == crate::ai::images::GENERATE_IMAGE_TOOL_NAME =>
-            {
-                AgentTurn::ToolCall {
-                    arguments: doc_blocks::resolve_target_arguments(document, &blocks, &arguments),
-                    call_id,
-                    name,
-                    reasoning,
-                }
-            }
-            other => other,
-        })
-        .collect();
-    (StepResult::ToolCalls(calls), applied)
-}
-
-pub(crate) type StepFuture<'a> =
-    Pin<Box<dyn Future<Output = Result<StepResult, String>> + Send + 'a>>;
-
-/// A provider step with [`postfix_step`] applied to what it returns, its
-/// native search citations numbered (WebPlan::finish_step), and the
-/// pictures written into its text placed (InlinePictures::place).
-fn with_postfix<'a, S, F>(
-    mut step: S,
-    document: &'a str,
-    conventions: &'a Conventions,
-    web: &'a WebPlan,
-    pictures: Option<&'a InlinePictures<'a>>,
-) -> impl FnMut(Vec<AgentTurn>) -> StepFuture<'a> + 'a
-where
-    S: FnMut(Vec<AgentTurn>) -> F + 'a,
-    F: Future<Output = Result<StepResult, String>> + Send + 'a,
-{
-    move |turns| {
-        let fut = step(turns);
-        Box::pin(async move {
-            fut.await.map(|r| {
-                let r = postfix_step(web.finish_step(r), document, conventions).0;
-                match pictures {
-                    Some(pictures) => pictures.place(r),
-                    None => r,
-                }
-            })
-        })
-    }
-}
 
 /// The system prompt with what it says about the web, when search is on.
 fn with_web_section(instructions: String, web: &WebPlan) -> String {
@@ -291,9 +101,6 @@ pub async fn ai_agent_message(
     // The UI language (src/i18n/langs.ts), for the names the agent is told
     // the app uses (UiNames). None - an older frontend - is English.
     ui_language: Option<String>,
-    // The conversation (`{id, title}`), recorded with what Textus AI
-    // remembers in it (ai::memory). None from an older frontend.
-    conversation: Option<crate::ai::memory::Source>,
     // The image model (Settings › Textus AI › Image model); None for none,
     // and from an older frontend. See ai::images.
     image_model: Option<crate::ai::images::ImageModel>,
@@ -304,10 +111,6 @@ pub async fn ai_agent_message(
         .then(|| web::resolve_service(&app, search_service.as_deref(), searxng_url.as_deref()))
         .flatten();
     let ui_language = ui_language.unwrap_or_else(|| "en".to_string());
-    let source = crate::ai::memory::Source {
-        document: doc_path.clone(),
-        ..conversation.unwrap_or_default()
-    };
     cancel::cancellable(
         request_id,
         ai_agent_message_inner(
@@ -326,7 +129,6 @@ pub async fn ai_agent_message(
             model,
             focus_heading,
             ui_language,
-            source,
             image_model,
             on_event,
         ),
@@ -353,26 +155,17 @@ async fn ai_agent_message_inner(
     model: Option<String>,
     focus_heading: Option<String>,
     ui_language: String,
-    source: crate::ai::memory::Source,
     image_model: Option<crate::ai::images::ImageModel>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
-    let workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
+    let mut workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
     let library = crate::ai::conventions::library_names(&workspace);
-    // Where the remember tool writes, while Remember automatically is on.
-    let memory = workspace
-        .remember
-        .then(|| crate::ai::memory::MemoryContext {
-            dirs: crate::ai::memory::MemoryDirs::new(
-                workspace::global_agent_dir(&app).ok().as_deref(),
-                workspace.root.as_deref().map(Path::new),
-            ),
-            source,
-        });
-    // What the request is about, for picking library entries: the message
-    // as the user's side sent it, before the reference packs go in.
+    // What the request is about, for picking library entries and, past the
+    // budget, memories: the message as the user's side sent it, before the
+    // reference packs go in.
     let focus = message.clone();
+    workspace.memories.select_for(&focus);
     // A /name call gets the skill's instructions and reference packs filled
     // in here, and history keeps the expanded message (see expand_message).
     let message = crate::ai::builtin::expand_message_with(
@@ -432,7 +225,8 @@ async fn ai_agent_message_inner(
     };
     let plain_message = message.clone();
     // generate_image, while an image model is set.
-    let image_run = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), entry.id);
+    let image_run = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), entry.id)
+        .map(|run| run.in_folder(doc_path.as_deref()));
 
     let agent = route::agent_provider(&app, entry, model.clone(), thinking, web.native).await?;
     let result = match agent {
@@ -454,7 +248,6 @@ async fn ai_agent_message_inner(
                 sees_images: entry.supports_vision,
                 conventions: &conventions,
                 library: &library,
-                memory: memory.as_ref(),
                 // The pictures not decided yet: this request's text may
                 // carry them, each once.
                 proposed: std::sync::Mutex::new(tools::ProposalLedger::with_pictures(
@@ -466,9 +259,15 @@ async fn ai_agent_message_inner(
                 workspace.has_usable_skills(),
                 workspace.root.is_some(),
                 mode,
-                workspace.remember,
                 entry.supports_vision,
             );
+            // A document shown whole needs no tools to read it: offered,
+            // they were read again and again instead of edited (DeepSeek,
+            // 1.2.0-rc.6).
+            if context::shown_whole(&document, true) {
+                tools.remove(tools::SEARCH_TOOL_NAME);
+                tools.remove(tools::READ_DOCUMENT_TOOL_NAME);
+            }
             if let Some(image_run) = &image_run {
                 tools.add(image_run.tool(
                     &document,
@@ -494,15 +293,16 @@ async fn ai_agent_message_inner(
                 let (agent, instructions, tool_specs) = (&agent, &instructions, &tool_specs);
                 let channel = on_event.clone();
                 let inline = inline.as_ref();
+                let (document, conventions) = (&document, &conventions);
                 async move {
-                    let sink = move |e: ProviderEvent<'_>| forward(&channel, web, inline, e);
-                    agent
-                        .step(instructions, &turns, tool_specs, &sink)
-                        .await
-                        .map(|(step, _)| step)
+                    let sink = |e: ProviderEvent<'_>| forward(&channel, web, inline, e);
+                    let result = agent.step(instructions, &turns, tool_specs, &sink).await;
+                    // Native search citations numbered (WebPlan::finish_step).
+                    result.map(|(step, _)| {
+                        settle_step(web.finish_step(step), document, conventions, inline).0
+                    })
                 }
             };
-            let step = with_postfix(step, &document, &conventions, web, inline.as_ref());
             // `history` is cloned so the plain-chat fallback below still has
             // it; `run_agent_loop` would otherwise have consumed it.
             match run_agent_loop(
@@ -601,7 +401,7 @@ fn for_history(turn: AgentTurn) -> AgentTurn {
         } if !images.is_empty() => AgentTurn::ToolResult {
             call_id,
             output: format!(
-                "{output}\n[The image was shown for that request only - call view_image again to look at it.]"
+                "{output}\n[The image was shown for that request only - call read_file again to look at it.]"
             ),
             images: Vec::new(),
         },
@@ -653,29 +453,19 @@ async fn flattened_chat_turn(
 
 /// The picture a message's selection is, when it is one picture and
 /// nothing else (`<selected-text>`, src/ai/chat/user-message.ts) whose
-/// file is in the document's folder: PNG, JPEG, GIF or WebP, as view_image
+/// file is in the document's folder: PNG, JPEG, GIF or WebP, as read_file
 /// reads them. None for a picture on the web, one outside the folder, or
 /// a selection of anything more.
-pub(super) fn selected_picture(message: &str, doc_path: Option<&str>) -> Option<ImageAttachment> {
+fn selected_picture(message: &str, doc_path: Option<&str>) -> Option<ImageAttachment> {
     let inner = message
         .strip_prefix("<selected-text>")?
         .split_once("</selected-text>")?
         .0
         .trim();
-    let rest = inner.strip_prefix("![")?;
-    let (_, src) = rest.split_once("](")?;
-    let src = src.strip_suffix(')')?;
-    // A title after the src, `![alt](src "title")`, goes.
-    let src = src.split(" \"").next()?.trim();
-    let src = src
-        .strip_prefix('<')
-        .and_then(|s| s.strip_suffix('>'))
-        .unwrap_or(src);
-    if src.is_empty() || src.contains("://") || src.starts_with("data:") {
+    if !inner.starts_with("![") {
         return None;
     }
-    let folder = Path::new(doc_path?).parent()?;
-    crate::ai::project::read_image(folder, src).ok()
+    crate::ai::images::local_picture(inner, Path::new(doc_path?).parent()?)
 }
 
 #[cfg(test)]

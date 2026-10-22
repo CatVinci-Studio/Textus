@@ -337,7 +337,7 @@ fetch-fresh-document signal that precedes every detached send.
 
 `ai/chat/useAgentConversation.ts`, `ai/chat/cancelled-turns.ts`,
 `ai/revision/proposal-status.ts`, `ai/chat/useRevealedText.ts`; Rust side
-`src-tauri/src/ai/agent.rs` / `tools.rs`.
+`src-tauri/src/ai/agent/` / `tools/`.
 
 **Every send.** History travels to the backend in full; the document goes
 into the system prompt as markdown source (long documents truncate to an
@@ -441,4 +441,4 @@ the answer to a per-window store (`useMarginAvailable`).
 | `ai/revision/revision-display.ts`                                   | The view drawn without a margin; which margin views can't be picked                                  |
 | `document-view/useEditorProposals.ts`                               | Wiring: the machine and its displays, supersede flag, exchange boundaries                            |
 | `draft-autosave.ts`, `startup-restore.ts`, `App.tsx`                | Draft snapshots, startup restore, close-time cleanup                                                 |
-| `src-tauri/src/ai/tools.rs`, `agent.rs`                             | `propose_edit` validation, system prompt, the status-note contract                                   |
+| `src-tauri/src/ai/tools/`, `agent/`                                 | `propose_edit` validation, system prompt, the status-note contract                                   |

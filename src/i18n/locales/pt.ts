@@ -175,6 +175,14 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   memoryKindRequirement: "Requisito",
   memoryKindPreference: "Preferência",
   memoryKindStyle: "Estilo",
+  memorySearch: "Pesquisar memórias e biblioteca",
+  memoryNoMatch: "Nada encontrado.",
+  memoryShowInFolder: "Mostrar na pasta",
+  memoryWrittenByAi: "Anotado pela IA",
+  memoryFactsInLibrary:
+    "{n} pessoas, lugares e termos anotados estão na biblioteca abaixo.",
+  memoryForgotten: "Esquecido recentemente",
+  memoryRestore: "Restaurar",
   memoryKindFact: "Fato",
   memoryFrom: "de “{title}”",
   memoryNotSent: "Não enviado",
@@ -197,6 +205,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   memoryMakePersonal: "Tornar pessoal",
   memoryMakeProject: "Passar para o projeto",
   memoryChipUndone: "Desfeito. Não é mais lembrado.",
+  memoryChipForgot: "Esquecido: {text} ({scope})",
+  memoryChipRestored: "Desfeito. Lembrado de novo.",
   memoryActionFailed: "Não deu certo. Tente de novo na aba Memória.",
   learnSuggestion: "Você recusou várias vezes {what}. Lembrar disto? {rule}",
   learnQuoted: "“{text}”",
@@ -242,8 +252,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   levisProjectLater: "Agora não",
   levisProjectDone:
     "Convertido: {n} arquivos copiados para .textus/. A pasta .levis/ fica como estava.",
+  suggestNextMessageLabel: "Sugerir a próxima mensagem",
+  suggestNextMessageHint:
+    "Depois de cada resposta, o que você provavelmente dirá a seguir aparece em cinza na caixa de mensagem; Tab usa. Custa mais um pedido curto.",
+  composerSuggestionTab: "Tab",
   rememberAutomaticallyLabel: "Lembrar automaticamente",
-  rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça na aba Memória.`,
+  rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça na aba Memória. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
   toolRemember: "Lembrando isto",
   agentGeneratingImage: "Gerando uma imagem…",
   toolGenerateImage: "Gerando uma imagem",
@@ -588,6 +602,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   providerNotConfigured: "Não configurado",
   providerCustom: "Endpoint personalizado",
   providerDoubao: "Doubao (Volcengine)",
+  providerMiniMax: "MiniMax (China)",
+  providerMiniMaxIntl: "MiniMax (global)",
   agentModelLabel: "Modelo do chat",
   agentDefaultModeLabel: "Modo padrão",
   agentModeWrite: "Escrever",
@@ -628,8 +644,13 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentWritingEdit: "Escrevendo a alteração…",
   agentWritingNotes: "Escrevendo notas…",
   agentDeepThinking: "Raciocínio profundo",
-  agentDeepThinkingHint: `Raciocínio profundo: quando ativado, ${AI_NAME} pensa por mais tempo antes de responder`,
+  agentDeepThinkingHint: `Raciocínio profundo: quando ativado, ${AI_NAME} pensa por mais tempo antes de responder; desativado, o modelo pensa o quanto pensa por padrão`,
   toggleOnHint: "{label} (Ativado: clique de novo para desativar)",
+  agentWaitedFor: {
+    one: "{n} segundo",
+    many: "{n} de segundos",
+    other: "{n} segundos",
+  },
   agentThinkingFor: {
     one: "Pensando · {n} segundo",
     many: "Pensando · {n} de segundos",
@@ -841,6 +862,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   quickAskRejectAllCount: "Rejeitar todas ({n})",
   chatDropSelection: "Não enviar a seleção",
   quickAskAtCursor: "No cursor",
+  chatStoppedAtLimit:
+    "Parou antes de terminar: este pedido usou todos os passos.",
+  chatContinueAfterLimit: "Continuar",
+  chatContinueRequest: "Continue de onde parou.",
   proposalRelocateRequest:
     "Essa edição não corresponde mais ao documento. Veja o documento como ele está agora e proponha a alteração de novo.",
   chatSelectionChip: {

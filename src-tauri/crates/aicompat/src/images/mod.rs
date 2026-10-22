@@ -20,14 +20,16 @@
 mod dashscope;
 mod fetch;
 mod gemini;
+mod minimax;
 mod openai;
 mod seedream;
 mod siliconflow;
 mod sniff;
 mod zhipu;
 
+use crate::agent::ImageAttachment;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::time::Duration;
 
 /// The shapes a picture can take. The agent's tool offers these and
@@ -77,11 +79,24 @@ pub enum ImageApi {
     Zhipu,
     /// SiliconFlow, OpenAI's path with its own fields.
     SiliconFlow,
+    /// MiniMax's image-01.
+    MiniMax,
     /// The ChatGPT sign-in: the image_generation tool on the backend
     /// ChatGPT's own apps use (providers::openai_codex::generate_image),
     /// not an Images API - no address or key, so never through
     /// [`generate`].
     ChatGpt,
+}
+
+impl ImageApi {
+    /// Whether a picture being redone is sent along with its description,
+    /// for the service to change rather than draw anew: Gemini's image
+    /// models and Seedream take one in the request, the ChatGPT sign-in as
+    /// an input image. OpenAI's Images API edits through a separate
+    /// endpoint, not wired; the others make pictures from text only.
+    pub fn takes_reference(self) -> bool {
+        matches!(self, Self::Gemini | Self::Seedream | Self::ChatGpt)
+    }
 }
 
 /// Where one request goes. `base_url` is the service's API root, as the
@@ -179,6 +194,7 @@ fn request(target: &ImageTarget, prompt: &str, aspect: Aspect) -> Request {
         ImageApi::DashScope => dashscope::request(base, target.model, prompt, aspect),
         ImageApi::Zhipu => zhipu::request(base, target.model, prompt, aspect),
         ImageApi::SiliconFlow => siliconflow::request(base, target.model, prompt, aspect),
+        ImageApi::MiniMax => minimax::request(base, target.model, prompt, aspect),
     }
 }
 
@@ -190,6 +206,7 @@ fn read_reply(api: ImageApi, reply: &Value) -> Result<Reply, ImageError> {
         ImageApi::DashScope => dashscope::reply(reply),
         ImageApi::Zhipu => zhipu::reply(reply),
         ImageApi::SiliconFlow => siliconflow::reply(reply),
+        ImageApi::MiniMax => minimax::reply(reply),
     }
 }
 
@@ -203,6 +220,7 @@ fn read_failure(api: ImageApi, status: reqwest::StatusCode, body: &str) -> Image
         ImageApi::DashScope => dashscope::refusal(&parsed),
         ImageApi::Zhipu => zhipu::refusal(&parsed),
         ImageApi::SiliconFlow => siliconflow::refusal(&parsed),
+        ImageApi::MiniMax => minimax::refusal(&parsed),
     };
     let message = error_message(&parsed).unwrap_or_else(|| short(body));
     if let Some(reason) = refused {
@@ -212,6 +230,7 @@ fn read_failure(api: ImageApi, status: reqwest::StatusCode, body: &str) -> Image
         ImageApi::Seedream => seedream::quota(&parsed),
         ImageApi::DashScope => dashscope::quota(&parsed),
         ImageApi::Zhipu => zhipu::quota(&parsed),
+        ImageApi::MiniMax => minimax::quota(&parsed),
         _ => false,
     };
     if quota || status == reqwest::StatusCode::PAYMENT_REQUIRED || status.as_u16() == 429 {
@@ -258,11 +277,37 @@ fn malformed(what: &str) -> ImageError {
     ))
 }
 
-/// Generates one picture.
+/// `reference` (the picture being redone) put into a request for a service
+/// that takes one ([`ImageApi::takes_reference`]); left out otherwise.
+fn with_reference(api: ImageApi, body: &mut Value, reference: Option<&ImageAttachment>) {
+    let Some(reference) = reference.filter(|_| api.takes_reference()) else {
+        return;
+    };
+    match api {
+        // Before the description, as Gemini's image editing reads them.
+        ImageApi::Gemini => {
+            if let Some(parts) = body
+                .pointer_mut("/contents/0/parts")
+                .and_then(Value::as_array_mut)
+            {
+                parts.insert(
+                    0,
+                    json!({"inlineData": {"mimeType": reference.mime, "data": reference.data_base64}}),
+                );
+            }
+        }
+        ImageApi::Seedream => body["image"] = json!(reference.data_url()),
+        _ => {}
+    }
+}
+
+/// Generates one picture - from `reference` where one is given and the
+/// service takes it, changed as `prompt` says.
 pub async fn generate(
     target: &ImageTarget<'_>,
     prompt: &str,
     aspect: Aspect,
+    reference: Option<&ImageAttachment>,
 ) -> Result<GeneratedImage, ImageError> {
     if target.api == ImageApi::ChatGpt {
         return Err(ImageError::Failed(
@@ -277,7 +322,8 @@ pub async fn generate(
             "There is no description to draw.".into(),
         ));
     }
-    let Request { url, body } = request(target, prompt, aspect);
+    let Request { url, mut body } = request(target, prompt, aspect);
+    with_reference(target.api, &mut body, reference);
     let mut req = crate::http::long_client(GENERATION_TIMEOUT)
         .post(url)
         .json(&body);

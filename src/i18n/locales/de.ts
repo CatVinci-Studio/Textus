@@ -175,6 +175,14 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   memoryKindRequirement: "Vorgabe",
   memoryKindPreference: "Vorliebe",
   memoryKindStyle: "Stil",
+  memorySearch: "Erinnerungen und Bibliothek durchsuchen",
+  memoryNoMatch: "Nichts gefunden.",
+  memoryShowInFolder: "Im Ordner zeigen",
+  memoryWrittenByAi: "Von der KI notiert",
+  memoryFactsInLibrary:
+    "{n} Personen, Orte und Begriffe stehen unten in der Bibliothek.",
+  memoryForgotten: "Kürzlich vergessen",
+  memoryRestore: "Wiederherstellen",
   memoryKindFact: "Fakt",
   memoryFrom: "aus „{title}“",
   memoryNotSent: "Nicht gesendet",
@@ -197,6 +205,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   memoryMakePersonal: "Persönlich machen",
   memoryMakeProject: "Ins Projekt",
   memoryChipUndone: "Rückgängig gemacht. Nicht mehr gemerkt.",
+  memoryChipForgot: "Vergessen: {text} ({scope})",
+  memoryChipRestored: "Rückgängig gemacht. Wieder gemerkt.",
   memoryActionFailed:
     "Das hat nicht geklappt. Versuch es im Tab Gedächtnis noch einmal.",
   learnSuggestion: "Du hast {what} mehrmals abgelehnt. Merken? {rule}",
@@ -243,8 +253,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   levisProjectLater: "Jetzt nicht",
   levisProjectDone:
     "Umgewandelt: {n} Dateien nach .textus/ kopiert. Der Ordner .levis/ bleibt, wie er war.",
+  suggestNextMessageLabel: "Nächste Nachricht vorschlagen",
+  suggestNextMessageHint:
+    "Nach jeder Antwort steht grau im Eingabefeld, was du wahrscheinlich als Nächstes schreibst; Tab übernimmt es. Kostet eine weitere kurze Anfrage.",
+  composerSuggestionTab: "Tab",
   rememberAutomaticallyLabel: "Automatisch merken",
-  rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Im Tab Gedächtnis kannst du es ansehen, ändern oder rückgängig machen.`,
+  rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Im Tab Gedächtnis kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
   toolRemember: "Merkt sich das",
   agentGeneratingImage: "Bild wird erstellt…",
   toolGenerateImage: "Bild wird erstellt",
@@ -586,6 +600,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   providerNotConfigured: "Nicht eingerichtet",
   providerCustom: "Eigener Endpunkt",
   providerDoubao: "Doubao (Volcengine)",
+  providerMiniMax: "MiniMax (China)",
+  providerMiniMaxIntl: "MiniMax (Global)",
   agentModelLabel: "Chat-Modell",
   agentDefaultModeLabel: "Standardmodus",
   agentModeWrite: "Schreiben",
@@ -628,8 +644,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentWritingEdit: "Änderung wird geschrieben…",
   agentWritingNotes: "Notizen werden geschrieben…",
   agentDeepThinking: "Gründlich nachdenken",
-  agentDeepThinkingHint: `Gründlich nachdenken: Wenn es an ist, denkt ${AI_NAME} länger nach, bevor es antwortet`,
+  agentDeepThinkingHint: `Gründlich nachdenken: Wenn es an ist, denkt ${AI_NAME} länger nach, bevor es antwortet; wenn es aus ist, so viel, wie das Modell von sich aus denkt`,
   toggleOnHint: "{label} (An – zum Ausschalten noch einmal klicken)",
+  agentWaitedFor: { one: "{n} Sekunde", other: "{n} Sekunden" },
   agentThinkingFor: {
     one: "Denkt nach · {n} Sekunde",
     other: "Denkt nach · {n} Sekunden",
@@ -841,6 +858,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   quickAskRejectAllCount: "Alle ablehnen ({n})",
   chatDropSelection: "Auswahl nicht mitsenden",
   quickAskAtCursor: "Am Cursor",
+  chatStoppedAtLimit:
+    "Vor dem Ende angehalten: Diese Anfrage hat alle Schritte verbraucht.",
+  chatContinueAfterLimit: "Weiter",
+  chatContinueRequest: "Mach dort weiter, wo du aufgehört hast.",
   proposalRelocateRequest:
     "Diese Änderung passt nicht mehr zum Dokument. Sieh dir das Dokument in seiner jetzigen Fassung an und schlage die Änderung erneut vor.",
   chatSelectionChip: {

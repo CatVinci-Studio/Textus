@@ -115,7 +115,7 @@ test("no Deep thinking button for a model that can't think deeper", async ({
   ).toEqual(["auto"]);
 });
 
-test("the thinking line counts seconds, then opens to the reasoning", async ({
+test("the thinking line counts seconds, shows the reasoning live, then folds", async ({
   page,
 }) => {
   await canThinkDeeper(page, true);
@@ -126,13 +126,39 @@ test("the thinking line counts seconds, then opens to the reasoning", async ({
   await composer(page).press("Enter");
 
   const thought = page.locator(".agent-thought");
+  const text = page.locator(".agent-thought-text");
   await expect(thought).toContainText("思考中 · 1 秒");
+  // While it thinks, the row stands open on the reasoning's last lines.
+  await expect(text).toHaveText("Weighing the two readings.");
+  await expect(text).toHaveClass(/is-tail/);
   await expect(thought).toContainText("思考中 · 2 秒");
+  // The reply folds it; a click opens it again, in full.
   await expect(thought).toContainText(/已思考 [23] 秒/);
-  await expect(page.locator(".agent-thought-text")).toHaveCount(0);
+  await expect(text).toHaveCount(0);
   await thought.getByRole("button").click();
-  await expect(page.locator(".agent-thought-text")).toHaveText(
-    "Weighing the two readings.",
-  );
+  await expect(text).toHaveText("Weighing the two readings.");
+  await expect(text).not.toHaveClass(/is-tail/);
   await expect(page.locator(".agent-panel-view")).toContainText("The second.");
+});
+
+test("closing a live thought keeps the conversation's next ones closed", async ({
+  page,
+}) => {
+  await canThinkDeeper(page, true);
+  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await pasteMarkdown(page, "One line.");
+  await scriptAgent(page, 1_500);
+  await composer(page).fill("Which reading is right?");
+  await composer(page).press("Enter");
+
+  const thought = page.locator(".agent-thought");
+  await expect(page.locator(".agent-thought-text")).toHaveCount(1);
+  await thought.getByRole("button").click();
+  await expect(page.locator(".agent-thought-text")).toHaveCount(0);
+  await expect(page.locator(".agent-panel-view")).toContainText("The second.");
+
+  await composer(page).fill("And the first?");
+  await composer(page).press("Enter");
+  await expect(thought.nth(1)).toContainText("思考中");
+  await expect(page.locator(".agent-thought-text")).toHaveCount(0);
 });

@@ -26,25 +26,10 @@ import { SettingRow } from "./controls";
 export function ThemeGallerySection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
-  const [catalog, setCatalog] = useState<GalleryTheme[] | null>(null);
-  const [unreachable, setUnreachable] = useState(false);
-  const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const working = useRef(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    setCatalog(null);
-    setUnreachable(false);
-    themeGallery
-      .catalog()
-      .then((themes) => !cancelled && setCatalog(themes))
-      .catch(() => !cancelled && setUnreachable(true));
-    return () => {
-      cancelled = true;
-    };
-  }, [attempt]);
+  const { catalog, unreachable, retry } = useGalleryCatalog();
 
   async function install(theme: GalleryTheme) {
     if (working.current) return;
@@ -74,7 +59,7 @@ export function ThemeGallerySection({ t }: { t: Strings }) {
           <button
             type="button"
             className="text-button settings-inline-button"
-            onClick={() => setAttempt((n) => n + 1)}
+            onClick={retry}
           >
             {t.themeGalleryRetry}
           </button>
@@ -261,4 +246,27 @@ function GalleryPreview({ path }: { path: string | undefined }) {
       {src && <img src={src} alt="" draggable={false} />}
     </div>
   );
+}
+
+/** The gallery's catalog, fetched as the page opens and again on `retry`;
+ *  `unreachable` when the fetch failed. */
+function useGalleryCatalog() {
+  const [catalog, setCatalog] = useState<GalleryTheme[] | null>(null);
+  const [unreachable, setUnreachable] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setCatalog(null);
+    setUnreachable(false);
+    themeGallery
+      .catalog()
+      .then((themes) => !cancelled && setCatalog(themes))
+      .catch(() => !cancelled && setUnreachable(true));
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt]);
+
+  return { catalog, unreachable, retry: () => setAttempt((n) => n + 1) };
 }

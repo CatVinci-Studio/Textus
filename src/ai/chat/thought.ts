@@ -41,3 +41,18 @@ export function thoughtSeconds(thought: Thought, now: number): number {
   const ms = thought.ms + (thought.since === null ? 0 : now - thought.since);
   return Math.max(1, Math.round(ms / 1000));
 }
+
+/** The live tail of a thought: its last few lines, at most `chars` long, so
+ *  a long think shows where it is now without growing the panel (or the
+ *  DOM) with all of it. Cut at a word where it can be. */
+export function thoughtTail(text: string, lines = 4, chars = 360): string {
+  const kept = text
+    .split("\n")
+    .filter((line) => line.trim())
+    .slice(-lines)
+    .join("\n");
+  if (kept.length <= chars) return kept;
+  const cut = kept.slice(kept.length - chars);
+  const space = cut.search(/\s/);
+  return "…" + (space >= 0 && space < 40 ? cut.slice(space + 1) : cut);
+}

@@ -2,7 +2,7 @@
 
 use super::*;
 
-pub(super) const SEARCH_TOOL_NAME: &str = "search_document";
+pub(crate) const SEARCH_TOOL_NAME: &str = "search_document";
 
 pub(super) fn search_document(ctx: &ToolContext, arguments: &str) -> String {
     let query = serde_json::from_str::<serde_json::Value>(arguments)
@@ -19,12 +19,23 @@ pub(super) fn search_document(ctx: &ToolContext, arguments: &str) -> String {
     }
 
     let query_lower = query.to_lowercase();
+    let blocks = crate::ai::doc_blocks::split(ctx.document);
+    let mut at = 0;
     let matches: Vec<String> = ctx
         .document
-        .lines()
+        .split_inclusive('\n')
         .enumerate()
-        .filter(|(_, line)| line.to_lowercase().contains(&query_lower))
-        .map(|(i, line)| format!("{}: {}", i + 1, line))
+        .filter_map(|(i, line)| {
+            let start = at;
+            at += line.len();
+            let line = line.trim_end_matches(['\n', '\r']);
+            line.to_lowercase().contains(&query_lower).then(|| {
+                match crate::ai::doc_blocks::id_at(&blocks, start) {
+                    Some(id) => format!("{} [#{id}]: {line}", i + 1),
+                    None => format!("{}: {line}", i + 1),
+                }
+            })
+        })
         .take(20)
         .collect();
 
@@ -35,7 +46,7 @@ pub(super) fn search_document(ctx: &ToolContext, arguments: &str) -> String {
     }
 }
 
-pub(super) const READ_DOCUMENT_TOOL_NAME: &str = "read_document";
+pub(crate) const READ_DOCUMENT_TOOL_NAME: &str = "read_document";
 
 /// Most a single read_document call returns; a longer range comes back cut
 /// at a line boundary with a pointer to where to continue.

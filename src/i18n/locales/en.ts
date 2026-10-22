@@ -173,6 +173,14 @@ type /name in a conversation to use one.
   memoryKindRequirement: "Requirement",
   memoryKindPreference: "Preference",
   memoryKindStyle: "Style",
+  memorySearch: "Search memories and the library",
+  memoryNoMatch: "Nothing matches.",
+  memoryShowInFolder: "Show in folder",
+  memoryWrittenByAi: "Noted by AI",
+  memoryFactsInLibrary:
+    "{n} people, places and terms it noted are in the library below.",
+  memoryForgotten: "Recently forgotten",
+  memoryRestore: "Restore",
   memoryKindFact: "Fact",
   memoryFrom: "from “{title}”",
   memoryNotSent: "Not sent",
@@ -194,6 +202,8 @@ type /name in a conversation to use one.
   memoryMakePersonal: "Make personal",
   memoryMakeProject: "Make project",
   memoryChipUndone: "Undone. No longer remembered.",
+  memoryChipForgot: "Forgot: {text} ({scope})",
+  memoryChipRestored: "Undone. Remembered again.",
   memoryActionFailed: "That didn't work. Try again in the Memory tab.",
   learnSuggestion:
     "You turned down {what} several times. Remember this? {rule}",
@@ -240,8 +250,12 @@ type /name in a conversation to use one.
   levisProjectLater: "Not now",
   levisProjectDone:
     "Converted: {n} files copied into .textus/. The .levis/ folder is left as it was.",
+  suggestNextMessageLabel: "Suggest your next message",
+  suggestNextMessageHint:
+    "After each reply, what you will probably say next shows grey in the message box; Tab takes it. It costs one more short request.",
+  composerSuggestionTab: "Tab",
   rememberAutomaticallyLabel: "Remember automatically",
-  rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it in the Memory tab.`,
+  rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it in the Memory tab. After each reply it asks the same model once more, briefly, what to keep.`,
   toolRemember: "Remembering this",
   agentGeneratingImage: "Generating an image…",
   toolGenerateImage: "Generating an image",
@@ -582,6 +596,8 @@ type /name in a conversation to use one.
   providerNotConfigured: "Not configured",
   providerCustom: "Custom Endpoint",
   providerDoubao: "Doubao (Volcengine)",
+  providerMiniMax: "MiniMax (China)",
+  providerMiniMaxIntl: "MiniMax (Global)",
   agentModelLabel: "Chat model",
   agentDefaultModeLabel: "Default mode",
   agentModeWrite: "Write",
@@ -622,8 +638,9 @@ type /name in a conversation to use one.
   agentWritingEdit: "Writing the edit…",
   agentWritingNotes: "Writing notes…",
   agentDeepThinking: "Deep thinking",
-  agentDeepThinkingHint: `Deep thinking: when it's on, ${AI_NAME} thinks longer before it answers`,
+  agentDeepThinkingHint: `Deep thinking: when it's on, ${AI_NAME} thinks longer before it answers; when it's off, the model thinks as much as it does by default`,
   toggleOnHint: "{label} (On - click again to turn it off)",
+  agentWaitedFor: { one: "{n} second", other: "{n} seconds" },
   agentThinkingFor: {
     one: "Thinking · {n} second",
     other: "Thinking · {n} seconds",
@@ -833,6 +850,10 @@ type /name in a conversation to use one.
   quickAskRejectAllCount: "Reject all ({n})",
   chatDropSelection: "Don't send the selection",
   quickAskAtCursor: "At the cursor",
+  chatStoppedAtLimit:
+    "Stopped before finishing: this request used all its steps.",
+  chatContinueAfterLimit: "Continue",
+  chatContinueRequest: "Continue where you stopped.",
   proposalRelocateRequest:
     "That edit no longer matches the document. Please look at the document as it reads now and propose the change again.",
   chatSelectionChip: {

@@ -503,6 +503,39 @@ test("a picture that wasn't made says why in its frame", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("a picture that wasn't made is asked for again by itself with Retry", async ({
+  page,
+}) => {
+  await open(page);
+  await writeAndPaint(page, 100, "The image service didn't answer in time.");
+  const frame = page.locator(`${editor} .pending-picture`);
+  await expect(frame).toHaveClass(/pending-picture-failed/);
+  // This time the service answers.
+  await page.evaluate((png) => {
+    const w = window as unknown as {
+      __devInvokeResults: Record<string, unknown>;
+    };
+    w.__devInvokeResults.ai_retry_generated_image = null;
+    w.__devInvokeResults.ai_generated_image = {
+      __delay: 300,
+      value: { mime: "image/png", ext: "png", dataBase64: png },
+    };
+  }, PNG);
+  await frame.getByRole("button", { name: "Retry" }).click();
+  await expect(page.locator(`${editor} .pending-picture-failed`)).toHaveCount(
+    0,
+  );
+  await expect(page.locator(`${editor} img[alt]`).first()).toBeVisible();
+  const retried = await page.evaluate(
+    () =>
+      (
+        (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
+          .__devInvokeCalls ?? []
+      ).filter((c) => c.cmd === "ai_retry_generated_image").length,
+  );
+  expect(retried).toBe(1);
+});
+
 // A picture already in a saved document, to redo (generate_image's
 // `replace`): it goes where the old one was, and the old file is offered
 // the Trash - never moved unasked.

@@ -33,7 +33,7 @@ test("Deep thinking explains itself on hover, and says when it is on", async ({
 
   await deepThinking(page).hover();
   await expect(tooltip(page)).toHaveText(
-    "深度思考：开启后 Textus AI 会先想得更久再回答",
+    "深度思考：开启后 Textus AI 会先想得更久再回答；关闭时按模型默认的思考量",
   );
   // Above the button, which sits at the bottom of the panel.
   const tip = await tooltip(page).boundingBox();
@@ -48,10 +48,10 @@ test("Deep thinking explains itself on hover, and says when it is on", async ({
   await page.mouse.move(0, 0);
   await deepThinking(page).hover();
   await expect(tooltip(page)).toHaveText(
-    "深度思考：开启后 Textus AI 会先想得更久再回答（已开启，再点关闭）",
+    "深度思考：开启后 Textus AI 会先想得更久再回答；关闭时按模型默认的思考量（已开启，再点关闭）",
   );
   await expect(deepThinking(page)).toHaveAccessibleDescription(
-    "深度思考：开启后 Textus AI 会先想得更久再回答",
+    "深度思考：开启后 Textus AI 会先想得更久再回答；关闭时按模型默认的思考量",
   );
 
   await page.keyboard.press("Escape");

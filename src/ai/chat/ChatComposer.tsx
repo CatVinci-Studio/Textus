@@ -1,11 +1,3 @@
-import {
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import type { ChatAttachment, ThinkingLevel } from "../types";
 import { resolveSkillMessage } from "./proposal";
 import { ai } from "../../platform/ipc";
 import {
@@ -25,14 +17,8 @@ import {
 } from "./skill-picker";
 import { errorText } from "../../utils/error-text";
 import { basename } from "../../utils/path";
-import { useActiveProvider, useWebSearchStatus } from "../provider-catalog";
 import type { AgentMode } from "../../settings/SettingsContext";
-import {
-  COMPOSER_MODES,
-  fitMode,
-  initialMode,
-  rememberMode,
-} from "./last-mode";
+import { COMPOSER_MODES } from "./last-mode";
 import {
   CloseIcon,
   GenericFileIcon,
@@ -41,16 +27,20 @@ import {
   PlusIcon,
   SearchIcon,
 } from "../../ui/icons";
-import {
-  deepThinkingOn,
-  rememberDeepThinking,
-  useCanThinkDeeper,
-} from "./deep-thinking";
+import { rememberDeepThinking } from "./deep-thinking";
 import { Select } from "../../ui/Select";
 import { Tooltip } from "../../ui/Tooltip";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
-import { useLatest } from "../../utils/hooks/useLatest";
+
 import { useComposerSkills } from "./useComposerSkills";
+import {
+  useAttachments,
+  useComposerInput,
+  useComposerMode,
+  useProjectFiles,
+  useRequestOptions,
+  useSelectionChip,
+} from "./useComposerState";
 import {
   defaultPickerLabels,
   FILE_LIMIT,
@@ -93,69 +83,27 @@ export function ChatComposer({
   onEscape,
   onModeChange,
   handle,
+  suggestion = null,
 }: ChatComposerProps) {
   const phone = usePhoneLayout();
-  // Derived here rather than passed in: this is the only place an image can
-  // be staged, so deriving it at the gate makes it impossible for a caller to
-  // forget - which is exactly what happened when it was a prop, leaving Quick
-  // Ask happy to attach an image to a provider that can't read one.
-  const supportsVision = useActiveProvider()?.supportsVision ?? true;
-  // With search on but nothing to search with - a model that can't search
-  // by itself and no search service set up - the button says so, rather
-  // than the request quietly going out without the web.
-  const searchStatus = useWebSearchStatus();
-  const searchUnavailable =
-    !!searchStatus && !searchStatus.native && !searchStatus.service;
   const picker = labels.picker ?? defaultPickerLabels();
-  const [input, setInput] = useState("");
-  const [pickerIndex, setPickerIndex] = useState(0);
-  // Escape closes a picker for the input as it stands; typing reopens it.
-  const [dismissedInput, setDismissedInput] = useState<string | null>(null);
-  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
-  const [mode, setModeState] = useState<AgentMode>(
-    () =>
-      tourMode ??
-      fitMode(carryMode ? initialMode(defaultMode) : defaultMode, offeredModes),
-  );
-  useEffect(() => {
-    if (tourMode) setModeState(tourMode);
-  }, [tourMode]);
-  const onModeChangeRef = useLatest(onModeChange);
-  useEffect(() => onModeChangeRef.current?.(mode), [mode, onModeChangeRef]);
-  const setMode = (next: AgentMode) => {
-    setModeState(next);
-    if (carryMode) rememberMode(next, defaultMode);
-  };
-  const [webSearch, setWebSearch] = useState(defaultWebSearch);
-  const [deepThinking, setDeepThinking] = useState(deepThinkingOn);
-  // Shown only where it changes something: a model that doesn't think, or
-  // thinks one fixed way, has no button - and no Deep, even if it was left
-  // on for another model.
-  const canThinkDeeper = useCanThinkDeeper(!compact);
-  const thinking: ThinkingLevel = compact
-    ? "fast"
-    : deepThinking && canThinkDeeper
-      ? "deep"
-      : "auto";
-  // Why an attachment couldn't be used ("this PDF has no text layer", "too
-  // large", ...). Shown, never swallowed: the previous version caught and
-  // discarded every failure, so picking a PDF - which could not work at all,
-  // the reader being read_to_string - looked exactly like a dead "+" button.
-  const [attachError, setAttachError] = useState<string | null>(null);
-  // The selection rides along as context by default, but a question about
-  // the document as a whole shouldn't be forced to carry whatever happened
-  // to be highlighted - dropping it is a click, not a re-selection.
-  //
-  // Dropping applies to THAT selection, not to the chat forever: in the
-  // detached window the user goes on highlighting new passages, and each one
-  // is a fresh request to talk about it. Remembering which text was
-  // dismissed (rather than a bare flag) gets both halves right - the chip
-  // stays gone while that selection is current, and a genuinely new
-  // selection brings it back without the user having to reopen anything.
-  const [droppedSelection, setDroppedSelection] = useState<string | null>(null);
-  const selectionDropped =
-    droppedSelection !== null && droppedSelection === selectedText;
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const typing = useComposerInput(handle);
+  const { input, setInput, pickerIndex, setPickerIndex, inputRef } = typing;
+  const { dismissedInput, setDismissedInput } = typing;
+  const staged = useAttachments(labels.attachmentNoVision);
+  const { attachments, setAttachments, attachError, setAttachError } = staged;
+  const { mode, setMode } = useComposerMode({
+    tourMode,
+    carryMode,
+    defaultMode,
+    offeredModes,
+    onModeChange,
+  });
+  const options = useRequestOptions(defaultWebSearch, compact);
+  const { searchUnavailable, webSearch, setWebSearch, thinking } = options;
+  const { deepThinking, setDeepThinking, canThinkDeeper } = options;
+  const { selectionDropped, setDroppedSelection, showSelection, setChipHot } =
+    useSelectionChip(selectedText, selectionChip);
   const {
     skills,
     available,
@@ -170,56 +118,6 @@ export function ChatComposer({
     dismissedInput,
     lang: picker.lang,
   });
-  useImperativeHandle(
-    handle,
-    () => ({
-      restore: (text: string) => {
-        setInput((now) => (now.trim() ? `${text}\n\n${now}` : text));
-        inputRef.current?.focus();
-      },
-    }),
-    [],
-  );
-
-  // The input grows with its content (Shift+Enter newlines) up to the CSS
-  // max-height, then scrolls - a fixed single row just scrolled horizontally
-  // out of view.
-  useLayoutEffect(() => {
-    const el = inputRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    let needed = el.scrollHeight;
-    el.style.height = `${needed}px`;
-    // scrollHeight is an integer, so the height just written can land a
-    // fraction of a pixel short of the line box it was measured from -
-    // WebKit then treats the textarea as scrolled by that hair, which clips
-    // the caret (most visible with CJK text, whose glyph box fills the line
-    // completely). One correction pass, and it fits whatever the font does.
-    if (el.scrollHeight > el.clientHeight) {
-      needed += el.scrollHeight - el.clientHeight;
-      el.style.height = `${needed}px`;
-    }
-    // Scrolling is enabled only once the content genuinely outgrows the box;
-    // leaving it permanently on is what drew scrollbars around an EMPTY input.
-    const max = parseFloat(getComputedStyle(el).maxHeight);
-    el.style.overflowY = needed > max ? "auto" : "hidden";
-  }, [input]);
-
-  async function attachFile() {
-    setAttachError(null);
-    try {
-      const file = await ai.pickAttachmentFile();
-      // null means the picker was cancelled - not something to report.
-      if (!file) return;
-      if (file.kind === "image" && !supportsVision) {
-        setAttachError(labels.attachmentNoVision);
-        return;
-      }
-      setAttachments((prev) => [...prev, file]);
-    } catch (err) {
-      setAttachError(errorText(err));
-    }
-  }
 
   // @-mention picker: "@" (or the full-width "＠" a CJK IME types) plus a
   // partial path at the end of the input lists matching project files
@@ -228,20 +126,7 @@ export function ChatComposer({
   // mount - most messages never mention a file.
   const mentionQuery = skillTrigger ? null : MENTION_TRIGGER.exec(input);
   const mentionMenuOpen = !!mentionQuery && dismissedInput !== input;
-  const [projectFiles, setProjectFiles] = useState<string[] | null>(null);
-  useEffect(() => {
-    setProjectFiles(null);
-  }, [docPath, workspaceRoot]);
-  useEffect(() => {
-    if (!mentionMenuOpen || projectFiles !== null) return;
-    let cancelled = false;
-    ai.listProjectFiles(docPath, workspaceRoot)
-      .then((files) => !cancelled && setProjectFiles(files ?? []))
-      .catch(() => !cancelled && setProjectFiles([]));
-    return () => {
-      cancelled = true;
-    };
-  }, [mentionMenuOpen, projectFiles, docPath, workspaceRoot]);
+  const projectFiles = useProjectFiles(mentionMenuOpen, docPath, workspaceRoot);
   const matchingFiles = mentionQuery
     ? (projectFiles ?? [])
         .filter((path) =>
@@ -405,12 +290,20 @@ export function ChatComposer({
         return;
       }
     }
+    if (e.key === "Tab" && !e.shiftKey && offered) {
+      e.preventDefault();
+      setInput(offered);
+      return;
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       submit();
     }
     if (e.key === "Escape") onEscape();
   }
+
+  // The suggested next message, while the box is empty.
+  const offered = !busy && input === "" ? suggestion : null;
 
   const modeLabels: Record<AgentMode, string> = {
     write: labels.modeWrite,
@@ -427,20 +320,6 @@ export function ChatComposer({
     ? { onMouseDown: (e: React.MouseEvent) => e.preventDefault() }
     : {};
 
-  const showSelection = !!selectedText && !selectionDropped;
-  const [chipHot, setChipHot] = useState(false);
-  const chipHandlers = useLatest(selectionChip);
-  const chip = { shown: showSelection, hot: showSelection && chipHot };
-  useEffect(() => {
-    chipHandlers.current?.onChange(chip);
-    // Reported by value; the handlers are read through a ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chip.shown, chip.hot, selectedText]);
-  // Gone with the composer: the panel closed, another tab came forward.
-  useEffect(
-    () => () => chipHandlers.current?.onChange({ shown: false, hot: false }),
-    [chipHandlers],
-  );
   const dropSelectionButton = (
     <Tooltip text={labels.dropSelection} side="above">
       <button
@@ -523,7 +402,11 @@ export function ChatComposer({
             ref={inputRef}
             className="inline-chat-input"
             rows={1}
-            placeholder={labels.placeholder}
+            placeholder={
+              offered
+                ? `${offered}  ·  ${labels.suggestionTab}`
+                : labels.placeholder
+            }
             value={input}
             onChange={(e) => {
               setInput(e.target.value);
@@ -576,7 +459,7 @@ export function ChatComposer({
                   <button
                     className="inline-chat-attach"
                     aria-label={labels.attachFile}
-                    onClick={attachFile}
+                    onClick={staged.attachFile}
                   >
                     <PlusIcon />
                   </button>

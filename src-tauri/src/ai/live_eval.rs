@@ -51,12 +51,14 @@ mod conventions;
 mod deepseek;
 mod docs;
 mod doubao;
+mod gemini;
 mod grammar_cases;
 mod grammar_matrix;
 mod harness;
 mod images;
 mod latency;
 mod memory_eval;
+mod memory_sessions;
 mod tokens;
 mod web_search;
 

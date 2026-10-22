@@ -93,6 +93,7 @@ fn run(
         },
         "A lighthouse on a cliff at dusk",
         aspect,
+        None,
     ))
 }
 
@@ -364,6 +365,37 @@ fn siliconflow_sends_image_size_and_reads_images() {
 }
 
 #[test]
+fn minimax_sends_the_aspect_and_reads_its_codes_from_a_200() {
+    let (base, seen) = serve(vec![
+        json_reply(
+            200,
+            json!({"data": {"image_base64": [b64()]}, "base_resp": {"status_code": 0, "status_msg": "success"}}),
+        ),
+        json_reply(
+            200,
+            json!({"data": {}, "base_resp": {"status_code": 1026, "status_msg": "input new_sensitive"}}),
+        ),
+        json_reply(
+            200,
+            json!({"base_resp": {"status_code": 1008, "status_msg": "insufficient balance"}}),
+        ),
+    ]);
+    run(ImageApi::MiniMax, &base, "image-01", Aspect::Landscape).unwrap();
+    let req = seen.recv().unwrap();
+    assert_eq!(req.line, "POST /image_generation HTTP/1.1");
+    assert_eq!(req.body["aspect_ratio"], "4:3");
+    assert_eq!(req.body["response_format"], "base64");
+    assert_eq!(
+        run(ImageApi::MiniMax, &base, "image-01", Aspect::Square).unwrap_err(),
+        ImageError::Refused("input new_sensitive".into())
+    );
+    assert_eq!(
+        run(ImageApi::MiniMax, &base, "image-01", Aspect::Square).unwrap_err(),
+        ImageError::Quota("insufficient balance".into())
+    );
+}
+
+#[test]
 fn an_endpoint_must_be_https_unless_it_is_this_computer() {
     let err = run(
         ImageApi::Compatible,
@@ -399,4 +431,50 @@ fn every_aspect_has_its_ratio() {
         assert_eq!(Aspect::parse(ratio).unwrap().ratio(), ratio);
     }
     assert_eq!(Aspect::parse("2:1"), None);
+}
+
+fn reference() -> ImageAttachment {
+    ImageAttachment {
+        name: "old.png".into(),
+        mime: "image/png".into(),
+        data_base64: "aGk=".into(),
+    }
+}
+
+#[test]
+fn a_picture_being_redone_goes_with_its_description_where_the_service_takes_one() {
+    let target = |api| ImageTarget {
+        api,
+        base_url: "https://example.com/v1",
+        api_key: "k",
+        model: "m",
+    };
+    // Gemini: an inline picture before the description.
+    let mut gemini = request(
+        &target(ImageApi::Gemini),
+        "Make her hair red",
+        Aspect::Square,
+    )
+    .body;
+    with_reference(ImageApi::Gemini, &mut gemini, Some(&reference()));
+    let parts = gemini["contents"][0]["parts"].as_array().unwrap();
+    assert_eq!(parts[0]["inlineData"]["mimeType"], "image/png");
+    assert_eq!(parts[0]["inlineData"]["data"], "aGk=");
+    assert_eq!(parts[1]["text"], "Make her hair red");
+    // Seedream: `image`, as a data URL.
+    let mut seedream = request(
+        &target(ImageApi::Seedream),
+        "Make her hair red",
+        Aspect::Square,
+    )
+    .body;
+    with_reference(ImageApi::Seedream, &mut seedream, Some(&reference()));
+    assert_eq!(seedream["image"], "data:image/png;base64,aGk=");
+    // A service that draws from text only gets the description alone.
+    for api in [ImageApi::OpenAi, ImageApi::MiniMax, ImageApi::DashScope] {
+        let before = request(&target(api), "Make her hair red", Aspect::Square).body;
+        let mut after = before.clone();
+        with_reference(api, &mut after, Some(&reference()));
+        assert_eq!(before, after, "{api:?}");
+    }
 }

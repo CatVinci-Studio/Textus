@@ -43,14 +43,11 @@ impl Folders {
         MemoryDirs::new(Some(&self.global), self.project.as_deref())
     }
 
-    /// A memory already there, written as the remember tool writes it.
+    /// A memory already there, kept as the app keeps one.
     fn seed(&self, kind: &str, scope: &str, text: &str) {
-        let ctx = crate::ai::memory::MemoryContext {
-            dirs: self.dirs(),
-            source: Default::default(),
-        };
-        let args = serde_json::json!({"kind": kind, "scope": scope, "text": text});
-        crate::ai::memory::run_tool(&ctx, &args.to_string());
+        self.dirs()
+            .keep(kind, scope, text, &Default::default())
+            .expect("a memory kept");
     }
 
     /// The library entries Textus AI wrote (facts), by file name.

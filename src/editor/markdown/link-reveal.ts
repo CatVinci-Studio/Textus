@@ -1,11 +1,7 @@
 import { parserCtx, schemaCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { Fragment } from "@milkdown/kit/prose/model";
-import type {
-  Mark,
-  Node as ProseNode,
-  Schema,
-} from "@milkdown/kit/prose/model";
+import type { Node as ProseNode, Schema } from "@milkdown/kit/prose/model";
 import {
   Plugin,
   PluginKey,
@@ -28,8 +24,25 @@ import {
   liveCaretPos,
 } from "../marks/enclosure";
 import { readLinkSource } from "./link-source";
-import { firstLink, linked, linksOnSpansIn } from "./markdown-output";
-
+import { linksOnSpansIn } from "./markdown-output";
+import {
+  type LinkRun,
+  LINK_SOURCE,
+  caretInSource,
+  definitionsIn,
+  linkRunAt,
+  linkSyntaxRanges,
+  parseLinkSource,
+} from "./link-runs";
+export {
+  type LinkRun,
+  LINK_SOURCE,
+  linkRunAt,
+  caretInSource,
+  parseLinkSource,
+  linkSyntaxRanges,
+  visibleTextBetween,
+} from "./link-runs";
 /**
  * A link shows its Markdown while the caret is on it, as Typora does, and
  * that Markdown is the text to edit: `[text](url)`, `[text](url "title")`,
@@ -65,8 +78,6 @@ import { firstLink, linked, linksOnSpansIn } from "./markdown-output";
  * below), so the file and the tab's clean state never see a link that is
  * only being looked at; one whose text was edited is written as typed.
  */
-
-export const LINK_SOURCE = "link_source";
 
 /** The linked text, as it was before it was shown as source, as long as
  *  the source still reads as it did. */
@@ -122,150 +133,6 @@ export const linkSourceSchema = $nodeSchema(LINK_SOURCE, (ctx) => ({
     },
   },
 }));
-
-/** A run of linked inline content: one link, from `from` to `to`. */
-export interface LinkRun {
-  from: number;
-  to: number;
-  link: Mark;
-}
-
-/** The link on an inline node: on the node, or (a bold or italic span
- *  inside the link) on everything in it. */
-function linkOf(node: ProseNode): Mark | null {
-  const own = node.marks.find((mark) => mark.type.name === "link");
-  if (own) return own;
-  if (node.type.name !== "md_span") return null;
-  const inner = firstLink(node);
-  return inner && linked(node, inner) ? inner : null;
-}
-
-/** The run of `parent`'s children (its content starting at `start`) that
- *  carry one link and reach `pos`, at either end included. */
-type NodeRun = LinkRun & { nodes: ProseNode[] };
-
-function runAround(
-  parent: ProseNode,
-  start: number,
-  pos: number,
-): NodeRun | null {
-  let current: NodeRun | null = null;
-  let found: NodeRun | null = null;
-  const reaches = (run: NodeRun | null) =>
-    run !== null && run.from <= pos && pos <= run.to;
-  parent.forEach((child, offset) => {
-    if (found) return;
-    const from = start + offset;
-    const link = linkOf(child);
-    if (link && current && link.eq(current.link)) {
-      current.to = from + child.nodeSize;
-      current.nodes.push(child);
-      return;
-    }
-    if (reaches(current)) found = current;
-    else
-      current = link
-        ? { from, to: from + child.nodeSize, link, nodes: [child] }
-        : null;
-  });
-  return found ?? (reaches(current) ? current : null);
-}
-
-/**
- * The link the caret at `pos` is on, inside it or at one of its ends: the
- * whole link, across the bold or code inside it. A link all inside one
- * bold span, `**[a](u)**`, is looked for inside the span, so the span's
- * own `**` stays out of its source.
- */
-export function linkRunAt(doc: ProseNode, pos: number): LinkRun | null {
-  const $pos = doc.resolve(pos);
-  let depth = $pos.depth;
-  while (depth > 0 && !$pos.node(depth).isTextblock) depth--;
-  let parent = $pos.node(depth);
-  if (!parent.isTextblock || parent.type.spec.code) return null;
-  let start = $pos.start(depth);
-  for (;;) {
-    const run = runAround(parent, start, pos);
-    if (!run) return null;
-    const only = run.nodes.length === 1 ? run.nodes[0] : null;
-    if (only?.type.name === "md_span" && !run.link.isInSet(only.marks)) {
-      parent = only;
-      start = run.from + 1;
-      continue;
-    }
-    return { from: run.from, to: run.to, link: run.link };
-  }
-}
-
-/**
- * Where in `source` the caret goes that stood `offset` characters into the
- * link's text `visible`: right after the same character. The characters
- * of the text are looked for in order through the source, past the
- * syntax between them (`**`, a backslash), from just inside the opening
- * `[` or `<`.
- */
-export function caretInSource(
-  visible: string,
-  source: string,
-  offset: number,
-): number {
-  let at = /^[[<]/.test(source) ? 1 : 0;
-  for (const char of visible.slice(0, offset)) {
-    const found = source.indexOf(char, at);
-    if (found < 0) break;
-    at = found + char.length;
-  }
-  return at;
-}
-
-/** What `source` reads as on its own: the inline content of the one
- *  paragraph it makes, or else itself as text. `definitions` are the
- *  document's `[ref]: url` lines, for a reference link. */
-export function parseLinkSource(
-  parse: (markdown: string) => ProseNode,
-  schema: Schema,
-  source: string,
-  definitions: () => string[],
-): Fragment {
-  const asText = Fragment.from(source ? schema.text(source) : []);
-  const core = source.trim();
-  if (!core) return asText;
-  // Spaces typed at its ends are text: at a line's start they would make
-  // code of it.
-  const lead = source.slice(0, source.indexOf(core));
-  const trail = source.slice(lead.length + core.length);
-  const defs = core.includes("](") || !core.includes("]") ? [] : definitions();
-  let doc: ProseNode;
-  try {
-    doc = parse([core, ...defs].join("\n\n"));
-  } catch {
-    return asText;
-  }
-  const first = doc.firstChild;
-  if (first?.type.name !== "paragraph") return asText;
-  let definition = false;
-  first.forEach((child) => {
-    definition ||= child.type.name === "link_definition";
-  });
-  if (definition) return asText;
-  const nodes: ProseNode[] = [];
-  if (lead) nodes.push(schema.text(lead));
-  first.forEach((child) => nodes.push(child));
-  if (trail) nodes.push(schema.text(trail));
-  return Fragment.fromArray(nodes);
-}
-
-/** The source of every `[ref]: url` definition in `doc`. */
-function definitionsIn(doc: ProseNode): string[] {
-  const found: string[] = [];
-  doc.descendants((node) => {
-    if (!node.isTextblock) return true;
-    if (node.firstChild?.type.name === "link_definition")
-      found.push(node.firstChild.textContent);
-    return false;
-  });
-  return found;
-}
 
 /** What revealing and collapsing need from the editor. */
 export interface LinkRevealDeps {
@@ -370,29 +237,6 @@ function revealRun(
   tr.setSelection(TextSelection.create(tr.doc, at));
 }
 
-/** The parts of a link's source that are syntax, as offsets: its
- *  brackets and what follows the text, or an autolink's `<` `>`. */
-export function linkSyntaxRanges(source: string): [number, number][] {
-  if (source.startsWith("<") && source.endsWith(">") && source.length > 1)
-    return [
-      [0, 1],
-      [source.length - 1, source.length],
-    ];
-  if (!source.startsWith("[")) return [];
-  let depth = 0;
-  for (let i = 0; i < source.length; i++) {
-    const char = source[i];
-    if (char === "\\") i++;
-    else if (char === "[") depth++;
-    else if (char === "]" && --depth === 0)
-      return [
-        [0, 1],
-        [i, source.length],
-      ];
-  }
-  return [[0, 1]];
-}
-
 function syntaxDecorations(state: EditorState): DecorationSet | null {
   const positions = linkRevealKey.getState(state);
   if (!positions?.length) return null;
@@ -440,38 +284,6 @@ export function revealedLinkHref(
     return href === null;
   });
   return href;
-}
-
-/**
- * `doc.textBetween(from, to, separator)` with each link shown as source
- * read as the link's text, while its source is as it was shown - what a
- * pending AI edit checks its text against (revision/pending-edit-plugin.ts),
- * so a look at a link inside the text it would change doesn't drop it.
- */
-export function visibleTextBetween(
-  doc: ProseNode,
-  from: number,
-  to: number,
-  separator: string,
-): string {
-  const sources: [number, ProseNode][] = [];
-  doc.nodesBetween(from, to, (node, pos) => {
-    if (node.type.name !== LINK_SOURCE) return true;
-    if (pos >= from && pos + node.nodeSize <= to) sources.push([pos, node]);
-    return false;
-  });
-  if (sources.length === 0) return doc.textBetween(from, to, separator);
-  let text = "";
-  let at = from;
-  for (const [pos, node] of sources) {
-    text += doc.textBetween(at, pos, separator);
-    text +=
-      node.textContent === node.attrs.source
-        ? (node.attrs.text as string)
-        : node.textContent;
-    at = pos + node.nodeSize;
-  }
-  return text + doc.textBetween(at, to, separator);
 }
 
 /** The deps the editor's own plugin works with. */

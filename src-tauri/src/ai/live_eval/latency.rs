@@ -45,6 +45,14 @@ fn run_on(
     assert!(conv.error.is_none(), "{:?}", conv.error);
     for outcome in &conv.outcomes {
         eprintln!("  tools {:?}", outcome.tools);
+        // Tokens, for the spend on a provider with a budget (Gemini).
+        let (input, output) = outcome.usage.iter().fold((0, 0), |(i, o), u| {
+            (
+                i + u.input_tokens + u.cache_read_input_tokens + u.cache_creation_input_tokens,
+                o + u.output_tokens,
+            )
+        });
+        eprintln!("  tokens in {input} out {output}");
         for call in outcome.calls.iter().filter(|c| c["name"] == "propose_edit") {
             let args = &call["args"];
             eprintln!(
@@ -53,6 +61,12 @@ fn run_on(
                 harness::clip(args["anchor"].as_str().unwrap_or(""), 30),
                 harness::clip(args["text"].as_str().unwrap_or(""), 50)
             );
+            // The pictures it carries, as placed (textus-generated:ID).
+            for line in args["text"].as_str().unwrap_or("").lines() {
+                if line.trim_start().starts_with("![") {
+                    eprintln!("    picture {}", harness::clip(line, 80));
+                }
+            }
         }
         eprintln!("  reply: {}", harness::clip(&outcome.reply, 120));
     }
@@ -112,5 +126,37 @@ fn redo_a_picture() {
         AgentMode::Revise,
         ThinkingLevel::Auto,
         "把这张图改成下雨的夜晚，窗户透出暖光",
+    );
+}
+
+/// The writer's own case (rc.6): a story of 2,000 characters translated
+/// whole, its picture redone with it - "Thinking…" for a long time, then
+/// every change at once. When the edit's call starts, how its arguments
+/// come (by block, by anchor), and the gaps in between.
+#[test]
+#[ignore = "live: calls the model"]
+fn translate_a_story_with_its_picture() {
+    let doc = include_str!("fixtures/borrowing-rain.md");
+    let pictures = crate::ai::images::ImageRun::offline(2);
+    run_on(
+        doc,
+        Some(&pictures),
+        AgentMode::Revise,
+        ThinkingLevel::Auto,
+        "翻译为英文，并且图片也换外国女孩",
+    );
+}
+
+/// The same story translated alone, no image model: whether a long edit's
+/// arguments stream when no picture is asked for with it.
+#[test]
+#[ignore = "live: calls the model"]
+fn translate_a_story() {
+    run_on(
+        include_str!("fixtures/borrowing-rain.md"),
+        None,
+        AgentMode::Revise,
+        ThinkingLevel::Auto,
+        "翻译为英文",
     );
 }

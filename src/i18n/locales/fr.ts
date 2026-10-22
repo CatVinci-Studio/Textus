@@ -185,6 +185,14 @@ utiliser une.
   memoryKindRequirement: "Exigence",
   memoryKindPreference: "Préférence",
   memoryKindStyle: "Style",
+  memorySearch: "Chercher dans la mémoire et la bibliothèque",
+  memoryNoMatch: "Aucun résultat.",
+  memoryShowInFolder: "Afficher dans le dossier",
+  memoryWrittenByAi: "Noté par l'IA",
+  memoryFactsInLibrary:
+    "{n} personnes, lieux et termes notés sont dans la bibliothèque ci-dessous.",
+  memoryForgotten: "Oublié récemment",
+  memoryRestore: "Restaurer",
   memoryKindFact: "Fait",
   memoryFrom: "de «\u00a0{title}\u00a0»",
   memoryNotSent: "Non envoyé",
@@ -207,6 +215,8 @@ utiliser une.
   memoryMakePersonal: "Rendre personnel",
   memoryMakeProject: "Passer au projet",
   memoryChipUndone: "Annulé. Ce n'est plus retenu.",
+  memoryChipForgot: "Oublié : {text} ({scope})",
+  memoryChipRestored: "Annulé. De nouveau mémorisé.",
   memoryActionFailed: "Cela n'a pas marché. Réessayez dans l'onglet Mémoire.",
   learnSuggestion:
     "Vous avez refusé plusieurs fois {what}. Retenir ceci\u00a0? {rule}",
@@ -255,8 +265,12 @@ utiliser une.
   levisProjectLater: "Plus tard",
   levisProjectDone:
     "Converti\u00a0: {n} fichiers copiés dans .textus/. Le dossier .levis/ reste tel quel.",
+  suggestNextMessageLabel: "Suggérer le message suivant",
+  suggestNextMessageHint:
+    "Après chaque réponse, ce que vous direz sans doute ensuite s'affiche en gris dans la zone de saisie ; Tab le reprend. Cela coûte une courte requête de plus.",
+  composerSuggestionTab: "Tab",
   rememberAutomaticallyLabel: "Retenir automatiquement",
-  rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le dans l'onglet Mémoire.`,
+  rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le dans l'onglet Mémoire. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
   toolRemember: "Mémorisation",
   agentGeneratingImage: "Création d'une image…",
   toolGenerateImage: "Création d'une image",
@@ -606,6 +620,8 @@ utiliser une.
   providerNotConfigured: "Non configuré",
   providerCustom: "Serveur personnalisé",
   providerDoubao: "Doubao (Volcengine)",
+  providerMiniMax: "MiniMax (Chine)",
+  providerMiniMaxIntl: "MiniMax (international)",
   agentModelLabel: "Modèle de discussion",
   agentDefaultModeLabel: "Mode par défaut",
   agentModeWrite: "Écrire",
@@ -648,8 +664,13 @@ utiliser une.
   agentWritingEdit: "Rédaction de la modification…",
   agentWritingNotes: "Rédaction des notes…",
   agentDeepThinking: "Réflexion approfondie",
-  agentDeepThinkingHint: `Réflexion approfondie\u00a0: une fois activée, ${AI_NAME} réfléchit plus longtemps avant de répondre`,
+  agentDeepThinkingHint: `Réflexion approfondie\u00a0: une fois activée, ${AI_NAME} réfléchit plus longtemps avant de répondre\u00a0; désactivée, le modèle réfléchit autant que par défaut`,
   toggleOnHint: "{label} (Activée\u00a0: cliquez à nouveau pour la désactiver)",
+  agentWaitedFor: {
+    one: "{n} seconde",
+    many: "{n} de secondes",
+    other: "{n} secondes",
+  },
   agentThinkingFor: {
     one: "Réflexion · {n} seconde",
     many: "Réflexion · {n} de secondes",
@@ -865,6 +886,10 @@ utiliser une.
   quickAskRejectAllCount: "Tout refuser ({n})",
   chatDropSelection: "Ne pas envoyer la sélection",
   quickAskAtCursor: "Au curseur",
+  chatStoppedAtLimit:
+    "Arrêté avant la fin : cette demande a utilisé toutes ses étapes.",
+  chatContinueAfterLimit: "Continuer",
+  chatContinueRequest: "Reprends là où tu t'es arrêté.",
   proposalRelocateRequest:
     "Cette modification ne correspond plus au document. Relis le document tel qu'il est maintenant et propose à nouveau la modification.",
   chatSelectionChip: {
