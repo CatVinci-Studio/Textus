@@ -10,6 +10,17 @@
  * payload)` fires them, so menu-driven features (Settings, Help docs, ...)
  * can be driven from the console / browser automation.
  */
+import type {
+  DirEntryInfo_Serialize,
+  FolderIndex,
+} from "../platform/bindings/files";
+import type { GalleryTheme_Serialize } from "../platform/bindings/app";
+import type { CustomEndpointStatus_Serialize } from "../platform/bindings/auth";
+import type {
+  FsEntry_Serialize,
+  PluginsState_Serialize,
+} from "../platform/bindings/plugins";
+
 /** The built-in skills as `list_skills` reports them: name, `/` menu group,
  *  invocation and the description written for the model (abridged). */
 const DEV_BUILTIN_SKILLS: [string, string, string, string][] = [
@@ -369,12 +380,12 @@ export function installDevTauriShim(): void {
       case "custom_endpoint_status": {
         const saved = store.customEndpoint;
         return Promise.resolve(
-          saved && {
+          (saved && {
             base_url: saved.baseUrl,
             api_key: null,
             has_api_key: !!saved.apiKey,
             model: saved.model,
-          },
+          }) satisfies CustomEndpointStatus_Serialize | null,
         );
       }
       case "set_custom_endpoint": {
@@ -414,7 +425,7 @@ export function installDevTauriShim(): void {
   w.__devThemeFiles = themeFiles;
   const gallery = {
     offline: false,
-    themes: [] as Record<string, unknown>[],
+    themes: [] as GalleryTheme_Serialize[],
     files: {} as Record<string, string>,
   };
   w.__devThemeGallery = gallery;
@@ -647,7 +658,7 @@ export function installDevTauriShim(): void {
                   ? -1
                   : 1
                 : a.name.localeCompare(b.name),
-            ),
+            ) satisfies DirEntryInfo_Serialize[],
         );
       }
       // commands/tree_ops.rs. A folder is the files under it; an empty one
@@ -700,7 +711,10 @@ export function installDevTauriShim(): void {
           )
           .sort()
           .map((file) => ({ path: file, rel: file.slice(path.length + 1) }));
-        return Promise.resolve({ files: indexed, truncated: false });
+        return Promise.resolve({
+          files: indexed,
+          truncated: false,
+        } satisfies FolderIndex);
       }
     }
     return null;
@@ -800,7 +814,9 @@ export function installDevTauriShim(): void {
             : Promise.reject(`${p}: No such file`);
     switch (cmd) {
       case "plugins_state":
-        return Promise.resolve(structuredClone(pluginState));
+        return Promise.resolve(
+          structuredClone(pluginState) satisfies PluginsState_Serialize,
+        );
       case "plugins_set_all":
         pluginState.allOn = !!args.on;
         return Promise.resolve(null);
@@ -854,7 +870,7 @@ export function installDevTauriShim(): void {
             isDir,
             size: isDir ? 0 : (folder[`${dir}/${name}`] ?? "").length,
             modifiedMs: 1,
-          })),
+          })) satisfies FsEntry_Serialize[],
         );
       }
       case "plugin_fs_write":
