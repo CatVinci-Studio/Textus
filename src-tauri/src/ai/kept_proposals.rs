@@ -5,6 +5,9 @@
 //! travel with it; outside one, the app's data folder keeps them under
 //! `pending/`, named by a hash of the document's path. What a file holds
 //! is the frontend's (ai/revision/kept-proposals.ts) - opaque JSON here.
+//! Their pictures, made and waiting for Accept (ai/images.rs keeps them in
+//! memory only), go beside it, one file each in `<that file>.pictures/`,
+//! and are put back where the frontend asks for them when it is read.
 
 use crate::ai::workspace::project_dir;
 use sha2::{Digest, Sha256};
@@ -43,11 +46,82 @@ fn kept_file(doc_path: &str, workspace_root: Option<&str>, app_data: &Path) -> O
     Some(base.with_file_name(name))
 }
 
+/// The folder beside `file` its pictures are kept in.
+fn pictures_dir(file: &Path) -> PathBuf {
+    let mut name = file.as_os_str().to_os_string();
+    name.push(".pictures");
+    PathBuf::from(name)
+}
+
+/// A picture id as ai/images.rs makes them: a few letters and digits, so
+/// it can name a file and nothing else.
+fn valid_id(id: &str) -> bool {
+    !id.is_empty()
+        && id.len() <= 16
+        && id
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+}
+
+/// The kept picture files in `dir`, as (id, path).
+fn kept_pictures(dir: &Path) -> Vec<(String, PathBuf)> {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    entries
+        .flatten()
+        .filter_map(|entry| {
+            let path = entry.path();
+            let id = path.file_stem()?.to_str()?.to_string();
+            let ext = path.extension()?.to_str()?;
+            (valid_id(&id) && matches!(ext, "png" | "jpg" | "jpeg" | "webp") && path.is_file())
+                .then_some((id, path))
+        })
+        .collect()
+}
+
+/// Keeps the made pictures among `ids` in `dir` and lets go of the kept
+/// ones no longer asked for. One still being made is kept on a later
+/// write, once it is made. Only picture files are ever removed, and the
+/// folder once it is empty.
+fn keep_pictures(dir: &Path, ids: &[String]) -> std::io::Result<()> {
+    for (id, path) in kept_pictures(dir) {
+        if !ids.contains(&id) {
+            std::fs::remove_file(path)?;
+        }
+    }
+    let have: Vec<String> = kept_pictures(dir).into_iter().map(|(id, _)| id).collect();
+    for id in ids.iter().filter(|id| valid_id(id) && !have.contains(id)) {
+        if let Some((bytes, ext)) = crate::ai::images::ready_bytes(id) {
+            std::fs::create_dir_all(dir)?;
+            crate::atomic::write_sync(&dir.join(format!("{id}.{ext}")), bytes)?;
+        }
+    }
+    if dir.is_dir() && std::fs::read_dir(dir)?.next().is_none() {
+        std::fs::remove_dir(dir)?;
+    }
+    Ok(())
+}
+
+/// Puts the pictures kept in `dir` back among the waiting ones, under
+/// their ids.
+fn restore_pictures(dir: &Path) {
+    for (id, path) in kept_pictures(dir) {
+        if let Ok(image) = std::fs::read(&path)
+            .map_err(|_| ())
+            .and_then(|bytes| aicompat::images::checked_image(bytes).map_err(|_| ()))
+        {
+            crate::ai::images::restore(&id, image);
+        }
+    }
+}
+
 fn app_data(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     app.path().app_data_dir().map_err(|e| e.to_string())
 }
 
-/// The proposals kept for the document, or None when there are none.
+/// The proposals kept for the document, or None when there are none - their
+/// pictures waiting again, for the frontend to fetch by id.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn kept_proposals_read(
@@ -56,12 +130,17 @@ pub async fn kept_proposals_read(
     workspace_root: Option<String>,
 ) -> Option<serde_json::Value> {
     let file = kept_file(&doc_path, workspace_root.as_deref(), &app_data(&app).ok()?)?;
-    let bytes = tokio::fs::read(file).await.ok()?;
+    let bytes = tokio::fs::read(&file).await.ok()?;
+    let dir = pictures_dir(&file);
+    tauri::async_runtime::spawn_blocking(move || restore_pictures(&dir))
+        .await
+        .ok()?;
     serde_json::from_slice(&bytes).ok()
 }
 
-/// Keeps `kept` for the document - or, with None, removes what was kept,
-/// once every proposal is decided.
+/// Keeps `kept` for the document, with the made pictures among `pictures`
+/// - or, with None, removes what was kept, once every proposal is
+/// decided.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn kept_proposals_write(
@@ -69,9 +148,16 @@ pub async fn kept_proposals_write(
     doc_path: String,
     workspace_root: Option<String>,
     kept: Option<serde_json::Value>,
+    pictures: Vec<String>,
 ) -> Result<(), String> {
     let file = kept_file(&doc_path, workspace_root.as_deref(), &app_data(&app)?)
         .ok_or_else(|| "not a document path".to_string())?;
+    let dir = pictures_dir(&file);
+    let ids = if kept.is_some() { pictures } else { Vec::new() };
+    tauri::async_runtime::spawn_blocking(move || keep_pictures(&dir, &ids))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())?;
     match kept {
         Some(kept) => {
             if let Some(dir) = file.parent() {
@@ -139,6 +225,52 @@ mod tests {
         let data = dir.path().join("data");
         let file = kept_file(doc.to_str().unwrap(), None, &data).unwrap();
         assert!(file.starts_with(data.join("pending")), "{file:?}");
+    }
+
+    #[test]
+    fn made_pictures_are_kept_beside_and_come_back() {
+        use crate::ai::images::{pending, ready_bytes, Slot};
+        let dir = tempfile::tempdir().unwrap();
+        let pictures = pictures_dir(&dir.path().join("story.md.json"));
+        // A 1x1 PNG.
+        let png = base64::Engine::decode(
+            &base64::engine::general_purpose::STANDARD,
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+        )
+        .unwrap();
+        let made = aicompat::images::checked_image(png.clone()).unwrap();
+        pending().push(("kpic01".into(), Slot::Ready(made)));
+        pending().push(("kpic02".into(), Slot::Making));
+        keep_pictures(&pictures, &["kpic01".into(), "kpic02".into()]).unwrap();
+        // The made one only; the other on a later write.
+        assert_eq!(
+            kept_pictures(&pictures)
+                .into_iter()
+                .map(|(id, _)| id)
+                .collect::<Vec<_>>(),
+            ["kpic01"]
+        );
+        // Gone with the app, back from the file.
+        pending().retain(|(id, _)| !id.starts_with("kpic"));
+        restore_pictures(&pictures);
+        assert_eq!(ready_bytes("kpic01").map(|(b, _)| b), Some(png));
+        // Let go of, the folder goes too - nothing else in it is touched.
+        keep_pictures(&pictures, &[]).unwrap();
+        assert!(!pictures.exists());
+        pending().retain(|(id, _)| !id.starts_with("kpic"));
+    }
+
+    #[test]
+    fn only_picture_files_are_let_go_of() {
+        let dir = tempfile::tempdir().unwrap();
+        let pictures = dir.path().join("x.pictures");
+        std::fs::create_dir_all(&pictures).unwrap();
+        std::fs::write(pictures.join("notes.txt"), "mine").unwrap();
+        std::fs::write(pictures.join("abc123.png"), "png").unwrap();
+        keep_pictures(&pictures, &[]).unwrap();
+        assert!(pictures.join("notes.txt").exists());
+        assert!(!pictures.join("abc123.png").exists());
+        assert!(!valid_id("../x") && !valid_id("A1") && valid_id("k3f9z0"));
     }
 
     #[test]

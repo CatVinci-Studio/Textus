@@ -4,6 +4,7 @@ import {
   KEPT_VERSION,
   keepable,
   keptFrom,
+  picturesOf,
   readKept,
   restorable,
 } from "./kept-proposals";
@@ -22,24 +23,33 @@ function preview(over: Partial<PendingPreview> = {}): PendingPreview {
 }
 
 describe("what is kept of a document's proposals", () => {
-  it("keeps the decidable ones, not one still streaming or with a picture of this run", () => {
-    expect(keepable(preview())).toBe(true);
-    expect(keepable(preview({ streaming: true }))).toBe(false);
+  const made = () => true;
+  const picture = preview({
+    proposal: {
+      action: "append",
+      text: `![a harbour](${generatedImageSrc("img1")})`,
+    },
+  });
+
+  it("keeps the decidable ones, a picture's once it is made", () => {
+    expect(keepable(preview(), made)).toBe(true);
+    expect(keepable(preview({ streaming: true }), made)).toBe(false);
+    expect(keepable(picture, made)).toBe(true);
+    expect(keepable(picture, (id) => id !== "img1")).toBe(false);
+  });
+
+  it("names the pictures to keep beside them", () => {
     expect(
-      keepable(
-        preview({
-          proposal: {
-            action: "append",
-            text: `![a harbour](${generatedImageSrc("img1")})`,
-          },
-        }),
-      ),
-    ).toBe(false);
+      picturesOf(keptFrom([picture, preview()], 1, () => "", made)),
+    ).toEqual(["img1"]);
+    expect(picturesOf(null)).toEqual([]);
   });
 
   it("is nothing once nothing is left to decide", () => {
-    expect(keptFrom([], 1, () => "")).toBeNull();
-    expect(keptFrom([preview({ streaming: true })], 1, () => "")).toBeNull();
+    expect(keptFrom([], 1, () => "", made)).toBeNull();
+    expect(
+      keptFrom([preview({ streaming: true })], 1, () => "", made),
+    ).toBeNull();
   });
 
   it("keeps where a selection's or the caret's proposal writes, and the calls made so far", () => {
@@ -70,6 +80,7 @@ describe("what is kept of a document's proposals", () => {
       ],
       42,
       (from, to) => `md ${from}-${to}`,
+      () => true,
     )!;
     expect(kept.version).toBe(KEPT_VERSION);
     expect(kept.document).toBe(42);
@@ -95,6 +106,7 @@ describe("what comes back", () => {
     ],
     42,
     () => "",
+    () => true,
   )!;
 
   it("reads only what this version wrote", () => {
