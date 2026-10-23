@@ -1,0 +1,36 @@
+# The agent cases the core set runs (scripts/live-eval.mjs --set core):
+# one per group, two for the largest groups. Every case still runs in a
+# full run before a release.
+academic/en/hedge
+agentmd/en/house-style-file
+ambiguous/en/thoughts
+ask/question-not-edit-en
+concept/en/global-instructions
+cross/en-asks-ja-doc/question
+email/en/casual-shorten
+essay/en/cliches
+files/facts-from-notes
+lang/de/question
+lang/ko/shorten
+learned/en/no-oxford-comma
+library/character-consistency
+long/edit-one-section
+md/alert-shorten
+md/math-fix
+meeting/en/cursor-insert
+multi/en-rejected-retry
+novel/en/beats
+panel/en/five-turn
+product/en/bullets
+quick/en/selection-formal
+report/en/add-row
+review/en/email-before-send
+skill/en/project-shadows-global
+social/en/tweet
+style/cross/en-profile-zh-doc
+task/continue
+task/insert-inside-sentence-zh
+tech/en/add-step
+translate/en-to-es-paragraph
+workspace/en/big-file-in-parts
+workspace/en/override-root
