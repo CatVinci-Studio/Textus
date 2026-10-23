@@ -4,7 +4,18 @@
 .model-switcher {
   position: relative;
   min-width: 0;
-  flex-shrink: 1;
+}
+
+/* Beside the composer's tools, it gives way first (inline-chat.css keeps
+   the others at their size). */
+.inline-chat-toolbar > .model-switcher {
+  flex: 0 1 auto;
+}
+
+/* A phone's sheet wraps its tools rather than shrinking them, and has no
+   room for the button: the model is picked in Settings there. */
+:root[data-window-chrome="mobile"] .model-switcher {
+  display: none;
 }
 
 .model-switcher-trigger {

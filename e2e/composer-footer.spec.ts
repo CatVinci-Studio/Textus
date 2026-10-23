@@ -22,7 +22,11 @@ const PASSAGE = "Alpha beta gamma delta epsilon. ".repeat(400).trim();
 async function expectOneRow(toolbar: Locator, ownRow?: string) {
   const layout = await toolbar.evaluate((bar) => {
     const box = bar.getBoundingClientRect();
-    const items = Array.from(bar.children).map((el) => {
+    // What isn't drawn has no place on the row (the phone's model button).
+    const shown = Array.from(bar.children).filter(
+      (el) => getComputedStyle(el).display !== "none",
+    );
+    const items = shown.map((el) => {
       const r = el.getBoundingClientRect();
       return {
         name: el.className,
