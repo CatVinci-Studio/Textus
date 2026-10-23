@@ -56,7 +56,8 @@ struct Http {
 }
 
 enum Transport {
-    Stdio(Stdio),
+    // Boxed: a Windows process handle makes it several times Http's size.
+    Stdio(Box<Stdio>),
     Http(Http),
 }
 
@@ -87,7 +88,7 @@ impl Connection {
     pub async fn open(endpoint: &Endpoint) -> Result<Self, String> {
         let transport = match endpoint {
             Endpoint::Command { program, args, env } => {
-                Transport::Stdio(spawn(program, args, env)?)
+                Transport::Stdio(Box::new(spawn(program, args, env)?))
             }
             Endpoint::Url { url, headers } => Transport::Http(Http {
                 client: crate::net::client(Duration::from_secs(15), TOOL_TIMEOUT)
