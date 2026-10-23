@@ -335,6 +335,12 @@ button.agent-context-chip:hover {
   border-radius: var(--radius-block);
   padding: 6px 8px;
   margin: 4px 0 0;
+  /* A long result (a whole skill's text) scrolls in its own box, the
+     summary that closes it just above: laid out in full it ran on for
+     screens, and closing it meant scrolling back up to find the summary.
+     As the thinking row's text does. */
+  max-height: min(320px, 45vh);
+  overflow-y: auto;
 }
 
 .agent-thinking {

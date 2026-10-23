@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * Textus AI's edits as they really arrive: streamed over the onEvent channel
@@ -446,4 +446,48 @@ test("a streaming reply stays where the reader scrolled it, and follows again fr
   await list.evaluate((e) => e.scrollTo({ top: e.scrollHeight }));
   await page.waitForTimeout(800);
   expect(await gap()).toBeLessThan(40);
+});
+
+test("a long step result opens in a box of its own, its summary at hand to close it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1100, height: 700 });
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(page, "One line.");
+  // A whole skill's text, as use_skill returns it.
+  const skill = Array.from(
+    { length: 120 },
+    (_, i) => `${i + 1}. A rule of the skill, written out in full.`,
+  ).join("\n");
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "Translate it" },
+      {
+        kind: "ToolCall",
+        call_id: "s1",
+        name: "use_skill",
+        arguments: JSON.stringify({ name: "translate" }),
+      },
+      { kind: "ToolResult", call_id: "s1", output: skill },
+      { kind: "Assistant", text: "Done." },
+    ],
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Translate it");
+  await composer.press("Enter");
+  const result = page.locator(".agent-tool-result");
+  await result.locator("summary").click();
+  const box = result.locator("pre");
+  await expect(box).toBeVisible();
+  expect((await box.boundingBox())!.height).toBeLessThanOrEqual(320);
+  // The rest scrolls inside it; the summary stays on screen, and closes it.
+  expect(
+    await box.evaluate((el) => el.scrollHeight > el.clientHeight + 100),
+  ).toBe(true);
+  await expect(result.locator("summary")).toBeInViewport();
+  await result.locator("summary").click();
+  await expect(box).toBeHidden();
 });
