@@ -851,6 +851,7 @@ utiliser une.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Fermer l'onglet",
+  splitDivider: "Séparateur entre les documents",
   menuUndo: "Annuler",
   menuRedo: "Rétablir",
   menuFindReplace: "Rechercher et remplacer…",

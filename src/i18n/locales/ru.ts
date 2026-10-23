@@ -833,6 +833,7 @@ export default {
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Закрыть вкладку",
+  splitDivider: "Разделитель между документами",
   menuUndo: "Отменить",
   menuRedo: "Повторить",
   menuFindReplace: "Найти и заменить…",

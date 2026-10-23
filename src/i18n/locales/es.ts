@@ -841,6 +841,7 @@ para usar una.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Cerrar pestaña",
+  splitDivider: "Separador entre los documentos",
   menuUndo: "Deshacer",
   menuRedo: "Rehacer",
   menuFindReplace: "Buscar y reemplazar…",

@@ -817,6 +817,7 @@ type /name in a conversation to use one.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Close Tab",
+  splitDivider: "Divider between the documents",
   menuUndo: "Undo",
   menuRedo: "Redo",
   menuFindReplace: "Find & Replace…",

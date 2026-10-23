@@ -754,6 +754,7 @@ export default {
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "關閉分頁",
+  splitDivider: "兩篇文件之間的分隔線",
   menuUndo: "復原",
   menuRedo: "重做",
   menuFindReplace: "尋找與取代…",

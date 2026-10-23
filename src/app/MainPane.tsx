@@ -10,6 +10,9 @@ import type { AgentMode } from "../settings/SettingsContext";
 import { PluginTabPane } from "../plugins/PluginWebview";
 import { WebPagePane } from "../plugins/WebPagePane";
 import { TabBar } from "./TabBar";
+import { useSplitPanes } from "./useSplitPanes";
+import { SplitDivider, splitGridStyles } from "./SplitDivider";
+import "./split-panes.css";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 
@@ -46,8 +49,20 @@ export function MainPane({
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
   t: Strings;
 }) {
+  const split = useSplitPanes(
+    tabs.map((tab) => tab.id),
+    activeTabId,
+    onAdd,
+  );
+  const grid = split && splitGridStyles(split, showTabBar);
+  const paneOf = (id: string) =>
+    split?.panes[0] === id ? "first" : split?.panes[1] === id ? "second" : null;
   return (
-    <main className="main-pane">
+    <main
+      className={split ? "main-pane main-pane-split" : "main-pane"}
+      data-split={split?.direction}
+      style={grid?.column}
+    >
       {showTabBar && (
         <TabBar
           tabs={tabs.map((tab) => ({
@@ -78,51 +93,80 @@ export function MainPane({
         tabs preserves undo history, scroll position, and in-flight AI
         state - only the active one is ever unmounted-on-purpose (via
         reloadKey, when leaving source mode). */}
-      {tabs.map((tab) => (
-        <div
-          key={tab.id}
-          data-active-tab={tab.id === activeTabId}
-          style={{ display: tab.id === activeTabId ? "contents" : "none" }}
-        >
-          {tab.view?.kind === "web" && tab.view.resource ? (
-            <WebPagePane url={tab.view.resource} t={t} />
-          ) : tab.view && tab.view.kind !== "web" ? (
-            <PluginTabPane
-              tabId={tab.id}
-              plugin={tab.view.plugin}
-              view={tab.view.view}
-              kind={tab.view.kind}
-              resource={tab.view.resource}
-              state={tab.view.state}
-            />
-          ) : tab.sourceMode && tab.splitView ? (
-            <SplitView
-              content={tab.content}
-              filePath={tab.path}
-              typewriter={typewriter}
-              onChange={(markdown) => onChange(tab.id, markdown)}
-            />
-          ) : tab.sourceMode ? (
-            <SourceTextarea
-              value={tab.content}
-              typewriter={typewriter}
-              onChange={(markdown) => onChange(tab.id, markdown)}
-            />
-          ) : (
-            <EditorPane
-              key={`${tab.id}-${tab.reloadKey}`}
-              tabId={tab.id}
-              filePath={tab.path}
-              docTitle={tabTitle(tab, t)}
-              initialValue={tab.content}
-              onChange={onChange}
-              isActive={tab.id === activeTabId}
-              tour={tour && tab.id === tour.tabId ? tour.ai : null}
-              tourMode={tour && tab.id === tour.tabId ? tour.mode : null}
-            />
-          )}
-        </div>
-      ))}
+      {/* Split (a plugin's, through split-layout.ts), two tabs show side
+        by side, each in its pane; a click or focus in one brings its tab
+        to the front. */}
+      {tabs.map((tab) => {
+        const pane = paneOf(tab.id);
+        return (
+          <div
+            key={tab.id}
+            data-active-tab={tab.id === activeTabId}
+            data-pane={pane ?? undefined}
+            className={pane ? "split-pane" : undefined}
+            style={
+              pane && grid
+                ? grid[pane]
+                : { display: tab.id === activeTabId ? "contents" : "none" }
+            }
+            onPointerDownCapture={
+              pane && tab.id !== activeTabId
+                ? () => onActivate(tab.id)
+                : undefined
+            }
+            onFocusCapture={
+              pane && tab.id !== activeTabId
+                ? () => onActivate(tab.id)
+                : undefined
+            }
+          >
+            {tab.view?.kind === "web" && tab.view.resource ? (
+              <WebPagePane url={tab.view.resource} t={t} />
+            ) : tab.view && tab.view.kind !== "web" ? (
+              <PluginTabPane
+                tabId={tab.id}
+                plugin={tab.view.plugin}
+                view={tab.view.view}
+                kind={tab.view.kind}
+                resource={tab.view.resource}
+                state={tab.view.state}
+              />
+            ) : tab.sourceMode && tab.splitView ? (
+              <SplitView
+                content={tab.content}
+                filePath={tab.path}
+                typewriter={typewriter}
+                onChange={(markdown) => onChange(tab.id, markdown)}
+              />
+            ) : tab.sourceMode ? (
+              <SourceTextarea
+                value={tab.content}
+                typewriter={typewriter}
+                onChange={(markdown) => onChange(tab.id, markdown)}
+              />
+            ) : (
+              <EditorPane
+                key={`${tab.id}-${tab.reloadKey}`}
+                tabId={tab.id}
+                filePath={tab.path}
+                docTitle={tabTitle(tab, t)}
+                initialValue={tab.content}
+                onChange={onChange}
+                isActive={tab.id === activeTabId}
+                tour={tour && tab.id === tour.tabId ? tour.ai : null}
+                tourMode={tour && tab.id === tour.tabId ? tour.mode : null}
+              />
+            )}
+          </div>
+        );
+      })}
+      {split && grid && (
+        <SplitDivider
+          layout={split}
+          style={grid.divider}
+          label={t.splitDivider}
+        />
+      )}
     </main>
   );
 }

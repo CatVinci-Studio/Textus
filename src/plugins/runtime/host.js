@@ -227,6 +227,15 @@
       openExternal: function (url) {
         return call("window.openExternal", { url: String(url) });
       },
+      splitEditor: function (direction) {
+        return call("window.splitEditor", { direction: direction || "row" });
+      },
+      closeSplit: function () {
+        return call("window.closeSplit", {});
+      },
+      layout: function () {
+        return call("window.layout", {});
+      },
       openUntitled: function (content, options) {
         return call("window.openUntitled", {
           content: String(content),

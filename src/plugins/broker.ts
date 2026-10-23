@@ -22,6 +22,7 @@ import { readPluginFile, withResources, type PluginOrigin } from "./files";
 import { localize, type Permission, type PluginManifest } from "./manifest";
 import { showQuickPick, type QuickPickItem } from "./quick-pick";
 import { webPageUrl } from "./WebPagePane";
+import { closeSplit, splitEditor, splitLayout } from "../app/split-layout";
 import { workspaceHandlers, type PluginScope } from "./broker-workspace";
 import type { Endpoint } from "./rpc";
 import { lazyModule, type LazyModule } from "../lazy/lazy-module";
@@ -452,6 +453,24 @@ export class PluginHost {
       }) => {
         this.need("workspace.read");
         getWindowAccess()?.openFile(path, heading);
+      },
+      // The layout: two documents side by side or one over the other.
+      // The panes are the app's; when they split is the plugin's.
+      "window.splitEditor": ({ direction }: { direction?: string }) => {
+        if (
+          direction !== undefined &&
+          direction !== "row" &&
+          direction !== "column"
+        )
+          throw new Error("direction is row or column.");
+        splitEditor(direction ?? "row");
+      },
+      "window.closeSplit": () => closeSplit(),
+      "window.layout": () => {
+        const layout = splitLayout();
+        return layout?.panes[1]
+          ? { split: layout.direction, ratio: layout.ratio }
+          : { split: null };
       },
       "window.openUntitled": ({
         content,

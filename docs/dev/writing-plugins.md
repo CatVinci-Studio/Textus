@@ -132,6 +132,14 @@ Every call returns a promise. By namespace:
 { title, state })`, `openWebPage(url)` (a web page in a tab, with its
     own origin and cookies; needs `network:` for its host),
     `openExternal(url)` (the browser);
+  - `splitEditor(direction)`: the document in front beside another tab
+    (`"row"`, side by side) or above it (`"column"`); with one tab, a
+    blank one is opened for the second pane, and already split, the panes
+    turn that way. `closeSplit()` goes back to one document, and
+    `layout()` says what is shown (`{ split: "row" | "column" | null,
+ratio }`). The app draws the panes and the line between them; a click
+    in a pane brings its tab to the front, and a tab chosen from the tab
+    bar opens in the pane in front;
   - `setStatusItem(id, { text, tooltip?, command? })`: a short status in
     the window bar beside the word count, which runs `command` when
     clicked; its `dispose()`, or the plugin stopping, takes it away;

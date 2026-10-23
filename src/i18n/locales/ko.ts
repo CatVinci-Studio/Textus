@@ -783,6 +783,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "탭 닫기",
+  splitDivider: "문서 사이 구분선",
   menuUndo: "실행 취소",
   menuRedo: "다시 실행",
   menuFindReplace: "찾기 및 바꾸기…",

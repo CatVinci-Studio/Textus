@@ -823,6 +823,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Tab schließen",
+  splitDivider: "Trennlinie zwischen den Dokumenten",
   menuUndo: "Rückgängig",
   menuRedo: "Wiederholen",
   menuFindReplace: "Suchen & Ersetzen…",

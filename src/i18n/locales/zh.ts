@@ -753,6 +753,7 @@ export default {
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "关闭标签页",
+  splitDivider: "两篇文档之间的分隔线",
   menuUndo: "撤销",
   menuRedo: "重做",
   menuFindReplace: "查找与替换…",
