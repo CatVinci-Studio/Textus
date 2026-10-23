@@ -33,6 +33,7 @@ mod settings;
 #[cfg(desktop)]
 mod tab_drag;
 mod walk;
+mod window_frame;
 
 use ai::agent::ai_agent_message;
 use ai::cancel::ai_cancel;
@@ -129,13 +130,14 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                     app.exit(0);
                 }
             }
-            // Nothing else remembers a window's size between launches (the
-            // undecorated Linux window gets no help from the desktop either).
-            // Close, not Destroyed - by then the size can no longer be read.
+            // Nothing else remembers a window's size and place between
+            // launches (the undecorated Linux window gets no help from the
+            // desktop either). Close, not Destroyed - by then they can no
+            // longer be read.
             if matches!(event, tauri::WindowEvent::CloseRequested { .. })
                 && commands::chat_window::is_editor_window(window.label())
             {
-                commands::prefs::remember_editor_window_size(app, window);
+                commands::prefs::remember_editor_window(app, window);
             }
         })
 }
