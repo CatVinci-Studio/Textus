@@ -77,9 +77,9 @@ test("the mode picker is a segmented control on a phone", async ({ page }) => {
   await openPhone(page);
   const dock = await openQuickAsk(page);
   const modes = dock.getByRole("radiogroup", { name: "Mode" });
-  // Quick Ask: Revise (on) and Review - no Write.
-  await expect(modes.getByRole("radio")).toHaveText(["Revise", "Review"]);
-  await expect(modes.getByRole("radio", { name: "Revise" })).toHaveAttribute(
+  // Quick Ask: Write (on) and Review.
+  await expect(modes.getByRole("radio")).toHaveText(["Write", "Review"]);
+  await expect(modes.getByRole("radio", { name: "Write" })).toHaveAttribute(
     "aria-checked",
     "true",
   );
@@ -88,19 +88,19 @@ test("the mode picker is a segmented control on a phone", async ({ page }) => {
     "aria-checked",
     "true",
   );
-  await expect(modes.getByRole("radio", { name: "Revise" })).toHaveAttribute(
+  await expect(modes.getByRole("radio", { name: "Write" })).toHaveAttribute(
     "aria-checked",
     "false",
   );
   await expect(dock.locator("select")).toHaveCount(0);
   await page.keyboard.press("Escape");
 
-  // The Textus AI sheet's composer: all three, and 44pt buttons.
+  // The Textus AI sheet's composer: the same two, and 44pt buttons.
   await page.locator(".window-bar-toggle").tap();
   const sheet = page.locator(".agent-panel");
   await expect(
     sheet.getByRole("radiogroup", { name: "Mode" }).getByRole("radio"),
-  ).toHaveText(["Write", "Review", "Revise"]);
+  ).toHaveText(["Write", "Review"]);
   await expectTouchTarget(page, ".agent-panel .chat-mode-segments");
   await expectTouchTarget(page, ".agent-panel .inline-chat-attach");
   await expectTouchTarget(page, ".agent-panel .inline-chat-web-search");
@@ -132,7 +132,9 @@ test("a proposed edit is reviewed in the dock and lands in the document", async 
   await dock.locator(".inline-chat-send").tap();
 
   // The preview is in the document; the decision is in the dock.
-  await expect(page.locator(".milkdown .pending-delete").first()).toBeAttached();
+  await expect(
+    page.locator(".milkdown .pending-delete").first(),
+  ).toBeAttached();
   await expect(dock).toContainText("Shortened.");
   const accept = dock.getByRole("button", { name: "Accept", exact: true });
   await expect(accept).toBeVisible();

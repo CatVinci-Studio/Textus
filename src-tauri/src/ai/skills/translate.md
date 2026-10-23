@@ -46,7 +46,6 @@ metadata:
 - Change figures, add explanations the source lacks, or drop sentences.
 
 ## Deliver
-- Revise mode: replace the passage with the translation, one proposal per section. "Bilingual" or "keep the original": insert_after each paragraph instead.
-- Write mode: insert_after each paragraph, as for "bilingual" - the original stays.
+- Write mode: replace the passage with the translation, one proposal per section. "Bilingual" or "keep the original": insert_after each paragraph instead.
 - Review mode: the translation in the reply.
 - Reply in the user's language, not the target's: one sentence, plus at most three terms or names the user should check.

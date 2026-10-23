@@ -127,7 +127,7 @@ pub(super) const APP_GUIDE_POINTER: &str = "Textus's own features - the project 
 /// The app guide (see APP_GUIDE).
 pub(crate) fn app_guide() -> String {
     format!(
-        "What the app calls the things that shape your work, in its English UI: the project folder, whose .textus/ folder holds the project's own settings. The writing instructions: agent.md files in the global config folder and in .textus/, shown to you under ---user instructions--- headings and used only in conversations; the global ones open from Settings > {AI_NAME} > Writing Instructions (agent.md) > Edit agent.md, the project's from Edit project writing instructions in the project menu. Skills: reusable instructions the user calls with /name, or that you load when a request matches one, each one Markdown file - a name and a one-line description at the top, then the instructions. The app ships built-in skills, listed in Settings > {AI_NAME} > Built-in skills, where each has a switch to turn it off and Customize…, which copies it into the global config folder's skills/ and opens the copy to edit (Reset deletes the copy and brings the built-in back); the user's own skills go in .textus/skills/ or in the global config folder's skills/ (Settings > {AI_NAME} > Skills > Import Skill… copies a file there), and one with a built-in skill's name replaces it. The library: one file per person, place or term in .textus/library, an entry sent to you whenever its name or an alias appears in the user's message or the open document (aliases go on an `aliases:` line at the top of the entry); New library entry… in the project menu starts one. The style profile: .textus/style.md, sent to you as ---the author's style profile---; Learn my style from samples… in the project menu drafts it from the user's own writing (\"Learn my style\"), Create style profile starts an empty one, and once it exists Open style profile in the menu, or the Style chip next to the folder name, opens it. Writing conventions (Settings > {AI_NAME}, under Writing Assistance) picks the punctuation, spacing and number norms you, the grammar check and check_conventions follow - Automatic, or one profile such as en-GB/govuk for documents in that language; a `conventions:` line in the style profile's front matter overrides it for the project. The style profile and the library also shape completion, the grey suggestions as the user types; Enable AI completion in Settings > {AI_NAME}, under Writing Assistance, turns completion on or off, and Completion tone there sets its register. What you remember: what Textus AI keeps after each conversation, one small file each - the user's personal memories in the global config folder's memory/, the project's in .textus/memory/, facts about the work as library entries - shown with Undo under your reply and listed in the AI panel's Memory tab, where the user can edit, delete or move each one; Remember automatically in Settings > {AI_NAME} turns it on or off. The panel's modes are Write, which drafts new text into the document, Review, which only reads and comments, and Revise, which proposes changes to the text already there; the user applies a proposal with Accept or drops it with Reject.\nAsked how to do something in the app, answer in two to four plain sentences: what to use, where it is and what it does - for a skill, first a built-in skill that already does it (named as their UI names it) and Customize… to adapt it, before writing one from scratch - no headings or code blocks, no tips they didn't ask for, and no remarks about their document or their files."
+        "What the app calls the things that shape your work, in its English UI: the project folder, whose .textus/ folder holds the project's own settings. The writing instructions: agent.md files in the global config folder and in .textus/, shown to you under ---user instructions--- headings and used only in conversations; the global ones open from Settings > {AI_NAME} > Writing Instructions (agent.md) > Edit agent.md, the project's from Edit project writing instructions in the project menu. Skills: reusable instructions the user calls with /name, or that you load when a request matches one, each one Markdown file - a name and a one-line description at the top, then the instructions. The app ships built-in skills, listed in Settings > {AI_NAME} > Built-in skills, where each has a switch to turn it off and Customize…, which copies it into the global config folder's skills/ and opens the copy to edit (Reset deletes the copy and brings the built-in back); the user's own skills go in .textus/skills/ or in the global config folder's skills/ (Settings > {AI_NAME} > Skills > Import Skill… copies a file there), and one with a built-in skill's name replaces it. The library: one file per person, place or term in .textus/library, an entry sent to you whenever its name or an alias appears in the user's message or the open document (aliases go on an `aliases:` line at the top of the entry); New library entry… in the project menu starts one. The style profile: .textus/style.md, sent to you as ---the author's style profile---; Learn my style from samples… in the project menu drafts it from the user's own writing (\"Learn my style\"), Create style profile starts an empty one, and once it exists Open style profile in the menu, or the Style chip next to the folder name, opens it. Writing conventions (Settings > {AI_NAME}, under Writing Assistance) picks the punctuation, spacing and number norms you, the grammar check and check_conventions follow - Automatic, or one profile such as en-GB/govuk for documents in that language; a `conventions:` line in the style profile's front matter overrides it for the project. The style profile and the library also shape completion, the grey suggestions as the user types; Enable AI completion in Settings > {AI_NAME}, under Writing Assistance, turns completion on or off, and Completion tone there sets its register. What you remember: what Textus AI keeps after each conversation, one small file each - the user's personal memories in the global config folder's memory/, the project's in .textus/memory/, facts about the work as library entries - shown with Undo under your reply and listed in the AI panel's Memory tab, where the user can edit, delete or move each one; Remember automatically in Settings > {AI_NAME} turns it on or off. The panel's modes are Write, which writes in the document - new text, and changes to the text already there - and Review, which only reads and comments; the user applies a proposal with Accept or drops it with Reject.\nAsked how to do something in the app, answer in two to four plain sentences: what to use, where it is and what it does - for a skill, first a built-in skill that already does it (named as their UI names it) and Customize… to adapt it, before writing one from scratch - no headings or code blocks, no tips they didn't ask for, and no remarks about their document or their files."
     )
 }
 
@@ -139,9 +139,10 @@ pub(crate) fn app_guide() -> String {
 pub enum AgentMode {
     /// Reads, answers and comments: no propose_edit.
     Review,
-    /// Changes the text that is there: every propose_edit action.
-    Revise,
-    /// Only adds new text: propose_edit limited to the insertion actions.
+    /// Adds text and changes the text that is there: every propose_edit
+    /// action. 1.2.0's Revise mode, which 1.2.1 folded into it, reads as
+    /// this one.
+    #[serde(alias = "revise")]
     Write,
 }
 
@@ -149,7 +150,6 @@ impl std::fmt::Display for AgentMode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
             AgentMode::Review => "review",
-            AgentMode::Revise => "revise",
             AgentMode::Write => "write",
         })
     }
@@ -174,7 +174,7 @@ pub(crate) fn build_instructions(
     let mut sections = vec![AGENT_ROLE.to_string()];
     // Tool-less, everything goes in the system prompt; with tools, what
     // changes from request to request comes with the message instead (see
-    // request_preamble), so a switch between Write and Revise, or a memory
+    // request_preamble), so a switch between Write and Review, or a memory
     // saved, leaves the cached prefix as it was.
     if !with_tools {
         sections.push(mode_section(mode, ui_language));
@@ -244,7 +244,7 @@ pub(crate) fn build_instructions(
 }
 
 /// The `---interaction mode---` section: what the user is in the panel for.
-/// Said in Write and Revise: text proposed and not decided yet is the
+/// Said in Write: text proposed and not decided yet is the
 /// document as the user sees it. A second request used to edit the
 /// document as saved under a first one's proposals - continuing before
 /// them, or quoting their text as an anchor the document didn't have.
@@ -265,9 +265,8 @@ pub(super) fn mode_section(mode: AgentMode, ui_language: &str) -> String {
         None => format!("{mode} mode"),
     };
     match mode {
-        AgentMode::Review => format!("---interaction mode: review---\nThe user is in {}: answer, explain, discuss or research, and pin feedback to passages with add_comment; you can't change the document here. When they ask for a change anyway, give the new text in your reply and say that in {} you can propose it for them to apply with one click - or, for new text added to the document, in {}.", named("Review", true), named("Revise", false), named("Write", false)),
-        AgentMode::Revise => format!("---interaction mode: revise---\nThe user is in {}: carry out their request on the document - rewrite, tighten, fix, restructure, delete or add - and submit every document change through propose_edit so they can review it before applying. {UNDECIDED_TEXT}", named("Revise", true)),
-        AgentMode::Write => format!("---interaction mode: write---\nThe user is in {}: draft new text into the document - continue it, or add a paragraph, section, list, scene or dialogue - through propose_edit, which in this mode only adds text (append, insert_at_cursor, insert_after, insert_before); the user reviews each proposal before it is applied. Where it goes: with a <selected-text> block, right after the selection - insert_after with the selection's last sentence (or the whole selection) as `anchor` - never in place of it; otherwise, with a <cursor> block in a document that has text, insert_at_cursor; in an empty document, append. Questions and feedback still get a plain reply. You can't change or remove text that is already there in this mode: when the user asks for that, say it needs {}, and add nothing in its place. {UNDECIDED_TEXT} That text is the one you may change here.", named("Write", true), named("Revise", false)),
+        AgentMode::Review => format!("---interaction mode: review---\nThe user is in {}: answer, explain, discuss or research, and pin feedback to passages with add_comment; you can't change the document here. When they ask for a change anyway, give the new text in your reply and say that in {} you can propose it for them to apply with one click.", named("Review", true), named("Write", false)),
+        AgentMode::Write => format!("---interaction mode: write---\nThe user is in {}: carry out their request on the document - continue it, add a paragraph, section, list, scene or dialogue, or rewrite, tighten, fix, translate, restructure or delete what is there - and submit every document change through propose_edit so they can review it before applying. Where new text goes, when the request doesn't say: with a <selected-text> block, a change to the selection (rewrite it, translate it, shorten it) replaces it with replace_selection, while more text (continue, add) goes right after it - insert_after with the selection's last sentence (or the whole selection) as `anchor`; otherwise, with a <cursor> block in a document that has text, insert_at_cursor; in an empty document, append. Questions and feedback still get a plain reply. {UNDECIDED_TEXT}", named("Write", true)),
     }
 }
 

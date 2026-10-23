@@ -27,15 +27,6 @@ pub(crate) const EDIT_ACTIONS: [&str; 7] = [
     "insert_at_cursor",
 ];
 
-/// The actions that only add text - all Write mode's propose_edit offers
-/// (agent::AgentMode).
-pub(crate) const INSERT_ACTIONS: [&str; 4] = [
-    "append",
-    "insert_at_cursor",
-    "insert_after",
-    "insert_before",
-];
-
 pub(super) fn needs_anchor(action: &str) -> bool {
     // replace_selection targets the user's captured selection, so there is
     // no anchor to locate (and the selection may not be unique in the
@@ -226,31 +217,6 @@ fn quotes_undecided(ctx: &ToolContext, anchor: &str) -> bool {
         .map(|text| text.matches(anchor).count())
         .sum();
     found == 1
-}
-
-/// Write mode's propose_edit. Its schema offers only INSERT_ACTIONS, but a
-/// model may send another action anyway; it is refused here, so nothing
-/// that changes or removes the user's text reaches the editor in this mode.
-pub(super) fn propose_insertion(ctx: &ToolContext, arguments: &str) -> String {
-    let action = serde_json::from_str::<serde_json::Value>(arguments)
-        .ok()
-        .and_then(|v| v.get("action")?.as_str().map(str::to_string))
-        .unwrap_or_default();
-    // Text it proposed and the user hasn't decided on isn't theirs yet:
-    // that it may change.
-    let own = serde_json::from_str::<serde_json::Value>(arguments)
-        .ok()
-        .and_then(|v| v.get("anchor")?.as_str().map(str::to_string))
-        .is_some_and(|anchor| {
-            !anchor.is_empty() && !ctx.document.contains(&anchor) && quotes_undecided(ctx, &anchor)
-        });
-    if !INSERT_ACTIONS.contains(&action.as_str()) && !own {
-        return format!(
-            "Not proposed: Write mode only adds text, with {} - `{action}` would change or remove text that is already there. Add the new text instead, or tell the user that changing existing text needs Revise mode.",
-            INSERT_ACTIONS.join(", ")
-        );
-    }
-    propose_edit(ctx, arguments)
 }
 
 /// How long a stretch of text is, in the unit its language counts in:

@@ -1,7 +1,7 @@
 //! Where a request keeps the user waiting: each case prints the stream's
 //! timeline (harness::Timeline) - when thinking ends, when the edit's
 //! arguments start, how long the anchor takes before the preview can be
-//! placed - for a rewrite in Revise and a continuation in Write, with
+//! placed - for a rewrite and a continuation in Write, with
 //! Deep thinking off and on.
 //!
 //!   TEXTUS_EVAL_TIMELINE=1 cargo test --lib live_eval::latency -- --ignored --nocapture --test-threads=1
@@ -76,12 +76,12 @@ fn run_on(
 #[ignore = "live: calls the model"]
 fn revise_whole_document() {
     run(
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Auto,
         "帮我把全文润色一下，语气更像新闻报道",
     );
     run(
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Deep,
         "帮我把全文润色一下，语气更像新闻报道",
     );
@@ -91,12 +91,12 @@ fn revise_whole_document() {
 #[ignore = "live: calls the model"]
 fn revise_one_paragraph() {
     run(
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Auto,
         "第二段写得啰嗦，帮我精简",
     );
     run(
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Deep,
         "第二段写得啰嗦，帮我精简",
     );
@@ -123,7 +123,7 @@ fn redo_a_picture() {
     run_on(
         &doc,
         Some(&pictures),
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Auto,
         "把这张图改成下雨的夜晚，窗户透出暖光",
     );
@@ -141,7 +141,7 @@ fn translate_a_story_with_its_picture() {
     run_on(
         doc,
         Some(&pictures),
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Auto,
         "翻译为英文，并且图片也换外国女孩",
     );
@@ -155,7 +155,7 @@ fn translate_a_story() {
     run_on(
         include_str!("fixtures/borrowing-rain.md"),
         None,
-        AgentMode::Revise,
+        AgentMode::Write,
         ThinkingLevel::Auto,
         "翻译为英文",
     );

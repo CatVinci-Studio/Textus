@@ -120,14 +120,17 @@ export type ImageStorageMode = "local" | "image-host";
 export type ImageHost = "picgo" | "smms" | "imgur" | "custom";
 export const IMAGE_HOSTS: ImageHost[] = ["picgo", "smms", "imgur", "custom"];
 export type ImageNamingMode = "auto" | "original" | "ask";
-/** The AI conversation's mode: Write only adds text, Review only reads and
- *  comments, Revise changes the text that is there. Mirrors `AgentMode` in
- *  src-tauri/src/ai/agent/prompt.rs. */
-export type AgentMode = "write" | "review" | "revise";
-export const AGENT_MODES: readonly AgentMode[] = ["write", "review", "revise"];
+/** The AI conversation's mode: Write adds text and changes the text that
+ *  is there, Review only reads and comments. Mirrors `AgentMode` in
+ *  src-tauri/src/ai/agent/prompt.rs. In the order the composer offers
+ *  them. */
+export type AgentMode = "write" | "review";
+export const AGENT_MODES: readonly AgentMode[] = ["write", "review"];
 
-/** A stored mode, or null for anything that isn't one of today's. */
+/** A stored mode, or null for anything that isn't one of today's - 1.2.0's
+ *  Revise, folded into Write in 1.2.1, reads as Write. */
 export function storedAgentMode(value: unknown): AgentMode | null {
+  if (value === "revise") return "write";
   return AGENT_MODES.includes(value as AgentMode) ? (value as AgentMode) : null;
 }
 

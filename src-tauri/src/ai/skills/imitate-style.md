@@ -45,7 +45,6 @@ metadata:
 - Use an imitation to pass off a message as written by a real person.
 
 ## Deliver
-- Revise mode: replace the target passage, one proposal per paragraph for long passages; or insert the new text.
-- Write mode: insert the new text; a rewrite of a passage needs Revise mode.
+- Write mode: replace the target passage, one proposal per paragraph for long passages; or insert the new text.
 - Review mode: the rewritten text in the reply.
 - Reply with the two or three style traits you applied (for example "short declaratives, present tense, no semicolons"). If the user wants this style for every request, mention Learn my style from samples… in the project menu.

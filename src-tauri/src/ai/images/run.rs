@@ -347,7 +347,7 @@ impl ImageRun {
 }
 
 impl ImageRun {
-    /// generate_image for this request, offered in Write and Revise.
+    /// generate_image for this request, offered in Write.
     pub fn tool<'a>(
         &'a self,
         document: &'a crate::ai::doc_blocks::Document,

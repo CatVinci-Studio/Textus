@@ -94,9 +94,9 @@ pub enum Access {
 }
 
 /// The modes a tool is offered in.
-pub const EVERY_MODE: &[AgentMode] = &[AgentMode::Review, AgentMode::Revise, AgentMode::Write];
-/// Write and Revise: the modes that change the document.
-pub const EDITING_MODES: &[AgentMode] = &[AgentMode::Revise, AgentMode::Write];
+pub const EVERY_MODE: &[AgentMode] = &[AgentMode::Review, AgentMode::Write];
+/// Write: the modes that change the document.
+pub const EDITING_MODES: &[AgentMode] = &[AgentMode::Write];
 
 pub type ToolFuture<'a> = Pin<Box<dyn Future<Output = ToolOutput> + Send + 'a>>;
 

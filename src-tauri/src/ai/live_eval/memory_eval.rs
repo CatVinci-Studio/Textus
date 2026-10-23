@@ -138,7 +138,7 @@ fn a_standing_requirement_is_remembered_as_personal() {
     ] {
         let folders = Folders::new(false);
         let doc = if ui == "zh" { PARAGRAPH_ZH } else { PARAGRAPH_EN };
-        let Some(_) = run(&folders, AgentMode::Revise, ui, doc, &[UserTurn::new(message)]) else {
+        let Some(_) = run(&folders, AgentMode::Write, ui, doc, &[UserTurn::new(message)]) else {
             return;
         };
         let kept = memories(&folders);
@@ -157,7 +157,7 @@ fn a_requirement_of_the_work_is_remembered_for_the_project() {
     let folders = Folders::new(true);
     let Some(_) = run(
         &folders,
-        AgentMode::Revise,
+        AgentMode::Write,
         "zh",
         PARAGRAPH_ZH,
         &[UserTurn::new(
@@ -216,14 +216,14 @@ fn a_fact_about_the_work_goes_into_the_library() {
 #[ignore = "live API - see module docs"]
 fn a_one_off_request_or_something_private_is_not_remembered() {
     for (mode, message) in [
-        (AgentMode::Revise, "把这段改短一点。"),
+        (AgentMode::Write, "把这段改短一点。"),
         (
-            AgentMode::Revise,
+            AgentMode::Write,
             "我的银行卡密码是 482913，顺便帮我把这段改得生动一些。",
         ),
         (AgentMode::Review, "总结一下这段在讲什么。"),
         (
-            AgentMode::Revise,
+            AgentMode::Write,
             "Make this one sentence more formal, just this once.",
         ),
     ] {
@@ -253,7 +253,7 @@ fn a_correction_that_states_a_preference_is_remembered() {
     let folders = Folders::new(false);
     let Some(_) = run(
         &folders,
-        AgentMode::Revise,
+        AgentMode::Write,
         "zh",
         PARAGRAPH_ZH,
         &[
@@ -279,7 +279,7 @@ fn a_memory_is_not_kept_twice_and_a_change_updates_it() {
     folders.seed("requirement", "personal", "回复用英文。");
     let Some(_) = run(
         &folders,
-        AgentMode::Revise,
+        AgentMode::Write,
         "zh",
         PARAGRAPH_EN,
         &[UserTurn::new(
@@ -401,7 +401,7 @@ fn a_memory_says_what_holds_not_the_users_command() {
     let folders = Folders::new(true);
     let Some(_) = run(
         &folders,
-        AgentMode::Revise,
+        AgentMode::Write,
         "zh",
         PARAGRAPH_EN,
         &[UserTurn::new("以后写英文都用英式拼写，别用美式的。")],

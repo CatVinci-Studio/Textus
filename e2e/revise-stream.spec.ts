@@ -3,7 +3,7 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
- * A Revise rewrite streaming in is laid out sentence by sentence from the
+ * A rewrite streaming in is laid out sentence by sentence from the
  * start (pending-edit-plugin's streamDecorations): each sentence shows in
  * place as it completes, with no phase where the whole original is struck
  * and the new text streams after it as one block, and nothing moves when
