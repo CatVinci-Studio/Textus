@@ -14,6 +14,11 @@ import type {
   DirEntryInfo_Serialize,
   FolderIndex,
 } from "../platform/bindings/files";
+import type {
+  ChatAttachment,
+  StreamEvent_Serialize,
+} from "../platform/bindings/ai-agent";
+import type { AgentSkill_Serialize } from "../platform/bindings/ai-project";
 import type { GalleryTheme_Serialize } from "../platform/bindings/app";
 import type { CustomEndpointStatus_Serialize } from "../platform/bindings/auth";
 import type {
@@ -528,7 +533,7 @@ export function installDevTauriShim(): void {
           source: "global",
           overridesBuiltin: false,
           enabled: true,
-        };
+        } satisfies AgentSkill_Serialize;
         return Promise.resolve([...builtins, own]);
       }
       case "set_builtin_skill_enabled":
@@ -1040,7 +1045,7 @@ export function installDevTauriShim(): void {
             onEvent?.onmessage?.({
               type: "delta",
               text: reply.slice(sent, next),
-            });
+            } satisfies StreamEvent_Serialize);
             sent = next;
             if (sent >= reply.length) {
               clearInterval(timer);
@@ -1062,7 +1067,7 @@ export function installDevTauriShim(): void {
           name: "dev-shim-notes.md",
           content: "Canned dev-shim attachment content.",
           truncated: false,
-        });
+        } satisfies ChatAttachment);
       }
       return Promise.resolve(null);
     },

@@ -1,6 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isDesktopApp } from "./capabilities";
 import { AI_OFF, aiRequestsAllowed } from "./ai-gate";
+import { commands as aiCommands } from "./bindings/ai";
+import { commands as aiAgentCommands } from "./bindings/ai-agent";
+import { commands as aiConventionsCommands } from "./bindings/ai-conventions";
+import { commands as aiMemoryCommands } from "./bindings/ai-memory";
+import { commands as aiProjectCommands } from "./bindings/ai-project";
 import { commands as appCommands } from "./bindings/app";
 import { commands as authCommands } from "./bindings/auth";
 import { commands as fileCommands } from "./bindings/files";
@@ -29,6 +34,11 @@ export class IpcError extends Error {
 
 // The commands whose types are generated from Rust (src-tauri/src/bindings.rs).
 const commands = {
+  ...aiCommands,
+  ...aiAgentCommands,
+  ...aiConventionsCommands,
+  ...aiMemoryCommands,
+  ...aiProjectCommands,
   ...appCommands,
   ...authCommands,
   ...fileCommands,
@@ -49,8 +59,8 @@ type Answer<K extends Command> = [Awaited<ReturnType<Commands[K]>>] extends [
 /**
  * Calls a generated command: tsc checks its name, its arguments (in the
  * Rust function's order) and its answer against the Rust signature. The
- * commands not generated yet - the AI ones, raw bytes, iOS-only - still go
- * through `call`.
+ * commands not generated - those reading their inputs as one struct, the
+ * agent message, raw bytes, iOS-only - still go through `call`.
  */
 export async function command<K extends Command>(
   name: K,

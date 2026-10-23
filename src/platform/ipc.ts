@@ -2,33 +2,34 @@ import { Channel } from "@tauri-apps/api/core";
 import type { ProviderCatalogEntry } from "../ai/provider-catalog";
 import type { ImageModel, ImageProviderEntry } from "../ai/image-models";
 import type { SentBlock } from "../ai/doc-blocks";
-import type {
-  AgentSkill,
-  AgentTurn,
-  ChatAttachment,
-  ImageAttachment,
-  ThinkingLevel,
-} from "../ai/types";
+import type { AgentTurn, ImageAttachment, ThinkingLevel } from "../ai/types";
 import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
 import type { AgentMode } from "../settings/SettingsContext";
+import type {
+  CompletionRequest_Deserialize as CompletionRequest,
+  GrammarRequest_Deserialize as GrammarRequest,
+} from "./bindings/ai";
+import type { AgentTurn_Deserialize as AgentTurnInput } from "./bindings/ai-agent";
+import type {
+  PassRequest_Deserialize as PassRequest,
+  Value,
+} from "./bindings/ai-memory";
 import { isIOSApp } from "./capabilities";
 import { iosFiles } from "./ios-files";
-import { aiCall, call, desktopAction, desktopQuery } from "./ipc-call";
+import {
+  aiCall,
+  aiCommand,
+  command,
+  desktopActionCommand,
+  desktopQueryCommand,
+} from "./ipc-call";
 import type {
-  AgentWorkspaceInfo,
   CompletionHints,
-  ConventionsReport,
-  EffectiveConventions,
-  GeneratedImageData,
-  LibraryUse,
   MemoryKind,
   MemoryScope,
   RememberedChange,
   SkillListItem,
   StreamEvent,
-  TextMeasure,
-  WebSearchStatus,
-  WritingConventionsOptions,
 } from "./ipc-ai-types";
 export { IpcError } from "./ipc-call";
 export * from "./ipc-plugins";
@@ -117,26 +118,28 @@ export {
  */
 
 export const ai = {
-  listProviders: () => call<ProviderCatalogEntry[]>("list_providers"),
+  // Rust sends the dialect and the auth methods as plain strings, from the
+  // fixed sets ProviderCatalogEntry names.
+  listProviders: () =>
+    command("list_providers") as Promise<ProviderCatalogEntry[]>,
   /** Whether Deep thinking changes anything for this provider and Agent
    *  model (null: the provider's default) - ai_can_think_deeper in
    *  src-tauri/src/ai/catalog.rs. */
   canThinkDeeper: (provider: string, model: string | null) =>
-    call<boolean>("ai_can_think_deeper", { provider, model }),
+    command("ai_can_think_deeper", provider, model),
   /** The services Settings › Textus AI › Image model offers (ai/images.rs). */
-  listImageProviders: () => call<ImageProviderEntry[]>("list_image_providers"),
+  listImageProviders: (): Promise<ImageProviderEntry[]> =>
+    command("list_image_providers"),
   /** A picture generate_image made, waiting for Accept or Reject. */
-  generatedImage: (id: string) =>
-    call<GeneratedImageData>("ai_generated_image", { id }),
+  generatedImage: (id: string) => command("ai_generated_image", id),
   /** Asks again for a picture that wasn't made, by itself. */
-  retryGeneratedImage: (id: string) =>
-    call<void>("ai_retry_generated_image", { id }),
+  retryGeneratedImage: (id: string) => command("ai_retry_generated_image", id),
   /** Lets a waiting picture go: rejected, or saved. */
   discardGeneratedImage: (id: string) =>
-    call<void>("ai_discard_generated_image", { id }),
+    command("ai_discard_generated_image", id),
   fetchAgentModels: (provider: string) =>
-    aiCall<string[]>("fetch_agent_models", { provider }),
-  setAiProxy: (proxy: string | null) => call<void>("set_ai_proxy", { proxy }),
+    aiCommand("fetch_agent_models", provider),
+  setAiProxy: (proxy: string | null) => command("set_ai_proxy", proxy),
   complete: (
     provider: string,
     before: string,
@@ -151,6 +154,8 @@ export const ai = {
       workspaceRoot: null,
     },
   ) =>
+    // Rust reads these keys as one struct (commands/args.rs), which the
+    // generated bindings can't call; the struct itself is generated.
     aiCall<string>("ai_complete", {
       provider,
       before,
@@ -160,7 +165,7 @@ export const ai = {
       hints,
       docPath: project.docPath,
       workspaceRoot: project.workspaceRoot,
-    }),
+    } satisfies CompletionRequest),
   grammarCheck: (
     provider: string,
     paragraph: string,
@@ -175,6 +180,7 @@ export const ai = {
     /** The app's language: the explanations are written in it. */
     uiLanguage: string | null = null,
   ) =>
+    // One struct in Rust, as ai_complete's.
     aiCall<GrammarIssue[]>("ai_grammar_check", {
       provider,
       paragraph,
@@ -183,7 +189,7 @@ export const ai = {
       docPath: project.docPath,
       workspaceRoot: project.workspaceRoot,
       uiLanguage,
-    }),
+    } satisfies GrammarRequest),
   agentMessage: ({
     onEvent,
     ...args
@@ -227,8 +233,12 @@ export const ai = {
   }) => {
     const channel = new Channel<StreamEvent>();
     if (onEvent) channel.onmessage = onEvent;
+    // More parameters than the generated bindings take (ten), so typed by
+    // hand; what the channel streams is generated, and the turns the
+    // frontend keeps must still be turns Rust reads.
     return aiCall<AgentTurn[]>("ai_agent_message", {
       ...args,
+      history: args.history satisfies AgentTurnInput[],
       onEvent: channel,
     });
   },
@@ -240,32 +250,20 @@ export const ai = {
     model: string | null,
     searchService: string,
     searxngUrl: string,
-  ) =>
-    call<WebSearchStatus>("web_search_status", {
-      provider,
-      model,
-      searchService,
-      searxngUrl,
-    }),
-  cancelAgentMessage: (requestId: string) =>
-    call<void>("ai_cancel", { requestId }),
+  ) => command("web_search_status", provider, model, searchService, searxngUrl),
+  cancelAgentMessage: (requestId: string) => command("ai_cancel", requestId),
 
   loadAgentWorkspace: (docPath: string | null, rootOverride: string | null) =>
-    call<AgentWorkspaceInfo>("load_agent_workspace", { docPath, rootOverride }),
+    command("load_agent_workspace", docPath, rootOverride),
   /** The writing conventions setting's allowed values (ai::conventions). */
-  writingConventionsOptions: () =>
-    call<WritingConventionsOptions>("writing_conventions_options"),
+  writingConventionsOptions: () => command("writing_conventions_options"),
   /** The profile a document follows, and each language's in its project. */
   writingConventionsEffective: (
     docPath: string | null,
     workspaceRoot: string | null,
     document: string | null = null,
   ) =>
-    call<EffectiveConventions>("writing_conventions_effective", {
-      docPath,
-      workspaceRoot,
-      document,
-    }),
+    command("writing_conventions_effective", docPath, workspaceRoot, document),
   /** Checks a document's writing conventions offline (no AI provider). */
   checkConventions: (
     document: string,
@@ -273,37 +271,32 @@ export const ai = {
     workspaceRoot: string | null,
     strictness: string | null = null,
   ) =>
-    call<ConventionsReport>("conventions_check_document", {
+    command(
+      "conventions_check_document",
       document,
       docPath,
       workspaceRoot,
       strictness,
-    }),
+    ),
   /** Exact platform counts: "x_weighted", "bluesky", "wechat_title"... */
   measureText: (text: string, metric: string) =>
-    call<TextMeasure | null>("measure_text", { text, metric }),
+    command("measure_text", text, metric),
   /** The project folder's text files, for @-mentions (ai::project). */
   listProjectFiles: (docPath: string | null, workspaceRoot: string | null) =>
-    call<string[]>("list_project_files", { docPath, workspaceRoot }),
+    command("list_project_files", docPath, workspaceRoot),
   readProjectFile: (
     docPath: string | null,
     workspaceRoot: string | null,
     path: string,
-  ) => call<string>("read_project_file", { docPath, workspaceRoot, path }),
+  ) => command("read_project_file", docPath, workspaceRoot, path),
   /** Creates `.textus/<rel>` from `template` if missing; returns its path. */
   ensureProjectFile: (
     docPath: string | null,
     workspaceRoot: string | null,
     rel: string,
     template: string,
-  ) =>
-    call<string>("ensure_project_file", {
-      docPath,
-      workspaceRoot,
-      rel,
-      template,
-    }),
-  pickTextFiles: () => call<string[]>("pick_text_files"),
+  ) => command("ensure_project_file", docPath, workspaceRoot, rel, template),
+  pickTextFiles: () => command("pick_text_files"),
   /** Undoes a remember call (ai::memory): deletes what it created, or
    *  writes back `previous`, the file before it updated it. */
   /** After an exchange: what to remember, update or forget, decided by
@@ -317,39 +310,42 @@ export const ai = {
     /** Recorded with what is remembered (`Source` in ai/memory.rs). */
     conversation: { id: string; title: string };
     exchange: { messages: string[]; reply: string };
-  }) => aiCall<RememberedChange[]>("memory_pass", args),
+  }) =>
+    // One struct in Rust, as ai_complete's.
+    aiCall<RememberedChange[]>("memory_pass", args satisfies PassRequest),
   /** What the writer will probably say next, after a reply
    *  (ai/next_message.rs); null when there is no clear next step. */
   suggestNextMessage: (args: {
     provider: string;
     model: string | null;
     exchange: { messages: string[]; reply: string };
-  }) => aiCall<string | null>("suggest_next_message", args),
+  }) =>
+    aiCommand("suggest_next_message", args.provider, args.model, args.exchange),
   memoryUndo: (
     docPath: string | null,
     workspaceRoot: string | null,
     id: string,
     previous: string | null,
-  ) => call<void>("memory_undo", { docPath, workspaceRoot, id, previous }),
+  ) => command("memory_undo", docPath, workspaceRoot, id, previous),
   /** Moves a memory to the other scope; returns its new id. */
   memoryMove: (
     docPath: string | null,
     workspaceRoot: string | null,
     id: string,
     scope: MemoryScope,
-  ) => call<string>("memory_move", { docPath, workspaceRoot, id, scope }),
+  ) => command("memory_move", docPath, workspaceRoot, id, scope),
   /** Puts a forgotten memory or library entry back; its new id. */
   memoryRestore: (
     docPath: string | null,
     workspaceRoot: string | null,
     id: string,
-  ) => call<string>("memory_restore", { docPath, workspaceRoot, id }),
+  ) => command("memory_restore", docPath, workspaceRoot, id),
   /** Deletes a memory or a library entry (`project/library/<stem>`). */
   memoryDelete: (
     docPath: string | null,
     workspaceRoot: string | null,
     id: string,
-  ) => call<void>("memory_delete", { docPath, workspaceRoot, id }),
+  ) => command("memory_delete", docPath, workspaceRoot, id),
   /** Saves one memory the user asked for with a click (a suggestion
    *  learned from revision choices); returns its id. Fails with plain
    *  words on a duplicate. */
@@ -359,26 +355,20 @@ export const ai = {
     kind: MemoryKind,
     scope: MemoryScope,
     text: string,
-  ) =>
-    call<{ remembered: string; scope: MemoryScope }>("memory_remember", {
-      docPath,
-      workspaceRoot,
-      kind,
-      scope,
-      text,
-    }),
+  ) => command("memory_remember", docPath, workspaceRoot, kind, scope, text),
   /** The revision choices log (ai/revision/revision-learning.ts), kept
    *  beside the personal memories and never sent anywhere; null when
    *  there is none yet. */
-  revisionChoicesRead: () => call<unknown>("revision_choices_read"),
+  revisionChoicesRead: () => command("revision_choices_read"),
+  // The log is the frontend's own shape, opaque JSON to Rust.
   revisionChoicesWrite: (log: object) =>
-    call<void>("revision_choices_write", { log }),
+    command("revision_choices_write", log as Value),
   /** The library entries the last request for the document carried. */
   libraryUse: (
     docPath: string | null,
     workspaceRoot: string | null,
     document: string,
-  ) => call<LibraryUse>("library_use", { docPath, workspaceRoot, document }),
+  ) => command("library_use", docPath, workspaceRoot, document),
   /** "Learn my style": writes the project's .textus/style.md from the
    *  picked samples and returns its path. */
   learnStyle: (args: {
@@ -387,37 +377,44 @@ export const ai = {
     docPath: string | null;
     workspaceRoot: string | null;
     files: string[];
-  }) => aiCall<string>("learn_style", args),
+  }) =>
+    aiCommand(
+      "learn_style",
+      args.provider,
+      args.model,
+      args.docPath,
+      args.workspaceRoot,
+      args.files,
+    ),
   /** Folder picker behind "Choose project folder…" (the project bar's menu
    *  and Settings > Textus AI > Project Folder). */
   pickWorkspaceRoot: (): Promise<string | null> =>
     isIOSApp
       ? iosFiles.pickProjectFolder()
-      : desktopQuery<string | null>("pick_workspace_root", null),
+      : desktopQueryCommand("pick_workspace_root", null),
   /** Reveals the global config folder, creating it - with `template` as
    *  its agent.md - on first use. */
   openGlobalAgentDir: (template: string) =>
-    desktopAction<void>("open_global_agent_dir", { template }),
+    desktopActionCommand("open_global_agent_dir", template),
   /** The global agent.md's path, created from `template` if missing. */
   ensureGlobalAgentMd: (template: string) =>
-    call<string>("ensure_global_agent_md", { template }),
-  importAgentSkill: () => call<AgentSkill[] | null>("import_agent_skill"),
+    command("ensure_global_agent_md", template),
+  importAgentSkill: () => command("import_agent_skill"),
   /** Every skill for this document - built-in, global and project - with
    *  the turned-off built-ins still in (`enabled: false`). Both null: the
    *  built-ins and the global ones, as Settings shows them. */
   listSkills: (docPath: string | null, workspaceRoot: string | null) =>
-    call<SkillListItem[]>("list_skills", { docPath, workspaceRoot }),
+    command("list_skills", docPath, workspaceRoot) as Promise<SkillListItem[]>,
   /** Copies a built-in into the global config folder's skills/ (or finds
    *  the copy already there) and returns its path, to open in a tab. */
   customizeBuiltinSkill: (name: string) =>
-    call<string>("customize_builtin_skill", { name }),
+    command("customize_builtin_skill", name),
   /** Deletes the copy Customize… made, so the built-in applies again;
    *  returns the deleted files' paths (a tab showing one is closed). */
-  resetBuiltinSkill: (name: string) =>
-    call<string[]>("reset_builtin_skill", { name }),
+  resetBuiltinSkill: (name: string) => command("reset_builtin_skill", name),
   setBuiltinSkillEnabled: (name: string, enabled: boolean) =>
-    call<string[]>("set_builtin_skill_enabled", { name, enabled }),
-  pickAttachmentFile: () => call<ChatAttachment | null>("pick_attachment_file"),
+    command("set_builtin_skill_enabled", name, enabled),
+  pickAttachmentFile: () => command("pick_attachment_file"),
 };
 
 // ---------------------------------------------------------------------------
