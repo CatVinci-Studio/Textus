@@ -52,7 +52,7 @@ async function open(page: Page, width = 1440) {
   await page.setViewportSize({ width, height: 900 });
   await openApp(page, {
     animations: true,
-    settings: { language: "en", revisionDisplay: "new" },
+    settings: { language: "en", revisionDisplay: "original" },
   });
 }
 

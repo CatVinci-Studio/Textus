@@ -273,6 +273,14 @@ export const RevisionCard = memo(
           </div>
         ) : (
           <div className="revision-note-text">
+            {/* A sentence the rewrite adds has no original beside it in
+              the text, only the mark where it goes: the card says what it
+              is, instead of standing as an entry with nothing replaced. */}
+            {!item.before.trim() && item.after.trim() && (
+              <span className="revision-note-was">
+                {labels.proposalAddedSentence}
+              </span>
+            )}
             {/* The text shows the original; read out here too, so the
               card says what is replaced by what. */}
             {item.before.trim() && (

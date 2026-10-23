@@ -32,6 +32,8 @@ export interface ReviewMarginLabels {
   proposalKeepSentence: string;
   proposalDeleteSentence: string;
   proposalDeletedSentence: string;
+  /** A card's heading for a sentence a rewrite adds, with no original. */
+  proposalAddedSentence: string;
   // What a change of a whole block (a table, a code block) is called on
   // its card - a picture is shown.
   proposalBlockPicture: string;
@@ -56,8 +58,9 @@ export type MarginItem =
       to: number;
       after: string;
       before: string;
-      /** Which side the margin shows: the replacement ("original": the
-       *  original stays in the text) or the original ("new"). */
+      /** Which side the card shows: the replacement (an AI rewrite, its
+       *  original still in the text) or the original (the writer's own
+       *  tracked change, the new words already in the text). */
       shows: "original" | "new";
       take: boolean | null;
       /** Its rewrite is still streaming in: shown, not decided yet. */

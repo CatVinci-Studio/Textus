@@ -150,12 +150,12 @@ type /name in a conversation to use one.
   revisionDisplayLabel: "Show revisions",
   revisionDisplayInline: "All in the text",
   revisionDisplayOriginal: "Original in the text, changes in the margin",
-  revisionDisplayNew: "Changes in the text, original in the margin",
   revisionDisplayFinal: "Result only, no markup",
   revisionDisplayNoRoom: "Not enough room - close the sidebar or the AI panel",
   revisionDisplayNewText:
     "New text has no original: it stays in the text, in green, in these views",
   proposalDeletedSentence: "Original",
+  proposalAddedSentence: "Added",
   reviewBarLabel: "Revision",
   reviewBarOpenChat: "Open the AI panel",
   reviewNoteBy: "Review",

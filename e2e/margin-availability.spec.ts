@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
-// The margin views of a revision ("original in the text, changes in the
-// margin" and its mirror) need room right of the text. Without it they
+// The margin view of a revision ("original in the text, changes in the
+// margin") needs room right of the text. Without it they
 // can't be picked, and say why; a chosen one waits, untouched in Settings,
 // and applies again once there is room.
 
@@ -10,7 +10,6 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 const t = {
   inline: "All in the text",
   original: "Original in the text, changes in the margin",
-  changed: "Changes in the text, original in the margin",
   noRoom: "Not enough room - close the sidebar or the AI panel",
   settingsTitle: "Settings",
   navAi: "Textus AI",
@@ -94,7 +93,6 @@ test("with no room for the margin, its views can't be picked and the chosen one 
   const item = (name: string) =>
     page.getByRole("menuitemradio", { name, exact: true });
   await expect(item(t.original)).toBeDisabled();
-  await expect(item(t.changed)).toBeDisabled();
   await expect(item(t.inline)).toHaveAttribute("aria-checked", "true");
   await expect(item(t.original)).toHaveClass(/review-bar-menu-waiting/);
   await expect(page.locator(".review-bar-menu-note")).toHaveText(t.noRoom);
@@ -125,7 +123,7 @@ test("with no room for the margin, its views can't be picked and the chosen one 
   await expect(page.locator(".review-bar-view-name")).toHaveCount(0);
   await page.locator(".review-bar-view-button").click();
   // With room, every view can be picked, in the bar and in Settings.
-  for (const name of [t.inline, t.original, t.changed])
+  for (const name of [t.inline, t.original])
     await expect(item(name)).toBeEnabled();
   await expect(item(t.original)).toHaveAttribute("aria-checked", "true");
   await expect(page.locator(".review-bar-menu-note")).toHaveCount(0);

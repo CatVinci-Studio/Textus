@@ -27,7 +27,9 @@
   overflow: hidden;
   border-radius: var(--radius-dialog);
   box-shadow: var(--shadow-dialog);
-  animation: tutorial-enter var(--dur-base) var(--ease-out) both;
+  --enter-y: var(--motion-distance-sm);
+  --enter-scale: var(--scale-enter);
+  animation: motion-enter var(--dur-base) var(--ease-out) both;
 }
 
 /* Inside the backdrop's padding, which starts under the window bar (see
@@ -346,13 +348,6 @@
 
 .tutorial-link-btn:hover {
   color: var(--editor-text);
-}
-
-@keyframes tutorial-enter {
-  from {
-    opacity: 0;
-    transform: translateY(var(--motion-distance-sm)) scale(var(--scale-enter));
-  }
 }
 
 @media (max-width: 720px) {

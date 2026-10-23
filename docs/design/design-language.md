@@ -21,6 +21,13 @@ The interface uses neutral backgrounds, light borders and a single accent color.
 ## Motion
 
 - Durations, easing curves, offsets and scales come only from the variables in `src/ui/motion.css`. Do not write raw values.
+- Everything that moves is one of five moves. Use them rather than a keyframe of your own:
+  - **enter**: a part of the page arrives, fading in from a short way off. In a stylesheet, `animation: motion-enter …` with `--enter-x`, `--enter-y` and `--enter-scale` saying where from (a fade in place when unset); from script, `enter(el, { from, distance, scale })` (`ui/moves.ts`).
+  - **exit**: it leaves the same way: `motion-exit` with `--exit-x`, `--exit-y`, `--exit-scale`, or `exit(el)`, which resolves once it has gone.
+  - **mark**: what is about to change is tinted for a moment (`.motion-mark`, `--motion-mark-bg`), then the change comes and what it brings enters: `land(marked, change)`. A tint is set and taken off, never faded. New content with nothing it replaces just enters.
+  - **glide**: something moves to a new place or size: FLIP, `ui/flip.ts`.
+  - **presence**: an element stays in the DOM while its exit plays: `ui/usePresence.ts`.
+  - "Working" loops (thinking dots, the caret while text is generated, a picture being made) are the only other animations.
   - Durations: `--dur-instant` 80 ms (press, hover color change), `--dur-fast` 120 ms (small popover exit, arrow rotation, fades), `--dur-base` 200 ms (menu, popover, notice bar and dialog entry), `--dur-slow` 320 ms (sidebar, AI panel, Settings, Zen mode), `--dur-sheet` 450 ms (phone bottom sheets and full pages), `--dur-linger` 1600 ms (the tint on a row Settings' search led to, fading out).
   - Curves: `--ease-standard` for changes in place, `--ease-out` for entry, `--ease-in` for exit, `--ease-in-out` for movement within the screen. The spring is `--ease-spring` (engines without `linear()` fall back to a cubic Bézier). `--ease-spring-bouncy`, with about 3% overshoot, is only for a finger release (panel snapping, a tab dropping into place, a switch).
 - Motion only tells the user three things: where something comes from, where it goes, and that a state changed. There are no looping decorations, except for "working" indicators (thinking dots, the export spinner, the cursor while text is generated).

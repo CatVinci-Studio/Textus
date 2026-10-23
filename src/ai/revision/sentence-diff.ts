@@ -21,10 +21,11 @@ export function splitSentences(text: string): string[] {
   // hard break, `\` or `<br>`, too) or the end; elsewhere (3.14, a URL) it
   // is part of the sentence - which used to fail the whole split, and the
   // rewrite was shown whole. A picture's `![` is no exclamation. The break
-  // after a sentence goes with it.
+  // after a sentence goes with it. Arabic's ؟, Devanagari's । and an
+  // ellipsis end one too.
   const parts =
     text.match(
-      /(?:[^。！？!?.;；\n]|\.(?!\s|$|\\\n|<br\s*\/?>)|!(?=\[))*(?:[。！？!?;；]+|\.|\n+|$)[”’"')）」』\]]*(?:\\\n|<br\s*\/?>|\s)*/g,
+      /(?:[^。！？!?.;；؟।…\n]|\.(?!\s|$|\\\n|<br\s*\/?>)|!(?=\[))*(?:[。！？!?;；؟।…]+|\.|\n+|$)[”’"')）」』\]]*(?:\\\n|<br\s*\/?>|\s)*/g,
     ) ?? [];
   const out = parts.filter((p) => p.length > 0);
   // Anything the pattern skipped (shouldn't happen) is kept rather than lost.

@@ -8,7 +8,8 @@ import {
   pendingDiagram,
   splitMermaidFences,
 } from "../../editor/pending-diagram";
-import { StreamReveal } from "../stream-reveal";
+import { enter } from "../../ui/moves";
+import { UnitReveal } from "./unit-reveal";
 import { showGeneratedImages, shownGeneratedSrc } from "./generated-images";
 import { framePendingPictures } from "./pending-picture";
 import { inlineSentence } from "./sentence-diff";
@@ -21,8 +22,9 @@ import {
 import { pendingEditKey, type PendingSentence } from "./pending-types";
 
 /**
- * New text typing into the document: one reveal per proposal (StreamReveal)
- * and the green text it fills in as it goes - Markdown rendered inline or
+ * New text coming into the document: one reveal per proposal (UnitReveal:
+ * a sentence or a block at a time, each entering as it lands) and the green
+ * text it fills in as it goes - Markdown rendered inline or
  * as blocks, diagrams and maths when ready, pictures in their frames - and
  * what a stopped rewrite keeps. DOM side effects only, outside the editor
  * state (pending-edit-plugin.ts).
@@ -32,8 +34,11 @@ export interface InsertAnimation {
   callId: string;
   /** Full text known so far - grows while the proposal streams. */
   target: string;
-  /** Paces `target` onto the screen (stream-reveal.ts). */
-  reveal: StreamReveal;
+  /** Paces `target` onto the screen a unit at a time (unit-reveal.ts). */
+  reveal: UnitReveal;
+  /** The text the widget last drew: a frame with nothing new draws
+   *  nothing, so the DOM under the caret stays as it is. */
+  drawn: string | null;
   /** False while more streamed text may still arrive (keeps the caret). */
   done: boolean;
   span: HTMLSpanElement | null;
@@ -85,12 +90,13 @@ export function newAnimation(
   text: string,
   done: boolean,
 ): InsertAnimation {
-  const reveal = new StreamReveal();
+  const reveal = new UnitReveal();
   reveal.update(text, done, performance.now());
   return {
     callId,
     target: text,
     reveal,
+    drawn: null,
     done,
     span: null,
     frame: null,
@@ -138,7 +144,10 @@ export function refreshStream(anim: InsertAnimation) {
   if (!s) return;
   const done = anim.done && anim.reveal.caughtUp;
   const pieces = splitUnits(anim.reveal.text);
-  const completed = done ? pieces : pieces.slice(0, -1);
+  // What is on screen ends where a unit does (unit-reveal.ts), unless a
+  // pause landed one partway: then its last piece is still being written.
+  const completed =
+    done || anim.reveal.endsOnUnit ? pieces : pieces.slice(0, -1);
   const key = `${done ? 1 : 0}${completed.join("")}`;
   let { pieces: aligned, reached } = s.layout;
   if (key !== s.alignedFor) {
@@ -158,7 +167,9 @@ export function refreshStream(anim: InsertAnimation) {
     reached,
     partial: done
       ? null
-      : partialFor(s.sentences, (pieces.at(-1) ?? "").trim(), reached),
+      : anim.reveal.endsOnUnit
+        ? null
+        : partialFor(s.sentences, (pieces.at(-1) ?? "").trim(), reached),
   };
   if (layoutSignature(s.layout) !== s.drawn) queueRelayout(anim);
 }
@@ -240,23 +251,28 @@ export function stopFrame(anim: InsertAnimation) {
 
 export function renderAnimation(anim: InsertAnimation) {
   if (!anim.span) return;
-  // Re-parses the growing revealed prefix every tick, not just the final
-  // text: a partial markdown token (an unclosed "**") can render as its
-  // literal characters for a frame until it closes, then flip to real
-  // formatting - a small, expected artifact of live-formatting a stream,
-  // not a bug (every streaming markdown renderer has it). Preferred over
-  // revealing raw source and snapping to formatted HTML only once done,
-  // which pops the widget's width/wrapping at the very end instead.
-  renderPendingHtml(
-    anim.span,
-    anim.stream
-      ? inlineSentence(anim.stream.layout.partial?.text ?? "")
-      : anim.reveal.text,
-  );
+  const text = anim.stream
+    ? inlineSentence(anim.stream.layout.partial?.text ?? "")
+    : anim.reveal.text;
   anim.span.classList.toggle(
     "pending-insert-typing",
     !anim.reveal.caughtUp || !anim.done,
   );
+  // Drawn only when what it shows changed: redrawn every frame, the DOM
+  // under the caret changed sixty times a second and WebKit scrolled the
+  // caret back into view each time - the document wouldn't scroll away
+  // while a proposal was written.
+  if (text === anim.drawn && anim.span.dataset.drawn === "true") return;
+  const before = anim.span.childNodes.length;
+  const grew = anim.drawn !== null && text.startsWith(anim.drawn);
+  renderPendingHtml(anim.span, text);
+  anim.drawn = text;
+  anim.span.dataset.drawn = "true";
+  // The blocks the unit that landed brought enter (ui/moves.ts). A
+  // sentence that joined the paragraph already shown just appears in it:
+  // fading the whole paragraph in again for it read as a flicker.
+  if (!grew) return;
+  for (const el of [...anim.span.children].slice(before)) enter(el);
 }
 
 /**
@@ -335,7 +351,27 @@ export function fillPendingBlocks(el: HTMLElement, source: string) {
   el.replaceChildren(...nodes);
 }
 
+/** Text that is blocks of its own: more than one paragraph, or a
+ *  heading, a list, a quote, a table, a fence or a formula. */
+export function hasBlocks(text: string): boolean {
+  return (
+    /\n[ \t]*\n/.test(text.trim()) ||
+    /^\s*(?:#{1,6}\s|[-*+]\s|\d+[.)]\s|>|\||```|~~~|\$\$)/m.test(text)
+  );
+}
+
 export function fillPendingContent(span: HTMLElement, source: string) {
+  // A widget is made once, often before any of its text has come: text at
+  // the caret that turns out to be blocks becomes blocks when it does.
+  if (
+    span.dataset.blocks !== "true" &&
+    span.classList.contains("pending-whole") &&
+    hasBlocks(source)
+  ) {
+    span.dataset.blocks = "true";
+    span.classList.add("pending-blocks");
+    span.classList.remove("pending-insert-lines");
+  }
   if (span.dataset.blocks === "true") {
     fillPendingBlocks(span, source);
     return;
