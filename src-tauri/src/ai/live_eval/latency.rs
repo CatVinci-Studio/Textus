@@ -153,6 +153,22 @@ fn translate_a_story_with_its_picture() {
     );
 }
 
+/// The standard flow's last step (1.2.1), on the story its first two
+/// steps wrote: the hard words of an English story glossed in Chinese, each a comment of its own. Sol pinned one
+/// comment for two words and ended the request there, the rest promised
+/// in its reply.
+#[test]
+#[ignore = "live: calls the model"]
+fn review_glosses_every_hard_word() {
+    run_on(
+        include_str!("fixtures/module-seven.md"),
+        None,
+        AgentMode::Review,
+        ThinkingLevel::Auto,
+        "把文中比较难的英文单词都批注出来，写上中文意思。",
+    );
+}
+
 /// The same story translated alone, with an image model: its picture is
 /// not redone - only a picture the user asks to change is (1.2.1).
 #[test]
