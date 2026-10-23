@@ -733,8 +733,8 @@ para usar una.
   themeDeleteButton: "Eliminar tema",
   themeImportLabel: "Añadir un tema desde un archivo CSS",
   themeMoreLabel: "Más temas",
+  themeGetMore: "Conseguir más temas",
   themeImportButton: "Importar CSS…",
-  themeGalleryBrowse: "Explorar temas",
   themeGalleryLoading: "Cargando temas…",
   themeGalleryUnreachable:
     "No se pudo conectar con la galería de temas. Revisa tu conexión o mira los temas en el sitio web.",
@@ -1193,9 +1193,6 @@ para usar una.
   extensionsTabSkills: "Habilidades",
   extensionsTabMcp: "MCP",
   extensionsThemesInstalled: "Tus temas",
-  extensionsThemesManage: "Gestionar…",
-  extensionsThemesManageHint:
-    "Los temas que tienes, Importar CSS… y Eliminar tema.",
   extensionsThemesGet: "Conseguir temas",
   extensionsSkillsHelp: `Una habilidad le dice a ${AI_NAME} cómo hacer bien un tipo de tarea. Las activadas se ofrecen a ${AI_NAME} y en el menú /; una instalación nueva empieza con cinco activadas, y el resto se añade aquí.`,
   extensionsSkillsMoved:

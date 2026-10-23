@@ -14,8 +14,8 @@ import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { localeOf } from "../i18n/strings";
 import type { FixedShortcutGroup } from "../app/fixed-shortcuts";
 import { ChevronIcon, CloseIcon } from "../ui/icons";
-import { MoreThemesSection } from "./sections/theme";
-import { ThemeGallerySection } from "./sections/theme-gallery";
+import { ThemeLibrarySection, ThemeSourcesSection } from "./sections/theme";
+import { openExtensionsTab, type ExtensionsTab } from "./pages/extensions-tab";
 import {
   revealEntry,
   SettingsSearchField,
@@ -71,30 +71,37 @@ export interface SettingsPanelProps {
 /** A Settings page's id (settings-pages.tsx). */
 type Category = string;
 
-/** The page a subpage's back button returns to; none is the category. */
-const SUBPAGE_PARENT: Partial<Record<Subpage, Subpage>> = {
-  gallery: "themes",
-};
-
-/** The subpages the search reads, by the category each is in. Not Browse
- *  themes: its rows are the gallery's themes, fetched only when it opens. */
+/** The subpages the search reads, by the category each is in. More themes
+ *  only on the phone: elsewhere its rows are Extensions › Themes. */
 const SEARCHED_SUBPAGES: [Subpage, Category][] = [
   ["about", "general"],
-  ["themes", "editor"],
+  ...(isIOSApp ? [["themes", "editor"] as [Subpage, Category]] : []),
 ];
 
-/** A searchable page's key (SearchEntry.page): "editor", "editor/themes". */
+/** The Extensions tabs the search reads, each as a page of its own: their
+ *  page reads none (SettingsPageProps.indexing). Not on the phone, which
+ *  has no Extensions. */
+const SEARCHED_TABS: ExtensionsTab[] = isIOSApp ? [] : ["themes"];
+
+/** A searchable page's key (SearchEntry.page): "editor", "editor/themes",
+ *  "extensions/tab:themes". */
 const pageKey = (category: Category, subpage: Subpage | null) =>
   subpage ? `${category}/${subpage}` : category;
+const tabKey = (tab: ExtensionsTab) => `extensions/tab:${tab}`;
 
 function pageOfKey(key: string): {
   category: Category;
   subpage: Subpage | null;
+  tab: ExtensionsTab | null;
 } {
-  const [category, subpage] = key.split("/");
+  const [category, rest] = key.split("/");
+  const tab = rest?.startsWith("tab:")
+    ? (rest.slice(4) as ExtensionsTab)
+    : null;
   return {
     category: category as Category,
-    subpage: (subpage as Subpage | undefined) ?? null,
+    subpage: tab ? null : ((rest as Subpage | undefined) ?? null),
+    tab,
   };
 }
 
@@ -142,7 +149,6 @@ export function SettingsPanel({
   const subpageTitles: Record<Subpage, string> = {
     about: t.navAbout,
     themes: t.themeMoreLabel,
-    gallery: t.themeGalleryBrowse,
   };
 
   const pageProps: SettingsPageProps = {
@@ -165,9 +171,12 @@ export function SettingsPanel({
     viewChecks,
     fixedShortcuts,
   };
-  const renderCategory = (c: Category) => {
+  const renderCategory = (c: Category, indexing = false) => {
     const page = settingsPage(c);
-    return page ? <page.Page {...pageProps} /> : null;
+    return page ? <page.Page {...pageProps} indexing={indexing} /> : null;
+  };
+  const tabTitles: Partial<Record<ExtensionsTab, string>> = {
+    themes: t.extensionsTabThemes,
   };
 
   const renderSubpage = (s: Subpage) =>
@@ -176,22 +185,23 @@ export function SettingsPanel({
     ) : (
       <>
         <h1 className="settings-category-title">{subpageTitles[s]}</h1>
-        {s === "themes" ? (
-          <MoreThemesSection t={t} onBrowse={() => setSubpage("gallery")} />
-        ) : (
-          <ThemeGallerySection t={t} />
-        )}
+        <ThemeLibrarySection t={t} />
       </>
     );
 
   // Each category, with the subpages it holds after it - the order the
   // results are listed in.
   const searchPages: SearchablePage[] = categories.flatMap((c) => [
-    { key: c.id, name: c.label, render: () => renderCategory(c.id) },
+    { key: c.id, name: c.label, render: () => renderCategory(c.id, true) },
     ...SEARCHED_SUBPAGES.filter(([, under]) => under === c.id).map(([s]) => ({
       key: pageKey(c.id, s),
       name: `${c.label} › ${subpageTitles[s]}`,
       render: () => renderSubpage(s),
+    })),
+    ...(c.id === "extensions" ? SEARCHED_TABS : []).map((tab) => ({
+      key: tabKey(tab),
+      name: `${c.label} › ${tabTitles[tab]}`,
+      render: () => <ThemeSourcesSection t={t} />,
     })),
   ]);
   const resultGroups = searchPages
@@ -208,6 +218,7 @@ export function SettingsPanel({
   const pick = (match: SearchMatch | undefined) => {
     if (!match) return;
     const page = pageOfKey(match.entry.page);
+    if (page.tab) openExtensionsTab(page.tab);
     setQuery("");
     setCategory(page.category);
     setSubpage(page.subpage);
@@ -321,12 +332,10 @@ export function SettingsPanel({
               <button
                 type="button"
                 className="text-button settings-back-button"
-                onClick={() => setSubpage(SUBPAGE_PARENT[subpage] ?? null)}
+                onClick={() => setSubpage(null)}
               >
                 <ChevronIcon className="settings-back-chevron" />
-                {SUBPAGE_PARENT[subpage]
-                  ? subpageTitles[SUBPAGE_PARENT[subpage]]
-                  : categories.find((c) => c.id === category)?.label}
+                {categories.find((c) => c.id === category)?.label}
               </button>
               {renderSubpage(subpage)}
             </div>
@@ -354,8 +363,8 @@ export function SettingsPanel({
 }
 
 /** Which page Settings shows: a category, and a page of its own inside it
- *  with a way back, on the desktop and the phone alike: General › About
- *  Textus, Editor & Appearance › More themes (› Browse themes). A search
+ *  with a way back: General › About Textus, and on the phone Editor &
+ *  Appearance › More themes. A search
  *  result picked sets `jump`: once the row's page is on screen, it goes to
  *  the row. */
 function useSettingsNav(initialCategory: Category) {

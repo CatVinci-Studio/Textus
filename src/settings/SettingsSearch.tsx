@@ -24,7 +24,7 @@ import {
 /** A page the search reads, rendered out of sight while a query is typed. */
 export interface SearchablePage {
   key: string;
-  /** "Editor & Appearance" or "Editor & Appearance › More themes". */
+  /** "Editor & Appearance" or "General › About Textus". */
   name: string;
   render: () => ReactNode;
 }

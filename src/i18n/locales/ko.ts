@@ -676,8 +676,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   themeDeleteButton: "테마 삭제",
   themeImportLabel: "CSS 파일에서 테마 추가",
   themeMoreLabel: "테마 더 보기",
+  themeGetMore: "테마 더 받기",
   themeImportButton: "CSS 가져오기…",
-  themeGalleryBrowse: "테마 둘러보기",
   themeGalleryLoading: "테마를 불러오는 중…",
   themeGalleryUnreachable:
     "테마 갤러리에 연결할 수 없습니다. 연결을 확인하거나 웹사이트에서 테마를 확인하세요.",
@@ -1119,8 +1119,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   extensionsTabSkills: "스킬",
   extensionsTabMcp: "MCP",
   extensionsThemesInstalled: "내 테마",
-  extensionsThemesManage: "관리…",
-  extensionsThemesManageHint: "가지고 있는 테마, CSS 가져오기…, 테마 삭제.",
   extensionsThemesGet: "테마 받기",
   extensionsSkillsHelp: `스킬은 ${AI_NAME}에게 한 가지 일을 잘하는 방법을 알려 줍니다. 켜 둔 스킬은 ${AI_NAME}와 / 메뉴에서 쓸 수 있고, 새로 설치하면 다섯 개가 켜져 있으며 나머지는 여기서 추가합니다.`,
   extensionsSkillsMoved: "기본 스킬과 직접 만든 스킬은 설정 › 확장에 있습니다.",

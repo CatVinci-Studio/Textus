@@ -116,7 +116,7 @@ export async function importThemeCss(path: string): Promise<string> {
 
 /// Saves a self-contained stylesheet as a user theme - a new one, or over
 /// the theme `replacing` names (a gallery theme's update) - and returns its
-/// settings entry, for `withUserTheme`. Import CSS… and Browse themes both
+/// settings entry, for `withUserTheme`. Import CSS… and the theme gallery both
 /// install through here.
 export async function saveUserTheme(
   css: string,

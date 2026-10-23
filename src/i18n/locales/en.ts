@@ -705,8 +705,8 @@ type /name in a conversation to use one.
   themeDeleteButton: "Delete Theme",
   themeImportLabel: "Add a theme from a CSS file",
   themeMoreLabel: "More themes",
+  themeGetMore: "Get more themes",
   themeImportButton: "Import CSS…",
-  themeGalleryBrowse: "Browse themes",
   themeGalleryLoading: "Loading themes…",
   themeGalleryUnreachable:
     "Couldn't reach the theme gallery. Check your connection, or see the themes on the website.",
@@ -1167,9 +1167,6 @@ type /name in a conversation to use one.
   extensionsTabSkills: "Skills",
   extensionsTabMcp: "MCP",
   extensionsThemesInstalled: "Your themes",
-  extensionsThemesManage: "Manage…",
-  extensionsThemesManageHint:
-    "The themes you have, Import CSS…, and Delete Theme.",
   extensionsThemesGet: "Get themes",
   extensionsSkillsHelp: `A skill tells ${AI_NAME} how to do one kind of task well. Each one on is offered to ${AI_NAME} and in the / menu; a new installation starts with five on, and you add the rest here.`,
   extensionsSkillsMoved:

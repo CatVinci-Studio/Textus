@@ -51,7 +51,7 @@ const t = {
   agentAdvancedGroupLabel: "Advanced",
   menuViewSource: "Source Mode",
   customCssLabel: "Custom CSS",
-  themeMoreLabel: "More themes",
+  themeGetMore: "Get more themes",
   privacyClearButton: "Clear",
   privacyClearClipboard: "Clear Clipboard History",
   pdfPageNumbersLabel: "Show page numbers in exports",
@@ -270,7 +270,7 @@ test.describe("desktop", () => {
     await openApp(page, { settings: { language: "en" } });
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: t.navEditor }).click();
-    await panel.getByRole("button", { name: t.themeMoreLabel }).click();
+    await panel.getByRole("button", { name: t.themeGetMore }).click();
     const css = panel.getByRole("textbox", { name: t.customCssLabel });
     await css.fill("p { color: red; }");
     await css.press("ControlOrMeta+a");

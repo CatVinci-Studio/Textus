@@ -715,8 +715,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   themeDeleteButton: "Design löschen",
   themeImportLabel: "Design aus einer CSS-Datei hinzufügen",
   themeMoreLabel: "Weitere Designs",
+  themeGetMore: "Weitere Themes holen",
   themeImportButton: "CSS importieren…",
-  themeGalleryBrowse: "Themes durchsuchen",
   themeGalleryLoading: "Themes werden geladen…",
   themeGalleryUnreachable:
     "Die Theme-Galerie ist nicht erreichbar. Prüfe deine Verbindung oder sieh dir die Themes auf der Website an.",
@@ -1182,9 +1182,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   extensionsTabSkills: "Skills",
   extensionsTabMcp: "MCP",
   extensionsThemesInstalled: "Deine Themes",
-  extensionsThemesManage: "Verwalten…",
-  extensionsThemesManageHint:
-    "Deine Themes, CSS importieren… und Theme löschen.",
   extensionsThemesGet: "Themes holen",
   extensionsSkillsHelp: `Ein Skill sagt ${AI_NAME}, wie es eine Art von Aufgabe gut erledigt. Eingeschaltete Skills bekommt ${AI_NAME}, und sie stehen im /-Menü; eine neue Installation beginnt mit fünf, den Rest fügst du hier hinzu.`,
   extensionsSkillsMoved:

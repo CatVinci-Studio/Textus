@@ -685,8 +685,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   themeDeleteButton: "テーマを削除",
   themeImportLabel: "CSS ファイルからテーマを追加",
   themeMoreLabel: "その他のテーマ",
+  themeGetMore: "テーマをさらに入手",
   themeImportButton: "CSSをインポート…",
-  themeGalleryBrowse: "テーマを探す",
   themeGalleryLoading: "テーマを読み込み中…",
   themeGalleryUnreachable:
     "テーマギャラリーに接続できません。接続を確認するか、ウェブサイトでテーマをご覧ください。",
@@ -1130,8 +1130,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   extensionsTabSkills: "スキル",
   extensionsTabMcp: "MCP",
   extensionsThemesInstalled: "あなたのテーマ",
-  extensionsThemesManage: "管理…",
-  extensionsThemesManageHint: "手元のテーマ、CSS を読み込む…、テーマを削除。",
   extensionsThemesGet: "テーマを入手",
   extensionsSkillsHelp: `スキルは ${AI_NAME} に、ある種類の作業をうまくこなす方法を伝えます。オンのスキルは ${AI_NAME} と / メニューで使えます。新しくインストールすると 5 つがオンで、残りはここで追加します。`,
   extensionsSkillsMoved:

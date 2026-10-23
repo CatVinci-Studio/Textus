@@ -47,15 +47,14 @@ test("Extensions has a tab each for plugins, themes, skills and MCP", async ({
     "true",
   );
   await panel.getByRole("tab", { name: "Themes" }).click();
+  // Everything about themes but picking one, on the one tab.
   await expect(panel.getByText("Get themes")).toBeVisible();
-  // Your own themes are a page of their own, with a way back here.
-  await panel.getByRole("button", { name: "Manage…" }).click();
-  await expect(panel.getByText("Import CSS…").first()).toBeVisible();
-  await panel.locator(".settings-back-button").click();
-  await expect(panel.getByRole("tab", { name: "Themes" })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await expect(
+    panel.getByRole("button", { name: "Import CSS…" }),
+  ).toBeVisible();
+  await expect(
+    panel.getByRole("textbox", { name: "Custom CSS" }),
+  ).toBeVisible();
   await panel.getByRole("tab", { name: "Skills" }).click();
   await expect(panel.locator(".settings-builtin-skills")).toHaveAttribute(
     "open",

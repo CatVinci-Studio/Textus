@@ -726,8 +726,8 @@ export default {
   themeDeleteButton: "Удалить тему",
   themeImportLabel: "Добавить тему из файла CSS",
   themeMoreLabel: "Другие темы",
+  themeGetMore: "Другие темы",
   themeImportButton: "Импортировать CSS…",
-  themeGalleryBrowse: "Обзор тем",
   themeGalleryLoading: "Загрузка тем…",
   themeGalleryUnreachable:
     "Не удалось подключиться к галерее тем. Проверьте соединение или посмотрите темы на сайте.",
@@ -1185,8 +1185,6 @@ export default {
   extensionsTabSkills: "Навыки",
   extensionsTabMcp: "MCP",
   extensionsThemesInstalled: "Ваши темы",
-  extensionsThemesManage: "Управлять…",
-  extensionsThemesManageHint: "Ваши темы, «Импорт CSS…» и «Удалить тему».",
   extensionsThemesGet: "Получить темы",
   extensionsSkillsHelp: `Навык подсказывает ${AI_NAME}, как хорошо делать определённую работу. Включённые навыки доступны ${AI_NAME} и в меню /; в новой установке включено пять, остальные добавляются здесь.`,
   extensionsSkillsMoved:

@@ -15,6 +15,7 @@ import { exportDoc, fs, themes } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { Select } from "../../ui/Select";
 import { LinkRow, RowHelp, SettingRow } from "./controls";
+import { ThemeGallerySection } from "./theme-gallery";
 
 const CUSTOM_CSS_PLACEHOLDER = `#write > p {
   text-indent: 2em;
@@ -88,7 +89,7 @@ async function exportThemeCss(t: Strings, customCss: string): Promise<void> {
   ]
     .filter(Boolean)
     .join("\n");
-  const css = `/* Textus theme - exported from Settings > More themes.
+  const css = `/* Textus theme - exported from Settings > Extensions > Themes.
    Edit it, then bring it back with Import CSS… there.
    #write is the document; .milkdown wraps it. */
 
@@ -154,7 +155,8 @@ function useThemeAction() {
 
 /** Settings › Editor & Appearance › Theme: which form (light, dark) and
  *  which theme - a choice and nothing else. Getting themes and changing
- *  them is on the More themes page `onMore` opens (MoreThemesSection). */
+ *  them is in Settings › Extensions › Themes (ThemeLibrarySection), which
+ *  Get more themes (`onMore`) opens. */
 export function ThemeSection({
   t,
   onMore,
@@ -257,7 +259,7 @@ export function ThemeSection({
       </SettingRow>
 
       <LinkRow
-        label={t.themeMoreLabel}
+        label={t.themeGetMore}
         onOpen={onMore}
         className="theme-more-entry"
       />
@@ -266,18 +268,27 @@ export function ThemeSection({
 }
 
 /**
- * Settings › Editor & Appearance › More themes: where themes come from -
- * the gallery (`onBrowse` opens it, a page of its own) and a CSS file -
- * then the user's own CSS on top of whichever is picked. Each action is
- * here once; the theme picker itself stays on the page before.
+ * Settings › Extensions › Themes (on the phone, which has no Extensions,
+ * Editor & Appearance › More themes): the one place themes are got and
+ * changed - a CSS file to add, the user's own CSS on top of whichever is
+ * picked, and the gallery. The picker stays in Editor & Appearance.
  */
-export function MoreThemesSection({
-  t,
-  onBrowse,
-}: {
-  t: Strings;
-  onBrowse: () => void;
-}) {
+export function ThemeLibrarySection({ t }: { t: Strings }) {
+  return (
+    <>
+      <ThemeSourcesSection t={t} />
+      <section className="settings-group">
+        <h2 className="settings-group-title">{t.extensionsThemesGet}</h2>
+        <ThemeGallerySection t={t} />
+      </section>
+    </>
+  );
+}
+
+/** Your themes: a CSS file to add and the user's own CSS - what the
+ *  settings search reads of the library (the gallery is fetched only when
+ *  it is opened). */
+export function ThemeSourcesSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
   const { busy, error, run } = useThemeAction();
@@ -308,8 +319,8 @@ export function MoreThemesSection({
         </div>
       )}
       <section className="settings-group">
+        <h2 className="settings-group-title">{t.extensionsThemesInstalled}</h2>
         <div className="settings-group-body">
-          <LinkRow label={t.themeGalleryBrowse} onOpen={onBrowse} />
           <SettingRow label={t.themeImportLabel}>
             <button
               className="text-button settings-inline-button"
@@ -319,13 +330,7 @@ export function MoreThemesSection({
               {t.themeImportButton}
             </button>
           </SettingRow>
-        </div>
-      </section>
-
-      {/* A tweak on top of the theme. On a page of its own, so shown open:
-          nothing else here competes with it for room. */}
-      <section className="settings-group">
-        <div className="settings-group-body">
+          {/* A tweak on top of the theme, shown open. */}
           <div className="settings-row settings-row-stacked">
             <div className="settings-row-label">
               <span id={customCssLabelId}>{t.customCssLabel}</span>

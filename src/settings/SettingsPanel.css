@@ -1307,13 +1307,13 @@ button.settings-skill-action:focus-visible {
   color: var(--chrome-muted);
 }
 
-/* The More themes row sits between other rows; a link row's
+/* The Get more themes row sits between other rows; a link row's
    `border: none` would drop the card's hairline above it. */
 .settings-group-body > * + button.theme-more-entry {
   border-top: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
 }
 
-/* Editor & Appearance › Browse themes (sections/theme-gallery.tsx): each
+/* Extensions › Themes › Get themes (sections/theme-gallery.tsx): each
    theme is an ordinary settings row with its screenshot in front. */
 .theme-gallery-item {
   display: flex;
