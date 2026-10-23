@@ -261,6 +261,7 @@ pub fn run() {
             settings::history_clear,
             settings::chat_history_get,
             settings::chat_history_archived,
+            settings::chat_history_search,
             settings::chat_history_move_document,
             commands::recents::add_recent_file,
             open_file_dialog,

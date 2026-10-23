@@ -296,6 +296,7 @@ para usar una.
   toolRemember: "Recordando esto",
   agentGeneratingImage: "Generando una imagen…",
   toolGenerateImage: "Generando una imagen",
+  toolSearchConversations: "Buscando en conversaciones anteriores",
   toolEditChapters: "Cambiando los capítulos a la vez",
   proposalImage: "Imagen",
   imageLimitReached:
@@ -693,6 +694,10 @@ para usar una.
   },
   chatHistoryOpen: "Historial",
   chatHistoryEmpty: "No hay conversaciones anteriores.",
+  chatHistorySearch: "Buscar en las conversaciones",
+  chatHistorySearchNone: "Ninguna conversación tiene estas palabras.",
+  chatHistoryByYou: "Tú",
+  chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Reabrir esta conversación con su documento",
   chatHistoryDelete: "Eliminar conversación",
   chatHistoryRestoreHereHint:

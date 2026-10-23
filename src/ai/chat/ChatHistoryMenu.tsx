@@ -11,6 +11,7 @@ import { Presence, PresenceDiv } from "../../ui/usePresence";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { basename, dirname } from "../../utils/path";
 import type { ChatSummary } from "./chat-history";
+import { useHistorySearch, type HistoryHit } from "./useHistorySearch";
 import { Tooltip } from "../../ui/Tooltip";
 import "./chat-history-menu.css";
 
@@ -94,13 +95,43 @@ function ChatHistoryList({
   // In the UI's language, not the OS's: a Chinese UI on an English system
   // dated its conversations in English.
   const locale = localeOf(settings.language);
+  const [query, setQuery] = useState("");
+  const hits = useHistorySearch(query);
 
   if (entries.length === 0) {
     return <div className="chat-history-empty">{t.chatHistoryEmpty}</div>;
   }
 
+  const search = (
+    <input
+      className="chat-history-search"
+      type="search"
+      placeholder={t.chatHistorySearch}
+      aria-label={t.chatHistorySearch}
+      value={query}
+      autoFocus
+      spellCheck={false}
+      onChange={(e) => setQuery(e.target.value)}
+    />
+  );
+  if (query.trim())
+    return (
+      <div className="chat-history">
+        {search}
+        <SearchHits
+          hits={hits}
+          locale={locale}
+          onReopen={(hit) => {
+            const entry = entries.find((e) => e.id === hit.id);
+            if (entry) onReopen(entry);
+          }}
+        />
+      </div>
+    );
+
   return (
     <div className="chat-history">
+      {search}
       {archived && (
         <div className="chat-history-archived">{t.chatHistoryArchived}</div>
       )}
@@ -148,5 +179,45 @@ function ChatHistoryList({
         </section>
       ))}
     </div>
+  );
+}
+
+/** What a search found: each conversation's title, where in it the words
+ *  are, and when it was. */
+function SearchHits({
+  hits,
+  locale,
+  onReopen,
+}: {
+  hits: HistoryHit[] | null;
+  locale: string;
+  onReopen: (hit: HistoryHit) => void;
+}) {
+  const { t } = useSettings();
+  if (hits === null) return null;
+  if (hits.length === 0)
+    return <div className="chat-history-empty">{t.chatHistorySearchNone}</div>;
+  return (
+    <section className="chat-history-group">
+      {hits.map((hit) => (
+        <div
+          key={hit.id}
+          className="chat-history-entry"
+          onClick={() => onReopen(hit)}
+        >
+          <div className="chat-history-entry-main">
+            <span className="chat-history-entry-title">{hit.title || "…"}</span>
+            <span className="chat-history-hit">
+              {hit.role === "user" ? t.chatHistoryByYou : t.chatHistoryByAi}:{" "}
+              {hit.snippet}
+            </span>
+            <span className="chat-history-entry-meta">
+              {new Date(hit.updatedAt).toLocaleString(locale)}
+              {hit.docPath ? ` · ${basename(hit.docPath)}` : ""}
+            </span>
+          </div>
+        </div>
+      ))}
+    </section>
   );
 }

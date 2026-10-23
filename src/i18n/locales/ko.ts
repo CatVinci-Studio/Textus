@@ -264,6 +264,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   toolRemember: "기억하는 중",
   agentGeneratingImage: "이미지를 생성하는 중…",
   toolGenerateImage: "이미지를 생성하는 중",
+  toolSearchConversations: "이전 대화를 검색하는 중",
   toolEditChapters: "여러 장을 동시에 고치는 중",
   proposalImage: "그림",
   imageLimitReached:
@@ -639,6 +640,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentThoughtFor: { other: "{n}초 동안 생각함" },
   chatHistoryOpen: "기록",
   chatHistoryEmpty: "지난 대화가 없습니다.",
+  chatHistorySearch: "대화 검색",
+  chatHistorySearchNone: "이 단어가 들어간 대화가 없습니다.",
+  chatHistoryByYou: "나",
+  chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "이 대화를 해당 문서와 함께 다시 열기",
   chatHistoryDelete: "대화 삭제",
   chatHistoryRestoreHereHint:

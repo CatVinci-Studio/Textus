@@ -341,6 +341,35 @@ export function installDevTauriShim(): void {
         return answer(cmd, null);
       case "chat_history_get":
         return Promise.resolve(store.conversations[String(args.id)] ?? null);
+      // As settings/chat_history/search.rs: every word in one message or
+      // reply, newest conversation first.
+      case "chat_history_search": {
+        const terms = String(args.query)
+          .toLowerCase()
+          .split(/\s+/)
+          .filter(Boolean);
+        const hits = (
+          store.histories.chat as Record<string, unknown>[]
+        ).flatMap((summary) => {
+          const entry = store.conversations[String(summary.id)] as
+            { turns?: { kind: string; text?: string }[] } | undefined;
+          const turn = entry?.turns?.find(
+            (t) =>
+              (t.kind === "User" || t.kind === "Assistant") &&
+              terms.every((w) => (t.text ?? "").toLowerCase().includes(w)),
+          );
+          return turn
+            ? [
+                {
+                  ...summary,
+                  role: turn.kind === "User" ? "user" : "assistant",
+                  snippet: turn.text,
+                },
+              ]
+            : [];
+        });
+        return Promise.resolve(terms.length ? hits : []);
+      }
       // commands/own_notes.rs: what the writer keeps on a document, by
       // "<part>:<path>", in `window.__devOwnNotes` (a test can start it
       // with some).

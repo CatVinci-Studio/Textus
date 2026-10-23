@@ -285,6 +285,7 @@ type /name in a conversation to use one.
   toolRemember: "Remembering this",
   agentGeneratingImage: "Generating an image…",
   toolGenerateImage: "Generating an image",
+  toolSearchConversations: "Searching earlier conversations",
   toolEditChapters: "Changing the chapters at once",
   proposalImage: "Picture",
   imageLimitReached:
@@ -670,6 +671,10 @@ type /name in a conversation to use one.
   },
   chatHistoryOpen: "History",
   chatHistoryEmpty: "No past conversations.",
+  chatHistorySearch: "Search conversations",
+  chatHistorySearchNone: "No conversation has these words.",
+  chatHistoryByYou: "You",
+  chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Reopen this conversation with its document",
   chatHistoryDelete: "Delete conversation",
   chatHistoryRestoreHereHint:

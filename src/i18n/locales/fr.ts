@@ -298,6 +298,7 @@ utiliser une.
   toolRemember: "Mémorisation",
   agentGeneratingImage: "Création d'une image…",
   toolGenerateImage: "Création d'une image",
+  toolSearchConversations: "Recherche dans les conversations précédentes",
   toolEditChapters: "Modification des chapitres en parallèle",
   proposalImage: "Image",
   imageLimitReached:
@@ -700,6 +701,10 @@ utiliser une.
   },
   chatHistoryOpen: "Historique",
   chatHistoryEmpty: "Aucune conversation passée.",
+  chatHistorySearch: "Rechercher dans les conversations",
+  chatHistorySearchNone: "Aucune conversation ne contient ces mots.",
+  chatHistoryByYou: "Vous",
+  chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Rouvrir cette conversation avec son document",
   chatHistoryDelete: "Supprimer la conversation",
   chatHistoryRestoreHereHint:

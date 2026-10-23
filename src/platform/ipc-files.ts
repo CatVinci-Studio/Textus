@@ -204,6 +204,10 @@ export const storage = {
    *  null when its file is gone. */
   chatHistoryGet: (id: string): Promise<unknown> =>
     command("chat_history_get", id),
+  /** The saved conversations with every word of `query` in what was
+   *  said, newest first (settings/chat_history/search.rs). */
+  chatHistorySearch: (query: string): Promise<unknown[]> =>
+    command("chat_history_search", query),
   /** How many older conversations were moved to the chat history's trash. */
   chatHistoryArchived: () => command("chat_history_archived"),
   /** A document saved under a new path takes its conversations along. */

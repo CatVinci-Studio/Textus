@@ -285,6 +285,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   toolRemember: "Lembrando isto",
   agentGeneratingImage: "Gerando uma imagem…",
   toolGenerateImage: "Gerando uma imagem",
+  toolSearchConversations: "Pesquisando conversas anteriores",
   toolEditChapters: "Alterando os capítulos ao mesmo tempo",
   proposalImage: "Imagem",
   imageLimitReached:
@@ -679,6 +680,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   },
   chatHistoryOpen: "Histórico",
   chatHistoryEmpty: "Nenhuma conversa anterior.",
+  chatHistorySearch: "Pesquisar conversas",
+  chatHistorySearchNone: "Nenhuma conversa tem estas palavras.",
+  chatHistoryByYou: "Você",
+  chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Reabrir esta conversa com o seu documento",
   chatHistoryDelete: "Apagar conversa",
   chatHistoryRestoreHereHint:

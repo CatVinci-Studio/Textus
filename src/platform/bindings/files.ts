@@ -206,6 +206,11 @@ export const commands = {
 	/**  How many older conversations sit in the chat history's trash. */
 	chat_history_archived: () => __TAURI_INVOKE<number>("chat_history_archived"),
 	/**
+	 *  The saved conversations with every word of `query` in a message or a
+	 *  reply, newest first (the history list's search).
+	 */
+	chat_history_search: (query: string) => __TAURI_INVOKE<Value[]>("chat_history_search", { query }),
+	/**
 	 *  A document Textus saved under a new path (Save As, a rename): its
 	 *  conversations follow it, and every window lists them again.
 	 */

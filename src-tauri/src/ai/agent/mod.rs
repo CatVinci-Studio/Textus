@@ -25,10 +25,12 @@ pub(crate) use settle::*;
 mod chapters;
 mod context;
 mod history;
+mod past;
 mod prompt;
 pub(crate) use chapters::*;
 pub(crate) use context::*;
 pub(crate) use history::*;
+pub(crate) use past::*;
 pub(crate) use prompt::*;
 
 /// The system prompt with what it says about the web, when search is on.
@@ -258,6 +260,7 @@ async fn ai_agent_message_inner(
                 )),
                 checks: Default::default(),
             };
+            let stores = tauri::Manager::state::<crate::settings::Stores>(&app);
             // A change through the whole of a long document, chapter by
             // chapter at once (chapters.rs): each chapter's helper has
             // propose_edit, and its turns join this request's.
@@ -311,6 +314,8 @@ async fn ai_agent_message_inner(
             for tool in web.tools(&focus) {
                 tools.add(tool);
             }
+            // The user's earlier conversations, when they refer to one.
+            tools.add(search_conversations_tool(&stores.chat));
             // The tools of the MCP servers the user turned on.
             #[cfg(desktop)]
             for tool in crate::mcp::tools_for_request(&app).await {

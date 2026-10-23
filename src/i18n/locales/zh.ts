@@ -250,6 +250,7 @@ export default {
   toolRemember: "记下来",
   agentGeneratingImage: "正在生成图片…",
   toolGenerateImage: "正在生成图片",
+  toolSearchConversations: "正在搜索以前的对话",
   toolEditChapters: "正在同时修改各章",
   proposalImage: "图片",
   imageLimitReached:
@@ -613,6 +614,10 @@ export default {
   agentThoughtFor: { other: "已思考 {n} 秒" },
   chatHistoryOpen: "历史记录",
   chatHistoryEmpty: "暂无历史对话。",
+  chatHistorySearch: "搜索对话",
+  chatHistorySearchNone: "没有对话包含这些词。",
+  chatHistoryByYou: "你",
+  chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "连同其文档重新打开这段对话",
   chatHistoryDelete: "删除该对话",
   chatHistoryRestoreHereHint: "在当前文档中继续这段对话（它的文档从未保存）",

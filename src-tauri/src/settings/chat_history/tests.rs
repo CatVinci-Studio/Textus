@@ -191,3 +191,56 @@ fn unsafe_ids_never_name_a_file() {
     }
     assert!(safe_id("4f1c2d9e-0b7a-4c55-9a51-3d8e2f6b7c10"));
 }
+
+#[test]
+fn a_search_finds_the_words_in_what_was_said_newest_first() {
+    let history = ChatHistory::load(&temp_dir());
+    let talk = |id: &str, at: u64, user: &str, reply: &str| {
+        json!({ "id": id, "docPath": "/n/a.md", "title": id, "updatedAt": at, "turns": [
+            { "kind": "User", "text": user },
+            { "kind": "ToolCall", "call_id": "c", "name": "propose_edit", "arguments": "{\"text\":\"lighthouse\"}" },
+            { "kind": "Assistant", "text": reply },
+        ] })
+    };
+    history.save(talk(
+        "old",
+        1,
+        "Lin keeps the lighthouse on the north cape.",
+        "Noted.",
+    ));
+    history.save(talk(
+        "new",
+        2,
+        "Shorter, please.",
+        "Done - the Lighthouse scene is half as long now.",
+    ));
+    history.save(talk("none", 3, "Hello", "Hi"));
+    let hits = history.search("lighthouse", 10);
+    let found: Vec<&str> = hits.iter().map(|h| h["id"].as_str().unwrap()).collect();
+    assert_eq!(found, ["new", "old"]);
+    assert_eq!(hits[0]["role"], "assistant");
+    assert!(hits[1]["snippet"]
+        .as_str()
+        .unwrap()
+        .contains("Lin keeps the lighthouse"));
+    // Every word, in one turn; a tool call's arguments aren't searched.
+    assert_eq!(history.search("lighthouse cape", 10).len(), 1);
+    assert!(history.search("propose_edit", 10).is_empty());
+    assert!(history.search("   ", 10).is_empty());
+    assert_eq!(history.search("lighthouse", 1).len(), 1);
+}
+
+#[test]
+fn a_long_turn_is_shown_around_the_words() {
+    let text = format!(
+        "{} 灯塔守护人林远 {}",
+        "前文".repeat(100),
+        "后文".repeat(100)
+    );
+    let entry = json!({ "id": "x", "turns": [{ "kind": "User", "text": text }] });
+    let hit = search::search_entry(&entry, &search::terms("林远")).unwrap();
+    let shown = hit["snippet"].as_str().unwrap();
+    assert!(shown.starts_with('…') && shown.ends_with('…'));
+    assert!(shown.contains("灯塔守护人林远"));
+    assert!(shown.chars().count() < 160);
+}

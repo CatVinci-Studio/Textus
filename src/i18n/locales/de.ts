@@ -286,6 +286,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolRemember: "Merkt sich das",
   agentGeneratingImage: "Bild wird erstellt…",
   toolGenerateImage: "Bild wird erstellt",
+  toolSearchConversations: "Frühere Unterhaltungen werden durchsucht",
   toolEditChapters: "Kapitel werden gleichzeitig geändert",
   proposalImage: "Bild",
   imageLimitReached:
@@ -674,6 +675,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   },
   chatHistoryOpen: "Verlauf",
   chatHistoryEmpty: "Keine früheren Unterhaltungen.",
+  chatHistorySearch: "Unterhaltungen durchsuchen",
+  chatHistorySearchNone: "Keine Unterhaltung enthält diese Wörter.",
+  chatHistoryByYou: "Sie",
+  chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Diese Unterhaltung mit ihrem Dokument wieder öffnen",
   chatHistoryDelete: "Unterhaltung löschen",
   chatHistoryRestoreHereHint:

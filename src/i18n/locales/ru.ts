@@ -288,6 +288,7 @@ export default {
   toolRemember: "Запоминаю",
   agentGeneratingImage: "Создаю изображение…",
   toolGenerateImage: "Создаю изображение",
+  toolSearchConversations: "Ищу в прошлых разговорах",
   toolEditChapters: "Изменяю главы одновременно",
   proposalImage: "Изображение",
   imageLimitReached:
@@ -684,6 +685,10 @@ export default {
   },
   chatHistoryOpen: "История",
   chatHistoryEmpty: "Прошлых диалогов нет.",
+  chatHistorySearch: "Поиск по разговорам",
+  chatHistorySearchNone: "Ни в одном разговоре нет этих слов.",
+  chatHistoryByYou: "Вы",
+  chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Снова открыть этот диалог вместе с его документом",
   chatHistoryDelete: "Удалить диалог",
   chatHistoryRestoreHereHint:
