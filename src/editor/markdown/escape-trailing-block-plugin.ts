@@ -1,4 +1,4 @@
-import { Plugin } from "@milkdown/kit/prose/state";
+import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import { liftTarget } from "@milkdown/kit/prose/transform";
 import { $prose } from "@milkdown/kit/utils";
@@ -7,7 +7,12 @@ import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
 import type { Node, ResolvedPos } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 
-const ESCAPABLE_BLOCK_TYPES = new Set(["code_block", "math_block"]);
+// Blocks Enter stays inside, so the arrows are the only way out at an end.
+const ESCAPABLE_BLOCK_TYPES = new Set([
+  "code_block",
+  "math_block",
+  "frontmatter",
+]);
 
 function isLastTopLevelNode($from: ResolvedPos, doc: Node): boolean {
   if ($from.depth < 1) return false;
@@ -20,18 +25,9 @@ function isFirstTopLevelNode($from: ResolvedPos): boolean {
   return $from.depth >= 1 && $from.index(0) === 0;
 }
 
-// Nesting-safe version of the two checks above: true only when every
+// Nesting-safe version of isFirstTopLevelNode: true only when every
 // ancestor level (list item within its list, list within the doc, etc.) is
-// also the last/first child of its own parent - so e.g. the last item of a
-// list still correctly reports "nothing after" even though the list itself
-// has siblings before it.
-function hasNothingAfter($pos: ResolvedPos): boolean {
-  for (let d = 0; d < $pos.depth; d++) {
-    if ($pos.index(d) < $pos.node(d).childCount - 1) return false;
-  }
-  return true;
-}
-
+// also the first child of its own parent.
 function hasNothingBefore($pos: ResolvedPos): boolean {
   for (let d = 0; d < $pos.depth; d++) {
     if ($pos.index(d) > 0) return false;
@@ -39,12 +35,21 @@ function hasNothingBefore($pos: ResolvedPos): boolean {
   return true;
 }
 
+/**
+ * The empty paragraph an escape below adds, while nothing has been typed in
+ * it: only somewhere for the caret to stand. Once the caret leaves it still
+ * empty it goes again, so moving through a document never changes the file
+ * (#350). Neither its coming nor its going is an undo step.
+ */
+const escapeLineKey = new PluginKey<number | null>("escape-line");
+
 function escapeAfterLastNode(view: EditorView): boolean {
   const { state } = view;
   const paragraph = state.schema.nodes.paragraph.create();
   const insertPos = state.doc.content.size;
   const tr = state.tr.insert(insertPos, paragraph);
   tr.setSelection(TextSelection.near(tr.doc.resolve(tr.doc.content.size - 1)));
+  tr.setMeta(escapeLineKey, insertPos).setMeta("addToHistory", false);
   view.dispatch(tr);
   view.focus();
   return true;
@@ -55,9 +60,19 @@ function escapeBeforeFirstNode(view: EditorView): boolean {
   const paragraph = state.schema.nodes.paragraph.create();
   const tr = state.tr.insert(0, paragraph);
   tr.setSelection(TextSelection.near(tr.doc.resolve(1)));
+  tr.setMeta(escapeLineKey, 0).setMeta("addToHistory", false);
   view.dispatch(tr);
   view.focus();
   return true;
+}
+
+/** The escape line at `pos`, if it is still there and still empty. */
+function emptyEscapeLine(doc: Node, pos: number): Node | null {
+  if (pos < 0 || pos >= doc.content.size) return null;
+  const node = doc.nodeAt(pos);
+  return node?.type.name === "paragraph" && node.content.size === 0
+    ? node
+    : null;
 }
 
 /**
@@ -108,14 +123,40 @@ function backspaceOutOfBlockquote(view: EditorView): boolean {
  * document has nothing before/after it to move a cursor into - normal
  * arrow-key navigation can't escape it in that direction, and gets stuck.
  * This adds a trailing/leading empty paragraph on demand so there's always
- * somewhere to land.
+ * somewhere to land - an escape line, gone again if left empty.
  *
- * The same "nothing to land on" gap exists for a plain non-empty last/first
- * line too, just for the vertical arrows: pressing Down on the document's
- * very last line, or Up on its very first, otherwise does nothing.
+ * A plain first or last line has no such gap: Enter at its start or end
+ * makes a new line there, so the arrows only move.
  */
 export function createEscapeTrailingBlockPlugin() {
-  return new Plugin({
+  return new Plugin<number | null>({
+    key: escapeLineKey,
+    state: {
+      init: () => null,
+      apply(tr, pos) {
+        const set = tr.getMeta(escapeLineKey) as number | null | undefined;
+        if (set !== undefined) return set;
+        if (pos == null) return null;
+        const mapped = tr.mapping.mapResult(pos, 1);
+        if (mapped.deleted) return null;
+        // Typed in: an ordinary line now.
+        return emptyEscapeLine(tr.doc, mapped.pos) ? mapped.pos : null;
+      },
+    },
+    appendTransaction(_trs, _old, state) {
+      const pos = escapeLineKey.getState(state);
+      if (pos == null) return null;
+      const line = emptyEscapeLine(state.doc, pos);
+      if (!line) return null;
+      const { from, to } = state.selection;
+      if (from >= pos && to <= pos + line.nodeSize) return null;
+      // The doc keeps at least one block.
+      if (state.doc.childCount === 1) return null;
+      return state.tr
+        .delete(pos, pos + line.nodeSize)
+        .setMeta(escapeLineKey, null)
+        .setMeta("addToHistory", false);
+    },
     props: {
       handleKeyDown(view, event) {
         if (isImeKeyEvent(view, event)) return false;
@@ -145,27 +186,7 @@ export function createEscapeTrailingBlockPlugin() {
         );
         const inTable = isInTable(state);
 
-        if (!inEscapableBlock && !inTable) {
-          // Plain block (paragraph, heading, list item, ...): pressing
-          // straight down off the document's last line, or up off its
-          // first, has nowhere to go by default. Only vertical arrows get
-          // this - Enter/horizontal arrows already behave as expected via
-          // ProseMirror's own defaults - and only when that boundary line
-          // actually has content, so it doesn't keep stacking empty lines.
-          if (event.key === "ArrowDown") {
-            if (!view.endOfTextblock("down") || !hasNothingAfter($from))
-              return false;
-            if ($from.parent.content.size === 0) return false;
-            return escapeAfterLastNode(view);
-          }
-          if (event.key === "ArrowUp") {
-            if (!view.endOfTextblock("up") || !hasNothingBefore($from))
-              return false;
-            if ($from.parent.content.size === 0) return false;
-            return escapeBeforeFirstNode(view);
-          }
-          return false;
-        }
+        if (!inEscapableBlock && !inTable) return false;
 
         if (inEscapableBlock) {
           if (isBackwardKey) {
