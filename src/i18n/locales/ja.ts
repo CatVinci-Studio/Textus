@@ -728,6 +728,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   chatCollapseInline: "回答を折りたたむ",
   chatNewConversation: "新しい会話",
   appMenu: "メニュー",
+  menuBarLabel: "メニューバーを表示",
+  menuBarHelp:
+    "「ファイル」「編集」「表示」などを ☰ にしまわず、タイトルバーに並べます。サイドバーのボタンはその分なくなります。サイドバーは「表示」メニューかショートカットで開けます。",
   menuFile: "ファイル",
   menuEdit: "編集",
   menuFormat: "書式",

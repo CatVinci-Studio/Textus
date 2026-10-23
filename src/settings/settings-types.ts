@@ -272,6 +272,11 @@ export interface Settings {
   proxyPort: string;
   typewriterMode: boolean;
   contentWidth: ContentWidth;
+  /// Windows and Linux, where the app draws the window bar: File, Edit,
+  /// View and the rest along it (app/MenuBar.tsx) instead of behind ☰.
+  /// Off by default; on, the bar has no sidebar button (the sidebar is in
+  /// View and has its shortcut).
+  menuBarShown: boolean;
   /// Typing "*", "**", "~~", "==" or "`" puts the closing mark in at once
   /// (an empty span to type into). Off, the marks are typed by hand and a
   /// complete "**text**" still turns into bold (#136).
@@ -388,6 +393,7 @@ export const DEFAULT_SETTINGS: Settings = {
   proxyPort: "",
   typewriterMode: false,
   contentWidth: "auto",
+  menuBarShown: false,
   autoCloseMarks: true,
   autoCloseBrackets: true,
   customCss: "",

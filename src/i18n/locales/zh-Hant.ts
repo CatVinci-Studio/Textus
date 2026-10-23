@@ -693,6 +693,9 @@ export default {
   chatCollapseInline: "收合回答",
   chatNewConversation: "新對話",
   appMenu: "選單",
+  menuBarLabel: "顯示選單列",
+  menuBarHelp:
+    "把「檔案」「編輯」「檢視」等選單直接排在標題列上，不再收在 ☰ 裡。側邊欄按鈕會讓出位置：側邊欄可以從「檢視」選單或快捷鍵打開。",
   menuFile: "檔案",
   menuEdit: "編輯",
   menuFormat: "格式",

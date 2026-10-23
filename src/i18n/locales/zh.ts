@@ -692,6 +692,9 @@ export default {
   chatCollapseInline: "收起回答",
   chatNewConversation: "新对话",
   appMenu: "菜单",
+  menuBarLabel: "显示菜单栏",
+  menuBarHelp:
+    "把“文件”“编辑”“视图”等菜单直接排在标题栏上，不再收在 ☰ 里。侧边栏按钮会让出位置：侧边栏可以从“视图”菜单或快捷键打开。",
   menuFile: "文件",
   menuEdit: "编辑",
   menuFormat: "格式",

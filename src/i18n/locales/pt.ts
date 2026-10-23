@@ -762,6 +762,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   chatCollapseInline: "Recolher resposta",
   chatNewConversation: "Nova conversa",
   appMenu: "Menu",
+  menuBarLabel: "Mostrar a barra de menus",
+  menuBarHelp:
+    "Arquivo, Editar, Visualizar e os outros menus direto na barra de título, em vez de atrás do ☰. O botão da barra lateral dá lugar a eles: a barra lateral fica em Visualizar e tem seu atalho.",
   menuFile: "Arquivo",
   menuEdit: "Editar",
   menuFormat: "Formatar",

@@ -9,6 +9,7 @@ import { emitMenuEvent, runMenuItemHere } from "../platform/menu-events";
 import {
   buildAppMenu,
   buildMobileMenu,
+  menuBarSections,
   NO_RECENTS,
   type RecentLists,
   type MenuChecks,
@@ -24,7 +25,8 @@ import "./app-menu.css";
 import { usePluginMenuEntries } from "../plugins/usePluginMenu";
 
 /**
- * The app-drawn menu, opened from the title row's hamburger.
+ * The app-drawn menu, opened from the title row's hamburger - or one of
+ * its lists, from the menu bar (MenuBar.tsx).
  *
  * Only ever mounted where the OS frame is gone and the native menu bar went
  * with it (Windows - see platform/window-chrome.ts). It replaces a `popup_menu_at`
@@ -48,9 +50,12 @@ interface AppMenuProps {
   onClose: () => void;
   /** Which view modes are on, for their check marks. */
   checks?: MenuChecks;
+  /** One of the menu bar's titles (menuBarSections) - its list alone,
+   *  opened from the bar (MenuBar.tsx); the whole menu when left out. */
+  section?: number;
 }
 
-export function AppMenu({ x, y, onClose, checks }: AppMenuProps) {
+export function AppMenu({ x, y, onClose, checks, section }: AppMenuProps) {
   const { t, settings } = useSettings();
   const pluginEntries = usePluginMenuEntries(settings.language);
   const ref = useRef<HTMLDivElement>(null);
@@ -61,6 +66,20 @@ export function AppMenu({ x, y, onClose, checks }: AppMenuProps) {
 
   const { recents, fullscreen } = useMenuOpening();
 
+  const menu = hasAppMenu
+    ? buildAppMenu(
+        t,
+        settings.shortcuts,
+        recents,
+        { ...checks, fullscreen },
+        pluginEntries,
+      )
+    : buildMobileMenu(t, checks);
+  const items =
+    section === undefined
+      ? menu
+      : (menuBarSections(menu)[section]?.items ?? []);
+
   // On <body>, not inside the title row that opens it: the row is a fixed
   // layer of its own (z-index 45), so a menu inside it could never rise
   // above the find bar (300) however high its own z-index was set - the
@@ -68,17 +87,7 @@ export function AppMenu({ x, y, onClose, checks }: AppMenuProps) {
   return createPortal(
     <div {...presence} className="app-menu" style={pos} data-floating-menu="">
       <MenuList
-        items={
-          hasAppMenu
-            ? buildAppMenu(
-                t,
-                settings.shortcuts,
-                recents,
-                { ...checks, fullscreen },
-                pluginEntries,
-              )
-            : buildMobileMenu(t, checks)
-        }
+        items={items}
         onDismiss={onClose}
         // The arrow keys need a row to start from; a finger doesn't, and on
         // a phone the first row would only sit there looking selected.

@@ -719,6 +719,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   chatCollapseInline: "답변 접기",
   chatNewConversation: "새 대화",
   appMenu: "메뉴",
+  menuBarLabel: "메뉴 막대 표시",
+  menuBarHelp:
+    "파일, 편집, 보기 등의 메뉴를 ☰ 안에 넣지 않고 제목 표시줄에 바로 늘어놓습니다. 사이드바 버튼은 그 자리를 내줍니다. 사이드바는 보기 메뉴나 단축키로 열 수 있습니다.",
   menuFile: "파일",
   menuEdit: "편집",
   menuFormat: "서식",

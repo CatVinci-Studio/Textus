@@ -748,6 +748,9 @@ type /name in a conversation to use one.
   chatCollapseInline: "Collapse answer",
   chatNewConversation: "New conversation",
   appMenu: "Menu",
+  menuBarLabel: "Show the menu bar",
+  menuBarHelp:
+    "File, Edit, View and the rest along the title bar, instead of behind ☰. The sidebar button makes room for them: the sidebar is in View, and has its shortcut.",
   // The app menu itself. Rendered from src/ui/app-menu-model.ts, which
   // pairs each of these with the menu id its native twin in
   // src-tauri/src/menu.rs carries - the ids are the contract, these
