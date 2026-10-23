@@ -498,6 +498,7 @@ export function MilkdownEditor({
           layoutKey={pendingEdits.previews}
           picked={notes.bar.picked}
           onPick={notes.bar.togglePick}
+          onOpen={notes.selectCard}
         />
       )}
       <OpenReviewNote

@@ -263,7 +263,11 @@ paragraph has lines - the run is one chip, "8 notes", which opens to the
 list of them. Clicked, or pointed at by a bar, a cut card opens whole over
 the ones below, which don't move, until a click elsewhere or Escape; opened
 by the pointer passing over it, it covered the very cards the pointer went
-on to. While there are notes, the notes bar (`NotesBar`) stands over the
+on to. The card selected - clicked last, or pointed at by a bar's
+step, whichever came last - stays lit with its passage while it is read,
+not only while pointed at, and its passage is brought into view in one
+eased stroke of a fixed length (`glideScroll`), with its block pulsed. A
+group draws one line, from its first passage. While there are notes, the notes bar (`NotesBar`) stands over the
 bottom of the document, above the review bar when both show: it steps
 through the notes in the order of the text, marks them all done, and picks
 some to ask about together in the AI panel. A card still pushed below its

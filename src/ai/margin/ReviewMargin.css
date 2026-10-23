@@ -238,8 +238,8 @@
   animation: none;
 }
 
-/* A cut card opens on a click. */
-.review-note:is(.review-note-chip, .review-note-cut) {
+/* A click selects a card (and opens a cut one). */
+.review-margin > .review-note {
   cursor: pointer;
 }
 

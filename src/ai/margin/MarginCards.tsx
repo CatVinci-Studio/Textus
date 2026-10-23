@@ -104,8 +104,10 @@ export function useCardBox(
   top: CardSpot,
   onHeight: CardPlace["onHeight"],
   cut: boolean,
+  open: boolean,
 ): RefObject<HTMLDivElement | null> {
   const ref = useRef<HTMLDivElement>(null);
+  useHeightGlide(ref, open);
   const latest = useRef({ onHeight, cut });
   latest.current = { onHeight, cut };
   useLayoutEffect(() => {
@@ -151,6 +153,35 @@ export function useCardBox(
   return ref;
 }
 
+/**
+ * A card that opens or closes - a cut one opened whole, a group to its list
+ * - glides between the two heights rather than snapping, on the motion
+ * tokens (and not at all under reduced motion). Only on `open` changing:
+ * a streaming card grows as it is written, and that is not animated.
+ */
+export function useHeightGlide(
+  ref: RefObject<HTMLElement | null>,
+  open: boolean,
+) {
+  const last = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const height = el.offsetHeight;
+    const was = last.current;
+    last.current = height;
+    if (was === null || was === height) return;
+    animate(
+      el,
+      [
+        { height: `${was}px`, overflow: "hidden" },
+        { height: `${height}px`, overflow: "hidden" },
+      ],
+      { duration: "--dur-base", easing: "--ease-out" },
+    );
+  }, [ref, open]);
+}
+
 export type RevisionItem = Extract<MarginItem, { kind: "revision" }>;
 
 /** A changed sentence in the margin: what replaces it, and ✓ / ✕ - the same
@@ -175,7 +206,7 @@ export const RevisionCard = memo(
     focused: boolean;
     onDecide: (callId: string, index: number, take: boolean | null) => void;
   }) {
-    const ref = useCardBox(item.key, top, onHeight, cut !== null);
+    const ref = useCardBox(item.key, top, onHeight, cut !== null, open);
     const state =
       item.take === false ? "kept" : item.take === true ? "taken" : "open";
     const closed = chip && !open;
@@ -188,9 +219,10 @@ export const RevisionCard = memo(
         style={cardStyle(top, left, cut, open)}
         onMouseEnter={() => onHot(item.key, true)}
         onMouseLeave={() => onHot(item.key, false)}
+        // A click selects it: its sentence lit and brought into view, a
+        // cut card opened whole - its own buttons aside.
         onClick={(e) => {
-          if (cut !== null && !(e.target as HTMLElement).closest("button"))
-            onOpen(item.key);
+          if (!(e.target as HTMLElement).closest("button")) onOpen(item.key);
         }}
       >
         <div className="review-note-by">
@@ -335,7 +367,7 @@ export const NoteCard = memo(function NoteCard({
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
 }) {
-  const ref = useCardBox(itemKey, top, onHeight, cut !== null);
+  const ref = useCardBox(itemKey, top, onHeight, cut !== null, open);
   return (
     <div
       ref={ref}
@@ -344,12 +376,13 @@ export const NoteCard = memo(function NoteCard({
       data-note={note.id}
       onMouseEnter={() => onHot(itemKey, true)}
       onMouseLeave={() => onHot(itemKey, false)}
-      // Picking, the whole card picks it; else a cut one opens - its own
-      // buttons aside.
+      // Picking, the whole card picks it; else a click selects it - its
+      // passage lit and brought into view, a cut card opened whole. Its
+      // own buttons aside.
       onClick={(e) => {
         if ((e.target as HTMLElement).closest("button")) return;
         if (picked !== null) onPick(note.id);
-        else if (cut !== null) onOpen(itemKey);
+        else onOpen(itemKey);
       }}
     >
       {picked !== null && (

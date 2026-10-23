@@ -63,7 +63,11 @@ export function ReviewMargin({
   layoutKey,
   picked = null,
   onPick,
+  onOpen,
 }: {
+  /** A click on a card selects it (useReviewNotes' `selected`, which
+   *  comes back as `focused`). */
+  onOpen?: (key: string | null) => void;
   /** The notes picked on the notes bar, or null while not picking: each
    *  note's card then has its box, and a click on it picks it. */
   picked?: ReadonlySet<string> | null;
@@ -74,8 +78,8 @@ export function ReviewMargin({
   view: EditorView | null;
   items: MarginItem[];
   hot: string | null;
-  /** The item the review bar points at ("rev:<callId>:<index>", or
-   *  "note:<id>"). */
+  /** The item selected - clicked, or pointed at by the review bar or the
+   *  notes bar ("rev:<callId>:<index>", or "note:<id>"): its card opens. */
   focused: string | null;
   scrollEl: HTMLElement;
   contentEl: HTMLElement;
@@ -195,13 +199,14 @@ export function ReviewMargin({
     [contentEl, scrollEl],
   );
 
-  const { cardHot, cardDone, cardAsk, cardDecide, cardPick, cardOpen, opened } =
+  const { cardHot, cardDone, cardAsk, cardDecide, cardPick, cardOpen } =
     useCardActions({
       onHot,
       onDone,
       onAsk,
       onDecide,
       onPick: onPick ?? (() => {}),
+      onOpen: onOpen ?? (() => {}),
     });
   const onHeight = useCallback((key: string, h: number) => {
     if (heights.current.get(key) !== h) {
@@ -215,7 +220,15 @@ export function ReviewMargin({
     <div className="review-margin">
       <svg className="review-links" aria-hidden="true">
         {layout.placed.map((p) => {
-          const lit = hot === p.item.key || focused === p.item.key;
+          // A group draws one line, from its first passage.
+          if (p.group !== null && p.group !== p.item.key) return null;
+          const own = (key: string | null) =>
+            p.group === null
+              ? key === p.item.key
+              : layout.placed.some(
+                  (q) => q.group === p.group && q.item.key === key,
+                );
+          const lit = own(hot) || own(focused);
           // Pushed far below its passage, a card's line is fainter, not
           // gone: with none, the card read as belonging to nothing.
           const far = p.drift > LINE_DRIFT;
@@ -246,9 +259,7 @@ export function ReviewMargin({
               groupKey={p.group}
               items={members.map((q) => q.item)}
               open={
-                opened === p.group ||
-                picked !== null ||
-                members.some((q) => q.item.key === focused)
+                picked !== null || members.some((q) => q.item.key === focused)
               }
               onOpen={cardOpen}
               picked={picked}
@@ -275,7 +286,7 @@ export function ReviewMargin({
             onPick={cardPick}
             cut={p.cut}
             chip={p.chip}
-            open={opened === item.key || focused === item.key}
+            open={focused === item.key}
             onOpen={cardOpen}
             labels={labels}
             top={p.top}
@@ -291,7 +302,7 @@ export function ReviewMargin({
             item={item}
             hot={hot === item.key}
             focused={focused === item.key}
-            open={opened === item.key || focused === item.key}
+            open={focused === item.key}
             onOpen={cardOpen}
             cut={p.cut}
             chip={p.chip}

@@ -198,6 +198,47 @@ export function animate(
   }
 }
 
+const gliding = new WeakMap<Element, () => void>();
+
+/**
+ * Scrolls `el` by `delta` in one eased stroke of a fixed length (a
+ * duration token), however far: the browser's own smooth scroll takes
+ * longer the further it goes, so a far target jumped instead and a near
+ * one crawled. Eased out as --ease-out is; a wheel or a press on the way
+ * hands the scroll back to the reader. Under reduced motion it jumps.
+ */
+export function glideScroll(
+  el: HTMLElement,
+  delta: number,
+  token: DurationToken = "--dur-sheet",
+) {
+  gliding.get(el)?.();
+  if (!motionAllowed() || Math.abs(delta) < 2) {
+    el.scrollTop += delta;
+    return;
+  }
+  const from = el.scrollTop;
+  const length = duration(token);
+  const start = performance.now();
+  let frame = 0;
+  const stop = () => {
+    cancelAnimationFrame(frame);
+    el.removeEventListener("wheel", stop);
+    el.removeEventListener("pointerdown", stop);
+    gliding.delete(el);
+  };
+  const step = (now: number) => {
+    const t = Math.min(1, (now - start) / length);
+    el.scrollTop = from + delta * (1 - Math.pow(1 - t, 4));
+    if (t < 1) frame = requestAnimationFrame(step);
+    else stop();
+  };
+  el.addEventListener("wheel", stop, { passive: true });
+  el.addEventListener("pointerdown", stop);
+  gliding.set(el, stop);
+  frame = requestAnimationFrame(step);
+}
+
 /** "smooth" unless motion is reduced - for scrollIntoView and scrollTo. */
 export function scrollBehavior(): ScrollBehavior {
   return motionAllowed() ? "smooth" : "auto";

@@ -77,12 +77,24 @@ test("notes that crowd a paragraph stand by their lines as chips, and open in pl
   const before = await tops(page);
   // Clicked, a chip opens whole, with its actions; the others stay put.
   const chip = page.locator(".review-note-chip").first();
+  const id = await chip.getAttribute("data-note");
   await chip.click({ position: { x: 40, y: 12 } });
   await expect(page.locator(".review-note-cut-open")).toHaveCount(1);
   await expect(
     page.locator(".review-note-cut-open").getByRole("button", { name: "Done" }),
   ).toBeVisible();
   expect(await tops(page)).toEqual(before);
+  // Selected, its passage stays lit with it once the pointer has gone.
+  await page.mouse.move(5, 450);
+  await expect(page.locator(".review-anchor-hot")).toHaveCount(1);
+  await expect(page.locator(".review-anchor-hot")).toHaveAttribute(
+    "data-note",
+    id!,
+  );
+  await expect(page.locator(".review-links path.hot")).toHaveCount(1);
+  // Escape lets it go.
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".review-anchor-hot")).toHaveCount(0);
 });
 
 test("more notes than lines make one chip, which opens to them all", async ({
@@ -102,7 +114,8 @@ test("more notes than lines make one chip, which opens to them all", async ({
   const group = page.locator(".review-note-group");
   await expect(group).toHaveCount(1);
   await expect(group).toHaveText(/8 notes/);
-  await expect(page.locator(".review-links path")).toHaveCount(8);
+  // One line for the group, not eight.
+  await expect(page.locator(".review-links path")).toHaveCount(1);
   await group.locator(".review-note-group-head").click();
   const listed = group.locator(".review-note-group-list > .review-note");
   await expect(listed).toHaveCount(8);
@@ -123,6 +136,9 @@ test("the notes bar steps through the notes, marks them all done, and asks about
   // Next: the first note in the text, its card open.
   await bar.getByRole("button", { name: "Next note" }).click();
   await expect(bar.locator(".review-bar-pos")).toHaveText("1 / 3");
+  // The note and what it is about, lit together.
+  await expect(page.locator(".review-anchor-hot")).toHaveText("Gulls argued");
+  await expect(page.locator(".review-links path.hot")).toHaveCount(1);
   await bar.getByRole("button", { name: "Next note" }).click();
   await expect(bar.locator(".review-bar-pos")).toHaveText("2 / 3");
   await bar.getByRole("button", { name: "Previous note" }).click();

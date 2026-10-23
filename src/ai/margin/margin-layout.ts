@@ -259,13 +259,13 @@ export function useMarginRoom(
 }
 
 /**
- * The cut card opened by a click (stackCards), whole over the ones below,
- * until a click elsewhere or Escape. Opened by the pointer passing over it,
- * it covered the very cards the pointer went on to, and they could not be
- * reached.
+ * The card a click selected (useReviewNotes) - a cut one opened whole over
+ * the ones below - until a click elsewhere or Escape. Opened by the pointer
+ * passing over it, a cut card covered the very cards the pointer went on
+ * to, and they could not be reached.
  */
-export function useOpenedCard() {
-  const [opened, setOpened] = useState<string | null>(null);
+export function useOpenedCard<T>() {
+  const [opened, setOpened] = useState<T | null>(null);
   useEffect(() => {
     if (opened === null) return;
     const away = (e: PointerEvent) => {
@@ -283,18 +283,17 @@ export function useOpenedCard() {
 }
 
 /** The cards' callbacks, the same from one render to the next, so a card
- *  whose own props didn't change isn't drawn again (they are memo'd) -
- *  and the card a click opened (useOpenedCard). */
+ *  whose own props didn't change isn't drawn again (they are memo'd). */
 export function useCardActions(handlers: {
   onHot: (key: string | null) => void;
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
   onDecide: (callId: string, index: number, take: boolean | null) => void;
   onPick: (id: string) => void;
+  onOpen: (key: string | null) => void;
 }) {
   const actions = useLatest(handlers);
-  const [opened, setOpened] = useOpenedCard();
-  const callbacks = useMemo(
+  return useMemo(
     () => ({
       cardHot: (key: string, on: boolean) =>
         actions.current.onHot(on ? key : null),
@@ -303,9 +302,8 @@ export function useCardActions(handlers: {
       cardDecide: (callId: string, index: number, take: boolean | null) =>
         actions.current.onDecide(callId, index, take),
       cardPick: (id: string) => actions.current.onPick(id),
-      cardOpen: setOpened,
+      cardOpen: (key: string | null) => actions.current.onOpen(key),
     }),
-    [actions, setOpened],
+    [actions],
   );
-  return { ...callbacks, opened };
 }

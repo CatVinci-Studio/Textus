@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useRef } from "react";
 import type { ReviewNote } from "./review-notes-plugin";
 import { CARD_WIDTH } from "./margin-room";
 import {
@@ -6,7 +6,7 @@ import {
   type MarginItem,
   type ReviewMarginLabels,
 } from "./margin-layout";
-import { NoteCard, RevisionCard } from "./MarginCards";
+import { NoteCard, RevisionCard, useHeightGlide } from "./MarginCards";
 import "./ReviewMargin.css";
 
 /** A group's line: how many notes and changes it holds. */
@@ -62,8 +62,11 @@ export const MarginGroup = memo(function MarginGroup({
   onDecide: (callId: string, index: number, take: boolean | null) => void;
 }) {
   const noHeight = () => {};
+  const ref = useRef<HTMLDivElement>(null);
+  useHeightGlide(ref, open);
   return (
     <div
+      ref={ref}
       className={`review-note review-note-group${open ? " review-note-cut-open review-note-group-open" : " review-note-chip"}`}
       style={{
         top,
@@ -77,6 +80,7 @@ export const MarginGroup = memo(function MarginGroup({
         className="review-note-by review-note-group-head"
         aria-expanded={open}
         onClick={() => onOpen(open ? null : groupKey)}
+        data-group={groupKey}
       >
         <span className="review-note-mark" aria-hidden="true">
           AI

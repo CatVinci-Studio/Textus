@@ -30,6 +30,7 @@ import type { RevisionDisplay } from "../../settings/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useNotesBar } from "./useNotesBar";
+import { useOpenedCard } from "./margin-layout";
 
 /** A proposal shown whole as a margin card's change: what it replaces and
  *  with what. Null for new text alone, which has no original. */
@@ -172,26 +173,10 @@ export function useReviewNotes({
   }, [comments, run]);
 
   // What the pointer is on - a margin card or its passage ("note:<id>",
-  // "rev:<callId>:<index>"): both light up together.
+  // "rev:<callId>:<index>"): both light up together (`lit`, below).
   function setNoteHot(key: string | null) {
     hotRef.current = key;
     setHotNote(key);
-    const id = key?.startsWith("note:") ? key.slice(5) : null;
-    let sentence: HotSentence | null = null;
-    if (key?.startsWith("rev:")) {
-      const [, callId, index] = key.split(":");
-      sentence = { callId, index: Number(index) };
-    }
-    // Through the plugins, never a class written onto the text: see
-    // pending-edit-plugin's hotDecorations.
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      view.dispatch(
-        view.state.tr
-          .setMeta(reviewNotesKey, { type: "hot", id })
-          .setMeta(pendingEditKey, { type: "hot", sentence }),
-      );
-    });
   }
 
   /** The pointer moving over the document: lights up the note or pending
@@ -376,12 +361,50 @@ export function useReviewNotes({
     return items;
   }, [notes, pendingEdits.reviewStops, pendingEdits.reviewed, revisionDisplay]);
 
-  // The margin card the notes bar or the review bar points at - whichever
-  // pointed last.
+  // The item selected: the card clicked last, or the one the notes bar or
+  // the review bar points at - whichever came last. A bar's step takes over
+  // from a click (`over`: what the bars pointed at when it was made).
   const { focusedStop } = pendingEdits;
-  const focusedItem =
+  const pointed =
     bar.focusedItem ??
     (focusedStop ? `rev:${focusedStop.callId}:${focusedStop.index}` : null);
+  const [clicked, setClicked] = useOpenedCard<{
+    key: string;
+    over: string | null;
+  }>();
+  const focusedItem =
+    clicked && clicked.over === pointed ? clicked.key : pointed;
+  // Lit, card and passage both: what the pointer is on, else the selected
+  // one - it stays lit while it is read, not only while pointed at.
+  const lit = hotNote ?? focusedItem;
+  useEffect(() => {
+    const id = lit?.startsWith("note:") ? lit.slice(5) : null;
+    let sentence: HotSentence | null = null;
+    if (lit?.startsWith("rev:")) {
+      const [, callId, index] = lit.split(":");
+      sentence = { callId, index: Number(index) };
+    }
+    // Through the plugins, never a class written onto the text: see
+    // pending-edit-plugin's hotDecorations.
+    run((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      view.dispatch(
+        view.state.tr
+          .setMeta(reviewNotesKey, { type: "hot", id })
+          .setMeta(pendingEditKey, { type: "hot", sentence }),
+      );
+    });
+  }, [lit, run]);
+
+  // A card clicked: selected, and its passage brought into view and
+  // pulsed, so the eye goes from the note to what it is about.
+  function selectCard(key: string | null) {
+    setClicked(key ? { key, over: pointed } : null);
+    const item = key ? marginItems.find((i) => i.key === key) : undefined;
+    if (!item) return;
+    const from = item.kind === "note" ? item.note.from : item.from;
+    run((ctx) => revealPosition(ctx.get(editorViewCtx), from));
+  }
 
   const openNoteData = openNote
     ? (notes.find((n) => n.id === openNote.id) ?? null)
@@ -390,8 +413,9 @@ export function useReviewNotes({
   return {
     notes,
     noMargin,
-    hotNote,
+    hotNote: lit,
     focusedItem,
+    selectCard,
     openNote,
     setOpenNote,
     openNoteData,
