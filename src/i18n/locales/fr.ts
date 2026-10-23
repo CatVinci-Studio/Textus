@@ -610,6 +610,7 @@ utiliser une.
   agentModeReview: "Relire",
   agentModeRevise: "Réviser",
   chatModeLabel: "Mode",
+  chatModelLabel: "Modèle",
   agentPersonalizationGroupLabel: "Instructions d'écriture et compétences",
   agentAdvancedGroupLabel: "Avancé",
   writingModelLabel: "Modèle d'assistance",

@@ -5,6 +5,7 @@ import {
   type PickerRow,
   type PickerSection,
 } from "./ComposerPicker";
+import { ModelSwitcher } from "./ModelSwitcher";
 import {
   MENTION_TOKEN,
   MENTION_TRIGGER,
@@ -523,6 +524,7 @@ export function ChatComposer({
                     </button>
                   </Tooltip>
                 )}
+                <ModelSwitcher />
               </>
             )}
             {selectedText && !selectionDropped && dockActions === undefined && (

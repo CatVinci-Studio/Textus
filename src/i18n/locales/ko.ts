@@ -564,6 +564,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentModeReview: "검토",
   agentModeRevise: "수정",
   chatModeLabel: "모드",
+  chatModelLabel: "모델",
   agentPersonalizationGroupLabel: "글쓰기 지침 및 스킬",
   agentAdvancedGroupLabel: "고급",
   writingModelLabel: "보조 모델",

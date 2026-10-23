@@ -592,6 +592,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentModeReview: "Revisar",
   agentModeRevise: "Editar",
   chatModeLabel: "Modo",
+  chatModelLabel: "Modelo",
   agentPersonalizationGroupLabel: "Instruções de escrita e habilidades",
   agentAdvancedGroupLabel: "Avançado",
   writingModelLabel: "Modelo auxiliar",

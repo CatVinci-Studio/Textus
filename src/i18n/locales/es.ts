@@ -605,6 +605,7 @@ para usar una.
   agentModeReview: "Revisar",
   agentModeRevise: "Editar",
   chatModeLabel: "Modo",
+  chatModelLabel: "Modelo",
   agentPersonalizationGroupLabel: "Instrucciones de escritura y habilidades",
   agentAdvancedGroupLabel: "Avanzado",
   writingModelLabel: "Modelo de asistencia",
