@@ -124,10 +124,6 @@ export interface ChatMessagesProps {
   /** Finished exchanges' thinking, by their user turn's index in
    *  `history` (useAgentConversation's `thoughts`). */
   thoughts?: Record<number, Thought>;
-  /** Whether a live thought opens on its last lines, and the user's say
-   *  on it (useAgentConversation's `followThinking`). */
-  followThinking?: boolean;
-  onFollowThinking?: (follow: boolean) => void;
   busy: boolean;
   error: string | null;
   selectedText: string | null;
@@ -191,8 +187,6 @@ export function ChatMessages({
   history,
   streaming,
   thoughts,
-  followThinking,
-  onFollowThinking,
   busy,
   error,
   selectedText,
@@ -496,12 +490,7 @@ export function ChatMessages({
               <AgentTurnView turn={turn} labels={labels} />
             </div>
             {thought && (
-              <ThoughtRow
-                thought={thought}
-                labels={labels}
-                follow={followThinking}
-                onFollow={onFollowThinking}
-              />
+              <ThoughtRow thought={thought} labels={labels} />
             )}
           </Fragment>
         );

@@ -1104,11 +1104,9 @@
   overflow-y: auto;
 }
 
-/* The live tail (thoughtTail): a few lines, the oldest fading out. */
-.agent-thought-text.is-tail {
-  max-height: none;
-  overflow: hidden;
-  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 35%), #000 1.6em);
+/* The seconds tick without the label changing width. */
+.agent-thought-label {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Under a reply still streaming: it waits, and shows only if the reply

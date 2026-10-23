@@ -104,9 +104,6 @@ export function useAgentConversation(
   // `history` - shown above its reply for the rest of the session, but not
   // saved with the conversation.
   const [thoughts, setThoughts] = useState<Record<number, Thought>>({});
-  // Whether a live thought opens on its last lines (ThoughtRow): on until
-  // the user closes one, for the rest of the conversation.
-  const [followThinking, setFollowThinking] = useState(true);
   const [streaming, setStreamingState] = useState<StreamingState | null>(null);
   // Mirror of `streaming`, readable synchronously inside `send`'s catch:
   // a stop must fold what already streamed into history, and the state
@@ -466,7 +463,6 @@ export function useAgentConversation(
     setConversationId(id);
     setHistory(turns);
     setThoughts({});
-    setFollowThinking(true);
     setStreaming(null);
     setBusy(false);
     setError(null);
@@ -497,8 +493,6 @@ export function useAgentConversation(
     conversationId,
     history,
     thoughts,
-    followThinking,
-    setFollowThinking,
     streaming,
     busy,
     error,

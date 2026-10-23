@@ -378,8 +378,6 @@ export function ChatBody({
                     history={history}
                     streaming={streaming}
                     thoughts={conversation.thoughts}
-                    followThinking={conversation.followThinking}
-                    onFollowThinking={conversation.setFollowThinking}
                     busy={busy}
                     error={error}
                     selectedText={selectedText}
@@ -418,8 +416,6 @@ export function ChatBody({
                 history={history}
                 streaming={streaming}
                 thoughts={conversation.thoughts}
-                followThinking={conversation.followThinking}
-                onFollowThinking={conversation.setFollowThinking}
                 busy={busy}
                 error={error}
                 selectedText={selectedText}

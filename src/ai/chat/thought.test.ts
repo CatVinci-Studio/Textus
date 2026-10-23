@@ -3,7 +3,6 @@ import {
   thinkingDone,
   thinkingEvent,
   thoughtSeconds,
-  thoughtTail,
 } from "./thought";
 
 describe("thought", () => {
@@ -27,12 +26,4 @@ describe("thought", () => {
     expect(thinkingDone(null, 5)).toBeNull();
   });
 
-  it("shows the last few lines of a long think", () => {
-    expect(thoughtTail("one\n\ntwo\nthree\nfour\nfive\n")).toBe(
-      "two\nthree\nfour\nfive",
-    );
-    const tail = thoughtTail("word ".repeat(200), 4, 50);
-    expect(tail.startsWith("…word")).toBe(true);
-    expect(tail.length).toBeLessThanOrEqual(51);
-  });
 });
