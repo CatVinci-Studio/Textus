@@ -386,3 +386,64 @@ test("the empty-document hint gives way to text the AI is writing", async ({
   );
   await expect(hint).toHaveCount(0);
 });
+
+test("a streaming reply stays where the reader scrolled it, and follows again from the bottom", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1100, height: 600 });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
+  await pasteMarkdown(page, "One line.");
+  // A reply that goes on: a word every 30ms, a paragraph every dozen.
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, args?: unknown) => Promise<unknown>;
+      };
+    };
+    const original = w.__TAURI_INTERNALS__.invoke;
+    w.__TAURI_INTERNALS__.invoke = (cmd, args) => {
+      if (cmd !== "ai_agent_message") return original(cmd, args);
+      const { onEvent } = args as {
+        onEvent?: { onmessage?: (e: unknown) => void };
+      };
+      let n = 0;
+      const timer = setInterval(
+        () =>
+          onEvent?.onmessage?.({
+            type: "delta",
+            text: n++ % 12 === 0 ? `\n\nParagraph ${n}. ` : `word${n} `,
+          }),
+        30,
+      );
+      return new Promise((resolve) =>
+        setTimeout(() => {
+          clearInterval(timer);
+          resolve([]);
+        }, 15000),
+      );
+    };
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Write a lot");
+  await composer.press("Enter");
+  const list = page.locator(".agent-panel-view .inline-chat-messages");
+  const gap = () =>
+    list.evaluate((e) => e.scrollHeight - e.clientHeight - e.scrollTop);
+  // Long enough to scroll, and kept at its end while it grows.
+  await expect
+    .poll(() => list.evaluate((e) => e.scrollHeight - e.clientHeight))
+    .toBeGreaterThan(400);
+  expect(await gap()).toBeLessThan(40);
+  // Scrolled up, it stays up: it was pulled back down on every piece.
+  const box = (await list.boundingBox())!;
+  await page.mouse.move(box.x + 100, box.y + 100);
+  await page.mouse.wheel(0, -400);
+  await expect.poll(gap).toBeGreaterThan(200);
+  const top = await list.evaluate((e) => e.scrollTop);
+  await page.waitForTimeout(800);
+  expect(await list.evaluate((e) => e.scrollTop)).toBe(top);
+  // Back at the bottom, it follows again.
+  await list.evaluate((e) => e.scrollTo({ top: e.scrollHeight }));
+  await page.waitForTimeout(800);
+  expect(await gap()).toBeLessThan(40);
+});

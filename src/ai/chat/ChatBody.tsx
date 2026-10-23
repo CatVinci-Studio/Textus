@@ -1,7 +1,8 @@
 import type { DocumentSnapshot } from "../doc-markdown";
+import { useFollowBottom } from "./useFollowBottom";
 import { pictureSrc } from "../revision/generated-images";
 import { MessageQueue } from "./MessageQueue";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import type { AgentRequestOptions } from "./useAgentConversation";
 import type {
   AgentTurn,
@@ -100,7 +101,8 @@ export function ChatBody({
     retry,
   } = conversation;
   const streaming = useRevealedStream(received);
-  const listRef = useRef<HTMLDivElement>(null);
+  const follow = useFollowBottom(streaming);
+  const listRef = follow.ref;
   const { quickExpanded, toggleQuickExpanded } = useQuickExpanded(
     variant,
     busy,
@@ -110,15 +112,10 @@ export function ChatBody({
 
   useStreamedProposals(streaming, onProposals);
 
-  // Keep the newest streamed content in view while it grows.
-  useEffect(() => {
-    if (!streaming) return;
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
-  }, [streaming]);
-
   function afterSend(newTurns: AgentTurn[] | undefined) {
     const proposals = proposalsFromTurns(newTurns ?? []);
     if (proposals.length > 0) onProposals(proposals);
+    follow.stick();
     requestAnimationFrame(() => {
       listRef.current?.scrollTo({
         top: listRef.current.scrollHeight,
@@ -372,7 +369,11 @@ export function ChatBody({
                 />
               )}
               {quickExpanded && (
-                <div className="quick-ask-transcript" ref={listRef}>
+                <div
+                  className="quick-ask-transcript"
+                  ref={listRef}
+                  onScroll={follow.onScroll}
+                >
                   <ChatMessages
                     proposalActions={false}
                     history={history}
@@ -411,7 +412,11 @@ export function ChatBody({
             </div>
           )
         : showMessages && (
-            <div className="inline-chat-messages" ref={listRef}>
+            <div
+              className="inline-chat-messages"
+              ref={listRef}
+              onScroll={follow.onScroll}
+            >
               <ChatMessages
                 history={history}
                 streaming={streaming}
