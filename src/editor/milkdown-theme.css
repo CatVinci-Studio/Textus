@@ -501,7 +501,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   vertical-align: 0.12em;
   white-space: nowrap;
   user-select: none;
-  animation: pending-pick-in var(--dur-base) var(--ease-out) both;
+  --enter-scale: var(--scale-enter);
+  animation: motion-enter var(--dur-base) var(--ease-out) both;
   animation-delay: calc((min(var(--i, 0), 8) + 2) * var(--dur-instant));
 }
 
@@ -590,13 +591,6 @@ br:is(.pending-delete, .pending-sentence-hot) {
 [data-platform="ios"] .pending-pick button svg {
   width: 13px;
   height: 13px;
-}
-
-@keyframes pending-pick-in {
-  from {
-    opacity: 0;
-    transform: scale(var(--scale-enter));
-  }
 }
 
 /* Reduced motion: fades, all at once - no stagger, and the ✓ / ✕ don't

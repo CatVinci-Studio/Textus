@@ -72,7 +72,8 @@
   /* Moved by the stack, a card glides on `translate` (useCardBox), never
      on `top`: that laid the margin out on every frame. */
   transition: transform var(--dur-fast) var(--ease-out);
-  animation: review-note-in var(--dur-slow) var(--ease-out) both;
+  --enter-x: calc(var(--motion-distance-md) * 1.75);
+  animation: motion-enter var(--dur-slow) var(--ease-out) both;
 }
 
 /* The deeper shadow under the pointer fades in on a layer of its own:
@@ -95,13 +96,6 @@
 
 .review-note-hot::after {
   opacity: 1;
-}
-
-@keyframes review-note-in {
-  from {
-    opacity: 0;
-    transform: translateX(calc(var(--motion-distance-md) * 1.75));
-  }
 }
 
 .review-note-by {
@@ -304,7 +298,8 @@
   font: 700 10.5px/1 var(--font-ui, sans-serif);
   cursor: pointer;
   box-shadow: 0 0 0 3px var(--review-anchor-bg);
-  animation: pending-pick-in var(--dur-medium) var(--ease-spring-bouncy) both;
+  --enter-scale: var(--scale-enter);
+  animation: motion-enter var(--dur-medium) var(--ease-spring-bouncy) both;
 }
 
 [data-platform="ios"] .review-badge {
