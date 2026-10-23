@@ -1,6 +1,7 @@
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
+import { duration, length, motionAllowed } from "../../ui/motion";
 
 /** How near the bottom of the page the writing may be and still count as
  *  in view - a wheel's last step short of it. */
@@ -107,7 +108,32 @@ class StreamFollow {
   private letGo = () => {
     this.intent = performance.now();
     this.following = false;
+    this.speed = 0;
   };
+
+  /**
+   * How far a frame of following goes, the writing `over` px below the
+   * view: a critically damped spring, so a sentence or block that lands
+   * draws the page down from rest and settles it without overshoot, in
+   * about --dur-slow - where it jumped down by the block's height, and an
+   * eased stroke that started at full speed still kicked when many landed
+   * at once. Under reduced motion, all of it at once.
+   */
+  private glide(over: number, dt: number): number {
+    if (over <= 0) {
+      this.speed = 0;
+      return 0;
+    }
+    if (!motionAllowed()) return over;
+    const omega = 4 / (duration("--dur-slow") / 1000);
+    const s = dt / 1000;
+    const pull = (omega * omega * over - 2 * omega * this.speed) * s;
+    // Picking up no more than a short distance of speed a frame: many
+    // blocks landing at once still start the page gently.
+    const most = length("--motion-distance-sm") / (1 / 60);
+    this.speed += Math.min(pull, most * (dt / (1000 / 60)));
+    return Math.min(over, Math.max(0, this.speed * s));
+  }
 
   /** Dragging the scrollbar or a selection is the reader's too. */
   private markDrag = (e: PointerEvent) => {
@@ -153,17 +179,29 @@ class StreamFollow {
 
   /** Each frame while something is written: keep it in view while
    *  following; stop once nothing is. */
-  private tick = () => {
+  /** The last frame's time, for how far a frame's glide goes. */
+  private lastFrame = 0;
+  /** How fast the page is gliding after the writing, px/s. */
+  private speed = 0;
+
+  private tick = (now: number = performance.now()) => {
     this.frame = null;
+    const dt = this.lastFrame ? Math.min(now - this.lastFrame, 64) : 16;
+    this.lastFrame = now;
     const edge = this.edge();
     if (edge === null && this.view.dom.querySelector(WRITING) === null) {
       this.live = false;
+      this.lastFrame = 0;
+      this.speed = 0;
       return;
     }
     const scroller = this.scroller;
     if (scroller && edge !== null && this.following) {
       const over = edge - (scroller.getBoundingClientRect().bottom - BELOW);
-      if (over > 0) this.set(scroller.scrollTop + over);
+      const step = this.glide(over, dt);
+      if (step > 0) this.set(scroller.scrollTop + step);
+    } else {
+      this.speed = 0;
     }
     this.frame = requestAnimationFrame(this.tick);
   };
