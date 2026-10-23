@@ -66,11 +66,12 @@ export function diffSentenceLists(
 ): SentenceHunk[] {
   // A rewrite still streaming in regroups only the paragraphs it has
   // finished: a paragraph's shape can't be judged half written.
-  return regroup(sentencePairs(a, b, alignTail ?? alignRun), !alignTail).map(
-    (p) =>
-      p.same
-        ? { kind: "same" as const, text: p.after }
-        : { kind: "change" as const, before: p.before, after: p.after },
+  return mergeShortParagraphs(
+    regroup(sentencePairs(a, b, alignTail ?? alignRun), !alignTail),
+  ).map((p) =>
+    p.same
+      ? { kind: "same" as const, text: p.after }
+      : { kind: "change" as const, before: p.before, after: p.after },
   );
 }
 
@@ -146,6 +147,59 @@ interface Pair {
  *  touched a few words in every sentence stays sentence by sentence. */
 const DENSE = 0.5;
 const REWRITTEN = 0.55;
+
+/** A paragraph this short or shorter, changed whole next to another such,
+ *  is decided with it: a run of short lines rewritten (dialogue, a list
+ *  of points) was a card a line, the margin a column of chips. */
+const SHORT_PARAGRAPH = 80;
+/** Short paragraphs taken together up to this much, then a new change. */
+const MERGED_AT_MOST = 320;
+/** Plain text: not a heading, a list item, a quote, a table, a fence, a
+ *  formula, a footnote, a picture or HTML - those keep their own card. */
+const PLAIN =
+  /^(?!\s*(?:#{1,6}\s|[-*+]\s|\d+[.)]\s|>|\||```|~~~|\$\$|!\[|\[\^|<|\[toc\]))/i;
+
+/**
+ * Changes next to each other that are each a whole short paragraph, on
+ * both sides, merged into one change of those paragraphs. A change inside
+ * a paragraph, or of a long one, stays as it was.
+ */
+function mergeShortParagraphs(pairs: Pair[]): Pair[] {
+  const out: Pair[] = [];
+  // Whether the text so far ends a paragraph: a change after that which
+  // ends one too is a whole paragraph. The text's own end ends one.
+  let atParagraph = true;
+  let run: Pair | null = null;
+  pairs.forEach((p, i) => {
+    const last = i === pairs.length - 1;
+    const ends =
+      last || (ENDS_PARAGRAPH.test(p.before) && ENDS_PARAGRAPH.test(p.after));
+    const whole =
+      !p.same &&
+      atParagraph &&
+      ends &&
+      PLAIN.test(p.before) &&
+      PLAIN.test(p.after) &&
+      paragraphCount(p.before) === 1 &&
+      paragraphCount(p.after) === 1 &&
+      p.before.trim().length <= SHORT_PARAGRAPH &&
+      p.after.trim().length <= SHORT_PARAGRAPH;
+    if (
+      whole &&
+      run &&
+      run.before.length + p.before.length <= MERGED_AT_MOST &&
+      run.after.length + p.after.length <= MERGED_AT_MOST
+    ) {
+      run.before += p.before;
+      run.after += p.after;
+    } else {
+      run = whole ? { ...p } : null;
+      out.push(run ?? p);
+    }
+    atParagraph = ends;
+  });
+  return out;
+}
 
 /** A paragraph's end, carried by its last sentence. */
 export const ENDS_PARAGRAPH = /\n[ \t]*\n\s*$/;
@@ -230,7 +284,7 @@ function regroup(pairs: Pair[], finished: boolean): Pair[] {
 }
 
 /** How many paragraphs with text `text` holds. */
-function paragraphCount(text: string): number {
+export function paragraphCount(text: string): number {
   return paragraphsOf(text).filter((t) => t.trim()).length;
 }
 

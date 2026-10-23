@@ -197,7 +197,10 @@ export function changeDecorations(
   // table has no words to draw a line through.
   if (c.block) {
     // An added block has no original to strike.
-    if (c.from < c.to) decos.push(blockStrike(callId, index, c, state, focus));
+    // Several paragraphs changed as one are struck each as its node.
+    if (c.from < c.to)
+      for (const node of c.parts ?? [c])
+        decos.push(blockStrike(callId, index, node, state, focus));
   } else if (c.from < c.to)
     for (const part of strikeParts(c))
       decos.push(sentenceStrike(callId, index, part, state, focus, stagger));

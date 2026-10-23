@@ -19,7 +19,12 @@ import {
   type PendingPreview,
   type PendingSentence,
 } from "./pending-edit-plugin";
-import { pairedPrefix, splitSentences, trimBreaks } from "./sentence-diff";
+import {
+  paragraphCount,
+  pairedPrefix,
+  splitSentences,
+  trimBreaks,
+} from "./sentence-diff";
 import { diffSentences, splitUnits } from "./unit-diff";
 import { matchableMarkdown } from "./markdown-forms";
 import { findInOrder, locateHunks } from "./sentence-locate";
@@ -177,12 +182,51 @@ function sentencesFor(
             ),
             ...(ranges[i].block
               ? { block: true, at: ranges[i].to }
-              : changeParts(ctx, doc, ranges[i], h.before, h.after)),
+              : (wholeParagraphs(doc, ranges[i], h.before, h.after) ??
+                changeParts(ctx, doc, ranges[i], h.before, h.after))),
           },
         ]
       : [],
   );
   return { hunks, changes };
+}
+
+/**
+ * A change of several whole paragraphs (short ones taken together, or
+ * paragraphs joined or split) as a change of blocks: the paragraphs it
+ * covers struck whole, the new ones drawn as the paragraphs they will be
+ * after them. Drawn in the last one's run of text, they stood as one tall
+ * paragraph that moved everything below once taken. Null when the change
+ * is inside a paragraph, or covers anything but top-level paragraphs.
+ */
+function wholeParagraphs(
+  doc: ProseNode,
+  range: { from: number; to: number },
+  before: string,
+  after: string,
+): {
+  from: number;
+  to: number;
+  block: true;
+  at: number;
+  parts: { from: number; to: number }[];
+} | null {
+  if (paragraphCount(before) < 2 && paragraphCount(after) < 2) return null;
+  const start = doc.resolve(range.from);
+  const end = doc.resolve(range.to);
+  if (start.depth !== 1 || end.depth !== 1) return null;
+  if (start.parentOffset !== 0 || end.parentOffset !== end.parent.content.size)
+    return null;
+  const from = start.before();
+  const to = end.after();
+  let plain = true;
+  const parts: { from: number; to: number }[] = [];
+  doc.nodesBetween(from, to, (node, pos) => {
+    if (node.type.name !== "paragraph") plain = false;
+    parts.push({ from: pos, to: pos + node.nodeSize });
+    return false;
+  });
+  return plain ? { from, to, block: true, at: to, parts } : null;
 }
 
 /**
