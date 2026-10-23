@@ -285,6 +285,7 @@ type /name in a conversation to use one.
   toolRemember: "Remembering this",
   agentGeneratingImage: "Generating an image…",
   toolGenerateImage: "Generating an image",
+  toolEditChapters: "Changing the chapters at once",
   proposalImage: "Picture",
   imageLimitReached:
     "No picture made: this request has made {n}, the most it may. You can change this in Settings under “{setting}”.",

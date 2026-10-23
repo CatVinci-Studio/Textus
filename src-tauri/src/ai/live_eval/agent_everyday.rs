@@ -286,6 +286,16 @@ fn zh_cases() -> Vec<AgentCase> {
         (o.reply != aicompat::agent::OUT_OF_STEPS).then_some(()).ok_or_else(|| "ran out of steps".into())
     }), "A 42k-character Chinese report shown as an outline: expect chapters 6, 7 and 8 read (several read_document calls in one step is best) and each replaced by its English translation - every number kept, including chapter 7's 214 households in 青石巷 - with nothing outside them touched."));
 
+    // The whole of it at once (agent/chapters.rs): every chapter
+    // translated by its own helper, the names written alike.
+    c.push(AgentCase::new("long/zh/translate-whole", Lang::ZhHans, Lang::En, &long, "把全文翻译成英文。", edit_anywhere().has(&["214"]).check("the chapters at once", |o| {
+        o.tools.iter().any(|t| t == "edit_chapters").then_some(()).ok_or_else(|| "edit_chapters not used".into())
+    }).check("all of it, in English", |o| {
+        let text = proposed_text(o);
+        let cjk = super::checks_builtin::cjk_chars(&text);
+        (text.len() > 40_000 && cjk * 50 < text.chars().count()).then_some(()).ok_or_else(|| format!("{} bytes, {cjk} CJK characters", text.len()))
+    }), "A 42k-character Chinese report in eleven chapters, to translate whole: expect one edit_chapters call with the instruction and a glossary of the recurring names and places (青石巷 and the like), every chapter replaced by its English translation, every number kept, and a short reply saying so."));
+
     // A 28k-character document: whole until the limit counted Chinese as
     // three, now the outline and the section the cursor is in - nothing it
     // needs may go missing. The cursor is in chapter 7, as when the user

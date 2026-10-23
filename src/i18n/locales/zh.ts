@@ -250,6 +250,7 @@ export default {
   toolRemember: "记下来",
   agentGeneratingImage: "正在生成图片…",
   toolGenerateImage: "正在生成图片",
+  toolEditChapters: "正在同时修改各章",
   proposalImage: "图片",
   imageLimitReached:
     "没有生成图片：这次请求已生成 {n} 张，达到上限。可以在设置的“{setting}”里调整。",

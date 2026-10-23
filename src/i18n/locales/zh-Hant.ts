@@ -250,6 +250,7 @@ export default {
   toolRemember: "記下來",
   agentGeneratingImage: "正在產生圖片…",
   toolGenerateImage: "正在產生圖片",
+  toolEditChapters: "正在同時修改各章",
   proposalImage: "圖片",
   imageLimitReached:
     "沒有產生圖片：這次請求已產生 {n} 張，達到上限。可以在設定的「{setting}」裡調整。",

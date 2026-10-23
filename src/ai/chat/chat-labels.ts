@@ -114,6 +114,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       measure_text: t.toolMeasureText,
       remember: t.toolRemember,
       generate_image: t.toolGenerateImage,
+      edit_chapters: t.toolEditChapters,
       web_search: t.toolWebSearch,
       web_fetch: t.toolWebFetch,
       // Any MCP server's tool (AgentTurnView's toolActivityText).

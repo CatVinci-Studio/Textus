@@ -288,6 +288,7 @@ export default {
   toolRemember: "Запоминаю",
   agentGeneratingImage: "Создаю изображение…",
   toolGenerateImage: "Создаю изображение",
+  toolEditChapters: "Изменяю главы одновременно",
   proposalImage: "Изображение",
   imageLimitReached:
     "Изображение не создано: этот запрос уже создал {n} — это предел. Его можно изменить в Настройках, в пункте «{setting}».",

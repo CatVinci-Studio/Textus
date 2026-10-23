@@ -286,6 +286,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolRemember: "Merkt sich das",
   agentGeneratingImage: "Bild wird erstellt…",
   toolGenerateImage: "Bild wird erstellt",
+  toolEditChapters: "Kapitel werden gleichzeitig geändert",
   proposalImage: "Bild",
   imageLimitReached:
     "Kein Bild erstellt: Diese Anfrage hat schon {n} erstellt, das Maximum. Du kannst das in den Einstellungen unter „{setting}“ ändern.",

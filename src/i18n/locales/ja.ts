@@ -270,6 +270,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   toolRemember: "覚えています",
   agentGeneratingImage: "画像を生成しています…",
   toolGenerateImage: "画像を生成しています",
+  toolEditChapters: "各章を同時に変更しています",
   proposalImage: "画像",
   imageLimitReached:
     "画像は生成されませんでした：このリクエストで {n} 枚生成し、上限に達しました。設定の「{setting}」で変更できます。",

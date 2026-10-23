@@ -285,6 +285,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   toolRemember: "Lembrando isto",
   agentGeneratingImage: "Gerando uma imagem…",
   toolGenerateImage: "Gerando uma imagem",
+  toolEditChapters: "Alterando os capítulos ao mesmo tempo",
   proposalImage: "Imagem",
   imageLimitReached:
     "Nenhuma imagem criada: este pedido já criou {n}, o máximo. Pode alterar isto nas Definições, em «{setting}».",

@@ -4815,6 +4815,7 @@ dependencies = [
  "codepage",
  "dom_query",
  "encoding_rs",
+ "futures-util",
  "gtk",
  "ignore",
  "libloading",

@@ -838,6 +838,33 @@ pub fn run_conversation(
             proposed: Default::default(),
             checks: Default::default(),
         };
+        // The app's provider path (route::agent_provider), on Claude unless
+        // TEXTUS_EVAL_PROVIDER says otherwise.
+        let agent = AgentProvider {
+            id: agent_provider_id().to_string(),
+            model: setup.model.to_string(),
+            endpoint: agent_endpoint(auth),
+            thinking: setup.thinking,
+            native_search: None,
+            enforce_binding: true,
+        };
+        // A long document's chapters at once, as the app offers it
+        // (agent/chapters.rs).
+        let helper_tools = tools::ToolRegistry::builtin(false, false, setup.mode, sees_images())
+            .only(tools::PROPOSE_EDIT_TOOL_NAME);
+        let helpers = crate::ai::agent::HelperTurns::default();
+        let chapter_run = crate::ai::agent::ChapterRun {
+            agent: &agent,
+            workspace: ws,
+            document: &document,
+            mode: setup.mode,
+            ui_language: setup.ui_language,
+            conventions: &conventions,
+            tools: &helper_tools,
+            tool_ctx: &ctx,
+            channel: &events,
+            helpers: &helpers,
+        };
         // Images as the
         // app offers them to the provider the eval runs on (Anthropic), and
         // generate_image when the case gives it one, on this turn's
@@ -858,21 +885,20 @@ pub fn run_conversation(
                 &events,
             ));
         }
+        if helper_tools.edits() && crate::ai::agent::offers_chapters(&document) {
+            let run = &chapter_run;
+            tool_set.add(tools::Tool {
+                spec: crate::ai::agent::chapters_spec(),
+                access: tools::Access::Proposes,
+                modes: tools::EDITING_MODES,
+                run: tools::Run::Async(Box::new(move |call| Box::pin(run.run(call)))),
+            });
+        }
         let specs = tool_set.specs();
         let usage = RefCell::new(Vec::new());
         let postfix = RefCell::new(Vec::new());
         let thinking_events = AtomicUsize::new(0);
         let thinking_chars = AtomicUsize::new(0);
-        // The app's provider path (route::agent_provider), on Claude unless
-        // TEXTUS_EVAL_PROVIDER says otherwise.
-        let agent = AgentProvider {
-            id: agent_provider_id().to_string(),
-            model: setup.model.to_string(),
-            endpoint: agent_endpoint(auth),
-            thinking: setup.thinking,
-            native_search: None,
-            enforce_binding: true,
-        };
         // Pictures written into the text, begun as the app begins them.
         let inline = setup.pictures.map(|p| p.inline(&ctx.proposed));
         let timeline = Timeline::from_env();
@@ -937,7 +963,7 @@ pub fn run_conversation(
         // generate_image held this turn's document; the next turn's may differ.
         drop(tool_set);
         let mut turns = match result {
-            Ok(turns) => turns,
+            Ok(turns) => crate::ai::agent::with_helper_turns(turns, &helpers),
             Err(e) => {
                 error = Some(format!("turn {}: {e}", outcomes.len() + 1));
                 break;

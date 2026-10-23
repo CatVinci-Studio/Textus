@@ -296,6 +296,7 @@ para usar una.
   toolRemember: "Recordando esto",
   agentGeneratingImage: "Generando una imagen…",
   toolGenerateImage: "Generando una imagen",
+  toolEditChapters: "Cambiando los capítulos a la vez",
   proposalImage: "Imagen",
   imageLimitReached:
     "No se creó la imagen: esta petición ya creó {n}, el máximo. Puedes cambiarlo en Ajustes, en «{setting}».",

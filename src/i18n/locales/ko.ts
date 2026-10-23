@@ -264,6 +264,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   toolRemember: "기억하는 중",
   agentGeneratingImage: "이미지를 생성하는 중…",
   toolGenerateImage: "이미지를 생성하는 중",
+  toolEditChapters: "여러 장을 동시에 고치는 중",
   proposalImage: "그림",
   imageLimitReached:
     '그림을 만들지 못했습니다: 이번 요청에서 {n}장을 만들어 한도에 도달했습니다. 설정의 "{setting}"에서 바꿀 수 있습니다.',

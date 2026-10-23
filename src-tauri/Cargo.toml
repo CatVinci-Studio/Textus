@@ -64,6 +64,7 @@ serde_json = "1"
 # rt-multi-thread (in the tree through tauri): the multi-threaded runtime
 # some tests run on (commands/fs.rs).
 tokio = { version = "1", features = ["fs", "sync", "macros", "rt", "rt-multi-thread", "net", "process", "io-util", "time"] }
+futures-util = { version = "0.3", default-features = false, features = ["alloc"] }
 base64 = "0.22"
 sha2 = "0.10"
 reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }

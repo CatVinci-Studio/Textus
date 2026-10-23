@@ -298,6 +298,7 @@ utiliser une.
   toolRemember: "Mémorisation",
   agentGeneratingImage: "Création d'une image…",
   toolGenerateImage: "Création d'une image",
+  toolEditChapters: "Modification des chapitres en parallèle",
   proposalImage: "Image",
   imageLimitReached:
     "Aucune image créée : cette demande en a déjà créé {n}, le maximum. Vous pouvez le changer dans les Réglages, sous « {setting} ».",
