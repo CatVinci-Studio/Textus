@@ -1437,11 +1437,14 @@
   flex: none;
   display: inline-grid;
   place-items: center;
-  /* The disc grows with the number in it (Interface Text Size). */
-  width: calc(18px * var(--ui-text-scale, 1));
+  box-sizing: border-box;
+  /* The disc grows with the number in it (Interface Text Size), and into
+     a pill past two digits. */
+  min-width: calc(18px * var(--ui-text-scale, 1));
   height: calc(18px * var(--ui-text-scale, 1));
+  padding-inline: calc(4px * var(--ui-text-scale, 1));
   margin-top: 1px;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   background: var(--success-color);
   color: var(--on-fill);
   font-size: calc(10.5px * var(--ui-text-scale, 1));
@@ -1511,9 +1514,11 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   flex: none;
   display: inline-grid;
   place-items: center;
-  width: calc(18px * var(--ui-text-scale, 1));
+  box-sizing: border-box;
+  min-width: calc(18px * var(--ui-text-scale, 1));
   height: calc(18px * var(--ui-text-scale, 1));
-  border-radius: 50%;
+  padding-inline: calc(4px * var(--ui-text-scale, 1));
+  border-radius: var(--radius-pill);
   background: var(--review-note-line);
   color: var(--on-fill);
   font: 700 calc(10.5px * var(--ui-text-scale, 1)) / 1

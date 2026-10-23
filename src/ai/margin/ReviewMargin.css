@@ -197,6 +197,21 @@
   color: var(--editor-accent);
 }
 
+/* A revision cut to its chip keeps the card's look: its number, then its
+   new text in the green box - not plain text, as a note's chip is. */
+.revision-note.review-note-chip .review-note-chip-text {
+  flex: 0 1 auto;
+  padding: 1px 4px;
+  border-radius: var(--radius-small);
+  background: var(--revision-insert-bg);
+}
+
+.revision-note-kept.review-note-chip .review-note-chip-text {
+  background: none;
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
 /* Picking on the notes bar (NotesBar): each note's box, top right. */
 .review-note-pick {
   position: absolute;
@@ -286,13 +301,14 @@
 .review-badge {
   display: inline-grid;
   place-items: center;
-  width: 18px;
+  box-sizing: border-box;
+  min-width: 18px;
   height: 18px;
   margin: 0 2px;
-  padding: 0;
+  padding: 0 4px;
   vertical-align: 0.2em;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   background: var(--review-note-line);
   color: var(--on-fill);
   font: 700 10.5px/1 var(--font-ui, sans-serif);
@@ -395,12 +411,16 @@
   margin-bottom: 4px;
 }
 
+/* A disc for one or two digits, a pill past that: a fixed width ran "100"
+   out of its circle. */
 .revision-note-num {
   display: inline-grid;
   place-items: center;
-  width: calc(16px * var(--ui-text-scale, 1));
+  box-sizing: border-box;
+  min-width: calc(16px * var(--ui-text-scale, 1));
   height: calc(16px * var(--ui-text-scale, 1));
-  border-radius: 50%;
+  padding-inline: calc(4px * var(--ui-text-scale, 1));
+  border-radius: var(--radius-pill);
   background: var(--success-color);
   color: var(--on-fill);
   font-size: calc(9.5px * var(--ui-text-scale, 1));

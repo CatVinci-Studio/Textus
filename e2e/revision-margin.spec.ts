@@ -332,3 +332,19 @@ test("a sentence the rewrite adds has a card that says Added, not an empty entry
   // In the text, only the mark where it goes.
   await expect(page.locator(".milkdown .pending-insert-mark")).toBeVisible();
 });
+
+test("a change's number fits its badge past two digits", async ({ page }) => {
+  await open(page, STORY, "original");
+  const fits = await page.evaluate(() =>
+    ["revision-note-num", "agent-proposal-num", "review-badge"].map((name) => {
+      const el = document.createElement("span");
+      el.className = name;
+      el.textContent = "128";
+      document.body.append(el);
+      const ok = el.scrollWidth <= el.clientWidth + 0.5;
+      el.remove();
+      return ok;
+    }),
+  );
+  expect(fits).toEqual([true, true, true]);
+});
