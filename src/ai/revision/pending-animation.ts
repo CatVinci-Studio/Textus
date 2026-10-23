@@ -8,7 +8,7 @@ import {
   pendingDiagram,
   splitMermaidFences,
 } from "../../editor/pending-diagram";
-import { enter } from "../../ui/moves";
+import { enter, glideAfter } from "../../ui/moves";
 import { UnitReveal } from "./unit-reveal";
 import { showGeneratedImages, shownGeneratedSrc } from "./generated-images";
 import { framePendingPictures } from "./pending-picture";
@@ -262,17 +262,34 @@ export function renderAnimation(anim: InsertAnimation) {
   // under the caret changed sixty times a second and WebKit scrolled the
   // caret back into view each time - the document wouldn't scroll away
   // while a proposal was written.
-  if (text === anim.drawn && anim.span.dataset.drawn === "true") return;
-  const before = anim.span.childNodes.length;
-  const grew = anim.drawn !== null && text.startsWith(anim.drawn);
+  const fresh = anim.span.dataset.drawn !== "true";
+  if (text === anim.drawn && !fresh) return;
+  // A widget made again (its decoration redrawn) shows what was on screen
+  // already: drawn, nothing entering.
+  const redrawn = fresh && anim.drawn !== null && text === anim.drawn;
+  const shown = fresh ? "" : (anim.drawn ?? "");
+  const before = fresh ? 0 : anim.span.children.length;
+  const height = fresh ? 0 : anim.span.offsetHeight;
   renderPendingHtml(anim.span, text);
   anim.drawn = text;
   anim.span.dataset.drawn = "true";
-  // The blocks the unit that landed brought enter (ui/moves.ts). A
-  // sentence that joined the paragraph already shown just appears in it:
-  // fading the whole paragraph in again for it read as a flicker.
-  if (!grew) return;
+  // The blocks the unit that landed brought enter (ui/moves.ts), the first
+  // one too. A sentence that joined the paragraph already shown just
+  // appears in it: fading the whole paragraph in again read as a flicker.
+  if (redrawn || !text.startsWith(shown)) return;
   for (const el of [...anim.span.children].slice(before)) enter(el);
+  // The text below it, pushed down by what landed, glides there - once
+  // the widget is in the document, when it was drawn as it was made: in a
+  // microtask, which runs once ProseMirror has put it in and before the
+  // frame is painted. On the next frame, the text stood a frame where it
+  // was pushed to and then went back up to glide down.
+  const span = anim.span;
+  const push = () => {
+    const root = span.closest(".ProseMirror");
+    if (root) glideAfter(span, span.offsetHeight - height, root);
+  };
+  if (span.isConnected) push();
+  else queueMicrotask(push);
 }
 
 /**

@@ -1,6 +1,6 @@
 import { Decoration } from "@milkdown/kit/prose/view";
 import { prefersReducedMotion } from "../../ui/motion";
-import { enter } from "../../ui/moves";
+import { enter, glideAfter } from "../../ui/moves";
 import { inlineSentence, pairedPrefix } from "./sentence-diff";
 import { type StreamLayout } from "./sentence-stream";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
@@ -411,6 +411,14 @@ export function streamEntrance(
   // A sentence written in place of the one its original was marked in
   // (the reading cursor, ui/moves.ts's mark) enters where it lands.
   enter(span, { from: "none" });
+  // A whole block pushes the text below it down: that glides there. Once
+  // it is in the document (a widget is drawn after it is made), before the
+  // frame is painted.
+  if (span.dataset.blocks !== "true") return;
+  queueMicrotask(() => {
+    const root = span.closest(".ProseMirror");
+    if (root) glideAfter(span, span.offsetHeight, root);
+  });
 }
 
 /** The completed changes of a streaming rewrite's layout, where they

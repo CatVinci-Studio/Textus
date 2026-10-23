@@ -141,3 +141,27 @@ export async function land(
   const entering = change() ?? [];
   for (const el of entering) enter(el, { from: "none", ...move });
 }
+
+/**
+ * What comes after `el` in `root` - the parts below a part that just grew
+ * by `by` px, or arrived - glides down from where it stood to where it now
+ * is (FLIP): written into the middle of a document, each block that landed
+ * pushed the text below it down at once. Only what is on screen moves.
+ */
+export function glideAfter(el: Element, by: number, root: Element) {
+  if (!motionAllowed() || by < 1) return;
+  let block: Element | null = el;
+  while (block && block.parentElement !== root) block = block.parentElement;
+  if (!block) return;
+  const bottom = window.innerHeight;
+  for (
+    let next = block.nextElementSibling;
+    next && next.getBoundingClientRect().top - by < bottom;
+    next = next.nextElementSibling
+  )
+    animate(
+      next,
+      [{ transform: `translateY(${-by}px)` }, { transform: "none" }],
+      { duration: "--dur-medium", easing: "--ease-out" },
+    );
+}
