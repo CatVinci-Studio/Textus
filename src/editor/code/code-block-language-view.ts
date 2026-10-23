@@ -171,7 +171,9 @@ export function createCodeBlockView(
         cancelAnimationFrame(fitting);
         fitting = requestAnimationFrame(() => fitGutter(gutter, code));
       };
-      const resized = new ResizeObserver(fitSoon);
+      // Made when the numbers are first shown: a block without them has
+      // nothing to fit.
+      let resized: ResizeObserver | null = null;
       function syncGutter(
         currentNode: ProseNode,
         currentDecorations: readonly Decoration[],
@@ -181,12 +183,13 @@ export function createCodeBlockView(
         );
         if (!on) {
           gutter.remove();
-          resized.disconnect();
+          resized?.disconnect();
           numberedLines = 0;
           return;
         }
         if (!gutter.isConnected) {
           pre.insertBefore(gutter, code);
+          resized ??= new ResizeObserver(fitSoon);
           resized.observe(code);
         }
         fitSoon();
@@ -225,7 +228,7 @@ export function createCodeBlockView(
         destroy() {
           clearTimeout(copiedTimer);
           cancelAnimationFrame(fitting);
-          resized.disconnect();
+          resized?.disconnect();
         },
       };
     },
