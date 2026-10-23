@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { openApp } from "./helpers";
+import { FIRST_LOAD, openApp } from "./helpers";
 
 /**
  * A rewrite of a whole document with a block in it that isn't sentences -
@@ -122,9 +122,10 @@ for (const c of CASES) {
         }),
       path,
     );
+    // Its block may be maths, which waits for KaTeX's first load.
     await expect(
       page.locator('[data-active-tab="true"] .ProseMirror'),
-    ).toContainText("小满");
+    ).toContainText("小满", FIRST_LOAD);
     await replyWithRewrite(
       page,
       `${NEW_BEFORE}\n\n${c.rewritten}\n\n${NEW_AFTER}`,

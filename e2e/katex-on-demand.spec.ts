@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { FIRST_LOAD, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 // KaTeX loads on a document's first formula (src/editor/math/katex-loader.ts)
 // instead of with the app. A document that has maths waits for it before
@@ -52,7 +52,7 @@ test("a document with maths opens with its formulas already drawn", async ({
     }).observe(document.body, { childList: true, subtree: true });
   });
   await openRecent(page, "/home/me/maths.md");
-  await expect(page.locator(`${editor} h1`)).toContainText("Maths");
+  await expect(page.locator(`${editor} h1`)).toContainText("Maths", FIRST_LOAD);
   const first = await page.evaluate(
     () => (window as unknown as { __firstMath?: number[] }).__firstMath,
   );
@@ -96,7 +96,7 @@ test("a formula in a Textus AI proposal is drawn as soon as KaTeX loads", async 
   // The source while KaTeX loads, then the formula - with nothing else
   // happening in the editor to draw it again.
   await expect(proposal.locator(".math-pending")).toHaveCount(1);
-  await expect(proposal.locator(".katex")).toHaveCount(1);
+  await expect(proposal.locator(".katex")).toHaveCount(1, FIRST_LOAD);
   await expect(proposal.locator(".math-pending")).toHaveCount(0);
 });
 
