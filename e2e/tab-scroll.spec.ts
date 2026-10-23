@@ -55,3 +55,40 @@ test("a tab back in front is where it was left", async ({ page }) => {
     .toBe(scrolled);
   await expect(line).toBeInViewport();
 });
+
+test("a file opened again opens where it was last read, at another width too (#348)", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", newDocumentMode: "tab" },
+  });
+  await drop(page, "/notes/long.md", LONG);
+  await expect(page.locator(editor)).toContainText("Paragraph 399");
+  const line = page.locator(`${editor} p`, { hasText: "Paragraph 300 of" });
+  await line.evaluate((el) => el.scrollIntoView({ block: "start" }));
+  await page.waitForTimeout(400);
+  // Closed, and opened again in a narrower window.
+  await page.keyboard.press("Control+w");
+  await expect(page.locator(editor)).not.toContainText("Paragraph 399");
+  await page.setViewportSize({ width: 900, height: 700 });
+  await drop(page, "/notes/long.md", LONG);
+  await expect(page.locator(editor)).toContainText("Paragraph 399");
+  await expect
+    .poll(() =>
+      line.evaluate((el) => {
+        const s = el.closest(".editor-scroll")!.getBoundingClientRect();
+        return Math.abs(el.getBoundingClientRect().top - s.top);
+      }),
+    )
+    .toBeLessThan(4);
+});
+
+test("a file never scrolled opens at its top", async ({ page }) => {
+  await openApp(page, {
+    settings: { language: "en", newDocumentMode: "tab" },
+  });
+  await drop(page, "/notes/other.md", LONG);
+  await expect(page.locator(editor)).toContainText("Paragraph 399");
+  await page.waitForTimeout(300);
+  expect(await page.locator(scroller).evaluate((el) => el.scrollTop)).toBe(0);
+});
