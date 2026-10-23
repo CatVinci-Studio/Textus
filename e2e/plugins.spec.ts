@@ -37,6 +37,8 @@ exports.activate = function () {
             tooltip: "Greet",
             command: "test.hello.greet",
           });
+        if (message === "l10n")
+          webview.postMessage(textus.l10n.t("greeting", "host"));
         if (message === "folder") {
           try {
             await textus.workspace.list("");
@@ -51,16 +53,19 @@ exports.activate = function () {
         "<button id=folder>Folder</button>",
         "<button id=outline>Outline</button>",
         "<button id=status>Status</button>",
+        "<button id=l10n>L10n</button>",
+        "<p id=page></p>",
         "<p id=out></p>",
         "<script>",
         "const api = acquireTextusApi();",
-        "for (const id of ['ping', 'propose', 'folder', 'outline', 'status'])",
+        "for (const id of ['ping', 'propose', 'folder', 'outline', 'status', 'l10n'])",
         "  document.getElementById(id).onclick = () => api.postMessage(id);",
         "api.onMessage((m) => (document.getElementById('out').textContent = m));",
         "let storage = 'open';",
         "try { localStorage.setItem('x', '1'); } catch { storage = 'blocked'; }",
         "let app = 'open';",
         "try { void parent.document.title; } catch { app = 'blocked'; }",
+        "document.getElementById('page').textContent = api.t('greeting', 'page');",
         "document.body.dataset.storage = storage;",
         "document.body.dataset.app = app;",
         "document.body.dataset.tauri = String('__TAURI_INTERNALS__' in window);",
@@ -86,7 +91,12 @@ const MANIFEST = {
       "editor/context": [{ command: "test.hello.greet" }],
       "app/plugins": [{ command: "test.hello.greet" }],
     },
-    sidebarTabs: [{ id: "test.hello.panel", title: "Hello" }],
+    sidebarTabs: [{ id: "test.hello.panel", title: "%tab%" }],
+  },
+  l10n: {
+    en: { tab: "Hello", greeting: "Hello from the {0}" },
+    zh: { tab: "你好", greeting: "来自{0}的问候" },
+    "zh-Hant": { tab: "哈囉", greeting: "來自{0}的問候" },
   },
 };
 
@@ -248,4 +258,42 @@ test("a plugin reads the document's outline, and puts a status in the window bar
   await expect(status).toBeVisible();
   await status.click();
   await expect(page.locator(".app-dialog")).toContainText("Hello 1");
+});
+
+test("a plugin's strings come in the UI's language, from its manifest", async ({
+  page,
+}) => {
+  await page.addInitScript(
+    ({ manifest, host }) => {
+      if (window.top !== window) return;
+      const w = window as unknown as Record<string, unknown>;
+      w.__devPlugins = [
+        {
+          id: "test.hello",
+          dir: "/plugins/test.hello",
+          manifest: JSON.stringify(manifest),
+          dev: false,
+          files: { "host.js": host },
+        },
+      ];
+      w.__devPluginState = {
+        allOn: true,
+        plugins: {
+          "test.hello": { enabled: true, granted: manifest.permissions },
+        },
+      };
+    },
+    { manifest: MANIFEST, host: HOST },
+  );
+  // Traditional Chinese has its own strings, not the Simplified ones.
+  await openApp(page, { settings: { language: "zh-Hant" } });
+  await emit(page, "menu-toggle-sidebar");
+  await page
+    .locator(".sidebar-tabs")
+    .getByRole("button", { name: "哈囉" })
+    .click();
+  const panel = page.frameLocator(".plugin-webview-frame");
+  await expect(panel.locator("#page")).toHaveText("來自page的問候");
+  await panel.locator("#l10n").click();
+  await expect(panel.locator("#out")).toHaveText("來自host的問候");
 });

@@ -67,7 +67,11 @@ To share it, zip the folder and name the file `<id>.textusplugin`;
 - Every id a plugin contributes - commands, views, sidebar tabs, custom
   editors - starts with the plugin's own id and a dot.
 - A string the user sees may be `%key%`, looked up in `l10n` for the
-  interface's language, then English.
+  interface's language, then its base language (`zh` for `zh-Hant`), then
+  English. The plugin's code reads the same table with
+  `textus.l10n.t(key, ...args)`, a webview with `api.t(key, ...args)`;
+  `{0}`, `{1}`… in a string are the arguments. Textus speaks `en`, `zh`,
+  `zh-Hant`, `ja`, `ko`, `es`, `fr`, `de`, `ru` and `pt`.
 - A plugin starts the first time something it adds is used - its command
   run, its tab opened - and not before, unless it asks for
   `onStartupFinished`.
@@ -201,6 +205,8 @@ key }` (`[@key]`); return `{ title, markdown }`, or null to let the next
   the plugin's own files.
 - `textus.env` - `language`, `appVersion`, `platform`, `theme` (`light` or
   `dark`), `onDidChangeTheme(fn)`, `onDidChangeLanguage(fn)`.
+- `textus.l10n` - `t(key, ...args)`: a string of the manifest's `l10n` in
+  the interface's language.
 
 Every `register…` and `on…` returns `{ dispose() }`.
 
@@ -240,7 +246,8 @@ resolveWebviewView: async function (webview) {
   `--font-sans`, `--text-sm`, `--space-3`, …) that follow the theme and
   dark mode, and buttons, inputs, `.toolbar`, `.list` and `.empty` look as
   they do in Settings without any CSS of yours.
-- `api.language` is the interface's language.
+- `api.language` is the interface's language, and `api.t(key, ...args)`
+  a string of the manifest's `l10n` in it.
 
 ## What a plugin can't do
 

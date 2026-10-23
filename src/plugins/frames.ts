@@ -60,13 +60,26 @@ export function webviewCsp(frameHosts: readonly string[]): string {
  *  kit and the runtime put first in its head. */
 export function webviewDocument(
   html: string,
-  options: { themeCss: string; dark: boolean; frameHosts: readonly string[] },
+  options: {
+    themeCss: string;
+    dark: boolean;
+    frameHosts: readonly string[];
+    /** The UI's language and the plugin's strings (its manifest's l10n),
+     *  there before the page's own scripts run (api.t). */
+    language: string;
+    l10n: Record<string, Record<string, string>>;
+  },
 ): string {
+  const locale = JSON.stringify({
+    language: options.language,
+    l10n: options.l10n,
+  });
   const head = [
     "<meta charset='utf-8'>",
     `<meta http-equiv="Content-Security-Policy" content="${webviewCsp(options.frameHosts)}">`,
     `<style id="textus-theme">${inElement(options.themeCss, "style")}</style>`,
     `<style id="textus-ui">${inElement(pluginUiCss, "style")}</style>`,
+    `<script type="application/json" id="textus-locale">${inElement(locale, "script")}</script>`,
     `<script>${inElement(`${RPC_SOURCE}\n${webviewRuntime}`, "script")}</script>`,
   ].join("\n");
   const theme = options.dark ? "dark" : "light";

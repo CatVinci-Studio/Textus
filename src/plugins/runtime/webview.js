@@ -31,9 +31,43 @@
     document.documentElement.dataset.theme = dark ? "dark" : "light";
   }
 
+  // A string of the plugin's manifest (`l10n`) in the UI's language: its
+  // own, then its base language's ("zh-Hant" -> "zh"), then English, then
+  // the key. "{0}", "{1}"... are the arguments after it.
+  function localized(l10n, language, key, args) {
+    var base = String(language).split("-")[0];
+    var text =
+      (l10n[language] && l10n[language][key]) ||
+      (l10n[base] && l10n[base][key]) ||
+      (l10n.en && l10n.en[key]) ||
+      key;
+    return text.replace(/\{(\d+)\}/g, function (all, n) {
+      return args[n] === undefined ? all : String(args[n]);
+    });
+  }
+
+  // The language and the plugin's strings, written into the page ahead of
+  // this script (frames.ts), so the page's own scripts have them at once.
+  var locale = { language: "", l10n: {} };
+  try {
+    locale = JSON.parse(document.getElementById("textus-locale").textContent);
+  } catch (err) {
+    // A page made without them: English, and the keys.
+  }
+  var l10n = locale.l10n || {};
+
   var api = {
     // The UI's language, as Textus's settings have it ("zh", "en").
-    language: document.documentElement.lang || "en",
+    language: locale.language || document.documentElement.lang || "en",
+    // A string of the plugin's manifest in that language.
+    t: function (key) {
+      return localized(
+        l10n,
+        api.language,
+        String(key),
+        Array.prototype.slice.call(arguments, 1),
+      );
+    },
     postMessage: function (message) {
       send("message", { message: message });
     },

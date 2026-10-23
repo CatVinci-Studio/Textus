@@ -235,6 +235,7 @@ export class PluginHost {
             appVersion: this.deps.appVersion,
             platform: this.deps.platform,
             theme: this.deps.dark() ? "dark" : "light",
+            l10n: manifest.l10n,
           },
         }),
         resolve,

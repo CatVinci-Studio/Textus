@@ -126,6 +126,21 @@
     return new TextEncoder().encode(String(data));
   }
 
+  // A string of the plugin's manifest (`l10n`) in the UI's language: its
+  // own, then its base language's ("zh-Hant" -> "zh"), then English, then
+  // the key. "{0}", "{1}"... are the arguments after it.
+  function localized(l10n, language, key, args) {
+    var base = String(language).split("-")[0];
+    var text =
+      (l10n[language] && l10n[language][key]) ||
+      (l10n[base] && l10n[base][key]) ||
+      (l10n.en && l10n.en[key]) ||
+      key;
+    return text.replace(/\{(\d+)\}/g, function (all, n) {
+      return args[n] === undefined ? all : String(args[n]);
+    });
+  }
+
   var textus = {
     plugin: {
       get id() {
@@ -161,6 +176,16 @@
       },
       onDidChangeLanguage: function (callback) {
         return on("language", callback);
+      },
+    },
+    l10n: {
+      t: function (key) {
+        return localized(
+          env.l10n || {},
+          env.language || "en",
+          String(key),
+          Array.prototype.slice.call(arguments, 1),
+        );
       },
     },
     commands: {
