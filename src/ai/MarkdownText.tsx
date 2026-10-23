@@ -1,5 +1,8 @@
 import { useMemo } from "react";
-import { renderMarkdownHtml } from "../editor/markdown/render-html";
+import {
+  renderMarkdownHtml,
+  renderMarkdownInlineHtml,
+} from "../editor/markdown/render-html";
 import { useKatexReady } from "../editor/math/katex-loader";
 
 /**
@@ -27,4 +30,15 @@ export function MarkdownText({ text }: { text: string }) {
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
+}
+
+/**
+ * A review note's words (add_comment) with their inline Markdown - the
+ * model writes a term in **bold** or `code`, which as plain text showed
+ * its asterisks. Sanitized like a reply; line breaks kept by the card.
+ */
+export function InlineMarkdownText({ text }: { text: string }) {
+  const html = useMemo(() => renderMarkdownInlineHtml(text), [text]);
+  // Safe: renderMarkdownInlineHtml sanitizes.
+  return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }

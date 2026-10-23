@@ -1,3 +1,4 @@
+import { PLUGINS_SHOWN } from "../plugins/availability";
 import { APP_NAME, type Strings } from "../i18n/strings";
 import type { HeadingAction, Shortcuts } from "../settings/SettingsContext";
 import { basename } from "../utils/path";
@@ -58,6 +59,8 @@ export type NativeMenuId =
   | `help-doc:${string}`
   | "help-community"
   | "help-tutorials"
+  | "manage-plugins"
+  | `plugin-command:${string}`
   // The phone menu's own (buildMobileMenu): emitted by emitMenuEvent, with
   // no menu.rs counterpart.
   | "share"
@@ -128,6 +131,12 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
     "toggle-typewriter-mode": !!checks.typewriter,
     "toggle-zen-mode": !!checks.zen,
   };
+}
+
+/** A command a plugin put in the Plugins menu (plugins/manager.ts). */
+export interface PluginMenuEntry {
+  command: string;
+  label: string;
 }
 
 /** What File > Open Recent lists (menu.rs's recents), most recent first. */
@@ -224,11 +233,37 @@ function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
   ];
 }
 
+/** The Plugins menu: the commands plugins put there, then Manage Plugins…
+ *  - none at all where the app doesn't show plugins
+ *  (plugins/availability.ts). */
+function pluginsMenu(
+  t: Strings,
+  plugins: readonly PluginMenuEntry[],
+): MenuNode[] {
+  if (!PLUGINS_SHOWN) return [];
+  return [
+    {
+      label: t.menuPlugins,
+      submenu: [
+        ...(plugins.length
+          ? plugins.map((p): MenuEntry => ({
+              label: p.label,
+              action: { native: `plugin-command:${p.command}` },
+            }))
+          : [{ label: t.menuNoPluginCommands, disabled: true }]),
+        "separator",
+        { label: t.menuManagePlugins, action: { native: "manage-plugins" } },
+      ],
+    },
+  ];
+}
+
 export function buildAppMenu(
   t: Strings,
   shortcuts: Shortcuts,
   recents: RecentLists,
   checks: MenuChecks = {},
+  plugins: readonly PluginMenuEntry[] = [],
 ): MenuNode[] {
   return [
     {
@@ -370,6 +405,7 @@ export function buildAppMenu(
         },
       ],
     },
+    ...pluginsMenu(t, plugins),
     {
       label: t.menuHelp,
       submenu: [
@@ -470,6 +506,8 @@ export function nativeMenuLabels(t: Strings): Record<string, string> {
     "menu:edit": t.menuEdit,
     "menu:format": t.menuFormat,
     "menu:view": t.menuView,
+    "menu:plugins": t.menuPlugins,
+    "plugin-commands-none": t.menuNoPluginCommands,
     "menu:window": t.menuWindow,
     "menu:help": t.menuHelp,
     "predefined:about": named(t.menuAbout),

@@ -6,37 +6,41 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
  * screen, where the traffic lights are gone from the window bar's corner
  * and its first control takes their place (window-bar.css). Elsewhere the
  * bar's left end is the same either way, so nothing is asked.
+ *
+ * AppKit says when (`window-fullscreen`, watch_fullscreen in
+ * src-tauri/src/lib.rs): once the window is in, and as it starts out.
+ * Guessing from the window's size, and asking the backend after a resize,
+ * caught a window still on its way out and left the button under the
+ * lights.
  */
 export function useFullscreenMark(): void {
   useEffect(() => {
     const root = document.documentElement;
     if (root.dataset.windowChrome !== "native") return;
+    const mark = (on: boolean) => {
+      if (on) root.dataset.windowFullscreen = "";
+      else delete root.dataset.windowFullscreen;
+    };
     const win = getCurrentWindow();
     let alive = true;
-    const sync = () => {
-      void win
-        .isFullscreen()
-        .then((on) => {
-          if (!alive) return;
-          if (on) root.dataset.windowFullscreen = "";
-          else delete root.dataset.windowFullscreen;
-        })
-        .catch(() => {
-          // No backend (the browser build): never in full screen.
-        });
-    };
-    sync();
-    // Entering or leaving full screen resizes the window; a drag-resize
-    // fires this every frame, and only where it ends matters.
-    let settle: ReturnType<typeof setTimeout> | undefined;
-    const unlisten = win.onResized(() => {
-      clearTimeout(settle);
-      settle = setTimeout(sync, 100);
-    });
+    let stop: (() => void) | undefined;
+    // A window opened in full screen (a tab torn off one) starts there.
+    void win
+      .isFullscreen()
+      .then((on) => alive && mark(on))
+      .catch(() => {
+        // No backend (the browser build): never full screen.
+      });
+    void win
+      .listen<boolean>("window-fullscreen", (event) => mark(event.payload))
+      .then((unlisten) => {
+        if (alive) stop = unlisten;
+        else unlisten();
+      })
+      .catch(() => {});
     return () => {
       alive = false;
-      clearTimeout(settle);
-      void unlisten.then((off) => off()).catch(() => {});
+      stop?.();
       delete root.dataset.windowFullscreen;
     };
   }, []);

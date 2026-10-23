@@ -30,6 +30,7 @@ fn variant_filename(variant: &str) -> Result<&'static str, String> {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn save_theme_css(
     app: AppHandle,
     id: String,
@@ -48,6 +49,7 @@ pub async fn save_theme_css(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn load_theme_css(
     app: AppHandle,
     id: String,
@@ -68,6 +70,7 @@ pub async fn load_theme_css(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn delete_theme(app: AppHandle, id: String) -> Result<(), String> {
     if !valid_component(&id) {
         return Err("invalid theme id".to_string());

@@ -11,15 +11,16 @@ use std::path::Path;
 /// `kind` string. The variants share only a name; as a flat struct every
 /// constructor had to fill the other half with `String::new()`, and both
 /// languages carried "empty for images" / "empty for text" comments enforcing
-/// by convention what the type can enforce itself. Mirrored by
-/// `ChatAttachment` in src/ai/types.ts, where `kind` narrows the union the
-/// same way.
+/// by convention what the type can enforce itself. Generated into
+/// src/platform/bindings/ai-agent.ts (`ChatAttachment` in src/ai/types.ts), where
+/// `kind` narrows the union the same way.
 ///
 /// The old implementation was a plain `read_to_string`, so every binary -
 /// a PDF above all - came back `Err`, and the frontend's `.catch(() => null)`
 /// swallowed it. The button looked dead. Everything here therefore reports a
 /// real reason on failure, and the caller shows it.
 #[derive(Serialize, Clone)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ChatAttachment {
     Text {
@@ -165,6 +166,7 @@ async fn read_attachment_file(path: String) -> Result<ChatAttachment, String> {
 /// The chat composer's "+" button: pick a file, then read it. Returns None
 /// only when the picker was cancelled.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn pick_attachment_file(
     window: tauri::WebviewWindow,
 ) -> Result<Option<ChatAttachment>, String> {

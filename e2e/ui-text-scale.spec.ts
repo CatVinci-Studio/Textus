@@ -38,7 +38,7 @@ test("Interface Text Size scales the sidebar, the tabs and the AI panel, not the
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "textus-sidebar-open": "1", "levis-agent-panel-open": "1" },
+    storage: { "textus-sidebar-open": "1", "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, SAMPLE_DOC);
   // A second tab, for the tab bar.

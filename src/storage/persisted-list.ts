@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { storage, type HistoryKind } from "../platform/ipc";
-import { legacyImportSettled, readBoot, readLocalJson } from "./boot";
+import { readBoot } from "./boot";
+import { readLocalJson } from "./local";
 import { trackWrite } from "./pending-writes";
 import { listenToThisWindow } from "../utils/tauri-events";
 
@@ -17,8 +18,7 @@ import { listenToThisWindow } from "../utils/tauri-events";
  * every other window applies the same operation to its copy.
  *
  * Without Rust behind the page (the browser dev shim, vitest) the list
- * lives in localStorage under `key`, as it did before the move, and other
- * windows hear of a write through the storage event.
+ * lives in localStorage under `key`, and other windows hear of a write through the storage event.
  *
  * What comes back from storage is untrusted (an older build's shape, a
  * hand edit), so every entry passes `isEntry` on load.
@@ -97,8 +97,8 @@ export function createPersistedList<T, Saved extends T = T>(
   function fetchList() {
     const mine: { ops: Op<T>[] } = { ops: [] };
     request = mine;
-    void legacyImportSettled()
-      .then(() => storage.historyList(options.kind))
+    void storage
+      .historyList(options.kind)
       .then((list) => {
         if (request !== mine) return;
         let next = tidy(Array.isArray(list) ? list : []);

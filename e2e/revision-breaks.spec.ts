@@ -39,21 +39,22 @@ async function open(page: Page) {
   await page.setViewportSize({ width: 1400, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: "inline" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, DOC);
 }
 
 const transparent = "rgba(0, 0, 0, 0)";
 
-test("new text over several lines is tinted line by line, its breaks not at all", async ({
+test("new text over several lines in a paragraph is tinted line by line, its breaks not at all", async ({
   page,
 }) => {
   await open(page);
   await propose(page, [
     {
-      action: "append",
-      text: "New one.\\\nNew two.  \nNew three.<br>New four.\n\nNew paragraph.",
+      action: "replace",
+      anchor: "Another paragraph.",
+      text: "New one.\\\nNew two.  \nNew three.<br>New four.",
     },
   ]);
   const insert = page.locator(".milkdown .pending-insert");
@@ -63,11 +64,10 @@ test("new text over several lines is tinted line by line, its breaks not at all"
     "New two.",
     "New three.",
     "New four.",
-    "New paragraph.",
   ]);
   // Breaks stand between the lines, outside every tinted box.
   await expect(insert.locator(".pending-line br")).toHaveCount(0);
-  await expect(insert.locator(":scope > br")).toHaveCount(5);
+  await expect(insert.locator(":scope > br")).toHaveCount(3);
   const tints = await insert.evaluate((el) => ({
     outer: getComputedStyle(el).backgroundColor,
     line: getComputedStyle(el.querySelector(".pending-line")!).backgroundColor,
@@ -83,6 +83,27 @@ test("new text over several lines is tinted line by line, its breaks not at all"
   }));
   expect(hot.outer).toBe(transparent);
   expect(hot.line).not.toBe(tints.line);
+});
+
+test("new paragraphs after the last are one tinted box, drawn as paragraphs", async ({
+  page,
+}) => {
+  await open(page);
+  await propose(page, [
+    { action: "append", text: "New one.\n\nNew paragraph." },
+  ]);
+  const insert = page.locator(".milkdown .pending-insert.pending-blocks");
+  await expect(insert.locator("p")).toHaveText(["New one.", "New paragraph."]);
+  const tint = await insert.evaluate(
+    (el) => getComputedStyle(el).backgroundColor,
+  );
+  expect(tint).not.toBe(transparent);
+  await insert.locator("p").first().hover();
+  await expect(insert).toHaveClass(/pending-sentence-hot/);
+  const hot = await insert.evaluate(
+    (el) => getComputedStyle(el).backgroundColor,
+  );
+  expect(hot).not.toBe(tint);
 });
 
 test("a rewrite across a hard break is struck sentence by sentence, the break untouched", async ({

@@ -68,10 +68,12 @@ const labels = {
   showSelection: "Show in document",
   atCursor: "At the cursor",
   placeholder: "Ask anything",
+  suggestionTab: "Tab",
   send: "Send",
   stop: "Stop",
   attachFile: "Attach a file",
   selectedChars: (n: number) => `${n} chars selected`,
+  selectedPicture: "Picture selected",
   attachmentTruncated: "(shortened)",
   attachmentNoVision: "This provider can't read images.",
   modeWrite: "Write",
@@ -237,11 +239,17 @@ describe("ChatComposer selection chip", () => {
       target: { value: "tighten this" },
     });
     fireEvent.click(screen.getByText("Send"));
-    expect(onSend).toHaveBeenCalledWith("tighten this", [], true, {
-      mode: "review",
-      webSearch: false,
-      thinking: "auto",
-    });
+    expect(onSend).toHaveBeenCalledWith(
+      "tighten this",
+      [],
+      true,
+      {
+        mode: "review",
+        webSearch: false,
+        thinking: "auto",
+      },
+      "tighten this",
+    );
   });
 
   it("reports its mode on the first render and on every switch", () => {
@@ -290,11 +298,17 @@ describe("ChatComposer selection chip", () => {
     });
     fireEvent.click(screen.getByText("Send"));
 
-    expect(onSend).toHaveBeenCalledWith("research this", [], true, {
-      mode: "write",
-      webSearch: true,
-      thinking: "auto",
-    });
+    expect(onSend).toHaveBeenCalledWith(
+      "research this",
+      [],
+      true,
+      {
+        mode: "write",
+        webSearch: true,
+        thinking: "auto",
+      },
+      "research this",
+    );
   });
 });
 
@@ -312,11 +326,17 @@ describe("ChatComposer Deep thinking", () => {
     expect(button).toHaveAttribute("aria-pressed", "false");
     fireEvent.click(button);
     send("think hard");
-    expect(onSend).toHaveBeenLastCalledWith("think hard", [], true, {
-      mode: "review",
-      webSearch: false,
-      thinking: "deep",
-    });
+    expect(onSend).toHaveBeenLastCalledWith(
+      "think hard",
+      [],
+      true,
+      {
+        mode: "review",
+        webSearch: false,
+        thinking: "deep",
+      },
+      "think hard",
+    );
     // A new conversation, another document, the detached window: still on.
     unmount();
     const next = renderComposer();
@@ -325,11 +345,17 @@ describe("ChatComposer Deep thinking", () => {
     ).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(screen.getByRole("button", { name: "Deep thinking" }));
     send("quick one");
-    expect(next.onSend).toHaveBeenLastCalledWith("quick one", [], true, {
-      mode: "review",
-      webSearch: false,
-      thinking: "auto",
-    });
+    expect(next.onSend).toHaveBeenLastCalledWith(
+      "quick one",
+      [],
+      true,
+      {
+        mode: "review",
+        webSearch: false,
+        thinking: "auto",
+      },
+      "quick one",
+    );
   });
 
   it("has no button, and no Deep, for a model that can't think deeper", () => {
@@ -338,11 +364,17 @@ describe("ChatComposer Deep thinking", () => {
     const { onSend } = renderComposer();
     expect(screen.queryByRole("button", { name: "Deep thinking" })).toBeNull();
     send("hi");
-    expect(onSend).toHaveBeenLastCalledWith("hi", [], true, {
-      mode: "review",
-      webSearch: false,
-      thinking: "auto",
-    });
+    expect(onSend).toHaveBeenLastCalledWith(
+      "hi",
+      [],
+      true,
+      {
+        mode: "review",
+        webSearch: false,
+        thinking: "auto",
+      },
+      "hi",
+    );
   });
 
   it("asks Quick Ask's model for a fast answer, with no button", () => {
@@ -366,11 +398,17 @@ describe("ChatComposer Deep thinking", () => {
     );
     expect(screen.queryByRole("button", { name: "Deep thinking" })).toBeNull();
     send("shorten");
-    expect(onSend).toHaveBeenLastCalledWith("shorten", [], true, {
-      mode: "revise",
-      webSearch: false,
-      thinking: "fast",
-    });
+    expect(onSend).toHaveBeenLastCalledWith(
+      "shorten",
+      [],
+      true,
+      {
+        mode: "revise",
+        webSearch: false,
+        thinking: "fast",
+      },
+      "shorten",
+    );
   });
 });
 
@@ -441,6 +479,7 @@ describe("ChatComposer attachments", () => {
       [imageAttachment],
       true,
       { mode: "review", webSearch: false, thinking: "auto" },
+      "what is this?",
     );
     await waitFor(() =>
       expect(screen.queryByText("chart.png")).not.toBeInTheDocument(),
@@ -546,6 +585,7 @@ describe("ChatComposer pickers", () => {
       [],
       true,
       { mode: "review", webSearch: false, thinking: "auto" },
+      "、续写 林晚走进书店",
     );
   });
 
@@ -585,5 +625,54 @@ describe("ChatComposer pickers", () => {
     const option = await screen.findByRole("option");
     expect(option).toHaveTextContent("@plan.md");
     expect(option).toHaveTextContent("notes/");
+  });
+});
+
+describe("ChatComposer suggested next message", () => {
+  it("shows it grey in the empty box and Tab takes it", () => {
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText={null}
+        busy={false}
+        labels={labels}
+        defaultMode="review"
+        defaultWebSearch={false}
+        suggestion="Translate the next chapter too"
+        onSend={() => {}}
+        onStop={() => {}}
+        onEscape={() => {}}
+      />,
+    );
+    const box = screen.getByRole("textbox") as HTMLTextAreaElement;
+    expect(box.placeholder).toBe("Translate the next chapter too  (Tab)");
+    fireEvent.keyDown(box, { key: "Tab" });
+    expect(box.value).toBe("Translate the next chapter too");
+    // Typed over, the suggestion goes and Tab is Tab again.
+    fireEvent.change(box, { target: { value: "No, " } });
+    expect(box.placeholder).toBe("Ask anything");
+  });
+
+  it("offers nothing while a reply is coming", () => {
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText={null}
+        busy={true}
+        labels={labels}
+        defaultMode="review"
+        defaultWebSearch={false}
+        suggestion="Translate the next chapter too"
+        onSend={() => {}}
+        onStop={() => {}}
+        onEscape={() => {}}
+      />,
+    );
+    const box = screen.getByRole("textbox") as HTMLTextAreaElement;
+    expect(box.placeholder).toBe("Ask anything");
+    fireEvent.keyDown(box, { key: "Tab" });
+    expect(box.value).toBe("");
   });
 });

@@ -23,6 +23,7 @@ fn config_file_path(app: &AppHandle) -> Result<PathBuf, String> {
 /// (always null) so the page's existing type still fits; `has_api_key`
 /// says whether one is stored.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct CustomEndpointStatus {
     base_url: String,
     api_key: Option<String>,
@@ -36,6 +37,7 @@ pub struct CustomEndpointStatus {
 /// the endpoint removes it). Saved for another URL, the old key is dropped
 /// rather than sent to the new host with every request (see resolve_key).
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn set_custom_endpoint(
     app: AppHandle,
     base_url: String,
@@ -66,6 +68,7 @@ pub fn load_custom_endpoint(app: &AppHandle) -> Result<Option<CustomEndpointConf
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn custom_endpoint_status(app: AppHandle) -> Result<Option<CustomEndpointStatus>, String> {
     Ok(load_custom_endpoint(&app)?.map(|c| CustomEndpointStatus {
         has_api_key: c.api_key.as_deref().is_some_and(|k| !k.is_empty()),
@@ -103,6 +106,7 @@ fn same_endpoint(a: &str, b: &str) -> bool {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn clear_custom_endpoint(app: AppHandle) -> Result<(), String> {
     let path = config_file_path(&app)?;
     if path.exists() {
@@ -112,6 +116,7 @@ pub fn clear_custom_endpoint(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn fetch_custom_models(
     app: AppHandle,
     base_url: String,
@@ -123,6 +128,7 @@ pub async fn fetch_custom_models(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn test_custom_endpoint(
     app: AppHandle,
     base_url: String,

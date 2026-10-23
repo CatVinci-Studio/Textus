@@ -1,6 +1,13 @@
+import type {
+  ChatAttachment as Attachment,
+  ImageAttachment as Image,
+  ThinkingLevel as Thinking,
+  WebSource as Source,
+} from "../platform/bindings/ai-agent";
+
 /**
  * The operations a propose_edit tool call can carry. Mirrors EDIT_ACTIONS in
- * src-tauri/src/ai/tools.rs - the backend validates proposals against the
+ * src-tauri/src/ai/tools/ - the backend validates proposals against the
  * same list, so the two must stay in sync.
  */
 export type EditAction =
@@ -25,21 +32,30 @@ export const EDIT_ACTIONS: readonly EditAction[] = [
 /** A validated propose_edit payload: what to do, where, and with what text. */
 export interface EditProposal {
   action: EditAction;
-  /** Exact document text the edit targets; absent for `append` and
-   *  `replace_selection` (the latter targets the captured selection). */
+  /** The id of the block the edit is in (doc-blocks.ts) - where it is
+   *  placed - and of the run's last block, for a run. Absent for `append`,
+   *  `replace_selection`, `insert_at_cursor`, and an edit of text proposed
+   *  and not decided yet (which has no id: `anchor` quotes it). */
+  block?: string;
+  lastBlock?: string;
+  /** The text the edit is about, as the document had it: the run's text,
+   *  or the words inside it an insertion goes next to. */
   anchor?: string;
   /** New markdown content; absent only for `delete`. */
   text?: string;
-  /** A longer verbatim quote containing `anchor`, itself unique in the
-   *  document - disambiguates which occurrence a repeated anchor means
-   *  (see findMarkdownMatch). Mirrors the `context` field tools.rs offers. */
-  context?: string;
   /** One sentence on why, shown on the proposal card (optional). */
   reason?: string;
   /** A generate_image proposal's picture, waiting in the backend
    *  (ai/images.rs) until Accept saves it; `text` then names it by
    *  generatedImageSrc(id) until it has a file. */
-  image?: { id: string; alt: string; width: number; height: number };
+  image?: {
+    id: string;
+    alt: string;
+    width: number;
+    height: number;
+    /** Still being made: the document shows its frame until it comes. */
+    pending?: boolean;
+  };
 }
 
 /**
@@ -75,53 +91,31 @@ export interface AgentSkill {
  * works with every provider. Images have no text to extract, so they travel
  * as base64 and become the provider's own image content part.
  *
- * A discriminated union, mirroring the Rust enum: the two carry nothing in
+ * A discriminated union, as the Rust enum is (commands/attachment.rs,
+ * generated into platform/bindings/ai-agent.ts): the two carry nothing in
  * common but a name, so `kind` narrows to exactly the fields that mean
  * something rather than leaving the other half documented as empty.
  */
-export type ChatAttachment =
-  | {
-      kind: "text";
-      name: string;
-      /** Extracted text, inlined into the outgoing message. */
-      content: string;
-      /** `content` was cut at the extraction cap. Shown on the chip - a
-       *  silent truncation reads as "the model has my whole file". */
-      truncated: boolean;
-    }
-  | {
-      kind: "image";
-      name: string;
-      /** "image/png", ... */
-      mime: string;
-      dataBase64: string;
-    };
+export type ChatAttachment = Attachment;
 
-/** The image half of a ChatAttachment, as `ai_agent_message` takes it.
- *  Mirrors ImageAttachment in src-tauri/crates/aicompat/src/agent.rs. */
-export interface ImageAttachment {
-  name: string;
-  mime: string;
-  dataBase64: string;
-}
+/** The image half of a ChatAttachment, as `ai_agent_message` takes it
+ *  (aicompat's agent.rs). */
+export type ImageAttachment = Image;
 
 /** How hard the model is asked to think: Fast from Quick Ask, Deep while
  *  the composer's Deep thinking is on, Auto (the provider's default)
- *  otherwise. Mirrors ThinkingLevel in
- *  src-tauri/crates/aicompat/src/capabilities.rs. */
-export type ThinkingLevel = "fast" | "auto" | "deep";
+ *  otherwise (aicompat's capabilities.rs). */
+export type ThinkingLevel = Thinking;
 
-/** A web page a reply cites as [n], numbered once per conversation.
- *  Mirrors `Source` in src-tauri/crates/aicompat/src/agent.rs. */
-export interface WebSource {
-  n: number;
-  url: string;
-  title: string;
-}
+/** A web page a reply cites as [n], numbered once per conversation
+ *  (`Source` in aicompat's agent.rs). */
+export type WebSource = Source;
 
-/** Mirrors AgentTurn in src-tauri/crates/aicompat/src/agent.rs. Its
- *  ToolResult also carries the images view_image showed the model, but
- *  agent.rs's for_history drops them before a turn reaches the frontend. */
+/** AgentTurn in src-tauri/crates/aicompat/src/agent.rs, generated into
+ *  platform/bindings/ai-agent.ts, as the frontend keeps it: agent.rs's
+ *  for_history drops a ToolCall's reasoning and a ToolResult's images
+ *  before a turn reaches the frontend, and a saved User turn may have no
+ *  images. ipc.ts checks it against the generated type. */
 export type AgentTurn =
   | { kind: "User"; text: string; images?: ImageAttachment[] }
   | { kind: "Assistant"; text: string; sources?: WebSource[] }

@@ -1,3 +1,4 @@
+use super::args::Args;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
@@ -51,6 +52,7 @@ pub fn editor_for_chat(label: &str, open: &OpenChatWindows) -> Option<String> {
 /// in TypeScript (src/ai/chat/window/chat-bridge.ts), so the protocol doesn't have
 /// to be kept in sync across two languages for a payload Rust never inspects.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct ChatHandoff {
     /// Window label of the editor this chat belongs to. Only the STARTING
     /// address: once running, the chat re-addresses itself to whichever
@@ -79,6 +81,16 @@ fn chat_serving(editor_label: &str, open: &OpenChatWindows) -> Option<String> {
         .map(|entry| entry.label.clone())
 }
 
+/// detach_chat_window's inputs, the keys of `detachChatWindow`'s invoke in
+/// platform/ipc-app.ts. `state` is the handoff's opaque JSON (ChatHandoff).
+#[derive(serde::Deserialize)]
+pub struct DetachRequest {
+    state: serde_json::Value,
+    position: Option<(f64, f64)>,
+    title: String,
+    pinned: bool,
+}
+
 /// Pops this chat out of the editor into a real OS window.
 ///
 /// A native window, not a webview-drawn panel, is the whole point: the user
@@ -100,18 +112,20 @@ fn chat_serving(editor_label: &str, open: &OpenChatWindows) -> Option<String> {
 /// `async` on a non-async fn runs the body on the async runtime instead, so
 /// window creation reaches the main thread as an ordinary event-loop message.
 /// Nothing in here awaits, so no lock is held across a suspension point.
-#[allow(clippy::too_many_arguments)]
 #[tauri::command(async)]
 pub fn detach_chat_window(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
-    state: serde_json::Value,
-    position: Option<(f64, f64)>,
-    title: String,
-    pinned: bool,
+    request: Args<DetachRequest>,
     pending: State<PendingChatHandoffs>,
     open: State<OpenChatWindows>,
 ) -> Result<String, String> {
+    let Args(DetachRequest {
+        state,
+        position,
+        title,
+        pinned,
+    }) = request;
     let editor_label = window.label().to_string();
 
     // Already open for this editor: focus what's there rather than spawning
@@ -210,6 +224,7 @@ pub fn detach_chat_window(
 /// or one whose chat was closed from the chat's own window - learns the
 /// current label instead of trusting a cached one.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn current_chat_window(
     window: tauri::WebviewWindow,
     open: State<OpenChatWindows>,
@@ -227,6 +242,7 @@ pub const CHAT_ADOPT_HANDOFF: &str = "chat:adopt-handoff";
 /// Claimed by the chat window's frontend at mount, and again whenever
 /// CHAT_ADOPT_HANDOFF says another one is waiting. Destructive either way.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn take_chat_handoff(
     window: tauri::Window,
     pending: State<PendingChatHandoffs>,
@@ -241,6 +257,7 @@ pub fn take_chat_handoff(
 /// older copy for the window to adopt, overwriting what the user did in it.
 /// Returns whether there was a window to focus.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn focus_chat_window(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
@@ -260,6 +277,7 @@ pub fn focus_chat_window(
 /// Closes the detached chat serving this editor, if one is open - what the
 /// editor calls when the user re-embeds the panel.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn close_chat_window(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
@@ -331,81 +349,4 @@ pub fn notify_chat_windows_changed(app: &tauri::AppHandle) {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn registry(entries: Vec<(&str, &str)>) -> OpenChatWindows {
-        OpenChatWindows(Mutex::new(
-            entries
-                .into_iter()
-                .map(|(label, scope)| ChatWindowEntry {
-                    label: label.to_string(),
-                    scope: scope.to_string(),
-                })
-                .collect(),
-        ))
-    }
-
-    /// The window-classification bugs this predicate exists to prevent were
-    /// all silent: a tab dropped on a chat window vanished, menu commands
-    /// went nowhere, files opened into the void. Worth pinning down.
-    #[test]
-    fn editor_windows_are_those_holding_a_document() {
-        assert!(is_editor_window("main"));
-        assert!(is_editor_window("window-1"));
-        assert!(is_editor_window("window-42"));
-    }
-
-    #[test]
-    fn chat_and_pill_windows_are_not_editors() {
-        assert!(!is_editor_window("chat-1"));
-        assert!(!is_editor_window("chat-99"));
-        assert!(!is_editor_window(crate::tab_drag::DRAG_PILL_LABEL));
-    }
-
-    #[test]
-    fn detached_chat_labels_are_classified_as_chats() {
-        // The label format detach_chat_window builds must keep matching the
-        // prefix the predicate tests, or every guard silently stops working.
-        let label = format!("{CHAT_LABEL_PREFIX}{}", 7);
-        assert!(!is_editor_window(&label));
-    }
-
-    #[test]
-    fn a_chat_resolves_back_to_the_editor_that_opened_it() {
-        let open = registry(vec![("chat-1", "main"), ("chat-3", "window-2")]);
-        assert_eq!(
-            editor_for_chat("chat-3", &open),
-            Some("window-2".to_string())
-        );
-        assert_eq!(editor_for_chat("chat-1", &open), Some("main".to_string()));
-    }
-
-    #[test]
-    fn an_unknown_chat_resolves_to_no_editor() {
-        let open = registry(vec![("chat-1", "main")]);
-        assert_eq!(editor_for_chat("chat-9", &open), None);
-    }
-
-    #[test]
-    fn a_chat_serves_only_its_own_editor() {
-        let open = registry(vec![("chat-1", "main")]);
-        assert_eq!(chat_serving("main", &open), Some("chat-1".to_string()));
-        assert_eq!(chat_serving("window-2", &open), None);
-    }
-
-    #[test]
-    fn forgetting_clears_both_directions_of_the_mapping() {
-        let open = registry(vec![("chat-1", "main"), ("chat-3", "window-2")]);
-
-        // A closed CHAT window drops its own entry, freeing its editor to
-        // detach again.
-        forget_entries("chat-1", &open);
-        assert_eq!(chat_serving("main", &open), None);
-        assert_eq!(chat_serving("window-2", &open), Some("chat-3".to_string()));
-
-        // A closed EDITOR window drops the chat scoped to it.
-        forget_entries("window-2", &open);
-        assert_eq!(chat_serving("window-2", &open), None);
-    }
-}
+mod tests;

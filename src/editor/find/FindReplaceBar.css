@@ -143,7 +143,7 @@
 
 .find-replace-toggle-active {
   background: var(--chrome-primary) !important;
-  color: #fff !important;
+  color: var(--on-fill) !important;
 }
 
 .find-replace-close {
@@ -159,10 +159,10 @@
 }
 
 .find-match {
-  background: rgba(255, 212, 0, 0.4);
+  background: var(--find-match-bg);
   border-radius: var(--md-radius-sm);
 }
 
 .find-match-active {
-  background: rgba(255, 140, 0, 0.55);
+  background: var(--find-match-active-bg);
 }

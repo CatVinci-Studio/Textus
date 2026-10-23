@@ -118,7 +118,7 @@ async function open(
   await page.setViewportSize({ width: 1400, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: "inline", ...settings },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
     animations,
   });
   await pasteMarkdown(page, ORIGINAL);
@@ -235,7 +235,7 @@ test("a streaming CJK rewrite completes each sentence at 。！？ in place", as
   await page.setViewportSize({ width: 1400, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: "inline" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, zh);
   await streamRevise(
@@ -341,7 +341,7 @@ test("two rewrites in a row each stream in by sentence", async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: "inline" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   const second = "A gull cried. It was far off. The tide was turning.";
   await pasteMarkdown(page, `${ORIGINAL}\n\n${second}`);
@@ -419,4 +419,29 @@ test("with motion on, each strike draws in once and each new text comes in once"
   // The strikes did draw in.
   expect(entrances["He climbed the stairs slowly."]).toBe(1);
   expect(entrances["The wind had dropped in the night."]).toBe(1);
+});
+
+test("a rewrite whose arguments arrive in one piece still types in, sentence by sentence", async ({
+  page,
+}) => {
+  // MiniMax sends a tool call's arguments whole: the reveal (stream-reveal)
+  // spreads them out instead of the whole rewrite appearing in one frame.
+  await open(page);
+  await streamRevise(page, [REVISE], { chunk: 100_000 });
+  const stop = await record(page);
+  await send(page);
+  await expect(
+    page.locator(".milkdown .pending-pick:not(.pending-streaming)"),
+  ).toHaveCount(2);
+  const samples = await stop();
+  const streaming = samples.filter((s) => s.live === 0);
+  // The first changed sentence is in while the next is still being written.
+  expect(
+    streaming.some(
+      (s) =>
+        s.fresh.some((f) => f.text === "He climbed the stairs one by one.") &&
+        !s.fresh.some((f) => f.text === "The lamp was warm to the touch."),
+    ),
+  ).toBe(true);
+  expect(streaming.filter((s) => s.partial !== null).length).toBeGreaterThan(5);
 });

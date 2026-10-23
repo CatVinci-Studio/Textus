@@ -6,10 +6,10 @@
 //! **Project folder** (in code, the workspace root): the folder the AI may
 //! read - the open document's own folder by default, or a chosen one (the
 //! override) - holding project files (read_file / search_files /
-//! find_files / list_files) and its `.textus/` folder: the library
+//! find_files) and its `.textus/` folder: the library
 //! (`.textus/library/*.md`, entries picked by name or alias), the writing
 //! instructions (`.textus/agent.md`) and skills (`.textus/skills/*.md`); plus
-//! the global config folder (the app config dir's `agent/`), whose writing
+//! the global config folder (the app config dir's `textus/`), whose writing
 //! instructions and skills apply to every document - the project's come
 //! after the global ones and shadow same-named skills. Every case here
 //! builds those folders on disk and loads them through
@@ -123,7 +123,7 @@ const CANNOT_ZH: &[&str] = &[
 fn used_file_tools(o: &TurnOutcome) -> Result<(), String> {
     o.tools
         .iter()
-        .any(|t| t == "read_file" || t == "search_files" || t == "list_files" || t == "find_files")
+        .any(|t| t == "read_file" || t == "search_files" || t == "find_files")
         .then_some(())
         .ok_or_else(|| "never looked in the project folder".into())
 }
@@ -501,7 +501,7 @@ fn workspace_cases() -> Vec<AgentCase> {
         std::fs::create_dir_all(dir.join("cover")).expect("mkdir");
         std::fs::write(dir.join("cover/swatch.png"), swatch).expect("write");
         let ws = doc_folder(&dir, "brief.md", BUDGET_EN);
-        c.push(AgentCase::new("workspace/en/image-in-folder", Lang::En, Lang::En, BUDGET_EN, "What colour is the swatch the designer left in the cover folder?", no_edit().reply(&["red", "Red"]).tools(&["view_image"]), "cover/swatch.png is a plain red square: expect find_files or list_files to show it as an image, then view_image to look at it, and a reply naming the colour red. No edit.").mode(AgentMode::Review).disk(ws));
+        c.push(AgentCase::new("workspace/en/image-in-folder", Lang::En, Lang::En, BUDGET_EN, "What colour is the swatch the designer left in the cover folder?", no_edit().reply(&["red", "Red"]).tools(&["read_file"]), "cover/swatch.png is a plain red square: expect find_files to show it as an image, then read_file to look at it, and a reply naming the colour red. No edit.").mode(AgentMode::Review).disk(ws));
     }
 
     // Outside the project folder: refused by the sandbox, and said so.

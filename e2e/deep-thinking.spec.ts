@@ -59,7 +59,7 @@ async function scriptAgent(page: Page, ms: number) {
 
 test("Deep thinking is offered, sent, and stays on", async ({ page }) => {
   await canThinkDeeper(page, true);
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await expect(button(page)).toHaveAttribute("aria-pressed", "false");
   await button(page).click();
   await expect(button(page)).toHaveAttribute("aria-pressed", "true");
@@ -88,7 +88,7 @@ test("no Deep thinking button for a model that can't think deeper", async ({
   await canThinkDeeper(page, false);
   await openApp(page, {
     storage: {
-      "levis-agent-panel-open": "1",
+      "textus-agent-panel-open": "1",
       "textus-agent-deep-thinking": "1",
     },
   });
@@ -115,24 +115,92 @@ test("no Deep thinking button for a model that can't think deeper", async ({
   ).toEqual(["auto"]);
 });
 
-test("the thinking line counts seconds, then opens to the reasoning", async ({
+test("the thinking line counts seconds, closed, and opens on a click to the reasoning", async ({
   page,
 }) => {
   await canThinkDeeper(page, true);
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(page, "One line.");
   await scriptAgent(page, 2_600);
   await composer(page).fill("Which reading is right?");
   await composer(page).press("Enter");
 
   const thought = page.locator(".agent-thought");
+  const text = page.locator(".agent-thought-text");
   await expect(thought).toContainText("思考中 · 1 秒");
+  // While it thinks, the row stays closed: only the seconds move.
+  await expect(text).toHaveCount(0);
+  await thought.getByRole("button").click();
+  await expect(text).toHaveText("Weighing the two readings.");
   await expect(thought).toContainText("思考中 · 2 秒");
   await expect(thought).toContainText(/已思考 [23] 秒/);
-  await expect(page.locator(".agent-thought-text")).toHaveCount(0);
-  await thought.getByRole("button").click();
-  await expect(page.locator(".agent-thought-text")).toHaveText(
-    "Weighing the two readings.",
-  );
   await expect(page.locator(".agent-panel-view")).toContainText("The second.");
+  // The next thought starts closed again.
+  await composer(page).fill("And the first?");
+  await composer(page).press("Enter");
+  await expect(thought.nth(1)).toContainText("思考中");
+  await expect(thought.nth(1).locator(".agent-thought-text")).toHaveCount(0);
+});
+
+test("thinking on after a step's rows still says so at the panel's end", async ({
+  page,
+}) => {
+  await canThinkDeeper(page, true);
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
+  await pasteMarkdown(page, "One line.");
+  // Thinks, loads a skill, and thinks on - the reasoning row stays up
+  // under the question, the skill's rows below it.
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, args?: unknown) => Promise<unknown>;
+      };
+    };
+    const original = w.__TAURI_INTERNALS__.invoke;
+    w.__TAURI_INTERNALS__.invoke = (cmd, args) => {
+      if (cmd !== "ai_agent_message") return original(cmd, args);
+      const { onEvent } = args as {
+        onEvent?: { onmessage?: (event: unknown) => void };
+      };
+      const send = (event: unknown) => onEvent?.onmessage?.(event);
+      send({ type: "thinking", text: "Which skill fits?" });
+      send({
+        type: "turn",
+        turn: {
+          kind: "ToolCall",
+          call_id: "s1",
+          name: "use_skill",
+          arguments: JSON.stringify({ name: "translate" }),
+        },
+      });
+      send({
+        type: "turn",
+        turn: { kind: "ToolResult", call_id: "s1", output: "Skill loaded." },
+      });
+      send({ type: "thinking", text: " Now the translation." });
+      return new Promise(() => {});
+    };
+  });
+  await composer(page).fill("翻译为中文");
+  await composer(page).press("Enter");
+  await expect(page.locator(".agent-thought.is-live")).toBeVisible();
+  // At the end, below the skill's rows: still working.
+  await expect(page.locator(".agent-thinking")).toBeVisible();
+  const last = await page
+    .locator(".inline-chat-messages > *")
+    .evaluateAll((els) =>
+      els
+        .map((el) =>
+          el.matches(".agent-thinking")
+            ? "working"
+            : el.querySelector(".agent-thought")
+              ? "thought"
+              : el.textContent?.includes("translate")
+                ? "skill"
+                : "",
+        )
+        .filter(Boolean),
+    );
+  expect(last.at(-1)).toBe("working");
+  expect(last).toContain("skill");
 });

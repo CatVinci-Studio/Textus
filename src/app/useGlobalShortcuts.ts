@@ -1,3 +1,4 @@
+import { heldByPlugin } from "../plugins/editor-input";
 import { useEffect } from "react";
 import { cycleRegion, trackRegionFocus } from "./regions";
 import { useSettings, type HeadingAction } from "../settings/SettingsContext";
@@ -12,6 +13,8 @@ import { runLocalMenuAction } from "./app-menu-actions";
 import { canOpenFolder } from "../platform/capabilities";
 import { comboFromEvent } from "../utils/shortcuts";
 import { menuIpc } from "../platform/ipc";
+import { runMenuItemHere } from "../platform/menu-events";
+import { commandForCombo } from "./commands";
 import {
   TRIGGER_COMPLETION_EVENT,
   TRIGGER_GRAMMAR_CHECK_EVENT,
@@ -99,6 +102,7 @@ export function useGlobalShortcuts(opts: {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.defaultPrevented || e.isComposing || e.keyCode === 229) return;
+      if (heldByPlugin(e)) return;
       const combo = comboFromEvent(e);
       if (!combo) return;
       const { shortcuts } = settings;
@@ -146,7 +150,7 @@ export function useGlobalShortcuts(opts: {
         const menuId = LINUX_MENU_ACCELERATORS[combo];
         if (menuId) {
           e.preventDefault();
-          void menuIpc.triggerMenuItem(menuId);
+          void runMenuItemHere(menuId);
           return;
         }
       }
@@ -241,6 +245,14 @@ export function useGlobalShortcuts(opts: {
       } else if (combo === shortcuts.toggleTypewriterMode) {
         e.preventDefault();
         setSettings({ typewriterMode: !settings.typewriterMode });
+      } else {
+        // A command added from outside (commands.ts), on a combo none of
+        // the app's own has taken.
+        const command = commandForCombo(combo);
+        if (command) {
+          e.preventDefault();
+          command.run();
+        }
       }
     }
     // Capture before the editor's keymaps: shortcuts such as Ctrl+F must not

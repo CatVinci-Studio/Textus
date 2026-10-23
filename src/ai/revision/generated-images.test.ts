@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
+  generatedAlt,
+  generatedIdsIn,
+  generatedImageId,
+  generatedImageSize,
   generatedImageSrc,
   hasGeneratedImage,
+  joinedText,
+  noteBegunPicture,
   parseImageProposal,
+  picturesState,
   showGeneratedImages,
+  withBegunPictures,
   withSavedSrc,
+  withoutPicture,
 } from "./generated-images";
 
 const call = (args: object) => JSON.stringify(args);
@@ -25,7 +34,29 @@ describe("parseImageProposal", () => {
       anchor: "The boats came in.",
       context: undefined,
       text: `![A quiet harbour](${generatedImageSrc("abc1")})`,
-      image: { id: "abc1", alt: "A quiet harbour", width: 1024, height: 768 },
+      image: {
+        id: "abc1",
+        alt: "A quiet harbour",
+        width: 1024,
+        height: 768,
+        pending: false,
+      },
+    });
+  });
+
+  it("marks a picture still being made, and keeps its size for its frame", () => {
+    const proposal = parseImageProposal(
+      call({
+        prompt: "A harbour at dusk",
+        alt: "Harbour",
+        action: "append",
+        image: { id: "abc2", width: 1536, height: 1024, pending: true },
+      }),
+    );
+    expect(proposal?.image?.pending).toBe(true);
+    expect(generatedImageSize("abc2")).toMatchObject({
+      width: 1536,
+      height: 1024,
     });
   });
 
@@ -55,9 +86,82 @@ describe("the placeholder src", () => {
     );
   });
 
-  it("stays as it is in the preview until the picture is loaded", () => {
+  it("is a stand-in the preview keeps until the picture is loaded", () => {
     const text = `![Boats](${generatedImageSrc("ab3")})`;
-    expect(showGeneratedImages(text)).toBe(text);
+    const shown = showGeneratedImages(text);
+    // A data: src the renderer keeps, its id still readable for the frame.
+    const src = /\]\((.+)\)$/.exec(shown)![1];
+    expect(src).toMatch(/^data:image\/gif;/);
+    expect(generatedImageId(src)).toBe("ab3");
+    expect(generatedImageId(generatedImageSrc("ab3"))).toBe("ab3");
+    expect(generatedImageId("assets/boats.png")).toBeNull();
     expect(showGeneratedImages("no picture")).toBe("no picture");
+  });
+});
+
+describe("pictures in a proposal's text", () => {
+  const text = `The tide went out.\n\n![Boats at dusk](${generatedImageSrc("c1")})\n\nThe boats came back.`;
+
+  it("are found, with their alt text", () => {
+    expect(generatedIdsIn(text)).toEqual(["c1"]);
+    expect(generatedAlt(text, "c1")).toBe("Boats at dusk");
+    // Not loaded yet: still being made, which Accept waits for.
+    expect(picturesState(text)).toBe("painting");
+    expect(picturesState("No picture.")).toBe("ready");
+  });
+
+  it("one that wasn't made is left out, with the blank line it stood on", () => {
+    expect(withoutPicture(text, "c1")).toBe(
+      "The tide went out.\n\nThe boats came back.",
+    );
+    expect(withoutPicture(`![x](${generatedImageSrc("c2")})`, "c2")).toBe("");
+  });
+
+  it("a picture joins text next to the paragraph that quotes its anchor", () => {
+    const draft = "One.\n\nTwo, three.\n\nFour.";
+    const picture = "![P](textus-generated:p1)";
+    expect(joinedText(draft, "Two", "insert_after", picture)).toBe(
+      `One.\n\nTwo, three.\n\n${picture}\n\nFour.`,
+    );
+    expect(joinedText(draft, "three.", "insert_before", picture)).toBe(
+      `One.\n\n${picture}\n\nTwo, three.\n\nFour.`,
+    );
+    expect(joinedText(draft, "Four.", "insert_after", picture)).toBe(
+      `${draft}\n\n${picture}`,
+    );
+    expect(joinedText(draft, "One.", "insert_before", picture)).toBe(
+      `${picture}\n\n${draft}`,
+    );
+    // Not there, or there twice: nowhere to put it.
+    expect(joinedText(draft, "Five", "insert_after", picture)).toBeNull();
+    expect(joinedText("A. A.", "A.", "insert_after", picture)).toBeNull();
+  });
+});
+
+describe("pictures written into streaming text", () => {
+  const line = "![港口](textus-picture:16:9 A harbour at dawn (mist))";
+
+  it("show as their picture once begun, never as the line", () => {
+    const text = `One.\n\n${line}\n\nTwo.`;
+    expect(withBegunPictures("w1", text)).toBe("One.\n\n\nTwo.");
+    noteBegunPicture("w1", line, "k3f9qz", { width: 1536, height: 1024 });
+    expect(withBegunPictures("w1", text)).toBe(
+      "One.\n\n![港口](textus-generated:k3f9qz)\n\nTwo.",
+    );
+    expect(generatedImageSize("k3f9qz")).toEqual({
+      width: 1536,
+      height: 1024,
+    });
+    // Another call's line isn't this picture.
+    expect(withBegunPictures("w2", text)).toBe("One.\n\n\nTwo.");
+  });
+
+  it("leave out a line still being written", () => {
+    expect(withBegunPictures("w3", "One.\n\n![港")).toBe("One.\n");
+    expect(withBegunPictures("w3", "One.\n\n!")).toBe("One.\n");
+    expect(withBegunPictures("w3", "Wow!")).toBe("Wow!");
+    expect(withBegunPictures("w3", "One.\n\n![a](b.png)")).toBe(
+      "One.\n\n![a](b.png)",
+    );
   });
 });

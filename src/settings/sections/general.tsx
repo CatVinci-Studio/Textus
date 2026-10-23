@@ -16,9 +16,6 @@ import { canAutoUpdate } from "../../platform/capabilities";
 import { useSettings } from "../SettingsContext";
 import { Select } from "../../ui/Select";
 import { SettingRow } from "./controls";
-import { levisImport, type LevisImportStatus } from "../../platform/ipc";
-import type { Lang } from "../../i18n/strings";
-import { runLevisImport } from "../levis-import";
 
 // The General category's sections beyond plain settings rows.
 
@@ -291,39 +288,6 @@ export function DefaultEditorSection({ t }: { t: Strings }) {
           {t.defaultEditorButton}
         </button>
       )}
-    </SettingRow>
-  );
-}
-
-/** Settings › General › About Textus: bring a Levis installation in (again) - the same
- *  flow the first launch offers (settings/levis-import.ts). Shown only
- *  where there is a Levis installation to read. */
-export function LevisImportSection({ t, lang }: { t: Strings; lang: Lang }) {
-  const [status, setStatus] = useState<LevisImportStatus | null>(null);
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    levisImport
-      .status()
-      .then(setStatus)
-      .catch(() => setStatus(null));
-  }, []);
-  if (!status?.supported || status.items.length === 0) return null;
-  return (
-    <SettingRow label={t.levisImportRow}>
-      <button
-        className="text-button settings-inline-button"
-        disabled={busy}
-        onClick={async () => {
-          setBusy(true);
-          try {
-            await runLevisImport(t, lang, status);
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        {t.levisImportButton}
-      </button>
     </SettingRow>
   );
 }

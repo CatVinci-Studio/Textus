@@ -27,6 +27,16 @@ use tauri::{AppHandle, Emitter, EventTarget, Manager, Wry};
 use crate::app_identity;
 use crate::commands;
 
+mod state;
+pub(crate) use state::*;
+mod recent;
+pub(crate) use recent::*;
+mod build;
+pub(crate) use build::*;
+mod plugins;
+pub use plugins::set_plugin_menu;
+pub(crate) use plugins::*;
+
 const SETTINGS_MENU_ID: &str = "settings";
 const NEW_FILE_ID: &str = "new-file";
 const OPEN_FILE_ID: &str = "open-file";
@@ -160,56 +170,6 @@ fn emit_or_open_window(app: &tauri::AppHandle, event: &'static str) {
     }
 }
 
-/// Handle to the File > Open Recent submenu, kept so add_recent_file can
-/// rebuild its entries at runtime without touching the rest of the menu.
-struct RecentMenu(Mutex<Option<Submenu<tauri::Wry>>>);
-
-/// The labels the menu is built with, keyed by menu id - or, for what has
-/// no id of ours, "menu:<name>" for a submenu and "predefined:<name>" for
-/// an item muda makes (the keys `nativeMenuLabels` in
-/// src/app/app-menu-model.ts sends). Empty until the frontend sends them,
-/// which leaves every label English.
-#[derive(Default)]
-struct MenuLabels(Mutex<HashMap<String, String>>);
-
-/// The View menu's on/off items and whether each is on, keyed by menu id:
-/// the states the frontend last sent (`set_menu_checks`), kept so a rebuild
-/// for a new language starts from them, and the items they are shown on.
-#[derive(Default)]
-struct ViewChecks(Mutex<ViewCheckState>);
-
-/// The Format menu's heading keys, keyed by menu id, as the frontend last
-/// sent them (`set_menu_accelerators`) - Settings › Shortcuts' bindings,
-/// kept so every rebuild of the bar carries them. Empty off macOS.
-#[derive(Default)]
-struct MenuAccelerators(Mutex<HashMap<String, String>>);
-
-#[derive(Default)]
-struct ViewCheckState {
-    checked: HashMap<String, bool>,
-    items: Vec<CheckMenuItem<Wry>>,
-}
-
-/// What `build` makes: the bar, its Open Recent submenu (built empty) and
-/// the View menu's on/off items.
-struct BuiltMenu {
-    menu: Menu<Wry>,
-    open_recent: Submenu<Wry>,
-    check_items: Vec<CheckMenuItem<Wry>>,
-}
-
-/// The label for `key`, or `english` when none was sent - as menu text:
-/// muda reads a lone `&` as a mnemonic marker and drops it ("Find & Replace…"
-/// showed as "Find  Replace…"), so a literal one is doubled.
-fn label(labels: &HashMap<String, String>, key: &str, english: &str) -> String {
-    menu_text(labels.get(key).map_or(english, String::as_str))
-}
-
-/// `text` with every `&` doubled, so the menu shows it as written.
-fn menu_text(text: &str) -> String {
-    text.replace('&', "&&")
-}
-
 /// The menu bar in the UI's language: `labels` as `MenuLabels` keys them,
 /// from the frontend's string table. Only macOS shows this menu - Windows
 /// and Linux draw their own in HTML (app-menu-model.ts) and keep the native
@@ -219,6 +179,7 @@ fn menu_text(text: &str) -> String {
 /// with the same ids and accelerators as before. `command(async)` and a hop
 /// to the main thread, as menus are only built there.
 #[tauri::command(async)]
+#[cfg_attr(test, specta::specta)]
 pub fn set_menu_labels(app: AppHandle, labels: HashMap<String, String>) {
     #[cfg(target_os = "macos")]
     {
@@ -248,6 +209,7 @@ pub fn set_menu_labels(app: AppHandle, labels: HashMap<String, String>) {
 /// is AppKit's own. Only macOS shows this menu; elsewhere the app-drawn menu
 /// draws the same marks (app/AppMenu.tsx) and this does nothing.
 #[tauri::command(async)]
+#[cfg_attr(test, specta::specta)]
 pub fn set_menu_checks(app: AppHandle, checks: HashMap<String, bool>) {
     #[cfg(target_os = "macos")]
     {
@@ -278,6 +240,7 @@ pub fn set_menu_checks(app: AppHandle, checks: HashMap<String, bool>) {
 /// shows this menu; on Windows a native key would fire twice beside the
 /// frontend's, so elsewhere this does nothing.
 #[tauri::command(async)]
+#[cfg_attr(test, specta::specta)]
 pub fn set_menu_accelerators(app: AppHandle, accelerators: HashMap<String, String>) {
     #[cfg(target_os = "macos")]
     {
@@ -320,6 +283,7 @@ pub fn set_menu_accelerators(app: AppHandle, accelerators: HashMap<String, Strin
 /// `command` runs on the main thread - is the re-entrancy that freezes the
 /// whole app.
 #[tauri::command(async)]
+#[cfg_attr(test, specta::specta)]
 pub fn trigger_menu_item(app: tauri::AppHandle, id: String) {
     dispatch(&app, &id);
 }
@@ -328,479 +292,16 @@ pub fn trigger_menu_item(app: tauri::AppHandle, id: String) {
 /// the native submenu is filled by `rebuild_recent_menu`, which the HTML one
 /// can't read.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn list_recent_files(app: tauri::AppHandle) -> Vec<String> {
     commands::recents::read_recent_files(&app)
 }
 
 /// The recent folders, listed above the files there - same reason.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn list_recent_folders(app: tauri::AppHandle) -> Vec<String> {
     commands::recents::read_recent_folders(&app)
-}
-
-/// How a recent folder reads in the submenu: its path ending in a
-/// separator, which sets it apart from the files below it in any language.
-fn folder_menu_text(path: &str) -> String {
-    let sep = if path.contains('\\') && !path.contains('/') {
-        '\\'
-    } else {
-        '/'
-    };
-    let shown = abbreviate_home(path);
-    menu_text(&format!("{}{sep}", shown.trim_end_matches(['/', '\\'])))
-}
-
-fn abbreviate_home(path: &str) -> String {
-    // Windows has no HOME; without USERPROFILE every recent file there shows
-    // its full C:\Users\... prefix and the submenu is unreadable.
-    let home = std::env::var("HOME")
-        .or_else(|_| std::env::var("USERPROFILE"))
-        .ok();
-    if let Some(home) = home {
-        if let Some(rest) = path.strip_prefix(&home) {
-            return format!("~{rest}");
-        }
-    }
-    path.to_string()
-}
-
-/// Refill the Open Recent submenu from the persisted lists, most recent
-/// first: the folders, then the files. Menus may only be mutated on the
-/// main thread, and the caller may be a command on any thread - hence the
-/// hop.
-pub(crate) fn rebuild_recent_menu(app: &tauri::AppHandle) {
-    let folders = commands::recents::read_recent_folders(app);
-    let list = commands::recents::read_recent_files(app);
-    let app = app.clone();
-    let _ = app.clone().run_on_main_thread(move || {
-        let Some(state) = app.try_state::<RecentMenu>() else {
-            return;
-        };
-        let guard = state.0.lock().unwrap();
-        let Some(submenu) = guard.as_ref() else {
-            return;
-        };
-        let labels = app
-            .try_state::<MenuLabels>()
-            .map(|state| state.0.lock().unwrap().clone())
-            .unwrap_or_default();
-        if let Ok(items) = submenu.items() {
-            for item in items {
-                let _ = submenu.remove(&item);
-            }
-        }
-        if list.is_empty() && folders.is_empty() {
-            if let Ok(item) = MenuItemBuilder::with_id(
-                "recent-none",
-                label(&labels, "recent-none", "No Recent Files"),
-            )
-            .enabled(false)
-            .build(&app)
-            {
-                let _ = submenu.append(&item);
-            }
-            return;
-        }
-        for path in &folders {
-            if let Ok(item) = MenuItemBuilder::with_id(
-                format!("{RECENT_FOLDER_PREFIX}{path}"),
-                folder_menu_text(path),
-            )
-            .build(&app)
-            {
-                let _ = submenu.append(&item);
-            }
-        }
-        if !folders.is_empty() && !list.is_empty() {
-            if let Ok(sep) = PredefinedMenuItem::separator(&app) {
-                let _ = submenu.append(&sep);
-            }
-        }
-        for path in &list {
-            if let Ok(item) = MenuItemBuilder::with_id(
-                format!("{RECENT_PREFIX}{path}"),
-                menu_text(&abbreviate_home(path)),
-            )
-            .build(&app)
-            {
-                let _ = submenu.append(&item);
-            }
-        }
-        if let Ok(sep) = PredefinedMenuItem::separator(&app) {
-            let _ = submenu.append(&sep);
-        }
-        if let Ok(item) = MenuItemBuilder::with_id(
-            RECENT_CLEAR_ID,
-            label(&labels, RECENT_CLEAR_ID, "Clear Menu"),
-        )
-        .build(&app)
-        {
-            let _ = submenu.append(&item);
-        }
-    });
-}
-
-/// Build and set the whole menu bar, then register the id -> event dispatch.
-/// Called once from setup.
-pub(crate) fn install(app: &tauri::App) -> tauri::Result<()> {
-    app.manage(MenuLabels::default());
-    app.manage(RecentMenu(Mutex::new(None)));
-    app.manage(ViewChecks::default());
-    app.manage(MenuAccelerators::default());
-    set_menu(app.handle(), &HashMap::new())?;
-    app.on_menu_event(move |app_handle, event| dispatch(app_handle, event.id().as_ref()));
-    Ok(())
-}
-
-/// Builds the menu bar with `labels` and makes it the app's, Open Recent
-/// filled from the persisted list.
-fn set_menu(app: &AppHandle, labels: &HashMap<String, String>) -> tauri::Result<()> {
-    let checked = app.state::<ViewChecks>().0.lock().unwrap().checked.clone();
-    let accelerators = app.state::<MenuAccelerators>().0.lock().unwrap().clone();
-    let built = build(app, labels, &checked, &accelerators)?;
-    app.set_menu(built.menu)?;
-    *app.state::<RecentMenu>().0.lock().unwrap() = Some(built.open_recent);
-    app.state::<ViewChecks>().0.lock().unwrap().items = built.check_items;
-    rebuild_recent_menu(app);
-    Ok(())
-}
-
-/// The whole menu bar, its Open Recent submenu (built empty) and the View
-/// menu's on/off items, marked as `checked` has them, and the heading
-/// levels with the keys in `accelerators`.
-fn build(
-    app: &AppHandle,
-    labels: &HashMap<String, String>,
-    checked: &HashMap<String, bool>,
-    accelerators: &HashMap<String, String>,
-) -> tauri::Result<BuiltMenu> {
-    let l = |key: &str, english: &'static str| label(labels, key, english);
-    let name = app_identity::APP_NAME;
-    // Accelerators below are written "CmdOrCtrl+X", never "Cmd+X". They read
-    // the same on macOS - both parse to ⌘ - but muda maps a bare CMD to
-    // SUPER, which on Windows is the WINDOWS key. That silently handed our
-    // shortcuts to the OS: Cmd+P became Win+P (the projection panel),
-    // Cmd+Shift+S became Win+Shift+S (the screenshot tool), and none of them
-    // ever reached the app.
-    let settings_item =
-        MenuItemBuilder::with_id(SETTINGS_MENU_ID, l(SETTINGS_MENU_ID, "Settings…"))
-            .accelerator("CmdOrCtrl+,")
-            .build(app)?;
-
-    // Custom Quit instead of the predefined one: quitting must give
-    // every window's unsaved document its close-confirmation prompt,
-    // so it goes through each window's normal close request rather
-    // than exiting the process outright.
-    let quit_item = {
-        let quit = format!("Quit {name}");
-        let builder = MenuItemBuilder::with_id(QUIT_ID, label(labels, QUIT_ID, &quit));
-        // Cmd+Q on macOS, Ctrl+Q on Linux - but Windows has no such combo.
-        // There the app is closed with Alt+F4, which the OS delivers on its
-        // own, and Ctrl+Q means nothing, so claiming it would only take a
-        // shortcut Windows users never aim at Quit. The app-drawn menu
-        // advertises Alt+F4 instead (src/app/app-menu-model.ts).
-        #[cfg(not(windows))]
-        let builder = builder.accelerator("CmdOrCtrl+Q");
-        builder.build(app)?
-    };
-
-    let app_menu = {
-        let about = format!("About {name}");
-        let builder = SubmenuBuilder::new(app, name)
-            .about_with_text(label(labels, "predefined:about", &about), None)
-            .separator()
-            .item(&settings_item);
-        // Hide / Hide Others / Show All are macOS application-menu concepts.
-        // muda still renders them elsewhere, so on Windows they were three
-        // entries that did nothing when clicked.
-        #[cfg(target_os = "macos")]
-        let builder = {
-            let hide = format!("Hide {name}");
-            builder
-                .separator()
-                .hide_with_text(label(labels, "predefined:hide", &hide))
-                .hide_others_with_text(l("predefined:hide-others", "Hide Others"))
-                .show_all_with_text(l("predefined:show-all", "Show All"))
-        };
-        builder.separator().item(&quit_item).build()?
-    };
-
-    // Windows draws its menu inside the webview, so New/Open are captured by
-    // App.tsx and routed back through dispatch below. Keeping native
-    // accelerators there as well risks either losing them while editor focus
-    // is active or firing both paths. macOS/Linux keep their visible native
-    // menu accelerators.
-    let new_file_builder = MenuItemBuilder::with_id(NEW_FILE_ID, l(NEW_FILE_ID, "New File"));
-    #[cfg(not(windows))]
-    let new_file_builder = new_file_builder.accelerator("CmdOrCtrl+N");
-    let new_file_item = new_file_builder.build(app)?;
-
-    let open_file_builder = MenuItemBuilder::with_id(OPEN_FILE_ID, l(OPEN_FILE_ID, "Open…"));
-    #[cfg(not(windows))]
-    let open_file_builder = open_file_builder.accelerator("CmdOrCtrl+O");
-    let open_file_item = open_file_builder.build(app)?;
-    // No accelerator: Cmd+Shift+O is the sidebar's file search, a
-    // configurable shortcut the frontend handles.
-    let open_folder_item =
-        MenuItemBuilder::with_id(OPEN_FOLDER_ID, l(OPEN_FOLDER_ID, "Open Folder…")).build(app)?;
-    let close_folder_item =
-        MenuItemBuilder::with_id(CLOSE_FOLDER_ID, l(CLOSE_FOLDER_ID, "Close Folder")).build(app)?;
-    // Built empty here; rebuild_recent_menu below fills it from the
-    // persisted list and keeps it current as files are opened.
-    let open_recent_menu =
-        SubmenuBuilder::new(app, l("menu:open-recent", "Open Recent")).build()?;
-    let save_file_item = MenuItemBuilder::with_id(SAVE_FILE_ID, l(SAVE_FILE_ID, "Save"))
-        .accelerator("CmdOrCtrl+S")
-        .build(app)?;
-    let save_file_as_item =
-        MenuItemBuilder::with_id(SAVE_FILE_AS_ID, l(SAVE_FILE_AS_ID, "Save As…"))
-            .accelerator("CmdOrCtrl+Shift+S")
-            .build(app)?;
-    let export_pdf_item = MenuItemBuilder::with_id(EXPORT_PDF_ID, l(EXPORT_PDF_ID, "PDF…"))
-        .accelerator("CmdOrCtrl+P")
-        .build(app)?;
-    let export_html_item =
-        MenuItemBuilder::with_id(EXPORT_HTML_ID, l(EXPORT_HTML_ID, "HTML…")).build(app)?;
-    let mut export_menu_builder = SubmenuBuilder::new(app, l("menu:export", "Export"))
-        .item(&export_pdf_item)
-        .item(&export_html_item)
-        .separator();
-    // Everything below converts through a user-installed pandoc
-    // (commands/export.rs) - same format list Typora offers.
-    for (format, label) in [
-        ("docx", "Word (.docx)…"),
-        ("odt", "OpenDocument (.odt)…"),
-        ("rtf", "RTF…"),
-        ("epub", "EPUB…"),
-        ("latex", "LaTeX…"),
-        ("mediawiki", "MediaWiki…"),
-        ("rst", "reStructuredText…"),
-        ("textile", "Textile…"),
-        ("opml", "OPML…"),
-    ] {
-        let id = format!("{EXPORT_PANDOC_PREFIX}{format}");
-        let item = MenuItemBuilder::with_id(&id, l(&id, label)).build(app)?;
-        export_menu_builder = export_menu_builder.item(&item);
-    }
-    let export_menu = export_menu_builder.build()?;
-
-    // Cmd+W closes the current tab (not the window - see
-    // CLOSE_WINDOW_ID below, which owns Cmd+Shift+W instead).
-    let close_tab_item = MenuItemBuilder::with_id(CLOSE_TAB_ID, l(CLOSE_TAB_ID, "Close Tab"))
-        .accelerator("CmdOrCtrl+W")
-        .build(app)?;
-
-    let file_menu = SubmenuBuilder::new(app, l("menu:file", "File"))
-        .item(&new_file_item)
-        .item(&open_file_item)
-        .item(&open_folder_item)
-        .item(&open_recent_menu)
-        .item(&close_folder_item)
-        .separator()
-        .item(&save_file_item)
-        .item(&save_file_as_item)
-        .separator()
-        .item(&export_menu)
-        .separator()
-        .item(&close_tab_item)
-        .build()?;
-
-    // No fixed accelerator - the combo is user-configurable and
-    // handled by the frontend keydown dispatcher (see
-    // toggle_source_mode_item's comment below for why).
-    let find_replace_item =
-        MenuItemBuilder::with_id(FIND_REPLACE_ID, l(FIND_REPLACE_ID, "Find & Replace…"))
-            .build(app)?;
-    let copy_as_markdown_item = MenuItemBuilder::with_id(
-        COPY_AS_MARKDOWN_ID,
-        l(COPY_AS_MARKDOWN_ID, "Copy as Markdown"),
-    )
-    .build(app)?;
-
-    let edit_menu = SubmenuBuilder::new(app, l("menu:edit", "Edit"))
-        .undo_with_text(l("predefined:undo", "Undo"))
-        .redo_with_text(l("predefined:redo", "Redo"))
-        .separator()
-        .cut_with_text(l("predefined:cut", "Cut"))
-        .copy_with_text(l("predefined:copy", "Copy"))
-        .item(&copy_as_markdown_item)
-        .paste_with_text(l("predefined:paste", "Paste"));
-    #[cfg(target_os = "macos")]
-    let edit_menu = edit_menu.item(
-        &MenuItemBuilder::with_id(SELECT_ALL_ID, l("predefined:select-all", "Select All"))
-            .accelerator("CmdOrCtrl+A")
-            .build(app)?,
-    );
-    #[cfg(not(target_os = "macos"))]
-    let edit_menu = edit_menu.select_all_with_text(l("predefined:select-all", "Select All"));
-    let edit_menu = edit_menu.separator().item(&find_replace_item).build()?;
-
-    let mut format_menu_builder = SubmenuBuilder::new(app, l("menu:format", "Format"));
-    for (kind, label) in [
-        ("h1", "Heading 1"),
-        ("h2", "Heading 2"),
-        ("h3", "Heading 3"),
-        ("h4", "Heading 4"),
-        ("h5", "Heading 5"),
-        ("h6", "Heading 6"),
-    ] {
-        let id = format!("{INSERT_BLOCK_PREFIX}{kind}");
-        let item = MenuItemBuilder::with_id(&id, l(&id, label)).build(app)?;
-        // Set after the build: a key muda can't read leaves the item
-        // without one, where the builder would fail the whole bar.
-        if let Some(accelerator) = accelerators.get(&id) {
-            let _ = item.set_accelerator(Some(accelerator));
-        }
-        format_menu_builder = format_menu_builder.item(&item);
-    }
-    format_menu_builder = format_menu_builder.separator();
-    for (kind, label) in [
-        ("bullet-list", "Bullet List"),
-        ("ordered-list", "Numbered List"),
-        ("blockquote", "Blockquote"),
-        ("code-block", "Code Block"),
-        ("table", "Table"),
-    ] {
-        let id = format!("{INSERT_BLOCK_PREFIX}{kind}");
-        let item = MenuItemBuilder::with_id(&id, l(&id, label)).build(app)?;
-        format_menu_builder = format_menu_builder.item(&item);
-    }
-    let format_menu = format_menu_builder.build()?;
-
-    // No fixed accelerators on these - their shortcuts are
-    // user-configurable and handled by the frontend keydown
-    // dispatcher (App.tsx), which reads the current bindings from
-    // Settings. A native accelerator here would keep firing on the
-    // default combo even after the user rebinds it.
-    let item = |id: &str, english: &'static str| MenuItemBuilder::with_id(id, l(id, english));
-    // The on/off items: named by what they show ("Sidebar", never "Toggle
-    // Sidebar"), with the check mark saying whether it is on.
-    let check = |id: &str, english: &'static str| {
-        CheckMenuItemBuilder::with_id(id, l(id, english))
-            .checked(checked.get(id).copied().unwrap_or(false))
-            .build(app)
-    };
-    let toggle_source_mode_item = check(TOGGLE_SOURCE_MODE_ID, "Source Code Mode")?;
-    let toggle_typewriter_mode_item = check(TOGGLE_TYPEWRITER_MODE_ID, "Typewriter Mode")?;
-    let toggle_sidebar_item = check(TOGGLE_SIDEBAR_ID, "Sidebar")?;
-    let toggle_agent_panel_item = check(TOGGLE_AGENT_PANEL_ID, "AI Panel")?;
-    let toggle_split_view_item = check(TOGGLE_SPLIT_VIEW_ID, "Split View")?;
-    let toggle_zen_mode_item = check(TOGGLE_ZEN_MODE_ID, "Zen Mode")?;
-
-    // Fixed OS-convention accelerators (like Cmd+S / Cmd+W), not
-    // user-configurable ones - so unlike the items above they keep
-    // native accelerators. Zoom itself is applied by the frontend
-    // (app/useZoom.ts), which also handles pinch and mod+wheel.
-    let zoom_in_item = item(ZOOM_IN_ID, "Zoom In")
-        .accelerator("CmdOrCtrl+=")
-        .build(app)?;
-    let zoom_out_item = item(ZOOM_OUT_ID, "Zoom Out")
-        .accelerator("CmdOrCtrl+-")
-        .build(app)?;
-    let zoom_reset_item = item(ZOOM_RESET_ID, "Actual Size")
-        .accelerator("CmdOrCtrl+0")
-        .build(app)?;
-
-    let view_menu = {
-        let builder = SubmenuBuilder::new(app, l("menu:view", "View"))
-            // Panels, then ways of viewing the text, then size.
-            .item(&toggle_sidebar_item)
-            .item(&toggle_agent_panel_item)
-            .separator()
-            .item(&toggle_source_mode_item)
-            .item(&toggle_split_view_item)
-            .item(&toggle_typewriter_mode_item)
-            .item(&toggle_zen_mode_item)
-            .separator()
-            .item(&zoom_in_item)
-            .item(&zoom_out_item)
-            .item(&zoom_reset_item);
-        // Same story as Hide/Show All and Bring All to Front: muda documents
-        // its predefined fullscreen item as unsupported on Windows and
-        // Linux, where it renders as an entry that does nothing when
-        // clicked. Windows reaches fullscreen through the app-drawn menu
-        // instead, which calls the window API directly
-        // (src/app/app-menu-actions.ts).
-        #[cfg(target_os = "macos")]
-        let builder = builder
-            .separator()
-            .fullscreen_with_text(l("predefined:fullscreen", "Full Screen"));
-        builder.build()?
-    };
-
-    // Cmd/Ctrl+Shift+N everywhere: what file managers, browsers and VS Code
-    // open a window with. Cmd+T read as "new tab" to anyone coming from a
-    // browser, and this app has tabs (Cmd+N opens a new document in one).
-    const NEW_WINDOW_ACCEL: &str = "CmdOrCtrl+Shift+N";
-    let new_window_item = item(NEW_WINDOW_ID, "New Window")
-        .accelerator(NEW_WINDOW_ACCEL)
-        .build(app)?;
-    // Built manually (not the .close_window() predefined item) so it
-    // doesn't own the OS-default Cmd+W accelerator - that's Close
-    // Tab's now (see CLOSE_TAB_ID above).
-    let close_window_item = item(CLOSE_WINDOW_ID, "Close Window")
-        .accelerator("CmdOrCtrl+Shift+W")
-        .build(app)?;
-
-    let window_menu = {
-        let builder = SubmenuBuilder::new(app, l("menu:window", "Window"))
-            .item(&new_window_item)
-            .separator()
-            .minimize_with_text(l("predefined:minimize", "Minimize"))
-            .maximize_with_text(l("predefined:maximize", "Zoom"))
-            .separator()
-            .item(&close_window_item);
-        // Same story as Hide/Show All above: "Bring All to Front" is an
-        // NSApplication command with no Windows counterpart.
-        #[cfg(target_os = "macos")]
-        let builder = builder
-            .separator()
-            .bring_all_to_front_with_text(l("predefined:bring-all-to-front", "Bring All to Front"));
-        builder.build()?
-    };
-
-    let help = |doc: &str, english: &'static str| {
-        let id = format!("{HELP_DOC_PREFIX}{doc}");
-        let text = l(&id, english);
-        (id, text)
-    };
-    let (welcome_id, welcome) = help("welcome", "Welcome and Tutorial");
-    let (markdown_id, markdown) = help("markdown", "Markdown Guide");
-    let (agent_id, agent) = help("agent", "AI Features Guide");
-    let help_menu = SubmenuBuilder::new(app, l("menu:help", "Help"))
-        .text(welcome_id, welcome)
-        .separator()
-        .text(markdown_id, markdown)
-        .text(agent_id, agent)
-        .text(TUTORIALS_ID, l(TUTORIALS_ID, "Video Tutorials"))
-        .separator()
-        .text(COMMUNITY_ID, l(COMMUNITY_ID, "Join the Community"))
-        .build()?;
-
-    let menu = MenuBuilder::new(app)
-        .items(&[
-            &app_menu,
-            &file_menu,
-            &edit_menu,
-            &format_menu,
-            &view_menu,
-            &window_menu,
-            &help_menu,
-        ])
-        .build()?;
-    let check_items = vec![
-        toggle_sidebar_item,
-        toggle_agent_panel_item,
-        toggle_source_mode_item,
-        toggle_split_view_item,
-        toggle_typewriter_mode_item,
-        toggle_zen_mode_item,
-    ];
-    Ok(BuiltMenu {
-        menu,
-        open_recent: open_recent_menu,
-        check_items,
-    })
 }
 
 /// Quit, from the menu bar (⌘Q, File › Quit) or the tray: every window is
@@ -861,6 +362,10 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         } else {
             emit_to_focused(app_handle, "menu-new-file");
         }
+    } else if let Some(command) = id.strip_prefix(PLUGIN_COMMAND_PREFIX) {
+        emit_to_focused_payload(app_handle, "menu-plugin-command", command.to_string());
+    } else if id == MANAGE_PLUGINS_ID {
+        emit_or_open_window(app_handle, "menu-manage-plugins");
     } else if id == OPEN_FILE_ID {
         emit_or_open_window(app_handle, "menu-open-file");
     } else if id == OPEN_FOLDER_ID {
@@ -972,37 +477,4 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
 }
 
 #[cfg(test)]
-mod tests {
-    #[test]
-    fn a_recent_folder_ends_in_a_separator_to_set_it_apart_from_files() {
-        assert_eq!(super::folder_menu_text("/srv/notes"), "/srv/notes/");
-        assert_eq!(super::folder_menu_text("/srv/notes/"), "/srv/notes/");
-        assert_eq!(super::folder_menu_text(r"D:\Notes"), r"D:\Notes\");
-        assert_eq!(super::folder_menu_text("/srv/Q&A"), "/srv/Q&&A/");
-    }
-
-    #[test]
-    fn every_label_key_is_one_the_frontend_sends() {
-        // Submenus and muda's own items have no menu id to key a label by;
-        // their keys are made up on both sides, so a typo on either would
-        // leave that one label English with nothing to say so.
-        let source = include_str!("menu.rs");
-        let frontend = include_str!("../../src/app/app-menu-model.ts");
-        let keys: Vec<&str> = source
-            .split('"')
-            .filter(|s| s.starts_with("menu:") || s.starts_with("predefined:"))
-            .filter(|s| {
-                s.chars()
-                    .all(|c| c.is_ascii_lowercase() || c == ':' || c == '-')
-            })
-            .filter(|s| !s.ends_with(':'))
-            .collect();
-        assert!(keys.len() >= 20, "found {keys:?}");
-        for key in keys {
-            assert!(
-                frontend.contains(&format!("\"{key}\"")),
-                "the frontend sends no {key}"
-            );
-        }
-    }
-}
+mod tests;

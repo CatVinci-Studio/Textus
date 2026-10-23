@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.2.0-rc.5"
+version = "1.2.0"
 description = "Textus Markdown Editor"
 authors = ["CatVinci Studio"]
 edition = "2021"
@@ -63,8 +63,9 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # rt-multi-thread (in the tree through tauri): the multi-threaded runtime
 # some tests run on (commands/fs.rs).
-tokio = { version = "1", features = ["fs", "sync", "macros", "rt", "rt-multi-thread", "net"] }
+tokio = { version = "1", features = ["fs", "sync", "macros", "rt", "rt-multi-thread", "net", "process", "io-util", "time"] }
 base64 = "0.22"
+sha2 = "0.10"
 reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
 aicompat = { path = "crates/aicompat" }
 
@@ -143,6 +144,9 @@ tauri-plugin-process = "2.4"
 # The update check's version comparison (commands/update.rs); the updater
 # hands its versions over as semver 1.
 semver = "1"
+# A picture an accepted AI picture replaced goes to the system's Trash or
+# Recycle Bin when the user says so (commands/images.rs) - never deleted.
+trash = "5"
 
 # macOS-native PDF export (commands/export.rs): the themed document is
 # rendered in an offscreen WKWebView with createPDF and cut into A4 sheets
@@ -160,6 +164,10 @@ objc2-foundation = { version = "0.3", features = [
     "NSData",
     "NSDictionary",
     "NSValue",
+    # The full-screen notifications (window_fullscreen in lib.rs).
+    "NSNotification",
+    "NSOperation",
+    "block2",
 ] }
 # CFString: the LaunchServices calls of commands/default_editor.rs.
 objc2-core-foundation = { version = "0.3", default-features = false, features = [
@@ -226,3 +234,15 @@ tauri-plugin-single-instance = "2"
 # Throwaway folders for the walker's tests (src/walk.rs), removed when
 # dropped. Already in the tree through tauri-plugin-updater.
 tempfile = "3"
+# The TypeScript side of the commands the frontend calls
+# (src/platform/bindings/), generated from their Rust signatures by a test
+# (src/bindings.rs) so the two cannot drift. Test-only: the attributes are
+# `cfg_attr(test, ...)`, so shipped builds (desktop and iOS) never compile
+# specta. tauri-specta and specta are pre-releases, pinned exactly; they
+# move together.
+tauri = { version = "2.12", features = ["specta"] }
+specta = { version = "=2.0.0-rc.26", features = ["derive", "function", "serde_json"] }
+specta-typescript = "=0.0.13"
+tauri-specta = { version = "=2.0.0-rc.26", features = ["typescript"] }
+# AgentTurn and the types it holds, for the AI commands' bindings.
+aicompat = { path = "crates/aicompat", features = ["specta"] }

@@ -308,71 +308,19 @@ export function stepIndexOf(id: TutorialStepId): number {
 export type TutorialAiMode = "live" | "watch";
 
 /**
- * The tours before this one, by their step ids. The second tour's lessons
- * that are gone map onto their nearest; the first tour's writing lessons
- * onto the matching ones, and anything in or after its AI chapter - which
- * ran on scripted replies and never asked about an AI - restarts at the
- * connect lesson.
- */
-const LEGACY_STEP_IDS = new Map<string, TutorialStepId>([
-  // The second tour (1.1.0-rc.1 to rc.6).
-  ["ai-panel", "write"],
-  ["memory", "done"],
-  // The first tour.
-  ["markdownIntro", "wysiwyg"],
-  ["markdownPractice", "wysiwyg"],
-  ["sidebar", "sidebar-export"],
-  ["aiIntro", "connect"],
-  ["completion", "connect"],
-  ["agentChat", "connect"],
-  ["agentEdit", "connect"],
-  ["connectAi", "connect"],
-]);
-
-/** The first tour's steps. Its progress holds only a `stepIndex` into
- *  this list (no `stepId`). */
-const LEGACY_INDEXED_IDS = [
-  "welcome",
-  "markdownIntro",
-  "markdownPractice",
-  "sidebar",
-  "aiIntro",
-  "completion",
-  "grammar",
-  "agentChat",
-  "agentEdit",
-  "done",
-] as const;
-
-/**
- * Where saved progress resumes, and in which AI mode. Read by `stepId`:
- * one of this tour's, one of a tour before (LEGACY_STEP_IDS), or - from
- * the first tour - only a `stepIndex`. An AI lesson resumes only with its
- * mode saved beside it; without one (an older tour, or a damaged save) the
- * learner is asked about connecting again.
+ * Where saved progress resumes, and in which AI mode. Read by `stepId`; one
+ * this tour doesn't have (a damaged save, a step since removed) starts the
+ * tour over. An AI lesson resumes only with its mode saved beside it;
+ * without one the learner is asked about connecting again.
  */
 export function resolveSavedProgress(saved: {
   stepId?: unknown;
-  stepIndex?: unknown;
   aiMode?: unknown;
 }): { stepIndex: number; aiMode: TutorialAiMode | null } {
   const aiMode =
     saved.aiMode === "live" || saved.aiMode === "watch" ? saved.aiMode : null;
-  const known = (stepId: string) =>
-    TUTORIAL_STEPS.find((step) => step.id === stepId)?.id ??
-    LEGACY_STEP_IDS.get(stepId);
-  let id = typeof saved.stepId === "string" ? known(saved.stepId) : undefined;
-  if (!id) {
-    const raw =
-      typeof saved.stepIndex === "number" && Number.isFinite(saved.stepIndex)
-        ? Math.trunc(saved.stepIndex)
-        : 0;
-    const legacy =
-      LEGACY_INDEXED_IDS[
-        Math.min(Math.max(0, raw), LEGACY_INDEXED_IDS.length - 1)
-      ];
-    id = known(legacy) ?? "welcome";
-  }
+  const id =
+    TUTORIAL_STEPS.find((step) => step.id === saved.stepId)?.id ?? "welcome";
   const step = TUTORIAL_STEPS[stepIndexOf(id)];
   if (step.ai && !aiMode)
     return { stepIndex: stepIndexOf("connect"), aiMode: null };

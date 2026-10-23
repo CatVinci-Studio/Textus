@@ -1,5 +1,6 @@
 import { Marked, Renderer, type TokenizerAndRendererExtension } from "marked";
 import DOMPurify from "dompurify";
+import { escapeHtml } from "../../utils/html";
 import { normalizeMathDelimiters } from "../../utils/markdown-math";
 import { sanitizeNodes } from "../html/html-policy";
 import { readImagePresentation } from "../images/image-html";
@@ -98,6 +99,62 @@ export function renderMarkdownHtml(markdown: string): string {
   return DOMPurify.sanitize(parsed);
 }
 
+// Footnotes, which marked has no syntax for: a reference `[^2]` as its
+// raised label, as the editor shows it, and a definition `[^2]: …` (its
+// indented lines with it) as a paragraph opening with that label. Without
+// them a preview of AI text with footnotes (pending-edit-plugin's
+// fillPendingBlocks) showed their Markdown.
+const footnotes: TokenizerAndRendererExtension[] = [
+  {
+    name: "footnoteDefinition",
+    level: "block",
+    start: (src) => src.match(/^\[\^[^\]\s]+\]:/m)?.index,
+    tokenizer(src) {
+      const match =
+        /^\[\^([^\]\s]+)\]:[ \t]*([^\n]*(?:\n(?: {2,}|\t)[^\n]*)*)(?:\n+|$)/.exec(
+          src,
+        );
+      if (!match) return undefined;
+      const token = {
+        type: "footnoteDefinition",
+        raw: match[0],
+        label: match[1],
+        text: match[2].replace(/\n(?: {2,}|\t)/g, " "),
+        tokens: [],
+      };
+      this.lexer.inline(token.text, token.tokens);
+      return token;
+    },
+    renderer(token) {
+      const label = escapeHtml(String(token.label));
+      return `<p><sup>${label}</sup> ${this.parser.parseInline(token.tokens ?? [])}</p>\n`;
+    },
+  },
+  {
+    name: "footnoteReference",
+    level: "inline",
+    start: (src) => src.indexOf("[^"),
+    tokenizer(src) {
+      const match = /^\[\^([^\]\s]+)\](?!:)/.exec(src);
+      if (!match) return undefined;
+      return { type: "footnoteReference", raw: match[0], label: match[1] };
+    },
+    renderer: (token) => `<sup>${escapeHtml(String(token.label))}</sup>`,
+  },
+];
+
+// The inline flavour (renderMarkdownInlineHtml): the chat's, and a
+// footnote's mark raised as the editor shows it - a rewritten sentence that
+// keeps its `[^1]` showed the Markdown in the text and on its card.
+const inlineMarked = new Marked({
+  gfm: true,
+  breaks: true,
+  extensions: [
+    ...mathExtensions(mathHtml),
+    ...footnotes.filter((f) => f.name === "footnoteReference"),
+  ],
+});
+
 // The formulas of the document being rendered, in order: the document
 // flavour leaves a placeholder element for each, so the HTML policy (which
 // would strip KaTeX's classes and styles) never sees them.
@@ -109,10 +166,13 @@ const MATH_SLOT_TAG = "textus-math";
 const documentMarked = new Marked({
   gfm: true,
   breaks: false,
-  extensions: mathExtensions((source, display, block) => {
-    mathSlots.push(DOMPurify.sanitize(mathHtml(source, display, block)));
-    return `<${MATH_SLOT_TAG} data-slot="${mathSlots.length - 1}"></${MATH_SLOT_TAG}>`;
-  }),
+  extensions: [
+    ...mathExtensions((source, display, block) => {
+      mathSlots.push(DOMPurify.sanitize(mathHtml(source, display, block)));
+      return `<${MATH_SLOT_TAG} data-slot="${mathSlots.length - 1}"></${MATH_SLOT_TAG}>`;
+    }),
+    ...footnotes,
+  ],
   renderer: {
     // A width an older Textus kept in the title (images/image-html.ts)
     // sizes the picture, as in the editor, instead of being its tooltip.
@@ -174,7 +234,7 @@ export function renderDocumentHtml(markdown: string): string {
  * the surrounding paragraph's inline content.
  */
 export function renderMarkdownInlineHtml(markdown: string): string {
-  const parsed = chatMarked.parseInline(normalizeMathDelimiters(markdown), {
+  const parsed = inlineMarked.parseInline(normalizeMathDelimiters(markdown), {
     async: false,
   });
   return DOMPurify.sanitize(parsed);

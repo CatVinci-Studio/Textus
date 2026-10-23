@@ -1,7 +1,6 @@
-/** What the app is called (Levis until 1.0, Textus since). Every string
- *  that names the app is built from this, in every language, so a rename
- *  is this one line (and its backend twin, app_identity::APP_NAME in
- *  src-tauri, which a test keeps in step). */
+/** What the app is called. Every string that names the app is built from
+ *  this, in every language, so a rename is this one line (and its backend
+ *  twin, app_identity::APP_NAME in src-tauri, which a test keeps in step). */
 export const APP_NAME = "Textus";
 
 /** What the AI is called, in every language. The assistant is named after

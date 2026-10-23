@@ -7,9 +7,9 @@ use crate::walk::{walk, Limits, LIMITS};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
-/// One indexed file. Shared with the frontend's IndexedFile in
-/// src/platform/ipc.ts - change both.
+/// One indexed file - generated into src/platform/bindings/files.ts.
 #[derive(Serialize, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct IndexedFile {
     /// Absolute, to open it.
     path: String,
@@ -17,8 +17,9 @@ pub struct IndexedFile {
     rel: String,
 }
 
-/// Shared with the frontend's FolderIndex in src/platform/ipc.ts.
+/// Generated into src/platform/bindings/files.ts.
 #[derive(Serialize, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct FolderIndex {
     files: Vec<IndexedFile>,
     /// A limit was hit: there may be more files than `files` holds.
@@ -46,6 +47,7 @@ fn index(root: &Path, limits: &Limits) -> FolderIndex {
 /// home folder and a drive root ("TOO_BROAD"), as the AI's project folder
 /// does: a walk there would be everything the user owns.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn index_folder(root: String) -> Result<FolderIndex, String> {
     crate::commands::fs::require_non_empty(&root)?;
     tauri::async_runtime::spawn_blocking(move || {
@@ -68,6 +70,7 @@ pub async fn index_folder(root: String) -> Result<FolderIndex, String> {
 /// the folder, would otherwise reach everything the user owns.
 #[cfg(desktop)]
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn pick_open_folder(window: tauri::WebviewWindow) -> Result<Option<String>, String> {
     let picked = tauri::async_runtime::spawn_blocking(move || {
         crate::commands::fs::window_file_dialog(&window).blocking_pick_folder()

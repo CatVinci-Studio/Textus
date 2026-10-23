@@ -221,7 +221,7 @@ test("the text column glides aside for the margin, on its transform", async ({
   await openApp(page, {
     animations: true,
     settings: { language: "en", revisionDisplay: "new" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, STORY);
   await mockInvoke(page, {

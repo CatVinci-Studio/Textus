@@ -59,6 +59,8 @@ const PROVIDERS = {
   zhipu: "zhipuai",
   qwen: "alibaba-cn",
   doubao: "volcengine",
+  minimax: "minimax-cn",
+  "minimax-intl": "minimax",
 };
 const UNMAPPED = ["openrouter", "ollama", "custom"];
 

@@ -41,8 +41,6 @@
  *                   own classic for that language.
  *   SHOTS_OUT       where the images go (default ../assets/site-assets/
  *                   app, beside the main checkout).
- *   SHOTS_APP_NAME  the product name the UI shows (default Textus: the site
- *                   is for 1.0, and names the app no other way).
  *   SHOTS_FONT_DIR  a folder with Inter's .otf files (Inter-Regular.otf
  *                   etc.), drawn where a Mac draws San Francisco. Found in
  *                   TeX Live's fonts when it is installed; without it the UI
@@ -502,7 +500,6 @@ const OUT = process.env.SHOTS_OUT
   ? path.resolve(process.env.SHOTS_OUT)
   : path.resolve(CHECKOUT, "..", "assets", "site-assets", "app");
 
-const APP_NAME = process.env.SHOTS_APP_NAME ?? "Textus";
 /** The Markdown tour's document zoom (Settings' zoom, View > Zoom Out). */
 const TOUR_ZOOM = 0.85;
 const WEBP_WIDTH = 1920;
@@ -718,12 +715,6 @@ async function launch(page: Page, options: Launch) {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "platform", { get: () => "MacIntel" });
   });
-  // The product's name, wherever the UI's strings carry it.
-  await page.route(/\/src\/i18n\/[^?]*\.ts(\?.*)?$/, async (route) => {
-    const response = await route.fetch();
-    const body = (await response.text()).replace(/\bLevis\b/g, APP_NAME);
-    await route.fulfill({ response, body });
-  });
   // Files outside the dev server's root - KaTeX's fonts, when node_modules
   // is a link to another checkout's, as in a worktree - which Vite refuses
   // to serve; without them every formula is drawn in a fallback serif.
@@ -785,7 +776,6 @@ async function launch(page: Page, options: Launch) {
       })),
       memories: { items: [], chars: 0, cap: 4000 },
       remember: true,
-      levis_project: false,
     },
   });
   await openApp(page, {
@@ -971,19 +961,6 @@ async function shoot(page: Page, browser: Browser, lang: string, name: Shot) {
       ),
       "the UI font did not load",
     ).toBe(true);
-  if (APP_NAME !== "Levis") {
-    const onScreen = await page.evaluate(() =>
-      [
-        document.body.innerText,
-        ...Array.from(document.querySelectorAll("[placeholder]"), (el) =>
-          el.getAttribute("placeholder"),
-        ),
-      ].join("\n"),
-    );
-    expect(onScreen, "the old product name is on screen").not.toMatch(
-      /\bLevis\b/,
-    );
-  }
   const dir = path.join(OUT, lang);
   mkdirSync(dir, { recursive: true });
   const png = await page.screenshot();
@@ -1026,9 +1003,9 @@ for (const lang of LANGS) {
           library: s.library,
         },
         storage: {
-          "levis-agent-panel-open": "1",
+          "textus-agent-panel-open": "1",
           ...(s.panelWidth
-            ? { "levis-agent-panel-width": String(s.panelWidth) }
+            ? { "textus-agent-panel-width": String(s.panelWidth) }
             : {}),
         },
       });
@@ -1200,7 +1177,7 @@ for (const lang of LANGS) {
       await caretAtEnd(page);
       await emit(page, "menu-open-settings");
       await page
-        .locator(".settings-nav-item", { hasText: `${APP_NAME} AI` })
+        .locator(".settings-nav-item", { hasText: "Textus AI" })
         .click();
       await page.locator(".provider-picker .combobox-trigger").click();
       await expect(page.locator(".combobox-option")).toHaveCount(

@@ -1,3 +1,4 @@
+import { LOCAL_KEYS, readLocalJson, writeLocal } from "../storage/local";
 import snapshot from "./models-snapshot.json";
 
 /** What models.dev says about one model (scripts/sync-models.mjs keeps the
@@ -27,8 +28,6 @@ export function formatContext(tokens: number): string {
   return `${Math.round(tokens / 1000)}K`;
 }
 
-const CACHE_PREFIX = "textus-fetched-models:";
-
 export interface FetchedModels {
   models: string[];
   /** Epoch ms. */
@@ -38,30 +37,23 @@ export interface FetchedModels {
 /** A provider's last fetched model list, so the picker keeps it across
  *  restarts instead of offering only the defaults until fetched again. */
 export function readFetchedModels(provider: string): FetchedModels | null {
-  try {
-    const raw = localStorage.getItem(CACHE_PREFIX + provider);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed?.models) && typeof parsed.at === "number"
-      ? {
-          models: parsed.models.filter((m: unknown) => typeof m === "string"),
-          at: parsed.at,
-        }
-      : null;
-  } catch {
-    return null;
-  }
+  const parsed = readLocalJson(LOCAL_KEYS.fetchedModels(provider)) as {
+    models?: unknown;
+    at?: unknown;
+  } | null;
+  return Array.isArray(parsed?.models) && typeof parsed.at === "number"
+    ? {
+        models: parsed.models.filter((m): m is string => typeof m === "string"),
+        at: parsed.at,
+      }
+    : null;
 }
 
 export function writeFetchedModels(provider: string, models: string[]): void {
-  try {
-    localStorage.setItem(
-      CACHE_PREFIX + provider,
-      JSON.stringify({ models, at: Date.now() }),
-    );
-  } catch {
-    // Storage unavailable: the list just isn't remembered.
-  }
+  writeLocal(
+    LOCAL_KEYS.fetchedModels(provider),
+    JSON.stringify({ models, at: Date.now() }),
+  );
 }
 
 /** Fetched ids ordered for the picker: current models before deprecated

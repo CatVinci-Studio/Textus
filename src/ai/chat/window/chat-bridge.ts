@@ -1,3 +1,4 @@
+import type { DocumentSnapshot } from "../../doc-markdown";
 import { emitTo } from "@tauri-apps/api/event";
 import { listenToThisWindow } from "../../../utils/tauri-events";
 import type { AgentTurn, EditProposal } from "../../types";
@@ -78,7 +79,7 @@ export const EDITOR_TO_CHAT = {
 /** The editor's current document state, pushed to the chat window. */
 export interface ChatContext {
   /** Document as markdown source - see doc-markdown.ts. */
-  document: string;
+  document: DocumentSnapshot;
   /** Selection as plain text, for the composer's chip. */
   selectedText: string | null;
   /** Selection as markdown - what actually rides with the request. */

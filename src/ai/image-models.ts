@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ai } from "../platform/ipc";
+import { ai, auth } from "../platform/ipc";
 import type { Settings } from "../settings/SettingsContext";
 
 /**
@@ -27,13 +27,80 @@ export interface ImageModel {
   provider: string;
   model: string;
   baseUrl: string;
+  /** At most this many pictures per request. */
+  limit: number;
+}
+
+/** The setting that follows the chat provider, the default. Mirrors
+ *  FOLLOW_CHAT in src-tauri/src/ai/images.rs, which resolves it. */
+export const FOLLOW_CHAT = "chat";
+
+/** The image service that goes with a chat provider, as the backend picks
+ *  it (following_chat in ai/images/services.rs): the one its sign-in brings
+ *  while there is one (OpenAI's through the ChatGPT sign-in), else the
+ *  provider's own pictures on the same key; null for a chat provider that
+ *  makes none. */
+const SIGN_IN_IMAGES: Partial<Record<string, string>> = {
+  openai: "openai-chatgpt",
+};
+
+const SAME_KEY_IMAGES = new Set([
+  "openai",
+  "google",
+  "doubao",
+  "qwen",
+  "zhipu",
+  "minimax",
+  "minimax-intl",
+  "siliconflow",
+]);
+
+export function followingChat(
+  chatProvider: string,
+  chatGptSignedIn: boolean,
+): string | null {
+  const signInImages = SIGN_IN_IMAGES[chatProvider];
+  if (signInImages && chatGptSignedIn) return signInImages;
+  return SAME_KEY_IMAGES.has(chatProvider) ? chatProvider : null;
+}
+
+/** Whether a ChatGPT sign-in is kept, for following an OpenAI chat. */
+export function useChatGptSignedIn(): boolean {
+  const [signedIn, setSignedIn] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void auth
+      .oauthStatus("openai")
+      .then((status) => live && setSignedIn(!!status?.configured))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
+  return signedIn;
+}
+
+/** The image service that makes the pictures under these settings - the
+ *  one chosen, or the chat provider's own while following it - or null
+ *  for none. */
+export function useImageService(
+  settings: Pick<Settings, "imageModelProvider" | "aiProvider">,
+): string | null {
+  const signedIn = useChatGptSignedIn();
+  const chosen = settings.imageModelProvider;
+  if (chosen === FOLLOW_CHAT)
+    return followingChat(settings.aiProvider, signedIn);
+  return chosen || null;
 }
 
 /** The image model a request is sent with, or null for none. */
 export function imageModelOf(
   settings: Pick<
     Settings,
-    "imageModelProvider" | "imageModel" | "imageModelEndpoint"
+    | "imageModelProvider"
+    | "imageModel"
+    | "imageModelEndpoint"
+    | "imagesPerRequest"
   >,
 ): ImageModel | null {
   if (!settings.imageModelProvider) return null;
@@ -41,6 +108,7 @@ export function imageModelOf(
     provider: settings.imageModelProvider,
     model: settings.imageModel,
     baseUrl: settings.imageModelEndpoint,
+    limit: settings.imagesPerRequest,
   };
 }
 

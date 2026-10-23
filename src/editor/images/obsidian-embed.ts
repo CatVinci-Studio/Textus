@@ -186,14 +186,14 @@ const embedToMarkdown: ToMarkdownExtension = {
   handlers: { obsidianEmbed: (node: ObsidianEmbed) => node.value },
 };
 
-const remarkObsidianEmbed: RemarkPluginRaw<unknown> = function (this: {
-  data: () => Record<string, unknown[]>;
-}) {
+const remarkObsidianEmbed: RemarkPluginRaw<unknown> = function (
+  this: ThisParameterType<RemarkPluginRaw<unknown>>,
+) {
   const data = this.data();
   (data.micromarkExtensions ??= []).push(embedSyntax());
   (data.fromMarkdownExtensions ??= []).push(embedFromMarkdown);
   (data.toMarkdownExtensions ??= []).push(embedToMarkdown);
-} as unknown as RemarkPluginRaw<unknown>;
+};
 
 export const remarkObsidianEmbedPlugin = $remark(
   "remark-obsidian-embed",

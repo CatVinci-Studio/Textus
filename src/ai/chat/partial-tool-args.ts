@@ -1,3 +1,5 @@
+import { withoutCitationMarkers } from "../citation-markers";
+import { resolveBlockEdit, type SentBlock } from "../doc-blocks";
 import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../types";
 
 /** A string field scanned out of an incomplete JSON fragment: what has
@@ -118,7 +120,12 @@ export interface DraftProposal {
  * text - so this is typically reached while the text is still streaming).
  * Returns null until then; the caller keeps feeding it grown fragments.
  */
-export function draftProposal(fragment: string): DraftProposal | null {
+export function draftProposal(
+  fragment: string,
+  /** The document's blocks as they are now, for an edit that names its
+   *  block (doc-blocks.ts). */
+  blocks?: SentBlock[],
+): DraftProposal | null {
   const fields = parsePartialToolArgs(fragment);
   const action = fields.action;
   if (!action?.complete) return null;
@@ -126,16 +133,48 @@ export function draftProposal(fragment: string): DraftProposal | null {
   const needsAnchor =
     action.value !== "append" && action.value !== "replace_selection";
   const anchor = fields.anchor;
+  // Named by its block: placed once the run's end is known too - its own
+  // `last_block`, or a field written after it (schema order: block,
+  // context, last_block, reason, text).
+  if (fields.block?.value && blocks !== undefined) {
+    if (!fields.block.complete) return null;
+    const runKnown =
+      fields.last_block?.complete || !!fields.reason || !!fields.text;
+    if (!runKnown) return null;
+    const text = withoutCitationMarkers(
+      fields.text?.value ?? "",
+      !fields.text?.complete,
+    );
+    const resolved = resolveBlockEdit(blocks, {
+      action: action.value,
+      block: fields.block.value,
+      lastBlock: fields.last_block?.value || undefined,
+      anchor: anchor?.complete && anchor.value ? anchor.value : undefined,
+      text,
+    });
+    if (!resolved) return null;
+    return {
+      proposal: { ...resolved, action: resolved.action as EditAction },
+      textComplete: fields.text?.complete ?? false,
+    };
+  }
   if (needsAnchor && !anchor?.complete) return null;
+  // Quoted without a block - text proposed and not decided yet - only
+  // once the text begins: a `block` the model writes after its quote
+  // comes before that, and the draft would otherwise be placed by the
+  // quote alone, nowhere.
+  if (needsAnchor && action.value !== "delete" && !fields.text) return null;
 
   return {
     proposal: {
       action: action.value as EditAction,
       anchor: needsAnchor ? anchor?.value : undefined,
-      text: fields.text?.value ?? "",
-      // Disambiguates a repeated anchor (findMarkdownMatch) - only once
-      // fully quoted; a half-arrived context must not mislocate the draft.
-      context: fields.context?.complete ? fields.context.value : undefined,
+      // What it writes, without the citation markers an OpenAI model may
+      // put in (citation-markers.ts) - the anchor quotes the document.
+      text: withoutCitationMarkers(
+        fields.text?.value ?? "",
+        !fields.text?.complete,
+      ),
     },
     textComplete: fields.text?.complete ?? false,
   };

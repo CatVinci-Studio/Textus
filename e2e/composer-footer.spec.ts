@@ -64,8 +64,8 @@ for (const uiTextScale of [1, 1.25])
       await openApp(page, {
         settings: { language, uiTextScale },
         storage: {
-          "levis-agent-panel-open": "1",
-          "levis-agent-panel-width": "300",
+          "textus-agent-panel-open": "1",
+          "textus-agent-panel-width": "300",
         },
       });
       await selectPassage(page);
@@ -95,8 +95,8 @@ for (const language of ["de", "ru"] as const)
     await openApp(page, {
       settings: { language },
       storage: {
-        "levis-agent-panel-open": "1",
-        "levis-agent-panel-width": "300",
+        "textus-agent-panel-open": "1",
+        "textus-agent-panel-width": "300",
       },
     });
     await page.addStyleTag({

@@ -16,7 +16,7 @@ import { blockAt, holdBlock } from "../../ui/hold-line";
 import type { AgentConversation } from "../chat/useAgentConversation";
 import type { AgentPanelFrame } from "../chat/panel/agent-panel";
 import {
-  locateAnchor,
+  locateTarget,
   type usePendingEdits,
 } from "../revision/usePendingEdits";
 import {
@@ -29,6 +29,8 @@ import {
 import type { RevisionDisplay } from "../../settings/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { useLatest } from "../../utils/hooks/useLatest";
+import { useNotesBar } from "./useNotesBar";
+import { useOpenedCard } from "./margin-layout";
 
 /** A proposal shown whole as a margin card's change: what it replaces and
  *  with what. Null for new text alone, which has no original. */
@@ -96,6 +98,7 @@ export function useReviewNotes({
     y: number;
   } | null>(null);
   const doneNotes = useRef(new Set<string>());
+  // Notes whose passage wasn't found, by what they were placed from.
   const lostNotes = useRef(new Set<string>());
   const [editorView, setEditorView] = useState<EditorView | null>(null);
   useEffect(() => {
@@ -109,30 +112,52 @@ export function useReviewNotes({
   }, [reviewNotesRef]);
   const panelTurns = conversation.streaming?.turns;
   const quickTurns = quickConversation.streaming?.turns;
+  // Each note still streaming in, once its passage and text are whole.
+  const panelDrafts = conversation.streaming?.comments;
+  const quickDrafts = quickConversation.streaming?.comments;
   const comments = useMemo(
     () =>
       commentCalls([
         ...conversation.history,
         ...(panelTurns ?? []),
+        ...(panelDrafts ?? []),
         ...quickConversation.history,
         ...(quickTurns ?? []),
+        ...(quickDrafts ?? []),
       ]),
-    [conversation.history, panelTurns, quickConversation.history, quickTurns],
+    [
+      conversation.history,
+      panelTurns,
+      panelDrafts,
+      quickConversation.history,
+      quickTurns,
+      quickDrafts,
+    ],
   );
+  // What each note was placed from: a draft placed before its context
+  // came is placed again from the completed call when that differs.
+  const placedFrom = useRef(new Map<string, string>());
   useEffect(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       setEditorView(view);
       const current = reviewNotesKey.getState(view.state)?.notes ?? [];
       const wanted = comments.filter((c) => !doneNotes.current.has(c.id));
-      const keep = current.filter((n) => wanted.some((w) => w.id === n.id));
+      const from = (c: (typeof wanted)[number]) =>
+        [c.block ?? "", c.anchor, c.comment].join("\0");
+      const keep = current.filter((n) =>
+        wanted.some(
+          (w) => w.id === n.id && placedFrom.current.get(n.id) === from(w),
+        ),
+      );
       const added: Omit<ReviewNote, "num">[] = [];
       for (const c of wanted) {
-        if (keep.some((n) => n.id === c.id) || lostNotes.current.has(c.id))
+        if (keep.some((n) => n.id === c.id) || lostNotes.current.has(from(c)))
           continue;
-        const range = locateAnchor(ctx, view.state.doc, c.anchor, c.context);
+        placedFrom.current.set(c.id, from(c));
+        const range = locateTarget(ctx, view.state.doc, c);
         if (!range || range.from >= range.to) {
-          lostNotes.current.add(c.id);
+          lostNotes.current.add(from(c));
           continue;
         }
         added.push({ id: c.id, ...range, comment: c.comment });
@@ -148,26 +173,10 @@ export function useReviewNotes({
   }, [comments, run]);
 
   // What the pointer is on - a margin card or its passage ("note:<id>",
-  // "rev:<callId>:<index>"): both light up together.
+  // "rev:<callId>:<index>"): both light up together (`lit`, below).
   function setNoteHot(key: string | null) {
     hotRef.current = key;
     setHotNote(key);
-    const id = key?.startsWith("note:") ? key.slice(5) : null;
-    let sentence: HotSentence | null = null;
-    if (key?.startsWith("rev:")) {
-      const [, callId, index] = key.split(":");
-      sentence = { callId, index: Number(index) };
-    }
-    // Through the plugins, never a class written onto the text: see
-    // pending-edit-plugin's hotDecorations.
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      view.dispatch(
-        view.state.tr
-          .setMeta(reviewNotesKey, { type: "hot", id })
-          .setMeta(pendingEditKey, { type: "hot", sentence }),
-      );
-    });
   }
 
   /** The pointer moving over the document: lights up the note or pending
@@ -204,9 +213,32 @@ export function useReviewNotes({
   // "Ask about it": into the AI panel's composer, the note quoted, for the
   // writer to finish the question.
   function askAboutNote(note: ReviewNote) {
+    askInPanel(t.reviewNoteAskPrefix.replace("{comment}", note.comment));
+  }
+
+  // The notes bar's picked notes, asked about together.
+  function askAboutNotes(picked: ReviewNote[]) {
+    if (picked.length === 1) return askAboutNote(picked[0]);
+    askInPanel(
+      t.reviewNotesAskPrefix.replace(
+        "{notes}",
+        picked.map((n) => `“${n.comment}”`).join("\n"),
+      ),
+    );
+  }
+
+  const bar = useNotesBar({
+    notes,
+    run,
+    revisionFocus: pendingEdits.focusedStop,
+    onDone: doneNote,
+    onAsk: askAboutNotes,
+  });
+
+  // `text` into the AI panel's composer, the caret after it.
+  function askInPanel(text: string) {
     setOpenNote(null);
     agentPanel.setOpen(true);
-    const text = t.reviewNoteAskPrefix.replace("{comment}", note.comment);
     window.setTimeout(() => {
       const box = document.querySelector<HTMLTextAreaElement>(
         ".agent-panel-view textarea",
@@ -263,10 +295,10 @@ export function useReviewNotes({
 
   // A comment card's "Show in document": select the passage and bring it
   // into view, so the feedback can be read against the text it is about.
-  function locateText(anchor: string, context?: string) {
+  function locateText(anchor: string, block?: string) {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      const range = locateAnchor(ctx, view.state.doc, anchor, context);
+      const range = locateTarget(ctx, view.state.doc, { block, anchor });
       if (!range) {
         showAiNotice(t.commentNotFound);
         return;
@@ -329,11 +361,50 @@ export function useReviewNotes({
     return items;
   }, [notes, pendingEdits.reviewStops, pendingEdits.reviewed, revisionDisplay]);
 
-  // The margin card of the sentence the review bar points at.
+  // The item selected: the card clicked last, or the one the notes bar or
+  // the review bar points at - whichever came last. A bar's step takes over
+  // from a click (`over`: what the bars pointed at when it was made).
   const { focusedStop } = pendingEdits;
-  const focusedItem = focusedStop
-    ? `rev:${focusedStop.callId}:${focusedStop.index}`
-    : null;
+  const pointed =
+    bar.focusedItem ??
+    (focusedStop ? `rev:${focusedStop.callId}:${focusedStop.index}` : null);
+  const [clicked, setClicked] = useOpenedCard<{
+    key: string;
+    over: string | null;
+  }>();
+  const focusedItem =
+    clicked && clicked.over === pointed ? clicked.key : pointed;
+  // Lit, card and passage both: what the pointer is on, else the selected
+  // one - it stays lit while it is read, not only while pointed at.
+  const lit = hotNote ?? focusedItem;
+  useEffect(() => {
+    const id = lit?.startsWith("note:") ? lit.slice(5) : null;
+    let sentence: HotSentence | null = null;
+    if (lit?.startsWith("rev:")) {
+      const [, callId, index] = lit.split(":");
+      sentence = { callId, index: Number(index) };
+    }
+    // Through the plugins, never a class written onto the text: see
+    // pending-edit-plugin's hotDecorations.
+    run((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      view.dispatch(
+        view.state.tr
+          .setMeta(reviewNotesKey, { type: "hot", id })
+          .setMeta(pendingEditKey, { type: "hot", sentence }),
+      );
+    });
+  }, [lit, run]);
+
+  // A card clicked: selected, and its passage brought into view and
+  // pulsed, so the eye goes from the note to what it is about.
+  function selectCard(key: string | null) {
+    setClicked(key ? { key, over: pointed } : null);
+    const item = key ? marginItems.find((i) => i.key === key) : undefined;
+    if (!item) return;
+    const from = item.kind === "note" ? item.note.from : item.from;
+    run((ctx) => revealPosition(ctx.get(editorViewCtx), from));
+  }
 
   const openNoteData = openNote
     ? (notes.find((n) => n.id === openNote.id) ?? null)
@@ -342,8 +413,9 @@ export function useReviewNotes({
   return {
     notes,
     noMargin,
-    hotNote,
+    hotNote: lit,
     focusedItem,
+    selectCard,
     openNote,
     setOpenNote,
     openNoteData,
@@ -355,5 +427,6 @@ export function useReviewNotes({
     askAboutNote,
     onNoMargin,
     locateText,
+    bar,
   };
 }

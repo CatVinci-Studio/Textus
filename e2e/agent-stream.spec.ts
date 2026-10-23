@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * Textus AI's edits as they really arrive: streamed over the onEvent channel
@@ -10,48 +10,48 @@ import { openApp, pasteMarkdown } from "./helpers";
 test("a streamed edit whose text starts empty still becomes decidable", async ({
   page,
 }) => {
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(page, "Alpha line one.\n\nBeta line two.\n\nGamma.");
   await page.evaluate(() => {
     type Send = (event: unknown) => void;
-    const internals = (
-      window as unknown as {
-        __TAURI_INTERNALS__: {
-          invoke: (cmd: string, args?: unknown) => Promise<unknown>;
-        };
-      }
-    ).__TAURI_INTERNALS__;
+    const w = window as unknown as {
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, args?: unknown) => Promise<unknown>;
+      };
+      __devNameCall: (blocks: unknown, args: object) => object;
+    };
+    const internals = w.__TAURI_INTERNALS__;
     const original = internals.invoke;
-    const edit = (anchor: string, text: string) =>
-      JSON.stringify({ action: "replace", anchor, text });
-    // The first call's fragments split right after the opening quote of
-    // `text`: the draft is placed while its text is still "" - what an
-    // Anthropic-style partial-JSON stream can do at any boundary.
-    const calls = [
-      {
-        id: "s1",
-        args: edit("Alpha line one.", "ALPHA LINE ONE (edited)."),
-        cut: [20, 40, 55],
-      },
-      {
-        id: "s2",
-        args: edit("Beta line two.", "BETA LINE TWO (edited)."),
-        cut: [20, 40, 56],
-      },
-      // No text at all, ever: must still become decidable.
-      {
-        id: "s3",
-        args: JSON.stringify({ action: "delete", anchor: "Gamma." }),
-        cut: [20],
-      },
-    ];
     internals.invoke = (cmd, args) => {
       if (cmd !== "ai_agent_message") return original(cmd, args);
-      const { message, onEvent } = args as {
+      const { message, onEvent, blocks } = args as {
         message: string;
         onEvent?: { onmessage?: Send };
+        blocks: unknown;
       };
       const send: Send = (event) => onEvent?.onmessage?.(event);
+      // Each call by the block it names, as a model writes it.
+      const written = (edit: object) =>
+        JSON.stringify(w.__devNameCall(blocks, edit));
+      const edit = (anchor: string, text: string) =>
+        written({ action: "replace", anchor, text });
+      // Right after the opening quote of `text`.
+      const textStart = (json: string) => json.indexOf('"text":"') + 8;
+      // The first call's fragments split right after the opening quote of
+      // `text`: the draft is placed while its text is still "" - what an
+      // Anthropic-style partial-JSON stream can do at any boundary.
+      const s1 = edit("Alpha line one.", "ALPHA LINE ONE (edited).");
+      const s2 = edit("Beta line two.", "BETA LINE TWO (edited).");
+      const calls = [
+        { id: "s1", args: s1, cut: [20, 40, textStart(s1)] },
+        { id: "s2", args: s2, cut: [20, 40, textStart(s2) + 1] },
+        // No text at all, ever: must still become decidable.
+        {
+          id: "s3",
+          args: written({ action: "delete", anchor: "Gamma." }),
+          cut: [20],
+        },
+      ];
       const turns: unknown[] = [];
       const steps: (() => void)[] = [];
       for (const call of calls) {
@@ -107,11 +107,12 @@ test("a streamed edit whose text starts empty still becomes decidable", async ({
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("Capitalise the first two lines");
   await composer.press("Enter");
-  const accept = page.locator(
-    ".agent-proposal-actions .inline-chat-action-primary",
-  );
-  // Every preview finishes typing and gets its Accept - the first one used
-  // to settle while its text was still empty, then stay "Writing…" for good.
+  // Three in a row are one card (ProposalGroup). Every preview finishes
+  // typing and gets its ✓ - the first one used to settle while its text
+  // was still empty, then stay "Writing…" for good.
+  const rows = page.locator(".agent-proposal-group-rows > li");
+  await expect(rows).toHaveCount(3);
+  const accept = rows.getByRole("button", { name: "采纳", exact: true });
   await expect(accept).toHaveCount(3);
   for (const left of [2, 1, 0]) {
     await accept.first().click();
@@ -124,17 +125,17 @@ test("a streamed edit whose text starts empty still becomes decidable", async ({
 });
 
 test("an edit the backend refused never stays on screen", async ({ page }) => {
-  await openApp(page, { storage: { "levis-agent-panel-open": "1" } });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
   await pasteMarkdown(page, "Alpha line one.\n\nBeta line two.");
   await page.evaluate(() => {
     type Send = (event: unknown) => void;
-    const internals = (
-      window as unknown as {
-        __TAURI_INTERNALS__: {
-          invoke: (cmd: string, args?: unknown) => Promise<unknown>;
-        };
-      }
-    ).__TAURI_INTERNALS__;
+    const w = window as unknown as {
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, args?: unknown) => Promise<unknown>;
+      };
+      __devNameCall: (blocks: unknown, args: object) => object;
+    };
+    const internals = w.__TAURI_INTERNALS__;
     const original = internals.invoke;
     const edit = (anchor: string, text: string) =>
       JSON.stringify({ action: "replace", anchor, text });
@@ -154,13 +155,19 @@ test("an edit the backend refused never stays on screen", async ({ page }) => {
     ];
     internals.invoke = (cmd, args) => {
       if (cmd !== "ai_agent_message") return original(cmd, args);
-      const { message, onEvent } = args as {
+      const { message, onEvent, blocks } = args as {
         message: string;
         onEvent?: { onmessage?: Send };
+        blocks: unknown;
       };
       const send: Send = (event) => onEvent?.onmessage?.(event);
       const turns: unknown[] = [];
       const steps: (() => void)[] = [];
+      // Each call by the block it names, as a model writes it.
+      for (const call of calls)
+        call.args = JSON.stringify(
+          w.__devNameCall(blocks, JSON.parse(call.args)),
+        );
       for (const call of calls) {
         const toolCall = {
           kind: "ToolCall",
@@ -224,7 +231,7 @@ test("a reply that arrives in a few large chunks still flows in, and ends as rec
   // Animations on: the reveal is motion, and the helpers' switch-off
   // stylesheet would show each chunk whole.
   await openApp(page, {
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
     animations: true,
   });
   const reply =
@@ -295,7 +302,7 @@ test("the empty-document hint gives way to text the AI is writing", async ({
 }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await editor.click();
@@ -379,4 +386,109 @@ test("the empty-document hint gives way to text the AI is writing", async ({
     "A first paragraph the AI wrote into the empty page.",
   );
   await expect(hint).toHaveCount(0);
+});
+
+test("a streaming reply stays where the reader scrolled it, and follows again from the bottom", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1100, height: 600 });
+  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
+  await pasteMarkdown(page, "One line.");
+  // A reply that goes on: a word every 30ms, a paragraph every dozen.
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, args?: unknown) => Promise<unknown>;
+      };
+    };
+    const original = w.__TAURI_INTERNALS__.invoke;
+    w.__TAURI_INTERNALS__.invoke = (cmd, args) => {
+      if (cmd !== "ai_agent_message") return original(cmd, args);
+      const { onEvent } = args as {
+        onEvent?: { onmessage?: (e: unknown) => void };
+      };
+      let n = 0;
+      const timer = setInterval(
+        () =>
+          onEvent?.onmessage?.({
+            type: "delta",
+            text: n++ % 12 === 0 ? `\n\nParagraph ${n}. ` : `word${n} `,
+          }),
+        30,
+      );
+      return new Promise((resolve) =>
+        setTimeout(() => {
+          clearInterval(timer);
+          resolve([]);
+        }, 15000),
+      );
+    };
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Write a lot");
+  await composer.press("Enter");
+  const list = page.locator(".agent-panel-view .inline-chat-messages");
+  const gap = () =>
+    list.evaluate((e) => e.scrollHeight - e.clientHeight - e.scrollTop);
+  // Long enough to scroll, and kept at its end while it grows.
+  await expect
+    .poll(() => list.evaluate((e) => e.scrollHeight - e.clientHeight))
+    .toBeGreaterThan(400);
+  expect(await gap()).toBeLessThan(40);
+  // Scrolled up, it stays up: it was pulled back down on every piece.
+  const box = (await list.boundingBox())!;
+  await page.mouse.move(box.x + 100, box.y + 100);
+  await page.mouse.wheel(0, -400);
+  await expect.poll(gap).toBeGreaterThan(200);
+  const top = await list.evaluate((e) => e.scrollTop);
+  await page.waitForTimeout(800);
+  expect(await list.evaluate((e) => e.scrollTop)).toBe(top);
+  // Back at the bottom, it follows again.
+  await list.evaluate((e) => e.scrollTo({ top: e.scrollHeight }));
+  await page.waitForTimeout(800);
+  expect(await gap()).toBeLessThan(40);
+});
+
+test("a long step result opens in a box of its own, its summary at hand to close it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1100, height: 700 });
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  await pasteMarkdown(page, "One line.");
+  // A whole skill's text, as use_skill returns it.
+  const skill = Array.from(
+    { length: 120 },
+    (_, i) => `${i + 1}. A rule of the skill, written out in full.`,
+  ).join("\n");
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "Translate it" },
+      {
+        kind: "ToolCall",
+        call_id: "s1",
+        name: "use_skill",
+        arguments: JSON.stringify({ name: "translate" }),
+      },
+      { kind: "ToolResult", call_id: "s1", output: skill },
+      { kind: "Assistant", text: "Done." },
+    ],
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Translate it");
+  await composer.press("Enter");
+  const result = page.locator(".agent-tool-result");
+  await result.locator("summary").click();
+  const box = result.locator("pre");
+  await expect(box).toBeVisible();
+  expect((await box.boundingBox())!.height).toBeLessThanOrEqual(320);
+  // The rest scrolls inside it; the summary stays on screen, and closes it.
+  expect(
+    await box.evaluate((el) => el.scrollHeight > el.clientHeight + 100),
+  ).toBe(true);
+  await expect(result.locator("summary")).toBeInViewport();
+  await result.locator("summary").click();
+  await expect(box).toBeHidden();
 });

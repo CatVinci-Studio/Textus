@@ -1,4 +1,7 @@
-import { draftProposal } from "../chat/partial-tool-args";
+import { draftProposal, parsePartialToolArgs } from "../chat/partial-tool-args";
+import { draftPictureProposal } from "./generated-images";
+import { resolveBlockTarget, type SentBlock } from "../doc-blocks";
+import type { PartialString } from "../chat/partial-tool-args";
 import { parseProposal } from "../chat/proposal";
 import type { EditProposal } from "../types";
 
@@ -55,17 +58,35 @@ export interface ProposalStreamEffects {
 interface Draft {
   phase: "drafting" | "revealing";
   args: string;
+  /** A generate_image call: its frame shows where it goes, the picture
+   *  follows with the completed call (draftPictureProposal). */
+  picture?: boolean;
 }
 
 export class ProposalStream {
   private drafts = new Map<string, Draft>();
+  /** Completed calls waiting for their result (`result`). */
+  private awaiting = new Set<string>();
 
-  constructor(private effects: ProposalStreamEffects) {}
+  constructor(
+    private effects: ProposalStreamEffects,
+    /** The document's blocks now, for a draft that names its block
+     *  (doc-blocks.ts): it is placed as soon as the block is named. */
+    private documentNow?: () => SentBlock[],
+  ) {}
 
-  /** A tool call opened - only propose_edit enters the machine. */
+  /** A tool call opened - propose_edit and generate_image enter the
+   *  machine. */
   toolStart(callId: string, toolName: string): void {
+    // Said again for a call already here - images.rs' execute announces
+    // the picture it runs - it is the same call: a fresh draft in its
+    // place left the frame placed from the stream un-discardable, and the
+    // picture's proposal "Writing…" for good, never in the text (rc.6).
+    if (this.drafts.has(callId)) return;
     if (toolName === "propose_edit")
       this.drafts.set(callId, { phase: "drafting", args: "" });
+    else if (toolName === "generate_image")
+      this.drafts.set(callId, { phase: "drafting", args: "", picture: true });
   }
 
   /** An argument fragment arrived. Places the preview the first time the
@@ -75,7 +96,19 @@ export class ProposalStream {
     const draft = this.drafts.get(callId);
     if (!draft) return;
     draft.args += delta;
-    const parsed = draftProposal(draft.args);
+    if (draft.picture) {
+      if (draft.phase === "revealing") return;
+      const proposal = draftPictureProposal(
+        callId,
+        byBlock(parsePartialToolArgs(draft.args), this.documentNow?.()),
+      );
+      if (!proposal) return;
+      draft.phase = "revealing";
+      this.effects.place(callId, proposal);
+      this.effects.feed(callId, proposal.text ?? "", true);
+      return;
+    }
+    const parsed = draftProposal(draft.args, this.documentNow?.());
     if (!parsed) return;
     if (draft.phase === "drafting") {
       draft.phase = "revealing";
@@ -93,6 +126,15 @@ export class ProposalStream {
   finalCall(callId: string, argumentsJson: string): void {
     const draft = this.drafts.get(callId);
     this.drafts.delete(callId);
+    this.awaiting.add(callId);
+    if (draft?.picture) {
+      // The frame goes; the picture's own proposal (ChatBody's
+      // completed-turn path, right after this) is placed in its stead - a
+      // final add over a streaming one keeps its text, and this one's
+      // names another picture. One that made none leaves nothing.
+      if (draft.phase === "revealing") this.effects.discard(callId);
+      return;
+    }
     const proposal = parseProposal(argumentsJson);
     if (!proposal) {
       // Final args that don't validate can never be applied; a preview left
@@ -103,13 +145,30 @@ export class ProposalStream {
     this.effects.feed(callId, proposal.text ?? "", true);
   }
 
+  /** A completed call's result came. One the backend refused (tools.rs:
+   *  a cut-off `text`, isRefusal) may already be on screen - streamed, or
+   *  placed from its completed call a moment before - and goes, with or
+   *  without animation; the model sends it again, fixed. */
+  result(callId: string, refused: boolean): void {
+    if (!this.awaiting.delete(callId)) return;
+    if (refused) this.effects.discard(callId);
+  }
+
   /** The exchange ended without a finalCall for whatever is still here. A
    *  normal completion leaves the machine empty (every call got its
    *  finalCall), so this only ever acts on interrupted drafts. */
   finish(outcome: "stopped" | "failed"): void {
     for (const [callId, draft] of this.drafts) {
       if (draft.phase !== "revealing") continue; // nothing ever shown
-      const parsed = outcome === "stopped" ? draftProposal(draft.args) : null;
+      // A frame whose picture was never asked for has nothing to keep.
+      if (draft.picture) {
+        this.effects.discard(callId);
+        continue;
+      }
+      const parsed =
+        outcome === "stopped"
+          ? draftProposal(draft.args, this.documentNow?.())
+          : null;
       if (parsed) {
         this.effects.feed(callId, parsed.proposal.text ?? "", true);
         this.effects.finalize(callId, parsed.proposal);
@@ -119,4 +178,28 @@ export class ProposalStream {
     }
     this.drafts.clear();
   }
+}
+
+/**
+ * A picture call's fields with the block it names (doc-blocks.ts'
+ * resolveBlockTarget) and its anchor, once that is complete - before, no
+ * anchor, so the frame waits for it. Without a block, as they came.
+ */
+function byBlock(
+  fields: Record<string, PartialString>,
+  blocks: SentBlock[] | undefined,
+): Record<string, PartialString> {
+  const { block, anchor, ...rest } = fields;
+  if (!block) return fields;
+  if (!block.complete || blocks === undefined) return rest;
+  const target = resolveBlockTarget(blocks, {
+    block: block.value,
+    anchor: anchor?.complete ? anchor.value : undefined,
+  });
+  if (!target?.block) return rest;
+  return {
+    ...rest,
+    block: { value: target.block, complete: true },
+    anchor: { value: target.anchor, complete: true },
+  };
 }

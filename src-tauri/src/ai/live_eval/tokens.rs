@@ -161,16 +161,10 @@ fn live_token_breakdown() {
             "en",
         ),
     ] {
-        let remember = label.contains("remember");
-        let system = build_instructions(ws, "", true, mode, "", ui);
-        let specs = tools::ToolRegistry::builtin(
-            ws.has_usable_skills(),
-            ws.root.is_some(),
-            mode,
-            remember,
-            true,
-        )
-        .specs();
+        let system = build_instructions(ws, &Default::default(), true, mode, "", ui);
+        let specs =
+            tools::ToolRegistry::builtin(ws.has_usable_skills(), ws.root.is_some(), mode, true)
+                .specs();
         let tool_values: Vec<Value> = specs.iter().map(tool_json).collect();
         let bare = count(key, AGENT_MODEL, None, &[], "x");
         let with_system = count(key, AGENT_MODEL, Some(&system), &[], "x");
@@ -186,7 +180,14 @@ fn live_token_breakdown() {
     }
 
     println!("\n## System prompt by section (project, Revise, en)\n");
-    let system = build_instructions(&project, "", true, AgentMode::Revise, "", "en");
+    let system = build_instructions(
+        &project,
+        &Default::default(),
+        true,
+        AgentMode::Revise,
+        "",
+        "en",
+    );
     for (name, text) in system_parts(&system) {
         println!(
             "- {name}: {} tokens, {} chars",
@@ -202,7 +203,7 @@ fn live_token_breakdown() {
     );
 
     println!("\n## Each tool's marginal cost (project, Revise, images)\n");
-    let specs = tools::ToolRegistry::builtin(true, true, AgentMode::Revise, true, true).specs();
+    let specs = tools::ToolRegistry::builtin(true, true, AgentMode::Revise, true).specs();
     let all: Vec<Value> = specs.iter().map(tool_json).collect();
     let none = count(key, AGENT_MODEL, None, &[], "x");
     let with_all = count(key, AGENT_MODEL, None, &all, "x");
@@ -227,8 +228,7 @@ fn live_token_breakdown() {
         (with_all - none).saturating_sub(marginal_sum),
         with_all - none
     );
-    let write_specs =
-        tools::ToolRegistry::builtin(true, true, AgentMode::Write, true, true).specs();
+    let write_specs = tools::ToolRegistry::builtin(true, true, AgentMode::Write, true).specs();
     let insertion = write_specs
         .iter()
         .find(|s| s.name == "propose_edit")
@@ -253,7 +253,13 @@ fn live_token_breakdown() {
             zh_long.chars().take(20_000).collect(),
         ),
     ] {
-        let context = request_context(&draft, &doc, true, "", None);
+        let context = request_context(
+            &draft,
+            &crate::ai::doc_blocks::Document::from_markdown(&doc),
+            true,
+            "",
+            None,
+        );
         let user = request_user_text(&context, "Tighten the second paragraph.");
         println!(
             "- {label}: document {} chars -> message {} tokens ({} chars)",
@@ -349,6 +355,8 @@ fn live_token_usage() {
             focus_heading: None,
             ui_language: "en",
             thinking,
+            pictures: None,
+            memory: None,
         };
         harness::run_conversation(&auth, &setup, doc, script)
     };
@@ -500,18 +508,23 @@ fn live_doubao_prefix_cache() {
     let model = entry.agent_default_model.expect("agent model");
     let en = lang_doc(super::checks::Lang::En);
     let ws = draft_workspace();
-    let system = build_instructions(&ws, "", true, AgentMode::Review, "", "en");
+    let system = build_instructions(&ws, &Default::default(), true, AgentMode::Review, "", "en");
     let tool_values: Vec<Value> = tools::ToolRegistry::builtin(
         true,
         false,
         AgentMode::Review,
-        false,
         true,
     ).specs()
     .iter()
     .map(|t| json!({"type": "function", "function": {"name": t.name, "description": t.description, "parameters": t.parameters}}))
     .collect();
-    let context = request_context(&ws, en.doc, true, "", None);
+    let context = request_context(
+        &ws,
+        &crate::ai::doc_blocks::Document::from_markdown(en.doc),
+        true,
+        "",
+        None,
+    );
     let messages = [en.question, en.question, "Who is the document written for?"];
     // Chat Completions as the app sends them, then the Responses API with
     // Ark's own `caching` switch, which the app doesn't use.
@@ -590,7 +603,7 @@ fn live_doubao_prefix_cache() {
         native_search: None,
         enforce_binding: false,
     };
-    let specs = tools::ToolRegistry::builtin(true, false, AgentMode::Review, false, true).specs();
+    let specs = tools::ToolRegistry::builtin(true, false, AgentMode::Review, true).specs();
     for (n, message) in messages.iter().enumerate() {
         let turn = aicompat::agent::AgentTurn::User {
             text: request_user_text(&context, message),

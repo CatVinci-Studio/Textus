@@ -28,9 +28,9 @@ it("names only languages the app has", () => {
 describe.each(["markdown", "agent"] as const)("the %s guide", (doc) => {
   const english = GUIDES[`./${doc}-guide.en.md`];
 
-  it("opens in every language, in English until it is translated", () => {
+  it("opens in every language, in English until it is translated", async () => {
     for (const lang of LANGS)
-      expect(helpDocContent(doc, lang)).toBe(
+      expect(await helpDocContent(doc, lang)).toBe(
         GUIDES[`./${doc}-guide.${lang}.md`] ?? english,
       );
   });

@@ -13,6 +13,9 @@ export interface ThoughtRowLabels {
  * then how long it thought. Where the provider streams readable reasoning
  * (a summary, or the reasoning itself), the line opens to show it; where it
  * only says that it thinks, the line is just the time.
+ *
+ * It starts closed, live or not: the seconds ticking say work is going on.
+ * Open on the streaming reasoning by default, it jumped with every piece.
  */
 export function ThoughtRow({
   thought,
@@ -41,7 +44,7 @@ export function ThoughtRow({
           type="button"
           className="agent-thought-toggle"
           aria-expanded={open}
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => setOpen(!open)}
         >
           <span className="agent-thought-label">{label}</span>
           <svg

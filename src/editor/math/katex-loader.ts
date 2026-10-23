@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { lazyModule } from "../../lazy/lazy-module";
+import { escapeHtml } from "../../utils/html";
 
 /**
  * KaTeX - its code, stylesheet and fonts - is loaded the first time a
@@ -12,25 +14,21 @@ import { useEffect, useState } from "react";
 type Katex = typeof import("katex").default;
 
 let katex: Katex | null = null;
-let loading: Promise<Katex> | null = null;
 let firstLoad: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
+// A failed load is tried again by the next formula drawn (lazy-module.ts).
+const katexModule = lazyModule("katex", () =>
+  import("./katex-bundle").then((module) => {
+    katex = module.default;
+    for (const listener of listeners) listener();
+    listeners.clear();
+    return katex;
+  }),
+);
+
 export function loadKatex(): Promise<Katex> {
-  loading ??= import("./katex-bundle").then(
-    (module) => {
-      katex = module.default;
-      for (const listener of listeners) listener();
-      listeners.clear();
-      return katex;
-    },
-    (error: unknown) => {
-      // Tried again by the next formula drawn.
-      loading = null;
-      throw error;
-    },
-  );
-  return loading;
+  return katexModule.load();
 }
 
 /** KaTeX if it is loaded; otherwise starts loading it and returns null. */
@@ -90,9 +88,5 @@ export function useKatexReady(): boolean {
 
 /** A formula's source, shown until KaTeX draws it. */
 export function mathSourceHtml(source: string): string {
-  const escaped = source
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  return `<code class="math-pending">${escaped}</code>`;
+  return `<code class="math-pending">${escapeHtml(source)}</code>`;
 }

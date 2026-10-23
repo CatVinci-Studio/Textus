@@ -12,11 +12,8 @@ import {
   useSettings,
   type SearchService,
 } from "../SettingsContext";
-import { localeOf, type Strings } from "../../i18n/strings";
-import {
-  OPENAI_OAUTH_AGENT_MODEL_PRESETS,
-  OPENAI_OAUTH_WRITING_MODEL_PRESETS,
-} from "../agent-models";
+import { localeOf, type Strings, type TextKey } from "../../i18n/strings";
+import { SIGN_IN_MODELS, type SignInModels } from "../agent-models";
 import {
   notifyWebSearchSetup,
   useActiveProvider,
@@ -36,18 +33,20 @@ import { SecretInput, SettingRow, VERBATIM_INPUT } from "./controls";
  *  chat) pick up the new list from the cache at once. */
 const MODELS_FETCHED_EVENT = "textus-models-fetched";
 
-/** Whether "sign in with ChatGPT" is the active OpenAI login - that OAuth
- *  token can't list models, and only accepts its own preset family. */
-function useCodexOauthActive(provider: string): boolean {
+/** The provider's sign-in models (SIGN_IN_MODELS) while that sign-in is the
+ *  active login - "sign in with ChatGPT" for OpenAI: its token can't list
+ *  models, and only accepts its own preset family. Null otherwise. */
+function useSignInModels(provider: string): SignInModels | null {
+  const models = SIGN_IN_MODELS[provider] ?? null;
   const [active, setActive] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    if (provider !== "openai") {
+    if (!models) {
       setActive(false);
       return;
     }
     auth
-      .oauthStatus("openai")
+      .oauthStatus(provider)
       .then((s) => {
         if (!cancelled) setActive(s.configured);
       })
@@ -57,8 +56,8 @@ function useCodexOauthActive(provider: string): boolean {
     return () => {
       cancelled = true;
     };
-  }, [provider]);
-  return active;
+  }, [provider, models]);
+  return active && models ? models : null;
 }
 
 /** The last list fetched for `provider`, remembered across restarts and
@@ -91,7 +90,7 @@ function ProviderModelRow({
 }) {
   const { settings, setSettings } = useSettings();
   const provider = settings.aiProvider;
-  const codexOauthActive = useCodexOauthActive(provider);
+  const signIn = useSignInModels(provider);
   const { models: fetched } = useFetchedModels(provider);
 
   const modelMap =
@@ -118,17 +117,13 @@ function ProviderModelRow({
   // incompatible saved choice to that mode's default instead of rendering a
   // blank select and sending a model the login cannot use.
   useEffect(() => {
-    if (!codexOauthActive || provider !== "openai" || !current) return;
-    const presets =
-      kind === "agent"
-        ? OPENAI_OAUTH_AGENT_MODEL_PRESETS
-        : OPENAI_OAUTH_WRITING_MODEL_PRESETS;
+    if (!signIn || !current) return;
+    const presets = kind === "agent" ? signIn.agent : signIn.writing;
     if (!presets.some((option) => option.value === current)) {
       setCurrent("");
     }
-  }, [codexOauthActive, current, kind, provider, setCurrent]);
+  }, [signIn, current, kind, setCurrent]);
 
-  const useCodexPresets = provider === "openai" && codexOauthActive;
   const knownAndFetched = [
     ...(entry?.knownModels ?? []),
     ...orderForPicker(
@@ -166,15 +161,12 @@ function ProviderModelRow({
   };
   const defaultModel =
     kind === "agent" ? entry?.agentDefaultModel : entry?.defaultModel;
-  const codexDefaultModel = kind === "agent" ? "gpt-6.1-sol" : "gpt-6-luna";
-  const codexPresets =
-    kind === "agent"
-      ? OPENAI_OAUTH_AGENT_MODEL_PRESETS
-      : OPENAI_OAUTH_WRITING_MODEL_PRESETS;
-  const presetOptions: { value: string; label: string }[] = useCodexPresets
-    ? codexPresets.map((option) => ({
+  const presetOptions: { value: string; label: string }[] = signIn
+    ? (kind === "agent" ? signIn.agent : signIn.writing).map((option) => ({
         value: option.value,
-        label: option.value || `${codexDefaultModel} (${t.modelDefault})`,
+        label:
+          option.value ||
+          `${kind === "agent" ? signIn.agentDefault : signIn.writingDefault} (${t.modelDefault})`,
       }))
     : [
         ...(defaultModel
@@ -196,7 +188,7 @@ function ProviderModelRow({
       label={label}
       error={currentMissing ? t.modelMissingHint : null}
     >
-      {useCodexPresets || defaultModel || hasList ? (
+      {signIn || defaultModel || hasList ? (
         <Select
           className="settings-select settings-model-select"
           aria-label={label}
@@ -239,7 +231,7 @@ export function AgentModelSection({ t }: { t: Strings }) {
 export function ModelListRow({ t }: { t: Strings }) {
   const { settings } = useSettings();
   const provider = settings.aiProvider;
-  const codexOauthActive = useCodexOauthActive(provider);
+  const signIn = useSignInModels(provider);
   const entry = useActiveProvider();
   const { at } = useFetchedModels(provider);
   const [error, setError] = useState<string | null>(null);
@@ -248,9 +240,7 @@ export function ModelListRow({ t }: { t: Strings }) {
   useEffect(() => setError(null), [provider]);
 
   const canFetch =
-    provider !== "custom" &&
-    !(provider === "openai" && codexOauthActive) &&
-    (entry?.modelsListable ?? true);
+    provider !== "custom" && !signIn && (entry?.modelsListable ?? true);
   if (!canFetch) return null;
 
   async function fetchModels() {
@@ -323,7 +313,7 @@ export function AgentWorkspaceSection({ t }: { t: Strings }) {
 /// The default - the folder of the document being edited - is right until
 /// the user's sources and their draft don't live together, and then there is
 /// no way out of it: `.textus/` is looked for there, and the agent's
-/// list_files/read_file are sandboxed to it (ai/workspace.rs), so material
+/// find_files/read_file are sandboxed to it (ai/workspace.rs), so material
 /// one folder over is simply unreachable. This makes the root explicit while
 /// keeping the default for everyone it already suits. The project bar's
 /// menu offers the same choice, with the same labels.
@@ -424,29 +414,25 @@ const SEARCH_KEY_IDS: Partial<Record<SearchService, string>> = {
 
 /** A search service's name as the UI shows it - brand names, but for the
  *  ones with a name of their own in Chinese, and Automatic. */
+const SEARCH_SERVICE_NAMES: Record<
+  string,
+  { brand: string } | { key: TextKey }
+> = {
+  auto: { key: "searchServiceAuto" },
+  zhipu: { key: "searchServiceZhipu" },
+  bocha: { key: "searchServiceBocha" },
+  deepseek: { brand: "DeepSeek" },
+  kimi: { brand: "Kimi" },
+  tavily: { brand: "Tavily" },
+  brave: { brand: "Brave Search" },
+  exa: { brand: "Exa" },
+  searxng: { brand: "SearXNG" },
+};
+
 function searchServiceName(t: Strings, id: string): string {
-  switch (id) {
-    case "auto":
-      return t.searchServiceAuto;
-    case "zhipu":
-      return t.searchServiceZhipu;
-    case "bocha":
-      return t.searchServiceBocha;
-    case "deepseek":
-      return "DeepSeek";
-    case "kimi":
-      return "Kimi";
-    case "tavily":
-      return "Tavily";
-    case "brave":
-      return "Brave Search";
-    case "exa":
-      return "Exa";
-    case "searxng":
-      return "SearXNG";
-    default:
-      return id;
-  }
+  const name = SEARCH_SERVICE_NAMES[id];
+  if (!name) return id;
+  return "key" in name ? t[name.key] : name.brand;
 }
 
 /**

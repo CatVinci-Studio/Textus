@@ -17,7 +17,7 @@ describe("toPandocMarkdown", () => {
     expect(toPandocMarkdown('![图](assets/a.png "{textus-width=30%}")')).toBe(
       "![图](assets/a.png){width=30%}",
     );
-    expect(toPandocMarkdown('![x](a.png "A caption {levis-width=50%}")')).toBe(
+    expect(toPandocMarkdown('![x](a.png "A caption {textus-width=50%}")')).toBe(
       '![x](a.png "A caption"){width=50%}',
     );
   });

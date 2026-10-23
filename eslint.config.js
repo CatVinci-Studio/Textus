@@ -43,6 +43,8 @@ export default tseslint.config(
       "dist-playground/**",
       "node_modules/**",
       "src-tauri/target/**",
+      // The official plugins checked out for the plugin flows.
+      "textus-plugins/**",
       // Local git worktrees (.claude/worktrees) are other checkouts.
       ".claude/**",
       // The save round-trip corpus: downloaded third-party files.
@@ -101,6 +103,23 @@ export default tseslint.config(
     ],
     ignores: ["**/*.test.*"],
     rules: above(SHELL),
+  },
+  {
+    // Plugin code: the runtimes put into a plugin's sandboxed frames
+    // (src/plugins/frames.ts) and the official plugins, plain scripts that
+    // run there - in a browser, with `textus` given to them.
+    files: ["src/plugins/runtime/**/*.js", "public/plugins/**/*.js"],
+    ignores: ["public/plugins/**/lib/**"],
+    languageOptions: {
+      sourceType: "script",
+      globals: {
+        ...globals.browser,
+        textus: "readonly",
+        acquireTextusApi: "readonly",
+        exports: "writable",
+        module: "writable",
+      },
+    },
   },
   {
     files: [

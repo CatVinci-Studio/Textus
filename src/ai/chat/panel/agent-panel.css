@@ -84,7 +84,7 @@
   left: 2px;
   border-radius: var(--radius-small);
   background: var(--editor-bg, var(--bg));
-  box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+  box-shadow: var(--shadow-raised);
   transition:
     transform var(--dur-slow) var(--ease-spring-bouncy),
     width var(--dur-slow) var(--ease-spring-bouncy);
@@ -256,7 +256,7 @@
     bottom: 0;
     z-index: 40;
     max-width: 92vw;
-    box-shadow: -8px 0 24px rgb(0 0 0 / 0.18);
+    box-shadow: var(--shadow-edge-end);
     animation: motion-edge-in-end var(--dur-slow) var(--ease-spring);
   }
 

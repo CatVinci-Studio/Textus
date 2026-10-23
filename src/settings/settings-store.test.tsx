@@ -16,7 +16,6 @@ import {
   normaliseSettings,
   resetSettingsStoreForTests,
   SettingsProvider,
-  SHORTCUTS_REVISION,
   type Settings,
   UI_TEXT_SCALES,
   useSettings,
@@ -44,7 +43,6 @@ vi.mock("../platform/ipc", () => ({
     settingsGet: vi.fn(),
     settingsPatch: vi.fn(),
     settingsFillDefaults: vi.fn(),
-    settingsImportLegacy: vi.fn(),
     uiStateGet: vi.fn().mockResolvedValue({}),
     uiStatePatch: vi.fn().mockResolvedValue(null),
     historyList: vi.fn().mockResolvedValue([]),
@@ -65,7 +63,6 @@ function boot(settings: Record<string, unknown>, extra: object = {}) {
     settings,
     rev: 3,
     uiState: {},
-    legacyImport: false,
     label: "main",
     ...extra,
   };
@@ -219,32 +216,6 @@ describe("file-backed settings", () => {
     expect(screen.getByTestId("probe").textContent).toContain("dark|");
   });
 
-  it("hands localStorage to Rust on the first launch after the move", async () => {
-    localStorage.setItem(
-      "catvinci-settings",
-      JSON.stringify({ theme: "dark", aiProvider: "codex" }),
-    );
-    localStorage.setItem("levis-chat-history", JSON.stringify([{ id: "c" }]));
-    localStorage.setItem("levis-agent-panel-open", "1");
-    vi.mocked(storage.settingsImportLegacy).mockResolvedValue({
-      accepted: true,
-      value: { theme: "dark", aiProvider: "openai", languageChosen: true },
-      rev: 4,
-    });
-    boot({}, { legacyImport: true, rev: 1 });
-    // Usable at once, from localStorage, before Rust has answered.
-    expect(loadSettings().theme).toBe("dark");
-    await Promise.resolve();
-    const payload = vi.mocked(storage.settingsImportLegacy).mock.calls[0][0];
-    // Normalised on the way: the old provider id is migrated.
-    expect(payload.settings.aiProvider).toBe("openai");
-    expect(payload.chatHistory).toEqual([{ id: "c" }]);
-    expect(payload.uiState).toEqual({ agentPanelOpen: true });
-    expect(storage.settingsGet).not.toHaveBeenCalled();
-    // localStorage is kept as it was, for a downgrade.
-    expect(localStorage.getItem("catvinci-settings")).toContain("codex");
-  });
-
   it("writes fresh defaults out when Rust has nothing stored", async () => {
     vi.mocked(storage.settingsFillDefaults).mockImplementation(
       async (defaults) => ({ value: defaults, rev: 4 }),
@@ -256,6 +227,26 @@ describe("file-backed settings", () => {
     const sent = vi.mocked(storage.settingsFillDefaults).mock.calls[0][0];
     expect(sent.languageChosen).toBe(false);
     expect(sent.onboardingShown).toBe(false);
+    await act(async () => {});
+    expect(loadSettings().languageChosen).toBe(false);
+  });
+
+  it("treats a new profile's seeded settings as no choices yet", async () => {
+    vi.mocked(storage.settingsFillDefaults).mockImplementation(
+      async (defaults) => ({
+        value: { ...defaults, disabledBuiltinSkills: ["poem"] },
+        rev: 2,
+      }),
+    );
+    // What Rust seeds a new profile with: the optional skills off.
+    boot({ disabledBuiltinSkills: ["poem"] }, { newProfile: true, rev: 1 });
+    const settings = loadSettings();
+    expect(settings.languageChosen).toBe(false);
+    expect(settings.onboardingShown).toBe(false);
+    const sent = vi.mocked(storage.settingsFillDefaults).mock.calls[0][0];
+    expect(sent.languageChosen).toBe(false);
+    expect(sent.disabledBuiltinSkills).toBeUndefined();
+    expect(storage.settingsGet).not.toHaveBeenCalled();
     await act(async () => {});
     expect(loadSettings().languageChosen).toBe(false);
   });
@@ -395,49 +386,34 @@ describe("heading shortcuts", () => {
       (n) => shortcuts[`setHeading${n}` as keyof Settings["shortcuts"]],
     );
   const TYPORA = ["mod+1", "mod+2", "mod+3", "mod+4", "mod+5", "mod+6"];
-  /** What 1.2.0-rc.1 and rc.2 saved: every action, the levels as "". */
-  const RC_SHORTCUTS = {
-    ...normaliseSettings(null).shortcuts,
-    setHeading1: "",
-    setHeading2: "",
-    setHeading3: "",
-    setHeading4: "",
-    setHeading5: "",
-    setHeading6: "",
-    setParagraph: "",
-  };
+  /** Stored shortcuts without the heading levels. */
+  const WITHOUT_LEVELS = Object.fromEntries(
+    Object.entries(normaliseSettings(null).shortcuts).filter(
+      ([action]) => !action.startsWith("setHeading"),
+    ),
+  );
 
-  it("start a new installation on Mod+1..6, under the current revision", () => {
+  it("start a new installation on Mod+1..6", () => {
     const settings = normaliseSettings(null);
     expect(levels(settings.shortcuts)).toEqual(TYPORA);
     expect(settings.shortcuts.setParagraph).toBe("");
-    expect(settings.shortcutsRevision).toBe(SHORTCUTS_REVISION);
   });
 
-  it("reach an installation from before the heading shortcuts", () => {
-    // 1.1.x saved no heading keys at all.
+  it("give an action the stored shortcuts lack its default", () => {
     const settings = normaliseSettings({
       shortcuts: { toggleZenMode: "mod+shift+j" },
     });
     expect(levels(settings.shortcuts)).toEqual(TYPORA);
-    expect(settings.shortcutsRevision).toBe(0);
+    expect(settings.shortcuts.toggleZenMode).toBe("mod+shift+j");
   });
 
-  it("replace the empty levels a release candidate saved, but not Paragraph", () => {
-    const settings = normaliseSettings({ shortcuts: RC_SHORTCUTS });
-    expect(levels(settings.shortcuts)).toEqual(TYPORA);
-    expect(settings.shortcuts.setParagraph).toBe("");
-    expect(settings.shortcuts.toggleTypewriterMode).toBe("");
-  });
-
-  it("keep a level cleared since, and every combo the user chose", () => {
+  it("keep a level cleared, and every combo the user chose", () => {
     const settings = normaliseSettings({
       shortcuts: {
         ...normaliseSettings(null).shortcuts,
         setHeading2: "",
         setHeading3: "alt+3",
       },
-      shortcutsRevision: SHORTCUTS_REVISION,
     });
     expect(levels(settings.shortcuts)).toEqual([
       "mod+1",
@@ -447,16 +423,11 @@ describe("heading shortcuts", () => {
       "mod+5",
       "mod+6",
     ]);
-    expect(
-      normaliseSettings({
-        shortcuts: { ...RC_SHORTCUTS, setHeading1: "alt+1" },
-      }).shortcuts.setHeading1,
-    ).toBe("alt+1");
   });
 
   it("leave a default unbound when another action has its combo", () => {
     const settings = normaliseSettings({
-      shortcuts: { ...RC_SHORTCUTS, toggleZenMode: "mod+2" },
+      shortcuts: { ...WITHOUT_LEVELS, toggleZenMode: "mod+2" },
     });
     expect(settings.shortcuts.toggleZenMode).toBe("mod+2");
     expect(levels(settings.shortcuts)).toEqual([
@@ -470,14 +441,14 @@ describe("heading shortcuts", () => {
   });
 
   it("keep the actions of a newer build", () => {
-    const stored = { ...RC_SHORTCUTS, someLaterAction: "mod+7" };
+    const stored = { ...WITHOUT_LEVELS, someLaterAction: "mod+7" };
     expect(normaliseSettings({ shortcuts: stored }).shortcuts).toMatchObject({
       someLaterAction: "mod+7",
     });
   });
 
-  it("save a level cleared after the update so it stays cleared", () => {
-    boot({ shortcuts: RC_SHORTCUTS, languageChosen: true });
+  it("save a level cleared so it stays cleared", () => {
+    boot({ languageChosen: true });
     render(
       <SettingsProvider>
         <Probe />
@@ -485,15 +456,9 @@ describe("heading shortcuts", () => {
     );
     const shortcuts = { ...loadSettings().shortcuts, setHeading2: "" };
     act(() => lastSet({ shortcuts }));
-    expect(storage.settingsPatch).toHaveBeenCalledWith({
-      shortcuts,
-      shortcutsRevision: SHORTCUTS_REVISION,
-    });
+    expect(storage.settingsPatch).toHaveBeenCalledWith({ shortcuts });
     // What the next launch reads.
-    const next = normaliseSettings({
-      shortcuts,
-      shortcutsRevision: SHORTCUTS_REVISION,
-    });
+    const next = normaliseSettings({ shortcuts });
     expect(next.shortcuts.setHeading2).toBe("");
     expect(next.shortcuts.setHeading1).toBe("mod+1");
   });

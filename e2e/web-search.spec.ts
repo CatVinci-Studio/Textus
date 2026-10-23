@@ -110,7 +110,7 @@ const composer = (page: Page) => page.locator(".agent-panel-view textarea");
 async function ask(page: Page, turns: unknown[]) {
   await openApp(page, {
     settings: { language: "en", agentDefaultMode: "write" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await mockInvoke(page, {
     ai_agent_message: turns,

@@ -100,6 +100,24 @@ function focusEditor() {
  * expanded as it was). Enter opens the selected match the way clicking it
  * in the tree does, ↑/↓ move, Esc clears and goes back to the editor.
  */
+/** The files matching the query in the scope. Matching runs a beat behind
+ *  the keystroke: the box shows each letter at once, and a large index
+ *  can't hold up typing. */
+function useFileMatches(
+  index: ReturnType<typeof useFolderIndex>["index"],
+  query: string,
+  scope: SearchScope,
+) {
+  const deferredQuery = useDeferredValue(query);
+  return useMemo(
+    () =>
+      index.kind === "ready"
+        ? matchFiles(index.entries, deferredQuery, scope)
+        : [],
+    [index, deferredQuery, scope],
+  );
+}
+
 export function FileSearch({
   root,
   refreshKey,
@@ -142,16 +160,7 @@ export function FileSearch({
     onFocusHandled();
   }, [focusRequest, onFocusHandled]);
 
-  // Matching runs a beat behind the keystroke: the box shows each letter
-  // at once, and a large index can't hold up typing.
-  const deferredQuery = useDeferredValue(query);
-  const matches = useMemo(
-    () =>
-      index.kind === "ready"
-        ? matchFiles(index.entries, deferredQuery, scope)
-        : [],
-    [index, deferredQuery, scope],
-  );
+  const matches = useFileMatches(index, query, scope);
   const active = Math.min(selected, Math.max(matches.length - 1, 0));
   const listId = useId();
 

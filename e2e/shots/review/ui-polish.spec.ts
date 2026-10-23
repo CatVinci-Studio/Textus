@@ -79,8 +79,8 @@ async function open(
       form === "phone"
         ? {}
         : {
-            "levis-agent-panel-open": "1",
-            "levis-agent-panel-width": form === "narrow" ? "300" : "400",
+            "textus-agent-panel-open": "1",
+            "textus-agent-panel-width": form === "narrow" ? "300" : "400",
           },
   });
   await pasteMarkdown(page, DOC[language].doc);
@@ -244,7 +244,7 @@ for (const language of ["en", "zh"] as Lang[]) {
       await openApp(page, {
         colorScheme: scheme,
         settings: { language, typewriterMode: true },
-        storage: { "levis-agent-panel-open": "1" },
+        storage: { "textus-agent-panel-open": "1" },
       });
       await pasteMarkdown(
         page,

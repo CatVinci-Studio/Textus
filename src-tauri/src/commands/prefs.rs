@@ -1,13 +1,6 @@
 //! prefs.json: the last editor window size, written by Rust itself on close.
-//!
-//! Up to 0.9.6 this file also mirrored two frontend settings that take
-//! effect in Rust before any webview exists - whether opening several
-//! documents at once (Finder "Open With" multi-select, `textus a.md b.md`)
-//! spawns one OS window per file or batches them into tabs in a single
-//! window, and whether startup restores last session's documents. Settings
-//! now live in a file Rust owns (settings.rs), so both are read from there;
-//! the old keys here are read once, on the first launch after the move, and
-//! left in place for a downgrade.
+//! Settings Rust needs before any webview exists are read from settings.json
+//! (settings.rs), not from here.
 
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};

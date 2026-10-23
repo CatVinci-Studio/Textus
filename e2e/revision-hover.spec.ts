@@ -252,7 +252,7 @@ for (const [[display, sides, margin, steps], colorScheme] of CASES) {
     await page.setViewportSize({ width: 1800, height: 900 });
     await openApp(page, {
       settings: { language: "en", revisionDisplay: display },
-      storage: { "levis-agent-panel-open": "1" },
+      storage: { "textus-agent-panel-open": "1" },
       colorScheme,
       // The bug was an entrance replaying: keep the motion on.
       animations: true,
@@ -301,7 +301,7 @@ test("the ✓ / ✕ darken their pair under the pointer and still decide it", as
   await page.setViewportSize({ width: 1800, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: "inline" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await proposeRevision(page);
   const take = page.locator(".milkdown .pending-pick-take").first();

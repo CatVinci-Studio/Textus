@@ -168,7 +168,7 @@
   border: 1px solid var(--editor-border, var(--border-color));
   border-radius: var(--radius-surface);
   background: var(--editor-bg, var(--bg));
-  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+  box-shadow: var(--shadow-raised);
   transition:
     border-color var(--dur-fast) var(--ease-standard),
     box-shadow var(--dur-fast) var(--ease-standard);
@@ -547,6 +547,19 @@
   overflow-x: hidden;
 }
 
+/* The hint in the empty field, in the theme's muted ink: left to the
+   engine's own grey, WebKitGTK drew it nearly as dark as typed text. */
+.inline-chat-input::placeholder {
+  color: var(--editor-muted);
+  opacity: 1;
+}
+
+/* A suggested next message (Tab takes it) is fainter still: it read as
+   something the writer had typed themselves. */
+.inline-chat-input-suggested::placeholder {
+  color: color-mix(in srgb, var(--editor-muted) 60%, transparent);
+}
+
 /* The composer is the surface's one field and shows its caret; a ring
    round it only boxed in the header icons above it (Quick Ask) and the
    tool row below. */
@@ -848,9 +861,10 @@
 }
 
 /* Not decidable yet - arguments still streaming or the typewriter still
-   revealing the text in the document. */
+   revealing the text in the document. Upright, as the thinking row: a
+   slanted CJK label is a faked italic. */
 .agent-proposal-status-streaming {
-  font-style: italic;
+  opacity: 0.85;
 }
 
 .agent-proposal-status-accepted {
@@ -1098,11 +1112,55 @@
   line-height: 1.55;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  /* A long thought opened in full scrolls in its own box. */
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+/* The seconds tick without the label changing width. */
+.agent-thought-label {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Under a reply still streaming: it waits, and shows only if the reply
+   pauses (ChatMessages re-keys it on every delta, starting the wait over). */
+.agent-thinking-after {
+  animation: agent-thinking-after 200ms var(--ease-out) 1500ms both;
+}
+
+/* Before anything has come back: a quick answer never flashes the dots. */
+.agent-thinking-soon {
+  animation: agent-thinking-after 200ms var(--ease-out) 400ms both;
+}
+
+@keyframes agent-thinking-after {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-thinking-after,
+  .agent-thinking-soon {
+    animation-duration: 1ms;
+  }
 }
 
 .agent-thinking-dots {
   display: inline-flex;
   gap: 3px;
+}
+
+/* How long nothing has moved: after the dots, quieter than the label, its
+   digits one width so the count doesn't jiggle as it ticks. */
+.agent-thinking-waited {
+  margin-left: 2px;
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
 }
 
 .agent-thinking-dots span {
@@ -1308,10 +1366,16 @@
 
 /* A proposed picture on its card (generate_image), small: the document
    shows it full size. */
+/* Its own shape within the card: as a flex item a picture shrank in width
+   and kept its height - squeezed (rc.6). */
 .agent-proposal-picture {
   display: block;
+  flex: none;
+  width: auto;
+  height: auto;
   max-width: 100%;
   max-height: 120px;
+  object-fit: contain;
   border-radius: var(--radius-small);
 }
 
@@ -1385,7 +1449,7 @@
   margin-top: 1px;
   border-radius: 50%;
   background: var(--success-color);
-  color: #fff;
+  color: var(--on-fill);
   font-size: calc(10.5px * var(--ui-text-scale, 1));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -1398,6 +1462,11 @@ li[data-state="kept"] .agent-proposal-num {
 
 li[data-state="kept"] .agent-proposal-sentence-text {
   color: var(--editor-muted);
+}
+
+/* A change of whole paragraphs keeps them apart (as its margin card). */
+.agent-proposal-sentence-text {
+  white-space: pre-line;
 }
 
 .agent-proposal-pick {
@@ -1452,7 +1521,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   height: calc(18px * var(--ui-text-scale, 1));
   border-radius: 50%;
   background: var(--review-note-line);
-  color: #fff;
+  color: var(--on-fill);
   font: 700 calc(10.5px * var(--ui-text-scale, 1)) / 1
     var(--font-ui, sans-serif);
 }
@@ -1488,4 +1557,111 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   font-family: var(--editor-mono-font, var(--font-mono));
   font-size: var(--text-xs);
   color: var(--editor-muted);
+}
+
+/* Messages sent while a reply is coming (MessageQueue.tsx), over the
+   composer: a line each, the oldest first. */
+.chat-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px 6px 14px;
+  font-size: var(--text-sm);
+  color: var(--editor-text);
+  border-top: 1px solid var(--chat-hairline, var(--editor-border));
+}
+.chat-queue-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--editor-muted);
+  font-size: var(--text-xs);
+}
+.chat-queue-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.chat-queue-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+button.chat-queue-action {
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--editor-muted);
+  font: inherit;
+  cursor: pointer;
+}
+button.chat-queue-action:hover {
+  color: var(--editor-text);
+}
+
+/* A run of proposals as one card (ProposalGroup): a row each - its new
+   text's first line, its size, ✓ / ✕ - and a decided one says how. */
+.agent-proposal-group-rows .agent-proposal-sentence-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.agent-proposal-group-rows > li {
+  align-items: center;
+}
+
+.agent-proposal-group-rows .agent-diff-summary {
+  display: inline-flex;
+  gap: 4px;
+  flex: none;
+}
+
+.agent-proposal-group-status {
+  flex: none;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+}
+
+.agent-proposal-group-rows
+  > li:not([data-state="pending"])
+  .agent-proposal-sentence-text {
+  color: var(--editor-muted);
+}
+
+/* A group's row text, and its own reason under it where the group's
+   reasons differ. */
+.agent-proposal-group-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.agent-proposal-group-reason {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+}
+
+/* "Show N more", and a decided group's status line: quiet text buttons
+   that open it. */
+.agent-proposal-group-fold {
+  align-self: flex-start;
+  border: 0;
+  background: none;
+  padding: 2px 4px;
+  font: inherit;
+  font-size: var(--text-xs);
+  color: var(--editor-muted);
+  cursor: pointer;
+}
+
+.agent-proposal-group-fold:hover {
+  color: var(--editor-text);
 }

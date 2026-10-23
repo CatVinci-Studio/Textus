@@ -2,8 +2,11 @@ import type { Page } from "@playwright/test";
 
 /**
  * The backend streaming `calls` (propose_edit arguments) in `chunk`-sized
- * argument fragments every `every` ms, then the turns. `hold`: the stream
- * stops after this many fragments and waits for a stop (ai_cancel).
+ * argument fragments every `every` ms, then the turns. A call written as
+ * the words it is about is named by their block first, as a model names
+ * it, and settled as the backend settles it (src/dev/settle-calls.ts).
+ * `hold`: the stream stops after this many fragments of the arguments as
+ * given (before naming their block) and waits for a stop (ai_cancel).
  */
 export async function streamRevise(
   page: Page,
@@ -13,13 +16,14 @@ export async function streamRevise(
   await page.evaluate(
     ({ calls, chunk, every, hold }) => {
       type Send = (event: unknown) => void;
-      const internals = (
-        window as unknown as {
-          __TAURI_INTERNALS__: {
-            invoke: (cmd: string, args?: unknown) => Promise<unknown>;
-          };
-        }
-      ).__TAURI_INTERNALS__;
+      const w = window as unknown as {
+        __TAURI_INTERNALS__: {
+          invoke: (cmd: string, args?: unknown) => Promise<unknown>;
+        };
+        __devNameCall: (blocks: unknown, args: object) => object;
+        __devSettle: (blocks: unknown, name: string, args: string) => string;
+      };
+      const internals = w.__TAURI_INTERNALS__;
       const original = internals.invoke;
       let cancel: (() => void) | null = null;
       internals.invoke = (cmd, args) => {
@@ -28,16 +32,25 @@ export async function streamRevise(
           return Promise.resolve(null);
         }
         if (cmd !== "ai_agent_message") return original(cmd, args);
-        const { message, onEvent } = args as {
+        const { message, onEvent, blocks } = args as {
           message: string;
           onEvent?: { onmessage?: Send };
+          blocks: unknown;
         };
         const send: Send = (event) => onEvent?.onmessage?.(event);
         const steps: (() => void)[] = [];
         const turns: unknown[] = [];
         let fragments = 0;
+        // The fragment `hold` stops at, in the named arguments: as far into
+        // them as `hold` fragments reach into the first call's own.
+        let holdAt = hold;
         for (const call of calls) {
-          const json = JSON.stringify(call.args);
+          const json = JSON.stringify(w.__devNameCall(blocks, call.args));
+          if (hold !== null && call === calls[0])
+            holdAt = Math.ceil(
+              (hold * chunk + json.length - JSON.stringify(call.args).length) /
+                chunk,
+            );
           steps.push(() =>
             send({ type: "toolStart", callId: call.id, name: "propose_edit" }),
           );
@@ -52,7 +65,7 @@ export async function streamRevise(
             kind: "ToolCall",
             call_id: call.id,
             name: "propose_edit",
-            arguments: json,
+            arguments: w.__devSettle(blocks, "propose_edit", json),
           };
           const result = {
             kind: "ToolResult",
@@ -73,7 +86,7 @@ export async function streamRevise(
             reject("cancelled");
           };
           const next = () => {
-            if (hold !== null && fragments >= hold) return;
+            if (holdAt !== null && fragments >= holdAt) return;
             const step = steps.shift();
             if (!step) {
               resolve([{ kind: "User", text: message }, ...turns]);

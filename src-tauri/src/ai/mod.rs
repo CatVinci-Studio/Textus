@@ -4,11 +4,12 @@ pub mod cancel;
 pub mod catalog;
 pub mod client;
 pub mod conventions;
+pub mod doc_blocks;
 pub mod images;
-pub mod levis_project;
 #[cfg(test)]
 mod live_eval;
 pub mod memory;
+pub mod next_message;
 pub mod project;
 pub mod route;
 pub mod rules;

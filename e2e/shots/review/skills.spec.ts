@@ -19,7 +19,7 @@ async function open(page: Page, language: string, phone: boolean) {
     });
   await openApp(page, {
     settings: { language },
-    storage: phone ? {} : { "levis-agent-panel-open": "1" },
+    storage: phone ? {} : { "textus-agent-panel-open": "1" },
   });
   if (phone) await page.locator(".window-bar-toggle").tap();
   const input = page.locator(".agent-panel .inline-chat-input");

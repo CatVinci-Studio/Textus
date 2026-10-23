@@ -1,4 +1,10 @@
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { APP_NAME, resolveStrings, type Lang } from "../i18n/strings";
 import type { Settings } from "../settings/SettingsContext";
 import { SourceTextarea } from "../editor/modes/SourceTextarea";
@@ -32,6 +38,75 @@ function sample(lang: Lang): string {
   return lang === "zh" ? sampleZh : sampleEn;
 }
 
+/** What the page itself listens for: files dropped anywhere on it, Mod+/,
+ *  and the tab going away. */
+function usePageEvents(
+  importFile: (file: File) => Promise<void>,
+  toggleSource: () => void,
+  editorRef: RefObject<EditorHandle | null>,
+) {
+  // Files dropped anywhere on the page: a document is imported, anything
+  // else explained - and never left to the browser, which would navigate
+  // away to show it. Dragging text inside the editor isn't a file drag.
+  const importRef = useRef(importFile);
+  importRef.current = importFile;
+  useEffect(() => {
+    const isFileDrag = (e: DragEvent) =>
+      e.dataTransfer?.types.includes("Files") ?? false;
+    const onDragOver = (e: DragEvent) => {
+      if (!isFileDrag(e)) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    };
+    const onDrop = (e: DragEvent) => {
+      if (!isFileDrag(e)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const file = e.dataTransfer?.files[0];
+      if (file) void importRef.current(file);
+    };
+    window.addEventListener("dragover", onDragOver, true);
+    window.addEventListener("drop", onDrop, true);
+    return () => {
+      window.removeEventListener("dragover", onDragOver, true);
+      window.removeEventListener("drop", onDrop, true);
+    };
+  }, []);
+
+  // Mod+/ switches to source mode and back, as in the app.
+  const toggleRef = useRef(toggleSource);
+  toggleRef.current = toggleSource;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = modIsMeta() ? e.metaKey : e.ctrlKey;
+      if (mod && !e.altKey && !e.shiftKey && e.key === "/") {
+        e.preventDefault();
+        toggleRef.current();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // An edit the listener's debounce still holds, before the tab goes.
+  useEffect(() => {
+    const flush = () => editorRef.current?.flush();
+    window.addEventListener("pagehide", flush);
+    return () => window.removeEventListener("pagehide", flush);
+  }, [editorRef]);
+}
+
+/** A notice shown for a few seconds. */
+function useNotice() {
+  const [notice, setNotice] = useState<string | null>(null);
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [notice]);
+  return [notice, setNotice] as const;
+}
+
 /**
  * Textus in a browser tab: the editor, Import, Export and nothing else.
  * One document, kept in this browser (document-store.ts).
@@ -42,7 +117,7 @@ export function Playground({ settings }: { settings: Settings }) {
     () => loadDocument() ?? sample(settings.language),
   );
   const [source, setSource] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useNotice();
   const editorRef = useRef<EditorHandle | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -105,61 +180,7 @@ export function Playground({ settings }: { settings: Settings }) {
     downloadMarkdown(markdown, exportFilename(markdown, t.untitledTab));
   }
 
-  // Files dropped anywhere on the page: a document is imported, anything
-  // else explained - and never left to the browser, which would navigate
-  // away to show it. Dragging text inside the editor isn't a file drag.
-  const importRef = useRef(importFile);
-  importRef.current = importFile;
-  useEffect(() => {
-    const isFileDrag = (e: DragEvent) =>
-      e.dataTransfer?.types.includes("Files") ?? false;
-    const onDragOver = (e: DragEvent) => {
-      if (!isFileDrag(e)) return;
-      e.preventDefault();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
-    };
-    const onDrop = (e: DragEvent) => {
-      if (!isFileDrag(e)) return;
-      e.preventDefault();
-      e.stopPropagation();
-      const file = e.dataTransfer?.files[0];
-      if (file) void importRef.current(file);
-    };
-    window.addEventListener("dragover", onDragOver, true);
-    window.addEventListener("drop", onDrop, true);
-    return () => {
-      window.removeEventListener("dragover", onDragOver, true);
-      window.removeEventListener("drop", onDrop, true);
-    };
-  }, []);
-
-  // Mod+/ switches to source mode and back, as in the app.
-  const toggleRef = useRef(toggleSource);
-  toggleRef.current = toggleSource;
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const mod = modIsMeta() ? e.metaKey : e.ctrlKey;
-      if (mod && !e.altKey && !e.shiftKey && e.key === "/") {
-        e.preventDefault();
-        toggleRef.current();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  // An edit the listener's debounce still holds, before the tab goes.
-  useEffect(() => {
-    const flush = () => editorRef.current?.flush();
-    window.addEventListener("pagehide", flush);
-    return () => window.removeEventListener("pagehide", flush);
-  }, []);
-
-  useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => setNotice(null), NOTICE_MS);
-    return () => clearTimeout(timer);
-  }, [notice]);
+  usePageEvents(importFile, toggleSource, editorRef);
 
   return (
     <div className="playground">

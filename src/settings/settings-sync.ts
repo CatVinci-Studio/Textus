@@ -11,12 +11,16 @@
  *    anything Rust can have sent), then carries the revision Rust gave it;
  *  - another window's change applies to a field only if its revision is
  *    newer than that field's;
- *  - a full snapshot (settings_get, the legacy import) covers every field
+ *  - a full snapshot (settings_get, settings_fill_defaults) covers every field
  *    up to its revision, so it replaces only fields not changed since.
  *
  * Plain data, no IPC or React - SettingsContext.tsx wires it up.
  */
 export type Raw = Record<string, unknown>;
+
+export function isRecord(value: unknown): value is Raw {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 export class SettingsSync {
   raw: Raw;

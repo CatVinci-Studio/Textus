@@ -164,9 +164,10 @@ export function TutorialOverlay({
   labels,
   phone = false,
 }: TutorialOverlayProps) {
-  const titleId = useId();
-  const bodyId = useId();
-  const contentId = useId();
+  const id = useId();
+  const titleId = `${id}title`;
+  const bodyId = `${id}body`;
+  const contentId = `${id}content`;
   const primaryRef = useRef<HTMLButtonElement>(null);
   const modal = useModalDialog(onSkip, layout === "overlay");
   const dockedWidth = useDockedPanelWidth();

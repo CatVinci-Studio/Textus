@@ -2163,6 +2163,140 @@
           "context": 1000000
         }
       }
+    },
+    "minimax": {
+      "modelsDev": "minimax-cn",
+      "models": {
+        "MiniMax-M2": {
+          "name": "MiniMax-M2",
+          "released": "2025-10-27",
+          "tools": true,
+          "vision": false,
+          "context": 204800,
+          "status": "deprecated"
+        },
+        "MiniMax-M2.1": {
+          "name": "MiniMax-M2.1",
+          "released": "2025-12-23",
+          "tools": true,
+          "vision": false,
+          "context": 204800,
+          "status": "deprecated"
+        },
+        "MiniMax-M2.5": {
+          "name": "MiniMax-M2.5",
+          "released": "2026-02-12",
+          "tools": true,
+          "vision": false,
+          "context": 204800,
+          "status": "deprecated"
+        },
+        "MiniMax-M2.5-highspeed": {
+          "name": "MiniMax-M2.5-highspeed",
+          "released": "2026-02-13",
+          "tools": true,
+          "vision": false,
+          "context": 204800,
+          "status": "deprecated"
+        },
+        "MiniMax-M2.7": {
+          "name": "MiniMax-M2.7",
+          "released": "2026-03-18",
+          "tools": true,
+          "vision": false,
+          "context": 204800,
+          "status": "deprecated"
+        },
+        "MiniMax-M2.7-highspeed": {
+          "name": "MiniMax-M2.7-highspeed",
+          "released": "2026-03-18",
+          "tools": true,
+          "vision": false,
+          "context": 204800,
+          "status": "deprecated"
+        },
+        "MiniMax-M3": {
+          "name": "MiniMax-M3",
+          "released": "2026-06-01",
+          "tools": true,
+          "vision": true,
+          "context": 1000000
+        },
+        "MiniMax-M3.1-Flash": {
+          "name": "MiniMax-M3.1-Flash",
+          "released": "2026-10-19",
+          "tools": true,
+          "vision": true,
+          "context": 1000000
+        }
+      }
+    },
+    "minimax-intl": {
+      "modelsDev": "minimax",
+      "models": {
+        "MiniMax-M2": {
+          "name": "MiniMax-M2",
+          "released": "2025-10-27",
+          "tools": true,
+          "vision": false,
+          "context": 204800,
+          "status": "deprecated"
+        },
+        "MiniMax-M2.1": {
+          "name": "MiniMax-M2.1",
+          "released": "2025-12-23",
+          "tools": true,
+          "vision": false,
+          "context": 204800,
+          "status": "deprecated"
+        },
+        "MiniMax-M2.5": {
+          "name": "MiniMax-M2.5",
+          "released": "2026-02-12",
+          "tools": true,
+          "vision": false,
+          "context": 204800,
+          "status": "deprecated"
+        },
+        "MiniMax-M2.5-highspeed": {
+          "name": "MiniMax-M2.5-highspeed",
+          "released": "2026-02-13",
+          "tools": true,
+          "vision": false,
+          "context": 204800,
+          "status": "deprecated"
+        },
+        "MiniMax-M2.7": {
+          "name": "MiniMax-M2.7",
+          "released": "2026-03-18",
+          "tools": true,
+          "vision": false,
+          "context": 204800,
+          "status": "deprecated"
+        },
+        "MiniMax-M2.7-highspeed": {
+          "name": "MiniMax-M2.7-highspeed",
+          "released": "2026-03-18",
+          "tools": true,
+          "vision": false,
+          "context": 204800,
+          "status": "deprecated"
+        },
+        "MiniMax-M3": {
+          "name": "MiniMax-M3",
+          "released": "2026-06-01",
+          "tools": true,
+          "vision": true,
+          "context": 1000000
+        },
+        "MiniMax-M3.1-Flash": {
+          "name": "MiniMax-M3.1-Flash",
+          "released": "2026-10-19",
+          "tools": true,
+          "vision": true,
+          "context": 1000000
+        }
+      }
     }
   }
 }

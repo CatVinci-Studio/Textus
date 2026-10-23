@@ -10,6 +10,24 @@
  * payload)` fires them, so menu-driven features (Settings, Help docs, ...)
  * can be driven from the console / browser automation.
  */
+import type {
+  DirEntryInfo_Serialize,
+  FolderIndex,
+} from "../platform/bindings/files";
+import type {
+  ChatAttachment,
+  StreamEvent_Serialize,
+} from "../platform/bindings/ai-agent";
+import type { AgentSkill_Serialize } from "../platform/bindings/ai-project";
+import type { GalleryTheme_Serialize } from "../platform/bindings/app";
+import type { CustomEndpointStatus_Serialize } from "../platform/bindings/auth";
+import type {
+  FsEntry_Serialize,
+  PluginsState_Serialize,
+} from "../platform/bindings/plugins";
+import type { SentBlock } from "../ai/doc-blocks";
+import { namedCall, settledArguments, settledTurns } from "./settle-calls";
+
 /** The built-in skills as `list_skills` reports them: name, `/` menu group,
  *  invocation and the description written for the model (abridged). */
 const DEV_BUILTIN_SKILLS: [string, string, string, string][] = [
@@ -144,7 +162,6 @@ export function installDevTauriShim(): void {
     | {
         settings?: Record<string, unknown>;
         rev?: number;
-        legacyImport?: boolean;
         uiState?: Record<string, unknown>;
       }
     | undefined;
@@ -152,8 +169,6 @@ export function installDevTauriShim(): void {
   const store = {
     settings: { ...(live ?? boot?.settings ?? {}) } as Record<string, unknown>,
     rev: (boot?.rev ?? 1) + (live ? 10 : 0),
-    legacyPending: boot?.legacyImport === true,
-    imports: 0,
     patches: [] as Record<string, unknown>[],
     fills: [] as Record<string, unknown>[],
     log: [] as string[],
@@ -221,6 +236,57 @@ export function installDevTauriShim(): void {
     switch (cmd) {
       case "settings_get":
         return Promise.resolve({ value: store.settings, rev: store.rev });
+      // MCP servers (src-tauri mcp/): each one on is ready at once, with
+      // one tool; a command called "missing" isn't installed.
+      case "mcp_status":
+      case "mcp_restart": {
+        // Settings live in localStorage when the page booted without the
+        // file store (SettingsContext's readLocalSettings).
+        let local: Record<string, unknown> = {};
+        try {
+          local = JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}");
+        } catch {
+          // Nothing saved.
+        }
+        const servers = (store.settings.mcpServers ??
+          local.mcpServers ??
+          []) as {
+          id: string;
+          name: string;
+          enabled: boolean;
+          command: string;
+        }[];
+        return Promise.resolve(
+          servers
+            .filter((s) => s.enabled)
+            .map((s) =>
+              s.command === "missing"
+                ? {
+                    id: s.id,
+                    state: "failed",
+                    server: "",
+                    tools: [],
+                    error: "`missing` isn't installed",
+                  }
+                : {
+                    id: s.id,
+                    state: "ready",
+                    server: `${s.name} 1.0`,
+                    tools: [{ name: "echo", description: "Says it back." }],
+                    error: null,
+                  },
+            ),
+        );
+      }
+      case "mcp_try": {
+        const server = args.server as { command: string; name: string };
+        return server.command === "missing"
+          ? Promise.reject("`missing` isn't installed, or isn't on the PATH")
+          : Promise.resolve({
+              server: `${server.name || "Server"} 1.0`,
+              tools: [{ name: "echo", description: "Says it back." }],
+            });
+      }
       case "settings_patch": {
         const patch = args.patch as Record<string, unknown>;
         store.settings = { ...store.settings, ...patch };
@@ -241,30 +307,6 @@ export function installDevTauriShim(): void {
           store.rev += 1;
         }
         return answer(cmd, { value: store.settings, rev: store.rev });
-      }
-      case "settings_import_legacy": {
-        const payload = args.payload as Record<string, unknown>;
-        store.imports += 1;
-        const accepted = store.legacyPending;
-        if (accepted) {
-          store.legacyPending = false;
-          store.settings = {
-            ...(payload.settings as object),
-            ...store.settings,
-          };
-          store.uiState = { ...(payload.uiState as object) };
-          store.histories.chat = (
-            (payload.chatHistory ?? []) as Record<string, unknown>[]
-          ).map(keepConversation);
-          store.histories.clipboard =
-            (payload.clipboardHistory as unknown[]) ?? [];
-          store.rev += 1;
-        }
-        return Promise.resolve({
-          accepted,
-          value: store.settings,
-          rev: store.rev,
-        });
       }
       case "ui_state_get":
         return Promise.resolve(store.uiState);
@@ -318,12 +360,12 @@ export function installDevTauriShim(): void {
       case "custom_endpoint_status": {
         const saved = store.customEndpoint;
         return Promise.resolve(
-          saved && {
+          (saved && {
             base_url: saved.baseUrl,
             api_key: null,
             has_api_key: !!saved.apiKey,
             model: saved.model,
-          },
+          }) satisfies CustomEndpointStatus_Serialize | null,
         );
       }
       case "set_custom_endpoint": {
@@ -363,7 +405,7 @@ export function installDevTauriShim(): void {
   w.__devThemeFiles = themeFiles;
   const gallery = {
     offline: false,
-    themes: [] as Record<string, unknown>[],
+    themes: [] as GalleryTheme_Serialize[],
     files: {} as Record<string, string>,
   };
   w.__devThemeGallery = gallery;
@@ -491,7 +533,7 @@ export function installDevTauriShim(): void {
           source: "global",
           overridesBuiltin: false,
           enabled: true,
-        };
+        } satisfies AgentSkill_Serialize;
         return Promise.resolve([...builtins, own]);
       }
       case "set_builtin_skill_enabled":
@@ -596,7 +638,7 @@ export function installDevTauriShim(): void {
                   ? -1
                   : 1
                 : a.name.localeCompare(b.name),
-            ),
+            ) satisfies DirEntryInfo_Serialize[],
         );
       }
       // commands/tree_ops.rs. A folder is the files under it; an empty one
@@ -649,7 +691,201 @@ export function installDevTauriShim(): void {
           )
           .sort()
           .map((file) => ({ path: file, rel: file.slice(path.length + 1) }));
-        return Promise.resolve({ files: indexed, truncated: false });
+        return Promise.resolve({
+          files: indexed,
+          truncated: false,
+        } satisfies FolderIndex);
+      }
+    }
+    return null;
+  }
+
+  // Plugins (src-tauri/src/plugins/), kept in memory: the switch and the
+  // grants, each plugin's storage, and its folder calls answered from the
+  // same `window.__devFs` the tree reads (a document opened on its own -
+  // a PDF given to a custom editor - from `__devFiles`). Installed plugins
+  // are `window.__devPlugins`: [{ id, dir, manifest, dev, files: {rel:
+  // text} }]. The network has nothing to answer: a test cans plugin_http.
+  // `window.__devPluginState` starts it with plugins already on. The
+  // catalog is the textus-plugins checkout the dev server serves at
+  // /dev-plugins/ (vite.dev-plugins.ts); installing from it lists the
+  // plugin with its files read from there, and `window.__devCatalogInstalled`
+  // ([ids]) has some installed from the start.
+  type DevPluginEntry = {
+    enabled: boolean;
+    granted: string[];
+    official?: boolean;
+  };
+  const pluginState = (w.__devPluginState as
+    | { allOn: boolean; plugins: Record<string, DevPluginEntry> }
+    | undefined) ?? {
+    allOn: true,
+    plugins: {} as Record<string, DevPluginEntry>,
+  };
+  type CatalogEntry = { id: string; official: boolean; manifest: unknown };
+  let catalogEntries: Promise<CatalogEntry[]> | null = null;
+  const devCatalog = () =>
+    (catalogEntries ??= fetch("/dev-plugins/index.json").then((r) =>
+      r.ok
+        ? (r.json() as Promise<{ plugins: CatalogEntry[] }>).then(
+            (c) => c.plugins,
+          )
+        : Promise.reject(new Error("No textus-plugins checkout to list.")),
+    ));
+  const installFromDevCatalog = async (id: string) => {
+    const entry = (await devCatalog()).find((e) => e.id === id);
+    if (!entry) throw new Error(`${id} isn't in the plugin catalog.`);
+    const list = ((w.__devPlugins ??= []) as Record<string, unknown>[]).filter(
+      (p) => p.id !== id,
+    );
+    const installed = {
+      id,
+      dir: `/dev-plugins/${id}`,
+      manifest: JSON.stringify(entry.manifest),
+      dev: false,
+      catalog: true,
+    };
+    w.__devPlugins = [...list, installed];
+    pluginState.plugins[id] = {
+      ...(pluginState.plugins[id] ?? { enabled: false, granted: [] }),
+      official: entry.official,
+    };
+    return installed;
+  };
+  let preinstalled: Promise<unknown> | null = null;
+  const preinstall = () =>
+    (preinstalled ??= Promise.all(
+      ((w.__devCatalogInstalled ?? []) as string[]).map((id) =>
+        installFromDevCatalog(id),
+      ),
+    ));
+  // `window.__devPluginStorage = { id: { key: value } }`: what plugins
+  // have stored, their settings under `$settings`.
+  const pluginStorage = new Map<string, Record<string, unknown>>(
+    Object.entries(
+      (w.__devPluginStorage ?? {}) as Record<string, Record<string, unknown>>,
+    ),
+  );
+  const encoded = (text: string) => new TextEncoder().encode(text).buffer;
+  function pluginCommand(
+    cmd: string,
+    args: Record<string, unknown> = {},
+  ): Promise<unknown> | null {
+    const id = String(args.id ?? "");
+    const folder = (w.__devFs ?? {}) as Record<string, string>;
+    const documents = (w.__devFiles ?? {}) as Record<string, string>;
+    // `window.__devBinaryFiles = { path: base64 }`: a PDF, a picture.
+    const binary = (w.__devBinaryFiles ?? {}) as Record<string, string>;
+    const installed = (w.__devPlugins ?? []) as {
+      id: string;
+      files?: Record<string, string>;
+      catalog?: boolean;
+    }[];
+    const path = String(args.path ?? "");
+    const fileText = (p: string) =>
+      p in binary
+        ? Promise.resolve(
+            Uint8Array.from(atob(binary[p]), (c) => c.charCodeAt(0)).buffer,
+          )
+        : p in folder
+          ? Promise.resolve(encoded(folder[p]))
+          : p in documents
+            ? Promise.resolve(encoded(documents[p]))
+            : Promise.reject(`${p}: No such file`);
+    switch (cmd) {
+      case "plugins_state":
+        return Promise.resolve(
+          structuredClone(pluginState) satisfies PluginsState_Serialize,
+        );
+      case "plugins_set_all":
+        pluginState.allOn = !!args.on;
+        return Promise.resolve(null);
+      case "plugin_set":
+        pluginState.plugins[id] = {
+          enabled: !!args.enabled,
+          granted: [...((args.granted as string[]) ?? [])],
+        };
+        return Promise.resolve(null);
+      case "plugins_installed":
+        return preinstall().then(() =>
+          ((w.__devPlugins ?? []) as typeof installed).map((plugin) => {
+            const listed: Record<string, unknown> = { ...plugin };
+            delete listed.files;
+            delete listed.catalog;
+            return listed;
+          }),
+        );
+      case "plugin_catalog":
+        return devCatalog();
+      case "plugin_install_catalog":
+        return installFromDevCatalog(id);
+      case "plugin_file": {
+        const plugin = installed.find((p) => p.id === id);
+        if (plugin?.catalog)
+          return fetch(`/dev-plugins/${id}/${String(args.rel)}`).then((r) =>
+            r.ok
+              ? r.arrayBuffer()
+              : Promise.reject(`${String(args.rel)}: No such file`),
+          );
+        const text = plugin?.files?.[String(args.rel)];
+        return text === undefined
+          ? Promise.reject(`${String(args.rel)}: No such file`)
+          : Promise.resolve(encoded(text));
+      }
+      case "plugin_read_resource":
+      case "plugin_fs_read":
+        return fileText(path);
+      case "plugin_fs_list": {
+        const dir = path.replace(/\/$/, "");
+        const entries = new Map<string, boolean>();
+        for (const file of Object.keys(folder)) {
+          if (!file.startsWith(`${dir}/`)) continue;
+          const [name, ...rest] = file.slice(dir.length + 1).split("/");
+          if (!name.startsWith(".")) entries.set(name, rest.length > 0);
+        }
+        return Promise.resolve(
+          [...entries].map(([name, isDir]) => ({
+            name,
+            path: `${dir}/${name}`,
+            isDir,
+            size: isDir ? 0 : (folder[`${dir}/${name}`] ?? "").length,
+            modifiedMs: 1,
+          })) satisfies FsEntry_Serialize[],
+        );
+      }
+      case "plugin_fs_write":
+        ((w.__devFs ??= {}) as Record<string, string>)[path] = args.base64
+          ? atob(String(args.contents))
+          : String(args.contents);
+        return Promise.resolve(null);
+      case "plugin_http":
+        return Promise.reject("The dev shim has no network.");
+      case "plugin_storage_get":
+        return Promise.resolve({ ...(pluginStorage.get(id) ?? {}) });
+      case "plugin_storage_set": {
+        const store = { ...(pluginStorage.get(id) ?? {}) };
+        if (args.value === null) delete store[String(args.key)];
+        else store[String(args.key)] = args.value;
+        pluginStorage.set(id, store);
+        return Promise.resolve(null);
+      }
+      case "plugin_uninstall":
+        w.__devPlugins = installed.filter((p) => p.id !== id);
+        delete pluginState.plugins[id];
+        return Promise.resolve(null);
+      case "plugin_install":
+      case "plugin_load_dev":
+        return Promise.reject("The dev shim installs no plugin from a file.");
+      case "plugin_pick_package":
+      case "set_plugin_menu":
+      case "set_tray_plugin_items":
+        return Promise.resolve(null);
+      // `window.__devPendingPluginCommand`: one picked in the tray with no
+      // window open, for this window to run.
+      case "take_pending_plugin_command": {
+        const command = (w.__devPendingPluginCommand as string) ?? null;
+        w.__devPendingPluginCommand = null;
+        return Promise.resolve(command);
       }
     }
     return null;
@@ -692,7 +928,33 @@ export function installDevTauriShim(): void {
       if (canned && cmd in canned) {
         // And records what it was asked: `window.__devInvokeCalls`.
         ((w.__devInvokeCalls ??= []) as unknown[]).push({ cmd, ...args });
-        const value = canned[cmd] as { __reject?: unknown } | null;
+        let value = canned[cmd] as {
+          __reject?: unknown;
+          __delay?: number;
+          value?: unknown;
+        } | null;
+        // A canned reply's calls, settled against the request's blocks as
+        // the backend settles a model's (settle-calls.ts).
+        if (cmd === "ai_agent_message") {
+          const blocks = ((args as { blocks?: SentBlock[] } | undefined)
+            ?.blocks ?? []) as SentBlock[];
+          value =
+            value && typeof value === "object" && "__delay" in value
+              ? { ...value, value: settledTurns(blocks, value.value) }
+              : (settledTurns(blocks, value) as typeof value);
+        }
+        // `{ __delay: ms, value }` answers only after a while - a picture
+        // still being made - and `{ __delay: ms, __reject }` fails then.
+        if (value && typeof value === "object" && "__delay" in value)
+          return new Promise((resolve, reject) =>
+            setTimeout(
+              () =>
+                "__reject" in value
+                  ? reject(value.__reject)
+                  : resolve(value.value),
+              value.__delay,
+            ),
+          );
         // `{ __reject: message }` fails the command instead, for error UI.
         return value && typeof value === "object" && "__reject" in value
           ? Promise.reject(value.__reject)
@@ -732,6 +994,8 @@ export function installDevTauriShim(): void {
       if (theme) return theme;
       const file = fsCommand(cmd, args as Record<string, unknown>);
       if (file) return file;
+      const plugin = pluginCommand(cmd, args as Record<string, unknown>);
+      if (plugin) return plugin;
       // A canned suggestion instead of null: lets ghost-text rendering (and
       // the tour's completion lesson) be smoke-tested in the browser -
       // null would make the manual trigger path throw an error dialog.
@@ -781,7 +1045,7 @@ export function installDevTauriShim(): void {
             onEvent?.onmessage?.({
               type: "delta",
               text: reply.slice(sent, next),
-            });
+            } satisfies StreamEvent_Serialize);
             sent = next;
             if (sent >= reply.length) {
               clearInterval(timer);
@@ -803,7 +1067,7 @@ export function installDevTauriShim(): void {
           name: "dev-shim-notes.md",
           content: "Canned dev-shim attachment content.",
           truncated: false,
-        });
+        } satisfies ChatAttachment);
       }
       return Promise.resolve(null);
     },
@@ -828,6 +1092,10 @@ export function installDevTauriShim(): void {
       );
     },
   };
+  // For an e2e mock that plays the model itself: its calls named and
+  // settled as the backend would (settle-calls.ts).
+  w.__devNameCall = namedCall;
+  w.__devSettle = settledArguments;
   w.__devEmitTauriEvent = (event: string, payload?: unknown) => {
     for (const id of listeners.get(event) ?? []) {
       (w[`_${id}`] as ((e: unknown) => void) | undefined)?.({

@@ -1,10 +1,14 @@
-use crate::agent::{AgentTurn, EventSink, StepResult, StepUsage, ToolSpec};
+use crate::agent::{AgentTurn, EventSink, ImageAttachment, StepResult, StepUsage, ToolSpec};
 use crate::capabilities::Thinking;
+use crate::images::{
+    checked_image, decode_base64, gpt_image_size, Aspect, GeneratedImage, ImageError,
+};
 use crate::pkce::{decode_base64url, generate_pkce, generate_state, now_ms};
 use crate::responses_api::{
     self, read_streamed_output, text_from_streamed_output, ResponsesRequest,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 const CLIENT_ID: &str = "app_EMoamEEZ73f0CkXaXp7hrann";
 const AUTHORIZE_URL: &str = "https://auth.openai.com/oauth/authorize";
@@ -35,10 +39,9 @@ pub const SUPPORTED_MODELS: &[&str] = &["gpt-6-astra", "gpt-6.1-sol", "gpt-6-lun
 ///
 /// The saved model outlives the auth method that was active when it was
 /// picked: sign in with an API key, choose `gpt-5.4`, later switch to "sign
-/// in with ChatGPT", and every request 400s. Worse, the model can arrive from
-/// a settings blob written by an older version and migrated forward
-/// (SettingsContext's migrateAgentModels), so the user never chose it at all
-/// and has no idea why the agent stopped answering.
+/// in with ChatGPT", and every request 400s. A preset this login served
+/// once and no longer does (a retired model) fails the same way, without
+/// the user having changed anything.
 ///
 /// The Settings panel normalizes the stored value too, but only while it is
 /// open - which is not where a request's correctness can live.
@@ -239,42 +242,120 @@ pub async fn agent_step(
     Ok((responses_api::parse_agent_output(&output, on_event), usage))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// The exact failure this guard exists for: a model saved while the
-    /// API-key auth method was active (or migrated forward from an older
-    /// settings blob) is a hard 400 once the login is a ChatGPT account.
-    #[test]
-    fn a_model_this_login_cannot_use_falls_back_to_the_default() {
-        assert_eq!(usable_model(Some("gpt-5.4"), "gpt-6.1-sol"), "gpt-6.1-sol");
-        assert_eq!(
-            usable_model(Some("gpt-4o-mini"), "gpt-6.1-sol"),
-            "gpt-6.1-sol"
+/// The request for one picture through the ChatGPT sign-in: the Responses
+/// API's image_generation tool, made the only thing the model may do.
+fn image_request_body(prompt: &str, aspect: Aspect, reference: Option<&ImageAttachment>) -> Value {
+    // The tool's `size` alone was not kept to (a square asked for came
+    // back 1536 x 1024): the shape is said in the request too.
+    let size = gpt_image_size(aspect);
+    let text = format!(
+        "{prompt}\n\nAspect ratio {}, {size} pixels.",
+        aspect.ratio()
+    );
+    let mut content = vec![json!({"type": "input_text", "text": text})];
+    if let Some(reference) = reference {
+        content.insert(
+            0,
+            json!({"type": "input_image", "image_url": reference.data_url()}),
         );
     }
+    json!({
+        "model": COMPLETION_MODEL,
+        "store": false,
+        // The ChatGPT backend only serves SSE.
+        "stream": true,
+        "instructions": "Draw the picture the user describes with the image_generation tool, exactly as described - with a picture given, change that picture as described, keeping the rest of it. Say nothing.",
+        "input": [{
+            "role": "user",
+            "content": content,
+        }],
+        "tools": [{
+            "type": "image_generation",
+            "size": size,
+            // As the API-key route asks (images/openai.rs): plenty for a
+            // page, and the plan's image allowance goes further.
+            "quality": "medium",
+            "output_format": "jpeg",
+        }],
+        "tool_choice": {"type": "image_generation"},
+    })
+}
 
-    /// The GPT-5.6 family was the previous preset list; Codex no longer
-    /// serves it, so a choice saved by an older version must not survive.
-    #[test]
-    fn a_retired_preset_falls_back_to_the_default() {
-        assert_eq!(
-            usable_model(Some("gpt-5.6-terra"), "gpt-6.1-sol"),
-            "gpt-6.1-sol"
-        );
+/// The picture in a finished response's output: an image_generation_call
+/// item's base64 `result`.
+fn image_from_output(output: &[Value]) -> Result<Vec<u8>, ImageError> {
+    let call = output
+        .iter()
+        .find(|item| item.get("type").and_then(Value::as_str) == Some("image_generation_call"))
+        .ok_or_else(|| {
+            ImageError::Failed(
+                "ChatGPT answered without making a picture - the sign-in's plan may not include image generation."
+                    .into(),
+            )
+        })?;
+    let result = call.get("result").and_then(Value::as_str).unwrap_or("");
+    if result.trim().is_empty() {
+        let status = call
+            .get("status")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown");
+        return Err(ImageError::Failed(format!(
+            "ChatGPT's picture didn't finish (status: {status})."
+        )));
     }
+    decode_base64(result)
+}
 
-    #[test]
-    fn a_supported_model_is_passed_through() {
-        assert_eq!(
-            usable_model(Some("gpt-6-astra"), "gpt-6.1-sol"),
-            "gpt-6-astra"
-        );
-    }
-
-    #[test]
-    fn no_choice_means_the_default() {
-        assert_eq!(usable_model(None, "gpt-6.1-sol"), "gpt-6.1-sol");
+/// A failed request's words, as one of the three kinds the user can act on.
+fn image_failure(message: String) -> ImageError {
+    let lower = message.to_lowercase();
+    if lower.contains("moderation") || lower.contains("safety") || lower.contains("content policy")
+    {
+        ImageError::Refused(message)
+    } else if lower.contains("429")
+        || lower.contains("usage limit")
+        || lower.contains("rate limit")
+        || lower.contains("quota")
+    {
+        ImageError::Quota(message)
+    } else {
+        ImageError::Failed(message)
     }
 }
+
+/// One picture through the ChatGPT sign-in, counted against the plan's own
+/// image allowance rather than API credit. This is the backend ChatGPT's
+/// apps use, not a published API - it has changed without notice before,
+/// so Settings calls it experimental and the API-key route stays.
+pub async fn generate_image(
+    access_token: &str,
+    account_id: &str,
+    originator: &str,
+    prompt: &str,
+    aspect: Aspect,
+    reference: Option<&ImageAttachment>,
+) -> Result<GeneratedImage, ImageError> {
+    let prompt = prompt.trim();
+    if prompt.is_empty() {
+        return Err(ImageError::Failed(
+            "There is no description to draw.".into(),
+        ));
+    }
+    let res = crate::http::streaming_client()
+        .post(CODEX_RESPONSES_URL)
+        .bearer_auth(access_token)
+        .header("chatgpt-account-id", account_id)
+        .header("originator", originator)
+        .header("OpenAI-Beta", "responses=experimental")
+        .json(&image_request_body(prompt, aspect, reference))
+        .send()
+        .await
+        .map_err(|e| ImageError::Failed(format!("Couldn't reach ChatGPT: {e}")))?;
+    let output = read_streamed_output(res, "ChatGPT", &|_| {})
+        .await
+        .map_err(image_failure)?;
+    checked_image(image_from_output(&output)?)
+}
+
+#[cfg(test)]
+mod tests;

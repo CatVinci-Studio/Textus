@@ -16,6 +16,7 @@ import { createPortal } from "react-dom";
 import { useViewportClamp } from "../utils/hooks/useViewportClamp";
 import { Presence, usePresenceProps } from "./usePresence";
 import "./Tooltip.css";
+import { useTipTimer } from "./useTipTimer";
 
 /** How long the mouse rests on a button before its tooltip shows, so
  *  crossing a toolbar on the way somewhere else shows nothing. */
@@ -86,17 +87,17 @@ export function Tooltip({
     shown.current = next;
     setOpenState(next);
   }, []);
-  const timer = useRef<number | undefined>(undefined);
+  const timerRef = useTipTimer();
   const anchor = useRef<HTMLElement | null>(null);
-  const descriptionId = useId();
-  const tipId = useId();
+  const id = useId();
+  const descriptionId = `${id}description`;
+  const tipId = `${id}tip`;
   const props = children.props;
 
   const close = useCallback(() => {
-    window.clearTimeout(timer.current);
+    window.clearTimeout(timerRef.current);
     setOpen(false);
-  }, [setOpen]);
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  }, [setOpen, timerRef]);
 
   // Esc hides it wherever the focus is: a hover tooltip over the composer
   // while the caret stays in the field. The Escape is only taken for
@@ -139,10 +140,13 @@ export function Tooltip({
       props.onPointerEnter?.(e);
       if (e.pointerType !== "mouse") return;
       anchor.current = e.currentTarget;
-      window.clearTimeout(timer.current);
+      window.clearTimeout(timerRef.current);
       if (warm()) setOpen(true);
       else
-        timer.current = window.setTimeout(() => setOpen(true), TOOLTIP_OPEN_MS);
+        timerRef.current = window.setTimeout(
+          () => setOpen(true),
+          TOOLTIP_OPEN_MS,
+        );
     },
     onPointerLeave: (e) => {
       props.onPointerLeave?.(e);
@@ -152,14 +156,14 @@ export function Tooltip({
     // must not sit under it. It comes back only on the next visit.
     onPointerDown: (e) => {
       props.onPointerDown?.(e);
-      window.clearTimeout(timer.current);
+      window.clearTimeout(timerRef.current);
       setOpen(false);
     },
     onFocus: (e) => {
       props.onFocus?.(e);
       if (!e.currentTarget.matches(":focus-visible")) return;
       anchor.current = e.currentTarget;
-      window.clearTimeout(timer.current);
+      window.clearTimeout(timerRef.current);
       setOpen(true);
     },
     onBlur: (e) => {

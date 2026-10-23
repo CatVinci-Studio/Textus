@@ -14,6 +14,7 @@ import { fs, session } from "../platform/ipc";
 import { moveConversations } from "../ai/chat/chat-history";
 import { defaultMarkdownFilename } from "../document/save-default-name";
 import { isWordDocument, wordSaveSuggestion } from "../document/word-import";
+import { emitPluginEvent } from "../plugins/app-bridge";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./useTabState";
 
@@ -62,7 +63,8 @@ export function useSaveTabs(opts: {
   const saveTabAs = useCallback(
     async (tabId: string): Promise<boolean> => {
       const tab = liveTabs().find((tb) => tb.id === tabId);
-      if (!tab) return false;
+      // A plugin's tab (a PDF) has no document of ours to save.
+      if (!tab || tab.view) return false;
       // Made from a Word document: a .md of the same name, beside it.
       const fromWord = tab.importedFrom
         ? wordSaveSuggestion(tab.importedFrom)
@@ -127,6 +129,7 @@ export function useSaveTabs(opts: {
       // The document goes on under its new name, and its past
       // conversations with it.
       if (tab.path) moveConversations(tab.path, picked);
+      emitPluginEvent("didSave", { path: picked, text: content });
       return true;
     },
     [updateTab, liveTabs, t, autoSuggestFilename, imageFolder, writeOrReport],
@@ -144,6 +147,8 @@ export function useSaveTabs(opts: {
         tb.id === tabId && tb.path === path ? { ...tb, ...patch } : tb,
       );
       updateTab(tabId, patch);
+      // Plugins listening for saves (version history) are told.
+      emitPluginEvent("didSave", { path, text: content });
     },
     [tabsRef, updateTab],
   );

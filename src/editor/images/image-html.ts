@@ -1,5 +1,6 @@
 import { $remark } from "@milkdown/kit/utils";
 import type { Attrs } from "@milkdown/kit/prose/model";
+import { escapeHtml } from "../../utils/html";
 import { sanitizeDimension, sanitizeStyle } from "../html/html-policy";
 
 /**
@@ -69,12 +70,7 @@ export function parseImageTag(raw: string): Omit<ImageAttrs, "html"> | null {
 /** An attribute value inside double quotes. A newline is written as a
  *  reference: a raw one would cut the tag over two lines. */
 export function escapeAttribute(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\r?\n/g, "&#10;");
+  return escapeHtml(value).replace(/\r?\n/g, "&#10;");
 }
 
 /**
@@ -103,9 +99,8 @@ export function imageMarkdownHtml(attrs: ImageAttrs): string | null {
 }
 
 /** `{textus-width=N%}` at the end of the title: where Textus 1.1.0 and
- *  older kept an image's width; documents written by Levis say
- *  `levis-width`. Read the same, for good. */
-const IMAGE_WIDTH_METADATA = /\s*\{(?:textus|levis)-width=(\d{1,3})%\}\s*$/;
+ *  older kept an image's width. A document's own text, so read for good. */
+const IMAGE_WIDTH_METADATA = /\s*\{textus-width=(\d{1,3})%\}\s*$/;
 
 /** An image title split into the caption it shows and the width an older
  *  Textus kept at its end. */
@@ -203,5 +198,5 @@ function readImageTags(node: MdastNode): void {
 /** Reads each `<img>` tag an image node can carry as one (parseImageTag). */
 export const remarkHtmlImages = $remark(
   "remark-html-images",
-  () => () => (tree) => readImageTags(tree as unknown as MdastNode),
+  () => () => (tree) => readImageTags(tree as MdastNode),
 );

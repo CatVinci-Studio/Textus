@@ -62,7 +62,7 @@ async function open(page: Page, animations = false) {
   await page.setViewportSize({ width: 1800, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: "inline" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
     animations,
   });
 }
@@ -118,14 +118,28 @@ test("after Write's text is accepted, every view applies to Revise's rewrite acr
   await expect(visible(page, ".pending-insert")).toHaveCount(0);
   await expect(visible(page, ".pending-pick")).toHaveCount(0);
   await expect(page.locator(".revision-note")).toHaveCount(3);
+  // Cut short where they crowd, a card says it all once clicked.
+  await page
+    .locator(".revision-note")
+    .first()
+    .click({ position: { x: 40, y: 12 } });
   await expect(page.locator(".revision-note").first()).toContainText(
     "He climbed the stairs.",
   );
+  await page.mouse.move(10, 10);
 
   await view(page, "new");
   await expect(visible(page, ".pending-delete")).toHaveCount(0);
   await expect(visible(page, ".pending-insert")).toHaveCount(3);
-  await expect(page.locator(".revision-note-original")).toHaveCount(3);
+  await expect(page.locator(".revision-note")).toHaveCount(3);
+  await page
+    .locator(".revision-note")
+    .first()
+    .click({ position: { x: 40, y: 12 } });
+  await expect(
+    page.locator(".revision-note").first().locator(".revision-note-original"),
+  ).toHaveCount(1);
+  await page.mouse.move(10, 10);
   await expect(page.locator(".milkdown")).toContainText("the sea lay calm.");
 
   await view(page, "final");
@@ -158,18 +172,19 @@ test("Write's new text has no original: a green block in every view but the resu
   await open(page);
   await write(page);
   const block = page.locator(".milkdown .pending-insert");
-  // Fully typed in: the story's two paragraphs are lines by then.
+  // Fully typed in: the story's two paragraphs, as paragraphs.
   await expect(block).not.toHaveClass(/pending-insert-typing/);
-  // The tint is on the text: on each line's span when the new text runs
-  // over several lines (the breaks between them untinted), else on the
-  // block itself.
+  // The tint is on the text: on each line's span when new text in a
+  // paragraph runs over several lines (the breaks between them untinted),
+  // else on the box - new paragraphs of their own are one box.
   const green = () =>
     block.evaluate((el) => {
       const lines = el.classList.contains("pending-insert-lines");
       const tinted = lines ? el.querySelector(".pending-line")! : el;
       return getComputedStyle(tinted).backgroundColor;
     });
-  await expect(block).toHaveClass(/pending-insert-lines/);
+  await expect(block).toHaveClass(/pending-blocks/);
+  await expect(block.locator("p")).toHaveCount(2);
   const tint = await green();
   expect(tint).not.toBe("rgba(0, 0, 0, 0)");
 

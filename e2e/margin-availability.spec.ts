@@ -71,7 +71,7 @@ async function openSettings(page: Page) {
 }
 
 const open = {
-  "levis-agent-panel-open": "1",
+  "textus-agent-panel-open": "1",
   "textus-sidebar-open": "1",
 };
 
@@ -145,7 +145,7 @@ test("the adaptive column leaves room for the margin views beside the AI panel a
   await page.setViewportSize({ width: 1341, height: 800 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: "original" },
-    storage: { "levis-agent-panel-open": "1", "textus-sidebar-open": "0" },
+    storage: { "textus-agent-panel-open": "1", "textus-sidebar-open": "0" },
   });
   await proposeRevision(page);
   await expect(page.locator(".revision-note")).toHaveCount(2);
@@ -171,7 +171,7 @@ test("the line being read stays put as revisions move between the text and the m
   await page.setViewportSize({ width: 1100, height: 500 });
   await openApp(page, {
     settings: { language: "en", contentWidth: "standard" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   // WebKit has no scroll anchoring: take Chromium's away too.
   await page.addStyleTag({

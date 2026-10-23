@@ -13,17 +13,31 @@ export function usePanelSelection(run: EditorRunner, tracking: boolean) {
   const [panelSelection, setPanelSelection] = useState<{
     text: string;
     range: { from: number; to: number };
+    /** The selection is one picture: `text` is its description, which
+     *  the picture's own text would leave empty (no chip at all). */
+    picture: boolean;
   } | null>(null);
   const updatePanelSelection = useCallback(() => {
     if (!trackingRef.current) return;
     const next = run((ctx) => {
       const { selection, doc } = ctx.get(editorViewCtx).state;
-      return selection.empty
-        ? null
-        : {
-            text: doc.textBetween(selection.from, selection.to, " "),
-            range: { from: selection.from, to: selection.to },
-          };
+      if (selection.empty) return null;
+      const range = { from: selection.from, to: selection.to };
+      const node = doc.nodeAt(selection.from);
+      if (
+        node?.type.name.startsWith("image") &&
+        selection.to - selection.from === node.nodeSize
+      )
+        return {
+          text: String(node.attrs.alt || node.attrs.src || "image"),
+          range,
+          picture: true,
+        };
+      return {
+        text: doc.textBetween(selection.from, selection.to, " "),
+        range,
+        picture: false,
+      };
     });
     if (next === undefined) return;
     setPanelSelection((prev) =>

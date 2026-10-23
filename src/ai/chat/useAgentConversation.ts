@@ -16,6 +16,11 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { announce } from "../../ui/announce";
 import { useSettings, type AgentMode } from "../../settings/SettingsContext";
 import { imageModelOf } from "../image-models";
+import { parsePartialToolArgs } from "./partial-tool-args";
+import { resolveBlockTarget } from "../doc-blocks";
+import type { DocumentSnapshot } from "../doc-markdown";
+import { insertTurns, memoryTurns, passExchange } from "./memory-pass";
+import { useNextMessage } from "./next-message";
 
 export interface AgentRequestOptions {
   mode: AgentMode;
@@ -36,15 +41,20 @@ export interface StreamingState {
   text: string;
   /** The exchange's thinking so far, once the model has thought. */
   thought: Thought | null;
-  /** A tool that works for a while before its call lands - generate_image,
-   *  for "Generating an image…" in place of "Thinking…". */
+  /** A tool whose call is coming in - generate_image ("Generating an
+   *  image…") or propose_edit ("Writing the edit…") - for the row under
+   *  the reply in place of "Thinking…". */
   tool?: string;
+  /** add_comment calls whose passage and note have streamed in, before
+   *  their ToolCall turn lands - the margin shows each as it is written,
+   *  not all of them once the step completes. */
+  comments?: AgentTurn[];
 }
 
 /** The (document, message) pair behind the last failed send - lets the
  *  caller offer a "retry" that resends without the user retyping. */
 export interface RetryableSend {
-  document: string;
+  document: DocumentSnapshot;
   message: string;
   /** Resent as-is: a retry that dropped the attached images would answer a
    *  question about a picture the model can no longer see. */
@@ -147,6 +157,14 @@ export function useAgentConversation(
   // Incremented whenever a fresh popup replaces the current conversation.
   // A late response from the old popup must never leak into the new chat.
   const generationRef = useRef(0);
+  /** How the last message was sent - Continue, after an exchange ran out
+   *  of steps, sends the same way. */
+  const lastOptionsRef = useRef<AgentRequestOptions | null>(null);
+  const next = useNextMessage(
+    provider,
+    model ?? "",
+    settings.suggestNextMessage && settings.textusAi,
+  );
 
   // Every exchange updates the conversation's saved copy, so past chats can
   // be reopened from the History list even across restarts.
@@ -167,7 +185,7 @@ export function useAgentConversation(
    *  completed proposals still get their afterSend re-show); undefined means
    *  the send was skipped, failed, or was stopped before anything streamed. */
   async function send(
-    document: string,
+    document: DocumentSnapshot,
     message: string,
     /** Attached images. Text-shaped attachments (PDF, Word, spreadsheets)
      *  were extracted and inlined into `message` by the caller; images have
@@ -177,6 +195,8 @@ export function useAgentConversation(
   ): Promise<AgentTurn[] | undefined> {
     const trimmed = message.trim();
     if (!trimmed || busy || !settings.textusAi) return undefined;
+    lastOptionsRef.current = options;
+    next.clear();
     setBusy(true);
     setError(null);
     setRetryable(null);
@@ -199,10 +219,13 @@ export function useAgentConversation(
     const requestId = crypto.randomUUID();
     const generation = generationRef.current;
     requestIdRef.current = requestId;
+    // add_comment arguments streaming in, by call id (StreamingState's
+    // comments).
+    const commentArgs = new Map<string, string>();
     try {
       const newTurns = await ai.agentMessage({
         provider,
-        document,
+        blocks: document.blocks,
         docPath,
         workspaceRoot,
         history: annotateProposalStatuses(history, proposalStatuses ?? {}),
@@ -215,14 +238,6 @@ export function useAgentConversation(
         mode: options.mode,
         focusHeading: options.focusHeading ?? null,
         uiLanguage: uiLanguage.current,
-        // Recorded with what Textus AI remembers in this exchange.
-        conversation: {
-          id: conversationId,
-          title: conversationTitle([
-            ...history,
-            { kind: "User", text: trimmed },
-          ]),
-        },
         model: model || null,
         imageModel: imageModel.current,
         requestId,
@@ -270,14 +285,68 @@ export function useAgentConversation(
               thought,
               tool: event.name,
             });
+          } else if (
+            event.type === "toolStart" &&
+            (event.name === "propose_edit" || event.name === "add_comment")
+          ) {
+            // The reply stays; the row under it says an edit (or a note)
+            // is coming.
+            if (event.name === "add_comment") commentArgs.set(event.callId, "");
+            setStreaming({
+              turns: prev?.turns ?? [],
+              text: prev?.text ?? "",
+              thought,
+              tool: event.name,
+              comments: prev?.comments,
+            });
+          } else if (
+            event.type === "toolArgsDelta" &&
+            commentArgs.has(event.callId)
+          ) {
+            const args = (commentArgs.get(event.callId) ?? "") + event.delta;
+            commentArgs.set(event.callId, args);
+            const { anchor, block, comment } = parsePartialToolArgs(args);
+            const shown = prev?.comments?.some(
+              (c) => c.kind === "ToolCall" && c.call_id === event.callId,
+            );
+            // Once: the passage and the whole note are in. The passage is
+            // the block it names (resolveBlockTarget), and the words in it
+            // it quotes.
+            if (!prev || shown || !comment?.complete) return;
+            if (block && !block.complete) return;
+            const target = resolveBlockTarget(document.blocks, {
+              block: block?.value,
+              anchor: anchor?.complete ? anchor.value : undefined,
+            });
+            if (!target) return;
+            const call: AgentTurn = {
+              kind: "ToolCall",
+              call_id: event.callId,
+              name: "add_comment",
+              arguments: JSON.stringify({
+                block: target.block,
+                anchor: target.anchor,
+                comment: comment.value,
+              }),
+            };
+            setStreaming({
+              ...prev,
+              thought,
+              comments: [...(prev.comments ?? []), call],
+            });
           } else if (event.type === "turn") {
             // Interim prose that streamed before a tool call is dropped,
             // mirroring how the backend's step parsers prefer tool calls
             // over accompanying text - it never enters history either.
+            const landed =
+              event.turn.kind === "ToolCall" ? event.turn.call_id : null;
             setStreaming({
               turns: [...(prev?.turns ?? []), event.turn],
               text: "",
               thought,
+              comments: prev?.comments?.filter(
+                (c) => c.kind !== "ToolCall" || c.call_id !== landed,
+              ),
             });
           } else if (thought !== prev?.thought && prev) {
             setStreaming({ ...prev, thought });
@@ -287,6 +356,8 @@ export function useAgentConversation(
       if (generation !== generationRef.current) return undefined;
       keepThought();
       setHistory((prev) => [...prev, ...newTurns]);
+      void rememberAfter([...history, ...newTurns], at + newTurns.length);
+      next.suggestAfter([...history, ...newTurns]);
       return newTurns;
     } catch (err) {
       if (generation !== generationRef.current) return undefined;
@@ -315,6 +386,33 @@ export function useAgentConversation(
         setStreaming(null);
         requestIdRef.current = null;
       }
+    }
+  }
+
+  /** After an exchange, what is remembered is brought up to date
+   *  (ai/memory/pass.rs) - apart from the reply, which is already shown -
+   *  and each change goes in as a chip right after the exchange (`at`).
+   *  A failure only means nothing was remembered this time. */
+  async function rememberAfter(conversation: AgentTurn[], at: number) {
+    if (!settings.rememberAutomatically) return;
+    const generation = generationRef.current;
+    try {
+      const changes = await ai.memoryPass({
+        provider,
+        model: model || null,
+        docPath,
+        workspaceRoot,
+        conversation: {
+          id: conversationId,
+          title: conversationTitle(conversation),
+        },
+        exchange: passExchange(conversation),
+      });
+      if (changes.length === 0 || generation !== generationRef.current) return;
+      const turns = memoryTurns(changes, () => crypto.randomUUID());
+      setHistory((prev) => insertTurns(prev, at, turns));
+    } catch {
+      // Nothing remembered; the exchange itself is unaffected.
     }
   }
 
@@ -369,6 +467,7 @@ export function useAgentConversation(
     setBusy(false);
     setError(null);
     setRetryable(null);
+    next.clear();
   }
 
   // A new, empty conversation: a fresh Quick Ask from the right-click menu
@@ -398,6 +497,9 @@ export function useAgentConversation(
     busy,
     error,
     retryable,
+    lastOptions: () => lastOptionsRef.current,
+    /** What the writer will probably say next (next-message.ts). */
+    suggestion: next.suggestion,
     send,
     stop,
     retry,

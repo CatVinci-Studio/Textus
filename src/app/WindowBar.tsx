@@ -1,3 +1,4 @@
+import { Fragment, useSyncExternalStore } from "react";
 import { useSettings } from "../settings/SettingsContext";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./app-menu-model";
@@ -7,6 +8,11 @@ import { TextusAiButton } from "../ai/TextusAiSwitch";
 import { isIOSApp } from "../platform/capabilities";
 import { SidebarToggleIcon } from "../ui/icons";
 import { useFullscreenMark } from "./useFullscreenMark";
+import { runCommand } from "./commands";
+import {
+  statusItemsSnapshot,
+  subscribeStatusItems,
+} from "../plugins/status-items";
 
 /**
  * The window's one top strip: traffic-light room, which document this
@@ -92,6 +98,7 @@ export function WindowBar({
         <span className="window-bar-title-text">{title}</span>
       </span>
       <div className="window-bar-status">
+        <PluginStatusItems />
         {largeDoc && (
           <span className="large-doc-badge" title={t.largeDocHint}>
             {t.largeDocBadge}
@@ -112,5 +119,41 @@ export function WindowBar({
       </div>
       <WindowCaptionButtons />
     </header>
+  );
+}
+
+/** What plugins show here (window.setStatusItem, plugins/status-items.ts):
+ *  a text, its tooltip, and a command a click runs. */
+function PluginStatusItems() {
+  const items = useSyncExternalStore(subscribeStatusItems, statusItemsSnapshot);
+  return (
+    <>
+      {items.map((item) => {
+        const label = (
+          <span className="plugin-status-item" data-status={item.key}>
+            {item.text}
+          </span>
+        );
+        const shown = item.command ? (
+          <button
+            type="button"
+            className="plugin-status-item plugin-status-button"
+            data-status={item.key}
+            onClick={() => runCommand(item.command!)}
+          >
+            {item.text}
+          </button>
+        ) : (
+          label
+        );
+        return item.tooltip ? (
+          <Tooltip key={item.key} text={item.tooltip}>
+            {shown}
+          </Tooltip>
+        ) : (
+          <Fragment key={item.key}>{shown}</Fragment>
+        );
+      })}
+    </>
   );
 }

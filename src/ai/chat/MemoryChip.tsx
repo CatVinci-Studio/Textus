@@ -3,18 +3,21 @@ import { ai, type MemoryScope } from "../../platform/ipc";
 import { useSettings } from "../../settings/SettingsContext";
 import { errorText } from "../../utils/error-text";
 
-/** What a remember call saved - its tool result, `Remembering` in
- *  src-tauri/src/ai/memory.rs. `previous`: the file before an update, for
- *  Undo to put back. */
+/** What was remembered - `Remembering` in src-tauri/src/ai/memory.rs.
+ *  `previous`: the file before an update or a forget, for Undo to put
+ *  back; `forgot`: taken back, `text` being what it said. */
 export interface RememberResult {
   remembered: string;
   scope: MemoryScope;
   created: boolean;
   text: string;
   previous: string | null;
+  /** A library entry's name (a fact). */
+  name: string | null;
+  forgot: boolean;
 }
 
-/** The remember tool's result when it saved something; null when it
+/** What the memory pass (or, before 1.2.0-rc.6, the remember tool) kept; null when it
  *  didn't (a duplicate, a refusal - plain words for the model). */
 export function parseRememberResult(output: string): RememberResult | null {
   try {
@@ -31,6 +34,8 @@ export function parseRememberResult(output: string): RememberResult | null {
       created: parsed.created === true,
       text: parsed.text,
       previous: typeof parsed.previous === "string" ? parsed.previous : null,
+      name: typeof parsed.name === "string" ? parsed.name : null,
+      forgot: parsed.forgot === true,
     };
   } catch {
     return null;
@@ -46,6 +51,10 @@ export interface MemoryChipLabels {
   memoryMakePersonal: string;
   memoryMakeProject: string;
   memoryUndone: string;
+  /** "Forgot: {text} ({scope})" - a memory taken back. */
+  memoryForgot: string;
+  /** Undo of a forget: it is remembered again. */
+  memoryRestored: string;
   memoryActionFailed: string;
 }
 
@@ -76,8 +85,9 @@ export function MemoryChip({
   const [state, setState] = useState<"saved" | "busy" | "undone" | "failed">(
     "saved",
   );
-  // Facts are library entries, which only a project has.
-  const movable = current.id.split("/")[1] === "memory";
+  // Facts are library entries, which only a project has; what was
+  // forgotten has nowhere to move.
+  const movable = current.id.split("/")[1] === "memory" && !result.forgot;
 
   async function act(work: () => Promise<void>) {
     setState("busy");
@@ -109,19 +119,32 @@ export function MemoryChip({
   if (state === "undone")
     return (
       <div className="agent-memory-chip agent-memory-chip-undone" role="status">
-        {labels.memoryUndone}
+        {result.forgot ? labels.memoryRestored : labels.memoryUndone}
       </div>
     );
   const scopeLabel =
     current.scope === "project"
       ? labels.memoryScopeProject
       : labels.memoryScopePersonal;
+  // A fact is its entry's body: the name says whom it is about.
+  const what = result.name ? `${result.name} · ${result.text}` : result.text;
+  // "Remembered: {text} ({scope})" in pieces, so a long memory is cut
+  // short while where it is kept stays in view.
+  const template = result.forgot ? labels.memoryForgot : labels.memorySaved;
+  const [before, after = ""] = template.split("{text}");
+  const scope = after.replace("{scope}", scopeLabel);
+  const line = before + what + scope;
   return (
-    <div className="agent-memory-chip" role="status">
-      <span className="agent-memory-chip-text">
-        {labels.memorySaved
-          .replace("{text}", result.text)
-          .replace("{scope}", scopeLabel)}
+    <div
+      className={`agent-memory-chip${result.forgot ? " is-forgot" : ""}`}
+      role="status"
+    >
+      <span className="agent-memory-chip-line" title={line}>
+        <span className="agent-memory-chip-text">
+          {before}
+          {what}
+        </span>
+        <span className="agent-memory-chip-scope">{scope}</span>
       </span>
       <span className="agent-memory-chip-actions">
         <button type="button" disabled={state === "busy"} onClick={undo}>

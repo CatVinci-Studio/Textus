@@ -126,7 +126,7 @@ test("an AI edit and a review note on folded text open the fold", async ({
   // Wide enough for the margin, where the note goes.
   await page.setViewportSize({ width: 1440, height: 900 });
   const { editor, hidden } = await openFolded(page, {
-    "levis-agent-panel-open": "1",
+    "textus-agent-panel-open": "1",
   });
   await mockInvoke(page, {
     ai_agent_message: [
@@ -209,14 +209,18 @@ test("a continuation after a fold lands in its own paragraph and leaves the fold
     "The end. Now and this ghost text is a canned dev-shim suggestion.",
   );
   await expect(hidden).toBeHidden();
-  // Typing at the end of folded text (opened by the caret) asks for none:
-  // the document goes on after it.
+  // At the end of folded text (opened by the caret), mid-document, one is
+  // offered too, and goes into that paragraph, inside the fold.
   await editor.locator(".raw-html-details-head summary").click();
   await editor.getByText(NOTED).click();
   await page.keyboard.press("End");
   await page.keyboard.type(" More");
-  await page.waitForTimeout(1500);
-  await expect(ghost).toHaveCount(0);
+  await expect(ghost).toHaveCount(1);
+  await page.keyboard.press("Tab");
+  await expect(editor.locator("p", { hasText: NOTED })).toHaveText(
+    `${NOTED} More and this ghost text is a canned dev-shim suggestion.`,
+  );
+  await expect(editor.locator(".raw-html-details-head summary")).toHaveCount(1);
 });
 
 test("the arrow keys stop on a fold's source lines instead of skipping them", async ({

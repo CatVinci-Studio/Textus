@@ -18,12 +18,9 @@
    would otherwise keep Textus's accent bar. SettingsContext sets
    data-user-theme while an imported theme is active.
 
-   The layer was `levis-content` before the rename to Textus. It was renamed
-   rather than kept: CSS written for Levis that says
-   `@layer levis-content { ... }` now creates a layer declared after this
-   one, so its rules still override the built-in look (more reliably than
-   before, when specificity inside the shared layer decided), and unlayered
-   CSS wins over both as always (e2e/user-css.spec.ts). */
+   CSS that puts its rules in a layer of its own (`@layer mine { ... }`)
+   creates a layer declared after this one, so its rules still override the
+   built-in look, and unlayered CSS wins over both (e2e/user-css.spec.ts). */
 
 @layer textus-content {
   /* The document's type. The size follows the column: the classic 16.5px

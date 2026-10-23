@@ -200,14 +200,12 @@ test("an outline jump lands the heading below the window bar", async ({
   expect(top).toBeLessThan(120);
 });
 
-test("accepting one of two proposals in a paragraph keeps the other", async ({
-  page,
-}) => {
+test("accepting one of two proposals keeps the other", async ({ page }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
-  await pasteMarkdown(page, "The cat sat on the mat and the dog ran far.");
+  await pasteMarkdown(page, "The cat sat on the mat.\n\nThe dog ran far.");
   await mockInvoke(page, {
     ai_agent_message: [
       { kind: "User", text: "Fix both" },
@@ -239,9 +237,8 @@ test("accepting one of two proposals in a paragraph keeps the other", async ({
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("Fix both");
   await composer.press("Enter");
-  const accept = page.locator(
-    ".agent-proposal-actions .inline-chat-action-primary",
-  );
+  // Two in a row are one card (ProposalGroup), a row each with its ✓.
+  const accept = page.locator(".agent-proposal-group-rows .pending-pick-take");
   await expect(accept).toHaveCount(2);
   // The second first, then the first: both land.
   await accept.nth(1).click();
@@ -249,7 +246,10 @@ test("accepting one of two proposals in a paragraph keeps the other", async ({
   await accept.first().click();
   await expect(accept).toHaveCount(0);
   await expect(page.locator(".milkdown p").first()).toHaveText(
-    "The cat slept on the mat and the dog walked far.",
+    "The cat slept on the mat.",
+  );
+  await expect(page.locator(".milkdown p").nth(1)).toHaveText(
+    "The dog walked far.",
   );
 });
 
@@ -260,7 +260,7 @@ test("a narrow window numbers the notes as the chat lists them", async ({
   await page.setViewportSize({ width: 900, height: 780 });
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "First paragraph here.\n\nSecond paragraph here.");
   const comment = (id: string, anchor: string, text: string) => [
@@ -303,7 +303,7 @@ test("a note opened from its badge stays under the Settings backdrop", async ({
   await page.setViewportSize({ width: 900, height: 780 });
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "First paragraph here.");
   await mockInvoke(page, {
@@ -349,7 +349,7 @@ test("a note opened from its badge stays under the Settings backdrop", async ({
 test("an undone edit's card still counts what it removes", async ({ page }) => {
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "The cat sat on the mat.\n\nThe end.");
   // A rewrite of the selection: the card compares it with the selection
@@ -473,7 +473,7 @@ test("the adaptive column takes 62% of a pane past about 1100px, between 680 and
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "0", "textus-sidebar-open": "0" },
+    storage: { "textus-agent-panel-open": "0", "textus-sidebar-open": "0" },
   });
   // A laptop window: wider than Standard, where 56% held it at 680.
   expect(await width()).toBe(Math.round(1280 * 0.62));

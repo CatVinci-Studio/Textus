@@ -1,9 +1,11 @@
+import { withoutCitationMarkers } from "../citation-markers";
+import type { BlockNames } from "../revision/markdown-forms";
+import { OUT_OF_STEPS } from "./out-of-steps";
 import {
   Fragment,
   useEffect,
   useMemo,
   useRef,
-  useState,
   type CSSProperties,
 } from "react";
 import { AgentTurnView, type AgentTurnLabels } from "./AgentTurnView";
@@ -13,25 +15,23 @@ import type { StreamingState } from "./useAgentConversation";
 import type { Thought } from "./thought";
 import { ThoughtRow, type ThoughtRowLabels } from "./ThoughtRow";
 import { isProposalTool, parseToolProposal } from "./proposal";
-import { hasCitations } from "../citations";
-import { useSettings } from "../../settings/SettingsContext";
 import { parseUserMessage } from "./user-message";
 import { refusedProposalIds } from "../revision/proposal-status";
 import { classifyAiError, type AiErrorKind } from "../error-messages";
-import { diffLines } from "./line-diff";
 import type { PendingSentence } from "../revision/pending-edit-plugin";
 import { FlipOnChange } from "../../ui/flip";
-import {
-  loadGeneratedImage,
-  generatedImageUrl,
-} from "../revision/generated-images";
+import "../revision/pending-picture.css";
 import {
   MemoryChip,
   parseRememberResult,
   type MemoryChipLabels,
   type RememberResult,
 } from "./MemoryChip";
-import { Tooltip } from "../../ui/Tooltip";
+import { ProposalCard, notMadeLine } from "./ProposalCard";
+import { ProposalGroup, proposalRuns } from "./ProposalGroup";
+import { CommentCard, parseComment } from "./CommentCard";
+import { ThinkingIndicator } from "./ThinkingIndicator";
+import { memoryRunsOf } from "./memory-pass";
 
 /** The statuses a card reaches by being decided, which collapse it. */
 const DECIDED: ReadonlySet<PendingStatus> = new Set([
@@ -40,33 +40,22 @@ const DECIDED: ReadonlySet<PendingStatus> = new Set([
   "invalid",
 ]);
 
-/** An add_comment call's arguments (src-tauri ai/tools.rs). */
-function parseComment(
-  argumentsJson: string,
-): { anchor: string; comment: string; context?: string } | null {
-  try {
-    const parsed = JSON.parse(argumentsJson);
-    if (typeof parsed.anchor !== "string" || typeof parsed.comment !== "string")
-      return null;
-    return {
-      anchor: parsed.anchor,
-      comment: parsed.comment,
-      context: typeof parsed.context === "string" ? parsed.context : undefined,
-    };
-  } catch {
-    return null;
-  }
-}
-
 export interface ChatMessagesLabels
   extends AgentTurnLabels, MemoryChipLabels, ThoughtRowLabels {
   thinking: string;
+  /** "{n} seconds", after the indicator's label once nothing has moved
+   *  for a while (ThinkingIndicator). */
+  waitedFor: (seconds: number) => string;
   proposalTitle: string;
   proposalStatus: Record<Exclude<PendingStatus, "pending">, string>;
   proposalAccept: string;
+  proposalPicturePainting: string;
   proposalReject: string;
   proposalAcceptAll: string;
   proposalRejectAll: string;
+  /** "Show {n} more" and back, under a group's first rows (ProposalGroup). */
+  proposalGroupMore: string;
+  proposalGroupLess: string;
   /** Offered when an anchor no longer resolves - asks the model to re-issue
    *  the proposal against the document as it now reads. */
   proposalRelocate: string;
@@ -83,6 +72,9 @@ export interface ChatMessagesLabels
   /** The ✓ / ✕ on a sentence (the card's and the text's). */
   proposalTakeSentence: string;
   proposalKeepSentence: string;
+  /** What a change of a whole block (markdown-forms.ts) is called on its
+   *  card, by its kind. */
+  proposalBlocks: BlockNames;
   /** Scrolls the document to the proposal. */
   proposalShowInText: string;
   /** The checkbox on a proposal that cites the web. */
@@ -95,9 +87,18 @@ export interface ChatMessagesLabels
   /** A generate_image card's kind, and the line for a picture that wasn't
    *  made ("{reason}": the service's words). */
   proposalImage: string;
-  imageNotGenerated: string;
+  imageLimitReached: string;
+  imageNoModel: string;
   /** In place of "Thinking…" while a picture is being made. */
   generatingImage: string;
+  /** In place of "Thinking…" while an edit's call streams in. */
+  writingEdit: string;
+  /** In place of "Thinking…" while a review note's call streams in. */
+  writingNotes: string;
+  /** The reply of an exchange that ran out of steps (OUT_OF_STEPS), and
+   *  the button that asks it to go on. */
+  stoppedAtLimit: string;
+  continueAfterLimit: string;
 }
 
 export interface ChatMessagesProps {
@@ -131,7 +132,7 @@ export interface ChatMessagesProps {
   onRevealProposal?: (callId: string, index: number) => void;
   /** Jumps to an add_comment card's passage in the document; absent where
    *  the document isn't reachable (the detached window). */
-  onLocateText?: (anchor: string, context?: string) => void;
+  onLocateText?: (anchor: string, block?: string) => void;
   /** The number on an add_comment note's badge in the text, for its card
    *  to show the same; null while the note has none (a margin has room
    *  for it, or it was never placed). */
@@ -147,6 +148,9 @@ export interface ChatMessagesProps {
    *  is still available to resend - not every error is retryable this way. */
   canRetry: boolean;
   onRetry: () => void;
+  /** Asks the model to go on after an exchange ran out of steps; absent
+   *  where nothing can be sent from here. */
+  onContinue?: () => void;
   /** The conversation's document, whose project a remembered project
    *  memory belongs to (MemoryChip). */
   docPath?: string | null;
@@ -185,6 +189,7 @@ export function ChatMessages({
   noteNumber,
   canRetry,
   onRetry,
+  onContinue,
   docPath = null,
 }: ChatMessagesProps) {
   const revealFrom = useRef(0);
@@ -198,6 +203,24 @@ export function ChatMessages({
   // replace the streaming object many times a second while reusing the
   // same turns array, and none of this depends on the text.
   const streamingTurns = streaming?.turns;
+  // The live thinking row sits under the question; anything past the
+  // question - a step's rows - pushes it up out of the panel's end.
+  const thoughtAbove = (streamingTurns?.length ?? 0) > 1;
+  // The step the row at the end names: the tool coming in, else the one
+  // whose result came last - between two edits of a run the label held
+  // "Writing the edit…" rather than flicking to "Thinking…" and back, the
+  // row fading in again each time.
+  const lastTurn = streamingTurns?.at(-1);
+  const step =
+    streaming?.tool ??
+    (lastTurn?.kind === "ToolCall"
+      ? lastTurn.name
+      : lastTurn?.kind === "ToolResult"
+        ? streamingTurns?.find(
+            (t): t is Extract<AgentTurn, { kind: "ToolCall" }> =>
+              t.kind === "ToolCall" && t.call_id === lastTurn.call_id,
+          )?.name
+        : undefined);
   const shown = useMemo(
     () => (streamingTurns ? [...history, ...streamingTurns] : history),
     [history, streamingTurns],
@@ -233,8 +256,9 @@ export function ChatMessages({
     return map;
   }, [shown]);
   // What each remember call saved, parsed once per turn-list change like
-  // the proposals.
-  const rememberResults = useMemo(() => {
+  // the proposals - and the changes of one exchange together, shown as one
+  // list under its first (the others render nothing).
+  const { rememberResults, memoryRuns } = useMemo(() => {
     const remembers = new Set(
       shown.flatMap((turn) =>
         turn.kind === "ToolCall" && turn.name === "remember"
@@ -242,23 +266,32 @@ export function ChatMessages({
           : [],
       ),
     );
-    const map = new Map<string, RememberResult>();
+    const results = new Map<string, RememberResult>();
     for (const turn of shown) {
       if (turn.kind !== "ToolResult" || !remembers.has(turn.call_id)) continue;
       const result = parseRememberResult(turn.output);
-      if (result) map.set(turn.call_id, result);
+      if (result) results.set(turn.call_id, result);
     }
-    return map;
+    return {
+      rememberResults: results,
+      memoryRuns: memoryRunsOf(shown, results),
+    };
   }, [shown]);
   // A call the backend refused (tools.rs) was never a proposal: the model
   // was told and resends it, so it gets no card - nor its result.
-  const refused = useMemo(() => refusedProposalIds(shown), [shown]);
+  // And proposals in a row for the same reason, as one card
+  // (ProposalGroup); the calls after a run's first render nothing.
+  const { refused, runs } = useMemo(() => {
+    const refused = refusedProposalIds(shown);
+    return { refused, runs: proposalRuns(shown, parsedProposals, refused) };
+  }, [shown, parsedProposals]);
+  const inRun = new Set([...runs.values()].flatMap((run) => run.slice(1)));
   const imageCalls = useMemo(
     () =>
-      new Set(
+      new Map(
         shown.flatMap((turn) =>
           turn.kind === "ToolCall" && turn.name === "generate_image"
-            ? [turn.call_id]
+            ? [[turn.call_id, turn.arguments] as const]
             : [],
         ),
       ),
@@ -298,23 +331,22 @@ export function ChatMessages({
               "--reveal-delay": `${Math.min(i - revealFrom.current, 3) * 40}ms`,
             } as CSSProperties)
           : undefined;
-        // A picture that wasn't made: the reason, plainly, in the service's
-        // own words where it gave any.
-        if (
+        // A picture that wasn't made, where the user has something to do
+        // about it: the request's limit, or no image model.
+        const notMade =
           turn.kind === "ToolResult" &&
           refused.has(turn.call_id) &&
           imageCalls.has(turn.call_id)
-        )
+            ? notMadeLine(imageCalls.get(turn.call_id) ?? "", labels)
+            : null;
+        if (notMade)
           return (
             <div
               key={i}
               className={`agent-tool-line agent-image-failed${reveal ? " turn-reveal" : ""}`}
               style={style}
             >
-              {labels.imageNotGenerated.replace(
-                "{reason}",
-                notGeneratedReason(turn.output),
-              )}
+              {notMade}
             </div>
           );
         if (
@@ -327,12 +359,37 @@ export function ChatMessages({
           const proposal = parsed?.proposal;
           if (!parsed || !proposal)
             return <AgentTurnView key={i} turn={turn} labels={labels} />;
-          const known = proposalStatus(turn.call_id);
           // While a request runs, a card can render a beat before its
           // preview is registered (or, in the detached window, before the
           // editor's status push arrives) - that's still arriving, not
           // expired.
-          const status = known === "expired" && busy ? "streaming" : known;
+          const statusOf = (id: string) => {
+            const known = proposalStatus(id);
+            return known === "expired" && busy ? "streaming" : known;
+          };
+          const status = statusOf(turn.call_id);
+          const run = runs.get(turn.call_id);
+          if (inRun.has(turn.call_id)) return null;
+          if (run)
+            return (
+              <ProposalGroup
+                key={i}
+                items={run.map((id) => ({
+                  callId: id,
+                  proposal: parsedProposals.get(id)!.proposal!,
+                  status: statusOf(id),
+                }))}
+                // Its first row was a card a moment ago: it takes that
+                // card's place, not fading in from nothing again.
+                reveal={false}
+                style={style}
+                labels={labels}
+                actions={proposalActions}
+                onAccept={onAcceptProposal}
+                onReject={onRejectProposal}
+                onReveal={onRevealProposal}
+              />
+            );
           return (
             <ProposalCard
               key={i}
@@ -361,45 +418,16 @@ export function ChatMessages({
           const comment = parseComment(turn.arguments);
           if (comment) {
             commentIds.add(turn.call_id);
-            const num = noteNumber?.(turn.call_id) ?? null;
             return (
-              <div
+              <CommentCard
                 key={i}
-                className={`agent-comment${reveal ? " turn-reveal" : ""}`}
+                comment={comment}
+                num={noteNumber?.(turn.call_id) ?? null}
+                reveal={reveal}
                 style={style}
-              >
-                <div className="agent-proposal-head">
-                  {/* Where the text shows the note as a numbered badge,
-                      the card wears the same number in its place. */}
-                  {num !== null ? (
-                    <span className="agent-comment-num">{num}</span>
-                  ) : (
-                    <span className="agent-comment-icon" aria-hidden="true">
-                      <svg viewBox="0 0 16 16">
-                        <path d="M3 3.5h10v7H7l-3 2.5v-2.5H3z" />
-                      </svg>
-                    </span>
-                  )}
-                  <span className="agent-proposal-title">
-                    {labels.commentTitle}
-                  </span>
-                  {onLocateText && (
-                    <button
-                      type="button"
-                      className="agent-proposal-link agent-proposal-show"
-                      onClick={() =>
-                        onLocateText(comment.anchor, comment.context)
-                      }
-                    >
-                      {labels.commentLocate}
-                    </button>
-                  )}
-                </div>
-                <blockquote className="agent-comment-quote">
-                  {comment.anchor}
-                </blockquote>
-                <div className="agent-comment-text">{comment.comment}</div>
-              </div>
+                labels={labels}
+                onLocateText={onLocateText}
+              />
             );
           }
         }
@@ -413,18 +441,43 @@ export function ChatMessages({
         if (turn.kind === "ToolCall" && turn.name === "remember") return null;
         const remembered =
           turn.kind === "ToolResult" && rememberResults.get(turn.call_id);
-        if (remembered)
+        if (remembered) {
+          const run = memoryRuns.get(turn.call_id);
+          if (!run) return null;
           return (
             <div
               key={i}
-              className={reveal ? "turn-reveal" : undefined}
+              className={`agent-memory-group${reveal ? " turn-reveal" : ""}`}
               style={style}
             >
-              <MemoryChip
-                result={remembered}
-                docPath={docPath}
-                labels={labels}
-              />
+              {run.map((id) => (
+                <MemoryChip
+                  key={id}
+                  result={rememberResults.get(id)!}
+                  docPath={docPath}
+                  labels={labels}
+                />
+              ))}
+            </div>
+          );
+        }
+        if (turn.kind === "Assistant" && turn.text === OUT_OF_STEPS)
+          return (
+            <div
+              key={i}
+              className={`agent-stopped${reveal ? " turn-reveal" : ""}`}
+              style={style}
+            >
+              <span>{labels.stoppedAtLimit}</span>
+              {onContinue && !busy && i === history.length - 1 && (
+                <button
+                  type="button"
+                  className="inline-chat-action agent-stopped-continue"
+                  onClick={onContinue}
+                >
+                  {labels.continueAfterLimit}
+                </button>
+              )}
             </div>
           );
         // An exchange's thinking sits under its question, above
@@ -447,18 +500,36 @@ export function ChatMessages({
       {streaming && streaming.text.length > 0 && (
         <div className="turn-reveal agent-streaming">
           <AgentTurnView
-            turn={{ kind: "Assistant", text: streaming.text }}
+            turn={{
+              kind: "Assistant",
+              text: withoutCitationMarkers(streaming.text, true),
+            }}
             labels={labels}
           />
         </div>
       )}
-      {/* While the thinking row counts the seconds, it says it all. */}
-      {busy && !streaming?.text && streaming?.thought?.since == null && (
+      {/* While the thinking row counts the seconds as the last thing in
+          the panel, it says it all - but once a step's rows stand under
+          it (a skill loaded, a tool's result), it is out of sight up
+          there, and the panel read as stuck: this one shows at the
+          bottom too. Under a reply, it shows once the reply has stopped
+          coming for a moment (re-keyed by each delta, it waits again): an
+          edit's call, a picture's description or the next step can take
+          seconds with nothing else moving (rc.6). */}
+      {busy && (streaming?.thought?.since == null || thoughtAbove) && (
         <ThinkingIndicator
+          key={step ?? streaming?.text.length ?? 0}
+          after={!!streaming?.text && !step}
+          soon={!streaming?.text && !step && !streaming?.thought}
+          waitedFor={labels.waitedFor}
           label={
-            streaming?.tool === "generate_image"
+            step === "generate_image"
               ? labels.generatingImage
-              : labels.thinking
+              : step === "propose_edit"
+                ? labels.writingEdit
+                : step === "add_comment"
+                  ? labels.writingNotes
+                  : labels.thinking
           }
         />
       )}
@@ -472,48 +543,6 @@ export function ChatMessages({
       )}
     </>
   );
-}
-
-/** The three-dot "thinking" row. Shared with ChatBody's quick variant so the
- *  two chat surfaces can't drift on this markup. */
-export function ThinkingIndicator({ label }: { label: string }) {
-  return (
-    <div className="agent-thinking">
-      <span className="agent-thinking-label">{label}</span>
-      <span className="agent-thinking-dots">
-        <span />
-        <span />
-        <span />
-      </span>
-    </div>
-  );
-}
-
-/** What a generate_image result says stopped it (ai/images.rs's
- *  `outcome`), without what it tells the model to do about it. */
-function notGeneratedReason(output: string): string {
-  return output
-    .replace(/^Not generated:\s*/, "")
-    .replace(/\s*Tell the user in plain words;[\s\S]*$/, "")
-    .trim();
-}
-
-/** A proposed picture on its card, small, once the preview has it. */
-function ProposedPicture({ id, alt }: { id: string; alt: string }) {
-  const [url, setUrl] = useState(() => generatedImageUrl(id));
-  useEffect(() => {
-    let live = true;
-    if (!url)
-      void loadGeneratedImage(id).then(() => {
-        if (live) setUrl(generatedImageUrl(id));
-      });
-    return () => {
-      live = false;
-    };
-  }, [id, url]);
-  return url ? (
-    <img className="agent-proposal-picture" src={url} alt={alt} />
-  ) : null;
 }
 
 /** The error row, with a retry button when the failed send is resendable
@@ -547,293 +576,6 @@ export function ErrorRow({
         >
           {retryLabel}
         </button>
-      )}
-    </div>
-  );
-}
-
-const CHECK = (
-  <svg viewBox="0 0 16 16" aria-hidden="true">
-    <path d="M3.5 8.5l3 3 6-7" />
-  </svg>
-);
-const CROSS = (
-  <svg viewBox="0 0 16 16" aria-hidden="true">
-    <path d="M4 4l8 8M12 4l-8 8" />
-  </svg>
-);
-
-/**
- * One propose_edit call: what kind of edit it is and how many sentences it
- * changes, the model's reason, and one row of controls.
- *
- * The document is where an edit is read and decided: the text shows each
- * changed sentence struck with its replacement and a ✓ / ✕ (pending-edit-
- * plugin.ts). The card mirrors those sentences as a numbered list with the
- * same ✓ / ✕ - one decision, shown in both places - and its Accept takes
- * whatever wasn't kept ("Accept 1 of 2").
- *
- * The full line diff stays collapsed behind the size chips. The one state
- * that opens it is `invalid`: an anchor that couldn't be located leaves NO
- * in-document preview, so the card is then the only view of the content.
- */
-function ProposalCard({
-  callId,
-  proposal,
-  status,
-  reveal,
-  style,
-  selectedText,
-  labels,
-  sentences,
-  onDecide,
-  onReveal,
-  onAccept,
-  onReject,
-  onRelocate,
-  actions = true,
-}: {
-  callId: string;
-  proposal: EditProposal;
-  status: PendingStatus;
-  reveal: boolean;
-  style: CSSProperties | undefined;
-  selectedText: string | null;
-  labels: ChatMessagesLabels;
-  sentences: PendingSentence[] | null;
-  onDecide?: (callId: string, index: number, take: boolean | null) => void;
-  onReveal?: (callId: string, index: number) => void;
-  onAccept: (callId: string, text?: string) => void;
-  onReject: (callId: string) => void;
-  onRelocate: (proposal: EditProposal) => void;
-  actions?: boolean;
-}) {
-  const [diffOpen, setDiffOpen] = useState(status === "invalid");
-  // The proposal cites the web: Accept writes the sources as footnotes, or
-  // leaves them out (usePendingEdits) - the last card's choice stands.
-  const { settings, setSettings } = useSettings();
-  // A proposal that turns invalid after mounting (its preview resolved and
-  // failed) must pop open - the card just became the only view of it.
-  useEffect(() => {
-    if (status === "invalid") setDiffOpen(true);
-  }, [status]);
-
-  // `append` has nothing to compare against; the others diff the text they
-  // target against the replacement. replace_selection targets the captured
-  // selection rather than a quoted anchor.
-  const before =
-    proposal.action === "append"
-      ? ""
-      : proposal.action === "replace_selection"
-        ? (selectedText ?? "")
-        : (proposal.anchor ?? "");
-  const after =
-    proposal.action === "delete"
-      ? ""
-      : proposal.action === "insert_before"
-        ? `${proposal.text ?? ""}\n${before}`
-        : proposal.action === "insert_after"
-          ? `${before}\n${proposal.text ?? ""}`
-          : (proposal.text ?? "");
-  // Memoized because this re-renders on every streaming delta while a later
-  // turn is still arriving, and the LCS diff is up to 400x400 lines.
-  const lines = useMemo(() => diffLines(before, after), [before, after]);
-  const added = lines.filter((line) => line.kind === "add").length;
-  const removed = lines.filter((line) => line.kind === "remove").length;
-
-  const taken = sentences?.filter((s) => s.take !== false).length ?? 0;
-  const partial = !!sentences && taken < sentences.length;
-
-  return (
-    <div
-      className={`agent-proposal${reveal ? " turn-reveal" : ""}`}
-      data-status={status}
-      style={style}
-    >
-      <div className="agent-proposal-head">
-        <span className="agent-proposal-icon" aria-hidden="true">
-          {CHECK}
-        </span>
-        <span className="agent-proposal-title">
-          {labels.proposalTitle}
-          <span className="agent-proposal-kind">
-            {" · "}
-            {proposal.image
-              ? labels.proposalImage
-              : sentences && sentences.length > 1
-                ? labels.proposalChangeCount.replace(
-                    "{n}",
-                    String(sentences.length),
-                  )
-                : labels.actionNames[proposal.action]}
-          </span>
-        </span>
-        {/* Listed sentence by sentence below, the size chips (the full
-            diff's toggle) only crowd the head - kept for the rest. */}
-        {!(sentences && sentences.length > 1) && !proposal.image && (
-          <Tooltip text={diffOpen ? labels.diffCollapse : labels.diffShow}>
-            <button
-              type="button"
-              className="agent-diff-summary"
-              aria-expanded={diffOpen}
-              onClick={() => setDiffOpen(!diffOpen)}
-            >
-              {added > 0 && (
-                <span className="agent-diff-chip agent-diff-add">+{added}</span>
-              )}
-              {removed > 0 && (
-                <span className="agent-diff-chip agent-diff-remove">
-                  {"\u2212"}
-                  {removed}
-                </span>
-              )}
-              <span className="agent-diff-caret" aria-hidden="true" />
-            </button>
-          </Tooltip>
-        )}
-        {status === "pending" && onReveal && (
-          <button
-            type="button"
-            className="agent-proposal-link agent-proposal-show"
-            onClick={() => onReveal(callId, -1)}
-          >
-            {labels.proposalShowInText}
-          </button>
-        )}
-      </div>
-      {proposal.reason && (
-        <div className="agent-proposal-reason">{proposal.reason}</div>
-      )}
-      {proposal.image && status !== "rejected" && (
-        <ProposedPicture id={proposal.image.id} alt={proposal.image.alt} />
-      )}
-      {diffOpen && (
-        <div className="agent-proposal-diff">
-          {lines.map((line, i) => (
-            <div key={i} className={`agent-diff-line agent-diff-${line.kind}`}>
-              <span className="agent-diff-marker" aria-hidden="true">
-                {line.kind === "add" ? "+" : line.kind === "remove" ? "-" : " "}
-              </span>
-              <span className="agent-diff-text">{line.text || "\u00a0"}</span>
-            </div>
-          ))}
-        </div>
-      )}
-      {sentences && sentences.length > 1 && (
-        <ol className="agent-proposal-sentences">
-          {sentences.map((s, k) => {
-            const state =
-              s.take === false ? "kept" : s.take === true ? "taken" : "open";
-            return (
-              <li key={k} data-state={state}>
-                <button
-                  type="button"
-                  className="agent-proposal-sentence"
-                  onClick={() => onReveal?.(callId, k)}
-                >
-                  <span className="agent-proposal-num">{k + 1}</span>
-                  <span className="agent-proposal-sentence-text">
-                    {(state === "kept" ? s.before : s.after).trim() ||
-                      s.before.trim()}
-                  </span>
-                </button>
-                {actions && onDecide && (
-                  <span className="agent-proposal-pick">
-                    <Tooltip text={labels.proposalTakeSentence}>
-                      <button
-                        type="button"
-                        className="pending-pick-take"
-                        aria-pressed={s.take === true}
-                        aria-label={labels.proposalTakeSentence}
-                        onClick={() =>
-                          onDecide(callId, k, s.take === true ? null : true)
-                        }
-                      >
-                        {CHECK}
-                      </button>
-                    </Tooltip>
-                    <Tooltip text={labels.proposalKeepSentence}>
-                      <button
-                        type="button"
-                        className="pending-pick-keep"
-                        aria-pressed={s.take === false}
-                        aria-label={labels.proposalKeepSentence}
-                        onClick={() =>
-                          onDecide(callId, k, s.take === false ? null : false)
-                        }
-                      >
-                        {CROSS}
-                      </button>
-                    </Tooltip>
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ol>
-      )}
-      {status === "pending" && hasCitations(proposal.text ?? "") && (
-        <label className="agent-proposal-footnotes">
-          <input
-            type="checkbox"
-            className="ui-check"
-            checked={settings.sourcesAsFootnotes}
-            onChange={(e) =>
-              setSettings({ sourcesAsFootnotes: e.target.checked })
-            }
-          />
-          {labels.proposalSourcesAsFootnotes}
-        </label>
-      )}
-      {status === "pending" ? (
-        actions && (
-          <div className="agent-proposal-actions">
-            <button
-              className="inline-chat-action inline-chat-action-primary"
-              onClick={() => onAccept(callId)}
-            >
-              {partial && sentences
-                ? labels.proposalAcceptSome
-                    .replace("{k}", String(taken))
-                    .replace("{n}", String(sentences.length))
-                : labels.proposalAccept}
-            </button>
-            <button
-              className="inline-chat-action"
-              onClick={() => onReject(callId)}
-            >
-              {labels.proposalReject}
-            </button>
-          </div>
-        )
-      ) : status === "invalid" ? (
-        // The anchor no longer resolves to exactly one place, so there's
-        // nothing to preview and nothing safe to write. The only honest move
-        // is to ask the model again against the document as it now reads -
-        // applying this text blind is what the old direct-apply fallback
-        // did, and it could land an edit somewhere the user never saw
-        // highlighted.
-        <>
-          <div className="agent-proposal-status agent-proposal-status-invalid">
-            {labels.proposalStatus.invalid}
-          </div>
-          {/* A picture's place can't be asked for again: its text is the
-              picture's placeholder, not words the model wrote. */}
-          {!proposal.image && (
-            <button
-              className="inline-chat-action"
-              onClick={() => onRelocate(proposal)}
-            >
-              {labels.proposalRelocate}
-            </button>
-          )}
-        </>
-      ) : (
-        <div
-          className={`agent-proposal-status agent-proposal-status-${status}`}
-        >
-          {labels.proposalStatus[status]}
-        </div>
       )}
     </div>
   );

@@ -1,8 +1,4 @@
-import { FileTree } from "../sidebar/FileTree";
-import { Outline } from "../sidebar/Outline";
-import { ClipboardHistory } from "../sidebar/ClipboardHistory";
-import { TreeTabIcon, OutlineTabIcon, ClipboardTabIcon } from "../ui/icons";
-import { canOpenFolder, isIOSApp } from "../platform/capabilities";
+import { isIOSApp } from "../platform/capabilities";
 import { Presence, PresenceDiv, type PresenceHandle } from "../ui/usePresence";
 import { ResizeHandle } from "../ui/ResizeHandle";
 import type { Strings } from "../i18n/strings";
@@ -10,11 +6,11 @@ import type { PanelMode } from "./useSidePanels";
 import type { useSidebarWidth } from "./sidebar-width";
 import type { OpenFolder } from "./useOpenFolder";
 import { Tooltip } from "../ui/Tooltip";
-import { PHONE_QUERY } from "../ui/usePhoneLayout";
+import { sidebarTab, sidebarTabs } from "./sidebar-tabs";
 
-/** The left sidebar (file tree, outline, clipboard history) and, on
- *  iPhone, the scrim behind its drawer. Its open state lives in
- *  useSidePanels. */
+/** The left sidebar - its tabs (sidebar-tabs.tsx: the file tree, the
+ *  outline, the clipboard history) - and, on iPhone, the scrim behind its
+ *  drawer. Its open state lives in useSidePanels. */
 export function Sidebar({
   open,
   presence,
@@ -56,6 +52,8 @@ export function Sidebar({
   onSearchFocusHandled: () => void;
   t: Strings;
 }) {
+  // The tab chosen, or Files for one no longer there.
+  const shown = sidebarTab(mode);
   return (
     <>
       {/* iPhone: the sidebar is a drawer over the page (mobile/styles),
@@ -79,66 +77,31 @@ export function Sidebar({
           <>
             <div className="sidebar-header" inert={closing || undefined}>
               <div className="sidebar-tabs">
-                <Tooltip text={t.treeTab}>
-                  <button
-                    className={`sidebar-tab ${mode === "tree" ? "sidebar-tab-active" : ""}`}
-                    onClick={() => onModeChange("tree")}
-                    aria-label={t.treeTab}
-                  >
-                    <TreeTabIcon />
-                  </button>
-                </Tooltip>
-                <Tooltip text={t.outlineTab}>
-                  <button
-                    className={`sidebar-tab ${mode === "outline" ? "sidebar-tab-active" : ""}`}
-                    onClick={() => onModeChange("outline")}
-                    aria-label={t.outlineTab}
-                  >
-                    <OutlineTabIcon />
-                  </button>
-                </Tooltip>
-                <Tooltip text={t.clipboardTab}>
-                  <button
-                    className={`sidebar-tab ${mode === "clipboard" ? "sidebar-tab-active" : ""}`}
-                    onClick={() => onModeChange("clipboard")}
-                    aria-label={t.clipboardTab}
-                  >
-                    <ClipboardTabIcon />
-                  </button>
-                </Tooltip>
+                {sidebarTabs().map(({ id, label, Icon }) => (
+                  <Tooltip key={id} text={label(t)}>
+                    <button
+                      className={`sidebar-tab ${shown.id === id ? "sidebar-tab-active" : ""}`}
+                      onClick={() => onModeChange(id)}
+                      aria-label={label(t)}
+                    >
+                      <Icon />
+                    </button>
+                  </Tooltip>
+                ))}
               </div>
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
-              {mode === "tree" &&
-                (openFolder.treeRoot ? (
-                  <FileTree
-                    root={openFolder.treeRoot}
-                    onRootChange={openFolder.setTreeRoot}
-                    folder={openFolder.folder}
-                    activePath={activePath}
-                    onFileSelect={(path) => {
-                      // On a phone the drawer covers the page it just
-                      // opened (mobile/styles); a docked one stays.
-                      if (isIOSApp && window.matchMedia(PHONE_QUERY).matches)
-                        onClose();
-                      onOpenFile(path);
-                    }}
-                    onOpenFolder={
-                      canOpenFolder ? openFolder.openFolderDialog : undefined
-                    }
-                    onCloseFolder={openFolder.closeFolder}
-                    onEntryMoved={onEntryMoved}
-                    searchFocusRequest={searchFocusRequest}
-                    onSearchFocusHandled={onSearchFocusHandled}
-                  />
-                ) : (
-                  // An unsaved draft has no folder - an empty panel read
-                  // as broken. File > Open Folder… is the way to one; a
-                  // button for it here sat oddly under the note.
-                  <div className="clipboard-empty">{t.treeEmptyDraft}</div>
-                ))}
-              {mode === "outline" && <Outline content={activeContent} />}
-              {mode === "clipboard" && <ClipboardHistory />}
+              <shown.Panel
+                t={t}
+                openFolder={openFolder}
+                activePath={activePath}
+                activeContent={activeContent}
+                onOpenFile={onOpenFile}
+                onClose={onClose}
+                onEntryMoved={onEntryMoved}
+                searchFocusRequest={searchFocusRequest}
+                onSearchFocusHandled={onSearchFocusHandled}
+              />
             </div>
             {/* Its width is the user's to drag on a desktop; an iPad's
               sidebar keeps the one the layout gives it. */}

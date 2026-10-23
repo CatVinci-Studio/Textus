@@ -80,35 +80,114 @@ pub fn block_on<F: std::future::Future>(future: F) -> F::Output {
 /// (how the matrix is re-run against another model).
 pub fn agent_model() -> String {
     std::env::var("TEXTUS_EVAL_AGENT_MODEL").unwrap_or_else(|_| {
-        crate::ai::catalog::find(agent_provider_id())
+        let model = crate::ai::catalog::find(agent_provider_id())
             .and_then(|e| e.agent_default_model)
-            .expect("the eval's provider has an agent default")
-            .to_string()
+            .expect("the eval's provider has an agent default");
+        // Vertex AI names Google's own models by their publisher.
+        if on_vertex() {
+            format!("google/{model}")
+        } else {
+            model.to_string()
+        }
     })
+}
+
+/// TEXTUS_EVAL_PROVIDER=vertex: Gemini on Vertex AI, with the API key
+/// GOOGLE_VERTEX_API_KEY (express mode) and the project
+/// TEXTUS_EVAL_VERTEX_PROJECT - its OpenAI-compatible endpoint on
+/// aiplatform.googleapis.com, never the Gemini Developer API.
+fn on_vertex() -> bool {
+    std::env::var("TEXTUS_EVAL_PROVIDER").is_ok_and(|v| v == "vertex")
 }
 
 /// TEXTUS_EVAL_PROVIDER=doubao: the agent cases run on Volcengine Ark
 /// (VOLCENGINE_ARK_API_KEY) instead of Claude, through the same
 /// AgentProvider path - to compare a change on a second provider, or when
 /// the Claude key can't be used. The judge stays Claude.
+///
+/// TEXTUS_EVAL_PROVIDER=deepseek or minimax: on DeepSeek
+/// (DEEPSEEK_API_KEY) or MiniMax's China platform (MINIMAX_API_KEY), the
+/// same way.
+///
+/// TEXTUS_EVAL_PROVIDER=chatgpt: on a ChatGPT subscription, as Textus on
+/// this machine is signed in (Settings › Textus AI › ChatGPT): its
+/// auth-codex.json, read where it is - never copied, printed or refreshed,
+/// so the app's sign-in stays as it was. Sign in again there once its
+/// token has expired.
 pub fn agent_provider_id() -> &'static str {
     match std::env::var("TEXTUS_EVAL_PROVIDER").as_deref() {
         Ok("doubao") => "doubao",
+        Ok("deepseek") => "deepseek",
+        Ok("minimax") => "minimax",
+        Ok("chatgpt") => "openai",
+        Ok("vertex") => "google",
         _ => "anthropic",
     }
+}
+
+/// The app's ChatGPT sign-in (auth/openai_codex.rs's auth-codex.json):
+/// its access token and account.
+pub(crate) fn chatgpt_sign_in() -> (String, String) {
+    let path = std::env::var_os("HOME")
+        .map(PathBuf::from)
+        .expect("HOME")
+        .join(".config/com.catvinci.textus/auth-codex.json");
+    let text = std::fs::read_to_string(&path).expect("Textus signed in to ChatGPT");
+    let auth: Value = serde_json::from_str(&text).expect("auth-codex.json");
+    let expires = auth["expires"].as_i64().unwrap_or(0);
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as i64;
+    assert!(
+        expires > now,
+        "the ChatGPT sign-in has expired: sign in again in Textus"
+    );
+    let field = |name: &str| {
+        auth[name]
+            .as_str()
+            .unwrap_or_else(|| panic!("auth-codex.json has no {name}"))
+            .to_string()
+    };
+    (field("access"), field("account_id"))
 }
 
 /// The endpoint the agent cases run on (see agent_provider_id).
 fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
     match agent_provider_id() {
-        "doubao" => {
-            let base_url = crate::ai::catalog::find("doubao")
+        "openai" => {
+            let (access_token, account_id) = chatgpt_sign_in();
+            Endpoint::Codex {
+                access_token,
+                account_id,
+                originator: crate::app_identity::ORIGINATOR.to_string(),
+            }
+        }
+        id @ ("doubao" | "deepseek" | "minimax") => {
+            let base_url = crate::ai::catalog::find(id)
                 .and_then(|e| e.base_url)
-                .expect("doubao has a base_url");
+                .expect("the provider has a base_url");
+            let key = match id {
+                "doubao" => "VOLCENGINE_ARK_API_KEY",
+                "deepseek" => "DEEPSEEK_API_KEY",
+                _ => "MINIMAX_API_KEY",
+            };
             Endpoint::ChatCompletions {
                 base_url: base_url.to_string(),
-                api_key: Some(secret("VOLCENGINE_ARK_API_KEY").expect("VOLCENGINE_ARK_API_KEY")),
+                api_key: Some(secret(key).unwrap_or_else(|| panic!("{key}"))),
                 vendor: crate::ai::route::chat_vendor(base_url),
+                stream_usage: true,
+            }
+        }
+        "google" => {
+            let project = std::env::var("TEXTUS_EVAL_VERTEX_PROJECT")
+                .expect("TEXTUS_EVAL_VERTEX_PROJECT: the Vertex AI project");
+            Endpoint::ChatCompletions {
+                base_url: format!(
+                    "https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/endpoints/openapi"
+                ),
+                api_key: Some(secret("GOOGLE_VERTEX_API_KEY").expect("GOOGLE_VERTEX_API_KEY")),
+                vendor: crate::ai::route::chat_vendor("https://aiplatform.googleapis.com"),
                 stream_usage: true,
             }
         }
@@ -171,6 +250,87 @@ pub fn par_map<T: Sync, R: Send>(items: &[T], f: impl Fn(&T) -> R + Sync) -> Vec
         .collect()
 }
 
+/// With TEXTUS_EVAL_TIMELINE=1, what the stream sends and when, printed as
+/// it comes: each run of thinking, text or a tool call's arguments with its
+/// start, end and size, and every pause of over a second between events -
+/// to see where a request keeps the user waiting.
+struct Timeline {
+    on: bool,
+    started: Instant,
+    state: Mutex<TimelineState>,
+}
+
+#[derive(Default)]
+struct TimelineState {
+    kind: String,
+    since: f64,
+    last: f64,
+    chars: usize,
+    head: String,
+}
+
+impl Timeline {
+    fn from_env() -> Self {
+        Timeline {
+            on: std::env::var("TEXTUS_EVAL_TIMELINE").is_ok_and(|v| v == "1"),
+            started: Instant::now(),
+            state: Mutex::new(TimelineState::default()),
+        }
+    }
+
+    fn observe(&self, event: &ProviderEvent<'_>) {
+        if !self.on {
+            return;
+        }
+        let (kind, text) = match event {
+            ProviderEvent::Thinking(t) => ("thinking".to_string(), *t),
+            ProviderEvent::Text(t) => ("text".to_string(), *t),
+            ProviderEvent::ToolStart { name, .. } => (format!("start {name}"), ""),
+            ProviderEvent::ToolArgs { delta, .. } => ("tool args".to_string(), *delta),
+            ProviderEvent::Citation { .. } => ("citation".to_string(), ""),
+        };
+        let now = self.started.elapsed().as_secs_f64();
+        let mut s = self.state.lock().unwrap();
+        if now - s.last > 1.0 && !s.kind.is_empty() {
+            Self::flush(&s);
+            eprintln!("  [timeline] {:6.1}s .. {:6.1}s  (nothing)", s.last, now);
+            s.kind.clear();
+        }
+        if s.kind != kind {
+            if !s.kind.is_empty() {
+                Self::flush(&s);
+            }
+            *s = TimelineState {
+                kind,
+                since: now,
+                ..Default::default()
+            };
+        }
+        s.last = now;
+        s.chars += text.chars().count();
+        if s.head.chars().count() < 70 {
+            s.head.push_str(text);
+        }
+    }
+
+    fn flush(s: &TimelineState) {
+        let head: String = s.head.chars().take(70).collect();
+        eprintln!(
+            "  [timeline] {:6.1}s .. {:6.1}s  {} ({} chars) {:?}",
+            s.since, s.last, s.kind, s.chars, head
+        );
+    }
+}
+
+impl Drop for Timeline {
+    fn drop(&mut self) {
+        let s = self.state.lock().unwrap();
+        if self.on && !s.kind.is_empty() {
+            Self::flush(&s);
+        }
+    }
+}
+
 fn transient(err: &str) -> bool {
     [
         "429",
@@ -217,6 +377,9 @@ pub fn price(model: &str) -> [f64; 4] {
         "claude-sonnet-5-5" => [2.0, 2.5, 0.20, 10.0],
         // Approximate, from Ark's yuan list prices.
         m if m.starts_with("doubao-") => [0.55, 0.0, 0.11, 2.2],
+        // The highest rates listed for each (2026), so the guard stops early.
+        m if m.starts_with("deepseek-") => [1.74, 0.0, 0.15, 3.96],
+        m if m.starts_with("MiniMax-") => [0.375, 0.0, 0.06, 1.5],
         _ => [4.0, 5.0, 0.20, 20.0],
     }
 }
@@ -347,6 +510,11 @@ pub struct UserTurn {
     /// sendContext + chat-selection-plugin), so "shorter" -> Accept ->
     /// "now more formal" targets the rewritten text.
     pub follow_selection: bool,
+    /// Neither accepts nor rejects: the proposals stay undecided into the
+    /// next message, as when the user types on (or queues a message)
+    /// before deciding. A later edit quoted from them goes into them, as
+    /// the frontend's joinEdit does; a later turn's Accept takes them too.
+    pub leave: bool,
 }
 
 impl UserTurn {
@@ -356,6 +524,15 @@ impl UserTurn {
             caret: Caret::default(),
             accept: true,
             follow_selection: false,
+            leave: false,
+        }
+    }
+
+    /// This message, its proposals left undecided.
+    pub fn leaving(message: impl Into<String>) -> UserTurn {
+        UserTurn {
+            leave: true,
+            ..UserTurn::new(message)
         }
     }
 }
@@ -375,6 +552,8 @@ pub struct TurnOutcome {
     /// each one cost the user a round trip of waiting.
     pub invalid_proposals: usize,
     pub invalid_errors: Vec<String>,
+    /// Proposals that went into an earlier, undecided one (joinEdit).
+    pub joined: usize,
     pub comments: Vec<(String, String)>,
     pub reply: String,
     pub tools: Vec<String>,
@@ -511,13 +690,31 @@ pub struct AgentSetup<'a> {
     /// thinking block replayed after an edit to the history fails the case
     /// instead of passing on an account the check isn't enforced for.
     pub thinking: ThinkingLevel,
+    /// generate_image, for the picture cases: None offers no such tool, as
+    /// the app does without an image model.
+    pub pictures: Option<&'a crate::ai::images::ImageRun>,
+    /// The memory pass after each exchange, writing to these folders, and what they hold
+    /// sent with each message, read again every turn - as the app does
+    /// with Remember automatically on. None: nothing is remembered.
+    pub memory: Option<&'a crate::ai::memory::MemoryDirs>,
 }
+
+/// Mirrors src/ai/revision/proposal-status.ts's note for a proposal not
+/// decided yet.
+const PENDING_NOTE: &str = "Status: the user has NOT yet accepted or rejected this proposed edit. It is shown to them as a preview and is NOT in the document text in this request - do not assume it was applied. To change it or go on from it, anchor in its text: the edit goes into this proposal.";
+
+/// Mirrors src/ai/revision/proposal-status.ts's note for an edit that went
+/// into another proposal.
+const JOINED_NOTE: &str = "Status: this went into the proposed text it changes or goes next to - that proposal now reads with it, and it is accepted or rejected with that proposal.";
 
 /// Mirrors src/ai/revision/proposal-status.ts's notes for the two decided states.
 const ACCEPTED_NOTE: &str =
     "Status: the user accepted this proposed edit - the document text in this request includes it.";
 const REJECTED_NOTE: &str =
     "Status: the user rejected this proposed edit - it was not applied. Don't propose it again unless asked.";
+/// Mirrors src/ai/revision/proposal-status.ts's note for a proposal a later
+/// one took the place of.
+const REPLACED_NOTE: &str = "Status: a later proposal of yours for the same passage took this one's place before the user decided on it - it was not applied, and the user didn't reject it.";
 
 /// Longest tool result kept in a case's record (the model saw all of it).
 const RECORDED_RESULT_CHARS: usize = 4_000;
@@ -542,13 +739,12 @@ pub fn run_conversation(
 ) -> Conversation {
     let ws = setup.workspace;
     let root = ws.root.as_deref().map(Path::new);
-    let tool_set =
-        // No remember tool: an eval run writes no memories. Images as the
-        // app offers them to the provider the eval runs on (Anthropic).
-        tools::ToolRegistry::builtin(ws.has_usable_skills(), root.is_some(), setup.mode, false, sees_images());
-    let specs = tool_set.specs();
+    // What generate_image streams (its start) goes nowhere here.
+    let events = tauri::ipc::Channel::new(|_| Ok(()));
     let mut history: Vec<AgentTurn> = Vec::new();
     let mut doc = document.to_string();
+    // Proposals left undecided, by call id, as they now read.
+    let mut held_back: Vec<(String, Proposal)> = Vec::new();
     let mut outcomes = Vec::new();
     let mut error = None;
     // Quick Ask's captured selection, mapped through accepted edits.
@@ -558,6 +754,18 @@ pub fn run_conversation(
         .and_then(|t| t.caret.selection);
 
     for user in script {
+        // What is remembered so far, sent with this message.
+        let remembering;
+        let ws = match setup.memory {
+            Some(dirs) => {
+                let mut with = setup.workspace.clone();
+                with.remember = true;
+                with.memories = dirs.load();
+                remembering = with;
+                &remembering
+            }
+            None => setup.workspace,
+        };
         let (message_sent, caret) = match (user.follow_selection, selection) {
             (true, Some((s, e))) => (
                 format!(
@@ -579,8 +787,16 @@ pub fn run_conversation(
                 .or(caret.cursor)
                 .and_then(|at| heading_at(&doc, at))
         });
-        let instructions =
-            build_instructions(ws, &doc, true, setup.mode, &message_sent, setup.ui_language);
+        // The document as the editor sends it: block by block.
+        let document = crate::ai::doc_blocks::Document::from_markdown(&doc);
+        let instructions = build_instructions(
+            ws,
+            &document,
+            true,
+            setup.mode,
+            &message_sent,
+            setup.ui_language,
+        );
         // The app's conventions for this workspace (the setting is the
         // default, Automatic): proposals are post-processed as the app does
         // (agent::postfix_step), and what was fixed is recorded.
@@ -589,18 +805,40 @@ pub fn run_conversation(
             project: ws.conventions.clone(),
         };
         let library = crate::ai::conventions::library_names(ws);
+        let undecided = crate::ai::images::undecided_edits(&history);
         let ctx = ToolContext {
-            document: &doc,
+            document: &document,
+            undecided: &undecided,
             skills: &ws.skills,
             ui_language: setup.ui_language,
             root,
             sees_images: sees_images(),
             conventions: &conventions,
             library: &library,
-            memory: None,
             proposed: Default::default(),
             checks: Default::default(),
         };
+        // Images as the
+        // app offers them to the provider the eval runs on (Anthropic), and
+        // generate_image when the case gives it one, on this turn's
+        // document as the app does per request.
+        let mut tool_set = tools::ToolRegistry::builtin(
+            ws.has_usable_skills(),
+            root.is_some(),
+            setup.mode,
+            sees_images(),
+        );
+        if let Some(pictures) = setup.pictures {
+            tool_set.add(pictures.tool(
+                &document,
+                crate::ai::images::ProposedText {
+                    this_request: &ctx.proposed,
+                    undecided: &undecided,
+                },
+                &events,
+            ));
+        }
+        let specs = tool_set.specs();
         let usage = RefCell::new(Vec::new());
         let postfix = RefCell::new(Vec::new());
         let thinking_events = AtomicUsize::new(0);
@@ -615,7 +853,14 @@ pub fn run_conversation(
             native_search: None,
             enforce_binding: true,
         };
+        // Pictures written into the text, begun as the app begins them.
+        let inline = setup.pictures.map(|p| p.inline(&ctx.proposed));
+        let timeline = Timeline::from_env();
         let sink = |event: ProviderEvent<'_>| {
+            timeline.observe(&event);
+            if let Some(inline) = &inline {
+                inline.observe(&event);
+            }
             if let ProviderEvent::Thinking(text) = event {
                 thinking_events.fetch_add(1, Ordering::Relaxed);
                 thinking_chars.fetch_add(text.chars().count(), Ordering::Relaxed);
@@ -629,7 +874,7 @@ pub fn run_conversation(
                     ws,
                     setup.mode,
                     setup.ui_language,
-                    &request_context(ws, &doc, true, &message_sent, focus_heading.as_deref()),
+                    &request_context(ws, &document, true, &message_sent, focus_heading.as_deref()),
                     &message_sent,
                 ),
                 images: Vec::new(),
@@ -639,7 +884,7 @@ pub fn run_conversation(
                 let (instructions, specs, usage, postfix) =
                     (&instructions, &specs, &usage, &postfix);
                 let (agent, sink) = (&agent, &sink);
-                let (doc, conventions) = (&doc, &conventions);
+                let (document, conventions, inline) = (&document, &conventions, &inline);
                 async move {
                     // with_retry's loop, inline: this already runs inside
                     // block_on, which can't be nested.
@@ -656,7 +901,8 @@ pub fn run_conversation(
                     };
                     charge(setup.model, &used);
                     usage.borrow_mut().push(used);
-                    let (step, applied) = crate::ai::agent::postfix_step(step, doc, conventions);
+                    let (step, applied) =
+                        crate::ai::agent::settle_step(step, document, conventions, inline.as_ref());
                     postfix
                         .borrow_mut()
                         .extend(applied.into_iter().map(str::to_string));
@@ -668,6 +914,8 @@ pub fn run_conversation(
             |_| {},
         ));
         let latency_ms = started.elapsed().as_millis();
+        // generate_image held this turn's document; the next turn's may differ.
+        drop(tool_set);
         let mut turns = match result {
             Ok(turns) => turns,
             Err(e) => {
@@ -747,10 +995,81 @@ pub fn run_conversation(
             }
         }
 
-        if user.accept && !outcome.proposals.is_empty() {
-            match checks::apply_all(&doc, &outcome.proposals, caret) {
-                Ok(next) => doc = next,
-                Err(e) => outcome.apply_error = Some(e),
+        // An edit quoted from an undecided proposal goes into it - also one
+        // of document text a rewrite replaces (joinInto).
+        let mut standing = Vec::new();
+        let mut standing_ids = Vec::new();
+        let mut joined_ids = Vec::new();
+        let ids = std::mem::take(&mut proposal_ids);
+        for (proposal, id) in std::mem::take(&mut outcome.proposals).into_iter().zip(ids) {
+            let anchor = proposal.anchor.as_str();
+            let into = (!anchor.is_empty())
+                .then(|| {
+                    held_back.iter_mut().find_map(|(_, held)| {
+                        let replaces = held.action == "replace" && held.anchor.contains(anchor);
+                        (!doc.contains(anchor) || replaces)
+                            .then(|| {
+                                crate::ai::images::edited_text(
+                                    &held.text,
+                                    &proposal.action,
+                                    anchor,
+                                    &proposal.text,
+                                )
+                            })
+                            .flatten()
+                            .map(|text| (held, text))
+                    })
+                })
+                .flatten();
+            match into {
+                Some((held, text)) => {
+                    held.text = text;
+                    outcome.joined += 1;
+                    joined_ids.push(id);
+                }
+                None => {
+                    standing.push(proposal);
+                    standing_ids.push(id);
+                }
+            }
+        }
+        outcome.proposals = standing;
+        let proposal_ids = standing_ids;
+        // A new version of a passage an undecided rewrite replaces takes its
+        // place: the old one reads as rejected (useEditorProposals's
+        // addPreviews).
+        held_back.retain(|(id, held)| {
+            let superseded = held.action == "replace"
+                && outcome
+                    .proposals
+                    .iter()
+                    .any(|p| p.action == "replace" && p.anchor == held.anchor);
+            if superseded {
+                for turn in history.iter_mut() {
+                    if let AgentTurn::ToolResult {
+                        call_id, output, ..
+                    } = turn
+                    {
+                        if call_id == id {
+                            *output = output.replace(PENDING_NOTE, REPLACED_NOTE);
+                        }
+                    }
+                }
+            }
+            !superseded
+        });
+        let decided = !user.leave;
+        if user.accept && decided {
+            let all: Vec<Proposal> = held_back
+                .iter()
+                .map(|(_, p)| p.clone())
+                .chain(outcome.proposals.iter().cloned())
+                .collect();
+            if !all.is_empty() {
+                match checks::apply_all(&doc, &all, caret) {
+                    Ok(next) => doc = next,
+                    Err(e) => outcome.apply_error = Some(e),
+                }
             }
         }
         outcome.doc_after = doc.clone();
@@ -758,11 +1077,37 @@ pub fn run_conversation(
             selection = map_selection(&outcome.doc_before, &doc, sel);
         }
 
-        let note = if user.accept && outcome.apply_error.is_none() {
+        let note = if user.leave {
+            PENDING_NOTE
+        } else if user.accept && outcome.apply_error.is_none() {
             ACCEPTED_NOTE
         } else {
             REJECTED_NOTE
         };
+        if !user.leave {
+            // The ones left before are decided with these: their notes in
+            // the history say so now.
+            for turn in history.iter_mut() {
+                if let AgentTurn::ToolResult {
+                    call_id, output, ..
+                } = turn
+                {
+                    if held_back.iter().any(|(id, _)| id == call_id) {
+                        *output = output.replace(PENDING_NOTE, note);
+                    }
+                }
+            }
+            held_back.clear();
+        } else {
+            let ids: Vec<&String> = proposal_ids.iter().collect();
+            held_back.extend(
+                outcome
+                    .proposals
+                    .iter()
+                    .zip(ids)
+                    .map(|(p, id)| (id.clone(), p.clone())),
+            );
+        }
         for turn in turns.iter_mut() {
             if let AgentTurn::ToolResult {
                 call_id, output, ..
@@ -770,7 +1115,57 @@ pub fn run_conversation(
             {
                 if proposal_ids.contains(call_id) {
                     *output = format!("{output}\n\n[{note}]");
+                } else if joined_ids.contains(call_id) {
+                    *output = format!("{output}\n\n[{JOINED_NOTE}]");
                 }
+            }
+        }
+        // What to remember, decided after the exchange (memory::pass) by
+        // the conversation's model, as the app does; each change recorded
+        // as a remember call, as the chips show it.
+        if let Some(dirs) = setup.memory {
+            let exchange = crate::ai::memory::Exchange {
+                messages: outcomes
+                    .iter()
+                    .map(|o: &TurnOutcome| o.message.clone())
+                    .chain(std::iter::once(outcome.message.clone()))
+                    .collect(),
+                reply: outcome.reply.clone(),
+            };
+            let agent = &agent;
+            // The model's answer too, for the report.
+            let said = RefCell::new(String::new());
+            let answer = &said;
+            let kept = block_on(crate::ai::memory::run_pass(
+                dirs,
+                &exchange,
+                &Default::default(),
+                |instructions, input| async move {
+                    let turn = [AgentTurn::User {
+                        text: input,
+                        images: Vec::new(),
+                    }];
+                    let (step, used) = agent.step(&instructions, &turn, &[], &|_| {}).await?;
+                    charge(setup.model, &used.unwrap_or_default());
+                    let text = match step {
+                        StepResult::Done(text) => text,
+                        _ => String::new(),
+                    };
+                    answer.replace(text.clone());
+                    Ok(text)
+                },
+            ));
+            match kept {
+                Ok(kept) => {
+                    outcome.calls.push(
+                        serde_json::json!({"name": "memory_pass", "result": said.into_inner()}),
+                    );
+                    outcome.calls.extend(
+                        kept.iter()
+                            .map(|r| serde_json::json!({"name": "remember", "args": r})),
+                    );
+                }
+                Err(e) => eprintln!("live_eval: memory pass failed: {e}"),
             }
         }
         history.extend(turns.iter().cloned());

@@ -1,3 +1,4 @@
+import { pictureSrc } from "../revision/generated-images";
 import { useState } from "react";
 import type { AgentTurn, ImageAttachment, WebSource } from "../types";
 import { links } from "../../platform/ipc";
@@ -11,6 +12,8 @@ import "./AgentTurnView.css";
 export interface AgentTurnLabels extends ReplyThemeLabels {
   /** Selection chip, for a selection of `n` characters. */
   selectionChip: (n: number) => string;
+  /** The chip of a selection that was one picture. */
+  selectedPicture: string;
   /** What each tool call is doing, by tool name; "{arg}" is its main
    *  argument (query, heading, path, skill); "*" covers any other tool. */
   toolActivity: Record<string, string>;
@@ -40,6 +43,10 @@ export function toolActivityText(
         .join("”, “")
     : undefined;
   const site = typeof args.url === "string" ? siteOf(args.url) : undefined;
+  // An MCP server's tool (src-tauri mcp/): named as the model knows it,
+  // mcp_<server>_<tool>, which says whose tool it is.
+  if (name.startsWith("mcp_") && labels.toolActivity.mcp)
+    return labels.toolActivity.mcp.replace("{arg}", name.slice(4));
   const arg =
     [args.query, queries, site, args.heading, args.path, args.name].find(
       (v): v is string => typeof v === "string" && v.length > 0,
@@ -144,7 +151,9 @@ function UserMessage({
                   expanded ? "agent-context-chip-caret-open" : ""
                 }`}
               />
-              {labels.selectionChip([...selection].length)}
+              {pictureSrc(selection) !== null
+                ? labels.selectedPicture
+                : labels.selectionChip([...selection].length)}
             </button>
           )}
           {attachmentNames.map((name, i) => (

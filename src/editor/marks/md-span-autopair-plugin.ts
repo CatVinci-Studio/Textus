@@ -1,14 +1,11 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
-import { canJoin, findWrapping } from "@milkdown/kit/prose/transform";
-import type { Node as ProseNode, Schema } from "@milkdown/kit/prose/model";
-import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import {
   COMPOSE_RELOCATE_DELAY_MS,
   caretAt,
   findRunClose,
-  findRunOpen,
   hasPendingRunOpen,
   isImeKeyEvent,
   literalTextAfter,
@@ -16,25 +13,26 @@ import {
   redirectMisattributedInput,
   stateWithLiveSelection,
 } from "./enclosure";
-
-interface SpanSpec {
-  char: string;
-  nodeType: "md_span" | "md_code_span";
-  minRung: number;
-  maxRung: number;
-}
-
-// "*" covers italic(1)/bold(2)/bold+italic(3) - typing it again while the
-// shell is still empty upgrades the rung. "~" and "=" only have a 2-character
-// form, so a lone one is left as literal text until a second, matching one
-// completes it. "`" is its own node type (see md-span-schema.ts) since code
-// content must never contain nested formatting.
-const SPECS: SpanSpec[] = [
-  { char: "*", nodeType: "md_span", minRung: 1, maxRung: 3 },
-  { char: "~", nodeType: "md_span", minRung: 2, maxRung: 2 },
-  { char: "=", nodeType: "md_span", minRung: 2, maxRung: 2 },
-  { char: "`", nodeType: "md_code_span", minRung: 1, maxRung: 1 },
-];
+import {
+  ONLY_CLOSERS,
+  SPECS,
+  closeOpenRun,
+  closeUnderscoreRun,
+  pairsIn,
+  runsHoldAtoms,
+  spanAround,
+  spanNode,
+  threeLiteral,
+  upgradeRung,
+} from "./md-span-runs";
+import {
+  codeFenceLanguage,
+  convertRunClosedBeforeCaret,
+  lineStartStars,
+  paragraphToBulletItem,
+  paragraphToRule,
+} from "./md-span-blocks";
+export { convertRunClosedBeforeCaret } from "./md-span-blocks";
 
 /**
  * After a typed delimiter steps the caret out of a filled span, the rest of
@@ -73,308 +71,6 @@ function swallowPendingCloser(
   if (view.state.selection.from !== from)
     view.dispatch(caretAt(view.state.tr, from));
   return true;
-}
-
-function isOurNode(name: string): boolean {
-  return name === "md_span" || name === "md_code_span";
-}
-
-/**
- * Whether `spec`'s delimiter typed in `parent` may make a node: in a
- * paragraph or heading, and code in bold, italic, strikethrough or
- * highlight too - `**a `b` c**`, which the file reads as. Never inside code
- * or maths, whose text is verbatim, and no span in a span of another kind.
- */
-function pairsIn(parent: ProseNode, spec: SpanSpec): boolean {
-  if (parent.type.name === "md_span") return spec.nodeType === "md_code_span";
-  if (isOurNode(parent.type.name)) return false;
-  return parent.isTextblock && !parent.type.spec.code;
-}
-
-/** The node `spec` makes at `rung` (a code span has no rungs), holding
- *  `text` if given, empty otherwise. */
-function spanNode(
-  schema: Schema,
-  spec: SpanSpec,
-  rung: number,
-  text?: string,
-): ProseNode {
-  const content = text === undefined ? undefined : schema.text(text);
-  return spec.nodeType === "md_span"
-    ? schema.nodes.md_span.create({ delim: spec.char, rung }, content)
-    : schema.nodes.md_code_span.create({}, content);
-}
-
-/** The node `spec` makes at `rung` around what stands from `from` to `to`
- *  in one parent: a span keeps the code, maths and links in it (see
- *  literalTextBefore's `withAtoms`); code takes it as text. */
-function spanAround(
-  state: EditorState,
-  spec: SpanSpec,
-  rung: number,
-  from: number,
-  to: number,
-): ProseNode {
-  if (spec.nodeType !== "md_span")
-    return spanNode(state.schema, spec, rung, state.doc.textBetween(from, to));
-  const $from = state.doc.resolve(from);
-  const content = $from.parent.content.cut(
-    $from.parentOffset,
-    $from.parentOffset + to - from,
-  );
-  return state.schema.nodes.md_span.create({ delim: spec.char, rung }, content);
-}
-
-/** Whether `spec`'s runs are read across code and maths. */
-const runsHoldAtoms = (spec: SpanSpec) => spec.nodeType === "md_span";
-
-/**
- * Closes an opening run left in the literal text before the caret
- * (`textBefore`, starting at `runStart`) with the delimiter being typed:
- * from that opener to `to` becomes one span. Longest rung first, so
- * "**hello" + "*" + "*" re-forms bold rather than italic. Returns whether
- * there was a run to close.
- */
-function closeOpenRun(
-  view: EditorView,
-  spec: SpanSpec,
-  textBefore: string,
-  runStart: number,
-  to: number,
-): boolean {
-  const { state } = view;
-  for (let rung = spec.maxRung; rung >= spec.minRung; rung--) {
-    const open = findRunOpen(textBefore, spec.char, rung);
-    if (!open) continue;
-    const absOpen = runStart + open.openIdx;
-    const valueStart = absOpen + rung;
-    const node = spanAround(
-      state,
-      spec,
-      rung,
-      valueStart,
-      valueStart + open.value.length,
-    );
-    const tr = state.tr.replaceWith(absOpen, to, node);
-    view.dispatch(caretAt(tr, absOpen + node.nodeSize));
-    return true;
-  }
-  return false;
-}
-
-/** Italic written with underscores - only ever closed, never opened as an
- *  empty shell: see closeUnderscoreRun. */
-const UNDERSCORE: SpanSpec = {
-  char: "_",
-  nodeType: "md_span",
-  minRung: 1,
-  maxRung: 1,
-};
-const LETTER_OR_DIGIT = /^[\p{L}\p{N}]$/u;
-/** Closing brackets and quotes, and nothing else. */
-const ONLY_CLOSERS = /^[)\]}"'」』）】》”’]+$/u;
-
-/**
- * The closing "_" of `_italic_`, at `to`, after the literal `textBefore`
- * (from `runStart`): the pair becomes italic by CommonMark's rule for
- * underscores, which open and close only at a word's edges - the opening
- * one not after a letter or digit, the closing one not before one - so
- * snake_case and file_name_v2 stay text. "_" never opens an empty shell
- * the way "*" does: in a word it is just a character.
- */
-function closeUnderscoreRun(
-  view: EditorView,
-  textBefore: string,
-  runStart: number,
-  to: number,
-): boolean {
-  const $to = view.state.doc.resolve(to);
-  if (!pairsIn($to.parent, UNDERSCORE)) return false;
-  const open = findRunOpen(textBefore, "_", 1);
-  if (!open) return false;
-  if (LETTER_OR_DIGIT.test(textBefore.charAt(open.openIdx - 1))) return false;
-  const next = literalTextAfter($to).text.charAt(0);
-  if (next === "_" || LETTER_OR_DIGIT.test(next)) return false;
-  return closeOpenRun(view, UNDERSCORE, textBefore, runStart, to);
-}
-
-/** Typing an empty shell's delimiter again: the shell (an md_span at
- *  `nodeStart`) one rung up, "*" to "**" - or null at its top rung. */
-function upgradeRung(
-  state: EditorState,
-  nodeStart: number,
-  shell: ProseNode,
-  spec: SpanSpec,
-): Transaction | null {
-  const rung = (shell.attrs.rung as number) ?? spec.minRung;
-  if (rung >= spec.maxRung) return null;
-  return state.tr.setNodeMarkup(nodeStart, undefined, {
-    delim: spec.char,
-    rung: rung + 1,
-  });
-}
-
-/**
- * A third "~" or "=" typed into the empty shell the first two opened: no
- * strikethrough or highlight takes three, so the three stay as typed -
- * "===" was a highlight of "=", and "~~~", a code fence, a strikethrough
- * of "~". Null for the other delimiters.
- */
-function threeLiteral(
-  state: EditorState,
-  nodeStart: number,
-  shell: ProseNode,
-  spec: SpanSpec,
-): Transaction | null {
-  if (spec.nodeType !== "md_span" || spec.minRung !== 2) return null;
-  const tr = state.tr.replaceWith(
-    nodeStart,
-    nodeStart + shell.nodeSize,
-    state.schema.text(spec.char.repeat(3)),
-  );
-  return caretAt(tr, nodeStart + 3);
-}
-
-/**
- * Whether a paragraph is a "```" (or "```lang") code-fence line, returning
- * the language ("" for none) or null if it isn't one. Typing three backticks
- * doesn't leave literal "```" text - the autopair turns the first two into a
- * code span holding one literal backtick and the third closes it - so the
- * fence shape to recognize at Enter time is that node, optionally followed
- * by a language word. A literal "```lang" run (left by a paste or by
- * deleting a delimiter) counts too, and "~~~lang", which stays literal
- * (threeLiteral).
- */
-function codeFenceLanguage(paragraph: ProseNode): string | null {
-  if (paragraph.childCount === 0 || paragraph.childCount > 2) return null;
-  const first = paragraph.child(0);
-  let rest: string;
-  if (first.type.name === "md_code_span" && first.textContent === "`") {
-    if (paragraph.childCount === 2) {
-      const second = paragraph.child(1);
-      if (!second.isText) return null;
-      rest = second.text ?? "";
-    } else {
-      rest = "";
-    }
-  } else if (paragraph.childCount === 1 && first.isText) {
-    const match = /^(?:```|~~~)(.*)$/.exec(first.text ?? "");
-    if (!match) return null;
-    rest = match[1];
-  } else {
-    return null;
-  }
-  const language = rest.trim();
-  return /\s/.test(language) ? null : language;
-}
-
-/**
- * An empty "*" shell that is all its paragraph holds: what "*" or "***" at
- * the start of a line leaves, the autopair having taken the stars. Those
- * are a list marker and a rule there, as "-" and "---" are; returns the
- * shell's rung and the paragraph's position, or null.
- */
-function lineStartStars(
-  $pos: ReturnType<ProseNode["resolve"]>,
-): { rung: number; paragraphPos: number } | null {
-  const shell = $pos.parent;
-  if (
-    shell.type.name !== "md_span" ||
-    shell.attrs.delim !== "*" ||
-    shell.content.size !== 0 ||
-    $pos.depth < 2
-  )
-    return null;
-  const paragraph = $pos.node($pos.depth - 1);
-  if (paragraph.type.name !== "paragraph" || paragraph.childCount !== 1)
-    return null;
-  return {
-    rung: (shell.attrs.rung as number) ?? 1,
-    paragraphPos: $pos.before($pos.depth - 1),
-  };
-}
-
-/** The paragraph at `paragraphPos` as a horizontal rule, the caret on a
- *  new line below it. */
-function paragraphToRule(
-  state: EditorState,
-  paragraphPos: number,
-): Transaction | null {
-  const { hr, paragraph } = state.schema.nodes;
-  if (!hr || !paragraph) return null;
-  const size = state.doc.nodeAt(paragraphPos)!.nodeSize;
-  const tr = state.tr.replaceWith(paragraphPos, paragraphPos + size, [
-    hr.create(),
-    paragraph.create(),
-  ]);
-  return caretAt(tr, paragraphPos + 2);
-}
-
-/** The paragraph at `paragraphPos`, emptied, as the first item of a
- *  bullet list - joined to a bullet list right above, as "- " does. */
-function paragraphToBulletItem(
-  state: EditorState,
-  paragraphPos: number,
-): Transaction | null {
-  const list = state.schema.nodes.bullet_list;
-  const paragraph = state.doc.nodeAt(paragraphPos)!;
-  const tr = state.tr.delete(
-    paragraphPos + 1,
-    paragraphPos + paragraph.nodeSize - 1,
-  );
-  const $start = tr.doc.resolve(paragraphPos + 1);
-  const range = $start.blockRange();
-  const wrapping = list && range && findWrapping(range, list);
-  if (!range || !wrapping) return null;
-  tr.wrap(range, wrapping);
-  const before = tr.doc.resolve(paragraphPos).nodeBefore;
-  if (before?.type === list && canJoin(tr.doc, paragraphPos))
-    tr.join(paragraphPos);
-  return tr.scrollIntoView();
-}
-
-/**
- * The IME counterpart of the run-closing path in handleTextInput below.
- * Several Windows IMEs in Chinese mode (Microsoft Pinyin, Sogou) deliver
- * even a plain "*" through a composition, and handleTextInput must stay out
- * of the way while one is active (dispatching aborts the preedit), so a
- * "**加粗文本**" written that way used to stay literal text (#134). Once the
- * composition has been committed, look at the text before the caret: if it
- * ends in a complete closing run that pairs with an opening run left in the
- * same literal text, convert the pair exactly as typing the last delimiter
- * would have. Only full pairs are converted - nothing opens an empty shell
- * after the fact - so a lone "*" committed this way stays literal until its
- * partner arrives. `committed` is the composition's text: unless it ends
- * in the delimiter, the closing run was already there (say, literal text
- * left by a paste) and is not the user's to convert now. Returns whether it
- * converted anything.
- */
-export function convertRunClosedBeforeCaret(
-  view: EditorView,
-  committed: string,
-): boolean {
-  const { state } = view;
-  const sel = state.selection;
-  if (!sel.empty) return false;
-  const $pos = sel.$from;
-  if (committed.endsWith("_")) {
-    const { text, from } = literalTextBefore($pos, true);
-    return (
-      text.endsWith("_") &&
-      closeUnderscoreRun(view, text.slice(0, -1), from, sel.from)
-    );
-  }
-  const spec = SPECS.find((s) => committed.endsWith(s.char));
-  if (!spec || !pairsIn($pos.parent, spec)) return false;
-  const { text: textBefore, from: runStart } = literalTextBefore(
-    $pos,
-    runsHoldAtoms(spec),
-  );
-  if (!textBefore.endsWith(spec.char)) return false;
-  // The caret sits inside a longer delimiter run - not a finished closer.
-  if (literalTextAfter($pos).text.startsWith(spec.char)) return false;
-  // findRunOpen expects the last closing character as "the one being typed".
-  return closeOpenRun(view, spec, textBefore.slice(0, -1), runStart, sel.from);
 }
 
 /**

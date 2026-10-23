@@ -1,7 +1,7 @@
 {
   "name": "textus",
   "private": true,
-  "version": "1.2.0-rc.5",
+  "version": "1.2.0",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -24,7 +24,7 @@
     "test:visual": "playwright test",
     "bench:large-doc": "playwright test -c playwright.perf.config.ts",
     "setup:e2e": "playwright install chromium",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run format:check && node scripts/check-readmes.mjs && node scripts/check-versions.mjs && node scripts/check-nsis-template.mjs && node scripts/updater-manifest.mjs check",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run format:check && node scripts/check-readmes.mjs && node scripts/check-code-shape.mjs && node scripts/check-versions.mjs && node scripts/check-nsis-template.mjs && node scripts/updater-manifest.mjs check",
     "check:quick": "node scripts/check-quick.mjs",
     "check:native": "node scripts/check-native.mjs",
     "check:all": "node scripts/check-all.mjs",
@@ -32,7 +32,8 @@
     "screenshots:website": "playwright test -c playwright.shots.config.ts --project=website",
     "screenshots:review": "playwright test -c playwright.shots.config.ts --project=review",
     "bench:motion": "playwright test -c playwright.bench.config.ts",
-    "sync-models": "node scripts/sync-models.mjs"
+    "sync-models": "node scripts/sync-models.mjs",
+    "bindings": "node scripts/write-bindings.mjs"
   },
   "dependencies": {
     "@milkdown/kit": "^7.22.3",
@@ -74,6 +75,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",
     "jsdom": "^29.1.1",
+    "jszip": "3.10.2",
     "mdast-util-from-markdown": "^2.1.0",
     "micromark-util-types": "^2.0.3",
     "postcss": "^8.5.31",

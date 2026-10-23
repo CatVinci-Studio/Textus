@@ -1,0 +1,88 @@
+[
+  {
+    "name": "a picture left out goes back by its paragraph",
+    "document": "One.\n\n![a](a.png)\n\nTwo.",
+    "text": "Uno.\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\nDos."
+  },
+  {
+    "name": "a picture kept stays as it is",
+    "document": "One.\n\n![a](a.png)\n\nTwo.",
+    "text": "Uno.\n\n![a](a.png)\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\nDos."
+  },
+  {
+    "name": "a picture first goes first",
+    "document": "![a](a.png)\n\nOne.",
+    "text": "Uno.",
+    "complete": true,
+    "expected": "![a](a.png)\n\nUno."
+  },
+  {
+    "name": "a picture last goes last once the text is complete",
+    "document": "One.\n\n![a](a.png)",
+    "text": "Uno.",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)"
+  },
+  {
+    "name": "a picture last waits while the text streams in",
+    "document": "One.\n\n![a](a.png)",
+    "text": "Uno.",
+    "complete": false,
+    "expected": "Uno."
+  },
+  {
+    "name": "a picture kept counts for the place of one left out",
+    "document": "One.\n\n![a](a.png)\n\nTwo.\n\n![b](b.png)\n\nThree.",
+    "text": "Uno.\n\n![a](a.png)\n\nDos.\n\nTres.",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\nDos.\n\n![b](b.png)\n\nTres."
+  },
+  {
+    "name": "a picture given a width is a picture",
+    "document": "One.\n\n<img src=\"a.png\" alt=\"a\" width=\"200\">\n\nTwo.",
+    "text": "Uno.\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n<img src=\"a.png\" alt=\"a\" width=\"200\">\n\nDos."
+  },
+  {
+    "name": "two pictures on one line are no picture",
+    "document": "One.\n\n![a](a.png) ![b](b.png)\n\nTwo.",
+    "text": "Uno.\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\nDos."
+  },
+  {
+    "name": "a paragraph with a picture in it is no picture",
+    "document": "One ![a](a.png) here.\n\nTwo.",
+    "text": "Uno.\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\nDos."
+  },
+  {
+    "name": "a picture swapped for a new one is kept, the new one taken out",
+    "document": "One.\n\n![a](a.png)\n\nTwo.",
+    "text": "Uno.\n\n![b](b.png)\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\nDos.",
+    "swapped": 1
+  },
+  {
+    "name": "of two pictures, the one swapped is kept and the other stays",
+    "document": "One.\n\n![a](a.png)\n\nTwo.\n\n![b](b.png)\n\nThree.",
+    "text": "Uno.\n\n![a](a.png)\n\nDos.\n\n![c](c.png)\n\nTres.",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\nDos.\n\n![b](b.png)\n\nTres.",
+    "swapped": 1
+  },
+  {
+    "name": "a new picture added with every original kept stays",
+    "document": "One.\n\n![a](a.png)\n\nTwo.",
+    "text": "Uno.\n\n![a](a.png)\n\nDos.\n\n![n](n.png)",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\nDos.\n\n![n](n.png)"
+  }
+]

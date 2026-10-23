@@ -1,0 +1,112 @@
+import type { SettingsPageProps } from "./types";
+import { SettingsGroup } from "./SettingsGroup";
+import { type NewDocumentMode } from "../SettingsContext";
+import { LANGS, LANG_NAMES, type Lang } from "../../i18n/strings";
+import { LinkRow, SettingRow, ToggleRow } from "../sections/controls";
+import { CliCommandSection, DefaultEditorSection } from "../sections/general";
+import { links } from "../../platform/ipc";
+import { BackgroundSection } from "../sections/background";
+import { Select } from "../../ui/Select";
+import {
+  canInstallCliCommand,
+  canSetDefaultEditor,
+  canUseWindows,
+} from "../../platform/capabilities";
+
+/** General: the language, how documents open and reach the disk, the system's integrations, About, and the guides. */
+export function GeneralPage({
+  t,
+  settings,
+  setSettings,
+  setSubpage,
+  openHelp,
+}: SettingsPageProps) {
+  return (
+    <>
+      <SettingsGroup title={t.generalBasicsLabel}>
+        <SettingRow label={t.languageLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.languageLabel}
+            value={settings.language}
+            onChange={(e) => setSettings({ language: e.target.value as Lang })}
+          >
+            {/* Each in its own language, so a user who can't read the
+                  current one still finds theirs. */}
+            {LANGS.map((lang) => (
+              <option key={lang} value={lang}>
+                {LANG_NAMES[lang]}
+              </option>
+            ))}
+          </Select>
+        </SettingRow>
+        {canUseWindows && (
+          <>
+            <SettingRow label={t.newDocumentModeLabel}>
+              <Select
+                className="settings-select"
+                aria-label={t.newDocumentModeLabel}
+                value={settings.newDocumentMode}
+                onChange={(e) =>
+                  setSettings({
+                    newDocumentMode: e.target.value as NewDocumentMode,
+                  })
+                }
+              >
+                <option value="window">{t.newDocumentModeWindow}</option>
+                <option value="tab">{t.newDocumentModeTab}</option>
+              </Select>
+            </SettingRow>
+            <ToggleRow
+              label={t.restoreSessionLabel}
+              checked={settings.restoreSessionOnStartup}
+              onChange={(v) => setSettings({ restoreSessionOnStartup: v })}
+            />
+          </>
+        )}
+      </SettingsGroup>
+
+      {/* How documents reach the disk - used daily, so above the rarer
+            groups. */}
+      <SettingsGroup title={t.settingsFilesGroup}>
+        <ToggleRow
+          label={t.autosaveLabel}
+          checked={settings.autosave}
+          onChange={(v) => setSettings({ autosave: v })}
+        />
+        <ToggleRow
+          label={t.autoSuggestFilenameLabel}
+          checked={settings.autoSuggestFilename}
+          onChange={(v) => setSettings({ autoSuggestFilename: v })}
+        />
+      </SettingsGroup>
+
+      <SettingsGroup title={t.generalSystemLabel}>
+        {/* A desktop's: the phone has no windows to close. */}
+        {canUseWindows && <BackgroundSection t={t} />}
+        {canSetDefaultEditor && <DefaultEditorSection t={t} />}
+        {canInstallCliCommand && <CliCommandSection t={t} />}
+        <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
+      </SettingsGroup>
+
+      {/* Last: links out rather than settings. The desktop also has
+            them in the Help menu; a phone's menu is kept short, so there
+            this is where they are. */}
+      <SettingsGroup title={t.settingsHelpGroup}>
+        <LinkRow
+          label={t.menuHelpMarkdown}
+          onOpen={() => openHelp("markdown")}
+        />
+        <LinkRow label={t.menuHelpAgent} onOpen={() => openHelp("agent")} />
+        <LinkRow
+          label={t.menuHelpTutorials}
+          onOpen={() => void links.openTutorialsPage(settings.language)}
+        />
+        <LinkRow
+          label={t.menuHelpCommunity}
+          onOpen={() => void links.openCommunityPage(settings.language)}
+        />
+      </SettingsGroup>
+    </>
+  );
+}

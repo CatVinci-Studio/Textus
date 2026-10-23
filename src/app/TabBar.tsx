@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type RefObject,
+} from "react";
 import { CloseIcon } from "../ui/icons";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { animate, scrollBehavior } from "../ui/motion";
@@ -105,19 +111,112 @@ export function TabBar({
     [],
   );
 
-  // THE INCOMING TAB, riding the bar. The preview pill is laid out at the
-  // end of the row but rendered (via transform) wherever the cursor is;
-  // every other pill (and the + button) slides one slot right the moment
-  // the cursor passes left of its center, and slides home when it passes
-  // back - the same give-way behavior as a local reorder drag, driven by
-  // Rust's hover events instead of pointer events. Give-way decisions
-  // always compare against hoverGeom - each pill's resting layout
-  // position, measured ONCE when the hover starts - never against live
-  // rects: a rect read mid-slide underestimates/overestimates the layout
-  // position, and near a decision boundary (e.g. hugging the bar's left
-  // edge, where the clamped cursor parks right at the first pill's
-  // center) that misread flips the decision back and forth, visible as
-  // pills jittering in and out.
+  const previewRef = useIncomingTabPreview(barRef, previewTab, tabs);
+
+  // A tab list: ← / → (and Home / End) move between the tabs, Enter or
+  // Space shows the one with the focus, Delete closes it. Only the tab in
+  // front is in the tab order.
+  function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const pills = Array.from(
+      barRef.current?.querySelectorAll<HTMLElement>('[role="tab"]') ?? [],
+    );
+    const at = pills.indexOf(e.target as HTMLElement);
+    if (at === -1 || e.altKey || e.ctrlKey || e.metaKey) return;
+    const id = pills[at].dataset.flipId!;
+    let next: HTMLElement | undefined;
+    if (e.key === "ArrowRight") next = pills[(at + 1) % pills.length];
+    else if (e.key === "ArrowLeft")
+      next = pills[(at - 1 + pills.length) % pills.length];
+    else if (e.key === "Home") next = pills[0];
+    else if (e.key === "End") next = pills[pills.length - 1];
+    else if (e.key === "Enter" || e.key === " ") onActivate(id);
+    else if (e.key === "Delete") {
+      // The focus stays in the strip, on the neighbour that takes the
+      // closed tab's place.
+      (pills[at + 1] ?? pills[at - 1])?.focus();
+      onClose(id);
+    } else return;
+    e.preventDefault();
+    next?.focus();
+  }
+
+  return (
+    <div
+      className="tab-bar"
+      ref={barRef}
+      role="tablist"
+      aria-label={labels.tabs}
+      onKeyDown={onKeyDown}
+    >
+      {/* Pills glide aside for a new tab and close up behind a closed
+          one, which shrinks away in its old place; a new one pops in. */}
+      <ListMotion
+        ids={tabs.map((tab) => tab.id)}
+        container={barRef}
+        ghostClass="tab-pill-ghost"
+        exitMs={150}
+        pending={pendingFlip}
+      />
+      {tabs.map((tab) => (
+        <TabPill
+          key={tab.id}
+          tab={tab}
+          tabIds={tabs.map((t) => t.id)}
+          isActive={tab.id === activeTabId}
+          labels={labels}
+          onActivate={onActivate}
+          onClose={onClose}
+          onDetach={onDetach}
+          onReorder={onReorder}
+          captureFlip={captureFlip}
+        />
+      ))}
+      {previewTab && (
+        <div
+          className="tab-pill tab-pill-active tab-pill-preview"
+          ref={previewRef}
+        >
+          {previewTab.dirty && <span className="tab-pill-dirty-dot" />}
+          <span className="tab-pill-title">{previewTab.title}</span>
+        </div>
+      )}
+      {/* The pointer's File › New File (Ctrl/⌘ + N, the keyboard's): a tab
+        list holds only tabs, so it stays out of the list's tree. */}
+      <Tooltip text={labels.add} description={null}>
+        <button
+          className="tab-bar-add"
+          data-flip-id="__add__"
+          tabIndex={-1}
+          aria-hidden="true"
+          onClick={onAdd}
+        >
+          +
+        </button>
+      </Tooltip>
+    </div>
+  );
+}
+
+/**
+ * THE INCOMING TAB, riding the bar. The preview pill is laid out at the
+ * end of the row but rendered (via transform) wherever the cursor is;
+ * every other pill (and the + button) slides one slot right the moment
+ * the cursor passes left of its center, and slides home when it passes
+ * back - the same give-way behavior as a local reorder drag, driven by
+ * Rust's hover events instead of pointer events. Give-way decisions
+ * always compare against hoverGeom - each pill's resting layout
+ * position, measured ONCE when the hover starts - never against live
+ * rects: a rect read mid-slide underestimates/overestimates the layout
+ * position, and near a decision boundary (e.g. hugging the bar's left
+ * edge, where the clamped cursor parks right at the first pill's
+ * center) that misread flips the decision back and forth, visible as
+ * pills jittering in and out.
+ */
+function useIncomingTabPreview(
+  barRef: RefObject<HTMLDivElement | null>,
+  previewTab: TabBarProps["previewTab"],
+  tabs: TabBarProps["tabs"],
+) {
   const previewRef = useRef<HTMLDivElement>(null);
   const appliedShift = useRef(new Map<string, number>());
   const hoverGeom = useRef<{
@@ -237,90 +336,8 @@ export function TabBar({
 
     prev.hadPreview = previewTab !== null;
     prev.tabIds = tabs.map((tab) => tab.id);
-  }, [previewTab, tabs]);
-
-  // A tab list: ← / → (and Home / End) move between the tabs, Enter or
-  // Space shows the one with the focus, Delete closes it. Only the tab in
-  // front is in the tab order.
-  function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    const pills = Array.from(
-      barRef.current?.querySelectorAll<HTMLElement>('[role="tab"]') ?? [],
-    );
-    const at = pills.indexOf(e.target as HTMLElement);
-    if (at === -1 || e.altKey || e.ctrlKey || e.metaKey) return;
-    const id = pills[at].dataset.flipId!;
-    let next: HTMLElement | undefined;
-    if (e.key === "ArrowRight") next = pills[(at + 1) % pills.length];
-    else if (e.key === "ArrowLeft")
-      next = pills[(at - 1 + pills.length) % pills.length];
-    else if (e.key === "Home") next = pills[0];
-    else if (e.key === "End") next = pills[pills.length - 1];
-    else if (e.key === "Enter" || e.key === " ") onActivate(id);
-    else if (e.key === "Delete") {
-      // The focus stays in the strip, on the neighbour that takes the
-      // closed tab's place.
-      (pills[at + 1] ?? pills[at - 1])?.focus();
-      onClose(id);
-    } else return;
-    e.preventDefault();
-    next?.focus();
-  }
-
-  return (
-    <div
-      className="tab-bar"
-      ref={barRef}
-      role="tablist"
-      aria-label={labels.tabs}
-      onKeyDown={onKeyDown}
-    >
-      {/* Pills glide aside for a new tab and close up behind a closed
-          one, which shrinks away in its old place; a new one pops in. */}
-      <ListMotion
-        ids={tabs.map((tab) => tab.id)}
-        container={barRef}
-        ghostClass="tab-pill-ghost"
-        exitMs={150}
-        pending={pendingFlip}
-      />
-      {tabs.map((tab) => (
-        <TabPill
-          key={tab.id}
-          tab={tab}
-          tabIds={tabs.map((t) => t.id)}
-          isActive={tab.id === activeTabId}
-          labels={labels}
-          onActivate={onActivate}
-          onClose={onClose}
-          onDetach={onDetach}
-          onReorder={onReorder}
-          captureFlip={captureFlip}
-        />
-      ))}
-      {previewTab && (
-        <div
-          className="tab-pill tab-pill-active tab-pill-preview"
-          ref={previewRef}
-        >
-          {previewTab.dirty && <span className="tab-pill-dirty-dot" />}
-          <span className="tab-pill-title">{previewTab.title}</span>
-        </div>
-      )}
-      {/* The pointer's File › New File (Ctrl/⌘ + N, the keyboard's): a tab
-        list holds only tabs, so it stays out of the list's tree. */}
-      <Tooltip text={labels.add} description={null}>
-        <button
-          className="tab-bar-add"
-          data-flip-id="__add__"
-          tabIndex={-1}
-          aria-hidden="true"
-          onClick={onAdd}
-        >
-          +
-        </button>
-      </Tooltip>
-    </div>
-  );
+  }, [barRef, previewTab, tabs]);
+  return previewRef;
 }
 
 interface PillRect {

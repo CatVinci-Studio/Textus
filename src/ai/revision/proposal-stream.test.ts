@@ -44,6 +44,38 @@ describe("ProposalStream", () => {
     });
   });
 
+  it("takes a call said to start again as the same call", () => {
+    const { stream, calls } = machine();
+    stream.toolStart("g1", "generate_image");
+    stream.argsDelta(
+      "g1",
+      '{"action":"replace","alt":"","anchor":"![](a.png)","aspect":"16:9","prompt":"x',
+    );
+    expect(calls[0]).toMatchObject({ effect: "place", callId: "g1" });
+    // The backend announces the picture it runs (images.rs' execute).
+    stream.toolStart("g1", "generate_image");
+    stream.finalCall("g1", "{}");
+    expect(calls[calls.length - 1]).toEqual({
+      effect: "discard",
+      callId: "g1",
+    });
+  });
+
+  it("discards a completed call the backend refused, and only that", () => {
+    const { stream, calls } = machine();
+    stream.toolStart("c1", "propose_edit");
+    stream.finalCall("c1", '{"action":"append","text":"x"}');
+    stream.result("c1", true);
+    expect(calls.at(-1)).toEqual({ effect: "discard", callId: "c1" });
+    // A result for a call it never saw, or one accepted: nothing.
+    const before = calls.length;
+    stream.result("other", true);
+    stream.toolStart("c2", "propose_edit");
+    stream.finalCall("c2", '{"action":"append","text":"y"}');
+    stream.result("c2", false);
+    expect(calls.slice(before).some((c) => c.effect === "discard")).toBe(false);
+  });
+
   it("ignores tools other than propose_edit", () => {
     const { stream, calls } = machine();
     stream.toolStart("c1", "search_document");

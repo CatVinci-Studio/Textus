@@ -73,6 +73,10 @@ If another copy of the e2e suite may be running (another worktree), set
   wrong, change it in a pull request of its own that says why.
 - Make the smallest change that fixes the cause. Match the surrounding code:
   naming, structure, comment density. Comments say why, not what.
+- Keep to the code shape in CONTRIBUTING.md › Code style: pure logic in
+  modules of its own, side effects in the hook or command that calls it; at
+  most 8 hooks a component and 600 lines a file; provider differences as
+  data, never an `if` on a provider's id. `npm run check` holds the limits.
 - Add or update tests with the change: unit tests next to the code
   (`name.test.ts`, `#[cfg(test)]`), an e2e spec for user-visible flows. Name
   tests as the claim they make.

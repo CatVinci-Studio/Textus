@@ -3,7 +3,7 @@ import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
 import { installClipboardCapture } from "../clipboard/history";
 import { isIOSApp } from "../platform/capabilities";
-import { SettingsPanel } from "../settings/SettingsPanel";
+import { SettingsLayer, useSettingsOpening } from "./SettingsLayer";
 import { DocumentList } from "../mobile/DocumentList";
 import { KeyboardToolbar } from "../mobile/KeyboardToolbar";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
@@ -55,7 +55,6 @@ import {
   type PendingClose,
 } from "./close-flow";
 import {
-  useLevisOffer,
   usePracticeTab,
   usePracticeNotes,
   useTutorialTabRecovery,
@@ -70,8 +69,14 @@ import {
   UpdateToast,
   WordImportNotice,
   ZenHint,
+  useWordImported,
 } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
+import { usePluginWindow } from "../plugins/usePluginWindow";
+import { QuickPickHost } from "../plugins/quick-pick";
+import "../plugins/plugins.css";
+import { tabIsUntouchedDraft } from "../document/doc-tabs";
+import { useLatest } from "../utils/hooks/useLatest";
 import "./App.css";
 
 /**
@@ -82,12 +87,6 @@ import "./App.css";
  */
 function App() {
   const { t, settings, setSettings } = useSettings();
-  const levisOffer = useLevisOffer({
-    t,
-    settings,
-    setSettings,
-    exitTutorial: () => tutorial.exit(),
-  });
   const tabState = useTabState();
   const { tabs, setTabs, activeTabId, setActiveTabId, tabsRef, liveTabs } =
     tabState;
@@ -114,7 +113,7 @@ function App() {
     panelMode,
     setPanelMode,
   } = useSidePanels(textusAi.on);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsOpening = useSettingsOpening();
   const appUpdate = useAppUpdate(settings.updateChannel);
   useZoom(settings.zoom, (zoom) => setSettings({ zoom }));
   const tutorial = useTutorial(textusAi.on);
@@ -129,9 +128,7 @@ function App() {
     settings.enableDraftRecovery,
   );
   const [draftsRestoredCount, setDraftsRestoredCount] = useState(0);
-  // The Word document last opened as a new one, for its notice.
-  const [wordImported, setWordImported] = useState<string | null>(null);
-  const dismissWordImported = useCallback(() => setWordImported(null), []);
+  const wordImported = useWordImported();
 
   const {
     activeTab,
@@ -189,9 +186,18 @@ function App() {
     dialogFilters,
     restoreCarets: settings.restoreSessionOnStartup,
     t,
-    onWordDocumentOpened: setWordImported,
+    onWordDocumentOpened: wordImported.opened,
   });
   useLastCarets(tabs, activeTabId, settings.restoreSessionOnStartup);
+  usePluginWindow({
+    t,
+    language: settings.language,
+    rootPath: openFolder.folder ?? openFolder.treeRoot,
+    activePath: activeTab.path,
+    tabState,
+    openPathInTab,
+    saveActiveTab: () => void saveTab(activeTab.id),
+  });
 
   const { openHelpTab } = useHelpTabs({
     tabState,
@@ -302,7 +308,12 @@ function App() {
 
   // The same, pushed to an already-running window (useFileOpening.ts).
   useOpenPathsPush(openPathInTab);
-  useFileDrop(openFile, openPathInTab);
+  const activeTabRef = useLatest(activeTab);
+  const activeIsUntouchedDraft = useCallback(
+    () => tabIsUntouchedDraft(activeTabRef.current),
+    [activeTabRef],
+  );
+  useFileDrop(openFile, openPathInTab, activeIsUntouchedDraft);
 
   useWindowCloseGuard(liveTabs, flushAutosave, setPendingClose);
 
@@ -343,7 +354,8 @@ function App() {
     t,
     pdfPageNumbers: settings.pdfPageNumbers,
     diagramEngine: settings.diagramEngine,
-    onOpenSettings: () => setSettingsOpen(true),
+    onOpenSettings: settingsOpening.openSettings,
+    onOpenPluginSettings: settingsOpening.openPluginSettings,
     onToggleTypewriter: () =>
       setSettings({ typewriterMode: !settings.typewriterMode }),
     onToggleSidebar: toggleSidebar,
@@ -502,21 +514,16 @@ function App() {
           />
         )}
 
-        {/* The longest exit is the phone's: the page going back down. */}
-        <Presence show={settingsOpen} exitMs={320}>
-          {settingsOpen && (
-            <SettingsPanel
-              onClose={() => setSettingsOpen(false)}
-              onOpenFile={(path) => void openFile(path)}
-              onFilesDeleted={skillFilesDeleted}
-              viewChecks={{
-                sourceMode: !!activeTab.sourceMode && !activeTab.splitView,
-                zen: zenMode,
-              }}
-              fixedShortcuts={fixedShortcutGroups(t, platformName())}
-            />
-          )}
-        </Presence>
+        <SettingsLayer
+          opening={settingsOpening}
+          onOpenFile={(path) => void openFile(path)}
+          onFilesDeleted={skillFilesDeleted}
+          viewChecks={{
+            sourceMode: !!activeTab.sourceMode && !activeTab.splitView,
+            zen: zenMode,
+          }}
+          fixedShortcuts={fixedShortcutGroups(t, platformName())}
+        />
 
         <ClosePrompt
           open={!!pendingClose}
@@ -545,6 +552,7 @@ function App() {
           )}
         </Presence>
         <AppDialogHost okLabel={t.dialogOk} />
+        <QuickPickHost emptyLabel={t.pluginQuickPickEmpty} />
 
         {zenMode && <ZenHint onExit={() => setZenMode(false)} t={t} />}
 
@@ -555,8 +563,8 @@ function App() {
         />
 
         <WordImportNotice
-          path={wordImported}
-          onDismiss={dismissWordImported}
+          path={wordImported.path}
+          onDismiss={wordImported.dismiss}
           t={t}
         />
 
@@ -566,7 +574,6 @@ function App() {
           tutorial={tutorial}
           settings={settings}
           setSettings={setSettings}
-          levisPending={levisOffer.pending}
           zen={{ on: zenMode, toggle: toggleZenMode }}
           t={t}
         />

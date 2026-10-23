@@ -72,7 +72,7 @@ async function open(
   await openApp(page, {
     colorScheme,
     settings: { language: "en" },
-    storage: agent ? { "levis-agent-panel-open": "1" } : {},
+    storage: agent ? { "textus-agent-panel-open": "1" } : {},
   });
 }
 
@@ -265,7 +265,7 @@ test.describe("axe, newer surfaces", () => {
     }, FILES);
     await openApp(page, {
       settings: { language: "en", imageModelProvider: "openai" },
-      storage: { "levis-agent-panel-open": "1" },
+      storage: { "textus-agent-panel-open": "1" },
     });
     const first = "The harbour was quiet before the boats came in.";
     await pasteMarkdown(page, `${first}\n\nThe second paragraph.`);
@@ -325,7 +325,6 @@ test.describe("axe, newer surfaces", () => {
       library: [],
       memories: { items: [], chars: 0, cap: 4000 },
       remember: false,
-      levis_project: false,
     };
     const rounds: [string, string, string, number][] = [
       [
@@ -424,7 +423,7 @@ test("reduced motion: the review bar fades in, without travel or scale", async (
   }, FILES);
   await openApp(page, {
     settings: { language: "en" },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
     animations: true,
   });
   // Every transform the bar shows as it comes in, one per frame.

@@ -1,3 +1,4 @@
+import type { DocumentSnapshot } from "../ai/doc-markdown";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { PendingEdits } from "./useEditorProposals";
@@ -22,6 +23,10 @@ import type { Strings } from "../i18n/strings";
 
 /** What this editor draws in the docked AI panel (ai/chat/panel/) while it
  *  is the active tab: the conversation, and Memory. */
+/** The panel's ChatBody always asks for the document as it is now
+ *  (refreshContext); this stands until it answers. */
+const NO_DOCUMENT: DocumentSnapshot = { markdown: "", blocks: [] };
+
 export function EditorAgentPanel({
   run,
   t,
@@ -33,6 +38,7 @@ export function EditorAgentPanel({
   conversation,
   pendingEdits,
   selectedText,
+  selectionIsPicture,
   selectionChip,
   panelSendContext,
   showProposals,
@@ -57,6 +63,8 @@ export function EditorAgentPanel({
   conversation: AgentConversation;
   pendingEdits: PendingEdits;
   selectedText: string | null;
+  /** The selection is one picture (usePanelSelection). */
+  selectionIsPicture: boolean;
   /** The chip's part in keeping the selection highlighted. */
   selectionChip: SelectionChipHandlers;
   panelSendContext: ReturnType<typeof useChatContextBridge>["panelSendContext"];
@@ -64,7 +72,7 @@ export function EditorAgentPanel({
     proposals: { callId: string; proposal: EditProposal }[],
   ) => void;
   onRevealProposal: (callId: string, index: number) => void;
-  onLocateText: (anchor: string, context?: string) => void;
+  onLocateText: (anchor: string, block?: string) => void;
   noteNumber: (id: string) => number | null;
   onRevealPending: () => void;
   onNewConversation: () => void;
@@ -126,8 +134,9 @@ export function EditorAgentPanel({
         </div>
       )}
       <ChatBody
-        document=""
+        document={NO_DOCUMENT}
         selectedText={selectedText}
+        selectionIsPicture={selectionIsPicture}
         selectionChip={selectionChip}
         selectionMarkdown={null}
         docPath={filePath}

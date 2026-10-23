@@ -12,7 +12,7 @@
  * pretends commands succeed, for testing the app in a browser.
  */
 export function installNativeStandIn(): void {
-  const w = window as unknown as { __TAURI_INTERNALS__?: unknown };
+  const w = window as Window & { __TAURI_INTERNALS__?: unknown };
   if (w.__TAURI_INTERNALS__) return;
   w.__TAURI_INTERNALS__ = {
     invoke: (command: string) =>

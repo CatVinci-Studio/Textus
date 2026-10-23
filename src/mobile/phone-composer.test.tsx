@@ -43,10 +43,12 @@ const labels = {
   showSelection: "Show in document",
   atCursor: "At the cursor",
   placeholder: "Ask anything",
+  suggestionTab: "Tab",
   send: "Send",
   stop: "Stop",
   attachFile: "Attach a file",
   selectedChars: (n: number) => `${n} chars selected`,
+  selectedPicture: "Picture selected",
   attachmentTruncated: "(shortened)",
   attachmentNoVision: "No images",
   modeWrite: "Write",
@@ -103,11 +105,17 @@ describe("the composer on a phone", () => {
       target: { value: "why?" },
     });
     fireEvent.click(screen.getByText("Send"));
-    expect(onSend).toHaveBeenCalledWith("why?", [], true, {
-      mode: "review",
-      webSearch: false,
-      thinking: "auto",
-    });
+    expect(onSend).toHaveBeenCalledWith(
+      "why?",
+      [],
+      true,
+      {
+        mode: "review",
+        webSearch: false,
+        thinking: "auto",
+      },
+      "why?",
+    );
   });
 
   it("docked, quotes the selection and falls back to the cursor", () => {

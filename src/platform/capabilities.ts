@@ -82,6 +82,10 @@ export const canOpenFolder = isDesktopApp;
 /** Settings' "install the `textus` terminal command" (cli.rs). */
 export const canInstallCliCommand = isDesktopApp;
 
+/** Moving a replaced picture's file to the system's Trash
+ *  (commands/fs.rs move_picture_to_trash). */
+export const canTrashFiles = isDesktopApp;
+
 /** Settings' "Default Markdown editor" (default_editor.rs). iOS opens
  *  documents through the Files app, which has no default app to set. */
 export const canSetDefaultEditor = isDesktopApp;

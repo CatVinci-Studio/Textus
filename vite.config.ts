@@ -3,21 +3,28 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { katexWoff2Only } from "./vite.katex-fonts";
 import { colorMixFallback } from "./vite.color-mix-fallback";
+import { devPlugins } from "./vite.dev-plugins";
+import { startupBudget } from "./vite.startup-budget";
 
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react(), katexWoff2Only()],
+  plugins: [react(), katexWoff2Only(), devPlugins(), startupBudget()],
   css: { postcss: { plugins: [colorMixFallback()] } },
   // The oldest engines Textus runs in: WebView2 on Chromium 105 (Windows
   // 10 without updates) and WKWebView on iOS 16. Syntax newer than these
   // is lowered; APIs and CSS aren't - docs/dev/webview-support.md.
   build: { target: ["chrome105", "safari16"] },
+  // One KaTeX: Mermaid's own copy (for maths in diagram labels) was a
+  // second 260 KB in the installer; it uses only renderToString, which
+  // ours has unchanged.
+  resolve: { dedupe: ["katex"] },
 
   // Unit tests only; e2e/ holds the Playwright flows (npm run test:e2e)
   // and screenshot generators, which vitest must not try to run.
   test: {
+    setupFiles: ["src/test-setup.ts"],
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
@@ -25,6 +32,7 @@ export default defineConfig(async () => ({
       "src-tauri/**",
       ".claude/**",
       ".cache/**",
+      "textus-plugins/**",
     ],
   },
 

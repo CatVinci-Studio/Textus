@@ -1,27 +1,23 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { animate, duration, scrollBehavior } from "../ui/motion";
+import { animate, duration, glideScroll } from "../ui/motion";
 
 /**
  * Brings `pos` into view and pulses the block it is in once, so the eye
- * lands on it - for a review note's "Show in document", the review bar's
- * steps and a followed #heading link (link-click-plugin.ts). A target off the
- * screen by less than two screens is scrolled to smoothly - the movement
- * says which way it was; further away it jumps, since a long smooth scroll
- * is only a wait. Already in view, nothing moves.
+ * lands on it - for a review note's "Show in document", a margin card
+ * clicked, the review bar's and the notes bar's steps, and a followed
+ * #heading link (link-click-plugin.ts). The scroll is one eased stroke of a
+ * fixed length however far it goes (glideScroll) - the movement says which
+ * way it was; the browser's own smooth scroll crawled on a long way, so
+ * that one used to jump. Already in view, nothing moves.
  */
 export function revealPosition(view: EditorView, pos: number) {
   const scroller = view.dom.closest<HTMLElement>(".editor-scroll");
   const at = view.coordsAtPos(pos);
   if (scroller) {
     const box = scroller.getBoundingClientRect();
-    if (at.top < box.top || at.bottom > box.bottom) {
+    if (at.top < box.top || at.bottom > box.bottom)
       // A third of the way down, where reading starts.
-      const delta = at.top - (box.top + box.height / 3);
-      scroller.scrollBy({
-        top: delta,
-        behavior: Math.abs(delta) < box.height * 2 ? scrollBehavior() : "auto",
-      });
-    }
+      glideScroll(scroller, at.top - (box.top + box.height / 3));
   }
   const { node } = view.domAtPos(pos);
   const block = (

@@ -8,7 +8,7 @@ use serde_json::{json, Value};
 
 /// The three sizes every GPT image model makes; the other aspects take the
 /// nearest of them.
-fn size(aspect: Aspect) -> &'static str {
+pub(super) fn size(aspect: Aspect) -> &'static str {
     match aspect {
         Aspect::Square => "1024x1024",
         Aspect::Landscape | Aspect::Wide => "1536x1024",

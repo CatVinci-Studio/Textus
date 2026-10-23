@@ -21,9 +21,9 @@ import {
 // way remark-math registers "$...$" (see math-schema.ts) - a unified plugin
 // that pushes a micromark syntax extension plus mdast fromMarkdown/
 // toMarkdown extensions onto the processor's shared `data()` bag.
-const remarkHighlight: RemarkPluginRaw<unknown> = function (this: {
-  data: () => Record<string, unknown[]>;
-}) {
+const remarkHighlight: RemarkPluginRaw<unknown> = function (
+  this: ThisParameterType<RemarkPluginRaw<unknown>>,
+) {
   const data = this.data();
   const micromarkExtensions = (data.micromarkExtensions ??= []);
   const fromMarkdownExtensions = (data.fromMarkdownExtensions ??= []);
@@ -31,7 +31,7 @@ const remarkHighlight: RemarkPluginRaw<unknown> = function (this: {
   micromarkExtensions.push(highlightSyntax());
   fromMarkdownExtensions.push(highlightFromMarkdown());
   toMarkdownExtensions.push(highlightToMarkdown());
-} as unknown as RemarkPluginRaw<unknown>;
+};
 
 export const remarkHighlightPlugin = $remark(
   "remark-highlight",

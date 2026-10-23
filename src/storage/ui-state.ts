@@ -1,17 +1,16 @@
 import { storage } from "../platform/ipc";
-import { legacyImportSettled, readBoot } from "./boot";
+import { readBoot } from "./boot";
 import { trackWrite } from "./pending-writes";
 
 /**
  * Small bits of UI remembered between launches - not settings the user
  * picks, just where they left things. Kept by Rust in ui-state.json
- * (docs/dev/storage.md); before the move each was its own localStorage key,
- * which is still what the fallback (no Rust boot snapshot) reads and writes.
+ * (docs/dev/storage.md); without Rust (no boot snapshot) each is a
+ * localStorage key of its own.
  *
  * Remembered for the next window or launch, never pushed into windows
- * already open - same as when they were localStorage keys read at mount.
- * Values come back untrusted (an older build, a hand edit); each caller
- * validates its own.
+ * already open. Values come back untrusted (a hand edit, a value this
+ * version no longer uses); each caller validates its own.
  */
 export interface UiState {
   /** The onboarding tour's step (onboarding/useTutorial.ts). */
@@ -38,10 +37,6 @@ export interface UiState {
   /** The skills last run from the composer, newest first - the `/` menu
    *  lists them first (ai/chat/skill-picker.ts). */
   recentSkills: string[];
-  /** Project folders whose Levis data the user chose not to convert yet
-   *  ("Not now", ai/chat/panel/levis-project.ts) - not asked again; the
-   *  Memory tab keeps a quiet "Convert Levis data" for them. */
-  levisProjectsDeclined: string[];
   /** The folder last opened in the sidebar (File > Open Folder…), or null
    *  after Close Folder - the session's first window opens it again
    *  (app/useOpenFolder.ts). */
@@ -79,11 +74,10 @@ export interface ThemeChromeCache {
 
 export type UiStateKey = keyof UiState;
 
-/** Each field's localStorage key before the move, and how it was encoded
- *  there - for the fallback and for the one-time import. A field without
- *  one is kept in the file only (themeChrome: only Rust's boot script reads
- *  it). */
-const LEGACY: {
+/** Each field's localStorage key without Rust, and how it is encoded
+ *  there. A field without one is kept in the file only (themeChrome: only
+ *  Rust's boot script reads it). */
+const LOCAL: {
   [K in UiStateKey]?: {
     key: string;
     decode: (raw: string) => unknown;
@@ -91,22 +85,20 @@ const LEGACY: {
   };
 } = {
   tutorialProgress: {
-    key: "levis-tutorial-progress",
+    key: "textus-tutorial-progress",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },
   agentPanelOpen: {
-    key: "levis-agent-panel-open",
+    key: "textus-agent-panel-open",
     decode: (raw) => raw === "1",
     encode: (value) => (value ? "1" : "0"),
   },
   agentPanelWidth: {
-    key: "levis-agent-panel-width",
+    key: "textus-agent-panel-width",
     decode: (raw) => Number(raw),
     encode: (value) => String(Math.round(value)),
   },
-  // Newer than the move: no build ever wrote this key, it is only where
-  // the fallback keeps the width.
   sidebarWidth: {
     key: "textus-sidebar-width",
     decode: (raw) => Number(raw),
@@ -123,21 +115,20 @@ const LEGACY: {
     encode: (value) => value,
   },
   iosRecentDocuments: {
-    key: "levis-ios-recent-documents",
+    key: "textus-ios-recent-documents",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },
   documentListView: {
-    key: "levis.documentListView",
+    key: "textus.documentListView",
     decode: (raw) => raw,
     encode: (value) => value,
   },
   recentSkills: {
-    key: "levis-recent-skills",
+    key: "textus-recent-skills",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },
-  // Newer than the move, like sidebarWidth: only the fallback's keys.
   openFolder: {
     key: "textus-open-folder",
     decode: (raw) => JSON.parse(raw),
@@ -165,25 +156,15 @@ const LEGACY: {
   },
 };
 
-function readLegacy(key: UiStateKey): unknown {
-  const legacy = LEGACY[key];
-  if (!legacy) return undefined;
+function readLocal(key: UiStateKey): unknown {
+  const local = LOCAL[key];
+  if (!local) return undefined;
   try {
-    const raw = localStorage.getItem(legacy.key);
-    return raw === null ? undefined : legacy.decode(raw);
+    const raw = localStorage.getItem(local.key);
+    return raw === null ? undefined : local.decode(raw);
   } catch {
     return undefined;
   }
-}
-
-/** Every field localStorage holds, for the one-time import. */
-export function readLegacyUiState(): Record<string, unknown> {
-  const state: Record<string, unknown> = {};
-  for (const key of Object.keys(LEGACY) as UiStateKey[]) {
-    const value = readLegacy(key);
-    if (value !== undefined) state[key] = value;
-  }
-  return state;
 }
 
 let cache: Record<string, unknown> | null = null;
@@ -195,11 +176,9 @@ function fileCache(): Record<string, unknown> | null {
   const boot = readBoot();
   if (!boot) return null;
   if (!cache) {
-    // Before the import has reached Rust, the snapshot is empty and
-    // localStorage is still where the values are.
-    cache = boot.legacyImport ? readLegacyUiState() : { ...boot.uiState };
-    refreshed = legacyImportSettled()
-      .then(() => storage.uiStateGet())
+    cache = { ...boot.uiState };
+    refreshed = storage
+      .uiStateGet()
       .then((live) => {
         const local = cache ?? {};
         cache = { ...live };
@@ -212,7 +191,7 @@ function fileCache(): Record<string, unknown> | null {
 
 export function getUiState<K extends UiStateKey>(key: K): unknown {
   const file = fileCache();
-  return file ? file[key] : readLegacy(key);
+  return file ? file[key] : readLocal(key);
 }
 
 export function setUiState<K extends UiStateKey>(
@@ -226,10 +205,10 @@ export function setUiState<K extends UiStateKey>(
     trackWrite(storage.uiStatePatch({ [key]: value })).catch(() => {});
     return;
   }
-  const legacy = LEGACY[key];
-  if (!legacy) return;
+  const local = LOCAL[key];
+  if (!local) return;
   try {
-    localStorage.setItem(legacy.key, legacy.encode(value));
+    localStorage.setItem(local.key, local.encode(value));
   } catch {
     // Storage unavailable: it just won't be remembered.
   }
@@ -247,7 +226,7 @@ export function updateUiState<K extends UiStateKey>(
 ): void {
   const file = fileCache();
   if (!file) {
-    setUiState(key, change(readLegacy(key)));
+    setUiState(key, change(readLocal(key)));
     return;
   }
   written.add(key);

@@ -16,7 +16,8 @@ import { setDockedPanelWidth } from "../utils/hooks/useDockedPanelWidth";
 import { useSidebarWidth } from "./sidebar-width";
 import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
 
-export type PanelMode = "tree" | "outline" | "clipboard";
+/** A sidebar tab's id (sidebar-tabs.tsx). */
+export type PanelMode = string;
 
 function subscribeWindowResize(onChange: () => void) {
   window.addEventListener("resize", onChange);

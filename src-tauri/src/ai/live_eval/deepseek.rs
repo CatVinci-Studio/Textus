@@ -83,8 +83,12 @@ fn agent(ds: &DeepSeek, model: &str, thinking: ThinkingLevel) -> AgentProvider {
 
 /// The tools' context for one exchange - its own, as each request's is:
 /// the proposals it has made are kept there.
-fn context<'a>(document: &'a str, conventions: &'a Conventions) -> ToolContext<'a> {
+fn context<'a>(
+    document: &'a crate::ai::doc_blocks::Document,
+    conventions: &'a Conventions,
+) -> ToolContext<'a> {
     ToolContext {
+        undecided: &[],
         document,
         skills: &[],
         ui_language: "en",
@@ -92,7 +96,6 @@ fn context<'a>(document: &'a str, conventions: &'a Conventions) -> ToolContext<'
         sees_images: false,
         conventions,
         library: &[],
-        memory: None,
         proposed: Default::default(),
         checks: Default::default(),
     }
@@ -211,7 +214,7 @@ const DOCUMENT: &str = "# Field report\n\n## Methods\n\nWe sampeled ten coastal 
 #[ignore = "live API - see module docs"]
 fn live_deepseek_thinks_with_tools_across_steps_and_exchanges() {
     let Some(ds) = deepseek() else { return };
-    let registry = ToolRegistry::builtin(false, false, AgentMode::Revise, false, false);
+    let registry = ToolRegistry::builtin(false, false, AgentMode::Revise, false);
     let conventions = Conventions::default();
     let instructions = "You edit the user's Markdown document with the tools. The document isn't shown to you: read the part you need with read_document first, then propose changes with propose_edit, quoting the exact text. Reply in one sentence.";
     let mut total = 0.0;
@@ -225,7 +228,10 @@ fn live_deepseek_thinks_with_tools_across_steps_and_exchanges() {
         let first = exchange(
             &agent,
             &registry,
-            &context(DOCUMENT, &conventions),
+            &context(
+                &crate::ai::doc_blocks::Document::from_markdown(DOCUMENT),
+                &conventions,
+            ),
             instructions,
             Vec::new(),
             "Fix the spelling mistake in the Methods section.",
@@ -256,7 +262,10 @@ fn live_deepseek_thinks_with_tools_across_steps_and_exchanges() {
         let second = exchange(
             &agent,
             &registry,
-            &context(DOCUMENT, &conventions),
+            &context(
+                &crate::ai::doc_blocks::Document::from_markdown(DOCUMENT),
+                &conventions,
+            ),
             instructions,
             as_kept(first.turns),
             "Thanks. Which section did you change? Answer without tools.",
@@ -322,7 +331,8 @@ fn live_deepseek_search_service_and_numbered_sources() {
         registry.add(tool);
     }
     let conventions = Conventions::default();
-    let ctx = context("", &conventions);
+    let empty = crate::ai::doc_blocks::Document::default();
+    let ctx = context(&empty, &conventions);
     let instructions = format!(
         "You are a research assistant.\n\n{}",
         web.prompt_section().expect("web search is on")

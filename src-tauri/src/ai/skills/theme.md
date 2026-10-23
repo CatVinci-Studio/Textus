@@ -50,7 +50,7 @@ One CSS file the app loads after its own styles, Typora-compatible: `#write` is 
 5. Element rules, each under `#write`: `h1`-`h6` (sizes, weight, colour; the app's own heading rules, quote tint and rule marks switch off under an imported theme, so style what the design wants), `p`, `a` and `a:hover`, `strong`, `em`, `blockquote`, `code`, `pre` and `.md-fences` (code blocks), `pre code`, `table`, `th`, `td`, `hr`, `mark`, `img`, and `li::marker` if the markers take the accent.
 
 The app's revision colours follow the page by themselves (they are built on its green and red); leave them unless the user asks about them. A theme may override any of them in `:root`:
-   - new text: `--revision-insert-bg` its tint; `--revision-insert-text` its text colour (default: the text's own); `--revision-insert-hover-bg` its darker tint under the pointer and for the change the review bar points at;
+   - new text: `--revision-insert-bg` its tint; `--revision-insert-text` its text colour (default: the text's own); `--revision-insert-hover-bg` its darker tint under the pointer and for the change the review bar points at; `--revision-reading-bg` the tint that moves over the original while a rewrite streams in;
    - the original: `--revision-delete-bg` its tint; `--revision-delete-text` its text colour (default: the text's own, faded); `--revision-delete-strike` the line through it; `--revision-delete-hover-bg` its darker tint under the pointer and for the change the review bar points at.
 
 ## Do

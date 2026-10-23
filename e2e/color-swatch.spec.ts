@@ -402,12 +402,11 @@ test("swatches never reach the saved file", async ({ page }) => {
     .toEqual([RICH.replace("# Brand #1e90ff", "# Brand #1e90ff and #00ff00")]);
 });
 
-test("the old switch, on, opens as In code only, and each choice in Settings applies at once", async ({
+test("In code only draws swatches in inline code, and each choice in Settings applies at once", async ({
   page,
 }) => {
-  // 1.2.0's betas stored a switch that drew swatches in inline code only.
   await openApp(page, {
-    settings: { language: "en", inlineColorSwatches: true },
+    settings: { language: "en", colorSwatches: "code" },
   });
   await pasteMarkdown(page, RICH);
   await expect(page.locator(swatch)).toHaveCount(2);

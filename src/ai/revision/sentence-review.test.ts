@@ -7,13 +7,19 @@ import type { Ctx } from "@milkdown/kit/ctx";
 import { createTestEditor } from "../../document-view/editor-test-harness";
 import { usePendingEdits } from "./usePendingEdits";
 import { locateHunks } from "./sentence-locate";
-import { diffSentences } from "./sentence-diff";
+import { diffSentences } from "./unit-diff";
 import { pendingEditKey } from "./pending-edit-plugin";
+import { serializeBlocks } from "../doc-markdown";
 
+// Two of five sentences changed: decided sentence by sentence (a
+// paragraph most of whose sentences changed is one change).
+const KEPT = "黛玉也不说破。二人从此相识。";
 const NOTE =
-  "这一句其实是在呼应第一回，可以说是一个起点。宝玉初见黛玉便觉似曾相识。贾母一句胡说，轻轻带过。";
+  "这一句其实是在呼应第一回，可以说是一个起点。宝玉初见黛玉便觉似曾相识。贾母一句胡说，轻轻带过。" +
+  KEPT;
 const REWRITE =
-  "这一句呼应第一回，是一个起点。宝玉初见黛玉便觉眼熟。贾母一句胡说，轻轻带过。";
+  "这一句呼应第一回，是一个起点。宝玉初见黛玉便觉眼熟。贾母一句胡说，轻轻带过。" +
+  KEPT;
 
 let editor: Editor | null = null;
 afterEach(() => {
@@ -35,6 +41,10 @@ async function setup() {
   editor = await createTestEditor(`# 笔记\n\n${NOTE}\n`);
   const e = editor;
   const hook = renderHook(() => usePendingEdits(runner(e)));
+  // The id the model names the paragraph by.
+  const block = e.action(
+    (ctx) => serializeBlocks(ctx, ctx.get(editorViewCtx).state.doc)[1].id,
+  );
   // The plugin reports its previews through the editor's callback, which
   // the harness leaves empty: read them back from the plugin itself.
   const sync = () =>
@@ -52,7 +62,7 @@ async function setup() {
       [
         {
           callId: "c1",
-          proposal: { action: "replace", anchor: NOTE, text: REWRITE },
+          proposal: { action: "replace", block, anchor: NOTE, text: REWRITE },
         },
       ],
       null,
@@ -88,7 +98,8 @@ describe("a rewrite decided sentence by sentence", () => {
     act(() => hook.result.current.decide("c1", 1, true));
     sync();
     expect(markdown(e)).toContain(
-      "这一句其实是在呼应第一回，可以说是一个起点。宝玉初见黛玉便觉眼熟。贾母一句胡说，轻轻带过。",
+      "这一句其实是在呼应第一回，可以说是一个起点。宝玉初见黛玉便觉眼熟。贾母一句胡说，轻轻带过。" +
+        KEPT,
     );
     expect(hook.result.current.status("c1")).toBe("accepted");
   });
@@ -101,7 +112,8 @@ describe("a rewrite decided sentence by sentence", () => {
       hook.result.current.accept("c1");
     });
     expect(markdown(e)).toContain(
-      "这一句呼应第一回，是一个起点。宝玉初见黛玉便觉似曾相识。贾母一句胡说，轻轻带过。",
+      "这一句呼应第一回，是一个起点。宝玉初见黛玉便觉似曾相识。贾母一句胡说，轻轻带过。" +
+        KEPT,
     );
   });
 
@@ -133,8 +145,9 @@ describe("locateHunks", () => {
       );
       return ranges?.map((r) => doc.textBetween(r.from, r.to));
     });
-    // "One." stays; the two changes, too unalike to pair, are one.
-    expect(result).toEqual(["One.", "Two.Three."]);
+    // "One." stays; the two changes, too unalike to pair, are one change
+    // for each paragraph they are in.
+    expect(result).toEqual(["One.", "Two.", "Three."]);
   });
 
   it("gives up when the words before the anchor aren't where it starts", async () => {

@@ -85,4 +85,29 @@ test.describe("on a Mac", () => {
     });
     expect(await left(page, toggle)).toBeLessThan(16);
   });
+
+  test("moves into that corner and back at once, as the lights go and come", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" }, animations: true });
+    await page.evaluate(() => {
+      document.documentElement.dataset.windowChrome = "native";
+      document.querySelector(".window-menu-button")?.remove();
+    });
+    const frames = await page.evaluate(async (selector) => {
+      const button = document.querySelector(selector)!;
+      const seen: number[] = [];
+      for (const on of [true, false]) {
+        if (on) document.documentElement.dataset.windowFullscreen = "";
+        else delete document.documentElement.dataset.windowFullscreen;
+        await new Promise(requestAnimationFrame);
+        seen.push(Math.round(button.getBoundingClientRect().left));
+      }
+      return seen;
+    }, toggle);
+    // The next frame already has it there: no slide that never kept pace
+    // with the window's own animation.
+    expect(frames[0]).toBeLessThan(16);
+    expect(frames[1]).toBeGreaterThanOrEqual(76);
+  });
 });

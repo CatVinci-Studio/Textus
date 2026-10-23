@@ -79,7 +79,7 @@ const remarkLinkSource: RemarkPluginRaw<unknown> = () => (tree, file) => {
     }
     node.children?.forEach(walk);
   };
-  walk(tree as unknown as Phrasing);
+  walk(tree as Phrasing);
 };
 
 export const remarkLinkSourcePlugin = $remark(

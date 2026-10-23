@@ -74,8 +74,8 @@ for (const language of ["en", "de", "zh"])
         storage: {
           "textus-sidebar-open": "1",
           "textus-sidebar-width": "180",
-          "levis-agent-panel-open": "1",
-          "levis-agent-panel-width": "300",
+          "textus-agent-panel-open": "1",
+          "textus-agent-panel-width": "300",
         },
       });
       await pasteMarkdown(page, SAMPLE_DOC);

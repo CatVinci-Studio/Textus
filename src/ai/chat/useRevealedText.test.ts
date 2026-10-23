@@ -30,7 +30,7 @@ describe("useRevealedText", () => {
     const { result, rerender } = stream();
     rerender({ text: reply, live: true });
     const seen: number[] = [];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 90; i++) {
       act(() => vi.advanceTimersToNextFrame());
       expect(reply.startsWith(result.current)).toBe(true);
       seen.push(result.current.length);

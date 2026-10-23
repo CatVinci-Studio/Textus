@@ -24,7 +24,7 @@ async function open(
   await page.setViewportSize({ width, height: 900 });
   await openApp(page, {
     settings: { language: "en", revisionDisplay: display },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, markdown);
 }
@@ -136,26 +136,49 @@ test("with many revisions the cards stack and move, the text doesn't", async ({
   expect(await blocks(page)).toEqual(withCards);
 });
 
-test("a card pushed below its passage draws its line only while pointed at", async ({
+test("a crowded rewrite's cards are cut to stand by their passages, and open whole", async ({
   page,
 }) => {
   await open(page, LONG, "new", 1100);
   await propose(page, LONG, LONG_CLASSICAL);
   await expect(page.locator(".revision-note")).toHaveCount(24);
-  const lines = page.locator(".review-links path");
-  // The first card sits level with its passage; most below are pushed down.
-  const drawn = await lines.count();
-  expect(drawn).toBeGreaterThan(0);
-  expect(drawn).toBeLessThan(8);
-  await page.locator(".revision-note").nth(5).hover();
-  await expect(lines).toHaveCount(drawn + 1);
+  // A line for every card from the start, not only once pointed at.
+  await expect(page.locator(".review-links path")).toHaveCount(24);
+  // Whole, the cards ran ever further below their sentences; cut to the
+  // room beside each, none is pushed far from its own.
+  await expect(page.locator(".review-links path.far")).toHaveCount(0);
+  const cut = page.locator(
+    ".revision-note:is(.review-note-chip, .review-note-cut)",
+  );
+  expect(await cut.count()).toBeGreaterThan(16);
+  const tops = await page
+    .locator(".revision-note")
+    .evaluateAll((els: HTMLElement[]) => els.map((e) => e.offsetTop));
+  // In order, and never overlapping one another.
+  for (let i = 1; i < tops.length; i++)
+    expect(tops[i]).toBeGreaterThan(tops[i - 1]);
+  // Clicked, one opens whole over the ones below, which stay put.
+  const card = page.locator(".revision-note").nth(5);
+  await card.click({ position: { x: 40, y: 12 } });
+  await expect(card).toHaveClass(/review-note-cut-open/);
   await expect(page.locator(".review-links path.hot")).toHaveCount(1);
-  // The review bar's pointer draws it too.
-  await page.mouse.move(10, 10);
-  await expect(lines).toHaveCount(drawn);
+  expect(
+    await page
+      .locator(".revision-note")
+      .evaluateAll((els: HTMLElement[]) => els.map((e) => e.offsetTop)),
+  ).toEqual(tops);
+  // Escape closes it; the review bar's pointer opens one too.
+  await page.keyboard.press("Escape");
+  await expect(
+    page.locator(".review-note-cut-open:not(.revision-note-focus)"),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "Previous edit" }).click();
   await expect(page.locator(".revision-note-focus")).toContainText("24");
-  await expect(lines).toHaveCount(drawn + 1);
+  // Not a chip: opened, or whole.
+  await expect(page.locator(".revision-note-focus")).not.toHaveClass(
+    /review-note-chip\b/,
+  );
+  await expect(page.locator(".review-links path.hot")).toHaveCount(1);
 });
 
 type Sample = {

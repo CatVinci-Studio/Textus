@@ -79,19 +79,12 @@ export interface DocumentListProps {
   onOpenOther: () => void;
 }
 
-export function DocumentList({
-  activePath,
-  onClose,
-  onOpen,
-  onRenamed,
-  onDeleted,
-  onOpenOther,
-}: DocumentListProps) {
-  const { t, settings } = useSettings();
+/** The recent documents, each with where it lives, when it changed and how
+ *  it begins, loaded as the list opens and again by `reload`; and `seen`,
+ *  the ones the list already showed - one that turns up later (a rename's
+ *  new name) appears by itself, the first load just shows. */
+function useRecentDocuments() {
   const [entries, setEntries] = useState<Entry[] | null>(null);
-  const [view, setView] = useState<View>(loadView);
-  // Rendered inside a Presence (App.tsx): it goes back down as it closes.
-  const presence = usePresenceProps<HTMLDivElement>();
 
   const reload = useCallback(async () => {
     const paths = await recentIOSDocuments();
@@ -106,16 +99,34 @@ export function DocumentList({
       ),
     );
   }, []);
-
-  // Switching between rows and tiles crossfades the body rather than
-  // moving each document from its row to its tile - too much at once.
-  const bodyRef = useRef<HTMLDivElement>(null);
-  // Which documents the list already showed: one that turns up later (a
-  // rename's new name) appears by itself; the first load just shows.
   const seen = useRef<Set<string> | null>(null);
   useEffect(() => {
     if (entries) seen.current = new Set(entries.map((entry) => entry.path));
   }, [entries]);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+  return { entries, reload, seen };
+}
+
+export function DocumentList({
+  activePath,
+  onClose,
+  onOpen,
+  onRenamed,
+  onDeleted,
+  onOpenOther,
+}: DocumentListProps) {
+  const { t, settings } = useSettings();
+  const [view, setView] = useState<View>(loadView);
+  // Rendered inside a Presence (App.tsx): it goes back down as it closes.
+  const presence = usePresenceProps<HTMLDivElement>();
+
+  // Switching between rows and tiles crossfades the body rather than
+  // moving each document from its row to its tile - too much at once.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const { entries, reload, seen } = useRecentDocuments();
   function switchView(next: View) {
     if (next === view) return;
     setView(next);
@@ -140,10 +151,6 @@ export function DocumentList({
       ? timeFormat.format(d)
       : dateFormat.format(d);
   };
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
 
   const fail = (error: unknown) =>
     showMessage(String(error), { title: t.docActionFailed, tone: "error" });

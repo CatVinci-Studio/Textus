@@ -19,7 +19,7 @@ import { parseImageTag } from "../editor/images/image-html";
 const FENCE = /^ {0,3}(`{3,}|~{3,})/;
 const IMG_TAG = /<img\b(?:[^<>"']|"[^"]*"|'[^']*')*>/gi;
 const IMAGE_WIDTH =
-  /!\[([^\]]*)\]\((\S+?)\s+"([^"]*?)\s*\{(?:textus|levis)-width=(\d{1,3})%\}"\)/g;
+  /!\[([^\]]*)\]\((\S+?)\s+"([^"]*?)\s*\{textus-width=(\d{1,3})%\}"\)/g;
 const HIGHLIGHT = /==(?=\S)(.+?)(?<=\S)==/g;
 const ALERT = /^(\s*>\s*)\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*$/;
 

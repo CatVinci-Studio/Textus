@@ -30,7 +30,7 @@ function proposal(args: object) {
 async function open(page: Page, diagramEngine = "mermaid") {
   await openApp(page, {
     settings: { language: "en", diagramEngine },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "The first paragraph.\n\nThe second paragraph.");
 }
@@ -114,21 +114,26 @@ async function streamLines(page: Page, lines: string[]) {
       __TAURI_INTERNALS__: {
         invoke: (cmd: string, args?: unknown) => Promise<unknown>;
       };
+      __devNameCall: (blocks: unknown, args: object) => object;
     };
     const original = w.__TAURI_INTERNALS__.invoke;
     w.__TAURI_INTERNALS__.invoke = (cmd, args) => {
       if (cmd !== "ai_agent_message") return original(cmd, args);
-      const { message, onEvent } = args as {
+      const { message, onEvent, blocks } = args as {
         message: string;
         onEvent?: { onmessage?: Send };
+        blocks: unknown;
       };
       const send: Send = (event) => onEvent?.onmessage?.(event);
       const text = lines.join("");
-      const json = JSON.stringify({
-        action: "insert_after",
-        anchor: "The first paragraph.",
-        text,
-      });
+      // By the block it goes after, as a model names it.
+      const json = JSON.stringify(
+        w.__devNameCall(blocks, {
+          action: "insert_after",
+          anchor: "The first paragraph.",
+          text,
+        }),
+      );
       // The argument JSON up to the end of each line of `text`.
       const cuts: number[] = [];
       let sent = 0;

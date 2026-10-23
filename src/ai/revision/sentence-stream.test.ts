@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { alignStream, type StreamLayout } from "./sentence-stream";
-import { diffSentences, splitSentences } from "./sentence-diff";
+import {
+  alignStream,
+  reachedPrefix,
+  type StreamLayout,
+} from "./sentence-stream";
+import { splitSentences } from "./sentence-diff";
+import { diffSentences } from "./unit-diff";
 
 const EN =
   "The keeper woke before dawn. He climbed the stairs slowly. The lamp was still warm. The sea was calm.";
@@ -237,5 +242,35 @@ describe("alignStream", () => {
     // compile on a busy CI runner can take longer than all the work.
     times.sort((a, b) => a - b);
     expect(times[Math.floor(n / 2)]).toBeLessThan(16);
+  });
+});
+
+describe("how far a stream has reached, paragraph by paragraph", () => {
+  const original = splitSentences(
+    "小满撑开伞。伞面完好。\n\n雨停了，她把伞挂在门后。\n\n夜里，她找到一枚纽扣。",
+  );
+  it("a translation reaches an original for each paragraph it has finished", () => {
+    const after = splitSentences(
+      "Xiaoman opened the umbrella. The canopy was intact.\n\nThe rain stopped.\n\n",
+    );
+    // Two paragraphs written: the two originals' sentences (3 of them).
+    expect(reachedPrefix(original, after)).toBe(3);
+  });
+
+  it("a polish is placed by what it says, not by its paragraphs", () => {
+    const after = splitSentences("小满撑开了伞。伞面完好无损。\n\n");
+    expect(reachedPrefix(original, after)).toBe(2);
+  });
+
+  it("a paragraph split in two doesn't reach the next original", () => {
+    const after = splitSentences("小满撑开伞。\n\n伞面完好。\n\n");
+    expect(reachedPrefix(original, after)).toBe(2);
+  });
+
+  it("two paragraphs joined into one reach both", () => {
+    const after = splitSentences(
+      "小满撑开伞，伞面完好。雨停了，她把伞挂在门后。\n\n",
+    );
+    expect(reachedPrefix(original, after)).toBe(3);
   });
 });

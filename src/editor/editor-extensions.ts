@@ -74,6 +74,7 @@ import { mathAutopairPlugin } from "./math/math-autopair-plugin";
 import { createMathPreviewPlugin } from "./math/math-preview-plugin";
 import { headingMarkerPlugin } from "./marks/heading-marker-plugin";
 import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
+import { editorInputPlugin } from "../plugins/editor-input";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,
@@ -93,6 +94,7 @@ import {
 import { codeBlockIndentPlugin } from "./code/code-block-indent-plugin";
 import { pasteMarkdownSourcePlugin } from "./markdown/paste-markdown-plugin";
 import { imageInputRule, linkInputRule } from "./markdown/link-input-rule";
+import { linkSettlePlugin } from "./markdown/link-settle";
 import { remarkLinkSourcePlugin } from "./markdown/link-source";
 import { linkRevealPlugin, linkSourceSchema } from "./markdown/link-reveal";
 import {
@@ -196,6 +198,9 @@ export function withEditorCore(
       // the blocks the user didn't touch as they were (source-preserving.ts).
       .use(openedParseRecorder)
       .use(linksOnSpansSerializer)
+      // A plugin holding the keyboard (Vim's normal mode) has its keys
+      // before any of the editor's own handlers.
+      .use(editorInputPlugin)
       .use(macNavigationPlugin)
       .use(linuxImeEnterPlugin)
       .use(compositionPruneGuardPlugin)
@@ -363,6 +368,7 @@ export function withEditorCore(
       .use(linkInputRule)
       .use(linkRevealPlugin)
       .use(imageInputRule)
+      .use(linkSettlePlugin)
       .use(htmlTagInputRule)
       .use(footnoteInputRule)
       .use(pasteUrlPlugin)

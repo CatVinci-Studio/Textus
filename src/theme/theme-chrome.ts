@@ -3,8 +3,10 @@ type RGB = readonly [number, number, number];
 const WHITE: RGB = [255, 255, 255];
 const INK: RGB = [24, 28, 36];
 const rgb = (c: RGB) => `rgb(${c.map(Math.round).join(", ")})`;
-const mix = (a: RGB, b: RGB, amount: number): RGB =>
-  a.map((v, i) => v * (1 - amount) + b[i] * amount) as unknown as RGB;
+const mix = (a: RGB, b: RGB, amount: number): RGB => {
+  const at = (i: 0 | 1 | 2) => a[i] * (1 - amount) + b[i] * amount;
+  return [at(0), at(1), at(2)];
+};
 const luminance = (c: RGB) =>
   c.reduce((sum, v, i) => {
     const s = v / 255;
@@ -47,7 +49,10 @@ export function chromePalette(background: RGB, foreground: RGB, accent: RGB) {
     "--sidebar-active-text": rgb(readable(text, active)),
     "--border-color": rgb(mix(background, text, 0.18)),
     "--danger": rgb(readable([190, 54, 75], background)),
+    // A fill that carries --on-fill's white whatever the page.
+    "--danger-fill": rgb(readable([190, 54, 75], WHITE)),
     "--success-color": rgb(readable([36, 115, 77], background)),
+    "--warning-color": rgb(readable([154, 98, 18], background)),
     "--overlay-bg": dark ? "rgb(0 0 0 / 48%)" : "rgb(20 27 40 / 30%)",
     "--shadow-popover": dark
       ? "0 4px 16px rgb(0 0 0 / 24%)"
@@ -55,6 +60,12 @@ export function chromePalette(background: RGB, foreground: RGB, accent: RGB) {
     "--shadow-dialog": dark
       ? "0 16px 48px rgb(0 0 0 / 32%)"
       : "0 16px 48px rgb(20 27 40 / 16%)",
+    "--shadow-sheet": dark
+      ? "0 -8px 24px rgb(0 0 0 / 40%)"
+      : "0 -8px 24px rgb(0 0 0 / 14%)",
+    "--shadow-drawer": dark
+      ? "8px 0 24px rgb(0 0 0 / 40%)"
+      : "8px 0 24px rgb(0 0 0 / 16%)",
     "color-scheme": dark ? "dark" : "light",
   };
 }
@@ -159,6 +170,14 @@ export function applyThemeChrome(css: string, dark: boolean): string | null {
     // "Adaptive"; picking Standard or Full Width still overrides it.
     const themeWidth = themeColumnWidth(documentStyle.maxWidth);
     if (themeWidth) palette["--theme-content-width"] = themeWidth;
+    // A theme may name its own interface colours on :root; only the theme
+    // sets variables in this frame, so whatever it names wins over the
+    // derived value.
+    const rootStyle = view.getComputedStyle(doc.documentElement);
+    for (const key of Object.keys(palette)) {
+      const own = rootStyle.getPropertyValue(key).trim();
+      if (own) palette[key] = own;
+    }
     const style = document.createElement("style");
     style.id = STYLE_ID;
     style.textContent = `:root { ${Object.entries(palette)

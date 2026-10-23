@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { openApp, PHONE } from "./helpers";
 
 // The composer's `/` and `@` pickers and Settings' skills, against the dev
@@ -11,7 +11,7 @@ const AI_NAME = "Textus AI";
 async function openWithPanel(page: Page, language: string) {
   await openApp(page, {
     settings: { language },
-    storage: { "levis-agent-panel-open": "1" },
+    storage: { "textus-agent-panel-open": "1" },
   });
   const input = page.locator(".agent-panel .inline-chat-input");
   await expect(input).toBeVisible();
@@ -165,13 +165,18 @@ test.describe("the @ picker", () => {
   });
 });
 
-test.describe("Settings > Textus AI skills", () => {
+/** Settings › Extensions › Skills, where the built-ins are listed open. */
+async function openSkillsTab(panel: Locator) {
+  await panel.locator(".settings-nav-item", { hasText: "Extensions" }).click();
+  await panel.getByRole("tab", { name: "Skills" }).click();
+}
+
+test.describe("Settings › Extensions › Skills", () => {
   test("a built-in turned off leaves the / menu", async ({ page }) => {
     const input = await openWithPanel(page, "en");
     const panel = await openSettings(page);
-    await panel.getByRole("button", { name: AI_NAME, exact: true }).click();
+    await openSkillsTab(panel);
     const builtins = panel.locator(".settings-builtin-skills");
-    await builtins.locator("summary").click();
     await expect(builtins.locator("summary")).toContainText("19 of 19 on");
     await builtins.getByRole("checkbox", { name: "Proofread" }).click();
     await expect(builtins.locator("summary")).toContainText("18 of 19 on");
@@ -195,8 +200,7 @@ test.describe("Settings > Textus AI skills", () => {
   }) => {
     await openApp(page, { settings: { language: "en" } });
     let panel = await openSettings(page);
-    await panel.getByRole("button", { name: AI_NAME, exact: true }).click();
-    await panel.locator(".settings-builtin-skills summary").click();
+    await openSkillsTab(panel);
     await panel.getByRole("button", { name: "Customize…: Summarize" }).click();
     // Settings gives way to the copy, opened as a document.
     await expect(page.locator(".settings-panel")).toHaveCount(0);
@@ -205,9 +209,8 @@ test.describe("Settings > Textus AI skills", () => {
     ).toContainText("summarize");
 
     panel = await openSettings(page);
-    await panel.getByRole("button", { name: AI_NAME, exact: true }).click();
+    await openSkillsTab(panel);
     const builtins = panel.locator(".settings-builtin-skills");
-    await builtins.locator("summary").click();
     const row = builtins.locator('[data-skill="summarize"]');
     await expect(row).toContainText("Customized");
     // The copy shows here only, not again among the user's own skills,
@@ -247,9 +250,8 @@ test.describe("Settings > Textus AI skills", () => {
       skills.outdated.add("email");
     });
     const panel = await openSettings(page);
-    await panel.getByRole("button", { name: AI_NAME, exact: true }).click();
+    await openSkillsTab(panel);
     const builtins = panel.locator(".settings-builtin-skills");
-    await builtins.locator("summary").click();
     const row = builtins.locator('[data-skill="email"]');
     await expect(row.locator(".settings-skill-tag-notice")).toHaveText(
       "Built-in updated",

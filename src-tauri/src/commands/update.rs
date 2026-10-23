@@ -70,6 +70,7 @@ fn is_rpm_install() -> bool {
 /// `Metadata`), which the JS `Update` class is built from
 /// (`updater.check` in src/platform/ipc.ts).
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateMetadata {
     rid: tauri::ResourceId,
@@ -97,6 +98,7 @@ fn configured_endpoints<R: Runtime>(webview: &Webview<R>) -> Vec<Url> {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn check_for_update<R: Runtime>(
     webview: Webview<R>,
     channel: String,
@@ -163,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn beta_never_names_levis_manifest() {
+    fn beta_never_names_the_old_apps_manifest() {
         for url in endpoints_for("beta", &stable()) {
             assert_ne!(
                 url.path_segments().unwrap().next_back(),

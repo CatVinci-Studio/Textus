@@ -10,7 +10,7 @@
 use super::checks::{self, Lang};
 use super::harness::{self, Checks, Record};
 use crate::ai::client::{
-    add_writing_context, completion_prompt, finish_completion, CompletionHints,
+    add_writing_context, completion_prompt, finish_suggestion, CompletionHints,
     CANDIDATE_SEPARATOR, CODE_BLOCK_HINT,
 };
 use aicompat::providers::anthropic::AnthropicAuth;
@@ -336,7 +336,7 @@ pub fn all_cases() -> Vec<CompletionCase> {
 }
 
 /// ghost-text-plugin.ts's stripEcho + tidySuggestion: what the user sees.
-fn shown(before: &str, raw: &str) -> String {
+pub(super) fn shown(before: &str, raw: &str) -> String {
     let b: Vec<char> = before.chars().collect();
     let r: Vec<char> = raw.chars().collect();
     let max = b.len().min(r.len()).min(200);
@@ -552,12 +552,13 @@ pub fn complete_and_check(
         }
     };
     // What ai_complete returns, then what the editor shows of it.
-    let returned = finish_completion(
-        &case.before,
-        &case.after,
-        &raw,
-        case.block == CODE_BLOCK_HINT,
-    );
+    let hints = CompletionHints {
+        block: Some(case.block.to_string()),
+        length: Some(if case.long { "long" } else { "short" }.to_string()),
+        candidates: case.candidates,
+        ..Default::default()
+    };
+    let returned = finish_suggestion(&case.before, &case.after, &raw, &hints);
     let parts: Vec<String> = if case.candidates.is_some() {
         returned
             .split(CANDIDATE_SEPARATOR)

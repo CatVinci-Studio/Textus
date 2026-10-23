@@ -1,0 +1,330 @@
+//! propose_edit: an edit the writer accepts or rejects, the blocks it
+//! names checked against the document before it is offered.
+
+use super::*;
+
+pub(crate) const PROPOSE_EDIT_TOOL_NAME: &str = "propose_edit";
+/// How a valid proposal's result starts - and a valid comment's below:
+/// such a call needs nothing more from the model (ToolOutput::settled).
+pub(super) const EDIT_PROPOSED: &str = "Edit proposed";
+
+/// Told after a rewrite whose text swapped a document's picture for a new
+/// one: the original stays in it, and the new one is the picture tool's.
+const PICTURE_KEPT_NOTE: &str = " A picture of the document you rewrote is kept as it was in it: text edits never change a picture. To change that picture, call generate_image with its block, in this reply.";
+
+/// The edit operations the frontend knows how to apply. Kept in sync with
+/// `EditAction` in src/ai/types.ts - adding one here without teaching
+/// the frontend (usePendingEdits.ts, which resolves proposals, and
+/// apply-edit.ts, which writes them) about it produces proposals that validate but
+/// can't be applied.
+pub(crate) const EDIT_ACTIONS: [&str; 7] = [
+    "replace",
+    "replace_selection",
+    "insert_before",
+    "insert_after",
+    "delete",
+    "append",
+    "insert_at_cursor",
+];
+
+/// The actions that only add text - all Write mode's propose_edit offers
+/// (agent::AgentMode).
+pub(crate) const INSERT_ACTIONS: [&str; 4] = [
+    "append",
+    "insert_at_cursor",
+    "insert_after",
+    "insert_before",
+];
+
+pub(super) fn needs_anchor(action: &str) -> bool {
+    // replace_selection targets the user's captured selection, so there is
+    // no anchor to locate (and the selection may not be unique in the
+    // document anyway - that's the point of having the action).
+    action != "append" && action != "replace_selection" && action != "insert_at_cursor"
+}
+
+pub(super) fn needs_text(action: &str) -> bool {
+    action != "delete"
+}
+
+/// Doesn't modify anything itself - the document only ever changes through
+/// the user clicking Apply in the frontend. This validates the proposal
+/// against the same rules the frontend applies with (known action, required
+/// fields present, the blocks it names there - doc_blocks::check_target) so
+/// the model gets immediate feedback instead of the user getting a dead
+/// Apply button.
+pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
+    let parsed: serde_json::Value = match serde_json::from_str(arguments) {
+        Ok(v) => v,
+        Err(_) => return "Invalid arguments - expected JSON with an `action` string.".to_string(),
+    };
+    let action = parsed.get("action").and_then(|v| v.as_str()).unwrap_or("");
+    if !EDIT_ACTIONS.contains(&action) {
+        return format!(
+            "Unknown action `{action}`. Use one of: {}.",
+            EDIT_ACTIONS.join(", ")
+        );
+    }
+
+    // What the edit is about: what its blocks name (agent::settle has
+    // filled that in for a call from the model), else the words it quotes.
+    let anchor = match ctx.document.target_span(&parsed) {
+        Some((from, to)) => &ctx.document.text[from..to],
+        None => parsed.get("anchor").and_then(|v| v.as_str()).unwrap_or(""),
+    };
+    // A block it names that isn't there (from before a change, mistyped):
+    // said as that, before anything the missing target would make it
+    // look like. Words its block doesn't hold that text proposed and not
+    // decided yet does - a rewrite of that very block, quoted as written -
+    // go into that proposal, as words quoted without a block do (Haiku
+    // named the block of the paragraph it had rewritten, live_eval::
+    // continuing).
+    let mut quote_joins = false;
+    if needs_anchor(action) && parsed.get("block").is_some() {
+        if let Err(problem) = crate::ai::doc_blocks::check_target(ctx.document, &parsed) {
+            let block = parsed.get("block").and_then(|v| v.as_str()).unwrap_or("");
+            let last = parsed.get("last_block").and_then(|v| v.as_str());
+            let in_run = ctx.document.run(block, last).is_some();
+            if !(in_run && !anchor.is_empty() && quotes_undecided(ctx, anchor)) {
+                return problem;
+            }
+            quote_joins = true;
+        }
+    }
+    let has_text = parsed.get("text").and_then(|v| v.as_str()).is_some();
+    if needs_text(action) && !has_text {
+        return format!("`{action}` requires `text` - the new content.");
+    }
+    let mut joins = false;
+    let mut again = false;
+    if needs_anchor(action) {
+        if anchor.is_empty() {
+            return format!(
+                "`{action}` requires `anchor` - the exact document text the edit targets."
+            );
+        }
+        let named = parsed.get("block").is_some() && !quote_joins;
+        if !named {
+            // Text proposed and not decided yet - this request's or an
+            // earlier one's - has no block: the edit quotes it, and goes
+            // into that proposal.
+            if !quotes_undecided(ctx, anchor) {
+                return crate::ai::doc_blocks::NO_BLOCK.to_string();
+            }
+            joins = true;
+        } else if let Err(problem) = crate::ai::doc_blocks::check_target(ctx.document, &parsed) {
+            return problem;
+        } else if let Some(rewrite) = ctx
+            .undecided
+            .iter()
+            .find(|edit| !edit.replaced.is_empty() && edit.replaced.contains(anchor))
+        {
+            // Document text an undecided rewrite replaces: the user sees the
+            // rewrite there, and an edit of the old text would overlap it
+            // (Sonnet anchored a word of the original after a rewrite of
+            // the paragraph, live_eval::continuing). Where the rewrite still
+            // has those words the edit goes into it, and a new version of
+            // the whole passage takes its place.
+            again = action == "replace" && anchor == rewrite.replaced;
+            if !again {
+                if rewrite.text.matches(anchor).count() != 1 || !quotes_undecided(ctx, anchor) {
+                    return "Not proposed: that passage is one you rewrote earlier and the user hasn't decided on yet - they see your rewrite in its place, and an edit of the old text can't be applied beside it. Anchor in the rewrite's text instead (quote it as you proposed it): the edit goes into that proposal.".to_string();
+                }
+                joins = true;
+            }
+        }
+    }
+
+    // On later requests the frontend appends a bracketed status note to this
+    // result (accepted / rejected / still undecided) - see
+    // annotateProposalStatuses in src/ai/revision/proposal-status.ts. The size of
+    // the change is measured here so the reply can rest on it: replies
+    // called a 20% cut "about 70% of the original" and an expansion that
+    // shrank "expanded into two paragraphs" (docs/design/ai-eval.md, round 2).
+    let text = parsed.get("text").and_then(|v| v.as_str()).unwrap_or("");
+    if let Some(problem) = degenerate_replacement(action, anchor, text) {
+        // Refused once; the identical call again means it ("replace this
+        // sentence with TBD").
+        let key = format!("{anchor}\0{text}");
+        let mut ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
+        if !ledger.refused_short.contains(&key) {
+            ledger.refused_short.push(key);
+            return problem;
+        }
+    }
+    // A second proposal for a passage this reply already changes: the two
+    // previews overlap and only one can ever be applied. Sonnet sent the
+    // same French proofreading twice in one step (round 4); the first
+    // stands, the copy is refused (and never shown - see proposal-status.ts).
+    if !joins && matches!(action, "replace" | "delete" | "replace_selection") {
+        let passage = match action {
+            "replace_selection" => ProposedPassage::selection(),
+            _ => ProposedPassage::at(ctx.document.target_span(&parsed), anchor),
+        };
+        let mut ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
+        if ledger.passages.iter().any(|p| p.overlaps(&passage)) {
+            return "Not proposed: an edit you already proposed in this reply covers this passage, and overlapping proposals can't both be applied. The first one stands - don't send another; describe it in your reply.".to_string();
+        }
+        ledger.passages.push(passage);
+    }
+    let size = match action {
+        "replace" => {
+            let (from, unit) = text_size(anchor);
+            let (to, _) = text_size(text);
+            format!(" It replaces {from} {unit} with {to}.")
+        }
+        "delete" => {
+            let (n, unit) = text_size(anchor);
+            format!(" It removes {n} {unit}.")
+        }
+        "replace_selection" => String::new(),
+        _ => {
+            let (n, unit) = text_size(text);
+            format!(" It adds {n} {unit}.")
+        }
+    };
+    // "Even if it falls short": told the size, the model sent a second,
+    // shorter proposal for the same passage to meet a skill's 70% - two
+    // overlapping previews, of which only one can be applied (round-2
+    // integration, skill/zh/slash).
+    let mut unmade = String::new();
+    if !text.is_empty() {
+        let mut ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(problem) = ledger.pictures_problem(text) {
+            return problem;
+        }
+        ledger.texts.push(text.to_string());
+        unmade = ledger.take_unmade().unwrap_or_default();
+        unmade.push_str(&ledger.pictures_placed(text));
+    }
+    // A rewrite that swapped a picture keeps the original
+    // (doc_blocks::keep_pictures): the swap is generate_image's.
+    if parsed
+        .get(crate::ai::doc_blocks::PICTURES_KEPT_KEY)
+        .is_some()
+    {
+        unmade.push_str(PICTURE_KEPT_NOTE);
+    }
+    let into = if joins {
+        " It changes text you proposed that the user hasn't decided on yet: it goes into that proposal, which now reads with it."
+    } else if again {
+        " It takes the place of your earlier rewrite of that passage, which the user hadn't decided on."
+    } else {
+        ""
+    };
+    format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{into}{size}{unmade} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.")
+}
+
+/// Whether `anchor` is quoted from exactly one place in text proposed and
+/// not decided yet: this request's proposals and earlier ones'.
+fn quotes_undecided(ctx: &ToolContext, anchor: &str) -> bool {
+    let ledger = ctx.proposed.lock().unwrap_or_else(|e| e.into_inner());
+    let found: usize = ledger
+        .texts
+        .iter()
+        .chain(ctx.undecided.iter().map(|edit| &edit.text))
+        .map(|text| text.matches(anchor).count())
+        .sum();
+    found == 1
+}
+
+/// Write mode's propose_edit. Its schema offers only INSERT_ACTIONS, but a
+/// model may send another action anyway; it is refused here, so nothing
+/// that changes or removes the user's text reaches the editor in this mode.
+pub(super) fn propose_insertion(ctx: &ToolContext, arguments: &str) -> String {
+    let action = serde_json::from_str::<serde_json::Value>(arguments)
+        .ok()
+        .and_then(|v| v.get("action")?.as_str().map(str::to_string))
+        .unwrap_or_default();
+    // Text it proposed and the user hasn't decided on isn't theirs yet:
+    // that it may change.
+    let own = serde_json::from_str::<serde_json::Value>(arguments)
+        .ok()
+        .and_then(|v| v.get("anchor")?.as_str().map(str::to_string))
+        .is_some_and(|anchor| {
+            !anchor.is_empty() && !ctx.document.contains(&anchor) && quotes_undecided(ctx, &anchor)
+        });
+    if !INSERT_ACTIONS.contains(&action.as_str()) && !own {
+        return format!(
+            "Not proposed: Write mode only adds text, with {} - `{action}` would change or remove text that is already there. Add the new text instead, or tell the user that changing existing text needs Revise mode.",
+            INSERT_ACTIONS.join(", ")
+        );
+    }
+    propose_edit(ctx, arguments)
+}
+
+/// How long a stretch of text is, in the unit its language counts in:
+/// characters for Chinese and Japanese, words otherwise - counted exactly
+/// as measure_text's `chars` and `words` do. The note used to count only
+/// ideographs while measure_text counted punctuation too, and a reply told
+/// the user the two counts disagreed and to count again themselves
+/// (round 4, social/zh/shorten-100).
+pub(super) fn text_size(text: &str) -> (usize, &'static str) {
+    // A picture's line is no part of the text's length.
+    let without_pictures: String = text
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("!["))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let text = without_pictures.as_str();
+    let cjk = text
+        .chars()
+        .filter(|c| matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}'))
+        .count();
+    let words = text
+        .split_whitespace()
+        .filter(|w| w.chars().any(|c| c.is_alphanumeric() && !matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}')))
+        .count();
+    if cjk > words {
+        (
+            crate::ai::rules::measure::graphemes(text.trim()),
+            "characters",
+        )
+    } else {
+        (crate::ai::rules::measure::words(text), "words")
+    }
+}
+
+pub(super) fn is_cjk_char(c: char) -> bool {
+    matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}' | '\u{ac00}'..='\u{d7af}')
+}
+
+/// A replacement that can't be what the model meant: a whole clause of
+/// Chinese, Japanese or Korean replaced by one short Latin token. Sonnet
+/// once sent `"text": "due"` for a 26-character apology in a formal email
+/// and, told the proposal stood, could only ask the user to reject it
+/// (round 4, email/zh/formal). No translation or rewrite of a clause comes
+/// out as a single short token, so the call is refused before it becomes
+/// a proposal (the frontend drops refused calls too) and the model resends.
+/// A user can still ask for exactly that ("replace the sentence with
+/// TBD"): the identical call sent a second time goes through.
+pub(super) fn degenerate_replacement(action: &str, anchor: &str, text: &str) -> Option<String> {
+    if action != "replace" {
+        return None;
+    }
+    let anchor_cjk = anchor.chars().filter(|&c| is_cjk_char(c)).count();
+    let text = text.trim();
+    let latin_token = !text.is_empty()
+        && text.chars().count() <= 12
+        && !text.contains(char::is_whitespace)
+        && !text.chars().any(is_cjk_char);
+    (anchor_cjk >= 12 && latin_token).then(|| {
+        format!("Not proposed: `text` is only \"{text}\", which looks cut off for a passage this long. Send the proposal again with the full new text - or, if the user really asked for exactly this text, send the same call again unchanged.")
+    })
+}
+
+/// One character's plain form: typographic quotes, dash variants,
+/// full-width ASCII and non-breaking spaces fold to their plain ASCII
+/// equivalents - the usual differences between two writings of the same
+/// text (the grammar check's, a memory file's name). One char in, one char
+/// out, so positions stay aligned.
+pub(crate) fn normalize_char(c: char) -> char {
+    match c {
+        '\u{2018}' | '\u{2019}' | '\u{201A}' | '\u{2032}' => '\'',
+        '\u{201C}' | '\u{201D}' | '\u{201E}' | '\u{2033}' => '"',
+        '\u{2010}'..='\u{2015}' | '\u{2212}' => '-',
+        '\u{00A0}' | '\u{2007}' | '\u{202F}' | '\u{3000}' => ' ',
+        '\u{FF01}'..='\u{FF5E}' => char::from_u32(c as u32 - 0xFEE0).unwrap_or(c),
+        _ => c,
+    }
+}

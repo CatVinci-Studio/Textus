@@ -227,6 +227,38 @@ change.
 **Prefer deepening the mechanism over special-casing.** A new `if` in shared
 code to serve one caller usually means the fix is at the wrong depth.
 
+### Code shape
+
+**Pure logic inside, side effects outside.** Deciding what happens - what
+the tags in a reply become, where a margin card stands, what a stored
+setting means - is a pure function of its inputs, in a module of its own,
+with unit tests. Reading the DOM, calling the backend, timers and listeners
+stay at the edge: a hook or a command that calls the pure part.
+
+**Components connect; hooks hold the concerns.** A component reads its
+feature's state and draws it. More than 8 hooks in one component is a
+component doing several things: each concern becomes a hook of its own,
+named for it (`useFloatingList`, `useComposerInput`, `useRowDrag`), in the
+component's file or beside it.
+
+**600 lines a file at most.** Split by concern, not by line count: each part
+is something you can name in its first comment. Rust tests live in a
+`tests.rs` beside their module (`foo.rs` and `foo/tests.rs`), not inline.
+Tests, the translation tables and the icon table are not held to it.
+
+**Provider differences are data.** What one AI provider does differently -
+a parameter, a name, a model list, a sign-in - is written in the catalog
+(`src-tauri/src/ai/catalog.rs`), `capabilities.rs` or a table beside the
+code that reads it. Outside a provider's own adapter in `aicompat`, no code
+compares a provider's id.
+
+**Dead code goes**: a path nothing calls, a flag nothing sets, a fallback
+for something nothing writes any more.
+
+`npm run check` holds the hook count, the file size and the provider ids
+(`scripts/check-code-shape.mjs`). The few files over a limit today are
+listed there with where they stand, and may only shrink.
+
 **Names.** Files are `kebab-case.ts`, React components `PascalCase.tsx`,
 tests `name.test.ts` beside the file they test, e2e specs `name.spec.ts`,
 Rust modules `snake_case.rs`, scripts `verb-noun.mjs`.

@@ -29,7 +29,7 @@ export const linuxImeEnterPlugin = $prose(
             if (event.isComposing || event.keyCode === 229) return false;
             // A private field, but the only one the rule consults; the
             // value is what prosemirror-view itself resets it to.
-            const input = (view as unknown as ViewInput).input;
+            const input = (view as ViewInput).input;
             if (input?.compositionEndedAt !== undefined)
               input.compositionEndedAt = -2e8;
             return false;

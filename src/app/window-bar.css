@@ -50,7 +50,10 @@
 
 /* In full screen a Mac shows the traffic lights only with the menu bar,
    over the window: their corner is free, and the sidebar's toggle takes it
-   (useFullscreenMark marks the root). */
+   (useFullscreenMark marks the root), 12px from the edge instead of the
+   lights' 78px. It moves there at once, with no slide: the lights don't
+   slide either, and one that followed the window's animation never kept
+   pace with it. */
 :root[data-window-chrome="native"][data-window-fullscreen] .window-bar {
   padding-left: 12px;
 }

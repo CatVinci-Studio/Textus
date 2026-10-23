@@ -1,4 +1,5 @@
 import { normalizeMathDelimiters } from "../../utils/markdown-math";
+import { withoutCitationMarkers } from "../citation-markers";
 import { skillBlock } from "./user-message";
 import { SKILL_COMMAND } from "./skill-picker";
 import { parseImageProposal } from "../revision/generated-images";
@@ -27,13 +28,11 @@ export function parseProposal(argumentsJson: string): EditProposal | null {
     // verbatim quote of the document to match.
     const text =
       typeof parsed.text === "string"
-        ? normalizeMathDelimiters(parsed.text)
+        ? normalizeMathDelimiters(withoutCitationMarkers(parsed.text))
         : undefined;
-    // Like the anchor, kept verbatim - it must match the document exactly.
-    const context =
-      typeof parsed.context === "string" && parsed.context
-        ? parsed.context
-        : undefined;
+    const id = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+    const block = id(parsed.block);
+    const lastBlock = id(parsed.last_block);
     if (
       action !== "append" &&
       action !== "replace_selection" &&
@@ -46,7 +45,14 @@ export function parseProposal(argumentsJson: string): EditProposal | null {
       typeof parsed.reason === "string" && parsed.reason.trim()
         ? parsed.reason.trim()
         : undefined;
-    return { action, anchor, text, context, reason };
+    return {
+      action,
+      ...(block ? { block } : {}),
+      ...(lastBlock ? { lastBlock } : {}),
+      anchor,
+      text,
+      reason,
+    };
   } catch {
     return null;
   }
