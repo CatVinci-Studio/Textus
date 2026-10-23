@@ -1,6 +1,7 @@
 import { Decoration } from "@milkdown/kit/prose/view";
 import { prefersReducedMotion } from "../../ui/motion";
 import { enter, glideAfter } from "../../ui/moves";
+import { Cascade, hasWords } from "../../ui/cascade";
 import { inlineSentence, pairedPrefix } from "./sentence-diff";
 import { type StreamLayout } from "./sentence-stream";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
@@ -409,8 +410,10 @@ export function streamEntrance(
       : before.at === at && after.startsWith(before.after);
   if (written) return;
   // A sentence written in place of the one its original was marked in
-  // (the reading cursor, ui/moves.ts's mark) enters where it lands.
-  enter(span, { from: "none" });
+  // (the reading cursor, ui/moves.ts's mark) comes in where it lands, a
+  // word at a time (ui/cascade.ts); a block with no words, whole.
+  if (hasWords(span)) new Cascade().play(span);
+  else enter(span, { from: "none" });
   // A whole block pushes the text below it down: that glides there. Once
   // it is in the document (a widget is drawn after it is made), before the
   // frame is painted.

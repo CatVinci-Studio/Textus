@@ -9,6 +9,7 @@ import {
   splitMermaidFences,
 } from "../../editor/pending-diagram";
 import { enter, glideAfter } from "../../ui/moves";
+import { Cascade, hasWords } from "../../ui/cascade";
 import { UnitReveal } from "./unit-reveal";
 import { showGeneratedImages, shownGeneratedSrc } from "./generated-images";
 import { framePendingPictures } from "./pending-picture";
@@ -52,6 +53,8 @@ export interface InsertAnimation {
    *  (PendingPreview.streamSource); `span` is then only the sentence being
    *  written. */
   stream: StreamState | null;
+  /** The words of what landed coming in one by one (ui/cascade.ts). */
+  cascade: Cascade;
 }
 
 /** A rewrite being laid out sentence by sentence while it streams. */
@@ -103,6 +106,7 @@ export function newAnimation(
     view: null,
     settled: false,
     stream: null,
+    cascade: new Cascade(),
   };
 }
 
@@ -273,11 +277,22 @@ export function renderAnimation(anim: InsertAnimation) {
   renderPendingHtml(anim.span, text);
   anim.drawn = text;
   anim.span.dataset.drawn = "true";
-  // The blocks the unit that landed brought enter (ui/moves.ts), the first
-  // one too. A sentence that joined the paragraph already shown just
-  // appears in it: fading the whole paragraph in again read as a flicker.
-  if (redrawn || !text.startsWith(shown)) return;
-  for (const el of [...anim.span.children].slice(before)) enter(el);
+  // The words of what landed come in one by one (ui/cascade.ts) - a
+  // sentence joined to the paragraph shown too, its words only; those still
+  // coming in carry on through a redraw. A block with no words (a picture,
+  // a rule) enters whole (ui/moves.ts). Text replaced rather than added to
+  // shows at once.
+  if (redrawn) {
+    anim.cascade.play(anim.span);
+    return;
+  }
+  if (!text.startsWith(shown)) {
+    anim.cascade.settle(anim.span);
+    return;
+  }
+  anim.cascade.play(anim.span);
+  for (const el of [...anim.span.children].slice(before))
+    if (!hasWords(el)) enter(el);
   // The text below it, pushed down by what landed, glides there - once
   // the widget is in the document, when it was drawn as it was made: in a
   // microtask, which runs once ProseMirror has put it in and before the
