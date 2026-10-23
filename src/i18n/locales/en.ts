@@ -1192,9 +1192,6 @@ type /name in a conversation to use one.
   mcpFormCommand: "Command",
   mcpFormCommandHint:
     "What starts it, as in a terminal. The program is looked for on your terminal's PATH.",
-  mcpFormFolder: "Choose a folder…",
-  mcpFormFolderHint:
-    "The folder it may read and write: added at the end of the command.",
   mcpFormEnv: "Environment",
   mcpFormEnvHint:
     "One KEY=value a line - an API key the server needs, for instance.",

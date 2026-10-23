@@ -1206,9 +1206,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   mcpFormCommand: "Befehl",
   mcpFormCommandHint:
     "Was ihn startet, wie im Terminal. Das Programm wird im PATH deines Terminals gesucht.",
-  mcpFormFolder: "Ordner wählen…",
-  mcpFormFolderHint:
-    "Der Ordner, den er lesen und schreiben darf – ans Ende des Befehls gesetzt.",
   mcpFormEnv: "Umgebung",
   mcpFormEnvHint:
     "Ein KEY=Wert pro Zeile – etwa ein API-Schlüssel, den der Server braucht.",

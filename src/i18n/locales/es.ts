@@ -1217,9 +1217,6 @@ para usar una.
   mcpFormCommand: "Comando",
   mcpFormCommandHint:
     "Lo que lo inicia, como en una terminal. El programa se busca en el PATH de tu terminal.",
-  mcpFormFolder: "Elegir una carpeta…",
-  mcpFormFolderHint:
-    "La carpeta que puede leer y escribir: se añade al final del comando.",
   mcpFormEnv: "Entorno",
   mcpFormEnvHint:
     "Un KEY=valor por línea; por ejemplo, una clave de API que necesita el servidor.",

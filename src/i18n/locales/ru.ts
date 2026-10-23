@@ -1208,9 +1208,6 @@ export default {
   mcpFormCommand: "Команда",
   mcpFormCommandHint:
     "Как его запустить — как в терминале. Программа ищется в PATH вашего терминала.",
-  mcpFormFolder: "Выбрать папку…",
-  mcpFormFolderHint:
-    "Папка, которую он может читать и изменять; добавляется в конец команды.",
   mcpFormEnv: "Окружение",
   mcpFormEnvHint:
     "По одной строке KEY=значение — например, ключ API, нужный серверу.",

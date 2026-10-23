@@ -84,32 +84,32 @@ test("an MCP server is added from the list, tried, saved, and shows its tools", 
   await panel.getByRole("tab", { name: "MCP" }).click();
   await expect(panel.getByText("No server added yet.")).toBeVisible();
   await panel
-    .locator('[data-mcp-preset="memory"]')
+    .locator('[data-mcp-preset="context7"]')
     .getByRole("button", { name: "Add" })
     .click();
   await expect(panel.getByLabel("Command", { exact: true })).toHaveValue(
-    "npx -y @modelcontextprotocol/server-memory",
+    "npx -y @upstash/context7-mcp",
   );
   await panel.getByRole("button", { name: "Try it" }).click();
   await expect(panel.locator(".mcp-tried")).toHaveText(
-    "Memory 1.0: 1 tools - echo",
+    "Context7 1.0: 1 tools - echo",
   );
   await panel.getByRole("button", { name: "Save" }).click();
-  const card = panel.locator('[data-mcp="memory"]');
+  const card = panel.locator('[data-mcp="context7"]');
   await expect(card.locator(".mcp-state")).toHaveText("Ready · 1 tools");
   await expect(card.locator(".mcp-tool")).toHaveText(["echo"]);
   // The preset is no longer offered: it is added.
-  await expect(panel.locator('[data-mcp-preset="memory"]')).toHaveCount(0);
+  await expect(panel.locator('[data-mcp-preset="context7"]')).toHaveCount(0);
   expect(await savedServers(page)).toMatchObject([
     {
-      id: "memory",
+      id: "context7",
       enabled: true,
       command: "npx",
-      args: ["-y", "@modelcontextprotocol/server-memory"],
+      args: ["-y", "@upstash/context7-mcp"],
     },
   ]);
   // Off: no longer running.
-  await card.getByRole("checkbox", { name: "Memory" }).uncheck();
+  await card.getByRole("checkbox", { name: "Context7" }).uncheck();
   await expect(card.locator(".mcp-state")).toHaveText("Off");
 });
 

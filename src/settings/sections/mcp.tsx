@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Strings } from "../../i18n/strings";
 import {
-  fs,
   links,
   mcp,
   type McpServerStatus,
@@ -333,7 +332,7 @@ function useMcpTry(t: Strings) {
       setTrying(false);
     }
   };
-  return { tried, error, setError, trying, tryServer };
+  return { tried, error, trying, tryServer };
 }
 
 function McpForm({
@@ -360,7 +359,7 @@ function McpForm({
   const [env, setEnv] = useState(formatPairs(server.env));
   const [url, setUrl] = useState(server.url);
   const [headers, setHeaders] = useState(formatPairs(server.headers, ": "));
-  const { tried, error, setError, trying, tryServer } = useMcpTry(t);
+  const { tried, error, trying, tryServer } = useMcpTry(t);
 
   const built = (): McpServer => {
     const [command = "", ...args] =
@@ -376,18 +375,6 @@ function McpForm({
     };
   };
   const ready = kind === "command" ? !!commandLine.trim() : !!url.trim();
-
-  const chooseFolder = async () => {
-    try {
-      const folder = await fs.pickOpenFolder();
-      if (folder)
-        setCommandLine((line) =>
-          joinCommandLine([...splitCommandLine(line), folder]),
-        );
-    } catch (err) {
-      setError(errorText(err));
-    }
-  };
 
   return (
     <SettingsGroup title={isNew ? t.mcpAddTitle : t.mcpEditTitle}>
@@ -426,23 +413,11 @@ function McpForm({
                 value={commandLine}
                 spellCheck={false}
                 autoCapitalize="off"
-                placeholder="npx -y @modelcontextprotocol/server-memory"
+                placeholder="npx -y @upstash/context7-mcp"
                 onChange={(e) => setCommandLine(e.target.value)}
               />
               <span className="settings-row-hint">{t.mcpFormCommandHint}</span>
             </label>
-            {preset?.needs === "folder" && (
-              <div className="settings-row">
-                <span className="settings-row-hint">{t.mcpFormFolderHint}</span>
-                <button
-                  type="button"
-                  className="text-button settings-inline-button"
-                  onClick={() => void chooseFolder()}
-                >
-                  {t.mcpFormFolder}
-                </button>
-              </div>
-            )}
             <label className="settings-field-label">
               {t.mcpFormEnv}
               <textarea

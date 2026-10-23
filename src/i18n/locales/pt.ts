@@ -1201,9 +1201,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   mcpFormCommand: "Comando",
   mcpFormCommandHint:
     "O que o inicia, como num terminal. O programa é procurado no PATH do seu terminal.",
-  mcpFormFolder: "Escolher uma pasta…",
-  mcpFormFolderHint:
-    "A pasta que ele pode ler e gravar, adicionada ao fim do comando.",
   mcpFormEnv: "Ambiente",
   mcpFormEnvHint:
     "Um CHAVE=valor por linha — uma chave de API de que o servidor precisa, por exemplo.",

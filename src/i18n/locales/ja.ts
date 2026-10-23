@@ -1154,8 +1154,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   mcpFormCommand: "コマンド",
   mcpFormCommandHint:
     "ターミナルで入力するのと同じ起動コマンド。プログラムはターミナルの PATH から探します。",
-  mcpFormFolder: "フォルダを選択…",
-  mcpFormFolderHint: "読み書きできるフォルダ。コマンドの末尾に加えます。",
   mcpFormEnv: "環境変数",
   mcpFormEnvHint:
     "1 行に KEY=value を 1 つ。サーバーが必要とする API キーなど。",

@@ -1100,8 +1100,6 @@ export default {
   mcpFormCommand: "指令",
   mcpFormCommandHint:
     "啟動它的指令，和在終端機裡輸入的一樣。程式會在你終端機的 PATH 裡尋找。",
-  mcpFormFolder: "選擇資料夾…",
-  mcpFormFolderHint: "它可以讀寫的資料夾，會加在指令末尾。",
   mcpFormEnv: "環境變數",
   mcpFormEnvHint: "每行一個 KEY=value，例如伺服器需要的 API 金鑰。",
   mcpFormUrl: "網址",

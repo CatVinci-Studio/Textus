@@ -1095,8 +1095,6 @@ export default {
   mcpFormCommand: "命令",
   mcpFormCommandHint:
     "启动它的命令，和在终端里输入的一样。程序会在你终端的 PATH 里查找。",
-  mcpFormFolder: "选择文件夹…",
-  mcpFormFolderHint: "它可以读写的文件夹，会加在命令末尾。",
   mcpFormEnv: "环境变量",
   mcpFormEnvHint: "每行一个 KEY=value，例如服务器需要的 API 密钥。",
   mcpFormUrl: "网址",

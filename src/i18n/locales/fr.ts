@@ -1238,9 +1238,6 @@ utiliser une.
   mcpFormCommand: "Commande",
   mcpFormCommandHint:
     "Ce qui le lance, comme dans un terminal. Le programme est cherché dans le PATH de votre terminal.",
-  mcpFormFolder: "Choisir un dossier…",
-  mcpFormFolderHint:
-    "Le dossier qu’il peut lire et écrire, ajouté à la fin de la commande.",
   mcpFormEnv: "Environnement",
   mcpFormEnvHint:
     "Un CLÉ=valeur par ligne : une clé d’API dont le serveur a besoin, par exemple.",

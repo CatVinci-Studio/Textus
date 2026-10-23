@@ -1142,8 +1142,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   mcpFormCommand: "명령어",
   mcpFormCommandHint:
     "터미널에 입력하는 것과 같은 시작 명령어. 프로그램은 터미널의 PATH에서 찾습니다.",
-  mcpFormFolder: "폴더 선택…",
-  mcpFormFolderHint: "읽고 쓸 수 있는 폴더로, 명령어 끝에 붙습니다.",
   mcpFormEnv: "환경 변수",
   mcpFormEnvHint: "한 줄에 KEY=value 하나. 서버가 필요로 하는 API 키 등.",
   mcpFormUrl: "URL",
