@@ -110,17 +110,19 @@ test("an edit leaves the rest of the file as it was written", async ({
 });
 
 test("with the setting off nothing is written", async ({ page }) => {
+  // The autosave delay passes on the page's clock, not in real time.
+  await page.clock.install();
   await openApp(page, { settings: { language: "en" } });
   await installDisk(page, "# Notes\n\nSaved text.\n");
   await openDoc(page);
   await typeAtEnd(page, " More.");
-  await page.waitForTimeout(3500);
+  await page.clock.runFor(3500);
   await page.evaluate(() =>
     (
       window as unknown as { __devEmitTauriEvent: (n: string) => void }
     ).__devEmitTauriEvent("tauri://blur"),
   );
-  await page.waitForTimeout(500);
+  await page.clock.runFor(500);
   expect((await disk(page)).writes).toEqual([]);
   await expect(page.locator(".unsaved-dot")).toBeVisible();
 });
@@ -141,6 +143,7 @@ test("leaving the window writes at once", async ({ page }) => {
 });
 
 test("a file changed on disk is not overwritten", async ({ page }) => {
+  await page.clock.install();
   await openApp(page, { settings: { language: "en", autosave: true } });
   await installDisk(page, "# Notes\n\nSaved text.\n");
   await openDoc(page);
@@ -150,8 +153,9 @@ test("a file changed on disk is not overwritten", async ({ page }) => {
     files[path] = { text: "Changed elsewhere.\n", mtime: 50 };
   }, PATH);
   await typeAtEnd(page, " More.");
+  await page.clock.runFor(3500);
   const prompt = page.getByRole("dialog", { name: "File Changed on Disk" });
-  await expect(prompt).toBeVisible({ timeout: 6000 });
+  await expect(prompt).toBeVisible();
   // The user didn't ask for this save: Enter on the way back keeps the
   // disk's version rather than overwriting it.
   await expect(prompt.getByRole("button", { name: "Cancel" })).toBeFocused();
@@ -159,7 +163,7 @@ test("a file changed on disk is not overwritten", async ({ page }) => {
   await expect(prompt).toBeHidden();
   // Typing on doesn't bring the prompt back every few seconds.
   await typeAtEnd(page, " Again.");
-  await page.waitForTimeout(3500);
+  await page.clock.runFor(3500);
   await expect(prompt).toBeHidden();
   const { files, writes } = await disk(page);
   expect(writes).toEqual([]);
