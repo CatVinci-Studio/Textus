@@ -150,7 +150,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   revisionDisplayLabel: "Mostrar revisões",
   revisionDisplayInline: "Tudo no texto",
   revisionDisplayOriginal: "Original no texto, alterações na margem",
-  revisionDisplayFinal: "Só o resultado, sem marcações",
+  revisionDisplayFinal: "Só o resultado, original na margem",
   revisionDisplayNoRoom: "Sem espaço: feche a barra lateral ou o painel de IA",
   revisionDisplayNewText:
     "Texto novo não tem original: nestas vistas ele fica no texto, em verde",

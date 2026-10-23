@@ -132,7 +132,7 @@ test("a proposed edit is reviewed in the dock and lands in the document", async 
   await dock.locator(".inline-chat-send").tap();
 
   // The preview is in the document; the decision is in the dock.
-  await expect(page.locator(".milkdown .pending-delete").first()).toBeVisible();
+  await expect(page.locator(".milkdown .pending-delete").first()).toBeAttached();
   await expect(dock).toContainText("Shortened.");
   const accept = dock.getByRole("button", { name: "Accept", exact: true });
   await expect(accept).toBeVisible();

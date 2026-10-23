@@ -127,7 +127,7 @@ export default {
   revisionDisplayLabel: "修订显示方式",
   revisionDisplayInline: "全部在正文中",
   revisionDisplayOriginal: "原文在正文，修改在页边",
-  revisionDisplayFinal: "只看修改后的结果",
+  revisionDisplayFinal: "只看结果，原文在页边",
   revisionDisplayNoRoom: "空间不够：关掉侧边栏或 AI 面板即可",
   revisionDisplayNewText:
     "新增的文字没有原文：在这两种视图里它仍以绿色留在正文中",

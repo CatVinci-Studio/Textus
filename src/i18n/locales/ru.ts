@@ -154,7 +154,7 @@ export default {
   revisionDisplayLabel: "Показ правок",
   revisionDisplayInline: "Всё в тексте",
   revisionDisplayOriginal: "Оригинал в тексте, правки на полях",
-  revisionDisplayFinal: "Только результат, без пометок",
+  revisionDisplayFinal: "Только результат, оригинал на полях",
   revisionDisplayNoRoom:
     "Не хватает места: закройте боковую панель или панель ИИ",
   revisionDisplayNewText:

@@ -46,7 +46,7 @@ const VIEWS = {
   inline: "All in the text",
   original: "Original in the text, changes in the margin",
   new: "Changes in the text, original in the margin",
-  final: "Result only, no markup",
+  final: "Result only, originals in the margin",
 } as const;
 
 async function view(page: Page, name: keyof typeof VIEWS) {
@@ -131,7 +131,12 @@ test("after Write's text is accepted, every view applies to Revise's rewrite acr
   await view(page, "final");
   await expect(visible(page, ".pending-delete")).toHaveCount(0);
   await expect(visible(page, ".pending-insert")).toHaveCount(3);
-  await expect(page.locator(".revision-note")).toHaveCount(0);
+  // What each change takes out, in its card.
+  await expect(page.locator(".revision-note")).toHaveCount(3);
+  for (let i = 0; i < 3; i++)
+    await expect(
+      page.locator(".revision-note").nth(i).locator(":is(s, del)").first(),
+    ).toBeAttached();
   expect(
     await visible(page, ".pending-insert")
       .first()

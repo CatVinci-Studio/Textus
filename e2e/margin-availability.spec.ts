@@ -168,7 +168,11 @@ test("the line being read stays put as revisions move between the text and the m
   // A fixed text width, so only the revisions reflow the page.
   await page.setViewportSize({ width: 1100, height: 500 });
   await openApp(page, {
-    settings: { language: "en", contentWidth: "standard" },
+    settings: {
+      language: "en",
+      contentWidth: "standard",
+      revisionDisplay: "original",
+    },
     storage: { "textus-agent-panel-open": "1" },
   });
   // WebKit has no scroll anchoring: take Chromium's away too.

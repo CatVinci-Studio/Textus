@@ -206,6 +206,11 @@
   background: var(--revision-insert-bg);
 }
 
+.revision-note.review-note-chip .review-note-chip-text:has(> s) {
+  background: var(--revision-delete-bg);
+  color: var(--editor-muted);
+}
+
 .revision-note-kept.review-note-chip .review-note-chip-text {
   background: none;
   opacity: 0.5;
@@ -474,8 +479,36 @@
   stroke: color-mix(in srgb, var(--success-color) 70%, transparent);
 }
 
-/* A card's heading over its text: "Added" for a sentence with no
-   original. */
+/* Result only: the card holds what the change takes out, struck - in the
+   text's own colour, its heading too: muted on the red, neither could be
+   read (axe, color-contrast). The strike and the red say it is gone. */
+.revision-note-original,
+.revision-note-original .revision-note-was {
+  background: var(--revision-delete-bg);
+  color: var(--editor-text);
+}
+
+.revision-note-original .revision-note-was {
+  background: none;
+}
+
+.revision-note-original s {
+  text-decoration-color: var(--revision-delete-strike);
+}
+
+.revision-note-kept .revision-note-original {
+  background: none;
+  text-decoration: none;
+  color: var(--editor-text);
+  opacity: 1;
+}
+
+.revision-note-kept .revision-note-original s {
+  text-decoration: none;
+}
+
+/* A card's heading over its text: "Original" for what Result only keeps
+   out of the text, "Added" for a sentence with no original. */
 .revision-note-was {
   display: block;
   margin-bottom: 1px;
@@ -489,8 +522,15 @@
 .revision-note:is(.review-note-hot, .revision-note-focus):not(
     .revision-note-kept
   )
-  .revision-note-text {
+  .revision-note-text:not(.revision-note-original) {
   background: var(--revision-insert-hover-bg);
+}
+
+.revision-note:is(.review-note-hot, .revision-note-focus):not(
+    .revision-note-kept
+  )
+  .revision-note-original {
+  background: var(--revision-delete-hover-bg);
 }
 
 /* Where a pure insertion would go, with its card in the margin. */

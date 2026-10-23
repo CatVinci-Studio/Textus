@@ -89,12 +89,12 @@ describe("settings from a build with features since taken out", () => {
     expect(settings.runInBackground).toBe(true);
   });
 
-  it("read 1.2.0's revision view taken out in 1.2.1 as the default one", () => {
+  it("read 1.2.0's changes-in-the-text view as Result only, its originals in the margin", () => {
     localStorage.setItem(
       SETTINGS_KEY,
       JSON.stringify({ language: "zh", revisionDisplay: "new" }),
     );
-    expect(loadSettings().revisionDisplay).toBe("original");
+    expect(loadSettings().revisionDisplay).toBe("final");
   });
 });
 

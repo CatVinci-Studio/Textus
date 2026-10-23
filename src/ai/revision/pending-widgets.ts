@@ -255,6 +255,26 @@ export function changeDecorations(
       ),
     );
   }
+  // Where a deleted sentence was, for Result only - its card in the
+  // margin holds it.
+  else
+    decos.push(
+      Decoration.widget(
+        c.to,
+        () => {
+          const el = document.createElement("span");
+          el.className = `pending-delete-mark pending-sentence-${state}${streaming}`;
+          el.dataset.call = callId;
+          el.dataset.index = String(index);
+          return el;
+        },
+        {
+          side: 1,
+          key: `pending-mark-delete-${callId}-${index}-${state}`,
+          part: "mark",
+        },
+      ),
+    );
   const { labels, decide } = draw;
   decos.push(
     Decoration.widget(

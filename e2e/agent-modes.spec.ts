@@ -250,7 +250,7 @@ test("Revise still replaces text, after Accept", async ({ page }) => {
   await pickMode(page, "Revise");
   await send(page, "Tighten it");
   expect((await agentCalls(page)).at(-1)?.mode).toBe("revise");
-  await expect(page.locator(".milkdown .pending-delete")).toBeVisible();
+  await expect(page.locator(".milkdown .pending-delete")).toBeAttached();
   await accept(page);
   await expect(page.locator(".milkdown p")).toHaveText("The meeting dragged.");
 });

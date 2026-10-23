@@ -26,10 +26,13 @@ describe("landingEnds", () => {
   // A table is held whole until the next block: e2e (the editor's parser
   // tells a table, and only the app has one).
 
-  it("lands writing with no stops at a soft break once it pauses", () => {
+  it("lands writing with no stops a paragraph at a time, never half of one on a pause", () => {
     const text = "สวัสดีครับ วันนี้อากาศดี";
     expect(landingEnds(text, 0, false, false)).toEqual([]);
-    expect(landingEnds(text, 0, false, true)).toEqual([11]);
+    expect(landingEnds(text, 0, false, true)).toEqual([]);
+    expect(landingEnds(`${text}\n\nต่อไป`, 0, false, false)).toEqual([
+      text.length + 2,
+    ]);
   });
 
   it("lands everything once the text is done", () => {

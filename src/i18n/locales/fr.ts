@@ -159,7 +159,7 @@ utiliser une.
   revisionDisplayInline: "Tout dans le texte",
   revisionDisplayOriginal:
     "Original dans le texte, modifications dans la marge",
-  revisionDisplayFinal: "Résultat seul, sans marques",
+  revisionDisplayFinal: "Résultat seul, original dans la marge",
   revisionDisplayNoRoom:
     "Pas assez de place : fermez la barre latérale ou le panneau IA",
   revisionDisplayNewText:
