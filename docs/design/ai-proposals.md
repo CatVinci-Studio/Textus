@@ -456,9 +456,15 @@ file goes once the last of them is decided.
 - **A selection's or the caret's proposal** (`replace_selection`,
   `insert_at_cursor`) keeps where it wrote, and comes back only to the
   document it was made for, unchanged (a hash of its markdown).
-- **Not kept:** an untitled document's proposals, one still streaming in,
-  and one with a picture still waiting in the backend, which doesn't
-  outlive the app.
+- **Pictures** made and waiting for Accept live only in the backend's
+  memory (`ai/images/pending.rs`); the backend keeps each one a kept
+  proposal shows as a file beside its JSON, in `<that file>.pictures/`,
+  and puts them back under their ids when the document opens. A proposal
+  whose picture is still being made is kept once it is made. Only picture
+  files are ever removed from that folder, and the folder once it is
+  empty.
+- **Not kept:** an untitled document's proposals and one still streaming
+  in.
 - Nothing is written for a document before what was kept for it has been
   offered again, so opening it never wipes them.
 

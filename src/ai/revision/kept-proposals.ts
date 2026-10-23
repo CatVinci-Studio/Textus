@@ -11,8 +11,9 @@ import type { PendingPreview } from "./pending-types";
  * their text, it lands where it did while those blocks read as they did,
  * and gives way when they don't. A selection's or the caret's proposal
  * keeps where that was, and comes back only to the document it was made
- * for, unchanged. A picture still waiting in the backend isn't kept: it
- * doesn't outlive the app.
+ * for, unchanged. Its pictures, made and waiting for Accept, are kept
+ * beside it by the backend (`picturesOf`); one still being made holds its
+ * proposal back until it is made.
  */
 
 export const KEPT_VERSION = 1;
@@ -34,13 +35,22 @@ export interface KeptProposals {
   proposals: KeptProposal[];
 }
 
-/** Whether a proposal in the document can be kept: decidable, and with no
- *  picture that lives only in this run of the app. */
-export function keepable(preview: PendingPreview): boolean {
+/** Whether a proposal in the document can be kept: decidable, and each of
+ *  its pictures made (`made`, generated-images.ts's pictureState). */
+export function keepable(
+  preview: PendingPreview,
+  made: (id: string) => boolean,
+): boolean {
   return (
     !preview.streaming &&
-    !preview.proposal.image &&
-    generatedIdsIn(preview.proposal.text ?? "").length === 0
+    generatedIdsIn(preview.proposal.text ?? "").every(made)
+  );
+}
+
+/** The pictures the kept proposals show, for the backend to keep. */
+export function picturesOf(kept: KeptProposals | null): string[] {
+  return (kept?.proposals ?? []).flatMap((p) =>
+    generatedIdsIn(p.proposal.text ?? ""),
   );
 }
 
@@ -50,8 +60,11 @@ export function keptFrom(
   previews: PendingPreview[],
   document: number,
   selectionMarkdown: (from: number, to: number) => string,
+  made: (id: string) => boolean,
 ): KeptProposals | null {
-  const proposals = previews.filter(keepable).map((p): KeptProposal => {
+  const proposals = previews
+    .filter((p) => keepable(p, made))
+    .map((p): KeptProposal => {
     const kept: KeptProposal = { callId: p.callId, proposal: p.proposal };
     if (p.proposal.action === "replace_selection")
       kept.target = {

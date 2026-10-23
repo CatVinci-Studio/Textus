@@ -156,3 +156,61 @@ test("a proposal whose original changed while it was closed gives way", async ({
   await expect(page.locator(".revision-note")).toHaveCount(1);
   await expect(page.locator(".revision-note")).toContainText("sea");
 });
+
+// A 1x1 PNG.
+const PNG =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+test("an undecided picture is kept with its document, and comes back", async ({
+  page,
+}) => {
+  await openStory(page);
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "Illustrate it" },
+      {
+        kind: "ToolCall",
+        call_id: "g1",
+        name: "generate_image",
+        arguments: JSON.stringify({
+          prompt: "A lighthouse stair at night",
+          alt: "The lighthouse stair",
+          action: "insert_after",
+          anchor: "The keeper climbed the stairs slowly.",
+          image: { id: "pic001", width: 1, height: 1 },
+        }),
+      },
+      {
+        kind: "ToolResult",
+        call_id: "g1",
+        output: "Image proposed - the user now sees the picture.",
+      },
+      { kind: "Assistant", text: "A picture after the first paragraph." },
+    ],
+    ai_generated_image: { mime: "image/png", ext: "png", dataBase64: PNG },
+    ai_discard_generated_image: null,
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Illustrate the first paragraph");
+  await composer.press("Enter");
+  const pending = `${editor} .pending-insert img`;
+  await expect(page.locator(pending)).toHaveCount(1);
+  // Kept, and its picture named for the backend to keep beside it.
+  await expect.poll(() => kept(page)).not.toBeNull();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (
+            window as unknown as {
+              __devKeptPictures?: Record<string, string[]>;
+            }
+          ).__devKeptPictures?.["/home/me/story.md"],
+      ),
+    )
+    .toEqual(["pic001"]);
+
+  await closeStory(page);
+  await openStory(page);
+  await expect(page.locator(pending)).toHaveCount(1);
+});
