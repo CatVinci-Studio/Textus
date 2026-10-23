@@ -22,8 +22,13 @@ import { readPluginFile, withResources, type PluginOrigin } from "./files";
 import { localize, type Permission, type PluginManifest } from "./manifest";
 import { showQuickPick, type QuickPickItem } from "./quick-pick";
 import { webPageUrl } from "./WebPagePane";
-import { closeSplit, splitEditor, splitLayout } from "../app/split-layout";
+import {
+  addHoverProvider,
+  removeHoverProvider,
+  type HoverCard,
+} from "./hover-providers";
 import { workspaceHandlers, type PluginScope } from "./broker-workspace";
+import { layoutHandlers } from "./broker-layout";
 import type { Endpoint } from "./rpc";
 import { lazyModule, type LazyModule } from "../lazy/lazy-module";
 import {
@@ -196,6 +201,7 @@ export class PluginHost {
     this.subscriptions.clear();
     removeStatusItem(this.id);
     releaseKeys(this.id);
+    removeHoverProvider(this.id);
     setTimeout(() => {
       this.disconnect?.();
       this.frame?.remove();
@@ -454,24 +460,6 @@ export class PluginHost {
         this.need("workspace.read");
         getWindowAccess()?.openFile(path, heading);
       },
-      // The layout: two documents side by side or one over the other.
-      // The panes are the app's; when they split is the plugin's.
-      "window.splitEditor": ({ direction }: { direction?: string }) => {
-        if (
-          direction !== undefined &&
-          direction !== "row" &&
-          direction !== "column"
-        )
-          throw new Error("direction is row or column.");
-        splitEditor(direction ?? "row");
-      },
-      "window.closeSplit": () => closeSplit(),
-      "window.layout": () => {
-        const layout = splitLayout();
-        return layout?.panes[1]
-          ? { split: layout.direction, ratio: layout.ratio }
-          : { split: null };
-      },
       "window.openUntitled": ({
         content,
         title,
@@ -521,6 +509,12 @@ export class PluginHost {
       "document.getSelection": () => {
         this.need("document.read");
         return getActiveDocument()?.selection() ?? null;
+      },
+      "editor.registerHoverProvider": () => {
+        this.need("document.read");
+        addHoverProvider(this.id, (target) =>
+          this.request<HoverCard | null>("$provideHover", { target }),
+        );
       },
       "editor.captureKeys": (capture: KeyCapture | null) => {
         this.need("editor.input");
@@ -591,6 +585,7 @@ export class PluginHost {
       "settings.get": ({ key }: { key: string }) =>
         this.deps.setting(this.id, key),
       ...workspaceHandlers(this.scope()),
+      ...layoutHandlers(),
     };
   }
 }

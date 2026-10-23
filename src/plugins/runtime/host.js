@@ -15,6 +15,7 @@
   var commands = new Map();
   var viewProviders = new Map();
   var editorProviders = new Map();
+  var hoverProviders = [];
   var settingsProvider = null;
   var webviews = new Map();
   var listeners = new Map();
@@ -273,6 +274,19 @@
       exec: function (op) {
         return call("editor.exec", op);
       },
+      // What the pointer rests on in the editor - a link to a document, any
+      // other link, or a citation [@key] - shown as a card: provider
+      // .provideHover(target) returns { title, markdown }, or null for
+      // targets it has nothing for. Needs document.read.
+      registerHoverProvider: function (provider) {
+        hoverProviders.push(provider);
+        call("editor.registerHoverProvider", {}).catch(function () {});
+        return disposable(function () {
+          hoverProviders = hoverProviders.filter(function (p) {
+            return p !== provider;
+          });
+        });
+      },
     },
     document: {
       getText: function () {
@@ -431,6 +445,17 @@
         new CustomDocument(params.webview, params.path),
         webview(params.webview),
       );
+    },
+    $provideHover: async function (params) {
+      for (var i = 0; i < hoverProviders.length; i++) {
+        var card = await hoverProviders[i].provideHover(params.target);
+        if (card && typeof card.markdown === "string")
+          return {
+            title: card.title == null ? null : String(card.title),
+            markdown: card.markdown,
+          };
+      }
+      return null;
     },
     $resolveSettingsPage: function (params) {
       if (!settingsProvider) throw new Error("No settings page");

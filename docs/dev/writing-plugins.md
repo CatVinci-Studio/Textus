@@ -156,6 +156,15 @@ anchor?, reason? })` (actions: `insert_at_cursor`, `replace_selection`,
   last name the block they change by its `id` - `lastBlock` for a run of
   them - and `anchor` quotes a few words inside it, left out for the whole
   block), `onDidChangeActive(fn)`.
+- `textus.editor.registerHoverProvider({ provideHover(target) })` - a
+  card for what the pointer rests on in the editor (needs
+  `document.read`). `target` is `{ type: "document", path, heading }` (a
+  Markdown link or a wikilink, found where it points), `{ type: "link",
+url }` (any other link, `zotero://` among them) or `{ type: "citation",
+key }` (`[@key]`); return `{ title, markdown }`, or null to let the next
+  provider answer. The app draws the card beside the link, without
+  pictures, and the user can pin it. Quick Preview and Zotero are
+  examples.
 - `textus.editor` (`editor.input`) - `captureKeys({ mode, keys })`: the
   editor's keys come to the plugin instead of typing. `mode: "all"` takes
   every key but the app's shortcuts (⌘ on a Mac, Ctrl elsewhere) unless

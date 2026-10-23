@@ -195,7 +195,11 @@ test("a citation searched in Zotero goes in where the caret is", async ({
   ];
   await openWithPlugins(page, {
     plugins: {
-      "catvinci.zotero": ["network:localhost:23119", "document.propose"],
+      "catvinci.zotero": [
+        "network:localhost:23119",
+        "document.propose",
+        "document.read",
+      ],
     },
   });
   await pasteMarkdown(page, "As shown ");

@@ -104,6 +104,7 @@ import {
 } from "./markdown/source-input-rules";
 import { pasteUrlPlugin } from "./markdown/paste-url";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
+import { createLinkHoverPlugin } from "./hover/link-hover-plugin";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
 import { plainTextCopyPlugin } from "./markdown/plain-text-copy-plugin";
 import { createImagePlugin } from "./images/image-plugin";
@@ -381,6 +382,8 @@ export function withEditorCore(
       // Ctrl/Cmd+click follows a link. The playground leaves links to the
       // browser it runs in.
       .use(disk ? createLinkClickPlugin(() => docPath.current) : [])
+      // A plugin's card for what the pointer rests on.
+      .use(disk ? createLinkHoverPlugin(() => docPath.current) : [])
       .use(listener)
       // Enter / Mod+Enter in tables, code blocks and quotes - ahead of the
       // other key handlers and the preset keymaps.

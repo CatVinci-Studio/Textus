@@ -1,0 +1,93 @@
+/* A plugin's card for what the pointer rests on (hover-card.ts): a small
+   page beside the link, fading in and rising a little; pinned, it stays
+   where it is moved to. */
+.hover-card {
+  position: fixed;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  width: min(360px, calc(100vw - 16px));
+  max-height: min(320px, calc(100vh - 16px));
+  border: 1px solid var(--editor-border);
+  border-radius: var(--radius-surface);
+  background: var(--bg);
+  color: var(--editor-text);
+  box-shadow: var(--shadow-popover);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.hover-card-open,
+.hover-card-pinned {
+  opacity: 1;
+  transform: none;
+}
+
+.hover-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  border-bottom: 1px solid var(--editor-border);
+}
+
+.hover-card-pinned .hover-card-head {
+  cursor: grab;
+  touch-action: none;
+}
+
+.hover-card-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hover-card-button {
+  padding: 1px 10px;
+  border: 1px solid var(--editor-border);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.hover-card-button:hover {
+  border-color: var(--editor-accent);
+  color: var(--editor-accent);
+}
+
+.hover-card-body {
+  overflow: auto;
+  padding: 8px 12px 10px;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.hover-card-body > :first-child {
+  margin-top: 0;
+}
+
+.hover-card-body > :last-child {
+  margin-bottom: 0;
+}
+
+.hover-card-body :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0.6em 0 0.3em;
+  font-size: 1.05em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-card {
+    transform: none;
+    transition: opacity var(--dur-fast) linear;
+  }
+}
