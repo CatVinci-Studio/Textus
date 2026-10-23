@@ -4,6 +4,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { Decoration } from "@milkdown/kit/prose/view";
 import { recordClipboardEntry } from "../../clipboard/history";
 import { LINE_NUMBERS_SPEC } from "./code-line-numbers-plugin";
+import { fitGutter } from "./gutter-fit";
 
 // A curated common subset rather than refractor's full ~40-language list -
 // enough to cover what people actually fence code with, in a menu that
@@ -158,12 +159,19 @@ export function createCodeBlockView(
       pre.appendChild(code);
 
       // Line numbers: one per line of the block, redrawn only when the
-      // count changes.
+      // count changes, each as tall as its line - which wraps - after any
+      // change to the text or the block's width (gutter-fit.ts).
       const gutter = document.createElement("span");
       gutter.className = "code-line-gutter";
       gutter.contentEditable = "false";
       gutter.setAttribute("aria-hidden", "true");
       let numberedLines = 0;
+      let fitting = 0;
+      const fitSoon = () => {
+        cancelAnimationFrame(fitting);
+        fitting = requestAnimationFrame(() => fitGutter(gutter, code));
+      };
+      const resized = new ResizeObserver(fitSoon);
       function syncGutter(
         currentNode: ProseNode,
         currentDecorations: readonly Decoration[],
@@ -173,10 +181,15 @@ export function createCodeBlockView(
         );
         if (!on) {
           gutter.remove();
+          resized.disconnect();
           numberedLines = 0;
           return;
         }
-        if (!gutter.isConnected) pre.insertBefore(gutter, code);
+        if (!gutter.isConnected) {
+          pre.insertBefore(gutter, code);
+          resized.observe(code);
+        }
+        fitSoon();
         const lines = lineCount(currentNode);
         if (lines === numberedLines) return;
         numberedLines = lines;
@@ -211,6 +224,8 @@ export function createCodeBlockView(
         },
         destroy() {
           clearTimeout(copiedTimer);
+          cancelAnimationFrame(fitting);
+          resized.disconnect();
         },
       };
     },
