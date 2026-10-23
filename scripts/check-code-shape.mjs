@@ -26,9 +26,7 @@ const MAX_HOOKS = 8;
 const LINES_NOW = {};
 
 /** Over the hook limit today: the roots that wire a window together. */
-const HOOKS_NOW = {
-  "src/ai/chat/window/ChatWindowApp.tsx ChatWindowApp": 30,
-};
+const HOOKS_NOW = {};
 
 /** Not held to the line limit: tables, not logic. */
 const TABLES = [/^src\/i18n\/locales\//, /^src\/ui\/icons\.tsx$/];
