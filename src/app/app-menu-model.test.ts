@@ -13,6 +13,7 @@ import { LANGS } from "../i18n/langs";
 import {
   buildAppMenu,
   buildMobileMenu,
+  menuBarSections,
   NO_RECENTS,
   nativeMenuAccelerators,
   nativeMenuChecks,
@@ -282,5 +283,20 @@ describe("the Format menu's heading keys", () => {
       .join("\n");
     expect(source).toContain('("h2", "Heading 2")');
     expect(source).toContain('INSERT_BLOCK_PREFIX: &str = "insert-block:"');
+  });
+});
+
+describe("menu bar", () => {
+  it("has a title per submenu, with Settings… and Exit at the end of File", () => {
+    const sections = menuBarSections(buildAppMenu(t, shortcuts, NO_RECENTS));
+    expect(sections.map((s) => s.label)).not.toContain(t.menuSettings);
+    expect(sections.map((s) => s.label)).not.toContain(t.menuExit);
+    expect(sections[0]?.label).toBe(t.menuFile);
+    const file = sections[0]!.items.map((n) =>
+      n === "separator" ? n : n.label,
+    );
+    expect(file.slice(-3)).toEqual(["separator", t.menuSettings, t.menuExit]);
+    for (const section of sections)
+      expect(section.items.length).toBeGreaterThan(0);
   });
 });

@@ -435,6 +435,31 @@ export function buildAppMenu(
   ];
 }
 
+/** One of the menu bar's titles (app/MenuBar.tsx) and the list it opens. */
+export interface MenuBarSection {
+  label: string;
+  items: MenuNode[];
+}
+
+/**
+ * The menu as a bar of titles: each entry with a submenu is a title of its
+ * own; the ones without (Settings…, Exit) go to the end of the first
+ * list, File, as a Windows app has them.
+ */
+export function menuBarSections(menu: MenuNode[]): MenuBarSection[] {
+  const sections: MenuBarSection[] = [];
+  const loose: MenuNode[] = [];
+  for (const node of menu) {
+    if (node === "separator") continue;
+    if (node.submenu) sections.push({ label: node.label, items: node.submenu });
+    else loose.push(node);
+  }
+  const [first] = sections;
+  if (first && loose.length)
+    first.items = [...first.items, "separator", ...loose];
+  return sections;
+}
+
 /**
  * The iPhone's menu, behind the title row's button. One flat list: a
  * flyout has nowhere to go on a 400-point-wide screen, and most of the

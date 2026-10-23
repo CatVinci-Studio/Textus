@@ -12,6 +12,7 @@ import { ThemeSection } from "../sections/theme";
 import { ImageStorageSection } from "../sections/images";
 import { Select } from "../../ui/Select";
 import { emitMenuEvent } from "../../platform/menu-events";
+import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canExportPdf, isIOSApp } from "../../platform/capabilities";
 import { openExtensionsTab } from "./extensions-tab";
 
@@ -82,6 +83,14 @@ export function EditorPage({
               ))}
             </Select>
           </SettingRow>
+        )}
+        {appDrawsWindowFrame && (
+          <ToggleRow
+            label={t.menuBarLabel}
+            help={t.menuBarHelp}
+            checked={settings.menuBarShown}
+            onChange={(on) => setSettings({ menuBarShown: on })}
+          />
         )}
         <ToggleRow
           label={t.menuViewSource}

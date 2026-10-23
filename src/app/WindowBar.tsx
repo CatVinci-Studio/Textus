@@ -3,6 +3,8 @@ import { useSettings } from "../settings/SettingsContext";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./app-menu-model";
 import { AppMenuButton } from "./WindowControls";
+import { MenuBar } from "./MenuBar";
+import { appDrawsWindowFrame } from "../platform/window-chrome";
 import { Tooltip } from "../ui/Tooltip";
 import { TextusAiButton } from "../ai/TextusAiSwitch";
 import { isIOSApp } from "../platform/capabilities";
@@ -31,7 +33,9 @@ import {
  * The sidebar's toggle leads the row: just past the traffic lights on a
  * Mac, in their corner once they are gone in full screen, beside the menu
  * button on Windows and Linux. It belongs to the bar, not the sidebar, so
- * the sidebar's slide never moves it.
+ * the sidebar's slide never moves it. With the menu bar shown there
+ * (Settings.menuBarShown) the titles take its room: the sidebar is in
+ * View, and has its shortcut.
  */
 export function WindowBar({
   menuChecks,
@@ -63,13 +67,24 @@ export function WindowBar({
   agentShortcut: string;
   onToggleAgent: () => void;
 }) {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
   useFullscreenMark();
+  const menuBar = appDrawsWindowFrame && settings.menuBarShown;
   return (
     <header className="window-bar" data-tauri-drag-region>
-      <AppMenuButton checks={menuChecks} />
+      {menuBar ? (
+        <>
+          <MenuBar checks={menuChecks} />
+          {/* For a window too narrow for the titles (window-controls.css). */}
+          <span className="window-menu-fallback">
+            <AppMenuButton checks={menuChecks} />
+          </span>
+        </>
+      ) : (
+        <AppMenuButton checks={menuChecks} />
+      )}
       {/* The iPhone and the iPad open the sidebar from their own bar. */}
-      {!isIOSApp && (
+      {!isIOSApp && !menuBar && (
         <Tooltip text={`${t.menuToggleSidebar} (${sidebarShortcut})`}>
           <button
             type="button"

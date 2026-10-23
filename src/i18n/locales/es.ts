@@ -777,6 +777,9 @@ para usar una.
   chatCollapseInline: "Contraer respuesta",
   chatNewConversation: "Nueva conversación",
   appMenu: "Menú",
+  menuBarLabel: "Mostrar la barra de menús",
+  menuBarHelp:
+    "Archivo, Edición, Visualización y los demás menús directamente en la barra de título, en lugar de tras ☰. El botón de la barra lateral les deja sitio: la barra lateral está en Visualización y tiene su atajo.",
   menuFile: "Archivo",
   menuEdit: "Edición",
   menuFormat: "Formato",

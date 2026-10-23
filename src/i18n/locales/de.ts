@@ -759,6 +759,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatCollapseInline: "Antwort einklappen",
   chatNewConversation: "Neue Unterhaltung",
   appMenu: "Menü",
+  menuBarLabel: "Menüleiste anzeigen",
+  menuBarHelp:
+    "Datei, Bearbeiten, Ansicht und die übrigen Menüs direkt in der Titelleiste statt hinter ☰. Die Seitenleisten-Schaltfläche macht dafür Platz: Die Seitenleiste gibt es unter Ansicht und per Tastenkürzel.",
   menuFile: "Datei",
   menuEdit: "Bearbeiten",
   menuFormat: "Format",

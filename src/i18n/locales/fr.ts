@@ -787,6 +787,9 @@ utiliser une.
   chatCollapseInline: "Replier la réponse",
   chatNewConversation: "Nouvelle conversation",
   appMenu: "Menu",
+  menuBarLabel: "Afficher la barre de menus",
+  menuBarHelp:
+    "Fichier, Édition, Présentation et les autres menus directement dans la barre de titre, au lieu de derrière ☰. Le bouton du panneau latéral leur laisse la place : le panneau s’ouvre depuis Présentation ou avec son raccourci.",
   menuFile: "Fichier",
   menuEdit: "Édition",
   menuFormat: "Format",
