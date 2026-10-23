@@ -395,6 +395,7 @@ type /name in a conversation to use one.
   treeNewFolderPrompt: "Name of the new folder",
   treeNewDocumentDefault: "Untitled",
   treeNewFolderDefault: "New Folder",
+  treeDuplicate: "Duplicate",
   treeSort: "Sort",
   treeSortName: "By name",
   treeSortModified: "By date modified",

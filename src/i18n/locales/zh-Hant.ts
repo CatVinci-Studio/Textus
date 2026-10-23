@@ -354,6 +354,7 @@ export default {
   treeNewFolderPrompt: "新檔案夾的名稱",
   treeNewDocumentDefault: "未命名",
   treeNewFolderDefault: "新增檔案夾",
+  treeDuplicate: "建立副本",
   treeSort: "排序",
   treeSortName: "依名稱",
   treeSortModified: "依修改時間",

@@ -372,6 +372,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeNewFolderPrompt: "새 폴더 이름",
   treeNewDocumentDefault: "제목 없음",
   treeNewFolderDefault: "새 폴더",
+  treeDuplicate: "복제",
   treeSort: "정렬",
   treeSortName: "이름순",
   treeSortModified: "수정한 날짜순",

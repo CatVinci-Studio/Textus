@@ -406,6 +406,7 @@ para usar una.
   treeNewFolderPrompt: "Nombre de la nueva carpeta",
   treeNewDocumentDefault: "Sin título",
   treeNewFolderDefault: "Nueva carpeta",
+  treeDuplicate: "Duplicar",
   treeSort: "Ordenar",
   treeSortName: "Por nombre",
   treeSortModified: "Por fecha de modificación",

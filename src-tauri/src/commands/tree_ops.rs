@@ -105,9 +105,117 @@ pub async fn tree_move_entry(path: String, into: String) -> Result<String, Strin
     Ok(to.to_string_lossy().to_string())
 }
 
+/// Renames a file or folder in place (same folder). Returns the new path.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn tree_rename_entry(path: String, name: String) -> Result<String, String> {
+    let from = PathBuf::from(&path)
+        .canonicalize()
+        .map_err(|e| e.to_string())?;
+    let to = from.with_file_name(check_name(&name)?);
+    if fs::try_exists(&to).await.unwrap_or(true) {
+        return Err("Already exists".into());
+    }
+    fs::rename(&from, &to).await.map_err(|e| e.to_string())?;
+    Ok(to.to_string_lossy().to_string())
+}
+
+/// Where a copy of `path` lands: beside it, "name copy" before the
+/// extension, then "name copy 2" and so on until a name is free.
+fn duplicate_target(path: &Path) -> PathBuf {
+    let parent = path.parent().map(Path::to_path_buf).unwrap_or_default();
+    let stem = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("copy");
+    let ext = path.extension().and_then(|s| s.to_str());
+    for n in 0.. {
+        let name = match (n, ext) {
+            (0, None) => format!("{stem} copy"),
+            (0, Some(e)) => format!("{stem} copy.{e}"),
+            (n, None) => format!("{stem} copy {}", n + 1),
+            (n, Some(e)) => format!("{stem} copy {}.{e}", n + 1),
+        };
+        let candidate = parent.join(name);
+        if !candidate.exists() {
+            return candidate;
+        }
+    }
+    unreachable!()
+}
+
+fn copy_dir<'a>(
+    from: &'a Path,
+    to: &'a Path,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), String>> + Send + 'a>> {
+    Box::pin(async move {
+        fs::create_dir(to).await.map_err(|e| e.to_string())?;
+        let mut entries = fs::read_dir(from).await.map_err(|e| e.to_string())?;
+        while let Some(entry) = entries.next_entry().await.map_err(|e| e.to_string())? {
+            let src = entry.path();
+            let dst = to.join(entry.file_name());
+            if src.is_dir() {
+                copy_dir(&src, &dst).await?;
+            } else {
+                fs::copy(&src, &dst).await.map_err(|e| e.to_string())?;
+            }
+        }
+        Ok(())
+    })
+}
+
+/// Copies a file or folder beside itself, under a free "name copy" name.
+/// Returns the copy's path.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn tree_duplicate_entry(path: String) -> Result<String, String> {
+    let from = PathBuf::from(&path)
+        .canonicalize()
+        .map_err(|e| e.to_string())?;
+    let to = duplicate_target(&from);
+    if from.is_dir() {
+        copy_dir(&from, &to).await?;
+    } else {
+        fs::copy(&from, &to).await.map_err(|e| e.to_string())?;
+    }
+    Ok(to.to_string_lossy().to_string())
+}
+
+/// Deletes a file or folder for good. There is no Trash to catch this on
+/// every platform the tree manages, so the frontend confirms first.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn tree_delete_entry(path: String) -> Result<(), String> {
+    let target = PathBuf::from(&path)
+        .canonicalize()
+        .map_err(|e| e.to_string())?;
+    if fs::metadata(&target)
+        .await
+        .map_err(|e| e.to_string())?
+        .is_dir()
+    {
+        fs::remove_dir_all(&target).await.map_err(|e| e.to_string())
+    } else {
+        fs::remove_file(&target).await.map_err(|e| e.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn duplicate_names_count_up() {
+        let base = Path::new("/nonexistent-textus-dup");
+        assert_eq!(
+            duplicate_target(&base.join("笔记.md")),
+            base.join("笔记 copy.md")
+        );
+        assert_eq!(
+            duplicate_target(&base.join("notes")),
+            base.join("notes copy")
+        );
+    }
 
     #[test]
     fn names_stay_one_component() {

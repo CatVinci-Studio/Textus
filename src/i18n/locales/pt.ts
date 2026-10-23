@@ -395,6 +395,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeNewFolderPrompt: "Nome da nova pasta",
   treeNewDocumentDefault: "Sem título",
   treeNewFolderDefault: "Nova pasta",
+  treeDuplicate: "Duplicar",
   treeSort: "Ordenar",
   treeSortName: "Por nome",
   treeSortModified: "Por data de modificação",

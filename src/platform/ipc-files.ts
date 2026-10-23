@@ -61,9 +61,11 @@ export const fs = {
       : command("save_file_dialog", defaultName, defaultDir),
   listDir: (path: string): Promise<DirEntryInfo[]> =>
     isScopedUrl(path) ? iosFiles.listFolder(path) : command("list_dir", path),
-  /** The sidebar tree's New Document and New Folder, and moving an entry
-   *  into a folder by dragging it there (commands/tree_ops.rs). Each
-   *  returns the new path and refuses a name that is already taken.
+  /** The sidebar tree's New Document and New Folder, moving an entry
+   *  into a folder by dragging it there, and the context menu's Rename,
+   *  Duplicate and Delete (commands/tree_ops.rs). The renames and the
+   *  duplicate return the new path and refuse a name that is already
+   *  taken; the delete is for good, so the tree confirms it first.
    *  Desktop only. */
   createDocument: (dir: string, name: string) =>
     desktopActionCommand("tree_create_document", dir, name),
@@ -71,6 +73,12 @@ export const fs = {
     desktopActionCommand("tree_create_folder", dir, name),
   moveEntry: (path: string, into: string) =>
     desktopActionCommand("tree_move_entry", path, into),
+  renameEntry: (path: string, name: string) =>
+    desktopActionCommand("tree_rename_entry", path, name),
+  duplicateEntry: (path: string) =>
+    desktopActionCommand("tree_duplicate_entry", path),
+  deleteEntry: (path: string) =>
+    desktopActionCommand("tree_delete_entry", path),
   /** File > Open Folder…'s picker (commands/folder.rs). Rejects with
    *  "TOO_BROAD" for the home folder or a drive root. Desktop only. */
   pickOpenFolder: () => desktopActionCommand("pick_open_folder"),
