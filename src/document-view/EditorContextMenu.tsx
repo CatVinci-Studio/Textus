@@ -2,6 +2,7 @@ import type { EditorRunner } from "../editor/useEditorRunner";
 import {
   buildContextMenuItems,
   buildPhoneMoreItems,
+  type ContextMenuOptions,
 } from "../editor/editor-menu";
 import { ContextMenu } from "../editor/ContextMenu";
 import { Presence } from "../ui/usePresence";
@@ -44,7 +45,7 @@ export function EditorContextMenu({
   selectAll,
   toggleFindReplace,
   openTableDialog,
-  addNote,
+  own,
   onClose,
 }: {
   menu: EditorMenuState;
@@ -65,7 +66,9 @@ export function EditorContextMenu({
   toggleFindReplace: () => void;
   openTableDialog: () => void;
   /** A note of the writer's own on the selection (useOwnNotes). */
-  addNote: () => void;
+  /** The writer's own items: a note on the selection, and their tracked
+   *  changes all accepted or rejected (useReviewNotes' `menu`). */
+  own: Pick<ContextMenuOptions, "addNote" | "ownChanges">;
   onClose: () => void;
 }) {
   const ai = aiFeatures(settings);
@@ -142,7 +145,7 @@ export function EditorContextMenu({
               selectAll,
               toggleFindReplace,
               openTableDialog,
-              addNote,
+              ...own,
             },
           )}
           onClose={onClose}

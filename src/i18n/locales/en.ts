@@ -164,6 +164,12 @@ type /name in a conversation to use one.
   ownNoteBy: "Your note",
   ownNoteEdit: "Edit",
   ownNoteDelete: "Delete",
+  menuTrackChanges: "Track My Changes",
+  trackStop: "Stop Tracking",
+  trackStopConfirm:
+    "Stop tracking your changes? They stay in the text; only their marks go.",
+  trackAcceptAll: "Accept All My Changes",
+  trackRejectAll: "Reject All My Changes",
   reviewGroupNotes: "{n} notes",
   reviewNotesLabel: "Notes",
   reviewNotePrev: "Previous note",

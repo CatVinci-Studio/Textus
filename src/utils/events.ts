@@ -28,6 +28,12 @@ export const RESTORE_CHAT_EVENT = "textus:restore-chat";
 /// through here to the editor instead.
 export const EDIT_ACTION_EVENT = "textus:edit-action";
 
+/// detail: what to do with the writer's tracked changes in the document on
+/// screen (ai/margin/useOwnRevisions.ts) - Edit › Track My Changes turns
+/// tracking on or off; the editor's menu accepts or rejects them all.
+export const TRACK_CHANGES_EVENT = "textus:track-changes";
+export type TrackChangesAction = "toggle" | "accept-all" | "reject-all";
+
 /// detail: the block kind to insert at the cursor, from the native Format
 /// menu (see menu-insert-block in src-tauri/src/lib.rs) - "h1".."h6",
 /// "bullet-list", "ordered-list", "blockquote", "code-block", or "table";

@@ -141,15 +141,15 @@ export const commands = {
 	clear_draft_snapshot: (tabId: string) => __TAURI_INVOKE<null>("clear_draft_snapshot", { tabId }),
 	clear_all_drafts: () => __TAURI_INVOKE<null>("clear_all_drafts"),
 	/**
-	 *  The notes kept for the document at `path`, as the JSON they were
-	 *  written as - none when it has none.
+	 *  What is kept of `part` for the document at `path`, as the JSON it was
+	 *  written as - none when nothing is.
 	 */
-	own_notes_read: (path: string) => __TAURI_INVOKE<string | null>("own_notes_read", { path }),
+	own_notes_read: (path: string, part: OwnPart) => __TAURI_INVOKE<string | null>("own_notes_read", { path, part }),
 	/**
-	 *  Keeps `notes` (a JSON array) for the document at `path`; an empty one
-	 *  removes its file.
+	 *  Keeps `value` (JSON: a list of notes, or the revisions' object) as
+	 *  `part` for the document at `path`; an empty one removes its file.
 	 */
-	own_notes_write: (path: string, notes: string) => __TAURI_INVOKE<null>("own_notes_write", { path, notes }),
+	own_notes_write: (path: string, part: OwnPart, value: string) => __TAURI_INVOKE<null>("own_notes_write", { path, part, value }),
 	/**  The live settings, for a window to correct its boot snapshot with. */
 	settings_get: () => __TAURI_INVOKE<Snapshot>("settings_get"),
 	/**
@@ -286,6 +286,12 @@ export type IndexedFile = {
 	/**  From the indexed folder, `/`-separated, to show where it is. */
 	rel: string,
 };
+
+/**
+ *  What is kept for a document: its own notes (a list), or its tracked
+ *  changes (an object: the text they are measured from, useOwnRevisions).
+ */
+export type OwnPart = "notes" | "revisions";
 
 export type SavedImage = {
 	/**

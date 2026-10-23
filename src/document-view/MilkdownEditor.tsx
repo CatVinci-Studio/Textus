@@ -495,7 +495,7 @@ export function MilkdownEditor({
           onDone={notes.doneNote}
           onAsk={notes.askAboutNote}
           onEdit={notes.editNote}
-          onDecide={pendingEdits.decide}
+          onDecide={notes.decide}
           onNoMargin={notes.onNoMargin}
           layoutKey={pendingEdits.previews}
           picked={notes.bar.picked}
@@ -557,7 +557,7 @@ export function MilkdownEditor({
         selectAll={selectAll}
         toggleFindReplace={findReplace.toggle}
         openTableDialog={() => setTableDialogOpen(true)}
-        addNote={() => void notes.addNote()}
+        own={notes.menu}
         onClose={() => setMenu(null)}
       />
       <Presence show={!!aiNotice} exitMs={120}>

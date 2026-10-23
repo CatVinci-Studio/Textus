@@ -151,6 +151,9 @@ export interface ContextMenuOptions {
   /** A note of the writer's own on the selection (useOwnNotes), offered
    *  while there is one. */
   addNote?: () => void;
+  /** The writer's tracked changes, all accepted or all rejected - offered
+   *  while there are some (useOwnRevisions). */
+  ownChanges?: { acceptAll: () => void; rejectAll: () => void };
 }
 
 export function buildContextMenuItems(
@@ -172,6 +175,14 @@ export function buildContextMenuItems(
     ...withSeparator(
       options.addNote && selectedText(run)
         ? [{ label: t.ownNoteAdd, onSelect: options.addNote }]
+        : [],
+    ),
+    ...withSeparator(
+      options.ownChanges
+        ? [
+            { label: t.trackAcceptAll, onSelect: options.ownChanges.acceptAll },
+            { label: t.trackRejectAll, onSelect: options.ownChanges.rejectAll },
+          ]
         : [],
     ),
     ...withSeparator(contributedMenuItems({ selectedText: selectedText(run) })),

@@ -1,8 +1,9 @@
-//! The notes a writer leaves on their own document (the margin's "Me"
-//! cards, src/ai/margin/useOwnNotes.ts): kept beside the app's data, never
-//! in the Markdown or the user's folder - one file per document, named by
-//! a hash of its path, under `own-notes/` in the app's data folder. Each
-//! note is found again by its words and the text before them. A document
+//! What a writer keeps on their own document beside the app's data: their
+//! notes (the margin's "Me" cards, src/ai/margin/useOwnNotes.ts) and the
+//! changes they track (src/ai/margin/useOwnRevisions.ts) - never in the
+//! Markdown or the user's folder. Files under `own-notes/` in the app's
+//! data folder, named by a hash of the document's path. Each note is found
+//! again by its words and the text before them. A document
 //! open in Textus while it is renamed or saved elsewhere keeps its notes
 //! (they are written under the new path); one renamed or moved outside
 //! Textus loses them.
@@ -11,53 +12,78 @@ use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
-fn notes_file(app: &AppHandle, path: &str) -> Result<PathBuf, String> {
+/// What is kept for a document: its own notes (a list), or its tracked
+/// changes (an object: the text they are measured from, useOwnRevisions).
+#[derive(serde::Deserialize, Clone, Copy, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "lowercase")]
+pub enum OwnPart {
+    Notes,
+    Revisions,
+}
+
+fn part_file(app: &AppHandle, path: &str, part: OwnPart) -> Result<PathBuf, String> {
     let hash: String = Sha256::digest(path.as_bytes())
         .iter()
         .map(|b| format!("{b:02x}"))
         .collect();
+    let name = match part {
+        OwnPart::Notes => format!("{hash}.json"),
+        OwnPart::Revisions => format!("{hash}.revisions.json"),
+    };
     Ok(app
         .path()
         .app_data_dir()
         .map_err(|e| e.to_string())?
         .join("own-notes")
-        .join(format!("{hash}.json")))
+        .join(name))
 }
 
-/// The notes kept for the document at `path`, as the JSON they were
-/// written as - none when it has none.
+/// What is kept of `part` for the document at `path`, as the JSON it was
+/// written as - none when nothing is.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn own_notes_read(app: AppHandle, path: String) -> Result<Option<String>, String> {
-    match tokio::fs::read_to_string(notes_file(&app, &path)?).await {
+pub async fn own_notes_read(
+    app: AppHandle,
+    path: String,
+    part: OwnPart,
+) -> Result<Option<String>, String> {
+    match tokio::fs::read_to_string(part_file(&app, &path, part)?).await {
         Ok(text) => Ok(Some(text)),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
         Err(e) => Err(e.to_string()),
     }
 }
 
-/// Keeps `notes` (a JSON array) for the document at `path`; an empty one
-/// removes its file.
+/// Keeps `value` (JSON: a list of notes, or the revisions' object) as
+/// `part` for the document at `path`; an empty one removes its file.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn own_notes_write(app: AppHandle, path: String, notes: String) -> Result<(), String> {
-    let parsed: serde_json::Value = serde_json::from_str(&notes).map_err(|e| e.to_string())?;
-    let file = notes_file(&app, &path)?;
-    if parsed.as_array().is_some_and(|a| a.is_empty()) {
+pub async fn own_notes_write(
+    app: AppHandle,
+    path: String,
+    part: OwnPart,
+    value: String,
+) -> Result<(), String> {
+    let parsed: serde_json::Value = serde_json::from_str(&value).map_err(|e| e.to_string())?;
+    let file = part_file(&app, &path, part)?;
+    let empty = match (&parsed, part) {
+        (serde_json::Value::Array(a), OwnPart::Notes) => a.is_empty(),
+        (serde_json::Value::Object(o), OwnPart::Revisions) => o.is_empty(),
+        _ => return Err("not what this part keeps".into()),
+    };
+    if empty {
         return match tokio::fs::remove_file(&file).await {
             Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.to_string()),
             _ => Ok(()),
         };
-    }
-    if !parsed.is_array() {
-        return Err("notes must be a list".into());
     }
     if let Some(dir) = file.parent() {
         tokio::fs::create_dir_all(dir)
             .await
             .map_err(|e| e.to_string())?;
     }
-    crate::atomic::write(&file, notes)
+    crate::atomic::write(&file, value)
         .await
         .map_err(|e| e.to_string())
 }

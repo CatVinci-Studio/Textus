@@ -169,6 +169,12 @@ export default {
   ownNoteBy: "Ваша заметка",
   ownNoteEdit: "Изменить",
   ownNoteDelete: "Удалить",
+  menuTrackChanges: "Отслеживать мои правки",
+  trackStop: "Остановить отслеживание",
+  trackStopConfirm:
+    "Перестать отслеживать ваши правки? Они останутся в тексте, исчезнут только пометки.",
+  trackAcceptAll: "Принять все мои правки",
+  trackRejectAll: "Отклонить все мои правки",
   reviewGroupNotes: "заметок: {n}",
   reviewNotesLabel: "Заметки",
   reviewNotePrev: "Предыдущая заметка",

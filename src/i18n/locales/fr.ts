@@ -174,6 +174,12 @@ utiliser une.
   ownNoteBy: "Votre note",
   ownNoteEdit: "Modifier",
   ownNoteDelete: "Supprimer",
+  menuTrackChanges: "Suivre mes modifications",
+  trackStop: "Arrêter le suivi",
+  trackStopConfirm:
+    "Arrêter de suivre vos modifications ? Elles restent dans le texte ; seules leurs marques disparaissent.",
+  trackAcceptAll: "Accepter toutes mes modifications",
+  trackRejectAll: "Refuser toutes mes modifications",
   reviewGroupNotes: "{n} notes",
   reviewNotesLabel: "Notes",
   reviewNotePrev: "Note précédente",

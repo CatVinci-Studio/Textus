@@ -70,7 +70,7 @@ export function useOwnNotes({
     }
     let alive = true;
     void ownNotesIpc
-      .read(filePath)
+      .read(filePath, "notes")
       .catch(() => null)
       .then((text) => {
         if (!alive) return;
@@ -114,7 +114,7 @@ export function useOwnNotes({
     if (text === (written.current ?? "[]")) return;
     const timer = window.setTimeout(() => {
       written.current = text;
-      void ownNotesIpc.write(filePath, text).catch(() => {
+      void ownNotesIpc.write(filePath, "notes", text).catch(() => {
         written.current = null;
       });
     }, WRITE_AFTER);

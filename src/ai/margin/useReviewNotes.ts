@@ -32,6 +32,8 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { useNotesBar } from "./useNotesBar";
 import { useOpenedCard } from "./margin-layout";
 import { useOwnNotes } from "./useOwnNotes";
+import { useOwnRevisions } from "./useOwnRevisions";
+import { OWN_CHANGES, ownRevisionKey } from "./own-revision-plugin";
 
 /** A proposal shown whole as a margin card's change: what it replaces and
  *  with what. Null for new text alone, which has no original. */
@@ -236,6 +238,7 @@ export function useReviewNotes({
   }
 
   const own = useOwnNotes({ run, filePath, notes, t });
+  const revisions = useOwnRevisions({ run, filePath, t });
 
   const bar = useNotesBar({
     notes,
@@ -368,8 +371,38 @@ export function useReviewNotes({
         streaming: !!preview.streaming,
       });
     });
+    // The writer's own tracked changes: the text has the new words, so a
+    // card shows what was deleted.
+    (revisions.changes ?? []).forEach((c, i) =>
+      items.push({
+        kind: "revision",
+        key: `rev:${OWN_CHANGES}:${c.index}`,
+        callId: OWN_CHANGES,
+        index: c.index,
+        num: i + 1,
+        from: c.from,
+        to: c.to,
+        after: c.after,
+        before: c.before,
+        shows: "new",
+        take: null,
+        streaming: false,
+      }),
+    );
     return items;
-  }, [notes, pendingEdits.reviewStops, pendingEdits.reviewed, revisionDisplay]);
+  }, [
+    notes,
+    pendingEdits.reviewStops,
+    pendingEdits.reviewed,
+    revisionDisplay,
+    revisions.changes,
+  ]);
+
+  // A card's ✓ / ✕: the writer's own change, or the AI's sentence.
+  function decide(callId: string, index: number, take: boolean | null) {
+    if (callId === OWN_CHANGES) revisions.decide(index, take);
+    else pendingEdits.decide(callId, index, take);
+  }
 
   // The item selected: the card clicked last, or the one the notes bar or
   // the review bar points at - whichever came last. A bar's step takes over
@@ -401,7 +434,11 @@ export function useReviewNotes({
       view.dispatch(
         view.state.tr
           .setMeta(reviewNotesKey, { type: "hot", id })
-          .setMeta(pendingEditKey, { type: "hot", sentence }),
+          .setMeta(pendingEditKey, { type: "hot", sentence })
+          .setMeta(ownRevisionKey, {
+            type: "hot",
+            index: sentence?.callId === OWN_CHANGES ? sentence.index : null,
+          }),
       );
     });
   }, [lit, run]);
@@ -437,6 +474,13 @@ export function useReviewNotes({
     askAboutNote,
     addNote: own.addNote,
     editNote: own.editNote,
+    decide,
+    revisions,
+    /** The editor menu's own items (EditorContextMenu). */
+    menu: {
+      addNote: () => void own.addNote(),
+      ownChanges: revisions.changes?.length ? revisions : undefined,
+    },
     onNoMargin,
     locateText,
     bar,

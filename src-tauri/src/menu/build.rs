@@ -198,7 +198,18 @@ pub(crate) fn build(
     );
     #[cfg(not(target_os = "macos"))]
     let edit_menu = edit_menu.select_all_with_text(l("predefined:select-all", "Select All"));
-    let edit_menu = edit_menu.separator().item(&find_replace_item).build()?;
+    // On for the document on screen (src/ai/margin/useOwnRevisions.ts),
+    // whose check the frontend sends.
+    let track_changes_item =
+        CheckMenuItemBuilder::with_id(TRACK_CHANGES_ID, l(TRACK_CHANGES_ID, "Track My Changes"))
+            .checked(checked.get(TRACK_CHANGES_ID).copied().unwrap_or(false))
+            .build(app)?;
+    let edit_menu = edit_menu
+        .separator()
+        .item(&find_replace_item)
+        .separator()
+        .item(&track_changes_item)
+        .build()?;
 
     let mut format_menu_builder = SubmenuBuilder::new(app, l("menu:format", "Format"));
     for (kind, label) in [
@@ -366,6 +377,7 @@ pub(crate) fn build(
         toggle_split_view_item,
         toggle_typewriter_mode_item,
         toggle_zen_mode_item,
+        track_changes_item,
     ];
     Ok(BuiltMenu {
         menu,

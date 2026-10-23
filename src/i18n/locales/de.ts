@@ -164,6 +164,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   ownNoteBy: "Ihre Notiz",
   ownNoteEdit: "Bearbeiten",
   ownNoteDelete: "Löschen",
+  menuTrackChanges: "Meine Änderungen nachverfolgen",
+  trackStop: "Nachverfolgung beenden",
+  trackStopConfirm:
+    "Ihre Änderungen nicht mehr nachverfolgen? Sie bleiben im Text, nur ihre Markierungen verschwinden.",
+  trackAcceptAll: "Alle meine Änderungen annehmen",
+  trackRejectAll: "Alle meine Änderungen ablehnen",
   reviewGroupNotes: "{n} Notizen",
   reviewNotesLabel: "Notizen",
   reviewNotePrev: "Vorherige Notiz",

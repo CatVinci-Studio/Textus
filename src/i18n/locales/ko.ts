@@ -150,6 +150,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   ownNoteBy: "내 메모",
   ownNoteEdit: "편집",
   ownNoteDelete: "삭제",
+  menuTrackChanges: "내 변경 내용 추적",
+  trackStop: "추적 중지",
+  trackStopConfirm:
+    "변경 내용 추적을 멈출까요? 변경한 내용은 본문에 남고 표시만 사라집니다.",
+  trackAcceptAll: "내 변경 내용 모두 수락",
+  trackRejectAll: "내 변경 내용 모두 거부",
   reviewGroupNotes: "메모 {n}개",
   reviewNotesLabel: "메모",
   reviewNotePrev: "이전 메모",

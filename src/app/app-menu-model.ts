@@ -44,6 +44,7 @@ export type NativeMenuId =
   | "copy-as-markdown"
   | "toggle-source-mode"
   | "toggle-typewriter-mode"
+  | "track-changes"
   | "toggle-sidebar"
   | "toggle-agent-panel"
   | "toggle-textus-ai"
@@ -108,6 +109,8 @@ export interface MenuChecks {
   splitView?: boolean;
   typewriter?: boolean;
   zen?: boolean;
+  /** The document on screen tracks the writer's changes (Edit). */
+  trackChanges?: boolean;
   fullscreen?: boolean;
   /** Not a check mark: a folder is open, so Close Folder has something to
    *  close. The macOS menu bar keeps it enabled (it is app-wide). */
@@ -130,6 +133,7 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
     "toggle-split-view": !!checks.splitView,
     "toggle-typewriter-mode": !!checks.typewriter,
     "toggle-zen-mode": !!checks.zen,
+    "track-changes": !!checks.trackChanges,
   };
 }
 
@@ -334,6 +338,12 @@ export function buildAppMenu(
           label: t.menuFindReplace,
           accel: shortcuts.findReplace,
           action: { native: "find-replace" },
+        },
+        "separator",
+        {
+          label: t.menuTrackChanges,
+          action: { native: "track-changes" },
+          checked: !!checks.trackChanges,
         },
       ],
     },

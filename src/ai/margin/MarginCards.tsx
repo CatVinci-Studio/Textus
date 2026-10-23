@@ -1,4 +1,5 @@
 import { RevisionNoteText } from "./RevisionNoteText";
+import { OWN_CHANGES } from "./own-revision-plugin";
 import { InlineMarkdownText } from "../MarkdownText";
 import { memo, useLayoutEffect, useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
@@ -195,9 +196,20 @@ export const RevisionCard = memo(
         }}
       >
         <div className="review-note-by">
-          <span className="revision-note-num" aria-hidden="true">
-            {item.num}
-          </span>
+          {/* The writer's own change (own-revision-plugin): Me, not a
+              number in the AI's review. */}
+          {item.callId === OWN_CHANGES ? (
+            <span
+              className="review-note-mark review-note-mark-me"
+              aria-hidden="true"
+            >
+              {labels.ownNoteMark}
+            </span>
+          ) : (
+            <span className="revision-note-num" aria-hidden="true">
+              {item.num}
+            </span>
+          )}
           {closed ? (
             <ChangeGlimpse
               before={item.before}

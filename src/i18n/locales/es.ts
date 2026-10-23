@@ -173,6 +173,12 @@ para usar una.
   ownNoteBy: "Tu nota",
   ownNoteEdit: "Editar",
   ownNoteDelete: "Eliminar",
+  menuTrackChanges: "Control de mis cambios",
+  trackStop: "Dejar de controlar",
+  trackStopConfirm:
+    "¿Dejar de controlar tus cambios? Se quedan en el texto; solo desaparecen sus marcas.",
+  trackAcceptAll: "Aceptar todos mis cambios",
+  trackRejectAll: "Rechazar todos mis cambios",
   reviewGroupNotes: "{n} notas",
   reviewNotesLabel: "Notas",
   reviewNotePrev: "Nota anterior",

@@ -152,6 +152,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   ownNoteBy: "自分のメモ",
   ownNoteEdit: "編集",
   ownNoteDelete: "削除",
+  menuTrackChanges: "変更を記録",
+  trackStop: "記録を停止",
+  trackStopConfirm:
+    "変更の記録を止めますか？変更は本文に残り、印だけが消えます。",
+  trackAcceptAll: "自分の変更をすべて承諾",
+  trackRejectAll: "自分の変更をすべて却下",
   reviewGroupNotes: "コメント {n} 件",
   reviewNotesLabel: "コメント",
   reviewNotePrev: "前のコメント",

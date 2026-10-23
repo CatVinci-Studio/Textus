@@ -20,7 +20,7 @@ async function openDraft(page: Page, kept?: string) {
       const w = window as unknown as Record<string, unknown>;
       w.__devFiles = { [path]: doc };
       w.__devInvokeResults = { take_pending_open_path: path };
-      if (kept) w.__devOwnNotes = { [path]: kept };
+      if (kept) w.__devOwnNotes = { [`notes:${path}`]: kept };
     },
     { path: PATH, doc: DOC, kept },
   );
@@ -52,7 +52,7 @@ const kept = (page: Page) =>
   page.evaluate(
     (path) =>
       ((window as unknown as { __devOwnNotes?: Record<string, string> })
-        .__devOwnNotes ?? {})[path] ?? null,
+        .__devOwnNotes ?? {})[`notes:${path}`] ?? null,
     PATH,
   );
 

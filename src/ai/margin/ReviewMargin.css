@@ -561,3 +561,29 @@ del .revision-note-picture {
   font-size: var(--text-sm);
   color: var(--editor-muted);
 }
+
+/* The writer's own tracked changes (own-revision-plugin.ts), in the
+   revision colours the AI's use: what went, struck where it was; what
+   came, marked. Lit with their card. */
+.own-insert {
+  background: var(--revision-insert-bg);
+  color: var(--revision-insert-text);
+  border-radius: 2px;
+}
+
+.own-delete {
+  color: var(--revision-delete-text);
+  background: var(--revision-delete-bg);
+  text-decoration: line-through;
+  text-decoration-color: var(--revision-delete-strike);
+  border-radius: 2px;
+  user-select: none;
+}
+
+.own-insert.own-change-hot {
+  background: var(--revision-insert-hover-bg);
+}
+
+.own-delete.own-change-hot {
+  background: var(--revision-delete-hover-bg);
+}
