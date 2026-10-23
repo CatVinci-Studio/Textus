@@ -56,7 +56,7 @@ tauri-build = { version = "2", features = [] }
 # and copies the library into the AppImage.
 # Keep the minor in step with @tauri-apps/api in package.json; the tauri
 # CLI warns when the JS and Rust versions drift apart.
-tauri = { version = "2.12", features = ["protocol-asset", "macos-private-api", "tray-icon"] }
+tauri = { version = "2.12", features = ["protocol-asset", "macos-private-api", "tray-icon", "unstable"] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }

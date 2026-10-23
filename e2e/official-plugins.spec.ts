@@ -78,6 +78,7 @@ test("a selected link opens in a web page tab of its own", async ({ page }) => {
   await page
     .getByRole("menuitem", { name: "Open the Selected Link in a Tab" })
     .click();
+  // Framed, as on Linux (native-web-page.spec.ts has the native page).
   const web = page.frameLocator('[data-active-tab="true"] .web-page-frame');
   await expect(web.locator("h1")).toHaveText("Example page");
   await expect(page.getByRole("textbox", { name: "Web address" })).toHaveValue(

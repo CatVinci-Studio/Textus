@@ -27,6 +27,7 @@ import type {
 } from "../platform/bindings/plugins";
 import type { SentBlock } from "../ai/doc-blocks";
 import { namedCall, settledArguments, settledTurns } from "./settle-calls";
+import { webPageCommand } from "./native-web-pages";
 
 /** The built-in skills as `list_skills` reports them: name, `/` menu group,
  *  invocation and the description written for the model (abridged). */
@@ -987,6 +988,20 @@ export function installDevTauriShim(): void {
               filePath
             ] ?? 1,
           );
+      }
+      // Native web pages, as frames laid where they would be.
+      const page = webPageCommand(
+        cmd,
+        (args ?? {}) as Record<string, unknown>,
+        (event, payload) =>
+          (w.__devEmitTauriEvent as (event: string, payload: unknown) => void)(
+            event,
+            payload,
+          ),
+      );
+      if (page) {
+        ((w.__devInvokeCalls ??= []) as unknown[]).push({ cmd, ...args });
+        return page;
       }
       // `window.__devInvokeResults = { cmd: value }` answers a command with
       // a canned value - e.g. take_chat_handoff, without which the chat

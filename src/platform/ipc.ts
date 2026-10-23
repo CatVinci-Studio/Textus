@@ -55,6 +55,7 @@ export {
   windowIpc,
   menuIpc,
   links,
+  webPages,
   exportDoc,
   themes,
   themeGallery,

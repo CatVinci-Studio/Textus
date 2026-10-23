@@ -121,7 +121,7 @@ export function MainPane({
             }
           >
             {tab.view?.kind === "web" && tab.view.resource ? (
-              <WebPagePane url={tab.view.resource} t={t} />
+              <WebPagePane tabId={tab.id} url={tab.view.resource} t={t} />
             ) : tab.view && tab.view.kind !== "web" ? (
               <PluginTabPane
                 tabId={tab.id}

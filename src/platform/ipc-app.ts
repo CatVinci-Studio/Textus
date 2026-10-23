@@ -168,6 +168,21 @@ export const links = {
   openWebLink: (url: string) => command("open_web_link", url),
 };
 
+/** Web pages in tabs as native webviews of their own, laid over each tab's
+ *  area (commands/web_page.rs; plugins/useNativeWebPage.ts). Desktop. */
+export const webPages = {
+  show: (
+    id: string,
+    url: string,
+    bounds: { x: number; y: number; width: number; height: number },
+  ) => desktopActionCommand("web_page_show", id, url, bounds),
+  hide: (id: string) => desktopActionCommand("web_page_hide", id),
+  close: (id: string) => desktopActionCommand("web_page_close", id),
+  navigate: (id: string, url: string) =>
+    desktopActionCommand("web_page_navigate", id, url),
+  reload: (id: string) => desktopActionCommand("web_page_reload", id),
+};
+
 export const exportDoc = {
   exportSaveDialog: (defaultName: string, filterName: string, ext: string) =>
     command("export_save_dialog", defaultName, filterName, ext),

@@ -209,7 +209,10 @@ fn chatgpt_draws_a_person_again_like_the_first_picture() {
         data_base64: STANDARD.encode(&first.bytes),
     };
     let started = std::time::Instant::now();
-    let like = draw(&format!("{}{SCENE}", crate::ai::images::LIKE), Some(&reference));
+    let like = draw(
+        &format!("{}{SCENE}", crate::ai::images::LIKE),
+        Some(&reference),
+    );
     let with_like = started.elapsed().as_secs_f64();
     let started = std::time::Instant::now();
     let alone = draw(SCENE, None);

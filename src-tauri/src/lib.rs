@@ -444,6 +444,16 @@ pub fn run() {
             #[cfg(desktop)]
             commands::chat_window::close_chat_window,
             #[cfg(desktop)]
+            commands::web_page::web_page_show,
+            #[cfg(desktop)]
+            commands::web_page::web_page_hide,
+            #[cfg(desktop)]
+            commands::web_page::web_page_close,
+            #[cfg(desktop)]
+            commands::web_page::web_page_navigate,
+            #[cfg(desktop)]
+            commands::web_page::web_page_reload,
+            #[cfg(desktop)]
             commands::chat_window::focus_chat_window,
             #[cfg(desktop)]
             commands::chat_window::current_chat_window,

@@ -1,4 +1,4 @@
-import { isDesktop, isIOSPlatform, isMacPlatform } from "./os";
+import { isDesktop, isIOSPlatform, isLinuxPlatform, isMacPlatform } from "./os";
 
 /**
  * What this build of the app can do - the ONE place the desktop/iOS split
@@ -41,6 +41,12 @@ export const hasNativeMenuBar = isDesktopApp && isMacPlatform();
  *  could only fail and cancel the reorder with it. The whole-window drag
  *  onto another window's tab row is on every desktop. */
 export const canDragTabsBetweenWindows = isDesktopApp && isMacPlatform();
+
+/** A web page tab's page as a native webview laid over the tab
+ *  (commands/web_page.rs), which opens every site. macOS and Windows
+ *  place a window's second webview where they are told; GTK (Linux) packs
+ *  it below the window's own, so Linux keeps the framed page. */
+export const hasNativeWebPages = isDesktopApp && !isLinuxPlatform();
 
 /** The Agent conversation popped out into its own OS window
  *  (chat_window.rs). */

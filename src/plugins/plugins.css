@@ -327,6 +327,13 @@ button.plugin-card-open:hover .plugin-card-name {
   border: 0;
   background: var(--bg);
 }
+/* Where the native page (useNativeWebPage) is laid: its size and place
+   are the page's. */
+.web-page-native {
+  flex: 1;
+  min-height: 0;
+  background: var(--bg);
+}
 
 /* A plugin's status in the window bar (WindowBar's PluginStatusItems):
    read like the word count beside it, a button only when it runs

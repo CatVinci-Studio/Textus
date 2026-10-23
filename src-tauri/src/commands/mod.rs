@@ -37,4 +37,6 @@ pub mod tree_ops;
 #[cfg(desktop)]
 pub mod update;
 pub mod vault;
+#[cfg(desktop)]
+pub mod web_page;
 pub mod word_import;
