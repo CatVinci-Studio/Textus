@@ -413,6 +413,15 @@ utiliser une.
   treeSort: "Trier",
   treeSortName: "Par nom",
   treeSortModified: "Par date de modification",
+  treeRenameItem: "Renommer…",
+  treeRename: "Renommer",
+  treeRenamePrompt: "Nouveau nom",
+  treeTrashItem: "Mettre à la corbeille",
+  treeTrash: "Mettre à la corbeille",
+  treeTrashConfirm:
+    "Mettre « {name} » à la corbeille ? Vous pourrez l’en sortir.",
+  treeTrashFolderConfirm:
+    "Mettre le dossier « {name} » et tout son contenu à la corbeille ? Vous pourrez l’en sortir.",
   treeNameTaken: "Il y a déjà un élément nommé « {name} » ici.",
   treeActionFailed: "Impossible : {reason}",
   shortcutSearchFiles: "Rechercher des noms de fichier",

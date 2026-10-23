@@ -102,6 +102,18 @@ export const commands = {
 	/**  Moves a file or folder into the folder `into`. Returns its new path. */
 	tree_move_entry: (path: string, into: string) => __TAURI_INVOKE<string>("tree_move_entry", { path, into }),
 	/**
+	 *  Gives a file or folder a new name in the folder it is in. A document
+	 *  renamed without an extension keeps being a document (`.md` added, as
+	 *  tree_create_document does); a folder takes the name as typed. Returns
+	 *  its new path.
+	 */
+	tree_rename_entry: (path: string, name: string) => __TAURI_INVOKE<string>("tree_rename_entry", { path, name }),
+	/**
+	 *  Moves a file or folder to the system's Trash (Recycle Bin), never
+	 *  deleting it, and refuses the folder the tree is showing.
+	 */
+	tree_trash_entry: (path: string, root: string) => __TAURI_INVOKE<null>("tree_trash_entry", { path, root }),
+	/**
 	 *  Where an Obsidian image embed's file is, as an absolute path for the
 	 *  asset protocol; None when it isn't an image or isn't in the vault.
 	 *  Shape shared with fs.resolveVaultImage in src/platform/ipc.ts.

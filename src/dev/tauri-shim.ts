@@ -679,6 +679,39 @@ export function installDevTauriShim(): void {
         }
         return Promise.resolve(target);
       }
+      case "tree_rename_entry": {
+        const name = String(args.name).trim();
+        if (!name || name.includes("/")) return Promise.reject("Invalid name");
+        const isDoc =
+          /\.(md|markdown)$/i.test(path) && !(`${path}/.keep` in files);
+        const leaf = isDoc && !name.includes(".") ? `${name}.md` : name;
+        const target = `${path.slice(0, path.lastIndexOf("/"))}/${leaf}`;
+        if (target === path) return Promise.resolve(path);
+        if (
+          Object.keys(files).some(
+            (f) => f === target || f.startsWith(`${target}/`),
+          )
+        )
+          return Promise.reject("Already exists");
+        for (const file of Object.keys(files)) {
+          if (file !== path && !file.startsWith(`${path}/`)) continue;
+          files[target + file.slice(path.length)] = files[file];
+          delete files[file];
+        }
+        return Promise.resolve(target);
+      }
+      case "tree_trash_entry": {
+        if (path === String(args.root)) return Promise.reject("Tree root");
+        const trashed = ((
+          window as unknown as Record<string, unknown>
+        ).__devTrashed ??= []) as string[];
+        for (const file of Object.keys(files)) {
+          if (file !== path && !file.startsWith(`${path}/`)) continue;
+          delete files[file];
+        }
+        trashed.push(path);
+        return Promise.resolve(null);
+      }
       case "index_folder": {
         // commands/folder.rs refuses these; the shim's "home" is /home/me.
         if (path === "/" || path === "/home/me")
