@@ -1,10 +1,42 @@
-import type { AgentSkill, AgentTurn } from "../ai/types";
 import type { SkillCategory } from "../ai/skills/builtin";
+import type { WebSearchStatus_Serialize } from "./bindings/ai";
+import type {
+  GeneratedImageData as GeneratedImage,
+  StreamEvent_Serialize,
+} from "./bindings/ai-agent";
+import type {
+  ConventionsOptions_Serialize,
+  DocReport_Serialize,
+  EffectiveConventions_Serialize,
+  Finding_Serialize,
+  Lang,
+  Measure_Serialize,
+  Profile_Serialize,
+} from "./bindings/ai-conventions";
+import type {
+  LibraryUse as LibraryUseAnswer,
+  Remembering_Serialize,
+} from "./bindings/ai-memory";
+import type {
+  AgentSkill_Serialize,
+  AgentWorkspace_Serialize,
+  Forgotten_Serialize,
+  LibraryEntry_Serialize,
+  Memories_Serialize,
+  MemoryKind as Kind,
+  Memory_Serialize,
+  ProjectConventions as StyleFrontMatter,
+  Remembered_Serialize,
+  Scope,
+} from "./bindings/ai-project";
 
 /**
  * What the AI commands send and return: stream events, completion hints,
  * the project's library and memory, writing conventions and their
- * findings, skills (ipc.ts). Each mirrors its Rust type.
+ * findings, skills (ipc.ts). What Rust answers is generated from its types
+ * (src/platform/bindings/ai*.ts) and named here as the callers know it;
+ * what the frontend sends keeps its own, narrower type where it has one,
+ * which ipc.ts checks against the generated request.
  */
 
 /// Mirrors ai::cancel::CANCELLED - the error string ai_agent_message rejects
@@ -12,51 +44,25 @@ import type { SkillCategory } from "../ai/skills/builtin";
 /// real failure, so callers should treat it differently from other errors.
 export const AI_CANCELLED = "cancelled";
 
-/** A picture waiting for a decision. Mirrors `GeneratedImageData` in
- *  src-tauri/src/ai/images.rs. */
-export interface GeneratedImageData {
-  mime: string;
-  ext: string;
-  dataBase64: string;
-}
+/** A picture waiting for a decision (ai/images/pending.rs). */
+export type GeneratedImageData = GeneratedImage;
 
-/** Mirrors `WebSearchStatus` in src-tauri/src/ai/web/mod.rs. */
-export interface WebSearchStatus {
-  /** The provider searches by itself. */
-  native: boolean;
-  /** Otherwise, the search service Textus's web_search uses; null when
-   *  none is set up. */
-  service: string | null;
-}
+/** Whether the provider searches by itself, and otherwise the search
+ *  service Textus's web_search uses, null when none is set up
+ *  (ai/web/mod.rs). */
+export type WebSearchStatus = WebSearchStatus_Serialize;
 
 /** One live fragment of an in-flight ai_agent_message, delivered over a
- *  Tauri channel while the agent loop runs. Purely additive display data -
- *  the command still resolves with the complete turn list, which stays the
- *  authoritative result. Mirrors `StreamEvent` in src-tauri/src/ai/agent/events.rs;
- *  the two must stay in sync. */
-export type StreamEvent =
-  | { type: "delta"; text: string }
-  | { type: "toolStart"; callId: string; name: string }
-  | { type: "toolArgsDelta"; callId: string; delta: string }
-  | {
-      type: "picture";
-      callId: string;
-      line: string;
-      id: string;
-      width: number;
-      height: number;
-    }
-  | { type: "turn"; turn: AgentTurn }
-  /** The step being streamed came back garbled and is asked for again:
-   *  drop what it streamed. */
-  | { type: "retry" }
-  /** The model is thinking: a fragment of its reasoning, or "" where the
-   *  provider only says that it thinks. Never part of the reply. */
-  | { type: "thinking"; text: string };
+ *  Tauri channel while the agent loop runs (ai/agent/events.rs). Purely
+ *  additive display data - the command still resolves with the complete
+ *  turn list, which stays the authoritative result. */
+export type StreamEvent = StreamEvent_Serialize;
 
 /** Where the cursor sits, beyond the raw text around it - what lets a
  *  completion fit the document instead of guessing from 2000 characters.
- *  Mirrors CompletionHints in src-tauri/src/ai/client/completion.rs. */
+ *  Narrower than CompletionHints in src-tauri/src/ai/client/completion.rs,
+ *  which takes the strings as they come; ipc.ts checks it against the
+ *  generated type. */
 export interface CompletionHints {
   /** The document's first heading, when it has one. */
   title: string | null;
@@ -75,117 +81,39 @@ export interface CompletionHints {
   uiLanguage?: string | null;
 }
 
-/** A project library entry (`.textus/library/*.md`, ai::project). */
-export interface LibraryEntry {
-  name: string;
-  aliases: string[];
-  include: "always" | "detected" | "never";
-  /** Relative to the project root. */
-  file: string;
-  body: string;
-  /** Set on an entry Textus AI wrote (ai::memory) - also listed under "AI
-   *  remembered". */
-  remembered: Remembered | null;
-}
+/** A project library entry (`.textus/library/*.md`, ai::project);
+ *  `remembered` is set on an entry Textus AI wrote (ai::memory). */
+export type LibraryEntry = LibraryEntry_Serialize;
 
-/** Where and when Textus AI remembered something - `Remembered` in
- *  src-tauri/src/ai/memory.rs. */
-export interface Remembered {
-  created: string;
-  updated: string;
-  conversation: string | null;
-  title: string | null;
-  document: string | null;
-}
+/** Where and when Textus AI remembered something (ai/memory.rs). */
+export type Remembered = Remembered_Serialize;
 
-/** One thing Textus AI remembered by itself - `Memory` in ai/memory.rs.
- *  `id` is `<scope>/memory/<file stem>`. */
-export interface Memory {
-  id: string;
-  scope: MemoryScope;
-  kind: MemoryKind;
-  text: string;
-  /** Absolute path, for Edit. */
-  file: string;
-  remembered: Remembered;
-  /** Whether it fits the prompt's budget and so goes with requests. */
-  included: boolean;
-}
+/** One thing Textus AI remembered by itself (ai/memory.rs). `id` is
+ *  `<scope>/memory/<file stem>`. */
+export type Memory = Memory_Serialize;
 
-export type MemoryScope = "project" | "personal";
-/** `MemoryKind` in ai/memory.rs. */
-export type MemoryKind = "requirement" | "preference" | "style";
+export type MemoryScope = Scope;
+export type MemoryKind = Kind;
 
 /** One change the memory pass made - `Remembering` in ai/memory.rs: what
  *  is remembered now (or, `forgot`, what was taken back), and `previous`,
  *  the file before, for Undo to put back. */
-export interface RememberedChange {
-  remembered: string;
-  scope: MemoryScope;
-  created: boolean;
-  text: string;
-  previous: string | null;
-  /** A library entry's name: whom or what `text` is about. */
-  name?: string;
-  forgot?: boolean;
-}
+export type RememberedChange = Remembering_Serialize;
 
-/** Every memory for a document, personal first - `Memories` in
- *  ai/memory.rs. `chars` of the included ones, of `cap`. */
-export interface Memories {
-  items: Memory[];
-  chars: number;
-  cap: number;
-  /** What was deleted or forgotten lately, newest first (ai/memory/
-   *  forgotten.rs). */
-  forgotten?: ForgottenMemory[];
-}
+/** Every memory for a document, personal first, and what was deleted or
+ *  forgotten lately (ai/memory.rs). */
+export type Memories = Memories_Serialize;
 
-/** A deleted or forgotten memory or library entry, kept to restore. */
-export interface ForgottenMemory {
-  id: string;
-  scope: MemoryScope;
-  /** A library entry's name; null for a memory. */
-  name: string | null;
-  text: string;
-  /** When, as `2026-10-18T09:30:00Z`. */
-  forgotten: string;
-}
+/** A deleted or forgotten memory or library entry, kept to restore
+ *  (ai/memory/forgotten.rs). */
+export type ForgottenMemory = Forgotten_Serialize;
 
-/** Which library entries reached Textus AI - `LibraryUse` in
- *  ai/project.rs: the entries' `file`s, those that came up but didn't fit,
- *  and whether that was the last request (or the document's text alone,
- *  before any). */
-export interface LibraryUse {
-  included: string[];
-  leftOut: string[];
-  lastRequest: boolean;
-  /** The limit per request, in characters. */
-  cap: number;
-}
+/** Which library entries reached Textus AI (ai/project.rs). */
+export type LibraryUse = LibraryUseAnswer;
 
-/** What shapes Textus AI for one document - see docs/design/ai-concepts.md. */
-export interface AgentWorkspaceInfo {
-  /** The global writing instructions (agent.md), comments stripped. */
-  instructions: string[];
-  /** The project's writing instructions (.textus/agent.md), if any. */
-  project_instructions: string | null;
-  /** Global and project skills; a project skill replaces a global one of
-   *  the same name. */
-  skills: AgentSkill[];
-  /** The project folder; null for an unsaved draft or a folder too broad
-   *  to expose (home, a drive root). */
-  root: string | null;
-  style: string | null;
-  library: LibraryEntry[];
-  /** What the style profile's front matter sets for the writing
-   *  conventions (`conventions:` and option keys) - ai::rules::profile. */
-  conventions?: ProjectConventions;
-  /** What Textus AI remembered by itself, personal and the project's. */
-  memories: Memories;
-  /** Settings > Textus AI > Remember automatically. */
-  remember: boolean;
-}
+/** What shapes Textus AI for one document - `AgentWorkspace` in
+ *  ai/workspace.rs; see docs/design/ai-concepts.md. */
+export type AgentWorkspaceInfo = AgentWorkspace_Serialize;
 
 // ---------------------------------------------------------------------------
 // Writing conventions (src-tauri/src/ai/rules/profile.rs)
@@ -197,9 +125,8 @@ export const WRITING_CONVENTIONS_KEY = "writingConventions";
 /** Its default value, and the per-language value meaning "no choice". */
 export const WRITING_CONVENTIONS_AUTOMATIC = "automatic";
 
-/** A document language as the rules engine names it. */
-export type ConventionsLang =
-  "zh-Hans" | "zh-Hant" | "en" | "ja" | "ko" | "es" | "fr" | "de" | "ru" | "pt";
+/** A document language as the rules engine names it (rules::detect). */
+export type ConventionsLang = Lang;
 
 /**
  * The profiles each language offers, the first entry being the one
@@ -276,80 +203,32 @@ export type WritingConventionsSetting =
     });
 
 /** `.textus/style.md` front matter, as Rust read it. */
-export interface ProjectConventions {
-  profiles: string[];
-  options: Record<string, string>;
-}
+export type ProjectConventions = StyleFrontMatter;
 
 /** A resolved profile (rules::Profile). */
-export interface ConventionsProfile {
-  id: string;
-  lang: ConventionsLang;
-  region: string | null;
-  preset: string | null;
-  /** Chosen by the user (settings or project) rather than Automatic. */
-  explicit: boolean;
-  source: "automatic" | "settings" | "project";
-  options: Record<string, string>;
-}
+export type ConventionsProfile = Profile_Serialize;
 
-export interface WritingConventionsOptions {
-  settingKey: string;
-  automatic: string;
-  languages: {
-    lang: ConventionsLang;
-    automaticProfile: string | null;
-    profiles: string[];
-  }[];
-  options: { key: string; values: string[] }[];
-}
+export type WritingConventionsOptions = ConventionsOptions_Serialize;
 
-export interface EffectiveConventions {
-  lang: ConventionsLang | null;
-  profile: ConventionsProfile | null;
-  byLanguage: ConventionsProfile[];
-}
+export type EffectiveConventions = EffectiveConventions_Serialize;
 
 /** One finding of the rules engine (rules::Finding). */
-export interface ConventionsFinding {
-  rule: string;
-  /** Unicode-scalar offsets into the checked Markdown. */
-  start: number;
-  end: number;
-  original: string;
-  /** Null when the finding only flags. */
-  suggestion: string | null;
-  severity: "error" | "warning" | "info";
-  /** "safe": fine to apply without review ("fix all"). */
-  fix: "safe" | "suggest" | "none";
-  priority: "P0" | "P1" | "P2";
-  /** In the language of the text it fired on. */
-  message: string;
-  /** 1-based line. */
-  line?: number;
-}
+export type ConventionsFinding = Finding_Serialize;
 
-export interface ConventionsReport {
-  lang: ConventionsLang | null;
-  profile: ConventionsProfile | null;
-  findings: ConventionsFinding[];
-}
+export type ConventionsReport = DocReport_Serialize;
 
 /** An exact platform count (rules::measure). */
-export interface TextMeasure {
-  metric: string;
-  count: number;
-  limit: number | null;
-  unit: string;
-  within: boolean;
-  notes: string[];
-}
+export type TextMeasure = Measure_Serialize;
 
 /**
  * One skill as the `/` menu and Settings list it (ai::workspace::AgentSkill,
  * from `list_skills`): the built-ins, the global config folder's skills/
  * and the project's .textus/skills/, each layer replacing same-named skills
- * of the layers before it. Hidden skills are never listed.
+ * of the layers before it. Hidden skills are never listed. Written by hand:
+ * the frontend also makes one from a workspace's skills (skill-picker.ts),
+ * where the later fields are unknown, and `category` is one of the `/`
+ * menu's groups where Rust holds a plain string. Its other fields are
+ * AgentSkill's (src/platform/bindings/ai-project.ts).
  */
 export interface SkillListItem {
   /** Canonical, ASCII kebab-case for a built-in; what follows the `/`. */
@@ -361,8 +240,8 @@ export interface SkillListItem {
   category: SkillCategory | null;
   /** "userOnly": offered in the `/` menu but never picked up by the model
    *  on its own. */
-  invocation: "both" | "userOnly" | "hidden";
-  source: "builtin" | "global" | "project";
+  invocation: AgentSkill_Serialize["invocation"];
+  source: AgentSkill_Serialize["source"];
   /** A global or project skill with a built-in's name - a copy made by
    *  Customize… (`basedOn` set), or the user's own skill that happens to
    *  share it. */

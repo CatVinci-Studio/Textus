@@ -8,6 +8,7 @@ use serde::Serialize;
 
 /// The ten document languages the rules engine knows.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, PartialOrd, Ord)]
+#[cfg_attr(test, derive(specta::Type))]
 pub enum Lang {
     #[serde(rename = "en")]
     En,

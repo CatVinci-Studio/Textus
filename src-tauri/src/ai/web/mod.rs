@@ -453,8 +453,9 @@ async fn cached_fetch(url: &str) -> Result<fetch::Fetched, String> {
 }
 
 /// What the composer's Web search button can do with the provider and
-/// model in use. Mirrors `WebSearchStatus` in src/platform/ipc.ts.
+/// model in use - generated into src/platform/bindings/ai.ts.
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct WebSearchStatus {
     /// The provider searches by itself.
@@ -464,6 +465,7 @@ pub struct WebSearchStatus {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn web_search_status(
     app: AppHandle,
     provider: String,

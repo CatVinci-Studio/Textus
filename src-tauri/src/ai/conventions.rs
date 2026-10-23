@@ -30,11 +30,13 @@ pub(crate) fn library_names(ws: &AgentWorkspace) -> Vec<String> {
 /// offers (with the one Automatic uses) and the option keys - everything
 /// the Settings row needs to offer the choice.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn writing_conventions_options() -> profile::ConventionsOptions {
     profile::options()
 }
 
 #[derive(Serialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct EffectiveConventions {
     /// The document's language, when a document was given and has enough
@@ -49,6 +51,7 @@ pub struct EffectiveConventions {
 /// The effective writing conventions for a document: per language, and
 /// for the document's own language when `document` is given.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn writing_conventions_effective(
     app: AppHandle,
     doc_path: Option<String>,
@@ -74,6 +77,7 @@ pub async fn writing_conventions_effective(
 /// AI provider): the findings check_conventions gives the agent, with
 /// offsets and lines into the Markdown, for a "Check conventions" command.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn conventions_check_document(
     app: AppHandle,
     document: String,
@@ -103,6 +107,7 @@ pub async fn conventions_check_document(
 /// titles...) - rules::measure::METRICS lists the metrics. None for an
 /// unknown metric.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn measure_text(text: String, metric: String) -> Option<measure::Measure> {
     measure::measure(&text, &metric)
 }

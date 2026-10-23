@@ -55,6 +55,7 @@ fn unregister(request_id: &str) {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub fn ai_cancel(request_id: String) {
     if let Some(tx) = PENDING
         .lock()

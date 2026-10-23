@@ -12,6 +12,7 @@ pub(crate) const FORGOTTEN_KEPT: usize = 30;
 
 /// One forgotten memory or library entry, for the Memory tab.
 #[derive(Serialize, Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Forgotten {
     /// `forgotten/<scope>/<folder>/<stem>`, for Restore.

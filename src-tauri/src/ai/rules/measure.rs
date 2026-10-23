@@ -47,6 +47,7 @@ pub const METRICS: &[&str] = &[
 ];
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Measure {
     pub metric: &'static str,

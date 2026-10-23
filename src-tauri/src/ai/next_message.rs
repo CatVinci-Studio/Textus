@@ -52,6 +52,7 @@ pub(crate) fn suggestion(answer: &str) -> Option<String> {
 
 /// The message the writer will probably send next, or None.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn suggest_next_message(
     app: tauri::AppHandle,
     provider: String,

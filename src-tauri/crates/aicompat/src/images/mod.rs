@@ -63,6 +63,7 @@ impl Aspect {
 
 /// How a service is asked for a picture.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "kebab-case")]
 pub enum ImageApi {
     /// OpenAI's Images API with a GPT image model.

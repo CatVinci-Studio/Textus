@@ -36,9 +36,10 @@ mod refusals;
 pub use refusals::*;
 
 /// How hard the model is asked to think. The user sees one button, Deep
-/// thinking; the other two are picked by the surface. Mirrored by
-/// `ThinkingLevel` in src/ai/types.ts.
+/// thinking; the other two are picked by the surface. Generated into the
+/// app's src/platform/bindings/ai-agent.ts.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum ThinkingLevel {
     /// Quick Ask: as little as the model allows - it is for a quick change.

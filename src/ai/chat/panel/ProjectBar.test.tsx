@@ -41,9 +41,11 @@ const workspace = (root: string | null): AgentWorkspaceInfo => ({
   project_instructions: null,
   skills: [],
   root,
+  root_source: "chosen",
   style: null,
   library: [],
-  memories: { items: [], chars: 0, cap: 4000 },
+  conventions: { profiles: [], options: {} },
+  memories: { items: [], chars: 0, cap: 4000, forgotten: [] },
   remember: true,
 });
 

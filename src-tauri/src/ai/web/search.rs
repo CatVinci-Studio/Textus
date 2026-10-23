@@ -21,6 +21,7 @@ const DEEPSEEK_FIELD_CHARS: usize = 128;
 /// (`aiSearchService` in src/settings/SettingsContext.tsx, which lists the
 /// same ones).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "lowercase")]
 pub enum Backend {
     Deepseek,

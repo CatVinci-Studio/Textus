@@ -244,3 +244,5 @@ tauri = { version = "2.12", features = ["specta"] }
 specta = { version = "=2.0.0-rc.26", features = ["derive", "function", "serde_json"] }
 specta-typescript = "=0.0.13"
 tauri-specta = { version = "=2.0.0-rc.26", features = ["typescript"] }
+# AgentTurn and the types it holds, for the AI commands' bindings.
+aicompat = { path = "crates/aicompat", features = ["specta"] }

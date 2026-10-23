@@ -98,6 +98,7 @@ pub fn remember_enabled(app: &tauri::AppHandle) -> bool {
 /// into the library, where the existing matching sends each only when it
 /// comes up.
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum MemoryKind {
     /// Something the user asked to be always or never done.
@@ -130,6 +131,7 @@ impl MemoryKind {
 /// Whose a memory is: the user's in general (the global config folder) or
 /// this project's (its `.textus/`).
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum Scope {
     Project,
@@ -154,8 +156,9 @@ impl Scope {
 }
 
 /// Where and when something was remembered. Serialised camelCase for the
-/// Memory tab (`Remembered` in platform/ipc.ts).
+/// Memory tab (`Remembered` in src/platform/bindings/ai-project.ts).
 #[derive(Serialize, Clone, Debug, Default, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Remembered {
     pub created: String,
@@ -223,8 +226,9 @@ fn quoted(value: &str) -> String {
 }
 
 /// One memory, as the Memory tab and the prompt see it. Serialised
-/// camelCase (`Memory` in platform/ipc.ts).
+/// camelCase (`Memory` in src/platform/bindings/ai-project.ts).
 #[derive(Serialize, Clone, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Memory {
     pub id: String,
@@ -241,6 +245,7 @@ pub struct Memory {
 /// Every memory for a document - personal first, then the project's,
 /// newest first in each - and how much of the budget the included ones use.
 #[derive(Serialize, Clone, Debug, Default)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Memories {
     pub items: Vec<Memory>,
@@ -254,8 +259,10 @@ pub struct Memories {
 
 /// Where something is remembered from, for the record: the conversation
 /// as ai_agent_message gets it (`conversation: {id, title}` in
-/// platform/ipc.ts) and the document open in it.
+/// platform/ipc.ts) and the document open in it. Generated as
+/// MemorySource (JSON never carries a struct's name).
 #[derive(Deserialize, Clone, Debug, Default)]
+#[cfg_attr(test, derive(specta::Type), serde(rename = "MemorySource"))]
 pub struct Source {
     #[serde(rename = "id")]
     pub conversation: Option<String>,
@@ -284,6 +291,7 @@ pub(crate) struct Located {
 /// src/ai/chat/MemoryChip.tsx). `previous` is the file as it was before an
 /// update, for Undo to put back.
 #[derive(Serialize, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Remembering {
     pub remembered: String,
@@ -339,8 +347,10 @@ impl MemoryDirs {
 // ----------------------------------------------------------------- commands
 
 /// memory_pass's inputs, the keys of `ai.memoryPass`'s invoke in
-/// platform/ipc.ts.
+/// platform/ipc.ts - generated into src/platform/bindings/ai-memory.ts, which
+/// types that call with it (the command itself, taking `Args`, can't be).
 #[derive(Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct PassRequest {
     provider: String,
@@ -385,6 +395,7 @@ pub async fn memory_pass(
 /// Restore in the Memory tab's Recently forgotten: puts a forgotten memory
 /// or library entry back. Returns its id.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn memory_restore(
     app: tauri::AppHandle,
     doc_path: Option<String>,
@@ -401,6 +412,7 @@ pub async fn memory_restore(
 /// The chat chip's Undo: deletes what a remember call created, or writes
 /// back `previous`, the file before it was updated.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn memory_undo(
     app: tauri::AppHandle,
     doc_path: Option<String>,
@@ -419,6 +431,7 @@ pub async fn memory_undo(
 /// "Make personal" / "Make project", in the chat chip and the Memory tab.
 /// Returns the memory's new id.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn memory_move(
     app: tauri::AppHandle,
     doc_path: Option<String>,
@@ -437,6 +450,7 @@ pub async fn memory_move(
 
 /// The Memory tab's Delete, for a memory or a library entry.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn memory_delete(
     app: tauri::AppHandle,
     doc_path: Option<String>,
@@ -456,6 +470,7 @@ pub async fn memory_delete(
 /// moved and deleted in the Memory tab like any other. A click, not the
 /// model: it saves whether or not Remember automatically is on.
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn memory_remember(
     app: tauri::AppHandle,
     doc_path: Option<String>,
@@ -477,6 +492,7 @@ pub async fn memory_remember(
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn revision_choices_read(app: tauri::AppHandle) -> Option<serde_json::Value> {
     tauri::async_runtime::spawn_blocking(move || {
         MemoryDirs::for_document(&app, None, None).read_choices()
@@ -487,6 +503,7 @@ pub async fn revision_choices_read(app: tauri::AppHandle) -> Option<serde_json::
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn revision_choices_write(
     app: tauri::AppHandle,
     log: serde_json::Value,

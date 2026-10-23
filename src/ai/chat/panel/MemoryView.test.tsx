@@ -53,9 +53,11 @@ const workspace = (over: Partial<AgentWorkspaceInfo>): AgentWorkspaceInfo => ({
   project_instructions: null,
   skills: [],
   root: "/novel",
+  root_source: "chosen",
   style: null,
   library: [],
-  memories: { items: [], chars: 0, cap: 4000 },
+  conventions: { profiles: [], options: {} },
+  memories: { items: [], chars: 0, cap: 4000, forgotten: [] },
   remember: true,
   ...over,
 });
@@ -107,6 +109,7 @@ describe("the Memory tab's AI remembered section", () => {
           ],
           chars: 30,
           cap: 4000,
+          forgotten: [],
         },
         library: [
           entry({ name: "Wu", body: "A doctor.", remembered: record }),
@@ -177,7 +180,7 @@ describe("the Memory tab's AI remembered section", () => {
     );
     const handlers = renderTab(
       workspace({
-        memories: { items, chars: 60, cap: 4000 },
+        memories: { items, chars: 60, cap: 4000, forgotten: [] },
         library: [entry({ name: "Wu", body: "A doctor." }), entry({})],
       }),
     );
@@ -206,7 +209,9 @@ describe("the Memory tab's AI remembered section", () => {
       file: "/config/agent/memory/brief.md",
     });
     const on = renderTab(
-      workspace({ memories: { items: [personal], chars: 14, cap: 4000 } }),
+      workspace({
+        memories: { items: [personal], chars: 14, cap: 4000, forgotten: [] },
+      }),
     );
     const tab = within(section());
     fireEvent.click(tab.getByRole("button", { name: t.memoryEdit }));
@@ -225,6 +230,7 @@ describe("the Memory tab's AI remembered section", () => {
           items: [memory({ id: "personal/memory/a", scope: "personal" })],
           chars: 1,
           cap: 4000,
+          forgotten: [],
         },
       }),
     );
@@ -243,6 +249,7 @@ describe("the Memory tab's AI remembered section", () => {
           ],
           chars: 3990,
           cap: 4000,
+          forgotten: [],
         },
       }),
     );
@@ -257,7 +264,12 @@ describe("the Memory tab's AI remembered section", () => {
   it("warns as the memories near the limit", () => {
     renderTab(
       workspace({
-        memories: { items: [memory({})], chars: 3500, cap: 4000 },
+        memories: {
+          items: [memory({})],
+          chars: 3500,
+          cap: 4000,
+          forgotten: [],
+        },
       }),
     );
     expect(

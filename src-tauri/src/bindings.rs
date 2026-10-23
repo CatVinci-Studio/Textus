@@ -7,10 +7,12 @@
 //!
 //! `bindings_are_current` fails when a checked-in file is not what these
 //! signatures generate; `npm run bindings` (TEXTUS_WRITE_BINDINGS=1)
-//! writes them again. The AI commands (src/ai/) are not listed yet: their
-//! types are still hand-written in src/platform/ipc-ai-types.ts. Neither
-//! are the iOS-only ones (commands/documents.rs), which a desktop test
-//! build doesn't compile.
+//! writes them again. Not listed: the commands reading their inputs as one
+//! struct (commands/args.rs) and ai_agent_message, whose inputs and stream
+//! are exported as types instead, and the iOS-only ones
+//! (commands/documents.rs), which a desktop test build doesn't compile.
+//! aicompat's types (AgentTurn and what it holds) derive specta::Type
+//! behind its `specta` feature, which only the dev-dependency turns on.
 //!
 //! The settings, histories and conversations are opaque JSON
 //! (serde_json::Value) to Rust, and `rev`/counts are u64/usize; specta
@@ -169,6 +171,89 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::mcp::mcp_status,
                 crate::mcp::mcp_restart,
                 crate::mcp::mcp_try,
+            ]),
+        ),
+        // The AI commands, in a file per concern (a generated file is held
+        // to the same 600 lines as any other): providers and the requests
+        // that take one struct, the agent's stream and what it shows, the
+        // project, its memory, and the writing conventions.
+        (
+            "ai.ts",
+            builder()
+                .commands(collect_commands![
+                    crate::ai::catalog::list_providers,
+                    crate::ai::catalog::ai_can_think_deeper,
+                    crate::ai::client::fetch_agent_models,
+                    crate::ai::client::set_ai_proxy,
+                    crate::ai::web::web_search_status,
+                    crate::ai::next_message::suggest_next_message,
+                ])
+                // The commands reading their inputs as one struct
+                // (commands/args.rs) can't be generated; their inputs are,
+                // and ipc.ts types each call's argument object with them.
+                .typ::<crate::ai::client::CompletionRequest>()
+                .typ::<crate::ai::client::GrammarRequest>(),
+        ),
+        (
+            "ai-agent.ts",
+            builder()
+                .commands(collect_commands![
+                    crate::ai::cancel::ai_cancel,
+                    crate::commands::attachment::pick_attachment_file,
+                    crate::ai::images::list_image_providers,
+                    crate::ai::images::ai_generated_image,
+                    crate::ai::images::ai_retry_generated_image,
+                    crate::ai::images::ai_discard_generated_image,
+                ])
+                // ai_agent_message takes more parameters than specta's
+                // function traits go to (ten), so it is not generated
+                // either: what its Channel streams is, AgentTurn with it,
+                // and the thinking level it takes.
+                .typ::<crate::ai::agent::StreamEvent>()
+                .typ::<aicompat::capabilities::ThinkingLevel>(),
+        ),
+        (
+            "ai-project.ts",
+            builder().commands(collect_commands![
+                crate::ai::workspace::load_agent_workspace,
+                crate::ai::workspace::pick_workspace_root,
+                crate::ai::workspace::open_global_agent_dir,
+                crate::ai::workspace::ensure_global_agent_md,
+                crate::ai::workspace::import_agent_skill,
+                crate::ai::workspace::list_skills,
+                crate::ai::workspace::customize_builtin_skill,
+                crate::ai::workspace::reset_builtin_skill,
+                crate::ai::workspace::set_builtin_skill_enabled,
+                crate::ai::project::list_project_files,
+                crate::ai::project::read_project_file,
+                crate::ai::project::ensure_project_file,
+                crate::ai::project::pick_text_files,
+                crate::ai::project::learn_style,
+            ]),
+        ),
+        (
+            "ai-memory.ts",
+            builder()
+                .commands(collect_commands![
+                    crate::ai::project::library_use,
+                    crate::ai::memory::memory_undo,
+                    crate::ai::memory::memory_move,
+                    crate::ai::memory::memory_restore,
+                    crate::ai::memory::memory_delete,
+                    crate::ai::memory::memory_remember,
+                    crate::ai::memory::revision_choices_read,
+                    crate::ai::memory::revision_choices_write,
+                ])
+                // memory_pass reads its inputs as one struct, as above.
+                .typ::<crate::ai::memory::PassRequest>(),
+        ),
+        (
+            "ai-conventions.ts",
+            builder().commands(collect_commands![
+                crate::ai::conventions::writing_conventions_options,
+                crate::ai::conventions::writing_conventions_effective,
+                crate::ai::conventions::conventions_check_document,
+                crate::ai::conventions::measure_text,
             ]),
         ),
     ]
