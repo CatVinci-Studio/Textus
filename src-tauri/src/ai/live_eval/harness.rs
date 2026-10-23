@@ -377,6 +377,9 @@ pub fn price(model: &str) -> [f64; 4] {
         "claude-sonnet-5-5" => [2.0, 2.5, 0.20, 10.0],
         // Approximate, from Ark's yuan list prices.
         m if m.starts_with("doubao-") => [0.55, 0.0, 0.11, 2.2],
+        // The highest rates listed for each (2026), so the guard stops early.
+        m if m.starts_with("deepseek-") => [1.74, 0.0, 0.15, 3.96],
+        m if m.starts_with("MiniMax-") => [0.375, 0.0, 0.06, 1.5],
         _ => [4.0, 5.0, 0.20, 20.0],
     }
 }
