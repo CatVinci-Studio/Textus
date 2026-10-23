@@ -167,6 +167,16 @@ test("what Textus AI remembers shows under its reply, and Undo takes it back", a
     page.locator(".agent-panel-view").getByText("Noted - British spelling"),
   ).toBeVisible();
 
+  // A click on what it says opens the Memory tab at it, marked.
+  await chip.locator(".agent-memory-chip-line").click();
+  const remembered = page.locator(
+    `[data-memory-id="${REMEMBERED.remembered}"]`,
+  );
+  await expect(remembered).toBeVisible();
+  await expect(remembered).toHaveClass(/motion-mark/);
+  await expect(remembered).toContainText(REMEMBERED.text);
+  await page.getByRole("tab", { name: "Chat" }).click();
+
   await chip.getByRole("button", { name: "Undo" }).click();
   await expect(chip).toHaveText("Undone. No longer remembered.");
   expect(await calls(page, "memory_undo")).toEqual([
