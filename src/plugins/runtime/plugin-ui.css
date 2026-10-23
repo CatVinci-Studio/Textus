@@ -156,3 +156,31 @@ pre {
 .danger {
   color: var(--danger);
 }
+
+/* The app's moves (src/ui/motion.css), for a plugin's own parts: arriving
+   (animation: motion-enter var(--dur-medium) var(--ease-out) backwards,
+   from --enter-x / --enter-y / --enter-scale) and leaving (motion-exit,
+   --dur-fast, --ease-in, forwards). The durations and distances are the
+   window's own, reduced motion included. */
+@keyframes motion-enter {
+  from {
+    opacity: 0;
+    transform: translate(var(--enter-x, 0), var(--enter-y, 0))
+      scale(var(--enter-scale, 1));
+  }
+}
+
+@keyframes motion-exit {
+  to {
+    opacity: 0;
+    transform: translate(var(--exit-x, 0), var(--exit-y, 0))
+      scale(var(--exit-scale, 1));
+  }
+}
+
+/* What is about to change, for the moment before it does: a tint, set and
+   taken off, never faded. */
+.motion-mark {
+  background-color: var(--motion-mark-bg);
+  border-radius: 2px;
+}
