@@ -246,6 +246,17 @@ resolveWebviewView: async function (webview) {
   `--font-sans`, `--text-sm`, `--space-3`, …) that follow the theme and
   dark mode, and buttons, inputs, `.toolbar`, `.list` and `.empty` look as
   they do in Settings without any CSS of yours.
+- Motion is Textus's own too. A part of the panel arriving takes
+  `animation: motion-enter var(--dur-medium) var(--ease-out) backwards`,
+  from where `--enter-x`, `--enter-y` and `--enter-scale` say (a fade in
+  place when unset); one leaving, `motion-exit var(--dur-fast)
+var(--ease-in) forwards` with `--exit-x`, `--exit-y`, `--exit-scale`.
+  What is about to change can be marked for a moment with the
+  `motion-mark` class. The durations (`--dur-fast`, `--dur-base`,
+  `--dur-medium`, `--dur-slow`), curves (`--ease-out`, `--ease-in`,
+  `--ease-in-out`) and distances (`--motion-distance-sm`, `-md`) are the
+  window's, so with the system's Reduce motion a plugin's moves become
+  fades with the app's. Animate only `opacity` and `transform`.
 - `api.language` is the interface's language, and `api.t(key, ...args)`
   a string of the manifest's `l10n` in it.
 
