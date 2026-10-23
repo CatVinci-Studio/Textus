@@ -47,6 +47,7 @@ export {
   storage,
   type DraftSnapshot,
   drafts,
+  ownNotes,
 } from "./ipc-files";
 export {
   type FloatingDragArgs,

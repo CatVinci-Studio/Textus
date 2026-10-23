@@ -22,6 +22,11 @@ export interface ReviewMarginLabels {
   proposalChangeCount: string;
   reviewNoteAsk: string;
   reviewNoteDone: string;
+  /** An own note's mark, by-line and actions (useOwnNotes). */
+  ownNoteMark: string;
+  ownNoteBy: string;
+  ownNoteEdit: string;
+  ownNoteDelete: string;
   reviewBarLabel: string;
   proposalTakeSentence: string;
   proposalKeepSentence: string;
@@ -288,6 +293,7 @@ export function useCardActions(handlers: {
   onHot: (key: string | null) => void;
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
+  onEdit: (note: ReviewNote) => void;
   onDecide: (callId: string, index: number, take: boolean | null) => void;
   onPick: (id: string) => void;
   onOpen: (key: string | null) => void;
@@ -299,6 +305,7 @@ export function useCardActions(handlers: {
         actions.current.onHot(on ? key : null),
       cardDone: (id: string) => actions.current.onDone(id),
       cardAsk: (note: ReviewNote) => actions.current.onAsk(note),
+      cardEdit: (note: ReviewNote) => actions.current.onEdit(note),
       cardDecide: (callId: string, index: number, take: boolean | null) =>
         actions.current.onDecide(callId, index, take),
       cardPick: (id: string) => actions.current.onPick(id),

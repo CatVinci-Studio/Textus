@@ -60,6 +60,7 @@ const CLOSE_TAB_ID: &str = "close-tab";
 const CLOSE_WINDOW_ID: &str = "close-window";
 const TOGGLE_SOURCE_MODE_ID: &str = "toggle-source-mode";
 const TOGGLE_TYPEWRITER_MODE_ID: &str = "toggle-typewriter-mode";
+const TRACK_CHANGES_ID: &str = "track-changes";
 const TOGGLE_SIDEBAR_ID: &str = "toggle-sidebar";
 const TOGGLE_AGENT_PANEL_ID: &str = "toggle-agent-panel";
 /// Textus AI's master switch (`textusAi` in settings.json), flipped by the
@@ -405,6 +406,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-toggle-source-mode");
     } else if id == TOGGLE_TYPEWRITER_MODE_ID {
         emit_to_focused(app_handle, "menu-toggle-typewriter-mode");
+    } else if id == TRACK_CHANGES_ID {
+        emit_to_focused(app_handle, "menu-track-changes");
     } else if id == TOGGLE_SIDEBAR_ID {
         emit_to_focused(app_handle, "menu-toggle-sidebar");
     } else if id == TOGGLE_AGENT_PANEL_ID {

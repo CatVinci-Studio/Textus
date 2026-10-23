@@ -23,6 +23,7 @@ import { usePresenceProps } from "../ui/usePresence";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import "./app-menu.css";
 import { usePluginMenuEntries } from "../plugins/usePluginMenu";
+import { trackingShown } from "../ai/margin/track-changes-state";
 
 /**
  * The app-drawn menu, opened from the title row's hamburger - or one of
@@ -71,7 +72,7 @@ export function AppMenu({ x, y, onClose, checks, section }: AppMenuProps) {
         t,
         settings.shortcuts,
         recents,
-        { ...checks, fullscreen },
+        { ...checks, fullscreen, trackChanges: trackingShown() },
         pluginEntries,
       )
     : buildMobileMenu(t, checks);

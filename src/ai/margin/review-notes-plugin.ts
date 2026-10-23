@@ -18,6 +18,8 @@ export interface ReviewNote {
   comment: string;
   /** Its badge's number - also shown on its card in the chat (numberNotes). */
   num: number;
+  /** The writer's own note (useOwnNotes.ts) rather than the AI's. */
+  by?: "me";
 }
 
 /**

@@ -1,4 +1,10 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { useSyncExternalStore } from "react";
+import {
+  subscribeTracking,
+  trackingShown,
+} from "../ai/margin/track-changes-state";
+import { TRACK_CHANGES_EVENT } from "../utils/events";
 import { menuIpc, windowIpc } from "../platform/ipc";
 import { selectAllInFocus } from "../ui/select-all";
 import { hasNativeMenuBar } from "../platform/capabilities";
@@ -142,6 +148,11 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-toggle-typewriter-mode", () =>
         h().onToggleTypewriter(),
       ),
+      listenToThisWindow("menu-track-changes", () =>
+        window.dispatchEvent(
+          new CustomEvent(TRACK_CHANGES_EVENT, { detail: "toggle" }),
+        ),
+      ),
       listenToThisWindow("menu-toggle-sidebar", () => h().onToggleSidebar()),
       listenToThisWindow("menu-toggle-agent-panel", () =>
         h().onToggleAgentPanel(),
@@ -233,7 +244,9 @@ export function useNativeMenuAccelerators(shortcuts: Shortcuts) {
  * focus - the bar is one for the whole app, so it shows the front window.
  */
 export function useNativeMenuChecks(checks: MenuChecks) {
-  const key = JSON.stringify(nativeMenuChecks(checks));
+  // Edit › Track My Changes: the document on screen's, not the window's.
+  const trackChanges = useSyncExternalStore(subscribeTracking, trackingShown);
+  const key = JSON.stringify(nativeMenuChecks({ ...checks, trackChanges }));
   useEffect(() => {
     if (!hasNativeMenuBar) return;
     const send = () =>
