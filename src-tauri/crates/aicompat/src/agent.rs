@@ -122,6 +122,11 @@ pub struct ToolOutput {
     /// call of a step is settled and the model wrote its reply with them,
     /// the loop ends there instead of asking for the reply again.
     pub settled: bool,
+    /// Settled only beside other calls: a step of this call alone goes on
+    /// to one more step. A review's comments come several to a step; one
+    /// pinned alone was a model that meant to go on, and the request ended
+    /// with the rest only promised in its reply.
+    pub settles_with_others: bool,
 }
 
 impl From<String> for ToolOutput {
