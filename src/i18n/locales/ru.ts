@@ -154,13 +154,13 @@ export default {
   revisionDisplayLabel: "Показ правок",
   revisionDisplayInline: "Всё в тексте",
   revisionDisplayOriginal: "Оригинал в тексте, правки на полях",
-  revisionDisplayNew: "Правки в тексте, оригинал на полях",
   revisionDisplayFinal: "Только результат, без пометок",
   revisionDisplayNoRoom:
     "Не хватает места: закройте боковую панель или панель ИИ",
   revisionDisplayNewText:
     "У нового текста нет оригинала: в этих режимах он остаётся в тексте, зелёным",
   proposalDeletedSentence: "Оригинал",
+  proposalAddedSentence: "Добавлено",
   reviewBarLabel: "Правка",
   reviewBarOpenChat: "Открыть панель ИИ",
   reviewNoteBy: "Рецензия",

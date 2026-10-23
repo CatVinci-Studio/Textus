@@ -466,7 +466,7 @@
   stroke: color-mix(in srgb, var(--success-color) 70%, transparent);
 }
 
-/* "Changes in the text": the card holds the original, struck. */
+/* The writer's own tracked change: the card holds the original, struck. */
 .revision-note-original {
   background: var(--revision-delete-bg);
   color: var(--editor-muted);

@@ -150,6 +150,16 @@ export function duration(token: DurationToken): number {
   return raw.endsWith("ms") ? value : value * 1000;
 }
 
+/** A length token in pixels, as the stylesheet currently has it (reduced
+ *  motion sets the distances to 0): --motion-distance-sm / -md. */
+export function length(
+  token: "--motion-distance-sm" | "--motion-distance-md",
+): number {
+  const value = parseFloat(readToken(token));
+  if (Number.isFinite(value)) return value;
+  return token === "--motion-distance-sm" ? 4 : 8;
+}
+
 /** An easing token's current value: the linear() spring where the engine
  *  has it, else its cubic-bezier. */
 export function easing(token: EasingToken): string {

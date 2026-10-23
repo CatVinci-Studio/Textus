@@ -18,7 +18,7 @@ const LONG_CLASSICAL = [STORY_CLASSICAL, STORY_CLASSICAL, STORY_CLASSICAL].join(
 async function open(
   page: Page,
   markdown: string,
-  display: "new" | "final" | "original",
+  display: "final" | "original",
   width = 1440,
 ) {
   await page.setViewportSize({ width, height: 900 });
@@ -83,7 +83,7 @@ function cards(page: Page) {
   );
 }
 
-for (const display of ["new", "final"] as const)
+for (const display of ["final"] as const)
   for (const width of [1440, 1100])
     test(`"${display}" leaves no blank gaps where a rewrite joins paragraphs, ${width}px`, async ({
       page,
@@ -114,7 +114,7 @@ for (const display of ["new", "final"] as const)
 test("with many revisions the cards stack and move, the text doesn't", async ({
   page,
 }) => {
-  await open(page, LONG, "new", 1100);
+  await open(page, LONG, "original", 1100);
   await propose(page, LONG, LONG_CLASSICAL);
   await expect(page.locator(".revision-note")).toHaveCount(24);
   await expect(page.locator(".review-bar-pos")).toHaveText("24 changes");
@@ -127,19 +127,19 @@ test("with many revisions the cards stack and move, the text doesn't", async ({
         .length;
     })
     .toBe(0);
-  // The text is laid out as in the view without cards.
-  await page.locator(".review-bar-view-button").click();
+  // A card opened whole moves the ones below it, never the text.
   await page
-    .getByRole("menuitemradio", { name: "Result only, no markup" })
-    .click();
-  await expect(page.locator(".revision-note")).toHaveCount(0);
+    .locator(".revision-note")
+    .nth(3)
+    .click({ position: { x: 40, y: 12 } });
+  await expect(page.locator(".revision-note-focus")).toHaveCount(1);
   expect(await blocks(page)).toEqual(withCards);
 });
 
 test("a crowded rewrite's cards are cut to stand by their passages, and open whole", async ({
   page,
 }) => {
-  await open(page, LONG, "new", 1100);
+  await open(page, LONG, "original", 1100);
   await propose(page, LONG, LONG_CLASSICAL);
   await expect(page.locator(".revision-note")).toHaveCount(24);
   // A line for every card from the start, not only once pointed at.
@@ -158,7 +158,13 @@ test("a crowded rewrite's cards are cut to stand by their passages, and open who
   for (let i = 1; i < tops.length; i++)
     expect(tops[i]).toBeGreaterThan(tops[i - 1]);
   // Clicked, one opens whole over the ones below, which stay put.
-  const card = page.locator(".revision-note").nth(5);
+  const first = await page
+    .locator(".revision-note")
+    .evaluateAll((els) =>
+      els.findIndex((e) => e.matches(".review-note-cut, .review-note-chip")),
+    );
+  expect(first).toBeGreaterThan(-1);
+  const card = page.locator(".revision-note").nth(first);
   await card.click({ position: { x: 40, y: 12 } });
   await expect(card).toHaveClass(/review-note-cut-open/);
   await expect(page.locator(".review-links path.hot")).toHaveCount(1);
@@ -192,7 +198,7 @@ type Sample = {
 test("a streaming rewrite brings its changes one at a time: text, card and count", async ({
   page,
 }) => {
-  await open(page, STORY, "new");
+  await open(page, STORY, "original");
   await streamRevise(
     page,
     [
@@ -264,7 +270,7 @@ test("a streaming rewrite brings its changes one at a time: text, card and count
 test("mid-stream, ‹ › step through the changes so far; Accept and Reject wait", async ({
   page,
 }) => {
-  await open(page, STORY, "new");
+  await open(page, STORY, "original");
   const args = { action: "replace", anchor: STORY, text: STORY_CLASSICAL };
   const json = JSON.stringify(args);
   // Held while the folded dialogue is being written.
@@ -272,7 +278,8 @@ test("mid-stream, ‹ › step through the changes so far; Accept and Reject wai
   await streamRevise(page, [{ id: "s1", args }], { chunk: 4, hold });
   await send(page);
   await expect(page.locator(".revision-note")).toHaveCount(5);
-  await expect(page.locator(".milkdown .pending-partial")).toBeVisible();
+  // The new text is only ever in the margin: none of it in the text.
+  await expect(page.locator(".milkdown .pending-partial")).toBeHidden();
   await expect(page.locator(".review-bar-pos")).toHaveText("5 changes");
   await expect(page.locator(".review-bar-accept")).toBeDisabled();
   await expect(
@@ -304,4 +311,24 @@ test("mid-stream, ‹ › step through the changes so far; Accept and Reject wai
     .click();
   await expect(page.locator(".review-bar-accept")).toBeEnabled();
   await expect(page.locator(".review-bar-pos")).toHaveText(/5/);
+});
+
+test("a sentence the rewrite adds has a card that says Added, not an empty entry", async ({
+  page,
+}) => {
+  const original = "The keeper woke before dawn. Outside, the sea was calm.";
+  await open(page, original, "original");
+  await propose(
+    page,
+    original,
+    "The keeper woke before dawn. He lit the lamp. Outside, the sea was calm.",
+  );
+  const card = page.locator(".revision-note");
+  await expect(card).toHaveCount(1);
+  await expect(card.locator(".revision-note-was")).toHaveText("Added");
+  await expect(card.locator(".revision-note-text")).toContainText(
+    "He lit the lamp.",
+  );
+  // In the text, only the mark where it goes.
+  await expect(page.locator(".milkdown .pending-insert-mark")).toBeVisible();
 });
