@@ -132,10 +132,44 @@ pub fn edited_text(text: &str, action: &str, anchor: &str, add: &str) -> Option<
                 &after[end..]
             )
         }
-        "insert_after" => format!("{before}{anchor} {add}{after}"),
-        "insert_before" => format!("{before}{add} {anchor}{after}"),
+        "insert_after" => format!("{before}{anchor}{}{add}{after}", gap(anchor, add)),
+        // A paragraph of its own before the anchor's paragraph - a title
+        // asked for above undecided writing was its first line's start, the
+        // whole paragraph read as the heading - or words before the anchor.
+        "insert_before"
+            if add.contains("\n\n") || before.is_empty() || before.ends_with("\n\n") =>
+        {
+            let start = before.rfind("\n\n").map_or(0, |i| i + 2);
+            format!(
+                "{}{}\n\n{}{anchor}{after}",
+                &before[..start],
+                add.trim(),
+                &before[start..]
+            )
+        }
+        "insert_before" => format!("{before}{add}{}{anchor}{after}", gap(add, anchor)),
         _ => return None,
     })
+}
+
+/// The space between `left` and `right` run together, as joined-edit.ts's
+/// `gap`: one between two words of a language that spaces them; none after
+/// CJK, before punctuation, or where either side has one already.
+fn gap(left: &str, right: &str) -> &'static str {
+    let (Some(last), Some(first)) = (left.chars().last(), right.chars().next()) else {
+        return "";
+    };
+    let cjk = |c: char| {
+        matches!(c, '\u{3000}'..='\u{303f}' | '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}'
+            | '\u{4e00}'..='\u{9fff}' | '\u{ff00}'..='\u{ffef}')
+    };
+    if last.is_whitespace() || first.is_whitespace() || cjk(last) || cjk(first) {
+        return "";
+    }
+    if ".,;:!?)]}".contains(first) {
+        return "";
+    }
+    " "
 }
 
 /// The pictures earlier requests made that the user hasn't accepted or

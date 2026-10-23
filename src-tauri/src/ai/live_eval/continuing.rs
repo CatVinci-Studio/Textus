@@ -293,7 +293,16 @@ fn a_title_asked_for_after_undecided_writing_goes_above_it() {
             doc.trim_start().starts_with('#'),
             "{ui}: no title first: {doc}"
         );
-        assert_eq!(doc.matches('#').count(), 1, "{ui}: {doc}");
+        // A heading of its own: joined with a space, the writing's first
+        // paragraph read as the heading.
+        let heading = doc.trim_start().split("\n\n").next().unwrap_or("");
+        assert!(
+            heading.chars().count() < 60,
+            "{ui}: the writing is in the heading: {heading}"
+        );
+        // One heading, whatever its level ("##" too).
+        let headings = doc.lines().filter(|l| l.trim_start().starts_with('#'));
+        assert_eq!(headings.count(), 1, "{ui}: {doc}");
         // The writing once, below it - however many paragraphs it came as.
         let start: String = conv.outcomes[0].proposals[0]
             .text

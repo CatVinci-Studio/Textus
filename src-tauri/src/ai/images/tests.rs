@@ -530,3 +530,30 @@ fn a_picture_that_was_not_made_is_asked_for_again_by_itself() {
     assert!(matches!(look(&other), Some(Err(_))));
     assert!(ai_retry_generated_image("gone00".into()).is_err());
 }
+
+/// An edit into undecided text as joined-edit.ts makes it: a title asked
+/// for above undecided writing is a paragraph of its own - joined with a
+/// space it was the writing's first line, the whole paragraph a heading.
+#[test]
+fn an_edit_into_undecided_text_is_made_as_the_page_makes_it() {
+    let text = "雨下到深夜，街上很静。\n\n雨没有停。";
+    assert_eq!(
+        edited_text(text, "insert_before", "雨下到深夜，街上很静。", "# 雨夜").unwrap(),
+        "# 雨夜\n\n雨下到深夜，街上很静。\n\n雨没有停。"
+    );
+    // Before a later paragraph: between the two.
+    assert_eq!(
+        edited_text(text, "insert_before", "雨没有停。", "## 后来").unwrap(),
+        "雨下到深夜，街上很静。\n\n## 后来\n\n雨没有停。"
+    );
+    // Words before words within a paragraph: no space after CJK.
+    assert_eq!(
+        edited_text(text, "insert_before", "街上很静。", "整条").unwrap(),
+        "雨下到深夜，整条街上很静。\n\n雨没有停。"
+    );
+    // English words: a space between them.
+    assert_eq!(
+        edited_text("The rain fell.", "insert_after", "The rain", "softly").unwrap(),
+        "The rain softly fell."
+    );
+}
