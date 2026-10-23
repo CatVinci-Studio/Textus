@@ -438,6 +438,30 @@ the answer to a per-window store (`useMarginAvailable`).
   disk content already matches are skipped; never steals focus), a Help doc
   this window was spawned for, OS-handed file paths, first-run onboarding.
 
+## Undecided proposals outlive closing
+
+`kept-proposals.ts`, `useKeptProposals.ts`, `ai/kept_proposals.rs`.
+
+A saved document's proposals that are neither accepted nor rejected are
+written down 0.4 s after they settle, and offered again when the document
+opens: in a project with a `.textus/` folder, as
+`.textus/pending/<the document's path in the project>.json`; otherwise in
+the app's data folder, under `pending/`, named by a hash of the path. The
+file goes once the last of them is decided.
+
+- **What is kept** is each proposal as it was made, with the writer's
+  calls on its sentences so far. It is placed again by its blocks' ids, a
+  hash of their text: while those blocks read as they did it lands where it
+  was, and once one changed it is invalid and drops out.
+- **A selection's or the caret's proposal** (`replace_selection`,
+  `insert_at_cursor`) keeps where it wrote, and comes back only to the
+  document it was made for, unchanged (a hash of its markdown).
+- **Not kept:** an untitled document's proposals, one still streaming in,
+  and one with a picture still waiting in the backend, which doesn't
+  outlive the app.
+- Nothing is written for a document before what was kept for it has been
+  offered again, so opening it never wipes them.
+
 ## File index
 
 | File                                                                | Owns                                                                                                 |
