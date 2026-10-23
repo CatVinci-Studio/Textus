@@ -244,6 +244,24 @@ fn a_rewrite_of_a_run_that_swaps_a_picture_keeps_it_and_says_so() {
 }
 
 #[test]
+fn a_rewrite_of_a_run_names_the_pictures_it_keeps() {
+    let doc = Document::from_markdown("One.\n\n![a](a.png)\n\nTwo.");
+    let (a, pic, b) = (&doc.blocks[0].id, &doc.blocks[1].id, &doc.blocks[2].id);
+    let v = resolved(
+        &doc,
+        json!({"action": "replace", "block": a, "last_block": b, "text": "Uno.\n\n![a](a.png)\n\nDos."}),
+    );
+    assert_eq!(v[PICTURES_IN_RUN_KEY], json!([pic]));
+    // A run with no picture names none.
+    let plain = Document::from_markdown("One.\n\nTwo.");
+    let v = resolved(
+        &plain,
+        json!({"action": "replace", "block": plain.blocks[0].id, "last_block": plain.blocks[1].id, "text": "Uno.\n\nDos."}),
+    );
+    assert!(v.get(PICTURES_IN_RUN_KEY).is_none());
+}
+
+#[test]
 fn an_id_written_as_its_whole_marker_still_names_its_block() {
     let doc = Document::from_markdown("One.\n\nTwo.");
     let id = doc.blocks[1].id.clone();

@@ -61,6 +61,12 @@ fn run_on(
                 harness::clip(args["anchor"].as_str().unwrap_or(""), 30),
                 harness::clip(args["text"].as_str().unwrap_or(""), 50)
             );
+            eprintln!(
+                "    block {} last_block {} -> {}",
+                args["block"],
+                args["last_block"],
+                harness::clip(call["result"].as_str().unwrap_or(""), 400)
+            );
             // The pictures it carries, as placed (textus-generated:ID).
             for line in args["text"].as_str().unwrap_or("").lines() {
                 if line.trim_start().starts_with("![") {
@@ -144,6 +150,21 @@ fn translate_a_story_with_its_picture() {
         AgentMode::Write,
         ThinkingLevel::Auto,
         "翻译为英文，并且图片也换外国女孩",
+    );
+}
+
+/// The same story translated alone, with an image model: its picture is
+/// not redone - only a picture the user asks to change is (1.2.1).
+#[test]
+#[ignore = "live: calls the model"]
+fn translate_a_story_keeping_its_picture() {
+    let pictures = crate::ai::images::ImageRun::offline(2);
+    run_on(
+        include_str!("fixtures/borrowing-rain.md"),
+        Some(&pictures),
+        AgentMode::Write,
+        ThinkingLevel::Auto,
+        "翻译为英文",
     );
 }
 
