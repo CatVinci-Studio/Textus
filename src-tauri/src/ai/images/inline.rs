@@ -30,17 +30,18 @@ use std::sync::Mutex;
 pub(super) const PICTURE_SCHEME: &str = "textus-picture:";
 
 /// One picture line read: its alt text, the description it is made from,
-/// and its shape.
+/// its shape, and the src of the picture it is drawn like (or "").
 #[derive(Debug, PartialEq)]
 struct PictureLine<'a> {
     alt: &'a str,
     prompt: &'a str,
     aspect: Aspect,
+    like: &'a str,
 }
 
 /// `line` as a picture line, if it is one: `![alt](textus-picture:` then
-/// an optional aspect and the description, up to the line's last `)` (a
-/// description may have parentheses of its own).
+/// an optional aspect, an optional `like:SRC`, and the description, up to
+/// the line's last `)` (a description may have parentheses of its own).
 fn picture_line(line: &str) -> Option<PictureLine<'_>> {
     let rest = line.trim().strip_prefix("![")?;
     let (alt, after) = rest.split_once("](")?;
@@ -51,16 +52,23 @@ fn picture_line(line: &str) -> Option<PictureLine<'_>> {
         .strip_prefix(PICTURE_SCHEME)?
         .strip_suffix(')')?
         .trim();
-    let (aspect, prompt) = match body.split_once(char::is_whitespace) {
+    let (aspect, rest) = match body.split_once(char::is_whitespace) {
         Some((first, rest)) if Aspect::parse(first).is_some() => {
             (Aspect::parse(first).unwrap_or_default(), rest.trim())
         }
         _ => (Aspect::default(), body),
     };
+    let (like, prompt) = match rest.strip_prefix("like:") {
+        Some(after) => after
+            .split_once(char::is_whitespace)
+            .map_or((after, ""), |(src, prompt)| (src, prompt.trim())),
+        None => ("", rest),
+    };
     (!prompt.is_empty()).then_some(PictureLine {
         alt: alt.trim(),
         prompt,
         aspect,
+        like,
     })
 }
 
@@ -168,9 +176,9 @@ impl InlinePictures<'_> {
         if let Some((_, known)) = started.iter().find(|(l, _)| l == line) {
             return known.clone();
         }
-        let outcome = self
-            .run
-            .begin_picture(picture.prompt.to_string(), picture.aspect);
+        let outcome =
+            self.run
+                .begin_picture(picture.prompt.to_string(), picture.aspect, picture.like);
         if let Ok((id, _)) = &outcome {
             self.ledger
                 .lock()

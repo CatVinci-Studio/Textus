@@ -8,7 +8,27 @@ fn a_picture_line_has_an_alt_an_aspect_and_a_description() {
             alt: "港口",
             prompt: "A harbour at dawn (soft light)",
             aspect: Aspect::Wide,
+            like: "",
         })
+    );
+    // Drawn like an earlier picture: its src after the aspect, or alone.
+    assert_eq!(
+        picture_line("![Lin](textus-picture:16:9 like:assets/lin.png Lin at the helm)"),
+        Some(PictureLine {
+            alt: "Lin",
+            prompt: "Lin at the helm",
+            aspect: Aspect::Wide,
+            like: "assets/lin.png",
+        })
+    );
+    assert_eq!(
+        picture_line("![Lin](textus-picture:like:textus-generated:ab12cd Lin asleep)")
+            .map(|p| (p.like, p.prompt)),
+        Some(("textus-generated:ab12cd", "Lin asleep"))
+    );
+    assert_eq!(
+        picture_line("![x](textus-picture:1:1 like:assets/lin.png)"),
+        None
     );
     assert_eq!(
         picture_line("  ![x](textus-picture: Boats)  ").map(|p| p.aspect),

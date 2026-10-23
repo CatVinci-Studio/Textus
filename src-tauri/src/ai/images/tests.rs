@@ -553,6 +553,54 @@ fn a_picture_is_drawn_again_from_the_writers_description() {
     assert_eq!(ai_generated_image_prompt("gone00".into()), None);
 }
 
+#[test]
+fn a_picture_is_drawn_like_an_earlier_one_that_is_here_now() {
+    const PNG_BYTES: &[u8] = b"\x89PNG\r\n\x1a\n";
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::create_dir(dir.path().join("assets")).unwrap();
+    std::fs::write(dir.path().join("assets/lin.png"), PNG_BYTES).unwrap();
+    let mut run = run();
+    run.folder = Some(dir.path().to_path_buf());
+    // A service that takes no picture: none sent.
+    assert!(run.like("assets/lin.png").is_none());
+    run.job.api = ImageApi::ChatGpt;
+    assert!(matches!(
+        run.like("assets/lin.png"),
+        Some(Reference::Like(_))
+    ));
+    assert!(run.like("assets/not-there.png").is_none());
+    assert!(run.like("").is_none());
+    // One proposed before: once made, not while it is being made.
+    let id = begin();
+    let src = placeholder_src(&id);
+    assert!(run.like(&src).is_none());
+    finish(
+        &id,
+        Slot::Ready(GeneratedImage {
+            bytes: PNG_BYTES.to_vec(),
+            mime: "image/png",
+            ext: "png",
+            width: 1,
+            height: 1,
+        }),
+    );
+    let Some(Reference::Like(picture)) = run.like(&src) else {
+        panic!("drawn like the made one");
+    };
+    assert_eq!(picture.mime, "image/png");
+    // The service is told it is a new picture, kept like that one.
+    let asked = Asked {
+        job: run.job.clone(),
+        prompt: "Lin asleep".into(),
+        aspect: Aspect::Square,
+        reference: Some(Reference::Like(picture)),
+    };
+    let (sent, attached) = asked.sent();
+    assert!(sent.starts_with("A new picture, not a copy"));
+    assert!(sent.ends_with("Lin asleep"));
+    assert!(attached.is_some());
+}
+
 /// An edit into undecided text as joined-edit.ts makes it: a title asked
 /// for above undecided writing is a paragraph of its own - joined with a
 /// space it was the writing's first line, the whole paragraph a heading.
