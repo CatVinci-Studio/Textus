@@ -4,9 +4,9 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { $prose } from "@milkdown/kit/utils";
 import { decorateAll, redecorateChanged } from "../changed-ranges";
 
-/** On a code block whose lines are numbered: its lines don't wrap, so each
- *  number stays beside its line (milkdown-theme.css). The export takes it
- *  off again (export/exporters.ts). */
+/** On a code block whose lines are numbered: a gutter beside its lines,
+ *  each number as tall as its line (gutter-fit.ts, milkdown-theme.css).
+ *  The export takes it off again (export/exporters.ts). */
 export const CODE_LINE_NUMBERS_CLASS = "code-block-numbered";
 
 /** What the code block's view looks for among its decorations. */
