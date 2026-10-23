@@ -11,6 +11,7 @@ import { localeOf, type Lang, type Strings } from "../../../i18n/strings";
 import { basename } from "../../../utils/path";
 import { listFromWorkspace, pickerSkills } from "../skill-picker";
 import { Tooltip } from "../../../ui/Tooltip";
+import { useMemoryFocus } from "./memory-focus";
 import "./MemoryView.css";
 
 /**
@@ -83,8 +84,11 @@ export function MemorySections({
   const searchable =
     info.memories.items.length + info.library.length >= SEARCH_FROM;
 
+  const [root, setRoot] = useState<HTMLDivElement | null>(null);
+  useMemoryFocus(root);
+
   return (
-    <div className="memory-sections">
+    <div className="memory-sections" ref={setRoot}>
       {searchable && (
         <input
           type="search"
@@ -162,6 +166,7 @@ export function MemorySections({
                 <div
                   key={entry.file}
                   className={`memory-entry${sent ? " memory-entry-used" : ""}`}
+                  data-memory-id={`project/library/${stemOf(entry.file)}`}
                 >
                   <button
                     type="button"
@@ -385,6 +390,7 @@ export function RememberedSection({
                   {group.items.map((memory) => (
                     <RememberedItem
                       key={memory.id}
+                      id={memory.id}
                       text={memory.text}
                       kind={t[KIND_LABEL[memory.kind]]}
                       remembered={memory.remembered}
@@ -463,6 +469,7 @@ const KIND_LABEL = {
 } as const satisfies Record<Memory["kind"], keyof Strings>;
 
 function RememberedItem({
+  id,
   text,
   kind,
   remembered,
@@ -474,6 +481,8 @@ function RememberedItem({
   onMove,
   onDelete,
 }: {
+  /** Its id, for a chip in the chat to point at (memory-focus.ts). */
+  id: string;
   text: string;
   kind: string;
   remembered: Remembered;
@@ -493,7 +502,7 @@ function RememberedItem({
     from ? t.memoryFrom.replace("{title}", from) : "",
   ].filter(Boolean);
   return (
-    <li className={notSent ? "memory-not-sent" : undefined}>
+    <li className={notSent ? "memory-not-sent" : undefined} data-memory-id={id}>
       <div className="memory-remembered-text">{text}</div>
       <div className="memory-remembered-meta">
         {meta.join(" · ")}
@@ -583,4 +592,10 @@ function firstLine(body: string): string {
       .map((l) => l.trim())
       .find((l) => l && !l.startsWith("#")) ?? ""
   );
+}
+
+/** A file's name without its folder or extension - its id's last part
+ *  (id_of in src-tauri/src/ai/memory/files.rs). */
+function stemOf(path: string): string {
+  return (path.split(/[\\/]/).pop() ?? "").replace(/\.[^.]*$/, "");
 }

@@ -15,7 +15,8 @@ export type DurationToken =
   | "--dur-base"
   | "--dur-medium"
   | "--dur-slow"
-  | "--dur-sheet";
+  | "--dur-sheet"
+  | "--dur-linger";
 
 export type EasingToken =
   | "--ease-standard"
@@ -35,6 +36,7 @@ const DURATIONS: Record<DurationToken, number> = {
   "--dur-medium": 250,
   "--dur-slow": 320,
   "--dur-sheet": 450,
+  "--dur-linger": 1600,
 };
 
 /** The cubic fallbacks: what an engine without linear() runs (motion.css
