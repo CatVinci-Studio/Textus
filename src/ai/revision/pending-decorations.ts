@@ -50,7 +50,7 @@ export const REVISION_DISPLAY_ATTR = "data-revision-display";
 
 /** The parts a view switch can show or hide. */
 export const REVISION_PARTS =
-  ".pending-delete, .pending-insert, .pending-pick, .pending-insert-mark";
+  ".pending-delete, .pending-insert, .pending-pick, .pending-insert-mark, .pending-delete-mark";
 
 export function shown(el: HTMLElement): boolean {
   // Hidden text stays in the document, out of the flow (font-size 0, see
@@ -235,9 +235,11 @@ export function buildDecorations(
  * The view that takes the originals out of the text ("final") takes
  * these out of the flow too (`pending-struck-block`): their text hidden,
  * they still stood there as empty lines with a paragraph's margins, and a
- * rewrite that joins paragraphs left blank gaps in the text. Read off the
- * decorations' own `part`: "struck" for an original that view hides,
- * "text" for new text.
+ * rewrite that joins paragraphs left blank gaps in the text. One that
+ * holds the mark of a deleted sentence (`pending-struck-marked`) keeps its
+ * line, where the mark shows. Read off the decorations' own `part`:
+ * "struck" for an original that view hides, "text" for new text, "mark"
+ * for a deleted sentence's mark.
  */
 export function struckBlocks(
   doc: ProseNode,
@@ -260,6 +262,7 @@ export function struckBlocks(
   const isCovered = (from: number, to: number) =>
     covered.some((r) => r.from <= from && to <= r.to);
   const texts = decos.filter((d) => part(d) === "text").map((d) => d.from);
+  const marks = decos.filter((d) => part(d) === "mark").map((d) => d.from);
   const out: Decoration[] = [];
   doc.nodesBetween(
     covered[0].from,
@@ -276,7 +279,13 @@ export function struckBlocks(
         return all;
       });
       if (!all) return true;
-      out.push(Decoration.node(pos, end, { class: "pending-struck-block" }));
+      out.push(
+        Decoration.node(pos, end, {
+          class: marks.some(inside)
+            ? "pending-struck-block pending-struck-marked"
+            : "pending-struck-block",
+        }),
+      );
       return false;
     },
   );

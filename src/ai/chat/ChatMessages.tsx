@@ -505,6 +505,7 @@ export function ChatMessages({
               text: withoutCitationMarkers(streaming.text, true),
             }}
             labels={labels}
+            live
           />
         </div>
       )}

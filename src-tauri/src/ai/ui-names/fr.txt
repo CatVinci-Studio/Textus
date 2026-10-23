@@ -31,7 +31,6 @@ Enable AI completion = Activer la complétion IA
 Completion tone = Ton de la complétion
 Write = Écrire
 Review = Relire
-Revise = Réviser
 Accept = Accepter
 Reject = Refuser
 Editor & Appearance (Settings page) = Éditeur et apparence

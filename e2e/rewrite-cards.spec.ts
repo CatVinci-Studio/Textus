@@ -64,10 +64,27 @@ test("a rewrite of the whole text has a card for each change, beside its passage
   expect(tops[5] - tops[0]).toBeGreaterThan(60);
 });
 
-test("a rewrite whose changes run across paragraphs has a card beside each paragraph", async ({
+test("long paragraphs rewritten across have a card beside each; short ones rewritten together, one card", async ({
   page,
 }) => {
   // Each sentence too unlike its new one to pair: one run of changes.
+  const long = (s: string) => `${s} ${s} ${s}`;
+  await proposeRewrite(
+    page,
+    BEFORE.map(long).join("\n\n"),
+    [
+      "Nothing stirred in the grey before morning.",
+      "Above the water a few birds circled.",
+      "Lamps came on along the quay at evening.",
+    ]
+      .map(long)
+      .join("\n\n"),
+  );
+  await expect(page.locator(".revision-note")).toHaveCount(3);
+  const tops = await cardTops(page);
+  expect(tops[2] - tops[0]).toBeGreaterThan(60);
+  await page.reload();
+  // The same, short: three cards a line each read as a column of chips.
   await proposeRewrite(
     page,
     BEFORE.join("\n\n"),
@@ -77,9 +94,10 @@ test("a rewrite whose changes run across paragraphs has a card beside each parag
       "Lamps came on along the quay at evening.",
     ].join("\n\n"),
   );
-  await expect(page.locator(".revision-note")).toHaveCount(3);
-  const tops = await cardTops(page);
-  expect(tops[2] - tops[0]).toBeGreaterThan(60);
+  await expect(page.locator(".revision-note")).toHaveCount(1);
+  await expect(page.locator(".revision-note")).toContainText(
+    "Lamps came on along the quay at evening.",
+  );
 });
 
 // A table or a code block the rewrite leaves alone: its Markdown is no

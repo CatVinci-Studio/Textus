@@ -211,6 +211,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::ai::images::ai_generated_image,
                     crate::ai::images::ai_retry_generated_image,
                     crate::ai::images::ai_discard_generated_image,
+                    crate::ai::kept_proposals::kept_proposals_read,
+                    crate::ai::kept_proposals::kept_proposals_write,
                 ])
                 // ai_agent_message takes more parameters than specta's
                 // function traits go to (ten), so it is not generated

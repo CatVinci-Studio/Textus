@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ai, type MemoryScope } from "../../platform/ipc";
 import { useSettings } from "../../settings/SettingsContext";
 import { errorText } from "../../utils/error-text";
+import { useAgentPanel } from "./panel/agent-panel";
+import { focusMemory } from "./panel/memory-focus";
 
 /** What was remembered - `Remembering` in src-tauri/src/ai/memory.rs.
  *  `previous`: the file before an update or a forget, for Undo to put
@@ -77,6 +79,7 @@ export function MemoryChip({
   labels: MemoryChipLabels;
 }) {
   const { settings } = useSettings();
+  const panel = useAgentPanel();
   const workspaceRoot = settings.agentWorkspaceRoot || null;
   const [current, setCurrent] = useState({
     id: result.remembered,
@@ -139,13 +142,24 @@ export function MemoryChip({
       className={`agent-memory-chip${result.forgot ? " is-forgot" : ""}`}
       role="status"
     >
-      <span className="agent-memory-chip-line" title={line}>
+      {/* The whole memory, in the Memory tab: cut short here. A memory
+          taken back is no longer there to show. */}
+      <button
+        type="button"
+        className="agent-memory-chip-line"
+        title={line}
+        disabled={result.forgot}
+        onClick={() => {
+          panel.setTab("memory");
+          focusMemory(current.id);
+        }}
+      >
         <span className="agent-memory-chip-text">
           {before}
           {what}
         </span>
         <span className="agent-memory-chip-scope">{scope}</span>
-      </span>
+      </button>
       <span className="agent-memory-chip-actions">
         <button type="button" disabled={state === "busy"} onClick={undo}>
           {labels.memoryUndo}

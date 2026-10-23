@@ -2,8 +2,12 @@ import { motionAllowed } from "../ui/motion";
 
 /** How far the page can be pulled past an end, at most. */
 const MAX_PULL = 80;
-/** How long after the last wheel event the page lets go. */
-const RELEASE_MS = 120;
+/** How long after the last wheel event the page lets go. A finger held
+ *  still on the trackpad sends nothing, the same as one lifted without
+ *  moving; at 120 ms a pull paused for a moment sprang back under the
+ *  finger. A finger lifted while moving is told by its momentum instead
+ *  (COASTING_STEPS), at once. */
+const RELEASE_MS = 450;
 /** A wheel step this large is a mouse's notch or a hard flick, not a
  *  trackpad's finger; a Mac doesn't stretch the page for those. */
 const MAX_TRACKPAD_DELTA = 60;

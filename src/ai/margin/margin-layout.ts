@@ -58,9 +58,9 @@ export type MarginItem =
       to: number;
       after: string;
       before: string;
-      /** Which side the card shows: the replacement (an AI rewrite, its
-       *  original still in the text) or the original (the writer's own
-       *  tracked change, the new words already in the text). */
+      /** Which side the card shows: the replacement ("original": the
+       *  original stays in the text) or what it replaces ("new": the result
+       *  is in the text - Result only, or the writer's own tracked change). */
       shows: "original" | "new";
       take: boolean | null;
       /** Its rewrite is still streaming in: shown, not decided yet. */

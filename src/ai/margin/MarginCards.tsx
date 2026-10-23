@@ -258,18 +258,26 @@ export const RevisionCard = memo(
             </Tooltip>
           </span>
         </div>
-        {closed ? null : item.shows === "new" ? (
+        {closed ? null : item.shows === "new" && item.before.trim() ? (
+          // Result only: the text reads as it will; the card keeps what
+          // the change takes out of it.
           <div className="revision-note-text revision-note-original">
             <span className="revision-note-was">
               {labels.proposalDeletedSentence}
             </span>
             <s>
-              {item.before.trim() ? (
-                <RevisionNoteText text={item.before.trim()} />
-              ) : (
-                "—"
-              )}
+              <RevisionNoteText text={item.before.trim()} />
             </s>
+            {/* What it becomes is in the text; read out here too, so the
+              card says what is replaced by what. */}
+            {item.after.trim() && (
+              <span className="visually-hidden">
+                {" "}
+                <ins>
+                  <RevisionNoteText text={revisionText(item.after, labels)} />
+                </ins>
+              </span>
+            )}
           </div>
         ) : (
           <div className="revision-note-text">
@@ -470,7 +478,7 @@ function NoteBody({
 /** A change on its chip. A small one (a comma, a word): the words that
  *  go, struck, and those that come, with a little of the sentence either
  *  side - the whole sentence read as the same sentence twice. A rewrite:
- *  the side of it the margin shows. */
+ *  the side of it the card shows. */
 function ChangeGlimpse({
   before,
   after,
@@ -484,7 +492,11 @@ function ChangeGlimpse({
   if (!g.partial)
     return (
       <span className="review-note-chip-text">
-        {shows === "new" ? <s>{before.trim()}</s> : after.trim()}
+        {shows === "new" && before.trim() ? (
+          <s>{before.trim()}</s>
+        ) : (
+          after.trim()
+        )}
       </span>
     );
   return (

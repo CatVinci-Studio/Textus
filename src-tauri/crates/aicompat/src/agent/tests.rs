@@ -425,6 +425,47 @@ fn a_settled_proposal_with_its_reply_ends_the_exchange() {
     assert!(matches!(turns[2], AgentTurn::ToolResult { .. }));
 }
 
+/// Runs a step of `calls` settled comments, with text beside it, then a
+/// closing reply: how many steps it took.
+fn comments_then(calls: usize) -> usize {
+    let steps = RefCell::new(0);
+    let step: Vec<AgentTurn> = (0..calls)
+        .map(|i| call(&format!("c{i}"), "add_comment", "{}"))
+        .collect();
+    let script = RefCell::new(VecDeque::from(vec![
+        StepResult::calls_with_text(step, "Glossed the hard words.".to_string()),
+        StepResult::Done("and the rest".into()),
+    ]));
+    tauri::async_runtime::block_on(run_agent_loop(
+        vec![],
+        user("go"),
+        12,
+        |_| {
+            *steps.borrow_mut() += 1;
+            let next = script.borrow_mut().pop_front();
+            async move { next.ok_or_else(|| "script ran out".to_string()) }
+        },
+        |_| {
+            std::future::ready(ToolOutput {
+                text: "Comment added".into(),
+                settled: true,
+                settles_with_others: true,
+                ..ToolOutput::default()
+            })
+        },
+        |_| ToolRun::InOrder,
+        |_| {},
+    ))
+    .unwrap();
+    steps.into_inner()
+}
+
+#[test]
+fn a_comment_pinned_alone_goes_on_one_more_step_and_several_end_there() {
+    assert_eq!(comments_then(1), 2);
+    assert_eq!(comments_then(3), 1);
+}
+
 #[test]
 fn without_a_reply_or_a_settled_call_the_model_is_asked_again() {
     let (turns, steps) = propose_then("", true);

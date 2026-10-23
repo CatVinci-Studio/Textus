@@ -52,6 +52,6 @@ metadata:
 
 ## Deliver
 - New document: append it. Fix: one replace per part (title, addressee line, body, closing, dates). "Check it": comments, each naming the rule.
-- Write mode: only the new document; a fix needs Revise mode.
+- Write mode: the new document, or the fixes to the one there.
 - Review mode: the text or the comments.
 - Reply in one or two sentences, plus any question about missing facts.

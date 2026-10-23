@@ -89,12 +89,12 @@ describe("settings from a build with features since taken out", () => {
     expect(settings.runInBackground).toBe(true);
   });
 
-  it("read 1.2.0's revision view taken out in 1.2.1 as the default one", () => {
+  it("read 1.2.0's changes-in-the-text view as Result only, its originals in the margin", () => {
     localStorage.setItem(
       SETTINGS_KEY,
       JSON.stringify({ language: "zh", revisionDisplay: "new" }),
     );
-    expect(loadSettings().revisionDisplay).toBe("original");
+    expect(loadSettings().revisionDisplay).toBe("final");
   });
 });
 
@@ -128,13 +128,21 @@ describe("the default Agent mode", () => {
   });
 
   it("keeps a saved mode", () => {
-    for (const mode of ["write", "review", "revise"]) {
+    for (const mode of ["write", "review"]) {
       localStorage.setItem(
         SETTINGS_KEY,
         JSON.stringify({ agentDefaultMode: mode }),
       );
       expect(loadSettings().agentDefaultMode).toBe(mode);
     }
+  });
+
+  it("reads 1.2.0's Revise mode as Write", () => {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ agentDefaultMode: "revise" }),
+    );
+    expect(loadSettings().agentDefaultMode).toBe("write");
   });
 
   it("rejects a mode it doesn't know", () => {

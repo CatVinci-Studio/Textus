@@ -2,8 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * The AI panel's three modes - Write adds, Review reads, Revise changes -
- * and the selection the composer's chip refers to staying highlighted in
+ * The AI panel's two modes - Write adds and changes, Review reads - and
+ * the selection the composer's chip refers to staying highlighted in
  * the document while the composer has the focus. What each mode may
  * propose is enforced in Rust (tools.rs); here the AI is mocked, so these
  * check what the app sends and how it shows what comes back.
@@ -71,26 +71,26 @@ function proposal(args: object) {
 const accept = (page: Page) =>
   page.locator(".agent-proposal-actions .inline-chat-action-primary").click();
 
-test("Quick Ask offers Revise and Review only, on Revise, even after Write was picked in the panel", async ({
+test("Quick Ask starts on Write, even after Review was picked in the panel", async ({
   page,
 }) => {
   await openPanel(page, "zh");
   // The panel's last pick carries over to its next conversation - not into
-  // Quick Ask, which has no Write.
+  // Quick Ask, which is opened on a passage to change it.
   const panelPicker = page
     .locator(".agent-panel-view")
     .getByRole("combobox", { name: "模式" });
   await panelPicker.click();
-  await page.getByRole("option", { name: "写作" }).click();
+  await page.getByRole("option", { name: "审阅" }).click();
   await pasteMarkdown(page, "A short note to ask about.");
   await page.locator(".milkdown p").first().click({ clickCount: 3 });
   await page.keyboard.press("Control+Shift+K");
   const picker = page
     .locator(".inline-chat")
     .getByRole("combobox", { name: "模式" });
-  await expect(picker).toHaveText("修订");
+  await expect(picker).toHaveText("写作");
   await picker.click();
-  await expect(page.getByRole("option")).toHaveText(["修订", "审阅"]);
+  await expect(page.getByRole("option")).toHaveText(["写作", "审阅"]);
 });
 
 /** Each mode: its name in the picker, and what the empty panel says. */
@@ -102,40 +102,30 @@ const MODE_LINES: Record<
     {
       mode: "write",
       name: "Write",
-      line: "The AI drafts new text into your document and doesn't change what's already there.",
+      line: "The AI writes in your document - new text, or changes to what's there; each change waits for you to accept or reject it.",
     },
     {
       mode: "review",
       name: "Review",
       line: "The AI answers and leaves notes in the margin, and doesn't change your text.",
     },
-    {
-      mode: "revise",
-      name: "Revise",
-      line: "The AI suggests changes to your text; each one waits for you to accept or reject it.",
-    },
   ],
   zh: [
     {
       mode: "write",
       name: "写作",
-      line: "AI 帮你起草新的文字加进文档，不改动已有的内容。",
+      line: "AI 在文档里写作：起草新文字，或修改已有的内容，每一处都由你决定接受还是拒绝。",
     },
     {
       mode: "review",
       name: "审阅",
       line: "AI 只回答问题、在页边留批注，不会改动你的文字。",
     },
-    {
-      mode: "revise",
-      name: "修订",
-      line: "AI 会提出修改建议，每一处都由你决定接受还是拒绝。",
-    },
   ],
 };
 
 for (const language of ["en", "zh"] as const)
-  test(`${language}: the composer offers Write, Review and Revise; the empty panel shows the mode's icon and says what it does, and follows a switch`, async ({
+  test(`${language}: the composer offers Write and Review; the empty panel shows the mode's icon and says what it does, and follows a switch`, async ({
     page,
   }) => {
     await openPanel(page, language);
@@ -152,7 +142,7 @@ for (const language of ["en", "zh"] as const)
     await expect(hint).toHaveText(modes[1].line);
     for (const { mode, name, line } of modes) {
       await picker.click();
-      // Write, Review and Revise, in that order.
+      // Write, then Review.
       await expect(page.getByRole("option")).toHaveText(
         modes.map((m) => m.name),
       );
@@ -237,7 +227,7 @@ test("Review answers without proposing anything", async ({ page }) => {
   await expect(page.locator(".review-bar")).toHaveCount(0);
 });
 
-test("Revise still replaces text, after Accept", async ({ page }) => {
+test("Write also replaces text, after Accept", async ({ page }) => {
   await openPanel(page);
   await pasteMarkdown(page, "The meeting was very long and quite boring.");
   await mockInvoke(page, {
@@ -247,10 +237,10 @@ test("Revise still replaces text, after Accept", async ({ page }) => {
       text: "The meeting dragged.",
     }),
   });
-  await pickMode(page, "Revise");
+  await pickMode(page, "Write");
   await send(page, "Tighten it");
-  expect((await agentCalls(page)).at(-1)?.mode).toBe("revise");
-  await expect(page.locator(".milkdown .pending-delete")).toBeVisible();
+  expect((await agentCalls(page)).at(-1)?.mode).toBe("write");
+  await expect(page.locator(".milkdown .pending-delete")).toBeAttached();
   await accept(page);
   await expect(page.locator(".milkdown p")).toHaveText("The meeting dragged.");
 });

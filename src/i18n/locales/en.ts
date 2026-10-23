@@ -30,11 +30,9 @@ const en = {
   shortcutToggleAgentPanel: "Toggle AI panel",
   menuToggleAgentPanel: "AI Panel",
   agentPanelEmptyWrite:
-    "The AI drafts new text into your document and doesn't change what's already there.",
+    "The AI writes in your document - new text, or changes to what's there; each change waits for you to accept or reject it.",
   agentPanelEmptyReview:
     "The AI answers and leaves notes in the margin, and doesn't change your text.",
-  agentPanelEmptyRevise:
-    "The AI suggests changes to your text; each one waits for you to accept or reject it.",
   aiWorkingCompletion: "Writing a continuation…",
   aiWorkingGrammar: "Checking this paragraph…",
   noticeCompletionNeedsCaret:
@@ -150,7 +148,7 @@ type /name in a conversation to use one.
   revisionDisplayLabel: "Show revisions",
   revisionDisplayInline: "All in the text",
   revisionDisplayOriginal: "Original in the text, changes in the margin",
-  revisionDisplayFinal: "Result only, no markup",
+  revisionDisplayFinal: "Result only, originals in the margin",
   revisionDisplayNoRoom: "Not enough room - close the sidebar or the AI panel",
   revisionDisplayNewText:
     "New text has no original: it stays in the text, in green, in these views",
@@ -614,7 +612,6 @@ type /name in a conversation to use one.
   agentDefaultModeLabel: "Default mode",
   agentModeWrite: "Write",
   agentModeReview: "Review",
-  agentModeRevise: "Revise",
   chatModeLabel: "Mode",
   chatModelLabel: "Model",
   agentPersonalizationGroupLabel: "Writing Instructions & Skills",
@@ -996,7 +993,7 @@ type /name in a conversation to use one.
   tutorialConnectSkip: "Skip for now",
   tutorialConnected: "Connected.",
   tutorialWriteTitle: "AI writing",
-  tutorialWriteBody: `In Write mode, ${AI_NAME} only adds text, shown in green until you accept it.`,
+  tutorialWriteBody: `In Write mode, ${AI_NAME} adds and changes text, shown in green until you accept it.`,
   tutorialWriteOpen:
     "Open the AI panel: the quill icon at the top right ({shortcut})",
   tutorialWriteOpenPhone: "Open the AI panel: tap the quill icon at the top",
@@ -1009,7 +1006,7 @@ type /name in a conversation to use one.
     "Send `Comment on my notes`, then read the notes in the margin",
   tutorialRevisionTitle: "Revision",
   tutorialRevisionBody:
-    "In Revise mode, it rewrites and you decide sentence by sentence.",
+    "Write mode rewrites too, and you decide sentence by sentence.",
   tutorialRevisionSelect: "Select the first sentence of your notes",
   tutorialRevisionSend:
     "Send `Make it more concise`, then choose Accept or Reject",

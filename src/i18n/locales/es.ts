@@ -29,11 +29,9 @@ export default {
   shortcutToggleAgentPanel: "Panel de IA",
   menuToggleAgentPanel: "Panel de IA",
   agentPanelEmptyWrite:
-    "La IA redacta texto nuevo en tu documento sin cambiar lo que ya está escrito.",
+    "La IA escribe en tu documento: texto nuevo o cambios a lo que ya está; cada cambio espera a que lo aceptes o lo rechaces.",
   agentPanelEmptyReview:
     "La IA responde y deja notas en el margen, sin cambiar tu texto.",
-  agentPanelEmptyRevise:
-    "La IA propone cambios en tu texto; cada uno espera a que lo aceptes o lo rechaces.",
   aiWorkingCompletion: "Escribiendo una continuación…",
   aiWorkingGrammar: "Revisando este párrafo…",
   noticeCompletionNeedsCaret: "Coloca el cursor donde debe ir la continuación.",
@@ -158,7 +156,7 @@ para usar una.
   revisionDisplayLabel: "Mostrar revisiones",
   revisionDisplayInline: "Todo en el texto",
   revisionDisplayOriginal: "Original en el texto, cambios en el margen",
-  revisionDisplayFinal: "Solo el resultado, sin marcas",
+  revisionDisplayFinal: "Solo el resultado, original en el margen",
   revisionDisplayNoRoom:
     "No hay espacio: cierra la barra lateral o el panel de IA",
   revisionDisplayNewText:
@@ -631,7 +629,6 @@ para usar una.
   agentDefaultModeLabel: "Modo predeterminado",
   agentModeWrite: "Escribir",
   agentModeReview: "Revisar",
-  agentModeRevise: "Editar",
   chatModeLabel: "Modo",
   chatModelLabel: "Modelo",
   agentPersonalizationGroupLabel: "Instrucciones de escritura y habilidades",
@@ -1023,7 +1020,7 @@ para usar una.
   tutorialConnectSkip: "Omitir por ahora",
   tutorialConnected: "Conectado.",
   tutorialWriteTitle: "Escribir con IA",
-  tutorialWriteBody: `En el modo Escribir, ${AI_NAME} solo añade texto, en verde hasta que lo aceptes.`,
+  tutorialWriteBody: `En el modo Escribir, ${AI_NAME} añade y cambia texto, en verde hasta que lo aceptes.`,
   tutorialWriteOpen:
     "Abre el panel de IA: el icono de la pluma, arriba a la derecha ({shortcut})",
   tutorialWriteOpenPhone:
@@ -1037,7 +1034,7 @@ para usar una.
     "Envía `Comenta mis notas` y lee los comentarios del margen",
   tutorialRevisionTitle: "Revisión",
   tutorialRevisionBody:
-    "En el modo Editar, reescribe y tú decides frase a frase.",
+    "El modo Escribir también reescribe, y tú decides frase a frase.",
   tutorialRevisionSelect: "Selecciona la primera frase de tus notas",
   tutorialRevisionSend: "Envía `Hazla más concisa` y elige Aceptar o Rechazar",
   tutorialGrammarTitle: "Revisión gramatical",

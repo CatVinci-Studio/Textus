@@ -41,6 +41,7 @@ import { useLatest } from "../utils/hooks/useLatest";
 import { announce } from "../ui/announce";
 import { plural } from "../i18n/plural";
 import { usePluginDocumentAccess } from "./usePluginDocumentAccess";
+import { useKeptProposals } from "../ai/revision/useKeptProposals";
 
 /** The editor's side of AI edits: the pending previews (usePendingEdits),
  *  the two conversations that propose them (the panel's and Quick Ask's),
@@ -124,6 +125,15 @@ export function useEditorProposals({
         ),
       );
     },
+  });
+  // The document's undecided proposals outlive closing it.
+  useKeptProposals({
+    run,
+    filePath,
+    workspaceRoot: settings.agentWorkspaceRoot || null,
+    previews: pendingEdits.previews,
+    showPreviews: pendingEdits.showPreviews,
+    decide: pendingEdits.decide,
   });
   useEffect(() => {
     pendingEditActionsRef.current = {

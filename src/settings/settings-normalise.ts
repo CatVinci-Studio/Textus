@@ -85,11 +85,14 @@ export function normaliseSettings(parsed: Raw | null): Settings {
       agentDefaultMode:
         storedAgentMode(parsed.agentDefaultMode) ??
         DEFAULT_SETTINGS.agentDefaultMode,
-      revisionDisplay: REVISION_DISPLAYS.includes(
-        parsed.revisionDisplay as RevisionDisplay,
-      )
-        ? (parsed.revisionDisplay as RevisionDisplay)
-        : DEFAULT_SETTINGS.revisionDisplay,
+      revisionDisplay:
+        parsed.revisionDisplay === "new"
+          ? "final"
+          : REVISION_DISPLAYS.includes(
+                parsed.revisionDisplay as RevisionDisplay,
+              )
+            ? (parsed.revisionDisplay as RevisionDisplay)
+            : DEFAULT_SETTINGS.revisionDisplay,
       shortcuts: storedShortcuts(parsed.shortcuts),
       mcpServers: normaliseMcpServers(parsed.mcpServers),
       diagramEngine: DIAGRAM_ENGINES.includes(
