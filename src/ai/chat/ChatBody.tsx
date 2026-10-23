@@ -13,6 +13,7 @@ import type {
 import { ChatMessages, ErrorRow } from "./ChatMessages";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
+import { ModelSwitcher } from "./ModelSwitcher";
 import { MarkdownText } from "../MarkdownText";
 import { QuickAskPendingBar } from "./quick-ask/QuickAskPendingBar";
 import { toolActivityText } from "./AgentTurnView";
@@ -525,6 +526,7 @@ export function ChatBody({
         compact={variant === "quick"}
         focusOnOpen={variant === "quick" || !phone}
         dockActions={dockActions}
+        modelSwitcher={variant === "quick" ? undefined : <ModelSwitcher />}
         defaultWebSearch={defaultWebSearch}
         onSend={handleSend}
         onSkillUsed={onSkillUsed}
