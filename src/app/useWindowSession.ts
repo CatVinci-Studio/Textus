@@ -28,8 +28,8 @@ export function useSessionPaths(tabs: DocTab[]): void {
   const sessionPathsKey = tabs.map((tab) => pathOf(tab) ?? "").join("\n");
   useEffect(() => {
     if (!canUseWindows) return;
-    const paths = tabs.map(pathOf).filter((path): path is string => !!path);
-    void session.updateSessionPaths(paths);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void session.updateSessionPaths(
+      sessionPathsKey.split("\n").filter((path) => !!path),
+    );
   }, [sessionPathsKey]);
 }

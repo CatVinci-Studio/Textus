@@ -553,6 +553,7 @@ export async function uninstallPlugin(id: string): Promise<void> {
 export function pluginMenuEntries(
   from: PluginsSnapshot = pluginsSnapshot(),
   menu: "app/plugins" | "app/tray" = "app/plugins",
+  language: string = windowInfo().language(),
 ): { command: string; label: string }[] {
   if (!from.allOn) return [];
   return from.records.flatMap((record) => {
@@ -564,11 +565,7 @@ export function pluginMenuEntries(
       );
       return {
         command: item.command,
-        label: localize(
-          manifest,
-          command?.title ?? item.command,
-          windowInfo().language(),
-        ),
+        label: localize(manifest, command?.title ?? item.command, language),
       };
     });
   });

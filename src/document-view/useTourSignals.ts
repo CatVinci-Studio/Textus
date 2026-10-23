@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useLatest } from "../utils/hooks/useLatest";
 import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import { sendTourSignal, type TourAi } from "../utils/events";
 
@@ -48,16 +49,17 @@ export function useTourSignals({
   const busy = conversations.map((c) => c.busy).join();
   const failed = conversations.map((c) => !!c.error).join();
   const wasBusy = useRef<boolean[]>([]);
+  // `busy`/`failed` stand for the conversations' states.
+  const latest = useLatest(conversations);
   useEffect(() => {
+    const conversations = latest.current;
     const now = conversations.map((c) => c.busy);
     const answered = conversations.some(
       (c, i) => wasBusy.current[i] && !c.busy && !c.error,
     );
     wasBusy.current = now;
     if (tour && answered) sendTourSignal("reply");
-    // `busy`/`failed` stand for the conversations' states.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tour, busy, failed]);
+  }, [tour, busy, failed, latest]);
 
   // For the chat composers (ChatComposer's onSkillUsed).
   const onSkillUsed = tour ? () => sendTourSignal("skill-sent") : undefined;

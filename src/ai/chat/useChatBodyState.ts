@@ -1,5 +1,6 @@
 import type { QueuedMessage } from "./MessageQueue";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLatest } from "../../utils/hooks/useLatest";
 import type { AgentTurn } from "../types";
 import { useRevealedText } from "./useRevealedText";
 import {
@@ -75,17 +76,18 @@ export function useStreamedProposals(
   onProposals: ChatBodyProps["onProposals"],
 ) {
   const streamedTurnCount = useRef(0);
+  const turns = streaming?.turns;
+  const handler = useLatest(onProposals);
   useEffect(() => {
-    if (!streaming) {
+    if (!turns) {
       streamedTurnCount.current = 0;
       return;
     }
-    const fresh = streaming.turns.slice(streamedTurnCount.current);
-    streamedTurnCount.current = streaming.turns.length;
+    const fresh = turns.slice(streamedTurnCount.current);
+    streamedTurnCount.current = turns.length;
     const proposals = proposalsFromTurns(fresh);
-    if (proposals.length > 0) onProposals(proposals);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [streaming?.turns]);
+    if (proposals.length > 0) handler.current(proposals);
+  }, [turns, handler]);
 }
 
 /** Messages sent while a reply is coming (MessageQueue), sent in turn by
@@ -99,6 +101,8 @@ export function useMessageQueue(
   const [queuePaused, setQueuePaused] = useState(false);
   const nextQueued = useRef(0);
   const sendingQueued = useRef(false);
+  // This render's; the queue and busy say when to look again.
+  const send = useLatest(sendNext);
 
   useEffect(() => {
     if (busy || queuePaused || sendingQueued.current || queue.length === 0)
@@ -108,15 +112,13 @@ export function useMessageQueue(
     void (async () => {
       setQueue((now) => now.filter((q) => q.id !== next.id));
       try {
-        const turns = await sendNext(next);
+        const turns = await send.current(next);
         if (!turns) setQueuePaused(true);
       } finally {
         sendingQueued.current = false;
       }
     })();
-    // sendNext is this render's; the queue and busy say when to look again.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busy, queue, queuePaused]);
+  }, [busy, queue, queuePaused, send]);
 
   return {
     queue,

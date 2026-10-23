@@ -5,6 +5,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { useLatest } from "../utils/hooks/useLatest";
 
 const MENU_MAX_HEIGHT = 280;
 
@@ -77,8 +78,12 @@ export function useFloatingList(
 
   // While open: focus the list, close on any outside press, and close when
   // the page moves under it (the list is placed once, from the trigger).
+  // Bound once per opening, as when this lived in Select.tsx: the latest
+  // dismiss is read when it fires.
+  const close = useLatest(dismiss);
   useEffect(() => {
     if (!open) return;
+    const dismiss = () => close.current();
     // Without preventScroll the browser may scroll the page's own scroll
     // areas to bring the list into view before it is placed (a Settings
     // page still settling in moved, and the scroll closed the list).
@@ -116,9 +121,7 @@ export function useFloatingList(
       window.removeEventListener("resize", onMove);
       window.removeEventListener("blur", onMove);
     };
-    // Bound once per opening, as when this lived in Select.tsx.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, close]);
 
   // The highlighted option stays in view by scrolling the list alone:
   // scrollIntoView would scroll every area around it too.

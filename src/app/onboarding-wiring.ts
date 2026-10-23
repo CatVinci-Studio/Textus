@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import { useLatest } from "../utils/hooks/useLatest";
 import { makeBlankTab, tabIsUntouchedDraft } from "../document/doc-tabs";
 import {
   LESSON_DONE,
@@ -75,13 +76,15 @@ export function useTutorialTabRecovery(
   claimPracticeTab: () => string,
 ): void {
   const { tabsRef } = tabState;
+  // Once, at the window's mount, with the tour as it stood then.
+  const latest = useLatest({ tutorial, claimPracticeTab });
   useEffect(() => {
+    const { tutorial, claimPracticeTab } = latest.current;
     if (tutorialTabRecoveryDone || !tutorial.active) return;
     tutorialTabRecoveryDone = true;
     if (tabsRef.current.some((tab) => tab.id === tutorial.tabId)) return;
     tutorial.rebindTab(claimPracticeTab());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [latest, tabsRef]);
 }
 
 const FIRST_NOTES_STEP = stepIndexOf("marks");
@@ -102,21 +105,21 @@ export function usePracticeNotes(opts: {
   const { tutorial, tabState, language, evaluate } = opts;
   const { liveTabs, updateTab } = tabState;
   const { active, tabId, stepIndex } = tutorial;
+  // The language is read, not followed: changing it mid-tour must not
+  // add a second set of notes (withPracticeNotes knows them all anyway).
+  const languageRef = useLatest(language);
   useEffect(() => {
     if (!active || !tabId) return;
     const tab = liveTabs().find((tb) => tb.id === tabId);
     if (!tab || tab.path || tab.helpDoc) return;
     let content = tab.content;
     if (stepIndex >= FIRST_NOTES_STEP) {
-      content = withPracticeNotes(content, practiceNotes(language));
+      content = withPracticeNotes(content, practiceNotes(languageRef.current));
       if (content !== tab.content)
         updateTab(tab.id, { content, reloadKey: tab.reloadKey + 1 });
     }
     evaluate(tab.id, content);
-    // The language is read, not followed: changing it mid-tour must not
-    // add a second set of notes (withPracticeNotes knows them all anyway).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, tabId, stepIndex, liveTabs, updateTab, evaluate]);
+  }, [active, tabId, stepIndex, liveTabs, updateTab, evaluate, languageRef]);
 }
 
 /**
