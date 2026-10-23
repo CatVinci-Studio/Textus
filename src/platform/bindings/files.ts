@@ -101,6 +101,18 @@ export const commands = {
 	tree_create_folder: (dir: string, name: string) => __TAURI_INVOKE<string>("tree_create_folder", { dir, name }),
 	/**  Moves a file or folder into the folder `into`. Returns its new path. */
 	tree_move_entry: (path: string, into: string) => __TAURI_INVOKE<string>("tree_move_entry", { path, into }),
+	/**  Renames a file or folder in place (same folder). Returns the new path. */
+	tree_rename_entry: (path: string, name: string) => __TAURI_INVOKE<string>("tree_rename_entry", { path, name }),
+	/**
+	 *  Copies a file or folder beside itself, under a free "name copy" name.
+	 *  Returns the copy's path.
+	 */
+	tree_duplicate_entry: (path: string) => __TAURI_INVOKE<string>("tree_duplicate_entry", { path }),
+	/**
+	 *  Deletes a file or folder for good. There is no Trash to catch this on
+	 *  every platform the tree manages, so the frontend confirms first.
+	 */
+	tree_delete_entry: (path: string) => __TAURI_INVOKE<null>("tree_delete_entry", { path }),
 	/**
 	 *  Where an Obsidian image embed's file is, as an absolute path for the
 	 *  asset protocol; None when it isn't an image or isn't in the vault.

@@ -379,6 +379,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeNewFolderPrompt: "新しいフォルダの名前",
   treeNewDocumentDefault: "名称未設定",
   treeNewFolderDefault: "新規フォルダ",
+  treeDuplicate: "複製",
   treeSort: "並べ替え",
   treeSortName: "名前順",
   treeSortModified: "変更日順",

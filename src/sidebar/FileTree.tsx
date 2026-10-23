@@ -16,7 +16,7 @@ import {
   RefreshIcon,
   SortIcon,
 } from "../ui/icons";
-import { fs } from "../platform/ipc";
+import { exportDoc, fs } from "../platform/ipc";
 import { useSettings } from "../settings/SettingsContext";
 import { basename, parentDir } from "../utils/path";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
@@ -27,7 +27,7 @@ import { FileSearch } from "./FileSearch";
 import { type SearchScope } from "./file-search";
 import { Tooltip } from "../ui/Tooltip";
 import { getUiState, setUiState } from "../storage/ui-state";
-import { showMessage, showPrompt } from "../ui/app-dialog";
+import { showConfirm, showMessage, showPrompt } from "../ui/app-dialog";
 import type { Strings } from "../i18n/strings";
 import {
   canMoveInto,
@@ -116,7 +116,14 @@ export function FileTree({
   const treeKeys = useTreeKeys(treeRef);
   const desktop = !isIOSApp && canOpenFolder;
 
-  const onRowMenu = useRowMenu(root, t, reload, onFileSelect, setMenu);
+  const onRowMenu = useRowMenu(
+    root,
+    t,
+    reload,
+    onFileSelect,
+    onEntryMoved,
+    setMenu,
+  );
   const { drag, onRowPointerDown, takeDragClick } = useRowDrag(
     treeRef,
     reload,
@@ -358,6 +365,7 @@ function useRowMenu(
   t: Strings,
   reload: (...dirs: string[]) => void,
   onFileSelect: (path: string) => void,
+  onEntryMoved: (from: string, to: string) => void,
   setMenu: (menu: TreeMenu) => void,
 ) {
   const create = useCallback(
@@ -382,6 +390,59 @@ function useRowMenu(
     [t, reload, onFileSelect],
   );
 
+  const rename = useCallback(
+    async (path: string) => {
+      const current = basename(path);
+      const name = await showPrompt(t.docRenamePrompt, current, {
+        okLabel: t.docRenameOk,
+        cancelLabel: t.cancel,
+      });
+      if (!name?.trim() || name.trim() === current) return;
+      try {
+        const to = await fs.renameEntry(path, name);
+        reload(parentDir(path) ?? root);
+        onEntryMoved(path, to);
+      } catch (err) {
+        await showMessage(failureText(t, err, name.trim()));
+      }
+    },
+    [root, t, reload, onEntryMoved],
+  );
+
+  const duplicate = useCallback(
+    async (path: string) => {
+      try {
+        await fs.duplicateEntry(path);
+        reload(parentDir(path) ?? root);
+      } catch (err) {
+        await showMessage(failureText(t, err, basename(path)));
+      }
+    },
+    [root, t, reload],
+  );
+
+  const remove = useCallback(
+    async (path: string) => {
+      const ok = await showConfirm(
+        t.docDeleteConfirm.replace("{name}", basename(path)),
+        {
+          title: t.docDelete,
+          okLabel: t.docDeleteOk,
+          cancelLabel: t.cancel,
+          danger: true,
+        },
+      );
+      if (!ok) return;
+      try {
+        await fs.deleteEntry(path);
+        reload(parentDir(path) ?? root);
+      } catch (err) {
+        await showMessage(failureText(t, err, basename(path)));
+      }
+    },
+    [root, t, reload],
+  );
+
   return useCallback(
     (e: ReactMouseEvent, path: string, isDir: boolean) => {
       e.preventDefault();
@@ -401,9 +462,21 @@ function useRowMenu(
         },
         { label: t.treeNewFolder, onSelect: () => void create(dir, "folder") },
       );
+      if (path !== root)
+        items.push(
+          "separator",
+          { label: t.docRename, onSelect: () => void rename(path) },
+          { label: t.treeDuplicate, onSelect: () => void duplicate(path) },
+          {
+            label: t.projectReveal,
+            onSelect: () => void exportDoc.revealInDir(path),
+          },
+          "separator",
+          { label: t.docDelete, onSelect: () => void remove(path) },
+        );
       setMenu({ x: e.clientX, y: e.clientY, items });
     },
-    [root, t, create, onFileSelect, setMenu],
+    [root, t, create, rename, duplicate, remove, onFileSelect, setMenu],
   );
 }
 

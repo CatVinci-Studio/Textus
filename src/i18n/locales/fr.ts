@@ -410,6 +410,7 @@ utiliser une.
   treeNewFolderPrompt: "Nom du nouveau dossier",
   treeNewDocumentDefault: "Sans titre",
   treeNewFolderDefault: "Nouveau dossier",
+  treeDuplicate: "Dupliquer",
   treeSort: "Trier",
   treeSortName: "Par nom",
   treeSortModified: "Par date de modification",

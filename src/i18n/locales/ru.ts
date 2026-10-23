@@ -397,6 +397,7 @@ export default {
   treeNewFolderPrompt: "Название новой папки",
   treeNewDocumentDefault: "Без названия",
   treeNewFolderDefault: "Новая папка",
+  treeDuplicate: "Дублировать",
   treeSort: "Сортировка",
   treeSortName: "По имени",
   treeSortModified: "По дате изменения",

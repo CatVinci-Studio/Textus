@@ -397,6 +397,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeNewFolderPrompt: "Name des neuen Ordners",
   treeNewDocumentDefault: "Unbenannt",
   treeNewFolderDefault: "Neuer Ordner",
+  treeDuplicate: "Duplizieren",
   treeSort: "Sortieren",
   treeSortName: "Nach Name",
   treeSortModified: "Nach Änderungsdatum",
