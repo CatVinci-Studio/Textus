@@ -32,6 +32,7 @@ const playgroundPort = port + 10;
 /** The specs the opt-in WebKit project runs (projects below). */
 const WEBKIT_SPECS = [
   "agent-image.spec.ts",
+  "drag-autoscroll.spec.ts",
   "api-key-field.spec.ts",
   "sidebar-toggle.spec.ts",
   "tab-scroll.spec.ts",
