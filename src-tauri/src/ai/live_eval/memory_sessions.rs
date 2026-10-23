@@ -587,3 +587,75 @@ fn live_memory_over_sessions() {
     std::fs::write(&path, serde_json::to_string_pretty(&reports).unwrap()).unwrap();
     eprintln!("memory_sessions: report at {path}");
 }
+
+/// The memory tidied (memory::tidy) on the eval's provider: three ways of
+/// saying "reply in English", a rule a later one overturned, and others
+/// that must stay as they are.
+#[test]
+#[ignore = "live API - see module docs"]
+fn live_memory_tidy() {
+    use crate::ai::memory::{tidy_if_due, Source};
+    use aicompat::agent::{AgentTurn, StepResult};
+    use aicompat::providers::AgentProvider;
+    let Some(auth) = auth() else { return };
+    let dir = tempfile::tempdir().unwrap();
+    let dirs = MemoryDirs::new(Some(dir.path()), None);
+    let source = Source::default();
+    let said = [
+        "Reply in English.",
+        "Use short sentences in replies.",
+        "Always answer me in English.",
+        "Write 你, never 您.",
+        "Never use exclamation marks.",
+        "Answer in English, please, even when I write Chinese.",
+        "Use 您 in letters to clients.",
+        "Keep headings in title case.",
+        "Prefer the Oxford comma.",
+    ];
+    for text in said {
+        dirs.keep("preference", "personal", text, &source).unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+    let agent = AgentProvider {
+        id: harness::agent_provider_id().to_string(),
+        model: harness::agent_model(),
+        endpoint: harness::agent_endpoint(&auth),
+        thinking: Default::default(),
+        native_search: None,
+        enforce_binding: true,
+    };
+    let started = std::time::Instant::now();
+    let made = harness::block_on(tidy_if_due(&dirs, &source, |instructions, input| {
+        let agent = &agent;
+        async move {
+            let turn = [AgentTurn::User {
+                text: input,
+                images: Vec::new(),
+            }];
+            let (step, _) = agent.step(&instructions, &turn, &[], &|_| {}).await?;
+            Ok(match step {
+                StepResult::Done(text) => text,
+                _ => String::new(),
+            })
+        }
+    }))
+    .unwrap();
+    let left: Vec<String> = dirs.load().items.into_iter().map(|m| m.text).collect();
+    eprintln!(
+        "memory_tidy: {} changes in {:.1} s; {} memories left:\n{}",
+        made.len(),
+        started.elapsed().as_secs_f64(),
+        left.len(),
+        left.join("\n")
+    );
+    let english = left.iter().filter(|m| m.contains("English")).count();
+    assert_eq!(english, 1, "one English rule left");
+    // The exception to the 你 rule is kept, with the rule or in it.
+    assert!(
+        left.iter().any(|m| m.contains("letters")),
+        "the exception kept"
+    );
+    for kept in ["exclamation", "title case", "Oxford"] {
+        assert!(left.iter().any(|m| m.contains(kept)), "{kept} kept");
+    }
+}

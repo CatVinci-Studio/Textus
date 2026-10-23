@@ -151,6 +151,29 @@ pub(crate) struct Change {
     name: Option<String>,
     #[serde(default)]
     aliases: Vec<String>,
+    /// A tidy's forget (memory::tidy): the memory that now says it, or
+    /// that overturns it.
+    into: Option<String>,
+}
+
+impl Change {
+    pub(crate) fn merged_into(&self) -> Option<&str> {
+        self.into
+            .as_deref()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+    }
+
+    pub(crate) fn op(&self) -> &str {
+        self.op.trim()
+    }
+
+    pub(crate) fn id(&self) -> Option<&str> {
+        self.id
+            .as_deref()
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+    }
 }
 
 /// The changes in the pass's answer - the JSON object in it, however it is

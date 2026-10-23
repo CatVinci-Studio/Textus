@@ -153,7 +153,7 @@ pub(crate) fn chatgpt_sign_in() -> (String, String) {
 }
 
 /// The endpoint the agent cases run on (see agent_provider_id).
-fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
+pub(crate) fn agent_endpoint(auth: &AnthropicAuth) -> Endpoint {
     match agent_provider_id() {
         "openai" => {
             let (access_token, account_id) = chatgpt_sign_in();

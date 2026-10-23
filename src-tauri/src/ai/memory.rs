@@ -53,7 +53,9 @@ mod forgotten;
 pub use forgotten::Forgotten;
 mod pass;
 mod select;
+mod tidy;
 pub use pass::*;
+pub use tidy::*;
 
 /// Most memory text sent with one request, in characters (not bytes, so
 /// Chinese and Japanese get as much as English): about 40 memories of a
@@ -386,10 +388,14 @@ pub async fn memory_pass(
         document: doc_path,
         ..conversation.unwrap_or_default()
     };
-    run_pass(&dirs, &exchange, &source, |instructions, input| async {
+    let call = |instructions, input| async {
         crate::ai::client::call(&app, &provider, instructions, input, model.as_deref()).await
-    })
-    .await
+    };
+    let mut made = run_pass(&dirs, &exchange, &source, call).await?;
+    // Now and then, the whole memory tidied (memory::tidy). Its failing
+    // takes nothing from the exchange's own changes.
+    made.extend(tidy_if_due(&dirs, &source, call).await.unwrap_or_default());
+    Ok(made)
 }
 
 /// Restore in the Memory tab's Recently forgotten: puts a forgotten memory
