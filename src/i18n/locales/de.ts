@@ -29,11 +29,9 @@ export default {
   shortcutToggleAgentPanel: "KI-Bereich ein-/ausblenden",
   menuToggleAgentPanel: "KI-Bereich",
   agentPanelEmptyWrite:
-    "Die KI schreibt neuen Text in Ihr Dokument und ändert nichts an dem, was schon dasteht.",
+    "Die KI schreibt in Ihrem Dokument - neuen Text oder Änderungen am vorhandenen; jede Änderung wartet, bis Sie sie annehmen oder ablehnen.",
   agentPanelEmptyReview:
     "Die KI antwortet und hinterlässt Notizen am Rand, ohne Ihren Text zu ändern.",
-  agentPanelEmptyRevise:
-    "Die KI schlägt Änderungen an Ihrem Text vor; jede wartet, bis Sie sie annehmen oder ablehnen.",
   aiWorkingCompletion: "Fortsetzung wird geschrieben…",
   aiWorkingGrammar: "Absatz wird geprüft…",
   noticeCompletionNeedsCaret:
@@ -149,7 +147,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   revisionDisplayLabel: "Überarbeitungen anzeigen",
   revisionDisplayInline: "Alles im Text",
   revisionDisplayOriginal: "Original im Text, Änderungen am Rand",
-  revisionDisplayFinal: "Nur das Ergebnis, ohne Markierungen",
+  revisionDisplayFinal: "Nur das Ergebnis, Original am Rand",
   revisionDisplayNoRoom:
     "Nicht genug Platz - schließen Sie die Seitenleiste oder den KI-Bereich",
   revisionDisplayNewText:
@@ -618,7 +616,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentDefaultModeLabel: "Standardmodus",
   agentModeWrite: "Schreiben",
   agentModeReview: "Prüfen",
-  agentModeRevise: "Überarbeiten",
   chatModeLabel: "Modus",
   chatModelLabel: "Modell",
   agentPersonalizationGroupLabel: "Schreibanweisungen & Skills",
@@ -1025,7 +1022,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialConnectSkip: "Später",
   tutorialConnected: "Verbunden.",
   tutorialWriteTitle: "Mit KI schreiben",
-  tutorialWriteBody: `Im Modus Schreiben fügt ${AI_NAME} nur Text hinzu, grün, bis du ihn annimmst.`,
+  tutorialWriteBody: `Im Modus Schreiben fügt ${AI_NAME} Text hinzu und ändert ihn, grün, bis du ihn annimmst.`,
   tutorialWriteOpen:
     "Öffne den KI-Bereich: das Federsymbol oben rechts ({shortcut})",
   tutorialWriteOpenPhone:
@@ -1039,7 +1036,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Sende `Kommentiere meine Notizen` und lies die Notizen am Rand",
   tutorialRevisionTitle: "Überarbeiten",
   tutorialRevisionBody:
-    "Im Modus Überarbeiten schreibt sie um, und du entscheidest Satz für Satz.",
+    "Im Modus Schreiben schreibt sie auch um, und du entscheidest Satz für Satz.",
   tutorialRevisionSelect: "Markiere den ersten Satz deiner Notizen",
   tutorialRevisionSend:
     "Sende `Mach ihn knapper` und wähl Annehmen oder Ablehnen",

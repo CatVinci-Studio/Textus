@@ -134,7 +134,7 @@ async function expectDarker(sides: Locator) {
           );
         const out = drawn.length === 0 ? ["no side drawn"] : [];
         for (const el of drawn) {
-          const side = el.matches(".pending-delete")
+          const side = el.matches(".pending-delete, .revision-note-original")
             ? "delete"
             : "insert";
           const s = getComputedStyle(el);
@@ -232,7 +232,7 @@ const MODES = [
   //  whether the new text is in the text for the review bar to step through]
   ["inline", ["pending-delete", "pending-insert"], false, true],
   ["original", ["pending-delete"], true, false],
-  ["final", ["pending-insert"], false, true],
+  ["final", ["pending-insert"], true, true],
 ] as const;
 
 // Every view in light. In dark only the inline view: it draws both sides

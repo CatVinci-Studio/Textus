@@ -83,8 +83,8 @@ describe("the tour", () => {
     expect(modes).toEqual({
       write: "write",
       review: "review",
-      revision: "revise",
-      skills: "revise",
+      revision: "write",
+      skills: "write",
     });
   });
 

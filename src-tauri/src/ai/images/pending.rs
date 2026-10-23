@@ -206,6 +206,32 @@ pub(crate) fn redraw(id: &str, prompt: String) -> Result<(), String> {
         }),
     );
     Ok(())
+/// A made picture's file contents and extension, for keeping it with its
+/// document (ai/kept_proposals.rs). None while it is made, or when it
+/// failed or is gone.
+pub(crate) fn ready_bytes(id: &str) -> Option<(Vec<u8>, &'static str)> {
+    pending()
+        .iter()
+        .find(|(i, _)| i == id)
+        .and_then(|(_, slot)| match slot {
+            Slot::Ready(image) => Some((image.bytes.clone(), image.ext)),
+            _ => None,
+        })
+}
+
+/// Puts back a picture kept with its document, made in an earlier run of
+/// the app, under its id - unless one by that id is waiting already.
+pub(crate) fn restore(id: &str, image: GeneratedImage) {
+    let mut pending = pending();
+    if pending.iter().any(|(i, _)| i == id) {
+        return;
+    }
+    pending.push((id.to_string(), Slot::Ready(image)));
+    while pending.len() > PENDING_COUNT
+        || pending.iter().map(|(_, s)| s.bytes()).sum::<usize>() > PENDING_BYTES
+    {
+        pending.remove(0);
+    }
 }
 
 /// What came of a picture being made. Nothing, if it was let go meanwhile

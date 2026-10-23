@@ -28,11 +28,9 @@ export default {
   shortcutToggleAgentPanel: "Alternar painel de IA",
   menuToggleAgentPanel: "Painel de IA",
   agentPanelEmptyWrite:
-    "A IA redige texto novo no seu documento sem alterar o que já está escrito.",
+    "A IA escreve no seu documento: texto novo ou mudanças no que já está; cada mudança espera você aceitar ou rejeitar.",
   agentPanelEmptyReview:
     "A IA responde e deixa notas na margem, sem alterar o seu texto.",
-  agentPanelEmptyRevise:
-    "A IA sugere alterações no seu texto; cada uma espera que você a aceite ou rejeite.",
   aiWorkingCompletion: "Escrevendo uma continuação…",
   aiWorkingGrammar: "Verificando este parágrafo…",
   noticeCompletionNeedsCaret:
@@ -150,7 +148,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   revisionDisplayLabel: "Mostrar revisões",
   revisionDisplayInline: "Tudo no texto",
   revisionDisplayOriginal: "Original no texto, alterações na margem",
-  revisionDisplayFinal: "Só o resultado, sem marcações",
+  revisionDisplayFinal: "Só o resultado, original na margem",
   revisionDisplayNoRoom: "Sem espaço: feche a barra lateral ou o painel de IA",
   revisionDisplayNewText:
     "Texto novo não tem original: nestas vistas ele fica no texto, em verde",
@@ -619,7 +617,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentDefaultModeLabel: "Modo padrão",
   agentModeWrite: "Escrever",
   agentModeReview: "Revisar",
-  agentModeRevise: "Editar",
   chatModeLabel: "Modo",
   chatModelLabel: "Modelo",
   agentPersonalizationGroupLabel: "Instruções de escrita e habilidades",
@@ -1028,7 +1025,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialConnectSkip: "Pular por agora",
   tutorialConnected: "Conectado.",
   tutorialWriteTitle: "Escrever com IA",
-  tutorialWriteBody: `No modo Escrever, o ${AI_NAME} só acrescenta texto, em verde até você aceitar.`,
+  tutorialWriteBody: `No modo Escrever, o ${AI_NAME} acrescenta e altera texto, em verde até você aceitar.`,
   tutorialWriteOpen:
     "Abra o painel de IA: o ícone da pena no canto superior direito ({shortcut})",
   tutorialWriteOpenPhone: "Abra o painel de IA: toque no ícone da pena no topo",
@@ -1041,7 +1038,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Envie `Comente minhas notas` e leia os comentários na margem",
   tutorialRevisionTitle: "Revisão",
   tutorialRevisionBody:
-    "No modo Editar, ele reescreve e você decide frase por frase.",
+    "O modo Escrever também reescreve, e você decide frase por frase.",
   tutorialRevisionSelect: "Selecione a primeira frase das suas notas",
   tutorialRevisionSend:
     "Envie `Deixe mais conciso` e escolha Aceitar ou Rejeitar",

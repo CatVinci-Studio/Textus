@@ -1,6 +1,7 @@
 import { Decoration } from "@milkdown/kit/prose/view";
 import { prefersReducedMotion } from "../../ui/motion";
-import { enter } from "../../ui/moves";
+import { enter, glideAfter } from "../../ui/moves";
+import { Cascade, hasWords } from "../../ui/cascade";
 import { inlineSentence, pairedPrefix } from "./sentence-diff";
 import { type StreamLayout } from "./sentence-stream";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
@@ -197,7 +198,10 @@ export function changeDecorations(
   // table has no words to draw a line through.
   if (c.block) {
     // An added block has no original to strike.
-    if (c.from < c.to) decos.push(blockStrike(callId, index, c, state, focus));
+    // Several paragraphs changed as one are struck each as its node.
+    if (c.from < c.to)
+      for (const node of c.parts ?? [c])
+        decos.push(blockStrike(callId, index, node, state, focus));
   } else if (c.from < c.to)
     for (const part of strikeParts(c))
       decos.push(sentenceStrike(callId, index, part, state, focus, stagger));
@@ -252,6 +256,26 @@ export function changeDecorations(
       ),
     );
   }
+  // Where a deleted sentence was, for Result only - its card in the
+  // margin holds it.
+  else
+    decos.push(
+      Decoration.widget(
+        c.to,
+        () => {
+          const el = document.createElement("span");
+          el.className = `pending-delete-mark pending-sentence-${state}${streaming}`;
+          el.dataset.call = callId;
+          el.dataset.index = String(index);
+          return el;
+        },
+        {
+          side: 1,
+          key: `pending-mark-delete-${callId}-${index}-${state}`,
+          part: "mark",
+        },
+      ),
+    );
   const { labels, decide } = draw;
   decos.push(
     Decoration.widget(
@@ -386,8 +410,18 @@ export function streamEntrance(
       : before.at === at && after.startsWith(before.after);
   if (written) return;
   // A sentence written in place of the one its original was marked in
-  // (the reading cursor, ui/moves.ts's mark) enters where it lands.
-  enter(span, { from: "none" });
+  // (the reading cursor, ui/moves.ts's mark) comes in where it lands, a
+  // word at a time (ui/cascade.ts); a block with no words, whole.
+  if (hasWords(span)) new Cascade().play(span);
+  else enter(span, { from: "none" });
+  // A whole block pushes the text below it down: that glides there. Once
+  // it is in the document (a widget is drawn after it is made), before the
+  // frame is painted.
+  if (span.dataset.blocks !== "true") return;
+  queueMicrotask(() => {
+    const root = span.closest(".ProseMirror");
+    if (root) glideAfter(span, span.offsetHeight, root);
+  });
 }
 
 /** The completed changes of a streaming rewrite's layout, where they

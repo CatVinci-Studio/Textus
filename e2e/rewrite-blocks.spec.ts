@@ -27,8 +27,12 @@ interface Case {
 const CASES: Case[] = JSON.parse(
   readFileSync(new URL("./rewrite-blocks-cases.json", import.meta.url), "utf8"),
 );
-const BEFORE = "小满撑开伞，仔细看过伞面和竹骨，都好好的。";
-const AFTER = "雨停了，她把伞挂在门后。";
+// Long enough on both sides not to be merged with a short paragraph next
+// to them (sentence-diff.ts, SHORT_PARAGRAPH): each part is its own.
+const BEFORE =
+  "小满撑开伞，仔细看过伞面和竹骨，都好好的。她又把伞收起来，在手里掂了掂，伞柄上的漆早就磨掉了，露出底下发黑的木头，摸上去却还是光滑的，像被很多只手握过很多年，一直没有换过。";
+const AFTER =
+  "雨停了，她把伞挂在门后。门后的钉子上原本挂着一件旧雨衣，她把雨衣取下来叠好放进柜子，让伞单独挂在那里，伞尖还在往下滴水，一滴一滴落在门口那块褪了色的旧地垫上，过了很久很久才终于停下来。";
 const NEW_BEFORE =
   "Xiaoman opened the umbrella and checked the canopy and ribs.";
 const NEW_AFTER =

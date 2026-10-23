@@ -48,6 +48,6 @@ metadata:
 - "Correct" forms the conventions list as valid: Spanish ?». and ?…, Russian ?.., a Korean period dropped consistently inside quotes.
 
 ## Deliver
-- Revise mode: replace proposals, each with a short reason naming the rule.
+- Write mode: replace proposals, each with a short reason naming the rule.
 - Review mode: comments on the lines that need changes, with the corrected line.
 - Reply in one or two sentences: what kind of fixes were made, and any line left alone on purpose.

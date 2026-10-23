@@ -338,6 +338,8 @@ pub fn run() {
             crate::ai::next_message::suggest_next_message,
             crate::ai::memory::revision_choices_read,
             crate::ai::memory::revision_choices_write,
+            crate::ai::kept_proposals::kept_proposals_read,
+            crate::ai::kept_proposals::kept_proposals_write,
             pick_attachment_file,
             set_provider_api_key,
             provider_api_key_status,

@@ -1220,7 +1220,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             describe(&c),
-            "route/none/en/meaning\trevise\ten\t[selection] What does this paragraph mean?"
+            "route/none/en/meaning\twrite\ten\t[selection] What does this paragraph mean?"
         );
     }
 }

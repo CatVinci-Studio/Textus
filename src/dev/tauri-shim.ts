@@ -188,6 +188,8 @@ export function installDevTauriShim(): void {
     } | null,
     // .revision-choices.json (ai/memory.rs), for learning from revisions.
     revisionChoices: null as unknown,
+    keptProposals: {} as Record<string, unknown>,
+    keptPictures: {} as Record<string, unknown>,
   };
   w.__devStorage = store;
   // Bounded: a long smoke-testing session in the browser invokes a lot.
@@ -437,6 +439,20 @@ export function installDevTauriShim(): void {
         return Promise.resolve(store.revisionChoices);
       case "revision_choices_write":
         store.revisionChoices = args.log ?? null;
+        return answer(cmd, null);
+      // ai/kept_proposals.rs: a document's undecided proposals, by path.
+      case "kept_proposals_read":
+        return Promise.resolve(
+          store.keptProposals[String(args.docPath)] ?? null,
+        );
+      case "kept_proposals_write":
+        if (args.kept == null) delete store.keptProposals[String(args.docPath)];
+        else store.keptProposals[String(args.docPath)] = args.kept;
+        // The pictures the backend would keep beside them:
+        // `window.__devKeptPictures` for assertions.
+        store.keptPictures[String(args.docPath)] = args.pictures ?? [];
+        (window as { __devKeptPictures?: unknown }).__devKeptPictures =
+          store.keptPictures;
         return answer(cmd, null);
     }
     return null;

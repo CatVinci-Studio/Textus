@@ -31,11 +31,9 @@ export default {
   shortcutToggleAgentPanel: "Afficher/masquer le panneau IA",
   menuToggleAgentPanel: "Panneau IA",
   agentPanelEmptyWrite:
-    "L'IA rédige du nouveau texte dans votre document sans modifier ce qui s'y trouve déjà.",
+    "L'IA écrit dans votre document - du nouveau texte ou des changements à l'existant ; chaque changement attend que vous l'acceptiez ou le refusiez.",
   agentPanelEmptyReview:
     "L'IA répond et laisse des notes dans la marge, sans modifier votre texte.",
-  agentPanelEmptyRevise:
-    "L'IA propose des modifications de votre texte ; chacune attend que vous l'acceptiez ou la refusiez.",
   aiWorkingCompletion: "Rédaction de la suite…",
   aiWorkingGrammar: "Vérification du paragraphe…",
   noticeCompletionNeedsCaret:
@@ -159,7 +157,7 @@ utiliser une.
   revisionDisplayInline: "Tout dans le texte",
   revisionDisplayOriginal:
     "Original dans le texte, modifications dans la marge",
-  revisionDisplayFinal: "Résultat seul, sans marques",
+  revisionDisplayFinal: "Résultat seul, original dans la marge",
   revisionDisplayNoRoom:
     "Pas assez de place : fermez la barre latérale ou le panneau IA",
   revisionDisplayNewText:
@@ -638,7 +636,6 @@ utiliser une.
   agentDefaultModeLabel: "Mode par défaut",
   agentModeWrite: "Écrire",
   agentModeReview: "Relire",
-  agentModeRevise: "Réviser",
   chatModeLabel: "Mode",
   chatModelLabel: "Modèle",
   agentPersonalizationGroupLabel: "Instructions d'écriture et compétences",
@@ -1057,7 +1054,7 @@ utiliser une.
   tutorialConnectSkip: "Passer pour l'instant",
   tutorialConnected: "Connecté.",
   tutorialWriteTitle: "Écrire avec l'IA",
-  tutorialWriteBody: `En mode Écrire, ${AI_NAME} ne fait qu'ajouter du texte, en vert tant que vous ne l'avez pas accepté.`,
+  tutorialWriteBody: `En mode Écrire, ${AI_NAME} ajoute et modifie du texte, en vert tant que vous ne l'avez pas accepté.`,
   tutorialWriteOpen:
     "Ouvrez le panneau IA : l'icône de la plume, en haut à droite ({shortcut})",
   tutorialWriteOpenPhone:
@@ -1071,7 +1068,7 @@ utiliser une.
     "Envoyez `Commente mes notes`, puis lisez les notes dans la marge",
   tutorialRevisionTitle: "Révision",
   tutorialRevisionBody:
-    "En mode Réviser, il réécrit et vous décidez phrase par phrase.",
+    "En mode Écrire, il réécrit aussi, et vous décidez phrase par phrase.",
   tutorialRevisionSelect: "Sélectionnez la première phrase de vos notes",
   tutorialRevisionSend:
     "Envoyez `Rends-la plus concise`, puis choisissez Accepter ou Refuser",

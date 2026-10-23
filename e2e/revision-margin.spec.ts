@@ -10,10 +10,25 @@ import { STORY, STORY_CLASSICAL, streamRevise } from "./revise-mock";
  * card and the review bar's count together.
  */
 
-const LONG = [STORY, STORY, STORY].join("\n\n");
-const LONG_CLASSICAL = [STORY_CLASSICAL, STORY_CLASSICAL, STORY_CLASSICAL].join(
-  "\n\n",
+// A rewrite that keeps a card per paragraph (sentence-diff.ts merges a run
+// of short ones only when both sides are short): the story's lines but its
+// dialogue, each rewritten at length - short passages, tall cards.
+const TAIL_CLASSICAL =
+  "窗外雨犹未止，室中唯闻螺丝刀触壳之声，一下复一下，若有人于极远之处，耐心叩一扇不复开启之门，久久不绝。灯影摇于壁上，旧物无言，人亦无言，唯夜色渐深。";
+const pick = (text: string, keep: number[], tail: string) =>
+  keep.map((i) => `${text.split("\n\n")[i]}${tail}`);
+const LINES = pick(STORY, [0, 1, 2, 3, 4, 8, 9], "");
+const LINES_CLASSICAL = pick(
+  STORY_CLASSICAL,
+  [0, 1, 2, 3, 4, 6, 7],
+  TAIL_CLASSICAL,
 );
+const LONG = [...LINES, ...LINES, ...LINES].join("\n\n");
+const LONG_CLASSICAL = [
+  ...LINES_CLASSICAL,
+  ...LINES_CLASSICAL,
+  ...LINES_CLASSICAL,
+].join("\n\n");
 
 async function open(
   page: Page,
@@ -64,9 +79,17 @@ function blocks(page: Page) {
     const root = document.querySelector(
       '[data-active-tab="true"] .ProseMirror',
     )!;
+    // A block of new text (several paragraphs rewritten as one change)
+    // counts as the paragraphs it holds, as they will stand once taken.
     const rects = Array.from(root.children)
       .filter((e) => getComputedStyle(e).position !== "absolute")
-      .map((e) => e.getBoundingClientRect());
+      .flatMap((e) =>
+        e.matches(".pending-insert.pending-blocks, .pending-sentence-new")
+          ? Array.from(e.children)
+          : [e],
+      )
+      .map((e) => e.getBoundingClientRect())
+      .filter((r) => r.height > 0);
     return rects.map((r) => ({
       top: Math.round(r.top - rects[0].top),
       height: Math.round(r.height),
@@ -94,10 +117,9 @@ for (const display of ["final"] as const)
         "data-revision-display",
         display,
       );
-      // Two of the ten paragraphs are joined to the one before them.
-      await expect(page.locator(".milkdown .pending-struck-block")).toHaveCount(
-        2,
-      );
+      // Two of the ten paragraphs are joined to the one before them, and
+      // runs of the short ones are rewritten as changes of paragraphs: what
+      // shows is the eight paragraphs it will be, where they will be.
       const shown = await blocks(page);
       expect(shown).toHaveLength(8);
       await page.locator(".review-bar-accept").click();
@@ -116,8 +138,8 @@ test("with many revisions the cards stack and move, the text doesn't", async ({
 }) => {
   await open(page, LONG, "original", 1100);
   await propose(page, LONG, LONG_CLASSICAL);
-  await expect(page.locator(".revision-note")).toHaveCount(24);
-  await expect(page.locator(".review-bar-pos")).toHaveText("24 changes");
+  await expect(page.locator(".revision-note")).toHaveCount(21);
+  await expect(page.locator(".review-bar-pos")).toHaveText("21 changes");
   const withCards = await blocks(page);
   // No card overlaps the one above it, once their heights are measured.
   await expect
@@ -141,9 +163,9 @@ test("a crowded rewrite's cards are cut to stand by their passages, and open who
 }) => {
   await open(page, LONG, "original", 1100);
   await propose(page, LONG, LONG_CLASSICAL);
-  await expect(page.locator(".revision-note")).toHaveCount(24);
+  await expect(page.locator(".revision-note")).toHaveCount(21);
   // A line for every card from the start, not only once pointed at.
-  await expect(page.locator(".review-links path")).toHaveCount(24);
+  await expect(page.locator(".review-links path")).toHaveCount(21);
   // Whole, the cards ran ever further below their sentences; cut to the
   // room beside each, none is pushed far from its own.
   await expect(page.locator(".review-links path.far")).toHaveCount(0);
@@ -179,7 +201,7 @@ test("a crowded rewrite's cards are cut to stand by their passages, and open who
     page.locator(".review-note-cut-open:not(.revision-note-focus)"),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Previous edit" }).click();
-  await expect(page.locator(".revision-note-focus")).toContainText("24");
+  await expect(page.locator(".revision-note-focus")).toContainText("21");
   // Not a chip: opened, or whole.
   await expect(page.locator(".revision-note-focus")).not.toHaveClass(
     /review-note-chip\b/,
@@ -198,13 +220,18 @@ type Sample = {
 test("a streaming rewrite brings its changes one at a time: text, card and count", async ({
   page,
 }) => {
-  await open(page, STORY, "original");
+  const story = LINES.join("\n\n");
+  await open(page, story, "original");
   await streamRevise(
     page,
     [
       {
         id: "s1",
-        args: { action: "replace", anchor: STORY, text: STORY_CLASSICAL },
+        args: {
+          action: "replace",
+          anchor: story,
+          text: LINES_CLASSICAL.join("\n\n"),
+        },
       },
     ],
     { chunk: 4, every: 20 },
@@ -260,8 +287,8 @@ test("a streaming rewrite brings its changes one at a time: text, card and count
   // the stream ends, brings the last card, and the others stay put.
   const last = streaming.at(-1)!;
   const settled = samples.at(-1)!;
-  expect(settled.cards).toBe(8);
-  expect(last.cards).toBeGreaterThanOrEqual(7);
+  expect(settled.cards).toBe(7);
+  expect(last.cards).toBeGreaterThanOrEqual(6);
   last.tops.forEach((top, i) =>
     expect(Math.abs(top - settled.tops[i])).toBeLessThan(1),
   );
@@ -270,14 +297,22 @@ test("a streaming rewrite brings its changes one at a time: text, card and count
 test("mid-stream, ‹ › step through the changes so far; Accept and Reject wait", async ({
   page,
 }) => {
-  await open(page, STORY, "original");
-  const args = { action: "replace", anchor: STORY, text: STORY_CLASSICAL };
+  const story = LINES.join("\n\n");
+  await open(page, story, "original");
+  const args = {
+    action: "replace",
+    anchor: story,
+    text: LINES_CLASSICAL.join("\n\n"),
+  };
   const json = JSON.stringify(args);
-  // Held while the folded dialogue is being written.
-  const hold = Math.ceil((json.indexOf("里面全是灰，") + 4) / 4);
+  // Held while the sixth paragraph is being written.
+  const hold = Math.ceil((json.indexOf("儿子说完，") + 4) / 4);
   await streamRevise(page, [{ id: "s1", args }], { chunk: 4, hold });
   await send(page);
-  await expect(page.locator(".revision-note")).toHaveCount(5);
+  // One landing at a time (unit-reveal.ts): slower on a loaded machine.
+  await expect(page.locator(".revision-note")).toHaveCount(5, {
+    timeout: 15_000,
+  });
   // The new text is only ever in the margin: none of it in the text.
   await expect(page.locator(".milkdown .pending-partial")).toBeHidden();
   await expect(page.locator(".review-bar-pos")).toHaveText("5 changes");
@@ -295,13 +330,10 @@ test("mid-stream, ‹ › step through the changes so far; Accept and Reject wai
   await expect(page.locator(".revision-note-focus")).toContainText(
     "林阿姨把那台旧收音机搬到窗边",
   );
-  await expect(
-    page.locator(".milkdown .pending-sentence-new.pending-sentence-focus"),
-  ).toHaveText("林阿姨移旧收音机至窗边，启工具盒。");
   // The paragraphs keep their spacing while it streams: one line each,
   // evenly apart.
   const shown = await blocks(page);
-  expect(shown).toHaveLength(10);
+  expect(shown).toHaveLength(7);
   const gaps = shown.slice(1).map((b, i) => b.top - shown[i].top);
   for (const gap of gaps) expect(Math.abs(gap - gaps[0])).toBeLessThan(2);
   // Stopped, what arrived can be decided on.
@@ -331,4 +363,20 @@ test("a sentence the rewrite adds has a card that says Added, not an empty entry
   );
   // In the text, only the mark where it goes.
   await expect(page.locator(".milkdown .pending-insert-mark")).toBeVisible();
+});
+
+test("a change's number fits its badge past two digits", async ({ page }) => {
+  await open(page, STORY, "original");
+  const fits = await page.evaluate(() =>
+    ["revision-note-num", "agent-proposal-num", "review-badge"].map((name) => {
+      const el = document.createElement("span");
+      el.className = name;
+      el.textContent = "128";
+      document.body.append(el);
+      const ok = el.scrollWidth <= el.clientWidth + 0.5;
+      el.remove();
+      return ok;
+    }),
+  );
+  expect(fits).toEqual([true, true, true]);
 });

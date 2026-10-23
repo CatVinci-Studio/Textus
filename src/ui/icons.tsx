@@ -1073,29 +1073,3 @@ export function ReviewModeIcon({ className }: IconProps) {
     </svg>
   );
 }
-
-/** Revise: a pencil over a change mark - the text that is there, changed. */
-export function ReviseModeIcon({ className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      width="13"
-      height="13"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <path
-        d="M10.4 2.6L13.4 5.6L6.4 12.6L2.8 13.2L3.4 9.6L10.4 2.6Z"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9 4L12 7M9.6 13.4H13.4"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}

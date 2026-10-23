@@ -36,29 +36,23 @@ The composer's mode (`AgentMode`, see
 this pipeline, and it is enforced in Rust, not only asked for in the prompt
 (`tools.rs`'s `builtin_tools`):
 
-| Mode   | `propose_edit`                                                     |
-| ------ | ------------------------------------------------------------------ |
-| Write  | `append`, `insert_at_cursor`, `insert_after`, `insert_before` only |
-| Review | not offered                                                        |
-| Revise | every action                                                       |
+| Mode   | `propose_edit` |
+| ------ | -------------- |
+| Write  | every action   |
+| Review | not offered    |
 
-The panel and the detached window offer all three; Quick Ask offers Revise
-and Review only (`COMPOSER_MODES`, [ai-concepts.md](ai-concepts.md#not-a-file-modes)).
-
-Write gets the same propose_edit as Revise (one tool list for both, so a
-switch keeps the provider's cached prefix); the mode section in the
-message says it only adds text, and `propose_insertion` refuses any other
-action a model sends; the refusal is a tool result
-like any validation failure, so its streamed preview is discarded
-(`isRefusal`) and nothing that replaces or deletes text reaches the editor.
-A Write proposal is the same green pending block as any insertion: shown,
-not applied, until Accept. With a selection, Write inserts after it
-(`insert_after`), never over it.
+Every surface offers both, Write first (`COMPOSER_MODES`,
+[ai-concepts.md](ai-concepts.md#not-a-file-modes)). Until 1.2.1 Write only
+added text and a third mode, Revise, changed it; the two did the same work
+from the user's side, so Revise folded into Write, and a stored or sent
+`revise` reads as `write`. With a selection, the request decides: a change
+to it replaces it (`replace_selection`), more text goes right after it
+(`insert_after`).
 
 ### Pictures: `generate_image`
 
 With an image model set (Settings › Textus AI › Image model; none by
-default), Write and Revise also get `generate_image`, whose call is a
+default), Write also gets `generate_image`, whose call is a
 proposal too: an insertion of one Markdown image, or the `replace` of a
 picture already in the document. The tool starts the picture in the
 background (`ai/images.rs`'s `ImageRun::run_call`) and returns at once with
@@ -443,6 +437,36 @@ the answer to a per-window store (`useMarginAvailable`).
   (short-circuits everything), recovered drafts (path-backed drafts whose
   disk content already matches are skipped; never steals focus), a Help doc
   this window was spawned for, OS-handed file paths, first-run onboarding.
+
+## Undecided proposals outlive closing
+
+`kept-proposals.ts`, `useKeptProposals.ts`, `ai/kept_proposals.rs`.
+
+A saved document's proposals that are neither accepted nor rejected are
+written down 0.4 s after they settle, and offered again when the document
+opens: in a project with a `.textus/` folder, as
+`.textus/pending/<the document's path in the project>.json`; otherwise in
+the app's data folder, under `pending/`, named by a hash of the path. The
+file goes once the last of them is decided.
+
+- **What is kept** is each proposal as it was made, with the writer's
+  calls on its sentences so far. It is placed again by its blocks' ids, a
+  hash of their text: while those blocks read as they did it lands where it
+  was, and once one changed it is invalid and drops out.
+- **A selection's or the caret's proposal** (`replace_selection`,
+  `insert_at_cursor`) keeps where it wrote, and comes back only to the
+  document it was made for, unchanged (a hash of its markdown).
+- **Pictures** made and waiting for Accept live only in the backend's
+  memory (`ai/images/pending.rs`); the backend keeps each one a kept
+  proposal shows as a file beside its JSON, in `<that file>.pictures/`,
+  and puts them back under their ids when the document opens. A proposal
+  whose picture is still being made is kept once it is made. Only picture
+  files are ever removed from that folder, and the folder once it is
+  empty.
+- **Not kept:** an untitled document's proposals and one still streaming
+  in.
+- Nothing is written for a document before what was kept for it has been
+  offered again, so opening it never wipes them.
 
 ## File index
 

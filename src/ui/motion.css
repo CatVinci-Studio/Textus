@@ -21,6 +21,10 @@
   /* A tint that marks where something was found, fading as it is read
      (Settings' search). Colour only, so reduced motion keeps it. */
   --dur-linger: 1600ms;
+  /* Between one word and the next as written text comes in (cascade.ts),
+     and the most a run of them may take: more words, a shorter step. */
+  --dur-stagger: 18ms;
+  --dur-cascade: 700ms;
   /* The exits of the last two. */
   --dur-slow-exit: calc(var(--dur-slow) * 0.7);
   --dur-sheet-exit: calc(var(--dur-sheet) * 0.7);

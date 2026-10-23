@@ -46,7 +46,6 @@ export interface ChatComposerLabels {
   attachmentNoVision: string;
   modeWrite: string;
   modeReview: string;
-  modeRevise: string;
   /** Accessible name of the phone's segmented mode control. */
   modeLabel: string;
   webSearch: string;
@@ -103,9 +102,6 @@ export interface ChatComposerProps {
   busy: boolean;
   labels: ChatComposerLabels;
   defaultMode: AgentMode;
-  /** The modes offered, in order (last-mode.ts's COMPOSER_MODES): a mode
-   *  not among them falls back to the first. Default: all three. */
-  modes?: readonly AgentMode[];
   /** The panel and the detached window: the mode picked carries over to
    *  the next conversation (last-mode.ts). Quick Ask keeps its own. */
   carryMode?: boolean;
