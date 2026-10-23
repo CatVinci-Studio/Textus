@@ -236,6 +236,23 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: 0 0 4px;
   font-size: var(--text-lg);
 }
+/* Get plugins: the search over the catalog, above its cards. */
+.plugin-search {
+  width: 100%;
+  box-sizing: border-box;
+  margin: var(--space-2) 0 var(--space-3);
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  color: var(--editor-text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+.plugin-search:focus {
+  outline: none;
+  border-color: var(--ui-primary);
+}
 .plugin-page-title-row .plugin-byline {
   margin-top: var(--space-1);
 }

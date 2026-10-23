@@ -1221,6 +1221,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsCatalogFailed: "Não foi possível carregar a lista: {reason}",
   pluginsCatalogRetry: "Tentar de novo",
   pluginsCatalogAllInstalled: "Você já tem todos os plugins da lista.",
+  pluginsSearch: "Pesquisar plugins",
+  pluginsSearchNone: "Nenhum plugin corresponde a “{query}”.",
+  pluginsCatalogKept:
+    "Mostrando a lista da última vez - não foi possível obter uma mais recente: {reason}",
   pluginInstall: "Instalar",
   pluginInstalling: "Instalando…",
   pluginUpdate: "Atualizar para {version}",

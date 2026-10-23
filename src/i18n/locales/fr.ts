@@ -1259,6 +1259,10 @@ utiliser une.
   pluginsCatalogRetry: "Réessayer",
   pluginsCatalogAllInstalled:
     "Toutes les extensions de la liste sont installées.",
+  pluginsSearch: "Rechercher des extensions",
+  pluginsSearchNone: "Aucune extension ne correspond à « {query} ».",
+  pluginsCatalogKept:
+    "Voici la liste de la dernière fois - impossible d’en obtenir une plus récente : {reason}",
   pluginInstall: "Installer",
   pluginInstalling: "Installation…",
   pluginUpdate: "Mettre à jour vers {version}",

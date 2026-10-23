@@ -95,30 +95,68 @@ fn parse(text: &str) -> Result<Vec<CatalogEntry>, String> {
         .collect())
 }
 
-/// The catalog, fetched now.
+/// The catalog as last fetched, kept in the app's cache folder so Get
+/// plugins can list it at once - and still list it offline.
+fn cache_file(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
+    use tauri::Manager;
+    Ok(app
+        .path()
+        .app_cache_dir()
+        .map_err(|e| e.to_string())?
+        .join("plugin-catalog.json"))
+}
+
+/// Fetches the catalog's text from its address.
+async fn fetch() -> Result<String, String> {
+    let url = catalog_url();
+    if let Some(path) = url.strip_prefix("file://") {
+        return std::fs::read_to_string(path).map_err(|e| e.to_string());
+    }
+    let response = client()?
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Couldn't reach the plugin catalog: {e}"))?;
+    if !response.status().is_success() {
+        return Err(format!(
+            "The plugin catalog answered {}.",
+            response.status()
+        ));
+    }
+    response.text().await.map_err(|e| e.to_string())
+}
+
+/// The catalog, fetched now - and kept for the next time
+/// (plugin_catalog_cached).
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn plugin_catalog() -> Result<Vec<CatalogEntry>, String> {
-    let url = catalog_url();
-    let text = if let Some(path) = url.strip_prefix("file://") {
-        std::fs::read_to_string(path).map_err(|e| e.to_string())?
-    } else {
-        let response = client()?
-            .get(&url)
-            .send()
-            .await
-            .map_err(|e| format!("Couldn't reach the plugin catalog: {e}"))?;
-        if !response.status().is_success() {
-            return Err(format!(
-                "The plugin catalog answered {}.",
-                response.status()
-            ));
-        }
-        response.text().await.map_err(|e| e.to_string())?
-    };
+pub async fn plugin_catalog(app: tauri::AppHandle) -> Result<Vec<CatalogEntry>, String> {
+    let text = fetch().await?;
     let entries = parse(&text)?;
     *FETCHED.lock().unwrap_or_else(|e| e.into_inner()) = entries.clone();
+    // Only a cache: a catalog that can't be kept is fetched again next time.
+    if let Ok(path) = cache_file(&app) {
+        if let Some(dir) = path.parent() {
+            let _ = std::fs::create_dir_all(dir);
+        }
+        let _ = std::fs::write(path, text);
+    }
     Ok(entries)
+}
+
+/// The catalog as last fetched, if one was kept - shown while a fresh one
+/// is fetched. Installing from it works as from a fresh one: a version's
+/// package never changes, so its checksum still holds.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn plugin_catalog_cached(app: tauri::AppHandle) -> Option<Vec<CatalogEntry>> {
+    let text = std::fs::read_to_string(cache_file(&app).ok()?).ok()?;
+    let entries = parse(&text).ok()?;
+    let mut fetched = FETCHED.lock().unwrap_or_else(|e| e.into_inner());
+    if fetched.is_empty() {
+        *fetched = entries.clone();
+    }
+    Some(entries)
 }
 
 /// Whether `bytes` is the package the catalog describes.
@@ -242,7 +280,7 @@ mod tests {
     #[ignore = "network: the published catalog"]
     fn the_published_catalog_and_its_packages_check_out() {
         tauri::async_runtime::block_on(async {
-            let entries = plugin_catalog().await.expect("the catalog");
+            let entries = parse(&fetch().await.expect("the catalog")).expect("readable");
             assert!(entries.len() >= 11, "{} plugins", entries.len());
             let tasks = entries.iter().find(|e| e.id == "catvinci.tasks").unwrap();
             assert!(tasks.official);

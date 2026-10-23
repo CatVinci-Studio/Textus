@@ -1238,6 +1238,10 @@ para usar una.
   pluginsCatalogFailed: "No se pudo cargar la lista: {reason}",
   pluginsCatalogRetry: "Reintentar",
   pluginsCatalogAllInstalled: "Ya tienes todos los complementos de la lista.",
+  pluginsSearch: "Buscar complementos",
+  pluginsSearchNone: "Ningún complemento coincide con «{query}».",
+  pluginsCatalogKept:
+    "Se muestra la lista de la última vez; no se pudo obtener una más reciente: {reason}",
   pluginInstall: "Instalar",
   pluginInstalling: "Instalando…",
   pluginUpdate: "Actualizar a {version}",

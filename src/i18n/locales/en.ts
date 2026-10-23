@@ -1212,6 +1212,10 @@ type /name in a conversation to use one.
   pluginsCatalogFailed: "Couldn’t load the list: {reason}",
   pluginsCatalogRetry: "Try again",
   pluginsCatalogAllInstalled: "You have every plugin listed here.",
+  pluginsSearch: "Search plugins",
+  pluginsSearchNone: "No plugin matches “{query}”.",
+  pluginsCatalogKept:
+    "Showing the list from last time - couldn’t get a newer one: {reason}",
   pluginInstall: "Install",
   pluginInstalling: "Installing…",
   pluginUpdate: "Update to {version}",

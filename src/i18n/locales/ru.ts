@@ -1229,6 +1229,10 @@ export default {
   pluginsCatalogFailed: "Не удалось загрузить список: {reason}",
   pluginsCatalogRetry: "Повторить",
   pluginsCatalogAllInstalled: "Все плагины из списка уже установлены.",
+  pluginsSearch: "Поиск плагинов",
+  pluginsSearchNone: "Нет плагинов по запросу «{query}».",
+  pluginsCatalogKept:
+    "Показан список с прошлого раза - новый получить не удалось: {reason}",
   pluginInstall: "Установить",
   pluginInstalling: "Установка…",
   pluginUpdate: "Обновить до {version}",

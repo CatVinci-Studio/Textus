@@ -46,8 +46,17 @@ export const commands = {
 	 *  `folder`, Load a plugin folder….
 	 */
 	plugin_pick_package: (folder: boolean, filterName: string) => __TAURI_INVOKE<string | null>("plugin_pick_package", { folder, filterName }),
-	/**  The catalog, fetched now. */
+	/**
+	 *  The catalog, fetched now - and kept for the next time
+	 *  (plugin_catalog_cached).
+	 */
 	plugin_catalog: () => __TAURI_INVOKE<CatalogEntry_Serialize[]>("plugin_catalog"),
+	/**
+	 *  The catalog as last fetched, if one was kept - shown while a fresh one
+	 *  is fetched. Installing from it works as from a fresh one: a version's
+	 *  package never changes, so its checksum still holds.
+	 */
+	plugin_catalog_cached: () => __TAURI_INVOKE<CatalogEntry_Serialize[] | null>("plugin_catalog_cached"),
 	/**
 	 *  Installs `id` from the catalog last fetched: downloads its package,
 	 *  checks it, and installs it as a package from a file is - marked
