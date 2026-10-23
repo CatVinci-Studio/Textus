@@ -793,7 +793,9 @@ fn interaction_mode_is_explicit_in_every_message() {
     // asked for more; it never sends the user to another mode.
     let write = message(AgentMode::Write);
     assert!(write.contains("interaction mode: write"));
-    assert!(write.contains("replaces it with replace_selection") && write.contains("right after it"));
+    assert!(
+        write.contains("replaces it with replace_selection") && write.contains("right after it")
+    );
     assert!(!write.contains("Revise"));
     // The mode comes before the document and the user's words.
     assert!(write.find("interaction mode").unwrap() < write.find("---document---").unwrap());

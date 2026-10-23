@@ -546,11 +546,20 @@ fn write_mode_offers_every_edit() {
         r#"{"action":"append","text":"It purred."}"#,
     ] {
         let ctx = ctx(doc);
-        let out = execute(&tools, &ctx, PROPOSE_EDIT_TOOL_NAME, &named(ctx.document, args)).text;
+        let out = execute(
+            &tools,
+            &ctx,
+            PROPOSE_EDIT_TOOL_NAME,
+            &named(ctx.document, args),
+        )
+        .text;
         assert!(out.starts_with("Edit proposed"), "{args}: {out}");
     }
     let review = ToolRegistry::builtin(false, false, AgentMode::Review, false);
-    assert!(!review.specs().iter().any(|s| s.name == PROPOSE_EDIT_TOOL_NAME));
+    assert!(!review
+        .specs()
+        .iter()
+        .any(|s| s.name == PROPOSE_EDIT_TOOL_NAME));
 }
 
 #[test]

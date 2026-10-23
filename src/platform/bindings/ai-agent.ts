@@ -31,6 +31,13 @@ export const commands = {
 	 *  still being made is let go too; what it makes is thrown away.
 	 */
 	ai_discard_generated_image: (id: string) => __TAURI_INVOKE<void>("ai_discard_generated_image", { id }),
+	/**  The proposals kept for the document, or None when there are none. */
+	kept_proposals_read: (docPath: string, workspaceRoot: string | null) => __TAURI_INVOKE<Value | null>("kept_proposals_read", { docPath, workspaceRoot }),
+	/**
+	 *  Keeps `kept` for the document - or, with None, removes what was kept,
+	 *  once every proposal is decided.
+	 */
+	kept_proposals_write: (docPath: string, workspaceRoot: string | null, kept: Value | null) => __TAURI_INVOKE<null>("kept_proposals_write", { docPath, workspaceRoot, kept }),
 };
 
 /* Types */

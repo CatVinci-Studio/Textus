@@ -137,6 +137,17 @@ export const ai = {
   /** Lets a waiting picture go: rejected, or saved. */
   discardGeneratedImage: (id: string) =>
     command("ai_discard_generated_image", id),
+  /** The document's undecided proposals as kept with it
+   *  (ai/revision/kept-proposals.ts), or null when none are. */
+  keptProposalsRead: (docPath: string, workspaceRoot: string | null) =>
+    command("kept_proposals_read", docPath, workspaceRoot),
+  /** Keeps them - or, with null, removes what was kept. Their shape is
+   *  the frontend's, opaque JSON to Rust. */
+  keptProposalsWrite: (
+    docPath: string,
+    workspaceRoot: string | null,
+    kept: object | null,
+  ) => command("kept_proposals_write", docPath, workspaceRoot, kept as Value),
   fetchAgentModels: (provider: string) =>
     aiCommand("fetch_agent_models", provider),
   setAiProxy: (proxy: string | null) => command("set_ai_proxy", proxy),
