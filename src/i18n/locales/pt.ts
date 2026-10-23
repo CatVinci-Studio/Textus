@@ -1114,6 +1114,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Remove tudo do histórico da área de transferência. Esta ação não pode ser desfeita.",
   privacyDraftRecoveryLabel: "Recuperação de rascunhos",
   privacyDraftRecoveryToggle: "Recuperar conteúdo não salvo após uma falha",
+  privacyKeepUnsavedToggle:
+    "Manter as alterações não salvas ao fechar, sem perguntar",
+  privacyKeepUnsavedHelp:
+    "Fechar uma janela com alterações não salvas não pergunta mais se deve salvar: os documentos abrem de novo com as alterações na próxima vez que o Textus iniciar. Os arquivos ficam como estavam até você salvar.",
   privacyDraftRecoveryClearHint:
     "Remove os instantâneos que estiverem no disco. Esta ação não pode ser desfeita.",
   privacyClearButton: "Limpar",

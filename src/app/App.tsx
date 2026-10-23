@@ -315,7 +315,12 @@ function App() {
   );
   useFileDrop(openFile, openPathInTab, activeIsUntouchedDraft);
 
-  useWindowCloseGuard(liveTabs, flushAutosave, setPendingClose);
+  useWindowCloseGuard(
+    liveTabs,
+    flushAutosave,
+    setPendingClose,
+    settings.keepUnsavedOnClose && settings.enableDraftRecovery,
+  );
 
   useExternalChangeReload(liveTabs, updateTab);
 

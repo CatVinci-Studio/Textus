@@ -6,6 +6,7 @@ import { tabIsDirty, type DocTab } from "../document/doc-tabs";
 import { drafts, session } from "../platform/ipc";
 import { flushPendingWrites } from "../storage/pending-writes";
 import { useModalDialog } from "../ui/useModalDialog";
+import { useLatest } from "../utils/hooks/useLatest";
 import type { TabState } from "./useTabState";
 
 // The one save/discard/cancel prompt, reused for every "this would lose
@@ -94,18 +95,32 @@ export function useTabRemoval(opts: {
  * storage writes still on their way to Rust (a setting typed a moment
  * ago) or held back (the resting zoom); the prompt's Save / Don't Save do the same before they
  * destroy the window themselves.
+ *
+ * With `keepUnsaved` (Settings › Privacy › Keep unsaved changes when
+ * closing) there is nothing to ask: each unsaved tab is kept as a draft
+ * now, and the next launch opens it again with its changes, as it does
+ * after a crash (startup-restore.ts).
  */
 export function useWindowCloseGuard(
   liveTabs: () => DocTab[],
   flushAutosave: () => Promise<void>,
   setPendingClose: (close: PendingClose) => void,
+  keepUnsaved: boolean,
 ): void {
+  const keep = useLatest(keepUnsaved);
   useEffect(() => {
     const unlisten = getCurrentWindow().onCloseRequested(async (event) => {
       // Save Automatically writes what it can first; the prompt is for the
       // rest.
       await flushAutosave();
-      if (liveTabs().some(tabIsDirty)) {
+      const dirty = liveTabs().filter(tabIsDirty);
+      if (dirty.length > 0 && keep.current) {
+        await Promise.all(
+          dirty.map((tab) =>
+            drafts.saveDraftSnapshot(tab.id, tab.path, tab.content),
+          ),
+        );
+      } else if (dirty.length > 0) {
         event.preventDefault();
         setPendingClose({ kind: "window" });
         return;
@@ -113,7 +128,7 @@ export function useWindowCloseGuard(
       await flushPendingWrites();
     });
     return unlistenAll(unlisten);
-  }, [liveTabs, flushAutosave, setPendingClose]);
+  }, [liveTabs, flushAutosave, setPendingClose, keep]);
 }
 
 /** The prompt's three answers - Save, Don't Save, Cancel - carried out for

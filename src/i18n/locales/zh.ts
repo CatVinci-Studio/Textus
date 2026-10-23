@@ -1011,6 +1011,9 @@ export default {
   privacyClipboardHistoryClearHint: "清空剪贴板历史中的所有内容，且无法撤销。",
   privacyDraftRecoveryLabel: "草稿恢复",
   privacyDraftRecoveryToggle: "崩溃后恢复未保存内容",
+  privacyKeepUnsavedToggle: "关闭时保留未保存的修改，不再询问",
+  privacyKeepUnsavedHelp:
+    "关闭有未保存修改的窗口时不再询问是否保存：下次启动 Textus 时，这些文档会带着修改重新打开。文件本身在你保存之前保持原样。",
   privacyDraftRecoveryClearHint: "删除当前保存在磁盘上的所有快照，且无法撤销。",
   privacyClearButton: "清空",
   privacyClearChatHistory: "清空聊天记录",

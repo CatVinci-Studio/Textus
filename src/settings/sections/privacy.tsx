@@ -106,6 +106,15 @@ export function PrivacySection({ t }: { t: Strings }) {
             checked={settings.enableDraftRecovery}
             onChange={(v) => setSettings({ enableDraftRecovery: v })}
           />
+          {/* Kept as drafts: only while drafts are kept at all. */}
+          {settings.enableDraftRecovery && (
+            <ToggleRow
+              label={t.privacyKeepUnsavedToggle}
+              help={t.privacyKeepUnsavedHelp}
+              checked={settings.keepUnsavedOnClose}
+              onChange={(v) => setSettings({ keepUnsavedOnClose: v })}
+            />
+          )}
           <ClearRow
             label={t.privacyClearDrafts}
             warning={t.privacyDraftRecoveryClearHint}

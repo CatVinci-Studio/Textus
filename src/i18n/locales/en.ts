@@ -1103,6 +1103,9 @@ type /name in a conversation to use one.
     "Removes everything in the clipboard history. This can't be undone.",
   privacyDraftRecoveryLabel: "Draft Recovery",
   privacyDraftRecoveryToggle: "Recover unsaved content after a crash",
+  privacyKeepUnsavedToggle: "Keep unsaved changes when closing, without asking",
+  privacyKeepUnsavedHelp:
+    "Closing a window with unsaved changes doesn't ask to save: the documents open again with their changes next time Textus starts. The files themselves stay as they were until you save.",
   privacyDraftRecoveryClearHint:
     "Removes any snapshots currently on disk. This can't be undone.",
   privacyClearButton: "Clear",
