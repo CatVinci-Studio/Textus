@@ -23,15 +23,11 @@ const MAX_LINES = 600;
 const MAX_HOOKS = 8;
 
 /** Over the line limit today: at most this many lines. */
-const LINES_NOW = {
-  // One component, the editor's wiring; its concerns are hooks already.
-  "src/document-view/MilkdownEditor.tsx": 699,
-};
+const LINES_NOW = {};
 
 /** Over the hook limit today: the roots that wire a window together. */
 const HOOKS_NOW = {
   "src/app/App.tsx App": 54,
-  "src/document-view/MilkdownEditor.tsx MilkdownEditor": 51,
   "src/ai/chat/window/ChatWindowApp.tsx ChatWindowApp": 30,
 };
 
