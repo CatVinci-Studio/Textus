@@ -251,9 +251,8 @@ test("an accepted new table row and nested item land inside the table and list",
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("Add a row and a sub-item");
   await composer.press("Enter");
-  const accept = page.locator(
-    ".agent-proposal-actions .inline-chat-action-primary",
-  );
+  // Two in a row are one card (ProposalGroup), a row each with its ✓.
+  const accept = page.locator(".agent-proposal-group-rows .pending-pick-take");
   await expect(accept).toHaveCount(2);
   // Top-down: the table grows by a row, and the list's preview below it
   // must follow - it used to keep its old position, drift off the list and

@@ -1,4 +1,5 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useRef, useState, type CSSProperties } from "react";
+import { FlipOnChange } from "../../ui/flip";
 import type { AgentTurn, EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import { isProposalTool } from "./proposal";
@@ -11,10 +12,12 @@ import type { ChatMessagesLabels } from "./ChatMessages";
  * Proposals one reply made one after another, shown as one card
  * (ProposalGroup): as cards of their own they were a column of the same
  * card - a translation, a paragraph at a time, "Translate this paragraph"
- * six times over - and ran on for screens. Three or more in a row are one
- * card whatever their reasons; two are, if they share theirs. By its first
- * call's id, the calls in it; a call in a group but not first renders
- * nothing. A picture keeps its own card.
+ * six times over - and ran on for screens. Two or more in a row are one
+ * card, whatever their reasons: as the second streams in, the first card
+ * becomes the group and grows a row at a time (formed at the third, two
+ * cards turned into one under the reader's eyes). By its first call's id,
+ * the calls in it; a call in a group but not first renders nothing. A
+ * picture keeps its own card.
  */
 export function proposalRuns(
   turns: AgentTurn[],
@@ -24,11 +27,7 @@ export function proposalRuns(
   const runs = new Map<string, string[]>();
   let run: string[] = [];
   const close = () => {
-    const reasons = new Set(
-      run.map((id) => parsed.get(id)?.proposal?.reason?.trim() || ""),
-    );
-    const shared = reasons.size === 1 && !reasons.has("");
-    if (run.length > 2 || (run.length === 2 && shared)) runs.set(run[0], run);
+    if (run.length > 1) runs.set(run[0], run);
     run = [];
   };
   for (const turn of turns) {
@@ -48,6 +47,14 @@ export function proposalRuns(
   }
   close();
   return runs;
+}
+
+/** What follows `el` in its list - what its growing or shrinking moves. */
+function following(el: Element | null): Element[] {
+  const out: Element[] = [];
+  for (let next = el?.nextElementSibling; next; next = next.nextElementSibling)
+    out.push(next);
+  return out;
 }
 
 /** Rows a group shows before "Show N more". */
@@ -183,6 +190,12 @@ export function ProposalGroup({
   // Folded: its first rows, the rest behind "Show N more"; decided, all of
   // it behind its status line. A click opens it either way.
   const [unfolded, setUnfolded] = useState(false);
+  // Its shape changing - a row arriving, its text or its decision coming
+  // in, the card folding or opening - slides what is below it to its new
+  // place (FlipOnChange), on transform: grown or shrunk at once, the card
+  // jumped the reply under it.
+  const ref = useRef<HTMLDivElement>(null);
+  const shape = `${unfolded}:${items.map((i) => `${i.status}${i.proposal.text ? "+" : ""}`).join()}`;
   const rows = unfolded ? items : items.slice(0, FOLDED_ROWS);
   const hidden = items.length - rows.length;
   const decidedLine = [...new Set(items.map((item) => item.status))]
@@ -195,10 +208,12 @@ export function ProposalGroup({
     .join(" · ");
   return (
     <div
+      ref={ref}
       className={`agent-proposal agent-proposal-group${reveal ? " turn-reveal" : ""}`}
       data-status={done ? "decided" : "pending"}
       style={style}
     >
+      <FlipOnChange watch={shape} targets={() => following(ref.current)} />
       <div className="agent-proposal-head">
         <span className="agent-proposal-icon" aria-hidden="true">
           {CHECK}
@@ -251,16 +266,20 @@ export function ProposalGroup({
           )}
         </>
       )}
-      {actions && waiting.length > 1 && !streaming && (
+      {/* There from the first row, waiting while the run streams in: shown
+          only once it was all in, it grew the card under the reader. */}
+      {actions && !done && (
         <div className="agent-proposal-actions">
           <button
             className="inline-chat-action inline-chat-action-primary"
+            disabled={streaming}
             onClick={() => waiting.forEach((item) => onAccept(item.callId))}
           >
             {labels.proposalAcceptAll}
           </button>
           <button
             className="inline-chat-action"
+            disabled={streaming}
             onClick={() => waiting.forEach((item) => onReject(item.callId))}
           >
             {labels.proposalRejectAll}

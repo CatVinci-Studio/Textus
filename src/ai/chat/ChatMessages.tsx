@@ -206,6 +206,21 @@ export function ChatMessages({
   // The live thinking row sits under the question; anything past the
   // question - a step's rows - pushes it up out of the panel's end.
   const thoughtAbove = (streamingTurns?.length ?? 0) > 1;
+  // The step the row at the end names: the tool coming in, else the one
+  // whose result came last - between two edits of a run the label held
+  // "Writing the edit…" rather than flicking to "Thinking…" and back, the
+  // row fading in again each time.
+  const lastTurn = streamingTurns?.at(-1);
+  const step =
+    streaming?.tool ??
+    (lastTurn?.kind === "ToolCall"
+      ? lastTurn.name
+      : lastTurn?.kind === "ToolResult"
+        ? streamingTurns?.find(
+            (t): t is Extract<AgentTurn, { kind: "ToolCall" }> =>
+              t.kind === "ToolCall" && t.call_id === lastTurn.call_id,
+          )?.name
+        : undefined);
   const shown = useMemo(
     () => (streamingTurns ? [...history, ...streamingTurns] : history),
     [history, streamingTurns],
@@ -364,7 +379,9 @@ export function ChatMessages({
                   proposal: parsedProposals.get(id)!.proposal!,
                   status: statusOf(id),
                 }))}
-                reveal={reveal}
+                // Its first row was a card a moment ago: it takes that
+                // card's place, not fading in from nothing again.
+                reveal={false}
                 style={style}
                 labels={labels}
                 actions={proposalActions}
@@ -501,16 +518,16 @@ export function ChatMessages({
           seconds with nothing else moving (rc.6). */}
       {busy && (streaming?.thought?.since == null || thoughtAbove) && (
         <ThinkingIndicator
-          key={streaming?.tool ? streaming.tool : (streaming?.text.length ?? 0)}
-          after={!!streaming?.text && !streaming?.tool}
-          soon={!streaming?.text && !streaming?.tool && !streaming?.thought}
+          key={step ?? streaming?.text.length ?? 0}
+          after={!!streaming?.text && !step}
+          soon={!streaming?.text && !step && !streaming?.thought}
           waitedFor={labels.waitedFor}
           label={
-            streaming?.tool === "generate_image"
+            step === "generate_image"
               ? labels.generatingImage
-              : streaming?.tool === "propose_edit"
+              : step === "propose_edit"
                 ? labels.writingEdit
-                : streaming?.tool === "add_comment"
+                : step === "add_comment"
                   ? labels.writingNotes
                   : labels.thinking
           }

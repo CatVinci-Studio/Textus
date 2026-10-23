@@ -237,9 +237,8 @@ test("accepting one of two proposals keeps the other", async ({ page }) => {
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("Fix both");
   await composer.press("Enter");
-  const accept = page.locator(
-    ".agent-proposal-actions .inline-chat-action-primary",
-  );
+  // Two in a row are one card (ProposalGroup), a row each with its ✓.
+  const accept = page.locator(".agent-proposal-group-rows .pending-pick-take");
   await expect(accept).toHaveCount(2);
   // The second first, then the first: both land.
   await accept.nth(1).click();
