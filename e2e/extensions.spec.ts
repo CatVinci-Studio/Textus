@@ -49,6 +49,9 @@ test("Extensions has a tab each for plugins, themes, skills and MCP", async ({
   await panel.getByRole("tab", { name: "Themes" }).click();
   // Everything about themes but picking one, on the one tab.
   await expect(panel.getByText("Get themes")).toBeVisible();
+  // The gallery's themes in one box under that title, not a box in a box.
+  await expect(panel.locator(".theme-gallery-item")).toHaveCount(2);
+  await expect(panel.locator(".settings-group .settings-group")).toHaveCount(0);
   await expect(
     panel.getByRole("button", { name: "Import CSS…" }),
   ).toBeVisible();

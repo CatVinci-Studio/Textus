@@ -1333,14 +1333,14 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 /* Line numbers (code-line-numbers-plugin.ts): the gutter floats at the
-   start of the <pre>, one number per line, and the code beside it scrolls
-   sideways on its own (a block that scrolls doesn't flow under a float),
-   so the numbers stay put and nothing has to paint over the code. Its
-   lines don't wrap - a number would sit beside half a line - and take
-   the <pre>'s size and line height, as the numbers do, so each line is
-   as tall as its number: a theme's own size for block code, or the code's
-   font on the <pre>'s baseline, made the lines a pixel taller apiece and
-   the numbers drifted up the block. The <pre>'s start padding moves into
+   start of the <pre>, one number per line, and the code beside it is a
+   block of its own (a block doesn't flow under a float), so the numbers
+   stay put and nothing has to paint over the code. Its lines wrap as
+   they do without numbers (#353); each number is as tall as its line
+   (gutter-fit.ts). The code takes the <pre>'s size and line height, as
+   the numbers do: a theme's own size for block code, or the code's font
+   on the <pre>'s baseline, made the lines a pixel taller apiece and the
+   numbers drifted up the block. The <pre>'s start padding moves into
    the gutter. On screen only: a printed page can't scroll, and the print
    and export drop the gutter. Id-weighted, as Typora themes style
    `#write pre`. */
@@ -1351,10 +1351,9 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
   #write .code-block-numbered pre code {
     display: block;
-    overflow-x: auto;
-    white-space: pre;
-    word-break: normal;
-    overflow-wrap: normal;
+    overflow: hidden;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     font-size: inherit;
     line-height: inherit;
   }
