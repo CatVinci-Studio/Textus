@@ -136,7 +136,7 @@ pub fn builtin_tools<'a>(
     tools.push(Tool {
         spec: ToolSpec {
             name: ADD_COMMENT_TOOL_NAME.into(),
-            description: "Pin a piece of feedback to a passage without changing it - for reviews and critique (\"what's weak here\", \"check this draft\"). One call per point; name the block it is about by its id as `block`, and quote `anchor` only for a few words inside that block it is about. The user sees each comment as a card that jumps to its passage, so keep your reply to a short overall summary.".into(),
+            description: "Pin a piece of feedback to a passage without changing it - for reviews and critique (\"what's weak here\", \"check this draft\"). One call per point, all of them in the same message; name the block it is about by its id as `block`, and quote `anchor` only for a few words inside that block it is about. The user sees each comment as a card that jumps to its passage, so keep your reply to a short overall summary.".into(),
             parameters: json!({
                 "type": "object",
                 "properties": {
