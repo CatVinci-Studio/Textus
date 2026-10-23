@@ -56,11 +56,11 @@ class StreamFollow {
     window.addEventListener("keydown", this.markIntent, true);
     window.addEventListener("pointerdown", this.markIntent, true);
     window.addEventListener("pointermove", this.markDrag, true);
-    window.addEventListener("touchmove", this.markIntent, {
+    window.addEventListener("touchmove", this.letGo, {
       capture: true,
       passive: true,
     });
-    window.addEventListener("wheel", this.markIntent, {
+    window.addEventListener("wheel", this.letGo, {
       capture: true,
       passive: true,
     });
@@ -79,8 +79,8 @@ class StreamFollow {
     window.removeEventListener("keydown", this.markIntent, true);
     window.removeEventListener("pointerdown", this.markIntent, true);
     window.removeEventListener("pointermove", this.markDrag, true);
-    window.removeEventListener("touchmove", this.markIntent, true);
-    window.removeEventListener("wheel", this.markIntent, true);
+    window.removeEventListener("touchmove", this.letGo, true);
+    window.removeEventListener("wheel", this.letGo, true);
     this.scroller?.removeEventListener("scroll", this.onScroll);
     if (this.frame !== null) cancelAnimationFrame(this.frame);
   }
@@ -99,6 +99,14 @@ class StreamFollow {
 
   private markIntent = () => {
     this.intent = performance.now();
+  };
+
+  /** The reader scrolling: no following until the scroll says where they
+   *  went - else a frame between the wheel and its scroll set the page
+   *  back, and cut the browser's smooth scroll short. */
+  private letGo = () => {
+    this.intent = performance.now();
+    this.following = false;
   };
 
   /** Dragging the scrollbar or a selection is the reader's too. */
@@ -137,8 +145,10 @@ class StreamFollow {
       this.set(this.kept);
       return;
     }
+    // Up is away from the writing, however near it still is; down to it
+    // takes it up again.
+    if (theirs) this.following = top >= this.kept && this.inView();
     this.kept = top;
-    if (theirs) this.following = this.inView();
   };
 
   /** Each frame while something is written: keep it in view while
