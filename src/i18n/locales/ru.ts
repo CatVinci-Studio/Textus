@@ -594,6 +594,7 @@ export default {
   agentModeReview: "Разбор",
   agentModeRevise: "Правка",
   chatModeLabel: "Режим",
+  chatModelLabel: "Модель",
   agentPersonalizationGroupLabel: "Инструкции и навыки",
   agentAdvancedGroupLabel: "Дополнительно",
   writingModelLabel: "Вспомогательная модель",

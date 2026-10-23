@@ -1,0 +1,71 @@
+/* The composer's model button (ModelSwitcher.tsx): a quiet pill like the
+   mode select beside it, the model's id cut short when the row is narrow;
+   its list opens above, as the composer sits at the bottom. */
+.model-switcher {
+  position: relative;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.model-switcher-trigger {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: inherit;
+  font-size: 0.85em;
+  color: var(--editor-muted);
+  background: color-mix(in srgb, var(--editor-text) 6%, transparent);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  padding: 0.15em 0.5em;
+  cursor: pointer;
+}
+
+.model-switcher-trigger:hover,
+.model-switcher-trigger[aria-expanded="true"] {
+  color: var(--editor-text);
+  background: color-mix(in srgb, var(--editor-text) 10%, transparent);
+}
+
+.model-switcher-list {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: var(--z-select, 300);
+  min-width: 220px;
+  max-height: min(360px, 60vh);
+  overflow-y: auto;
+  padding: 4px;
+  animation: motion-fade-in var(--dur-fast) var(--ease-out) both;
+}
+
+.model-switcher-provider {
+  padding: 6px 8px 2px;
+  font-size: 0.75em;
+  color: var(--editor-muted);
+}
+
+.model-switcher-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 0.9em;
+  color: var(--editor-text);
+  background: none;
+  border: none;
+  border-radius: var(--radius-control);
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.model-switcher-option:hover,
+.model-switcher-option:focus-visible {
+  background: color-mix(in srgb, var(--editor-text) 8%, transparent);
+}
+
+.model-switcher-option.is-selected {
+  color: var(--editor-accent);
+}

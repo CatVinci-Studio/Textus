@@ -541,6 +541,7 @@ export default {
   agentModeReview: "审阅",
   agentModeRevise: "修订",
   chatModeLabel: "模式",
+  chatModelLabel: "模型",
   agentPersonalizationGroupLabel: "写作要求与技能",
   agentAdvancedGroupLabel: "高级设置",
   writingModelLabel: "辅助模型",

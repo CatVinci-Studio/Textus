@@ -588,6 +588,7 @@ type /name in a conversation to use one.
   agentModeReview: "Review",
   agentModeRevise: "Revise",
   chatModeLabel: "Mode",
+  chatModelLabel: "Model",
   agentPersonalizationGroupLabel: "Writing Instructions & Skills",
   agentAdvancedGroupLabel: "Advanced",
   writingModelLabel: "Assist model",

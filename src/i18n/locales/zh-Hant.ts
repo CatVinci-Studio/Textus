@@ -542,6 +542,7 @@ export default {
   agentModeReview: "審閱",
   agentModeRevise: "修訂",
   chatModeLabel: "模式",
+  chatModelLabel: "模型",
   agentPersonalizationGroupLabel: "寫作指示與技能",
   agentAdvancedGroupLabel: "進階",
   writingModelLabel: "輔助模型",

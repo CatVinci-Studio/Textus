@@ -574,6 +574,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentModeReview: "レビュー",
   agentModeRevise: "推敲",
   chatModeLabel: "モード",
+  chatModelLabel: "モデル",
   agentPersonalizationGroupLabel: "執筆の指示とスキル",
   agentAdvancedGroupLabel: "詳細設定",
   writingModelLabel: "補助モデル",

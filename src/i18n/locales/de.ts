@@ -590,6 +590,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentModeReview: "Prüfen",
   agentModeRevise: "Überarbeiten",
   chatModeLabel: "Modus",
+  chatModelLabel: "Modell",
   agentPersonalizationGroupLabel: "Schreibanweisungen & Skills",
   agentAdvancedGroupLabel: "Erweitert",
   writingModelLabel: "Assistenzmodell",
