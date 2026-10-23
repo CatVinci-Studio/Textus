@@ -387,6 +387,7 @@ export function MilkdownEditor({
     agentPanel,
     t,
     showAiNotice,
+    filePath,
   });
 
   const { onSkillUsed } = useTourSignals({
@@ -493,6 +494,7 @@ export function MilkdownEditor({
           onHot={notes.setNoteHot}
           onDone={notes.doneNote}
           onAsk={notes.askAboutNote}
+          onEdit={notes.editNote}
           onDecide={pendingEdits.decide}
           onNoMargin={notes.onNoMargin}
           layoutKey={pendingEdits.previews}
@@ -509,6 +511,7 @@ export function MilkdownEditor({
         t={t}
         onDone={notes.doneNote}
         onAsk={notes.askAboutNote}
+        onEdit={notes.editNote}
         onClose={() => notes.setOpenNote(null)}
       />
       <ReviewBars
@@ -554,6 +557,7 @@ export function MilkdownEditor({
         selectAll={selectAll}
         toggleFindReplace={findReplace.toggle}
         openTableDialog={() => setTableDialogOpen(true)}
+        addNote={() => void notes.addNote()}
         onClose={() => setMenu(null)}
       />
       <Presence show={!!aiNotice} exitMs={120}>

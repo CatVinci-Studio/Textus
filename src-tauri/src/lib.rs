@@ -345,6 +345,8 @@ pub fn run() {
             take_draft_snapshots,
             clear_draft_snapshot,
             clear_all_drafts,
+            commands::own_notes::own_notes_read,
+            commands::own_notes::own_notes_write,
             distribution::app_distribution,
             plugins::state::plugins_state,
             plugins::state::plugins_set_all,

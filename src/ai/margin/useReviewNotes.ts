@@ -31,6 +31,7 @@ import type { Strings } from "../../i18n/strings";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useNotesBar } from "./useNotesBar";
 import { useOpenedCard } from "./margin-layout";
+import { useOwnNotes } from "./useOwnNotes";
 
 /** A proposal shown whole as a margin card's change: what it replaces and
  *  with what. Null for new text alone, which has no original. */
@@ -54,7 +55,8 @@ function wholeChange(p: PendingPreview): PendingSentence | null {
 /** Review notes (review-notes-plugin.ts, ReviewMargin.tsx): every
  *  add_comment of this tab's conversations, pinned to its passage and
  *  drawn in the margin - until it is marked done, or its conversation is
- *  cleared. Also the margin's revision cards, which share its hover. */
+ *  cleared - and the writer's own notes beside them (useOwnNotes). Also
+ *  the margin's revision cards, which share its hover. */
 export function useReviewNotes({
   run,
   reviewNotesRef,
@@ -66,8 +68,11 @@ export function useReviewNotes({
   agentPanel,
   t,
   showAiNotice,
+  filePath,
 }: {
   run: EditorRunner;
+  /** The document's file, whose own notes are kept for it. */
+  filePath: string | null;
   /** The plugin's ref-indirected callbacks (see useTextusEditor). */
   reviewNotesRef: {
     current: {
@@ -145,10 +150,13 @@ export function useReviewNotes({
       const wanted = comments.filter((c) => !doneNotes.current.has(c.id));
       const from = (c: (typeof wanted)[number]) =>
         [c.block ?? "", c.anchor, c.comment].join("\0");
-      const keep = current.filter((n) =>
-        wanted.some(
-          (w) => w.id === n.id && placedFrom.current.get(n.id) === from(w),
-        ),
+      // The writer's own notes aren't the conversation's to drop.
+      const keep = current.filter(
+        (n) =>
+          n.by === "me" ||
+          wanted.some(
+            (w) => w.id === n.id && placedFrom.current.get(n.id) === from(w),
+          ),
       );
       const added: Omit<ReviewNote, "num">[] = [];
       for (const c of wanted) {
@@ -226,6 +234,8 @@ export function useReviewNotes({
       ),
     );
   }
+
+  const own = useOwnNotes({ run, filePath, notes, t });
 
   const bar = useNotesBar({
     notes,
@@ -425,6 +435,8 @@ export function useReviewNotes({
     hoverNotes,
     doneNote,
     askAboutNote,
+    addNote: own.addNote,
+    editNote: own.editNote,
     onNoMargin,
     locateText,
     bar,

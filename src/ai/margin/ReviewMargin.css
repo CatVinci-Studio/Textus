@@ -125,6 +125,13 @@
   font-weight: 700;
 }
 
+/* The writer's own note: its mark in the text colour, not the AI's
+   accent, so whose note it is reads at a glance. */
+.review-note-mark-me {
+  background: color-mix(in srgb, var(--editor-text) 12%, transparent);
+  color: var(--editor-text);
+}
+
 .review-note-text {
   white-space: pre-wrap;
   overflow-wrap: anywhere;

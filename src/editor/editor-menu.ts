@@ -148,6 +148,9 @@ export interface ContextMenuOptions {
   selectAll: () => void;
   toggleFindReplace: () => void;
   openTableDialog: () => void;
+  /** A note of the writer's own on the selection (useOwnNotes), offered
+   *  while there is one. */
+  addNote?: () => void;
 }
 
 export function buildContextMenuItems(
@@ -166,6 +169,11 @@ export function buildContextMenuItems(
     { label: t.copy, onSelect: () => options.copyOrCut(false) },
     { label: t.copyAsMarkdown, onSelect: options.copyAsMarkdown },
     { label: t.paste, onSelect: options.paste },
+    ...withSeparator(
+      options.addNote && selectedText(run)
+        ? [{ label: t.ownNoteAdd, onSelect: options.addNote }]
+        : [],
+    ),
     ...withSeparator(contributedMenuItems({ selectedText: selectedText(run) })),
     ...generalItems(options),
   ];

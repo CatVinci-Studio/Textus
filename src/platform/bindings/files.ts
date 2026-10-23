@@ -140,6 +140,16 @@ export const commands = {
 	take_draft_snapshots: () => __TAURI_INVOKE<DraftSnapshot_Serialize[]>("take_draft_snapshots"),
 	clear_draft_snapshot: (tabId: string) => __TAURI_INVOKE<null>("clear_draft_snapshot", { tabId }),
 	clear_all_drafts: () => __TAURI_INVOKE<null>("clear_all_drafts"),
+	/**
+	 *  The notes kept for the document at `path`, as the JSON they were
+	 *  written as - none when it has none.
+	 */
+	own_notes_read: (path: string) => __TAURI_INVOKE<string | null>("own_notes_read", { path }),
+	/**
+	 *  Keeps `notes` (a JSON array) for the document at `path`; an empty one
+	 *  removes its file.
+	 */
+	own_notes_write: (path: string, notes: string) => __TAURI_INVOKE<null>("own_notes_write", { path, notes }),
 	/**  The live settings, for a window to correct its boot snapshot with. */
 	settings_get: () => __TAURI_INVOKE<Snapshot>("settings_get"),
 	/**

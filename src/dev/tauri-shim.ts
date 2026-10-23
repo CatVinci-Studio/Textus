@@ -340,6 +340,20 @@ export function installDevTauriShim(): void {
         return answer(cmd, null);
       case "chat_history_get":
         return Promise.resolve(store.conversations[String(args.id)] ?? null);
+      // commands/own_notes.rs: the writer's own notes, by document path,
+      // in `window.__devOwnNotes` (a test can start it with some).
+      case "own_notes_read":
+        return Promise.resolve(
+          ((w.__devOwnNotes ??= {}) as Record<string, string>)[
+            String(args.path)
+          ] ?? null,
+        );
+      case "own_notes_write": {
+        const kept = (w.__devOwnNotes ??= {}) as Record<string, string>;
+        if (String(args.notes) === "[]") delete kept[String(args.path)];
+        else kept[String(args.path)] = String(args.notes);
+        return Promise.resolve(null);
+      }
       case "chat_history_archived":
         return Promise.resolve(store.archivedChats);
       case "chat_history_move_document": {

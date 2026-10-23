@@ -44,6 +44,7 @@ export function EditorContextMenu({
   selectAll,
   toggleFindReplace,
   openTableDialog,
+  addNote,
   onClose,
 }: {
   menu: EditorMenuState;
@@ -63,6 +64,8 @@ export function EditorContextMenu({
   selectAll: () => void;
   toggleFindReplace: () => void;
   openTableDialog: () => void;
+  /** A note of the writer's own on the selection (useOwnNotes). */
+  addNote: () => void;
   onClose: () => void;
 }) {
   const ai = aiFeatures(settings);
@@ -139,6 +142,7 @@ export function EditorContextMenu({
               selectAll,
               toggleFindReplace,
               openTableDialog,
+              addNote,
             },
           )}
           onClose={onClose}

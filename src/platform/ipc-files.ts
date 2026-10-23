@@ -216,3 +216,11 @@ export const drafts = {
   clearDraftSnapshot: (tabId: string) => command("clear_draft_snapshot", tabId),
   clearAllDrafts: () => command("clear_all_drafts"),
 };
+
+/** The writer's own notes on a document, kept beside the app's data
+ *  (src-tauri/src/commands/own_notes.rs), as JSON. */
+export const ownNotes = {
+  read: (path: string) => command("own_notes_read", path),
+  write: (path: string, notes: string) =>
+    command("own_notes_write", path, notes),
+};

@@ -15,6 +15,7 @@ export function OpenReviewNote({
   t,
   onDone,
   onAsk,
+  onEdit,
   onClose,
 }: {
   note: ReviewNote | null;
@@ -25,8 +26,10 @@ export function OpenReviewNote({
   t: Strings;
   onDone: (id: string) => void;
   onAsk: (note: ReviewNote) => void;
+  onEdit: (note: ReviewNote) => void;
   onClose: () => void;
 }) {
+  const own = note?.by === "me";
   return (
     <>
       {note && at && !phone && (
@@ -37,20 +40,24 @@ export function OpenReviewNote({
           labels={t}
           onDone={onDone}
           onAsk={onAsk}
+          onEdit={onEdit}
           onClose={onClose}
         />
       )}
       <Presence show={!!note && phone} exitMs={250}>
         {note && phone && (
           <BottomCard
-            label={t.reviewNoteBy}
+            label={own ? t.ownNoteBy : t.reviewNoteBy}
             actions={[
               {
                 label: t.reviewNoteAsk,
                 onSelect: () => onAsk(note),
               },
+              ...(own
+                ? [{ label: t.ownNoteEdit, onSelect: () => onEdit(note) }]
+                : []),
               {
-                label: t.reviewNoteDone,
+                label: own ? t.ownNoteDelete : t.reviewNoteDone,
                 primary: true,
                 onSelect: () => onDone(note.id),
               },
@@ -58,10 +65,13 @@ export function OpenReviewNote({
             onClose={onClose}
           >
             <div className="bottom-card-kicker">
-              <span className="review-note-mark" aria-hidden="true">
-                AI
+              <span
+                className={`review-note-mark${own ? " review-note-mark-me" : ""}`}
+                aria-hidden="true"
+              >
+                {own ? t.ownNoteMark : "AI"}
               </span>
-              {t.reviewNoteBy}
+              {own ? t.ownNoteBy : t.reviewNoteBy}
             </div>
             <p className="bottom-card-quote">
               {editorView?.state.doc.textBetween(note.from, note.to, " ")}
