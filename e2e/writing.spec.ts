@@ -1412,3 +1412,24 @@ test.describe("phone", () => {
     await expect.poll(async () => Math.abs(await offMiddle())).toBeLessThan(20);
   });
 });
+
+test("Enter on an empty nested task lifts it a level as a task, not a bullet (#355)", async ({
+  page,
+}) => {
+  await openApp(page);
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await pasteMarkdown(page, "- [ ] one\n  - [ ] two\n    - [ ] three");
+  await editor.locator("li p", { hasText: "three" }).click();
+  await page.keyboard.press("End");
+  // A new task at the third level, then Enter on it while it is empty: it
+  // moves up beside "two" - and stays a task, as its new neighbours are.
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("four");
+  const four = editor.locator("li", { hasText: /^four$/ });
+  await expect(four).toHaveAttribute("data-item-type", "task");
+  await expect(editor.locator('li[data-item-type="task"]')).toHaveCount(4);
+  expect(await sourceOf(page)).toContain(
+    "  * [ ] two\n    * [ ] three\n  * [ ] four",
+  );
+});

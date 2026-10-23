@@ -14,6 +14,7 @@ import {
   CellSelection,
 } from "@milkdown/kit/prose/tables";
 import { splitBlock } from "@milkdown/kit/prose/commands";
+import { splitListItem } from "@milkdown/kit/prose/schema-list";
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeyEvent, stateWithLiveSelection } from "../marks/enclosure";
 import { modIsMeta } from "../../platform/os";
@@ -334,12 +335,44 @@ export function spacesAfterCaret(state: EditorState): Transaction | null {
   return state.tr.delete($from.pos, $from.pos + spaces.length);
 }
 
+/**
+ * Enter on an empty task nested in a task list: it moves up a level, as
+ * any empty nested item does - and stays a task. ProseMirror's
+ * splitListItem makes the item it moves up as a new one with the default
+ * attributes, so a task came out as a plain bullet among tasks (#355).
+ */
+export const liftEmptyNestedTask: Command = (state, dispatch) => {
+  const { $from, empty } = state.selection;
+  const item = state.schema.nodes.list_item;
+  if (!empty || !item || $from.depth < 4 || $from.parent.content.size > 0)
+    return false;
+  const own = $from.node(-1);
+  const outer = $from.node(-3);
+  if (own.type !== item || outer.type !== item) return false;
+  if (own.attrs.checked == null || outer.attrs.checked == null) return false;
+  return splitListItem(item)(
+    state,
+    dispatch &&
+      ((tr) => {
+        const $to = tr.selection.$from;
+        const lifted = $to.node(-1);
+        if (lifted?.type === item && lifted.attrs.checked == null)
+          tr.setNodeMarkup($to.before(-1), undefined, {
+            ...lifted.attrs,
+            checked: false,
+          });
+        dispatch(tr);
+      }),
+  );
+};
+
 const onEnter: Command[] = [
   frontMatterFromFirstLine,
   splitInlineCode,
   enterInTable,
   pipeRowToTable,
   leaveTextBlockOnEmptyLastLine,
+  liftEmptyNestedTask,
 ];
 const onModEnter: Command[] = [leaveBlockquote];
 const onShiftEnter: Command[] = [
