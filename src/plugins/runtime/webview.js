@@ -51,7 +51,7 @@
   var locale = { language: "", l10n: {} };
   try {
     locale = JSON.parse(document.getElementById("textus-locale").textContent);
-  } catch (err) {
+  } catch {
     // A page made without them: English, and the keys.
   }
   var l10n = locale.l10n || {};
