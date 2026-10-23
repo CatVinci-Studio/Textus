@@ -137,13 +137,13 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   revisionDisplayLabel: "修正の表示",
   revisionDisplayInline: "すべて本文に",
   revisionDisplayOriginal: "本文に元の文、修正は余白に",
-  revisionDisplayNew: "本文に修正、元の文は余白に",
   revisionDisplayFinal: "修正後の文だけ",
   revisionDisplayNoRoom:
     "余白が足りません：サイドバーか AIパネルを閉じてください",
   revisionDisplayNewText:
     "追加された文には元の文がないため、この表示でも緑色のまま本文に残ります",
   proposalDeletedSentence: "元の文",
+  proposalAddedSentence: "追加",
   reviewBarLabel: "修正",
   reviewBarOpenChat: "AIパネルを開く",
   reviewNoteBy: "レビュー",

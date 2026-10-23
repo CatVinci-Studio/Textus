@@ -74,7 +74,9 @@ function landings(
     end += unit.length;
     const last = i === units.length - 1;
     if (end <= shown) return;
-    if (!last || done || lastComplete(unit)) {
+    // A pause after a stop that wants a space: the sentence is over.
+    const stopped = idle && /[.!?;][”’"')）」』\]]*$/.test(unit);
+    if (!last || done || stopped || lastComplete(unit)) {
       ends.push({ end, cut: false });
       return;
     }
@@ -94,6 +96,9 @@ function landings(
       const cut = written.search(SOFT_BREAK);
       if (cut > 0)
         ends.push({ end: Math.max(start, shown) + cut + 1, cut: true });
+      // A few words with nowhere to cut them (a word replaced, a name):
+      // all of them, once nothing more has come for a while.
+      else if (idle) ends.push({ end, cut: true });
     }
   });
   return ends;

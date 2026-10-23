@@ -390,13 +390,13 @@ br:is(.pending-delete, .pending-sentence-hot) {
    own, so a switch redraws nothing and replays no entrance.
 
    - inline (and no attribute): both sides in the text, with ✓ / ✕;
-   - original: the original in the text, the new text in the margin;
-   - new: the new text in the text, the original in the margin;
+   - original: the original in the text, the new text in the margin - from
+     the moment it is written, never first in the text;
    - final: the result, unmarked but for a faint dotted line, so a pending
      change can still be told from settled text.
 
    New text with no original (Write's insertions) has nothing to put in the
-   margin: it stays in the text, green, in "original" and "new" too, and
+   margin: it stays in the text, green, in "original" too, and
    reads as the result in "final".
 
    An original taken out of the text is hidden in the flow, not with
@@ -405,17 +405,14 @@ br:is(.pending-delete, .pending-sentence-hot) {
 .ProseMirror[data-revision-display]:not([data-revision-display="inline"])
   .pending-pick,
 .pending-insert-mark,
-.pending-delete-mark,
 .ProseMirror[data-revision-display="original"]
-  :is(.pending-sentence-new, .pending-insert.pending-replaces):not(
-    .pending-whole.pending-insert-typing
-  ),
-.ProseMirror:is([data-revision-display="new"], [data-revision-display="final"])
+  :is(.pending-sentence-new, .pending-insert.pending-replaces),
+.ProseMirror[data-revision-display="final"]
   .pending-sentence-new.pending-sentence-kept {
   display: none;
 }
 
-.ProseMirror:is([data-revision-display="new"], [data-revision-display="final"])
+.ProseMirror[data-revision-display="final"]
   .pending-delete:not(.pending-sentence-kept) {
   font-size: 0;
   padding: 0;
@@ -429,8 +426,6 @@ br:is(.pending-delete, .pending-sentence-hot) {
    blank line with a paragraph's margins. Taken out of the flow rather
    than display: none, for the same reason as its text; out of the flow,
    the margins round it meet as if it weren't there. */
-.ProseMirror[data-revision-display="new"]
-  .pending-struck-block:not(.pending-struck-marked),
 .ProseMirror[data-revision-display="final"] .pending-struck-block {
   position: absolute;
   visibility: hidden;
@@ -438,7 +433,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 /* An inline atom (an image, a formula) in a hidden original. */
-.ProseMirror:is([data-revision-display="new"], [data-revision-display="final"])
+.ProseMirror[data-revision-display="final"]
   .pending-delete:not(span, .pending-sentence-kept) {
   display: none;
 }
@@ -455,36 +450,9 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-underline-offset: 0.2em;
 }
 
-/* A kept sentence whose original card is in the margin: a faint line ties
-   it to the card. */
-.ProseMirror[data-revision-display="new"]
-  .pending-sentence.pending-sentence-kept {
-  text-decoration: underline dotted;
-  text-decoration-color: color-mix(
-    in srgb,
-    var(--editor-muted) 60%,
-    transparent
-  );
-  text-underline-offset: 0.2em;
-}
-
-/* Where a pure insertion goes, or where a deleted sentence was, with its
-   card in the margin. */
-.ProseMirror[data-revision-display="original"] .pending-insert-mark,
-.ProseMirror[data-revision-display="new"]
-  .pending-insert-mark.pending-sentence-kept,
-.ProseMirror[data-revision-display="new"]
-  .pending-delete-mark:not(.pending-sentence-kept) {
+/* Where a pure insertion goes, with its card in the margin. */
+.ProseMirror[data-revision-display="original"] .pending-insert-mark {
   display: inline-block;
-}
-
-.pending-delete-mark {
-  width: 2px;
-  height: 1.1em;
-  margin: 0 1px;
-  vertical-align: -0.15em;
-  border-radius: 1px;
-  background: var(--danger);
 }
 
 /* What a view switch shows is not new: no entrance (syncDisplay). */

@@ -333,7 +333,7 @@ export function useReviewNotes({
     }));
     const display = revisionDisplay;
     pendingEdits.reviewStops.forEach((stop, i) => {
-      if (display !== "original" && display !== "new") return;
+      if (display !== "original") return;
       const preview = pendingEdits.reviewed.find(
         (p) => p.callId === stop.callId,
       );
@@ -353,7 +353,6 @@ export function useReviewNotes({
         to: c.to,
         after: c.after,
         before: c.before,
-        shows: display,
         take: c.take,
         streaming: !!preview.streaming,
       });

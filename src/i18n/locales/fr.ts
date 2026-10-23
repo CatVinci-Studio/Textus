@@ -159,13 +159,13 @@ utiliser une.
   revisionDisplayInline: "Tout dans le texte",
   revisionDisplayOriginal:
     "Original dans le texte, modifications dans la marge",
-  revisionDisplayNew: "Modifications dans le texte, original dans la marge",
   revisionDisplayFinal: "Résultat seul, sans marques",
   revisionDisplayNoRoom:
     "Pas assez de place : fermez la barre latérale ou le panneau IA",
   revisionDisplayNewText:
     "Le nouveau texte n'a pas d'original : dans ces vues, il reste dans le texte, en vert",
   proposalDeletedSentence: "Original",
+  proposalAddedSentence: "Ajout",
   reviewBarLabel: "Révision",
   reviewBarOpenChat: "Ouvrir le panneau IA",
   reviewNoteBy: "Relecture",

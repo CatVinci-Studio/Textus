@@ -454,16 +454,8 @@
   stroke: color-mix(in srgb, var(--success-color) 70%, transparent);
 }
 
-/* "Changes in the text": the card holds the original, struck. */
-.revision-note-original {
-  background: var(--revision-delete-bg);
-  color: var(--editor-muted);
-}
-
-.revision-note-original s {
-  text-decoration-color: var(--revision-delete-strike);
-}
-
+/* A card's heading over its text: "Added" for a sentence with no
+   original. */
 .revision-note-was {
   display: block;
   margin-bottom: 1px;
@@ -471,34 +463,14 @@
   color: var(--editor-muted);
 }
 
-/* Its pair under the pointer or the review bar's pointer: the text it
-   holds darkens with the pair's in the document - a darker green for new
-   text, a darker red for the original - as a note's passage does. A kept
-   one stays as it is. */
+/* Its pair under the pointer or the review bar's pointer: the new text it
+   holds darkens with the pair's in the document, as a note's passage
+   does. A kept one stays as it is. */
 .revision-note:is(.review-note-hot, .revision-note-focus):not(
     .revision-note-kept
   )
-  .revision-note-text:not(.revision-note-original) {
+  .revision-note-text {
   background: var(--revision-insert-hover-bg);
-}
-
-.revision-note:is(.review-note-hot, .revision-note-focus):not(
-    .revision-note-kept
-  )
-  .revision-note-original {
-  background: var(--revision-delete-hover-bg);
-}
-
-/* Kept: the original is the text again. */
-.revision-note-kept .revision-note-original {
-  background: none;
-  text-decoration: none;
-  color: var(--editor-text);
-  opacity: 1;
-}
-
-.revision-note-kept .revision-note-original s {
-  text-decoration: none;
 }
 
 /* Where a pure insertion would go, with its card in the margin. */

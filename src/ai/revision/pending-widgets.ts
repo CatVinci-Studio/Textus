@@ -207,25 +207,22 @@ export function changeDecorations(
   // settles is drawn already, so the settle moves nothing: the ✓ / ✕ faint
   // and inert (`pending-streaming`, which syncStreaming takes off).
   const streaming = draw.stream ? " pending-streaming" : "";
-  const mark = (kind: "insert" | "delete") =>
-    Decoration.widget(
-      c.to,
-      () => {
-        const el = document.createElement("span");
-        el.className = `pending-${kind}-mark pending-sentence-${state}${streaming}`;
-        el.dataset.call = callId;
-        el.dataset.index = String(index);
-        return el;
-      },
-      {
-        side: 1,
-        key: `pending-mark-${kind}-${callId}-${index}-${state}`,
-        part: kind === "delete" ? "mark" : undefined,
-      },
+  // Where a pure insertion goes, for the view that leaves its new text to
+  // the margin ("original").
+  if (c.from === c.to)
+    decos.push(
+      Decoration.widget(
+        c.to,
+        () => {
+          const el = document.createElement("span");
+          el.className = `pending-insert-mark pending-sentence-${state}${streaming}`;
+          el.dataset.call = callId;
+          el.dataset.index = String(index);
+          return el;
+        },
+        { side: 1, key: `pending-mark-insert-${callId}-${index}-${state}` },
+      ),
     );
-  // Where a pure insertion goes, for the views that leave its new text
-  // to the margin ("original").
-  if (c.from === c.to) decos.push(mark("insert"));
   // The line break a sentence ends with stays the original's, in the text.
   // A whole block (a table, a picture) is drawn as one, between blocks.
   const after = c.block ? c.after.trim() : inlineSentence(c.after);
@@ -255,9 +252,6 @@ export function changeDecorations(
       ),
     );
   }
-  // Where a deleted sentence was, for the views that leave the original
-  // to the margin ("new").
-  else decos.push(mark("delete"));
   const { labels, decide } = draw;
   decos.push(
     Decoration.widget(

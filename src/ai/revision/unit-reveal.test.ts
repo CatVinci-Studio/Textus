@@ -8,6 +8,8 @@ describe("landingEnds", () => {
     expect(landingEnds("One. Tw", 0, false, false)).toEqual([5]);
     expect(landingEnds("One.", 0, false, false)).toEqual([]);
     expect(landingEnds("Pi is 3.1", 0, false, false)).toEqual([]);
+    // Once nothing more comes for a while, a stop ends it.
+    expect(landingEnds("One.", 0, false, true)).toEqual([4]);
   });
 
   it("lands a sentence ended by a stop that needs no space", () => {

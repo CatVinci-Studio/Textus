@@ -281,7 +281,7 @@ test("theme imported typora", async ({ page }) => {
 
 // The four revision displays (Settings > revision display), as Word's
 // markup views, each with the second sentence kept.
-for (const revisionDisplay of ["inline", "original", "new", "final"]) {
+for (const revisionDisplay of ["inline", "original", "final"]) {
   test(`revision display ${revisionDisplay}`, async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await openApp(page, {

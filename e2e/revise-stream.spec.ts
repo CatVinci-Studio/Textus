@@ -91,13 +91,13 @@ async function layout(page: Page) {
   return page.evaluate(() =>
     Array.from(
       document.querySelectorAll(
-        '[data-active-tab="true"] .ProseMirror :is(.pending-delete, .pending-insert, .pending-pick, .pending-insert-mark, .pending-delete-mark)',
+        '[data-active-tab="true"] .ProseMirror :is(.pending-delete, .pending-insert, .pending-pick, .pending-insert-mark)',
       ),
     ).map((e) =>
       [
         Array.from(e.classList)
           .filter((c) =>
-            /^pending-(delete|insert|pick|insert-mark|delete-mark|sentence|sentence-new|whole)$/.test(
+            /^pending-(delete|insert|pick|insert-mark|sentence|sentence-new|whole)$/.test(
               c,
             ),
           )
@@ -273,7 +273,7 @@ test("each display mode draws a streaming rewrite's completed sentences, with th
   // Held while the second change is being written: the first is complete.
   const json = JSON.stringify(REVISE.args);
   const hold = Math.ceil((json.indexOf("The lamp was warm") + 22) / 6);
-  for (const display of ["original", "new", "final"] as const) {
+  for (const display of ["original", "final"] as const) {
     await open(page, { revisionDisplay: display });
     await streamRevise(page, [REVISE], { hold });
     await send(page);
@@ -295,10 +295,6 @@ test("each display mode draws a streaming rewrite's completed sentences, with th
       await expect(fresh).toBeVisible();
       await expect(page.locator(".milkdown .pending-partial")).toBeVisible();
     }
-    if (display === "new")
-      await expect(page.locator(".revision-note-original")).toHaveText([
-        /He climbed the stairs slowly\./,
-      ]);
     if (display === "final")
       await expect(page.locator(".revision-note")).toHaveCount(0);
     await page.reload();
