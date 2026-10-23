@@ -157,13 +157,15 @@ test("a streaming rewrite shows each sentence in place, never the whole original
     expect(s.struck.join("")).not.toContain("Outside, the sea");
   }
   // A completed changed sentence is in place before the stream ends: its
-  // original struck, its new text beside it, while the next one is written.
+  // original struck, its new text beside it, before the next one comes -
+  // which shows only once it is whole, never half written.
   const early = streaming.find(
     (s) =>
       s.fresh.some((f) => f.text === "He climbed the stairs one by one.") &&
-      s.partial !== null,
+      !s.fresh.some((f) => f.text === "The lamp was warm to the touch."),
   );
   expect(early).toBeTruthy();
+  for (const s of samples) expect(s.partial).toBeNull();
   expect(early!.struck[0]).toBe("He climbed the stairs slowly.");
   // The sentence the rewrite drops is struck only once the stream passes
   // it, not before.
@@ -259,9 +261,10 @@ test("a streaming CJK rewrite completes each sentence at 。！？ in place", as
     streaming.some(
       (s) =>
         s.fresh.some((f) => f.text === "他一级一级走上楼梯。") &&
-        s.partial !== null,
+        !s.fresh.some((f) => f.text === "灯摸上去还是温的！"),
     ),
   ).toBe(true);
+  for (const s of samples) expect(s.partial).toBeNull();
 });
 
 test("each display mode draws a streaming rewrite's completed sentences, with their cards", async ({
@@ -421,10 +424,10 @@ test("with motion on, each strike draws in once and each new text comes in once"
   expect(entrances["The wind had dropped in the night."]).toBe(1);
 });
 
-test("a rewrite whose arguments arrive in one piece still types in, sentence by sentence", async ({
+test("a rewrite whose arguments arrive in one piece still lands sentence by sentence", async ({
   page,
 }) => {
-  // MiniMax sends a tool call's arguments whole: the reveal (stream-reveal)
+  // MiniMax sends a tool call's arguments whole: the reveal (unit-reveal)
   // spreads them out instead of the whole rewrite appearing in one frame.
   await open(page);
   await streamRevise(page, [REVISE], { chunk: 100_000 });
@@ -435,7 +438,7 @@ test("a rewrite whose arguments arrive in one piece still types in, sentence by 
   ).toHaveCount(2);
   const samples = await stop();
   const streaming = samples.filter((s) => s.live === 0);
-  // The first changed sentence is in while the next is still being written.
+  // The first changed sentence is in before the next.
   expect(
     streaming.some(
       (s) =>
@@ -443,5 +446,5 @@ test("a rewrite whose arguments arrive in one piece still types in, sentence by 
         !s.fresh.some((f) => f.text === "The lamp was warm to the touch."),
     ),
   ).toBe(true);
-  expect(streaming.filter((s) => s.partial !== null).length).toBeGreaterThan(5);
+  for (const s of samples) expect(s.partial).toBeNull();
 });

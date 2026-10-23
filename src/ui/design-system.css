@@ -127,14 +127,10 @@
   --revision-insert-bg: var(--diff-insert-bg);
   /* The original sentence a rewrite is at while it streams in - the
      progress cursor, also over sentences it keeps as they were. */
-  --revision-reading-bg: color-mix(
-    in srgb,
-    var(--success-color) 14%,
-    transparent
-  );
   /* What a change is about to replace, marked for a moment before the
      new text comes (ui/moves.ts's land). */
   --motion-mark-bg: color-mix(in srgb, var(--warning-color) 26%, transparent);
+  --revision-reading-bg: var(--motion-mark-bg);
   --revision-insert-text: currentColor;
   --revision-insert-hover-bg: color-mix(
     in srgb,

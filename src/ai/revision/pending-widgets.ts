@@ -1,8 +1,6 @@
 import { Decoration } from "@milkdown/kit/prose/view";
-import {
-  animate as animateElement,
-  prefersReducedMotion,
-} from "../../ui/motion";
+import { prefersReducedMotion } from "../../ui/motion";
+import { enter } from "../../ui/moves";
 import { inlineSentence, pairedPrefix } from "./sentence-diff";
 import { type StreamLayout } from "./sentence-stream";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
@@ -18,6 +16,7 @@ import {
   stopFrame,
   textKey,
   updateAnimation,
+  hasBlocks,
 } from "./pending-animation";
 import { type SentenceHooks } from "./pending-decorations";
 
@@ -39,10 +38,12 @@ export function textWidget(
     (view) => {
       // Between two blocks (an append, text after a paragraph), the new
       // text is blocks of its own (fillPendingBlocks); inside a paragraph,
-      // the run of text it goes into.
+      // the run of text it goes into - unless it is blocks itself (Write
+      // at the caret, after a paragraph's last word): drawn as a run of
+      // text, its headings showed their `##` and its lists their `-`.
       const blocks =
         view.state.doc.resolve(pos).parent.type ===
-        view.state.schema.topNodeType;
+          view.state.schema.topNodeType || hasBlocks(p.proposal.text ?? "");
       const span = document.createElement(blocks ? "div" : "span");
       if (blocks) span.dataset.blocks = "true";
       // `pending-replaces`: there is an original, which the margin views
@@ -390,11 +391,9 @@ export function streamEntrance(
       ? s.partialIndex === index
       : before.at === at && after.startsWith(before.after);
   if (written) return;
-  animateElement(
-    span,
-    [{ opacity: before === undefined ? 0 : 0.3 }, { opacity: 1 }],
-    { duration: "--dur-base", easing: "--ease-out" },
-  );
+  // A sentence written in place of the one its original was marked in
+  // (the reading cursor, ui/moves.ts's mark) enters where it lands.
+  enter(span, { from: "none" });
 }
 
 /** The completed changes of a streaming rewrite's layout, where they
