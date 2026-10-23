@@ -489,9 +489,7 @@ export function ChatMessages({
             <div className={reveal ? "turn-reveal" : undefined} style={style}>
               <AgentTurnView turn={turn} labels={labels} />
             </div>
-            {thought && (
-              <ThoughtRow thought={thought} labels={labels} />
-            )}
+            {thought && <ThoughtRow thought={thought} labels={labels} />}
           </Fragment>
         );
       })}

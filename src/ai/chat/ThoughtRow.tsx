@@ -58,9 +58,7 @@ export function ThoughtRow({
       ) : (
         <span className="agent-thought-label">{label}</span>
       )}
-      {open && text && (
-        <div className="agent-thought-text">{text}</div>
-      )}
+      {open && text && <div className="agent-thought-text">{text}</div>}
     </div>
   );
 }

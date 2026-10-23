@@ -41,4 +41,3 @@ export function thoughtSeconds(thought: Thought, now: number): number {
   const ms = thought.ms + (thought.since === null ? 0 : now - thought.since);
   return Math.max(1, Math.round(ms / 1000));
 }
-

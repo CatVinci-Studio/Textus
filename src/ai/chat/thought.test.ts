@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  thinkingDone,
-  thinkingEvent,
-  thoughtSeconds,
-} from "./thought";
+import { thinkingDone, thinkingEvent, thoughtSeconds } from "./thought";
 
 describe("thought", () => {
   it("adds up the phases an exchange thinks in", () => {
@@ -25,5 +21,4 @@ describe("thought", () => {
   it("leaves an exchange that never thought alone", () => {
     expect(thinkingDone(null, 5)).toBeNull();
   });
-
 });
