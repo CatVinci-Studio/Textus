@@ -158,7 +158,7 @@ para usar una.
   revisionDisplayLabel: "Mostrar revisiones",
   revisionDisplayInline: "Todo en el texto",
   revisionDisplayOriginal: "Original en el texto, cambios en el margen",
-  revisionDisplayFinal: "Solo el resultado, sin marcas",
+  revisionDisplayFinal: "Solo el resultado, original en el margen",
   revisionDisplayNoRoom:
     "No hay espacio: cierra la barra lateral o el panel de IA",
   revisionDisplayNewText:

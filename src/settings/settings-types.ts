@@ -47,7 +47,8 @@ export const COLOR_SWATCH_MODES = ["off", "code", "everywhere"] as const;
 export type ColorSwatchMode = (typeof COLOR_SWATCH_MODES)[number];
 
 /// Settings.revisionDisplay's values.
-export const REVISION_DISPLAYS = ["inline", "original", "final"] as const;
+/// In the order the menus list them, the default first.
+export const REVISION_DISPLAYS = ["final", "original", "inline"] as const;
 export type RevisionDisplay = (typeof REVISION_DISPLAYS)[number];
 
 /// Tone presets for AI completion - resolved to an English style directive
@@ -196,11 +197,13 @@ export interface Settings {
   /** Initial mode shown in a newly mounted Agent composer. */
   agentDefaultMode: AgentMode;
   /// How a pending rewrite shows in the document, as Word's markup views:
-  /// "inline" (struck original and new text in the text), "original" (the
-  /// original struck in the text, the new text in the margin) or "final"
-  /// (only the result, unmarked). "original" falls back to "inline" where
-  /// there is no room for a margin. A stored view no longer offered (1.2.0's
-  /// "new") reads as the default.
+  /// "final" (the result in the text, what it takes out in the margin -
+  /// the default), "original" (the original struck in the text, the new
+  /// text in the margin) or "inline" (struck original and new text in the
+  /// text). "original" falls back to "inline" where there is no room for a
+  /// margin; "final" shows the result alone. 1.2.0's "new" (the new text in
+  /// the text, the original in the margin) reads as "final", what it is
+  /// now.
   revisionDisplay: RevisionDisplay;
   /// Tone preset for inline completion suggestions.
   completionTone: CompletionTone;
@@ -360,7 +363,7 @@ export const DEFAULT_SETTINGS: Settings = {
   writingModels: {},
   agentModels: {},
   agentDefaultMode: "review",
-  revisionDisplay: "original",
+  revisionDisplay: "final",
   completionTone: "default",
   writingConventions: "automatic",
   enableWebSearch: false,

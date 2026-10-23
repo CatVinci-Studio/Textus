@@ -199,7 +199,11 @@ export const RevisionCard = memo(
             {item.num}
           </span>
           {closed ? (
-            <ChangeGlimpse before={item.before} after={item.after} />
+            <ChangeGlimpse
+              before={item.before}
+              after={item.after}
+              shows={item.shows}
+            />
           ) : (
             labels.reviewBarLabel
           )}
@@ -242,7 +246,28 @@ export const RevisionCard = memo(
             </Tooltip>
           </span>
         </div>
-        {closed ? null : (
+        {closed ? null : item.shows === "new" && item.before.trim() ? (
+          // Result only: the text reads as it will; the card keeps what
+          // the change takes out of it.
+          <div className="revision-note-text revision-note-original">
+            <span className="revision-note-was">
+              {labels.proposalDeletedSentence}
+            </span>
+            <s>
+              <RevisionNoteText text={item.before.trim()} />
+            </s>
+            {/* What it becomes is in the text; read out here too, so the
+              card says what is replaced by what. */}
+            {item.after.trim() && (
+              <span className="visually-hidden">
+                {" "}
+                <ins>
+                  <RevisionNoteText text={revisionText(item.after, labels)} />
+                </ins>
+              </span>
+            )}
+          </div>
+        ) : (
           <div className="revision-note-text">
             {/* A sentence the rewrite adds has no original beside it in
               the text, only the mark where it goes: the card says what it
@@ -296,6 +321,7 @@ export const RevisionCard = memo(
     a.item.num === b.item.num &&
     a.item.after === b.item.after &&
     a.item.before === b.item.before &&
+    a.item.shows === b.item.shows &&
     a.item.take === b.item.take &&
     a.item.streaming === b.item.streaming,
 );
@@ -409,11 +435,27 @@ function NoteBody({
 /** A change on its chip. A small one (a comma, a word): the words that
  *  go, struck, and those that come, with a little of the sentence either
  *  side - the whole sentence read as the same sentence twice. A rewrite:
- *  its new text. */
-function ChangeGlimpse({ before, after }: { before: string; after: string }) {
+ *  the side of it the card shows. */
+function ChangeGlimpse({
+  before,
+  after,
+  shows,
+}: {
+  before: string;
+  after: string;
+  shows: RevisionItem["shows"];
+}) {
   const g = changeGlimpse(before, after);
   if (!g.partial)
-    return <span className="review-note-chip-text">{after.trim()}</span>;
+    return (
+      <span className="review-note-chip-text">
+        {shows === "new" && before.trim() ? (
+          <s>{before.trim()}</s>
+        ) : (
+          after.trim()
+        )}
+      </span>
+    );
   return (
     <span className="review-note-chip-text">
       {g.cutLead && "…"}

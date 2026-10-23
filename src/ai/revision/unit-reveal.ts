@@ -22,8 +22,9 @@ import { splitUnits } from "./unit-diff";
 /** Units waiting past which they all land together. */
 const BACKLOG = 5;
 
-/** A pause this long with a unit unfinished: it lands up to where it has
- *  got, at a comma or a space - for writing with no full stops. */
+/** A pause this long after a sentence's stop: the sentence is over, though
+ *  nothing follows it yet. Half a sentence never lands on a pause - writing
+ *  with no full stops lands a paragraph at a time. */
 const IDLE_MS = 1000;
 
 /** A sentence this long with no end yet lands up to its last comma or
@@ -92,13 +93,13 @@ function landings(
     }
     if (kind) return;
     const written = text.slice(Math.max(start, shown), end);
-    if (idle || written.length >= LONG_UNIT) {
+    // Half a sentence never shows (a pause lands a sentence only once it
+    // has its stop, above): only one that runs on past LONG_UNIT does, up
+    // to its last soft break.
+    if (written.length >= LONG_UNIT) {
       const cut = written.search(SOFT_BREAK);
       if (cut > 0)
         ends.push({ end: Math.max(start, shown) + cut + 1, cut: true });
-      // A few words with nowhere to cut them (a word replaced, a name):
-      // all of them, once nothing more has come for a while.
-      else if (idle) ends.push({ end, cut: true });
     }
   });
   return ends;

@@ -149,7 +149,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   revisionDisplayLabel: "Überarbeitungen anzeigen",
   revisionDisplayInline: "Alles im Text",
   revisionDisplayOriginal: "Original im Text, Änderungen am Rand",
-  revisionDisplayFinal: "Nur das Ergebnis, ohne Markierungen",
+  revisionDisplayFinal: "Nur das Ergebnis, Original am Rand",
   revisionDisplayNoRoom:
     "Nicht genug Platz - schließen Sie die Seitenleiste oder den KI-Bereich",
   revisionDisplayNewText:

@@ -277,26 +277,29 @@ test("each display mode draws a streaming rewrite's completed sentences, with th
     await open(page, { revisionDisplay: display });
     await streamRevise(page, [REVISE], { hold });
     await send(page);
-    await expect(page.locator(".milkdown .pending-partial")).toBeAttached();
     const fresh = page.locator(".milkdown .pending-sentence-new", {
       hasText: "He climbed the stairs one by one.",
     });
+    await expect(fresh).toBeAttached();
     await expect(page.locator(".milkdown .pending-whole")).toHaveCount(0);
     await expect(page.locator(".review-bar")).toBeVisible();
     // The completed change has its card already, the one being written
-    // none yet; "original" leaves the new text to the card.
+    // none yet, nor any half of it in the text.
+    await expect(page.locator(".revision-note")).toHaveCount(1);
+    await expect(page.locator(".milkdown .pending-partial")).toHaveCount(0);
     if (display === "original") {
-      await expect(page.locator(".revision-note")).toHaveText([
-        /He climbed the stairs one by one\./,
-      ]);
+      // The new text is the card's; the text keeps the original.
+      await expect(page.locator(".revision-note")).toContainText(
+        "He climbed the stairs one by one.",
+      );
       await expect(fresh).toBeHidden();
-      await expect(page.locator(".milkdown .pending-partial")).toBeHidden();
     } else {
+      // Result only: the new text in the text, the original in the card.
       await expect(fresh).toBeVisible();
-      await expect(page.locator(".milkdown .pending-partial")).toBeVisible();
+      await expect(page.locator(".revision-note")).toContainText(
+        "He climbed the stairs slowly.",
+      );
     }
-    if (display === "final")
-      await expect(page.locator(".revision-note")).toHaveCount(0);
     await page.reload();
   }
 });
@@ -315,7 +318,8 @@ test("Stop mid-stream keeps what arrived, laid out by sentence", async ({
       hasText: "He climbed the stairs one by one.",
     }),
   ).toBeVisible();
-  await expect(page.locator(".milkdown .pending-partial")).toBeVisible();
+  // The half-written one isn't on screen: only whole sentences are.
+  await expect(page.locator(".milkdown .pending-partial")).toHaveCount(0);
   await page
     .locator(".agent-panel-view")
     .getByRole("button", { name: "Stop" })
@@ -324,8 +328,8 @@ test("Stop mid-stream keeps what arrived, laid out by sentence", async ({
     page.locator(".milkdown .pending-pick:not(.pending-streaming)").first(),
   ).toBeVisible();
   await expect(page.locator(".milkdown .pending-whole")).toHaveCount(0);
-  // The half-written sentence goes and its original stays; what the stream
-  // hadn't reached stays as it was, not struck.
+  // The half-written sentence never comes and its original stays; what
+  // the stream hadn't reached stays as it was, not struck.
   await expect(page.locator(".milkdown .pending-partial")).toHaveCount(0);
   await expect(page.locator(".milkdown .pending-sentence")).toHaveText([
     "He climbed the stairs slowly.",
