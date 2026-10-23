@@ -88,6 +88,14 @@ describe("settings from a build with features since taken out", () => {
     expect(settings.language).toBe("zh");
     expect(settings.runInBackground).toBe(true);
   });
+
+  it("read 1.2.0's revision view taken out in 1.2.1 as the default one", () => {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ language: "zh", revisionDisplay: "new" }),
+    );
+    expect(loadSettings().revisionDisplay).toBe("original");
+  });
 });
 
 describe("colour swatches", () => {

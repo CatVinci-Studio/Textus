@@ -8,14 +8,13 @@ export function revisionDisplayName(t: Strings, mode: RevisionDisplay): string {
   return {
     inline: t.revisionDisplayInline,
     original: t.revisionDisplayOriginal,
-    new: t.revisionDisplayNew,
     final: t.revisionDisplayFinal,
   }[mode];
 }
 
-/** Whether a display puts one side of each change in the margin. */
+/** Whether a display puts the new side of each change in the margin. */
 export function needsMargin(mode: RevisionDisplay): boolean {
-  return mode === "original" || mode === "new";
+  return mode === "original";
 }
 
 /**

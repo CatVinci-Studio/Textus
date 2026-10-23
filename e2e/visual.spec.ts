@@ -745,17 +745,11 @@ test("the review bar switches how revisions show, as Word's markup views", async
     await page.locator(".review-bar-view-button").click();
     await page.getByRole("menuitemradio", { name }).click();
   };
-  // Changes in the text, the original in the margin.
-  await pick("修改在正文，原文在页边");
-  await expect(page.locator(".revision-note-original")).toHaveCount(2);
-  // The originals stay in the document, out of the flow.
-  await expect(page.locator(".milkdown .pending-sentence")).toHaveCount(2);
-  await expect(page.locator(".milkdown .pending-sentence:visible")).toHaveCount(
-    0,
-  );
-  await expect(page.locator(".milkdown")).toContainText(
-    "这项研究覆盖三个街区。",
-  );
+  // Three views: the one 1.2.0 also had, changes in the text with the
+  // original in the margin, is gone.
+  await page.locator(".review-bar-view-button").click();
+  await expect(page.getByRole("menuitemradio")).toHaveCount(3);
+  await page.locator(".review-bar-view-button").click();
   // Everything in the text.
   await pick("全部在正文中");
   await expect(page.locator(".revision-note")).toHaveCount(0);

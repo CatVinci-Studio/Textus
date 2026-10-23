@@ -128,20 +128,6 @@ test("after Write's text is accepted, every view applies to Revise's rewrite acr
   );
   await page.mouse.move(10, 10);
 
-  await view(page, "new");
-  await expect(visible(page, ".pending-delete")).toHaveCount(0);
-  await expect(visible(page, ".pending-insert")).toHaveCount(3);
-  await expect(page.locator(".revision-note")).toHaveCount(3);
-  await page
-    .locator(".revision-note")
-    .first()
-    .click({ position: { x: 40, y: 12 } });
-  await expect(
-    page.locator(".revision-note").first().locator(".revision-note-original"),
-  ).toHaveCount(1);
-  await page.mouse.move(10, 10);
-  await expect(page.locator(".milkdown")).toContainText("the sea lay calm.");
-
   await view(page, "final");
   await expect(visible(page, ".pending-delete")).toHaveCount(0);
   await expect(visible(page, ".pending-insert")).toHaveCount(3);
@@ -188,12 +174,10 @@ test("Write's new text has no original: a green block in every view but the resu
   const tint = await green();
   expect(tint).not.toBe("rgba(0, 0, 0, 0)");
 
-  for (const name of ["original", "new"] as const) {
-    await view(page, name);
-    await expect(block).toBeVisible();
-    expect(await green()).toBe(tint);
-    await expect(page.locator(".revision-note")).toHaveCount(0);
-  }
+  await view(page, "original");
+  await expect(block).toBeVisible();
+  expect(await green()).toBe(tint);
+  await expect(page.locator(".revision-note")).toHaveCount(0);
   await page.locator(".review-bar-view-button").click();
   await expect(page.locator(".review-bar-menu-note")).toHaveText(
     "New text has no original: it stays in the text, in green, in these views",
@@ -230,7 +214,7 @@ test("switching views cross-fades: the same elements, no entrance replayed, noth
     );
   }, parts);
 
-  for (const name of ["original", "new", "final", "inline", "new"] as const) {
+  for (const name of ["original", "final", "inline", "original"] as const) {
     // What is shown before the switch and still after it.
     await page.evaluate((sel) => {
       const shown = (el: Element) =>

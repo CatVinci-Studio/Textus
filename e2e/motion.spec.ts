@@ -220,7 +220,7 @@ test("the text column glides aside for the margin, on its transform", async ({
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page, {
     animations: true,
-    settings: { language: "en", revisionDisplay: "new" },
+    settings: { language: "en", revisionDisplay: "original" },
     storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, STORY);

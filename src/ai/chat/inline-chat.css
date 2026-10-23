@@ -58,15 +58,9 @@
 /* It hangs below its paragraph and grows down out of it. */
 .inline-chat:not(.quick-ask-dock) > .inline-chat-shell {
   transform-origin: top center;
-  animation: quick-ask-in var(--dur-base) var(--ease-out);
-}
-
-@keyframes quick-ask-in {
-  from {
-    opacity: 0;
-    transform: translateY(calc(var(--motion-distance-sm) * -1))
-      scale(calc(var(--scale-enter) + (1 - var(--scale-enter)) * 0.25));
-  }
+  --enter-y: calc(var(--motion-distance-sm) * -1);
+  --enter-scale: calc(var(--scale-enter) + (1 - var(--scale-enter)) * 0.25);
+  animation: motion-enter var(--dur-base) var(--ease-out);
 }
 
 /* Just the pop-out and close buttons, pinned to the panel's top-right

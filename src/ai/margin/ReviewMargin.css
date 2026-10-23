@@ -72,7 +72,8 @@
   /* Moved by the stack, a card glides on `translate` (useCardBox), never
      on `top`: that laid the margin out on every frame. */
   transition: transform var(--dur-fast) var(--ease-out);
-  animation: review-note-in var(--dur-slow) var(--ease-out) both;
+  --enter-x: calc(var(--motion-distance-md) * 1.75);
+  animation: motion-enter var(--dur-slow) var(--ease-out) both;
 }
 
 /* The deeper shadow under the pointer fades in on a layer of its own:
@@ -95,13 +96,6 @@
 
 .review-note-hot::after {
   opacity: 1;
-}
-
-@keyframes review-note-in {
-  from {
-    opacity: 0;
-    transform: translateX(calc(var(--motion-distance-md) * 1.75));
-  }
 }
 
 .review-note-by {
@@ -304,7 +298,8 @@
   font: 700 10.5px/1 var(--font-ui, sans-serif);
   cursor: pointer;
   box-shadow: 0 0 0 3px var(--review-anchor-bg);
-  animation: pending-pick-in var(--dur-medium) var(--ease-spring-bouncy) both;
+  --enter-scale: var(--scale-enter);
+  animation: motion-enter var(--dur-medium) var(--ease-spring-bouncy) both;
 }
 
 [data-platform="ios"] .review-badge {
@@ -459,16 +454,8 @@
   stroke: color-mix(in srgb, var(--success-color) 70%, transparent);
 }
 
-/* "Changes in the text": the card holds the original, struck. */
-.revision-note-original {
-  background: var(--revision-delete-bg);
-  color: var(--editor-muted);
-}
-
-.revision-note-original s {
-  text-decoration-color: var(--revision-delete-strike);
-}
-
+/* A card's heading over its text: "Added" for a sentence with no
+   original. */
 .revision-note-was {
   display: block;
   margin-bottom: 1px;
@@ -476,34 +463,14 @@
   color: var(--editor-muted);
 }
 
-/* Its pair under the pointer or the review bar's pointer: the text it
-   holds darkens with the pair's in the document - a darker green for new
-   text, a darker red for the original - as a note's passage does. A kept
-   one stays as it is. */
+/* Its pair under the pointer or the review bar's pointer: the new text it
+   holds darkens with the pair's in the document, as a note's passage
+   does. A kept one stays as it is. */
 .revision-note:is(.review-note-hot, .revision-note-focus):not(
     .revision-note-kept
   )
-  .revision-note-text:not(.revision-note-original) {
+  .revision-note-text {
   background: var(--revision-insert-hover-bg);
-}
-
-.revision-note:is(.review-note-hot, .revision-note-focus):not(
-    .revision-note-kept
-  )
-  .revision-note-original {
-  background: var(--revision-delete-hover-bg);
-}
-
-/* Kept: the original is the text again. */
-.revision-note-kept .revision-note-original {
-  background: none;
-  text-decoration: none;
-  color: var(--editor-text);
-  opacity: 1;
-}
-
-.revision-note-kept .revision-note-original s {
-  text-decoration: none;
 }
 
 /* Where a pure insertion would go, with its card in the margin. */

@@ -8,7 +8,6 @@ describe("marginViewBlocked", () => {
   it("blocks only the margin views, and only when there is no margin", () => {
     const noMargin = { phone: false, marginAvailable: false };
     expect(marginViewBlocked("original", noMargin)).toBe(true);
-    expect(marginViewBlocked("new", noMargin)).toBe(true);
     expect(marginViewBlocked("inline", noMargin)).toBe(false);
     expect(marginViewBlocked("final", noMargin)).toBe(false);
     expect(
@@ -25,8 +24,8 @@ describe("marginViewBlocked", () => {
 
 describe("effectiveRevisionDisplay", () => {
   it("draws a margin view inline while there is no margin, and keeps the others", () => {
-    expect(effectiveRevisionDisplay("new", false)).toBe("inline");
-    expect(effectiveRevisionDisplay("new", true)).toBe("new");
+    expect(effectiveRevisionDisplay("original", false)).toBe("inline");
+    expect(effectiveRevisionDisplay("original", true)).toBe("original");
     expect(effectiveRevisionDisplay("final", false)).toBe("final");
   });
 });

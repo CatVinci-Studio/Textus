@@ -127,12 +127,12 @@ export default {
   revisionDisplayLabel: "修訂顯示方式",
   revisionDisplayInline: "全部在正文中",
   revisionDisplayOriginal: "原文在正文，修改在頁邊",
-  revisionDisplayNew: "修改在正文，原文在頁邊",
   revisionDisplayFinal: "只看修改後的結果",
   revisionDisplayNoRoom: "空間不夠：關掉側邊欄或 AI 面板即可",
   revisionDisplayNewText:
     "新增的文字沒有原文：在這兩種檢視裡它仍以綠色留在正文中",
   proposalDeletedSentence: "原文",
+  proposalAddedSentence: "新增",
   reviewBarLabel: "修訂",
   reviewBarOpenChat: "開啟 AI 面板",
   reviewNoteBy: "審閱",

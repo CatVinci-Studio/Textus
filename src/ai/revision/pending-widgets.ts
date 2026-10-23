@@ -1,8 +1,6 @@
 import { Decoration } from "@milkdown/kit/prose/view";
-import {
-  animate as animateElement,
-  prefersReducedMotion,
-} from "../../ui/motion";
+import { prefersReducedMotion } from "../../ui/motion";
+import { enter } from "../../ui/moves";
 import { inlineSentence, pairedPrefix } from "./sentence-diff";
 import { type StreamLayout } from "./sentence-stream";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
@@ -18,6 +16,7 @@ import {
   stopFrame,
   textKey,
   updateAnimation,
+  hasBlocks,
 } from "./pending-animation";
 import { type SentenceHooks } from "./pending-decorations";
 
@@ -39,10 +38,12 @@ export function textWidget(
     (view) => {
       // Between two blocks (an append, text after a paragraph), the new
       // text is blocks of its own (fillPendingBlocks); inside a paragraph,
-      // the run of text it goes into.
+      // the run of text it goes into - unless it is blocks itself (Write
+      // at the caret, after a paragraph's last word): drawn as a run of
+      // text, its headings showed their `##` and its lists their `-`.
       const blocks =
         view.state.doc.resolve(pos).parent.type ===
-        view.state.schema.topNodeType;
+          view.state.schema.topNodeType || hasBlocks(p.proposal.text ?? "");
       const span = document.createElement(blocks ? "div" : "span");
       if (blocks) span.dataset.blocks = "true";
       // `pending-replaces`: there is an original, which the margin views
@@ -206,25 +207,22 @@ export function changeDecorations(
   // settles is drawn already, so the settle moves nothing: the ✓ / ✕ faint
   // and inert (`pending-streaming`, which syncStreaming takes off).
   const streaming = draw.stream ? " pending-streaming" : "";
-  const mark = (kind: "insert" | "delete") =>
-    Decoration.widget(
-      c.to,
-      () => {
-        const el = document.createElement("span");
-        el.className = `pending-${kind}-mark pending-sentence-${state}${streaming}`;
-        el.dataset.call = callId;
-        el.dataset.index = String(index);
-        return el;
-      },
-      {
-        side: 1,
-        key: `pending-mark-${kind}-${callId}-${index}-${state}`,
-        part: kind === "delete" ? "mark" : undefined,
-      },
+  // Where a pure insertion goes, for the view that leaves its new text to
+  // the margin ("original").
+  if (c.from === c.to)
+    decos.push(
+      Decoration.widget(
+        c.to,
+        () => {
+          const el = document.createElement("span");
+          el.className = `pending-insert-mark pending-sentence-${state}${streaming}`;
+          el.dataset.call = callId;
+          el.dataset.index = String(index);
+          return el;
+        },
+        { side: 1, key: `pending-mark-insert-${callId}-${index}-${state}` },
+      ),
     );
-  // Where a pure insertion goes, for the views that leave its new text
-  // to the margin ("original").
-  if (c.from === c.to) decos.push(mark("insert"));
   // The line break a sentence ends with stays the original's, in the text.
   // A whole block (a table, a picture) is drawn as one, between blocks.
   const after = c.block ? c.after.trim() : inlineSentence(c.after);
@@ -254,9 +252,6 @@ export function changeDecorations(
       ),
     );
   }
-  // Where a deleted sentence was, for the views that leave the original
-  // to the margin ("new").
-  else decos.push(mark("delete"));
   const { labels, decide } = draw;
   decos.push(
     Decoration.widget(
@@ -390,11 +385,9 @@ export function streamEntrance(
       ? s.partialIndex === index
       : before.at === at && after.startsWith(before.after);
   if (written) return;
-  animateElement(
-    span,
-    [{ opacity: before === undefined ? 0 : 0.3 }, { opacity: 1 }],
-    { duration: "--dur-base", easing: "--ease-out" },
-  );
+  // A sentence written in place of the one its original was marked in
+  // (the reading cursor, ui/moves.ts's mark) enters where it lands.
+  enter(span, { from: "none" });
 }
 
 /** The completed changes of a streaming rewrite's layout, where they
