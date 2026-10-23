@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
+import { Cascade } from "../ui/cascade";
 import {
   renderMarkdownHtml,
   renderMarkdownInlineHtml,
@@ -10,9 +11,17 @@ import { useKatexReady } from "../editor/math/katex-loader";
  * links, ...) instead of a flat text blob. The model's raw output is
  * untrusted (it can be steered by document content or prompt injection), so
  * it's sanitized (renderMarkdownHtml) before going into the DOM via
- * `dangerouslySetInnerHTML`.
+ * `dangerouslySetInnerHTML`. `live`: the reply is still streaming in,
+ * its words coming in one by one as they arrive (ui/cascade.ts) - a reply
+ * shown again from the conversation is simply there.
  */
-export function MarkdownText({ text }: { text: string }) {
+export function MarkdownText({
+  text,
+  live = false,
+}: {
+  text: string;
+  live?: boolean;
+}) {
   // A reply's first formula loads KaTeX (and its stylesheet, which the
   // detached chat window, never loading the editor, needs too); the reply
   // renders again once it is here.
@@ -23,9 +32,17 @@ export function MarkdownText({ text }: { text: string }) {
     [text, katexReady],
   );
 
+  const root = useRef<HTMLDivElement>(null);
+  const cascade = useRef<Cascade | null>(null);
+  useLayoutEffect(() => {
+    if (!live || !root.current) return;
+    (cascade.current ??= new Cascade()).play(root.current);
+  }, [html, live]);
+
   // Safe at this boundary because the generated HTML is sanitized above.
   return (
     <div
+      ref={root}
       className="agent-markdown"
       dangerouslySetInnerHTML={{ __html: html }}
     />
