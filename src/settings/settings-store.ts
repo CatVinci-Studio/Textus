@@ -58,7 +58,7 @@ export function fileStore(): SettingsSync | null {
   // being left alone: a new installation's defaults (the OS's language
   // among them), written out now so the next launch reads the same.
   const fresh = boot.newProfile || Object.keys(boot.settings).length === 0;
-  const defaults = normaliseSettings(null) as unknown as Raw;
+  const defaults: Raw = { ...normaliseSettings(null) };
   sync = new SettingsSync(
     fresh ? { ...defaults, ...boot.settings } : boot.settings,
     boot.rev,

@@ -171,7 +171,4 @@ export const tableHoverView = $view(
  * still drives the colgroup that view renders. Needs tableEditing, already in
  * the gfm preset.
  */
-export const tableColumnResizing = $prose(() =>
-  // Its types allow only a view or undefined, and undefined means its own.
-  columnResizing({ View: null as unknown as undefined }),
-);
+export const tableColumnResizing = $prose(() => columnResizing({ View: null }));
