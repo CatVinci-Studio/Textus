@@ -1,6 +1,17 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import type { Page } from "@playwright/test";
 import JSZip from "jszip";
+import { pluginsCheckout } from "../vite.dev-plugins";
 import { openApp } from "./helpers";
+
+/** Whether the textus-plugins checkout the dev server serves has plugin
+ *  `id`: one not published yet (Vim, Emacs) is only in a local one, so
+ *  its tests skip where CI checks out the published repository. */
+export function hasPlugin(id: string): boolean {
+  const root = pluginsCheckout();
+  return root != null && existsSync(join(root, "plugins", id));
+}
 
 /** A Word document of one paragraph, base64. */
 export async function minimalDocx(text: string): Promise<string> {

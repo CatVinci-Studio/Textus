@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { pasteMarkdown } from "./helpers";
-import { openWithPlugins } from "./plugin-helpers";
+import { hasPlugin, openWithPlugins } from "./plugin-helpers";
 
 /**
  * The Vim plugin (textus-plugins' catvinci.vim) through the editor's key
@@ -8,6 +8,8 @@ import { openWithPlugins } from "./plugin-helpers";
  * motions and operators edit as typing does, insert mode types, u undoes,
  * and flash jumps to a label.
  */
+
+test.skip(!hasPlugin("catvinci.vim"), "catvinci.vim is not published yet");
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const status = ".window-bar .plugin-status-item";

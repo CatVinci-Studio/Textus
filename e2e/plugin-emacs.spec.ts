@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { pasteMarkdown } from "./helpers";
-import { openWithPlugins } from "./plugin-helpers";
+import { hasPlugin, openWithPlugins } from "./plugin-helpers";
 
 /**
  * The Emacs plugin (textus-plugins' catvinci.emacs) through the editor's
@@ -8,6 +8,8 @@ import { openWithPlugins } from "./plugin-helpers";
  * so typing stays the editor's; motions, the mark, kills into the kill
  * ring and yanks back, and undo.
  */
+
+test.skip(!hasPlugin("catvinci.emacs"), "catvinci.emacs is not published yet");
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const status = ".window-bar .plugin-status-item";
