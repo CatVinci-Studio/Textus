@@ -96,7 +96,7 @@ pub fn remember_editor_window(app: &AppHandle, window: &tauri::Window) {
         "editor_window_size",
         serde_json::json!([size.width.round(), size.height.round()]),
     );
-    if crate::is_wayland() {
+    if !crate::window_place_known() {
         return;
     }
     if let Ok(at) = window.outer_position() {

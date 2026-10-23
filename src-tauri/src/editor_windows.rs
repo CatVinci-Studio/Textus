@@ -187,6 +187,16 @@ pub(crate) fn is_wayland() -> bool {
 #[cfg(target_os = "linux")]
 pub(crate) static WAYLAND: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
 
+/// Whether the system tells an app where its window is and lets it put it
+/// there - everywhere but Wayland.
+#[cfg(desktop)]
+pub(crate) fn window_place_known() -> bool {
+    #[cfg(target_os = "linux")]
+    return !is_wayland();
+    #[cfg(not(target_os = "linux"))]
+    true
+}
+
 /// Main thread only (GDK); see `is_wayland`.
 #[cfg(target_os = "linux")]
 pub(crate) fn detect_wayland() {
@@ -332,10 +342,10 @@ pub(crate) fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
     #[cfg(desktop)]
     let builder = {
         let app = app.handle();
-        let saved = if is_wayland() {
-            None
-        } else {
+        let saved = if window_place_known() {
             commands::prefs::read_editor_window_position(app)
+        } else {
+            None
         };
         let size =
             commands::prefs::read_editor_window_size(app).unwrap_or((config.width, config.height));
@@ -343,7 +353,7 @@ pub(crate) fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
             window_frame::place(saved, size, &screens(app), EDITOR_MIN_SIZE);
         let builder = builder.inner_size(width, height);
         match at {
-            Some((x, y)) if !is_wayland() => builder.position(x, y),
+            Some((x, y)) if window_place_known() => builder.position(x, y),
             _ => builder,
         }
     };
