@@ -649,6 +649,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentThoughtFor: { other: "{n} 秒考えました" },
   chatHistoryOpen: "履歴",
   chatHistoryEmpty: "過去の会話はありません。",
+  skillOffer: "このやり方をスキル {name} として保存しますか？",
+  skillOfferSaved:
+    "{name} として保存しました。入力欄に入力すると同じことができます。",
+  skillOfferSave: "すべての文書で使う",
+  skillOfferSaveProject: "このプロジェクトだけ",
   chatHistorySearch: "会話を検索",
   chatHistorySearchNone: "この言葉を含む会話はありません。",
   chatHistoryByYou: "あなた",

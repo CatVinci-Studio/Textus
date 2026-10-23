@@ -331,6 +331,8 @@ pub fn run() {
             crate::ai::memory::memory_remember,
             crate::ai::memory::memory_pass,
             crate::ai::memory::memory_restore,
+            crate::ai::memory::save_offered_skill,
+            crate::ai::memory::ai_offer_skill,
             crate::ai::next_message::suggest_next_message,
             crate::ai::memory::revision_choices_read,
             crate::ai::memory::revision_choices_write,

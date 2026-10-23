@@ -701,6 +701,11 @@ utiliser une.
   },
   chatHistoryOpen: "Historique",
   chatHistoryEmpty: "Aucune conversation passée.",
+  skillOffer: "Garder cette façon de faire comme compétence, {name} ?",
+  skillOfferSaved:
+    "Gardée sous {name} : tapez-la dans la zone de message pour recommencer.",
+  skillOfferSave: "Pour tous les documents",
+  skillOfferSaveProject: "Pour ce projet seulement",
   chatHistorySearch: "Rechercher dans les conversations",
   chatHistorySearchNone: "Aucune conversation ne contient ces mots.",
   chatHistoryByYou: "Vous",

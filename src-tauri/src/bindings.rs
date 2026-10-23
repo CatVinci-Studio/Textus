@@ -254,6 +254,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::ai::memory::memory_undo,
                     crate::ai::memory::memory_move,
                     crate::ai::memory::memory_restore,
+                    crate::ai::memory::save_offered_skill,
                     crate::ai::memory::memory_delete,
                     crate::ai::memory::memory_remember,
                     crate::ai::memory::revision_choices_read,

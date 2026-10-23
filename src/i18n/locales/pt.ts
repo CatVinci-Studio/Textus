@@ -680,6 +680,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   },
   chatHistoryOpen: "Histórico",
   chatHistoryEmpty: "Nenhuma conversa anterior.",
+  skillOffer: "Guardar isto como habilidade, {name}?",
+  skillOfferSaved:
+    "Guardada como {name}: digite-a na caixa de mensagem para fazer de novo.",
+  skillOfferSave: "Para todos os documentos",
+  skillOfferSaveProject: "Só para este projeto",
   chatHistorySearch: "Pesquisar conversas",
   chatHistorySearchNone: "Nenhuma conversa tem estas palavras.",
   chatHistoryByYou: "Você",

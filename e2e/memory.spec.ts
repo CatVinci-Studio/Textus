@@ -255,3 +255,49 @@ test("with Remember automatically off, the Memory tab says so", async ({
     "Remember automatically is off",
   );
 });
+
+test("a request worth doing again is offered as a skill, saved only when asked", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  const message =
+    "Turn my notes into the weekly report: three sections - Done, Next, Risks - one line each, no names.";
+  await mockInvoke(page, {
+    load_agent_workspace: memoryWorkspace(),
+    library_use: LIBRARY_USE,
+    ai_agent_message: [
+      { kind: "User", text: message },
+      { kind: "Assistant", text: "Here is the report." },
+    ],
+    memory_pass: [],
+    // After the reply (ai/memory/skill_offer.rs).
+    ai_offer_skill: {
+      name: "Weekly-report",
+      description: "Turns notes into the weekly report.",
+      instructions:
+        "Three sections: Done, Next, Risks. One line each, no names.",
+    },
+    save_offered_skill: "/home/me/.config/textus/skills/Weekly-report.md",
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill(message);
+  await composer.press("Enter");
+  const chip = page.locator(".skill-offer-chip");
+  await expect(chip).toContainText("Keep this as a skill, /Weekly-report?");
+  await expect(chip).toContainText("Turns notes into the weekly report.");
+  // Nothing is saved until asked.
+  expect(await calls(page, "save_offered_skill")).toEqual([]);
+  const [asked] = await calls(page, "ai_offer_skill");
+  expect(asked).toMatchObject({ exchange: { messages: [message] } });
+  await chip.getByRole("button", { name: "Save for every document" }).click();
+  await expect(chip).toContainText("Kept as /Weekly-report");
+  expect(await calls(page, "save_offered_skill")).toEqual([
+    expect.objectContaining({
+      scope: "personal",
+      offer: expect.objectContaining({ name: "Weekly-report" }),
+    }),
+  ]);
+});

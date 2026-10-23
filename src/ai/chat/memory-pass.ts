@@ -1,3 +1,5 @@
+import type { SkillOffer } from "../../platform/bindings/ai-memory";
+import { OFFER_SKILL } from "./SkillOfferChip";
 import type { AgentTurn } from "../types";
 import type { RememberedChange } from "../../platform/ipc";
 import { parseUserMessage } from "./user-message";
@@ -56,6 +58,24 @@ export function memoryTurns(
       },
     ];
   });
+}
+
+/** A skill offered after an exchange, as the call and result it stands
+ *  in the conversation as (SkillOfferChip shows it). */
+export function skillOfferTurns(
+  offer: SkillOffer,
+  newId: () => string,
+): AgentTurn[] {
+  const callId = `${OFFER_SKILL}-${newId()}`;
+  return [
+    {
+      kind: "ToolCall",
+      call_id: callId,
+      name: OFFER_SKILL,
+      arguments: "{}",
+    },
+    { kind: "ToolResult", call_id: callId, output: JSON.stringify(offer) },
+  ];
 }
 
 /** `history` with `turns` put in at `at`: right after the exchange they

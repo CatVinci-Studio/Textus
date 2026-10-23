@@ -694,6 +694,11 @@ para usar una.
   },
   chatHistoryOpen: "Historial",
   chatHistoryEmpty: "No hay conversaciones anteriores.",
+  skillOffer: "¿Guardar esto como habilidad, {name}?",
+  skillOfferSaved:
+    "Guardada como {name}: escríbela en el cuadro de mensaje para repetirlo.",
+  skillOfferSave: "Para todos los documentos",
+  skillOfferSaveProject: "Solo para este proyecto",
   chatHistorySearch: "Buscar en las conversaciones",
   chatHistorySearchNone: "Ninguna conversación tiene estas palabras.",
   chatHistoryByYou: "Tú",

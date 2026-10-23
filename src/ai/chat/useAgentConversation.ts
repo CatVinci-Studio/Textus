@@ -19,7 +19,12 @@ import { imageModelOf } from "../image-models";
 import { parsePartialToolArgs } from "./partial-tool-args";
 import { resolveBlockTarget } from "../doc-blocks";
 import type { DocumentSnapshot } from "../doc-markdown";
-import { insertTurns, memoryTurns, passExchange } from "./memory-pass";
+import {
+  insertTurns,
+  memoryTurns,
+  passExchange,
+  skillOfferTurns,
+} from "./memory-pass";
 import { useNextMessage } from "./next-message";
 
 export interface AgentRequestOptions {
@@ -357,6 +362,7 @@ export function useAgentConversation(
       keepThought();
       setHistory((prev) => [...prev, ...newTurns]);
       void rememberAfter([...history, ...newTurns], at + newTurns.length);
+      void offerSkillAfter([...history, ...newTurns], at + newTurns.length);
       next.suggestAfter([...history, ...newTurns]);
       return newTurns;
     } catch (err) {
@@ -413,6 +419,26 @@ export function useAgentConversation(
       setHistory((prev) => insertTurns(prev, at, turns));
     } catch {
       // Nothing remembered; the exchange itself is unaffected.
+    }
+  }
+
+  /** After an exchange, its request offered as a skill when it was a
+   *  procedure worth keeping (ai/memory/skill_offer.rs), under the reply. */
+  async function offerSkillAfter(conversation: AgentTurn[], at: number) {
+    const generation = generationRef.current;
+    try {
+      const offer = await ai.offerSkill({
+        provider,
+        model: model || null,
+        docPath,
+        workspaceRoot,
+        exchange: passExchange(conversation),
+      });
+      if (!offer || generation !== generationRef.current) return;
+      const turns = skillOfferTurns(offer, () => crypto.randomUUID());
+      setHistory((prev) => insertTurns(prev, at, turns));
+    } catch {
+      // No offer; the exchange itself is unaffected.
     }
   }
 

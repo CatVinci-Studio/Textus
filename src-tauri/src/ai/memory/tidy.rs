@@ -117,7 +117,8 @@ fn tidy_changes(answer: &str, memories: &Memories) -> Vec<pass::Change> {
     // A removal into a memory of its own scope: merged into one updated
     // here, or overturned by a newer one.
     let fits = |c: &pass::Change| -> bool {
-        let (Some(me), Some(into)) = (c.id().and_then(shown), c.merged_into().and_then(shown)) else {
+        let (Some(me), Some(into)) = (c.id().and_then(shown), c.merged_into().and_then(shown))
+        else {
             return false;
         };
         into.id != me.id

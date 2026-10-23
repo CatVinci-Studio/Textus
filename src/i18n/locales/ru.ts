@@ -685,6 +685,11 @@ export default {
   },
   chatHistoryOpen: "История",
   chatHistoryEmpty: "Прошлых диалогов нет.",
+  skillOffer: "Сохранить это как навык {name}?",
+  skillOfferSaved:
+    "Сохранено как {name}: введите его в поле сообщения, чтобы сделать снова.",
+  skillOfferSave: "Для всех документов",
+  skillOfferSaveProject: "Только для этого проекта",
   chatHistorySearch: "Поиск по разговорам",
   chatHistorySearchNone: "Ни в одном разговоре нет этих слов.",
   chatHistoryByYou: "Вы",

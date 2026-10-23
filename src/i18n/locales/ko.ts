@@ -640,6 +640,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentThoughtFor: { other: "{n}초 동안 생각함" },
   chatHistoryOpen: "기록",
   chatHistoryEmpty: "지난 대화가 없습니다.",
+  skillOffer: "이 방식을 스킬 {name}(으)로 저장할까요?",
+  skillOfferSaved:
+    "{name}(으)로 저장했습니다. 입력창에 입력하면 다시 할 수 있습니다.",
+  skillOfferSave: "모든 문서에서 쓰기",
+  skillOfferSaveProject: "이 프로젝트에서만",
   chatHistorySearch: "대화 검색",
   chatHistorySearchNone: "이 단어가 들어간 대화가 없습니다.",
   chatHistoryByYou: "나",

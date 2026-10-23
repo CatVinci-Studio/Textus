@@ -675,6 +675,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   },
   chatHistoryOpen: "Verlauf",
   chatHistoryEmpty: "Keine früheren Unterhaltungen.",
+  skillOffer: "Diese Vorgehensweise als Skill {name} behalten?",
+  skillOfferSaved:
+    "Als {name} behalten: Tippen Sie es ins Eingabefeld, um es wieder zu tun.",
+  skillOfferSave: "Für alle Dokumente speichern",
+  skillOfferSaveProject: "Nur für dieses Projekt",
   chatHistorySearch: "Unterhaltungen durchsuchen",
   chatHistorySearchNone: "Keine Unterhaltung enthält diese Wörter.",
   chatHistoryByYou: "Sie",

@@ -659,3 +659,57 @@ fn live_memory_tidy() {
         assert!(left.iter().any(|m| m.contains(kept)), "{kept} kept");
     }
 }
+
+/// Whether a request is offered as a skill (memory::skill_offer), on the
+/// eval's provider: a procedure of the user's own is, a one-off request
+/// about this text and one a skill already does are not.
+#[test]
+#[ignore = "live API - see module docs"]
+fn live_skill_offer() {
+    use crate::ai::memory::{offer_skill, Exchange};
+    use aicompat::agent::{AgentTurn, StepResult};
+    use aicompat::providers::AgentProvider;
+    let Some(auth) = auth() else { return };
+    let agent = AgentProvider {
+        id: harness::agent_provider_id().to_string(),
+        model: harness::agent_model(),
+        endpoint: harness::agent_endpoint(&auth),
+        thinking: Default::default(),
+        native_search: None,
+        enforce_binding: true,
+    };
+    let skills = vec![crate::ai::workspace::parse_skill_file(
+        "translate",
+        "---\nname: translate\ndescription: Translates a passage or document into another language.\n---\n\nTranslate it.",
+    )];
+    let ask = |message: &str| {
+        let exchange = Exchange {
+            messages: vec![message.into()],
+            reply: "Done - the edits are proposed in the document.".into(),
+        };
+        harness::block_on(offer_skill(&exchange, &skills, |instructions, input| {
+            let agent = &agent;
+            async move {
+                let turn = [AgentTurn::User {
+                    text: input,
+                    images: Vec::new(),
+                }];
+                let (step, _) = agent.step(&instructions, &turn, &[], &|_| {}).await?;
+                Ok(match step {
+                    StepResult::Done(text) => text,
+                    _ => String::new(),
+                })
+            }
+        }))
+        .unwrap()
+    };
+    let procedure = ask("把我的会议记录整理成周报：分成「本周完成」「下周计划」「风险」三部分，每条一句话，不写人名，数字保留，最后加一行需要老板决定的事。");
+    eprintln!("skill_offer: procedure -> {procedure:?}");
+    let one_off = ask("把第二段改得更简洁一些，别丢数字，语气保持正式一点就好。");
+    eprintln!("skill_offer: one-off -> {one_off:?}");
+    let covered = ask("Translate this whole document into English, keeping it faithful to the original wording please.");
+    eprintln!("skill_offer: covered by translate -> {covered:?}");
+    assert!(procedure.is_some(), "the procedure is offered");
+    assert!(one_off.is_none(), "a one-off is not");
+    assert!(covered.is_none(), "nor what translate already does");
+}

@@ -28,6 +28,12 @@ export const commands = {
 	 *  or library entry back. Returns its id.
 	 */
 	memory_restore: (docPath: string | null, workspaceRoot: string | null, id: string) => __TAURI_INVOKE<string>("memory_restore", { docPath, workspaceRoot, id }),
+	/**
+	 *  The offered skill saved: for every document (`personal`, the global
+	 *  config folder's skills/) or this project's (its .textus/skills/). Its
+	 *  file's path.
+	 */
+	save_offered_skill: (offer: SkillOffer, scope: string, docPath: string | null, workspaceRoot: string | null) => __TAURI_INVOKE<string>("save_offered_skill", { offer, scope, docPath, workspaceRoot }),
 	/**  The Memory tab's Delete, for a memory or a library entry. */
 	memory_delete: (docPath: string | null, workspaceRoot: string | null, id: string) => __TAURI_INVOKE<null>("memory_delete", { docPath, workspaceRoot, id }),
 	/**
@@ -195,6 +201,13 @@ export type Remembering_Serialize = {
  *  this project's (its `.textus/`).
  */
 export type Scope = "project" | "personal";
+
+/**  A skill offered after an exchange. */
+export type SkillOffer = {
+	name: string,
+	description: string,
+	instructions: string,
+};
 
 export type Value = null | boolean | number | string | Value[] | { [key in string]: Value };
 
