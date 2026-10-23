@@ -3,7 +3,7 @@ import { openApp, openPhone, PHONE } from "./helpers";
 
 // Settings' search box (src/settings/SettingsSearch.tsx): typing lists the
 // matching rows of every page - labels, group titles, subpages such as
-// More themes, the shortcut list and the hidden "?" text - grouped by
+// About Textus and the Extensions tabs, the shortcut list and the hidden "?" text - grouped by
 // page; Enter or a click opens the row's page and goes to it; Esc clears;
 // Ctrl/⌘+F reaches the box while Settings is open.
 
@@ -62,12 +62,13 @@ test.describe("in English", () => {
     await expect(results.getByRole("option")).toContainText("Diagram engine");
 
     await box.fill("custom css");
-    const more = results.getByRole("group", {
-      name: "Editor & Appearance › More themes",
+    // In a tab of Extensions: the search goes to the tab.
+    const themes = results.getByRole("group", {
+      name: "Extensions › Themes",
     });
-    await more.getByRole("option", { name: /Custom CSS/ }).click();
+    await themes.getByRole("option", { name: /Custom CSS/ }).click();
     await expect(
-      dialog.getByRole("region", { name: "More themes" }),
+      dialog.getByRole("tabpanel", { name: "Themes" }),
     ).toBeVisible();
     await expect(
       dialog.getByRole("textbox", { name: "Custom CSS" }),
@@ -138,7 +139,7 @@ test.describe("in Chinese", () => {
 
     await box.fill("ＣＳＳ");
     await expect(
-      results.getByRole("group", { name: "编辑与外观 › 更多主题" }),
+      results.getByRole("group", { name: "扩展 › 主题" }),
     ).toContainText("自定义 CSS");
 
     await box.fill("画图更快");

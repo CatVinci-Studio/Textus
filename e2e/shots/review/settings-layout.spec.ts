@@ -2,7 +2,7 @@ import { test, type Page } from "@playwright/test";
 import { PHONE, openApp, openPhone } from "../../helpers";
 
 // Every page of Settings at its full length - each category, About Textus
-// and More themes, in English and Chinese, on the desktop and the phone,
+// and Extensions › Themes, in English and Chinese, on the desktop and the phone,
 // light and dark - and a row's "?" open, for reviewing how Settings is
 // grouped, ordered and explained, not a baseline. Runs only with
 // TEXTUS_SHOTS_DIR set to where the PNGs go:
@@ -80,13 +80,13 @@ async function shootPages(page: Page, prefix: string) {
       await panel.locator(".settings-back-button").click();
     }
     if (CATEGORY_IDS[label] === "editor") {
+      // Get more themes goes to Extensions › Themes.
       await panel
         .locator(".settings-link-row", {
-          hasText: /^(More themes|更多主题)$/,
+          hasText: /^(Get more themes|获取更多主题)$/,
         })
         .click();
-      await shoot("2b-more-themes");
-      await panel.locator(".settings-back-button").click();
+      await shoot("2b-themes");
     }
   }
 }

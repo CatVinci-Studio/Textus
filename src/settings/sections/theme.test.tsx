@@ -9,7 +9,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveStrings } from "../../i18n/strings";
-import { MoreThemesSection, ThemeSection } from "./theme";
+import { ThemeLibrarySection, ThemeSection } from "./theme";
 import { fs, themes } from "../../platform/ipc";
 const mock = vi.hoisted(() => ({
   setSettings: vi.fn(),
@@ -30,6 +30,9 @@ vi.mock("../../platform/ipc", () => ({
   fs: { openCssFileDialog: vi.fn() },
   themes: { deleteTheme: vi.fn(), saveThemeCss: vi.fn() },
 }));
+vi.mock("./theme-gallery", () => ({
+  ThemeGallerySection: () => <p>gallery</p>,
+}));
 vi.mock("../../theme/theme-import", () => ({
   importThemeCss: vi.fn().mockResolvedValue("body{}"),
 }));
@@ -42,7 +45,7 @@ describe("theme settings", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Dark" }));
     expect(mock.setSettings).toHaveBeenCalledWith({ theme: "dark" });
   });
-  it("keeps getting and editing themes on the More themes page", () => {
+  it("keeps getting and editing themes in the theme library", () => {
     const t = resolveStrings("en");
     const onMore = vi.fn();
     render(<ThemeSection t={t} onMore={onMore} />);
@@ -52,25 +55,27 @@ describe("theme settings", () => {
     expect(
       screen.queryByRole("textbox", { name: t.customCssLabel }),
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: t.themeMoreLabel }));
+    fireEvent.click(screen.getByRole("button", { name: t.themeGetMore }));
     expect(onMore).toHaveBeenCalled();
     cleanup();
-    const onBrowse = vi.fn();
-    render(<MoreThemesSection t={t} onBrowse={onBrowse} />);
+    render(<ThemeLibrarySection t={t} />);
     expect(
       screen.getByRole("button", { name: t.themeImportButton }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("textbox", { name: t.customCssLabel }),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: t.themeGalleryBrowse }));
-    expect(onBrowse).toHaveBeenCalled();
+    // The gallery is on the same page, under Get themes.
+    expect(
+      screen.getByRole("heading", { name: t.extensionsThemesGet }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("gallery")).toBeInTheDocument();
   });
   it("shows picker errors and allows retry", async () => {
     vi.mocked(fs.openCssFileDialog).mockRejectedValueOnce(
       new Error("Cannot open picker"),
     );
-    render(<MoreThemesSection t={resolveStrings("en")} onBrowse={() => {}} />);
+    render(<ThemeLibrarySection t={resolveStrings("en")} />);
     fireEvent.click(
       screen.getByRole("button", {
         name: resolveStrings("en").themeImportButton,

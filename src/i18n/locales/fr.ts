@@ -742,8 +742,8 @@ utiliser une.
   themeDeleteButton: "Supprimer le thème",
   themeImportLabel: "Ajouter un thème depuis un fichier CSS",
   themeMoreLabel: "Plus de thèmes",
+  themeGetMore: "Obtenir d’autres thèmes",
   themeImportButton: "Importer du CSS…",
-  themeGalleryBrowse: "Parcourir les thèmes",
   themeGalleryLoading: "Chargement des thèmes…",
   themeGalleryUnreachable:
     "Impossible de joindre la galerie de thèmes. Vérifiez votre connexion ou consultez les thèmes sur le site web.",
@@ -1209,9 +1209,6 @@ utiliser une.
   extensionsTabSkills: "Compétences",
   extensionsTabMcp: "MCP",
   extensionsThemesInstalled: "Vos thèmes",
-  extensionsThemesManage: "Gérer…",
-  extensionsThemesManageHint:
-    "Vos thèmes, Importer un CSS… et Supprimer le thème.",
   extensionsThemesGet: "Obtenir des thèmes",
   extensionsSkillsHelp: `Une compétence indique à ${AI_NAME} comment bien faire un type de tâche. Celles qui sont activées sont proposées à ${AI_NAME} et dans le menu / ; une nouvelle installation en active cinq, et vous ajoutez les autres ici.`,
   extensionsSkillsMoved:

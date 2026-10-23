@@ -12,7 +12,8 @@ import { ThemeSection } from "../sections/theme";
 import { ImageStorageSection } from "../sections/images";
 import { Select } from "../../ui/Select";
 import { emitMenuEvent } from "../../platform/menu-events";
-import { canExportPdf } from "../../platform/capabilities";
+import { canExportPdf, isIOSApp } from "../../platform/capabilities";
+import { openExtensionsTab } from "./extensions-tab";
 
 /** Editor & Appearance: the theme, the window's layout and view modes, and how Markdown is typed and shown. */
 export function EditorPage({
@@ -22,12 +23,22 @@ export function EditorPage({
   phone,
   percent,
   setSubpage,
+  openPage,
   viewChecks,
 }: SettingsPageProps) {
   return (
     <>
       <SettingsGroup title={t.navTheme}>
-        <ThemeSection t={t} onMore={() => setSubpage("themes")} />
+        <ThemeSection
+          t={t}
+          onMore={() => {
+            // The phone has no Extensions page: its themes are a page of
+            // their own here.
+            if (isIOSApp) return setSubpage("themes");
+            openExtensionsTab("themes");
+            openPage("extensions");
+          }}
+        />
       </SettingsGroup>
       {/* How the window lays out - the text's width and the interface's
             size - then the window's view modes, beside the one that is a

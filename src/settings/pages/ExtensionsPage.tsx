@@ -2,8 +2,7 @@ import { useState } from "react";
 import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
 import { PluginsPage } from "./PluginsPage";
-import { SettingRow } from "../sections/controls";
-import { ThemeGallerySection } from "../sections/theme-gallery";
+import { ThemeLibrarySection } from "../sections/theme";
 import { AgentSkillsSection, BuiltinSkillsSection } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
 
@@ -23,7 +22,7 @@ const TABS = extensionsTabs();
  * own), and MCP servers. Desktop only, as plugins are.
  */
 export function ExtensionsPage(props: SettingsPageProps) {
-  const { t, setSubpage, onOpenFile, onFilesDeleted, onClose } = props;
+  const { t, onOpenFile, onFilesDeleted, onClose } = props;
   const [tab, setTabState] = useState<ExtensionsTab>(extensionsStartTab);
   const setTab = (next: ExtensionsTab) => {
     openExtensionsTab(next);
@@ -55,46 +54,28 @@ export function ExtensionsPage(props: SettingsPageProps) {
           </button>
         ))}
       </div>
-      <div role="tabpanel" aria-label={label[tab]}>
-        {tab === "plugins" && <PluginsPage {...props} />}
-        {tab === "themes" && (
-          <>
-            <SettingsGroup title={t.extensionsThemesInstalled}>
-              <SettingRow
-                label={t.themeMoreLabel}
-                hint={t.extensionsThemesManageHint}
-              >
-                <button
-                  type="button"
-                  className="text-button settings-inline-button"
-                  onClick={() => setSubpage("themes")}
-                >
-                  {t.extensionsThemesManage}
-                </button>
-              </SettingRow>
-            </SettingsGroup>
-            <SettingsGroup title={t.extensionsThemesGet}>
-              <ThemeGallerySection t={t} />
-            </SettingsGroup>
-          </>
-        )}
-        {tab === "skills" && (
-          <>
-            <SettingsGroup title={t.extensionsTabSkills}>
-              <p className="plugin-group-help">{t.extensionsSkillsHelp}</p>
-              <AgentSkillsSection t={t} />
-            </SettingsGroup>
-            <BuiltinSkillsSection
-              t={t}
-              open
-              onOpenFile={onOpenFile}
-              onFilesDeleted={onFilesDeleted}
-              onClose={onClose}
-            />
-          </>
-        )}
-        {tab === "mcp" && <McpSection t={t} />}
-      </div>
+      {!props.indexing && (
+        <div role="tabpanel" aria-label={label[tab]}>
+          {tab === "plugins" && <PluginsPage {...props} />}
+          {tab === "themes" && <ThemeLibrarySection t={t} />}
+          {tab === "skills" && (
+            <>
+              <SettingsGroup title={t.extensionsTabSkills}>
+                <p className="plugin-group-help">{t.extensionsSkillsHelp}</p>
+                <AgentSkillsSection t={t} />
+              </SettingsGroup>
+              <BuiltinSkillsSection
+                t={t}
+                open
+                onOpenFile={onOpenFile}
+                onFilesDeleted={onFilesDeleted}
+                onClose={onClose}
+              />
+            </>
+          )}
+          {tab === "mcp" && <McpSection t={t} />}
+        </div>
+      )}
     </>
   );
 }

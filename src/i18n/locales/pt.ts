@@ -718,8 +718,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   themeDeleteButton: "Apagar Tema",
   themeImportLabel: "Adicionar um tema de um arquivo CSS",
   themeMoreLabel: "Mais temas",
+  themeGetMore: "Obter mais temas",
   themeImportButton: "Importar CSS…",
-  themeGalleryBrowse: "Explorar temas",
   themeGalleryLoading: "Carregando temas…",
   themeGalleryUnreachable:
     "Não foi possível acessar a galeria de temas. Verifique sua conexão ou veja os temas no site.",
@@ -1173,8 +1173,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   extensionsTabSkills: "Habilidades",
   extensionsTabMcp: "MCP",
   extensionsThemesInstalled: "Seus temas",
-  extensionsThemesManage: "Gerenciar…",
-  extensionsThemesManageHint: "Seus temas, Importar CSS… e Excluir tema.",
   extensionsThemesGet: "Obter temas",
   extensionsSkillsHelp: `Uma habilidade diz ao ${AI_NAME} como fazer bem um tipo de tarefa. As ativadas são oferecidas ao ${AI_NAME} e no menu /; uma instalação nova começa com cinco ativadas, e você adiciona as outras aqui.`,
   extensionsSkillsMoved:

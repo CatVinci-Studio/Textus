@@ -15,7 +15,8 @@ import { useSettings } from "../SettingsContext";
 import { SettingRow } from "./controls";
 
 /**
- * Settings › Editor & Appearance › More themes › Browse themes: the public
+ * Settings › Extensions › Themes › Get themes (inside that group, which
+ * ThemeLibrarySection draws): the public
  * theme gallery.
  * The catalog is fetched when this page opens and at no other time - the
  * app makes no gallery requests in the background. Installing a theme makes
@@ -88,28 +89,24 @@ export function ThemeGallerySection({ t }: { t: Strings }) {
           {error}
         </div>
       )}
-      <section className="settings-group">
-        <div className="settings-group-body">
-          {catalog.length === 0 && <SettingRow label={t.themeGalleryEmpty} />}
-          {catalog.map((theme) => {
-            const installed = installedCopy(theme, settings.userThemes);
-            return (
-              <GalleryItem
-                key={theme.id}
-                t={t}
-                theme={theme}
-                status={galleryStatus(theme, installed)}
-                inUse={!!installed && installed.id === settings.themeId}
-                busy={busy}
-                onInstall={() => void install(theme)}
-                onUse={() =>
-                  installed && setSettings({ themeId: installed.id })
-                }
-              />
-            );
-          })}
-        </div>
-      </section>
+      <div className="settings-group-body">
+        {catalog.length === 0 && <SettingRow label={t.themeGalleryEmpty} />}
+        {catalog.map((theme) => {
+          const installed = installedCopy(theme, settings.userThemes);
+          return (
+            <GalleryItem
+              key={theme.id}
+              t={t}
+              theme={theme}
+              status={galleryStatus(theme, installed)}
+              inUse={!!installed && installed.id === settings.themeId}
+              busy={busy}
+              onInstall={() => void install(theme)}
+              onUse={() => installed && setSettings({ themeId: installed.id })}
+            />
+          );
+        })}
+      </div>
     </>
   );
 }

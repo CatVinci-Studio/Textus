@@ -122,7 +122,7 @@ async function importTheme(page: Page, path: string) {
     (window as unknown as { __nextPick: string }).__nextPick = p;
   }, path);
   const dialog = await openSettings(page);
-  await dialog.getByRole("button", { name: "More themes" }).click();
+  await dialog.getByRole("button", { name: "Get more themes" }).click();
   await dialog.getByRole("button", { name: "Import CSS…" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-user-theme", "");
   await expect(page.locator("#textus-imported-chrome")).toHaveCount(1);
@@ -466,7 +466,7 @@ test("export then import keeps the ornaments and fonts, readable in dark", async
     before.push((await computed(page, sel, prop)) ?? "");
 
   const dialog = await openSettings(page);
-  await dialog.getByRole("button", { name: "More themes" }).click();
+  await dialog.getByRole("button", { name: "Get more themes" }).click();
   await dialog.getByRole("button", { name: "Export as CSS…" }).click();
   const css = await page
     .waitForFunction(
@@ -558,7 +558,7 @@ for (const action of ["Import CSS…", "Delete Theme"] as const) {
     });
     const dialog = await openSettings(page);
     if (action === "Import CSS…")
-      await dialog.getByRole("button", { name: "More themes" }).click();
+      await dialog.getByRole("button", { name: "Get more themes" }).click();
     await dialog.getByRole("button", { name: action }).focus();
     await page.keyboard.press("Enter");
     await page.waitForTimeout(800);

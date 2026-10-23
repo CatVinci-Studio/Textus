@@ -247,7 +247,7 @@ A **Plugins** page in Settings (a built-in page in settings-pages.tsx):
   read, it is made for another Textus, or it was turned off because it
   failed: "PDF Viewer stopped answering - Turn back on"; section 3).
   Clicking a row opens its page.
-- **A plugin's page** (a subpage, as More themes is):
+- **A plugin's page** (a page of its own inside the tab, as Get plugins is):
   - what it adds (commands, views, file types), its permissions with
     Revoke beside each, the folders it may read;
   - its settings, drawn from its `configuration` schema with the same rows
@@ -259,8 +259,10 @@ A **Plugins** page in Settings (a built-in page in settings-pages.tsx):
   unpacked plugin and reloads it when its files change.
 - A plugin's shortcuts appear in Settings › Shortcuts under its name, and
   can be changed there like the app's own.
-- Themes stay under **Editor & Appearance › More themes**, whose **Browse
-  themes** shows the market's themes.
+- Themes are got and changed in **Extensions › Themes** (a CSS file, the
+  user's own CSS, the gallery); **Editor & Appearance** only picks one, and
+  its **Get more themes** goes there. The phone, with no Extensions, keeps
+  them on **Editor & Appearance › More themes**.
 
 Search in Settings finds plugins' setting rows too.
 
