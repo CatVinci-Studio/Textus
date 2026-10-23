@@ -208,10 +208,18 @@ pub fn writing_model_arg(model: &str) -> Option<&str> {
     (model != anthropic::COMPLETION_MODEL).then_some(model)
 }
 
-pub const JUDGE_MODEL: &str = "claude-opus-5-5";
+/// The judge's model: Sonnet unless TEXTUS_EVAL_JUDGE_MODEL names another.
+/// Opus judged once, at several times the price of the whole run; asking
+/// for it is now a choice made on purpose.
+pub fn judge_model() -> String {
+    std::env::var("TEXTUS_EVAL_JUDGE_MODEL").unwrap_or_else(|_| "claude-sonnet-5-5".into())
+}
 
+/// TEXTUS_EVAL_JUDGE=1 turns the judge on. Off by default: the automatic
+/// checks decide pass or fail, and a judged run costs about three times
+/// as much.
 fn judge_enabled() -> bool {
-    std::env::var("TEXTUS_EVAL_JUDGE").map_or(true, |v| v != "0")
+    std::env::var("TEXTUS_EVAL_JUDGE").is_ok_and(|v| v == "1")
 }
 
 /// TEXTUS_EVAL_FILTER: run only cases whose id contains this substring.
@@ -370,17 +378,29 @@ pub fn with_retry<T>(mut attempt: impl FnMut() -> Result<T, String>) -> Result<T
 /// output) - Anthropic's first-party prices for the models the eval runs
 /// (Haiku 5.5 at the up-to-100K-token prompt rate, which every completion
 /// and grammar request is under). An unknown model is priced as Opus, so
-/// the budget guard errs on the side of stopping early.
+/// the budget guard errs on the side of stopping early, and says so once.
 pub fn price(model: &str) -> [f64; 4] {
     match model {
         "claude-haiku-5-5" => [0.10, 0.125, 0.01, 0.50],
         "claude-sonnet-5-5" => [2.0, 2.5, 0.20, 10.0],
+        // On the ChatGPT sign-in a request is the plan's, not billed.
+        m if m.starts_with("gpt-") && agent_provider_id() == "openai" => [0.0; 4],
         // Approximate, from Ark's yuan list prices.
         m if m.starts_with("doubao-") => [0.55, 0.0, 0.11, 2.2],
         // The highest rates listed for each (2026), so the guard stops early.
         m if m.starts_with("deepseek-") => [1.74, 0.0, 0.15, 3.96],
         m if m.starts_with("MiniMax-") => [0.375, 0.0, 0.06, 1.5],
-        _ => [4.0, 5.0, 0.20, 20.0],
+        m if m.contains("gemini-") && m.contains("flash") => [0.5, 0.0, 0.05, 3.0],
+        m if m.contains("gemini-") => [2.5, 0.0, 0.25, 15.0],
+        other => {
+            static WARNED: std::sync::Once = std::sync::Once::new();
+            WARNED.call_once(|| {
+                eprintln!(
+                    "live_eval: no price for {other}; priced as Opus, so the budget stops early"
+                )
+            });
+            [4.0, 5.0, 0.20, 20.0]
+        }
     }
 }
 
@@ -1228,7 +1248,7 @@ pub fn judge(
     );
     for _ in 0..2 {
         let Ok(Reply { text: raw, .. }) =
-            complete(auth, JUDGE_INSTRUCTIONS, &user, Some(JUDGE_MODEL))
+            complete(auth, JUDGE_INSTRUCTIONS, &user, Some(&judge_model()))
         else {
             continue;
         };

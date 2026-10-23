@@ -23,7 +23,7 @@
 //! TEXTUS_EVAL_OUT (where replay.jsonl goes).
 
 use super::completion_matrix::shown;
-use super::harness::{self, JUDGE_MODEL};
+use super::harness;
 use crate::ai::client::{completion_prompt, finish_suggestion, CompletionHints};
 use serde_json::{json, Value};
 
@@ -212,7 +212,7 @@ fn judge(
         "<text-before-caret>\n{tail}\n</text-before-caret>\n\n<suggestion>{suggestion}</suggestion>\n\n<what-the-writer-wrote-next>{actual}</what-the-writer-wrote-next>"
     );
     for _ in 0..2 {
-        let Ok(reply) = harness::complete(auth, JUDGE, &user, Some(JUDGE_MODEL)) else {
+        let Ok(reply) = harness::complete(auth, JUDGE, &user, Some(&harness::judge_model())) else {
             continue;
         };
         let raw = reply.text;
